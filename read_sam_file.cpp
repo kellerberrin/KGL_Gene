@@ -29,52 +29,70 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <seqan/bam_io.h>
 #include "read_sam_file.h"
 
 
+namespace kgl = kellerberrin::genome;
 
-void ProcessSamFile::readSamFile(std::string &file_name) {
+kgl::ProcessSamFile::ProcessSamFile(const std::string& log_file) : logger_(log_file ) {}
 
+void kgl::ProcessSamFile::zreadSamFile(std::string &file_name) {
+
+  long counter = 0;
+  std::string samrecord;
+  std::ifstream samfile;
+
+  samfile.open(file_name);
+
+  while (not std::getline(samfile, samrecord).eof()) {
+
+
+    counter++;
+
+  }
+
+  samfile.close();
+
+  std::cout << "SAM records:" << counter << std::endl;
+
+}
+
+using namespace seqan;
+
+void kgl::ProcessSamFile::readSamFile(std::string &file_name) {
+
+  // Open input file, BamFileIn can read SAM and BAM files.
+  BamFileIn bamFileIn;
+
+  if (!open(bamFileIn, toCString(file_name))) {
+    std::cerr << "ERROR: Could not open " << file_name << std::endl;
+    return;
+  }
+
+  try {
+    // Copy header.
+    BamHeader header;
+    readHeader(header, bamFileIn);
     long counter = 0;
-    std::string samrecord;
-    std::ifstream samfile;
-    samfile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
+    // Copy records.
+    BamAlignmentRecord record;
+    while (not atEnd(bamFileIn)) {
 
-    try {
-
-        samfile.open(file_name);
-
-        while (samGetLine(samfile, samrecord)) {
-
-            counter++;
-
-        }
-
-        samfile.close();
-
-    }
-    catch (const std::ifstream::failure &e) {
-
-        std::cerr << "Sam file io error, check directories and permissions. Error:" << e.what() << std::endl;
-        std::exit(EXIT_FAILURE);
+      readRecord(record, bamFileIn);
+      ++counter;
 
     }
 
-    std::cout << "number file records read:";
-    std::cout << counter << std::endl;
+    std::cout << "Seqan Read SAM Records:" << counter << std::endl;
 
+  }
+  catch (Exception const &e) {
+    std::cout << "ERROR: " << e.what() << std::endl;
+    return;
+  }
+
+
+  return;
 }
-
-
-bool ProcessSamFile::samGetLine(std::istream &samfile, std::string &samrecord) {
-    try {
-        return std::getline(samfile, samrecord);
-    }
-    catch (std::ifstream::failure &) {
-        if (!samfile.eof()) throw;
-        return false;
-    }
-}
-
-

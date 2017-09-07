@@ -22,43 +22,6 @@
 //
 //
 //
+// Created by kellerberrin on 2/09/17.
 //
-// Created by kellerberrin on 31/08/17.
-//
-
-#ifndef READSAMFILE_EXECENV_H
-#define READSAMFILE_EXECENV_H
-
-#endif //READSAMFILE_EXECENV_H
-
-
-
-
-#include "spdlog/spdlog.h"
-
-
-
-//
-// Copyright(c) 2015 Gabi Melman.
-// Distributed under the MIT License (http://opensource.org/licenses/MIT)
-//
-//
-// spdlog usage example
-//
-//
-
-#define SPDLOG_TRACE_ON
-#define SPDLOG_DEBUG_ON
-
-
-int test_logging();
-
-
-void async_example();
-void syslog_example();
-void android_example();
-void user_defined_example();
-void err_handler_example();
-
-namespace spd = spdlog;
 

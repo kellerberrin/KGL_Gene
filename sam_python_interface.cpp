@@ -31,12 +31,9 @@
 #include <fstream>
 
 #include "read_sam_file.h"
-#include "execenv.h"
-
 
 namespace py = pybind11;
-
-
+namespace kgl = kellerberrin::genome;
 
 void print_dict(py::dict dict) {
 /* Easily interact with Python types */
@@ -48,13 +45,10 @@ void print_dict(py::dict dict) {
     }
 }
 
-
-
 PYBIND11_MODULE(libread_sam, m) {
     m.doc() = "pybind11 example plugin"; // optional module docstring
-    m.def("log", &test_logging, "A function which tests C++ logging");
     m.def("print_dict", &print_dict);
-    py::class_<ProcessSamFile>(m, "ProcessSamFile")
-            .def(py::init<>())
-            .def("readSamFile", &ProcessSamFile::readSamFile);
+    py::class_<kgl::ProcessSamFile>(m, "ProcessSamFile")
+            .def(py::init<const std::string &>())
+            .def("readSamFile", &kgl::ProcessSamFile::readSamFile);
 }

@@ -26,28 +26,38 @@
 // Created by kellerberrin on 31/08/17.
 //
 
-#ifndef READSAMFILE_READ_SAM_FILE_H
-#define READSAMFILE_READ_SAM_FILE_H
-
-#endif //READSAMFILE_READ_SAM_FILE_H
+#ifndef READ_SAM_FILE_H
+#define READ_SAM_FILE_H
 
 
 #include <string>
+#include <vector>
+#include <queue>
+#include "kgl_logging.h"
 
 
+namespace kellerberrin {   //  organization level namespace
+namespace genome {   // project level namespace
 
 
 class ProcessSamFile {
 
 public:
 
-    ProcessSamFile() = default ;
-    ~ProcessSamFile() = default ;
+  ProcessSamFile(const std::string& log_file);
+  ~ProcessSamFile() = default;
 
-    void readSamFile(std::string &file_name);
+  void zreadSamFile(std::string &file_name);
+  void readSamFile(std::string &file_name);
+
 
 private:
 
-    bool samGetLine(std::istream &samfile, std::string &samrecord);
+  Logger logger_;
 
 };
+
+}   // namespace genome
+}   // namespace kellerberrin
+
+#endif // READ_SAM_FILE_H
