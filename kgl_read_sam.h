@@ -23,11 +23,11 @@
 //
 //
 //
-// Created by kellerberrin on 31/08/17.
+// Created by kellerberrin on 8/09/17.
 //
 
-#ifndef READ_SAM_FILE_H
-#define READ_SAM_FILE_H
+#ifndef KGL_READ_SAM_H
+#define KGL_READ_SAM_H
 
 
 #include <string>
@@ -44,20 +44,21 @@ class ProcessSamFile {
 
 public:
 
-  ProcessSamFile(const std::string& log_file);
+  explicit ProcessSamFile(const std::string& log_file);
   ~ProcessSamFile() = default;
 
-  void zreadSamFile(std::string &file_name);
   void readSamFile(std::string &file_name);
 
 
 private:
 
-  Logger logger_;
+  Logger log;
 
 };
+
+
 
 }   // namespace genome
 }   // namespace kellerberrin
 
-#endif // READ_SAM_FILE_H
+#endif // KGL_READ_SAM_H

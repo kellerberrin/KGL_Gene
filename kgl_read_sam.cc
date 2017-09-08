@@ -30,54 +30,34 @@
 #include <fstream>
 #include <iostream>
 #include <seqan/bam_io.h>
-#include "read_sam_file.h"
+#include "kgl_read_sam.h"
 
 
 namespace kgl = kellerberrin::genome;
 
-kgl::ProcessSamFile::ProcessSamFile(const std::string& log_file) : logger_(log_file ) {}
-
-void kgl::ProcessSamFile::zreadSamFile(std::string &file_name) {
-
-  long counter = 0;
-  std::string samrecord;
-  std::ifstream samfile;
-
-  samfile.open(file_name);
-
-  while (not std::getline(samfile, samrecord).eof()) {
-
-
-    counter++;
-
-  }
-
-  samfile.close();
-
-  std::cout << "SAM records:" << counter << std::endl;
-
-}
-
-using namespace seqan;
+// To avoid contention with Python 'log_file', 'libread_sam' logs to 'log_file + cpp'
+kgl::ProcessSamFile::ProcessSamFile(const std::string& log_file) : log("ReadSam", log_file + "cpp") {}
 
 void kgl::ProcessSamFile::readSamFile(std::string &file_name) {
 
-  // Open input file, BamFileIn can read SAM and BAM files.
-  BamFileIn bamFileIn;
+  log.info("'libread_sam': Begin processing SAM file");
 
-  if (!open(bamFileIn, toCString(file_name))) {
-    std::cerr << "ERROR: Could not open " << file_name << std::endl;
+  // Open input file, BamFileIn can read SAM and BAM files.
+  seqan::BamFileIn bamFileIn;
+
+  if (!open(bamFileIn, seqan::toCString(file_name))) {
+    log.error("I/O error; could not open file: {}", file_name);
     return;
   }
 
   try {
     // Copy header.
-    BamHeader header;
+    seqan::BamHeader header;
     readHeader(header, bamFileIn);
     long counter = 0;
 
     // Copy records.
-    BamAlignmentRecord record;
+    seqan::BamAlignmentRecord record;
     while (not atEnd(bamFileIn)) {
 
       readRecord(record, bamFileIn);
@@ -85,14 +65,15 @@ void kgl::ProcessSamFile::readSamFile(std::string &file_name) {
 
     }
 
-    std::cout << "Seqan Read SAM Records:" << counter << std::endl;
+    log.info("Processed: {} records", counter);
 
   }
-  catch (Exception const &e) {
-    std::cout << "ERROR: " << e.what() << std::endl;
+  catch (seqan::Exception const &e) {
+    log.error("seqan library exception: {}", e.what());
     return;
   }
 
+  log.info("'libread_sam': Completed processing SAM file");
 
   return;
 }

@@ -22,6 +22,32 @@
 //
 //
 //
-// Created by kellerberrin on 2/09/17.
+//
+// Created by kellerberrin on 8/09/17.
 //
 
+#include <iostream>
+#include <fstream>
+#include <pybind11/pybind11.h>
+#include "kgl_read_sam.h"
+
+namespace py = pybind11;
+namespace kgl = kellerberrin::genome;
+
+void print_dict(py::dict dict) {
+/* Easily interact with Python types */
+  std::cout << "Dictionary Element" << std::endl;
+
+  for (auto item : dict) {
+    std::cout << "key=" << std::string(py::str(item.first)) << ", "
+              << "value=" << std::string(py::str(item.second)) << std::endl;
+  }
+}
+
+PYBIND11_MODULE(libread_sam, m) {
+  m.doc() = "Python binding for 'libread_sam' using 'pybind11'"; // optional module docstring
+  m.def("print_dict", &print_dict);
+  py::class_<kgl::ProcessSamFile>(m, "ProcessSamFile")
+      .def(py::init<const std::string&>())
+      .def("readSamFile", &kgl::ProcessSamFile::readSamFile);
+}
