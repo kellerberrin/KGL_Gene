@@ -49,10 +49,11 @@ public:
 
   void readSamFile(std::string &file_name);
 
-
 private:
 
   Logger log;
+  static constexpr long report_increment_ = 500000;
+  static constexpr const char* sam_read_module_name_{"SamRead"};
 
 };
 

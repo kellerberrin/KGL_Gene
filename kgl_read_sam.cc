@@ -27,53 +27,72 @@
 //
 
 #include <string>
+#include <memory>
 #include <fstream>
 #include <iostream>
 #include <seqan/bam_io.h>
 #include "kgl_read_sam.h"
+#include "kgl_mt_queue.h"
 
 
 namespace kgl = kellerberrin::genome;
 
 // To avoid contention with Python 'log_file', 'libread_sam' logs to 'log_file + cpp'
-kgl::ProcessSamFile::ProcessSamFile(const std::string& log_file) : log("ReadSam", log_file + "cpp") {}
+kgl::ProcessSamFile::ProcessSamFile(const std::string& log_file) : log(sam_read_module_name_, log_file + "cpp") {}
+
 
 void kgl::ProcessSamFile::readSamFile(std::string &file_name) {
 
-  log.info("'libread_sam': Begin processing SAM file");
+  std::ifstream sam_file;
 
-  // Open input file, BamFileIn can read SAM and BAM files.
-  seqan::BamFileIn bamFileIn;
+  log.info("Begin processing SAM file: {}", file_name);
 
-  if (!open(bamFileIn, seqan::toCString(file_name))) {
+  // Open input file, BamFileIn can read SAM and BAM filets.
+
+  sam_file.open(file_name);
+
+  if (not sam_file.good()) {
     log.error("I/O error; could not open file: {}", file_name);
     return;
   }
 
   try {
-    // Copy header.
-    seqan::BamHeader header;
-    readHeader(header, bamFileIn);
+
+    // The bounded multithreaded queue has a maximum of 1000000 elements and a low tide
+    // of 500000 when the producer(s) can start pushing elements after a high tide event.
+    // This stops excessive memory usage (and swapping) if the producer(s) can queue records
+    // faster than consumer(s) can remove them.
+    kgl::BoundedMtQueue<std::unique_ptr<std::string>> record_vec(1000000, 500000);
     long counter = 0;
 
-    // Copy records.
-    seqan::BamAlignmentRecord record;
-    while (not atEnd(bamFileIn)) {
+    while (true) {
 
-      readRecord(record, bamFileIn);
+      std::unique_ptr<std::string> record_ptr(std::make_unique<std::string>());
+
+      if (std::getline(sam_file, *record_ptr).eof()) break;
+
+      if ((*record_ptr)[0] == '@') continue;   // ignore header records.
+
+      record_vec.push(std::move(record_ptr));
+
       ++counter;
+
+      if (counter % report_increment_ == 0) {
+
+        log.info("Processed: {} records", counter);
+
+      }
 
     }
 
-    log.info("Processed: {} records", counter);
+    sam_file.close();
+
+    log.info("Final; Processed: {} records", counter);
 
   }
-  catch (seqan::Exception const &e) {
-    log.error("seqan library exception: {}", e.what());
+  catch (std::exception const &e) {
+    log.error("SAM file: {} io exception: {}", file_name, e.what());
     return;
   }
 
-  log.info("'libread_sam': Completed processing SAM file");
-
-  return;
 }
