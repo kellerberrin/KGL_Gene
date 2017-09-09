@@ -28,25 +28,38 @@
 
 #include <iostream>
 #include <fstream>
+#include <typeinfo>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include "kgl_read_sam.h"
 
 namespace py = pybind11;
 namespace kgl = kellerberrin::genome;
 
-void print_dict(py::dict dict) {
+void print_dict(const py::dict& dict) {
 /* Easily interact with Python types */
   std::cout << "Dictionary Element" << std::endl;
 
   for (auto item : dict) {
-    std::cout << "key=" << std::string(py::str(item.first)) << ", "
-              << "value=" << std::string(py::str(item.second)) << std::endl;
+    std::cout << "type=" << typeid(item.first).name() << "  key=" << std::string(py::str(item.first)) << std:: endl
+              << "type=" << typeid(item.second).name() << "  value=" << std::string(py::str(item.second)) << std::endl;
   }
 }
 
+void contig_args(const std::vector<std::string> &contig_names, const std::vector<int64_t> &contig_sizes) {
+/* Easily interact with Python types */
+  std::cout << "List of Contigs" << std::endl;
+
+  for (int i = 0; i < contig_sizes.size(); ++i) {
+    std::cout << "  contig=" << contig_names[i] << " size=" << contig_sizes[i] << std:: endl;
+  }
+}
+
+
 PYBIND11_MODULE(libread_sam, m) {
-  m.doc() = "Python binding for 'libread_sam' using 'pybind11'"; // optional module docstring
+  m.doc() = "Python binding for 'libread_sam' using 'pybind11'"; // module docstring
   m.def("print_dict", &print_dict);
+  m.def("contig_args", &contig_args);
   py::class_<kgl::ProcessSamFile>(m, "ProcessSamFile")
       .def(py::init<const std::string&>())
       .def("readSamFile", &kgl::ProcessSamFile::readSamFile);

@@ -34,6 +34,8 @@
 #include <vector>
 #include <queue>
 #include "kgl_logging.h"
+#include "kgl_mt_queue.h"
+#include "kgl_process_sam.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -47,13 +49,22 @@ public:
   explicit ProcessSamFile(const std::string& log_file);
   ~ProcessSamFile() = default;
 
-  void readSamFile(std::string &file_name);
+  void readSamFile(std::string &file_name);   // Mainline spawns the consumer threads.
+  void samProducer(std::string &file_name);   // Read the SAM file and queue the record in a BoundedMtQueue.
+  void samConsumer();                         // Multiple threads; dequeue from the BoundedMtQueue and process.
 
 private:
 
-  Logger log;
-  static constexpr long report_increment_ = 500000;
-  static constexpr const char* sam_read_module_name_{"SamRead"};
+  static constexpr const char* sam_read_module_name_{"SamRead"};  // Name of this module for the logger
+  static constexpr const char* eof_indicator_{"<<EOF>>"};  // Enqueued by producer to indicate SAM eof.
+  static constexpr long report_increment_{500000};    // Frequency to emit SAM progress messages
+  static constexpr long high_tide_{1000000};          // Maximum BoundedMtQueue size
+  static constexpr long low_tide_{500000};            // Low water mark to begin queueing SAM records
+
+  int consumer_thread_count_{4};                      // Consumer threads (defaults to 4)
+  Logger log;                                         // Emit log messages to console and log file.
+  BoundedMtQueue<std::unique_ptr<const std::string>> producer_consumer_queue_; // The Producer/Consumer SAM record queue
+  ProcessSamRecord process_sam_record_;               // Must be declared after the logger.
 
 };
 

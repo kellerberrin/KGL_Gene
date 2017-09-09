@@ -34,7 +34,6 @@
 #include <condition_variable>
 #include <memory>
 
-
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
@@ -64,7 +63,7 @@ public:
 
     data_cond_.wait(lock,[this]{return not data_queue_.empty();});
 
-    value=std::move(data_queue_.front());
+    value = std::move(data_queue_.front());
 
     data_queue_.pop();
   }
@@ -75,11 +74,11 @@ public:
 
     data_cond_.wait(lock,[this]{return not data_queue_.empty();});
 
-    std::shared_ptr<T> res(std::make_shared<T>(std::move(data_queue_.front())));
+    std::shared_ptr<T> value_ptr(std::make_shared<T>(std::move(data_queue_.front())));
 
     data_queue_.pop();
 
-    return res;
+    return value_ptr;
   }
 
   bool tryPop(T& value) {
@@ -101,11 +100,11 @@ public:
 
     if (data_queue_.empty()) return std::shared_ptr<T>();
 
-    std::shared_ptr<T> res(std::make_shared<T>(std::move(data_queue_.front())));
+    std::shared_ptr<T> value_ptr(std::make_shared<T>(std::move(data_queue_.front())));
 
     data_queue_.pop();
 
-    return res;
+    return value_ptr;
   }
 
   bool empty() const {
@@ -131,10 +130,10 @@ private:
 };
 
 // The bounded multithreaded queue has a maximum of high_tide elements and a low tide
-// when the producer(s) can start pushing elements after a high tide event.
+// when the producer(s) can again start pushing elements after a high tide event.
 // This stops excessive memory usage (and swapping) if the producer(s) can queue records
 // faster than consumer(s) can remove them.
-// Note, if there are no consumers then this queue will block forever on high tide.
+// Note, if there are no active consumers then this queue will block forever on high tide.
 
 template<typename T> class BoundedMtQueue {
 
@@ -185,7 +184,6 @@ public:
 
   inline size_t size() const { mt_queue_.size(); }
 
-
 private:
 
   MtQueue<T> mt_queue_;
@@ -196,8 +194,6 @@ private:
   mutable std::mutex mutex_;
 
 };
-
-
 
 }   // namespace genome
 }   // namespace kellerberrin

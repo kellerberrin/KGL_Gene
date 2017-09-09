@@ -30,39 +30,64 @@
 #include <memory>
 #include <fstream>
 #include <iostream>
-#include <seqan/bam_io.h>
+#include <thread>
 #include "kgl_read_sam.h"
-#include "kgl_mt_queue.h"
 
 
 namespace kgl = kellerberrin::genome;
 
-// To avoid contention with Python 'log_file', 'libread_sam' logs to 'log_file + cpp'
-kgl::ProcessSamFile::ProcessSamFile(const std::string& log_file) : log(sam_read_module_name_, log_file + "cpp") {}
-
+// To avoid contention with Python 'log_file', file changed to 'log_file + cpp'
+kgl::ProcessSamFile::ProcessSamFile(const std::string& log_file) : log(sam_read_module_name_, log_file + "cpp")
+                                                                 , producer_consumer_queue_(high_tide_, low_tide_)
+                                                                 , process_sam_record_(log) {}
 
 void kgl::ProcessSamFile::readSamFile(std::string &file_name) {
 
-  std::ifstream sam_file;
-
   log.info("Begin processing SAM file: {}", file_name);
 
-  // Open input file, BamFileIn can read SAM and BAM filets.
+  // Spawn consumer threads.
+  consumer_thread_count_ = std::thread::hardware_concurrency();
+
+  log.info("Spawning: {} Consumer threads to process the SAM file", consumer_thread_count_);
+
+  std::vector<std::thread> consumer_vec;
+  for(int i = 0; i < consumer_thread_count_; ++i) {
+
+    consumer_vec.emplace_back(std::thread(&ProcessSamFile::samConsumer,this));
+
+  }
+
+  // Read SAM records and enqueue them.
+  samProducer(file_name);
+
+  // Join on the consumer threads
+
+  for(int i = 0; i < consumer_vec.size(); ++i) {
+
+    consumer_vec[i].join();
+
+  }
+
+  log.info("Completed processing SAM file");
+
+}
+
+// Read the SAM file and queue the records.
+void kgl::ProcessSamFile::samProducer(std::string &file_name) {
+
+  std::ifstream sam_file;
+
+  // Open input file.
 
   sam_file.open(file_name);
 
   if (not sam_file.good()) {
-    log.error("I/O error; could not open file: {}", file_name);
-    return;
+    log.error("I/O error; could not open SAM file: {}, program exits.", file_name);
+    std::exit(EXIT_FAILURE);
   }
 
   try {
 
-    // The bounded multithreaded queue has a maximum of 1000000 elements and a low tide
-    // of 500000 when the producer(s) can start pushing elements after a high tide event.
-    // This stops excessive memory usage (and swapping) if the producer(s) can queue records
-    // faster than consumer(s) can remove them.
-    kgl::BoundedMtQueue<std::unique_ptr<std::string>> record_vec(1000000, 500000);
     long counter = 0;
 
     while (true) {
@@ -73,26 +98,57 @@ void kgl::ProcessSamFile::readSamFile(std::string &file_name) {
 
       if ((*record_ptr)[0] == '@') continue;   // ignore header records.
 
-      record_vec.push(std::move(record_ptr));
+      producer_consumer_queue_.push(std::move(record_ptr));
 
       ++counter;
 
       if (counter % report_increment_ == 0) {
 
-        log.info("Processed: {} records", counter);
+        log.info("Producer thread read: {} SAM records", counter);
 
       }
 
     }
 
+    // Enqueue an eof indicator for each consumer thread.
+    for(int i = 0; i < consumer_thread_count_; ++i) {
+
+      std::unique_ptr<std::string> eof_record_ptr(new std::string(eof_indicator_));
+      producer_consumer_queue_.push(std::move(eof_record_ptr));
+
+    }
+
     sam_file.close();
 
-    log.info("Final; Processed: {} records", counter);
+    log.info("Final; Producer thread read: {} SAM records", counter);
 
   }
   catch (std::exception const &e) {
-    log.error("SAM file: {} io exception: {}", file_name, e.what());
-    return;
+    log.error("SAM file: {}, unexpected I/O exception: {}, program exits.", file_name, e.what());
+    std::exit(EXIT_FAILURE);
   }
+
+}
+
+// Multiple threads; dequeue from the BoundedMtQueue and process.
+void kgl::ProcessSamFile::samConsumer() {
+
+  long counter = 0;
+  std::unique_ptr<const std::string> record_ptr;
+  const std::string eof_record(eof_indicator_);
+
+  while (true) {
+
+    producer_consumer_queue_.waitAndPop(record_ptr);
+
+    if (*record_ptr == eof_record) break;  // Eof encountered, terminate processing.
+
+    process_sam_record_.processSamRecord(record_ptr);  // update SNP and Indel structures
+
+    ++counter;
+
+  }
+
+  log.info("Final; Consumer thread processed: {} SAM records", counter);
 
 }
