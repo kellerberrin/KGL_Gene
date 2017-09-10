@@ -36,6 +36,7 @@
 #include "kgl_logging.h"
 #include "kgl_mt_queue.h"
 #include "kgl_process_sam.h"
+#include "kgl_mt_data.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -52,6 +53,7 @@ public:
   void readSamFile(std::string &file_name);   // Mainline spawns the consumer threads.
   void samProducer(std::string &file_name);   // Read the SAM file and queue the record in a BoundedMtQueue.
   void samConsumer();                         // Multiple threads; dequeue from the BoundedMtQueue and process.
+  ContigDataMap& contigDataMap() { return contig_data_map_; }
 
 private:
 
@@ -65,6 +67,7 @@ private:
   Logger log;                                         // Emit log messages to console and log file.
   BoundedMtQueue<std::unique_ptr<const std::string>> producer_consumer_queue_; // The Producer/Consumer SAM record queue
   ProcessSamRecord process_sam_record_;               // Must be declared after the logger.
+  ContigDataMap contig_data_map_;                     // Must be declared after the logger.
 
 };
 

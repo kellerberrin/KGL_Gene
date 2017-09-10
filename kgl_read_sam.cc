@@ -39,7 +39,8 @@ namespace kgl = kellerberrin::genome;
 // To avoid contention with Python 'log_file', file changed to 'log_file + cpp'
 kgl::ProcessSamFile::ProcessSamFile(const std::string& log_file) : log(sam_read_module_name_, log_file + "cpp")
                                                                  , producer_consumer_queue_(high_tide_, low_tide_)
-                                                                 , process_sam_record_(log) {}
+                                                                 , process_sam_record_(log)
+                                                                 , contig_data_map_(log) {}
 
 void kgl::ProcessSamFile::readSamFile(std::string &file_name) {
 
