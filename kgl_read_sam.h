@@ -48,7 +48,7 @@ class ProcessSamFile {
 public:
 
   explicit ProcessSamFile(const std::string& log_file);
-  ~ProcessSamFile() = default;
+  virtual ~ProcessSamFile() = default;  // Called by the Python binding super class.
 
   void readSamFile(std::string &file_name);   // Mainline spawns the consumer threads.
   void samProducer(std::string &file_name);   // Read the SAM file and queue the record in a BoundedMtQueue.
@@ -63,11 +63,13 @@ private:
   static constexpr long high_tide_{1000000};          // Maximum BoundedMtQueue size
   static constexpr long low_tide_{500000};            // Low water mark to begin queueing SAM records
 
-  int consumer_thread_count_{4};                      // Consumer threads (defaults to 4)
   Logger log;                                         // Emit log messages to console and log file.
+
+  int consumer_thread_count_{4};                      // Consumer threads (defaults to local CPU cores available)
   BoundedMtQueue<std::unique_ptr<const std::string>> producer_consumer_queue_; // The Producer/Consumer SAM record queue
   ProcessSamRecord process_sam_record_;               // Must be declared after the logger.
   ContigDataMap contig_data_map_;                     // Must be declared after the logger.
+  MtQueue<InsertQueueItem> insert_queue_queue_;       // Enqueued by spawned threads and dequeued by mainline.
 
 };
 

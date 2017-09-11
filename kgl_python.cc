@@ -33,15 +33,16 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 #include "kgl_read_sam.h"
+#include "kgl_genome_types.h"
 
 namespace py = pybind11;
 namespace kgl = kellerberrin::genome;
 
 
-using numpy_type = uint32_t;
+using numpy_type = kgl::NucleotideReadCount_t;
 
-py::array_t<numpy_type> contig_args( const std::vector<std::string> &contig_names
-                                  , const std::vector<int64_t> &contig_sizes
+py::array_t<numpy_type> contig_args( const std::vector<kgl::ContigId_t>&contig_names
+                                  , const std::vector<kgl::ContigSize_t> &contig_sizes
                                   , int nucleotides) {
 
   std::cout << "List of Contigs, nucleotides:" << nucleotides << std::endl;
@@ -118,14 +119,38 @@ private:
 
 };
 
+// Class to implement the Python bindings to the underlying C++ code.
+
+class PythonProcessSamFile : public kgl::ProcessSamFile {
+
+public:
+
+  explicit PythonProcessSamFile(const std::string& log_file) : ProcessSamFile(log_file) {}
+  ~PythonProcessSamFile() override = default;
+
+  void registerContigNumpy( const kgl::ContigId_t &contig_name
+                          , py::array_t<kgl::NucleotideReadCount_t> contig_numpy_data) {
+    // Use the PyBind11 input variables to register the contig numpy with the underlying C++ object.
+    auto numpy_dims = contig_numpy_data.mutable_unchecked<2>();
+    auto numpy_data_ptr =  contig_numpy_data.mutable_data(0,0);
+    auto contig_size = static_cast<kgl::ContigSize_t>(numpy_dims.shape(0));
+    auto num_nucleotides = static_cast<kgl::ContigSize_t>(numpy_dims.shape(1));
+
+    contigDataMap().addContigData(contig_name, numpy_data_ptr, contig_size, num_nucleotides);
+
+  }
+
+};
+
 
 PYBIND11_MODULE(libread_sam, m) {
   m.doc() = "Python binding for 'libread_sam' using 'pybind11'"; // module docstring
   m.def("contig_args", &contig_args);
   m.def("numpy_args", &numpy_args, py::arg().noconvert(), py::arg(), py::arg());
-  py::class_<kgl::ProcessSamFile>(m, "ProcessSamFile")
+  py::class_<PythonProcessSamFile>(m, "ProcessSamFile")
       .def(py::init<const std::string&>())
-      .def("readSamFile", &kgl::ProcessSamFile::readSamFile);
+      .def("registerContigNumpy", &PythonProcessSamFile::registerContigNumpy)
+      .def("readSamFile", &PythonProcessSamFile::readSamFile);
   py::class_<NoLeak>(m, "NoLeak")
       .def(py::init<>())
       .def("getVec", &NoLeak::getVec);
