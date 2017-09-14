@@ -25,6 +25,7 @@
 // Created by kellerberrin on 11/09/17.
 //
 
+#include <iostream>
 #include "kgl_mt_data.h"
 
 namespace kgl = kellerberrin::genome;
@@ -203,24 +204,12 @@ void kgl::ContigDataMap::contigIncrementCount( const ContigId_t& contig_id
                                              , const ContigOffset_t contig_offset
                                              , const Nucleotide_t nucleotide) {
 
-  auto search = contig_map_.find(contig_id);
-
-  if(search != contig_map_.end()) {
 
 #ifdef KGL_USE_X86_ATOMIC
-    search->second->incrementCountX86(contig_offset, nucleotide);
+  getContig(contig_id).incrementCountX86(contig_offset, nucleotide);
 #else
-    search->second->incrementCount(contig_offset, nucleotide);
+  getContig(contig_id).incrementCount(contig_offset, nucleotide);
 #endif
-
-  }
-  else {
-
-    log.error("contigIncrementCount(), No data array exists for contig; {}", contig_id);
-    log.error("Program exists");
-    std::exit(EXIT_FAILURE);
-
-  }
 
 }
 

@@ -40,7 +40,7 @@ namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 // If the target processor is X86 then use atomic incrementCountX86() with asm xaddl instruction.
-#define KGL_USE_X86_ATOMIC  // Comment out for generic mutex protected incrementCount() for all architectures.
+// #define KGL_USE_X86_ATOMIC  // Comment out for generic mutex protected incrementCount() for all architectures.
 
 // Only lock small sections of the data array for write access.
 // This is a classic trade-off between the space taken by the mutex array and fine-grained speedup of access
@@ -194,7 +194,7 @@ class InsertQueue {
 
 public:
 
-  InsertQueue(): contig_id_vector_(10000000, "3.141592"){}
+  InsertQueue() = default;
   ~InsertQueue() = default;
   InsertQueue(const InsertQueue&) = delete;
   InsertQueue(InsertQueue&&) = delete;

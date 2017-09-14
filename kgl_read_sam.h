@@ -62,6 +62,9 @@ private:
   static constexpr long report_increment_{500000};    // Frequency to emit SAM progress messages
   static constexpr long high_tide_{1000000};          // Maximum BoundedMtQueue size
   static constexpr long low_tide_{500000};            // Low water mark to begin queueing SAM records
+  static constexpr char delete_nucleotide{'-'};
+  static constexpr char insert_nucleotide{'+'};
+  static constexpr const char* unmapped_read{"*"};
 
   Logger log;                                         // Emit log messages to console and log file.
 
@@ -71,6 +74,11 @@ private:
   ContigDataMap contig_data_map_;                     // Must be declared after the logger.
   InsertQueue insert_queue_;       // Enqueued by spawned threads and dequeued by mainline.
 
+  std::atomic<uint64_t> unmapped_reads_{0};  // Read statistics.
+  std::atomic<uint64_t> insert_sequence_{0};
+  std::atomic<uint64_t> delete_nucleotide_{0};
+  std::atomic<uint64_t> mismatch_nucleotide_{0};
+
   void samProducer(std::string &file_name);   // Read the SAM file and queue the record in a BoundedMtQueue.
   void samConsumer();                         // Multiple threads; dequeue from the BoundedMtQueue and process.
   void parseSAMRecord(std::unique_ptr<const std::string>& record_ptr);  // Parse SAM record into fields.
@@ -78,7 +86,7 @@ private:
                      , std::vector<std::string>& sam_fields
                      , std::vector<std::string>& sam_flags);   // Split record into fields
   void decodeSAMCigar( std::string cigar_string
-                     , std::vector<std::pair<const char, ContigOffset_t >>& cigar_fields);
+                     , std::vector<std::pair<const char, const ContigOffset_t >>& cigar_fields);
 
 };
 

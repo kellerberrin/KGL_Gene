@@ -69,7 +69,10 @@ void kgl::ProcessSamFile::readSamFile(std::string &file_name) {
 
   }
 
-  log.info("Completed processing SAM file");
+  size_t unmapped = unmapped_reads_;
+  size_t deleted = delete_nucleotide_;
+  size_t inserted = insert_sequence_;
+  log.info("Completed processing SAM file; unmapped: {}, deleted: {}, inserted: {}", unmapped, deleted, inserted);
 
 }
 
@@ -197,7 +200,7 @@ void kgl::ProcessSamFile::parseSAMFields( std::string sam_record
 }
 
 void kgl::ProcessSamFile::decodeSAMCigar( std::string cigar_string
-                                        , std::vector<std::pair<const char, ContigOffset_t>>& cigar_fields) {
+                                        , std::vector<std::pair<const char, const ContigOffset_t>>& cigar_fields) {
 
   static std::regex regex("([0-9]+[MIDNSHP=X])");
   static std::sregex_iterator match_end;
@@ -212,15 +215,13 @@ void kgl::ProcessSamFile::decodeSAMCigar( std::string cigar_string
     const char cigar_action = cigar_item.back();
     cigar_item.pop_back();
     ContigOffset_t cigar_length = std::stoull(cigar_item);
-    std::pair<const char, ContigOffset_t> cigar(cigar_action, cigar_length);
+    std::pair<const char, const ContigOffset_t> cigar(cigar_action, cigar_length);
 
     cigar_fields.emplace_back(std::move(cigar));
 
     match_iter++;
 
   }
-
-
 
 }
 
@@ -239,16 +240,24 @@ void kgl::ProcessSamFile::parseSAMRecord(std::unique_ptr<const std::string>& rec
   constexpr size_t Sequence = 9;
   constexpr size_t Quality = 10;
 
+
   std::vector<std::string> sam_fields;
   std::vector<std::string> sam_flags;
+  std::vector<std::pair<const char, const ContigOffset_t>> cigar_fields;
 
-  std::vector<std::pair<const char, ContigOffset_t>> cigar_fields;
+  parseSAMFields(*record_ptr, sam_fields, sam_flags); // Must be called first.
+  decodeSAMCigar(sam_fields[Cigar], cigar_fields);  // Must be called first.
 
-  parseSAMFields(*record_ptr, sam_fields, sam_flags);
+  const ContigId_t& contig_id = sam_fields[Rname];  // Alias the contig_id
 
-  decodeSAMCigar(sam_fields[Cigar], cigar_fields);
+  if (contig_id == unmapped_read) {
 
-  ContigMatrixMT& contig_block = contig_data_map_.getContig(sam_fields[Rname]);  // Get the contig data block.
+    unmapped_reads_++;
+    return;
+
+  }
+
+  ContigMatrixMT& contig_block = contig_data_map_.getContig(contig_id);  // Get the contig data block.
 
   ContigOffset_t location = std::stoull(sam_fields[Pos]) - 1;    // Subtract 1 for zero offset - SAM usage is offset 1
 
@@ -257,7 +266,7 @@ void kgl::ProcessSamFile::parseSAMRecord(std::unique_ptr<const std::string>& rec
   if (location >= contig_size) {
 
     log.error("Sam record error - Contig: {} sequence size: {} exceeded at position: {}; SAM record: {}"
-             , sam_fields[Rname], contig_size, location, *record_ptr);
+             , contig_id, contig_size, location, *record_ptr);
     std::exit(EXIT_FAILURE);
 
   }
@@ -273,6 +282,11 @@ void kgl::ProcessSamFile::parseSAMRecord(std::unique_ptr<const std::string>& rec
       case '=':
         for (ContigOffset_t cigar_offset = 0; cigar_offset < cigar.second; ++cigar_offset) {
 
+          if (location + cigar_offset >= contig_size) {
+            log.error("Sam record error - Contig: {} sequence size: {} exceeded at position: {} Cigar Offset: {}; SAM record: {}"
+                , contig_id, contig_size, location, cigar_offset, *record_ptr);
+            std::exit(EXIT_FAILURE);
+          }
           Nucleotide_t sam_nucleotide = sam_fields[Sequence][cigar_offset + sam_idx];
           contig_block.incrementCount(location + cigar_offset, sam_nucleotide);
 
@@ -283,16 +297,38 @@ void kgl::ProcessSamFile::parseSAMRecord(std::unique_ptr<const std::string>& rec
         break;
 
       case 'D':
+
+        delete_nucleotide_++;
+        for (ContigOffset_t cigar_offset = 0; cigar_offset < cigar.second; ++cigar_offset) {
+
+          contig_block.incrementCount(location + cigar_offset, delete_nucleotide);
+
+        }
+
         location += cigar.second;
         break;
 
       case 'I':
+
+        if (location >= contig_size) {
+          log.error("Sam record error - Contig: {} sequence size: {} exceeded at position: {}; SAM record: {}"
+              , contig_id, contig_size, location, *record_ptr);
+          std::exit(EXIT_FAILURE);
+        }
+        contig_block.incrementCount(location, insert_nucleotide);
+        { // Program block to scope insert_sequence variable
+          std::string insert_sequence = sam_fields[Sequence].substr(sam_idx, cigar.second);
+          insert_sequence_++;
+          insert_queue_.push(contig_id, location, insert_sequence);
+        }
         sam_idx += cigar.second;
-        location += cigar.second;
         break;
 
       case 'S':
         sam_idx += cigar.second;
+        break;
+
+      case 'H':
         break;
 
       case 'N':
