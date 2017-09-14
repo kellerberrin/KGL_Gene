@@ -51,9 +51,9 @@ public:
   virtual ~ProcessSamFile() = default;  // Called by the Python binding super class.
 
   void readSamFile(std::string &file_name);   // Mainline spawns the consumer threads.
-  void samProducer(std::string &file_name);   // Read the SAM file and queue the record in a BoundedMtQueue.
-  void samConsumer();                         // Multiple threads; dequeue from the BoundedMtQueue and process.
   ContigDataMap& contigDataMap() { return contig_data_map_; }
+  InsertQueue& getInsertQueue() { return  insert_queue_ ; };
+
 
 private:
 
@@ -69,7 +69,16 @@ private:
   BoundedMtQueue<std::unique_ptr<const std::string>> producer_consumer_queue_; // The Producer/Consumer SAM record queue
   ProcessSamRecord process_sam_record_;               // Must be declared after the logger.
   ContigDataMap contig_data_map_;                     // Must be declared after the logger.
-  MtQueue<InsertQueueItem> insert_queue_queue_;       // Enqueued by spawned threads and dequeued by mainline.
+  InsertQueue insert_queue_;       // Enqueued by spawned threads and dequeued by mainline.
+
+  void samProducer(std::string &file_name);   // Read the SAM file and queue the record in a BoundedMtQueue.
+  void samConsumer();                         // Multiple threads; dequeue from the BoundedMtQueue and process.
+  void parseSAMRecord(std::unique_ptr<const std::string>& record_ptr);  // Parse SAM record into fields.
+  void parseSAMFields( std::string sam_record
+                     , std::vector<std::string>& sam_fields
+                     , std::vector<std::string>& sam_flags);   // Split record into fields
+  void decodeSAMCigar( std::string cigar_string
+                     , std::vector<std::pair<const char, ContigOffset_t >>& cigar_fields);
 
 };
 

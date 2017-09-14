@@ -33,7 +33,6 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 #include "kgl_read_sam.h"
-#include "kgl_genome_types.h"
 
 namespace py = pybind11;
 namespace kgl = kellerberrin::genome;
@@ -108,14 +107,14 @@ class NoLeak {
 
 public:
 
-  NoLeak(): pvec(std::make_unique<std::vector<std::string>>(10000000, "3.141592")) {}
+  NoLeak() {}
   ~NoLeak() { std::cerr << "NoLeak out of scope" << std::endl; }
 
-  std::vector<std::string>& getVec() { *pvec; }
+  const std::vector<std::string>& getVec() { return vec.getQueueContigs(); }
 
 private:
 
-  std::unique_ptr<std::vector<std::string>> pvec;
+  kgl::InsertQueue vec;
 
 };
 
@@ -126,6 +125,7 @@ class PythonProcessSamFile : public kgl::ProcessSamFile {
 public:
 
   explicit PythonProcessSamFile(const std::string& log_file) : ProcessSamFile(log_file) {}
+
   ~PythonProcessSamFile() override = default;
 
   void registerContigNumpy( const kgl::ContigId_t &contig_name
@@ -140,6 +140,27 @@ public:
 
   }
 
+  // Cannot return const std::vector<const std::string>&, const qualifier on std::string fails in pybind11.
+  const std::vector<std::string>& getQueueContigs() {
+
+    return getInsertQueue().getQueueContigs();
+
+  }
+
+  const std::vector<std::size_t>& getQueueOffsets() {
+
+    return getInsertQueue().getQueueOffsets();
+
+  }
+
+  const std::vector<std::string>& getQueueSequences() {
+
+    return getInsertQueue().getQueueSequences();
+
+  }
+
+private:
+
 };
 
 
@@ -150,7 +171,12 @@ PYBIND11_MODULE(libread_sam, m) {
   py::class_<PythonProcessSamFile>(m, "ProcessSamFile")
       .def(py::init<const std::string&>())
       .def("registerContigNumpy", &PythonProcessSamFile::registerContigNumpy)
-      .def("readSamFile", &PythonProcessSamFile::readSamFile);
+      .def("readSamFile", &PythonProcessSamFile::readSamFile)
+      .def("getQueueContigs", &PythonProcessSamFile::getQueueContigs)
+      .def("getQueueOffsets", &PythonProcessSamFile::getQueueOffsets)
+      .def("getQueueSequences", &PythonProcessSamFile::getQueueSequences);
+
+
   py::class_<NoLeak>(m, "NoLeak")
       .def(py::init<>())
       .def("getVec", &NoLeak::getVec);

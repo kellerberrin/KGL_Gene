@@ -32,11 +32,15 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <queue>
 #include "kgl_logging.h"
 #include "kgl_genome_types.h"
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
+
+// If the target processor is X86 then use atomic incrementCountX86() with asm xaddl instruction.
+#define KGL_USE_X86_ATOMIC  // Comment out for generic mutex protected incrementCount() for all architectures.
 
 // Only lock small sections of the data array for write access.
 // This is a classic trade-off between the space taken by the mutex array and fine-grained speedup of access
@@ -109,6 +113,8 @@ public:
   ContigMatrixMT(ContigMatrixMT&&) = delete;
   ContigMatrixMT& operator=(const ContigMatrixMT&) = delete;
 
+  void incrementCountX86(const std::size_t row, const std::size_t column);
+
   void incrementCount(const std::size_t row, const std::size_t column);
 
   inline void incrementCount(const std::size_t row, const Nucleotide_t nucleotide) {
@@ -125,6 +131,8 @@ public:
 
   }
 
+  inline const ContigSize_t contigSize() const { return rows_; }
+
 private:
 
   void initialize(const NucleotideReadCount_t initial_value);
@@ -136,8 +144,8 @@ private:
   // Yes folks, that's a raw pointer (watch it snort and shake).
   // Never delete[] or use to initialize a smart pointer (same thing).
   // The data actually belongs to a numpy passed in from Python.
-  const NucleotideReadCount_t  *data_ptr_;
-  const std::size_t rows_;
+  const NucleotideReadCount_t  *data_ptr_; // Snort, shake, snort, shake ...
+  const std::size_t rows_;      // Number of of nucleotides in the contig.
   mutable std::mutex mutex_;  // Used to initialize the data.
   GranularityMutex granularity_mutex_; // Fine grained thread access to the underlying data structure.
 
@@ -163,6 +171,8 @@ public:
                     , const ContigOffset_t contig_offset
                     , const ContigOffset_t num_nucleotides);  // This is to check the numpy dimensions
 
+  ContigMatrixMT& getContig(const ContigId_t& contig_id); // Access function.
+
 private:
 
   static constexpr std::size_t lock_granularity = 1000;
@@ -180,24 +190,55 @@ private:
 // When the consumer threads complete, the mainline process transfers this information back to the Python
 // program so that it can construct a data array of insertions for each contig.
 
-class InsertQueueItem {
+class InsertQueue {
 
 public:
 
-  InsertQueueItem( const ContigId_t& contig_id
-                 , ContigOffset_t offset
-                 , const Sequence_t& sequence) : contig_id_(std::move(contig_id))
-                                               , offset_(offset)
-                                               , sequence_(std::move(sequence)) {}
+  InsertQueue(): contig_id_vector_(10000000, "3.141592"){}
+  ~InsertQueue() = default;
+  InsertQueue(const InsertQueue&) = delete;
+  InsertQueue(InsertQueue&&) = delete;
+  InsertQueue& operator=(const InsertQueue&) = delete;
 
-  ~InsertQueueItem() = default;
+  // Thread safe
+  void push(const ContigId_t& contig_id, const ContigOffset_t& contig_offset, const Sequence_t& sequence) {
 
-  const ContigId_t contig_id_;
-  const ContigOffset_t offset_;
-  const Sequence_t sequence_;
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    contig_id_vector_.push_back(contig_id);
+    contig_offset_vector_.push_back(contig_offset);
+    sequence_vector_.push_back(sequence);
+
+  }
+
+  // Thread unsafe. Access to this data structure may only be performed after the spawned threads have joined.
+  const std::vector<std::string>& getQueueContigs() {
+
+    return contig_id_vector_;
+
+  }
+
+  const std::vector<std::size_t>& getQueueOffsets() {
+
+    return contig_offset_vector_;
+
+  }
+
+  const std::vector<std::string>& getQueueSequences() {
+
+    return sequence_vector_;
+
+  }
+
+private:
+
+  mutable std::mutex mutex_;
+
+  std::vector<ContigId_t> contig_id_vector_;
+  std::vector<ContigOffset_t> contig_offset_vector_;
+  std::vector<Sequence_t> sequence_vector_;
 
 };
-
 
 }   // namespace genome
 }   // namespace kellerberrin

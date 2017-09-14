@@ -33,6 +33,38 @@ namespace kgl = kellerberrin::genome;
 // Implementation of ContigMatrixMT object that provides thread safe access to the contig Python numpy.
 //
 
+static inline void asmX86AtomicInc(kgl::NucleotideReadCount_t  *access_ptr)
+{
+  int inc = 1;
+
+  __asm__ volatile("lock; xaddl %0, %1"
+  : "=r" (inc), "+m" (*access_ptr) // input+output
+  : // memory and condition codes changed
+  : "memory", "cc"
+  );
+
+}
+
+void kgl::ContigMatrixMT::incrementCountX86(const std::size_t row, const std::size_t column) {
+
+
+  if (row >= rows_) {
+    log.error("Invalid access in incrementCount(); Row index: {} >= Array size: {}", row, rows_);
+    log.error("Program exits");
+    std::exit(EXIT_FAILURE);
+  }
+  if (column >= expected_columns) {
+    log.error("Invalid access in incrementCount(); Column index: {} >= Number Columns: {}", column, expected_columns);
+    log.error("Program exits");
+    std::exit(EXIT_FAILURE);
+  }
+
+  // pointer arithmetic, stride is expected_columns
+  NucleotideReadCount_t  *access_ptr = const_cast<NucleotideReadCount_t *>(data_ptr_) + ((row * expected_columns) + column);
+  asmX86AtomicInc(access_ptr);
+
+}
+
 void kgl::ContigMatrixMT::incrementCount(const std::size_t row, const std::size_t column) {
 
   if (row >= rows_) {
@@ -147,6 +179,26 @@ std::size_t kgl::ContigMatrixMT::nucleotideToColumn(const Nucleotide_t nucleotid
 
 constexpr std::size_t kgl::ContigDataMap::lock_granularity;  // Only lock small sections of the read data matrix.
 
+// Access function to obtain the underlying contig block.
+kgl::ContigMatrixMT& kgl::ContigDataMap::getContig( const ContigId_t& contig_id) {
+
+  auto search = contig_map_.find(contig_id);
+
+  if(search != contig_map_.end()) {
+
+    return *(search->second);
+
+  }
+  else {
+
+    log.error("contigIncrementCount(), No data array exists for contig; {}", contig_id);
+    log.error("Program exists");
+    std::exit(EXIT_FAILURE);
+
+  }
+
+}
+
 void kgl::ContigDataMap::contigIncrementCount( const ContigId_t& contig_id
                                              , const ContigOffset_t contig_offset
                                              , const Nucleotide_t nucleotide) {
@@ -155,7 +207,11 @@ void kgl::ContigDataMap::contigIncrementCount( const ContigId_t& contig_id
 
   if(search != contig_map_.end()) {
 
+#ifdef KGL_USE_X86_ATOMIC
+    search->second->incrementCountX86(contig_offset, nucleotide);
+#else
     search->second->incrementCount(contig_offset, nucleotide);
+#endif
 
   }
   else {
