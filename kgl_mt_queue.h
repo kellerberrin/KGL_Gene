@@ -180,16 +180,17 @@ public:
 
   }
 
-  inline bool empty() const { mt_queue_.empty(); }
+  inline bool empty() const { return mt_queue_.empty(); }
 
-  inline size_t size() const { mt_queue_.size(); }
+  inline size_t size() const { return mt_queue_.size(); }
 
 private:
 
-  MtQueue<T> mt_queue_;
-  enum class QueueState { Normal, HighTide } queue_state_;
   size_t high_tide_;
   size_t low_tide_;
+
+  MtQueue<T> mt_queue_;
+  enum class QueueState { Normal, HighTide } queue_state_;
   std::condition_variable data_cond_;
   mutable std::mutex mutex_;
 

@@ -34,8 +34,87 @@
 #include <thread>
 #include "kgl_read_sam.h"
 
-
 namespace kgl = kellerberrin::genome;
+
+
+// Efficiently store field offsets and sizes.
+void kgl::SAMRecordParser::parseSAMFields(std::unique_ptr<const std::string>& record_ptr)
+{
+
+  std::size_t start = 0;
+  std::size_t end = record_ptr->find_first_of(SAM_DELIMITER);
+
+  int field_count = 0;
+
+  while (end <= std::string::npos) {
+
+    if (field_count < SAM_FIELD_COUNT) {
+
+      sam_fields_.emplace_back(start, end - start);
+
+    } else {
+
+      opt_flags_.emplace_back(start, end - start);
+
+    }
+
+    ++field_count;
+
+    if (end == std::string::npos)
+      break;
+
+    start = end + 1;
+    end = record_ptr->find_first_of(SAM_DELIMITER, start);
+
+  }
+
+  if (field_count <  SAM_FIELD_COUNT) {
+
+    log.error("Incorrect field count: {}, SAM record: {}", field_count, *record_ptr);
+    std::exit(EXIT_FAILURE);
+
+  }
+
+}
+
+kgl::CigarParser::CigarParser( Logger& logger
+                             , std::unique_ptr<const std::string>& record_ptr
+                             , const std::pair<std::size_t, std::size_t>& cigar_offset): log(logger) {
+
+  decodeSAMCigar(record_ptr, cigar_offset);
+
+}
+
+void kgl::CigarParser::decodeSAMCigar( std::unique_ptr<const std::string>& record_ptr
+                                     , const std::pair<std::size_t, std::size_t>& cigar_offset) {
+
+
+  static std::regex regex("([0-9]+[MIDNSHP=X])");
+  static std::sregex_iterator match_end;
+  std::smatch match;
+  std::string::const_iterator begin = record_ptr->begin() + cigar_offset.first;
+  std::string::const_iterator end = begin + cigar_offset.second;
+
+  std::sregex_iterator match_iter(begin, end, regex);
+
+  while (match_iter != match_end) {
+
+    match = *match_iter;
+    std::string cigar_item(std::move(match.str()));
+    const char cigar_action = cigar_item.back();
+    cigar_item.pop_back();
+    ContigOffset_t cigar_length = std::stoull(cigar_item);
+    std::pair<const char, const ContigOffset_t> cigar(cigar_action, cigar_length);
+
+    cigar_fields_.emplace_back(std::move(cigar));
+
+    match_iter++;
+
+  }
+
+}
+
+
 
 kgl::ProcessSamFile::ProcessSamFile(const std::string& log_file) : log(sam_read_module_name_, log_file)
                                                                  , producer_consumer_queue_(high_tide_, low_tide_)
@@ -51,10 +130,10 @@ void kgl::ProcessSamFile::readSamFile(std::string &file_name) {
 
   log.info("Spawning: {} Consumer threads to process the SAM file", consumer_thread_count_);
 
-  std::vector<std::thread> consumer_vec;
+  std::vector<std::thread> consumer_threads;
   for(int i = 0; i < consumer_thread_count_; ++i) {
 
-    consumer_vec.emplace_back(std::thread(&ProcessSamFile::samConsumer,this));
+    consumer_threads.emplace_back(std::thread(&ProcessSamFile::samConsumer,this));
 
   }
 
@@ -62,10 +141,9 @@ void kgl::ProcessSamFile::readSamFile(std::string &file_name) {
   samProducer(file_name);
 
   // Join on the consumer threads
+  for(auto& consumer : consumer_threads) {
 
-  for(int i = 0; i < consumer_vec.size(); ++i) {
-
-    consumer_vec[i].join();
+    consumer.join();
 
   }
 
@@ -157,98 +235,16 @@ void kgl::ProcessSamFile::samConsumer() {
 
 }
 
-void kgl::ProcessSamFile::parseSAMFields( std::string sam_record
-                                        , std::vector<std::string>& sam_fields
-                                        , std::vector<std::string>& sam_flags)
-{
-  constexpr int sam_mandatory_field_count = 11;
-  constexpr char sam_delimiter = '\t';
-  std::size_t start=0;
-  std::size_t end = sam_record.find_first_of(sam_delimiter);
-
-  int field_count = 0;
-
-  while (end <= std::string::npos) {
-
-    ++field_count;
-
-    if (field_count <= sam_mandatory_field_count) {
-
-      sam_fields.emplace_back(sam_record.substr(start, end - start));
-
-    } else {
-
-      sam_flags.emplace_back(sam_record.substr(start, end - start));
-
-    }
-
-    if (end == std::string::npos)
-      break;
-
-    start = end + 1;
-    end = sam_record.find_first_of(sam_delimiter, start);
-
-  }
-
-  if (sam_fields.size() <  sam_mandatory_field_count) {
-
-    log.error("Incorrect field count: {}, line: {}", sam_fields.size(), sam_record);
-    std::exit(EXIT_FAILURE);
-
-  }
-
-}
-
-void kgl::ProcessSamFile::decodeSAMCigar( std::string cigar_string
-                                        , std::vector<std::pair<const char, const ContigOffset_t>>& cigar_fields) {
-
-  static std::regex regex("([0-9]+[MIDNSHP=X])");
-  static std::sregex_iterator match_end;
-  std::smatch match;
-
-  std::sregex_iterator match_iter(cigar_string.begin(), cigar_string.end(), regex);
-
-  while (match_iter != match_end) {
-
-    match = *match_iter;
-    std::string cigar_item(std::move(match.str()));
-    const char cigar_action = cigar_item.back();
-    cigar_item.pop_back();
-    ContigOffset_t cigar_length = std::stoull(cigar_item);
-    std::pair<const char, const ContigOffset_t> cigar(cigar_action, cigar_length);
-
-    cigar_fields.emplace_back(std::move(cigar));
-
-    match_iter++;
-
-  }
-
-}
-
 void kgl::ProcessSamFile::parseSAMRecord(std::unique_ptr<const std::string>& record_ptr) {
 
-  // Define the SAM record offsets.
-  constexpr size_t Qname = 0;
-  constexpr size_t Flag = 1;
-  constexpr size_t Rname = 2;
-  constexpr size_t Pos = 3;
-  constexpr size_t Mapquality = 4;
-  constexpr size_t Cigar = 5;
-  constexpr size_t Rnext = 6;
-  constexpr size_t Pnext = 7;
-  constexpr size_t Tlen = 8;
-  constexpr size_t Sequence = 9;
-  constexpr size_t Quality = 10;
 
 
-  std::vector<std::string> sam_fields;
-  std::vector<std::string> sam_flags;
-  std::vector<std::pair<const char, const ContigOffset_t>> cigar_fields;
+  SAMRecordParser sam_record_parser(log, record_ptr);
+  CigarParser cigar_parser(log, record_ptr, sam_record_parser.getCigar(record_ptr));
 
-  parseSAMFields(*record_ptr, sam_fields, sam_flags); // Must be called first.
-  decodeSAMCigar(sam_fields[Cigar], cigar_fields);  // Must be called first.
+  const std::vector<std::pair<const char, const ContigOffset_t>>& cigar_fields = cigar_parser.cigarFields();
 
-  const ContigId_t& contig_id = sam_fields[Rname];  // Alias the contig_id
+  const ContigId_t contig_id(sam_record_parser.getContigId(record_ptr));
 
   if (contig_id == unmapped_read) {
 
@@ -259,7 +255,7 @@ void kgl::ProcessSamFile::parseSAMRecord(std::unique_ptr<const std::string>& rec
 
   ContigMatrixMT& contig_block = contig_data_map_.getContig(contig_id);  // Get the contig data block.
 
-  ContigOffset_t location = std::stoull(sam_fields[Pos]) - 1;    // Subtract 1 for zero offset - SAM usage is offset 1
+  ContigOffset_t location = sam_record_parser.getPos(record_ptr);
 
   auto contig_size = contig_block.contigSize();
 
@@ -287,7 +283,7 @@ void kgl::ProcessSamFile::parseSAMRecord(std::unique_ptr<const std::string>& rec
                 , contig_id, contig_size, location, cigar_offset, *record_ptr);
             std::exit(EXIT_FAILURE);
           }
-          Nucleotide_t sam_nucleotide = sam_fields[Sequence][cigar_offset + sam_idx];
+          Nucleotide_t sam_nucleotide = sam_record_parser.getSequenceNucleotide(record_ptr, cigar_offset + sam_idx);
           contig_block.incrementCount(location + cigar_offset, sam_nucleotide);
 
         }
@@ -317,9 +313,9 @@ void kgl::ProcessSamFile::parseSAMRecord(std::unique_ptr<const std::string>& rec
         }
         contig_block.incrementCount(location, insert_nucleotide);
         { // Program block to scope insert_sequence variable
-          std::string insert_sequence = sam_fields[Sequence].substr(sam_idx, cigar.second);
+
           insert_sequence_++;
-          insert_queue_.push(contig_id, location, insert_sequence);
+          insert_queue_.push(contig_id, location, sam_record_parser.getSubSequence(record_ptr, sam_idx, cigar.second));
         }
         sam_idx += cigar.second;
         break;

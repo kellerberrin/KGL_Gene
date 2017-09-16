@@ -135,11 +135,14 @@ public:
 
 private:
 
+  Logger& log;
+
   void initialize(const NucleotideReadCount_t initial_value);
 
   std::size_t nucleotideToColumn(const Nucleotide_t nucleotide) const;
 
-  static constexpr std::size_t expected_columns = 6; // A, C, G, T/U, -, + (in that order). See nucleotideToColumn(const char).
+  // A, C, G, T/U, N, -, + (in that order). See nucleotideToColumn(const char).
+  static constexpr std::size_t expected_columns = 7;
 
   // Yes folks, that's a raw pointer (watch it snort and shake).
   // Never delete[] or use to initialize a smart pointer (same thing).
@@ -148,8 +151,6 @@ private:
   const std::size_t rows_;      // Number of of nucleotides in the contig.
   mutable std::mutex mutex_;  // Used to initialize the data.
   GranularityMutex granularity_mutex_; // Fine grained thread access to the underlying data structure.
-
-  Logger& log;
 
 };
 

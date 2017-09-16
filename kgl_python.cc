@@ -46,7 +46,7 @@ py::array_t<numpy_type> contig_args( const std::vector<kgl::ContigId_t>&contig_n
 
   std::cout << "List of Contigs, nucleotides:" << nucleotides << std::endl;
 
-  for (int i = 0; i < contig_sizes.size(); ++i) {
+  for (size_t i = 0; i < contig_sizes.size(); ++i) {
     std::cout << "  contig=" << contig_names[i] << " size=" << contig_sizes[i] << std::endl;
   }
 

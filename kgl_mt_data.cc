@@ -149,12 +149,17 @@ std::size_t kgl::ContigMatrixMT::nucleotideToColumn(const Nucleotide_t nucleotid
       column = 3;
       break;
 
-    case '-':
+    case 'N':
+    case 'n':
       column = 4;
       break;
 
-    case '+':
+    case '-':
       column = 5;
+      break;
+
+    case '+':
+      column = 6;
       break;
 
     case 'U':
