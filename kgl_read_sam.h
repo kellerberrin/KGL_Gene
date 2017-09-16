@@ -35,31 +35,26 @@
 #include <queue>
 #include "kgl_logging.h"
 #include "kgl_mt_queue.h"
-#include "kgl_process_sam.h"
 #include "kgl_mt_data.h"
 
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-
 class SAMRecordParser {
 
 public:
 
-  explicit SAMRecordParser(Logger& logger, std::unique_ptr<const std::string>& record_ptr): log(logger) {
-
-    parseSAMFields(record_ptr);
-
-  }
+  explicit SAMRecordParser(Logger& logger) : log(logger) {}
   ~SAMRecordParser() = default;
 
+  // Returns false if the sam record is unmapped.
+  bool Parse(std::unique_ptr<const std::string>& record_ptr);
+
   inline const std::vector<std::pair<std::size_t, std::size_t>>& getOptFlags() { return opt_flags_; }
-  inline const std::pair<std::size_t, std::size_t>& getCigar(std::unique_ptr<const std::string>& record_ptr) {
 
-    return sam_fields_[CIGAR_OFFSET];
+  inline const std::vector<std::pair<const char, const ContigOffset_t>>& cigarFields() { return cigar_fields_; }
 
-  }
   inline const ContigOffset_t getPos(std::unique_ptr<const std::string>& record_ptr) {
 
     // Subtract 1 for zero offset - SAM usage is offset 1
@@ -103,34 +98,20 @@ private:
 
   static constexpr int SAM_FIELD_COUNT = 11;
   static constexpr char SAM_DELIMITER = '\t';
+  static constexpr const char unmapped_read{'*'};
 
   // Just store the offset and size of fields within the SAM record.
-  std::vector<std::pair<std::size_t, std::size_t>> sam_fields_;
+  std::pair<std::size_t, std::size_t> sam_fields_[SAM_FIELD_COUNT];
   std::vector<std::pair<std::size_t, std::size_t>> opt_flags_;
-
-  void parseSAMFields(std::unique_ptr<const std::string>& record_ptr);
-
-};
-
-class CigarParser {
-
-public:
-
-  explicit CigarParser( Logger& logger
-                      , std::unique_ptr<const std::string>& record_ptr
-                      , const std::pair<std::size_t, std::size_t>& cigar_offset);
-  ~CigarParser() = default;
-
-  const std::vector<std::pair<const char, const ContigOffset_t>>& cigarFields() { return cigar_fields_; }
-
-private:
-
-  Logger& log;
-
   std::vector<std::pair<const char, const ContigOffset_t>> cigar_fields_;
 
-  void decodeSAMCigar( std::unique_ptr<const std::string>& record_ptr
-                     , const std::pair<std::size_t, std::size_t>& cigar_offset);
+  void parseSAMFields(std::unique_ptr<const std::string>& record_ptr, bool parse_opt_fields);
+  bool decodeSAMCigar( std::unique_ptr<const std::string>& record_ptr
+                     , const std::pair<std::size_t
+                     , std::size_t>& cigar_offset);
+  bool fastDecodeSAMCigar( std::unique_ptr<const std::string>& record_ptr
+                         , const std::pair<std::size_t
+                         , std::size_t>& cigar_offset);
 
 };
 
@@ -161,7 +142,6 @@ private:
 
   int consumer_thread_count_{4};                      // Consumer threads (defaults to local CPU cores available)
   BoundedMtQueue<std::unique_ptr<const std::string>> producer_consumer_queue_; // The Producer/Consumer SAM record queue
-  ProcessSamRecord process_sam_record_;               // Must be declared after the logger.
   ContigDataMap contig_data_map_;                     // Must be declared after the logger.
   InsertQueue insert_queue_;       // Enqueued by spawned threads and dequeued by mainline.
 
@@ -174,8 +154,6 @@ private:
   void parseSAMRecord(std::unique_ptr<const std::string>& record_ptr);  // Parse SAM record into fields.
 
 };
-
-
 
 }   // namespace genome
 }   // namespace kellerberrin

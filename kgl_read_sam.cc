@@ -37,8 +37,25 @@
 namespace kgl = kellerberrin::genome;
 
 
+bool kgl::SAMRecordParser::Parse(std::unique_ptr<const std::string>& record_ptr) {
+
+  parseSAMFields(record_ptr, false);
+  if (record_ptr->at(sam_fields_[RNAME_OFFSET].first) != unmapped_read) {
+
+    if (fastDecodeSAMCigar(record_ptr, sam_fields_[CIGAR_OFFSET])) {
+
+      return true;
+
+    }
+
+  }
+
+  return false;
+
+}
+
 // Efficiently store field offsets and sizes.
-void kgl::SAMRecordParser::parseSAMFields(std::unique_ptr<const std::string>& record_ptr)
+void kgl::SAMRecordParser::parseSAMFields(std::unique_ptr<const std::string>& record_ptr, bool parse_opt_fields)
 {
 
   std::size_t start = 0;
@@ -50,13 +67,14 @@ void kgl::SAMRecordParser::parseSAMFields(std::unique_ptr<const std::string>& re
 
     if (field_count < SAM_FIELD_COUNT) {
 
-      sam_fields_.emplace_back(start, end - start);
+      sam_fields_[field_count] = std::pair<std::size_t, std::size_t>(start, end - start);
 
-    } else {
+    } else if (parse_opt_fields) {
 
       opt_flags_.emplace_back(start, end - start);
 
     }
+    else break;
 
     ++field_count;
 
@@ -77,16 +95,8 @@ void kgl::SAMRecordParser::parseSAMFields(std::unique_ptr<const std::string>& re
 
 }
 
-kgl::CigarParser::CigarParser( Logger& logger
-                             , std::unique_ptr<const std::string>& record_ptr
-                             , const std::pair<std::size_t, std::size_t>& cigar_offset): log(logger) {
-
-  decodeSAMCigar(record_ptr, cigar_offset);
-
-}
-
-void kgl::CigarParser::decodeSAMCigar( std::unique_ptr<const std::string>& record_ptr
-                                     , const std::pair<std::size_t, std::size_t>& cigar_offset) {
+bool kgl::SAMRecordParser::decodeSAMCigar( std::unique_ptr<const std::string>& record_ptr
+                                         , const std::pair<std::size_t, std::size_t>& cigar_offset) {
 
 
   static std::regex regex("([0-9]+[MIDNSHP=X])");
@@ -112,13 +122,70 @@ void kgl::CigarParser::decodeSAMCigar( std::unique_ptr<const std::string>& recor
 
   }
 
+  return true;
+
 }
 
+bool kgl::SAMRecordParser::fastDecodeSAMCigar( std::unique_ptr<const std::string>& record_ptr
+                                             , const std::pair<std::size_t, std::size_t>& cigar_offset) {
 
+  char cigar_buffer[1000];
+  std::size_t char_index = 0;
+  std::size_t buffer_index = 0;
+
+  while (char_index < cigar_offset.second) {
+
+    if (!isdigit(record_ptr->at(cigar_offset.first + char_index))) {
+
+      return false;
+
+    }
+
+    while (true) {
+
+      cigar_buffer[buffer_index] = record_ptr->at(cigar_offset.first + char_index);
+      if (isalpha(cigar_buffer[buffer_index])) break;
+      ++char_index;
+      ++buffer_index;
+      if (char_index >= cigar_offset.second) {
+
+        return false;
+
+      }
+
+    }
+    const char cigar_code = cigar_buffer[buffer_index];
+    switch(cigar_code) {
+
+      case 'M':
+      case 'X':
+      case '=':
+      case 'D':
+      case 'I':
+      case 'S':
+      case 'H':
+      case 'P':
+      case 'N':
+        break;
+
+      default:
+        return false;
+
+    }
+    cigar_buffer[buffer_index] = '\0';
+    ContigOffset_t cigar_length = std::strtoull(cigar_buffer, nullptr, 10);
+    cigar_fields_.emplace_back(cigar_code, cigar_length);
+    buffer_index = 0;
+    ++char_index;
+
+  }
+
+  return true;
+
+}
 
 kgl::ProcessSamFile::ProcessSamFile(const std::string& log_file) : log(sam_read_module_name_, log_file)
                                                                  , producer_consumer_queue_(high_tide_, low_tide_)
-                                                                 , process_sam_record_(log)
                                                                  , contig_data_map_(log) {}
 
 void kgl::ProcessSamFile::readSamFile(std::string &file_name) {
@@ -237,21 +304,16 @@ void kgl::ProcessSamFile::samConsumer() {
 
 void kgl::ProcessSamFile::parseSAMRecord(std::unique_ptr<const std::string>& record_ptr) {
 
+  SAMRecordParser sam_record_parser(log);
 
-
-  SAMRecordParser sam_record_parser(log, record_ptr);
-  CigarParser cigar_parser(log, record_ptr, sam_record_parser.getCigar(record_ptr));
-
-  const std::vector<std::pair<const char, const ContigOffset_t>>& cigar_fields = cigar_parser.cigarFields();
-
-  const ContigId_t contig_id(sam_record_parser.getContigId(record_ptr));
-
-  if (contig_id == unmapped_read) {
+  if (not sam_record_parser.Parse(record_ptr)) {
 
     unmapped_reads_++;
     return;
 
   }
+
+  const ContigId_t contig_id(sam_record_parser.getContigId(record_ptr));
 
   ContigMatrixMT& contig_block = contig_data_map_.getContig(contig_id);  // Get the contig data block.
 
@@ -269,7 +331,7 @@ void kgl::ProcessSamFile::parseSAMRecord(std::unique_ptr<const std::string>& rec
 
   ContigOffset_t sam_idx = 0;
 
-  for (auto cigar : cigar_fields) {
+  for (auto cigar : sam_record_parser.cigarFields()) {
 
     switch(cigar.first) {
 
@@ -325,6 +387,7 @@ void kgl::ProcessSamFile::parseSAMRecord(std::unique_ptr<const std::string>& rec
         break;
 
       case 'H':
+      case 'P':
         break;
 
       case 'N':
