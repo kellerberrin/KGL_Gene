@@ -40,7 +40,8 @@ namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 // If the target processor is X86 then use atomic incrementCountX86() with asm xaddl instruction.
-// #define KGL_USE_X86_ATOMIC  // Comment out for generic mutex protected incrementCount() for all architectures.
+
+#define KGL_USE_X86_ATOMIC  // Comment out for generic mutex protected incrementCount() for all architectures.
 
 // Only lock small sections of the data array for write access.
 // This is a classic trade-off between the space taken by the mutex array and fine-grained speedup of access
@@ -97,11 +98,10 @@ public:
                                                        , rows_(rows)
                                                        , granularity_mutex_(rows, mutex_granularity) {
 
-    if (nucleotides != expected_columns) {
+    if (nucleotides != EXPECTED_COLUMNS) {
 
-      log.critical("Numpy array is expected to have 6 nucleotides (columns), actual columns: {}", nucleotides);
-      log.critical("Serious software error - program terminates");
-      std::exit(EXIT_FAILURE);
+      log.critical("Numpy array is expected to have: {} nucleotides (columns), actual columns: {}"
+                  , EXPECTED_COLUMNS, nucleotides);
 
     }
 
@@ -115,11 +115,27 @@ public:
 
   void incrementCountX86(const std::size_t row, const std::size_t column);
 
-  void incrementCount(const std::size_t row, const std::size_t column);
+  inline void incrementCountX86(const std::size_t row, const Nucleotide_t nucleotide) {
 
-  inline void incrementCount(const std::size_t row, const Nucleotide_t nucleotide) {
+    incrementCountX86(row, nucleotideToColumn(nucleotide));
 
-    incrementCount(row, nucleotideToColumn(nucleotide));
+  }
+
+  void incrementCountMutex(const std::size_t row, const std::size_t column);
+
+  inline void incrementCountMutex(const std::size_t row, const Nucleotide_t nucleotide) {
+
+    incrementCountMutex(row, nucleotideToColumn(nucleotide));
+
+  }
+
+  inline void incrementCount(const ContigOffset_t contig_offset, const Nucleotide_t nucleotide) {
+
+#ifdef KGL_USE_X86_ATOMIC
+    incrementCountX86(contig_offset, nucleotide);
+#else
+    incrementCountMutex(contig_offset, nucleotide);
+#endif
 
   }
 
@@ -142,7 +158,7 @@ private:
   std::size_t nucleotideToColumn(const Nucleotide_t nucleotide) const;
 
   // A, C, G, T/U, N, -, + (in that order). See nucleotideToColumn(const char).
-  static constexpr std::size_t expected_columns = 7;
+  static constexpr std::size_t EXPECTED_COLUMNS = 7;
 
   // Yes folks, that's a raw pointer (watch it snort and shake).
   // Never delete[] or use to initialize a smart pointer (same thing).
@@ -154,6 +170,8 @@ private:
 
 };
 
+using ContigMap = std::map<const ContigId_t, std::unique_ptr<ContigMatrixMT>>;
+
 class ContigDataMap {
 
 public:
@@ -163,25 +181,24 @@ public:
   ContigDataMap(ContigMatrixMT&&) = delete;
   ContigDataMap& operator=(const ContigMatrixMT&) = delete;
 
-  void contigIncrementCount( const ContigId_t& contig_id
-                           , const ContigOffset_t contig_offset
-                           , const Nucleotide_t nucleotide);
-
   void addContigData( const ContigId_t& contig_id
                     , const NucleotideReadCount_t *data_ptr
                     , const ContigOffset_t contig_offset
                     , const ContigOffset_t num_nucleotides);  // This is to check the numpy dimensions
 
-  ContigMatrixMT& getContig(const ContigId_t& contig_id); // Access function.
+// Access function to obtain the underlying contig block.
+  inline ContigMap::iterator getContig( const ContigId_t& contig_id) { return contig_map_.find(contig_id); }
+  inline ContigMap::const_iterator notFound() { return contig_map_.end(); }
+  inline ContigMatrixMT& getMatrix(ContigMap::iterator& map_ptr) { return *(map_ptr->second); }
 
 private:
 
+  Logger& log;
+
   static constexpr std::size_t lock_granularity = 1000;
 
-  std::map<const ContigId_t, std::unique_ptr<ContigMatrixMT>> contig_map_;  // Store the DNA read data for all contigs.
+  ContigMap contig_map_;  // Store the DNA read data for all contigs.
   mutable std::mutex mutex_;  // Used to add contigs.
-
-  Logger& log;
 
 };
 

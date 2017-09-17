@@ -31,7 +31,7 @@
 namespace kgl = kellerberrin::genome;
 
 //
-// Implementation of ContigMatrixMT object that provides thread safe access to the contig Python numpy.
+// Implementation of ContigMatrixMT object that provides thread safe access to the contig read count data
 //
 
 static inline void asmX86AtomicInc(kgl::NucleotideReadCount_t  *access_ptr)
@@ -39,7 +39,7 @@ static inline void asmX86AtomicInc(kgl::NucleotideReadCount_t  *access_ptr)
   int inc = 1;
 
   __asm__ volatile("lock; xaddl %0, %1"
-  : "=r" (inc), "+m" (*access_ptr) // input+output
+  : "+r" (inc), "+m" (*access_ptr) // input+output
   : // memory and condition codes changed
   : "memory", "cc"
   );
@@ -50,37 +50,37 @@ void kgl::ContigMatrixMT::incrementCountX86(const std::size_t row, const std::si
 
 
   if (row >= rows_) {
-    log.error("Invalid access in incrementCount(); Row index: {} >= Array size: {}", row, rows_);
-    log.error("Program exits");
-    std::exit(EXIT_FAILURE);
+
+    log.critical("Invalid access in incrementCount(); Row index: {} >= Array size: {}", row, rows_);
+
   }
-  if (column >= expected_columns) {
-    log.error("Invalid access in incrementCount(); Column index: {} >= Number Columns: {}", column, expected_columns);
-    log.error("Program exits");
-    std::exit(EXIT_FAILURE);
+  if (column >= EXPECTED_COLUMNS) {
+
+    log.critical("Invalid access in incrementCount(); Column index: {} >= Number Columns: {}", column, EXPECTED_COLUMNS);
+
   }
 
   // pointer arithmetic, stride is expected_columns
-  NucleotideReadCount_t  *access_ptr = const_cast<NucleotideReadCount_t *>(data_ptr_) + ((row * expected_columns) + column);
+  NucleotideReadCount_t  *access_ptr = const_cast<NucleotideReadCount_t *>(data_ptr_) + ((row * EXPECTED_COLUMNS) + column);
   asmX86AtomicInc(access_ptr);
 
 }
 
-void kgl::ContigMatrixMT::incrementCount(const std::size_t row, const std::size_t column) {
+void kgl::ContigMatrixMT::incrementCountMutex(const std::size_t row, const std::size_t column) {
 
   if (row >= rows_) {
-    log.error("Invalid access in incrementCount(); Row index: {} >= Array size: {}", row, rows_);
-    log.error("Program exits");
-    std::exit(EXIT_FAILURE);
+
+    log.critical("Invalid access in incrementCount(); Row index: {} >= Array size: {}", row, rows_);
+
   }
-  if (column >= expected_columns) {
-    log.error("Invalid access in incrementCount(); Column index: {} >= Number Columns: {}", column, expected_columns);
-    log.error("Program exits");
-    std::exit(EXIT_FAILURE);
+  if (column >= EXPECTED_COLUMNS) {
+
+    log.critical("Invalid access in incrementCount(); Column index: {} >= Number Columns: {}", column, EXPECTED_COLUMNS);
+
   }
 
   // pointer arithmetic, stride is expected_columns
-  NucleotideReadCount_t  *access_ptr = const_cast<NucleotideReadCount_t *>(data_ptr_) + ((row * expected_columns) + column);
+  NucleotideReadCount_t  *access_ptr = const_cast<NucleotideReadCount_t *>(data_ptr_) + ((row * EXPECTED_COLUMNS) + column);
   granularity_mutex_.acquire(row);  // Enforce thread protection.
   ++(*access_ptr);
   granularity_mutex_.release(row);
@@ -90,18 +90,18 @@ void kgl::ContigMatrixMT::incrementCount(const std::size_t row, const std::size_
 const kgl::NucleotideReadCount_t  kgl::ContigMatrixMT::readCount(const std::size_t row, const std::size_t column) const {
 
   if (row >= rows_) {
-    log.error("Invalid access in readCount(); Row index: {} >= Array size: {}", row, rows_);
-    log.error("Program exists");
-    std::exit(EXIT_FAILURE);
+
+    log.critical("Invalid access in readCount(); Row index: {} >= Array size: {}", row, rows_);
+
   }
-  if (column >= expected_columns) {
-    log.error("Invalid access in readCount(); Column index: {} >= Number Columns: {}", column, expected_columns);
-    log.error("Program exists");
-    std::exit(EXIT_FAILURE);
+  if (column >= EXPECTED_COLUMNS) {
+
+    log.critical("Invalid access in readCount(); Column index: {} >= Number Columns: {}", column, EXPECTED_COLUMNS);
+
   }
 
   // pointer arithmetic, stride is expected_columns
-  const NucleotideReadCount_t  *access_ptr = data_ptr_ + ((row * expected_columns) + column);
+  const NucleotideReadCount_t  *access_ptr = data_ptr_ + ((row * EXPECTED_COLUMNS) + column);
   return *access_ptr;  // read access - no mutex.
 
 }
@@ -112,9 +112,9 @@ void kgl::ContigMatrixMT::initialize(const NucleotideReadCount_t initial_value) 
   std::lock_guard<std::mutex> lock(mutex_) ;
 
   for (std::size_t row = 0; row < rows_; ++row) {
-    for (std::size_t column = 0; column < expected_columns; ++column) {
+    for (std::size_t column = 0; column < EXPECTED_COLUMNS; ++column) {
       // pointer arithmetic, stride is expected_columns
-      NucleotideReadCount_t  *access_ptr = const_cast<NucleotideReadCount_t  *>(data_ptr_) + ((row * expected_columns) + column);
+      NucleotideReadCount_t  *access_ptr = const_cast<NucleotideReadCount_t  *>(data_ptr_) + ((row * EXPECTED_COLUMNS) + column);
       (*access_ptr) = initial_value;
     }
 
@@ -168,10 +168,9 @@ std::size_t kgl::ContigMatrixMT::nucleotideToColumn(const Nucleotide_t nucleotid
       break;
 
     default:
-      log.error("nucleotideToColumn(), Count data array accessed with unknown nucleotide: {}", nucleotide);
-      log.error("Does the Fasta file match the SAM file alignment?");
-      log.error("Program exists");
-      std::exit(EXIT_FAILURE);
+      log.critical("nucleotideToColumn(), Count data array accessed with unknown nucleotide: {}", nucleotide);
+      column = 0; // Never reached, to keep the compiler happy.
+      break;
 
   }
 
@@ -184,39 +183,6 @@ std::size_t kgl::ContigMatrixMT::nucleotideToColumn(const Nucleotide_t nucleotid
 //
 
 constexpr std::size_t kgl::ContigDataMap::lock_granularity;  // Only lock small sections of the read data matrix.
-
-// Access function to obtain the underlying contig block.
-kgl::ContigMatrixMT& kgl::ContigDataMap::getContig( const ContigId_t& contig_id) {
-
-  auto search = contig_map_.find(contig_id);
-
-  if(search != contig_map_.end()) {
-
-    return *(search->second);
-
-  }
-  else {
-
-    log.error("contigIncrementCount(), No data array exists for contig; {}", contig_id);
-    log.error("Program exists");
-    std::exit(EXIT_FAILURE);
-
-  }
-
-}
-
-void kgl::ContigDataMap::contigIncrementCount( const ContigId_t& contig_id
-                                             , const ContigOffset_t contig_offset
-                                             , const Nucleotide_t nucleotide) {
-
-
-#ifdef KGL_USE_X86_ATOMIC
-  getContig(contig_id).incrementCountX86(contig_offset, nucleotide);
-#else
-  getContig(contig_id).incrementCount(contig_offset, nucleotide);
-#endif
-
-}
 
 void kgl::ContigDataMap::addContigData( const ContigId_t& contig_id
                                       , const NucleotideReadCount_t *data_ptr
@@ -238,8 +204,6 @@ void kgl::ContigDataMap::addContigData( const ContigId_t& contig_id
   if (not result.second) {
 
     log.error("addContigData(), Attempted to add duplicate contig; {}", contig_id);
-    log.error("Program exists");
-    std::exit(EXIT_FAILURE);
 
   }
 

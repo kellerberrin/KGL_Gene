@@ -32,7 +32,6 @@
 
 namespace kgl = kellerberrin::genome;
 
-#define SPDLOG_DEFAULT_FORMAT "%+"
 kgl::Logger::Logger(const std::string& module, const std::string& log_file) {
 
   SetFormat(SPDLOG_DEFAULT_FORMAT);

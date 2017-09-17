@@ -53,6 +53,9 @@ public:
   void SetLevel(Severity level) noexcept;
   void SetFormat(const std::string& message) noexcept;
 
+  static constexpr const int NO_EXIT_ON_ERROR = -1;  // No exit on error messages
+  void SetMaxErrorMessages(int max_messages) { max_error_messages_ = max_messages; }
+
   template<typename M, typename... Args> void trace(M& message, Args... args) noexcept;
   template<typename M, typename... Args> void info(M& message, Args... args) noexcept;
   template<typename M, typename... Args> void warn(M& message, Args... args) noexcept;
@@ -61,7 +64,11 @@ public:
 
 private:
 
+  static constexpr const char* SPDLOG_DEFAULT_FORMAT{"%+"};  // Default format from spdlog
+
   std::unique_ptr<spdlog::logger> plog_impl_;
+  std::atomic<int> max_error_messages_{100};     // Defaults to 100 error messages
+  std::atomic<int> error_message_count_{0};     // number of error messages issued.
 
 };
 
@@ -91,12 +98,24 @@ template<typename M, typename... Args> void Logger::error(M& message, Args... ar
   plog_impl_->error(message, args...);
   plog_impl_->flush();
 
+  ++error_message_count_;
+
+  if (max_error_messages_ >= 0 and error_message_count_ >= max_error_messages_) {
+
+    plog_impl_->error("Maximum error messages: {} issued.", max_error_messages_);
+    plog_impl_->error("Program exits.");
+    std::exit(EXIT_FAILURE);
+
+  }
+
 }
 
 template<typename M, typename... Args> void Logger::critical(M& message, Args... args) noexcept {
 
   plog_impl_->critical(message, args...);
   plog_impl_->flush();
+  plog_impl_->error("Critical error; program exits.");
+  std::exit(EXIT_FAILURE);
 
 }
 

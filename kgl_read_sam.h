@@ -49,7 +49,7 @@ public:
   ~SAMRecordParser() = default;
 
   // Returns false if the sam record is unmapped.
-  bool Parse(std::unique_ptr<const std::string>& record_ptr);
+  bool parseSAM(std::unique_ptr<const std::string>& record_ptr);
 
   inline const std::vector<std::pair<std::size_t, std::size_t>>& getOptFlags() { return opt_flags_; }
 
@@ -81,7 +81,7 @@ public:
 
 private:
 
-  Logger& log;
+  Logger& log;        // Declared First. Emit log messages to console and log file.
 
   // Define the SAM record offsets.
   static constexpr size_t QNAME_OFFSET = 0;
@@ -98,18 +98,18 @@ private:
 
   static constexpr int SAM_FIELD_COUNT = 11;
   static constexpr char SAM_DELIMITER = '\t';
-  static constexpr const char unmapped_read{'*'};
+  static constexpr const char UNMAPPED_READ_{'*'};
 
   // Just store the offset and size of fields within the SAM record.
   std::pair<std::size_t, std::size_t> sam_fields_[SAM_FIELD_COUNT];
   std::vector<std::pair<std::size_t, std::size_t>> opt_flags_;
   std::vector<std::pair<const char, const ContigOffset_t>> cigar_fields_;
 
-  void parseSAMFields(std::unique_ptr<const std::string>& record_ptr, bool parse_opt_fields);
+  bool parseSAMFields(std::unique_ptr<const std::string>& record_ptr, bool parse_opt_fields); // False if unmapped read
   bool decodeSAMCigar( std::unique_ptr<const std::string>& record_ptr
                      , const std::pair<std::size_t
                      , std::size_t>& cigar_offset);
-  bool fastDecodeSAMCigar( std::unique_ptr<const std::string>& record_ptr
+  bool fastDecodeSAMCigar( std::unique_ptr<const std::string>& record_ptr // False if unexpected cigar format
                          , const std::pair<std::size_t
                          , std::size_t>& cigar_offset);
 
@@ -129,25 +129,25 @@ public:
 
 private:
 
-  static constexpr const char* sam_read_module_name_{"SamRead"};  // Name of this module for the logger
-  static constexpr const char* eof_indicator_{"<<EOF>>"};  // Enqueued by producer to indicate SAM eof.
-  static constexpr long report_increment_{500000};    // Frequency to emit SAM progress messages
-  static constexpr long high_tide_{1000000};          // Maximum BoundedMtQueue size
-  static constexpr long low_tide_{500000};            // Low water mark to begin queueing SAM records
-  static constexpr char delete_nucleotide{'-'};
-  static constexpr char insert_nucleotide{'+'};
-  static constexpr const char* unmapped_read{"*"};
+  Logger log;                              // Declared First. Emit log messages to console and log file.
 
-  Logger log;                                         // Declared First. Emit log messages to console and log file.
+  static constexpr const char* SAM_READ_MODULE_NAME_{"SamRead"};  // Name of this module for the logger
+  static constexpr const char* EOF_INDICATOR_{"<<EOF>>"};  // Enqueued by producer to indicate SAM eof.
+  static constexpr long REPORT_INCREMENT_{500000};    // Frequency to emit SAM progress messages
+  static constexpr long HIGH_TIDE_{1000000};          // Maximum BoundedMtQueue size
+  static constexpr long LOW_TIDE_{500000};            // Low water mark to begin queueing SAM records
+  static constexpr char DELETE_NUCLEOTIDE_{'-'};
+  static constexpr char INSERT_NUCLEOTIDE_{'+'};
 
   int consumer_thread_count_{4};                      // Consumer threads (defaults to local CPU cores available)
   BoundedMtQueue<std::unique_ptr<const std::string>> producer_consumer_queue_; // The Producer/Consumer SAM record queue
   ContigDataMap contig_data_map_;                     // Must be declared after the logger.
-  InsertQueue insert_queue_;       // Enqueued by spawned threads and dequeued by mainline.
+  InsertQueue insert_queue_;                          // Enqueued by spawned threads and dequeued by mainline.
 
-  std::atomic<uint64_t> unmapped_reads_{0};  // Read statistics.
-  std::atomic<uint64_t> insert_sequence_{0};
-  std::atomic<uint64_t> delete_nucleotide_{0};
+  std::atomic<uint64_t> unmapped_reads_{0};     // Contig = "*"
+  std::atomic<uint64_t> other_contig_{0};       // SAM records for unregistered contigs (ignored by the code).
+  std::atomic<uint64_t> insert_sequence_{0};    // Insertions
+  std::atomic<uint64_t> delete_nucleotide_{0};  // Deletions
 
   void samProducer(std::string &file_name);   // Read the SAM file and queue the record in a BoundedMtQueue.
   void samConsumer();                         // Multiple threads; dequeue from the BoundedMtQueue and process.
