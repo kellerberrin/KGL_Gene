@@ -34,141 +34,185 @@
 #include <string>
 #include <queue>
 #include "kgl_logging.h"
+#include "kgl_lock.h"
 #include "kgl_genome_types.h"
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-// If the target processor is X86 then use atomic incrementCountX86() with asm xaddl instruction.
-
-#define KGL_USE_X86_ATOMIC  // Comment out for generic mutex protected incrementCount() for all architectures.
-
-// Only lock small sections of the data array for write access.
-// This is a classic trade-off between the space taken by the mutex array and fine-grained speedup of access
-
-class GranularityMutex {
+// Standard contig column layout. Implement the nucleotides as "A", "C", "G", "T"/"U", "-", "+" in that order.
+class StandardNucleotideColumn {
 
 public:
 
-  GranularityMutex(const std::size_t array_size,const  std::size_t granularity): array_size_(array_size)
-                                                                               , granularity_(granularity) {
+  StandardNucleotideColumn(Logger& logger) : log(logger) {}
 
-    auto lock_count = std::size_t(array_size / granularity) + 1;
-    lock_array_ = std::move(std::vector<std::mutex>{lock_count});
+  static constexpr ContigOffset_t nucleotides = 7;
+  static constexpr Nucleotide_t delete_nucleotide = '-';
+  static constexpr Nucleotide_t insert_sequence = '+';
 
-  }
+  ContigOffset_t nucleotideToColumn(const Nucleotide_t nucleotide) {
 
-  inline void acquire(std::size_t array_index) {
+    // Translate the nucleotide to an array column
+    switch (nucleotide) {
 
-    auto idx = std::size_t(array_index / granularity_);
-    lock_array_[idx].lock();
+      case 'A':
+      case 'a': return 0;
 
-  }
+      case 'C':
+      case 'c': return 1;
 
-  inline void release(std::size_t array_index) {
+      case 'G':
+      case 'g': return 2;
 
-    auto idx = std::size_t(array_index / granularity_);
-    lock_array_[idx].unlock();
+      case 'U':
+      case 'u':
+      case 'T':
+      case 't': return 3;
+
+      case 'N':
+      case 'n': return 4;
+
+      case '-': return 5;
+
+      case '+': return 6;
+
+      default:
+        log.critical("nucleotideToColumn(), Count data array accessed with unknown nucleotide: {}", nucleotide);
+        return 0; // Never reached, to keep the compiler happy.
+
+    }
 
   }
 
 private:
 
-  const std::size_t array_size_;
-  const std::size_t granularity_;
-  std::vector<std::mutex> lock_array_;
+  Logger& log;
 
 };
 
-// This object holds the aggregated SAM read data for a DNA contiguous region. Thread safe.
+// This object holds the aggregated SAM read data for a DNA contiguous region. Thread safe LockStrategy.
 // The data block is assumed to be contiguous. It is allocated from raw memory - see associated Python code.
 // Important - pointer arithmetic assumes the associated numpy matrix is row-major (default).
 // The data is accessed via a raw pointer - nasty but necessary. Elements are assumed set to zero.
 
-class ContigMatrixMT {
+template <class LockStrategy, class NucleotideColumn>
+class NumpyContigMT {
 
 public:
 
-  ContigMatrixMT( Logger& logger
+  NumpyContigMT(  Logger& logger
                 , const NucleotideReadCount_t *data_ptr
-                , const std::size_t rows
-                , const std::size_t nucleotides  // This is to check the numpy dimensions
-                , const std::size_t mutex_granularity) : log(logger)
-                                                       , data_ptr_(data_ptr)
-                                                       , rows_(rows)
-                                                       , granularity_mutex_(rows, mutex_granularity) {
+                , const ContigSize_t contig_size
+                , const std::size_t nucleotides) :  log(logger),
+                                                    nucleotide_column_(log),
+                                                    data_ptr_(data_ptr),
+                                                    contig_size_(contig_size),
+                                                    lock_strategy_(contig_size) {
 
-    if (nucleotides != EXPECTED_COLUMNS) {
+    if (nucleotides != NucleotideColumn::nucleotides) {
 
-      log.critical("Numpy array is expected to have: {} nucleotides (columns), actual columns: {}"
-                  , EXPECTED_COLUMNS, nucleotides);
+      ContigOffset_t nucleotide_columns = NucleotideColumn::nucleotides;
+      log.critical("Numpy array is expected to have: {} nucleotides (columns), columns specified: {}"
+                  , nucleotide_columns, nucleotides);
 
     }
 
     initialize(0);  // Ensure the array is properly initialized.
 
   }
+  ~NumpyContigMT() = default;
 
-  ~ContigMatrixMT() = default;
-
-  void incrementCountX86(const std::size_t row, const std::size_t column);
-
-  inline void incrementCountX86(const std::size_t row, const Nucleotide_t nucleotide) {
-
-    incrementCountX86(row, nucleotideToColumn(nucleotide));
-
-  }
-
-  void incrementCountMutex(const std::size_t row, const std::size_t column);
-
-  inline void incrementCountMutex(const std::size_t row, const Nucleotide_t nucleotide) {
-
-    incrementCountMutex(row, nucleotideToColumn(nucleotide));
-
-  }
-
+  // Threadsafe read count increment.
   inline void incrementCount(const ContigOffset_t contig_offset, const Nucleotide_t nucleotide) {
 
-#ifdef KGL_USE_X86_ATOMIC
-    incrementCountX86(contig_offset, nucleotide);
-#else
-    incrementCountMutex(contig_offset, nucleotide);
-#endif
+    std::size_t column =  nucleotide_column_.nucleotideToColumn(nucleotide);
+
+    if (contig_offset >= contig_size_) {
+
+      log.critical("Invalid access in incrementCount(); Contig index: {} >= Contig size: {}"
+                  , contig_offset, contig_size_);
+
+    }
+    if (column >= NucleotideColumn::nucleotides) {
+
+      ContigOffset_t nucleotide_columns = NucleotideColumn::nucleotides;
+      log.critical("Invalid access in incrementCount(); Nucleotide column index: {} >= Number Nucleotides: {}"
+                   , column, nucleotide_columns);
+
+    }
+
+    // pointer arithmetic, stride is expected_columns
+    NucleotideReadCount_t* access_ptr = const_cast<NucleotideReadCount_t *>(data_ptr_)
+                                        + ((contig_offset * NucleotideColumn::nucleotides) + column);
+
+    lock_strategy_.incrementCount(*access_ptr, contig_offset);
 
   }
 
-  const NucleotideReadCount_t  readCount(const std::size_t row, const std::size_t column) const;
+  // Reads are not locked. Do not call while updating read counts.
+  inline const NucleotideReadCount_t readCount( const ContigOffset_t contig_offset
+                                              , const Nucleotide_t nucleotide) const {
 
-  inline const NucleotideReadCount_t  readCount(const std::size_t row, const Nucleotide_t nucleotide) const {
+    std::size_t column = nucleotide_column_.nucleotideToColumn(nucleotide);
 
-    return readCount(row, nucleotideToColumn(nucleotide));
+    if (contig_offset >= contig_size_) {
+
+      log.critical("Invalid access in incrementCount(); Contig index: {} >= Contig size: {}"
+                  , contig_offset, contig_size_);
+
+    }
+    if (column >= NucleotideColumn::nucleotides) {
+
+      ContigOffset_t nucleotide_columns = NucleotideColumn::nucleotides;
+      log.critical("Invalid access in incrementCount(); Nucleotide column index: {} >= Number Nucleotides: {}"
+                  , column, nucleotide_columns);
+
+    }
+
+    // pointer arithmetic, stride is number of nucleotides
+    const NucleotideReadCount_t  *access_ptr = data_ptr_ + ((contig_offset * NucleotideColumn::nucleotides) + column);
+    return *access_ptr;  // read access - no mutex.
 
   }
 
-  inline const ContigSize_t contigSize() const { return rows_; }
+  inline const ContigSize_t contigSize() const { return contig_size_; }
 
 private:
 
   Logger& log;
 
-  void initialize(const NucleotideReadCount_t initial_value);
-
-  std::size_t nucleotideToColumn(const Nucleotide_t nucleotide) const;
-
-  // A, C, G, T/U, N, -, + (in that order). See nucleotideToColumn(const char).
-  static constexpr std::size_t EXPECTED_COLUMNS = 7;
-
+  NucleotideColumn nucleotide_column_;
   // Yes folks, that's a raw pointer (watch it snort and shake).
-  // Never delete[] or use to initialize a smart pointer (same thing).
   // The data actually belongs to a numpy passed in from Python.
-  const NucleotideReadCount_t  *data_ptr_; // Snort, shake, snort, shake ...
-  const std::size_t rows_;      // Number of of nucleotides in the contig.
+  const NucleotideReadCount_t *data_ptr_; // Snort, shake, snort, shake ...
+  const std::size_t contig_size_;      // Number of of nucleotides in the contig.
   mutable std::mutex mutex_;  // Used to initialize the data.
-  GranularityMutex granularity_mutex_; // Fine grained thread access to the underlying data structure.
+  LockStrategy lock_strategy_; // Fine grained thread access to the underlying data structure (or X86 asm).
+
+  void initialize(const NucleotideReadCount_t initial_value) {
+
+    // Initialization happens before threads are spawned but we lock the data just to make sure.
+    std::lock_guard<std::mutex> lock(mutex_) ;
+
+    for (ContigOffset_t contig_offset = 0; contig_offset < contig_size_; ++contig_offset) {
+      for (ContigOffset_t column = 0; column < NucleotideColumn::nucleotides; ++column) {
+        // pointer arithmetic, stride is expected_columns
+        NucleotideReadCount_t  *access_ptr = const_cast<NucleotideReadCount_t  *>(data_ptr_)
+                                             + ((contig_offset * NucleotideColumn::nucleotides) + column);
+        (*access_ptr) = initial_value;
+      }
+
+    }
+
+  }
 
 };
 
-using ContigMap = std::map<const ContigId_t, std::unique_ptr<ContigMatrixMT>>;
+// Contig Id indexed Contig Arrays.
+
+using ContigArrayMT = NumpyContigMT<NullMutex<NucleotideReadCount_t >, StandardNucleotideColumn>; // Use fast asm Mutex and standard columns.
+using ContigMap = std::map<const ContigId_t, std::unique_ptr<ContigArrayMT>>;
 
 class ContigDataMap {
 
@@ -185,19 +229,16 @@ public:
 // Access function to obtain the underlying contig block.
   inline ContigMap::iterator getContig( const ContigId_t& contig_id) { return contig_map_.find(contig_id); }
   inline ContigMap::const_iterator notFound() { return contig_map_.end(); }
-  inline ContigMatrixMT& getMatrix(ContigMap::iterator& map_ptr) { return *(map_ptr->second); }
+  inline ContigArrayMT& getMatrix(ContigMap::iterator& map_ptr) { return *(map_ptr->second); }
 
 private:
 
   Logger& log;
 
-  static constexpr std::size_t lock_granularity = 1000;
-
   ContigMap contig_map_;  // Store the DNA read data for all contigs.
   mutable std::mutex mutex_;  // Used to add contigs.
 
 };
-
 
 // Class to hold enqueued nucleotide sequences to be inserted in the genome model.
 // The consumer threads enqueue inserted sequences along with contig id and offset.

@@ -37,26 +37,32 @@ namespace genome {   // project level namespace
 
 
 // Simple class to bolt the producer and consumer together.
+using Consumer = ConsumeMTSAM;
+using Producer = ProduceMTSAM<ConsumeMTSAM>;
+
 class ProcessSAMFile {
 
 public:
 
-  explicit ProcessSAMFile(const std::string &log_file) : log(SAM_READ_MODULE_NAME_, log_file)
-                                                       , consumer_(log)
-                                                       , producer_(log, consumer_) {}
+  explicit ProcessSAMFile(const std::string &log_file) : log(SAM_READ_MODULE_NAME_, log_file) {
+
+    consumer_ptr_ = std::shared_ptr<Consumer>(std::make_shared<Consumer>(log));
+    producer_ptr_ = std::unique_ptr<Producer>(std::make_unique<Producer>(log, consumer_ptr_));
+
+  }
   virtual ~ProcessSAMFile() = default;
 
   inline void readSAMFile(const std::string& file_name) {
 
-    producer_.readSamFile(file_name);
-    consumer_.finalize();
+    producer_ptr_->readSamFile(file_name);
+    consumer_ptr_->finalize();
 
   }
 
-  inline ContigDataMap& contigDataMap() { return consumer_.contigDataMap(); }
-  inline const std::vector<std::string>& getQueueContigs() { return consumer_.getInsertQueue().getQueueContigs(); }
-  inline const std::vector<std::size_t>& getQueueOffsets() { return consumer_.getInsertQueue().getQueueOffsets(); }
-  inline const std::vector<std::string>& getQueueSequences() { return consumer_.getInsertQueue().getQueueSequences(); }
+  inline ContigDataMap& contigDataMap() { return consumer_ptr_->contigDataMap(); }
+  inline const std::vector<std::string>& getQueueContigs() { return consumer_ptr_->getInsertQueue().getQueueContigs(); }
+  inline const std::vector<std::size_t>& getQueueOffsets() { return consumer_ptr_->getInsertQueue().getQueueOffsets(); }
+  inline const std::vector<std::string>& getQueueSequences() { return consumer_ptr_->getInsertQueue().getQueueSequences(); }
 
 
 private:
@@ -64,8 +70,8 @@ private:
   Logger log;                              // Must be declared First. Emit log messages to console and log file.
   static constexpr const char* SAM_READ_MODULE_NAME_{"SamRead"};  // Name of this module for the logger
 
-  ConsumeMTSAM consumer_;  // Thread safe SAM record consumer - must be declared before producer
-  ProduceMTSAM producer_;   // Multi-threaded SAM record producer.
+  std::shared_ptr<Consumer> consumer_ptr_; ;  // Thread safe SAM record consumer
+  std::unique_ptr<Producer> producer_ptr_;   //  Thread safe SAM record producer.
 
 };
 

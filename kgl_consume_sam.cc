@@ -226,7 +226,7 @@ void kgl::ConsumeMTSAM::consume(std::unique_ptr<const std::string>& record_ptr) 
 
   }
 
-  ContigMatrixMT& contig_block = contig_data_map_.getMatrix(matrix_ptr);
+  ContigArrayMT& contig_block = contig_data_map_.getMatrix(matrix_ptr);
 
   auto contig_size = contig_block.contigSize();
 
