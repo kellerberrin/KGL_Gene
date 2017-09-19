@@ -29,129 +29,45 @@
 #ifndef KGL_READ_SAM_H
 #define KGL_READ_SAM_H
 
-
 #include <string>
-#include <vector>
-#include <queue>
+#include <thread>
 #include "kgl_logging.h"
 #include "kgl_mt_queue.h"
-#include "kgl_mt_data.h"
-
+#include "kgl_consume_sam.h"
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-class SAMRecordParser {
+
+class ProduceMTSAM {
 
 public:
 
-  explicit SAMRecordParser(Logger& logger) : log(logger) {}
-  ~SAMRecordParser() = default;
+  explicit ProduceMTSAM(Logger& logger, ConsumeMTSAM& consumer) : log(logger)
+                                                                , producer_consumer_queue_(HIGH_TIDE_, LOW_TIDE_)
+                                                                , consumer_(consumer) {}
+  virtual ~ProduceMTSAM() = default;
 
-  // Returns false if the sam record is unmapped.
-  bool parseSAM(std::unique_ptr<const std::string>& record_ptr);
-
-  inline const std::vector<std::pair<std::size_t, std::size_t>>& getOptFlags() { return opt_flags_; }
-
-  inline const std::vector<std::pair<const char, const ContigOffset_t>>& cigarFields() { return cigar_fields_; }
-
-  inline const ContigOffset_t getPos(std::unique_ptr<const std::string>& record_ptr) {
-
-    // Subtract 1 for zero offset - SAM usage is offset 1
-    return std::stoull(record_ptr->substr(sam_fields_[POS_OFFSET].first, sam_fields_[POS_OFFSET].second)) - 1;
-
-  }
-  inline const Sequence_t getSubSequence( std::unique_ptr<const std::string>& record_ptr
-                                        , std::size_t start
-                                        , std::size_t length) {
-
-    return record_ptr->substr(sam_fields_[SEQUENCE_OFFSET].first + start, length);
-
-  }
-  inline const Nucleotide_t getSequenceNucleotide(std::unique_ptr<const std::string>& record_ptr, std::size_t offset) {
-
-    return record_ptr->at(sam_fields_[SEQUENCE_OFFSET].first + offset);
-
-  }
-  inline const ContigId_t getContigId(std::unique_ptr<const std::string>& record_ptr) {
-
-    return record_ptr->substr(sam_fields_[RNAME_OFFSET].first, sam_fields_[RNAME_OFFSET].second);
-
-  }
+  void readSamFile(const std::string &file_name);
 
 private:
 
-  Logger& log;        // Declared First. Emit log messages to console and log file.
+  Logger& log;                              // Declared First. Emit log messages to console and log file.
+  BoundedMtQueue<std::unique_ptr<const std::string>> producer_consumer_queue_; // The Producer/Consumer record queue
+  ConsumeMTSAM& consumer_;                  // Consume the SAM records.
 
-  // Define the SAM record offsets.
-  static constexpr size_t QNAME_OFFSET = 0;
-  static constexpr size_t FLAG_OFFSET = 1;
-  static constexpr size_t RNAME_OFFSET = 2;
-  static constexpr size_t POS_OFFSET = 3;
-  static constexpr size_t MAP_QUALITY_OFFSET = 4;
-  static constexpr size_t CIGAR_OFFSET = 5;
-  static constexpr size_t RNEXT_OFFSET = 6;
-  static constexpr size_t PNEXT_OFFSET = 7;
-  static constexpr size_t TLEN_OFFSET = 8;
-  static constexpr size_t SEQUENCE_OFFSET = 9;
-  static constexpr size_t QUALITY_OFFSET = 10;
-
-  static constexpr int SAM_FIELD_COUNT = 11;
-  static constexpr char SAM_DELIMITER = '\t';
-  static constexpr const char UNMAPPED_READ_{'*'};
-
-  // Just store the offset and size of fields within the SAM record.
-  std::pair<std::size_t, std::size_t> sam_fields_[SAM_FIELD_COUNT];
-  std::vector<std::pair<std::size_t, std::size_t>> opt_flags_;
-  std::vector<std::pair<const char, const ContigOffset_t>> cigar_fields_;
-
-  bool parseSAMFields(std::unique_ptr<const std::string>& record_ptr, bool parse_opt_fields); // False if unmapped read
-  bool decodeSAMCigar( std::unique_ptr<const std::string>& record_ptr
-                     , const std::pair<std::size_t
-                     , std::size_t>& cigar_offset);
-  bool fastDecodeSAMCigar( std::unique_ptr<const std::string>& record_ptr // False if unexpected cigar format
-                         , const std::pair<std::size_t
-                         , std::size_t>& cigar_offset);
-
-};
-
-class ProcessSamFile {
-
-public:
-
-  explicit ProcessSamFile(const std::string& log_file);
-  virtual ~ProcessSamFile() = default;  // Called by the Python binding super class.
-
-  void readSamFile(std::string &file_name);   // Mainline spawns the consumer threads.
-  ContigDataMap& contigDataMap() { return contig_data_map_; }
-  InsertQueue& getInsertQueue() { return  insert_queue_ ; };
-
-
-private:
-
-  Logger log;                              // Declared First. Emit log messages to console and log file.
-
-  static constexpr const char* SAM_READ_MODULE_NAME_{"SamRead"};  // Name of this module for the logger
   static constexpr const char* EOF_INDICATOR_{"<<EOF>>"};  // Enqueued by producer to indicate SAM eof.
   static constexpr long REPORT_INCREMENT_{500000};    // Frequency to emit SAM progress messages
   static constexpr long HIGH_TIDE_{1000000};          // Maximum BoundedMtQueue size
   static constexpr long LOW_TIDE_{500000};            // Low water mark to begin queueing SAM records
-  static constexpr char DELETE_NUCLEOTIDE_{'-'};
-  static constexpr char INSERT_NUCLEOTIDE_{'+'};
 
   int consumer_thread_count_{4};                      // Consumer threads (defaults to local CPU cores available)
-  BoundedMtQueue<std::unique_ptr<const std::string>> producer_consumer_queue_; // The Producer/Consumer SAM record queue
-  ContigDataMap contig_data_map_;                     // Must be declared after the logger.
-  InsertQueue insert_queue_;                          // Enqueued by spawned threads and dequeued by mainline.
 
-  std::atomic<uint64_t> unmapped_reads_{0};     // Contig = "*"
-  std::atomic<uint64_t> other_contig_{0};       // SAM records for unregistered contigs (ignored by the code).
-  std::atomic<uint64_t> insert_sequence_{0};    // Insertions
-  std::atomic<uint64_t> delete_nucleotide_{0};  // Deletions
+  // Read the SAM file and queue the record in a BoundedMtQueue.
+  void samProducer(const std::string &file_name);
+  // Call the template SAM consumer class
+  void samConsumer();
 
-  void samProducer(std::string &file_name);   // Read the SAM file and queue the record in a BoundedMtQueue.
-  void samConsumer();                         // Multiple threads; dequeue from the BoundedMtQueue and process.
-  void parseSAMRecord(std::unique_ptr<const std::string>& record_ptr);  // Parse SAM record into fields.
 
 };
 

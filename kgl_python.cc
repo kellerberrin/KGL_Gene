@@ -32,7 +32,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
-#include "kgl_read_sam.h"
+#include "kgl_process_sam.h"
 
 namespace py = pybind11;
 namespace kgl = kellerberrin::genome;
@@ -120,12 +120,11 @@ private:
 
 // Class to implement the Python bindings to the underlying C++ code.
 
-class PythonProcessSamFile : public kgl::ProcessSamFile {
+class PythonProcessSamFile : public kgl::ProcessSAMFile {
 
 public:
 
-  explicit PythonProcessSamFile(const std::string& log_file) : ProcessSamFile(log_file) {}
-
+  explicit PythonProcessSamFile(const std::string& log_file) : ProcessSAMFile(log_file) {}
   ~PythonProcessSamFile() override = default;
 
   void registerContigNumpy( const kgl::ContigId_t &contig_name
@@ -140,24 +139,6 @@ public:
 
   }
 
-  // Cannot return const std::vector<const std::string>&, const qualifier on std::string fails in pybind11.
-  const std::vector<std::string>& getQueueContigs() {
-
-    return getInsertQueue().getQueueContigs();
-
-  }
-
-  const std::vector<std::size_t>& getQueueOffsets() {
-
-    return getInsertQueue().getQueueOffsets();
-
-  }
-
-  const std::vector<std::string>& getQueueSequences() {
-
-    return getInsertQueue().getQueueSequences();
-
-  }
 
 private:
 
@@ -171,11 +152,10 @@ PYBIND11_MODULE(libread_sam, m) {
   py::class_<PythonProcessSamFile>(m, "ProcessSamFile")
       .def(py::init<const std::string&>())
       .def("registerContigNumpy", &PythonProcessSamFile::registerContigNumpy)
-      .def("readSamFile", &PythonProcessSamFile::readSamFile)
+      .def("readSamFile", &PythonProcessSamFile::readSAMFile)
       .def("getQueueContigs", &PythonProcessSamFile::getQueueContigs)
       .def("getQueueOffsets", &PythonProcessSamFile::getQueueOffsets)
       .def("getQueueSequences", &PythonProcessSamFile::getQueueSequences);
-
 
   py::class_<NoLeak>(m, "NoLeak")
       .def(py::init<>())

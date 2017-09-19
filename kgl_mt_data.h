@@ -110,8 +110,6 @@ public:
   }
 
   ~ContigMatrixMT() = default;
-  ContigMatrixMT(ContigMatrixMT&&) = delete;
-  ContigMatrixMT& operator=(const ContigMatrixMT&) = delete;
 
   void incrementCountX86(const std::size_t row, const std::size_t column);
 
@@ -178,8 +176,6 @@ public:
 
   explicit ContigDataMap(Logger& logger) : log(logger) {}
   ~ContigDataMap() = default;
-  ContigDataMap(ContigMatrixMT&&) = delete;
-  ContigDataMap& operator=(const ContigMatrixMT&) = delete;
 
   void addContigData( const ContigId_t& contig_id
                     , const NucleotideReadCount_t *data_ptr
@@ -214,9 +210,6 @@ public:
 
   InsertQueue() = default;
   ~InsertQueue() = default;
-  InsertQueue(const InsertQueue&) = delete;
-  InsertQueue(InsertQueue&&) = delete;
-  InsertQueue& operator=(const InsertQueue&) = delete;
 
   // Thread safe
   void push(const ContigId_t& contig_id, const ContigOffset_t& contig_offset, const Sequence_t& sequence) {
