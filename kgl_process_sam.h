@@ -59,7 +59,20 @@ public:
 
   }
 
-  inline ContigDataMap& contigDataMap() { return consumer_ptr_->contigDataMap(); }
+  void insertContig( const ContigId_t& contig_id,
+                      NucleotideReadCount_t *data_ptr,
+                      const ContigSize_t contig_size,
+                      const ContigOffset_t num_nucleotides) {
+
+    std::unique_ptr<ConsumerArrayType> contig_matrix_ptr(std::make_unique<ConsumerArrayType>(log,  contig_size));
+//                                                                               data_ptr,
+//                                                                               contig_size,
+//                                                                               num_nucleotides));
+    contigDataMap().addContigBlock(contig_id, contig_matrix_ptr);
+
+  }
+
+  inline ConsumerDataMap& contigDataMap() { return consumer_ptr_->contigDataMap(); }
   inline const std::vector<std::string>& getQueueContigs() { return consumer_ptr_->getInsertQueue().getQueueContigs(); }
   inline const std::vector<std::size_t>& getQueueOffsets() { return consumer_ptr_->getInsertQueue().getQueueOffsets(); }
   inline const std::vector<std::string>& getQueueSequences() { return consumer_ptr_->getInsertQueue().getQueueSequences(); }

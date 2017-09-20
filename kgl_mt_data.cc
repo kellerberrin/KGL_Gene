@@ -33,27 +33,3 @@ namespace kgl = kellerberrin::genome;
 //
 // Implementation of ContigMatrixMT object that provides thread safe ConitgId_t access to the contig read count data
 //
-
-void kgl::ContigDataMap::addContigData( const ContigId_t& contig_id
-                                      , const NucleotideReadCount_t *data_ptr
-                                      , const ContigOffset_t contig_offset
-                                      , const ContigOffset_t num_nucleotides)  // This is to check the numpy dimensions
-{
-
-  // Contig data matrices should be setup before threads are spawned, but let's be sure.
-  std::lock_guard<std::mutex> lock(mutex_) ;
-
-  std::unique_ptr<ContigArrayMT> contig_matrix_ptr(std::make_unique<ContigArrayMT>(log,
-                                                                                   data_ptr,
-                                                                                   contig_offset,
-                                                                                   num_nucleotides));
-
-  auto result = contig_map_.insert(std::make_pair(contig_id, std::move(contig_matrix_ptr)));
-
-  if (not result.second) {
-
-    log.error("addContigData(), Attempted to add duplicate contig; {}", contig_id);
-
-  }
-
-}

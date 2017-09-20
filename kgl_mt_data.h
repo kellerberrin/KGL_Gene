@@ -38,6 +38,7 @@
 #include "kgl_genome_types.h"
 #include "kgl_nucleotide.h"
 #include "kgl_mt_numpy.h"
+#include "kgl_mt_contig.h"
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
@@ -46,27 +47,40 @@ namespace genome {   // project level namespace
 // Important - these typedefs define the nucleotide types being analyzed (generally DNA).
 // The multi-thread locking strategy and the data structure being updated, numpy or local.
 
-using ContigArrayMT = NumpyContigMT<X86Mutex, StandardNucleotideColumn>; // Use fast asm Mutex and standard columns.
-using ContigMap = std::map<const ContigId_t, std::unique_ptr<ContigArrayMT>>;
+using NumpyArray = NumpyContigMT<X86Mutex, StandardNucleotideColumn>; // Use fast asm Mutex and standard columns.
+using LocalArray = LocalContigMT<X86Mutex, StandardNucleotideColumn>; // Use fast asm Mutex and standard columns.
 
-
-// ContigId indexed ContigArrayMT.
-class ContigDataMap {
+// ContigId indexed data.
+template <class ContigDataBlock> class ContigDataMap {
 
 public:
+
+  using ContigMap = std::map<const ContigId_t, std::unique_ptr<ContigDataBlock>>;
 
   explicit ContigDataMap(Logger& logger) : log(logger) {}
   ~ContigDataMap() = default;
 
-  void addContigData( const ContigId_t& contig_id
-                    , const NucleotideReadCount_t *data_ptr
-                    , const ContigOffset_t contig_offset
-                    , const ContigOffset_t num_nucleotides);  // This is to check the numpy dimensions
+
+  void addContigBlock( const ContigId_t& contig_id, std::unique_ptr<ContigDataBlock>& data_ptr)
+  {
+
+    // Contig data matrices should be setup before threads are spawned, but let's be sure.
+    std::lock_guard<std::mutex> lock(mutex_) ;
+
+    auto result = contig_map_.insert(std::make_pair(contig_id, std::move(data_ptr)));
+
+    if (not result.second) {
+
+      log.error("addContigData(), Attempted to add duplicate contig; {}", contig_id);
+
+    }
+
+  }
 
 // Access function to obtain the underlying contig block.
-  inline ContigMap::iterator getContig( const ContigId_t& contig_id) { return contig_map_.find(contig_id); }
-  inline ContigMap::const_iterator notFound() { return contig_map_.end(); }
-  inline ContigArrayMT& getMatrix(ContigMap::iterator& map_ptr) { return *(map_ptr->second); }
+  inline typename ContigMap::iterator getContig( const ContigId_t& contig_id) { return contig_map_.find(contig_id); }
+  inline typename ContigMap::const_iterator notFound() { return contig_map_.end(); }
+  inline ContigDataBlock& getMatrix(typename ContigMap::iterator& map_ptr) { return *(map_ptr->second); }
 
 private:
 
@@ -76,6 +90,7 @@ private:
   mutable std::mutex mutex_;  // Used to add contigs.
 
 };
+
 
 // Class to hold enqueued nucleotide sequences to be inserted in the genome model.
 // The consumer threads enqueue inserted sequences along with contig id and offset.

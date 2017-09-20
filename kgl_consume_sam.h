@@ -39,6 +39,10 @@
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
+// Define the consumer contig data structure.
+using ConsumerArrayType = LocalArray;  //Local or Numpy
+using ConsumerDataMap = ContigDataMap<ConsumerArrayType>;
+
 // Process (consume) SAM records coming from the SAM record reader (the producer).
 // This code is multi-threaded, all data structures must be thread safe (see kgl_mt_data.h).
 
@@ -49,7 +53,7 @@ public:
   explicit ConsumeMTSAM(Logger& logger) : log(logger),  contig_data_map_(logger) {}
   virtual ~ConsumeMTSAM() = default;
 
-  ContigDataMap& contigDataMap() { return contig_data_map_; }
+  ConsumerDataMap& contigDataMap() { return contig_data_map_; }
   InsertQueue& getInsertQueue() { return  insert_queue_ ; };
 
   void consume(std::unique_ptr<const std::string>& record_ptr);  // Parse SAM record into fields.
@@ -59,7 +63,7 @@ private:
 
   Logger& log;                              // Declared First. Emit log messages to console and log file.
 
-  ContigDataMap contig_data_map_;                     // Thread safe map of contig data.
+  ConsumerDataMap contig_data_map_;                     // Thread safe map of contig data.
   InsertQueue insert_queue_;                          // Thread safe map of all inserted sequences.
 
   std::atomic<uint64_t> unmapped_reads_{0};     // Contig = "*"

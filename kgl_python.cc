@@ -135,7 +135,7 @@ public:
     auto contig_size = static_cast<kgl::ContigSize_t>(numpy_dims.shape(0));
     auto num_nucleotides = static_cast<kgl::ContigSize_t>(numpy_dims.shape(1));
 
-    contigDataMap().addContigData(contig_name, numpy_data_ptr, contig_size, num_nucleotides);
+    insertContig(contig_name, numpy_data_ptr, contig_size, num_nucleotides);
 
   }
 
