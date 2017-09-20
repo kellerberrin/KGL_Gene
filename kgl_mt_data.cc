@@ -31,20 +31,8 @@
 namespace kgl = kellerberrin::genome;
 
 //
-// Implementation of ContigMatrixMT object that provides thread safe access to the contig read count data
+// Implementation of ContigMatrixMT object that provides thread safe ConitgId_t access to the contig read count data
 //
-
-static inline void asmX86AtomicInc(kgl::NucleotideReadCount_t  *access_ptr)
-{
-  int inc = 1;
-
-  __asm__ volatile("lock; xaddl %0, %1"
-  : "+r" (inc), "+m" (*access_ptr) // input+output
-  : // memory and condition codes changed
-  : "memory", "cc"
-  );
-
-}
 
 void kgl::ContigDataMap::addContigData( const ContigId_t& contig_id
                                       , const NucleotideReadCount_t *data_ptr

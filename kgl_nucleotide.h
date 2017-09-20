@@ -22,54 +22,77 @@
 //
 //
 //
-//
-// Created by kellerberrin on 18/09/17.
+// Created by kellerberrin on 20/09/17.
 //
 
-#ifndef KGL_CONSUME_SAM_H
-#define KGL_CONSUME_SAM_H
+#ifndef KGL_NUCLEOTIDE_H
+#define KGL_NUCLEOTIDE_H
 
+#include <cstdint>
+#include <memory>
 #include <string>
-#include <vector>
 #include <queue>
 #include "kgl_logging.h"
-#include "kgl_mt_data.h"
-
+#include "kgl_genome_types.h"
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-// Process (consume) SAM records coming from the SAM record reader (the producer).
-// This code is multi-threaded, all data structures must be thread safe (see kgl_mt_data.h).
 
-class ConsumeMTSAM {
+// Standard contig nucleotide column layout.
+// Implement the NUCLEOTIDE_COLUMNS as "A", "C", "G", "T"/"U", "-", "+" in that order.
+
+class StandardNucleotideColumn {
 
 public:
 
-  explicit ConsumeMTSAM(Logger& logger) : log(logger),  contig_data_map_(logger) {}
-  virtual ~ConsumeMTSAM() = default;
+  explicit StandardNucleotideColumn(Logger& logger) : log(logger) {}
 
-  ContigDataMap& contigDataMap() { return contig_data_map_; }
-  InsertQueue& getInsertQueue() { return  insert_queue_ ; };
+  static constexpr ContigOffset_t NUCLEOTIDE_COLUMNS = 7;
+  static constexpr Nucleotide_t DELETE_NUCLEOTIDE = '-';
+  static constexpr Nucleotide_t INSERT_SEQUENCE = '+';
 
-  void consume(std::unique_ptr<const std::string>& record_ptr);  // Parse SAM record into fields.
-  void finalize();
+  ContigOffset_t nucleotideToColumn(const Nucleotide_t nucleotide) {
+
+    // Translate the nucleotide to an array column
+    switch (nucleotide) {
+
+      case 'A':
+      case 'a': return 0;
+
+      case 'C':
+      case 'c': return 1;
+
+      case 'G':
+      case 'g': return 2;
+
+      case 'U':
+      case 'u':
+      case 'T':
+      case 't': return 3;
+
+      case 'N':
+      case 'n': return 4;
+
+      case '-': return 5;
+
+      case '+': return 6;
+
+      default:
+        log.critical("nucleotideToColumn(), Count data array accessed with unknown nucleotide: {}", nucleotide);
+        return 0; // Never reached, to keep the compiler happy.
+
+    }
+
+  }
 
 private:
 
-  Logger& log;                              // Declared First. Emit log messages to console and log file.
-
-  ContigDataMap contig_data_map_;                     // Thread safe map of contig data.
-  InsertQueue insert_queue_;                          // Thread safe map of all inserted sequences.
-
-  std::atomic<uint64_t> unmapped_reads_{0};     // Contig = "*"
-  std::atomic<uint64_t> other_contig_{0};       // SAM records for unregistered contigs (ignored by the code).
-  std::atomic<uint64_t> insert_sequence_{0};    // Insertions
-  std::atomic<uint64_t> delete_nucleotide_{0};  // Deletions
+  Logger& log;
 
 };
 
 }   // namespace genome
 }   // namespace kellerberrin
 
-#endif //KGL_CONSUME_SAM_H
+#endif //KGL_NUCLEOTIDE_H
