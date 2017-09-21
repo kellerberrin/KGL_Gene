@@ -63,7 +63,8 @@ void kgl::ConsumeMTSAM::consume(std::unique_ptr<const std::string>& record_ptr) 
 
   }
 
-  auto& contig_block = contig_data_map_.getMatrix(matrix_ptr);
+  auto& contig_block = contig_data_map_.getMatrix(matrix_ptr).getNucleotideArray();
+  auto& insert_block = contig_data_map_.getMatrix(matrix_ptr).getInsertArray();
 
   auto contig_size = contig_block.contigSize();
 
@@ -118,7 +119,7 @@ void kgl::ConsumeMTSAM::consume(std::unique_ptr<const std::string>& record_ptr) 
 
         insert_sequence_++;
         contig_block.incrementInsert(location);
-        insert_queue_.push(contig_id, location, sam_record_parser.getSubSequence(record_ptr, sam_idx, cigar.second));
+        insert_block.insertSequence(location, sam_record_parser.getSubSequence(record_ptr, sam_idx, cigar.second));
 
         sam_idx += cigar.second;
         break;

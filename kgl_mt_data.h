@@ -30,6 +30,7 @@
 #define KGL_MT_DATA_H
 
 #include <cstdint>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <queue>
@@ -44,11 +45,67 @@ namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 
-// Important - these typedefs define the nucleotide types being analyzed (generally DNA).
-// The multi-thread locking strategy and the data structure being updated, numpy or local.
+// The insert sequence data structure is an contig sized array of maps indexed by contig offset.
+using OffsetSequenceMap = std::map<const Sequence_t, NucleotideReadCount_t>;
 
-using NumpyArray = NumpyContigMT<X86Mutex, StandardNucleotideColumn>; // Use fast asm Mutex and standard columns.
-using LocalArray = LocalContigMT<X86Mutex, StandardNucleotideColumn>; // Use fast asm Mutex and standard columns.
+template <class LockingStrategy = ArrayMutex>    // Specify a GranularityMutex or an ArrayMutex.
+class ContigInsertSequences {
+
+public:
+
+  ContigInsertSequences(Logger& logger, ContigSize_t contig_size)
+      : log(logger),
+        insert_array_ptr_(std::make_unique<OffsetSequenceMap[]>(contig_size)),
+                                                    mutex_array_(contig_size),
+                                                    contig_size_(contig_size) {}
+  ~ContigInsertSequences() = default;
+
+  inline void insertSequence(ContigOffset_t contig_offset, const Sequence_t& sequence) {
+
+
+    if (contig_offset >= contig_size_) {
+
+      log.error("Insert offset: {} exceeds contig size: {}", contig_offset, contig_size_);
+
+    }
+
+    // Lock the data structure.
+    mutex_array_.acquire(contig_offset);
+
+    // Check if the inserted sequence already exists.
+    auto found = insert_array_ptr_[contig_offset].find(sequence);
+
+    // Add the sequence if not found.
+    if (found == insert_array_ptr_[contig_offset].end()) {
+
+      auto result = insert_array_ptr_[contig_offset].insert(std::make_pair(sequence, 1));
+
+      if (not result.second) {
+
+        log.error("insertSequence(), Attempted to add duplicate sequence: {}, at offset: {}", sequence, contig_offset);
+      }
+
+    } else { // Sequence was found, so increment counter.
+
+      ++(found->second);
+
+    }
+
+    mutex_array_.release(contig_offset);
+
+  }
+
+
+private:
+
+  Logger& log;
+
+  std::unique_ptr<OffsetSequenceMap[]> insert_array_ptr_;   // points to contig sized array of sequence maps.
+  mutable LockingStrategy mutex_array_;           // Locks the data structure for update.
+  ContigSize_t contig_size_;
+
+
+};
 
 // ContigId indexed data.
 template <class ContigDataBlock> class ContigDataMap {
@@ -90,7 +147,6 @@ private:
   mutable std::mutex mutex_;  // Used to add contigs.
 
 };
-
 
 // Class to hold enqueued nucleotide sequences to be inserted in the genome model.
 // The consumer threads enqueue inserted sequences along with contig id and offset.

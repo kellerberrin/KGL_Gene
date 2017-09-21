@@ -64,10 +64,10 @@ public:
                       const ContigSize_t contig_size,
                       const ContigOffset_t num_nucleotides) {
 
-    std::unique_ptr<ConsumerArrayType> contig_matrix_ptr(std::make_unique<ConsumerArrayType>(log,  contig_size));
-//                                                                               data_ptr,
-//                                                                               contig_size,
-//                                                                               num_nucleotides));
+    std::unique_ptr<ConsumerNumpyRecord> contig_matrix_ptr(std::make_unique<ConsumerNumpyRecord>(log, // contig_size));
+                                                                               data_ptr,
+                                                                               contig_size,
+                                                                               num_nucleotides));
     contigDataMap().addContigBlock(contig_id, contig_matrix_ptr);
 
   }

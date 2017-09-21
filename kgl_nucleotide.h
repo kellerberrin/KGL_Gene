@@ -74,9 +74,9 @@ public:
       case 'N':
       case 'n': return 4;
 
-      case '-': return 5;
+      case DELETE_NUCLEOTIDE: return 5;
 
-      case '+': return 6;
+      case INSERT_SEQUENCE: return 6;
 
       default:
         log.critical("nucleotideToColumn(), Count data array accessed with unknown nucleotide: {}", nucleotide);
