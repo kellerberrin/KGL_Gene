@@ -44,113 +44,8 @@
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-
-// The insert sequence data structure is an contig sized array of maps indexed by contig offset.
-using OffsetSequenceMap = std::map<const Sequence_t, NucleotideReadCount_t>;
-
-template <class LockingStrategy = ArrayMutex>    // Specify a GranularityMutex or an ArrayMutex.
-class ContigInsertSequences {
-
-public:
-
-  ContigInsertSequences(Logger& logger, ContigSize_t contig_size)
-      : log(logger),
-        insert_array_ptr_(std::make_unique<OffsetSequenceMap[]>(contig_size)),
-                                                    mutex_array_(contig_size),
-                                                    contig_size_(contig_size) {}
-  ~ContigInsertSequences() = default;
-
-  inline void insertSequence(ContigOffset_t contig_offset, const Sequence_t& sequence) {
-
-
-    if (contig_offset >= contig_size_) {
-
-      log.error("Insert offset: {} exceeds contig size: {}", contig_offset, contig_size_);
-
-    }
-
-    // Lock the data structure.
-    mutex_array_.acquire(contig_offset);
-
-    // Check if the inserted sequence already exists.
-    auto found = insert_array_ptr_[contig_offset].find(sequence);
-
-    // Add the sequence if not found.
-    if (found == insert_array_ptr_[contig_offset].end()) {
-
-      auto result = insert_array_ptr_[contig_offset].insert(std::make_pair(sequence, 1));
-
-      if (not result.second) {
-
-        log.error("insertSequence(), Attempted to add duplicate sequence: {}, at offset: {}", sequence, contig_offset);
-      }
-
-    } else { // Sequence was found, so increment counter.
-
-      ++(found->second);
-
-    }
-
-    mutex_array_.release(contig_offset);
-
-  }
-
-
-private:
-
-  Logger& log;
-
-  std::unique_ptr<OffsetSequenceMap[]> insert_array_ptr_;   // points to contig sized array of sequence maps.
-  mutable LockingStrategy mutex_array_;           // Locks the data structure for update.
-  ContigSize_t contig_size_;
-
-
-};
-
-// ContigId indexed data.
-template <class ContigDataBlock> class ContigDataMap {
-
-public:
-
-  using ContigMap = std::map<const ContigId_t, std::unique_ptr<ContigDataBlock>>;
-
-  explicit ContigDataMap(Logger& logger) : log(logger) {}
-  ~ContigDataMap() = default;
-
-
-  void addContigBlock( const ContigId_t& contig_id, std::unique_ptr<ContigDataBlock>& data_ptr)
-  {
-
-    // Contig data matrices should be setup before threads are spawned, but let's be sure.
-    std::lock_guard<std::mutex> lock(mutex_) ;
-
-    auto result = contig_map_.insert(std::make_pair(contig_id, std::move(data_ptr)));
-
-    if (not result.second) {
-
-      log.error("addContigData(), Attempted to add duplicate contig; {}", contig_id);
-
-    }
-
-  }
-
-// Access function to obtain the underlying contig block.
-  inline typename ContigMap::iterator getContig( const ContigId_t& contig_id) { return contig_map_.find(contig_id); }
-  inline typename ContigMap::const_iterator notFound() { return contig_map_.end(); }
-  inline ContigDataBlock& getMatrix(typename ContigMap::iterator& map_ptr) { return *(map_ptr->second); }
-
-private:
-
-  Logger& log;
-
-  ContigMap contig_map_;  // Store the DNA read data for all contigs.
-  mutable std::mutex mutex_;  // Used to add contigs.
-
-};
-
-// Class to hold enqueued nucleotide sequences to be inserted in the genome model.
-// The consumer threads enqueue inserted sequences along with contig id and offset.
-
+// Class to inserted nucleotide sequences to be passed back to Python.
+// This object is not updatecd directly but is generated from the ContigInsertSequences class below.
 class InsertQueue {
 
 public:
@@ -195,6 +90,130 @@ private:
   std::vector<ContigId_t> contig_id_vector_;
   std::vector<ContigOffset_t> contig_offset_vector_;
   std::vector<Sequence_t> sequence_vector_;
+
+};
+
+
+// The insert sequence data structure is an contig sized array of maps indexed by contig offset.
+using OffsetSequenceMap = std::map<const Sequence_t, NucleotideReadCount_t>;
+
+template <class LockingStrategy = ArrayMutex>    // Specify a GranularityMutex or an ArrayMutex.
+class ContigInsertSequences {
+
+public:
+
+  ContigInsertSequences(Logger& logger, ContigSize_t contig_size)
+      : log(logger),
+        insert_array_ptr_(std::make_unique<OffsetSequenceMap[]>(contig_size)),
+                                                    mutex_array_(contig_size),
+                                                    contig_size_(contig_size) {}
+  ~ContigInsertSequences() = default;
+
+  inline void insertSequence(ContigOffset_t contig_offset, const Sequence_t& sequence) {
+
+    if (contig_offset >= contig_size_) {
+
+      log.error("Insert offset: {} exceeds contig size: {}", contig_offset, contig_size_);
+
+    }
+
+    // Lock the data structure.
+    mutex_array_.acquire(contig_offset);
+
+    // Check if the inserted sequence already exists.
+    auto found = insert_array_ptr_[contig_offset].find(sequence);
+
+    // Add the sequence if not found.
+    if (found == insert_array_ptr_[contig_offset].end()) {
+
+      auto result = insert_array_ptr_[contig_offset].insert(std::make_pair(sequence, 1));
+
+      if (not result.second) {
+
+        log.error("insertSequence(), Attempted to add duplicate sequence: {}, at offset: {}", sequence, contig_offset);
+      }
+
+    } else { // Sequence was found, so increment counter.
+
+      ++(found->second);
+
+    }
+
+    mutex_array_.release(contig_offset);
+
+  }
+
+  inline void convertToQueue(const ContigId_t& contig_id, InsertQueue& insert_queue) {
+
+    for (ContigOffset_t offset = 0; offset < contig_size_; ++offset) {
+
+      for (auto sequence : insert_array_ptr_[offset]) {
+
+        for (NucleotideReadCount_t count = 0; count < sequence.second; count++) {
+
+          insert_queue.push(contig_id, offset, sequence.first);
+
+        }
+
+      }
+
+    }
+
+  }
+
+private:
+
+  Logger& log;
+
+  std::unique_ptr<OffsetSequenceMap[]> insert_array_ptr_;   // points to contig sized array of sequence maps.
+  mutable LockingStrategy mutex_array_;           // Locks the data structure for update.
+  ContigSize_t contig_size_;
+
+
+};
+
+// ContigId indexed data.
+template <class ContigDataBlock>
+class ContigDataMap {
+
+public:
+
+  using ContigMap = std::map<const ContigId_t, std::unique_ptr<ContigDataBlock>>;
+
+  explicit ContigDataMap(Logger& logger) : log(logger) {}
+  ~ContigDataMap() = default;
+
+
+  void addContigBlock( const ContigId_t& contig_id, std::unique_ptr<ContigDataBlock>& data_ptr)
+  {
+
+    // Contig data matrices should be setup before threads are spawned, but let's be sure.
+    std::lock_guard<std::mutex> lock(mutex_) ;
+
+    auto result = contig_map_.insert(std::make_pair(contig_id, std::move(data_ptr)));
+
+    if (not result.second) {
+
+      log.error("addContigData(), Attempted to add duplicate contig; {}", contig_id);
+
+    }
+
+  }
+
+// Access function to obtain the underlying contig block.
+  inline typename ContigMap::iterator getContig( const ContigId_t& contig_id) { return contig_map_.find(contig_id); }
+  inline typename ContigMap::iterator getbegin() { return contig_map_.begin(); }
+  inline typename ContigMap::iterator getend() { return contig_map_.end(); }
+  inline typename ContigMap::const_iterator notFound() { return contig_map_.end(); }
+  inline ContigDataBlock& getMatrix(typename ContigMap::iterator& map_ptr) { return *(map_ptr->second); }
+  inline const ContigMap& getMap() { return contig_map_; }
+
+private:
+
+  Logger& log;
+
+  ContigMap contig_map_;  // Store the DNA read data for all contigs.
+  mutable std::mutex mutex_;  // Used to add contigs.
 
 };
 

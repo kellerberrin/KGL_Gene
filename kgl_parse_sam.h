@@ -71,6 +71,11 @@ public:
     return record_ptr->at(sam_fields_[SEQUENCE_OFFSET].first + offset);
 
   }
+  inline const Nucleotide_t getQualityNucleotide(std::unique_ptr<const std::string>& record_ptr, std::size_t offset) {
+
+    return record_ptr->at(sam_fields_[QUALITY_OFFSET].first + offset);
+
+  }
   inline const ContigId_t getContigId(std::unique_ptr<const std::string>& record_ptr) {
 
     return record_ptr->substr(sam_fields_[RNAME_OFFSET].first, sam_fields_[RNAME_OFFSET].second);

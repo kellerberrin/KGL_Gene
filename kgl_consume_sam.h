@@ -42,7 +42,6 @@ namespace genome {   // project level namespace
 
 // Important - these typedefs define the nucleotide types being analyzed (generally DNA).
 // The multi-thread locking strategy and the nucleotide data structure being updated, numpy or local.
-
 using NumpyArray = NumpyContigMT<X86CountLock, StandardNucleotideColumn>; // Use fast asm lock and standard columns.
 using LocalArray = LocalContigMT<X86CountLock, StandardNucleotideColumn>; // Use fast asm lock and standard columns.
 
@@ -96,7 +95,7 @@ private:
 
 
 using ConsumerRecordType = ConsumerNumpyRecord;  //Local or Numpy
-using ConsumerDataMap = ContigDataMap<ConsumerRecordType>;
+using ConsumerDataMap = ContigDataMap<ConsumerRecordType>;  // A map of contig data blocks.
 
 // Process (consume) SAM records coming from the SAM record reader (the producer).
 // This code is multi-threaded, all data structures must be thread safe (see kgl_mt_data.h).
@@ -109,22 +108,27 @@ public:
   virtual ~ConsumeMTSAM() = default;
 
   ConsumerDataMap& contigDataMap() { return contig_data_map_; }
-  InsertQueue& getInsertQueue() { return insert_queue_; }
 
   void consume(std::unique_ptr<const std::string>& record_ptr);  // Parse SAM record into fields.
   void finalize();
+  void readQuality(unsigned char read_quality) { read_quality_ = read_quality + NUCLEOTIDE_QUALITY_ASCII; }
 
 private:
 
   Logger& log;                              // Declared First. Emit log messages to console and log file.
 
+  static constexpr unsigned char NUCLEOTIDE_QUALITY_ASCII = 33;  // adjusts nucleotide quality to an ascii value.
+  static constexpr unsigned char DEFAULT_MINIMUM_QUALITY = 30 + NUCLEOTIDE_QUALITY_ASCII;   // -10 log10 Pr{ReadError}
+
+  unsigned char read_quality_ = DEFAULT_MINIMUM_QUALITY;
   ConsumerDataMap contig_data_map_;             // Thread safe map of contig data.
-  InsertQueue insert_queue_;
 
   std::atomic<uint64_t> unmapped_reads_{0};     // Contig = "*"
   std::atomic<uint64_t> other_contig_{0};       // SAM records for unregistered contigs (ignored by the code).
   std::atomic<uint64_t> insert_sequence_{0};    // Insertions
   std::atomic<uint64_t> delete_nucleotide_{0};  // Deletions
+  std::atomic<uint64_t> rejected_{0};           // Below Quality Reads
+  std::atomic<uint64_t> accepted_{0};           // Nucleotides accepted
 
 };
 

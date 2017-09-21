@@ -44,9 +44,10 @@ class ProcessSAMFile {
 
 public:
 
-  explicit ProcessSAMFile(const std::string &log_file) : log(SAM_READ_MODULE_NAME_, log_file) {
+  explicit ProcessSAMFile(const std::string &log_file, int readQuality) : log(SAM_READ_MODULE_NAME_, log_file) {
 
     consumer_ptr_ = std::shared_ptr<Consumer>(std::make_shared<Consumer>(log));
+    consumer_ptr_->readQuality(readQuality);
     producer_ptr_ = std::unique_ptr<Producer>(std::make_unique<Producer>(log, consumer_ptr_));
 
   }
@@ -57,6 +58,13 @@ public:
     producer_ptr_->readSamFile(file_name);
     consumer_ptr_->finalize();
 
+    // Convert the inserted sequences to Python format.
+    for(auto& contig : consumer_ptr_->contigDataMap().getMap()) {
+
+      contig.second->getInsertArray().convertToQueue(contig.first, insert_queue_);
+
+    }
+
   }
 
   void insertContig( const ContigId_t& contig_id,
@@ -64,7 +72,7 @@ public:
                       const ContigSize_t contig_size,
                       const ContigOffset_t num_nucleotides) {
 
-    std::unique_ptr<ConsumerNumpyRecord> contig_matrix_ptr(std::make_unique<ConsumerNumpyRecord>(log, // contig_size));
+    std::unique_ptr<ConsumerRecordType> contig_matrix_ptr(std::make_unique<ConsumerRecordType>(log,  // contig_size));
                                                                                data_ptr,
                                                                                contig_size,
                                                                                num_nucleotides));
@@ -73,10 +81,9 @@ public:
   }
 
   inline ConsumerDataMap& contigDataMap() { return consumer_ptr_->contigDataMap(); }
-  inline const std::vector<std::string>& getQueueContigs() { return consumer_ptr_->getInsertQueue().getQueueContigs(); }
-  inline const std::vector<std::size_t>& getQueueOffsets() { return consumer_ptr_->getInsertQueue().getQueueOffsets(); }
-  inline const std::vector<std::string>& getQueueSequences() { return consumer_ptr_->getInsertQueue().getQueueSequences(); }
-
+  inline const std::vector<std::string>& getQueueContigs() { return insert_queue_.getQueueContigs(); }
+  inline const std::vector<std::size_t>& getQueueOffsets() { return insert_queue_.getQueueOffsets(); }
+  inline const std::vector<std::string>& getQueueSequences() { return insert_queue_.getQueueSequences(); }
 
 private:
 
@@ -85,6 +92,7 @@ private:
 
   std::shared_ptr<Consumer> consumer_ptr_; ;  // Thread safe SAM record consumer
   std::unique_ptr<Producer> producer_ptr_;   //  Thread safe SAM record producer.
+  InsertQueue insert_queue_;                // Inserted sequences converted for Python.
 
 };
 
