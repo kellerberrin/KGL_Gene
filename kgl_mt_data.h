@@ -44,8 +44,9 @@
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-// Class to inserted nucleotide sequences to be passed back to Python.
-// This object is not updatecd directly but is generated from the ContigInsertSequences class below.
+// Class to hold inserted nucleotide sequences to be passed back to Python.
+// This object is not updated directly from processed SAM records, but is populated
+// from the ContigInsertSequences class below.
 class InsertQueue {
 
 public:
@@ -172,7 +173,62 @@ private:
 
 };
 
-// ContigId indexed data.
+// Important - these typedefs define the nucleotide types being analyzed (generally DNA).
+// The multi-thread locking strategy and the nucleotide data structure being updated, numpy or local.
+using NumpyArray = NumpyContigMT<X86CountLock, StandardNucleotideColumn>; // Use fast asm lock and standard columns.
+using LocalArray = LocalContigMT<X86CountLock, StandardNucleotideColumn>; // Use fast asm lock and standard columns.
+
+// Define the consumer insert data structure with locking strategy.
+using ConsumerInsertType = ContigInsertSequences<GranularityMutex<1000>>;
+
+// An object to hold both the thread-safe nucleotide array and insert array for a Python Numpy.
+class ConsumerNumpyRecord {
+
+public:
+
+  explicit ConsumerNumpyRecord(Logger& logger,
+                               NucleotideReadCount_t *data_ptr,
+                               const ContigSize_t contig_size,
+                               const ContigOffset_t num_nucleotides) : nucleotide_array_(logger,
+                                                                                         data_ptr,
+                                                                                         contig_size,
+                                                                                         num_nucleotides),
+                                                                       insert_array_(logger, contig_size) {}
+  ~ConsumerNumpyRecord() = default;
+
+  inline NumpyArray& getNucleotideArray() { return nucleotide_array_; }
+  inline ConsumerInsertType& getInsertArray() { return insert_array_; }
+
+private:
+
+  NumpyArray nucleotide_array_;
+  ConsumerInsertType insert_array_;
+
+};
+
+
+// Uses internal data arrays to hold the data
+// An object to hold both the local (non-python) thread-safe nucleotide array and insert array.
+class ConsumerLocalRecord {
+
+public:
+
+  explicit ConsumerLocalRecord(Logger& logger, const ContigSize_t contig_size) : nucleotide_array_(logger, contig_size),
+                                                                                 insert_array_(logger, contig_size) {}
+  ~ConsumerLocalRecord() = default;
+
+  inline LocalArray& getNucleotideArray() { return nucleotide_array_; }
+  inline ConsumerInsertType& getInsertArray() { return insert_array_; }
+
+private:
+
+  LocalArray nucleotide_array_;
+  ConsumerInsertType insert_array_;
+
+};
+
+
+// ContigId indexed data. This is a map structure that holds the processed read data indexed by contig_id.
 template <class ContigDataBlock>
 class ContigDataMap {
 
@@ -200,10 +256,8 @@ public:
 
   }
 
-// Access function to obtain the underlying contig block.
+// Access functions to obtain the underlying contig block.
   inline typename ContigMap::iterator getContig( const ContigId_t& contig_id) { return contig_map_.find(contig_id); }
-  inline typename ContigMap::iterator getbegin() { return contig_map_.begin(); }
-  inline typename ContigMap::iterator getend() { return contig_map_.end(); }
   inline typename ContigMap::const_iterator notFound() { return contig_map_.end(); }
   inline ContigDataBlock& getMatrix(typename ContigMap::iterator& map_ptr) { return *(map_ptr->second); }
   inline const ContigMap& getMap() { return contig_map_; }

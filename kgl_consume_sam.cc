@@ -36,14 +36,25 @@ void kgl::ConsumeMTSAM::finalize() {
   size_t deleted = delete_nucleotide_;
   size_t inserted = insert_sequence_;
   size_t ignored = other_contig_;
-  size_t rejected = rejected_;
-  size_t accepted = accepted_;
 
-  log.info("Processed SAM file; unmapped: {}, deleted: {}, inserted: {}, ignored: {}, rejected: {}, accepted: {}"
-      , unmapped, deleted, inserted, ignored, rejected, accepted);
+  log.info("Processed SAM file; unmapped: {}, deleted: {}, inserted: {}, ignored: {}"
+      , unmapped, deleted, inserted, ignored);
 
-  log.info("Accept/Reject nucleotide read quality -10log10(Pr Read Error) = {}"
-      , static_cast<int>(read_quality_ - NUCLEOTIDE_QUALITY_ASCII));
+  if (read_quality_ > NUCLEOTIDE_QUALITY_ASCII) {
+
+    size_t rejected = rejected_;
+    size_t accepted = accepted_;
+    double percentage = static_cast<double>(rejected)/static_cast<double>(accepted) * 100.0;
+
+    log.info("Accept/Reject nucleotide read quality -10log10(Pr Read Error) = {}, accepted {}, rejected: {} ({}%)",
+             static_cast<int>(read_quality_ - NUCLEOTIDE_QUALITY_ASCII), accepted , rejected, percentage);
+
+  }
+  else {
+
+    log.info("Accept/Reject nucleotide read quality disabled (read quality = 0)");
+
+  }
 
 }
 
@@ -100,15 +111,24 @@ void kgl::ConsumeMTSAM::consume(std::unique_ptr<const std::string>& record_ptr) 
                 , contig_id, contig_size, location, cigar_offset, *record_ptr);
             return;
           }
-          if (sam_record_parser.getQualityNucleotide(record_ptr, cigar_offset + sam_idx) >= read_quality_) {
+          if (read_quality_ > NUCLEOTIDE_QUALITY_ASCII) {
+
+            if (sam_record_parser.getQualityNucleotide(record_ptr, cigar_offset + sam_idx) >= read_quality_) {
+
+              Nucleotide_t sam_nucleotide = sam_record_parser.getSequenceNucleotide(record_ptr, cigar_offset + sam_idx);
+              contig_block.incrementCount(location + cigar_offset, sam_nucleotide);
+              ++accepted_;
+
+            } else {
+
+              ++rejected_;
+
+            }
+
+          } else { // Read quality disabled.
 
             Nucleotide_t sam_nucleotide = sam_record_parser.getSequenceNucleotide(record_ptr, cigar_offset + sam_idx);
             contig_block.incrementCount(location + cigar_offset, sam_nucleotide);
-            ++accepted_;
-
-          } else {
-
-            ++rejected_;
 
           }
 

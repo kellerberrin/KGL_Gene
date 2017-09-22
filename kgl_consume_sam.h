@@ -40,61 +40,8 @@ namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 
-// Important - these typedefs define the nucleotide types being analyzed (generally DNA).
-// The multi-thread locking strategy and the nucleotide data structure being updated, numpy or local.
-using NumpyArray = NumpyContigMT<X86CountLock, StandardNucleotideColumn>; // Use fast asm lock and standard columns.
-using LocalArray = LocalContigMT<X86CountLock, StandardNucleotideColumn>; // Use fast asm lock and standard columns.
-
-// Define the consumer insert data structure with locking strategy.
-using ConsumerInsertType = ContigInsertSequences<GranularityMutex<1000>>;
-
-// An object to hold both the thread-safe nucleotide array and insert array for a Python Numpy.
-class ConsumerNumpyRecord {
-
-public:
-
-  explicit ConsumerNumpyRecord(Logger& logger,
-                               NucleotideReadCount_t *data_ptr,
-                               const ContigSize_t contig_size,
-                               const ContigOffset_t num_nucleotides) : nucleotide_array_(logger,
-                                                                                         data_ptr,
-                                                                                         contig_size,
-                                                                                         num_nucleotides),
-                                                                       insert_array_(logger, contig_size) {}
-  ~ConsumerNumpyRecord() = default;
-
-  inline NumpyArray& getNucleotideArray() { return nucleotide_array_; }
-  inline ConsumerInsertType& getInsertArray() { return insert_array_; }
-
-private:
-
-  NumpyArray nucleotide_array_;
-  ConsumerInsertType insert_array_;
-
-};
-
-
-// Uses internal data arrays to hold the data
-class ConsumerLocalRecord {
-
-public:
-
-  explicit ConsumerLocalRecord(Logger& logger, const ContigSize_t contig_size) : nucleotide_array_(logger, contig_size),
-                                                                                 insert_array_(logger, contig_size) {}
-  ~ConsumerLocalRecord() = default;
-
-  inline LocalArray& getNucleotideArray() { return nucleotide_array_; }
-  inline ConsumerInsertType& getInsertArray() { return insert_array_; }
-
-private:
-
-  LocalArray nucleotide_array_;
-  ConsumerInsertType insert_array_;
-
-};
-
-
-using ConsumerRecordType = ConsumerNumpyRecord;  //Local or Numpy
+using ConsumerRecordType = ConsumerNumpyRecord;  //Define Local or Numpy
+//using ConsumerRecordType = ConsumerLocalRecord;  //Define Local or Numpy
 using ConsumerDataMap = ContigDataMap<ConsumerRecordType>;  // A map of contig data blocks.
 
 // Process (consume) SAM records coming from the SAM record reader (the producer).
