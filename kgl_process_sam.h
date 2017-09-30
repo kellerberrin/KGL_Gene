@@ -36,63 +36,50 @@ namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 
-// Simple class to bolt the producer and consumer together.
-using Consumer = ConsumeMTSAM;
-using Producer = ProduceMTSAM<ConsumeMTSAM>;
 
-class ProcessSAMFile {
+
+// Simple class to bolt the Python producer and consumer together.
+using LocalConsumer = ConsumeMTSAM<ConsumerLocalRecord>;
+using LocalProducer = ProduceMTSAM<LocalConsumer>;
+
+class LocalProcessSam {
 
 public:
 
-  explicit ProcessSAMFile(const std::string &log_file, int readQuality) : log(SAM_READ_MODULE_NAME_, log_file) {
+  explicit LocalProcessSam(const std::string &log_file, int readQuality) : log(SAM_READ_MODULE_NAME_, log_file) {
 
-    consumer_ptr_ = std::shared_ptr<Consumer>(std::make_shared<Consumer>(log));
+    consumer_ptr_ = std::shared_ptr<LocalConsumer>(std::make_shared<LocalConsumer>(log));
     consumer_ptr_->readQuality(readQuality);
-    producer_ptr_ = std::unique_ptr<Producer>(std::make_unique<Producer>(log, consumer_ptr_));
+    producer_ptr_ = std::unique_ptr<LocalProducer>(std::make_unique<LocalProducer>(log, consumer_ptr_));
 
   }
-  virtual ~ProcessSAMFile() = default;
+  virtual ~LocalProcessSam() = default;
 
   inline void readSAMFile(const std::string& file_name) {
 
     producer_ptr_->readSamFile(file_name);
     consumer_ptr_->finalize();
 
-    // Convert the inserted sequences to Python format.
-    for(auto& contig : consumer_ptr_->contigDataMap().getMap()) {
-
-      contig.second->getInsertArray().convertToQueue(contig.first, insert_queue_);
-
-    }
-
   }
 
   void insertContig( const ContigId_t& contig_id,
-                      NucleotideReadCount_t *data_ptr,
-                      const ContigSize_t contig_size,
-                      const ContigOffset_t num_nucleotides) {
+                     const ContigSize_t contig_size) {
 
-    std::unique_ptr<ConsumerRecordType> contig_matrix_ptr(std::make_unique<ConsumerRecordType>(log,  // contig_size));
-                                                                               data_ptr,
-                                                                               contig_size,
-                                                                               num_nucleotides));
+    std::unique_ptr<ConsumerLocalRecord> contig_matrix_ptr(std::make_unique<ConsumerLocalRecord>(log,  contig_size));
     contigDataMap().addContigBlock(contig_id, contig_matrix_ptr);
 
   }
 
-  inline ConsumerDataMap& contigDataMap() { return consumer_ptr_->contigDataMap(); }
-  inline const std::vector<std::string>& getQueueContigs() { return insert_queue_.getQueueContigs(); }
-  inline const std::vector<std::size_t>& getQueueOffsets() { return insert_queue_.getQueueOffsets(); }
-  inline const std::vector<std::string>& getQueueSequences() { return insert_queue_.getQueueSequences(); }
+
+  inline ContigDataMap<ConsumerLocalRecord>& contigDataMap() { return consumer_ptr_->contigDataMap(); }
 
 private:
 
   Logger log;                              // Must be declared First. Emit log messages to console and log file.
   static constexpr const char* SAM_READ_MODULE_NAME_{"SamRead"};  // Name of this module for the logger
 
-  std::shared_ptr<Consumer> consumer_ptr_; ;  // Thread safe SAM record consumer
-  std::unique_ptr<Producer> producer_ptr_;   //  Thread safe SAM record producer.
-  InsertQueue insert_queue_;                // Inserted sequences converted for Python.
+  std::shared_ptr<LocalConsumer> consumer_ptr_; ;  // Thread safe SAM record consumer
+  std::unique_ptr<LocalProducer> producer_ptr_;   //  Thread safe SAM record producer.
 
 };
 

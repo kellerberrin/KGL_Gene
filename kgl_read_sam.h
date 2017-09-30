@@ -31,6 +31,7 @@
 
 #include <string>
 #include <thread>
+#include <fstream>
 #include "kgl_logging.h"
 #include "kgl_mt_queue.h"
 #include "kgl_consume_sam.h"
