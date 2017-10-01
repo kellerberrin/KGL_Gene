@@ -34,17 +34,16 @@ namespace kgl = kellerberrin::genome;
 int main(int argc, char const ** argv)
 {
   // Parse the command line.
-  ModifyStringOptions options;
-  seqan::ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
 
-  // If parsing was not successful then exit with code 1 if there were errors.
-  // Otherwise, exit with code 0 (e.g. help was printed).
-  if (res != seqan::ArgumentParser::PARSE_OK)
-    return res == seqan::ArgumentParser::PARSE_ERROR;
+  if (!kgl::ExecEnv::parseCommandLine(argc, argv)) {
 
-  std::cout << modifyString(options.text, options) << '\n';
+    return 1;
 
-  kgl::LocalProcessSam("kgl_snp.log", 0);
+  }
+
+  kgl::LocalProcessSam process_sam(kgl::ExecEnv::log(), kgl::ExecEnv::args().readQuality);
+
+  process_sam.readSAMFile(kgl::ExecEnv::args().mutantFile);
 
   return 0;
 }

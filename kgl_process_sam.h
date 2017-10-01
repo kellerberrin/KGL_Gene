@@ -36,9 +36,7 @@ namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 
-
-
-// Simple class to bolt the Python producer and consumer together.
+// Simple class to bolt the producer and consumer together.
 using LocalConsumer = ConsumeMTSAM<ConsumerLocalRecord>;
 using LocalProducer = ProduceMTSAM<LocalConsumer>;
 
@@ -46,7 +44,7 @@ class LocalProcessSam {
 
 public:
 
-  explicit LocalProcessSam(const std::string &log_file, int readQuality) : log(SAM_READ_MODULE_NAME_, log_file) {
+  explicit LocalProcessSam(Logger& logger, unsigned char readQuality) : log(logger) {
 
     consumer_ptr_ = std::shared_ptr<LocalConsumer>(std::make_shared<LocalConsumer>(log));
     consumer_ptr_->readQuality(readQuality);
@@ -70,13 +68,11 @@ public:
 
   }
 
-
   inline ContigDataMap<ConsumerLocalRecord>& contigDataMap() { return consumer_ptr_->contigDataMap(); }
 
 private:
 
-  Logger log;                              // Must be declared First. Emit log messages to console and log file.
-  static constexpr const char* SAM_READ_MODULE_NAME_{"SamRead"};  // Name of this module for the logger
+  Logger &log;                              // Must be declared First. Emit log messages to console and log file.
 
   std::shared_ptr<LocalConsumer> consumer_ptr_; ;  // Thread safe SAM record consumer
   std::unique_ptr<LocalProducer> producer_ptr_;   //  Thread safe SAM record producer.

@@ -28,29 +28,55 @@
 #ifndef KGL_EXEC_ENV_H
 #define KGL_EXEC_ENV_H
 
-#include <seqan/arg_parse.h>
+#include "kgl_logging.h"
 
 
-struct ModifyStringOptions
-{
-  unsigned period;
-  bool toUppercase;
-  bool toLowercase;
-  seqan::CharString text;
+namespace kellerberrin {   //  organization level namespace
+namespace genome {   // project level namespace
 
-  ModifyStringOptions() :
-      period(1), toUppercase(false), toLowercase(false)
-  {}
+
+class ExecEnv {
+
+public:
+
+  ExecEnv()=default;
+  ~ExecEnv()=default;
+  ExecEnv(const ExecEnv&)=delete;
+  ExecEnv& operator=(const ExecEnv&) = delete; // no self-assignments
+
+  struct arg_struct {
+
+    std::string workDirectory{"./Work"};
+    std::string fastaFile{""};
+    std::string gffFile{""};
+    std::string parentFile{""};
+    std::string mutantFile{"mutant.sam"};
+    std::string logFile{"kgl_snp.log"};
+    int mutantMinCount{20};
+    double mutantMinProportion{0.7};
+    int parentMinCount{20};
+    double parentMinProportion{0.7};
+    int threadCount{-1};
+    unsigned char readQuality{0};
+    int lockGranularity{1000};
+
+  };
+
+  static bool parseCommandLine(int argc, char const ** argv);
+  static const arg_struct& args() { return args_; }
+  static Logger& log() { return *log_ptr_; }
+
+private:
+
+  static arg_struct args_;
+  static std::unique_ptr<Logger> log_ptr_;
+
+  static constexpr const char* MODULE_LOG_NAME = "kgl_snp";
+
 };
 
 
-// forward declaration.
-seqan::ArgumentParser::ParseResult
-parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv);
-
-
-seqan::CharString modifyString(seqan::CharString const & text,
-                               ModifyStringOptions const & options);
-
+}   // namespace genome
+}   // namespace kellerberrin
 
 #endif //KGL_EXEC_ENV_H
