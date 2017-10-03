@@ -30,39 +30,78 @@
 
 
 #include <memory>
+#include <string>
+#include <map>
+#include "kgl_genome_types.h"
 #include "kgl_logging.h"
 
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-class GFFRecord {};
+class GFFRecord {
 
-class FastaRecord {};
+public:
+
+  explicit GFFRecord(Logger& logger) : log(logger) {};
+  ~GFFRecord() = default;
+
+  void readGFFFile(const std::string& gff_file_name);
+
+private:
+
+  Logger& log;
+
+};
+
+
+
+using FastaMap = std::map<const ContigId_t, Sequence_t>;
+class FastaRecord {
+
+public:
+
+  explicit FastaRecord(Logger& logger): log(logger) {}
+  ~FastaRecord() = default;
+
+  void addSequence(const ContigId_t& contig, const Sequence_t& sequence);
+  void readFastaFile(const std::string& fasta_file_name);
+  const FastaMap& getFastaMap() const { return fasta_map_; }
+
+private:
+
+  Logger& log;
+
+  FastaMap fasta_map_;
+
+};
 
 class ParseGFFSFasta { // parses the input gff(3) file and annotates it with a fasta sequence
 
 public:
 
-  ParseGFFSFasta(Logger& logger, const std::string& gff_file_name, const std::string fasta_file_name): log(logger) {
+  ParseGFFSFasta( Logger& logger,
+                  const std::string& gff_file_name,
+                  const std::string& fasta_file_name): log(logger),
+                                                       fasta_ptr_(std::make_unique<FastaRecord>(logger)),
+                                                       gff_ptr_(std::make_unique<GFFRecord>(logger)) {
 
-    gff_ptr_ = readGFFFile(gff_file_name);
-    fasta_ptr_ = readFastaFile(fasta_file_name);
+    fasta_ptr_->readFastaFile(fasta_file_name);
+    gff_ptr_->readGFFFile(gff_file_name);
 
   }
+  ~ParseGFFSFasta() = default;
 
   inline const GFFRecord& getGFF() { return *gff_ptr_; }
   inline const FastaRecord& getFasta() { return *fasta_ptr_; }
 
 private:
 
-  Logger& log;
+  Logger& log; // Should declared first.
 
-  std::unique_ptr<GFFRecord> gff_ptr_;
   std::unique_ptr<FastaRecord> fasta_ptr_;
+  std::unique_ptr<GFFRecord> gff_ptr_;
 
-  std::unique_ptr<GFFRecord> readGFFFile(const std::string& gff_file_name);
-  std::unique_ptr<FastaRecord> readFastaFile(const std::string& fasta_file_name);
 
 };
 

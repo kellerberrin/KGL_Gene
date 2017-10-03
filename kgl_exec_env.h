@@ -34,17 +34,16 @@
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-
+// This class sets up the application runtime environment as a series of static variables and member functions.
+// The class is never instantiated and is the first statement in main() (see kgl_main.cc).
 class ExecEnv {
 
 public:
 
-  ExecEnv()=default;
-  ~ExecEnv()=default;
-  ExecEnv(const ExecEnv&)=delete;
-  ExecEnv& operator=(const ExecEnv&) = delete; // no self-assignments
+  ExecEnv()=delete;
+  ~ExecEnv()=delete;
 
-  struct arg_struct {
+  struct Args {
 
     std::string workDirectory{"./Work"};
     std::string fastaFile{""};
@@ -65,15 +64,16 @@ public:
   };
 
   static bool parseCommandLine(int argc, char const ** argv);
-  static const arg_struct& args() { return args_; }
+  static const Args& args() { return args_; }
   static Logger& log() { return *log_ptr_; }
+  static constexpr const char* VERSION = "0.1";
+  static constexpr const char* MODULE_NAME = "kgl_genome";
+  static void getElpasedTime(double& Clock, double& System, double& User);
 
 private:
 
-  static arg_struct args_;
+  static Args args_;
   static std::unique_ptr<Logger> log_ptr_;
-
-  static constexpr const char* MODULE_LOG_NAME = "kgl_snp";
 
 };
 

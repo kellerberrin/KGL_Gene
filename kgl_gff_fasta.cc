@@ -25,18 +25,65 @@
 //
 
 #include "kgl_gff_fasta.h"
+#include <seqan/seq_io.h>
 
 namespace kgl = kellerberrin::genome;
 
 
-std::unique_ptr<kgl::GFFRecord> kgl::ParseGFFSFasta::readGFFFile(const std::string& gff_file_name) {
+void kgl::GFFRecord::readGFFFile(const std::string& gff_file_name) {
 
-  return std::make_unique<kgl::GFFRecord>();
+
+}
+
+
+void kgl::FastaRecord::addSequence(const kgl::ContigId_t& contig_id, const kgl::Sequence_t& sequence) {
+
+
+  auto result = fasta_map_.insert(std::make_pair(contig_id, std::move(sequence)));
+
+  if (not result.second) {
+
+    log.error("addSequence(), Attempted to add duplicate contig; {}", contig_id);
+
+  }
+
 
 }
 
-std::unique_ptr<kgl::FastaRecord> kgl::ParseGFFSFasta::readFastaFile(const std::string& fasta_file_name) {
+void kgl::FastaRecord::readFastaFile(const std::string& fasta_file_name) {
 
-  return std::make_unique<kgl::FastaRecord>();
+  seqan::SeqFileIn seqFileIn;
+  if (!seqan::open(seqFileIn, fasta_file_name.c_str()))
+  {
+    log.critical("Could not open fasta file: {}", fasta_file_name);
+  }
+
+  log.info("Reading Fasta file: {}", fasta_file_name);
+
+  seqan::StringSet<seqan::CharString> ids;
+  seqan::StringSet<seqan::Dna5String> seqs;
+
+  try
+  {
+    readRecords(ids, seqs, seqFileIn);
+  }
+  catch (seqan::Exception const & e)
+  {
+    log.critical("Error: {} reading fasta file: {}", e.what(), fasta_file_name);
+  }
+
+  for (unsigned i = 0; i < length(ids); ++i) {
+
+    kgl::ContigId_t contig_id = toCString(ids[i]);
+    Sequence_t sequence;
+    seqan::move(sequence, seqs[i]);
+    addSequence(contig_id, sequence);
+    log.info("Fasta Contig id: {}; Contig sequence length: {} ", contig_id, sequence.length());
+
+  }
 
 }
+
+
+
+

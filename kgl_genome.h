@@ -22,30 +22,33 @@
 //
 //
 //
-// Created by kellerberrin on 30/09/17.
+// Created by kellerberrin on 3/10/17.
 //
-#include <iostream>
+
+#ifndef SAMFILE_KGL_GENOME_H
+#define SAMFILE_KGL_GENOME_H
+
 #include "kgl_exec_env.h"
 #include "kgl_gff_fasta.h"
 #include "kgl_process_sam.h"
 
-namespace kgl = kellerberrin::genome;
+
+namespace kellerberrin {   //  organization level namespace
+namespace genome {   // project level namespace
+
+// Simple class implements the mainline logic, see kgl_genome.cc.
+class GenomeAnalysis {
+
+public:
+
+  GenomeAnalysis(Logger& log, const ExecEnv::Args& args );
+  ~GenomeAnalysis() = default;
+
+};
 
 
-int main(int argc, char const ** argv)
-{
+}   // namespace genome
+}   // namespace kellerberrin
 
-  if (!kgl::ExecEnv::parseCommandLine(argc, argv)) {
 
-    return EXIT_FAILURE;
-
-  }
-
-  kgl::ParseGFFSFasta gff_fasta(kgl::ExecEnv::log(), kgl::ExecEnv::args().gffFile, kgl::ExecEnv::args().fastaFile);
-
-  kgl::LocalProcessSam process_sam(kgl::ExecEnv::log(), kgl::ExecEnv::args().readQuality);
-
-  process_sam.readSAMFile(kgl::ExecEnv::args().mutantFile);
-
-  return EXIT_SUCCESS;
-}
+#endif //KGL_GENOME_H

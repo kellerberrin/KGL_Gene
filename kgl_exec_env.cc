@@ -8,15 +8,21 @@
 #include "kgl_exec_env.h"
 #define BOOST_FILESYSTEM_NO_DEPRECATED // Recommended by boost documentation.
 #include <boost/filesystem.hpp>
+#include <boost/timer/timer.hpp>
+
 
 // Define namespace alias
 namespace fs = boost::filesystem;
+namespace bt = boost::timer;
 namespace kgl = kellerberrin::genome;
 
+
+
 // Static member declarations.
-kgl::ExecEnv::arg_struct kgl::ExecEnv::args_;
+kgl::ExecEnv::Args kgl::ExecEnv::args_;
 std::unique_ptr<kgl::Logger> kgl::ExecEnv::log_ptr_;
-constexpr const char* kgl::ExecEnv::MODULE_LOG_NAME;
+constexpr const char* kgl::ExecEnv::MODULE_NAME;
+constexpr const char* kgl::ExecEnv::VERSION;
 
 // Utility function to pre-pend work directory path and check file existance
 void getFilePath(const std::string& option_text,
@@ -49,6 +55,18 @@ void getFilePath(const std::string& option_text,
 
 }
 
+// Hide the boost cpu timer in an anonymous namespace.
+namespace {  bt::cpu_timer cpu_timer; }
+
+void kgl::ExecEnv::getElpasedTime(double& Clock, double& User, double& System) {
+
+  bt::cpu_times elapsedtime = cpu_timer.elapsed();
+  Clock = elapsedtime.wall / 1e09; // Convert from nanoseconds to seconds
+  User = elapsedtime.user / 1e09;
+  System = elapsedtime.system / 1e09;
+
+}
+
 // Parse the command line.
 bool kgl::ExecEnv::parseCommandLine(int argc, char const ** argv)
 {
@@ -56,7 +74,7 @@ bool kgl::ExecEnv::parseCommandLine(int argc, char const ** argv)
   seqan::ArgumentParser parser("kgl_snp");
   // Set short description, version, and date.
   setShortDescription(parser, "Organism Genome Comparison");
-  setVersion(parser, "0.1");
+  setVersion(parser, VERSION);
   setDate(parser, "October 2017");
 
   // Define usage line and long description.
@@ -265,13 +283,13 @@ bool kgl::ExecEnv::parseCommandLine(int argc, char const ** argv)
 
   }
   // Setup the Logger.
-  log_ptr_ = std::make_unique<kgl::Logger>(MODULE_LOG_NAME, args().logFile);
+  log_ptr_ = std::make_unique<kgl::Logger>(MODULE_NAME, args().logFile);
 
   // Setup the files.
   getFilePath("fastaFile" ,parser , directory_path, args_.fastaFile);
   getFilePath("gffFile" ,parser , directory_path, args_.gffFile);
   getFilePath("mutantFile" ,parser , directory_path, args_.mutantFile);
-  getFilePath("parentFile" ,parser , directory_path, args_.parentFile);
+  if (seqan::isSet(parser, "parentFile")) getFilePath("parentFile" ,parser , directory_path, args_.parentFile);
 
   // Setup Other Parameters.
   if (seqan::isSet(parser, "contig")) seqan::getOptionValue(args_.contig, parser, "contig");
