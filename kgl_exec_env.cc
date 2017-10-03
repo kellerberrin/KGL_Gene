@@ -18,6 +18,37 @@ kgl::ExecEnv::arg_struct kgl::ExecEnv::args_;
 std::unique_ptr<kgl::Logger> kgl::ExecEnv::log_ptr_;
 constexpr const char* kgl::ExecEnv::MODULE_LOG_NAME;
 
+// Utility function to pre-pend work directory path and check file existance
+void getFilePath(const std::string& option_text,
+                 seqan::ArgumentParser& parser,
+                 fs::path& directory_path,
+                 std::string& file_name) {
+
+  if (seqan::isSet(parser, option_text)) seqan::getOptionValue(file_name, parser, option_text);
+
+  fs::path file_path = directory_path / fs::path(file_name);
+
+  boost::system::error_code error_code;
+  bool file_exists = fs::exists(file_path, error_code);
+
+  if (!file_exists) {
+
+    kgl::ExecEnv::log().critical("File: {}, type: {} does not exist - 'kgl_snp' exits."
+                                , file_path.string(), option_text);
+
+  }
+
+  if (error_code.value() != boost::system::errc::success) {
+
+    kgl::ExecEnv::log().critical("File: {}, type: {}, error: {} - 'kgl_snp' exits."
+                                , file_path.string(), option_text, error_code.message());
+
+  }
+
+  file_name = file_path.string();
+
+}
+
 // Parse the command line.
 bool kgl::ExecEnv::parseCommandLine(int argc, char const ** argv)
 {
@@ -177,18 +208,91 @@ bool kgl::ExecEnv::parseCommandLine(int argc, char const ** argv)
 
   }
 
-  // Get the argument fields.
+  // Get the work directory and check that it exists
   if (seqan::isSet(parser, "workDirectory")) seqan::getOptionValue(args_.workDirectory, parser, "workDirectory");
-  if (seqan::isSet(parser, "mutantFile")) seqan::getOptionValue(args_.mutantFile, parser, "mutantFile");
 
-  std::cerr << "workDirectory:" << args().workDirectory << std::endl;
+  fs::path directory_path = fs::path(args().workDirectory);
 
-  fs::path full_path = fs::path(args().workDirectory) / fs::path(args().mutantFile);
-  std::cerr << full_path << std::endl;
-  args_.mutantFile = full_path.string();
+  boost::system::error_code error_code;
+  bool valid_directory = fs::exists(directory_path, error_code);
 
+  if (!valid_directory) {
+
+    std::cerr << "Specified work directory:" << directory_path.string() << " does not exist." << std::endl;
+    std::cerr << "'kgl_snp' exits" << std::endl;
+    std::exit(EXIT_FAILURE);
+
+  }
+
+  if (error_code.value() != boost::system::errc::success) {
+
+    std::cerr << "Error verifying work directory:" << directory_path.string()
+              << ", error was:" << error_code.message() << std::endl;
+    std::cerr << "'kgl_snp' exits" << std::endl;
+    std::exit(EXIT_FAILURE);
+
+  }
+
+  // Get the log or newlog fields.
+  if (seqan::isSet(parser, "newLogFile")) {
+
+    std::string log_file_name;
+    seqan::getOptionValue(log_file_name, parser, "newLogFile");
+    // Join the log file and the directory
+    fs::path log_file_path = directory_path / fs::path(log_file_name);
+    // truncate the log file.
+    std::fstream log_file(log_file_path.string(), std::fstream::out | std::fstream::trunc);
+    if(!log_file)
+    {
+      std::cerr << "Cannot open truncated log file (--newLogFile):" << log_file_path.string() << std::endl;
+      std::cerr << "'kgl_snp' exits" << std::endl;
+      std::exit(EXIT_FAILURE);
+    }
+    args_.logFile = log_file_path.string();
+
+  } else if (seqan::isSet(parser, "logFile")) {
+
+    std::string log_file_name;
+    seqan::getOptionValue(log_file_name, parser, "logFile");
+    // Join the log file and the directory
+    fs::path log_file_path = directory_path / fs::path(log_file_name);
+    args_.logFile = log_file_path.string();
+
+  } else { // log file not specified - join default log file to the work directory.
+
+    fs::path log_file_path = directory_path / fs::path(args_.logFile);
+    args_.logFile = log_file_path.string();
+
+  }
   // Setup the Logger.
   log_ptr_ = std::make_unique<kgl::Logger>(MODULE_LOG_NAME, args().logFile);
+
+  // Setup the files.
+  getFilePath("fastaFile" ,parser , directory_path, args_.fastaFile);
+  getFilePath("gffFile" ,parser , directory_path, args_.gffFile);
+  getFilePath("mutantFile" ,parser , directory_path, args_.mutantFile);
+  getFilePath("parentFile" ,parser , directory_path, args_.parentFile);
+
+  // Setup Other Parameters.
+  if (seqan::isSet(parser, "contig")) seqan::getOptionValue(args_.contig, parser, "contig");
+  if (seqan::isSet(parser, "mutantMinimumCount")) seqan::getOptionValue(args_.mutantMinCount, parser,
+                                                                        "mutantMinimumCount");
+  if (seqan::isSet(parser, "mutantMinimumProportion")) seqan::getOptionValue(args_.mutantMinProportion, parser,
+                                                                             "mutantMinimumProportion");
+  if (seqan::isSet(parser, "parentMinimumCount")) seqan::getOptionValue(args_.mutantMinCount, parser,
+                                                                        "parentMinimumCount");
+  if (seqan::isSet(parser, "mutantMinimumProportion")) seqan::getOptionValue(args_.mutantMinProportion, parser,
+                                                                             "parentMinimumProportion");
+  if (seqan::isSet(parser, "queueSize")) seqan::getOptionValue(args_.queueSize, parser,"queueSize");
+  if (seqan::isSet(parser, "threadCount")) seqan::getOptionValue(args_.queueSize, parser,"threadCount");
+  if (seqan::isSet(parser, "lockGranularity")) seqan::getOptionValue(args_.queueSize, parser,"lockGranularity");
+  if (seqan::isSet(parser, "readQuality")) {
+
+    int readQuality;
+    seqan::getOptionValue(readQuality, parser, "readQuality");
+    args_.readQuality = static_cast<unsigned char>(readQuality);
+
+  }
 
   return true;
 

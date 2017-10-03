@@ -21,31 +21,22 @@
 // SOFTWARE.
 //
 //
+// Created by kellerberrin on 3/10/17.
 //
-// Created by kellerberrin on 30/09/17.
-//
-#include <iostream>
-#include "kgl_exec_env.h"
+
 #include "kgl_gff_fasta.h"
-#include "kgl_process_sam.h"
 
 namespace kgl = kellerberrin::genome;
 
 
-int main(int argc, char const ** argv)
-{
+std::unique_ptr<kgl::GFFRecord> kgl::ParseGFFSFasta::readGFFFile(const std::string& gff_file_name) {
 
-  if (!kgl::ExecEnv::parseCommandLine(argc, argv)) {
+  return std::make_unique<kgl::GFFRecord>();
 
-    return EXIT_FAILURE;
+}
 
-  }
+std::unique_ptr<kgl::FastaRecord> kgl::ParseGFFSFasta::readFastaFile(const std::string& fasta_file_name) {
 
-  kgl::ParseGFFSFasta gff_fasta(kgl::ExecEnv::log(), kgl::ExecEnv::args().gffFile, kgl::ExecEnv::args().fastaFile);
+  return std::make_unique<kgl::FastaRecord>();
 
-  kgl::LocalProcessSam process_sam(kgl::ExecEnv::log(), kgl::ExecEnv::args().readQuality);
-
-  process_sam.readSAMFile(kgl::ExecEnv::args().mutantFile);
-
-  return EXIT_SUCCESS;
 }

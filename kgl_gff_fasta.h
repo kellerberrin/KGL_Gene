@@ -22,58 +22,47 @@
 //
 //
 //
-// Created by kellerberrin on 30/09/17.
+// Created by kellerberrin on 3/10/17.
 //
 
-#ifndef KGL_EXEC_ENV_H
-#define KGL_EXEC_ENV_H
+#ifndef KGL_GFF_FASTA_H
+#define KGL_GFF_FASTA_H
 
+
+#include <memory>
 #include "kgl_logging.h"
 
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
+class GFFRecord {};
 
-class ExecEnv {
+class FastaRecord {};
+
+class ParseGFFSFasta { // parses the input gff(3) file and annotates it with a fasta sequence
 
 public:
 
-  ExecEnv()=default;
-  ~ExecEnv()=default;
-  ExecEnv(const ExecEnv&)=delete;
-  ExecEnv& operator=(const ExecEnv&) = delete; // no self-assignments
+  ParseGFFSFasta(Logger& logger, const std::string& gff_file_name, const std::string fasta_file_name): log(logger) {
 
-  struct arg_struct {
+    gff_ptr_ = readGFFFile(gff_file_name);
+    fasta_ptr_ = readFastaFile(fasta_file_name);
 
-    std::string workDirectory{"./Work"};
-    std::string fastaFile{""};
-    std::string gffFile{""};
-    std::string parentFile{""};
-    std::string mutantFile{"mutant.sam"};
-    std::string logFile{"kgl_snp.log"};
-    std::string contig{"*"};
-    int mutantMinCount{20};
-    double mutantMinProportion{0.7};
-    int parentMinCount{20};
-    double parentMinProportion{0.7};
-    int threadCount{-1};
-    unsigned char readQuality{0};
-    int lockGranularity{1000};
-    int queueSize{1000000};
+  }
 
-  };
-
-  static bool parseCommandLine(int argc, char const ** argv);
-  static const arg_struct& args() { return args_; }
-  static Logger& log() { return *log_ptr_; }
+  inline const GFFRecord& getGFF() { return *gff_ptr_; }
+  inline const FastaRecord& getFasta() { return *fasta_ptr_; }
 
 private:
 
-  static arg_struct args_;
-  static std::unique_ptr<Logger> log_ptr_;
+  Logger& log;
 
-  static constexpr const char* MODULE_LOG_NAME = "kgl_snp";
+  std::unique_ptr<GFFRecord> gff_ptr_;
+  std::unique_ptr<FastaRecord> fasta_ptr_;
+
+  std::unique_ptr<GFFRecord> readGFFFile(const std::string& gff_file_name);
+  std::unique_ptr<FastaRecord> readFastaFile(const std::string& fasta_file_name);
 
 };
 
@@ -81,4 +70,4 @@ private:
 }   // namespace genome
 }   // namespace kellerberrin
 
-#endif //KGL_EXEC_ENV_H
+#endif //KGL_GFF_FASTA_H
