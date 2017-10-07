@@ -89,36 +89,6 @@ bool kgl::SAMRecordParser::parseSAMFields(std::unique_ptr<const std::string>& re
 
 }
 
-bool kgl::SAMRecordParser::decodeSAMCigar( std::unique_ptr<const std::string>& record_ptr
-    , const std::pair<std::size_t, std::size_t>& cigar_offset) {
-
-
-  static std::regex regex("([0-9]+[MIDNSHP=X])");
-  static std::sregex_iterator match_end;
-  std::smatch match;
-  std::string::const_iterator begin = record_ptr->begin() + cigar_offset.first;
-  std::string::const_iterator end = begin + cigar_offset.second;
-
-  std::sregex_iterator match_iter(begin, end, regex);
-
-  while (match_iter != match_end) {
-
-    match = *match_iter;
-    std::string cigar_item(std::move(match.str()));
-    const char cigar_action = cigar_item.back();
-    cigar_item.pop_back();
-    ContigOffset_t cigar_length = std::stoull(cigar_item);
-    std::pair<const char, const ContigOffset_t> cigar(cigar_action, cigar_length);
-
-    cigar_fields_.emplace_back(std::move(cigar));
-
-    match_iter++;
-
-  }
-
-  return not cigar_fields_.empty();
-
-}
 
 bool kgl::SAMRecordParser::fastDecodeSAMCigar( std::unique_ptr<const std::string>& record_ptr
     , const std::pair<std::size_t, std::size_t>& cigar_offset) {

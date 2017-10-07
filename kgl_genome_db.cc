@@ -21,35 +21,24 @@
 // SOFTWARE.
 //
 //
-//
-// Created by kellerberrin on 3/10/17.
+// Created by kellerberrin on 7/10/17.
 //
 
-#ifndef SAMFILE_KGL_GENOME_H
-#define SAMFILE_KGL_GENOME_H
-
-#include "kgl_exec_env.h"
 #include "kgl_genome_db.h"
-#include "kgl_gff_fasta.h"
-#include "kgl_process_sam.h"
+
+namespace kgl = kellerberrin::genome;
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+void kgl::GenomeSequences::addContigSequence(kgl::ContigId_t& contig_id, kgl::Sequence_t sequence) {
 
-// Simple class implements the mainline logic, see kgl_genome.cc.
-class GenomeAnalysis {
+  using ContigPtr = std::unique_ptr<kgl::ContigRecord>;
+  ContigPtr contig_ptr(std::make_unique<kgl::ContigRecord>(contig_id, std::move(sequence)));
 
-public:
+  auto result = genome_sequence_map_.insert(std::make_pair(contig_id, std::move(contig_ptr)));
+  if (not result.second) {
 
-  GenomeAnalysis(Logger& log, const ExecEnv::Args& args );
-  ~GenomeAnalysis() = default;
+    log.error("addContigSequence(), Attempted to add duplicate contig; {}", contig_id);
 
-};
+  }
 
-
-}   // namespace genome
-}   // namespace kellerberrin
-
-
-#endif //KGL_GENOME_H
+}

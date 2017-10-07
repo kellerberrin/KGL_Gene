@@ -38,5 +38,5 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../..)
 add_library(read_sam SHARED ${SOURCE_FILES} kgl_python.cc)
 
 #generate kgl_genome executable
-add_executable (kgl_genome ${SOURCE_FILES} kgl_main.cc kgl_exec_env.h kgl_exec_env.cc kgl_gff_fasta.h kgl_gff_fasta.cc kgl_main.cc kgl_genome.h kgl_genome.cc)
+add_executable (kgl_genome ${SOURCE_FILES} kgl_main.cc kgl_exec_env.h kgl_exec_env.cc kgl_gff_fasta.h kgl_gff_fasta.cc kgl_main.cc kgl_genome.h kgl_genome.cc kgl_genome_db.h kgl_genome_db.cc)
 target_link_libraries(kgl_genome ${Boost_LIBRARIES})

@@ -190,7 +190,7 @@ void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string
 
       case 'D':
 
-        delete_nucleotide_++;
+        ++delete_nucleotide_;
         for (ContigOffset_t cigar_offset = 0; cigar_offset < cigar.second; ++cigar_offset) {
 
           contig_block.incrementDelete(location + cigar_offset);
@@ -202,7 +202,7 @@ void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string
 
       case 'I':
 
-        insert_sequence_++;
+        ++insert_sequence_;
         contig_block.incrementInsert(location);
         insert_block.insertSequence(location, sam_record_parser.getSubSequence(record_ptr, sam_idx, cigar.second));
 

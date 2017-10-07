@@ -109,9 +109,6 @@ private:
   std::vector<std::pair<const char, const ContigOffset_t>> cigar_fields_;
 
   bool parseSAMFields(std::unique_ptr<const std::string>& record_ptr, bool parse_opt_fields); // False if unmapped read
-  bool decodeSAMCigar( std::unique_ptr<const std::string>& record_ptr
-      , const std::pair<std::size_t
-      , std::size_t>& cigar_offset);
   bool fastDecodeSAMCigar( std::unique_ptr<const std::string>& record_ptr // False if unexpected cigar format
       , const std::pair<std::size_t
       , std::size_t>& cigar_offset);

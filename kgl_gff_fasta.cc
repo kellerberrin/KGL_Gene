@@ -30,32 +30,47 @@
 namespace kgl = kellerberrin::genome;
 
 
-void kgl::GFFRecord::readGFFFile(const std::string& gff_file_name) {
+void kgl::ParseGFFSFasta::readGffFile(const std::string &gff_file_name, kgl::GenomeSequences& genome_sequences) {
 
+  seqan::GffFileIn gff_file_in;
+  if (!seqan::open(gff_file_in, gff_file_name.c_str())) {
 
-}
-
-
-void kgl::FastaRecord::addSequence(const kgl::ContigId_t& contig_id, const kgl::Sequence_t& sequence) {
-
-
-  auto result = fasta_map_.insert(std::make_pair(contig_id, std::move(sequence)));
-
-  if (not result.second) {
-
-    log.error("addSequence(), Attempted to add duplicate contig; {}", contig_id);
+    log.critical("Could not open Gff file: {}", gff_file_name);
 
   }
 
+  log.info("Reading Gff file: {}", gff_file_name);
+
+  seqan::GffFileOut gff_file_out(std::cout, seqan::Gff());
+
+  seqan::GffRecord record;
+
+  try {
+
+    while(!seqan::atEnd(gff_file_in)) {
+
+      seqan::readRecord(record, gff_file_in);
+//      seqan::writeRecord(gff_file_out, record);
+
+    }
+
+  } catch(seqan::Exception const & e) {
+
+    log.critical("Error: {} reading fasta file: {}", e.what(), gff_file_name);
+
+  }
 
 }
 
-void kgl::FastaRecord::readFastaFile(const std::string& fasta_file_name) {
 
-  seqan::SeqFileIn seqFileIn;
-  if (!seqan::open(seqFileIn, fasta_file_name.c_str()))
-  {
+
+std::unique_ptr<kgl::GenomeSequences> kgl::ParseGFFSFasta::readFastaFile(const std::string& fasta_file_name) {
+
+  seqan::SeqFileIn seq_file_in;
+  if (!seqan::open(seq_file_in, fasta_file_name.c_str())) {
+
     log.critical("Could not open fasta file: {}", fasta_file_name);
+
   }
 
   log.info("Reading Fasta file: {}", fasta_file_name);
@@ -63,27 +78,42 @@ void kgl::FastaRecord::readFastaFile(const std::string& fasta_file_name) {
   seqan::StringSet<seqan::CharString> ids;
   seqan::StringSet<seqan::Dna5String> seqs;
 
-  try
-  {
-    readRecords(ids, seqs, seqFileIn);
+  try {
+
+    readRecords(ids, seqs, seq_file_in);
+
   }
-  catch (seqan::Exception const & e)
-  {
+  catch (seqan::Exception const & e) {
+
     log.critical("Error: {} reading fasta file: {}", e.what(), fasta_file_name);
+
   }
+
+  std::unique_ptr<kgl::GenomeSequences> genome_sequences_ptr(std::make_unique<kgl::GenomeSequences>(log));
 
   for (unsigned i = 0; i < length(ids); ++i) {
 
     kgl::ContigId_t contig_id = toCString(ids[i]);
     Sequence_t sequence;
     seqan::move(sequence, seqs[i]);
-    addSequence(contig_id, sequence);
+    genome_sequences_ptr->addContigSequence(contig_id, sequence);
     log.info("Fasta Contig id: {}; Contig sequence length: {} ", contig_id, sequence.length());
 
   }
 
+  return genome_sequences_ptr;
+
 }
 
 
+std::unique_ptr<kgl::GenomeSequences> kgl::ParseGFFSFasta::readFastaGffFile(const std::string& fasta_file_name,
+                                                                            const std::string& gff_file_name) {
+
+  std::unique_ptr<kgl::GenomeSequences> genome_sequences_ptr = readFastaFile(fasta_file_name);
+  readGffFile(gff_file_name, *genome_sequences_ptr);
+
+  return genome_sequences_ptr;
+
+}
 
 

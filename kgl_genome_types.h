@@ -41,7 +41,8 @@ namespace genome {   // project level namespace
 using Nucleotide_t = char;
 using Sequence_t = std::string;
 using ContigId_t = std::string;
-using ContigOffset_t = uint64_t;              // Paris Japonica has 150 billion base pairs.
+using ContigFeatureId_t = std::string;
+using ContigOffset_t = uint64_t;              // Paris Japonica has 150 billion base pairs, use 64 bit integer.
 using ContigSize_t = ContigOffset_t;
 using NucleotideReadCount_t = uint32_t;
 

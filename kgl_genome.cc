@@ -31,15 +31,16 @@ namespace kgl = kellerberrin::genome;
 kgl::GenomeAnalysis::GenomeAnalysis(kgl::Logger& log, const kgl::ExecEnv::Args& args ) {
 
   // Parse the Fasta and GFF files.
-  kgl::ParseGFFSFasta gff_fasta(log, args.gffFile, args.fastaFile);
+  kgl::ParseGFFSFasta gff_fasta_reader(log);
+  std::unique_ptr<kgl::GenomeSequences> genome_ptr = gff_fasta_reader.readFastaGffFile(args.fastaFile, args.gffFile);
 
   // Declare a SAM reader.
   kgl::LocalProcessSam process_sam(log, args.readQuality);
 
   // Register the Fasta contigs with the SAM reader.
-  for (auto contig_pair : gff_fasta.getFasta().getFastaMap()) {
+  for (const auto& contig_pair : genome_ptr->getGenomeSequenceMap()) {
 
-    process_sam.insertContig(contig_pair.first, contig_pair.second.length());
+    process_sam.insertContig(contig_pair.first, contig_pair.second->sequence().length());
 
   }
 
