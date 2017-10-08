@@ -29,16 +29,98 @@
 namespace kgl = kellerberrin::genome;
 
 
-void kgl::GenomeSequences::addContigSequence(kgl::ContigId_t& contig_id, kgl::Sequence_t sequence) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FeatureAttributes members.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  using ContigPtr = std::unique_ptr<kgl::ContigRecord>;
-  ContigPtr contig_ptr(std::make_unique<kgl::ContigRecord>(contig_id, std::move(sequence)));
 
-  auto result = genome_sequence_map_.insert(std::make_pair(contig_id, std::move(contig_ptr)));
-  if (not result.second) {
+// Returns false if key not found.
+bool kgl::FeatureAttributes::getAttributes(const std::string& key, std::vector<std::string>& values) const {
 
-    log.error("addContigSequence(), Attempted to add duplicate contig; {}", contig_id);
+  auto iter_pair = attributes_.equal_range(key);
+
+  values.clear();
+  for (auto iter = iter_pair.first; iter != iter_pair.second; ++iter) {
+
+    values.emplace_back(iter->second);
 
   }
+
+  return not values.empty();
+
+}
+
+
+// Always succeeds
+void kgl::FeatureAttributes::insertAttribute(const std::string& key, const std::string& value) {
+
+  attributes_.insert(std::make_pair(key, value));
+
+}
+
+
+void kgl::FeatureAttributes::getAllAttributes(std::vector<std::pair<std::string, std::string>>& all_key_value_pairs) const {
+
+  all_key_value_pairs.clear();
+
+  for (auto key_value_pair : attributes_) {
+
+    all_key_value_pairs.emplace_back(key_value_pair);
+
+  }
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ContigRecord members.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bool kgl::ContigRecord::addFeature(std::shared_ptr<kgl::FeatureRecord>& feature_ptr) {
+
+  auto result = id_feature_map_.insert(std::make_pair(feature_ptr->id(), feature_ptr));
+
+  if (not result.second) {
+
+    return false;
+
+  }
+
+  offset_feature_map_.insert(std::make_pair(feature_ptr->sequence().begin(), feature_ptr));
+
+  return true;
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// GenomeSequences members.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool kgl::GenomeSequences::addContigSequence(const kgl::ContigId_t& contig_id, kgl::Sequence_t sequence) {
+
+  using ContigPtr = std::shared_ptr<kgl::ContigRecord>;
+  ContigPtr contig_ptr(std::make_shared<kgl::ContigRecord>(contig_id, std::move(sequence)));
+
+  auto result = genome_sequence_map_.insert(std::make_pair(contig_id, std::move(contig_ptr)));
+
+  return result.second;
+
+}
+
+bool kgl::GenomeSequences::getContigSequence(const kgl::ContigId_t& contig_id,
+                                             std::shared_ptr<ContigRecord>& contig_ptr) const {
+
+  auto result_iter = genome_sequence_map_.find(contig_id);
+
+  if (result_iter != genome_sequence_map_.end()) {
+
+    contig_ptr = result_iter->second;
+    return true;
+
+  }
+
+  return false;
 
 }

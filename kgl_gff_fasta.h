@@ -41,13 +41,15 @@ namespace genome {   // project level namespace
 
 // Creates an instance of a Genome database object.
 // Parses the input gff(3) file and annotates it with a fasta sequence
-class ParseGFFSFasta {
+// This class is a facade; the file reading details are handled by a 3rd party library.
+class ParseGffFasta {
 
 public:
 
-  ParseGFFSFasta( Logger& logger) : log(logger) {}
-  ~ParseGFFSFasta() = default;
+  ParseGffFasta( Logger& logger);
+  ~ParseGffFasta();
 
+  // Functionality passed to the implmentation.
   std::unique_ptr<GenomeSequences> readFastaFile(const std::string& fasta_file_name);
   std::unique_ptr<GenomeSequences> readFastaGffFile(const std::string& fasta_file_name,
                                                     const std::string& gff_file_name);
@@ -55,8 +57,12 @@ public:
 
 private:
 
-  Logger& log; // Should declared first.
+  Logger& log; // Should be declared first.
 
+  class GffFastaImpl;       // Forward declaration of the Gff Fasta parser implementation class
+  std::unique_ptr<GffFastaImpl> gff_fasta_impl_ptr_;    // Gff Fasta parser PIMPL
+
+  // Functionality passed to the implmentation.
   void readGffFile(const std::string& gff_file_name, GenomeSequences& genome_sequences);
 
 };

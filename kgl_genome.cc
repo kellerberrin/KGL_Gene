@@ -31,7 +31,7 @@ namespace kgl = kellerberrin::genome;
 kgl::GenomeAnalysis::GenomeAnalysis(kgl::Logger& log, const kgl::ExecEnv::Args& args ) {
 
   // Parse the Fasta and GFF files.
-  kgl::ParseGFFSFasta gff_fasta_reader(log);
+  kgl::ParseGffFasta gff_fasta_reader(log);
   std::unique_ptr<kgl::GenomeSequences> genome_ptr = gff_fasta_reader.readFastaGffFile(args.fastaFile, args.gffFile);
 
   // Declare a SAM reader.

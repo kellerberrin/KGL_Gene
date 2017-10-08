@@ -40,22 +40,24 @@
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FeatureAttributes Object to hold { key=value } pairs.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Object to hold { index : item } pairs.
-using AttributeMap = std::map<const std::string, const std::string>;
-class GenomeAttributes {
+using AttributeMap = std::multimap<const std::string, std::string>;
+class FeatureAttributes {
 
 public:
 
-  explicit GenomeAttributes() = default;
-  GenomeAttributes(const GenomeAttributes&) = default;
-  ~GenomeAttributes() = default;
+  explicit FeatureAttributes() = default;
+  FeatureAttributes(const FeatureAttributes&) = default;
+  ~FeatureAttributes() = default;
 
-  GenomeAttributes& operator=(const GenomeAttributes&) = default;
+  FeatureAttributes& operator=(const FeatureAttributes&) = default;
 
-  bool getAttributes(const std::string& key, std::string& value);   // Returns bool false if the key not found.
-  void getAllAttributes(std::vector<std::pair<std::string, std::string>>& key_value_pairs);
-  void insertAttribute(const std::string& key, const std::string& value); // Always succeeds - overwrites any existing.
+  bool getAttributes(const std::string& key, std::vector<std::string>& value_vec) const;   // Returns false if key not found.
+  void insertAttribute(const std::string& key, const std::string& value); // Always succeeds
+  void getAllAttributes(std::vector<std::pair<std::string, std::string>>& all_key_value_pairs) const;
 
 private:
 
@@ -64,6 +66,9 @@ private:
 };
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FeatureSequence - Feature location and sense (if applicable)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 enum class StrandSense { FORWARD = '+', REVERSE = '-', UNKNOWN = '.'};
 class FeatureSequence {
@@ -81,6 +86,10 @@ public:
 
   FeatureSequence& operator=(const FeatureSequence&) = default;
 
+  ContigOffset_t begin() const { return begin_offset_; }
+  ContigOffset_t end() const { return end_offset_; }
+  StrandSense sense() const { return strand_sense_; }
+
 private:
 
   ContigOffset_t begin_offset_;    // O based contig sequence offset.
@@ -89,60 +98,52 @@ private:
 
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FeatureRecord - Annotated contig features
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 class ContigRecord; // Forward decl;
-class SubFeatureRecord; // Forward decl.
-using SubFeaturePtrMap = std::map<ContigOffset_t, std::unique_ptr<SubFeatureRecord>>;
-enum class FeatureType { GENE, EXON, CDS, INTRON };
+class FeatureRecord; // Forward decl.
+using FeatureIdent_t = std::string;
+using FeatureType_t = std::string;
+using SubFeatureMap = std::map<const FeatureIdent_t, std::shared_ptr<FeatureRecord>>;
+using ParentFeatureMap = std::map<const FeatureIdent_t, std::shared_ptr<FeatureRecord>>;
 class FeatureRecord {
 
 public:
 
-  FeatureRecord(ContigRecord& contig,
-                const FeatureSequence& sequence): contig_(contig), sequence_(sequence) {}
+  FeatureRecord(const FeatureIdent_t& id,
+                const FeatureType_t& type,
+                const std::shared_ptr<ContigRecord>& contig_ptr,
+                const FeatureSequence& sequence): id_(id), type_(type), contig_ptr_(contig_ptr), sequence_(sequence) {}
   FeatureRecord(const FeatureRecord&) = default;
   virtual ~FeatureRecord() = default;
 
   FeatureRecord& operator=(const FeatureRecord&) = default;
-
-  bool isSubFeature() { return (bool) getParent(); }
-  virtual std::shared_ptr<FeatureRecord> getParent() { std::shared_ptr<FeatureRecord> null; return null; }
-  virtual FeatureType featureType() { return FeatureType::GENE; }
+  const FeatureIdent_t& id() const { return id_; }
+  const FeatureSequence& sequence() const { return sequence_; }
+  void setAttributes(const FeatureAttributes& attributes) { attributes_ = attributes; }
+  bool isSubFeature() { return not parents_.empty(); }
 
 private:
 
-  ContigRecord& contig_;
+  FeatureIdent_t id_;
+  FeatureType_t type_;
+  std::shared_ptr<ContigRecord> contig_ptr_;
   FeatureSequence sequence_;
-  SubFeaturePtrMap sub_features_;
-  GenomeAttributes attributes_;
+  SubFeatureMap sub_features_;
+  ParentFeatureMap parents_;
+  FeatureAttributes attributes_;
 
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ContigRecord - A contiguous region, the associated sequence,  and all features that map onto that region/sequence.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class SubFeatureRecord: public FeatureRecord {
-
-public:
-
-  SubFeatureRecord(ContigRecord& contig,
-                   const FeatureSequence& sequence,
-                   std::shared_ptr<FeatureRecord> parent,
-                   FeatureType feature_type) : FeatureRecord(contig, sequence),
-                                               parent_(std::move(parent)),
-                                               feature_type_(feature_type){}
-  ~SubFeatureRecord() override = default;
-  SubFeatureRecord(const SubFeatureRecord&) = default;
-
-  std::shared_ptr<FeatureRecord> getParent() final { return parent_; }
-  FeatureType featureType() final { return feature_type_; }
-
-private:
-
-  std::shared_ptr<FeatureRecord> parent_;
-  FeatureType feature_type_;
-
-};
-
-
-using FeatureMap = std::map<ContigOffset_t, std::unique_ptr<FeatureRecord>>;
+using OffsetFeatureMap = std::multimap<ContigOffset_t, std::shared_ptr<FeatureRecord>>;
+using IdFeatureMap = std::map<FeatureIdent_t, std::shared_ptr<FeatureRecord>>;
 class ContigRecord {
 
 public:
@@ -154,6 +155,8 @@ public:
 
   ContigRecord& operator=(const ContigRecord&) = default;
 
+  bool addFeature(std::shared_ptr<FeatureRecord>& feature_ptr);
+
   const ContigId_t& contigID() const { return contig_id_; }
   const Sequence_t& sequence() const { return sequence_; }
 
@@ -161,13 +164,17 @@ private:
 
   ContigId_t contig_id_;
   Sequence_t sequence_;
-  FeatureMap feature_map_;
-  GenomeAttributes attributes_;
+  OffsetFeatureMap offset_feature_map_;
+  IdFeatureMap id_feature_map_;
+  FeatureAttributes attributes_;
 
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// GenomeSequences - A map of contigs and associated features.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using GenomeSequenceMap = std::map<ContigId_t, std::unique_ptr<ContigRecord>>;
+using GenomeSequenceMap = std::map<ContigId_t, std::shared_ptr<ContigRecord>>;
 class GenomeSequences {
 
 public:
@@ -178,7 +185,8 @@ public:
 
   GenomeSequences& operator=(const GenomeSequences&) = default;
 
-  void addContigSequence(ContigId_t& contig, Sequence_t sequence);
+  bool addContigSequence(const ContigId_t& contig, Sequence_t sequence);  // Return false if contig already exists.
+  bool getContigSequence(const ContigId_t& contig, std::shared_ptr<ContigRecord>& contig_ptr) const;   // Returns false if key not found.
   GenomeSequenceMap& getGenomeSequenceMap() { return genome_sequence_map_; }
 
 private:
@@ -186,7 +194,7 @@ private:
   Logger& log;
 
   GenomeSequenceMap genome_sequence_map_;
-  GenomeAttributes attributes_;
+  FeatureAttributes attributes_;
 
 };
 
