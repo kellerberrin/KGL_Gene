@@ -35,8 +35,7 @@ kgl::GenomeAnalysis::GenomeAnalysis(kgl::Logger& log, const kgl::ExecEnv::Args& 
   std::unique_ptr<kgl::GenomeSequences> genome_ptr = gff_fasta_reader.readFastaGffFile(args.fastaFile, args.gffFile);
 
   // Wireup the genome database.
-
-  genome_ptr->setupFeatureHierarchy();
+  genome_ptr->createVerifyGenomeDatabase();
 
   // Declare a SAM reader.
   kgl::LocalProcessSam process_sam(log, args.readQuality);
@@ -49,12 +48,6 @@ kgl::GenomeAnalysis::GenomeAnalysis(kgl::Logger& log, const kgl::ExecEnv::Args& 
   }
 
   process_sam.readSAMFile(args.mutantFile);
-
-  if (args.parentFile.length() > 0) {
-
-    process_sam.readSAMFile(args.parentFile); // Optionally specified.
-
-  }
 
 }
 

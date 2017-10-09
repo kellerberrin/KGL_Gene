@@ -26,8 +26,12 @@
 
 #include "kgl_gff_fasta.h"
 #include <seqan/seq_io.h>
+#include <boost/tokenizer.hpp>
+
 
 namespace kgl = kellerberrin::genome;
+namespace bt = boost;
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ParseGffFasta::GffFastaImpl does all the heavy lifting using 3rd a party library. In this case; Seqan.
@@ -162,7 +166,15 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(const kgl::GenomeSequences
     std::string key = toCString(record.tagNames[i]);
     std::string value = toCString(record.tagValues[i]);
 
-    record_attributes.insertAttribute(key, value);
+
+    bt::char_separator<char> sep(",");
+    bt::tokenizer<bt::char_separator<char>> tokenize(value, sep);
+    for(auto iter = tokenize.begin(); iter != tokenize.end(); ++iter) {
+
+      record_attributes.insertAttribute(key, *iter);
+
+    }
+
 
   }
   // Create a sequence object.
@@ -211,8 +223,9 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(const kgl::GenomeSequences
   kgl::ContigId_t contig_id = toCString(record.ref);
   // Get a pointer to the contig.
   std::shared_ptr<kgl::ContigRecord> contig_ptr;
-  if (!genome_sequences.getContigSequence(contig_id, contig_ptr)) {
+  if (not genome_sequences.getContigSequence(contig_id, contig_ptr)) {
 
+    log.error("Could not find contig: {}", contig_id);
     return false;
 
   }
@@ -224,7 +237,14 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(const kgl::GenomeSequences
   // Add in the attributes.
   feature_ptr->setAttributes(record_attributes);
   // Annotate the contig.
-  return contig_ptr->addFeature(feature_ptr);
+  if (not contig_ptr->addFeature(feature_ptr)) {
+
+    log.error("Could not add duplicate feature: {} to contig: {}", feature_id, contig_id);
+    return false;
+
+  }
+
+  return true;
 
 }
 

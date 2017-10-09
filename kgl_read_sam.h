@@ -61,7 +61,7 @@ private:
   std::shared_ptr<SAMConsumerMT> consumer_ptr_;                  // Consume the SAM records.
 
   static constexpr const char* EOF_INDICATOR_{"<<EOF>>"};  // Enqueued by producer to indicate SAM eof.
-  static constexpr long REPORT_INCREMENT_{500000};    // Frequency to emit SAM progress messages
+  static constexpr long REPORT_INCREMENT_{1000000};    // Frequency to emit SAM progress messages
   static constexpr long HIGH_TIDE_{1000000};          // Maximum BoundedMtQueue size
   static constexpr long LOW_TIDE_{500000};            // Low water mark to begin queueing SAM records
 

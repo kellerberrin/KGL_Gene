@@ -32,9 +32,9 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 #include <map>
 #include "kgl_genome_types.h"
-#include "kgl_logging.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -121,8 +121,8 @@ class ContigRecord; // Forward decl;
 class FeatureRecord; // Forward decl.
 using FeatureIdent_t = std::string;
 using FeatureType_t = std::string;
-using SubFeatureMap = std::map<const FeatureIdent_t, std::shared_ptr<FeatureRecord>>;
-using ParentFeatureMap = std::map<const FeatureIdent_t, std::shared_ptr<FeatureRecord>>;
+using SubFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<FeatureRecord>>;
+using ParentFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<FeatureRecord>>;
 class FeatureRecord {
 
 public:
@@ -143,8 +143,11 @@ public:
 
   // Hierarchy routines.
   void clearHierachy() { sub_features_.clear(); parents_.clear(); }
-  bool addParent(const FeatureIdent_t& parent_id, const std::shared_ptr<FeatureRecord>& parent_ptr);
-  bool addSubFeature(const FeatureIdent_t& parent_id, const std::shared_ptr<FeatureRecord>& sub_feature_ptr);
+  void addParent(const FeatureIdent_t& parent_id, const std::shared_ptr<FeatureRecord>& parent_ptr);
+  void addSubFeature(const FeatureIdent_t& parent_id, const std::shared_ptr<FeatureRecord>& sub_feature_ptr);
+
+  ParentFeatureMap& parentFeatures() { return parents_; }
+  SubFeatureMap& subFeatures() { return sub_features_; }
 
 private:
 
@@ -165,7 +168,7 @@ private:
 
 
 using OffsetFeatureMap = std::multimap<ContigOffset_t, std::shared_ptr<FeatureRecord>>;
-using IdFeatureMap = std::map<FeatureIdent_t, std::shared_ptr<FeatureRecord>>;
+using IdFeatureMap = std::multimap<FeatureIdent_t, std::shared_ptr<FeatureRecord>>;
 class ContigRecord {
 
 public:
@@ -178,11 +181,15 @@ public:
   ContigRecord& operator=(const ContigRecord&) = default;
 
   bool addFeature(std::shared_ptr<FeatureRecord>& feature_ptr);
-  void setupFeatureHierarchy();
-  bool findFeatureId(FeatureIdent_t& feature_id, std::shared_ptr<FeatureRecord>& feature_ptr); // false if not found.
+  // false if not found.
+  bool findFeatureId(FeatureIdent_t& feature_id, std::vector<std::shared_ptr<FeatureRecord>>& feature_ptr_vec);
 
   const ContigId_t& contigID() const { return contig_id_; }
   const Sequence_t& sequence() const { return sequence_; }
+  ContigSize_t contigSize() { return sequence_.length(); }
+
+  void setupFeatureHierarchy();
+  void verifyFeatureHierarchy();
 
 private:
 
@@ -190,6 +197,8 @@ private:
   Sequence_t sequence_;
   OffsetFeatureMap offset_feature_map_;
   IdFeatureMap id_feature_map_;
+
+
 
 };
 
@@ -214,12 +223,17 @@ public:
   bool addContigSequence(const ContigId_t& contig, Sequence_t sequence);
   // Returns false if key not found.
   bool getContigSequence(const ContigId_t& contig, std::shared_ptr<ContigRecord>& contig_ptr) const;
-  void setupFeatureHierarchy();
   GenomeSequenceMap& getGenomeSequenceMap() { return genome_sequence_map_; }
+
+  void createVerifyGenomeDatabase();
+
 
 private:
 
   GenomeSequenceMap genome_sequence_map_;
+
+  void setupFeatureHierarchy();
+  void verifyFeatureHierarchy();
 
 };
 

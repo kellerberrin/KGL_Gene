@@ -55,6 +55,7 @@ public:
 
   static constexpr const int NO_EXIT_ON_ERROR = -1;  // No exit on error messages
   void SetMaxErrorMessages(int max_messages) { max_error_messages_ = max_messages; }
+  void SetMaxwarningMessages(int max_messages) { max_warn_messages_ = max_messages; }
 
   template<typename M, typename... Args> void trace(M& message, Args... args) noexcept;
   template<typename M, typename... Args> void info(M& message, Args... args) noexcept;
@@ -69,6 +70,8 @@ private:
   std::unique_ptr<spdlog::logger> plog_impl_;
   std::atomic<int> max_error_messages_{100};     // Defaults to 100 error messages
   std::atomic<int> error_message_count_{0};     // number of error messages issued.
+  std::atomic<int> max_warn_messages_{100};     // Defaults to 100 warning messages
+  std::atomic<int> warn_message_count_{0};     // number of warning messages issued.
 
 };
 
@@ -88,8 +91,21 @@ template<typename M, typename... Args> void Logger::info(M& message, Args... arg
 
 template<typename M, typename... Args> void Logger::warn(M& message, Args... args) noexcept {
 
-  plog_impl_->warn(message, args...);
-  plog_impl_->flush();
+  if (max_warn_messages_ < 0 or warn_message_count_ <= max_warn_messages_) {
+
+    plog_impl_->warn(message, args...);
+    plog_impl_->flush();
+
+  }
+
+  if (max_warn_messages_ >= 0 and warn_message_count_ == max_warn_messages_) {
+
+    plog_impl_->warn("Maximum warning messages: {} issued.", max_warn_messages_);
+    plog_impl_->warn("Further warning messages will be suppressed.");
+
+  }
+
+  ++warn_message_count_;
 
 }
 

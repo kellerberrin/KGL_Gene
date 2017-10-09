@@ -18,11 +18,13 @@ namespace kgl = kellerberrin::genome;
 
 
 
+
 // Static member declarations.
 kgl::ExecEnv::Args kgl::ExecEnv::args_;
 std::unique_ptr<kgl::Logger> kgl::ExecEnv::log_ptr_;
 constexpr const char* kgl::ExecEnv::MODULE_NAME;
 constexpr const char* kgl::ExecEnv::VERSION;
+
 
 // Utility function to pre-pend work directory path and check file existance
 void getFilePath(const std::string& option_text,

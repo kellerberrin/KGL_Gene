@@ -25,6 +25,7 @@
 //
 
 #include "kgl_genome_db.h"
+#include "kgl_exec_env.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -80,22 +81,18 @@ void kgl::FeatureAttributes::getAllAttributes(std::vector<std::pair<std::string,
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool kgl::FeatureRecord::addParent(const kgl::FeatureIdent_t& parent_id,
+void kgl::FeatureRecord::addParent(const kgl::FeatureIdent_t& parent_id,
                                    const std::shared_ptr<kgl::FeatureRecord>& parent_ptr) {
 
-  auto result = sub_features_.insert(std::make_pair(parent_id, parent_ptr));
-
-  return result.second;
+  parents_.insert(std::make_pair(parent_id, parent_ptr));
 
 }
 
 
-bool kgl::FeatureRecord::addSubFeature(const FeatureIdent_t& sub_feature_id,
+void kgl::FeatureRecord::addSubFeature(const FeatureIdent_t& sub_feature_id,
                                        const std::shared_ptr<FeatureRecord>& sub_feature_ptr) {
 
-  auto result = sub_features_.insert(std::make_pair(sub_feature_id, sub_feature_ptr));
-
-  return result.second;
+  sub_features_.insert(std::make_pair(sub_feature_id, sub_feature_ptr));
 
 }
 
@@ -107,13 +104,7 @@ bool kgl::FeatureRecord::addSubFeature(const FeatureIdent_t& sub_feature_id,
 
 bool kgl::ContigRecord::addFeature(std::shared_ptr<kgl::FeatureRecord>& feature_ptr) {
 
-  auto result = id_feature_map_.insert(std::make_pair(feature_ptr->id(), feature_ptr));
-
-  if (not result.second) {
-
-    return false;
-
-  }
+  id_feature_map_.insert(std::make_pair(feature_ptr->id(), feature_ptr));
 
   offset_feature_map_.insert(std::make_pair(feature_ptr->sequence().begin(), feature_ptr));
 
@@ -121,20 +112,19 @@ bool kgl::ContigRecord::addFeature(std::shared_ptr<kgl::FeatureRecord>& feature_
 
 }
 
-
 bool kgl::ContigRecord::findFeatureId(kgl::FeatureIdent_t& feature_id,
-                                      std::shared_ptr<kgl::FeatureRecord>& feature_ptr) {
+                                      std::vector<std::shared_ptr<kgl::FeatureRecord>>& feature_ptr_vec) {
 
-  auto result = id_feature_map_.find(feature_id);
+  auto iter_pair = id_feature_map_.equal_range(feature_id);
 
-  if (result != id_feature_map_.end()) {
+  feature_ptr_vec.clear();
+  for (auto iter = iter_pair.first; iter != iter_pair.second; ++iter) {
 
-    feature_ptr = result->second;
-    return true;
+    feature_ptr_vec.emplace_back(iter->second);
 
   }
 
-  return false;  // Not found.
+  return not feature_ptr_vec.empty();
 
 }
 
@@ -158,30 +148,129 @@ void kgl::ContigRecord::setupFeatureHierarchy() {
     // Add parent pointers for the child and child pointers for the parents.
     for (auto parent_id : parents) {
 
-      std::shared_ptr<kgl::FeatureRecord> parent_ptr;
-      if (findFeatureId(parent_id, parent_ptr)) {
-
-        if (not feature.addParent(parent_id, parent_ptr)) {
-
-          // Error; parent already exists
-
-        }
-
-        if(not parent_ptr->addSubFeature(feature.id(), feature_pair.second)) {
-
-          // Error; child already exists
-
-        }
-
-      } else {
+      std::vector<std::shared_ptr<kgl::FeatureRecord>> parent_ptr_vec;
+      if (not findFeatureId(parent_id, parent_ptr_vec)) {
 
         // Error; could not find parent.
+        kgl::ExecEnv::log().error("Child Feature: {}; Parent Feature: {} does not exist", feature.id(), parent_id);
 
-      } // Find parent.
+      }
+      if (parent_ptr_vec.size() > 1) {
 
-    } // For all parents.
+        // Warning, more than 1 parent.
+        kgl::ExecEnv::log().warn("Parent id: {} returned : {} Parent Features", parent_id, parent_ptr_vec.size());
+
+      }
+      for (auto& parent_ptr : parent_ptr_vec) {
+
+        feature.addParent(parent_id, parent_ptr);
+        parent_ptr->addSubFeature(feature.id(), feature_pair.second);
+
+      } // For all parents with same id.
+
+    } // For all parent ids.
 
   } // For all features.
+
+}
+
+
+void kgl::ContigRecord::verifyFeatureHierarchy() {
+
+  // No features larger than the contig.
+  ContigSize_t contig_size = contigSize();
+  for (auto feature_pair : id_feature_map_) {
+    FeatureRecord& feature = *feature_pair.second;
+    // Error if feature overlaps the and of the contig.
+    if (feature.sequence().end() >= contig_size) {
+
+      kgl::ExecEnv::log().error("Feature: {}; (zero offset) end sequence: {} >= contig size: {}",
+                                feature.id(), feature.sequence().end(), contig_size);
+
+    }
+
+  }
+
+  // Check that children fit within parents
+  for (auto feature_pair : id_feature_map_) {
+    FeatureRecord& feature = *feature_pair.second;
+
+    for(auto child_feature_pair : feature.subFeatures()) {
+      FeatureRecord &child_feature = *child_feature_pair.second;
+      if (child_feature.sequence().begin() < feature.sequence().begin()
+          or child_feature.sequence().end() > feature.sequence().end()) {
+
+        kgl::ExecEnv::log().error("Child Feature: {}; [{}:{}] overlaps Feature {}; [{}:{}]",
+                                  child_feature.id(),
+                                  child_feature.sequence().begin(),
+                                  child_feature.sequence().end(),
+                                  feature.id(),
+                                  feature.sequence().begin(),
+                                  feature.sequence().end());
+
+
+      }
+
+    }
+
+    for(auto parent_feature_pair : feature.parentFeatures()) {
+      FeatureRecord& parent_feature = *parent_feature_pair.second;
+      if (feature.sequence().begin() < parent_feature.sequence().begin()
+          or feature.sequence().end() > parent_feature.sequence().end()) {
+
+        kgl::ExecEnv::log().error("Feature: {}; [{}:{}] overlaps Feature {}; [{}:{}]",
+                                  feature.id(),
+                                  feature.sequence().begin(),
+                                  feature.sequence().end(),
+                                  parent_feature.id(),
+                                  parent_feature.sequence().begin(),
+                                  parent_feature.sequence().end());
+
+      } // If parent >= feature
+
+    } // for all parents
+
+    long duplicates = 0;
+    // Check for duplicate parents.
+    for(auto parent_feature_pair_a : feature.parentFeatures()) {
+
+      for(auto parent_feature_pair_b : feature.parentFeatures()) {
+
+        if (parent_feature_pair_a == parent_feature_pair_b) ++duplicates;
+
+      } // for all parents
+
+    } // for all parents
+
+    duplicates -= feature.parentFeatures().size();
+
+    if (duplicates > 0) {
+
+      kgl::ExecEnv::log().info("Feature: {}; has {} duplicate parents", feature.id(), duplicates);
+
+    }
+
+    duplicates = 0;
+    // Check for duplicate children.
+    for(auto child_feature_pair_a : feature.subFeatures()) {
+
+      for(auto child_feature_pair_b : feature.subFeatures()) {
+
+        if (child_feature_pair_a == child_feature_pair_b) ++duplicates;
+
+      } // for all children
+
+    } // for all children
+
+    duplicates -= feature.subFeatures().size();
+
+    if (duplicates > 0) {
+
+      kgl::ExecEnv::log().info("Feature: {}; has {} duplicate children", feature.id(), duplicates);
+
+    }
+
+  } // for all features.
 
 }
 
@@ -217,6 +306,13 @@ bool kgl::GenomeSequences::getContigSequence(const kgl::ContigId_t& contig_id,
 
 }
 
+void kgl::GenomeSequences::createVerifyGenomeDatabase() {
+
+  setupFeatureHierarchy();
+  verifyFeatureHierarchy();
+
+}
+
 void kgl::GenomeSequences::setupFeatureHierarchy() {
 
   for (auto contig_pair : genome_sequence_map_) {
@@ -226,3 +322,15 @@ void kgl::GenomeSequences::setupFeatureHierarchy() {
   }
 
 }
+
+
+void kgl::GenomeSequences::verifyFeatureHierarchy() {
+
+  for (auto contig_pair : genome_sequence_map_) {
+
+    contig_pair.second->verifyFeatureHierarchy();
+
+  }
+
+}
+
