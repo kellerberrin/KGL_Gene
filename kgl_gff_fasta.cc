@@ -81,7 +81,7 @@ std::unique_ptr<kgl::GenomeSequences> kgl::ParseGffFasta::GffFastaImpl::readFast
 
   }
 
-  std::unique_ptr<kgl::GenomeSequences> genome_sequences_ptr(std::make_unique<kgl::GenomeSequences>(log));
+  std::unique_ptr<kgl::GenomeSequences> genome_sequences_ptr(std::make_unique<kgl::GenomeSequences>());
 
   for (unsigned i = 0; i < length(ids); ++i) {
 
@@ -155,9 +155,8 @@ void kgl::ParseGffFasta::GffFastaImpl::readGffFile(const std::string &gff_file_n
 bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(const kgl::GenomeSequences& genome_sequences,
                                                       seqan::GffRecord& record,
                                                       long gff_line_counter) {
-
+  // Get the attributes.
   kgl::FeatureAttributes record_attributes;
-
   for (unsigned i = 0; i < length(record.tagNames); i++) {
 
     std::string key = toCString(record.tagNames[i]);
@@ -166,20 +165,31 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(const kgl::GenomeSequences
     record_attributes.insertAttribute(key, value);
 
   }
-
   // Create a sequence object.
-
   ContigOffset_t begin = record.beginPos;
   ContigOffset_t end = record.endPos;
-  kgl::StrandSense strand = static_cast<kgl::StrandSense>(record.strand);
+  kgl::StrandSense strand;
+  // Check validity of the strand character
+  switch(record.strand) {
 
+    case '+':
+    case '-':
+    case '.':
+      strand = static_cast<kgl::StrandSense>(record.strand);
+      break;
+
+    default:
+      log.error("Strand Sense character: {} is not one of ['+', '-', '.']", record.strand);
+      return false;
+
+  }
   FeatureSequence sequence (begin, end, strand);
-
+  // Get the feature type.
   kgl::FeatureType_t type = toCString(record.type);
-
+  // Get (or construct) the feature ID.
   std::vector<kgl::FeatureIdent_t> feature_id_vec;
   kgl::FeatureIdent_t feature_id;
-  if (not record_attributes.getAttributes("ID", feature_id_vec)) {
+  if (not record_attributes.getIDs(feature_id_vec)) {
 
     // Construct an id
     feature_id = type + std::to_string(begin);
@@ -197,24 +207,23 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(const kgl::GenomeSequences
     feature_id = feature_id_vec[0];
 
   }
-
+  // Get the contig id.
   kgl::ContigId_t contig_id = toCString(record.ref);
-
+  // Get a pointer to the contig.
   std::shared_ptr<kgl::ContigRecord> contig_ptr;
-
   if (!genome_sequences.getContigSequence(contig_id, contig_ptr)) {
 
     return false;
 
   }
-
+  // Create the feature
   std::shared_ptr<kgl::FeatureRecord> feature_ptr(std::make_shared<kgl::FeatureRecord>(feature_id,
                                                                                        type,
                                                                                        contig_ptr,
                                                                                        sequence));
-
+  // Add in the attributes.
   feature_ptr->setAttributes(record_attributes);
-
+  // Annotate the contig.
   return contig_ptr->addFeature(feature_ptr);
 
 }

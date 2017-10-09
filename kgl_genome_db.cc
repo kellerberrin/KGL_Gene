@@ -51,10 +51,13 @@ bool kgl::FeatureAttributes::getAttributes(const std::string& key, std::vector<s
 }
 
 
-// Always succeeds
+// Always succeeds; keys are uppercase.
 void kgl::FeatureAttributes::insertAttribute(const std::string& key, const std::string& value) {
 
-  attributes_.insert(std::make_pair(key, value));
+  // Convert the key to upper case to avoid the vagaries of non-standard case in keys.
+  std::string upper_case_key = key;
+  std::transform(upper_case_key.begin(), upper_case_key.end(), upper_case_key.begin(), ::toupper);
+  attributes_.insert(std::make_pair(upper_case_key, value));
 
 }
 
@@ -68,6 +71,31 @@ void kgl::FeatureAttributes::getAllAttributes(std::vector<std::pair<std::string,
     all_key_value_pairs.emplace_back(key_value_pair);
 
   }
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FeatureRecord members.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bool kgl::FeatureRecord::addParent(const kgl::FeatureIdent_t& parent_id,
+                                   const std::shared_ptr<kgl::FeatureRecord>& parent_ptr) {
+
+  auto result = sub_features_.insert(std::make_pair(parent_id, parent_ptr));
+
+  return result.second;
+
+}
+
+
+bool kgl::FeatureRecord::addSubFeature(const FeatureIdent_t& sub_feature_id,
+                                       const std::shared_ptr<FeatureRecord>& sub_feature_ptr) {
+
+  auto result = sub_features_.insert(std::make_pair(sub_feature_id, sub_feature_ptr));
+
+  return result.second;
 
 }
 
@@ -90,6 +118,70 @@ bool kgl::ContigRecord::addFeature(std::shared_ptr<kgl::FeatureRecord>& feature_
   offset_feature_map_.insert(std::make_pair(feature_ptr->sequence().begin(), feature_ptr));
 
   return true;
+
+}
+
+
+bool kgl::ContigRecord::findFeatureId(kgl::FeatureIdent_t& feature_id,
+                                      std::shared_ptr<kgl::FeatureRecord>& feature_ptr) {
+
+  auto result = id_feature_map_.find(feature_id);
+
+  if (result != id_feature_map_.end()) {
+
+    feature_ptr = result->second;
+    return true;
+
+  }
+
+  return false;  // Not found.
+
+}
+
+
+
+void kgl::ContigRecord::setupFeatureHierarchy() {
+
+  // Remove all hierarchies for all features.
+  for (auto feature_pair : id_feature_map_) {
+    FeatureRecord& feature = *feature_pair.second;
+    // Remove feature hierarchy.
+    feature.clearHierachy();
+  }
+
+  // Re-establish the hierarchies for all features.
+  for (auto feature_pair : id_feature_map_) {
+    FeatureRecord& feature = *feature_pair.second;
+    // For each feature lookup a list of parents
+    std::vector<FeatureIdent_t> parents;
+    feature.getAttributes().getParents(parents);
+    // Add parent pointers for the child and child pointers for the parents.
+    for (auto parent_id : parents) {
+
+      std::shared_ptr<kgl::FeatureRecord> parent_ptr;
+      if (findFeatureId(parent_id, parent_ptr)) {
+
+        if (not feature.addParent(parent_id, parent_ptr)) {
+
+          // Error; parent already exists
+
+        }
+
+        if(not parent_ptr->addSubFeature(feature.id(), feature_pair.second)) {
+
+          // Error; child already exists
+
+        }
+
+      } else {
+
+        // Error; could not find parent.
+
+      } // Find parent.
+
+    } // For all parents.
+
+  } // For all features.
 
 }
 
@@ -122,5 +214,15 @@ bool kgl::GenomeSequences::getContigSequence(const kgl::ContigId_t& contig_id,
   }
 
   return false;
+
+}
+
+void kgl::GenomeSequences::setupFeatureHierarchy() {
+
+  for (auto contig_pair : genome_sequence_map_) {
+
+    contig_pair.second->setupFeatureHierarchy();
+
+  }
 
 }
