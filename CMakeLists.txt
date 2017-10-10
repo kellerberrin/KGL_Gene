@@ -22,7 +22,7 @@ find_package( Boost COMPONENTS system filesystem timer chrono REQUIRED )
 set(SOURCE_FILES kgl_logging.h kgl_logging.cc kgl_read_sam.h
         kgl_mt_queue.h kgl_mt_data.h kgl_genome_types.h kgl_consume_sam.h
         kgl_process_sam.h kgl_lock.h kgl_mt_numpy.h kgl_nucleotide.h kgl_parse_sam.h
-        kgl_parse_sam.cc kgl_mt_contig.h)
+        kgl_parse_sam.cc kgl_mt_contig.h kgl_exec_env.cc)
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pg -pthread")
 #set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall -pg")
@@ -38,5 +38,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../..)
 add_library(read_sam SHARED ${SOURCE_FILES} kgl_python.cc)
 
 #generate kgl_genome executable
-add_executable (kgl_genome ${SOURCE_FILES} kgl_main.cc kgl_exec_env.h kgl_exec_env.cc kgl_gff_fasta.h kgl_gff_fasta.cc kgl_main.cc kgl_genome.h kgl_genome.cc kgl_genome_db.h kgl_genome_db.cc kgl_patterns.h kgl_genome_feature.h kgl_genome_feature.cc)
+add_executable (kgl_genome ${SOURCE_FILES} kgl_main.cc  kgl_gff_fasta.h kgl_gff_fasta.cc kgl_genome.h kgl_genome.cc
+                kgl_genome_db.h kgl_genome_db.cc kgl_patterns.h kgl_genome_feature.h kgl_genome_feature.cc
+                kgl_exec_env_boost.cc)
 target_link_libraries(kgl_genome ${Boost_LIBRARIES})

@@ -49,7 +49,7 @@ class ConsumeMTSAM {
 
 public:
 
-  explicit ConsumeMTSAM(Logger& logger) : log(logger),  contig_data_map_(logger) {}
+  explicit ConsumeMTSAM(Logger& logger) : log(logger)  {}
   virtual ~ConsumeMTSAM() = default;
 
   ContigDataMap<ConsumerRecordType>& contigDataMap() { return contig_data_map_; }

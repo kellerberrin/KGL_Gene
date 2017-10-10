@@ -40,6 +40,7 @@
 #include "kgl_nucleotide.h"
 #include "kgl_mt_numpy.h"
 #include "kgl_mt_contig.h"
+#include "kgl_exec_env.h"
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
@@ -227,16 +228,14 @@ private:
 
 };
 
-
 // ContigId indexed data. This is a map structure that holds the processed read data indexed by contig_id.
+template<typename DataBlock> using ContigCountMap = std::map<const ContigId_t, std::unique_ptr<DataBlock>>;
 template <class ContigDataBlock>
 class ContigDataMap {
 
 public:
 
-  using ContigMap = std::map<const ContigId_t, std::unique_ptr<ContigDataBlock>>;
-
-  explicit ContigDataMap(Logger& logger) : log(logger) {}
+  explicit ContigDataMap() {}
   ~ContigDataMap() = default;
 
 
@@ -250,23 +249,21 @@ public:
 
     if (not result.second) {
 
-      log.error("addContigData(), Attempted to add duplicate contig; {}", contig_id);
+      ExecEnv::log().error("addContigData(), Attempted to add duplicate contig; {}", contig_id);
 
     }
 
   }
 
 // Access functions to obtain the underlying contig block.
-  inline typename ContigMap::iterator getContig( const ContigId_t& contig_id) { return contig_map_.find(contig_id); }
-  inline typename ContigMap::const_iterator notFound() { return contig_map_.end(); }
-  inline ContigDataBlock& getMatrix(typename ContigMap::iterator& map_ptr) { return *(map_ptr->second); }
-  inline const ContigMap& getMap() { return contig_map_; }
+  inline typename ContigCountMap<ContigDataBlock>::iterator getContig( const ContigId_t& contig_id) { return contig_map_.find(contig_id); }
+  inline typename ContigCountMap<ContigDataBlock>::const_iterator notFound() { return contig_map_.end(); }
+  inline ContigDataBlock& getMatrix(typename ContigCountMap<ContigDataBlock>::iterator& map_ptr) { return *(map_ptr->second); }
+  inline ContigCountMap<ContigDataBlock>& getMap() { return contig_map_; }
 
 private:
 
-  Logger& log;
-
-  ContigMap contig_map_;  // Store the DNA read data for all contigs.
+  ContigCountMap<ContigDataBlock> contig_map_;  // Store the DNA read data for all contigs.
   mutable std::mutex mutex_;  // Used to add contigs.
 
 };

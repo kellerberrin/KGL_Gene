@@ -64,8 +64,8 @@ public:
   };
 
   static bool parseCommandLine(int argc, char const ** argv);
-  static const Args& args() { return args_; }
-  static Logger& log() { return *log_ptr_; }
+  static const Args& args();
+  static Logger& log();
   static constexpr const char* VERSION = "0.1";
   static constexpr const char* MODULE_NAME = "kgl_genome";
   static void getElpasedTime(double& Clock, double& System, double& User);
