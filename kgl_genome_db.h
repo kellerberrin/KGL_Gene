@@ -64,11 +64,11 @@ public:
 
   // Attribute keys.
   constexpr static const char* ID_KEY = "ID";
-  constexpr static const char* PARENT_KEY = "PARENT";
+  constexpr static const char* SUPER_FEATURE_KEY = "PARENT";
 
   // Convenience access routines.
-  bool getIDs(std::vector<std::string>& value_vec) const { return getAttributes(ID_KEY, value_vec); }
-  bool getParents(std::vector<std::string>& value_vec) const { return getAttributes(PARENT_KEY, value_vec); }
+  bool getIds(std::vector<std::string> &value_vec) const { return getAttributes(ID_KEY, value_vec); }
+  bool getSuperFeatureIds(std::vector<std::string> &value_vec) const { return getAttributes(SUPER_FEATURE_KEY, value_vec); }
 
 
 private:
@@ -102,11 +102,15 @@ public:
   ContigOffset_t begin() const { return begin_offset_; }
   ContigOffset_t end() const { return end_offset_; }
   StrandSense sense() const { return strand_sense_; }
+  void begin(ContigOffset_t begin) { begin_offset_ = begin; }
+  void end(ContigOffset_t end) { end_offset_ = end; }
+  void sense(StrandSense strand) { strand_sense_ = strand; }
+
 
 private:
 
-  ContigOffset_t begin_offset_;    // O based contig sequence offset.
-  ContigOffset_t end_offset_;      // 0 based contig sequence offset.
+  ContigOffset_t begin_offset_;    // [O, size-1] based contig sequence offset.
+  ContigOffset_t end_offset_;      // [O, size-1] based contig sequence offset.
   StrandSense strand_sense_;
 
 };
@@ -122,7 +126,7 @@ class FeatureRecord; // Forward decl.
 using FeatureIdent_t = std::string;
 using FeatureType_t = std::string;
 using SubFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<FeatureRecord>>;
-using ParentFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<FeatureRecord>>;
+using SuperFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<FeatureRecord>>;
 class FeatureRecord {
 
 public:
@@ -135,18 +139,19 @@ public:
   virtual ~FeatureRecord() = default;
 
   FeatureRecord& operator=(const FeatureRecord&) = default;
+
   const FeatureIdent_t& id() const { return id_; }
   const FeatureSequence& sequence() const { return sequence_; }
+  void sequence(const FeatureSequence& new_sequence) { sequence_ = new_sequence; }
   void setAttributes(const FeatureAttributes& attributes) { attributes_ = attributes; }
   const FeatureAttributes& getAttributes() const { return attributes_; }
-  bool isSubFeature() { return not parents_.empty(); }
 
   // Hierarchy routines.
-  void clearHierachy() { sub_features_.clear(); parents_.clear(); }
-  void addParent(const FeatureIdent_t& parent_id, const std::shared_ptr<FeatureRecord>& parent_ptr);
-  void addSubFeature(const FeatureIdent_t& parent_id, const std::shared_ptr<FeatureRecord>& sub_feature_ptr);
+  void clearHierachy() { sub_features_.clear(); super_features_.clear(); }
+  void addSuperFeature(const FeatureIdent_t &super_feature_id, const std::shared_ptr<FeatureRecord> &super_feature_ptr);
+  void addSubFeature(const FeatureIdent_t& sub_feature_id, const std::shared_ptr<FeatureRecord>& sub_feature_ptr);
 
-  ParentFeatureMap& parentFeatures() { return parents_; }
+  SuperFeatureMap& superFeatures() { return super_features_; }
   SubFeatureMap& subFeatures() { return sub_features_; }
 
 private:
@@ -156,7 +161,7 @@ private:
   std::shared_ptr<ContigRecord> contig_ptr_;
   FeatureSequence sequence_;
   SubFeatureMap sub_features_;
-  ParentFeatureMap parents_;
+  SuperFeatureMap super_features_;
   FeatureAttributes attributes_;
 
 };
@@ -184,7 +189,7 @@ public:
   // false if not found.
   bool findFeatureId(FeatureIdent_t& feature_id, std::vector<std::shared_ptr<FeatureRecord>>& feature_ptr_vec);
 
-  const ContigId_t& contigID() const { return contig_id_; }
+  const ContigId_t& contigId() const { return contig_id_; }
   const Sequence_t& sequence() const { return sequence_; }
   ContigSize_t contigSize() { return sequence_.length(); }
 
@@ -198,7 +203,12 @@ private:
   OffsetFeatureMap offset_feature_map_;
   IdFeatureMap id_feature_map_;
 
-
+  void verifyContigOverlap();
+  void verifySubFeatureSuperFeatureDimensions();
+  void verifySubFeatureDuplicates();
+  void verifySuperFeatureDuplicates();
+  void removeSubFeatureDuplicates();
+  void removeSuperFeatureDuplicates();
 
 };
 

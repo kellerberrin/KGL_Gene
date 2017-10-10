@@ -201,7 +201,7 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(const kgl::GenomeSequences
   // Get (or construct) the feature ID.
   std::vector<kgl::FeatureIdent_t> feature_id_vec;
   kgl::FeatureIdent_t feature_id;
-  if (not record_attributes.getIDs(feature_id_vec)) {
+  if (not record_attributes.getIds(feature_id_vec)) {
 
     // Construct an id
     feature_id = type + std::to_string(begin);

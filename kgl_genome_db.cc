@@ -81,10 +81,10 @@ void kgl::FeatureAttributes::getAllAttributes(std::vector<std::pair<std::string,
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void kgl::FeatureRecord::addParent(const kgl::FeatureIdent_t& parent_id,
-                                   const std::shared_ptr<kgl::FeatureRecord>& parent_ptr) {
+void kgl::FeatureRecord::addSuperFeature(const kgl::FeatureIdent_t &super_feature_id,
+                                         const std::shared_ptr<kgl::FeatureRecord> &super_feature_ptr) {
 
-  parents_.insert(std::make_pair(parent_id, parent_ptr));
+  super_features_.insert(std::make_pair(super_feature_id, super_feature_ptr));
 
 }
 
@@ -139,34 +139,35 @@ void kgl::ContigRecord::setupFeatureHierarchy() {
     feature.clearHierachy();
   }
 
-  // Re-establish the hierarchies for all features.
+  // Establish or re-establish the hierarchies for all features.
   for (auto feature_pair : id_feature_map_) {
     FeatureRecord& feature = *feature_pair.second;
-    // For each feature lookup a list of parents
-    std::vector<FeatureIdent_t> parents;
-    feature.getAttributes().getParents(parents);
-    // Add parent pointers for the child and child pointers for the parents.
-    for (auto parent_id : parents) {
+    // For each feature lookup a list of super_features
+    std::vector<FeatureIdent_t> super_features;
+    feature.getAttributes().getSuperFeatureIds(super_features);
+    // Add parent pointers for the child and child pointers for the super_features.
+    for (auto super_feature_id : super_features) {
 
-      std::vector<std::shared_ptr<kgl::FeatureRecord>> parent_ptr_vec;
-      if (not findFeatureId(parent_id, parent_ptr_vec)) {
+      std::vector<std::shared_ptr<kgl::FeatureRecord>> super_feature_ptr_vec;
+      if (not findFeatureId(super_feature_id, super_feature_ptr_vec)) {
 
-        // Error; could not find parent.
-        kgl::ExecEnv::log().error("Child Feature: {}; Parent Feature: {} does not exist", feature.id(), parent_id);
-
-      }
-      if (parent_ptr_vec.size() > 1) {
-
-        // Warning, more than 1 parent.
-        kgl::ExecEnv::log().warn("Parent id: {} returned : {} Parent Features", parent_id, parent_ptr_vec.size());
+        // Error; could not find super feature.
+        kgl::ExecEnv::log().error("Feature: {}; Super Feature: {} does not exist", feature.id(), super_feature_id);
 
       }
-      for (auto& parent_ptr : parent_ptr_vec) {
+      if (super_feature_ptr_vec.size() > 1) {
 
-        feature.addParent(parent_id, parent_ptr);
-        parent_ptr->addSubFeature(feature.id(), feature_pair.second);
+        // Warning, more than 1 super feature.
+        kgl::ExecEnv::log().warn("Super Feature id: {} returned : {} Super Features",
+                                 super_feature_id, super_feature_ptr_vec.size());
 
-      } // For all parents with same id.
+      }
+      for (auto& super_feature_ptr : super_feature_ptr_vec) {
+
+        feature.addSuperFeature(super_feature_id, super_feature_ptr);
+        super_feature_ptr->addSubFeature(feature.id(), feature_pair.second);
+
+      } // For all super_features with same id.
 
     } // For all parent ids.
 
@@ -177,100 +178,249 @@ void kgl::ContigRecord::setupFeatureHierarchy() {
 
 void kgl::ContigRecord::verifyFeatureHierarchy() {
 
+  verifyContigOverlap();
+  verifySubFeatureSuperFeatureDimensions();
+  removeSubFeatureDuplicates();
+  removeSuperFeatureDuplicates();
+  verifySubFeatureDuplicates();
+  verifySuperFeatureDuplicates();
+
+}
+
+
+void kgl::ContigRecord::verifyContigOverlap() {
+
+  // If feature dimensions are [1, size] instead of [0, size-1] then assume that conversion from the
+  // Gff convention of [1, size] has not been performed correctly during feature read from disk.
+  // Adjust to [0, size-1] here.
+  // Note that this suggests a problem with the (3rd party) Gff read functionality and should be addressed there.
+
+  long adjust_from_1_size = 0;  // Report heuristic adjustment.
+
   // No features larger than the contig.
   ContigSize_t contig_size = contigSize();
+
   for (auto feature_pair : id_feature_map_) {
-    FeatureRecord& feature = *feature_pair.second;
+    FeatureRecord &feature = *feature_pair.second;
     // Error if feature overlaps the and of the contig.
+    // If [1,contig_size] then adjust to [0, contis_size-1]
     if (feature.sequence().end() >= contig_size) {
 
-      kgl::ExecEnv::log().error("Feature: {}; (zero offset) end sequence: {} >= contig size: {}",
-                                feature.id(), feature.sequence().end(), contig_size);
+      if (feature.sequence().end() == contig_size) { // adjust to [0, size-1]
 
-    }
+        ++adjust_from_1_size;
+        FeatureSequence adj_sequence = feature.sequence();
+        ContigOffset_t adj_end = feature.sequence().end();
+        --adj_end;
+        adj_sequence.end(adj_end);
+        adj_sequence.begin(0);
+        feature.sequence(adj_sequence);
 
-  }
+      } else {
 
-  // Check that children fit within parents
+        kgl::ExecEnv::log().error("Feature: {};  sequence: [{}:{}] >= contig: {} size: {}",
+                                  feature.id(), feature.sequence().begin(), feature.sequence().end(),
+                                  contigId(), contig_size);
+
+      } // if end == contig_size
+
+    } // contig overlap
+
+  } // for all features.
+
+}
+
+
+void kgl::ContigRecord::verifySubFeatureSuperFeatureDimensions() {
+
+
+  // Check that sub-features fit within feature.
   for (auto feature_pair : id_feature_map_) {
-    FeatureRecord& feature = *feature_pair.second;
+    FeatureRecord &feature = *feature_pair.second;
 
-    for(auto child_feature_pair : feature.subFeatures()) {
-      FeatureRecord &child_feature = *child_feature_pair.second;
-      if (child_feature.sequence().begin() < feature.sequence().begin()
-          or child_feature.sequence().end() > feature.sequence().end()) {
+    for (auto sub_feature_pair : feature.subFeatures()) {
+      FeatureRecord &sub_feature = *sub_feature_pair.second;
+      if (sub_feature.sequence().begin() < feature.sequence().begin()
+          or sub_feature.sequence().end() > feature.sequence().end()) {
 
-        kgl::ExecEnv::log().error("Child Feature: {}; [{}:{}] overlaps Feature {}; [{}:{}]",
-                                  child_feature.id(),
-                                  child_feature.sequence().begin(),
-                                  child_feature.sequence().end(),
+        kgl::ExecEnv::log().error("SubFeature: {}; [{}:{}] overlaps Feature {}; [{}:{}]",
+                                  sub_feature.id(),
+                                  sub_feature.sequence().begin(),
+                                  sub_feature.sequence().end(),
                                   feature.id(),
                                   feature.sequence().begin(),
                                   feature.sequence().end());
 
 
+      } // if sub-feature overlaps feature
+
+    } // for all sub-features.
+
+    // Check that features fit within super-feature.
+    for (auto super_feature_pair : feature.superFeatures()) {
+      FeatureRecord &super_feature = *super_feature_pair.second;
+      if (feature.sequence().begin() < super_feature.sequence().begin()
+          or feature.sequence().end() > super_feature.sequence().end()) {
+
+        kgl::ExecEnv::log().error("Feature: {}; [{}:{}] overlaps SuperFeature {}; [{}:{}]",
+                                  feature.id(),
+                                  feature.sequence().begin(),
+                                  feature.sequence().end(),
+                                  super_feature.id(),
+                                  super_feature.sequence().begin(),
+                                  super_feature.sequence().end());
+
+      } // If feature overlaps super-feature.
+
+    } // for all super features.
+
+  } // for all features.
+
+}
+
+
+void kgl::ContigRecord::removeSubFeatureDuplicates() {
+
+  long duplicates_removed = 0;
+
+  for (auto feature_pair : id_feature_map_) {
+    FeatureRecord &feature = *feature_pair.second;
+
+    // Check for duplicate sub-features
+    for (auto iter = feature.subFeatures().begin(); iter != feature.subFeatures().end();  ++iter) {
+
+      auto check_iter = iter;
+      while (check_iter != feature.subFeatures().end()) {
+
+        check_iter++;
+
+        if (*iter == *check_iter) { // found a duplicate
+
+          check_iter = feature.subFeatures().erase(check_iter)  ;
+          ++duplicates_removed;
+
+        }
+
       }
 
     }
 
-    for(auto parent_feature_pair : feature.parentFeatures()) {
-      FeatureRecord& parent_feature = *parent_feature_pair.second;
-      if (feature.sequence().begin() < parent_feature.sequence().begin()
-          or feature.sequence().end() > parent_feature.sequence().end()) {
+  }
 
-        kgl::ExecEnv::log().error("Feature: {}; [{}:{}] overlaps Feature {}; [{}:{}]",
-                                  feature.id(),
-                                  feature.sequence().begin(),
-                                  feature.sequence().end(),
-                                  parent_feature.id(),
-                                  parent_feature.sequence().begin(),
-                                  parent_feature.sequence().end());
+  if (duplicates_removed > 0) {
 
-      } // If parent >= feature
+    kgl::ExecEnv::log().info("{} duplicate sub-features removed from contig: {}", duplicates_removed, contigId());
 
-    } // for all parents
+  }
+
+}
+
+
+void kgl::ContigRecord::removeSuperFeatureDuplicates() {
+
+  long duplicates_removed = 0;
+
+  for (auto feature_pair : id_feature_map_) {
+    FeatureRecord &feature = *feature_pair.second;
+
+    // Check for duplicate sub-features
+    for (auto iter = feature.superFeatures().begin(); iter != feature.superFeatures().end();  ++iter) {
+
+      auto check_iter = iter;
+      while (check_iter != feature.superFeatures().end()) {
+
+        check_iter++;
+
+        if (*iter == *check_iter) { // found a duplicate
+
+          check_iter = feature.superFeatures().erase(check_iter)  ;
+          ++duplicates_removed;
+
+        }
+
+      }
+
+    }
+
+  }
+
+  if (duplicates_removed > 0) {
+
+    kgl::ExecEnv::log().info("{} duplicate super-features removed from contig: {}", duplicates_removed, contigId());
+
+  }
+
+}
+
+
+void kgl::ContigRecord::verifySubFeatureDuplicates() {
+
+
+  for (auto feature_pair : id_feature_map_) {
+    FeatureRecord &feature = *feature_pair.second;
 
     long duplicates = 0;
-    // Check for duplicate parents.
-    for(auto parent_feature_pair_a : feature.parentFeatures()) {
+    // Check for duplicate sub-features
+    for (auto iter = feature.subFeatures().begin(); iter != feature.subFeatures().end();  ++iter) {
 
-      for(auto parent_feature_pair_b : feature.parentFeatures()) {
+      auto check_iter = iter;
+      while (check_iter != feature.subFeatures().end()) {
 
-        if (parent_feature_pair_a == parent_feature_pair_b) ++duplicates;
+        check_iter++;
 
-      } // for all parents
+        if (*iter == *check_iter) { // found a duplicate
 
-    } // for all parents
+          ++duplicates;
 
-    duplicates -= feature.parentFeatures().size();
+        }
 
-    if (duplicates > 0) {
-
-      kgl::ExecEnv::log().info("Feature: {}; has {} duplicate parents", feature.id(), duplicates);
-
-    }
-
-    duplicates = 0;
-    // Check for duplicate children.
-    for(auto child_feature_pair_a : feature.subFeatures()) {
-
-      for(auto child_feature_pair_b : feature.subFeatures()) {
-
-        if (child_feature_pair_a == child_feature_pair_b) ++duplicates;
-
-      } // for all children
-
-    } // for all children
-
-    duplicates -= feature.subFeatures().size();
-
-    if (duplicates > 0) {
-
-      kgl::ExecEnv::log().info("Feature: {}; has {} duplicate children", feature.id(), duplicates);
+      }
 
     }
 
-  } // for all features.
+    if (duplicates > 0) {
+
+      kgl::ExecEnv::log().warn("Feature: {}; has {} duplicate sub-features", feature.id(), duplicates);
+
+    }
+
+  }
+
+}
+
+
+void kgl::ContigRecord::verifySuperFeatureDuplicates() {
+
+
+  for (auto feature_pair : id_feature_map_) {
+    FeatureRecord &feature = *feature_pair.second;
+
+    long duplicates = 0;
+    // Check for duplicate super-features
+    for (auto iter = feature.superFeatures().begin(); iter != feature.superFeatures().end();  ++iter) {
+
+      auto check_iter = iter;
+      while (check_iter != feature.superFeatures().end()) {
+
+        check_iter++;
+
+        if (*iter == *check_iter) { // found a duplicate
+
+          ++duplicates;
+
+        }
+
+      }
+
+    }
+
+    if (duplicates > 0) {
+
+      kgl::ExecEnv::log().warn("Feature: {}; has {} duplicate super-features", feature.id(), duplicates);
+
+    }
+
+  }
 
 }
 
