@@ -45,10 +45,11 @@ using ContigFeatureId_t = std::string;
 using ContigOffset_t = uint64_t;              // Paris Japonica has 150 billion base pairs, use 64 bit integer.
 using ContigSize_t = ContigOffset_t;
 using NucleotideReadCount_t = uint32_t;
+using CDSPhaseType_t = unsigned char;
 
 // Usage and semantics : ContigOffset_t should be used when referring to the Genome and std::size_t should be used
 // when referring to the underlying data structure. In reality both are 64 bit integers (Paris Japonica). This is
-// asserted below. In general, the code is unsuitable for IA32 architectures, although will run (slowly).
+// asserted below.
 
 static_assert( sizeof(ContigSize_t) == sizeof(std::size_t)
              , "kgl::ContigSize_t and std::size_t should both be 64bit integers");

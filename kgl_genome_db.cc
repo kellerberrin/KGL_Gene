@@ -24,77 +24,12 @@
 // Created by kellerberrin on 7/10/17.
 //
 
-#include "kgl_genome_db.h"
 #include "kgl_exec_env.h"
+#include "kgl_patterns.h"
+#include "kgl_genome_feature.h"
+#include "kgl_genome_db.h"
 
 namespace kgl = kellerberrin::genome;
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// FeatureAttributes members.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-// Returns false if key not found.
-bool kgl::FeatureAttributes::getAttributes(const std::string& key, std::vector<std::string>& values) const {
-
-  auto iter_pair = attributes_.equal_range(key);
-
-  values.clear();
-  for (auto iter = iter_pair.first; iter != iter_pair.second; ++iter) {
-
-    values.emplace_back(iter->second);
-
-  }
-
-  return not values.empty();
-
-}
-
-
-// Always succeeds; keys are uppercase.
-void kgl::FeatureAttributes::insertAttribute(const std::string& key, const std::string& value) {
-
-  // Convert the key to upper case to avoid the vagaries of non-standard case in keys.
-  std::string upper_case_key = key;
-  std::transform(upper_case_key.begin(), upper_case_key.end(), upper_case_key.begin(), ::toupper);
-  attributes_.insert(std::make_pair(upper_case_key, value));
-
-}
-
-
-void kgl::FeatureAttributes::getAllAttributes(std::vector<std::pair<std::string, std::string>>& all_key_value_pairs) const {
-
-  all_key_value_pairs.clear();
-
-  for (auto key_value_pair : attributes_) {
-
-    all_key_value_pairs.emplace_back(key_value_pair);
-
-  }
-
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// FeatureRecord members.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-void kgl::FeatureRecord::addSuperFeature(const kgl::FeatureIdent_t &super_feature_id,
-                                         const std::shared_ptr<kgl::FeatureRecord> &super_feature_ptr) {
-
-  super_features_.insert(std::make_pair(super_feature_id, super_feature_ptr));
-
-}
-
-
-void kgl::FeatureRecord::addSubFeature(const FeatureIdent_t& sub_feature_id,
-                                       const std::shared_ptr<FeatureRecord>& sub_feature_ptr) {
-
-  sub_features_.insert(std::make_pair(sub_feature_id, sub_feature_ptr));
-
-}
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -206,13 +141,11 @@ void kgl::ContigRecord::verifyContigOverlap() {
     // If [1,contig_size] then adjust to [0, contis_size-1]
     if (feature.sequence().end() >= contig_size) {
 
-      if (feature.sequence().end() == contig_size) { // adjust to [0, size-1]
+      if (feature.sequence().end() == contig_size and feature.sequence().begin() <= 1) { // adjust to [0, size-1]
 
         ++adjust_from_1_size;
         FeatureSequence adj_sequence = feature.sequence();
-        ContigOffset_t adj_end = feature.sequence().end();
-        --adj_end;
-        adj_sequence.end(adj_end);
+        adj_sequence.end(adj_sequence.end() - 1);
         adj_sequence.begin(0);
         feature.sequence(adj_sequence);
 
@@ -228,6 +161,11 @@ void kgl::ContigRecord::verifyContigOverlap() {
 
   } // for all features.
 
+  if (adjust_from_1_size > 0) {
+
+    kgl::ExecEnv::log().warn("Contig: {}; size: {} had: {} 1-offset features [1, {}], adjusted to zero-offset [0, {}]",
+                             contigId(), contig_size, adjust_from_1_size, contig_size, (contig_size - 1));
+  }
 }
 
 
@@ -286,24 +224,7 @@ void kgl::ContigRecord::removeSubFeatureDuplicates() {
   for (auto feature_pair : id_feature_map_) {
     FeatureRecord &feature = *feature_pair.second;
 
-    // Check for duplicate sub-features
-    for (auto iter = feature.subFeatures().begin(); iter != feature.subFeatures().end();  ++iter) {
-
-      auto check_iter = iter;
-      while (check_iter != feature.subFeatures().end()) {
-
-        check_iter++;
-
-        if (*iter == *check_iter) { // found a duplicate
-
-          check_iter = feature.subFeatures().erase(check_iter)  ;
-          ++duplicates_removed;
-
-        }
-
-      }
-
-    }
+    duplicates_removed += deleteIterable(feature.subFeatures());
 
   }
 
@@ -315,7 +236,6 @@ void kgl::ContigRecord::removeSubFeatureDuplicates() {
 
 }
 
-
 void kgl::ContigRecord::removeSuperFeatureDuplicates() {
 
   long duplicates_removed = 0;
@@ -323,24 +243,7 @@ void kgl::ContigRecord::removeSuperFeatureDuplicates() {
   for (auto feature_pair : id_feature_map_) {
     FeatureRecord &feature = *feature_pair.second;
 
-    // Check for duplicate sub-features
-    for (auto iter = feature.superFeatures().begin(); iter != feature.superFeatures().end();  ++iter) {
-
-      auto check_iter = iter;
-      while (check_iter != feature.superFeatures().end()) {
-
-        check_iter++;
-
-        if (*iter == *check_iter) { // found a duplicate
-
-          check_iter = feature.superFeatures().erase(check_iter)  ;
-          ++duplicates_removed;
-
-        }
-
-      }
-
-    }
+    duplicates_removed += deleteIterable(feature.superFeatures());
 
   }
 
@@ -355,28 +258,10 @@ void kgl::ContigRecord::removeSuperFeatureDuplicates() {
 
 void kgl::ContigRecord::verifySubFeatureDuplicates() {
 
-
   for (auto feature_pair : id_feature_map_) {
     FeatureRecord &feature = *feature_pair.second;
 
-    long duplicates = 0;
-    // Check for duplicate sub-features
-    for (auto iter = feature.subFeatures().begin(); iter != feature.subFeatures().end();  ++iter) {
-
-      auto check_iter = iter;
-      while (check_iter != feature.subFeatures().end()) {
-
-        check_iter++;
-
-        if (*iter == *check_iter) { // found a duplicate
-
-          ++duplicates;
-
-        }
-
-      }
-
-    }
+    long duplicates = checkDuplicates(feature.subFeatures());
 
     if (duplicates > 0) {
 
@@ -391,28 +276,10 @@ void kgl::ContigRecord::verifySubFeatureDuplicates() {
 
 void kgl::ContigRecord::verifySuperFeatureDuplicates() {
 
-
   for (auto feature_pair : id_feature_map_) {
     FeatureRecord &feature = *feature_pair.second;
 
-    long duplicates = 0;
-    // Check for duplicate super-features
-    for (auto iter = feature.superFeatures().begin(); iter != feature.superFeatures().end();  ++iter) {
-
-      auto check_iter = iter;
-      while (check_iter != feature.superFeatures().end()) {
-
-        check_iter++;
-
-        if (*iter == *check_iter) { // found a duplicate
-
-          ++duplicates;
-
-        }
-
-      }
-
-    }
+    long duplicates = checkDuplicates(feature.superFeatures());
 
     if (duplicates > 0) {
 

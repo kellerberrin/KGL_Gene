@@ -196,8 +196,9 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(const kgl::GenomeSequences
 
   }
   FeatureSequence sequence (begin, end, strand);
-  // Get the feature type.
+  // Get the feature type and convert to upper case.
   kgl::FeatureType_t type = toCString(record.type);
+  std::transform(type.begin(), type.end(), type.begin(), ::toupper);
   // Get (or construct) the feature ID.
   std::vector<kgl::FeatureIdent_t> feature_id_vec;
   kgl::FeatureIdent_t feature_id;
@@ -229,11 +230,60 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(const kgl::GenomeSequences
     return false;
 
   }
-  // Create the feature
-  std::shared_ptr<kgl::FeatureRecord> feature_ptr(std::make_shared<kgl::FeatureRecord>(feature_id,
-                                                                                       type,
-                                                                                       contig_ptr,
-                                                                                       sequence));
+  // Check for a valid phase field
+  CDSPhaseType_t phase;
+  bool valid_phase = false;
+  switch(record.phase) {
+
+    case '0':
+      phase = 0;
+      valid_phase = true;
+      break;
+
+    case '1':
+      phase = 1;
+      valid_phase = true;
+      break;
+
+    case '2':
+      phase = 2;
+      valid_phase = true;
+      break;
+
+    case '.':
+      break;
+
+    default:
+      log.warn("Unexpected phase code: {} in Gff file should be one of '0', '1', '2', '.'", record.phase);
+      break;
+
+
+  }
+  // Check that the type field contains "CDS"
+  if (valid_phase) {
+
+    if (type.find(CDSRecord::CDS_TYPE) == std::string::npos) {
+
+      log.warn("Mis-match between valid phase: {} and record type: {}", phase, type);
+
+    }
+
+  }
+
+  std::shared_ptr<kgl::FeatureRecord> feature_ptr;
+  if (valid_phase) {
+    // Create a CDS Feature.
+    feature_ptr = std::make_shared<kgl::CDSRecord>(feature_id, phase, contig_ptr, sequence);
+  }
+  else if (type.find(GeneRecord::GENE_TYPE) != std::string::npos) {
+    // Create a GENE feature
+    feature_ptr = std::make_shared<kgl::GeneRecord>(feature_id, contig_ptr, sequence);
+
+  } else {
+    // Create a general feature
+    feature_ptr = std::make_shared<kgl::FeatureRecord>(feature_id, type, contig_ptr, sequence);
+
+  }
   // Add in the attributes.
   feature_ptr->setAttributes(record_attributes);
   // Annotate the contig.
