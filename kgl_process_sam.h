@@ -36,43 +36,32 @@ namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 
-// Simple class to bolt the producer and consumer together.
-using LocalConsumer = ConsumeMTSAM<ConsumerLocalRecord>;
+// Simple class to bolt the producer, consumer and data together.
+using ContigDataBlock = ContigDataMap<ConsumerLocalRecord>;
+using LocalConsumer = ConsumeMTSAM<ContigDataBlock>;
 using LocalProducer = ProduceMTSAM<LocalConsumer>;
 
 class LocalProcessSam {
 
 public:
 
-  explicit LocalProcessSam(Logger& logger, unsigned char readQuality) : log(logger) {
+  explicit LocalProcessSam(std::shared_ptr<ContigDataBlock> contig_data_ptr, Logger& log) {
 
-    consumer_ptr_ = std::shared_ptr<LocalConsumer>(std::make_shared<LocalConsumer>(log));
-    consumer_ptr_->readQuality(readQuality);
+    consumer_ptr_ = std::shared_ptr<LocalConsumer>(std::make_shared<LocalConsumer>(log, contig_data_ptr));
     producer_ptr_ = std::unique_ptr<LocalProducer>(std::make_unique<LocalProducer>(log, consumer_ptr_));
 
   }
   virtual ~LocalProcessSam() = default;
 
-  inline void readSAMFile(const std::string& file_name) {
+  inline void readSAMFile(const std::string& file_name, unsigned char readQuality = 0) {
 
+    consumer_ptr_->readQuality(readQuality);
     producer_ptr_->readSamFile(file_name);
     consumer_ptr_->finalize();
 
   }
 
-  void insertContig( const ContigId_t& contig_id,
-                     const ContigSize_t contig_size) {
-
-    std::unique_ptr<ConsumerLocalRecord> contig_matrix_ptr(std::make_unique<ConsumerLocalRecord>(log,  contig_size));
-    contigDataMap().addContigBlock(contig_id, contig_matrix_ptr);
-
-  }
-
-  inline ContigDataMap<ConsumerLocalRecord>& contigDataMap() { return consumer_ptr_->contigDataMap(); }
-
 private:
-
-  Logger &log;                              // Must be declared First. Emit log messages to console and log file.
 
   std::shared_ptr<LocalConsumer> consumer_ptr_; ;  // Thread safe SAM record consumer
   std::unique_ptr<LocalProducer> producer_ptr_;   //  Thread safe SAM record producer.

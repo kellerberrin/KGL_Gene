@@ -56,20 +56,17 @@ class NumpyContigMT {
 
 public:
 
-  NumpyContigMT(  Logger& logger,
-                  NucleotideReadCount_t *data_ptr,
+  NumpyContigMT(  NucleotideReadCount_t *data_ptr,
                   const ContigSize_t contig_size,
-                  const std::size_t nucleotides) :  log(logger),
-                                                    data_ptr_(data_ptr),
-                                                    nucleotide_column_(log),
+                  const std::size_t nucleotides) :  data_ptr_(data_ptr),
                                                     contig_size_(contig_size),
                                                     lock_strategy_(contig_size) {
 
     if (nucleotides != NucleotideColumn::NUCLEOTIDE_COLUMNS) {
 
       ContigOffset_t nucleotide_columns = NucleotideColumn::NUCLEOTIDE_COLUMNS;
-      log.critical("Numpy array is expected to have: {} NUCLEOTIDE_COLUMNS (columns), columns specified: {}"
-          , nucleotide_columns, nucleotides);
+      ExecEnv::log().critical("Numpy array expected to have: {} NUCLEOTIDE_COLUMNS (columns), columns specified: {}",
+                              nucleotide_columns, nucleotides);
 
     }
 
@@ -85,15 +82,15 @@ public:
 
     if (contig_offset >= contig_size_) {
 
-      log.critical("Invalid access in incrementCount(); Contig index: {} >= Contig size: {}"
-          , contig_offset, contig_size_);
+      ExecEnv::log().critical("Invalid access in incrementCount(); Contig index: {} >= Contig size: {}",
+                              contig_offset, contig_size_);
 
     }
     if (column >= NucleotideColumn::NUCLEOTIDE_COLUMNS) {
 
       ContigOffset_t nucleotide_columns = NucleotideColumn::NUCLEOTIDE_COLUMNS;
-      log.critical("Invalid access in incrementCount(); Nucleotide column index: {} >= Number Nucleotides: {}"
-          , column, nucleotide_columns);
+      ExecEnv::log().critical("incrementCount() invalis access; Nucleotide column index: {} >= Number Nucleotides: {}",
+                              column, nucleotide_columns);
 
     }
 
@@ -124,15 +121,15 @@ public:
 
     if (contig_offset >= contig_size_) {
 
-      log.critical("Invalid access in incrementCount(); Contig index: {} >= Contig size: {}"
-          , contig_offset, contig_size_);
+      ExecEnv::log().critical("Invalid access in incrementCount(); Contig index: {} >= Contig size: {}",
+                              contig_offset, contig_size_);
 
     }
     if (column >= NucleotideColumn::NUCLEOTIDE_COLUMNS) {
 
       ContigOffset_t nucleotide_columns = NucleotideColumn::NUCLEOTIDE_COLUMNS;
-      log.critical("Invalid access in incrementCount(); Nucleotide column index: {} >= Number Nucleotides: {}"
-          , column, nucleotide_columns);
+      ExecEnv::log().critical("readCount() invalid access; Nucleotide column index: {} >= Number Nucleotides: {}",
+                              column, nucleotide_columns);
 
     }
 
@@ -147,7 +144,6 @@ public:
 
 private:
 
-  Logger& log;
   // Yes folks, that's a raw pointer (watch it snort and shake).
   NucleotideReadCount_t *data_ptr_; // Snort, shake, snort, shake ...
   NucleotideColumn nucleotide_column_;

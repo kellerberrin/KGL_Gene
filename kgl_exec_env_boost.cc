@@ -300,7 +300,7 @@ bool kgl::ExecEnv::parseCommandLine(int argc, char const ** argv)
 
   }
   // Setup the Logger.
-  log_ptr_ = std::make_unique<kgl::Logger>(MODULE_NAME, args().logFile);
+  createLogger(MODULE_NAME, args().logFile);
 
   // Setup the files.
   getFilePath("fastaFile" ,parser , directory_path, args_.fastaFile);

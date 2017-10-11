@@ -34,6 +34,7 @@
 #include <queue>
 #include "kgl_logging.h"
 #include "kgl_genome_types.h"
+#include "kgl_exec_env.h"
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
@@ -46,7 +47,8 @@ class StandardNucleotideColumn {
 
 public:
 
-  explicit StandardNucleotideColumn(Logger& logger) : log(logger) {}
+  explicit StandardNucleotideColumn() = default;
+  ~StandardNucleotideColumn() = default;
 
   static constexpr ContigOffset_t NUCLEOTIDE_COLUMNS = 7;
   static constexpr Nucleotide_t DELETE_NUCLEOTIDE = '-';
@@ -79,7 +81,8 @@ public:
       case INSERT_SEQUENCE: return 6;
 
       default:
-        log.critical("nucleotideToColumn(), Count data array accessed with unknown nucleotide: {}", nucleotide);
+        ExecEnv::log().critical("nucleotideToColumn(), Count data array accessed with unknown nucleotide: {}",
+                                nucleotide);
         return 0; // Never reached, to keep the compiler happy.
 
     }
@@ -87,8 +90,6 @@ public:
   }
 
 private:
-
-  Logger& log;
 
 };
 

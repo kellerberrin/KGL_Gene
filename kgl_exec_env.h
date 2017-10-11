@@ -66,6 +66,7 @@ public:
   static bool parseCommandLine(int argc, char const ** argv);
   static const Args& args();
   static Logger& log();
+  static void createLogger(const std::string& module, const std::string& log_file);
   static constexpr const char* VERSION = "0.1";
   static constexpr const char* MODULE_NAME = "kgl_genome";
   static void getElpasedTime(double& Clock, double& System, double& User);

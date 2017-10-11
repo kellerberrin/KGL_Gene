@@ -34,6 +34,7 @@
 #include <map>
 #include "kgl_genome_types.h"
 #include "kgl_genome_feature.h"
+#include "kgl_mt_data.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -111,6 +112,7 @@ public:
 
   void createVerifyGenomeDatabase();
 
+  void registerContigData(std::shared_ptr<ContigDataBlock>& contig_data_ptr);
 
 private:
 

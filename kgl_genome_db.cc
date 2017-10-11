@@ -351,3 +351,17 @@ void kgl::GenomeSequences::verifyFeatureHierarchy() {
 
 }
 
+
+void kgl::GenomeSequences::registerContigData(std::shared_ptr<kgl::ContigDataBlock>& contig_data_ptr) {
+// Create data blocks for each contig in the genome database
+  for (const auto &contig_pair : getGenomeSequenceMap()) {
+
+    if (not contig_data_ptr->insertContig(contig_pair.first, contig_pair.second->sequence().length())) {
+
+      kgl::ExecEnv::log().error("ContigDataBlock; attempted to add duplicate contig; {}", contig_pair.first);
+
+    }
+
+  }
+
+}

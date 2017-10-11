@@ -49,10 +49,10 @@ class ConsumeMTSAM {
 
 public:
 
-  explicit ConsumeMTSAM(Logger& logger) : log(logger)  {}
+  explicit ConsumeMTSAM(Logger& logger, std::shared_ptr<ConsumerRecordType> data_map_ptr) : log(logger), contig_data_map_(data_map_ptr)  {}
   virtual ~ConsumeMTSAM() = default;
 
-  ContigDataMap<ConsumerRecordType>& contigDataMap() { return contig_data_map_; }
+  ConsumerRecordType& contigDataMap() { return *contig_data_map_; }
 
   void consume(std::unique_ptr<const std::string>& record_ptr);  // Parse SAM record into fields.
   void finalize();
@@ -66,7 +66,7 @@ private:
   static constexpr unsigned char DEFAULT_MINIMUM_QUALITY = 30 + NUCLEOTIDE_QUALITY_ASCII;   // -10 log10 Pr{ReadError}
 
   unsigned char read_quality_ = DEFAULT_MINIMUM_QUALITY;
-  ContigDataMap<ConsumerRecordType> contig_data_map_;             // Thread safe map of contig data.
+  std::shared_ptr<ConsumerRecordType> contig_data_map_;             // Thread safe map of contig data.
 
   std::atomic<uint64_t> unmapped_reads_{0};     // Contig = "*"
   std::atomic<uint64_t> other_contig_{0};       // SAM records for unregistered contigs (ignored by the code).
@@ -121,26 +121,25 @@ void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string
 
   const ContigId_t contig_id(sam_record_parser.getContigId(record_ptr));
 
-  auto matrix_ptr = contig_data_map_.getContig(contig_id);  // Get the contig data block.
+  auto contig_data_ptr = contig_data_map_->findContigBlock(contig_id);
 
-  if (matrix_ptr == contig_data_map_.notFound()) {
+  if (not contig_data_ptr) {
 
     ++other_contig_;    // Contig is not registered.
     return;
 
   }
 
-  auto& contig_block = contig_data_map_.getMatrix(matrix_ptr).getNucleotideArray();
-  auto& insert_block = contig_data_map_.getMatrix(matrix_ptr).getInsertArray();
-
+  auto& contig_block = contig_data_ptr->getNucleotideArray();
   auto contig_size = contig_block.contigSize();
+  auto& insert_block = contig_data_ptr->getInsertArray();
 
   ContigOffset_t location = sam_record_parser.getPos(record_ptr);
 
   if (location >= contig_size) {
 
-    log.error("Sam record error - Contig: {} sequence size: {} exceeded at position: {}; SAM record: {}"
-        , contig_id, contig_size, location, *record_ptr);
+    log.error("Sam record error - Contig: {} sequence size: {} exceeded at position: {}; SAM record: {}",
+              contig_id, contig_size, location, *record_ptr);
     return;
 
   }

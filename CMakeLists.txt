@@ -22,7 +22,7 @@ find_package( Boost COMPONENTS system filesystem timer chrono REQUIRED )
 set(SOURCE_FILES kgl_logging.h kgl_logging.cc kgl_read_sam.h
         kgl_mt_queue.h kgl_mt_data.h kgl_genome_types.h kgl_consume_sam.h
         kgl_process_sam.h kgl_lock.h kgl_mt_numpy.h kgl_nucleotide.h kgl_parse_sam.h
-        kgl_parse_sam.cc kgl_mt_contig.h kgl_exec_env.cc)
+        kgl_parse_sam.cc kgl_mt_contig.h kgl_exec_env.cc kgl_mt_insert.h)
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pg -pthread")
 #set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall -pg")

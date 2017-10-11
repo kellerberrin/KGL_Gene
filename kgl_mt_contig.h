@@ -46,17 +46,14 @@ class LocalContigMT {
 
 public:
 
-  LocalContigMT(  Logger& logger, const ContigSize_t contig_size): log(logger),
-                                                                   nucleotide_column_(log),
-                                                                   contig_size_(contig_size),
-                                                                   lock_strategy_(contig_size) {
+  LocalContigMT( const ContigSize_t contig_size):  contig_size_(contig_size), lock_strategy_(contig_size) {
 
     data_ptr_.reset(new (std::nothrow) NucleotideReadCount_t[contig_size * NucleotideColumn::NUCLEOTIDE_COLUMNS]);
 
     if (data_ptr_.get() == nullptr) {
 
-      log.critical("Failed to allocate memory for contig. data block size: {}, nucleotides: {}",
-                   contig_size, NucleotideColumn::NUCLEOTIDE_COLUMNS);
+      ExecEnv::log().critical("Failed to allocate memory for contig. data block size: {}, nucleotides: {}",
+                              contig_size, NucleotideColumn::NUCLEOTIDE_COLUMNS);
 
     }
 
@@ -72,15 +69,15 @@ public:
 
     if (contig_offset >= contig_size_) {
 
-      log.critical("Invalid access in incrementCount(); Contig index: {} >= Contig size: {}"
-          , contig_offset, contig_size_);
+      ExecEnv::log().critical("Invalid access in incrementCount(); Contig index: {} >= Contig size: {}",
+                              contig_offset, contig_size_);
 
     }
     if (column >= NucleotideColumn::NUCLEOTIDE_COLUMNS) {
 
       ContigOffset_t nucleotide_columns = NucleotideColumn::NUCLEOTIDE_COLUMNS;
-      log.critical("Invalid access in incrementCount(); Nucleotide column index: {} >= Number Nucleotides: {}"
-          , column, nucleotide_columns);
+      ExecEnv::log().critical("incrementCount() invalid access; Nucleotide column index: {} >= Number Nucleotides: {}",
+                              column, nucleotide_columns);
 
     }
 
@@ -112,15 +109,15 @@ public:
 
     if (contig_offset >= contig_size_) {
 
-      log.critical("Invalid access in incrementCount(); Contig index: {} >= Contig size: {}"
-          , contig_offset, contig_size_);
+      ExecEnv::log().critical("readCount() invalid access; Contig index: {} >= Contig size: {}",
+                              contig_offset, contig_size_);
 
     }
     if (column >= NucleotideColumn::NUCLEOTIDE_COLUMNS) {
 
       ContigOffset_t nucleotide_columns = NucleotideColumn::NUCLEOTIDE_COLUMNS;
-      log.critical("Invalid access in incrementCount(); Nucleotide column index: {} >= Number Nucleotides: {}"
-          , column, nucleotide_columns);
+      ExecEnv::log().critical("incrementCount() invalid access; Nucleotide column index: {} >= Number Nucleotides: {}",
+                              column, nucleotide_columns);
 
     }
 
@@ -135,7 +132,6 @@ public:
 
 private:
 
-  Logger& log;
   std::unique_ptr<NucleotideReadCount_t> data_ptr_;
   NucleotideColumn nucleotide_column_;
   const ContigSize_t contig_size_;      // Number of of NUCLEOTIDE_COLUMNS in the contig.

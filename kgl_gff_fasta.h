@@ -46,13 +46,14 @@ class ParseGffFasta {
 
 public:
 
-  ParseGffFasta( Logger& logger);
+  explicit ParseGffFasta(Logger& logger);
   ~ParseGffFasta();
 
   // Functionality passed to the implmentation.
-  std::unique_ptr<GenomeSequences> readFastaFile(const std::string& fasta_file_name);
-  std::unique_ptr<GenomeSequences> readFastaGffFile(const std::string& fasta_file_name,
-                                                    const std::string& gff_file_name);
+  void readFastaFile(const std::string& fasta_file_name, std::shared_ptr<GenomeSequences>& genome_db);
+  void readFastaGffFile(const std::string& fasta_file_name,
+                        const std::string& gff_file_name,
+                        std::shared_ptr<GenomeSequences>& genome_db);
 
 
 private:
@@ -63,7 +64,7 @@ private:
   std::unique_ptr<GffFastaImpl> gff_fasta_impl_ptr_;    // Gff Fasta parser PIMPL
 
   // Functionality passed to the implmentation.
-  void readGffFile(const std::string& gff_file_name, GenomeSequences& genome_sequences);
+  void readGffFile(const std::string& gff_file_name, std::shared_ptr<GenomeSequences>& genome_db_ptr);
 
 };
 
