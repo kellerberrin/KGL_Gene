@@ -22,28 +22,30 @@
 //
 //
 //
-// Created by kellerberrin on 3/10/17.
+// Created by kellerberrin on 13/10/17.
 //
 
-#ifndef SAMFILE_KGL_GENOME_H
-#define SAMFILE_KGL_GENOME_H
+#ifndef KGL_APPLICATION_H
+#define KGL_APPLICATION_H
+
 
 #include "kgl_exec_env.h"
 #include "kgl_genome_db.h"
 #include "kgl_gff_fasta.h"
 #include "kgl_process_sam.h"
+#include "kgl_genome_analysis.h"
 
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-// Simple class implements the mainline logic, see kgl_genome.cc.
-class GenomeAnalysis {
+// Simple class implements the mainline logic, see kgl_applicationcc.
+class GenomeApplication {
 
 public:
 
-  GenomeAnalysis(Logger& log, const ExecEnv::Args& args );
-  ~GenomeAnalysis() = default;
+  GenomeApplication(Logger& log, const ExecEnv::Args& args );
+  ~GenomeApplication() = default;
 
 };
 
@@ -52,4 +54,4 @@ public:
 }   // namespace kellerberrin
 
 
-#endif //KGL_GENOME_H
+#endif //KGL_APPLICATION_H

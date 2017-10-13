@@ -27,7 +27,7 @@
 #include <signal.h>
 #include <iostream>
 #include "kgl_exec_env.h"
-#include "kgl_genome.h"
+#include "kgl_application.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -39,6 +39,9 @@ void ctrlC(int sig) {
 
 }
 
+// The main() function sets up the static ExecEnv object.
+// Which provides logging and commandline arguments to the
+// application object GenomeApplication.
 
 int main(int argc, char const ** argv)
 {
@@ -53,7 +56,7 @@ int main(int argc, char const ** argv)
                              kgl::ExecEnv::MODULE_NAME,
                              kgl::ExecEnv::VERSION);
 
-    kgl::GenomeAnalysis(kgl::ExecEnv::log(), kgl::ExecEnv::args()); // Do the analysis.
+    kgl::GenomeApplication(kgl::ExecEnv::log(), kgl::ExecEnv::args()); // Do the analysis.
 
     double Clock, System, User;
     kgl::ExecEnv::getElpasedTime(Clock,System,User);

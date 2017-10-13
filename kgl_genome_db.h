@@ -89,20 +89,20 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// GenomeSequences - A map of contigs
+// GenomeDatabase - A map of contigs
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 using GenomeSequenceMap = std::map<ContigId_t, std::shared_ptr<ContigRecord>>;
-class GenomeSequences {
+class GenomeDatabase {
 
 public:
 
-  explicit GenomeSequences() {}
-  GenomeSequences(const GenomeSequences&) = default;
-  ~GenomeSequences() = default;
+  explicit GenomeDatabase() {}
+  GenomeDatabase(const GenomeDatabase&) = default;
+  ~GenomeDatabase() = default;
 
-  GenomeSequences& operator=(const GenomeSequences&) = default;
+  GenomeDatabase& operator=(const GenomeDatabase&) = default;
 
   // Return false if contig already exists.
   bool addContigSequence(const ContigId_t& contig, Sequence_t sequence);
@@ -112,7 +112,7 @@ public:
 
   void createVerifyGenomeDatabase();
 
-  void registerContigData(std::shared_ptr<ContigDataBlock>& contig_data_ptr);
+  void registerContigData(std::shared_ptr<ContigCountData>& contig_data_ptr);
 
 private:
 

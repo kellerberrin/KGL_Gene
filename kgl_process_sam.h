@@ -37,21 +37,21 @@ namespace genome {   // project level namespace
 
 
 // Simple class to bolt the producer, consumer and data together.
-using ContigDataBlock = ContigDataMap<ConsumerLocalRecord>;
-using LocalConsumer = ConsumeMTSAM<ContigDataBlock>;
+using ContigCountData = ContigDataMap<ConsumerLocalRecord>;
+using LocalConsumer = ConsumeMTSAM<ContigCountData>;
 using LocalProducer = ProduceMTSAM<LocalConsumer>;
 
-class LocalProcessSam {
+class SamCountReader {
 
 public:
 
-  explicit LocalProcessSam(std::shared_ptr<ContigDataBlock> contig_data_ptr, Logger& log) {
+  explicit SamCountReader(std::shared_ptr<ContigCountData> contig_data_ptr, Logger& log) {
 
     consumer_ptr_ = std::shared_ptr<LocalConsumer>(std::make_shared<LocalConsumer>(log, contig_data_ptr));
     producer_ptr_ = std::unique_ptr<LocalProducer>(std::make_unique<LocalProducer>(log, consumer_ptr_));
 
   }
-  virtual ~LocalProcessSam() = default;
+  virtual ~SamCountReader() = default;
 
   inline void readSAMFile(const std::string& file_name, unsigned char readQuality = 0) {
 

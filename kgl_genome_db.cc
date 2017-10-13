@@ -293,10 +293,10 @@ void kgl::ContigRecord::verifySuperFeatureDuplicates() {
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// GenomeSequences members.
+// GenomeDatabase members.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool kgl::GenomeSequences::addContigSequence(const kgl::ContigId_t& contig_id, kgl::Sequence_t sequence) {
+bool kgl::GenomeDatabase::addContigSequence(const kgl::ContigId_t& contig_id, kgl::Sequence_t sequence) {
 
   using ContigPtr = std::shared_ptr<kgl::ContigRecord>;
   ContigPtr contig_ptr(std::make_shared<kgl::ContigRecord>(contig_id, std::move(sequence)));
@@ -307,7 +307,7 @@ bool kgl::GenomeSequences::addContigSequence(const kgl::ContigId_t& contig_id, k
 
 }
 
-bool kgl::GenomeSequences::getContigSequence(const kgl::ContigId_t& contig_id,
+bool kgl::GenomeDatabase::getContigSequence(const kgl::ContigId_t& contig_id,
                                              std::shared_ptr<ContigRecord>& contig_ptr) const {
 
   auto result_iter = genome_sequence_map_.find(contig_id);
@@ -323,14 +323,14 @@ bool kgl::GenomeSequences::getContigSequence(const kgl::ContigId_t& contig_id,
 
 }
 
-void kgl::GenomeSequences::createVerifyGenomeDatabase() {
+void kgl::GenomeDatabase::createVerifyGenomeDatabase() {
 
   setupFeatureHierarchy();
   verifyFeatureHierarchy();
 
 }
 
-void kgl::GenomeSequences::setupFeatureHierarchy() {
+void kgl::GenomeDatabase::setupFeatureHierarchy() {
 
   for (auto contig_pair : genome_sequence_map_) {
 
@@ -341,7 +341,7 @@ void kgl::GenomeSequences::setupFeatureHierarchy() {
 }
 
 
-void kgl::GenomeSequences::verifyFeatureHierarchy() {
+void kgl::GenomeDatabase::verifyFeatureHierarchy() {
 
   for (auto contig_pair : genome_sequence_map_) {
 
@@ -352,13 +352,13 @@ void kgl::GenomeSequences::verifyFeatureHierarchy() {
 }
 
 
-void kgl::GenomeSequences::registerContigData(std::shared_ptr<kgl::ContigDataBlock>& contig_data_ptr) {
+void kgl::GenomeDatabase::registerContigData(std::shared_ptr<kgl::ContigCountData>& contig_data_ptr) {
 // Create data blocks for each contig in the genome database
   for (const auto &contig_pair : getGenomeSequenceMap()) {
 
     if (not contig_data_ptr->insertContig(contig_pair.first, contig_pair.second->sequence().length())) {
 
-      kgl::ExecEnv::log().error("ContigDataBlock; attempted to add duplicate contig; {}", contig_pair.first);
+      kgl::ExecEnv::log().error("ContigCountData; attempted to add duplicate contig; {}", contig_pair.first);
 
     }
 

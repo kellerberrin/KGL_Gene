@@ -45,14 +45,14 @@ public:
   GffFastaImpl(kgl::Logger& logger) : log(logger) {}
   ~GffFastaImpl() = default;
 
-  void readGffFile(const std::string &gff_file_name, std::shared_ptr<kgl::GenomeSequences>& genome_db_ptr);
-  void readFastaFile(const std::string& fasta_file_name, std::shared_ptr<kgl::GenomeSequences>& genome_db_ptr);
+  void readGffFile(const std::string &gff_file_name, std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr);
+  void readFastaFile(const std::string& fasta_file_name, std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr);
 
 private:
 
   Logger& log; // Should declared first.
 
-  bool parseGffRecord(std::shared_ptr<kgl::GenomeSequences>& genome_db_ptr,
+  bool parseGffRecord(std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr,
                       seqan::GffRecord& record,
                       long gff_line_counter);
 
@@ -61,7 +61,7 @@ private:
 
 
 void kgl::ParseGffFasta::GffFastaImpl::readFastaFile(const std::string& fasta_file_name,
-                                                     std::shared_ptr<kgl::GenomeSequences>& genome_db_ptr) {
+                                                     std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr) {
 
   seqan::SeqFileIn seq_file_in;
   if (!seqan::open(seq_file_in, fasta_file_name.c_str())) {
@@ -107,7 +107,7 @@ void kgl::ParseGffFasta::GffFastaImpl::readFastaFile(const std::string& fasta_fi
 
 
 void kgl::ParseGffFasta::GffFastaImpl::readGffFile(const std::string &gff_file_name,
-                                                   std::shared_ptr<kgl::GenomeSequences>& genome_db_ptr) {
+                                                   std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr) {
 
   seqan::GffFileIn gff_file_in;
   if (!seqan::open(gff_file_in, gff_file_name.c_str())) {
@@ -153,7 +153,7 @@ void kgl::ParseGffFasta::GffFastaImpl::readGffFile(const std::string &gff_file_n
 
 
 
-bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::GenomeSequences>& genome_db_ptr,
+bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr,
                                                       seqan::GffRecord& record,
                                                       long gff_line_counter) {
   // Get the attributes.
@@ -309,7 +309,7 @@ kgl::ParseGffFasta::~ParseGffFasta() {}
 
 // Functionality passed to the implmentation.
 void kgl::ParseGffFasta::readFastaFile(const std::string& fasta_file_name,
-                                       std::shared_ptr<kgl::GenomeSequences>& genome_db_ptr) {
+                                       std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr) {
 
   return gff_fasta_impl_ptr_->readFastaFile(fasta_file_name, genome_db_ptr);
 
@@ -317,7 +317,7 @@ void kgl::ParseGffFasta::readFastaFile(const std::string& fasta_file_name,
 
 // Functionality passed to the implmentation.
 void kgl::ParseGffFasta::readGffFile(const std::string& gff_file_name,
-                                     std::shared_ptr<GenomeSequences>& genome_db_ptr) {
+                                     std::shared_ptr<GenomeDatabase>& genome_db_ptr) {
 
   gff_fasta_impl_ptr_->readGffFile(gff_file_name, genome_db_ptr);
 
@@ -326,7 +326,7 @@ void kgl::ParseGffFasta::readGffFile(const std::string& gff_file_name,
 
 void kgl::ParseGffFasta::readFastaGffFile(const std::string& fasta_file_name,
                                           const std::string& gff_file_name,
-                                          std::shared_ptr<kgl::GenomeSequences>& genome_db_ptr) {
+                                          std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr) {
 
   readFastaFile(fasta_file_name, genome_db_ptr);
   readGffFile(gff_file_name, genome_db_ptr);

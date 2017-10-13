@@ -139,7 +139,7 @@ private:
 };
 
 // Important - this is the data structure used in the executable.
-using ContigDataBlock = ContigDataMap<ConsumerLocalRecord>;
+using ContigCountData = ContigDataMap<ConsumerLocalRecord>;
 
 
 }   // namespace genome
