@@ -308,28 +308,21 @@ kgl::ParseGffFasta::ParseGffFasta(kgl::Logger& logger)
 kgl::ParseGffFasta::~ParseGffFasta() {}
 
 // Functionality passed to the implmentation.
-void kgl::ParseGffFasta::readFastaFile(const std::string& fasta_file_name,
-                                       std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr) {
+std::shared_ptr<kgl::GenomeDatabase> kgl::ParseGffFasta::readFastaFile(const std::string& fasta_file_name) {
 
-  return gff_fasta_impl_ptr_->readFastaFile(fasta_file_name, genome_db_ptr);
+  std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr(std::make_shared<kgl::GenomeDatabase>());
+  gff_fasta_impl_ptr_->readFastaFile(fasta_file_name, genome_db_ptr);
+  return genome_db_ptr;
 
 }
 
-// Functionality passed to the implmentation.
-void kgl::ParseGffFasta::readGffFile(const std::string& gff_file_name,
-                                     std::shared_ptr<GenomeDatabase>& genome_db_ptr) {
 
+std::shared_ptr<kgl::GenomeDatabase> kgl::ParseGffFasta::readFastaGffFile(const std::string& fasta_file_name,
+                                                                          const std::string& gff_file_name ) {
+
+  std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr = readFastaFile(fasta_file_name);
   gff_fasta_impl_ptr_->readGffFile(gff_file_name, genome_db_ptr);
-
-}
-
-
-void kgl::ParseGffFasta::readFastaGffFile(const std::string& fasta_file_name,
-                                          const std::string& gff_file_name,
-                                          std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr) {
-
-  readFastaFile(fasta_file_name, genome_db_ptr);
-  readGffFile(gff_file_name, genome_db_ptr);
+  return genome_db_ptr;
 
 }
 

@@ -31,15 +31,10 @@ namespace kgl = kellerberrin::genome;
 kgl::GenomeApplication::GenomeApplication(kgl::Logger& log, const kgl::ExecEnv::Args& args ) {
 
   // Create a genome database object.
-  std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr(std::make_shared<kgl::GenomeDatabase>());
-
-  { // Attach to a scoped reader to parse in Fasta and Gff files.
-
-    kgl::ParseGffFasta(log).readFastaGffFile(args.fastaFile, args.gffFile, genome_db_ptr);
-    // Wireup the genome database.
-    genome_db_ptr->createVerifyGenomeDatabase();
-
-  }
+  std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr = kgl::ParseGffFasta(log).readFastaGffFile(args.fastaFile,
+                                                                                                args.gffFile);
+  // Wire-up the genome database.
+  genome_db_ptr->createVerifyGenomeDatabase();
 
   // Create a data block to hold the read data.
   std::shared_ptr<kgl::ContigCountData> contig_data_ptr(std::make_shared<kgl::ContigCountData>());
@@ -47,14 +42,12 @@ kgl::GenomeApplication::GenomeApplication(kgl::Logger& log, const kgl::ExecEnv::
   // Register with the genome database to setup the contig data blocks.
   genome_db_ptr->registerContigData(contig_data_ptr);
 
-  { // Attach a scoped SAM reader to the contig data block and read in the SAM file.
-
-    kgl::SamCountReader(contig_data_ptr, log).readSAMFile(args.mutantFile, args.readQuality);
-
-  }
+  // Attach a SAM reader to the contig data block and read in the SAM file.
+  kgl::SamCountReader(contig_data_ptr, log).readSAMFile(args.mutantFile, args.readQuality);
 
   // Create a genome variant to hold the SNP variant data.
-  std::shared_ptr<kgl::GenomeVariant> variant_ptr = kgl::GenomeAnalysis().simpleSNPVariants(contig_data_ptr, genome_db_ptr);
+  std::shared_ptr<kgl::GenomeVariant> variant_ptr = kgl::GenomeAnalysis().simpleSNPVariants(contig_data_ptr,
+                                                                                            genome_db_ptr);
 
 
 }

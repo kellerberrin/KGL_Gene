@@ -54,7 +54,7 @@ public:
   static constexpr Nucleotide_t DELETE_NUCLEOTIDE = '-';
   static constexpr Nucleotide_t INSERT_SEQUENCE = '+';
 
-  ContigOffset_t nucleotideToColumn(const Nucleotide_t nucleotide) {
+  static ContigOffset_t nucleotideToColumn(const Nucleotide_t nucleotide) {
 
     // Translate the nucleotide to an array column
     switch (nucleotide) {

@@ -28,7 +28,10 @@
 #ifndef KGL_EXEC_ENV_H
 #define KGL_EXEC_ENV_H
 
+#include <string>
+#include <memory>
 #include "kgl_logging.h"
+
 
 
 namespace kellerberrin {   //  organization level namespace

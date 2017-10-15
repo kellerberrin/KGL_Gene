@@ -4,19 +4,21 @@ project(ReadSamFile)
 set(CMAKE_CXX_STANDARD 14)
 
 # add extra include directories
-include_directories(/usr/local/lib/pybind11/include)
-include_directories(/usr/local/lib/spdlog/include)
-include_directories(/usr/include/python2.7)
-include_directories(/usr/local/lib/seqan-seqan-v2.3.2/include)
-include_directories(/usr/local/lib/boost_1_65_0)
+include_directories(/usr/local/lib/pybind11/include
+                    /usr/local/lib/spdlog/include
+                    /usr/include/python2.7
+                    /usr/local/lib/seqan/include
+                    /usr/include)
 
 # add boost library directories
-set(BOOST_ROOT "/usr/local/lib/boost_1_65_0")
+set(BOOST_ROOT /usr/local/include/boost)
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 include_directories(${Boost_INCLUDE_DIRS})
 find_package( Boost COMPONENTS system filesystem timer chrono REQUIRED )
+
+
 
 #setup common source directories
 set(SOURCE_FILES kgl_logging.h kgl_logging.cc kgl_read_sam.h

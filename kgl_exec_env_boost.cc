@@ -28,7 +28,7 @@
 #include <iostream>
 #include <seqan/arg_parse.h>
 #include "kgl_exec_env.h"
-#define BOOST_FILESYSTEM_NO_DEPRECATED // Recommended by boost documentation.
+#define BOOST_FILESYSTEM_NO_DEPRECATED // Recommended by boost filesystem documentation.
 #include <boost/filesystem.hpp>
 #include <boost/timer/timer.hpp>
 
@@ -238,7 +238,7 @@ bool kgl::ExecEnv::parseCommandLine(int argc, char const ** argv)
   } else if (parse_result != seqan::ArgumentParser::PARSE_OK) {  // Problem parsing the command line.
 
     std::cerr << "Error - Problem Parsing Command Line. Use '-h' or '--help' for argument formats." << std::endl;
-    std::cerr << "'kgl_snp' exits" << std::endl;
+    std::cerr << MODULE_NAME << " exits" << std::endl;
     std::exit(EXIT_FAILURE);
 
   }
@@ -254,7 +254,7 @@ bool kgl::ExecEnv::parseCommandLine(int argc, char const ** argv)
   if (!valid_directory) {
 
     std::cerr << "Specified work directory:" << directory_path.string() << " does not exist." << std::endl;
-    std::cerr << "'kgl_snp' exits" << std::endl;
+    std::cerr << MODULE_NAME << " exits" << std::endl;
     std::exit(EXIT_FAILURE);
 
   }
@@ -263,7 +263,7 @@ bool kgl::ExecEnv::parseCommandLine(int argc, char const ** argv)
 
     std::cerr << "Error verifying work directory:" << directory_path.string()
               << ", error was:" << error_code.message() << std::endl;
-    std::cerr << "'kgl_snp' exits" << std::endl;
+    std::cerr << MODULE_NAME << " exits" << std::endl;
     std::exit(EXIT_FAILURE);
 
   }
@@ -280,7 +280,7 @@ bool kgl::ExecEnv::parseCommandLine(int argc, char const ** argv)
     if(!log_file)
     {
       std::cerr << "Cannot open truncated log file (--newLogFile):" << log_file_path.string() << std::endl;
-      std::cerr << "'kgl_snp' exits" << std::endl;
+      std::cerr << MODULE_NAME << " exits" << std::endl;
       std::exit(EXIT_FAILURE);
     }
     args_.logFile = log_file_path.string();

@@ -31,7 +31,7 @@
 
 
 #include <memory>
-#include "spdlog/spdlog.h"  // Implement the logger using the spdlog library
+#include <spdlog/spdlog.h>  // Implement the logger using the spdlog library
 
 
 namespace kellerberrin {   //  organization level namespace

@@ -78,7 +78,7 @@ public:
   // Threadsafe read count increment.
   inline void incrementCount(const ContigOffset_t contig_offset, const Nucleotide_t nucleotide) {
 
-    std::size_t column =  nucleotide_column_.nucleotideToColumn(nucleotide);
+    std::size_t column =  NucleotideColumn::nucleotideToColumn(nucleotide);
 
     if (contig_offset >= contig_size_) {
 
@@ -117,7 +117,7 @@ public:
   inline const NucleotideReadCount_t readCount( const ContigOffset_t contig_offset,
                                                 const Nucleotide_t nucleotide) const {
 
-    std::size_t column = nucleotide_column_.nucleotideToColumn(nucleotide);
+    std::size_t column = NucleotideColumn::nucleotideToColumn(nucleotide);
 
     if (contig_offset >= contig_size_) {
 
@@ -146,7 +146,6 @@ private:
 
   // Yes folks, that's a raw pointer (watch it snort and shake).
   NucleotideReadCount_t *data_ptr_; // Snort, shake, snort, shake ...
-  NucleotideColumn nucleotide_column_;
   const ContigSize_t contig_size_;      // Number of of NUCLEOTIDE_COLUMNS in the contig.
   mutable std::mutex mutex_;  // Used to initialize the data.
   LockStrategy lock_strategy_; // The template multi-thread locking strategy.
