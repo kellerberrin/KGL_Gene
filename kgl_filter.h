@@ -22,32 +22,53 @@
 //
 //
 //
-// Created by kellerberrin on 13/10/17.
+// Created by kellerberrin on 16/10/17.
 //
 
-#ifndef KGL_APPLICATION_H
-#define KGL_APPLICATION_H
+#ifndef KGL_FILTER_H
+#define KGL_FILTER_H
 
-
-#include "kgl_exec_env.h"
-
+#include "kgl_variant.h"
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-// Simple class implements the mainline logic, see kgl_applicationcc.
-class GenomeApplication {
+
+class ReadCountFilter : public VariantFilter {
 
 public:
 
-  GenomeApplication(Logger& log, const ExecEnv::Args& args );
-  ~GenomeApplication() = default;
+  explicit ReadCountFilter(NucleotideReadCount_t read_count) : read_count_(read_count) {}
+  ~ReadCountFilter() override = default;
+
+  bool applyFilter(ReadCountVariant& variant) const final { return variant.readCount() >= read_count_; }
+  std::string filterName() const final;
+
+private:
+
+  NucleotideReadCount_t read_count_;
 
 };
 
+
+class MutantProportionFilter : public VariantFilter {
+
+public:
+
+  explicit MutantProportionFilter(double proportion) : mutant_proportion_(proportion) {}
+  ~MutantProportionFilter() override = default;
+
+  bool applyFilter(ReadCountVariant& variant) const final { return variant.proportion() >= mutant_proportion_; }
+  std::string filterName() const final;
+
+private:
+
+  double mutant_proportion_;
+
+};
 
 }   // namespace genome
 }   // namespace kellerberrin
 
 
-#endif //KGL_APPLICATION_H
+#endif //KGL_FILTER_H

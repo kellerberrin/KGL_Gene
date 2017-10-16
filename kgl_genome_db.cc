@@ -224,7 +224,7 @@ void kgl::ContigRecord::removeSubFeatureDuplicates() {
   for (auto feature_pair : id_feature_map_) {
     FeatureRecord &feature = *feature_pair.second;
 
-    duplicates_removed += deleteIterable(feature.subFeatures());
+    duplicates_removed += deleteIterableDuplicates(feature.subFeatures());
 
   }
 
@@ -243,7 +243,7 @@ void kgl::ContigRecord::removeSuperFeatureDuplicates() {
   for (auto feature_pair : id_feature_map_) {
     FeatureRecord &feature = *feature_pair.second;
 
-    duplicates_removed += deleteIterable(feature.superFeatures());
+    duplicates_removed += deleteIterableDuplicates(feature.superFeatures());
 
   }
 

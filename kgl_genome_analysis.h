@@ -93,11 +93,16 @@ std::shared_ptr<GenomeVariant> GenomeAnalysis::simpleSNPVariants(std::shared_ptr
 
         typename T::NucleotideType max_count_nucleotide = T::offsetToNucleotide(max_count_offset);
 
-        if (max_count_nucleotide != contig_sequence[contig_offset]) {
+        if (max_count_nucleotide != contig_sequence[contig_offset] and read_count > 0) {
 
-          std::shared_ptr<Variant> snp_variant(std::make_shared<SNPVariant>(contig_block.first,
-                                                                            contig_offset,
-                                                                            read_count));
+          std::shared_ptr<Variant>
+          snp_variant(std::make_shared<SNPVariant<typename T::NucleotideType>>(contig_block.first,
+                                                      contig_offset,
+                                                      read_count,
+                                                      nucleotide_count_ptr[max_count_offset],
+                                                      max_count_nucleotide,
+                                                      contig_sequence[contig_offset]));
+
           contig_variant_ptr->addVariant(contig_offset, snp_variant);
 
         }
@@ -108,6 +113,13 @@ std::shared_ptr<GenomeVariant> GenomeAnalysis::simpleSNPVariants(std::shared_ptr
                           contig_variant_ptr->contigId(),
                           contig_variant_ptr->variantCount());
 
+
+      if (not snp_variants->addContigVariant(contig_variant_ptr)) {
+
+        ExecEnv::log().info("Duplicate Contig: {} variant. SNP variants not added to genome variants",
+                            contig_variant_ptr->contigId());
+
+      }
     } // found contig.
 
   }  // for all contigs.

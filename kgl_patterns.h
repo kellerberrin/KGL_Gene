@@ -39,7 +39,7 @@ namespace genome {   // project level namespace
 // set it up as a pattern so there can be no mistake.
 
 template<class T>
-long deleteIterable(T& iterableContainer) {
+long deleteIterableDuplicates(T& iterableContainer) {
 
   long duplicates_removed = 0;
   auto iterator = iterableContainer.begin();
@@ -105,6 +105,34 @@ long checkDuplicates(T& iterableContainer) {
 
 }
 
+// Pattern to delete elements from an iterable container
+// A template boolean function, generally a lambda function,
+// evaluates each element to determine if it is to be deleted (true).
+
+template<class T, typename F>
+long predicateIterableDelete(T& iterableContainer, F bool_pred) {
+
+  size_t elements_removed = 0;
+  auto iterator = iterableContainer.begin();
+  while(iterator != iterableContainer.end()) {
+
+    if (bool_pred(iterator)) {
+
+      // C++ 11 erase() returns next iterator to next valid (or end())
+      iterator = iterableContainer.erase(iterator);
+      ++elements_removed;
+
+    } else {
+
+      ++iterator;
+
+    } // if erase
+
+  } // while duplicate_iterator
+
+  return elements_removed;
+
+}
 
 }   // namespace genome
 }   // namespace kellerberrin

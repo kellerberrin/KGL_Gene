@@ -26,23 +26,17 @@
 
 #include "kgl_variant.h"
 #include "kgl_exec_env.h"
+#include "kgl_patterns.h"
 
 
 namespace kgl = kellerberrin::genome;
 
 
-
 size_t kgl::ContigVariant::filterVariants(const kgl::VariantFilter& filter) {
 
-  for (auto v_iter = offset_variant_map_.begin(); v_iter != offset_variant_map_.end(); ++v_iter) {
-
-    if (not v_iter->second->filterVariant(filter)) {
-
-      v_iter = offset_variant_map_.erase(v_iter);
-
-    }
-
-  }
+  // Inverts the bool returned by filterVariant(filter) because the delete pattern expects bool true for deletion.
+  auto predicate = [&](const OffsetVariantMap::const_iterator& it) { return not it->second->filterVariant(filter); };
+  predicateIterableDelete(offset_variant_map_,  predicate);
 
   return offset_variant_map_.size();
 
@@ -66,6 +60,7 @@ bool kgl::GenomeVariant::addContigVariant(std::shared_ptr<kgl::ContigVariant>& c
 
 void kgl::GenomeVariant::filterVariants(const kgl::VariantFilter& filter) {
 
+  ExecEnv::log().info("Applying filter: {}", filter.filterName());
   for (const auto& contig_variant : genome_variant_map_) {
 
     size_t v_size = contig_variant.second->filterVariants(filter);

@@ -22,32 +22,27 @@
 //
 //
 //
-// Created by kellerberrin on 13/10/17.
+// Created by kellerberrin on 16/10/17.
 //
 
-#ifndef KGL_APPLICATION_H
-#define KGL_APPLICATION_H
+#include <sstream>
+#include "kgl_filter.h"
+
+namespace kgl = kellerberrin::genome;
+
+std::string kgl::ReadCountFilter::filterName() const {
+
+  std::ostringstream oss;
+  oss << "Minimum Read Count Filter >= " << read_count_;
+  return oss.str();
+
+}
 
 
-#include "kgl_exec_env.h"
+std::string kgl::MutantProportionFilter::filterName() const {
 
+  std::ostringstream oss;
+  oss << "Mutant Minimum Proportion Filter >= " << mutant_proportion_;
+  return oss.str();
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
-
-// Simple class implements the mainline logic, see kgl_applicationcc.
-class GenomeApplication {
-
-public:
-
-  GenomeApplication(Logger& log, const ExecEnv::Args& args );
-  ~GenomeApplication() = default;
-
-};
-
-
-}   // namespace genome
-}   // namespace kellerberrin
-
-
-#endif //KGL_APPLICATION_H
+}

@@ -24,6 +24,11 @@
 // Created by kellerberrin on 13/10/17.
 //
 #include "kgl_application.h"
+#include "kgl_genome_db.h"
+#include "kgl_gff_fasta.h"
+#include "kgl_process_sam.h"
+#include "kgl_genome_analysis.h"
+#include "kgl_filter.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -51,7 +56,6 @@ kgl::GenomeApplication::GenomeApplication(kgl::Logger& log, const kgl::ExecEnv::
 
   // Filter for read count.
   variant_ptr->filterVariants(kgl::ReadCountFilter(args.mutantMinCount));
-
   // Filter for read proportion.
   variant_ptr->filterVariants(kgl::MutantProportionFilter(args.mutantMinProportion));
 
