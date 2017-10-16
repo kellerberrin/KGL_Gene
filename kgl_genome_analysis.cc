@@ -29,33 +29,3 @@
 
 namespace kgl = kellerberrin::genome;
 
-
-std::shared_ptr<kgl::GenomeVariant>
-kgl::GenomeAnalysis::simpleSNPVariants(std::shared_ptr<kgl::ContigCountData>& count_data,
-                                       std::shared_ptr<GenomeDatabase>& genome_db) {
-
-  std::shared_ptr<kgl::GenomeVariant> snp_variant(std::make_shared<kgl::GenomeVariant>());
-
-  for (auto& contig_block : count_data->getMap()) {   // For each contig block.
-
-    const auto& nucleotide_array = contig_block.second->getNucleotideArray();
-    for (ContigOffset_t contig_offset = 0; contig_offset < nucleotide_array.contigSize(); ++contig_offset) {
-
-      NucleotideReadCount_t A_count = nucleotide_array.readCount(contig_offset, 'A');
-
-      NucleotideReadCount_t C_count = nucleotide_array.readCount(contig_offset, 'C');
-      NucleotideReadCount_t G_count = nucleotide_array.readCount(contig_offset, 'G');
-      NucleotideReadCount_t T_count = nucleotide_array.readCount(contig_offset, 'T');
-      NucleotideReadCount_t N_count = nucleotide_array.readCount(contig_offset, 'N');
-      NucleotideReadCount_t Delete_count = nucleotide_array.readCount(contig_offset,
-                                                                      StandardNucleotideColumn::DELETE_NUCLEOTIDE);
-      NucleotideReadCount_t Insert_count = nucleotide_array.readCount(contig_offset,
-                                                                      StandardNucleotideColumn::INSERT_SEQUENCE);
-
-    }
-
-  }
-
-  return snp_variant;
-
-}

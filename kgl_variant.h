@@ -40,14 +40,18 @@
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-
-class Variant {
+class Variant;
+class ReadCountVariant;
+// Variant filters use the vistor pattern.
+class VariantFilter {
 
 public:
 
+  VariantFilter() = default;
+  virtual ~VariantFilter() = default;
 
-  Variant() = default;
-  virtual ~Variant() = default;
+  bool applyFilter(Variant& variant) const { return true; }  // Filter is ignored by variant.
+  virtual bool applyFilter(ReadCountVariant& variant) const = 0;
 
 private:
 
@@ -55,20 +59,100 @@ private:
 };
 
 
+
+class Variant {
+
+public:
+
+
+  Variant(const ContigId_t& contig_id) : contig_id_(contig_id) {}
+  virtual ~Variant() = default;
+  bool filterVariant(const VariantFilter& filter) { return applyFilter(filter); }
+
+private:
+
+  ContigId_t contig_id_;
+
+  virtual bool applyFilter(const VariantFilter& filter) = 0;
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  A read count variant.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class ReadCountVariant : public Variant {
+
+public:
+
+  ReadCountVariant(const ContigId_t& contig_id, ContigOffset_t contig_offset, NucleotideReadCount_t read_count)
+      : Variant(contig_id), contig_offset_(contig_offset), read_count_(read_count) {}
+  ~ReadCountVariant() override = default;
+
+  ContigOffset_t SNPOffset() const { return contig_offset_; }
+  NucleotideReadCount_t readCount() const { return read_count_; }
+
+private:
+
+  ContigOffset_t contig_offset_;
+  NucleotideReadCount_t read_count_;
+
+  bool applyFilter(const VariantFilter& filter) override { return filter.applyFilter(*this); }
+
+};
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  A simple SNP variant. Modelled on the VCF file format.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class SNPVariant : public Variant {
+class SNPVariant : public ReadCountVariant {
 
 public:
 
-  SNPVariant() = default;
-  ~SNPVariant() final = default;
+  SNPVariant(const ContigId_t& contig_id, ContigOffset_t contig_offset, NucleotideReadCount_t read_count)
+      : ReadCountVariant(contig_id, contig_offset, read_count) {}
+  ~SNPVariant() override = default;
 
 private:
 
+  bool applyFilter(const VariantFilter& filter) final { return true; }
+
+};
+
+
+class ReadCountFilter : public VariantFilter {
+
+public:
+
+  explicit ReadCountFilter(NucleotideReadCount_t read_count) : read_count_(read_count) {}
+  ~ReadCountFilter() override = default;
+
+  bool applyFilter(ReadCountVariant& variant) const override { return variant.readCount() >= read_count_; }
+
+private:
+
+  NucleotideReadCount_t read_count_;
+
+};
+
+
+class MutantProportionFilter : public VariantFilter {
+
+public:
+
+  explicit MutantProportionFilter(double proportion) : mutant_proportion_(proportion) {}
+  ~MutantProportionFilter() override = default;
+
+  bool applyFilter(ReadCountVariant& variant) const override { return true; }
+
+private:
+
+  double mutant_proportion_;
 
 };
 
@@ -89,16 +173,19 @@ public:
 
   ContigVariant& operator=(const ContigVariant&) = default;
 
+  void addVariant(ContigOffset_t contig_offset, std::shared_ptr<Variant>& variant_ptr);
   const ContigId_t& contigId() const { return contig_id_; }
+  size_t variantCount() const { return offset_variant_map_.size(); }
 
+  size_t filterVariants(const VariantFilter& filter);
 
 private:
 
   ContigId_t contig_id_;
   OffsetVariantMap offset_variant_map_;
 
-
 };
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -117,6 +204,8 @@ public:
 
   GenomeVariant& operator=(const GenomeVariant&) = default;
 
+  bool addContigVariant(std::shared_ptr<ContigVariant>& contig_variant);
+  void filterVariants(const VariantFilter& filter);
 
 private:
 
@@ -125,8 +214,12 @@ private:
 };
 
 
+
+
 }   // namespace genome
 }   // namespace kellerberrin
+
+
 
 
 #endif //KGL_VARIANT_H

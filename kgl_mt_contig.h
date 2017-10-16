@@ -63,7 +63,7 @@ public:
   virtual ~LocalContigMT() = default;
 
   // Threadsafe read count increment.
-  inline void incrementCount(const ContigOffset_t contig_offset, const Nucleotide_t nucleotide) {
+  inline void incrementCount(const ContigOffset_t contig_offset, const Nucleotide_DNA5_t nucleotide) {
 
     std::size_t column =  NucleotideColumn::nucleotideToColumn(nucleotide);
 
@@ -103,7 +103,7 @@ public:
 
   // Reads are not locked. Do not call while updating read counts.
   inline const NucleotideReadCount_t readCount( const ContigOffset_t contig_offset,
-                                                const Nucleotide_t nucleotide) const {
+                                                const Nucleotide_DNA5_t nucleotide) const {
 
     std::size_t column = NucleotideColumn::nucleotideToColumn(nucleotide);
 
@@ -127,6 +127,25 @@ public:
     return *access_ptr;  // read access - no mutex.
 
   }
+
+  // Reads are not locked. Do not call while updating read counts.
+  inline const NucleotideReadCount_t* readCount( const ContigOffset_t contig_offset) const {
+
+
+    if (contig_offset >= contig_size_) {
+
+      ExecEnv::log().critical("readCount() invalid access; Contig index: {} >= Contig size: {}",
+                              contig_offset, contig_size_);
+
+    }
+
+    // pointer arithmetic, stride is NucleotideColumn::NUCLEOTIDE_COLUMNS
+    const NucleotideReadCount_t  *access_ptr = data_ptr_.get()
+                                               + (contig_offset * NucleotideColumn::NUCLEOTIDE_COLUMNS);
+    return access_ptr;  // read access - no mutex.
+
+  }
+
 
   inline const ContigSize_t contigSize() const { return contig_size_; }
 

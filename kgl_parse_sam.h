@@ -66,12 +66,12 @@ public:
     return record_ptr->substr(sam_fields_[SEQUENCE_OFFSET].first + start, length);
 
   }
-  inline const Nucleotide_t getSequenceNucleotide(std::unique_ptr<const std::string>& record_ptr, std::size_t offset) {
+  inline const Nucleotide_DNA5_t getSequenceNucleotide(std::unique_ptr<const std::string>& record_ptr, std::size_t offset) {
 
     return record_ptr->at(sam_fields_[SEQUENCE_OFFSET].first + offset);
 
   }
-  inline const Nucleotide_t getQualityNucleotide(std::unique_ptr<const std::string>& record_ptr, std::size_t offset) {
+  inline const Nucleotide_DNA5_t getQualityNucleotide(std::unique_ptr<const std::string>& record_ptr, std::size_t offset) {
 
     return record_ptr->at(sam_fields_[QUALITY_OFFSET].first + offset);
 

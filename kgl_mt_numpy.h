@@ -76,7 +76,7 @@ public:
   virtual ~NumpyContigMT() = default;
 
   // Threadsafe read count increment.
-  inline void incrementCount(const ContigOffset_t contig_offset, const Nucleotide_t nucleotide) {
+  inline void incrementCount(const ContigOffset_t contig_offset, const Nucleotide_DNA5_t nucleotide) {
 
     std::size_t column =  NucleotideColumn::nucleotideToColumn(nucleotide);
 
@@ -115,7 +115,7 @@ public:
 
   // Reads are not locked. Do not call while updating read counts.
   inline const NucleotideReadCount_t readCount( const ContigOffset_t contig_offset,
-                                                const Nucleotide_t nucleotide) const {
+                                                const Nucleotide_DNA5_t nucleotide) const {
 
     std::size_t column = NucleotideColumn::nucleotideToColumn(nucleotide);
 

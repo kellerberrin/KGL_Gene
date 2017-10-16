@@ -25,6 +25,52 @@
 //
 
 #include "kgl_variant.h"
+#include "kgl_exec_env.h"
 
 
 namespace kgl = kellerberrin::genome;
+
+
+
+size_t kgl::ContigVariant::filterVariants(const kgl::VariantFilter& filter) {
+
+  for (auto v_iter = offset_variant_map_.begin(); v_iter != offset_variant_map_.end(); ++v_iter) {
+
+    if (not v_iter->second->filterVariant(filter)) {
+
+      v_iter = offset_variant_map_.erase(v_iter);
+
+    }
+
+  }
+
+  return offset_variant_map_.size();
+
+}
+
+
+void kgl::ContigVariant::addVariant(ContigOffset_t contig_offset, std::shared_ptr<kgl::Variant>& variant_ptr) {
+
+  offset_variant_map_.insert(std::make_pair(contig_offset, variant_ptr));
+
+}
+
+
+bool kgl::GenomeVariant::addContigVariant(std::shared_ptr<kgl::ContigVariant>& contig_variant) {
+
+  auto result = genome_variant_map_.insert(std::make_pair(contig_variant->contigId(), contig_variant));
+
+  return result.second;
+
+}
+
+void kgl::GenomeVariant::filterVariants(const kgl::VariantFilter& filter) {
+
+  for (const auto& contig_variant : genome_variant_map_) {
+
+    size_t v_size = contig_variant.second->filterVariants(filter);
+    ExecEnv::log().info("Contig: {} has: {} filtered variants", contig_variant.first, v_size);
+
+  }
+
+}

@@ -45,10 +45,15 @@ kgl::GenomeApplication::GenomeApplication(kgl::Logger& log, const kgl::ExecEnv::
   // Attach a SAM reader to the contig data block and read in the SAM file.
   kgl::SamCountReader(contig_data_ptr, log).readSAMFile(args.mutantFile, args.readQuality);
 
-  // Create a genome variant to hold the SNP variant data.
-  std::shared_ptr<kgl::GenomeVariant> variant_ptr = kgl::GenomeAnalysis().simpleSNPVariants(contig_data_ptr,
-                                                                                            genome_db_ptr);
+  // Generate simple SNPs.
+  std::shared_ptr<kgl::GenomeVariant> variant_ptr
+      = kgl::GenomeAnalysis().simpleSNPVariants<NucleotideColumn_DNA5>(contig_data_ptr, genome_db_ptr);
 
+  // Filter for read count.
+  variant_ptr->filterVariants(kgl::ReadCountFilter(args.mutantMinCount));
+
+  // Filter for read proportion.
+  variant_ptr->filterVariants(kgl::MutantProportionFilter(args.mutantMinProportion));
 
 }
 
