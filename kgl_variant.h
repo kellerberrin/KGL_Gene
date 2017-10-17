@@ -50,8 +50,8 @@ public:
   VariantFilter() = default;
   virtual ~VariantFilter() = default;
 
-  bool applyFilter(Variant& variant) const { return true; }  // Catchall for filters not defined for variant type.
-  virtual bool applyFilter(ReadCountVariant& variant) const = 0;
+  bool applyFilter(const Variant& variant) const { return true; }  // Catchall for filters not defined for variant type.
+  virtual bool applyFilter(const ReadCountVariant& variant) const = 0;
   virtual std::string filterName() const = 0;
 
 private:
@@ -73,17 +73,19 @@ public:
   Variant(const ContigId_t& contig_id, ContigOffset_t contig_offset) : contig_id_(contig_id),
                                                                        contig_offset_(contig_offset) {}
   virtual ~Variant() = default;
-  bool filterVariant(const VariantFilter& filter) { return applyFilter(filter); }
+  bool filterVariant(const VariantFilter& filter) const { return applyFilter(filter); }
 
   const ContigId_t& contigId() const { return contig_id_; }
-  ContigOffset_t SNPOffset() const { return contig_offset_; }
+  ContigOffset_t contigOffset() const { return contig_offset_; }
+  bool operator==(const Variant& cmp_var) const { return equivalent(cmp_var); };
 
 private:
 
   ContigId_t contig_id_;
   ContigOffset_t contig_offset_;
 
-  virtual bool applyFilter(const VariantFilter& filter) = 0;
+  virtual bool applyFilter(const VariantFilter& filter) const = 0;
+  virtual bool equivalent(const Variant& cmp_var) const = 0;
 
 };
 
@@ -134,7 +136,7 @@ public:
       : ReadCountVariant(contig_id, contig_offset, read_count, mutant_count), reference_(reference) , mutant_(mutant) {}
   ~SNPVariant() override = default;
 
-  bool operator==(const SNPVariant& cmp_snp) const;
+  bool equivalent(const Variant& cmp_var) const final;
 
   const T& reference() const { return reference_; }
   const T& mutant() const { return mutant_; }
@@ -144,17 +146,21 @@ private:
   T reference_;
   T mutant_;
 
-  bool applyFilter(const VariantFilter& filter) final { return filter.applyFilter(*this); }
+  bool applyFilter(const VariantFilter& filter) const final { return filter.applyFilter(*this); }
 
 };
 
 template<class T>
-bool SNPVariant<T>::operator==(const SNPVariant& cmp_snp) const {
+bool SNPVariant<T>::equivalent(const Variant& cmp_var) const {
 
-  return contigId() == cmp_snp.contigId()
-         and SNPOffset() == cmp_snp.SNPOffset()
-         and reference() == cmp_snp.reference()
-         and mutant() == cmp_snp.mutant();
+  auto cmp_snp = dynamic_cast<const SNPVariant<T>*>(&cmp_var);
+
+  if (cmp_snp == nullptr) return false;
+
+  return contigId() == cmp_snp->contigId()
+         and contigOffset() == cmp_snp->contigOffset()
+         and reference() == cmp_snp->reference()
+         and mutant() == cmp_snp->mutant();
 
 }
 
@@ -165,20 +171,26 @@ bool SNPVariant<T>::operator==(const SNPVariant& cmp_snp) const {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-using OffsetVariantMap = std::multimap<ContigOffset_t, std::shared_ptr<Variant>>;
+using OffsetVariantMap = std::multimap<ContigOffset_t, std::shared_ptr<const Variant>>;
 class ContigVariant {
 
 public:
 
-  ContigVariant(const ContigId_t& contig_id) : contig_id_(contig_id) {}
+  explicit ContigVariant(const ContigId_t& contig_id) : contig_id_(contig_id) {}
   ContigVariant(const ContigVariant&) = default;
   ~ContigVariant() = default;
 
   ContigVariant& operator=(const ContigVariant&) = default;
 
-  void addVariant(ContigOffset_t contig_offset, std::shared_ptr<Variant>& variant_ptr);
+  void addVariant(ContigOffset_t contig_offset, std::shared_ptr<const Variant>& variant_ptr);
   const ContigId_t& contigId() const { return contig_id_; }
   size_t variantCount() const { return offset_variant_map_.size(); }
+
+  // Set functions.
+  bool isElement(const Variant& variant) const;
+  ContigVariant& Union(const ContigVariant& contig_variant) const;
+  ContigVariant& Intersection(const ContigVariant& contig_variant) const;
+  ContigVariant& Difference(const ContigVariant& contig_variant) const;
 
   size_t filterVariants(const VariantFilter& filter);
 
@@ -204,10 +216,15 @@ public:
   GenomeVariant(const GenomeVariant&) = default;
   ~GenomeVariant() = default;
 
-  GenomeVariant& operator=(const GenomeVariant&) = default;
+  GenomeVariant& operator=(const GenomeVariant& genome_variant) = default;
 
   bool addContigVariant(std::shared_ptr<ContigVariant>& contig_variant);
   void filterVariants(const VariantFilter& filter);
+
+  bool isElement(const Variant& variant) const;
+  std::shared_ptr<GenomeVariant> Union(std::shared_ptr<const GenomeVariant> genome_variant_ptr) const;
+  std::shared_ptr<GenomeVariant> Intersection(std::shared_ptr<const GenomeVariant> genome_variant_ptr) const;
+  std::shared_ptr<GenomeVariant> Difference(std::shared_ptr<const GenomeVariant> genome_variant_ptr) const;
 
 private:
 

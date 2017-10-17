@@ -24,10 +24,9 @@
 //
 // Created by kellerberrin on 30/09/17.
 //
-#include <signal.h>
+#include <csignal>
 #include <iostream>
-#include "kgl_exec_env.h"
-#include "kgl_application.h"
+#include "kgl_minority_env.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -39,39 +38,51 @@ void ctrlC(int sig) {
 
 }
 
-// The main() function sets up the static ExecEnv object.
-// Which provides logging and commandline arguments to the
-// application object GenomeApplication.
 
-int main(int argc, char const ** argv)
-{
+// The application() function sets up the static environment object.
+// and provides logging and commandline arguments to the
+// application object. The function is a template so that
+// different applications may be easily specified.
+
+template<class T>
+int application(int argc, char const ** argv) {
+
 
   try {
 
-    kgl::ExecEnv::parseCommandLine(argc, argv);  // Setup the runtime environment.
+    T::parseCommandLine(argc, argv);  // Setup the runtime environment.
 
     signal(SIGINT, ctrlC);
 
     kgl::ExecEnv::log().info("############ {} {} Start Processing ###########",
-                             kgl::ExecEnv::MODULE_NAME,
-                             kgl::ExecEnv::VERSION);
+                             T::MODULE_NAME,
+                             T::VERSION);
 
-    kgl::GenomeApplication(kgl::ExecEnv::log(), kgl::ExecEnv::args()); // Do the analysis.
+    typename T::Application(T::log(), T::args()); // Do the analysis.
 
     double Clock, System, User;
-    kgl::ExecEnv::getElpasedTime(Clock,System,User);
+    kgl::ExecEnv::getElpasedTime(Clock, System, User);
     kgl::ExecEnv::log().info("Elapsed seconds; Clock: {}, System CPU: {}, User CPU: {} (No GPU)", Clock, System, User);
     kgl::ExecEnv::log().info("############ {} {} End Processing ###########",
-                             kgl::ExecEnv::MODULE_NAME,
-                             kgl::ExecEnv::VERSION);
+                             T::MODULE_NAME,
+                             T::VERSION);
 
   } catch(...) { // Code should not throw any exceptions, so complain and exit.
 
-    std::cerr << kgl::ExecEnv::MODULE_NAME << " " << kgl::ExecEnv::VERSION << " - Unexpected Exception." << std::endl;
+    std::cerr << T::MODULE_NAME << " " << T::VERSION << " - Unexpected Exception." << std::endl;
     std::exit(EXIT_FAILURE);
 
   }
 
   return EXIT_SUCCESS;
+
+}
+
+
+int main(int argc, char const ** argv)
+{
+
+  return application<kgl::MinorityExecEnv>(argc, argv);
+
 }
 

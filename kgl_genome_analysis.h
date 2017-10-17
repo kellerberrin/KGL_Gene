@@ -95,8 +95,8 @@ std::shared_ptr<GenomeVariant> GenomeAnalysis::simpleSNPVariants(std::shared_ptr
 
         if (max_count_nucleotide != contig_sequence[contig_offset] and read_count > 0) {
 
-          std::shared_ptr<Variant>
-          snp_variant(std::make_shared<SNPVariant<typename T::NucleotideType>>(contig_block.first,
+          std::shared_ptr<const Variant>
+          snp_variant(std::make_shared<const SNPVariant<typename T::NucleotideType>>(contig_block.first,
                                                       contig_offset,
                                                       read_count,
                                                       nucleotide_count_ptr[max_count_offset],

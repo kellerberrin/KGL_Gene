@@ -21,33 +21,11 @@
 // SOFTWARE.
 //
 //
+// Created by kellerberrin on 17/10/17.
 //
-// Created by kellerberrin on 13/10/17.
-//
-
-#ifndef KGL_APPLICATION_H
-#define KGL_APPLICATION_H
 
 
-#include "kgl_exec_env.h"
+#include "kgl_variant_set.h"
 
+namespace kgl = kellerberrin::genome;
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
-
-// Simple class implements the mainline logic, see kgl_applicationcc.
-class GenomeApplication {
-
-public:
-
-  GenomeApplication(Logger& log, const ExecEnv::Args& args );
-  ~GenomeApplication() = default;
-
-};
-
-
-}   // namespace genome
-}   // namespace kellerberrin
-
-
-#endif //KGL_APPLICATION_H

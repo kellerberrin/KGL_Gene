@@ -35,10 +35,11 @@
 
 
 namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+  namespace genome {   // project level namespace
 
 // This class sets up the application runtime environment as a series of static variables and member functions.
 // The class is never instantiated and is the first statement in main() (see kgl_main.cc).
+
 class ExecEnv {
 
 public:
@@ -46,46 +47,20 @@ public:
   ExecEnv()=delete;
   ~ExecEnv()=delete;
 
-  struct Args {
 
-    std::string workDirectory{"./Work"};
-    std::string fastaFile{""};
-    std::string gffFile{""};
-    std::string parentFile{""};
-    std::string mutantFile{"mutant.sam"};
-    std::string logFile{"kgl_snp.log"};
-    std::string contig{"*"};
-    int mutantMinCount{20};
-    double mutantMinProportion{0.7};
-    int parentMinCount{20};
-    double parentMinProportion{0.7};
-    int threadCount{-1};
-    unsigned char readQuality{0};
-    int lockGranularity{1000};
-    int queueSize{1000000};
-
-  };
-
-  static bool parseCommandLine(int argc, char const ** argv);
-  static const Args& args();
   static Logger& log();
   static void createLogger(const std::string& module, const std::string& log_file);
-  static constexpr const char* VERSION = "0.1";
-  static constexpr const char* MODULE_NAME = "kgl_genome";
   static void getElpasedTime(double& Clock, double& System, double& User);
 
-private:
+public:
 
-  static Args args_;
   static std::unique_ptr<Logger> log_ptr_;
 
 };
 
 
-}   // namespace genome
+
+  }   // namespace genome
 }   // namespace kellerberrin
-
-
-
 
 #endif //KGL_EXEC_ENV_H
