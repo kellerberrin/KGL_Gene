@@ -1,25 +1,3 @@
-// MIT License
-//
-// Copyright (c) 2017
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-//
 //
 // Created by kellerberrin on 17/10/17.
 //
@@ -55,9 +33,9 @@ std::shared_ptr<kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
   = kgl::GenomeAnalysis().simpleSNPVariants<kgl::NucleotideColumn_DNA5>(count_data_ptr, genome_db_ptr);
 
   // Filter for read count.
-  variant_ptr->filterVariants(kgl::ReadCountFilter(min_count));
+  variant_ptr = variant_ptr->filterVariants(kgl::ReadCountFilter(min_count));
   // Filter for read proportion.
-  variant_ptr->filterVariants(kgl::MutantProportionFilter(min_proportion));
+  variant_ptr = variant_ptr->filterVariants(kgl::MutantProportionFilter(min_proportion));
 
   return variant_ptr;
 
@@ -79,15 +57,36 @@ kgl::MinorityExecEnv::Application::Application(kgl::Logger& log, const kgl::Mino
                                                                           args.readQuality,
                                                                           args.mutantMinCount,
                                                                           args.mutantMinProportion);
-  // Generate parent filtered simple SNPs.
-  std::shared_ptr<kgl::GenomeVariant> parent_variant_ptr = getSNPVariants(log,
-                                                                          genome_db_ptr,
-                                                                          args.parentFile,
-                                                                          args.readQuality,
-                                                                          args.parentMinCount,
-                                                                          args.parentMinProportion);
-  // Subtract any variants from the mutant that are in the parent.
-  std::shared_ptr<kgl::GenomeVariant> diff_variant_ptr = mutant_variant_ptr->Difference(parent_variant_ptr);
+  std::cout << *mutant_variant_ptr;
+
+  if (args.parentFile.length() > 0) {
+
+    // Generate parent filtered simple SNPs.
+    std::shared_ptr<kgl::GenomeVariant> parent_variant_ptr = getSNPVariants(log,
+                                                                            genome_db_ptr,
+                                                                            args.parentFile,
+                                                                            args.readQuality,
+                                                                            args.parentMinCount,
+                                                                            args.parentMinProportion);
+    std::cout << *parent_variant_ptr;
+
+
+    // Union between variants in the mutant and in the parent.
+    std::shared_ptr<kgl::GenomeVariant> intersect_variant_ptr = mutant_variant_ptr->Intersection(parent_variant_ptr);
+
+    std::cout << *intersect_variant_ptr;
+
+    // Union between variants in the mutant and in the parent.
+    std::shared_ptr<kgl::GenomeVariant> union_variant_ptr = mutant_variant_ptr->Union(parent_variant_ptr);
+
+    std::cout << *union_variant_ptr;
+
+    // Subtract any variants from the union that are in the parent.
+    std::shared_ptr<kgl::GenomeVariant> diff_variant_ptr = union_variant_ptr->Difference(parent_variant_ptr);
+
+    std::cout << *diff_variant_ptr;
+
+  }
 
 }
 

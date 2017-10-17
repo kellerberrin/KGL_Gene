@@ -1,31 +1,215 @@
 // MIT License
 //
-// Copyright (c) 2017
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-//
-//
 // Created by kellerberrin on 17/10/17.
 //
 
 
-#include "kgl_variant_set.h"
+#include "kgl_variant.h"
+#include "kgl_exec_env.h"
+#include "kgl_patterns.h"
+
 
 namespace kgl = kellerberrin::genome;
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ContigVariant - All the variant features that map onto that region/sequence.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bool kgl::ContigVariant::isElement(const Variant& variant) const {
+
+  auto result = offset_variant_map_.equal_range(variant.contigOffset());
+
+  for (auto it = result.first; it != result.second; ++it) {
+
+    if (*(it->second) == variant) return true;
+
+  }
+
+  return false;
+
+}
+
+
+std::shared_ptr<kgl::ContigVariant>
+kgl::ContigVariant::Union(std::shared_ptr<const kgl::ContigVariant> contig_variant_ptr) const {
+
+  std::shared_ptr<kgl::ContigVariant> union_variant_ptr(std::make_shared<kgl::ContigVariant>(contigId()));
+
+  std::set_union(offset_variant_map_.begin(), offset_variant_map_.end(),
+                 contig_variant_ptr->offset_variant_map_.begin(), contig_variant_ptr->offset_variant_map_.end(),
+                 std::inserter(union_variant_ptr->offset_variant_map_, union_variant_ptr->offset_variant_map_.begin()));
+
+  return union_variant_ptr;
+
+}
+
+
+std::shared_ptr<kgl::ContigVariant>
+kgl::ContigVariant::Intersection(std::shared_ptr<const kgl::ContigVariant> contig_variant_ptr) const {
+
+  std::shared_ptr<kgl::ContigVariant> intersect_variant_ptr(std::make_shared<kgl::ContigVariant>(*this));
+
+  auto pred = [](const OffsetVariantMap::const_iterator& mod_it,
+                 const OffsetVariantMap::const_iterator& ref_it) { return *(mod_it->second) == *(ref_it->second); };
+
+  intersectIterable(intersect_variant_ptr->offset_variant_map_, contig_variant_ptr->offset_variant_map_, pred);
+
+  return intersect_variant_ptr;
+
+}
+
+
+std::shared_ptr<kgl::ContigVariant>
+kgl::ContigVariant::Difference(std::shared_ptr<const kgl::ContigVariant> contig_variant_ptr) const {
+
+  std::shared_ptr<kgl::ContigVariant> diff_variant_ptr(std::make_shared<kgl::ContigVariant>(*this));
+
+  auto pred = [](const OffsetVariantMap::const_iterator& mod_it,
+                 const OffsetVariantMap::const_iterator& ref_it) { return *(mod_it->second) == *(ref_it->second); };
+
+  deleteIterableReference(diff_variant_ptr->offset_variant_map_, contig_variant_ptr->offset_variant_map_, pred);
+
+  return diff_variant_ptr;
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// GenomeVariant - A map of contig variants
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bool kgl::GenomeVariant::isElement(const Variant& variant) const {
+
+  auto result = genome_variant_map_.find(variant.contigId());
+
+  if (result == genome_variant_map_.end()) {
+
+    return false;
+
+  }
+
+  return result->second->isElement(variant);
+
+}
+
+// Returns a GenomeVariant that is the union and returns (*this U *genome_variant_ptr)
+std::shared_ptr<kgl::GenomeVariant>
+kgl::GenomeVariant::Union(std::shared_ptr<const kgl::GenomeVariant> genome_variant_ptr) const {
+
+  std::shared_ptr<kgl::GenomeVariant> genome_union(std::make_shared<kgl::GenomeVariant>("Union"));
+
+  for (auto contig_variant : genome_variant_map_) {
+
+    auto result = genome_variant_ptr->genome_variant_map_.find(contig_variant.first);
+
+    std::shared_ptr<kgl::ContigVariant> union_contig_ptr;
+
+    if (result != genome_variant_map_.end()) {
+
+      union_contig_ptr = contig_variant.second->Union(result->second);
+      genome_union->addContigVariant(union_contig_ptr);
+
+    } else {
+
+      genome_union->addContigVariant(contig_variant.second);
+
+    }
+
+  }
+
+  for (auto contig_variant: genome_variant_ptr->genome_variant_map_) {
+
+    auto result = genome_union->genome_variant_map_.find(contig_variant.first);
+
+    if (result == genome_union->genome_variant_map_.end()) {
+
+      genome_union->addContigVariant(result->second);
+
+    }
+
+  }
+
+  for (auto contig_variant : genome_union->genome_variant_map_) {
+
+    kgl::ExecEnv::log().info("Union Contig: {} contains: {} variants",
+                             contig_variant.first,
+                             contig_variant.second->variantCount());
+
+  }
+
+  return genome_union;
+
+}
+
+
+// Returns a GenomeVariant that is the intersection return (*this & *genome_variant)
+std::shared_ptr<kgl::GenomeVariant>
+kgl::GenomeVariant::Intersection(std::shared_ptr<const kgl::GenomeVariant> genome_variant) const {
+
+  std::shared_ptr<kgl::GenomeVariant> genome_difference(std::make_shared<kgl::GenomeVariant>("Intersection"));
+
+  for (auto contig_variant : genome_variant_map_) {
+
+    auto result = genome_variant->genome_variant_map_.find(contig_variant.first);
+
+    std::shared_ptr<kgl::ContigVariant> diff_contig_ptr;
+
+    if (result != genome_variant_map_.end()) {
+
+      diff_contig_ptr = contig_variant.second->Intersection(result->second);
+      genome_difference->addContigVariant(diff_contig_ptr);
+
+    } else {
+
+      diff_contig_ptr = std::make_shared<kgl::ContigVariant>(contig_variant.first);
+      genome_difference->addContigVariant(diff_contig_ptr);
+
+    }
+
+    kgl::ExecEnv::log().info("Intersection Contig: {} contains: {} variants",
+                             contig_variant.first,
+                             diff_contig_ptr->variantCount());
+
+  }
+
+  return genome_difference;
+
+}
+
+
+// Returns a GenomeVariant that is the difference return (*this - *genome_variant)
+std::shared_ptr<kgl::GenomeVariant>
+kgl::GenomeVariant::Difference(std::shared_ptr<const kgl::GenomeVariant> genome_variant) const {
+
+  std::shared_ptr<kgl::GenomeVariant> genome_difference(std::make_shared<kgl::GenomeVariant>("Difference"));
+
+  for (auto contig_variant : genome_variant_map_) {
+
+    auto result = genome_variant->genome_variant_map_.find(contig_variant.first);
+
+    std::shared_ptr<kgl::ContigVariant> diff_contig_ptr;
+
+    if (result != genome_variant_map_.end()) {
+
+      diff_contig_ptr = contig_variant.second->Difference(result->second);
+      genome_difference->addContigVariant(diff_contig_ptr);
+
+    } else {
+
+      genome_difference->addContigVariant(contig_variant.second);
+
+    }
+
+    kgl::ExecEnv::log().info("Difference Contig: {} contains: {} variants",
+                             contig_variant.first,
+                             diff_contig_ptr->variantCount());
+
+  }
+
+  return genome_difference;
+
+}
 

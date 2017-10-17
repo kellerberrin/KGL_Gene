@@ -134,7 +134,80 @@ long predicateIterableDelete(T& iterableContainer, F bool_pred) {
 
 }
 
-}   // namespace genome
+
+// Pattern to delete items that match a predicate in a reference container.
+template<class T, typename P>
+long deleteIterableReference(T& modified_container, const T& reference_container, P bool_pred) {
+
+  long items_removed = 0;
+
+  for (auto ref_it = reference_container.begin(); ref_it != reference_container.end(); ++ref_it) {
+
+    auto mod_iterator = modified_container.begin();
+    while(mod_iterator != modified_container.end()) {
+
+      if (bool_pred(ref_it, mod_iterator)) {
+
+        // C++ 11 erase() returns next iterator to next valid (or end())
+        mod_iterator = modified_container.erase(mod_iterator);
+        ++items_removed;
+
+      } else {
+
+        ++mod_iterator;
+
+      } // if erase
+
+    } // while mod_iterator
+
+  } // for ref_it
+
+  return items_removed;
+
+}
+
+// Pattern to delete items that do not match a predicate in a reference container.
+template<class T, typename P>
+long intersectIterable(T& modified_container, const T& reference_container, P bool_pred) {
+
+  long items_removed = 0;
+
+  auto mod_iterator = modified_container.begin();
+  while(mod_iterator != modified_container.end()) {
+
+    bool found = false;
+
+    for (auto ref_it = reference_container.begin(); ref_it != reference_container.end(); ++ref_it) {
+
+      if (bool_pred(ref_it, mod_iterator)) {
+
+        found = true;
+        break; // element found in the reference container so keep the element
+
+      }
+
+    } // for ref_it
+
+    if (not found) {
+
+      // C++ 11 erase() returns next iterator to next valid (or end())
+      mod_iterator = modified_container.erase(mod_iterator);
+      ++items_removed;
+
+    } else {
+
+      ++mod_iterator;
+
+    }
+
+  } // while mod_iterator
+
+  return items_removed;
+
+}
+
+
+  }   // namespace genome
 }   // namespace kellerberrin
 
 

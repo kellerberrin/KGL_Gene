@@ -1,26 +1,4 @@
-// MIT License
-//
-// Copyright (c) 2017
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-//
-//
+///
 // Created by kellerberrin on 13/10/17.
 //
 
@@ -78,6 +56,7 @@ public:
   const ContigId_t& contigId() const { return contig_id_; }
   ContigOffset_t contigOffset() const { return contig_offset_; }
   bool operator==(const Variant& cmp_var) const { return equivalent(cmp_var); };
+  friend std::ostream& operator<<(std::ostream &os, const Variant& variant) { return variant.output(os); }
 
 private:
 
@@ -86,6 +65,7 @@ private:
 
   virtual bool applyFilter(const VariantFilter& filter) const = 0;
   virtual bool equivalent(const Variant& cmp_var) const = 0;
+  virtual std::ostream& output(std::ostream& os) const = 0;
 
 };
 
@@ -147,6 +127,7 @@ private:
   T mutant_;
 
   bool applyFilter(const VariantFilter& filter) const final { return filter.applyFilter(*this); }
+  std::ostream & output(std::ostream &os) const final;
 
 };
 
@@ -164,6 +145,12 @@ bool SNPVariant<T>::equivalent(const Variant& cmp_var) const {
 
 }
 
+template<class T>
+std::ostream & SNPVariant<T>::output(std::ostream &os) const
+{
+  return os << contigId() << " " << " " << mutantCount() << "/" << readCount()
+            << " " << reference() << (contigOffset() + 1) << mutant();
+}
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -188,11 +175,13 @@ public:
 
   // Set functions.
   bool isElement(const Variant& variant) const;
-  ContigVariant& Union(const ContigVariant& contig_variant) const;
-  ContigVariant& Intersection(const ContigVariant& contig_variant) const;
-  ContigVariant& Difference(const ContigVariant& contig_variant) const;
+  std::shared_ptr<ContigVariant> Union(std::shared_ptr<const ContigVariant> contig_variant_ptr) const;
+  std::shared_ptr<ContigVariant> Intersection(std::shared_ptr<const ContigVariant> contig_variant_ptr) const;
+  std::shared_ptr<ContigVariant> Difference(std::shared_ptr<const ContigVariant> contig_variant_ptr) const;
 
-  size_t filterVariants(const VariantFilter& filter);
+  std::shared_ptr<ContigVariant> filterVariants(const VariantFilter& filter) const;
+
+  friend std::ostream & operator<<(std::ostream &os, const ContigVariant& contig_variant);
 
 private:
 
@@ -212,22 +201,30 @@ class GenomeVariant {
 
 public:
 
-  explicit GenomeVariant() {}
+  explicit GenomeVariant(const GenomeId_t& genome_id) : genome_id_(genome_id) {}
   GenomeVariant(const GenomeVariant&) = default;
   ~GenomeVariant() = default;
 
   GenomeVariant& operator=(const GenomeVariant& genome_variant) = default;
 
+  const GenomeId_t& genomeId() const { return genome_id_; }
+  void genomeId(const GenomeId_t& contig_id) { genome_id_ = contig_id; }
+
+  size_t contigCount() const { return genome_variant_map_.size(); }
+
   bool addContigVariant(std::shared_ptr<ContigVariant>& contig_variant);
-  void filterVariants(const VariantFilter& filter);
+  std::shared_ptr<GenomeVariant> filterVariants(const VariantFilter& filter) const;
 
   bool isElement(const Variant& variant) const;
   std::shared_ptr<GenomeVariant> Union(std::shared_ptr<const GenomeVariant> genome_variant_ptr) const;
   std::shared_ptr<GenomeVariant> Intersection(std::shared_ptr<const GenomeVariant> genome_variant_ptr) const;
   std::shared_ptr<GenomeVariant> Difference(std::shared_ptr<const GenomeVariant> genome_variant_ptr) const;
 
+  friend std::ostream & operator<<(std::ostream &os, const GenomeVariant& contig_variant);
+
 private:
 
+  GenomeId_t genome_id_;
   GenomeVariantMap genome_variant_map_;
 
 };

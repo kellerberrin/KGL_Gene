@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2017
+// Copyright (c) James McCulloch (Kellerberrin) 2017 all rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,27 +21,4 @@
 // SOFTWARE.
 //
 //
-// Created by kellerberrin on 17/10/17.
 //
-
-
-#ifndef KGL_VARIANT_SET_H
-#define KGL_VARIANT_SET_H
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Implements set operations on collections variants.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-namespace kellerberrin {   //  organization level namespace
-  namespace genome {   // project level namespace
-
-
-
-
-
-  };
-};
-
-#endif //READSAMFILE_KGL_VARIANT_SET_H
