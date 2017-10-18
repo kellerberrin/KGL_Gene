@@ -7,6 +7,7 @@
 
 #include <map>
 #include <memory>
+#include <vector>
 #include "kgl_genome_types.h"
 
 
@@ -74,7 +75,6 @@ private:
 //  A read count variant.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 class ReadCountVariant : public Variant {
 
 public:
@@ -82,12 +82,24 @@ public:
   ReadCountVariant(const ContigId_t& contig_id,
                    ContigOffset_t contig_offset,
                    NucleotideReadCount_t read_count,
-                   NucleotideReadCount_t mutant_count)
-      : Variant(contig_id, contig_offset), read_count_(read_count), mutant_count_(mutant_count) {}
+                   NucleotideReadCount_t mutant_count,
+                   NucleotideReadCount_t const count_array[],
+                   ContigSize_t count_array_size) : Variant(contig_id, contig_offset),
+                                                            read_count_(read_count),
+                                                            mutant_count_(mutant_count) {
+
+    for(ContigOffset_t idx = 0; idx < count_array_size; ++idx) {
+
+      count_array_.push_back(count_array[idx]);
+
+    }
+
+  }
   ~ReadCountVariant() override = default;
 
   NucleotideReadCount_t readCount() const { return read_count_; }
   NucleotideReadCount_t mutantCount() const { return mutant_count_; }
+  const std::vector<NucleotideReadCount_t>& countArray() const { return count_array_; }
 
   double proportion() const { return static_cast<double>(mutant_count_) / static_cast<double>(read_count_); }
 
@@ -95,6 +107,7 @@ private:
 
   NucleotideReadCount_t read_count_;
   NucleotideReadCount_t mutant_count_;
+  std::vector<NucleotideReadCount_t> count_array_;
 
 };
 
@@ -111,20 +124,24 @@ public:
              ContigOffset_t contig_offset,
              NucleotideReadCount_t read_count,
              NucleotideReadCount_t mutant_count,
-             T reference,
-             T mutant)
-      : ReadCountVariant(contig_id, contig_offset, read_count, mutant_count), reference_(reference) , mutant_(mutant) {}
+             NucleotideReadCount_t const count_array[],
+             ContigSize_t  count_array_size,
+             typename T::NucleotideType reference,
+             typename T::NucleotideType mutant)
+      : ReadCountVariant(contig_id, contig_offset, read_count, mutant_count, count_array, count_array_size),
+        reference_(reference),
+        mutant_(mutant) {}
   ~SNPVariant() override = default;
 
   bool equivalent(const Variant& cmp_var) const final;
 
-  const T& reference() const { return reference_; }
-  const T& mutant() const { return mutant_; }
+  const typename T::NucleotideType& reference() const { return reference_; }
+  const typename T::NucleotideType& mutant() const { return mutant_; }
 
 private:
 
-  T reference_;
-  T mutant_;
+  typename T::NucleotideType reference_;
+  typename T::NucleotideType mutant_;
 
   bool applyFilter(const VariantFilter& filter) const final { return filter.applyFilter(*this); }
   std::ostream & output(std::ostream &os) const final;
@@ -146,10 +163,15 @@ bool SNPVariant<T>::equivalent(const Variant& cmp_var) const {
 }
 
 template<class T>
-std::ostream & SNPVariant<T>::output(std::ostream &os) const
+std::ostream& SNPVariant<T>::output(std::ostream& os) const
 {
-  return os << contigId() << " " << " " << mutantCount() << "/" << readCount()
-            << " " << reference() << (contigOffset() + 1) << mutant();
+  os << contigId() << " " << " " << mutantCount() << "/" << readCount()
+     << " " << reference() << (contigOffset() + 1) << mutant() << " [";
+  for (auto count : countArray()) {
+    os << count << ",";
+  }
+//  os << "]";
+  return os;
 }
 
 

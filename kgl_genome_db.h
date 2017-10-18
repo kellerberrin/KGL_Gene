@@ -90,7 +90,7 @@ public:
 
   void createVerifyGenomeDatabase();
 
-  void registerContigData(std::shared_ptr<ContigCountData>& contig_data_ptr);
+  void registerContigData(std::shared_ptr<ContigCountData>& contig_data_ptr) const;
 
 private:
 

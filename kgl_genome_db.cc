@@ -330,9 +330,9 @@ void kgl::GenomeDatabase::verifyFeatureHierarchy() {
 }
 
 
-void kgl::GenomeDatabase::registerContigData(std::shared_ptr<kgl::ContigCountData>& contig_data_ptr) {
+void kgl::GenomeDatabase::registerContigData(std::shared_ptr<kgl::ContigCountData>& contig_data_ptr) const {
 // Create data blocks for each contig in the genome database
-  for (const auto &contig_pair : getGenomeSequenceMap()) {
+  for (const auto &contig_pair : genome_sequence_map_) {
 
     if (not contig_data_ptr->insertContig(contig_pair.first, contig_pair.second->sequence().length())) {
 

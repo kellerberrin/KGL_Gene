@@ -57,11 +57,13 @@ std::shared_ptr<GenomeVariant> GenomeAnalysis::simpleSNPVariants(std::shared_ptr
 
         ContigOffset_t max_count_offset = 0;
         NucleotideReadCount_t read_count = 0;
+        NucleotideReadCount_t max_count = 0;
         for(ContigOffset_t idx = 0; idx <  T::NUCLEOTIDE_COLUMNS; ++idx) {
 
-          if (idx > 0 and nucleotide_count_ptr[idx-1] < nucleotide_count_ptr[idx]) {
+          if (max_count < nucleotide_count_ptr[idx]) {
 
             max_count_offset = idx;
+            max_count = nucleotide_count_ptr[idx];
 
           }
 
@@ -70,16 +72,23 @@ std::shared_ptr<GenomeVariant> GenomeAnalysis::simpleSNPVariants(std::shared_ptr
         }
 
         typename T::NucleotideType max_count_nucleotide = T::offsetToNucleotide(max_count_offset);
+        typename T::NucleotideType reference_nucleotide = contig_sequence[contig_offset];
+        NucleotideReadCount_t reference_count =  nucleotide_count_ptr[T::nucleotideToColumn(reference_nucleotide)];
 
-        if (max_count_nucleotide != contig_sequence[contig_offset] and read_count > 0) {
+        if (max_count > reference_count
+            and max_count_nucleotide != T::INSERT_SEQUENCE
+            and max_count_nucleotide != contig_sequence[contig_offset]
+            and read_count > 0) {
 
           std::shared_ptr<const Variant>
-          snp_variant(std::make_shared<const SNPVariant<typename T::NucleotideType>>(contig_block.first,
-                                                      contig_offset,
-                                                      read_count,
-                                                      nucleotide_count_ptr[max_count_offset],
-                                                      max_count_nucleotide,
-                                                      contig_sequence[contig_offset]));
+          snp_variant(std::make_shared<const SNPVariant<T>>(contig_block.first,
+                                                            contig_offset,
+                                                            read_count,
+                                                            max_count,
+                                                            nucleotide_count_ptr,
+                                                            T::NUCLEOTIDE_COLUMNS,
+                                                            reference_nucleotide,
+                                                            max_count_nucleotide));
 
           contig_variant_ptr->addVariant(contig_offset, snp_variant);
 

@@ -19,18 +19,15 @@ std::shared_ptr<kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
                                                    long min_count,
                                                    double min_proportion) {
 
-  // Create a data block to hold the read data.
-  std::shared_ptr<kgl::ContigCountData> count_data_ptr(std::make_shared<kgl::ContigCountData>());
 
-  // Register with the genome database to setup the contig data blocks.
-  genome_db_ptr->registerContigData(count_data_ptr);
-
-  // Attach a SAM reader to the contig data block and read in the SAM file.
-  kgl::SamCountReader(count_data_ptr, log).readSAMFile(file_name, read_quality);
-
+  // Read in the SAM file.
+  std::shared_ptr<kgl::ContigCountData> count_data_ptr = kgl::SamCountReader(log).readSAMFile(genome_db_ptr,
+                                                                                              file_name,
+                                                                                              read_quality);
   // Generate simple SNPs.
-  std::shared_ptr<kgl::GenomeVariant> variant_ptr
-  = kgl::GenomeAnalysis().simpleSNPVariants<kgl::NucleotideColumn_DNA5>(count_data_ptr, genome_db_ptr);
+  std::shared_ptr<kgl::GenomeVariant> variant_ptr = kgl::GenomeAnalysis().simpleSNPVariants<kgl::NucleotideColumn_DNA5>(count_data_ptr,
+                                                                                                                        genome_db_ptr);
+//  std::cout << *variant_ptr;
 
   // Filter for read count.
   variant_ptr = variant_ptr->filterVariants(kgl::ReadCountFilter(min_count));

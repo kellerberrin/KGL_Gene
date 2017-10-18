@@ -3,7 +3,7 @@
 // Created by kellerberrin on 17/10/17.
 //
 
-
+#include <algorithm>
 #include "kgl_variant.h"
 #include "kgl_exec_env.h"
 #include "kgl_patterns.h"

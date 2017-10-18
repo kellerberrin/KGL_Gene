@@ -26,8 +26,8 @@ public:
 
   using NucleotideType = Nucleotide_DNA5_t;
 
-  explicit NucleotideColumn_DNA5() = default;
-  ~NucleotideColumn_DNA5() = default;
+  NucleotideColumn_DNA5() = delete; // Singleton
+  ~NucleotideColumn_DNA5() = delete;
 
   static constexpr ContigOffset_t NUCLEOTIDE_COLUMNS = 7;
   static constexpr Nucleotide_DNA5_t A_NUCLEOTIDE = 'A';
@@ -36,6 +36,8 @@ public:
   static constexpr ContigOffset_t C_NUCLEOTIDE_OFFSET = 1;
   static constexpr Nucleotide_DNA5_t G_NUCLEOTIDE = 'G';
   static constexpr ContigOffset_t G_NUCLEOTIDE_OFFSET = 2;
+  static constexpr Nucleotide_DNA5_t U_NUCLEOTIDE = 'U';
+  static constexpr ContigOffset_t U_NUCLEOTIDE_OFFSET = 3;
   static constexpr Nucleotide_DNA5_t T_NUCLEOTIDE = 'T';
   static constexpr ContigOffset_t T_NUCLEOTIDE_OFFSET = 3;
   static constexpr Nucleotide_DNA5_t N_NUCLEOTIDE = 'N';

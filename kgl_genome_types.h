@@ -39,6 +39,7 @@ namespace genome {   // project level namespace
 // Types used to represent genome data.
 
 using Nucleotide_DNA5_t = char;
+using Amino_22_t = char;
 using Sequence_t = std::basic_string<Nucleotide_DNA5_t>;
 using ContigId_t = std::string;
 using GenomeId_t = std::string;
