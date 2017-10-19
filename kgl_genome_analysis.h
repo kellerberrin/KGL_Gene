@@ -39,7 +39,7 @@ std::shared_ptr<GenomeVariant> GenomeAnalysis::simpleSNPVariants(std::shared_ptr
   for (auto& contig_block : count_data->getMap()) {   // For each contig block.
 
     // Get the sequence.
-    std::shared_ptr<ContigRecord> contig_ptr;
+    std::shared_ptr<ContigFeatures> contig_ptr;
     if (not genome_db->getContigSequence(contig_block.first, contig_ptr)) {
 
       ExecEnv::log().error("Contig: {} not found in simpleSNPVariants()", contig_block.first);

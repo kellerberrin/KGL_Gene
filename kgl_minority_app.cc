@@ -33,6 +33,8 @@ std::shared_ptr<kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
   variant_ptr = variant_ptr->filterVariants(kgl::ReadCountFilter(min_count));
   // Filter for read proportion.
   variant_ptr = variant_ptr->filterVariants(kgl::MutantProportionFilter(min_proportion));
+  // Filter for CDS membership.
+  variant_ptr = variant_ptr->filterVariants(kgl::InCDSFilter(genome_db_ptr));
 
   return variant_ptr;
 
@@ -44,9 +46,6 @@ kgl::MinorityExecEnv::Application::Application(kgl::Logger& log, const kgl::Mino
   // Create a genome database object.
   std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr = kgl::ParseGffFasta(log).readFastaGffFile(args.fastaFile,
                                                                                                 args.gffFile);
-  // Wire-up the genome database.
-  genome_db_ptr->createVerifyGenomeDatabase();
-
   // Generate mutant filtered simple SNPs.
   std::shared_ptr<kgl::GenomeVariant> mutant_variant_ptr = getSNPVariants(log,
                                                                           genome_db_ptr,

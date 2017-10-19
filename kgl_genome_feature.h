@@ -93,68 +93,84 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// FeatureRecord - Annotated contig features
+// Feature - Annotated contig features
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class ContigRecord; // Forward decl;
-class FeatureRecord; // Forward decl.
+class ContigFeatures; // Forward decl;
+class Feature; // Forward decl.
+class CDSFeature; // Forward Decl
 using FeatureIdent_t = std::string;
 using FeatureType_t = std::string;
-using SubFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<FeatureRecord>>;
-using SuperFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<FeatureRecord>>;
-class FeatureRecord {
+using SubFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<Feature>>;
+using SuperFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<Feature>>;
+using SortedCDS = std::map<ContigOffset_t, std::shared_ptr<CDSFeature>>;
+using SortedCDSVector = std::vector<SortedCDS>;
+using ParentSortedCDS = std::pair<std::shared_ptr<const Feature>, SortedCDSVector>; // Feature ptr is the CDS parent (mRna, Gene)
+
+class Feature {
 
 public:
 
-  FeatureRecord(const FeatureIdent_t& id,
-                const FeatureType_t& type,
-                const std::shared_ptr<ContigRecord>& contig_ptr,
-                const FeatureSequence& sequence): id_(id), type_(type), contig_ptr_(contig_ptr), sequence_(sequence) {}
-  FeatureRecord(const FeatureRecord&) = default;
-  virtual ~FeatureRecord() = default;
+  Feature(const FeatureIdent_t& id,
+          const FeatureType_t& type,
+          const std::shared_ptr<ContigFeatures>& contig_ptr,
+          const FeatureSequence& sequence): id_(id), type_(type), contig_ptr_(contig_ptr), sequence_(sequence) {}
+  Feature(const Feature&) = default;
+  virtual ~Feature() = default;
 
-  FeatureRecord& operator=(const FeatureRecord&) = default;
+  Feature& operator=(const Feature&) = default;
 
   const FeatureIdent_t& id() const { return id_; }
   const FeatureSequence& sequence() const { return sequence_; }
   void sequence(const FeatureSequence& new_sequence) { sequence_ = new_sequence; }
   void setAttributes(const FeatureAttributes& attributes) { attributes_ = attributes; }
   const FeatureAttributes& getAttributes() const { return attributes_; }
-
+  const FeatureType_t& featureType() const { return type_; }
+  bool getSortedCDS(SortedCDSVector& sorted_cds_vec) const; // Recursively descend the subfeatures.
+  bool verifyCDSPhase(const SortedCDSVector& sorted_cds_vec); // Check the CDS phase for -ve and +ve strand genes
+  void recusivelyPrintsubfeatures(long feature_level = 1) const; // useful debug function.
   // Hierarchy routines.
   void clearHierachy() { sub_features_.clear(); super_features_.clear(); }
-  void addSuperFeature(const FeatureIdent_t &super_feature_id, const std::shared_ptr<FeatureRecord> &super_feature_ptr);
-  void addSubFeature(const FeatureIdent_t& sub_feature_id, const std::shared_ptr<FeatureRecord>& sub_feature_ptr);
+  void addSuperFeature(const FeatureIdent_t &super_feature_id, const std::shared_ptr<Feature> &super_feature_ptr);
+  void addSubFeature(const FeatureIdent_t& sub_feature_id, const std::shared_ptr<Feature>& sub_feature_ptr);
 
   SuperFeatureMap& superFeatures() { return super_features_; }
   SubFeatureMap& subFeatures() { return sub_features_; }
+
+  // MRNA Type.
+  constexpr static const char* MRNA_TYPE = "MRNA";
+  // EXON Type.
+  constexpr static const char* EXON_TYPE = "EXON";
 
 private:
 
   FeatureIdent_t id_;
   FeatureType_t type_;
-  std::shared_ptr<ContigRecord> contig_ptr_;
+  std::shared_ptr<ContigFeatures> contig_ptr_;
   FeatureSequence sequence_;
   SubFeatureMap sub_features_;
   SuperFeatureMap super_features_;
   FeatureAttributes attributes_;
 
+  bool verifyMod3(const SortedCDS& sorted_cds);
+  bool verifyPhase(const SortedCDS& sorted_cds);
 };
 
-class CDSRecord : public FeatureRecord {
+
+class CDSFeature : public Feature {
 
 public:
 
-  CDSRecord(const FeatureIdent_t &id,
+  CDSFeature(const FeatureIdent_t &id,
             const CDSPhaseType_t phase,
-            const std::shared_ptr<ContigRecord> &contig_ptr,
-            const FeatureSequence &sequence) : FeatureRecord(id, CDS_TYPE, contig_ptr, sequence), phase_(phase) {}
+            const std::shared_ptr<ContigFeatures> &contig_ptr,
+            const FeatureSequence &sequence) : Feature(id, CDS_TYPE, contig_ptr, sequence), phase_(phase) {}
 
-  CDSRecord(const CDSRecord &) = default;
-  ~CDSRecord() override = default;
+  CDSFeature(const CDSFeature &) = default;
+  ~CDSFeature() override = default;
 
-  CDSRecord &operator=(const CDSRecord &) = default;
+  CDSFeature &operator=(const CDSFeature &) = default;
 
   CDSPhaseType_t phase() const { return phase_; }
 
@@ -168,20 +184,21 @@ private:
 };
 
 
-class GeneRecord : public FeatureRecord {
+class GeneFeature : public Feature {
 
 public:
 
-  GeneRecord(const FeatureIdent_t &id,
-             const std::shared_ptr<ContigRecord> &contig_ptr,
-             const FeatureSequence &sequence) : FeatureRecord(id, GENE_TYPE, contig_ptr, sequence) {}
+  GeneFeature(const FeatureIdent_t &id,
+             const std::shared_ptr<ContigFeatures> &contig_ptr,
+             const FeatureSequence &sequence) : Feature(id, GENE_TYPE, contig_ptr, sequence) {}
 
-  GeneRecord(const GeneRecord &) = default;
-  ~GeneRecord() override = default;
+  GeneFeature(const GeneFeature &) = default;
+  ~GeneFeature() override = default;
 
-  GeneRecord &operator=(const GeneRecord &) = default;
+  GeneFeature &operator=(const GeneFeature &) = default;
 
-  // CDS Type.
+
+  // GENE Type.
   constexpr static const char* GENE_TYPE = "GENE";
 
 private:

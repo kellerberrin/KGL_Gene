@@ -11,11 +11,11 @@ namespace kgl = kellerberrin::genome;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ContigRecord members.
+// ContigFeatures members.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool kgl::ContigRecord::addFeature(std::shared_ptr<kgl::FeatureRecord>& feature_ptr) {
+bool kgl::ContigFeatures::addFeature(std::shared_ptr<kgl::Feature>& feature_ptr) {
 
   id_feature_map_.insert(std::make_pair(feature_ptr->id(), feature_ptr));
 
@@ -25,8 +25,8 @@ bool kgl::ContigRecord::addFeature(std::shared_ptr<kgl::FeatureRecord>& feature_
 
 }
 
-bool kgl::ContigRecord::findFeatureId(kgl::FeatureIdent_t& feature_id,
-                                      std::vector<std::shared_ptr<kgl::FeatureRecord>>& feature_ptr_vec) {
+bool kgl::ContigFeatures::findFeatureId(kgl::FeatureIdent_t& feature_id,
+                                      std::vector<std::shared_ptr<kgl::Feature>>& feature_ptr_vec) {
 
   auto iter_pair = id_feature_map_.equal_range(feature_id);
 
@@ -43,25 +43,25 @@ bool kgl::ContigRecord::findFeatureId(kgl::FeatureIdent_t& feature_id,
 
 
 
-void kgl::ContigRecord::setupFeatureHierarchy() {
+void kgl::ContigFeatures::setupFeatureHierarchy() {
 
   // Remove all hierarchies for all features.
   for (auto feature_pair : id_feature_map_) {
-    FeatureRecord& feature = *feature_pair.second;
+    Feature& feature = *feature_pair.second;
     // Remove feature hierarchy.
     feature.clearHierachy();
   }
 
   // Establish or re-establish the hierarchies for all features.
   for (auto feature_pair : id_feature_map_) {
-    FeatureRecord& feature = *feature_pair.second;
+    Feature& feature = *feature_pair.second;
     // For each feature lookup a list of super_features
     std::vector<FeatureIdent_t> super_features;
     feature.getAttributes().getSuperFeatureIds(super_features);
     // Add parent pointers for the child and child pointers for the super_features.
     for (auto super_feature_id : super_features) {
 
-      std::vector<std::shared_ptr<kgl::FeatureRecord>> super_feature_ptr_vec;
+      std::vector<std::shared_ptr<kgl::Feature>> super_feature_ptr_vec;
       if (not findFeatureId(super_feature_id, super_feature_ptr_vec)) {
 
         // Error; could not find super feature.
@@ -89,7 +89,7 @@ void kgl::ContigRecord::setupFeatureHierarchy() {
 }
 
 
-void kgl::ContigRecord::verifyFeatureHierarchy() {
+void kgl::ContigFeatures::verifyFeatureHierarchy() {
 
   verifyContigOverlap();
   verifySubFeatureSuperFeatureDimensions();
@@ -97,11 +97,13 @@ void kgl::ContigRecord::verifyFeatureHierarchy() {
   removeSuperFeatureDuplicates();
   verifySubFeatureDuplicates();
   verifySuperFeatureDuplicates();
+  verifyCDSPhasePeptide();
+  createCDSTable();
 
 }
 
 
-void kgl::ContigRecord::verifyContigOverlap() {
+void kgl::ContigFeatures::verifyContigOverlap() {
 
   // If feature dimensions are [1, size] instead of [0, size-1] then assume that conversion from the
   // Gff convention of [1, size] has not been performed correctly during feature read from disk.
@@ -114,7 +116,7 @@ void kgl::ContigRecord::verifyContigOverlap() {
   ContigSize_t contig_size = contigSize();
 
   for (auto feature_pair : id_feature_map_) {
-    FeatureRecord &feature = *feature_pair.second;
+    Feature &feature = *feature_pair.second;
     // Error if feature overlaps the and of the contig.
     // If [1,contig_size] then adjust to [0, contis_size-1]
     if (feature.sequence().end() >= contig_size) {
@@ -147,15 +149,15 @@ void kgl::ContigRecord::verifyContigOverlap() {
 }
 
 
-void kgl::ContigRecord::verifySubFeatureSuperFeatureDimensions() {
+void kgl::ContigFeatures::verifySubFeatureSuperFeatureDimensions() {
 
 
   // Check that sub-features fit within feature.
   for (auto feature_pair : id_feature_map_) {
-    FeatureRecord &feature = *feature_pair.second;
+    Feature &feature = *feature_pair.second;
 
     for (auto sub_feature_pair : feature.subFeatures()) {
-      FeatureRecord &sub_feature = *sub_feature_pair.second;
+      Feature &sub_feature = *sub_feature_pair.second;
       if (sub_feature.sequence().begin() < feature.sequence().begin()
           or sub_feature.sequence().end() > feature.sequence().end()) {
 
@@ -174,7 +176,7 @@ void kgl::ContigRecord::verifySubFeatureSuperFeatureDimensions() {
 
     // Check that features fit within super-feature.
     for (auto super_feature_pair : feature.superFeatures()) {
-      FeatureRecord &super_feature = *super_feature_pair.second;
+      Feature &super_feature = *super_feature_pair.second;
       if (feature.sequence().begin() < super_feature.sequence().begin()
           or feature.sequence().end() > super_feature.sequence().end()) {
 
@@ -195,12 +197,12 @@ void kgl::ContigRecord::verifySubFeatureSuperFeatureDimensions() {
 }
 
 
-void kgl::ContigRecord::removeSubFeatureDuplicates() {
+void kgl::ContigFeatures::removeSubFeatureDuplicates() {
 
   long duplicates_removed = 0;
 
   for (auto feature_pair : id_feature_map_) {
-    FeatureRecord &feature = *feature_pair.second;
+    Feature &feature = *feature_pair.second;
 
     duplicates_removed += deleteIterableDuplicates(feature.subFeatures());
 
@@ -214,12 +216,12 @@ void kgl::ContigRecord::removeSubFeatureDuplicates() {
 
 }
 
-void kgl::ContigRecord::removeSuperFeatureDuplicates() {
+void kgl::ContigFeatures::removeSuperFeatureDuplicates() {
 
   long duplicates_removed = 0;
 
   for (auto feature_pair : id_feature_map_) {
-    FeatureRecord &feature = *feature_pair.second;
+    Feature &feature = *feature_pair.second;
 
     duplicates_removed += deleteIterableDuplicates(feature.superFeatures());
 
@@ -234,10 +236,10 @@ void kgl::ContigRecord::removeSuperFeatureDuplicates() {
 }
 
 
-void kgl::ContigRecord::verifySubFeatureDuplicates() {
+void kgl::ContigFeatures::verifySubFeatureDuplicates() {
 
   for (auto feature_pair : id_feature_map_) {
-    FeatureRecord &feature = *feature_pair.second;
+    Feature &feature = *feature_pair.second;
 
     long duplicates = checkDuplicates(feature.subFeatures());
 
@@ -252,10 +254,10 @@ void kgl::ContigRecord::verifySubFeatureDuplicates() {
 }
 
 
-void kgl::ContigRecord::verifySuperFeatureDuplicates() {
+void kgl::ContigFeatures::verifySuperFeatureDuplicates() {
 
   for (auto feature_pair : id_feature_map_) {
-    FeatureRecord &feature = *feature_pair.second;
+    Feature &feature = *feature_pair.second;
 
     long duplicates = checkDuplicates(feature.superFeatures());
 
@@ -270,14 +272,86 @@ void kgl::ContigRecord::verifySuperFeatureDuplicates() {
 }
 
 
+void kgl::ContigFeatures::verifyCDSPhasePeptide() {
+
+  // Iterate through all the features looking for Genes.
+  size_t gene_count = 0;
+  for(const auto& feature : offset_feature_map_) {
+
+    if(feature.second->featureType() == GeneFeature::GENE_TYPE) {
+
+      ++gene_count;
+      SortedCDSVector sorted_cds_vec;
+      feature.second->getSortedCDS(sorted_cds_vec); // all +ve offset sorted gene CDS.
+      if (not feature.second->verifyCDSPhase(sorted_cds_vec)) {
+
+
+        ExecEnv::log().info("Gene : {} Offset: {} Problem verifying CDS structure - gene sub-features print out",
+                            feature.second->id(),
+                            feature.second->sequence().begin());
+        feature.second->recusivelyPrintsubfeatures();
+
+      }
+
+    }
+
+  }
+
+  ExecEnv::log().info("Contig: {} found: {} Gene features", contigId(), gene_count);
+
+}
+
+
+void kgl::ContigFeatures::createCDSTable() {
+
+  // Clear the lookup table.
+  cds_table_.clear();
+
+  // Iterate through all the features looking for CDS features.
+  for(const auto& feature : offset_feature_map_) {
+
+    if(feature.second->featureType() == CDSFeature::CDS_TYPE) {
+
+      cds_table_.emplace_back(std::static_pointer_cast<CDSFeature>(feature.second));
+
+    }
+
+  }
+
+  ExecEnv::log().info("Contig: {} found: {} CDS features", contigId(), cds_table_.size());
+
+}
+
+
+bool kgl::ContigFeatures::findOffsetCDS(ContigOffset_t offset,
+                                        std::vector<std::shared_ptr<CDSFeature>>& cds_ptr_vec) {
+
+  cds_ptr_vec.clear();
+  for (auto cds : cds_table_) {
+
+    if (cds->sequence().begin() > offset) break;
+
+    if (cds->sequence().end() >= offset) {
+
+      cds_ptr_vec.emplace_back(cds);
+
+    }
+
+  }
+
+  return not cds_ptr_vec.empty();
+
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GenomeDatabase members.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool kgl::GenomeDatabase::addContigSequence(const kgl::ContigId_t& contig_id, kgl::Sequence_t sequence) {
 
-  using ContigPtr = std::shared_ptr<kgl::ContigRecord>;
-  ContigPtr contig_ptr(std::make_shared<kgl::ContigRecord>(contig_id, std::move(sequence)));
+  using ContigPtr = std::shared_ptr<kgl::ContigFeatures>;
+  ContigPtr contig_ptr(std::make_shared<kgl::ContigFeatures>(contig_id, std::move(sequence)));
 
   auto result = genome_sequence_map_.insert(std::make_pair(contig_id, std::move(contig_ptr)));
 
@@ -286,7 +360,7 @@ bool kgl::GenomeDatabase::addContigSequence(const kgl::ContigId_t& contig_id, kg
 }
 
 bool kgl::GenomeDatabase::getContigSequence(const kgl::ContigId_t& contig_id,
-                                             std::shared_ptr<ContigRecord>& contig_ptr) const {
+                                             std::shared_ptr<ContigFeatures>& contig_ptr) const {
 
   auto result_iter = genome_sequence_map_.find(contig_id);
 

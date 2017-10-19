@@ -29,8 +29,9 @@ public:
   VariantFilter() = default;
   virtual ~VariantFilter() = default;
 
-  bool applyFilter(const Variant& variant) const { return true; }  // Catchall for filters not defined for variant type.
+  virtual bool applyFilter(const Variant& variant) const = 0;
   virtual bool applyFilter(const ReadCountVariant& variant) const = 0;
+
   virtual std::string filterName() const = 0;
 
 private:
@@ -64,7 +65,7 @@ private:
   ContigId_t contig_id_;
   ContigOffset_t contig_offset_;
 
-  virtual bool applyFilter(const VariantFilter& filter) const = 0;
+  virtual bool applyFilter(const VariantFilter& filter) const { return filter.applyFilter(*this); }
   virtual bool equivalent(const Variant& cmp_var) const = 0;
   virtual std::ostream& output(std::ostream& os) const = 0;
 
@@ -109,6 +110,9 @@ private:
   NucleotideReadCount_t mutant_count_;
   std::vector<NucleotideReadCount_t> count_array_;
 
+  bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
+
+
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -143,7 +147,6 @@ private:
   typename T::NucleotideType reference_;
   typename T::NucleotideType mutant_;
 
-  bool applyFilter(const VariantFilter& filter) const final { return filter.applyFilter(*this); }
   std::ostream & output(std::ostream &os) const final;
 
 };
@@ -170,7 +173,6 @@ std::ostream& SNPVariant<T>::output(std::ostream& os) const
   for (auto count : countArray()) {
     os << count << ",";
   }
-//  os << "]";
   return os;
 }
 

@@ -198,7 +198,7 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
   // Get the contig id.
   kgl::ContigId_t contig_id = toCString(record.ref);
   // Get a pointer to the contig.
-  std::shared_ptr<kgl::ContigRecord> contig_ptr;
+  std::shared_ptr<kgl::ContigFeatures> contig_ptr;
   if (not genome_db_ptr->getContigSequence(contig_id, contig_ptr)) {
 
     log.error("Could not find contig: {}", contig_id);
@@ -237,7 +237,7 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
   // Check that the type field contains "CDS"
   if (valid_phase) {
 
-    if (type.find(CDSRecord::CDS_TYPE) == std::string::npos) {
+    if (type.find(CDSFeature::CDS_TYPE) == std::string::npos) {
 
       log.warn("Mis-match between valid phase: {} and record type: {}", phase, type);
 
@@ -245,18 +245,18 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
 
   }
 
-  std::shared_ptr<kgl::FeatureRecord> feature_ptr;
+  std::shared_ptr<kgl::Feature> feature_ptr;
   if (valid_phase) {
     // Create a CDS Feature.
-    feature_ptr = std::make_shared<kgl::CDSRecord>(feature_id, phase, contig_ptr, sequence);
+    feature_ptr = std::make_shared<kgl::CDSFeature>(feature_id, phase, contig_ptr, sequence);
   }
-  else if (type.find(GeneRecord::GENE_TYPE) != std::string::npos) {
+  else if (type.find(GeneFeature::GENE_TYPE) != std::string::npos) {
     // Create a GENE feature
-    feature_ptr = std::make_shared<kgl::GeneRecord>(feature_id, contig_ptr, sequence);
+    feature_ptr = std::make_shared<kgl::GeneFeature>(feature_id, contig_ptr, sequence);
 
   } else {
     // Create a general feature
-    feature_ptr = std::make_shared<kgl::FeatureRecord>(feature_id, type, contig_ptr, sequence);
+    feature_ptr = std::make_shared<kgl::Feature>(feature_id, type, contig_ptr, sequence);
 
   }
   // Add in the attributes.
@@ -300,6 +300,9 @@ std::shared_ptr<kgl::GenomeDatabase> kgl::ParseGffFasta::readFastaGffFile(const 
 
   std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr = readFastaFile(fasta_file_name);
   gff_fasta_impl_ptr_->readGffFile(gff_file_name, genome_db_ptr);
+  // Wire-up the genome database.
+  genome_db_ptr->createVerifyGenomeDatabase();
+
   return genome_db_ptr;
 
 }
