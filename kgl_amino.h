@@ -20,8 +20,8 @@ public:
   AminoColumn_64() = delete; // Singleton
   ~AminoColumn_64() = delete;
 
-//RNA codon to amino acid mapping
-//A = 0, C = 1, G = 2, U = 3
+  static constexpr size_t CODON_SIZE = 3;
+  static constexpr size_t CODING_NUCLEOTIDES = 4;
 
   // The 20 'natural amino acids
   static constexpr AminoType PHENYLALANINE = 'F';
@@ -52,7 +52,10 @@ public:
   static constexpr AminoType STOP_OCHRE_TAA = '*';
   static constexpr AminoType STOP_OPAL_TGA = '*';
 
-  Nucleotide_DNA5_t aminoAcid[4][4][4];
+  //DNA/RNA codon to amino acid mapping
+  //A = 0, C = 1, G = 2, T/U = 3
+
+  Nucleotide_DNA5_t aminoAcid[CODING_NUCLEOTIDES][CODING_NUCLEOTIDES][CODING_NUCLEOTIDES];
 
 };
 

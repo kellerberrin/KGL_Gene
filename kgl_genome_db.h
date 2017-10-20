@@ -11,6 +11,7 @@
 #include <vector>
 #include <map>
 #include "kgl_genome_types.h"
+#include "kgl_sequence.h"
 #include "kgl_genome_feature.h"
 #include "kgl_mt_data.h"
 
@@ -32,8 +33,8 @@ class ContigFeatures {
 
 public:
 
-  ContigFeatures(ContigId_t contig_id, Sequence_t sequence) : contig_id_(std::move(contig_id)),
-                                                            sequence_(std::move(sequence)) {}
+  ContigFeatures(const ContigId_t &contig_id,
+                 std::shared_ptr<DNA5Sequence> sequence_ptr) : contig_id_(contig_id), sequence_ptr_(sequence_ptr) {}
   ContigFeatures(const ContigFeatures&) = default;
   ~ContigFeatures() = default;
 
@@ -46,8 +47,8 @@ public:
   bool findOffsetCDS(ContigOffset_t offset, std::vector<std::shared_ptr<CDSFeature>>& cds_ptr_vec);
 
   const ContigId_t& contigId() const { return contig_id_; }
-  const Sequence_t& sequence() const { return sequence_; }
-  ContigSize_t contigSize() { return sequence_.length(); }
+  const DNA5Sequence& sequence() const { return *sequence_ptr_; }
+  ContigSize_t contigSize() { return sequence_ptr_->length(); }
 
   void setupFeatureHierarchy();
   void verifyFeatureHierarchy();
@@ -56,7 +57,7 @@ public:
 private:
 
   ContigId_t contig_id_;
-  Sequence_t sequence_;
+  std::shared_ptr<DNA5Sequence> sequence_ptr_;
   OffsetFeatureMap offset_feature_map_;
   IdFeatureMap id_feature_map_;
   CDSTable cds_table_;
@@ -89,7 +90,7 @@ public:
   GenomeDatabase& operator=(const GenomeDatabase&) = default;
 
   // Return false if contig already exists.
-  bool addContigSequence(const ContigId_t& contig, Sequence_t sequence);
+  bool addContigSequence(const ContigId_t& contig, std::shared_ptr<DNA5Sequence> sequence_ptr);
   // Returns false if key not found.
   bool getContigSequence(const ContigId_t& contig, std::shared_ptr<ContigFeatures>& contig_ptr) const;
   GenomeSequenceMap& getGenomeSequenceMap() { return genome_sequence_map_; }

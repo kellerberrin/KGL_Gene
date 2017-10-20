@@ -47,7 +47,7 @@ std::shared_ptr<GenomeVariant> GenomeAnalysis::simpleSNPVariants(std::shared_ptr
 
     } else {
 
-      const Sequence_t& contig_sequence = contig_ptr->sequence();
+      const DNA5Sequence& contig_sequence = contig_ptr->sequence();
       std::shared_ptr<ContigVariant> contig_variant_ptr(std::make_shared<ContigVariant>(contig_ptr->contigId()));
 
       const auto &nucleotide_array = contig_block.second->getNucleotideArray();

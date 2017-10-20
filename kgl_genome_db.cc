@@ -348,10 +348,11 @@ bool kgl::ContigFeatures::findOffsetCDS(ContigOffset_t offset,
 // GenomeDatabase members.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool kgl::GenomeDatabase::addContigSequence(const kgl::ContigId_t& contig_id, kgl::Sequence_t sequence) {
+bool kgl::GenomeDatabase::addContigSequence(const kgl::ContigId_t& contig_id,
+                                            std::shared_ptr<kgl::DNA5Sequence> sequence_ptr) {
 
   using ContigPtr = std::shared_ptr<kgl::ContigFeatures>;
-  ContigPtr contig_ptr(std::make_shared<kgl::ContigFeatures>(contig_id, std::move(sequence)));
+  ContigPtr contig_ptr(std::make_shared<kgl::ContigFeatures>(contig_id, sequence_ptr));
 
   auto result = genome_sequence_map_.insert(std::make_pair(contig_id, std::move(contig_ptr)));
 

@@ -66,18 +66,20 @@ void kgl::ParseGffFasta::GffFastaImpl::readFastaFile(const std::string& fasta_fi
 
   for (unsigned i = 0; i < length(ids); ++i) {
 
-    std::string id_line = toCString(ids[i]);
+    std::string id_line;
+    seqan::move(id_line, ids[i]);
     ContigId_t  contig_id = id_line.substr(0, id_line.find_first_of(" \t,")); // Only the identifier.
-    Sequence_t sequence;
+    std::string sequence;
     seqan::move(sequence, seqs[i]);
+    std::shared_ptr<DNA5Sequence> sequence_ptr(std::make_shared<DNA5Sequence>(sequence));
 
-    if (not genome_db_ptr->addContigSequence(contig_id, sequence)) {
+    if (not genome_db_ptr->addContigSequence(contig_id, sequence_ptr)) {
 
       log.error("addContigSequence(), Attempted to add duplicate contig; {}", contig_id);
 
     }
 
-    log.info("Fasta Contig id: {}; Contig sequence length: {} ", contig_id, sequence.length());
+    log.info("Fasta Contig id: {}; Contig sequence length: {} ", contig_id, sequence_ptr->length());
 
   }
 

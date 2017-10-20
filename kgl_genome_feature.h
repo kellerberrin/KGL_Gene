@@ -55,7 +55,7 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// FeatureSequence - Feature location and sense (if applicable)
+// FeatureSequence - Feature location and strand (if applicable)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -77,10 +77,10 @@ public:
 
   ContigOffset_t begin() const { return begin_offset_; }
   ContigOffset_t end() const { return end_offset_; }
-  StrandSense sense() const { return strand_sense_; }
+  StrandSense strand() const { return strand_sense_; }
   void begin(ContigOffset_t begin) { begin_offset_ = begin; }
   void end(ContigOffset_t end) { end_offset_ = end; }
-  void sense(StrandSense strand) { strand_sense_ = strand; }
+  void strand(StrandSense strand) { strand_sense_ = strand; }
 
 
 private:
@@ -106,7 +106,6 @@ using SubFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<Featur
 using SuperFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<Feature>>;
 using SortedCDS = std::map<ContigOffset_t, std::shared_ptr<CDSFeature>>;
 using SortedCDSVector = std::vector<SortedCDS>;
-using ParentSortedCDS = std::pair<std::shared_ptr<const Feature>, SortedCDSVector>; // Feature ptr is the CDS parent (mRna, Gene)
 
 class Feature {
 
@@ -128,6 +127,7 @@ public:
   const FeatureAttributes& getAttributes() const { return attributes_; }
   const FeatureType_t& featureType() const { return type_; }
   bool getSortedCDS(SortedCDSVector& sorted_cds_vec) const; // Recursively descend the subfeatures.
+  bool verifyStrand(const SortedCDS& sorted_cds);   // Check feature strand consistency
   bool verifyCDSPhase(const SortedCDSVector& sorted_cds_vec); // Check the CDS phase for -ve and +ve strand genes
   void recusivelyPrintsubfeatures(long feature_level = 1) const; // useful debug function.
   // Hierarchy routines.
@@ -173,6 +173,7 @@ public:
   CDSFeature &operator=(const CDSFeature &) = default;
 
   CDSPhaseType_t phase() const { return phase_; }
+  void phase(CDSPhaseType_t _phase) { phase_ = _phase; }
 
   // CDS Type.
   constexpr static const char* CDS_TYPE = "CDS";

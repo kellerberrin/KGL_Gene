@@ -31,43 +31,50 @@ public:
 
   static constexpr ContigOffset_t NUCLEOTIDE_COLUMNS = 7;
   static constexpr Nucleotide_DNA5_t A_NUCLEOTIDE = 'A';
+  static constexpr Nucleotide_DNA5_t A_NUCLEOTIDE_LC = 'a';
   static constexpr ContigOffset_t A_NUCLEOTIDE_OFFSET = 0;
   static constexpr Nucleotide_DNA5_t C_NUCLEOTIDE = 'C';
+  static constexpr Nucleotide_DNA5_t C_NUCLEOTIDE_LC = 'c';
   static constexpr ContigOffset_t C_NUCLEOTIDE_OFFSET = 1;
   static constexpr Nucleotide_DNA5_t G_NUCLEOTIDE = 'G';
+  static constexpr Nucleotide_DNA5_t G_NUCLEOTIDE_LC = 'g';
   static constexpr ContigOffset_t G_NUCLEOTIDE_OFFSET = 2;
   static constexpr Nucleotide_DNA5_t U_NUCLEOTIDE = 'U';
+  static constexpr Nucleotide_DNA5_t U_NUCLEOTIDE_LC = 'u';
   static constexpr ContigOffset_t U_NUCLEOTIDE_OFFSET = 3;
   static constexpr Nucleotide_DNA5_t T_NUCLEOTIDE = 'T';
+  static constexpr Nucleotide_DNA5_t T_NUCLEOTIDE_LC = 't';
   static constexpr ContigOffset_t T_NUCLEOTIDE_OFFSET = 3;
   static constexpr Nucleotide_DNA5_t N_NUCLEOTIDE = 'N';
+  static constexpr Nucleotide_DNA5_t N_NUCLEOTIDE_LC = 'n';
   static constexpr ContigOffset_t N_NUCLEOTIDE_OFFSET = 4;
   static constexpr Nucleotide_DNA5_t DELETE_NUCLEOTIDE = '-';
   static constexpr ContigOffset_t DELETE_NUCLEOTIDE_OFFSET = 5;
   static constexpr Nucleotide_DNA5_t INSERT_SEQUENCE = '+';
   static constexpr ContigOffset_t INSERT_NUCLEOTIDE_OFFSET = 6;
 
+  // Convert a base to an array offset.
   static ContigOffset_t nucleotideToColumn(const Nucleotide_DNA5_t nucleotide) {
 
     // Translate the nucleotide to an array column
     switch (nucleotide) {
 
       case A_NUCLEOTIDE:
-      case 'a': return A_NUCLEOTIDE_OFFSET;
+      case A_NUCLEOTIDE_LC: return A_NUCLEOTIDE_OFFSET;
 
       case C_NUCLEOTIDE:
-      case 'c': return C_NUCLEOTIDE_OFFSET;
+      case C_NUCLEOTIDE_LC: return C_NUCLEOTIDE_OFFSET;
 
       case G_NUCLEOTIDE:
-      case 'g': return G_NUCLEOTIDE_OFFSET;
+      case G_NUCLEOTIDE_LC: return G_NUCLEOTIDE_OFFSET;
 
       case T_NUCLEOTIDE:
-      case 't':
-      case 'U':
-      case 'u': return T_NUCLEOTIDE_OFFSET;
+      case T_NUCLEOTIDE_LC:
+      case U_NUCLEOTIDE:
+      case U_NUCLEOTIDE_LC: return T_NUCLEOTIDE_OFFSET;
 
       case N_NUCLEOTIDE:
-      case 'n': return N_NUCLEOTIDE_OFFSET;
+      case N_NUCLEOTIDE_LC: return N_NUCLEOTIDE_OFFSET;
 
       case DELETE_NUCLEOTIDE: return DELETE_NUCLEOTIDE_OFFSET;
 
@@ -82,33 +89,71 @@ public:
 
   }
 
+  // Converts an array offset into a base.
   static Nucleotide_DNA5_t offsetToNucleotide(ContigOffset_t offset) {
 
     // Translate the nucleotide to an array column
     switch (offset) {
 
-      case A_NUCLEOTIDE_OFFSET: return A_NUCLEOTIDE;
+      case A_NUCLEOTIDE_OFFSET:
+        return A_NUCLEOTIDE;
 
-      case C_NUCLEOTIDE_OFFSET: return C_NUCLEOTIDE;
+      case C_NUCLEOTIDE_OFFSET:
+        return C_NUCLEOTIDE;
 
-      case G_NUCLEOTIDE_OFFSET: return G_NUCLEOTIDE;
+      case G_NUCLEOTIDE_OFFSET:
+        return G_NUCLEOTIDE;
 
-      case T_NUCLEOTIDE_OFFSET: return T_NUCLEOTIDE;
+      case T_NUCLEOTIDE_OFFSET:
+        return T_NUCLEOTIDE;
 
-      case N_NUCLEOTIDE_OFFSET: return N_NUCLEOTIDE;
+      case DELETE_NUCLEOTIDE_OFFSET:
+        return DELETE_NUCLEOTIDE;
 
-      case DELETE_NUCLEOTIDE_OFFSET: return DELETE_NUCLEOTIDE;
-
-      case INSERT_NUCLEOTIDE_OFFSET: return INSERT_SEQUENCE;
+      case INSERT_NUCLEOTIDE_OFFSET:
+        return INSERT_SEQUENCE;
 
       default:
-        ExecEnv::log().critical("indexToNucleotide(), unknown nucleotide: {}", offset);
+        ExecEnv::log().critical("indexToNucleotide(), unknown nucleotide offset: {}", offset);
         return N_NUCLEOTIDE; // Never reached, to keep the compiler happy.
 
     }
 
   }
 
+  // Find complementary bases.
+  static Nucleotide_DNA5_t complementNucleotide(const Nucleotide_DNA5_t nucleotide) {
+
+      // Translate the nucleotide to an array column
+      switch (nucleotide) {
+
+        case A_NUCLEOTIDE:
+        case A_NUCLEOTIDE_LC:
+          return T_NUCLEOTIDE;
+
+        case C_NUCLEOTIDE:
+        case C_NUCLEOTIDE_LC:
+          return G_NUCLEOTIDE;
+
+        case G_NUCLEOTIDE:
+        case G_NUCLEOTIDE_LC:
+          return C_NUCLEOTIDE;
+
+        case T_NUCLEOTIDE:
+        case T_NUCLEOTIDE_LC:
+          return A_NUCLEOTIDE;
+
+        case U_NUCLEOTIDE:
+        case U_NUCLEOTIDE_LC:
+          return A_NUCLEOTIDE;
+
+        default:
+          ExecEnv::log().critical("complementNucleotide(), Unknown Nucleotide: {}", nucleotide);
+          return N_NUCLEOTIDE; // Never reached, to keep the compiler happy.
+
+      }
+
+  }
 
 private:
 

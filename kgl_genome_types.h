@@ -40,7 +40,7 @@ namespace genome {   // project level namespace
 
 using Nucleotide_DNA5_t = char;
 using Amino_22_t = char;
-using Sequence_t = std::basic_string<Nucleotide_DNA5_t>;
+using CharSequence_t = std::basic_string<Nucleotide_DNA5_t>;
 using ContigId_t = std::string;
 using GenomeId_t = std::string;
 using ContigFeatureId_t = std::string;

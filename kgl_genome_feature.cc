@@ -6,6 +6,7 @@
 #include "kgl_patterns.h"
 #include "kgl_genome_feature.h"
 #include "kgl_genome_db.h"
+#include "kgl_amino.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -144,7 +145,7 @@ void kgl::Feature::recusivelyPrintsubfeatures(long feature_level) const {
                         feature.second->featureType(),
                         feature.second->sequence().begin(),
                         feature.second->sequence().end(),
-                        static_cast<char>(feature.second->sequence().sense()));
+                        static_cast<char>(feature.second->sequence().strand()));
 
     feature.second->recusivelyPrintsubfeatures(feature_level + 1); // Recursive call for the sub-feature.
 
@@ -160,6 +161,7 @@ bool kgl::Feature::verifyCDSPhase(const SortedCDSVector& parent_sorted_vec) {
   for(auto& sorted_cds : parent_sorted_vec) {
 
     result = result and verifyMod3(sorted_cds);
+    result = result and verifyStrand(sorted_cds);
     result = result and verifyPhase(sorted_cds);
 
   }
@@ -181,7 +183,7 @@ bool kgl::Feature::verifyMod3(const SortedCDS& sorted_cds) {
 
   }
 
-  if ((coding_sequence_length % 3) != 0) {
+  if ((coding_sequence_length % AminoColumn_64::CODON_SIZE) != 0) {
 
     ExecEnv::log().warn("Gene: {} offset: {} CDS coding sequence length mod 3 not zero : {}",
                         id(),
@@ -196,55 +198,100 @@ bool kgl::Feature::verifyMod3(const SortedCDS& sorted_cds) {
 
 }
 
-bool kgl::Feature::verifyPhase(const SortedCDS& sorted_cds) {
+bool kgl::Feature::verifyStrand(const SortedCDS& sorted_cds) {
 
   bool result = true;
 
 // Check the strand is consistent and not unknown.
   for (auto cds : sorted_cds) {
 
-    if (cds.second->sequence().sense() != sequence().sense()) {
+    if (cds.second->sequence().strand() != sequence().strand()) {
 
       ExecEnv::log().error("CDS: {} offset: {} strand: {}, parent sequence strand: {} mis-match",
                            cds.second->id(),
                            cds.second->sequence().begin(),
-                           static_cast<char>(cds.second->sequence().sense()),
-                           static_cast<char>(sequence().sense()));
+                           static_cast<char>(cds.second->sequence().strand()),
+                           static_cast<char>(sequence().strand()));
       result = false;
 
     }
 
   }
 
-  switch(sequence().sense()) {
+  return result;
+
+}
+
+
+bool kgl::Feature::verifyPhase(const SortedCDS& sorted_cds) {
+
+  bool result = true;
+
+  switch(sequence().strand()) {
 
     case StrandSense::FORWARD: {
 
-        CDSPhaseType_t phase = 0;
-        for (auto it = sorted_cds.begin(); it != sorted_cds.end(); ++it) {
+      ContigOffset_t sequence_length = 0;
+      bool warn_adjust = false;
+      static bool warn_forward_once = false;
+      for (auto it = sorted_cds.begin(); it != sorted_cds.end(); ++it) {
 
-          if (it->second->phase() != phase) {
+        CDSPhaseType_t phase = (AminoColumn_64::CODON_SIZE - (sequence_length % AminoColumn_64::CODON_SIZE))
+                               % AminoColumn_64::CODON_SIZE;
 
-            ExecEnv::log().error("CDS: {} , offset: {}, mis-match; calculated phase: {}, CDS phase: {}",
-                                 it->second->id(),
-                                 it->second->sequence().begin(),
-                                 phase,
-                                 it->second->phase());
-            result = false;
+        if (it->second->phase() != phase) {
 
-          }
-          phase = (3 - ((it->second->sequence().end() - it->second->sequence().begin()) % 3)) % 3;
+          it->second->phase(phase);
+          warn_adjust = true;
+
         }
-      }
-      break;
 
-    case StrandSense::REVERSE:
-      break;
+        sequence_length += it->second->sequence().end() - it->second->sequence().begin();
+
+      }
+
+      if (warn_adjust and not warn_forward_once) {
+        warn_forward_once = true;
+        ExecEnv::log().warn("Inconsistent Gff3 phase fields found in forward ('+') strand CDS features - adjusted");
+      }
+    }
+    break;
+
+    case StrandSense::REVERSE: {
+
+      ContigOffset_t sequence_length = 0;
+      bool warn_adjust = false;
+      static bool warn_reverse_once = false;
+      for (auto rit = sorted_cds.rbegin(); rit != sorted_cds.rend(); ++rit) {
+
+        CDSPhaseType_t phase = (AminoColumn_64::CODON_SIZE - (sequence_length % AminoColumn_64::CODON_SIZE))
+                               % AminoColumn_64::CODON_SIZE;
+
+        if (rit->second->phase() != phase) {
+
+          rit->second->phase(phase);
+          warn_adjust = true;
+
+        }
+
+        sequence_length += rit->second->sequence().end() - rit->second->sequence().begin();
+
+      }
+
+      if (warn_adjust and not warn_reverse_once) {
+
+        warn_reverse_once = true;
+        ExecEnv::log().warn("Inconsistent Gff3 phase fields found in reverse ('-') strand CDS features - adjusted");
+
+      }
+
+    }
+    break;
 
     case StrandSense::UNKNOWN:
-      ExecEnv::log().error("verifyPhase() CDS parent sequence strand is UNKNOWN");
-      result = false;
-      break;
+    ExecEnv::log().error("verifyPhase() CDS parent: {} sequence strand is UNKNOWN '.'", id());
+    result = false;
+    break;
 
   }
 
