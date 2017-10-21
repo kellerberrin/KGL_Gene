@@ -99,7 +99,7 @@ private:
 
 class ContigFeatures; // Forward decl;
 class Feature; // Forward decl.
-class CDSFeature; // Forward Decl
+class CDSFeature; // Forward decl
 using FeatureIdent_t = std::string;
 using FeatureType_t = std::string;
 using SubFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<Feature>>;
@@ -126,14 +126,17 @@ public:
   void setAttributes(const FeatureAttributes& attributes) { attributes_ = attributes; }
   const FeatureAttributes& getAttributes() const { return attributes_; }
   const FeatureType_t& featureType() const { return type_; }
-  bool getSortedCDS(SortedCDSVector& sorted_cds_vec) const; // Recursively descend the subfeatures.
   bool verifyStrand(const SortedCDS& sorted_cds);   // Check feature strand consistency
   bool verifyCDSPhase(const SortedCDSVector& sorted_cds_vec); // Check the CDS phase for -ve and +ve strand genes
+  bool getSortedCDS(SortedCDSVector& sorted_cds_vec) const; // Recursively descend the sub-features.
+  std::shared_ptr<Feature> getGene() const; // returns null p[ointer if not found
   void recusivelyPrintsubfeatures(long feature_level = 1) const; // useful debug function.
   // Hierarchy routines.
   void clearHierachy() { sub_features_.clear(); super_features_.clear(); }
   void addSuperFeature(const FeatureIdent_t &super_feature_id, const std::shared_ptr<Feature> &super_feature_ptr);
   void addSubFeature(const FeatureIdent_t& sub_feature_id, const std::shared_ptr<Feature>& sub_feature_ptr);
+  virtual bool isCDS() const { return false; }
+  virtual bool isGene() const { return false; }
 
   SuperFeatureMap& superFeatures() { return super_features_; }
   SubFeatureMap& subFeatures() { return sub_features_; }
@@ -175,6 +178,7 @@ public:
   CDSPhaseType_t phase() const { return phase_; }
   void phase(CDSPhaseType_t _phase) { phase_ = _phase; }
 
+  virtual bool isCDS() const final { return true; }
   // CDS Type.
   constexpr static const char* CDS_TYPE = "CDS";
 
@@ -198,6 +202,7 @@ public:
 
   GeneFeature &operator=(const GeneFeature &) = default;
 
+  bool isGene() const final { return true; }
 
   // GENE Type.
   constexpr static const char* GENE_TYPE = "GENE";

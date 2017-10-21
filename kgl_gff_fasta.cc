@@ -69,7 +69,7 @@ void kgl::ParseGffFasta::GffFastaImpl::readFastaFile(const std::string& fasta_fi
     std::string id_line;
     seqan::move(id_line, ids[i]);
     ContigId_t  contig_id = id_line.substr(0, id_line.find_first_of(" \t,")); // Only the identifier.
-    std::string sequence;
+    DNA5Sequence::SequenceString sequence;
     seqan::move(sequence, seqs[i]);
     std::shared_ptr<DNA5Sequence> sequence_ptr(std::make_shared<DNA5Sequence>(sequence));
 

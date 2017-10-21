@@ -76,7 +76,8 @@ void kgl::Feature::addSubFeature(const FeatureIdent_t& sub_feature_id,
 
 }
 
-// Recursively descends the sub-feature tree and returns a vector of sorted
+// Recursively descends the sub-feature tree and returns a vector of sorted.
+//
 // CDS trees. Each sorted CDS tree is an alternative coding sequence for the gene.
 // The logic in this function must take into account that the CDS features
 // can be direct sub-features of the Gene or are sub-features of multiple mRna
@@ -183,7 +184,7 @@ bool kgl::Feature::verifyMod3(const SortedCDS& sorted_cds) {
 
   }
 
-  if ((coding_sequence_length % AminoColumn_64::CODON_SIZE) != 0) {
+  if ((coding_sequence_length % AminoAcidTypes::CODON_SIZE) != 0) {
 
     ExecEnv::log().warn("Gene: {} offset: {} CDS coding sequence length mod 3 not zero : {}",
                         id(),
@@ -236,8 +237,8 @@ bool kgl::Feature::verifyPhase(const SortedCDS& sorted_cds) {
       static bool warn_forward_once = false;
       for (auto it = sorted_cds.begin(); it != sorted_cds.end(); ++it) {
 
-        CDSPhaseType_t phase = (AminoColumn_64::CODON_SIZE - (sequence_length % AminoColumn_64::CODON_SIZE))
-                               % AminoColumn_64::CODON_SIZE;
+        CDSPhaseType_t phase = (AminoAcidTypes::CODON_SIZE - (sequence_length % AminoAcidTypes::CODON_SIZE))
+                               % AminoAcidTypes::CODON_SIZE;
 
         if (it->second->phase() != phase) {
 
@@ -264,8 +265,8 @@ bool kgl::Feature::verifyPhase(const SortedCDS& sorted_cds) {
       static bool warn_reverse_once = false;
       for (auto rit = sorted_cds.rbegin(); rit != sorted_cds.rend(); ++rit) {
 
-        CDSPhaseType_t phase = (AminoColumn_64::CODON_SIZE - (sequence_length % AminoColumn_64::CODON_SIZE))
-                               % AminoColumn_64::CODON_SIZE;
+        CDSPhaseType_t phase = (AminoAcidTypes::CODON_SIZE - (sequence_length % AminoAcidTypes::CODON_SIZE))
+                               % AminoAcidTypes::CODON_SIZE;
 
         if (rit->second->phase() != phase) {
 
@@ -296,5 +297,28 @@ bool kgl::Feature::verifyPhase(const SortedCDS& sorted_cds) {
   }
 
   return result;
+
+}
+
+
+std::shared_ptr<kgl::Feature> kgl::Feature::getGene() const {
+
+  // recursivly search upward
+
+  for (auto feature : super_features_) {
+
+    if (feature.second->isGene()) {
+
+      return feature.second;
+
+    } else {
+
+      return feature.second->getGene();
+
+    }
+  }
+
+  std::shared_ptr<kgl::Feature> null;
+  return null;
 
 }

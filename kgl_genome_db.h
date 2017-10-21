@@ -69,6 +69,8 @@ private:
   void removeSubFeatureDuplicates();
   void removeSuperFeatureDuplicates();
   void createCDSTable();
+  // Check all gene coding sequences for start and end codons and nonsense (intermediate stop codon) mutations.
+  bool verifyCodingSequences(const SortedCDSVector& sorted_cds_vec) const;
 
 };
 

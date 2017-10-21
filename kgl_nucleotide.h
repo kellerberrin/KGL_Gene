@@ -148,7 +148,8 @@ public:
           return A_NUCLEOTIDE;
 
         default:
-          ExecEnv::log().critical("complementNucleotide(), Unknown Nucleotide: {}", nucleotide);
+          ExecEnv::log().error("complementNucleotide(), Unknown Nucleotide: {} (ascii): {}",
+                               nucleotide, static_cast<unsigned char>(nucleotide));
           return N_NUCLEOTIDE; // Never reached, to keep the compiler happy.
 
       }
