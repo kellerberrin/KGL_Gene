@@ -61,6 +61,7 @@ private:
   OffsetFeatureMap offset_feature_map_;
   IdFeatureMap id_feature_map_;
   CDSTable cds_table_;
+  StandardCodingSequence coding_sequence_;
 
   void verifyContigOverlap();
   void verifySubFeatureSuperFeatureDimensions();

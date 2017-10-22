@@ -279,8 +279,7 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
   size_t ill_formed_genes = 0;
   size_t empty_genes = 0;
 
-  ExecEnv::log().info("Verifying Gene structure using translation table: {}",
-                      StandardCodingSequence::translationTableName());
+  ExecEnv::log().info("Verifying Gene structure using translation table: {}", coding_sequence_.translationTableName());
 
   for(const auto& feature : offset_feature_map_) {
 
@@ -368,36 +367,35 @@ bool kgl::ContigFeatures::verifyCodingSequences(const SortedCDSVector& sorted_cd
     }
 
     std::shared_ptr<DNA5Sequence> coding_sequence_ptr = sequence_ptr_->codingSequence(sorted_cds);
-    StandardCodingSequence standard_coding(coding_sequence_ptr);
 
-    if (not standard_coding.checkStartCodon()) {
+    if (not coding_sequence_.checkStartCodon(coding_sequence_ptr)) {
 
       ExecEnv::log().warn("No START codon for Gene: {} begin: {}, end: {}, strand: {} | first codon bases: {}{}{}",
                           gene_ptr->id(),
                           gene_ptr->sequence().begin(),
                           gene_ptr->sequence().end(),
                           static_cast<char>(gene_ptr->sequence().strand()),
-                          standard_coding.firstCodon().bases[0],
-                          standard_coding.firstCodon().bases[1],
-                          standard_coding.firstCodon().bases[2]);
+                          coding_sequence_.firstCodon(coding_sequence_ptr).bases[0],
+                          coding_sequence_.firstCodon(coding_sequence_ptr).bases[1],
+                          coding_sequence_.firstCodon(coding_sequence_ptr).bases[2]);
       gene_ptr->recusivelyPrintsubfeatures();
       result = false;
     }
-    if (not standard_coding.checkStopCodon()) {
+    if (not coding_sequence_.checkStopCodon(coding_sequence_ptr)) {
 
       ExecEnv::log().warn("No STOP codon: {} for Gene: {} begin: {}, end: {}, strand: {} | last codon bases: {}{}{}",
-                          (standard_coding.codonLength()-1),
+                          (coding_sequence_.codonLength(coding_sequence_ptr)-1),
                           gene_ptr->id(),
                           gene_ptr->sequence().begin(),
                           gene_ptr->sequence().end(),
                           static_cast<char>(gene_ptr->sequence().strand()),
-                          standard_coding.lastCodon().bases[0],
-                          standard_coding.lastCodon().bases[1],
-                          standard_coding.lastCodon().bases[2]);
+                          coding_sequence_.lastCodon(coding_sequence_ptr).bases[0],
+                          coding_sequence_.lastCodon(coding_sequence_ptr).bases[1],
+                          coding_sequence_.lastCodon(coding_sequence_ptr).bases[2]);
       gene_ptr->recusivelyPrintsubfeatures();
       result = false;
     }
-    size_t nonsense_index = standard_coding.checkNonsenseMutation();
+    size_t nonsense_index = coding_sequence_.checkNonsenseMutation(coding_sequence_ptr);
     if (nonsense_index > 0) {
 
       ExecEnv::log().warn("NONSENSE mutation codon:{} Gene: {} begin: {}, end: {}, strand: {} | codon bases: {}{}{}",
@@ -406,9 +404,9 @@ bool kgl::ContigFeatures::verifyCodingSequences(const SortedCDSVector& sorted_cd
                           gene_ptr->sequence().begin(),
                           gene_ptr->sequence().end(),
                           static_cast<char>(gene_ptr->sequence().strand()),
-                          standard_coding.getCodon(nonsense_index).bases[0],
-                          standard_coding.getCodon(nonsense_index).bases[1],
-                          standard_coding.getCodon(nonsense_index).bases[2]);
+                          coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[0],
+                          coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[1],
+                          coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[2]);
       gene_ptr->recusivelyPrintsubfeatures();
       result = false;
     }
