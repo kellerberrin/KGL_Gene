@@ -46,7 +46,7 @@ public:
   static const MinorityArgs& args();
   static bool parseCommandLine(int argc, char const ** argv);
   static constexpr const char* VERSION = "0.1";
-  static constexpr const char* MODULE_NAME = "kgl_minority";
+  static constexpr const char* MODULE_NAME = "kgl_phylo";
 
   class Application;
 

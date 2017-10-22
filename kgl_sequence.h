@@ -7,48 +7,46 @@
 
 #include <string>
 #include "kgl_nucleotide.h"
+#include "kgl_base_sequence.h"
 #include "kgl_amino.h"
-#include "kgl_genome_feature.h"
 
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-// Convenience class to hold contig sequence strings.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Amino Sequence - A container for Amino Acid (protein) sequences.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 template<typename T>
-class BaseSequence {
+class AminoSequence {
 
 public:
 
-  using NucleotideType = typename T::NucleotideType;
-  using SequenceString = std::basic_string<NucleotideType>;
+  using AminoType = typename T::AminoType;
+  using ProteinString = std::basic_string<AminoType>;
 
-  explicit BaseSequence(SequenceString sequence) : base_sequence_(std::move(sequence)) {};
-  BaseSequence() = delete;
-  virtual ~BaseSequence() = default;
+  explicit AminoSequence(ProteinString sequence) : amino_sequence_(std::move(sequence)) {};
+  AminoSequence() = delete;
+  virtual ~AminoSequence() = default;
 
-  NucleotideType operator[] (ContigOffset_t& offset) const { return base_sequence_[offset]; }
-  ContigSize_t length() const { return base_sequence_.length(); }
-  const NucleotideType* baseAddress(ContigOffset_t& offset) const { return &base_sequence_[offset]; }
-
-
-  static std::shared_ptr<BaseSequence> codingSequence(std::shared_ptr<const BaseSequence> base_sequence_ptr,
-                                                      const SortedCDS& sorted_cds);
-
-  std::shared_ptr<BaseSequence> codingSequence(const SortedCDS& sorted_cds) const {
-
-    std::shared_ptr<const BaseSequence> seq_ptr(std::make_shared<const BaseSequence>(base_sequence_));
-    return codingSequence(seq_ptr, sorted_cds);
-
-  }
+  AminoType operator[] (ContigOffset_t& offset) const { return amino_sequence_[offset]; }
+  ContigSize_t length() const { return amino_sequence_.length(); }
+  const AminoType* baseAddress(ContigOffset_t& offset) const { return &amino_sequence_[offset]; }
 
 
 private:
 
-  SequenceString base_sequence_;
+  ProteinString amino_sequence_;
 
 };
 
+using StandardAminoSequence = AminoSequence<AminoAcidTypes>;
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Coding Sequence - An assembly of DNA/RNA sequences from CDS features, should contain start and stop codons.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<class T, class AminoTable>
 class CodingSequence {
@@ -60,6 +58,7 @@ public:
   CodingSequence() = delete;
   ~CodingSequence() = default;
 
+  static std::string translationTableName() { return AminoTable::TableName(); }
   inline AminoAcidTypes::Codon firstCodon() const { return getCodon(0); }
   bool checkStartCodon() const { return AminoTable::isStartCodon(firstCodon()); }
   inline AminoAcidTypes::Codon lastCodon() const { return getCodon(codonLength() - 1); }
@@ -100,87 +99,7 @@ private:
 
 
 using DNA5Sequence = BaseSequence<NucleotideColumn_DNA5>;
-using StandardCodingSequence = CodingSequence<NucleotideColumn_DNA5, StandardAminoTranslationTable>;
-
-
-template<typename T>
-std::shared_ptr<BaseSequence<T>> BaseSequence<T>::codingSequence(std::shared_ptr<const BaseSequence> base_sequence_ptr,
-                                                const SortedCDS& sorted_cds) {
-
-  // If no cds then return null string.
-  if (sorted_cds.empty()) {
-
-    SequenceString null_seq;
-    return std::shared_ptr<BaseSequence<T>>(std::make_shared<BaseSequence<T>>(BaseSequence(null_seq)));
-
-  }
-
-  // Check bounds.
-  if (sorted_cds.rbegin()->second->sequence().end() >= base_sequence_ptr->length()) {
-
-    ExecEnv::log().error("codingSequence(), CDS end offset: {} >= target sequence size: {}",
-                         sorted_cds.rbegin()->second->sequence().end(),
-                         base_sequence_ptr->length());
-    SequenceString null_seq;
-    return std::shared_ptr<BaseSequence<T>>(std::make_shared<BaseSequence<T>>(BaseSequence(null_seq)));
-
-  }
-
-  // For efficiency, pre-allocate storage for the sequence string.
-  std::string::size_type seq_size = 0;
-  for (auto cds : sorted_cds) {
-
-    seq_size += cds.second->sequence().end() - cds.second->sequence().begin();
-
-  }
-
-  SequenceString coding_sequence;
-  coding_sequence.reserve(seq_size + 1); // Just to make sure.
-
-  // Get the strand and copy or reverse copy the base complement.
-  switch(sorted_cds.begin()->second->sequence().strand()) {
-
-    case StrandSense::UNKNOWN:
-      ExecEnv::log().warn("codingSequence(); CDS: {} offset: {} has 'UNKNOWN' ('.') strand assuming 'FORWARD' ('+')",
-                          sorted_cds.begin()->second->id(),
-                          sorted_cds.begin()->second->sequence().begin());
-    case StrandSense::FORWARD: {
-
-      typename SequenceString::const_iterator begin;
-      typename SequenceString::const_iterator end;
-      for (auto cds : sorted_cds) {
-
-        begin = base_sequence_ptr->base_sequence_.begin() + cds.second->sequence().begin();
-        end = base_sequence_ptr->base_sequence_.begin() + cds.second->sequence().end();
-        std::copy( begin, end, std::back_inserter(coding_sequence));
-
-      }
-
-    }
-
-    case StrandSense::REVERSE: {
-
-      // Insert in reverse complement order.
-      typename SequenceString::const_reverse_iterator rbegin;
-      typename SequenceString::const_reverse_iterator rend;
-      auto complement_base = [](typename BaseSequence::NucleotideType base) { return T::complementNucleotide(base); };
-      for (auto cds : sorted_cds) {
-
-        rbegin = base_sequence_ptr->base_sequence_.rbegin()
-                 + (base_sequence_ptr->length() - cds.second->sequence().end());
-        rend = base_sequence_ptr->base_sequence_.rbegin()
-               + (base_sequence_ptr->length() - cds.second->sequence().begin());
-        std::transform( rbegin, rend, std::back_inserter(coding_sequence), complement_base);
-
-      }
-
-    }
-
-  }
-
-  return std::shared_ptr<BaseSequence<T>>(std::make_shared<BaseSequence<T>>(BaseSequence(coding_sequence)));
-
-}
+using StandardCodingSequence = CodingSequence<NucleotideColumn_DNA5, StandardTranslationTable_1>;
 
 
 }   // namespace genome

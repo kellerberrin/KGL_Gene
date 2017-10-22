@@ -61,7 +61,7 @@ void getFilePath(const std::string& option_text,
 bool kgl::MinorityExecEnv::parseCommandLine(int argc, char const ** argv)
 {
   // Setup ArgumentParser.
-  seqan::ArgumentParser parser("kgl_minority");
+  seqan::ArgumentParser parser(MODULE_NAME);
   // Set short description, version, and date.
   setShortDescription(parser, "Haploid Organism Genome Comparison");
   setVersion(parser, VERSION);

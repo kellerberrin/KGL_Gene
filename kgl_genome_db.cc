@@ -277,6 +277,11 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
   // Iterate through all the features looking for Genes.
   size_t gene_count = 0;
   size_t ill_formed_genes = 0;
+  size_t empty_genes = 0;
+
+  ExecEnv::log().info("Verifying Gene structure using translation table: {}",
+                      StandardCodingSequence::translationTableName());
+
   for(const auto& feature : offset_feature_map_) {
 
     if(feature.second->isGene()) {
@@ -284,27 +289,35 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
       ++gene_count;
       const std::shared_ptr<GeneFeature> gene_ptr = std::static_pointer_cast<GeneFeature>(feature.second);
       SortedCDSVector sorted_cds_vec;
-      gene_ptr->getSortedCDS(sorted_cds_vec); // all +ve offset sorted gene CDS.
-      if (not gene_ptr->verifyCDSPhase(sorted_cds_vec)) {
+      gene_ptr->getSortedCDS(sorted_cds_vec); // All sorted gene CDS.
+      if (sorted_cds_vec.empty()) { // No coding sequence available
 
+        ++empty_genes;
 
-        ExecEnv::log().info("Gene : {} Offset: {} Problem verifying CDS structure - gene sub-features print out",
-                            gene_ptr->id(),
-                            gene_ptr->sequence().begin());
-        feature.second->recusivelyPrintsubfeatures();
+      } else {
 
-      }
-      if(not verifyCodingSequences(sorted_cds_vec)) {
-        ++ill_formed_genes;
+        if (not gene_ptr->verifyCDSPhase(sorted_cds_vec)) {
+
+          ExecEnv::log().info("Gene : {} Offset: {} Problem verifying CDS structure - gene sub-features print out",
+                              gene_ptr->id(),
+                              gene_ptr->sequence().begin());
+          feature.second->recusivelyPrintsubfeatures();
+
+        }
+        if (not verifyCodingSequences(sorted_cds_vec)) {
+
+          ++ill_formed_genes;
+
+        }
+
       }
 
     }
 
   }
 
-  if (ill_formed_genes > 0) ExecEnv::log().info("Ill formed (no start/no stop/nonsense mutation) Genes: {}",
-                                                ill_formed_genes);
-  ExecEnv::log().info("Contig: {} found: {} Gene features", contigId(), gene_count);
+  ExecEnv::log().info("Contig: {} found: {} Gene features; deformed (no start/no stop/nonsense mutation) Genes: {}",
+                      contigId(), gene_count, ill_formed_genes);
 
 }
 
@@ -312,90 +325,95 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
 bool kgl::ContigFeatures::verifyCodingSequences(const SortedCDSVector& sorted_cds_vec) const {
 
   bool result = true;
+  bool CDS_ok = true;
+  std::shared_ptr<Feature> gene_ptr;
 
-  for (auto sorted_cds : sorted_cds_vec) {
+  if (sorted_cds_vec.empty ()) {
 
-    if (sorted_cds.empty()) continue;
-    std::shared_ptr<DNA5Sequence> coding_sequence_ptr = sequence_ptr_->codingSequence(sorted_cds);
-    StandardCodingSequence standard_coding(coding_sequence_ptr);
-    if (not standard_coding.checkStartCodon()) {
+    ExecEnv::log().error("codingSequence(), empty CDS vector");
+    CDS_ok = false;
 
-      std::shared_ptr<Feature> gene_ptr = sorted_cds.begin()->second->getGene();
-      if (gene_ptr) {
+  }
+  if (sorted_cds_vec.front().empty()) {
 
-        ExecEnv::log().warn("No start codon for Gene: {} begin: {}, end: {}, strand: {} first codon bases: {}{}{}",
-                            gene_ptr->id(),
-                            gene_ptr->sequence().begin(),
-                            gene_ptr->sequence().end(),
-                            static_cast<char>(gene_ptr->sequence().strand()),
-                            standard_coding.firstCodon().bases[0],
-                            standard_coding.firstCodon().bases[1],
-                            standard_coding.firstCodon().bases[2]);
+    ExecEnv::log().error("codingSequence(), no corresponding CDS features found");
+    CDS_ok = false;
 
-        gene_ptr->recusivelyPrintsubfeatures(0);
+  }
 
-      } else {
+  // From the first cds get the corresponding gene
+  if (CDS_ok) gene_ptr = sorted_cds_vec.front().begin()->second->getGene();
 
-        ExecEnv::log().error("Gene not found for CDS: {} offset: {}",
-                            sorted_cds.begin()->second->id(),
-                            sorted_cds.begin()->first);
+  if (not gene_ptr) {
+
+    ExecEnv::log().error("Gene not found for CDS: {} offset: {}",
+                         sorted_cds_vec.front().begin()->second->id(),
+                         sorted_cds_vec.front().begin()->first);
+  }
+
+  for (const auto& sorted_cds : sorted_cds_vec) {
+
+    if (not gene_ptr) {
+
+      continue;
+
+    } else {
+
+      if (sorted_cds.empty()) {
+
+        ExecEnv::log().error("codingSequence(), no corresponding CDS features found");
+        continue;
 
       }
+    }
+
+    std::shared_ptr<DNA5Sequence> coding_sequence_ptr = sequence_ptr_->codingSequence(sorted_cds);
+    StandardCodingSequence standard_coding(coding_sequence_ptr);
+
+    if (not standard_coding.checkStartCodon()) {
+
+      ExecEnv::log().warn("No START codon for Gene: {} begin: {}, end: {}, strand: {} | first codon bases: {}{}{}",
+                          gene_ptr->id(),
+                          gene_ptr->sequence().begin(),
+                          gene_ptr->sequence().end(),
+                          static_cast<char>(gene_ptr->sequence().strand()),
+                          standard_coding.firstCodon().bases[0],
+                          standard_coding.firstCodon().bases[1],
+                          standard_coding.firstCodon().bases[2]);
+      gene_ptr->recusivelyPrintsubfeatures();
       result = false;
     }
     if (not standard_coding.checkStopCodon()) {
 
-      std::shared_ptr<Feature> gene_ptr = sorted_cds.begin()->second->getGene();
-      if (gene_ptr) {
-
-        ExecEnv::log().warn("No stop codon for Gene: {} begin: {}, end: {}, strand: {} last codon bases: {}{}{}",
-                            gene_ptr->id(),
-                            gene_ptr->sequence().begin(),
-                            gene_ptr->sequence().end(),
-                            static_cast<char>(gene_ptr->sequence().strand()),
-                            standard_coding.lastCodon().bases[0],
-                            standard_coding.lastCodon().bases[1],
-                            standard_coding.lastCodon().bases[2]);
-
-        gene_ptr->recusivelyPrintsubfeatures(0);
-
-      } else {
-
-        ExecEnv::log().error("Gene not found for CDS: {} offset: {}",
-                            sorted_cds.begin()->second->id(),
-                            sorted_cds.begin()->first);
-
-      }
+      ExecEnv::log().warn("No STOP codon: {} for Gene: {} begin: {}, end: {}, strand: {} | last codon bases: {}{}{}",
+                          (standard_coding.codonLength()-1),
+                          gene_ptr->id(),
+                          gene_ptr->sequence().begin(),
+                          gene_ptr->sequence().end(),
+                          static_cast<char>(gene_ptr->sequence().strand()),
+                          standard_coding.lastCodon().bases[0],
+                          standard_coding.lastCodon().bases[1],
+                          standard_coding.lastCodon().bases[2]);
+      gene_ptr->recusivelyPrintsubfeatures();
       result = false;
     }
     size_t nonsense_index = standard_coding.checkNonsenseMutation();
     if (nonsense_index > 0) {
 
-      std::shared_ptr<Feature> gene_ptr = sorted_cds.begin()->second->getGene();
-      if (gene_ptr) {
-
-        ExecEnv::log().warn("No stop codon for Gene: {} begin: {}, end: {}, strand: {} last codon bases: {}{}{}",
-                            gene_ptr->id(),
-                            gene_ptr->sequence().begin(),
-                            gene_ptr->sequence().end(),
-                            static_cast<char>(gene_ptr->sequence().strand()),
-                            standard_coding.getCodon(nonsense_index).bases[0],
-                            standard_coding.getCodon(nonsense_index).bases[1],
-                            standard_coding.getCodon(nonsense_index).bases[2]);
-
-        gene_ptr->recusivelyPrintsubfeatures(0);
-
-      } else {
-
-        ExecEnv::log().error("Gene not found for CDS: {} offset: {}",
-                            sorted_cds.begin()->second->id(),
-                            sorted_cds.begin()->first);
-
-      }
+      ExecEnv::log().warn("NONSENSE mutation codon:{} Gene: {} begin: {}, end: {}, strand: {} | codon bases: {}{}{}",
+                          nonsense_index,
+                          gene_ptr->id(),
+                          gene_ptr->sequence().begin(),
+                          gene_ptr->sequence().end(),
+                          static_cast<char>(gene_ptr->sequence().strand()),
+                          standard_coding.getCodon(nonsense_index).bases[0],
+                          standard_coding.getCodon(nonsense_index).bases[1],
+                          standard_coding.getCodon(nonsense_index).bases[2]);
+      gene_ptr->recusivelyPrintsubfeatures();
       result = false;
     }
 
-  }
+  } // for cds group
 
   return result;
 
