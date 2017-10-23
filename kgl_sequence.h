@@ -40,8 +40,11 @@ private:
 
 };
 
-using StandardAminoSequence = AminoSequence<AminoAcidTypes>;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Amino Sequence Specialization for the Standard Amino Acid types.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+using StandardAminoSequence = AminoSequence<AminoAcidTypes>;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Coding Table Class
@@ -50,16 +53,14 @@ using StandardAminoSequence = AminoSequence<AminoAcidTypes>;
 
 // Amino acid Translation tables
 // Found at https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
-class StandardTranslationTable_1 {
+class AminoTranslationTable {
 
 public:
 
-  StandardTranslationTable_1() = default;
-  ~StandardTranslationTable_1() = default;
+  AminoTranslationTable() = default;
+  ~AminoTranslationTable() = default;
 
-  std::string TableName() { return AMINO_TABLE_NAME; }
-
-  constexpr static const char* AMINO_TABLE_NAME = "The Standard Code (table 1)";
+  std::string TableName() { return amino_table_rows_.table_name; }
 
   inline AminoAcidTypes::AminoType getAmino(const AminoAcidTypes::Codon& Codon) {
 
@@ -85,34 +86,30 @@ private:
   inline size_t index(const AminoAcidTypes::Codon& Codon) {
 
 
-    size_t table_index = (NucleotideColumn_DNA5::nucleotideToColumn(Codon.bases[0]) * CODING_NUCLEOTIDE_1) +
-                         (NucleotideColumn_DNA5::nucleotideToColumn(Codon.bases[1]) * CODING_NUCLEOTIDE_2) +
+    size_t table_index = (NucleotideColumn_DNA5::nucleotideToColumn(Codon.bases[0]) * Tables::CODING_NUCLEOTIDE_1) +
+                         (NucleotideColumn_DNA5::nucleotideToColumn(Codon.bases[1]) * Tables::CODING_NUCLEOTIDE_2) +
                          NucleotideColumn_DNA5::nucleotideToColumn(Codon.bases[2]);
 
-    if (table_index >= AMINO_TABLE_SIZE) {
+    if (table_index >= Tables::AMINO_TABLE_SIZE) {
 
       ExecEnv::log().error("Bad Amino Table Index: {}, base1: {} base2: {}, base3: {}",
                            table_index, Codon.bases[0], Codon.bases[1], Codon.bases[2]);
-      table_index = STOP_CODON_OFFSET;
+      table_index = amino_table_rows_.stop_codon_index;
     }
 
     return table_index;
 
   }
 
-  constexpr static int AMINO_TABLE_SIZE = 64;
-  constexpr static int CODING_NUCLEOTIDE_2 = 4;
-  constexpr static int CODING_NUCLEOTIDE_1 = 16;
-  constexpr static int STOP_CODON_OFFSET = 48;
 
-  const TranslationTable amino_table_rows_ = Tables::TABLE_1;
+  const TranslationTable amino_table_rows_ = Tables::TABLE_4;
 
 
 };
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Coding Sequence - An assembly of DNA/RNA sequences from CDS features, should contain start and stop codons.
+// Coding Sequence - An assembly of DNA/RNA sequences from CDS features.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<class T>
@@ -121,7 +118,7 @@ class CodingSequence {
 public:
 
 
-  CodingSequence() : table_ptr_(std::make_shared<StandardTranslationTable_1>())  {}
+  CodingSequence() : table_ptr_(std::make_shared<AminoTranslationTable>())  {}
   ~CodingSequence() = default;
 
   std::string translationTableName() { return table_ptr_->TableName(); }
@@ -183,11 +180,14 @@ public:
 
 private:
 
-  std::shared_ptr<StandardTranslationTable_1> table_ptr_;
+  std::shared_ptr<AminoTranslationTable> table_ptr_;
 
 };
 
-using DNA5Sequence = BaseSequence<NucleotideColumn_DNA5>;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Coding Sequence Specialization for DNA
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 using StandardCodingSequence = CodingSequence<NucleotideColumn_DNA5>;
 
 

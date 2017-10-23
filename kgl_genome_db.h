@@ -96,7 +96,6 @@ public:
   bool addContigSequence(const ContigId_t& contig, std::shared_ptr<DNA5Sequence> sequence_ptr);
   // Returns false if key not found.
   bool getContigSequence(const ContigId_t& contig, std::shared_ptr<ContigFeatures>& contig_ptr) const;
-  GenomeSequenceMap& getGenomeSequenceMap() { return genome_sequence_map_; }
 
   void createVerifyGenomeDatabase();
 
