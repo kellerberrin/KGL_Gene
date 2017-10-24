@@ -36,6 +36,10 @@ public:
   ContigSize_t length() const { return base_sequence_.length(); }
   const NucleotideType* baseAddress(ContigOffset_t& offset) const { return &base_sequence_[offset]; }
 
+  SequenceString getSequenceString() const { return base_sequence_; }
+
+  std::shared_ptr<BaseSequence> codingSequence(ContigOffset_t offset, ContigOffset_t length, StrandSense strand) const;
+
   static std::shared_ptr<BaseSequence> codingSequence(std::shared_ptr<const BaseSequence> base_sequence_ptr,
                                                       const SortedCDS& sorted_cds);
 
@@ -51,6 +55,66 @@ private:
   SequenceString base_sequence_;
 
 };
+
+
+template<typename T>
+std::shared_ptr<BaseSequence<T>> BaseSequence<T>::codingSequence(ContigOffset_t offset,
+                                                                 ContigOffset_t length,
+                                                                 StrandSense strand) const {
+
+  // Check bounds.
+  if (offset >= base_sequence_.length()) {
+
+    SequenceString null_seq;
+    return std::shared_ptr<BaseSequence<T>>(std::make_shared<BaseSequence<T>>(BaseSequence(null_seq)));
+
+  }
+
+  if (offset + length >= base_sequence_.length()) {
+
+    length = base_sequence_.length() - offset;
+
+  }
+
+
+  SequenceString coding_sequence;
+  coding_sequence.reserve(length + 1); // Just to make sure.
+
+  // Get the strand and copy or reverse copy the base complement.
+  switch(strand) {
+
+    case StrandSense::UNKNOWN:
+    case StrandSense::FORWARD: {
+
+      typename SequenceString::const_iterator begin;
+      typename SequenceString::const_iterator end;
+      begin = base_sequence_.begin() + offset;
+      end = base_sequence_.begin() + (offset + length);
+      std::copy( begin, end, std::back_inserter(coding_sequence));
+
+
+    }
+      break;
+
+    case StrandSense::REVERSE: {
+
+      // Insert in reverse complement order.
+      typename SequenceString::const_reverse_iterator rbegin;
+      typename SequenceString::const_reverse_iterator rend;
+      auto complement_base = [](typename BaseSequence::NucleotideType base) { return T::complementNucleotide(base); };
+
+      rbegin = base_sequence_.rbegin() - (offset + length);
+      rend = base_sequence_.rbegin() - offset;
+      std::transform( rbegin, rend, std::back_inserter(coding_sequence), complement_base);
+
+    }
+      break;
+
+  }
+
+  return std::shared_ptr<BaseSequence<T>>(std::make_shared<BaseSequence<T>>(BaseSequence(coding_sequence)));
+
+}
 
 
 template<typename T>

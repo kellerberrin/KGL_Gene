@@ -16,7 +16,7 @@ namespace genome {   // project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Defines DNA/RNA to Amino Acid translation tables.
 // These are found at the NCBI website: https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
-// At the current time only 5 tables are implemented (there are 31) as it is a tedious task.
+// At the current time only 5 tables are implemented (there are 31) as it is a somewhat tedious task.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -35,21 +35,25 @@ struct TranslationTable {
 
   const AminoTableColumn* amino_table;
   const char* table_name;
-  const size_t stop_codon_index;
+  size_t stop_codon_index;
 
 };
 
 
 
-struct Tables {
+class Tables {
 
+public:
 
   Tables() = delete; // Singleton
   ~Tables() = delete;
 
-  constexpr static int CODING_NUCLEOTIDE_2 = 4;
-  constexpr static int CODING_NUCLEOTIDE_1 = 16;
+  constexpr static const int CODING_NUCLEOTIDE_2 = 4;
+  constexpr static const int CODING_NUCLEOTIDE_1 = 16;
   constexpr static const int AMINO_TABLE_SIZE = 64;
+  constexpr static const int STANDARD_TABLE_1 = 1;
+
+private:
 
   constexpr static const int STOP_CODON_OFFSET = 48;
   constexpr static const char *AMINO_TABLE_NAME = "The Standard Code (table 1)";
@@ -444,6 +448,7 @@ struct Tables {
   // Define the standard translation table.
   constexpr static const TranslationTable TABLE_5{TranslationTable_5, AMINO_TABLE_5_NAME, STOP_CODON_OFFSET_5};
 
+public:
 
   // An array of Amino translation tables, nullptr are ignored and default to TABLE_1 (the standard table)
   // These tables are defined on the NCBI website: https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
@@ -452,7 +457,7 @@ struct Tables {
   // separate tables for different contigs, so for example, a different table could used for (e.g. table 2)
   // for a vertebrate mitochondrial contig.
   constexpr static const size_t TABLE_ARRAY_SIZE = 5;
-  constexpr static const TranslationTable* TableArray[] = { &TABLE_1, &TABLE_2, &TABLE_3, &TABLE_4, &TABLE_5 };
+  constexpr static const TranslationTable* TABLEARRAY[]{ &TABLE_1, &TABLE_2, &TABLE_3, &TABLE_4, &TABLE_5 };
 
 
 };  // Table

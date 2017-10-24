@@ -21,9 +21,12 @@ struct MinorityArgs {
   std::string fastaFile{""};
   std::string gffFile{""};
   std::string parentFile{""};
-  std::string mutantFile{"mutant.sam"};
+  std::vector<std::string> fileList;
+  std::string mutantFile{""};
   std::string logFile{"kgl_snp.log"};
   std::string contig{"*"};
+  size_t aminoTranslationTable{1};
+  bool verbose{false};
   int mutantMinCount{20};
   double mutantMinProportion{0.7};
   int parentMinCount{20};

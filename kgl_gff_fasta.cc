@@ -302,8 +302,6 @@ std::shared_ptr<kgl::GenomeDatabase> kgl::ParseGffFasta::readFastaGffFile(const 
 
   std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr = readFastaFile(fasta_file_name);
   gff_fasta_impl_ptr_->readGffFile(gff_file_name, genome_db_ptr);
-  // Wire-up the genome database.
-  genome_db_ptr->createVerifyGenomeDatabase();
 
   return genome_db_ptr;
 

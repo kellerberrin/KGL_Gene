@@ -29,4 +29,4 @@ constexpr const kgl::TranslationTable kgl::Tables::TABLE_5;
 
 // Link definitions for translation table array.
 
-constexpr const kgl::TranslationTable* kgl::Tables::TableArray[];
+constexpr const kgl::TranslationTable* kgl::Tables::TABLEARRAY[];

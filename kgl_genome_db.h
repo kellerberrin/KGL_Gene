@@ -46,6 +46,9 @@ public:
   // false if offset is not in an cds else returns a vector of cds (these will be in different genes).
   bool findOffsetCDS(ContigOffset_t offset, std::vector<std::shared_ptr<CDSFeature>>& cds_ptr_vec);
 
+  bool setTranslationTable(size_t table) { return coding_sequence_.settranslationTable(table); }
+  std::string translationTableName() const { return coding_sequence_.translationTableName(); }
+
   const ContigId_t& contigId() const { return contig_id_; }
   const DNA5Sequence& sequence() const { return *sequence_ptr_; }
   ContigSize_t contigSize() { return sequence_ptr_->length(); }
@@ -61,7 +64,7 @@ private:
   OffsetFeatureMap offset_feature_map_;
   IdFeatureMap id_feature_map_;
   CDSTable cds_table_;
-  StandardCodingSequence coding_sequence_;
+  CodingSequenceDNA5 coding_sequence_;
 
   void verifyContigOverlap();
   void verifySubFeatureSuperFeatureDimensions();
@@ -99,6 +102,8 @@ public:
 
   void createVerifyGenomeDatabase();
 
+  void setTranslationTable(size_t table);
+
   void registerContigData(std::shared_ptr<ContigCountData>& contig_data_ptr) const;
 
 private:
@@ -107,7 +112,6 @@ private:
 
   void setupFeatureHierarchy();
   void verifyFeatureHierarchy();
-  void verifyCDSPhasePeptide();
 
 };
 

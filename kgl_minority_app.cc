@@ -43,17 +43,48 @@ std::shared_ptr<kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
 
 kgl::MinorityExecEnv::Application::Application(kgl::Logger& log, const kgl::MinorityArgs& args) {
 
+  log.SetVerbose(args.verbose);
+
   // Create a genome database object.
   std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr = kgl::ParseGffFasta(log).readFastaGffFile(args.fastaFile,
                                                                                                 args.gffFile);
-  // Generate mutant filtered simple SNPs.
-  std::shared_ptr<kgl::GenomeVariant> mutant_variant_ptr = getSNPVariants(log,
-                                                                          genome_db_ptr,
-                                                                          args.mutantFile,
-                                                                          args.readQuality,
-                                                                          args.mutantMinCount,
-                                                                          args.mutantMinProportion);
-  std::cout << *mutant_variant_ptr;
+  // Set the amino translation table
+  genome_db_ptr->setTranslationTable(args.aminoTranslationTable);
+
+  // Wire-up the genome database.
+  genome_db_ptr->createVerifyGenomeDatabase();
+
+  std::vector<std::shared_ptr<kgl::GenomeVariant>> variant_vector;
+  if (not args.fileList.empty()) {
+
+    for(auto sam_file : args.fileList) {
+
+      // Generate mutant filtered simple SNPs.
+      std::shared_ptr<kgl::GenomeVariant> variant_ptr = getSNPVariants(log,
+                                                                       genome_db_ptr,
+                                                                       sam_file,
+                                                                       args.readQuality,
+                                                                       args.mutantMinCount,
+                                                                       args.mutantMinProportion);
+      variant_vector.push_back(variant_ptr);
+      std::cout << *variant_ptr;
+
+    }
+
+  }
+
+
+  if (args.mutantFile.length() > 0) {
+    // Generate mutant filtered simple SNPs.
+    std::shared_ptr<kgl::GenomeVariant> mutant_variant_ptr = getSNPVariants(log,
+                                                                            genome_db_ptr,
+                                                                            args.mutantFile,
+                                                                            args.readQuality,
+                                                                            args.mutantMinCount,
+                                                                            args.mutantMinProportion);
+    std::cout << *mutant_variant_ptr;
+
+  }
 
   if (args.parentFile.length() > 0) {
 
@@ -68,19 +99,19 @@ kgl::MinorityExecEnv::Application::Application(kgl::Logger& log, const kgl::Mino
 
 
     // Union between variants in the mutant and in the parent.
-    std::shared_ptr<kgl::GenomeVariant> intersect_variant_ptr = mutant_variant_ptr->Intersection(parent_variant_ptr);
+//    std::shared_ptr<kgl::GenomeVariant> intersect_variant_ptr = mutant_variant_ptr->Intersection(parent_variant_ptr);
 
-    std::cout << *intersect_variant_ptr;
+//    std::cout << *intersect_variant_ptr;
 
     // Union between variants in the mutant and in the parent.
-    std::shared_ptr<kgl::GenomeVariant> union_variant_ptr = mutant_variant_ptr->Union(parent_variant_ptr);
+//    std::shared_ptr<kgl::GenomeVariant> union_variant_ptr = mutant_variant_ptr->Union(parent_variant_ptr);
 
-    std::cout << *union_variant_ptr;
+//    std::cout << *union_variant_ptr;
 
     // Subtract any variants from the union that are in the parent.
-    std::shared_ptr<kgl::GenomeVariant> diff_variant_ptr = union_variant_ptr->Difference(parent_variant_ptr);
+//    std::shared_ptr<kgl::GenomeVariant> diff_variant_ptr = union_variant_ptr->Difference(parent_variant_ptr);
 
-    std::cout << *diff_variant_ptr;
+//    std::cout << *diff_variant_ptr;
 
   }
 

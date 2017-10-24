@@ -315,8 +315,7 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
 
   }
 
-  ExecEnv::log().info("Contig: {} found: {} Gene features; deformed (no start/no stop/nonsense mutation) Genes: {}",
-                      contigId(), gene_count, ill_formed_genes);
+  ExecEnv::log().info("Contig: {} found: {} Genes; Malformed Genes: {}", contigId(), gene_count, ill_formed_genes);
 
 }
 
@@ -370,7 +369,7 @@ bool kgl::ContigFeatures::verifyCodingSequences(const SortedCDSVector& sorted_cd
 
     if (not coding_sequence_.checkStartCodon(coding_sequence_ptr)) {
 
-      ExecEnv::log().warn("No START codon for Gene: {} begin: {}, end: {}, strand: {} | first codon bases: {}{}{}",
+      ExecEnv::log().vwarn("No START codon for Gene: {} begin: {}, end: {}, strand: {} | first codon: {}{}{}",
                           gene_ptr->id(),
                           gene_ptr->sequence().begin(),
                           gene_ptr->sequence().end(),
@@ -378,12 +377,12 @@ bool kgl::ContigFeatures::verifyCodingSequences(const SortedCDSVector& sorted_cd
                           coding_sequence_.firstCodon(coding_sequence_ptr).bases[0],
                           coding_sequence_.firstCodon(coding_sequence_ptr).bases[1],
                           coding_sequence_.firstCodon(coding_sequence_ptr).bases[2]);
-      gene_ptr->recusivelyPrintsubfeatures();
+//      gene_ptr->recusivelyPrintsubfeatures();
       result = false;
     }
     if (not coding_sequence_.checkStopCodon(coding_sequence_ptr)) {
 
-      ExecEnv::log().warn("No STOP codon: {} for Gene: {} begin: {}, end: {}, strand: {} | last codon bases: {}{}{}",
+      ExecEnv::log().vwarn("No STOP codon: {} for Gene: {} begin: {}, end: {}, strand: {} | last codon: {}{}{}",
                           (coding_sequence_.codonLength(coding_sequence_ptr)-1),
                           gene_ptr->id(),
                           gene_ptr->sequence().begin(),
@@ -392,13 +391,13 @@ bool kgl::ContigFeatures::verifyCodingSequences(const SortedCDSVector& sorted_cd
                           coding_sequence_.lastCodon(coding_sequence_ptr).bases[0],
                           coding_sequence_.lastCodon(coding_sequence_ptr).bases[1],
                           coding_sequence_.lastCodon(coding_sequence_ptr).bases[2]);
-      gene_ptr->recusivelyPrintsubfeatures();
+//      gene_ptr->recusivelyPrintsubfeatures();
       result = false;
     }
     size_t nonsense_index = coding_sequence_.checkNonsenseMutation(coding_sequence_ptr);
     if (nonsense_index > 0) {
 
-      ExecEnv::log().warn("NONSENSE mutation codon:{} Gene: {} begin: {}, end: {}, strand: {} | codon bases: {}{}{}",
+      ExecEnv::log().vwarn("NONSENSE mutation codon:{} Gene: {} begin: {}, end: {}, strand: {} | stop codon: {}{}{}",
                           nonsense_index,
                           gene_ptr->id(),
                           gene_ptr->sequence().begin(),
@@ -407,7 +406,7 @@ bool kgl::ContigFeatures::verifyCodingSequences(const SortedCDSVector& sorted_cd
                           coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[0],
                           coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[1],
                           coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[2]);
-      gene_ptr->recusivelyPrintsubfeatures();
+//      gene_ptr->recusivelyPrintsubfeatures();
       result = false;
     }
 
@@ -515,6 +514,16 @@ void kgl::GenomeDatabase::verifyFeatureHierarchy() {
   for (auto contig_pair : genome_sequence_map_) {
 
     contig_pair.second->verifyFeatureHierarchy();
+
+  }
+
+}
+
+void kgl::GenomeDatabase::setTranslationTable(size_t table) {
+
+  for (auto contig_pair : genome_sequence_map_) {
+
+    contig_pair.second->setTranslationTable(table);
 
   }
 

@@ -204,6 +204,7 @@ public:
 
   bool isGene() const final { return true; }
 
+
   // GENE Type.
   constexpr static const char* GENE_TYPE = "GENE";
 

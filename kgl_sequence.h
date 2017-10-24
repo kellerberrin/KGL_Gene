@@ -57,34 +57,60 @@ class AminoTranslationTable {
 
 public:
 
-  AminoTranslationTable() = default;
+  explicit AminoTranslationTable() { setTranslationTable(Tables::STANDARD_TABLE_1); }
   ~AminoTranslationTable() = default;
 
   std::string TableName() { return amino_table_rows_.table_name; }
 
-  inline AminoAcidTypes::AminoType getAmino(const AminoAcidTypes::Codon& Codon) {
+  // The NCBI Amino Acid translation tables (1-31).
+  bool setTranslationTable(size_t table) {
+
+    bool result = false;
+
+    if(table > Tables::TABLE_ARRAY_SIZE) {
+
+      ExecEnv::log().warn("Amino translation table: {} not implemented, Standard table 1 used", table);
+      table = Tables::STANDARD_TABLE_1;
+      result = false;
+
+    }
+    if (Tables::TABLEARRAY[table-1] == nullptr) {
+
+      ExecEnv::log().warn("Amino translation table: {} not implemented, Standard table 1 used", table);
+      table = Tables::STANDARD_TABLE_1;
+      result = false;
+
+    }
+
+    amino_table_rows_ = *(Tables::TABLEARRAY[table-1]);
+
+    return result;
+
+  }
+
+  AminoAcidTypes::AminoType getAmino(const AminoAcidTypes::Codon& Codon) {
 
     return amino_table_rows_.amino_table[index(Codon)].amino_acid;
 
   }
 
-  inline bool isStopCodon(const AminoAcidTypes::Codon& Codon) {
+  bool isStopCodon(const AminoAcidTypes::Codon& Codon) {
 
     return (amino_table_rows_.amino_table[index(Codon)].start == AminoAcidTypes::STOP_CODON);
 
   }
 
-  inline bool isStartCodon(const AminoAcidTypes::Codon& Codon) {
+  bool isStartCodon(const AminoAcidTypes::Codon& Codon) {
 
     return amino_table_rows_.amino_table[index(Codon)].start == AminoAcidTypes::START_CODON;
 
   }
 
-
 private:
 
-  inline size_t index(const AminoAcidTypes::Codon& Codon) {
+  TranslationTable amino_table_rows_;
 
+  inline size_t index(const AminoAcidTypes::Codon& Codon) {
 
     size_t table_index = (NucleotideColumn_DNA5::nucleotideToColumn(Codon.bases[0]) * Tables::CODING_NUCLEOTIDE_1) +
                          (NucleotideColumn_DNA5::nucleotideToColumn(Codon.bases[1]) * Tables::CODING_NUCLEOTIDE_2) +
@@ -95,18 +121,14 @@ private:
       ExecEnv::log().error("Bad Amino Table Index: {}, base1: {} base2: {}, base3: {}",
                            table_index, Codon.bases[0], Codon.bases[1], Codon.bases[2]);
       table_index = amino_table_rows_.stop_codon_index;
+
     }
 
     return table_index;
 
   }
 
-
-  const TranslationTable amino_table_rows_ = Tables::TABLE_4;
-
-
 };
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Coding Sequence - An assembly of DNA/RNA sequences from CDS features.
@@ -121,7 +143,9 @@ public:
   CodingSequence() : table_ptr_(std::make_shared<AminoTranslationTable>())  {}
   ~CodingSequence() = default;
 
-  std::string translationTableName() { return table_ptr_->TableName(); }
+  std::string translationTableName() const { return table_ptr_->TableName(); }
+
+  bool settranslationTable(size_t table) { return table_ptr_->setTranslationTable(table); }
 
   AminoAcidTypes::Codon firstCodon(std::shared_ptr<BaseSequence<T>> sequence_ptr) const {
 
@@ -188,7 +212,7 @@ private:
 // Coding Sequence Specialization for DNA
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using StandardCodingSequence = CodingSequence<NucleotideColumn_DNA5>;
+using CodingSequenceDNA5 = CodingSequence<NucleotideColumn_DNA5>;
 
 
 }   // namespace genome
