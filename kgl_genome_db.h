@@ -44,7 +44,7 @@ public:
   // false if not found.
   bool findFeatureId(FeatureIdent_t& feature_id, std::vector<std::shared_ptr<Feature>>& feature_ptr_vec);
   // false if offset is not in an cds else returns a vector of cds (these will be in different genes).
-  bool findOffsetCDS(ContigOffset_t offset, std::vector<std::shared_ptr<CDSFeature>>& cds_ptr_vec);
+  bool findOffsetCDS(ContigOffset_t offset, std::vector<std::shared_ptr<CDSFeature>>& cds_ptr_vec) const;
 
   bool setTranslationTable(size_t table) { return coding_sequence_.settranslationTable(table); }
   std::string translationTableName() const { return coding_sequence_.translationTableName(); }

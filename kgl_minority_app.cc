@@ -1,6 +1,7 @@
 //
 // Created by kellerberrin on 17/10/17.
 //
+#include <sstream>
 
 #include "kgl_minority_env.h"
 #include "kgl_genome_db.h"
@@ -25,16 +26,17 @@ std::shared_ptr<kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
                                                                                               file_name,
                                                                                               read_quality);
   // Generate simple SNPs.
-  std::shared_ptr<kgl::GenomeVariant> variant_ptr = kgl::GenomeAnalysis().simpleSNPVariants<kgl::NucleotideColumn_DNA5>(count_data_ptr,
-                                                                                                                        genome_db_ptr);
-//  std::cout << *variant_ptr;
-
+  std::shared_ptr<kgl::GenomeVariant> variant_ptr = kgl::GenomeAnalysis().SNPVariants(count_data_ptr, genome_db_ptr);
   // Filter for read count.
   variant_ptr = variant_ptr->filterVariants(kgl::ReadCountFilter(min_count));
   // Filter for read proportion.
   variant_ptr = variant_ptr->filterVariants(kgl::MutantProportionFilter(min_proportion));
   // Filter for CDS membership.
   variant_ptr = variant_ptr->filterVariants(kgl::InCDSFilter(genome_db_ptr));
+  // Filter for Gene membership.
+  variant_ptr = variant_ptr->filterVariants(kgl::GeneFilter("PF3D7_1211900",genome_db_ptr));
+  // Convert to coding sequence variants.
+//  variant_ptr = variant_ptr->codingVariants(genome_db_ptr);
 
   return variant_ptr;
 
@@ -67,7 +69,9 @@ kgl::MinorityExecEnv::Application::Application(kgl::Logger& log, const kgl::Mino
                                                                        args.mutantMinCount,
                                                                        args.mutantMinProportion);
       variant_vector.push_back(variant_ptr);
-      std::cout << *variant_ptr;
+      std::ostringstream ss;
+      ss << *variant_ptr;
+      ExecEnv::log().info("Genome: {}\nPF3D7_1211900 variants\n{}", variant_ptr->genomeId(), ss.str());
 
     }
 

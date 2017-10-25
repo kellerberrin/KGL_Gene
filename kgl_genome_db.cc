@@ -439,7 +439,7 @@ void kgl::ContigFeatures::createCDSTable() {
 
 
 bool kgl::ContigFeatures::findOffsetCDS(ContigOffset_t offset,
-                                        std::vector<std::shared_ptr<CDSFeature>>& cds_ptr_vec) {
+                                        std::vector<std::shared_ptr<CDSFeature>>& cds_ptr_vec) const {
 
   cds_ptr_vec.clear();
   for (auto cds : cds_table_) {

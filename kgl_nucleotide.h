@@ -107,6 +107,9 @@ public:
       case T_NUCLEOTIDE_OFFSET:
         return T_NUCLEOTIDE;
 
+      case N_NUCLEOTIDE_OFFSET:
+        return N_NUCLEOTIDE;
+
       case DELETE_NUCLEOTIDE_OFFSET:
         return DELETE_NUCLEOTIDE;
 

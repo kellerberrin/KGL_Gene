@@ -36,6 +36,7 @@ public:
                                                const std::string& file_name,
                                                unsigned char readQuality = 0) {
     // Register with the genome database to setup the contig data blocks before reading.
+    contig_data_ptr_->fileName(file_name);
     genome_db_ptr->registerContigData(contig_data_ptr_);
     consumer_ptr_->readQuality(readQuality);
     producer_ptr_->readSamFile(file_name);

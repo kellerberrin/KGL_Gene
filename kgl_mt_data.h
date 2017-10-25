@@ -83,6 +83,10 @@ public:
   explicit ContigDataMap() = default;
   ~ContigDataMap() = default;
 
+// File name
+  void fileName(const std::string& file_name) { file_name_ = file_name;}
+  const std::string& fileName() const { return file_name_; }
+
 // Access functions to obtain the underlying contig block.
 
   ContigCountMap<ContigDataBlock>& getMap() { return contig_map_; }
@@ -111,6 +115,7 @@ public:
 private:
 
   ContigCountMap<ContigDataBlock> contig_map_;  // Store the DNA read data for all contigs.
+  std::string file_name_;  // File used to create the read data
 
 };
 

@@ -12,6 +12,10 @@ namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Set the minimum read count SNP generation.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 class ReadCountFilter : public VariantFilter {
 
 public:
@@ -29,6 +33,9 @@ private:
 
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Set the minimum mutant read proportion in a candidate SNP.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class MutantProportionFilter : public VariantFilter {
 
@@ -46,6 +53,10 @@ private:
   double mutant_proportion_;
 
 };
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter SNPs to coding sequences only.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class InCDSFilter : public VariantFilter {
 
@@ -66,6 +77,62 @@ private:
   bool implementFilter(const Variant& variant) const;
 
 };
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter SNPs to a particular contig.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class ContigFilter : public VariantFilter {
+
+public:
+
+  explicit ContigFilter(const ContigId_t& contig_ident,
+                      const std::shared_ptr<const GenomeDatabase> genome_db_ptr) : contig_ident_(contig_ident),
+                                                                                   genome_db_ptr_(genome_db_ptr) {}
+  ~ContigFilter() override = default;
+
+  std::string filterName() const final;
+
+  bool applyFilter(const Variant& variant) const override { return implementFilter(variant); } // redirect
+  bool applyFilter(const ReadCountVariant& variant) const override { return implementFilter(variant); }
+
+private:
+
+  const ContigId_t contig_ident_;
+  std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
+
+  bool implementFilter(const Variant& variant) const;
+
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter SNPs to a particular gene.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class GeneFilter : public VariantFilter {
+
+public:
+
+  explicit GeneFilter(const FeatureIdent_t& gene_ident,
+                      const std::shared_ptr<const GenomeDatabase> genome_db_ptr) : gene_ident_(gene_ident),
+                                                                                   genome_db_ptr_(genome_db_ptr) {}
+  ~GeneFilter() override = default;
+
+  std::string filterName() const final;
+
+  bool applyFilter(const Variant& variant) const override { return implementFilter(variant); } // redirect
+  bool applyFilter(const ReadCountVariant& variant) const override { return implementFilter(variant); }
+
+private:
+
+  const FeatureIdent_t gene_ident_;
+  std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
+
+  bool implementFilter(const Variant& variant) const;
+
+};
+
+
 
 
 

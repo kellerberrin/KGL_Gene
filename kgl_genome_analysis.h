@@ -24,6 +24,14 @@ public:
   std::shared_ptr<GenomeVariant> simpleSNPVariants(std::shared_ptr<ContigCountData>& count_data,
                                                    std::shared_ptr<GenomeDatabase>& genome_db);
 
+  std::shared_ptr<GenomeVariant> SNPVariants(std::shared_ptr<ContigCountData>& count_data,
+                                             std::shared_ptr<GenomeDatabase>& genome_db) {
+
+    return simpleSNPVariants<NucleotideColumn_DNA5>(count_data, genome_db);
+
+  }
+
+
 private:
 
 
@@ -34,7 +42,8 @@ template<typename T>
 std::shared_ptr<GenomeVariant> GenomeAnalysis::simpleSNPVariants(std::shared_ptr<ContigCountData>& count_data,
                                                                  std::shared_ptr<GenomeDatabase>& genome_db) {
 
-  std::shared_ptr<GenomeVariant> snp_variants(std::make_shared<GenomeVariant>("simpleSNPVariants"));
+  std::shared_ptr<GenomeVariant> snp_variants(std::make_shared<GenomeVariant>("simpleSNPVariants",
+                                                                              count_data->fileName()));
 
   for (auto& contig_block : count_data->getMap()) {   // For each contig block.
 
@@ -81,7 +90,7 @@ std::shared_ptr<GenomeVariant> GenomeAnalysis::simpleSNPVariants(std::shared_ptr
             and read_count > 0) {
 
           std::shared_ptr<const Variant>
-          snp_variant(std::make_shared<const SNPVariant<T>>(contig_block.first,
+          snp_variant(std::make_shared<const SNPVariant<T>>(contig_ptr,
                                                             contig_offset,
                                                             read_count,
                                                             max_count,

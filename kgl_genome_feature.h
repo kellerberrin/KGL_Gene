@@ -100,8 +100,6 @@ private:
 class ContigFeatures; // Forward decl;
 class Feature; // Forward decl.
 class CDSFeature; // Forward decl
-using FeatureIdent_t = std::string;
-using FeatureType_t = std::string;
 using SubFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<Feature>>;
 using SuperFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<Feature>>;
 using SortedCDS = std::map<ContigOffset_t, std::shared_ptr<CDSFeature>>;

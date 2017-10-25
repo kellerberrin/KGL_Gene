@@ -48,6 +48,10 @@ using ContigOffset_t = uint64_t;              // Paris Japonica has 150 billion 
 using ContigSize_t = ContigOffset_t;
 using NucleotideReadCount_t = uint32_t;
 using CDSPhaseType_t = unsigned char;
+using FeatureIdent_t = std::string;
+using FeatureType_t = std::string;
+using VariantType_t = std::string;
+
 
 // Usage and semantics : ContigOffset_t should be used when referring to the Genome and std::size_t should be used
 // when referring to the underlying data structure. In reality both are 64 bit integers (Paris Japonica). This is

@@ -99,7 +99,7 @@ bool kgl::GenomeVariant::isElement(const Variant& variant) const {
 std::shared_ptr<kgl::GenomeVariant>
 kgl::GenomeVariant::Union(std::shared_ptr<const kgl::GenomeVariant> genome_variant_ptr) const {
 
-  std::shared_ptr<kgl::GenomeVariant> genome_union(std::make_shared<kgl::GenomeVariant>("Union"));
+  std::shared_ptr<kgl::GenomeVariant> genome_union(std::make_shared<kgl::GenomeVariant>("Union", genomeId()));
 
   for (auto contig_variant : genome_variant_map_) {
 
@@ -149,7 +149,8 @@ kgl::GenomeVariant::Union(std::shared_ptr<const kgl::GenomeVariant> genome_varia
 std::shared_ptr<kgl::GenomeVariant>
 kgl::GenomeVariant::Intersection(std::shared_ptr<const kgl::GenomeVariant> genome_variant) const {
 
-  std::shared_ptr<kgl::GenomeVariant> genome_difference(std::make_shared<kgl::GenomeVariant>("Intersection"));
+  std::shared_ptr<kgl::GenomeVariant> genome_difference(std::make_shared<kgl::GenomeVariant>("Intersection",
+                                                                                             genomeId()));
 
   for (auto contig_variant : genome_variant_map_) {
 
@@ -184,7 +185,7 @@ kgl::GenomeVariant::Intersection(std::shared_ptr<const kgl::GenomeVariant> genom
 std::shared_ptr<kgl::GenomeVariant>
 kgl::GenomeVariant::Difference(std::shared_ptr<const kgl::GenomeVariant> genome_variant) const {
 
-  std::shared_ptr<kgl::GenomeVariant> genome_difference(std::make_shared<kgl::GenomeVariant>("Difference"));
+  std::shared_ptr<kgl::GenomeVariant> genome_difference(std::make_shared<kgl::GenomeVariant>("Difference", genomeId()));
 
   for (auto contig_variant : genome_variant_map_) {
 
