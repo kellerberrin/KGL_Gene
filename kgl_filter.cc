@@ -73,34 +73,10 @@ std::string kgl::ContigFilter::filterName() const {
 
 bool kgl::GeneFilter::implementFilter(const Variant& variant) const {
 
-  std::shared_ptr<ContigFeatures> contig_ptr;
-  if (genome_db_ptr_->getContigSequence(variant.contigId(), contig_ptr)) {
+  std::shared_ptr<kgl::GeneFeature> gene_ptr;
+  if (variant.variantGenome().contig()->findGene(variant.contigOffset(), gene_ptr)) {
 
-    std::vector<std::shared_ptr<CDSFeature>> cds_ptr_vec;
-    if (not contig_ptr->findOffsetCDS(variant.contigOffset(), cds_ptr_vec)) {
-
-      return false;
-
-    } else {
-
-      std::shared_ptr<kgl::Feature> gene_ptr = cds_ptr_vec.front()->getGene();
-      if (not gene_ptr) {
-
-        ExecEnv::log().error("Variant GeneFilter; Gene not found for CDS: {}", cds_ptr_vec.front()->id());
-        return false;
-
-      } else {
-
-        return gene_ptr->id() == gene_ident_;
-
-      }
-
-    }
-
-
-  } else {
-
-    ExecEnv::log().error("Variant contig: {} not found in genome database", variant.contigId());
+      return gene_ptr->id() == gene_ident_;
 
   }
 

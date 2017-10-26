@@ -98,7 +98,7 @@ void kgl::ContigFeatures::verifyFeatureHierarchy() {
   verifySubFeatureDuplicates();
   verifySuperFeatureDuplicates();
   verifyCDSPhasePeptide();
-  createCDSTable();
+  createGeneMap();
 
 }
 
@@ -417,44 +417,86 @@ bool kgl::ContigFeatures::verifyCodingSequences(const SortedCDSVector& sorted_cd
 }
 
 
-void kgl::ContigFeatures::createCDSTable() {
+void kgl::ContigFeatures::createGeneMap() {
 
   // Clear the lookup table.
-  cds_table_.clear();
+  gene_map_.clear();
 
-  // Iterate through all the features looking for CDS features.
+  // Iterate through all the features looking for Gene features.
   for(const auto& feature : offset_feature_map_) {
 
-    if(feature.second->featureType() == CDSFeature::CDS_TYPE) {
+    if(feature.second->isGene()) {
 
-      cds_table_.emplace_back(std::static_pointer_cast<CDSFeature>(feature.second));
+      ContigOffset_t end_offset = feature.second->sequence().end();
+      auto result = gene_map_.insert(std::make_pair(end_offset, std::static_pointer_cast<GeneFeature>(feature.second)));
+
+      if (not result.second) {
+
+        ExecEnv::log().error("Contig: {} Gene: {}, END offset: {}; gene already inserted at END offset",
+                             contigId(), feature.second->id(), end_offset);
+
+      }
 
     }
 
   }
 
-  ExecEnv::log().info("Contig: {} found: {} CDS features", contigId(), cds_table_.size());
+  ExecEnv::log().info("Contig: {} found: {} Genes", contigId(), gene_map_.size());
 
 }
 
 
-bool kgl::ContigFeatures::findOffsetCDS(ContigOffset_t offset,
-                                        std::vector<std::shared_ptr<CDSFeature>>& cds_ptr_vec) const {
+bool kgl::ContigFeatures::findGene(ContigOffset_t offset, std::shared_ptr<GeneFeature>& gene_ptr) const {
 
-  cds_ptr_vec.clear();
-  for (auto cds : cds_table_) {
+  auto result = gene_map_.lower_bound(offset);
 
-    if (cds->sequence().begin() > offset) break;
+  if (result == gene_map_.end()) {
 
-    if (cds->sequence().end() >= offset) {
-
-      cds_ptr_vec.emplace_back(cds);
-
-    }
+    gene_ptr = nullptr;
+    return false;
 
   }
 
-  return not cds_ptr_vec.empty();
+  if (offset < result->second->sequence().begin()) {
+
+    gene_ptr = nullptr;
+    return false;
+
+  }
+
+  gene_ptr = result->second;
+  return true;
+
+}
+
+
+bool kgl::ContigFeatures::findOffsetCDS(ContigOffset_t contig_offset, CDSArray & cds_array) const {
+
+  cds_array.clear();
+
+  std::shared_ptr<kgl::GeneFeature> gene_ptr;
+  if (findGene(contig_offset, gene_ptr)) {
+
+    SortedCDSVector sorted_cds_vec;
+    gene_ptr->getSortedCDS(sorted_cds_vec); // All sorted gene CDS.
+
+    for(auto sorted_cds : sorted_cds_vec) {
+
+      for (auto cds : sorted_cds) {
+
+        if (cds.second->sequence().begin() <= contig_offset and cds.second->sequence().end() >= contig_offset) {
+
+          cds_array.emplace_back(cds.second);
+
+        } // if in cds
+
+      } // for cds
+
+    } // for cds vector
+
+  } // found gene ptr
+
+  return not cds_array.empty();
 
 }
 

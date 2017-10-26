@@ -21,13 +21,15 @@ namespace genome {   // project level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ContigFeatures - A contiguous region, the associated sequence,  and all features that map onto that region/sequence.
+// ContigFeatures - A contiguous region, the associated sequence, and all features that map onto that region/sequence.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 using OffsetFeatureMap = std::multimap<ContigOffset_t, std::shared_ptr<Feature>>;
 using IdFeatureMap = std::multimap<FeatureIdent_t, std::shared_ptr<Feature>>;
-using CDSTable = std::vector<std::shared_ptr<CDSFeature>>;
+using CDSArray = std::vector<std::shared_ptr<CDSFeature>>;
+using GeneMap = std::map<ContigOffset_t, std::shared_ptr<GeneFeature>>;  // Inserted using the END offset as key.
+
 
 class ContigFeatures {
 
@@ -44,7 +46,9 @@ public:
   // false if not found.
   bool findFeatureId(FeatureIdent_t& feature_id, std::vector<std::shared_ptr<Feature>>& feature_ptr_vec);
   // false if offset is not in an cds else returns a vector of cds (these will be in different genes).
-  bool findOffsetCDS(ContigOffset_t offset, std::vector<std::shared_ptr<CDSFeature>>& cds_ptr_vec) const;
+  bool findOffsetCDS(ContigOffset_t offset, CDSArray& cds_array) const;
+  // false if offset is not in a gene, else (true) returns a ptr to the gene.
+  bool findGene(ContigOffset_t offset, std::shared_ptr<GeneFeature>& gene_ptr) const;
 
   bool setTranslationTable(size_t table) { return coding_sequence_.settranslationTable(table); }
   std::string translationTableName() const { return coding_sequence_.translationTableName(); }
@@ -63,7 +67,7 @@ private:
   std::shared_ptr<DNA5Sequence> sequence_ptr_;
   OffsetFeatureMap offset_feature_map_;
   IdFeatureMap id_feature_map_;
-  CDSTable cds_table_;
+  GeneMap gene_map_;
   CodingSequenceDNA5 coding_sequence_;
 
   void verifyContigOverlap();
@@ -72,7 +76,7 @@ private:
   void verifySuperFeatureDuplicates();
   void removeSubFeatureDuplicates();
   void removeSuperFeatureDuplicates();
-  void createCDSTable();
+  void createGeneMap();
   // Check all gene coding sequences for start and end codons and nonsense (intermediate stop codon) mutations.
   bool verifyCodingSequences(const SortedCDSVector& sorted_cds_vec) const;
 

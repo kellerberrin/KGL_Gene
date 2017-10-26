@@ -24,7 +24,10 @@ std::string kgl::VariantGenome::typestr() const {
 
     case VariantGenomeType::CDS_CODING : return "CDS Coding";
 
+    case VariantGenomeType::INTRON : return "INTRON";
+
     case VariantGenomeType::NON_CODING : return "NON Coding";
+
   }
 
   return "ERROR"; // Should not happen.
@@ -35,9 +38,20 @@ kgl::VariantGenomeType kgl::VariantGenome::genomeType() {
 
   if (variant_genome_type_ == VariantGenomeType::UNKNOWN) {
 
-    if (contig_ptr_->findOffsetCDS(contig_offset_, cds_ptr_vec_)) {
+    std::shared_ptr<kgl::GeneFeature> gene_ptr;
+    if (contig_ptr_->findGene(contig_offset_, gene_ptr)) {
 
-      variant_genome_type_ = VariantGenomeType::CDS_CODING;
+      CDSArray cds_array;
+      if(contig_ptr_->findOffsetCDS(contig_offset_, cds_array)) {
+
+        variant_genome_type_ = VariantGenomeType::CDS_CODING;
+
+      }
+      else {
+
+        variant_genome_type_ = VariantGenomeType::INTRON;
+
+      }
 
     } else {
 
@@ -72,51 +86,6 @@ kgl::ContigVariant::filterVariants(const kgl::VariantFilter& filter) const {
 void kgl::ContigVariant::addVariant(ContigOffset_t contig_offset, std::shared_ptr<const kgl::Variant>& variant_ptr) {
 
   offset_variant_map_.insert(std::make_pair(contig_offset, variant_ptr));
-
-}
-
-std::shared_ptr<kgl::ContigVariant>
-kgl::ContigVariant::codingVariants(const std::shared_ptr<const GenomeDatabase> genome_db_ptr) const {
-
-  // empty contig variants
-  std::shared_ptr<ContigVariant> coding_contig_ptr(std::make_shared<ContigVariant>(contigId()));
-  // Get the genome contig.
-  std::shared_ptr<ContigFeatures> contig_ptr;
-  if (genome_db_ptr->getContigSequence(contigId(), contig_ptr)) {
-
-    for (auto cds_variant : offset_variant_map_) {
-
-      std::vector<std::shared_ptr<CDSFeature>> cds_ptr_vec;
-      if (contig_ptr->findOffsetCDS(cds_variant.second->contigOffset(), cds_ptr_vec)) {
-
-        std::shared_ptr<Feature> gene_ptr = cds_ptr_vec.front()->getGene();
-        if (gene_ptr) {
-
-//          std::shared_ptr<Variant> coding_variant(std::make_shared<CodingSNPVariant>(cds_variant.second));
-
-        } else {
-
-          ExecEnv::log().error("Variant GeneFilter; Gene not found for CDS: {}", cds_ptr_vec.front()->id());
-
-        }
-
-      } else {
-
-        ExecEnv::log().error("Contig: {} Offset: {} Variant CDS not found in genome database",
-                             cds_variant.second->contigId(),
-                             cds_variant.second->contigOffset());
-
-      }
-
-    }
-
-  } else {
-
-    ExecEnv::log().error("Variant contig: {} not found in genome database", contigId());
-
-  }
-
-  return coding_contig_ptr;
 
 }
 
@@ -162,23 +131,6 @@ std::shared_ptr<kgl::GenomeVariant> kgl::GenomeVariant::filterVariants(const kgl
   }
 
   return filtered_genome_ptr;
-
-}
-
-
-std::shared_ptr<kgl::GenomeVariant>
-kgl::GenomeVariant::codingVariants(const std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr) const {
-
-  std::shared_ptr<GenomeVariant> variant_genome_ptr(std::make_shared<GenomeVariant>("Coding Variants", genomeId()));
-  for (const auto& contig_variant : genome_variant_map_) {
-
-    std::shared_ptr<ContigVariant> coding_contig_ptr = contig_variant.second->codingVariants(genome_db_ptr);
-    variant_genome_ptr->addContigVariant(coding_contig_ptr);
-    ExecEnv::log().vinfo("Contig: {} has: {} Coding variants", contig_variant.first, coding_contig_ptr->variantCount());
-
-  }
-
-  return variant_genome_ptr;
 
 }
 

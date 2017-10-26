@@ -127,7 +127,7 @@ public:
   bool verifyStrand(const SortedCDS& sorted_cds);   // Check feature strand consistency
   bool verifyCDSPhase(const SortedCDSVector& sorted_cds_vec); // Check the CDS phase for -ve and +ve strand genes
   bool getSortedCDS(SortedCDSVector& sorted_cds_vec) const; // Recursively descend the sub-features.
-  std::shared_ptr<Feature> getGene() const; // returns null p[ointer if not found
+  std::shared_ptr<Feature> getGene() const; // returns null pointer if not found
   void recusivelyPrintsubfeatures(long feature_level = 1) const; // useful debug function.
   // Hierarchy routines.
   void clearHierachy() { sub_features_.clear(); super_features_.clear(); }

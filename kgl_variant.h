@@ -47,7 +47,7 @@ private:
 //  Genome information of the variant.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum class VariantGenomeType { UNKNOWN, CDS_CODING, NON_CODING };
+enum class VariantGenomeType { UNKNOWN, CDS_CODING, INTRON, NON_CODING };
 
 class VariantGenome {
 
@@ -71,7 +71,6 @@ private:
   std::shared_ptr<const ContigFeatures> contig_ptr_;
   ContigOffset_t contig_offset_;
   VariantGenomeType variant_genome_type_;
-  std::vector<std::shared_ptr<CDSFeature>> cds_ptr_vec_;
 
   VariantGenomeType genomeType();
   VariantGenomeType genomeType() const { return const_cast<VariantGenome*>(this)->genomeType(); };
@@ -104,6 +103,7 @@ public:
 
   VariantGenomeType type() const { return variant_genome_.type(); }
   std::string typestr() const { return variant_genome_.typestr(); }
+  const VariantGenome& variantGenome() const { return  variant_genome_; }
 
   virtual std::string output() const = 0;
 
@@ -263,7 +263,6 @@ public:
   std::shared_ptr<ContigVariant> Difference(std::shared_ptr<const ContigVariant> contig_variant_ptr) const;
 
   std::shared_ptr<ContigVariant> filterVariants(const VariantFilter& filter) const;
-  std::shared_ptr<ContigVariant> codingVariants(const std::shared_ptr<const GenomeDatabase> genome_db_ptr) const;
 
   friend std::ostream & operator<<(std::ostream &os, const ContigVariant& contig_variant);
 
@@ -300,7 +299,6 @@ public:
 
   bool addContigVariant(std::shared_ptr<ContigVariant>& contig_variant);
   std::shared_ptr<GenomeVariant> filterVariants(const VariantFilter& filter) const;
-  std::shared_ptr<GenomeVariant> codingVariants(const std::shared_ptr<const GenomeDatabase> genome_db_ptr) const;
 
   bool isElement(const Variant& variant) const;
   std::shared_ptr<GenomeVariant> Union(std::shared_ptr<const GenomeVariant> genome_variant_ptr) const;
