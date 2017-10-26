@@ -73,10 +73,18 @@ std::string kgl::ContigFilter::filterName() const {
 
 bool kgl::GeneFilter::implementFilter(const Variant& variant) const {
 
-  std::shared_ptr<kgl::GeneFeature> gene_ptr;
-  if (variant.variantGenome().contig()->findGene(variant.contigOffset(), gene_ptr)) {
+  GeneVector gene_ptr_vec;
+  if (variant.variantGenome().contig()->findGene(variant.contigOffset(), gene_ptr_vec)) {
 
-      return gene_ptr->id() == gene_ident_;
+    for (const auto& gene_ptr : gene_ptr_vec) {
+
+      if (gene_ptr->id() == gene_ident_) {
+
+        return true;
+
+      }
+
+    }
 
   }
 

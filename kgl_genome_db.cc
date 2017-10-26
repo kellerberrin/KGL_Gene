@@ -428,44 +428,39 @@ void kgl::ContigFeatures::createGeneMap() {
     if(feature.second->isGene()) {
 
       ContigOffset_t end_offset = feature.second->sequence().end();
-      auto result = gene_map_.insert(std::make_pair(end_offset, std::static_pointer_cast<GeneFeature>(feature.second)));
-
-      if (not result.second) {
-
-        ExecEnv::log().error("Contig: {} Gene: {}, END offset: {}; gene already inserted at END offset",
-                             contigId(), feature.second->id(), end_offset);
-
-      }
+      gene_map_.insert(std::make_pair(end_offset, std::static_pointer_cast<GeneFeature>(feature.second)));
 
     }
 
   }
 
-  ExecEnv::log().info("Contig: {} found: {} Genes", contigId(), gene_map_.size());
-
 }
 
 
-bool kgl::ContigFeatures::findGene(ContigOffset_t offset, std::shared_ptr<GeneFeature>& gene_ptr) const {
+bool kgl::ContigFeatures::findGene(ContigOffset_t offset, GeneVector& gene_ptr_vec) const {
 
-  auto result = gene_map_.lower_bound(offset);
+  gene_ptr_vec.clear();
+  auto lb_result = gene_map_.lower_bound(offset);
 
-  if (result == gene_map_.end()) {
+  if (lb_result == gene_map_.end()) {
 
-    gene_ptr = nullptr;
     return false;
 
   }
 
-  if (offset < result->second->sequence().begin()) {
+  auto result = gene_map_.equal_range(lb_result->first);
 
-    gene_ptr = nullptr;
-    return false;
+  for (auto it = result.first; it != result.second; ++it) {
+
+    if (offset >= it->second->sequence().begin()) {
+
+      gene_ptr_vec.emplace_back(it->second);
+
+    }
 
   }
 
-  gene_ptr = result->second;
-  return true;
+  return not gene_ptr_vec.empty();
 
 }
 
@@ -474,25 +469,29 @@ bool kgl::ContigFeatures::findOffsetCDS(ContigOffset_t contig_offset, CDSArray &
 
   cds_array.clear();
 
-  std::shared_ptr<kgl::GeneFeature> gene_ptr;
-  if (findGene(contig_offset, gene_ptr)) {
+  GeneVector gene_ptr_vec;
+  if (findGene(contig_offset, gene_ptr_vec)) {
 
-    SortedCDSVector sorted_cds_vec;
-    gene_ptr->getSortedCDS(sorted_cds_vec); // All sorted gene CDS.
+    for (const auto& gene_ptr : gene_ptr_vec) {
 
-    for(auto sorted_cds : sorted_cds_vec) {
+      SortedCDSVector sorted_cds_vec;
+      gene_ptr->getSortedCDS(sorted_cds_vec); // All sorted gene CDS.
 
-      for (auto cds : sorted_cds) {
+      for (auto sorted_cds : sorted_cds_vec) {
 
-        if (cds.second->sequence().begin() <= contig_offset and cds.second->sequence().end() >= contig_offset) {
+        for (auto cds : sorted_cds) {
 
-          cds_array.emplace_back(cds.second);
+          if (cds.second->sequence().begin() <= contig_offset and cds.second->sequence().end() >= contig_offset) {
 
-        } // if in cds
+            cds_array.emplace_back(cds.second);
 
-      } // for cds
+          } // if in cds
 
-    } // for cds vector
+        } // for cds
+
+      } // for cds vector
+
+    } // for each gene_ptr
 
   } // found gene ptr
 

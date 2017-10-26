@@ -28,7 +28,8 @@ namespace genome {   // project level namespace
 using OffsetFeatureMap = std::multimap<ContigOffset_t, std::shared_ptr<Feature>>;
 using IdFeatureMap = std::multimap<FeatureIdent_t, std::shared_ptr<Feature>>;
 using CDSArray = std::vector<std::shared_ptr<CDSFeature>>;
-using GeneMap = std::map<ContigOffset_t, std::shared_ptr<GeneFeature>>;  // Inserted using the END offset as key.
+using GeneMap = std::multimap<ContigOffset_t, std::shared_ptr<GeneFeature>>;  // Inserted using the END offset as key.
+using GeneVector = std::vector<std::shared_ptr<GeneFeature>>;  // Multiple alternative genes for sequence region.
 
 
 class ContigFeatures {
@@ -48,7 +49,7 @@ public:
   // false if offset is not in an cds else returns a vector of cds (these will be in different genes).
   bool findOffsetCDS(ContigOffset_t offset, CDSArray& cds_array) const;
   // false if offset is not in a gene, else (true) returns a ptr to the gene.
-  bool findGene(ContigOffset_t offset, std::shared_ptr<GeneFeature>& gene_ptr) const;
+  bool findGene(ContigOffset_t offset, GeneVector& gene_ptr_vec) const;
 
   bool setTranslationTable(size_t table) { return coding_sequence_.settranslationTable(table); }
   std::string translationTableName() const { return coding_sequence_.translationTableName(); }

@@ -29,6 +29,7 @@ std::shared_ptr<kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
   std::shared_ptr<kgl::GenomeVariant> variant_ptr = kgl::GenomeAnalysis().SNPVariants(count_data_ptr, genome_db_ptr);
   // Filter for read count.
   variant_ptr = variant_ptr->filterVariants(kgl::ReadCountFilter(min_count));
+  std::cout << *variant_ptr;
   // Filter for read proportion.
   variant_ptr = variant_ptr->filterVariants(kgl::MutantProportionFilter(min_proportion));
   // Filter for CDS membership.
@@ -36,7 +37,6 @@ std::shared_ptr<kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
   // Filter for Gene membership.
   variant_ptr = variant_ptr->filterVariants(kgl::GeneFilter("PF3D7_1211900",genome_db_ptr));
   // Convert to coding sequence variants.
-//  variant_ptr = variant_ptr->codingVariants(genome_db_ptr);
 
   return variant_ptr;
 

@@ -38,8 +38,8 @@ kgl::VariantGenomeType kgl::VariantGenome::genomeType() {
 
   if (variant_genome_type_ == VariantGenomeType::UNKNOWN) {
 
-    std::shared_ptr<kgl::GeneFeature> gene_ptr;
-    if (contig_ptr_->findGene(contig_offset_, gene_ptr)) {
+    GeneVector gene_ptr_vec;
+    if (contig_ptr_->findGene(contig_offset_, gene_ptr_vec)) {
 
       CDSArray cds_array;
       if(contig_ptr_->findOffsetCDS(contig_offset_, cds_array)) {
