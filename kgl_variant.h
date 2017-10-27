@@ -57,24 +57,26 @@ public:
                 ContigOffset_t contig_offset) : contig_ptr_(contig_ptr),
                                                 contig_offset_(contig_offset),
                                                 variant_genome_type_(VariantGenomeType::UNKNOWN) {}
-  ~VariantGenome() = default;
+  virtual ~VariantGenome() = default;
 
   VariantGenomeType type() const { return genomeType(); }
-  std::string typestr() const;
+  std::string typestr() const; // variant type text.
+  std::string genomeOutput() const;  // Genome information text.
 
   std::shared_ptr<const ContigFeatures> contig() const { return contig_ptr_; }
   ContigOffset_t offset() const { return contig_offset_; }
 
+  VariantGenomeType genomeType(); // Lazy evaluation of gene membership and variant type.
+  VariantGenomeType genomeType() const { return const_cast<VariantGenome*>(this)->genomeType(); };
+
+  const GeneVector& geneMembership() const { genomeType(); return gene_membership_; }
 
 private:
 
   std::shared_ptr<const ContigFeatures> contig_ptr_;
   ContigOffset_t contig_offset_;
   VariantGenomeType variant_genome_type_;
-
-  VariantGenomeType genomeType();
-  VariantGenomeType genomeType() const { return const_cast<VariantGenome*>(this)->genomeType(); };
-
+  GeneVector gene_membership_;
 
 
 };
@@ -85,31 +87,25 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class Variant {
+class Variant : public VariantGenome {
 
 public:
 
 
   Variant(const std::shared_ptr<const ContigFeatures> contig_ptr,
-          ContigOffset_t contig_offset) : variant_genome_(contig_ptr, contig_offset) {}
+          ContigOffset_t contig_offset) : VariantGenome(contig_ptr, contig_offset) {}
   Variant(const Variant& variant) = default;
-  virtual ~Variant() = default;
+  ~Variant() override = default;
   bool filterVariant(const VariantFilter& filter) const { return applyFilter(filter); }
 
-  const ContigId_t& contigId() const { return variant_genome_.contig()->contigId(); }
-  ContigOffset_t contigOffset() const { return variant_genome_.offset(); }
+  const ContigId_t& contigId() const { return contig()->contigId(); }
+  ContigOffset_t contigOffset() const { return offset(); }
   bool operator==(const Variant& cmp_var) const { return equivalent(cmp_var); };
   friend std::ostream& operator<<(std::ostream &os, const Variant& variant) { os << variant.output();  return os; }
-
-  VariantGenomeType type() const { return variant_genome_.type(); }
-  std::string typestr() const { return variant_genome_.typestr(); }
-  const VariantGenome& variantGenome() const { return  variant_genome_; }
 
   virtual std::string output() const = 0;
 
 private:
-
-  VariantGenome variant_genome_;
 
   virtual bool applyFilter(const VariantFilter& filter) const { return filter.applyFilter(*this); }
   virtual bool equivalent(const Variant& cmp_var) const = 0;
@@ -217,9 +213,9 @@ bool SNPVariant<T>::equivalent(const Variant& cmp_var) const {
 template<class T> std::string SNPVariant<T>::output() const
 {
   std::stringstream ss;
-  ss << "Type:" << typestr() << " ";
-  ss << contigId() << " " << mutantCount() << "/" << readCount()
-     << " " << reference() << (contigOffset() + 1) << mutant() << " [";
+  ss << genomeOutput();
+  ss << reference() << (contigOffset() + 1) << mutant() << " ";
+  ss << mutantCount() << "/" << readCount() << " [";
   for (size_t idx = 0; idx < countArray().size(); ++idx) {
     ss << T::offsetToNucleotide(idx) << ":" << countArray()[idx] << " ";
   }

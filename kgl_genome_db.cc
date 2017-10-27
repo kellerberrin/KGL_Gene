@@ -437,7 +437,7 @@ void kgl::ContigFeatures::createGeneMap() {
 }
 
 
-bool kgl::ContigFeatures::findGene(ContigOffset_t offset, GeneVector& gene_ptr_vec) const {
+bool kgl::ContigFeatures::findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const {
 
   gene_ptr_vec.clear();
   auto lb_result = gene_map_.lower_bound(offset);
@@ -470,7 +470,7 @@ bool kgl::ContigFeatures::findOffsetCDS(ContigOffset_t contig_offset, CDSArray &
   cds_array.clear();
 
   GeneVector gene_ptr_vec;
-  if (findGene(contig_offset, gene_ptr_vec)) {
+  if (findGenes(contig_offset, gene_ptr_vec)) {
 
     for (const auto& gene_ptr : gene_ptr_vec) {
 

@@ -34,12 +34,35 @@ std::string kgl::VariantGenome::typestr() const {
 
 }
 
+
+std::string kgl::VariantGenome::genomeOutput() const {
+
+  std:: stringstream ss;
+// Contig.
+
+  ss << contig()->contigId();
+  ss << " " << typestr() << " ";
+
+  if (genomeType() != VariantGenomeType::NON_CODING) {
+
+    ss << "Gene(s):";
+
+    for (auto gene_ptr : geneMembership()) {
+
+      ss << gene_ptr->id() << " " << (offset() - gene_ptr->sequence().begin()) << " ";
+
+    }
+  }
+
+  return ss.str();
+
+}
+
 kgl::VariantGenomeType kgl::VariantGenome::genomeType() {
 
   if (variant_genome_type_ == VariantGenomeType::UNKNOWN) {
 
-    GeneVector gene_ptr_vec;
-    if (contig_ptr_->findGene(contig_offset_, gene_ptr_vec)) {
+    if (contig_ptr_->findGenes(contig_offset_, gene_membership_)) {
 
       CDSArray cds_array;
       if(contig_ptr_->findOffsetCDS(contig_offset_, cds_array)) {
