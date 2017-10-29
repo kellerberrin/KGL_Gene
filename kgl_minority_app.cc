@@ -7,7 +7,7 @@
 #include "kgl_genome_db.h"
 #include "kgl_gff_fasta.h"
 #include "kgl_process_sam.h"
-#include "kgl_genome_analysis.h"
+#include "kgl_variant_evidence.h"
 #include "kgl_filter.h"
 
 namespace kgl = kellerberrin::genome;
@@ -25,15 +25,15 @@ std::shared_ptr<kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
   std::shared_ptr<kgl::ContigCountData> count_data_ptr = kgl::SamCountReader(log).readSAMFile(genome_db_ptr,
                                                                                               file_name,
                                                                                               read_quality);
-  // Generate simple SNPs.
-  std::shared_ptr<kgl::GenomeVariant> variant_ptr = kgl::GenomeAnalysis().SNPVariants(count_data_ptr, genome_db_ptr);
+  // Generate SNP variants.
+  std::shared_ptr<kgl::GenomeVariant> variant_ptr = kgl::VariantAnalysis().SNPVariants(count_data_ptr, genome_db_ptr);
   // Filter for read count.
   variant_ptr = variant_ptr->filterVariants(kgl::ReadCountFilter(min_count));
-  std::cout << *variant_ptr;
   // Filter for read proportion.
   variant_ptr = variant_ptr->filterVariants(kgl::MutantProportionFilter(min_proportion));
   // Filter for CDS membership.
   variant_ptr = variant_ptr->filterVariants(kgl::InCDSFilter(genome_db_ptr));
+  std::cout << *variant_ptr;
   // Filter for Gene membership.
   variant_ptr = variant_ptr->filterVariants(kgl::GeneFilter("PF3D7_1211900",genome_db_ptr));
   // Convert to coding sequence variants.

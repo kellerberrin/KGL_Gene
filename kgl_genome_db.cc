@@ -279,7 +279,8 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
   size_t ill_formed_genes = 0;
   size_t empty_genes = 0;
 
-  ExecEnv::log().info("Verifying Gene structure using translation table: {}", coding_sequence_.translationTableName());
+  ExecEnv::log().info("Verifying {} Gene structure using: {}",
+                      contigId(), coding_sequence_.translationTableName());
 
   for(const auto& feature : offset_feature_map_) {
 
@@ -315,7 +316,7 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
 
   }
 
-  ExecEnv::log().info("Contig: {} found: {} Genes; Malformed Genes: {}", contigId(), gene_count, ill_formed_genes);
+  ExecEnv::log().info("Verified {} found: {} Genes; Malformed Genes: {}", contigId(), gene_count, ill_formed_genes);
 
 }
 

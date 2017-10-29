@@ -1,46 +1,20 @@
 //
+// Created by kellerberrin on 29/10/17.
+//
+
+//
 // Created by kellerberrin on 13/10/17.
 //
 
-#ifndef KGL_GENOME_ANALYSIS_H
-#define KGL_GENOME_ANALYSIS_H
-
-#include "kgl_variant.h"
-#include "kgl_genome_db.h"
+#include "kgl_variant_evidence.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kgl = kellerberrin::genome;
 
 
-class GenomeAnalysis {
 
-public:
-
-  explicit GenomeAnalysis() = default;
-  ~GenomeAnalysis() = default;
-
-  template <typename T>
-  std::shared_ptr<GenomeVariant> simpleSNPVariants(std::shared_ptr<ContigCountData>& count_data,
-                                                   std::shared_ptr<GenomeDatabase>& genome_db);
-
-  std::shared_ptr<GenomeVariant> SNPVariants(std::shared_ptr<ContigCountData>& count_data,
-                                             std::shared_ptr<GenomeDatabase>& genome_db) {
-
-    return simpleSNPVariants<NucleotideColumn_DNA5>(count_data, genome_db);
-
-  }
-
-
-private:
-
-
-};
-
-
-template<typename T>
-std::shared_ptr<GenomeVariant> GenomeAnalysis::simpleSNPVariants(std::shared_ptr<ContigCountData>& count_data,
-                                                                 std::shared_ptr<GenomeDatabase>& genome_db) {
+std::shared_ptr<kgl::GenomeVariant> kgl::VariantAnalysis::SNPVariants(std::shared_ptr<ContigCountData>& count_data,
+                                                                     std::shared_ptr<GenomeDatabase>& genome_db) {
 
   std::shared_ptr<GenomeVariant> snp_variants(std::make_shared<GenomeVariant>("simpleSNPVariants",
                                                                               count_data->fileName()));
@@ -51,7 +25,7 @@ std::shared_ptr<GenomeVariant> GenomeAnalysis::simpleSNPVariants(std::shared_ptr
     std::shared_ptr<ContigFeatures> contig_ptr;
     if (not genome_db->getContigSequence(contig_block.first, contig_ptr)) {
 
-      ExecEnv::log().error("Contig: {} not found in simpleSNPVariants()", contig_block.first);
+      ExecEnv::log().error("Contig: {} not found in SNPVariants()", contig_block.first);
       continue;
 
     } else {
@@ -67,7 +41,7 @@ std::shared_ptr<GenomeVariant> GenomeAnalysis::simpleSNPVariants(std::shared_ptr
         ContigOffset_t max_count_offset = 0;
         NucleotideReadCount_t read_count = 0;
         NucleotideReadCount_t max_count = 0;
-        for(ContigOffset_t idx = 0; idx <  T::NUCLEOTIDE_COLUMNS; ++idx) {
+        for(ContigOffset_t idx = 0; idx <  NucleotideColumn_DNA5::NUCLEOTIDE_COLUMNS; ++idx) {
 
           if (max_count < nucleotide_count_ptr[idx]) {
 
@@ -80,22 +54,24 @@ std::shared_ptr<GenomeVariant> GenomeAnalysis::simpleSNPVariants(std::shared_ptr
 
         }
 
-        typename T::NucleotideType max_count_nucleotide = T::offsetToNucleotide(max_count_offset);
-        typename T::NucleotideType reference_nucleotide = contig_sequence[contig_offset];
-        NucleotideReadCount_t reference_count =  nucleotide_count_ptr[T::nucleotideToColumn(reference_nucleotide)];
+        typename NucleotideColumn_DNA5::NucleotideType max_count_nucleotide
+        = NucleotideColumn_DNA5::offsetToNucleotide(max_count_offset);
+        typename NucleotideColumn_DNA5::NucleotideType reference_nucleotide = contig_sequence[contig_offset];
+        NucleotideReadCount_t reference_count
+        =  nucleotide_count_ptr[NucleotideColumn_DNA5::nucleotideToColumn(reference_nucleotide)];
 
         if (max_count > reference_count
-            and max_count_nucleotide != T::INSERT_SEQUENCE
+            and max_count_nucleotide != NucleotideColumn_DNA5::INSERT_SEQUENCE
             and max_count_nucleotide != contig_sequence[contig_offset]
             and read_count > 0) {
 
           std::shared_ptr<const Variant>
-          snp_variant(std::make_shared<const SNPVariant<T>>(contig_ptr,
+          snp_variant(std::make_shared<const SNPVariantDNA5>(contig_ptr,
                                                             contig_offset,
                                                             read_count,
                                                             max_count,
                                                             nucleotide_count_ptr,
-                                                            T::NUCLEOTIDE_COLUMNS,
+                                                            NucleotideColumn_DNA5::NUCLEOTIDE_COLUMNS,
                                                             reference_nucleotide,
                                                             max_count_nucleotide));
 
@@ -123,9 +99,3 @@ std::shared_ptr<GenomeVariant> GenomeAnalysis::simpleSNPVariants(std::shared_ptr
   return snp_variants;
 
 }
-
-
-}   // namespace genome
-}   // namespace kellerberrin
-
-#endif //KGL_GENOME_ANALYSIS_H

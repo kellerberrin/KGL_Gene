@@ -88,6 +88,41 @@ kgl::VariantGenomeType kgl::VariantGenome::genomeType() {
 
 }
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SNPVariant - SNPs generated from the SAM/BAM read data.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+bool kgl::SNPVariantDNA5::equivalent(const Variant& cmp_var) const {
+
+  auto cmp_snp = dynamic_cast<const SNPVariantDNA5*>(&cmp_var);
+
+  if (cmp_snp == nullptr) return false;
+
+  return contigId() == cmp_snp->contigId()
+         and contigOffset() == cmp_snp->contigOffset()
+         and reference() == cmp_snp->reference()
+         and mutant() == cmp_snp->mutant();
+
+}
+
+
+std::string kgl::SNPVariantDNA5::output() const
+{
+  std::stringstream ss;
+  ss << genomeOutput();
+  ss << reference() << (contigOffset() + 1) << mutant() << " ";
+  ss << mutantCount() << "/" << readCount() << " [";
+  for (size_t idx = 0; idx < countArray().size(); ++idx) {
+    ss << NucleotideColumn_DNA5::offsetToNucleotide(idx) << ":" << countArray()[idx] << " ";
+  }
+  ss << "]";
+  return ss.str();
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ContigVariant - All the variant features that map onto that region/sequence.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +132,7 @@ std::shared_ptr<kgl::ContigVariant>
 kgl::ContigVariant::filterVariants(const kgl::VariantFilter& filter) const {
 
   std::shared_ptr<kgl::ContigVariant> filtered_contig_ptr(std::make_shared<kgl::ContigVariant>(*this));
-  // Inverts the bool returned by filterVariant(filter) because the delete pattern expects bool true for deletion.
+  // Complements the bool returned by filterVariant(filter) because the delete pattern expects bool true for deletion.
   auto predicate = [&](const OffsetVariantMap::const_iterator& it) { return not it->second->filterVariant(filter); };
   predicateIterableDelete(filtered_contig_ptr->offset_variant_map_,  predicate);
 

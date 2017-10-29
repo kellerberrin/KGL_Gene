@@ -20,8 +20,11 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
+
+
 
 class Variant; // Forward decl.
 class ReadCountVariant; // Forward decl.
@@ -162,74 +165,40 @@ private:
 //  A simple SNP variant. Modelled on the VCF file format.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<class T>
-class SNPVariant : public ReadCountVariant {
+class SNPVariantDNA5 : public ReadCountVariant {
 
 public:
 
-  SNPVariant(const std::shared_ptr<const ContigFeatures> contig_ptr,
-             ContigOffset_t contig_offset,
-             NucleotideReadCount_t read_count,
-             NucleotideReadCount_t mutant_count,
-             NucleotideReadCount_t const count_array[],
-             ContigSize_t  count_array_size,
-             typename T::NucleotideType reference,
-             typename T::NucleotideType mutant)
-      : ReadCountVariant(contig_ptr, contig_offset, read_count, mutant_count, count_array, count_array_size),
-        reference_(reference),
-        mutant_(mutant) {}
-  SNPVariant(const SNPVariant& variant) = default;
-  ~SNPVariant() override = default;
+  SNPVariantDNA5(const std::shared_ptr<const ContigFeatures> contig_ptr,
+                 ContigOffset_t contig_offset,
+                 NucleotideReadCount_t read_count,
+                 NucleotideReadCount_t mutant_count,
+                 NucleotideReadCount_t const count_array[],
+                 ContigSize_t  count_array_size,
+                 typename NucleotideColumn_DNA5::NucleotideType reference,
+                 typename NucleotideColumn_DNA5::NucleotideType mutant)
+  : ReadCountVariant(contig_ptr, contig_offset, read_count, mutant_count, count_array, count_array_size),
+    reference_(reference),
+    mutant_(mutant) {}
+
+  SNPVariantDNA5(const SNPVariantDNA5& variant) = default;
+
+  ~SNPVariantDNA5() override = default;
 
   bool equivalent(const Variant& cmp_var) const override;
 
-  const typename T::NucleotideType& reference() const { return reference_; }
-  const typename T::NucleotideType& mutant() const { return mutant_; }
+  const typename NucleotideColumn_DNA5::NucleotideType& reference() const { return reference_; }
+  const typename NucleotideColumn_DNA5::NucleotideType& mutant() const { return mutant_; }
 
   std::string output() const override;
 
 private:
 
-  typename T::NucleotideType reference_;
-  typename T::NucleotideType mutant_;
+  typename NucleotideColumn_DNA5::NucleotideType reference_;
+  typename NucleotideColumn_DNA5::NucleotideType mutant_;
 
 
 };
-
-template<class T>
-bool SNPVariant<T>::equivalent(const Variant& cmp_var) const {
-
-  auto cmp_snp = dynamic_cast<const SNPVariant<T>*>(&cmp_var);
-
-  if (cmp_snp == nullptr) return false;
-
-  return contigId() == cmp_snp->contigId()
-         and contigOffset() == cmp_snp->contigOffset()
-         and reference() == cmp_snp->reference()
-         and mutant() == cmp_snp->mutant();
-
-}
-
-template<class T> std::string SNPVariant<T>::output() const
-{
-  std::stringstream ss;
-  ss << genomeOutput();
-  ss << reference() << (contigOffset() + 1) << mutant() << " ";
-  ss << mutantCount() << "/" << readCount() << " [";
-  for (size_t idx = 0; idx < countArray().size(); ++idx) {
-    ss << T::offsetToNucleotide(idx) << ":" << countArray()[idx] << " ";
-  }
-  ss << "]";
-  return ss.str();
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  Specialize the SNP variant using NucleotideColumn_DNA5.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-using SNPVariantDNA5 = SNPVariant<NucleotideColumn_DNA5>;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -260,7 +229,7 @@ public:
 
   std::shared_ptr<ContigVariant> filterVariants(const VariantFilter& filter) const;
 
-  friend std::ostream & operator<<(std::ostream &os, const ContigVariant& contig_variant);
+  friend std::ostream& operator<<(std::ostream &os, const ContigVariant& contig_variant);
 
 private:
 
