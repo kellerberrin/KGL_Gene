@@ -1,9 +1,9 @@
 //
-// Created by kellerberrin on 22/10/17.
+// Created by kellerberrin on 31/10/17.
 //
 
-#ifndef KGL_BASE_SEQUENCE_H
-#define KGL_BASE_SEQUENCE_H
+#ifndef KGL_SEQUENCE_BASE_H
+#define KGL_SEQUENCE_BASE_H
 
 
 #include <string>
@@ -60,9 +60,8 @@ private:
 };
 
 
-
 }   // namespace genome
 }   // namespace kellerberrin
 
 
-#endif //KGL_BASE_SEQUENCE_H
+#endif //KGL_SEQUENCE_BASE_H

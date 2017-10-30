@@ -21,10 +21,10 @@ find_package( Boost COMPONENTS system filesystem timer chrono REQUIRED )
 
 
 #setup common source directories
-set(SOURCE_FILES kgl_logging.h kgl_logging.cc kgl_read_sam.h
-        kgl_mt_queue.h kgl_mt_data.h kgl_genome_types.h kgl_consume_sam.h
-        kgl_process_sam.h kgl_lock.h kgl_mt_numpy.h kgl_nucleotide.h kgl_parse_sam.h
-        kgl_parse_sam.cc kgl_mt_contig.h kgl_exec_env.cc kgl_mt_insert.h)
+set(SOURCE_FILES kgl_logging.h kgl_logging.cc
+        kgl_mt_queue.h kgl_mt_data.h kgl_genome_types.h
+        kgl_lock.h kgl_mt_numpy.h kgl_nucleotide.h
+        kgl_mt_contig.h kgl_exec_env.cc kgl_mt_insert.h)
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pg -pthread")
 #set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall -pg")
@@ -44,5 +44,5 @@ add_executable (kgl_genome ${SOURCE_FILES} kgl_main.cc  kgl_gff_fasta.h kgl_gff_
                 kgl_genome_db.h kgl_genome_db.cc kgl_patterns.h kgl_genome_feature.h kgl_genome_feature.cc
                 kgl_exec_env_boost.cc kgl_variant.h kgl_variant.cc
                 kgl_filter.h kgl_filter.cc kgl_variant_set.cc kgl_minority_env.cc
-                kgl_minority_env.h kgl_minority_app.cc kgl_nucleotide.cc kgl_amino.h kgl_table.h kgl_base_sequence.h kgl_table.cc kgl_mutant_sequence.h kgl_mutant_sequence.cc kgl_base_sequence.cc kgl_ncbi_table.h kgl_ncbi_table.cc kgl_amino_sequence.h kgl_amino_sequence.cc kgl_variant_evidence.h kgl_variant_evidence.cc)
+                kgl_minority_env.h kgl_minority_app.cc kgl_nucleotide.cc kgl_amino.h kgl_table.h kgl_table.cc kgl_variant_evidence.h kgl_variant_evidence.cc kgl_sam_parse.h kgl_sam_parse.cc kgl_sam_read.h kgl_sam_consume.h kgl_sam_process.h kgl_table_ncbi.h kgl_table_ncbi.cc kgl_sequence_base.h kgl_sequence_base.cc kgl_sequence_amino.h kgl_sequence_amino.cc kgl_sequence_mutant.h kgl_sequence_mutant.cc)
 target_link_libraries(kgl_genome ${Boost_LIBRARIES})

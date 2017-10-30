@@ -1,9 +1,10 @@
 //
-// Created by kellerberrin on 20/09/17.
+// Created by kellerberrin on 31/10/17.
 //
 
-#ifndef KGL_PARSE_SAM_H
-#define KGL_PARSE_SAM_H
+#ifndef KGL_SAM_PARSE_H
+#define KGL_SAM_PARSE_H
+
 
 #include <string>
 #include <vector>
@@ -37,8 +38,8 @@ public:
 
   }
   inline const CharSequence_t getSubSequence( std::unique_ptr<const std::string>& record_ptr
-      , std::size_t start
-      , std::size_t length) {
+  , std::size_t start
+  , std::size_t length) {
 
     return record_ptr->substr(sam_fields_[SEQUENCE_OFFSET].first + start, length);
 
@@ -87,8 +88,8 @@ private:
 
   bool parseSAMFields(std::unique_ptr<const std::string>& record_ptr, bool parse_opt_fields); // False if unmapped read
   bool fastDecodeSAMCigar( std::unique_ptr<const std::string>& record_ptr // False if unexpected cigar format
-      , const std::pair<std::size_t
-      , std::size_t>& cigar_offset);
+  , const std::pair<std::size_t
+  , std::size_t>& cigar_offset);
 
 };
 
@@ -97,4 +98,4 @@ private:
 }   // namespace kellerberrin
 
 
-#endif //KGL_PARSE_SAM_H
+#endif //KGL_SAM_PARSE_H

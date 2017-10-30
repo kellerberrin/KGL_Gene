@@ -1,14 +1,15 @@
 //
-// Created by kellerberrin on 18/09/17.
+// Created by kellerberrin on 31/10/17.
 //
 
-#ifndef KGL_PROCESS_SAM_H
-#define KGL_PROCESS_SAM_H
+#ifndef KGL_SAM_PROCESS_H
+#define KGL_SAM_PROCESS_H
+
 
 #include <memory>
 #include "kgl_logging.h"
-#include "kgl_read_sam.h"
-#include "kgl_consume_sam.h"
+#include "kgl_sam_read.h"
+#include "kgl_sam_consume.h"
 #include "kgl_genome_db.h"
 
 namespace kellerberrin {   //  organization level namespace
@@ -56,4 +57,5 @@ private:
 }   // namespace genome
 }   // namespace kellerberrin
 
-#endif //KGL_PROCESS_SAM_H
+
+#endif //KGL_SAM_PROCESS_H

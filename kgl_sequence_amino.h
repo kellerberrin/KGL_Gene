@@ -1,13 +1,13 @@
 //
-// Created by kellerberrin on 29/10/17.
+// Created by kellerberrin on 31/10/17.
 //
 
-#ifndef KGL_AMINO_SEQUENCE_H
-#define KGL_AMINO_SEQUENCE_H
+#ifndef KGL_SEQUENCE_AMINO_H
+#define KGL_SEQUENCE_AMINO_H
 
 
 #include <string>
-#include "kgl_base_sequence.h"
+#include "kgl_sequence_base.h"
 #include "kgl_table.h"
 
 
@@ -99,4 +99,4 @@ private:
 }   // namespace kellerberrin
 
 
-#endif //READSAMFILE_KGL_AMINO_SEQUENCE_H
+#endif //KGL_SEQUENCE_AMINO_H

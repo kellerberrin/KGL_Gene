@@ -6,7 +6,7 @@
 #include "kgl_minority_env.h"
 #include "kgl_genome_db.h"
 #include "kgl_gff_fasta.h"
-#include "kgl_process_sam.h"
+#include "kgl_sam_process.h"
 #include "kgl_variant_evidence.h"
 #include "kgl_filter.h"
 

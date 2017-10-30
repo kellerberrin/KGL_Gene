@@ -6,7 +6,7 @@
 #define KGL_TABLE_H
 
 
-#include "kgl_ncbi_table.h"
+#include "kgl_table_ncbi.h"
 
 
 namespace kellerberrin {   //  organization level namespace

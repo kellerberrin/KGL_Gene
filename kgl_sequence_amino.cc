@@ -1,9 +1,9 @@
 //
-// Created by kellerberrin on 29/10/17.
+// Created by kellerberrin on 31/10/17.
 //
 
 
-#include "kgl_amino_sequence.h"
+#include "kgl_sequence_amino.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -44,7 +44,7 @@ size_t kgl::CodingSequenceDNA5::checkNonsenseMutation(std::shared_ptr<DNA5Sequen
 
 
 kgl::AminoAcidTypes::Codon kgl::CodingSequenceDNA5::getCodon(std::shared_ptr<DNA5Sequence> sequence_ptr,
-                                                        size_t index) const {
+                                                             size_t index) const {
 
   if (index >= codonLength(sequence_ptr)) {
 
@@ -59,3 +59,4 @@ kgl::AminoAcidTypes::Codon kgl::CodingSequenceDNA5::getCodon(std::shared_ptr<DNA
   return codon;
 
 }
+

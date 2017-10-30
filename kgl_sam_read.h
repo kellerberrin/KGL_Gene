@@ -1,16 +1,17 @@
 //
-// Created by kellerberrin on 8/09/17.
+// Created by kellerberrin on 31/10/17.
 //
 
-#ifndef KGL_READ_SAM_H
-#define KGL_READ_SAM_H
+#ifndef KGL_SAM_READ_H
+#define KGL_SAM_READ_H
+
 
 #include <string>
 #include <thread>
 #include <fstream>
 #include "kgl_logging.h"
 #include "kgl_mt_queue.h"
-#include "kgl_consume_sam.h"
+#include "kgl_sam_consume.h"
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
@@ -21,7 +22,7 @@ class ProduceMTSAM {
 public:
 
   explicit ProduceMTSAM(Logger& logger, std::shared_ptr<SAMConsumerMT>& consumer_ptr)
-      : log(logger), producer_consumer_queue_(HIGH_TIDE_, LOW_TIDE_) {
+  : log(logger), producer_consumer_queue_(HIGH_TIDE_, LOW_TIDE_) {
 
     consumer_ptr_ = consumer_ptr;
 
@@ -167,4 +168,5 @@ void ProduceMTSAM<SAMConsumerMT>::samConsumer() {
 }   // namespace genome
 }   // namespace kellerberrin
 
-#endif // KGL_READ_SAM_H
+
+#endif //KGL_SAM_READ_H

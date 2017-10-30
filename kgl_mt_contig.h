@@ -26,7 +26,9 @@ public:
 
   LocalContigMT( const ContigSize_t contig_size):  contig_size_(contig_size), lock_strategy_(contig_size) {
 
-    data_ptr_.reset(new (std::nothrow) NucleotideReadCount_t[contig_size * NucleotideColumn::NUCLEOTIDE_COLUMNS]);
+    auto read_block = new (std::nothrow) NucleotideReadCount_t[(contig_size * NucleotideColumn::NUCLEOTIDE_COLUMNS)];
+
+    data_ptr_.reset(read_block);
 
     if (data_ptr_.get() == nullptr) {
 

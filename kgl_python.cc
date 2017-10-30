@@ -10,7 +10,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 #include "kgl_exec_env.h"
-#include "kgl_read_sam.h"
+#include "kgl_sam_read.h"
 
 
 

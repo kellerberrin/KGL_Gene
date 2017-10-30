@@ -1,8 +1,9 @@
 //
-// Created by kellerberrin on 29/10/17.
+// Created by kellerberrin on 31/10/17.
 //
 
-#include "kgl_base_sequence.h"
+
+#include "kgl_sequence_base.h"
 
 namespace kgl = kellerberrin::genome;
 

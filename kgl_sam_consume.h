@@ -1,16 +1,17 @@
 //
-// Created by kellerberrin on 18/09/17.
+// Created by kellerberrin on 31/10/17.
 //
 
-#ifndef KGL_CONSUME_SAM_H
-#define KGL_CONSUME_SAM_H
+#ifndef KGL_SAM_CONSUME_H
+#define KGL_SAM_CONSUME_H
+
 
 #include <string>
 #include <vector>
 #include <queue>
 #include "kgl_logging.h"
 #include "kgl_mt_data.h"
-#include "kgl_parse_sam.h"
+#include "kgl_sam_parse.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -63,7 +64,7 @@ void ConsumeMTSAM<ConsumerRecordType>::finalize() {
   size_t ignored = other_contig_;
 
   log.info("Processed SAM file; unmapped: {}, deleted: {}, inserted: {}, ignored: {}"
-      , unmapped, deleted, inserted, ignored);
+  , unmapped, deleted, inserted, ignored);
 
   if (read_quality_ > NUCLEOTIDE_QUALITY_ASCII) {
 
@@ -133,7 +134,7 @@ void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string
 
           if (location + cigar_offset >= contig_size) {
             log.error("Sam record error - Contig: {} sequence size: {} exceeded at position: {} Cigar Offset: {}; SAM record: {}"
-                , contig_id, contig_size, location, cigar_offset, *record_ptr);
+            , contig_id, contig_size, location, cigar_offset, *record_ptr);
             return;
           }
           if (read_quality_ > NUCLEOTIDE_QUALITY_ASCII) {
@@ -221,4 +222,6 @@ void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string
 }   // namespace genome
 }   // namespace kellerberrin
 
-#endif //KGL_CONSUME_SAM_H
+
+
+#endif //KGL_SAM_CONSUME_H

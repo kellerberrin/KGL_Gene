@@ -1,10 +1,9 @@
 //
-// Created by kellerberrin on 29/10/17.
+// Created by kellerberrin on 31/10/17.
 //
 
-#ifndef KGL_NCBI_TABLE_H
-#define KGL_NCBI_TABLE_H
-
+#ifndef KGL_TABLE_NCBI_H
+#define KGL_TABLE_NCBI_H
 
 
 #include "kgl_nucleotide.h"
@@ -469,5 +468,4 @@ public:
 }   // namespace kellerberrin
 
 
-
-#endif //KGL_NCBI_TABLE_H
+#endif //KGL_TABLE_NCBI_H

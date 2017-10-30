@@ -1,9 +1,9 @@
 //
-// Created by kellerberrin on 29/10/17.
+// Created by kellerberrin on 31/10/17.
 //
 
 
-#include "kgl_ncbi_table.h"
+#include "kgl_table_ncbi.h"
 
 namespace kgl = kellerberrin::genome;
 
