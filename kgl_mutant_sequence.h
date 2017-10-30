@@ -20,19 +20,16 @@ class MutantSequence   {
 
 public:
 
-  explicit MutantSequence(std::shared_ptr<DNA5Sequence> sequence_ptr) : sequence_ptr_(sequence_ptr) {};
-  MutantSequence() = delete;
-  virtual ~MutantSequence() = default;
+  MutantSequence() = default;
+  ~MutantSequence() = default;
 
 
   std::shared_ptr<DNA5Sequence> mutantSequence(std::shared_ptr<const DNA5Sequence> sequence_ptr,
                                                   const OffsetVariantMap& variant_map,
                                                   const SortedCDS& sorted_cds);
 
-
 private:
 
-  std::shared_ptr<DNA5Sequence> sequence_ptr_;
 
 };
 

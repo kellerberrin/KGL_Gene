@@ -10,6 +10,7 @@
 #include <vector>
 #include <sstream>
 #include "kgl_genome_types.h"
+#include "kgl_amino.h"
 #include "kgl_genome_db.h"
 
 
@@ -28,6 +29,10 @@ namespace genome {   // project level namespace
 
 class Variant; // Forward decl.
 class ReadCountVariant; // Forward decl.
+class SNPVariantDNA5; // Forward decl.
+class CompoundVariant; // Forward decl.
+class CodonDelete; // Forward decl.
+
 class VariantFilter {
 
 public:
@@ -37,6 +42,8 @@ public:
 
   virtual bool applyFilter(const Variant& variant) const = 0;
   virtual bool applyFilter(const ReadCountVariant& variant) const = 0;
+  virtual bool applyFilter(const SNPVariantDNA5& variant) const = 0;
+  virtual bool applyFilter(const CodonDelete& variant) const = 0;
 
   virtual std::string filterName() const = 0;
 
@@ -50,37 +57,36 @@ private:
 //  Genome information of the variant.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum class VariantGenomeType { UNKNOWN, CDS_CODING, INTRON, NON_CODING };
+enum class VariantSequenceType { UNKNOWN, CDS_CODING, INTRON, NON_CODING };
 
-class VariantGenome {
+class VariantSequence {
 
 public:
 
-  VariantGenome(std::shared_ptr<const ContigFeatures> contig_ptr,
+  VariantSequence(std::shared_ptr<const ContigFeatures> contig_ptr,
                 ContigOffset_t contig_offset) : contig_ptr_(contig_ptr),
                                                 contig_offset_(contig_offset),
-                                                variant_genome_type_(VariantGenomeType::UNKNOWN) {}
-  virtual ~VariantGenome() = default;
+                                                variant_genome_type_(VariantSequenceType::UNKNOWN) {}
+  virtual ~VariantSequence() = default;
 
-  VariantGenomeType type() const { return genomeType(); }
-  std::string typestr() const; // variant type text.
   std::string genomeOutput() const;  // Genome information text.
 
   std::shared_ptr<const ContigFeatures> contig() const { return contig_ptr_; }
   ContigOffset_t offset() const { return contig_offset_; }
 
-  VariantGenomeType genomeType(); // Lazy evaluation of gene membership and variant type.
-  VariantGenomeType genomeType() const { return const_cast<VariantGenome*>(this)->genomeType(); };
-
+  VariantSequenceType type() const { return genomeType(); };
+  std::string typestr() const;
   const GeneVector& geneMembership() const { genomeType(); return gene_membership_; }
 
 private:
 
-  std::shared_ptr<const ContigFeatures> contig_ptr_;
-  ContigOffset_t contig_offset_;
-  VariantGenomeType variant_genome_type_;
-  GeneVector gene_membership_;
+  std::shared_ptr<const ContigFeatures> contig_ptr_;    // The contig.
+  ContigOffset_t contig_offset_;                        // Location on the contig.
+  VariantSequenceType variant_genome_type_;             // Non-coding, intron or coding.
+  GeneVector gene_membership_;                          // Membership includes intron variants.
 
+  VariantSequenceType genomeType(); // Lazy evaluation of gene membership and variant type.
+  VariantSequenceType genomeType() const { return const_cast<VariantSequence*>(this)->genomeType(); }
 
 };
 
@@ -90,13 +96,13 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class Variant : public VariantGenome {
+class Variant : public VariantSequence {
 
 public:
 
 
   Variant(const std::shared_ptr<const ContigFeatures> contig_ptr,
-          ContigOffset_t contig_offset) : VariantGenome(contig_ptr, contig_offset) {}
+          ContigOffset_t contig_offset) : VariantSequence(contig_ptr, contig_offset) {}
   Variant(const Variant& variant) = default;
   ~Variant() override = default;
   bool filterVariant(const VariantFilter& filter) const { return applyFilter(filter); }
@@ -115,6 +121,60 @@ private:
 
 };
 
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  A compound variant. A collection of feature aligned and contiguous variants. Insertions and Deletions.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+using CompoundVariantMap = std::map<ContigOffset_t, std::shared_ptr<const Variant>>;
+class CompoundVariant : public Variant {
+
+public:
+
+  CompoundVariant(std::shared_ptr<const ContigFeatures> contig_ptr,
+                  ContigOffset_t contig_offset,
+                  const CompoundVariantMap& variant_map) : Variant(contig_ptr, contig_offset),
+                                                           variant_map_(variant_map) {}
+  ~CompoundVariant() override = default;
+
+  bool equivalent(const Variant& cmp_var) const override;
+
+private:
+
+  const CompoundVariantMap variant_map_;
+
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  A compound delete. 3 contiguous SNP deletions aligned on a Gene codon boundary delete a single Amino Acid
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class CodonDelete : public CompoundVariant {
+
+public:
+
+  CodonDelete(std::shared_ptr<const ContigFeatures> contig_ptr,
+              ContigOffset_t contig_offset,
+              const CompoundVariantMap variant_map,
+              ContigOffset_t deleted_codon,
+              AminoAcidTypes::AminoType deleted_amino) : CompoundVariant(contig_ptr, contig_offset, variant_map),
+                                                         deleted_codon_(deleted_codon),
+                                                         deleted_amino_(deleted_amino) {}
+  ~CodonDelete() override = default;
+
+
+private:
+
+  ContigOffset_t deleted_codon_;
+  AminoAcidTypes::AminoType deleted_amino_;
+
+  bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
+
+
+};
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -158,7 +218,6 @@ private:
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
 
-
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -197,6 +256,7 @@ private:
   typename NucleotideColumn_DNA5::NucleotideType reference_;
   typename NucleotideColumn_DNA5::NucleotideType mutant_;
 
+  bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
 
 };
 
@@ -228,6 +288,8 @@ public:
   std::shared_ptr<ContigVariant> Difference(std::shared_ptr<const ContigVariant> contig_variant_ptr) const;
 
   std::shared_ptr<ContigVariant> filterVariants(const VariantFilter& filter) const;
+
+  const OffsetVariantMap& getMap() const { return offset_variant_map_; }
 
   friend std::ostream& operator<<(std::ostream &os, const ContigVariant& contig_variant);
 
@@ -264,6 +326,8 @@ public:
 
   bool addContigVariant(std::shared_ptr<ContigVariant>& contig_variant);
   std::shared_ptr<GenomeVariant> filterVariants(const VariantFilter& filter) const;
+
+  const GenomeVariantMap& contigMap() const { return genome_variant_map_; }
 
   bool isElement(const Variant& variant) const;
   std::shared_ptr<GenomeVariant> Union(std::shared_ptr<const GenomeVariant> genome_variant_ptr) const;

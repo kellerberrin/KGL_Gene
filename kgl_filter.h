@@ -25,6 +25,9 @@ public:
 
   bool applyFilter(const Variant& variant) const override { return true; }  // default
   bool applyFilter(const ReadCountVariant& variant) const override { return variant.readCount() >= read_count_; }
+  bool applyFilter(const SNPVariantDNA5& variant) const override { return variant.readCount() >= read_count_; }
+  bool applyFilter(const CodonDelete& variant) const override { return true; }  // default
+
   std::string filterName() const final;
 
 private:
@@ -46,6 +49,9 @@ public:
 
   bool applyFilter(const Variant& variant) const override { return true; }  // default
   bool applyFilter(const ReadCountVariant& variant) const override { return variant.proportion() >= mutant_proportion_; }
+  bool applyFilter(const SNPVariantDNA5& variant) const override { return variant.proportion() >= mutant_proportion_; }
+  bool applyFilter(const CodonDelete& variant) const override { return true; }  // default
+
   std::string filterName() const final;
 
 private:
@@ -69,6 +75,8 @@ public:
 
   bool applyFilter(const Variant& variant) const override { return implementFilter(variant); } // redirect
   bool applyFilter(const ReadCountVariant& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const SNPVariantDNA5& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const CodonDelete& variant) const override { return implementFilter(variant); }
 
 private:
 
@@ -95,6 +103,8 @@ public:
 
   bool applyFilter(const Variant& variant) const override { return implementFilter(variant); } // redirect
   bool applyFilter(const ReadCountVariant& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const SNPVariantDNA5& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const CodonDelete& variant) const override { return implementFilter(variant); }
 
 private:
 
@@ -122,6 +132,8 @@ public:
 
   bool applyFilter(const Variant& variant) const override { return implementFilter(variant); } // redirect
   bool applyFilter(const ReadCountVariant& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const SNPVariantDNA5& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const CodonDelete& variant) const override { return implementFilter(variant); }
 
 private:
 
@@ -133,6 +145,117 @@ private:
 };
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter deletion SNPs
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class DeleteSNPFilter : public VariantFilter {
+
+public:
+
+  DeleteSNPFilter() = default;
+  ~DeleteSNPFilter() override = default;
+
+  bool applyFilter(const Variant& variant) const override { return true; }  // default
+  bool applyFilter(const ReadCountVariant& variant) const override { return true; }  // default
+  bool applyFilter(const SNPVariantDNA5& variant) const override {
+
+    return variant.mutant() == NucleotideColumn_DNA5::DELETE_NUCLEOTIDE;
+
+  }
+  bool applyFilter(const CodonDelete& variant) const override { return true; }
+
+
+  std::string filterName() const final { return "Delete nucleotide base '-' SNPs only"; }
+
+private:
+
+
+};
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter insert SNPs
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class InsertSNPFilter : public VariantFilter {
+
+public:
+
+  InsertSNPFilter() = default;
+  ~InsertSNPFilter() override = default;
+
+  bool applyFilter(const Variant& variant) const override { return true; }  // default
+  bool applyFilter(const ReadCountVariant& variant) const override { return true; }  // default
+  bool applyFilter(const SNPVariantDNA5& variant) const override {
+
+    return variant.mutant() == NucleotideColumn_DNA5::INSERT_SEQUENCE;
+
+  }
+  bool applyFilter(const CodonDelete& variant) const override { return true; }
+
+  std::string filterName() const final { return "Insert nucleotide bases '+' SNPs only"; }
+
+private:
+
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter mutant SNPs
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class MutantSNPFilter : public VariantFilter {
+
+public:
+
+  MutantSNPFilter() = default;
+  ~MutantSNPFilter() override = default;
+
+  bool applyFilter(const Variant& variant) const override { return true; }  // default
+  bool applyFilter(const ReadCountVariant& variant) const override { return true; }  // default
+  bool applyFilter(const SNPVariantDNA5& variant) const override {
+
+    return variant.mutant() != NucleotideColumn_DNA5::INSERT_SEQUENCE
+    and variant.mutant() != NucleotideColumn_DNA5::DELETE_NUCLEOTIDE;
+
+  }
+  bool applyFilter(const CodonDelete& variant) const override { return true; }
+
+  std::string filterName() const final { return "Mutation SNPs (no insert '+' or delete '-' SNPS)"; }
+
+private:
+
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Negation Filter
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template<class T, typename... Args>
+class NotFilter : public VariantFilter {
+
+public:
+
+  explicit NotFilter(Args... args) : filter_ptr_(std::make_unique<T>(args...)) {}
+  ~NotFilter() override = default;
+
+  bool applyFilter(const Variant& variant) const override { return not filter_ptr_->applyFilter(variant); }
+  bool applyFilter(const ReadCountVariant& variant) const override { return not filter_ptr_->applyFilter(variant); }
+  bool applyFilter(const SNPVariantDNA5& variant) const override { return not filter_ptr_->applyFilter(variant); }
+  bool applyFilter(const CodonDelete& variant) const override { return not filter_ptr_->applyFilter(variant); }
+
+  std::string filterName() const final { return "NOT (" + filter_ptr_->filterName() + ")"; }
+
+private:
+
+  std::unique_ptr<const T> filter_ptr_;
+
+};
 
 
 

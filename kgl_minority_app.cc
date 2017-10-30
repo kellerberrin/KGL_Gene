@@ -27,15 +27,22 @@ std::shared_ptr<kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
                                                                                               read_quality);
   // Generate SNP variants.
   std::shared_ptr<kgl::GenomeVariant> variant_ptr = kgl::VariantAnalysis().SNPVariants(count_data_ptr, genome_db_ptr);
+
+  // Generate contiguous deletion variants.
+  std::shared_ptr<kgl::GenomeVariant> codon_deletes = kgl::VariantAnalysis().codonDelete(variant_ptr,
+                                                                                         count_data_ptr,
+                                                                                         genome_db_ptr);
   // Filter for read count.
   variant_ptr = variant_ptr->filterVariants(kgl::ReadCountFilter(min_count));
   // Filter for read proportion.
   variant_ptr = variant_ptr->filterVariants(kgl::MutantProportionFilter(min_proportion));
   // Filter for CDS membership.
   variant_ptr = variant_ptr->filterVariants(kgl::InCDSFilter(genome_db_ptr));
+  // Exclude insert SNP.
+  variant_ptr = variant_ptr->filterVariants(kgl::DeleteSNPFilter());
   std::cout << *variant_ptr;
   // Filter for Gene membership.
-  variant_ptr = variant_ptr->filterVariants(kgl::GeneFilter("PF3D7_1211900",genome_db_ptr));
+//  variant_ptr = variant_ptr->filterVariants(kgl::GeneFilter("PF3D7_1211900",genome_db_ptr));
   // Convert to coding sequence variants.
 
   return variant_ptr;

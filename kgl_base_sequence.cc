@@ -9,7 +9,8 @@ namespace kgl = kellerberrin::genome;
 
 std::shared_ptr<kgl::DNA5Sequence>
 kgl::DNA5Sequence::codingSequence(std::shared_ptr<const DNA5Sequence> base_sequence_ptr,
-                                  const SortedCDS& sorted_cds) {
+                                  const SortedCDS& sorted_cds,
+                                  ContigOffset_t contig_offset) {
 
   // If no cds then return null string.
   if (sorted_cds.empty()) {
@@ -20,11 +21,12 @@ kgl::DNA5Sequence::codingSequence(std::shared_ptr<const DNA5Sequence> base_seque
   }
 
   // Check bounds.
-  if (sorted_cds.rbegin()->second->sequence().end() >= base_sequence_ptr->length()) {
+  if (sorted_cds.rbegin()->second->sequence().end() >= contig_offset + base_sequence_ptr->length()) {
 
-    ExecEnv::log().error("codingSequence(), CDS end offset: {} >= target sequence size: {}",
+    ExecEnv::log().error("codingSequence(), CDS end offset: {} >= (target sequence size: {} + offset : {})",
                          sorted_cds.rbegin()->second->sequence().end(),
-                         base_sequence_ptr->length());
+                         base_sequence_ptr->length(),
+                         contig_offset);
     SequenceString null_seq;
     return std::shared_ptr<DNA5Sequence>(std::make_shared<DNA5Sequence>(DNA5Sequence(null_seq)));
 
@@ -55,8 +57,8 @@ kgl::DNA5Sequence::codingSequence(std::shared_ptr<const DNA5Sequence> base_seque
       typename SequenceString::const_iterator end;
       for (auto cds : sorted_cds) {
 
-        begin = base_sequence_ptr->base_sequence_.begin() + cds.second->sequence().begin();
-        end = base_sequence_ptr->base_sequence_.begin() + cds.second->sequence().end();
+        begin = base_sequence_ptr->base_sequence_.begin() + (cds.second->sequence().begin() - contig_offset);
+        end = base_sequence_ptr->base_sequence_.begin() + (cds.second->sequence().end() - contig_offset);
         std::copy( begin, end, std::back_inserter(coding_sequence));
 
       }
@@ -74,9 +76,9 @@ kgl::DNA5Sequence::codingSequence(std::shared_ptr<const DNA5Sequence> base_seque
       for (auto rit = sorted_cds.rbegin(); rit != sorted_cds.rend(); ++rit) {
 
         rbegin = base_sequence_ptr->base_sequence_.rbegin()
-                 + (base_sequence_ptr->length() - rit->second->sequence().end());
+                 + (base_sequence_ptr->length() - (rit->second->sequence().end() - contig_offset));
         rend = base_sequence_ptr->base_sequence_.rbegin()
-               + (base_sequence_ptr->length() - rit->second->sequence().begin());
+               + (base_sequence_ptr->length() - (rit->second->sequence().begin() - contig_offset));
         std::transform( rbegin, rend, std::back_inserter(coding_sequence), complement_base);
 
       }

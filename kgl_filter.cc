@@ -40,7 +40,7 @@ std::string kgl::MutantProportionFilter::filterName() const {
 
 bool kgl::InCDSFilter::implementFilter(const Variant& variant) const {
 
-  return variant.type() == VariantGenomeType::CDS_CODING;
+  return variant.type() == VariantSequenceType::CDS_CODING;
 
 }
 
@@ -74,7 +74,7 @@ std::string kgl::ContigFilter::filterName() const {
 bool kgl::GeneFilter::implementFilter(const Variant& variant) const {
 
   GeneVector gene_ptr_vec;
-  if (variant.type() != VariantGenomeType::NON_CODING) {
+  if (variant.type() != VariantSequenceType::NON_CODING) {
 
     for (const auto& gene_ptr : variant.geneMembership()) {
 

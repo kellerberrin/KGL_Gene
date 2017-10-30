@@ -129,6 +129,7 @@ public:
   bool getSortedCDS(SortedCDSVector& sorted_cds_vec) const; // Recursively descend the sub-features.
   std::shared_ptr<Feature> getGene() const; // returns null pointer if not found
   void recusivelyPrintsubfeatures(long feature_level = 1) const; // useful debug function.
+  void printCDSvector(const SortedCDSVector& sorted_cds_vec) const; // useful debug function
   // Hierarchy routines.
   void clearHierachy() { sub_features_.clear(); super_features_.clear(); }
   void addSuperFeature(const FeatureIdent_t &super_feature_id, const std::shared_ptr<Feature> &super_feature_ptr);

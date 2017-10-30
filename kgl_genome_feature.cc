@@ -154,6 +154,31 @@ void kgl::Feature::recusivelyPrintsubfeatures(long feature_level) const {
 
 }
 
+void kgl::Feature::printCDSvector(const SortedCDSVector& sorted_cds_vec) const {
+
+  long vector_count = 0;
+
+  for (const auto& sorted_cds : sorted_cds_vec) {
+
+    ++vector_count;
+
+    ExecEnv::log().info("++++++++++++++ CDS Vector : {} ********************", vector_count);
+
+    for (const auto& cds : sorted_cds) {
+
+      ExecEnv::log().info("CDS: {}, Type: {}, begin: {}, end: {} strand: {}",
+                          cds.second->id(),
+                          cds.second->featureType(),
+                          cds.second->sequence().begin(),
+                          cds.second->sequence().end(),
+                          static_cast<char>(cds.second->sequence().strand()));
+
+    }
+
+  }
+
+}
+
 
 bool kgl::Feature::verifyCDSPhase(const SortedCDSVector& parent_sorted_vec) {
 

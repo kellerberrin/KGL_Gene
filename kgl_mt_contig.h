@@ -94,7 +94,7 @@ public:
     if (column >= NucleotideColumn::NUCLEOTIDE_COLUMNS) {
 
       ContigOffset_t nucleotide_columns = NucleotideColumn::NUCLEOTIDE_COLUMNS;
-      ExecEnv::log().critical("incrementCount() invalid access; Nucleotide column index: {} >= Number Nucleotides: {}",
+      ExecEnv::log().critical("readCount() invalid access; Nucleotide column index: {} >= Number Nucleotides: {}",
                               column, nucleotide_columns);
 
     }

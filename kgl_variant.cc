@@ -16,17 +16,17 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-std::string kgl::VariantGenome::typestr() const {
+std::string kgl::VariantSequence::typestr() const {
 
   switch(genomeType()) {
 
-    case VariantGenomeType::UNKNOWN: return "UNKNOWN";
+    case VariantSequenceType::UNKNOWN: return "UNKNOWN";
 
-    case VariantGenomeType::CDS_CODING : return "CDS Coding";
+    case VariantSequenceType::CDS_CODING : return "CDS Coding";
 
-    case VariantGenomeType::INTRON : return "INTRON";
+    case VariantSequenceType::INTRON : return "INTRON";
 
-    case VariantGenomeType::NON_CODING : return "NON Coding";
+    case VariantSequenceType::NON_CODING : return "NON Coding";
 
   }
 
@@ -35,7 +35,7 @@ std::string kgl::VariantGenome::typestr() const {
 }
 
 
-std::string kgl::VariantGenome::genomeOutput() const {
+std::string kgl::VariantSequence::genomeOutput() const {
 
   std:: stringstream ss;
 // Contig.
@@ -43,7 +43,7 @@ std::string kgl::VariantGenome::genomeOutput() const {
   ss << contig()->contigId();
   ss << " " << typestr() << " ";
 
-  if (genomeType() != VariantGenomeType::NON_CODING) {
+  if (type() != VariantSequenceType::NON_CODING) {
 
     ss << "Gene(s):";
 
@@ -58,33 +58,56 @@ std::string kgl::VariantGenome::genomeOutput() const {
 
 }
 
-kgl::VariantGenomeType kgl::VariantGenome::genomeType() {
+kgl::VariantSequenceType kgl::VariantSequence::genomeType() {
 
-  if (variant_genome_type_ == VariantGenomeType::UNKNOWN) {
+  if (variant_genome_type_ == VariantSequenceType::UNKNOWN) {
 
     if (contig_ptr_->findGenes(contig_offset_, gene_membership_)) {
 
       CDSArray cds_array;
       if(contig_ptr_->findOffsetCDS(contig_offset_, cds_array)) {
 
-        variant_genome_type_ = VariantGenomeType::CDS_CODING;
+        variant_genome_type_ = VariantSequenceType::CDS_CODING;
 
       }
       else {
 
-        variant_genome_type_ = VariantGenomeType::INTRON;
+        variant_genome_type_ = VariantSequenceType::INTRON;
 
       }
 
     } else {
 
-      variant_genome_type_ = VariantGenomeType::NON_CODING;
+      variant_genome_type_ = VariantSequenceType::NON_CODING;
 
     }
 
   }
 
   return variant_genome_type_;
+
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// A compound variant. A collection of feature aligned and contiguous variants. Insertions and Deletions.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bool kgl::CompoundVariant::equivalent(const Variant& cmp_var) const {
+
+  auto compound_var = dynamic_cast<const CompoundVariant*>(&cmp_var);
+
+  if (compound_var == nullptr) return false;
+
+  for (auto variant : variant_map_) {
+
+    if (not ((*variant.second) == (*this))) return false;
+
+  }
+
+  return contigId() == compound_var->contigId() and contigOffset() == compound_var->contigOffset();
 
 }
 

@@ -379,6 +379,7 @@ bool kgl::ContigFeatures::verifyCodingSequences(const SortedCDSVector& sorted_cd
                           coding_sequence_.firstCodon(coding_sequence_ptr).bases[1],
                           coding_sequence_.firstCodon(coding_sequence_ptr).bases[2]);
 //      gene_ptr->recusivelyPrintsubfeatures();
+//      gene_ptr->printCDSvector(sorted_cds_vec);
       result = false;
     }
     if (not coding_sequence_.checkStopCodon(coding_sequence_ptr)) {
@@ -393,6 +394,7 @@ bool kgl::ContigFeatures::verifyCodingSequences(const SortedCDSVector& sorted_cd
                           coding_sequence_.lastCodon(coding_sequence_ptr).bases[1],
                           coding_sequence_.lastCodon(coding_sequence_ptr).bases[2]);
 //      gene_ptr->recusivelyPrintsubfeatures();
+//      gene_ptr->printCDSvector(sorted_cds_vec);
       result = false;
     }
     size_t nonsense_index = coding_sequence_.checkNonsenseMutation(coding_sequence_ptr);
@@ -408,6 +410,7 @@ bool kgl::ContigFeatures::verifyCodingSequences(const SortedCDSVector& sorted_cd
                           coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[1],
                           coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[2]);
 //      gene_ptr->recusivelyPrintsubfeatures();
+//      gene_ptr->printCDSvector(sorted_cds_vec);
       result = false;
     }
 

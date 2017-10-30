@@ -25,7 +25,9 @@ public:
   std::shared_ptr<GenomeVariant> SNPVariants(std::shared_ptr<ContigCountData>& count_data,
                                              std::shared_ptr<GenomeDatabase>& genome_db);
 
-
+  std::shared_ptr<GenomeVariant> codonDelete(std::shared_ptr<GenomeVariant> delete_SNPs,
+                                             std::shared_ptr<ContigCountData>& count_data,
+                                             std::shared_ptr<GenomeDatabase>& genome_db);
 private:
 
 
