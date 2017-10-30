@@ -4,9 +4,9 @@
 //
 
 #include <algorithm>
-#include "kgl_variant.h"
 #include "kgl_exec_env.h"
 #include "kgl_patterns.h"
+#include "kgl_variant_db.h"
 
 
 namespace kgl = kellerberrin::genome;

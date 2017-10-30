@@ -7,7 +7,7 @@
 
 
 #include "kgl_sequence_base.h"
-#include "kgl_variant.h"
+#include "kgl_variant_db.h"
 
 
 namespace kellerberrin {   //  organization level namespace

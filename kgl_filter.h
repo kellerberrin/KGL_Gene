@@ -5,7 +5,8 @@
 #ifndef KGL_FILTER_H
 #define KGL_FILTER_H
 
-#include "kgl_variant.h"
+#include "kgl_variant_snp.h"
+#include "kgl_variant_compound.h"
 #include "kgl_genome_db.h"
 
 namespace kellerberrin {   //  organization level namespace

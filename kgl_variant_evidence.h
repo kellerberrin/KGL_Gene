@@ -6,7 +6,7 @@
 #define KGL_VARIANT_EVIDENCE_H
 
 
-#include "kgl_variant.h"
+#include "kgl_variant_db.h"
 #include "kgl_genome_db.h"
 
 

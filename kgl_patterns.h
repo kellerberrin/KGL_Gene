@@ -28,6 +28,8 @@
 #ifndef KGL_PATTERNS_H
 #define KGL_PATTERNS_H
 
+#include <map>
+
 // Generic code patterns for the project.
 
 namespace kellerberrin {   //  organization level namespace
