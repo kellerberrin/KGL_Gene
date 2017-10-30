@@ -6,7 +6,7 @@
 #include "kgl_patterns.h"
 #include "kgl_genome_feature.h"
 #include "kgl_genome_db.h"
-#include "kgl_amino.h"
+#include "kgl_alphabet_amino.h"
 
 namespace kgl = kellerberrin::genome;
 

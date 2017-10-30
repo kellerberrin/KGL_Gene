@@ -10,7 +10,7 @@
 #include <vector>
 #include "kgl_lock.h"
 #include "kgl_genome_types.h"
-#include "kgl_nucleotide.h"
+#include "kgl_alphabet_base.h"
 #include "kgl_exec_env.h"
 
 

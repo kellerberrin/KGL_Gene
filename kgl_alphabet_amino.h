@@ -1,12 +1,13 @@
 //
-// Created by kellerberrin on 18/10/17.
+// Created by kellerberrin on 31/10/17.
 //
 
-#ifndef KGL_AMINO_H
-#define KGL_AMINO_H
+#ifndef KGL_ALPHABET_AMINO_H
+#define KGL_ALPHABET_AMINO_H
+
 
 #include "kgl_exec_env.h"
-#include "kgl_nucleotide.h"
+#include "kgl_alphabet_base.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -75,5 +76,4 @@ public:
 }   // namespace kellerberrin
 
 
-
-#endif //KGL_AMINO_H
+#endif //KGL_ALPHABET_AMINO_H

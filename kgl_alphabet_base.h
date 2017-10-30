@@ -1,9 +1,10 @@
 //
-// Created by kellerberrin on 20/09/17.
+// Created by kellerberrin on 31/10/17.
 //
 
-#ifndef KGL_NUCLEOTIDE_H
-#define KGL_NUCLEOTIDE_H
+#ifndef KGL_ALPHABET_BASE_H
+#define KGL_ALPHABET_BASE_H
+
 
 #include <cstdint>
 #include <memory>
@@ -127,35 +128,35 @@ public:
   // Find complementary bases.
   static Nucleotide_DNA5_t complementNucleotide(const Nucleotide_DNA5_t nucleotide) {
 
-      // Translate the nucleotide to an array column
-      switch (nucleotide) {
+    // Translate the nucleotide to an array column
+    switch (nucleotide) {
 
-        case A_NUCLEOTIDE:
-        case A_NUCLEOTIDE_LC:
-          return T_NUCLEOTIDE;
+      case A_NUCLEOTIDE:
+      case A_NUCLEOTIDE_LC:
+        return T_NUCLEOTIDE;
 
-        case C_NUCLEOTIDE:
-        case C_NUCLEOTIDE_LC:
-          return G_NUCLEOTIDE;
+      case C_NUCLEOTIDE:
+      case C_NUCLEOTIDE_LC:
+        return G_NUCLEOTIDE;
 
-        case G_NUCLEOTIDE:
-        case G_NUCLEOTIDE_LC:
-          return C_NUCLEOTIDE;
+      case G_NUCLEOTIDE:
+      case G_NUCLEOTIDE_LC:
+        return C_NUCLEOTIDE;
 
-        case T_NUCLEOTIDE:
-        case T_NUCLEOTIDE_LC:
-          return A_NUCLEOTIDE;
+      case T_NUCLEOTIDE:
+      case T_NUCLEOTIDE_LC:
+        return A_NUCLEOTIDE;
 
-        case U_NUCLEOTIDE:
-        case U_NUCLEOTIDE_LC:
-          return A_NUCLEOTIDE;
+      case U_NUCLEOTIDE:
+      case U_NUCLEOTIDE_LC:
+        return A_NUCLEOTIDE;
 
-        default:
-          ExecEnv::log().error("complementNucleotide(), Unknown Nucleotide: {} (ascii): {}",
-                               nucleotide, static_cast<unsigned char>(nucleotide));
-          return N_NUCLEOTIDE; // Never reached, to keep the compiler happy.
+      default:
+        ExecEnv::log().error("complementNucleotide(), Unknown Nucleotide: {} (ascii): {}",
+                             nucleotide, static_cast<unsigned char>(nucleotide));
+        return N_NUCLEOTIDE; // Never reached, to keep the compiler happy.
 
-      }
+    }
 
   }
 
@@ -166,4 +167,5 @@ private:
 }   // namespace genome
 }   // namespace kellerberrin
 
-#endif //KGL_NUCLEOTIDE_H
+
+#endif //KGL_ALPHABET_BASE_H

@@ -1,8 +1,9 @@
 //
-// Created by kellerberrin on 18/10/17.
+// Created by kellerberrin on 31/10/17.
 //
 
-#include "kgl_nucleotide.h"
+
+#include "kgl_alphabet_base.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -31,3 +32,5 @@ const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::DELETE_NUCLEOTIDE;
 const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::DELETE_NUCLEOTIDE_OFFSET;
 const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::INSERT_SEQUENCE;
 const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::INSERT_NUCLEOTIDE_OFFSET;
+
+

@@ -10,7 +10,7 @@
 #include "kgl_logging.h"
 #include "kgl_lock.h"
 #include "kgl_genome_types.h"
-#include "kgl_nucleotide.h"
+#include "kgl_alphabet_base.h"
 #include "kgl_mt_numpy.h"
 #include "kgl_mt_contig.h"
 #include "kgl_mt_insert.h"

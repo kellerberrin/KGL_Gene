@@ -10,7 +10,7 @@
 #include <vector>
 #include <sstream>
 #include "kgl_genome_types.h"
-#include "kgl_amino.h"
+#include "kgl_alphabet_amino.h"
 #include "kgl_genome_db.h"
 
 

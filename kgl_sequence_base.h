@@ -7,7 +7,7 @@
 
 
 #include <string>
-#include "kgl_nucleotide.h"
+#include "kgl_alphabet_base.h"
 #include "kgl_genome_feature.h"
 
 namespace kellerberrin {   //  organization level namespace

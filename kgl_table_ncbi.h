@@ -6,8 +6,8 @@
 #define KGL_TABLE_NCBI_H
 
 
-#include "kgl_nucleotide.h"
-#include "kgl_amino.h"
+#include "kgl_alphabet_base.h"
+#include "kgl_alphabet_amino.h"
 
 
 namespace kellerberrin {   //  organization level namespace
