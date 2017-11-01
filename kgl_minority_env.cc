@@ -350,7 +350,7 @@ bool kgl::MinorityExecEnv::parseCommandLine(int argc, char const ** argv)
 
   }
   // Setup the Logger.
-  createLogger(MODULE_NAME, args().logFile);
+  createLogger(MODULE_NAME, args().logFile, args().max_error_count, args().max_warn_count);
 
   std::string file_list;
   // Setup the files.

@@ -33,9 +33,9 @@ public:
   }
   virtual ~SamCountReader() = default;
 
-  std::shared_ptr<ContigCountData> readSAMFile(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                               const std::string& file_name,
-                                               unsigned char readQuality = 0) {
+  std::shared_ptr<const ContigCountData> readSAMFile(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                                     const std::string& file_name,
+                                                     unsigned char readQuality = 0) {
     // Register with the genome database to setup the contig data blocks before reading.
     contig_data_ptr_->fileName(file_name);
     genome_db_ptr->registerContigData(contig_data_ptr_);

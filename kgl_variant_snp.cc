@@ -32,7 +32,7 @@ std::string kgl::SNPVariantDNA5::output() const
 {
   std::stringstream ss;
   ss << genomeOutput();
-  ss << reference() << (contigOffset() + 1) << mutant() << " ";
+  ss << reference() << contigOffset() << mutant() << " ";
   ss << mutantCount() << "/" << readCount() << " [";
   for (size_t idx = 0; idx < countArray().size(); ++idx) {
     ss << NucleotideColumn_DNA5::offsetToNucleotide(idx) << ":" << countArray()[idx] << " ";

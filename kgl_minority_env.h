@@ -26,6 +26,8 @@ struct MinorityArgs {
   std::string logFile{"kgl_snp.log"};
   std::string contig{"*"};
   size_t aminoTranslationTable{1};
+  int max_error_count{1000};
+  int max_warn_count{1000};
   bool verbose{false};
   int mutantMinCount{20};
   double mutantMinProportion{0.7};

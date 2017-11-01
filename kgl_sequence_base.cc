@@ -103,3 +103,94 @@ kgl::DNA5Sequence::codingSequence(std::shared_ptr<const DNA5Sequence> base_seque
 
 }
 
+// Returns bool false if contig_offset is not within the coding sequences defined by sorted_cds.
+// If the contig_offset is in the coding sequence then a valid sequence_offset and the sequence length is returned.
+// The offset is adjusted for strand type; the offset arithmetic is reversed for -ve strand sequences.
+bool kgl::DNA5Sequence::offsetWithinSequence(const SortedCDS& sorted_cds,
+                                             ContigOffset_t contig_offset,
+                                             ContigOffset_t& sequence_offset,
+                                             ContigSize_t& sequence_length) {
+
+  bool iscoding = false;
+  ContigOffset_t coding_offset = 0;
+  ContigSize_t coding_size = 0;
+
+  if (sorted_cds.empty()) {
+
+    sequence_offset = 0;
+    sequence_length = 0;
+    return false;
+
+  }
+
+  // Get the strand.
+  StrandSense strand = sorted_cds.begin()->second->sequence().strand();
+
+  switch(strand) {
+
+    case StrandSense::UNKNOWN:  // Complain and assume a forward strand.
+    ExecEnv::log().error("CDS feature: {} offset: {} with UNKNOWN strand sense",
+                         sorted_cds.begin()->second->id(), sorted_cds.begin()->second->sequence().begin());
+    case StrandSense::FORWARD: {
+
+      for (auto cds : sorted_cds) {
+
+        // within the CDS
+        if (contig_offset >= cds.second->sequence().begin() and contig_offset <= cds.second->sequence().end()) {
+
+          coding_offset += (contig_offset - cds.second->sequence().begin());
+          iscoding = true;
+
+        } else if (contig_offset > cds.second->sequence().end()) {
+
+          coding_offset += (cds.second->sequence().end() - cds.second->sequence().begin());
+
+        }
+
+        coding_size += (cds.second->sequence().end() - cds.second->sequence().begin());
+
+      }
+
+    }
+      break;
+
+    case StrandSense::REVERSE: {
+
+      for (auto rit = sorted_cds.rbegin(); rit != sorted_cds.rend(); ++rit) {
+
+        // within the CDS
+        if (contig_offset >= rit->second->sequence().begin() and contig_offset <= rit->second->sequence().end()) {
+
+          coding_offset += (rit->second->sequence().end() - contig_offset);
+          iscoding = true;
+
+        } else if (contig_offset < rit->second->sequence().begin()) {
+
+          coding_offset += (rit->second->sequence().end() - rit->second->sequence().begin());
+
+        }
+
+        coding_size += (rit->second->sequence().end() - rit->second->sequence().begin());
+
+      }
+
+    }
+      break;
+
+  } // switch
+
+  if (iscoding) {
+
+    sequence_offset = coding_offset;
+    sequence_length = coding_size;
+
+  } else {
+
+    sequence_offset = 0;
+    sequence_length = 0;
+
+  }
+
+  return iscoding;
+
+}

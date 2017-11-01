@@ -38,6 +38,14 @@ public:
 
   SequenceString getSequenceString() const { return base_sequence_; }
 
+  // Returns bool false if contig_offset is not within the coding sequences defined by sorted_cds.
+  // If the contig_offset is in the coding sequence then a valid sequence_offset and the sequence length is returned.
+  // The offset is adjusted for strand type; the offset arithmetic is reversed for -ve strand sequences.
+  bool static offsetWithinSequence(const SortedCDS& sorted_cds,
+                                   ContigOffset_t contig_offset,
+                                   ContigOffset_t& sequence_offset,
+                                   ContigSize_t& sequence_length);
+
   // The contig_offset arg is used when then supplied sequence is a sub-sequence of the entire contig sequence
   // and is used to adjust calculated offsets when copying the CDS regions to the coding sequence.
   // For example, the supplied sub-sequence could be a Gene sequence, in this case contig_offset would be

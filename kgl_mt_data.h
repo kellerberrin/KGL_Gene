@@ -42,7 +42,9 @@ public:
                                                                        insert_array_(contig_size) {}
   ~ConsumerNumpyRecord() = default;
 
+  inline const NumpyArray& getNucleotideArray() const { return nucleotide_array_; }
   inline NumpyArray& getNucleotideArray() { return nucleotide_array_; }
+  inline const ConsumerInsertType& getInsertArray() const { return insert_array_; }
   inline ConsumerInsertType& getInsertArray() { return insert_array_; }
 
 private:
@@ -63,7 +65,9 @@ public:
                                                                  insert_array_(contig_size) {}
   ~ConsumerLocalRecord() = default;
 
+  inline const LocalArray& getNucleotideArray() const { return nucleotide_array_; }
   inline LocalArray& getNucleotideArray() { return nucleotide_array_; }
+  inline const ConsumerInsertType& getInsertArray() const { return insert_array_; }
   inline ConsumerInsertType& getInsertArray() { return insert_array_; }
 
 private:
@@ -89,7 +93,7 @@ public:
 
 // Access functions to obtain the underlying contig block.
 
-  ContigCountMap<ContigDataBlock>& getMap() { return contig_map_; }
+  const ContigCountMap<ContigDataBlock>& getMap() const { return contig_map_; }
 
   std::shared_ptr<ContigDataBlock> findContigBlock(const ContigId_t& contig_id) {
 
@@ -98,6 +102,17 @@ public:
       return result->second;
     }
     std::shared_ptr<ContigDataBlock> null;
+    return null;
+
+  }
+
+  std::shared_ptr<const ContigDataBlock> findContigBlock(const ContigId_t& contig_id) const {
+
+    auto result = contig_map_.find(contig_id);
+    if (result != contig_map_.end()) {
+      return result->second;
+    }
+    std::shared_ptr<const ContigDataBlock> null;
     return null;
 
   }

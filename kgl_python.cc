@@ -29,7 +29,7 @@ public:
 
   explicit PythonProcessSam(const std::string &log_file) {
 
-    kgl::ExecEnv::createLogger(SAM_READ_MODULE_NAME_, log_file); // Must be the first statement.
+    kgl::ExecEnv::createLogger(SAM_READ_MODULE_NAME_, log_file, 0, 0); // Must be the first statement.
     numpy_data_ptr_ = std::shared_ptr<NumpyDataBlock >(std::make_shared<NumpyDataBlock>());
     consumer_ptr_ = std::shared_ptr<PythonConsumer>(std::make_shared<PythonConsumer>(kgl::ExecEnv::log(),
                                                                                      numpy_data_ptr_));

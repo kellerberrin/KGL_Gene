@@ -18,9 +18,16 @@ std::unique_ptr<kgl::Logger> kgl::ExecEnv::log_ptr_;
 // Public static member functions.
 kgl::Logger& kgl::ExecEnv::log() { return *log_ptr_; }
 
-void kgl::ExecEnv::createLogger(const std::string& module, const std::string& log_file) {
+void kgl::ExecEnv::createLogger(const std::string& module,
+                                const std::string& log_file,
+                                int max_error_messages,
+                                int max_warning_messages) {
 
   kgl::ExecEnv::log_ptr_ = std::make_unique<kgl::Logger>(module, log_file);
+
+  kgl::ExecEnv::log_ptr_->SetMaxErrorMessages(max_error_messages);
+
+  kgl::ExecEnv::log_ptr_->SetMaxwarningMessages(max_warning_messages);
 
 }
 

@@ -7,6 +7,7 @@
 
 
 #include "kgl_variant_db.h"
+#include "kgl_variant_compound.h"
 #include "kgl_genome_db.h"
 
 
@@ -21,16 +22,25 @@ public:
   explicit VariantAnalysis() = default;
   ~VariantAnalysis() = default;
 
+  std::shared_ptr<const GenomeVariant> SNPVariants(std::shared_ptr<const ContigCountData> count_data,
+                                                   std::shared_ptr<const GenomeDatabase> genome_db);
 
-  std::shared_ptr<GenomeVariant> SNPVariants(std::shared_ptr<ContigCountData>& count_data,
-                                             std::shared_ptr<GenomeDatabase>& genome_db);
-
-  std::shared_ptr<GenomeVariant> codonDelete(std::shared_ptr<GenomeVariant> delete_SNPs,
-                                             std::shared_ptr<ContigCountData>& count_data,
-                                             std::shared_ptr<GenomeDatabase>& genome_db);
+  std::shared_ptr<const GenomeVariant> codonDelete(std::shared_ptr<const GenomeVariant> delete_SNPs,
+                                                   std::shared_ptr<const ContigCountData> count_data,
+                                                   std::shared_ptr<const GenomeDatabase> genome_db);
 private:
 
 
+  void aggregateCodingDeletions(std::shared_ptr<const GenomeVariant>& delete_SNPs,
+                                std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
+                                std::vector<CompoundVariantMap>& contiguous_delete_vec);
+
+  bool membershipCodingDeletions(const std::vector<CompoundVariantMap>& contiguous_delete_vec);
+
+  void generateCodonDeletes(std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
+                            std::shared_ptr<const ContigCountData> count_data,
+                            const std::vector<CompoundVariantMap>& contiguous_delete_vec);
+  void printCompoundVariant(const std::vector<CompoundVariantMap>& contiguous_delete_vec);
 };
 
 
