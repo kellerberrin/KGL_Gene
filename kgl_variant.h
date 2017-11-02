@@ -31,7 +31,7 @@ class Variant; // Forward decl.
 class ReadCountVariant; // Forward decl.
 class SNPVariantDNA5; // Forward decl.
 class CompoundVariant; // Forward decl.
-class CodonDelete; // Forward decl.
+class CompoundDelete; // Forward decl.
 
 class VariantFilter {
 
@@ -43,7 +43,7 @@ public:
   virtual bool applyFilter(const Variant& variant) const = 0;
   virtual bool applyFilter(const ReadCountVariant& variant) const = 0;
   virtual bool applyFilter(const SNPVariantDNA5& variant) const = 0;
-  virtual bool applyFilter(const CodonDelete& variant) const = 0;
+  virtual bool applyFilter(const CompoundDelete& variant) const = 0;
 
   virtual std::string filterName() const = 0;
 

@@ -81,6 +81,10 @@ public:
   size_t contigCount() const { return genome_variant_map_.size(); }
 
   bool addContigVariant(std::shared_ptr<ContigVariant>& contig_variant);
+  bool getContigVariant(const ContigId_t& contig_id, std::shared_ptr<ContigVariant>& contig_variant);
+
+  bool addVariant(std::shared_ptr<const Variant> variant);
+
   std::shared_ptr<GenomeVariant> filterVariants(const VariantFilter& filter) const;
 
   const GenomeVariantMap& contigMap() const { return genome_variant_map_; }
@@ -89,6 +93,10 @@ public:
   std::shared_ptr<GenomeVariant> Union(std::shared_ptr<const GenomeVariant> genome_variant_ptr) const;
   std::shared_ptr<GenomeVariant> Intersection(std::shared_ptr<const GenomeVariant> genome_variant_ptr) const;
   std::shared_ptr<GenomeVariant> Difference(std::shared_ptr<const GenomeVariant> genome_variant_ptr) const;
+
+  static std::shared_ptr<GenomeVariant> emptyGenomeVariant(const VariantType_t& variant_type,
+                                                           const GenomeId_t& genome_id,
+                                                           std::shared_ptr<const GenomeDatabase> genome_db);
 
   friend std::ostream & operator<<(std::ostream &os, const GenomeVariant& genome_variant);
 

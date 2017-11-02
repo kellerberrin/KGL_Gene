@@ -111,6 +111,8 @@ public:
 
   void registerContigData(std::shared_ptr<ContigCountData>& contig_data_ptr) const;
 
+  const GenomeSequenceMap& getMap() const { return genome_sequence_map_; }
+
 private:
 
   GenomeSequenceMap genome_sequence_map_;

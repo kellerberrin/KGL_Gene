@@ -9,6 +9,7 @@
 #include "kgl_variant_db.h"
 #include "kgl_variant_compound.h"
 #include "kgl_genome_db.h"
+#include "kgl_variant.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -39,7 +40,11 @@ private:
 
   void generateCodonDeletes(std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
                             std::shared_ptr<const ContigCountData> count_data,
-                            const std::vector<CompoundVariantMap>& contiguous_delete_vec);
+                            const std::vector<CompoundVariantMap>& contiguous_delete_vec,
+                            std::shared_ptr<GenomeVariant> genome_variant_ptr);
+
+  std::shared_ptr<const Variant> createCompoundDelete(const CompoundVariantMap& variant_map);
+
   void printCompoundVariant(const std::vector<CompoundVariantMap>& contiguous_delete_vec);
 };
 

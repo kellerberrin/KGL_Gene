@@ -58,6 +58,43 @@ bool kgl::GenomeVariant::addContigVariant(std::shared_ptr<kgl::ContigVariant>& c
 
 }
 
+bool kgl::GenomeVariant::getContigVariant(const ContigId_t& contig_id,
+                                          std::shared_ptr<ContigVariant>& contig_variant) {
+  bool result;
+
+  auto contig = genome_variant_map_.find(contig_id);
+
+  if (contig != genome_variant_map_.end()) {
+
+    contig_variant = contig->second;
+    result = true;
+
+  } else {
+
+    contig_variant = nullptr;
+    result = false;
+
+  }
+
+  return result;
+
+}
+
+
+bool kgl::GenomeVariant::addVariant(std::shared_ptr<const Variant> variant) {
+
+  std::shared_ptr<ContigVariant> contig_variant;
+  if (not getContigVariant(variant->contigId(), contig_variant)) {
+
+    ExecEnv::log().error("Contig: {} not found, variant: {}", variant->contigId(), variant->output());
+    return false;
+  }
+
+  contig_variant->addVariant(variant->contigOffset(), variant);
+  return true;
+
+}
+
 
 std::shared_ptr<kgl::GenomeVariant> kgl::GenomeVariant::filterVariants(const kgl::VariantFilter& filter) const {
 
@@ -76,6 +113,31 @@ std::shared_ptr<kgl::GenomeVariant> kgl::GenomeVariant::filterVariants(const kgl
   return filtered_genome_ptr;
 
 }
+
+// Creates an empty genome variant with the same contig structure as the genome database.
+std::shared_ptr<kgl::GenomeVariant>
+kgl::GenomeVariant::emptyGenomeVariant(const VariantType_t& variant_type,
+                                       const GenomeId_t& genome_id,
+                                       std::shared_ptr<const GenomeDatabase> genome_db) {
+
+
+  std::shared_ptr<GenomeVariant> empty_genome_variant(std::make_shared<GenomeVariant>(variant_type, genome_id));
+
+  for (auto contig_db : genome_db->getMap()) {
+
+    std::shared_ptr<ContigVariant> contig_variant(std::make_shared<ContigVariant>(contig_db.first));
+    if (not empty_genome_variant->addContigVariant(contig_variant)) {
+
+      ExecEnv::log().error("emptyGenomeVariant(), could not add contig variant: {}", contig_db.first);
+
+    }
+
+  }
+
+  return empty_genome_variant;
+
+}
+
 
 std::ostream& kgl::operator<<(std::ostream &os, const kgl::GenomeVariant& genome_variant) {
 

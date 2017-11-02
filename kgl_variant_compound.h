@@ -39,10 +39,9 @@ public:
 
   bool equivalent(const Variant& cmp_var) const override;
 
-private:
+protected:
 
   const CompoundVariantMap variant_map_;
-
 
 };
 
@@ -51,27 +50,20 @@ private:
 //  A compound delete. 3 contiguous SNP deletions aligned on a Gene codon boundary delete a single Amino Acid
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class CodonDelete : public CompoundVariant {
+class CompoundDelete : public CompoundVariant {
 
 public:
 
-  CodonDelete(std::shared_ptr<const ContigFeatures> contig_ptr,
-              ContigOffset_t contig_offset,
-              const CompoundVariantMap variant_map,
-              ContigOffset_t deleted_codon,
-              AminoAcidTypes::AminoType deleted_amino) : CompoundVariant(contig_ptr, contig_offset, variant_map),
-                                                         deleted_codon_(deleted_codon),
-                                                         deleted_amino_(deleted_amino) {}
-  ~CodonDelete() override = default;
-
+  CompoundDelete(std::shared_ptr<const ContigFeatures> contig_ptr,
+                 ContigOffset_t contig_offset,
+                 const CompoundVariantMap variant_map) : CompoundVariant(contig_ptr, contig_offset, variant_map) {}
+  ~CompoundDelete() override = default;
 
 private:
 
-  ContigOffset_t deleted_codon_;
-  AminoAcidTypes::AminoType deleted_amino_;
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
-
+  std::string output() const;
 
 };
 
