@@ -84,9 +84,30 @@ public:
 
   size_t checkNonsenseMutation(std::shared_ptr<DNA5Sequence> sequence_ptr) const;
 
-  size_t codonLength(std::shared_ptr<DNA5Sequence> sequence_ptr) const { return sequence_ptr->length() / 3; }
+  static ContigOffset_t codonLength(std::shared_ptr<DNA5Sequence> sequence_ptr) {
 
-  AminoAcidTypes::Codon getCodon(std::shared_ptr<DNA5Sequence> sequence_ptr, size_t index) const;
+    return static_cast<ContigOffset_t>(sequence_ptr->length() / 3);
+
+  }
+
+  static AminoAcidTypes::Codon getCodon(std::shared_ptr<DNA5Sequence> sequence_ptr, ContigOffset_t codon_index);
+
+  AminoAcidTypes::AminoType getAmino(std::shared_ptr<DNA5Sequence> sequence_ptr, ContigSize_t codon_index) const;
+
+  static bool codonOffset(const SortedCDS& sorted_cds,
+                          ContigOffset_t contig_offset,
+                          ContigOffset_t& codon_offset,
+                          ContigSize_t& base_in_codon);
+
+  // Returns the amino mutation of an SNP in a coding sequence.
+  bool SNPMutation(const SortedCDS& sorted_cds,
+                   const std::shared_ptr<const DNA5Sequence>& contig_sequence_ptr,
+                   ContigOffset_t contig_offset,
+                   typename NucleotideColumn_DNA5::NucleotideType reference_base,
+                   typename NucleotideColumn_DNA5::NucleotideType mutant_base,
+                   ContigOffset_t& codon_offset,
+                   typename AminoAcidTypes::AminoType& reference_amino,
+                   typename AminoAcidTypes::AminoType& mutant_amino) const;
 
 private:
 

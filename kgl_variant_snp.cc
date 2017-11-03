@@ -50,8 +50,6 @@ std::string kgl::SNPVariantDNA5::mutation() const
 
     GeneVector gene_vector = geneMembership();
     SortedCDSVector sorted_cds_vec;
-    ContigOffset_t sequence_offset;
-    ContigSize_t sequence_size;
 
     for (auto gene : gene_vector) {
 
@@ -59,13 +57,28 @@ std::string kgl::SNPVariantDNA5::mutation() const
 
       for (auto sorted_cds : sorted_cds_vec) {
 
-        DNA5Sequence::offsetWithinSequence(sorted_cds, contigOffset(), sequence_offset, sequence_size);
         if (NucleotideColumn_DNA5::isBaseCode(mutant())) {
 
-          ss << reference() << static_cast<long>(sequence_offset/3) << mutant() << " ";
+          ContigOffset_t codon_offset;
+          typename AminoAcidTypes::AminoType reference_amino;
+          typename AminoAcidTypes::AminoType mutant_amino;
+
+          contig()->SNPMutation(sorted_cds,
+                                contigOffset(),
+                                reference(),
+                                mutant(),
+                                codon_offset,
+                                reference_amino,
+                                mutant_amino);
+
+          ss << reference_amino << codon_offset << mutant_amino << " ";
+          ss << reference() << contigOffset() << mutant() << " ";
 
         } else {
 
+          ContigOffset_t sequence_offset;
+          ContigSize_t sequence_length;
+          DNA5Sequence::offsetWithinSequence(sorted_cds, contigOffset(), sequence_offset, sequence_length);
           ss << reference() << sequence_offset << mutant() << " ";
 
         }

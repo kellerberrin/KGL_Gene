@@ -62,6 +62,14 @@ public:
   void verifyFeatureHierarchy();
   void verifyCDSPhasePeptide();
 
+  bool SNPMutation(const SortedCDS& sorted_cds,
+                   ContigOffset_t contig_offset,
+                   typename NucleotideColumn_DNA5::NucleotideType reference_base,
+                   typename NucleotideColumn_DNA5::NucleotideType mutant_base,
+                   ContigOffset_t& codon_offset,
+                   typename AminoAcidTypes::AminoType& reference_amino,
+                   typename AminoAcidTypes::AminoType& mutant_amino) const;
+
 private:
 
   ContigId_t contig_id_;

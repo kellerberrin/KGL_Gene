@@ -503,6 +503,28 @@ bool kgl::ContigFeatures::findOffsetCDS(ContigOffset_t contig_offset, CDSArray &
 
 }
 
+// Convenience routine for tagging SNPs.
+bool kgl::ContigFeatures::SNPMutation(const SortedCDS& sorted_cds,
+                                      ContigOffset_t contig_offset,
+                                      typename NucleotideColumn_DNA5::NucleotideType reference_base,
+                                      typename NucleotideColumn_DNA5::NucleotideType mutant_base,
+                                      ContigOffset_t& codon_offset,
+                                      typename AminoAcidTypes::AminoType& reference_amino,
+                                      typename AminoAcidTypes::AminoType& mutant_amino) const {
+
+
+  return coding_sequence_.SNPMutation(sorted_cds,
+                                      sequence_ptr_,
+                                      contig_offset,
+                                      reference_base,
+                                      mutant_base,
+                                      codon_offset,
+                                      reference_amino,
+                                      mutant_amino);
+
+}
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GenomeDatabase members.

@@ -199,19 +199,206 @@ bool kgl::DNA5Sequence::offsetWithinSequence(const SortedCDS& sorted_cds,
 std::shared_ptr<kgl::DNA5Sequence>
 kgl::DNA5Sequence::codingSubSequence(std::shared_ptr<const DNA5Sequence> base_sequence_ptr,
                                      const SortedCDS& sorted_cds,
-                                     ContigOffset_t& sub_sequence_offset,
-                                     ContigSize_t sub_sequence_length,
+                                     ContigOffset_t sub_sequence_offset,  // base count offset; 0 == all
+                                     ContigSize_t sub_sequence_length,   // number of bases; 0 == all
                                      ContigOffset_t contig_offset) {
 
-  std::shared_ptr<kgl::DNA5Sequence> sequence = codingSequence(base_sequence_ptr, sorted_cds, contig_offset);
+  // If no cds then return null string.
+  if (sorted_cds.empty()) {
 
-  ContigOffset_t sequence_offset;
-  ContigSize_t sequence_length;
-  if (offsetWithinSequence(sorted_cds, sub_sequence_offset, sequence_offset, sequence_length)) {
-
+    SequenceString null_seq;
+    return std::shared_ptr<DNA5Sequence>(std::make_shared<DNA5Sequence>(DNA5Sequence(null_seq)));
 
   }
 
-  return sequence;
+  // Check bounds.
+  if (sorted_cds.rbegin()->second->sequence().end() >= contig_offset + base_sequence_ptr->length()) {
+
+    ExecEnv::log().error("codingSubSequence(), CDS end offset: {} >= (target sequence size: {} + offset : {})",
+                         sorted_cds.rbegin()->second->sequence().end(),
+                         base_sequence_ptr->length(),
+                         contig_offset);
+    SequenceString null_seq;
+    return std::shared_ptr<DNA5Sequence>(std::make_shared<DNA5Sequence>(DNA5Sequence(null_seq)));
+
+  }
+
+  // Get the size of the coding sequence
+  std::string::size_type calculated_seq_size = 0;
+  for (auto cds : sorted_cds) {
+
+    calculated_seq_size += cds.second->sequence().end() - cds.second->sequence().begin();
+
+  }
+
+  // If subsequence length is zero and offset is zero then return the whole coding sequence
+  if (sub_sequence_offset == 0 and sub_sequence_length == 0) {
+
+    sub_sequence_length = calculated_seq_size;
+
+  }
+
+  // Make sure the requested offset and length are within the coding sequence.
+  if ((sub_sequence_offset + sub_sequence_length)  > calculated_seq_size) {
+
+    ExecEnv::log().error("codingSubSequence(), Sub-seq offset: {} + Sub seq length: {} > sequence size: {}",
+                         sub_sequence_offset,
+                         sub_sequence_length,
+                         calculated_seq_size);
+    SequenceString null_seq;
+    return std::shared_ptr<DNA5Sequence>(std::make_shared<DNA5Sequence>(DNA5Sequence(null_seq)));
+
+  }
+
+  SequenceString coding_sequence;
+  coding_sequence.reserve(sub_sequence_length + 1); // Just to make sure.
+
+  // Get the strand and copy or reverse copy the base complement.
+  switch(sorted_cds.begin()->second->sequence().strand()) {
+
+    case StrandSense::UNKNOWN:
+      ExecEnv::log().warn("codingSubSequence(); CDS: {} offset: {} has 'UNKNOWN' ('.') strand assuming 'FORWARD' ('+')",
+                          sorted_cds.begin()->second->id(),
+                          sorted_cds.begin()->second->sequence().begin());
+
+    case StrandSense::FORWARD: {
+
+      typename SequenceString::const_iterator begin;
+      typename SequenceString::const_iterator end;
+      ContigOffset_t begin_offset;
+      ContigOffset_t end_offset;
+      ContigOffset_t relative_offset = 0;
+      // Convert to an absolute sequence based offset
+      for (auto cds : sorted_cds) {
+
+        ContigSize_t cds_size = cds.second->sequence().end() - cds.second->sequence().begin();
+
+        if (sub_sequence_offset < relative_offset + cds_size) {
+
+          if (sub_sequence_offset <= relative_offset) {
+
+            begin_offset = cds.second->sequence().begin();
+
+          } else {
+
+            begin_offset = cds.second->sequence().begin() + (sub_sequence_offset - relative_offset);
+
+          }
+
+          if (sub_sequence_offset + sub_sequence_length > relative_offset + cds_size) {
+
+            end_offset = cds.second->sequence().end();
+
+          } else {
+
+            end_offset = cds.second->sequence().end()
+                         - ((relative_offset + cds_size) - (sub_sequence_offset + sub_sequence_length));
+
+          }
+
+          begin = base_sequence_ptr->base_sequence_.begin() + (begin_offset - contig_offset);
+          end = base_sequence_ptr->base_sequence_.begin() + (end_offset - contig_offset);
+          std::copy( begin, end, std::back_inserter(coding_sequence));
+
+        } // if sub_sequence_offset < relative_offset + cds_size
+
+        relative_offset += cds_size;
+        // Check if we need to process more CDS.
+        if (sub_sequence_offset + sub_sequence_length < relative_offset) {
+
+          break;
+
+        } // terminate if complete.
+
+      } // for cds
+
+    } // case
+      break;
+
+    case StrandSense::REVERSE: {
+
+      // Insert in reverse complement order.
+      typename SequenceString::const_reverse_iterator rbegin;
+      typename SequenceString::const_reverse_iterator rend;
+      ContigOffset_t begin_offset;
+      ContigOffset_t end_offset;
+      ContigOffset_t relative_offset = 0;
+      auto complement_base =
+      [](typename DNA5Sequence::NucleotideType base) { return NucleotideColumn_DNA5::complementNucleotide(base); };
+      for (auto rit = sorted_cds.rbegin(); rit != sorted_cds.rend(); ++rit) {
+
+        ContigSize_t cds_size = rit->second->sequence().end() - rit->second->sequence().begin();
+
+        if (sub_sequence_offset < relative_offset + cds_size) {
+
+          if (sub_sequence_offset <= relative_offset) {
+
+            begin_offset = rit->second->sequence().end();
+
+          } else {
+
+            begin_offset = rit->second->sequence().end() - (sub_sequence_offset - relative_offset);
+
+          }
+
+          if (sub_sequence_offset + sub_sequence_length > relative_offset + cds_size) {
+
+            end_offset = rit->second->sequence().begin();
+
+          } else {
+
+            end_offset = rit->second->sequence().begin()
+                         + ((relative_offset + cds_size) - (sub_sequence_offset + sub_sequence_length));
+
+          }
+
+          rbegin = base_sequence_ptr->base_sequence_.rbegin()
+                   + (base_sequence_ptr->length() - (begin_offset - contig_offset));
+          rend = base_sequence_ptr->base_sequence_.rbegin()
+                 + (base_sequence_ptr->length() - (end_offset - contig_offset));
+          std::transform( rbegin, rend, std::back_inserter(coding_sequence), complement_base);
+
+        } // if sub_sequence_offset < relative_offset + cds_size
+
+        relative_offset += cds_size;
+        // Check if we need to process more CDS.
+        if (sub_sequence_offset + sub_sequence_length < relative_offset) {
+
+          break;
+
+        } // terminate if complete
+
+      } // for cds
+
+    } // case
+      break;
+
+  } // switch
+
+  // Check the sub sequence size.
+  if (coding_sequence.length() != sub_sequence_length) {
+
+    ExecEnv::log().error("Coding SubSequence length: {} NOT EQUAL to specified subsequence: {}",
+                         coding_sequence.length(),
+                         calculated_seq_size);
+
+  }
+
+  return std::shared_ptr<DNA5Sequence>(std::make_shared<DNA5Sequence>(DNA5Sequence(coding_sequence)));
+
+}
+
+
+bool kgl::DNA5Sequence::modifyBase(NucleotideType Nucleotide, ContigOffset_t sequence_offset) {
+
+  if (sequence_offset >= base_sequence_.length()) {
+
+    ExecEnv::log().error("modifyBase(), sequence offset: {} exceeds sequence size: {}",
+                         sequence_offset, base_sequence_.length());
+    return false;
+  }
+
+  base_sequence_.at(sequence_offset) = Nucleotide;
+  return true;
 
 }

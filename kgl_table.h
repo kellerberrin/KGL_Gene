@@ -39,6 +39,12 @@ public:
 
   }
 
+  AminoAcidTypes::AminoType getStopAmino() {
+
+    return amino_table_rows_.amino_table[amino_table_rows_.stop_codon_index].amino_acid;
+
+  }
+
   bool isStopCodon(const AminoAcidTypes::Codon& Codon) {
 
     return (amino_table_rows_.amino_table[index(Codon)].start == AminoAcidTypes::STOP_CODON);
