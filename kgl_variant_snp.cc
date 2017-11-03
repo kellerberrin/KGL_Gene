@@ -31,13 +31,56 @@ bool kgl::SNPVariantDNA5::equivalent(const Variant& cmp_var) const {
 std::string kgl::SNPVariantDNA5::output() const
 {
   std::stringstream ss;
-  ss << genomeOutput();
-  ss << reference() << contigOffset() << mutant() << " ";
+  ss << genomeOutput() << " ";
+  ss << mutation() << " ";
   ss << mutantCount() << "/" << readCount() << " [";
   for (size_t idx = 0; idx < countArray().size(); ++idx) {
     ss << NucleotideColumn_DNA5::offsetToNucleotide(idx) << ":" << countArray()[idx] << " ";
   }
   ss << "]";
   return ss.str();
+}
+
+
+std::string kgl::SNPVariantDNA5::mutation() const
+{
+
+  std::stringstream ss;
+  if (type() == VariantSequenceType::CDS_CODING) {
+
+    GeneVector gene_vector = geneMembership();
+    SortedCDSVector sorted_cds_vec;
+    ContigOffset_t sequence_offset;
+    ContigSize_t sequence_size;
+
+    for (auto gene : gene_vector) {
+
+      gene->getSortedCDS(sorted_cds_vec);
+
+      for (auto sorted_cds : sorted_cds_vec) {
+
+        DNA5Sequence::offsetWithinSequence(sorted_cds, contigOffset(), sequence_offset, sequence_size);
+        if (NucleotideColumn_DNA5::isBaseCode(mutant())) {
+
+          ss << reference() << static_cast<long>(sequence_offset/3) << mutant() << " ";
+
+        } else {
+
+          ss << reference() << sequence_offset << mutant() << " ";
+
+        }
+
+      }
+
+    }
+
+  } else {
+
+    ss << reference() << contigOffset() << mutant() << " ";
+
+  }
+
+  return ss.str();
+
 }
 

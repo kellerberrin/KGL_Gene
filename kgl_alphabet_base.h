@@ -54,6 +54,37 @@ public:
   static constexpr Nucleotide_DNA5_t INSERT_SEQUENCE = '+';
   static constexpr ContigOffset_t INSERT_NUCLEOTIDE_OFFSET = 6;
 
+  static bool isBaseCode(const Nucleotide_DNA5_t nucleotide) {
+
+    // Translate the nucleotide to an array column
+    switch (nucleotide) {
+
+      case A_NUCLEOTIDE:
+      case A_NUCLEOTIDE_LC:
+      case C_NUCLEOTIDE:
+      case C_NUCLEOTIDE_LC:
+      case G_NUCLEOTIDE:
+      case G_NUCLEOTIDE_LC:
+      case T_NUCLEOTIDE:
+      case T_NUCLEOTIDE_LC:
+      case U_NUCLEOTIDE:
+      case U_NUCLEOTIDE_LC:
+        return true;
+
+      case N_NUCLEOTIDE:
+      case N_NUCLEOTIDE_LC:
+      case DELETE_NUCLEOTIDE:
+      case INSERT_SEQUENCE:
+        return false;
+
+      default:
+        ExecEnv::log().critical("isBaseCode(), Called with unknown nucleotide: {}", nucleotide);
+        return false; // Never reached, to keep the compiler happy.
+
+    }
+
+  }
+
   // Convert a base to an array offset.
   static ContigOffset_t nucleotideToColumn(const Nucleotide_DNA5_t nucleotide) {
 

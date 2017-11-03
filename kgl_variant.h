@@ -113,6 +113,7 @@ public:
   friend std::ostream& operator<<(std::ostream &os, const Variant& variant) { os << variant.output();  return os; }
 
   virtual std::string output() const = 0;
+  virtual std::string mutation() const = 0;
 
 private:
 

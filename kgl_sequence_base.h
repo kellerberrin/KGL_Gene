@@ -50,7 +50,7 @@ public:
   // and is used to adjust calculated offsets when copying the CDS regions to the coding sequence.
   // For example, the supplied sub-sequence could be a Gene sequence, in this case contig_offset would be
   // the Gene offset within the contig. If the supplied sequence is the entire contig sequence then contig_offset
-  // will be zero (the default argument value).
+  // will be zero (the default argument value). The entire sequence defined by the sorted CDS is returned.
   static std::shared_ptr<DNA5Sequence> codingSequence(std::shared_ptr<const DNA5Sequence> base_sequence_ptr,
                                                       const SortedCDS& sorted_cds, ContigOffset_t contig_offset = 0);
 
@@ -60,6 +60,24 @@ public:
     return codingSequence(seq_ptr, sorted_cds, contig_offset);
 
   }
+
+  // Same as the above, but returns a defined subsequence of the coding sequence.
+  static std::shared_ptr<DNA5Sequence> codingSubSequence(std::shared_ptr<const DNA5Sequence> base_sequence_ptr,
+                                                         const SortedCDS& sorted_cds,
+                                                         ContigOffset_t& sub_sequence_offset,
+                                                         ContigSize_t sub_sequence_length,
+                                                         ContigOffset_t contig_offset = 0);
+
+  std::shared_ptr<DNA5Sequence> codingSubSequence(const SortedCDS& sorted_cds,
+                                                  ContigOffset_t& sub_sequence_offset,
+                                                  ContigSize_t sub_sequence_length,
+                                                  ContigOffset_t contig_offset = 0) const {
+
+    std::shared_ptr<const DNA5Sequence> seq_ptr(std::make_shared<const DNA5Sequence>(base_sequence_));
+    return codingSubSequence(seq_ptr, sorted_cds, sub_sequence_offset, sub_sequence_length, contig_offset);
+
+  }
+
 
 private:
 

@@ -24,12 +24,21 @@ namespace kgl = kellerberrin::genome;
 std::string kgl::CompoundDelete::output() const {
 
   std::stringstream ss;
-  ss << genomeOutput() << '\n';
+  ss << genomeOutput() << " ";
+  ss << mutation() << "\n";
   ss << "Compound Delete >>>>>\n";
   for (const auto& variant : variant_map_) {
     ss << variant.second->output() << "\n";
   }
   ss << "<<<<< Compound Delete\n";
+  return ss.str();
+
+}
+
+std::string kgl::CompoundDelete::mutation() const {
+
+  std::stringstream ss;
+  ss << "-" << "(" << variant_map_.size() << ")" << contigOffset() << " ";
   return ss.str();
 
 }

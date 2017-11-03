@@ -64,6 +64,7 @@ private:
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
   std::string output() const;
+  std::string mutation() const;
 
 };
 

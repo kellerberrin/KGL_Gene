@@ -194,3 +194,24 @@ bool kgl::DNA5Sequence::offsetWithinSequence(const SortedCDS& sorted_cds,
   return iscoding;
 
 }
+
+
+std::shared_ptr<kgl::DNA5Sequence>
+kgl::DNA5Sequence::codingSubSequence(std::shared_ptr<const DNA5Sequence> base_sequence_ptr,
+                                     const SortedCDS& sorted_cds,
+                                     ContigOffset_t& sub_sequence_offset,
+                                     ContigSize_t sub_sequence_length,
+                                     ContigOffset_t contig_offset) {
+
+  std::shared_ptr<kgl::DNA5Sequence> sequence = codingSequence(base_sequence_ptr, sorted_cds, contig_offset);
+
+  ContigOffset_t sequence_offset;
+  ContigSize_t sequence_length;
+  if (offsetWithinSequence(sorted_cds, sub_sequence_offset, sequence_offset, sequence_length)) {
+
+
+  }
+
+  return sequence;
+
+}

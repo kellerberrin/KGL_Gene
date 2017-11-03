@@ -49,7 +49,7 @@ std::string kgl::VariantSequence::genomeOutput() const {
 
     for (auto gene_ptr : geneMembership()) {
 
-      ss << gene_ptr->id() << " " << (offset() - gene_ptr->sequence().begin()) << " ";
+      ss << gene_ptr->id() << " ";
 
     }
   }
