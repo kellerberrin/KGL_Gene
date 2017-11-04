@@ -43,16 +43,6 @@ std::string kgl::VariantSequence::genomeOutput() const {
   ss << contig()->contigId();
   ss << " " << typestr() << " ";
 
-  if (type() != VariantSequenceType::NON_CODING) {
-
-    ss << "Gene(s):";
-
-    for (auto gene_ptr : geneMembership()) {
-
-      ss << gene_ptr->id() << " ";
-
-    }
-  }
 
   return ss.str();
 

@@ -32,6 +32,7 @@ public:
   AminoType operator[] (ContigOffset_t& offset) const { return amino_sequence_[offset]; }
   ContigSize_t length() const { return amino_sequence_.length(); }
 
+  const ProteinString& getProteinString() const { return amino_sequence_; }
 
 private:
 
@@ -69,6 +70,9 @@ public:
   }
 
   std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<DNA5Sequence> sequence_ptr) const;
+
+  std::shared_ptr<AminoSequence> getAminoSequence(const SortedCDS& sorted_cds,
+                                                  std::shared_ptr<const DNA5Sequence> contig_sequence_ptr) const;
 
   AminoAcidTypes::Codon lastCodon(std::shared_ptr<DNA5Sequence> sequence_ptr) const {
 

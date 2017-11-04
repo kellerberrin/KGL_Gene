@@ -30,6 +30,17 @@ kgl::CodingSequenceDNA5::getAminoSequence(std::shared_ptr<DNA5Sequence> sequence
 }
 
 
+std::shared_ptr<kgl::AminoSequence>
+kgl::CodingSequenceDNA5::getAminoSequence(const SortedCDS& sorted_cds,
+                                          std::shared_ptr<const DNA5Sequence> contig_sequence_ptr) const {
+
+  std::shared_ptr<DNA5Sequence> coding_sequence = DNA5Sequence::codingSequence(contig_sequence_ptr, sorted_cds);
+  return getAminoSequence(coding_sequence);
+
+}
+
+
+
 size_t kgl::CodingSequenceDNA5::checkNonsenseMutation(std::shared_ptr<DNA5Sequence> sequence_ptr) const {
 
   for (size_t index = 0; index < codonLength(sequence_ptr) - 1; ++index) {
@@ -154,11 +165,8 @@ bool kgl::CodingSequenceDNA5::SNPMutation(const SortedCDS& sorted_cds,
     // Get the reference and mutant amino acids
     if (result) {
 
-      ExecEnv::log().info("SNPMutation - reference codon: {}, mutation base in codon: {}",
-                          codon_sequence->getSequenceString(), base_in_codon);
       reference_amino = getAmino(codon_sequence, 0);
       codon_sequence->modifyBase(mutant_base, base_in_codon);
-      ExecEnv::log().info("SNPMutation - mutant codon: {}", codon_sequence->getSequenceString());
       mutant_amino = getAmino(codon_sequence, 0);
 
     }

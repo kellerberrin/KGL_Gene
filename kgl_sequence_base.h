@@ -28,7 +28,7 @@ public:
 
   explicit DNA5Sequence(SequenceString sequence) : base_sequence_(std::move(sequence)) {};
   DNA5Sequence() = delete;
-  virtual ~DNA5Sequence() = default;
+  ~DNA5Sequence() = default;
 
   NucleotideType operator[] (ContigOffset_t& offset) const { return base_sequence_[offset]; }
 
@@ -53,14 +53,16 @@ public:
   // For example, the supplied sub-sequence could be a Gene sequence, in this case contig_offset would be
   // the Gene offset within the contig. If the supplied sequence is the entire contig sequence then contig_offset
   // will be zero (the default argument value). The entire sequence defined by the sorted CDS is returned.
-  static std::shared_ptr<DNA5Sequence> codingSequence(std::shared_ptr<const DNA5Sequence> base_sequence_ptr,
-                                                      const SortedCDS& sorted_cds, ContigOffset_t contig_offset = 0);
+  static std::shared_ptr<DNA5Sequence> codingSequence(std::shared_ptr<const DNA5Sequence> contig_sequence_ptr,
+                                                      const SortedCDS& sorted_cds) {
 
-  std::shared_ptr<DNA5Sequence> codingSequence(const SortedCDS& sorted_cds, ContigOffset_t contig_offset = 0) const {
+    return codingSubSequence(contig_sequence_ptr, sorted_cds, 0, 0, 0);
 
-    return codingSubSequence(sorted_cds, 0, 0, contig_offset);
-//    std::shared_ptr<const DNA5Sequence> seq_ptr(std::make_shared<const DNA5Sequence>(base_sequence_));
-//    return codingSequence(seq_ptr, sorted_cds, contig_offset);
+  }
+
+  std::shared_ptr<DNA5Sequence> codingSequence(const SortedCDS& sorted_cds) const {
+
+    return codingSubSequence(sorted_cds, 0, 0);
 
   }
 
@@ -81,10 +83,6 @@ public:
     return codingSubSequence(seq_ptr, sorted_cds, sub_sequence_offset, sub_sequence_length, contig_offset);
 
   }
-
-  // Convenience routine returns a codon given an offset within a coding region.
-
-
 
 private:
 

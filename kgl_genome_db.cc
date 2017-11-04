@@ -524,7 +524,12 @@ bool kgl::ContigFeatures::SNPMutation(const SortedCDS& sorted_cds,
 
 }
 
+// Convenience routine for Amino sequences.
+std::shared_ptr<kgl::AminoSequence> kgl::ContigFeatures::getAminoSequence(const SortedCDS& sorted_cds) const {
 
+  return coding_sequence_.getAminoSequence(sorted_cds, sequence_ptr_);
+
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GenomeDatabase members.

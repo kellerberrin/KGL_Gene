@@ -7,7 +7,7 @@
 
 namespace kgl = kellerberrin::genome;
 
-
+/*
 std::shared_ptr<kgl::DNA5Sequence>
 kgl::DNA5Sequence::codingSequence(std::shared_ptr<const DNA5Sequence> base_sequence_ptr,
                                   const SortedCDS& sorted_cds,
@@ -102,6 +102,7 @@ kgl::DNA5Sequence::codingSequence(std::shared_ptr<const DNA5Sequence> base_seque
   return std::shared_ptr<DNA5Sequence>(std::make_shared<DNA5Sequence>(DNA5Sequence(coding_sequence)));
 
 }
+*/
 
 // Returns bool false if contig_offset is not within the coding sequences defined by sorted_cds.
 // If the contig_offset is in the coding sequence then a valid sequence_offset and the sequence length is returned.
@@ -154,14 +155,15 @@ bool kgl::DNA5Sequence::offsetWithinSequence(const SortedCDS& sorted_cds,
     }
       break;
 
+      // Careful with this logic as the CDS offsets are [begin, end). Therefore we must adjust the offset by -1.
     case StrandSense::REVERSE: {
 
       for (auto rit = sorted_cds.rbegin(); rit != sorted_cds.rend(); ++rit) {
 
         // within the CDS
-        if (contig_offset >= rit->second->sequence().begin() and contig_offset <= rit->second->sequence().end()) {
+        if (contig_offset >= rit->second->sequence().begin() and contig_offset < rit->second->sequence().end()) {
 
-          coding_offset += (rit->second->sequence().end() - contig_offset);
+          coding_offset += (rit->second->sequence().end() - contig_offset) - 1;  // Careful here.
           iscoding = true;
 
         } else if (contig_offset < rit->second->sequence().begin()) {

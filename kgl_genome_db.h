@@ -70,6 +70,8 @@ public:
                    typename AminoAcidTypes::AminoType& reference_amino,
                    typename AminoAcidTypes::AminoType& mutant_amino) const;
 
+  std::shared_ptr<AminoSequence> getAminoSequence(const SortedCDS& sorted_cds) const;
+
 private:
 
   ContigId_t contig_id_;
