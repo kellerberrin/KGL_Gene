@@ -8,10 +8,34 @@
 namespace kgl = kellerberrin::genome;
 
 
+
+kgl::ProteinString kgl::AminoSequence::emphasizeProteinString(const ProteinString& protein_string,
+                                                              const std::vector<ContigOffset_t>& emphasize_offsets) {
+
+  ProteinString emph_protein_string = protein_string;
+  std::transform(emph_protein_string.begin(), emph_protein_string.end(), emph_protein_string.begin(), ::tolower);
+  for (auto offset : emphasize_offsets) {
+
+    if (offset >= emph_protein_string.length()) {
+
+      ExecEnv::log().error("emphasizeProteinString() emphasize offset: {} >= protein string length: {}",
+                           offset, emph_protein_string.length());
+      continue;
+    }
+
+    emph_protein_string[offset] = ::toupper(emph_protein_string[offset]);
+
+  }
+
+  return emph_protein_string;
+
+}
+
+
 std::shared_ptr<kgl::AminoSequence>
 kgl::CodingSequenceDNA5::getAminoSequence(std::shared_ptr<DNA5Sequence> sequence_ptr) const {
 
-  typename AminoSequence::ProteinString protein_string;
+  ProteinString protein_string;
   AminoAcidTypes::AminoType amino_acid;
 
   protein_string.reserve(codonLength(sequence_ptr));
@@ -170,6 +194,10 @@ bool kgl::CodingSequenceDNA5::SNPMutation(const SortedCDS& sorted_cds,
       mutant_amino = getAmino(codon_sequence, 0);
 
     }
+
+  } else {
+
+
 
   }
 

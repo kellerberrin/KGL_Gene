@@ -17,13 +17,13 @@ namespace genome {   // project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Amino Sequence - A container for Amino Acid (protein) sequences.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+using AminoType = typename AminoAcidTypes::AminoType;
+using ProteinString = std::basic_string<AminoType>;
 
 class AminoSequence {
 
 public:
 
-  using AminoType = typename AminoAcidTypes::AminoType;
-  using ProteinString = std::basic_string<AminoType>;
 
   explicit AminoSequence(ProteinString sequence) : amino_sequence_(std::move(sequence)) {};
   AminoSequence() = delete;
@@ -33,6 +33,15 @@ public:
   ContigSize_t length() const { return amino_sequence_.length(); }
 
   const ProteinString& getProteinString() const { return amino_sequence_; }
+
+  static ProteinString emphasizeProteinString(const ProteinString& getProteinString,
+                                              const std::vector<ContigOffset_t>& emphasize_offsets);
+
+  const ProteinString emphasizeProteinString(const std::vector<ContigOffset_t>& emphasize_offsets) const {
+
+    return emphasizeProteinString(amino_sequence_, emphasize_offsets);
+
+  }
 
 private:
 

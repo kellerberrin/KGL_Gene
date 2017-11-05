@@ -68,6 +68,31 @@ public:
   static constexpr AminoType STOP_OPAL_TGA = '*';
   // Null Amino Type used in the translation tables.
   static constexpr AminoType NULL_AMINO = '-';
+  // Lower case amino acids
+  static constexpr AminoType PHENYLALANINE_LC = 'f';
+  static constexpr AminoType LEUCINE_LC = 'l';
+  static constexpr AminoType SERINE_LC = 's';
+  static constexpr AminoType TYROSINE_LC = 'y';
+  static constexpr AminoType CYSTEINE_LC = 'c';
+  static constexpr AminoType TRYPTOPHAN_LC = 'w';
+  static constexpr AminoType PROLINE_LC = 'p';
+  static constexpr AminoType HISTIDINE_LC = 'h';
+  static constexpr AminoType GLUTAMINE_LC = 'q';
+  static constexpr AminoType ARGININE_LC = 'r';
+  static constexpr AminoType ISOLEUCINE_LC = 'i';
+  static constexpr AminoType METHIONINE_LC = 'm';
+  static constexpr AminoType THREONINE_LC = 't';
+  static constexpr AminoType ASPARAGINE_LC = 'n';
+  static constexpr AminoType LYSINE_LC = 'l';
+  static constexpr AminoType VALINE_LC = 'v';
+  static constexpr AminoType ALANINE_LC = 'a';
+  static constexpr AminoType ASPARTIC_LC = 'd';
+  static constexpr AminoType GLUTAMIC_LC = 'e';
+  static constexpr AminoType GLYCINE_LC = 'g';
+  // The additional two amino acids encoded using stop codons by some species.
+  static constexpr AminoType SELENOCYSTEINE_LC = 'u';
+  static constexpr AminoType PYRROLYSINE_LC = 'o';
+
 
 };
 

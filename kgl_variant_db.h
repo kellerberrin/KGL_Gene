@@ -22,7 +22,7 @@ namespace genome {   // project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-using OffsetVariantMap = std::multimap<ContigOffset_t, std::shared_ptr<const Variant>>;
+using OffsetVariantMap = std::map<ContigOffset_t, std::shared_ptr<const Variant>>;
 class ContigVariant {
 
 public:
@@ -33,7 +33,7 @@ public:
 
   ContigVariant& operator=(const ContigVariant&) = default;
 
-  void addVariant(ContigOffset_t contig_offset, std::shared_ptr<const Variant>& variant_ptr);
+  bool addVariant(ContigOffset_t contig_offset, std::shared_ptr<const Variant>& variant_ptr);
   const ContigId_t& contigId() const { return contig_id_; }
   size_t variantCount() const { return offset_variant_map_.size(); }
 
@@ -46,6 +46,8 @@ public:
   std::shared_ptr<ContigVariant> filterVariants(const VariantFilter& filter) const;
 
   const OffsetVariantMap& getMap() const { return offset_variant_map_; }
+
+  size_t size() const { return offset_variant_map_.size(); }
 
   friend std::ostream& operator<<(std::ostream &os, const ContigVariant& contig_variant);
 
@@ -85,6 +87,8 @@ public:
 
   bool addVariant(std::shared_ptr<const Variant> variant);
 
+  size_t size() const;
+
   std::shared_ptr<GenomeVariant> filterVariants(const VariantFilter& filter) const;
 
   const GenomeVariantMap& contigMap() const { return genome_variant_map_; }
@@ -96,7 +100,10 @@ public:
 
   static std::shared_ptr<GenomeVariant> emptyGenomeVariant(const VariantType_t& variant_type,
                                                            const GenomeId_t& genome_id,
-                                                           std::shared_ptr<const GenomeDatabase> genome_db);
+                                                           const std::shared_ptr<const GenomeDatabase>& genome_db);
+
+  std::shared_ptr<GenomeVariant>
+  disaggregateCompoundVariants(const std::shared_ptr<const GenomeDatabase>& genome_db) const;
 
   friend std::ostream & operator<<(std::ostream &os, const GenomeVariant& genome_variant);
 

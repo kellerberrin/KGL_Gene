@@ -2,7 +2,9 @@
 // Created by kellerberrin on 31/10/17.
 //
 
+#include <memory>
 #include "kgl_patterns.h"
+#include "kgl_variant_compound.h"
 #include "kgl_variant_db.h"
 
 
@@ -26,9 +28,11 @@ kgl::ContigVariant::filterVariants(const kgl::VariantFilter& filter) const {
 }
 
 
-void kgl::ContigVariant::addVariant(ContigOffset_t contig_offset, std::shared_ptr<const kgl::Variant>& variant_ptr) {
+bool kgl::ContigVariant::addVariant(ContigOffset_t contig_offset, std::shared_ptr<const kgl::Variant>& variant_ptr) {
 
-  offset_variant_map_.insert(std::make_pair(contig_offset, variant_ptr));
+  auto result = offset_variant_map_.insert(std::make_pair(contig_offset, variant_ptr));
+
+  return result.second;
 
 }
 
@@ -90,8 +94,7 @@ bool kgl::GenomeVariant::addVariant(std::shared_ptr<const Variant> variant) {
     return false;
   }
 
-  contig_variant->addVariant(variant->contigOffset(), variant);
-  return true;
+  return contig_variant->addVariant(variant->contigOffset(), variant);
 
 }
 
@@ -118,7 +121,7 @@ std::shared_ptr<kgl::GenomeVariant> kgl::GenomeVariant::filterVariants(const kgl
 std::shared_ptr<kgl::GenomeVariant>
 kgl::GenomeVariant::emptyGenomeVariant(const VariantType_t& variant_type,
                                        const GenomeId_t& genome_id,
-                                       std::shared_ptr<const GenomeDatabase> genome_db) {
+                                       const std::shared_ptr<const GenomeDatabase>& genome_db) {
 
 
   std::shared_ptr<GenomeVariant> empty_genome_variant(std::make_shared<GenomeVariant>(variant_type, genome_id));
@@ -152,5 +155,56 @@ std::ostream& kgl::operator<<(std::ostream &os, const kgl::GenomeVariant& genome
   os.flush();
 
   return os;
+
+}
+
+
+std::shared_ptr<kgl::GenomeVariant>
+kgl::GenomeVariant::disaggregateCompoundVariants(const std::shared_ptr<const GenomeDatabase>& genome_db) const {
+
+  std::shared_ptr<kgl::GenomeVariant>
+  disaggreagated = emptyGenomeVariant("disaggregated variants", genomeId(), genome_db);
+
+  for (auto contig_variant : genome_variant_map_) {
+
+    for (auto variant : contig_variant.second->getMap()) {
+
+      if (variant.second->isCompound()) {
+
+        std::shared_ptr<const CompoundVariant>
+        compound_variant = std::static_pointer_cast<const CompoundVariant>(variant.second);
+
+        for (auto single_variant : compound_variant->getMap()) {
+
+          if (not disaggreagated->addVariant(single_variant.second)) {
+
+            ExecEnv::log().error("Cannot add disaggregated variant: {} - same contig offset as existing variant",
+                                 single_variant.second->output());
+
+          }
+
+        }
+
+      }
+
+    }
+
+  }
+
+  return disaggreagated;
+
+}
+
+
+size_t kgl::GenomeVariant::size() const {
+
+  size_t total_variants = 0;
+  for (auto contig_variant : genome_variant_map_) {
+
+    total_variants += contig_variant.second->size();
+
+  }
+
+  return total_variants;
 
 }

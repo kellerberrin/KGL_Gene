@@ -11,8 +11,8 @@ namespace kgl = kellerberrin::genome;
 
 // Generate SNP variants.
 std::shared_ptr<const kgl::GenomeVariant>
-kgl::VariantAnalysis::SNPVariants(std::shared_ptr<const ContigCountData> count_data,
-                                  std::shared_ptr<const GenomeDatabase> genome_db) {
+kgl::VariantAnalysis::SNPVariants(const std::shared_ptr<const ContigCountData>& count_data,
+                                  const std::shared_ptr<const GenomeDatabase>& genome_db) {
 
   std::shared_ptr<GenomeVariant> snp_variants = kgl::GenomeVariant::emptyGenomeVariant("simpleSNPVariants",
                                                                                        count_data->fileName(),
@@ -73,7 +73,12 @@ kgl::VariantAnalysis::SNPVariants(std::shared_ptr<const ContigCountData> count_d
                                                             reference_nucleotide,
                                                             max_count_nucleotide));
 
-          snp_variants->addVariant(snp_variant);
+          if (not snp_variants->addVariant(snp_variant)) {
+
+            ExecEnv::log().error("Unable to add SNP variant: {} to contig: {} - probable offset duplicate",
+                                 snp_variant->output(), contig_ptr->contigId());
+
+          }
           ++snp_count;
 
         }

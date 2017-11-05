@@ -32,18 +32,24 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
   std::shared_ptr<const kgl::GenomeVariant> codon_delete_ptr = kgl::VariantAnalysis().codonDelete(variant_ptr,
                                                                                                   count_data_ptr,
                                                                                                   genome_db_ptr);
-  variant_ptr = variant_ptr->filterVariants(kgl::NotFilter<kgl::DeleteSNPFilter>());
-  // Filter for CDS membership.
-  variant_ptr = variant_ptr->filterVariants(kgl::InCDSFilter(genome_db_ptr));
+  // Disaggregated contiguous deletion variants.
+  std::shared_ptr<const kgl::GenomeVariant> disagg_ptr = codon_delete_ptr->disaggregateCompoundVariants(genome_db_ptr);
+  // Remove disaggregated variants.
+  variant_ptr = variant_ptr->Difference(disagg_ptr);
+  // Add in contiguous deletes.
+  variant_ptr = variant_ptr->Union(codon_delete_ptr);
+  // Generate compound single codon variants
+  std::shared_ptr<const kgl::GenomeVariant> compound_snp_ptr = kgl::VariantAnalysis().compoundSNP(variant_ptr,
+                                                                                                  genome_db_ptr);
+  variant_ptr = variant_ptr->filterVariants(kgl::InCDSFilter());
   std::cout << *variant_ptr;
   // Filter for read count.
   variant_ptr = variant_ptr->filterVariants(kgl::ReadCountFilter(min_count));
   // Filter for read proportion.
   variant_ptr = variant_ptr->filterVariants(kgl::MutantProportionFilter(min_proportion));
-  // Add in compound deletes.
-  variant_ptr = variant_ptr->Union(codon_delete_ptr);
   // Filter for PfATP4
-  variant_ptr = variant_ptr->filterVariants(kgl::GeneFilter("PF3D7_1211900",genome_db_ptr));
+  variant_ptr = variant_ptr->filterVariants(kgl::GeneFilter("PF3D7_1211900"));
+//  std::cout << *variant_ptr;
 
   return variant_ptr;
 

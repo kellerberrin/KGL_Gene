@@ -45,9 +45,9 @@ std::string kgl::CompoundDelete::mutation() const {
 
 
 std::shared_ptr<const kgl::GenomeVariant>
-kgl::VariantAnalysis::codonDelete(std::shared_ptr<const GenomeVariant> delete_SNPs,
-                                  std::shared_ptr<const ContigCountData> count_data,
-                                  std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
+kgl::VariantAnalysis::codonDelete(const std::shared_ptr<const GenomeVariant>& delete_SNPs,
+                                  const std::shared_ptr<const ContigCountData>& count_data,
+                                  const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) {
 
   std::shared_ptr<kgl::GenomeVariant>
   genome_delete_variants = kgl::GenomeVariant::emptyGenomeVariant("Compound Delete Variants",
@@ -74,13 +74,13 @@ kgl::VariantAnalysis::codonDelete(std::shared_ptr<const GenomeVariant> delete_SN
 
 
 // Generate SNP variants.
-void kgl::VariantAnalysis::aggregateCodingDeletions(std::shared_ptr<const GenomeVariant>& delete_SNPs,
-                                                    std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
+void kgl::VariantAnalysis::aggregateCodingDeletions(const std::shared_ptr<const GenomeVariant>& delete_SNPs,
+                                                    const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
                                                     std::vector<CompoundVariantMap>& contiguous_delete_vec) {
 
   // Filter to only coding deletion SNPs.
-  delete_SNPs = delete_SNPs->filterVariants(kgl::DeleteSNPFilter());
-  std::shared_ptr<kgl::GenomeVariant> coding_delete_SNPs = delete_SNPs->filterVariants(kgl::InCDSFilter(genome_db_ptr));
+  std::shared_ptr<kgl::GenomeVariant> filtered_delete_SNPs = delete_SNPs->filterVariants(kgl::DeleteSNPFilter());
+  std::shared_ptr<kgl::GenomeVariant> coding_delete_SNPs = filtered_delete_SNPs->filterVariants(kgl::InCDSFilter());
   CompoundVariantMap contiguous_deletes;
 
   for (const auto& contig_variants : coding_delete_SNPs->contigMap()) {
@@ -208,8 +208,8 @@ kgl::VariantAnalysis::membershipCodingDeletions(const std::vector<kgl::CompoundV
 }
 
 
-void kgl::VariantAnalysis::generateCodonDeletes( std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
-                                                 std::shared_ptr<const ContigCountData> count_data,
+void kgl::VariantAnalysis::generateCodonDeletes( const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
+                                                 const std::shared_ptr<const ContigCountData>& count_data,
                                                  const std::vector<CompoundVariantMap>& contiguous_delete_vec,
                                                  std::shared_ptr<kgl::GenomeVariant> genome_variant_ptr) {
 
@@ -220,10 +220,19 @@ void kgl::VariantAnalysis::generateCodonDeletes( std::shared_ptr<const GenomeDat
     ContigSize_t mod3_size = variant_map.size() % 3;
     std::shared_ptr<const Variant> compound_delete;
 
-    switch(mod3_size) {
+    switch (mod3_size) {
 
-      case 0:
-        genome_variant_ptr->addVariant(createCompoundDelete(variant_map));
+      case 0: {
+
+          std::shared_ptr<const Variant> delete_variant = createCompoundDelete(variant_map);
+          if (not genome_variant_ptr->addVariant(delete_variant)) {
+
+            ExecEnv::log().error("Unable to add compound delete variant: {} - probable offset duplicate",
+                                 delete_variant->output());
+
+          }
+
+        }
         break;
 
       case 1:
@@ -275,169 +284,6 @@ std::shared_ptr<const kgl::Variant> kgl::VariantAnalysis::createCompoundDelete(c
   return compound_delete;
 
 }
-
-
-/*
-void kgl::VariantAnalysis::generateCodonDeletes( std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
-                                                 std::shared_ptr<const ContigCountData> count_data,
-                                                 const std::vector<CompoundVariantMap>& contiguous_delete_vec) {
-
-  size_t codon_aligned_deletions = 0;
-  size_t codon_offset_deletions = 0;
-  size_t previous_delete_evidence = 0;
-  size_t codon_offset_2_deletions = 0;
-  size_t previous_codon_evidence = 0;
-  size_t coding_deletions = 0;
-
-  if (contiguous_delete_vec.empty()) return;
-
-  for (auto variant_map : contiguous_delete_vec) {
-
-    auto it = variant_map.begin();
-    GeneVector gene_vector = it->second->geneMembership();
-
-    for (auto gene : gene_vector) {
-
-      StrandSense gene_strand = gene->sequence().strand();
-      SortedCDSVector coding_cds_vec;
-      gene->getSortedCDS(coding_cds_vec);
-      ContigOffset_t delete_offset;
-
-      switch(gene_strand) {
-
-        case StrandSense::UNKNOWN:
-        case StrandSense::FORWARD:
-          delete_offset = variant_map.begin()->second->contigOffset();
-          break;
-
-        case StrandSense::REVERSE:
-          delete_offset = variant_map.rbegin()->second->contigOffset();
-          break;
-      }
-
-      for (auto coding_cds : coding_cds_vec) {
-
-        ContigOffset_t sequence_offset;
-        ContigSize_t sequence_length;
-        if (not DNA5Sequence::offsetWithinSequence(coding_cds, delete_offset, sequence_offset, sequence_length)) {
-
-//          ExecEnv::log().info("Variant compound delete contig: {}, offset:{}, size: {} not in gene: {} coding sequence",
-//                              it->second->contigId(), delete_offset, variant_map.size(), gene->id());
-//          gene->recusivelyPrintsubfeatures();
-//          gene->printCDSvector(coding_cds_vec);
-
-        } else { // we have the delete sequence offset determine if
-
-          ++coding_deletions;
-          if ((sequence_offset % 3) == 0) {
-
-            // create the compound delete.
-            ++codon_aligned_deletions;
-
-          }
-          if ((variant_map.size() % 3) == 1) {
-
-            ++codon_offset_deletions;
-
-            // Get the gene strand
-            ContigSize_t previous_offset;
-            // see if the the previous offset read evidence has any deletions
-            switch(gene_strand) {
-
-              case StrandSense::UNKNOWN:
-              case StrandSense::FORWARD:
-                previous_offset = delete_offset - 1;
-                break;
-
-              case StrandSense::REVERSE:
-                previous_offset = delete_offset + 1;
-                break;
-            }
-            auto contig_block = count_data->findContigBlock(it->second->contigId());
-            if (contig_block) {
-
-              const auto &nucleotide_array = contig_block->getNucleotideArray();
-              NucleotideReadCount_t delete_count;
-              delete_count = nucleotide_array.readCount(previous_offset, NucleotideColumn_DNA5::DELETE_NUCLEOTIDE);
-              if (delete_count > 1) {
-
-                ++previous_delete_evidence;
-
-              } else { // no delete evidence.
-
-
-              }
-
-            } else {
-
-              ExecEnv::log().error("Read count data for contig: {} not found", it->second->contigId());
-
-            }
-
-          } // offset 2 from codon boundary.
-          if ((variant_map.size() % 3) == 2) {
-
-            ++codon_offset_2_deletions;
-            ContigSize_t previous_offset;
-            ContigSize_t codon_boundary_offset;
-
-            switch(gene_strand) {
-
-              case StrandSense::UNKNOWN:
-              case StrandSense::FORWARD:
-                previous_offset = delete_offset - 1;
-                codon_boundary_offset = delete_offset - 2;
-                break;
-
-              case StrandSense::REVERSE:
-                previous_offset = delete_offset + 1;
-                codon_boundary_offset = delete_offset + 2;
-                break;
-            }
-
-            // see if the previous 2 offset read evidence have deletions
-            auto contig_block = count_data->findContigBlock(it->second->contigId());
-            if (contig_block) {
-
-              const auto &nucleotide_array = contig_block->getNucleotideArray();
-              NucleotideReadCount_t previous_count, codon_count;
-              previous_count = nucleotide_array.readCount(previous_offset, NucleotideColumn_DNA5::DELETE_NUCLEOTIDE);
-              codon_count = nucleotide_array.readCount(codon_boundary_offset, NucleotideColumn_DNA5::DELETE_NUCLEOTIDE);
-              if (previous_count > 1 and codon_count > 1) {
-
-                ++previous_codon_evidence;
-
-              } else { // no delete evidence.
-
-
-              }
-
-            } else {
-
-              ExecEnv::log().error("Read count data for contig: {} not found", it->second->contigId());
-
-            }
-
-          } // offset 2 from codon boundary.
-
-        } // Check coding sequence offset.
-
-      } // coding sequences cds collection
-
-    }  // all coding sequences per gene.
-
-  } // for all genes
-
-  ExecEnv::log().info("Total contiguous deletions: {}, mod(size,3) == 0 :{}, in coding sequence: {}",
-                      contiguous_delete_vec.size(), codon_lengthmod3_delete, coding_deletions);
-  ExecEnv::log().info("Contiguous deletions on codon boundary: {}", codon_aligned_deletions);
-  ExecEnv::log().info("Contiguous deletions offset+1 from codon boundary: {} and offset-1 delete evidence : {}",
-                      codon_offset_deletions, previous_delete_evidence);
-  ExecEnv::log().info("Contiguous deletions offset+2 from codon boundary: {} and previous delete evidence : {}",
-                      codon_offset_2_deletions, previous_codon_evidence);
-
-}
-*/
 
 void kgl::VariantAnalysis::printCompoundVariant(const std::vector<CompoundVariantMap>& map_vec) {
 

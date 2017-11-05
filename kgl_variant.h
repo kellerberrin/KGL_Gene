@@ -114,6 +114,7 @@ public:
 
   virtual std::string output() const = 0;
   virtual std::string mutation() const = 0;
+  virtual bool isCompound() const { return false; }
 
 private:
 

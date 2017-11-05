@@ -68,19 +68,19 @@ std::string kgl::SNPVariantDNA5::mutation() const
             typename AminoAcidTypes::AminoType reference_amino;
             typename AminoAcidTypes::AminoType mutant_amino;
 
-            contig()->SNPMutation(sorted_cds,
-                                  contigOffset(),
-                                  reference(),
-                                  mutant(),
-                                  codon_offset,
-                                  reference_amino,
-                                  mutant_amino);
+            if (contig()->SNPMutation(sorted_cds,
+                                      contigOffset(),
+                                      reference(),
+                                      mutant(),
+                                      codon_offset,
+                                      reference_amino,
+                                      mutant_amino)) {
 
-            ss << reference_amino << codon_offset << mutant_amino << " ";
+              ss << reference_amino << codon_offset << mutant_amino << " ";
+              gene->recusivelyPrintsubfeatures();
+            }
+
             ss << reference() << contigOffset() << mutant() << " ";
-//          std::shared_ptr<AminoSequence> amino_sequence = contig()->getAminoSequence(sorted_cds);
-//          ss << "\n" << amino_sequence->getProteinString() << "\n";
-//          gene->recusivelyPrintsubfeatures(0);
 
           } else {
 

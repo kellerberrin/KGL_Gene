@@ -23,23 +23,27 @@ public:
   explicit VariantAnalysis() = default;
   ~VariantAnalysis() = default;
 
-  std::shared_ptr<const GenomeVariant> SNPVariants(std::shared_ptr<const ContigCountData> count_data,
-                                                   std::shared_ptr<const GenomeDatabase> genome_db);
+  std::shared_ptr<const GenomeVariant> SNPVariants(const std::shared_ptr<const ContigCountData>& count_data,
+                                                   const std::shared_ptr<const GenomeDatabase>& genome_db);
 
-  std::shared_ptr<const GenomeVariant> codonDelete(std::shared_ptr<const GenomeVariant> delete_SNPs,
-                                                   std::shared_ptr<const ContigCountData> count_data,
-                                                   std::shared_ptr<const GenomeDatabase> genome_db);
+  std::shared_ptr<const GenomeVariant> codonDelete(const std::shared_ptr<const GenomeVariant>& delete_SNPs,
+                                                   const std::shared_ptr<const ContigCountData>& count_data,
+                                                   const std::shared_ptr<const GenomeDatabase>& genome_db);
+
+  std::shared_ptr<const GenomeVariant> compoundSNP(const std::shared_ptr<const GenomeVariant>& SNPs,
+                                                   const std::shared_ptr<const GenomeDatabase>& genome_db);
+
 private:
 
 
-  void aggregateCodingDeletions(std::shared_ptr<const GenomeVariant>& delete_SNPs,
-                                std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
+  void aggregateCodingDeletions(const std::shared_ptr<const GenomeVariant>& delete_SNPs,
+                                const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
                                 std::vector<CompoundVariantMap>& contiguous_delete_vec);
 
   bool membershipCodingDeletions(const std::vector<CompoundVariantMap>& contiguous_delete_vec);
 
-  void generateCodonDeletes(std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
-                            std::shared_ptr<const ContigCountData> count_data,
+  void generateCodonDeletes(const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
+                            const std::shared_ptr<const ContigCountData>& count_data,
                             const std::vector<CompoundVariantMap>& contiguous_delete_vec,
                             std::shared_ptr<GenomeVariant> genome_variant_ptr);
 

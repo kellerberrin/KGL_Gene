@@ -485,7 +485,7 @@ bool kgl::ContigFeatures::findOffsetCDS(ContigOffset_t contig_offset, CDSArray &
 
         for (auto cds : sorted_cds) {
 
-          if (cds.second->sequence().begin() <= contig_offset and cds.second->sequence().end() >= contig_offset) {
+          if (cds.second->sequence().begin() <= contig_offset and cds.second->sequence().end() > contig_offset) {
 
             cds_array.emplace_back(cds.second);
 

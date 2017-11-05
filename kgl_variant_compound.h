@@ -37,6 +37,10 @@ public:
                                                            variant_map_(variant_map) {}
   ~CompoundVariant() override = default;
 
+  bool isCompound() const override { return true; }
+
+  const CompoundVariantMap& getMap() const { return variant_map_; }
+
   bool equivalent(const Variant& cmp_var) const override;
 
 protected:
@@ -58,6 +62,29 @@ public:
                  ContigOffset_t contig_offset,
                  const CompoundVariantMap variant_map) : CompoundVariant(contig_ptr, contig_offset, variant_map) {}
   ~CompoundDelete() override = default;
+
+private:
+
+
+  bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
+  std::string output() const;
+  std::string mutation() const;
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  A compound SNP. where SNPs act on the same codon and therefore have a combined change to the AA.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class CompoundSNP : public CompoundVariant {
+
+public:
+
+  CompoundSNP(std::shared_ptr<const ContigFeatures> contig_ptr,
+              ContigOffset_t contig_offset,
+              const CompoundVariantMap variant_map) : CompoundVariant(contig_ptr, contig_offset, variant_map) {}
+  ~CompoundSNP() override = default;
 
 private:
 

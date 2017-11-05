@@ -69,7 +69,7 @@ class InCDSFilter : public VariantFilter {
 
 public:
 
-  explicit InCDSFilter(std::shared_ptr<const GenomeDatabase> genome_db_ptr) : genome_db_ptr_(genome_db_ptr) {}
+  explicit InCDSFilter() {}
   ~InCDSFilter() override = default;
 
   std::string filterName() const final;
@@ -80,8 +80,6 @@ public:
   bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
 
 private:
-
-  std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
 
   bool implementFilter(const Variant& variant) const;
 
@@ -95,9 +93,7 @@ class ContigFilter : public VariantFilter {
 
 public:
 
-  explicit ContigFilter(const ContigId_t& contig_ident,
-                      const std::shared_ptr<const GenomeDatabase> genome_db_ptr) : contig_ident_(contig_ident),
-                                                                                   genome_db_ptr_(genome_db_ptr) {}
+  explicit ContigFilter(const ContigId_t& contig_ident) : contig_ident_(contig_ident) {}
   ~ContigFilter() override = default;
 
   std::string filterName() const final;
@@ -110,7 +106,6 @@ public:
 private:
 
   const ContigId_t contig_ident_;
-  std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
 
   bool implementFilter(const Variant& variant) const;
 
@@ -124,9 +119,7 @@ class GeneFilter : public VariantFilter {
 
 public:
 
-  explicit GeneFilter(const FeatureIdent_t& gene_ident,
-                      const std::shared_ptr<const GenomeDatabase> genome_db_ptr) : gene_ident_(gene_ident),
-                                                                                   genome_db_ptr_(genome_db_ptr) {}
+  explicit GeneFilter(const FeatureIdent_t& gene_ident) : gene_ident_(gene_ident) {}
   ~GeneFilter() override = default;
 
   std::string filterName() const final;
@@ -139,7 +132,6 @@ public:
 private:
 
   const FeatureIdent_t gene_ident_;
-  std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
 
   bool implementFilter(const Variant& variant) const;
 
