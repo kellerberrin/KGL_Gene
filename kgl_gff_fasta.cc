@@ -248,9 +248,13 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
   }
 
   std::shared_ptr<kgl::Feature> feature_ptr;
-  if (valid_phase) {
+  if (type.find(CDSFeature::CDS_TYPE) != std::string::npos) {
     // Create a CDS Feature.
     feature_ptr = std::make_shared<kgl::CDSFeature>(feature_id, phase, contig_ptr, sequence);
+  }
+  else if (type.find(mRNAFeature::MRNA_TYPE) != std::string::npos) {
+    // Create a mRNA feature
+    feature_ptr = std::make_shared<kgl::mRNAFeature>(feature_id, contig_ptr, sequence);
   }
   else if (type.find(GeneFeature::GENE_TYPE) != std::string::npos) {
     // Create a GENE feature

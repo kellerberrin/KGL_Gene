@@ -80,7 +80,7 @@ public:
 
   std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<DNA5Sequence> sequence_ptr) const;
 
-  std::shared_ptr<AminoSequence> getAminoSequence(const SortedCDS& sorted_cds,
+  std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                                                   std::shared_ptr<const DNA5Sequence> contig_sequence_ptr) const;
 
   AminoAcidTypes::Codon lastCodon(std::shared_ptr<DNA5Sequence> sequence_ptr) const {
@@ -107,13 +107,13 @@ public:
 
   AminoAcidTypes::AminoType getAmino(std::shared_ptr<DNA5Sequence> sequence_ptr, ContigSize_t codon_index) const;
 
-  static bool codonOffset(const SortedCDS& sorted_cds,
+  static bool codonOffset(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                           ContigOffset_t contig_offset,
                           ContigOffset_t& codon_offset,
                           ContigSize_t& base_in_codon);
 
   // Returns the amino mutation of an SNP in a coding sequence.
-  bool SNPMutation(const SortedCDS& sorted_cds,
+  bool SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                    const std::shared_ptr<const DNA5Sequence>& contig_sequence_ptr,
                    ContigOffset_t contig_offset,
                    typename NucleotideColumn_DNA5::NucleotideType reference_base,

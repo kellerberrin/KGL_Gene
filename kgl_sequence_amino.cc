@@ -55,10 +55,10 @@ kgl::CodingSequenceDNA5::getAminoSequence(std::shared_ptr<DNA5Sequence> sequence
 
 
 std::shared_ptr<kgl::AminoSequence>
-kgl::CodingSequenceDNA5::getAminoSequence(const SortedCDS& sorted_cds,
+kgl::CodingSequenceDNA5::getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                                           std::shared_ptr<const DNA5Sequence> contig_sequence_ptr) const {
 
-  std::shared_ptr<DNA5Sequence> coding_sequence = DNA5Sequence::codingSequence(contig_sequence_ptr, sorted_cds);
+  std::shared_ptr<DNA5Sequence> coding_sequence = DNA5Sequence::codingSequence(contig_sequence_ptr, coding_seq_ptr);
   return getAminoSequence(coding_sequence);
 
 }
@@ -104,14 +104,14 @@ kgl::AminoAcidTypes::AminoType kgl::CodingSequenceDNA5::getAmino(std::shared_ptr
 }
 
 
-bool kgl::CodingSequenceDNA5::codonOffset(const SortedCDS& sorted_cds,
+bool kgl::CodingSequenceDNA5::codonOffset(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                                           ContigOffset_t contig_offset,
                                           ContigOffset_t& codon_offset,
                                           ContigSize_t& base_in_codon) {
 
   ContigOffset_t sequence_offset;
   ContigSize_t sequence_length;
-  if (DNA5Sequence::offsetWithinSequence(sorted_cds, contig_offset, sequence_offset, sequence_length)) {
+  if (DNA5Sequence::offsetWithinSequence(coding_seq_ptr, contig_offset, sequence_offset, sequence_length)) {
 
     codon_offset = static_cast<ContigOffset_t>(sequence_offset / 3);
     base_in_codon = static_cast <ContigOffset_t>(sequence_offset % 3);
@@ -127,7 +127,7 @@ bool kgl::CodingSequenceDNA5::codonOffset(const SortedCDS& sorted_cds,
 
 }
 
-bool kgl::CodingSequenceDNA5::SNPMutation(const SortedCDS& sorted_cds,
+bool kgl::CodingSequenceDNA5::SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                                           const std::shared_ptr<const DNA5Sequence>& contig_sequence_ptr,
                                           ContigOffset_t contig_offset,
                                           typename NucleotideColumn_DNA5::NucleotideType reference_base,
@@ -138,15 +138,17 @@ bool kgl::CodingSequenceDNA5::SNPMutation(const SortedCDS& sorted_cds,
 
   bool result;
 
+  const SortedCDS& sorted_cds = coding_seq_ptr->getSortedCDS();
+
   ContigSize_t base_in_codon;
-  result = codonOffset(sorted_cds, contig_offset, codon_offset, base_in_codon);
+  result = codonOffset(coding_seq_ptr, contig_offset, codon_offset, base_in_codon);
 
   if (result) {
 
     auto sequence_offset = static_cast<ContigOffset_t>(codon_offset * 3);
     ContigSize_t codon_size = 3;
     StrandSense strand = sorted_cds.begin()->second->sequence().strand();
-    std::shared_ptr<DNA5Sequence> codon_sequence = contig_sequence_ptr->codingSubSequence(sorted_cds,
+    std::shared_ptr<DNA5Sequence> codon_sequence = contig_sequence_ptr->codingSubSequence(coding_seq_ptr,
                                                                                           sequence_offset,
                                                                                           codon_size);
     if (codon_sequence->length() != codon_size) {

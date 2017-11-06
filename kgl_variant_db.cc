@@ -28,11 +28,9 @@ kgl::ContigVariant::filterVariants(const kgl::VariantFilter& filter) const {
 }
 
 
-bool kgl::ContigVariant::addVariant(ContigOffset_t contig_offset, std::shared_ptr<const kgl::Variant>& variant_ptr) {
+void kgl::ContigVariant::addVariant(ContigOffset_t contig_offset, std::shared_ptr<const kgl::Variant>& variant_ptr) {
 
-  auto result = offset_variant_map_.insert(std::make_pair(contig_offset, variant_ptr));
-
-  return result.second;
+  offset_variant_map_.insert(std::make_pair(contig_offset, variant_ptr));
 
 }
 
@@ -42,7 +40,7 @@ std::ostream& kgl::operator<<(std::ostream &os, const kgl::ContigVariant& contig
 
   for (auto& variant : contig_variant.offset_variant_map_) {
 
-    os << *(variant.second) << '\n';
+    os << *(variant.second);
 
   }
 
@@ -94,7 +92,9 @@ bool kgl::GenomeVariant::addVariant(std::shared_ptr<const Variant> variant) {
     return false;
   }
 
-  return contig_variant->addVariant(variant->contigOffset(), variant);
+  contig_variant->addVariant(variant->contigOffset(), variant);
+
+  return true;
 
 }
 

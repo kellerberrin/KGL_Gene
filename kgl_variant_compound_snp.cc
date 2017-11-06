@@ -71,13 +71,12 @@ kgl::VariantAnalysis::compoundSNP(const std::shared_ptr<const GenomeVariant>& SN
 
               GeneVector variant_genes = variant.second->geneMembership();
               for (auto gene : variant_genes) {
-                SortedCDSVector sorted_cds_vec;
-                gene->getSortedCDS(sorted_cds_vec);
+                std::shared_ptr<const CodingSequenceArray> coding_seqs = kgl::GeneFeature::getCodingSequences(gene);
                 ContigOffset_t codon_offset;
                 ContigSize_t base_in_codon;
-                for (auto sorted_cds : sorted_cds_vec) {
+                for (const auto& sequence : coding_seqs->getMap()) {
 
-                  if (kgl::CodingSequenceDNA5::codonOffset(sorted_cds,
+                  if (kgl::CodingSequenceDNA5::codonOffset(sequence.second,
                                                            variant.second->contigOffset(),
                                                            codon_offset,
                                                            base_in_codon)) {

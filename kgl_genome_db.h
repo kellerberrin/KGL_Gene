@@ -27,7 +27,6 @@ namespace genome {   // project level namespace
 
 using OffsetFeatureMap = std::multimap<ContigOffset_t, std::shared_ptr<Feature>>; // Contig features indexed by offset.
 using IdFeatureMap = std::multimap<FeatureIdent_t, std::shared_ptr<Feature>>; // Contig features indexed by ident.
-using CDSArray = std::vector<std::shared_ptr<CDSFeature>>;
 using GeneMap = std::multimap<ContigOffset_t, std::shared_ptr<GeneFeature>>;  // Inserted using the END offset as key.
 using GeneVector = std::vector<std::shared_ptr<GeneFeature>>;  // Multiple alternative genes for sequence region.
 
@@ -46,8 +45,6 @@ public:
   bool addFeature(std::shared_ptr<Feature>& feature_ptr);
   // false if not found.
   bool findFeatureId(FeatureIdent_t& feature_id, std::vector<std::shared_ptr<Feature>>& feature_ptr_vec);
-  // false if offset is not in an cds else returns a vector of cds (these will be in different genes).
-  bool findOffsetCDS(ContigOffset_t offset, CDSArray& cds_array) const;
   // false if offset is not in a gene, else (true) returns a vector of ptrs to the genes.
   bool findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const;
 
@@ -62,7 +59,7 @@ public:
   void verifyFeatureHierarchy();
   void verifyCDSPhasePeptide();
 
-  bool SNPMutation(const SortedCDS& sorted_cds,
+  bool SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                    ContigOffset_t contig_offset,
                    typename NucleotideColumn_DNA5::NucleotideType reference_base,
                    typename NucleotideColumn_DNA5::NucleotideType mutant_base,
@@ -70,7 +67,7 @@ public:
                    typename AminoAcidTypes::AminoType& reference_amino,
                    typename AminoAcidTypes::AminoType& mutant_amino) const;
 
-  std::shared_ptr<AminoSequence> getAminoSequence(const SortedCDS& sorted_cds) const;
+  std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr) const;
 
 private:
 
@@ -89,7 +86,7 @@ private:
   void removeSuperFeatureDuplicates();
   void createGeneMap();
   // Check all gene coding sequences for start and end codons and nonsense (intermediate stop codon) mutations.
-  bool verifyCodingSequences(const SortedCDSVector& sorted_cds_vec) const;
+  bool verifyCodingSequences(const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const;
 
 };
 

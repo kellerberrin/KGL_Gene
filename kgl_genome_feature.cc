@@ -55,6 +55,102 @@ void kgl::FeatureAttributes::getAllAttributes(std::vector<std::pair<std::string,
 
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// CodingSequence - Members
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// return true if the contig_offset lies with a CDS.
+bool kgl::CodingSequence::isWithinCoding(ContigOffset_t contig_offset) const {
+
+  // Safety first.
+  if (sorted_cds_.empty()) return false;
+
+  // Less than the begin offset.
+  if (contig_offset < sorted_cds_.begin()->second->sequence().begin()) return false;
+
+  // More than the end offset.
+  if (contig_offset > sorted_cds_.rbegin()->second->sequence().end()) return false;
+
+  // Loop through and test membership of each cds. Reminder; testing for [begin, end)
+  for (const auto& cds : sorted_cds_) {
+
+    if (cds.second->sequence().begin() <= contig_offset and cds.second->sequence().end() > contig_offset) {
+
+      return true;
+
+    }
+
+  }
+
+  return false;
+
+}
+
+
+void kgl::CodingSequenceArray::printCodingSequence(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) {
+
+  long vector_count = 0;
+  for (const auto& sequence : coding_seq_ptr->getMap()) {
+
+    ExecEnv::log().info("Gene: {}, begin: {}, end: {} strand: {}",
+                        sequence.second->getGene()->id(),
+                        sequence.second->getGene()->sequence().begin(),
+                        sequence.second->getGene()->sequence().end(),
+                        static_cast<char>(sequence.second->getGene()->sequence().strand()));
+
+    ExecEnv::log().info("Parent Feature: {}, begin: {}, end: {} strand: {}",
+                        sequence.second->getCDSParent()->id(),
+                        sequence.second->getCDSParent()->sequence().begin(),
+                        sequence.second->getCDSParent()->sequence().end(),
+                        static_cast<char>(sequence.second->getCDSParent()->sequence().strand()));
+
+    ++vector_count;
+
+    ExecEnv::log().info("++++++++++++++ CDS Vector : {} ********************", vector_count);
+
+    for (const auto& cds : sequence.second->getSortedCDS()) {
+
+      ExecEnv::log().info("CDS: {}, Type: {}, begin: {}, end: {} strand: {}",
+                          cds.second->id(),
+                          cds.second->featureType(),
+                          cds.second->sequence().begin(),
+                          cds.second->sequence().end(),
+                          static_cast<char>(cds.second->sequence().strand()));
+
+    }
+
+  }
+
+}
+
+
+bool kgl::CodingSequenceArray::insertCodingSequence(std::shared_ptr<const CodingSequence> coding_sequence_ptr) {
+
+  auto insert = coding_sequence_map_.insert(std::make_pair(coding_sequence_ptr->getCDSParent()->id(),
+                                                           coding_sequence_ptr));
+  if (not insert.second) {
+
+    ExecEnv::log().warn("Duplicate CDS parent: {} at contig offset: {}",
+                        coding_sequence_ptr->getCDSParent()->id(),
+                        coding_sequence_ptr->getCDSParent()->sequence().begin());
+  }
+
+  return insert.second;
+
+}
+
+
+void kgl::CodingSequenceArray::mergeArrays(std::shared_ptr<const CodingSequenceArray> merge_array) {
+
+  for (auto sequence: merge_array->getMap()) {
+
+    insertCodingSequence(sequence.second);
+
+  }
+
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Feature members.
@@ -73,65 +169,6 @@ void kgl::Feature::addSubFeature(const FeatureIdent_t& sub_feature_id,
                                        const std::shared_ptr<Feature>& sub_feature_ptr) {
 
   sub_features_.insert(std::make_pair(sub_feature_id, sub_feature_ptr));
-
-}
-
-// Recursively descends the sub-feature tree and returns a vector of sorted.
-//
-// CDS trees. Each sorted CDS tree is an alternative coding sequence for the gene.
-// The logic in this function must take into account that the CDS features
-// can be direct sub-features of the Gene or are sub-features of multiple mRna
-// sub-features. This corresponds to the Gff3 standard.
-// All this makes the logic a bit tricky, so read the code carefully before modifying.
-bool kgl::Feature::getSortedCDS(SortedCDSVector& sorted_cds_vec) const {
-
-  bool result = true;
-
-  auto sub_feature_iter = sub_features_.begin();
-  while (sub_feature_iter != sub_features_.end()) {
-
-    if (sub_feature_iter->second->featureType() == CDSFeature::CDS_TYPE) {
-
-      SortedCDS sorted_cds;
-
-      while(sub_feature_iter != sub_features_.end()) {
-
-        if (sub_feature_iter->second->featureType() == CDSFeature::CDS_TYPE) {
-
-          auto insert_result = sorted_cds.insert(std::make_pair(sub_feature_iter->second->sequence().begin(),
-                                                  std::static_pointer_cast<CDSFeature>(sub_feature_iter->second)));
-
-          if (not insert_result.second) {
-
-            ExecEnv::log().warn("Duplicate CDS: {} at contig offset: {}",
-                                sub_feature_iter->second->id(),
-                                sub_feature_iter->second->sequence().begin());
-            result = false;
-          }
-
-
-        } // If sub-feature is a CDS
-
-        ++sub_feature_iter; // next sub-feature.
-
-      } // While looking for other CDS for this nRNA or Gene.
-
-      if (not sorted_cds.empty()) { // Unnecessary, but safe.
-
-        sorted_cds_vec.emplace_back(sorted_cds);
-
-      }
-
-    } else { // Not a CDS, so look deeper
-
-      sub_feature_iter->second->getSortedCDS(sorted_cds_vec); // Recursive call for the sub-feature.
-      ++sub_feature_iter; // while next sub-feature.
-
-    }
-
-  }
-
-  return result;
 
 }
 
@@ -154,41 +191,17 @@ void kgl::Feature::recusivelyPrintsubfeatures(long feature_level) const {
 
 }
 
-void kgl::Feature::printCDSvector(const SortedCDSVector& sorted_cds_vec) const {
-
-  long vector_count = 0;
-
-  for (const auto& sorted_cds : sorted_cds_vec) {
-
-    ++vector_count;
-
-    ExecEnv::log().info("++++++++++++++ CDS Vector : {} ********************", vector_count);
-
-    for (const auto& cds : sorted_cds) {
-
-      ExecEnv::log().info("CDS: {}, Type: {}, begin: {}, end: {} strand: {}",
-                          cds.second->id(),
-                          cds.second->featureType(),
-                          cds.second->sequence().begin(),
-                          cds.second->sequence().end(),
-                          static_cast<char>(cds.second->sequence().strand()));
-
-    }
-
-  }
-
-}
 
 
-bool kgl::Feature::verifyCDSPhase(const SortedCDSVector& parent_sorted_vec) {
+bool kgl::Feature::verifyCDSPhase(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const {
 
   bool result = true;
   // Check for mod3
-  for(auto& sorted_cds : parent_sorted_vec) {
+  for(const auto& sorted_cds : coding_seq_ptr->getMap()) {
 
-    result = result and verifyMod3(sorted_cds);
-    result = result and verifyStrand(sorted_cds);
-    result = result and verifyPhase(sorted_cds);
+    result = result and verifyMod3(sorted_cds.second->getSortedCDS());
+    result = result and verifyStrand(sorted_cds.second->getSortedCDS());
+    result = result and verifyPhase(sorted_cds.second->getSortedCDS());
 
   }
 
@@ -197,7 +210,7 @@ bool kgl::Feature::verifyCDSPhase(const SortedCDSVector& parent_sorted_vec) {
 }
 
 
-bool kgl::Feature::verifyMod3(const SortedCDS& sorted_cds) {
+bool kgl::Feature::verifyMod3(const SortedCDS& sorted_cds) const {
 
   bool result = true;
 // Check the combined sequence length is mod 3 = 0
@@ -224,7 +237,7 @@ bool kgl::Feature::verifyMod3(const SortedCDS& sorted_cds) {
 
 }
 
-bool kgl::Feature::verifyStrand(const SortedCDS& sorted_cds) {
+bool kgl::Feature::verifyStrand(const SortedCDS& sorted_cds) const {
 
   bool result = true;
 
@@ -249,7 +262,7 @@ bool kgl::Feature::verifyStrand(const SortedCDS& sorted_cds) {
 }
 
 
-bool kgl::Feature::verifyPhase(const SortedCDS& sorted_cds) {
+bool kgl::Feature::verifyPhase(const SortedCDS& sorted_cds) const {
 
   bool result = true;
 
@@ -267,7 +280,7 @@ bool kgl::Feature::verifyPhase(const SortedCDS& sorted_cds) {
 
         if (it->second->phase() != phase) {
 
-          it->second->phase(phase);
+          std::const_pointer_cast<CDSFeature>(it->second)->phase(phase);
           warn_adjust = true;
 
         }
@@ -295,7 +308,7 @@ bool kgl::Feature::verifyPhase(const SortedCDS& sorted_cds) {
 
         if (rit->second->phase() != phase) {
 
-          rit->second->phase(phase);
+          std::const_pointer_cast<CDSFeature>(rit->second)->phase(phase);
           warn_adjust = true;
 
         }
@@ -347,3 +360,84 @@ std::shared_ptr<kgl::Feature> kgl::Feature::getGene() const {
   return null;
 
 }
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Gene Feature members.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<const kgl::CodingSequenceArray>
+kgl::GeneFeature::getCodingSequences(std::shared_ptr<const GeneFeature> gene) {
+
+  std::shared_ptr<CodingSequenceArray> sequence_array_ptr(std::make_shared<CodingSequenceArray>());
+  getCodingSequences(gene, gene, sequence_array_ptr);
+  return sequence_array_ptr;
+
+}
+
+// This routine is recursive. Assumes all the CDS are on the same sub-feature level.
+bool kgl::GeneFeature::getCodingSequences(std::shared_ptr<const GeneFeature> gene_ptr,
+                                          std::shared_ptr<const Feature> cds_parent_ptr,
+                                          std::shared_ptr<CodingSequenceArray>& sequence_array_ptr) {
+
+  bool result = true;
+  SortedCDS parent_cds;
+
+  for (auto sub_feature : cds_parent_ptr->subFeatures()) {
+
+    if (sub_feature.second->isCDS()) {
+
+
+      auto insert = parent_cds.insert(std::make_pair(sub_feature.second->sequence().begin(),
+                                                     std::static_pointer_cast<const CDSFeature>(sub_feature.second)));
+
+      if (not insert.second) {
+
+        ExecEnv::log().warn("Duplicate CDS: {} at contig offset: {}",
+                            sub_feature.second->id(),
+                            sub_feature.second->sequence().begin());
+        result = false;
+      }
+
+    } else { // recursively call this function
+
+      result = result and getCodingSequences(gene_ptr, sub_feature.second, sequence_array_ptr);
+
+    }
+
+  }
+
+  if (not parent_cds.empty()) {
+
+    std::shared_ptr<const CodingSequence> coding_sequence(std::make_shared<const CodingSequence>(gene_ptr,
+                                                                                                 cds_parent_ptr,
+                                                                                                 parent_cds));
+
+    result = result and sequence_array_ptr->insertCodingSequence(coding_sequence);
+
+  }
+
+  return result;
+
+}
+
+
+std::shared_ptr<const kgl::CodingSequenceArray>
+kgl::GeneFeature::getOffsetSequences(ContigOffset_t offset,
+                                     std::shared_ptr<const CodingSequenceArray> sequence_array_ptr) {
+
+  std::shared_ptr<CodingSequenceArray> filtered_map_ptr(std::make_shared<CodingSequenceArray>());
+  for (const auto& sequence : sequence_array_ptr->getMap()) {
+
+    if (sequence.second->isWithinCoding(offset)) {
+
+      filtered_map_ptr->insertCodingSequence(sequence.second);
+
+    }
+
+  }
+
+  return filtered_map_ptr;
+
+}
+

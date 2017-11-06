@@ -74,18 +74,25 @@ public:
   std::shared_ptr<const ContigFeatures> contig() const { return contig_ptr_; }
   ContigOffset_t offset() const { return contig_offset_; }
 
+  std::shared_ptr<const CodingSequenceArray> codingSequences() const { genomeType(); return coding_sequences_ptr_; }
+
   VariantSequenceType type() const { return genomeType(); };
   std::string typestr() const;
   const GeneVector& geneMembership() const { genomeType(); return gene_membership_; }
+
+// Returns all the coding sequences of a variant.
+  static std:: shared_ptr<CodingSequenceArray> findOffsetCDS(ContigOffset_t contig_offset,
+                                                             const GeneVector& gene_ptr_vec);
 
 private:
 
   std::shared_ptr<const ContigFeatures> contig_ptr_;    // The contig.
   ContigOffset_t contig_offset_;                        // Location on the contig.
   VariantSequenceType variant_genome_type_;             // Non-coding, intron or coding.
-  GeneVector gene_membership_;                          // Membership includes intron variants.
+  GeneVector gene_membership_;                          // Membership includes introns (zero sized for non-coding)
+  std::shared_ptr<const CodingSequenceArray> coding_sequences_ptr_;  // All coding sequences (zero-sized for an intron)
 
-  VariantSequenceType genomeType(); // Lazy evaluation of gene membership and variant type.
+  VariantSequenceType genomeType(); // Lazy evaluation of gene membership and coding sequences.
   VariantSequenceType genomeType() const { return const_cast<VariantSequence*>(this)->genomeType(); }
 
 };

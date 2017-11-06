@@ -22,7 +22,7 @@ namespace genome {   // project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-using OffsetVariantMap = std::map<ContigOffset_t, std::shared_ptr<const Variant>>;
+using OffsetVariantMap = std::multimap<ContigOffset_t, std::shared_ptr<const Variant>>;
 class ContigVariant {
 
 public:
@@ -33,7 +33,7 @@ public:
 
   ContigVariant& operator=(const ContigVariant&) = default;
 
-  bool addVariant(ContigOffset_t contig_offset, std::shared_ptr<const Variant>& variant_ptr);
+  void addVariant(ContigOffset_t contig_offset, std::shared_ptr<const Variant>& variant_ptr);
   const ContigId_t& contigId() const { return contig_id_; }
   size_t variantCount() const { return offset_variant_map_.size(); }
 

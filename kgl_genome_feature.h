@@ -91,19 +91,75 @@ private:
 
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// CodingSequence - The Gene and mRNA feature (if present) and the CDS features necessary for a protein sequence.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class Feature; // Forward decl.
+class CDSFeature; // Forward decl
+class GeneFeature; // Forward decl.
+class mRNAFeature; // Forward decl.
+
+using SortedCDS = std::map<ContigOffset_t, std::shared_ptr<const CDSFeature>>;
+class CodingSequence {
+
+public:
+
+  CodingSequence(std::shared_ptr<const GeneFeature> gene_ptr,
+                 std::shared_ptr<const Feature> cds_parent_ptr,
+                 SortedCDS sorted_cds): gene_ptr_(std::move(gene_ptr)),
+                                        cds_parent_ptr_(std::move(cds_parent_ptr)),
+                                        sorted_cds_(std::move(sorted_cds)) {}
+  ~CodingSequence() = default;
+
+  const SortedCDS& getSortedCDS() const { return sorted_cds_; }
+  std::shared_ptr<const GeneFeature> getGene() const { return gene_ptr_; }
+  std::shared_ptr<const Feature> getCDSParent() const { return cds_parent_ptr_; }
+  bool isWithinCoding(ContigOffset_t contig_offset) const;
+
+private:
+
+  std::shared_ptr<const GeneFeature> gene_ptr_;
+  std::shared_ptr<const Feature> cds_parent_ptr_;  // Generally an mRNAFeature, or whatever was the CDS superFeature().
+  SortedCDS sorted_cds_;
+
+};
+
+// A sorted array of coding sequences.
+// Sorted by CDS parent (mRNA) feature ident.
+using CodingSequenceMap = std::map<const FeatureIdent_t, std::shared_ptr<const CodingSequence>>;
+class CodingSequenceArray {
+
+public:
+
+  CodingSequenceArray() = default;
+  ~CodingSequenceArray() = default;
+
+  const CodingSequenceMap& getMap() const { return coding_sequence_map_; }
+  CodingSequenceMap& getMap() { return coding_sequence_map_; }
+
+  bool insertCodingSequence(std::shared_ptr<const CodingSequence> coding_sequence);
+
+  size_t size() const { return coding_sequence_map_.size(); }
+
+  void mergeArrays(std::shared_ptr<const CodingSequenceArray> merge_array);
+
+  static void printCodingSequence(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr);
+
+private:
+
+  CodingSequenceMap coding_sequence_map_;
+
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Feature - Annotated contig features
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 class ContigFeatures; // Forward decl;
-class Feature; // Forward decl.
-class CDSFeature; // Forward decl
 using SubFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<Feature>>;
 using SuperFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<Feature>>;
-using SortedCDS = std::map<ContigOffset_t, std::shared_ptr<CDSFeature>>;
-using SortedCDSVector = std::vector<SortedCDS>;
 
 class Feature {
 
@@ -124,24 +180,23 @@ public:
   void setAttributes(const FeatureAttributes& attributes) { attributes_ = attributes; }
   const FeatureAttributes& getAttributes() const { return attributes_; }
   const FeatureType_t& featureType() const { return type_; }
-  bool verifyStrand(const SortedCDS& sorted_cds);   // Check feature strand consistency
-  bool verifyCDSPhase(const SortedCDSVector& sorted_cds_vec); // Check the CDS phase for -ve and +ve strand genes
-  bool getSortedCDS(SortedCDSVector& sorted_cds_vec) const; // Recursively descend the sub-features.
+  bool verifyStrand(const SortedCDS& sorted_cds) const;   // Check feature strand consistency
+  bool verifyCDSPhase(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const; // Check the CDS phase for -ve and +ve strand genes
   std::shared_ptr<Feature> getGene() const; // returns null pointer if not found
   void recusivelyPrintsubfeatures(long feature_level = 1) const; // useful debug function.
-  void printCDSvector(const SortedCDSVector& sorted_cds_vec) const; // useful debug function
   // Hierarchy routines.
   void clearHierachy() { sub_features_.clear(); super_features_.clear(); }
   void addSuperFeature(const FeatureIdent_t &super_feature_id, const std::shared_ptr<Feature> &super_feature_ptr);
   void addSubFeature(const FeatureIdent_t& sub_feature_id, const std::shared_ptr<Feature>& sub_feature_ptr);
   virtual bool isCDS() const { return false; }
   virtual bool isGene() const { return false; }
+  virtual bool ismRNA() const { return false; }
 
+  const SuperFeatureMap& superFeatures() const { return super_features_; }
+  const SubFeatureMap& subFeatures() const { return sub_features_; }
   SuperFeatureMap& superFeatures() { return super_features_; }
   SubFeatureMap& subFeatures() { return sub_features_; }
 
-  // MRNA Type.
-  constexpr static const char* MRNA_TYPE = "MRNA";
   // EXON Type.
   constexpr static const char* EXON_TYPE = "EXON";
 
@@ -155,8 +210,8 @@ private:
   SuperFeatureMap super_features_;
   FeatureAttributes attributes_;
 
-  bool verifyMod3(const SortedCDS& sorted_cds);
-  bool verifyPhase(const SortedCDS& sorted_cds);
+  bool verifyMod3(const SortedCDS& sorted_cds) const;
+  bool verifyPhase(const SortedCDS& sorted_cds) const;
 };
 
 
@@ -188,6 +243,30 @@ private:
 };
 
 
+class mRNAFeature : public Feature {
+
+public:
+
+  mRNAFeature(const FeatureIdent_t &id,
+              const std::shared_ptr<ContigFeatures> &contig_ptr,
+              const FeatureSequence &sequence) : Feature(id, MRNA_TYPE, contig_ptr, sequence) {}
+
+  mRNAFeature(const mRNAFeature &) = default;
+  ~mRNAFeature() override = default;
+
+  mRNAFeature &operator=(const mRNAFeature &) = default;
+
+  bool ismRNA() const final { return true; }
+
+  // MRNA Type.
+  constexpr static const char* MRNA_TYPE = "MRNA";
+
+private:
+
+
+};
+
+
 class GeneFeature : public Feature {
 
 public:
@@ -201,6 +280,13 @@ public:
 
   GeneFeature &operator=(const GeneFeature &) = default;
 
+  // Public function returns a sequence map.
+  static std::shared_ptr<const CodingSequenceArray> getCodingSequences(std::shared_ptr<const GeneFeature> gene);
+
+  // Returns the coding sequences relevant for this offset - will be zero sequences for intron offsets.
+  static std::shared_ptr<const CodingSequenceArray>
+  getOffsetSequences(ContigOffset_t offset, const std::shared_ptr<const CodingSequenceArray> sequence_array_ptr);
+
   bool isGene() const final { return true; }
 
 
@@ -209,6 +295,10 @@ public:
 
 private:
 
+  // Initializes the map_ptr with a list of coding sequences found for the gene. Recursive.
+  static bool getCodingSequences(std::shared_ptr<const GeneFeature> gene,
+                                 std::shared_ptr<const Feature> cds_parent,
+                                 std::shared_ptr<CodingSequenceArray>& sequence_array_ptr);
 
 };
 

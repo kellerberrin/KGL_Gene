@@ -287,24 +287,23 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
     if(feature.second->isGene()) {
 
       ++gene_count;
-      const std::shared_ptr<GeneFeature> gene_ptr = std::static_pointer_cast<GeneFeature>(feature.second);
-      SortedCDSVector sorted_cds_vec;
-      gene_ptr->getSortedCDS(sorted_cds_vec); // All sorted gene CDS.
-      if (sorted_cds_vec.empty()) { // No coding sequence available
+      const std::shared_ptr<const GeneFeature> gene_ptr = std::static_pointer_cast<const GeneFeature>(feature.second);
+      const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene_ptr);
+      if (coding_seq_ptr->size() == 0) { // No coding sequence available
 
         ++empty_genes;
 
       } else {
 
-        if (not gene_ptr->verifyCDSPhase(sorted_cds_vec)) {
+        if (not gene_ptr->verifyCDSPhase(coding_seq_ptr)) {
 
-          ExecEnv::log().info("Gene : {} Offset: {} Problem verifying CDS structure - gene sub-features print out",
+          ExecEnv::log().warn("Gene : {} Offset: {} Problem verifying CDS structure - gene sub-features print out",
                               gene_ptr->id(),
                               gene_ptr->sequence().begin());
           feature.second->recusivelyPrintsubfeatures();
 
         }
-        if (not verifyCodingSequences(sorted_cds_vec)) {
+        if (not verifyCodingSequences(coding_seq_ptr)) {
 
           ++ill_formed_genes;
 
@@ -321,60 +320,34 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
 }
 
 
-bool kgl::ContigFeatures::verifyCodingSequences(const SortedCDSVector& sorted_cds_vec) const {
+bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const {
 
   bool result = true;
-  bool CDS_ok = true;
-  std::shared_ptr<Feature> gene_ptr;
 
-  if (sorted_cds_vec.empty ()) {
+  if (coding_seq_ptr->size() == 0) {
 
-    ExecEnv::log().error("codingSequence(), empty CDS vector");
-    CDS_ok = false;
-
-  }
-  if (sorted_cds_vec.front().empty()) {
-
-    ExecEnv::log().error("codingSequence(), no corresponding CDS features found");
-    CDS_ok = false;
+    ExecEnv::log().error("codingSequence(), empty CCodingSequenceArray");
 
   }
 
-  // From the first cds get the corresponding gene
-  if (CDS_ok) gene_ptr = sorted_cds_vec.front().begin()->second->getGene();
+  for (const auto& sequence : coding_seq_ptr->getMap()) {
 
-  if (not gene_ptr) {
+    if (sequence.second->getSortedCDS().empty()) {
 
-    ExecEnv::log().error("Gene not found for CDS: {} offset: {}",
-                         sorted_cds_vec.front().begin()->second->id(),
-                         sorted_cds_vec.front().begin()->first);
-  }
-
-  for (const auto& sorted_cds : sorted_cds_vec) {
-
-    if (not gene_ptr) {
-
+      ExecEnv::log().error("codingSequence(), no corresponding CDS features found");
       continue;
 
-    } else {
-
-      if (sorted_cds.empty()) {
-
-        ExecEnv::log().error("codingSequence(), no corresponding CDS features found");
-        continue;
-
-      }
     }
 
-    std::shared_ptr<DNA5Sequence> coding_sequence_ptr = sequence_ptr_->codingSequence(sorted_cds);
+    std::shared_ptr<DNA5Sequence> coding_sequence_ptr = sequence_ptr_->codingSequence(sequence.second);
 
     if (not coding_sequence_.checkStartCodon(coding_sequence_ptr)) {
 
       ExecEnv::log().vwarn("No START codon for Gene: {} begin: {}, end: {}, strand: {} | first codon: {}{}{}",
-                          gene_ptr->id(),
-                          gene_ptr->sequence().begin(),
-                          gene_ptr->sequence().end(),
-                          static_cast<char>(gene_ptr->sequence().strand()),
+                           sequence.second->getGene()->id(),
+                           sequence.second->getGene()->sequence().begin(),
+                           sequence.second->getGene()->sequence().end(),
+                          static_cast<char>(sequence.second->getGene()->sequence().strand()),
                           coding_sequence_.firstCodon(coding_sequence_ptr).bases[0],
                           coding_sequence_.firstCodon(coding_sequence_ptr).bases[1],
                           coding_sequence_.firstCodon(coding_sequence_ptr).bases[2]);
@@ -386,10 +359,10 @@ bool kgl::ContigFeatures::verifyCodingSequences(const SortedCDSVector& sorted_cd
 
       ExecEnv::log().vwarn("No STOP codon: {} for Gene: {} begin: {}, end: {}, strand: {} | last codon: {}{}{}",
                           (coding_sequence_.codonLength(coding_sequence_ptr)-1),
-                          gene_ptr->id(),
-                          gene_ptr->sequence().begin(),
-                          gene_ptr->sequence().end(),
-                          static_cast<char>(gene_ptr->sequence().strand()),
+                           sequence.second->getGene()->id(),
+                           sequence.second->getGene()->sequence().begin(),
+                           sequence.second->getGene()->sequence().end(),
+                          static_cast<char>(sequence.second->getGene()->sequence().strand()),
                           coding_sequence_.lastCodon(coding_sequence_ptr).bases[0],
                           coding_sequence_.lastCodon(coding_sequence_ptr).bases[1],
                           coding_sequence_.lastCodon(coding_sequence_ptr).bases[2]);
@@ -401,11 +374,11 @@ bool kgl::ContigFeatures::verifyCodingSequences(const SortedCDSVector& sorted_cd
     if (nonsense_index > 0) {
 
       ExecEnv::log().vwarn("NONSENSE mutation codon:{} Gene: {} begin: {}, end: {}, strand: {} | stop codon: {}{}{}",
-                          nonsense_index,
-                          gene_ptr->id(),
-                          gene_ptr->sequence().begin(),
-                          gene_ptr->sequence().end(),
-                          static_cast<char>(gene_ptr->sequence().strand()),
+                           nonsense_index,
+                           sequence.second->getGene()->id(),
+                           sequence.second->getGene()->sequence().begin(),
+                           sequence.second->getGene()->sequence().end(),
+                          static_cast<char>(sequence.second->getGene()->sequence().strand()),
                           coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[0],
                           coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[1],
                           coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[2]);
@@ -469,42 +442,8 @@ bool kgl::ContigFeatures::findGenes(ContigOffset_t offset, GeneVector &gene_ptr_
 }
 
 
-bool kgl::ContigFeatures::findOffsetCDS(ContigOffset_t contig_offset, CDSArray & cds_array) const {
-
-  cds_array.clear();
-
-  GeneVector gene_ptr_vec;
-  if (findGenes(contig_offset, gene_ptr_vec)) {
-
-    for (const auto& gene_ptr : gene_ptr_vec) {
-
-      SortedCDSVector sorted_cds_vec;
-      gene_ptr->getSortedCDS(sorted_cds_vec); // All sorted gene CDS.
-
-      for (auto sorted_cds : sorted_cds_vec) {
-
-        for (auto cds : sorted_cds) {
-
-          if (cds.second->sequence().begin() <= contig_offset and cds.second->sequence().end() > contig_offset) {
-
-            cds_array.emplace_back(cds.second);
-
-          } // if in cds
-
-        } // for cds
-
-      } // for cds vector
-
-    } // for each gene_ptr
-
-  } // found gene ptr
-
-  return not cds_array.empty();
-
-}
-
 // Convenience routine for tagging SNPs.
-bool kgl::ContigFeatures::SNPMutation(const SortedCDS& sorted_cds,
+bool kgl::ContigFeatures::SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                                       ContigOffset_t contig_offset,
                                       typename NucleotideColumn_DNA5::NucleotideType reference_base,
                                       typename NucleotideColumn_DNA5::NucleotideType mutant_base,
@@ -513,7 +452,7 @@ bool kgl::ContigFeatures::SNPMutation(const SortedCDS& sorted_cds,
                                       typename AminoAcidTypes::AminoType& mutant_amino) const {
 
 
-  return coding_sequence_.SNPMutation(sorted_cds,
+  return coding_sequence_.SNPMutation(coding_seq_ptr,
                                       sequence_ptr_,
                                       contig_offset,
                                       reference_base,
@@ -525,9 +464,10 @@ bool kgl::ContigFeatures::SNPMutation(const SortedCDS& sorted_cds,
 }
 
 // Convenience routine for Amino sequences.
-std::shared_ptr<kgl::AminoSequence> kgl::ContigFeatures::getAminoSequence(const SortedCDS& sorted_cds) const {
+std::shared_ptr<kgl::AminoSequence>
+kgl::ContigFeatures::getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr) const {
 
-  return coding_sequence_.getAminoSequence(sorted_cds, sequence_ptr_);
+  return coding_sequence_.getAminoSequence(coding_seq_ptr, sequence_ptr_);
 
 }
 
