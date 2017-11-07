@@ -65,15 +65,15 @@ kgl::VariantAnalysis::SNPVariants(const std::shared_ptr<const ContigCountData>& 
 
           std::shared_ptr<const Variant>
           snp_variant(std::make_shared<const SNPVariantDNA5>(contig_ptr,
-                                                            contig_offset,
-                                                            read_count,
-                                                            max_count,
-                                                            nucleotide_count_ptr,
-                                                            NucleotideColumn_DNA5::NUCLEOTIDE_COLUMNS,
-                                                            reference_nucleotide,
-                                                            max_count_nucleotide));
+                                                             contig_offset,
+                                                             read_count,
+                                                             max_count,
+                                                             nucleotide_count_ptr,
+                                                             NucleotideColumn_DNA5::NUCLEOTIDE_COLUMNS,
+                                                             reference_nucleotide,
+                                                             max_count_nucleotide));
 
-          if (not snp_variants->addVariant(snp_variant)) {
+          if (not snp_variants->addVariant(snp_variant)) { // Annotate with genome information
 
             ExecEnv::log().error("Unable to add SNP variant: {} to contig: {} - probable offset duplicate",
                                  snp_variant->output(), contig_ptr->contigId());

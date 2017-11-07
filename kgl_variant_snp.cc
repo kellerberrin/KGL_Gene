@@ -31,8 +31,16 @@ bool kgl::SNPVariantDNA5::equivalent(const Variant& cmp_var) const {
 std::string kgl::SNPVariantDNA5::output() const
 {
   std::stringstream ss;
+  ss << genomeOutput() << " ";
   ss << mutation();
+  ss << mutantCount() << "/" << readCount() << " [";
+  for (size_t idx = 0; idx < countArray().size(); ++idx) {
+    ss << NucleotideColumn_DNA5::offsetToNucleotide(idx) << ":" << countArray()[idx] << " ";
+  }
+  ss << "]" << "\n";
+
   return ss.str();
+
 }
 
 
@@ -43,77 +51,63 @@ std::string kgl::SNPVariantDNA5::mutation() const
 
   if (type() == VariantSequenceType::CDS_CODING) {
 
-    for (const auto &sequence : codingSequences()->getMap()) {
+    std::shared_ptr<const CodingSequence> sequence;
+    codingSequences(sequence);
 
-      ss << genomeOutput() << " ";
-      ss << sequence.second->getGene()->id() << " " << sequence.second->getCDSParent()->id() << " ";
+    ss << sequence->getGene()->id() << " " << sequence->getCDSParent()->id() << " ";
 
-      if (NucleotideColumn_DNA5::isBaseCode(mutant())) {
+    if (NucleotideColumn_DNA5::isBaseCode(mutant())) {
 
-        ContigOffset_t codon_offset;
-        typename AminoAcidTypes::AminoType reference_amino;
-        typename AminoAcidTypes::AminoType mutant_amino;
+      ContigOffset_t codon_offset;
+      typename AminoAcidTypes::AminoType reference_amino;
+      typename AminoAcidTypes::AminoType mutant_amino;
 
-        if (contig()->SNPMutation(sequence.second,
-                                  contigOffset(),
-                                  reference(),
-                                  mutant(),
-                                  codon_offset,
-                                  reference_amino,
-                                  mutant_amino)) {
+      if (contig()->SNPMutation(sequence,
+                                contigOffset(),
+                                reference(),
+                                mutant(),
+                                codon_offset,
+                                reference_amino,
+                                mutant_amino)) {
 
-          ss << reference_amino << codon_offset << mutant_amino << " ";
-//              gene->recusivelyPrintsubfeatures();
-        }
+        ss << reference_amino << codon_offset << mutant_amino << " ";
+//        sequence->getGene()->recusivelyPrintsubfeatures();
 
-        ss << reference() << contigOffset() << mutant() << " ";
+      ss << reference() << contigOffset() << mutant() << " ";
 
 
-      } else {
+      } else {  // is a deletion or insert
 
         ContigOffset_t sequence_offset;
         ContigSize_t sequence_length;
-        DNA5Sequence::offsetWithinSequence(sequence.second, contigOffset(), sequence_offset, sequence_length);
+        DNA5Sequence::offsetWithinSequence(sequence, contigOffset(), sequence_offset, sequence_length);
         ss << reference() << sequence_offset << mutant() << " ";
         ss << reference() << contigOffset() << mutant() << " ";
 
       }
 
-      ss << mutantCount() << "/" << readCount() << " [";
-      for (size_t idx = 0; idx < countArray().size(); ++idx) {
-        ss << NucleotideColumn_DNA5::offsetToNucleotide(idx) << ":" << countArray()[idx] << " ";
-      }
-      ss << "]" << "\n";
 
     }
 
-  } else if (type() != VariantSequenceType::INTRON) {
+  } else if (type() == VariantSequenceType::INTRON) {
 
-    GeneVector gene_vector = geneMembership();
-    for (auto gene : gene_vector) {
+    std::shared_ptr<const GeneFeature> gene_ptr;
+   if (not geneMembership(gene_ptr)) {
 
-      ss << genomeOutput() << " ";
-      ss << gene->id() << " ";
-      ss << reference() << contigOffset() << mutant() << " ";
+     ExecEnv::log().error("Intron does not have a valid gene");
 
-      ss << mutantCount() << "/" << readCount() << " [";
-      for (size_t idx = 0; idx < countArray().size(); ++idx) {
-        ss << NucleotideColumn_DNA5::offsetToNucleotide(idx) << ":" << countArray()[idx] << " ";
-      }
-      ss << "]" << "\n";
+   } else {
 
-    }
+     ss << gene_ptr->id() << " ";
 
-  } else { // non coding (non-gene) variant
+   }
 
-    ss << genomeOutput() << " ";
     ss << reference() << contigOffset() << mutant() << " ";
-    ss << mutantCount() << "/" << readCount() << " [";
 
-    for (size_t idx = 0; idx < countArray().size(); ++idx) {
-      ss << NucleotideColumn_DNA5::offsetToNucleotide(idx) << ":" << countArray()[idx] << " ";
-    }
-    ss << "]" << "\n";
+
+  } else { // non coding (non-gene) variant or unknown
+
+    ss << reference() << contigOffset() << mutant() << " ";
 
   }
 

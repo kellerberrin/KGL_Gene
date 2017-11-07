@@ -67,26 +67,6 @@ kgl::VariantAnalysis::compoundSNP(const std::shared_ptr<const GenomeVariant>& SN
           case 2:
             if (offset_diff == 1) {
 
-              // check if this variant is in the same codon as the variants in the CompoundVariantMap.
-
-              GeneVector variant_genes = variant.second->geneMembership();
-              for (auto gene : variant_genes) {
-                std::shared_ptr<const CodingSequenceArray> coding_seqs = kgl::GeneFeature::getCodingSequences(gene);
-                ContigOffset_t codon_offset;
-                ContigSize_t base_in_codon;
-                for (const auto& sequence : coding_seqs->getMap()) {
-
-                  if (kgl::CodingSequenceDNA5::codonOffset(sequence.second,
-                                                           variant.second->contigOffset(),
-                                                           codon_offset,
-                                                           base_in_codon)) {
-
-
-                  }
-
-                }
-
-              }
 
             }
 

@@ -33,7 +33,7 @@ public:
 
   ContigVariant& operator=(const ContigVariant&) = default;
 
-  void addVariant(ContigOffset_t contig_offset, std::shared_ptr<const Variant>& variant_ptr);
+  void addVariant(std::shared_ptr<const Variant>& variant_ptr);
   const ContigId_t& contigId() const { return contig_id_; }
   size_t variantCount() const { return offset_variant_map_.size(); }
 

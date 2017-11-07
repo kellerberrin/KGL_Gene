@@ -40,8 +40,6 @@ private:
                                 const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
                                 std::vector<CompoundVariantMap>& contiguous_delete_vec);
 
-  bool membershipCodingDeletions(const std::vector<CompoundVariantMap>& contiguous_delete_vec);
-
   void generateCodonDeletes(const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
                             const std::shared_ptr<const ContigCountData>& count_data,
                             const std::vector<CompoundVariantMap>& contiguous_delete_vec,
@@ -49,7 +47,6 @@ private:
 
   std::shared_ptr<const Variant> createCompoundDelete(const CompoundVariantMap& variant_map);
 
-  void printCompoundVariant(const std::vector<CompoundVariantMap>& contiguous_delete_vec);
 };
 
 

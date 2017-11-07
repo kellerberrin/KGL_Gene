@@ -27,13 +27,56 @@ kgl::ContigVariant::filterVariants(const kgl::VariantFilter& filter) const {
 
 }
 
+// This function will insert multiple variants for each CDS sequence within each gene.
+void kgl::ContigVariant::addVariant(std::shared_ptr<const Variant>& variant_ptr) {
 
-void kgl::ContigVariant::addVariant(ContigOffset_t contig_offset, std::shared_ptr<const kgl::Variant>& variant_ptr) {
+  // Annotate the variant with genome information.
+  GeneVector gene_vector;
+  ContigOffset_t variant_offset = variant_ptr->contigOffset();
+  if (variant_ptr->contig()->findGenes(variant_offset, gene_vector)) {
 
-  offset_variant_map_.insert(std::make_pair(contig_offset, variant_ptr));
+    for (const auto& gene_ptr : gene_vector) {
+
+      std::shared_ptr<const CodingSequenceArray> sequence_array = kgl::GeneFeature::getCodingSequences(gene_ptr);
+      if (sequence_array->size() == 0) {
+
+        ExecEnv::log().warn("addVariant() unexpected; contig: {}, offset: {} gene: {} no matching coding sequence",
+                            variant_ptr->contigId(), variant_offset, gene_ptr->id());
+
+        std::const_pointer_cast<Variant>(variant_ptr)->defineVariantType(gene_ptr, nullptr); // intron
+        offset_variant_map_.insert(std::make_pair(variant_ptr->contigOffset(), variant_ptr));
+
+      } else {
+
+        for (const auto& sequence : sequence_array->getMap()) {
+
+          if (sequence.second->isWithinCoding(variant_offset)) {
+
+            std::const_pointer_cast<Variant>(variant_ptr)->defineVariantType(gene_ptr, sequence.second); // coding
+            offset_variant_map_.insert(std::make_pair(variant_ptr->contigOffset(), variant_ptr));
+
+          } else {  // an intron for this sequence
+
+            std::const_pointer_cast<Variant>(variant_ptr)->defineVariantType(gene_ptr, nullptr); // intron
+            offset_variant_map_.insert(std::make_pair(variant_ptr->contigOffset(), variant_ptr));
+
+          } // if valid sequence for offset
+
+        } // for all sequences within a gene
+
+      } // if gene has a valid sequence.
+
+    } // for all genes.
+
+  } else {
+
+    std::const_pointer_cast<Variant>(variant_ptr)->defineVariantType(nullptr, nullptr); // non coding
+    offset_variant_map_.insert(std::make_pair(variant_ptr->contigOffset(), variant_ptr));
+
+  }
+
 
 }
-
 
 
 std::ostream& kgl::operator<<(std::ostream &os, const kgl::ContigVariant& contig_variant) {
@@ -92,7 +135,7 @@ bool kgl::GenomeVariant::addVariant(std::shared_ptr<const Variant> variant) {
     return false;
   }
 
-  contig_variant->addVariant(variant->contigOffset(), variant);
+  contig_variant->addVariant(variant);
 
   return true;
 

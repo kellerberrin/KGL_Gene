@@ -41,8 +41,8 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
   // Generate compound single codon variants
   std::shared_ptr<const kgl::GenomeVariant> compound_snp_ptr = kgl::VariantAnalysis().compoundSNP(variant_ptr,
                                                                                                   genome_db_ptr);
-  variant_ptr = variant_ptr->filterVariants(kgl::InCDSFilter());
 //  std::cout << *variant_ptr;
+  variant_ptr = variant_ptr->filterVariants(kgl::InCDSFilter());
   // Filter for read count.
   variant_ptr = variant_ptr->filterVariants(kgl::ReadCountFilter(min_count));
   // Filter for read proportion.

@@ -57,16 +57,8 @@ kgl::VariantAnalysis::codonDelete(const std::shared_ptr<const GenomeVariant>& de
 
   // Aggregate the coding deletions.
   aggregateCodingDeletions(delete_SNPs, genome_db_ptr, contiguous_delete_vec);
-  // Check the aggregates for the same Gene(s) membership.
-  if (!membershipCodingDeletions(contiguous_delete_vec)) {
-
-    ExecEnv::log().info("codonDelete(), problem verifying the gene structures of contiguous SNP deletes.");
-
-  } else { // All good.
-
-    generateCodonDeletes(genome_db_ptr, count_data, contiguous_delete_vec, genome_delete_variants);
-
-  }
+  // Generate the Codon_deletes
+  generateCodonDeletes(genome_db_ptr, count_data, contiguous_delete_vec, genome_delete_variants);
 
   return genome_delete_variants;
 
@@ -150,62 +142,6 @@ void kgl::VariantAnalysis::aggregateCodingDeletions(const std::shared_ptr<const 
 
 }
 
-// Not strictly necessary. However, always best to check the contents of complex data structures.
-// Checks contiguous SNPs for the same Gene membership.
-bool
-kgl::VariantAnalysis::membershipCodingDeletions(const std::vector<kgl::CompoundVariantMap>& contiguous_delete_vec) {
-
-  bool result = true;
-
-  if (contiguous_delete_vec.empty()) return true;
-
-
-  for (auto variant_map : contiguous_delete_vec) {
-
-    if (variant_map.size() < 2) {
-
-      ExecEnv::log().error("membershipCodingDeletions(), contiguous map size: {} should be >= 2", variant_map.size());
-      result = false;
-
-    } else {  // correct size.
-
-      auto it = variant_map.begin();
-      GeneVector cmp_genes = it->second->geneMembership();
-
-      while (it != variant_map.end()) {
-
-        if (it->second->geneMembership().size() != cmp_genes.size()) {
-
-          ExecEnv::log().error("membershipCodingDeletions(), mismatching gene vector size");
-          result = false;
-
-        } else { // correct size
-
-          for (size_t idx = 0; idx < cmp_genes.size(); ++idx) {
-
-            if (not cmp_genes[idx]->isGene() or cmp_genes[idx]->id() != it->second->geneMembership()[idx]->id()) {
-
-              ExecEnv::log().error("membershipCodingDeletions(), mismatching genes id: {} and id: {}",
-                                   cmp_genes[idx]->id(), it->second->geneMembership()[idx]->id());
-              result = false;
-
-            } // Check gene ids.
-
-          } // for all genes
-
-        } // Correct number of genes.
-
-        ++it;
-
-      } // while variant in variant_map
-
-    } // correct size.
-
-  } // for all variant_maps.
-
-  return result;
-
-}
 
 
 void kgl::VariantAnalysis::generateCodonDeletes( const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
@@ -225,10 +161,14 @@ void kgl::VariantAnalysis::generateCodonDeletes( const std::shared_ptr<const Gen
       case 0: {
 
           std::shared_ptr<const Variant> delete_variant = createCompoundDelete(variant_map);
-          if (not genome_variant_ptr->addVariant(delete_variant)) {
+          if (delete_variant != nullptr) {
 
-            ExecEnv::log().error("Unable to add compound delete variant: {} - probable offset duplicate",
-                                 delete_variant->output());
+            if (not genome_variant_ptr->addVariant(delete_variant)) {
+
+              ExecEnv::log().error("Unable to add compound delete variant: {} - probable offset duplicate",
+                                   delete_variant->output());
+
+            }
 
           }
 
@@ -250,16 +190,15 @@ void kgl::VariantAnalysis::generateCodonDeletes( const std::shared_ptr<const Gen
 
 std::shared_ptr<const kgl::Variant> kgl::VariantAnalysis::createCompoundDelete(const CompoundVariantMap& variant_map) {
 
-  auto it = variant_map.begin();
-  GeneVector gene_vector = it->second->geneMembership();
+  std::shared_ptr<const GeneFeature> gene_ptr;
+  variant_map.begin()->second->geneMembership(gene_ptr);
+  if (variant_map.empty() or gene_ptr == nullptr) {
 
-  if (gene_vector.empty()) {
-
-    ExecEnv::log().error("Variant has no associated gene: {}", it->second->output());
+    ExecEnv::log().error("Variant map is empty or has no associated gene:");
     return nullptr;
   }
 
-  StrandSense gene_strand = gene_vector.front()->sequence().strand();
+  StrandSense gene_strand = gene_ptr->sequence().strand();
   std::shared_ptr<const ContigFeatures> contig_ptr;
   ContigOffset_t variant_offset;
 
