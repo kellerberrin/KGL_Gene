@@ -54,7 +54,7 @@ kgl::VariantSequenceType kgl::VariantSequence::genomeType() {
 
     if (contig_ptr_->findGenes(contig_offset_, gene_membership_)) {
 
-      coding_sequences_ptr_ = findOffsetCDS(contig_offset_, gene_membership_);
+      coding_sequences_ptr_ = kgl::GeneFeature::findOffsetCDS(contig_offset_, gene_membership_);
       if(coding_sequences_ptr_->size() > 0) {
 
         variant_genome_type_ = VariantSequenceType::CDS_CODING;
@@ -78,20 +78,3 @@ kgl::VariantSequenceType kgl::VariantSequence::genomeType() {
 
 }
 
-
-// Returns all the coding sequences of a variant.
-std:: shared_ptr<kgl::CodingSequenceArray> kgl::VariantSequence::findOffsetCDS(ContigOffset_t contig_offset,
-                                                                              const GeneVector& gene_ptr_vec) {
-
-  std:: shared_ptr<CodingSequenceArray> merged_sequences(std::make_shared<CodingSequenceArray>());
-
-  for (const auto& gene_ptr : gene_ptr_vec) {
-
-    std:: shared_ptr<const CodingSequenceArray> coding_sequences = kgl::GeneFeature::getCodingSequences(gene_ptr);
-    merged_sequences->mergeArrays(kgl::GeneFeature::getOffsetSequences(contig_offset, coding_sequences));
-
-  } // for each gene_ptr
-
-  return merged_sequences;
-
-}

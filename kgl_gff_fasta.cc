@@ -256,6 +256,10 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
     // Create a mRNA feature
     feature_ptr = std::make_shared<kgl::mRNAFeature>(feature_id, contig_ptr, sequence);
   }
+  else if (type.find(EXONFeature::EXON_TYPE) != std::string::npos) {
+    // Create a mRNA feature
+    feature_ptr = std::make_shared<kgl::EXONFeature>(feature_id, contig_ptr, sequence);
+  }
   else if (type.find(GeneFeature::GENE_TYPE) != std::string::npos) {
     // Create a GENE feature
     feature_ptr = std::make_shared<kgl::GeneFeature>(feature_id, contig_ptr, sequence);

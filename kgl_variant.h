@@ -80,9 +80,6 @@ public:
   std::string typestr() const;
   const GeneVector& geneMembership() const { genomeType(); return gene_membership_; }
 
-// Returns all the coding sequences of a variant.
-  static std:: shared_ptr<CodingSequenceArray> findOffsetCDS(ContigOffset_t contig_offset,
-                                                             const GeneVector& gene_ptr_vec);
 
 private:
 
