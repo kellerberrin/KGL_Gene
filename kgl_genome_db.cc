@@ -105,47 +105,40 @@ void kgl::ContigFeatures::verifyFeatureHierarchy() {
 
 void kgl::ContigFeatures::verifyContigOverlap() {
 
-  // If feature dimensions are [1, size] instead of [0, size-1] then assume that conversion from the
+  // If feature dimensions are [1, size] instead of [0, size) then assume that conversion from the
   // Gff convention of [1, size] has not been performed correctly during feature read from disk.
-  // Adjust to [0, size-1] here.
+  // Adjust to [0, size) here.
   // Note that this suggests a problem with the (3rd party) Gff read functionality and should be addressed there.
 
-  long adjust_from_1_size = 0;  // Report heuristic adjustment.
-
-  // No features larger than the contig.
   ContigSize_t contig_size = contigSize();
 
   for (auto feature_pair : id_feature_map_) {
+
     Feature &feature = *feature_pair.second;
     // Error if feature overlaps the and of the contig.
-    // If [1,contig_size] then adjust to [0, contis_size-1]
-    if (feature.sequence().end() >= contig_size) {
+    // If [1,contig_size] then adjust to [0, contig_size)
 
-      if (feature.sequence().end() == contig_size and feature.sequence().begin() <= 1) { // adjust to [0, size-1]
+    if (feature.sequence().begin() == 1) { // adjust to [0, size)
 
-        ++adjust_from_1_size;
-        FeatureSequence adj_sequence = feature.sequence();
-        adj_sequence.end(adj_sequence.end() - 1);
-        adj_sequence.begin(0);
-        feature.sequence(adj_sequence);
+      FeatureSequence adj_sequence = feature.sequence();
+      adj_sequence.begin(0);
+      feature.sequence(adj_sequence);
+      ExecEnv::log().warn("Contig: {} 1-offset features [1, {}], adjusted to zero-offset [0, {})",
+                          contigId(), contig_size, contig_size);
 
-      } else {
+    } else if (feature.sequence().end() > contig_size) { // No features larger than the contig.
 
-        kgl::ExecEnv::log().error("Feature: {};  sequence: [{}:{}] >= contig: {} size: {}",
-                                  feature.id(), feature.sequence().begin(), feature.sequence().end(),
-                                  contigId(), contig_size);
+      FeatureSequence adj_sequence = feature.sequence();
+      adj_sequence.end(contig_size);
+      feature.sequence(adj_sequence);
+      ExecEnv::log().warn("Feature: {} [{}, {}) exceeds contig size :{} adjusted to [{}, {})",
+                          feature.id(), feature.sequence().begin(), feature.sequence().end(),
+                          contig_size, feature.sequence().begin(), contig_size);
 
-      } // if end == contig_size
+    }
 
-    } // contig overlap
+  } // for contig
 
-  } // for all features.
-
-  if (adjust_from_1_size > 0) {
-
-    kgl::ExecEnv::log().warn("Contig: {}; size: {} had: {} 1-offset features [1, {}], adjusted to zero-offset [0, {}]",
-                             contigId(), contig_size, adjust_from_1_size, contig_size, (contig_size - 1));
-  }
 }
 
 
@@ -289,11 +282,13 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
       ++gene_count;
       const std::shared_ptr<const GeneFeature> gene_ptr = std::static_pointer_cast<const GeneFeature>(feature.second);
       const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene_ptr);
-      if (coding_seq_ptr->size() == 0) { // No coding sequence available
+      if (coding_seq_ptr->size() == 0) { // No CDS coding sequence available, try the EXON coding sequence
 
         ++empty_genes;
 
-      } else {
+      }
+
+      if (coding_seq_ptr->size() > 0) {
 
         if (not gene_ptr->verifyCDSPhase(coding_seq_ptr)) {
 
@@ -303,6 +298,7 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
           feature.second->recusivelyPrintsubfeatures();
 
         }
+
         if (not verifyCodingSequences(coding_seq_ptr)) {
 
           ++ill_formed_genes;
@@ -326,7 +322,7 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Codi
 
   if (coding_seq_ptr->size() == 0) {
 
-    ExecEnv::log().error("codingSequence(), empty CCodingSequenceArray");
+    ExecEnv::log().error("codingSequence(), empty CodingSequenceArray");
 
   }
 
@@ -343,29 +339,25 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Codi
 
     if (not coding_sequence_.checkStartCodon(coding_sequence_ptr)) {
 
-      ExecEnv::log().vwarn("No START codon for Gene: {} begin: {}, end: {}, strand: {} | first codon: {}{}{}",
+      ExecEnv::log().vwarn("No START codon Gene: {}, CDS parent (mRNA): {} | first codon: {}{}{}",
                            sequence.second->getGene()->id(),
-                           sequence.second->getGene()->sequence().begin(),
-                           sequence.second->getGene()->sequence().end(),
-                          static_cast<char>(sequence.second->getGene()->sequence().strand()),
-                          coding_sequence_.firstCodon(coding_sequence_ptr).bases[0],
-                          coding_sequence_.firstCodon(coding_sequence_ptr).bases[1],
-                          coding_sequence_.firstCodon(coding_sequence_ptr).bases[2]);
+                           sequence.second->getCDSParent()->id(),
+                           coding_sequence_.firstCodon(coding_sequence_ptr).bases[0],
+                           coding_sequence_.firstCodon(coding_sequence_ptr).bases[1],
+                           coding_sequence_.firstCodon(coding_sequence_ptr).bases[2]);
 //      gene_ptr->recusivelyPrintsubfeatures();
 //      gene_ptr->printCDSvector(sorted_cds_vec);
       result = false;
     }
     if (not coding_sequence_.checkStopCodon(coding_sequence_ptr)) {
 
-      ExecEnv::log().vwarn("No STOP codon: {} for Gene: {} begin: {}, end: {}, strand: {} | last codon: {}{}{}",
+      ExecEnv::log().vwarn("No STOP codon: {} Gene: {}, CDS parent (mRNA): {} | last codon: {}{}{}",
                           (coding_sequence_.codonLength(coding_sequence_ptr)-1),
                            sequence.second->getGene()->id(),
-                           sequence.second->getGene()->sequence().begin(),
-                           sequence.second->getGene()->sequence().end(),
-                          static_cast<char>(sequence.second->getGene()->sequence().strand()),
-                          coding_sequence_.lastCodon(coding_sequence_ptr).bases[0],
-                          coding_sequence_.lastCodon(coding_sequence_ptr).bases[1],
-                          coding_sequence_.lastCodon(coding_sequence_ptr).bases[2]);
+                           sequence.second->getCDSParent()->id(),
+                           coding_sequence_.lastCodon(coding_sequence_ptr).bases[0],
+                           coding_sequence_.lastCodon(coding_sequence_ptr).bases[1],
+                           coding_sequence_.lastCodon(coding_sequence_ptr).bases[2]);
 //      gene_ptr->recusivelyPrintsubfeatures();
 //      gene_ptr->printCDSvector(sorted_cds_vec);
       result = false;
@@ -373,15 +365,13 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Codi
     size_t nonsense_index = coding_sequence_.checkNonsenseMutation(coding_sequence_ptr);
     if (nonsense_index > 0) {
 
-      ExecEnv::log().vwarn("NONSENSE mutation codon:{} Gene: {} begin: {}, end: {}, strand: {} | stop codon: {}{}{}",
+      ExecEnv::log().vwarn("NONSENSE mutation codon:{} Gene: {}, CDS Parent (mRNA): {} | stop codon: {}{}{}",
                            nonsense_index,
                            sequence.second->getGene()->id(),
-                           sequence.second->getGene()->sequence().begin(),
-                           sequence.second->getGene()->sequence().end(),
-                          static_cast<char>(sequence.second->getGene()->sequence().strand()),
-                          coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[0],
-                          coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[1],
-                          coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[2]);
+                           sequence.second->getCDSParent()->id(),
+                           coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[0],
+                           coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[1],
+                           coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[2]);
 //      gene_ptr->recusivelyPrintsubfeatures();
 //      gene_ptr->printCDSvector(sorted_cds_vec);
       result = false;

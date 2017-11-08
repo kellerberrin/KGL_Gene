@@ -20,8 +20,6 @@ std::string kgl::VariantSequence::typestr() const {
 
   switch(type()) {
 
-    case VariantSequenceType::UNKNOWN: return "UNKNOWN";
-
     case VariantSequenceType::CDS_CODING : return "CDS Coding";
 
     case VariantSequenceType::INTRON : return "INTRON";
@@ -33,7 +31,6 @@ std::string kgl::VariantSequence::typestr() const {
   return "ERROR"; // Should not happen.
 
 }
-
 
 std::string kgl::VariantSequence::genomeOutput() const {
 
@@ -48,30 +45,70 @@ std::string kgl::VariantSequence::genomeOutput() const {
 
 }
 
+kgl::VariantSequenceType kgl::VariantSequence::type() const {
 
-void kgl::VariantSequence::defineVariantType(std::shared_ptr<const GeneFeature> gene_ptr,
-                                             std::shared_ptr<const CodingSequence> coding_sequence_ptr)
-{
+  if (not codingSequences().empty()) {
 
-  gene_membership_ = gene_ptr;
-  coding_sequence_ptr_ = coding_sequence_ptr;
+    return VariantSequenceType::CDS_CODING;
 
-  if (gene_ptr != nullptr and coding_sequence_ptr != nullptr) {
+  } else if (not geneMembership().empty()) {
 
-    variant_genome_type_ = VariantSequenceType::CDS_CODING;
-
-  } else if (gene_ptr != nullptr) {
-
-
-    variant_genome_type_ = VariantSequenceType::INTRON;
-
+    return VariantSequenceType::INTRON;
 
   } else {
 
-    variant_genome_type_ = VariantSequenceType::NON_CODING;
+    return VariantSequenceType::NON_CODING;
 
   }
 
 }
+
+void kgl::VariantSequence::defineIntron(std::shared_ptr<const GeneFeature> gene_ptr)
+{
+
+  if (gene_ptr) {
+
+    coding_sequences_.getMap().clear();
+    gene_membership_.clear();
+    gene_membership_.push_back(gene_ptr);
+
+  } else {
+
+
+    ExecEnv::log().error("Variant contig: {} offset: {}; Attempted to define intron with null pointer",
+                         contig()->contigId(), offset());
+
+  }
+
+}
+
+void kgl::VariantSequence::defineCoding(std::shared_ptr<const CodingSequence> coding_sequence_ptr)
+{
+
+  if (coding_sequence_ptr) {
+
+    coding_sequences_.getMap().clear();
+    coding_sequences_.insertCodingSequence(coding_sequence_ptr);
+    gene_membership_.clear();
+    gene_membership_.push_back(coding_sequence_ptr->getGene());
+
+  } else {
+
+
+    ExecEnv::log().error("Variant contig: {} offset: {}; Attempted to define coding sequence with null pointer",
+                         contig()->contigId(), offset());
+
+  }
+
+}
+
+void kgl::VariantSequence::defineNonCoding()
+{
+
+  coding_sequences_.getMap().clear();
+  gene_membership_.clear();
+
+}
+
 
 

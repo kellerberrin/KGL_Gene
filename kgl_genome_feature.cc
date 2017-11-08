@@ -59,7 +59,6 @@ bool kgl::Feature::verifyCDSPhase(std::shared_ptr<const CodingSequenceArray> cod
 
     result = result and verifyMod3(sorted_cds.second->getSortedCDS());
     result = result and verifyStrand(sorted_cds.second->getSortedCDS());
-    result = result and verifyPhase(sorted_cds.second->getSortedCDS());
 
   }
 
@@ -120,83 +119,6 @@ bool kgl::Feature::verifyStrand(const SortedCDS& sorted_cds) const {
 }
 
 
-bool kgl::Feature::verifyPhase(const SortedCDS& sorted_cds) const {
-
-  bool result = true;
-
-  switch(sequence().strand()) {
-
-    case StrandSense::FORWARD: {
-
-      ContigOffset_t sequence_length = 0;
-      bool warn_adjust = false;
-      static bool warn_forward_once = false;
-      for (auto it = sorted_cds.begin(); it != sorted_cds.end(); ++it) {
-
-        CDSPhaseType_t phase = (AminoAcidTypes::CODON_SIZE - (sequence_length % AminoAcidTypes::CODON_SIZE))
-                               % AminoAcidTypes::CODON_SIZE;
-
-        if (it->second->phase() != phase) {
-
-          std::const_pointer_cast<CDSFeature>(it->second)->phase(phase);
-          warn_adjust = true;
-
-        }
-
-        sequence_length += it->second->sequence().end() - it->second->sequence().begin();
-
-      }
-
-      if (warn_adjust and not warn_forward_once) {
-        warn_forward_once = true;
-        ExecEnv::log().warn("Inconsistent Gff3 phase fields found in forward ('+') strand CDS features - adjusted");
-      }
-    }
-    break;
-
-    case StrandSense::REVERSE: {
-
-      ContigOffset_t sequence_length = 0;
-      bool warn_adjust = false;
-      static bool warn_reverse_once = false;
-      for (auto rit = sorted_cds.rbegin(); rit != sorted_cds.rend(); ++rit) {
-
-        CDSPhaseType_t phase = (AminoAcidTypes::CODON_SIZE - (sequence_length % AminoAcidTypes::CODON_SIZE))
-                               % AminoAcidTypes::CODON_SIZE;
-
-        if (rit->second->phase() != phase) {
-
-          std::const_pointer_cast<CDSFeature>(rit->second)->phase(phase);
-          warn_adjust = true;
-
-        }
-
-        sequence_length += rit->second->sequence().end() - rit->second->sequence().begin();
-
-      }
-
-      if (warn_adjust and not warn_reverse_once) {
-
-        warn_reverse_once = true;
-        ExecEnv::log().warn("Inconsistent Gff3 phase fields found in reverse ('-') strand CDS features - adjusted");
-
-      }
-
-    }
-    break;
-
-    case StrandSense::UNKNOWN:
-    ExecEnv::log().error("verifyPhase() CDS parent: {} sequence strand is UNKNOWN '.'", id());
-    result = false;
-    break;
-
-  }
-
-  return result;
-
-}
-
-
 std::shared_ptr<kgl::Feature> kgl::Feature::getGene() const {
 
   // recursivly search upward
@@ -233,7 +155,7 @@ kgl::GeneFeature::getCodingSequences(std::shared_ptr<const GeneFeature> gene) {
 
 }
 
-// This routine is recursive. Assumes all the CDS are on the same sub-feature level.
+// This routine is recursive. Assumes all the CDS/EXONS are on the same sub-feature level.
 bool kgl::GeneFeature::getCodingSequences(std::shared_ptr<const GeneFeature> gene_ptr,
                                           std::shared_ptr<const Feature> cds_parent_ptr,
                                           std::shared_ptr<CodingSequenceArray>& sequence_array_ptr) {
@@ -251,7 +173,7 @@ bool kgl::GeneFeature::getCodingSequences(std::shared_ptr<const GeneFeature> gen
 
       if (not insert.second) {
 
-        ExecEnv::log().warn("Duplicate CDS: {} at contig offset: {}",
+        ExecEnv::log().warn("Duplicate coding feature: {} at contig offset: {}",
                             sub_feature.second->id(),
                             sub_feature.second->sequence().begin());
         result = false;
@@ -276,42 +198,6 @@ bool kgl::GeneFeature::getCodingSequences(std::shared_ptr<const GeneFeature> gen
   }
 
   return result;
-
-}
-
-std::shared_ptr<const kgl::CodingSequenceArray>
-kgl::GeneFeature::filterOffsetSequences(ContigOffset_t offset,
-                                     std::shared_ptr<const CodingSequenceArray> sequence_array_ptr) {
-
-  std::shared_ptr<CodingSequenceArray> filtered_map_ptr(std::make_shared<CodingSequenceArray>());
-  for (const auto& sequence : sequence_array_ptr->getMap()) {
-
-    if (sequence.second->isWithinCoding(offset)) {
-
-      filtered_map_ptr->insertCodingSequence(sequence.second);
-
-    }
-
-  }
-
-  return filtered_map_ptr;
-
-}
-
-// Returns all the coding sequences for a particular offset
-std:: shared_ptr<kgl::CodingSequenceArray> kgl::GeneFeature::findOffsetCDS(ContigOffset_t contig_offset,
-                                                                           const GeneVector& gene_ptr_vec) {
-
-  std:: shared_ptr<CodingSequenceArray> merged_sequences(std::make_shared<CodingSequenceArray>());
-
-  for (const auto& gene_ptr : gene_ptr_vec) {
-
-    std:: shared_ptr<const CodingSequenceArray> coding_sequences = kgl::GeneFeature::getCodingSequences(gene_ptr);
-    merged_sequences->mergeArrays(kgl::GeneFeature::filterOffsetSequences(contig_offset, coding_sequences));
-
-  } // for each gene_ptr
-
-  return merged_sequences;
 
 }
 

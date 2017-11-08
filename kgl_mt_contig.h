@@ -75,12 +75,6 @@ public:
 
   }
 
-  inline void incrementInsert(const ContigOffset_t contig_offset) {
-
-    incrementCount(contig_offset, NucleotideColumn::INSERT_SEQUENCE );
-
-  }
-
   // Reads are not locked. Do not call while updating read counts.
   inline const NucleotideReadCount_t readCount( const ContigOffset_t contig_offset,
                                                 const Nucleotide_DNA5_t nucleotide) const {

@@ -74,16 +74,9 @@ std::string kgl::ContigFilter::filterName() const {
 bool kgl::GeneFilter::implementFilter(const Variant& variant) const {
 
   GeneVector gene_ptr_vec;
-  if (variant.type() == VariantSequenceType::INTRON or variant.type() == VariantSequenceType::CDS_CODING) {
+  if (not variant.geneMembership().empty()) {
 
-    std::shared_ptr<const GeneFeature> gene_ptr;
-    if (not variant.geneMembership(gene_ptr)) {
-
-      ExecEnv::log().error("Contig: {} Offset: {}, Variant type INTRON or CDS_CODING; expected a valid gene.",
-                           variant.contigId(), variant.contigOffset());
-      return false;
-
-    }
+    std::shared_ptr<const GeneFeature> gene_ptr = variant.geneMembership().front();
     if (gene_ptr->id() == gene_ident_) {
 
       return true;

@@ -138,12 +138,14 @@ bool kgl::CodingSequenceArray::insertCodingSequence(std::shared_ptr<const Coding
 }
 
 
-void kgl::CodingSequenceArray::mergeArrays(std::shared_ptr<const CodingSequenceArray> merge_array) {
+std::shared_ptr<const kgl::CodingSequence> kgl::CodingSequenceArray::getFirst() const {
 
-  for (auto sequence: merge_array->getMap()) {
+  if (empty()) {
 
-    insertCodingSequence(sequence.second);
+    ExecEnv::log().critical("CodingSequenceArray::getFirst() tried to obtain a CodingSequence from empty container");
 
   }
+
+  return getMap().begin()->second;
 
 }

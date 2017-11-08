@@ -167,35 +167,6 @@ private:
 };
 
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Filter insert SNPs
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class InsertSNPFilter : public VariantFilter {
-
-public:
-
-  InsertSNPFilter() = default;
-  ~InsertSNPFilter() override = default;
-
-  bool applyFilter(const Variant& variant) const override { return true; }  // default
-  bool applyFilter(const ReadCountVariant& variant) const override { return true; }  // default
-  bool applyFilter(const SNPVariantDNA5& variant) const override {
-
-    return variant.mutant() == NucleotideColumn_DNA5::INSERT_SEQUENCE;
-
-  }
-  bool applyFilter(const CompoundDelete& variant) const override { return true; }
-
-  std::string filterName() const final { return "Insert nucleotide bases '+' SNPs only"; }
-
-private:
-
-
-};
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Filter mutant SNPs
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -211,8 +182,7 @@ public:
   bool applyFilter(const ReadCountVariant& variant) const override { return true; }  // default
   bool applyFilter(const SNPVariantDNA5& variant) const override {
 
-    return variant.mutant() != NucleotideColumn_DNA5::INSERT_SEQUENCE
-    and variant.mutant() != NucleotideColumn_DNA5::DELETE_NUCLEOTIDE;
+    return NucleotideColumn_DNA5::isBaseCode(variant.mutant());
 
   }
   bool applyFilter(const CompoundDelete& variant) const override { return true; }

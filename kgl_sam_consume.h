@@ -185,14 +185,15 @@ void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string
           // Check that we have not exceeded the size of the contig block (insert beyond the end of the contig)
           if ((location + cigar_offset) < contig_block.contigSize()) {
 
-            contig_block.incrementInsert((location + cigar_offset));
+            Nucleotide_DNA5_t sam_nucleotide = sam_record_parser.getSequenceNucleotide(record_ptr, cigar_offset + sam_idx);
+            Nucleotide_DNA5_t insert_nucleotide = NucleotideColumn_DNA5::insertNucleotide(sam_nucleotide);
+            contig_block.incrementCount(location + cigar_offset, insert_nucleotide);
 
           }
 
         }
         // Store the inserted sequence at the origin location.
         insert_block.insertSequence(location, sam_record_parser.getSubSequence(record_ptr, sam_idx, cigar.second));
-
         sam_idx += cigar.second;
         break;
 

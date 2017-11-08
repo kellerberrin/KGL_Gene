@@ -190,13 +190,21 @@ void kgl::VariantAnalysis::generateCodonDeletes( const std::shared_ptr<const Gen
 
 std::shared_ptr<const kgl::Variant> kgl::VariantAnalysis::createCompoundDelete(const CompoundVariantMap& variant_map) {
 
-  std::shared_ptr<const GeneFeature> gene_ptr;
-  variant_map.begin()->second->geneMembership(gene_ptr);
-  if (variant_map.empty() or gene_ptr == nullptr) {
+  if (variant_map.empty()) {
 
-    ExecEnv::log().error("Variant map is empty or has no associated gene:");
+    ExecEnv::log().error("Variant map is empty");
     return nullptr;
+
   }
+
+  if (variant_map.begin()->second->geneMembership().empty()) {
+
+    ExecEnv::log().error("Variant has no associated gene");
+    return nullptr;
+
+  }
+
+  std::shared_ptr<const GeneFeature> gene_ptr = variant_map.begin()->second->geneMembership().front();
 
   StrandSense gene_strand = gene_ptr->sequence().strand();
   std::shared_ptr<const ContigFeatures> contig_ptr;

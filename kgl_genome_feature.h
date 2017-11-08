@@ -70,7 +70,6 @@ private:
   FeatureAttributes attributes_;
 
   bool verifyMod3(const SortedCDS& sorted_cds) const;
-  bool verifyPhase(const SortedCDS& sorted_cds) const;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -163,7 +162,7 @@ private:
 // A Gene - can have multiple coding CDSFeatures/mRNAFeature sequences
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using GeneVector = std::vector<std::shared_ptr<GeneFeature>>;  // Multiple alternative genes for sequence region.
+using GeneVector = std::vector<std::shared_ptr<const GeneFeature>>;  // Multiple alternative genes for sequence region.
 class GeneFeature : public Feature {
 
 public:
@@ -180,16 +179,7 @@ public:
   // Public function returns a sequence map.
   static std::shared_ptr<const CodingSequenceArray> getCodingSequences(std::shared_ptr<const GeneFeature> gene);
 
-  // Returns the coding sequences relevant for this offset - will be zero sequences for intron offsets.
-  static std::shared_ptr<const CodingSequenceArray>
-  filterOffsetSequences(ContigOffset_t offset, std::shared_ptr<const CodingSequenceArray> sequence_array_ptr);
-
-  // Returns all the coding sequences for a gene vector and a particular offset.
-  static std:: shared_ptr<CodingSequenceArray> findOffsetCDS(ContigOffset_t contig_offset,
-                                                             const GeneVector& gene_ptr_vec);
-
   bool isGene() const final { return true; }
-
 
   // GENE Type.
   constexpr static const char* GENE_TYPE = "GENE";
@@ -200,6 +190,7 @@ private:
   static bool getCodingSequences(std::shared_ptr<const GeneFeature> gene,
                                  std::shared_ptr<const Feature> cds_parent,
                                  std::shared_ptr<CodingSequenceArray>& sequence_array_ptr);
+
 
 };
 

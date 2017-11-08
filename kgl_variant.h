@@ -56,17 +56,14 @@ private:
 //  Genome information of the variant.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum class VariantSequenceType { UNKNOWN, CDS_CODING, INTRON, NON_CODING };
+enum class VariantSequenceType { CDS_CODING, INTRON, NON_CODING };
 class VariantSequence {
 
 public:
 
   VariantSequence(std::shared_ptr<const ContigFeatures> contig_ptr,
                 ContigOffset_t contig_offset) : contig_ptr_(contig_ptr),
-                                                contig_offset_(contig_offset),
-                                                variant_genome_type_(VariantSequenceType::UNKNOWN),
-                                                gene_membership_(nullptr),
-                                                coding_sequence_ptr_(nullptr) {}
+                                                contig_offset_(contig_offset) {}
   virtual ~VariantSequence() = default;
 
   std::string genomeOutput() const;  // Genome information text.
@@ -74,37 +71,22 @@ public:
   std::shared_ptr<const ContigFeatures> contig() const { return contig_ptr_; }
   ContigOffset_t offset() const { return contig_offset_; }
 
-  VariantSequenceType type() const { return variant_genome_type_; }
-
+  VariantSequenceType type() const;
   std::string typestr() const;
 
-  bool codingSequences(std::shared_ptr<const CodingSequence>& coding_sequence_ptr) const {
+  const CodingSequenceArray& codingSequences() const { return coding_sequences_; }
+  const GeneVector& geneMembership() const { return gene_membership_; }
 
-    coding_sequence_ptr = coding_sequence_ptr_;
-    return coding_sequence_ptr_ != nullptr;
-
-  }
-
-  bool geneMembership(std::shared_ptr<const GeneFeature>& gene_ptr) const
-  {
-
-    gene_ptr = gene_membership_;
-    return  gene_membership_ != nullptr;
-
-  }
-
-  bool variantTypeDefined() const { return variant_genome_type_ != VariantSequenceType::UNKNOWN; }
-
-  void defineVariantType(std::shared_ptr<const GeneFeature> gene_ptr,
-                         std::shared_ptr<const CodingSequence> coding_sequence_ptr);
+  void defineIntron(std::shared_ptr<const GeneFeature> gene_ptr);
+  void defineCoding(std::shared_ptr<const CodingSequence> coding_sequence_ptr);
+  void defineNonCoding();
 
 private:
 
   std::shared_ptr<const ContigFeatures> contig_ptr_;    // The contig.
   ContigOffset_t contig_offset_;                        // Location on the contig.
-  VariantSequenceType variant_genome_type_;             // Non-coding, intron or coding.
-  std::shared_ptr<const GeneFeature> gene_membership_;      // Membership includes introns (nullptr for non-coding)
-  std::shared_ptr<const CodingSequence> coding_sequence_ptr_;  // Coding sequence for variant ( nullptr for an intron)
+  GeneVector gene_membership_;                          // Membership includes introns (empty for non-coding)
+  CodingSequenceArray coding_sequences_;  // Coding sequence for variant ( nullptr for an intron)
 
 };
 

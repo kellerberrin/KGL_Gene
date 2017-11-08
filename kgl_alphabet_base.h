@@ -30,7 +30,8 @@ public:
   NucleotideColumn_DNA5() = delete; // Singleton
   ~NucleotideColumn_DNA5() = delete;
 
-  static constexpr ContigOffset_t NUCLEOTIDE_COLUMNS = 7;
+  static constexpr ContigOffset_t NUCLEOTIDE_COLUMNS = 11;
+
   static constexpr Nucleotide_DNA5_t A_NUCLEOTIDE = 'A';
   static constexpr Nucleotide_DNA5_t A_NUCLEOTIDE_LC = 'a';
   static constexpr ContigOffset_t A_NUCLEOTIDE_OFFSET = 0;
@@ -51,8 +52,19 @@ public:
   static constexpr ContigOffset_t N_NUCLEOTIDE_OFFSET = 4;
   static constexpr Nucleotide_DNA5_t DELETE_NUCLEOTIDE = '-';
   static constexpr ContigOffset_t DELETE_NUCLEOTIDE_OFFSET = 5;
-  static constexpr Nucleotide_DNA5_t INSERT_SEQUENCE = '+';
-  static constexpr ContigOffset_t INSERT_NUCLEOTIDE_OFFSET = 6;
+  static constexpr Nucleotide_DNA5_t INSERT_A_NUCLEOTIDE = 'E';
+  static constexpr ContigOffset_t INSERT_A_NUCLEOTIDE_OFFSET = 6;
+  static constexpr Nucleotide_DNA5_t INSERT_C_NUCLEOTIDE = 'F';
+  static constexpr ContigOffset_t INSERT_C_NUCLEOTIDE_OFFSET = 7;
+  static constexpr Nucleotide_DNA5_t INSERT_G_NUCLEOTIDE = 'I';
+  static constexpr ContigOffset_t INSERT_G_NUCLEOTIDE_OFFSET = 8;
+  static constexpr Nucleotide_DNA5_t INSERT_U_NUCLEOTIDE = 'J';
+  static constexpr ContigOffset_t INSERT_U_NUCLEOTIDE_OFFSET = 9;
+  static constexpr Nucleotide_DNA5_t INSERT_T_NUCLEOTIDE = 'J';
+  static constexpr ContigOffset_t INSERT_T_NUCLEOTIDE_OFFSET = 9;
+  static constexpr Nucleotide_DNA5_t INSERT_N_NUCLEOTIDE = 'K';
+  static constexpr ContigOffset_t INSERT_N_NUCLEOTIDE_OFFSET = 10;
+
 
   static bool isBaseCode(const Nucleotide_DNA5_t nucleotide) {
 
@@ -74,7 +86,11 @@ public:
       case N_NUCLEOTIDE:
       case N_NUCLEOTIDE_LC:
       case DELETE_NUCLEOTIDE:
-      case INSERT_SEQUENCE:
+      case INSERT_A_NUCLEOTIDE:
+      case INSERT_C_NUCLEOTIDE:
+      case INSERT_G_NUCLEOTIDE:
+      case INSERT_T_NUCLEOTIDE:
+      case INSERT_N_NUCLEOTIDE:
         return false;
 
       default:
@@ -84,6 +100,8 @@ public:
     }
 
   }
+
+
 
   // Convert a base to an array offset.
   static ContigOffset_t nucleotideToColumn(const Nucleotide_DNA5_t nucleotide) {
@@ -110,7 +128,15 @@ public:
 
       case DELETE_NUCLEOTIDE: return DELETE_NUCLEOTIDE_OFFSET;
 
-      case INSERT_SEQUENCE: return INSERT_NUCLEOTIDE_OFFSET;
+      case INSERT_A_NUCLEOTIDE: return INSERT_A_NUCLEOTIDE_OFFSET;
+
+      case INSERT_C_NUCLEOTIDE: return INSERT_C_NUCLEOTIDE_OFFSET;
+
+      case INSERT_G_NUCLEOTIDE: return INSERT_G_NUCLEOTIDE_OFFSET;
+
+      case INSERT_T_NUCLEOTIDE: return INSERT_T_NUCLEOTIDE_OFFSET;
+
+      case INSERT_N_NUCLEOTIDE: return INSERT_N_NUCLEOTIDE_OFFSET;
 
       default:
         ExecEnv::log().critical("nucleotideToColumn(), Nucleotide array accessed with unknown nucleotide: {}",
@@ -127,30 +153,65 @@ public:
     // Translate the nucleotide to an array column
     switch (offset) {
 
-      case A_NUCLEOTIDE_OFFSET:
-        return A_NUCLEOTIDE;
+      case A_NUCLEOTIDE_OFFSET: return A_NUCLEOTIDE;
 
-      case C_NUCLEOTIDE_OFFSET:
-        return C_NUCLEOTIDE;
+      case C_NUCLEOTIDE_OFFSET: return C_NUCLEOTIDE;
 
-      case G_NUCLEOTIDE_OFFSET:
-        return G_NUCLEOTIDE;
+      case G_NUCLEOTIDE_OFFSET: return G_NUCLEOTIDE;
 
-      case T_NUCLEOTIDE_OFFSET:
-        return T_NUCLEOTIDE;
+      case T_NUCLEOTIDE_OFFSET: return T_NUCLEOTIDE;
 
-      case N_NUCLEOTIDE_OFFSET:
-        return N_NUCLEOTIDE;
+      case N_NUCLEOTIDE_OFFSET: return N_NUCLEOTIDE;
 
-      case DELETE_NUCLEOTIDE_OFFSET:
-        return DELETE_NUCLEOTIDE;
+      case DELETE_NUCLEOTIDE_OFFSET: return DELETE_NUCLEOTIDE;
 
-      case INSERT_NUCLEOTIDE_OFFSET:
-        return INSERT_SEQUENCE;
+      case INSERT_A_NUCLEOTIDE_OFFSET: return INSERT_A_NUCLEOTIDE;
+
+      case INSERT_C_NUCLEOTIDE_OFFSET: return INSERT_C_NUCLEOTIDE;
+
+      case INSERT_G_NUCLEOTIDE_OFFSET: return INSERT_G_NUCLEOTIDE;
+
+      case INSERT_T_NUCLEOTIDE_OFFSET: return INSERT_T_NUCLEOTIDE;
+
+      case INSERT_N_NUCLEOTIDE_OFFSET: return INSERT_N_NUCLEOTIDE;
 
       default:
         ExecEnv::log().critical("indexToNucleotide(), unknown nucleotide offset: {}", offset);
         return N_NUCLEOTIDE; // Never reached, to keep the compiler happy.
+
+    }
+
+  }
+
+
+  // Insert offsets.
+  static Nucleotide_DNA5_t insertNucleotide(const Nucleotide_DNA5_t nucleotide) {
+
+    // Translate the nucleotide to an array column
+    switch (nucleotide) {
+
+      case A_NUCLEOTIDE:
+      case A_NUCLEOTIDE_LC: return INSERT_A_NUCLEOTIDE;
+
+      case C_NUCLEOTIDE:
+      case C_NUCLEOTIDE_LC: return INSERT_C_NUCLEOTIDE;
+
+      case G_NUCLEOTIDE:
+      case G_NUCLEOTIDE_LC: return INSERT_G_NUCLEOTIDE;
+
+      case T_NUCLEOTIDE:
+      case T_NUCLEOTIDE_LC: return INSERT_T_NUCLEOTIDE;
+
+      case U_NUCLEOTIDE:
+      case U_NUCLEOTIDE_LC: return INSERT_U_NUCLEOTIDE;
+
+      case N_NUCLEOTIDE:
+      case N_NUCLEOTIDE_LC: return INSERT_N_NUCLEOTIDE;
+
+      default:
+        ExecEnv::log().error("insertNucleotide(), Invalid/Unknown Nucleotide: {} (ascii): {}",
+                             nucleotide, static_cast<unsigned char>(nucleotide));
+        return INSERT_A_NUCLEOTIDE; // Dummy value
 
     }
 
@@ -163,29 +224,24 @@ public:
     switch (nucleotide) {
 
       case A_NUCLEOTIDE:
-      case A_NUCLEOTIDE_LC:
-        return T_NUCLEOTIDE;
+      case A_NUCLEOTIDE_LC: return T_NUCLEOTIDE;
 
       case C_NUCLEOTIDE:
-      case C_NUCLEOTIDE_LC:
-        return G_NUCLEOTIDE;
+      case C_NUCLEOTIDE_LC: return G_NUCLEOTIDE;
 
       case G_NUCLEOTIDE:
-      case G_NUCLEOTIDE_LC:
-        return C_NUCLEOTIDE;
+      case G_NUCLEOTIDE_LC: return C_NUCLEOTIDE;
 
       case T_NUCLEOTIDE:
-      case T_NUCLEOTIDE_LC:
-        return A_NUCLEOTIDE;
+      case T_NUCLEOTIDE_LC: return A_NUCLEOTIDE;
 
       case U_NUCLEOTIDE:
-      case U_NUCLEOTIDE_LC:
-        return A_NUCLEOTIDE;
+      case U_NUCLEOTIDE_LC: return A_NUCLEOTIDE;
 
       default:
         ExecEnv::log().error("complementNucleotide(), Unknown Nucleotide: {} (ascii): {}",
                              nucleotide, static_cast<unsigned char>(nucleotide));
-        return N_NUCLEOTIDE; // Never reached, to keep the compiler happy.
+        return A_NUCLEOTIDE; // Dummy Value.
 
     }
 

@@ -30,7 +30,16 @@ const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::N_NUCLEOTIDE_LC;
 const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::N_NUCLEOTIDE_OFFSET;
 const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::DELETE_NUCLEOTIDE;
 const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::DELETE_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::INSERT_SEQUENCE;
-const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::INSERT_NUCLEOTIDE_OFFSET;
-
+const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::INSERT_A_NUCLEOTIDE;
+const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::INSERT_A_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::INSERT_C_NUCLEOTIDE;
+const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::INSERT_C_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::INSERT_G_NUCLEOTIDE;
+const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::INSERT_G_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::INSERT_U_NUCLEOTIDE;
+const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::INSERT_U_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::INSERT_T_NUCLEOTIDE;
+const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::INSERT_T_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::INSERT_N_NUCLEOTIDE;
+const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::INSERT_N_NUCLEOTIDE_OFFSET;
 

@@ -26,29 +26,30 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
                                                                                                     file_name,
                                                                                                     read_quality);
   // Generate SNP variants.
-  std::shared_ptr<const kgl::GenomeVariant> variant_ptr = kgl::VariantAnalysis().SNPVariants(count_data_ptr,
+  std::shared_ptr<const kgl::GenomeVariant> variant_ptr = kgl::VariantAnalysis().AllSNPVariants(count_data_ptr,
                                                                                              genome_db_ptr);
-  // Generate contiguous deletion variants.
-  std::shared_ptr<const kgl::GenomeVariant> codon_delete_ptr = kgl::VariantAnalysis().codonDelete(variant_ptr,
-                                                                                                  count_data_ptr,
-                                                                                                  genome_db_ptr);
-  // Disaggregated contiguous deletion variants.
-  std::shared_ptr<const kgl::GenomeVariant> disagg_ptr = codon_delete_ptr->disaggregateCompoundVariants(genome_db_ptr);
-  // Remove disaggregated variants.
-  variant_ptr = variant_ptr->Difference(disagg_ptr);
-  // Add in contiguous deletes.
-  variant_ptr = variant_ptr->Union(codon_delete_ptr);
-  // Generate compound single codon variants
-  std::shared_ptr<const kgl::GenomeVariant> compound_snp_ptr = kgl::VariantAnalysis().compoundSNP(variant_ptr,
-                                                                                                  genome_db_ptr);
 //  std::cout << *variant_ptr;
+  // Generate contiguous deletion variants.
+//  std::shared_ptr<const kgl::GenomeVariant> codon_delete_ptr = kgl::VariantAnalysis().codonDelete(variant_ptr,
+//                                                                                                  count_data_ptr,
+//                                                                                                  genome_db_ptr);
+  // Disaggregated contiguous deletion variants.
+//  std::shared_ptr<const kgl::GenomeVariant> disagg_ptr = codon_delete_ptr->disaggregateCompoundVariants(genome_db_ptr);
+  // Remove disaggregated variants.
+//  variant_ptr = variant_ptr->Difference(disagg_ptr);
+  // Add in contiguous deletes.
+//  variant_ptr = variant_ptr->Union(codon_delete_ptr);
+  // Generate compound single codon variants
+//  std::shared_ptr<const kgl::GenomeVariant> compound_snp_ptr = kgl::VariantAnalysis().compoundSNP(variant_ptr,
+//                                                                                                  genome_db_ptr);
   variant_ptr = variant_ptr->filterVariants(kgl::InCDSFilter());
   // Filter for read count.
-  variant_ptr = variant_ptr->filterVariants(kgl::ReadCountFilter(min_count));
+//  variant_ptr = variant_ptr->filterVariants(kgl::ReadCountFilter(min_count));
   // Filter for read proportion.
-  variant_ptr = variant_ptr->filterVariants(kgl::MutantProportionFilter(min_proportion));
+//  variant_ptr = variant_ptr->filterVariants(kgl::MutantProportionFilter(min_proportion));
   // Filter for PfATP4
   variant_ptr = variant_ptr->filterVariants(kgl::GeneFilter("PF3D7_1211900"));
+
   std::cout << *variant_ptr;
 
   return variant_ptr;
@@ -72,19 +73,34 @@ kgl::MinorityExecEnv::Application::Application(kgl::Logger& log, const kgl::Mino
   std::vector<std::shared_ptr<const kgl::GenomeVariant>> variant_vector;
   if (not args.fileList.empty()) {
 
-    for(auto sam_file : args.fileList) {
+    auto it = args.fileList.begin();
+    while (it != args.fileList.end()) {
 
       // Generate mutant filtered simple SNPs.
-      std::shared_ptr<const kgl::GenomeVariant> variant_ptr = getSNPVariants(log,
+      std::shared_ptr<const kgl::GenomeVariant> variant1_ptr = getSNPVariants(log,
                                                                              genome_db_ptr,
-                                                                             sam_file,
+                                                                             *it,
                                                                              args.readQuality,
                                                                              args.mutantMinCount,
                                                                              args.mutantMinProportion);
-      variant_vector.push_back(variant_ptr);
+
+      it++;
+
+      if (it == args.fileList.end()) continue;
+
+      std::shared_ptr<const kgl::GenomeVariant> variant2_ptr = getSNPVariants(log,
+                                                                             genome_db_ptr,
+                                                                             *it,
+                                                                             args.readQuality,
+                                                                             args.mutantMinCount,
+                                                                             args.mutantMinProportion);
+
+
+      std::shared_ptr<const kgl::GenomeVariant> variant_inter_ptr = variant1_ptr->Intersection(variant2_ptr);
+      variant_vector.push_back(variant_inter_ptr);
       std::ostringstream ss;
-      ss << *variant_ptr;
-      ExecEnv::log().info("Genome: {}\nPF3D7_1211900 variants\n{}", variant_ptr->genomeId(), ss.str());
+      ss << *variant_inter_ptr;
+      ExecEnv::log().info("Genome: {}\nPF3D7_1211900 variants\n{}", variant_inter_ptr->genomeId(), ss.str());
 
     }
 

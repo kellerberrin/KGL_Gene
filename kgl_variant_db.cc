@@ -40,10 +40,7 @@ void kgl::ContigVariant::addVariant(std::shared_ptr<const Variant>& variant_ptr)
       std::shared_ptr<const CodingSequenceArray> sequence_array = kgl::GeneFeature::getCodingSequences(gene_ptr);
       if (sequence_array->size() == 0) {
 
-        ExecEnv::log().warn("addVariant() unexpected; contig: {}, offset: {} gene: {} no matching coding sequence",
-                            variant_ptr->contigId(), variant_offset, gene_ptr->id());
-
-        std::const_pointer_cast<Variant>(variant_ptr)->defineVariantType(gene_ptr, nullptr); // intron
+        std::const_pointer_cast<Variant>(variant_ptr)->defineIntron(gene_ptr); // intron
         offset_variant_map_.insert(std::make_pair(variant_ptr->contigOffset(), variant_ptr));
 
       } else {
@@ -52,12 +49,12 @@ void kgl::ContigVariant::addVariant(std::shared_ptr<const Variant>& variant_ptr)
 
           if (sequence.second->isWithinCoding(variant_offset)) {
 
-            std::const_pointer_cast<Variant>(variant_ptr)->defineVariantType(gene_ptr, sequence.second); // coding
+            std::const_pointer_cast<Variant>(variant_ptr)->defineCoding(sequence.second); // coding
             offset_variant_map_.insert(std::make_pair(variant_ptr->contigOffset(), variant_ptr));
 
           } else {  // an intron for this sequence
 
-            std::const_pointer_cast<Variant>(variant_ptr)->defineVariantType(gene_ptr, nullptr); // intron
+            std::const_pointer_cast<Variant>(variant_ptr)->defineIntron(gene_ptr); // intron
             offset_variant_map_.insert(std::make_pair(variant_ptr->contigOffset(), variant_ptr));
 
           } // if valid sequence for offset
@@ -70,7 +67,7 @@ void kgl::ContigVariant::addVariant(std::shared_ptr<const Variant>& variant_ptr)
 
   } else {
 
-    std::const_pointer_cast<Variant>(variant_ptr)->defineVariantType(nullptr, nullptr); // non coding
+    std::const_pointer_cast<Variant>(variant_ptr)->defineNonCoding(); // non coding
     offset_variant_map_.insert(std::make_pair(variant_ptr->contigOffset(), variant_ptr));
 
   }

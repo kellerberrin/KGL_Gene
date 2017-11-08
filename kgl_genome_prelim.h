@@ -140,9 +140,9 @@ public:
   bool insertCodingSequence(std::shared_ptr<const CodingSequence> coding_sequence);
 
   size_t size() const { return coding_sequence_map_.size(); }
+  bool empty() const { return size() == 0; }
 
-  void mergeArrays(std::shared_ptr<const CodingSequenceArray> merge_array);
-
+  std::shared_ptr<const CodingSequence> getFirst() const;
 
   static void printCodingSequence(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr);
 

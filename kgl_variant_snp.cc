@@ -49,10 +49,9 @@ std::string kgl::SNPVariantDNA5::mutation() const
 
   std::stringstream ss;
 
-  if (type() == VariantSequenceType::CDS_CODING) {
+  if (not codingSequences().empty()) {
 
-    std::shared_ptr<const CodingSequence> sequence;
-    codingSequences(sequence);
+    std::shared_ptr<const CodingSequence> sequence = codingSequences().getFirst();
 
     ss << sequence->getGene()->id() << " " << sequence->getCDSParent()->id() << " ";
 
@@ -76,34 +75,23 @@ std::string kgl::SNPVariantDNA5::mutation() const
       ss << reference() << contigOffset() << mutant() << " ";
 
 
-      } else {  // is a deletion or insert
-
-        ContigOffset_t sequence_offset;
-        ContigSize_t sequence_length;
-        DNA5Sequence::offsetWithinSequence(sequence, contigOffset(), sequence_offset, sequence_length);
-        ss << reference() << sequence_offset << mutant() << " ";
-        ss << reference() << contigOffset() << mutant() << " ";
-
       }
 
+    } else {  // is a deletion or insert
+
+      ContigOffset_t sequence_offset;
+      ContigSize_t sequence_length;
+      DNA5Sequence::offsetWithinSequence(sequence, contigOffset(), sequence_offset, sequence_length);
+      ss << reference() << sequence_offset << mutant() << " ";
+      ss << reference() << contigOffset() << mutant() << " ";
 
     }
 
-  } else if (type() == VariantSequenceType::INTRON) {
+  } else if (not geneMembership().empty()) {
 
-    std::shared_ptr<const GeneFeature> gene_ptr;
-   if (not geneMembership(gene_ptr)) {
-
-     ExecEnv::log().error("Intron does not have a valid gene");
-
-   } else {
-
-     ss << gene_ptr->id() << " ";
-
-   }
-
+    std::shared_ptr<const GeneFeature> gene_ptr = geneMembership().front();
+    ss << gene_ptr->id() << " ";
     ss << reference() << contigOffset() << mutant() << " ";
-
 
   } else { // non coding (non-gene) variant or unknown
 
