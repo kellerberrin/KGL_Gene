@@ -52,7 +52,7 @@ kgl::VariantAnalysis::compoundSNP(const std::shared_ptr<const GenomeVariant>& SN
   for (auto contig_variant : mutant_coding_SNPs->contigMap()) {
 
     for (auto variant : contig_variant.second->getMap()) {
-
+/*
       int64_t offset = variant.second->contigOffset();
       int64_t previous_offset = variant_map.rbegin()->second->contigOffset();
       int64_t offset_diff = ::llabs(offset - previous_offset);
@@ -73,7 +73,7 @@ kgl::VariantAnalysis::compoundSNP(const std::shared_ptr<const GenomeVariant>& SN
           break;
 
       } // switch map size
-
+*/
     } // for variant
 
   } // for contig.

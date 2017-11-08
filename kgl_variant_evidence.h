@@ -23,11 +23,11 @@ public:
   explicit VariantAnalysis() = default;
   ~VariantAnalysis() = default;
 
-  std::shared_ptr<const GenomeVariant> SNPVariants(const std::shared_ptr<const ContigCountData>& count_data,
-                                                   const std::shared_ptr<const GenomeDatabase>& genome_db);
 
-  std::shared_ptr<const GenomeVariant> AllSNPVariants(const std::shared_ptr<const ContigCountData>& count_data,
-                                                      const std::shared_ptr<const GenomeDatabase>& genome_db);
+  std::shared_ptr<const GenomeVariant> SNPVariants(const std::shared_ptr<const ContigCountData>& count_data,
+                                                   const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                                   NucleotideReadCount_t minimum_read_count,
+                                                   double minimum_proportion);
 
   std::shared_ptr<const GenomeVariant> codonDelete(const std::shared_ptr<const GenomeVariant>& delete_SNPs,
                                                    const std::shared_ptr<const ContigCountData>& count_data,
