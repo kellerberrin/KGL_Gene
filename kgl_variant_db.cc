@@ -141,8 +141,9 @@ bool kgl::GenomeVariant::addVariant(std::shared_ptr<const Variant> variant) {
 
 std::shared_ptr<kgl::GenomeVariant> kgl::GenomeVariant::filterVariants(const kgl::VariantFilter& filter) const {
 
-  std::shared_ptr<kgl::GenomeVariant> filtered_genome_ptr(std::make_shared<kgl::GenomeVariant>(filter.filterName(),
-                                                                                               genomeId()));
+  std::shared_ptr<kgl::GenomeVariant> filtered_genome_ptr(std::make_shared<kgl::GenomeVariant>(genomeId()));
+
+  filtered_genome_ptr->attributes().insertAttribute("filter", filter.filterName());
 
   ExecEnv::log().info("Applying filter: {}", filter.filterName());
   for (const auto& contig_variant : genome_variant_map_) {
@@ -164,7 +165,7 @@ kgl::GenomeVariant::emptyGenomeVariant(const VariantType_t& variant_type,
                                        const std::shared_ptr<const GenomeDatabase>& genome_db) {
 
 
-  std::shared_ptr<GenomeVariant> empty_genome_variant(std::make_shared<GenomeVariant>(variant_type, genome_id));
+  std::shared_ptr<GenomeVariant> empty_genome_variant(std::make_shared<GenomeVariant>(genome_id));
 
   for (auto contig_db : genome_db->getMap()) {
 

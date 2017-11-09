@@ -28,7 +28,7 @@ std::string kgl::CompoundDelete::output() const {
   ss << mutation() << "\n";
   ss << "Compound Delete >>>>>\n";
   for (const auto& variant : variant_map_) {
-    ss << variant.second->output() << "\n";
+    ss << variant.second->output();
   }
   ss << "<<<<< Compound Delete\n";
   return ss.str();

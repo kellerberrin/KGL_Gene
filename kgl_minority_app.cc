@@ -66,82 +66,23 @@ kgl::MinorityExecEnv::Application::Application(kgl::Logger& log, const kgl::Mino
   genome_db_ptr->createVerifyGenomeDatabase();
 
   std::vector<std::shared_ptr<const kgl::GenomeVariant>> variant_vector;
-  if (not args.fileList.empty()) {
+  for (const auto& file : args.fileList) {
 
-    auto it = args.fileList.begin();
-    while (it != args.fileList.end()) {
-
-      // Generate mutant filtered simple SNPs.
-      std::shared_ptr<const kgl::GenomeVariant> variant1_ptr = getSNPVariants(log,
-                                                                             genome_db_ptr,
-                                                                             *it,
-                                                                             args.readQuality,
-                                                                             args.mutantMinCount,
-                                                                             args.mutantMinProportion);
-
-      it++;
-
-      if (it == args.fileList.end()) continue;
-
-      std::shared_ptr<const kgl::GenomeVariant> variant2_ptr = getSNPVariants(log,
-                                                                             genome_db_ptr,
-                                                                             *it,
-                                                                             args.readQuality,
-                                                                             args.mutantMinCount,
-                                                                             args.mutantMinProportion);
-
-
-      std::shared_ptr<const kgl::GenomeVariant> variant_inter_ptr = variant1_ptr->Intersection(variant2_ptr);
-      variant_vector.push_back(variant_inter_ptr);
-      std::ostringstream ss;
-      ss << *variant_inter_ptr;
-      ExecEnv::log().info("Genome: {}\nPF3D7_1211900 variants\n{}", variant_inter_ptr->genomeId(), ss.str());
-
-    }
-
-  }
-
-
-  if (args.mutantFile.length() > 0) {
     // Generate mutant filtered simple SNPs.
-    std::shared_ptr<const kgl::GenomeVariant> mutant_variant_ptr = getSNPVariants(log,
-                                                                                  genome_db_ptr,
-                                                                                  args.mutantFile,
-                                                                                  args.readQuality,
-                                                                                  args.mutantMinCount,
-                                                                                  args.mutantMinProportion);
-//    std::cout << *mutant_variant_ptr;
+    std::shared_ptr<const kgl::GenomeVariant> variant_ptr = getSNPVariants(log,
+                                                                           genome_db_ptr,
+                                                                           file,
+                                                                           args.readQuality,
+                                                                           args.minCount,
+                                                                           args.minProportion);
+
+    variant_vector.push_back(variant_ptr);
+    std::ostringstream ss;
+    ss << *variant_ptr;
+    ExecEnv::log().info("Genome: {}\nPF3D7_1211900 variants\n{}", variant_ptr->genomeId(), ss.str());
 
   }
 
-  if (args.parentFile.length() > 0) {
-
-    // Generate parent filtered simple SNPs.
-    std::shared_ptr<const kgl::GenomeVariant> parent_variant_ptr = getSNPVariants(log,
-                                                                                  genome_db_ptr,
-                                                                                  args.parentFile,
-                                                                                  args.readQuality,
-                                                                                  args.parentMinCount,
-                                                                                  args.parentMinProportion);
-//    std::cout << *parent_variant_ptr;
-
-
-    // Union between variants in the mutant and in the parent.
-//    std::shared_ptr<kgl::GenomeVariant> intersect_variant_ptr = mutant_variant_ptr->Intersection(parent_variant_ptr);
-
-//    std::cout << *intersect_variant_ptr;
-
-    // Union between variants in the mutant and in the parent.
-//    std::shared_ptr<kgl::GenomeVariant> union_variant_ptr = mutant_variant_ptr->Union(parent_variant_ptr);
-
-//    std::cout << *union_variant_ptr;
-
-    // Subtract any variants from the union that are in the parent.
-//    std::shared_ptr<kgl::GenomeVariant> diff_variant_ptr = union_variant_ptr->Difference(parent_variant_ptr);
-
-//    std::cout << *diff_variant_ptr;
-
-  }
 
 }
 

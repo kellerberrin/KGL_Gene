@@ -5,7 +5,7 @@
 #ifndef KGL_GENOME_FEATURE_H
 #define KGL_GENOME_FEATURE_H
 
-
+#include "kgl_attributes.h"
 #include "kgl_genome_prelim.h"
 
 
@@ -37,8 +37,8 @@ public:
   const FeatureIdent_t& id() const { return id_; }
   const FeatureSequence& sequence() const { return sequence_; }
   void sequence(const FeatureSequence& new_sequence) { sequence_ = new_sequence; }
-  void setAttributes(const FeatureAttributes& attributes) { attributes_ = attributes; }
-  const FeatureAttributes& getAttributes() const { return attributes_; }
+  void setAttributes(const Attributes& attributes) { attributes_ = attributes; }
+  const Attributes& getAttributes() const { return attributes_; }
   const FeatureType_t& featureType() const { return type_; }
   bool verifyStrand(const SortedCDS& sorted_cds) const;   // Check feature strand consistency
   bool verifyCDSPhase(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const; // Check the CDS phase for -ve and +ve strand genes
@@ -67,7 +67,7 @@ private:
   FeatureSequence sequence_;
   SubFeatureMap sub_features_;
   SuperFeatureMap super_features_;
-  FeatureAttributes attributes_;
+  Attributes attributes_;
 
   bool verifyMod3(const SortedCDS& sorted_cds) const;
 };

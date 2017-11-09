@@ -137,7 +137,7 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
                                                       seqan::GffRecord& record,
                                                       long gff_line_counter) {
   // Get the attributes.
-  kgl::FeatureAttributes record_attributes;
+  kgl::Attributes record_attributes;
   for (unsigned i = 0; i < length(record.tagNames); i++) {
 
     std::string key = toCString(record.tagNames[i]);

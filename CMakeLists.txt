@@ -49,6 +49,6 @@ add_executable (kgl_genome ${SOURCE_FILES} kgl_main.cc  kgl_gff_fasta.h kgl_gff_
                 kgl_alphabet_base.h kgl_alphabet_base.cc kgl_alphabet_amino.h kgl_variant_db.h
                 kgl_variant_db.cc kgl_variant_snp.h kgl_variant_snp.cc kgl_variant_compound.h
                 kgl_variant_compound.cc kgl_variant_delete.cc kgl_variant_compound_snp.cc kgl_genome_prelim.h
-                kgl_genome_prelim.cc)
+                kgl_genome_prelim.cc kgl_attributes.h kgl_attributes.cc)
 
 target_link_libraries(kgl_genome ${Boost_LIBRARIES})

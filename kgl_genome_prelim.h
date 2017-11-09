@@ -16,42 +16,6 @@ namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// FeatureAttributes Object to hold { key=value } pairs.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-using AttributeMap = std::multimap<const std::string, std::string>;
-class FeatureAttributes {
-
-public:
-
-  explicit FeatureAttributes() = default;
-  FeatureAttributes(const FeatureAttributes&) = default;
-  ~FeatureAttributes() = default;
-
-  FeatureAttributes& operator=(const FeatureAttributes&) = default;
-
-  // General access routines.
-  bool getAttributes(const std::string& key, std::vector<std::string>& value_vec) const; // false if no key.
-  void insertAttribute(const std::string& key, const std::string& value); // Always succeeds; keys are uppercase.
-  void getAllAttributes(std::vector<std::pair<std::string, std::string>>& all_key_value_pairs) const;
-
-  // Attribute keys.
-  constexpr static const char* ID_KEY = "ID";
-  constexpr static const char* SUPER_FEATURE_KEY = "PARENT";
-
-  // Convenience access routines.
-  bool getIds(std::vector<std::string> &value_vec) const { return getAttributes(ID_KEY, value_vec); }
-  bool getSuperFeatureIds(std::vector<std::string> &value_vec) const { return getAttributes(SUPER_FEATURE_KEY, value_vec); }
-
-
-private:
-
-  AttributeMap attributes_;
-
-};
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FeatureSequence - Feature location and strand (if applicable)

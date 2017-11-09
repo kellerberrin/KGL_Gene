@@ -10,6 +10,7 @@
 #include <memory>
 #include <vector>
 #include <sstream>
+#include "kgl_attributes.h"
 #include "kgl_variant.h"
 
 
@@ -70,8 +71,7 @@ class GenomeVariant {
 
 public:
 
-  explicit GenomeVariant(const VariantType_t& variant_type, const GenomeId_t& genome_id) : variant_type_(variant_type),
-                                                                                           genome_id_(genome_id) {}
+  explicit GenomeVariant(const GenomeId_t& genome_id) : genome_id_(genome_id) {}
   GenomeVariant(const GenomeVariant&) = default;
   ~GenomeVariant() = default;
 
@@ -107,11 +107,14 @@ public:
 
   friend std::ostream & operator<<(std::ostream &os, const GenomeVariant& genome_variant);
 
+  const Attributes& attributes() const { return attributes_; }
+  Attributes& attributes() { return attributes_; }
+
 private:
 
-  VariantType_t variant_type_;
   GenomeId_t genome_id_;
   GenomeVariantMap genome_variant_map_;
+  Attributes attributes_;
 
 };
 

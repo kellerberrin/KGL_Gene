@@ -20,22 +20,17 @@ struct MinorityArgs {
   std::string workDirectory{"./Work"};
   std::string fastaFile{""};
   std::string gffFile{""};
-  std::string parentFile{""};
   std::vector<std::string> fileList;
-  std::string mutantFile{""};
   std::string logFile{"kgl_snp.log"};
   std::string contig{"*"};
   size_t aminoTranslationTable{1};
   int max_error_count{1000};
   int max_warn_count{1000};
   bool verbose{false};
-  int mutantMinCount{20};
-  double mutantMinProportion{0.7};
-  int parentMinCount{20};
-  double parentMinProportion{0.7};
+  int minCount{0};
+  double minProportion{0};
   int threadCount{-1};
   unsigned char readQuality{0};
-  int lockGranularity{1000};
   int queueSize{1000000};
 
 };
