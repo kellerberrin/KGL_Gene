@@ -21,14 +21,14 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-std::string kgl::CompoundDelete::output() const {
+std::string kgl::CompoundDelete::output(char delimiter) const {
 
   std::stringstream ss;
-  ss << genomeOutput() << " ";
+  ss << genomeOutput(delimiter) << delimiter;
   ss << mutation() << "\n";
   ss << "Compound Delete >>>>>\n";
   for (const auto& variant : variant_map_) {
-    ss << variant.second->output();
+    ss << variant.second->output(delimiter);
   }
   ss << "<<<<< Compound Delete\n";
   return ss.str();
@@ -166,7 +166,7 @@ void kgl::VariantAnalysis::generateCodonDeletes( const std::shared_ptr<const Gen
             if (not genome_variant_ptr->addVariant(delete_variant)) {
 
               ExecEnv::log().error("Unable to add compound delete variant: {} - probable offset duplicate",
-                                   delete_variant->output());
+                                   delete_variant->output(' '));
 
             }
 
@@ -188,7 +188,8 @@ void kgl::VariantAnalysis::generateCodonDeletes( const std::shared_ptr<const Gen
 }
 
 
-std::shared_ptr<const kgl::Variant> kgl::VariantAnalysis::createCompoundDelete(const CompoundVariantMap& variant_map) {
+std::shared_ptr<const kgl::Variant>
+kgl::VariantAnalysis::createCompoundDelete(const CompoundVariantMap& variant_map) {
 
   if (variant_map.empty()) {
 

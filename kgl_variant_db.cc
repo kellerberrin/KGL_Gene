@@ -75,16 +75,16 @@ void kgl::ContigVariant::addVariant(std::shared_ptr<const Variant>& variant_ptr)
 
 }
 
+std::string kgl::ContigVariant::output(char delimter) const {
 
-std::ostream& kgl::operator<<(std::ostream &os, const kgl::ContigVariant& contig_variant) {
+  std::string variant_text;
+  for (const auto& variant : offset_variant_map_) {
 
-  for (auto& variant : contig_variant.offset_variant_map_) {
-
-    os << *(variant.second);
+    variant_text += variant.second->output(delimter);
 
   }
 
-  return os;
+  return variant_text;
 
 }
 
@@ -128,7 +128,7 @@ bool kgl::GenomeVariant::addVariant(std::shared_ptr<const Variant> variant) {
   std::shared_ptr<ContigVariant> contig_variant;
   if (not getContigVariant(variant->contigId(), contig_variant)) {
 
-    ExecEnv::log().error("Contig: {} not found, variant: {}", variant->contigId(), variant->output());
+    ExecEnv::log().error("Contig: {} not found, variant: {}", variant->contigId(), variant->output(' '));
     return false;
   }
 
@@ -183,21 +183,6 @@ kgl::GenomeVariant::emptyGenomeVariant(const VariantType_t& variant_type,
 }
 
 
-std::ostream& kgl::operator<<(std::ostream &os, const kgl::GenomeVariant& genome_variant) {
-
-  for (auto& contig_variant : genome_variant.genome_variant_map_) {
-
-    os << contig_variant.second->contigId() << " variants: ";
-    os << contig_variant.second->variantCount() << "\n";
-    os << *(contig_variant.second);
-
-  }
-
-  os.flush();
-
-  return os;
-
-}
 
 
 std::shared_ptr<kgl::GenomeVariant>
@@ -220,7 +205,7 @@ kgl::GenomeVariant::disaggregateCompoundVariants(const std::shared_ptr<const Gen
           if (not disaggreagated->addVariant(single_variant.second)) {
 
             ExecEnv::log().error("Cannot add disaggregated variant: {} - same contig offset as existing variant",
-                                 single_variant.second->output());
+                                 single_variant.second->output(' '));
 
           }
 
@@ -247,5 +232,27 @@ size_t kgl::GenomeVariant::size() const {
   }
 
   return total_variants;
+
+}
+
+std::string kgl::GenomeVariant::output(char field_delimter) const {
+
+  std::string variant_text;
+  for (const auto& contig_variant : genome_variant_map_) {
+
+    variant_text += contig_variant.second->output(field_delimter);
+
+  }
+
+  return variant_text;
+
+}
+
+std::ostream& operator<<(std::ostream &os, const kgl::GenomeVariant& genome_variant) {
+
+  os << genome_variant.output(' ');
+  os.flush();
+
+  return os;
 
 }

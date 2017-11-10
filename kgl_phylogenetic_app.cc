@@ -1,9 +1,10 @@
 //
-// Created by kellerberrin on 17/10/17.
+// Created by kellerberrin on 10/11/17.
 //
+
 #include <sstream>
 
-#include "kgl_minority_env.h"
+#include "kgl_phylogenetic_env.h"
 #include "kgl_genome_db.h"
 #include "kgl_gff_fasta.h"
 #include "kgl_sam_process.h"
@@ -52,7 +53,7 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
 }
 
 
-kgl::MinorityExecEnv::Application::Application(kgl::Logger& log, const kgl::MinorityArgs& args) {
+kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::Phylogenetic& args) {
 
   log.SetVerbose(args.verbose);
 
@@ -85,7 +86,5 @@ kgl::MinorityExecEnv::Application::Application(kgl::Logger& log, const kgl::Mino
 
 
 }
-
-
 
 

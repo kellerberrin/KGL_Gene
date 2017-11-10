@@ -1,26 +1,25 @@
-// MIT License
 //
-// Copyright (c) 2017
-//
-// Created by kellerberrin on 17/10/17.
+// Created by kellerberrin on 10/11/17.
 //
 
-#ifndef KGL_MINORITY_ENV_H
-#define KGL_MINORITY_ENV_H
+#ifndef KGL_PHYLOGENETIC_ENV_H
+#define KGL_PHYLOGENETIC_ENV_H
+
 
 #include "kgl_exec_env.h"
 
 namespace kellerberrin {   //  organization level namespace
-  namespace genome {   // project level namespace
+namespace genome {   // project level namespace
 
 
 // Holds the Minority Arguments.
-struct MinorityArgs {
+struct Phylogenetic {
 
   std::string workDirectory{"./Work"};
   std::string fastaFile{""};
   std::string gffFile{""};
   std::vector<std::string> fileList;
+  std::string outCSVFile{""};
   std::string logFile{"kgl_snp.log"};
   std::string contig{"*"};
   size_t aminoTranslationTable{1};
@@ -29,21 +28,19 @@ struct MinorityArgs {
   bool verbose{false};
   int minCount{0};
   double minProportion{0};
-  int threadCount{-1};
   unsigned char readQuality{0};
-  int queueSize{1000000};
 
 };
 
-// The Minority Runtime environment.
-class MinorityExecEnv : public ExecEnv {
+// The Phylogenetic Runtime environment.
+class PhylogeneticExecEnv : public ExecEnv {
 
 public:
 
-  MinorityExecEnv()=delete;
-  ~MinorityExecEnv()=delete;
+  PhylogeneticExecEnv()=delete;
+  ~PhylogeneticExecEnv()=delete;
 
-  static const MinorityArgs& args();
+  static const Phylogenetic& args();
   static bool parseCommandLine(int argc, char const ** argv);
   static constexpr const char* VERSION = "0.1";
   static constexpr const char* MODULE_NAME = "kgl_phylo";
@@ -52,24 +49,25 @@ public:
 
 private:
 
-  static MinorityArgs args_;
+  static Phylogenetic args_;
 
 };
 
 // Application class implements the mainline logic and controls
-// data object lifetimes, see kgl_minority_app.cc.
-class MinorityExecEnv::Application {
+// data object lifetimes, see kgl_phylogenetic_app.cc.
+class PhylogeneticExecEnv::Application {
 
 public:
 
-  Application(Logger& log, const MinorityArgs& args);
+  Application(Logger& log, const Phylogenetic& args);
   ~Application() = default;
 
 };
 
 
 
-  }; //  organization level namespace
+}; //  organization level namespace
 };  // project level namespace
 
-#endif //KGL_MINORITY_ENV_H
+
+#endif //KGL_PHYLOGENETIC_ENV_H

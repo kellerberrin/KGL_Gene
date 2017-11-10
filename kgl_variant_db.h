@@ -50,7 +50,8 @@ public:
 
   size_t size() const { return offset_variant_map_.size(); }
 
-  friend std::ostream& operator<<(std::ostream &os, const ContigVariant& contig_variant);
+  std::string output(char field_delimiter) const;
+
 
 private:
 
@@ -58,8 +59,6 @@ private:
   OffsetVariantMap offset_variant_map_;
 
 };
-
-std::ostream & operator<<(std::ostream &os, const ContigVariant& contig_variant);
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -105,7 +104,7 @@ public:
   std::shared_ptr<GenomeVariant>
   disaggregateCompoundVariants(const std::shared_ptr<const GenomeDatabase>& genome_db) const;
 
-  friend std::ostream & operator<<(std::ostream &os, const GenomeVariant& genome_variant);
+  std::string output(char field_delimiter) const;
 
   const Attributes& attributes() const { return attributes_; }
   Attributes& attributes() { return attributes_; }
@@ -118,12 +117,12 @@ private:
 
 };
 
-std::ostream & operator<<(std::ostream &os, const GenomeVariant& genome_variant);
 
 
 }   // namespace genome
 }   // namespace kellerberrin
 
+std::ostream & operator<<(std::ostream &os, const kellerberrin::genome::GenomeVariant& genome_variant);
 
 
 #endif //KGL_VARIANT_DB_H

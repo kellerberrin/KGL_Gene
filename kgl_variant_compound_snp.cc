@@ -8,14 +8,14 @@
 namespace kgl = kellerberrin::genome;
 
 
-std::string kgl::CompoundSNP::output() const {
+std::string kgl::CompoundSNP::output(char delimiter) const {
 
   std::stringstream ss;
-  ss << genomeOutput() << " ";
-  ss << mutation() << "\n";
+  ss << genomeOutput(delimiter) << delimiter;
+  ss << mutation() << delimiter;
   ss << "Compound SNP >>>>>\n";
   for (const auto& variant : variant_map_) {
-    ss << variant.second->output() << "\n";
+    ss << variant.second->output(delimiter) << "\n";
   }
   ss << "<<<<< Compound SNP\n";
   return ss.str();

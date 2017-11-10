@@ -3,14 +3,14 @@
 //
 #include <csignal>
 #include <iostream>
-#include "kgl_minority_env.h"
+#include "kgl_phylogenetic_env.h"
 
 namespace kgl = kellerberrin::genome;
 
 
 void ctrlC(int sig) {
 
-  kgl::ExecEnv::log().warn("Control-C pressed. Program terminates. Open files may be in an unsafe state.");
+  kgl::ExecEnv::log().warn("Control-C. Program terminates. Output files may be corrupt. Multi-threaded code may hang.");
   std::exit(EXIT_FAILURE);
 
 }
@@ -59,7 +59,7 @@ int application(int argc, char const ** argv) {
 int main(int argc, char const ** argv)
 {
 
-  return application<kgl::MinorityExecEnv>(argc, argv);
+  return application<kgl::PhylogeneticExecEnv>(argc, argv);
 
 }
 

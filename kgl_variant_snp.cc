@@ -28,10 +28,10 @@ bool kgl::SNPVariantDNA5::equivalent(const Variant& cmp_var) const {
 }
 
 
-std::string kgl::SNPVariantDNA5::output() const
+std::string kgl::SNPVariantDNA5::output(char delimiter) const
 {
   std::stringstream ss;
-  ss << genomeOutput() << " ";
+  ss << genomeOutput(delimiter) << " ";
   ss << mutation();
   ss << mutantCount() << "/" << readCount() << " [";
   for (size_t idx = 0; idx < countArray().size(); ++idx) {

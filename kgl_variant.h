@@ -56,17 +56,19 @@ private:
 //  Genome information of the variant.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+class GenomeVariant; // Forward
+
 enum class VariantSequenceType { CDS_CODING, INTRON, NON_CODING };
 class VariantSequence {
 
 public:
 
   VariantSequence(std::shared_ptr<const ContigFeatures> contig_ptr,
-                ContigOffset_t contig_offset) : contig_ptr_(contig_ptr),
-                                                contig_offset_(contig_offset) {}
+                  ContigOffset_t contig_offset) : contig_ptr_(contig_ptr),
+                                                  contig_offset_(contig_offset) {}
   virtual ~VariantSequence() = default;
 
-  std::string genomeOutput() const;  // Genome information text.
+  std::string genomeOutput(char delimiter) const;  // Genome information text.
 
   std::shared_ptr<const ContigFeatures> contig() const { return contig_ptr_; }
   ContigOffset_t offset() const { return contig_offset_; }
@@ -86,7 +88,7 @@ private:
   std::shared_ptr<const ContigFeatures> contig_ptr_;    // The contig.
   ContigOffset_t contig_offset_;                        // Location on the contig.
   GeneVector gene_membership_;                          // Membership includes introns (empty for non-coding)
-  CodingSequenceArray coding_sequences_;  // Coding sequence for variant ( nullptr for an intron)
+  CodingSequenceArray coding_sequences_;  // Coding sequence for variant (empty for introns and non-coding)
 
 };
 
@@ -110,9 +112,8 @@ public:
   const ContigId_t& contigId() const { return contig()->contigId(); }
   ContigOffset_t contigOffset() const { return offset(); }
   bool operator==(const Variant& cmp_var) const { return equivalent(cmp_var); };
-  friend std::ostream& operator<<(std::ostream &os, const Variant& variant) { os << variant.output();  return os; }
 
-  virtual std::string output() const = 0;
+  virtual std::string output(char delimiter) const = 0;
   virtual std::string mutation() const = 0;
   virtual bool isCompound() const { return false; }
 

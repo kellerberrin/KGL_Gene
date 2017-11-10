@@ -60,14 +60,15 @@ public:
 
   CompoundDelete(std::shared_ptr<const ContigFeatures> contig_ptr,
                  ContigOffset_t contig_offset,
-                 const CompoundVariantMap variant_map) : CompoundVariant(contig_ptr, contig_offset, variant_map) {}
+                 const CompoundVariantMap variant_map)
+  : CompoundVariant(contig_ptr, contig_offset, variant_map) {}
   ~CompoundDelete() override = default;
 
 private:
 
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
-  std::string output() const;
+  std::string output(char delimter) const;
   std::string mutation() const;
 
 };
@@ -83,14 +84,15 @@ public:
 
   CompoundSNP(std::shared_ptr<const ContigFeatures> contig_ptr,
               ContigOffset_t contig_offset,
-              const CompoundVariantMap variant_map) : CompoundVariant(contig_ptr, contig_offset, variant_map) {}
+              const CompoundVariantMap variant_map)
+  : CompoundVariant(contig_ptr, contig_offset, variant_map) {}
   ~CompoundSNP() override = default;
 
 private:
 
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
-  std::string output() const;
+  std::string output(char delimiter) const;
   std::string mutation() const;
 
 };
