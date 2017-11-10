@@ -99,8 +99,8 @@ public:
   const typename NucleotideColumn_DNA5::NucleotideType& reference() const { return reference_; }
   const typename NucleotideColumn_DNA5::NucleotideType& mutant() const { return mutant_; }
 
-  std::string output(char delimiter) const override;
-  std::string mutation() const override;
+  std::string output(char delimiter, VariantOutputIndex output_index) const override;
+  std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
 
 private:
 

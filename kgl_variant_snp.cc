@@ -28,23 +28,23 @@ bool kgl::SNPVariantDNA5::equivalent(const Variant& cmp_var) const {
 }
 
 
-std::string kgl::SNPVariantDNA5::output(char delimiter) const
+std::string kgl::SNPVariantDNA5::output(char delimiter, VariantOutputIndex output_index) const
 {
   std::stringstream ss;
-  ss << genomeOutput(delimiter) << " ";
-  ss << mutation();
-  ss << mutantCount() << "/" << readCount() << " [";
+  ss << genomeOutput(delimiter, output_index);
+  ss << mutation(delimiter, output_index);
+  ss << mutantCount() << "/" << readCount() << delimiter;
   for (size_t idx = 0; idx < countArray().size(); ++idx) {
-    ss << NucleotideColumn_DNA5::offsetToNucleotide(idx) << ":" << countArray()[idx] << " ";
+    ss << NucleotideColumn_DNA5::offsetToNucleotide(idx) << ":" << countArray()[idx] << delimiter;
   }
-  ss << "]" << "\n";
+  ss << '\n';
 
   return ss.str();
 
 }
 
 
-std::string kgl::SNPVariantDNA5::mutation() const
+std::string kgl::SNPVariantDNA5::mutation(char delimiter, VariantOutputIndex output_index) const
 {
 
   std::stringstream ss;
@@ -53,7 +53,7 @@ std::string kgl::SNPVariantDNA5::mutation() const
 
     std::shared_ptr<const CodingSequence> sequence = codingSequences().getFirst();
 
-    ss << sequence->getGene()->id() << " " << sequence->getCDSParent()->id() << " ";
+    ss << sequence->getGene()->id() << delimiter << sequence->getCDSParent()->id() << delimiter;
 
     if (NucleotideColumn_DNA5::isBaseCode(mutant())) {
 
@@ -69,10 +69,10 @@ std::string kgl::SNPVariantDNA5::mutation() const
                                 reference_amino,
                                 mutant_amino)) {
 
-        ss << reference_amino << codon_offset << mutant_amino << " ";
+        ss << reference_amino << offsetOutput(codon_offset, output_index) << mutant_amino << delimiter;
+        ss << reference() << offsetOutput(contigOffset(), output_index) << mutant() << delimiter;
 //        sequence->getGene()->recusivelyPrintsubfeatures();
 
-      ss << reference() << contigOffset() << mutant() << " ";
 
 
       }
@@ -82,8 +82,8 @@ std::string kgl::SNPVariantDNA5::mutation() const
       ContigOffset_t sequence_offset;
       ContigSize_t sequence_length;
       DNA5Sequence::offsetWithinSequence(sequence, contigOffset(), sequence_offset, sequence_length);
-      ss << reference() << sequence_offset << mutant() << " ";
-      ss << reference() << contigOffset() << mutant() << " ";
+      ss << reference() << offsetOutput(sequence_offset, output_index) << mutant() << delimiter;
+      ss << reference() << offsetOutput(contigOffset(), output_index) << mutant() << delimiter;
 
     }
 
@@ -91,11 +91,11 @@ std::string kgl::SNPVariantDNA5::mutation() const
 
     std::shared_ptr<const GeneFeature> gene_ptr = geneMembership().front();
     ss << gene_ptr->id() << " ";
-    ss << reference() << contigOffset() << mutant() << " ";
+    ss << reference() << offsetOutput(contigOffset(), output_index) << mutant() << delimiter;
 
   } else { // non coding (non-gene) variant or unknown
 
-    ss << reference() << contigOffset() << mutant() << " ";
+    ss << reference() << offsetOutput(contigOffset(), output_index) << mutant() << delimiter;
 
   }
 

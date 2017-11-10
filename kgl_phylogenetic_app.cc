@@ -81,6 +81,7 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
     std::ostringstream ss;
     ss << *variant_ptr;
     ExecEnv::log().info("Genome: {}\nPF3D7_1211900 variants\n{}", variant_ptr->genomeId(), ss.str());
+    variant_ptr->outputCSV(args.outCSVFile, VariantOutputIndex::START_1_BASED);
 
   }
 

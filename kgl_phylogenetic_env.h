@@ -19,7 +19,7 @@ struct Phylogenetic {
   std::string fastaFile{""};
   std::string gffFile{""};
   std::vector<std::string> fileList;
-  std::string outCSVFile{""};
+  std::string outCSVFile{"kgl_out.csv"};
   std::string logFile{"kgl_snp.log"};
   std::string contig{"*"};
   size_t aminoTranslationTable{1};

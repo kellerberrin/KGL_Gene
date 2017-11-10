@@ -13,6 +13,32 @@ namespace kgl = kellerberrin::genome;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  Variant offset output convention.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+std::string kgl::offsetOutput(kgl::ContigOffset_t offset, kgl::VariantOutputIndex output_base) {
+
+  std::stringstream ss;
+
+  switch(output_base) {
+
+    case VariantOutputIndex::START_0_BASED:
+      ss << offset;
+      break;
+
+    case VariantOutputIndex::START_1_BASED:
+      ss << (offset + 1);
+      break;
+
+  }
+
+  return ss.str();
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  Genome information of the variant.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -21,11 +47,11 @@ std::string kgl::VariantSequence::typestr() const {
 
   switch(type()) {
 
-    case VariantSequenceType::CDS_CODING : return "CDS Coding";
+    case VariantSequenceType::CDS_CODING : return "CDSCoding";
 
     case VariantSequenceType::INTRON : return "INTRON";
 
-    case VariantSequenceType::NON_CODING : return "NON Coding";
+    case VariantSequenceType::NON_CODING : return "NONCoding";
 
   }
 
@@ -33,12 +59,11 @@ std::string kgl::VariantSequence::typestr() const {
 
 }
 
-std::string kgl::VariantSequence::genomeOutput(char delimiter) const {
+std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputIndex output_index) const {
 
   std:: stringstream ss;
 // Contig.
-  ss << contig()->contigId();
-  ss << delimiter << typestr() << delimiter;
+  ss << contig()->contigId() << delimiter << typestr() << delimiter;
 
   return ss.str();
 

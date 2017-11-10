@@ -71,7 +71,7 @@ kgl::VariantAnalysis::SNPVariants(const std::shared_ptr<const ContigCountData>& 
             if (not snp_variants->addVariant(snp_variant)) { // Annotate with genome information
 
               ExecEnv::log().error("Unable to add SNP variant: {} to contig: {} - probable offset duplicate",
-                                   snp_variant->output(' '), contig_ptr->contigId());
+                                   snp_variant->output(' ', VariantOutputIndex::START_0_BASED), contig_ptr->contigId());
 
             }
 

@@ -357,19 +357,23 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   // Setup the outCSVFile.
   if (seqan::isSet(parser, "outCSVFile")) {
 
-    std::string out_file_name;
-    seqan::getOptionValue(out_file_name, parser, "outCSVFile");
-    // Join the log file and the directory
-    fs::path out_file_path = directory_path / fs::path(out_file_name);
-    // check by opening.
-    std::fstream out_file(out_file_path.string(), std::fstream::out);
-    if (!out_file) {
-
-      ExecEnv::log().critical("Cannot open output CSV file (--outCSVFile): {}", out_file_path.string());
-
-    }
-
+    std::string outCSVFile;
+    seqan::getOptionValue(outCSVFile, parser, "outCSVFile");
+    fs::path out_file_path = directory_path / fs::path(outCSVFile);
     args_.outCSVFile = out_file_path.string();
+
+  } else {
+
+    fs::path out_file_path = directory_path / fs::path(args_.outCSVFile);
+    args_.outCSVFile = out_file_path.string();
+
+  }
+  // Join the log file and the directory
+  // check by opening.
+  std::fstream out_file(args_.outCSVFile, std::fstream::out | std::fstream::app);
+  if (!out_file) {
+
+    ExecEnv::log().critical("Cannot open output CSV file (--outCSVFile): {}", args_.outCSVFile);
 
   }
 

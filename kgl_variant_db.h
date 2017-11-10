@@ -50,8 +50,7 @@ public:
 
   size_t size() const { return offset_variant_map_.size(); }
 
-  std::string output(char field_delimiter) const;
-
+  std::string output(char field_delimiter, VariantOutputIndex output_index) const;
 
 private:
 
@@ -104,7 +103,8 @@ public:
   std::shared_ptr<GenomeVariant>
   disaggregateCompoundVariants(const std::shared_ptr<const GenomeDatabase>& genome_db) const;
 
-  std::string output(char field_delimiter) const;
+  std::string output(char field_delimiter, VariantOutputIndex output_index) const;
+  bool outputCSV(const std::string& file_name, VariantOutputIndex output_index) const;
 
   const Attributes& attributes() const { return attributes_; }
   Attributes& attributes() { return attributes_; }

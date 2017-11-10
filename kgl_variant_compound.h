@@ -68,8 +68,8 @@ private:
 
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
-  std::string output(char delimter) const;
-  std::string mutation() const;
+  std::string output(char delimter, VariantOutputIndex output_index) const override;
+  std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
 
 };
 
@@ -92,8 +92,8 @@ private:
 
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
-  std::string output(char delimiter) const;
-  std::string mutation() const;
+  std::string output(char delimiter, VariantOutputIndex output_index) const override;
+  std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
 
 };
 

@@ -53,10 +53,19 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  Genome information of the variant.
+//  Variant offset output convention.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class GenomeVariant; // Forward
+// Used to display output as 1 based or zero based offsets. Never, ever, use START_1_BASED internally.
+enum class VariantOutputIndex { START_1_BASED, START_0_BASED};   // Used for output functions - default START_1_BASED
+
+// helper function - only ever use for output.
+
+std::string offsetOutput(ContigOffset_t offset, VariantOutputIndex output_base);
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  Genome information of the variant.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 enum class VariantSequenceType { CDS_CODING, INTRON, NON_CODING };
 class VariantSequence {
@@ -68,7 +77,7 @@ public:
                                                   contig_offset_(contig_offset) {}
   virtual ~VariantSequence() = default;
 
-  std::string genomeOutput(char delimiter) const;  // Genome information text.
+  std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
 
   std::shared_ptr<const ContigFeatures> contig() const { return contig_ptr_; }
   ContigOffset_t offset() const { return contig_offset_; }
@@ -113,8 +122,9 @@ public:
   ContigOffset_t contigOffset() const { return offset(); }
   bool operator==(const Variant& cmp_var) const { return equivalent(cmp_var); };
 
-  virtual std::string output(char delimiter) const = 0;
-  virtual std::string mutation() const = 0;
+  virtual std::string output(char delimiter, VariantOutputIndex output_index) const = 0;
+  virtual std::string mutation(char delimiter, VariantOutputIndex output_index) const = 0;
+
   virtual bool isCompound() const { return false; }
 
 private:

@@ -3,6 +3,7 @@
 //
 
 #include <memory>
+#include <fstream>
 #include "kgl_patterns.h"
 #include "kgl_variant_compound.h"
 #include "kgl_variant_db.h"
@@ -75,12 +76,12 @@ void kgl::ContigVariant::addVariant(std::shared_ptr<const Variant>& variant_ptr)
 
 }
 
-std::string kgl::ContigVariant::output(char delimter) const {
+std::string kgl::ContigVariant::output(char delimter, VariantOutputIndex output_index) const {
 
   std::string variant_text;
   for (const auto& variant : offset_variant_map_) {
 
-    variant_text += variant.second->output(delimter);
+    variant_text += variant.second->output(delimter, output_index);
 
   }
 
@@ -128,7 +129,8 @@ bool kgl::GenomeVariant::addVariant(std::shared_ptr<const Variant> variant) {
   std::shared_ptr<ContigVariant> contig_variant;
   if (not getContigVariant(variant->contigId(), contig_variant)) {
 
-    ExecEnv::log().error("Contig: {} not found, variant: {}", variant->contigId(), variant->output(' '));
+    ExecEnv::log().error("Contig: {} not found, variant: {}",
+                         variant->contigId(), variant->output(' ', VariantOutputIndex::START_0_BASED));
     return false;
   }
 
@@ -205,7 +207,7 @@ kgl::GenomeVariant::disaggregateCompoundVariants(const std::shared_ptr<const Gen
           if (not disaggreagated->addVariant(single_variant.second)) {
 
             ExecEnv::log().error("Cannot add disaggregated variant: {} - same contig offset as existing variant",
-                                 single_variant.second->output(' '));
+                                 single_variant.second->output(' ', VariantOutputIndex::START_0_BASED));
 
           }
 
@@ -235,12 +237,12 @@ size_t kgl::GenomeVariant::size() const {
 
 }
 
-std::string kgl::GenomeVariant::output(char field_delimter) const {
+std::string kgl::GenomeVariant::output(char field_delimter, VariantOutputIndex output_index) const {
 
   std::string variant_text;
   for (const auto& contig_variant : genome_variant_map_) {
 
-    variant_text += contig_variant.second->output(field_delimter);
+    variant_text += genomeId() + field_delimter + contig_variant.second->output(field_delimter, output_index);
 
   }
 
@@ -248,9 +250,27 @@ std::string kgl::GenomeVariant::output(char field_delimter) const {
 
 }
 
+bool kgl::GenomeVariant::outputCSV(const std::string& file_name, VariantOutputIndex output_index) const {
+
+  // open the file.
+  std::fstream out_file(file_name, std::fstream::out | std::fstream::app);
+  if (!out_file) {
+
+    ExecEnv::log().error("Cannot open output CSV file (--outCSVFile): {}", file_name);
+    return false;
+
+  }
+
+  out_file << output(',', output_index);
+
+  return out_file.good();
+
+}
+
+
 std::ostream& operator<<(std::ostream &os, const kgl::GenomeVariant& genome_variant) {
 
-  os << genome_variant.output(' ');
+  os << genome_variant.output(' ', kgl::VariantOutputIndex::START_1_BASED);
   os.flush();
 
   return os;
