@@ -8,10 +8,12 @@
 #include "kgl_phylogenetic_env.h"
 #define BOOST_FILESYSTEM_NO_DEPRECATED // Recommended by boost filesystem documentation.
 #include <boost/filesystem.hpp>
+#include <boost/tokenizer.hpp>
 
 
 // Define namespace alias
 namespace fs = boost::filesystem;
+namespace bt = boost;
 namespace kgl = kellerberrin::genome;
 
 
@@ -60,7 +62,7 @@ void getFilePath(const std::string& option_text,
 
 bool readFileList(const std::string& file_list_name,
                   fs::path& directory_path,
-                  std::vector<std::string>& file_list) {
+                  std::vector<kgl::SAM_BAM_Info>& file_list) {
 
   bool result = true;
   std::ifstream list_file;
@@ -79,9 +81,55 @@ bool readFileList(const std::string& file_list_name,
 
     while (true) {
 
+      std::string line;
+      std::vector<std::string> tokens;
       std::string sam_file_name;
+      std::string genome_name;
+      int line_number = 0;
 
-      if (std::getline(list_file, sam_file_name).eof()) break;
+      if (std::getline(list_file, line).eof()) break;
+
+      line_number++;
+
+      if (line.empty()) {  // Skip empty lines.
+
+        continue;
+
+      } else {
+
+        if (line[0] == '#') {  // Skip comments.
+
+          continue;
+
+        }
+
+      }
+
+      boost::char_separator<char> sep("\t ");
+      using tokenizer_t = bt::tokenizer< boost::char_separator<char>>;
+      tokenizer_t tok(line, sep); // looking for 1 or 2 tokens separated by whitespace.
+      for(auto it = tok.begin(); it != tok.end(); ++it){
+
+        tokens.push_back(*it);
+
+      }
+
+      if (tokens.empty()) {
+
+        kgl::ExecEnv::log().critical("No SAM/BAM filename given on line number: {} in list file: {}.",
+                                     line_number, file_list_name);
+
+      } else if (tokens.size() == 1) {
+
+        sam_file_name = tokens[0];
+        genome_name = tokens[0];
+
+      } else {
+
+        sam_file_name = tokens[0];
+        genome_name = tokens[1];
+
+      }
 
       fs::path file_path = directory_path / fs::path(sam_file_name);
 
@@ -100,7 +148,10 @@ bool readFileList(const std::string& file_list_name,
 
       }
 
-      file_list.push_back(file_path.string());
+      kgl::SAM_BAM_Info sam_bam_info;
+      sam_bam_info.file_name = file_path.string();
+      sam_bam_info.genome_name = genome_name;
+      file_list.push_back(sam_bam_info);
 
     }
 
@@ -338,7 +389,10 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
   } else if (sam_file.length() > 0) {
 
-    args_.fileList.push_back(sam_file);
+    kgl::SAM_BAM_Info sam_bam_info;
+    sam_bam_info.file_name = sam_file;
+    sam_bam_info.genome_name = sam_file;
+    args_.fileList.push_back(sam_bam_info);
 
   } else if (file_list.length() > 0) {
 

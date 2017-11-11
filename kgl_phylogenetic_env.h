@@ -11,6 +11,12 @@
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
+struct SAM_BAM_Info {
+
+  std::string file_name;
+  std::string genome_name;
+
+};
 
 // Holds the Minority Arguments.
 struct Phylogenetic {
@@ -18,7 +24,7 @@ struct Phylogenetic {
   std::string workDirectory{"./Work"};
   std::string fastaFile{""};
   std::string gffFile{""};
-  std::vector<std::string> fileList;
+  std::vector<SAM_BAM_Info> fileList;
   std::string outCSVFile{"kgl_out.csv"};
   std::string logFile{"kgl_snp.log"};
   std::string contig{"*"};

@@ -2,7 +2,7 @@
 // Created by kellerberrin on 31/10/17.
 //
 
-
+#include <set>
 #include "kgl_sequence_amino.h"
 
 namespace kgl = kellerberrin::genome;
@@ -12,18 +12,51 @@ namespace kgl = kellerberrin::genome;
 kgl::ProteinString kgl::AminoSequence::emphasizeProteinString(const ProteinString& protein_string,
                                                               const std::vector<ContigOffset_t>& emphasize_offsets) {
 
-  ProteinString emph_protein_string = protein_string;
-  std::transform(emph_protein_string.begin(), emph_protein_string.end(), emph_protein_string.begin(), ::tolower);
+  if (emphasize_offsets.empty()) return protein_string;
+
+  // Order the offsets. A < B < C
+  std::set<ContigOffset_t> ordered_offsets;
   for (auto offset : emphasize_offsets) {
 
-    if (offset >= emph_protein_string.length()) {
+    ordered_offsets.insert(offset);
+
+  }
+
+  ProteinString emph_protein_string;
+  size_t index = 0;
+  for (auto offset : ordered_offsets) {
+
+    if (offset >= protein_string.length()) {
 
       ExecEnv::log().error("emphasizeProteinString() emphasize offset: {} >= protein string length: {}",
                            offset, emph_protein_string.length());
-      continue;
+      break;
     }
 
-    emph_protein_string[offset] = ::toupper(emph_protein_string[offset]);
+    while (index < offset) {
+
+      emph_protein_string += protein_string[index];
+      index++;
+
+    }
+
+    // Add spaces to emphasize.
+    if (index == offset) {
+
+      emph_protein_string += ' ';
+      emph_protein_string += protein_string[index];;
+      emph_protein_string += ' ';
+      index++;
+
+    }
+
+  }
+
+  // Add in the rest of the sequence
+  while (index < protein_string.length()) {
+
+    emph_protein_string += protein_string[index];
+    index++;
 
   }
 

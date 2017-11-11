@@ -28,66 +28,13 @@ kgl::ContigVariant::filterVariants(const kgl::VariantFilter& filter) const {
 
 }
 
-// This function will insert multiple variants for each CDS sequence within each gene.
+// This function will insert multiple variants for contig offset in a std::multimap
 void kgl::ContigVariant::addVariant(std::shared_ptr<const Variant>& variant_ptr) {
 
-  // Annotate the variant with genome information.
-  GeneVector gene_vector;
-  ContigOffset_t variant_offset = variant_ptr->contigOffset();
-  if (variant_ptr->contig()->findGenes(variant_offset, gene_vector)) {
-
-    for (const auto& gene_ptr : gene_vector) {
-
-      std::shared_ptr<const CodingSequenceArray> sequence_array = kgl::GeneFeature::getCodingSequences(gene_ptr);
-      if (sequence_array->size() == 0) {
-
-        std::const_pointer_cast<Variant>(variant_ptr)->defineIntron(gene_ptr); // intron
-        offset_variant_map_.insert(std::make_pair(variant_ptr->contigOffset(), variant_ptr));
-
-      } else {
-
-        for (const auto& sequence : sequence_array->getMap()) {
-
-          if (sequence.second->isWithinCoding(variant_offset)) {
-
-            std::const_pointer_cast<Variant>(variant_ptr)->defineCoding(sequence.second); // coding
-            offset_variant_map_.insert(std::make_pair(variant_ptr->contigOffset(), variant_ptr));
-
-          } else {  // an intron for this sequence
-
-            std::const_pointer_cast<Variant>(variant_ptr)->defineIntron(gene_ptr); // intron
-            offset_variant_map_.insert(std::make_pair(variant_ptr->contigOffset(), variant_ptr));
-
-          } // if valid sequence for offset
-
-        } // for all sequences within a gene
-
-      } // if gene has a valid sequence.
-
-    } // for all genes.
-
-  } else {
-
-    std::const_pointer_cast<Variant>(variant_ptr)->defineNonCoding(); // non coding
-    offset_variant_map_.insert(std::make_pair(variant_ptr->contigOffset(), variant_ptr));
-
-  }
-
+  offset_variant_map_.insert(std::make_pair(variant_ptr->contigOffset(), variant_ptr));
 
 }
 
-std::string kgl::ContigVariant::output(char delimter, VariantOutputIndex output_index) const {
-
-  std::string variant_text;
-  for (const auto& variant : offset_variant_map_) {
-
-    variant_text += variant.second->output(delimter, output_index);
-
-  }
-
-  return variant_text;
-
-}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GenomeVariant - A map of contig variants
@@ -162,8 +109,7 @@ std::shared_ptr<kgl::GenomeVariant> kgl::GenomeVariant::filterVariants(const kgl
 
 // Creates an empty genome variant with the same contig structure as the genome database.
 std::shared_ptr<kgl::GenomeVariant>
-kgl::GenomeVariant::emptyGenomeVariant(const VariantType_t& variant_type,
-                                       const GenomeId_t& genome_id,
+kgl::GenomeVariant::emptyGenomeVariant(const GenomeId_t& genome_id,
                                        const std::shared_ptr<const GenomeDatabase>& genome_db) {
 
 
@@ -190,8 +136,7 @@ kgl::GenomeVariant::emptyGenomeVariant(const VariantType_t& variant_type,
 std::shared_ptr<kgl::GenomeVariant>
 kgl::GenomeVariant::disaggregateCompoundVariants(const std::shared_ptr<const GenomeDatabase>& genome_db) const {
 
-  std::shared_ptr<kgl::GenomeVariant>
-  disaggreagated = emptyGenomeVariant("disaggregated variants", genomeId(), genome_db);
+  std::shared_ptr<kgl::GenomeVariant> disaggreagated = emptyGenomeVariant(genomeId(), genome_db);
 
   for (auto contig_variant : genome_variant_map_) {
 
@@ -239,14 +184,20 @@ size_t kgl::GenomeVariant::size() const {
 
 std::string kgl::GenomeVariant::output(char field_delimter, VariantOutputIndex output_index) const {
 
-  std::string variant_text;
+  std::stringstream ss;
   for (const auto& contig_variant : genome_variant_map_) {
 
-    variant_text += genomeId() + field_delimter + contig_variant.second->output(field_delimter, output_index);
+    for (const auto& variant : contig_variant.second->getMap()) {
+
+      ss << genomeId();
+      ss << field_delimter;
+      ss << variant.second->output(field_delimter, output_index);
+
+    }
 
   }
 
-  return variant_text;
+  return ss.str();
 
 }
 

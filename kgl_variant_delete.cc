@@ -50,9 +50,7 @@ kgl::VariantAnalysis::codonDelete(const std::shared_ptr<const GenomeVariant>& de
                                   const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) {
 
   std::shared_ptr<kgl::GenomeVariant>
-  genome_delete_variants = kgl::GenomeVariant::emptyGenomeVariant("Compound Delete Variants",
-                                                                  delete_SNPs->genomeId(),
-                                                                  genome_db_ptr);
+  genome_delete_variants = kgl::GenomeVariant::emptyGenomeVariant(delete_SNPs->genomeId(), genome_db_ptr);
   std::vector<CompoundVariantMap> contiguous_delete_vec;
 
   // Aggregate the coding deletions.

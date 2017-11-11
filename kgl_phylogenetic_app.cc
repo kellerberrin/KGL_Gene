@@ -17,6 +17,7 @@ namespace kgl = kellerberrin::genome;
 std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
                                                          std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr,
                                                          const std::string& file_name,
+                                                         const std::string& genome_name,
                                                          unsigned char read_quality,
                                                          long min_count,
                                                          double min_proportion) {
@@ -26,7 +27,8 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
                                                                                                     file_name,
                                                                                                     read_quality);
   // Generate SNP variants.
-  std::shared_ptr<const kgl::GenomeVariant> variant_ptr = kgl::VariantAnalysis().SNPVariants(count_data_ptr,
+  std::shared_ptr<const kgl::GenomeVariant> variant_ptr = kgl::VariantAnalysis().SNPVariants(genome_name,
+                                                                                             count_data_ptr,
                                                                                              genome_db_ptr,
                                                                                              min_count,
                                                                                              min_proportion);
@@ -46,7 +48,7 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
   variant_ptr = variant_ptr->filterVariants(kgl::InCDSFilter());
   std::cout << *variant_ptr;
   // Filter for PfATP4
-  variant_ptr = variant_ptr->filterVariants(kgl::GeneFilter("PF3D7_1211900"));
+//  variant_ptr = variant_ptr->filterVariants(kgl::GeneFilter("PF3D7_1211900"));
 
   return variant_ptr;
 
@@ -72,15 +74,13 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
     // Generate mutant filtered simple SNPs.
     std::shared_ptr<const kgl::GenomeVariant> variant_ptr = getSNPVariants(log,
                                                                            genome_db_ptr,
-                                                                           file,
+                                                                           file.file_name,
+                                                                           file.genome_name,
                                                                            args.readQuality,
                                                                            args.minCount,
                                                                            args.minProportion);
 
     variant_vector.push_back(variant_ptr);
-    std::ostringstream ss;
-    ss << *variant_ptr;
-    ExecEnv::log().info("Genome: {}\nPF3D7_1211900 variants\n{}", variant_ptr->genomeId(), ss.str());
     variant_ptr->outputCSV(args.outCSVFile, VariantOutputIndex::START_1_BASED);
 
   }

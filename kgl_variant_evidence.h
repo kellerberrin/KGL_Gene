@@ -24,7 +24,8 @@ public:
   ~VariantAnalysis() = default;
 
 
-  std::shared_ptr<const GenomeVariant> SNPVariants(const std::shared_ptr<const ContigCountData>& count_data,
+  std::shared_ptr<const GenomeVariant> SNPVariants(const std::string& genome_name,
+                                                   const std::shared_ptr<const ContigCountData>& count_data,
                                                    const std::shared_ptr<const GenomeDatabase>& genome_db,
                                                    NucleotideReadCount_t minimum_read_count,
                                                    double minimum_proportion);
@@ -49,6 +50,8 @@ private:
                             std::shared_ptr<GenomeVariant> genome_variant_ptr);
 
   std::shared_ptr<const Variant> createCompoundDelete(const CompoundVariantMap& variant_map);
+
+  void addSNPVariant(std::shared_ptr<GenomeVariant> genome_snp_variants, const SNPVariantDNA5& variant);
 
 };
 

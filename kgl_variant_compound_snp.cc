@@ -40,9 +40,7 @@ kgl::VariantAnalysis::compoundSNP(const std::shared_ptr<const GenomeVariant>& SN
                                   const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) {
 
   std::shared_ptr<GenomeVariant>
-  genome_compoundSNP_variants = kgl::GenomeVariant::emptyGenomeVariant("Compound SNP Variants",
-                                                                       SNPs->genomeId(),
-                                                                       genome_db_ptr);
+  genome_compoundSNP_variants = kgl::GenomeVariant::emptyGenomeVariant(SNPs->genomeId(), genome_db_ptr);
 
   // Filter to only coding base mutation SNPs.
   std::shared_ptr<GenomeVariant> mutant_coding_SNPs = SNPs->filterVariants(MutantSNPFilter());

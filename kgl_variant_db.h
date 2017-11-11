@@ -50,7 +50,6 @@ public:
 
   size_t size() const { return offset_variant_map_.size(); }
 
-  std::string output(char field_delimiter, VariantOutputIndex output_index) const;
 
 private:
 
@@ -96,8 +95,7 @@ public:
   std::shared_ptr<GenomeVariant> Intersection(std::shared_ptr<const GenomeVariant> genome_variant_ptr) const;
   std::shared_ptr<GenomeVariant> Difference(std::shared_ptr<const GenomeVariant> genome_variant_ptr) const;
 
-  static std::shared_ptr<GenomeVariant> emptyGenomeVariant(const VariantType_t& variant_type,
-                                                           const GenomeId_t& genome_id,
+  static std::shared_ptr<GenomeVariant> emptyGenomeVariant(const GenomeId_t& genome_id,
                                                            const std::shared_ptr<const GenomeDatabase>& genome_db);
 
   std::shared_ptr<GenomeVariant>
