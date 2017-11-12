@@ -201,29 +201,3 @@ std::string kgl::GenomeVariant::output(char field_delimter, VariantOutputIndex o
 
 }
 
-bool kgl::GenomeVariant::outputCSV(const std::string& file_name, VariantOutputIndex output_index) const {
-
-  // open the file.
-  std::fstream out_file(file_name, std::fstream::out | std::fstream::app);
-  if (!out_file) {
-
-    ExecEnv::log().error("Cannot open output CSV file (--outCSVFile): {}", file_name);
-    return false;
-
-  }
-
-  out_file << output(',', output_index);
-
-  return out_file.good();
-
-}
-
-
-std::ostream& operator<<(std::ostream &os, const kgl::GenomeVariant& genome_variant) {
-
-  os << genome_variant.output(' ', kgl::VariantOutputIndex::START_1_BASED);
-  os.flush();
-
-  return os;
-
-}

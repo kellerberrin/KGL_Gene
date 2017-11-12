@@ -39,7 +39,7 @@ add_library(read_sam SHARED ${SOURCE_FILES} kgl_python.cc)
 
 #generate kgl_genome executable
 add_executable (kgl_genome ${SOURCE_FILES} kgl_main.cc  kgl_gff_fasta.h kgl_gff_fasta.cc
-                kgl_genome_db.h kgl_genome_db.cc kgl_patterns.h kgl_genome_feature.h kgl_genome_feature.cc
+                kgl_genome_db.h kgl_patterns.h kgl_genome_feature.h kgl_genome_feature.cc
                 kgl_exec_env_boost.cc kgl_variant.h kgl_variant.cc
                 kgl_filter.h kgl_filter.cc kgl_variant_set.cc
                 kgl_table.h kgl_table.cc
@@ -50,6 +50,6 @@ add_executable (kgl_genome ${SOURCE_FILES} kgl_main.cc  kgl_gff_fasta.h kgl_gff_
                 kgl_variant_db.cc kgl_variant_snp.h kgl_variant_snp.cc kgl_variant_compound.h
                 kgl_variant_compound.cc kgl_variant_delete.cc kgl_variant_compound_snp.cc kgl_genome_prelim.h
                 kgl_genome_prelim.cc kgl_attributes.h kgl_attributes.cc kgl_phylogenetic_app.cc
-                kgl_phylogenetic_env.h kgl_phylogenetic_env.cc)
+                kgl_phylogenetic_env.h kgl_phylogenetic_env.cc kgl_sequence_virtual.h kgl_genome_contig.cc kgl_genome_verify.cc kgl_genome_genome.cc kgl_variant_io.cc)
 
 target_link_libraries(kgl_genome ${Boost_LIBRARIES})

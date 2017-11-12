@@ -38,7 +38,7 @@ struct Phylogenetic {
 
 };
 
-// The Phylogenetic Runtime environment.
+// Singleton. The Phylogenetic Runtime environment.
 class PhylogeneticExecEnv : public ExecEnv {
 
 public:

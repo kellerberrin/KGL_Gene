@@ -14,8 +14,8 @@
 namespace kellerberrin {   //  organization level namespace
   namespace genome {   // project level namespace
 
-// This class sets up the application runtime environment as a series of static variables and member functions.
-// The class is never instantiated and is the first statement in main() (see kgl_main.cc).
+// Singleton. This class sets up the application runtime environment as a series of static variables
+// and member functions. The class is never instantiated and is the first statement in main() (see kgl_main.cc).
 
 class ExecEnv {
 
@@ -31,6 +31,7 @@ public:
                            int max_error_message,
                            int max_warning_messages);
   static void getElpasedTime(double& Clock, double& System, double& User);
+  static std::string filePath(const std::string& file_name, const std::string& path); // utility for "path/file"
 
 public:
 

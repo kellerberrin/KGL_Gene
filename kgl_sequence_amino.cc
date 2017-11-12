@@ -171,8 +171,6 @@ bool kgl::CodingSequenceDNA5::SNPMutation(std::shared_ptr<const CodingSequence> 
 
   bool result;
 
-  const SortedCDS& sorted_cds = coding_seq_ptr->getSortedCDS();
-
   ContigSize_t base_in_codon;
   result = codonOffset(coding_seq_ptr, contig_offset, codon_offset, base_in_codon);
 
@@ -180,7 +178,7 @@ bool kgl::CodingSequenceDNA5::SNPMutation(std::shared_ptr<const CodingSequence> 
 
     auto sequence_offset = static_cast<ContigOffset_t>(codon_offset * 3);
     ContigSize_t codon_size = 3;
-    StrandSense strand = sorted_cds.begin()->second->sequence().strand();
+    StrandSense strand = coding_seq_ptr->getCDSParent()->sequence().strand();
     std::shared_ptr<DNA5Sequence> codon_sequence = contig_sequence_ptr->codingSubSequence(coding_seq_ptr,
                                                                                           sequence_offset,
                                                                                           codon_size);
@@ -248,3 +246,4 @@ bool kgl::CodingSequenceDNA5::SNPMutation(std::shared_ptr<const CodingSequence> 
   return result;
 
 }
+

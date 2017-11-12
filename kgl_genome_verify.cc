@@ -1,8 +1,8 @@
 //
-// Created by kellerberrin on 7/10/17.
+// Created by kellerberrin on 12/11/17.
 //
 
-#include "kgl_exec_env.h"
+
 #include "kgl_patterns.h"
 #include "kgl_genome_feature.h"
 #include "kgl_genome_db.h"
@@ -15,79 +15,6 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool kgl::ContigFeatures::addFeature(std::shared_ptr<kgl::Feature>& feature_ptr) {
-
-  id_feature_map_.insert(std::make_pair(feature_ptr->id(), feature_ptr));
-
-  offset_feature_map_.insert(std::make_pair(feature_ptr->sequence().begin(), feature_ptr));
-
-  return true;
-
-}
-
-bool kgl::ContigFeatures::findFeatureId(kgl::FeatureIdent_t& feature_id,
-                                      std::vector<std::shared_ptr<kgl::Feature>>& feature_ptr_vec) {
-
-  auto iter_pair = id_feature_map_.equal_range(feature_id);
-
-  feature_ptr_vec.clear();
-  for (auto iter = iter_pair.first; iter != iter_pair.second; ++iter) {
-
-    feature_ptr_vec.emplace_back(iter->second);
-
-  }
-
-  return not feature_ptr_vec.empty();
-
-}
-
-
-
-void kgl::ContigFeatures::setupFeatureHierarchy() {
-
-  // Remove all hierarchies for all features.
-  for (auto feature_pair : id_feature_map_) {
-    Feature& feature = *feature_pair.second;
-    // Remove feature hierarchy.
-    feature.clearHierachy();
-  }
-
-  // Establish or re-establish the hierarchies for all features.
-  for (auto feature_pair : id_feature_map_) {
-    Feature& feature = *feature_pair.second;
-    // For each feature lookup a list of super_features
-    std::vector<FeatureIdent_t> super_features;
-    feature.getAttributes().getSuperFeatureIds(super_features);
-    // Add parent pointers for the child and child pointers for the super_features.
-    for (auto super_feature_id : super_features) {
-
-      std::vector<std::shared_ptr<kgl::Feature>> super_feature_ptr_vec;
-      if (not findFeatureId(super_feature_id, super_feature_ptr_vec)) {
-
-        // Error; could not find super feature.
-        kgl::ExecEnv::log().error("Feature: {}; Super Feature: {} does not exist", feature.id(), super_feature_id);
-
-      }
-      if (super_feature_ptr_vec.size() > 1) {
-
-        // Warning, more than 1 super feature.
-        kgl::ExecEnv::log().warn("Super Feature id: {} returned : {} Super Features",
-                                 super_feature_id, super_feature_ptr_vec.size());
-
-      }
-      for (auto& super_feature_ptr : super_feature_ptr_vec) {
-
-        feature.addSuperFeature(super_feature_id, super_feature_ptr);
-        super_feature_ptr->addSubFeature(feature.id(), feature_pair.second);
-
-      } // For all super_features with same id.
-
-    } // For all parent ids.
-
-  } // For all features.
-
-}
-
 
 void kgl::ContigFeatures::verifyFeatureHierarchy() {
 
@@ -99,6 +26,25 @@ void kgl::ContigFeatures::verifyFeatureHierarchy() {
   verifySuperFeatureDuplicates();
   verifyCDSPhasePeptide();
   createGeneMap();
+
+}
+
+void kgl::ContigFeatures::createGeneMap() {
+
+  // Clear the lookup table.
+  gene_map_.clear();
+
+  // Iterate through all the features looking for Gene features.
+  for(const auto& feature : offset_feature_map_) {
+
+    if(feature.second->isGene()) {
+
+      ContigOffset_t end_offset = feature.second->sequence().end();
+      gene_map_.insert(std::make_pair(end_offset, std::static_pointer_cast<GeneFeature>(feature.second)));
+
+    }
+
+  }
 
 }
 
@@ -189,44 +135,6 @@ void kgl::ContigFeatures::verifySubFeatureSuperFeatureDimensions() {
 
 }
 
-
-void kgl::ContigFeatures::removeSubFeatureDuplicates() {
-
-  long duplicates_removed = 0;
-
-  for (auto feature_pair : id_feature_map_) {
-    Feature &feature = *feature_pair.second;
-
-    duplicates_removed += deleteIterableDuplicates(feature.subFeatures());
-
-  }
-
-  if (duplicates_removed > 0) {
-
-    kgl::ExecEnv::log().info("{} duplicate sub-features removed from contig: {}", duplicates_removed, contigId());
-
-  }
-
-}
-
-void kgl::ContigFeatures::removeSuperFeatureDuplicates() {
-
-  long duplicates_removed = 0;
-
-  for (auto feature_pair : id_feature_map_) {
-    Feature &feature = *feature_pair.second;
-
-    duplicates_removed += deleteIterableDuplicates(feature.superFeatures());
-
-  }
-
-  if (duplicates_removed > 0) {
-
-    kgl::ExecEnv::log().info("{} duplicate super-features removed from contig: {}", duplicates_removed, contigId());
-
-  }
-
-}
 
 
 void kgl::ContigFeatures::verifySubFeatureDuplicates() {
@@ -352,7 +260,7 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Codi
     if (not coding_sequence_.checkStopCodon(coding_sequence_ptr)) {
 
       ExecEnv::log().vwarn("No STOP codon: {} Gene: {}, CDS parent (mRNA): {} | last codon: {}{}{}",
-                          (coding_sequence_.codonLength(coding_sequence_ptr)-1),
+                           (coding_sequence_.codonLength(coding_sequence_ptr)-1),
                            sequence.second->getGene()->id(),
                            sequence.second->getCDSParent()->id(),
                            coding_sequence_.lastCodon(coding_sequence_ptr).bases[0],
@@ -384,164 +292,41 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Codi
 }
 
 
-void kgl::ContigFeatures::createGeneMap() {
+void kgl::ContigFeatures::removeSubFeatureDuplicates() {
 
-  // Clear the lookup table.
-  gene_map_.clear();
+  long duplicates_removed = 0;
 
-  // Iterate through all the features looking for Gene features.
-  for(const auto& feature : offset_feature_map_) {
+  for (auto feature_pair : id_feature_map_) {
+    Feature &feature = *feature_pair.second;
 
-    if(feature.second->isGene()) {
+    duplicates_removed += deleteIterableDuplicates(feature.subFeatures());
 
-      ContigOffset_t end_offset = feature.second->sequence().end();
-      gene_map_.insert(std::make_pair(end_offset, std::static_pointer_cast<GeneFeature>(feature.second)));
+  }
 
-    }
+  if (duplicates_removed > 0) {
+
+    kgl::ExecEnv::log().info("{} duplicate sub-features removed from contig: {}", duplicates_removed, contigId());
 
   }
 
 }
 
+void kgl::ContigFeatures::removeSuperFeatureDuplicates() {
 
-bool kgl::ContigFeatures::findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const {
+  long duplicates_removed = 0;
 
-  gene_ptr_vec.clear();
-  auto lb_result = gene_map_.lower_bound(offset);
+  for (auto feature_pair : id_feature_map_) {
+    Feature &feature = *feature_pair.second;
 
-  if (lb_result == gene_map_.end()) {
-
-    return false;
-
-  }
-
-  auto result = gene_map_.equal_range(lb_result->first);
-
-  for (auto it = result.first; it != result.second; ++it) {
-
-    if (offset >= it->second->sequence().begin()) {
-
-      gene_ptr_vec.emplace_back(it->second);
-
-    }
+    duplicates_removed += deleteIterableDuplicates(feature.superFeatures());
 
   }
 
-  return not gene_ptr_vec.empty();
+  if (duplicates_removed > 0) {
 
-}
-
-
-// Convenience routine for tagging SNPs.
-bool kgl::ContigFeatures::SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                      ContigOffset_t contig_offset,
-                                      typename NucleotideColumn_DNA5::NucleotideType reference_base,
-                                      typename NucleotideColumn_DNA5::NucleotideType mutant_base,
-                                      ContigOffset_t& codon_offset,
-                                      typename AminoAcidTypes::AminoType& reference_amino,
-                                      typename AminoAcidTypes::AminoType& mutant_amino) const {
-
-
-  return coding_sequence_.SNPMutation(coding_seq_ptr,
-                                      sequence_ptr_,
-                                      contig_offset,
-                                      reference_base,
-                                      mutant_base,
-                                      codon_offset,
-                                      reference_amino,
-                                      mutant_amino);
-
-}
-
-// Convenience routine for Amino sequences.
-std::shared_ptr<kgl::AminoSequence>
-kgl::ContigFeatures::getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr) const {
-
-  return coding_sequence_.getAminoSequence(coding_seq_ptr, sequence_ptr_);
-
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// GenomeDatabase members.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-bool kgl::GenomeDatabase::addContigSequence(const kgl::ContigId_t& contig_id,
-                                            std::shared_ptr<kgl::DNA5Sequence> sequence_ptr) {
-
-  using ContigPtr = std::shared_ptr<kgl::ContigFeatures>;
-  ContigPtr contig_ptr(std::make_shared<kgl::ContigFeatures>(contig_id, sequence_ptr));
-
-  auto result = genome_sequence_map_.insert(std::make_pair(contig_id, std::move(contig_ptr)));
-
-  return result.second;
-
-}
-
-bool kgl::GenomeDatabase::getContigSequence(const kgl::ContigId_t& contig_id,
-                                             std::shared_ptr<ContigFeatures>& contig_ptr) const {
-
-  auto result_iter = genome_sequence_map_.find(contig_id);
-
-  if (result_iter != genome_sequence_map_.end()) {
-
-    contig_ptr = result_iter->second;
-    return true;
-
-  }
-
-  return false;
-
-}
-
-void kgl::GenomeDatabase::createVerifyGenomeDatabase() {
-
-  setupFeatureHierarchy();
-  verifyFeatureHierarchy();
-
-}
-
-void kgl::GenomeDatabase::setupFeatureHierarchy() {
-
-  for (auto contig_pair : genome_sequence_map_) {
-
-    contig_pair.second->setupFeatureHierarchy();
+    kgl::ExecEnv::log().info("{} duplicate super-features removed from contig: {}", duplicates_removed, contigId());
 
   }
 
 }
 
-
-void kgl::GenomeDatabase::verifyFeatureHierarchy() {
-
-  for (auto contig_pair : genome_sequence_map_) {
-
-    contig_pair.second->verifyFeatureHierarchy();
-
-  }
-
-}
-
-void kgl::GenomeDatabase::setTranslationTable(size_t table) {
-
-  for (auto contig_pair : genome_sequence_map_) {
-
-    contig_pair.second->setTranslationTable(table);
-
-  }
-
-}
-
-
-void kgl::GenomeDatabase::registerContigData(std::shared_ptr<kgl::ContigCountData>& contig_data_ptr) const {
-// Create data blocks for each contig in the genome database
-  for (const auto &contig_pair : genome_sequence_map_) {
-
-    if (not contig_data_ptr->insertContig(contig_pair.first, contig_pair.second->sequence().length())) {
-
-      kgl::ExecEnv::log().error("ContigCountData; attempted to add duplicate contig; {}", contig_pair.first);
-
-    }
-
-  }
-
-}

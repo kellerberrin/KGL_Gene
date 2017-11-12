@@ -2,6 +2,7 @@
 // Created by kellerberrin on 3/10/17.
 //
 
+#include "kgl_exec_env.h"
 #include "kgl_gff_fasta.h"
 #include <seqan/seq_io.h>
 #include <boost/tokenizer.hpp>
@@ -20,15 +21,15 @@ class kgl::ParseGffFasta::GffFastaImpl {
 
 public:
 
-  GffFastaImpl(kgl::Logger& logger) : log(logger) {}
+  GffFastaImpl() = default;
   ~GffFastaImpl() = default;
 
   void readGffFile(const std::string &gff_file_name, std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr);
+  bool writeFastaFile(const std::string& fasta_file_name, const std::vector<FastaSequence>& fasta_sequences);
   void readFastaFile(const std::string& fasta_file_name, std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr);
 
 private:
 
-  Logger& log; // Should declared first.
 
   bool parseGffRecord(std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr,
                       seqan::GffRecord& record,
@@ -44,11 +45,11 @@ void kgl::ParseGffFasta::GffFastaImpl::readFastaFile(const std::string& fasta_fi
   seqan::SeqFileIn seq_file_in;
   if (!seqan::open(seq_file_in, fasta_file_name.c_str())) {
 
-    log.critical("Could not open fasta file: {}", fasta_file_name);
+    ExecEnv::log().critical("Could not open fasta file: {}", fasta_file_name);
 
   }
 
-  log.info("Reading Fasta file: {}", fasta_file_name);
+  ExecEnv::log().info("Reading Fasta file: {}", fasta_file_name);
 
   seqan::StringSet<seqan::CharString> ids;
   seqan::StringSet<seqan::Dna5String> seqs;
@@ -60,7 +61,7 @@ void kgl::ParseGffFasta::GffFastaImpl::readFastaFile(const std::string& fasta_fi
   }
   catch (seqan::Exception const & e) {
 
-    log.critical("Error: {} reading fasta file: {}", e.what(), fasta_file_name);
+    ExecEnv::log().critical("Error: {} reading fasta file: {}", e.what(), fasta_file_name);
 
   }
 
@@ -69,17 +70,17 @@ void kgl::ParseGffFasta::GffFastaImpl::readFastaFile(const std::string& fasta_fi
     std::string id_line;
     seqan::move(id_line, ids[i]);
     ContigId_t  contig_id = id_line.substr(0, id_line.find_first_of(" \t,")); // Only the identifier.
-    DNA5Sequence::SequenceString sequence;
+    SequenceString sequence;
     seqan::move(sequence, seqs[i]);
     std::shared_ptr<DNA5Sequence> sequence_ptr(std::make_shared<DNA5Sequence>(sequence));
 
     if (not genome_db_ptr->addContigSequence(contig_id, sequence_ptr)) {
 
-      log.error("addContigSequence(), Attempted to add duplicate contig; {}", contig_id);
+      ExecEnv::log().error("addContigSequence(), Attempted to add duplicate contig; {}", contig_id);
 
     }
 
-    log.info("Fasta Contig id: {}; Contig sequence length: {} ", contig_id, sequence_ptr->length());
+    ExecEnv::log().info("Fasta Contig id: {}; Contig sequence length: {} ", contig_id, sequence_ptr->length());
 
   }
 
@@ -92,11 +93,11 @@ void kgl::ParseGffFasta::GffFastaImpl::readGffFile(const std::string &gff_file_n
   seqan::GffFileIn gff_file_in;
   if (!seqan::open(gff_file_in, gff_file_name.c_str())) {
 
-    log.critical("Could not open Gff file: {}", gff_file_name);
+    ExecEnv::log().critical("Could not open Gff file: {}", gff_file_name);
 
   }
 
-  log.info("Reading Gff file: {}", gff_file_name);
+  ExecEnv::log().info("Reading Gff file: {}", gff_file_name);
 
   seqan::GffFileOut gff_file_out(std::cout, seqan::Gff());
 
@@ -114,18 +115,18 @@ void kgl::ParseGffFasta::GffFastaImpl::readGffFile(const std::string &gff_file_n
 
       if (not parseGffRecord(genome_db_ptr, record, gff_line_counter)) {
 
-        log.error("Parse error, unable to load feature at Gff line: {}", gff_line_counter);
+        ExecEnv::log().error("Parse error, unable to load feature at Gff line: {}", gff_line_counter);
         seqan::writeRecord(gff_file_out, record);
 
       }
 
     }
 
-    log.info("Processed: {} Gff feature records", gff_line_counter);
+    ExecEnv::log().info("Processed: {} Gff feature records", gff_line_counter);
 
   } catch(seqan::Exception const & e) {
 
-    log.critical("Error: {} reading fasta file: {}", e.what(), gff_file_name);
+    ExecEnv::log().critical("Error: {} reading fasta file: {}", e.what(), gff_file_name);
 
   }
 
@@ -168,7 +169,7 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
       break;
 
     default:
-      log.error("Strand Sense character: {} is not one of ['+', '-', '.']", record.strand);
+      ExecEnv::log().error("Strand Sense character: {} is not one of ['+', '-', '.']", record.strand);
       return false;
 
   }
@@ -183,11 +184,11 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
 
     // Construct an id
     feature_id = type + std::to_string(begin);
-    log.warn("Gff line: {}, 'ID' key not found; ID: {} generated", gff_line_counter, feature_id);
+    ExecEnv::log().warn("Gff line: {}, 'ID' key not found; ID: {} generated", gff_line_counter, feature_id);
 
   } else if (feature_id_vec.size() > 1) {
 
-    log.warn("Gff line: {}, Has {} 'ID' values, choosing first value"
+    ExecEnv::log().warn("Gff line: {}, Has {} 'ID' values, choosing first value"
         , gff_line_counter, feature_id_vec.size());
 
     feature_id = feature_id_vec[0];
@@ -203,7 +204,7 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
   std::shared_ptr<kgl::ContigFeatures> contig_ptr;
   if (not genome_db_ptr->getContigSequence(contig_id, contig_ptr)) {
 
-    log.error("Could not find contig: {}", contig_id);
+    ExecEnv::log().error("Could not find contig: {}", contig_id);
     return false;
 
   }
@@ -231,7 +232,7 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
       break;
 
     default:
-      log.warn("Unexpected phase code: {} in Gff file should be one of '0', '1', '2', '.'", record.phase);
+      ExecEnv::log().warn("Unexpected phase code: {} in Gff file should be one of '0', '1', '2', '.'", record.phase);
       break;
 
 
@@ -241,7 +242,7 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
 
     if (type.find(CDSFeature::CDS_TYPE) == std::string::npos) {
 
-      log.warn("Mis-match between valid phase: {} and record type: {}", phase, type);
+      ExecEnv::log().warn("Mis-match between valid phase: {} and record type: {}", phase, type);
 
     }
 
@@ -274,7 +275,48 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
   // Annotate the contig.
   if (not contig_ptr->addFeature(feature_ptr)) {
 
-    log.error("Could not add duplicate feature: {} to contig: {}", feature_id, contig_id);
+    ExecEnv::log().error("Could not add duplicate feature: {} to contig: {}", feature_id, contig_id);
+    return false;
+
+  }
+
+  return true;
+
+}
+
+
+bool kgl::ParseGffFasta::GffFastaImpl::writeFastaFile(const std::string& fasta_file_name,
+                                                      const std::vector<FastaSequence>& fasta_sequences) {
+
+  if (fasta_sequences.empty()) {
+
+    ExecEnv::log().warn("writeFastaFile(), No Fasta sequences to write to file: {}", fasta_file_name);
+    return false;
+
+  }
+
+  seqan::SeqFileOut seq_file_out;
+  if (!seqan::open(seq_file_out, fasta_file_name.c_str())) {
+
+    ExecEnv::log().error("Could not open fasta file: {}", fasta_file_name);
+    return false;
+
+  }
+
+  try {
+
+    for (auto sequence : fasta_sequences) {
+
+      seqan::CharString seqan_id = sequence.first;
+      seqan::CharString seqan_seq = sequence.second->getSequence();
+      seqan::writeRecord(seq_file_out, seqan_id, seqan_seq, seqan::Fasta());
+
+    }
+
+  }
+  catch(seqan::Exception const & e) {
+
+    ExecEnv::log().error("Error: {} writing to Fasta file: {}", e.what(), fasta_file_name);
     return false;
 
   }
@@ -289,11 +331,8 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-kgl::ParseGffFasta::ParseGffFasta(kgl::Logger& logger)
-    : log(logger), gff_fasta_impl_ptr_(std::make_unique<kgl::ParseGffFasta::GffFastaImpl>(logger)) {}
-
-
-kgl::ParseGffFasta::~ParseGffFasta() {}
+kgl::ParseGffFasta::ParseGffFasta() : gff_fasta_impl_ptr_(std::make_unique<kgl::ParseGffFasta::GffFastaImpl>()) {}
+kgl::ParseGffFasta::~ParseGffFasta() {}  // DO NOT DELETE or USE DEFAULT. Required because of incomplete pimpl type.
 
 // Functionality passed to the implmentation.
 std::shared_ptr<kgl::GenomeDatabase> kgl::ParseGffFasta::readFastaFile(const std::string& fasta_file_name) {
@@ -305,12 +344,19 @@ std::shared_ptr<kgl::GenomeDatabase> kgl::ParseGffFasta::readFastaFile(const std
 }
 
 
+bool kgl::ParseGffFasta::writeFastaFile(const std::string& fasta_file_name,
+                                        const std::vector<FastaSequence>& fasta_sequences) {
+
+  return gff_fasta_impl_ptr_->writeFastaFile(fasta_file_name, fasta_sequences);
+
+}
+
+
 std::shared_ptr<kgl::GenomeDatabase> kgl::ParseGffFasta::readFastaGffFile(const std::string& fasta_file_name,
                                                                           const std::string& gff_file_name ) {
 
   std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr = readFastaFile(fasta_file_name);
   gff_fasta_impl_ptr_->readGffFile(gff_file_name, genome_db_ptr);
-
   return genome_db_ptr;
 
 }

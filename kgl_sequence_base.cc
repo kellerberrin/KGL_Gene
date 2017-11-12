@@ -172,8 +172,8 @@ kgl::DNA5Sequence::codingSubSequence(std::shared_ptr<const DNA5Sequence> base_se
 
     case StrandSense::FORWARD: {
 
-      typename SequenceString::const_iterator begin;
-      typename SequenceString::const_iterator end;
+      SequenceString::const_iterator begin;
+      SequenceString::const_iterator end;
       ContigOffset_t begin_offset;
       ContigOffset_t end_offset;
       ContigOffset_t relative_offset = 0;
@@ -227,13 +227,13 @@ kgl::DNA5Sequence::codingSubSequence(std::shared_ptr<const DNA5Sequence> base_se
     case StrandSense::REVERSE: {
 
       // Insert in reverse complement order.
-      typename SequenceString::const_reverse_iterator rbegin;
-      typename SequenceString::const_reverse_iterator rend;
+      SequenceString::const_reverse_iterator rbegin;
+      SequenceString::const_reverse_iterator rend;
       ContigOffset_t begin_offset;
       ContigOffset_t end_offset;
       ContigOffset_t relative_offset = 0;
       auto complement_base =
-      [](typename DNA5Sequence::NucleotideType base) { return NucleotideColumn_DNA5::complementNucleotide(base); };
+      [](NucleotideType base) { return NucleotideColumn_DNA5::complementNucleotide(base); };
       for (auto rit = sorted_cds.rbegin(); rit != sorted_cds.rend(); ++rit) {
 
         ContigSize_t cds_size = rit->second->sequence().end() - rit->second->sequence().begin();

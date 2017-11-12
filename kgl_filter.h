@@ -137,6 +137,31 @@ private:
 
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter SNPs to a particular gene.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class SequenceFilter : public VariantFilter {
+
+public:
+
+  explicit SequenceFilter(const FeatureIdent_t& sequence_ident) : sequence_ident_(sequence_ident) {}
+  ~SequenceFilter() override = default;
+
+  std::string filterName() const final;
+
+  bool applyFilter(const Variant& variant) const override { return implementFilter(variant); } // redirect
+  bool applyFilter(const ReadCountVariant& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const SNPVariantDNA5& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
+
+private:
+
+  const FeatureIdent_t sequence_ident_;
+
+  bool implementFilter(const Variant& variant) const;
+
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Filter deletion SNPs

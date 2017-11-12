@@ -96,3 +96,35 @@ std::string kgl::GeneFilter::filterName() const {
 
 }
 
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter variants to a particular sequence.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool kgl::SequenceFilter::implementFilter(const Variant& variant) const {
+
+  if (not variant.codingSequences().empty()) {
+
+    std::shared_ptr<const CodingSequence> sequence_ptr = variant.codingSequences().getFirst();
+    if (sequence_ptr->getCDSParent()->id() == sequence_ident_) {
+
+      return true;
+
+    }
+
+  }
+
+  return false;
+
+}
+
+
+std::string kgl::SequenceFilter::filterName() const {
+
+  return "Variant in Sequence: " + sequence_ident_;
+
+}
+
+
+

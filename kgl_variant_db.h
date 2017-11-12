@@ -107,6 +107,13 @@ public:
   const Attributes& attributes() const { return attributes_; }
   Attributes& attributes() { return attributes_; }
 
+  bool writeMutantProtein(const std::string& fastaFile,
+                          const std::string& sequenceName,
+                          const ContigId_t& contig_id,
+                          const FeatureIdent_t& gene_id,
+                          const FeatureIdent_t& sequence_id,
+                          const std::shared_ptr<const GenomeDatabase>& genome_db) const;
+
 private:
 
   GenomeId_t genome_id_;

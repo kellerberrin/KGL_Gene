@@ -43,7 +43,7 @@ public:
 
   bool addFeature(std::shared_ptr<Feature>& feature_ptr);
   // false if not found.
-  bool findFeatureId(FeatureIdent_t& feature_id, std::vector<std::shared_ptr<Feature>>& feature_ptr_vec);
+  bool findFeatureId(const FeatureIdent_t& feature_id, std::vector<std::shared_ptr<Feature>>& feature_ptr_vec) const;
   // false if offset is not in a gene, else (true) returns a vector of ptrs to the genes.
   bool findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const;
 
@@ -66,7 +66,13 @@ public:
                    typename AminoAcidTypes::AminoType& reference_amino,
                    typename AminoAcidTypes::AminoType& mutant_amino) const;
 
+  // give a gene id and an mRNA (sequence id) return the coding base sequence.
+  bool getDNA5Sequence(const FeatureIdent_t& gene_id,
+                       const FeatureIdent_t& sequence_id,
+                       std::shared_ptr<DNA5Sequence>& sequence_ptr) const;
+
   std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr) const;
+  std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<DNA5Sequence> sequence_ptr) const;
 
 private:
 
@@ -118,6 +124,12 @@ public:
   void registerContigData(std::shared_ptr<ContigCountData>& contig_data_ptr) const;
 
   const GenomeSequenceMap& getMap() const { return genome_sequence_map_; }
+
+// Given a contig id, gene id and an mRNA id (sequence id) return the coding base sequence.
+  bool getDNA5Sequence(const ContigId_t& contig_id,
+                       const FeatureIdent_t& gene_id,
+                       const FeatureIdent_t& sequence_id,
+                       std::shared_ptr<DNA5Sequence>& sequence_ptr) const;
 
 private:
 

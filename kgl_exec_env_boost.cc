@@ -5,12 +5,14 @@
 
 #include <iostream>
 #include "kgl_exec_env.h"
-#define BOOST_FILESYSTEM_NO_DEPRECATED // Recommended by boost filesystem documentation.
 #include <boost/timer/timer.hpp>
+#define BOOST_FILESYSTEM_NO_DEPRECATED // Recommended by boost filesystem documentation.
+#include <boost/filesystem.hpp>
 
 
 // Define namespace alias
 namespace bt = boost::timer;
+namespace fs = boost::filesystem;
 namespace kgl = kellerberrin::genome;
 
 
@@ -25,6 +27,16 @@ void kgl::ExecEnv::getElpasedTime(double& Clock, double& User, double& System) {
   Clock = elapsedtime.wall / 1e09; // Convert from nanoseconds to seconds
   User = elapsedtime.user / 1e09;
   System = elapsedtime.system / 1e09;
+
+}
+
+
+// Returns the filename with the path directory appended to it "path/file".
+std::string kgl::ExecEnv::filePath(const std::string& file_name, const std::string& path) {
+
+  fs::path directory_path = fs::path(path);
+  fs::path file_path = directory_path / fs::path(file_name);
+  return file_path.string();
 
 }
 

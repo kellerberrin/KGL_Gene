@@ -46,10 +46,10 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
   std::shared_ptr<const kgl::GenomeVariant> compound_snp_ptr = kgl::VariantAnalysis().compoundSNP(variant_ptr,
                                                                                                   genome_db_ptr);
   variant_ptr = variant_ptr->filterVariants(kgl::InCDSFilter());
-  std::cout << *variant_ptr;
   // Filter for PfATP4
 //  variant_ptr = variant_ptr->filterVariants(kgl::GeneFilter("PF3D7_1211900"));
-
+  variant_ptr = variant_ptr->filterVariants(kgl::SequenceFilter("rna_PF3D7_1211900-1"));
+  std::cout << *variant_ptr;
   return variant_ptr;
 
 }
@@ -60,8 +60,8 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
   log.SetVerbose(args.verbose);
 
   // Create a genome database object.
-  std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr = kgl::ParseGffFasta(log).readFastaGffFile(args.fastaFile,
-                                                                                                args.gffFile);
+  std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr = kgl::ParseGffFasta().readFastaGffFile(args.fastaFile,
+                                                                                             args.gffFile);
   // Set the amino translation table
   genome_db_ptr->setTranslationTable(args.aminoTranslationTable);
 

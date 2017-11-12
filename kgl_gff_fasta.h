@@ -10,6 +10,7 @@
 #include <string>
 #include <map>
 #include "kgl_genome_db.h"
+#include "kgl_sequence_virtual.h"
 #include "kgl_logging.h"
 
 
@@ -19,23 +20,29 @@ namespace genome {   // project level namespace
 // Creates an instance of a Genome database object.
 // Parses the input gff(3) file and annotates it with a fasta sequence
 // This class is a facade; the file reading details are handled by a 3rd party library.
+
+// Passed in a vector to write a fasta sequence.
+// FastaSequence.first is the sequence name.
+// FastaSequence.second is the virtual sequence (Base or Amino).
+using FastaSequence = std::pair<std::string, std::shared_ptr<AlphabetSequence>>;
+
 class ParseGffFasta {
 
 public:
 
-  explicit ParseGffFasta(Logger& logger);
+  explicit ParseGffFasta();
   ~ParseGffFasta();
 
   // Functionality passed to the implmentation.
   std::shared_ptr<GenomeDatabase> readFastaFile(const std::string& fasta_file_name);
+
+  bool writeFastaFile(const std::string& fasta_file_name, const std::vector<FastaSequence>& fasta_sequences);
 
   std::shared_ptr<GenomeDatabase> readFastaGffFile(const std::string& fasta_file_name,
                                                    const std::string& gff_file_name);
 
 
 private:
-
-  Logger& log; // Should be declared first.
 
   class GffFastaImpl;       // Forward declaration of the Gff Fasta parser implementation class
   std::unique_ptr<GffFastaImpl> gff_fasta_impl_ptr_;    // Gff Fasta parser PIMPL

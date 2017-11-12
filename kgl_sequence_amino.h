@@ -20,19 +20,19 @@ namespace genome {   // project level namespace
 using AminoType = typename AminoAcidTypes::AminoType;
 using ProteinString = std::basic_string<AminoType>;
 
-class AminoSequence {
+class AminoSequence: public AlphabetSequence {
 
 public:
 
-
   explicit AminoSequence(ProteinString sequence) : amino_sequence_(std::move(sequence)) {};
   AminoSequence() = delete;
-  virtual ~AminoSequence() = default;
+  ~AminoSequence() override = default;
+
+  const std::string& getSequence() const override { return amino_sequence_; }
 
   AminoType operator[] (ContigOffset_t& offset) const { return amino_sequence_[offset]; }
   ContigSize_t length() const { return amino_sequence_.length(); }
 
-  const ProteinString& getProteinString() const { return amino_sequence_; }
 
   static ProteinString emphasizeProteinString(const ProteinString& getProteinString,
                                               const std::vector<ContigOffset_t>& emphasize_offsets);

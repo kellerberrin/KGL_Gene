@@ -9,6 +9,7 @@
 #include <string>
 #include "kgl_alphabet_base.h"
 #include "kgl_genome_feature.h"
+#include "kgl_sequence_virtual.h"
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
@@ -18,25 +19,25 @@ namespace genome {   // project level namespace
 // Base Sequence - A container for DNA/RNA sequences.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+using NucleotideType = typename NucleotideColumn_DNA5::NucleotideType ;
+using SequenceString = std::basic_string<NucleotideType>;
 
-class DNA5Sequence  {
+class DNA5Sequence: public AlphabetSequence {
 
 public:
 
-  using NucleotideType = typename NucleotideColumn_DNA5::NucleotideType ;
-  using SequenceString = std::basic_string<NucleotideType>;
 
   explicit DNA5Sequence(SequenceString sequence) : base_sequence_(std::move(sequence)) {};
   DNA5Sequence() = delete;
-  ~DNA5Sequence() = default;
+  ~DNA5Sequence() override = default;
+
+  const std::string& getSequence() const override { return base_sequence_; }
 
   NucleotideType operator[] (ContigOffset_t& offset) const { return base_sequence_[offset]; }
 
   ContigSize_t length() const { return base_sequence_.length(); }
 
   const NucleotideType* baseAddress(ContigOffset_t& offset) const { return &base_sequence_[offset]; }
-
-  const SequenceString& getSequenceString() const { return base_sequence_; }
 
   bool modifyBase(NucleotideType Nucleotide, ContigOffset_t sequence_offset);
 
