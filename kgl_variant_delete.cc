@@ -43,6 +43,13 @@ std::string kgl::CompoundDelete::mutation(char delimiter, VariantOutputIndex out
 
 }
 
+bool kgl::CompoundDelete::mutateCodingSequence(const FeatureIdent_t& sequence_id,
+                                               std::shared_ptr<DNA5Sequence>& mutated_sequence) const {
+
+  ExecEnv::log().warn("mutateCodingSequence() not yet implemented for CompoundDelete");
+  return false;
+
+}
 
 std::shared_ptr<const kgl::GenomeVariant>
 kgl::VariantAnalysis::codonDelete(const std::shared_ptr<const GenomeVariant>& delete_SNPs,

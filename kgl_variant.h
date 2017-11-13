@@ -12,6 +12,7 @@
 #include "kgl_genome_types.h"
 #include "kgl_alphabet_amino.h"
 #include "kgl_genome_db.h"
+#include "kgl_sequence_base.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -124,6 +125,8 @@ public:
 
   virtual std::string output(char delimiter, VariantOutputIndex output_index) const = 0;
   virtual std::string mutation(char delimiter, VariantOutputIndex output_index) const = 0;
+  virtual bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
+                                    std::shared_ptr<DNA5Sequence>& mutated_sequence) const = 0;
 
   virtual bool isCompound() const { return false; }
 

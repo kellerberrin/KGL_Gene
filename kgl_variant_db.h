@@ -104,6 +104,8 @@ public:
   std::string output(char field_delimiter, VariantOutputIndex output_index) const;
   bool outputCSV(const std::string& file_name, VariantOutputIndex output_index) const;
 
+  void getVariants(std::vector<std::shared_ptr<const Variant>>& variant_vector);
+
   const Attributes& attributes() const { return attributes_; }
   Attributes& attributes() { return attributes_; }
 

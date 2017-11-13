@@ -32,7 +32,7 @@ public:
 
   struct Codon {
 
-    const NucleotideColumn_DNA5::NucleotideType* bases;
+    const Nucleotide_ExtendedDNA5* bases;
 
   };
 

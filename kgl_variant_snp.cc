@@ -43,6 +43,163 @@ std::string kgl::SNPVariantDNA5::output(char delimiter, VariantOutputIndex outpu
 
 }
 
+// complement base if -ve strand and coding or intron.
+kgl::Nucleotide_ExtendedDNA5 kgl::SNPVariantDNA5::strandNucleotide(Nucleotide_ExtendedDNA5 nucleotide) const {
+
+  switch(type()) {
+
+    case VariantSequenceType::CDS_CODING:
+
+      if (codingSequences().empty()) {
+
+        ExecEnv::log().error("strandReference(), empty coding sequence for coding variant: {}",
+                             output(' ', VariantOutputIndex::START_0_BASED));
+        return nucleotide;
+      }
+      switch(codingSequences().getFirst()->getCDSParent()->sequence().strand()) {
+
+        case StrandSense::UNKNOWN:
+        ExecEnv::log().error("strandReference(), unknown coding sequence for variant: {}",
+                             output(' ', VariantOutputIndex::START_0_BASED));
+        case StrandSense::FORWARD:
+          return nucleotide;
+
+        case StrandSense::REVERSE:
+          return NucleotideColumn_DNA5::complementNucleotide(nucleotide);
+
+      }
+
+    case VariantSequenceType::INTRON:
+
+      if (geneMembership().empty()) {
+
+        ExecEnv::log().error("strandReference(), no gene for intron variant: {}",
+                             output(' ', VariantOutputIndex::START_0_BASED));
+        return nucleotide;
+      }
+      switch(geneMembership().front()->sequence().strand()) {
+
+        case StrandSense::UNKNOWN:
+          ExecEnv::log().error("strandReference(), unknown coding sequence for variant: {}",
+                               output(' ', VariantOutputIndex::START_0_BASED));
+        case StrandSense::FORWARD:
+          return nucleotide;
+
+        case StrandSense::REVERSE:
+          return NucleotideColumn_DNA5::complementNucleotide(reference());
+
+      }
+
+    case VariantSequenceType::NON_CODING:
+      return nucleotide;
+
+  }
+
+  return nucleotide; // To stop compiler complaints.
+
+}
+
+
+bool kgl::SNPVariantDNA5::mutateCodingSequence(const FeatureIdent_t& sequence_id,
+                                               std::shared_ptr<DNA5Sequence>& mutated_sequence) const {
+
+
+  CodingSequenceArray coding_sequence_array = codingSequences();
+
+  // Check that we have a variant in a coding sequence.
+  if (coding_sequence_array.empty()) {
+
+    ExecEnv::log().warn("mutateCodingSequence(), variant: {} not in a coding sequence",
+                        output(' ', VariantOutputIndex::START_0_BASED));
+    return true; // just ignored.
+
+  }
+
+  std::shared_ptr<const CodingSequence> coding_sequence = coding_sequence_array.getFirst();
+
+  // Check the sequence id.
+  if (coding_sequence->getCDSParent()->id() != sequence_id) {
+
+    ExecEnv::log().warn("mutateCodingSequence(), variant: {} does not mutate sequence id: {}",
+                        output(' ', VariantOutputIndex::START_0_BASED), sequence_id);
+    return true; // just ignored.
+
+  }
+
+  // Get the variant sequence offset
+  ContigOffset_t sequence_offset;
+  ContigSize_t sequence_length;
+  if(not DNA5Sequence::offsetWithinSequence(coding_sequence, contigOffset(), sequence_offset, sequence_length)) {
+
+    ExecEnv::log().error("mutateCodingSequence(), unable to retrieve coding sequence offset for variant: {}",
+                         output(' ', VariantOutputIndex::START_0_BASED));
+    return false;
+
+  }
+
+  // Check that the sequence lengths match.
+  if (sequence_length != mutated_sequence->length()) {
+
+    ExecEnv::log().error("mutateCodingSequence(), unexpected; variant sequence length: {} not equal mutate length: {}",
+                         sequence_length, mutated_sequence->length());
+    return false;
+
+  }
+
+  if (NucleotideColumn_DNA5::isBaseCode(mutant())) {  // If just a base code mutation.
+
+    // Finally, check that the sequence base code matches the original base code recorded in the variant.
+    if (mutated_sequence->at(sequence_offset) != strandReference()) {
+
+      ExecEnv::log().error(
+      "mutateCodingSequence(), unexpected; base: {} at seq. offset: {} not equal snp (strand) reference: {}",
+      mutated_sequence->at(sequence_offset), sequence_offset, strandReference());
+
+    }
+
+    // All is good, so mutate the sequence.
+    return mutated_sequence->modifyBase(strandMutant(), sequence_offset);
+
+  } else if (NucleotideColumn_DNA5::isDeletion(mutant())) {
+
+
+    ExecEnv::log().warn("mutateCodingSequence(), snp deletions not implementated, variant: {}",
+                        output(' ', VariantOutputIndex::START_0_BASED));
+    return true;
+
+  } else if (NucleotideColumn_DNA5::isInsertion(mutant())) {
+
+
+    ExecEnv::log().warn("mutateCodingSequence(), snp insertions not implementated, variant: {}",
+                        output(' ', VariantOutputIndex::START_0_BASED));
+    return true;
+
+  } else {
+
+    ExecEnv::log().warn("mutateCodingSequence(), snp mutation is unknown type, variant: {}",
+                        output(' ', VariantOutputIndex::START_0_BASED));
+    return false;
+
+  }
+
+
+  // Debug get the amino sequence and highlight the mutant AA.
+/*
+  ContigOffset_t codon_offset;
+  ContigSize_t base_in_codon;
+  CodingSequenceDNA5::codonOffset(coding_sequence, contigOffset(), codon_offset, base_in_codon);
+
+  std::shared_ptr<AminoSequence> mutant_sequence = contig()->getAminoSequence(mutated_sequence);
+  std::vector<ContigOffset_t> offset_vec{codon_offset};
+  const ProteinString emph_protein = mutant_sequence->emphasizeProteinString(offset_vec);
+
+  ExecEnv::log().info("mutateCodingSequence(); mutated protein: {}", emph_protein);
+
+  return true;
+*/
+
+ }
+
 
 std::string kgl::SNPVariantDNA5::mutation(char delimiter, VariantOutputIndex output_index) const
 {

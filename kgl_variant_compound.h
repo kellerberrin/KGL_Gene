@@ -70,6 +70,8 @@ private:
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
   std::string output(char delimter, VariantOutputIndex output_index) const override;
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
+  bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
+                            std::shared_ptr<DNA5Sequence>& mutated_sequence) const override;
 
 };
 
@@ -94,6 +96,9 @@ private:
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
   std::string output(char delimiter, VariantOutputIndex output_index) const override;
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
+  bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
+                            std::shared_ptr<DNA5Sequence>& mutated_sequence) const override;
+
 
 };
 

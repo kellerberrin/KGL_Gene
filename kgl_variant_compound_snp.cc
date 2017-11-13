@@ -30,6 +30,14 @@ std::string kgl::CompoundSNP::mutation(char delimiter, VariantOutputIndex output
 
 }
 
+bool kgl::CompoundSNP::mutateCodingSequence(const FeatureIdent_t& sequence_id,
+                                            std::shared_ptr<DNA5Sequence>& mutated_sequence) const {
+
+  ExecEnv::log().warn("mutateCodingSequence() not yet implemented for CompoundSNP");
+  return false;
+
+}
+
 // Compound SNPs are created to hold 2 or 3 coding SNPs that modify an Amino Acid simultaneously.
 // 1. The SNP can only be in the same coding sequence (same mRNA parent).
 // 2. They must be within an offset of 2 of each other.

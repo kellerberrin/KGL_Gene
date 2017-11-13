@@ -19,7 +19,7 @@ namespace genome {   // project level namespace
 // Base Sequence - A container for DNA/RNA sequences.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using NucleotideType = typename NucleotideColumn_DNA5::NucleotideType ;
+using NucleotideType = Nucleotide_DNA5_t;
 using SequenceString = std::basic_string<NucleotideType>;
 
 class DNA5Sequence: public AlphabetSequence {
@@ -34,11 +34,13 @@ public:
   const std::string& getSequence() const override { return base_sequence_; }
 
   NucleotideType operator[] (ContigOffset_t& offset) const { return base_sequence_[offset]; }
+  NucleotideType at(ContigOffset_t& offset) const { return base_sequence_[offset]; }
 
   ContigSize_t length() const { return base_sequence_.length(); }
 
   const NucleotideType* baseAddress(ContigOffset_t& offset) const { return &base_sequence_[offset]; }
 
+  // Offset is the relative sequence offset.
   bool modifyBase(NucleotideType Nucleotide, ContigOffset_t sequence_offset);
 
   // Returns bool false if contig_offset is not within the coding sequences defined by sorted_cds.

@@ -201,3 +201,17 @@ std::string kgl::GenomeVariant::output(char field_delimter, VariantOutputIndex o
 
 }
 
+
+void kgl::GenomeVariant::getVariants(std::vector<std::shared_ptr<const Variant>>& variant_vector) {
+
+  for (const auto& contig_variant : genome_variant_map_) {
+
+    for (const auto& variant : contig_variant.second->getMap()) {
+
+      variant_vector.push_back(variant.second);
+
+    }
+
+  }
+
+}

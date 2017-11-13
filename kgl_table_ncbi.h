@@ -24,9 +24,9 @@ struct AminoTableColumn {
 
   AminoAcidTypes::AminoType amino_acid;
   AminoAcidTypes::AminoType start;
-  NucleotideColumn_DNA5::NucleotideType base1;
-  NucleotideColumn_DNA5::NucleotideType base2;
-  NucleotideColumn_DNA5::NucleotideType base3;
+  Nucleotide_DNA5_t base1;
+  Nucleotide_DNA5_t base2;
+  Nucleotide_DNA5_t base3;
 
 };
 

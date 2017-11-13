@@ -8,6 +8,7 @@
 #include "kgl_patterns.h"
 #include "kgl_variant_compound.h"
 #include "kgl_variant_db.h"
+#include "kgl_filter.h"
 #include "kgl_gff_fasta.h"
 
 namespace kgl = kellerberrin::genome;
@@ -38,8 +39,30 @@ bool kgl::GenomeVariant::writeMutantProtein(const std::string& fasta_file,
                                             const FeatureIdent_t& sequence_id,
                                             const std::shared_ptr<const GenomeDatabase>& genome_db) const {
 
+  // Filter the variants, assumes that gene is only unique to contig and sequence is only unique to gene.
+  std::shared_ptr<GenomeVariant> variant_ptr = filterVariants(ContigFilter(contig_id));
+  variant_ptr = variant_ptr->filterVariants(GeneFilter(gene_id));
+  variant_ptr = variant_ptr->filterVariants(SequenceFilter(sequence_id));
+  std::cout << *variant_ptr; // debug.
+  // Extract the variants for processing.
+  std::vector<std::shared_ptr<const Variant>> variant_vector;
+  variant_ptr->getVariants(variant_vector);
+
   std::shared_ptr<DNA5Sequence> sequence_ptr;
   if (genome_db->getDNA5Sequence(contig_id, gene_id, sequence_id, sequence_ptr)) {
+
+    // Mutate the base sequence.
+    for (const auto& variant : variant_vector) {
+
+      if (not variant->mutateCodingSequence(sequence_id, sequence_ptr)) {
+
+        ExecEnv::log().warn("mutateCodingSequence(), problem with variant contig: {}, offset: {}",
+                            variant->contigId(), variant->offset());
+        return false;
+
+      }
+
+    }
 
     std::shared_ptr<ContigFeatures> contig_ptr;
     if (genome_db->getContigSequence(contig_id, contig_ptr)) {

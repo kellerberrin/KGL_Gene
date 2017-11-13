@@ -163,8 +163,8 @@ bool kgl::CodingSequenceDNA5::codonOffset(std::shared_ptr<const CodingSequence> 
 bool kgl::CodingSequenceDNA5::SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                                           const std::shared_ptr<const DNA5Sequence>& contig_sequence_ptr,
                                           ContigOffset_t contig_offset,
-                                          typename NucleotideColumn_DNA5::NucleotideType reference_base,
-                                          typename NucleotideColumn_DNA5::NucleotideType mutant_base,
+                                          Nucleotide_ExtendedDNA5 reference_base,
+                                          Nucleotide_ExtendedDNA5 mutant_base,
                                           ContigOffset_t& codon_offset,
                                           typename AminoAcidTypes::AminoType& reference_amino,
                                           typename AminoAcidTypes::AminoType& mutant_amino) const {

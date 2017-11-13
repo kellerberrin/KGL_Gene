@@ -84,8 +84,8 @@ public:
                  NucleotideReadCount_t mutant_count,
                  NucleotideReadCount_t const count_array[],
                  ContigSize_t  count_array_size,
-                 typename NucleotideColumn_DNA5::NucleotideType reference,
-                 typename NucleotideColumn_DNA5::NucleotideType mutant)
+                 Nucleotide_DNA5_t reference,
+                 Nucleotide_DNA5_t mutant)
   : ReadCountVariant(contig_ptr, contig_offset, read_count, mutant_count, count_array, count_array_size),
     reference_(reference),
     mutant_(mutant) {}
@@ -95,19 +95,27 @@ public:
   ~SNPVariantDNA5() override = default;
 
   bool equivalent(const Variant& cmp_var) const override;
+  bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
+                            std::shared_ptr<DNA5Sequence>& mutated_sequence) const override;
 
-  const typename NucleotideColumn_DNA5::NucleotideType& reference() const { return reference_; }
-  const typename NucleotideColumn_DNA5::NucleotideType& mutant() const { return mutant_; }
+  Nucleotide_DNA5_t reference() const { return reference_; }
+  Nucleotide_ExtendedDNA5 mutant() const { return mutant_; }
+
+  // complement base if -ve strand and coding or intron.
+  Nucleotide_DNA5_t strandReference() const { return strandNucleotide(reference()); }
+  // complement base if -ve strand and coding or intron.
+  Nucleotide_ExtendedDNA5 strandMutant() const { return strandNucleotide(mutant()); }
 
   std::string output(char delimiter, VariantOutputIndex output_index) const override;
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
 
 private:
 
-  typename NucleotideColumn_DNA5::NucleotideType reference_;
-  typename NucleotideColumn_DNA5::NucleotideType mutant_;
+  Nucleotide_DNA5_t reference_;
+  Nucleotide_ExtendedDNA5 mutant_;
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
+  Nucleotide_ExtendedDNA5 strandNucleotide(Nucleotide_ExtendedDNA5 nucleotide) const;
 
 };
 

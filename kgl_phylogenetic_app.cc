@@ -3,7 +3,6 @@
 //
 
 #include <sstream>
-
 #include "kgl_phylogenetic_env.h"
 #include "kgl_genome_db.h"
 #include "kgl_gff_fasta.h"
@@ -47,8 +46,8 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
                                                                                                   genome_db_ptr);
   variant_ptr = variant_ptr->filterVariants(kgl::InCDSFilter());
   // Filter for PfATP4
-//  variant_ptr = variant_ptr->filterVariants(kgl::GeneFilter("PF3D7_1211900"));
-  variant_ptr = variant_ptr->filterVariants(kgl::SequenceFilter("rna_PF3D7_1211900-1"));
+  variant_ptr = variant_ptr->filterVariants(kgl::GeneFilter("PF3D7_1211900"));
+//  variant_ptr = variant_ptr->filterVariants(kgl::SequenceFilter("rna_PF3D7_1211900-1"));
   std::cout << *variant_ptr;
   return variant_ptr;
 
@@ -68,7 +67,6 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
   // Wire-up the genome database.
   genome_db_ptr->createVerifyGenomeDatabase();
 
-  std::vector<std::shared_ptr<const kgl::GenomeVariant>> variant_vector;
   for (const auto& file : args.fileList) {
 
     // Generate mutant filtered simple SNPs.
@@ -80,8 +78,36 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
                                                                            args.minCount,
                                                                            args.minProportion);
 
-    variant_vector.push_back(variant_ptr);
+
     variant_ptr->outputCSV(args.outCSVFile, VariantOutputIndex::START_1_BASED);
+    std::string fasta_file_name = ExecEnv::filePath(file.genome_name, args.workDirectory) + ".fasta";
+    std::string sequence_name = "PF3D7_1211900_" + file.genome_name;
+
+//#define MUTANT_PROTEIN 1
+#define MALAWI 1
+
+#ifdef MUTANT_PROTEIN
+#ifdef MALAWI
+
+    variant_ptr->writeMutantProtein(fasta_file_name,
+                                    sequence_name,
+                                    "Pf3D7_12_v3",
+                                    "PF3D7_1211900",
+                                    "PF3D7_1211900.1",
+                                    genome_db_ptr);
+
+
+#else
+
+    variant_ptr->writeMutantProtein(fasta_file_name,
+                                    sequence_name,
+                                    "chr12",
+                                    "PF3D7_1211900",
+                                    "rna_PF3D7_1211900-1",
+                                    genome_db_ptr);
+
+#endif
+#endif
 
   }
 
