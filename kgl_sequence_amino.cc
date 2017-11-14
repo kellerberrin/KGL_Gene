@@ -4,6 +4,7 @@
 
 #include <set>
 #include "kgl_sequence_amino.h"
+#include "kgl_genome_db.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -66,16 +67,16 @@ kgl::ProteinString kgl::AminoSequence::emphasizeProteinString(const ProteinStrin
 
 
 std::shared_ptr<kgl::AminoSequence>
-kgl::CodingSequenceDNA5::getAminoSequence(std::shared_ptr<DNA5Sequence> sequence_ptr) const {
+kgl::TranslateToAmino::getAminoSequence(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const {
 
   ProteinString protein_string;
   AminoAcidTypes::AminoType amino_acid;
 
-  protein_string.reserve(codonLength(sequence_ptr));
+  protein_string.reserve(Codon::codonLength(sequence_ptr));
 
-  for (size_t index = 0; index < codonLength(sequence_ptr); ++index) {
+  for (size_t index = 0; index < Codon::codonLength(sequence_ptr); ++index) {
 
-    amino_acid = table_ptr_->getAmino(getCodon(sequence_ptr,index));
+    amino_acid = table_ptr_->getAmino(Codon(sequence_ptr,index));
     protein_string.push_back(amino_acid);
 
   }
@@ -88,21 +89,21 @@ kgl::CodingSequenceDNA5::getAminoSequence(std::shared_ptr<DNA5Sequence> sequence
 
 
 std::shared_ptr<kgl::AminoSequence>
-kgl::CodingSequenceDNA5::getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                          std::shared_ptr<const DNA5Sequence> contig_sequence_ptr) const {
+kgl::TranslateToAmino::getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+                                          std::shared_ptr<const DNA5SequenceContig> contig_sequence_ptr) const {
 
-  std::shared_ptr<DNA5Sequence> coding_sequence = DNA5Sequence::codingSequence(contig_sequence_ptr, coding_seq_ptr);
+  std::shared_ptr<DNA5SequenceCoding> coding_sequence = contig_sequence_ptr->codingSequence(coding_seq_ptr);
   return getAminoSequence(coding_sequence);
 
 }
 
 
 
-size_t kgl::CodingSequenceDNA5::checkNonsenseMutation(std::shared_ptr<DNA5Sequence> sequence_ptr) const {
+size_t kgl::TranslateToAmino::checkNonsenseMutation(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const {
 
-  for (size_t index = 0; index < codonLength(sequence_ptr) - 1; ++index) {
+  for (size_t index = 0; index < Codon::codonLength(sequence_ptr) - 1; ++index) {
 
-    if (table_ptr_->isStopCodon(getCodon(sequence_ptr,index))) return index;
+    if (table_ptr_->isStopCodon(Codon(sequence_ptr,index))) return index;
 
   }
 
@@ -111,40 +112,24 @@ size_t kgl::CodingSequenceDNA5::checkNonsenseMutation(std::shared_ptr<DNA5Sequen
 }
 
 
-kgl::AminoAcidTypes::Codon kgl::CodingSequenceDNA5::getCodon(std::shared_ptr<DNA5Sequence> sequence_ptr,
-                                                             ContigOffset_t codon_index) {
 
-  if (codon_index >= codonLength(sequence_ptr)) {
-
-    ExecEnv::log().error("Invalid codon specified index:{}, for coding sequence length:{} (first codon returned)",
-                         codon_index, sequence_ptr->length());
-    codon_index = 0;
-  }
-
-  AminoAcidTypes::Codon codon;
-  codon_index = static_cast<ContigOffset_t>(codon_index * 3);
-  codon.bases = sequence_ptr->baseAddress(codon_index);
-  return codon;
-
-}
-
-
-kgl::AminoAcidTypes::AminoType kgl::CodingSequenceDNA5::getAmino(std::shared_ptr<DNA5Sequence> sequence_ptr,
+kgl::AminoAcidTypes::AminoType kgl::TranslateToAmino::getAmino(std::shared_ptr<DNA5SequenceCoding> sequence_ptr,
                                                                  ContigOffset_t codon_index) const {
 
-  return table_ptr_->getAmino(getCodon(sequence_ptr, codon_index));
+  return table_ptr_->getAmino(Codon(sequence_ptr, codon_index));
 
 }
 
 
-bool kgl::CodingSequenceDNA5::codonOffset(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+bool kgl::TranslateToAmino::codonOffset(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+                                          std::shared_ptr<const DNA5SequenceContig> contig_sequence_ptr,
                                           ContigOffset_t contig_offset,
                                           ContigOffset_t& codon_offset,
                                           ContigSize_t& base_in_codon) {
 
   ContigOffset_t sequence_offset;
   ContigSize_t sequence_length;
-  if (DNA5Sequence::offsetWithinSequence(coding_seq_ptr, contig_offset, sequence_offset, sequence_length)) {
+  if (contig_sequence_ptr->offsetWithinSequence(coding_seq_ptr, contig_offset, sequence_offset, sequence_length)) {
 
     codon_offset = static_cast<ContigOffset_t>(sequence_offset / 3);
     base_in_codon = static_cast <ContigOffset_t>(sequence_offset % 3);
@@ -160,8 +145,8 @@ bool kgl::CodingSequenceDNA5::codonOffset(std::shared_ptr<const CodingSequence> 
 
 }
 
-bool kgl::CodingSequenceDNA5::SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                          const std::shared_ptr<const DNA5Sequence>& contig_sequence_ptr,
+bool kgl::TranslateToAmino::SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+                                          const std::shared_ptr<const DNA5SequenceContig>& contig_sequence_ptr,
                                           ContigOffset_t contig_offset,
                                           Nucleotide_ExtendedDNA5 reference_base,
                                           Nucleotide_ExtendedDNA5 mutant_base,
@@ -172,16 +157,16 @@ bool kgl::CodingSequenceDNA5::SNPMutation(std::shared_ptr<const CodingSequence> 
   bool result;
 
   ContigSize_t base_in_codon;
-  result = codonOffset(coding_seq_ptr, contig_offset, codon_offset, base_in_codon);
+  result = codonOffset(coding_seq_ptr, contig_sequence_ptr, contig_offset, codon_offset, base_in_codon);
 
   if (result) {
 
     auto sequence_offset = static_cast<ContigOffset_t>(codon_offset * 3);
     ContigSize_t codon_size = 3;
     StrandSense strand = coding_seq_ptr->getCDSParent()->sequence().strand();
-    std::shared_ptr<DNA5Sequence> codon_sequence = contig_sequence_ptr->codingSubSequence(coding_seq_ptr,
-                                                                                          sequence_offset,
-                                                                                          codon_size);
+    std::shared_ptr<DNA5SequenceCoding> codon_sequence = contig_sequence_ptr->codingSubSequence(coding_seq_ptr,
+                                                                                                sequence_offset,
+                                                                                                codon_size);
     if (codon_sequence->length() != codon_size) {
 
       ExecEnv::log().error("SNPMutation(), expected codon sequence size 3: got size: {}", codon_sequence->length());
@@ -209,10 +194,10 @@ bool kgl::CodingSequenceDNA5::SNPMutation(std::shared_ptr<const CodingSequence> 
     // Check the reference base in the codon sequence.
     if (result) {
 
-      if (getCodon(codon_sequence, 0).bases[base_in_codon] != reference_base) {
+      if (Codon(codon_sequence, 0)[base_in_codon] != reference_base) {
 
         ExecEnv::log().error("SNPMutation(), reference base: {} does not match codon base: {}",
-                             getCodon(codon_sequence, 0).bases[base_in_codon], reference_base);
+                             Codon(codon_sequence, 0)[base_in_codon], reference_base);
         result = false;
 
       }

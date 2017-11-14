@@ -91,12 +91,13 @@ public:
     mutant_(mutant) {}
 
   SNPVariantDNA5(const SNPVariantDNA5& variant) = default;
-
   ~SNPVariantDNA5() override = default;
 
   bool equivalent(const Variant& cmp_var) const override;
+
+  // This mutates a coding sequence that has already been generated using a CodingSequence (CDS) object.
   bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
-                            std::shared_ptr<DNA5Sequence>& mutated_sequence) const override;
+                            std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const override;
 
   Nucleotide_DNA5_t reference() const { return reference_; }
   Nucleotide_ExtendedDNA5 mutant() const { return mutant_; }

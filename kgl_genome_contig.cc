@@ -150,7 +150,7 @@ kgl::ContigFeatures::getAminoSequence(std::shared_ptr<const CodingSequence> codi
 
 // Convenience routine for Amino sequences.
 std::shared_ptr<kgl::AminoSequence>
-kgl::ContigFeatures::getAminoSequence(std::shared_ptr<DNA5Sequence> sequence_ptr) const {
+kgl::ContigFeatures::getAminoSequence(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const {
 
   return coding_sequence_.getAminoSequence(sequence_ptr);
 
@@ -158,9 +158,9 @@ kgl::ContigFeatures::getAminoSequence(std::shared_ptr<DNA5Sequence> sequence_ptr
 
 
 // Given a gene id and an mRNA id (sequence id) return the coding base sequence.
-bool kgl::ContigFeatures::getDNA5Sequence(const FeatureIdent_t& gene_id,
-                                          const FeatureIdent_t& sequence_id,
-                                          std::shared_ptr<DNA5Sequence>& sequence_ptr) const {
+bool kgl::ContigFeatures::getDNA5SequenceCoding(const FeatureIdent_t& gene_id,
+                                                const FeatureIdent_t& sequence_id,
+                                                std::shared_ptr<DNA5SequenceCoding>& sequence_ptr) const {
 
   std::vector<std::shared_ptr<Feature>> feature_ptr_vec;
   std::shared_ptr<const GeneFeature> gene_ptr;
@@ -208,7 +208,7 @@ bool kgl::ContigFeatures::getDNA5Sequence(const FeatureIdent_t& gene_id,
 
     if (sequence.second->getCDSParent()->id() == sequence_id) {
 
-      sequence_ptr = DNA5Sequence::codingSequence(sequence_ptr_, sequence.second);
+      sequence_ptr = sequence_ptr_->DNA5SequenceContig::codingSequence(sequence.second);
       return true;
 
     }

@@ -35,7 +35,8 @@ class ContigFeatures {
 public:
 
   ContigFeatures(const ContigId_t &contig_id,
-                 std::shared_ptr<DNA5Sequence> sequence_ptr) : contig_id_(contig_id), sequence_ptr_(sequence_ptr) {}
+                 std::shared_ptr<DNA5SequenceContig> sequence_ptr) : contig_id_(contig_id),
+                                                                     sequence_ptr_(sequence_ptr) {}
   ContigFeatures(const ContigFeatures&) = default;
   ~ContigFeatures() = default;
 
@@ -51,7 +52,7 @@ public:
   std::string translationTableName() const { return coding_sequence_.translationTableName(); }
 
   const ContigId_t& contigId() const { return contig_id_; }
-  const DNA5Sequence& sequence() const { return *sequence_ptr_; }
+  const DNA5SequenceContig& sequence() const { return *sequence_ptr_; }
   ContigSize_t contigSize() { return sequence_ptr_->length(); }
 
   void setupFeatureHierarchy();
@@ -67,21 +68,21 @@ public:
                    typename AminoAcidTypes::AminoType& mutant_amino) const;
 
   // give a gene id and an mRNA (sequence id) return the coding base sequence.
-  bool getDNA5Sequence(const FeatureIdent_t& gene_id,
-                       const FeatureIdent_t& sequence_id,
-                       std::shared_ptr<DNA5Sequence>& sequence_ptr) const;
+  bool getDNA5SequenceCoding(const FeatureIdent_t& gene_id,
+                             const FeatureIdent_t& sequence_id,
+                             std::shared_ptr<DNA5SequenceCoding>& sequence_ptr) const;
 
   std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr) const;
-  std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<DNA5Sequence> sequence_ptr) const;
+  std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const;
 
 private:
 
   ContigId_t contig_id_;
-  std::shared_ptr<DNA5Sequence> sequence_ptr_;
+  std::shared_ptr<DNA5SequenceContig> sequence_ptr_;
   OffsetFeatureMap offset_feature_map_;
   IdFeatureMap id_feature_map_;
   GeneMap gene_map_;
-  CodingSequenceDNA5 coding_sequence_;  // Amino Acid translation table, can be unique for contig (e.g. mitochondria)
+  TranslateToAmino coding_sequence_;  // Amino Acid translation table, can be unique for contig (e.g. mitochondria)
 
   void verifyContigOverlap();
   void verifySubFeatureSuperFeatureDimensions();
@@ -91,7 +92,7 @@ private:
   void removeSuperFeatureDuplicates();
   void createGeneMap();
   // Check all gene coding sequences for start and end codons and nonsense (intermediate stop codon) mutations.
-  bool verifyCodingSequences(const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const;
+  bool verifyCodingSequences(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const;
 
 };
 
@@ -113,7 +114,7 @@ public:
   GenomeDatabase& operator=(const GenomeDatabase&) = default;
 
   // Return false if contig already exists.
-  bool addContigSequence(const ContigId_t& contig, std::shared_ptr<DNA5Sequence> sequence_ptr);
+  bool addContigSequence(const ContigId_t& contig, std::shared_ptr<DNA5SequenceContig> sequence_ptr);
   // Returns false if key not found.
   bool getContigSequence(const ContigId_t& contig, std::shared_ptr<ContigFeatures>& contig_ptr) const;
 
@@ -126,10 +127,10 @@ public:
   const GenomeSequenceMap& getMap() const { return genome_sequence_map_; }
 
 // Given a contig id, gene id and an mRNA id (sequence id) return the coding base sequence.
-  bool getDNA5Sequence(const ContigId_t& contig_id,
-                       const FeatureIdent_t& gene_id,
-                       const FeatureIdent_t& sequence_id,
-                       std::shared_ptr<DNA5Sequence>& sequence_ptr) const;
+  bool getDNA5SequenceCoding(const ContigId_t& contig_id,
+                             const FeatureIdent_t& gene_id,
+                             const FeatureIdent_t& sequence_id,
+                             std::shared_ptr<DNA5SequenceCoding>& sequence_ptr) const;
 
 private:
 

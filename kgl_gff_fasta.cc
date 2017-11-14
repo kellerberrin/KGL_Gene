@@ -72,7 +72,7 @@ void kgl::ParseGffFasta::GffFastaImpl::readFastaFile(const std::string& fasta_fi
     ContigId_t  contig_id = id_line.substr(0, id_line.find_first_of(" \t,")); // Only the identifier.
     SequenceString sequence;
     seqan::move(sequence, seqs[i]);
-    std::shared_ptr<DNA5Sequence> sequence_ptr(std::make_shared<DNA5Sequence>(sequence));
+    std::shared_ptr<DNA5SequenceContig> sequence_ptr(std::make_shared<DNA5SequenceContig>(sequence));
 
     if (not genome_db_ptr->addContigSequence(contig_id, sequence_ptr)) {
 
@@ -308,7 +308,7 @@ bool kgl::ParseGffFasta::GffFastaImpl::writeFastaFile(const std::string& fasta_f
     for (auto sequence : fasta_sequences) {
 
       seqan::CharString seqan_id = sequence.first;
-      seqan::CharString seqan_seq = sequence.second->getSequence();
+      seqan::CharString seqan_seq = sequence.second->getSequenceAsString();
       seqan::writeRecord(seq_file_out, seqan_id, seqan_seq, seqan::Fasta());
 
     }

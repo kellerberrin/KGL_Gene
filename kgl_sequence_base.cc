@@ -8,103 +8,33 @@
 namespace kgl = kellerberrin::genome;
 
 
-// Returns bool false if contig_offset is not within the coding sequence defined by the coding_seq_ptr.
-// If the contig_offset is in the coding sequence then a valid sequence_offset and the sequence length is returned.
-// The offset is adjusted for strand type; the offset arithmetic is reversed for -ve strand sequences.
-bool kgl::DNA5Sequence::offsetWithinSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                             ContigOffset_t contig_offset,
-                                             ContigOffset_t& sequence_offset,
-                                             ContigSize_t& sequence_length) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The base DNA5 sequence class.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  bool iscoding = false;
-  ContigOffset_t coding_offset = 0;
-  ContigSize_t coding_size = 0;
-  const SortedCDS sorted_cds = coding_seq_ptr->getSortedCDS();
+bool kgl::DNA5Sequence::modifyBase(NucleotideType Nucleotide, ContigOffset_t sequence_offset) {
 
-  if (sorted_cds.empty()) {
+  if (sequence_offset >= base_sequence_.length()) {
 
-    sequence_offset = 0;
-    sequence_length = 0;
+    ExecEnv::log().error("modifyBase(), sequence offset: {} exceeds sequence size: {}",
+                         sequence_offset, base_sequence_.length());
     return false;
-
   }
 
-  // Get the strand.
-  StrandSense strand = coding_seq_ptr->getGene()->sequence().strand();
-
-  switch(strand) {
-
-    case StrandSense::UNKNOWN:  // Complain and assume a forward strand.
-    ExecEnv::log().error("Gene feature: {} offset: {} with UNKNOWN strand sense",
-                         coding_seq_ptr->getGene()->id(), coding_seq_ptr->getGene()->sequence().begin());
-    case StrandSense::FORWARD: {
-
-      for (auto cds : sorted_cds) {
-
-        // within the CDS
-        if (contig_offset >= cds.second->sequence().begin() and contig_offset <= cds.second->sequence().end()) {
-
-          coding_offset += (contig_offset - cds.second->sequence().begin());
-          iscoding = true;
-
-        } else if (contig_offset > cds.second->sequence().end()) {
-
-          coding_offset += (cds.second->sequence().end() - cds.second->sequence().begin());
-
-        }
-
-        coding_size += (cds.second->sequence().end() - cds.second->sequence().begin());
-
-      }
-
-    }
-      break;
-
-      // Careful with this logic as the CDS offsets are [begin, end). Therefore we must adjust the offset by -1.
-    case StrandSense::REVERSE: {
-
-      for (auto rit = sorted_cds.rbegin(); rit != sorted_cds.rend(); ++rit) {
-
-        // within the CDS
-        if (contig_offset >= rit->second->sequence().begin() and contig_offset < rit->second->sequence().end()) {
-
-          coding_offset += (rit->second->sequence().end() - contig_offset) - 1;  // Careful here.
-          iscoding = true;
-
-        } else if (contig_offset < rit->second->sequence().begin()) {
-
-          coding_offset += (rit->second->sequence().end() - rit->second->sequence().begin());
-
-        }
-
-        coding_size += (rit->second->sequence().end() - rit->second->sequence().begin());
-
-      }
-
-    }
-      break;
-
-  } // switch
-
-  if (iscoding) {
-
-    sequence_offset = coding_offset;
-    sequence_length = coding_size;
-
-  } else {
-
-    sequence_offset = 0;
-    sequence_length = 0;
-
-  }
-
-  return iscoding;
+  base_sequence_.at(sequence_offset) = Nucleotide;
+  return true;
 
 }
 
 
-std::shared_ptr<kgl::DNA5Sequence>
-kgl::DNA5Sequence::codingSubSequence(std::shared_ptr<const DNA5Sequence> base_sequence_ptr,
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// A linear and contiguous DNA5 sequence that cannot be used to directly generate an Amino Acid sequence
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+std::shared_ptr<kgl::DNA5SequenceCoding>
+kgl::DNA5SequenceLinear::codingSubSequence(std::shared_ptr<const DNA5SequenceLinear> base_sequence_ptr,
                                      std::shared_ptr<const CodingSequence> coding_seq_ptr,
                                      ContigOffset_t sub_sequence_offset,  // base count offset; 0 == all
                                      ContigSize_t sub_sequence_length,   // number of bases; 0 == all
@@ -116,7 +46,7 @@ kgl::DNA5Sequence::codingSubSequence(std::shared_ptr<const DNA5Sequence> base_se
   if (sorted_cds.empty()) {
 
     SequenceString null_seq;
-    return std::shared_ptr<DNA5Sequence>(std::make_shared<DNA5Sequence>(DNA5Sequence(null_seq)));
+    return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(null_seq)));
 
   }
 
@@ -128,7 +58,7 @@ kgl::DNA5Sequence::codingSubSequence(std::shared_ptr<const DNA5Sequence> base_se
                          base_sequence_ptr->length(),
                          contig_offset);
     SequenceString null_seq;
-    return std::shared_ptr<DNA5Sequence>(std::make_shared<DNA5Sequence>(DNA5Sequence(null_seq)));
+    return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(null_seq)));
 
   }
 
@@ -155,7 +85,7 @@ kgl::DNA5Sequence::codingSubSequence(std::shared_ptr<const DNA5Sequence> base_se
                          sub_sequence_length,
                          calculated_seq_size);
     SequenceString null_seq;
-    return std::shared_ptr<DNA5Sequence>(std::make_shared<DNA5Sequence>(DNA5Sequence(null_seq)));
+    return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(null_seq)));
 
   }
 
@@ -293,21 +223,107 @@ kgl::DNA5Sequence::codingSubSequence(std::shared_ptr<const DNA5Sequence> base_se
 
   }
 
-  return std::shared_ptr<DNA5Sequence>(std::make_shared<DNA5Sequence>(DNA5Sequence(coding_sequence)));
+  return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(coding_sequence)));
 
 }
 
 
-bool kgl::DNA5Sequence::modifyBase(NucleotideType Nucleotide, ContigOffset_t sequence_offset) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// A linear and contiguous DNA5 sequence used in a contig (chromosome). This object exists for semantic reasons.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  if (sequence_offset >= base_sequence_.length()) {
 
-    ExecEnv::log().error("modifyBase(), sequence offset: {} exceeds sequence size: {}",
-                         sequence_offset, base_sequence_.length());
+// Returns bool false if contig_offset is not within the coding sequence defined by the coding_seq_ptr.
+// If the contig_offset is in the coding sequence then a valid sequence_offset and the sequence length is returned.
+// The offset is adjusted for strand type; the offset arithmetic is reversed for -ve strand sequences.
+bool kgl::DNA5SequenceContig::offsetWithinSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+                                                   ContigOffset_t contig_offset,
+                                                   ContigOffset_t& sequence_offset,
+                                                   ContigSize_t& sequence_length) const {
+
+  bool iscoding = false;
+  ContigOffset_t coding_offset = 0;
+  ContigSize_t coding_size = 0;
+  const SortedCDS sorted_cds = coding_seq_ptr->getSortedCDS();
+
+  if (sorted_cds.empty()) {
+
+    sequence_offset = 0;
+    sequence_length = 0;
     return false;
+
   }
 
-  base_sequence_.at(sequence_offset) = Nucleotide;
-  return true;
+
+  // Get the strand.
+  StrandSense strand = coding_seq_ptr->getGene()->sequence().strand();
+
+  switch(strand) {
+
+    case StrandSense::UNKNOWN:  // Complain and assume a forward strand.
+      ExecEnv::log().error("Gene feature: {} offset: {} with UNKNOWN strand sense",
+                           coding_seq_ptr->getGene()->id(), coding_seq_ptr->getGene()->sequence().begin());
+    case StrandSense::FORWARD: {
+
+      for (auto cds : sorted_cds) {
+
+        // within the CDS
+        if (contig_offset >= cds.second->sequence().begin() and contig_offset <= cds.second->sequence().end()) {
+
+          coding_offset += (contig_offset - cds.second->sequence().begin());
+          iscoding = true;
+
+        } else if (contig_offset > cds.second->sequence().end()) {
+
+          coding_offset += (cds.second->sequence().end() - cds.second->sequence().begin());
+
+        }
+
+        coding_size += (cds.second->sequence().end() - cds.second->sequence().begin());
+
+      }
+
+    }
+      break;
+
+      // Careful with this logic as the CDS offsets are [begin, end). Therefore we must adjust the offset by -1.
+    case StrandSense::REVERSE: {
+
+      for (auto rit = sorted_cds.rbegin(); rit != sorted_cds.rend(); ++rit) {
+
+        // within the CDS
+        if (contig_offset >= rit->second->sequence().begin() and contig_offset < rit->second->sequence().end()) {
+
+          coding_offset += (rit->second->sequence().end() - contig_offset) - 1;  // Careful here.
+          iscoding = true;
+
+        } else if (contig_offset < rit->second->sequence().begin()) {
+
+          coding_offset += (rit->second->sequence().end() - rit->second->sequence().begin());
+
+        }
+
+        coding_size += (rit->second->sequence().end() - rit->second->sequence().begin());
+
+      }
+
+    }
+      break;
+
+  } // switch
+
+  if (iscoding) {
+
+    sequence_offset = coding_offset;
+    sequence_length = coding_size;
+
+  } else {
+
+    sequence_offset = 0;
+    sequence_length = 0;
+
+  }
+
+  return iscoding;
 
 }

@@ -34,16 +34,16 @@ bool kgl::AminoTranslationTable::setTranslationTable(size_t table) {
 }
 
 
-size_t kgl::AminoTranslationTable::index(const AminoAcidTypes::Codon& Codon) {
+size_t kgl::AminoTranslationTable::index(const Codon& codon) {
 
-  size_t table_index = (NucleotideColumn_DNA5::nucleotideToColumn(Codon.bases[0]) * Tables::CODING_NUCLEOTIDE_1) +
-                       (NucleotideColumn_DNA5::nucleotideToColumn(Codon.bases[1]) * Tables::CODING_NUCLEOTIDE_2) +
-                       NucleotideColumn_DNA5::nucleotideToColumn(Codon.bases[2]);
+  size_t table_index = (NucleotideColumn_DNA5::nucleotideToColumn(codon[0]) * Tables::CODING_NUCLEOTIDE_1) +
+                       (NucleotideColumn_DNA5::nucleotideToColumn(codon[1]) * Tables::CODING_NUCLEOTIDE_2) +
+                       NucleotideColumn_DNA5::nucleotideToColumn(codon[2]);
 
   if (table_index >= Tables::AMINO_TABLE_SIZE) {
 
     ExecEnv::log().error("Bad Amino Table Index: {}, base1: {} base2: {}, base3: {}",
-                         table_index, Codon.bases[0], Codon.bases[1], Codon.bases[2]);
+                         table_index, codon[0], codon[1], codon[2]);
     table_index = amino_table_rows_.stop_codon_index;
 
   }

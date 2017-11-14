@@ -243,29 +243,25 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Codi
 
     }
 
-    std::shared_ptr<DNA5Sequence> coding_sequence_ptr = sequence_ptr_->codingSequence(sequence.second);
+    std::shared_ptr<DNA5SequenceCoding> coding_sequence_ptr = sequence_ptr_->codingSequence(sequence.second);
 
     if (not coding_sequence_.checkStartCodon(coding_sequence_ptr)) {
 
-      ExecEnv::log().vwarn("No START codon Gene: {}, CDS parent (mRNA): {} | first codon: {}{}{}",
+      ExecEnv::log().vwarn("No START codon Gene: {}, CDS parent (mRNA): {} | first codon: {}",
                            sequence.second->getGene()->id(),
                            sequence.second->getCDSParent()->id(),
-                           coding_sequence_.firstCodon(coding_sequence_ptr).bases[0],
-                           coding_sequence_.firstCodon(coding_sequence_ptr).bases[1],
-                           coding_sequence_.firstCodon(coding_sequence_ptr).bases[2]);
+                           coding_sequence_.firstCodon(coding_sequence_ptr).getSequenceAsString());
 //      gene_ptr->recusivelyPrintsubfeatures();
 //      gene_ptr->printCDSvector(sorted_cds_vec);
       result = false;
     }
     if (not coding_sequence_.checkStopCodon(coding_sequence_ptr)) {
 
-      ExecEnv::log().vwarn("No STOP codon: {} Gene: {}, CDS parent (mRNA): {} | last codon: {}{}{}",
-                           (coding_sequence_.codonLength(coding_sequence_ptr)-1),
+      ExecEnv::log().vwarn("No STOP codon: {} Gene: {}, CDS parent (mRNA): {} | last codon: {}",
+                           (Codon::codonLength(coding_sequence_ptr)-1),
                            sequence.second->getGene()->id(),
                            sequence.second->getCDSParent()->id(),
-                           coding_sequence_.lastCodon(coding_sequence_ptr).bases[0],
-                           coding_sequence_.lastCodon(coding_sequence_ptr).bases[1],
-                           coding_sequence_.lastCodon(coding_sequence_ptr).bases[2]);
+                           coding_sequence_.lastCodon(coding_sequence_ptr).getSequenceAsString());
 //      gene_ptr->recusivelyPrintsubfeatures();
 //      gene_ptr->printCDSvector(sorted_cds_vec);
       result = false;
@@ -273,13 +269,11 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Codi
     size_t nonsense_index = coding_sequence_.checkNonsenseMutation(coding_sequence_ptr);
     if (nonsense_index > 0) {
 
-      ExecEnv::log().vwarn("NONSENSE mutation codon:{} Gene: {}, CDS Parent (mRNA): {} | stop codon: {}{}{}",
+      ExecEnv::log().vwarn("NONSENSE mutation codon:{} Gene: {}, CDS Parent (mRNA): {} | stop codon: {}",
                            nonsense_index,
                            sequence.second->getGene()->id(),
                            sequence.second->getCDSParent()->id(),
-                           coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[0],
-                           coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[1],
-                           coding_sequence_.getCodon(coding_sequence_ptr, nonsense_index).bases[2]);
+                           Codon(coding_sequence_ptr, nonsense_index).getSequenceAsString());
 //      gene_ptr->recusivelyPrintsubfeatures();
 //      gene_ptr->printCDSvector(sorted_cds_vec);
       result = false;

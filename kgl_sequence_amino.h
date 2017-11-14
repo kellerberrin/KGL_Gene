@@ -28,7 +28,7 @@ public:
   AminoSequence() = delete;
   ~AminoSequence() override = default;
 
-  const std::string& getSequence() const override { return amino_sequence_; }
+  std::string getSequenceAsString() const override { return static_cast<std::string>(amino_sequence_); }
 
   AminoType operator[] (ContigOffset_t& offset) const { return amino_sequence_[offset]; }
   ContigSize_t length() const { return amino_sequence_.length(); }
@@ -51,70 +51,63 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Coding Sequence - Convert DNA/RNA base sequences to Amino acid sequences.
+// TranslateToAmino - Convert DNA/RNA base sequences to Amino acid sequences.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class CodingSequenceDNA5 {
+class TranslateToAmino {
 
 public:
 
 
-  CodingSequenceDNA5() : table_ptr_(std::make_shared<AminoTranslationTable>())  {}
-  ~CodingSequenceDNA5() = default;
+  TranslateToAmino() : table_ptr_(std::make_shared<AminoTranslationTable>())  {}
+  ~TranslateToAmino() = default;
 
   std::string translationTableName() const { return table_ptr_->TableName(); }
 
   bool settranslationTable(size_t table) { return table_ptr_->setTranslationTable(table); }
 
-  AminoAcidTypes::Codon firstCodon(std::shared_ptr<DNA5Sequence> sequence_ptr) const {
+  Codon firstCodon(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const {
 
-    return getCodon(sequence_ptr, 0);
+    return Codon(sequence_ptr, 0);
 
   }
 
-  bool checkStartCodon(std::shared_ptr<DNA5Sequence> sequence_ptr) const {
+  bool checkStartCodon(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const {
 
     return table_ptr_->isStartCodon(firstCodon(sequence_ptr));
 
   }
 
-  std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<DNA5Sequence> sequence_ptr) const;
+  std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const;
 
   std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                                  std::shared_ptr<const DNA5Sequence> contig_sequence_ptr) const;
+                                                  std::shared_ptr<const DNA5SequenceContig> contig_sequence_ptr) const;
 
-  AminoAcidTypes::Codon lastCodon(std::shared_ptr<DNA5Sequence> sequence_ptr) const {
+  Codon lastCodon(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const {
 
-    return getCodon(sequence_ptr, codonLength(sequence_ptr) - 1);
+    return Codon(sequence_ptr, Codon::codonLength(sequence_ptr) - 1);
 
   }
 
-  bool checkStopCodon(std::shared_ptr<DNA5Sequence> sequence_ptr) const {
+  bool checkStopCodon(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const {
 
     return table_ptr_->isStopCodon(lastCodon(sequence_ptr));
 
   }
 
-  size_t checkNonsenseMutation(std::shared_ptr<DNA5Sequence> sequence_ptr) const;
+  size_t checkNonsenseMutation(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const;
 
-  static ContigOffset_t codonLength(std::shared_ptr<DNA5Sequence> sequence_ptr) {
-
-    return static_cast<ContigOffset_t>(sequence_ptr->length() / 3);
-
-  }
-
-  static AminoAcidTypes::Codon getCodon(std::shared_ptr<DNA5Sequence> sequence_ptr, ContigOffset_t codon_index);
-
-  AminoAcidTypes::AminoType getAmino(std::shared_ptr<DNA5Sequence> sequence_ptr, ContigSize_t codon_index) const;
+  AminoAcidTypes::AminoType getAmino(std::shared_ptr<DNA5SequenceCoding> sequence_ptr, ContigSize_t codon_index) const;
 
   static bool codonOffset(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+                          std::shared_ptr<const DNA5SequenceContig> contig_seq_ptr,
                           ContigOffset_t contig_offset,
                           ContigOffset_t& codon_offset,
                           ContigSize_t& base_in_codon);
 
   // Returns the amino mutation of an SNP in a coding sequence.
   bool SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                   const std::shared_ptr<const DNA5Sequence>& contig_sequence_ptr,
+                   const std::shared_ptr<const DNA5SequenceContig>& contig_sequence_ptr,
                    ContigOffset_t contig_offset,
                    Nucleotide_ExtendedDNA5 reference_base,
                    Nucleotide_ExtendedDNA5 mutant_base,

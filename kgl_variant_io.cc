@@ -17,7 +17,7 @@ namespace kgl = kellerberrin::genome;
 bool kgl::GenomeVariant::outputCSV(const std::string& file_name, VariantOutputIndex output_index) const {
 
   // open the file.
-  std::fstream out_file(file_name, std::fstream::out | std::fstream::app);
+  std::fstream out_file(file_name, std::fstream::out | std::fstream::trunc);
   if (!out_file) {
 
     ExecEnv::log().error("Cannot open output CSV file (--outCSVFile): {}", file_name);
@@ -48,8 +48,8 @@ bool kgl::GenomeVariant::writeMutantProtein(const std::string& fasta_file,
   std::vector<std::shared_ptr<const Variant>> variant_vector;
   variant_ptr->getVariants(variant_vector);
 
-  std::shared_ptr<DNA5Sequence> sequence_ptr;
-  if (genome_db->getDNA5Sequence(contig_id, gene_id, sequence_id, sequence_ptr)) {
+  std::shared_ptr<DNA5SequenceCoding> sequence_ptr;
+  if (genome_db->getDNA5SequenceCoding(contig_id, gene_id, sequence_id, sequence_ptr)) {
 
     // Mutate the base sequence.
     for (const auto& variant : variant_vector) {

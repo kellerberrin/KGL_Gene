@@ -7,6 +7,7 @@
 
 
 #include "kgl_table_ncbi.h"
+#include "kgl_sequence_codon.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -33,7 +34,7 @@ public:
   // The NCBI Amino Acid translation tables. table should be in the interval [1, 31].
   bool setTranslationTable(size_t table);
 
-  AminoAcidTypes::AminoType getAmino(const AminoAcidTypes::Codon& Codon) {
+  AminoAcidTypes::AminoType getAmino(const Codon& Codon) {
 
     return amino_table_rows_.amino_table[index(Codon)].amino_acid;
 
@@ -45,13 +46,13 @@ public:
 
   }
 
-  bool isStopCodon(const AminoAcidTypes::Codon& Codon) {
+  bool isStopCodon(const Codon& Codon) {
 
     return (amino_table_rows_.amino_table[index(Codon)].start == AminoAcidTypes::STOP_CODON);
 
   }
 
-  bool isStartCodon(const AminoAcidTypes::Codon& Codon) {
+  bool isStartCodon(const Codon& Codon) {
 
     return amino_table_rows_.amino_table[index(Codon)].start == AminoAcidTypes::START_CODON;
 
@@ -61,7 +62,7 @@ private:
 
   TranslationTable amino_table_rows_;
 
-  size_t index(const AminoAcidTypes::Codon& Codon);
+  size_t index(const Codon& Codon);
 
 };
 

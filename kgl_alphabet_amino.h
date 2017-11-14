@@ -18,6 +18,7 @@ namespace genome {   // project level namespace
 // Defines the standard Amino Acids. Used as a template class with the Amino Acid sequence objects.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
 class AminoAcidTypes {
 
 public:
@@ -30,11 +31,6 @@ public:
   static constexpr size_t CODON_SIZE = 3;
   static constexpr size_t CODING_NUCLEOTIDES = 4;
 
-  struct Codon {
-
-    const Nucleotide_ExtendedDNA5* bases;
-
-  };
 
   // The 20 'natural amino acids
   static constexpr AminoType PHENYLALANINE = 'F';
@@ -92,6 +88,9 @@ public:
   // The additional two amino acids encoded using stop codons by some species.
   static constexpr AminoType SELENOCYSTEINE_LC = 'u';
   static constexpr AminoType PYRROLYSINE_LC = 'o';
+  // The special unknown amino acid generated when the DNA5 codon
+  // contains the unknown base 'N'.
+  static constexpr AminoType UNKNOWN_AMINO = '?';
 
 
 };

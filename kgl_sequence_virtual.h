@@ -25,7 +25,7 @@ public:
   AlphabetSequence() = default;
   virtual ~AlphabetSequence() = default;
 
-  virtual const std::string& getSequence() const = 0;
+  virtual std::string getSequenceAsString() const = 0;
 
 private:
 

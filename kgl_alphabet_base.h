@@ -212,8 +212,8 @@ public:
       case INSERT_N_NUCLEOTIDE: return INSERT_N_NUCLEOTIDE_OFFSET;
 
       default:
-        ExecEnv::log().critical("nucleotideToColumn(), Nucleotide array accessed with unknown nucleotide: {}",
-                                nucleotide);
+        ExecEnv::log().critical("nucleotideToColumn(), array accessed with unknown nucleotide: {}, ascii: {}",
+                                nucleotide, static_cast<int>(nucleotide));
         return 0; // Never reached, to keep the compiler happy.
 
     }
@@ -249,7 +249,7 @@ public:
       case INSERT_N_NUCLEOTIDE_OFFSET: return INSERT_N_NUCLEOTIDE;
 
       default:
-        ExecEnv::log().critical("indexToNucleotide(), unknown nucleotide offset: {}", offset);
+        ExecEnv::log().critical("offsetToNucleotide(), unknown nucleotide offset: {}", offset);
         return N_NUCLEOTIDE; // Never reached, to keep the compiler happy.
 
     }
@@ -258,28 +258,28 @@ public:
 
 
   // Insert offsets. Translates to an insert nucleotide.
-  static ContigOffset_t insertNucleotide(const Nucleotide_DNA5_t nucleotide) {
+  static Nucleotide_DNA5_t insertNucleotide(const Nucleotide_DNA5_t nucleotide) {
 
     // Translate the nucleotide to an array column
     switch (nucleotide) {
 
       case A_NUCLEOTIDE:
-      case A_NUCLEOTIDE_LC: return INSERT_A_NUCLEOTIDE_OFFSET;
+      case A_NUCLEOTIDE_LC: return INSERT_A_NUCLEOTIDE;
 
       case C_NUCLEOTIDE:
-      case C_NUCLEOTIDE_LC: return INSERT_C_NUCLEOTIDE_OFFSET;
+      case C_NUCLEOTIDE_LC: return INSERT_C_NUCLEOTIDE;
 
       case G_NUCLEOTIDE:
-      case G_NUCLEOTIDE_LC: return INSERT_G_NUCLEOTIDE_OFFSET;
+      case G_NUCLEOTIDE_LC: return INSERT_G_NUCLEOTIDE;
 
       case T_NUCLEOTIDE:
-      case T_NUCLEOTIDE_LC: return INSERT_T_NUCLEOTIDE_OFFSET;
+      case T_NUCLEOTIDE_LC: return INSERT_T_NUCLEOTIDE;
 
       case U_NUCLEOTIDE:
-      case U_NUCLEOTIDE_LC: return INSERT_U_NUCLEOTIDE_OFFSET;
+      case U_NUCLEOTIDE_LC: return INSERT_U_NUCLEOTIDE;
 
       case N_NUCLEOTIDE:
-      case N_NUCLEOTIDE_LC: return INSERT_N_NUCLEOTIDE_OFFSET;
+      case N_NUCLEOTIDE_LC: return INSERT_N_NUCLEOTIDE;
 
       default:
         ExecEnv::log().error("insertNucleotide(), Invalid/Unknown Nucleotide: {} (ascii): {}",

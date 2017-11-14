@@ -101,7 +101,7 @@ kgl::Nucleotide_ExtendedDNA5 kgl::SNPVariantDNA5::strandNucleotide(Nucleotide_Ex
 
 
 bool kgl::SNPVariantDNA5::mutateCodingSequence(const FeatureIdent_t& sequence_id,
-                                               std::shared_ptr<DNA5Sequence>& mutated_sequence) const {
+                                               std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const {
 
 
   CodingSequenceArray coding_sequence_array = codingSequences();
@@ -129,7 +129,7 @@ bool kgl::SNPVariantDNA5::mutateCodingSequence(const FeatureIdent_t& sequence_id
   // Get the variant sequence offset
   ContigOffset_t sequence_offset;
   ContigSize_t sequence_length;
-  if(not DNA5Sequence::offsetWithinSequence(coding_sequence, contigOffset(), sequence_offset, sequence_length)) {
+  if(not contig()->sequence().offsetWithinSequence(coding_sequence, contigOffset(), sequence_offset, sequence_length)) {
 
     ExecEnv::log().error("mutateCodingSequence(), unable to retrieve coding sequence offset for variant: {}",
                          output(' ', VariantOutputIndex::START_0_BASED));
@@ -148,7 +148,7 @@ bool kgl::SNPVariantDNA5::mutateCodingSequence(const FeatureIdent_t& sequence_id
 
   if (NucleotideColumn_DNA5::isBaseCode(mutant())) {  // If just a base code mutation.
 
-    // Finally, check that the sequence base code matches the original base code recorded in the variant.
+    // Check that the sequence base code matches the original strand adjusted base code recorded in the variant.
     if (mutated_sequence->at(sequence_offset) != strandReference()) {
 
       ExecEnv::log().error(
@@ -187,7 +187,7 @@ bool kgl::SNPVariantDNA5::mutateCodingSequence(const FeatureIdent_t& sequence_id
 /*
   ContigOffset_t codon_offset;
   ContigSize_t base_in_codon;
-  CodingSequenceDNA5::codonOffset(coding_sequence, contigOffset(), codon_offset, base_in_codon);
+  TranslateToAmino::codonOffset(coding_sequence, contigOffset(), codon_offset, base_in_codon);
 
   std::shared_ptr<AminoSequence> mutant_sequence = contig()->getAminoSequence(mutated_sequence);
   std::vector<ContigOffset_t> offset_vec{codon_offset};
@@ -238,7 +238,7 @@ std::string kgl::SNPVariantDNA5::mutation(char delimiter, VariantOutputIndex out
 
       ContigOffset_t sequence_offset;
       ContigSize_t sequence_length;
-      DNA5Sequence::offsetWithinSequence(sequence, contigOffset(), sequence_offset, sequence_length);
+      contig()->sequence().offsetWithinSequence(sequence, contigOffset(), sequence_offset, sequence_length);
       ss << reference() << offsetOutput(sequence_offset, output_index) << mutant() << delimiter;
       ss << reference() << offsetOutput(contigOffset(), output_index) << mutant() << delimiter;
 
