@@ -34,13 +34,13 @@ public:
   // The NCBI Amino Acid translation tables. table should be in the interval [1, 31].
   bool setTranslationTable(size_t table);
 
-  AminoAcidTypes::AminoType getAmino(const Codon& Codon) {
+  Amino_t getAmino(const Codon& Codon) {
 
     return amino_table_rows_.amino_table[index(Codon)].amino_acid;
 
   }
 
-  AminoAcidTypes::AminoType getStopAmino() {
+  Amino_t getStopAmino() {
 
     return amino_table_rows_.amino_table[amino_table_rows_.stop_codon_index].amino_acid;
 
@@ -48,13 +48,13 @@ public:
 
   bool isStopCodon(const Codon& Codon) {
 
-    return (amino_table_rows_.amino_table[index(Codon)].start == AminoAcidTypes::STOP_CODON);
+    return (amino_table_rows_.amino_table[index(Codon)].start == AminoAcid::STOP_CODON);
 
   }
 
   bool isStartCodon(const Codon& Codon) {
 
-    return amino_table_rows_.amino_table[index(Codon)].start == AminoAcidTypes::START_CODON;
+    return amino_table_rows_.amino_table[index(Codon)].start == AminoAcid::START_CODON;
 
   }
 

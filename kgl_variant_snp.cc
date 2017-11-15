@@ -35,7 +35,7 @@ std::string kgl::SNPVariantDNA5::output(char delimiter, VariantOutputIndex outpu
   ss << mutation(delimiter, output_index);
   ss << mutantCount() << "/" << readCount() << delimiter;
   for (size_t idx = 0; idx < countArray().size(); ++idx) {
-    ss << NucleotideColumn_DNA5::offsetToNucleotide(idx) << ":" << countArray()[idx] << delimiter;
+    ss << ExtendDNA5::offsetToNucleotide(idx) << ":" << countArray()[idx] << delimiter;
   }
   ss << '\n';
 
@@ -44,7 +44,7 @@ std::string kgl::SNPVariantDNA5::output(char delimiter, VariantOutputIndex outpu
 }
 
 // complement base if -ve strand and coding or intron.
-kgl::Nucleotide_DNA5_t kgl::SNPVariantDNA5::strandNucleotide(Nucleotide_DNA5_t nucleotide) const {
+kgl::Nucleotide_t kgl::SNPVariantDNA5::strandNucleotide(Nucleotide_t nucleotide) const {
 
   switch(type()) {
 
@@ -65,7 +65,7 @@ kgl::Nucleotide_DNA5_t kgl::SNPVariantDNA5::strandNucleotide(Nucleotide_DNA5_t n
           return nucleotide;
 
         case StrandSense::REVERSE:
-          return NucleotideColumn_DNA5::complementNucleotide(nucleotide);
+          return ExtendDNA5::complementNucleotide(nucleotide);
 
       }
 
@@ -86,7 +86,7 @@ kgl::Nucleotide_DNA5_t kgl::SNPVariantDNA5::strandNucleotide(Nucleotide_DNA5_t n
           return nucleotide;
 
         case StrandSense::REVERSE:
-          return NucleotideColumn_DNA5::complementNucleotide(reference());
+          return ExtendDNA5::complementNucleotide(reference());
 
       }
 
@@ -146,7 +146,7 @@ bool kgl::SNPVariantDNA5::mutateCodingSequence(const FeatureIdent_t& sequence_id
 
   }
 
-  if (NucleotideColumn_DNA5::isBaseCode(mutant())) {  // If just a base code mutation.
+  if (ExtendDNA5::isBaseCode(mutant())) {  // If just a base code mutation.
 
     // Check that the sequence base code matches the original strand adjusted base code recorded in the variant.
     if (mutated_sequence->at(sequence_offset) != strandReference()) {
@@ -160,14 +160,14 @@ bool kgl::SNPVariantDNA5::mutateCodingSequence(const FeatureIdent_t& sequence_id
     // All is good, so mutate the sequence.
     return mutated_sequence->modifyBase(strandMutant(), sequence_offset);
 
-  } else if (NucleotideColumn_DNA5::isDeletion(mutant())) {
+  } else if (ExtendDNA5::isDeletion(mutant())) {
 
 
     ExecEnv::log().warn("mutateCodingSequence(), snp deletions not implementated, variant: {}",
                         output(' ', VariantOutputIndex::START_0_BASED));
     return true;
 
-  } else if (NucleotideColumn_DNA5::isInsertion(mutant())) {
+  } else if (ExtendDNA5::isInsertion(mutant())) {
 
 
     ExecEnv::log().warn("mutateCodingSequence(), snp insertions not implementated, variant: {}",
@@ -212,11 +212,11 @@ std::string kgl::SNPVariantDNA5::mutation(char delimiter, VariantOutputIndex out
 
     ss << sequence->getGene()->id() << delimiter << sequence->getCDSParent()->id() << delimiter;
 
-    if (NucleotideColumn_DNA5::isBaseCode(mutant())) {
+    if (ExtendDNA5::isBaseCode(mutant())) {
 
       ContigOffset_t codon_offset;
-      typename AminoAcidTypes::AminoType reference_amino;
-      typename AminoAcidTypes::AminoType mutant_amino;
+      Amino_t reference_amino;
+      Amino_t mutant_amino;
 
       if (contig()->SNPMutation(sequence,
                                 contigOffset(),

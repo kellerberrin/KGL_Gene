@@ -38,15 +38,15 @@ kgl::VariantAnalysis::SNPVariants(const std::string& genome_name,
 
         const NucleotideReadCount_t* nucleotide_count_ptr = nucleotide_array.readCount(contig_offset);
 
-        Nucleotide_DNA5_t reference_nucleotide = contig_sequence[contig_offset];
-        ContigOffset_t  reference_column = NucleotideColumn_DNA5::nucleotideToColumn(reference_nucleotide);
+        Nucleotide_t reference_nucleotide = contig_sequence[contig_offset];
+        ContigOffset_t  reference_column = ExtendDNA5::nucleotideToColumn(reference_nucleotide);
         NucleotideReadCount_t read_count = 0;
-        for(ContigOffset_t idx = 0; idx <  NucleotideColumn_DNA5::NUCLEOTIDE_COLUMNS; ++idx) {
+        for(ContigOffset_t idx = 0; idx <  ExtendDNA5::NUCLEOTIDE_COLUMNS; ++idx) {
 
           read_count += nucleotide_count_ptr[idx];
 
         }
-        for(ContigOffset_t idx = 0; idx <  NucleotideColumn_DNA5::NUCLEOTIDE_COLUMNS; ++idx) {
+        for(ContigOffset_t idx = 0; idx <  ExtendDNA5::NUCLEOTIDE_COLUMNS; ++idx) {
 
           double proportion = static_cast<double>(nucleotide_count_ptr[idx]) / static_cast<double>(read_count);
 
@@ -55,14 +55,14 @@ kgl::VariantAnalysis::SNPVariants(const std::string& genome_name,
               and read_count >= minimum_read_count
               and proportion >= minimum_proportion) {
 
-            Nucleotide_DNA5_t mutant_nucleotide = NucleotideColumn_DNA5::offsetToNucleotide(idx);
+            Nucleotide_t mutant_nucleotide = ExtendDNA5::offsetToNucleotide(idx);
 
             SNPVariantDNA5 snp_variant(contig_ptr,
                                        contig_offset,
                                        read_count,
                                        nucleotide_count_ptr[idx],
                                        nucleotide_count_ptr,
-                                       NucleotideColumn_DNA5::NUCLEOTIDE_COLUMNS,
+                                       ExtendDNA5::NUCLEOTIDE_COLUMNS,
                                        reference_nucleotide,
                                        mutant_nucleotide);
 

@@ -19,7 +19,7 @@ namespace genome {   // project level namespace
 // Base Sequence - Containers for DNA/RNA sequences.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using NucleotideType = Nucleotide_DNA5_t;
+using NucleotideType = Nucleotide_t;
 using SequenceString = std::basic_string<NucleotideType>;
 
 

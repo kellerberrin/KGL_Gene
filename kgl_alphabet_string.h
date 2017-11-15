@@ -77,7 +77,21 @@ void StringAlphabet<Alphabet>::convertFromString(const std::string &alphabet_str
 
 }
 
-using StringDNA5 = StringAlphabet<BaseDNA5>;
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The alphabet strings are defined here.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// The standard 5 nucleotide DNA/RNA A, C, G, T/U, N
+using StringDNA5 = StringAlphabet<DNA5>;
+
+// The extended DNA alphabet to include deletions and insertions.
+// Note that X = Delete, E = A insert, F = C insert, I = G insert, J = T insert and K = N insert.
+using StringExtendDNA5 = StringAlphabet<ExtendDNA5>;
+
+
 
 
 }

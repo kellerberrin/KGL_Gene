@@ -122,11 +122,11 @@ bool kgl::ContigFeatures::findGenes(ContigOffset_t offset, GeneVector &gene_ptr_
 // Convenience routine for tagging SNPs.
 bool kgl::ContigFeatures::SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                                       ContigOffset_t contig_offset,
-                                      Nucleotide_DNA5_t reference_base,
-                                      Nucleotide_DNA5_t mutant_base,
+                                      Nucleotide_t reference_base,
+                                      Nucleotide_t mutant_base,
                                       ContigOffset_t& codon_offset,
-                                      typename AminoAcidTypes::AminoType& reference_amino,
-                                      typename AminoAcidTypes::AminoType& mutant_amino) const {
+                                      Amino_t& reference_amino,
+                                      Amino_t& mutant_amino) const {
 
 
   return coding_sequence_.SNPMutation(coding_seq_ptr,

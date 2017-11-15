@@ -164,7 +164,7 @@ kgl::DNA5SequenceLinear::codingSubSequence(std::shared_ptr<const DNA5SequenceLin
       ContigOffset_t end_offset;
       ContigOffset_t relative_offset = 0;
 
-      auto complement_base = [](NucleotideType base) { return NucleotideColumn_DNA5::complementNucleotide(base); };
+      auto complement_base = [](NucleotideType base) { return ExtendDNA5::complementNucleotide(base); };
 
       for (auto rit = sorted_cds.rbegin(); rit != sorted_cds.rend(); ++rit) {
 

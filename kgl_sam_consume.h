@@ -141,7 +141,7 @@ void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string
 
             if (sam_record_parser.getQualityNucleotide(record_ptr, cigar_offset + sam_idx) >= read_quality_) {
 
-              Nucleotide_DNA5_t sam_nucleotide = sam_record_parser.getSequenceNucleotide(record_ptr, cigar_offset + sam_idx);
+              Nucleotide_t sam_nucleotide = sam_record_parser.getSequenceNucleotide(record_ptr, cigar_offset + sam_idx);
               contig_block.incrementCount(location + cigar_offset, sam_nucleotide);
               ++accepted_;
 
@@ -153,7 +153,7 @@ void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string
 
           } else { // Read quality disabled.
 
-            Nucleotide_DNA5_t sam_nucleotide = sam_record_parser.getSequenceNucleotide(record_ptr, cigar_offset + sam_idx);
+            Nucleotide_t sam_nucleotide = sam_record_parser.getSequenceNucleotide(record_ptr, cigar_offset + sam_idx);
             contig_block.incrementCount(location + cigar_offset, sam_nucleotide);
 
           }
@@ -185,8 +185,8 @@ void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string
           // Check that we have not exceeded the size of the contig block (insert beyond the end of the contig)
           if ((location + cigar_offset) < contig_block.contigSize()) {
 
-            Nucleotide_DNA5_t sam_nucleotide = sam_record_parser.getSequenceNucleotide(record_ptr, cigar_offset + sam_idx);
-            Nucleotide_DNA5_t insert_nucleotide = NucleotideColumn_DNA5::insertNucleotide(sam_nucleotide);
+            Nucleotide_t sam_nucleotide = sam_record_parser.getSequenceNucleotide(record_ptr, cigar_offset + sam_idx);
+            Nucleotide_t insert_nucleotide = ExtendDNA5::insertNucleotide(sam_nucleotide);
             contig_block.incrementCount(location + cigar_offset, insert_nucleotide);
 
           }

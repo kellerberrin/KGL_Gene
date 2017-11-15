@@ -23,8 +23,8 @@ namespace genome {   // project level namespace
 
 // Important - these typedefs define the nucleotide types being analyzed (generally DNA).
 // The multi-thread locking strategy and the nucleotide data structure being updated, numpy or local.
-using NumpyArray = NumpyContigMT<X86CountLock, NucleotideColumn_DNA5>; // Use fast asm lock and standard columns.
-using LocalArray = LocalContigMT<X86CountLock, NucleotideColumn_DNA5>; // Use fast asm lock and standard columns.
+using NumpyArray = NumpyContigMT<X86CountLock, ExtendDNA5>; // Use fast asm lock and standard columns.
+using LocalArray = LocalContigMT<X86CountLock, ExtendDNA5>; // Use fast asm lock and standard columns.
 
 // Define the consumer insert data structure with locking strategy.
 using ConsumerInsertType = ContigInsertSequences<GranularityMutex<1000>>;

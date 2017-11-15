@@ -17,7 +17,7 @@ namespace genome {   // project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Amino Sequence - A container for Amino Acid (protein) sequences.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-using AminoType = typename AminoAcidTypes::AminoType;
+using AminoType = Amino_t;
 using ProteinString = std::basic_string<AminoType>;
 
 class AminoSequence: public AlphabetSequence {
@@ -97,17 +97,17 @@ public:
 
   size_t checkNonsenseMutation(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const;
 
-  AminoAcidTypes::AminoType getAmino(std::shared_ptr<DNA5SequenceCoding> sequence_ptr, ContigSize_t codon_index) const;
+  Amino_t getAmino(std::shared_ptr<DNA5SequenceCoding> sequence_ptr, ContigSize_t codon_index) const;
 
   // Returns the amino mutation of an SNP in a coding sequence.
   bool SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                    const std::shared_ptr<const DNA5SequenceContig>& contig_sequence_ptr,
                    ContigOffset_t contig_offset,
-                   Nucleotide_DNA5_t reference_base,
-                   Nucleotide_DNA5_t mutant_base,
+                   Nucleotide_t reference_base,
+                   Nucleotide_t mutant_base,
                    ContigOffset_t& codon_offset,
-                   typename AminoAcidTypes::AminoType& reference_amino,
-                   typename AminoAcidTypes::AminoType& mutant_amino) const;
+                   Amino_t& reference_amino,
+                   Amino_t& mutant_amino) const;
 
 private:
 

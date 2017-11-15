@@ -79,7 +79,7 @@ bool kgl::Feature::verifyMod3(const SortedCDS& sorted_cds) const {
 
   }
 
-  if ((coding_sequence_length % AminoAcidTypes::CODON_SIZE) != 0) {
+  if ((coding_sequence_length % Codon::CODON_SIZE) != 0) {
 
     ExecEnv::log().warn("Gene: {} offset: {} CDS coding sequence length mod 3 not zero : {}",
                         id(),

@@ -6,8 +6,8 @@
 #include "kgl_sequence_amino.h"
 #include "kgl_genome_db.h"
 
-namespace kgl = kellerberrin::genome;
 
+namespace kgl = kellerberrin::genome;
 
 
 kgl::ProteinString kgl::AminoSequence::emphasizeProteinString(const ProteinString& protein_string,
@@ -70,7 +70,7 @@ std::shared_ptr<kgl::AminoSequence>
 kgl::TranslateToAmino::getAminoSequence(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const {
 
   ProteinString protein_string;
-  AminoAcidTypes::AminoType amino_acid;
+  Amino_t amino_acid;
 
   protein_string.reserve(Codon::codonLength(sequence_ptr));
 
@@ -113,14 +113,14 @@ size_t kgl::TranslateToAmino::checkNonsenseMutation(std::shared_ptr<DNA5Sequence
 
 
 
-kgl::AminoAcidTypes::AminoType kgl::TranslateToAmino::getAmino(std::shared_ptr<DNA5SequenceCoding> sequence_ptr,
-                                                                 ContigOffset_t codon_index) const {
+kgl::Amino_t kgl::TranslateToAmino::getAmino(std::shared_ptr<DNA5SequenceCoding> sequence_ptr,
+                                             ContigOffset_t codon_index) const {
 
   Codon codon(sequence_ptr, codon_index);
 
   if (codon.containsBaseN()) {
 
-    return AminoAcidTypes::UNKNOWN_AMINO;
+    return AminoAcid::UNKNOWN_AMINO;
 
   }
 
@@ -132,11 +132,11 @@ kgl::AminoAcidTypes::AminoType kgl::TranslateToAmino::getAmino(std::shared_ptr<D
 bool kgl::TranslateToAmino::SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                                           const std::shared_ptr<const DNA5SequenceContig>& contig_sequence_ptr,
                                           ContigOffset_t contig_offset,
-                                          Nucleotide_DNA5_t reference_base,
-                                          Nucleotide_DNA5_t mutant_base,
+                                          Nucleotide_t reference_base,
+                                          Nucleotide_t mutant_base,
                                           ContigOffset_t& codon_offset,
-                                          typename AminoAcidTypes::AminoType& reference_amino,
-                                          typename AminoAcidTypes::AminoType& mutant_amino) const {
+                                          Amino_t& reference_amino,
+                                          Amino_t& mutant_amino) const {
 
   bool result;
 
@@ -169,8 +169,8 @@ bool kgl::TranslateToAmino::SNPMutation(std::shared_ptr<const CodingSequence> co
         break;
 
       case StrandSense::REVERSE:
-        reference_base = NucleotideColumn_DNA5::complementNucleotide(reference_base);
-        mutant_base = NucleotideColumn_DNA5::complementNucleotide(mutant_base);
+        reference_base = ExtendDNA5::complementNucleotide(reference_base);
+        mutant_base = ExtendDNA5::complementNucleotide(mutant_base);
         break;
 
     }

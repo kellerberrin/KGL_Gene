@@ -84,8 +84,8 @@ public:
                  NucleotideReadCount_t mutant_count,
                  NucleotideReadCount_t const count_array[],
                  ContigSize_t  count_array_size,
-                 Nucleotide_DNA5_t reference,
-                 Nucleotide_DNA5_t mutant)
+                 Nucleotide_t reference,
+                 Nucleotide_t mutant)
   : ReadCountVariant(contig_ptr, contig_offset, read_count, mutant_count, count_array, count_array_size),
     reference_(reference),
     mutant_(mutant) {}
@@ -99,24 +99,24 @@ public:
   bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
                             std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const override;
 
-  Nucleotide_DNA5_t reference() const { return reference_; }
-  Nucleotide_DNA5_t mutant() const { return mutant_; }
+  Nucleotide_t reference() const { return reference_; }
+  Nucleotide_t mutant() const { return mutant_; }
 
   // complement base if -ve strand and coding or intron.
-  Nucleotide_DNA5_t strandReference() const { return strandNucleotide(reference()); }
+  Nucleotide_t strandReference() const { return strandNucleotide(reference()); }
   // complement base if -ve strand and coding or intron.
-  Nucleotide_DNA5_t strandMutant() const { return strandNucleotide(mutant()); }
+  Nucleotide_t strandMutant() const { return strandNucleotide(mutant()); }
 
   std::string output(char delimiter, VariantOutputIndex output_index) const override;
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
 
 private:
 
-  Nucleotide_DNA5_t reference_;
-  Nucleotide_DNA5_t mutant_;
+  Nucleotide_t reference_;
+  Nucleotide_t mutant_;
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
-  Nucleotide_DNA5_t strandNucleotide(Nucleotide_DNA5_t nucleotide) const;
+  Nucleotide_t strandNucleotide(Nucleotide_t nucleotide) const;
 
 };
 

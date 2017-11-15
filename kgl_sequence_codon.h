@@ -35,7 +35,7 @@ public:
 
   }
 
-  Nucleotide_DNA5_t operator[](size_t index) const { return bases_[index]; };
+  Nucleotide_t operator[](size_t index) const { return bases_[index]; };
 
   std::string getSequenceAsString() const override {
 
@@ -49,9 +49,9 @@ public:
 
   bool containsBaseN() const {
 
-    return NucleotideColumn_DNA5::isNucleotideN(bases_[0])
-           or NucleotideColumn_DNA5::isNucleotideN(bases_[1])
-           or NucleotideColumn_DNA5::isNucleotideN(bases_[2]);
+    return ExtendDNA5::isNucleotideN(bases_[0])
+           or ExtendDNA5::isNucleotideN(bases_[1])
+           or ExtendDNA5::isNucleotideN(bases_[2]);
 
   }
 
@@ -59,7 +59,7 @@ public:
 
 private:
 
-  std::array<Nucleotide_DNA5_t, CODON_SIZE> bases_;
+  std::array<Nucleotide_t, CODON_SIZE> bases_;
 
 };
 

@@ -22,11 +22,11 @@ namespace genome {   // project level namespace
 
 struct AminoTableColumn {
 
-  AminoAcidTypes::AminoType amino_acid;
-  AminoAcidTypes::AminoType start;
-  Nucleotide_DNA5_t base1;
-  Nucleotide_DNA5_t base2;
-  Nucleotide_DNA5_t base3;
+  Amino_t amino_acid;
+  Amino_t start;
+  Nucleotide_t base1;
+  Nucleotide_t base2;
+  Nucleotide_t base3;
 
 };
 
@@ -453,7 +453,7 @@ public:
   // An array of Amino translation tables, nullptr are ignored and default to TABLE_1 (the standard table)
   // These tables are defined on the NCBI website: https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
   // There are 31 tables defined there and as time permits these can be added to the table array and will
-  // be automatically available for DNA/RNA translation and Gene verification. Note that the code maintains
+  // be automatically available for DNA/RNA translation and Gene verification. Note that the kgl code maintains
   // separate tables for different contigs, so for example, a different table could used for (e.g. table 2)
   // for a vertebrate mitochondrial contig.
   constexpr static const size_t TABLE_ARRAY_SIZE = 5;

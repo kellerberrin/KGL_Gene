@@ -7,29 +7,29 @@
 
 namespace kgl = kellerberrin::genome;
 
-// Instantiate the NucleotideColumn_DNA5 constants for the edification of the linker.
-const kgl::Nucleotide_DNA5_t kgl::BaseDNA5::A_NUCLEOTIDE;
-const kgl::Nucleotide_DNA5_t kgl::BaseDNA5::A_NUCLEOTIDE_LC;
-const kgl::ContigOffset_t kgl::BaseDNA5::A_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_DNA5_t kgl::BaseDNA5::C_NUCLEOTIDE;
-const kgl::Nucleotide_DNA5_t kgl::BaseDNA5::C_NUCLEOTIDE_LC;
-const kgl::ContigOffset_t kgl::BaseDNA5::C_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_DNA5_t kgl::BaseDNA5::G_NUCLEOTIDE;
-const kgl::Nucleotide_DNA5_t kgl::BaseDNA5::G_NUCLEOTIDE_LC;
-const kgl::ContigOffset_t kgl::BaseDNA5::G_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_DNA5_t kgl::BaseDNA5::U_NUCLEOTIDE;
-const kgl::Nucleotide_DNA5_t kgl::BaseDNA5::U_NUCLEOTIDE_LC;
-const kgl::ContigOffset_t kgl::BaseDNA5::U_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_DNA5_t kgl::BaseDNA5::T_NUCLEOTIDE;
-const kgl::Nucleotide_DNA5_t kgl::BaseDNA5::T_NUCLEOTIDE_LC;
-const kgl::ContigOffset_t kgl::BaseDNA5::T_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_DNA5_t kgl::BaseDNA5::N_NUCLEOTIDE;
-const kgl::Nucleotide_DNA5_t kgl::BaseDNA5::N_NUCLEOTIDE_LC;
-const kgl::ContigOffset_t kgl::BaseDNA5::N_NUCLEOTIDE_OFFSET;
+// Instantiate the ExtendDNA5 constants for the edification of the linker.
+const kgl::Nucleotide_t kgl::DNA5::A_NUCLEOTIDE;
+const kgl::Nucleotide_t kgl::DNA5::A_NUCLEOTIDE_LC;
+const kgl::ContigOffset_t kgl::DNA5::A_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_t kgl::DNA5::C_NUCLEOTIDE;
+const kgl::Nucleotide_t kgl::DNA5::C_NUCLEOTIDE_LC;
+const kgl::ContigOffset_t kgl::DNA5::C_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_t kgl::DNA5::G_NUCLEOTIDE;
+const kgl::Nucleotide_t kgl::DNA5::G_NUCLEOTIDE_LC;
+const kgl::ContigOffset_t kgl::DNA5::G_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_t kgl::DNA5::U_NUCLEOTIDE;
+const kgl::Nucleotide_t kgl::DNA5::U_NUCLEOTIDE_LC;
+const kgl::ContigOffset_t kgl::DNA5::U_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_t kgl::DNA5::T_NUCLEOTIDE;
+const kgl::Nucleotide_t kgl::DNA5::T_NUCLEOTIDE_LC;
+const kgl::ContigOffset_t kgl::DNA5::T_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_t kgl::DNA5::N_NUCLEOTIDE;
+const kgl::Nucleotide_t kgl::DNA5::N_NUCLEOTIDE_LC;
+const kgl::ContigOffset_t kgl::DNA5::N_NUCLEOTIDE_OFFSET;
 
 
 // Convert char to Alphabet enum type.
-kgl::BaseDNA5::Alphabet kgl::BaseDNA5::convertChar(char chr_base) {
+kgl::DNA5::Alphabet kgl::DNA5::convertChar(char chr_base) {
 
   switch (std::toupper(chr_base)) {
 
@@ -54,38 +54,79 @@ kgl::BaseDNA5::Alphabet kgl::BaseDNA5::convertChar(char chr_base) {
 
 
 
-const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::NUCLEOTIDE_COLUMNS;
+const kgl::ContigOffset_t kgl::ExtendDNA5::NUCLEOTIDE_COLUMNS;
 
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::A_NUCLEOTIDE;
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::A_NUCLEOTIDE_LC;
-const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::A_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::C_NUCLEOTIDE;
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::C_NUCLEOTIDE_LC;
-const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::C_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::G_NUCLEOTIDE;
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::G_NUCLEOTIDE_LC;
-const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::G_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::U_NUCLEOTIDE;
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::U_NUCLEOTIDE_LC;
-const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::U_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::T_NUCLEOTIDE;
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::T_NUCLEOTIDE_LC;
-const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::T_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::N_NUCLEOTIDE;
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::N_NUCLEOTIDE_LC;
-const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::N_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::DELETE_NUCLEOTIDE;
-const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::DELETE_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::INSERT_A_NUCLEOTIDE;
-const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::INSERT_A_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::INSERT_C_NUCLEOTIDE;
-const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::INSERT_C_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::INSERT_G_NUCLEOTIDE;
-const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::INSERT_G_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::INSERT_U_NUCLEOTIDE;
-const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::INSERT_U_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::INSERT_T_NUCLEOTIDE;
-const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::INSERT_T_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_DNA5_t kgl::NucleotideColumn_DNA5::INSERT_N_NUCLEOTIDE;
-const kgl::ContigOffset_t kgl::NucleotideColumn_DNA5::INSERT_N_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_t kgl::ExtendDNA5::A_NUCLEOTIDE;
+const kgl::Nucleotide_t kgl::ExtendDNA5::A_NUCLEOTIDE_LC;
+const kgl::ContigOffset_t kgl::ExtendDNA5::A_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_t kgl::ExtendDNA5::C_NUCLEOTIDE;
+const kgl::Nucleotide_t kgl::ExtendDNA5::C_NUCLEOTIDE_LC;
+const kgl::ContigOffset_t kgl::ExtendDNA5::C_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_t kgl::ExtendDNA5::G_NUCLEOTIDE;
+const kgl::Nucleotide_t kgl::ExtendDNA5::G_NUCLEOTIDE_LC;
+const kgl::ContigOffset_t kgl::ExtendDNA5::G_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_t kgl::ExtendDNA5::U_NUCLEOTIDE;
+const kgl::Nucleotide_t kgl::ExtendDNA5::U_NUCLEOTIDE_LC;
+const kgl::ContigOffset_t kgl::ExtendDNA5::U_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_t kgl::ExtendDNA5::T_NUCLEOTIDE;
+const kgl::Nucleotide_t kgl::ExtendDNA5::T_NUCLEOTIDE_LC;
+const kgl::ContigOffset_t kgl::ExtendDNA5::T_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_t kgl::ExtendDNA5::N_NUCLEOTIDE;
+const kgl::Nucleotide_t kgl::ExtendDNA5::N_NUCLEOTIDE_LC;
+const kgl::ContigOffset_t kgl::ExtendDNA5::N_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_t kgl::ExtendDNA5::DELETE_NUCLEOTIDE;
+const kgl::ContigOffset_t kgl::ExtendDNA5::DELETE_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_t kgl::ExtendDNA5::INSERT_A_NUCLEOTIDE;
+const kgl::ContigOffset_t kgl::ExtendDNA5::INSERT_A_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_t kgl::ExtendDNA5::INSERT_C_NUCLEOTIDE;
+const kgl::ContigOffset_t kgl::ExtendDNA5::INSERT_C_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_t kgl::ExtendDNA5::INSERT_G_NUCLEOTIDE;
+const kgl::ContigOffset_t kgl::ExtendDNA5::INSERT_G_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_t kgl::ExtendDNA5::INSERT_U_NUCLEOTIDE;
+const kgl::ContigOffset_t kgl::ExtendDNA5::INSERT_U_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_t kgl::ExtendDNA5::INSERT_T_NUCLEOTIDE;
+const kgl::ContigOffset_t kgl::ExtendDNA5::INSERT_T_NUCLEOTIDE_OFFSET;
+const kgl::Nucleotide_t kgl::ExtendDNA5::INSERT_N_NUCLEOTIDE;
+const kgl::ContigOffset_t kgl::ExtendDNA5::INSERT_N_NUCLEOTIDE_OFFSET;
 
+
+// Covert from char to alphabet
+kgl::ExtendDNA5::Alphabet kgl::ExtendDNA5::convertChar(char chr_base) {
+
+  // Translate the nucleotide to an array column
+  switch (chr_base) {
+
+    case A_NUCLEOTIDE:
+    case A_NUCLEOTIDE_LC: return Alphabet::A;
+
+    case C_NUCLEOTIDE:
+    case C_NUCLEOTIDE_LC: return Alphabet::C;
+
+    case G_NUCLEOTIDE:
+    case G_NUCLEOTIDE_LC: return Alphabet::G;
+
+    case T_NUCLEOTIDE:
+    case T_NUCLEOTIDE_LC: return Alphabet::T;
+
+    case U_NUCLEOTIDE:
+    case U_NUCLEOTIDE_LC: return Alphabet::T;
+
+    case DELETE_NUCLEOTIDE: return Alphabet::X;
+
+    case INSERT_A_NUCLEOTIDE: return Alphabet::E;
+
+    case INSERT_C_NUCLEOTIDE: return Alphabet::F;
+
+    case INSERT_G_NUCLEOTIDE: return Alphabet::I;
+
+    case INSERT_T_NUCLEOTIDE: return Alphabet::J;
+
+    case INSERT_N_NUCLEOTIDE: return Alphabet::K;
+
+    default:
+      ExecEnv::log().error("ExtendDNA5::Alphabet(), Invalid nucleotide: {}", chr_base);
+      return Alphabet::N;
+
+  }
+
+}
