@@ -116,34 +116,18 @@ size_t kgl::TranslateToAmino::checkNonsenseMutation(std::shared_ptr<DNA5Sequence
 kgl::AminoAcidTypes::AminoType kgl::TranslateToAmino::getAmino(std::shared_ptr<DNA5SequenceCoding> sequence_ptr,
                                                                  ContigOffset_t codon_index) const {
 
-  return table_ptr_->getAmino(Codon(sequence_ptr, codon_index));
+  Codon codon(sequence_ptr, codon_index);
 
-}
+  if (codon.containsBaseN()) {
 
-
-bool kgl::TranslateToAmino::codonOffset(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                          std::shared_ptr<const DNA5SequenceContig> contig_sequence_ptr,
-                                          ContigOffset_t contig_offset,
-                                          ContigOffset_t& codon_offset,
-                                          ContigSize_t& base_in_codon) {
-
-  ContigOffset_t sequence_offset;
-  ContigSize_t sequence_length;
-  if (contig_sequence_ptr->offsetWithinSequence(coding_seq_ptr, contig_offset, sequence_offset, sequence_length)) {
-
-    codon_offset = static_cast<ContigOffset_t>(sequence_offset / 3);
-    base_in_codon = static_cast <ContigOffset_t>(sequence_offset % 3);
-    return true;
-
-  } else {
-
-    codon_offset = 0;
-    base_in_codon = 0;
-    return false;
+    return AminoAcidTypes::UNKNOWN_AMINO;
 
   }
 
+  return table_ptr_->getAmino(codon);
+
 }
+
 
 bool kgl::TranslateToAmino::SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                                           const std::shared_ptr<const DNA5SequenceContig>& contig_sequence_ptr,
@@ -157,7 +141,7 @@ bool kgl::TranslateToAmino::SNPMutation(std::shared_ptr<const CodingSequence> co
   bool result;
 
   ContigSize_t base_in_codon;
-  result = codonOffset(coding_seq_ptr, contig_sequence_ptr, contig_offset, codon_offset, base_in_codon);
+  result = contig_sequence_ptr->codonOffset(coding_seq_ptr, contig_offset, codon_offset, base_in_codon);
 
   if (result) {
 

@@ -27,7 +27,7 @@ public:
 
 
   Codon(std::shared_ptr<DNA5SequenceCoding> sequence_ptr, ContigOffset_t codon_index);
-  ~Codon() = default;
+  ~Codon() override = default;
 
   static ContigOffset_t codonLength(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) {
 
@@ -44,6 +44,14 @@ public:
     codon_string += bases_[1];
     codon_string += bases_[2];
     return codon_string;
+
+  }
+
+  bool containsBaseN() const {
+
+    return NucleotideColumn_DNA5::isNucleotideN(bases_[0])
+           or NucleotideColumn_DNA5::isNucleotideN(bases_[1])
+           or NucleotideColumn_DNA5::isNucleotideN(bases_[2]);
 
   }
 

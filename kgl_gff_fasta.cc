@@ -3,6 +3,7 @@
 //
 
 #include "kgl_exec_env.h"
+#include "kgl_alphabet_string.h"
 #include "kgl_gff_fasta.h"
 #include <seqan/seq_io.h>
 #include <boost/tokenizer.hpp>
@@ -73,6 +74,12 @@ void kgl::ParseGffFasta::GffFastaImpl::readFastaFile(const std::string& fasta_fi
     SequenceString sequence;
     seqan::move(sequence, seqs[i]);
     std::shared_ptr<DNA5SequenceContig> sequence_ptr(std::make_shared<DNA5SequenceContig>(sequence));
+
+    StringDNA5 contig_string(sequence);
+    StringDNA5 sub_contig = contig_string.substr(10, 10);
+    ExecEnv::log().info("******** DEBUG ** contig: {},  StringDNA5 length :{}, substring: {}",
+                        contig_id, contig_string.length(), sub_contig.str());
+
 
     if (not genome_db_ptr->addContigSequence(contig_id, sequence_ptr)) {
 

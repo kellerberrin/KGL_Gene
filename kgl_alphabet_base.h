@@ -22,36 +22,62 @@ namespace genome {   // project level namespace
 // Implement the NUCLEOTIDE_COLUMNS as "A", "C", "G", "T"/"U", "-", "E", "F", "I", "J" "K" in that order.
 // Note that "E" = +A , "F" = +C , "I" = +G, "J" = +T/U and "K" = +N.
 
+
+class BaseDNA5 {
+
+public:
+
+
+  BaseDNA5() = delete; // Singleton
+  ~BaseDNA5() = delete;
+
+  static constexpr Nucleotide_DNA5_t A_NUCLEOTIDE = 'A';
+  static constexpr Nucleotide_DNA5_t A_NUCLEOTIDE_LC = 'a';
+  static constexpr ContigOffset_t A_NUCLEOTIDE_OFFSET = 0;
+  static constexpr Nucleotide_DNA5_t C_NUCLEOTIDE = 'C';
+  static constexpr Nucleotide_DNA5_t C_NUCLEOTIDE_LC = 'c';
+  static constexpr ContigOffset_t C_NUCLEOTIDE_OFFSET = 1;
+  static constexpr Nucleotide_DNA5_t G_NUCLEOTIDE = 'G';
+  static constexpr Nucleotide_DNA5_t G_NUCLEOTIDE_LC = 'g';
+  static constexpr ContigOffset_t G_NUCLEOTIDE_OFFSET = 2;
+  static constexpr Nucleotide_DNA5_t U_NUCLEOTIDE = 'U';
+  static constexpr Nucleotide_DNA5_t U_NUCLEOTIDE_LC = 'u';
+  static constexpr ContigOffset_t U_NUCLEOTIDE_OFFSET = 3;
+  static constexpr Nucleotide_DNA5_t T_NUCLEOTIDE = 'T';
+  static constexpr Nucleotide_DNA5_t T_NUCLEOTIDE_LC = 't';
+  static constexpr ContigOffset_t T_NUCLEOTIDE_OFFSET = 3;
+  static constexpr Nucleotide_DNA5_t N_NUCLEOTIDE = 'N';
+  static constexpr Nucleotide_DNA5_t N_NUCLEOTIDE_LC = 'n';
+  static constexpr ContigOffset_t N_NUCLEOTIDE_OFFSET = 4;
+
+  // The Alphabet enum type must be defined -see kgl_alphabet_string.h
+  enum class Alphabet : Nucleotide_DNA5_t
+  { A = BaseDNA5::A_NUCLEOTIDE,
+    C = BaseDNA5::C_NUCLEOTIDE,
+    G = BaseDNA5::G_NUCLEOTIDE,
+    T = BaseDNA5::T_NUCLEOTIDE,
+    N = BaseDNA5::N_NUCLEOTIDE };
+
+  // The Alphabet convertChar(char) function must be defined -see kgl_alphabet_string.h
+  static Alphabet convertChar(char chr_base);
+
+};
+
+
+
+
+
 using Nucleotide_ExtendedDNA5 = Nucleotide_DNA5_t;
 
-class NucleotideColumn_DNA5 {
+class NucleotideColumn_DNA5 : public BaseDNA5 {
 
 public:
 
 
   NucleotideColumn_DNA5() = delete; // Singleton
-  ~NucleotideColumn_DNA5() = delete;
 
   static constexpr ContigOffset_t NUCLEOTIDE_COLUMNS = 11;
 
-  static constexpr Nucleotide_ExtendedDNA5 A_NUCLEOTIDE = 'A';
-  static constexpr Nucleotide_ExtendedDNA5 A_NUCLEOTIDE_LC = 'a';
-  static constexpr ContigOffset_t A_NUCLEOTIDE_OFFSET = 0;
-  static constexpr Nucleotide_ExtendedDNA5 C_NUCLEOTIDE = 'C';
-  static constexpr Nucleotide_ExtendedDNA5 C_NUCLEOTIDE_LC = 'c';
-  static constexpr ContigOffset_t C_NUCLEOTIDE_OFFSET = 1;
-  static constexpr Nucleotide_ExtendedDNA5 G_NUCLEOTIDE = 'G';
-  static constexpr Nucleotide_ExtendedDNA5 G_NUCLEOTIDE_LC = 'g';
-  static constexpr ContigOffset_t G_NUCLEOTIDE_OFFSET = 2;
-  static constexpr Nucleotide_ExtendedDNA5 U_NUCLEOTIDE = 'U';
-  static constexpr Nucleotide_ExtendedDNA5 U_NUCLEOTIDE_LC = 'u';
-  static constexpr ContigOffset_t U_NUCLEOTIDE_OFFSET = 3;
-  static constexpr Nucleotide_ExtendedDNA5 T_NUCLEOTIDE = 'T';
-  static constexpr Nucleotide_ExtendedDNA5 T_NUCLEOTIDE_LC = 't';
-  static constexpr ContigOffset_t T_NUCLEOTIDE_OFFSET = 3;
-  static constexpr Nucleotide_ExtendedDNA5 N_NUCLEOTIDE = 'N';
-  static constexpr Nucleotide_ExtendedDNA5 N_NUCLEOTIDE_LC = 'n';
-  static constexpr ContigOffset_t N_NUCLEOTIDE_OFFSET = 4;
   static constexpr Nucleotide_ExtendedDNA5 DELETE_NUCLEOTIDE = '-';
   static constexpr ContigOffset_t DELETE_NUCLEOTIDE_OFFSET = 5;
   static constexpr Nucleotide_ExtendedDNA5 INSERT_A_NUCLEOTIDE = 'E';
@@ -66,7 +92,6 @@ public:
   static constexpr ContigOffset_t INSERT_T_NUCLEOTIDE_OFFSET = 9;
   static constexpr Nucleotide_ExtendedDNA5 INSERT_N_NUCLEOTIDE = 'K';
   static constexpr ContigOffset_t INSERT_N_NUCLEOTIDE_OFFSET = 10;
-
 
   static bool isDeletion(const Nucleotide_ExtendedDNA5 nucleotide) {
 
@@ -289,6 +314,14 @@ public:
     }
 
   }
+
+  // Check if a "N" nucleotide.
+  static bool isNucleotideN(const Nucleotide_ExtendedDNA5 nucleotide) {
+
+    return nucleotide == N_NUCLEOTIDE or nucleotide == N_NUCLEOTIDE_LC;
+
+  }
+
 
   // Find complementary bases.
   static Nucleotide_ExtendedDNA5 complementNucleotide(const Nucleotide_ExtendedDNA5 nucleotide) {

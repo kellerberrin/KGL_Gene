@@ -4,6 +4,7 @@
 
 
 #include "kgl_sequence_base.h"
+#include "kgl_sequence_codon.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -162,8 +163,9 @@ kgl::DNA5SequenceLinear::codingSubSequence(std::shared_ptr<const DNA5SequenceLin
       ContigOffset_t begin_offset;
       ContigOffset_t end_offset;
       ContigOffset_t relative_offset = 0;
-      auto complement_base =
-      [](NucleotideType base) { return NucleotideColumn_DNA5::complementNucleotide(base); };
+
+      auto complement_base = [](NucleotideType base) { return NucleotideColumn_DNA5::complementNucleotide(base); };
+
       for (auto rit = sorted_cds.rbegin(); rit != sorted_cds.rend(); ++rit) {
 
         ContigSize_t cds_size = rit->second->sequence().end() - rit->second->sequence().begin();
@@ -232,6 +234,30 @@ kgl::DNA5SequenceLinear::codingSubSequence(std::shared_ptr<const DNA5SequenceLin
 // A linear and contiguous DNA5 sequence used in a contig (chromosome). This object exists for semantic reasons.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+// Returns the codon offset of offset within a coding, returns false if not within the coding sequence.
+bool kgl::DNA5SequenceContig::codonOffset(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+                                          ContigOffset_t contig_offset,
+                                          ContigOffset_t& codon_offset,
+                                          ContigSize_t& base_in_codon) const {
+
+  ContigOffset_t sequence_offset;
+  ContigSize_t sequence_length;
+  if (offsetWithinSequence(coding_seq_ptr, contig_offset, sequence_offset, sequence_length)) {
+
+    codon_offset = static_cast<ContigOffset_t>(sequence_offset / Codon::CODON_SIZE);
+    base_in_codon = static_cast <ContigOffset_t>(sequence_offset % Codon::CODON_SIZE);
+    return true;
+
+  } else {
+
+    codon_offset = 0;
+    base_in_codon = 0;
+    return false;
+
+  }
+
+}
 
 // Returns bool false if contig_offset is not within the coding sequence defined by the coding_seq_ptr.
 // If the contig_offset is in the coding sequence then a valid sequence_offset and the sequence length is returned.

@@ -99,12 +99,6 @@ public:
 
   AminoAcidTypes::AminoType getAmino(std::shared_ptr<DNA5SequenceCoding> sequence_ptr, ContigSize_t codon_index) const;
 
-  static bool codonOffset(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                          std::shared_ptr<const DNA5SequenceContig> contig_seq_ptr,
-                          ContigOffset_t contig_offset,
-                          ContigOffset_t& codon_offset,
-                          ContigSize_t& base_in_codon);
-
   // Returns the amino mutation of an SNP in a coding sequence.
   bool SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                    const std::shared_ptr<const DNA5SequenceContig>& contig_sequence_ptr,

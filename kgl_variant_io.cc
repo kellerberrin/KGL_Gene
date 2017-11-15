@@ -17,7 +17,7 @@ namespace kgl = kellerberrin::genome;
 bool kgl::GenomeVariant::outputCSV(const std::string& file_name, VariantOutputIndex output_index) const {
 
   // open the file.
-  std::fstream out_file(file_name, std::fstream::out | std::fstream::trunc);
+  std::fstream out_file(file_name, std::fstream::out | std::fstream::app);
   if (!out_file) {
 
     ExecEnv::log().error("Cannot open output CSV file (--outCSVFile): {}", file_name);
