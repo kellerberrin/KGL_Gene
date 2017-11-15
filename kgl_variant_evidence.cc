@@ -55,7 +55,7 @@ kgl::VariantAnalysis::SNPVariants(const std::string& genome_name,
               and read_count >= minimum_read_count
               and proportion >= minimum_proportion) {
 
-            Nucleotide_ExtendedDNA5 mutant_nucleotide = NucleotideColumn_DNA5::offsetToNucleotide(idx);
+            Nucleotide_DNA5_t mutant_nucleotide = NucleotideColumn_DNA5::offsetToNucleotide(idx);
 
             SNPVariantDNA5 snp_variant(contig_ptr,
                                        contig_offset,

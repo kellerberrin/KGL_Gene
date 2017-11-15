@@ -52,11 +52,11 @@ public:
 
   // The Alphabet enum type must be defined -see kgl_alphabet_string.h
   enum class Alphabet : Nucleotide_DNA5_t
-  { A = BaseDNA5::A_NUCLEOTIDE,
-    C = BaseDNA5::C_NUCLEOTIDE,
-    G = BaseDNA5::G_NUCLEOTIDE,
-    T = BaseDNA5::T_NUCLEOTIDE,
-    N = BaseDNA5::N_NUCLEOTIDE };
+  { A = A_NUCLEOTIDE,
+    C = C_NUCLEOTIDE,
+    G = G_NUCLEOTIDE,
+    T = T_NUCLEOTIDE,
+    N = N_NUCLEOTIDE };
 
   // The Alphabet convertChar(char) function must be defined -see kgl_alphabet_string.h
   static Alphabet convertChar(char chr_base);
@@ -65,11 +65,7 @@ public:
 
 
 
-
-
-using Nucleotide_ExtendedDNA5 = Nucleotide_DNA5_t;
-
-class NucleotideColumn_DNA5 : public BaseDNA5 {
+class NucleotideColumn_DNA5  {
 
 public:
 
@@ -78,22 +74,40 @@ public:
 
   static constexpr ContigOffset_t NUCLEOTIDE_COLUMNS = 11;
 
-  static constexpr Nucleotide_ExtendedDNA5 DELETE_NUCLEOTIDE = '-';
+  static constexpr Nucleotide_DNA5_t A_NUCLEOTIDE = 'A';
+  static constexpr Nucleotide_DNA5_t A_NUCLEOTIDE_LC = 'a';
+  static constexpr ContigOffset_t A_NUCLEOTIDE_OFFSET = 0;
+  static constexpr Nucleotide_DNA5_t C_NUCLEOTIDE = 'C';
+  static constexpr Nucleotide_DNA5_t C_NUCLEOTIDE_LC = 'c';
+  static constexpr ContigOffset_t C_NUCLEOTIDE_OFFSET = 1;
+  static constexpr Nucleotide_DNA5_t G_NUCLEOTIDE = 'G';
+  static constexpr Nucleotide_DNA5_t G_NUCLEOTIDE_LC = 'g';
+  static constexpr ContigOffset_t G_NUCLEOTIDE_OFFSET = 2;
+  static constexpr Nucleotide_DNA5_t U_NUCLEOTIDE = 'U';
+  static constexpr Nucleotide_DNA5_t U_NUCLEOTIDE_LC = 'u';
+  static constexpr ContigOffset_t U_NUCLEOTIDE_OFFSET = 3;
+  static constexpr Nucleotide_DNA5_t T_NUCLEOTIDE = 'T';
+  static constexpr Nucleotide_DNA5_t T_NUCLEOTIDE_LC = 't';
+  static constexpr ContigOffset_t T_NUCLEOTIDE_OFFSET = 3;
+  static constexpr Nucleotide_DNA5_t N_NUCLEOTIDE = 'N';
+  static constexpr Nucleotide_DNA5_t N_NUCLEOTIDE_LC = 'n';
+  static constexpr ContigOffset_t N_NUCLEOTIDE_OFFSET = 4;
+  static constexpr Nucleotide_DNA5_t DELETE_NUCLEOTIDE = '-';
   static constexpr ContigOffset_t DELETE_NUCLEOTIDE_OFFSET = 5;
-  static constexpr Nucleotide_ExtendedDNA5 INSERT_A_NUCLEOTIDE = 'E';
+  static constexpr Nucleotide_DNA5_t INSERT_A_NUCLEOTIDE = 'E';
   static constexpr ContigOffset_t INSERT_A_NUCLEOTIDE_OFFSET = 6;
-  static constexpr Nucleotide_ExtendedDNA5 INSERT_C_NUCLEOTIDE = 'F';
+  static constexpr Nucleotide_DNA5_t INSERT_C_NUCLEOTIDE = 'F';
   static constexpr ContigOffset_t INSERT_C_NUCLEOTIDE_OFFSET = 7;
-  static constexpr Nucleotide_ExtendedDNA5 INSERT_G_NUCLEOTIDE = 'I';
+  static constexpr Nucleotide_DNA5_t INSERT_G_NUCLEOTIDE = 'I';
   static constexpr ContigOffset_t INSERT_G_NUCLEOTIDE_OFFSET = 8;
-  static constexpr Nucleotide_ExtendedDNA5 INSERT_U_NUCLEOTIDE = 'J';
+  static constexpr Nucleotide_DNA5_t INSERT_U_NUCLEOTIDE = 'J';
   static constexpr ContigOffset_t INSERT_U_NUCLEOTIDE_OFFSET = 9;
-  static constexpr Nucleotide_ExtendedDNA5 INSERT_T_NUCLEOTIDE = 'J';
+  static constexpr Nucleotide_DNA5_t INSERT_T_NUCLEOTIDE = 'J';
   static constexpr ContigOffset_t INSERT_T_NUCLEOTIDE_OFFSET = 9;
-  static constexpr Nucleotide_ExtendedDNA5 INSERT_N_NUCLEOTIDE = 'K';
+  static constexpr Nucleotide_DNA5_t INSERT_N_NUCLEOTIDE = 'K';
   static constexpr ContigOffset_t INSERT_N_NUCLEOTIDE_OFFSET = 10;
 
-  static bool isDeletion(const Nucleotide_ExtendedDNA5 nucleotide) {
+  static bool isDeletion(const Nucleotide_DNA5_t nucleotide) {
 
     // Translate the nucleotide to an array column
     switch (nucleotide) {
@@ -128,7 +142,7 @@ public:
 
   }
 
-  static bool isInsertion(const Nucleotide_ExtendedDNA5 nucleotide) {
+  static bool isInsertion(const Nucleotide_DNA5_t nucleotide) {
 
     // Translate the nucleotide to an array column
     switch (nucleotide) {
@@ -164,7 +178,7 @@ public:
   }
 
 
-  static bool isBaseCode(const Nucleotide_ExtendedDNA5 nucleotide) {
+  static bool isBaseCode(const Nucleotide_DNA5_t nucleotide) {
 
     // Translate the nucleotide to an array column
     switch (nucleotide) {
@@ -200,9 +214,8 @@ public:
   }
 
 
-
   // Convert a base to an array offset.
-  static ContigOffset_t nucleotideToColumn(const Nucleotide_ExtendedDNA5 nucleotide) {
+  static ContigOffset_t nucleotideToColumn(const Nucleotide_DNA5_t nucleotide) {
 
     // Translate the nucleotide to an array column
     switch (nucleotide) {
@@ -246,7 +259,7 @@ public:
   }
 
   // Converts an array offset into a base.
-  static Nucleotide_ExtendedDNA5 offsetToNucleotide(ContigOffset_t offset) {
+  static Nucleotide_DNA5_t offsetToNucleotide(ContigOffset_t offset) {
 
     // Translate the nucleotide to an array column
     switch (offset) {
@@ -316,7 +329,7 @@ public:
   }
 
   // Check if a "N" nucleotide.
-  static bool isNucleotideN(const Nucleotide_ExtendedDNA5 nucleotide) {
+  static bool isNucleotideN(const Nucleotide_DNA5_t nucleotide) {
 
     return nucleotide == N_NUCLEOTIDE or nucleotide == N_NUCLEOTIDE_LC;
 
@@ -324,7 +337,7 @@ public:
 
 
   // Find complementary bases.
-  static Nucleotide_ExtendedDNA5 complementNucleotide(const Nucleotide_ExtendedDNA5 nucleotide) {
+  static Nucleotide_DNA5_t complementNucleotide(const Nucleotide_DNA5_t nucleotide) {
 
     // Translate the nucleotide to an array column
     switch (nucleotide) {
@@ -363,7 +376,29 @@ public:
 
   }
 
-private:
+
+  // Note that "E" = +A , "F" = +C , "I" = +G, "J" = +T/U and "K" = +N.
+  // The Alphabet enum type must be defined -see kgl_alphabet_string.h
+  // The extended alphabet does not conflict with LUPAC codes.
+  enum class Alphabet : Nucleotide_DNA5_t
+  { A = A_NUCLEOTIDE,
+    C = C_NUCLEOTIDE,
+    G = G_NUCLEOTIDE,
+    T = T_NUCLEOTIDE,
+    N = N_NUCLEOTIDE,
+    X = DELETE_NUCLEOTIDE,
+    E = INSERT_A_NUCLEOTIDE,
+    F = INSERT_C_NUCLEOTIDE,
+    I = INSERT_G_NUCLEOTIDE,
+    J = INSERT_T_NUCLEOTIDE,
+    K = INSERT_N_NUCLEOTIDE
+  };
+
+  // The Alphabet convertChar(char) function must be defined -see kgl_alphabet_string.h
+  static Alphabet convertChar(char chr_base);
+
+  // The Alphabet convertChar(char) function must be defined -see kgl_alphabet_string.h
+//  static Alphabet NucleotideColumn_DNA5::convertChar(char chr_base);
 
 };
 

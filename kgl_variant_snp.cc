@@ -44,7 +44,7 @@ std::string kgl::SNPVariantDNA5::output(char delimiter, VariantOutputIndex outpu
 }
 
 // complement base if -ve strand and coding or intron.
-kgl::Nucleotide_ExtendedDNA5 kgl::SNPVariantDNA5::strandNucleotide(Nucleotide_ExtendedDNA5 nucleotide) const {
+kgl::Nucleotide_DNA5_t kgl::SNPVariantDNA5::strandNucleotide(Nucleotide_DNA5_t nucleotide) const {
 
   switch(type()) {
 

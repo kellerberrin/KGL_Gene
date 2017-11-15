@@ -132,8 +132,8 @@ kgl::AminoAcidTypes::AminoType kgl::TranslateToAmino::getAmino(std::shared_ptr<D
 bool kgl::TranslateToAmino::SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                                           const std::shared_ptr<const DNA5SequenceContig>& contig_sequence_ptr,
                                           ContigOffset_t contig_offset,
-                                          Nucleotide_ExtendedDNA5 reference_base,
-                                          Nucleotide_ExtendedDNA5 mutant_base,
+                                          Nucleotide_DNA5_t reference_base,
+                                          Nucleotide_DNA5_t mutant_base,
                                           ContigOffset_t& codon_offset,
                                           typename AminoAcidTypes::AminoType& reference_amino,
                                           typename AminoAcidTypes::AminoType& mutant_amino) const {
