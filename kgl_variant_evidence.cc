@@ -38,8 +38,8 @@ kgl::VariantAnalysis::SNPVariants(const std::string& genome_name,
 
         const NucleotideReadCount_t* nucleotide_count_ptr = nucleotide_array.readCount(contig_offset);
 
-        Nucleotide_t reference_nucleotide = contig_sequence[contig_offset];
-        ContigOffset_t  reference_column = ExtendDNA5::nucleotideToColumn(reference_nucleotide);
+        DNA5::Alphabet reference_nucleotide = contig_sequence[contig_offset];
+        ContigOffset_t  reference_column = DNA5::nucleotideToColumn(reference_nucleotide);
         NucleotideReadCount_t read_count = 0;
         for(ContigOffset_t idx = 0; idx <  ExtendDNA5::NUCLEOTIDE_COLUMNS; ++idx) {
 
@@ -55,7 +55,7 @@ kgl::VariantAnalysis::SNPVariants(const std::string& genome_name,
               and read_count >= minimum_read_count
               and proportion >= minimum_proportion) {
 
-            Nucleotide_t mutant_nucleotide = ExtendDNA5::offsetToNucleotide(idx);
+            ExtendDNA5::Alphabet mutant_nucleotide = ExtendDNA5::offsetToNucleotide(idx);
 
             SNPVariantDNA5 snp_variant(contig_ptr,
                                        contig_offset,

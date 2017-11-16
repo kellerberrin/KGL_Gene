@@ -33,19 +33,19 @@ kgl::DNA5::Alphabet kgl::DNA5::convertChar(char chr_base) {
 
   switch (std::toupper(chr_base)) {
 
-    case 'A':return Alphabet::A;
+    case A_NUCLEOTIDE:return Alphabet::A;
 
-    case 'C': return Alphabet::C;
+    case C_NUCLEOTIDE: return Alphabet::C;
 
-    case 'G': return Alphabet::G;
+    case G_NUCLEOTIDE: return Alphabet::G;
 
-    case 'U':
-    case 'T': return Alphabet::T;
+    case U_NUCLEOTIDE:
+    case T_NUCLEOTIDE: return Alphabet::T;
 
-    case 'N': return Alphabet::N;
+    case N_NUCLEOTIDE: return Alphabet::N;
 
     default:
-      ExecEnv::log().error("BaseDNA5::convertchar(), Invalid nucleotide: {}", chr_base);
+      ExecEnv::log().error("DNA5::convertchar(), Invalid nucleotide: {}", chr_base);
       return Alphabet::N;
 
   }
@@ -94,7 +94,7 @@ const kgl::ContigOffset_t kgl::ExtendDNA5::INSERT_N_NUCLEOTIDE_OFFSET;
 kgl::ExtendDNA5::Alphabet kgl::ExtendDNA5::convertChar(char chr_base) {
 
   // Translate the nucleotide to an array column
-  switch (chr_base) {
+  switch (std::toupper(chr_base)) {
 
     case A_NUCLEOTIDE:
     case A_NUCLEOTIDE_LC: return Alphabet::A;

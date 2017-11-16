@@ -1,29 +1,19 @@
 //
-// Created by kellerberrin on 31/10/17.
+// Created by kellerberrin on 16/11/17.
 //
 
-#ifndef KGL_SEQUENCE_BASE_H
-#define KGL_SEQUENCE_BASE_H
+#ifndef KGL_SEQUENCE_BASE_ALPHA_H
+#define KGL_SEQUENCE_BASE_ALPHA_H
+
 
 
 #include <string>
-#include "kgl_alphabet_base.h"
+#include "kgl_alphabet_string.h"
 #include "kgl_genome_feature.h"
 #include "kgl_sequence_virtual.h"
 
-#include "kgl_sequence_base_alpha.h"
-
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
-
-/*
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Base Sequence - Containers for DNA/RNA sequences.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-using NucleotideType = Nucleotide_t;
-using SequenceString = std::basic_string<NucleotideType>;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,23 +26,25 @@ class DNA5Sequence: public AlphabetSequence {
 public:
 
 
-  explicit DNA5Sequence(SequenceString sequence) : base_sequence_(std::move(sequence)) {}
+  explicit DNA5Sequence(StringDNA5 sequence) : base_sequence_(std::move(sequence)) {}
   DNA5Sequence() = delete;
   ~DNA5Sequence() override = default;
 
 
-  NucleotideType operator[] (ContigOffset_t& offset) const { return base_sequence_[offset]; }
-  NucleotideType at(ContigOffset_t& offset) const { return base_sequence_[offset]; }
+  DNA5::Alphabet operator[] (ContigOffset_t& offset) const { return base_sequence_[offset]; }
+  DNA5::Alphabet at(ContigOffset_t& offset) const { return base_sequence_[offset]; }
 
   ContigSize_t length() const { return base_sequence_.length(); }
 
+  std::string getSequenceAsString() const override { return base_sequence_.str(); }
+
   // Offset is the relative sequence offset.
-  bool modifyBase(NucleotideType Nucleotide, ContigOffset_t sequence_offset);
+  bool modifyBase(DNA5::Alphabet Nucleotide, ContigOffset_t sequence_offset);
 
 
 protected:
 
-  SequenceString base_sequence_;
+  StringDNA5 base_sequence_;
 
 };
 
@@ -68,11 +60,10 @@ class DNA5SequenceCoding: public DNA5Sequence {
 public:
 
 
-  explicit DNA5SequenceCoding(SequenceString sequence) : DNA5Sequence(std::move(sequence)) {}
+  explicit DNA5SequenceCoding(StringDNA5 sequence) : DNA5Sequence(std::move(sequence)) {}
   DNA5SequenceCoding() = delete;
   ~DNA5SequenceCoding() override = default;
 
-  std::string getSequenceAsString() const override { return static_cast<std::string>(base_sequence_); }
 
 private:
 
@@ -90,13 +81,9 @@ class DNA5SequenceLinear: public DNA5Sequence {
 public:
 
 
-  explicit DNA5SequenceLinear(SequenceString sequence) : DNA5Sequence(std::move(sequence)) {}
+  explicit DNA5SequenceLinear(StringDNA5 sequence) : DNA5Sequence(std::move(sequence)) {}
   DNA5SequenceLinear() = delete;
   ~DNA5SequenceLinear() override = default;
-
-  std::string getSequenceAsString() const override { return static_cast<std::string>(base_sequence_); }
-
-
 
   std::shared_ptr<DNA5SequenceCoding> codingSubSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                                                         ContigOffset_t sub_sequence_offset,
@@ -132,7 +119,7 @@ class DNA5SequenceContig: public DNA5SequenceLinear {
 public:
 
 
-  explicit DNA5SequenceContig(SequenceString sequence) : DNA5SequenceLinear(std::move(sequence)) {}
+  explicit DNA5SequenceContig(StringDNA5 sequence) : DNA5SequenceLinear(std::move(sequence)) {}
   DNA5SequenceContig() = delete;
   ~DNA5SequenceContig() override = default;
 
@@ -165,10 +152,12 @@ private:
 };
 
 
-*/
 
 }   // namespace genome
 }   // namespace kellerberrin
 
 
-#endif //KGL_SEQUENCE_BASE_H
+
+
+
+#endif //KGL_SEQUENCE_BASE_ALPHA_H

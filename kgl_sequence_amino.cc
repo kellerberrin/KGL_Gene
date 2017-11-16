@@ -132,8 +132,8 @@ kgl::Amino_t kgl::TranslateToAmino::getAmino(std::shared_ptr<DNA5SequenceCoding>
 bool kgl::TranslateToAmino::SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                                           const std::shared_ptr<const DNA5SequenceContig>& contig_sequence_ptr,
                                           ContigOffset_t contig_offset,
-                                          Nucleotide_t reference_base,
-                                          Nucleotide_t mutant_base,
+                                          DNA5::Alphabet reference_base,
+                                          DNA5::Alphabet mutant_base,
                                           ContigOffset_t& codon_offset,
                                           Amino_t& reference_amino,
                                           Amino_t& mutant_amino) const {
@@ -169,8 +169,8 @@ bool kgl::TranslateToAmino::SNPMutation(std::shared_ptr<const CodingSequence> co
         break;
 
       case StrandSense::REVERSE:
-        reference_base = ExtendDNA5::complementNucleotide(reference_base);
-        mutant_base = ExtendDNA5::complementNucleotide(mutant_base);
+        reference_base = DNA5::complementNucleotide(reference_base);
+        mutant_base = DNA5::complementNucleotide(mutant_base);
         break;
 
     }
@@ -181,7 +181,8 @@ bool kgl::TranslateToAmino::SNPMutation(std::shared_ptr<const CodingSequence> co
       if (Codon(codon_sequence, 0)[base_in_codon] != reference_base) {
 
         ExecEnv::log().error("SNPMutation(), reference base: {} does not match codon base: {}",
-                             Codon(codon_sequence, 0)[base_in_codon], reference_base);
+                             DNA5::convertToChar(Codon(codon_sequence, 0)[base_in_codon]),
+                             DNA5::convertToChar(reference_base));
         result = false;
 
       }

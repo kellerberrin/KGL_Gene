@@ -133,8 +133,8 @@ void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string
         for (ContigOffset_t cigar_offset = 0; cigar_offset < cigar.second; ++cigar_offset) {
 
           if (location + cigar_offset >= contig_size) {
-            log.error("Sam record error - Contig: {} sequence size: {} exceeded at position: {} Cigar Offset: {}; SAM record: {}"
-            , contig_id, contig_size, location, cigar_offset, *record_ptr);
+            log.error("Sam record error - Contig: {} sequence size: {} exceeded at position: {} Cigar Offset: {}; SAM record: {}",
+                      contig_id, contig_size, location, cigar_offset, *record_ptr);
             return;
           }
           if (read_quality_ > NUCLEOTIDE_QUALITY_ASCII) {
@@ -142,7 +142,9 @@ void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string
             if (sam_record_parser.getQualityNucleotide(record_ptr, cigar_offset + sam_idx) >= read_quality_) {
 
               Nucleotide_t sam_nucleotide = sam_record_parser.getSequenceNucleotide(record_ptr, cigar_offset + sam_idx);
-              contig_block.incrementCount(location + cigar_offset, sam_nucleotide);
+              DNA5::Alphabet nucleotide = DNA5::convertChar(sam_nucleotide);
+              size_t column = DNA5::nucleotideToColumn(nucleotide);
+              contig_block.incrementCount(location + cigar_offset, column);
               ++accepted_;
 
             } else {
@@ -154,7 +156,9 @@ void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string
           } else { // Read quality disabled.
 
             Nucleotide_t sam_nucleotide = sam_record_parser.getSequenceNucleotide(record_ptr, cigar_offset + sam_idx);
-            contig_block.incrementCount(location + cigar_offset, sam_nucleotide);
+            DNA5::Alphabet nucleotide = DNA5::convertChar(sam_nucleotide);
+            size_t column = DNA5::nucleotideToColumn(nucleotide);
+            contig_block.incrementCount(location + cigar_offset, column);
 
           }
 
@@ -169,7 +173,7 @@ void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string
         ++delete_nucleotide_;
         for (ContigOffset_t cigar_offset = 0; cigar_offset < cigar.second; ++cigar_offset) {
 
-          contig_block.incrementDelete(location + cigar_offset);
+          contig_block.incrementCount(location + cigar_offset, ExtendDNA5::DELETE_NUCLEOTIDE_OFFSET);
 
         }
 
@@ -186,8 +190,9 @@ void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string
           if ((location + cigar_offset) < contig_block.contigSize()) {
 
             Nucleotide_t sam_nucleotide = sam_record_parser.getSequenceNucleotide(record_ptr, cigar_offset + sam_idx);
-            Nucleotide_t insert_nucleotide = ExtendDNA5::insertNucleotide(sam_nucleotide);
-            contig_block.incrementCount(location + cigar_offset, insert_nucleotide);
+            ExtendDNA5::Alphabet insert_nucleotide = ExtendDNA5::insertNucleotide(DNA5::convertChar(sam_nucleotide));
+            size_t column = ExtendDNA5::nucleotideToColumn(insert_nucleotide);
+            contig_block.incrementCount(location + cigar_offset, column);
 
           }
 

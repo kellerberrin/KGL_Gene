@@ -61,8 +61,8 @@ public:
 
   bool SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                    ContigOffset_t contig_offset,
-                   Nucleotide_t reference_base,
-                   Nucleotide_t mutant_base,
+                   DNA5::Alphabet reference_base,
+                   DNA5::Alphabet mutant_base,
                    ContigOffset_t& codon_offset,
                    Amino_t& reference_amino,
                    Amino_t& mutant_amino) const;

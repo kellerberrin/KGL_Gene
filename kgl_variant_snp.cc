@@ -35,7 +35,7 @@ std::string kgl::SNPVariantDNA5::output(char delimiter, VariantOutputIndex outpu
   ss << mutation(delimiter, output_index);
   ss << mutantCount() << "/" << readCount() << delimiter;
   for (size_t idx = 0; idx < countArray().size(); ++idx) {
-    ss << ExtendDNA5::offsetToNucleotide(idx) << ":" << countArray()[idx] << delimiter;
+    ss << ExtendDNA5::convertToChar(ExtendDNA5::offsetToNucleotide(idx)) << ":" << countArray()[idx] << delimiter;
   }
   ss << '\n';
 
@@ -44,7 +44,7 @@ std::string kgl::SNPVariantDNA5::output(char delimiter, VariantOutputIndex outpu
 }
 
 // complement base if -ve strand and coding or intron.
-kgl::Nucleotide_t kgl::SNPVariantDNA5::strandNucleotide(Nucleotide_t nucleotide) const {
+kgl::DNA5::Alphabet kgl::SNPVariantDNA5::strandNucleotide(DNA5::Alphabet nucleotide) const {
 
   switch(type()) {
 
@@ -65,7 +65,7 @@ kgl::Nucleotide_t kgl::SNPVariantDNA5::strandNucleotide(Nucleotide_t nucleotide)
           return nucleotide;
 
         case StrandSense::REVERSE:
-          return ExtendDNA5::complementNucleotide(nucleotide);
+          return DNA5::complementNucleotide(nucleotide);
 
       }
 
@@ -86,7 +86,7 @@ kgl::Nucleotide_t kgl::SNPVariantDNA5::strandNucleotide(Nucleotide_t nucleotide)
           return nucleotide;
 
         case StrandSense::REVERSE:
-          return ExtendDNA5::complementNucleotide(reference());
+          return DNA5::complementNucleotide(reference());
 
       }
 
@@ -153,12 +153,14 @@ bool kgl::SNPVariantDNA5::mutateCodingSequence(const FeatureIdent_t& sequence_id
 
       ExecEnv::log().error(
       "mutateCodingSequence(), unexpected; base: {} at seq. offset: {} not equal snp (strand) reference: {}",
-      mutated_sequence->at(sequence_offset), sequence_offset, strandReference());
+      DNA5::convertToChar(mutated_sequence->at(sequence_offset)), sequence_offset,
+      DNA5::convertToChar(strandReference()));
 
     }
 
     // All is good, so mutate the sequence.
-    return mutated_sequence->modifyBase(strandMutant(), sequence_offset);
+    return mutated_sequence->modifyBase(DNA5::complementNucleotide(ExtendDNA5::extendToBase(mutant())),
+                                        sequence_offset);
 
   } else if (ExtendDNA5::isDeletion(mutant())) {
 
@@ -221,13 +223,14 @@ std::string kgl::SNPVariantDNA5::mutation(char delimiter, VariantOutputIndex out
       if (contig()->SNPMutation(sequence,
                                 contigOffset(),
                                 reference(),
-                                mutant(),
+                                ExtendDNA5::extendToBase(mutant()),
                                 codon_offset,
                                 reference_amino,
                                 mutant_amino)) {
 
         ss << reference_amino << offsetOutput(codon_offset, output_index) << mutant_amino << delimiter;
-        ss << reference() << offsetOutput(contigOffset(), output_index) << mutant() << delimiter;
+        ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
+        ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
 //        sequence->getGene()->recusivelyPrintsubfeatures();
 
 
@@ -239,8 +242,10 @@ std::string kgl::SNPVariantDNA5::mutation(char delimiter, VariantOutputIndex out
       ContigOffset_t sequence_offset;
       ContigSize_t sequence_length;
       contig()->sequence().offsetWithinSequence(sequence, contigOffset(), sequence_offset, sequence_length);
-      ss << reference() << offsetOutput(sequence_offset, output_index) << mutant() << delimiter;
-      ss << reference() << offsetOutput(contigOffset(), output_index) << mutant() << delimiter;
+      ss << DNA5::convertToChar(reference()) << offsetOutput(sequence_offset, output_index);
+      ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
+      ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
+      ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
 
     }
 
@@ -248,11 +253,13 @@ std::string kgl::SNPVariantDNA5::mutation(char delimiter, VariantOutputIndex out
 
     std::shared_ptr<const GeneFeature> gene_ptr = geneMembership().front();
     ss << gene_ptr->id() << " ";
-    ss << reference() << offsetOutput(contigOffset(), output_index) << mutant() << delimiter;
+    ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
+    ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
 
   } else { // non coding (non-gene) variant or unknown
 
-    ss << reference() << offsetOutput(contigOffset(), output_index) << mutant() << delimiter;
+    ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
+    ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
 
   }
 

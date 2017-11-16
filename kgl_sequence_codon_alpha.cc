@@ -1,13 +1,14 @@
 //
-// Created by kellerberrin on 14/11/17.
+// Created by kellerberrin on 16/11/17.
 //
 
-#include "kgl_sequence_codon.h"
+
+#include "kgl_sequence_codon_alpha.h"
 
 
 namespace kgl = kellerberrin::genome;
 
-/*
+
 
 kgl::Codon::Codon(std::shared_ptr<DNA5SequenceCoding> sequence_ptr, ContigOffset_t codon_index) {
 
@@ -28,4 +29,3 @@ kgl::Codon::Codon(std::shared_ptr<DNA5SequenceCoding> sequence_ptr, ContigOffset
 
 }
 
-*/

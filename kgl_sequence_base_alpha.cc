@@ -1,20 +1,20 @@
 //
-// Created by kellerberrin on 31/10/17.
+// Created by kellerberrin on 16/11/17.
 //
 
 
-#include "kgl_sequence_base.h"
-#include "kgl_sequence_codon.h"
+
+#include "kgl_sequence_base_alpha.h"
+#include "kgl_sequence_codon_alpha.h"
 
 namespace kgl = kellerberrin::genome;
 
-/*
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The base DNA5 sequence class.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool kgl::DNA5Sequence::modifyBase(NucleotideType Nucleotide, ContigOffset_t sequence_offset) {
+bool kgl::DNA5Sequence::modifyBase(DNA5::Alphabet nucleotide, ContigOffset_t sequence_offset) {
 
   if (sequence_offset >= base_sequence_.length()) {
 
@@ -23,7 +23,8 @@ bool kgl::DNA5Sequence::modifyBase(NucleotideType Nucleotide, ContigOffset_t seq
     return false;
   }
 
-  base_sequence_.at(sequence_offset) = Nucleotide;
+  base_sequence_.modifyNucleotide(sequence_offset, nucleotide);
+
   return true;
 
 }
@@ -37,17 +38,17 @@ bool kgl::DNA5Sequence::modifyBase(NucleotideType Nucleotide, ContigOffset_t seq
 
 std::shared_ptr<kgl::DNA5SequenceCoding>
 kgl::DNA5SequenceLinear::codingSubSequence(std::shared_ptr<const DNA5SequenceLinear> base_sequence_ptr,
-                                     std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                     ContigOffset_t sub_sequence_offset,  // base count offset; 0 == all
-                                     ContigSize_t sub_sequence_length,   // number of bases; 0 == all
-                                     ContigOffset_t contig_offset) {
+                                           std::shared_ptr<const CodingSequence> coding_seq_ptr,
+                                           ContigOffset_t sub_sequence_offset,  // base count offset; 0 == all
+                                           ContigSize_t sub_sequence_length,   // number of bases; 0 == all
+                                           ContigOffset_t contig_offset) {
 
 
   const SortedCDS& sorted_cds = coding_seq_ptr->getSortedCDS();
   // If no cds then return null string.
   if (sorted_cds.empty()) {
 
-    SequenceString null_seq;
+    StringDNA5 null_seq;
     return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(null_seq)));
 
   }
@@ -59,7 +60,7 @@ kgl::DNA5SequenceLinear::codingSubSequence(std::shared_ptr<const DNA5SequenceLin
                          sorted_cds.rbegin()->second->sequence().end(),
                          base_sequence_ptr->length(),
                          contig_offset);
-    SequenceString null_seq;
+    StringDNA5 null_seq;
     return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(null_seq)));
 
   }
@@ -86,12 +87,12 @@ kgl::DNA5SequenceLinear::codingSubSequence(std::shared_ptr<const DNA5SequenceLin
                          sub_sequence_offset,
                          sub_sequence_length,
                          calculated_seq_size);
-    SequenceString null_seq;
+    StringDNA5 null_seq;
     return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(null_seq)));
 
   }
 
-  SequenceString coding_sequence;
+  StringDNA5 coding_sequence;
   coding_sequence.reserve(sub_sequence_length + 1); // Just to make sure.
 
   // Get the strand and copy or reverse copy the base complement.
@@ -104,8 +105,8 @@ kgl::DNA5SequenceLinear::codingSubSequence(std::shared_ptr<const DNA5SequenceLin
 
     case StrandSense::FORWARD: {
 
-      SequenceString::const_iterator begin;
-      SequenceString::const_iterator end;
+      StringDNA5::const_iterator begin;
+      StringDNA5::const_iterator end;
       ContigOffset_t begin_offset;
       ContigOffset_t end_offset;
       ContigOffset_t relative_offset = 0;
@@ -159,13 +160,13 @@ kgl::DNA5SequenceLinear::codingSubSequence(std::shared_ptr<const DNA5SequenceLin
     case StrandSense::REVERSE: {
 
       // Insert in reverse complement order.
-      SequenceString::const_reverse_iterator rbegin;
-      SequenceString::const_reverse_iterator rend;
+      StringDNA5::const_reverse_iterator rbegin;
+      StringDNA5::const_reverse_iterator rend;
       ContigOffset_t begin_offset;
       ContigOffset_t end_offset;
       ContigOffset_t relative_offset = 0;
 
-      auto complement_base = [](NucleotideType base) { return ExtendDNA5::complementNucleotide(base); };
+      auto complement_base = [](DNA5::Alphabet base) { return DNA5::complementNucleotide(base); };
 
       for (auto rit = sorted_cds.rbegin(); rit != sorted_cds.rend(); ++rit) {
 
@@ -354,5 +355,3 @@ bool kgl::DNA5SequenceContig::offsetWithinSequence(std::shared_ptr<const CodingS
   return iscoding;
 
 }
-
-*/

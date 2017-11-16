@@ -3,8 +3,8 @@
 //
 
 #include "kgl_exec_env.h"
-#include "kgl_alphabet_string.h"
 #include "kgl_gff_fasta.h"
+#include "kgl_sequence_base.h"
 #include <seqan/seq_io.h>
 #include <boost/tokenizer.hpp>
 
@@ -71,15 +71,10 @@ void kgl::ParseGffFasta::GffFastaImpl::readFastaFile(const std::string& fasta_fi
     std::string id_line;
     seqan::move(id_line, ids[i]);
     ContigId_t  contig_id = id_line.substr(0, id_line.find_first_of(" \t,")); // Only the identifier.
-    SequenceString sequence;
-    seqan::move(sequence, seqs[i]);
-    std::shared_ptr<DNA5SequenceContig> sequence_ptr(std::make_shared<DNA5SequenceContig>(sequence));
-
-    StringDNA5 contig_string(sequence);
-    StringDNA5 sub_contig = contig_string.substr(10, 10);
-    ExecEnv::log().info("******** DEBUG ** contig: {},  StringDNA5 length :{}, substring: {}",
-                        contig_id, contig_string.length(), sub_contig.str());
-
+    std::string sequence_string;
+    seqan::move(sequence_string, seqs[i]);  // convert from seqan
+    StringDNA5 DNA5sequence(sequence_string); // convert to DNA5.
+    std::shared_ptr<DNA5SequenceContig> sequence_ptr(std::make_shared<DNA5SequenceContig>(DNA5sequence));
 
     if (not genome_db_ptr->addContigSequence(contig_id, sequence_ptr)) {
 

@@ -178,7 +178,7 @@ public:
   bool applyFilter(const ReadCountVariant& variant) const override { return true; }  // default
   bool applyFilter(const SNPVariantDNA5& variant) const override {
 
-    return variant.mutant() == ExtendDNA5::DELETE_NUCLEOTIDE;
+    return variant.mutant() == ExtendDNA5::Alphabet::X;
 
   }
   bool applyFilter(const CompoundDelete& variant) const override { return true; }

@@ -44,7 +44,7 @@ public:
   static constexpr Amino_t START_CODON = 'M';
   static constexpr Amino_t THREONINE = 'T';
   static constexpr Amino_t ASPARAGINE = 'N';
-  static constexpr Amino_t LYSINE = 'L';
+  static constexpr Amino_t LYSINE = 'K';
   static constexpr Amino_t VALINE = 'V';
   static constexpr Amino_t ALANINE = 'A';
   static constexpr Amino_t ASPARTIC = 'D';
@@ -63,6 +63,40 @@ public:
   // The special unknown amino acid generated when the DNA5 codon
   // contains the unknown base 'N'.
   static constexpr Amino_t UNKNOWN_AMINO = '?';
+
+  // The Alphabet enum type must be defined -see kgl_alphabet_string.h
+  enum class Alphabet : Nucleotide_t
+  { F = PHENYLALANINE,
+    L = LEUCINE,
+    S = SERINE,
+    Y = TYROSINE,
+    C = CYSTEINE,
+    W = TRYPTOPHAN,
+    P = PROLINE,
+    H = HISTIDINE,
+    Q = GLUTAMINE,
+    R = ARGININE,
+    I = ISOLEUCINE,
+    M = METHIONINE,
+    T = THREONINE,
+    N = ASPARAGINE,
+    K = LYSINE,
+    V = VALINE,
+    A = ALANINE,
+    D = ASPARTIC,
+    E = GLUTAMIC,
+    G = GLYCINE,
+    // Rare - The additional two amino acids encoded using stop codons by some species.
+    U = SELENOCYSTEINE,
+    O = PYRROLYSINE,
+    // The three stop codons.
+    _ = STOP_CODON,
+    // The special unknown amino acid generated when the DNA5 codon
+    // contains the unknown base 'N'.
+    Z = UNKNOWN_AMINO};
+
+  // The Alphabet convertChar(char) function must be defined -see kgl_alphabet_string.h
+  static Alphabet convertChar(char chr_base);
 
 
 };
