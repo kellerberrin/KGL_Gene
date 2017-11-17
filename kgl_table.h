@@ -34,15 +34,9 @@ public:
   // The NCBI Amino Acid translation tables. table should be in the interval [1, 31].
   bool setTranslationTable(size_t table);
 
-  Amino_t getAmino(const Codon& Codon) {
+  AminoAcid::Alphabet getAmino(const Codon& Codon) {
 
-    return amino_table_rows_.amino_table[index(Codon)].amino_acid;
-
-  }
-
-  Amino_t getStopAmino() {
-
-    return amino_table_rows_.amino_table[amino_table_rows_.stop_codon_index].amino_acid;
+    return AminoAcid::convertChar(amino_table_rows_.amino_table[index(Codon)].amino_acid);
 
   }
 

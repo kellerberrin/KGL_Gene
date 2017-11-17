@@ -22,9 +22,15 @@ namespace genome {   // project level namespace
 // This class is a facade; the file reading details are handled by a 3rd party library.
 
 // Passed in a vector to write a fasta sequence.
-// FastaSequence.first is the sequence name.
-// FastaSequence.second is the virtual sequence (Base or Amino).
-using FastaSequence = std::pair<std::string, std::shared_ptr<AlphabetSequence>>;
+// WriteFastaSequence.first is the sequence name.
+// WriteFastaSequence.second is the virtual sequence (Base or Amino).
+using WriteFastaSequence = std::pair<std::string, std::shared_ptr<AlphabetSequence>>;
+// Passed in a vector from fasta sequence read.
+// ReadFastaSequence.first is the sequence name.
+// ReadFastaSequence.second is a std::string of the fasta sequence.
+// Note that AlphabetSequence and AlphabetSequence_t are very different.
+using ReadFastaSequence = std::pair<std::string, std::shared_ptr<AlphabetSequence_t>>;
+
 
 class ParseGffFasta {
 
@@ -36,7 +42,9 @@ public:
   // Functionality passed to the implmentation.
   std::shared_ptr<GenomeDatabase> readFastaFile(const std::string& fasta_file_name);
 
-  bool writeFastaFile(const std::string& fasta_file_name, const std::vector<FastaSequence>& fasta_sequences);
+  bool writeFastaFile(const std::string& fasta_file_name, const std::vector<WriteFastaSequence>& fasta_sequences);
+
+  bool readFastaFile(const std::string& fasta_file_name, std::vector<ReadFastaSequence>& fasta_sequences);
 
   std::shared_ptr<GenomeDatabase> readFastaGffFile(const std::string& fasta_file_name,
                                                    const std::string& gff_file_name);

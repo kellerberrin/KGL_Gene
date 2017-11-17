@@ -1,107 +1,23 @@
 //
-// Created by kellerberrin on 31/10/17.
+// Created by kellerberrin on 17/11/17.
 //
 
-#ifndef KGL_ALPHABET_BASE_H
-#define KGL_ALPHABET_BASE_H
+#ifndef KGL_ALPHABET_EXTEND_H
+#define KGL_ALPHABET_EXTEND_H
 
 
-#include <cstdint>
-#include <memory>
-#include <string>
-#include <queue>
 #include "kgl_logging.h"
 #include "kgl_genome_types.h"
 #include "kgl_exec_env.h"
+#include "kgl_alphabet_dna5.h"
+
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 
-// Standard contig nucleotide column layout.
-// Implement the NUCLEOTIDE_COLUMNS as "A", "C", "G", "T"/"U", "-", "E", "F", "I", "J" "K" in that order.
+// Implement the extended NUCLEOTIDE_COLUMNS as "A", "C", "G", "T"/"U", "-", "E", "F", "I", "J" "K" in that order.
 // Note that "E" = +A , "F" = +C , "I" = +G, "J" = +T/U and "K" = +N.
-
-
-class DNA5 {
-
-public:
-
-
-  DNA5() = delete; // Singleton
-  ~DNA5() = delete;
-
-  static constexpr Nucleotide_t A_NUCLEOTIDE = 'A';
-  static constexpr Nucleotide_t A_NUCLEOTIDE_LC = 'a';
-  static constexpr ContigOffset_t A_NUCLEOTIDE_OFFSET = 0;
-  static constexpr Nucleotide_t C_NUCLEOTIDE = 'C';
-  static constexpr Nucleotide_t C_NUCLEOTIDE_LC = 'c';
-  static constexpr ContigOffset_t C_NUCLEOTIDE_OFFSET = 1;
-  static constexpr Nucleotide_t G_NUCLEOTIDE = 'G';
-  static constexpr Nucleotide_t G_NUCLEOTIDE_LC = 'g';
-  static constexpr ContigOffset_t G_NUCLEOTIDE_OFFSET = 2;
-  static constexpr Nucleotide_t U_NUCLEOTIDE = 'U';
-  static constexpr Nucleotide_t U_NUCLEOTIDE_LC = 'u';
-  static constexpr ContigOffset_t U_NUCLEOTIDE_OFFSET = 3;
-  static constexpr Nucleotide_t T_NUCLEOTIDE = 'T';
-  static constexpr Nucleotide_t T_NUCLEOTIDE_LC = 't';
-  static constexpr ContigOffset_t T_NUCLEOTIDE_OFFSET = 3;
-  static constexpr Nucleotide_t N_NUCLEOTIDE = 'N';
-  static constexpr Nucleotide_t N_NUCLEOTIDE_LC = 'n';
-  static constexpr ContigOffset_t N_NUCLEOTIDE_OFFSET = 4;
-
-
-  // The Alphabet enum type must be defined -see kgl_alphabet_string.h
-  enum class Alphabet : Nucleotide_t
-  { A = A_NUCLEOTIDE,
-    C = C_NUCLEOTIDE,
-    G = G_NUCLEOTIDE,
-    T = T_NUCLEOTIDE,
-    N = N_NUCLEOTIDE };
-
-  // The Alphabet convertChar(char) function must be defined -see kgl_alphabet_string.h
-  static Alphabet convertChar(char chr_base);
-
-  // Find complementary bases.
-  static Alphabet complementNucleotide(Alphabet nucleotide) {
-
-    // Translate the nucleotide
-    switch (nucleotide) {
-
-      case Alphabet::A: return Alphabet::T;
-      case Alphabet::C: return Alphabet::G;
-      case Alphabet::G: return Alphabet::C;
-      case Alphabet::T: return Alphabet::A;
-      case Alphabet::N: return Alphabet::N;
-
-    }
-
-    return Alphabet::N; //  Never reached, to keep the compiler happy.
-
-  }
-
-  // Convert a base to an array offset.
-  static ContigOffset_t nucleotideToColumn(Alphabet nucleotide) {
-
-    // Translate the nucleotide to an array column
-    switch (nucleotide) {
-
-      case Alphabet::A: return A_NUCLEOTIDE_OFFSET;
-      case Alphabet::C: return C_NUCLEOTIDE_OFFSET;
-      case Alphabet::G: return G_NUCLEOTIDE_OFFSET;
-      case Alphabet::T: return T_NUCLEOTIDE_OFFSET;
-      case Alphabet::N: return N_NUCLEOTIDE_OFFSET;
-
-    }
-
-    return N_NUCLEOTIDE_OFFSET; //  Never reached, to keep the compiler happy.
-
-  }
-
-  static char convertToChar(Alphabet nucleotide) { return static_cast<char>(nucleotide); }
-
-};
-
 
 
 class ExtendDNA5  {
@@ -114,22 +30,16 @@ public:
   static constexpr ContigOffset_t NUCLEOTIDE_COLUMNS = 11;
 
   static constexpr Nucleotide_t A_NUCLEOTIDE = 'A';
-  static constexpr Nucleotide_t A_NUCLEOTIDE_LC = 'a';
   static constexpr ContigOffset_t A_NUCLEOTIDE_OFFSET = 0;
   static constexpr Nucleotide_t C_NUCLEOTIDE = 'C';
-  static constexpr Nucleotide_t C_NUCLEOTIDE_LC = 'c';
   static constexpr ContigOffset_t C_NUCLEOTIDE_OFFSET = 1;
   static constexpr Nucleotide_t G_NUCLEOTIDE = 'G';
-  static constexpr Nucleotide_t G_NUCLEOTIDE_LC = 'g';
   static constexpr ContigOffset_t G_NUCLEOTIDE_OFFSET = 2;
   static constexpr Nucleotide_t U_NUCLEOTIDE = 'U';
-  static constexpr Nucleotide_t U_NUCLEOTIDE_LC = 'u';
   static constexpr ContigOffset_t U_NUCLEOTIDE_OFFSET = 3;
   static constexpr Nucleotide_t T_NUCLEOTIDE = 'T';
-  static constexpr Nucleotide_t T_NUCLEOTIDE_LC = 't';
   static constexpr ContigOffset_t T_NUCLEOTIDE_OFFSET = 3;
   static constexpr Nucleotide_t N_NUCLEOTIDE = 'N';
-  static constexpr Nucleotide_t N_NUCLEOTIDE_LC = 'n';
   static constexpr ContigOffset_t N_NUCLEOTIDE_OFFSET = 4;
   static constexpr Nucleotide_t DELETE_NUCLEOTIDE = '-';
   static constexpr ContigOffset_t DELETE_NUCLEOTIDE_OFFSET = 5;
@@ -148,7 +58,6 @@ public:
 
 
   // Note that X = Delete, E = A insert, F = C insert, I = G insert, J = T insert and K = N insert.
-  // The Alphabet enum type must be defined -see kgl_alphabet_string.h
   // The extended alphabet does not conflict with LUPAC codes.
   enum class Alphabet : Nucleotide_t
   { A = A_NUCLEOTIDE,
@@ -164,11 +73,13 @@ public:
     K = INSERT_N_NUCLEOTIDE
   };
 
+
   static bool isDeletion(Alphabet nucleotide) {
 
     return nucleotide == Alphabet::X;
 
   }
+
 
   static bool isInsertion(Alphabet nucleotide) {
 
@@ -208,6 +119,7 @@ public:
     }
 
   }
+
 
   static DNA5::Alphabet extendToBase(Alphabet nucleotide) {
 
@@ -300,30 +212,6 @@ public:
 
   }
 
-
-  // Find extended complementary bases.
-  static Alphabet complementNucleotide(Alphabet nucleotide) {
-
-    switch (nucleotide) {
-
-      case Alphabet::A: return Alphabet::T;
-      case Alphabet::C: return Alphabet::G;
-      case Alphabet::G: return Alphabet::C;
-      case Alphabet::T: return Alphabet::A;
-      case Alphabet::N: return Alphabet::N;
-      case Alphabet::X: return Alphabet::X;
-      case Alphabet::E: return Alphabet::J;
-      case Alphabet::F: return Alphabet::I;
-      case Alphabet::I: return Alphabet::F;
-      case Alphabet::J: return Alphabet::E;
-      case Alphabet::K: return Alphabet::K;
-
-    }
-
-    return Alphabet::N; // Never reached, to keep the compiler happy.
-
-  }
-
   // The Alphabet convertChar(char) function must be defined -see kgl_alphabet_string.h
   static Alphabet convertChar(char chr_base);
 
@@ -336,4 +224,4 @@ public:
 }   // namespace kellerberrin
 
 
-#endif //KGL_ALPHABET_BASE_H
+#endif //KGL_ALPHABET_EXTEND_H

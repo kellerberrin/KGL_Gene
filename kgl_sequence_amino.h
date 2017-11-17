@@ -14,30 +14,41 @@
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The Amino alphabet strings are defined here.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+using StringAminoAcid = AlphabetString<AminoAcid>;
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Amino Sequence - A container for Amino Acid (protein) sequences.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-using AminoType = Amino_t;
-using ProteinString = std::basic_string<AminoType>;
+
+
 
 class AminoSequence: public AlphabetSequence {
 
 public:
 
-  explicit AminoSequence(ProteinString sequence) : amino_sequence_(std::move(sequence)) {};
+  explicit AminoSequence(StringAminoAcid sequence) : amino_sequence_(std::move(sequence)) {};
   AminoSequence() = delete;
   ~AminoSequence() override = default;
 
-  std::string getSequenceAsString() const override { return static_cast<std::string>(amino_sequence_); }
+  std::string getSequenceAsString() const override { return amino_sequence_.str(); }
 
-  AminoType operator[] (ContigOffset_t& offset) const { return amino_sequence_[offset]; }
+  AminoAcid::Alphabet operator[] (ContigOffset_t& offset) const { return amino_sequence_[offset]; }
   ContigSize_t length() const { return amino_sequence_.length(); }
 
+  const std::string compareAminoSequences(const std::shared_ptr<const AminoSequence>& amino_seq_ptr) const {
 
-  static ProteinString emphasizeProteinString(const ProteinString& getProteinString,
-                                              const std::vector<ContigOffset_t>& emphasize_offsets);
+    return compareAminoSequences(amino_seq_ptr->amino_sequence_, amino_sequence_);
 
-  const ProteinString emphasizeProteinString(const std::vector<ContigOffset_t>& emphasize_offsets) const {
+  }
+
+  const std::string emphasizeAminoSequence(const std::vector<ContigOffset_t>& emphasize_offsets) const {
 
     return emphasizeProteinString(amino_sequence_, emphasize_offsets);
 
@@ -45,7 +56,13 @@ public:
 
 private:
 
-  ProteinString amino_sequence_;
+  StringAminoAcid amino_sequence_;
+
+  static std::string emphasizeProteinString(const StringAminoAcid& amino_string,
+                                            const std::vector<ContigOffset_t>& emphasize_offsets);
+
+  static std::string compareAminoSequences(const StringAminoAcid& compare_amino,
+                                           const StringAminoAcid& reference_amino);
 
 };
 
@@ -97,7 +114,7 @@ public:
 
   size_t checkNonsenseMutation(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const;
 
-  Amino_t getAmino(std::shared_ptr<DNA5SequenceCoding> sequence_ptr, ContigSize_t codon_index) const;
+  AminoAcid::Alphabet getAmino(std::shared_ptr<DNA5SequenceCoding> sequence_ptr, ContigSize_t codon_index) const;
 
   // Returns the amino mutation of an SNP in a coding sequence.
   bool SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
@@ -106,8 +123,8 @@ public:
                    DNA5::Alphabet reference_base,
                    DNA5::Alphabet mutant_base,
                    ContigOffset_t& codon_offset,
-                   Amino_t& reference_amino,
-                   Amino_t& mutant_amino) const;
+                   AminoAcid::Alphabet& reference_amino,
+                   AminoAcid::Alphabet& mutant_amino) const;
 
 private:
 

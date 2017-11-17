@@ -7,15 +7,14 @@
 
 
 #include "kgl_exec_env.h"
-#include "kgl_alphabet_base.h"
-
+#include "kgl_genome_types.h"
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Defines the standard Amino Acids. Used as a template class with the Amino Acid sequence objects.
+// Defines the standard Amino Acids.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -25,8 +24,6 @@ public:
 
   AminoAcid() = delete; // Singleton
   ~AminoAcid() = delete;
-
-  static constexpr size_t CODING_NUCLEOTIDES = 4;
 
   // The 20 'natural amino acids
   static constexpr Amino_t PHENYLALANINE = 'F';
@@ -65,7 +62,7 @@ public:
   static constexpr Amino_t UNKNOWN_AMINO = '?';
 
   // The Alphabet enum type must be defined -see kgl_alphabet_string.h
-  enum class Alphabet : Nucleotide_t
+  enum class Alphabet : Amino_t
   { F = PHENYLALANINE,
     L = LEUCINE,
     S = SERINE,
@@ -95,9 +92,14 @@ public:
     // contains the unknown base 'N'.
     Z = UNKNOWN_AMINO};
 
+  static constexpr Alphabet AMINO_STOP = Alphabet::_;
+  static constexpr Alphabet AMINO_UNKNOWN = Alphabet::Z;
+
   // The Alphabet convertChar(char) function must be defined -see kgl_alphabet_string.h
   static Alphabet convertChar(char chr_base);
 
+  // Return amin acid as a char.
+  static char convertToChar(Alphabet nucleotide) { return static_cast<char>(nucleotide); }
 
 };
 

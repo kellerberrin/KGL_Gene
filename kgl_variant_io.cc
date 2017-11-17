@@ -31,13 +31,12 @@ bool kgl::GenomeVariant::outputCSV(const std::string& file_name, VariantOutputIn
 
 }
 
-
-bool kgl::GenomeVariant::writeMutantProtein(const std::string& fasta_file,
-                                            const std::string& sequence_name,
-                                            const ContigId_t& contig_id,
-                                            const FeatureIdent_t& gene_id,
-                                            const FeatureIdent_t& sequence_id,
-                                            const std::shared_ptr<const GenomeDatabase>& genome_db) const {
+bool kgl::GenomeVariant::mutantProtein( const std::string& sequence_name,
+                                        const ContigId_t& contig_id,
+                                        const FeatureIdent_t& gene_id,
+                                        const FeatureIdent_t& sequence_id,
+                                        const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                        std::shared_ptr<AminoSequence>& amino_sequence) const {
 
   // Filter the variants, assumes that gene is only unique to contig and sequence is only unique to gene.
   std::shared_ptr<GenomeVariant> variant_ptr = filterVariants(ContigFilter(contig_id));
@@ -67,12 +66,8 @@ bool kgl::GenomeVariant::writeMutantProtein(const std::string& fasta_file,
     std::shared_ptr<ContigFeatures> contig_ptr;
     if (genome_db->getContigSequence(contig_id, contig_ptr)) {
 
-      std::shared_ptr<AminoSequence> amino_sequence = contig_ptr->getAminoSequence(sequence_ptr);
-
-      FastaSequence fasta_sequence;
-      fasta_sequence.first = sequence_name;
-      fasta_sequence.second = amino_sequence;
-      return ParseGffFasta().writeFastaFile(fasta_file, std::vector<FastaSequence>{fasta_sequence});
+      amino_sequence = contig_ptr->getAminoSequence(sequence_ptr);
+      return true;
 
     } else {
 
@@ -83,13 +78,14 @@ bool kgl::GenomeVariant::writeMutantProtein(const std::string& fasta_file,
 
   } else {
 
-    ExecEnv::log().warn("No valid sequence for contig: {}, gene: {}, sequence id: {} Fasta: {} not written",
-                        contig_id, gene_id, sequence_id, fasta_file);
+    ExecEnv::log().warn("No valid sequence for contig: {}, gene: {}, sequence id: {}",
+                        contig_id, gene_id, sequence_id);
     return false;
 
   }
 
 }
+
 
 
 std::ostream& operator<<(std::ostream &os, const kgl::GenomeVariant& genome_variant) {

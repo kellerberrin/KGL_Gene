@@ -217,8 +217,8 @@ std::string kgl::SNPVariantDNA5::mutation(char delimiter, VariantOutputIndex out
     if (ExtendDNA5::isBaseCode(mutant())) {
 
       ContigOffset_t codon_offset;
-      Amino_t reference_amino;
-      Amino_t mutant_amino;
+      AminoAcid::Alphabet reference_amino;
+      AminoAcid::Alphabet mutant_amino;
 
       if (contig()->SNPMutation(sequence,
                                 contigOffset(),
@@ -228,7 +228,8 @@ std::string kgl::SNPVariantDNA5::mutation(char delimiter, VariantOutputIndex out
                                 reference_amino,
                                 mutant_amino)) {
 
-        ss << reference_amino << offsetOutput(codon_offset, output_index) << mutant_amino << delimiter;
+        ss << AminoAcid::convertToChar(reference_amino) << offsetOutput(codon_offset, output_index);
+        ss << AminoAcid::convertToChar(mutant_amino) << delimiter;
         ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
         ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
 //        sequence->getGene()->recusivelyPrintsubfeatures();

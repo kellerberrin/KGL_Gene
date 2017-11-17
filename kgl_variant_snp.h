@@ -104,8 +104,6 @@ public:
 
   // complement base if -ve strand and coding or intron.
   DNA5::Alphabet strandReference() const { return strandNucleotide(reference()); }
-  // complement base if -ve strand and coding or intron.
-//  ExtendDNA5::Alphabet strandMutant() const { return strandNucleotide(mutant()); }
 
   std::string output(char delimiter, VariantOutputIndex output_index) const override;
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
@@ -117,7 +115,6 @@ private:
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
   DNA5::Alphabet strandNucleotide(DNA5::Alphabet nucleotide) const;
-//  ExtendDNA5::Alphabet strandNucleotide(ExtendDNA5::Alphabet nucleotide) const;
 
 };
 

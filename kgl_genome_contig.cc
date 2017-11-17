@@ -125,8 +125,8 @@ bool kgl::ContigFeatures::SNPMutation(std::shared_ptr<const CodingSequence> codi
                                       DNA5::Alphabet reference_base,
                                       DNA5::Alphabet mutant_base,
                                       ContigOffset_t& codon_offset,
-                                      Amino_t& reference_amino,
-                                      Amino_t& mutant_amino) const {
+                                      AminoAcid::Alphabet& reference_amino,
+                                      AminoAcid::Alphabet& mutant_amino) const {
 
 
   return coding_sequence_.SNPMutation(coding_seq_ptr,

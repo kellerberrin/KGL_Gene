@@ -64,8 +64,8 @@ public:
                    DNA5::Alphabet reference_base,
                    DNA5::Alphabet mutant_base,
                    ContigOffset_t& codon_offset,
-                   Amino_t& reference_amino,
-                   Amino_t& mutant_amino) const;
+                   AminoAcid::Alphabet& reference_amino,
+                   AminoAcid::Alphabet& mutant_amino) const;
 
   // give a gene id and an mRNA (sequence id) return the coding base sequence.
   bool getDNA5SequenceCoding(const FeatureIdent_t& gene_id,

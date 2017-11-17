@@ -9,6 +9,7 @@
 #include "kgl_sam_process.h"
 #include "kgl_variant_evidence.h"
 #include "kgl_filter.h"
+#include "kgl_phylogenetic_analysis.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -82,29 +83,55 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
     variant_ptr->outputCSV(args.outCSVFile, VariantOutputIndex::START_1_BASED);
     std::string fasta_file_name = ExecEnv::filePath(file.genome_name, args.workDirectory) + ".fasta";
     std::string sequence_name = "PF3D7_1211900_" + file.genome_name;
+    std::string read_fasta_name = ExecEnv::filePath("PF3D7_1211900_Reference", args.workDirectory) + ".fasta";
 
-//#define MUTANT_PROTEIN 1
+
+#define MUTANT_PROTEIN 1
 #define MALAWI 1
 
 #ifdef MUTANT_PROTEIN
 #ifdef MALAWI
 
-    variant_ptr->writeMutantProtein(fasta_file_name,
-                                    sequence_name,
-                                    "Pf3D7_12_v3",
-                                    "PF3D7_1211900",
-                                    "PF3D7_1211900.1",
-                                    genome_db_ptr);
+    ApplicationAnalysis::writeMutantProtein(fasta_file_name,
+                                            sequence_name,
+                                            "Pf3D7_12_v3",
+                                            "PF3D7_1211900",
+                                            "PF3D7_1211900.1",
+                                            genome_db_ptr,
+                                            variant_ptr);
 
+    std::string comparison;
+    ApplicationAnalysis::readMutantProtein(read_fasta_name,
+                                           "PF3D7_1211900",
+                                           "Pf3D7_12_v3",
+                                           "PF3D7_1211900",
+                                           "PF3D7_1211900.1",
+                                           genome_db_ptr,
+                                           variant_ptr,
+                                           comparison);
+
+    ExecEnv::log().info("PF3D7_1211900 comparison:\n{}", comparison);
 
 #else
 
-    variant_ptr->writeMutantProtein(fasta_file_name,
-                                    sequence_name,
-                                    "chr12",
-                                    "PF3D7_1211900",
-                                    "rna_PF3D7_1211900-1",
-                                    genome_db_ptr);
+    ApplicationAnalysis::writeMutantProtein(fasta_file_name,
+                                            sequence_name,
+                                            "chr12",
+                                            "PF3D7_1211900",
+                                            "rna_PF3D7_1211900-1",
+                                            genome_db_ptr,
+                                            variant_ptr);
+    std::string comparison;
+    ApplicationAnalysis::readMutantProtein(read_fasta_name,
+                                           "PF3D7_1211900",
+                                           "chr12",
+                                           "PF3D7_1211900",
+                                           "rna_PF3D7_1211900-1",
+                                           genome_db_ptr,
+                                           variant_ptr,
+                                           comparison);
+
+    ExecEnv::log().info("PF3D7_1211900 comparison:\n{}", comparison);
 
 #endif
 #endif

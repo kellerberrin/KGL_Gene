@@ -10,7 +10,7 @@
 #include <string>
 #include <algorithm>
 #include "kgl_genome_types.h"
-#include "kgl_alphabet_base.h"
+#include "kgl_alphabet_dna5.h"
 #include "kgl_alphabet_amino.h"
 
 
@@ -31,8 +31,6 @@ public:
 
   explicit AlphabetString() = default;
   explicit AlphabetString(const std::string& alphabet_str) { convertFromCharString(alphabet_str); }
-  explicit AlphabetString(std::basic_string<typename Alphabet::Alphabet> base_string)
-  : base_string_(std::move(base_string)) {}
   ~AlphabetString() = default;
 
   // Iterators to access the underlying std::basic_string
@@ -45,13 +43,6 @@ public:
   void push_back(typename Alphabet::Alphabet nucleotide) { base_string_.push_back(nucleotide); }
 
   AlphabetString& operator=(const AlphabetString& copy) = default;
-
-  AlphabetString substr(ContigOffset_t offset, ContigSize_t size)
-  {
-
-    return AlphabetString(base_string_.substr(offset, size));
-
-  }
 
   ContigSize_t length() const { return base_string_.length(); }
 
@@ -98,20 +89,6 @@ void AlphabetString<Alphabet>::convertFromCharString(const std::string &alphabet
 }
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// The alphabet strings are defined here.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-// A string of the standard 5 nucleotide DNA/RNA alphabet A, C, G, T/U, N
-using StringDNA5 = AlphabetString<DNA5>;
-
-// A string of the extended DNA5 alphabet to include deletions and insertions.
-// Note that X = Delete, E = A insert, F = C insert, I = G insert, J = T insert and K = N insert.
-using StringExtendDNA5 = AlphabetString<ExtendDNA5>;
-
-// Defines a string of the Amino Acid alphabet
-using StringAminoAcid = AlphabetString<AminoAcid>;
 
 
 }

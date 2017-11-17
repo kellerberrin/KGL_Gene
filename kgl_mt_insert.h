@@ -10,7 +10,7 @@
 #include <vector>
 #include "kgl_lock.h"
 #include "kgl_genome_types.h"
-#include "kgl_alphabet_base.h"
+#include "kgl_alphabet_extend.h"
 #include "kgl_exec_env.h"
 
 
@@ -28,7 +28,7 @@ public:
   ~InsertQueue() = default;
 
   // Thread safe
-  void push(const ContigId_t& contig_id, const ContigOffset_t& contig_offset, const CharSequence_t& sequence) {
+  void push(const ContigId_t& contig_id, const ContigOffset_t& contig_offset, const AlphabetSequence_t& sequence) {
 
     std::lock_guard<std::mutex> lock(mutex_);
 
@@ -63,13 +63,13 @@ private:
 
   std::vector<ContigId_t> contig_id_vector_;
   std::vector<ContigOffset_t> contig_offset_vector_;
-  std::vector<CharSequence_t> sequence_vector_;
+  std::vector<AlphabetSequence_t> sequence_vector_;
 
 };
 
 
 // The insert sequence data structure is an contig sized array of maps indexed by contig offset.
-using OffsetSequenceMap = std::map<const CharSequence_t, NucleotideReadCount_t>;
+using OffsetSequenceMap = std::map<const AlphabetSequence_t, NucleotideReadCount_t>;
 
 template <class LockingStrategy = ArrayMutex>    // Specify a GranularityMutex or an ArrayMutex.
 class ContigInsertSequences {
@@ -82,7 +82,7 @@ public:
          contig_size_(contig_size) {}
   ~ContigInsertSequences() = default;
 
-  inline void insertSequence(ContigOffset_t contig_offset, const CharSequence_t& sequence) {
+  inline void insertSequence(ContigOffset_t contig_offset, const AlphabetSequence_t& sequence) {
 
     if (contig_offset >= contig_size_) {
 

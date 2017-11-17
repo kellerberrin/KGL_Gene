@@ -10,8 +10,63 @@
 namespace kgl = kellerberrin::genome;
 
 
-kgl::ProteinString kgl::AminoSequence::emphasizeProteinString(const ProteinString& protein_string,
-                                                              const std::vector<ContigOffset_t>& emphasize_offsets) {
+
+std::string kgl::AminoSequence::compareAminoSequences(const StringAminoAcid& compare_amino,
+                                                      const StringAminoAcid& reference_amino) {
+
+  ContigSize_t length_compare = compare_amino.length();
+  ContigSize_t length_reference = reference_amino.length();
+
+  ContigSize_t common_length = length_reference <= length_compare ? length_reference : length_compare;
+
+  std::vector<ContigOffset_t> differences;
+  for (ContigOffset_t index = 0; index < common_length; ++index) {
+
+
+    if (reference_amino[index] != compare_amino[index]) {
+
+      differences.push_back(index);
+
+    }
+
+  }
+
+  ExecEnv::log().info("compareAminoSequences(), found: {} amino sequence differences, common length: {}",
+                      differences.size(), common_length);
+
+  std::string comparison_string;
+  if (common_length == length_reference) {
+
+    comparison_string = kgl::AminoSequence::emphasizeProteinString(compare_amino, differences);
+    comparison_string += "  comparison>";
+    for (ContigOffset_t index = common_length; index < length_compare; ++index) {
+
+      comparison_string += kgl::AminoAcid::convertToChar(compare_amino[index]);
+
+    }
+
+
+  } else if (common_length == length_compare) {
+
+    comparison_string = kgl::AminoSequence::emphasizeProteinString(compare_amino, differences);
+    comparison_string += "  reference>";
+    for (ContigOffset_t index = common_length; index < length_reference; ++index) {
+
+      comparison_string += kgl::AminoAcid::convertToChar(reference_amino[index]);
+
+    }
+
+  }
+
+  return comparison_string;
+
+}
+
+
+std::string kgl::AminoSequence::emphasizeProteinString(const StringAminoAcid& amino_string,
+                                                       const std::vector<ContigOffset_t>& emphasize_offsets) {
+
+  std::string protein_string = amino_string.str();
 
   if (emphasize_offsets.empty()) return protein_string;
 
@@ -23,7 +78,7 @@ kgl::ProteinString kgl::AminoSequence::emphasizeProteinString(const ProteinStrin
 
   }
 
-  ProteinString emph_protein_string;
+  std::string emph_protein_string;
   size_t index = 0;
   for (auto offset : ordered_offsets) {
 
@@ -69,8 +124,8 @@ kgl::ProteinString kgl::AminoSequence::emphasizeProteinString(const ProteinStrin
 std::shared_ptr<kgl::AminoSequence>
 kgl::TranslateToAmino::getAminoSequence(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const {
 
-  ProteinString protein_string;
-  Amino_t amino_acid;
+  StringAminoAcid protein_string;
+  AminoAcid::Alphabet amino_acid;
 
   protein_string.reserve(Codon::codonLength(sequence_ptr));
 
@@ -113,14 +168,14 @@ size_t kgl::TranslateToAmino::checkNonsenseMutation(std::shared_ptr<DNA5Sequence
 
 
 
-kgl::Amino_t kgl::TranslateToAmino::getAmino(std::shared_ptr<DNA5SequenceCoding> sequence_ptr,
-                                             ContigOffset_t codon_index) const {
+kgl::AminoAcid::Alphabet kgl::TranslateToAmino::getAmino(std::shared_ptr<DNA5SequenceCoding> sequence_ptr,
+                                                         ContigOffset_t codon_index) const {
 
   Codon codon(sequence_ptr, codon_index);
 
   if (codon.containsBaseN()) {
 
-    return AminoAcid::UNKNOWN_AMINO;
+    return AminoAcid::Alphabet::Z;
 
   }
 
@@ -130,13 +185,13 @@ kgl::Amino_t kgl::TranslateToAmino::getAmino(std::shared_ptr<DNA5SequenceCoding>
 
 
 bool kgl::TranslateToAmino::SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                          const std::shared_ptr<const DNA5SequenceContig>& contig_sequence_ptr,
-                                          ContigOffset_t contig_offset,
-                                          DNA5::Alphabet reference_base,
-                                          DNA5::Alphabet mutant_base,
-                                          ContigOffset_t& codon_offset,
-                                          Amino_t& reference_amino,
-                                          Amino_t& mutant_amino) const {
+                                        const std::shared_ptr<const DNA5SequenceContig>& contig_sequence_ptr,
+                                        ContigOffset_t contig_offset,
+                                        DNA5::Alphabet reference_base,
+                                        DNA5::Alphabet mutant_base,
+                                        ContigOffset_t& codon_offset,
+                                        AminoAcid::Alphabet& reference_amino,
+                                        AminoAcid::Alphabet& mutant_amino) const {
 
   bool result;
 
@@ -207,8 +262,8 @@ bool kgl::TranslateToAmino::SNPMutation(std::shared_ptr<const CodingSequence> co
   if (not result) {
 
     codon_offset = 0;
-    reference_amino = table_ptr_->getStopAmino();
-    mutant_amino = table_ptr_->getStopAmino();
+    reference_amino = AminoAcid::AMINO_UNKNOWN;  // The unknown amino acid
+    mutant_amino = AminoAcid::AMINO_UNKNOWN;
     return false;
 
   }

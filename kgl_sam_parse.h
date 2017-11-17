@@ -37,7 +37,7 @@ public:
     return std::stoull(record_ptr->substr(sam_fields_[POS_OFFSET].first, sam_fields_[POS_OFFSET].second)) - 1;
 
   }
-  inline const CharSequence_t getSubSequence( std::unique_ptr<const std::string>& record_ptr
+  inline const AlphabetSequence_t getSubSequence( std::unique_ptr<const std::string>& record_ptr
   , std::size_t start
   , std::size_t length) {
 
