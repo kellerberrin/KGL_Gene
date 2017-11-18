@@ -54,6 +54,8 @@ public:
 
   }
 
+  bool removeTrailingStop();  // Remove the stop codon (if present).
+
 private:
 
   StringAminoAcid amino_sequence_;

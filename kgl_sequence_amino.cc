@@ -11,6 +11,12 @@ namespace kgl = kellerberrin::genome;
 
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Amino Sequence - A container for Amino Acid (protein) sequences.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 std::string kgl::AminoSequence::compareAminoSequences(const StringAminoAcid& compare_amino,
                                                       const StringAminoAcid& reference_amino) {
 
@@ -35,9 +41,9 @@ std::string kgl::AminoSequence::compareAminoSequences(const StringAminoAcid& com
                       differences.size(), common_length);
 
   std::string comparison_string;
-  if (common_length == length_reference) {
+  comparison_string = kgl::AminoSequence::emphasizeProteinString(compare_amino, differences);
+  if (common_length < length_compare) {
 
-    comparison_string = kgl::AminoSequence::emphasizeProteinString(compare_amino, differences);
     comparison_string += "  comparison>";
     for (ContigOffset_t index = common_length; index < length_compare; ++index) {
 
@@ -46,9 +52,8 @@ std::string kgl::AminoSequence::compareAminoSequences(const StringAminoAcid& com
     }
 
 
-  } else if (common_length == length_compare) {
+  } else if (common_length < length_reference) {
 
-    comparison_string = kgl::AminoSequence::emphasizeProteinString(compare_amino, differences);
     comparison_string += "  reference>";
     for (ContigOffset_t index = common_length; index < length_reference; ++index) {
 
@@ -121,6 +126,34 @@ std::string kgl::AminoSequence::emphasizeProteinString(const StringAminoAcid& am
 }
 
 
+
+bool kgl::AminoSequence::removeTrailingStop() {
+
+  if (amino_sequence_.empty()) {
+
+    ExecEnv::log().warn("Attempt to remove trailing stop amino acid from empty amino sequence");
+    return false;
+
+  }
+
+  if (*amino_sequence_.rbegin() == AminoAcid::AMINO_STOP) {
+
+    amino_sequence_.pop_back();
+    return true;
+
+  } else {  // Not a stop codon.
+
+    return false;
+
+  }
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// TranslateToAmino - Convert DNA/RNA base sequences to Amino acid sequences.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 std::shared_ptr<kgl::AminoSequence>
 kgl::TranslateToAmino::getAminoSequence(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const {
 
@@ -137,6 +170,8 @@ kgl::TranslateToAmino::getAminoSequence(std::shared_ptr<DNA5SequenceCoding> sequ
   }
 
   std::shared_ptr<AminoSequence> amino_sequence(std::make_shared<AminoSequence>(protein_string));
+
+  amino_sequence->removeTrailingStop();  // Remove the trailing stop Amino Acid (if present).
 
   return amino_sequence;
 

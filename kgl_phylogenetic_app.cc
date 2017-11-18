@@ -46,10 +46,10 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
   std::shared_ptr<const kgl::GenomeVariant> compound_snp_ptr = kgl::VariantAnalysis().compoundSNP(variant_ptr,
                                                                                                   genome_db_ptr);
   variant_ptr = variant_ptr->filterVariants(kgl::InCDSFilter());
+  std::cout << *variant_ptr;
   // Filter for PfATP4
   variant_ptr = variant_ptr->filterVariants(kgl::GeneFilter("PF3D7_1211900"));
 //  variant_ptr = variant_ptr->filterVariants(kgl::SequenceFilter("rna_PF3D7_1211900-1"));
-  std::cout << *variant_ptr;
   return variant_ptr;
 
 }
@@ -101,16 +101,18 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
                                             variant_ptr);
 
     std::string comparison;
-    ApplicationAnalysis::readMutantProtein(read_fasta_name,
+    if (ApplicationAnalysis::readMutantProtein(read_fasta_name,
                                            "PF3D7_1211900",
                                            "Pf3D7_12_v3",
                                            "PF3D7_1211900",
                                            "PF3D7_1211900.1",
                                            genome_db_ptr,
                                            variant_ptr,
-                                           comparison);
+                                           comparison)) {
 
-    ExecEnv::log().info("PF3D7_1211900 comparison:\n{}", comparison);
+      ExecEnv::log().info("PF3D7_1211900 comparison:\n{}", comparison);
+
+    }
 
 #else
 
@@ -122,16 +124,18 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
                                             genome_db_ptr,
                                             variant_ptr);
     std::string comparison;
-    ApplicationAnalysis::readMutantProtein(read_fasta_name,
+    if (ApplicationAnalysis::readMutantProtein(read_fasta_name,
                                            "PF3D7_1211900",
                                            "chr12",
                                            "PF3D7_1211900",
                                            "rna_PF3D7_1211900-1",
                                            genome_db_ptr,
                                            variant_ptr,
-                                           comparison);
+                                           comparison)) {
 
-    ExecEnv::log().info("PF3D7_1211900 comparison:\n{}", comparison);
+      ExecEnv::log().info("PF3D7_1211900 comparison:\n{}", comparison);
+
+    }
 
 #endif
 #endif

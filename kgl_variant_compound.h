@@ -27,6 +27,7 @@ namespace genome {   // project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using CompoundVariantMap = std::map<ContigOffset_t, std::shared_ptr<const Variant>>;
+
 class CompoundVariant : public Variant {
 
 public:

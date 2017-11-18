@@ -41,10 +41,12 @@ public:
   const_iterator begin() const { return base_string_.begin(); }
   const_reverse_iterator rbegin() const { return base_string_.rbegin(); }
   void push_back(typename Alphabet::Alphabet nucleotide) { base_string_.push_back(nucleotide); }
+  void pop_back() { base_string_.pop_back(); }
 
   AlphabetString& operator=(const AlphabetString& copy) = default;
 
   ContigSize_t length() const { return base_string_.length(); }
+  bool empty() const { return base_string_.empty(); }
 
   void reserve(ContigSize_t string_size) { base_string_.reserve(string_size); }
 
