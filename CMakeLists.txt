@@ -12,6 +12,7 @@ include_directories(/usr/local/lib/pybind11/include
 
 # add boost library directories
 set(BOOST_ROOT /usr/lib/boost)
+set(BOOST_INCLUDEDIR /usr/include/boost)
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
