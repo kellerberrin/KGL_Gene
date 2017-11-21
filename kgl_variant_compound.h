@@ -52,7 +52,33 @@ protected:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  A compound delete. 3 contiguous SNP deletions aligned on a Gene codon boundary delete a single Amino Acid
+//  A compound insert. Contiguous SNP insertions insert new nucleotides.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class CompoundInsert : public CompoundVariant {
+
+public:
+
+  CompoundInsert(std::shared_ptr<const ContigFeatures> contig_ptr,
+                 ContigOffset_t contig_offset,
+                 const CompoundVariantMap variant_map)
+  : CompoundVariant(contig_ptr, contig_offset, variant_map) {}
+  ~CompoundInsert() override = default;
+
+private:
+
+
+  bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
+  std::string output(char delimter, VariantOutputIndex output_index) const override;
+  std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
+  bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
+                            std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const override;
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  A compound delete. Contiguous SNP deletions delete nucleotides.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class CompoundDelete : public CompoundVariant {
