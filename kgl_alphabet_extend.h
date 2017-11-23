@@ -73,7 +73,6 @@ public:
     K = INSERT_N_NUCLEOTIDE
   };
 
-
   static bool isDeletion(Alphabet nucleotide) {
 
     return nucleotide == Alphabet::X;

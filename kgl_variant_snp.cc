@@ -184,23 +184,7 @@ bool kgl::SNPVariantDNA5::mutateCodingSequence(const FeatureIdent_t& sequence_id
 
   }
 
-
-  // Debug get the amino sequence and highlight the mutant AA.
-/*
-  ContigOffset_t codon_offset;
-  ContigSize_t base_in_codon;
-  TranslateToAmino::codonOffset(coding_sequence, contigOffset(), codon_offset, base_in_codon);
-
-  std::shared_ptr<AminoSequence> mutant_sequence = contig()->getAminoSequence(mutated_sequence);
-  std::vector<ContigOffset_t> offset_vec{codon_offset};
-  const ProteinString emph_protein = mutant_sequence->emphasizeProteinString(offset_vec);
-
-  ExecEnv::log().info("mutateCodingSequence(); mutated protein: {}", emph_protein);
-
-  return true;
-*/
-
- }
+}
 
 
 std::string kgl::SNPVariantDNA5::mutation(char delimiter, VariantOutputIndex output_index) const

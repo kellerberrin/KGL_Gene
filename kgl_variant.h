@@ -86,12 +86,21 @@ public:
   VariantSequenceType type() const;
   std::string typestr() const;
 
+  FeatureIdent_t codingSequenceId() const {
+
+    return type() == VariantSequenceType::CDS_CODING ? codingSequences().getFirst()->getCDSParent()->id() : NULL_ID;
+
+  }
+
   const CodingSequenceArray& codingSequences() const { return coding_sequences_; }
   const GeneVector& geneMembership() const { return gene_membership_; }
 
   void defineIntron(std::shared_ptr<const GeneFeature> gene_ptr);
   void defineCoding(std::shared_ptr<const CodingSequence> coding_sequence_ptr);
   void defineNonCoding();
+
+  static constexpr const char* NULL_ID = "NULL";
+
 
 private:
 
@@ -129,6 +138,7 @@ public:
                                     std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const = 0;
 
   virtual bool isCompound() const { return false; }
+  virtual bool isSNP() const { return false; }
 
 private:
 

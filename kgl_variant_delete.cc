@@ -37,6 +37,13 @@ std::string kgl::CompoundDelete::output(char delimiter, VariantOutputIndex outpu
 std::string kgl::CompoundDelete::mutation(char delimiter, VariantOutputIndex output_index) const {
 
   std::stringstream ss;
+  if (not codingSequences().empty()) {
+
+    std::shared_ptr<const CodingSequence> sequence = codingSequences().getFirst();
+
+    ss << sequence->getGene()->id() << delimiter << sequence->getCDSParent()->id() << delimiter;
+
+  }
   ss << "-" << "(" << variant_map_.size() << ")" << offsetOutput(contigOffset(), output_index) << delimiter;
   return ss.str();
 

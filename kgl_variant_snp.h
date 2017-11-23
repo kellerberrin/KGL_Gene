@@ -93,6 +93,8 @@ public:
   SNPVariantDNA5(const SNPVariantDNA5& variant) = default;
   ~SNPVariantDNA5() override = default;
 
+  bool isSNP() const override { return true; }
+
   bool equivalent(const Variant& cmp_var) const override;
 
   // This mutates a coding sequence that has already been generated using a CodingSequence (CDS) object.

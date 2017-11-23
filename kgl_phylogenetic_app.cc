@@ -8,6 +8,7 @@
 #include "kgl_gff_fasta.h"
 #include "kgl_sam_process.h"
 #include "kgl_variant_factory.h"
+#include "kgl_variant_factory_compound.h"
 #include "kgl_filter.h"
 #include "kgl_phylogenetic_analysis.h"
 
@@ -33,12 +34,12 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
                                                                                              min_count,
                                                                                              min_proportion);
   // Generate contiguous deletion variants.
-  std::shared_ptr<const kgl::GenomeVariant> codon_delete_ptr = kgl::VariantDeleteFactory().codonDelete(variant_ptr,
-                                                                                                  count_data_ptr,
-                                                                                                  genome_db_ptr);
+  std::shared_ptr<const kgl::GenomeVariant> codon_delete_ptr = kgl::VariantDeleteFactory().compoundDelete(variant_ptr,
+                                                                                                          genome_db_ptr);
+  std::cout << *codon_delete_ptr;
   // Disaggregated contiguous deletion variants.
   std::shared_ptr<const kgl::GenomeVariant>
-  disagg_ptr = kgl::VariantCompoundFactory().disaggregateCompoundVariants(codon_delete_ptr, genome_db_ptr);
+  disagg_ptr = kgl::VariantDeleteFactory().disaggregateCompoundVariants(codon_delete_ptr, genome_db_ptr);
   // Remove disaggregated variants.
   variant_ptr = variant_ptr->Difference(disagg_ptr);
   // Add in contiguous deletes.
@@ -48,7 +49,6 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
   compound_snp_ptr = kgl::VariantCompoundSNPFactory().compoundSNP(variant_ptr, genome_db_ptr);
 
   variant_ptr = variant_ptr->filterVariants(kgl::InCDSFilter());
-  std::cout << *variant_ptr;
   // Filter for PfATP4
   variant_ptr = variant_ptr->filterVariants(kgl::GeneFilter("PF3D7_1211900"));
 //  variant_ptr = variant_ptr->filterVariants(kgl::SequenceFilter("rna_PF3D7_1211900-1"));
@@ -89,7 +89,7 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
 
 #define MUTANT_PROTEIN 1
-//#define MALAWI 1
+#define MALAWI 1
 
 #ifdef MUTANT_PROTEIN
 #ifdef MALAWI

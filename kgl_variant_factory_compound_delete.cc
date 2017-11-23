@@ -3,9 +3,7 @@
 //
 
 
-
-#include "kgl_variant_factory.h"
-#include "kgl_filter.h"
+#include "kgl_variant_factory_compound.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -16,144 +14,61 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+bool kgl::VariantDeleteFactory::aggregateVariant(const std::shared_ptr<const Variant>& variant_ptr) const {
+
+  if (variant_ptr->isSNP()) {
+
+    const std::shared_ptr<const SNPVariantDNA5> SNP_ptr = std::static_pointer_cast<const SNPVariantDNA5>(variant_ptr);
+    return ExtendDNA5::isDeletion(SNP_ptr->mutant());
+
+  } else {
+
+    return false;
+
+  }
+
+}
+
+
+
 std::shared_ptr<const kgl::GenomeVariant>
-kgl::VariantDeleteFactory::codonDelete(const std::shared_ptr<const GenomeVariant>& delete_SNPs,
-                                       const std::shared_ptr<const ContigCountData>& count_data,
-                                       const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) {
+kgl::VariantDeleteFactory::compoundDelete(const std::shared_ptr<const GenomeVariant>& genome_variants,
+                                          const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) {
 
   std::shared_ptr<kgl::GenomeVariant>
-  genome_delete_variants = kgl::GenomeVariant::emptyGenomeVariant(delete_SNPs->genomeId(), genome_db_ptr);
-  std::vector<CompoundVariantMap> contiguous_delete_vec;
+  compound_delete_variants = kgl::GenomeVariant::emptyGenomeVariant(genome_variants->genomeId(), genome_db_ptr);
 
-  // Aggregate the coding deletions.
-  aggregateCodingDeletions(delete_SNPs, genome_db_ptr, contiguous_delete_vec);
-  // Generate the Codon_deletes
-  generateCodonDeletes(genome_db_ptr, count_data, contiguous_delete_vec, genome_delete_variants);
+  std::vector<std::shared_ptr<const CompoundVariantMap>> aggregated_variants_vec;
 
-  return genome_delete_variants;
+  // Get the aggregated variants.
+  aggregateCompoundVariants(genome_variants ,aggregated_variants_vec);
 
-}
+  // Generate the actual compound deletes.
+  generateCompoundDeletes(aggregated_variants_vec, compound_delete_variants);
 
-
-// Generate SNP variants.
-void kgl::VariantDeleteFactory::aggregateCodingDeletions(const std::shared_ptr<const GenomeVariant>& delete_SNPs,
-                                                         const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
-                                                         std::vector<CompoundVariantMap>& contiguous_delete_vec) {
-
-  // Filter to only coding deletion SNPs.
-  std::shared_ptr<kgl::GenomeVariant> filtered_delete_SNPs = delete_SNPs->filterVariants(kgl::DeleteSNPFilter());
-  std::shared_ptr<kgl::GenomeVariant> coding_delete_SNPs = filtered_delete_SNPs->filterVariants(kgl::InCDSFilter());
-  CompoundVariantMap contiguous_deletes;
-
-  for (const auto& contig_variants : coding_delete_SNPs->contigMap()) {
-
-    contiguous_deletes.clear();
-
-    for (const auto& variants : contig_variants.second->getMap()) {
-
-      if (contiguous_deletes.empty()) {
-
-        auto result = contiguous_deletes.insert(variants);
-
-        if (not result.second) {
-
-          ExecEnv::log().error("generateCodonDelete(), unexpected - could not insert to empty map");
-
-        }
-
-      } else { // not empty
-
-        // check if next delete contiguous.
-        if ((contiguous_deletes.rbegin()->second->contigOffset() + 1) == variants.second->contigOffset()) {
-
-          auto result = contiguous_deletes.insert(variants);
-
-          if (not result.second) {
-
-            ExecEnv::log().error("generateCodonDelete(), unexpected - could not insert to contiguous map");
-
-          } // insert OK
-
-        } else { // not contiguous
-
-          if (contiguous_deletes.size() >= 2) {  // 2 or more added to the vector.
-
-            contiguous_delete_vec.push_back(contiguous_deletes);
-
-          }
-
-          contiguous_deletes.clear();
-
-          auto result = contiguous_deletes.insert(variants);
-
-          if (not result.second) {
-
-            ExecEnv::log().error("generateCodonDelete(), unexpected - could not insert to contiguous map");
-
-          } // insert OK
-
-        } // not contig.
-
-      } // not empty.
-
-    } // for all variants.
-
-    if (contiguous_deletes.size() >= 2) {  // 2 or more added to the vector.
-
-      contiguous_delete_vec.push_back(contiguous_deletes);
-
-    }
-
-    contiguous_deletes.clear();
-
-  } // for all contigs.
-
-  ExecEnv::log().info("Found: {} contiguous SNP deletions", contiguous_delete_vec.size());
+  return compound_delete_variants;
 
 }
 
 
+void kgl::VariantDeleteFactory::generateCompoundDeletes( const std::vector<std::shared_ptr<const CompoundVariantMap>>& contiguous_delete_vec,
+                                                         std::shared_ptr<kgl::GenomeVariant>& genome_variant_ptr) {
 
-void kgl::VariantDeleteFactory::generateCodonDeletes( const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
-                                                      const std::shared_ptr<const ContigCountData>& count_data,
-                                                      const std::vector<CompoundVariantMap>& contiguous_delete_vec,
-                                                      std::shared_ptr<kgl::GenomeVariant> genome_variant_ptr) {
+  for (const auto& variant_map : contiguous_delete_vec) {
 
-  if (contiguous_delete_vec.empty()) return;
+    std::shared_ptr<const Variant> delete_variant = createCompoundDelete(*variant_map);
+    if (delete_variant != nullptr) {
 
-  for (auto variant_map : contiguous_delete_vec) {
+      if (not genome_variant_ptr->addVariant(delete_variant)) {
 
-    ContigSize_t mod3_size = variant_map.size() % 3;
-    std::shared_ptr<const Variant> compound_delete;
-
-    switch (mod3_size) {
-
-      case 0: {
-
-        std::shared_ptr<const Variant> delete_variant = createCompoundDelete(variant_map);
-        if (delete_variant != nullptr) {
-
-          if (not genome_variant_ptr->addVariant(delete_variant)) {
-
-            ExecEnv::log().error("Unable to add compound delete variant: {} - probable offset duplicate",
-                                 delete_variant->output(' ', VariantOutputIndex::START_0_BASED));
-
-          }
-
-        }
+        ExecEnv::log().error("Unable to add compound delete variant: {} - probable offset duplicate",
+                             delete_variant->output(' ', VariantOutputIndex::START_0_BASED));
 
       }
-        break;
-
-      case 1:
-        break;
-
-      case 2:
-        break;
 
     }
 
-  } // for all genes
+  } // for all contiguous
 
 }
 
@@ -201,9 +116,10 @@ kgl::VariantDeleteFactory::createCompoundDelete(const CompoundVariantMap& varian
 
   }
 
-  std::shared_ptr<const Variant> compound_delete(std::make_shared<const CompoundDelete>(contig_ptr,
-                                                                                        variant_offset,
-                                                                                        variant_map));
+  // create the variant
+  std::shared_ptr<Variant> compound_delete(std::make_shared<CompoundDelete>(contig_ptr, variant_offset, variant_map));
+  // define its coding sequence.
+  compound_delete->defineCoding(variant_map.begin()->second->codingSequences().getFirst());
 
   return compound_delete;
 
