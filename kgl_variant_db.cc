@@ -155,8 +155,6 @@ std::string kgl::GenomeVariant::output(char field_delimter, VariantOutputIndex o
 
     for (const auto& variant : contig_variant.second->getMap()) {
 
-      ss << genomeId();
-      ss << field_delimter;
       ss << variant.second->output(field_delimter, output_index);
 
     }

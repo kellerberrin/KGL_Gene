@@ -63,7 +63,7 @@ std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputInde
 
   std:: stringstream ss;
 // Contig.
-  ss << contig()->contigId() << delimiter << typestr() << delimiter;
+  ss << variantSource() << delimiter <<contig()->contigId() << delimiter << typestr() << delimiter;
 
   return ss.str();
 

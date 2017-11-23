@@ -61,7 +61,6 @@ private:
 enum class VariantOutputIndex { START_1_BASED, START_0_BASED};   // Used for output functions - default START_1_BASED
 
 // helper function - only ever use for output.
-
 std::string offsetOutput(ContigOffset_t offset, VariantOutputIndex output_base);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,10 +72,14 @@ class VariantSequence {
 
 public:
 
-  VariantSequence(std::shared_ptr<const ContigFeatures> contig_ptr,
-                  ContigOffset_t contig_offset) : contig_ptr_(contig_ptr),
+  VariantSequence(const std::string& variant_source,
+                  std::shared_ptr<const ContigFeatures>  contig_ptr,
+                  ContigOffset_t contig_offset) : variant_source_(variant_source),
+                                                  contig_ptr_(contig_ptr),
                                                   contig_offset_(contig_offset) {}
   virtual ~VariantSequence() = default;
+
+  const std::string& variantSource() const { return variant_source_; }
 
   std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
 
@@ -101,9 +104,9 @@ public:
 
   static constexpr const char* NULL_ID = "NULL";
 
-
 private:
 
+  std::string variant_source_;                          // The source of this variant
   std::shared_ptr<const ContigFeatures> contig_ptr_;    // The contig.
   ContigOffset_t contig_offset_;                        // Location on the contig.
   GeneVector gene_membership_;                          // Membership includes introns (empty for non-coding)
@@ -122,8 +125,9 @@ class Variant : public VariantSequence {
 public:
 
 
-  Variant(const std::shared_ptr<const ContigFeatures> contig_ptr,
-          ContigOffset_t contig_offset) : VariantSequence(contig_ptr, contig_offset) {}
+  Variant(const std::string& variant_source,
+          const std::shared_ptr<const ContigFeatures> contig_ptr,
+          ContigOffset_t contig_offset) : VariantSequence(variant_source, contig_ptr, contig_offset) {}
   Variant(const Variant& variant) = default;
   ~Variant() override = default;
   bool filterVariant(const VariantFilter& filter) const { return applyFilter(filter); }

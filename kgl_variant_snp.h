@@ -35,12 +35,13 @@ class ReadCountVariant : public Variant {
 
 public:
 
-  ReadCountVariant(const std::shared_ptr<const ContigFeatures> contig_ptr,
+  ReadCountVariant(const std::string& variant_source,
+                   const std::shared_ptr<const ContigFeatures> contig_ptr,
                    ContigOffset_t contig_offset,
                    NucleotideReadCount_t read_count,
                    NucleotideReadCount_t mutant_count,
                    NucleotideReadCount_t const count_array[],
-                   ContigSize_t count_array_size) : Variant(contig_ptr, contig_offset),
+                   ContigSize_t count_array_size) : Variant(variant_source, contig_ptr, contig_offset),
                                                     read_count_(read_count),
                                                     mutant_count_(mutant_count) {
 
@@ -78,17 +79,23 @@ class SNPVariantDNA5 : public ReadCountVariant {
 
 public:
 
-  SNPVariantDNA5(const std::shared_ptr<const ContigFeatures> contig_ptr,
+  SNPVariantDNA5(const std::string& variant_source,
+                 const std::shared_ptr<const ContigFeatures> contig_ptr,
                  ContigOffset_t contig_offset,
                  NucleotideReadCount_t read_count,
                  NucleotideReadCount_t mutant_count,
                  NucleotideReadCount_t const count_array[],
                  ContigSize_t  count_array_size,
                  DNA5::Alphabet reference,
-                 ExtendDNA5::Alphabet mutant)
-  : ReadCountVariant(contig_ptr, contig_offset, read_count, mutant_count, count_array, count_array_size),
-    reference_(reference),
-    mutant_(mutant) {}
+                 ExtendDNA5::Alphabet mutant) : ReadCountVariant(variant_source,
+                                                                 contig_ptr,
+                                                                 contig_offset,
+                                                                 read_count,
+                                                                 mutant_count,
+                                                                 count_array,
+                                                                 count_array_size),
+                                                reference_(reference),
+                                                mutant_(mutant) {}
 
   SNPVariantDNA5(const SNPVariantDNA5& variant) = default;
   ~SNPVariantDNA5() override = default;
@@ -109,6 +116,8 @@ public:
 
   std::string output(char delimiter, VariantOutputIndex output_index) const override;
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
+
+  static constexpr const char* VARIANT_TYPE = "SNP";
 
 private:
 

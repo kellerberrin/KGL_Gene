@@ -32,9 +32,10 @@ class CompoundVariant : public Variant {
 
 public:
 
-  CompoundVariant(std::shared_ptr<const ContigFeatures> contig_ptr,
+  CompoundVariant(const std::string& variant_source,
+                  std::shared_ptr<const ContigFeatures> contig_ptr,
                   ContigOffset_t contig_offset,
-                  const CompoundVariantMap& variant_map) : Variant(contig_ptr, contig_offset),
+                  const CompoundVariantMap& variant_map) : Variant(variant_source, contig_ptr, contig_offset),
                                                            variant_map_(variant_map) {}
   ~CompoundVariant() override = default;
 
@@ -59,10 +60,13 @@ class CompoundInsert : public CompoundVariant {
 
 public:
 
-  CompoundInsert(std::shared_ptr<const ContigFeatures> contig_ptr,
+  CompoundInsert(const std::string& variant_source,
+                 std::shared_ptr<const ContigFeatures> contig_ptr,
                  ContigOffset_t contig_offset,
-                 const CompoundVariantMap variant_map)
-  : CompoundVariant(contig_ptr, contig_offset, variant_map) {}
+                 const CompoundVariantMap variant_map) : CompoundVariant(variant_source,
+                                                                         contig_ptr,
+                                                                         contig_offset,
+                                                                         variant_map) {}
   ~CompoundInsert() override = default;
 
 private:
@@ -85,11 +89,16 @@ class CompoundDelete : public CompoundVariant {
 
 public:
 
-  CompoundDelete(std::shared_ptr<const ContigFeatures> contig_ptr,
+  CompoundDelete(const std::string& variant_source,
+                 std::shared_ptr<const ContigFeatures> contig_ptr,
                  ContigOffset_t contig_offset,
-                 const CompoundVariantMap variant_map)
-  : CompoundVariant(contig_ptr, contig_offset, variant_map) {}
+                 const CompoundVariantMap variant_map) : CompoundVariant(variant_source,
+                                                                         contig_ptr,
+                                                                         contig_offset,
+                                                                         variant_map) {}
   ~CompoundDelete() override = default;
+
+  static constexpr const char* VARIANT_TYPE = "COMPOUND_DELETE";
 
 private:
 
@@ -111,10 +120,13 @@ class CompoundSNP : public CompoundVariant {
 
 public:
 
-  CompoundSNP(std::shared_ptr<const ContigFeatures> contig_ptr,
+  CompoundSNP(const std::string& variant_source,
+              std::shared_ptr<const ContigFeatures> contig_ptr,
               ContigOffset_t contig_offset,
-              const CompoundVariantMap variant_map)
-  : CompoundVariant(contig_ptr, contig_offset, variant_map) {}
+              const CompoundVariantMap variant_map) : CompoundVariant(variant_source,
+                                                                      contig_ptr,
+                                                                      contig_offset,
+                                                                      variant_map) {}
   ~CompoundSNP() override = default;
 
 private:

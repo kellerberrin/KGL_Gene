@@ -57,7 +57,8 @@ kgl::VariantSNPFactory::SNPVariants(const std::string& genome_name,
 
             ExtendDNA5::Alphabet mutant_nucleotide = ExtendDNA5::offsetToNucleotide(idx);
 
-            SNPVariantDNA5 snp_variant(contig_ptr,
+            SNPVariantDNA5 snp_variant(genome_name,
+                                       contig_ptr,
                                        contig_offset,
                                        read_count,
                                        nucleotide_count_ptr[idx],

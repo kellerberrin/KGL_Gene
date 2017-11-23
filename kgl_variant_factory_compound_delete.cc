@@ -116,8 +116,13 @@ kgl::VariantDeleteFactory::createCompoundDelete(const CompoundVariantMap& varian
 
   }
 
+  // source is the same as the snp variants
+  const std::string& variant_source = variant_map.begin()->second->variantSource();
   // create the variant
-  std::shared_ptr<Variant> compound_delete(std::make_shared<CompoundDelete>(contig_ptr, variant_offset, variant_map));
+  std::shared_ptr<Variant> compound_delete(std::make_shared<CompoundDelete>(variant_source,
+                                                                            contig_ptr,
+                                                                            variant_offset,
+                                                                            variant_map));
   // define its coding sequence.
   compound_delete->defineCoding(variant_map.begin()->second->codingSequences().getFirst());
 

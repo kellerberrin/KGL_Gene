@@ -32,6 +32,7 @@ std::string kgl::SNPVariantDNA5::output(char delimiter, VariantOutputIndex outpu
 {
   std::stringstream ss;
   ss << genomeOutput(delimiter, output_index);
+  ss << VARIANT_TYPE << delimiter;
   ss << mutation(delimiter, output_index);
   ss << mutantCount() << "/" << readCount() << delimiter;
   for (size_t idx = 0; idx < countArray().size(); ++idx) {
@@ -224,10 +225,10 @@ std::string kgl::SNPVariantDNA5::mutation(char delimiter, VariantOutputIndex out
 
     } else {  // is a deletion or insert
 
-      ContigOffset_t sequence_offset;
-      ContigSize_t sequence_length;
-      contig()->sequence().offsetWithinSequence(sequence, contigOffset(), sequence_offset, sequence_length);
-      ss << DNA5::convertToChar(reference()) << offsetOutput(sequence_offset, output_index);
+      ContigSize_t base_in_codon;
+      ContigOffset_t codon_offset;
+      contig()->sequence().codonOffset(sequence, contigOffset(), codon_offset, base_in_codon);
+      ss << DNA5::convertToChar(reference()) << offsetOutput(codon_offset, output_index);
       ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
       ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
       ss << ExtendDNA5::convertToChar(mutant()) << delimiter;

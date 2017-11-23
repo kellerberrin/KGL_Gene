@@ -12,11 +12,11 @@ std::string kgl::CompoundSNP::output(char delimiter, VariantOutputIndex output_i
   std::stringstream ss;
   ss << genomeOutput(delimiter, output_index) << delimiter;
   ss << mutation(delimiter, output_index) << delimiter;
-  ss << "Compound SNP >>>>>\n";
+  ss << "Compound_SNP>>>>>\n";
   for (const auto& variant : variant_map_) {
     ss << variant.second->output(delimiter, output_index) << "\n";
   }
-  ss << "<<<<< Compound SNP\n";
+  ss << "<<<<<Compound_SNP\n";
   return ss.str();
 
 }
