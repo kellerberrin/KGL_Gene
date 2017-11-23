@@ -259,10 +259,14 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
       break;
 
     case '.':
+      phase = 0;
+      valid_phase = false;
       break;
 
     default:
       ExecEnv::log().warn("Unexpected phase code: {} in Gff file should be one of '0', '1', '2', '.'", record.phase);
+      phase = 0;
+      valid_phase = false;
       break;
 
 

@@ -42,7 +42,8 @@ private:
   static constexpr long HIGH_TIDE_{1000000};          // Maximum BoundedMtQueue size
   static constexpr long LOW_TIDE_{500000};            // Low water mark to begin queueing SAM records
 
-  int consumer_thread_count_{4};                      // Consumer threads (defaults to local CPU cores available)
+  int consumer_thread_count_{2};                      // Consumer threads (defaults to local CPU cores available)
+  static constexpr int MAX_CONSUMER_THREADS_{4};     // Spawning more threads does not increase performance
 
   // Read the SAM file and queue the record in a BoundedMtQueue.
   void samProducer(const std::string &file_name);
@@ -59,6 +60,9 @@ void ProduceMTSAM<SAMConsumerMT>::readSamFile( const std::string &file_name) {
 
   // Spawn consumer threads.
   consumer_thread_count_ = std::thread::hardware_concurrency();
+
+  // Spawn a maximum of 4 consumers.
+  consumer_thread_count_ = consumer_thread_count_ > MAX_CONSUMER_THREADS_? MAX_CONSUMER_THREADS_ : consumer_thread_count_;
 
   log.info("Spawning: {} Consumer threads to process the SAM file", consumer_thread_count_);
 

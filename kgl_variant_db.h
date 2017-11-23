@@ -98,9 +98,6 @@ public:
   static std::shared_ptr<GenomeVariant> emptyGenomeVariant(const GenomeId_t& genome_id,
                                                            const std::shared_ptr<const GenomeDatabase>& genome_db);
 
-  std::shared_ptr<GenomeVariant>
-  disaggregateCompoundVariants(const std::shared_ptr<const GenomeDatabase>& genome_db) const;
-
   std::string output(char field_delimiter, VariantOutputIndex output_index) const;
   bool outputCSV(const std::string& file_name, VariantOutputIndex output_index) const;
 

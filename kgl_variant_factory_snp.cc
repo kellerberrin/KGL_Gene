@@ -1,9 +1,9 @@
 //
-// Created by kellerberrin on 29/10/17.
+// Created by kellerberrin on 22/11/17.
 //
 
-#include "kgl_variant_evidence.h"
-#include "kgl_filter.h"
+#include "kgl_variant_snp.h"
+#include "kgl_variant_factory.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -11,11 +11,11 @@ namespace kgl = kellerberrin::genome;
 
 // Generate SNP variants.
 std::shared_ptr<const kgl::GenomeVariant>
-kgl::VariantAnalysis::SNPVariants(const std::string& genome_name,
-                                  const std::shared_ptr<const ContigCountData>& count_data,
-                                  const std::shared_ptr<const GenomeDatabase>& genome_db,
-                                  NucleotideReadCount_t minimum_read_count,
-                                  double minimum_proportion) {
+kgl::VariantSNPFactory::SNPVariants(const std::string& genome_name,
+                                    const std::shared_ptr<const ContigCountData>& count_data,
+                                    const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                    NucleotideReadCount_t minimum_read_count,
+                                    double minimum_proportion) {
 
   std::shared_ptr<GenomeVariant> genome_snp_variants = kgl::GenomeVariant::emptyGenomeVariant(genome_name, genome_db);
   size_t snp_count = 0;
@@ -89,8 +89,8 @@ kgl::VariantAnalysis::SNPVariants(const std::string& genome_name,
 
 
 // This function will insert multiple variants for each CDS sequence within each gene.
-void kgl::VariantAnalysis::addSNPVariant(std::shared_ptr<GenomeVariant> genome_snp_variants,
-                                         const SNPVariantDNA5& variant) {
+void kgl::VariantSNPFactory::addSNPVariant(std::shared_ptr<GenomeVariant> genome_snp_variants,
+                                           const SNPVariantDNA5& variant) {
 
   // Annotate the variant with genome information.
   GeneVector gene_vector;
@@ -143,6 +143,3 @@ void kgl::VariantAnalysis::addSNPVariant(std::shared_ptr<GenomeVariant> genome_s
   }
 
 }
-
-
-

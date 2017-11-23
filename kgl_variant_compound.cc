@@ -30,3 +30,4 @@ bool kgl::CompoundVariant::equivalent(const Variant& cmp_var) const {
 
 }
 
+
