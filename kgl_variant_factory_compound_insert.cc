@@ -15,7 +15,7 @@ namespace kgl = kellerberrin::genome;
 
 
 
-bool kgl::VariantInsertFactory::aggregateVariant(const std::shared_ptr<const Variant>& variant_ptr) const {
+bool kgl::VariantInsertFactory::selectVariant(const std::shared_ptr<const Variant>& variant_ptr) const {
 
   if (variant_ptr->isSNP()) {
 
@@ -31,13 +31,104 @@ bool kgl::VariantInsertFactory::aggregateVariant(const std::shared_ptr<const Var
 }
 
 
+
 std::shared_ptr<const kgl::GenomeVariant>
 kgl::VariantInsertFactory::compoundInsert(const std::shared_ptr<const GenomeVariant>& genome_variants,
                                           const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) {
 
-  std::shared_ptr<GenomeVariant>
-  genome_compound_variants = kgl::GenomeVariant::emptyGenomeVariant(genome_variants->genomeId(), genome_db_ptr);
+  std::shared_ptr<kgl::GenomeVariant>
+  compound_insert_variants = kgl::GenomeVariant::emptyGenomeVariant(genome_variants->genomeId(), genome_db_ptr);
 
-  return genome_compound_variants;
+  std::vector<std::shared_ptr<const CompoundVariantMap>> aggregated_variants_vec;
+
+  // Get the aggregated variants.
+  aggregateVariants(genome_variants ,aggregated_variants_vec);
+
+  // Generate the actual compound deletes.
+  generateCompoundInserts(aggregated_variants_vec, compound_insert_variants);
+
+  return compound_insert_variants;
 
 }
+
+
+void kgl::VariantInsertFactory::generateCompoundInserts( const std::vector<std::shared_ptr<const CompoundVariantMap>>& contiguous_insert_vec,
+                                                         std::shared_ptr<kgl::GenomeVariant>& genome_variant_ptr) {
+
+  for (const auto& variant_map : contiguous_insert_vec) {
+
+    std::shared_ptr<const Variant> insert_variant = createCompoundInsert(*variant_map);
+    if (insert_variant != nullptr) {
+
+      if (not genome_variant_ptr->addVariant(insert_variant)) {
+
+        ExecEnv::log().error("Unable to add compound insert variant: {} - probable offset duplicate",
+                             insert_variant->output(' ', VariantOutputIndex::START_0_BASED));
+
+      }
+
+    }
+
+  } // for all contiguous
+
+}
+
+
+std::shared_ptr<const kgl::Variant>
+kgl::VariantInsertFactory::createCompoundInsert(const CompoundVariantMap& variant_map) {
+
+  if (variant_map.empty()) {
+
+    ExecEnv::log().error("Variant map is empty");
+    return nullptr;
+
+  }
+
+  if (variant_map.begin()->second->geneMembership().empty()) {
+
+    ExecEnv::log().error("Variant has no associated gene");
+    return nullptr;
+
+  }
+
+  std::shared_ptr<const GeneFeature> gene_ptr = variant_map.begin()->second->geneMembership().front();
+
+  StrandSense gene_strand = gene_ptr->sequence().strand();
+  std::shared_ptr<const ContigFeatures> contig_ptr;
+  ContigOffset_t variant_offset;
+
+  switch(gene_strand) {
+
+    case StrandSense::UNKNOWN:
+    case StrandSense::FORWARD:
+      contig_ptr = variant_map.begin()->second->contig();
+      variant_offset = variant_map.begin()->second->contigOffset();
+      break;
+
+    case StrandSense::REVERSE:
+      contig_ptr = variant_map.rbegin()->second->contig();
+      variant_offset = variant_map.rbegin()->second->contigOffset();
+      break;
+
+    default: // cannot happen, but the compiler complains.
+      contig_ptr = variant_map.begin()->second->contig();
+      variant_offset = variant_map.begin()->second->contigOffset();
+      break;
+
+  }
+
+  // source is the same as the snp variants
+  const std::string& variant_source = variant_map.begin()->second->variantSource();
+  // create the variant
+  std::shared_ptr<Variant> compound_insert(std::make_shared<CompoundInsert>(variant_source,
+                                                                            contig_ptr,
+                                                                            variant_offset,
+                                                                            variant_map));
+  // define its coding sequence.
+  compound_insert->defineCoding(variant_map.begin()->second->codingSequences().getFirst());
+
+  return compound_insert;
+
+}
+
+

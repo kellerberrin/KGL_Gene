@@ -50,6 +50,13 @@ public:
 
   void reserve(ContigSize_t string_size) { base_string_.reserve(string_size); }
 
+  void erase(ContigOffset_t offset, ContigSize_t size) {
+
+    std::basic_string<typename Alphabet::Alphabet> null_string;
+    base_string_.replace(offset, size, null_string);
+
+  }
+
   typename Alphabet::Alphabet operator[] (ContigOffset_t& offset) const { return base_string_[offset]; }
 
   void modifyNucleotide(ContigOffset_t& offset,

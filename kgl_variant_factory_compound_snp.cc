@@ -21,21 +21,6 @@ namespace kgl = kellerberrin::genome;
 // 3. They must lie within the same codon boundary (a subset of point 2).
 
 
-bool kgl::VariantCompoundSNPFactory::aggregateVariant(const std::shared_ptr<const Variant>& variant_ptr) const {
-
-  if (variant_ptr->isSNP()) {
-
-    const std::shared_ptr<const SNPVariantDNA5> SNP_ptr = std::static_pointer_cast<const SNPVariantDNA5>(variant_ptr);
-    return ExtendDNA5::isBaseCode(SNP_ptr->mutant());
-
-  } else {
-
-    return false;
-
-  }
-
-}
-
 
 std::shared_ptr<const kgl::GenomeVariant>
 kgl::VariantCompoundSNPFactory::compoundSNP(const std::shared_ptr<const GenomeVariant>& genome_variants,

@@ -36,7 +36,10 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
   // Generate contiguous deletion variants.
   std::shared_ptr<const kgl::GenomeVariant> codon_delete_ptr = kgl::VariantDeleteFactory().compoundDelete(variant_ptr,
                                                                                                           genome_db_ptr);
-  std::cout << *codon_delete_ptr;
+  // Generate contiguous insertion variants.
+  std::shared_ptr<const kgl::GenomeVariant> codon_insert_ptr = kgl::VariantInsertFactory().compoundInsert(variant_ptr,
+                                                                                                          genome_db_ptr);
+  std::cout << *codon_insert_ptr;
   // Disaggregated contiguous deletion variants.
   std::shared_ptr<const kgl::GenomeVariant>
   disagg_ptr = kgl::VariantDeleteFactory().disaggregateCompoundVariants(codon_delete_ptr, genome_db_ptr);

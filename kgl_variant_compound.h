@@ -69,6 +69,8 @@ public:
                                                                          variant_map) {}
   ~CompoundInsert() override = default;
 
+  static constexpr const char* VARIANT_TYPE = "COMPOUND_INSERT";
+
 private:
 
 

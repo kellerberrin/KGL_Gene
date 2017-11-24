@@ -55,6 +55,12 @@ kgl::VariantCompoundFactory::disaggregateCompoundVariants(const std::shared_ptr<
 }
 
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Aggregate insert/delete variants
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 // The logic of this function is very convoluted so read the following carefully before modifying this function.
 
 // This function aggregates variants that occur consecutively in coding sequences (only).
@@ -66,8 +72,8 @@ kgl::VariantCompoundFactory::disaggregateCompoundVariants(const std::shared_ptr<
 // 3. Therefore there can be multiple SNP variants defined for a particular coding sequence contig offset.
 // 4. These can only be distinguished by examining the coding sequence membership.
 // 5. Thus coding sequences can create multiple aggregated variants for the same contig (chromosome) interval.
-bool kgl::VariantCompoundFactory::aggregateCompoundVariants(const std::shared_ptr<const GenomeVariant>& variant_ptr,
-                                                            std::vector<std::shared_ptr<const CompoundVariantMap>>& aggregated_variants_vec) const {
+bool kgl::VariantInsertDeleteFactory::aggregateVariants(const std::shared_ptr<const GenomeVariant>& variant_ptr,
+                                                        std::vector<std::shared_ptr<const CompoundVariantMap>>& aggregated_variants_vec) const {
 
   // The working structure that maintains a vector of compound variants.
   std::vector<std::shared_ptr<CompoundVariantMap>> compound_variant_vec;
@@ -82,7 +88,7 @@ bool kgl::VariantCompoundFactory::aggregateCompoundVariants(const std::shared_pt
       // only coding sequence and non-compound (no recursive compound)
       if (variant.second->type() == VariantSequenceType::CDS_CODING and not variant.second->isCompound()) {
 
-        if (aggregateVariant(variant.second)) {  // The selection function passed in as a template.
+        if (selectVariant(variant.second)) {  // The selection function passed in as a template.
 
           // If empty then just add the variant to a variant map and update the working structure.
           if (compound_variant_vec.empty()) {

@@ -4,21 +4,11 @@
 
 
 
-#include "kgl_filter.h"
+#include "kgl_variant_compound.h"
 
 
 namespace kgl = kellerberrin::genome;
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  Generate compound delete variants.
-//  Given a list of raw delete variants:
-// 1. Find delete SNPs in coding sequences.
-// 2. Find mod(size, 3) = 0 contiguous SNP deletions.
-// 3. If aligned on a codon boundary delete size/3 Amino Acids.
-// 4. Or if not aligned, modify 2 Amino Acids and delete size/3 -1 Amino Acids.
-// 5. Assemble these SNP deletions into a compound CodonDelete variant.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 std::string kgl::CompoundDelete::output(char delimiter, VariantOutputIndex output_index) const {
@@ -62,8 +52,7 @@ std::string kgl::CompoundDelete::mutation(char delimiter, VariantOutputIndex out
 bool kgl::CompoundDelete::mutateCodingSequence(const FeatureIdent_t& sequence_id,
                                                std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const {
 
-  ExecEnv::log().warn("mutateCodingSequence() not yet implemented for CompoundDelete");
-  return false;
+  return true;
 
 }
 

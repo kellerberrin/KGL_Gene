@@ -14,7 +14,7 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool kgl::VariantDeleteFactory::aggregateVariant(const std::shared_ptr<const Variant>& variant_ptr) const {
+bool kgl::VariantDeleteFactory::selectVariant(const std::shared_ptr<const Variant>& variant_ptr) const {
 
   if (variant_ptr->isSNP()) {
 
@@ -41,7 +41,7 @@ kgl::VariantDeleteFactory::compoundDelete(const std::shared_ptr<const GenomeVari
   std::vector<std::shared_ptr<const CompoundVariantMap>> aggregated_variants_vec;
 
   // Get the aggregated variants.
-  aggregateCompoundVariants(genome_variants ,aggregated_variants_vec);
+  aggregateVariants(genome_variants ,aggregated_variants_vec);
 
   // Generate the actual compound deletes.
   generateCompoundDeletes(aggregated_variants_vec, compound_delete_variants);
