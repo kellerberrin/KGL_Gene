@@ -1,9 +1,10 @@
 //
-// Created by kellerberrin on 17/11/17.
+// Created by kellerberrin on 25/11/17.
 //
 
-#ifndef KGL_ALPHABET_DNA5_H
-#define KGL_ALPHABET_DNA5_H
+#ifndef KGL_ALPHABET_CODING_DNA5_H
+#define KGL_ALPHABET_CODING_DNA5_H
+
 
 
 
@@ -12,7 +13,6 @@
 #include "kgl_logging.h"
 #include "kgl_genome_types.h"
 #include "kgl_exec_env.h"
-#include "kgl_alphabet_coding_dna5.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -20,21 +20,18 @@ namespace genome {   // project level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// This class defines DNA sequences.
-// The sequences that contain this class have NOT been strand converted.
-// Do not use this alphabet to generate amino sequences.
+// This is a semantic class that defines strand converted DNA sequences.
+// Sequences that contain strings of this class have been STRANDED and can be used to generate amino acids.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-// Standard 5 letter nucleotide.
-
-class DNA5 {
+class CodingDNA5 {
 
 public:
 
 
-  DNA5() = delete; // Singleton
-  ~DNA5() = delete;
+  CodingDNA5() = delete; // Singleton
+  ~CodingDNA5() = delete;
 
   static constexpr ContigOffset_t NUCLEOTIDE_COLUMNS = 5;
 
@@ -61,23 +58,14 @@ public:
     N = N_NUCLEOTIDE
   };
 
-  // The Alphabet convertChar(char) function must be defined -see kgl_alphabet_string.h
-  static Alphabet convertChar(char chr_base);
-
-  // Find complementary bases.
-  static CodingDNA5::Alphabet complementNucleotide(Alphabet nucleotide);
-
-  // Convert to CodingDNA5 without complementary base conversion.
-  static CodingDNA5::Alphabet convertToCodingDN5(Alphabet nucleotide) { return static_cast<CodingDNA5::Alphabet>(nucleotide); }
-
   // Convert a base to an array offset.
   static ContigOffset_t nucleotideToColumn(Alphabet nucleotide);
 
   // Return nucleotide as a char.
   static char convertToChar(Alphabet nucleotide) { return static_cast<char>(nucleotide); }
 
-};
 
+};
 
 
 
@@ -86,4 +74,6 @@ public:
 
 
 
-#endif //KGL_ALPHABET_DNA5_H
+
+
+#endif //KGL_ALPHABET_CODING_DNA5_H

@@ -34,7 +34,7 @@ class ContigFeatures {
 
 public:
 
-  ContigFeatures(const ContigId_t &contig_id,
+  ContigFeatures(const ContigId_t& contig_id,
                  std::shared_ptr<DNA5SequenceContig> sequence_ptr) : contig_id_(contig_id),
                                                                      sequence_ptr_(sequence_ptr) {}
   ContigFeatures(const ContigFeatures&) = default;
@@ -59,21 +59,15 @@ public:
   void verifyFeatureHierarchy();
   void verifyCDSPhasePeptide();
 
-  bool SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                   ContigOffset_t contig_offset,
-                   DNA5::Alphabet reference_base,
-                   DNA5::Alphabet mutant_base,
-                   ContigOffset_t& codon_offset,
-                   AminoAcid::Alphabet& reference_amino,
-                   AminoAcid::Alphabet& mutant_amino) const;
-
   // give a gene id and an mRNA (sequence id) return the coding base sequence.
   bool getDNA5SequenceCoding(const FeatureIdent_t& gene_id,
                              const FeatureIdent_t& sequence_id,
                              std::shared_ptr<DNA5SequenceCoding>& sequence_ptr) const;
 
   std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr) const;
-  std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const;
+  std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const;
+  AminoAcid::Alphabet getAminoAcid(const Codon& codon) const { return coding_sequence_.getAmino(codon); }
+
 
 private:
 

@@ -134,5 +134,17 @@ void kgl::VariantSequence::defineNonCoding()
 
 }
 
+// Convenience routine to reduce downstream boiler plate.
+bool kgl::VariantSequence::codonOffset(ContigOffset_t& codon_offset, ContigSize_t& base_in_codon)const {
 
+  if (not codingSequences().empty()) {
 
+    return contig()->sequence().codonOffset(codingSequences().getFirst(), offset(), codon_offset, base_in_codon);
+
+  } else {
+
+    return false;
+
+  }
+
+}

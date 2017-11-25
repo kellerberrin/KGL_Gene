@@ -21,8 +21,6 @@ namespace genome {   // project level namespace
 // The DNA5 alphabet strings are defined here.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// A string of the standard 5 nucleotide DNA/RNA alphabet A, C, G, T/U, N
-using StringDNA5 = AlphabetString<DNA5>;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -30,49 +28,26 @@ using StringDNA5 = AlphabetString<DNA5>;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class DNA5Sequence: public AlphabetSequence {
-
-public:
-
-
-  explicit DNA5Sequence(StringDNA5 sequence) : base_sequence_(std::move(sequence)) {}
-  DNA5Sequence() = delete;
-  ~DNA5Sequence() override = default;
-
-
-  DNA5::Alphabet operator[] (ContigOffset_t& offset) const { return base_sequence_[offset]; }
-  DNA5::Alphabet at(ContigOffset_t& offset) const { return base_sequence_[offset]; }
-
-  ContigSize_t length() const { return base_sequence_.length(); }
-
-  std::string getSequenceAsString() const override { return base_sequence_.str(); }
-
-  // Offset is the relative sequence offset.
-  bool modifyBase(DNA5::Alphabet Nucleotide, ContigOffset_t sequence_offset);
-
-
-protected:
-
-  StringDNA5 base_sequence_;
-
-};
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This is a DNA5 coding sequence that has been generated using a CodingSequence (CDS) object.
 // Only this object can be used to generate an amino acid sequence.
+// This sequence is ALWAYS STRANDED.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// A string of the standard 5 nucleotide DNA/RNA alphabet A, C, G, T/U, N
+using StringCodingDNA5 = AlphabetString<CodingDNA5>;
 
 
-class DNA5SequenceCoding: public DNA5Sequence {
+class DNA5SequenceCoding: public AlphabetSequence<CodingDNA5> {
 
 public:
 
 
-  explicit DNA5SequenceCoding(StringDNA5 sequence) : DNA5Sequence(std::move(sequence)) {}
+  explicit DNA5SequenceCoding(StringCodingDNA5 sequence) : AlphabetSequence<CodingDNA5>(std::move(sequence)) {}
   DNA5SequenceCoding() = delete;
   ~DNA5SequenceCoding() override = default;
 
+  // Offset is the relative sequence offset.
+  bool modifyBase(CodingDNA5::Alphabet Nucleotide, ContigOffset_t sequence_offset);
 
 private:
 
@@ -82,15 +57,19 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A linear and contiguous DNA5 sequence that cannot be used to directly generate an Amino Acid sequence
+// This sequence is NOT STRANDED.
+// However, it can return the STRANDED sequence DNA5SequenceCoding using a CodingSequence (array of CDS).
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// A string of the standard 5 nucleotide DNA/RNA alphabet A, C, G, T/U, N
+using StringDNA5 = AlphabetString<DNA5>;
 
 
-class DNA5SequenceLinear: public DNA5Sequence {
+class DNA5SequenceLinear: public  AlphabetSequence<DNA5> {
 
 public:
 
 
-  explicit DNA5SequenceLinear(StringDNA5 sequence) : DNA5Sequence(std::move(sequence)) {}
+  explicit DNA5SequenceLinear(StringDNA5 sequence) :  AlphabetSequence<DNA5>(std::move(sequence)) {}
   DNA5SequenceLinear() = delete;
   ~DNA5SequenceLinear() override = default;
 
@@ -99,7 +78,7 @@ public:
                                                         ContigSize_t sub_sequence_length,
                                                         ContigOffset_t contig_offset = 0) const {
 
-    std::shared_ptr<const DNA5SequenceLinear> seq_ptr(std::make_shared<const DNA5SequenceLinear>(base_sequence_));
+    std::shared_ptr<const DNA5SequenceLinear> seq_ptr(std::make_shared<const DNA5SequenceLinear>(alphabet_string_));
     return codingSubSequence(seq_ptr, coding_seq_ptr, sub_sequence_offset, sub_sequence_length, contig_offset);
 
   }
@@ -119,7 +98,8 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// A linear and contiguous DNA5 sequence that implements a contig or chromosome
+// A linear and contiguous DNA5 sequence that implements a contig or chromosome.
+// This sequence is NOT STRANDED.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 

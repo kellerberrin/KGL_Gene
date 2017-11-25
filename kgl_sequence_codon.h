@@ -8,6 +8,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The codon class transfers indexed codons from a DNA5SequenceCoding + offset to the amino translation table
+// Only accepts the stranded sequence DNA5SequenceCoding.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <string>
@@ -20,23 +21,24 @@ namespace genome {   // project level namespace
 
 
 
-class Codon : public AlphabetSequence {
+class Codon  {
 
 public:
 
 
-  Codon(std::shared_ptr<DNA5SequenceCoding> sequence_ptr, ContigOffset_t codon_index);
-  ~Codon() override = default;
+  Codon(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr, ContigOffset_t codon_index);
+  ~Codon() = default;
 
-  static ContigOffset_t codonLength(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) {
+  static ContigOffset_t codonLength(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) {
 
     return static_cast<ContigOffset_t>(sequence_ptr->length() / CODON_SIZE);
 
   }
 
-  DNA5::Alphabet operator[](size_t index) const { return bases_[index]; };
+  CodingDNA5::Alphabet operator[](size_t index) const { return bases_[index]; };
+  void modifyBase(size_t index, CodingDNA5::Alphabet base);
 
-  std::string getSequenceAsString() const override {
+  std::string getSequenceAsString() const {
 
     std::string codon_string;
     codon_string = static_cast<char>(bases_[0]);
@@ -48,7 +50,9 @@ public:
 
   bool containsBaseN() const {
 
-    return bases_[0] == DNA5::Alphabet::N or bases_[1] == DNA5::Alphabet::N or bases_[2]  == DNA5::Alphabet::N;
+    return bases_[0] == CodingDNA5::Alphabet::N
+           or bases_[1] == CodingDNA5::Alphabet::N
+           or bases_[2]  == CodingDNA5::Alphabet::N;
 
   }
 
@@ -56,7 +60,7 @@ public:
 
 private:
 
-  std::array<DNA5::Alphabet, CODON_SIZE> bases_;
+  std::array<CodingDNA5::Alphabet, CODON_SIZE> bases_;
 
 };
 

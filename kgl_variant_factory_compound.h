@@ -29,21 +29,21 @@ public:
   explicit VariantCompoundFactory() = default;
   ~VariantCompoundFactory() override = default;
 
-  // Disaggregate compound variant.
-  std::shared_ptr<GenomeVariant>
-  disaggregateCompoundVariants(const std::shared_ptr<const GenomeVariant>& genome_variant,
-                               const std::shared_ptr<const GenomeDatabase>& genome_db) const;
+  virtual std::shared_ptr<GenomeVariant> disaggregate(const std::shared_ptr<const GenomeVariant>& genome_variant,
+                                                      const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) const = 0;
 
-
-private:
+  virtual std::shared_ptr<GenomeVariant> create(const std::shared_ptr<const GenomeVariant>& genome_variants,
+                                                const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) const = 0;
 
 
 };
 
 
 
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// The top level compound variant factory.
+// The top level insert/delete compound variant factory.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -54,18 +54,19 @@ public:
   explicit VariantInsertDeleteFactory() = default;
   ~VariantInsertDeleteFactory() override = default;
 
+  std::shared_ptr<GenomeVariant> create(const std::shared_ptr<const GenomeVariant>& genome_variants,
+                                        const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) const override;
 
-protected:
+private:
 
-  // Generate compound variant by aggregating consecutive variants in a coding sequence (see implementation for detail).
-  bool aggregateVariants(const std::shared_ptr<const GenomeVariant>& genome_variants,
+
+  bool aggregateVariants(const std::shared_ptr<const GenomeVariant>& variant_ptr,
                          std::vector<std::shared_ptr<const CompoundVariantMap>>& aggregated_variants_vec) const;
 
   // Determine which variants to aggregate.
   virtual bool selectVariant(const std::shared_ptr<const Variant>& variant_ptr) const = 0;
 
-private:
-
+  virtual std::shared_ptr<const Variant> createCompoundVariant(const CompoundVariantMap& variant_map) const = 0;
 
 };
 
@@ -84,18 +85,11 @@ public:
   ~VariantDeleteFactory() override = default;
 
 
-  std::shared_ptr<const GenomeVariant> compoundDelete(const std::shared_ptr<const GenomeVariant>& variants,
-                                                      const std::shared_ptr<const GenomeDatabase>& genome_db);
-
-
 private:
 
   bool selectVariant(const std::shared_ptr<const Variant>& variant_ptr) const override;
 
-  void generateCompoundDeletes( const std::vector<std::shared_ptr<const CompoundVariantMap>>& contiguous_delete_vec,
-                                std::shared_ptr<GenomeVariant>& genome_variant_ptr);
-
-  std::shared_ptr<const Variant> createCompoundDelete(const CompoundVariantMap& variant_map);
+  std::shared_ptr<const Variant> createCompoundVariant(const CompoundVariantMap& variant_map) const override;
 
 };
 
@@ -110,19 +104,13 @@ class VariantInsertFactory : public VariantInsertDeleteFactory {
 public:
 
   explicit VariantInsertFactory() = default;
-  ~VariantInsertFactory() = default;
-
-  std::shared_ptr<const GenomeVariant> compoundInsert(const std::shared_ptr<const GenomeVariant>& SNPs,
-                                                      const std::shared_ptr<const GenomeDatabase>& genome_db);
+  ~VariantInsertFactory() override = default;
 
 private:
 
   bool selectVariant(const std::shared_ptr<const Variant>& variant_ptr) const override;
 
-  void generateCompoundInserts( const std::vector<std::shared_ptr<const CompoundVariantMap>>& contiguous_delete_vec,
-                                std::shared_ptr<GenomeVariant>& genome_variant_ptr);
-
-  std::shared_ptr<const Variant> createCompoundInsert(const CompoundVariantMap& variant_map);
+  std::shared_ptr<const Variant> createCompoundVariant(const CompoundVariantMap& variant_map) const override;
 
 
 };
@@ -140,12 +128,16 @@ public:
   explicit VariantCompoundSNPFactory() = default;
   ~VariantCompoundSNPFactory() override = default;
 
-  std::shared_ptr<const GenomeVariant> compoundSNP(const std::shared_ptr<const GenomeVariant>& SNPs,
-                                                   const std::shared_ptr<const GenomeDatabase>& genome_db);
+  std::shared_ptr<GenomeVariant> create(const std::shared_ptr<const GenomeVariant>& genome_variants,
+                                        const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) const override;
 
 private:
 
 
+  bool aggregateVariants(const std::shared_ptr<const GenomeVariant>& variant_ptr,
+                         std::vector<std::shared_ptr<const SNPCompoundVariantMap>>& aggregated_variants_vec) const;
+
+  std::shared_ptr<const Variant> createCompoundVariant(const SNPCompoundVariantMap& variant_map) const;
 
 };
 

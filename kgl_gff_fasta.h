@@ -24,7 +24,7 @@ namespace genome {   // project level namespace
 // Passed in a vector to write a fasta sequence.
 // WriteFastaSequence.first is the sequence name.
 // WriteFastaSequence.second is the virtual sequence (Base or Amino).
-using WriteFastaSequence = std::pair<std::string, std::shared_ptr<AlphabetSequence>>;
+using WriteFastaSequence = std::pair<std::string, std::shared_ptr<VirtualSequence>>;
 // Passed in a vector from fasta sequence read.
 // ReadFastaSequence.first is the sequence name.
 // ReadFastaSequence.second is a std::string of the fasta sequence.

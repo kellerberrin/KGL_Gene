@@ -34,22 +34,22 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
                                                                                              min_count,
                                                                                              min_proportion);
   // Generate contiguous deletion variants.
-  std::shared_ptr<const kgl::GenomeVariant> codon_delete_ptr = kgl::VariantDeleteFactory().compoundDelete(variant_ptr,
-                                                                                                          genome_db_ptr);
+  std::shared_ptr<const kgl::GenomeVariant> codon_delete_ptr = kgl::VariantDeleteFactory().create(variant_ptr,
+                                                                                                  genome_db_ptr);
   // Generate contiguous insertion variants.
-  std::shared_ptr<const kgl::GenomeVariant> codon_insert_ptr = kgl::VariantInsertFactory().compoundInsert(variant_ptr,
-                                                                                                          genome_db_ptr);
-  std::cout << *codon_insert_ptr;
+  std::shared_ptr<const kgl::GenomeVariant> codon_insert_ptr = kgl::VariantInsertFactory().create(variant_ptr,
+                                                                                                  genome_db_ptr);
   // Disaggregated contiguous deletion variants.
-  std::shared_ptr<const kgl::GenomeVariant>
-  disagg_ptr = kgl::VariantDeleteFactory().disaggregateCompoundVariants(codon_delete_ptr, genome_db_ptr);
+  std::shared_ptr<const kgl::GenomeVariant> disagg_ptr = kgl::VariantDeleteFactory().disaggregate(codon_delete_ptr,
+                                                                                                  genome_db_ptr);
   // Remove disaggregated variants.
   variant_ptr = variant_ptr->Difference(disagg_ptr);
   // Add in contiguous deletes.
   variant_ptr = variant_ptr->Union(codon_delete_ptr);
   // Generate compound single codon variants
-  std::shared_ptr<const kgl::GenomeVariant>
-  compound_snp_ptr = kgl::VariantCompoundSNPFactory().compoundSNP(variant_ptr, genome_db_ptr);
+  std::shared_ptr<const kgl::GenomeVariant> compound_snp_ptr = kgl::VariantCompoundSNPFactory().create(variant_ptr,
+                                                                                                       genome_db_ptr);
+  std::cout << *compound_snp_ptr;
 
   variant_ptr = variant_ptr->filterVariants(kgl::InCDSFilter());
   // Filter for PfATP4

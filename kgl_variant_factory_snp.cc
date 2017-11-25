@@ -31,7 +31,7 @@ kgl::VariantSNPFactory::SNPVariants(const std::string& genome_name,
 
     } else {
 
-      const DNA5Sequence& contig_sequence = contig_ptr->sequence();
+      const DNA5SequenceContig& contig_sequence = contig_ptr->sequence();
 
       const auto &nucleotide_array = contig_block.second->getNucleotideArray();
       for (ContigOffset_t contig_offset = 0; contig_offset < nucleotide_array.contigSize(); ++contig_offset) {

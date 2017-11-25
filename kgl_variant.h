@@ -98,6 +98,9 @@ public:
   const CodingSequenceArray& codingSequences() const { return coding_sequences_; }
   const GeneVector& geneMembership() const { return gene_membership_; }
 
+  // returns false if not in a coding sequence.
+  bool codonOffset(ContigOffset_t& codon_offset, ContigSize_t& base_in_codon) const;
+
   void defineIntron(std::shared_ptr<const GeneFeature> gene_ptr);
   void defineCoding(std::shared_ptr<const CodingSequence> coding_sequence_ptr);
   void defineNonCoding();

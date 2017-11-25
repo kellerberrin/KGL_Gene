@@ -129,16 +129,16 @@ std::string kgl::AminoSequence::emphasizeProteinString(const StringAminoAcid& am
 
 bool kgl::AminoSequence::removeTrailingStop() {
 
-  if (amino_sequence_.empty()) {
+  if (alphabet_string_.empty()) {
 
     ExecEnv::log().warn("Attempt to remove trailing stop amino acid from empty amino sequence");
     return false;
 
   }
 
-  if (*amino_sequence_.rbegin() == AminoAcid::AMINO_STOP) {
+  if (*alphabet_string_.rbegin() == AminoAcid::AMINO_STOP) {
 
-    amino_sequence_.pop_back();
+    alphabet_string_.pop_back();
     return true;
 
   } else {  // Not a stop codon.
@@ -155,7 +155,7 @@ bool kgl::AminoSequence::removeTrailingStop() {
 
 
 std::shared_ptr<kgl::AminoSequence>
-kgl::TranslateToAmino::getAminoSequence(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const {
+kgl::TranslateToAmino::getAminoSequence(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const {
 
   StringAminoAcid protein_string;
   AminoAcid::Alphabet amino_acid;
@@ -189,7 +189,7 @@ kgl::TranslateToAmino::getAminoSequence(std::shared_ptr<const CodingSequence> co
 
 
 
-size_t kgl::TranslateToAmino::checkNonsenseMutation(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const {
+size_t kgl::TranslateToAmino::checkNonsenseMutation(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const {
 
   for (size_t index = 0; index < Codon::codonLength(sequence_ptr) - 1; ++index) {
 
@@ -201,9 +201,21 @@ size_t kgl::TranslateToAmino::checkNonsenseMutation(std::shared_ptr<DNA5Sequence
 
 }
 
+kgl::AminoAcid::Alphabet kgl::TranslateToAmino::getAmino(const Codon& codon) const {
+
+  if (codon.containsBaseN()) {
+
+    return AminoAcid::Alphabet::Z;
+
+  }
+
+  return table_ptr_->getAmino(codon);
+
+}
 
 
-kgl::AminoAcid::Alphabet kgl::TranslateToAmino::getAmino(std::shared_ptr<DNA5SequenceCoding> sequence_ptr,
+
+kgl::AminoAcid::Alphabet kgl::TranslateToAmino::getAmino(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr,
                                                          ContigOffset_t codon_index) const {
 
   Codon codon(sequence_ptr, codon_index);
@@ -218,92 +230,4 @@ kgl::AminoAcid::Alphabet kgl::TranslateToAmino::getAmino(std::shared_ptr<DNA5Seq
 
 }
 
-
-bool kgl::TranslateToAmino::SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                        const std::shared_ptr<const DNA5SequenceContig>& contig_sequence_ptr,
-                                        ContigOffset_t contig_offset,
-                                        DNA5::Alphabet reference_base,
-                                        DNA5::Alphabet mutant_base,
-                                        ContigOffset_t& codon_offset,
-                                        AminoAcid::Alphabet& reference_amino,
-                                        AminoAcid::Alphabet& mutant_amino) const {
-
-  bool result;
-
-  ContigSize_t base_in_codon;
-  result = contig_sequence_ptr->codonOffset(coding_seq_ptr, contig_offset, codon_offset, base_in_codon);
-
-  if (result) {
-
-    auto sequence_offset = static_cast<ContigOffset_t>(codon_offset * 3);
-    ContigSize_t codon_size = 3;
-    StrandSense strand = coding_seq_ptr->getCDSParent()->sequence().strand();
-    std::shared_ptr<DNA5SequenceCoding> codon_sequence = contig_sequence_ptr->codingSubSequence(coding_seq_ptr,
-                                                                                                sequence_offset,
-                                                                                                codon_size);
-    if (codon_sequence->length() != codon_size) {
-
-      ExecEnv::log().error("SNPMutation(), expected codon sequence size 3: got size: {}", codon_sequence->length());
-      result = false;
-
-    }
-
-    switch(strand) {
-
-      case StrandSense::UNKNOWN:
-        ExecEnv::log().error("SNPMutation() CDS strands type not set");
-        result = false;
-        break;
-
-      case StrandSense::FORWARD:
-        break;
-
-      case StrandSense::REVERSE:
-        reference_base = DNA5::complementNucleotide(reference_base);
-        mutant_base = DNA5::complementNucleotide(mutant_base);
-        break;
-
-    }
-
-    // Check the reference base in the codon sequence.
-    if (result) {
-
-      if (Codon(codon_sequence, 0)[base_in_codon] != reference_base) {
-
-        ExecEnv::log().error("SNPMutation(), reference base: {} does not match codon base: {}",
-                             DNA5::convertToChar(Codon(codon_sequence, 0)[base_in_codon]),
-                             DNA5::convertToChar(reference_base));
-        result = false;
-
-      }
-
-    }
-
-    // Get the reference and mutant amino acids
-    if (result) {
-
-      reference_amino = getAmino(codon_sequence, 0);
-      codon_sequence->modifyBase(mutant_base, base_in_codon);
-      mutant_amino = getAmino(codon_sequence, 0);
-
-    }
-
-  } else {
-
-
-
-  }
-
-  if (not result) {
-
-    codon_offset = 0;
-    reference_amino = AminoAcid::AMINO_UNKNOWN;  // The unknown amino acid
-    mutant_amino = AminoAcid::AMINO_UNKNOWN;
-    return false;
-
-  }
-
-  return result;
-
-}
 

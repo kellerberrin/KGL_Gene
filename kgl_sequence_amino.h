@@ -9,6 +9,7 @@
 #include <string>
 #include "kgl_sequence_base.h"
 #include "kgl_table.h"
+#include "kgl_sequence_virtual.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -29,36 +30,29 @@ using StringAminoAcid = AlphabetString<AminoAcid>;
 
 
 
-class AminoSequence: public AlphabetSequence {
+class AminoSequence: public AlphabetSequence<AminoAcid> {
 
 public:
 
-  explicit AminoSequence(StringAminoAcid sequence) : amino_sequence_(std::move(sequence)) {};
+  explicit AminoSequence(StringAminoAcid sequence) : AlphabetSequence<AminoAcid>(std::move(sequence)) {};
   AminoSequence() = delete;
   ~AminoSequence() override = default;
 
-  std::string getSequenceAsString() const override { return amino_sequence_.str(); }
-
-  AminoAcid::Alphabet operator[] (ContigOffset_t& offset) const { return amino_sequence_[offset]; }
-  ContigSize_t length() const { return amino_sequence_.length(); }
-
   const std::string compareAminoSequences(const std::shared_ptr<const AminoSequence>& amino_seq_ptr) const {
 
-    return compareAminoSequences(amino_seq_ptr->amino_sequence_, amino_sequence_);
+    return compareAminoSequences(amino_seq_ptr->alphabet_string_, alphabet_string_);
 
   }
 
   const std::string emphasizeAminoSequence(const std::vector<ContigOffset_t>& emphasize_offsets) const {
 
-    return emphasizeProteinString(amino_sequence_, emphasize_offsets);
+    return emphasizeProteinString(alphabet_string_, emphasize_offsets);
 
   }
 
   bool removeTrailingStop();  // Remove the stop codon (if present).
 
 private:
-
-  StringAminoAcid amino_sequence_;
 
   static std::string emphasizeProteinString(const StringAminoAcid& amino_string,
                                             const std::vector<ContigOffset_t>& emphasize_offsets);
@@ -85,48 +79,40 @@ public:
 
   bool settranslationTable(size_t table) { return table_ptr_->setTranslationTable(table); }
 
-  Codon firstCodon(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const {
+  Codon firstCodon(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const {
 
     return Codon(sequence_ptr, 0);
 
   }
 
-  bool checkStartCodon(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const {
+  bool checkStartCodon(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const {
 
     return table_ptr_->isStartCodon(firstCodon(sequence_ptr));
 
   }
 
-  std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const;
+  std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const;
 
   std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                                                   std::shared_ptr<const DNA5SequenceContig> contig_sequence_ptr) const;
 
-  Codon lastCodon(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const {
+  Codon lastCodon(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const {
 
     return Codon(sequence_ptr, Codon::codonLength(sequence_ptr) - 1);
 
   }
 
-  bool checkStopCodon(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const {
+  bool checkStopCodon(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const {
 
     return table_ptr_->isStopCodon(lastCodon(sequence_ptr));
 
   }
 
-  size_t checkNonsenseMutation(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const;
+  size_t checkNonsenseMutation(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const;
 
-  AminoAcid::Alphabet getAmino(std::shared_ptr<DNA5SequenceCoding> sequence_ptr, ContigSize_t codon_index) const;
+  AminoAcid::Alphabet getAmino(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr, ContigSize_t codon_index) const;
+  AminoAcid::Alphabet getAmino(const Codon& codon) const;
 
-  // Returns the amino mutation of an SNP in a coding sequence.
-  bool SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                   const std::shared_ptr<const DNA5SequenceContig>& contig_sequence_ptr,
-                   ContigOffset_t contig_offset,
-                   DNA5::Alphabet reference_base,
-                   DNA5::Alphabet mutant_base,
-                   ContigOffset_t& codon_offset,
-                   AminoAcid::Alphabet& reference_amino,
-                   AminoAcid::Alphabet& mutant_amino) const;
 
 private:
 

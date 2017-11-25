@@ -90,6 +90,8 @@ public:
 
   const GenomeVariantMap& contigMap() const { return genome_variant_map_; }
 
+
+
   bool isElement(const Variant& variant) const;
   std::shared_ptr<GenomeVariant> Union(std::shared_ptr<const GenomeVariant> genome_variant_ptr) const;
   std::shared_ptr<GenomeVariant> Intersection(std::shared_ptr<const GenomeVariant> genome_variant_ptr) const;

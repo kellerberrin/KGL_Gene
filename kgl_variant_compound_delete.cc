@@ -37,7 +37,8 @@ std::string kgl::CompoundDelete::mutation(char delimiter, VariantOutputIndex out
 
     ContigSize_t base_in_codon;
     ContigOffset_t codon_offset;
-    contig()->sequence().codonOffset(sequence, contigOffset(), codon_offset, base_in_codon);
+
+    codonOffset(codon_offset, base_in_codon);
 
     ss << "-" << "(" << variant_map_.size() << ")" << offsetOutput(codon_offset, output_index) << delimiter;
 

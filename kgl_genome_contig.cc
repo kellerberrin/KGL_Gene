@@ -119,27 +119,6 @@ bool kgl::ContigFeatures::findGenes(ContigOffset_t offset, GeneVector &gene_ptr_
 }
 
 
-// Convenience routine for tagging SNPs.
-bool kgl::ContigFeatures::SNPMutation(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                      ContigOffset_t contig_offset,
-                                      DNA5::Alphabet reference_base,
-                                      DNA5::Alphabet mutant_base,
-                                      ContigOffset_t& codon_offset,
-                                      AminoAcid::Alphabet& reference_amino,
-                                      AminoAcid::Alphabet& mutant_amino) const {
-
-
-  return coding_sequence_.SNPMutation(coding_seq_ptr,
-                                      sequence_ptr_,
-                                      contig_offset,
-                                      reference_base,
-                                      mutant_base,
-                                      codon_offset,
-                                      reference_amino,
-                                      mutant_amino);
-
-}
-
 // Convenience routine for Amino sequences.
 std::shared_ptr<kgl::AminoSequence>
 kgl::ContigFeatures::getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr) const {
@@ -150,7 +129,7 @@ kgl::ContigFeatures::getAminoSequence(std::shared_ptr<const CodingSequence> codi
 
 // Convenience routine for Amino sequences.
 std::shared_ptr<kgl::AminoSequence>
-kgl::ContigFeatures::getAminoSequence(std::shared_ptr<DNA5SequenceCoding> sequence_ptr) const {
+kgl::ContigFeatures::getAminoSequence(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const {
 
   return coding_sequence_.getAminoSequence(sequence_ptr);
 

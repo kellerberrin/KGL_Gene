@@ -45,7 +45,7 @@ std::string kgl::SNPVariantDNA5::output(char delimiter, VariantOutputIndex outpu
 }
 
 // complement base if -ve strand and coding or intron.
-kgl::DNA5::Alphabet kgl::SNPVariantDNA5::strandNucleotide(DNA5::Alphabet nucleotide) const {
+kgl::CodingDNA5::Alphabet kgl::SNPVariantDNA5::strandNucleotide(DNA5::Alphabet nucleotide) const {
 
   switch(type()) {
 
@@ -55,7 +55,7 @@ kgl::DNA5::Alphabet kgl::SNPVariantDNA5::strandNucleotide(DNA5::Alphabet nucleot
 
         ExecEnv::log().error("strandReference(), empty coding sequence for coding variant: {}",
                              output(' ', VariantOutputIndex::START_0_BASED));
-        return nucleotide;
+        return DNA5::convertToCodingDN5(nucleotide);
       }
       switch(codingSequences().getFirst()->getCDSParent()->sequence().strand()) {
 
@@ -63,7 +63,7 @@ kgl::DNA5::Alphabet kgl::SNPVariantDNA5::strandNucleotide(DNA5::Alphabet nucleot
         ExecEnv::log().error("strandReference(), unknown coding sequence for variant: {}",
                              output(' ', VariantOutputIndex::START_0_BASED));
         case StrandSense::FORWARD:
-          return nucleotide;
+          return DNA5::convertToCodingDN5(nucleotide);
 
         case StrandSense::REVERSE:
           return DNA5::complementNucleotide(nucleotide);
@@ -76,7 +76,7 @@ kgl::DNA5::Alphabet kgl::SNPVariantDNA5::strandNucleotide(DNA5::Alphabet nucleot
 
         ExecEnv::log().error("strandReference(), no gene for intron variant: {}",
                              output(' ', VariantOutputIndex::START_0_BASED));
-        return nucleotide;
+        return DNA5::convertToCodingDN5(nucleotide);
       }
       switch(geneMembership().front()->sequence().strand()) {
 
@@ -84,7 +84,7 @@ kgl::DNA5::Alphabet kgl::SNPVariantDNA5::strandNucleotide(DNA5::Alphabet nucleot
           ExecEnv::log().error("strandReference(), unknown coding sequence for variant: {}",
                                output(' ', VariantOutputIndex::START_0_BASED));
         case StrandSense::FORWARD:
-          return nucleotide;
+          return DNA5::convertToCodingDN5(nucleotide);
 
         case StrandSense::REVERSE:
           return DNA5::complementNucleotide(reference());
@@ -92,11 +92,11 @@ kgl::DNA5::Alphabet kgl::SNPVariantDNA5::strandNucleotide(DNA5::Alphabet nucleot
       }
 
     case VariantSequenceType::NON_CODING:
-      return nucleotide;
+      return DNA5::convertToCodingDN5(nucleotide);
 
   }
 
-  return nucleotide; // To stop compiler complaints.
+  return DNA5::convertToCodingDN5(nucleotide); // To stop compiler complaints.
 
 }
 
@@ -154,8 +154,8 @@ bool kgl::SNPVariantDNA5::mutateCodingSequence(const FeatureIdent_t& sequence_id
 
       ExecEnv::log().error(
       "mutateCodingSequence(), unexpected; base: {} at seq. offset: {} not equal snp (strand) reference: {}",
-      DNA5::convertToChar(mutated_sequence->at(sequence_offset)), sequence_offset,
-      DNA5::convertToChar(strandReference()));
+      CodingDNA5::convertToChar(mutated_sequence->at(sequence_offset)), sequence_offset,
+      CodingDNA5::convertToChar(strandReference()));
 
     }
 
@@ -205,13 +205,7 @@ std::string kgl::SNPVariantDNA5::mutation(char delimiter, VariantOutputIndex out
       AminoAcid::Alphabet reference_amino;
       AminoAcid::Alphabet mutant_amino;
 
-      if (contig()->SNPMutation(sequence,
-                                contigOffset(),
-                                reference(),
-                                ExtendDNA5::extendToBase(mutant()),
-                                codon_offset,
-                                reference_amino,
-                                mutant_amino)) {
+      if (SNPMutation(codon_offset, reference_amino, mutant_amino)) {
 
         ss << AminoAcid::convertToChar(reference_amino) << offsetOutput(codon_offset, output_index);
         ss << AminoAcid::convertToChar(mutant_amino) << delimiter;
@@ -219,15 +213,15 @@ std::string kgl::SNPVariantDNA5::mutation(char delimiter, VariantOutputIndex out
         ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
 //        sequence->getGene()->recusivelyPrintsubfeatures();
 
-
-
       }
 
     } else {  // is a deletion or insert
 
       ContigSize_t base_in_codon;
       ContigOffset_t codon_offset;
-      contig()->sequence().codonOffset(sequence, contigOffset(), codon_offset, base_in_codon);
+
+      codonOffset(codon_offset, base_in_codon);
+
       ss << DNA5::convertToChar(reference()) << offsetOutput(codon_offset, output_index);
       ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
       ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
@@ -253,3 +247,55 @@ std::string kgl::SNPVariantDNA5::mutation(char delimiter, VariantOutputIndex out
 
 }
 
+
+bool kgl::SNPVariantDNA5::SNPMutation( ContigOffset_t& codon_offset,
+                                       AminoAcid::Alphabet& reference_amino,
+                                       AminoAcid::Alphabet& mutant_amino) const {
+
+
+  ContigSize_t base_in_codon;
+
+  if (not codonOffset(codon_offset, base_in_codon)) {
+
+    ExecEnv::log().error("SNPMutation() called for non coding variant: {}",
+                         output(' ', VariantOutputIndex::START_0_BASED));
+    reference_amino = AminoAcid::AMINO_UNKNOWN;  // The unknown amino acid
+    mutant_amino = AminoAcid::AMINO_UNKNOWN;
+    return false;
+
+  }
+
+  auto sequence_offset = static_cast<ContigOffset_t>(codon_offset * Codon::CODON_SIZE);
+
+  const std::shared_ptr<const CodingSequence> coding_seq_ptr = codingSequences().getFirst();
+  std::shared_ptr<DNA5SequenceCoding> codon_sequence = contig()->sequence().codingSubSequence(coding_seq_ptr,
+                                                                                              sequence_offset,
+                                                                                              Codon::CODON_SIZE);
+  if (codon_sequence->length() != Codon::CODON_SIZE) {
+
+    ExecEnv::log().error("SNPMutation(), expected codon sequence size 3: got size: {}", codon_sequence->length());
+    reference_amino = AminoAcid::AMINO_UNKNOWN;  // The unknown amino acid
+    mutant_amino = AminoAcid::AMINO_UNKNOWN;
+    return false;
+
+  }
+
+  Codon codon(codon_sequence, 0);  // Create the codon.
+
+  if (ExtendDNA5::isBaseCode(mutant())) {
+
+    reference_amino = contig()->getAminoAcid(codon);
+    codon.modifyBase(base_in_codon, strandNucleotide(ExtendDNA5::extendToBase(mutant())));
+    mutant_amino = contig()->getAminoAcid(codon);
+
+
+  } else {
+
+    mutant_amino = contig()->getAminoAcid(codon);
+    mutant_amino = AminoAcid::AMINO_UNKNOWN;
+
+  }
+
+  return true;
+
+}

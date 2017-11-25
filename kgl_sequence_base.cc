@@ -13,16 +13,17 @@ namespace kgl = kellerberrin::genome;
 // The base DNA5 sequence class.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool kgl::DNA5Sequence::modifyBase(DNA5::Alphabet nucleotide, ContigOffset_t sequence_offset) {
 
-  if (sequence_offset >= base_sequence_.length()) {
+bool kgl::DNA5SequenceCoding::modifyBase(CodingDNA5::Alphabet nucleotide, ContigOffset_t sequence_offset) {
+
+  if (sequence_offset >= alphabet_string_.length()) {
 
     ExecEnv::log().error("modifyBase(), sequence offset: {} exceeds sequence size: {}",
-                         sequence_offset, base_sequence_.length());
+                         sequence_offset, alphabet_string_.length());
     return false;
   }
 
-  base_sequence_.modifyNucleotide(sequence_offset, nucleotide);
+  alphabet_string_.modifyNucleotide(sequence_offset, nucleotide);
 
   return true;
 
@@ -47,7 +48,7 @@ kgl::DNA5SequenceLinear::codingSubSequence(std::shared_ptr<const DNA5SequenceLin
   // If no cds then return null string.
   if (sorted_cds.empty()) {
 
-    StringDNA5 null_seq;
+    StringCodingDNA5 null_seq;
     return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(null_seq)));
 
   }
@@ -59,7 +60,7 @@ kgl::DNA5SequenceLinear::codingSubSequence(std::shared_ptr<const DNA5SequenceLin
                          sorted_cds.rbegin()->second->sequence().end(),
                          base_sequence_ptr->length(),
                          contig_offset);
-    StringDNA5 null_seq;
+    StringCodingDNA5 null_seq;
     return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(null_seq)));
 
   }
@@ -86,12 +87,12 @@ kgl::DNA5SequenceLinear::codingSubSequence(std::shared_ptr<const DNA5SequenceLin
                          sub_sequence_offset,
                          sub_sequence_length,
                          calculated_seq_size);
-    StringDNA5 null_seq;
+    StringCodingDNA5 null_seq;
     return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(null_seq)));
 
   }
 
-  StringDNA5 coding_sequence;
+  StringCodingDNA5 coding_sequence;
   coding_sequence.reserve(sub_sequence_length + 1); // Just to make sure.
 
   // Get the strand and copy or reverse copy the base complement.
@@ -109,6 +110,9 @@ kgl::DNA5SequenceLinear::codingSubSequence(std::shared_ptr<const DNA5SequenceLin
       ContigOffset_t begin_offset;
       ContigOffset_t end_offset;
       ContigOffset_t relative_offset = 0;
+
+      auto convert_base = [](DNA5::Alphabet base) { return DNA5::convertToCodingDN5(base); };
+
       // Convert to an absolute sequence based offset
       for (auto cds : sorted_cds) {
 
@@ -137,9 +141,9 @@ kgl::DNA5SequenceLinear::codingSubSequence(std::shared_ptr<const DNA5SequenceLin
 
           }
 
-          begin = base_sequence_ptr->base_sequence_.begin() + (begin_offset - contig_offset);
-          end = base_sequence_ptr->base_sequence_.begin() + (end_offset - contig_offset);
-          std::copy( begin, end, std::back_inserter(coding_sequence));
+          begin = base_sequence_ptr->alphabet_string_.begin() + (begin_offset - contig_offset);
+          end = base_sequence_ptr->alphabet_string_.begin() + (end_offset - contig_offset);
+          std::transform( begin, end, std::back_inserter(coding_sequence), convert_base);
 
         } // if sub_sequence_offset < relative_offset + cds_size
 
@@ -194,9 +198,9 @@ kgl::DNA5SequenceLinear::codingSubSequence(std::shared_ptr<const DNA5SequenceLin
 
           }
 
-          rbegin = base_sequence_ptr->base_sequence_.rbegin()
+          rbegin = base_sequence_ptr->alphabet_string_.rbegin()
                    + (base_sequence_ptr->length() - (begin_offset - contig_offset));
-          rend = base_sequence_ptr->base_sequence_.rbegin()
+          rend = base_sequence_ptr->alphabet_string_.rbegin()
                  + (base_sequence_ptr->length() - (end_offset - contig_offset));
           std::transform( rbegin, rend, std::back_inserter(coding_sequence), complement_base);
 
@@ -233,6 +237,7 @@ kgl::DNA5SequenceLinear::codingSubSequence(std::shared_ptr<const DNA5SequenceLin
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A linear and contiguous DNA5 sequence used in a contig (chromosome). This object exists for semantic reasons.
+// NOT STRANDED
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 

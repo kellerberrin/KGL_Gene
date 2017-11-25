@@ -52,20 +52,20 @@ kgl::DNA5::Alphabet kgl::DNA5::convertChar(char chr_base) {
 
 
 // Find complementary bases.
-kgl::DNA5::Alphabet kgl::DNA5::complementNucleotide(Alphabet nucleotide) {
+kgl::CodingDNA5::Alphabet kgl::DNA5::complementNucleotide(Alphabet nucleotide) {
 
   // Translate the nucleotide
   switch (nucleotide) {
 
-    case Alphabet::A: return Alphabet::T;
-    case Alphabet::C: return Alphabet::G;
-    case Alphabet::G: return Alphabet::C;
-    case Alphabet::T: return Alphabet::A;
-    case Alphabet::N: return Alphabet::N;
+    case Alphabet::A: return CodingDNA5::Alphabet::T;
+    case Alphabet::C: return CodingDNA5::Alphabet::G;
+    case Alphabet::G: return CodingDNA5::Alphabet::C;
+    case Alphabet::T: return CodingDNA5::Alphabet::A;
+    case Alphabet::N: return CodingDNA5::Alphabet::N;
 
   }
 
-  return Alphabet::N; //  Never reached, to keep the compiler happy.
+  return CodingDNA5::Alphabet::N; //  Never reached, to keep the compiler happy.
 
 }
 

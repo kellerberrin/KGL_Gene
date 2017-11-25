@@ -10,7 +10,7 @@ namespace kgl = kellerberrin::genome;
 
 
 
-kgl::Codon::Codon(std::shared_ptr<DNA5SequenceCoding> sequence_ptr, ContigOffset_t codon_index) {
+kgl::Codon::Codon(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr, ContigOffset_t codon_index) {
 
   if (codon_index >= codonLength(sequence_ptr)) {
 
@@ -29,3 +29,15 @@ kgl::Codon::Codon(std::shared_ptr<DNA5SequenceCoding> sequence_ptr, ContigOffset
 
 }
 
+
+void kgl::Codon::modifyBase(size_t index, CodingDNA5::Alphabet base)
+{
+
+  if (index >= CODON_SIZE) {
+
+    ExecEnv::log().error("Invalid codon base index specified index:{}, must be < 3)", index);
+    return;
+  }
+  bases_[index] = base;
+
+}

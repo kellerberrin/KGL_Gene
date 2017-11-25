@@ -112,10 +112,14 @@ public:
   ExtendDNA5::Alphabet mutant() const { return mutant_; }
 
   // complement base if -ve strand and coding or intron.
-  DNA5::Alphabet strandReference() const { return strandNucleotide(reference()); }
+  CodingDNA5::Alphabet strandReference() const { return strandNucleotide(reference()); }
 
   std::string output(char delimiter, VariantOutputIndex output_index) const override;
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
+
+  bool SNPMutation(ContigOffset_t& codon_offset,
+                   AminoAcid::Alphabet& reference_amino,
+                   AminoAcid::Alphabet& mutant_amino) const;
 
   static constexpr const char* VARIANT_TYPE = "SNP";
 
@@ -125,7 +129,7 @@ private:
   ExtendDNA5::Alphabet mutant_;
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
-  DNA5::Alphabet strandNucleotide(DNA5::Alphabet nucleotide) const;
+  CodingDNA5::Alphabet strandNucleotide(DNA5::Alphabet nucleotide) const;
 
 };
 
