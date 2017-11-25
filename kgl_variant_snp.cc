@@ -22,6 +22,8 @@ bool kgl::SNPVariantDNA5::equivalent(const Variant& cmp_var) const {
 
   return contigId() == cmp_snp->contigId()
          and contigOffset() == cmp_snp->contigOffset()
+         and type() == cmp_snp->type()
+         and codingSequenceId() == cmp_snp->codingSequenceId()
          and reference() == cmp_snp->reference()
          and mutant() == cmp_snp->mutant();
 
@@ -32,7 +34,7 @@ std::string kgl::SNPVariantDNA5::output(char delimiter, VariantOutputIndex outpu
 {
   std::stringstream ss;
   ss << genomeOutput(delimiter, output_index);
-  ss << VARIANT_TYPE << delimiter;
+  ss << name() << delimiter;
   ss << mutation(delimiter, output_index);
   ss << mutantCount() << "/" << readCount() << delimiter;
   for (size_t idx = 0; idx < countArray().size(); ++idx) {

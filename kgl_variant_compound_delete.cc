@@ -16,7 +16,7 @@ std::string kgl::CompoundDelete::output(char delimiter, VariantOutputIndex outpu
   std::stringstream ss;
   ss << "Compound_Delete>>>>>\n";
   ss << genomeOutput(delimiter, output_index);
-  ss << VARIANT_TYPE << delimiter;
+  ss << name() << delimiter;
   ss << mutation(delimiter, output_index) << "\n";
   for (const auto& variant : variant_map_) {
     ss << variant.second->output(delimiter, output_index);

@@ -17,13 +17,13 @@ namespace kgl = kellerberrin::genome;
 
 
 std::shared_ptr<kgl::GenomeVariant>
-kgl::VariantCompoundFactory::disaggregate(const std::shared_ptr<const GenomeVariant>& genome_variant,
-                                        const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) const {
+kgl::CompoundFactory::disaggregate(const std::shared_ptr<const GenomeVariant>& genome_variants,
+                                          const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) const {
 
-  std::shared_ptr<kgl::GenomeVariant> disaggreagated = genome_variant->emptyGenomeVariant(genome_variant->genomeId(),
-                                                                                          genome_db_ptr);
+  std::shared_ptr<kgl::GenomeVariant> disaggreagated = genome_variants->emptyGenomeVariant(genome_variants->genomeId(),
+                                                                                           genome_db_ptr);
 
-  for (auto contig_variant : genome_variant->contigMap()) {
+  for (auto contig_variant : genome_variants->contigMap()) {
 
     for (auto variant : contig_variant.second->getMap()) {
 
@@ -55,15 +55,10 @@ kgl::VariantCompoundFactory::disaggregate(const std::shared_ptr<const GenomeVari
 
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Generate the compound variant maps for insert/delete
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 
 std::shared_ptr<kgl::GenomeVariant>
-kgl::VariantInsertDeleteFactory::create(const std::shared_ptr<const GenomeVariant>& genome_variants,
-                                        const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) const {
+kgl::CompoundFactory::create(const std::shared_ptr<const GenomeVariant>& genome_variants,
+                                    const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) const {
 
   std::shared_ptr<kgl::GenomeVariant>
   compound_variants = kgl::GenomeVariant::emptyGenomeVariant(genome_variants->genomeId(), genome_db_ptr);
@@ -96,6 +91,12 @@ kgl::VariantInsertDeleteFactory::create(const std::shared_ptr<const GenomeVarian
 }
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Generate the compound variant maps for insert/delete
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 // The logic of this function is very convoluted so read the following carefully before modifying this function.
 
 // This function aggregates variants that occur consecutively in coding sequences (only).
@@ -108,7 +109,7 @@ kgl::VariantInsertDeleteFactory::create(const std::shared_ptr<const GenomeVarian
 // 4. These can only be distinguished by examining the coding sequence membership.
 // 5. Thus coding sequences can create multiple aggregated variants for the same contig (chromosome) interval.
 
-bool kgl::VariantInsertDeleteFactory::aggregateVariants(const std::shared_ptr<const GenomeVariant>& variant_ptr,
+bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const GenomeVariant>& variant_ptr,
                                                         std::vector<std::shared_ptr<const CompoundVariantMap>>& aggregated_variants_vec) const {
 
   // The working structure that maintains a vector of compound variants.

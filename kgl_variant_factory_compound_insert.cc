@@ -15,7 +15,7 @@ namespace kgl = kellerberrin::genome;
 
 
 
-bool kgl::VariantInsertFactory::selectVariant(const std::shared_ptr<const Variant>& variant_ptr) const {
+bool kgl::CompoundInsertFactory::selectVariant(const std::shared_ptr<const Variant>& variant_ptr) const {
 
   if (variant_ptr->isSNP()) {
 
@@ -33,7 +33,7 @@ bool kgl::VariantInsertFactory::selectVariant(const std::shared_ptr<const Varian
 
 
 std::shared_ptr<const kgl::Variant>
-kgl::VariantInsertFactory::createCompoundVariant(const CompoundVariantMap& variant_map) const {
+kgl::CompoundInsertFactory::createCompoundVariant(const CompoundVariantMap& variant_map) const {
 
   if (variant_map.empty()) {
 

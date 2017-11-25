@@ -16,7 +16,7 @@ namespace kgl = kellerberrin::genome;
 
 
 
-bool kgl::VariantDeleteFactory::selectVariant(const std::shared_ptr<const Variant>& variant_ptr) const {
+bool kgl::CompoundDeleteFactory::selectVariant(const std::shared_ptr<const Variant>& variant_ptr) const {
 
   if (variant_ptr->isSNP()) {
 
@@ -35,7 +35,7 @@ bool kgl::VariantDeleteFactory::selectVariant(const std::shared_ptr<const Varian
 
 
 std::shared_ptr<const kgl::Variant>
-kgl::VariantDeleteFactory::createCompoundVariant(const CompoundVariantMap& variant_map) const {
+kgl::CompoundDeleteFactory::createCompoundVariant(const CompoundVariantMap& variant_map) const {
 
   if (variant_map.empty()) {
 

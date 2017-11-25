@@ -139,6 +139,7 @@ public:
   ContigOffset_t contigOffset() const { return offset(); }
   bool operator==(const Variant& cmp_var) const { return equivalent(cmp_var); };
 
+  virtual std::string name() const = 0;
   virtual std::string output(char delimiter, VariantOutputIndex output_index) const = 0;
   virtual std::string mutation(char delimiter, VariantOutputIndex output_index) const = 0;
   virtual bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
@@ -146,11 +147,11 @@ public:
 
   virtual bool isCompound() const { return false; }
   virtual bool isSNP() const { return false; }
+  virtual bool equivalent(const Variant& cmp_var) const = 0;
 
 private:
 
   virtual bool applyFilter(const VariantFilter& filter) const { return filter.applyFilter(*this); }
-  virtual bool equivalent(const Variant& cmp_var) const = 0;
 
 };
 

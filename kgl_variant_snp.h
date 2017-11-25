@@ -121,7 +121,8 @@ public:
                    AminoAcid::Alphabet& reference_amino,
                    AminoAcid::Alphabet& mutant_amino) const;
 
-  static constexpr const char* VARIANT_TYPE = "SNP";
+  static constexpr const char* VARIANT_NAME = "SNP";
+  std::string name() const override { return VARIANT_NAME; }
 
 private:
 

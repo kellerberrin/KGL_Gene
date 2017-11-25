@@ -11,11 +11,11 @@ namespace kgl = kellerberrin::genome;
 
 // Generate SNP variants.
 std::shared_ptr<const kgl::GenomeVariant>
-kgl::VariantSNPFactory::SNPVariants(const std::string& genome_name,
-                                    const std::shared_ptr<const ContigCountData>& count_data,
-                                    const std::shared_ptr<const GenomeDatabase>& genome_db,
-                                    NucleotideReadCount_t minimum_read_count,
-                                    double minimum_proportion) {
+kgl::SNPFactory::create(const std::string &genome_name,
+                        const std::shared_ptr<const ContigCountData> &count_data,
+                        const std::shared_ptr<const GenomeDatabase> &genome_db,
+                        NucleotideReadCount_t minimum_read_count,
+                        double minimum_proportion) {
 
   std::shared_ptr<GenomeVariant> genome_snp_variants = kgl::GenomeVariant::emptyGenomeVariant(genome_name, genome_db);
   size_t snp_count = 0;
@@ -26,7 +26,7 @@ kgl::VariantSNPFactory::SNPVariants(const std::string& genome_name,
     std::shared_ptr<ContigFeatures> contig_ptr;
     if (not genome_db->getContigSequence(contig_block.first, contig_ptr)) {
 
-      ExecEnv::log().error("Contig: {} not found in SNPVariants()", contig_block.first);
+      ExecEnv::log().error("Contig: {} not found in SNPFactory.create()", contig_block.first);
       continue;
 
     } else {
@@ -90,7 +90,7 @@ kgl::VariantSNPFactory::SNPVariants(const std::string& genome_name,
 
 
 // This function will insert multiple variants for each CDS sequence within each gene.
-void kgl::VariantSNPFactory::addSNPVariant(std::shared_ptr<GenomeVariant> genome_snp_variants,
+void kgl::SNPFactory::addSNPVariant(std::shared_ptr<GenomeVariant> genome_snp_variants,
                                            const SNPVariantDNA5& variant) {
 
   // Annotate the variant with genome information.

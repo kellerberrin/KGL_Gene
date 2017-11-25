@@ -41,19 +41,19 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class VariantSNPFactory : public VariantFactory {
+class SNPFactory : public VariantFactory {
 
 public:
 
-  explicit VariantSNPFactory() = default;
-  ~VariantSNPFactory() override = default;
+  explicit SNPFactory() = default;
+  ~SNPFactory() override = default;
 
 
-  std::shared_ptr<const GenomeVariant> SNPVariants(const std::string& genome_name,
-                                                   const std::shared_ptr<const ContigCountData>& count_data,
-                                                   const std::shared_ptr<const GenomeDatabase>& genome_db,
-                                                   NucleotideReadCount_t minimum_read_count,
-                                                   double minimum_proportion);
+  std::shared_ptr<const GenomeVariant> create(const std::string &genome_name,
+                                              const std::shared_ptr<const ContigCountData> &count_data,
+                                              const std::shared_ptr<const GenomeDatabase> &genome_db,
+                                              NucleotideReadCount_t minimum_read_count,
+                                              double minimum_proportion);
 
 private:
 

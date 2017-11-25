@@ -21,11 +21,11 @@ namespace genome {   // project level namespace
 
 
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  A compound variant. A collection of feature aligned and contiguous variants. Insertions and Deletions.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+using CompoundVariantMap = std::map<ContigOffset_t, std::shared_ptr<const Variant>>;
 
 class CompoundVariant : public Variant {
 
@@ -33,13 +33,20 @@ public:
 
   CompoundVariant(const std::string& variant_source,
                   std::shared_ptr<const ContigFeatures> contig_ptr,
-                  ContigOffset_t contig_offset) : Variant(variant_source, contig_ptr, contig_offset) {}
+                  ContigOffset_t contig_offset,
+                  const CompoundVariantMap& variant_map) : Variant(variant_source, contig_ptr, contig_offset),
+                                                           variant_map_(variant_map) {}
   ~CompoundVariant() override = default;
 
   bool isCompound() const override { return true; }
 
   bool equivalent(const Variant& cmp_var) const override;
 
+  const CompoundVariantMap& getMap() const { return variant_map_; }
+
+protected:
+
+  const CompoundVariantMap variant_map_;
 
 };
 
@@ -48,7 +55,6 @@ public:
 //  A compound insert. Contiguous SNP insertions insert new nucleotides.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using CompoundVariantMap = std::map<ContigOffset_t, std::shared_ptr<const Variant>>;
 
 class CompoundInsert : public CompoundVariant {
 
@@ -57,17 +63,17 @@ public:
   CompoundInsert(const std::string& variant_source,
                  std::shared_ptr<const ContigFeatures> contig_ptr,
                  ContigOffset_t contig_offset,
-                 const CompoundVariantMap& variant_map) : CompoundVariant(variant_source, contig_ptr, contig_offset),
-                                                         variant_map_(variant_map) {}
+                 const CompoundVariantMap& variant_map) : CompoundVariant(variant_source,
+                                                                          contig_ptr,
+                                                                          contig_offset,
+                                                                          variant_map) {}
   ~CompoundInsert() override = default;
 
-  const CompoundVariantMap& getMap() const { return variant_map_; }
-
-  static constexpr const char* VARIANT_TYPE = "COMPOUND_INSERT";
+  static constexpr const char* VARIANT_NAME = "COMPOUND_INSERT";
+  std::string name() const override { return VARIANT_NAME; }
 
 private:
 
-  const CompoundVariantMap variant_map_;
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
   std::string output(char delimter, VariantOutputIndex output_index) const override;
@@ -89,17 +95,16 @@ public:
   CompoundDelete(const std::string& variant_source,
                  std::shared_ptr<const ContigFeatures> contig_ptr,
                  ContigOffset_t contig_offset,
-                 const CompoundVariantMap& variant_map) : CompoundVariant(variant_source, contig_ptr, contig_offset),
-                                                         variant_map_(variant_map) {}
+                 const CompoundVariantMap& variant_map) : CompoundVariant(variant_source,
+                                                                          contig_ptr,
+                                                                          contig_offset,
+                                                                          variant_map) {}
   ~CompoundDelete() override = default;
 
-  const CompoundVariantMap& getMap() const { return variant_map_; }
-
-  static constexpr const char* VARIANT_TYPE = "COMPOUND_DELETE";
+  static constexpr const char* VARIANT_NAME = "COMPOUND_DELETE";
+  std::string name() const override { return VARIANT_NAME; }
 
 private:
-
-  const CompoundVariantMap variant_map_;
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
   std::string output(char delimter, VariantOutputIndex output_index) const override;
@@ -114,8 +119,6 @@ private:
 //  A compound SNP. where SNPs act on the same codon and therefore have a combined change to the AA.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using SNPCompoundVariantMap = std::multimap<ContigOffset_t, std::shared_ptr<const Variant>>;
-
 class CompoundSNP : public CompoundVariant {
 
 public:
@@ -123,17 +126,17 @@ public:
   CompoundSNP(const std::string& variant_source,
               std::shared_ptr<const ContigFeatures> contig_ptr,
               ContigOffset_t contig_offset,
-              const SNPCompoundVariantMap& variant_map) : CompoundVariant(variant_source, contig_ptr, contig_offset),
-                                                         variant_map_(variant_map) {}
+              const CompoundVariantMap& variant_map) : CompoundVariant(variant_source,
+                                                                       contig_ptr,
+                                                                       contig_offset,
+                                                                       variant_map) {}
   ~CompoundSNP() override = default;
 
-  const SNPCompoundVariantMap& getMap() const { return variant_map_; }
-
-  static constexpr const char* VARIANT_TYPE = "COMPOUND_SNP";
+  static constexpr const char* VARIANT_NAME = "COMPOUND_SNP";
+  std::string name() const override { return VARIANT_NAME; }
 
 private:
 
-  const SNPCompoundVariantMap variant_map_;
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
   std::string output(char delimiter, VariantOutputIndex output_index) const override;

@@ -18,7 +18,29 @@ bool kgl::CompoundVariant::equivalent(const Variant& cmp_var) const {
 
   auto compound_var = dynamic_cast<const CompoundVariant*>(&cmp_var);
 
-  return contigId() == compound_var->contigId() and contigOffset() == compound_var->contigOffset();
+  if (compound_var == nullptr) return false;
+
+  bool result = contigId() == compound_var->contigId()
+                and contigOffset() == compound_var->contigOffset()
+                and type() == compound_var->type()
+                and codingSequenceId() == compound_var->codingSequenceId();
+
+  if (not result) return false;
+
+  if (getMap().size() != compound_var->getMap().size()) return false;
+
+  auto cmp_iterator = compound_var->getMap().begin();
+  for (auto iterator = getMap().begin(); iterator != getMap().end(); ++iterator) {
+
+    if(cmp_iterator == compound_var->getMap().end()) return false;
+
+    if (not iterator->second->equivalent(*(cmp_iterator->second))) return false;
+
+    cmp_iterator++;
+
+  }
+
+  return true;
 
 }
 
