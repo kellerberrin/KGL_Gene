@@ -57,7 +57,7 @@ kgl::SNPFactory::create(const std::string &genome_name,
 
             ExtendDNA5::Alphabet mutant_nucleotide = ExtendDNA5::offsetToNucleotide(idx);
 
-            SNPVariantDNA5 snp_variant(genome_name,
+            SNPVariant snp_variant(genome_name,
                                        contig_ptr,
                                        contig_offset,
                                        read_count,
@@ -91,7 +91,7 @@ kgl::SNPFactory::create(const std::string &genome_name,
 
 // This function will insert multiple variants for each CDS sequence within each gene.
 void kgl::SNPFactory::addSNPVariant(std::shared_ptr<GenomeVariant> genome_snp_variants,
-                                           const SNPVariantDNA5& variant) {
+                                           const SNPVariant& variant) {
 
   // Annotate the variant with genome information.
   GeneVector gene_vector;
@@ -104,7 +104,7 @@ void kgl::SNPFactory::addSNPVariant(std::shared_ptr<GenomeVariant> genome_snp_va
       if (sequence_array->empty()) {
 
         // create a variant copy and annotate with a gene.
-        std::shared_ptr<SNPVariantDNA5> intron_snp_ptr(std::make_shared<SNPVariantDNA5>(variant));
+        std::shared_ptr<SNPVariant> intron_snp_ptr(std::make_shared<SNPVariant>(variant));
         intron_snp_ptr->defineIntron(gene_ptr); // intron
         genome_snp_variants->addVariant(intron_snp_ptr);
 
@@ -115,14 +115,14 @@ void kgl::SNPFactory::addSNPVariant(std::shared_ptr<GenomeVariant> genome_snp_va
           if (sequence.second->isWithinCoding(variant_offset)) {
 
             // create a variant copy and annotate with a coding sequence.
-            std::shared_ptr<SNPVariantDNA5> coding_snp_ptr(std::make_shared<SNPVariantDNA5>(variant));
+            std::shared_ptr<SNPVariant> coding_snp_ptr(std::make_shared<SNPVariant>(variant));
             coding_snp_ptr->defineCoding(sequence.second); // coding
             genome_snp_variants->addVariant(coding_snp_ptr);
 
           } else {  // an intron for this sequence
 
             // create a variant copy and annotate with a gene.
-            std::shared_ptr<SNPVariantDNA5> intron_snp_ptr(std::make_shared<SNPVariantDNA5>(variant));
+            std::shared_ptr<SNPVariant> intron_snp_ptr(std::make_shared<SNPVariant>(variant));
             intron_snp_ptr->defineIntron(gene_ptr); // intron
             genome_snp_variants->addVariant(intron_snp_ptr);
 
@@ -137,7 +137,7 @@ void kgl::SNPFactory::addSNPVariant(std::shared_ptr<GenomeVariant> genome_snp_va
   } else {
 
     // create a variant copy and tag as non-coding.
-    std::shared_ptr<SNPVariantDNA5> noncoding_snp_ptr(std::make_shared<SNPVariantDNA5>(variant));
+    std::shared_ptr<SNPVariant> noncoding_snp_ptr(std::make_shared<SNPVariant>(variant));
     noncoding_snp_ptr->defineNonCoding(); // non coding
     genome_snp_variants->addVariant(noncoding_snp_ptr);
 

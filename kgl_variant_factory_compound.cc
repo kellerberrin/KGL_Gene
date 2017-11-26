@@ -125,13 +125,24 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
       // only coding sequence and non-compound (no recursive compound)
       if (variant.second->type() == VariantSequenceType::CDS_CODING and not variant.second->isCompound()) {
 
-        if (selectVariant(variant.second)) {  // The selection function passed in as a template.
+        if (selectVariant(variant.second)) {  // The virtual selection function.
+
+          std::shared_ptr<const SubordinateSNP> subSNP_ptr = std::dynamic_pointer_cast<const SubordinateSNP>(variant.second);
+
+          if (not subSNP_ptr) {
+
+            ExecEnv::log().error("Not a (Subordinate) SNP Variant: {}",
+                                 variant.second->output(' ', VariantOutputIndex::START_0_BASED));
+            return false;
+
+          }
 
           // If empty then just add the variant to a variant map and update the working structure.
           if (compound_variant_vec.empty()) {
 
+            std::pair<ContigSize_t, std::shared_ptr<const SubordinateSNP>> insert_pair(subSNP_ptr->offset(), subSNP_ptr);
             CompoundVariantMap compound_variant;
-            compound_variant.insert(variant);
+            compound_variant.insert(insert_pair);
             compound_variant_vec.push_back(std::make_shared<CompoundVariantMap>(compound_variant));
 
           } else { // if not empty
@@ -156,7 +167,8 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
                 } else if ((compound_variant_ptr->rbegin()->second->contigOffset() + 1) == variant.second->contigOffset()) {
 
                   // Is contiguous in the same coding sequence so append to the compound map.
-                  auto result = compound_variant_ptr->insert(variant);
+                  std::pair<ContigSize_t, std::shared_ptr<const SubordinateSNP>> insert_pair(subSNP_ptr->offset(), subSNP_ptr);
+                  auto result = compound_variant_ptr->insert(insert_pair);
                   if (not result.second) {
 
                     ExecEnv::log().error("aggregateCompoundVariants(), unexpected - could not insert to contiguous map");
@@ -199,7 +211,8 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
             if (not found_sequence) {
 
               CompoundVariantMap compound_variant;
-              compound_variant.insert(variant);
+              std::pair<ContigSize_t, std::shared_ptr<const SubordinateSNP>> insert_pair(subSNP_ptr->offset(), subSNP_ptr);
+              compound_variant.insert(insert_pair);
               compound_variant_vec.push_back(std::make_shared<CompoundVariantMap>(compound_variant));
 
             } // if not found coding sequence

@@ -51,14 +51,15 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
       // only coding sequence and SNP
       if (variant.second->type() == VariantSequenceType::CDS_CODING and variant.second->isSNP()) {
 
-        std::shared_ptr<const SNPVariantDNA5> SNP_ptr = std::static_pointer_cast<const SNPVariantDNA5>(variant.second);
+        std::shared_ptr<const SubordinateSNP> subSNP_ptr = std::static_pointer_cast<const SubordinateSNP>(variant.second);
 
-        if (ExtendDNA5::isBaseCode(SNP_ptr->mutant())) {
+        if (ExtendDNA5::isBaseCode(subSNP_ptr->mutant())) {
           // If empty then just add the variant to a variant map and update the working structure.
           if (compound_variant_vec.empty()) {
 
             CompoundVariantMap compound_variant;
-            compound_variant.insert(variant);
+            std::pair<ContigSize_t, std::shared_ptr<const SubordinateSNP>> insert_pair(subSNP_ptr->offset(), subSNP_ptr);
+            compound_variant.insert(insert_pair);
             compound_variant_vec.push_back(std::make_shared<CompoundVariantMap>(compound_variant));
 
           } else { // if not empty
@@ -79,10 +80,10 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
                 ContigOffset_t compound_codon_offset;
                 ContigSize_t base_in_codon;
 
-                if (not SNP_ptr->codonOffset(variant_codon_offset, base_in_codon)) {
+                if (not subSNP_ptr->codonOffset(variant_codon_offset, base_in_codon)) {
 
                   ExecEnv::log().error("aggregateVariants(), unexpected - could not find codon offset for variant: {}",
-                                       SNP_ptr->output(' ', VariantOutputIndex::START_0_BASED));
+                                       subSNP_ptr->output(' ', VariantOutputIndex::START_0_BASED));
                   return false;
 
                 }
@@ -97,13 +98,14 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
 
                 if (compound_codon_offset == variant_codon_offset) { // In the same codon
 
-                  auto result = compound_variant_ptr->insert(variant);
+                  std::pair<ContigSize_t, std::shared_ptr<const SubordinateSNP>> insert_pair(subSNP_ptr->offset(), subSNP_ptr);
+                  auto result = compound_variant_ptr->insert(insert_pair);
 
                   if (not result.second) {
 
                     ExecEnv::log().error(
                     "aggregateVariants(), unexpected - could not add variant: {}, previous variant: {}",
-                    SNP_ptr->output(' ', VariantOutputIndex::START_0_BASED),
+                    subSNP_ptr->output(' ', VariantOutputIndex::START_0_BASED),
                     compound_variant_ptr->rbegin()->second->output(' ', VariantOutputIndex::START_0_BASED));
 
                   }
@@ -111,8 +113,6 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
                 }
 
               } // if same offset.
-
-              break; // found the coding sequence so no need to look further.
 
             }  // for all compound variants.
 
@@ -143,7 +143,8 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
             if (not found_sequence) {
 
               CompoundVariantMap compound_variant;
-              compound_variant.insert(variant);
+              std::pair<ContigSize_t, std::shared_ptr<const SubordinateSNP>> insert_pair(subSNP_ptr->offset(), subSNP_ptr);
+              compound_variant.insert(insert_pair);
               compound_variant_vec.push_back(std::make_shared<CompoundVariantMap>(compound_variant));
 
             } // if not found coding sequence

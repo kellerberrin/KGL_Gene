@@ -71,36 +71,83 @@ private:
 
 };
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  A virtual class held in compound variants, produces a modified text output for coding variants.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class SubordinateSNP : public ReadCountVariant {
+
+public:
+
+  SubordinateSNP(const std::string& variant_source,
+                const std::shared_ptr<const ContigFeatures> contig_ptr,
+                ContigOffset_t contig_offset,
+                NucleotideReadCount_t read_count,
+                NucleotideReadCount_t mutant_count,
+                NucleotideReadCount_t const count_array[],
+                ContigSize_t  count_array_size,
+                DNA5::Alphabet reference,
+                ExtendDNA5::Alphabet mutant) : ReadCountVariant(variant_source,
+                                                                contig_ptr,
+                                                                contig_offset,
+                                                                read_count,
+                                                                mutant_count,
+                                                                count_array,
+                                                                count_array_size),
+                                              reference_(reference),
+                                              mutant_(mutant) {}
+
+  bool isSNP() const override { return true; }
+
+  DNA5::Alphabet reference() const { return reference_; }
+  ExtendDNA5::Alphabet mutant() const { return mutant_; }
+
+
+  std::string suboutput(char delimiter, VariantOutputIndex output_index) const;
+
+private:
+
+  DNA5::Alphabet reference_;
+  ExtendDNA5::Alphabet mutant_;
+
+  std::string submutation(char delimiter, VariantOutputIndex output_index) const;
+
+  static constexpr const char* VARIANT_NAME = "SSNP";
+  std::string subname() const { return VARIANT_NAME; }
+
+
+};
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  A simple SNP variant. Modelled on the VCF file format.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class SNPVariantDNA5 : public ReadCountVariant {
+class SNPVariant : public SubordinateSNP {
 
 public:
 
-  SNPVariantDNA5(const std::string& variant_source,
-                 const std::shared_ptr<const ContigFeatures> contig_ptr,
-                 ContigOffset_t contig_offset,
-                 NucleotideReadCount_t read_count,
-                 NucleotideReadCount_t mutant_count,
-                 NucleotideReadCount_t const count_array[],
-                 ContigSize_t  count_array_size,
-                 DNA5::Alphabet reference,
-                 ExtendDNA5::Alphabet mutant) : ReadCountVariant(variant_source,
-                                                                 contig_ptr,
-                                                                 contig_offset,
-                                                                 read_count,
-                                                                 mutant_count,
-                                                                 count_array,
-                                                                 count_array_size),
-                                                reference_(reference),
-                                                mutant_(mutant) {}
+  SNPVariant(const std::string& variant_source,
+             const std::shared_ptr<const ContigFeatures> contig_ptr,
+             ContigOffset_t contig_offset,
+             NucleotideReadCount_t read_count,
+             NucleotideReadCount_t mutant_count,
+             NucleotideReadCount_t const count_array[],
+             ContigSize_t  count_array_size,
+             DNA5::Alphabet reference,
+             ExtendDNA5::Alphabet mutant) : SubordinateSNP(variant_source,
+                                                           contig_ptr,
+                                                           contig_offset,
+                                                           read_count,
+                                                           mutant_count,
+                                                           count_array,
+                                                           count_array_size,
+                                                           reference,
+                                                           mutant) {}
 
-  SNPVariantDNA5(const SNPVariantDNA5& variant) = default;
-  ~SNPVariantDNA5() override = default;
-
-  bool isSNP() const override { return true; }
+  SNPVariant(const SNPVariant& variant) = default;
+  ~SNPVariant() override = default;
 
   bool equivalent(const Variant& cmp_var) const override;
 
@@ -108,11 +155,9 @@ public:
   bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
                             std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const override;
 
-  DNA5::Alphabet reference() const { return reference_; }
-  ExtendDNA5::Alphabet mutant() const { return mutant_; }
-
   // complement base if -ve strand and coding or intron.
   CodingDNA5::Alphabet strandReference() const { return strandNucleotide(reference()); }
+  CodingDNA5::Alphabet strandMutant() const { return strandNucleotide(ExtendDNA5::extendToBase(mutant())); }
 
   std::string output(char delimiter, VariantOutputIndex output_index) const override;
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
@@ -125,9 +170,6 @@ public:
   std::string name() const override { return VARIANT_NAME; }
 
 private:
-
-  DNA5::Alphabet reference_;
-  ExtendDNA5::Alphabet mutant_;
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
   CodingDNA5::Alphabet strandNucleotide(DNA5::Alphabet nucleotide) const;

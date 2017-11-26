@@ -10,14 +10,12 @@ namespace kgl = kellerberrin::genome;
 std::string kgl::CompoundSNP::output(char delimiter, VariantOutputIndex output_index) const {
 
   std::stringstream ss;
-  ss << "Compound_SNP>>>>>\n";
-  ss << genomeOutput(delimiter, output_index) << delimiter;
+  ss << genomeOutput(delimiter, output_index);
   ss << name();
   ss << mutation(delimiter, output_index) << "\n";
   for (const auto& variant : variant_map_) {
-    ss << variant.second->output(delimiter, output_index);
+    ss << variant.second->suboutput(delimiter, output_index);
   }
-  ss << "<<<<<Compound_SNP\n";
   return ss.str();
 
 }
@@ -25,10 +23,121 @@ std::string kgl::CompoundSNP::output(char delimiter, VariantOutputIndex output_i
 std::string kgl::CompoundSNP::mutation(char delimiter, VariantOutputIndex output_index) const {
 
   std::stringstream ss;
-  ss << "-" << "(" << variant_map_.size() << ")" << offsetOutput(contigOffset(), output_index) << delimiter;
+
+  if (not codingSequences().empty()) {
+
+    std::shared_ptr<const CodingSequence> sequence = codingSequences().getFirst();
+
+    ContigOffset_t codon_offset;
+    AminoAcid::Alphabet reference_amino;
+    AminoAcid::Alphabet mutant_amino;
+    codonMutation(codon_offset, reference_amino, mutant_amino);
+
+    ss << delimiter << variant_map_.size() << delimiter
+       << sequence->getGene()->id() << delimiter << sequence->getCDSParent()->id() << delimiter
+       << AminoAcid::convertToChar(reference_amino) << offsetOutput(codon_offset, output_index)
+       << AminoAcid::convertToChar(mutant_amino) << delimiter;
+
+  }
+
   return ss.str();
 
 }
+
+
+bool kgl::CompoundSNP::codonMutation( ContigOffset_t& codon_offset,
+                                      AminoAcid::Alphabet& reference_amino,
+                                      AminoAcid::Alphabet& mutant_amino) const {
+
+
+  ContigSize_t base_in_codon;
+
+  if (codingSequences().empty()) {
+
+    reference_amino = AminoAcid::AMINO_UNKNOWN;  // The unknown amino acid
+    mutant_amino = AminoAcid::AMINO_UNKNOWN;
+    codon_offset = 0;
+    return false;
+
+  }
+
+  codonOffset(codon_offset, base_in_codon);
+
+  auto sequence_offset = static_cast<ContigOffset_t>(codon_offset * Codon::CODON_SIZE);
+
+  const std::shared_ptr<const CodingSequence> coding_seq_ptr = codingSequences().getFirst();
+
+  std::shared_ptr<DNA5SequenceCoding> codon_sequence = contig()->sequence().codingSubSequence(coding_seq_ptr,
+                                                                                              sequence_offset,
+                                                                                              Codon::CODON_SIZE);
+
+  if (codon_sequence->length() != Codon::CODON_SIZE) {
+
+    ExecEnv::log().error("codonMutation(), expected codon sequence size 3: got size: {}", codon_sequence->length());
+    reference_amino = AminoAcid::AMINO_UNKNOWN;  // The unknown amino acid
+    mutant_amino = AminoAcid::AMINO_UNKNOWN;
+    codon_offset = 0;
+    return false;
+
+  }
+
+  Codon codon(codon_sequence, 0);  // Create the codon.
+  reference_amino = contig()->getAminoAcid(codon);
+
+  for (auto variant : getMap()) {
+
+    std::shared_ptr<const SNPVariant> SNP_ptr = std::dynamic_pointer_cast<const SNPVariant>(variant.second);
+
+    if (not SNP_ptr) {
+
+      ExecEnv::log().error("NON SNP Variant :{} found in Compound SNP :{}",
+                           variant.second->output(' ', VariantOutputIndex::START_0_BASED),
+                           output(' ', VariantOutputIndex::START_0_BASED));
+      reference_amino = AminoAcid::AMINO_UNKNOWN;  // The unknown amino acid
+      mutant_amino = AminoAcid::AMINO_UNKNOWN;
+      codon_offset = 0;
+      return false;
+    }
+
+    if (not ExtendDNA5::isBaseCode(SNP_ptr->mutant())) {
+
+      ExecEnv::log().error("NON Base code SNP Variant :{}",
+                           variant.second->output(' ', VariantOutputIndex::START_0_BASED),
+                           output(' ', VariantOutputIndex::START_0_BASED));
+      reference_amino = AminoAcid::AMINO_UNKNOWN;  // The unknown amino acid
+      mutant_amino = AminoAcid::AMINO_UNKNOWN;
+      codon_offset = 0;
+      return false;
+    }
+
+    CodingDNA5::Alphabet strand_mutant = SNP_ptr->strandMutant();
+    CodingDNA5::Alphabet strand_reference = SNP_ptr->strandReference();
+
+
+    SNP_ptr->codonOffset(codon_offset, base_in_codon);
+
+    if (strand_reference != codon[base_in_codon]) {
+
+      ExecEnv::log().error("codonMutation(), strand reference: {} does not match codon reference: {} for variant: {}",
+                           CodingDNA5::convertToChar(strand_reference),
+                           CodingDNA5::convertToChar(codon[base_in_codon]),
+                           SNP_ptr->output(' ', VariantOutputIndex::START_0_BASED));
+      reference_amino = AminoAcid::AMINO_UNKNOWN;  // The unknown amino acid
+      mutant_amino = AminoAcid::AMINO_UNKNOWN;
+      codon_offset = 0;
+      return false;
+    }
+
+    codon.modifyBase(base_in_codon, strand_mutant);
+
+  }
+
+  mutant_amino = contig()->getAminoAcid(codon);
+
+  return true;
+
+}
+
 
 bool kgl::CompoundSNP::mutateCodingSequence(const FeatureIdent_t& sequence_id,
                                             std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const {

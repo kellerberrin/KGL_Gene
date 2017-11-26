@@ -9,16 +9,77 @@ namespace kgl = kellerberrin::genome;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  SubordinateSNP Variant. A virtual class held in compound variants, produces a modified text output.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+std::string kgl::SubordinateSNP::suboutput(char delimiter, VariantOutputIndex output_index) const
+{
+  std::stringstream ss;
+  ss << genomeOutput(delimiter, output_index);
+  ss << subname() << delimiter << 1 << delimiter;
+  ss << submutation(delimiter, output_index);
+  ss << mutantCount() << "/" << readCount() << delimiter;
+  for (size_t idx = 0; idx < countArray().size(); ++idx) {
+    ss << ExtendDNA5::convertToChar(ExtendDNA5::offsetToNucleotide(idx)) << ":" << countArray()[idx] << delimiter;
+  }
+  ss << '\n';
+
+  return ss.str();
+
+}
+
+std::string kgl::SubordinateSNP::submutation(char delimiter, VariantOutputIndex output_index) const
+{
+
+  std::stringstream ss;
+
+  if (not codingSequences().empty()) {
+
+    std::shared_ptr<const CodingSequence> sequence = codingSequences().getFirst();
+
+    ss << sequence->getGene()->id() << delimiter << sequence->getCDSParent()->id() << delimiter;
+
+    ContigSize_t base_in_codon;
+    ContigOffset_t codon_offset;
+
+    codonOffset(codon_offset, base_in_codon);
+
+    ss << offsetOutput(codon_offset, output_index) << "-" << offsetOutput(base_in_codon, output_index) << delimiter;
+    ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
+    ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
+
+
+  } else if (not geneMembership().empty()) {
+
+    std::shared_ptr<const GeneFeature> gene_ptr = geneMembership().front();
+    ss << gene_ptr->id() << " ";
+    ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
+    ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
+
+  } else { // non coding (non-gene) variant or unknown
+
+    ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
+    ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
+
+  }
+
+  return ss.str();
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SNPVariant - SNPs generated from the SAM/BAM read data.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
-bool kgl::SNPVariantDNA5::equivalent(const Variant& cmp_var) const {
+bool kgl::SNPVariant::equivalent(const Variant& cmp_var) const {
 
-  auto cmp_snp = dynamic_cast<const SNPVariantDNA5*>(&cmp_var);
+  auto cmp_snp = dynamic_cast<const SNPVariant*>(&cmp_var);
 
-  if (cmp_snp == nullptr) return false;
+  if (not cmp_snp) return false;
 
   return contigId() == cmp_snp->contigId()
          and contigOffset() == cmp_snp->contigOffset()
@@ -30,11 +91,11 @@ bool kgl::SNPVariantDNA5::equivalent(const Variant& cmp_var) const {
 }
 
 
-std::string kgl::SNPVariantDNA5::output(char delimiter, VariantOutputIndex output_index) const
+std::string kgl::SNPVariant::output(char delimiter, VariantOutputIndex output_index) const
 {
   std::stringstream ss;
   ss << genomeOutput(delimiter, output_index);
-  ss << name() << delimiter;
+  ss << name() << delimiter << 1 << delimiter;
   ss << mutation(delimiter, output_index);
   ss << mutantCount() << "/" << readCount() << delimiter;
   for (size_t idx = 0; idx < countArray().size(); ++idx) {
@@ -47,7 +108,7 @@ std::string kgl::SNPVariantDNA5::output(char delimiter, VariantOutputIndex outpu
 }
 
 // complement base if -ve strand and coding or intron.
-kgl::CodingDNA5::Alphabet kgl::SNPVariantDNA5::strandNucleotide(DNA5::Alphabet nucleotide) const {
+kgl::CodingDNA5::Alphabet kgl::SNPVariant::strandNucleotide(DNA5::Alphabet nucleotide) const {
 
   switch(type()) {
 
@@ -64,6 +125,7 @@ kgl::CodingDNA5::Alphabet kgl::SNPVariantDNA5::strandNucleotide(DNA5::Alphabet n
         case StrandSense::UNKNOWN:
         ExecEnv::log().error("strandReference(), unknown coding sequence for variant: {}",
                              output(' ', VariantOutputIndex::START_0_BASED));
+          return CodingDNA5::Alphabet::N;
         case StrandSense::FORWARD:
           return DNA5::convertToCodingDN5(nucleotide);
 
@@ -78,13 +140,15 @@ kgl::CodingDNA5::Alphabet kgl::SNPVariantDNA5::strandNucleotide(DNA5::Alphabet n
 
         ExecEnv::log().error("strandReference(), no gene for intron variant: {}",
                              output(' ', VariantOutputIndex::START_0_BASED));
-        return DNA5::convertToCodingDN5(nucleotide);
+        return CodingDNA5::Alphabet::N;
+
       }
       switch(geneMembership().front()->sequence().strand()) {
 
         case StrandSense::UNKNOWN:
           ExecEnv::log().error("strandReference(), unknown coding sequence for variant: {}",
                                output(' ', VariantOutputIndex::START_0_BASED));
+          return CodingDNA5::Alphabet::N;
         case StrandSense::FORWARD:
           return DNA5::convertToCodingDN5(nucleotide);
 
@@ -103,7 +167,7 @@ kgl::CodingDNA5::Alphabet kgl::SNPVariantDNA5::strandNucleotide(DNA5::Alphabet n
 }
 
 
-bool kgl::SNPVariantDNA5::mutateCodingSequence(const FeatureIdent_t& sequence_id,
+bool kgl::SNPVariant::mutateCodingSequence(const FeatureIdent_t& sequence_id,
                                                std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const {
 
 
@@ -190,7 +254,7 @@ bool kgl::SNPVariantDNA5::mutateCodingSequence(const FeatureIdent_t& sequence_id
 }
 
 
-std::string kgl::SNPVariantDNA5::mutation(char delimiter, VariantOutputIndex output_index) const
+std::string kgl::SNPVariant::mutation(char delimiter, VariantOutputIndex output_index) const
 {
 
   std::stringstream ss;
@@ -250,7 +314,7 @@ std::string kgl::SNPVariantDNA5::mutation(char delimiter, VariantOutputIndex out
 }
 
 
-bool kgl::SNPVariantDNA5::SNPMutation( ContigOffset_t& codon_offset,
+bool kgl::SNPVariant::SNPMutation( ContigOffset_t& codon_offset,
                                        AminoAcid::Alphabet& reference_amino,
                                        AminoAcid::Alphabet& mutant_amino) const {
 

@@ -7,6 +7,7 @@
 
 
 #include "kgl_variant.h"
+#include "kgl_variant_snp.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -25,7 +26,7 @@ namespace genome {   // project level namespace
 //  A compound variant. A collection of feature aligned and contiguous variants. Insertions and Deletions.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using CompoundVariantMap = std::map<ContigOffset_t, std::shared_ptr<const Variant>>;
+using CompoundVariantMap = std::map<ContigOffset_t, std::shared_ptr<const SubordinateSNP>>;
 
 class CompoundVariant : public Variant {
 
@@ -69,7 +70,7 @@ public:
                                                                           variant_map) {}
   ~CompoundInsert() override = default;
 
-  static constexpr const char* VARIANT_NAME = "COMPOUND_INSERT";
+  static constexpr const char* VARIANT_NAME = "CINS";
   std::string name() const override { return VARIANT_NAME; }
 
 private:
@@ -101,7 +102,7 @@ public:
                                                                           variant_map) {}
   ~CompoundDelete() override = default;
 
-  static constexpr const char* VARIANT_NAME = "COMPOUND_DELETE";
+  static constexpr const char* VARIANT_NAME = "CDEL";
   std::string name() const override { return VARIANT_NAME; }
 
 private:
@@ -132,7 +133,7 @@ public:
                                                                        variant_map) {}
   ~CompoundSNP() override = default;
 
-  static constexpr const char* VARIANT_NAME = "COMPOUND_SNP";
+  static constexpr const char* VARIANT_NAME = "CSNP";
   std::string name() const override { return VARIANT_NAME; }
 
 private:
@@ -143,7 +144,9 @@ private:
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
   bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
                             std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const override;
-
+  bool codonMutation( ContigOffset_t& codon_offset,
+                      AminoAcid::Alphabet& reference_amino,
+                      AminoAcid::Alphabet& mutant_amino) const;
 
 };
 

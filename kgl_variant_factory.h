@@ -57,7 +57,7 @@ public:
 
 private:
 
-  void addSNPVariant(std::shared_ptr<GenomeVariant> genome_snp_variants, const SNPVariantDNA5& variant);
+  void addSNPVariant(std::shared_ptr<GenomeVariant> genome_snp_variants, const SNPVariant& variant);
 
 };
 

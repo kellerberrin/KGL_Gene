@@ -47,11 +47,11 @@ std::string kgl::VariantSequence::typestr() const {
 
   switch(type()) {
 
-    case VariantSequenceType::CDS_CODING : return "CDSCoding";
+    case VariantSequenceType::CDS_CODING : return "Coding";
 
-    case VariantSequenceType::INTRON : return "INTRON";
+    case VariantSequenceType::INTRON : return "Intron";
 
-    case VariantSequenceType::NON_CODING : return "NONCoding";
+    case VariantSequenceType::NON_CODING : return "NonCoding";
 
   }
 

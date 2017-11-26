@@ -26,7 +26,7 @@ public:
 
   bool applyFilter(const Variant& variant) const override { return true; }  // default
   bool applyFilter(const ReadCountVariant& variant) const override { return variant.readCount() >= read_count_; }
-  bool applyFilter(const SNPVariantDNA5& variant) const override { return variant.readCount() >= read_count_; }
+  bool applyFilter(const SNPVariant& variant) const override { return variant.readCount() >= read_count_; }
   bool applyFilter(const CompoundDelete& variant) const override { return true; }  // default
 
   std::string filterName() const final;
@@ -50,7 +50,7 @@ public:
 
   bool applyFilter(const Variant& variant) const override { return true; }  // default
   bool applyFilter(const ReadCountVariant& variant) const override { return variant.proportion() >= mutant_proportion_; }
-  bool applyFilter(const SNPVariantDNA5& variant) const override { return variant.proportion() >= mutant_proportion_; }
+  bool applyFilter(const SNPVariant& variant) const override { return variant.proportion() >= mutant_proportion_; }
   bool applyFilter(const CompoundDelete& variant) const override { return true; }  // default
 
   std::string filterName() const final;
@@ -76,7 +76,7 @@ public:
 
   bool applyFilter(const Variant& variant) const override { return implementFilter(variant); } // redirect
   bool applyFilter(const ReadCountVariant& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const SNPVariantDNA5& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const SNPVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
 
 private:
@@ -100,7 +100,7 @@ public:
 
   bool applyFilter(const Variant& variant) const override { return implementFilter(variant); } // redirect
   bool applyFilter(const ReadCountVariant& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const SNPVariantDNA5& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const SNPVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
 
 private:
@@ -126,7 +126,7 @@ public:
 
   bool applyFilter(const Variant& variant) const override { return implementFilter(variant); } // redirect
   bool applyFilter(const ReadCountVariant& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const SNPVariantDNA5& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const SNPVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
 
 private:
@@ -152,7 +152,7 @@ public:
 
   bool applyFilter(const Variant& variant) const override { return implementFilter(variant); } // redirect
   bool applyFilter(const ReadCountVariant& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const SNPVariantDNA5& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const SNPVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
 
 private:
@@ -176,7 +176,7 @@ public:
 
   bool applyFilter(const Variant& variant) const override { return true; }  // default
   bool applyFilter(const ReadCountVariant& variant) const override { return true; }  // default
-  bool applyFilter(const SNPVariantDNA5& variant) const override {
+  bool applyFilter(const SNPVariant& variant) const override {
 
     return ExtendDNA5::isDeletion(variant.mutant());
 
@@ -205,7 +205,7 @@ public:
 
   bool applyFilter(const Variant& variant) const override { return true; }  // default
   bool applyFilter(const ReadCountVariant& variant) const override { return true; }  // default
-  bool applyFilter(const SNPVariantDNA5& variant) const override {
+  bool applyFilter(const SNPVariant& variant) const override {
 
     return ExtendDNA5::isBaseCode(variant.mutant());
 
@@ -234,7 +234,7 @@ public:
 
   bool applyFilter(const Variant& variant) const override { return not filter_ptr_->applyFilter(variant); }
   bool applyFilter(const ReadCountVariant& variant) const override { return not filter_ptr_->applyFilter(variant); }
-  bool applyFilter(const SNPVariantDNA5& variant) const override { return not filter_ptr_->applyFilter(variant); }
+  bool applyFilter(const SNPVariant& variant) const override { return not filter_ptr_->applyFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return not filter_ptr_->applyFilter(variant); }
 
   std::string filterName() const final { return "NOT (" + filter_ptr_->filterName() + ")"; }

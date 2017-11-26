@@ -20,7 +20,7 @@ bool kgl::CompoundDeleteFactory::selectVariant(const std::shared_ptr<const Varia
 
   if (variant_ptr->isSNP()) {
 
-    const std::shared_ptr<const SNPVariantDNA5> SNP_ptr = std::static_pointer_cast<const SNPVariantDNA5>(variant_ptr);
+    const std::shared_ptr<const SNPVariant> SNP_ptr = std::static_pointer_cast<const SNPVariant>(variant_ptr);
     return ExtendDNA5::isDeletion(SNP_ptr->mutant());
 
   } else {
