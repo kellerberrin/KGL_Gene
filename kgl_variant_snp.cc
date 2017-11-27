@@ -45,7 +45,8 @@ std::string kgl::SubordinateSNP::submutation(char delimiter, VariantOutputIndex 
 
     codonOffset(codon_offset, base_in_codon);
 
-    ss << offsetOutput(codon_offset, output_index) << "-" << offsetOutput(base_in_codon, output_index) << delimiter;
+    ss << offsetOutput(codon_offset, output_index) << CODON_BASE_SEPARATOR
+       << offsetOutput(base_in_codon, output_index) << delimiter;
     ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
     ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
 
@@ -268,11 +269,14 @@ std::string kgl::SNPVariant::mutation(char delimiter, VariantOutputIndex output_
     if (ExtendDNA5::isBaseCode(mutant())) {
 
       ContigOffset_t codon_offset;
+      ContigSize_t base_in_codon;
       AminoAcid::Alphabet reference_amino;
       AminoAcid::Alphabet mutant_amino;
 
-      if (SNPMutation(codon_offset, reference_amino, mutant_amino)) {
+      if (SNPMutation(codon_offset, base_in_codon, reference_amino, mutant_amino)) {
 
+        ss << offsetOutput(codon_offset, output_index) << CODON_BASE_SEPARATOR;
+        ss << offsetOutput(base_in_codon, output_index) << delimiter;
         ss << AminoAcid::convertToChar(reference_amino) << offsetOutput(codon_offset, output_index);
         ss << AminoAcid::convertToChar(mutant_amino) << delimiter;
         ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
@@ -288,8 +292,8 @@ std::string kgl::SNPVariant::mutation(char delimiter, VariantOutputIndex output_
 
       codonOffset(codon_offset, base_in_codon);
 
-      ss << DNA5::convertToChar(reference()) << offsetOutput(codon_offset, output_index);
-      ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
+      ss << offsetOutput(codon_offset, output_index) << CODON_BASE_SEPARATOR;
+      ss << offsetOutput(base_in_codon, output_index) << delimiter;
       ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
       ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
 
@@ -315,11 +319,10 @@ std::string kgl::SNPVariant::mutation(char delimiter, VariantOutputIndex output_
 
 
 bool kgl::SNPVariant::SNPMutation( ContigOffset_t& codon_offset,
-                                       AminoAcid::Alphabet& reference_amino,
-                                       AminoAcid::Alphabet& mutant_amino) const {
+                                   ContigSize_t& base_in_codon,
+                                   AminoAcid::Alphabet& reference_amino,
+                                   AminoAcid::Alphabet& mutant_amino) const {
 
-
-  ContigSize_t base_in_codon;
 
   if (not codonOffset(codon_offset, base_in_codon)) {
 

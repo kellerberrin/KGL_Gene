@@ -24,6 +24,7 @@ std::string kgl::CompoundDelete::output(char delimiter, VariantOutputIndex outpu
 
 }
 
+
 std::string kgl::CompoundDelete::mutation(char delimiter, VariantOutputIndex output_index) const {
 
   std::stringstream ss;
@@ -33,15 +34,36 @@ std::string kgl::CompoundDelete::mutation(char delimiter, VariantOutputIndex out
 
     ss << sequence->getGene()->id() << delimiter << sequence->getCDSParent()->id() << delimiter;
 
-    ss << offsetOutput(contigOffset(), output_index) << delimiter;
+    ContigSize_t base_in_codon;
+    ContigOffset_t codon_offset;
+    codonOffset(codon_offset, base_in_codon);
+
+    ss << offsetOutput(codon_offset, output_index) << CODON_BASE_SEPARATOR
+       << offsetOutput(base_in_codon, output_index) << delimiter;
+
+    if (not getMap().empty()) {
+
+      getMap().rbegin()->second->codonOffset(codon_offset, base_in_codon);
+
+      ss << offsetOutput(codon_offset, output_index) << CODON_BASE_SEPARATOR
+         << offsetOutput(base_in_codon, output_index) << delimiter;
+
+    } else {
+
+      ExecEnv::log().error("Compound delete in contig: {} offset: {} is empty", contigId(), offset());
+
+    }
+
+  } else {
+
+    ExecEnv::log().error("Compound delete in contig: {} offset: {} is not in a coding sequence", contigId(), offset());
 
   }
-
-  ss << offsetOutput(contigOffset(), output_index) << delimiter;
 
   return ss.str();
 
 }
+
 
 bool kgl::CompoundDelete::mutateCodingSequence(const FeatureIdent_t& sequence_id,
                                                std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const {

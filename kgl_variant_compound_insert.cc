@@ -29,11 +29,54 @@ std::string kgl::CompoundInsert::mutation(char delimiter, VariantOutputIndex out
     std::shared_ptr<const CodingSequence> sequence = codingSequences().getFirst();
 
     ss << sequence->getGene()->id() << delimiter << sequence->getCDSParent()->id() << delimiter;
-    ss << offsetOutput(contigOffset(), output_index) << delimiter;
+
+    if (not getMap().empty()) {
+
+      ContigSize_t base_in_codon_begin;
+      ContigOffset_t codon_offset_begin;
+      getMap().begin()->second->codonOffset(codon_offset_begin, base_in_codon_begin);
+      ContigSize_t base_in_codon_end;
+      ContigOffset_t codon_offset_end;
+      getMap().rbegin()->second->codonOffset(codon_offset_end, base_in_codon_end);
+
+      if (codon_offset_begin == codon_offset_end) {
+
+        if (base_in_codon_begin < base_in_codon_end) {
+
+          ss << offsetOutput(codon_offset_begin, output_index) << CODON_BASE_SEPARATOR
+             << offsetOutput(base_in_codon_begin, output_index) << delimiter;
+
+        } else {
+
+          ss << offsetOutput(codon_offset_end, output_index) << CODON_BASE_SEPARATOR
+             << offsetOutput(base_in_codon_end, output_index) << delimiter;
+
+        }
+
+      } else if (codon_offset_begin < codon_offset_end) {
+
+        ss << offsetOutput(codon_offset_begin, output_index) << CODON_BASE_SEPARATOR
+           << offsetOutput(base_in_codon_begin, output_index) << delimiter;
+
+      } else {
+
+        ss << offsetOutput(codon_offset_end, output_index) << CODON_BASE_SEPARATOR
+           << offsetOutput(base_in_codon_end, output_index) << delimiter;
+
+      }
+
+
+    } else {
+
+      ExecEnv::log().error("Compound insert in contig: {} offset: {} is empty", contigId(), offset());
+
+    }
+
+  } else {
+
+    ExecEnv::log().error("Compound insert in contig: {} offset: {} is not in a coding sequence", contigId(), offset());
 
   }
-
-  ss << offsetOutput(contigOffset(), output_index) << delimiter;
 
   return ss.str();
 

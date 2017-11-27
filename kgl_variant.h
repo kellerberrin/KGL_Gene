@@ -149,6 +149,10 @@ public:
   virtual bool isSNP() const { return false; }
   virtual bool equivalent(const Variant& cmp_var) const = 0;
 
+protected:
+
+  static constexpr const char CODON_BASE_SEPARATOR = ':';
+
 private:
 
   virtual bool applyFilter(const VariantFilter& filter) const { return filter.applyFilter(*this); }

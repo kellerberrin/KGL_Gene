@@ -15,7 +15,7 @@ kgl::SNPFactory::create(const std::string &genome_name,
                         const std::shared_ptr<const ContigCountData> &count_data,
                         const std::shared_ptr<const GenomeDatabase> &genome_db,
                         NucleotideReadCount_t minimum_read_count,
-                        double minimum_proportion) {
+                        double minimum_proportion) const {
 
   std::shared_ptr<GenomeVariant> genome_snp_variants = kgl::GenomeVariant::emptyGenomeVariant(genome_name, genome_db);
   size_t snp_count = 0;
@@ -91,7 +91,7 @@ kgl::SNPFactory::create(const std::string &genome_name,
 
 // This function will insert multiple variants for each CDS sequence within each gene.
 void kgl::SNPFactory::addSNPVariant(std::shared_ptr<GenomeVariant> genome_snp_variants,
-                                           const SNPVariant& variant) {
+                                    const SNPVariant& variant) const {
 
   // Annotate the variant with genome information.
   GeneVector gene_vector;
