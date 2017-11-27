@@ -45,9 +45,14 @@ public:
 
   const CompoundVariantMap& getMap() const { return variant_map_; }
 
+  std::string output(char delimiter, VariantOutputIndex output_index) const;
+
 protected:
 
   const CompoundVariantMap variant_map_;
+
+  std::string location(char delimiter, VariantOutputIndex output_index) const;
+
 
 };
 
@@ -77,8 +82,7 @@ private:
 
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
-  std::string output(char delimter, VariantOutputIndex output_index) const override;
-  std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
+  std::string mutation(char delimiter, VariantOutputIndex output_index) const override { return ""; }
   bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
                             std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const override;
 
@@ -108,8 +112,7 @@ public:
 private:
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
-  std::string output(char delimter, VariantOutputIndex output_index) const override;
-  std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
+  std::string mutation(char delimiter, VariantOutputIndex output_index) const override { return ""; }
   bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
                             std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const override;
 
@@ -140,7 +143,6 @@ private:
 
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
-  std::string output(char delimiter, VariantOutputIndex output_index) const override;
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
   bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
                             std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const override;

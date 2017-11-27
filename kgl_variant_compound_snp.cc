@@ -7,19 +7,6 @@
 namespace kgl = kellerberrin::genome;
 
 
-std::string kgl::CompoundSNP::output(char delimiter, VariantOutputIndex output_index) const {
-
-  std::stringstream ss;
-  ss << genomeOutput(delimiter, output_index);
-  ss << name();
-  ss << mutation(delimiter, output_index) << "\n";
-  for (const auto& variant : variant_map_) {
-    ss << variant.second->suboutput(delimiter, output_index);
-  }
-  return ss.str();
-
-}
-
 std::string kgl::CompoundSNP::mutation(char delimiter, VariantOutputIndex output_index) const {
 
   std::stringstream ss;
@@ -33,9 +20,7 @@ std::string kgl::CompoundSNP::mutation(char delimiter, VariantOutputIndex output
     AminoAcid::Alphabet mutant_amino;
     codonMutation(codon_offset, reference_amino, mutant_amino);
 
-    ss << delimiter << variant_map_.size() << delimiter
-       << sequence->getGene()->id() << delimiter << sequence->getCDSParent()->id() << delimiter
-       << AminoAcid::convertToChar(reference_amino) << offsetOutput(codon_offset, output_index)
+    ss << AminoAcid::convertToChar(reference_amino) << offsetOutput(codon_offset, output_index)
        << AminoAcid::convertToChar(mutant_amino) << delimiter;
 
   }
