@@ -38,16 +38,16 @@ std::string kgl::MutantProportionFilter::filterName() const {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool kgl::InCDSFilter::implementFilter(const Variant& variant) const {
+bool kgl::CodingFilter::implementFilter(const Variant& variant) const {
 
   return variant.type() == VariantSequenceType::CDS_CODING;
 
 }
 
 
-std::string kgl::InCDSFilter::filterName() const {
+std::string kgl::CodingFilter::filterName() const {
 
-  return "Variant in CDS";
+  return "Variant in Coding Sequence";
 
 }
 

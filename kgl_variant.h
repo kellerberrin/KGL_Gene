@@ -32,6 +32,8 @@ class ReadCountVariant; // Forward decl.
 class SNPVariant; // Forward decl.
 class CompoundVariant; // Forward decl.
 class CompoundDelete; // Forward decl.
+class CompoundInsert; // Forward decl.
+class CompoundSNP; // Forward decl.
 
 class VariantFilter {
 
@@ -44,6 +46,8 @@ public:
   virtual bool applyFilter(const ReadCountVariant& variant) const = 0;
   virtual bool applyFilter(const SNPVariant& variant) const = 0;
   virtual bool applyFilter(const CompoundDelete& variant) const = 0;
+  virtual bool applyFilter(const CompoundInsert& variant) const = 0;
+  virtual bool applyFilter(const CompoundSNP& variant) const = 0;
 
   virtual std::string filterName() const = 0;
 
@@ -122,6 +126,8 @@ private:
 //  Base class for a genome variant. Modelled on the VCF file format.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Defined Variant Types.
+enum class VariantType { SNP, DELETE, INSERT, COMPOUND_SNP, COMPOUND_INSERT, COMPOUND_DELETE };
 
 class Variant : public VariantSequence {
 
@@ -139,14 +145,17 @@ public:
   ContigOffset_t contigOffset() const { return offset(); }
   bool operator==(const Variant& cmp_var) const { return equivalent(cmp_var); };
 
-  virtual std::string name() const = 0;
+  std::string name() const;
+
+  virtual VariantType variantType() const = 0;
+  virtual size_t size() const = 0;
   virtual std::string output(char delimiter, VariantOutputIndex output_index) const = 0;
   virtual std::string mutation(char delimiter, VariantOutputIndex output_index) const = 0;
   virtual bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
                                     std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const = 0;
 
-  virtual bool isCompound() const { return false; }
-  virtual bool isSNP() const { return false; }
+  bool isCompound() const { return size() > 1; }
+  bool isSingle() const { return size() == 1; }
   virtual bool equivalent(const Variant& cmp_var) const = 0;
 
 protected:

@@ -136,9 +136,9 @@ kgl::GenomeVariant::Union(std::shared_ptr<const kgl::GenomeVariant> genome_varia
 
   for (auto contig_variant : genome_union->genome_variant_map_) {
 
-    kgl::ExecEnv::log().info("Union Contig: {} contains: {} variants",
-                             contig_variant.first,
-                             contig_variant.second->variantCount());
+    kgl::ExecEnv::log().vinfo("Union Contig: {} contains: {} variants",
+                              contig_variant.first,
+                              contig_variant.second->variantCount());
 
   }
 
@@ -174,9 +174,9 @@ kgl::GenomeVariant::Intersection(std::shared_ptr<const kgl::GenomeVariant> genom
 
     }
 
-    kgl::ExecEnv::log().info("Intersection Contig: {} contains: {} variants",
-                             contig_variant.first,
-                             diff_contig_ptr->variantCount());
+    kgl::ExecEnv::log().vinfo("Intersection Contig: {} contains: {} variants",
+                              contig_variant.first,
+                              diff_contig_ptr->variantCount());
 
   }
 
@@ -210,9 +210,9 @@ kgl::GenomeVariant::Difference(std::shared_ptr<const kgl::GenomeVariant> genome_
 
     }
 
-    kgl::ExecEnv::log().info("Difference Contig: {} contains: {} variants",
-                             contig_variant.first,
-                             diff_contig_ptr->variantCount());
+    kgl::ExecEnv::log().vinfo("Difference Contig: {} contains: {} variants",
+                              contig_variant.first,
+                              diff_contig_ptr->variantCount());
 
   }
 

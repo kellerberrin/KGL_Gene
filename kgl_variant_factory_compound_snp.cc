@@ -36,7 +36,7 @@ namespace kgl = kellerberrin::genome;
 // 6. For SNPs there can be multiple SNPs (up to 5) per offset in a coding sequence. This is different from insert/delete.
 
 bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const GenomeVariant>& variant_ptr,
-                                                       std::vector<std::shared_ptr<const CompoundVariantMap>>& aggregated_variants_vec) const {
+                                                std::vector<std::shared_ptr<const CompoundVariantMap>>& aggregated_variants_vec) const {
 
   // The working structure that maintains a vector of compound variants.
   std::vector<std::shared_ptr<CompoundVariantMap>> compound_variant_vec;
@@ -49,11 +49,14 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
     for (const auto& variant : contig_variants.second->getMap()) {  // For all variants.
 
       // only coding sequence and SNP
-      if (variant.second->type() == VariantSequenceType::CDS_CODING and variant.second->isSNP()) {
+      if (variant.second->type() == VariantSequenceType::CDS_CODING and variant.second->isSingle()) {
 
+        // Get a (virtual) subordinate SNP pointer.
         std::shared_ptr<const SubordinateSNP> subSNP_ptr = std::static_pointer_cast<const SubordinateSNP>(variant.second);
 
+        // The mutant must be a base
         if (ExtendDNA5::isBaseCode(subSNP_ptr->mutant())) {
+
           // If empty then just add the variant to a variant map and update the working structure.
           if (compound_variant_vec.empty()) {
 
@@ -66,13 +69,11 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
 
             // scroll through all the compound variants
             bool found_sequence = false;
+            std::vector<std::shared_ptr<CompoundVariantMap>> temp_compound_variant_vec;
             for (const auto &compound_variant_ptr : compound_variant_vec) {
 
               // Does the SNP belong to the coding sequence.
               if (compound_variant_ptr->rbegin()->second->codingSequenceId() == variant.second->codingSequenceId()) {
-
-                // set the found flag to true.
-                found_sequence = true;
 
                 // Get the codon offset of the SNP in the compoundmap and the codon offset of the SNP.
 
@@ -98,26 +99,56 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
 
                 if (compound_codon_offset == variant_codon_offset) { // In the same codon
 
-                  std::pair<ContigSize_t, std::shared_ptr<const SubordinateSNP>> insert_pair(subSNP_ptr->offset(), subSNP_ptr);
-                  auto result = compound_variant_ptr->insert(insert_pair);
+                  // set the found flag to true.
+                  found_sequence = true;
+                  // create the insert pair.
+                  std::pair<ContigSize_t, std::shared_ptr<const SubordinateSNP>> insert_pair(subSNP_ptr->offset(),
+                                                                                             subSNP_ptr);
 
-                  if (not result.second) {
+                  // Is the variant at the same contig address.
+                  if (compound_variant_ptr->rbegin()->second->offset() == subSNP_ptr->offset()) {
 
-                    ExecEnv::log().error(
-                    "aggregateVariants(), unexpected - could not add variant: {}, previous variant: {}",
-                    subSNP_ptr->output(' ', VariantOutputIndex::START_0_BASED),
-                    compound_variant_ptr->rbegin()->second->output(' ', VariantOutputIndex::START_0_BASED));
+                    // used if an identical offset is found. take a copy of the current map.
+                    std::shared_ptr<CompoundVariantMap> temp_map_ptr(std::make_shared<CompoundVariantMap>(*compound_variant_ptr));
+                    // pop the final SNP from the copy.
+                    temp_map_ptr->erase(std::prev(temp_map_ptr->end()));
+                    // and insert this SNP in it's place.
+                    auto result = temp_map_ptr->insert(insert_pair);
+                    if (not result.second) {
+
+                      ExecEnv::log().error("aggregateVariants(), unexpected - could not add variant: {}, previous variant: {}",
+                                           subSNP_ptr->output(' ', VariantOutputIndex::START_0_BASED),
+                                           temp_map_ptr->rbegin()->second->output(' ', VariantOutputIndex::START_0_BASED));
+
+                    } else { // insertion successful
+
+                      ExecEnv::log().info("aggregateVariants(), inserted duplicate offset variant: {}",
+                                           subSNP_ptr->output(' ', VariantOutputIndex::START_0_BASED));
+                      temp_compound_variant_vec.push_back(temp_map_ptr);
+
+                    }
 
                   }
+                  else {
 
-                }
+                    auto result = compound_variant_ptr->insert(insert_pair);
+                    if (not result.second) {
 
-              } // if same offset.
+                      ExecEnv::log().error("aggregateVariants(), unexpected - could not add variant: {}, previous variant: {}",
+                                           subSNP_ptr->output(' ', VariantOutputIndex::START_0_BASED),
+                                           compound_variant_ptr->rbegin()->second->output(' ', VariantOutputIndex::START_0_BASED));
+
+                    } // could not insert
+
+                  } // different contig offset
+
+                } // same codon offset.
+
+              } // if same CDS sequence
 
             }  // for all compound variants.
 
             // flush non contiguous compound variants from the working structure.
-            std::vector<std::shared_ptr<CompoundVariantMap>> temp_compound_variant_vec;
             for (const auto &compound_variant_ptr : compound_variant_vec) {
 
               // if the variant is not contigous with ANY compound variant then remove the compound variant.
@@ -137,7 +168,9 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
               }
 
             }  // for all compound variants
+
             // copy the temp structure to the working structure.
+
             compound_variant_vec = temp_compound_variant_vec;
             // Finally, if we did not find a coding sequence for the variant, then add it to the working structure.
             if (not found_sequence) {

@@ -150,3 +150,32 @@ bool kgl::VariantSequence::codonOffset(ContigOffset_t& codon_offset, ContigSize_
   }
 
 }
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  Variant class.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+std::string kgl::Variant::name() const {
+
+ switch(variantType()) {
+
+   case VariantType::SNP: return "SNP";
+
+   case VariantType::DELETE: return "DEL";
+
+   case VariantType::INSERT: return "INS";
+
+   case VariantType::COMPOUND_SNP: return "CSNP";
+
+   case VariantType::COMPOUND_DELETE: return "CDEL";
+
+   case VariantType::COMPOUND_INSERT: return "CINS";
+
+ }
+
+ return "NOT_IMPLEMENTED";  // Not reached, to keep the compiler happy.
+
+}
+
+

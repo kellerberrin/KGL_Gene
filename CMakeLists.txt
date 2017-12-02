@@ -61,6 +61,8 @@ add_executable (kgl_genome ${SOURCE_FILES} kgl_main.cc  kgl_gff_fasta.h kgl_gff_
                 kgl_phylogenetic_analysis.cc kgl_variant_factory.h kgl_variant_factory_snp.cc
                 kgl_variant_factory_compound.cc kgl_variant_factory_compound_delete.cc
                 kgl_variant_factory_compound_snp.cc kgl_variant_factory_compound.h
-                kgl_variant_factory_compound_insert.cc kgl_variant_compound_insert.cc kgl_variant_compound_delete.cc kgl_alphabet_coding_dna5.h kgl_alphabet_coding_dna5.cc kgl_variant_factory.cc)
+                kgl_variant_factory_compound_insert.cc kgl_variant_compound_insert.cc
+                kgl_variant_compound_delete.cc kgl_alphabet_coding_dna5.h kgl_alphabet_coding_dna5.cc
+                kgl_variant_factory.cc)
 
 target_link_libraries(kgl_genome ${Boost_LIBRARIES})

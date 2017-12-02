@@ -39,7 +39,7 @@ public:
                                                            variant_map_(variant_map) {}
   ~CompoundVariant() override = default;
 
-  bool isCompound() const override { return true; }
+  size_t size() const override { return variant_map_.size(); }
 
   bool equivalent(const Variant& cmp_var) const override;
 
@@ -75,14 +75,13 @@ public:
                                                                           variant_map) {}
   ~CompoundInsert() override = default;
 
-  static constexpr const char* VARIANT_NAME = "CINS";
-  std::string name() const override { return VARIANT_NAME; }
+  VariantType variantType() const override { return VariantType::COMPOUND_INSERT; }
 
 private:
 
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
-  std::string mutation(char delimiter, VariantOutputIndex output_index) const override { return ""; }
+  std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
   bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
                             std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const override;
 
@@ -106,13 +105,12 @@ public:
                                                                           variant_map) {}
   ~CompoundDelete() override = default;
 
-  static constexpr const char* VARIANT_NAME = "CDEL";
-  std::string name() const override { return VARIANT_NAME; }
+  VariantType variantType() const override { return VariantType::COMPOUND_DELETE; }
 
 private:
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
-  std::string mutation(char delimiter, VariantOutputIndex output_index) const override { return ""; }
+  std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
   bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
                             std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const override;
 
@@ -136,8 +134,7 @@ public:
                                                                        variant_map) {}
   ~CompoundSNP() override = default;
 
-  static constexpr const char* VARIANT_NAME = "CSNP";
-  std::string name() const override { return VARIANT_NAME; }
+  VariantType variantType() const override { return VariantType::COMPOUND_SNP; }
 
 private:
 

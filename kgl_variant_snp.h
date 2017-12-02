@@ -98,7 +98,9 @@ public:
                                               reference_(reference),
                                               mutant_(mutant) {}
 
-  bool isSNP() const override { return true; }
+  size_t size() const override { return 1; }
+
+  VariantType variantType() const override;
 
   DNA5::Alphabet reference() const { return reference_; }
   ExtendDNA5::Alphabet mutant() const { return mutant_; }
@@ -113,8 +115,7 @@ private:
 
   std::string submutation(char delimiter, VariantOutputIndex output_index) const;
 
-  static constexpr const char* VARIANT_NAME = "SSNP";
-  std::string subname() const { return VARIANT_NAME; }
+  std::string subname() const { return "S" + name(); }
 
 
 };
@@ -166,9 +167,6 @@ public:
                    ContigSize_t& base_in_codon,
                    AminoAcid::Alphabet& reference_amino,
                    AminoAcid::Alphabet& mutant_amino) const;
-
-  static constexpr const char* VARIANT_NAME = "SNP";
-  std::string name() const override { return VARIANT_NAME; }
 
 private:
 

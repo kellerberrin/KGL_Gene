@@ -110,7 +110,7 @@ kgl::CompoundFactory::create(const std::shared_ptr<const GenomeVariant>& genome_
 // 5. Thus coding sequences can create multiple aggregated variants for the same contig (chromosome) interval.
 
 bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const GenomeVariant>& variant_ptr,
-                                                        std::vector<std::shared_ptr<const CompoundVariantMap>>& aggregated_variants_vec) const {
+                                                 std::vector<std::shared_ptr<const CompoundVariantMap>>& aggregated_variants_vec) const {
 
   // The working structure that maintains a vector of compound variants.
   std::vector<std::shared_ptr<CompoundVariantMap>> compound_variant_vec;
@@ -154,8 +154,6 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
               // Does the variant belong to the coding sequence.
               if (compound_variant_ptr->rbegin()->second->codingSequenceId() == variant.second->codingSequenceId()) {
 
-                // set the found flag to true.
-                found_sequence = true;
                 // If the variant is the at same offset, then this is an error.
                 if (compound_variant_ptr->rbegin()->second->contigOffset() == variant.second->contigOffset()) {
 
@@ -166,6 +164,8 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
 
                 } else if ((compound_variant_ptr->rbegin()->second->contigOffset() + 1) == variant.second->contigOffset()) {
 
+                  // set the found flag to true.
+                  found_sequence = true;
                   // Is contiguous in the same coding sequence so append to the compound map.
                   std::pair<ContigSize_t, std::shared_ptr<const SubordinateSNP>> insert_pair(subSNP_ptr->offset(), subSNP_ptr);
                   auto result = compound_variant_ptr->insert(insert_pair);
