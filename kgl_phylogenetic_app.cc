@@ -11,6 +11,7 @@
 #include "kgl_variant_factory_compound.h"
 #include "kgl_filter.h"
 #include "kgl_phylogenetic_analysis.h"
+#include "kgl_statistics.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -21,7 +22,8 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
                                                          const std::string& genome_name,
                                                          unsigned char read_quality,
                                                          long min_count,
-                                                         double min_proportion) {
+                                                         double min_proportion,
+                                                         const std::string& workDirectory) {
 
   // Read in the SAM file.
   std::shared_ptr<const kgl::ContigCountData> count_data_ptr = kgl::SamCountReader(log).readSAMFile(genome_db_ptr,
@@ -35,6 +37,13 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
                                                                                            genome_db_ptr,
                                                                                            min_count,
                                                                                            min_proportion);
+
+  std::shared_ptr<const kgl::GenomeStatistics> statistics_ptr(std::make_shared<kgl::GenomeStatistics>(genome_db_ptr,
+                                                                                                      all_variant_ptr));
+
+  std::string stats_file_name = kgl::ExecEnv::filePath("malawi_stats", workDirectory) + ".csv";
+  statistics_ptr->outputCSV(stats_file_name, kgl::VariantOutputIndex::START_1_BASED);
+
 //#define TEST_GENE "PF3D7_1211900"
 #define TEST_GENE "PF3D7_1255200"
 //#define TEST_GENE "PF3D7_0101900"
@@ -73,7 +82,8 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
                                                                            file.genome_name,
                                                                            args.readQuality,
                                                                            args.minCount,
-                                                                           args.minProportion);
+                                                                           args.minProportion,
+                                                                           args.workDirectory);
 
 
     variant_ptr->outputCSV(args.outCSVFile, VariantOutputIndex::START_1_BASED);

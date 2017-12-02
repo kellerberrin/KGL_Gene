@@ -190,7 +190,7 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
       ++gene_count;
       const std::shared_ptr<const GeneFeature> gene_ptr = std::static_pointer_cast<const GeneFeature>(feature.second);
       const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene_ptr);
-      if (coding_seq_ptr->size() == 0) { // No CDS coding sequence available, try the EXON coding sequence
+      if (coding_seq_ptr->size() == 0) { // No CDS coding sequence available.
 
         ++empty_genes;
 

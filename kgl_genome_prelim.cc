@@ -40,6 +40,21 @@ bool kgl::CodingSequence::isWithinCoding(ContigOffset_t contig_offset) const {
 }
 
 
+kgl::ContigSize_t kgl::CodingSequence::codingNucleotides() const {
+
+  ContigSize_t coding_size = 0;
+  // Loop through and test membership of each cds. Reminder; testing for [begin, end)
+  for (const auto& cds : sorted_cds_) {
+
+    coding_size += (cds.second->sequence().end() - cds.second->sequence().begin());
+
+  }
+
+  return coding_size;
+
+}
+
+
 void kgl::CodingSequenceArray::printCodingSequence(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) {
 
   long vector_count = 0;

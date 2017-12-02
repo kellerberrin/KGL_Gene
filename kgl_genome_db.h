@@ -47,6 +47,7 @@ public:
   bool findFeatureId(const FeatureIdent_t& feature_id, std::vector<std::shared_ptr<Feature>>& feature_ptr_vec) const;
   // false if offset is not in a gene, else (true) returns a vector of ptrs to the genes.
   bool findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const;
+  const GeneMap& getGeneMap() const { return gene_map_; }
 
   bool setTranslationTable(size_t table) { return coding_sequence_.settranslationTable(table); }
   std::string translationTableName() const { return coding_sequence_.translationTableName(); }

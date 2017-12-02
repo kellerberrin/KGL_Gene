@@ -166,7 +166,7 @@ std::string kgl::GenomeVariant::output(char field_delimter, VariantOutputIndex o
 }
 
 
-void kgl::GenomeVariant::getVariants(std::vector<std::shared_ptr<const Variant>>& variant_vector) {
+void kgl::GenomeVariant::getVariants(std::vector<std::shared_ptr<const Variant>>& variant_vector) const {
 
   for (const auto& contig_variant : genome_variant_map_) {
 

@@ -80,6 +80,7 @@ public:
   std::shared_ptr<const GeneFeature> getGene() const { return gene_ptr_; }
   std::shared_ptr<const Feature> getCDSParent() const { return cds_parent_ptr_; }
   bool isWithinCoding(ContigOffset_t contig_offset) const;
+  ContigSize_t codingNucleotides() const;
 
 private:
 
