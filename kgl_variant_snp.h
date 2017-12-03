@@ -12,6 +12,7 @@
 #include <sstream>
 #include "kgl_genome_types.h"
 #include "kgl_alphabet_amino.h"
+#include "kgl_variant_evidence.h"
 #include "kgl_variant.h"
 #include "kgl_genome_db.h"
 
@@ -27,89 +28,39 @@ namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  A read count variant.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class ReadCountVariant : public Variant {
-
-public:
-
-  ReadCountVariant(const std::string& variant_source,
-                   const std::shared_ptr<const ContigFeatures> contig_ptr,
-                   ContigOffset_t contig_offset,
-                   NucleotideReadCount_t read_count,
-                   NucleotideReadCount_t mutant_count,
-                   NucleotideReadCount_t const count_array[],
-                   ContigSize_t count_array_size) : Variant(variant_source, contig_ptr, contig_offset),
-                                                    read_count_(read_count),
-                                                    mutant_count_(mutant_count) {
-
-    for(ContigOffset_t idx = 0; idx < count_array_size; ++idx) {
-
-      count_array_.push_back(count_array[idx]);
-
-    }
-
-  }
-  ReadCountVariant(const ReadCountVariant& variant) = default;
-  ~ReadCountVariant() override = default;
-
-  NucleotideReadCount_t readCount() const { return read_count_; }
-  NucleotideReadCount_t mutantCount() const { return mutant_count_; }
-  const std::vector<NucleotideReadCount_t>& countArray() const { return count_array_; }
-
-  double proportion() const { return static_cast<double>(mutant_count_) / static_cast<double>(read_count_); }
-
-private:
-
-  NucleotideReadCount_t read_count_;
-  NucleotideReadCount_t mutant_count_;
-  std::vector<NucleotideReadCount_t> count_array_;
-
-  bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
-
-};
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  A virtual class held in compound variants, produces a modified text output for coding variants.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class SubordinateSNP : public ReadCountVariant {
+class SubordinateSNP : public Variant {
 
 public:
 
   SubordinateSNP(const std::string& variant_source,
-                const std::shared_ptr<const ContigFeatures> contig_ptr,
-                ContigOffset_t contig_offset,
-                NucleotideReadCount_t read_count,
-                NucleotideReadCount_t mutant_count,
-                NucleotideReadCount_t const count_array[],
-                ContigSize_t  count_array_size,
-                DNA5::Alphabet reference,
-                ExtendDNA5::Alphabet mutant) : ReadCountVariant(variant_source,
-                                                                contig_ptr,
-                                                                contig_offset,
-                                                                read_count,
-                                                                mutant_count,
-                                                                count_array,
-                                                                count_array_size),
-                                              reference_(reference),
-                                              mutant_(mutant) {}
+                 std::shared_ptr<const ContigFeatures> contig_ptr,
+                 ContigOffset_t contig_offset,
+                 std::shared_ptr<const VariantEvidence> evidence_ptr,
+                 DNA5::Alphabet reference,
+                 ExtendDNA5::Alphabet mutant) : Variant(variant_source, contig_ptr, contig_offset),
+                                                evidence_ptr_(evidence_ptr),
+                                                reference_(reference),
+                                                mutant_(mutant) {}
 
   size_t size() const override { return 1; }
 
   VariantType variantType() const override;
 
+  std::shared_ptr<const VariantEvidence> evidence() const { return evidence_ptr_; }
+
   DNA5::Alphabet reference() const { return reference_; }
   ExtendDNA5::Alphabet mutant() const { return mutant_; }
-
 
   std::string suboutput(char delimiter, VariantOutputIndex output_index) const;
 
 private:
 
+  const std::shared_ptr<const VariantEvidence> evidence_ptr_;
   DNA5::Alphabet reference_;
   ExtendDNA5::Alphabet mutant_;
 
@@ -130,20 +81,14 @@ class SNPVariant : public SubordinateSNP {
 public:
 
   SNPVariant(const std::string& variant_source,
-             const std::shared_ptr<const ContigFeatures> contig_ptr,
+             std::shared_ptr<const ContigFeatures> contig_ptr,
              ContigOffset_t contig_offset,
-             NucleotideReadCount_t read_count,
-             NucleotideReadCount_t mutant_count,
-             NucleotideReadCount_t const count_array[],
-             ContigSize_t  count_array_size,
+             std::shared_ptr<const VariantEvidence> evidence_ptr,
              DNA5::Alphabet reference,
              ExtendDNA5::Alphabet mutant) : SubordinateSNP(variant_source,
                                                            contig_ptr,
                                                            contig_offset,
-                                                           read_count,
-                                                           mutant_count,
-                                                           count_array,
-                                                           count_array_size,
+                                                           evidence_ptr,
                                                            reference,
                                                            mutant) {}
 

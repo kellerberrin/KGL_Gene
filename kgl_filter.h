@@ -25,8 +25,7 @@ public:
   ~ReadCountFilter() override = default;
 
   bool applyFilter(const Variant& variant) const override { return true; }  // default
-  bool applyFilter(const ReadCountVariant& variant) const override { return variant.readCount() >= read_count_; }
-  bool applyFilter(const SNPVariant& variant) const override { return variant.readCount() >= read_count_; }
+  bool applyFilter(const SNPVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return true; }  // default
   bool applyFilter(const CompoundInsert& variant) const override { return true; }
   bool applyFilter(const CompoundSNP& variant) const override { return true; }
@@ -34,6 +33,8 @@ public:
   std::string filterName() const final;
 
 private:
+
+  bool implementFilter(const SNPVariant& variant) const;
 
   NucleotideReadCount_t read_count_;
 
@@ -51,8 +52,7 @@ public:
   ~MutantProportionFilter() override = default;
 
   bool applyFilter(const Variant& variant) const override { return true; }  // default
-  bool applyFilter(const ReadCountVariant& variant) const override { return variant.proportion() >= mutant_proportion_; }
-  bool applyFilter(const SNPVariant& variant) const override { return variant.proportion() >= mutant_proportion_; }
+  bool applyFilter(const SNPVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return true; }  // default
   bool applyFilter(const CompoundInsert& variant) const override { return true; }
   bool applyFilter(const CompoundSNP& variant) const override { return true; }
@@ -60,6 +60,8 @@ public:
   std::string filterName() const final;
 
 private:
+
+  bool implementFilter(const SNPVariant& variant) const;
 
   double mutant_proportion_;
 
@@ -79,7 +81,6 @@ public:
   std::string filterName() const final;
 
   bool applyFilter(const Variant& variant) const override { return implementFilter(variant); } // redirect
-  bool applyFilter(const ReadCountVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const SNPVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundInsert& variant) const override { return implementFilter(variant); }
@@ -105,7 +106,6 @@ public:
   std::string filterName() const final;
 
   bool applyFilter(const Variant& variant) const override { return implementFilter(variant); } // redirect
-  bool applyFilter(const ReadCountVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const SNPVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundInsert& variant) const override { return implementFilter(variant); }
@@ -133,7 +133,6 @@ public:
   std::string filterName() const final;
 
   bool applyFilter(const Variant& variant) const override { return implementFilter(variant); } // redirect
-  bool applyFilter(const ReadCountVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const SNPVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundInsert& variant) const override { return implementFilter(variant); }
@@ -161,7 +160,6 @@ public:
   std::string filterName() const final;
 
   bool applyFilter(const Variant& variant) const override { return implementFilter(variant); } // redirect
-  bool applyFilter(const ReadCountVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const SNPVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundInsert& variant) const override { return implementFilter(variant); }
@@ -187,7 +185,6 @@ public:
   ~DeleteSNPFilter() override = default;
 
   bool applyFilter(const Variant& variant) const override { return true; }  // default
-  bool applyFilter(const ReadCountVariant& variant) const override { return true; }  // default
   bool applyFilter(const SNPVariant& variant) const override {
 
     return variant.variantType() == VariantType::DELETE;
@@ -218,7 +215,6 @@ public:
   ~MutantSNPFilter() override = default;
 
   bool applyFilter(const Variant& variant) const override { return true; }  // default
-  bool applyFilter(const ReadCountVariant& variant) const override { return true; }  // default
   bool applyFilter(const SNPVariant& variant) const override {
 
     return variant.variantType() == VariantType::SNP;
@@ -249,7 +245,6 @@ public:
   ~NotFilter() override = default;
 
   bool applyFilter(const Variant& variant) const override { return not filter_ptr_->applyFilter(variant); }
-  bool applyFilter(const ReadCountVariant& variant) const override { return not filter_ptr_->applyFilter(variant); }
   bool applyFilter(const SNPVariant& variant) const override { return not filter_ptr_->applyFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return not filter_ptr_->applyFilter(variant); }
   bool applyFilter(const CompoundInsert& variant) const override { return not filter_ptr_->applyFilter(variant); }

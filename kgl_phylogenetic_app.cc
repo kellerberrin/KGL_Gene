@@ -32,11 +32,11 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
 
   // Generate all variants.
 
-  std::shared_ptr<const kgl::GenomeVariant> all_variant_ptr = kgl::VariantFactory().create(genome_name,
-                                                                                           count_data_ptr,
-                                                                                           genome_db_ptr,
-                                                                                           min_count,
-                                                                                           min_proportion);
+  std::shared_ptr<const kgl::GenomeVariant> all_variant_ptr = kgl::VariantFactory().createVariants(genome_name,
+                                                                                                   count_data_ptr,
+                                                                                                   genome_db_ptr,
+                                                                                                   min_count,
+                                                                                                   min_proportion);
 
   std::shared_ptr<const kgl::GenomeStatistics> statistics_ptr(std::make_shared<kgl::GenomeStatistics>(genome_db_ptr,
                                                                                                       all_variant_ptr));

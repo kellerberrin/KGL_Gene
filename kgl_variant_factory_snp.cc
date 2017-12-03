@@ -11,11 +11,11 @@ namespace kgl = kellerberrin::genome;
 
 // Generate SNP variants.
 std::shared_ptr<const kgl::GenomeVariant>
-kgl::SNPFactory::create(const std::string &genome_name,
-                        const std::shared_ptr<const ContigCountData> &count_data,
-                        const std::shared_ptr<const GenomeDatabase> &genome_db,
-                        NucleotideReadCount_t minimum_read_count,
-                        double minimum_proportion) const {
+kgl::SNPFactory::createSNPs(const std::string &genome_name,
+                            const std::shared_ptr<const ContigCountData> &count_data,
+                            const std::shared_ptr<const GenomeDatabase> &genome_db,
+                            NucleotideReadCount_t minimum_read_count,
+                            double minimum_proportion) const {
 
   std::shared_ptr<GenomeVariant> genome_snp_variants = kgl::GenomeVariant::emptyGenomeVariant(genome_name, genome_db);
   size_t snp_count = 0;
@@ -57,15 +57,18 @@ kgl::SNPFactory::create(const std::string &genome_name,
 
             ExtendDNA5::Alphabet mutant_nucleotide = ExtendDNA5::offsetToNucleotide(idx);
 
+            std::shared_ptr<const VariantEvidence>
+            evidence_ptr(std::make_shared<const ReadCountEvidence>(read_count,
+                                                                   nucleotide_count_ptr[idx],
+                                                                   nucleotide_count_ptr,
+                                                                   ExtendDNA5::NUCLEOTIDE_COLUMNS));
+
             SNPVariant snp_variant(genome_name,
-                                       contig_ptr,
-                                       contig_offset,
-                                       read_count,
-                                       nucleotide_count_ptr[idx],
-                                       nucleotide_count_ptr,
-                                       ExtendDNA5::NUCLEOTIDE_COLUMNS,
-                                       reference_nucleotide,
-                                       mutant_nucleotide);
+                                   contig_ptr,
+                                   contig_offset,
+                                   evidence_ptr,
+                                   reference_nucleotide,
+                                   mutant_nucleotide);
 
             addSNPVariant(genome_snp_variants, snp_variant); // Annotate with genome information
 

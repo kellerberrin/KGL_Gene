@@ -19,10 +19,7 @@ std::string kgl::SubordinateSNP::suboutput(char delimiter, VariantOutputIndex ou
   ss << genomeOutput(delimiter, output_index);
   ss << subname() << delimiter << size() << delimiter;
   ss << submutation(delimiter, output_index);
-  ss << mutantCount() << "/" << readCount() << delimiter;
-  for (size_t idx = 0; idx < countArray().size(); ++idx) {
-    ss << ExtendDNA5::convertToChar(ExtendDNA5::offsetToNucleotide(idx)) << ":" << countArray()[idx] << delimiter;
-  }
+  ss << evidence()->output(delimiter, output_index);
   ss << '\n';
 
   return ss.str();
@@ -125,10 +122,7 @@ std::string kgl::SNPVariant::output(char delimiter, VariantOutputIndex output_in
   ss << genomeOutput(delimiter, output_index);
   ss << name() << delimiter << size() << delimiter;
   ss << mutation(delimiter, output_index);
-  ss << mutantCount() << "/" << readCount() << delimiter;
-  for (size_t idx = 0; idx < countArray().size(); ++idx) {
-    ss << ExtendDNA5::convertToChar(ExtendDNA5::offsetToNucleotide(idx)) << ":" << countArray()[idx] << delimiter;
-  }
+  ss << evidence()->output(delimiter, output_index);
   ss << '\n';
 
   return ss.str();

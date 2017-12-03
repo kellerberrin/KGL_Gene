@@ -29,11 +29,11 @@ public:
   explicit VariantFactory() = default;
   virtual ~VariantFactory() = default;
 
-  std::shared_ptr<const GenomeVariant> create(const std::string &genome_name,
-                                              const std::shared_ptr<const ContigCountData> &count_data,
-                                              const std::shared_ptr<const GenomeDatabase> &genome_db,
-                                              NucleotideReadCount_t minimum_read_count,
-                                              double minimum_proportion) const;
+  std::shared_ptr<const GenomeVariant> createVariants(const std::string &genome_name,
+                                                      const std::shared_ptr<const ContigCountData> &count_data,
+                                                      const std::shared_ptr<const GenomeDatabase> &genome_db,
+                                                      NucleotideReadCount_t minimum_read_count,
+                                                      double minimum_proportion) const;
 
 private:
 
@@ -54,11 +54,11 @@ public:
   ~SNPFactory() override = default;
 
 
-  std::shared_ptr<const GenomeVariant> create(const std::string &genome_name,
-                                              const std::shared_ptr<const ContigCountData> &count_data,
-                                              const std::shared_ptr<const GenomeDatabase> &genome_db_ptr,
-                                              NucleotideReadCount_t minimum_read_count,
-                                              double minimum_proportion) const;
+  std::shared_ptr<const GenomeVariant> createSNPs(const std::string &genome_name,
+                                                  const std::shared_ptr<const ContigCountData> &count_data,
+                                                  const std::shared_ptr<const GenomeDatabase> &genome_db_ptr,
+                                                  NucleotideReadCount_t minimum_read_count,
+                                                  double minimum_proportion) const;
 
 private:
 

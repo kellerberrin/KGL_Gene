@@ -28,7 +28,6 @@ namespace genome {   // project level namespace
 
 
 class Variant; // Forward decl.
-class ReadCountVariant; // Forward decl.
 class SNPVariant; // Forward decl.
 class CompoundVariant; // Forward decl.
 class CompoundDelete; // Forward decl.
@@ -43,7 +42,6 @@ public:
   virtual ~VariantFilter() = default;
 
   virtual bool applyFilter(const Variant& variant) const = 0;
-  virtual bool applyFilter(const ReadCountVariant& variant) const = 0;
   virtual bool applyFilter(const SNPVariant& variant) const = 0;
   virtual bool applyFilter(const CompoundDelete& variant) const = 0;
   virtual bool applyFilter(const CompoundInsert& variant) const = 0;
