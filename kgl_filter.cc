@@ -171,4 +171,71 @@ std::string kgl::SequenceFilter::filterName() const {
 }
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Remove synonymous coding SNPs and compound SNPs.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+bool kgl::SynonymousSNPFilter::implementFilter(const Variant& variant) const {
+
+  if (variant.variantType() == VariantType::SNP) {
+
+    if (variant.type() == VariantSequenceType::CDS_CODING) {
+
+      auto SNP = dynamic_cast<const SNPVariant*>(&variant);
+
+      if (SNP == nullptr) {
+
+        ExecEnv::log().error("SynonymousFilter(); Bad variant type for variant: {}",
+                             variant.output(' ', VariantOutputIndex::START_0_BASED));
+        return true;
+
+      }
+
+      ContigOffset_t codon_offset;
+      ContigSize_t base_in_codon;
+      AminoAcid::Alphabet reference_amino;
+      AminoAcid::Alphabet mutant_amino;
+      SNP->codonMutation(codon_offset, base_in_codon, reference_amino, mutant_amino);
+
+      return not (reference_amino == mutant_amino);
+
+    }
+
+
+  } else if (variant.variantType() == VariantType::COMPOUND_SNP) {
+
+    if (variant.type() == VariantSequenceType::CDS_CODING) {
+
+      auto cmp_SNP = dynamic_cast<const CompoundSNP*>(&variant);
+
+      if (cmp_SNP == nullptr) {
+
+        ExecEnv::log().error("SynonymousFilter(); Bad variant type for variant: {}",
+                             variant.output(' ', VariantOutputIndex::START_0_BASED));
+        return true;
+
+      }
+
+      ContigOffset_t codon_offset;
+      AminoAcid::Alphabet reference_amino;
+      AminoAcid::Alphabet mutant_amino;
+      cmp_SNP->codonMutation(codon_offset, reference_amino, mutant_amino);
+
+      return not (reference_amino == mutant_amino);
+
+    }
+
+  }
+
+  return true;
+
+}
+
+
+
+std::string kgl::SynonymousSNPFilter::filterName() const {
+
+  return "Remove Synonymous Coding (single and compound) SNPs";
+
+}

@@ -136,6 +136,11 @@ public:
 
   VariantType variantType() const override { return VariantType::COMPOUND_SNP; }
 
+  bool codonMutation( ContigOffset_t& codon_offset,
+                      AminoAcid::Alphabet& reference_amino,
+                      AminoAcid::Alphabet& mutant_amino) const;
+
+
 private:
 
 
@@ -143,9 +148,6 @@ private:
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
   bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
                             std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const override;
-  bool codonMutation( ContigOffset_t& codon_offset,
-                      AminoAcid::Alphabet& reference_amino,
-                      AminoAcid::Alphabet& mutant_amino) const;
 
 };
 

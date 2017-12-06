@@ -108,10 +108,10 @@ public:
   std::string output(char delimiter, VariantOutputIndex output_index) const override;
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
 
-  bool SNPMutation(ContigOffset_t& codon_offset,
-                   ContigSize_t& base_in_codon,
-                   AminoAcid::Alphabet& reference_amino,
-                   AminoAcid::Alphabet& mutant_amino) const;
+  bool codonMutation(ContigOffset_t &codon_offset,
+                     ContigSize_t &base_in_codon,
+                     AminoAcid::Alphabet &reference_amino,
+                     AminoAcid::Alphabet &mutant_amino) const;
 
 private:
 

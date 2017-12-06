@@ -13,6 +13,7 @@
 #include "kgl_variant_db.h"
 #include "kgl_filter.h"
 #include "kgl_gff_fasta.h"
+#include "kgl_statistics.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -48,10 +49,36 @@ public:
                                 const std::shared_ptr<const GenomeVariant>& genome_variant,
                                 std::string& comparison_string);
 
+
+
 private:
 
 
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Implements various phylogenetic algorithms using population statistics objects (genome_id indexed variants).
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class PhylogeneticAnalysis {
+
+public:
+
+  PhylogeneticAnalysis() = default;
+  virtual ~PhylogeneticAnalysis() = default;
+
+  static bool UPGMA(std::shared_ptr<const PopulationStatistics> population_stats);
+
+
+private:
+
+
+};
+
+
+
+
 
 
 }   // namespace genome

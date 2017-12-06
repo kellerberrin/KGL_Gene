@@ -35,7 +35,6 @@ bool kgl::CompoundSNP::codonMutation( ContigOffset_t& codon_offset,
                                       AminoAcid::Alphabet& mutant_amino) const {
 
 
-  ContigSize_t base_in_codon;
 
   if (codingSequences().empty()) {
 
@@ -46,6 +45,7 @@ bool kgl::CompoundSNP::codonMutation( ContigOffset_t& codon_offset,
 
   }
 
+  ContigSize_t base_in_codon;
   codonOffset(codon_offset, base_in_codon);
 
   auto sequence_offset = static_cast<ContigOffset_t>(codon_offset * Codon::CODON_SIZE);
@@ -98,8 +98,20 @@ bool kgl::CompoundSNP::codonMutation( ContigOffset_t& codon_offset,
     CodingDNA5::Alphabet strand_mutant = SNP_ptr->strandMutant();
     CodingDNA5::Alphabet strand_reference = SNP_ptr->strandReference();
 
+    ContigOffset_t sub_codon_offset;
+    SNP_ptr->codonOffset(sub_codon_offset, base_in_codon);
 
-    SNP_ptr->codonOffset(codon_offset, base_in_codon);
+    if (codon_offset != sub_codon_offset) {
+
+      ExecEnv::log().error("codonMutation(), subordinate SNP variant: {} in different codon from compound SNP variant: {}",
+                           SNP_ptr->output(' ', VariantOutputIndex::START_0_BASED),
+                           output(' ', VariantOutputIndex::START_0_BASED));
+      reference_amino = AminoAcid::AMINO_UNKNOWN;  // The unknown amino acid
+      mutant_amino = AminoAcid::AMINO_UNKNOWN;
+      codon_offset = 0;
+      return false;
+
+    }
 
     if (strand_reference != codon[base_in_codon]) {
 

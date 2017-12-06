@@ -21,7 +21,7 @@ namespace genome {   // project level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Auxillary container objects to hold variants for statistical analysis.
+// Auxillary container objects to hold variants for statistical and phylogenetic analysis.
 // Similar to the variant_db.h objects.
 // Implemented separately so that statistics can be added and deleted as required, without
 // changing the underlying the variant_db.h objects.
@@ -111,12 +111,12 @@ public:
   const GenomeId_t& genomeId() const { return genome_id_; }
   void genomeId(const GenomeId_t& contig_id) { genome_id_ = contig_id; }
 
-  bool addContigStatistics(std::shared_ptr<ContigStatistics>& contig_statitics);
+  bool addContigStatistics(std::shared_ptr<ContigStatistics>& contig_statistics);
   bool getContigStatistics(const ContigId_t& contig_id, std::shared_ptr<ContigStatistics>& contig_statistics) const;
 
   bool addVariant(std::shared_ptr<const Variant> variant);
 
-  const GenomeStatisticsMap& contigMap() const { return genome_statistics_map_; }
+  const GenomeStatisticsMap& getMap() const { return genome_statistics_map_; }
 
   std::string output(char field_delimiter, VariantOutputIndex output_index) const;
   bool outputCSV(const std::string& file_name, VariantOutputIndex output_index) const;
@@ -129,9 +129,35 @@ private:
 };
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Holds variants for population statistical analysis.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+using PopulationStatisticsMap = std::map<GenomeId_t, std::shared_ptr<const GenomeStatistics>>;
+class PopulationStatistics {
+
+public:
+
+  explicit PopulationStatistics() = default;
+  PopulationStatistics(const PopulationStatistics&) = default;
+  ~PopulationStatistics() = default;
+
+  bool addGenomeStatistics(std::shared_ptr<const GenomeStatistics> genome_statistics);
+
+  const PopulationStatisticsMap& getMap() const { return population_statistics_map_; }
+
+private:
+
+  PopulationStatisticsMap population_statistics_map_;
+
+};
+
+
 
 }   // namespace genome
 }   // namespace kellerberrin
+
 
 
 

@@ -248,3 +248,24 @@ bool kgl::GenomeStatistics::outputCSV(const std::string& file_name, VariantOutpu
   return out_file.good();
 
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Holds population genome statistical objects. For Phylogenetic analysis.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bool kgl::PopulationStatistics::addGenomeStatistics(std::shared_ptr<const kgl::GenomeStatistics> genome_stats_ptr) {
+
+  std::pair<GenomeId_t, std::shared_ptr<const kgl::GenomeStatistics>> insert_pair(genome_stats_ptr->genomeId(), genome_stats_ptr);
+  auto result = population_statistics_map_.insert(insert_pair);
+
+  if (not result.second) {
+
+    ExecEnv::log().error("Could not add genome: {} to population statistics object - probable duplicate",
+                         genome_stats_ptr->genomeId());
+
+  }
+
+  return result.second;
+
+}

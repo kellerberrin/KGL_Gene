@@ -294,7 +294,7 @@ std::string kgl::SNPVariant::mutation(char delimiter, VariantOutputIndex output_
       AminoAcid::Alphabet reference_amino;
       AminoAcid::Alphabet mutant_amino;
 
-      if (SNPMutation(codon_offset, base_in_codon, reference_amino, mutant_amino)) {
+      if (codonMutation(codon_offset, base_in_codon, reference_amino, mutant_amino)) {
 
         ss << offsetOutput(codon_offset, output_index) << CODON_BASE_SEPARATOR;
         ss << offsetOutput(base_in_codon, output_index) << delimiter;
@@ -357,15 +357,15 @@ std::string kgl::SNPVariant::mutation(char delimiter, VariantOutputIndex output_
 }
 
 
-bool kgl::SNPVariant::SNPMutation( ContigOffset_t& codon_offset,
-                                   ContigSize_t& base_in_codon,
-                                   AminoAcid::Alphabet& reference_amino,
-                                   AminoAcid::Alphabet& mutant_amino) const {
+bool kgl::SNPVariant::codonMutation(ContigOffset_t &codon_offset,
+                                    ContigSize_t &base_in_codon,
+                                    AminoAcid::Alphabet &reference_amino,
+                                    AminoAcid::Alphabet &mutant_amino) const {
 
 
   if (not codonOffset(codon_offset, base_in_codon)) {
 
-    ExecEnv::log().error("SNPMutation() called for non coding variant: {}",
+    ExecEnv::log().error("codonMutation() called for non coding variant: {}",
                          output(' ', VariantOutputIndex::START_0_BASED));
     reference_amino = AminoAcid::AMINO_UNKNOWN;  // The unknown amino acid
     mutant_amino = AminoAcid::AMINO_UNKNOWN;
@@ -381,7 +381,7 @@ bool kgl::SNPVariant::SNPMutation( ContigOffset_t& codon_offset,
                                                                                               Codon::CODON_SIZE);
   if (codon_sequence->length() != Codon::CODON_SIZE) {
 
-    ExecEnv::log().error("SNPMutation(), expected codon sequence size 3: got size: {}", codon_sequence->length());
+    ExecEnv::log().error("codonMutation(), expected codon sequence size 3: got size: {}", codon_sequence->length());
     reference_amino = AminoAcid::AMINO_UNKNOWN;  // The unknown amino acid
     mutant_amino = AminoAcid::AMINO_UNKNOWN;
     return false;

@@ -173,6 +173,32 @@ private:
 
 };
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Remove synonymous coding SNPs and compound snps.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class SynonymousSNPFilter : public VariantFilter {
+
+public:
+
+  explicit SynonymousSNPFilter() = default;
+  ~SynonymousSNPFilter() override = default;
+
+  std::string filterName() const final;
+
+  bool applyFilter(const Variant& variant) const override { return implementFilter(variant); } // redirect
+  bool applyFilter(const SNPVariant& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const CompoundInsert& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const CompoundSNP& variant) const override { return implementFilter(variant); }
+
+private:
+
+  bool implementFilter(const Variant& variant) const;
+
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Filter deletion SNPs
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

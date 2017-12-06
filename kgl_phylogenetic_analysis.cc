@@ -89,3 +89,12 @@ bool kgl::ApplicationAnalysis::readMutantProtein(const std::string& fasta_file,
   }
 
 }
+
+
+
+bool kgl::PhylogeneticAnalysis::UPGMA(std::shared_ptr<const PopulationStatistics> population_stats) {
+
+
+  return true;
+
+}

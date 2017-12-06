@@ -12,12 +12,14 @@
 #include "kgl_filter.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_statistics.h"
+#include "kgl_statistics_phylo.h"
 
 namespace kgl = kellerberrin::genome;
 
 
 std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
                                                          std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr,
+                                                         std::shared_ptr<kgl::PopulationStatistics> population_stats_ptr,
                                                          const std::string& file_name,
                                                          const std::string& genome_name,
                                                          unsigned char read_quality,
@@ -38,9 +40,14 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
                                                                                                    min_count,
                                                                                                    min_proportion);
 
+  // Not interested in Synonymous SNPs, so filter them.
+  all_variant_ptr = all_variant_ptr->filterVariants(kgl::SynonymousSNPFilter());
+
+  // Create a genome statistics object.
   std::shared_ptr<const kgl::GenomeStatistics> statistics_ptr(std::make_shared<kgl::GenomeStatistics>(genome_db_ptr,
                                                                                                       all_variant_ptr));
 
+  // Write the genome stats to file.
   std::string stats_file_name = kgl::ExecEnv::filePath("malawi_stats", workDirectory) + ".csv";
   statistics_ptr->outputCSV(stats_file_name, kgl::VariantOutputIndex::START_1_BASED);
 
@@ -48,13 +55,22 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
 #define TEST_GENE "PF3D7_1255200"
 //#define TEST_GENE "PF3D7_0101900"
 
+  // Filter on a GENE.
   all_variant_ptr = all_variant_ptr->filterVariants(kgl::GeneFilter(TEST_GENE));
   all_variant_ptr = all_variant_ptr->filterVariants(kgl::CodingFilter());  // remove introns.
+
+  // Create stats for the GENE.
+  std::shared_ptr<const kgl::GenomeStatistics> filtered_stats_ptr(std::make_shared<kgl::GenomeStatistics>(genome_db_ptr,
+                                                                                                          all_variant_ptr));
+
+  // Add to the population stats for later phylogenetic analysis.
+  population_stats_ptr->addGenomeStatistics(filtered_stats_ptr);
 
   kgl::ExecEnv::log().info("Filtered for: {}, Genome has: {} variants", TEST_GENE, all_variant_ptr->size());
 
   std::cout << *all_variant_ptr;
 
+  // Return the filtered variants.
   return all_variant_ptr;
 
 }
@@ -73,11 +89,16 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
   // Wire-up the genome database.
   genome_db_ptr->createVerifyGenomeDatabase();
 
+  // Create a population statistics object.
+
+  std::shared_ptr<kgl::PopulationStatistics> population_stats_ptr(std::make_shared<kgl::PopulationStatistics>());
+
   for (const auto& file : args.fileList) {
 
     // Generate mutant filtered simple SNPs.
     std::shared_ptr<const kgl::GenomeVariant> variant_ptr = getSNPVariants(log,
                                                                            genome_db_ptr,
+                                                                           population_stats_ptr,
                                                                            file.file_name,
                                                                            file.genome_name,
                                                                            args.readQuality,
@@ -146,7 +167,10 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 #endif
 #endif
 
-  }
+  } // For all sam files loop.
+
+  // Perform population analysis.
+  kgl::PhylogeneticAnalysis::UPGMA(population_stats_ptr);
 
 
 }
