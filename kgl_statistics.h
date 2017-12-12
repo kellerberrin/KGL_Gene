@@ -10,8 +10,10 @@
 #include <memory>
 #include <vector>
 #include <sstream>
+#include <iostream>
 #include "kgl_attributes.h"
 #include "kgl_variant_db.h"
+#include "kgl_statistics_phylo.h"
 
 
 
@@ -26,6 +28,7 @@ namespace genome {   // project level namespace
 // Implemented separately so that statistics can be added and deleted as required, without
 // changing the underlying the variant_db.h objects.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Holds variants for per coding feature for statistical analysis.
@@ -48,7 +51,7 @@ public:
   const FeatureStatiticsMap& getMap() const { return offset_variant_map_; }
   std::shared_ptr<const CodingSequence> codingSequence() const { return coding_sequence_; }
 
-  size_t size() const { return offset_variant_map_.size(); }
+  ContigSize_t size() const { return offset_variant_map_.size(); }
 
 
 private:
@@ -84,6 +87,7 @@ public:
   const ContigId_t& contigId() const { return contig_id_; }
   const ContigStatiticsMap& getMap() const { return feature_map_; }
 
+  ContigSize_t size() const;
 
 private:
 
@@ -118,13 +122,27 @@ public:
 
   const GenomeStatisticsMap& getMap() const { return genome_statistics_map_; }
 
+  ContigSize_t size() const;
+
+  bool isElement(std::shared_ptr<const Variant> variant) const;
+  void getVariants(std::vector<std::shared_ptr<const Variant>>& variant_vector) const;
+
   std::string output(char field_delimiter, VariantOutputIndex output_index) const;
   bool outputCSV(const std::string& file_name, VariantOutputIndex output_index) const;
+
+
+  // UPGMA Classification functions
+  void write_node(std::ofstream& outfile) const { outfile << genomeId(); }
+  DistanceType_t distance(std::shared_ptr<const GenomeStatistics> GenomeStatistics) const;
+  std::shared_ptr<const GenomeStatistics> merge(std::shared_ptr<const GenomeStatistics> merge_genome) const;
+
 
 private:
 
   GenomeId_t genome_id_;
   GenomeStatisticsMap genome_statistics_map_;
+
+  static constexpr const char* DESCRIPTION_KEY_{"DESCRIPTION"};
 
 };
 
@@ -139,7 +157,7 @@ class PopulationStatistics {
 
 public:
 
-  explicit PopulationStatistics() = default;
+  explicit PopulationStatistics(const std::string& population_id) : population_id_(population_id) {}
   PopulationStatistics(const PopulationStatistics&) = default;
   ~PopulationStatistics() = default;
 
@@ -147,9 +165,13 @@ public:
 
   const PopulationStatisticsMap& getMap() const { return population_statistics_map_; }
 
+  // Initialize the UPGMA analysis.
+  void initUPGMA(NodeVector<const GenomeStatistics>& node_vector) const;
+
 private:
 
   PopulationStatisticsMap population_statistics_map_;
+  std::string population_id_;
 
 };
 

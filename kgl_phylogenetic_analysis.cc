@@ -92,8 +92,17 @@ bool kgl::ApplicationAnalysis::readMutantProtein(const std::string& fasta_file,
 
 
 
-bool kgl::PhylogeneticAnalysis::UPGMA(std::shared_ptr<const PopulationStatistics> population_stats) {
+bool kgl::PhylogeneticAnalysis::UPGMA(const std::string& newick_file,
+                                      std::shared_ptr<const PopulationStatistics> population_stats_ptr) {
 
+  NodeVector<const GenomeStatistics> node_vector;
+
+  population_stats_ptr->initUPGMA(node_vector);
+  UPGMAMatrix<const GenomeStatistics> upgma_matrix(node_vector);
+
+  upgma_matrix.calculateReduce();
+
+  upgma_matrix.writeNewick(newick_file);
 
   return true;
 

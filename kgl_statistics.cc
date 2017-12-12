@@ -17,7 +17,16 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // This function will insert multiple variants for a contig offset in a std::multimap
+// Only adds a variant if it does not already exist (not equivalent, but can have the same offset).
 void kgl::FeatureStatistics::addVariant(const std::shared_ptr<const kgl::Variant>& variant_ptr) {
+
+  auto result = offset_variant_map_.equal_range(variant_ptr->contigOffset());
+
+  for (auto it = result.first; it != result.second; ++it) {
+
+    if (it->second->equivalent(*variant_ptr)) return;
+
+  }
 
   offset_variant_map_.insert(std::make_pair(variant_ptr->contigOffset(), variant_ptr));
 
@@ -93,6 +102,20 @@ bool kgl::ContigStatistics::addFeatureStatistics(const FeatureIdent_t& feature_i
   }
 
   return true;
+
+}
+
+
+kgl::ContigSize_t kgl::ContigStatistics::size() const {
+
+  ContigSize_t size_count = 0;
+  for (auto feature : feature_map_) {
+
+    size_count += feature.second->size();
+
+  }
+
+  return size_count;
 
 }
 
@@ -218,7 +241,11 @@ std::string kgl::GenomeStatistics::output(char delimiter, VariantOutputIndex out
       ss << feature.second->size();
       for (const auto& description : description_vec) {
 
-        ss << delimiter << description.second;
+        if (description.first == DESCRIPTION_KEY_) {
+
+          ss << delimiter << description.second;
+
+        }
 
       }
 
@@ -249,6 +276,136 @@ bool kgl::GenomeStatistics::outputCSV(const std::string& file_name, VariantOutpu
 
 }
 
+
+kgl::ContigSize_t kgl::GenomeStatistics::size() const {
+
+  ContigSize_t size_count = 0;
+  for (auto contig : genome_statistics_map_) {
+
+    size_count += contig.second->size();
+
+  }
+
+  return size_count;
+
+}
+
+
+bool kgl::GenomeStatistics::isElement(std::shared_ptr<const Variant> variant_ptr) const {
+
+  // get contig
+  std::shared_ptr<ContigStatistics> contig_variant;
+  if (not getContigStatistics(variant_ptr->contigId(), contig_variant)) {
+
+    return false;
+
+  }
+
+  // check if not coding
+  if (variant_ptr->type() != VariantSequenceType::CDS_CODING) {
+
+    return false;
+
+  }
+
+  // get feature.
+  std::shared_ptr<FeatureStatistics> feature_statistics;
+  if (not contig_variant->getFeatureStatistics(variant_ptr->codingSequenceId(), feature_statistics)) {
+
+    return false;
+
+  }
+
+  // check if variant is present in the feature.
+  auto result = feature_statistics->getMap().equal_range(variant_ptr->contigOffset());
+
+  for (auto it = result.first; it != result.second; ++it) {
+
+    if (variant_ptr->equivalent(*(it->second))) return true;
+
+  }
+
+  return false;
+
+}
+
+
+void kgl::GenomeStatistics::getVariants(std::vector<std::shared_ptr<const Variant>>& variant_vector) const {
+
+  variant_vector.clear();
+
+  for (auto contig : getMap()) {
+
+    for(auto feature : contig.second->getMap()) {
+
+      for (auto contig : feature.second->getMap()) {
+
+        variant_vector.push_back(contig.second);
+
+      }
+
+    }
+
+  }
+
+}
+
+
+
+
+kgl::DistanceType_t kgl::GenomeStatistics::distance(std::shared_ptr<const GenomeStatistics> genome_stats_ptr) const {
+
+  DistanceType_t distance = 0;
+  std::vector<std::shared_ptr<const Variant>> variant_vector;
+
+  // find variants in genome_stats_ptr but not in this genome.
+  genome_stats_ptr->getVariants(variant_vector);
+
+  for (auto variant : variant_vector) {
+
+    if (not isElement(variant)) {
+
+      distance++;
+
+    }
+
+  }
+
+  // find variants in this genome but not in this genome_stats_ptr
+  getVariants(variant_vector);
+
+  for (auto variant : variant_vector) {
+
+    if (not genome_stats_ptr->isElement(variant)) {
+
+      distance++;
+
+    }
+
+  }
+
+  return distance;
+
+}
+
+
+std::shared_ptr<const kgl::GenomeStatistics> kgl::GenomeStatistics::merge(std::shared_ptr<const GenomeStatistics> merge_genome) const {
+
+  std::shared_ptr<GenomeStatistics> merged(std::make_shared<GenomeStatistics>(*merge_genome));
+
+  std::vector<std::shared_ptr<const Variant>> variant_vector;
+  getVariants(variant_vector);
+
+  for (const auto& variant : variant_vector) {
+
+    merged->addVariant(variant);
+
+  }
+
+  return merged;
+
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Holds population genome statistical objects. For Phylogenetic analysis.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -267,5 +424,20 @@ bool kgl::PopulationStatistics::addGenomeStatistics(std::shared_ptr<const kgl::G
   }
 
   return result.second;
+
+}
+
+
+void kgl::PopulationStatistics::initUPGMA(NodeVector<const GenomeStatistics>& node_vector) const {
+
+  node_vector.clear();
+  for (auto genome : population_statistics_map_) {
+
+    std::shared_ptr<PhyloNode<const GenomeStatistics>>
+    phylo_node_ptr(std::make_shared<PhyloNode<const GenomeStatistics>>(genome.second, genome.second->size()));
+
+    node_vector.push_back(phylo_node_ptr);
+
+  }
 
 }

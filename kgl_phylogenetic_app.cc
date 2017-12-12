@@ -12,7 +12,6 @@
 #include "kgl_filter.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_statistics.h"
-#include "kgl_statistics_phylo.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -43,12 +42,13 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
   // Not interested in Synonymous SNPs, so filter them.
   all_variant_ptr = all_variant_ptr->filterVariants(kgl::SynonymousSNPFilter());
 
+
   // Create a genome statistics object.
   std::shared_ptr<const kgl::GenomeStatistics> statistics_ptr(std::make_shared<kgl::GenomeStatistics>(genome_db_ptr,
                                                                                                       all_variant_ptr));
 
   // Write the genome stats to file.
-  std::string stats_file_name = kgl::ExecEnv::filePath("malawi_stats", workDirectory) + ".csv";
+  std::string stats_file_name = kgl::ExecEnv::filePath("genome_stats", workDirectory) + ".csv";
   statistics_ptr->outputCSV(stats_file_name, kgl::VariantOutputIndex::START_1_BASED);
 
 //#define TEST_GENE "PF3D7_1211900"
@@ -91,7 +91,7 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
   // Create a population statistics object.
 
-  std::shared_ptr<kgl::PopulationStatistics> population_stats_ptr(std::make_shared<kgl::PopulationStatistics>());
+  std::shared_ptr<kgl::PopulationStatistics> population_stats_ptr(std::make_shared<kgl::PopulationStatistics>("Malawi-PRJNA173723"));
 
   for (const auto& file : args.fileList) {
 
@@ -113,8 +113,8 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
     std::string read_fasta_name = ExecEnv::filePath("PF3D7_1211900_Reference", args.workDirectory) + ".fasta";
 
 
-#define MUTANT_PROTEIN 1
-#define MALAWI 1
+//#define MUTANT_PROTEIN 1
+//#define MALAWI 1
 
 #ifdef MUTANT_PROTEIN
 #ifdef MALAWI
@@ -167,10 +167,12 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 #endif
 #endif
 
+    std::string newick_file = ExecEnv::filePath("UPGMA_newick", args.workDirectory) + ".txt";
+    kgl::PhylogeneticAnalysis::UPGMA(newick_file, population_stats_ptr);
+
   } // For all sam files loop.
 
   // Perform population analysis.
-  kgl::PhylogeneticAnalysis::UPGMA(population_stats_ptr);
 
 
 }
