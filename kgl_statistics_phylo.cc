@@ -141,8 +141,6 @@ kgl::DistanceType_t kgl::DistanceMatrix::DistanceMatrixImpl::findMin(size_t& i, 
 // The reduced column is the left most column (column, j index = 0)
 void kgl::DistanceMatrix::DistanceMatrixImpl::reduce(size_t i, size_t j) {
 
-  std::cout << "merge i:" << i << " j:" << j << " initial matrix" << lower_triangular_ << "\n";
-
   // Save and resize
   DistanceMatrixImpl temp_distance(*this);
 
@@ -162,8 +160,6 @@ void kgl::DistanceMatrix::DistanceMatrixImpl::reduce(size_t i, size_t j) {
     }
 
   }
-
-  std::cout << "merged distances, reduced matrix:" << lower_triangular_ << "\n";
 
   // re-populate other distances.
   if (size() <= 2) {
@@ -201,8 +197,6 @@ void kgl::DistanceMatrix::DistanceMatrixImpl::reduce(size_t i, size_t j) {
     }
 
   }
-
-  std::cout << "final reduced matrix:" << lower_triangular_ << "\n";
 
 }
 

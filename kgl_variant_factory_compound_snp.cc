@@ -41,7 +41,7 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
   // The working structure that maintains a vector of compound variants.
   std::vector<std::shared_ptr<CompoundVariantMap>> compound_variant_vec;
 
-  for (const auto& contig_variants : variant_ptr->contigMap()) {  // For all contigs,
+  for (const auto& contig_variants : variant_ptr->getMap()) {  // For all contigs,
 
     // flush the working structure for every contig.
     compound_variant_vec.clear();

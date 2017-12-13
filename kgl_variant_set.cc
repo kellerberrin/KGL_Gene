@@ -49,7 +49,7 @@ kgl::ContigVariant::Union(std::shared_ptr<const kgl::ContigVariant> contig_varia
 std::shared_ptr<kgl::ContigVariant>
 kgl::ContigVariant::Intersection(std::shared_ptr<const kgl::ContigVariant> contig_variant_ptr) const {
 
-  std::shared_ptr<kgl::ContigVariant> intersect_variant_ptr(std::make_shared<kgl::ContigVariant>(*this));
+  std::shared_ptr<kgl::ContigVariant> intersect_variant_ptr = deepCopy();
 
   auto pred = [](const OffsetVariantMap::const_iterator& mod_it,
                  const OffsetVariantMap::const_iterator& ref_it) { return *(mod_it->second) == *(ref_it->second); };
@@ -64,7 +64,7 @@ kgl::ContigVariant::Intersection(std::shared_ptr<const kgl::ContigVariant> conti
 std::shared_ptr<kgl::ContigVariant>
 kgl::ContigVariant::Difference(std::shared_ptr<const kgl::ContigVariant> contig_variant_ptr) const {
 
-  std::shared_ptr<kgl::ContigVariant> diff_variant_ptr(std::make_shared<kgl::ContigVariant>(*this));
+  std::shared_ptr<kgl::ContigVariant> diff_variant_ptr = deepCopy();
 
   auto pred = [](const OffsetVariantMap::const_iterator& mod_it,
                  const OffsetVariantMap::const_iterator& ref_it) { return *(mod_it->second) == *(ref_it->second); };

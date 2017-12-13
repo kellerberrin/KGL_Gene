@@ -23,7 +23,7 @@ kgl::CompoundFactory::disaggregate(const std::shared_ptr<const GenomeVariant>& g
   std::shared_ptr<kgl::GenomeVariant> disaggreagated = genome_variants->emptyGenomeVariant(genome_variants->genomeId(),
                                                                                            genome_db_ptr);
 
-  for (auto contig_variant : genome_variants->contigMap()) {
+  for (auto contig_variant : genome_variants->getMap()) {
 
     for (auto variant : contig_variant.second->getMap()) {
 
@@ -115,7 +115,7 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
   // The working structure that maintains a vector of compound variants.
   std::vector<std::shared_ptr<CompoundVariantMap>> compound_variant_vec;
 
-  for (const auto& contig_variants : variant_ptr->contigMap()) {  // For all contigs,
+  for (const auto& contig_variants : variant_ptr->getMap()) {  // For all contigs,
 
     // flush the working structure for every contig.
     compound_variant_vec.clear();

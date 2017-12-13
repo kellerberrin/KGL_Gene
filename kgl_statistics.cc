@@ -391,7 +391,7 @@ kgl::DistanceType_t kgl::GenomeStatistics::distance(std::shared_ptr<const Genome
 
 std::shared_ptr<const kgl::GenomeStatistics> kgl::GenomeStatistics::merge(std::shared_ptr<const GenomeStatistics> merge_genome) const {
 
-  std::shared_ptr<GenomeStatistics> merged(std::make_shared<GenomeStatistics>(*merge_genome));
+  std::shared_ptr<GenomeStatistics> merged = merge_genome->deepCopy();
 
   std::vector<std::shared_ptr<const Variant>> variant_vector;
   getVariants(variant_vector);
@@ -405,6 +405,40 @@ std::shared_ptr<const kgl::GenomeStatistics> kgl::GenomeStatistics::merge(std::s
   return merged;
 
 }
+
+
+std::shared_ptr<kgl::GenomeStatistics> kgl::GenomeStatistics::deepCopy() const {
+
+  std::shared_ptr<GenomeStatistics> copy = std::shared_ptr<GenomeStatistics>(std::make_shared<GenomeStatistics>(genomeId()));
+
+  // Copy the index structure.
+  for (auto contig : getMap()) {
+
+    std::shared_ptr<ContigStatistics> contig_stats(std::make_shared<ContigStatistics>(contig.second->contigId()));
+    copy->addContigStatistics(contig_stats);
+
+    for (auto feature : contig.second->getMap()) {
+
+      contig_stats->addFeatureStatistics(feature.second->featureId(), feature.second->codingSequence());
+
+    }
+
+  }
+
+  // Add in the variants.
+  std::vector<std::shared_ptr<const Variant>> variant_vector;
+  getVariants(variant_vector);
+
+  for (const auto& variant : variant_vector) {
+
+    copy->addVariant(variant);
+
+  }
+
+  return copy;
+
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Holds population genome statistical objects. For Phylogenetic analysis.

@@ -186,8 +186,9 @@ template<class T> bool UPGMAMatrix<T>::reduce(size_t row, size_t column, Distanc
   std::shared_ptr<PhyloNode<T>> merged_node(std::make_shared<PhyloNode<T>>(merged_leaf, node_distance));
   merged_node->addNode(row_node);
   merged_node->addNode(column_node);
-
-  node_vector_.push_back(merged_node);
+  // Insert the merged node at the front of the vector.
+  // This matches the patterm of the reduction of the distance matrix (above).
+  node_vector_.insert(node_vector_.begin(), merged_node);
 
   return true;
 

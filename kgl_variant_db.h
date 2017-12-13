@@ -29,10 +29,13 @@ class ContigVariant {
 public:
 
   explicit ContigVariant(const ContigId_t& contig_id) : contig_id_(contig_id) {}
-  ContigVariant(const ContigVariant&) = default;
+  ContigVariant(const ContigVariant&) = delete; // Use deep copy.
   ~ContigVariant() = default;
 
-  ContigVariant& operator=(const ContigVariant&) = default;
+  ContigVariant& operator=(const ContigVariant&) = delete; // Use deep copy.
+
+  // Always use deep copy when modifying this object (filter and set operations).
+  std::shared_ptr<ContigVariant> deepCopy() const;
 
   void addVariant(std::shared_ptr<const Variant>& variant_ptr);
   const ContigId_t& contigId() const { return contig_id_; }
@@ -49,7 +52,6 @@ public:
   const OffsetVariantMap& getMap() const { return offset_variant_map_; }
 
   size_t size() const { return offset_variant_map_.size(); }
-
 
 private:
 
@@ -69,10 +71,13 @@ class GenomeVariant {
 public:
 
   explicit GenomeVariant(const GenomeId_t& genome_id) : genome_id_(genome_id) {}
-  GenomeVariant(const GenomeVariant&) = default;
+  GenomeVariant(const GenomeVariant&) = delete; // Use deep copy.
   ~GenomeVariant() = default;
 
-  GenomeVariant& operator=(const GenomeVariant& genome_variant) = default;
+  GenomeVariant& operator=(const GenomeVariant&) = delete; // Use deep copy.
+
+  // Always use deep copy when modifying this object (filter and set operations).
+  std::shared_ptr<GenomeVariant> deepCopy() const;
 
   const GenomeId_t& genomeId() const { return genome_id_; }
   void genomeId(const GenomeId_t& contig_id) { genome_id_ = contig_id; }
@@ -88,9 +93,7 @@ public:
 
   std::shared_ptr<GenomeVariant> filterVariants(const VariantFilter& filter) const;
 
-  const GenomeVariantMap& contigMap() const { return genome_variant_map_; }
-
-
+  const GenomeVariantMap& getMap() const { return genome_variant_map_; }
 
   bool isElement(const Variant& variant) const;
   std::shared_ptr<GenomeVariant> Union(std::shared_ptr<const GenomeVariant> genome_variant_ptr) const;
@@ -107,6 +110,7 @@ public:
 
   const Attributes& attributes() const { return attributes_; }
   Attributes& attributes() { return attributes_; }
+  void attributes(const Attributes& attributes) { attributes_ = attributes; }
 
   bool mutantProtein( const std::string& sequence_name,
                       const ContigId_t& contig_id,

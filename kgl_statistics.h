@@ -107,13 +107,17 @@ class GenomeStatistics {
 
 public:
 
-  GenomeStatistics(const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
-                   const std::shared_ptr<const GenomeVariant>& genome_variant_ptr);
-  GenomeStatistics(const GenomeStatistics&) = default;
+  explicit GenomeStatistics(const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
+                            const std::shared_ptr<const GenomeVariant>& genome_variant_ptr);
+  explicit GenomeStatistics(const GenomeId_t& genome_id) { genomeId(genome_id); }
+  explicit GenomeStatistics(const GenomeStatistics& copy) = delete;
   ~GenomeStatistics() = default;
 
+  // Use this instead of the copy constructor.
+  std::shared_ptr<GenomeStatistics> deepCopy() const;
+
   const GenomeId_t& genomeId() const { return genome_id_; }
-  void genomeId(const GenomeId_t& contig_id) { genome_id_ = contig_id; }
+  void genomeId(const GenomeId_t& genome_id) { genome_id_ = genome_id; }
 
   bool addContigStatistics(std::shared_ptr<ContigStatistics>& contig_statistics);
   bool getContigStatistics(const ContigId_t& contig_id, std::shared_ptr<ContigStatistics>& contig_statistics) const;

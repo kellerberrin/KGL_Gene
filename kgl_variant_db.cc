@@ -19,7 +19,7 @@ namespace kgl = kellerberrin::genome;
 std::shared_ptr<kgl::ContigVariant>
 kgl::ContigVariant::filterVariants(const kgl::VariantFilter& filter) const {
 
-  std::shared_ptr<kgl::ContigVariant> filtered_contig_ptr(std::make_shared<kgl::ContigVariant>(*this));
+  std::shared_ptr<kgl::ContigVariant> filtered_contig_ptr = deepCopy();
   // Complements the bool returned by filterVariant(filter) because the delete pattern expects bool true for deletion.
   auto predicate = [&](const OffsetVariantMap::const_iterator& it) { return not it->second->filterVariant(filter); };
   predicateIterableDelete(filtered_contig_ptr->offset_variant_map_,  predicate);
@@ -34,6 +34,22 @@ void kgl::ContigVariant::addVariant(std::shared_ptr<const Variant>& variant_ptr)
   offset_variant_map_.insert(std::make_pair(variant_ptr->contigOffset(), variant_ptr));
 
 }
+
+// Always use deep copy when modifying this object.
+std::shared_ptr<kgl::ContigVariant> kgl::ContigVariant::deepCopy() const {
+
+  std::shared_ptr<ContigVariant> copy(std::make_shared<ContigVariant>(contigId()));
+
+  for (auto variant : getMap()) {
+
+    copy->addVariant(variant.second);
+
+  }
+
+  return copy;
+
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -179,3 +195,30 @@ void kgl::GenomeVariant::getVariants(std::vector<std::shared_ptr<const Variant>>
   }
 
 }
+
+// Always use deep copy when modifying this object.
+std::shared_ptr<kgl::GenomeVariant> kgl::GenomeVariant::deepCopy() const {
+
+  std::shared_ptr<GenomeVariant> copy(std::make_shared<GenomeVariant>(genomeId()));
+  copy->attributes(attributes());
+
+  for (auto contig : getMap()) {
+
+    std::shared_ptr<ContigVariant> copy_contig(std::make_shared<ContigVariant>(contig.second->contigId()));
+    copy->addContigVariant(copy_contig);
+
+  }
+
+  std::vector<std::shared_ptr<const Variant>> variant_vector;
+  getVariants(variant_vector);
+
+  for (auto variant : variant_vector) {
+
+    copy->addVariant(variant);
+
+  }
+
+  return copy;
+
+}
+
