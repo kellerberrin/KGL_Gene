@@ -170,7 +170,7 @@ public:
   const PopulationStatisticsMap& getMap() const { return population_statistics_map_; }
 
   // Initialize the UPGMA analysis.
-  void initUPGMA(NodeVector<const GenomeStatistics>& node_vector) const;
+  std::shared_ptr<NodeVector<const GenomeStatistics>> initUPGMA() const;
 
 private:
 

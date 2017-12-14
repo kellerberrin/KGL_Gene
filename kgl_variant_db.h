@@ -103,8 +103,8 @@ public:
   static std::shared_ptr<GenomeVariant> emptyGenomeVariant(const GenomeId_t& genome_id,
                                                            const std::shared_ptr<const GenomeDatabase>& genome_db);
 
-  std::string output(char field_delimiter, VariantOutputIndex output_index) const;
-  bool outputCSV(const std::string& file_name, VariantOutputIndex output_index) const;
+  std::string output(char field_delimiter, VariantOutputIndex output_index, bool detail) const;
+  bool outputCSV(const std::string& file_name, VariantOutputIndex output_index, bool detail) const;
 
   void getVariants(std::vector<std::shared_ptr<const Variant>>& variant_vector) const;
 

@@ -76,8 +76,8 @@ bool kgl::CompoundSNP::codonMutation( ContigOffset_t& codon_offset,
     if (not SNP_ptr) {
 
       ExecEnv::log().error("NON SNP Variant :{} found in Compound SNP :{}",
-                           variant.second->output(' ', VariantOutputIndex::START_0_BASED),
-                           output(' ', VariantOutputIndex::START_0_BASED));
+                           variant.second->output(' ', VariantOutputIndex::START_0_BASED, true),
+                           output(' ', VariantOutputIndex::START_0_BASED, true));
       reference_amino = AminoAcid::AMINO_UNKNOWN;  // The unknown amino acid
       mutant_amino = AminoAcid::AMINO_UNKNOWN;
       codon_offset = 0;
@@ -87,8 +87,8 @@ bool kgl::CompoundSNP::codonMutation( ContigOffset_t& codon_offset,
     if (not ExtendDNA5::isBaseCode(SNP_ptr->mutant())) {
 
       ExecEnv::log().error("NON Base code SNP Variant :{}",
-                           variant.second->output(' ', VariantOutputIndex::START_0_BASED),
-                           output(' ', VariantOutputIndex::START_0_BASED));
+                           variant.second->output(' ', VariantOutputIndex::START_0_BASED, true),
+                           output(' ', VariantOutputIndex::START_0_BASED, true));
       reference_amino = AminoAcid::AMINO_UNKNOWN;  // The unknown amino acid
       mutant_amino = AminoAcid::AMINO_UNKNOWN;
       codon_offset = 0;
@@ -104,8 +104,8 @@ bool kgl::CompoundSNP::codonMutation( ContigOffset_t& codon_offset,
     if (codon_offset != sub_codon_offset) {
 
       ExecEnv::log().error("codonMutation(), subordinate SNP variant: {} in different codon from compound SNP variant: {}",
-                           SNP_ptr->output(' ', VariantOutputIndex::START_0_BASED),
-                           output(' ', VariantOutputIndex::START_0_BASED));
+                           SNP_ptr->output(' ', VariantOutputIndex::START_0_BASED, true),
+                           output(' ', VariantOutputIndex::START_0_BASED, true));
       reference_amino = AminoAcid::AMINO_UNKNOWN;  // The unknown amino acid
       mutant_amino = AminoAcid::AMINO_UNKNOWN;
       codon_offset = 0;
@@ -118,7 +118,7 @@ bool kgl::CompoundSNP::codonMutation( ContigOffset_t& codon_offset,
       ExecEnv::log().error("codonMutation(), strand reference: {} does not match codon reference: {} for variant: {}",
                            CodingDNA5::convertToChar(strand_reference),
                            CodingDNA5::convertToChar(codon[base_in_codon]),
-                           SNP_ptr->output(' ', VariantOutputIndex::START_0_BASED));
+                           SNP_ptr->output(' ', VariantOutputIndex::START_0_BASED, true));
       reference_amino = AminoAcid::AMINO_UNKNOWN;  // The unknown amino acid
       mutant_amino = AminoAcid::AMINO_UNKNOWN;
       codon_offset = 0;

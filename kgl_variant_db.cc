@@ -93,7 +93,7 @@ bool kgl::GenomeVariant::addVariant(std::shared_ptr<const Variant> variant) {
   if (not getContigVariant(variant->contigId(), contig_variant)) {
 
     ExecEnv::log().error("Contig: {} not found, variant: {}",
-                         variant->contigId(), variant->output(' ', VariantOutputIndex::START_0_BASED));
+                         variant->contigId(), variant->output(' ', VariantOutputIndex::START_0_BASED, true));
     return false;
   }
 
@@ -164,14 +164,14 @@ size_t kgl::GenomeVariant::size() const {
 
 
 
-std::string kgl::GenomeVariant::output(char field_delimter, VariantOutputIndex output_index) const {
+std::string kgl::GenomeVariant::output(char field_delimter, VariantOutputIndex output_index, bool detail) const {
 
   std::stringstream ss;
   for (const auto& contig_variant : genome_variant_map_) {
 
     for (const auto& variant : contig_variant.second->getMap()) {
 
-      ss << variant.second->output(field_delimter, output_index);
+      ss << variant.second->output(field_delimter, output_index, detail);
 
     }
 

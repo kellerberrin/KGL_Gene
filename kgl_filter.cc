@@ -187,7 +187,7 @@ bool kgl::SynonymousSNPFilter::implementFilter(const Variant& variant) const {
       if (SNP == nullptr) {
 
         ExecEnv::log().error("SynonymousFilter(); Bad variant type for variant: {}",
-                             variant.output(' ', VariantOutputIndex::START_0_BASED));
+                             variant.output(' ', VariantOutputIndex::START_0_BASED, true));
         return true;
 
       }
@@ -212,7 +212,7 @@ bool kgl::SynonymousSNPFilter::implementFilter(const Variant& variant) const {
       if (cmp_SNP == nullptr) {
 
         ExecEnv::log().error("SynonymousFilter(); Bad variant type for variant: {}",
-                             variant.output(' ', VariantOutputIndex::START_0_BASED));
+                             variant.output(' ', VariantOutputIndex::START_0_BASED, true));
         return true;
 
       }

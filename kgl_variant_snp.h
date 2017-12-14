@@ -105,7 +105,7 @@ public:
   CodingDNA5::Alphabet strandReference() const { return strandNucleotide(reference()); }
   CodingDNA5::Alphabet strandMutant() const { return strandNucleotide(ExtendDNA5::extendToBase(mutant())); }
 
-  std::string output(char delimiter, VariantOutputIndex output_index) const override;
+  std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const override;
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
 
   bool codonMutation(ContigOffset_t &codon_offset,

@@ -19,7 +19,6 @@ namespace genome {   // project level namespace
 // Used by the classification functions.
 //using DistanceType_t = uint64_t;
 using DistanceType_t = double;
-
 template<class T> class PhyloNode;  // fwd.
 template <class T> using OutNodes = std::multimap<DistanceType_t , std::shared_ptr<PhyloNode<T>>>;
 
@@ -30,12 +29,17 @@ public:
   explicit PhyloNode(std::shared_ptr<T> leaf, DistanceType_t distance) : leaf_(leaf), distance_(distance) {}
   ~PhyloNode() = default;
 
-  DistanceType_t distance() const { return distance_; }
-  void addNode(std::shared_ptr<PhyloNode<T>> node) {
+  void addOutNode(std::shared_ptr<PhyloNode<T>> node) {
     out_nodes_.insert(std::pair<DistanceType_t , std::shared_ptr<PhyloNode<T>>>(node->distance(), node));
   }
+
+  DistanceType_t distance() const { return distance_; }
   std::shared_ptr<T> leaf() const { return leaf_; }
   const OutNodes<T>& getMap() const { return out_nodes_; }
+
+  // Recursively counts the total number of leaf nodes.
+  bool isLeaf() const { return getMap().empty(); }
+  size_t leafNodeCount() const;
 
 private:
 
@@ -45,11 +49,37 @@ private:
 
 };
 
+// Recursively counts the total number of leaf nodes.
+template<class T>
+size_t PhyloNode<T>::leafNodeCount() const {
+
+  size_t leaf_nodes = 0;
+
+  if (not isLeaf()) {
+
+    for (auto node : getMap()) {
+
+      leaf_nodes += node.second->leafNodeCount();
+
+    }
+
+    return leaf_nodes;
+
+  } else {
+
+    return 1;
+
+  }
+
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Distance matrix. Implements the PIMPL pattern to isolate Boost functionality.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+template <class T> using NodeVector = std::vector<std::shared_ptr<PhyloNode<T>>>;
 
 class DistanceMatrix {
 
@@ -62,11 +92,14 @@ public:
   void setDistance(size_t i, size_t j, DistanceType_t distance);
   size_t size() const;
 
-  DistanceType_t reduceMinimum(size_t& i, size_t& j) const;
+  DistanceType_t minimum(size_t& i, size_t& j) const;
+  void reduce(size_t i, size_t j);
+
+
+  class DistanceMatrixImpl;       // Forward declaration of the boost strict diagonal implementation class
 
 private:
 
-  class DistanceMatrixImpl;       // Forward declaration of the boost strict diagonal implementation class
   std::unique_ptr<DistanceMatrixImpl> diagonal_impl_ptr_;    // PIMPL
 
 };
@@ -77,14 +110,13 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-template <class T> using NodeVector = std::vector<std::shared_ptr<PhyloNode<T>>>;
 
 template<class T> class UPGMAMatrix {
 
 public:
 
-  explicit UPGMAMatrix(const NodeVector<T>& node_vector) : node_vector_(node_vector),
-                                                           distance_matrix_(node_vector.size()) {
+  explicit UPGMAMatrix(std::shared_ptr<NodeVector<T>> node_vector_ptr) : node_vector_ptr_(node_vector_ptr),
+                                                                         distance_matrix_(node_vector_ptr->size()) {
     initializeDistance();
 
   }
@@ -101,7 +133,7 @@ private:
   void writeNode(std::shared_ptr<PhyloNode<T>> node, std::ofstream& newick_file) const;
 
 
-  NodeVector<T> node_vector_;
+  std::shared_ptr<NodeVector<T>> node_vector_ptr_;
   DistanceMatrix distance_matrix_;
 
 
@@ -119,11 +151,11 @@ DistanceType_t UPGMAMatrix<T>::distance(std::shared_ptr<PhyloNode<T>> row_node,
 
 template<class T> void UPGMAMatrix<T>::initializeDistance() {
 
-  for (size_t row = 0; row < node_vector_.size(); ++row) {
+  for (size_t row = 0; row < node_vector_ptr_->size(); ++row) {
 
     for (size_t column = 0; column < row; column++) {
 
-      distance_matrix_.setDistance(row, column, distance(node_vector_[row], node_vector_[column]));
+      distance_matrix_.setDistance(row, column, distance(node_vector_ptr_->at(row), node_vector_ptr_->at(column)));
 
     }
 
@@ -134,11 +166,13 @@ template<class T> void UPGMAMatrix<T>::initializeDistance() {
 
 template<class T> void UPGMAMatrix<T>::calculateReduce() {
 
-  while (node_vector_.size() > 1) {
+  while (node_vector_ptr_->size() > 1) {
 
     size_t row;
     size_t column;
-    DistanceType_t minimum = distance_matrix_.reduceMinimum(row, column);
+    DistanceType_t minimum = distance_matrix_.minimum(row, column);
+
+    distance_matrix_.reduce(row, column);
 
     reduce(row, column, minimum);
 
@@ -149,23 +183,23 @@ template<class T> void UPGMAMatrix<T>::calculateReduce() {
 
 template<class T> bool UPGMAMatrix<T>::reduce(size_t row, size_t column, DistanceType_t minimum) {
 
-  NodeVector<T> temp_node_vector;
+  std::shared_ptr<NodeVector<T>> temp_node_vector_ptr(std::make_shared<NodeVector<T>>());
   std::shared_ptr<PhyloNode<T>> column_node = nullptr;
   std::shared_ptr<PhyloNode<T>> row_node = nullptr;
 
-  for (size_t idx = 0; idx < node_vector_.size(); idx++) {
+  for (size_t idx = 0; idx < node_vector_ptr_->size(); idx++) {
 
     if (not (idx == column or idx == row)) {
 
-      temp_node_vector.push_back(node_vector_[idx]);
+      temp_node_vector_ptr->push_back(node_vector_ptr_->at(idx));
 
     } else if (idx == column) {
 
-      column_node = node_vector_[idx];
+      column_node = node_vector_ptr_->at(idx);
 
     } else if (idx == row) {
 
-      row_node = node_vector_[idx];
+      row_node = node_vector_ptr_->at(idx);
 
     }
 
@@ -174,21 +208,22 @@ template<class T> bool UPGMAMatrix<T>::reduce(size_t row, size_t column, Distanc
   if (not column_node or not row_node) {
 
     ExecEnv::log().error("Null pointer found, error calculating UPGMA, row: {}, column: {}, nodes: {}",
-                         row, column, node_vector_.size());
+                         row, column, node_vector_ptr_->size());
     return false;
 
   }
 
-  node_vector_ = temp_node_vector;
+  node_vector_ptr_ = temp_node_vector_ptr;
 
-  std::shared_ptr<const T> merged_leaf = row_node->leaf()->merge(column_node->leaf());
   DistanceType_t node_distance = minimum / 2;
-  std::shared_ptr<PhyloNode<T>> merged_node(std::make_shared<PhyloNode<T>>(merged_leaf, node_distance));
-  merged_node->addNode(row_node);
-  merged_node->addNode(column_node);
+  std::shared_ptr<PhyloNode<T>> merged_node(std::make_shared<PhyloNode<T>>(row_node->leaf(), node_distance));
+  merged_node->addOutNode(row_node);
+  merged_node->addOutNode(column_node);
+  ExecEnv::log().info("UPMGA Matrix Reduce merged leaf count: {}", merged_node->leafNodeCount());
   // Insert the merged node at the front of the vector.
-  // This matches the patterm of the reduction of the distance matrix (above).
-  node_vector_.insert(node_vector_.begin(), merged_node);
+  // This matches the pattern of the reduction of the distance matrix (above).
+  node_vector_ptr_->insert(node_vector_ptr_->begin(), merged_node);
+  ExecEnv::log().info("UPMGA Matrix Reduce merged leaf count: {}", merged_node->leafNodeCount());
 
   return true;
 
@@ -210,7 +245,7 @@ template<class T> bool UPGMAMatrix<T>::writeNewick(const std::string& file_name)
 
   }
 
-  for (auto node : node_vector_) {
+  for (auto node : *node_vector_ptr_) {
 
     writeNode(node, newick_file);
 
@@ -251,9 +286,11 @@ template<class T> void UPGMAMatrix<T>::writeNode(std::shared_ptr<PhyloNode<T>> n
 
     newick_file << ")";
 
-  }
+  } else {
 
-  node->leaf()->write_node(newick_file);
+    node->leaf()->write_node(newick_file);
+
+  }
   newick_file << ":";
   newick_file << node->distance();
 

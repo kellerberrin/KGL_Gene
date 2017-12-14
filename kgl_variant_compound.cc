@@ -45,7 +45,7 @@ bool kgl::CompoundVariant::equivalent(const Variant& cmp_var) const {
 }
 
 
-std::string kgl::CompoundVariant::output(char delimiter, VariantOutputIndex output_index) const {
+std::string kgl::CompoundVariant::output(char delimiter, VariantOutputIndex output_index, bool detail) const {
 
   std::stringstream ss;
   ss << genomeOutput(delimiter, output_index);
@@ -54,9 +54,15 @@ std::string kgl::CompoundVariant::output(char delimiter, VariantOutputIndex outp
   ss << sequence->getGene()->id() << delimiter << sequence->getCDSParent()->id() << delimiter;
   ss << location(delimiter, output_index);
   ss << mutation(delimiter, output_index) << "\n";
-  for (const auto& variant : variant_map_) {
-    ss << variant.second->suboutput(delimiter, output_index);
+
+  if (detail) {
+
+    for (const auto &variant : variant_map_) {
+      ss << variant.second->suboutput(delimiter, output_index);
+    }
+
   }
+
   return ss.str();
 
 }

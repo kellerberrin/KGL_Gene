@@ -84,15 +84,14 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
                 if (not subSNP_ptr->codonOffset(variant_codon_offset, base_in_codon)) {
 
                   ExecEnv::log().error("aggregateVariants(), unexpected - could not find codon offset for variant: {}",
-                                       subSNP_ptr->output(' ', VariantOutputIndex::START_0_BASED));
+                                       subSNP_ptr->output(' ', VariantOutputIndex::START_0_BASED, true));
                   return false;
 
                 }
                 if (not compound_variant_ptr->rbegin()->second->codonOffset(compound_codon_offset, base_in_codon)) {
 
                   ExecEnv::log().error("aggregateVariants(), unexpected - could not find codon offset for variant: {}",
-                                       compound_variant_ptr->rbegin()->second->output(' ',
-                                                                                      VariantOutputIndex::START_0_BASED));
+                                       compound_variant_ptr->rbegin()->second->output(' ', VariantOutputIndex::START_0_BASED, true));
                   return false;
 
                 }
@@ -117,13 +116,13 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
                     if (not result.second) {
 
                       ExecEnv::log().error("aggregateVariants(), unexpected - could not add variant: {}, previous variant: {}",
-                                           subSNP_ptr->output(' ', VariantOutputIndex::START_0_BASED),
-                                           temp_map_ptr->rbegin()->second->output(' ', VariantOutputIndex::START_0_BASED));
+                                           subSNP_ptr->output(' ', VariantOutputIndex::START_0_BASED, true),
+                                           temp_map_ptr->rbegin()->second->output(' ', VariantOutputIndex::START_0_BASED, true));
 
                     } else { // insertion successful
 
                       ExecEnv::log().info("aggregateVariants(), inserted duplicate offset variant: {}",
-                                           subSNP_ptr->output(' ', VariantOutputIndex::START_0_BASED));
+                                           subSNP_ptr->output(' ', VariantOutputIndex::START_0_BASED, true));
                       temp_compound_variant_vec.push_back(temp_map_ptr);
 
                     }
@@ -135,8 +134,8 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
                     if (not result.second) {
 
                       ExecEnv::log().error("aggregateVariants(), unexpected - could not add variant: {}, previous variant: {}",
-                                           subSNP_ptr->output(' ', VariantOutputIndex::START_0_BASED),
-                                           compound_variant_ptr->rbegin()->second->output(' ', VariantOutputIndex::START_0_BASED));
+                                           subSNP_ptr->output(' ', VariantOutputIndex::START_0_BASED, true),
+                                           compound_variant_ptr->rbegin()->second->output(' ', VariantOutputIndex::START_0_BASED, true));
 
                     } // could not insert
 

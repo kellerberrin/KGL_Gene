@@ -51,7 +51,7 @@ bool kgl::ContigStatistics::addVariant(std::shared_ptr<const Variant>& variant_p
   if (not getFeatureStatistics(variant_ptr->codingSequenceId(), feature_statistics)) {
 
     ExecEnv::log().error("Feature: {} not found, variant: {}",
-                         variant_ptr->codingSequenceId(), variant_ptr->output(' ', VariantOutputIndex::START_0_BASED));
+                         variant_ptr->codingSequenceId(), variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, true));
     return false;
   }
 
@@ -167,7 +167,7 @@ kgl::GenomeStatistics::GenomeStatistics(const std::shared_ptr<const GenomeDataba
     if (not addVariant(variant)) {
 
       ExecEnv::log().error("GenomeStatistics(), could not add variant: {}",
-                           variant->output(' ', VariantOutputIndex::START_0_BASED));
+                           variant->output(' ', VariantOutputIndex::START_0_BASED, true));
 
     }
 
@@ -214,7 +214,7 @@ bool kgl::GenomeStatistics::addVariant(std::shared_ptr<const Variant> variant) {
   if (not getContigStatistics(variant->contigId(), contig_variant)) {
 
     ExecEnv::log().error("Contig: {} not found, variant: {}",
-                         variant->contigId(), variant->output(' ', VariantOutputIndex::START_0_BASED));
+                         variant->contigId(), variant->output(' ', VariantOutputIndex::START_0_BASED, true));
     return false;
   }
 
@@ -462,16 +462,19 @@ bool kgl::PopulationStatistics::addGenomeStatistics(std::shared_ptr<const kgl::G
 }
 
 
-void kgl::PopulationStatistics::initUPGMA(NodeVector<const GenomeStatistics>& node_vector) const {
+std::shared_ptr<kgl::NodeVector<const kgl::GenomeStatistics>> kgl::PopulationStatistics::initUPGMA() const {
 
-  node_vector.clear();
-  for (auto genome : population_statistics_map_) {
+  std::shared_ptr<NodeVector<const GenomeStatistics>> node_vector_ptr(std::make_shared<NodeVector<const GenomeStatistics>>());
+
+  for (auto genome : getMap()) {
 
     std::shared_ptr<PhyloNode<const GenomeStatistics>>
     phylo_node_ptr(std::make_shared<PhyloNode<const GenomeStatistics>>(genome.second, genome.second->size()));
 
-    node_vector.push_back(phylo_node_ptr);
+    node_vector_ptr->push_back(phylo_node_ptr);
 
   }
+
+  return node_vector_ptr;
 
 }

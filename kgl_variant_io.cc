@@ -14,7 +14,7 @@
 namespace kgl = kellerberrin::genome;
 
 
-bool kgl::GenomeVariant::outputCSV(const std::string& file_name, VariantOutputIndex output_index) const {
+bool kgl::GenomeVariant::outputCSV(const std::string& file_name, VariantOutputIndex output_index, bool detail) const {
 
   // open the file.
   std::fstream out_file(file_name, std::fstream::out | std::fstream::app);
@@ -25,7 +25,7 @@ bool kgl::GenomeVariant::outputCSV(const std::string& file_name, VariantOutputIn
 
   }
 
-  out_file << output(',', output_index);
+  out_file << output(',', output_index, detail);
 
   return out_file.good();
 
@@ -90,7 +90,7 @@ bool kgl::GenomeVariant::mutantProtein( const std::string& sequence_name,
 
 std::ostream& operator<<(std::ostream &os, const kgl::GenomeVariant& genome_variant) {
 
-  os << genome_variant.output(' ', kgl::VariantOutputIndex::START_1_BASED);
+  os << genome_variant.output(' ', kgl::VariantOutputIndex::START_1_BASED, false);
   os.flush();
 
   return os;

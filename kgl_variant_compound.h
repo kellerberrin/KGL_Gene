@@ -45,7 +45,7 @@ public:
 
   const CompoundVariantMap& getMap() const { return variant_map_; }
 
-  std::string output(char delimiter, VariantOutputIndex output_index) const;
+  std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const;
 
 protected:
 

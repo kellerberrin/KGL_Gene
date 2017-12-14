@@ -37,7 +37,7 @@ kgl::CompoundFactory::disaggregate(const std::shared_ptr<const GenomeVariant>& g
           if (not disaggreagated->addVariant(single_variant.second)) {
 
             ExecEnv::log().error("Cannot add disaggregated variant: {} - same contig offset as existing variant",
-                                 single_variant.second->output(' ', VariantOutputIndex::START_0_BASED));
+                                 single_variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
 
           }
 
@@ -78,7 +78,7 @@ kgl::CompoundFactory::create(const std::shared_ptr<const GenomeVariant>& genome_
       if (not compound_variants->addVariant(compound_variant)) {
 
         ExecEnv::log().error("Unable to add compound insert variant: {} - probable offset duplicate",
-                             compound_variant->output(' ', VariantOutputIndex::START_0_BASED));
+                             compound_variant->output(' ', VariantOutputIndex::START_0_BASED, true));
 
       }
 
@@ -132,7 +132,7 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
           if (not subSNP_ptr) {
 
             ExecEnv::log().error("Not a (Subordinate) SNP Variant: {}",
-                                 variant.second->output(' ', VariantOutputIndex::START_0_BASED));
+                                 variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
             return false;
 
           }
@@ -159,8 +159,8 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
 
                   // Error if in the same coding sequence.
                   ExecEnv::log().error("Variant: {} with the same offset in the same coding sequence as variant: {}",
-                                       compound_variant_ptr->rbegin()->second->output(' ', VariantOutputIndex::START_0_BASED),
-                                       variant.second->output(' ', VariantOutputIndex::START_0_BASED));
+                                       compound_variant_ptr->rbegin()->second->output(' ', VariantOutputIndex::START_0_BASED, true),
+                                       variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
 
                 } else if ((compound_variant_ptr->rbegin()->second->contigOffset() + 1) == variant.second->contigOffset()) {
 

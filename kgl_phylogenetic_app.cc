@@ -52,23 +52,30 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
   statistics_ptr->outputCSV(stats_file_name, kgl::VariantOutputIndex::START_1_BASED);
 
 //#define TEST_GENE "PF3D7_1211900"
-#define TEST_GENE "PF3D7_1255200"
+//#define TEST_GENE "PF3D7_1255200"
 //#define TEST_GENE "PF3D7_0101900"
+#define TEST_GENE_1 "PF3D7_0711700"   // possible duplicate mutations.
+#define TEST_GENE  "PF3D7_0712600"   // possible duplicate mutations.
 
-  // Filter on a GENE.
+  // Filter on dup. GENE.
+  std::shared_ptr<const kgl::GenomeVariant> filter_ptr = all_variant_ptr->filterVariants(kgl::GeneFilter(TEST_GENE_1));
+  filter_ptr = filter_ptr->filterVariants(kgl::CodingFilter());  // remove introns.
+
+  kgl::ExecEnv::log().info("Filtered for: {}, Genome has: {} variants", TEST_GENE_1, filter_ptr->size());
+  std::cout << *filter_ptr;
+
+  // Filter on dup. GENE.
   all_variant_ptr = all_variant_ptr->filterVariants(kgl::GeneFilter(TEST_GENE));
   all_variant_ptr = all_variant_ptr->filterVariants(kgl::CodingFilter());  // remove introns.
+
+  kgl::ExecEnv::log().info("Filtered for: {}, Genome has: {} variants", TEST_GENE, all_variant_ptr->size());
+  std::cout << *all_variant_ptr;
 
   // Create stats for the GENE.
   std::shared_ptr<const kgl::GenomeStatistics> filtered_stats_ptr(std::make_shared<kgl::GenomeStatistics>(genome_db_ptr,
                                                                                                           all_variant_ptr));
-
   // Add to the population stats for later phylogenetic analysis.
   population_stats_ptr->addGenomeStatistics(filtered_stats_ptr);
-
-  kgl::ExecEnv::log().info("Filtered for: {}, Genome has: {} variants", TEST_GENE, all_variant_ptr->size());
-
-  std::cout << *all_variant_ptr;
 
   // Return the filtered variants.
   return all_variant_ptr;
@@ -107,7 +114,7 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
                                                                            args.workDirectory);
 
 
-    variant_ptr->outputCSV(args.outCSVFile, VariantOutputIndex::START_1_BASED);
+    variant_ptr->outputCSV(args.outCSVFile, VariantOutputIndex::START_1_BASED, false);
     std::string fasta_file_name = ExecEnv::filePath(file.genome_name, args.workDirectory) + ".fasta";
     std::string sequence_name = "PF3D7_1211900_" + file.genome_name;
     std::string read_fasta_name = ExecEnv::filePath("PF3D7_1211900_Reference", args.workDirectory) + ".fasta";

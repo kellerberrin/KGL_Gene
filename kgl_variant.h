@@ -147,7 +147,7 @@ public:
 
   virtual VariantType variantType() const = 0;
   virtual size_t size() const = 0;
-  virtual std::string output(char delimiter, VariantOutputIndex output_index) const = 0;
+  virtual std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const = 0;
   virtual std::string mutation(char delimiter, VariantOutputIndex output_index) const = 0;
   virtual bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
                                     std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const = 0;

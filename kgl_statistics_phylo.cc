@@ -13,34 +13,37 @@
 
 #include "kgl_exec_env.h"
 #include "kgl_statistics_phylo.h"
+#include "kgl_statistics.h"
 
 
 namespace kgl = kellerberrin::genome;
 namespace bnu = boost::numeric::ublas;
 
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Implementation of a strict lower triangular distance matrix using the Boost library.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
 using DistanceMatrixImplType = bnu::triangular_matrix<kgl::DistanceType_t, bnu::strict_lower>;
 
-class kgl::DistanceMatrix::DistanceMatrixImpl {
+class BoostDistanceMatrix {
 
 public:
 
-  explicit DistanceMatrixImpl(size_t matrix_size) : lower_triangular_(matrix_size, matrix_size) {}
-  explicit DistanceMatrixImpl(DistanceMatrixImpl& distance_matrix) = default;
-  ~DistanceMatrixImpl() = default;
+  explicit BoostDistanceMatrix(size_t matrix_size) : lower_triangular_(matrix_size, matrix_size) {}
+  explicit BoostDistanceMatrix(const BoostDistanceMatrix&) = default;
+  ~BoostDistanceMatrix() = default;
 
-  DistanceMatrixImpl& operator=(const DistanceMatrixImpl& distance_matrix) = default;
+  BoostDistanceMatrix& operator=(const BoostDistanceMatrix& distance_matrix) = default;
 
   size_t size() const { return lower_triangular_.size1(); }
   void reduce(size_t i, size_t j);
-  DistanceType_t findMin(size_t& i, size_t& j) const;
-  DistanceType_t getDistance(size_t i, size_t j) const;
-  void setDistance(size_t i, size_t j, DistanceType_t distance);
+  kgl::DistanceType_t findMin(size_t& i, size_t& j) const;
+  kgl::DistanceType_t getDistance(size_t i, size_t j) const;
+  void setDistance(size_t i, size_t j, kgl::DistanceType_t distance);
+
+  virtual size_t getLeafCount(size_t node_i) const { return 1; };
 
 private:
 
@@ -49,11 +52,17 @@ private:
 };
 
 
-kgl::DistanceType_t kgl::DistanceMatrix::DistanceMatrixImpl::getDistance(size_t i, size_t j) const {
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Implementation functions.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+kgl::DistanceType_t BoostDistanceMatrix::getDistance(size_t i, size_t j) const {
 
   if (i >= size() or i >= size()) {
 
-    ExecEnv::log().error("Index too large i: {}, j:{} for distance matrix size: {}", i, j, size());
+    kgl::ExecEnv::log().error("Index too large i: {}, j:{} for distance matrix size: {}", i, j, size());
     return 0;
 
   }
@@ -74,11 +83,11 @@ kgl::DistanceType_t kgl::DistanceMatrix::DistanceMatrixImpl::getDistance(size_t 
 
 }
 
-void kgl::DistanceMatrix::DistanceMatrixImpl::setDistance(size_t i, size_t j, DistanceType_t distance) {
+void BoostDistanceMatrix::setDistance(size_t i, size_t j, kgl::DistanceType_t distance) {
 
   if (i >= size() or i >= size()) {
 
-    ExecEnv::log().error("Index too large i: {}, j:{} for distance matrix size: {}", i, j, size());
+    kgl::ExecEnv::log().error("Index too large i: {}, j:{} for distance matrix size: {}", i, j, size());
     return;
 
   }
@@ -99,10 +108,10 @@ void kgl::DistanceMatrix::DistanceMatrixImpl::setDistance(size_t i, size_t j, Di
 
 }
 
-kgl::DistanceType_t kgl::DistanceMatrix::DistanceMatrixImpl::findMin(size_t& i, size_t& j) const {
+kgl::DistanceType_t BoostDistanceMatrix::findMin(size_t& i, size_t& j) const {
 
   bool first_pass = true;
-  DistanceType_t min_distance = 0;
+  kgl::DistanceType_t min_distance = 0;
 //  i = 0;
 //  j = 0;
   for (size_t row = 0; row < size(); ++row) {
@@ -118,7 +127,7 @@ kgl::DistanceType_t kgl::DistanceMatrix::DistanceMatrixImpl::findMin(size_t& i, 
 
       } else {
 
-        DistanceType_t check_min = getDistance( row, column);
+        kgl::DistanceType_t check_min = getDistance( row, column);
         if (check_min < min_distance) {
 
           min_distance = check_min;
@@ -139,10 +148,11 @@ kgl::DistanceType_t kgl::DistanceMatrix::DistanceMatrixImpl::findMin(size_t& i, 
 
 // Reduces the distance matrix.
 // The reduced column is the left most column (column, j index = 0)
-void kgl::DistanceMatrix::DistanceMatrixImpl::reduce(size_t i, size_t j) {
+void BoostDistanceMatrix::reduce(size_t i, size_t j) {
 
   // Save and resize
-  DistanceMatrixImpl temp_distance(*this);
+  // Note that this object is not a base class.
+  BoostDistanceMatrix temp_distance(*this);
 
   size_t reduce_size = size() - 1;
   lower_triangular_.resize(reduce_size, reduce_size, false);
@@ -153,7 +163,10 @@ void kgl::DistanceMatrix::DistanceMatrixImpl::reduce(size_t i, size_t j) {
 
     if (row != i and row != j) {
 
-      DistanceType_t calc_dist = 0.5 * (temp_distance.getDistance(row, i) + temp_distance.getDistance(row, j));
+      kgl::DistanceType_t i_leaf = getLeafCount(i);
+      kgl::DistanceType_t j_leaf = getLeafCount(j);
+      kgl::DistanceType_t calc_dist = (i_leaf * temp_distance.getDistance(row, i)) + (j_leaf * temp_distance.getDistance(row, j));
+      calc_dist = calc_dist / (i_leaf + j_leaf);
       setDistance(idx_row, 0, calc_dist);
       ++idx_row;
 
@@ -200,6 +213,28 @@ void kgl::DistanceMatrix::DistanceMatrixImpl::reduce(size_t i, size_t j) {
 
 }
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Public PIMPL object. The object returns the leaf count for each node to the Boost implementation.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class kgl::DistanceMatrix::DistanceMatrixImpl: public BoostDistanceMatrix {
+
+public:
+
+  explicit DistanceMatrixImpl(size_t matrix_size) : BoostDistanceMatrix(matrix_size) {}
+  ~DistanceMatrixImpl() = default;
+
+  size_t getLeafCount(size_t node_i) const override { return 1; };
+  void setNodeVector(std::shared_ptr<kgl::NodeVector<const GenomeStatistics>> node_vector_ptr) { node_vector_ptr_ = node_vector_ptr; }
+
+private:
+
+  std::shared_ptr<kgl::NodeVector<const GenomeStatistics>> node_vector_ptr_;
+
+};
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Public class of a strict lower triangular distance matrix.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -227,15 +262,15 @@ void kgl::DistanceMatrix::setDistance(size_t i, size_t j, DistanceType_t value) 
 
 }
 
-kgl::DistanceType_t kgl::DistanceMatrix::reduceMinimum(size_t& i, size_t& j) const {
 
-  DistanceType_t minimum;
+kgl::DistanceType_t kgl::DistanceMatrix::minimum(size_t& i, size_t& j) const {
 
-  minimum = diagonal_impl_ptr_->findMin( i, j);
-  ExecEnv::log().info("findMin() i: {}, j: {} size: {}, minimum: {}", i, j, size(), minimum);
-  diagonal_impl_ptr_->reduce(i, j);
-
-  return minimum;
+  return diagonal_impl_ptr_->findMin( i, j);
 
 }
 
+void kgl::DistanceMatrix::reduce(size_t i, size_t j) {
+
+  diagonal_impl_ptr_->reduce(i, j);
+
+}

@@ -83,7 +83,7 @@ kgl::VariantType kgl::SubordinateSNP::variantType() const {
 
   } else {
 
-    ExecEnv::log().error("Unknown variant for variant:: {}", output(' ', VariantOutputIndex::START_0_BASED));
+    ExecEnv::log().error("Unknown variant for variant:: {}", output(' ', VariantOutputIndex::START_0_BASED, true));
     return VariantType::SNP;
 
   }
@@ -116,13 +116,19 @@ bool kgl::SNPVariant::equivalent(const Variant& cmp_var) const {
 }
 
 
-std::string kgl::SNPVariant::output(char delimiter, VariantOutputIndex output_index) const
+std::string kgl::SNPVariant::output(char delimiter, VariantOutputIndex output_index, bool detail) const
 {
   std::stringstream ss;
   ss << genomeOutput(delimiter, output_index);
   ss << name() << delimiter << size() << delimiter;
   ss << mutation(delimiter, output_index);
-  ss << evidence()->output(delimiter, output_index);
+
+  if (detail) {
+
+    ss << evidence()->output(delimiter, output_index);
+
+  }
+
   ss << '\n';
 
   return ss.str();
@@ -139,14 +145,14 @@ kgl::CodingDNA5::Alphabet kgl::SNPVariant::strandNucleotide(DNA5::Alphabet nucle
       if (codingSequences().empty()) {
 
         ExecEnv::log().error("strandReference(), empty coding sequence for coding variant: {}",
-                             output(' ', VariantOutputIndex::START_0_BASED));
+                             output(' ', VariantOutputIndex::START_0_BASED, true));
         return DNA5::convertToCodingDN5(nucleotide);
       }
       switch(codingSequences().getFirst()->getCDSParent()->sequence().strand()) {
 
         case StrandSense::UNKNOWN:
         ExecEnv::log().error("strandReference(), unknown coding sequence for variant: {}",
-                             output(' ', VariantOutputIndex::START_0_BASED));
+                             output(' ', VariantOutputIndex::START_0_BASED, true));
           return CodingDNA5::Alphabet::N;
         case StrandSense::FORWARD:
           return DNA5::convertToCodingDN5(nucleotide);
@@ -161,7 +167,7 @@ kgl::CodingDNA5::Alphabet kgl::SNPVariant::strandNucleotide(DNA5::Alphabet nucle
       if (geneMembership().empty()) {
 
         ExecEnv::log().error("strandReference(), no gene for intron variant: {}",
-                             output(' ', VariantOutputIndex::START_0_BASED));
+                             output(' ', VariantOutputIndex::START_0_BASED, true));
         return CodingDNA5::Alphabet::N;
 
       }
@@ -169,7 +175,7 @@ kgl::CodingDNA5::Alphabet kgl::SNPVariant::strandNucleotide(DNA5::Alphabet nucle
 
         case StrandSense::UNKNOWN:
           ExecEnv::log().error("strandReference(), unknown coding sequence for variant: {}",
-                               output(' ', VariantOutputIndex::START_0_BASED));
+                               output(' ', VariantOutputIndex::START_0_BASED, true));
           return CodingDNA5::Alphabet::N;
         case StrandSense::FORWARD:
           return DNA5::convertToCodingDN5(nucleotide);
@@ -199,7 +205,7 @@ bool kgl::SNPVariant::mutateCodingSequence(const FeatureIdent_t& sequence_id,
   if (coding_sequence_array.empty()) {
 
     ExecEnv::log().warn("mutateCodingSequence(), variant: {} not in a coding sequence",
-                        output(' ', VariantOutputIndex::START_0_BASED));
+                        output(' ', VariantOutputIndex::START_0_BASED, true));
     return true; // just ignored.
 
   }
@@ -210,7 +216,7 @@ bool kgl::SNPVariant::mutateCodingSequence(const FeatureIdent_t& sequence_id,
   if (coding_sequence->getCDSParent()->id() != sequence_id) {
 
     ExecEnv::log().warn("mutateCodingSequence(), variant: {} does not mutate sequence id: {}",
-                        output(' ', VariantOutputIndex::START_0_BASED), sequence_id);
+                        output(' ', VariantOutputIndex::START_0_BASED, true), sequence_id);
     return true; // just ignored.
 
   }
@@ -221,7 +227,7 @@ bool kgl::SNPVariant::mutateCodingSequence(const FeatureIdent_t& sequence_id,
   if(not contig()->sequence().offsetWithinSequence(coding_sequence, contigOffset(), sequence_offset, sequence_length)) {
 
     ExecEnv::log().error("mutateCodingSequence(), unable to retrieve coding sequence offset for variant: {}",
-                         output(' ', VariantOutputIndex::START_0_BASED));
+                         output(' ', VariantOutputIndex::START_0_BASED, true));
     return false;
 
   }
@@ -255,20 +261,20 @@ bool kgl::SNPVariant::mutateCodingSequence(const FeatureIdent_t& sequence_id,
 
 
     ExecEnv::log().warn("mutateCodingSequence(), snp deletions not implementated, variant: {}",
-                        output(' ', VariantOutputIndex::START_0_BASED));
+                        output(' ', VariantOutputIndex::START_0_BASED, true));
     return true;
 
   } else if (ExtendDNA5::isInsertion(mutant())) {
 
 
     ExecEnv::log().warn("mutateCodingSequence(), snp insertions not implementated, variant: {}",
-                        output(' ', VariantOutputIndex::START_0_BASED));
+                        output(' ', VariantOutputIndex::START_0_BASED, true));
     return true;
 
   } else {
 
     ExecEnv::log().warn("mutateCodingSequence(), snp mutation is unknown type, variant: {}",
-                        output(' ', VariantOutputIndex::START_0_BASED));
+                        output(' ', VariantOutputIndex::START_0_BASED, true));
     return false;
 
   }
@@ -366,7 +372,7 @@ bool kgl::SNPVariant::codonMutation(ContigOffset_t &codon_offset,
   if (not codonOffset(codon_offset, base_in_codon)) {
 
     ExecEnv::log().error("codonMutation() called for non coding variant: {}",
-                         output(' ', VariantOutputIndex::START_0_BASED));
+                         output(' ', VariantOutputIndex::START_0_BASED, true));
     reference_amino = AminoAcid::AMINO_UNKNOWN;  // The unknown amino acid
     mutant_amino = AminoAcid::AMINO_UNKNOWN;
     return false;
