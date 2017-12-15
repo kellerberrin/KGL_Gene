@@ -20,6 +20,7 @@ namespace kgl = kellerberrin::genome;
 namespace bnu = boost::numeric::ublas;
 
 
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Implementation of a strict lower triangular distance matrix using the Boost library.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -27,7 +28,7 @@ namespace bnu = boost::numeric::ublas;
 
 using DistanceMatrixImplType = bnu::triangular_matrix<kgl::DistanceType_t, bnu::strict_lower>;
 
-class BoostDistanceMatrix {
+class kgl::DistanceMatrix::BoostDistanceMatrix {
 
 public:
 
@@ -35,15 +36,10 @@ public:
   explicit BoostDistanceMatrix(const BoostDistanceMatrix&) = default;
   ~BoostDistanceMatrix() = default;
 
-  BoostDistanceMatrix& operator=(const BoostDistanceMatrix& distance_matrix) = default;
-
   size_t size() const { return lower_triangular_.size1(); }
-  void reduce(size_t i, size_t j);
-  kgl::DistanceType_t findMin(size_t& i, size_t& j) const;
+  void resize(size_t new_size) { lower_triangular_.resize(new_size, new_size, false); }
   kgl::DistanceType_t getDistance(size_t i, size_t j) const;
   void setDistance(size_t i, size_t j, kgl::DistanceType_t distance);
-
-  virtual size_t getLeafCount(size_t node_i) const { return 1; };
 
 private:
 
@@ -52,13 +48,7 @@ private:
 };
 
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Implementation functions.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-kgl::DistanceType_t BoostDistanceMatrix::getDistance(size_t i, size_t j) const {
+kgl::DistanceType_t kgl::DistanceMatrix::BoostDistanceMatrix::getDistance(size_t i, size_t j) const {
 
   if (i >= size() or i >= size()) {
 
@@ -83,7 +73,7 @@ kgl::DistanceType_t BoostDistanceMatrix::getDistance(size_t i, size_t j) const {
 
 }
 
-void BoostDistanceMatrix::setDistance(size_t i, size_t j, kgl::DistanceType_t distance) {
+void kgl::DistanceMatrix::BoostDistanceMatrix::setDistance(size_t i, size_t j, kgl::DistanceType_t distance) {
 
   if (i >= size() or i >= size()) {
 
@@ -108,7 +98,52 @@ void BoostDistanceMatrix::setDistance(size_t i, size_t j, kgl::DistanceType_t di
 
 }
 
-kgl::DistanceType_t BoostDistanceMatrix::findMin(size_t& i, size_t& j) const {
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Public class od the UPGMA distance matrix.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+kgl::DistanceMatrix::DistanceMatrix(size_t matrix_size) : diagonal_impl_ptr_(std::make_unique<kgl::DistanceMatrix::BoostDistanceMatrix>(matrix_size)) {}
+
+kgl::DistanceMatrix::DistanceMatrix(const DistanceMatrix& copy) : diagonal_impl_ptr_(std::make_unique<kgl::DistanceMatrix::BoostDistanceMatrix>(*copy.diagonal_impl_ptr_)) {}
+
+kgl::DistanceMatrix::~DistanceMatrix() {}  // DO NOT DELETE or USE DEFAULT. Required because of incomplete PIMPL type.
+
+
+size_t kgl::DistanceMatrix::size() const {
+
+  return diagonal_impl_ptr_->size();
+
+}
+
+
+void kgl::DistanceMatrix::resize(size_t new_size) {
+
+  diagonal_impl_ptr_->resize(new_size);
+
+}
+
+
+kgl::DistanceType_t kgl::DistanceMatrix::getDistance(size_t i, size_t j) const {
+
+  return diagonal_impl_ptr_->getDistance( i, j);
+
+}
+
+void kgl::DistanceMatrix::setDistance(size_t i, size_t j, DistanceType_t value) {
+
+  diagonal_impl_ptr_->setDistance( i, j, value);
+
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Implementation functions.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+kgl::DistanceType_t kgl::DistanceMatrix::minimum(size_t& i, size_t& j) const {
 
   bool first_pass = true;
   kgl::DistanceType_t min_distance = 0;
@@ -148,14 +183,14 @@ kgl::DistanceType_t BoostDistanceMatrix::findMin(size_t& i, size_t& j) const {
 
 // Reduces the distance matrix.
 // The reduced column is the left most column (column, j index = 0)
-void BoostDistanceMatrix::reduce(size_t i, size_t j) {
+void kgl::DistanceMatrix::reduce(size_t i, size_t j) {
 
   // Save and resize
-  // Note that this object is not a base class.
-  BoostDistanceMatrix temp_distance(*this);
+  DistanceMatrix temp_distance(*this);
 
   size_t reduce_size = size() - 1;
-  lower_triangular_.resize(reduce_size, reduce_size, false);
+
+  resize(reduce_size);
 
   // re-populate merged distances.
   size_t idx_row = 1;
@@ -210,67 +245,5 @@ void BoostDistanceMatrix::reduce(size_t i, size_t j) {
     }
 
   }
-
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Public PIMPL object. The object returns the leaf count for each node to the Boost implementation.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class kgl::DistanceMatrix::DistanceMatrixImpl: public BoostDistanceMatrix {
-
-public:
-
-  explicit DistanceMatrixImpl(size_t matrix_size) : BoostDistanceMatrix(matrix_size) {}
-  ~DistanceMatrixImpl() = default;
-
-  size_t getLeafCount(size_t node_i) const override { return 1; };
-  void setNodeVector(std::shared_ptr<kgl::NodeVector<const GenomeStatistics>> node_vector_ptr) { node_vector_ptr_ = node_vector_ptr; }
-
-private:
-
-  std::shared_ptr<kgl::NodeVector<const GenomeStatistics>> node_vector_ptr_;
-
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Public class of a strict lower triangular distance matrix.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-kgl::DistanceMatrix::DistanceMatrix(size_t matrix_size) : diagonal_impl_ptr_(std::make_unique<kgl::DistanceMatrix::DistanceMatrixImpl>(matrix_size)) {}
-kgl::DistanceMatrix::~DistanceMatrix() {}  // DO NOT DELETE or USE DEFAULT. Required because of incomplete PIMPL type.
-
-size_t kgl::DistanceMatrix::size() const {
-
-  return diagonal_impl_ptr_->size();
-
-}
-
-
-kgl::DistanceType_t kgl::DistanceMatrix::getDistance(size_t i, size_t j) const {
-
-  return diagonal_impl_ptr_->getDistance( i, j);
-
-}
-
-void kgl::DistanceMatrix::setDistance(size_t i, size_t j, DistanceType_t value) {
-
-  diagonal_impl_ptr_->setDistance( i, j, value);
-
-}
-
-
-kgl::DistanceType_t kgl::DistanceMatrix::minimum(size_t& i, size_t& j) const {
-
-  return diagonal_impl_ptr_->findMin( i, j);
-
-}
-
-void kgl::DistanceMatrix::reduce(size_t i, size_t j) {
-
-  diagonal_impl_ptr_->reduce(i, j);
 
 }

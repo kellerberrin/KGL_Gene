@@ -136,7 +136,7 @@ void kgl::VariantSequence::defineNonCoding()
 
 }
 
-// Convenience routine to reduce downstream boiler plate.
+// Convenience routine to reduceNode downstream boiler plate.
 bool kgl::VariantSequence::codonOffset(ContigOffset_t& codon_offset, ContigSize_t& base_in_codon)const {
 
   if (not codingSequences().empty()) {
