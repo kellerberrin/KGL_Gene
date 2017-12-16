@@ -13,7 +13,7 @@
 #include <iostream>
 #include "kgl_attributes.h"
 #include "kgl_variant_db.h"
-#include "kgl_statistics_phylo.h"
+#include "kgl_statistics_upgma.h"
 
 
 

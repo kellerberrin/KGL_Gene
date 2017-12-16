@@ -469,7 +469,7 @@ std::shared_ptr<kgl::NodeVector<const kgl::GenomeStatistics>> kgl::PopulationSta
   for (auto genome : getMap()) {
 
     std::shared_ptr<PhyloNode<const GenomeStatistics>>
-    phylo_node_ptr(std::make_shared<PhyloNode<const GenomeStatistics>>(genome.second, genome.second->size()));
+    phylo_node_ptr(std::make_shared<PhyloNode<const GenomeStatistics>>(genome.second));
 
     node_vector_ptr->push_back(phylo_node_ptr);
 

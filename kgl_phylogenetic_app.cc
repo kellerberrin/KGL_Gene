@@ -64,6 +64,12 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
   kgl::ExecEnv::log().info("Filtered for: {}, Genome has: {} variants", TEST_GENE_1, filter_ptr->size());
   std::cout << *filter_ptr;
 
+  // Create stats for the GENE.
+  std::shared_ptr<const kgl::GenomeStatistics> filtered_stats_ptr(std::make_shared<kgl::GenomeStatistics>(genome_db_ptr,
+                                                                                                          filter_ptr));
+  // Add to the population stats for later phylogenetic analysis.
+  population_stats_ptr->addGenomeStatistics(filtered_stats_ptr);
+
   // Filter on dup. GENE.
   all_variant_ptr = all_variant_ptr->filterVariants(kgl::GeneFilter(TEST_GENE));
   all_variant_ptr = all_variant_ptr->filterVariants(kgl::CodingFilter());  // remove introns.
@@ -71,11 +77,6 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
   kgl::ExecEnv::log().info("Filtered for: {}, Genome has: {} variants", TEST_GENE, all_variant_ptr->size());
   std::cout << *all_variant_ptr;
 
-  // Create stats for the GENE.
-  std::shared_ptr<const kgl::GenomeStatistics> filtered_stats_ptr(std::make_shared<kgl::GenomeStatistics>(genome_db_ptr,
-                                                                                                          all_variant_ptr));
-  // Add to the population stats for later phylogenetic analysis.
-  population_stats_ptr->addGenomeStatistics(filtered_stats_ptr);
 
   // Return the filtered variants.
   return all_variant_ptr;
@@ -174,6 +175,7 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 #endif
 #endif
 
+    // Generate a UPGMA newick file from the population stats object
     std::string newick_file = ExecEnv::filePath("UPGMA_newick", args.workDirectory) + ".txt";
     kgl::PhylogeneticAnalysis::UPGMA(newick_file, population_stats_ptr);
 

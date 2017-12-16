@@ -1,19 +1,13 @@
 //
-// Created by kellerberrin on 9/12/17.
+// Created by kellerberrin on 16/12/17.
 //
 
-#include <map>
-#include <iostream>
-#include <fstream>
-#include <utility>
 
 #include <boost/numeric/ublas/triangular.hpp>
-#include <boost/numeric/ublas/io.hpp>
-
+// #include <boost/numeric/ublas/io.hpp>
 
 #include "kgl_exec_env.h"
-#include "kgl_statistics_phylo.h"
-#include "kgl_statistics.h"
+#include "kgl_statistics_upgma.h"
 
 
 namespace kgl = kellerberrin::genome;

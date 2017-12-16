@@ -1,15 +1,20 @@
 //
-// Created by kellerberrin on 6/12/17.
+// Created by kellerberrin on 16/12/17.
 //
 
-#ifndef KGL_STATISTICS_PHYLO_H
-#define KGL_STATISTICS_PHYLO_H
+#ifndef KGL_STATISTICS_UPGMA_H
+#define KGL_STATISTICS_UPGMA_H
 
+#include <memory>
+#include <map>
+#include <vector>
+#include <fstream>
+
+#include "kgl_exec_env.h"
 
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
-
 
 
 
@@ -18,7 +23,6 @@ namespace genome {   // project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Used by the classification functions.
-//using DistanceType_t = uint64_t;
 using DistanceType_t = double;
 template<class T> class PhyloNode;  // fwd.
 template <class T> using OutNodes = std::multimap<DistanceType_t , std::shared_ptr<PhyloNode<T>>>;
@@ -320,4 +324,5 @@ template<class T> void UPGMAMatrix<T>::writeNode(std::shared_ptr<PhyloNode<T>> n
 }   // namespace kellerberrin
 
 
-#endif //KGL_STATISTICS_PHYLO_H
+
+#endif //KGL_STATISTICS_UPGMA_H
