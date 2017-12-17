@@ -56,13 +56,18 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
 //#define TEST_GENE "PF3D7_0101900"
 #define TEST_GENE_1 "PF3D7_0711700"   // possible duplicate mutations.
 #define TEST_GENE  "PF3D7_0712600"   // possible duplicate mutations.
+#define TEST_CONTIG "Pf3D7_12_v3"
 
   // Filter on dup. GENE.
-  std::shared_ptr<const kgl::GenomeVariant> filter_ptr = all_variant_ptr->filterVariants(kgl::GeneFilter(TEST_GENE_1));
-  filter_ptr = filter_ptr->filterVariants(kgl::CodingFilter());  // remove introns.
+//  std::shared_ptr<const kgl::GenomeVariant> filter_ptr = all_variant_ptr->filterVariants(kgl::GeneFilter(TEST_GENE_1));
+  // Filter on contig
+//  std::shared_ptr<const kgl::GenomeVariant> filter_ptr = all_variant_ptr->filterVariants(kgl::ContigFilter(TEST_CONTIG));
 
-  kgl::ExecEnv::log().info("Filtered for: {}, Genome has: {} variants", TEST_GENE_1, filter_ptr->size());
-  std::cout << *filter_ptr;
+  std::shared_ptr<const kgl::GenomeVariant> filter_ptr = all_variant_ptr->filterVariants(kgl::CodingFilter());  // remove introns.
+//  filter_ptr = filter_ptr->filterVariants(kgl::NotFilter<kgl::CodingFilter>());  // only non-coding
+
+//  kgl::ExecEnv::log().info("Filtered for: {}, Genome has: {} variants", TEST_GENE_1, filter_ptr->size());
+//  std::cout << *filter_ptr;
 
   // Create stats for the GENE.
   std::shared_ptr<const kgl::GenomeStatistics> filtered_stats_ptr(std::make_shared<kgl::GenomeStatistics>(genome_db_ptr,
