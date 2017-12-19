@@ -79,6 +79,9 @@ public:
   const SortedCDS& getSortedCDS() const { return sorted_cds_; }
   std::shared_ptr<const GeneFeature> getGene() const { return gene_ptr_; }
   std::shared_ptr<const Feature> getCDSParent() const { return cds_parent_ptr_; }
+  StrandSense strand() const;
+  ContigOffset_t prime_5() const; // offset of the first nucleotide (strand adjusted).
+  ContigOffset_t prime_3() const; // offset of the last nucleotide (strand adjusted).
   bool isWithinCoding(ContigOffset_t contig_offset) const;
   ContigSize_t codingNucleotides() const;
 

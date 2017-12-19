@@ -207,7 +207,7 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
 
         }
 
-        if (not verifyCodingSequences(coding_seq_ptr)) {
+        if (not verifyCodingSequences(gene_ptr, coding_seq_ptr)) {
 
           ++ill_formed_genes;
 
@@ -224,7 +224,8 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
 }
 
 
-bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const {
+bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const GeneFeature> gene_ptr,
+                                                const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const {
 
   bool result = true;
 
@@ -247,8 +248,19 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Codi
 
     if (not coding_sequence_.checkStartCodon(coding_sequence_ptr)) {
 
-      ExecEnv::log().vwarn("No START codon Gene: {}, CDS parent (mRNA): {} | first codon: {}",
+      std::vector<std::string> description_vec;
+      gene_ptr->getAttributes().getDescription(description_vec);
+
+      if (description_vec.empty()) {
+
+        description_vec.emplace_back("No Description");
+
+      }
+      std::string gene_description = description_vec.front();
+
+      ExecEnv::log().vwarn("No START codon Gene: {}: {}, Sequence (mRNA): {} | first codon: {}",
                            sequence.second->getGene()->id(),
+                           gene_description,
                            sequence.second->getCDSParent()->id(),
                            coding_sequence_.firstCodon(coding_sequence_ptr).getSequenceAsString());
 //      gene_ptr->recusivelyPrintsubfeatures();
@@ -257,9 +269,20 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Codi
     }
     if (not coding_sequence_.checkStopCodon(coding_sequence_ptr)) {
 
-      ExecEnv::log().vwarn("No STOP codon: {} Gene: {}, CDS parent (mRNA): {} | last codon: {}",
+      std::vector<std::string> description_vec;
+      gene_ptr->getAttributes().getDescription(description_vec);
+
+      if (description_vec.empty()) {
+
+        description_vec.emplace_back("No Description");
+
+      }
+      std::string gene_description = description_vec.front();
+
+      ExecEnv::log().vwarn("No STOP codon: {} Gene: {}: {}, Sequence (mRNA): {} | last codon: {}",
                            (Codon::codonLength(coding_sequence_ptr)-1),
                            sequence.second->getGene()->id(),
+                           gene_description,
                            sequence.second->getCDSParent()->id(),
                            coding_sequence_.lastCodon(coding_sequence_ptr).getSequenceAsString());
 //      gene_ptr->recusivelyPrintsubfeatures();
@@ -269,9 +292,20 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Codi
     size_t nonsense_index = coding_sequence_.checkNonsenseMutation(coding_sequence_ptr);
     if (nonsense_index > 0) {
 
-      ExecEnv::log().vwarn("NONSENSE mutation codon:{} Gene: {}, CDS Parent (mRNA): {} | stop codon: {}",
+      std::vector<std::string> description_vec;
+      gene_ptr->getAttributes().getDescription(description_vec);
+
+      if (description_vec.empty()) {
+
+        description_vec.emplace_back("No Description");
+
+      }
+      std::string gene_description = description_vec.front();
+
+      ExecEnv::log().vwarn("NONSENSE mutation codon:{} Gene: {}: {}, Sequence (mRNA): {} | stop codon: {}",
                            nonsense_index,
                            sequence.second->getGene()->id(),
+                           gene_description,
                            sequence.second->getCDSParent()->id(),
                            Codon(coding_sequence_ptr, nonsense_index).getSequenceAsString());
 //      gene_ptr->recusivelyPrintsubfeatures();

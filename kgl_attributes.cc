@@ -13,7 +13,7 @@ namespace kgl = kellerberrin::genome;
 
 
 // Returns false if key not found.
-bool kgl::Attributes::getAttributes(const std::string& key, std::vector<std::string>& values) const {
+bool kgl::Attributes::getAttributes(const std::string &key, std::vector<std::string> &values) const {
 
   auto iter_pair = attributes_.equal_range(key);
 

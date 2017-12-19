@@ -53,7 +53,6 @@ public:
 
   ContigSize_t size() const { return offset_variant_map_.size(); }
 
-
 private:
 
   FeatureIdent_t feature_id_;
@@ -68,12 +67,14 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-using ContigStatiticsMap = std::map<FeatureIdent_t, std::shared_ptr<FeatureStatistics>>;
+using ContigFeatureMap = std::map<FeatureIdent_t, std::shared_ptr<FeatureStatistics>>;
+using ContigVariantMap = std::multimap<ContigOffset_t , std::shared_ptr<const Variant>>;
+
 class ContigStatistics {
 
 public:
 
-  explicit ContigStatistics(const ContigId_t& contig_id) : contig_id_(contig_id) {}
+  explicit ContigStatistics(std::shared_ptr<const ContigFeatures> contig_ptr) : contig_ptr_(contig_ptr) {}
   ContigStatistics(const ContigStatistics&) = default;
   ~ContigStatistics() = default;
 
@@ -84,15 +85,27 @@ public:
   bool getFeatureStatistics(const FeatureIdent_t& feature_id,
                             std::shared_ptr<FeatureStatistics>& feature_statistics) const;
 
-  const ContigId_t& contigId() const { return contig_id_; }
-  const ContigStatiticsMap& getMap() const { return feature_map_; }
+  const ContigId_t& contigId() const { return contig_ptr_->contigId(); }
+  std::shared_ptr<const ContigFeatures> contig() const { return contig_ptr_; }
 
-  ContigSize_t size() const;
+  const ContigFeatureMap& getFeatureMap() const { return feature_map_; }
+  const ContigVariantMap& getVariantMap() const { return variant_map_; }
+
+  void getVariant(ContigOffset_t begin,
+                  ContigSize_t size,
+                  std::vector<std::shared_ptr<const Variant>>& variant_vector) const;
+  void prime_5(FeatureIdent_t featureId, ContigSize_t size, std::vector<std::shared_ptr<const Variant>>& variant_vector) const;
+  void prime_3(FeatureIdent_t featureId, ContigSize_t size, std::vector<std::shared_ptr<const Variant>>& variant_vector) const;
+  void prime_5(ContigSize_t size, std::vector<std::shared_ptr<const Variant>>& variant_vector) const;
+  void prime_3(ContigSize_t size, std::vector<std::shared_ptr<const Variant>>& variant_vector) const;
+
+  ContigSize_t size() const { return variant_map_.size(); }
 
 private:
 
-  ContigId_t contig_id_;
-  ContigStatiticsMap feature_map_;
+  std::shared_ptr<const ContigFeatures> contig_ptr_;
+  ContigFeatureMap feature_map_;
+  ContigVariantMap variant_map_;
 
 };
 
@@ -131,14 +144,17 @@ public:
   bool isElement(std::shared_ptr<const Variant> variant) const;
   void getVariants(std::vector<std::shared_ptr<const Variant>>& variant_vector) const;
 
-  std::string output(char field_delimiter, VariantOutputIndex output_index) const;
-  bool outputCSV(const std::string& file_name, VariantOutputIndex output_index) const;
+  void prime_5(ContigSize_t size, std::vector<std::shared_ptr<const Variant>>& variant_vector) const;
+  void prime_3(ContigSize_t size, std::vector<std::shared_ptr<const Variant>>& variant_vector) const;
+
+  static std::string outputFeatureHeader(char delimiter);
+  std::string outputFeature(char field_delimiter, VariantOutputIndex output_index) const;
+  bool outputFeatureCSV(const std::string &file_name, VariantOutputIndex output_index) const;
 
 
   // UPGMA Classification functions
   void write_node(std::ofstream& outfile) const { outfile << genomeId(); }
   DistanceType_t distance(std::shared_ptr<const GenomeStatistics> GenomeStatistics) const;
-  std::shared_ptr<const GenomeStatistics> merge(std::shared_ptr<const GenomeStatistics> merge_genome) const;
 
 
 private:
@@ -147,6 +163,8 @@ private:
   GenomeStatisticsMap genome_statistics_map_;
 
   static constexpr const char* DESCRIPTION_KEY_{"DESCRIPTION"};
+  static constexpr const ContigSize_t PRIME_5_SIZE_{1000};
+  static constexpr const ContigSize_t PRIME_3_SIZE_{1000};
 
 };
 

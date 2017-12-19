@@ -31,17 +31,19 @@ public:
   Attributes& operator=(const Attributes&) = default;
 
   // General access routines.
-  bool getAttributes(const std::string& key, std::vector<std::string>& value_vec) const; // false if no key.
+  bool getAttributes(const std::string &key, std::vector<std::string> &value_vec) const; // false if no key.
   void insertAttribute(const std::string& key, const std::string& value); // Always succeeds; keys are uppercase.
   void getAllAttributes(std::vector<std::pair<std::string, std::string>>& all_key_value_pairs) const;
 
   // Attribute keys.
   constexpr static const char* ID_KEY = "ID";
   constexpr static const char* SUPER_FEATURE_KEY = "PARENT";
+  constexpr static const char* DESCRIPTION_KEY = "DESCRIPTION";
 
   // Convenience access routines.
   bool getIds(std::vector<std::string> &value_vec) const { return getAttributes(ID_KEY, value_vec); }
   bool getSuperFeatureIds(std::vector<std::string> &value_vec) const { return getAttributes(SUPER_FEATURE_KEY, value_vec); }
+  bool getDescription(std::vector<std::string> &value_vec) const { return getAttributes(DESCRIPTION_KEY, value_vec); }
 
 
 private:

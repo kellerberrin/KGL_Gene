@@ -39,23 +39,25 @@ void kgl::FeatureStatistics::addVariant(const std::shared_ptr<const kgl::Variant
 
 bool kgl::ContigStatistics::addVariant(std::shared_ptr<const Variant>& variant_ptr) {
 
-  // if not coding then ignore for now
+  // All variants go into the variant map.
+  std::pair<ContigOffset_t , std::shared_ptr<const Variant>> insert_pair(variant_ptr->contigOffset(), variant_ptr);
+  variant_map_.insert(insert_pair);
 
-  if (variant_ptr->type() != VariantSequenceType::CDS_CODING) {
+  // Coding variants are also assigned to a feature.
+  if (variant_ptr->type() == VariantSequenceType::CDS_CODING) {
 
-    return true;
+    std::shared_ptr<FeatureStatistics> feature_statistics;
+    if (not getFeatureStatistics(variant_ptr->codingSequenceId(), feature_statistics)) {
+
+      ExecEnv::log().error("Feature: {} not found, variant: {}",
+                           variant_ptr->codingSequenceId(),
+                           variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, true));
+      return false;
+    }
+
+    feature_statistics->addVariant(variant_ptr);
 
   }
-
-  std::shared_ptr<FeatureStatistics> feature_statistics;
-  if (not getFeatureStatistics(variant_ptr->codingSequenceId(), feature_statistics)) {
-
-    ExecEnv::log().error("Feature: {} not found, variant: {}",
-                         variant_ptr->codingSequenceId(), variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, true));
-    return false;
-  }
-
-  feature_statistics->addVariant(variant_ptr);
 
   return true;
 
@@ -106,16 +108,138 @@ bool kgl::ContigStatistics::addFeatureStatistics(const FeatureIdent_t& feature_i
 }
 
 
-kgl::ContigSize_t kgl::ContigStatistics::size() const {
+void kgl::ContigStatistics::getVariant(ContigOffset_t begin,
+                                       ContigSize_t size,
+                                       std::vector<std::shared_ptr<const Variant>>& variant_vector) const {
 
-  ContigSize_t size_count = 0;
-  for (auto feature : feature_map_) {
+  auto lower = variant_map_.lower_bound (begin);
+  auto upper = variant_map_.upper_bound (begin + size - 1);
 
-    size_count += feature.second->size();
+  for (auto it = lower; it != upper; ++it) {
+
+    variant_vector.push_back(it->second);
 
   }
 
-  return size_count;
+}
+
+void kgl::ContigStatistics::prime_5(ContigSize_t size,
+                                    std::vector<std::shared_ptr<const Variant>>& variant_vector) const {
+
+  for (auto feature : getFeatureMap()) {
+
+    prime_5(feature.second->featureId(), size, variant_vector);
+
+  }
+
+}
+
+
+void kgl::ContigStatistics::prime_3(ContigSize_t size,
+                                    std::vector<std::shared_ptr<const Variant>>& variant_vector) const {
+
+  for (auto feature : getFeatureMap()) {
+
+    prime_3(feature.second->featureId(), size, variant_vector);
+
+  }
+
+}
+
+void kgl::ContigStatistics::prime_5(FeatureIdent_t feature_id,
+                                    ContigSize_t size,
+                                    std::vector<std::shared_ptr<const Variant>>& variant_vector) const {
+
+  std::shared_ptr<FeatureStatistics> feature_statistics;
+  if (not getFeatureStatistics(feature_id, feature_statistics)) {
+
+    ExecEnv::log().error("prime_5(), feature id: {} not found", feature_id);
+    return;
+
+  }
+
+  if (not feature_statistics) {
+
+    ExecEnv::log().error("prime_5(), null feature: {} pointer", feature_id);
+    return;
+
+  }
+
+  StrandSense strand = feature_statistics->codingSequence()->strand();
+  ContigOffset_t prime_5_offset = feature_statistics->codingSequence()->prime_5();
+  ContigOffset_t begin;
+
+  switch (strand) {
+
+    case StrandSense::UNKNOWN:
+    case StrandSense::FORWARD:
+      if (prime_5_offset > (size -1)) {
+
+        begin = prime_5_offset - (size - 1);
+
+      } else {
+
+        begin = 0;
+
+      }
+      break;
+
+    case StrandSense::REVERSE:
+      begin = prime_5_offset;
+      break;
+
+  }
+
+  getVariant(begin, size, variant_vector);
+
+}
+
+
+void kgl::ContigStatistics::prime_3(FeatureIdent_t feature_id,
+                                    ContigSize_t size,
+                                    std::vector<std::shared_ptr<const Variant>>& variant_vector) const {
+
+  std::shared_ptr<FeatureStatistics> feature_statistics;
+  if (not getFeatureStatistics(feature_id, feature_statistics)) {
+
+    ExecEnv::log().error("prime_3(), feature id: {} not found", feature_id);
+    return;
+
+  }
+
+  if (not feature_statistics) {
+
+    ExecEnv::log().error("prime_3(), null feature: {} pointer", feature_id);
+    return;
+
+  }
+
+  StrandSense strand = feature_statistics->codingSequence()->strand();
+  ContigOffset_t prime_3_offset = feature_statistics->codingSequence()->prime_3();
+  ContigOffset_t begin;
+
+  switch (strand) {
+
+    case StrandSense::UNKNOWN:
+    case StrandSense::FORWARD:
+      begin = prime_3_offset;
+      break;
+
+    case StrandSense::REVERSE:
+      if (prime_3_offset > (size -1)) {
+
+        begin = prime_3_offset - (size - 1);
+
+      } else {
+
+        begin = 0;
+
+      }
+      break;
+
+  }
+
+  getVariant(begin, size, variant_vector);
 
 }
 
@@ -134,7 +258,7 @@ kgl::GenomeStatistics::GenomeStatistics(const std::shared_ptr<const GenomeDataba
 
   for (auto contig_db : genome_db_ptr->getMap()) {
 
-    std::shared_ptr<ContigStatistics> contig_statistics(std::make_shared<ContigStatistics>(contig_db.first));
+    std::shared_ptr<ContigStatistics> contig_statistics(std::make_shared<ContigStatistics>(contig_db.second));
     if (addContigStatistics(contig_statistics)) {
 
       for (auto gene : contig_db.second->getGeneMap()) {
@@ -225,20 +349,54 @@ bool kgl::GenomeStatistics::addVariant(std::shared_ptr<const Variant> variant) {
 }
 
 
-std::string kgl::GenomeStatistics::output(char delimiter, VariantOutputIndex output_index) const {
+std::string kgl::GenomeStatistics::outputFeatureHeader(char delimiter) {
 
   std::stringstream ss;
+
+  ss << "AAA_Genome" << delimiter;
+  ss << "Contig" << delimiter;
+  ss << "Sequence" << delimiter;
+  ss << "Size(DNA)" << delimiter;
+  ss << "CodingVariants" << delimiter;
+  ss << "Strand" << delimiter;
+  ss << "Prime5" << delimiter;
+  ss << "Prime3" << delimiter;
+  ss << "Prime5Variants" << delimiter;
+  ss << "Prime3Variants" << delimiter;
+  ss << "Description";
+  ss << '\n';
+
+  return ss.str();
+
+}
+
+std::string kgl::GenomeStatistics::outputFeature(char delimiter, VariantOutputIndex output_index) const {
+
+  std::stringstream ss;
+
   for (const auto& contig_statistics : genome_statistics_map_) {
 
-    for (const auto& feature : contig_statistics.second->getMap()) {
+    for (const auto& feature : contig_statistics.second->getFeatureMap()) {
 
       std::vector<std::pair<std::string,std::string>> description_vec;
       feature.second->codingSequence()->getGene()->getAttributes().getAllAttributes(description_vec);
+      std::vector<std::shared_ptr<const Variant>> variant_vector;
+      contig_statistics.second->prime_5(feature.first, PRIME_5_SIZE_, variant_vector);
+      ContigSize_t prime_5_size = variant_vector.size();
+      variant_vector.clear();
+      contig_statistics.second->prime_3(feature.first, PRIME_3_SIZE_, variant_vector);
+      ContigSize_t prime_3_size = variant_vector.size();
 
       ss << genomeId() << delimiter << contig_statistics.first;
       ss << delimiter << feature.first << delimiter;
       ss << feature.second->codingSequence()->codingNucleotides() << delimiter;
-      ss << feature.second->size();
+      ss << feature.second->size() << delimiter;
+      ss << static_cast<char>(feature.second->codingSequence()->strand()) << delimiter;
+      ss << feature.second->codingSequence()->prime_5() << delimiter;
+      ss << feature.second->codingSequence()->prime_3() << delimiter;
+      ss << prime_5_size << delimiter;
+      ss << prime_3_size;
+
       for (const auto& description : description_vec) {
 
         if (description.first == DESCRIPTION_KEY_) {
@@ -259,8 +417,9 @@ std::string kgl::GenomeStatistics::output(char delimiter, VariantOutputIndex out
 
 }
 
-bool kgl::GenomeStatistics::outputCSV(const std::string& file_name, VariantOutputIndex output_index) const {
+bool kgl::GenomeStatistics::outputFeatureCSV(const std::string &file_name, VariantOutputIndex output_index) const {
 
+  const char CSV_delimiter = ',';
   // open the file.
   std::fstream out_file(file_name, std::fstream::out | std::fstream::app);
   if (!out_file) {
@@ -270,7 +429,8 @@ bool kgl::GenomeStatistics::outputCSV(const std::string& file_name, VariantOutpu
 
   }
 
-  out_file << output(',', output_index);
+  out_file << outputFeatureHeader(CSV_delimiter);
+  out_file << outputFeature(CSV_delimiter, output_index);
 
   return out_file.good();
 
@@ -301,23 +461,8 @@ bool kgl::GenomeStatistics::isElement(std::shared_ptr<const Variant> variant_ptr
 
   }
 
-  // check if not coding
-  if (variant_ptr->type() != VariantSequenceType::CDS_CODING) {
-
-    return false;
-
-  }
-
-  // get feature.
-  std::shared_ptr<FeatureStatistics> feature_statistics;
-  if (not contig_variant->getFeatureStatistics(variant_ptr->codingSequenceId(), feature_statistics)) {
-
-    return false;
-
-  }
-
-  // check if variant is present in the feature.
-  auto result = feature_statistics->getMap().equal_range(variant_ptr->contigOffset());
+  // check if variant is present in the contig.
+  auto result = contig_variant->getVariantMap().equal_range(variant_ptr->contigOffset());
 
   for (auto it = result.first; it != result.second; ++it) {
 
@@ -336,21 +481,15 @@ void kgl::GenomeStatistics::getVariants(std::vector<std::shared_ptr<const Varian
 
   for (auto contig : getMap()) {
 
-    for(auto feature : contig.second->getMap()) {
+    for(auto variant : contig.second->getVariantMap()) {
 
-      for (auto contig : feature.second->getMap()) {
-
-        variant_vector.push_back(contig.second);
-
-      }
+         variant_vector.push_back(variant.second);
 
     }
 
   }
 
 }
-
-
 
 
 kgl::DistanceType_t kgl::GenomeStatistics::distance(std::shared_ptr<const GenomeStatistics> genome_stats_ptr) const {
@@ -389,24 +528,6 @@ kgl::DistanceType_t kgl::GenomeStatistics::distance(std::shared_ptr<const Genome
 }
 
 
-std::shared_ptr<const kgl::GenomeStatistics> kgl::GenomeStatistics::merge(std::shared_ptr<const GenomeStatistics> merge_genome) const {
-
-  std::shared_ptr<GenomeStatistics> merged = merge_genome->deepCopy();
-
-  std::vector<std::shared_ptr<const Variant>> variant_vector;
-  getVariants(variant_vector);
-
-  for (const auto& variant : variant_vector) {
-
-    merged->addVariant(variant);
-
-  }
-
-  return merged;
-
-}
-
-
 std::shared_ptr<kgl::GenomeStatistics> kgl::GenomeStatistics::deepCopy() const {
 
   std::shared_ptr<GenomeStatistics> copy = std::shared_ptr<GenomeStatistics>(std::make_shared<GenomeStatistics>(genomeId()));
@@ -414,10 +535,10 @@ std::shared_ptr<kgl::GenomeStatistics> kgl::GenomeStatistics::deepCopy() const {
   // Copy the index structure.
   for (auto contig : getMap()) {
 
-    std::shared_ptr<ContigStatistics> contig_stats(std::make_shared<ContigStatistics>(contig.second->contigId()));
+    std::shared_ptr<ContigStatistics> contig_stats(std::make_shared<ContigStatistics>(contig.second->contig()));
     copy->addContigStatistics(contig_stats);
 
-    for (auto feature : contig.second->getMap()) {
+    for (auto feature : contig.second->getFeatureMap()) {
 
       contig_stats->addFeatureStatistics(feature.second->featureId(), feature.second->codingSequence());
 
@@ -439,6 +560,25 @@ std::shared_ptr<kgl::GenomeStatistics> kgl::GenomeStatistics::deepCopy() const {
 
 }
 
+void kgl::GenomeStatistics::prime_5(ContigSize_t size, std::vector<std::shared_ptr<const Variant>>& variant_vector) const {
+
+  for (auto contig : getMap()) {
+
+    contig.second->prime_5(size, variant_vector);
+
+  }
+
+}
+
+void kgl::GenomeStatistics::prime_3(ContigSize_t size, std::vector<std::shared_ptr<const Variant>>& variant_vector) const {
+
+  for (auto contig : getMap()) {
+
+    contig.second->prime_3(size, variant_vector);
+
+  }
+
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Holds population genome statistical objects. For Phylogenetic analysis.
@@ -478,3 +618,4 @@ std::shared_ptr<kgl::NodeVector<const kgl::GenomeStatistics>> kgl::PopulationSta
   return node_vector_ptr;
 
 }
+

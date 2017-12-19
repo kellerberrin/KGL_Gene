@@ -12,6 +12,66 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+kgl::StrandSense kgl::CodingSequence::strand() const {
+
+  return getGene()->sequence().strand();
+
+}
+
+// offset of the nucleotide not in the coding seuence (strand adjusted).
+kgl::ContigOffset_t kgl::CodingSequence::prime_5() const {
+
+  // Safety first.
+  if (sorted_cds_.empty()) {
+
+    ExecEnv::log().error("prime_5(), coding sequence for gene id: {} is empty", getGene()->id());
+    return getGene()->sequence().strand() == StrandSense::REVERSE ? getGene()->sequence().end() : getGene()->sequence().begin() - 1;
+    return 0;
+  }
+
+  switch(strand()) {
+
+    case StrandSense::UNKNOWN:
+      ExecEnv::log().error("prime_5(), unknown strand sense for gene id: {}", getGene()->id());
+    case StrandSense::FORWARD:
+      return sorted_cds_.begin()->second->sequence().begin() - 1;
+
+    case StrandSense::REVERSE:
+      return sorted_cds_.rbegin()->second->sequence().end();
+
+  }
+
+  return sorted_cds_.begin()->second->sequence().begin(); // never reached; to keep the compiler happy
+
+}
+
+// offset of the nucleotide not in the coding seuence (strand adjusted).
+kgl::ContigOffset_t kgl::CodingSequence::prime_3() const {
+
+  // Safety first.
+  if (sorted_cds_.empty()) {
+
+    ExecEnv::log().error("prime_5(), coding sequence for gene id: {} is empty", getGene()->id());
+    return getGene()->sequence().strand() == StrandSense::REVERSE ? getGene()->sequence().begin() - 1 : getGene()->sequence().end();
+  }
+
+  switch(strand()) {
+
+    case StrandSense::UNKNOWN:
+      ExecEnv::log().error("prime_3(), unknown strand sense for gene id: {}", getGene()->id());
+    case StrandSense::FORWARD:
+      return sorted_cds_.rbegin()->second->sequence().end();
+
+    case StrandSense::REVERSE:
+      return sorted_cds_.begin()->second->sequence().begin() - 1;
+
+  }
+
+  return sorted_cds_.begin()->second->sequence().begin(); // never reached; to keep the compiler happy
+
+}
+
+
 // return true if the contig_offset lies with a CDS.
 bool kgl::CodingSequence::isWithinCoding(ContigOffset_t contig_offset) const {
 
@@ -21,8 +81,8 @@ bool kgl::CodingSequence::isWithinCoding(ContigOffset_t contig_offset) const {
   // Less than the begin offset.
   if (contig_offset < sorted_cds_.begin()->second->sequence().begin()) return false;
 
-  // More than the end offset.
-  if (contig_offset > sorted_cds_.rbegin()->second->sequence().end()) return false;
+  // More than the end offset - remember the end offset is 1 past the last nucleotide. [begin, end)
+  if (contig_offset >= sorted_cds_.rbegin()->second->sequence().end()) return false;
 
   // Loop through and test membership of each cds. Reminder; testing for [begin, end)
   for (const auto& cds : sorted_cds_) {
