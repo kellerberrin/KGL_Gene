@@ -98,8 +98,8 @@ public:
   // The Alphabet convertChar(char) function must be defined -see kgl_alphabet_string.h
   static Alphabet convertChar(char chr_base);
 
-  // Return amin acid as a char.
-  static char convertToChar(Alphabet nucleotide) { return static_cast<char>(nucleotide); }
+  // Return amino acid as a char.
+  static char convertToChar(Alphabet amino) { return static_cast<char>(amino); }
 
 };
 

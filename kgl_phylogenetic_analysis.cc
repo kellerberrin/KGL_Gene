@@ -61,7 +61,7 @@ bool kgl::ApplicationAnalysis::readMutantProtein(const std::string& fasta_file,
 
           StringAminoAcid fasta_amino_string(*sequence.second);
           std::shared_ptr<AminoSequence> fasta_amino_sequence(std::make_shared<AminoSequence>(fasta_amino_string));
-          comparison_string = fasta_amino_sequence->compareAminoSequences(amino_sequence);
+          comparison_string = fasta_amino_sequence->compareSequences(amino_sequence);
 
           return true;
 

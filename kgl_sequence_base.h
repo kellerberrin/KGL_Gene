@@ -121,7 +121,7 @@ public:
                             ContigOffset_t& sequence_offset,
                             ContigSize_t& sequence_length) const;
 
-  // Returns the codon offset of offset within a coding sequence, returns false if not within the coding sequence.
+  // Returns the codon offset of the contig offset within a coding sequence, returns false if not within the coding sequence.
   bool codonOffset(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                    ContigOffset_t contig_offset,
                    ContigOffset_t& codon_offset,

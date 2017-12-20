@@ -38,27 +38,10 @@ public:
   AminoSequence() = delete;
   ~AminoSequence() override = default;
 
-  const std::string compareAminoSequences(const std::shared_ptr<const AminoSequence>& amino_seq_ptr) const {
-
-    return compareAminoSequences(amino_seq_ptr->alphabet_string_, alphabet_string_);
-
-  }
-
-  const std::string emphasizeAminoSequence(const std::vector<ContigOffset_t>& emphasize_offsets) const {
-
-    return emphasizeProteinString(alphabet_string_, emphasize_offsets);
-
-  }
-
   bool removeTrailingStop();  // Remove the stop codon (if present).
 
 private:
 
-  static std::string emphasizeProteinString(const StringAminoAcid& amino_string,
-                                            const std::vector<ContigOffset_t>& emphasize_offsets);
-
-  static std::string compareAminoSequences(const StringAminoAcid& compare_amino,
-                                           const StringAminoAcid& reference_amino);
 
 };
 
