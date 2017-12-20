@@ -53,6 +53,12 @@ public:
 
   size_t size() const { return offset_variant_map_.size(); }
 
+  // All variants in [start, end) - note that end points past the last variant; end = (last + 1).
+  bool getSortedVariants(ContigOffset_t start,
+                         ContigOffset_t end,
+                         OffsetVariantMap& variant_map) const;
+
+
 private:
 
   ContigId_t contig_id_;
@@ -85,7 +91,7 @@ public:
   size_t contigCount() const { return genome_variant_map_.size(); }
 
   bool addContigVariant(std::shared_ptr<ContigVariant>& contig_variant);
-  bool getContigVariant(const ContigId_t& contig_id, std::shared_ptr<ContigVariant>& contig_variant);
+  bool getContigVariant(const ContigId_t& contig_id, std::shared_ptr<ContigVariant>& contig_variant) const;
 
   bool addVariant(std::shared_ptr<const Variant> variant);
 
@@ -108,17 +114,33 @@ public:
 
   void getVariants(std::vector<std::shared_ptr<const Variant>>& variant_vector) const;
 
+  // All contig_id variants use the zero-based half-open convention [start, end).
+  // End points past the last variant; end = (last + 1).
+  bool getSortedVariants(ContigId_t contig_id,
+                         ContigOffset_t start,
+                         ContigOffset_t end,
+                         OffsetVariantMap& variant_map) const;
+
+  // Convenience routine only returns coding variants.
+  bool getCodingSortedVariants(ContigId_t contig_id,
+                               ContigOffset_t start,
+                               ContigOffset_t end,
+                               OffsetVariantMap& variant_map) const;
+
   const Attributes& attributes() const { return attributes_; }
   Attributes& attributes() { return attributes_; }
   void attributes(const Attributes& attributes) { attributes_ = attributes; }
 
-  bool mutantProtein( const std::string& sequence_name,
-                      const ContigId_t& contig_id,
+  bool mutantProtein( const ContigId_t& contig_id,
                       const FeatureIdent_t& gene_id,
                       const FeatureIdent_t& sequence_id,
                       const std::shared_ptr<const GenomeDatabase>& genome_db,
                       std::shared_ptr<AminoSequence>& amino_sequence) const;
 
+  // The coding variants in the variant_map are used to mutate the dna_sequence.
+  static bool mutateDNA(const OffsetVariantMap& variant_map,
+                        const FeatureIdent_t& sequence_id,
+                        std::shared_ptr<DNA5SequenceCoding>& dna_sequence_ptr);
 
 private:
 

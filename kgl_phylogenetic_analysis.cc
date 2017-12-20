@@ -19,7 +19,7 @@ bool kgl::ApplicationAnalysis::writeMutantProtein(const std::string& fasta_file,
 
 
   std::shared_ptr<AminoSequence> amino_sequence;
-  if (genome_variant->mutantProtein(sequence_name, contig_id, gene_id, sequence_id, genome_db, amino_sequence)) {
+  if (genome_variant->mutantProtein(contig_id, gene_id, sequence_id, genome_db, amino_sequence)) {
 
     WriteFastaSequence fasta_sequence;
     fasta_sequence.first = sequence_name;
@@ -50,7 +50,7 @@ bool kgl::ApplicationAnalysis::readMutantProtein(const std::string& fasta_file,
 
 
   std::shared_ptr<AminoSequence> amino_sequence;
-  if (genome_variant->mutantProtein(sequence_name, contig_id, gene_id, sequence_id, genome_db, amino_sequence)) {
+  if (genome_variant->mutantProtein(contig_id, gene_id, sequence_id, genome_db, amino_sequence)) {
 
     std::vector<ReadFastaSequence> fasta_sequence_vec;
     if (ParseGffFasta().readFastaFile(fasta_file, fasta_sequence_vec)) {

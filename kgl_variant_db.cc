@@ -51,6 +51,20 @@ std::shared_ptr<kgl::ContigVariant> kgl::ContigVariant::deepCopy() const {
 }
 
 
+bool kgl::ContigVariant::getSortedVariants(ContigOffset_t start, ContigOffset_t end, OffsetVariantMap& variant_map) const {
+
+  auto lower_bound = offset_variant_map_.lower_bound(start);
+  auto upper_bound = offset_variant_map_.upper_bound(end-1); //  [start, end)
+
+  for (auto it = lower_bound; it != upper_bound; ++it) {
+
+    variant_map.insert(std::pair<ContigOffset_t , std::shared_ptr<const Variant>>(it->first, it->second));
+
+  }
+
+  return true;
+
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GenomeVariant - A map of contig variants
@@ -65,7 +79,7 @@ bool kgl::GenomeVariant::addContigVariant(std::shared_ptr<kgl::ContigVariant>& c
 }
 
 bool kgl::GenomeVariant::getContigVariant(const ContigId_t& contig_id,
-                                          std::shared_ptr<ContigVariant>& contig_variant) {
+                                          std::shared_ptr<ContigVariant>& contig_variant) const {
   bool result;
 
   auto contig = genome_variant_map_.find(contig_id);
@@ -222,3 +236,46 @@ std::shared_ptr<kgl::GenomeVariant> kgl::GenomeVariant::deepCopy() const {
 
 }
 
+bool kgl::GenomeVariant::getSortedVariants(ContigId_t contig_id,
+                                           ContigOffset_t start,
+                                           ContigOffset_t end,
+                                           OffsetVariantMap& variant_map) const {
+
+  std::shared_ptr<ContigVariant> contig_variant_ptr;
+  if (not getContigVariant(contig_id, contig_variant_ptr)) {
+
+    ExecEnv::log().error("Contig Id: {} not found in Genome Variant: {}", contig_id, genomeId());
+    return false;
+
+  }
+
+  return contig_variant_ptr->getSortedVariants(start, end, variant_map);
+
+}
+
+
+bool kgl::GenomeVariant::getCodingSortedVariants(ContigId_t contig_id,
+                                                 ContigOffset_t start,
+                                                 ContigOffset_t end,
+                                                 OffsetVariantMap& variant_map) const {
+
+  OffsetVariantMap all_variant_map;
+  if (not getSortedVariants(contig_id, start, end, all_variant_map)) {
+
+    return false;
+
+  }
+
+  for (auto variant : all_variant_map) {
+
+    if (variant.second->type() == VariantSequenceType::CDS_CODING) {
+
+      variant_map.insert(std::pair<ContigOffset_t,std::shared_ptr<const Variant>>(variant.first, variant.second));
+
+    }
+
+  }
+
+  return true;
+
+}

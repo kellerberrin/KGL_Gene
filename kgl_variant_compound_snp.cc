@@ -139,8 +139,28 @@ bool kgl::CompoundSNP::codonMutation( ContigOffset_t& codon_offset,
 bool kgl::CompoundSNP::mutateCodingSequence(const FeatureIdent_t& sequence_id,
                                             std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const {
 
-  ExecEnv::log().warn("mutateCodingSequence() not yet implemented for CompoundSNP");
-  return false;
+  for (auto variant : getMap()) {
+
+    std::shared_ptr<const SNPVariant> SNP_ptr = std::dynamic_pointer_cast<const SNPVariant>(variant.second);
+
+    if (not SNP_ptr) {
+
+      ExecEnv::log().error("Compound SNP contains non-SNP subordinate: {}",
+                           variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
+      return false;
+    }
+
+    if (not SNP_ptr->mutateCodingSequence(sequence_id, mutated_sequence)) {
+
+      ExecEnv::log().error("Compound SNP problem mutating subordinate SNP: {}",
+                           variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
+      return false;
+
+    }
+
+  }
+
+  return true;
 
 }
 

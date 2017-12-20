@@ -60,9 +60,18 @@ public:
   void verifyFeatureHierarchy();
   void verifyCDSPhasePeptide();
 
-  // give a gene id and an mRNA (sequence id) return the coding base sequence.
+  // Given a gene id and an mRNA (sequence id) return the CDS coding sequence.
+  bool getCodingSequence(const FeatureIdent_t& gene_id,
+                         const FeatureIdent_t& sequence_id,
+                         std::shared_ptr<const CodingSequence>& coding_sequence_ptr) const;
+
+  // Convenience routine. Given a gene id and an mRNA (sequence id) return the DNA base sequence (strand adjusted).
   bool getDNA5SequenceCoding(const FeatureIdent_t& gene_id,
                              const FeatureIdent_t& sequence_id,
+                             std::shared_ptr<DNA5SequenceCoding>& sequence_ptr) const;
+
+  // Given a CDS coding sequence, return the corresponding DNA base sequence (strand adjusted).
+  bool getDNA5SequenceCoding(const std::shared_ptr<const CodingSequence>& coding_sequence_ptr,
                              std::shared_ptr<DNA5SequenceCoding>& sequence_ptr) const;
 
   std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr) const;

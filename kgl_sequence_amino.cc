@@ -105,7 +105,7 @@ std::string kgl::AminoSequence::emphasizeProteinString(const StringAminoAcid& am
     if (index == offset) {
 
       emph_protein_string += ' ';
-      emph_protein_string += protein_string[index];;
+      emph_protein_string += std::tolower(protein_string[index]);
       emph_protein_string += ' ';
       index++;
 

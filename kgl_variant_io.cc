@@ -31,61 +31,77 @@ bool kgl::GenomeVariant::outputCSV(const std::string& file_name, VariantOutputIn
 
 }
 
-bool kgl::GenomeVariant::mutantProtein( const std::string& sequence_name,
-                                        const ContigId_t& contig_id,
+bool kgl::GenomeVariant::mutantProtein( const ContigId_t& contig_id,
                                         const FeatureIdent_t& gene_id,
                                         const FeatureIdent_t& sequence_id,
                                         const std::shared_ptr<const GenomeDatabase>& genome_db,
                                         std::shared_ptr<AminoSequence>& amino_sequence) const {
+  // Get the contig.
+  std::shared_ptr<ContigFeatures> contig_ptr;
+  if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
 
-  // Filter the variants, assumes that gene is only unique to contig and sequence is only unique to gene.
-  std::shared_ptr<GenomeVariant> variant_ptr = filterVariants(ContigFilter(contig_id));
-  variant_ptr = variant_ptr->filterVariants(GeneFilter(gene_id));
-  variant_ptr = variant_ptr->filterVariants(SequenceFilter(sequence_id));
-  std::cout << *variant_ptr; // debug.
+    ExecEnv::log().warn("mutantProtein(), Could not find contig: {} in genome database", contig_id);
+    return false;
+
+  }
+
+  // Get the coding sequence.
+  std::shared_ptr<const CodingSequence> coding_sequence_ptr;
+  if (not contig_ptr->getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
+
+    ExecEnv::log().warn("mutantProtein(), Could not find a coding sequence for gene: {}, sequence: {}", gene_id, sequence_id);
+    return false;
+
+  }
+
+
+  // Get the DNA sequence
+  std::shared_ptr<DNA5SequenceCoding> dna_sequence_ptr;
+  if (not contig_ptr->getDNA5SequenceCoding(coding_sequence_ptr, dna_sequence_ptr))  {
+
+    ExecEnv::log().warn("No valid DNA sequence for contig: {}, gene: {}, sequence id: {}", contig_id, gene_id, sequence_id);
+    return false;
+
+  }
+
   // Extract the variants for processing.
-  std::vector<std::shared_ptr<const Variant>> variant_vector;
-  variant_ptr->getVariants(variant_vector);
+  OffsetVariantMap variant_map;
+  getCodingSortedVariants(contig_id, coding_sequence_ptr->start(), coding_sequence_ptr->end(), variant_map);
 
-  std::shared_ptr<DNA5SequenceCoding> sequence_ptr;
-  if (genome_db->getDNA5SequenceCoding(contig_id, gene_id, sequence_id, sequence_ptr)) {
+  if (not GenomeVariant::mutateDNA(variant_map, sequence_id, dna_sequence_ptr)) {
 
-    // Mutate the base sequence.
-    for (const auto& variant : variant_vector) {
-
-      if (not variant->mutateCodingSequence(sequence_id, sequence_ptr)) {
-
-        ExecEnv::log().warn("mutateCodingSequence(), problem with variant contig: {}, offset: {}",
-                            variant->contigId(), variant->offset());
-        return false;
-
-      }
-
-    }
-
-    std::shared_ptr<ContigFeatures> contig_ptr;
-    if (genome_db->getContigSequence(contig_id, contig_ptr)) {
-
-      amino_sequence = contig_ptr->getAminoSequence(sequence_ptr);
-      return true;
-
-    } else {
-
-      ExecEnv::log().warn("Could not find contig: {} in genome database", contig_id);
-      return false;
-
-    }
-
-  } else {
-
-    ExecEnv::log().warn("No valid sequence for contig: {}, gene: {}, sequence id: {}",
+    ExecEnv::log().warn("Problem mutating DNA sequence for contig: {}, gene: {}, sequence id: {}",
                         contig_id, gene_id, sequence_id);
     return false;
 
   }
 
+  amino_sequence = contig_ptr->getAminoSequence(dna_sequence_ptr);
+  return true;
+
 }
 
+// Perform the actual mutation.
+bool kgl::GenomeVariant::mutateDNA(const OffsetVariantMap& variant_map,
+                                   const FeatureIdent_t& sequence_id,
+                                   std::shared_ptr<DNA5SequenceCoding>& dna_sequence_ptr) {
+
+  // Mutate the base sequence.
+  for (const auto& variant : variant_map) {
+
+    if (not variant.second->mutateCodingSequence(sequence_id, dna_sequence_ptr)) {
+
+      ExecEnv::log().warn("mutateDNA(), problem with variant contig: {}, offset: {}",
+                          variant.second->contigId(), variant.second->offset());
+      return false;
+
+    }
+
+  }
+
+  return true;
+
+}
 
 
 std::ostream& operator<<(std::ostream &os, const kgl::GenomeVariant& genome_variant) {

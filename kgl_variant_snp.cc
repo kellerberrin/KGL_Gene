@@ -241,7 +241,7 @@ bool kgl::SNPVariant::mutateCodingSequence(const FeatureIdent_t& sequence_id,
 
   }
 
-  if (ExtendDNA5::isBaseCode(mutant())) {  // If just a base code mutation.
+  if (ExtendDNA5::isBaseCode(mutant())) {  // If a base code mutation.
 
     // Check that the sequence base code matches the original strand adjusted base code recorded in the variant.
     if (mutated_sequence->at(sequence_offset) != strandReference()) {
@@ -253,9 +253,19 @@ bool kgl::SNPVariant::mutateCodingSequence(const FeatureIdent_t& sequence_id,
 
     }
 
+    CodingDNA5::Alphabet mutant_base;
+    if (coding_sequence->strand() == StrandSense::REVERSE) {
+
+      mutant_base = DNA5::complementNucleotide(ExtendDNA5::extendToBase(mutant()));
+
+    } else {
+
+      mutant_base = DNA5::convertToCodingDN5(ExtendDNA5::extendToBase(mutant()));
+
+    }
+
     // All is good, so mutate the sequence.
-    return mutated_sequence->modifyBase(DNA5::complementNucleotide(ExtendDNA5::extendToBase(mutant())),
-                                        sequence_offset);
+    return mutated_sequence->modifyBase(mutant_base, sequence_offset);
 
   } else if (ExtendDNA5::isDeletion(mutant())) {
 

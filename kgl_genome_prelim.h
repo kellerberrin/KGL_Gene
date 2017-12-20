@@ -48,9 +48,15 @@ public:
 
 private:
 
-  ContigOffset_t begin_offset_;    // [O, size-1] based contig sequence offset.
-  ContigOffset_t end_offset_;      // [O, size-1] based contig sequence offset.
-  StrandSense strand_sense_;
+  // Important - the offsets of the features use the half open interval [begin, end) convention and are ZERO based.
+  // This is different from the gff format which are 1-based and are specified as the closed interval [begin, end].
+  // Thus begin_offset_ = gff.begin - 1
+  // And end_offset_ = gff.end
+  // Note that always begin_offset_ < end_offset_. They are not strand adjusted.
+  // They always correspond to zero based offsets on the relevant contig.
+  ContigOffset_t begin_offset_;    // begin is the first nucleotide of the feature.
+  ContigOffset_t end_offset_;      // end points past the last nucleotide of the feature; end = last_offset+1
+  StrandSense strand_sense_;      // can be 'UNKNOWN'
 
 };
 
@@ -80,8 +86,10 @@ public:
   std::shared_ptr<const GeneFeature> getGene() const { return gene_ptr_; }
   std::shared_ptr<const Feature> getCDSParent() const { return cds_parent_ptr_; }
   StrandSense strand() const;
-  ContigOffset_t prime_5() const; // offset of the first nucleotide (strand adjusted).
-  ContigOffset_t prime_3() const; // offset of the last nucleotide (strand adjusted).
+  ContigOffset_t prime_5() const; // Offset of the 5 prime nucleotide closest to the sequence (strand adjusted start - 1).
+  ContigOffset_t prime_3() const; // Offset of the 3 prime nucleotide closest to the sequence (strand adjusted end).
+  ContigOffset_t start() const; // Offset of the start of the sequence - not strand adjusted.
+  ContigOffset_t end() const; // Offset of the end of the sequence (last nucleotide + 1) - not strand adjusted.
   bool isWithinCoding(ContigOffset_t contig_offset) const;
   ContigSize_t codingNucleotides() const;
 

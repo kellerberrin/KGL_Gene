@@ -137,9 +137,9 @@ kgl::ContigFeatures::getAminoSequence(std::shared_ptr<const DNA5SequenceCoding> 
 
 
 // Given a gene id and an mRNA id (sequence id) return the coding base sequence.
-bool kgl::ContigFeatures::getDNA5SequenceCoding(const FeatureIdent_t& gene_id,
-                                                const FeatureIdent_t& sequence_id,
-                                                std::shared_ptr<DNA5SequenceCoding>& sequence_ptr) const {
+bool kgl::ContigFeatures::getCodingSequence(const FeatureIdent_t& gene_id,
+                                            const FeatureIdent_t& sequence_id,
+                                            std::shared_ptr<const CodingSequence>& coding_sequence_ptr) const {
 
   std::vector<std::shared_ptr<Feature>> feature_ptr_vec;
   std::shared_ptr<const GeneFeature> gene_ptr;
@@ -151,7 +151,7 @@ bool kgl::ContigFeatures::getDNA5SequenceCoding(const FeatureIdent_t& gene_id,
 
         if (feature_ptr->isGene()) {
 
-          gene_ptr = std::static_pointer_cast<const GeneFeature>(feature_ptr);
+          gene_ptr = std::dynamic_pointer_cast<const GeneFeature>(feature_ptr);
           break;
 
         } else {
@@ -187,7 +187,7 @@ bool kgl::ContigFeatures::getDNA5SequenceCoding(const FeatureIdent_t& gene_id,
 
     if (sequence.second->getCDSParent()->id() == sequence_id) {
 
-      sequence_ptr = sequence_ptr_->DNA5SequenceContig::codingSequence(sequence.second);
+      coding_sequence_ptr = sequence.second;
       return true;
 
     }
@@ -199,4 +199,35 @@ bool kgl::ContigFeatures::getDNA5SequenceCoding(const FeatureIdent_t& gene_id,
 
 }
 
+// Convenience routine. Given a gene id and an mRNA id (sequence id) return the DNA base sequence.
+bool kgl::ContigFeatures::getDNA5SequenceCoding(const FeatureIdent_t& gene_id,
+                                                const FeatureIdent_t& sequence_id,
+                                                std::shared_ptr<DNA5SequenceCoding>& sequence_ptr) const {
 
+  std::shared_ptr<const CodingSequence> coding_sequence_ptr;
+  if (getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
+
+    sequence_ptr = sequence_ptr_->DNA5SequenceContig::codingSequence(coding_sequence_ptr);
+    return true;
+
+  }
+
+  return false;
+
+}
+
+// Given a CDS coding sequence, return the corresponding DNA base sequence (strand adjusted).
+bool kgl::ContigFeatures::getDNA5SequenceCoding(const std::shared_ptr<const CodingSequence>& coding_sequence_ptr,
+                                                std::shared_ptr<DNA5SequenceCoding>& sequence_ptr) const {
+
+  if (coding_sequence_ptr) {
+
+    sequence_ptr = sequence_ptr_->DNA5SequenceContig::codingSequence(coding_sequence_ptr);
+    return true;
+
+  }
+
+  ExecEnv::log().error("getDNA5SequenceCoding(), coding_sequence_ptr is null");
+  return false;
+
+}

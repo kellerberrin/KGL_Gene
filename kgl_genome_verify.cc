@@ -264,7 +264,6 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Gene
                            sequence.second->getCDSParent()->id(),
                            coding_sequence_.firstCodon(coding_sequence_ptr).getSequenceAsString());
 //      gene_ptr->recusivelyPrintsubfeatures();
-//      gene_ptr->printCDSvector(sorted_cds_vec);
       result = false;
     }
     if (not coding_sequence_.checkStopCodon(coding_sequence_ptr)) {
@@ -286,7 +285,6 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Gene
                            sequence.second->getCDSParent()->id(),
                            coding_sequence_.lastCodon(coding_sequence_ptr).getSequenceAsString());
 //      gene_ptr->recusivelyPrintsubfeatures();
-//      gene_ptr->printCDSvector(sorted_cds_vec);
       result = false;
     }
     size_t nonsense_index = coding_sequence_.checkNonsenseMutation(coding_sequence_ptr);
@@ -309,7 +307,6 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Gene
                            sequence.second->getCDSParent()->id(),
                            Codon(coding_sequence_ptr, nonsense_index).getSequenceAsString());
 //      gene_ptr->recusivelyPrintsubfeatures();
-//      gene_ptr->printCDSvector(sorted_cds_vec);
       result = false;
     }
 

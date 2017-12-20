@@ -126,7 +126,7 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
     variant_ptr->outputCSV(args.outCSVFile, VariantOutputIndex::START_1_BASED, false);
     std::string fasta_file_name = ExecEnv::filePath(file.genome_name, args.workDirectory) + ".fasta";
     std::string sequence_name = "PF3D7_1035200_" + file.genome_name;
-    std::string read_fasta_name = ExecEnv::filePath("PF3D7_1035200_Reference", args.workDirectory) + ".fasta";
+    std::string read_fasta_name = ExecEnv::filePath("AuxFiles/PF3D7_1035200_Reference", args.workDirectory) + ".fasta";
 
 
 #define MUTANT_PROTEIN 1

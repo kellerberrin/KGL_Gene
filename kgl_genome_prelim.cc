@@ -18,6 +18,36 @@ kgl::StrandSense kgl::CodingSequence::strand() const {
 
 }
 
+// Offset of the start of the sequence - not strand adjusted..
+kgl::ContigOffset_t kgl::CodingSequence::start() const {
+
+  // Safety first.
+  if (sorted_cds_.empty()) {
+
+    ExecEnv::log().error("prime_5(), coding sequence for gene id: {} is empty", getGene()->id());
+    return getGene()->sequence().begin();
+    return 0;
+  }
+
+  return sorted_cds_.begin()->second->sequence().begin();
+
+}
+
+// Offset of the end of the sequence (last nucleotide + 1) - not strand adjusted.
+kgl::ContigOffset_t kgl::CodingSequence::end() const {
+
+  // Safety first.
+  if (sorted_cds_.empty()) {
+
+    ExecEnv::log().error("prime_5(), coding sequence for gene id: {} is empty", getGene()->id());
+    return getGene()->sequence().end();
+  }
+
+  return sorted_cds_.rbegin()->second->sequence().end();
+
+}
+
+
 // offset of the nucleotide not in the coding seuence (strand adjusted).
 kgl::ContigOffset_t kgl::CodingSequence::prime_5() const {
 
