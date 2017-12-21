@@ -121,8 +121,8 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
 
                     } else { // insertion successful
 
-                      ExecEnv::log().info("aggregateVariants(), inserted duplicate offset variant: {}",
-                                           subSNP_ptr->output(' ', VariantOutputIndex::START_0_BASED, true));
+                    //  ExecEnv::log().info("aggregateVariants(), inserted duplicate offset variant: {}",
+                    //                       subSNP_ptr->output(' ', VariantOutputIndex::START_0_BASED, true));
                       temp_compound_variant_vec.push_back(temp_map_ptr);
 
                     }

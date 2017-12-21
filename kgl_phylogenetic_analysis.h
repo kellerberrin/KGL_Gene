@@ -33,22 +33,22 @@ public:
   ApplicationAnalysis() = default;
   virtual ~ApplicationAnalysis() = default;
 
-  static bool writeMutantProtein(const std::string& fastaFile,
+  static bool writeMutantProteins(const std::string& fastaFile,
+                                  const std::string& sequenceName,
+                                  const ContigId_t& contig_id,
+                                  const FeatureIdent_t& gene_id,
+                                  const FeatureIdent_t& sequence_id,
+                                  const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                  const std::shared_ptr<const GenomeVariant>& genome_variant);
+
+  static bool readMutantProteins(const std::string& fastaFile,
                                  const std::string& sequenceName,
                                  const ContigId_t& contig_id,
                                  const FeatureIdent_t& gene_id,
                                  const FeatureIdent_t& sequence_id,
                                  const std::shared_ptr<const GenomeDatabase>& genome_db,
-                                 const std::shared_ptr<const GenomeVariant>& genome_variant);
-
-  static bool readMutantProtein(const std::string& fastaFile,
-                                const std::string& sequenceName,
-                                const ContigId_t& contig_id,
-                                const FeatureIdent_t& gene_id,
-                                const FeatureIdent_t& sequence_id,
-                                const std::shared_ptr<const GenomeDatabase>& genome_db,
-                                const std::shared_ptr<const GenomeVariant>& genome_variant,
-                                std::string& comparison_string);
+                                 const std::shared_ptr<const GenomeVariant>& genome_variant,
+                                 std::vector<std::string>& comparison_string_vector);
 
 
 

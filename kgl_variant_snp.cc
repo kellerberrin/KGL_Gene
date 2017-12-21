@@ -246,8 +246,7 @@ bool kgl::SNPVariant::mutateCodingSequence(const FeatureIdent_t& sequence_id,
     // Check that the sequence base code matches the original strand adjusted base code recorded in the variant.
     if (mutated_sequence->at(sequence_offset) != strandReference()) {
 
-      ExecEnv::log().error(
-      "mutateCodingSequence(), unexpected; base: {} at seq. offset: {} not equal snp (strand) reference: {}",
+      ExecEnv::log().warn("mutateCodingSequence(), unexpected; base: {} at seq. offset: {} (strand) reference: {}, probable duplicate variant",
       CodingDNA5::convertToChar(mutated_sequence->at(sequence_offset)), sequence_offset,
       CodingDNA5::convertToChar(strandReference()));
 

@@ -131,22 +131,37 @@ public:
   Attributes& attributes() { return attributes_; }
   void attributes(const Attributes& attributes) { attributes_ = attributes; }
 
-  bool mutantProtein( const ContigId_t& contig_id,
-                      const FeatureIdent_t& gene_id,
-                      const FeatureIdent_t& sequence_id,
-                      const std::shared_ptr<const GenomeDatabase>& genome_db,
-                      std::shared_ptr<AminoSequence>& amino_sequence) const;
+  bool mutantProteins( const ContigId_t& contig_id,
+                       const FeatureIdent_t& gene_id,
+                       const FeatureIdent_t& sequence_id,
+                       const std::shared_ptr<const GenomeDatabase>& genome_db,
+                       std::vector<std::shared_ptr<AminoSequence>>& amino_sequence_vector) const;
 
   // The coding variants in the variant_map are used to mutate the dna_sequence.
   static bool mutateDNA(const OffsetVariantMap& variant_map,
                         const FeatureIdent_t& sequence_id,
                         std::shared_ptr<DNA5SequenceCoding>& dna_sequence_ptr);
 
+  // Returns a vector of alternative mutation paths based on the number of equal offset mutations in the coding variants.
+  // There maybe more than one variant specified per offset.
+  // If there are equal offset variants then we create alternative (2) mutation paths.
+  // This function is exponential. Alternative Mutations = 2 ^ (#equal offset variants).
+  // A warning is issued if the soft limit is reached; default 32 alternatives (5 equal offset variants).
+  // The number of variant paths is capped by the hard limit; default 128 alternatives (9 equal offset variants)
+  static void getMutationAlternatives(const OffsetVariantMap coding_variant_map,
+                                      std::vector<OffsetVariantMap>& variant_map_vector,
+                                      size_t& alternative_count,
+                                      size_t soft_limit = MUTATION_SOFT_LIMIT_,
+                                      size_t hard_limit = MUTATION_HARD_LIMIT_);
+
 private:
 
   GenomeId_t genome_id_;
   GenomeVariantMap genome_variant_map_;
   Attributes attributes_;
+
+  constexpr static size_t MUTATION_SOFT_LIMIT_ = 32;
+  constexpr static size_t MUTATION_HARD_LIMIT_ = 128;
 
 };
 

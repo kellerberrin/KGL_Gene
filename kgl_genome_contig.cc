@@ -199,22 +199,6 @@ bool kgl::ContigFeatures::getCodingSequence(const FeatureIdent_t& gene_id,
 
 }
 
-// Convenience routine. Given a gene id and an mRNA id (sequence id) return the DNA base sequence.
-bool kgl::ContigFeatures::getDNA5SequenceCoding(const FeatureIdent_t& gene_id,
-                                                const FeatureIdent_t& sequence_id,
-                                                std::shared_ptr<DNA5SequenceCoding>& sequence_ptr) const {
-
-  std::shared_ptr<const CodingSequence> coding_sequence_ptr;
-  if (getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
-
-    sequence_ptr = sequence_ptr_->DNA5SequenceContig::codingSequence(coding_sequence_ptr);
-    return true;
-
-  }
-
-  return false;
-
-}
 
 // Given a CDS coding sequence, return the corresponding DNA base sequence (strand adjusted).
 bool kgl::ContigFeatures::getDNA5SequenceCoding(const std::shared_ptr<const CodingSequence>& coding_sequence_ptr,

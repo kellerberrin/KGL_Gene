@@ -65,15 +65,11 @@ public:
                          const FeatureIdent_t& sequence_id,
                          std::shared_ptr<const CodingSequence>& coding_sequence_ptr) const;
 
-  // Convenience routine. Given a gene id and an mRNA (sequence id) return the DNA base sequence (strand adjusted).
-  bool getDNA5SequenceCoding(const FeatureIdent_t& gene_id,
-                             const FeatureIdent_t& sequence_id,
-                             std::shared_ptr<DNA5SequenceCoding>& sequence_ptr) const;
-
   // Given a CDS coding sequence, return the corresponding DNA base sequence (strand adjusted).
   bool getDNA5SequenceCoding(const std::shared_ptr<const CodingSequence>& coding_sequence_ptr,
                              std::shared_ptr<DNA5SequenceCoding>& sequence_ptr) const;
 
+  // Generate Amino acid sequences using the table specified for this contig.
   std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr) const;
   std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const;
   AminoAcid::Alphabet getAminoAcid(const Codon& codon) const { return coding_sequence_.getAmino(codon); }
@@ -86,7 +82,7 @@ private:
   OffsetFeatureMap offset_feature_map_;
   IdFeatureMap id_feature_map_;
   GeneMap gene_map_;
-  TranslateToAmino coding_sequence_;  // Amino Acid translation table, can be unique for contig (e.g. mitochondria)
+  TranslateToAmino coding_sequence_;  // Amino Acid translation table, unique for contig (e.g. mitochondria)
 
   void verifyContigOverlap();
   void verifySubFeatureSuperFeatureDimensions();
@@ -130,12 +126,6 @@ public:
   void registerContigData(std::shared_ptr<ContigCountData>& contig_data_ptr) const;
 
   const GenomeSequenceMap& getMap() const { return genome_sequence_map_; }
-
-// Given a contig id, gene id and an mRNA id (sequence id) return the coding base sequence.
-  bool getDNA5SequenceCoding(const ContigId_t& contig_id,
-                             const FeatureIdent_t& gene_id,
-                             const FeatureIdent_t& sequence_id,
-                             std::shared_ptr<DNA5SequenceCoding>& sequence_ptr) const;
 
 private:
 

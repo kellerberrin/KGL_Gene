@@ -43,6 +43,7 @@ public:
 
 
   explicit DNA5SequenceCoding(StringCodingDNA5 sequence) : AlphabetSequence<CodingDNA5>(std::move(sequence)) {}
+  explicit DNA5SequenceCoding(const DNA5SequenceCoding&) = default;
   DNA5SequenceCoding() = delete;
   ~DNA5SequenceCoding() override = default;
 

@@ -46,6 +46,7 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
   // Create a genome statistics object.
   std::shared_ptr<const kgl::GenomeStatistics> statistics_ptr(std::make_shared<kgl::GenomeStatistics>(genome_db_ptr,
                                                                                                       all_variant_ptr));
+  population_stats_ptr->addGenomeStatistics(statistics_ptr);
 
   // Write the genome stats to file.
   std::string stats_file_name = kgl::ExecEnv::filePath("genome_stats", workDirectory) + ".csv";
@@ -73,10 +74,10 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
   std::cout << *filter_ptr;
 
   // Create stats for the GENE.
-  std::shared_ptr<const kgl::GenomeStatistics> filtered_stats_ptr(std::make_shared<kgl::GenomeStatistics>(genome_db_ptr,
-                                                                                                          filter_ptr));
+//  std::shared_ptr<const kgl::GenomeStatistics> filtered_stats_ptr(std::make_shared<kgl::GenomeStatistics>(genome_db_ptr,
+//                                                                                                          filter_ptr));
   // Add to the population stats for later phylogenetic analysis.
-  population_stats_ptr->addGenomeStatistics(filtered_stats_ptr);
+//  population_stats_ptr->addGenomeStatistics(filtered_stats_ptr);
 
   // Filter on dup. GENE.
 //  all_variant_ptr = all_variant_ptr->filterVariants(kgl::GeneFilter(TEST_GENE));
@@ -87,7 +88,7 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
 
 
   // Return the filtered variants.
-  return filter_ptr;
+  return all_variant_ptr;
 
 }
 
@@ -135,25 +136,29 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 #ifdef MUTANT_PROTEIN
 #ifdef MALAWI
 
-    ApplicationAnalysis::writeMutantProtein(fasta_file_name,
-                                            sequence_name,
-                                            "Pf3D7_10_v3",
-                                            "PF3D7_1035200",
-                                            "PF3D7_1035200.1",
-                                            genome_db_ptr,
-                                            variant_ptr);
+    ApplicationAnalysis::writeMutantProteins(fasta_file_name,
+                                             sequence_name,
+                                             "Pf3D7_10_v3",
+                                             "PF3D7_1035200",
+                                             "PF3D7_1035200.1",
+                                             genome_db_ptr,
+                                             variant_ptr);
 
-    std::string comparison;
-    if (ApplicationAnalysis::readMutantProtein(read_fasta_name,
-                                           "PF3D7_1035200",
-                                           "Pf3D7_10_v3",
-                                           "PF3D7_1035200",
-                                           "PF3D7_1035200.1",
-                                           genome_db_ptr,
-                                           variant_ptr,
-                                           comparison)) {
+    std::vector<std::string> comparison_vector;
+    if (ApplicationAnalysis::readMutantProteins(read_fasta_name,
+                                                "PF3D7_1035200",
+                                                "Pf3D7_10_v3",
+                                                "PF3D7_1035200",
+                                                "PF3D7_1035200.1",
+                                                genome_db_ptr,
+                                                variant_ptr,
+                                                comparison_vector)) {
 
-      ExecEnv::log().info("PF3D7_1035200 comparison:\n{}", comparison);
+      for (const auto& comparison : comparison_vector) {
+
+        ExecEnv::log().info("PF3D7_1035200 comparison:\n{}", comparison);
+
+      }
 
     }
 

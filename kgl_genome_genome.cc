@@ -95,24 +95,3 @@ void kgl::GenomeDatabase::registerContigData(std::shared_ptr<kgl::ContigCountDat
   }
 
 }
-
-// Given a contig id, gene id and an mRNA id (sequence id) return the coding base sequence.
-bool kgl::GenomeDatabase::getDNA5SequenceCoding(const ContigId_t& contig_id,
-                                                const FeatureIdent_t& gene_id,
-                                                const FeatureIdent_t& sequence_id,
-                                                std::shared_ptr<DNA5SequenceCoding>& sequence_ptr) const {
-
-  std::shared_ptr<ContigFeatures> contig_ptr;
-  if (getContigSequence(contig_id, contig_ptr)) {
-
-    return contig_ptr->getDNA5SequenceCoding(gene_id, sequence_id, sequence_ptr);
-
-  } else {
-
-    ExecEnv::log().warn("Contig id: {} not found", contig_id);
-
-  }
-
-  return false;
-
-}

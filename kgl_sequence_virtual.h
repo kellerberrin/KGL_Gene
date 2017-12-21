@@ -43,6 +43,7 @@ class AlphabetSequence : public VirtualSequence {
 public:
 
   explicit AlphabetSequence(AlphabetString<Alphabet> sequence) : alphabet_string_(std::move(sequence)) {}
+  explicit AlphabetSequence(const AlphabetSequence&) = default;
   AlphabetSequence() = delete;
   ~AlphabetSequence() override = default;
 
