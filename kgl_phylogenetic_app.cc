@@ -40,7 +40,7 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
                                                                                                    min_proportion);
 
   // Not interested in Synonymous SNPs, so filter them.
-  all_variant_ptr = all_variant_ptr->filterVariants(kgl::SynonymousSNPFilter());
+//  all_variant_ptr = all_variant_ptr->filterVariants(kgl::SynonymousSNPFilter());
 
 
   // Create a genome statistics object.

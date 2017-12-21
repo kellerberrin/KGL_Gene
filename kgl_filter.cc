@@ -184,7 +184,7 @@ bool kgl::SynonymousSNPFilter::implementFilter(const Variant& variant) const {
 
       auto SNP = dynamic_cast<const SNPVariant*>(&variant);
 
-      if (SNP == nullptr) {
+      if (not SNP) {
 
         ExecEnv::log().error("SynonymousFilter(); Bad variant type for variant: {}",
                              variant.output(' ', VariantOutputIndex::START_0_BASED, true));
@@ -209,7 +209,7 @@ bool kgl::SynonymousSNPFilter::implementFilter(const Variant& variant) const {
 
       auto cmp_SNP = dynamic_cast<const CompoundSNP*>(&variant);
 
-      if (cmp_SNP == nullptr) {
+      if (not cmp_SNP) {
 
         ExecEnv::log().error("SynonymousFilter(); Bad variant type for variant: {}",
                              variant.output(' ', VariantOutputIndex::START_0_BASED, true));

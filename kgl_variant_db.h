@@ -137,6 +137,16 @@ public:
                        const std::shared_ptr<const GenomeDatabase>& genome_db,
                        std::vector<std::shared_ptr<AminoSequence>>& amino_sequence_vector) const;
 
+
+private:
+
+  GenomeId_t genome_id_;
+  GenomeVariantMap genome_variant_map_;
+  Attributes attributes_;
+
+  constexpr static size_t MUTATION_SOFT_LIMIT_ = 32;
+  constexpr static size_t MUTATION_HARD_LIMIT_ = 128;
+
   // The coding variants in the variant_map are used to mutate the dna_sequence.
   static bool mutateDNA(const OffsetVariantMap& variant_map,
                         const FeatureIdent_t& sequence_id,
@@ -154,14 +164,6 @@ public:
                                       size_t soft_limit = MUTATION_SOFT_LIMIT_,
                                       size_t hard_limit = MUTATION_HARD_LIMIT_);
 
-private:
-
-  GenomeId_t genome_id_;
-  GenomeVariantMap genome_variant_map_;
-  Attributes attributes_;
-
-  constexpr static size_t MUTATION_SOFT_LIMIT_ = 32;
-  constexpr static size_t MUTATION_HARD_LIMIT_ = 128;
 
 };
 
