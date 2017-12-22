@@ -196,7 +196,10 @@ kgl::CodingDNA5::Alphabet kgl::SNPVariant::strandNucleotide(DNA5::Alphabet nucle
 
 
 bool kgl::SNPVariant::mutateCodingSequence(const FeatureIdent_t& sequence_id,
-                                               std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const {
+                                           SignedOffset_t offset_adjust,  // Adjust the variant offsets before mutation
+                                           ContigSize_t sequence_size,  // Calculated sequence size before mutation.
+                                           SignedOffset_t& sequence_size_adjust,  // How the variant modifies sequence size.
+                                           std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const {
 
 
   CodingSequenceArray coding_sequence_array = codingSequences();
@@ -233,7 +236,7 @@ bool kgl::SNPVariant::mutateCodingSequence(const FeatureIdent_t& sequence_id,
   }
 
   // Check that the sequence lengths match.
-  if (sequence_length != mutated_sequence->length()) {
+  if (sequence_length != sequence_size) {
 
     ExecEnv::log().error("mutateCodingSequence(), unexpected; variant sequence length: {} not equal mutate length: {}",
                          sequence_length, mutated_sequence->length());
@@ -241,10 +244,23 @@ bool kgl::SNPVariant::mutateCodingSequence(const FeatureIdent_t& sequence_id,
 
   }
 
+  SignedOffset_t check_offset = static_cast<SignedOffset_t>(sequence_offset) + offset_adjust;
+
+  // Check the adjusted offset
+  if (check_offset < 0 or check_offset >= static_cast<SignedOffset_t>(mutated_sequence->length())) {
+
+    ExecEnv::log().error("mutateCodingSequence(), adjusted offset: {} out of range for sequence length: {}",
+                        check_offset, mutated_sequence->length());
+    return false;
+
+  }
+
+  ContigOffset_t adjusted_offset = static_cast<ContigOffset_t>(check_offset);
+
   if (ExtendDNA5::isBaseCode(mutant())) {  // If a base code mutation.
 
     // Check that the sequence base code matches the original strand adjusted base code recorded in the variant.
-    if (mutated_sequence->at(sequence_offset) != strandReference()) {
+    if (mutated_sequence->at(adjusted_offset) != strandReference()) {
 
       ExecEnv::log().warn("mutateCodingSequence(), unexpected; base: {} at seq. offset: {} (strand) reference: {}, probable duplicate variant",
       CodingDNA5::convertToChar(mutated_sequence->at(sequence_offset)), sequence_offset,
@@ -263,26 +279,14 @@ bool kgl::SNPVariant::mutateCodingSequence(const FeatureIdent_t& sequence_id,
 
     }
 
+    sequence_size_adjust = 0;
+
     // All is good, so mutate the sequence.
-    return mutated_sequence->modifyBase(mutant_base, sequence_offset);
-
-  } else if (ExtendDNA5::isDeletion(mutant())) {
-
-
-    ExecEnv::log().warn("mutateCodingSequence(), snp deletions not implementated, variant: {}",
-                        output(' ', VariantOutputIndex::START_0_BASED, true));
-    return true;
-
-  } else if (ExtendDNA5::isInsertion(mutant())) {
-
-
-    ExecEnv::log().warn("mutateCodingSequence(), snp insertions not implementated, variant: {}",
-                        output(' ', VariantOutputIndex::START_0_BASED, true));
-    return true;
+    return mutated_sequence->modifyBase(sequence_offset, mutant_base);
 
   } else {
 
-    ExecEnv::log().warn("mutateCodingSequence(), snp mutation is unknown type, variant: {}",
+    ExecEnv::log().warn("mutateCodingSequence(), variant is not a single SNP",
                         output(' ', VariantOutputIndex::START_0_BASED, true));
     return false;
 

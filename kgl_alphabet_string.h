@@ -50,17 +50,41 @@ public:
 
   void reserve(ContigSize_t string_size) { base_string_.reserve(string_size); }
 
-  void erase(ContigOffset_t offset, ContigSize_t size) {
+  bool erase(ContigOffset_t offset, ContigSize_t size) {
 
-    std::basic_string<typename Alphabet::Alphabet> null_string;
-    base_string_.replace(offset, size, null_string);
+    try {
+
+      base_string_.erase(offset, size);
+      return true;
+
+    }
+    catch(...) {
+
+      return false;
+
+    }
+
+  }
+
+  bool insert(ContigOffset_t offset, const AlphabetString& sub_string) {
+
+    try {
+
+      base_string_.insert(offset, sub_string.base_string_);
+      return true;
+
+    }
+    catch(...) {
+
+      return false;
+
+    }
 
   }
 
   typename Alphabet::Alphabet operator[] (ContigOffset_t& offset) const { return base_string_[offset]; }
 
-  void modifyNucleotide(ContigOffset_t& offset,
-                        typename Alphabet::Alphabet nucleotide) { base_string_[offset] = nucleotide; }
+  void modifyLetter(ContigOffset_t &offset, typename Alphabet::Alphabet letter) { base_string_[offset] = letter; }
 
   std::string str() const { return convertToCharString(); }
 

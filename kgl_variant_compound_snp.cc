@@ -137,6 +137,9 @@ bool kgl::CompoundSNP::codonMutation( ContigOffset_t& codon_offset,
 
 
 bool kgl::CompoundSNP::mutateCodingSequence(const FeatureIdent_t& sequence_id,
+                                            SignedOffset_t offset_adjust,  // Adjust the variant offsets before mutation
+                                            ContigSize_t sequence_size,  // Calculated sequence size before mutation.
+                                            SignedOffset_t& sequence_size_adjust,  // How the variant modifies sequence size.
                                             std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const {
 
   for (auto variant : getMap()) {
@@ -150,13 +153,26 @@ bool kgl::CompoundSNP::mutateCodingSequence(const FeatureIdent_t& sequence_id,
       return false;
     }
 
-    if (not SNP_ptr->mutateCodingSequence(sequence_id, mutated_sequence)) {
+    if (not SNP_ptr->mutateCodingSequence(sequence_id,
+                                          offset_adjust,
+                                          sequence_size,
+                                          sequence_size_adjust,
+                                          mutated_sequence)) {
 
       ExecEnv::log().error("Compound SNP problem mutating subordinate SNP: {}",
                            variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
       return false;
 
     }
+
+    if (sequence_size_adjust != 0) {
+
+      ExecEnv::log().error("Compound SNP, Non zero sequence resize: {} with SNP variant: {}",
+                           sequence_size_adjust, variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
+      return false;
+
+    }
+
 
   }
 

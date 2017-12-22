@@ -73,7 +73,7 @@ kgl::CompoundFactory::create(const std::shared_ptr<const GenomeVariant>& genome_
   for (const auto &variant_map : aggregated_variants_vec) {
 
     std::shared_ptr<const Variant> compound_variant = createCompoundVariant(*variant_map);
-    if (compound_variant != nullptr) {
+    if (compound_variant) {
 
       if (not compound_variants->addVariant(compound_variant)) {
 

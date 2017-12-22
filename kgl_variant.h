@@ -142,6 +142,7 @@ public:
   const ContigId_t& contigId() const { return contig()->contigId(); }
   ContigOffset_t contigOffset() const { return offset(); }
   bool operator==(const Variant& cmp_var) const { return equivalent(cmp_var); };
+  bool offsetOverlap(const Variant& cmp_var) const;  // Particuarly relevant for compound variants.
 
   std::string name() const;
 
@@ -150,10 +151,17 @@ public:
   virtual std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const = 0;
   virtual std::string mutation(char delimiter, VariantOutputIndex output_index) const = 0;
   virtual bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
+                                    SignedOffset_t offset_adjust,  // Adjust the variant offsets before mutation
+                                    ContigSize_t sequence_size,  // Calculated sequence size before mutation.
+                                    SignedOffset_t& sequence_size_adjust,  // How the variant modifies sequence size.
                                     std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const = 0;
 
   bool isCompound() const { return size() > 1; }
   bool isSingle() const { return size() == 1; }
+  bool isSNP() const { return variantType() == VariantType::SNP or variantType() == VariantType::COMPOUND_SNP; }
+  bool isDelete() const { return variantType() == VariantType::DELETE or variantType() == VariantType::COMPOUND_DELETE; }
+  bool isInsert() const { return variantType() == VariantType::INSERT or variantType() == VariantType::COMPOUND_INSERT; }
+
   virtual bool equivalent(const Variant& cmp_var) const = 0;
 
 protected:

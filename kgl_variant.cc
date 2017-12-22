@@ -179,3 +179,24 @@ std::string kgl::Variant::name() const {
 }
 
 
+// Relevant for compound variants.
+// Used to see if variants are mutating the same section of DNA.
+bool kgl::Variant::offsetOverlap(const Variant& cmp_var) const {
+
+  // First check if the variants are on the same contig.
+  if (contigId() != cmp_var.contigId()) {
+
+    return false;
+
+  }
+
+  // On the same contig so check for overlap.
+  ContigOffset_t start = contigOffset();
+  ContigOffset_t end = contigOffset() + size() - 1;
+
+  ContigOffset_t cmp_start = cmp_var.contigOffset();
+  ContigOffset_t cmp_end = cmp_var.contigOffset() + size() - 1;
+
+  return ((start <= cmp_start) and (cmp_start <= end)) or ((start <= cmp_end) and (cmp_end <= end));
+
+}

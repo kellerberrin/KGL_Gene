@@ -53,16 +53,20 @@ public:
   ContigSize_t length() const { return alphabet_string_.length(); }
   std::string getSequenceAsString() const override { return alphabet_string_.str(); }
 
-  const std::string compareSequences(const std::shared_ptr<const AlphabetSequence>& sequence_ptr) const {
-
-    return compareSequences(*sequence_ptr, *this);
-
-  }
-
 protected:
 
   AlphabetString<Alphabet> alphabet_string_;
 
+  const std::string compareSequences(const AlphabetSequence& compare_seq) const {  return compareSequences(compare_seq, *this); }
+
+  // Letter offset is relative to the begining of the sequence (0 is the first letter).
+  bool modifyLetter(ContigOffset_t sequence_offset, typename Alphabet::Alphabet letter);
+  // Delete offset is relative to the begining of the sequence (0 is the first letter).
+  bool deleteOffset(ContigOffset_t delete_offset, ContigSize_t delete_size);
+  // Insert offset is relative to the begining of the sequence (0 is the first letter).
+  bool insertOffset(ContigOffset_t insert_offset, const AlphabetSequence& inserted_sequence);
+
+private:
 
   static std::string emphasizeDifferences(const AlphabetSequence& alphabet_sequence,
                                           const std::vector<ContigOffset_t>& emphasize_offsets);
@@ -74,115 +78,68 @@ protected:
 
 
 template<typename Alphabet>
-std::string AlphabetSequence<Alphabet>::compareSequences(const AlphabetSequence<Alphabet>& compare_sequence,
-                                                         const AlphabetSequence<Alphabet>& reference_sequence) {
+bool AlphabetSequence<Alphabet>::modifyLetter(ContigOffset_t sequence_offset, typename Alphabet::Alphabet letter) {
 
-  ContigSize_t length_compare = compare_sequence.length();
-  ContigSize_t length_reference = reference_sequence.length();
+  if (sequence_offset >= length()) {
 
-  ContigSize_t common_length = length_reference <= length_compare ? length_reference : length_compare;
-
-  std::vector<ContigOffset_t> differences;
-  for (ContigOffset_t index = 0; index < common_length; ++index) {
-
-
-    if (reference_sequence[index] != compare_sequence[index]) {
-
-      differences.push_back(index);
-
-    }
-
+    ExecEnv::log().error("modifyLetter(), sequence offset: {} exceeds sequence size: {}",
+                         sequence_offset, length());
+    return false;
   }
 
-  ExecEnv::log().info("compareSequences(), found: {} sequence differences, common length: {}",
-                      differences.size(), common_length);
+  alphabet_string_.modifyLetter(sequence_offset, letter);
 
-  std::string comparison_string;
-  comparison_string = AlphabetSequence<Alphabet>::emphasizeDifferences(compare_sequence, differences);
-  if (common_length < length_compare) {
-
-    comparison_string += "  comparison>";
-    for (ContigOffset_t index = common_length; index < length_compare; ++index) {
-
-      comparison_string += Alphabet::convertToChar(compare_sequence[index]);
-
-    }
-
-
-  } else if (common_length < length_reference) {
-
-    comparison_string += "  reference>";
-    for (ContigOffset_t index = common_length; index < length_reference; ++index) {
-
-      comparison_string += Alphabet::convertToChar(reference_sequence[index]);
-
-    }
-
-  }
-
-  return comparison_string;
+  return true;
 
 }
+
 
 template<typename Alphabet>
-std::string AlphabetSequence<Alphabet>::emphasizeDifferences(const AlphabetSequence<Alphabet>& alphabet_sequence,
-                                                             const std::vector<ContigOffset_t>& emphasize_offsets) {
+bool AlphabetSequence<Alphabet>::deleteOffset(ContigOffset_t delete_offset, ContigSize_t delete_size) {
 
-  std::string sequence_string = alphabet_sequence.getSequenceAsString();
+  if ((delete_offset + delete_size) > length()) {
 
-  if (emphasize_offsets.empty()) return sequence_string;
-
-  // Order the offsets. A < B < C
-  std::set<ContigOffset_t> ordered_offsets;
-  for (auto offset : emphasize_offsets) {
-
-    ordered_offsets.insert(offset);
+    ExecEnv::log().error("Attempt to delete past the end a sequence string, offset: {}, delete size: {}, sequence size: {}",
+                         delete_offset, delete_size, length());
+    return false;
 
   }
 
-  std::string emph_sequence_string;
-  size_t index = 0;
-  for (auto offset : ordered_offsets) {
+  if (not alphabet_string_.erase(delete_offset, delete_size)) {
 
-    if (offset >= sequence_string.length()) {
-
-      ExecEnv::log().error("emphasizeDifferences() emphasize offset: {} >= sequence string length: {}",
-                           offset, emph_sequence_string.length());
-      break;
-    }
-
-    while (index < offset) {
-
-      emph_sequence_string += sequence_string[index];
-      index++;
-
-    }
-
-    // Add spaces to emphasize.
-    if (index == offset) {
-
-      emph_sequence_string += ' ';
-      emph_sequence_string += std::tolower(sequence_string[index]);
-      emph_sequence_string += ' ';
-      index++;
-
-    }
+    ExecEnv::log().error("Problem deleting subsequence from sequence string, offset: {}, delete size: {}, sequence size: {}",
+                         delete_offset, delete_size, length());
+    return false;
 
   }
 
-  // Add in the rest of the sequence
-  while (index < sequence_string.length()) {
-
-    emph_sequence_string += sequence_string[index];
-    index++;
-
-  }
-
-  return emph_sequence_string;
+  return true;
 
 }
 
 
+template<typename Alphabet>
+bool AlphabetSequence<Alphabet>::insertOffset(ContigOffset_t insert_offset, const AlphabetSequence& inserted_sequence) {
+
+  if (insert_offset >= length()) {
+
+    ExecEnv::log().error("Attempt to insert past the end a sequence string, insert offset: {}, insert sub-sequence: {}",
+                         insert_offset, inserted_sequence.getSequenceAsString());
+    return false;
+
+  }
+
+  if (not alphabet_string_.insert(insert_offset, inserted_sequence.alphabet_string_)) {
+
+    ExecEnv::log().error("Problem inserting a sub-sequence , insert offset: {}, insert sub-sequence: {}",
+                         insert_offset, inserted_sequence.getSequenceAsString());
+    return false;
+
+  }
+
+  return true;
+
+}
 
 
 }   // namespace genome

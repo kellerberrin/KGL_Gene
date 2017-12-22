@@ -27,26 +27,22 @@ int application(int argc, char const ** argv) {
 
   try {
 
-    T::parseCommandLine(argc, argv);  // Setup the runtime environment.
+    T::parseCommandLine(argc, argv);  // Setup the static ExecEnv runtime environment.
 
     signal(SIGINT, ctrlC);
 
-    kgl::ExecEnv::log().info("############ {} {} Start Processing ###########",
-                             T::MODULE_NAME,
-                             T::VERSION);
+    kgl::ExecEnv::log().info("############ {} {} Start Processing ###########", T::MODULE_NAME, T::VERSION);
 
-    typename T::Application(T::log(), T::args()); // Do the analysis.
+    typename T::Application(T::log(), T::args()); // Run the application.
 
     double Clock, System, User;
     kgl::ExecEnv::getElpasedTime(Clock, System, User);
     kgl::ExecEnv::log().info("Elapsed seconds; Clock: {}, System CPU: {}, User CPU: {} (No GPU)", Clock, System, User);
-    kgl::ExecEnv::log().info("############ {} {} End Processing ###########",
-                             T::MODULE_NAME,
-                             T::VERSION);
+    kgl::ExecEnv::log().info("############ {} {} End Processing ###########", T::MODULE_NAME, T::VERSION);
 
-  } catch(...) { // Code should not throw any exceptions, so complain and exit.
+  } catch(std::exception& e) { // Code should not throw any exceptions, so complain and exit.
 
-    std::cerr << T::MODULE_NAME << " " << T::VERSION << " - Unexpected Exception." << std::endl;
+    std::cerr << T::MODULE_NAME << " " << T::VERSION << " - Unexpected Exception: " << e.what() << std::endl;
     std::exit(EXIT_FAILURE);
 
   }

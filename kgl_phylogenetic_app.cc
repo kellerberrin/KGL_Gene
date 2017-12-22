@@ -16,15 +16,15 @@
 namespace kgl = kellerberrin::genome;
 
 
-std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
-                                                         std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr,
-                                                         std::shared_ptr<kgl::PopulationStatistics> population_stats_ptr,
-                                                         const std::string& file_name,
-                                                         const std::string& genome_name,
-                                                         unsigned char read_quality,
-                                                         long min_count,
-                                                         double min_proportion,
-                                                         const std::string& workDirectory) {
+std::shared_ptr<const kgl::GenomeVariant> getGenomeVariants(kgl::Logger& log,
+                                                            std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr,
+                                                            std::shared_ptr<kgl::PopulationStatistics> population_stats_ptr,
+                                                            const std::string& file_name,
+                                                            const std::string& genome_name,
+                                                            unsigned char read_quality,
+                                                            long min_count,
+                                                            double min_proportion,
+                                                            const std::string& workDirectory) {
 
   // Read in the SAM file.
   std::shared_ptr<const kgl::ContigCountData> count_data_ptr = kgl::SamCountReader(log).readSAMFile(genome_db_ptr,
@@ -32,62 +32,67 @@ std::shared_ptr<const kgl::GenomeVariant> getSNPVariants(kgl::Logger& log,
                                                                                                     read_quality);
 
   // Generate all variants.
-
   std::shared_ptr<const kgl::GenomeVariant> all_variant_ptr = kgl::VariantFactory().createVariants(genome_name,
                                                                                                    count_data_ptr,
                                                                                                    genome_db_ptr,
                                                                                                    min_count,
                                                                                                    min_proportion);
 
-  // Not interested in Synonymous SNPs, so filter them.
-//  all_variant_ptr = all_variant_ptr->filterVariants(kgl::SynonymousSNPFilter());
-
-
   // Create a genome statistics object.
   std::shared_ptr<const kgl::GenomeStatistics> statistics_ptr(std::make_shared<kgl::GenomeStatistics>(genome_db_ptr,
                                                                                                       all_variant_ptr));
+  // Add to the population statistics
   population_stats_ptr->addGenomeStatistics(statistics_ptr);
 
   // Write the genome stats to file.
   std::string stats_file_name = kgl::ExecEnv::filePath("genome_stats", workDirectory) + ".csv";
   statistics_ptr->outputFeatureCSV(stats_file_name, kgl::VariantOutputIndex::START_1_BASED);
 
-//#define TEST_GENE "PF3D7_1211900"
-//#define TEST_GENE "PF3D7_1255200"
-//#define TEST_GENE "PF3D7_0101900"
-//#define TEST_GENE_1 "PF3D7_0711700"   // possible duplicate mutations.
-//#define TEST_GENE  "PF3D7_0712600"   // possible duplicate mutations.
-#define TEST_CONTIG "Pf3D7_12_v3"
-#define TEST_GENE_1 "PF3D7_1035200"   // s-antigen
-#define TEST_GENE  "PF3D7_1035200"   // s-antigen
+// pfATP4 drug target ATP4 sodium pump.
+#define PFATP4_MINORITY_CONTIG "chr12"
+#define PFATP4_MINORITY_GENE "PF3D7_1211900"
+#define PFATP4_MINORITY_SEQUENCE "rna_PF3D7_1211900-1"
 
+#define PFATP4_MALAWI_CONTIG "PF3D7_12_v3"
+#define PFATP4_MALAWI_GENE "PF3D7_1211900"
+#define PFATP4_MALAWI_SEQUENCE "PF3D7_1211900.1"
 
-  // Filter on dup. GENE.
-  std::shared_ptr<const kgl::GenomeVariant> filter_ptr = all_variant_ptr->filterVariants(kgl::GeneFilter(TEST_GENE_1));
+// Erythrocyte membrane (Blood Cell Surface) protein (busy Malawi)
+#define _BCS_CONTIG "PF3D7_12_v3"
+#define _BCS_GENE "PF3D7_1255200"
+#define  BCS_SEQUENCE "PF3D7_1255200.1"
+
+// Mutant rich Rifin (Malawi)
+#define RIFIN_3_CONTIG "Pf3D7_10_v3"
+#define RIFIN_3_GENE "PF3D7_0101900"
+#define RIFIN_3_SEQUENCE "PF3D7_0101900.1"
+
+// Rifin very similar mutations (Malawi).
+#define RIFIN_1_CONTIG "Pf3D7_07_v3"
+#define RIFIN_1_GENE "PF3D7_0711700"
+#define RIFIN_1_SEQUENCE "PF3D7_0711700.1"
+
+#define RIFIN_2_CONTIG "Pf3D7_07_v3"
+#define RIFIN_2_GENE  "PF3D7_0712600"
+#define RIFIN_2_SEQUENCE "PF3D7_0712600.1"
+
+// S-Antigen very busy 5-prime and 3-prime regions (Malawi).
+#define S_ANTIGEN_CONTIG "Pf3D7_10_v3"
+#define S_ANTIGEN_GENE "PF3D7_1035200"
+#define S_ANTIGEN_SEQUENCE "PF3D7_1035200.1"
+
+#define ACTIVE_CONTIG RIFIN_1_CONTIG
+#define ACTIVE_GENE RIFIN_1_GENE
+#define ACTIVE_SEQUENCE RIFIN_1_SEQUENCE
+
+  // Filter on sequence
+  std::shared_ptr<const kgl::GenomeVariant> filter_ptr = all_variant_ptr->filterVariants(kgl::SequenceFilter(ACTIVE_SEQUENCE));
   // Filter on contig
-//  std::shared_ptr<const kgl::GenomeVariant> filter_ptr = all_variant_ptr->filterVariants(kgl::ContigFilter(TEST_CONTIG));
 
-  filter_ptr = filter_ptr->filterVariants(kgl::CodingFilter());  // remove introns.
-//  std::shared_ptr<const kgl::GenomeVariant> filter_ptr = all_variant_ptr->filterVariants(kgl::NotFilter<kgl::CodingFilter>());  // only non-coding
-
-  kgl::ExecEnv::log().info("Filtered for: {}, Genome has: {} variants", TEST_GENE_1, filter_ptr->size());
+  kgl::ExecEnv::log().info("Filtered for: {}, Genome: {} has: {} variants", ACTIVE_SEQUENCE, genome_name, filter_ptr->size());
   std::cout << *filter_ptr;
 
-  // Create stats for the GENE.
-//  std::shared_ptr<const kgl::GenomeStatistics> filtered_stats_ptr(std::make_shared<kgl::GenomeStatistics>(genome_db_ptr,
-//                                                                                                          filter_ptr));
-  // Add to the population stats for later phylogenetic analysis.
-//  population_stats_ptr->addGenomeStatistics(filtered_stats_ptr);
-
-  // Filter on dup. GENE.
-//  all_variant_ptr = all_variant_ptr->filterVariants(kgl::GeneFilter(TEST_GENE));
-//  all_variant_ptr = all_variant_ptr->filterVariants(kgl::CodingFilter());  // remove introns.
-
-//  kgl::ExecEnv::log().info("Filtered for: {}, Genome has: {} variants", TEST_GENE, all_variant_ptr->size());
-//  std::cout << *all_variant_ptr;
-
-
-  // Return the filtered variants.
+  // Return the genome variants.
   return all_variant_ptr;
 
 }
@@ -107,95 +112,62 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
   genome_db_ptr->createVerifyGenomeDatabase();
 
   // Create a population statistics object.
-
   std::shared_ptr<kgl::PopulationStatistics> population_stats_ptr(std::make_shared<kgl::PopulationStatistics>("Malawi-PRJNA173723"));
 
+  // For all organisms
   for (const auto& file : args.fileList) {
 
-    // Generate mutant filtered simple SNPs.
-    std::shared_ptr<const kgl::GenomeVariant> variant_ptr = getSNPVariants(log,
-                                                                           genome_db_ptr,
-                                                                           population_stats_ptr,
-                                                                           file.file_name,
-                                                                           file.genome_name,
-                                                                           args.readQuality,
-                                                                           args.minCount,
-                                                                           args.minProportion,
-                                                                           args.workDirectory);
+    // Generate all genome variants.
+    std::shared_ptr<const kgl::GenomeVariant> variant_ptr = getGenomeVariants(log,
+                                                                              genome_db_ptr,
+                                                                              population_stats_ptr,
+                                                                              file.file_name,
+                                                                              file.genome_name,
+                                                                              args.readQuality,
+                                                                              args.minCount,
+                                                                              args.minProportion,
+                                                                              args.workDirectory);
 
-
+    // Write genome variants to file.
     variant_ptr->outputCSV(args.outCSVFile, VariantOutputIndex::START_1_BASED, false);
-    std::string fasta_file_name = ExecEnv::filePath(file.genome_name, args.workDirectory) + ".fasta";
-    std::string sequence_name = "PF3D7_1035200_" + file.genome_name;
-    std::string read_fasta_name = ExecEnv::filePath("AuxFiles/PF3D7_1035200_Reference", args.workDirectory) + ".fasta";
+    std::string sequence_name = file.genome_name;
+    sequence_name += "_";
+    sequence_name += ACTIVE_GENE;
+    std::string fasta_file_name = ExecEnv::filePath(sequence_name, args.workDirectory) + ".fasta";
 
-
-#define MUTANT_PROTEIN 1
-#define MALAWI 1
-
-#ifdef MUTANT_PROTEIN
-#ifdef MALAWI
-
+    // Write the vector of mutant proteins to a fasta file.
     ApplicationAnalysis::writeMutantProteins(fasta_file_name,
                                              sequence_name,
-                                             "Pf3D7_10_v3",
-                                             "PF3D7_1035200",
-                                             "PF3D7_1035200.1",
+                                             ACTIVE_CONTIG,
+                                             ACTIVE_GENE,
+                                             ACTIVE_SEQUENCE,
                                              genome_db_ptr,
                                              variant_ptr);
 
     std::vector<std::string> comparison_vector;
-    if (ApplicationAnalysis::readMutantProteins(read_fasta_name,
-                                                "PF3D7_1035200",
-                                                "Pf3D7_10_v3",
-                                                "PF3D7_1035200",
-                                                "PF3D7_1035200.1",
-                                                genome_db_ptr,
-                                                variant_ptr,
-                                                comparison_vector)) {
+
+    // Generate a vector of protein mutation maps for visual inspection
+    if (ApplicationAnalysis::compareMutantProteins(ACTIVE_CONTIG,
+                                                   ACTIVE_GENE,
+                                                   ACTIVE_SEQUENCE,
+                                                   genome_db_ptr,
+                                                   variant_ptr,
+                                                   comparison_vector)) {
 
       for (const auto& comparison : comparison_vector) {
 
-        ExecEnv::log().info("PF3D7_1035200 comparison:\n{}", comparison);
+        ExecEnv::log().info("Genome: {} Sequence:{} Comparison:\n{}\n", file.genome_name, ACTIVE_SEQUENCE, comparison);
 
       }
 
     }
 
-#else
-
-    ApplicationAnalysis::writeMutantProtein(fasta_file_name,
-                                            sequence_name,
-                                            "chr12",
-                                            "PF3D7_1211900",
-                                            "rna_PF3D7_1211900-1",
-                                            genome_db_ptr,
-                                            variant_ptr);
-    std::string comparison;
-    if (ApplicationAnalysis::readMutantProtein(read_fasta_name,
-                                           "PF3D7_1211900",
-                                           "chr12",
-                                           "PF3D7_1211900",
-                                           "rna_PF3D7_1211900-1",
-                                           genome_db_ptr,
-                                           variant_ptr,
-                                           comparison)) {
-
-      ExecEnv::log().info("PF3D7_1211900 comparison:\n{}", comparison);
-
-    }
-
-#endif
-#endif
-
-    // Generate a UPGMA newick file from the population stats object
-    std::string newick_file = ExecEnv::filePath("UPGMA_newick", args.workDirectory) + ".txt";
-    kgl::PhylogeneticAnalysis::UPGMA(newick_file, population_stats_ptr);
-
   } // For all sam files loop.
 
-  // Perform population analysis.
-
+  // Perform population analysis
+  // (disabled to save CPU time)
+  std::string newick_file = ExecEnv::filePath("file.genome_name+ UPGMA_newick", args.workDirectory) + ".txt";
+//  kgl::PhylogeneticAnalysis::UPGMA(newick_file, population_stats_ptr);
 
 }
 

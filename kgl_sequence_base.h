@@ -48,7 +48,12 @@ public:
   ~DNA5SequenceCoding() override = default;
 
   // Offset is the relative sequence offset.
-  bool modifyBase(CodingDNA5::Alphabet Nucleotide, ContigOffset_t sequence_offset);
+  bool modifyBase(ContigOffset_t sequence_offset, CodingDNA5::Alphabet Nucleotide);
+  // Delete offset is relative to the begining of the sequence (0 is the first letter).
+  bool deleteSubSequence(ContigOffset_t delete_offset, ContigSize_t delete_size);
+  // Insert offset is relative to the begining of the sequence (0 is the first letter).
+  bool insertSubSequence(ContigOffset_t insert_offset, const DNA5SequenceCoding& inserted_sequence);
+
 
 private:
 

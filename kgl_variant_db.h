@@ -131,11 +131,13 @@ public:
   Attributes& attributes() { return attributes_; }
   void attributes(const Attributes& attributes) { attributes_ = attributes; }
 
+  // Returns a maximum of MUTATION_HARD_LIMIT_ alternative protein mutations.
   bool mutantProteins( const ContigId_t& contig_id,
                        const FeatureIdent_t& gene_id,
                        const FeatureIdent_t& sequence_id,
                        const std::shared_ptr<const GenomeDatabase>& genome_db,
-                       std::vector<std::shared_ptr<AminoSequence>>& amino_sequence_vector) const;
+                       std::shared_ptr<AminoSequence>& reference_sequence,
+                       std::vector<std::shared_ptr<AminoSequence>>& mutant_sequence_vector) const;
 
 
 private:
@@ -154,16 +156,41 @@ private:
 
   // Returns a vector of alternative mutation paths based on the number of equal offset mutations in the coding variants.
   // There maybe more than one variant specified per offset.
-  // If there are equal offset variants then we create alternative (2) mutation paths.
+  // If there are equal offset variants then we create alternative mutation paths.
   // This function is exponential. Alternative Mutations = 2 ^ (#equal offset variants).
   // A warning is issued if the soft limit is reached; default 32 alternatives (5 equal offset variants).
   // The number of variant paths is capped by the hard limit; default 128 alternatives (9 equal offset variants)
-  static void getMutationAlternatives(const OffsetVariantMap coding_variant_map,
+  static void getMutationAlternatives(std::shared_ptr<const OffsetVariantMap> variant_map_ptr,
                                       std::vector<OffsetVariantMap>& variant_map_vector,
                                       size_t& alternative_count,
-                                      size_t soft_limit = MUTATION_SOFT_LIMIT_,
-                                      size_t hard_limit = MUTATION_HARD_LIMIT_);
+                                      size_t soft_limit,
+                                      size_t hard_limit);
 
+  // Split the variant map into SNP, Delete and Insert Variants.
+  static void SplitVariantMap(const OffsetVariantMap& variant_map,
+                              OffsetVariantMap& snp_variant_map,
+                              OffsetVariantMap& delete_variant_map,
+                              OffsetVariantMap& insert_variant_map);
+
+  // Mutate the DNA sequence using SNP variants
+  static bool mutateSNPs(const OffsetVariantMap& snp_variant_map,
+                         const FeatureIdent_t& sequence_id,
+                         std::shared_ptr<DNA5SequenceCoding>& dna_sequence_ptr);
+
+  // The delete offset accounting map records where deletions occur so that inserts can be properly aligned.
+  using DeleteAccountingMap = std::map<ContigOffset_t, ContigSize_t>;
+
+  // Mutate the DNA sequence using delete variants
+  static bool mutateDeletes(const OffsetVariantMap& delete_variant_map,
+                            const FeatureIdent_t& sequence_id,
+                            std::shared_ptr<DNA5SequenceCoding>& dna_sequence_ptr,
+                            DeleteAccountingMap& delete_accounting_map);
+
+  // Mutate the DNA sequence using insert variants
+  static bool mutateInserts(const OffsetVariantMap& insert_variant_map,
+                            const FeatureIdent_t& sequence_id,
+                            const DeleteAccountingMap& delete_accounting_map,
+                            std::shared_ptr<DNA5SequenceCoding>& dna_sequence_ptr);
 
 };
 

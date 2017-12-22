@@ -3,6 +3,7 @@
 //
 
 #include "kgl_phylogenetic_analysis.h"
+#include "kgl_sequence_virtual_compare.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -18,15 +19,25 @@ bool kgl::ApplicationAnalysis::writeMutantProteins(const std::string& fasta_file
                                                    const std::shared_ptr<const GenomeVariant>& genome_variant) {
 
 
-  std::vector<std::shared_ptr<AminoSequence>> amino_sequence_vector;
-  if (genome_variant->mutantProteins(contig_id, gene_id, sequence_id, genome_db, amino_sequence_vector)) {
+  std::vector<std::shared_ptr<AminoSequence>> mutant_sequence_vector;
+  std::shared_ptr<AminoSequence> reference_sequence;
+
+  if (genome_variant->mutantProteins(contig_id,
+                                     gene_id,
+                                     sequence_id,
+                                     genome_db,
+                                     reference_sequence,
+                                     mutant_sequence_vector)) {
 
     std::vector<WriteFastaSequence> fasta_sequence_vec;
+    size_t sequence_counter = 0;
+    for (auto amino_sequence : mutant_sequence_vector) {
 
-    for (auto amino_sequence : amino_sequence_vector) {
-
+      ++sequence_counter;
+      std::stringstream ss;
+      ss << sequence_name << "_" << sequence_counter;
       WriteFastaSequence fasta_sequence;
-      fasta_sequence.first = sequence_name;
+      fasta_sequence.first = ss.str();
       fasta_sequence.second = amino_sequence;
       fasta_sequence_vec.push_back(fasta_sequence);
 
@@ -55,11 +66,17 @@ bool kgl::ApplicationAnalysis::readMutantProteins(const std::string& fasta_file,
                                                   std::vector<std::string>& comparison_string_vector) {
 
 
-  std::vector<std::shared_ptr<AminoSequence>> amino_sequence_vector;
+  std::vector<std::shared_ptr<AminoSequence>> mutant_sequence_vector;
+  std::shared_ptr<AminoSequence> reference_sequence;
 
   comparison_string_vector.clear();
 
-  if (genome_variant->mutantProteins(contig_id, gene_id, sequence_id, genome_db, amino_sequence_vector)) {
+  if (genome_variant->mutantProteins(contig_id,
+                                     gene_id,
+                                     sequence_id,
+                                     genome_db,
+                                     reference_sequence,
+                                     mutant_sequence_vector)) {
 
     std::vector<ReadFastaSequence> fasta_sequence_vec;
     if (ParseGffFasta().readFastaFile(fasta_file, fasta_sequence_vec)) {
@@ -68,11 +85,11 @@ bool kgl::ApplicationAnalysis::readMutantProteins(const std::string& fasta_file,
 
         if (sequence.first == sequence_name) {
 
-          for (auto amino_sequence : amino_sequence_vector) {
+          for (auto amino_sequence : mutant_sequence_vector) {
 
             StringAminoAcid fasta_amino_string(*sequence.second);
             std::shared_ptr<AminoSequence> fasta_amino_sequence(std::make_shared<AminoSequence>(fasta_amino_string));
-            std::string comparison_string = fasta_amino_sequence->compareSequences(amino_sequence);
+            std::string comparison_string = fasta_amino_sequence->compareAminoSequences(*amino_sequence);
             comparison_string_vector.push_back(comparison_string);
 
           }
@@ -104,6 +121,43 @@ bool kgl::ApplicationAnalysis::readMutantProteins(const std::string& fasta_file,
 
 }
 
+
+bool kgl::ApplicationAnalysis::compareMutantProteins(const ContigId_t& contig_id,
+                                                     const FeatureIdent_t& gene_id,
+                                                     const FeatureIdent_t& sequence_id,
+                                                     const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                                     const std::shared_ptr<const GenomeVariant>& genome_variant,
+                                                     std::vector<std::string>& comparison_string_vector) {
+
+  std::vector<std::shared_ptr<AminoSequence>> mutant_sequence_vector;
+  std::shared_ptr<AminoSequence> reference_sequence;
+
+  comparison_string_vector.clear();
+
+  if (genome_variant->mutantProteins(contig_id,
+                                     gene_id,
+                                     sequence_id,
+                                     genome_db,
+                                     reference_sequence,
+                                     mutant_sequence_vector)) {
+
+    for (auto amino_sequence : mutant_sequence_vector) {
+
+      std::string comparison_string = reference_sequence->compareAminoSequences(*amino_sequence);
+      comparison_string_vector.push_back(comparison_string);
+
+    }
+
+  } else {
+
+    ExecEnv::log().warn("No valid sequence for contig: {}, gene: {}, sequence id: {}", contig_id, gene_id, sequence_id);
+    return false;
+
+  }
+
+  return true;
+
+}
 
 
 bool kgl::PhylogeneticAnalysis::UPGMA(const std::string& newick_file,
