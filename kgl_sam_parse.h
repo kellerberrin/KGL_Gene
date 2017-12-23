@@ -21,7 +21,7 @@ class SAMRecordParser {
 
 public:
 
-  explicit SAMRecordParser(Logger& logger) : log(logger) {}
+  explicit SAMRecordParser() = default;
   ~SAMRecordParser() = default;
 
   // Returns false if the sam record is unmapped.
@@ -61,8 +61,6 @@ public:
   }
 
 private:
-
-  Logger& log;        // Declared First. Emit log messages to console and log file.
 
   // Define the SAM record offsets.
   static constexpr size_t QNAME_OFFSET = 0;

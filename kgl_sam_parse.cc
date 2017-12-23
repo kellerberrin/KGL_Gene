@@ -59,7 +59,7 @@ bool kgl::SAMRecordParser::parseSAMFields(std::unique_ptr<const std::string>& re
 
   if (field_count <  SAM_FIELD_COUNT) {
 
-    log.error("Incorrect field count: {}, SAM record: {}", field_count, *record_ptr);
+    ExecEnv::log().error("Incorrect field count: {}, SAM record: {}", field_count, *record_ptr);
     return false;
 
   }
@@ -82,7 +82,7 @@ bool kgl::SAMRecordParser::fastDecodeSAMCigar( std::unique_ptr<const std::string
 
       if (record_ptr->at(cigar_offset.first + char_index) != UNMAPPED_READ_) {
 
-        log.error("Unexpected character in cigar, SAM record: {}", *record_ptr);
+        ExecEnv::log().error("Unexpected character in cigar, SAM record: {}", *record_ptr);
 
       }
 
@@ -121,7 +121,7 @@ bool kgl::SAMRecordParser::fastDecodeSAMCigar( std::unique_ptr<const std::string
         return false;
 
       default:
-        log.error("Unexpected character in cigar, SAM record: {}", *record_ptr);
+      ExecEnv::log().error("Unexpected character in cigar, SAM record: {}", *record_ptr);
         return false;
 
     }

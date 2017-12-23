@@ -33,7 +33,8 @@ public:
                                                       const std::shared_ptr<const ContigCountData> &count_data,
                                                       const std::shared_ptr<const GenomeDatabase> &genome_db,
                                                       NucleotideReadCount_t minimum_read_count,
-                                                      double minimum_proportion) const;
+                                                      double minimum_proportion,
+                                                      Phred_t read_quality) const;
 
 private:
 
@@ -46,23 +47,24 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class SNPFactory : public VariantFactory {
+class SingleFactory : public VariantFactory {
 
 public:
 
-  explicit SNPFactory() = default;
-  ~SNPFactory() override = default;
+  explicit SingleFactory() = default;
+  ~SingleFactory() override = default;
 
 
-  std::shared_ptr<const GenomeVariant> createSNPs(const std::string &genome_name,
-                                                  const std::shared_ptr<const ContigCountData> &count_data,
-                                                  const std::shared_ptr<const GenomeDatabase> &genome_db_ptr,
-                                                  NucleotideReadCount_t minimum_read_count,
-                                                  double minimum_proportion) const;
+  std::shared_ptr<const GenomeVariant> createSingleVariants(const std::string &genome_name,
+                                                            const std::shared_ptr<const ContigCountData> &count_data,
+                                                            const std::shared_ptr<const GenomeDatabase> &genome_db_ptr,
+                                                            NucleotideReadCount_t minimum_read_count,
+                                                            double minimum_proportion,
+                                                            Phred_t read_quality) const;
 
 private:
 
-  void addSNPVariant(std::shared_ptr<GenomeVariant> genome_snp_variants, const Variant& variant) const;
+  void addSingleVariant(std::shared_ptr<GenomeVariant> genome_single_variants, const Variant &variant) const;
 
 };
 

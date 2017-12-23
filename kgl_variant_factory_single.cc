@@ -1,6 +1,7 @@
 //
-// Created by kellerberrin on 22/11/17.
+// Created by kellerberrin on 23/12/17.
 //
+
 
 #include "kgl_variant_single.h"
 #include "kgl_variant_factory.h"
@@ -11,13 +12,14 @@ namespace kgl = kellerberrin::genome;
 
 // Generate SNP variants.
 std::shared_ptr<const kgl::GenomeVariant>
-kgl::SNPFactory::createSNPs(const std::string &genome_name,
-                            const std::shared_ptr<const ContigCountData> &count_data,
-                            const std::shared_ptr<const GenomeDatabase> &genome_db,
-                            NucleotideReadCount_t minimum_read_count,
-                            double minimum_proportion) const {
+kgl::SingleFactory::createSingleVariants(const std::string &genome_name,
+                                         const std::shared_ptr<const ContigCountData> &count_data,
+                                         const std::shared_ptr<const GenomeDatabase> &genome_db,
+                                         NucleotideReadCount_t minimum_read_count,
+                                         double minimum_proportion,
+                                         Phred_t read_quality) const {
 
-  std::shared_ptr<GenomeVariant> genome_snp_variants = kgl::GenomeVariant::emptyGenomeVariant(genome_name, genome_db);
+  std::shared_ptr<GenomeVariant> genome_single_variants = kgl::GenomeVariant::emptyGenomeVariant(genome_name, genome_db);
   size_t snp_count = 0;
 
   for (auto& contig_block : count_data->getMap()) {   // For each contig block.
@@ -26,7 +28,7 @@ kgl::SNPFactory::createSNPs(const std::string &genome_name,
     std::shared_ptr<ContigFeatures> contig_ptr;
     if (not genome_db->getContigSequence(contig_block.first, contig_ptr)) {
 
-      ExecEnv::log().error("Contig: {} not found in SNPFactory.create()", contig_block.first);
+      ExecEnv::log().error("Contig: {} not found in SingleFactory.create()", contig_block.first);
       continue;
 
     } else {
@@ -75,31 +77,31 @@ kgl::SNPFactory::createSNPs(const std::string &genome_name,
                                      reference_nucleotide,
                                      mutant_nucleotide);
 
-              addSNPVariant(genome_snp_variants, snp_variant); // Annotate with genome information
+              addSingleVariant(genome_single_variants, snp_variant); // Annotate with genome information
 
             } else if (ExtendDNA5::isDeletion(mutant_nucleotide)) {
 
               DeleteVariant delete_variant(genome_name,
-                                     contig_ptr,
-                                     contig_offset,
-                                     quality,
-                                     evidence_ptr,
-                                     reference_nucleotide,
-                                     mutant_nucleotide);
+                                           contig_ptr,
+                                           contig_offset,
+                                           quality,
+                                           evidence_ptr,
+                                           reference_nucleotide,
+                                           mutant_nucleotide);
 
-              addSNPVariant(genome_snp_variants, delete_variant); // Annotate with genome information
+              addSingleVariant(genome_single_variants, delete_variant); // Annotate with genome information
 
             } else if (ExtendDNA5::isInsertion(mutant_nucleotide)) {
 
               InsertVariant insert_variant(genome_name,
-                                     contig_ptr,
-                                     contig_offset,
-                                     quality,
-                                     evidence_ptr,
-                                     reference_nucleotide,
-                                     mutant_nucleotide);
+                                           contig_ptr,
+                                           contig_offset,
+                                           quality,
+                                           evidence_ptr,
+                                           reference_nucleotide,
+                                           mutant_nucleotide);
 
-              addSNPVariant(genome_snp_variants, insert_variant); // Annotate with genome information
+              addSingleVariant(genome_single_variants, insert_variant); // Annotate with genome information
 
             } else {
 
@@ -122,14 +124,14 @@ kgl::SNPFactory::createSNPs(const std::string &genome_name,
 
   }  // for all contigs.
 
-  return genome_snp_variants;
+  return genome_single_variants;
 
 }
 
 
 // This function will insert multiple variants for each CDS sequence within each gene.
-void kgl::SNPFactory::addSNPVariant(std::shared_ptr<GenomeVariant> genome_snp_variants,
-                                    const Variant& variant) const {
+void kgl::SingleFactory::addSingleVariant(std::shared_ptr<GenomeVariant> genome_single_variants,
+                                          const Variant &variant) const {
 
   // Annotate the variant with genome information.
   GeneVector gene_vector;
@@ -142,9 +144,9 @@ void kgl::SNPFactory::addSNPVariant(std::shared_ptr<GenomeVariant> genome_snp_va
       if (sequence_array->empty()) {
 
         // create a variant copy and annotate with a gene.
-        std::shared_ptr<Variant> intron_snp_ptr = variant.clone();
-        intron_snp_ptr->defineIntron(gene_ptr); // intron
-        genome_snp_variants->addVariant(intron_snp_ptr);
+        std::shared_ptr<Variant> intron_single_ptr = variant.clone();
+        intron_single_ptr->defineIntron(gene_ptr); // intron
+        genome_single_variants->addVariant(intron_single_ptr);
 
       } else {
 
@@ -153,16 +155,16 @@ void kgl::SNPFactory::addSNPVariant(std::shared_ptr<GenomeVariant> genome_snp_va
           if (sequence.second->isWithinCoding(variant_offset)) {
 
             // create a variant copy and annotate with a coding sequence.
-            std::shared_ptr<Variant> coding_snp_ptr = variant.clone();
-            coding_snp_ptr->defineCoding(sequence.second); // coding
-            genome_snp_variants->addVariant(coding_snp_ptr);
+            std::shared_ptr<Variant> coding_single_ptr = variant.clone();
+            coding_single_ptr->defineCoding(sequence.second); // coding
+            genome_single_variants->addVariant(coding_single_ptr);
 
           } else {  // an intron for this sequence
 
             // create a variant copy and annotate with a gene.
-            std::shared_ptr<Variant> intron_snp_ptr = variant.clone();
-            intron_snp_ptr->defineIntron(gene_ptr); // intron
-            genome_snp_variants->addVariant(intron_snp_ptr);
+            std::shared_ptr<Variant> intron_single_ptr = variant.clone();
+            intron_single_ptr->defineIntron(gene_ptr); // intron
+            genome_single_variants->addVariant(intron_single_ptr);
 
           } // if valid sequence for offset
 
@@ -175,9 +177,9 @@ void kgl::SNPFactory::addSNPVariant(std::shared_ptr<GenomeVariant> genome_snp_va
   } else {
 
     // create a variant copy and tag as non-coding.
-    std::shared_ptr<Variant> noncoding_snp_ptr  = variant.clone();
-    noncoding_snp_ptr->defineNonCoding(); // non coding
-    genome_snp_variants->addVariant(noncoding_snp_ptr);
+    std::shared_ptr<Variant> noncoding_single_ptr  = variant.clone();
+    noncoding_single_ptr->defineNonCoding(); // non coding
+    genome_single_variants->addVariant(noncoding_single_ptr);
 
   }
 

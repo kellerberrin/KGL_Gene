@@ -6,6 +6,7 @@
 #define KGL_PHYLOGENETIC_ENV_H
 
 
+#include "kgl_genome_types.h"
 #include "kgl_exec_env.h"
 
 namespace kellerberrin {   //  organization level namespace
@@ -34,7 +35,8 @@ struct Phylogenetic {
   bool verbose{false};
   int minCount{0};
   double minProportion{0};
-  unsigned char readQuality{0};
+  Phred_t readQuality{30.0};
+
 
 };
 

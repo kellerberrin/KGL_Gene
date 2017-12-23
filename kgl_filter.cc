@@ -8,73 +8,6 @@
 
 namespace kgl = kellerberrin::genome;
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Set the minimum read count SNP generation.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-bool kgl::ReadCountFilter::implementFilter(const SNPVariant& variant) const {
-
-  if (variant.evidence()->isReadCount())  {
-
-    auto read_count_ptr = std::dynamic_pointer_cast<const ReadCountEvidence>(variant.evidence());
-
-    if (not read_count_ptr) {
-
-      return true;
-
-    }
-
-    return read_count_ptr->readCount() >= read_count_;
-
-  }
-
-  return true;
-
-}
-
-
-std::string kgl::ReadCountFilter::filterName() const {
-
-  std::ostringstream oss;
-  oss << "Minimum Read Count >= " << read_count_;
-  return oss.str();
-
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Set the minimum mutant read proportion in a candidate SNP.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-bool kgl::MutantProportionFilter::implementFilter(const SNPVariant& variant) const {
-
-  if (variant.evidence()->isReadCount())  {
-
-    auto read_count_ptr = std::dynamic_pointer_cast<const ReadCountEvidence>(variant.evidence());
-
-    if (not read_count_ptr) {
-
-      return true;
-
-    }
-
-    return read_count_ptr->proportion() >= mutant_proportion_;
-
-  }
-
-  return true;
-
-}
-
-
-std::string kgl::MutantProportionFilter::filterName() const {
-
-  std::ostringstream oss;
-  oss << "Minimum Read Proportion >= " << mutant_proportion_;
-  return oss.str();
-
-}
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -176,7 +109,7 @@ std::string kgl::SequenceFilter::filterName() const {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool kgl::SynonymousSNPFilter::implementFilter(const Variant& variant) const {
+bool kgl::SynonymousFilter::implementFilter(const Variant& variant) const {
 
   if (variant.variantType() == VariantType::SNP) {
 
@@ -234,7 +167,7 @@ bool kgl::SynonymousSNPFilter::implementFilter(const Variant& variant) const {
 
 
 
-std::string kgl::SynonymousSNPFilter::filterName() const {
+std::string kgl::SynonymousFilter::filterName() const {
 
   return "Remove Synonymous Coding (single and compound) SNPs";
 

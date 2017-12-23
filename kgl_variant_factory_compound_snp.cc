@@ -52,7 +52,7 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
       if (variant.second->type() == VariantSequenceType::CDS_CODING and variant.second->isSingle()) {
 
         // Get a (virtual) subordinate SNP pointer.
-        std::shared_ptr<const SubordinateSNP> subSNP_ptr = std::static_pointer_cast<const SubordinateSNP>(variant.second);
+        std::shared_ptr<const SingleVariant> subSNP_ptr = std::static_pointer_cast<const SingleVariant>(variant.second);
 
         // The mutant must be a base
         if (ExtendDNA5::isBaseCode(subSNP_ptr->mutant())) {
@@ -61,7 +61,7 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
           if (compound_variant_vec.empty()) {
 
             CompoundVariantMap compound_variant;
-            std::pair<ContigSize_t, std::shared_ptr<const SubordinateSNP>> insert_pair(subSNP_ptr->offset(), subSNP_ptr);
+            std::pair<ContigSize_t, std::shared_ptr<const SingleVariant>> insert_pair(subSNP_ptr->offset(), subSNP_ptr);
             compound_variant.insert(insert_pair);
             compound_variant_vec.push_back(std::make_shared<CompoundVariantMap>(compound_variant));
 
@@ -101,7 +101,7 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
                   // set the found flag to true.
                   found_sequence = true;
                   // create the insert pair.
-                  std::pair<ContigSize_t, std::shared_ptr<const SubordinateSNP>> insert_pair(subSNP_ptr->offset(),
+                  std::pair<ContigSize_t, std::shared_ptr<const SingleVariant>> insert_pair(subSNP_ptr->offset(),
                                                                                              subSNP_ptr);
 
                   // Is the variant at the same contig address.
@@ -175,7 +175,7 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
             if (not found_sequence) {
 
               CompoundVariantMap compound_variant;
-              std::pair<ContigSize_t, std::shared_ptr<const SubordinateSNP>> insert_pair(subSNP_ptr->offset(), subSNP_ptr);
+              std::pair<ContigSize_t, std::shared_ptr<const SingleVariant>> insert_pair(subSNP_ptr->offset(), subSNP_ptr);
               compound_variant.insert(insert_pair);
               compound_variant_vec.push_back(std::make_shared<CompoundVariantMap>(compound_variant));
 

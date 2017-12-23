@@ -23,6 +23,7 @@ bool kgl::CompoundVariant::equivalent(const Variant& cmp_var) const {
   bool result = contigId() == compound_var->contigId()
                 and contigOffset() == compound_var->contigOffset()
                 and type() == compound_var->type()
+                and variantType() == compound_var->variantType()
                 and codingSequenceId() == compound_var->codingSequenceId();
 
   if (not result) return false;

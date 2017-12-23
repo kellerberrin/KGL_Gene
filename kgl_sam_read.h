@@ -21,8 +21,7 @@ class ProduceMTSAM {
 
 public:
 
-  explicit ProduceMTSAM(Logger& logger, std::shared_ptr<SAMConsumerMT>& consumer_ptr)
-  : log(logger), producer_consumer_queue_(HIGH_TIDE_, LOW_TIDE_) {
+  explicit ProduceMTSAM(std::shared_ptr<SAMConsumerMT>& consumer_ptr) : producer_consumer_queue_(HIGH_TIDE_, LOW_TIDE_) {
 
     consumer_ptr_ = consumer_ptr;
 
@@ -33,7 +32,6 @@ public:
 
 private:
 
-  Logger& log;                              // Declared First. Emit log messages to console and log file.
   BoundedMtQueue<std::unique_ptr<const std::string>> producer_consumer_queue_; // The Producer/Consumer record queue
   std::shared_ptr<SAMConsumerMT> consumer_ptr_;                  // Consume the SAM records.
 
@@ -56,7 +54,7 @@ private:
 template <class SAMConsumerMT>
 void ProduceMTSAM<SAMConsumerMT>::readSamFile( const std::string &file_name) {
 
-  log.info("Begin processing SAM file: {}", file_name);
+  ExecEnv::log().info("Begin processing SAM file: {}", file_name);
 
   // Spawn consumer threads.
   consumer_thread_count_ = std::thread::hardware_concurrency();
@@ -64,7 +62,7 @@ void ProduceMTSAM<SAMConsumerMT>::readSamFile( const std::string &file_name) {
   // Spawn a maximum of 4 consumers.
   consumer_thread_count_ = consumer_thread_count_ > MAX_CONSUMER_THREADS_? MAX_CONSUMER_THREADS_ : consumer_thread_count_;
 
-  log.info("Spawning: {} Consumer threads to process the SAM file", consumer_thread_count_);
+  ExecEnv::log().info("Spawning: {} Consumer threads to process the SAM file", consumer_thread_count_);
 
   std::vector<std::thread> consumer_threads;
   for(int i = 0; i < consumer_thread_count_; ++i) {
@@ -97,7 +95,7 @@ void ProduceMTSAM<SAMConsumerMT>::samProducer(const std::string &file_name) {
 
   if (not sam_file.good()) {
 
-    log.critical("I/O error; could not open SAM file: {}", file_name);
+    ExecEnv::log().critical("I/O error; could not open SAM file: {}", file_name);
 
   }
 
@@ -119,7 +117,7 @@ void ProduceMTSAM<SAMConsumerMT>::samProducer(const std::string &file_name) {
 
       if (counter % REPORT_INCREMENT_ == 0) {
 
-        log.info("Producer thread read: {} SAM records", counter);
+        ExecEnv::log().info("Producer thread read: {} SAM records", counter);
 
       }
 
@@ -135,12 +133,12 @@ void ProduceMTSAM<SAMConsumerMT>::samProducer(const std::string &file_name) {
 
     sam_file.close();
 
-    log.info("Final; Producer thread read: {} SAM records", counter);
+    ExecEnv::log().info("Final; Producer thread read: {} SAM records", counter);
 
   }
   catch (std::exception const &e) {
 
-    log.critical("SAM file: {}, unexpected I/O exception: {}", file_name, e.what());
+    ExecEnv::log().critical("SAM file: {}, unexpected I/O exception: {}", file_name, e.what());
 
   }
 
@@ -165,7 +163,7 @@ void ProduceMTSAM<SAMConsumerMT>::samConsumer() {
 
   }
 
-  log.info("Final; Consumer thread processed: {} SAM records", counter);
+  ExecEnv::log().info("Final; Consumer thread processed: {} SAM records", counter);
 
 }
 

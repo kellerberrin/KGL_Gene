@@ -26,7 +26,7 @@ namespace genome {   // project level namespace
 //  A compound variant. A collection of feature aligned and contiguous variants. Insertions and Deletions.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using CompoundVariantMap = std::map<ContigOffset_t, std::shared_ptr<const SubordinateSNP>>;
+using CompoundVariantMap = std::map<ContigOffset_t, std::shared_ptr<const SingleVariant>>;
 
 class CompoundVariant : public Variant {
 
@@ -79,7 +79,8 @@ public:
   CompoundInsert(const CompoundInsert&) = default;
   ~CompoundInsert() override = default;
 
-  virtual std::shared_ptr<Variant> clone() const override { return std::shared_ptr<CompoundInsert>(std::make_shared<CompoundInsert>(*this)); }
+  // Polymorphic copy constructor
+  std::shared_ptr<Variant> clone() const override { return std::shared_ptr<CompoundInsert>(std::make_shared<CompoundInsert>(*this)); }
 
   VariantType variantType() const override { return VariantType::COMPOUND_INSERT; }
 
@@ -116,7 +117,8 @@ public:
   CompoundDelete(const CompoundDelete&) = default;
   ~CompoundDelete() override = default;
 
-  virtual std::shared_ptr<Variant> clone() const override { return std::shared_ptr<CompoundDelete>(std::make_shared<CompoundDelete>(*this)); }
+  // Polymorphic copy constructor
+  std::shared_ptr<Variant> clone() const override { return std::shared_ptr<CompoundDelete>(std::make_shared<CompoundDelete>(*this)); }
 
   VariantType variantType() const override { return VariantType::COMPOUND_DELETE; }
 
@@ -153,7 +155,8 @@ public:
   CompoundSNP(const CompoundSNP&) = default;
   ~CompoundSNP() override = default;
 
-  virtual std::shared_ptr<Variant> clone() const override { return std::shared_ptr<CompoundSNP>(std::make_shared<CompoundSNP>(*this)); }
+  // Polymorphic copy constructor
+  std::shared_ptr<Variant> clone() const override { return std::shared_ptr<CompoundSNP>(std::make_shared<CompoundSNP>(*this)); }
 
   VariantType variantType() const override { return VariantType::COMPOUND_SNP; }
 

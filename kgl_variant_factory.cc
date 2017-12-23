@@ -17,16 +17,18 @@ kgl::VariantFactory::createVariants(const std::string &genome_name,
                                     const std::shared_ptr<const ContigCountData> &count_data,
                                     const std::shared_ptr<const GenomeDatabase> &genome_db_ptr,
                                     NucleotideReadCount_t minimum_read_count,
-                                    double minimum_proportion) const {
+                                    double minimum_proportion,
+                                    Phred_t read_quality) const {
 
 
   ExecEnv::log().info("Generating SNP variants for Genome: {}", genome_name);
   // generate snp raw variants.
-  std::shared_ptr<const GenomeVariant> snp_ptr = SNPFactory().createSNPs(genome_name,
-                                                                         count_data,
-                                                                         genome_db_ptr,
-                                                                         minimum_read_count,
-                                                                         minimum_proportion);
+  std::shared_ptr<const GenomeVariant> snp_ptr = SingleFactory().createSingleVariants(genome_name,
+                                                                                      count_data,
+                                                                                      genome_db_ptr,
+                                                                                      minimum_read_count,
+                                                                                      minimum_proportion,
+                                                                                      read_quality);
 
   ExecEnv::log().info("Generated: {} SNP variants for Genome: {}", snp_ptr->size(), genome_name);
   ExecEnv::log().info("Generating Compound variants for Genome: {}", genome_name);

@@ -31,10 +31,8 @@ public:
 
     kgl::ExecEnv::createLogger(SAM_READ_MODULE_NAME_, log_file, 0, 0); // Must be the first statement.
     numpy_data_ptr_ = std::shared_ptr<NumpyDataBlock >(std::make_shared<NumpyDataBlock>());
-    consumer_ptr_ = std::shared_ptr<PythonConsumer>(std::make_shared<PythonConsumer>(kgl::ExecEnv::log(),
-                                                                                     numpy_data_ptr_));
-    producer_ptr_ = std::unique_ptr<PythonProducer>(std::make_unique<PythonProducer>(kgl::ExecEnv::log(),
-                                                                                     consumer_ptr_));
+    consumer_ptr_ = std::shared_ptr<PythonConsumer>(std::make_shared<PythonConsumer>(numpy_data_ptr_));
+    producer_ptr_ = std::unique_ptr<PythonProducer>(std::make_unique<PythonProducer>(consumer_ptr_));
 
   }
   virtual ~PythonProcessSam() = default;

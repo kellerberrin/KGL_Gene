@@ -27,9 +27,9 @@ namespace genome {   // project level namespace
 
 
 
-class Variant; // Forward decl.
 class SNPVariant; // Forward decl.
-class CompoundVariant; // Forward decl.
+class DeleteVariant; // Forward decl.
+class InsertVariant; // Forward decl.
 class CompoundDelete; // Forward decl.
 class CompoundInsert; // Forward decl.
 class CompoundSNP; // Forward decl.
@@ -41,8 +41,9 @@ public:
   VariantFilter() = default;
   virtual ~VariantFilter() = default;
 
-  virtual bool applyFilter(const Variant& variant) const = 0;
   virtual bool applyFilter(const SNPVariant& variant) const = 0;
+  virtual bool applyFilter(const DeleteVariant& variant) const = 0;
+  virtual bool applyFilter(const InsertVariant& variant) const = 0;
   virtual bool applyFilter(const CompoundDelete& variant) const = 0;
   virtual bool applyFilter(const CompoundInsert& variant) const = 0;
   virtual bool applyFilter(const CompoundSNP& variant) const = 0;
@@ -170,7 +171,7 @@ public:
   bool isInsert() const { return variantType() == VariantType::INSERT or variantType() == VariantType::COMPOUND_INSERT; }
 
   virtual bool equivalent(const Variant& cmp_var) const = 0;
-  virtual std::shared_ptr<Variant> clone() const = 0;  // Use this - not the copy contructor.
+  virtual std::shared_ptr<Variant> clone() const = 0;  // Polymorphic copy constructor
 
 protected:
 
@@ -178,7 +179,7 @@ protected:
 
 private:
 
-  virtual bool applyFilter(const VariantFilter& filter) const { return filter.applyFilter(*this); }
+  virtual bool applyFilter(const VariantFilter& filter) const = 0;
 
 };
 

@@ -2,18 +2,19 @@
 // Created by kellerberrin on 23/12/17.
 //
 
-#include "kgl_variant_subordinate.h"
+
+#include "kgl_variant_single.h"
 
 
 namespace kgl = kellerberrin::genome;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  SubordinateSNP Variant. A virtual class held in compound variants, produces a modified text output.
+//  SingleVariant Variant. A virtual class held in compound variants, produces a modified text output.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-std::string kgl::SubordinateSNP::suboutput(char delimiter, VariantOutputIndex output_index) const
+std::string kgl::SingleVariant::suboutput(char delimiter, VariantOutputIndex output_index) const
 {
   std::stringstream ss;
   ss << genomeOutput(delimiter, output_index);
@@ -27,7 +28,7 @@ std::string kgl::SubordinateSNP::suboutput(char delimiter, VariantOutputIndex ou
 
 }
 
-std::string kgl::SubordinateSNP::submutation(char delimiter, VariantOutputIndex output_index) const
+std::string kgl::SingleVariant::submutation(char delimiter, VariantOutputIndex output_index) const
 {
 
   std::stringstream ss;
@@ -69,7 +70,7 @@ std::string kgl::SubordinateSNP::submutation(char delimiter, VariantOutputIndex 
 
 
 // complement base if -ve strand and coding or intron.
-kgl::CodingDNA5::Alphabet kgl::SubordinateSNP::strandNucleotide(DNA5::Alphabet nucleotide) const {
+kgl::CodingDNA5::Alphabet kgl::SingleVariant::strandNucleotide(DNA5::Alphabet nucleotide) const {
 
   switch(type()) {
 
@@ -128,9 +129,9 @@ kgl::CodingDNA5::Alphabet kgl::SubordinateSNP::strandNucleotide(DNA5::Alphabet n
 }
 
 
-bool kgl::SubordinateSNP::equivalent(const Variant& cmp_var) const {
+bool kgl::SingleVariant::equivalent(const Variant& cmp_var) const {
 
-  auto cmp_snp = dynamic_cast<const SubordinateSNP*>(&cmp_var);
+  auto cmp_snp = dynamic_cast<const SingleVariant*>(&cmp_var);
 
   if (not cmp_snp) return false;
 
@@ -145,10 +146,10 @@ bool kgl::SubordinateSNP::equivalent(const Variant& cmp_var) const {
 }
 
 
-bool kgl::SubordinateSNP::codonMutation(ContigOffset_t &codon_offset,
-                                        ContigSize_t &base_in_codon,
-                                        AminoAcid::Alphabet &reference_amino,
-                                        AminoAcid::Alphabet &mutant_amino) const {
+bool kgl::SingleVariant::codonMutation(ContigOffset_t &codon_offset,
+                                   ContigSize_t &base_in_codon,
+                                   AminoAcid::Alphabet &reference_amino,
+                                   AminoAcid::Alphabet &mutant_amino) const {
 
 
   if (not codonOffset(codon_offset, base_in_codon)) {
@@ -198,7 +199,7 @@ bool kgl::SubordinateSNP::codonMutation(ContigOffset_t &codon_offset,
 
 
 
-std::string kgl::SubordinateSNP::mutation(char delimiter, VariantOutputIndex output_index) const
+std::string kgl::SingleVariant::mutation(char delimiter, VariantOutputIndex output_index) const
 {
 
   std::stringstream ss;

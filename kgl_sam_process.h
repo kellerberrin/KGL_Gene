@@ -25,17 +25,17 @@ class SamCountReader {
 
 public:
 
-  explicit SamCountReader(Logger& log) : contig_data_ptr_(std::make_shared<ContigCountData>()) {
+  explicit SamCountReader() : contig_data_ptr_(std::make_shared<ContigCountData>()) {
 
-    consumer_ptr_ = std::shared_ptr<LocalConsumer>(std::make_shared<LocalConsumer>(log, contig_data_ptr_));
-    producer_ptr_ = std::unique_ptr<LocalProducer>(std::make_unique<LocalProducer>(log, consumer_ptr_));
+    consumer_ptr_ = std::shared_ptr<LocalConsumer>(std::make_shared<LocalConsumer>(contig_data_ptr_));
+    producer_ptr_ = std::unique_ptr<LocalProducer>(std::make_unique<LocalProducer>(consumer_ptr_));
 
   }
   virtual ~SamCountReader() = default;
 
   std::shared_ptr<const ContigCountData> readSAMFile(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                                      const std::string& file_name,
-                                                     unsigned char readQuality = 0) {
+                                                     Phred_t readQuality) {
     // Register with the genome database to setup the contig data blocks before reading.
     contig_data_ptr_->fileName(file_name);
     genome_db_ptr->registerContigData(contig_data_ptr_);

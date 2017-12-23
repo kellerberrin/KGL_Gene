@@ -26,18 +26,16 @@ class ConsumeMTSAM {
 
 public:
 
-  explicit ConsumeMTSAM(Logger& logger, std::shared_ptr<ConsumerRecordType> data_map_ptr) : log(logger), contig_data_map_(data_map_ptr)  {}
+  explicit ConsumeMTSAM(std::shared_ptr<ConsumerRecordType> data_map_ptr) : contig_data_map_(data_map_ptr)  {}
   virtual ~ConsumeMTSAM() = default;
 
   ConsumerRecordType& contigDataMap() { return *contig_data_map_; }
 
   void consume(std::unique_ptr<const std::string>& record_ptr);  // Parse SAM record into fields.
   void finalize();
-  void readQuality(unsigned char read_quality) { read_quality_ = read_quality + NUCLEOTIDE_QUALITY_ASCII; }
+  void readQuality(Phred_t read_quality) { read_quality_ = static_cast<unsigned char>(read_quality) + NUCLEOTIDE_QUALITY_ASCII; }
 
 private:
-
-  Logger& log;                              // Declared First. Emit log messages to console and log file.
 
   static constexpr unsigned char NUCLEOTIDE_QUALITY_ASCII = 33;  // adjusts nucleotide quality to an ascii value.
   static constexpr unsigned char DEFAULT_MINIMUM_QUALITY = 30 + NUCLEOTIDE_QUALITY_ASCII;   // -10 log10 Pr{ReadError}
@@ -63,7 +61,7 @@ void ConsumeMTSAM<ConsumerRecordType>::finalize() {
   size_t inserted = insert_sequence_;
   size_t ignored = other_contig_;
 
-  log.info("Processed SAM file; unmapped: {}, deleted: {}, inserted: {}, ignored: {}"
+  ExecEnv::log().info("Processed SAM file; unmapped: {}, deleted: {}, inserted: {}, ignored: {}"
   , unmapped, deleted, inserted, ignored);
 
   if (read_quality_ > NUCLEOTIDE_QUALITY_ASCII) {
@@ -72,13 +70,13 @@ void ConsumeMTSAM<ConsumerRecordType>::finalize() {
     size_t accepted = accepted_;
     double percentage = static_cast<double>(rejected)/static_cast<double>(accepted) * 100.0;
 
-    log.info("Accept/Reject nucleotide read quality -10log10(Pr Read Error) = {}, accepted {}, rejected: {} ({}%)",
+    ExecEnv::log().info("Accept/Reject nucleotide read quality -10log10(Pr Read Error) = {}, accepted {}, rejected: {} ({}%)",
              static_cast<int>(read_quality_ - NUCLEOTIDE_QUALITY_ASCII), accepted , rejected, percentage);
 
   }
   else {
 
-    log.info("Accept/Reject nucleotide read quality disabled (read quality = 0)");
+    ExecEnv::log().info("Accept/Reject nucleotide read quality disabled (read quality = 0)");
 
   }
 
@@ -87,7 +85,7 @@ void ConsumeMTSAM<ConsumerRecordType>::finalize() {
 template <class ConsumerRecordType>
 void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string>& record_ptr) {
 
-  SAMRecordParser sam_record_parser(log);
+  SAMRecordParser sam_record_parser;
 
   if (not sam_record_parser.parseSAM(record_ptr)) {
 
@@ -115,8 +113,8 @@ void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string
 
   if (location >= contig_size) {
 
-    log.error("Sam record error - Contig: {} sequence size: {} exceeded at position: {} SAM record: {}",
-              contig_id, contig_size, location, *record_ptr);
+    ExecEnv::log().error("Sam record error - Contig: {} sequence size: {} exceeded at position: {} SAM record: {}",
+                         contig_id, contig_size, location, *record_ptr);
     return;
 
   }
@@ -133,8 +131,8 @@ void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string
         for (ContigOffset_t cigar_offset = 0; cigar_offset < cigar.second; ++cigar_offset) {
 
           if (location + cigar_offset >= contig_size) {
-            log.error("Sam record error - Contig: {} sequence size: {} exceeded at position: {} Cigar Offset: {}; SAM record: {}",
-                      contig_id, contig_size, location, cigar_offset, *record_ptr);
+            ExecEnv::log().error("Sam record error - Contig: {} sequence size: {} exceeded at position: {} Cigar Offset: {}; SAM record: {}",
+                                 contig_id, contig_size, location, cigar_offset, *record_ptr);
             return;
           }
           if (read_quality_ > NUCLEOTIDE_QUALITY_ASCII) {
@@ -215,7 +213,7 @@ void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string
         break;
 
       default:
-        log.error("Unknown cigar code {}; SAM record: {}", cigar.first, *record_ptr);
+      ExecEnv::log().error("Unknown cigar code {}; SAM record: {}", cigar.first, *record_ptr);
         return;
 
     }
