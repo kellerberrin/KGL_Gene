@@ -7,7 +7,7 @@
 
 
 #include "kgl_variant.h"
-#include "kgl_variant_snp.h"
+#include "kgl_variant_single.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -35,7 +35,8 @@ public:
   CompoundVariant(const std::string& variant_source,
                   std::shared_ptr<const ContigFeatures> contig_ptr,
                   ContigOffset_t contig_offset,
-                  const CompoundVariantMap& variant_map) : Variant(variant_source, contig_ptr, contig_offset),
+                  Phred_t quality,
+                  const CompoundVariantMap& variant_map) : Variant(variant_source, contig_ptr, contig_offset, quality),
                                                            variant_map_(variant_map) {}
   ~CompoundVariant() override = default;
 
@@ -69,16 +70,20 @@ public:
   CompoundInsert(const std::string& variant_source,
                  std::shared_ptr<const ContigFeatures> contig_ptr,
                  ContigOffset_t contig_offset,
+                 Phred_t quality,
                  const CompoundVariantMap& variant_map) : CompoundVariant(variant_source,
                                                                           contig_ptr,
                                                                           contig_offset,
+                                                                          quality,
                                                                           variant_map) {}
+  CompoundInsert(const CompoundInsert&) = default;
   ~CompoundInsert() override = default;
+
+  virtual std::shared_ptr<Variant> clone() const override { return std::shared_ptr<CompoundInsert>(std::make_shared<CompoundInsert>(*this)); }
 
   VariantType variantType() const override { return VariantType::COMPOUND_INSERT; }
 
 private:
-
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
@@ -102,11 +107,16 @@ public:
   CompoundDelete(const std::string& variant_source,
                  std::shared_ptr<const ContigFeatures> contig_ptr,
                  ContigOffset_t contig_offset,
+                 Phred_t quality,
                  const CompoundVariantMap& variant_map) : CompoundVariant(variant_source,
                                                                           contig_ptr,
                                                                           contig_offset,
+                                                                          quality,
                                                                           variant_map) {}
+  CompoundDelete(const CompoundDelete&) = default;
   ~CompoundDelete() override = default;
+
+  virtual std::shared_ptr<Variant> clone() const override { return std::shared_ptr<CompoundDelete>(std::make_shared<CompoundDelete>(*this)); }
 
   VariantType variantType() const override { return VariantType::COMPOUND_DELETE; }
 
@@ -134,11 +144,16 @@ public:
   CompoundSNP(const std::string& variant_source,
               std::shared_ptr<const ContigFeatures> contig_ptr,
               ContigOffset_t contig_offset,
+              Phred_t quality,
               const CompoundVariantMap& variant_map) : CompoundVariant(variant_source,
                                                                        contig_ptr,
                                                                        contig_offset,
+                                                                       quality,
                                                                        variant_map) {}
+  CompoundSNP(const CompoundSNP&) = default;
   ~CompoundSNP() override = default;
+
+  virtual std::shared_ptr<Variant> clone() const override { return std::shared_ptr<CompoundSNP>(std::make_shared<CompoundSNP>(*this)); }
 
   VariantType variantType() const override { return VariantType::COMPOUND_SNP; }
 
@@ -148,7 +163,6 @@ public:
 
 
 private:
-
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;

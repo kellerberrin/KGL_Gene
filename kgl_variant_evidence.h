@@ -38,6 +38,8 @@ public:
 
   virtual bool isReadCount() const { return false; }
 
+  virtual Phred_t calculateQuality() const = 0;
+
 private:
 
 
@@ -78,6 +80,8 @@ public:
   double proportion() const { return static_cast<double>(mutant_count_) / static_cast<double>(read_count_); }
 
   std::string output(char delimiter, VariantOutputIndex output_index) const override;
+
+  virtual Phred_t calculateQuality() const override { return 100.0; }
 
   bool isReadCount() const override { return true; }
 

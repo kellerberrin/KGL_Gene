@@ -44,10 +44,13 @@ kgl::CompoundDeleteFactory::createCompoundVariant(const CompoundVariantMap& vari
 
   }
 
+  Phred_t quality = calculateQuality(variant_map);
+
   // create the variant
   std::shared_ptr<Variant> compound_delete(std::make_shared<CompoundDelete>(variant_map.begin()->second->variantSource(),
                                                                             variant_map.begin()->second->contig(),
                                                                             variant_map.begin()->second->contigOffset(),
+                                                                            quality,
                                                                             variant_map));
   // define its coding sequence.
   compound_delete->defineCoding(variant_map.begin()->second->codingSequences().getFirst());

@@ -76,9 +76,11 @@ public:
 
   VariantSequence(const std::string& variant_source,
                   std::shared_ptr<const ContigFeatures>  contig_ptr,
-                  ContigOffset_t contig_offset) : variant_source_(variant_source),
-                                                  contig_ptr_(contig_ptr),
-                                                  contig_offset_(contig_offset) {}
+                  ContigOffset_t contig_offset,
+                  Phred_t quality) : variant_source_(variant_source),
+                                     contig_ptr_(contig_ptr),
+                                     contig_offset_(contig_offset),
+                                     quality_(quality) { }
   virtual ~VariantSequence() = default;
 
   const std::string& variantSource() const { return variant_source_; }
@@ -90,6 +92,9 @@ public:
 
   VariantSequenceType type() const;
   std::string typestr() const;
+
+  Phred_t quality() const { return quality_; }
+  void quality(Phred_t quality_update) { quality_ = quality_update; }
 
   FeatureIdent_t codingSequenceId() const {
 
@@ -116,6 +121,7 @@ private:
   ContigOffset_t contig_offset_;                        // Location on the contig.
   GeneVector gene_membership_;                          // Membership includes introns (empty for non-coding)
   CodingSequenceArray coding_sequences_;  // Coding sequence for variant (empty for introns and non-coding)
+  Phred_t quality_;                       // Phred (-10log10) quality that the variant is not valid.
 
 };
 
@@ -134,10 +140,11 @@ public:
 
   Variant(const std::string& variant_source,
           const std::shared_ptr<const ContigFeatures> contig_ptr,
-          ContigOffset_t contig_offset) : VariantSequence(variant_source, contig_ptr, contig_offset) {}
-  Variant(const Variant& variant) = default;
+          ContigOffset_t contig_offset,
+          Phred_t quality) : VariantSequence(variant_source, contig_ptr, contig_offset, quality) {}
   ~Variant() override = default;
   bool filterVariant(const VariantFilter& filter) const { return applyFilter(filter); }
+
 
   const ContigId_t& contigId() const { return contig()->contigId(); }
   ContigOffset_t contigOffset() const { return offset(); }
@@ -163,6 +170,7 @@ public:
   bool isInsert() const { return variantType() == VariantType::INSERT or variantType() == VariantType::COMPOUND_INSERT; }
 
   virtual bool equivalent(const Variant& cmp_var) const = 0;
+  virtual std::shared_ptr<Variant> clone() const = 0;  // Use this - not the copy contructor.
 
 protected:
 

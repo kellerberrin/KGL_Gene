@@ -9,7 +9,7 @@
 #include "kgl_variant_db.h"
 #include "kgl_variant_compound.h"
 #include "kgl_genome_db.h"
-#include "kgl_variant_snp.h"
+#include "kgl_variant_single.h"
 #include "kgl_variant_factory.h"
 
 
@@ -35,12 +35,17 @@ public:
   std::shared_ptr<GenomeVariant> create(const std::shared_ptr<const GenomeVariant>& genome_variants,
                                         const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) const;
 
+protected:
+
+  Phred_t calculateQuality(const CompoundVariantMap& variant_map) const { return 100.0; }
+
 private:
 
   virtual bool aggregateVariants(const std::shared_ptr<const GenomeVariant>& genome_variants,
                                  std::vector<std::shared_ptr<const CompoundVariantMap>>& aggregated_variants_vec) const = 0;
 
   virtual std::shared_ptr<const Variant> createCompoundVariant(const CompoundVariantMap& variant_map) const = 0;
+
 
   };
 

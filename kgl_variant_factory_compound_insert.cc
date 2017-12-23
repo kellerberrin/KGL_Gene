@@ -42,10 +42,13 @@ kgl::CompoundInsertFactory::createCompoundVariant(const CompoundVariantMap& vari
 
   }
 
+  Phred_t quality = calculateQuality(variant_map);
+
   // create the variant
   std::shared_ptr<Variant> compound_insert(std::make_shared<CompoundInsert>(variant_map.begin()->second->variantSource(),
                                                                             variant_map.begin()->second->contig(),
                                                                             variant_map.begin()->second->contigOffset(),
+                                                                            quality,
                                                                             variant_map));
 
   // define its coding sequence.

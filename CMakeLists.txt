@@ -51,7 +51,7 @@ add_executable (kgl_genome ${SOURCE_FILES} kgl_main.cc  kgl_gff_fasta.h kgl_gff_
                 kgl_sam_read.h kgl_sam_consume.h kgl_sam_process.h kgl_table_ncbi.h kgl_table_ncbi.cc
                 kgl_sequence_base.h kgl_sequence_base.cc kgl_sequence_amino.h kgl_sequence_amino.cc
                 kgl_alphabet_amino.h kgl_variant_db.h
-                kgl_variant_db.cc kgl_variant_snp.h kgl_variant_snp.cc kgl_variant_compound.h
+                kgl_variant_db.cc kgl_variant_snp.cc kgl_variant_compound.h
                 kgl_variant_compound.cc kgl_variant_compound_snp.cc kgl_genome_prelim.h
                 kgl_genome_prelim.cc kgl_attributes.h kgl_attributes.cc kgl_phylogenetic_app.cc
                 kgl_phylogenetic_env.h kgl_phylogenetic_env.cc kgl_sequence_virtual.h kgl_genome_contig.cc
@@ -65,6 +65,6 @@ add_executable (kgl_genome ${SOURCE_FILES} kgl_main.cc  kgl_gff_fasta.h kgl_gff_
                 kgl_variant_compound_delete.cc kgl_alphabet_coding_dna5.h kgl_alphabet_coding_dna5.cc
                 kgl_variant_factory.cc kgl_statistics.h kgl_statistics.cc kgl_variant_evidence.h
                 kgl_variant_evidence.cc kgl_statistics_upgma.h kgl_statistics_upgma.cc kgl_variant_mutation.cc
-                kgl_sequence_virtual_compare.h)
+                kgl_sequence_virtual_compare.h kgl_variant_subordinate.h kgl_variant_subordinate.cc kgl_variant_single.h kgl_variant_delete.cc kgl_variant_insert.cc)
 
 target_link_libraries(kgl_genome ${Boost_LIBRARIES})
