@@ -171,7 +171,7 @@ void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string
         ++delete_nucleotide_;
         for (ContigOffset_t cigar_offset = 0; cigar_offset < cigar.second; ++cigar_offset) {
 
-          contig_block.incrementCount(location + cigar_offset, ExtendDNA5::DELETE_NUCLEOTIDE_OFFSET);
+          contig_block.incrementCount(location + cigar_offset, ReadCountColumns::DELETE_NUCLEOTIDE_OFFSET);
 
         }
 
@@ -188,8 +188,8 @@ void ConsumeMTSAM<ConsumerRecordType>::consume(std::unique_ptr<const std::string
           if ((location + cigar_offset) < contig_block.contigSize()) {
 
             Nucleotide_t sam_nucleotide = sam_record_parser.getSequenceNucleotide(record_ptr, cigar_offset + sam_idx);
-            ExtendDNA5::Alphabet insert_nucleotide = ExtendDNA5::insertNucleotide(DNA5::convertChar(sam_nucleotide));
-            size_t column = ExtendDNA5::nucleotideToColumn(insert_nucleotide);
+            ReadCountColumns::Alphabet insert_nucleotide = ReadCountColumns::insertNucleotide(DNA5::convertChar(sam_nucleotide));
+            size_t column = ReadCountColumns::nucleotideToColumn(insert_nucleotide);
             contig_block.incrementCount(location + cigar_offset, column);
 
           }

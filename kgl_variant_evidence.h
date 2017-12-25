@@ -52,19 +52,25 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
+template <class Alphabet>
 class ReadCountEvidence : public VariantEvidence {
 
 public:
 
-  ReadCountEvidence(NucleotideReadCount_t read_count,
-                    NucleotideReadCount_t mutant_count,
-                    NucleotideReadCount_t const count_array[],
-                    ContigSize_t count_array_size) : read_count_(read_count),
-                                                     mutant_count_(mutant_count) {
+  ReadCountEvidence(size_t mutant_offset,
+                    NucleotideReadCount_t const count_array[]) : mutant_offset_(mutant_offset) {
 
-    for(size_t idx = 0; idx < count_array_size; ++idx) {
+    // check mutant offset.
+    if (mutant_offset >= Alphabet::NUCLEOTIDE_COLUMNS) {
 
+      ExecEnv::log().error("ReadCountEvidence; Bad mutant index: {} for count_array size: {}", mutant_offset, Alphabet::NUCLEOTIDE_COLUMNS);
+      mutant_offset = 0;
+
+    }
+    read_count_ = 0;
+    for(size_t idx = 0; idx < Alphabet::NUCLEOTIDE_COLUMNS; ++idx) {
+
+      read_count_ += count_array[idx];
       count_array_.push_back(count_array[idx]);
 
     }
@@ -74,10 +80,10 @@ public:
   ~ReadCountEvidence() override = default;
 
   NucleotideReadCount_t readCount() const { return read_count_; }
-  NucleotideReadCount_t mutantCount() const { return mutant_count_; }
+  NucleotideReadCount_t mutantCount() const { return count_array_[mutant_offset_]; }
   const std::vector<NucleotideReadCount_t>& countArray() const { return count_array_; }
 
-  double proportion() const { return static_cast<double>(mutant_count_) / static_cast<double>(read_count_); }
+  double proportion() const { return static_cast<double>(mutantCount()) / static_cast<double>(readCount()); }
 
   std::string output(char delimiter, VariantOutputIndex output_index) const override;
 
@@ -88,11 +94,26 @@ public:
 private:
 
   NucleotideReadCount_t read_count_;
-  NucleotideReadCount_t mutant_count_;
+  size_t mutant_offset_;
   std::vector<NucleotideReadCount_t> count_array_;
 
 };
 
+
+template <class Alphabet>
+std::string ReadCountEvidence<Alphabet>::output(char delimiter, VariantOutputIndex output_index) const
+{
+
+  std::stringstream ss;
+
+  ss << mutantCount() << "/" << readCount() << delimiter;
+  for (size_t idx = 0; idx < countArray().size(); ++idx) {
+    ss << ReadCountColumns::convertToChar(ReadCountColumns::offsetToNucleotide(idx)) << ":" << countArray()[idx] << delimiter;
+  }
+
+  return ss.str();
+
+}
 
 
 

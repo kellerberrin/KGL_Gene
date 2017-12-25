@@ -51,9 +51,9 @@ public:
                               contig_offset, contig_size_);
 
     }
-    if (column >= ExtendDNA5::NUCLEOTIDE_COLUMNS) {
+    if (column >= ReadCountColumns::NUCLEOTIDE_COLUMNS) {
 
-      ContigOffset_t nucleotide_columns = ExtendDNA5::NUCLEOTIDE_COLUMNS;
+      ContigOffset_t nucleotide_columns = ReadCountColumns::NUCLEOTIDE_COLUMNS;
       ExecEnv::log().critical("incrementCount() invalid access; Nucleotide column index: {} >= Number Nucleotides: {}",
                               column, nucleotide_columns);
 
@@ -101,10 +101,10 @@ private:
     std::lock_guard<std::mutex> lock(mutex_) ;
 
     for (ContigOffset_t contig_offset = 0; contig_offset < contig_size_; ++contig_offset) {
-      for (ContigOffset_t column = 0; column < ExtendDNA5::NUCLEOTIDE_COLUMNS; ++column) {
+      for (ContigOffset_t column = 0; column < ReadCountColumns::NUCLEOTIDE_COLUMNS; ++column) {
         // pointer arithmetic, stride is expected_columns
         NucleotideReadCount_t *access_ptr = data_ptr_.get()
-                                            + ((contig_offset * ExtendDNA5::NUCLEOTIDE_COLUMNS) + column);
+                                            + ((contig_offset * ReadCountColumns::NUCLEOTIDE_COLUMNS) + column);
         (*access_ptr) = initial_value;
       }
 

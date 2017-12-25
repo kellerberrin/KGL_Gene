@@ -76,6 +76,27 @@ public:
   // Return nucleotide as a char.
   static char convertToChar(Alphabet nucleotide) { return static_cast<char>(nucleotide); }
 
+  // Converts an array offset into a base.
+  static Alphabet offsetToNucleotide(ContigOffset_t offset) {
+
+    // Translate the nucleotide to an array column
+    switch (offset) {
+
+      case A_NUCLEOTIDE_OFFSET: return Alphabet::A;
+      case C_NUCLEOTIDE_OFFSET: return Alphabet::C;
+      case G_NUCLEOTIDE_OFFSET: return Alphabet::G;
+      case T_NUCLEOTIDE_OFFSET: return Alphabet::T;
+      case N_NUCLEOTIDE_OFFSET: return Alphabet::N;
+
+      default:
+        ExecEnv::log().error("DNA5::offsetToNucleotide(), Invalid Nucleotide Offset", offset);
+        return Alphabet::N;
+    }
+
+    return Alphabet::N; // Never reached, to keep the compiler happy.
+
+  }
+
 };
 
 

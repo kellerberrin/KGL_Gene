@@ -48,14 +48,11 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
 
     for (const auto& variant : contig_variants.second->getMap()) {  // For all variants.
 
-      // only coding sequence and SNP
-      if (variant.second->type() == VariantSequenceType::CDS_CODING and variant.second->isSingle()) {
+      // only coding sequence and single SNPs (no recursive compound)
+      if (variant.second->type() == VariantSequenceType::CDS_CODING and variant.second->isSingle() and variant.second->isSNP()) {
 
         // Get a (virtual) subordinate SNP pointer.
         std::shared_ptr<const SingleVariant> subSNP_ptr = std::static_pointer_cast<const SingleVariant>(variant.second);
-
-        // The mutant must be a base
-        if (ExtendDNA5::isBaseCode(subSNP_ptr->mutant())) {
 
           // If empty then just add the variant to a variant map and update the working structure.
           if (compound_variant_vec.empty()) {
@@ -182,8 +179,6 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
             } // if not found coding sequence
 
           } // if not empty
-
-        } // Is base code variant.
 
       } // if in a coding sequence and non-compound (no recursive compound)
 

@@ -10,7 +10,7 @@
 #include <vector>
 #include "kgl_lock.h"
 #include "kgl_genome_types.h"
-#include "kgl_alphabet_extend.h"
+#include "kgl_alphabet_readcount.h"
 #include "kgl_exec_env.h"
 
 

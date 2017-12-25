@@ -15,7 +15,7 @@ namespace genome {   // project level namespace
 
 // Types used to represent genome data.
 
-using Alphabet_t = char;   // Storage type for Amino, DNA5 or ExtendDNA5 alphabets
+using Alphabet_t = char;   // Storage type for Amino, DNA5 or ReadCountColumns alphabets
 using Nucleotide_t = Alphabet_t;  // Semantic alias for nucleotides. Python only, do not use in C++.
 using Amino_t = Alphabet_t; // Semantic alias for Amino Acids. Python only, do not use in C++.
 using AlphabetSequence_t = std::basic_string<Alphabet_t>;  // Only used to link to Python code. Do not use in C++.

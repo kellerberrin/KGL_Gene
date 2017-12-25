@@ -28,8 +28,6 @@ namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  A virtual class held in compound variants, produces a modified text output for coding variants.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,11 +41,9 @@ public:
             ContigOffset_t contig_offset,
             Phred_t quality,
             std::shared_ptr<const VariantEvidence> evidence_ptr,
-            DNA5::Alphabet reference,
-            ExtendDNA5::Alphabet mutant) : Variant(variant_source, contig_ptr, contig_offset, quality),
+            DNA5::Alphabet reference ) : Variant(variant_source, contig_ptr, contig_offset, quality),
                                            evidence_ptr_(evidence_ptr),
-                                           reference_(reference),
-                                           mutant_(mutant) {}
+                                           reference_(reference) {}
 
   ~SingleVariant() override = default;
 
@@ -56,21 +52,13 @@ public:
   std::shared_ptr<const VariantEvidence> evidence() const { return evidence_ptr_; }
 
   DNA5::Alphabet reference() const { return reference_; }
-  ExtendDNA5::Alphabet mutant() const { return mutant_; }
+  virtual char mutantChar() const = 0;
 
   std::string suboutput(char delimiter, VariantOutputIndex output_index) const;
-  bool equivalent(const Variant& cmp_var) const override;
 
   // complement base if -ve strand and coding or intron.
   CodingDNA5::Alphabet strandReference() const { return strandNucleotide(reference()); }
-  CodingDNA5::Alphabet strandMutant() const { return strandNucleotide(ExtendDNA5::extendToBase(mutant())); }
 
-  bool codonMutation(ContigOffset_t &codon_offset,
-                     ContigSize_t &base_in_codon,
-                     AminoAcid::Alphabet &reference_amino,
-                     AminoAcid::Alphabet &mutant_amino) const;
-
-  std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
 
 protected:
 
@@ -80,7 +68,6 @@ private:
 
   const std::shared_ptr<const VariantEvidence> evidence_ptr_;
   DNA5::Alphabet reference_;
-  ExtendDNA5::Alphabet mutant_;
 
   std::string submutation(char delimiter, VariantOutputIndex output_index) const;
 
@@ -103,13 +90,12 @@ public:
              Phred_t quality,
              std::shared_ptr<const VariantEvidence> evidence_ptr,
              DNA5::Alphabet reference,
-             ExtendDNA5::Alphabet mutant) : SingleVariant(variant_source,
+             DNA5::Alphabet mutant) : SingleVariant(variant_source,
                                                            contig_ptr,
                                                            contig_offset,
                                                            quality,
                                                            evidence_ptr,
-                                                           reference,
-                                                           mutant) {}
+                                                           reference), mutant_(mutant) {}
 
   SNPVariant(const SNPVariant& variant) = default;
   ~SNPVariant() override = default;
@@ -118,6 +104,8 @@ public:
   std::shared_ptr<Variant> clone() const override { return std::shared_ptr<SNPVariant>(std::make_shared<SNPVariant>(*this)); }
 
   VariantType variantType() const override { return VariantType::SNP; }
+
+  bool equivalent(const Variant& cmp_var) const override;
 
   // This mutates a coding sequence that has already been generated using a CodingSequence (CDS) object.
   bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
@@ -129,9 +117,25 @@ public:
 
   std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const override;
 
+  CodingDNA5::Alphabet strandMutant() const { return strandNucleotide(mutant()); }
+
+  DNA5::Alphabet mutant() const { return mutant_; }
+
+  char mutantChar() const override { return DNA5::convertToChar(mutant()); }
+
+  std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
+
+  bool codonMutation(ContigOffset_t &codon_offset,
+                     ContigSize_t &base_in_codon,
+                     AminoAcid::Alphabet &reference_amino,
+                     AminoAcid::Alphabet &mutant_amino) const;
+
 private:
 
+  DNA5::Alphabet mutant_;
+
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
+
 
 };
 
@@ -149,14 +153,12 @@ public:
                 ContigOffset_t contig_offset,
                 Phred_t quality,
                 std::shared_ptr<const VariantEvidence> evidence_ptr,
-                DNA5::Alphabet reference,
-                ExtendDNA5::Alphabet mutant) : SingleVariant(variant_source,
+                DNA5::Alphabet reference) : SingleVariant(variant_source,
                                                               contig_ptr,
                                                               contig_offset,
                                                               quality,
                                                               evidence_ptr,
-                                                              reference,
-                                                              mutant) {}
+                                                              reference) {}
 
   DeleteVariant(const DeleteVariant& variant) = default;
   ~DeleteVariant() override = default;
@@ -165,6 +167,8 @@ public:
   std::shared_ptr<Variant> clone() const override { return std::shared_ptr<DeleteVariant>(std::make_shared<DeleteVariant>(*this)); }
 
   VariantType variantType() const override { return VariantType::DELETE; }
+
+  bool equivalent(const Variant& cmp_var) const override;
 
   // This mutates a coding sequence that has already been generated using a CodingSequence (CDS) object.
   bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
@@ -175,6 +179,10 @@ public:
 
 
   std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const override;
+
+  virtual char mutantChar() const override { return '-'; }
+
+  std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
 
 private:
 
@@ -197,13 +205,12 @@ public:
                 Phred_t quality,
                 std::shared_ptr<const VariantEvidence> evidence_ptr,
                 DNA5::Alphabet reference,
-                ExtendDNA5::Alphabet mutant) : SingleVariant(variant_source,
-                                                              contig_ptr,
-                                                              contig_offset,
-                                                              quality,
-                                                              evidence_ptr,
-                                                              reference,
-                                                              mutant) {}
+                DNA5::Alphabet mutant) : SingleVariant(variant_source,
+                                                       contig_ptr,
+                                                       contig_offset,
+                                                       quality,
+                                                       evidence_ptr,
+                                                       reference), mutant_(mutant) {}
 
   InsertVariant(const InsertVariant& variant) = default;
   ~InsertVariant() override = default;
@@ -212,6 +219,14 @@ public:
   std::shared_ptr<Variant> clone() const override { return std::shared_ptr<InsertVariant>(std::make_shared<InsertVariant>(*this)); }
 
   VariantType variantType() const override { return VariantType::INSERT; }
+
+  bool equivalent(const Variant& cmp_var) const override;
+
+  CodingDNA5::Alphabet strandMutant() const { return strandNucleotide(mutant()); }
+
+  DNA5::Alphabet mutant() const { return mutant_; }
+
+  virtual char mutantChar() const override { return DNA5::convertToChar(mutant()); }
 
   // This mutates a coding sequence that has already been generated using a CodingSequence (CDS) object.
   bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
@@ -223,9 +238,13 @@ public:
 
   std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const override;
 
+  std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
+
 private:
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
+
+  DNA5::Alphabet mutant_;
 
 };
 

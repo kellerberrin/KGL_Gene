@@ -99,40 +99,20 @@ bool kgl::SNPVariant::mutateCodingSequence(const FeatureIdent_t& sequence_id,
 
   ContigOffset_t adjusted_offset = static_cast<ContigOffset_t>(check_offset);
 
-  if (ExtendDNA5::isBaseCode(mutant())) {  // If a base code mutation.
+  // Check that the sequence base code matches the original strand adjusted base code recorded in the variant.
+  if (mutated_sequence->at(adjusted_offset) != strandReference()) {
 
-    // Check that the sequence base code matches the original strand adjusted base code recorded in the variant.
-    if (mutated_sequence->at(adjusted_offset) != strandReference()) {
-
-      ExecEnv::log().warn("mutateCodingSequence(), unexpected; base: {} at seq. offset: {} (strand) reference: {}, probable duplicate variant",
-      CodingDNA5::convertToChar(mutated_sequence->at(sequence_offset)), sequence_offset,
-      CodingDNA5::convertToChar(strandReference()));
-
-    }
-
-    CodingDNA5::Alphabet mutant_base;
-    if (coding_sequence->strand() == StrandSense::REVERSE) {
-
-      mutant_base = DNA5::complementNucleotide(ExtendDNA5::extendToBase(mutant()));
-
-    } else {
-
-      mutant_base = DNA5::convertToCodingDN5(ExtendDNA5::extendToBase(mutant()));
-
-    }
-
-    sequence_size_adjust = 0;
-
-    // All is good, so mutate the sequence.
-    return mutated_sequence->modifyBase(sequence_offset, mutant_base);
-
-  } else {
-
-    ExecEnv::log().warn("mutateCodingSequence(), variant is not a single SNP",
-                        output(' ', VariantOutputIndex::START_0_BASED, true));
-    return false;
+    ExecEnv::log().warn("mutateCodingSequence(), unexpected; base: {} at seq. offset: {} (strand) reference: {}, probable duplicate variant",
+    CodingDNA5::convertToChar(mutated_sequence->at(sequence_offset)), sequence_offset,
+    CodingDNA5::convertToChar(strandReference()));
 
   }
+
+  sequence_size_adjust = 0;
+
+  // All is good, so mutate the sequence.
+  return mutated_sequence->modifyBase(sequence_offset, strandMutant());
+
 
 }
 

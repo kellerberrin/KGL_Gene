@@ -123,13 +123,13 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
     for (const auto& variant : contig_variants.second->getMap()) {  // For all variants.
 
       // only coding sequence and non-compound (no recursive compound)
-      if (variant.second->type() == VariantSequenceType::CDS_CODING and not variant.second->isCompound()) {
+      if (variant.second->type() == VariantSequenceType::CDS_CODING and variant.second->isSingle()) {
 
         if (selectVariant(variant.second)) {  // The virtual selection function.
 
-          std::shared_ptr<const SingleVariant> subSNP_ptr = std::dynamic_pointer_cast<const SingleVariant>(variant.second);
+          std::shared_ptr<const SingleVariant> subvariant_ptr = std::dynamic_pointer_cast<const SingleVariant>(variant.second);
 
-          if (not subSNP_ptr) {
+          if (not subvariant_ptr) {
 
             ExecEnv::log().error("Not a (Subordinate) SNP Variant: {}",
                                  variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
@@ -140,7 +140,7 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
           // If empty then just add the variant to a variant map and update the working structure.
           if (compound_variant_vec.empty()) {
 
-            std::pair<ContigSize_t, std::shared_ptr<const SingleVariant>> insert_pair(subSNP_ptr->offset(), subSNP_ptr);
+            std::pair<ContigSize_t, std::shared_ptr<const SingleVariant>> insert_pair(subvariant_ptr->offset(), subvariant_ptr);
             CompoundVariantMap compound_variant;
             compound_variant.insert(insert_pair);
             compound_variant_vec.push_back(std::make_shared<CompoundVariantMap>(compound_variant));
@@ -167,7 +167,7 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
                   // set the found flag to true.
                   found_sequence = true;
                   // Is contiguous in the same coding sequence so append to the compound map.
-                  std::pair<ContigSize_t, std::shared_ptr<const SingleVariant>> insert_pair(subSNP_ptr->offset(), subSNP_ptr);
+                  std::pair<ContigSize_t, std::shared_ptr<const SingleVariant>> insert_pair(subvariant_ptr->offset(), subvariant_ptr);
                   auto result = compound_variant_ptr->insert(insert_pair);
                   if (not result.second) {
 
@@ -211,7 +211,7 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
             if (not found_sequence) {
 
               CompoundVariantMap compound_variant;
-              std::pair<ContigSize_t, std::shared_ptr<const SingleVariant>> insert_pair(subSNP_ptr->offset(), subSNP_ptr);
+              std::pair<ContigSize_t, std::shared_ptr<const SingleVariant>> insert_pair(subvariant_ptr->offset(), subvariant_ptr);
               compound_variant.insert(insert_pair);
               compound_variant_vec.push_back(std::make_shared<CompoundVariantMap>(compound_variant));
 

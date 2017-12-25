@@ -47,7 +47,7 @@ std::string kgl::SingleVariant::submutation(char delimiter, VariantOutputIndex o
     ss << offsetOutput(codon_offset, output_index) << CODON_BASE_SEPARATOR
        << offsetOutput(base_in_codon, output_index) << delimiter;
     ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
-    ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
+    ss << mutantChar() << delimiter;
 
 
   } else if (not geneMembership().empty()) {
@@ -55,12 +55,12 @@ std::string kgl::SingleVariant::submutation(char delimiter, VariantOutputIndex o
     std::shared_ptr<const GeneFeature> gene_ptr = geneMembership().front();
     ss << gene_ptr->id() << " ";
     ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
-    ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
+    ss << mutantChar() << delimiter;
 
   } else { // non coding (non-gene) variant or unknown
 
     ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
-    ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
+    ss << mutantChar() << delimiter;
 
   }
 
@@ -129,9 +129,14 @@ kgl::CodingDNA5::Alphabet kgl::SingleVariant::strandNucleotide(DNA5::Alphabet nu
 }
 
 
-bool kgl::SingleVariant::equivalent(const Variant& cmp_var) const {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  SNPVariant Variant.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  auto cmp_snp = dynamic_cast<const SingleVariant*>(&cmp_var);
+
+bool kgl::SNPVariant::equivalent(const Variant& cmp_var) const {
+
+  auto cmp_snp = dynamic_cast<const SNPVariant*>(&cmp_var);
 
   if (not cmp_snp) return false;
 
@@ -146,7 +151,7 @@ bool kgl::SingleVariant::equivalent(const Variant& cmp_var) const {
 }
 
 
-bool kgl::SingleVariant::codonMutation(ContigOffset_t &codon_offset,
+bool kgl::SNPVariant::codonMutation(ContigOffset_t &codon_offset,
                                    ContigSize_t &base_in_codon,
                                    AminoAcid::Alphabet &reference_amino,
                                    AminoAcid::Alphabet &mutant_amino) const {
@@ -154,8 +159,7 @@ bool kgl::SingleVariant::codonMutation(ContigOffset_t &codon_offset,
 
   if (not codonOffset(codon_offset, base_in_codon)) {
 
-    ExecEnv::log().error("codonMutation() called for non coding variant: {}",
-                         output(' ', VariantOutputIndex::START_0_BASED, true));
+    ExecEnv::log().error("codonMutation() called for non coding variant");
     reference_amino = AminoAcid::AMINO_UNKNOWN;  // The unknown amino acid
     mutant_amino = AminoAcid::AMINO_UNKNOWN;
     return false;
@@ -179,27 +183,16 @@ bool kgl::SingleVariant::codonMutation(ContigOffset_t &codon_offset,
 
   Codon codon(codon_sequence, 0);  // Create the codon.
 
-  if (ExtendDNA5::isBaseCode(mutant())) {
-
-    reference_amino = contig()->getAminoAcid(codon);
-    codon.modifyBase(base_in_codon, strandNucleotide(ExtendDNA5::extendToBase(mutant())));
-    mutant_amino = contig()->getAminoAcid(codon);
-
-
-  } else {
-
-    mutant_amino = contig()->getAminoAcid(codon);
-    mutant_amino = AminoAcid::AMINO_UNKNOWN;
-
-  }
+  reference_amino = contig()->getAminoAcid(codon);
+  codon.modifyBase(base_in_codon, strandMutant());
+  mutant_amino = contig()->getAminoAcid(codon);
 
   return true;
 
 }
 
 
-
-std::string kgl::SingleVariant::mutation(char delimiter, VariantOutputIndex output_index) const
+std::string kgl::SNPVariant::mutation(char delimiter, VariantOutputIndex output_index) const
 {
 
   std::stringstream ss;
@@ -210,68 +203,162 @@ std::string kgl::SingleVariant::mutation(char delimiter, VariantOutputIndex outp
 
     ss << sequence->getGene()->id() << delimiter << sequence->getCDSParent()->id() << delimiter;
 
-    if (variantType() == VariantType::SNP) {
+    ContigOffset_t codon_offset;
+    ContigSize_t base_in_codon;
+    AminoAcid::Alphabet reference_amino;
+    AminoAcid::Alphabet mutant_amino;
 
-      ContigOffset_t codon_offset;
-      ContigSize_t base_in_codon;
-      AminoAcid::Alphabet reference_amino;
-      AminoAcid::Alphabet mutant_amino;
+    if (codonMutation(codon_offset, base_in_codon, reference_amino, mutant_amino)) {
 
-      if (codonMutation(codon_offset, base_in_codon, reference_amino, mutant_amino)) {
-
-        ss << offsetOutput(codon_offset, output_index) << CODON_BASE_SEPARATOR;
-        ss << offsetOutput(base_in_codon, output_index) << delimiter;
-        ss << AminoAcid::convertToChar(reference_amino) << offsetOutput(codon_offset, output_index);
-        ss << AminoAcid::convertToChar(mutant_amino) << delimiter;
-        ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
-        ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
+      ss << offsetOutput(codon_offset, output_index) << CODON_BASE_SEPARATOR;
+      ss << offsetOutput(base_in_codon, output_index) << delimiter;
+      ss << AminoAcid::convertToChar(reference_amino) << offsetOutput(codon_offset, output_index);
+      ss << AminoAcid::convertToChar(mutant_amino) << delimiter;
+      ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
+      ss << mutantChar() << delimiter;
 //        sequence->getGene()->recusivelyPrintsubfeatures();
 
-      }
-
-    } else if (variantType()== VariantType::INSERT) {  // is an insertion
-
-      ContigSize_t base_in_codon;
-      ContigOffset_t codon_offset;
-
-      codonOffset(codon_offset, base_in_codon);
-
-      ss << offsetOutput(codon_offset, output_index) << CODON_BASE_SEPARATOR;
-      ss << offsetOutput(base_in_codon, output_index) << delimiter;
-      ss << "+(" << size() << ")";
-      ss << offsetOutput(codon_offset, output_index) << CODON_BASE_SEPARATOR;
-      ss << offsetOutput(base_in_codon, output_index) << delimiter;
-      ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
-      ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
-
-    } else if (variantType()== VariantType::DELETE) {  // is a deletion
-
-      ContigSize_t base_in_codon;
-      ContigOffset_t codon_offset;
-
-      codonOffset(codon_offset, base_in_codon);
-
-      ss << offsetOutput(codon_offset, output_index) << CODON_BASE_SEPARATOR;
-      ss << offsetOutput(base_in_codon, output_index) << delimiter;
-      ss << "-(" << size() << ")";
-      ss << offsetOutput(codon_offset, output_index) << CODON_BASE_SEPARATOR;
-      ss << offsetOutput(base_in_codon, output_index) << delimiter;
-      ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
-      ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
-
     }
+
 
   } else if (type() == VariantSequenceType::INTRON) {
 
     std::shared_ptr<const GeneFeature> gene_ptr = geneMembership().front();
     ss << gene_ptr->id() << delimiter;
     ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
-    ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
+    ss << mutantChar() << delimiter;
 
   } else { // else non coding (non-gene) variant or unknown
 
     ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
-    ss << ExtendDNA5::convertToChar(mutant()) << delimiter;
+    ss << mutantChar() << delimiter;
+
+  }
+
+  return ss.str();
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  Delete Variant.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool kgl::DeleteVariant::equivalent(const Variant& cmp_var) const {
+
+  auto cmp_snp = dynamic_cast<const DeleteVariant*>(&cmp_var);
+
+  if (not cmp_snp) return false;
+
+  return contigId() == cmp_snp->contigId()
+         and contigOffset() == cmp_snp->contigOffset()
+         and type() == cmp_snp->type()
+         and variantType() == cmp_snp->variantType()
+         and codingSequenceId() == cmp_snp->codingSequenceId()
+         and reference() == cmp_snp->reference();
+
+}
+
+std::string kgl::DeleteVariant::mutation(char delimiter, VariantOutputIndex output_index) const
+{
+
+  std::stringstream ss;
+
+  if (type() == VariantSequenceType::CDS_CODING) {
+
+    std::shared_ptr<const CodingSequence> sequence = codingSequences().getFirst();
+
+    ss << sequence->getGene()->id() << delimiter << sequence->getCDSParent()->id() << delimiter;
+
+
+    ContigSize_t base_in_codon;
+    ContigOffset_t codon_offset;
+
+    codonOffset(codon_offset, base_in_codon);
+
+    ss << offsetOutput(codon_offset, output_index) << CODON_BASE_SEPARATOR;
+    ss << offsetOutput(base_in_codon, output_index) << delimiter;
+    ss << "-(" << size() << ")";
+    ss << offsetOutput(codon_offset, output_index) << CODON_BASE_SEPARATOR;
+    ss << offsetOutput(base_in_codon, output_index) << delimiter;
+    ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
+    ss << mutantChar() << delimiter;
+
+  } else if (type() == VariantSequenceType::INTRON) {
+
+    std::shared_ptr<const GeneFeature> gene_ptr = geneMembership().front();
+    ss << gene_ptr->id() << delimiter;
+    ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
+    ss << mutantChar() << delimiter;
+
+  } else { // else non coding (non-gene) variant or unknown
+
+    ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
+    ss << mutantChar() << delimiter;
+
+  }
+
+  return ss.str();
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  Insert Variant.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bool kgl::InsertVariant::equivalent(const Variant& cmp_var) const {
+
+  auto cmp_snp = dynamic_cast<const InsertVariant*>(&cmp_var);
+
+  if (not cmp_snp) return false;
+
+  return contigId() == cmp_snp->contigId()
+         and contigOffset() == cmp_snp->contigOffset()
+         and type() == cmp_snp->type()
+         and variantType() == cmp_snp->variantType()
+         and codingSequenceId() == cmp_snp->codingSequenceId()
+         and reference() == cmp_snp->reference()
+         and mutant() == cmp_snp->mutant();
+
+}
+
+
+std::string kgl::InsertVariant::mutation(char delimiter, VariantOutputIndex output_index) const
+{
+
+  std::stringstream ss;
+
+  if (type() == VariantSequenceType::CDS_CODING) {
+
+    std::shared_ptr<const CodingSequence> sequence = codingSequences().getFirst();
+
+    ss << sequence->getGene()->id() << delimiter << sequence->getCDSParent()->id() << delimiter;
+
+    ContigSize_t base_in_codon;
+    ContigOffset_t codon_offset;
+
+    codonOffset(codon_offset, base_in_codon);
+
+    ss << offsetOutput(codon_offset, output_index) << CODON_BASE_SEPARATOR;
+    ss << offsetOutput(base_in_codon, output_index) << delimiter;
+    ss << "+(" << size() << ")";
+    ss << offsetOutput(codon_offset, output_index) << CODON_BASE_SEPARATOR;
+    ss << offsetOutput(base_in_codon, output_index) << delimiter;
+    ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
+    ss << mutantChar() << delimiter;
+
+  } else if (type() == VariantSequenceType::INTRON) {
+
+    std::shared_ptr<const GeneFeature> gene_ptr = geneMembership().front();
+    ss << gene_ptr->id() << delimiter;
+    ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
+    ss << mutantChar() << delimiter;
+
+  } else { // else non coding (non-gene) variant or unknown
+
+    ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
+    ss << mutantChar() << delimiter;
 
   }
 

@@ -18,20 +18,9 @@ namespace kgl = kellerberrin::genome;
 
 bool kgl::CompoundDeleteFactory::selectVariant(const std::shared_ptr<const Variant>& variant_ptr) const {
 
-  if (variant_ptr->isSingle()) {
-
-    const std::shared_ptr<const SNPVariant> SNP_ptr = std::static_pointer_cast<const SNPVariant>(variant_ptr);
-    return ExtendDNA5::isDeletion(SNP_ptr->mutant());
-
-  } else {
-
-    return false;
-
-  }
+  return variant_ptr->isDelete();
 
 }
-
-
 
 
 std::shared_ptr<const kgl::Variant>
