@@ -15,6 +15,8 @@ namespace kgl = kellerberrin::genome;
 // Static private member declarations.
 std::unique_ptr<kgl::Logger> kgl::ExecEnv::log_ptr_;
 
+std::string kgl::ExecEnv::command_line_;
+
 // Public static member functions.
 kgl::Logger& kgl::ExecEnv::log() { return *log_ptr_; }
 
@@ -30,6 +32,8 @@ void kgl::ExecEnv::createLogger(const std::string& module,
   kgl::ExecEnv::log_ptr_->SetMaxwarningMessages(max_warning_messages);
 
 }
+
+
 
 
 

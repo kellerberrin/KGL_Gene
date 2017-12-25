@@ -4,7 +4,7 @@
 
 
 #include "kgl_variant_single.h"
-#include "kgl_variant_factory.h"
+#include "kgl_variant_factory_single.h"
 #include "kgl_alphabet_extend.h"
 
 

@@ -168,10 +168,28 @@ bool readFileList(const std::string& file_list_name,
 
 }
 
+std::string getCommandLine(int argc, char const ** argv) {
+
+  std::string command_line;
+
+  for (int idx = 0; idx < argc; ++idx) {
+
+    command_line += argv[idx];
+    command_line += ' ';
+
+  }
+
+  return command_line;
+
+}
+
 
 // Parse the command line.
 bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 {
+  // Get the command line.
+  kgl::ExecEnv::commandLine(getCommandLine(argc, argv));
+
   // Setup ArgumentParser.
   seqan::ArgumentParser parser(MODULE_NAME);
   // Set short description, version, and date.

@@ -32,9 +32,11 @@ int application(int argc, char const ** argv) {
     signal(SIGINT, ctrlC);
 
     kgl::ExecEnv::log().info("############ {} {} Start Processing ###########", T::MODULE_NAME, T::VERSION);
+    kgl::ExecEnv::log().info("Command Line: {}", kgl::ExecEnv::commandLine());
 
     typename T::Application(T::log(), T::args()); // Run the application.
 
+    kgl::ExecEnv::log().info("Command Line: {}", kgl::ExecEnv::commandLine());
     double Clock, System, User;
     kgl::ExecEnv::getElpasedTime(Clock, System, User);
     kgl::ExecEnv::log().info("Elapsed seconds; Clock: {}, System CPU: {}, User CPU: {} (No GPU)", Clock, System, User);

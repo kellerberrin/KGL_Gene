@@ -66,6 +66,6 @@ add_executable (kgl_genome ${SOURCE_FILES} kgl_main.cc  kgl_gff_fasta.h kgl_gff_
                 kgl_variant_factory.cc kgl_statistics.h kgl_statistics.cc kgl_variant_evidence.h
         kgl_statistics_upgma.h kgl_statistics_upgma.cc kgl_variant_mutation.cc
                 kgl_sequence_virtual_compare.h
-        kgl_variant_single.h kgl_variant_delete.cc kgl_variant_insert.cc kgl_variant_single.cc kgl_variant_factory_single.cc kgl_alphabet_readcount.cc kgl_alphabet_readcount.h kgl_alphabet_extend.h kgl_alphabet_extend.cc)
+        kgl_variant_single.h kgl_variant_delete.cc kgl_variant_insert.cc kgl_variant_single.cc kgl_variant_factory_single.cc kgl_alphabet_readcount.cc kgl_alphabet_readcount.h kgl_alphabet_extend.h kgl_alphabet_extend.cc kgl_variant_factory_single.h)
 
 target_link_libraries(kgl_genome ${Boost_LIBRARIES})
