@@ -1,10 +1,10 @@
 //
-// Created by kellerberrin on 10/10/17.
+// Created by kellerberrin on 26/12/17.
 //
 
 
 #include <iostream>
-#include "kgl_exec_env.h"
+#include "kgl_utility.h"
 #include <boost/timer/timer.hpp>
 #define BOOST_FILESYSTEM_NO_DEPRECATED // Recommended by boost filesystem documentation.
 #include <boost/filesystem.hpp>
@@ -20,7 +20,7 @@ namespace kgl = kellerberrin::genome;
 // Hide the boost cpu timer in an anonymous namespace.
 namespace {  bt::cpu_timer cpu_timer; }
 
-void kgl::ExecEnv::getElpasedTime(double& Clock, double& User, double& System) {
+void kgl::Utility::getElpasedTime(double& Clock, double& User, double& System) {
 
   Clock = 0; User = 0; System = 0;
   bt::cpu_times elapsedtime = cpu_timer.elapsed();
@@ -32,7 +32,7 @@ void kgl::ExecEnv::getElpasedTime(double& Clock, double& User, double& System) {
 
 
 // Returns the filename with the path directory appended to it "path/file".
-std::string kgl::ExecEnv::filePath(const std::string& file_name, const std::string& path) {
+std::string kgl::Utility::filePath(const std::string& file_name, const std::string& path) {
 
   fs::path directory_path = fs::path(path);
   fs::path file_path = directory_path / fs::path(file_name);
@@ -40,3 +40,10 @@ std::string kgl::ExecEnv::filePath(const std::string& file_name, const std::stri
 
 }
 
+// Returns the filename with the path directory appended to it "path/file".
+std::string kgl::Utility::fileExtension(const std::string& file_name) {
+
+  fs::path file_path(file_name);
+  return file_path.extension().string();  // returns the extension with a '.' e.g. "example.txt" returns ".txt"
+
+}

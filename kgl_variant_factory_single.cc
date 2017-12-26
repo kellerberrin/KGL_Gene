@@ -21,7 +21,7 @@ kgl::SingleFactory::createSingleVariants(const std::string &genome_name,
                                          Phred_t read_quality) const {
 
   std::shared_ptr<GenomeVariant> genome_single_variants = kgl::GenomeVariant::emptyGenomeVariant(genome_name, genome_db);
-  size_t snp_count = 0;
+  size_t variant_count = 0;
 
   for (auto& contig_block : count_data->getMap()) {   // For each contig block.
 
@@ -49,7 +49,7 @@ kgl::SingleFactory::createSingleVariants(const std::string &genome_name,
         // The first six A, C, G, T, N, - are used to generate SNP and delete variants.
         // The remaining five +A, +C, +G, +T, +N are used to generate insert variants.
 
-        snp_count += GenerateSNPDelete(genome_name,
+        variant_count += GenerateSNPDelete(genome_name,
                                        contig_ptr,
                                        contig_offset,
                                        reference_nucleotide,
@@ -63,7 +63,7 @@ kgl::SingleFactory::createSingleVariants(const std::string &genome_name,
         // Increment the array pointer by six to access the remaining five elements of the count array.
         const NucleotideReadCount_t* nucleotide_insert_count_ptr = nucleotide_count_ptr + ExtendCountColumns::NUCLEOTIDE_COLUMNS;
 
-        snp_count += GenerateInsert(genome_name,
+        variant_count += GenerateInsert(genome_name,
                                     contig_ptr,
                                     contig_offset,
                                     reference_nucleotide,
@@ -75,8 +75,8 @@ kgl::SingleFactory::createSingleVariants(const std::string &genome_name,
 
       }  // for all sequence elements
 
-      ExecEnv::log().info("Contig: {} has: {} raw SNPs", contig_ptr->contigId(), snp_count);
-      snp_count = 0;
+      ExecEnv::log().info("Contig: {} has: {} raw variants", contig_ptr->contigId(), variant_count);
+      variant_count = 0;
 
     } // found contig.
 

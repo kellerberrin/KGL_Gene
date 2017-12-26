@@ -3,6 +3,7 @@
 //
 #include <csignal>
 #include <iostream>
+#include "kgl_utility.h"
 #include "kgl_phylogenetic_env.h"
 
 namespace kgl = kellerberrin::genome;
@@ -36,9 +37,8 @@ int application(int argc, char const ** argv) {
 
     typename T::Application(T::log(), T::args()); // Run the application.
 
-    kgl::ExecEnv::log().info("Command Line: {}", kgl::ExecEnv::commandLine());
     double Clock, System, User;
-    kgl::ExecEnv::getElpasedTime(Clock, System, User);
+    kgl::Utility::getElpasedTime(Clock, System, User);
     kgl::ExecEnv::log().info("Elapsed seconds; Clock: {}, System CPU: {}, User CPU: {} (No GPU)", Clock, System, User);
     kgl::ExecEnv::log().info("############ {} {} End Processing ###########", T::MODULE_NAME, T::VERSION);
 

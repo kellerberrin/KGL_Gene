@@ -3,6 +3,7 @@
 //
 
 #include <sstream>
+#include "kgl_utility.h"
 #include "kgl_genome_types.h"
 #include "kgl_phylogenetic_env.h"
 #include "kgl_genome_db.h"
@@ -26,18 +27,13 @@ std::shared_ptr<const kgl::GenomeVariant> getGenomeVariants(std::shared_ptr<cons
                                                             double min_proportion,
                                                             const std::string& workDirectory) {
 
-  // Read in the SAM file.
-  std::shared_ptr<const kgl::ContigCountData> count_data_ptr = kgl::SamCountReader().readSAMFile(genome_db_ptr,
-                                                                                                 file_name,
-                                                                                                 read_quality);
-
-  // Generate all variants.
-  std::shared_ptr<const kgl::GenomeVariant> all_variant_ptr = kgl::VariantFactory().createVariants(genome_name,
-                                                                                                   count_data_ptr,
-                                                                                                   genome_db_ptr,
+  // Read in the SAM file variants
+  std::shared_ptr<const kgl::GenomeVariant> all_variant_ptr = kgl::VariantFactory().createVariants(genome_db_ptr,
+                                                                                                   genome_name,
+                                                                                                   file_name,
+                                                                                                   read_quality,
                                                                                                    min_count,
-                                                                                                   min_proportion,
-                                                                                                   read_quality);
+                                                                                                   min_proportion);
 
   // Create a genome statistics object.
   std::shared_ptr<const kgl::GenomeStatistics> statistics_ptr(std::make_shared<kgl::GenomeStatistics>(genome_db_ptr,
@@ -46,7 +42,7 @@ std::shared_ptr<const kgl::GenomeVariant> getGenomeVariants(std::shared_ptr<cons
   population_stats_ptr->addGenomeStatistics(statistics_ptr);
 
   // Write the genome stats to file.
-  std::string stats_file_name = kgl::ExecEnv::filePath("genome_stats", workDirectory) + ".csv";
+  std::string stats_file_name = kgl::Utility::filePath("genome_stats", workDirectory) + ".csv";
   statistics_ptr->outputFeatureCSV(stats_file_name, kgl::VariantOutputIndex::START_1_BASED);
 
 // pfATP4 drug target ATP4 sodium pump.
@@ -133,7 +129,7 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
     std::string sequence_name = file.genome_name;
     sequence_name += "_";
     sequence_name += ACTIVE_GENE;
-    std::string fasta_file_name = ExecEnv::filePath(sequence_name, args.workDirectory) + ".fasta";
+    std::string fasta_file_name = Utility::filePath(sequence_name, args.workDirectory) + ".fasta";
 
     // Write the vector of mutant proteins to a fasta file.
     ApplicationAnalysis::writeMutantProteins(fasta_file_name,
@@ -166,7 +162,7 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
   // Perform population analysis
   // (disabled to save CPU time)
-  std::string newick_file = ExecEnv::filePath("file.genome_name+ UPGMA_newick", args.workDirectory) + ".txt";
+  std::string newick_file = Utility::filePath("file.genome_name+ UPGMA_newick", args.workDirectory) + ".txt";
 //  kgl::PhylogeneticAnalysis::UPGMA(newick_file, population_stats_ptr);
 
 }

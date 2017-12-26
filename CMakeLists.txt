@@ -45,7 +45,7 @@ add_library(read_sam SHARED ${SOURCE_FILES} kgl_python.cc)
 #generate kgl_genome executable
 add_executable (kgl_genome ${SOURCE_FILES} kgl_main.cc  kgl_gff_fasta.h kgl_gff_fasta.cc
                 kgl_genome_db.h kgl_patterns.h kgl_genome_feature.h kgl_genome_feature.cc
-                kgl_exec_env_boost.cc kgl_variant.h kgl_variant.cc
+        kgl_variant.h kgl_variant.cc
                 kgl_filter.h kgl_filter.cc kgl_variant_set.cc
                 kgl_table.h kgl_table.cc kgl_sam_parse.h kgl_sam_parse.cc
                 kgl_sam_read.h kgl_sam_consume.h kgl_sam_process.h kgl_table_ncbi.h kgl_table_ncbi.cc
@@ -59,13 +59,15 @@ add_executable (kgl_genome ${SOURCE_FILES} kgl_main.cc  kgl_gff_fasta.h kgl_gff_
                 kgl_sequence_codon.cc kgl_alphabet_string.h kgl_alphabet_amino.cc kgl_alphabet_dna5.h
                 kgl_alphabet_dna5.cc kgl_phylogenetic_analysis.h
                 kgl_phylogenetic_analysis.cc kgl_variant_factory.h
-        kgl_variant_factory_compound.cc kgl_variant_factory_compound_delete.cc
+                kgl_variant_factory_compound.cc kgl_variant_factory_compound_delete.cc
                 kgl_variant_factory_compound_snp.cc kgl_variant_factory_compound.h
                 kgl_variant_factory_compound_insert.cc kgl_variant_compound_insert.cc
                 kgl_variant_compound_delete.cc kgl_alphabet_coding_dna5.h kgl_alphabet_coding_dna5.cc
                 kgl_variant_factory.cc kgl_statistics.h kgl_statistics.cc kgl_variant_evidence.h
-        kgl_statistics_upgma.h kgl_statistics_upgma.cc kgl_variant_mutation.cc
-                kgl_sequence_virtual_compare.h
-        kgl_variant_single.h kgl_variant_delete.cc kgl_variant_insert.cc kgl_variant_single.cc kgl_variant_factory_single.cc kgl_alphabet_readcount.cc kgl_alphabet_readcount.h kgl_alphabet_extend.h kgl_alphabet_extend.cc kgl_variant_factory_single.h)
+                kgl_statistics_upgma.h kgl_statistics_upgma.cc kgl_variant_mutation.cc
+                kgl_sequence_virtual_compare.h kgl_variant_single.h kgl_variant_delete.cc kgl_variant_insert.cc
+                kgl_variant_single.cc kgl_variant_factory_single.cc kgl_alphabet_readcount.cc
+                kgl_alphabet_readcount.h kgl_alphabet_extend.h kgl_alphabet_extend.cc kgl_variant_factory_single.h
+                kgl_variant_factory_vcf.h kgl_utility.h kgl_utility.cc kgl_variant_factory_vcf.cc kgl_variant_factory_bam.h kgl_variant_factory_bam.cc)
 
 target_link_libraries(kgl_genome ${Boost_LIBRARIES})
