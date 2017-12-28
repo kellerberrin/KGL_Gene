@@ -61,8 +61,6 @@ private:
                         Phred_t read_quality,
                         std::shared_ptr<GenomeVariant> genome_single_variants) const;
 
-  size_t addSingleVariant(std::shared_ptr<GenomeVariant> genome_single_variants, const Variant &variant) const;
-
 };
 
 

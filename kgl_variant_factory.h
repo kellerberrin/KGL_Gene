@@ -36,6 +36,10 @@ public:
                                                       NucleotideReadCount_t min_read_count,
                                                       double min_proportion) const;
 
+protected:
+
+  // For use in the superclass SAM, BAM and VCF parsers.
+  size_t addSingleVariant(std::shared_ptr<GenomeVariant> genome_single_variants, const Variant &variant) const;
 
 private:
 

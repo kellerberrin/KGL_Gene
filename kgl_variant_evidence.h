@@ -35,10 +35,10 @@ public:
   virtual ~VariantEvidence() = default;
 
   virtual std::string output(char delimiter, VariantOutputIndex output_index) const = 0;
+  virtual Phred_t calculateQuality() const = 0;
 
   virtual bool isReadCount() const { return false; }
-
-  virtual Phred_t calculateQuality() const = 0;
+  virtual bool isVCF() const { return false; }
 
 private:
 
@@ -116,6 +116,27 @@ std::string ReadCountEvidence<Alphabet>::output(char delimiter, VariantOutputInd
 }
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The VCF evidence object
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class VCFEvidence : public VariantEvidence {
+
+public:
+
+  explicit VCFEvidence(const std::string& info, Phred_t quality) : info_(info), quality_(quality) {}
+  virtual ~VCFEvidence() = default;
+
+  std::string output(char delimiter, VariantOutputIndex output_index) const override { return info_; }
+  Phred_t calculateQuality() const override { return quality_; }
+  bool isVCF() const override { return true; }
+
+private:
+
+  std::string info_;
+  Phred_t quality_;
+
+};
 
 
 

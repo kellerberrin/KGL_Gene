@@ -127,6 +127,8 @@ public:
 
   const GenomeSequenceMap& getMap() const { return genome_sequence_map_; }
 
+  size_t contigCount() const { return getMap().size(); }
+
 private:
 
   GenomeSequenceMap genome_sequence_map_;

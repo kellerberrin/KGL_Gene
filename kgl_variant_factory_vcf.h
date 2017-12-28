@@ -30,14 +30,12 @@ public:
                                               const std::string& vcf_file_name,
                                               Phred_t read_quality,
                                               NucleotideReadCount_t min_read_count,
-                                              double min_proportion);
+                                              double min_proportion) const;
 
 private:
 
   class VcfFileImpl;       // Forward declaration of the VCF File reader implementation class
   std::unique_ptr<VcfFileImpl> vcf_file_impl_ptr_;    // Read VCF file PIMPL
-
-  bool readVcfFile(const std::string& vcf_file_name);
 
 };
 

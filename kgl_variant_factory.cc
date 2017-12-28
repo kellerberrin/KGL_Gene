@@ -178,3 +178,68 @@ kgl::VariantFactory::aggregateVariants(const std::shared_ptr<const GenomeDatabas
   return variant_ptr;
 
 }
+
+
+// This function will insert multiple variants for each CDS sequence within each gene.
+size_t kgl::VariantFactory::addSingleVariant(std::shared_ptr<GenomeVariant> genome_single_variants,
+                                            const Variant &variant) const {
+
+  // Annotate the variant with genome information.
+  size_t variant_count = 0;
+  GeneVector gene_vector;
+  ContigOffset_t variant_offset = variant.contigOffset();
+  if (variant.contig()->findGenes(variant_offset, gene_vector)) {
+
+    for (const auto& gene_ptr : gene_vector) {
+
+      std::shared_ptr<const CodingSequenceArray> sequence_array = kgl::GeneFeature::getCodingSequences(gene_ptr);
+      if (sequence_array->empty()) {
+
+        // create a variant copy and annotate with a gene.
+        std::shared_ptr<Variant> intron_single_ptr = variant.clone();
+        intron_single_ptr->defineIntron(gene_ptr); // intron
+        genome_single_variants->addVariant(intron_single_ptr);
+        ++variant_count;
+
+      } else {
+
+        for (const auto& sequence : sequence_array->getMap()) {
+
+          if (sequence.second->isWithinCoding(variant_offset)) {
+
+            // create a variant copy and annotate with a coding sequence.
+            std::shared_ptr<Variant> coding_single_ptr = variant.clone();
+            coding_single_ptr->defineCoding(sequence.second); // coding
+            genome_single_variants->addVariant(coding_single_ptr);
+            ++variant_count;
+
+          } else {  // an intron for this sequence
+
+            // create a variant copy and annotate with a gene.
+            std::shared_ptr<Variant> intron_single_ptr = variant.clone();
+            intron_single_ptr->defineIntron(gene_ptr); // intron
+            genome_single_variants->addVariant(intron_single_ptr);
+            ++variant_count;
+
+          } // if valid sequence for offset
+
+        } // for all sequences within a gene
+
+      } // if gene has a valid sequence.
+
+    } // for all genes.
+
+  } else {
+
+    // create a variant copy and tag as non-coding.
+    std::shared_ptr<Variant> noncoding_single_ptr  = variant.clone();
+    noncoding_single_ptr->defineNonCoding(); // non coding
+    genome_single_variants->addVariant(noncoding_single_ptr);
+    ++variant_count;
+
+  }
+
+  return variant_count;
+
+}
+
