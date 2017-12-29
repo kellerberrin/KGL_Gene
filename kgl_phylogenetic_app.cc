@@ -80,9 +80,9 @@ std::shared_ptr<const kgl::GenomeVariant> getGenomeVariants(std::shared_ptr<cons
 #define S_ANTIGEN_GENE "PF3D7_1035200"
 #define S_ANTIGEN_SEQUENCE "PF3D7_1035200.1"
 
-#define ACTIVE_CONTIG RIFIN_1_CONTIG
-#define ACTIVE_GENE RIFIN_1_GENE
-#define ACTIVE_SEQUENCE RIFIN_1_SEQUENCE
+#define ACTIVE_CONTIG RIFIN_2_CONTIG
+#define ACTIVE_GENE RIFIN_2_GENE
+#define ACTIVE_SEQUENCE RIFIN_2_SEQUENCE
 
   // Filter on sequence
   std::shared_ptr<const kgl::GenomeVariant> filter_ptr = all_variant_ptr->filterVariants(kgl::SequenceFilter(ACTIVE_SEQUENCE));
@@ -113,6 +113,9 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
   // Create a population statistics object.
   std::shared_ptr<kgl::PopulationStatistics> population_stats_ptr(std::make_shared<kgl::PopulationStatistics>("Malawi-PRJNA173723"));
 
+  // Create a population variant object.
+  std::shared_ptr<kgl::PopulationVariant> population_variant_ptr(std::make_shared<kgl::PopulationVariant>("Malawi-PRJNA173723"));
+
   // For all organisms
   for (const auto& file : args.fileList) {
 
@@ -126,6 +129,9 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
                                                                               args.minCount,
                                                                               args.minProportion,
                                                                               args.workDirectory);
+
+    // Store the genome variant pointer
+    population_variant_ptr->addGenomeVariant(variant_ptr);
 
     // Write genome variants to file.
     variant_ptr->outputCSV(args.outCSVFile, VariantOutputIndex::START_1_BASED, false);
@@ -162,6 +168,46 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
     }
 
   } // For all sam files loop.
+
+  std::shared_ptr<const kgl::GenomeVariant> vcf_variant_ptr;
+  std::shared_ptr<const kgl::GenomeVariant> sam_variant_ptr;
+  population_variant_ptr->getGenomeVariant("sam_SRR609052", sam_variant_ptr);
+  population_variant_ptr->getGenomeVariant("vcf_SRR609052", vcf_variant_ptr);
+
+  if (vcf_variant_ptr and sam_variant_ptr) {
+
+    vcf_variant_ptr = vcf_variant_ptr->filterVariants(SequenceFilter(ACTIVE_SEQUENCE));
+    sam_variant_ptr = sam_variant_ptr->filterVariants(SequenceFilter(ACTIVE_SEQUENCE));
+
+    std::shared_ptr<const kgl::GenomeVariant> inter_vcf_sam = vcf_variant_ptr->Intersection(sam_variant_ptr);
+    std::shared_ptr<const kgl::GenomeVariant> inter_sam_vcf = sam_variant_ptr->Intersection(vcf_variant_ptr);
+
+    std::cout << " Intersection(VCF,SAM) :" << std::endl;
+    std::cout << *inter_vcf_sam;
+
+    std::shared_ptr<const kgl::GenomeVariant> diff_inter = inter_vcf_sam->Difference(inter_sam_vcf);
+
+    std::cout << " Difference Intersection(VCF,SAM) :" << std::endl;
+    std::cout << *diff_inter;
+
+    diff_inter = inter_sam_vcf->Difference(inter_vcf_sam);
+
+    std::cout << " Difference Intersection(VCF,SAM) :" << std::endl;
+    std::cout << *diff_inter;
+
+    std::shared_ptr<const kgl::GenomeVariant> diff_vcf_sam = vcf_variant_ptr->Difference(sam_variant_ptr);
+
+    std::cout << " Difference VCF - SAM :" << std::endl;
+    std::cout << *diff_vcf_sam;
+
+
+    std::shared_ptr<const kgl::GenomeVariant> diff_sam_vcf = sam_variant_ptr->Difference(vcf_variant_ptr);
+
+    std::cout << " Difference SAM - VCF :" << std::endl;
+    std::cout << *diff_sam_vcf;
+
+  }
+
 
   // Perform population analysis
   // (disabled to save CPU time)

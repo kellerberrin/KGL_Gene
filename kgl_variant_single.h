@@ -54,7 +54,7 @@ public:
   DNA5::Alphabet reference() const { return reference_; }
   virtual char mutantChar() const = 0;
 
-  std::string suboutput(char delimiter, VariantOutputIndex output_index) const;
+  std::string suboutput(char delimiter, VariantOutputIndex output_index, bool detail) const;
 
   // complement base if -ve strand and coding or intron.
   CodingDNA5::Alphabet strandReference() const { return strandNucleotide(reference()); }

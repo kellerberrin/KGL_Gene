@@ -14,14 +14,18 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-std::string kgl::SingleVariant::suboutput(char delimiter, VariantOutputIndex output_index) const
+std::string kgl::SingleVariant::suboutput(char delimiter, VariantOutputIndex output_index, bool detail) const
 {
   std::stringstream ss;
   ss << genomeOutput(delimiter, output_index);
   ss << quality() << delimiter;
   ss << subname() << delimiter << size() << delimiter;
   ss << submutation(delimiter, output_index);
-  ss << evidence()->output(delimiter, output_index);
+  if (detail) {
+
+    ss << evidence()->output(delimiter, output_index);
+
+  }
   ss << '\n';
 
   return ss.str();

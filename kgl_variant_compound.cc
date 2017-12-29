@@ -57,11 +57,9 @@ std::string kgl::CompoundVariant::output(char delimiter, VariantOutputIndex outp
   ss << location(delimiter, output_index);
   ss << mutation(delimiter, output_index) << "\n";
 
-  if (detail) {
+  for (const auto &variant : variant_map_) {
 
-    for (const auto &variant : variant_map_) {
-      ss << variant.second->suboutput(delimiter, output_index);
-    }
+    ss << variant.second->suboutput(delimiter, output_index, detail);
 
   }
 
