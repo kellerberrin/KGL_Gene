@@ -23,6 +23,7 @@ std::shared_ptr<const kgl::GenomeVariant> getGenomeVariants(std::shared_ptr<cons
                                                             const std::string& file_name,
                                                             const std::string& genome_name,
                                                             kgl::Phred_t read_quality,
+                                                            kgl::Phred_t variant_quality,
                                                             long min_count,
                                                             double min_proportion,
                                                             const std::string& workDirectory) {
@@ -32,6 +33,7 @@ std::shared_ptr<const kgl::GenomeVariant> getGenomeVariants(std::shared_ptr<cons
                                                                                                    genome_name,
                                                                                                    file_name,
                                                                                                    read_quality,
+                                                                                                   variant_quality,
                                                                                                    min_count,
                                                                                                    min_proportion);
 
@@ -120,6 +122,7 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
                                                                               file.file_name,
                                                                               file.genome_name,
                                                                               args.readQuality,
+                                                                              args.variantQuality,
                                                                               args.minCount,
                                                                               args.minProportion,
                                                                               args.workDirectory);

@@ -16,9 +16,9 @@ std::shared_ptr<const kgl::GenomeVariant>
 kgl::SingleFactory::createSingleVariants(const std::string &genome_name,
                                          const std::shared_ptr<const ContigCountData> &count_data,
                                          const std::shared_ptr<const GenomeDatabase> &genome_db,
+                                         Phred_t variant_quality,
                                          NucleotideReadCount_t minimum_read_count,
-                                         double minimum_proportion,
-                                         Phred_t read_quality) const {
+                                         double minimum_proportion) const {
 
   std::shared_ptr<GenomeVariant> genome_single_variants = kgl::GenomeVariant::emptyGenomeVariant(genome_name, genome_db);
   size_t variant_count = 0;
@@ -26,7 +26,7 @@ kgl::SingleFactory::createSingleVariants(const std::string &genome_name,
   for (auto& contig_block : count_data->getMap()) {   // For each contig block.
 
     // Get the sequence.
-    std::shared_ptr<ContigFeatures> contig_ptr;
+    std::shared_ptr<const ContigFeatures> contig_ptr;
     if (not genome_db->getContigSequence(contig_block.first, contig_ptr)) {
 
       ExecEnv::log().error("Contig: {} not found in SingleFactory.create()", contig_block.first);
@@ -50,28 +50,28 @@ kgl::SingleFactory::createSingleVariants(const std::string &genome_name,
         // The remaining five +A, +C, +G, +T, +N are used to generate insert variants.
 
         variant_count += GenerateSNPDelete(genome_name,
-                                       contig_ptr,
-                                       contig_offset,
-                                       reference_nucleotide,
-                                       nucleotide_count_ptr,
-                                       minimum_read_count,
-                                       minimum_proportion,
-                                       read_quality,
-                                       genome_single_variants);
+                                           contig_ptr,
+                                           contig_offset,
+                                           reference_nucleotide,
+                                           nucleotide_count_ptr,
+                                           variant_quality,
+                                           minimum_read_count,
+                                           minimum_proportion,
+                                           genome_single_variants);
 
         // Warning; raw pointer arithmetic - very nasty.
         // Increment the array pointer by six to access the remaining five elements of the count array.
         const NucleotideReadCount_t* nucleotide_insert_count_ptr = nucleotide_count_ptr + ExtendCountColumns::NUCLEOTIDE_COLUMNS;
 
         variant_count += GenerateInsert(genome_name,
-                                    contig_ptr,
-                                    contig_offset,
-                                    reference_nucleotide,
-                                    nucleotide_insert_count_ptr,
-                                    minimum_read_count,
-                                    minimum_proportion,
-                                    read_quality,
-                                    genome_single_variants);
+                                        contig_ptr,
+                                        contig_offset,
+                                        reference_nucleotide,
+                                        nucleotide_insert_count_ptr,
+                                        variant_quality,
+                                        minimum_read_count,
+                                        minimum_proportion,
+                                        genome_single_variants);
 
       }  // for all sequence elements
 
@@ -88,14 +88,14 @@ kgl::SingleFactory::createSingleVariants(const std::string &genome_name,
 
 
 size_t kgl::SingleFactory::GenerateSNPDelete(const std::string &genome_name,
-                                           std::shared_ptr<ContigFeatures> contig_ptr,
-                                           ContigOffset_t contig_offset,
-                                           DNA5::Alphabet reference_nucleotide,
-                                           const NucleotideReadCount_t nucleotide_count_array[],
-                                           NucleotideReadCount_t minimum_read_count,
-                                           double minimum_proportion,
-                                           Phred_t read_quality,
-                                           std::shared_ptr<GenomeVariant> genome_single_variants) const {
+                                             std::shared_ptr<const ContigFeatures> contig_ptr,
+                                             ContigOffset_t contig_offset,
+                                             DNA5::Alphabet reference_nucleotide,
+                                             const NucleotideReadCount_t nucleotide_count_array[],
+                                             Phred_t variant_quality,
+                                             NucleotideReadCount_t minimum_read_count,
+                                             double minimum_proportion,
+                                             std::shared_ptr<GenomeVariant> genome_single_variants) const {
 
   size_t variant_count = 0;
   NucleotideReadCount_t read_count = 0;
@@ -121,34 +121,41 @@ size_t kgl::SingleFactory::GenerateSNPDelete(const std::string &genome_name,
 
       Phred_t quality = evidence_ptr->calculateQuality();
 
-      if (ExtendCountColumns::isBaseCode(mutant_nucleotide)) {
+      if (quality >= variant_quality) {
 
-        SNPVariant snp_variant(genome_name,
-                               contig_ptr,
-                               contig_offset,
-                               quality,
-                               evidence_ptr,
-                               reference_nucleotide,
-                               ExtendCountColumns::extendToBase(mutant_nucleotide));
+        if (ExtendCountColumns::isBaseCode(mutant_nucleotide)) {
 
-        variant_count += addSingleVariant(genome_single_variants, snp_variant); // Annotate with genome information
 
-      } else if (ExtendCountColumns::isDeletion(mutant_nucleotide)) {
+          SNPVariant snp_variant(genome_name,
+                                 contig_ptr,
+                                 contig_offset,
+                                 quality,
+                                 evidence_ptr,
+                                 reference_nucleotide,
+                                 ExtendCountColumns::extendToBase(mutant_nucleotide));
 
-        DeleteVariant delete_variant(genome_name,
-                                     contig_ptr,
-                                     contig_offset,
-                                     quality,
-                                     evidence_ptr,
-                                     reference_nucleotide);
+          variant_count += VariantFactory::addSingleVariant(genome_single_variants, snp_variant); // Annotate with genome information
 
-        variant_count += addSingleVariant(genome_single_variants, delete_variant); // Annotate with genome information
 
-      } else {
+        } else if (ExtendCountColumns::isDeletion(mutant_nucleotide)) {
 
-        ExecEnv::log().error("ExtendCountColumns Unknown letter type: {}", ExtendCountColumns::convertToChar(mutant_nucleotide));
+          DeleteVariant delete_variant(genome_name,
+                                       contig_ptr,
+                                       contig_offset,
+                                       quality,
+                                       evidence_ptr,
+                                       reference_nucleotide);
 
-      }
+          variant_count += VariantFactory::addSingleVariant(genome_single_variants, delete_variant); // Annotate with genome information
+
+        } else {
+
+          ExecEnv::log().error("ExtendCountColumns Unknown letter type: {}",
+                               ExtendCountColumns::convertToChar(mutant_nucleotide));
+
+        }
+
+      } // if quality
 
     }
 
@@ -160,13 +167,13 @@ size_t kgl::SingleFactory::GenerateSNPDelete(const std::string &genome_name,
 
 
 size_t kgl::SingleFactory::GenerateInsert(const std::string &genome_name,
-                                          std::shared_ptr<ContigFeatures> contig_ptr,
+                                          std::shared_ptr<const ContigFeatures> contig_ptr,
                                           ContigOffset_t contig_offset,
                                           DNA5::Alphabet reference_nucleotide,
                                           const NucleotideReadCount_t nucleotide_count_array[],
+                                          Phred_t variant_quality,
                                           NucleotideReadCount_t minimum_read_count,
                                           double minimum_proportion,
-                                          Phred_t read_quality,
                                           std::shared_ptr<GenomeVariant> genome_single_variants) const {
 
   size_t variant_count = 0;
@@ -193,17 +200,21 @@ size_t kgl::SingleFactory::GenerateInsert(const std::string &genome_name,
 
       Phred_t quality = evidence_ptr->calculateQuality();
 
-      InsertVariant insert_variant(genome_name,
-                                   contig_ptr,
-                                   contig_offset,
-                                   quality,
-                                   evidence_ptr,
-                                   reference_nucleotide,
-                                   mutant_nucleotide);
+      if (quality >= variant_quality) {
 
-      variant_count += addSingleVariant(genome_single_variants, insert_variant); // Annotate with genome information
+        InsertVariant insert_variant(genome_name,
+                                     contig_ptr,
+                                     contig_offset,
+                                     quality,
+                                     evidence_ptr,
+                                     reference_nucleotide,
+                                     mutant_nucleotide);
 
-    }
+        variant_count += VariantFactory::addSingleVariant(genome_single_variants, insert_variant); // Annotate with genome information
+
+      }
+
+    } // if quality.
 
   }
 

@@ -332,6 +332,14 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
   addOption(parser, seqan::ArgParseOption(readQualityShortFlag_, readQualityFlag_, read_quality_desc, seqan::ArgParseArgument::DOUBLE, "FLOAT"));
 
+  const char* variant_quality_desc =
+  R"(The variant quality as -10 log10 Pr {VariantError} e.g. 10 is a 1/10 chance the variant is incorrectly called. Defaults to 10.)";
+
+  const char* variantQualityFlag_ = "variantQuality";
+  const char* variantQualityShortFlag_ = "a";
+
+  addOption(parser, seqan::ArgParseOption(variantQualityShortFlag_, variantQualityFlag_, variant_quality_desc, seqan::ArgParseArgument::DOUBLE, "FLOAT"));
+
   // Parse command line.
   seqan::ArgumentParser::ParseResult parse_result = seqan::parse(parser, argc, argv);
 
@@ -471,6 +479,8 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   if (seqan::isSet(parser, verboseFlag_)) seqan::getOptionValue(args_.verbose, parser, verboseFlag_);
 
   if (seqan::isSet(parser, readQualityFlag_)) seqan::getOptionValue(args_.readQuality, parser, readQualityFlag_);
+
+  if (seqan::isSet(parser, variantQualityFlag_)) seqan::getOptionValue(args_.variantQuality, parser, variantQualityFlag_);
 
   return true;
 

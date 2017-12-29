@@ -33,13 +33,12 @@ public:
                                                       const std::string& genome_name,
                                                       const std::string& variant_file_name,
                                                       Phred_t read_quality,
+                                                      Phred_t variant_quality,
                                                       NucleotideReadCount_t min_read_count,
                                                       double min_proportion) const;
 
-protected:
-
-  // For use in the superclass SAM, BAM and VCF parsers.
-  size_t addSingleVariant(std::shared_ptr<GenomeVariant> genome_single_variants, const Variant &variant) const;
+  // Annotates variants with genome information and adds to the variant genome. For use in the SAM, BAM and VCF parsers.
+  static size_t addSingleVariant(std::shared_ptr<GenomeVariant> genome_single_variants, const Variant &variant);
 
 private:
 
@@ -47,6 +46,7 @@ private:
                                                          const std::string& genome_name,
                                                          const std::string& sam_file_name,
                                                          Phred_t read_quality,
+                                                         Phred_t variant_quality,
                                                          NucleotideReadCount_t min_read_count,
                                                          double min_proportion) const;
 
@@ -54,6 +54,7 @@ private:
                                                          const std::string& genome_name,
                                                          const std::string& sam_file_name,
                                                          Phred_t read_quality,
+                                                         Phred_t variant_quality,
                                                          NucleotideReadCount_t min_read_count,
                                                          double min_proportion) const;
 
@@ -61,6 +62,7 @@ private:
                                                          const std::string& genome_name,
                                                          const std::string& vcf_file_name,
                                                          Phred_t read_quality,
+                                                         Phred_t variant_quality,
                                                          NucleotideReadCount_t min_read_count,
                                                          double min_proportion) const;
 

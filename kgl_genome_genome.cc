@@ -28,7 +28,7 @@ bool kgl::GenomeDatabase::addContigSequence(const kgl::ContigId_t& contig_id,
 }
 
 bool kgl::GenomeDatabase::getContigSequence(const kgl::ContigId_t& contig_id,
-                                            std::shared_ptr<ContigFeatures>& contig_ptr) const {
+                                            std::shared_ptr<const ContigFeatures>& contig_ptr) const {
 
   auto result_iter = genome_sequence_map_.find(contig_id);
 

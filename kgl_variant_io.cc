@@ -35,7 +35,7 @@ bool kgl::GenomeVariant::outputCSV(const std::string& file_name, VariantOutputIn
 std::ostream& operator<<(std::ostream &os, const kgl::GenomeVariant& genome_variant) {
 
   os << "(Variants are displayed with the start offset = 1 convention)\n";
-  os << genome_variant.output(' ', kgl::VariantOutputIndex::START_1_BASED, true);
+  os << genome_variant.output(' ', kgl::VariantOutputIndex::START_1_BASED, false);
   os.flush();
 
   return os;

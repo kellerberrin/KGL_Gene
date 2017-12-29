@@ -20,7 +20,7 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
                                          std::shared_ptr<AminoSequence>& reference_sequence,
                                          std::vector<std::shared_ptr<AminoSequence>>& mutant_sequence_vector) const {
   // Get the contig.
-  std::shared_ptr<ContigFeatures> contig_ptr;
+  std::shared_ptr<const ContigFeatures> contig_ptr;
   if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
 
     ExecEnv::log().warn("mutantProtein(), Could not find contig: {} in genome database", contig_id);

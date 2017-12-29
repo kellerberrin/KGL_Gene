@@ -28,9 +28,7 @@ public:
   std::shared_ptr<GenomeVariant> readParseVcf(const std::string& genome_name,
                                               std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                               const std::string& vcf_file_name,
-                                              Phred_t read_quality,
-                                              NucleotideReadCount_t min_read_count,
-                                              double min_proportion) const;
+                                              Phred_t variant_quality) const;
 
 private:
 

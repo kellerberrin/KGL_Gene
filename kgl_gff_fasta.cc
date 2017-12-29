@@ -171,8 +171,8 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
   kgl::Attributes record_attributes;
   for (unsigned i = 0; i < length(record.tagNames); i++) {
 
-    std::string key = toCString(record.tagNames[i]);
-    std::string value = toCString(record.tagValues[i]);
+    std::string key = seqan::toCString(record.tagNames[i]);
+    std::string value = seqan::toCString(record.tagValues[i]);
 
 
     bt::char_separator<char> sep(",");
@@ -231,7 +231,7 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
   // Get the contig id.
   kgl::ContigId_t contig_id = toCString(record.ref);
   // Get a pointer to the contig.
-  std::shared_ptr<kgl::ContigFeatures> contig_ptr;
+  std::shared_ptr<const kgl::ContigFeatures> contig_ptr;
   if (not genome_db_ptr->getContigSequence(contig_id, contig_ptr)) {
 
     ExecEnv::log().error("Could not find contig: {}", contig_id);
@@ -307,7 +307,8 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
   // Add in the attributes.
   feature_ptr->setAttributes(record_attributes);
   // Annotate the contig.
-  if (not contig_ptr->addFeature(feature_ptr)) {
+  std::shared_ptr<kgl::ContigFeatures> mutable_contig_ptr = std::const_pointer_cast<kgl::ContigFeatures>(contig_ptr);
+  if (not mutable_contig_ptr->addFeature(feature_ptr)) {
 
     ExecEnv::log().error("Could not add duplicate feature: {} to contig: {}", feature_id, contig_id);
     return false;

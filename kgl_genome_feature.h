@@ -27,7 +27,7 @@ public:
 
   Feature(const FeatureIdent_t& id,
           const FeatureType_t& type,
-          const std::shared_ptr<ContigFeatures>& contig_ptr,
+          const std::shared_ptr<const ContigFeatures>& contig_ptr,
           const FeatureSequence& sequence): id_(id), type_(type), contig_ptr_(contig_ptr), sequence_(sequence) {}
   Feature(const Feature&) = default;
   virtual ~Feature() = default;
@@ -63,7 +63,7 @@ private:
 
   FeatureIdent_t id_;
   FeatureType_t type_;
-  std::shared_ptr<ContigFeatures> contig_ptr_;
+  std::shared_ptr<const ContigFeatures> contig_ptr_;
   FeatureSequence sequence_;
   SubFeatureMap sub_features_;
   SuperFeatureMap super_features_;
@@ -82,7 +82,7 @@ public:
 
   CDSFeature(const FeatureIdent_t &id,
             const CDSPhaseType_t phase,
-            const std::shared_ptr<ContigFeatures> &contig_ptr,
+            const std::shared_ptr<const ContigFeatures> &contig_ptr,
             const FeatureSequence &sequence) : Feature(id, CDS_TYPE, contig_ptr, sequence), phase_(phase) {}
 
   CDSFeature(const CDSFeature &) = default;
@@ -112,7 +112,7 @@ class EXONFeature : public Feature {
 public:
 
   EXONFeature(const FeatureIdent_t &id,
-              const std::shared_ptr<ContigFeatures> &contig_ptr,
+              const std::shared_ptr<const ContigFeatures> &contig_ptr,
               const FeatureSequence &sequence) : Feature(id, EXON_TYPE, contig_ptr, sequence) {}
 
   EXONFeature(const EXONFeature &) = default;
@@ -140,7 +140,7 @@ class mRNAFeature : public Feature {
 public:
 
   mRNAFeature(const FeatureIdent_t &id,
-              const std::shared_ptr<ContigFeatures> &contig_ptr,
+              const std::shared_ptr<const ContigFeatures> &contig_ptr,
               const FeatureSequence &sequence) : Feature(id, MRNA_TYPE, contig_ptr, sequence) {}
 
   mRNAFeature(const mRNAFeature &) = default;
@@ -168,7 +168,7 @@ class GeneFeature : public Feature {
 public:
 
   GeneFeature(const FeatureIdent_t &id,
-             const std::shared_ptr<ContigFeatures> &contig_ptr,
+             const std::shared_ptr<const ContigFeatures> &contig_ptr,
              const FeatureSequence &sequence) : Feature(id, GENE_TYPE, contig_ptr, sequence) {}
 
   GeneFeature(const GeneFeature &) = default;

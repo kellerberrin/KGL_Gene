@@ -117,7 +117,7 @@ public:
   // Return false if contig already exists.
   bool addContigSequence(const ContigId_t& contig, std::shared_ptr<DNA5SequenceContig> sequence_ptr);
   // Returns false if key not found.
-  bool getContigSequence(const ContigId_t& contig, std::shared_ptr<ContigFeatures>& contig_ptr) const;
+  bool getContigSequence(const ContigId_t& contig, std::shared_ptr<const ContigFeatures>& contig_ptr) const;
 
   void createVerifyGenomeDatabase();
 

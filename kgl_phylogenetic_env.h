@@ -36,7 +36,7 @@ struct Phylogenetic {
   int minCount{0};
   double minProportion{0};
   Phred_t readQuality{30.0};
-
+  Phred_t variantQuality{10.0};
 
 };
 

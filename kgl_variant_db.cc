@@ -80,23 +80,20 @@ bool kgl::GenomeVariant::addContigVariant(std::shared_ptr<kgl::ContigVariant>& c
 
 bool kgl::GenomeVariant::getContigVariant(const ContigId_t& contig_id,
                                           std::shared_ptr<ContigVariant>& contig_variant) const {
-  bool result;
 
   auto contig = genome_variant_map_.find(contig_id);
 
   if (contig != genome_variant_map_.end()) {
 
     contig_variant = contig->second;
-    result = true;
+    return true;
 
   } else {
 
     contig_variant = nullptr;
-    result = false;
+    return false;
 
   }
-
-  return result;
 
 }
 

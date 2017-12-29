@@ -20,8 +20,11 @@ kgl::VariantFactory::createVariants(std::shared_ptr<const kgl::GenomeDatabase> g
                                     const std::string& genome_name,
                                     const std::string& variant_file_name,
                                     Phred_t read_quality,
+                                    Phred_t variant_quality,
                                     NucleotideReadCount_t min_read_count,
                                     double min_proportion) const {
+
+
 
   std::string file_ext = kgl::Utility::fileExtension(variant_file_name);
   std::transform(file_ext.begin(), file_ext.end(), file_ext.begin(), ::toupper); // convert to UC for robust comparison
@@ -30,21 +33,40 @@ kgl::VariantFactory::createVariants(std::shared_ptr<const kgl::GenomeDatabase> g
 
   if (file_ext == SAM_FILE_EXTENSTION_) {
 
-    variant_ptr = createSamVariants(genome_db_ptr, genome_name, variant_file_name, read_quality, min_read_count, min_proportion);
+    variant_ptr = createSamVariants(genome_db_ptr,
+                                    genome_name,
+                                    variant_file_name,
+                                    read_quality,
+                                    variant_quality,
+                                    min_read_count,
+                                    min_proportion);
 
   } else if (file_ext == BAM_FILE_EXTENSTION_) {
 
-    variant_ptr = createBamVariants(genome_db_ptr, genome_name, variant_file_name, read_quality, min_read_count, min_proportion);
+    variant_ptr = createBamVariants(genome_db_ptr,
+                                    genome_name,
+                                    variant_file_name,
+                                    read_quality,
+                                    variant_quality,
+                                    min_read_count,
+                                    min_proportion);
 
   } else if (file_ext == VCF_FILE_EXTENSTION_) {
 
-    variant_ptr = createVcfVariants(genome_db_ptr, genome_name, variant_file_name, read_quality, min_read_count, min_proportion);
+    variant_ptr = createVcfVariants(genome_db_ptr,
+                                    genome_name,
+                                    variant_file_name,
+                                    read_quality,
+                                    variant_quality,
+                                    min_read_count,
+                                    min_proportion);
 
   } else {
 
     ExecEnv::log().critical("Unsupported file type: '{}' for variant calling. Must be SAM ('.sam'), BAM ('.bam') or freebayes VCF ('.vcf')", file_ext);
 
   }
+
 
   return variant_ptr;
 
@@ -57,6 +79,7 @@ kgl::VariantFactory::createSamVariants(std::shared_ptr<const GenomeDatabase> gen
                                        const std::string& genome_name,
                                        const std::string& sam_file_name,
                                        Phred_t read_quality,
+                                       Phred_t variant_quality,
                                        NucleotideReadCount_t min_read_count,
                                        double min_proportion) const {
 
@@ -70,9 +93,9 @@ kgl::VariantFactory::createSamVariants(std::shared_ptr<const GenomeDatabase> gen
   std::shared_ptr<const GenomeVariant> single_variant_ptr = SingleFactory().createSingleVariants(genome_name,
                                                                                                  count_data_ptr,
                                                                                                  genome_db_ptr,
+                                                                                                 variant_quality,
                                                                                                  min_read_count,
-                                                                                                 min_proportion,
-                                                                                                 read_quality);
+                                                                                                 min_proportion);
 
   ExecEnv::log().info("Generated: {} Single variants for Genome: {}", single_variant_ptr->size(), genome_name);
 
@@ -88,6 +111,7 @@ kgl::VariantFactory::createVcfVariants(std::shared_ptr<const GenomeDatabase> gen
                                        const std::string& genome_name,
                                        const std::string& vcf_file_name,
                                        Phred_t read_quality,
+                                       Phred_t variant_quality,
                                        NucleotideReadCount_t min_read_count,
                                        double min_proportion) const {
 
@@ -97,9 +121,7 @@ kgl::VariantFactory::createVcfVariants(std::shared_ptr<const GenomeDatabase> gen
   std::shared_ptr<const GenomeVariant> single_variant_ptr = VcfFactory().readParseVcf(genome_name,
                                                                                       genome_db_ptr,
                                                                                       vcf_file_name,
-                                                                                      min_read_count,
-                                                                                      min_proportion,
-                                                                                      read_quality);
+                                                                                      variant_quality);
 
   ExecEnv::log().info("Generated: {} Single variants for Genome: {}", single_variant_ptr->size(), genome_name);
 
@@ -115,6 +137,7 @@ kgl::VariantFactory::createBamVariants(std::shared_ptr<const GenomeDatabase> gen
                                        const std::string& genome_name,
                                        const std::string& vcf_file_name,
                                        Phred_t read_quality,
+                                       Phred_t variant_quality,
                                        NucleotideReadCount_t min_read_count,
                                        double min_proportion) const {
 
@@ -124,9 +147,10 @@ kgl::VariantFactory::createBamVariants(std::shared_ptr<const GenomeDatabase> gen
   std::shared_ptr<const GenomeVariant> single_variant_ptr = BamFactory().readParseBam(genome_name,
                                                                                       genome_db_ptr,
                                                                                       vcf_file_name,
+                                                                                      read_quality,
+                                                                                      variant_quality,
                                                                                       min_read_count,
-                                                                                      min_proportion,
-                                                                                      read_quality);
+                                                                                      min_proportion);
 
   ExecEnv::log().info("Generated: {} Single variants for Genome: {}", single_variant_ptr->size(), genome_name);
 
@@ -182,7 +206,7 @@ kgl::VariantFactory::aggregateVariants(const std::shared_ptr<const GenomeDatabas
 
 // This function will insert multiple variants for each CDS sequence within each gene.
 size_t kgl::VariantFactory::addSingleVariant(std::shared_ptr<GenomeVariant> genome_single_variants,
-                                            const Variant &variant) const {
+                                            const Variant &variant) {
 
   // Annotate the variant with genome information.
   size_t variant_count = 0;

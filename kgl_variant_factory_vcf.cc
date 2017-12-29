@@ -34,9 +34,7 @@ public:
   std::shared_ptr<GenomeVariant> readParseVcfFile(const std::string& genome_name,
                                              std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                              const std::string& vcf_file_name,
-                                             Phred_t read_quality,
-                                             NucleotideReadCount_t min_read_count,
-                                             double min_proportion) const;
+                                             Phred_t variant_quality);
 
 private:
 
@@ -48,6 +46,13 @@ private:
   constexpr static const char* ID_READ_DEPTH_ = "DPB";
   constexpr static const char* ID_PROPORTION_ = "AF";
 
+  constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 5000;
+
+  size_t vcf_record_count_;
+  size_t vcf_record_ignored_;
+  size_t vcf_record_error_;
+  size_t vcf_record_rejected_;
+
   bool parseVcfHeader(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                       const seqan::VcfHeader& header,
                       ActiveContigMap& active_contig_map) const;
@@ -55,11 +60,58 @@ private:
   bool parseVcfRecord(const std::string& genome_name,
                       const seqan::VcfRecord& record,
                       ActiveContigMap& active_contig_map,
-                      std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                      std::shared_ptr<const ContigFeatures> contig_ptr,
                       std::shared_ptr<GenomeVariant> genome_variants,
-                      Phred_t read_quality,
-                      NucleotideReadCount_t min_read_count,
-                      double min_proportion) const;
+                      Phred_t variant_quality,
+                      bool& quality_ok) const;
+
+  // Parse 1M ... XM in the cigar.
+  bool parseCheck(size_t cigar_count,
+                  std::shared_ptr<const ContigFeatures> contig_ptr,
+                  const std::string& reference,
+                  const std::string& alternate,
+                  size_t& reference_index,
+                  size_t& alternate_index,
+                  ContigOffset_t& contig_offset) const;
+
+  // Parse 1X ... XX in the cigar.
+
+  bool parseSNP(size_t cigar_count,
+                const std::string& variant_source,
+                std::shared_ptr<const ContigFeatures> contig_ptr,
+                std::shared_ptr<GenomeVariant> genome_variants,
+                Phred_t quality,
+                const std::string& info,
+                const std::string& reference,
+                const std::string& alternate,
+                size_t& reference_index,
+                size_t& alternate_index,
+                ContigOffset_t& contig_offset,
+                size_t& variant_count) const;
+
+  // Parse 1I ... XI in the cigar.
+  bool parseInsert(size_t cigar_count,
+                   const std::string& variant_source,
+                   std::shared_ptr<const ContigFeatures> contig_ptr,
+                   std::shared_ptr<GenomeVariant> genome_variants,
+                   Phred_t quality,
+                   const std::string& info,
+                   const std::string& alternate,
+                   size_t& alternate_index,
+                   ContigOffset_t& contig_offset,
+                   size_t& variant_count) const;
+
+  // Parse 1D ... XD in the cigar.
+  bool parseDelete(size_t cigar_count,
+                   const std::string& variant_source,
+                   std::shared_ptr<const ContigFeatures> contig_ptr,
+                   std::shared_ptr<GenomeVariant> genome_variants,
+                   Phred_t quality,
+                   const std::string& info,
+                   const std::string& reference,
+                   size_t& reference_index,
+                   ContigOffset_t& contig_offset,
+                   size_t& variant_count) const;
 
   // assumes input "<key_1=value_1, ...,key_n=value_n>"
   bool tokenizeVcfHeaderKeyValues(const std::string& key_value_text,
@@ -70,7 +122,8 @@ private:
                                 std::map<std::string, std::string>& key_value_map) const;
 
   bool parseCigar(const std::string& cigar,
-                  size_t& total_cigar_size,
+                  size_t& check_reference_size,
+                  size_t& check_alternate_size,
                   std::vector<std::pair<char, size_t>>& parsed_cigar) const;
 
 };
@@ -80,9 +133,7 @@ std::shared_ptr<kgl::GenomeVariant>
 kgl::VcfFactory::VcfFileImpl::readParseVcfFile(const std::string& genome_name,
                                                std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                                const std::string& vcf_file_name,
-                                               Phred_t read_quality,
-                                               NucleotideReadCount_t min_read_count,
-                                               double min_proportion) const {
+                                               Phred_t variant_quality) {
 
   std::shared_ptr<GenomeVariant> genome_single_variants = kgl::GenomeVariant::emptyGenomeVariant(genome_name, genome_db_ptr);
 
@@ -90,16 +141,17 @@ kgl::VcfFactory::VcfFileImpl::readParseVcfFile(const std::string& genome_name,
   // Open input file.
   seqan::VcfFileIn vcfIn(seqan::toCString(vcf_file_name));
 
-  // Attach to string stream.
+  // Attach VcfFileOut to string stream to dump record information.
   std::stringstream ss;
   seqan::VcfFileOut vcfOut(vcfIn);
-  seqan::open(vcfOut, std::cout, seqan::Vcf());
+  seqan::open(vcfOut, ss, seqan::Vcf());
 
   // Copy over header.
   seqan::VcfHeader header;
   readHeader(header, vcfIn);
   writeHeader(vcfOut, header);
 
+  // Investigate header.
   ActiveContigMap active_contig_map;
   if (not parseVcfHeader(genome_db_ptr, header, active_contig_map)) {
 
@@ -111,8 +163,13 @@ kgl::VcfFactory::VcfFileImpl::readParseVcfFile(const std::string& genome_name,
 
   }
 
+  // Process records.
   // Copy the file record by record.
-  size_t vcf_record_count = 0;
+  vcf_record_count_ = 0;
+  vcf_record_error_ = 0;
+  vcf_record_ignored_ = 0;
+  vcf_record_rejected_ = 0;
+
   seqan::VcfRecord record;
 
   while (!seqan::atEnd(vcfIn))
@@ -120,28 +177,45 @@ kgl::VcfFactory::VcfFileImpl::readParseVcfFile(const std::string& genome_name,
 
     readRecord(record, vcfIn);
 
-    ++vcf_record_count;
-    if (vcf_record_count < 1000000000) {
+    ++vcf_record_count_;
 
-//      writeRecord(vcfOut, record);
+    ContigId_t contig_id = seqan::toCString(contigNames(context(vcfIn))[record.rID]);
+    std::shared_ptr<const ContigFeatures> contig_ptr;
+    if (genome_db_ptr->getContigSequence(contig_id, contig_ptr)) {
 
+      bool record_quality_ok;
       if (not parseVcfRecord(genome_name,
                              record,
                              active_contig_map,
-                             genome_db_ptr,
+                             contig_ptr,
                              genome_single_variants,
-                             read_quality,
-                             min_read_count,
-                             min_proportion)) {
+                             variant_quality,
+                             record_quality_ok)) {
+
+        ++vcf_record_error_;
+        ss.str("");
+        writeRecord(vcfOut, record);
+        ExecEnv::log().error("Error parsing VCF record:\n{}", ss.str());
 
       }
+
+      if (not record_quality_ok) {
+
+        ++vcf_record_rejected_;
+
+      }
+
+    } else {
+
+      ++vcf_record_ignored_;
 
     }
 
   }
 
-  ExecEnv::log().info("Read: {} records from VCF file: {}", vcf_record_count, vcf_file_name);
-  ExecEnv::log().info("VCF file {} has: {} raw variants", vcf_file_name, genome_single_variants->size());
+  ExecEnv::log().info("VCF file; Read: {}, Rejected: {} (quality={}), Ignored: {} (no matching contig), Error: {} records.",
+                      vcf_record_count_, vcf_record_rejected_, variant_quality, vcf_record_ignored_, vcf_record_error_);
+  ExecEnv::log().info("VCF file: {} generated: {} raw variants.", vcf_file_name, genome_single_variants->size());
 
   return genome_single_variants;
 
@@ -150,11 +224,10 @@ kgl::VcfFactory::VcfFileImpl::readParseVcfFile(const std::string& genome_name,
 bool kgl::VcfFactory::VcfFileImpl::parseVcfRecord(const std::string& genome_name,
                                                   const seqan::VcfRecord& record,
                                                   ActiveContigMap& active_contig_map,
-                                                  std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                                  std::shared_ptr<const ContigFeatures> contig_ptr,
                                                   std::shared_ptr<GenomeVariant> genome_variants,
-                                                  Phred_t read_quality,
-                                                  NucleotideReadCount_t min_read_count,
-                                                  double min_proportion) const {
+                                                  Phred_t variant_quality,
+                                                  bool& quality_ok) const {
 
   /*
   record.info
@@ -171,14 +244,7 @@ bool kgl::VcfFactory::VcfFileImpl::parseVcfRecord(const std::string& genome_name
   record.rID
   record.MISSING_QUAL() */
 
-
-//      kgl::Attributes record_attributes;
-//  std::cout << "length of record.genotypeInfos: " << seqan::length(record.genotypeInfos) << '\n';
-//  std::cout << "record.format: " << toCString(record.format) << '\n';
-//  std::cout << "record.ref: " << toCString(record.ref) << '\n';
   std::string info = toCString(record.info);
-//  std::cout << "record.info: " << info << '\n';
-
   // assumes input "key_1=value_1; ...;key_n=value_n"
   std::map<std::string, std::string> info_key_value_map;
   if (not tokenizeVcfInfoKeyValues(info, info_key_value_map)) {
@@ -189,17 +255,17 @@ bool kgl::VcfFactory::VcfFileImpl::parseVcfRecord(const std::string& genome_name
   }
 
   std::vector<std::pair<char, size_t>> parsed_cigar;
-  NucleotideReadCount_t read_depth;
-  size_t total_cigar_size;
+  size_t reference_size;
+  size_t alternate_size;
   std::string cigar;
-  double proportion;
+  Phred_t quality = record.qual;
 
   auto result_cigar = info_key_value_map.find(ID_CIGAR_VALUE_);
 
   if (result_cigar != info_key_value_map.end()) {
 
     cigar = result_cigar->second;
-    if (not parseCigar(cigar, total_cigar_size, parsed_cigar)) {
+    if (not parseCigar(cigar, reference_size, alternate_size, parsed_cigar)) {
 
       return false;
 
@@ -213,47 +279,266 @@ bool kgl::VcfFactory::VcfFileImpl::parseVcfRecord(const std::string& genome_name
 
   }
 
-  auto result_read_depth = info_key_value_map.find(ID_READ_DEPTH_);
+  if (quality >= variant_quality) {
 
-  if (result_read_depth != info_key_value_map.end()) {
-
-    read_depth = std::atoll(result_read_depth->second.c_str());
-
-  } else {
-
-    ExecEnv::log().error("VCF factory; read depth field: {} not found in info: {}.", ID_READ_DEPTH_, info);
-    ExecEnv::log().error("VCF file should conform to 'freebayes' format");
-    return false;
-
-  }
-
-  auto result_proportion = info_key_value_map.find(ID_PROPORTION_);
-
-  if (result_proportion != info_key_value_map.end()) {
-
-    proportion = std::atof(result_read_depth->second.c_str());
-
-  } else {
-
-    ExecEnv::log().error("VCF factory; read depth field: {} not found in info: {}.", ID_PROPORTION_, info);
-    ExecEnv::log().error("VCF file should conform to 'freebayes' format");
-    return false;
-
-  }
-
-  if (read_depth >= min_read_count and proportion >= min_proportion) {
-
+    quality_ok = true;
     std::string reference = seqan::toCString(record.ref);
-    std::string alleles = seqan::toCString(record.alt);
+    std::string alternate = seqan::toCString(record.alt);
+    if (record.beginPos < 0) {
+
+      ExecEnv::log().error("");
+
+    }
 
     // check sizes.
-    if (reference.size() != total_cigar_size) {
+    if (reference.size() != reference_size) {
 
       ExecEnv::log().error("VCF factory; reference: {} size: {} does not match cigar: {} size: {}",
-                           reference, reference.size(), cigar, total_cigar_size);
+                           reference, reference.size(), cigar, reference_size);
       return false;
 
     }
+
+    if (alternate.size() != alternate_size) {
+
+        ExecEnv::log().error("VCF factory; alternative: {} size: {} does not match cigar: {} size: {}",
+                             alternate, alternate.size(), cigar, alternate_size);
+        return false;
+
+    }
+
+
+    ContigOffset_t contig_offset = static_cast<ContigOffset_t >(record.beginPos);
+    size_t reference_index = 0;
+    size_t alternate_index = 0;
+    size_t variant_total = 0;
+    bool result = false;
+
+
+    // Generate variants.
+    for (auto cigar_item : parsed_cigar) {
+
+      size_t variant_count = 0;
+
+      switch(cigar_item.first) {
+
+
+        case 'M':
+          result = parseCheck(cigar_item.second,
+                              contig_ptr,
+                              reference,
+                              alternate,
+                              reference_index,
+                              alternate_index,
+                              contig_offset);
+          break;
+
+        case 'X':
+          result = parseSNP(cigar_item.second,
+                            genome_name,
+                            contig_ptr,
+                            genome_variants,
+                            quality,
+                            info,
+                            reference,
+                            alternate,
+                            reference_index,
+                            alternate_index,
+                            contig_offset,
+                            variant_count);
+          break;
+
+        case 'I':
+          result = parseInsert(cigar_item.second,
+                               genome_name,
+                               contig_ptr,
+                               genome_variants,
+                               quality,
+                               info,
+                               alternate,
+                               alternate_index,
+                               contig_offset,
+                               variant_count);
+          break;
+
+        case 'D':
+          result = parseDelete(cigar_item.second,
+                               genome_name,
+                               contig_ptr,
+                               genome_variants,
+                               quality,
+                               info,
+                               reference,
+                               reference_index,
+                               contig_offset,
+                               variant_count);
+          break;
+
+      }
+
+      if (not result) {
+
+        ExecEnv::log().error("VCF file, problem parsing cigar element {}:{}", cigar_item.second, cigar_item.first);
+        return false;
+
+      }
+
+      for (size_t idx = 0; idx < variant_count; ++idx) {
+
+        ++variant_total;
+
+        if (variant_total % VARIANT_REPORT_INTERVAL_ == 0) {
+
+          ExecEnv::log().info("VCF file, generated: {} variants", variant_total);
+
+        }
+
+      }
+
+    }
+
+  } else {
+
+    quality_ok = false;
+
+  }
+
+  return true;
+
+}
+
+
+bool kgl::VcfFactory::VcfFileImpl::parseCheck(size_t cigar_count,
+                                              std::shared_ptr<const ContigFeatures> contig_ptr,
+                                              const std::string& reference,
+                                              const std::string& alternate,
+                                              size_t& reference_index,
+                                              size_t& alternate_index,
+                                              ContigOffset_t& contig_offset) const {
+
+  for (size_t idx = 0; idx < cigar_count; ++idx) {
+
+    if (DNA5::convertToChar(contig_ptr->sequence().at(contig_offset)) != reference[reference_index]) {
+
+      ExecEnv::log().error("VCF record reference[{}] = base: {} does not match contig: {}[{}] = base: {}",
+                           reference_index, reference[reference_index], contig_ptr->contigId(),
+                           contig_offset, DNA5::convertToChar(contig_ptr->sequence().at(contig_offset)));
+      return false;
+
+    }
+
+    if (alternate[alternate_index] != reference[reference_index]) {
+
+      ExecEnv::log().error("VCF record reference[{}] = base: {} does not match VCF record alternate[{}] = base: {}",
+                           reference_index, reference[reference_index], alternate_index, alternate[alternate_index]);
+      return false;
+
+    }
+
+    ++reference_index;
+    ++alternate_index;
+    ++contig_offset;
+
+  }
+
+  return true;
+
+}
+
+
+bool kgl::VcfFactory::VcfFileImpl::parseSNP(size_t cigar_count,
+                                            const std::string& variant_source,
+                                            std::shared_ptr<const ContigFeatures> contig_ptr,
+                                            std::shared_ptr<GenomeVariant> genome_variants,
+                                            Phred_t quality,
+                                            const std::string& info,
+                                            const std::string& reference,
+                                            const std::string& alternate,
+                                            size_t& reference_index,
+                                            size_t& alternate_index,
+                                            ContigOffset_t& contig_offset,
+                                            size_t& variant_count) const {
+
+  for (size_t idx = 0; idx < cigar_count; ++idx) {
+
+    if (DNA5::convertToChar(contig_ptr->sequence().at(contig_offset)) != reference[reference_index]) {
+
+      ExecEnv::log().error("VCF record reference[{}] = base: {} does not match contig: {}[{}] = base: {}",
+                           reference_index, reference[reference_index], contig_ptr->contigId(),
+                           contig_offset, DNA5::convertToChar(contig_ptr->sequence().at(contig_offset)));
+      return false;
+
+    }
+
+    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
+
+    SNPVariant snp_variant(variant_source,
+                           contig_ptr,
+                           contig_offset,
+                           quality,
+                           evidence_ptr,
+                           DNA5::convertChar(reference[reference_index]),
+                           DNA5::convertChar(alternate[alternate_index]));
+
+    variant_count += VariantFactory::addSingleVariant(genome_variants, snp_variant); // Annotate with genome information
+
+    ++reference_index;
+    ++alternate_index;
+    ++contig_offset;
+
+  }
+
+  return true;
+
+}
+
+
+bool kgl::VcfFactory::VcfFileImpl::parseInsert(size_t cigar_count,
+                                               const std::string& variant_source,
+                                               std::shared_ptr<const ContigFeatures> contig_ptr,
+                                               std::shared_ptr<GenomeVariant> genome_variants,
+                                               Phred_t quality,
+                                               const std::string& info,
+                                               const std::string& alternate,
+                                               size_t& alternate_index,
+                                               ContigOffset_t& contig_offset,
+                                               size_t& variant_count) const {
+
+  for (size_t idx = 0; idx < cigar_count; ++idx) {
+
+    ++alternate_index;
+
+  }
+
+  return true;
+
+}
+
+bool kgl::VcfFactory::VcfFileImpl::parseDelete(size_t cigar_count,
+                                               const std::string& variant_source,
+                                               std::shared_ptr<const ContigFeatures> contig_ptr,
+                                               std::shared_ptr<GenomeVariant> genome_variants,
+                                               Phred_t quality,
+                                               const std::string& info,
+                                               const std::string& reference,
+                                               size_t& reference_index,
+                                               ContigOffset_t& contig_offset,
+                                               size_t& variant_count) const {
+
+
+  for (size_t idx = 0; idx < cigar_count; ++idx) {
+
+    if (DNA5::convertToChar(contig_ptr->sequence().at(contig_offset)) != reference[reference_index]) {
+
+      ExecEnv::log().error("VCF record reference[{}] = base: {} does not match contig: {}[{}] = base: {}",
+                           reference_index, reference[reference_index], contig_ptr->contigId(),
+                           contig_offset, DNA5::convertToChar(contig_ptr->sequence().at(contig_offset)));
+      return false;
+
+    }
+
+    ++reference_index;
+    ++contig_offset;
 
   }
 
@@ -263,11 +548,13 @@ bool kgl::VcfFactory::VcfFileImpl::parseVcfRecord(const std::string& genome_name
 
 
 bool kgl::VcfFactory::VcfFileImpl::parseCigar(const std::string& cigar,
-                                              size_t& total_cigar_size,
+                                              size_t& check_reference_size,
+                                              size_t& check_alternate_size,
                                               std::vector<std::pair<char, size_t>>& parsed_cigar) const {
 
   parsed_cigar.clear();
-  total_cigar_size = 0;
+  check_reference_size = 0;
+  check_alternate_size = 0;
   auto it = cigar.begin();
   char cigar_code;
   std::string cigar_size;
@@ -288,14 +575,26 @@ bool kgl::VcfFactory::VcfFileImpl::parseCigar(const std::string& cigar,
 
     }
 
+    size_t size = std::atoll(cigar_size.c_str());
+
     if (it != cigar.end()) {
 
       switch (*it) {
 
+        case 'I':
+          check_alternate_size += size;
+          cigar_code = *it;
+          break;
+
+        case 'D':
+          check_reference_size += size;
+          cigar_code = *it;
+          break;
+
         case 'X':
         case 'M':
-        case 'I':
-        case 'D':
+          check_alternate_size += size;
+          check_reference_size += size;
           cigar_code = *it;
           break;
 
@@ -305,8 +604,6 @@ bool kgl::VcfFactory::VcfFileImpl::parseCigar(const std::string& cigar,
 
       }
 
-      size_t size = std::atoll(cigar_size.c_str());
-      total_cigar_size += size;
       parsed_cigar.push_back(std::pair<char, size_t>(cigar_code, size));
       ++it;
 
@@ -350,7 +647,7 @@ bool kgl::VcfFactory::VcfFileImpl::parseVcfHeader(std::shared_ptr<const GenomeDa
         ContigId_t contig_id = id_result->second;
         ContigSize_t contig_size = std::atoll(length_result->second.c_str());
 
-        std::shared_ptr<ContigFeatures> contig_ptr;
+        std::shared_ptr<const ContigFeatures> contig_ptr;
         if (genome_db_ptr->getContigSequence(contig_id, contig_ptr)) {
 
           if (contig_ptr->sequence().length() == contig_size) {
@@ -422,8 +719,9 @@ bool kgl::VcfFactory::VcfFileImpl::parseVcfHeader(std::shared_ptr<const GenomeDa
 
   if (not has_cigar) {
 
-    ExecEnv::log().info("This VCF file does not define an allele 'CIGAR' field; this field is required to parse multi-nucleotide alleles");
+    ExecEnv::log().info("This VCF file does not define a 'CIGAR' field; this field is required to parse the VCF files");
     ExecEnv::log().info("See the VCF format of the variant caller 'freebayes' for more information.");
+    return false;
 
   }
 
@@ -473,7 +771,6 @@ bool kgl::VcfFactory::VcfFileImpl::tokenizeVcfHeaderKeyValues(const std::string&
 
 }
 
-
 // assumes input "key_1=value_1; ...;key_n=value_n"
 bool kgl::VcfFactory::VcfFileImpl::tokenizeVcfInfoKeyValues(const std::string& key_value_text,
                                                               std::map<std::string, std::string>& key_value_map) const {
@@ -513,12 +810,6 @@ bool kgl::VcfFactory::VcfFileImpl::tokenizeVcfInfoKeyValues(const std::string& k
 }
 
 
-
-
-
-
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // VcfFactory() is a public facade class that passes the functionality onto VcfFactory::VcfFileImpl.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -531,16 +822,12 @@ kgl::VcfFactory::~VcfFactory() {}  // DO NOT DELETE or USE DEFAULT. Required bec
 std::shared_ptr<kgl::GenomeVariant> kgl::VcfFactory::readParseVcf(const std::string& genome_name,
                                                                   std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                                                   const std::string& vcf_file_name,
-                                                                  Phred_t read_quality,
-                                                                  NucleotideReadCount_t min_read_count,
-                                                                  double min_proportion) const {
+                                                                  Phred_t variant_quality) const {
 
   return vcf_file_impl_ptr_->readParseVcfFile(genome_name,
                                               genome_db_ptr,
                                               vcf_file_name,
-                                              read_quality,
-                                              min_read_count,
-                                              min_proportion);
+                                              variant_quality);
 
 }
 

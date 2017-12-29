@@ -35,30 +35,30 @@ public:
   std::shared_ptr<const GenomeVariant> createSingleVariants(const std::string &genome_name,
                                                             const std::shared_ptr<const ContigCountData> &count_data,
                                                             const std::shared_ptr<const GenomeDatabase> &genome_db_ptr,
+                                                            Phred_t variant_quality,
                                                             NucleotideReadCount_t minimum_read_count,
-                                                            double minimum_proportion,
-                                                            Phred_t read_quality) const;
+                                                            double minimum_proportion) const;
 
 private:
 
   size_t GenerateSNPDelete(const std::string &genome_name,
-                           std::shared_ptr<ContigFeatures> contig_ptr,
+                           std::shared_ptr<const ContigFeatures> contig_ptr,
                            ContigOffset_t contig_offset,
                            DNA5::Alphabet reference_nucleotide,
                            const NucleotideReadCount_t nucleotide_count_array[],
+                           Phred_t variant_quality,
                            NucleotideReadCount_t minimum_read_count,
                            double minimum_proportion,
-                           Phred_t read_quality,
                            std::shared_ptr<GenomeVariant> genome_single_variants) const;
 
   size_t GenerateInsert(const std::string &genome_name,
-                        std::shared_ptr<ContigFeatures> contig_ptr,
+                        std::shared_ptr<const ContigFeatures> contig_ptr,
                         ContigOffset_t contig_offset,
                         DNA5::Alphabet reference_nucleotide,
                         const NucleotideReadCount_t nucleotide_count_array[],
+                        Phred_t variant_quality,
                         NucleotideReadCount_t minimum_read_count,
                         double minimum_proportion,
-                        Phred_t read_quality,
                         std::shared_ptr<GenomeVariant> genome_single_variants) const;
 
 };
