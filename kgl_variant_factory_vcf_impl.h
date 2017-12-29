@@ -8,22 +8,24 @@
 
 
 #include "kgl_utility.h"
-#include "kgl_sam_process.h"
 #include "kgl_variant_factory_vcf.h"
-#include "kgl_variant_single.h"
 #include "kgl_variant_factory_single.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
 #include <seqan/vcf_io.h>
 
+
 namespace kgl = kellerberrin::genome;
 namespace bt = boost;
 
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// VcfFactory::VcfFileImpl does all the heavy lifting using 3rd a party library. In this case; Seqan.
+// VCF (freebayes) parser. Low-level implementation. Do not include this file in any source files except the following:
+// kgl_variant_factory_vcf.cc
+// kgl_variant_factory_vcf_impl.cc
+// kgl_variant_factory_vcf_utils.cc
+// VcfFactory::VcfFileImpl does all the heavy lifting using the 3rd party libraries, seqan and boost.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using ActiveContigMap = std::map<kgl::ContigId_t, kgl::ContigSize_t>;
@@ -56,6 +58,7 @@ private:
   size_t vcf_record_ignored_;
   size_t vcf_record_error_;
   size_t vcf_record_rejected_;
+  size_t vcf_variant_count_;
 
   bool parseVcfHeader(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                       const seqan::VcfHeader& header,
@@ -67,7 +70,8 @@ private:
                       std::shared_ptr<const ContigFeatures> contig_ptr,
                       std::shared_ptr<GenomeVariant> genome_variants,
                       Phred_t variant_quality,
-                      bool& quality_ok) const;
+                      bool& quality_ok,
+                      size_t& variant_count) const;
 
   // Parse 1M ... XM in the cigar.
   bool parseCheck(size_t cigar_count,
@@ -79,7 +83,6 @@ private:
                   ContigOffset_t& contig_offset) const;
 
   // Parse 1X ... XX in the cigar.
-
   bool parseSNP(size_t cigar_count,
                 const std::string& variant_source,
                 std::shared_ptr<const ContigFeatures> contig_ptr,
@@ -101,8 +104,8 @@ private:
                    Phred_t quality,
                    const std::string& info,
                    const std::string& alternate,
+                   ContigOffset_t contig_offset,
                    size_t& alternate_index,
-                   ContigOffset_t& contig_offset,
                    size_t& variant_count) const;
 
   // Parse 1D ... XD in the cigar.
