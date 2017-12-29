@@ -276,3 +276,34 @@ bool kgl::GenomeVariant::getCodingSortedVariants(ContigId_t contig_id,
   return true;
 
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Simple container to hold genome variants for populations
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bool kgl::PopulationVariant::addGenomeVariant(std::shared_ptr<const GenomeVariant> genome_variant) {
+
+  auto result = population_variant_map_.insert(std::pair<GenomeId_t, std::shared_ptr<const GenomeVariant>>(genome_variant->genomeId(), genome_variant));
+
+  return result.second;
+
+}
+
+bool kgl::PopulationVariant::getGenomeVariant(const GenomeId_t& genome_id, std::shared_ptr<const GenomeVariant>& genome_variant) {
+
+  auto result = population_variant_map_.find(genome_id);
+
+  if (result != population_variant_map_.end()) {
+
+    genome_variant = result->second;
+    return true;
+
+  } else {
+
+    genome_variant = nullptr;
+    return false;
+
+  }
+
+}
