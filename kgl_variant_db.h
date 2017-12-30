@@ -37,7 +37,8 @@ public:
   // Always use deep copy when modifying this object (filter and set operations).
   std::shared_ptr<ContigVariant> deepCopy() const;
 
-  void addVariant(std::shared_ptr<const Variant>& variant_ptr);
+  bool addVariant(std::shared_ptr<const Variant>& variant_ptr);
+
   const ContigId_t& contigId() const { return contig_id_; }
   size_t variantCount() const { return offset_variant_map_.size(); }
 
@@ -229,7 +230,7 @@ private:
 }   // namespace kellerberrin
 
 
-// Not in kgl:: namspace.
+// Not in kgl:: namespace.
 std::ostream & operator<<(std::ostream &os, const kellerberrin::genome::GenomeVariant& genome_variant);
 
 

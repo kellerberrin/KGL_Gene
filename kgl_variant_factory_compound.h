@@ -37,7 +37,7 @@ public:
 
 protected:
 
-  Phred_t calculateQuality(const CompoundVariantMap& variant_map) const { return 100.0; }
+  Phred_t calculateQuality(const CompoundVariantMap& variant_map) const;
 
 private:
 

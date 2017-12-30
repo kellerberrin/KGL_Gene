@@ -166,9 +166,17 @@ bool kgl::SynonymousFilter::implementFilter(const Variant& variant) const {
 }
 
 
-
 std::string kgl::SynonymousFilter::filterName() const {
 
   return "Remove Synonymous Coding (single and compound) SNPs";
+
+}
+
+
+std::string kgl::QualityFilter::filterName() const {
+
+  std::stringstream ss;
+  ss << "Filter Variants with Quality >= " << quality_;
+  return ss.str();
 
 }

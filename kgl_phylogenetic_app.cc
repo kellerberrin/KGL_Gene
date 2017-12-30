@@ -62,9 +62,14 @@ std::shared_ptr<const kgl::GenomeVariant> getGenomeVariants(std::shared_ptr<cons
 #define  BCS_SEQUENCE "PF3D7_1255200.1"
 
 // Mutant rich Rifin (Malawi)
-#define RIFIN_3_CONTIG "Pf3D7_10_v3"
+#define RIFIN_3_CONTIG "Pf3D7_01_v3"
 #define RIFIN_3_GENE "PF3D7_0101900"
 #define RIFIN_3_SEQUENCE "PF3D7_0101900.1"
+
+// Mutant rich Rifin (Malawi)
+#define RIFIN_4_CONTIG "Pf3D7_08_v3"
+#define RIFIN_4_GENE "PF3D7_0808900"
+#define RIFIN_4_SEQUENCE "PF3D7_0808900.1"
 
 // Rifin very similar mutations (Malawi).
 #define RIFIN_1_CONTIG "Pf3D7_07_v3"
@@ -80,9 +85,9 @@ std::shared_ptr<const kgl::GenomeVariant> getGenomeVariants(std::shared_ptr<cons
 #define S_ANTIGEN_GENE "PF3D7_1035200"
 #define S_ANTIGEN_SEQUENCE "PF3D7_1035200.1"
 
-#define ACTIVE_CONTIG RIFIN_2_CONTIG
-#define ACTIVE_GENE RIFIN_2_GENE
-#define ACTIVE_SEQUENCE RIFIN_2_SEQUENCE
+#define ACTIVE_CONTIG S_ANTIGEN_CONTIG
+#define ACTIVE_GENE S_ANTIGEN_GENE
+#define ACTIVE_SEQUENCE S_ANTIGEN_SEQUENCE
 
   // Filter on sequence
   std::shared_ptr<const kgl::GenomeVariant> filter_ptr = all_variant_ptr->filterVariants(kgl::SequenceFilter(ACTIVE_SEQUENCE));
@@ -176,8 +181,11 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
   if (vcf_variant_ptr and sam_variant_ptr) {
 
-    vcf_variant_ptr = vcf_variant_ptr->filterVariants(SequenceFilter(ACTIVE_SEQUENCE));
-    sam_variant_ptr = sam_variant_ptr->filterVariants(SequenceFilter(ACTIVE_SEQUENCE));
+    vcf_variant_ptr = vcf_variant_ptr->filterVariants(ContigFilter(S_ANTIGEN_CONTIG));
+    sam_variant_ptr = sam_variant_ptr->filterVariants(ContigFilter(S_ANTIGEN_CONTIG));
+
+    vcf_variant_ptr = vcf_variant_ptr->filterVariants(InsertFilter());
+    sam_variant_ptr = sam_variant_ptr->filterVariants(InsertFilter());
 
     std::shared_ptr<const kgl::GenomeVariant> inter_vcf_sam = vcf_variant_ptr->Intersection(sam_variant_ptr);
     std::shared_ptr<const kgl::GenomeVariant> inter_sam_vcf = sam_variant_ptr->Intersection(vcf_variant_ptr);
@@ -205,6 +213,10 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
     std::cout << " Difference SAM - VCF :" << std::endl;
     std::cout << *diff_sam_vcf;
+
+    std::string insert_file_name = Utility::filePath("InsertDiff", args.workDirectory) + ".csv";
+    vcf_variant_ptr->outputCSV(insert_file_name, VariantOutputIndex::START_0_BASED, false);
+    sam_variant_ptr->outputCSV(insert_file_name, VariantOutputIndex::START_0_BASED, false);
 
   }
 

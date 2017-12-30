@@ -34,12 +34,7 @@ kgl::CompoundFactory::disaggregate(const std::shared_ptr<const GenomeVariant>& g
 
         for (auto single_variant : compound_variant->getMap()) {
 
-          if (not disaggreagated->addVariant(single_variant.second)) {
-
-            ExecEnv::log().error("Cannot add disaggregated variant: {} - same contig offset as existing variant",
-                                 single_variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
-
-          }
+          disaggreagated->addVariant(single_variant.second);
 
         }
 
@@ -91,6 +86,26 @@ kgl::CompoundFactory::create(const std::shared_ptr<const GenomeVariant>& genome_
 }
 
 
+// Assumes the component subordinate quality probabilities are independent.
+kgl::Phred_t kgl::CompoundFactory::calculateQuality(const CompoundVariantMap& variant_map) const
+{
+
+  double probability = 0.0;
+  double adjust_log;
+  for (auto variant : variant_map) {
+
+    adjust_log = variant.second->quality() / -10.0;
+    probability += ::pow10(adjust_log);
+
+  }
+
+  adjust_log = ::log10(probability) * -10.0;
+
+  return adjust_log;
+
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Generate the compound variant maps for insert/delete
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -131,7 +146,7 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
 
           if (not subvariant_ptr) {
 
-            ExecEnv::log().error("Not a (Subordinate) SNP Variant: {}",
+            ExecEnv::log().error("Not a (Subordinate) Variant: {}",
                                  variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
             return false;
 
@@ -140,7 +155,7 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
           // If empty then just add the variant to a variant map and update the working structure.
           if (compound_variant_vec.empty()) {
 
-            std::pair<ContigSize_t, std::shared_ptr<const SingleVariant>> insert_pair(subvariant_ptr->offset(), subvariant_ptr);
+            std::pair<ContigOffset_t, std::shared_ptr<const SingleVariant>> insert_pair(subvariant_ptr->offset(), subvariant_ptr);
             CompoundVariantMap compound_variant;
             compound_variant.insert(insert_pair);
             compound_variant_vec.push_back(std::make_shared<CompoundVariantMap>(compound_variant));
@@ -149,18 +164,32 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
 
             // scroll through all the compound variants
             bool found_sequence = false;
+            std::vector<std::shared_ptr<CompoundVariantMap>> add_compound_variant_vec;
             for (const auto& compound_variant_ptr : compound_variant_vec) {
 
               // Does the variant belong to the coding sequence.
               if (compound_variant_ptr->rbegin()->second->codingSequenceId() == variant.second->codingSequenceId()) {
 
-                // If the variant is the at same offset, then this is an error.
+                // If the variant is the at same offset
                 if (compound_variant_ptr->rbegin()->second->contigOffset() == variant.second->contigOffset()) {
 
-                  // Error if in the same coding sequence.
-                  ExecEnv::log().error("Variant: {} with the same offset in the same coding sequence as variant: {}",
-                                       compound_variant_ptr->rbegin()->second->output(' ', VariantOutputIndex::START_0_BASED, true),
-                                       variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
+                  // If it is a different variant then copy the compound variant map, pop the last entry, push the variant and add the map.
+                  if (not compound_variant_ptr->rbegin()->second->equivalent(*variant.second)) {
+
+                    CompoundVariantMap compound_variant = *compound_variant_ptr; // copy
+                    compound_variant.erase(std::prev(compound_variant.end())); // pop last
+                    std::pair<ContigSize_t, std::shared_ptr<const SingleVariant>> insert_pair(subvariant_ptr->offset(), subvariant_ptr);
+                    compound_variant.insert(insert_pair); // push this
+                    add_compound_variant_vec.push_back(std::make_shared<CompoundVariantMap>(compound_variant)); // add to working structure.
+
+                  } else {
+
+                    // Error if an identical variant in the same coding sequence.
+                    ExecEnv::log().warn("Identical Variant: {} with the same offset in the same coding sequence as variant: {}",
+                                         compound_variant_ptr->rbegin()->second->output(' ', VariantOutputIndex::START_0_BASED, true),
+                                         variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
+
+                  }
 
                 } else if ((compound_variant_ptr->rbegin()->second->contigOffset() + 1) == variant.second->contigOffset()) {
 
@@ -178,11 +207,16 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
 
                 }
 
-                break; // found the coding sequence so no need to look further.
-
               } // If in the same sequence.
 
             }  // for all compound variants.
+
+            // add in any additional compound variants.
+            for (const auto& compound_variant : add_compound_variant_vec) {
+
+              compound_variant_vec.push_back(compound_variant);
+
+            }
 
             // flush non contiguous compound variants from the working structure.
             std::vector<std::shared_ptr<CompoundVariantMap>> temp_compound_variant_vec;

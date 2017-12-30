@@ -113,7 +113,7 @@ kgl::VcfFactory::VcfFileImpl::readParseVcfFile(const std::string& genome_name,
   // Check the size of the genome variants with the number of generated variants.
   if (vcf_variant_count_ != genome_single_variants->size()) {
 
-    ExecEnv::log().warn("Size mismatch, VCF file generated: {} raw variants, genome variant contains : {} variants, should be the same",
+    ExecEnv::log().info("VCF file generated: {} raw variants, genome variant contains : {} variants. Identical variants generated and ignored.",
                         vcf_variant_count_, genome_single_variants->size());
 
   }

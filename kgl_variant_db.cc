@@ -29,9 +29,23 @@ kgl::ContigVariant::filterVariants(const kgl::VariantFilter& filter) const {
 }
 
 // This function will insert multiple variants for contig offset in a std::multimap
-void kgl::ContigVariant::addVariant(std::shared_ptr<const Variant>& variant_ptr) {
+bool kgl::ContigVariant::addVariant(std::shared_ptr<const Variant>& variant_ptr) {
+
+  auto result = offset_variant_map_.equal_range(variant_ptr->contigOffset());
+
+  for (auto it = result.first; it != result.second; ++it) {
+
+    if (variant_ptr->equivalent(*it->second)) {
+
+      return false;
+
+    }
+
+  }
 
   offset_variant_map_.insert(std::make_pair(variant_ptr->contigOffset(), variant_ptr));
+
+  return true;
 
 }
 
@@ -108,9 +122,7 @@ bool kgl::GenomeVariant::addVariant(std::shared_ptr<const Variant> variant) {
     return false;
   }
 
-  contig_variant->addVariant(variant);
-
-  return true;
+  return contig_variant->addVariant(variant);
 
 }
 

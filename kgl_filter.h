@@ -40,6 +40,115 @@ private:
 
 };
 
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter variants to SNPs (single and compound)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class SNPFilter : public VariantFilter {
+
+public:
+
+  explicit SNPFilter() {}
+  ~SNPFilter() override = default;
+
+  std::string filterName() const final { return "Filter Single SNP and Compound MNP (exclude indels)"; }
+
+  bool applyFilter(const SNPVariant& variant) const override { return true; }
+  bool applyFilter(const DeleteVariant& variant) const override { return false; }
+  bool applyFilter(const InsertVariant& variant) const override { return false; }
+  bool applyFilter(const CompoundDelete& variant) const override { return false; }
+  bool applyFilter(const CompoundInsert& variant) const override { return false; }
+  bool applyFilter(const CompoundSNP& variant) const override { return true; }
+
+private:
+
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter to Delete variants (single and compound)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class DeleteFilter : public VariantFilter {
+
+public:
+
+  explicit DeleteFilter() {}
+  ~DeleteFilter() override = default;
+
+  std::string filterName() const final { return "Filter Single and Compound Delete Variants"; }
+
+  bool applyFilter(const SNPVariant& variant) const override { return false; }
+  bool applyFilter(const DeleteVariant& variant) const override { return true; }
+  bool applyFilter(const InsertVariant& variant) const override { return false; }
+  bool applyFilter(const CompoundDelete& variant) const override { return true; }
+  bool applyFilter(const CompoundInsert& variant) const override { return false; }
+  bool applyFilter(const CompoundSNP& variant) const override { return false; }
+
+private:
+
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter to Insert variants (single and compound)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class InsertFilter : public VariantFilter {
+
+public:
+
+  explicit InsertFilter() {}
+  ~InsertFilter() override = default;
+
+  std::string filterName() const final { return "Filter Single and Compound Insert Variants"; }
+
+  bool applyFilter(const SNPVariant& variant) const override { return false; }
+  bool applyFilter(const DeleteVariant& variant) const override { return false; }
+  bool applyFilter(const InsertVariant& variant) const override { return true; }
+  bool applyFilter(const CompoundDelete& variant) const override { return false; }
+  bool applyFilter(const CompoundInsert& variant) const override { return true; }
+  bool applyFilter(const CompoundSNP& variant) const override { return false; }
+
+private:
+
+
+};
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter variants by quality (-10log10 {prob variant is in error})
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class QualityFilter : public VariantFilter {
+
+public:
+
+  explicit QualityFilter(Phred_t quality) : quality_(quality) {}
+  ~QualityFilter() override = default;
+
+  std::string filterName() const final;
+
+  bool applyFilter(const SNPVariant& variant) const override { return variant.quality() >= quality_; }
+  bool applyFilter(const DeleteVariant& variant) const override { return variant.quality() >= quality_; }
+  bool applyFilter(const InsertVariant& variant) const override { return variant.quality() >= quality_; }
+  bool applyFilter(const CompoundDelete& variant) const override { return variant.quality() >= quality_; }
+  bool applyFilter(const CompoundInsert& variant) const override { return variant.quality() >= quality_; }
+  bool applyFilter(const CompoundSNP& variant) const override { return variant.quality() >= quality_; }
+
+private:
+
+  const Phred_t quality_;
+
+};
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Filter SNPs to a particular contig.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -186,6 +295,9 @@ using NotContigFilter = NotFilter<ContigFilter>;
 using NotGeneFilter = NotFilter<GeneFilter>;
 using NotSequenceFilter = NotFilter<SequenceFilter>;
 using NotSynonymousFilter = NotFilter<SynonymousFilter>;
+using NotSNPFilter = NotFilter<SNPFilter>;
+using NotDeleteFilter = NotFilter<DeleteFilter>;
+using NotInsertFilter = NotFilter<InsertFilter>;
 
 
 
