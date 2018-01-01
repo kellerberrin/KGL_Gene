@@ -66,7 +66,6 @@ private:
 
   bool parseVcfRecord(const std::string& genome_name,
                       const seqan::VcfRecord& record,
-                      ActiveContigMap& active_contig_map,
                       std::shared_ptr<const ContigFeatures> contig_ptr,
                       std::shared_ptr<GenomeVariant> genome_variants,
                       Phred_t variant_quality,

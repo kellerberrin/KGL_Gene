@@ -101,7 +101,7 @@ private:
 
 
 template <class Alphabet>
-std::string ReadCountEvidence<Alphabet>::output(char delimiter, VariantOutputIndex output_index) const
+std::string ReadCountEvidence<Alphabet>::output(char delimiter, VariantOutputIndex) const
 {
 
   std::stringstream ss;
@@ -127,7 +127,7 @@ public:
   explicit VCFEvidence(const std::string& info, Phred_t quality) : info_(info), quality_(quality) {}
   virtual ~VCFEvidence() = default;
 
-  std::string output(char delimiter, VariantOutputIndex output_index) const override { return info_; }
+  std::string output(char, VariantOutputIndex) const override { return info_; }
   Phred_t calculateQuality() const override { return quality_; }
   bool isVCF() const override { return true; }
 

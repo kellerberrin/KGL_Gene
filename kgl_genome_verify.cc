@@ -181,7 +181,7 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
   size_t empty_genes = 0;
 
   ExecEnv::log().info("Verifying {} Gene structure using: {}",
-                      contigId(), coding_sequence_.translationTableName());
+                      contigId(), coding_table_.translationTableName());
 
   for(const auto& feature : offset_feature_map_) {
 
@@ -246,7 +246,7 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Gene
 
     std::shared_ptr<DNA5SequenceCoding> coding_sequence_ptr = sequence_ptr_->codingSequence(sequence.second);
 
-    if (not coding_sequence_.checkStartCodon(coding_sequence_ptr)) {
+    if (not coding_table_.checkStartCodon(coding_sequence_ptr)) {
 
       std::vector<std::string> description_vec;
       gene_ptr->getAttributes().getDescription(description_vec);
@@ -262,11 +262,11 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Gene
                            sequence.second->getGene()->id(),
                            gene_description,
                            sequence.second->getCDSParent()->id(),
-                           coding_sequence_.firstCodon(coding_sequence_ptr).getSequenceAsString());
+                           coding_table_.firstCodon(coding_sequence_ptr).getSequenceAsString());
 //      gene_ptr->recusivelyPrintsubfeatures();
       result = false;
     }
-    if (not coding_sequence_.checkStopCodon(coding_sequence_ptr)) {
+    if (not coding_table_.checkStopCodon(coding_sequence_ptr)) {
 
       std::vector<std::string> description_vec;
       gene_ptr->getAttributes().getDescription(description_vec);
@@ -283,11 +283,11 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Gene
                            sequence.second->getGene()->id(),
                            gene_description,
                            sequence.second->getCDSParent()->id(),
-                           coding_sequence_.lastCodon(coding_sequence_ptr).getSequenceAsString());
+                           coding_table_.lastCodon(coding_sequence_ptr).getSequenceAsString());
 //      gene_ptr->recusivelyPrintsubfeatures();
       result = false;
     }
-    size_t nonsense_index = coding_sequence_.checkNonsenseMutation(coding_sequence_ptr);
+    size_t nonsense_index = coding_table_.checkNonsenseMutation(coding_sequence_ptr);
     if (nonsense_index > 0) {
 
       std::vector<std::string> description_vec;

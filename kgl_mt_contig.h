@@ -86,7 +86,7 @@ public:
   }
 
 
-  inline const ContigSize_t contigSize() const { return contig_size_; }
+  inline ContigSize_t contigSize() const { return contig_size_; }
 
 private:
 

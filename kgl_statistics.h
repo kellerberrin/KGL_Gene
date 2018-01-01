@@ -53,6 +53,13 @@ public:
 
   ContigSize_t size() const { return offset_variant_map_.size(); }
 
+  // Count variant types weighted by compound variant size.
+  size_t inserts() const;
+  size_t deletes() const;
+  size_t SNPs() const;
+
+
+
 private:
 
   FeatureIdent_t feature_id_;

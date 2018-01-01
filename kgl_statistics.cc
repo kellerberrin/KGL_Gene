@@ -33,6 +33,48 @@ void kgl::FeatureStatistics::addVariant(const std::shared_ptr<const kgl::Variant
 }
 
 
+
+size_t kgl::FeatureStatistics::inserts() const {
+
+  size_t counter = 0;
+  for (auto variant : offset_variant_map_) {
+
+    if (variant.second->isInsert()) counter += variant.second->size();
+
+  }
+
+  return counter;
+
+}
+
+size_t kgl::FeatureStatistics::deletes() const {
+
+  size_t counter = 0;
+  for (auto variant : offset_variant_map_) {
+
+    if (variant.second->isDelete()) counter += variant.second->size();
+
+  }
+
+  return counter;
+
+}
+
+
+size_t kgl::FeatureStatistics::SNPs() const {
+
+  size_t counter = 0;
+  for (auto variant : offset_variant_map_) {
+
+    if (variant.second->isSNP()) counter += variant.second->size();
+
+  }
+
+  return counter;
+
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Holds variants for per contig statistical analysis.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -358,6 +400,9 @@ std::string kgl::GenomeStatistics::outputFeatureHeader(char delimiter) {
   ss << "Sequence" << delimiter;
   ss << "Size(DNA)" << delimiter;
   ss << "CodingVariants" << delimiter;
+  ss << "SNPs" << delimiter;
+  ss << "Deletes" << delimiter;
+  ss << "Inserts" << delimiter;
   ss << "Strand" << delimiter;
   ss << "Prime5" << delimiter;
   ss << "Prime3" << delimiter;
@@ -391,6 +436,9 @@ std::string kgl::GenomeStatistics::outputFeature(char delimiter, VariantOutputIn
       ss << delimiter << feature.first << delimiter;
       ss << feature.second->codingSequence()->codingNucleotides() << delimiter;
       ss << feature.second->size() << delimiter;
+      ss << feature.second->SNPs() << delimiter;
+      ss << feature.second->deletes() << delimiter;
+      ss << feature.second->inserts() << delimiter;
       ss << static_cast<char>(feature.second->codingSequence()->strand()) << delimiter;
       ss << feature.second->codingSequence()->prime_5() << delimiter;
       ss << feature.second->codingSequence()->prime_3() << delimiter;

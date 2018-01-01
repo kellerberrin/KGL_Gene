@@ -49,7 +49,7 @@ public:
 private:
 
   std::shared_ptr<ContigCountData> contig_data_ptr_; // Holds the raw read data.
-  std::shared_ptr<LocalConsumer> consumer_ptr_; ;  // Thread safe SAM record consumer
+  std::shared_ptr<LocalConsumer> consumer_ptr_;  // Thread safe SAM record consumer
   std::unique_ptr<LocalProducer> producer_ptr_;   //  Thread safe SAM record producer.
 
 };

@@ -55,12 +55,12 @@ public:
 
   std::string filterName() const final { return "Filter Single SNP and Compound MNP (exclude indels)"; }
 
-  bool applyFilter(const SNPVariant& variant) const override { return true; }
-  bool applyFilter(const DeleteVariant& variant) const override { return false; }
-  bool applyFilter(const InsertVariant& variant) const override { return false; }
-  bool applyFilter(const CompoundDelete& variant) const override { return false; }
-  bool applyFilter(const CompoundInsert& variant) const override { return false; }
-  bool applyFilter(const CompoundSNP& variant) const override { return true; }
+  bool applyFilter(const SNPVariant&) const override { return true; }
+  bool applyFilter(const DeleteVariant&) const override { return false; }
+  bool applyFilter(const InsertVariant&) const override { return false; }
+  bool applyFilter(const CompoundDelete&) const override { return false; }
+  bool applyFilter(const CompoundInsert&) const override { return false; }
+  bool applyFilter(const CompoundSNP&) const override { return true; }
 
 private:
 
@@ -81,12 +81,12 @@ public:
 
   std::string filterName() const final { return "Filter Single and Compound Delete Variants"; }
 
-  bool applyFilter(const SNPVariant& variant) const override { return false; }
-  bool applyFilter(const DeleteVariant& variant) const override { return true; }
-  bool applyFilter(const InsertVariant& variant) const override { return false; }
-  bool applyFilter(const CompoundDelete& variant) const override { return true; }
-  bool applyFilter(const CompoundInsert& variant) const override { return false; }
-  bool applyFilter(const CompoundSNP& variant) const override { return false; }
+  bool applyFilter(const SNPVariant&) const override { return false; }
+  bool applyFilter(const DeleteVariant&) const override { return true; }
+  bool applyFilter(const InsertVariant&) const override { return false; }
+  bool applyFilter(const CompoundDelete&) const override { return true; }
+  bool applyFilter(const CompoundInsert&) const override { return false; }
+  bool applyFilter(const CompoundSNP&) const override { return false; }
 
 private:
 
@@ -107,12 +107,12 @@ public:
 
   std::string filterName() const final { return "Filter Single and Compound Insert Variants"; }
 
-  bool applyFilter(const SNPVariant& variant) const override { return false; }
-  bool applyFilter(const DeleteVariant& variant) const override { return false; }
-  bool applyFilter(const InsertVariant& variant) const override { return true; }
-  bool applyFilter(const CompoundDelete& variant) const override { return false; }
-  bool applyFilter(const CompoundInsert& variant) const override { return true; }
-  bool applyFilter(const CompoundSNP& variant) const override { return false; }
+  bool applyFilter(const SNPVariant&) const override { return false; }
+  bool applyFilter(const DeleteVariant&) const override { return false; }
+  bool applyFilter(const InsertVariant&) const override { return true; }
+  bool applyFilter(const CompoundDelete&) const override { return false; }
+  bool applyFilter(const CompoundInsert&) const override { return true; }
+  bool applyFilter(const CompoundSNP&) const override { return false; }
 
 private:
 

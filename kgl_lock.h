@@ -90,11 +90,11 @@ class NullMutex {
 
 public:
 
-  explicit NullMutex(const std::size_t array_size) {}
+  explicit NullMutex(const std::size_t) {}
 
-  inline void acquire(std::size_t array_index) {}
+  inline void acquire(std::size_t) {}
 
-  inline void release(std::size_t array_index) {}
+  inline void release(std::size_t) {}
 
 };
 
@@ -127,9 +127,9 @@ class X86CountLock {
 
 public:
 
-  explicit X86CountLock(const std::size_t array_size) {}
+  explicit X86CountLock(const std::size_t) {}
 
-  inline void incrementCount(NucleotideReadCount_t& counter, std::size_t array_index) {
+  inline void incrementCount(NucleotideReadCount_t& counter, std::size_t) {
 
     int inc = 1;
 

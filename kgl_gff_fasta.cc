@@ -5,7 +5,11 @@
 #include "kgl_exec_env.h"
 #include "kgl_gff_fasta.h"
 #include "kgl_sequence_base.h"
+
+#include <seqan/sequence.h>
+#include <seqan/stream.h>
 #include <seqan/seq_io.h>
+
 #include <boost/tokenizer.hpp>
 
 
@@ -338,7 +342,15 @@ bool kgl::ParseGffFasta::GffFastaImpl::writeFastaFile(const std::string& fasta_f
 
   }
 
+
   try {
+
+//    seqan::CharString comment = "# commment line.";
+//    std::string str_comment = "# commment line.";
+
+//    seqan::write(seq_file_out, comment);
+//    seqan::streamWriteBlock(seq_file_out, str_comment.c_str(), str_comment.size());
+//    seqan::stream
 
     for (auto sequence : fasta_sequences) {
 
@@ -355,6 +367,7 @@ bool kgl::ParseGffFasta::GffFastaImpl::writeFastaFile(const std::string& fasta_f
     return false;
 
   }
+
 
   return true;
 

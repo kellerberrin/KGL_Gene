@@ -31,30 +31,30 @@ public:
 
   inline const std::vector<std::pair<const char, const ContigOffset_t>>& cigarFields() { return cigar_fields_; }
 
-  inline const ContigOffset_t getPos(std::unique_ptr<const std::string>& record_ptr) {
+  inline ContigOffset_t getPos(std::unique_ptr<const std::string>& record_ptr) {
 
     // Subtract 1 for zero offset - SAM usage is offset 1
     return std::stoull(record_ptr->substr(sam_fields_[POS_OFFSET].first, sam_fields_[POS_OFFSET].second)) - 1;
 
   }
-  inline const AlphabetSequence_t getSubSequence( std::unique_ptr<const std::string>& record_ptr
+  inline AlphabetSequence_t getSubSequence( std::unique_ptr<const std::string>& record_ptr
   , std::size_t start
   , std::size_t length) {
 
     return record_ptr->substr(sam_fields_[SEQUENCE_OFFSET].first + start, length);
 
   }
-  inline const Nucleotide_t getSequenceNucleotide(std::unique_ptr<const std::string>& record_ptr, std::size_t offset) {
+  inline Nucleotide_t getSequenceNucleotide(std::unique_ptr<const std::string>& record_ptr, std::size_t offset) {
 
     return record_ptr->at(sam_fields_[SEQUENCE_OFFSET].first + offset);
 
   }
-  inline const Nucleotide_t getQualityNucleotide(std::unique_ptr<const std::string>& record_ptr, std::size_t offset) {
+  inline Nucleotide_t getQualityNucleotide(std::unique_ptr<const std::string>& record_ptr, std::size_t offset) {
 
     return record_ptr->at(sam_fields_[QUALITY_OFFSET].first + offset);
 
   }
-  inline const ContigId_t getContigId(std::unique_ptr<const std::string>& record_ptr) {
+  inline ContigId_t getContigId(std::unique_ptr<const std::string>& record_ptr) {
 
     return record_ptr->substr(sam_fields_[RNAME_OFFSET].first, sam_fields_[RNAME_OFFSET].second);
 

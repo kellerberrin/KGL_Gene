@@ -56,10 +56,7 @@ kgl::VariantFactory::createVariants(std::shared_ptr<const kgl::GenomeDatabase> g
     variant_ptr = createVcfVariants(genome_db_ptr,
                                     genome_name,
                                     variant_file_name,
-                                    read_quality,
-                                    variant_quality,
-                                    min_read_count,
-                                    min_proportion);
+                                    variant_quality);
 
   } else {
 
@@ -110,10 +107,7 @@ std::shared_ptr<const kgl::GenomeVariant>
 kgl::VariantFactory::createVcfVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                        const std::string& genome_name,
                                        const std::string& vcf_file_name,
-                                       Phred_t read_quality,
-                                       Phred_t variant_quality,
-                                       NucleotideReadCount_t min_read_count,
-                                       double min_proportion) const {
+                                       Phred_t variant_quality) const {
 
 
   ExecEnv::log().info("Generating VCF file: {}  variants for Genome: {}", vcf_file_name, genome_name);

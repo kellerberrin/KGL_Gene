@@ -49,8 +49,8 @@ public:
   bool findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const;
   const GeneMap& getGeneMap() const { return gene_map_; }
 
-  bool setTranslationTable(size_t table) { return coding_sequence_.settranslationTable(table); }
-  std::string translationTableName() const { return coding_sequence_.translationTableName(); }
+  bool setTranslationTable(size_t table) { return coding_table_.settranslationTable(table); }
+  std::string translationTableName() const { return coding_table_.translationTableName(); }
 
   const ContigId_t& contigId() const { return contig_id_; }
   const DNA5SequenceContig& sequence() const { return *sequence_ptr_; }
@@ -72,7 +72,7 @@ public:
   // Generate Amino acid sequences using the table specified for this contig.
   std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr) const;
   std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const;
-  AminoAcid::Alphabet getAminoAcid(const Codon& codon) const { return coding_sequence_.getAmino(codon); }
+  AminoAcid::Alphabet getAminoAcid(const Codon& codon) const { return coding_table_.getAmino(codon); }
 
 
 private:
@@ -82,7 +82,7 @@ private:
   OffsetFeatureMap offset_feature_map_;
   IdFeatureMap id_feature_map_;
   GeneMap gene_map_;
-  TranslateToAmino coding_sequence_;  // Amino Acid translation table, unique for contig (e.g. mitochondria)
+  TranslateToAmino coding_table_;  // Amino Acid translation table, unique for contig (e.g. mitochondria)
 
   void verifyContigOverlap();
   void verifySubFeatureSuperFeatureDimensions();

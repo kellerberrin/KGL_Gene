@@ -18,10 +18,10 @@ namespace kgl = kellerberrin::genome;
 std::shared_ptr<kgl::GenomeVariant> kgl::BamFactory::readParseBam(const std::string& genome_name,
                                                                   std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                                                   const std::string& bam_file_name,
-                                                                  Phred_t read_quality,
-                                                                  Phred_t variant_quality,
-                                                                  NucleotideReadCount_t min_read_count,
-                                                                  double min_proportion) {
+                                                                  Phred_t, //read_quality,
+                                                                  Phred_t, // variant_quality,
+                                                                  NucleotideReadCount_t, // min_read_count,
+                                                                  double) { //min_proportion) {
 
   std::shared_ptr<GenomeVariant> genome_single_variants = kgl::GenomeVariant::emptyGenomeVariant(genome_name, genome_db_ptr);
 

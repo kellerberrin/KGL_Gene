@@ -76,8 +76,8 @@ public:
   }
 
   // Reads are not locked. Do not call while updating read counts.
-  inline const NucleotideReadCount_t readCount( const ContigOffset_t contig_offset,
-                                                std::size_t column) const {
+  inline NucleotideReadCount_t readCount( const ContigOffset_t contig_offset,
+                                          std::size_t column) const {
 
     if (contig_offset >= contig_size_) {
 
@@ -100,7 +100,7 @@ public:
 
   }
 
-  inline const ContigSize_t contigSize() const { return contig_size_; }
+  inline ContigSize_t contigSize() const { return contig_size_; }
 
 private:
 

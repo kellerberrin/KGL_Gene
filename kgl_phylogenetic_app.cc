@@ -85,9 +85,9 @@ std::shared_ptr<const kgl::GenomeVariant> getGenomeVariants(std::shared_ptr<cons
 #define S_ANTIGEN_GENE "PF3D7_1035200"
 #define S_ANTIGEN_SEQUENCE "PF3D7_1035200.1"
 
-#define ACTIVE_CONTIG S_ANTIGEN_CONTIG
-#define ACTIVE_GENE S_ANTIGEN_GENE
-#define ACTIVE_SEQUENCE S_ANTIGEN_SEQUENCE
+#define ACTIVE_CONTIG RIFIN_1_CONTIG
+#define ACTIVE_GENE RIFIN_1_GENE
+#define ACTIVE_SEQUENCE RIFIN_1_SEQUENCE
 
   // Filter on sequence
   std::shared_ptr<const kgl::GenomeVariant> filter_ptr = all_variant_ptr->filterVariants(kgl::SequenceFilter(ACTIVE_SEQUENCE));
@@ -174,51 +174,6 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
   } // For all sam files loop.
 
-  std::shared_ptr<const kgl::GenomeVariant> vcf_variant_ptr;
-  std::shared_ptr<const kgl::GenomeVariant> sam_variant_ptr;
-  population_variant_ptr->getGenomeVariant("sam_SRR609052", sam_variant_ptr);
-  population_variant_ptr->getGenomeVariant("vcf_SRR609052", vcf_variant_ptr);
-
-  if (vcf_variant_ptr and sam_variant_ptr) {
-
-    vcf_variant_ptr = vcf_variant_ptr->filterVariants(ContigFilter(S_ANTIGEN_CONTIG));
-    sam_variant_ptr = sam_variant_ptr->filterVariants(ContigFilter(S_ANTIGEN_CONTIG));
-
-    vcf_variant_ptr = vcf_variant_ptr->filterVariants(InsertFilter());
-    sam_variant_ptr = sam_variant_ptr->filterVariants(InsertFilter());
-
-    std::shared_ptr<const kgl::GenomeVariant> inter_vcf_sam = vcf_variant_ptr->Intersection(sam_variant_ptr);
-    std::shared_ptr<const kgl::GenomeVariant> inter_sam_vcf = sam_variant_ptr->Intersection(vcf_variant_ptr);
-
-    std::cout << " Intersection(VCF,SAM) :" << std::endl;
-    std::cout << *inter_vcf_sam;
-
-    std::shared_ptr<const kgl::GenomeVariant> diff_inter = inter_vcf_sam->Difference(inter_sam_vcf);
-
-    std::cout << " Difference Intersection(VCF,SAM) :" << std::endl;
-    std::cout << *diff_inter;
-
-    diff_inter = inter_sam_vcf->Difference(inter_vcf_sam);
-
-    std::cout << " Difference Intersection(VCF,SAM) :" << std::endl;
-    std::cout << *diff_inter;
-
-    std::shared_ptr<const kgl::GenomeVariant> diff_vcf_sam = vcf_variant_ptr->Difference(sam_variant_ptr);
-
-    std::cout << " Difference VCF - SAM :" << std::endl;
-    std::cout << *diff_vcf_sam;
-
-
-    std::shared_ptr<const kgl::GenomeVariant> diff_sam_vcf = sam_variant_ptr->Difference(vcf_variant_ptr);
-
-    std::cout << " Difference SAM - VCF :" << std::endl;
-    std::cout << *diff_sam_vcf;
-
-    std::string insert_file_name = Utility::filePath("InsertDiff", args.workDirectory) + ".csv";
-    vcf_variant_ptr->outputCSV(insert_file_name, VariantOutputIndex::START_0_BASED, false);
-    sam_variant_ptr->outputCSV(insert_file_name, VariantOutputIndex::START_0_BASED, false);
-
-  }
 
 
   // Perform population analysis

@@ -8,8 +8,6 @@
 namespace kgl = kellerberrin::genome;
 
 
-
-
 bool kgl::ApplicationAnalysis::writeMutantProteins(const std::string& fasta_file,
                                                    const std::string& sequence_name,
                                                    const ContigId_t& contig_id,
@@ -31,11 +29,18 @@ bool kgl::ApplicationAnalysis::writeMutantProteins(const std::string& fasta_file
 
     std::vector<WriteFastaSequence> fasta_sequence_vec;
     size_t sequence_counter = 0;
+
+    std::string reference_name =  sequence_name + "_reference";
+    WriteFastaSequence gff_sequence;
+    gff_sequence.first = reference_name;
+    gff_sequence.second = reference_sequence;
+    fasta_sequence_vec.push_back(gff_sequence);
+
     for (auto amino_sequence : mutant_sequence_vector) {
 
       ++sequence_counter;
       std::stringstream ss;
-      ss << sequence_name << "_" << sequence_counter;
+      ss << sequence_name << "_mutant_" << sequence_counter;
       WriteFastaSequence fasta_sequence;
       fasta_sequence.first = ss.str();
       fasta_sequence.second = amino_sequence;

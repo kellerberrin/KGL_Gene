@@ -74,8 +74,8 @@ public:
 
 
 
-}; //  organization level namespace
-};  // project level namespace
+} //  organization level namespace
+}  // project level namespace
 
 
 #endif //KGL_PHYLOGENETIC_ENV_H

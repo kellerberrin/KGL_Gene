@@ -123,7 +123,7 @@ bool kgl::ContigFeatures::findGenes(ContigOffset_t offset, GeneVector &gene_ptr_
 std::shared_ptr<kgl::AminoSequence>
 kgl::ContigFeatures::getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr) const {
 
-  return coding_sequence_.getAminoSequence(coding_seq_ptr, sequence_ptr_);
+  return coding_table_.getAminoSequence(coding_seq_ptr, sequence_ptr_);
 
 }
 
@@ -131,7 +131,7 @@ kgl::ContigFeatures::getAminoSequence(std::shared_ptr<const CodingSequence> codi
 std::shared_ptr<kgl::AminoSequence>
 kgl::ContigFeatures::getAminoSequence(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const {
 
-  return coding_sequence_.getAminoSequence(sequence_ptr);
+  return coding_table_.getAminoSequence(sequence_ptr);
 
 }
 

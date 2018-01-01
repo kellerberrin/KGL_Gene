@@ -264,10 +264,58 @@ bool kgl::GenomeVariant::mutateDeletes(const OffsetVariantMap& delete_variant_ma
                                        std::shared_ptr<DNA5SequenceCoding>& dna_sequence_ptr,
                                        DeleteAccountingMap& delete_accounting_map) {
 
+  delete_accounting_map.clear();
   // Process the deletions in reverse order so that we don't have to adjust the variant offsets.
-
+  ContigSize_t sequence_size = dna_sequence_ptr->length();
+  SignedOffset_t sequence_size_adjust;
   for (auto rit = delete_variant_map.rbegin(); rit != delete_variant_map.rend(); ++rit) {
 
+    if (rit->second->isDelete() && rit->second->codingSequenceId() == sequence_id) {
+
+      std::cout << "PRE  calc size:" << sequence_size << " actual seq size:" << dna_sequence_ptr->length() << std::endl;
+
+      // We are deleting from the rear of the sequence, no offset adjusted is required.
+      if (rit->second->mutateCodingSequence(sequence_id, 0, sequence_size, sequence_size_adjust, dna_sequence_ptr)) {
+
+        ContigOffset_t variant_offset = rit->second->offset();
+        std::pair<ContigOffset_t, SignedOffset_t> insert_pair(variant_offset, sequence_size_adjust);
+        auto result = delete_accounting_map.insert(insert_pair);
+        if (not result.second) {
+
+          ExecEnv::log().error("mutateDeletes(): Unexpected, two delete variants with the same offset: {}",
+                               rit->second->output(' ', VariantOutputIndex::START_0_BASED, true));
+
+        }
+
+      } else {
+
+        ExecEnv::log().error("mutateDeletes(): Unable to mutate delete variant: {}",
+                             rit->second->output(' ', VariantOutputIndex::START_0_BASED, true));
+
+      }
+
+    } else {
+
+      ExecEnv::log().error("mutateDeletes(), unexpected variant: {}",
+                           rit->second->output(' ', VariantOutputIndex::START_0_BASED, true));
+      return false;
+
+    }
+
+    // reduce the size of the sequence
+    SignedOffset_t reduced_sequence_size = static_cast<SignedOffset_t>(sequence_size) + sequence_size_adjust;
+    std::cout << "POST  calc size:" << reduced_sequence_size << " seq size:" << sequence_size << " adjust:" << sequence_size_adjust << std::endl;
+    sequence_size = static_cast<ContigSize_t>(reduced_sequence_size);
+
+    // check the size
+    if (sequence_size != dna_sequence_ptr->length()) {
+
+      ExecEnv::log().error("mutateDeletes(): Calculated sequence size: {} does match sequence size: {} for variant: {}",
+                           sequence_size_adjust,
+                           dna_sequence_ptr->length(),
+                           rit->second->output(' ', VariantOutputIndex::START_0_BASED, true));
+
+    }
 
 
   }

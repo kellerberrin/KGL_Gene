@@ -98,7 +98,7 @@ public:
   void reduce(size_t i, size_t j);
   void setDistance(size_t i, size_t j, DistanceType_t distance);
 
-  virtual size_t getLeafCount(size_t leaf_idx) const { return 1; }
+  virtual size_t getLeafCount(size_t) const { return 1; }
 
 private:
 

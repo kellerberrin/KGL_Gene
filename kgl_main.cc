@@ -9,7 +9,7 @@
 namespace kgl = kellerberrin::genome;
 
 
-void ctrlC(int sig) {
+void ctrlC(int) {
 
   kgl::ExecEnv::log().warn("Control-C. Program terminates. Output files may be corrupt. Multi-threaded code may hang.");
   std::exit(EXIT_FAILURE);

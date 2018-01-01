@@ -178,8 +178,8 @@ private:
                          const FeatureIdent_t& sequence_id,
                          std::shared_ptr<DNA5SequenceCoding>& dna_sequence_ptr);
 
-  // The delete offset accounting map records where deletions occur so that inserts can be properly aligned.
-  using DeleteAccountingMap = std::map<ContigOffset_t, ContigSize_t>;
+  // The delete offset accounting map records where deletions occur so that inserts and deletes can be properly aligned.
+  using DeleteAccountingMap = std::map<ContigOffset_t, SignedOffset_t>;
 
   // Mutate the DNA sequence using delete variants
   static bool mutateDeletes(const OffsetVariantMap& delete_variant_map,

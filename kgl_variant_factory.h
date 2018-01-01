@@ -61,10 +61,7 @@ private:
   std::shared_ptr<const GenomeVariant> createVcfVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                                          const std::string& genome_name,
                                                          const std::string& vcf_file_name,
-                                                         Phred_t read_quality,
-                                                         Phred_t variant_quality,
-                                                         NucleotideReadCount_t min_read_count,
-                                                         double min_proportion) const;
+                                                         Phred_t variant_quality) const;
 
   std::shared_ptr<const GenomeVariant> aggregateVariants(const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
                                                          const std::string& genome_name,
