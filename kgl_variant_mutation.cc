@@ -19,6 +19,47 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
                                          const std::shared_ptr<const GenomeDatabase>& genome_db,
                                          std::shared_ptr<AminoSequence>& reference_sequence,
                                          std::vector<std::shared_ptr<AminoSequence>>& mutant_sequence_vector) const {
+
+
+  std::shared_ptr<DNA5SequenceCoding> DNA_reference;
+  std::vector<std::shared_ptr<DNA5SequenceCoding>> DNA_mutant_vector;
+  if (not mutantCodingDNA(contig_id, gene_id, sequence_id, genome_db, DNA_reference, DNA_mutant_vector)) {
+
+    ExecEnv::log().warn("mutantProtein(), Problem generating stranded mutant DNA");
+    return false;
+
+  }
+
+  // Get the contig.
+  std::shared_ptr<const ContigFeatures> contig_ptr;
+  if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
+
+    ExecEnv::log().warn("mutantProtein(), Could not find contig: {} in genome database", contig_id);
+    return false;
+
+  }
+
+  // The reference Amino sequence.
+  reference_sequence = contig_ptr->getAminoSequence(DNA_reference);
+
+  // Mutant Amino vector
+  for (const auto& mutant_sequence : DNA_mutant_vector) {
+
+    mutant_sequence_vector.push_back(contig_ptr->getAminoSequence(mutant_sequence));
+
+  }
+
+  return true;
+
+}
+
+
+bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
+                                          const FeatureIdent_t& gene_id,
+                                          const FeatureIdent_t& sequence_id,
+                                          const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                          std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
+                                          std::vector<std::shared_ptr<DNA5SequenceCoding>>& mutant_sequence_vector) const {
   // Get the contig.
   std::shared_ptr<const ContigFeatures> contig_ptr;
   if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
@@ -39,8 +80,8 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
 
 
   // Get the reference DNA sequence
-  std::shared_ptr<DNA5SequenceCoding> dna_sequence_ptr;
-  if (not contig_ptr->getDNA5SequenceCoding(coding_sequence_ptr, dna_sequence_ptr))  {
+  std::shared_ptr<DNA5SequenceCoding> stranded_sequence_ptr;
+  if (not contig_ptr->getDNA5SequenceCoding(coding_sequence_ptr, stranded_sequence_ptr))  {
 
     ExecEnv::log().warn("No valid DNA sequence for contig: {}, gene: {}, sequence id: {}", contig_id, gene_id, sequence_id);
     return false;
@@ -48,18 +89,18 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
   }
 
   // Return the reference amino sequence.
-  reference_sequence = contig_ptr->getAminoSequence(dna_sequence_ptr);
+  reference_sequence = stranded_sequence_ptr;
 
   // Generate the mutant sequences.
   // Extract the variants for processing.
   OffsetVariantMap coding_variant_map;
   getCodingSortedVariants(contig_id, coding_sequence_ptr->start(), coding_sequence_ptr->end(), coding_variant_map);
 
-  // There maybe more than one variant specified per offset.
-  // If this is the case then we create alternative mutation paths.
+  // There may be more than one different variant specified per offset.
+  // If this is the case, then we create alternative mutation paths.
   // In other words, there can be more than one mutant protein alternative.
-  // This function is exponential. Alternatives = 2 ^ (#equal offset variants) - assuming 2 alternatives.
-  // A message is issued if there are more than 32 alternatives (5 equal offset variants).
+  // The number of mutation is exponential. Alternatives = 2 ^ (#equal offset variants) - assuming 2 alternatives per offset.
+  // A message is issued if there are more than 32 alternative mutation paths (5 equal offset variants).
   // For performance reasons, a hard limit of 128 alternatives is imposed (can be varied).
   std::vector<OffsetVariantMap> variant_map_vector;
   size_t alternative_count = 0;
@@ -68,11 +109,9 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
 
   for (auto variant_map : variant_map_vector) {
 
-    // Make a copy of the protein dna.
-    std::shared_ptr<DNA5SequenceCoding> copy_dna_sequence_ptr(std::make_shared<DNA5SequenceCoding>(*dna_sequence_ptr));
-
-    // And mutate it.
-    if (not GenomeVariant::mutateDNA(variant_map, sequence_id, copy_dna_sequence_ptr)) {
+    // Mutate.
+    std::shared_ptr<DNA5SequenceCoding> mutant_coding_dna;
+    if (not GenomeVariant::mutateDNA(variant_map, contig_ptr, coding_sequence_ptr,  mutant_coding_dna)) {
 
       ExecEnv::log().warn("Problem mutating DNA sequence for contig: {}, gene: {}, sequence id: {}",
                           contig_id, gene_id, sequence_id);
@@ -80,7 +119,7 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
 
     }
 
-    mutant_sequence_vector.push_back(contig_ptr->getAminoSequence(copy_dna_sequence_ptr));
+    mutant_sequence_vector.push_back(mutant_coding_dna);
 
   }
 
@@ -151,7 +190,8 @@ void kgl::GenomeVariant::getMutationAlternatives(std::shared_ptr<const OffsetVar
 
 // Perform the actual mutation.
 bool kgl::GenomeVariant::mutateDNA(const OffsetVariantMap& variant_map,
-                                   const FeatureIdent_t& sequence_id,
+                                   std::shared_ptr<const ContigFeatures> contig_ptr,
+                                   std::shared_ptr<const CodingSequence> coding_sequence_ptr,
                                    std::shared_ptr<DNA5SequenceCoding>& dna_sequence_ptr) {
 
   // Split the variant map into SNP, Delete and Insert Variants.
@@ -161,33 +201,101 @@ bool kgl::GenomeVariant::mutateDNA(const OffsetVariantMap& variant_map,
   OffsetVariantMap insert_variant_map;
   SplitVariantMap(variant_map, snp_variant_map, delete_variant_map, insert_variant_map);
 
-  DeleteAccountingMap delete_accounting_map;
+  IndelAccountingMap indel_accounting_map;
 
-  if (not mutateSNPs(snp_variant_map, sequence_id, dna_sequence_ptr)) {
+  // mutate UNSTRANDED DNA and then convert to STRANDED DNA
+  std::shared_ptr<DNA5SequenceLinear>
+  unstranded_ptr = contig_ptr->sequence().unstrandedRegion(coding_sequence_ptr->start(),
+                                                           (coding_sequence_ptr->end() - coding_sequence_ptr->start()));
+
+  if (not mutateSNPs(snp_variant_map, coding_sequence_ptr->start(), unstranded_ptr)) {
 
     ExecEnv::log().error("Problem with SNP mutations");
     return false;
 
   }
 
-  if (not mutateDeletes(delete_variant_map, sequence_id, dna_sequence_ptr, delete_accounting_map)) {
+  if (not mutateDeletes(delete_variant_map, coding_sequence_ptr->start(), unstranded_ptr, indel_accounting_map)) {
 
     ExecEnv::log().error("Problem with Delete mutations");
     return false;
 
   }
 
-  if (not mutateInserts(insert_variant_map, sequence_id, delete_accounting_map, dna_sequence_ptr)) {
+  if (not mutateInserts(insert_variant_map, coding_sequence_ptr->start(),  unstranded_ptr, indel_accounting_map)) {
 
     ExecEnv::log().error("Problem with Insert mutations");
     return false;
 
   }
 
+  dna_sequence_ptr = unstranded_ptr->codingSubSequence(coding_sequence_ptr, 0, 0, coding_sequence_ptr->start());
+
   return true;
 
 }
 
+
+// Returns a maximum of MUTATION_HARD_LIMIT_ alternative mutations.
+bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
+                                       const ContigOffset_t & region_offset,
+                                       const ContigSize_t region_size,
+                                       const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                       std::shared_ptr<DNA5SequenceLinear>& reference_sequence,
+                                       std::vector<std::shared_ptr<DNA5SequenceLinear>>& mutant_sequence_vector) const {
+
+  // Get the contig.
+  std::shared_ptr<const ContigFeatures> contig_ptr;
+  if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
+
+    ExecEnv::log().warn("mutantProtein(), Could not find contig: {} in genome database", contig_id);
+    return false;
+
+  }
+
+  // Get the reference DNA sequence
+  reference_sequence = contig_ptr->sequence().unstrandedRegion(region_offset, region_size);
+
+
+  // Generate the mutant sequences.
+  // Extract the variants for processing.
+  OffsetVariantMap region_variant_map;
+  getSortedVariants(contig_id, region_offset, region_offset + region_size, region_variant_map);
+
+  // There may be more than one different variant specified per offset.
+  // If this is the case, then we create alternative mutation paths.
+  // In other words, there can be more than one mutant protein alternative.
+  // The number of mutation is exponential. Alternatives = 2 ^ (#equal offset variants) - assuming 2 alternatives per offset.
+  // A message is issued if there are more than 32 alternative mutation paths (5 equal offset variants).
+  // For performance reasons, a hard limit of 128 alternatives is imposed (can be varied).
+  std::vector<OffsetVariantMap> variant_map_vector;
+  size_t alternative_count = 0;
+  std::shared_ptr<const OffsetVariantMap> variant_map_ptr(std::make_shared<OffsetVariantMap>(region_variant_map));
+  getMutationAlternatives(variant_map_ptr, variant_map_vector, alternative_count, MUTATION_SOFT_LIMIT_, MUTATION_HARD_LIMIT_);
+
+  IndelAccountingMap indel_accounting_map;
+
+  for (auto variant_map : variant_map_vector) {
+
+    // Make a copy of the linear dna.
+    std::shared_ptr<DNA5SequenceLinear> copy_dna_sequence_ptr(std::make_shared<DNA5SequenceLinear>(*reference_sequence));
+
+    // And mutate it.
+    if (not GenomeVariant::mutateDNA(variant_map, region_offset, copy_dna_sequence_ptr, indel_accounting_map)) {
+
+      ExecEnv::log().warn("Problem mutating region DNA sequence for contig: {}, offset: {}, size: {}",
+                          contig_id, region_offset, region_size);
+      return false;
+
+    }
+
+    mutant_sequence_vector.push_back(copy_dna_sequence_ptr);
+
+  }
+
+  return true;
+
+}
 
 
 // Split the variant map into SNP, Delete and Insert Variants.
@@ -225,98 +333,82 @@ void kgl::GenomeVariant::SplitVariantMap(const OffsetVariantMap& variant_map,
 
 }
 
+bool kgl::GenomeVariant::mutateDNA(const OffsetVariantMap& region_variant_map,
+                                   ContigOffset_t contig_offset,
+                                   std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr,
+                                   IndelAccountingMap& indel_accounting_map) {
+
+  // Split the variant map into SNP, Delete and Insert Variants.
+
+  OffsetVariantMap snp_variant_map;
+  OffsetVariantMap delete_variant_map;
+  OffsetVariantMap insert_variant_map;
+  SplitVariantMap(region_variant_map, snp_variant_map, delete_variant_map, insert_variant_map);
+
+  indel_accounting_map.clear();
+
+  if (not mutateSNPs(snp_variant_map, contig_offset, dna_sequence_ptr)) {
+
+    ExecEnv::log().error("Problem with SNP mutations");
+    return false;
+
+  }
+
+  if (not mutateDeletes(delete_variant_map, contig_offset, dna_sequence_ptr, indel_accounting_map)) {
+
+    ExecEnv::log().error("Problem with Delete mutations");
+    return false;
+
+  }
+
+  if (not mutateInserts(insert_variant_map, contig_offset, dna_sequence_ptr, indel_accounting_map)) {
+
+    ExecEnv::log().error("Problem with Insert mutations");
+    return false;
+
+  }
+
+  return true;
+
+}
+
 
 // Mutate the DNA sequence using SNP variants
 bool kgl::GenomeVariant::mutateSNPs(const OffsetVariantMap& snp_variant_map,
-                                    const FeatureIdent_t& sequence_id,
-                                    std::shared_ptr<DNA5SequenceCoding>& dna_sequence_ptr) {
+                                    ContigOffset_t contig_offset,
+                                    std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr) {
 
   // Mutate the base sequence.
   for (const auto& variant : snp_variant_map) {
 
-    SignedOffset_t sequence_size_adjust = 0;  // How the variant modifies sequence size.
-    if (not variant.second->mutateCodingSequence(sequence_id, 0, dna_sequence_ptr->length(), sequence_size_adjust, dna_sequence_ptr)) {
+    if (variant.second->isSingle()) {
 
-      ExecEnv::log().error("mutateDNA(), problem with variant: {}",
-                           variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
-      return false;
+      return mutateSingleSNP(variant.second, contig_offset, dna_sequence_ptr);
 
-    }
+    } else { // compound SNP.
 
-    if (sequence_size_adjust != 0) {
+      std::shared_ptr<const CompoundSNP> cmp_snp_ptr = std::dynamic_pointer_cast<const CompoundSNP>(variant.second);
 
-      ExecEnv::log().error("mutateDNA(), Non zero sequence resize: {} with SNP variant: {}",
-                           sequence_size_adjust, variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
-      return false;
+      if (not cmp_snp_ptr) {
 
-    }
+        ExecEnv::log().error("mutateSNPs(), should be CompoundSNP; unexpected variant: {}",
+                             variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
+      } else {
 
-  }
+        for (auto variant : cmp_snp_ptr->getMap()) {
 
-  return true;
+          if (not mutateSingleSNP(variant.second, contig_offset, dna_sequence_ptr)) {
 
-}
-
-
-// Mutate the DNA sequence using delete variants
-bool kgl::GenomeVariant::mutateDeletes(const OffsetVariantMap& delete_variant_map,
-                                       const FeatureIdent_t& sequence_id,
-                                       std::shared_ptr<DNA5SequenceCoding>& dna_sequence_ptr,
-                                       DeleteAccountingMap& delete_accounting_map) {
-
-  delete_accounting_map.clear();
-  // Process the deletions in reverse order so that we don't have to adjust the variant offsets.
-  ContigSize_t sequence_size = dna_sequence_ptr->length();
-  SignedOffset_t sequence_size_adjust;
-  for (auto rit = delete_variant_map.rbegin(); rit != delete_variant_map.rend(); ++rit) {
-
-    if (rit->second->isDelete() && rit->second->codingSequenceId() == sequence_id) {
-
-      std::cout << "PRE  calc size:" << sequence_size << " actual seq size:" << dna_sequence_ptr->length() << std::endl;
-
-      // We are deleting from the rear of the sequence, no offset adjusted is required.
-      if (rit->second->mutateCodingSequence(sequence_id, 0, sequence_size, sequence_size_adjust, dna_sequence_ptr)) {
-
-        ContigOffset_t variant_offset = rit->second->offset();
-        std::pair<ContigOffset_t, SignedOffset_t> insert_pair(variant_offset, sequence_size_adjust);
-        auto result = delete_accounting_map.insert(insert_pair);
-        if (not result.second) {
-
-          ExecEnv::log().error("mutateDeletes(): Unexpected, two delete variants with the same offset: {}",
-                               rit->second->output(' ', VariantOutputIndex::START_0_BASED, true));
+            ExecEnv::log().error("mutateSNPs(), problem mutating sequence with compound snp: {}",
+                                 cmp_snp_ptr->output(' ', VariantOutputIndex::START_0_BASED, true));
+            return false;
+          }
 
         }
 
-      } else {
-
-        ExecEnv::log().error("mutateDeletes(): Unable to mutate delete variant: {}",
-                             rit->second->output(' ', VariantOutputIndex::START_0_BASED, true));
-
       }
 
-    } else {
-
-      ExecEnv::log().error("mutateDeletes(), unexpected variant: {}",
-                           rit->second->output(' ', VariantOutputIndex::START_0_BASED, true));
-      return false;
-
     }
-
-    // reduce the size of the sequence
-    SignedOffset_t reduced_sequence_size = static_cast<SignedOffset_t>(sequence_size) + sequence_size_adjust;
-    std::cout << "POST  calc size:" << reduced_sequence_size << " seq size:" << sequence_size << " adjust:" << sequence_size_adjust << std::endl;
-    sequence_size = static_cast<ContigSize_t>(reduced_sequence_size);
-
-    // check the size
-    if (sequence_size != dna_sequence_ptr->length()) {
-
-      ExecEnv::log().error("mutateDeletes(): Calculated sequence size: {} does match sequence size: {} for variant: {}",
-                           sequence_size_adjust,
-                           dna_sequence_ptr->length(),
-                           rit->second->output(' ', VariantOutputIndex::START_0_BASED, true));
-
-    }
-
 
   }
 
@@ -324,15 +416,69 @@ bool kgl::GenomeVariant::mutateDeletes(const OffsetVariantMap& delete_variant_ma
 
 }
 
+// Mutate the DNA sequence using SNP variants
+bool kgl::GenomeVariant::mutateSingleSNP(std::shared_ptr<const Variant> variant_ptr,
+                                         ContigOffset_t contig_offset,
+                                         std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr) {
 
-// Mutate the DNA sequence using insert variants
-bool kgl::GenomeVariant::mutateInserts(const OffsetVariantMap& insert_variant_map,
-                                       const FeatureIdent_t& sequence_id,
-                                       const DeleteAccountingMap& delete_accounting_map,
-                                       std::shared_ptr<DNA5SequenceCoding>& dna_sequence_ptr) {
+  std::shared_ptr<const SNPVariant> snp_ptr = std::dynamic_pointer_cast<const SNPVariant>(variant_ptr);
 
+  if (not snp_ptr) {
+
+    ExecEnv::log().error("mutateSingleSNP, should be SNPVariant; unexpected variant: {}",
+                         variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, true));
+    return false;
+
+  }
+
+  // Adjust the offset
+  SignedOffset_t adjusted_offset = snp_ptr->offset() - contig_offset;
+
+  // Check the offset
+  if (adjusted_offset < 0 or adjusted_offset >= dna_sequence_ptr->length()) {
+
+    ExecEnv::log().error("mutateSingleSNP(), calculated sequence offset: {} is out of range for sequence size: {}",
+                         adjusted_offset, dna_sequence_ptr->length(),
+                         snp_ptr->output(' ', VariantOutputIndex::START_0_BASED, true));
+    return false;
+  }
+
+  ContigOffset_t sequence_offset = static_cast<ContigOffset_t>(adjusted_offset);
+
+  // Check the reference.
+  if (snp_ptr->reference() != dna_sequence_ptr->at(sequence_offset)) {
+
+    ExecEnv::log().warn("mutateSingleSNP(), reference base: {} does not match sequence base: {} at sequence offset: {}",
+                        DNA5::convertToChar(snp_ptr->reference()),
+                        DNA5::convertToChar(dna_sequence_ptr->at(sequence_offset)),
+                        sequence_offset);
+
+  }
+
+  // Mutate the sequence
+  dna_sequence_ptr->modifyBase(sequence_offset, snp_ptr->mutant());
 
   return true;
 
 }
 
+// Mutate the DNA sequence using Delete variants
+bool kgl::GenomeVariant::mutateDeletes(const OffsetVariantMap& snp_variant_map,
+                                       ContigOffset_t contig_offset,
+                                       std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr,
+                                       IndelAccountingMap& indel_accounting_map) {
+
+  return true;
+
+}
+
+
+// Mutate the DNA sequence using Insert variants
+bool kgl::GenomeVariant::mutateInserts(const OffsetVariantMap& snp_variant_map,
+                                       ContigOffset_t contig_offset,
+                                       std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr,
+                                       IndelAccountingMap& indel_accounting_map) {
+
+  return true;
+
+}

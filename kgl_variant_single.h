@@ -107,14 +107,6 @@ public:
 
   bool equivalent(const Variant& cmp_var) const override;
 
-  // This mutates a coding sequence that has already been generated using a CodingSequence (CDS) object.
-  bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
-                            SignedOffset_t offset_adjust,  // Adjust the variant offsets before mutation
-                            ContigSize_t sequence_size,  // Calculated sequence size before mutation.
-                            SignedOffset_t& sequence_size_adjust,  // How the variant modifies sequence size.
-                            std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const override;
-
-
   std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const override;
 
   CodingDNA5::Alphabet strandMutant() const { return strandNucleotide(mutant()); }
@@ -170,14 +162,6 @@ public:
 
   bool equivalent(const Variant& cmp_var) const override;
 
-  // This mutates a coding sequence that has already been generated using a CodingSequence (CDS) object.
-  bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
-                            SignedOffset_t offset_adjust,  // Adjust the variant offsets before mutation
-                            ContigSize_t sequence_size,  // Calculated sequence size before mutation.
-                            SignedOffset_t& sequence_size_adjust,  // How the variant modifies sequence size.
-                            std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const override;
-
-
   std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const override;
 
   virtual char mutantChar() const override { return '-'; }
@@ -227,14 +211,6 @@ public:
   DNA5::Alphabet mutant() const { return mutant_; }
 
   virtual char mutantChar() const override { return DNA5::convertToChar(mutant()); }
-
-  // This mutates a coding sequence that has already been generated using a CodingSequence (CDS) object.
-  bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
-                            SignedOffset_t offset_adjust,  // Adjust the variant offsets before mutation
-                            ContigSize_t sequence_size,  // Calculated sequence size before mutation.
-                            SignedOffset_t& sequence_size_adjust,  // How the variant modifies sequence size.
-                            std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const override;
-
 
   std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const override;
 

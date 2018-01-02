@@ -18,14 +18,3 @@ std::string kgl::CompoundInsert::mutation(char delimiter, VariantOutputIndex out
 
 }
 
-
-bool kgl::CompoundInsert::mutateCodingSequence(const FeatureIdent_t&, // sequence_id,
-                                               SignedOffset_t, // offset_adjust,  // Adjust the variant offsets before mutation
-                                               ContigSize_t, // sequence_size,  // Calculated sequence size before mutation.
-                                               SignedOffset_t&, // sequence_size_adjust,  // How the variant modifies sequence size.
-                                               std::shared_ptr<DNA5SequenceCoding>&) const { // mutated_sequence) const {
-
-  return true;
-
-}
-

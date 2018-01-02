@@ -41,6 +41,30 @@ bool kgl::DNA5SequenceCoding::insertSubSequence(ContigOffset_t insert_offset, co
 // A linear and contiguous DNA5 sequence that cannot be used to directly generate an Amino Acid sequence
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The base DNA5 sequence class.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Letter offset is relative to the begining of the sequence (0 is the first letter).
+bool kgl::DNA5SequenceLinear::modifyBase(ContigOffset_t base_offset, DNA5::Alphabet nucleotide) {
+
+  return modifyLetter(base_offset, nucleotide);
+
+}
+
+// Delete offset is relative to the begining of the sequence (0 is the first letter).
+bool kgl::DNA5SequenceLinear::deleteSubSequence(ContigOffset_t delete_offset, ContigSize_t delete_size) {
+
+  return deleteOffset(delete_offset, delete_size);
+
+}
+
+// Insert offset is relative to the begining of the sequence (0 is the first letter).
+bool kgl::DNA5SequenceLinear::insertSubSequence(ContigOffset_t insert_offset, const DNA5SequenceLinear& inserted_sequence) {
+
+  return insertOffset(insert_offset, inserted_sequence);
+
+}
 
 
 std::shared_ptr<kgl::DNA5SequenceCoding>
@@ -61,9 +85,9 @@ kgl::DNA5SequenceLinear::codingSubSequence(std::shared_ptr<const DNA5SequenceLin
   }
 
   // Check bounds.
-  if (sorted_cds.rbegin()->second->sequence().end() >= contig_offset + base_sequence_ptr->length()) {
+  if (sorted_cds.rbegin()->second->sequence().end() > contig_offset + base_sequence_ptr->length()) {
 
-    ExecEnv::log().error("codingSubSequence(), CDS end offset: {} >= (target sequence size: {} + offset : {})",
+    ExecEnv::log().error("codingSubSequence(), CDS end offset: {} > (target sequence size: {} + offset : {})",
                          sorted_cds.rbegin()->second->sequence().end(),
                          base_sequence_ptr->length(),
                          contig_offset);
@@ -366,4 +390,5 @@ bool kgl::DNA5SequenceContig::offsetWithinSequence(std::shared_ptr<const CodingS
   return iscoding;
 
 }
+
 

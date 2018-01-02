@@ -44,7 +44,7 @@ public:
 
   explicit AlphabetSequence(AlphabetString<Alphabet> sequence) : alphabet_string_(std::move(sequence)) {}
   explicit AlphabetSequence(const AlphabetSequence&) = default;
-  AlphabetSequence() = delete;
+  AlphabetSequence() = default;
   ~AlphabetSequence() override = default;
 
   auto operator[] (ContigOffset_t& offset) const { return alphabet_string_[offset]; }
@@ -65,6 +65,8 @@ protected:
   bool deleteOffset(ContigOffset_t delete_offset, ContigSize_t delete_size);
   // Insert offset is relative to the begining of the sequence (0 is the first letter).
   bool insertOffset(ContigOffset_t insert_offset, const AlphabetSequence& inserted_sequence);
+  // Returns bool false if offset and/or size are out of bounds.
+  bool getSubsequence(ContigOffset_t substring_offset, ContigSize_t delete_size, std::shared_ptr<AlphabetSequence> sub_sequence) const;
 
 private:
 
@@ -140,6 +142,31 @@ bool AlphabetSequence<Alphabet>::insertOffset(ContigOffset_t insert_offset, cons
   return true;
 
 }
+
+
+template<typename Alphabet>
+bool AlphabetSequence<Alphabet>::getSubsequence(ContigOffset_t substring_offset, ContigSize_t substring_size, std::shared_ptr<AlphabetSequence> sub_sequence) const {
+
+  if ((substring_offset + substring_size) > length()) {
+
+    ExecEnv::log().error("Attempt to get substring past the end a sequence string, offset: {}, size: {}, sequence size: {}",
+                         substring_offset, substring_size, length());
+    return false;
+
+  }
+
+  if (not alphabet_string_.substring(substring_offset, substring_size, sub_sequence->alphabet_string_)) {
+
+    ExecEnv::log().error("Problem generating a subsequence , offset: {}, subsequence size: {}, from sequence size: {}",
+                         substring_offset, substring_size, alphabet_string_.length());
+    return false;
+
+  }
+
+  return true;
+
+}
+
 
 
 }   // namespace genome

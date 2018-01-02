@@ -72,7 +72,12 @@ private:
 // GenomeVariant - A map of contig variants
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// The delete offset accounting map records where deletions occur so that inserts and deletes can be properly aligned.
+using IndelAccountingMap = std::map<ContigOffset_t, SignedOffset_t>;
+
+// The variant contig map
 using GenomeVariantMap = std::map<ContigId_t, std::shared_ptr<ContigVariant>>;
+
 class GenomeVariant {
 
 public:
@@ -140,6 +145,23 @@ public:
                        std::shared_ptr<AminoSequence>& reference_sequence,
                        std::vector<std::shared_ptr<AminoSequence>>& mutant_sequence_vector) const;
 
+  // Returns a maximum of MUTATION_HARD_LIMIT_ alternative protein mutations.
+  bool mutantCodingDNA( const ContigId_t& contig_id,
+                        const FeatureIdent_t& gene_id,
+                        const FeatureIdent_t& sequence_id,
+                        const std::shared_ptr<const GenomeDatabase>& genome_db,
+                        std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
+                        std::vector<std::shared_ptr<DNA5SequenceCoding>>& mutant_sequence_vector) const;
+
+  // Returns a maximum of MUTATION_HARD_LIMIT_ alternative mutations.
+  bool mutantRegion( const ContigId_t& contig_id,
+                     const ContigOffset_t & region_offset,
+                     const ContigSize_t region_size,
+                     const std::shared_ptr<const GenomeDatabase>& genome_db,
+                     std::shared_ptr<DNA5SequenceLinear>& reference_sequence,
+                     std::vector<std::shared_ptr<DNA5SequenceLinear>>& mutant_sequence_vector) const;
+
+
 
 private:
 
@@ -152,7 +174,8 @@ private:
 
   // The coding variants in the variant_map are used to mutate the dna_sequence.
   static bool mutateDNA(const OffsetVariantMap& variant_map,
-                        const FeatureIdent_t& sequence_id,
+                        std::shared_ptr<const ContigFeatures> contig_ptr,
+                        std::shared_ptr<const CodingSequence> coding_sequence_ptr,
                         std::shared_ptr<DNA5SequenceCoding>& dna_sequence_ptr);
 
   // Returns a vector of alternative mutation paths based on the number of equal offset mutations in the coding variants.
@@ -173,29 +196,35 @@ private:
                               OffsetVariantMap& delete_variant_map,
                               OffsetVariantMap& insert_variant_map);
 
-  // Mutate the DNA sequence using SNP variants
+  static bool mutateDNA(const OffsetVariantMap& insert_variant_map,
+                        ContigOffset_t contig_offset,
+                        std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr,
+                        IndelAccountingMap& indel_accounting_map);
+
+// Mutate the DNA sequence using SNP variants
   static bool mutateSNPs(const OffsetVariantMap& snp_variant_map,
-                         const FeatureIdent_t& sequence_id,
-                         std::shared_ptr<DNA5SequenceCoding>& dna_sequence_ptr);
+                         ContigOffset_t contig_offset,
+                         std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr);
 
-  // The delete offset accounting map records where deletions occur so that inserts and deletes can be properly aligned.
-  using DeleteAccountingMap = std::map<ContigOffset_t, SignedOffset_t>;
+// Mutate the DNA sequence using a single SNP.
+  static bool mutateSingleSNP(std::shared_ptr<const Variant> variant_ptr,
+                              ContigOffset_t contig_offset,
+                              std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr);
 
-  // Mutate the DNA sequence using delete variants
-  static bool mutateDeletes(const OffsetVariantMap& delete_variant_map,
-                            const FeatureIdent_t& sequence_id,
-                            std::shared_ptr<DNA5SequenceCoding>& dna_sequence_ptr,
-                            DeleteAccountingMap& delete_accounting_map);
+// Mutate the DNA sequence using Delete variants
+  static bool mutateDeletes(const OffsetVariantMap& snp_variant_map,
+                            ContigOffset_t contig_offset,
+                            std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr,
+                            IndelAccountingMap& indel_accounting_map);
 
-  // Mutate the DNA sequence using insert variants
-  static bool mutateInserts(const OffsetVariantMap& insert_variant_map,
-                            const FeatureIdent_t& sequence_id,
-                            const DeleteAccountingMap& delete_accounting_map,
-                            std::shared_ptr<DNA5SequenceCoding>& dna_sequence_ptr);
+// Mutate the DNA sequence using Insert variants
+  static bool mutateInserts(const OffsetVariantMap& snp_variant_map,
+                            ContigOffset_t contig_offset,
+                            std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr,
+                            IndelAccountingMap& indel_accounting_map);
+
 
 };
-
-
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

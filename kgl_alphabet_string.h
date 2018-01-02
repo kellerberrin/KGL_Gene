@@ -82,6 +82,23 @@ public:
 
   }
 
+  bool substring(ContigOffset_t offset, ContigSize_t size, AlphabetString& substring) const {
+
+    try {
+
+      substring.base_string_ = base_string_.substr(offset, size);
+      return true;
+
+    }
+    catch(...) {
+
+      return false;
+
+    }
+
+  }
+
+
   typename Alphabet::Alphabet operator[] (ContigOffset_t& offset) const { return base_string_[offset]; }
 
   void modifyLetter(ContigOffset_t &offset, typename Alphabet::Alphabet letter) { base_string_[offset] = letter; }

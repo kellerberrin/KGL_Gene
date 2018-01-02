@@ -158,11 +158,6 @@ public:
   virtual size_t size() const = 0;
   virtual std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const = 0;
   virtual std::string mutation(char delimiter, VariantOutputIndex output_index) const = 0;
-  virtual bool mutateCodingSequence(const FeatureIdent_t& sequence_id,
-                                    SignedOffset_t offset_adjust,  // Adjust the variant offsets before mutation
-                                    ContigSize_t sequence_size,  // Calculated sequence size before mutation.
-                                    SignedOffset_t& sequence_size_adjust,  // How the variant modifies sequence size.
-                                    std::shared_ptr<DNA5SequenceCoding>& mutated_sequence) const = 0;
 
   bool isCompound() const { return size() > 1; }
   bool isSingle() const { return size() == 1; }
