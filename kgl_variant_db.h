@@ -198,29 +198,29 @@ private:
 
   static bool mutateDNA(const OffsetVariantMap& insert_variant_map,
                         ContigOffset_t contig_offset,
-                        std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr,
+                        std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
                         IndelAccountingMap& indel_accounting_map);
 
 // Mutate the DNA sequence using SNP variants
   static bool mutateSNPs(const OffsetVariantMap& snp_variant_map,
                          ContigOffset_t contig_offset,
-                         std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr);
+                         std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr);
 
 // Mutate the DNA sequence using a single SNP.
   static bool mutateSingleSNP(std::shared_ptr<const Variant> variant_ptr,
                               ContigOffset_t contig_offset,
-                              std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr);
+                              std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr);
 
 // Mutate the DNA sequence using Delete variants
   static bool mutateDeletes(const OffsetVariantMap& snp_variant_map,
                             ContigOffset_t contig_offset,
-                            std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr,
+                            std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
                             IndelAccountingMap& indel_accounting_map);
 
 // Mutate the DNA sequence using Insert variants
   static bool mutateInserts(const OffsetVariantMap& snp_variant_map,
                             ContigOffset_t contig_offset,
-                            std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr,
+                            std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
                             IndelAccountingMap& indel_accounting_map);
 
 

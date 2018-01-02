@@ -78,7 +78,8 @@ public:
 
 
   explicit DNA5SequenceLinear(StringDNA5 sequence) :  AlphabetSequence<DNA5>(std::move(sequence)) {}
-  DNA5SequenceLinear() = default;
+  explicit DNA5SequenceLinear() = default;
+  explicit DNA5SequenceLinear(const DNA5SequenceLinear&) = default;
   ~DNA5SequenceLinear() override = default;
 
   // Returns a defined subsequence (generally a single/group of codons) of the coding sequence
@@ -99,6 +100,8 @@ public:
   bool deleteSubSequence(ContigOffset_t delete_offset, ContigSize_t delete_size);
   // Insert offset is relative to the begining of the sequence (0 is the first letter).
   bool insertSubSequence(ContigOffset_t insert_offset, const DNA5SequenceLinear& inserted_sequence);
+
+  std::string compareDNA5Sequences(const DNA5SequenceLinear& compare_seq) const { return compareSequences(compare_seq); }
 
 private:
 

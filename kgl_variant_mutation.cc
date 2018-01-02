@@ -9,6 +9,7 @@
 #include "kgl_variant_db.h"
 #include "kgl_filter.h"
 #include "kgl_gff_fasta.h"
+#include "kgl_sequence_virtual_compare.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -203,6 +204,9 @@ bool kgl::GenomeVariant::mutateDNA(const OffsetVariantMap& variant_map,
 
   IndelAccountingMap indel_accounting_map;
 
+  ExecEnv::log().info("mutateDNA() processing SNPs: {}, Inserts: {}, Deletes: {}",
+                      snp_variant_map.size(), insert_variant_map.size(), delete_variant_map.size());
+
   // mutate UNSTRANDED DNA and then convert to STRANDED DNA
   std::shared_ptr<DNA5SequenceLinear>
   unstranded_ptr = contig_ptr->sequence().unstrandedRegion(coding_sequence_ptr->start(),
@@ -335,7 +339,7 @@ void kgl::GenomeVariant::SplitVariantMap(const OffsetVariantMap& variant_map,
 
 bool kgl::GenomeVariant::mutateDNA(const OffsetVariantMap& region_variant_map,
                                    ContigOffset_t contig_offset,
-                                   std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr,
+                                   std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
                                    IndelAccountingMap& indel_accounting_map) {
 
   // Split the variant map into SNP, Delete and Insert Variants.
@@ -376,14 +380,20 @@ bool kgl::GenomeVariant::mutateDNA(const OffsetVariantMap& region_variant_map,
 // Mutate the DNA sequence using SNP variants
 bool kgl::GenomeVariant::mutateSNPs(const OffsetVariantMap& snp_variant_map,
                                     ContigOffset_t contig_offset,
-                                    std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr) {
+                                    std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) {
 
   // Mutate the base sequence.
   for (const auto& variant : snp_variant_map) {
 
     if (variant.second->isSingle()) {
 
-      return mutateSingleSNP(variant.second, contig_offset, dna_sequence_ptr);
+      if (not mutateSingleSNP(variant.second, contig_offset, dna_sequence_ptr)) {
+
+        ExecEnv::log().error("mutateSNPs(), problem mutating sequence with single snp: {}",
+                             variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
+        return false;
+
+      }
 
     } else { // compound SNP.
 
@@ -419,7 +429,7 @@ bool kgl::GenomeVariant::mutateSNPs(const OffsetVariantMap& snp_variant_map,
 // Mutate the DNA sequence using SNP variants
 bool kgl::GenomeVariant::mutateSingleSNP(std::shared_ptr<const Variant> variant_ptr,
                                          ContigOffset_t contig_offset,
-                                         std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr) {
+                                         std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) {
 
   std::shared_ptr<const SNPVariant> snp_ptr = std::dynamic_pointer_cast<const SNPVariant>(variant_ptr);
 
@@ -465,7 +475,7 @@ bool kgl::GenomeVariant::mutateSingleSNP(std::shared_ptr<const Variant> variant_
 // Mutate the DNA sequence using Delete variants
 bool kgl::GenomeVariant::mutateDeletes(const OffsetVariantMap& snp_variant_map,
                                        ContigOffset_t contig_offset,
-                                       std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr,
+                                       std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
                                        IndelAccountingMap& indel_accounting_map) {
 
   return true;
@@ -476,7 +486,7 @@ bool kgl::GenomeVariant::mutateDeletes(const OffsetVariantMap& snp_variant_map,
 // Mutate the DNA sequence using Insert variants
 bool kgl::GenomeVariant::mutateInserts(const OffsetVariantMap& snp_variant_map,
                                        ContigOffset_t contig_offset,
-                                       std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr,
+                                       std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
                                        IndelAccountingMap& indel_accounting_map) {
 
   return true;

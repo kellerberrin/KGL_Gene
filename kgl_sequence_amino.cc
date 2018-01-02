@@ -34,6 +34,7 @@ bool kgl::AminoSequence::removeTrailingStop() {
 
   } else {  // Not a stop codon.
 
+    ExecEnv::log().warn("removeTrailingStop(). Final amino: {} is not a stop codon.", AminoAcid::convertToChar(*alphabet_string_.rbegin()));
     return false;
 
   }
