@@ -32,7 +32,7 @@ set(SOURCE_FILES kgl_logging.h kgl_logging.cc
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -s -DNDEBUG")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pthread -W -Wstrict-aliasing -pedantic -Wno-long-long -Wno-variadic-macros")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pthread -W -Wstrict-aliasing -pedantic -Wno-variadic-macros")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall")
 
 
@@ -70,6 +70,8 @@ add_executable (kgl_genome ${SOURCE_FILES} kgl_main.cc  kgl_gff_fasta.h kgl_gff_
                 kgl_alphabet_readcount.h kgl_alphabet_extend.h kgl_alphabet_extend.cc kgl_variant_factory_single.h
                 kgl_variant_factory_vcf.h kgl_utility.h kgl_utility.cc kgl_variant_factory_vcf.cc
                 kgl_variant_factory_bam.h kgl_variant_factory_bam.cc kgl_variant_factory_vcf_impl.h
-                kgl_variant_factory_vcf_impl.cc kgl_variant_factory_vcf_utils.cc)
+                kgl_variant_factory_vcf_impl.cc kgl_variant_factory_vcf_utils.cc kgl_variant_mutation.h
+                kgl_variant_db_mutation.cc kgl_variant_db_contig.h kgl_variant_db_genome.h
+                kgl_variant_mutation_variant.cc)
 
 target_link_libraries(kgl_genome ${Boost_LIBRARIES})

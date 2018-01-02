@@ -415,7 +415,7 @@ std::string kgl::GenomeStatistics::outputFeatureHeader(char delimiter) {
 
 }
 
-std::string kgl::GenomeStatistics::outputFeature(char delimiter, VariantOutputIndex output_index) const {
+std::string kgl::GenomeStatistics::outputFeature(char delimiter, VariantOutputIndex) const {
 
   std::stringstream ss;
 
