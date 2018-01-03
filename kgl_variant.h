@@ -158,6 +158,7 @@ public:
   virtual size_t size() const = 0;
   virtual std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const = 0;
   virtual std::string mutation(char delimiter, VariantOutputIndex output_index) const = 0;
+  virtual bool mutateSequence(SignedOffset_t, std::shared_ptr<DNA5SequenceLinear>) const { return true; }
 
   bool isCompound() const { return size() > 1; }
   bool isSingle() const { return size() == 1; }

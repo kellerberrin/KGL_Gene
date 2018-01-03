@@ -52,6 +52,7 @@ public:
 
   ContigSize_t length() const { return alphabet_string_.length(); }
   std::string getSequenceAsString() const override { return alphabet_string_.str(); }
+  const AlphabetString<Alphabet>& getAlphabetString() const { return alphabet_string_; }
 
 protected:
 

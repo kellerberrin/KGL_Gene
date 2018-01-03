@@ -107,7 +107,8 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
 
     // Mutate.
     std::shared_ptr<DNA5SequenceCoding> mutant_coding_dna;
-    if (not VariantMutation::mutateDNA(variant_map, contig_ptr, coding_sequence_ptr,  mutant_coding_dna)) {
+    VariantMutation variant_mutation;
+    if (not variant_mutation.mutateDNA(variant_map, contig_ptr, coding_sequence_ptr,  mutant_coding_dna)) {
 
       ExecEnv::log().warn("Problem mutating DNA sequence for contig: {}, gene: {}, sequence id: {}",
                           contig_id, gene_id, sequence_id);
@@ -168,7 +169,8 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
     std::shared_ptr<DNA5SequenceLinear> copy_dna_sequence_ptr(std::make_shared<DNA5SequenceLinear>(*reference_sequence));
 
     // And mutate it.
-    if (not VariantMutation::mutateDNA(variant_map, region_offset, copy_dna_sequence_ptr, indel_accounting_map)) {
+    VariantMutation variant_mutation;
+    if (not variant_mutation.mutateDNA(variant_map, region_offset, copy_dna_sequence_ptr)) {
 
       ExecEnv::log().warn("Problem mutating region DNA sequence for contig: {}, offset: {}, size: {}",
                           contig_id, region_offset, region_size);

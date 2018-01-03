@@ -123,3 +123,32 @@ bool kgl::CompoundSNP::codonMutation( ContigOffset_t& codon_offset,
 
 }
 
+
+bool kgl::CompoundSNP::mutateSequence(SignedOffset_t offset_adjust,
+                                      std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) const {
+
+  for (auto variant : getMap()) {
+
+    std::shared_ptr<SNPVariant const> snp_ptr = std::dynamic_pointer_cast<const SNPVariant>(variant.second);
+
+    if (not snp_ptr) {
+
+      ExecEnv::log().error("mutateSequence(), compound snp contains unexpected variant: {}",
+                           variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
+      return false;
+
+    }
+
+    if (not snp_ptr->mutateSequence(offset_adjust, dna_sequence_ptr)) {
+
+      ExecEnv::log().error("mutateSequence(), problem mutating sequence with compound snp: {}",
+                           output(' ', VariantOutputIndex::START_0_BASED, true));
+      return false;
+
+    }
+
+  }
+
+  return true;
+
+}

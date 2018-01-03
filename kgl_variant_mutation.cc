@@ -7,6 +7,7 @@
 #include "kgl_variant_compound.h"
 #include "kgl_sequence_virtual_compare.h"
 #include "kgl_variant_mutation.h"
+#include "kgl_sequence_offset.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -17,81 +18,81 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& variant_map,
                                      std::shared_ptr<const CodingSequence> coding_sequence_ptr,
                                      std::shared_ptr<DNA5SequenceCoding>& dna_sequence_ptr) {
 
-  // Split the variant map into SNP, Delete and Insert Variants.
-
-  OffsetVariantMap snp_variant_map;
-  OffsetVariantMap delete_variant_map;
-  OffsetVariantMap insert_variant_map;
-  SplitVariantMap(variant_map, snp_variant_map, delete_variant_map, insert_variant_map);
-
-  IndelAccountingMap indel_accounting_map;
-
   // mutate UNSTRANDED DNA and then convert to STRANDED DNA
+  // First we extract the UNSTRANDED coding region.
   std::shared_ptr<DNA5SequenceLinear>
   unstranded_ptr = contig_ptr->sequence().unstrandedRegion(coding_sequence_ptr->start(),
                                                            (coding_sequence_ptr->end() - coding_sequence_ptr->start()));
 
-  if (not mutateSNPs(snp_variant_map, coding_sequence_ptr->start(), unstranded_ptr)) {
+  ContigSize_t sequence_size = unstranded_ptr->length();
 
-    ExecEnv::log().error("Problem with SNP mutations");
-    return false;
+  for (auto variant : variant_map) {
 
-  }
+    // Adjust the mutation offset for indels.
+    SignedOffset_t adjusted_offset = variant_mutation_offset_.adjustIndelOffsets(variant.second->offset());
 
-  if (not mutateDeletes(delete_variant_map, coding_sequence_ptr->start(), unstranded_ptr, indel_accounting_map)) {
+    // Adjust the offset for the sequence offset
+    adjusted_offset = adjusted_offset - coding_sequence_ptr->start();
 
-    ExecEnv::log().error("Problem with Delete mutations");
-    return false;
+    // Mutate the sequence
+    variant.second->mutateSequence(adjusted_offset, unstranded_ptr);
 
-  }
-
-  if (not mutateInserts(insert_variant_map, coding_sequence_ptr->start(),  unstranded_ptr, indel_accounting_map)) {
-
-    ExecEnv::log().error("Problem with Insert mutations");
-    return false;
+    // Update the mutation offset for indels.
+    variant_mutation_offset_.updateIndelAccounting(variant.second);
 
   }
 
-  dna_sequence_ptr = unstranded_ptr->codingSubSequence(coding_sequence_ptr, 0, 0, coding_sequence_ptr->start());
+  // Check the sequence size.
+  ContigSize_t calc_sequence_size = sequence_size + variant_mutation_offset_.totalIndelOffset();
+
+  if (calc_sequence_size != unstranded_ptr->length()) {
+
+    ExecEnv::log().error("Mutated sequence length: {}, unmutated size: {}, indel adjust: {}",
+                         unstranded_ptr->length(), sequence_size, variant_mutation_offset_.totalIndelOffset());
+
+  }
+
+  dna_sequence_ptr = kgl::SequenceOffset::mutantCodingSubSequence(coding_sequence_ptr,
+                                                                  *unstranded_ptr,
+                                                                  variant_mutation_offset_,
+                                                                  0,
+                                                                  0,
+                                                                  coding_sequence_ptr->start());
 
   return true;
 
 }
 
-
 // Mutate DNA region.
 bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& region_variant_map,
-                                     ContigOffset_t contig_offset,
-                                     std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
-                                     IndelAccountingMap& indel_accounting_map) {
+                                     ContigOffset_t sequence_offset,
+                                     std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) {
 
-  // Split the variant map into SNP, Delete and Insert Variants.
+  ContigSize_t sequence_size = dna_sequence_ptr->length();
 
-  OffsetVariantMap snp_variant_map;
-  OffsetVariantMap delete_variant_map;
-  OffsetVariantMap insert_variant_map;
-  SplitVariantMap(region_variant_map, snp_variant_map, delete_variant_map, insert_variant_map);
+  for (auto variant : region_variant_map) {
 
-  indel_accounting_map.clear();
+    // Adjust the mutation offset for indels.
+    SignedOffset_t adjusted_offset = variant_mutation_offset_.adjustIndelOffsets(variant.second->offset());
 
-  if (not mutateSNPs(snp_variant_map, contig_offset, dna_sequence_ptr)) {
+    // Adjust the offset for the sequence offset
+    adjusted_offset = adjusted_offset - sequence_offset;
 
-    ExecEnv::log().error("Problem with SNP mutations");
-    return false;
+    // Mutate the sequence
+    variant.second->mutateSequence(adjusted_offset, dna_sequence_ptr);
 
-  }
-
-  if (not mutateDeletes(delete_variant_map, contig_offset, dna_sequence_ptr, indel_accounting_map)) {
-
-    ExecEnv::log().error("Problem with Delete mutations");
-    return false;
+    // Update the mutation offset for indels.
+    variant_mutation_offset_.updateIndelAccounting(variant.second);
 
   }
 
-  if (not mutateInserts(insert_variant_map, contig_offset, dna_sequence_ptr, indel_accounting_map)) {
+  // Check the sequence size.
+  ContigSize_t calc_sequence_size = sequence_size + variant_mutation_offset_.totalIndelOffset();
 
-    ExecEnv::log().error("Problem with Insert mutations");
-    return false;
+  if (calc_sequence_size != dna_sequence_ptr->length()) {
+
+    ExecEnv::log().error("Mutated sequence length: {}, unmutated size: {}, indel adjust: {}",
+                         dna_sequence_ptr->length(), sequence_size, variant_mutation_offset_.totalIndelOffset());
 
   }
 
@@ -196,63 +197,3 @@ void kgl::VariantMutation::SplitVariantMap(const OffsetVariantMap& variant_map,
 
 }
 
-// Important - This routine is paired with updateIndelAccounting(), which should be called AFTER calling (this routine) adjustIndelOffsets()
-// Important - calculate indel offset adjustment with (this routine) adjustIndelOffsets() BEFORE calling updateIndelAccounting().
-kgl::SignedOffset_t kgl::VariantMutation::adjustIndelOffsets(ContigOffset_t contig_offset,
-                                                             const IndelAccountingMap& indel_accounting_map) {
-
-  SignedOffset_t indel_offset_adjust = 0;
-
-  // Lookup all indel offsets that are smaller or the same for the variant offset.
-  auto upper_bound = indel_accounting_map.upper_bound(contig_offset);
-
-  for (auto it = indel_accounting_map.begin(); it != upper_bound; ++it) {
-
-    indel_offset_adjust += it->second;
-
-  }
-
-  return indel_offset_adjust;
-
-}
-
-// Important - This routine is paired with adjustIndelOffsets(), which should be called BEFORE calling (this routine) updateIndelAccounting()
-// Important - update the indel offset accounting structure AFTER the actual indel offset has been calculated with adjustIndelOffsets().
-bool kgl::VariantMutation::updateIndelAccounting(std::shared_ptr<const Variant> variant_ptr,
-                                                 IndelAccountingMap &indel_accounting_map) {
-
-  if (variant_ptr->isDelete()) {
-
-    // Update the accounting map by decrementing the offset by -1 * size().
-    SignedOffset_t offset_adjust = -1 * variant_ptr->size();
-    std::pair<ContigOffset_t, SignedOffset_t> insert_pair(variant_ptr->offset(), offset_adjust );
-    auto result = indel_accounting_map.insert(insert_pair);
-
-    if (not result.second) {
-
-      ExecEnv::log().error("updateIndelAccounting(), Unable to update indel accounting, duplicate offset variant: {}",
-                           variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, true));
-      return false;
-
-    }
-
-  } else if (variant_ptr->isInsert()) {
-
-    // Update the accounting map by decrementing the offset by size().
-    SignedOffset_t offset_adjust = variant_ptr->size();
-    std::pair<ContigOffset_t, SignedOffset_t> insert_pair(variant_ptr->offset(), offset_adjust );
-    auto result = indel_accounting_map.insert(insert_pair);
-
-    if (not result.second) {
-
-      ExecEnv::log().error("updateIndelAccounting(), Unable to update indel accounting, duplicate offset variant: {}",
-                           variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, true));
-      return false;
-
-    }
-
-  }
-
-  return true;
-
-}

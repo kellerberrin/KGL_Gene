@@ -154,6 +154,7 @@ public:
                       AminoAcid::Alphabet& reference_amino,
                       AminoAcid::Alphabet& mutant_amino) const;
 
+  bool mutateSequence(SignedOffset_t sequence_offset, std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) const override;
 
 private:
 

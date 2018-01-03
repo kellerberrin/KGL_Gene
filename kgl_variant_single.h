@@ -109,6 +109,8 @@ public:
 
   std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const override;
 
+  bool mutateSequence(SignedOffset_t offset_adjust, std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) const override;
+
   CodingDNA5::Alphabet strandMutant() const { return strandNucleotide(mutant()); }
 
   DNA5::Alphabet mutant() const { return mutant_; }
