@@ -82,8 +82,18 @@ private:
                               OffsetVariantMap &delete_variant_map,
                               OffsetVariantMap &insert_variant_map);
 
+// Important - This routine is paired with updateIndelAccounting(), which should be called AFTER calling (this routine) adjustIndelOffsets()
+// Important - calculate indel offset adjustment with (this routine) adjustIndelOffsets() BEFORE calling updateIndelAccounting().
+  static SignedOffset_t adjustIndelOffsets(ContigOffset_t contig_offset,
+                                           const IndelAccountingMap& indel_accounting_map);
+
+// Important - This routine is paired with adjustIndelOffsets(), which should be called BEFORE calling (this routine) updateIndelAccounting()
+// Important - update the indel offset accounting structure AFTER the actual indel offset has been calculated with adjustIndelOffsets().
+  static bool updateIndelAccounting(std::shared_ptr<const Variant> variant_ptr,
+                                    IndelAccountingMap &indel_accounting_map);
+
 // Mutate the DNA sequence using SNP variants
-  static bool mutateSNPs(const OffsetVariantMap &snp_variant_map,
+  static bool mutateSNPs(const OffsetVariantMap &variant_map,
                          ContigOffset_t contig_offset,
                          std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr);
 
@@ -93,7 +103,7 @@ private:
                               std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr);
 
 // Mutate the DNA sequence using Delete variants
-  static bool mutateDeletes(const OffsetVariantMap &snp_variant_map,
+  static bool mutateDeletes(const OffsetVariantMap &variant_map,
                             ContigOffset_t contig_offset,
                             std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
                             IndelAccountingMap &indel_accounting_map);
@@ -105,7 +115,7 @@ private:
                                  IndelAccountingMap &indel_accounting_map);
 
 // Mutate the DNA sequence using Insert variants
-  static bool mutateInserts(const OffsetVariantMap &snp_variant_map,
+  static bool mutateInserts(const OffsetVariantMap &variant_map,
                             ContigOffset_t contig_offset,
                             std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
                             IndelAccountingMap &indel_accounting_map);
