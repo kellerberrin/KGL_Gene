@@ -105,8 +105,8 @@ public:
 
   // Returns a maximum of MUTATION_HARD_LIMIT_ alternative mutations.
   bool mutantRegion( const ContigId_t& contig_id,
-                     const ContigOffset_t & region_offset,
-                     const ContigSize_t region_size,
+                     ContigOffset_t region_offset,
+                     ContigSize_t region_size,
                      const std::shared_ptr<const GenomeDatabase>& genome_db,
                      std::shared_ptr<DNA5SequenceLinear>& reference_sequence,
                      std::vector<std::shared_ptr<DNA5SequenceLinear>>& mutant_sequence_vector) const;

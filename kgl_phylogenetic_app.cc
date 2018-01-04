@@ -85,9 +85,9 @@ std::shared_ptr<const kgl::GenomeVariant> getGenomeVariants(std::shared_ptr<cons
 #define S_ANTIGEN_GENE "PF3D7_1035200"
 #define S_ANTIGEN_SEQUENCE "PF3D7_1035200.1"
 
-#define ACTIVE_CONTIG RIFIN_1_CONTIG
-#define ACTIVE_GENE RIFIN_1_GENE
-#define ACTIVE_SEQUENCE RIFIN_1_SEQUENCE
+#define ACTIVE_CONTIG "Pf3D7_07_v3"
+#define ACTIVE_GENE "PF3D7_0712600"
+#define ACTIVE_SEQUENCE "PF3D7_0712600.1"
 
   // Filter on sequence
   std::shared_ptr<const kgl::GenomeVariant> filter_ptr = all_variant_ptr->filterVariants(kgl::SequenceFilter(ACTIVE_SEQUENCE));
@@ -156,6 +156,23 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
     std::vector<std::string> comparison_vector;
 
+    // Generate a vector of 5 Prime UTR mutation maps for visual inspection
+    if (ApplicationAnalysis::compare5Prime(ACTIVE_CONTIG,
+                                           ACTIVE_GENE,
+                                           ACTIVE_SEQUENCE,
+                                           1000,
+                                           genome_db_ptr,
+                                           variant_ptr,
+                                           comparison_vector)) {
+
+      for (const auto& comparison : comparison_vector) {
+
+        ExecEnv::log().info("Genome: {} 5 Prime UTR Sequence:{} Comparison:\n{}\n", file.genome_name, ACTIVE_SEQUENCE, comparison);
+
+      }
+
+    }
+
     // Generate a vector of protein mutation maps for visual inspection
     if (ApplicationAnalysis::compareMutantProteins(ACTIVE_CONTIG,
                                                    ACTIVE_GENE,
@@ -166,11 +183,30 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
       for (const auto& comparison : comparison_vector) {
 
-        ExecEnv::log().info("Genome: {} Sequence:{} Comparison:\n{}\n", file.genome_name, ACTIVE_SEQUENCE, comparison);
+        ExecEnv::log().info("Genome: {} Protein Sequence:{} Comparison:\n{}\n", file.genome_name, ACTIVE_SEQUENCE, comparison);
 
       }
 
     }
+
+    // Generate a vector of 3 Prime UTR mutation maps for visual inspection
+    if (ApplicationAnalysis::compare3Prime(ACTIVE_CONTIG,
+                                           ACTIVE_GENE,
+                                           ACTIVE_SEQUENCE,
+                                           1000,
+                                           genome_db_ptr,
+                                           variant_ptr,
+                                           comparison_vector)) {
+
+      for (const auto& comparison : comparison_vector) {
+
+        ExecEnv::log().info("Genome: {} 3 Prime UTR Sequence:{} Comparison:\n{}\n", file.genome_name, ACTIVE_SEQUENCE, comparison);
+
+      }
+
+    }
+
+
 
   } // For all sam files loop.
 

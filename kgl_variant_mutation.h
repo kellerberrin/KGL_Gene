@@ -74,11 +74,6 @@ private:
                                       size_t soft_limit,
                                       size_t hard_limit);
 
-  // Split the variant map into SNP, Delete and Insert Variants.
-  static void SplitVariantMap(const OffsetVariantMap &variant_map,
-                              OffsetVariantMap &snp_variant_map,
-                              OffsetVariantMap &delete_variant_map,
-                              OffsetVariantMap &insert_variant_map);
 
 };
 

@@ -58,6 +58,29 @@ public:
                                     const std::shared_ptr<const GenomeVariant>& genome_variant,
                                     std::vector<std::string>& comparison_string_vector);
 
+  static bool compareMutantRegions(const ContigId_t& contig_id,
+                                   ContigOffset_t region_offset,
+                                   ContigSize_t region_size,
+                                   const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                   const std::shared_ptr<const GenomeVariant>& genome_variant,
+                                   std::vector<std::string>& comparison_string_vector);
+
+  static bool compare5Prime(const ContigId_t& contig_id,
+                            const FeatureIdent_t& gene_id,
+                            const FeatureIdent_t& sequence_id,
+                            ContigSize_t region_size,
+                            const std::shared_ptr<const GenomeDatabase>& genome_db,
+                            const std::shared_ptr<const GenomeVariant>& genome_variant,
+                            std::vector<std::string>& comparison_string_vector);
+
+  static bool compare3Prime(const ContigId_t& contig_id,
+                            const FeatureIdent_t& gene_id,
+                            const FeatureIdent_t& sequence_id,
+                            ContigSize_t region_size,
+                            const std::shared_ptr<const GenomeDatabase>& genome_db,
+                            const std::shared_ptr<const GenomeVariant>& genome_variant,
+                            std::vector<std::string>& comparison_string_vector);
+
 private:
 
 

@@ -158,9 +158,9 @@ public:
   virtual size_t size() const = 0;
   virtual std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const = 0;
   virtual std::string mutation(char delimiter, VariantOutputIndex output_index) const = 0;
-  virtual bool mutateSequence(SignedOffset_t, std::shared_ptr<DNA5SequenceLinear>) const { return true; }
+  virtual bool mutateSequence(SignedOffset_t offset_adjust, std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) const = 0;
 
-  bool isCompound() const { return size() > 1; }
+ bool isCompound() const { return size() > 1; }
   bool isSingle() const { return size() == 1; }
   bool isSNP() const { return variantType() == VariantType::SNP or variantType() == VariantType::COMPOUND_SNP; }
   bool isDelete() const { return variantType() == VariantType::DELETE or variantType() == VariantType::COMPOUND_DELETE; }

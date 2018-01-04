@@ -74,6 +74,39 @@ kgl::ContigOffset_t kgl::CodingSequence::prime_5() const {
 
 }
 
+
+
+void kgl::CodingSequence::prime_5_region(ContigSize_t requested_size, ContigOffset_t& begin_offset, ContigSize_t& size) const {
+
+  // Safety first.
+  if (sorted_cds_.empty()) {
+
+    ExecEnv::log().error("prime_5(), coding sequence for gene id: {} is empty", getGene()->id());
+    begin_offset = 0;
+    size = 0;
+    return;
+
+  }
+
+  switch(strand()) {
+
+    case StrandSense::UNKNOWN:
+      ExecEnv::log().error("prime_5_region(), unknown strand sense for gene id: {}", getGene()->id());
+    case StrandSense::FORWARD:
+      begin_offset = sorted_cds_.begin()->second->sequence().begin() - requested_size;
+      size = requested_size;
+
+    case StrandSense::REVERSE:
+      begin_offset = sorted_cds_.rbegin()->second->sequence().end();
+      size = requested_size;
+
+  }
+
+
+}
+
+
+
 // offset of the nucleotide not in the coding seuence (strand adjusted).
 kgl::ContigOffset_t kgl::CodingSequence::prime_3() const {
 
@@ -97,6 +130,36 @@ kgl::ContigOffset_t kgl::CodingSequence::prime_3() const {
   }
 
   return sorted_cds_.begin()->second->sequence().begin(); // never reached; to keep the compiler happy
+
+}
+
+
+void kgl::CodingSequence::prime_3_region(ContigSize_t requested_size, ContigOffset_t& begin_offset, ContigSize_t& size) const {
+
+  // Safety first.
+  if (sorted_cds_.empty()) {
+
+    ExecEnv::log().error("prime_5(), coding sequence for gene id: {} is empty", getGene()->id());
+    begin_offset = 0;
+    size = 0;
+    return;
+
+  }
+
+  switch(strand()) {
+
+    case StrandSense::UNKNOWN:
+      ExecEnv::log().error("prime_3_region(), unknown strand sense for gene id: {}", getGene()->id());
+    case StrandSense::FORWARD:
+      begin_offset = sorted_cds_.rbegin()->second->sequence().end();
+      size = requested_size;
+
+    case StrandSense::REVERSE:
+      begin_offset = sorted_cds_.begin()->second->sequence().begin() - requested_size;
+      size = requested_size;
+
+  }
+
 
 }
 
@@ -142,6 +205,7 @@ kgl::ContigSize_t kgl::CodingSequence::codingNucleotides() const {
   return coding_size;
 
 }
+
 
 
 void kgl::CodingSequenceArray::printCodingSequence(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) {

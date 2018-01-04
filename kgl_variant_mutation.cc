@@ -161,39 +161,3 @@ void kgl::VariantMutation::getMutationAlternatives(std::shared_ptr<const OffsetV
 
 }
 
-
-// Split the variant map into SNP, Delete and Insert Variants.
-void kgl::VariantMutation::SplitVariantMap(const OffsetVariantMap& variant_map,
-                                         OffsetVariantMap& snp_variant_map,
-                                         OffsetVariantMap& delete_variant_map,
-                                         OffsetVariantMap& insert_variant_map) {
-
-  snp_variant_map.clear();
-  delete_variant_map.clear();
-  insert_variant_map.clear();
-
-  for (auto variant : variant_map) {
-
-    if (variant.second->isSNP()) {
-
-      snp_variant_map.insert(variant);
-
-    } else if (variant.second->isDelete()) {
-
-      delete_variant_map.insert(variant);
-
-    } else if (variant.second->isInsert()) {
-
-      insert_variant_map.insert(variant);
-
-    } else { // Unknown variant type.
-
-      ExecEnv::log().error("SplitVariantMap(), Unknown variant type :{}",
-                           variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
-      return;
-    }
-
-  }
-
-}
-

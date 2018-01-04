@@ -126,8 +126,8 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
 
 // Returns a maximum of MUTATION_HARD_LIMIT_ alternative mutations.
 bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
-                                       const ContigOffset_t & region_offset,
-                                       const ContigSize_t region_size,
+                                       ContigOffset_t region_offset,
+                                       ContigSize_t region_size,
                                        const std::shared_ptr<const GenomeDatabase>& genome_db,
                                        std::shared_ptr<DNA5SequenceLinear>& reference_sequence,
                                        std::vector<std::shared_ptr<DNA5SequenceLinear>>& mutant_sequence_vector) const {
@@ -160,8 +160,6 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
   size_t alternative_count = 0;
   std::shared_ptr<const OffsetVariantMap> variant_map_ptr(std::make_shared<OffsetVariantMap>(region_variant_map));
   VariantMutation::getMutationAlternatives(variant_map_ptr, variant_map_vector, alternative_count);
-
-  IndelAccountingMap indel_accounting_map;
 
   for (auto variant_map : variant_map_vector) {
 

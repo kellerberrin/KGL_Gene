@@ -18,3 +18,58 @@ std::string kgl::CompoundInsert::mutation(char delimiter, VariantOutputIndex out
 
 }
 
+
+bool kgl::CompoundInsert::mutateSequence(SignedOffset_t offset_adjust,
+                                         std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) const {
+
+  SignedOffset_t adjusted_offset = offset() + offset_adjust;
+
+  // Check the offset
+  if (adjusted_offset < 0 or adjusted_offset >= static_cast<SignedOffset_t>(dna_sequence_ptr->length())) {
+
+    ExecEnv::log().error("mutateSequence(), calculated sequence offset: {} is out of range for sequence size: {}, variant: {}",
+                         adjusted_offset, dna_sequence_ptr->length(), output(' ', VariantOutputIndex::START_0_BASED, true));
+    return false;
+  }
+
+  auto sequence_offset = static_cast<ContigOffset_t>(adjusted_offset);
+
+  auto reference_offset = sequence_offset;
+
+  StringDNA5 seq_string;
+
+  for (auto variant : getMap()) {
+
+    std::shared_ptr<InsertVariant const> insert_ptr = std::dynamic_pointer_cast<const InsertVariant>(variant.second);
+
+    if (not insert_ptr) {
+
+      ExecEnv::log().error("mutateSequence(), compound insert contains unexpected variant: {}",
+                           variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
+      return false;
+
+    }
+
+    // Check the reference.
+    if (insert_ptr->reference() != dna_sequence_ptr->at(reference_offset)) {
+
+      ExecEnv::log().warn("insertSequence(), Delete reference base: {} does not match sequence base: {} at sequence offset: {}",
+                          DNA5::convertToChar(insert_ptr->reference()),
+                          DNA5::convertToChar(dna_sequence_ptr->at(reference_offset)),
+                          sequence_offset);
+
+    }
+
+    seq_string.push_back(insert_ptr->mutant());
+
+    ++reference_offset;
+
+  }
+
+  // Mutate the sequence
+  DNA5SequenceLinear insert_seq(seq_string);
+  dna_sequence_ptr->insertSubSequence(sequence_offset, insert_seq);
+
+  return true;
+
+}

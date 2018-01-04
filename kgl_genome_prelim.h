@@ -87,7 +87,9 @@ public:
   std::shared_ptr<const Feature> getCDSParent() const { return cds_parent_ptr_; }
   StrandSense strand() const;
   ContigOffset_t prime_5() const; // Offset of the 5 prime nucleotide closest to the sequence (strand adjusted start - 1).
+  void prime_5_region(ContigSize_t requested_size, ContigOffset_t& begin_offset, ContigSize_t& size) const;
   ContigOffset_t prime_3() const; // Offset of the 3 prime nucleotide closest to the sequence (strand adjusted end).
+  void prime_3_region(ContigSize_t requested_size, ContigOffset_t& begin_offset, ContigSize_t& size) const;
   ContigOffset_t start() const; // Offset of the start of the sequence - not strand adjusted.
   ContigOffset_t end() const; // Offset of the end of the sequence (last nucleotide + 1) - not strand adjusted.
   bool isWithinCoding(ContigOffset_t contig_offset) const;

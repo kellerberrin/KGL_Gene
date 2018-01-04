@@ -84,6 +84,8 @@ public:
 
   VariantType variantType() const override { return VariantType::COMPOUND_INSERT; }
 
+  bool mutateSequence(SignedOffset_t offset_adjust, std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) const override;
+
 private:
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
@@ -116,6 +118,9 @@ public:
   std::shared_ptr<Variant> clone() const override { return std::shared_ptr<CompoundDelete>(std::make_shared<CompoundDelete>(*this)); }
 
   VariantType variantType() const override { return VariantType::COMPOUND_DELETE; }
+
+  bool mutateSequence(SignedOffset_t offset_adjust, std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) const override;
+
 
 private:
 

@@ -48,14 +48,6 @@ public:
   DNA5SequenceCoding() = delete;
   ~DNA5SequenceCoding() override = default;
 
-  // Offset is the relative sequence offset.
-  bool modifyBase(ContigOffset_t sequence_offset, CodingDNA5::Alphabet Nucleotide);
-  // Delete offset is relative to the begining of the sequence (0 is the first letter).
-  bool deleteSubSequence(ContigOffset_t delete_offset, ContigSize_t delete_size);
-  // Insert offset is relative to the begining of the sequence (0 is the first letter).
-  bool insertSubSequence(ContigOffset_t insert_offset, const DNA5SequenceCoding& inserted_sequence);
-
-
 private:
 
 
@@ -117,14 +109,6 @@ public:
   DNA5SequenceContig() = delete;
   ~DNA5SequenceContig() override = default;
 
-
-  // Returns bool false if contig_offset is not within the coding sequences defined by the coding sequence.
-  // If the contig_offset is in the coding sequence then a valid sequence_offset and the coding sequence length is returned.
-  // The offset is adjusted for strand type; the offset arithmetic is reversed for -ve strand sequences.
-  bool offsetWithinCodingSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                  ContigOffset_t contig_offset,
-                                  ContigOffset_t &sequence_offset,
-                                  ContigSize_t &sequence_length) const;
 
   // Returns the codon offset of the contig offset within a coding sequence, returns false if not within the coding sequence.
   bool codonOffset(std::shared_ptr<const CodingSequence> coding_seq_ptr,

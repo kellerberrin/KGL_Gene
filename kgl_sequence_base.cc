@@ -10,31 +10,6 @@
 namespace kgl = kellerberrin::genome;
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// The base DNA5 sequence class.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// Letter offset is relative to the begining of the sequence (0 is the first letter).
-bool kgl::DNA5SequenceCoding::modifyBase(ContigOffset_t sequence_offset, CodingDNA5::Alphabet nucleotide) {
-
-  return modifyLetter(sequence_offset, nucleotide);
-
-}
-
-// Delete offset is relative to the begining of the sequence (0 is the first letter).
-bool kgl::DNA5SequenceCoding::deleteSubSequence(ContigOffset_t delete_offset, ContigSize_t delete_size) {
-
-  return deleteOffset(delete_offset, delete_size);
-
-}
-
-// Insert offset is relative to the begining of the sequence (0 is the first letter).
-bool kgl::DNA5SequenceCoding::insertSubSequence(ContigOffset_t insert_offset, const DNA5SequenceCoding& inserted_sequence) {
-
-  return insertOffset(insert_offset, inserted_sequence);
-
-}
-
 
 
 
