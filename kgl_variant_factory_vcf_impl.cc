@@ -344,15 +344,15 @@ bool kgl::VcfFactory::VcfFileImpl::parseSNP(size_t cigar_count,
 
     std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
 
-    SNPVariant snp_variant(variant_source,
-                           contig_ptr,
-                           contig_offset,
-                           quality,
-                           evidence_ptr,
-                           DNA5::convertChar(reference[reference_index]),
-                           DNA5::convertChar(alternate[alternate_index]));
+    std::shared_ptr<SNPVariant> snp_variant_ptr(std::make_shared<SNPVariant>(variant_source,
+                                                                             contig_ptr,
+                                                                             contig_offset,
+                                                                             quality,
+                                                                             evidence_ptr,
+                                                                             DNA5::convertChar(reference[reference_index]),
+                                                                             DNA5::convertChar(alternate[alternate_index])));
 
-    variant_count += VariantFactory::addSingleVariant(genome_variants, snp_variant); // Annotate with genome information
+    variant_count += VariantFactory::addVariantToGenome(genome_variants, snp_variant_ptr); // Annotate with genome information
 
     ++reference_index;
     ++alternate_index;
@@ -380,15 +380,15 @@ bool kgl::VcfFactory::VcfFileImpl::parseInsert(size_t cigar_count,
 
     std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
 
-    InsertVariant insert_variant(variant_source,
-                                 contig_ptr,
-                                 contig_offset,
-                                 quality,
-                                 evidence_ptr,
-                                 contig_ptr->sequence().at(contig_offset),
-                                 DNA5::convertChar(alternate[alternate_index]));
+    std::shared_ptr<InsertVariant> insert_variant_ptr(std::make_shared<InsertVariant>(variant_source,
+                                                                                      contig_ptr,
+                                                                                      contig_offset,
+                                                                                      quality,
+                                                                                      evidence_ptr,
+                                                                                      contig_ptr->sequence().at(contig_offset),
+                                                                                      DNA5::convertChar(alternate[alternate_index])));
 
-    variant_count += VariantFactory::addSingleVariant(genome_variants, insert_variant); // Annotate with genome information
+    variant_count += VariantFactory::addVariantToGenome(genome_variants, insert_variant_ptr); // Annotate with genome information
 
     ++alternate_index;
     ++contig_offset;
@@ -424,14 +424,14 @@ bool kgl::VcfFactory::VcfFileImpl::parseDelete(size_t cigar_count,
 
     std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
 
-    DeleteVariant delete_variant(variant_source,
-                                 contig_ptr,
-                                 contig_offset,
-                                 quality,
-                                 evidence_ptr,
-                                 contig_ptr->sequence().at(contig_offset));
+    std::shared_ptr<DeleteVariant> delete_variant_ptr(std::make_shared<DeleteVariant>(variant_source,
+                                                                                      contig_ptr,
+                                                                                      contig_offset,
+                                                                                      quality,
+                                                                                      evidence_ptr,
+                                                                                      contig_ptr->sequence().at(contig_offset)));
 
-    variant_count += VariantFactory::addSingleVariant(genome_variants, delete_variant); // Annotate with genome information
+    variant_count += VariantFactory::addVariantToGenome(genome_variants, delete_variant_ptr); // Annotate with genome information
 
     ++reference_index;
     ++contig_offset;

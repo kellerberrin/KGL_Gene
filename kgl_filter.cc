@@ -180,3 +180,14 @@ std::string kgl::QualityFilter::filterName() const {
   return ss.str();
 
 }
+
+
+std::string kgl::RegionFilter::filterName() const {
+
+  std::stringstream ss;
+  ss << "Filter in the interval [" << start_ << ", " << end_ << ")";
+  return ss.str();
+
+}
+
+

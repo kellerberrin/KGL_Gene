@@ -48,6 +48,8 @@ public:
   DNA5SequenceCoding() = delete;
   ~DNA5SequenceCoding() override = default;
 
+  std::string compareDNA5Coding(const DNA5SequenceCoding& compare_seq) const { return compareSequences(compare_seq); }
+
 private:
 
 

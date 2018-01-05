@@ -49,6 +49,7 @@ public:
   virtual bool applyFilter(const CompoundSNP& variant) const = 0;
 
   virtual std::string filterName() const = 0;
+  virtual std::shared_ptr<VariantFilter> clone() const = 0;
 
 private:
 

@@ -126,27 +126,27 @@ size_t kgl::SingleFactory::GenerateSNPDelete(const std::string &genome_name,
         if (ExtendCountColumns::isBaseCode(mutant_nucleotide)) {
 
 
-          SNPVariant snp_variant(genome_name,
-                                 contig_ptr,
-                                 contig_offset,
-                                 quality,
-                                 evidence_ptr,
-                                 reference_nucleotide,
-                                 ExtendCountColumns::extendToBase(mutant_nucleotide));
+          std::shared_ptr<SNPVariant> snp_variant_ptr(std::make_shared<SNPVariant>(genome_name,
+                                                                                   contig_ptr,
+                                                                                   contig_offset,
+                                                                                   quality,
+                                                                                   evidence_ptr,
+                                                                                   reference_nucleotide,
+                                                                                   ExtendCountColumns::extendToBase(mutant_nucleotide)));
 
-          variant_count += VariantFactory::addSingleVariant(genome_single_variants, snp_variant); // Annotate with genome information
+          variant_count += VariantFactory::addVariantToGenome(genome_single_variants, snp_variant_ptr); // Annotate with genome information
 
 
         } else if (ExtendCountColumns::isDeletion(mutant_nucleotide)) {
 
-          DeleteVariant delete_variant(genome_name,
-                                       contig_ptr,
-                                       contig_offset,
-                                       quality,
-                                       evidence_ptr,
-                                       reference_nucleotide);
+          std::shared_ptr<DeleteVariant> delete_variant_ptr(std::make_shared<DeleteVariant>(genome_name,
+                                                                                            contig_ptr,
+                                                                                            contig_offset,
+                                                                                            quality,
+                                                                                            evidence_ptr,
+                                                                                            reference_nucleotide));
 
-          variant_count += VariantFactory::addSingleVariant(genome_single_variants, delete_variant); // Annotate with genome information
+          variant_count += VariantFactory::addVariantToGenome(genome_single_variants, delete_variant_ptr); // Annotate with genome information
 
         } else {
 
@@ -202,15 +202,15 @@ size_t kgl::SingleFactory::GenerateInsert(const std::string &genome_name,
 
       if (quality >= variant_quality) {
 
-        InsertVariant insert_variant(genome_name,
-                                     contig_ptr,
-                                     contig_offset,
-                                     quality,
-                                     evidence_ptr,
-                                     reference_nucleotide,
-                                     mutant_nucleotide);
+        std::shared_ptr<InsertVariant> insert_variant_ptr(std::make_shared<InsertVariant>(genome_name,
+                                                                                          contig_ptr,
+                                                                                          contig_offset,
+                                                                                          quality,
+                                                                                          evidence_ptr,
+                                                                                          reference_nucleotide,
+                                                                                          mutant_nucleotide));
 
-        variant_count += VariantFactory::addSingleVariant(genome_single_variants, insert_variant); // Annotate with genome information
+        variant_count += VariantFactory::addVariantToGenome(genome_single_variants, insert_variant_ptr); // Annotate with genome information
 
       }
 

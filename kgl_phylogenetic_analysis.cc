@@ -165,6 +165,45 @@ bool kgl::ApplicationAnalysis::compareMutantProteins(const ContigId_t& contig_id
 }
 
 
+bool kgl::ApplicationAnalysis::compareMutantCodingDNA(const ContigId_t& contig_id,
+                                                     const FeatureIdent_t& gene_id,
+                                                     const FeatureIdent_t& sequence_id,
+                                                     const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                                     const std::shared_ptr<const GenomeVariant>& genome_variant,
+                                                     std::vector<std::string>& comparison_string_vector) {
+
+  std::vector<std::shared_ptr<DNA5SequenceCoding>> mutant_sequence_vector;
+  std::shared_ptr<DNA5SequenceCoding> reference_sequence;
+
+  comparison_string_vector.clear();
+
+  if (genome_variant->mutantCodingDNA(contig_id,
+                                     gene_id,
+                                     sequence_id,
+                                     genome_db,
+                                     reference_sequence,
+                                     mutant_sequence_vector)) {
+
+    for (auto dna_sequence : mutant_sequence_vector) {
+
+      std::string comparison_string = reference_sequence->compareDNA5Coding(*dna_sequence);
+      comparison_string_vector.push_back(comparison_string);
+
+    }
+
+  } else {
+
+    ExecEnv::log().warn("No valid sequence for contig: {}, gene: {}, sequence id: {}", contig_id, gene_id, sequence_id);
+    return false;
+
+  }
+
+  return true;
+
+}
+
+
+
 bool kgl::ApplicationAnalysis::compareMutantRegions(const ContigId_t& contig_id,
                                                     ContigOffset_t region_offset,
                                                     ContigSize_t region_size,

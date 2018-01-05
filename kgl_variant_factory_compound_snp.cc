@@ -205,8 +205,7 @@ bool kgl::CompoundSNPFactory::aggregateVariants(const std::shared_ptr<const Geno
 
 
 
-std::shared_ptr<const kgl::Variant>
-kgl::CompoundSNPFactory::createCompoundVariant(const CompoundVariantMap& variant_map) const {
+std::shared_ptr<kgl::Variant> kgl::CompoundSNPFactory::createCompoundVariant(const CompoundVariantMap& variant_map) const {
 
   if (variant_map.empty()) {
 
@@ -224,8 +223,6 @@ kgl::CompoundSNPFactory::createCompoundVariant(const CompoundVariantMap& variant
                                                                          quality,
                                                                          variant_map));
 
-  // define its coding sequence.
-  compound_insert->defineCoding(variant_map.begin()->second->codingSequences().getFirst());
 
   return compound_insert;
 

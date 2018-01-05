@@ -47,6 +47,11 @@ std::shared_ptr<const kgl::GenomeVariant> getGenomeVariants(std::shared_ptr<cons
   std::string stats_file_name = kgl::Utility::filePath("genome_stats", workDirectory) + ".csv";
   statistics_ptr->outputFeatureCSV(stats_file_name, kgl::VariantOutputIndex::START_1_BASED);
 
+  // Filter on sequence
+  std::shared_ptr<const kgl::GenomeVariant> check_ptr = all_variant_ptr->filterVariants(kgl::AndFilter(kgl::ContigFilter("Pf3D7_01_v3"), kgl::RegionFilter(63100,63280)));
+  kgl::ExecEnv::log().info("Region Filter\n:");
+  std::cout << *check_ptr;
+
 // pfATP4 drug target ATP4 sodium pump.
 #define PFATP4_MINORITY_CONTIG "chr12"
 #define PFATP4_MINORITY_GENE "PF3D7_1211900"
@@ -174,7 +179,7 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
     }
 
     // Generate a vector of protein mutation maps for visual inspection
-    if (ApplicationAnalysis::compareMutantProteins(ACTIVE_CONTIG,
+    if (ApplicationAnalysis::compareMutantCodingDNA(ACTIVE_CONTIG,
                                                    ACTIVE_GENE,
                                                    ACTIVE_SEQUENCE,
                                                    genome_db_ptr,
@@ -206,6 +211,16 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
     }
 
+    // Generate a vector of 3 Prime UTR mutation maps for visual inspection
+    if (ApplicationAnalysis::compareMutantRegions("Pf3D7_01_v3", 63250, 63262-63250, genome_db_ptr, variant_ptr, comparison_vector)) {
+
+      for (const auto& comparison : comparison_vector) {
+
+        ExecEnv::log().info("Genome: {} Test Sequence:{} Comparison:\n{}\n", file.genome_name, ACTIVE_SEQUENCE, comparison);
+
+      }
+
+    }
 
 
   } // For all sam files loop.

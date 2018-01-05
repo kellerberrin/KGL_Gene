@@ -23,8 +23,7 @@ bool kgl::CompoundInsertFactory::selectVariant(const std::shared_ptr<const Varia
 
 
 
-std::shared_ptr<const kgl::Variant>
-kgl::CompoundInsertFactory::createCompoundVariant(const CompoundVariantMap& variant_map) const {
+std::shared_ptr<kgl::Variant> kgl::CompoundInsertFactory::createCompoundVariant(const CompoundVariantMap& variant_map) const {
 
   if (variant_map.empty()) {
 
@@ -42,8 +41,6 @@ kgl::CompoundInsertFactory::createCompoundVariant(const CompoundVariantMap& vari
                                                                             quality,
                                                                             variant_map));
 
-  // define its coding sequence.
-  compound_insert->defineCoding(variant_map.begin()->second->codingSequences().getFirst());
 
   return compound_insert;
 

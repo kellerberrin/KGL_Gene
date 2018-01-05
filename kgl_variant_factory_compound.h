@@ -44,7 +44,7 @@ private:
   virtual bool aggregateVariants(const std::shared_ptr<const GenomeVariant>& genome_variants,
                                  std::vector<std::shared_ptr<const CompoundVariantMap>>& aggregated_variants_vec) const = 0;
 
-  virtual std::shared_ptr<const Variant> createCompoundVariant(const CompoundVariantMap& variant_map) const = 0;
+  virtual std::shared_ptr<Variant> createCompoundVariant(const CompoundVariantMap& variant_map) const = 0;
 
 
   };
@@ -95,7 +95,7 @@ private:
 
   bool selectVariant(const std::shared_ptr<const Variant>& variant_ptr) const override;
 
-  std::shared_ptr<const Variant> createCompoundVariant(const CompoundVariantMap& variant_map) const override;
+  std::shared_ptr<Variant> createCompoundVariant(const CompoundVariantMap& variant_map) const override;
 
 };
 
@@ -116,7 +116,7 @@ private:
 
   bool selectVariant(const std::shared_ptr<const Variant>& variant_ptr) const override;
 
-  std::shared_ptr<const Variant> createCompoundVariant(const CompoundVariantMap& variant_map) const override;
+  std::shared_ptr<Variant> createCompoundVariant(const CompoundVariantMap& variant_map) const override;
 
 
 };
@@ -141,7 +141,7 @@ private:
   bool aggregateVariants(const std::shared_ptr<const GenomeVariant>& variant_ptr,
                          std::vector<std::shared_ptr<const CompoundVariantMap>>& aggregated_variants_vec) const override;
 
-  std::shared_ptr<const Variant> createCompoundVariant(const CompoundVariantMap& variant_map) const override;
+  std::shared_ptr<Variant> createCompoundVariant(const CompoundVariantMap& variant_map) const override;
 
 };
 

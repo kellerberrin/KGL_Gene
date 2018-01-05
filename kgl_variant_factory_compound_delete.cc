@@ -23,8 +23,7 @@ bool kgl::CompoundDeleteFactory::selectVariant(const std::shared_ptr<const Varia
 }
 
 
-std::shared_ptr<const kgl::Variant>
-kgl::CompoundDeleteFactory::createCompoundVariant(const CompoundVariantMap& variant_map) const {
+std::shared_ptr<kgl::Variant> kgl::CompoundDeleteFactory::createCompoundVariant(const CompoundVariantMap& variant_map) const {
 
   if (variant_map.empty()) {
 
@@ -41,8 +40,6 @@ kgl::CompoundDeleteFactory::createCompoundVariant(const CompoundVariantMap& vari
                                                                             variant_map.begin()->second->contigOffset(),
                                                                             quality,
                                                                             variant_map));
-  // define its coding sequence.
-  compound_delete->defineCoding(variant_map.begin()->second->codingSequences().getFirst());
 
   return compound_delete;
 
