@@ -24,7 +24,7 @@ bool kgl::CodingFilter::implementFilter(const Variant& variant) const {
 
 std::string kgl::CodingFilter::filterName() const {
 
-  return "Variant in Coding Sequence";
+  return "Variants in Coding Sequence";
 
 }
 
@@ -40,7 +40,7 @@ bool kgl::ContigFilter::implementFilter(const Variant& variant) const {
 
 std::string kgl::ContigFilter::filterName() const {
 
-  return "Variant in Contig: " + contig_ident_;
+  return "Variants in Contig: " + contig_ident_;
 
 }
 
@@ -69,7 +69,7 @@ bool kgl::GeneFilter::implementFilter(const Variant& variant) const {
 
 std::string kgl::GeneFilter::filterName() const {
 
-  return "Variant in Gene: " + gene_ident_;
+  return "Variants in Gene: " + gene_ident_;
 
 }
 
@@ -99,7 +99,7 @@ bool kgl::SequenceFilter::implementFilter(const Variant& variant) const {
 
 std::string kgl::SequenceFilter::filterName() const {
 
-  return "Variant in Sequence: " + sequence_ident_;
+  return "Variants in Sequence: " + sequence_ident_;
 
 }
 
@@ -176,7 +176,7 @@ std::string kgl::SynonymousFilter::filterName() const {
 std::string kgl::QualityFilter::filterName() const {
 
   std::stringstream ss;
-  ss << "Filter Variants with Quality >= " << quality_;
+  ss << "Variants with Quality >= " << quality_;
   return ss.str();
 
 }
@@ -185,7 +185,7 @@ std::string kgl::QualityFilter::filterName() const {
 std::string kgl::RegionFilter::filterName() const {
 
   std::stringstream ss;
-  ss << "Filter in the interval [" << start_ << ", " << end_ << ")";
+  ss << "Variant in the interval [" << start_ << ", " << end_ << ")";
   return ss.str();
 
 }

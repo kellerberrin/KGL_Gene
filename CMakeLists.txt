@@ -72,6 +72,6 @@ add_executable (kgl_genome ${SOURCE_FILES} kgl_main.cc  kgl_gff_fasta.h kgl_gff_
                 kgl_variant_factory_bam.h kgl_variant_factory_bam.cc kgl_variant_factory_vcf_impl.h
                 kgl_variant_factory_vcf_impl.cc kgl_variant_factory_vcf_utils.cc kgl_variant_mutation.h
                 kgl_variant_db_mutation.cc kgl_variant_db_contig.h kgl_variant_db_genome.h
-        kgl_sequence_offset.h kgl_sequence_offset.cc kgl_variant_mutation_offset.h kgl_variant_mutation_offset.cc kgl_sequence_manip.h kgl_sequence_manip.cc)
+        kgl_sequence_offset.h kgl_sequence_offset.cc kgl_variant_mutation_offset.h kgl_variant_mutation_offset.cc kgl_sequence_manip.h kgl_sequence_manip.cc kgl_variant_factory_compound_noncoding.cc)
 
 target_link_libraries(kgl_genome ${Boost_LIBRARIES})

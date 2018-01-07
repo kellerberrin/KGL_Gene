@@ -11,9 +11,13 @@ std::string kgl::CompoundSNP::mutation(char delimiter, VariantOutputIndex output
 
   std::stringstream ss;
 
-  if (not codingSequences().empty()) {
+
+  if (type() == VariantSequenceType::CDS_CODING) {
 
     std::shared_ptr<const CodingSequence> sequence = codingSequences().getFirst();
+    ss << sequence->getGene()->id() << delimiter;
+    ss << sequence->getCDSParent()->id() << delimiter;
+    ss << location(delimiter, output_index);
 
     ContigOffset_t codon_offset;
     AminoAcid::Alphabet reference_amino;
@@ -24,7 +28,20 @@ std::string kgl::CompoundSNP::mutation(char delimiter, VariantOutputIndex output
     ss << AminoAcid::convertToChar(reference_amino) << offsetOutput(codon_offset, output_index)
        << AminoAcid::convertToChar(mutant_amino) << delimiter;
 
+
+  } else if (type() == VariantSequenceType::INTRON) {
+
+    std::shared_ptr<const GeneFeature> gene_ptr = geneMembership().front();
+    ss << gene_ptr->id() << delimiter;
+    ss << offsetOutput(contigOffset(), output_index);
+
+  } else { // else non coding (non-gene) variant or unknown
+
+    ss << offsetOutput(contigOffset(), output_index);
+
   }
+
+
 
   return ss.str();
 

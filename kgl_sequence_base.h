@@ -43,7 +43,7 @@ class DNA5SequenceCoding: public AlphabetSequence<CodingDNA5> {
 public:
 
 
-  explicit DNA5SequenceCoding(StringCodingDNA5 sequence) : AlphabetSequence<CodingDNA5>(std::move(sequence)) {}
+  explicit DNA5SequenceCoding(StringCodingDNA5 sequence, StrandSense strand) : AlphabetSequence<CodingDNA5>(std::move(sequence)), strand_(strand) {}
   explicit DNA5SequenceCoding(const DNA5SequenceCoding&) = default;
   DNA5SequenceCoding() = delete;
   ~DNA5SequenceCoding() override = default;
@@ -52,6 +52,7 @@ public:
 
 private:
 
+  StrandSense strand_;
 
 };
 
@@ -82,12 +83,14 @@ public:
                                                               ContigOffset_t sub_sequence_offset,
                                                               ContigSize_t sub_sequence_length,
                                                               ContigOffset_t contig_offset) const;
+
   // Offset is the relative sequence offset.
   bool modifyBase(ContigOffset_t base_offset, DNA5::Alphabet Nucleotide);
   // Delete offset is relative to the begining of the sequence (0 is the first letter).
   bool deleteSubSequence(ContigOffset_t delete_offset, ContigSize_t delete_size);
   // Insert offset is relative to the begining of the sequence (0 is the first letter).
   bool insertSubSequence(ContigOffset_t insert_offset, const DNA5SequenceLinear& inserted_sequence);
+
 
   std::string compareDNA5Sequences(const DNA5SequenceLinear& compare_seq) const { return compareSequences(compare_seq); }
 

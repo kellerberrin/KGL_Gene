@@ -7,6 +7,7 @@
 #include "kgl_patterns.h"
 #include "kgl_filter.h"
 #include "kgl_variant_db.h"
+#include "kgl_sequence_offset.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -63,9 +64,13 @@ std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputInde
 
   std:: stringstream ss;
 // Contig.
-  ss << variantSource() << delimiter <<contig()->contigId()
-     << delimiter << offsetOutput(offset(), output_index)
-     << delimiter << typestr() << delimiter;
+  ss << variantSource() << delimiter
+     << contig()->contigId() << delimiter
+     << offsetOutput(offset(), output_index) << delimiter;
+  ss << typestr();
+
+
+  ss << delimiter;
 
   return ss.str();
 

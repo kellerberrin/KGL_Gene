@@ -55,7 +55,7 @@ public:
   explicit SNPFilter() {}
   ~SNPFilter() override = default;
 
-  std::string filterName() const final { return "Filter Single SNP and Compound MNP (exclude indels)"; }
+  std::string filterName() const final { return "SNP and MNP Variants)"; }
 
   bool applyFilter(const SNPVariant&) const override { return true; }
   bool applyFilter(const DeleteVariant&) const override { return false; }
@@ -83,7 +83,7 @@ public:
   explicit DeleteFilter() {}
   ~DeleteFilter() override = default;
 
-  std::string filterName() const final { return "Filter Single and Compound Delete Variants"; }
+  std::string filterName() const final { return "Delete Variants"; }
 
   bool applyFilter(const SNPVariant&) const override { return false; }
   bool applyFilter(const DeleteVariant&) const override { return true; }
@@ -111,7 +111,7 @@ public:
   explicit InsertFilter() {}
   ~InsertFilter() override = default;
 
-  std::string filterName() const final { return "Filter Single and Compound Insert Variants"; }
+  std::string filterName() const final { return "Insert Variants"; }
 
   bool applyFilter(const SNPVariant&) const override { return false; }
   bool applyFilter(const DeleteVariant&) const override { return false; }

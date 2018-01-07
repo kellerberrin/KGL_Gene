@@ -59,6 +59,7 @@ public:
                                             ContigOffset_t &coding_sequence_offset,
                                             ContigSize_t &coding_sequence_length);
 
+  static std::shared_ptr<DNA5SequenceCoding> codingSequence(std::shared_ptr<const DNA5SequenceLinear> base_sequence, StrandSense strand);
 
 private:
 

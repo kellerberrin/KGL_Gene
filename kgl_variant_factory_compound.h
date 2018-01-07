@@ -47,6 +47,7 @@ private:
   virtual std::shared_ptr<Variant> createCompoundVariant(const CompoundVariantMap& variant_map) const = 0;
 
 
+
   };
 
 
@@ -66,7 +67,6 @@ public:
 
 private:
 
-
   bool aggregateVariants(const std::shared_ptr<const GenomeVariant>& genome_variants,
                          std::vector<std::shared_ptr<const CompoundVariantMap>>& aggregated_variants_vec) const override;
 
@@ -75,7 +75,6 @@ private:
 
 
 };
-
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -118,6 +117,77 @@ private:
 
   std::shared_ptr<Variant> createCompoundVariant(const CompoundVariantMap& variant_map) const override;
 
+
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The compound insert variant factory.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class NonCodingInsertDeleteFactory : public CompoundFactory {
+
+public:
+
+  explicit NonCodingInsertDeleteFactory() = default;
+  ~NonCodingInsertDeleteFactory() override = default;
+
+protected:
+
+  // Determine which variants to aggregate.
+  void nonCodingIntron(std::shared_ptr<Variant> variant_ptr) const;
+
+private:
+
+  virtual bool selectVariant(const std::shared_ptr<const Variant>& variant_ptr) const = 0;
+
+  bool aggregateVariants(const std::shared_ptr<const GenomeVariant>& genome_variant_ptr,
+                         std::vector<std::shared_ptr<const CompoundVariantMap>>& aggregated_variants_vec) const;
+
+
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The compound insert variant factory.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class CompoundNonCodingDeleteFactory : public NonCodingInsertDeleteFactory {
+
+public:
+
+  explicit CompoundNonCodingDeleteFactory() = default;
+  ~CompoundNonCodingDeleteFactory() override = default;
+
+private:
+
+  std::shared_ptr<Variant> createCompoundVariant(const CompoundVariantMap& variant_map) const override;
+
+  // Determine which variants to aggregate.
+  bool selectVariant(const std::shared_ptr<const Variant>& variant_ptr) const override { return variant_ptr->isDelete(); }
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The compound insert variant factory.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class CompoundNonCodingInsertFactory : public NonCodingInsertDeleteFactory {
+
+public:
+
+  explicit CompoundNonCodingInsertFactory() = default;
+  ~CompoundNonCodingInsertFactory() override = default;
+
+private:
+
+  std::shared_ptr<Variant> createCompoundVariant(const CompoundVariantMap& variant_map) const override;
+
+  bool selectVariant(const std::shared_ptr<const Variant>& variant_ptr) const override { return variant_ptr->isInsert(); }
 
 };
 

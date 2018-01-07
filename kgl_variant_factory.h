@@ -38,7 +38,8 @@ public:
                                                       double min_proportion) const;
 
   // Annotates variants with genome information and adds to the variant genome. For use in the SAM, BAM and VCF parsers.
-  static size_t addVariantToGenome(std::shared_ptr<GenomeVariant> genome_single_variants, std::shared_ptr<Variant> variant_ptr);
+  static size_t addSingleVariant(std::shared_ptr<GenomeVariant> genome_single_variants,
+                                 std::shared_ptr<Variant> variant_ptr);
 
 private:
 

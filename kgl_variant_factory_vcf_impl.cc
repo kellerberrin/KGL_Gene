@@ -352,7 +352,7 @@ bool kgl::VcfFactory::VcfFileImpl::parseSNP(size_t cigar_count,
                                                                              DNA5::convertChar(reference[reference_index]),
                                                                              DNA5::convertChar(alternate[alternate_index])));
 
-    variant_count += VariantFactory::addVariantToGenome(genome_variants, snp_variant_ptr); // Annotate with genome information
+    variant_count += VariantFactory::addSingleVariant(genome_variants, snp_variant_ptr); // Annotate with genome information
 
     ++reference_index;
     ++alternate_index;
@@ -388,7 +388,7 @@ bool kgl::VcfFactory::VcfFileImpl::parseInsert(size_t cigar_count,
                                                                                       contig_ptr->sequence().at(contig_offset),
                                                                                       DNA5::convertChar(alternate[alternate_index])));
 
-    variant_count += VariantFactory::addVariantToGenome(genome_variants, insert_variant_ptr); // Annotate with genome information
+    variant_count += VariantFactory::addSingleVariant(genome_variants, insert_variant_ptr); // Annotate with genome information
 
     ++alternate_index;
     ++contig_offset;
@@ -431,7 +431,7 @@ bool kgl::VcfFactory::VcfFileImpl::parseDelete(size_t cigar_count,
                                                                                       evidence_ptr,
                                                                                       contig_ptr->sequence().at(contig_offset)));
 
-    variant_count += VariantFactory::addVariantToGenome(genome_variants, delete_variant_ptr); // Annotate with genome information
+    variant_count += VariantFactory::addSingleVariant(genome_variants, delete_variant_ptr); // Annotate with genome information
 
     ++reference_index;
     ++contig_offset;

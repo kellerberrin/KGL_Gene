@@ -130,7 +130,7 @@ kgl::SequenceOffset::codingSubSequence(const DNA5SequenceLinear& base_sequence,
   if (exon_offset_map.empty()) {
 
     StringCodingDNA5 null_seq;
-    return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(null_seq)));
+    return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(null_seq, StrandSense::FORWARD)));
 
   }
 
@@ -142,7 +142,7 @@ kgl::SequenceOffset::codingSubSequence(const DNA5SequenceLinear& base_sequence,
                          base_sequence.length(),
                          contig_offset);
     StringCodingDNA5 null_seq;
-    return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(null_seq)));
+    return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(null_seq, StrandSense::FORWARD)));
 
   }
 
@@ -169,7 +169,7 @@ kgl::SequenceOffset::codingSubSequence(const DNA5SequenceLinear& base_sequence,
                          sub_sequence_length,
                          calculated_seq_size);
     StringCodingDNA5 null_seq;
-    return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(null_seq)));
+    return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(null_seq, StrandSense::FORWARD)));
 
   }
 
@@ -305,9 +305,45 @@ kgl::SequenceOffset::codingSubSequence(const DNA5SequenceLinear& base_sequence,
 
   }
 
-  return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(coding_sequence)));
+  return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(coding_sequence, strand)));
 
 }
+
+// Converts a DNA5SequenceLinear sequence to a DNA5SequenceCoding sequence
+std::shared_ptr<kgl::DNA5SequenceCoding> kgl::SequenceOffset::codingSequence(std::shared_ptr<const DNA5SequenceLinear> base_sequence,
+                                                                             StrandSense strand) {
+
+
+  StringCodingDNA5 coding_sequence;
+  coding_sequence.reserve(base_sequence->length() + 1); // Just to make sure.
+
+  switch(strand) {
+
+    case StrandSense::UNKNOWN:
+      ExecEnv::log().warn("codingSequence(); has 'UNKNOWN' ('.') strand assuming 'FORWARD' ('+')");
+    case StrandSense::FORWARD: {
+      auto convert_base = [](DNA5::Alphabet base) { return DNA5::convertToCodingDN5(base); };
+      std::transform(base_sequence->getAlphabetString().begin(),
+                     base_sequence->getAlphabetString().end(),
+                     std::back_inserter(coding_sequence), convert_base);
+    }
+      break;
+
+    case StrandSense::REVERSE: {
+      auto complement_base = [](DNA5::Alphabet base) { return DNA5::complementNucleotide(base); };
+      std::transform(base_sequence->getAlphabetString().rbegin(),
+                     base_sequence->getAlphabetString().rend(),
+                     std::back_inserter(coding_sequence), complement_base);
+    }
+      break;
+
+  }
+
+  return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(coding_sequence, strand)));
+
+}
+
+
 
 // Returns bool false if contig_offset is not within the coding sequence defined by the coding_seq_ptr.
 // If the contig_offset is in the coding sequence then a valid sequence_offset and the sequence length is returned.

@@ -40,6 +40,8 @@ public:
 
   const_iterator begin() const { return base_string_.begin(); }
   const_reverse_iterator rbegin() const { return base_string_.rbegin(); }
+  const_iterator end() const { return base_string_.end(); }
+  const_reverse_iterator rend() const { return base_string_.rend(); }
   void push_back(typename Alphabet::Alphabet nucleotide) { base_string_.push_back(nucleotide); }
   void pop_back() { base_string_.pop_back(); }
 

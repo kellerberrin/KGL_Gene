@@ -68,6 +68,7 @@ public:
   static bool compareMutantRegions(const ContigId_t& contig_id,
                                    ContigOffset_t region_offset,
                                    ContigSize_t region_size,
+                                   StrandSense strand,
                                    const std::shared_ptr<const GenomeDatabase>& genome_db,
                                    const std::shared_ptr<const GenomeVariant>& genome_variant,
                                    std::vector<std::string>& comparison_string_vector);
@@ -75,6 +76,7 @@ public:
   static bool compare5Prime(const ContigId_t& contig_id,
                             const FeatureIdent_t& gene_id,
                             const FeatureIdent_t& sequence_id,
+                            bool AminoFlag,
                             ContigSize_t region_size,
                             const std::shared_ptr<const GenomeDatabase>& genome_db,
                             const std::shared_ptr<const GenomeVariant>& genome_variant,
@@ -83,6 +85,7 @@ public:
   static bool compare3Prime(const ContigId_t& contig_id,
                             const FeatureIdent_t& gene_id,
                             const FeatureIdent_t& sequence_id,
+                            bool AminoFlag,
                             ContigSize_t region_size,
                             const std::shared_ptr<const GenomeDatabase>& genome_db,
                             const std::shared_ptr<const GenomeVariant>& genome_variant,

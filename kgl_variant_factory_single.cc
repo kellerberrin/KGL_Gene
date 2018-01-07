@@ -134,7 +134,7 @@ size_t kgl::SingleFactory::GenerateSNPDelete(const std::string &genome_name,
                                                                                    reference_nucleotide,
                                                                                    ExtendCountColumns::extendToBase(mutant_nucleotide)));
 
-          variant_count += VariantFactory::addVariantToGenome(genome_single_variants, snp_variant_ptr); // Annotate with genome information
+          variant_count += VariantFactory::addSingleVariant(genome_single_variants, snp_variant_ptr); // Annotate with genome information
 
 
         } else if (ExtendCountColumns::isDeletion(mutant_nucleotide)) {
@@ -146,7 +146,7 @@ size_t kgl::SingleFactory::GenerateSNPDelete(const std::string &genome_name,
                                                                                             evidence_ptr,
                                                                                             reference_nucleotide));
 
-          variant_count += VariantFactory::addVariantToGenome(genome_single_variants, delete_variant_ptr); // Annotate with genome information
+          variant_count += VariantFactory::addSingleVariant(genome_single_variants, delete_variant_ptr); // Annotate with genome information
 
         } else {
 
@@ -210,7 +210,7 @@ size_t kgl::SingleFactory::GenerateInsert(const std::string &genome_name,
                                                                                           reference_nucleotide,
                                                                                           mutant_nucleotide));
 
-        variant_count += VariantFactory::addVariantToGenome(genome_single_variants, insert_variant_ptr); // Annotate with genome information
+        variant_count += VariantFactory::addSingleVariant(genome_single_variants, insert_variant_ptr); // Annotate with genome information
 
       }
 

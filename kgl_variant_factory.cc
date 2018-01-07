@@ -174,9 +174,18 @@ kgl::VariantFactory::aggregateVariants(const std::shared_ptr<const GenomeDatabas
   std::shared_ptr<const kgl::GenomeVariant> cmp_snp_ptr = kgl::CompoundSNPFactory().create(single_variant_ptr,
                                                                                            genome_db_ptr);
 
+  // Generate compound non-coding insert variants.
+  std::shared_ptr<const kgl::GenomeVariant> non_coding_insert_ptr = kgl::CompoundNonCodingInsertFactory().create(single_variant_ptr,
+                                                                                                                 genome_db_ptr);
+  // Generate compound non-coding insert variants.
+  std::shared_ptr<const kgl::GenomeVariant> non_coding_delete_ptr = kgl::CompoundNonCodingDeleteFactory().create(single_variant_ptr,
+                                                                                                                 genome_db_ptr);
+
   // combine the compound variants
   std::shared_ptr<const kgl::GenomeVariant> compound_ptr = cmp_delete_ptr->Union(cmp_insert_ptr);
   compound_ptr = compound_ptr->Union(cmp_snp_ptr);
+  compound_ptr = compound_ptr->Union(non_coding_insert_ptr);
+  compound_ptr = compound_ptr->Union(non_coding_delete_ptr);
 
   ExecEnv::log().info("Generated: {} Compound variants for Genome: {}", compound_ptr->size(), genome_name);
   ExecEnv::log().info("Combining Compound and SNP variants for Genome: {}", genome_name);
@@ -199,8 +208,8 @@ kgl::VariantFactory::aggregateVariants(const std::shared_ptr<const GenomeDatabas
 
 
 // This function will insert multiple variants for each CDS sequence within each gene.
-size_t kgl::VariantFactory::addVariantToGenome(std::shared_ptr<GenomeVariant> genome_single_variants,
-                                               std::shared_ptr<Variant> variant_ptr) {
+size_t kgl::VariantFactory::addSingleVariant(std::shared_ptr<GenomeVariant> genome_single_variants,
+                                             std::shared_ptr<Variant> variant_ptr) {
 
   // Annotate the variant with genome information.
   size_t variant_count = 0;
@@ -213,7 +222,8 @@ size_t kgl::VariantFactory::addVariantToGenome(std::shared_ptr<GenomeVariant> ge
       std::shared_ptr<const CodingSequenceArray> sequence_array = kgl::GeneFeature::getCodingSequences(gene_ptr);
       if (sequence_array->empty()) {
 
-        variant_ptr->defineIntron(gene_ptr); // intron
+        std::shared_ptr<Variant> intron_variant_ptr = variant_ptr->clone();
+        intron_variant_ptr->defineIntron(gene_ptr); // intron
         genome_single_variants->addVariant(variant_ptr);
         ++variant_count;
 

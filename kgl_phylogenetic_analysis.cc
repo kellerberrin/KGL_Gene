@@ -4,6 +4,7 @@
 
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_virtual_compare.h"
+#include "kgl_sequence_offset.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -207,6 +208,7 @@ bool kgl::ApplicationAnalysis::compareMutantCodingDNA(const ContigId_t& contig_i
 bool kgl::ApplicationAnalysis::compareMutantRegions(const ContigId_t& contig_id,
                                                     ContigOffset_t region_offset,
                                                     ContigSize_t region_size,
+                                                    StrandSense strand,
                                                     const std::shared_ptr<const GenomeDatabase>& genome_db,
                                                     const std::shared_ptr<const GenomeVariant>& genome_variant,
                                                     std::vector<std::string>& comparison_string_vector) {
@@ -223,9 +225,11 @@ bool kgl::ApplicationAnalysis::compareMutantRegions(const ContigId_t& contig_id,
                                    reference_sequence,
                                    mutant_sequence_vector)) {
 
+    std::shared_ptr<DNA5SequenceCoding> reference_sequence_coding = SequenceOffset::codingSequence(reference_sequence, strand);
     for (auto dna_sequence : mutant_sequence_vector) {
 
-      std::string comparison_string = reference_sequence->compareDNA5Sequences(*dna_sequence);
+      std::shared_ptr<DNA5SequenceCoding> mutant_sequence_coding = SequenceOffset::codingSequence(dna_sequence, strand);
+      std::string comparison_string = reference_sequence_coding->compareDNA5Coding(*mutant_sequence_coding);
       comparison_string_vector.push_back(comparison_string);
 
     }
@@ -246,6 +250,7 @@ bool kgl::ApplicationAnalysis::compareMutantRegions(const ContigId_t& contig_id,
 bool kgl::ApplicationAnalysis::compare5Prime(const ContigId_t& contig_id,
                                              const FeatureIdent_t& gene_id,
                                              const FeatureIdent_t& sequence_id,
+                                             bool AminoFlag,
                                              ContigSize_t region_size,
                                              const std::shared_ptr<const GenomeDatabase>& genome_db,
                                              const std::shared_ptr<const GenomeVariant>& genome_variant,
@@ -285,10 +290,23 @@ bool kgl::ApplicationAnalysis::compare5Prime(const ContigId_t& contig_id,
                                    reference_sequence,
                                    mutant_sequence_vector)) {
 
+    std::shared_ptr<DNA5SequenceCoding> reference_sequence_coding = SequenceOffset::codingSequence(reference_sequence, coding_sequence_ptr->strand());
+    std::shared_ptr<AminoSequence> reference_amino = contig_ptr->getAminoSequence(reference_sequence_coding);
     for (auto dna_sequence : mutant_sequence_vector) {
 
-      std::string comparison_string = reference_sequence->compareDNA5Sequences(*dna_sequence);
-      comparison_string_vector.push_back(comparison_string);
+      std::shared_ptr<DNA5SequenceCoding> sequence_coding = SequenceOffset::codingSequence(dna_sequence, coding_sequence_ptr->strand());
+      if (AminoFlag) {
+
+        std::shared_ptr<AminoSequence> sequence_amino = contig_ptr->getAminoSequence(sequence_coding);
+        std::string comparison_string = reference_amino->compareAminoSequences(*sequence_amino);
+        comparison_string_vector.push_back(comparison_string);
+
+      } else {
+
+        std::string comparison_string = reference_sequence_coding->compareDNA5Coding(*sequence_coding);
+        comparison_string_vector.push_back(comparison_string);
+
+      }
 
     }
 
@@ -309,6 +327,7 @@ bool kgl::ApplicationAnalysis::compare5Prime(const ContigId_t& contig_id,
 bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
                                              const FeatureIdent_t& gene_id,
                                              const FeatureIdent_t& sequence_id,
+                                             bool AminoFlag,
                                              ContigSize_t region_size,
                                              const std::shared_ptr<const GenomeDatabase>& genome_db,
                                              const std::shared_ptr<const GenomeVariant>& genome_variant,
@@ -348,10 +367,23 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
                                    reference_sequence,
                                    mutant_sequence_vector)) {
 
+    std::shared_ptr<DNA5SequenceCoding> reference_sequence_coding = SequenceOffset::codingSequence(reference_sequence, coding_sequence_ptr->strand());
+    std::shared_ptr<AminoSequence> reference_amino = contig_ptr->getAminoSequence(reference_sequence_coding);
     for (auto dna_sequence : mutant_sequence_vector) {
 
-      std::string comparison_string = reference_sequence->compareDNA5Sequences(*dna_sequence);
-      comparison_string_vector.push_back(comparison_string);
+      std::shared_ptr<DNA5SequenceCoding> sequence_coding = SequenceOffset::codingSequence(dna_sequence, coding_sequence_ptr->strand());
+      if (AminoFlag) {
+
+        std::shared_ptr<AminoSequence> sequence_amino = contig_ptr->getAminoSequence(sequence_coding);
+        std::string comparison_string = reference_amino->compareAminoSequences(*sequence_amino);
+        comparison_string_vector.push_back(comparison_string);
+
+      } else {
+
+        std::string comparison_string = reference_sequence_coding->compareDNA5Coding(*sequence_coding);
+        comparison_string_vector.push_back(comparison_string);
+
+      }
 
     }
 

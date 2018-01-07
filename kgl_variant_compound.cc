@@ -52,9 +52,6 @@ std::string kgl::CompoundVariant::output(char delimiter, VariantOutputIndex outp
   ss << genomeOutput(delimiter, output_index);
   ss << quality() << delimiter;
   ss << name() << delimiter << size() << delimiter;
-  std::shared_ptr<const CodingSequence> sequence = codingSequences().getFirst();
-  ss << sequence->getGene()->id() << delimiter << sequence->getCDSParent()->id() << delimiter;
-  ss << location(delimiter, output_index);
   ss << mutation(delimiter, output_index) << "\n";
 
   for (const auto &variant : variant_map_) {

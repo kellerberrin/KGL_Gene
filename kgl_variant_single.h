@@ -52,6 +52,9 @@ public:
   std::shared_ptr<const VariantEvidence> evidence() const { return evidence_ptr_; }
 
   DNA5::Alphabet reference() const { return reference_; }
+
+  virtual char mutantStrandChar() const = 0;
+
   virtual char mutantChar() const = 0;
 
   std::string suboutput(char delimiter, VariantOutputIndex output_index, bool detail) const;
@@ -115,7 +118,9 @@ public:
 
   DNA5::Alphabet mutant() const { return mutant_; }
 
-  char mutantChar() const override { return DNA5::convertToChar(mutant()); }
+  char mutantStrandChar() const override { return CodingDNA5::convertToChar(strandMutant()); }
+
+  virtual char mutantChar() const override { return DNA5::convertToChar(mutant()); }
 
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
 
@@ -168,6 +173,8 @@ public:
 
   bool mutateSequence(SignedOffset_t offset_adjust, std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) const override;
 
+  virtual char mutantStrandChar() const override { return '-'; }
+
   virtual char mutantChar() const override { return '-'; }
 
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
@@ -213,6 +220,8 @@ public:
   CodingDNA5::Alphabet strandMutant() const { return strandNucleotide(mutant()); }
 
   DNA5::Alphabet mutant() const { return mutant_; }
+
+  virtual char mutantStrandChar() const override { return CodingDNA5::convertToChar(strandMutant()); }
 
   virtual char mutantChar() const override { return DNA5::convertToChar(mutant()); }
 

@@ -13,8 +13,31 @@ std::string kgl::CompoundInsert::mutation(char delimiter, VariantOutputIndex out
 {
 
   std::stringstream ss;
-  ss << "+(" << size() << ")";
-  return ss.str() +  location(delimiter, output_index);
+
+  if (type() == VariantSequenceType::CDS_CODING) {
+
+    std::shared_ptr<const CodingSequence> sequence = codingSequences().getFirst();
+    ss << sequence->getGene()->id() << delimiter;
+    ss << sequence->getCDSParent()->id() << delimiter;
+    ss << location(delimiter, output_index);
+    ss << "+(" << size() << ")";
+    ss << location(delimiter, output_index);
+
+  } else if (type() == VariantSequenceType::INTRON) {
+
+    std::shared_ptr<const GeneFeature> gene_ptr = geneMembership().front();
+    ss << gene_ptr->id() << delimiter;
+    ss << "+(" << size() << ")";
+    ss << offsetOutput(contigOffset(), output_index);
+
+  } else { // else non coding (non-gene) variant or unknown
+
+    ss << "+(" << size() << ")";
+    ss << offsetOutput(contigOffset(), output_index);
+
+  }
+
+  return ss.str();
 
 }
 

@@ -4,6 +4,7 @@
 
 
 #include "kgl_variant_single.h"
+#include "kgl_sequence_offset.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -73,8 +74,13 @@ std::string kgl::DeleteVariant::mutation(char delimiter, VariantOutputIndex outp
     ss << "-(" << size() << ")";
     ss << offsetOutput(codon_offset, output_index) << CODON_BASE_SEPARATOR;
     ss << offsetOutput(base_in_codon, output_index) << delimiter;
-    ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
-    ss << mutantChar() << delimiter;
+
+    ContigOffset_t coding_sequence_offset;
+    ContigSize_t coding_sequence_length;
+    SequenceOffset::refOffsetWithinCodingSequence(sequence, offset(), coding_sequence_offset, coding_sequence_length);
+
+    ss << CodingDNA5::convertToChar(strandReference()) << offsetOutput(coding_sequence_offset, output_index);
+    ss << mutantStrandChar() << delimiter;
 
   } else if (type() == VariantSequenceType::INTRON) {
 

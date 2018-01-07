@@ -3,6 +3,7 @@
 //
 
 #include "kgl_variant_single.h"
+#include "kgl_sequence_offset.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -117,8 +118,13 @@ std::string kgl::SNPVariant::mutation(char delimiter, VariantOutputIndex output_
       ss << offsetOutput(base_in_codon, output_index) << delimiter;
       ss << AminoAcid::convertToChar(reference_amino) << offsetOutput(codon_offset, output_index);
       ss << AminoAcid::convertToChar(mutant_amino) << delimiter;
-      ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
-      ss << mutantChar() << delimiter;
+
+      ContigOffset_t coding_sequence_offset;
+      ContigSize_t coding_sequence_length;
+      SequenceOffset::refOffsetWithinCodingSequence(sequence, offset(), coding_sequence_offset, coding_sequence_length);
+
+      ss << CodingDNA5::convertToChar(strandReference()) << offsetOutput(coding_sequence_offset, output_index);
+      ss << CodingDNA5::convertToChar(strandMutant()) << delimiter;
 //        sequence->getGene()->recusivelyPrintsubfeatures();
 
     }
