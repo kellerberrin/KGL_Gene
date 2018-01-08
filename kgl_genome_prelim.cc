@@ -93,12 +93,14 @@ void kgl::CodingSequence::prime_5_region(ContigSize_t requested_size, ContigOffs
     case StrandSense::UNKNOWN:
       ExecEnv::log().error("prime_5_region(), unknown strand sense for gene id: {}", getGene()->id());
     case StrandSense::FORWARD:
-      begin_offset = sorted_cds_.begin()->second->sequence().begin() - (requested_size - 3);
+      begin_offset = sorted_cds_.begin()->second->sequence().begin() - requested_size;
       size = requested_size;
+      break;
 
     case StrandSense::REVERSE:
-      begin_offset = sorted_cds_.rbegin()->second->sequence().end() - 3;
+      begin_offset = sorted_cds_.rbegin()->second->sequence().end();
       size = requested_size;
+      break;
 
   }
 
@@ -151,12 +153,14 @@ void kgl::CodingSequence::prime_3_region(ContigSize_t requested_size, ContigOffs
     case StrandSense::UNKNOWN:
       ExecEnv::log().error("prime_3_region(), unknown strand sense for gene id: {}", getGene()->id());
     case StrandSense::FORWARD:
-      begin_offset = sorted_cds_.rbegin()->second->sequence().end() - 3;
+      begin_offset = sorted_cds_.rbegin()->second->sequence().end();
       size = requested_size;
+      break;
 
     case StrandSense::REVERSE:
-      begin_offset = sorted_cds_.begin()->second->sequence().begin() - (requested_size - 3);
+      begin_offset = sorted_cds_.begin()->second->sequence().begin() - requested_size;
       size = requested_size;
+      break;
 
   }
 

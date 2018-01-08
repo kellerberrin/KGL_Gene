@@ -250,7 +250,6 @@ bool kgl::ApplicationAnalysis::compareMutantRegions(const ContigId_t& contig_id,
 bool kgl::ApplicationAnalysis::compare5Prime(const ContigId_t& contig_id,
                                              const FeatureIdent_t& gene_id,
                                              const FeatureIdent_t& sequence_id,
-                                             bool AminoFlag,
                                              ContigSize_t region_size,
                                              const std::shared_ptr<const GenomeDatabase>& genome_db,
                                              const std::shared_ptr<const GenomeVariant>& genome_variant,
@@ -278,6 +277,9 @@ bool kgl::ApplicationAnalysis::compare5Prime(const ContigId_t& contig_id,
   ContigSize_t size_5_prime;
   coding_sequence_ptr->prime_5_region(region_size, offset_5_prime, size_5_prime);
 
+  ExecEnv::log().info("Analyzing the 5 Prime Region for Sequence {} at offset {}, size {}, 5 prime {}",
+                      coding_sequence_ptr->getCDSParent()->id(), offset_5_prime, size_5_prime, coding_sequence_ptr->prime_5());
+
   std::vector<std::shared_ptr<DNA5SequenceLinear>> mutant_sequence_vector;
   std::shared_ptr<DNA5SequenceLinear> reference_sequence;
 
@@ -291,22 +293,11 @@ bool kgl::ApplicationAnalysis::compare5Prime(const ContigId_t& contig_id,
                                    mutant_sequence_vector)) {
 
     std::shared_ptr<DNA5SequenceCoding> reference_sequence_coding = SequenceOffset::codingSequence(reference_sequence, coding_sequence_ptr->strand());
-    std::shared_ptr<AminoSequence> reference_amino = contig_ptr->getAminoSequence(reference_sequence_coding);
     for (auto dna_sequence : mutant_sequence_vector) {
 
       std::shared_ptr<DNA5SequenceCoding> sequence_coding = SequenceOffset::codingSequence(dna_sequence, coding_sequence_ptr->strand());
-      if (AminoFlag) {
-
-        std::shared_ptr<AminoSequence> sequence_amino = contig_ptr->getAminoSequence(sequence_coding);
-        std::string comparison_string = reference_amino->compareAminoSequences(*sequence_amino);
-        comparison_string_vector.push_back(comparison_string);
-
-      } else {
-
-        std::string comparison_string = reference_sequence_coding->compareDNA5Coding(*sequence_coding);
-        comparison_string_vector.push_back(comparison_string);
-
-      }
+      std::string comparison_string = reference_sequence_coding->compareDNA5Coding(*sequence_coding);
+      comparison_string_vector.push_back(comparison_string);
 
     }
 
@@ -322,12 +313,9 @@ bool kgl::ApplicationAnalysis::compare5Prime(const ContigId_t& contig_id,
 }
 
 
-
-
 bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
                                              const FeatureIdent_t& gene_id,
                                              const FeatureIdent_t& sequence_id,
-                                             bool AminoFlag,
                                              ContigSize_t region_size,
                                              const std::shared_ptr<const GenomeDatabase>& genome_db,
                                              const std::shared_ptr<const GenomeVariant>& genome_variant,
@@ -355,6 +343,10 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
   ContigSize_t size_3_prime;
   coding_sequence_ptr->prime_3_region(region_size, offset_3_prime, size_3_prime);
 
+  ExecEnv::log().info("Analyzing the 3 Prime Region for Sequence {} offset at {}, size {}, 3 prime offset {}",
+                      coding_sequence_ptr->getCDSParent()->id(), offset_3_prime, size_3_prime, coding_sequence_ptr->prime_3());
+
+
   std::vector<std::shared_ptr<DNA5SequenceLinear>> mutant_sequence_vector;
   std::shared_ptr<DNA5SequenceLinear> reference_sequence;
 
@@ -368,22 +360,11 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
                                    mutant_sequence_vector)) {
 
     std::shared_ptr<DNA5SequenceCoding> reference_sequence_coding = SequenceOffset::codingSequence(reference_sequence, coding_sequence_ptr->strand());
-    std::shared_ptr<AminoSequence> reference_amino = contig_ptr->getAminoSequence(reference_sequence_coding);
     for (auto dna_sequence : mutant_sequence_vector) {
 
       std::shared_ptr<DNA5SequenceCoding> sequence_coding = SequenceOffset::codingSequence(dna_sequence, coding_sequence_ptr->strand());
-      if (AminoFlag) {
-
-        std::shared_ptr<AminoSequence> sequence_amino = contig_ptr->getAminoSequence(sequence_coding);
-        std::string comparison_string = reference_amino->compareAminoSequences(*sequence_amino);
-        comparison_string_vector.push_back(comparison_string);
-
-      } else {
-
-        std::string comparison_string = reference_sequence_coding->compareDNA5Coding(*sequence_coding);
-        comparison_string_vector.push_back(comparison_string);
-
-      }
+      std::string comparison_string = reference_sequence_coding->compareDNA5Coding(*sequence_coding);
+      comparison_string_vector.push_back(comparison_string);
 
     }
 

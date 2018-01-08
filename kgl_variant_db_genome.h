@@ -126,5 +126,9 @@ private:
 }   // namespace kellerberrin
 
 
+// Not in kgl:: namespace.
+std::ostream & operator<<(std::ostream &os, const kellerberrin::genome::GenomeVariant& genome_variant);
+
+
 
 #endif //KGL_VARIANT_DB_GENOME_H

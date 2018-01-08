@@ -165,8 +165,7 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
     if (ApplicationAnalysis::compare5Prime(ACTIVE_CONTIG,
                                            ACTIVE_GENE,
                                            ACTIVE_SEQUENCE,
-                                           false,
-                                           999,
+                                           1000,
                                            genome_db_ptr,
                                            variant_ptr,
                                            comparison_vector)) {
@@ -180,7 +179,7 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
     }
 
     // Generate a vector of protein mutation maps for visual inspection
-    if (ApplicationAnalysis::compareMutantCodingDNA(ACTIVE_CONTIG,
+    if (ApplicationAnalysis::compareMutantProteins(ACTIVE_CONTIG,
                                                    ACTIVE_GENE,
                                                    ACTIVE_SEQUENCE,
                                                    genome_db_ptr,
@@ -199,8 +198,7 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
     if (ApplicationAnalysis::compare3Prime(ACTIVE_CONTIG,
                                            ACTIVE_GENE,
                                            ACTIVE_SEQUENCE,
-                                           false,
-                                           999,
+                                           1000,
                                            genome_db_ptr,
                                            variant_ptr,
                                            comparison_vector)) {
@@ -214,7 +212,7 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
     }
 
     // Generate a vector of 3 Prime UTR mutation maps for visual inspection
-    if (ApplicationAnalysis::compareMutantRegions("Pf3D7_07_v3", 570500, 20, StrandSense::FORWARD, genome_db_ptr, variant_ptr, comparison_vector)) {
+    if (ApplicationAnalysis::compareMutantRegions(ACTIVE_CONTIG, 1394830, 20, StrandSense::FORWARD, genome_db_ptr, variant_ptr, comparison_vector)) {
 
       for (const auto& comparison : comparison_vector) {
 
@@ -224,7 +222,7 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
     }
 
-    if (ApplicationAnalysis::compareMutantRegions("Pf3D7_07_v3", 570500, 20, StrandSense::REVERSE, genome_db_ptr, variant_ptr, comparison_vector)) {
+    if (ApplicationAnalysis::compareMutantRegions(ACTIVE_CONTIG, 1396590, 20, StrandSense::FORWARD, genome_db_ptr, variant_ptr, comparison_vector)) {
 
       for (const auto& comparison : comparison_vector) {
 
