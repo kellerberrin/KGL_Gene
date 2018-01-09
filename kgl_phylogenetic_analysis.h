@@ -33,45 +33,13 @@ public:
   ApplicationAnalysis() = default;
   virtual ~ApplicationAnalysis() = default;
 
+  // Sequences are presented as a pair of a sequence name and an amino sequences.
   static bool writeMutantProteins(const std::string& fastaFile,
-                                  const std::string& sequenceName,
-                                  const ContigId_t& contig_id,
-                                  const FeatureIdent_t& gene_id,
-                                  const FeatureIdent_t& sequence_id,
-                                  const std::shared_ptr<const GenomeDatabase>& genome_db,
-                                  const std::shared_ptr<const GenomeVariant>& genome_variant);
+                                  const std::vector<std::pair<std::string, std::shared_ptr<AminoSequence>>>& amino_seq_vector);
 
-  static bool readMutantProteins(const std::string& fastaFile,
-                                 const std::string& sequenceName,
-                                 const ContigId_t& contig_id,
-                                 const FeatureIdent_t& gene_id,
-                                 const FeatureIdent_t& sequence_id,
-                                 const std::shared_ptr<const GenomeDatabase>& genome_db,
-                                 const std::shared_ptr<const GenomeVariant>& genome_variant,
-                                 std::vector<std::string>& comparison_string_vector);
-
-
-  static bool compareMutantProteins(const ContigId_t& contig_id,
-                                    const FeatureIdent_t& gene_id,
-                                    const FeatureIdent_t& sequence_id,
-                                    const std::shared_ptr<const GenomeDatabase>& genome_db,
-                                    const std::shared_ptr<const GenomeVariant>& genome_variant,
-                                    std::vector<std::string>& comparison_string_vector);
-
-  static bool compareMutantCodingDNA(const ContigId_t& contig_id,
-                                     const FeatureIdent_t& gene_id,
-                                     const FeatureIdent_t& sequence_id,
-                                     const std::shared_ptr<const GenomeDatabase>& genome_db,
-                                     const std::shared_ptr<const GenomeVariant>& genome_variant,
-                                     std::vector<std::string>& comparison_string_vector);
-
-  static bool compareMutantRegions(const ContigId_t& contig_id,
-                                   ContigOffset_t region_offset,
-                                   ContigSize_t region_size,
-                                   StrandSense strand,
-                                   const std::shared_ptr<const GenomeDatabase>& genome_db,
-                                   const std::shared_ptr<const GenomeVariant>& genome_variant,
-                                   std::vector<std::string>& comparison_string_vector);
+  // If sequence name = "" then the code reads all sequences in the fasta file.
+  static bool readFastaProteins(const std::string& fasta_file,
+                                std::vector<std::pair<std::string, std::shared_ptr<AminoSequence>>>& amino_seq_vector);
 
   static bool compare5Prime(const ContigId_t& contig_id,
                             const FeatureIdent_t& gene_id,
@@ -79,7 +47,8 @@ public:
                             ContigSize_t region_size,
                             const std::shared_ptr<const GenomeDatabase>& genome_db,
                             const std::shared_ptr<const GenomeVariant>& genome_variant,
-                            std::vector<std::string>& comparison_string_vector);
+                            std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
+                            std::vector<std::shared_ptr<DNA5SequenceCoding>>& mutant_sequence_vector);
 
   static bool compare3Prime(const ContigId_t& contig_id,
                             const FeatureIdent_t& gene_id,
@@ -87,7 +56,8 @@ public:
                             ContigSize_t region_size,
                             const std::shared_ptr<const GenomeDatabase>& genome_db,
                             const std::shared_ptr<const GenomeVariant>& genome_variant,
-                            std::vector<std::string>& comparison_string_vector);
+                            std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
+                            std::vector<std::shared_ptr<DNA5SequenceCoding>>& mutant_sequence_vector);
 
 private:
 

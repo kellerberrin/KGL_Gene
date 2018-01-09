@@ -74,10 +74,10 @@ bool kgl::CompoundDelete::mutateSequence(SignedOffset_t offset_adjust,
     // Check the reference.
     if (delete_ptr->reference() != dna_sequence_ptr->at(reference_offset)) {
 
-      ExecEnv::log().warn("insertSequence(), Delete reference base: {} does not match sequence base: {} at sequence offset: {}",
+      ExecEnv::log().warn("mutateSequence(), delete reference base: {} does not match sequence base: {} at contig: {} offset: {}",
                           DNA5::convertToChar(delete_ptr->reference()),
-                          DNA5::convertToChar(dna_sequence_ptr->at(reference_offset)),
-                          sequence_offset);
+                          DNA5::convertToChar(dna_sequence_ptr->at(sequence_offset)),
+                          delete_ptr->contig()->contigId(), delete_ptr->offset());
 
     }
 

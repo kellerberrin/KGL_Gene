@@ -81,7 +81,8 @@ public:
   bool getCodingSortedVariants(ContigId_t contig_id,
                                ContigOffset_t start,
                                ContigOffset_t end,
-                               OffsetVariantMap& variant_map) const;
+                               OffsetVariantMap& variant_map,
+                               bool& frame_shift) const;
 
   const Attributes& attributes() const { return attributes_; }
   Attributes& attributes() { return attributes_; }
@@ -92,6 +93,7 @@ public:
                        const FeatureIdent_t& gene_id,
                        const FeatureIdent_t& sequence_id,
                        const std::shared_ptr<const GenomeDatabase>& genome_db,
+                       bool& frame_shift_mutation,
                        std::shared_ptr<AminoSequence>& reference_sequence,
                        std::vector<std::shared_ptr<AminoSequence>>& mutant_sequence_vector) const;
 
@@ -100,6 +102,7 @@ public:
                         const FeatureIdent_t& gene_id,
                         const FeatureIdent_t& sequence_id,
                         const std::shared_ptr<const GenomeDatabase>& genome_db,
+                        bool& frame_shift_flag,
                         std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
                         std::vector<std::shared_ptr<DNA5SequenceCoding>>& mutant_sequence_vector) const;
 
@@ -128,7 +131,7 @@ private:
 
 // Not in kgl:: namespace.
 std::ostream & operator<<(std::ostream &os, const kellerberrin::genome::GenomeVariant& genome_variant);
-
+std::ostream & operator<<(std::ostream &os, std::shared_ptr<const kellerberrin::genome::GenomeVariant> genome_variant_ptr);
 
 
 #endif //KGL_VARIANT_DB_GENOME_H

@@ -138,6 +138,7 @@ long predicateIterableDelete(T& iterableContainer, F bool_pred) {
 
 
 // Pattern to delete items that match a predicate in a reference container.
+// Note that this is quadratic in time and can be slow.
 template<class T, typename P>
 long deleteIterableReference(T& modified_container, const T& reference_container, P bool_pred) {
 

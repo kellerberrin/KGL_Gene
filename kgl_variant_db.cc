@@ -49,6 +49,28 @@ bool kgl::ContigVariant::addVariant(std::shared_ptr<const Variant>& variant_ptr)
 
 }
 
+// Returns true if variant found and erased.
+bool kgl::ContigVariant::eraseVariant(std::shared_ptr<const Variant>& variant_ptr) {
+
+  auto result = offset_variant_map_.equal_range(variant_ptr->contigOffset());
+
+  for (auto it = result.first; it != result.second; ++it) {
+
+    if (variant_ptr->equivalent(*it->second)) {
+
+      // C++ 11 erase() returns next iterator to next valid (or end())
+      offset_variant_map_.erase(it);
+      return true;
+
+    }
+
+  }
+
+  return false;
+
+}
+
+
 // Always use deep copy when modifying this object.
 std::shared_ptr<kgl::ContigVariant> kgl::ContigVariant::deepCopy() const {
 
@@ -266,7 +288,8 @@ bool kgl::GenomeVariant::getSortedVariants(ContigId_t contig_id,
 bool kgl::GenomeVariant::getCodingSortedVariants(ContigId_t contig_id,
                                                  ContigOffset_t start,
                                                  ContigOffset_t end,
-                                                 OffsetVariantMap& variant_map) const {
+                                                 OffsetVariantMap& variant_map,
+                                                 bool& frame_shift) const {
 
   OffsetVariantMap all_variant_map;
   if (not getSortedVariants(contig_id, start, end, all_variant_map)) {
@@ -275,15 +298,27 @@ bool kgl::GenomeVariant::getCodingSortedVariants(ContigId_t contig_id,
 
   }
 
+  SignedOffset_t shift_count = 0;
   for (auto variant : all_variant_map) {
 
     if (variant.second->type() == VariantSequenceType::CDS_CODING) {
 
       variant_map.insert(std::pair<ContigOffset_t,std::shared_ptr<const Variant>>(variant.first, variant.second));
+      if (variant.second->isDelete()) {
+
+        shift_count -= variant.second->size();
+
+      } else if (variant.second->isInsert()) {
+
+        shift_count += variant.second->size();
+
+      }
 
     }
 
   }
+
+  frame_shift = (shift_count % Codon::CODON_SIZE) != 0;
 
   return true;
 

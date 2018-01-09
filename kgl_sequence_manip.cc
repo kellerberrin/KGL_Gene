@@ -20,13 +20,13 @@ public:
   SequenceManipImpl() = default;
   ~SequenceManipImpl() = default;
 
-  std::string compareSequences(const std::string& reference_str, const std::string& compare_str) const { return align_example(reference_str, compare_str); }
+  std::string compareSequences(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
 
   std::string gap_example(const std::string& reference_str, const std::string& compare_str) const;
 
   std::string graph_example(const std::string& reference_str, const std::string& compare_str) const;
 
-  std::string align_example(const std::string& reference_str, const std::string& compare_str) const;
+  std::string align_example(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
 
 private:
 
@@ -34,12 +34,23 @@ private:
 };
 
 
+
+std::string kgl::SequenceManipulation::SequenceManipImpl::compareSequences(const std::string& reference_str,
+                                                                           const std::string& compare_str,
+                                                                           CompareScore_t& score) const {
+
+  return align_example(reference_str, compare_str, score);
+
+}
+
+
 std::string kgl::SequenceManipulation::SequenceManipImpl::align_example(const std::string& reference_str,
-                                                                        const std::string& compare_str) const {
+                                                                        const std::string& compare_str,
+                                                                        CompareScore_t& score) const {
   typedef String<char> TSequence;
   typedef Align<TSequence, ArrayGaps> TAlign;
-  typedef Row<TAlign>::Type TRow;
-  typedef Iterator<TRow>::Type TRowIterator;
+//  typedef Row<TAlign>::Type TRow;
+//  typedef Iterator<TRow>::Type TRowIterator;
 
 //  TSequence seq1 = "AAGUGACUUAUUG";
 //  TSequence seq2 = "AGUCGGAUCUACUG";
@@ -54,8 +65,7 @@ std::string kgl::SequenceManipulation::SequenceManipImpl::align_example(const st
 
   std::stringstream ss;
 
-  int score = globalAlignment(align, MyersHirschberg());
-  ss << "Score: " << score << std::endl;
+  score = globalAlignment(align, MyersHirschberg());
   ss << align << std::endl;
 
   return ss.str();
@@ -65,7 +75,7 @@ std::string kgl::SequenceManipulation::SequenceManipImpl::align_example(const st
 
 
 std::string kgl::SequenceManipulation::SequenceManipImpl::graph_example(const std::string& reference_str,
-                                                                           const std::string& compare_str) const {
+                                                                           const std::string&) const {
 
   typedef String<char> TSequence;
   typedef StringSet<TSequence> TStringSet;
@@ -124,7 +134,7 @@ std::string kgl::SequenceManipulation::SequenceManipImpl::graph_example(const st
 }
 
 std::string kgl::SequenceManipulation::SequenceManipImpl::gap_example(const std::string& reference_str,
-                                                                           const std::string& compare_str) const {
+                                                                           const std::string&) const {
 
   // Defining all types that are needed.
   using TSequence = seqan::String<char>;
@@ -216,9 +226,10 @@ kgl::SequenceManipulation::~SequenceManipulation() {}  // DO NOT DELETE or USE D
 
 
 std::string kgl::SequenceManipulation::compareSequences(const std::string& reference_str,
-                                                        const std::string& compare_str) const {
+                                                        const std::string& compare_str,
+                                                        CompareScore_t& score) const {
 
-  return sequence_manip_impl_ptr_->compareSequences(reference_str, compare_str);
+  return sequence_manip_impl_ptr_->compareSequences(reference_str, compare_str, score);
 
 }
 

@@ -23,6 +23,7 @@ std::string kgl::CompoundSNP::mutation(char delimiter, VariantOutputIndex output
     AminoAcid::Alphabet reference_amino;
     AminoAcid::Alphabet mutant_amino;
 
+
     codonMutation(codon_offset, reference_amino, mutant_amino);
 
     ss << AminoAcid::convertToChar(reference_amino) << offsetOutput(codon_offset, output_index)

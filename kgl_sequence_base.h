@@ -48,7 +48,7 @@ public:
   DNA5SequenceCoding() = delete;
   ~DNA5SequenceCoding() override = default;
 
-  std::string compareDNA5Coding(const DNA5SequenceCoding& compare_seq) const { return compareSequences(compare_seq); }
+  std::string compareDNA5Coding(std::shared_ptr<const DNA5SequenceCoding> compare_seq, CompareScore_t& score) const { return compareSequences(*compare_seq, score); }
 
 private:
 
@@ -92,7 +92,7 @@ public:
   bool insertSubSequence(ContigOffset_t insert_offset, const DNA5SequenceLinear& inserted_sequence);
 
 
-  std::string compareDNA5Sequences(const DNA5SequenceLinear& compare_seq) const { return compareSequences(compare_seq); }
+  std::string compareDNA5Sequences(std::shared_ptr<const DNA5SequenceLinear> compare_seq, CompareScore_t& score) const { return compareSequences(*compare_seq, score); }
 
 private:
 

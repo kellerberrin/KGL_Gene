@@ -15,7 +15,7 @@
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-
+using CompareScore_t = long;
 
 class SequenceManipulation {
 
@@ -24,7 +24,7 @@ public:
   explicit SequenceManipulation();
   ~SequenceManipulation();
 
-  std::string compareSequences(const std::string& reference_str, const std::string& compare_str) const;
+  std::string compareSequences(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
 
 
 private:

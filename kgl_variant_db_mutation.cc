@@ -13,13 +13,14 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
                                          const FeatureIdent_t& gene_id,
                                          const FeatureIdent_t& sequence_id,
                                          const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                         bool& frame_shift_flag,
                                          std::shared_ptr<AminoSequence>& reference_sequence,
                                          std::vector<std::shared_ptr<AminoSequence>>& mutant_sequence_vector) const {
 
 
   std::shared_ptr<DNA5SequenceCoding> DNA_reference;
   std::vector<std::shared_ptr<DNA5SequenceCoding>> DNA_mutant_vector;
-  if (not mutantCodingDNA(contig_id, gene_id, sequence_id, genome_db, DNA_reference, DNA_mutant_vector)) {
+  if (not mutantCodingDNA(contig_id, gene_id, sequence_id, genome_db, frame_shift_flag, DNA_reference, DNA_mutant_vector)) {
 
     ExecEnv::log().warn("mutantProtein(), Problem generating stranded mutant DNA");
     return false;
@@ -54,6 +55,7 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
                                           const FeatureIdent_t& gene_id,
                                           const FeatureIdent_t& sequence_id,
                                           const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                          bool& frame_shift_flag,
                                           std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
                                           std::vector<std::shared_ptr<DNA5SequenceCoding>>& mutant_sequence_vector) const {
   // Get the contig.
@@ -90,7 +92,7 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
   // Generate the mutant sequences.
   // Extract the variants for processing.
   OffsetVariantMap coding_variant_map;
-  getCodingSortedVariants(contig_id, coding_sequence_ptr->start(), coding_sequence_ptr->end(), coding_variant_map);
+  getCodingSortedVariants(contig_id, coding_sequence_ptr->start(), coding_sequence_ptr->end(), coding_variant_map, frame_shift_flag);
 
   // There may be more than one different variant specified per offset.
   // If this is the case, then we create alternative mutation paths.

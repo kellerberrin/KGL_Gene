@@ -76,10 +76,10 @@ bool kgl::CompoundInsert::mutateSequence(SignedOffset_t offset_adjust,
     // Check the reference.
     if (insert_ptr->reference() != dna_sequence_ptr->at(reference_offset)) {
 
-      ExecEnv::log().info("insertSequence(), Insert reference base: {} does not match sequence base: {} at insert contig offset: {}",
+      ExecEnv::log().info("mutateSequence(), Insert reference base: {} does not match sequence base: {} at contig: {} offset: {}",
                           DNA5::convertToChar(insert_ptr->reference()),
                           DNA5::convertToChar(dna_sequence_ptr->at(sequence_offset)),
-                          insert_ptr->offset());
+                          insert_ptr->contig()->contigId(), insert_ptr->offset());
 
     }
 

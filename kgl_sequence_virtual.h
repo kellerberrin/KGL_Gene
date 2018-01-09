@@ -61,7 +61,7 @@ protected:
 
 //  const std::string compareSequences(const AlphabetSequence& compare_seq) const {  return compareSequences(compare_seq, *this); }
 
-  const std::string compareSequences(const AlphabetSequence& compare) const;
+  const std::string compareSequences(const AlphabetSequence& compare, CompareScore_t& score) const;
 
   // Letter offset is relative to the begining of the sequence (0 is the first letter).
   bool modifyLetter(ContigOffset_t sequence_offset, typename Alphabet::Alphabet letter);
@@ -172,10 +172,10 @@ bool AlphabetSequence<Alphabet>::getSubsequence(ContigOffset_t substring_offset,
 }
 
 template<typename Alphabet>
-const std::string AlphabetSequence<Alphabet>::compareSequences(const AlphabetSequence<Alphabet>& compare_sequence) const
+const std::string AlphabetSequence<Alphabet>::compareSequences(const AlphabetSequence<Alphabet>& compare_sequence, CompareScore_t& score) const
 {
 
-  return SequenceManipulation().compareSequences(getSequenceAsString(), compare_sequence.getSequenceAsString());
+  return SequenceManipulation().compareSequences(getSequenceAsString(), compare_sequence.getSequenceAsString(), score);
 
 }
 

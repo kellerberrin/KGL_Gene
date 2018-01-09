@@ -60,7 +60,7 @@ kgl::ContigVariant::Intersection(std::shared_ptr<const kgl::ContigVariant> conti
 
 }
 
-
+/*
 std::shared_ptr<kgl::ContigVariant>
 kgl::ContigVariant::Difference(std::shared_ptr<const kgl::ContigVariant> contig_variant_ptr) const {
 
@@ -74,6 +74,23 @@ kgl::ContigVariant::Difference(std::shared_ptr<const kgl::ContigVariant> contig_
   return diff_variant_ptr;
 
 }
+*/
+
+std::shared_ptr<kgl::ContigVariant>
+kgl::ContigVariant::Difference(std::shared_ptr<const kgl::ContigVariant> contig_variant_ptr) const {
+
+  std::shared_ptr<kgl::ContigVariant> diff_variant_ptr = deepCopy();
+
+  for (auto variant : contig_variant_ptr->getMap()) {
+
+    diff_variant_ptr->eraseVariant(variant.second);
+
+  }
+
+  return diff_variant_ptr;
+
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

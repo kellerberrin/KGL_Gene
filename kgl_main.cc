@@ -53,7 +53,7 @@ int application(int argc, char const ** argv) {
 
 }
 
-
+// The mainline, called by the operating system and passed command line arguments.
 int main(int argc, char const ** argv)
 {
 
