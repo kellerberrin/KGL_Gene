@@ -47,10 +47,6 @@ std::shared_ptr<const kgl::GenomeVariant> getGenomeVariants(std::shared_ptr<cons
   std::string stats_file_name = kgl::Utility::filePath("genome_stats", workDirectory) + ".csv";
   statistics_ptr->outputFeatureCSV(stats_file_name, kgl::VariantOutputIndex::START_1_BASED);
 
-  // Filter on sequence
-//  std::shared_ptr<const kgl::GenomeVariant> check_ptr = all_variant_ptr->filterVariants(kgl::AndFilter(kgl::ContigFilter("Pf3D7_01_v3"), kgl::RegionFilter(63100,63280)));
-//  kgl::ExecEnv::log().info("Region Filter\n:");
-//  std::cout << *check_ptr;
 
 // pfATP4 drug target ATP4 sodium pump.
 #define PFATP4_MINORITY_CONTIG "chr12"
@@ -159,6 +155,11 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
                                              genome_db_ptr,
                                              variant_ptr);
 
+    // Filter on sequence
+    std::shared_ptr<const kgl::GenomeVariant> check_ptr = variant_ptr->filterVariants(kgl::AndFilter(kgl::ContigFilter(ACTIVE_CONTIG), kgl::RegionFilter(1393838,1394838)));
+    kgl::ExecEnv::log().info("5 Prime Filter\n:");
+    std::cout << *check_ptr;
+
     std::vector<std::string> comparison_vector;
 
     // Generate a vector of 5 Prime UTR mutation maps for visual inspection
@@ -194,6 +195,11 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
     }
 
+    // Filter on sequence
+    check_ptr = variant_ptr->filterVariants(kgl::AndFilter(kgl::ContigFilter(ACTIVE_CONTIG), kgl::RegionFilter(1396596,1397596)));
+    kgl::ExecEnv::log().info("3 Prime Filter\n:");
+    std::cout << *check_ptr;
+
     // Generate a vector of 3 Prime UTR mutation maps for visual inspection
     if (ApplicationAnalysis::compare3Prime(ACTIVE_CONTIG,
                                            ACTIVE_GENE,
@@ -212,7 +218,7 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
     }
 
     // Generate a vector of 3 Prime UTR mutation maps for visual inspection
-    if (ApplicationAnalysis::compareMutantRegions(ACTIVE_CONTIG, 1394830, 20, StrandSense::FORWARD, genome_db_ptr, variant_ptr, comparison_vector)) {
+    if (ApplicationAnalysis::compareMutantRegions(ACTIVE_CONTIG, 1397070, 20, StrandSense::FORWARD, genome_db_ptr, variant_ptr, comparison_vector)) {
 
       for (const auto& comparison : comparison_vector) {
 
@@ -222,7 +228,7 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
     }
 
-    if (ApplicationAnalysis::compareMutantRegions(ACTIVE_CONTIG, 1396590, 20, StrandSense::FORWARD, genome_db_ptr, variant_ptr, comparison_vector)) {
+    if (ApplicationAnalysis::compareMutantRegions(ACTIVE_CONTIG, 1397070, 20, StrandSense::FORWARD, genome_db_ptr, variant_ptr, comparison_vector)) {
 
       for (const auto& comparison : comparison_vector) {
 

@@ -188,7 +188,7 @@ kgl::VariantFactory::aggregateVariants(const std::shared_ptr<const GenomeDatabas
   compound_ptr = compound_ptr->Union(non_coding_delete_ptr);
 
   ExecEnv::log().info("Generated: {} Compound variants for Genome: {}", compound_ptr->size(), genome_name);
-  ExecEnv::log().info("Combining Compound and SNP variants for Genome: {}", genome_name);
+  ExecEnv::log().info("Combining Compound and Single variants for Genome: {}", genome_name);
 
   // disaggregate the compound variants.
   std::shared_ptr<const kgl::GenomeVariant> disagg_ptr = kgl::CompoundDeleteFactory().disaggregate(compound_ptr,

@@ -195,6 +195,13 @@ bool kgl::Variant::offsetOverlap(const Variant& cmp_var) const {
 
   }
 
+  // Only if both variants are SNPs.
+  if (not (isSNP() and cmp_var.isSNP())) {
+
+    return false;
+
+  }
+
   // On the same contig so check for overlap.
   ContigOffset_t start = contigOffset();
   ContigOffset_t end = contigOffset() + size() - 1;
