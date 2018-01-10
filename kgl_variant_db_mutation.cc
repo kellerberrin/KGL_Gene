@@ -107,18 +107,22 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
 
   for (auto variant_map : variant_map_vector) {
 
-    // Mutate.
-    std::shared_ptr<DNA5SequenceCoding> mutant_coding_dna;
-    VariantMutation variant_mutation;
-    if (not variant_mutation.mutateDNA(variant_map, contig_ptr, coding_sequence_ptr,  mutant_coding_dna)) {
+    // Mutate if non-empty variant map.
+    if (not variant_map.empty()) {
 
-      ExecEnv::log().warn("Problem mutating DNA sequence for contig: {}, gene: {}, sequence id: {}",
-                          contig_id, gene_id, sequence_id);
-      return false;
+      std::shared_ptr<DNA5SequenceCoding> mutant_coding_dna;
+      VariantMutation variant_mutation;
+      if (not variant_mutation.mutateDNA(variant_map, contig_ptr, coding_sequence_ptr, mutant_coding_dna)) {
+
+        ExecEnv::log().warn("Problem mutating DNA sequence for contig: {}, gene: {}, sequence id: {}",
+                            contig_id, gene_id, sequence_id);
+        return false;
+
+      }
+
+      mutant_sequence_vector.push_back(mutant_coding_dna);
 
     }
-
-    mutant_sequence_vector.push_back(mutant_coding_dna);
 
   }
 
@@ -174,20 +178,25 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
 
   for (auto variant_map : variant_map_vector) {
 
-    // Make a copy of the linear dna.
-    std::shared_ptr<DNA5SequenceLinear> copy_dna_sequence_ptr(std::make_shared<DNA5SequenceLinear>(*reference_sequence));
+    // Non-empty variant map.
+    if (not variant_map.empty()) {
 
-    // And mutate it.
-    VariantMutation variant_mutation;
-    if (not variant_mutation.mutateDNA(variant_map, region_offset, copy_dna_sequence_ptr)) {
+      // Make a copy of the linear dna.
+      std::shared_ptr<DNA5SequenceLinear> copy_dna_sequence_ptr(std::make_shared<DNA5SequenceLinear>(*reference_sequence));
 
-      ExecEnv::log().warn("Problem mutating region DNA sequence for contig: {}, offset: {}, size: {}",
-                          contig_id, region_offset, region_size);
-      return false;
+      // And mutate it.
+      VariantMutation variant_mutation;
+      if (not variant_mutation.mutateDNA(variant_map, region_offset, copy_dna_sequence_ptr)) {
+
+        ExecEnv::log().warn("Problem mutating region DNA sequence for contig: {}, offset: {}, size: {}",
+                            contig_id, region_offset, region_size);
+        return false;
+
+      }
+
+      mutant_sequence_vector.push_back(copy_dna_sequence_ptr);
 
     }
-
-    mutant_sequence_vector.push_back(copy_dna_sequence_ptr);
 
   }
 

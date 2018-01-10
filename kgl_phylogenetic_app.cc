@@ -53,12 +53,12 @@ std::shared_ptr<const kgl::GenomeVariant> getGenomeVariants(std::shared_ptr<cons
 #define PFATP4_MINORITY_GENE "PF3D7_1211900"
 #define PFATP4_MINORITY_SEQUENCE "rna_PF3D7_1211900-1"
 
-#define PFATP4_MALAWI_CONTIG "PF3D7_12_v3"
+#define PFATP4_MALAWI_CONTIG "Pf3D7_12_v3"
 #define PFATP4_MALAWI_GENE "PF3D7_1211900"
 #define PFATP4_MALAWI_SEQUENCE "PF3D7_1211900.1"
 
 // Erythrocyte membrane (Blood Cell Surface) protein (busy Malawi)
-#define _BCS_CONTIG "PF3D7_12_v3"
+#define _BCS_CONTIG "Pf3D7_12_v3"
 #define _BCS_GENE "PF3D7_1255200"
 #define  BCS_SEQUENCE "PF3D7_1255200.1"
 
@@ -86,9 +86,9 @@ std::shared_ptr<const kgl::GenomeVariant> getGenomeVariants(std::shared_ptr<cons
 #define S_ANTIGEN_GENE "PF3D7_1035200"
 #define S_ANTIGEN_SEQUENCE "PF3D7_1035200.1"
 
-#define ACTIVE_CONTIG S_ANTIGEN_CONTIG
-#define ACTIVE_GENE S_ANTIGEN_GENE
-#define ACTIVE_SEQUENCE S_ANTIGEN_SEQUENCE
+#define ACTIVE_CONTIG PFATP4_MALAWI_CONTIG
+#define ACTIVE_GENE PFATP4_MALAWI_GENE
+#define ACTIVE_SEQUENCE PFATP4_MALAWI_SEQUENCE
 
   // Filter on sequence and quality >= 5.
   std::shared_ptr<const kgl::GenomeVariant> filter_ptr = all_variant_ptr->filterVariants(kgl::AndFilter(kgl::SequenceFilter(ACTIVE_SEQUENCE), kgl::QualityFilter(5)));
@@ -149,31 +149,39 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
     std::shared_ptr<AminoSequence> amino_reference_seq;
     std::vector<std::shared_ptr<AminoSequence>> amino_mutant_vec;
     bool frame_shift_flag;
-    variant_ptr->mutantProteins(ACTIVE_CONTIG,
+    if (variant_ptr->mutantProteins(ACTIVE_CONTIG,
                                 ACTIVE_GENE,
                                 ACTIVE_SEQUENCE,
                                 genome_db_ptr,
                                 frame_shift_flag,
                                 amino_reference_seq,
-                                amino_mutant_vec);
+                                amino_mutant_vec)) {
 
-    // Write the vector of mutant proteins to a fasta file.
-    std::vector<std::pair<std::string, std::shared_ptr<AminoSequence>>> fasta_records;
-    std::string ref_name = ACTIVE_SEQUENCE;
-    ref_name += "_reference";
-    fasta_records.emplace_back(std::pair<std::string, std::shared_ptr<AminoSequence>>(ref_name, amino_reference_seq));
-    std::stringstream mutant_name;
-    size_t mutant_count = 0;
-    for (auto mutant : amino_mutant_vec) {
+      // Write the vector of mutant proteins to a fasta file.
+      std::vector<std::pair<std::string, std::shared_ptr<AminoSequence>>> fasta_records;
+      std::string ref_name = ACTIVE_SEQUENCE;
+      ref_name += "_reference";
+      fasta_records.emplace_back(std::pair<std::string, std::shared_ptr<AminoSequence>>(ref_name, amino_reference_seq));
+      std::stringstream mutant_name;
+      size_t mutant_count = 0;
+      for (auto mutant : amino_mutant_vec) {
 
-      ++mutant_count;
-      mutant_name << ACTIVE_SEQUENCE << "_mutant" << mutant_count;
-      fasta_records.emplace_back(
-      std::pair<std::string, std::shared_ptr<AminoSequence>>(mutant_name.str(), amino_reference_seq));
+        ++mutant_count;
+        mutant_name << ACTIVE_SEQUENCE << "_mutant" << mutant_count;
+        fasta_records.emplace_back(
+        std::pair<std::string, std::shared_ptr<AminoSequence>>(mutant_name.str(), amino_reference_seq));
 
+        CompareScore_t score;
+        std::string comparison = amino_reference_seq->compareAminoSequences(mutant, score);
+        ExecEnv::log().info("Genome: {} Protein Sequence:{}, Frame Shift: {}, Score: {} Comparison:\n{}\n",
+                            file.genome_name, ACTIVE_SEQUENCE, frame_shift_flag, score, comparison);
+
+
+      }
+
+      ApplicationAnalysis::writeMutantProteins(fasta_file_name, fasta_records);
 
     }
-    ApplicationAnalysis::writeMutantProteins(fasta_file_name, fasta_records);
 
     // Filter on sequence
     std::shared_ptr<const kgl::GenomeVariant> check_ptr = variant_ptr->filterVariants(
@@ -205,14 +213,6 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
     }
 
-    for (auto mutant : amino_mutant_vec) {
-
-      CompareScore_t score;
-      std::string comparison = amino_reference_seq->compareAminoSequences(mutant, score);
-      ExecEnv::log().info("Genome: {} Protein Sequence:{}, Frame Shift: {}, Score: {} Comparison:\n{}\n",
-                          file.genome_name, ACTIVE_SEQUENCE, frame_shift_flag, score, comparison);
-
-    }
 
 
     // Filter on sequence

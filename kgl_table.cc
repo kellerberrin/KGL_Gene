@@ -7,29 +7,33 @@
 namespace kgl = kellerberrin::genome;
 
 
+
 // The NCBI Amino Acid translation tables. table should be in the interval [1, 31].
-bool kgl::AminoTranslationTable::setTranslationTable(size_t table) {
+bool kgl::AminoTranslationTable::setTranslationTable(const std::string& table_name) {
 
-  bool result = false;
+  std::string uc_table_name = table_name;
+  std::transform(uc_table_name.begin(), uc_table_name.end(), uc_table_name.begin(), ::toupper);
+  bool table_found = false;
 
-  if(table > Tables::TABLE_ARRAY_SIZE or table == 0) {
+  for (size_t idx = 0; idx < Tables::TABLEARRAYSIZE; ++idx) {
 
-    ExecEnv::log().warn("Amino translation table: {} not implemented, Standard table 1 used", table);
-    table = Tables::STANDARD_TABLE_1;
-    result = false;
+    if (Tables::TABLEARRAY[idx]->table_name == uc_table_name) {
 
-  }
-  if (Tables::TABLEARRAY[table-1] == nullptr) {
+      amino_table_rows_ = *(Tables::TABLEARRAY[idx]);
+      table_found = true;
 
-    ExecEnv::log().warn("Amino translation table: {} not implemented, Standard table 1 used", table);
-    table = Tables::STANDARD_TABLE_1;
-    result = false;
+    }
 
   }
 
-  amino_table_rows_ = *(Tables::TABLEARRAY[table-1]);
+  if(not table_found) {
 
-  return result;
+    ExecEnv::log().warn("Amino translation table: {} not found, Standard table 1 used", table_name);
+    amino_table_rows_ = *(Tables::STANDARDTABLE);
+
+  }
+
+  return table_found;
 
 }
 

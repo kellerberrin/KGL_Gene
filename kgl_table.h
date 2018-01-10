@@ -6,7 +6,7 @@
 #define KGL_TABLE_H
 
 
-#include "kgl_table_ncbi.h"
+#include "kgl_table_impl.h"
 #include "kgl_sequence_codon.h"
 
 
@@ -26,13 +26,15 @@ class AminoTranslationTable {
 
 public:
 
-  explicit AminoTranslationTable() { setTranslationTable(Tables::STANDARD_TABLE_1); }
+  explicit AminoTranslationTable() : amino_table_rows_(*Tables::STANDARDTABLE) {}
   ~AminoTranslationTable() = default;
 
   std::string TableName() { return amino_table_rows_.table_name; }
 
-  // The NCBI Amino Acid translation tables. table should be in the interval [1, 31].
-  bool setTranslationTable(size_t table);
+  std::string TableDescription() { return amino_table_rows_.table_description; }
+
+  // Get table by name.
+  bool setTranslationTable(const std::string& table_name);
 
   AminoAcid::Alphabet getAmino(const Codon& Codon) {
 

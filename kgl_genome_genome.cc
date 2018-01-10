@@ -71,7 +71,7 @@ void kgl::GenomeDatabase::verifyFeatureHierarchy() {
 
 }
 
-void kgl::GenomeDatabase::setTranslationTable(size_t table) {
+void kgl::GenomeDatabase::setTranslationTable(const std::string& table) {
 
   for (auto contig_pair : genome_sequence_map_) {
 

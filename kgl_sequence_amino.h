@@ -62,7 +62,9 @@ public:
 
   std::string translationTableName() const { return table_ptr_->TableName(); }
 
-  bool settranslationTable(size_t table) { return table_ptr_->setTranslationTable(table); }
+  std::string translationTableDescription() const { return table_ptr_->TableDescription(); }
+
+  bool settranslationTable(const std::string& table_name) { return table_ptr_->setTranslationTable(table_name); }
 
   Codon firstCodon(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const {
 

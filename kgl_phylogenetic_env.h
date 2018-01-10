@@ -29,7 +29,7 @@ struct Phylogenetic {
   std::string outCSVFile{"kgl_out.csv"};
   std::string logFile{"kgl_snp.log"};
   std::string contig{"*"};
-  size_t aminoTranslationTable{1};
+  std::string aminoTranslationTable{"NCBI_TABLE_1"};
   int max_error_count{1000};
   int max_warn_count{1000};
   bool verbose{false};

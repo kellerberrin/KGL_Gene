@@ -345,12 +345,6 @@ bool kgl::ParseGffFasta::GffFastaImpl::writeFastaFile(const std::string& fasta_f
 
   try {
 
-//    seqan::CharString comment = "# commment line.";
-//    std::string str_comment = "# commment line.";
-
-//    seqan::write(seq_file_out, comment);
-//    seqan::streamWriteBlock(seq_file_out, str_comment.c_str(), str_comment.size());
-//    seqan::stream
 
     for (auto sequence : fasta_sequences) {
 

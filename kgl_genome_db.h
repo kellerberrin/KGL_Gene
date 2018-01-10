@@ -49,7 +49,7 @@ public:
   bool findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const;
   const GeneMap& getGeneMap() const { return gene_map_; }
 
-  bool setTranslationTable(size_t table) { return coding_table_.settranslationTable(table); }
+  bool setTranslationTable(const std::string& table_name) { return coding_table_.settranslationTable(table_name); }
   std::string translationTableName() const { return coding_table_.translationTableName(); }
 
   const ContigId_t& contigId() const { return contig_id_; }
@@ -121,7 +121,7 @@ public:
 
   void createVerifyGenomeDatabase();
 
-  void setTranslationTable(size_t table);
+  void setTranslationTable(const std::string& table);
 
   void registerContigData(std::shared_ptr<ContigCountData>& contig_data_ptr) const;
 

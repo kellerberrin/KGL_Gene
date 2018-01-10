@@ -306,14 +306,16 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   addOption(parser, seqan::ArgParseOption(minimumProportionShortFlag_, minimumProportionFlag_, min_prop_desc, seqan::ArgParseArgument::DOUBLE, "FLOAT"));
 
   const char* translation_table_desc =
-  R"(The amino acid translation table used in gene verification and amino acid generation from CDS regions.
-  The table code is an integer that matches the translation tables defines on the NCBI website at
-  https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi)";
+  R"(The amino acid translation table name used in gene verification and amino acid generation from CDS regions.
+  The tables match the translation tables defines on the NCBI website at
+  https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi. Individual organism tables are also supported.
+  The current defined tables are: 'NCBI_TABLE_1' (the standard default table), 'NCBI_TABLE_2', 'NCBI_TABLE_3',
+  'NCBI_TABLE_4', 'NCBI_TABLE_5' and organism 'P_FALCIPARUM')";
 
   const char* translationTableFlag_ = "translationTable";
   const char* translationTableShortFlag_ = "t";
 
-  addOption(parser, seqan::ArgParseOption(translationTableShortFlag_, translationTableFlag_, translation_table_desc, seqan::ArgParseArgument::INTEGER, "INT"));
+  addOption(parser, seqan::ArgParseOption(translationTableShortFlag_, translationTableFlag_, translation_table_desc, seqan::ArgParseArgument::STRING, "STRING"));
 
   const char* verbose_desc =
   R"(Flag. Enables verbose logged output to screen and log file.)";

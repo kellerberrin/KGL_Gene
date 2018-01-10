@@ -48,8 +48,8 @@ add_executable (kgl_genome ${SOURCE_FILES} kgl_main.cc  kgl_gff_fasta.h kgl_gff_
                 kgl_variant.h kgl_variant.cc
                 kgl_filter.h kgl_filter.cc kgl_variant_set.cc
                 kgl_table.h kgl_table.cc kgl_sam_parse.h kgl_sam_parse.cc
-                kgl_sam_read.h kgl_sam_consume.h kgl_sam_process.h kgl_table_ncbi.h kgl_table_ncbi.cc
-                kgl_sequence_base.h kgl_sequence_base.cc kgl_sequence_amino.h kgl_sequence_amino.cc
+                kgl_sam_read.h kgl_sam_consume.h kgl_sam_process.h kgl_table_ncbi.h
+        kgl_sequence_base.h kgl_sequence_base.cc kgl_sequence_amino.h kgl_sequence_amino.cc
                 kgl_alphabet_amino.h kgl_variant_db.h
                 kgl_variant_db.cc kgl_variant_snp.cc kgl_variant_compound.h
                 kgl_variant_compound.cc kgl_variant_compound_snp.cc kgl_genome_prelim.h
@@ -72,6 +72,6 @@ add_executable (kgl_genome ${SOURCE_FILES} kgl_main.cc  kgl_gff_fasta.h kgl_gff_
                 kgl_variant_factory_bam.h kgl_variant_factory_bam.cc kgl_variant_factory_vcf_impl.h
                 kgl_variant_factory_vcf_impl.cc kgl_variant_factory_vcf_utils.cc kgl_variant_mutation.h
                 kgl_variant_db_mutation.cc kgl_variant_db_contig.h kgl_variant_db_genome.h
-        kgl_sequence_offset.h kgl_sequence_offset.cc kgl_variant_mutation_offset.h kgl_variant_mutation_offset.cc kgl_sequence_manip.h kgl_sequence_manip.cc kgl_variant_factory_compound_noncoding.cc kgl_variant_db_population.h)
+        kgl_sequence_offset.h kgl_sequence_offset.cc kgl_variant_mutation_offset.h kgl_variant_mutation_offset.cc kgl_sequence_manip.h kgl_sequence_manip.cc kgl_variant_factory_compound_noncoding.cc kgl_variant_db_population.h kgl_table_impl.h kgl_table_impl.cc kgl_table_organism.h)
 
 target_link_libraries(kgl_genome ${Boost_LIBRARIES})

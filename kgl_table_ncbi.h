@@ -7,6 +7,7 @@
 
 
 #include "kgl_genome_types.h"
+#include "kgl_table_impl.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -19,44 +20,19 @@ namespace genome {   // project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-struct AminoTableColumn {
 
-  Amino_t amino_acid;
-  Amino_t start;
-  Nucleotide_t base1;
-  Nucleotide_t base2;
-  Nucleotide_t base3;
-
-};
-
-
-struct TranslationTable {
-
-  const AminoTableColumn* amino_table;
-  const char* table_name;
-  size_t stop_codon_index;
-
-};
-
-
-
-class Tables {
+class NCBITables {
 
 public:
 
-  Tables() = delete; // Singleton
-  ~Tables() = delete;
+  NCBITables() = delete; // Singleton
+  ~NCBITables() = delete;
 
-  constexpr static const int CODING_NUCLEOTIDE_2 = 4;
-  constexpr static const int CODING_NUCLEOTIDE_1 = 16;
-  constexpr static const int AMINO_TABLE_SIZE = 64;
-  constexpr static const int STANDARD_TABLE_1 = 1;
-
-private:
 
   constexpr static const int STOP_CODON_OFFSET = 48;
-  constexpr static const char *AMINO_TABLE_NAME = "The Standard Code (table 1)";
-  constexpr static const AminoTableColumn StandardTranslationTable[AMINO_TABLE_SIZE]
+  constexpr static const char *AMINO_TABLE_NAME = "NCBI_TABLE_1";
+  constexpr static const char *AMINO_TABLE_DESC = "The Standard Amino Code";
+  constexpr static const AminoTableColumn StandardTranslationTable[Tables::AMINO_TABLE_SIZE]
   {{'K', '-', 'A', 'A', 'A'},
    {'N', '-', 'A', 'A', 'C'},
    {'K', '-', 'A', 'A', 'G'},
@@ -123,19 +99,20 @@ private:
    {'F', '-', 'T', 'T', 'T'}};
 
   // Check the array size at compile time.
-  static_assert( sizeof(StandardTranslationTable)/sizeof(AminoTableColumn) == AMINO_TABLE_SIZE
+  static_assert( sizeof(StandardTranslationTable)/sizeof(AminoTableColumn) == Tables::AMINO_TABLE_SIZE
   , "Error - the standard amino acid translation table should have 64 elements");
 
   // Define the standard translation table.
-  constexpr static const TranslationTable TABLE_1{StandardTranslationTable, AMINO_TABLE_NAME, STOP_CODON_OFFSET};
+  constexpr static const TranslationTable TABLE_1{StandardTranslationTable, AMINO_TABLE_NAME, AMINO_TABLE_DESC, STOP_CODON_OFFSET};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The Vertebrate Mitochondrial Code (transl_table=2)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   constexpr static const int STOP_CODON_OFFSET_2 = 48;
-  constexpr static const char *AMINO_TABLE_2_NAME = "The Vertebrate Mitochondrial Code (transl_table=2)";
-  constexpr static const AminoTableColumn TranslationTable_2[AMINO_TABLE_SIZE]
+  constexpr static const char *AMINO_TABLE_2_NAME = "NCBI_TABLE_2";
+  constexpr static const char *AMINO_TABLE_2_DESC = "The Vertebrate Mitochondrial Code";
+  constexpr static const AminoTableColumn TranslationTable_2[Tables::AMINO_TABLE_SIZE]
   {{ 'K' ,'-' ,'A' ,'A' ,'A' },
    { 'N' ,'-' ,'A' ,'A' ,'C' },
    { 'K' ,'-' ,'A' ,'A' ,'G' },
@@ -202,19 +179,20 @@ private:
    { 'F' ,'-' ,'T' ,'T' ,'T' }};
 
   // Check the array size at compile time.
-  static_assert( sizeof(TranslationTable_2)/sizeof(AminoTableColumn) == AMINO_TABLE_SIZE
+  static_assert( sizeof(TranslationTable_2)/sizeof(AminoTableColumn) == Tables::AMINO_TABLE_SIZE
   , "Error - the standard amino acid translation table should have 64 elements");
 
   // Define the standard translation table.
-  constexpr static const TranslationTable TABLE_2{TranslationTable_2, AMINO_TABLE_2_NAME, STOP_CODON_OFFSET_2};
+  constexpr static const TranslationTable TABLE_2{TranslationTable_2, AMINO_TABLE_2_NAME, AMINO_TABLE_2_DESC, STOP_CODON_OFFSET_2};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The Yeast Mitochondrial Code (transl_table=3)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   constexpr static const int STOP_CODON_OFFSET_3 = 48;
-  constexpr static const char *AMINO_TABLE_3_NAME = "The Yeast Mitochondrial Code (transl_table=3)";
-  constexpr static const AminoTableColumn TranslationTable_3[AMINO_TABLE_SIZE]
+  constexpr static const char *AMINO_TABLE_3_NAME = "NCBI_TABLE_3";
+  constexpr static const char *AMINO_TABLE_3_DESC = "The Yeast Mitochondrial Code";
+  constexpr static const AminoTableColumn TranslationTable_3[Tables::AMINO_TABLE_SIZE]
   {{ 'K' ,'-' ,'A' ,'A' ,'A' },
    { 'N' ,'-' ,'A' ,'A' ,'C' },
    { 'K' ,'-' ,'A' ,'A' ,'G' },
@@ -281,11 +259,11 @@ private:
    { 'F' ,'-' ,'T' ,'T' ,'T' }};
 
   // Check the array size at compile time.
-  static_assert( sizeof(TranslationTable_3)/sizeof(AminoTableColumn) == AMINO_TABLE_SIZE
+  static_assert( sizeof(TranslationTable_3)/sizeof(AminoTableColumn) == Tables::AMINO_TABLE_SIZE
   , "Error - the standard amino acid translation table should have 64 elements");
 
   // Define the standard translation table.
-  constexpr static const TranslationTable TABLE_3{TranslationTable_3, AMINO_TABLE_3_NAME, STOP_CODON_OFFSET_3};
+  constexpr static const TranslationTable TABLE_3{TranslationTable_3, AMINO_TABLE_3_NAME, AMINO_TABLE_3_DESC, STOP_CODON_OFFSET_3};
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -293,9 +271,10 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   constexpr static const int STOP_CODON_OFFSET_4 = 48;
-  constexpr static const char *AMINO_TABLE_4_NAME =
-  "The Mold, Protozoan, and Coelenterate Mitochondrial Code and the Mycoplasma/Spiroplasma Code (transl_table=4)";
-  constexpr static const AminoTableColumn TranslationTable_4[AMINO_TABLE_SIZE]
+  constexpr static const char *AMINO_TABLE_4_NAME = "NCBI_TABLE_4";
+  constexpr static const char *AMINO_TABLE_4_DESC =
+  "The Mold, Protozoan, and Coelenterate Mitochondrial Code and the Mycoplasma/Spiroplasma Code";
+  constexpr static const AminoTableColumn TranslationTable_4[Tables::AMINO_TABLE_SIZE]
   {{ 'K' ,'-' ,'A' ,'A' ,'A' },
    { 'N' ,'-' ,'A' ,'A' ,'C' },
    { 'K' ,'-' ,'A' ,'A' ,'G' },
@@ -362,19 +341,20 @@ private:
    { 'F' ,'-' ,'T' ,'T' ,'T' }};
 
   // Check the array size at compile time.
-  static_assert( sizeof(TranslationTable_4)/sizeof(AminoTableColumn) == AMINO_TABLE_SIZE
+  static_assert( sizeof(TranslationTable_4)/sizeof(AminoTableColumn) == Tables::AMINO_TABLE_SIZE
   , "Error - the standard amino acid translation table should have 64 elements");
 
   // Define the standard translation table.
-  constexpr static const TranslationTable TABLE_4{TranslationTable_4, AMINO_TABLE_4_NAME, STOP_CODON_OFFSET_4};
+  constexpr static const TranslationTable TABLE_4{TranslationTable_4, AMINO_TABLE_4_NAME, AMINO_TABLE_4_DESC, STOP_CODON_OFFSET_4};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The Invertebrate Mitochondrial Code (transl_table=5)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   constexpr static const int STOP_CODON_OFFSET_5 = 48;
-  constexpr static const char *AMINO_TABLE_5_NAME = "The Invertebrate Mitochondrial Code (transl_table=5)";
-  constexpr static const AminoTableColumn TranslationTable_5[AMINO_TABLE_SIZE]
+  constexpr static const char *AMINO_TABLE_5_NAME = "NCBI_TABLE_5";
+  constexpr static const char *AMINO_TABLE_5_DESC = "The Invertebrate Mitochondrial Code";
+  constexpr static const AminoTableColumn TranslationTable_5[Tables::AMINO_TABLE_SIZE]
   {{ 'K' ,'-' ,'A' ,'A' ,'A' },
    { 'N' ,'-' ,'A' ,'A' ,'C' },
    { 'K' ,'-' ,'A' ,'A' ,'G' },
@@ -441,25 +421,14 @@ private:
    { 'F' ,'-' ,'T' ,'T' ,'T' }};
 
   // Check the array size at compile time.
-  static_assert( sizeof(TranslationTable_5)/sizeof(AminoTableColumn) == AMINO_TABLE_SIZE
+  static_assert( sizeof(TranslationTable_5)/sizeof(AminoTableColumn) == Tables::AMINO_TABLE_SIZE
   , "Error - the standard amino acid translation table should have 64 elements");
 
   // Define the standard translation table.
-  constexpr static const TranslationTable TABLE_5{TranslationTable_5, AMINO_TABLE_5_NAME, STOP_CODON_OFFSET_5};
-
-public:
-
-  // An array of Amino translation tables, nullptr are ignored and default to TABLE_1 (the standard table)
-  // These tables are defined on the NCBI website: https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
-  // There are 31 tables defined there and as time permits these can be added to the table array and will
-  // be automatically available for DNA/RNA translation and Gene verification. Note that the kgl code maintains
-  // separate tables for different contigs, so for example, a different table could used for (e.g. table 2)
-  // for a vertebrate mitochondrial contig.
-  constexpr static const size_t TABLE_ARRAY_SIZE = 5;
-  constexpr static const TranslationTable* TABLEARRAY[]{ &TABLE_1, &TABLE_2, &TABLE_3, &TABLE_4, &TABLE_5 };
+  constexpr static const TranslationTable TABLE_5{TranslationTable_5, AMINO_TABLE_5_NAME, AMINO_TABLE_5_DESC, STOP_CODON_OFFSET_5};
 
 
-};  // Table
+};  // NCBITable
 
 
 
