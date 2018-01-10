@@ -18,36 +18,6 @@
 namespace kgl = kellerberrin::genome;
 
 
-std::shared_ptr<const kgl::GenomeVariant> getGenomeVariants(std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr,
-                                                            std::shared_ptr<kgl::PopulationStatistics> population_stats_ptr,
-                                                            const std::string& file_name,
-                                                            const std::string& genome_name,
-                                                            kgl::Phred_t read_quality,
-                                                            kgl::Phred_t variant_quality,
-                                                            long min_count,
-                                                            double min_proportion,
-                                                            const std::string& workDirectory) {
-
-  // Read in the SAM file variants
-  std::shared_ptr<const kgl::GenomeVariant> all_variant_ptr = kgl::VariantFactory().createVariants(genome_db_ptr,
-                                                                                                   genome_name,
-                                                                                                   file_name,
-                                                                                                   read_quality,
-                                                                                                   variant_quality,
-                                                                                                   min_count,
-                                                                                                   min_proportion);
-
-  // Create a genome statistics object.
-  std::shared_ptr<const kgl::GenomeStatistics> statistics_ptr(std::make_shared<kgl::GenomeStatistics>(genome_db_ptr,
-                                                                                                      all_variant_ptr));
-  // Add to the population statistics
-  population_stats_ptr->addGenomeStatistics(statistics_ptr);
-
-  // Write the genome stats to file.
-  std::string stats_file_name = kgl::Utility::filePath("genome_stats", workDirectory) + ".csv";
-  statistics_ptr->outputFeatureCSV(stats_file_name, kgl::VariantOutputIndex::START_1_BASED);
-
-
 // pfATP4 drug target ATP4 sodium pump.
 #define PFATP4_MINORITY_CONTIG "chr12"
 #define PFATP4_MINORITY_GENE "PF3D7_1211900"
@@ -90,15 +60,37 @@ std::shared_ptr<const kgl::GenomeVariant> getGenomeVariants(std::shared_ptr<cons
 #define ACTIVE_GENE PFATP4_MALAWI_GENE
 #define ACTIVE_SEQUENCE PFATP4_MALAWI_SEQUENCE
 
+
+
+
+
+std::shared_ptr<const kgl::GenomeVariant> getGenomeVariants(std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr,
+                                                            const std::string& file_name,
+                                                            const std::string& genome_name,
+                                                            kgl::Phred_t read_quality,
+                                                            kgl::Phred_t variant_quality,
+                                                            long min_count,
+                                                            double min_proportion,
+                                                            const std::string& workDirectory) {
+
+  // Read in the SAM file variants
+  std::shared_ptr<const kgl::GenomeVariant> all_variant_ptr = kgl::VariantFactory().createVariants(genome_db_ptr,
+                                                                                                   genome_name,
+                                                                                                   file_name,
+                                                                                                   read_quality,
+                                                                                                   variant_quality,
+                                                                                                   min_count,
+                                                                                                   min_proportion);
+
+
   // Filter on sequence and quality >= 5.
-  std::shared_ptr<const kgl::GenomeVariant> filter_ptr = all_variant_ptr->filterVariants(kgl::AndFilter(kgl::SequenceFilter(ACTIVE_SEQUENCE), kgl::QualityFilter(5)));
+  std::shared_ptr<const kgl::GenomeVariant> filter_ptr = all_variant_ptr->filterVariants(kgl::QualityFilter(5));
   // Filter on contig
 
-  kgl::ExecEnv::log().info("Filtered for: {}, Genome: {} has: {} variants", ACTIVE_SEQUENCE, genome_name, filter_ptr->size());
-  std::cout << filter_ptr;
+  kgl::ExecEnv::log().info("Filtered for quality: {}, Genome: {} has: {} variants", 5, genome_name, filter_ptr->size());
 
   // Return the genome variants.
-  return all_variant_ptr;
+  return filter_ptr;
 
 }
 
@@ -116,18 +108,14 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
   // Wire-up the genome database.
   genome_db_ptr->createVerifyGenomeDatabase();
 
-  // Create a population statistics object.
-  std::shared_ptr<kgl::PopulationStatistics> population_stats_ptr(std::make_shared<kgl::PopulationStatistics>("Malawi-PRJNA173723"));
-
   // Create a population variant object.
-  std::shared_ptr<kgl::PopulationVariant> population_variant_ptr(std::make_shared<kgl::PopulationVariant>("Malawi-PRJNA173723"));
+  std::shared_ptr<kgl::PopulationVariant> pop_variant_ptr(std::make_shared<kgl::PopulationVariant>("Malawi-PRJNA173723"));
 
   // For all organisms
   for (const auto& file : args.fileList) {
 
     // Generate all genome variants.
     std::shared_ptr<const kgl::GenomeVariant> variant_ptr = getGenomeVariants(genome_db_ptr,
-                                                                              population_stats_ptr,
                                                                               file.file_name,
                                                                               file.genome_name,
                                                                               args.readQuality,
@@ -137,132 +125,12 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
                                                                               args.workDirectory);
 
     // Store the genome variant pointer
-    population_variant_ptr->addGenomeVariant(variant_ptr);
+    pop_variant_ptr->addGenomeVariant(variant_ptr);
 
-    // Write genome variants to file.
-    variant_ptr->outputCSV(args.outCSVFile, VariantOutputIndex::START_1_BASED, false);
-    std::string sequence_name = file.genome_name;
-    sequence_name += "_";
-    sequence_name += ACTIVE_GENE;
-    std::string fasta_file_name = Utility::filePath(sequence_name, args.workDirectory) + ".fasta";
-
-    std::shared_ptr<AminoSequence> amino_reference_seq;
-    std::vector<std::shared_ptr<AminoSequence>> amino_mutant_vec;
-    bool frame_shift_flag;
-    if (variant_ptr->mutantProteins(ACTIVE_CONTIG,
-                                ACTIVE_GENE,
-                                ACTIVE_SEQUENCE,
-                                genome_db_ptr,
-                                frame_shift_flag,
-                                amino_reference_seq,
-                                amino_mutant_vec)) {
-
-      // Write the vector of mutant proteins to a fasta file.
-      std::vector<std::pair<std::string, std::shared_ptr<AminoSequence>>> fasta_records;
-      std::string ref_name = ACTIVE_SEQUENCE;
-      ref_name += "_reference";
-      fasta_records.emplace_back(std::pair<std::string, std::shared_ptr<AminoSequence>>(ref_name, amino_reference_seq));
-      std::stringstream mutant_name;
-      size_t mutant_count = 0;
-      for (auto mutant : amino_mutant_vec) {
-
-        ++mutant_count;
-        mutant_name << ACTIVE_SEQUENCE << "_mutant" << mutant_count;
-        fasta_records.emplace_back(
-        std::pair<std::string, std::shared_ptr<AminoSequence>>(mutant_name.str(), amino_reference_seq));
-
-        CompareScore_t score;
-        std::string comparison = amino_reference_seq->compareAminoSequences(mutant, score);
-        ExecEnv::log().info("Genome: {} Protein Sequence:{}, Frame Shift: {}, Score: {} Comparison:\n{}\n",
-                            file.genome_name, ACTIVE_SEQUENCE, frame_shift_flag, score, comparison);
-
-
-      }
-
-      ApplicationAnalysis::writeMutantProteins(fasta_file_name, fasta_records);
-
-    }
-
-    // Filter on sequence
-    std::shared_ptr<const kgl::GenomeVariant> check_ptr = variant_ptr->filterVariants(
-    kgl::AndFilter(kgl::ContigFilter(ACTIVE_CONTIG), kgl::RegionFilter(1393838, 1394838)));
-    kgl::ExecEnv::log().info("5 Prime Filter\n:");
-    std::cout << check_ptr;
-
-
-    // Generate a vector of 5 Prime UTR mutation maps for visual inspection
-    std::shared_ptr<DNA5SequenceCoding> prime_5_reference_seq;
-    std::vector<std::shared_ptr<DNA5SequenceCoding>> prime_5_mutant_vec;
-    if (ApplicationAnalysis::compare5Prime(ACTIVE_CONTIG,
-                                           ACTIVE_GENE,
-                                           ACTIVE_SEQUENCE,
-                                           1000,
-                                           genome_db_ptr,
-                                           variant_ptr,
-                                           prime_5_reference_seq,
-                                           prime_5_mutant_vec)) {
-
-      for (auto mutant : prime_5_mutant_vec) {
-
-        CompareScore_t score;
-        std::string comparison = prime_5_reference_seq->compareDNA5Coding(mutant, score);
-        ExecEnv::log().info("Genome: {} 5 Prime UTR Sequence:{}, Score: {} Comparison:\n{}\n",
-                            file.genome_name, ACTIVE_SEQUENCE, score, comparison);
-
-      }
-
-    }
-
-
-
-    // Filter on sequence
-    check_ptr = variant_ptr->filterVariants(
-    kgl::AndFilter(kgl::ContigFilter(ACTIVE_CONTIG), kgl::RegionFilter(1396596, 1397596)));
-    kgl::ExecEnv::log().info("3 Prime Filter\n:");
-    std::cout << check_ptr;
-
-    // Generate a vector of 3 Prime UTR mutation maps for visual inspection
-    std::shared_ptr<DNA5SequenceCoding> prime_3_reference_seq;
-    std::vector<std::shared_ptr<DNA5SequenceCoding>> prime_3_mutant_vec;
-    if (ApplicationAnalysis::compare3Prime(ACTIVE_CONTIG,
-                                           ACTIVE_GENE,
-                                           ACTIVE_SEQUENCE,
-                                           1000,
-                                           genome_db_ptr,
-                                           variant_ptr,
-                                           prime_3_reference_seq,
-                                           prime_3_mutant_vec)) {
-
-      for (auto mutant : prime_3_mutant_vec) {
-
-        CompareScore_t score;
-        std::string comparison = prime_3_reference_seq->compareDNA5Coding(mutant, score);
-        ExecEnv::log().info("Genome: {} 3 Prime UTR Sequence:{}, Score: {} Comparison:\n{}\n",
-                            file.genome_name, ACTIVE_SEQUENCE, score, comparison);
-
-      }
-
-    }
-
-    // Generate a vector of 3 Prime UTR mutation maps for visual inspection
-
-    std::shared_ptr<DNA5SequenceLinear> region_reference;
-    std::vector<std::shared_ptr<DNA5SequenceLinear>> region_mutant_vec;
-    if (variant_ptr->mutantRegion(ACTIVE_CONTIG, 1397190, 20, genome_db_ptr, region_reference, region_mutant_vec)) {
-
-      for (auto mutant : region_mutant_vec) {
-
-        CompareScore_t score;
-        std::string comparison = region_reference->compareDNA5Sequences(mutant, score);
-        ExecEnv::log().info("Genome: {} Test Sequence:{}, Score: {} Comparison:\n{}\n",
-                            file.genome_name, ACTIVE_SEQUENCE, score, comparison);
-
-      }
-
-    }
 
   }
 
+  ApplicationAnalysis::outputSequenceCSV(args.outCSVFile, genome_db_ptr, pop_variant_ptr);
   // Perform population analysis
   // (disabled to save CPU time)
   std::string newick_file = Utility::filePath("file.genome_name+ UPGMA_newick", args.workDirectory) + ".txt";

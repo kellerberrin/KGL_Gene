@@ -175,6 +175,14 @@ template<typename Alphabet>
 const std::string AlphabetSequence<Alphabet>::compareSequences(const AlphabetSequence<Alphabet>& compare_sequence, CompareScore_t& score) const
 {
 
+  if (length() == 0 or compare_sequence.length() == 0) {
+
+    ExecEnv::log().error("compareSequences(), Cannot compare empty sequences");
+    score = 0;
+    return "";
+
+  }
+
   return SequenceManipulation().compareSequences(getSequenceAsString(), compare_sequence.getSequenceAsString(), score);
 
 }

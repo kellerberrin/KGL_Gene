@@ -58,6 +58,7 @@ public:
   SuperFeatureMap& superFeatures() { return super_features_; }
   SubFeatureMap& subFeatures() { return sub_features_; }
 
+  std::shared_ptr<const ContigFeatures> contig() const { return contig_ptr_; }
 
 private:
 

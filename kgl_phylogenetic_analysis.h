@@ -59,7 +59,17 @@ public:
                             std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
                             std::vector<std::shared_ptr<DNA5SequenceCoding>>& mutant_sequence_vector);
 
+  static bool outputSequenceCSV(const std::string &file_name,
+                                std::shared_ptr<const GenomeDatabase> genome_db,
+                                std::shared_ptr<const PopulationVariant> pop_variant_ptr);
+
 private:
+
+  static std::string outputSequenceHeader(char delimiter);
+  static std::string outputSequence(char delimiter,
+                                    std::shared_ptr<const CodingSequence> coding_sequence,
+                                    std::shared_ptr<const GenomeDatabase> genome_db,
+                                    std::shared_ptr<const GenomeVariant> genome_variant);
 
 
 };

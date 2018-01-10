@@ -191,6 +191,144 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
 }
 
 
+bool kgl::ApplicationAnalysis::outputSequenceCSV(const std::string &file_name,
+                                                 std::shared_ptr<const GenomeDatabase> genome_db,
+                                                 std::shared_ptr<const PopulationVariant> pop_variant_ptr) {
+
+  const char CSV_delimiter = ',';
+  // open the file.
+  std::fstream out_file(file_name, std::fstream::out | std::fstream::app);
+  if (!out_file) {
+
+    ExecEnv::log().error("Cannot open output CSV file (--outCSVFile): {}", file_name);
+    return false;
+
+  }
+
+  out_file << outputSequenceHeader(CSV_delimiter);
+
+  for( auto genome_variant : pop_variant_ptr->getMap()) {
+
+    for (auto contig : genome_db->getMap()) {
+
+      for (auto gene : contig.second->getGeneMap()) {
+
+        const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene.second);
+        for (auto sequence : coding_seq_ptr->getMap()) {
+
+          out_file << outputSequence(CSV_delimiter, sequence.second, genome_db, genome_variant.second);
+
+        }
+
+      }
+
+    }
+
+  }
+
+  return out_file.good();
+
+}
+
+
+std::string kgl::ApplicationAnalysis::outputSequenceHeader(char delimiter) {
+
+  std::stringstream ss;
+
+  ss << "Genome" << delimiter;
+  ss << "Contig" << delimiter;
+  ss << "Sequence" << delimiter;
+  ss << "Size(DNA)" << delimiter;
+  ss << "Error" << delimiter;
+  ss << "Paths" << delimiter;
+  ss << "Score" << delimiter;
+  ss << '\n';
+
+  return ss.str();
+
+}
+
+
+std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
+                                                      std::shared_ptr<const CodingSequence> coding_sequence,
+                                                      std::shared_ptr<const GenomeDatabase> genome_db,
+                                                      std::shared_ptr<const GenomeVariant> genome_variant) {
+
+  std::string genome_id = genome_variant->genomeId();
+  std::string contig_id = coding_sequence->getGene()->contig()->contigId();
+  std::string gene_id = coding_sequence->getGene()->id();
+  std::string sequence_id = coding_sequence->getCDSParent()->id();
+  std::vector<std::pair<std::string,std::string>> description_vec;
+  coding_sequence->getGene()->getAttributes().getAllAttributes(description_vec);
+
+  std::shared_ptr<AminoSequence> amino_reference_seq;
+  std::vector<std::shared_ptr<AminoSequence>> amino_mutant_vec;
+  bool frame_shift_flag;
+  bool error_flag = true;
+  size_t mutant_paths = 0;
+  double average_score = 0;
+  if (genome_variant->mutantProteins(contig_id,
+                                     gene_id,
+                                     sequence_id,
+                                     genome_db,
+                                     frame_shift_flag,
+                                     amino_reference_seq,
+                                     amino_mutant_vec)) {
+
+    error_flag = false;
+    for (auto mutant : amino_mutant_vec) {
+
+      CompareScore_t amino_score;
+      amino_reference_seq->compareAminoSequences(mutant, amino_score);
+      average_score += static_cast<double>(amino_score);
+      ++mutant_paths;
+
+    }
+
+    if (mutant_paths > 0) {
+
+      average_score = average_score / static_cast<double>(mutant_paths);
+
+    } else {
+
+      average_score = 0;
+
+    }
+
+
+  } else {
+
+    ExecEnv::log().error("Problem mutating contig: {}, sequence: {}", contig_id, sequence_id);
+
+  }
+
+
+  std::stringstream ss;
+
+  ss << genome_id << delimiter;
+  ss << contig_id << delimiter;
+  ss << sequence_id << delimiter;
+  ss << coding_sequence->codingNucleotides() << delimiter;
+  ss << error_flag << delimiter;
+  ss << mutant_paths << delimiter;
+  ss << average_score << delimiter;
+
+  for (const auto& description : description_vec) {
+
+    if (description.first == Attributes::DESCRIPTION_KEY) {
+
+      ss << description.second;
+
+    }
+
+  }
+
+  ss << '\n';
+
+  return ss.str();
+
+}
+
 
 bool kgl::PhylogeneticAnalysis::UPGMA(const std::string& newick_file,
                                       std::shared_ptr<const PopulationStatistics> population_stats_ptr) {
