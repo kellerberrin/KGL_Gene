@@ -44,6 +44,12 @@ std::ostream& operator<<(std::ostream &os, const kgl::GenomeVariant& genome_vari
 
 std::ostream & operator<<(std::ostream &os, std::shared_ptr<const kellerberrin::genome::GenomeVariant> genome_variant_ptr) {
 
-  return os << *genome_variant_ptr;
+  return operator<<(os, *genome_variant_ptr);
+
+}
+
+std::ostream & operator<<(std::ostream &os, std::shared_ptr<kellerberrin::genome::GenomeVariant> genome_variant_ptr) {
+
+  return operator<<(os, *genome_variant_ptr);
 
 }

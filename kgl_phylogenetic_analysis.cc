@@ -241,8 +241,9 @@ std::string kgl::ApplicationAnalysis::outputSequenceHeader(char delimiter) {
   ss << "Size(DNA)" << delimiter;
   ss << "Error" << delimiter;
   ss << "Paths" << delimiter;
+  ss << "FrameShift" << delimiter;
   ss << "Score" << delimiter;
-  ss << '\n';
+  ss << "Description" << '\n';
 
   return ss.str();
 
@@ -311,6 +312,7 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
   ss << coding_sequence->codingNucleotides() << delimiter;
   ss << error_flag << delimiter;
   ss << mutant_paths << delimiter;
+  ss << frame_shift_flag << delimiter;
   ss << average_score << delimiter;
 
   for (const auto& description : description_vec) {

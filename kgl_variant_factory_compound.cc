@@ -177,6 +177,8 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
                   // If it is a different variant then copy the compound variant map, pop the last entry, push the variant and add the map.
                   if (not compound_variant_ptr->rbegin()->second->equivalent(*variant.second)) {
 
+                    // set the found flag to true.
+                    found_sequence = true;
                     CompoundVariantMap compound_variant = *compound_variant_ptr; // copy
                     compound_variant.erase(std::prev(compound_variant.end())); // pop last
                     std::pair<ContigSize_t, std::shared_ptr<const SingleVariant>> insert_pair(subvariant_ptr->offset(), subvariant_ptr);

@@ -78,6 +78,10 @@ public:
 
   }
 
+  bool checkStartCodon(std::shared_ptr<const AminoSequence> sequence_ptr) const;
+  bool checkStopCodon(std::shared_ptr<const AminoSequence> sequence_ptr) const;
+  size_t checkNonsenseMutation(std::shared_ptr<const AminoSequence> sequence_ptr) const;
+
   std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const;
 
   std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,

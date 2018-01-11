@@ -92,7 +92,13 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
   // Generate the mutant sequences.
   // Extract the variants for processing.
   OffsetVariantMap coding_variant_map;
-  getCodingSortedVariants(contig_id, coding_sequence_ptr->start(), coding_sequence_ptr->end(), coding_variant_map, frame_shift_flag);
+  getCodingSortedVariants(contig_id,
+                          gene_id,
+                          sequence_id,
+                          coding_sequence_ptr->start(),
+                          coding_sequence_ptr->end(),
+                          coding_variant_map,
+                          frame_shift_flag);
 
   // There may be more than one different variant specified per offset.
   // If this is the case, then we create alternative mutation paths.

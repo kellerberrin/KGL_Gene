@@ -195,13 +195,6 @@ bool kgl::Variant::offsetOverlap(const Variant& cmp_var) const {
 
   }
 
-  // Only if both variants are SNPs.
-  if (not (isSNP() and cmp_var.isSNP())) {
-
-    return false;
-
-  }
-
   // On the same contig so check for overlap.
   ContigOffset_t start = contigOffset();
   ContigOffset_t end = contigOffset() + size() - 1;
@@ -209,6 +202,114 @@ bool kgl::Variant::offsetOverlap(const Variant& cmp_var) const {
   ContigOffset_t cmp_start = cmp_var.contigOffset();
   ContigOffset_t cmp_end = cmp_var.contigOffset() + size() - 1;
 
-  return ((start <= cmp_start) and (cmp_start <= end)) or ((start <= cmp_end) and (cmp_end <= end));
+  bool overlap_offset = ((start <= cmp_start) and (cmp_start <= end)) or ((start <= cmp_end) and (cmp_end <= end));
+
+  // The overlap response depends on type of variant overlapping.
+  // If Insert / Insert - normal split
+  // If Insert / Delete - abnormal complain and split.
+  // If Insert / SNP - normal do not split.
+  // If Delete / Delete - abnormal complain and split
+  // If Delete and SNP - abnormal complain and split.
+  // If SNO and SNP - normal split.
+  if (overlap_offset) {
+
+    if (isInsert()) {
+
+      if (cmp_var.isInsert()) {
+
+        return true; // OK and split
+
+      } else if (cmp_var.isDelete()) {
+
+        // complain
+        ExecEnv::log().warn("offsetOverlap(), Insert variant: {} overlaps Delete variant: {}",
+                             output(' ', VariantOutputIndex::START_0_BASED, true),
+                             cmp_var.output(' ', VariantOutputIndex::START_0_BASED, true));
+        return true; // and split
+
+      } else if (cmp_var.isSNP()) {
+
+        return false; // OK and no split
+
+      } else {
+
+        ExecEnv::log().warn("offsetOverlap(), Unexpected variant type: {}",
+                             cmp_var.output(' ', VariantOutputIndex::START_0_BASED, true));
+        return false; // no split
+
+      }
+
+    } else if (isDelete()) {
+
+      if (cmp_var.isInsert()) {
+
+        // complain
+        ExecEnv::log().warn("offsetOverlap(), Delete variant: {} overlaps Insert variant: {}",
+                             output(' ', VariantOutputIndex::START_0_BASED, true),
+                             cmp_var.output(' ', VariantOutputIndex::START_0_BASED, true));
+        return true; // and split
+
+      } else if (cmp_var.isDelete()) {
+
+        // complain
+        ExecEnv::log().warn("offsetOverlap(), Delete variant: {} overlaps Delete variant: {}",
+                             output(' ', VariantOutputIndex::START_0_BASED, true),
+                             cmp_var.output(' ', VariantOutputIndex::START_0_BASED, true));
+        return true; // and split
+
+      } else if (cmp_var.isSNP()) {
+
+        // complain
+        ExecEnv::log().warn("offsetOverlap(), Delete variant: {} overlaps SNP variant: {}",
+                             output(' ', VariantOutputIndex::START_0_BASED, true),
+                             cmp_var.output(' ', VariantOutputIndex::START_0_BASED, true));
+        return true; // and split
+
+      } else {
+
+        ExecEnv::log().error("offsetOverlap(), Unexpected variant type: {}",
+                             cmp_var.output(' ', VariantOutputIndex::START_0_BASED, true));
+        return false; // no split
+
+      }
+
+
+    } else if (isSNP()) {
+
+      if (cmp_var.isInsert()) {
+
+        return false; // OK and no split
+
+      } else if (cmp_var.isDelete()) {
+
+        // complain
+        ExecEnv::log().warn("offsetOverlap(), SNP variant: {} overlaps Delete variant: {}",
+                            output(' ', VariantOutputIndex::START_0_BASED, true),
+                            cmp_var.output(' ', VariantOutputIndex::START_0_BASED, true));
+        return true; // and split
+
+      } else if (cmp_var.isSNP()) {
+
+        return true; // OK and split
+
+      } else {
+
+        ExecEnv::log().error("offsetOverlap(), Unexpected variant type: {}",
+                             cmp_var.output(' ', VariantOutputIndex::START_0_BASED, true));
+        return false; // no split
+
+      }
+
+    } else {
+
+      ExecEnv::log().error("offsetOverlap(), Unexpected variant type: {}",
+                           output(' ', VariantOutputIndex::START_0_BASED, true));
+      return false; // no split
+
+    }
+
+  }
+
+  return false; // no overlap.
 
 }

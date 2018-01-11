@@ -185,7 +185,7 @@ std::string kgl::QualityFilter::filterName() const {
 std::string kgl::RegionFilter::filterName() const {
 
   std::stringstream ss;
-  ss << "Variant in the interval [" << start_ << ", " << end_ << ")";
+  ss << "Variant in the half-interval [" << start_ << ", " << end_ << ")";
   return ss.str();
 
 }

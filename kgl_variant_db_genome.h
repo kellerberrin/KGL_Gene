@@ -78,7 +78,9 @@ public:
                          OffsetVariantMap& variant_map) const;
 
   // Convenience routine only returns coding variants.
-  bool getCodingSortedVariants(ContigId_t contig_id,
+  bool getCodingSortedVariants(const ContigId_t& contig_id,
+                               const FeatureIdent_t& gene_id,
+                               const FeatureIdent_t& sequence_id,
                                ContigOffset_t start,
                                ContigOffset_t end,
                                OffsetVariantMap& variant_map,
@@ -132,6 +134,7 @@ private:
 // Not in kgl:: namespace.
 std::ostream & operator<<(std::ostream &os, const kellerberrin::genome::GenomeVariant& genome_variant);
 std::ostream & operator<<(std::ostream &os, std::shared_ptr<const kellerberrin::genome::GenomeVariant> genome_variant_ptr);
+std::ostream & operator<<(std::ostream &os, std::shared_ptr<kellerberrin::genome::GenomeVariant> genome_variant_ptr);
 
 
 #endif //KGL_VARIANT_DB_GENOME_H

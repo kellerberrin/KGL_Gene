@@ -38,7 +38,27 @@ bool kgl::AminoTranslationTable::setTranslationTable(const std::string& table_na
 }
 
 
-size_t kgl::AminoTranslationTable::index(const Codon& codon) {
+bool kgl::AminoTranslationTable::isStartAmino(AminoAcid::Alphabet amino) const {
+
+  bool found = false;
+  for (size_t index = 0; index < Tables::AMINO_TABLE_SIZE; ++index) {
+
+    if (AminoAcid::convertToChar(amino) == amino_table_rows_.amino_table[index].amino_acid
+        and amino_table_rows_.amino_table[index].start == AminoAcid::START_CODON) {
+
+      found = true;
+      break;
+
+    }
+
+  }
+
+  return found;
+
+}
+
+
+size_t kgl::AminoTranslationTable::index(const Codon& codon) const {
 
   size_t table_index = (CodingDNA5::nucleotideToColumn(codon[0]) * Tables::CODING_NUCLEOTIDE_1) +
                        (CodingDNA5::nucleotideToColumn(codon[1]) * Tables::CODING_NUCLEOTIDE_2) +

@@ -48,8 +48,8 @@ public:
   AlphabetSequence() = default;
   ~AlphabetSequence() override = default;
 
-  auto operator[] (ContigOffset_t& offset) const { return alphabet_string_[offset]; }
-  auto at(ContigOffset_t& offset) const { return alphabet_string_[offset]; }
+  auto operator[] (ContigOffset_t offset) const { return alphabet_string_[offset]; }
+  auto at(ContigOffset_t offset) const { return alphabet_string_[offset]; }
 
   ContigSize_t length() const { return alphabet_string_.length(); }
   std::string getSequenceAsString() const override { return alphabet_string_.str(); }

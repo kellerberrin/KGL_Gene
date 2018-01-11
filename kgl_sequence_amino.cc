@@ -34,7 +34,7 @@ bool kgl::AminoSequence::removeTrailingStop() {
 
   } else {  // Not a stop codon.
 
-    ExecEnv::log().warn("removeTrailingStop(). Final amino: {} is not a stop codon.", AminoAcid::convertToChar(*alphabet_string_.rbegin()));
+    ExecEnv::log().info("removeTrailingStop(). Final amino: {} is not a stop codon.", AminoAcid::convertToChar(*alphabet_string_.rbegin()));
     return false;
 
   }
@@ -92,6 +92,49 @@ size_t kgl::TranslateToAmino::checkNonsenseMutation(std::shared_ptr<const DNA5Se
   return 0;
 
 }
+
+
+bool kgl::TranslateToAmino::checkStartCodon(std::shared_ptr<const AminoSequence> sequence_ptr) const {
+
+  if (sequence_ptr->length() > 0) {
+
+    return table_ptr_->isStartAmino(sequence_ptr->at(0));
+
+  } else {
+
+    return false;
+
+  }
+
+}
+
+bool kgl::TranslateToAmino::checkStopCodon(std::shared_ptr<const AminoSequence> sequence_ptr) const {
+
+  if (sequence_ptr->length() > 0) {
+
+    return table_ptr_->isStopAmino(sequence_ptr->at(sequence_ptr->length()-1));
+
+  } else {
+
+    return false;
+
+  }
+
+}
+
+
+size_t kgl::TranslateToAmino::checkNonsenseMutation(std::shared_ptr<const AminoSequence> sequence_ptr) const {
+
+  for (size_t index = 0; index < sequence_ptr->length() - 1; ++index) {
+
+    if (table_ptr_->isStopAmino(sequence_ptr->at(index))) return index;
+
+  }
+
+  return 0;
+
+}
+
 
 kgl::AminoAcid::Alphabet kgl::TranslateToAmino::getAmino(const Codon& codon) const {
 

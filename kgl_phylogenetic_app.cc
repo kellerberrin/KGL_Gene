@@ -124,13 +124,19 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
                                                                               args.minProportion,
                                                                               args.workDirectory);
 
+    std::shared_ptr<GenomeVariant> filter_ptr = variant_ptr->filterVariants(kgl::GeneFilter("PF3D7_0900600"));
+    std::cout << filter_ptr;
+
     // Store the genome variant pointer
     pop_variant_ptr->addGenomeVariant(variant_ptr);
+
 
 
   }
 
   ApplicationAnalysis::outputSequenceCSV(args.outCSVFile, genome_db_ptr, pop_variant_ptr);
+
+
   // Perform population analysis
   // (disabled to save CPU time)
   std::string newick_file = Utility::filePath("file.genome_name+ UPGMA_newick", args.workDirectory) + ".txt";

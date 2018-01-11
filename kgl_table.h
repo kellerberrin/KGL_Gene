@@ -29,9 +29,9 @@ public:
   explicit AminoTranslationTable() : amino_table_rows_(*Tables::STANDARDTABLE) {}
   ~AminoTranslationTable() = default;
 
-  std::string TableName() { return amino_table_rows_.table_name; }
+  std::string TableName() const { return amino_table_rows_.table_name; }
 
-  std::string TableDescription() { return amino_table_rows_.table_description; }
+  std::string TableDescription() const { return amino_table_rows_.table_description; }
 
   // Get table by name.
   bool setTranslationTable(const std::string& table_name);
@@ -42,13 +42,17 @@ public:
 
   }
 
-  bool isStopCodon(const Codon& Codon) {
+  bool isStopAmino(AminoAcid::Alphabet amino) const { return amino == AminoAcid::AMINO_STOP; }
+
+  bool isStartAmino(AminoAcid::Alphabet amino) const;
+
+  bool isStopCodon(const Codon& Codon) const {
 
     return (amino_table_rows_.amino_table[index(Codon)].start == AminoAcid::STOP_CODON);
 
   }
 
-  bool isStartCodon(const Codon& Codon) {
+  bool isStartCodon(const Codon& Codon) const {
 
     return amino_table_rows_.amino_table[index(Codon)].start == AminoAcid::START_CODON;
 
@@ -58,7 +62,7 @@ private:
 
   TranslationTable amino_table_rows_;
 
-  size_t index(const Codon& Codon);
+  size_t index(const Codon& Codon) const;
 
 };
 

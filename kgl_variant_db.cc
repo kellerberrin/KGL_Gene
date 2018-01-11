@@ -285,7 +285,9 @@ bool kgl::GenomeVariant::getSortedVariants(ContigId_t contig_id,
 }
 
 
-bool kgl::GenomeVariant::getCodingSortedVariants(ContigId_t contig_id,
+bool kgl::GenomeVariant::getCodingSortedVariants(const ContigId_t& contig_id,
+                                                 const FeatureIdent_t& gene_id,
+                                                 const FeatureIdent_t& sequence_id,
                                                  ContigOffset_t start,
                                                  ContigOffset_t end,
                                                  OffsetVariantMap& variant_map,
@@ -303,14 +305,18 @@ bool kgl::GenomeVariant::getCodingSortedVariants(ContigId_t contig_id,
 
     if (variant.second->type() == VariantSequenceType::CDS_CODING) {
 
-      variant_map.insert(std::pair<ContigOffset_t,std::shared_ptr<const Variant>>(variant.first, variant.second));
-      if (variant.second->isDelete()) {
+      if (variant.second->codingSequenceId() == sequence_id) {
 
-        shift_count -= variant.second->size();
+        variant_map.insert(std::pair<ContigOffset_t, std::shared_ptr<const Variant>>(variant.first, variant.second));
+        if (variant.second->isDelete()) {
 
-      } else if (variant.second->isInsert()) {
+          shift_count -= variant.second->size();
 
-        shift_count += variant.second->size();
+        } else if (variant.second->isInsert()) {
+
+          shift_count += variant.second->size();
+
+        }
 
       }
 
