@@ -240,7 +240,9 @@ std::string kgl::ApplicationAnalysis::outputSequenceHeader(char delimiter) {
   ss << "Sequence" << delimiter;
   ss << "Size(DNA)" << delimiter;
   ss << "Error" << delimiter;
-  ss << "Paths" << delimiter;
+  ss << "ValidReference" << delimiter;
+  ss << "AllPaths" << delimiter;
+  ss << "ValidPaths" << delimiter;
   ss << "FrameShift" << delimiter;
   ss << "Score" << delimiter;
   ss << "Description" << '\n';
@@ -256,7 +258,7 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
                                                       std::shared_ptr<const GenomeVariant> genome_variant) {
 
   std::string genome_id = genome_variant->genomeId();
-  std::string contig_id = coding_sequence->getGene()->contig()->contigId();
+  std::shared_ptr<const ContigFeatures> contig_ptr= coding_sequence->getGene()->contig();
   std::string gene_id = coding_sequence->getGene()->id();
   std::string sequence_id = coding_sequence->getCDSParent()->id();
   std::vector<std::pair<std::string,std::string>> description_vec;
@@ -267,8 +269,10 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
   bool frame_shift_flag;
   bool error_flag = true;
   size_t mutant_paths = 0;
+  size_t valid_paths = 0;
   double average_score = 0;
-  if (genome_variant->mutantProteins(contig_id,
+  bool valid_reference = false;
+  if (genome_variant->mutantProteins(contig_ptr->contigId(),
                                      gene_id,
                                      sequence_id,
                                      genome_db,
@@ -277,18 +281,24 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
                                      amino_mutant_vec)) {
 
     error_flag = false;
+    valid_reference = contig_ptr->verifyProteinSequence(amino_reference_seq);
     for (auto mutant : amino_mutant_vec) {
 
       CompareScore_t amino_score;
       amino_reference_seq->compareAminoSequences(mutant, amino_score);
-      average_score += static_cast<double>(amino_score);
+      if (contig_ptr->verifyProteinSequence(mutant)) {
+
+        average_score += static_cast<double>(amino_score);
+        ++valid_paths;
+
+      }
       ++mutant_paths;
 
     }
 
-    if (mutant_paths > 0) {
+    if (valid_paths > 0) {
 
-      average_score = average_score / static_cast<double>(mutant_paths);
+      average_score = average_score / static_cast<double>(valid_paths);
 
     } else {
 
@@ -299,7 +309,7 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
 
   } else {
 
-    ExecEnv::log().error("Problem mutating contig: {}, sequence: {}", contig_id, sequence_id);
+    ExecEnv::log().error("Problem mutating contig: {}, sequence: {}", contig_ptr->contigId(), sequence_id);
 
   }
 
@@ -307,11 +317,13 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
   std::stringstream ss;
 
   ss << genome_id << delimiter;
-  ss << contig_id << delimiter;
+  ss << contig_ptr->contigId() << delimiter;
   ss << sequence_id << delimiter;
   ss << coding_sequence->codingNucleotides() << delimiter;
   ss << error_flag << delimiter;
+  ss << valid_reference << delimiter;
   ss << mutant_paths << delimiter;
+  ss << valid_paths << delimiter;
   ss << frame_shift_flag << delimiter;
   ss << average_score << delimiter;
 

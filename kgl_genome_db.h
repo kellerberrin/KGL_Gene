@@ -61,6 +61,7 @@ public:
   void verifyCDSPhasePeptide();
 
   bool verifyDNACodingSequence(std::shared_ptr<const DNA5SequenceCoding> coding_sequence_ptr) const;
+  bool verifyProteinSequence(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const;
 
   // Given a gene id and an mRNA (sequence id) return the CDS coding sequence.
   bool getCodingSequence(const FeatureIdent_t& gene_id,

@@ -63,8 +63,6 @@ kgl::TranslateToAmino::getAminoSequence(std::shared_ptr<const DNA5SequenceCoding
 
   std::shared_ptr<AminoSequence> amino_sequence(std::make_shared<AminoSequence>(protein_string));
 
-  amino_sequence->removeTrailingStop();  // Remove the trailing stop Amino Acid (if present).
-
   return amino_sequence;
 
 }

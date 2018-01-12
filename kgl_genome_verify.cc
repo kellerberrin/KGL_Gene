@@ -328,6 +328,20 @@ bool kgl::ContigFeatures::verifyDNACodingSequence(std::shared_ptr<const DNA5Sequ
 }
 
 
+// Verifies a coding sequence using the amino coding table defined for the contig.
+bool kgl::ContigFeatures::verifyProteinSequence(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const {
+
+  bool result = coding_table_.checkStopCodon(amino_sequence_ptr);
+  result = result and coding_table_.checkStartCodon(amino_sequence_ptr);
+  result = result and coding_table_.checkNonsenseMutation(amino_sequence_ptr) == 0;
+
+  return result;
+
+}
+
+
+
+
 void kgl::ContigFeatures::removeSubFeatureDuplicates() {
 
   long duplicates_removed = 0;
