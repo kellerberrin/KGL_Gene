@@ -16,6 +16,7 @@ Win32
 x64
 Release
 Debug
+.idea
 .vs
 CTestTestfile.cmake
 Testing
