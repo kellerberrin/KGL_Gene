@@ -6,8 +6,8 @@
 #define KGL_PHYLOGENETIC_ENV_H
 
 
-#include "kgl_genome_types.h"
-#include "kgl_exec_env.h"
+#include "kgl_library/kgl_genome_types.h"
+#include "kgl_library/kgl_exec_env.h"
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
