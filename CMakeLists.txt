@@ -146,6 +146,6 @@ target_link_libraries(kgl_lib ${Boost_LIBRARIES})
 
 #generate kgl_genome executable
 add_executable (kgl_genome kgl_main.cc kgl_phylogenetic_env.h kgl_phylogenetic_env.cc kgl_phylogenetic_app.cc
-                kgl_phylogenetic_analysis.h kgl_phylogenetic_analysis.cc)
+                kgl_phylogenetic_analysis.h kgl_phylogenetic_analysis.cc kgl_phylogenetic_gene.h kgl_phylogenetic_gene.cc)
 
 target_link_libraries(kgl_genome kgl_lib)

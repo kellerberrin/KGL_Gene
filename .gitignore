@@ -34,5 +34,4 @@ MANIFEST
 /cmake/
 .cache/
 sosize-*.txt
-/pybind11
 

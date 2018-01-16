@@ -38,7 +38,7 @@ public:
 
   bool addGenomeVariant(std::shared_ptr<const GenomeVariant> genome_variant);
 
-  bool getGenomeVariant(const GenomeId_t& genome_id, std::shared_ptr<const GenomeVariant>& genome_variant);
+  bool getGenomeVariant(const GenomeId_t& genome_id, std::shared_ptr<const GenomeVariant>& genome_variant) const;
 
   const PopulationVariantMap& getMap() const { return population_variant_map_; }
 

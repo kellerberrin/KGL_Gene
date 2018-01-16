@@ -205,8 +205,8 @@ bool kgl::Variant::offsetOverlap(const Variant& cmp_var) const {
   bool overlap_offset = ((start <= cmp_start) and (cmp_start <= end)) or ((start <= cmp_end) and (cmp_end <= end));
 
   // The overlap response depends on type of variant overlapping.
-  // If Insert / Insert - normal split
-  // If Insert / Delete - abnormal complain and split.
+  // If Insert / Insert - abnormal complain and split
+  // If Insert / Delete - normal no split.
   // If Insert / SNP - normal do not split.
   // If Delete / Delete - abnormal complain and split
   // If Delete and SNP - abnormal complain and split.
@@ -217,15 +217,15 @@ bool kgl::Variant::offsetOverlap(const Variant& cmp_var) const {
 
       if (cmp_var.isInsert()) {
 
-        return true; // OK and split
+        // complain
+        ExecEnv::log().warn("offsetOverlap(), Insert variant: {} overlaps Insert variant: {}",
+                            output(' ', VariantOutputIndex::START_0_BASED, true),
+                            cmp_var.output(' ', VariantOutputIndex::START_0_BASED, true));
+        return true; // abnormal and split
 
       } else if (cmp_var.isDelete()) {
 
-        // complain
-        ExecEnv::log().warn("offsetOverlap(), Insert variant: {} overlaps Delete variant: {}",
-                             output(' ', VariantOutputIndex::START_0_BASED, true),
-                             cmp_var.output(' ', VariantOutputIndex::START_0_BASED, true));
-        return true; // and split
+        return false; // OK and no split
 
       } else if (cmp_var.isSNP()) {
 

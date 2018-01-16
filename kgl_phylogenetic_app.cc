@@ -14,6 +14,7 @@
 #include "kgl_library/kgl_filter.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_statistics.h"
+#include "kgl_phylogenetic_gene.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -134,8 +135,9 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
   }
 
-  ApplicationAnalysis::outputSequenceCSV(args.outCSVFile, genome_db_ptr, pop_variant_ptr);
+//  ApplicationAnalysis::outputSequenceCSV(args.outCSVFile, genome_db_ptr, pop_variant_ptr);
 
+  GeneAnalysis::mutateGenomeRegion("vcf_SRR609073", "Pf3D7_09_v3", 46890, 30, pop_variant_ptr, genome_db_ptr);
 
   // Perform population analysis
   // (disabled to save CPU time)

@@ -343,7 +343,8 @@ bool kgl::PopulationVariant::addGenomeVariant(std::shared_ptr<const GenomeVarian
 
 }
 
-bool kgl::PopulationVariant::getGenomeVariant(const GenomeId_t& genome_id, std::shared_ptr<const GenomeVariant>& genome_variant) {
+bool kgl::PopulationVariant::getGenomeVariant(const GenomeId_t& genome_id,
+                                              std::shared_ptr<const GenomeVariant>& genome_variant) const {
 
   auto result = population_variant_map_.find(genome_id);
 
