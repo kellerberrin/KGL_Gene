@@ -25,6 +25,8 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& variant_map,
                                                            (coding_sequence_ptr->end() - coding_sequence_ptr->start()));
 
   ContigSize_t sequence_size = unstranded_ptr->length();
+  SignedOffset_t sequence_size_modify;
+  variant_mutation_offset_.clearIndelOffset();
 
   for (auto variant : variant_map) {
 
@@ -35,10 +37,10 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& variant_map,
     adjusted_offset = adjusted_offset - coding_sequence_ptr->start();
 
     // Mutate the sequence
-    variant.second->mutateSequence(adjusted_offset, unstranded_ptr);
+    variant.second->mutateSequence(adjusted_offset, unstranded_ptr, sequence_size_modify);
 
     // Update the mutation offset for indels.
-    variant_mutation_offset_.updateIndelAccounting(variant.second);
+    variant_mutation_offset_.updateIndelAccounting(variant.second, sequence_size_modify);
 
   }
 
@@ -69,6 +71,8 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& region_variant_map,
                                      std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) {
 
   ContigSize_t sequence_size = dna_sequence_ptr->length();
+  SignedOffset_t sequence_size_modify;
+  variant_mutation_offset_.clearIndelOffset();
 
   for (auto variant : region_variant_map) {
 
@@ -79,10 +83,10 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& region_variant_map,
     adjusted_offset = adjusted_offset - sequence_offset;
 
     // Mutate the sequence
-    variant.second->mutateSequence(adjusted_offset, dna_sequence_ptr);
+    variant.second->mutateSequence(adjusted_offset, dna_sequence_ptr, sequence_size_modify);
 
     // Update the mutation offset for indels.
-    variant_mutation_offset_.updateIndelAccounting(variant.second);
+    variant_mutation_offset_.updateIndelAccounting(variant.second, sequence_size_modify);
 
   }
 

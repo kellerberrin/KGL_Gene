@@ -14,28 +14,8 @@ std::string kgl::CompoundInsert::mutation(char delimiter, VariantOutputIndex out
 
   std::stringstream ss;
 
-  if (type() == VariantSequenceType::CDS_CODING) {
-
-    std::shared_ptr<const CodingSequence> sequence = codingSequences().getFirst();
-    ss << sequence->getGene()->id() << delimiter;
-    ss << sequence->getCDSParent()->id() << delimiter;
-    ss << location(delimiter, output_index);
-    ss << "+(" << size() << ")";
-    ss << location(delimiter, output_index);
-
-  } else if (type() == VariantSequenceType::INTRON) {
-
-    std::shared_ptr<const GeneFeature> gene_ptr = geneMembership().front();
-    ss << gene_ptr->id() << delimiter;
-    ss << "+(" << size() << ")";
-    ss << offsetOutput(contigOffset(), output_index);
-
-  } else { // else non coding (non-gene) variant or unknown
-
-    ss << "+(" << size() << ")";
-    ss << offsetOutput(contigOffset(), output_index);
-
-  }
+  ss << "+(" << size() << ")";
+  ss << offsetOutput(contigOffset(), output_index);
 
   return ss.str();
 
@@ -43,7 +23,8 @@ std::string kgl::CompoundInsert::mutation(char delimiter, VariantOutputIndex out
 
 
 bool kgl::CompoundInsert::mutateSequence(SignedOffset_t offset_adjust,
-                                         std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) const {
+                                         std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
+                                         SignedOffset_t& sequence_size_modify) const {
 
   SignedOffset_t adjusted_offset = offset() + offset_adjust;
 
@@ -63,7 +44,7 @@ bool kgl::CompoundInsert::mutateSequence(SignedOffset_t offset_adjust,
 
   for (auto variant : getMap()) {
 
-    std::shared_ptr<InsertVariant const> insert_ptr = std::dynamic_pointer_cast<const InsertVariant>(variant.second);
+    std::shared_ptr<const InsertVariant> insert_ptr = std::dynamic_pointer_cast<const InsertVariant>(variant.second);
 
     if (not insert_ptr) {
 
@@ -91,7 +72,16 @@ bool kgl::CompoundInsert::mutateSequence(SignedOffset_t offset_adjust,
 
   // Mutate the sequence
   DNA5SequenceLinear insert_seq(seq_string);
-  dna_sequence_ptr->insertSubSequence(sequence_offset, insert_seq);
+
+  if (dna_sequence_ptr->insertSubSequence(sequence_offset, insert_seq)) {
+
+    sequence_size_modify = insert_seq.length();
+
+  } else {
+
+    sequence_size_modify = 0;
+
+  }
 
   return true;
 

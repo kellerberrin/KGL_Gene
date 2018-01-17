@@ -139,7 +139,7 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
     for (const auto& variant : contig_variants.second->getMap()) {  // For all variants.
 
       // only coding sequence and non-compound (no recursive compound)
-      if (variant.second->type() == VariantSequenceType::CDS_CODING and variant.second->isSingle()) {
+      if (variant.second->isSingle()) {
 
         if (selectVariant(variant.second)) {  // The virtual selection function.
 
@@ -168,49 +168,44 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
             std::vector<std::shared_ptr<CompoundVariantMap>> add_compound_variant_vec;
             for (const auto& compound_variant_ptr : compound_variant_vec) {
 
-              // Does the variant belong to the coding sequence.
-              if (compound_variant_ptr->rbegin()->second->codingSequenceId() == variant.second->codingSequenceId()) {
+              // If the variant is the at same offset
+              if (compound_variant_ptr->rbegin()->second->contigOffset() == variant.second->contigOffset()) {
 
-                // If the variant is the at same offset
-                if (compound_variant_ptr->rbegin()->second->contigOffset() == variant.second->contigOffset()) {
-
-                  // If it is a different variant then copy the compound variant map, pop the last entry, push the variant and add the map.
-                  if (not compound_variant_ptr->rbegin()->second->equivalent(*variant.second)) {
-
-                    // set the found flag to true.
-                    found_sequence = true;
-                    CompoundVariantMap compound_variant = *compound_variant_ptr; // copy
-                    compound_variant.erase(std::prev(compound_variant.end())); // pop last
-                    std::pair<ContigSize_t, std::shared_ptr<const SingleVariant>> insert_pair(subvariant_ptr->offset(), subvariant_ptr);
-                    compound_variant.insert(insert_pair); // push this
-                    add_compound_variant_vec.push_back(std::make_shared<CompoundVariantMap>(compound_variant)); // add to working structure.
-
-                  } else {
-
-                    // Error if an identical variant in the same coding sequence.
-                    ExecEnv::log().warn("Identical Variant: {} with the same offset in the same coding sequence as variant: {}",
-                                        compound_variant_ptr->rbegin()->second->output(' ', VariantOutputIndex::START_0_BASED, true),
-                                        variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
-
-                  }
-
-                } else if ((compound_variant_ptr->rbegin()->second->contigOffset() + 1) == variant.second->contigOffset()) {
+                // If it is a different variant then copy the compound variant map, pop the last entry, push the variant and add the map.
+                if (not compound_variant_ptr->rbegin()->second->equivalent(*variant.second)) {
 
                   // set the found flag to true.
                   found_sequence = true;
-                  // Is contiguous in the same coding sequence so append to the compound map.
+                  CompoundVariantMap compound_variant = *compound_variant_ptr; // copy
+                  compound_variant.erase(std::prev(compound_variant.end())); // pop last
                   std::pair<ContigSize_t, std::shared_ptr<const SingleVariant>> insert_pair(subvariant_ptr->offset(), subvariant_ptr);
-                  auto result = compound_variant_ptr->insert(insert_pair);
-                  if (not result.second) {
+                  compound_variant.insert(insert_pair); // push this
+                  add_compound_variant_vec.push_back(std::make_shared<CompoundVariantMap>(compound_variant)); // add to working structure.
 
-                    ExecEnv::log().error("aggregateCompoundVariants(), unexpected - could not insert to contiguous map");
-                    return false;
+                } else {
 
-                  }
+                  // Error if an identical variant in the same coding sequence.
+                  ExecEnv::log().warn("Identical Variant: {} with the same offset in the same coding sequence as variant: {}",
+                                      compound_variant_ptr->rbegin()->second->output(' ', VariantOutputIndex::START_0_BASED, true),
+                                      variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
 
                 }
 
-              } // If in the same sequence.
+              } else if ((compound_variant_ptr->rbegin()->second->contigOffset() + 1) == variant.second->contigOffset()) {
+
+                // set the found flag to true.
+                found_sequence = true;
+                // Is contiguous in the same coding sequence so append to the compound map.
+                std::pair<ContigSize_t, std::shared_ptr<const SingleVariant>> insert_pair(subvariant_ptr->offset(), subvariant_ptr);
+                auto result = compound_variant_ptr->insert(insert_pair);
+                if (not result.second) {
+
+                  ExecEnv::log().error("aggregateCompoundVariants(), unexpected - could not insert to contiguous map");
+                  return false;
+
+                }
+
+              }
 
             }  // for all compound variants.
 

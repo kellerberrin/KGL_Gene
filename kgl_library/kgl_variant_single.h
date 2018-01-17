@@ -53,19 +53,9 @@ public:
 
   DNA5::Alphabet reference() const { return reference_; }
 
-  virtual char mutantStrandChar() const = 0;
-
   virtual char mutantChar() const = 0;
 
   std::string suboutput(char delimiter, VariantOutputIndex output_index, bool detail) const;
-
-  // complement base if -ve strand and coding or intron.
-  CodingDNA5::Alphabet strandReference() const { return strandNucleotide(reference()); }
-
-
-protected:
-
-  CodingDNA5::Alphabet strandNucleotide(DNA5::Alphabet nucleotide) const;
 
 private:
 
@@ -112,22 +102,15 @@ public:
 
   std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const override;
 
-  bool mutateSequence(SignedOffset_t offset_adjust, std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) const override;
-
-  CodingDNA5::Alphabet strandMutant() const { return strandNucleotide(mutant()); }
+  bool mutateSequence(SignedOffset_t offset_adjust,
+                      std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
+                      SignedOffset_t& sequence_size_modify) const override;
 
   DNA5::Alphabet mutant() const { return mutant_; }
 
-  char mutantStrandChar() const override { return CodingDNA5::convertToChar(strandMutant()); }
-
-  virtual char mutantChar() const override { return DNA5::convertToChar(mutant()); }
+  char mutantChar() const override { return DNA5::convertToChar(mutant()); }
 
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
-
-  bool codonMutation(ContigOffset_t &codon_offset,
-                     ContigSize_t &base_in_codon,
-                     AminoAcid::Alphabet &reference_amino,
-                     AminoAcid::Alphabet &mutant_amino) const;
 
 private:
 
@@ -171,9 +154,9 @@ public:
 
   std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const override;
 
-  bool mutateSequence(SignedOffset_t offset_adjust, std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) const override;
-
-  virtual char mutantStrandChar() const override { return '-'; }
+  bool mutateSequence(SignedOffset_t offset_adjust,
+                      std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
+                      SignedOffset_t& sequence_size_modify) const override;
 
   virtual char mutantChar() const override { return '-'; }
 
@@ -217,15 +200,13 @@ public:
 
   bool equivalent(const Variant& cmp_var) const override;
 
-  CodingDNA5::Alphabet strandMutant() const { return strandNucleotide(mutant()); }
-
   DNA5::Alphabet mutant() const { return mutant_; }
-
-  virtual char mutantStrandChar() const override { return CodingDNA5::convertToChar(strandMutant()); }
 
   virtual char mutantChar() const override { return DNA5::convertToChar(mutant()); }
 
-  bool mutateSequence(SignedOffset_t offset_adjust, std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) const override;
+  bool mutateSequence(SignedOffset_t offset_adjust,
+                      std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
+                      SignedOffset_t& sequence_size_modify) const override;
 
 
   std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const override;

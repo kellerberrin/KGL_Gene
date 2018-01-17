@@ -78,11 +78,7 @@ public:
                          OffsetVariantMap& variant_map) const;
 
   // Convenience routine only returns coding variants.
-  bool getCodingSortedVariants(const ContigId_t& contig_id,
-                               const FeatureIdent_t& gene_id,
-                               const FeatureIdent_t& sequence_id,
-                               ContigOffset_t start,
-                               ContigOffset_t end,
+  bool getCodingSortedVariants(std::shared_ptr<const CodingSequence> coding_sequence_ptr,
                                OffsetVariantMap& variant_map,
                                bool& frame_shift) const;
 

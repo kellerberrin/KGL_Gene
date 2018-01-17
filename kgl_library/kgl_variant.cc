@@ -44,22 +44,6 @@ std::string kgl::offsetOutput(kgl::ContigOffset_t offset, kgl::VariantOutputInde
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-std::string kgl::VariantSequence::typestr() const {
-
-  switch(type()) {
-
-    case VariantSequenceType::CDS_CODING : return "Coding";
-
-    case VariantSequenceType::INTRON : return "Intron";
-
-    case VariantSequenceType::NON_CODING : return "NonCoding";
-
-  }
-
-  return "ERROR"; // Should not happen.
-
-}
-
 std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputIndex output_index) const {
 
   std:: stringstream ss;
@@ -67,92 +51,8 @@ std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputInde
   ss << variantSource() << delimiter
      << contig()->contigId() << delimiter
      << offsetOutput(offset(), output_index) << delimiter;
-  ss << typestr();
-
-
-  ss << delimiter;
 
   return ss.str();
-
-}
-
-kgl::VariantSequenceType kgl::VariantSequence::type() const {
-
-  if (not codingSequences().empty()) {
-
-    return VariantSequenceType::CDS_CODING;
-
-  } else if (not geneMembership().empty()) {
-
-    return VariantSequenceType::INTRON;
-
-  } else {
-
-    return VariantSequenceType::NON_CODING;
-
-  }
-
-}
-
-void kgl::VariantSequence::defineIntron(std::shared_ptr<const GeneFeature> gene_ptr)
-{
-
-  if (gene_ptr) {
-
-    coding_sequences_.getMap().clear();
-    gene_membership_.clear();
-    gene_membership_.push_back(gene_ptr);
-
-  } else {
-
-
-    ExecEnv::log().error("Variant contig: {} offset: {}; Attempted to define intron with null pointer",
-                         contig()->contigId(), offset());
-
-  }
-
-}
-
-void kgl::VariantSequence::defineCoding(std::shared_ptr<const CodingSequence> coding_sequence_ptr)
-{
-
-  if (coding_sequence_ptr) {
-
-    coding_sequences_.getMap().clear();
-    coding_sequences_.insertCodingSequence(coding_sequence_ptr);
-    gene_membership_.clear();
-    gene_membership_.push_back(coding_sequence_ptr->getGene());
-
-  } else {
-
-
-    ExecEnv::log().error("Variant contig: {} offset: {}; Attempted to define coding sequence with null pointer",
-                         contig()->contigId(), offset());
-
-  }
-
-}
-
-void kgl::VariantSequence::defineNonCoding()
-{
-
-  coding_sequences_.getMap().clear();
-  gene_membership_.clear();
-
-}
-
-// Convenience routine to reduce downstream boiler plate.
-bool kgl::VariantSequence::codonOffset(ContigOffset_t& codon_offset, ContigSize_t& base_in_codon)const {
-
-  if (not codingSequences().empty()) {
-
-    return contig()->sequence().codonOffset(codingSequences().getFirst(), offset(), codon_offset, base_in_codon);
-
-  } else {
-
-    return false;
-
-  }
 
 }
 
@@ -217,11 +117,15 @@ bool kgl::Variant::offsetOverlap(const Variant& cmp_var) const {
 
       if (cmp_var.isInsert()) {
 
-        // complain
-        ExecEnv::log().warn("offsetOverlap(), Insert variant: {} overlaps Insert variant: {}",
-                            output(' ', VariantOutputIndex::START_0_BASED, true),
-                            cmp_var.output(' ', VariantOutputIndex::START_0_BASED, true));
-        return true; // abnormal and split
+        // complain if both have the same offset
+        if (offset() == cmp_var.offset()) {
+
+          ExecEnv::log().warn("offsetOverlap(), Two insert variants with the same offset: {} overlaps Insert variant: {}",
+                              output(' ', VariantOutputIndex::START_0_BASED, true),
+                              cmp_var.output(' ', VariantOutputIndex::START_0_BASED, true));
+
+        }
+        return false; // OK and split
 
       } else if (cmp_var.isDelete()) {
 

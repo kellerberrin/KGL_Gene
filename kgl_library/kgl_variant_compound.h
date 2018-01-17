@@ -52,9 +52,6 @@ protected:
 
   const CompoundVariantMap variant_map_;
 
-  std::string location(char delimiter, VariantOutputIndex output_index) const;
-
-
 };
 
 
@@ -84,7 +81,9 @@ public:
 
   VariantType variantType() const override { return VariantType::COMPOUND_INSERT; }
 
-  bool mutateSequence(SignedOffset_t offset_adjust, std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) const override;
+  bool mutateSequence(SignedOffset_t offset_adjust,
+                      std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
+                      SignedOffset_t& sequence_size_modify) const override;
 
 private:
 
@@ -119,47 +118,10 @@ public:
 
   VariantType variantType() const override { return VariantType::COMPOUND_DELETE; }
 
-  bool mutateSequence(SignedOffset_t offset_adjust, std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) const override;
+  bool mutateSequence(SignedOffset_t offset_adjust,
+                      std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
+                      SignedOffset_t& sequence_size_modify) const override;
 
-
-private:
-
-  bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
-  std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
-
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  A compound SNP. where SNPs act on the same codon and therefore have a combined change to the AA.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class CompoundSNP : public CompoundVariant {
-
-public:
-
-  CompoundSNP(const std::string& variant_source,
-              std::shared_ptr<const ContigFeatures> contig_ptr,
-              ContigOffset_t contig_offset,
-              Phred_t quality,
-              const CompoundVariantMap& variant_map) : CompoundVariant(variant_source,
-                                                                       contig_ptr,
-                                                                       contig_offset,
-                                                                       quality,
-                                                                       variant_map) {}
-  CompoundSNP(const CompoundSNP&) = default;
-  ~CompoundSNP() override = default;
-
-  // Polymorphic copy constructor
-  std::shared_ptr<Variant> clone() const override { return std::shared_ptr<CompoundSNP>(std::make_shared<CompoundSNP>(*this)); }
-
-  VariantType variantType() const override { return VariantType::COMPOUND_SNP; }
-
-  bool codonMutation( ContigOffset_t& codon_offset,
-                      AminoAcid::Alphabet& reference_amino,
-                      AminoAcid::Alphabet& mutant_amino) const;
-
-  bool mutateSequence(SignedOffset_t sequence_offset, std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) const override;
 
 private:
 

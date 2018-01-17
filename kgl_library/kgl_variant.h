@@ -32,7 +32,6 @@ class DeleteVariant; // Forward decl.
 class InsertVariant; // Forward decl.
 class CompoundDelete; // Forward decl.
 class CompoundInsert; // Forward decl.
-class CompoundSNP; // Forward decl.
 
 class VariantFilter {
 
@@ -46,7 +45,6 @@ public:
   virtual bool applyFilter(const InsertVariant& variant) const = 0;
   virtual bool applyFilter(const CompoundDelete& variant) const = 0;
   virtual bool applyFilter(const CompoundInsert& variant) const = 0;
-  virtual bool applyFilter(const CompoundSNP& variant) const = 0;
 
   virtual std::string filterName() const = 0;
   virtual std::shared_ptr<VariantFilter> clone() const = 0;
@@ -92,37 +90,14 @@ public:
   std::shared_ptr<const ContigFeatures> contig() const { return contig_ptr_; }
   ContigOffset_t offset() const { return contig_offset_; }
 
-  VariantSequenceType type() const;
-  std::string typestr() const;
-
   Phred_t quality() const { return quality_; }
   void quality(Phred_t quality_update) { quality_ = quality_update; }
-
-  FeatureIdent_t codingSequenceId() const {
-
-    return type() == VariantSequenceType::CDS_CODING ? codingSequences().getFirst()->getCDSParent()->id() : NULL_ID;
-
-  }
-
-  const CodingSequenceArray& codingSequences() const { return coding_sequences_; }
-  const GeneVector& geneMembership() const { return gene_membership_; }
-
-  // returns false if not in a coding sequence.
-  bool codonOffset(ContigOffset_t& codon_offset, ContigSize_t& base_in_codon) const;
-
-  void defineIntron(std::shared_ptr<const GeneFeature> gene_ptr);
-  void defineCoding(std::shared_ptr<const CodingSequence> coding_sequence_ptr);
-  void defineNonCoding();
-
-  static constexpr const char* NULL_ID = "NULL";
 
 private:
 
   std::string variant_source_;                          // The source of this variant
   std::shared_ptr<const ContigFeatures> contig_ptr_;    // The contig.
   ContigOffset_t contig_offset_;                        // Location on the contig.
-  GeneVector gene_membership_;                          // Membership includes introns (empty for non-coding)
-  CodingSequenceArray coding_sequences_;  // Coding sequence for variant (empty for introns and non-coding)
   Phred_t quality_;                       // Phred (-10log10) quality that the variant is not valid.
 
 };
@@ -151,6 +126,7 @@ public:
   const ContigId_t& contigId() const { return contig()->contigId(); }
   ContigOffset_t contigOffset() const { return offset(); }
   bool operator==(const Variant& cmp_var) const { return equivalent(cmp_var); };
+
   bool offsetOverlap(const Variant& cmp_var) const;  // Particuarly relevant for compound variants.
 
   std::string name() const;
@@ -159,7 +135,9 @@ public:
   virtual size_t size() const = 0;
   virtual std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const = 0;
   virtual std::string mutation(char delimiter, VariantOutputIndex output_index) const = 0;
-  virtual bool mutateSequence(SignedOffset_t offset_adjust, std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) const = 0;
+  virtual bool mutateSequence(SignedOffset_t offset_adjust,
+                              std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
+                              SignedOffset_t& sequence_size_modify) const = 0;
 
  bool isCompound() const { return size() > 1; }
   bool isSingle() const { return size() == 1; }

@@ -168,32 +168,12 @@ void kgl::CodingSequence::prime_3_region(ContigSize_t requested_size, ContigOffs
 }
 
 
-// return true if the contig_offset lies with a CDS.
-bool kgl::CodingSequence::isWithinCoding(ContigOffset_t contig_offset) const {
+std::shared_ptr<const kgl::ContigFeatures> kgl::CodingSequence::contig() const {
 
-  // Safety first.
-  if (sorted_cds_.empty()) return false;
-
-  // Less than the begin offset.
-  if (contig_offset < sorted_cds_.begin()->second->sequence().begin()) return false;
-
-  // More than the end offset - remember the end offset is 1 past the last nucleotide. [begin, end)
-  if (contig_offset >= sorted_cds_.rbegin()->second->sequence().end()) return false;
-
-  // Loop through and test membership of each cds. Reminder; testing for [begin, end)
-  for (const auto& cds : sorted_cds_) {
-
-    if (cds.second->sequence().begin() <= contig_offset and cds.second->sequence().end() > contig_offset) {
-
-      return true;
-
-    }
-
-  }
-
-  return false;
+  return getGene()->contig();
 
 }
+
 
 
 kgl::ContigSize_t kgl::CodingSequence::codingNucleotides() const {
@@ -276,3 +256,4 @@ std::shared_ptr<const kgl::CodingSequence> kgl::CodingSequenceArray::getFirst() 
   return getMap().begin()->second;
 
 }
+

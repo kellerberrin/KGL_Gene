@@ -32,28 +32,12 @@ kgl::SignedOffset_t kgl::VariantMutationOffset::adjustIndelOffsets(ContigOffset_
 
 // Important - This routine is paired with adjustIndelOffsets(), which should be called BEFORE calling (this routine) updateIndelAccounting()
 // Important - update the indel offset accounting structure AFTER the actual indel offset has been calculated with adjustIndelOffsets().
-bool kgl::VariantMutationOffset::updateIndelAccounting(std::shared_ptr<const Variant> variant_ptr) {
+bool kgl::VariantMutationOffset::updateIndelAccounting(std::shared_ptr<const Variant> variant_ptr,
+                                                       SignedOffset_t sequence_size_modify) {
 
-  if (variant_ptr->isDelete()) {
+  if (sequence_size_modify != 0) {
 
-    // Update the accounting map by decrementing the offset by -1 * size().
-    SignedOffset_t offset_adjust = -1 * variant_ptr->size();
-    std::pair<ContigOffset_t, SignedOffset_t> insert_pair(variant_ptr->offset(), offset_adjust );
-    auto result = indel_accounting_map_.insert(insert_pair);
-
-    if (not result.second) {
-
-      ExecEnv::log().error("updateIndelAccounting(), Unable to update indel accounting, duplicate offset variant: {}",
-                           variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, true));
-      return false;
-
-    }
-
-  } else if (variant_ptr->isInsert()) {
-
-    // Update the accounting map by decrementing the offset by size().
-    SignedOffset_t offset_adjust = variant_ptr->size();
-    std::pair<ContigOffset_t, SignedOffset_t> insert_pair(variant_ptr->offset(), offset_adjust );
+    std::pair<ContigOffset_t, SignedOffset_t> insert_pair(variant_ptr->offset(), sequence_size_modify);
     auto result = indel_accounting_map_.insert(insert_pair);
 
     if (not result.second) {

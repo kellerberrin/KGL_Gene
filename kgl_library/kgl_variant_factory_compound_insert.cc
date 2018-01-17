@@ -40,8 +40,6 @@ std::shared_ptr<kgl::Variant> kgl::CompoundInsertFactory::createCompoundVariant(
                                                                             variant_map.begin()->second->contigOffset(),
                                                                             quality,
                                                                             variant_map));
-  // define its coding sequence.
-  compound_insert->defineCoding(variant_map.begin()->second->codingSequences().getFirst());
 
   return compound_insert;
 

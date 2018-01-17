@@ -13,7 +13,6 @@
 #include "kgl_library/kgl_variant_db.h"
 #include "kgl_library/kgl_filter.h"
 #include "kgl_library/kgl_gff_fasta.h"
-#include "kgl_statistics.h"
 
 
 
@@ -86,7 +85,7 @@ public:
   PhylogeneticAnalysis() = default;
   virtual ~PhylogeneticAnalysis() = default;
 
-  static bool UPGMA(const std::string& newick_file, std::shared_ptr<const PopulationStatistics> population_stats);
+  static bool UPGMA(const std::string& newick_file, std::shared_ptr<const PopulationVariant> pop_variant_ptr);
 
 
 private:

@@ -70,7 +70,6 @@ set(SOURCE_FILES
         kgl_library/kgl_variant_snp.cc
         kgl_library/kgl_variant_compound.h
         kgl_library/kgl_variant_compound.cc
-        kgl_library/kgl_variant_compound_snp.cc
         kgl_library/kgl_genome_prelim.h
         kgl_library/kgl_genome_prelim.cc
         kgl_library/kgl_attributes.h
@@ -89,7 +88,6 @@ set(SOURCE_FILES
         kgl_library/kgl_variant_factory.h
         kgl_library/kgl_variant_factory_compound.cc
         kgl_library/kgl_variant_factory_compound_delete.cc
-        kgl_library/kgl_variant_factory_compound_snp.cc
         kgl_library/kgl_variant_factory_compound.h
         kgl_library/kgl_variant_factory_compound_insert.cc
         kgl_library/kgl_variant_compound_insert.cc
@@ -97,8 +95,6 @@ set(SOURCE_FILES
         kgl_library/kgl_alphabet_coding_dna5.h
         kgl_library/kgl_alphabet_coding_dna5.cc
         kgl_library/kgl_variant_factory.cc
-        kgl_library/kgl_statistics.h
-        kgl_library/kgl_statistics.cc
         kgl_library/kgl_variant_evidence.h
         kgl_library/kgl_statistics_upgma.h
         kgl_library/kgl_statistics_upgma.cc
@@ -133,7 +129,6 @@ set(SOURCE_FILES
         kgl_library/kgl_variant_mutation_offset.cc
         kgl_library/kgl_sequence_manip.h
         kgl_library/kgl_sequence_manip.cc
-        kgl_library/kgl_variant_factory_compound_noncoding.cc
         kgl_library/kgl_variant_db_population.h
         kgl_library/kgl_table_impl.h
         kgl_library/kgl_table_impl.cc

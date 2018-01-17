@@ -22,9 +22,7 @@ bool kgl::CompoundVariant::equivalent(const Variant& cmp_var) const {
 
   bool result = contigId() == compound_var->contigId()
                 and contigOffset() == compound_var->contigOffset()
-                and type() == compound_var->type()
-                and variantType() == compound_var->variantType()
-                and codingSequenceId() == compound_var->codingSequenceId();
+                and variantType() == compound_var->variantType();
 
   if (not result) return false;
 
@@ -64,60 +62,4 @@ std::string kgl::CompoundVariant::output(char delimiter, VariantOutputIndex outp
 
 }
 
-std::string kgl::CompoundVariant::location(char delimiter, VariantOutputIndex output_index) const {
-
-  std::stringstream ss;
-  if (not codingSequences().empty()) {
-
-    if (not getMap().empty()) {
-
-      ContigSize_t base_in_codon_begin;
-      ContigOffset_t codon_offset_begin;
-      getMap().begin()->second->codonOffset(codon_offset_begin, base_in_codon_begin);
-      ContigSize_t base_in_codon_end;
-      ContigOffset_t codon_offset_end;
-      getMap().rbegin()->second->codonOffset(codon_offset_end, base_in_codon_end);
-
-      if (codon_offset_begin == codon_offset_end) {
-
-        if (base_in_codon_begin < base_in_codon_end) {
-
-          ss << offsetOutput(codon_offset_begin, output_index) << CODON_BASE_SEPARATOR
-             << offsetOutput(base_in_codon_begin, output_index) << delimiter;
-
-        } else {
-
-          ss << offsetOutput(codon_offset_end, output_index) << CODON_BASE_SEPARATOR
-             << offsetOutput(base_in_codon_end, output_index) << delimiter;
-
-        }
-
-      } else if (codon_offset_begin < codon_offset_end) {
-
-        ss << offsetOutput(codon_offset_begin, output_index) << CODON_BASE_SEPARATOR
-           << offsetOutput(base_in_codon_begin, output_index) << delimiter;
-
-      } else {
-
-        ss << offsetOutput(codon_offset_end, output_index) << CODON_BASE_SEPARATOR
-           << offsetOutput(base_in_codon_end, output_index) << delimiter;
-
-      }
-
-
-    } else {
-
-      ExecEnv::log().error("Compound variant in contig: {} offset: {} is empty", contigId(), offset());
-
-    }
-
-  } else {
-
-    ExecEnv::log().error("Compound variant in contig: {} offset: {} is not in a coding sequence", contigId(), offset());
-
-  }
-
-  return ss.str();
-
-}
 

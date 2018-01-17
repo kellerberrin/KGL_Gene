@@ -15,35 +15,16 @@ std::string kgl::CompoundDelete::mutation(char delimiter, VariantOutputIndex out
 
   std::stringstream ss;
 
-  if (type() == VariantSequenceType::CDS_CODING) {
+  ss << "-(" << size() << ")";
+  ss << offsetOutput(contigOffset(), output_index);
 
-    std::shared_ptr<const CodingSequence> sequence = codingSequences().getFirst();
-    ss << sequence->getGene()->id() << delimiter;
-    ss << sequence->getCDSParent()->id() << delimiter;
-    ss << location(delimiter, output_index);
-    ss << "-(" << size() << ")";
-    ss << location(delimiter, output_index);
-
-  } else if (type() == VariantSequenceType::INTRON) {
-
-    std::shared_ptr<const GeneFeature> gene_ptr = geneMembership().front();
-    ss << gene_ptr->id() << delimiter;
-    ss << "-(" << size() << ")";
-    ss << offsetOutput(contigOffset(), output_index);
-
-  } else { // else non coding (non-gene) variant or unknown
-
-    ss << "-(" << size() << ")";
-    ss << offsetOutput(contigOffset(), output_index);
-
-  }
-
-   return ss.str();
+  return ss.str();
 
 }
 
 bool kgl::CompoundDelete::mutateSequence(SignedOffset_t offset_adjust,
-                                         std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr) const {
+                                         std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
+                                         SignedOffset_t& sequence_size_modify) const {
 
   SignedOffset_t adjusted_offset = offset() + offset_adjust;
 
@@ -56,10 +37,28 @@ bool kgl::CompoundDelete::mutateSequence(SignedOffset_t offset_adjust,
   }
 
   auto sequence_offset = static_cast<ContigOffset_t>(adjusted_offset);
+  ContigOffset_t max_delete_size = dna_sequence_ptr->length() - sequence_offset;
+  ContigSize_t delete_size;
+
+  // Check that we are not deleting beyond the end of the sequence.
+  if (size() > max_delete_size) {
+
+    delete_size = max_delete_size;
+    ExecEnv::log().warn("mutateSequence(), compound deletion size: {},  offset: {}, sequence size: {}, max delete size: {}",
+                        size(), sequence_offset, dna_sequence_ptr->length(), max_delete_size);
+
+  } else {
+
+    delete_size = size();
+
+  }
 
   auto reference_offset = sequence_offset;
+  ContigSize_t reference_count = 0;
 
   for (auto variant : getMap()) {
+
+    if (reference_count >= delete_size) break;
 
     std::shared_ptr<DeleteVariant const> delete_ptr = std::dynamic_pointer_cast<const DeleteVariant>(variant.second);
 
@@ -82,11 +81,21 @@ bool kgl::CompoundDelete::mutateSequence(SignedOffset_t offset_adjust,
     }
 
     ++reference_offset;
+    ++reference_count;
 
   }
 
   // Mutate the sequence
-  dna_sequence_ptr->deleteSubSequence(sequence_offset, size());
+
+  if (dna_sequence_ptr->deleteSubSequence(sequence_offset, delete_size)) {
+
+    sequence_size_modify = -1 * delete_size;
+
+  } else {
+
+    sequence_size_modify = 0;
+
+  }
 
   return true;
 

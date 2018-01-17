@@ -14,34 +14,6 @@ namespace genome {   // project level namespace
 
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Filter SNPs to coding sequences only.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class CodingFilter : public VariantFilter {
-
-public:
-
-  explicit CodingFilter() {}
-  ~CodingFilter() override = default;
-
-  std::string filterName() const final;
-
-  bool applyFilter(const SNPVariant& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const DeleteVariant& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const InsertVariant& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const CompoundInsert& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const CompoundSNP& variant) const override { return implementFilter(variant); }
-
-  std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<CodingFilter>(*this); }
-
-private:
-
-  bool implementFilter(const Variant& variant) const;
-
-};
-
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,7 +34,6 @@ public:
   bool applyFilter(const InsertVariant&) const override { return false; }
   bool applyFilter(const CompoundDelete&) const override { return false; }
   bool applyFilter(const CompoundInsert&) const override { return false; }
-  bool applyFilter(const CompoundSNP&) const override { return true; }
 
   std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<SNPFilter>(*this); }
 
@@ -90,7 +61,6 @@ public:
   bool applyFilter(const InsertVariant&) const override { return false; }
   bool applyFilter(const CompoundDelete&) const override { return true; }
   bool applyFilter(const CompoundInsert&) const override { return false; }
-  bool applyFilter(const CompoundSNP&) const override { return false; }
 
   std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<DeleteFilter>(*this); }
 
@@ -118,7 +88,6 @@ public:
   bool applyFilter(const InsertVariant&) const override { return true; }
   bool applyFilter(const CompoundDelete&) const override { return false; }
   bool applyFilter(const CompoundInsert&) const override { return true; }
-  bool applyFilter(const CompoundSNP&) const override { return false; }
 
   std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InsertFilter>(*this); }
 
@@ -147,7 +116,6 @@ public:
   bool applyFilter(const InsertVariant& variant) const override { return variant.quality() >= quality_; }
   bool applyFilter(const CompoundDelete& variant) const override { return variant.quality() >= quality_; }
   bool applyFilter(const CompoundInsert& variant) const override { return variant.quality() >= quality_; }
-  bool applyFilter(const CompoundSNP& variant) const override { return variant.quality() >= quality_; }
 
   std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<QualityFilter>(*this); }
 
@@ -177,102 +145,12 @@ public:
   bool applyFilter(const InsertVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundInsert& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const CompoundSNP& variant) const override { return implementFilter(variant); }
 
   std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<ContigFilter>(*this); }
 
 private:
 
   const ContigId_t contig_ident_;
-
-  bool implementFilter(const Variant& variant) const;
-
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Filter SNPs to a particular gene.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class GeneFilter : public VariantFilter {
-
-public:
-
-  explicit GeneFilter(const FeatureIdent_t& gene_ident) : gene_ident_(gene_ident) {}
-  ~GeneFilter() override = default;
-
-  std::string filterName() const final;
-
-  bool applyFilter(const SNPVariant& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const DeleteVariant& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const InsertVariant& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const CompoundInsert& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const CompoundSNP& variant) const override { return implementFilter(variant); }
-
-  std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<GeneFilter>(*this); }
-
-private:
-
-  const FeatureIdent_t gene_ident_;
-
-  bool implementFilter(const Variant& variant) const;
-
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Filter SNPs to a particular CDS sequence.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class SequenceFilter : public VariantFilter {
-
-public:
-
-  explicit SequenceFilter(const FeatureIdent_t& sequence_ident) : sequence_ident_(sequence_ident) {}
-  ~SequenceFilter() override = default;
-
-  std::string filterName() const final;
-
-  bool applyFilter(const SNPVariant& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const DeleteVariant& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const InsertVariant& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const CompoundInsert& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const CompoundSNP& variant) const override { return implementFilter(variant); }
-
-  std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<SequenceFilter>(*this); }
-
-private:
-
-  const FeatureIdent_t sequence_ident_;
-
-  bool implementFilter(const Variant& variant) const;
-
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Remove synonymous coding SNPs and compound snps.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class SynonymousFilter : public VariantFilter {
-
-public:
-
-  explicit SynonymousFilter() = default;
-  ~SynonymousFilter() override = default;
-
-  std::string filterName() const final;
-
-  bool applyFilter(const SNPVariant& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const InsertVariant& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const DeleteVariant& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const CompoundInsert& variant) const override { return implementFilter(variant); }
-  bool applyFilter(const CompoundSNP& variant) const override { return implementFilter(variant); }
-
-  std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<SynonymousFilter>(*this); }
-
-private:
 
   bool implementFilter(const Variant& variant) const;
 
@@ -298,7 +176,6 @@ public:
   bool applyFilter(const DeleteVariant& variant) const override { return variant.offset() >= start_ and variant.offset() < end_; }
   bool applyFilter(const CompoundDelete& variant) const override { return variant.offset() >= start_ and variant.offset() < end_; }
   bool applyFilter(const CompoundInsert& variant) const override { return variant.offset() >= start_ and variant.offset() < end_; }
-  bool applyFilter(const CompoundSNP& variant) const override { return variant.offset() >= start_ and variant.offset() < end_; }
 
   std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<RegionFilter>(*this); }
 
@@ -326,7 +203,6 @@ public:
   bool applyFilter(const InsertVariant& variant) const override { return not filter_ptr_->applyFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return not filter_ptr_->applyFilter(variant); }
   bool applyFilter(const CompoundInsert& variant) const override { return not filter_ptr_->applyFilter(variant); }
-  bool applyFilter(const CompoundSNP& variant) const override { return not filter_ptr_->applyFilter(variant); }
 
   std::string filterName() const final { return "NOT(" + filter_ptr_->filterName() + ")"; }
 
@@ -355,7 +231,6 @@ public:
   bool applyFilter(const InsertVariant& variant) const override { return filter1_ptr_->applyFilter(variant) and filter2_ptr_->applyFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return filter1_ptr_->applyFilter(variant) and filter2_ptr_->applyFilter(variant); }
   bool applyFilter(const CompoundInsert& variant) const override { return filter1_ptr_->applyFilter(variant) and filter2_ptr_->applyFilter(variant); }
-  bool applyFilter(const CompoundSNP& variant) const override { return filter1_ptr_->applyFilter(variant) and filter2_ptr_->applyFilter(variant); }
 
   std::string filterName() const final { return "AND(" + filter1_ptr_->filterName() + ", " + filter2_ptr_->filterName() + ")"; }
 
@@ -385,7 +260,6 @@ public:
   bool applyFilter(const InsertVariant& variant) const override { return filter1_ptr_->applyFilter(variant) or filter2_ptr_->applyFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return filter1_ptr_->applyFilter(variant) or filter2_ptr_->applyFilter(variant); }
   bool applyFilter(const CompoundInsert& variant) const override { return filter1_ptr_->applyFilter(variant) or filter2_ptr_->applyFilter(variant); }
-  bool applyFilter(const CompoundSNP& variant) const override { return filter1_ptr_->applyFilter(variant) or filter2_ptr_->applyFilter(variant); }
 
   std::string filterName() const final { return "OR(" + filter1_ptr_->filterName() + ", " + filter2_ptr_->filterName() + ")"; }
 

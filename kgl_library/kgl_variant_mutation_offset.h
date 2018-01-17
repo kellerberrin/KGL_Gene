@@ -32,10 +32,13 @@ public:
 
   // Important - Call this routine after mutation.
   // Important - Call this to update the indel offset accounting structure AFTER the actual indel offset has been calculated with adjustIndelOffsets().
-  bool updateIndelAccounting(std::shared_ptr<const Variant> variant_ptr);
+  bool updateIndelAccounting(std::shared_ptr<const Variant> variant_ptr, SignedOffset_t sequence_size_modify);
 
   // Total indel offset - can be used to check the sequence size after mutation is complete.
   SignedOffset_t totalIndelOffset() const;
+
+  // Reset the count.
+  void clearIndelOffset() { indel_accounting_map_.clear(); }
 
 private:
 

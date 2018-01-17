@@ -4,6 +4,7 @@
 
 
 #include "kgl_variant_factory_vcf_impl.h"
+#include "kgl_variant_factory_compound.h"
 
 namespace kgl = kellerberrin::genome;
 namespace bt = boost;
@@ -347,7 +348,7 @@ bool kgl::VcfFactory::VcfFileImpl::parseSNP(size_t cigar_count,
                                                                              DNA5::convertChar(reference[reference_index]),
                                                                              DNA5::convertChar(alternate[alternate_index])));
 
-    variant_count += VariantFactory::addSingleVariant(genome_variants, snp_variant_ptr); // Annotate with genome information
+    variant_count += VariantFactory::addGenomeVariant(genome_variants, snp_variant_ptr); // Annotate with genome information
 
     ++reference_index;
     ++alternate_index;
@@ -371,6 +372,8 @@ bool kgl::VcfFactory::VcfFileImpl::parseInsert(size_t cigar_count,
                                                size_t& alternate_index,
                                                size_t& variant_count) const {
 
+  CompoundVariantMap compound_variant_map;
+
   for (size_t idx = 0; idx < cigar_count; ++idx) {
 
     std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
@@ -383,12 +386,35 @@ bool kgl::VcfFactory::VcfFileImpl::parseInsert(size_t cigar_count,
                                                                                       contig_ptr->sequence().at(contig_offset),
                                                                                       DNA5::convertChar(alternate[alternate_index])));
 
-    variant_count += VariantFactory::addSingleVariant(genome_variants, insert_variant_ptr); // Annotate with genome information
+
+    std::pair<ContigOffset_t, std::shared_ptr<const SingleVariant>> insert_pair(contig_offset, insert_variant_ptr);
+    auto result = compound_variant_map.insert(insert_pair);
+
+    if (not result.second) {
+
+      ExecEnv::log().error("parseInsert(), unable to insert variant with duplicate offset: {}", contig_offset);
+
+    }
 
     ++alternate_index;
     ++contig_offset;
 
   }
+
+  if (compound_variant_map.size() > 1) {
+
+    variant_count += VariantFactory::addGenomeVariant(genome_variants,CompoundInsertFactory().createCompoundVariant(compound_variant_map));
+
+  } else if (compound_variant_map.size() == 1) {
+
+    variant_count += VariantFactory::addGenomeVariant(genome_variants, compound_variant_map.begin()->second); // Annotate with genome information
+
+  } else {
+
+    ExecEnv::log().error("parseInsert(), cigar size: {} but zero insert variant generated", cigar_count);
+
+  }
+
 
   return true;
 
@@ -405,6 +431,7 @@ bool kgl::VcfFactory::VcfFileImpl::parseDelete(size_t cigar_count,
                                                ContigOffset_t& contig_offset,
                                                size_t& variant_count) const {
 
+  CompoundVariantMap compound_variant_map;
 
   for (size_t idx = 0; idx < cigar_count; ++idx) {
 
@@ -426,12 +453,34 @@ bool kgl::VcfFactory::VcfFileImpl::parseDelete(size_t cigar_count,
                                                                                       evidence_ptr,
                                                                                       contig_ptr->sequence().at(contig_offset)));
 
-    variant_count += VariantFactory::addSingleVariant(genome_variants, delete_variant_ptr); // Annotate with genome information
+    std::pair<ContigOffset_t, std::shared_ptr<const SingleVariant>> insert_pair(contig_offset, delete_variant_ptr);
+    auto result = compound_variant_map.insert(insert_pair);
+
+    if (not result.second) {
+
+      ExecEnv::log().error("parseDelete(), unable to insert variant with duplicate offset: {}", contig_offset);
+
+    }
 
     ++reference_index;
     ++contig_offset;
 
   }
+
+  if (compound_variant_map.size() > 1) {
+
+    variant_count += VariantFactory::addGenomeVariant(genome_variants,CompoundDeleteFactory().createCompoundVariant(compound_variant_map));
+
+  } else if (compound_variant_map.size() == 1) {
+
+    variant_count += VariantFactory::addGenomeVariant(genome_variants, compound_variant_map.begin()->second); // Annotate with genome information
+
+  } else {
+
+    ExecEnv::log().error("parseDelete(), cigar size: {} but zero insert variant generated", cigar_count);
+
+  }
+
 
   return true;
 

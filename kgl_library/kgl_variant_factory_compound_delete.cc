@@ -40,8 +40,6 @@ std::shared_ptr<kgl::Variant> kgl::CompoundDeleteFactory::createCompoundVariant(
                                                                             variant_map.begin()->second->contigOffset(),
                                                                             quality,
                                                                             variant_map));
-  // define its coding sequence.
-  compound_delete->defineCoding(variant_map.begin()->second->codingSequences().getFirst());
 
   return compound_delete;
 

@@ -170,22 +170,9 @@ kgl::VariantFactory::aggregateVariants(const std::shared_ptr<const GenomeDatabas
   // Generate contiguous insertion variants.
   std::shared_ptr<const kgl::GenomeVariant> cmp_insert_ptr = kgl::CompoundInsertFactory().create(single_variant_ptr,
                                                                                                  genome_db_ptr);
-  // Generate compound single codon variants
-  std::shared_ptr<const kgl::GenomeVariant> cmp_snp_ptr = kgl::CompoundSNPFactory().create(single_variant_ptr,
-                                                                                           genome_db_ptr);
-
-  // Generate compound non-coding insert variants.
-  std::shared_ptr<const kgl::GenomeVariant> non_coding_insert_ptr = kgl::CompoundNonCodingInsertFactory().create(single_variant_ptr,
-                                                                                                                 genome_db_ptr);
-  // Generate compound non-coding insert variants.
-  std::shared_ptr<const kgl::GenomeVariant> non_coding_delete_ptr = kgl::CompoundNonCodingDeleteFactory().create(single_variant_ptr,
-                                                                                                                 genome_db_ptr);
 
   // combine the compound variants
   std::shared_ptr<const kgl::GenomeVariant> compound_ptr = cmp_delete_ptr->Union(cmp_insert_ptr);
-  compound_ptr = compound_ptr->Union(cmp_snp_ptr);
-  compound_ptr = compound_ptr->Union(non_coding_insert_ptr);
-  compound_ptr = compound_ptr->Union(non_coding_delete_ptr);
 
   ExecEnv::log().info("Generated: {} Compound variants for Genome: {}", compound_ptr->size(), genome_name);
   ExecEnv::log().info("Combining Compound and Single variants for Genome: {}", genome_name);
@@ -207,64 +194,11 @@ kgl::VariantFactory::aggregateVariants(const std::shared_ptr<const GenomeDatabas
 }
 
 
-// This function will insert multiple variants for each CDS sequence within each gene.
-size_t kgl::VariantFactory::addSingleVariant(std::shared_ptr<GenomeVariant> genome_single_variants,
-                                             std::shared_ptr<Variant> variant_ptr) {
+size_t kgl::VariantFactory::addGenomeVariant(std::shared_ptr<GenomeVariant> genome_variants,
+                                             std::shared_ptr<const Variant> variant_ptr) {
 
-  // Annotate the variant with genome information.
-  size_t variant_count = 0;
-  GeneVector gene_vector;
-  ContigOffset_t variant_offset = variant_ptr->contigOffset();
-  if (variant_ptr->contig()->findGenes(variant_offset, gene_vector)) {
-
-    for (const auto& gene_ptr : gene_vector) {
-
-      std::shared_ptr<const CodingSequenceArray> sequence_array = kgl::GeneFeature::getCodingSequences(gene_ptr);
-      if (sequence_array->empty()) {
-
-        std::shared_ptr<Variant> intron_variant_ptr = variant_ptr->clone();
-        intron_variant_ptr->defineIntron(gene_ptr); // intron
-        genome_single_variants->addVariant(variant_ptr);
-        ++variant_count;
-
-      } else {
-
-        for (const auto& sequence : sequence_array->getMap()) {
-
-          if (sequence.second->isWithinCoding(variant_offset)) {
-
-            // create a variant copy and annotate with a coding sequence.
-            std::shared_ptr<Variant> coding_single_ptr = variant_ptr->clone();
-            coding_single_ptr->defineCoding(sequence.second); // coding
-            genome_single_variants->addVariant(coding_single_ptr);
-            ++variant_count;
-
-          } else {  // an intron for this sequence
-
-            // create a variant copy and annotate with a gene.
-            std::shared_ptr<Variant> intron_single_ptr = variant_ptr->clone();
-            intron_single_ptr->defineIntron(gene_ptr); // intron
-            genome_single_variants->addVariant(intron_single_ptr);
-            ++variant_count;
-
-          } // if valid sequence for offset
-
-        } // for all sequences within a gene
-
-      } // if gene has a valid sequence.
-
-    } // for all genes.
-
-  } else {
-
-    // create a variant copy and tag as non-coding.
-    variant_ptr->defineNonCoding(); // non coding
-    genome_single_variants->addVariant(variant_ptr);
-    ++variant_count;
-
-  }
-
-  return variant_count;
+  genome_variants->addVariant(variant_ptr);
+  return 1;
 
 }
 

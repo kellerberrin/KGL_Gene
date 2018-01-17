@@ -69,6 +69,7 @@ class CDSFeature; // Forward decl
 class EXONFeature; // Forward decl
 class GeneFeature; // Forward decl.
 class mRNAFeature; // Forward decl.
+class ContigFeatures; // Forward decl.
 
 using SortedCDS = std::map<ContigOffset_t, std::shared_ptr<const CDSFeature>>;
 class CodingSequence {
@@ -83,6 +84,7 @@ public:
   ~CodingSequence() = default;
 
   const SortedCDS& getSortedCDS() const { return sorted_cds_; }
+  std::shared_ptr<const ContigFeatures> contig() const;
   std::shared_ptr<const GeneFeature> getGene() const { return gene_ptr_; }
   std::shared_ptr<const Feature> getCDSParent() const { return cds_parent_ptr_; }
   StrandSense strand() const;
@@ -92,7 +94,6 @@ public:
   void prime_3_region(ContigSize_t requested_size, ContigOffset_t& begin_offset, ContigSize_t& size) const;
   ContigOffset_t start() const; // Offset of the start of the sequence - not strand adjusted.
   ContigOffset_t end() const; // Offset of the end of the sequence (last nucleotide + 1) - not strand adjusted.
-  bool isWithinCoding(ContigOffset_t contig_offset) const;
   ContigSize_t codingNucleotides() const;
 
 private:

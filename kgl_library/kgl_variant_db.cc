@@ -7,7 +7,7 @@
 #include "kgl_patterns.h"
 #include "kgl_variant_compound.h"
 #include "kgl_variant_db.h"
-
+#include "kgl_sequence_offset.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -285,42 +285,44 @@ bool kgl::GenomeVariant::getSortedVariants(ContigId_t contig_id,
 }
 
 
-bool kgl::GenomeVariant::getCodingSortedVariants(const ContigId_t& contig_id,
-                                                 const FeatureIdent_t& gene_id,
-                                                 const FeatureIdent_t& sequence_id,
-                                                 ContigOffset_t start,
-                                                 ContigOffset_t end,
+bool kgl::GenomeVariant::getCodingSortedVariants(std::shared_ptr<const CodingSequence> coding_sequence_ptr,
                                                  OffsetVariantMap& variant_map,
                                                  bool& frame_shift) const {
 
   OffsetVariantMap all_variant_map;
-  if (not getSortedVariants(contig_id, start, end, all_variant_map)) {
+  if (not getSortedVariants(coding_sequence_ptr->contig()->contigId(),
+                            coding_sequence_ptr->start(),
+                            coding_sequence_ptr->end(),
+                            all_variant_map)) {
 
     return false;
 
   }
 
   SignedOffset_t shift_count = 0;
+  ContigOffset_t coding_sequence_offset;
+  ContigSize_t coding_sequence_length;
+  variant_map.clear();
   for (auto variant : all_variant_map) {
 
-    if (variant.second->type() == VariantSequenceType::CDS_CODING) {
+    if (SequenceOffset::refOffsetWithinCodingSequence(coding_sequence_ptr,
+                                                      variant.second->offset(),
+                                                      coding_sequence_offset,
+                                                      coding_sequence_length)) {
 
-      if (variant.second->codingSequenceId() == sequence_id) {
+      variant_map.insert(std::pair<ContigOffset_t, std::shared_ptr<const Variant>>(variant.first, variant.second));
+      if (variant.second->isDelete()) {
 
-        variant_map.insert(std::pair<ContigOffset_t, std::shared_ptr<const Variant>>(variant.first, variant.second));
-        if (variant.second->isDelete()) {
+        shift_count -= variant.second->size();
 
-          shift_count -= variant.second->size();
+      } else if (variant.second->isInsert()) {
 
-        } else if (variant.second->isInsert()) {
-
-          shift_count += variant.second->size();
-
-        }
+        shift_count += variant.second->size();
 
       }
 
     }
+
 
   }
 
