@@ -44,7 +44,7 @@ bool kgl::CompoundDelete::mutateSequence(SignedOffset_t offset_adjust,
   if (size() > max_delete_size) {
 
     delete_size = max_delete_size;
-    ExecEnv::log().warn("mutateSequence(), compound deletion size: {},  offset: {}, sequence size: {}, max delete size: {}",
+    ExecEnv::log().vinfo("mutateSequence(), compound deletion size: {},  offset: {}, sequence size: {}, max delete size: {}",
                         size(), sequence_offset, dna_sequence_ptr->length(), max_delete_size);
 
   } else {
@@ -75,7 +75,7 @@ bool kgl::CompoundDelete::mutateSequence(SignedOffset_t offset_adjust,
 
       ExecEnv::log().warn("mutateSequence(), delete reference base: {} does not match sequence base: {} at contig: {} offset: {}",
                           DNA5::convertToChar(delete_ptr->reference()),
-                          DNA5::convertToChar(dna_sequence_ptr->at(sequence_offset)),
+                          DNA5::convertToChar(dna_sequence_ptr->at(reference_offset)),
                           delete_ptr->contig()->contigId(), delete_ptr->offset());
 
     }

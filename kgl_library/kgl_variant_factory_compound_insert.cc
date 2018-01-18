@@ -35,7 +35,7 @@ std::shared_ptr<kgl::Variant> kgl::CompoundInsertFactory::createCompoundVariant(
   Phred_t quality = calculateQuality(variant_map);
 
   // create the variant
-  std::shared_ptr<Variant> compound_insert(std::make_shared<CompoundInsert>(variant_map.begin()->second->variantSource(),
+  std::shared_ptr<Variant> compound_insert(std::make_shared<CompoundInsert>(variant_map.begin()->second->sourceGenome(),
                                                                             variant_map.begin()->second->contig(),
                                                                             variant_map.begin()->second->contigOffset(),
                                                                             quality,

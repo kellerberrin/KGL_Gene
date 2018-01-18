@@ -13,14 +13,13 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
                                          const FeatureIdent_t& gene_id,
                                          const FeatureIdent_t& sequence_id,
                                          const std::shared_ptr<const GenomeDatabase>& genome_db,
-                                         bool& frame_shift_flag,
                                          std::shared_ptr<AminoSequence>& reference_sequence,
                                          std::vector<std::shared_ptr<AminoSequence>>& mutant_sequence_vector) const {
 
 
   std::shared_ptr<DNA5SequenceCoding> DNA_reference;
   std::vector<std::shared_ptr<DNA5SequenceCoding>> DNA_mutant_vector;
-  if (not mutantCodingDNA(contig_id, gene_id, sequence_id, genome_db, frame_shift_flag, DNA_reference, DNA_mutant_vector)) {
+  if (not mutantCodingDNA(contig_id, gene_id, sequence_id, genome_db, DNA_reference, DNA_mutant_vector)) {
 
     ExecEnv::log().warn("mutantProtein(), Problem generating stranded mutant DNA");
     return false;
@@ -55,7 +54,6 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
                                           const FeatureIdent_t& gene_id,
                                           const FeatureIdent_t& sequence_id,
                                           const std::shared_ptr<const GenomeDatabase>& genome_db,
-                                          bool& frame_shift_flag,
                                           std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
                                           std::vector<std::shared_ptr<DNA5SequenceCoding>>& mutant_sequence_vector) const {
   // Get the contig.
@@ -92,7 +90,7 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
   // Generate the mutant sequences.
   // Extract the variants for processing.
   OffsetVariantMap coding_variant_map;
-  getCodingSortedVariants( coding_sequence_ptr, coding_variant_map, frame_shift_flag);
+  getSortedVariants(contig_id, coding_sequence_ptr->start(), coding_sequence_ptr->end(), coding_variant_map);
 
   // There may be more than one different variant specified per offset.
   // If this is the case, then we create alternative mutation paths.
@@ -107,22 +105,17 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
 
   for (auto variant_map : variant_map_vector) {
 
-    // Mutate if non-empty variant map.
-    if (not variant_map.empty()) {
+    std::shared_ptr<DNA5SequenceCoding> mutant_coding_dna;
+    VariantMutation variant_mutation;
+    if (not variant_mutation.mutateDNA(variant_map, contig_ptr, coding_sequence_ptr, mutant_coding_dna)) {
 
-      std::shared_ptr<DNA5SequenceCoding> mutant_coding_dna;
-      VariantMutation variant_mutation;
-      if (not variant_mutation.mutateDNA(variant_map, contig_ptr, coding_sequence_ptr, mutant_coding_dna)) {
-
-        ExecEnv::log().warn("Problem mutating DNA sequence for contig: {}, gene: {}, sequence id: {}",
-                            contig_id, gene_id, sequence_id);
-        return false;
-
-      }
-
-      mutant_sequence_vector.push_back(mutant_coding_dna);
+      ExecEnv::log().warn("Problem mutating DNA sequence for contig: {}, gene: {}, sequence id: {}",
+                          contig_id, gene_id, sequence_id);
+      return false;
 
     }
+
+    mutant_sequence_vector.push_back(mutant_coding_dna);
 
   }
 
@@ -135,6 +128,7 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
                                        ContigOffset_t region_offset,
                                        ContigSize_t region_size,
                                        const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                       OffsetVariantMap& variant_map,
                                        std::shared_ptr<DNA5SequenceLinear>& reference_sequence,
                                        std::vector<std::shared_ptr<DNA5SequenceLinear>>& mutant_sequence_vector) const {
 
@@ -164,6 +158,7 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
   // Extract the variants for processing.
   OffsetVariantMap region_variant_map;
   getSortedVariants(contig_id, region_offset, region_offset + region_size, region_variant_map);
+  variant_map = region_variant_map;
 
   // There may be more than one different variant specified per offset.
   // If this is the case, then we create alternative mutation paths.
@@ -178,25 +173,20 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
 
   for (auto variant_map : variant_map_vector) {
 
-    // Non-empty variant map.
-    if (not variant_map.empty()) {
+    // Make a copy of the linear dna.
+    std::shared_ptr<DNA5SequenceLinear> copy_dna_sequence_ptr(std::make_shared<DNA5SequenceLinear>(*reference_sequence));
 
-      // Make a copy of the linear dna.
-      std::shared_ptr<DNA5SequenceLinear> copy_dna_sequence_ptr(std::make_shared<DNA5SequenceLinear>(*reference_sequence));
+    // And mutate it.
+    VariantMutation variant_mutation;
+    if (not variant_mutation.mutateDNA(variant_map, region_offset, copy_dna_sequence_ptr)) {
 
-      // And mutate it.
-      VariantMutation variant_mutation;
-      if (not variant_mutation.mutateDNA(variant_map, region_offset, copy_dna_sequence_ptr)) {
-
-        ExecEnv::log().warn("Problem mutating region DNA sequence for contig: {}, offset: {}, size: {}",
-                            contig_id, region_offset, region_size);
-        return false;
-
-      }
-
-      mutant_sequence_vector.push_back(copy_dna_sequence_ptr);
+      ExecEnv::log().warn("Problem mutating region DNA sequence for contig: {}, offset: {}, size: {}",
+                          contig_id, region_offset, region_size);
+      return false;
 
     }
+
+    mutant_sequence_vector.push_back(copy_dna_sequence_ptr);
 
   }
 

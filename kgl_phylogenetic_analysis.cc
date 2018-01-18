@@ -98,11 +98,13 @@ bool kgl::ApplicationAnalysis::compare5Prime(const ContigId_t& contig_id,
 
   std::vector<std::shared_ptr<DNA5SequenceLinear>> linear_mutant_sequence_vector;
   std::shared_ptr<DNA5SequenceLinear> linear_reference_sequence;
+  OffsetVariantMap variant_map;
 
   if (genome_variant->mutantRegion(contig_id,
                                    offset_5_prime,
                                    size_5_prime,
                                    genome_db,
+                                   variant_map,
                                    linear_reference_sequence,
                                    linear_mutant_sequence_vector)) {
 
@@ -163,11 +165,13 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
 
   std::vector<std::shared_ptr<DNA5SequenceLinear>> linear_mutant_sequence_vector;
   std::shared_ptr<DNA5SequenceLinear> linear_reference_sequence;
+  OffsetVariantMap variant_map;
 
   if (genome_variant->mutantRegion(contig_id,
                                    offset_3_prime,
                                    size_3_prime,
                                    genome_db,
+                                   variant_map,
                                    linear_reference_sequence,
                                    linear_mutant_sequence_vector)) {
 
@@ -209,6 +213,8 @@ bool kgl::ApplicationAnalysis::outputSequenceCSV(const std::string &file_name,
 
   for( auto genome_variant : pop_variant_ptr->getMap()) {
 
+    ExecEnv::log().info("outputSequenceCSV(), Processing genome: {}", genome_variant.first);
+
     for (auto contig : genome_db->getMap()) {
 
       for (auto gene : contig.second->getGeneMap()) {
@@ -243,7 +249,6 @@ std::string kgl::ApplicationAnalysis::outputSequenceHeader(char delimiter) {
   ss << "ValidReference" << delimiter;
   ss << "AllPaths" << delimiter;
   ss << "ValidPaths" << delimiter;
-  ss << "FrameShift" << delimiter;
   ss << "Score" << delimiter;
   ss << "Description" << '\n';
 
@@ -266,7 +271,6 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
 
   std::shared_ptr<AminoSequence> amino_reference_seq;
   std::vector<std::shared_ptr<AminoSequence>> amino_mutant_vec;
-  bool frame_shift_flag;
   bool error_flag = true;
   size_t mutant_paths = 0;
   size_t valid_paths = 0;
@@ -276,7 +280,6 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
                                      gene_id,
                                      sequence_id,
                                      genome_db,
-                                     frame_shift_flag,
                                      amino_reference_seq,
                                      amino_mutant_vec)) {
 
@@ -324,7 +327,6 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
   ss << valid_reference << delimiter;
   ss << mutant_paths << delimiter;
   ss << valid_paths << delimiter;
-  ss << frame_shift_flag << delimiter;
   ss << average_score << delimiter;
 
   for (const auto& description : description_vec) {

@@ -38,10 +38,27 @@ bool kgl::CompoundInsert::mutateSequence(SignedOffset_t offset_adjust,
 
   auto sequence_offset = static_cast<ContigOffset_t>(adjusted_offset);
 
+  ContigOffset_t remaining_size = dna_sequence_ptr->length() - sequence_offset;
+  ContigSize_t reference_size;
+
+  // Check that we are not deleting beyond the end of the sequence.
+  if (size() > remaining_size) {
+
+    reference_size = remaining_size;
+    ExecEnv::log().vinfo("mutateSequence(), compound insert size: {},  offset: {}, sequence size: {}, remaining size: {}",
+                        size(), sequence_offset, dna_sequence_ptr->length(), remaining_size);
+
+  } else {
+
+    reference_size = size();
+
+  }
+
   auto reference_offset = sequence_offset;
 
   StringDNA5 seq_string;
 
+  ContigSize_t reference_index = 0;
   for (auto variant : getMap()) {
 
     std::shared_ptr<const InsertVariant> insert_ptr = std::dynamic_pointer_cast<const InsertVariant>(variant.second);
@@ -54,19 +71,28 @@ bool kgl::CompoundInsert::mutateSequence(SignedOffset_t offset_adjust,
 
     }
 
-    // Check the reference.
-    if (insert_ptr->reference() != dna_sequence_ptr->at(reference_offset)) {
 
-      ExecEnv::log().info("mutateSequence(), Insert reference base: {} does not match sequence base: {} at contig: {} offset: {}",
-                          DNA5::convertToChar(insert_ptr->reference()),
-                          DNA5::convertToChar(dna_sequence_ptr->at(sequence_offset)),
-                          insert_ptr->contig()->contigId(), insert_ptr->offset());
+    // If sufficient sequence remains then check reference.
+    if (reference_index < reference_size) {
+
+      // Check the reference.
+      if (insert_ptr->reference() != dna_sequence_ptr->at(reference_offset)) {
+
+        ExecEnv::log().info(
+        "mutateSequence(), Compound Insert reference base: {} does not match sequence base: {}; Genome: {} Contig: {} Offset: {}",
+        DNA5::convertToChar(insert_ptr->reference()),
+        DNA5::convertToChar(dna_sequence_ptr->at(reference_offset)),
+        insert_ptr->sourceGenome(), insert_ptr->contig()->contigId(), insert_ptr->offset());
+
+      }
 
     }
+
 
     seq_string.push_back(insert_ptr->mutant());
 
     ++reference_offset;
+    ++reference_index;
 
   }
 

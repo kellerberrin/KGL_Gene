@@ -62,14 +62,12 @@ bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
 
 
 
-  bool frame_shift_mutation;
   std::vector<std::shared_ptr<AminoSequence>> mutant_sequence_vector;
   std::shared_ptr<AminoSequence> reference_sequence;
   if (genome_variant_ptr->mutantProteins(contig,
                                          gene,
                                          sequence,
                                          genome_db_ptr,
-                                         frame_shift_mutation,
                                          reference_sequence,
                                          mutant_sequence_vector)) {
 
@@ -152,12 +150,20 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
 
   std::vector<std::shared_ptr<DNA5SequenceLinear>> mutant_sequence_vector;
   std::shared_ptr<DNA5SequenceLinear> reference_sequence;
+  OffsetVariantMap variant_map;
   if (genome_variant_ptr->mutantRegion(contig,
                                        offset,
                                        region_size,
                                        genome_db_ptr,
+                                       variant_map,
                                        reference_sequence,
                                        mutant_sequence_vector)) {
+
+    std::stringstream ss;
+    ss << variant_map;
+
+    ExecEnv::log().info("Variants used to mutate Genome: {}, Contig: {}, Offset: {} Size: {}:\n{}",
+                        genome_variant_ptr->genomeId(), contig, offset, region_size, ss.str());
 
 
     for (auto mutant : mutant_sequence_vector) {

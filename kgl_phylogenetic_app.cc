@@ -133,7 +133,7 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
   ApplicationAnalysis::outputSequenceCSV(args.outCSVFile, genome_db_ptr, pop_variant_ptr);
 
-  GeneAnalysis::mutateGenomeRegion("vcf_SRR609073", "Pf3D7_09_v3", 46890, 30, pop_variant_ptr, genome_db_ptr);
+  GeneAnalysis::mutateGenomeRegion("Senegal_SRR1645304", "Pf3D7_02_v3", 534345, 30, pop_variant_ptr, genome_db_ptr);
 
   // Perform population analysis
   // (disabled to save CPU time)

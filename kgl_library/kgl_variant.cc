@@ -48,7 +48,7 @@ std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputInde
 
   std:: stringstream ss;
 // Contig.
-  ss << variantSource() << delimiter
+  ss << sourceGenome() << delimiter
      << contig()->contigId() << delimiter
      << offsetOutput(offset(), output_index) << delimiter;
 
@@ -123,9 +123,9 @@ bool kgl::Variant::offsetOverlap(const Variant& cmp_var) const {
           ExecEnv::log().warn("offsetOverlap(), Two insert variants with the same offset: {} overlaps Insert variant: {}",
                               output(' ', VariantOutputIndex::START_0_BASED, true),
                               cmp_var.output(' ', VariantOutputIndex::START_0_BASED, true));
-
+          return true; // Complain and Split
         }
-        return false; // OK and split
+        return false; // OK and no split
 
       } else if (cmp_var.isDelete()) {
 

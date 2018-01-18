@@ -73,6 +73,8 @@ private:
 }   // namespace genome
 }   // namespace kellerberrin
 
+// Not in kgl:: namespace.
+std::ostream & operator<<(std::ostream &os, const kellerberrin::genome::OffsetVariantMap& variant_map);
 
 
 #endif //KGL_VARIANT_DB_CONTIG_H

@@ -32,10 +32,26 @@ bool kgl::GenomeVariant::outputCSV(const std::string& file_name, VariantOutputIn
 }
 
 
+std::ostream & operator<<(std::ostream &os, const kellerberrin::genome::OffsetVariantMap& variant_map) {
+
+  os << "(Variants are displayed with the start offset = 0 convention)\n";
+  for (auto variant : variant_map) {
+
+    os << variant.second->output(' ', kgl::VariantOutputIndex::START_0_BASED, false) << '\n';
+
+  }
+
+  os.flush();
+  return os;
+
+}
+
+
+
 std::ostream& operator<<(std::ostream &os, const kgl::GenomeVariant& genome_variant) {
 
-  os << "(Variants are displayed with the start offset = 1 convention)\n";
-  os << genome_variant.output(' ', kgl::VariantOutputIndex::START_1_BASED, false);
+  os << "(Variants are displayed with the start offset = 0 convention)\n";
+  os << genome_variant.output(' ', kgl::VariantOutputIndex::START_0_BASED, false);
   os.flush();
 
   return os;
