@@ -37,7 +37,7 @@ std::ostream & operator<<(std::ostream &os, const kellerberrin::genome::OffsetVa
   os << "(Variants are displayed with the start offset = 0 convention)\n";
   for (auto variant : variant_map) {
 
-    os << variant.second->output(' ', kgl::VariantOutputIndex::START_0_BASED, false) << '\n';
+    os << variant.second->output(' ', kgl::VariantOutputIndex::START_0_BASED, false);
 
   }
 

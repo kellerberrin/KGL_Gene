@@ -3,7 +3,6 @@
 //
 
 #include "kgl_phylogenetic_analysis.h"
-#include "kgl_sequence_virtual_compare.h"
 #include "kgl_sequence_offset.h"
 
 namespace kgl = kellerberrin::genome;
@@ -214,6 +213,7 @@ bool kgl::ApplicationAnalysis::outputSequenceCSV(const std::string &file_name,
   for( auto genome_variant : pop_variant_ptr->getMap()) {
 
     ExecEnv::log().info("outputSequenceCSV(), Processing genome: {}", genome_variant.first);
+    ContigSize_t sequence_count = 0;
 
     for (auto contig : genome_db->getMap()) {
 
@@ -223,12 +223,15 @@ bool kgl::ApplicationAnalysis::outputSequenceCSV(const std::string &file_name,
         for (auto sequence : coding_seq_ptr->getMap()) {
 
           out_file << outputSequence(CSV_delimiter, sequence.second, genome_db, genome_variant.second);
+          ++sequence_count;
 
         }
 
       }
 
     }
+
+    ExecEnv::log().info("outputSequenceCSV(), genome: {} mutated: {} sequences.", genome_variant.first, sequence_count);
 
   }
 
@@ -266,8 +269,9 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
   std::shared_ptr<const ContigFeatures> contig_ptr= coding_sequence->getGene()->contig();
   std::string gene_id = coding_sequence->getGene()->id();
   std::string sequence_id = coding_sequence->getCDSParent()->id();
-  std::vector<std::pair<std::string,std::string>> description_vec;
-  coding_sequence->getGene()->getAttributes().getAllAttributes(description_vec);
+  std::vector<std::string> description_vec;
+  coding_sequence->getGene()->getAttributes().getDescription(description_vec);
+//  coding_sequence->getGene()->getAttributes().getAllAttributes(description_vec);
 
   std::shared_ptr<AminoSequence> amino_reference_seq;
   std::vector<std::shared_ptr<AminoSequence>> amino_mutant_vec;
@@ -276,10 +280,12 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
   size_t valid_paths = 0;
   double average_score = 0;
   bool valid_reference = false;
+  OffsetVariantMap variant_map;
   if (genome_variant->mutantProteins(contig_ptr->contigId(),
                                      gene_id,
                                      sequence_id,
                                      genome_db,
+                                     variant_map,
                                      amino_reference_seq,
                                      amino_mutant_vec)) {
 
@@ -331,11 +337,7 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
 
   for (const auto& description : description_vec) {
 
-    if (description.first == Attributes::DESCRIPTION_KEY) {
-
-      ss << description.second;
-
-    }
+      ss << description;
 
   }
 

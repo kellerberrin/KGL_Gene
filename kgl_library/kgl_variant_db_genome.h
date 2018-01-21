@@ -91,6 +91,7 @@ public:
                        const FeatureIdent_t& gene_id,
                        const FeatureIdent_t& sequence_id,
                        const std::shared_ptr<const GenomeDatabase>& genome_db,
+                       OffsetVariantMap& variant_map,
                        std::shared_ptr<AminoSequence>& reference_sequence,
                        std::vector<std::shared_ptr<AminoSequence>>& mutant_sequence_vector) const;
 
@@ -99,6 +100,7 @@ public:
                         const FeatureIdent_t& gene_id,
                         const FeatureIdent_t& sequence_id,
                         const std::shared_ptr<const GenomeDatabase>& genome_db,
+                        OffsetVariantMap& variant_map,
                         std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
                         std::vector<std::shared_ptr<DNA5SequenceCoding>>& mutant_sequence_vector) const;
 

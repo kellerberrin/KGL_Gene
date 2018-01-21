@@ -41,6 +41,23 @@ bool kgl::AminoSequence::removeTrailingStop() {
 
 }
 
+
+std::string kgl::AminoSequence::multipleCompare(const std::vector<std::shared_ptr<const AminoSequence>>& compare_seq_vec) {
+
+
+  std::vector<std::shared_ptr<const AlphabetSequence<AminoAcid>>> alpha_seq_vec;
+  for (auto seq : compare_seq_vec) {
+
+    alpha_seq_vec.push_back(seq);
+
+  }
+
+  return multipleAlign(alpha_seq_vec);
+
+
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TranslateToAmino - Convert DNA/RNA base sequences to Amino acid sequences.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

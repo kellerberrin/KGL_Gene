@@ -3,6 +3,7 @@
 //
 
 #include "kgl_phylogenetic_gene.h"
+#include "kgl_phylogenetic_analysis.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -15,9 +16,12 @@ bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
                                    std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
 
 
+
+  GeneSummaryMap gene_summary_map;
+
   for (auto genome : population_ptr->getMap()) {
 
-    if (not mutateGenomeGene(contig, gene, sequence, genome.second, genome_db_ptr)) {
+    if (not mutateGenomeGene(contig, gene, sequence, genome.second, genome_db_ptr, gene_summary_map)) {
 
       return false;
 
@@ -25,59 +29,99 @@ bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
 
   }
 
+  std::vector<std::shared_ptr<const DNA5SequenceCoding>> prime5_vector;
+  for (auto summary : gene_summary_map) {
+
+    for (auto mutant : summary.second.prime5_mutant_vec) {
+
+      prime5_vector.push_back(mutant);
+
+    }
+
+  }
+
+  std::string compare = DNA5SequenceCoding::multipleCompare(prime5_vector);
+  ExecEnv::log().info("Comparison of all 5 prime regions for Contig: {}, Gene: {}, Sequence: {}; \n{}",
+                      contig, gene, sequence, compare);
+
+  std::vector<std::shared_ptr<const AminoSequence>> amino_vector;
+  for (auto summary : gene_summary_map) {
+
+    for (auto mutant : summary.second.sequence_mutant_vec) {
+
+      amino_vector.push_back(mutant);
+
+    }
+
+  }
+
+  std::string amino_compare = AminoSequence::multipleCompare(amino_vector);
+  ExecEnv::log().info("Comparison of all Amino sequences for Contig: {}, Gene: {}, Sequence: {}; \n{}",
+                      contig, gene, sequence, amino_compare);
+
+
+
   return true;
 
 }
 
-
-bool kgl::GeneAnalysis::mutateGenomeGene(const GenomeId_t& genome,
-                                         const ContigId_t& contig,
-                                         const FeatureIdent_t& gene,
-                                         const FeatureIdent_t& sequence,
-                                         std::shared_ptr<const PopulationVariant> population_ptr,
-                                         std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
-
-
-  std::shared_ptr<const GenomeVariant> genome_variant_ptr;
-  if (population_ptr->getGenomeVariant(genome, genome_variant_ptr)) {
-
-    return mutateGenomeGene(contig, gene, sequence, genome_variant_ptr, genome_db_ptr);
-
-  } else {
-
-    ExecEnv::log().error("mutateGenomeGene(), Genome: {} not found", genome);
-    return false;
-
-  }
-
-}
 
 
 bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
                                          const FeatureIdent_t& gene,
                                          const FeatureIdent_t& sequence,
                                          std::shared_ptr<const GenomeVariant> genome_variant_ptr,
-                                         std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
+                                         std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                         GeneSummaryMap& gene_summary_map) {
 
 
+  GeneSummary gene_summary;
+  gene_summary.genome = genome_variant_ptr->genomeId();
+  if (ApplicationAnalysis::compare5Prime(contig,
+                                         gene,
+                                         sequence,
+                                         PRIME_REGION_SIZE,
+                                         genome_db_ptr,
+                                         genome_variant_ptr,
+                                         gene_summary.prime5_reference,
+                                         gene_summary.prime5_mutant_vec)) {
+
+    for (auto mutant : gene_summary.prime5_mutant_vec) {
+
+      std::string comparison = gene_summary.prime5_reference->compareDNA5Coding(mutant, gene_summary.prime5_score);
+      ExecEnv::log().info("5PRIME Genome: {}, Contig: {}, Gene: {}, Sequence: {} score: {}, comparison:\n{}",
+                          genome_variant_ptr->genomeId(), contig, gene, sequence, gene_summary.prime5_score, comparison);
+
+    }
+
+  } else {
+
+    ExecEnv::log().error("MutateGenomeGene(), Unexpected error mutating Genome: {}, Contig: {}, Gene: {}, Sequence: {}",
+                         genome_variant_ptr->genomeId(), contig, gene, sequence);
+    return false;
+
+  }
 
 
-  std::vector<std::shared_ptr<AminoSequence>> mutant_sequence_vector;
-  std::shared_ptr<AminoSequence> reference_sequence;
   if (genome_variant_ptr->mutantProteins(contig,
                                          gene,
                                          sequence,
                                          genome_db_ptr,
-                                         reference_sequence,
-                                         mutant_sequence_vector)) {
+                                         gene_summary.variant_map,
+                                         gene_summary.sequence_ptr,
+                                         gene_summary.sequence_mutant_vec)) {
 
+    std::stringstream ss;
+    ss << gene_summary.variant_map;
 
-    for (auto mutant : mutant_sequence_vector) {
+    ExecEnv::log().info("Variants used to mutate Genome: {}, Contig: {}, Gene: {} Sequence: {}:\n{}",
+                        genome_variant_ptr->genomeId(), contig, gene, sequence, ss.str());
 
-      CompareScore_t score;
-      std::string comparison = reference_sequence->compareAminoSequences(mutant, score);
+    for (auto mutant : gene_summary.sequence_mutant_vec) {
+
+      std::string comparison = gene_summary.sequence_ptr->compareAminoSequences(mutant, gene_summary.sequence_score);
       ExecEnv::log().info("Genome: {}, Contig: {}, Gene: {}, Sequence: {} score: {}, comparison:\n{}",
-                          genome_variant_ptr->genomeId(), contig, gene, sequence, score, comparison);
+                          genome_variant_ptr->genomeId(), contig, gene, sequence, gene_summary.sequence_score, comparison);
 
     }
 
@@ -88,6 +132,42 @@ bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
     return false;
 
   }
+
+  if (ApplicationAnalysis::compare3Prime(contig,
+                                         gene,
+                                         sequence,
+                                         PRIME_REGION_SIZE,
+                                         genome_db_ptr,
+                                         genome_variant_ptr,
+                                         gene_summary.prime3_reference,
+                                         gene_summary.prime3_mutant_vec)) {
+
+    for (auto mutant : gene_summary.prime3_mutant_vec) {
+
+      std::string comparison = gene_summary.prime3_reference->compareDNA5Coding(mutant, gene_summary.prime3_score);
+      ExecEnv::log().info("3PRIME Genome: {}, Contig: {}, Gene: {}, Sequence: {} score: {}, comparison:\n{}",
+                          genome_variant_ptr->genomeId(), contig, gene, sequence, gene_summary.prime3_score, comparison);
+
+    }
+
+  } else {
+
+    ExecEnv::log().error("MutateGenomeGene(), Unexpected error mutating Genome: {}, Contig: {}, Gene: {}, Sequence: {}",
+                         genome_variant_ptr->genomeId(), contig, gene, sequence);
+    return false;
+
+  }
+
+  auto result = gene_summary_map.insert(std::pair<GenomeId_t, GeneSummary>(gene_summary.genome, gene_summary));
+
+  if (not result.second) {
+
+    ExecEnv::log().error("MutateGenomeGene(), Duplicate sequence; Genome: {}, Contig: {}, Gene: {}, Sequence: {}",
+                         genome_variant_ptr->genomeId(), contig, gene, sequence);
+    return false;
+
+  }
+
 
   return true;
 

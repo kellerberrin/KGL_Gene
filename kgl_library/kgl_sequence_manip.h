@@ -24,8 +24,11 @@ public:
   explicit SequenceManipulation();
   ~SequenceManipulation();
 
-  std::string compareSequences(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
+  std::string compareSequencesDNA(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
 
+  std::string compareSequencesAmino(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
+
+  std::string compareSequencesMultiple(const std::vector<std::string>& sequence_vector) const;
 
 private:
 

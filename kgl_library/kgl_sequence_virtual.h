@@ -61,7 +61,9 @@ protected:
 
 //  const std::string compareSequences(const AlphabetSequence& compare_seq) const {  return compareSequences(compare_seq, *this); }
 
-  const std::string compareSequences(const AlphabetSequence& compare, CompareScore_t& score) const;
+  const std::string compareSequencesDNA(const AlphabetSequence& compare, CompareScore_t& score) const;
+  const std::string compareSequencesAmino(const AlphabetSequence& compare, CompareScore_t& score) const;
+  static const std::string multipleAlign(const std::vector<std::shared_ptr<const AlphabetSequence>>& compare_vec);
 
   // Letter offset is relative to the begining of the sequence (0 is the first letter).
   bool modifyLetter(ContigOffset_t sequence_offset, typename Alphabet::Alphabet letter);
@@ -74,11 +76,6 @@ protected:
 
 private:
 
-  static std::string emphasizeDifferences(const AlphabetSequence& alphabet_sequence,
-                                          const std::vector<ContigOffset_t>& emphasize_offsets);
-
-  static std::string compareSequences(const AlphabetSequence& compare_sequence,
-                                      const AlphabetSequence& reference_sequence);
 
 };
 
@@ -172,7 +169,7 @@ bool AlphabetSequence<Alphabet>::getSubsequence(ContigOffset_t substring_offset,
 }
 
 template<typename Alphabet>
-const std::string AlphabetSequence<Alphabet>::compareSequences(const AlphabetSequence<Alphabet>& compare_sequence, CompareScore_t& score) const
+const std::string AlphabetSequence<Alphabet>::compareSequencesDNA(const AlphabetSequence<Alphabet>& compare_sequence, CompareScore_t& score) const
 {
 
   if (length() == 0 or compare_sequence.length() == 0) {
@@ -183,11 +180,41 @@ const std::string AlphabetSequence<Alphabet>::compareSequences(const AlphabetSeq
 
   }
 
-  return SequenceManipulation().compareSequences(getSequenceAsString(), compare_sequence.getSequenceAsString(), score);
+  return SequenceManipulation().compareSequencesDNA(getSequenceAsString(), compare_sequence.getSequenceAsString(), score);
+
+}
+
+template<typename Alphabet>
+const std::string AlphabetSequence<Alphabet>::compareSequencesAmino(const AlphabetSequence<Alphabet>& compare_sequence, CompareScore_t& score) const
+{
+
+  if (length() == 0 or compare_sequence.length() == 0) {
+
+    ExecEnv::log().error("compareSequences(), Cannot compare empty sequences");
+    score = 0;
+    return "";
+
+  }
+
+  return SequenceManipulation().compareSequencesAmino(getSequenceAsString(), compare_sequence.getSequenceAsString(), score);
 
 }
 
 
+template<typename Alphabet>
+const std::string AlphabetSequence<Alphabet>::multipleAlign(const std::vector<std::shared_ptr<const AlphabetSequence>>& compare_vec) {
+
+  std::vector<std::string> str_vector;
+
+  for (auto sequence : compare_vec) {
+
+    str_vector.push_back(sequence->getSequenceAsString());
+
+  }
+
+  return SequenceManipulation().compareSequencesMultiple(str_vector);
+
+}
 
 
 }   // namespace genome

@@ -99,7 +99,6 @@ set(SOURCE_FILES
         kgl_library/kgl_statistics_upgma.h
         kgl_library/kgl_statistics_upgma.cc
         kgl_library/kgl_variant_mutation.cc
-        kgl_library/kgl_sequence_virtual_compare.h
         kgl_library/kgl_variant_single.h
         kgl_library/kgl_variant_delete.cc
         kgl_library/kgl_variant_insert.cc

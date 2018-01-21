@@ -18,50 +18,6 @@
 namespace kgl = kellerberrin::genome;
 
 
-// pfATP4 drug target ATP4 sodium pump.
-#define PFATP4_MINORITY_CONTIG "chr12"
-#define PFATP4_MINORITY_GENE "PF3D7_1211900"
-#define PFATP4_MINORITY_SEQUENCE "rna_PF3D7_1211900-1"
-
-#define PFATP4_MALAWI_CONTIG "Pf3D7_12_v3"
-#define PFATP4_MALAWI_GENE "PF3D7_1211900"
-#define PFATP4_MALAWI_SEQUENCE "PF3D7_1211900.1"
-
-// Erythrocyte membrane (Blood Cell Surface) protein (busy Malawi)
-#define _BCS_CONTIG "Pf3D7_12_v3"
-#define _BCS_GENE "PF3D7_1255200"
-#define  BCS_SEQUENCE "PF3D7_1255200.1"
-
-// Mutant rich Rifin (Malawi)
-#define RIFIN_3_CONTIG "Pf3D7_01_v3"
-#define RIFIN_3_GENE "PF3D7_0101900"
-#define RIFIN_3_SEQUENCE "PF3D7_0101900.1"
-
-// Mutant rich Rifin (Malawi)
-#define RIFIN_4_CONTIG "Pf3D7_08_v3"
-#define RIFIN_4_GENE "PF3D7_0808900"
-#define RIFIN_4_SEQUENCE "PF3D7_0808900.1"
-
-// Rifin very similar mutations (Malawi).
-#define RIFIN_1_CONTIG "Pf3D7_07_v3"
-#define RIFIN_1_GENE "PF3D7_0711700"
-#define RIFIN_1_SEQUENCE "PF3D7_0711700.1"
-
-#define RIFIN_2_CONTIG "Pf3D7_07_v3"
-#define RIFIN_2_GENE  "PF3D7_0712600"
-#define RIFIN_2_SEQUENCE "PF3D7_0712600.1"
-
-// S-Antigen very busy 5-prime and 3-prime regions (Malawi).
-#define S_ANTIGEN_CONTIG "Pf3D7_10_v3"
-#define S_ANTIGEN_GENE "PF3D7_1035200"
-#define S_ANTIGEN_SEQUENCE "PF3D7_1035200.1"
-
-#define ACTIVE_CONTIG PFATP4_MALAWI_CONTIG
-#define ACTIVE_GENE PFATP4_MALAWI_GENE
-#define ACTIVE_SEQUENCE PFATP4_MALAWI_SEQUENCE
-
-
-
 
 
 std::shared_ptr<const kgl::GenomeVariant> getGenomeVariants(std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr,
@@ -133,7 +89,9 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
   ApplicationAnalysis::outputSequenceCSV(args.outCSVFile, genome_db_ptr, pop_variant_ptr);
 
-  GeneAnalysis::mutateGenomeRegion("Senegal_SRR1645304", "Pf3D7_02_v3", 534345, 30, pop_variant_ptr, genome_db_ptr);
+  GeneAnalysis::mutateGene(ACTIVE_CONTIG, ACTIVE_GENE, ACTIVE_SEQUENCE, pop_variant_ptr, genome_db_ptr);
+
+  GeneAnalysis::mutateGenomeRegion("vcf_SRR609077", "Pf3D7_02_v3", 534345, 30, pop_variant_ptr, genome_db_ptr);
 
   // Perform population analysis
   // (disabled to save CPU time)

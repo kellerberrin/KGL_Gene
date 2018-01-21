@@ -5,7 +5,6 @@
 #include <memory>
 #include "kgl_variant_single.h"
 #include "kgl_variant_compound.h"
-#include "kgl_sequence_virtual_compare.h"
 #include "kgl_variant_mutation.h"
 #include "kgl_sequence_offset.h"
 
@@ -24,36 +23,10 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& variant_map,
   unstranded_ptr = contig_ptr->sequence().unstrandedRegion(coding_sequence_ptr->start(),
                                                            (coding_sequence_ptr->end() - coding_sequence_ptr->start()));
 
-  ContigSize_t sequence_size = unstranded_ptr->length();
-  SignedOffset_t sequence_size_modify;
-  variant_mutation_offset_.clearIndelOffset();
+  // And mutate it.
+  mutateDNA(variant_map, coding_sequence_ptr->start(), unstranded_ptr);
 
-  for (auto variant : variant_map) {
-
-    // Adjust the mutation offset for indels.
-    SignedOffset_t adjusted_offset = variant_mutation_offset_.adjustIndelOffsets(variant.second->offset());
-
-    // Adjust the offset for the sequence offset
-    adjusted_offset = adjusted_offset - coding_sequence_ptr->start();
-
-    // Mutate the sequence
-    variant.second->mutateSequence(adjusted_offset, unstranded_ptr, sequence_size_modify);
-
-    // Update the mutation offset for indels.
-    variant_mutation_offset_.updateIndelAccounting(variant.second, sequence_size_modify);
-
-  }
-
-  // Check the sequence size.
-  ContigSize_t calc_sequence_size = sequence_size + variant_mutation_offset_.totalIndelOffset();
-
-  if (calc_sequence_size != unstranded_ptr->length()) {
-
-    ExecEnv::log().error("Mutated sequence length: {}, unmutated size: {}, indel adjust: {}",
-                         unstranded_ptr->length(), sequence_size, variant_mutation_offset_.totalIndelOffset());
-
-  }
-
+  // Convert to stranded DNA.
   dna_sequence_ptr = kgl::SequenceOffset::mutantCodingSubSequence(coding_sequence_ptr,
                                                                   *unstranded_ptr,
                                                                   variant_mutation_offset_,

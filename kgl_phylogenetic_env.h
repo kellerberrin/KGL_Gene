@@ -19,7 +19,7 @@ struct SAM_BAM_Info {
 
 };
 
-// Holds the Minority Arguments.
+// Holds the Phylogenetic Arguments.
 struct Phylogenetic {
 
   std::string workDirectory{"./Work"};
