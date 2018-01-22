@@ -19,6 +19,7 @@ std::shared_ptr<const kgl::GenomeVariant>
 kgl::VariantFactory::createVariants(std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr,
                                     const std::string& genome_name,
                                     const std::string& variant_file_name,
+                                    bool vcf_is_gatk,
                                     Phred_t read_quality,
                                     Phred_t variant_quality,
                                     NucleotideReadCount_t min_read_count,
@@ -53,10 +54,35 @@ kgl::VariantFactory::createVariants(std::shared_ptr<const kgl::GenomeDatabase> g
 
   } else if (file_ext == VCF_FILE_EXTENSTION_) {
 
-    variant_ptr = createVcfVariants(genome_db_ptr,
-                                    genome_name,
-                                    variant_file_name,
-                                    variant_quality);
+    if (vcf_is_gatk) {
+
+
+      variant_ptr = createGATKVcfVariants(genome_db_ptr, genome_name, variant_file_name, variant_quality);
+
+
+    } else { // Check if the prefix of the file is "gatk" (case insenstive).
+
+      std::string file_name = kgl::Utility::fileName(variant_file_name);
+      std::transform(file_name.begin(), file_name.end(), file_name.begin(), ::toupper); // convert to UC for robust comparison
+      std::size_t gtk_prefix_length = std::strlen(GATK_FILE_PREFIX_);
+      std::string file_name_prefix = file_name.substr(0, gtk_prefix_length);
+
+      ExecEnv::log().info("VCF file name prefix: {}", file_name_prefix);
+
+      if (file_name_prefix == GATK_FILE_PREFIX_) {
+
+        variant_ptr = createGATKVcfVariants(genome_db_ptr, genome_name, variant_file_name, variant_quality);
+
+      } else {
+
+        variant_ptr = createFreeBayesVcfVariants(genome_db_ptr, genome_name, variant_file_name, variant_quality);
+
+      }
+
+
+    }
+
+
 
   } else {
 
@@ -104,26 +130,51 @@ kgl::VariantFactory::createSamVariants(std::shared_ptr<const GenomeDatabase> gen
 
 
 std::shared_ptr<const kgl::GenomeVariant>
-kgl::VariantFactory::createVcfVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                       const std::string& genome_name,
-                                       const std::string& vcf_file_name,
-                                       Phred_t variant_quality) const {
+kgl::VariantFactory::createFreeBayesVcfVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                                const std::string &genome_name,
+                                                const std::string &vcf_file_name,
+                                                Phred_t variant_quality) const {
 
 
-  ExecEnv::log().info("Generating VCF file: {}  variants for Genome: {}", vcf_file_name, genome_name);
+  ExecEnv::log().info("Generating VCF file: {}  Freebayes variants for Genome: {}", vcf_file_name, genome_name);
   // generate snp raw variants.
-  std::shared_ptr<const GenomeVariant> single_variant_ptr = VcfFactory().readParseVcf(genome_name,
-                                                                                      genome_db_ptr,
-                                                                                      vcf_file_name,
-                                                                                      variant_quality);
+  std::shared_ptr<const GenomeVariant> fb_variant_ptr = VcfFactory().readParseFreeBayesVcf(genome_name,
+                                                                                           genome_db_ptr,
+                                                                                           vcf_file_name,
+                                                                                           variant_quality);
 
-  ExecEnv::log().info("Generated: {} Single variants for Genome: {}", single_variant_ptr->size(), genome_name);
+  ExecEnv::log().info("Generated: {} Freebayes variants for Genome: {}", fb_variant_ptr->size(), genome_name);
 
-  std::shared_ptr<const GenomeVariant> variant_ptr = aggregateVariants(genome_db_ptr, genome_name, single_variant_ptr);
+  // Do we still need this step?
+  std::shared_ptr<const GenomeVariant> variant_ptr = aggregateVariants(genome_db_ptr, genome_name, fb_variant_ptr);
 
   return variant_ptr;
 
 }
+
+
+std::shared_ptr<const kgl::GenomeVariant>
+kgl::VariantFactory::createGATKVcfVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                           const std::string &genome_name,
+                                           const std::string &vcf_file_name,
+                                           Phred_t variant_quality) const {
+
+
+  ExecEnv::log().info("Generating VCF file: {}  GATK variants for Genome: {}", vcf_file_name, genome_name);
+  // generate snp raw variants.
+  std::shared_ptr<const GenomeVariant> gatk_variant_ptr = VcfFactory().readParseGATKVcf(genome_name,
+                                                                                        genome_db_ptr,
+                                                                                        vcf_file_name,
+                                                                                        variant_quality);
+
+  ExecEnv::log().info("Generated: {} GATK variants for Genome: {}", gatk_variant_ptr->size(), genome_name);
+
+  std::shared_ptr<const GenomeVariant> variant_ptr = aggregateVariants(genome_db_ptr, genome_name, gatk_variant_ptr);
+
+  return variant_ptr;
+
+}
+
 
 
 std::shared_ptr<const kgl::GenomeVariant>

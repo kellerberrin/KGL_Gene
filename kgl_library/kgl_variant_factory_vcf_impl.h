@@ -1,10 +1,9 @@
 //
-// Created by kellerberrin on 29/12/17.
+// Created by kellerberrin on 22/01/18.
 //
 
 #ifndef KGL_VARIANT_FACTORY_VCF_IMPL_H
 #define KGL_VARIANT_FACTORY_VCF_IMPL_H
-
 
 
 #include "kgl_utility.h"
@@ -22,35 +21,23 @@ namespace bt = boost;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // VCF (freebayes) parser. Low-level implementation. Do not include this file in any source files except the following:
-// kgl_variant_factory_vcf.cc
+// kgl_variant_factory_vcf_fbimpl.cc
+// kgl_variant_factory_vcf_gatkimpl.cc
 // kgl_variant_factory_vcf_impl.cc
-// kgl_variant_factory_vcf_utils.cc
-// VcfFactory::VcfFileImpl does all the heavy lifting using the 3rd party libraries, seqan and boost.
+// VcfFactory::FreeBayesVCFImpl does all the heavy lifting using the 3rd party libraries, seqan and boost.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using ActiveContigMap = std::map<kgl::ContigId_t, kgl::ContigSize_t>;
 
-class kgl::VcfFactory::VcfFileImpl {
+class kgl::VcfFactory::ParseVCFImpl {
 
 public:
 
-  VcfFileImpl() = default;
-  ~VcfFileImpl() = default;
+  ParseVCFImpl() = default;
+  virtual ~ParseVCFImpl() = default;
 
-  std::shared_ptr<GenomeVariant> readParseVcfFile(const std::string& genome_name,
-                                                  std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                  const std::string& vcf_file_name,
-                                                  Phred_t variant_quality);
 
-private:
-
-  constexpr static const char* HEADER_CONTIG_KEY_ = "CONTIG";
-  constexpr static const char* ID_KEY_ = "ID";
-  constexpr static const char* CONTIG_LENGTH_KEY_ = "LENGTH";
-  constexpr static const char* HEADER_INFO_KEY_ = "INFO";
-  constexpr static const char* ID_CIGAR_VALUE_ = "CIGAR";
-  constexpr static const char* ID_READ_DEPTH_ = "DPB";
-  constexpr static const char* ID_PROPORTION_ = "AF";
+protected:
 
   constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 5000;
 
@@ -60,64 +47,18 @@ private:
   size_t vcf_record_rejected_;
   size_t vcf_variant_count_;
 
+  constexpr static const char* HEADER_CONTIG_KEY_ = "CONTIG";
+  constexpr static const char* ID_KEY_ = "ID";
+  constexpr static const char* CONTIG_LENGTH_KEY_ = "LENGTH";
+  constexpr static const char* HEADER_INFO_KEY_ = "INFO";
+  constexpr static const char* ID_CIGAR_VALUE_ = "CIGAR";
+  constexpr static const char* ID_READ_DEPTH_ = "DPB";
+  constexpr static const char* ID_PROPORTION_ = "AF";
+
   bool parseVcfHeader(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                       const seqan::VcfHeader& header,
-                      ActiveContigMap& active_contig_map) const;
-
-  bool parseVcfRecord(const std::string& genome_name,
-                      const seqan::VcfRecord& record,
-                      std::shared_ptr<const ContigFeatures> contig_ptr,
-                      std::shared_ptr<GenomeVariant> genome_variants,
-                      Phred_t variant_quality,
-                      bool& quality_ok,
-                      size_t& variant_count) const;
-
-  // Parse 1M ... XM in the cigar.
-  bool parseCheck(size_t cigar_count,
-                  std::shared_ptr<const ContigFeatures> contig_ptr,
-                  const std::string& reference,
-                  const std::string& alternate,
-                  size_t& reference_index,
-                  size_t& alternate_index,
-                  ContigOffset_t& contig_offset) const;
-
-  // Parse 1X ... XX in the cigar.
-  bool parseSNP(size_t cigar_count,
-                const std::string& variant_source,
-                std::shared_ptr<const ContigFeatures> contig_ptr,
-                std::shared_ptr<GenomeVariant> genome_variants,
-                Phred_t quality,
-                const std::string& info,
-                const std::string& reference,
-                const std::string& alternate,
-                size_t& reference_index,
-                size_t& alternate_index,
-                ContigOffset_t& contig_offset,
-                size_t& variant_count) const;
-
-  // Parse 1I ... XI in the cigar.
-  bool parseInsert(size_t cigar_count,
-                   const std::string& variant_source,
-                   std::shared_ptr<const ContigFeatures> contig_ptr,
-                   std::shared_ptr<GenomeVariant> genome_variants,
-                   Phred_t quality,
-                   const std::string& info,
-                   const std::string& alternate,
-                   ContigOffset_t contig_offset,
-                   size_t& alternate_index,
-                   size_t& variant_count) const;
-
-  // Parse 1D ... XD in the cigar.
-  bool parseDelete(size_t cigar_count,
-                   const std::string& variant_source,
-                   std::shared_ptr<const ContigFeatures> contig_ptr,
-                   std::shared_ptr<GenomeVariant> genome_variants,
-                   Phred_t quality,
-                   const std::string& info,
-                   const std::string& reference,
-                   size_t& reference_index,
-                   ContigOffset_t& contig_offset,
-                   size_t& variant_count) const;
+                      ActiveContigMap& active_contig_map,
+                      bool cigar_required) const;
 
   // assumes input "<key_1=value_1, ...,key_n=value_n>"
   bool tokenizeVcfHeaderKeyValues(const std::string& key_value_text,
@@ -136,4 +77,4 @@ private:
 
 
 
-#endif //READSAMFILE_KGL_VARIANT_FACTORY_VCF_IMPL_H
+#endif //KGL_KGL_VARIANT_FACTORY_VCF_IMPL_H

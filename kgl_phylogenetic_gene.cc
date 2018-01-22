@@ -13,7 +13,8 @@ bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
                                    const FeatureIdent_t& gene,
                                    const FeatureIdent_t& sequence,
                                    std::shared_ptr<const PopulationVariant> population_ptr,
-                                   std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
+                                   std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                   const std::string& fasta_filename) {
 
 
 
@@ -44,12 +45,32 @@ bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
   ExecEnv::log().info("Comparison of all 5 prime regions for Contig: {}, Gene: {}, Sequence: {}; \n{}",
                       contig, gene, sequence, compare);
 
+
+  // Get the contig.
+  std::shared_ptr<const ContigFeatures> contig_ptr;
+  if (not genome_db_ptr->getContigSequence(contig, contig_ptr)) {
+
+    ExecEnv::log().warn("mutantProtein(), Could not find contig: {} in genome database", contig);
+    return false;
+
+  }
+
   std::vector<std::shared_ptr<const AminoSequence>> amino_vector;
   for (auto summary : gene_summary_map) {
 
     for (auto mutant : summary.second.sequence_mutant_vec) {
 
-      amino_vector.push_back(mutant);
+      if (contig_ptr->verifyProteinSequence(mutant)) {
+
+        amino_vector.push_back(mutant);
+        ExecEnv::log().info("Multiple comparison Genome: {}, protein sequence score: {}", summary.first, summary.second.sequence_score);
+
+      } else {
+
+        ExecEnv::log().info("Frame shift mutation Genome: {}, protein sequence score: {}", summary.first, summary.second.sequence_score);
+
+
+      }
 
     }
 
@@ -59,6 +80,34 @@ bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
   ExecEnv::log().info("Comparison of all Amino sequences for Contig: {}, Gene: {}, Sequence: {}; \n{}",
                       contig, gene, sequence, amino_compare);
 
+
+  // Write all the amino sequences as a fasta file.
+  std::vector<std::pair<std::string, std::shared_ptr<AminoSequence>>> amino_fasta_vector;
+  for (auto summary : gene_summary_map) {
+
+    std::string reference_name = summary.first + "_Reference_" + sequence;
+    std::pair<std::string, std::shared_ptr<AminoSequence>> fasta_entry(reference_name, summary.second.sequence_ptr);
+    amino_fasta_vector.push_back(fasta_entry);
+
+    size_t mutant_count = 0;
+    for (auto mutant : summary.second.sequence_mutant_vec) {
+
+      ++mutant_count;
+      std::stringstream ss;
+      ss << summary.first << "_Mutant" << mutant_count << "_" << sequence;
+      std::pair<std::string, std::shared_ptr<AminoSequence>> mutant_fasta_entry(ss.str(), mutant);
+      amino_fasta_vector.push_back(mutant_fasta_entry);
+
+    }
+
+  }
+
+  // Sequences are presented as a pair of a sequence name and an amino sequences.
+  if (not ApplicationAnalysis::writeMutantProteins(fasta_filename, amino_fasta_vector)) {
+
+    ExecEnv::log().warn("mutantProtein(), Problem writing protein fasta file: {}", fasta_filename);
+
+  }
 
 
   return true;

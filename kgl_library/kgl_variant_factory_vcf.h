@@ -25,15 +25,26 @@ public:
   ~VcfFactory();
 
   // Functionality passed to the implmentation.
-  std::shared_ptr<GenomeVariant> readParseVcf(const std::string& genome_name,
-                                              std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                              const std::string& vcf_file_name,
-                                              Phred_t variant_quality) const;
+  std::shared_ptr<GenomeVariant> readParseFreeBayesVcf(const std::string &genome_name,
+                                                       std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                                       const std::string &vcf_file_name,
+                                                       Phred_t variant_quality) const;
+
+  // Functionality passed to the implmentation.
+  std::shared_ptr<GenomeVariant> readParseGATKVcf(const std::string &genome_name,
+                                                  std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                                  const std::string &vcf_file_name,
+                                                  Phred_t variant_quality) const;
+
 
 private:
 
-  class VcfFileImpl;       // Forward declaration of the VCF File reader implementation class
-  std::unique_ptr<VcfFileImpl> vcf_file_impl_ptr_;    // Read VCF file PIMPL
+  class ParseVCFImpl;           // Forward declaration of the VCF File reader implementation Base class
+  class FreeBayesVCFImpl;       // Forward declaration of the Free Bayes VCF File reader implementation class
+  std::unique_ptr<FreeBayesVCFImpl> fb_vcf_impl_ptr_;    // Read Free Bayes VCF file PIMPL
+  class GATKVCFImpl;       // Forward declaration of the GATK VCF File reader implementation class
+  std::unique_ptr<GATKVCFImpl> gatk_vcf_impl_ptr_;    // Read GATK VCF file PIMPL
+
 
 };
 

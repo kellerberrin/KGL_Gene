@@ -109,7 +109,8 @@ public:
                          const FeatureIdent_t& gene,
                          const FeatureIdent_t& sequence,
                          std::shared_ptr<const PopulationVariant> population_ptr,
-                         std::shared_ptr<const GenomeDatabase> genome_db_ptr);
+                         std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                         const std::string& fasta_filename);
 
   static bool mutateRegion(const ContigId_t& contig,
                            ContigOffset_t offset,

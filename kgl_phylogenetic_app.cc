@@ -22,17 +22,18 @@ namespace kgl = kellerberrin::genome;
 
 std::shared_ptr<const kgl::GenomeVariant> getGenomeVariants(std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr,
                                                             const std::string& file_name,
+                                                            bool vcf_is_gatk,
                                                             const std::string& genome_name,
                                                             kgl::Phred_t read_quality,
                                                             kgl::Phred_t variant_quality,
                                                             long min_count,
-                                                            double min_proportion,
-                                                            const std::string& workDirectory) {
+                                                            double min_proportion) {
 
   // Read in the SAM file variants
   std::shared_ptr<const kgl::GenomeVariant> all_variant_ptr = kgl::VariantFactory().createVariants(genome_db_ptr,
                                                                                                    genome_name,
                                                                                                    file_name,
+                                                                                                   vcf_is_gatk,
                                                                                                    read_quality,
                                                                                                    variant_quality,
                                                                                                    min_count,
@@ -73,12 +74,12 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
     // Generate all genome variants.
     std::shared_ptr<const kgl::GenomeVariant> variant_ptr = getGenomeVariants(genome_db_ptr,
                                                                               file.file_name,
+                                                                              args.vcfAllGATK,
                                                                               file.genome_name,
                                                                               args.readQuality,
                                                                               args.variantQuality,
                                                                               args.minCount,
-                                                                              args.minProportion,
-                                                                              args.workDirectory);
+                                                                              args.minProportion);
 
     // Store the genome variant pointer
     pop_variant_ptr->addGenomeVariant(variant_ptr);
@@ -87,11 +88,12 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
   }
 
-  ApplicationAnalysis::outputSequenceCSV(args.outCSVFile, genome_db_ptr, pop_variant_ptr);
+//  ApplicationAnalysis::outputSequenceCSV(args.outCSVFile, genome_db_ptr, pop_variant_ptr);
 
-  GeneAnalysis::mutateGene(ACTIVE_CONTIG, ACTIVE_GENE, ACTIVE_SEQUENCE, pop_variant_ptr, genome_db_ptr);
+//  std::string fasta_file = Utility::filePath(ACTIVE_SEQUENCE, args.workDirectory) + ".fasta";
+//  GeneAnalysis::mutateGene(ACTIVE_CONTIG, ACTIVE_GENE, ACTIVE_SEQUENCE, pop_variant_ptr, genome_db_ptr, fasta_file);
 
-  GeneAnalysis::mutateGenomeRegion("vcf_SRR609077", "Pf3D7_02_v3", 534345, 30, pop_variant_ptr, genome_db_ptr);
+//  GeneAnalysis::mutateGenomeRegion("gatk_SRR609052", "Pf3D7_02_v3", 534345, 30, pop_variant_ptr, genome_db_ptr);
 
   // Perform population analysis
   // (disabled to save CPU time)

@@ -32,6 +32,7 @@ public:
   std::shared_ptr<const GenomeVariant> createVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                                       const std::string& genome_name,
                                                       const std::string& variant_file_name,
+                                                      bool vcf_is_gatk,
                                                       Phred_t read_quality,
                                                       Phred_t variant_quality,
                                                       NucleotideReadCount_t min_read_count,
@@ -57,10 +58,16 @@ private:
                                                          NucleotideReadCount_t min_read_count,
                                                          double min_proportion) const;
 
-  std::shared_ptr<const GenomeVariant> createVcfVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                         const std::string& genome_name,
-                                                         const std::string& vcf_file_name,
-                                                         Phred_t variant_quality) const;
+  std::shared_ptr<const GenomeVariant> createFreeBayesVcfVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                                                  const std::string &genome_name,
+                                                                  const std::string &vcf_file_name,
+                                                                  Phred_t variant_quality) const;
+
+  std::shared_ptr<const GenomeVariant> createGATKVcfVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                                             const std::string &genome_name,
+                                                             const std::string &vcf_file_name,
+                                                             Phred_t variant_quality) const;
+
 
   std::shared_ptr<const GenomeVariant> aggregateVariants(const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
                                                          const std::string& genome_name,
@@ -69,6 +76,7 @@ private:
   constexpr static const char* SAM_FILE_EXTENSTION_ = ".SAM";
   constexpr static const char* BAM_FILE_EXTENSTION_ = ".BAM";
   constexpr static const char* VCF_FILE_EXTENSTION_ = ".VCF";
+  constexpr static const char* GATK_FILE_PREFIX_ = "GATK";
 
 };
 

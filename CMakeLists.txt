@@ -115,9 +115,6 @@ set(SOURCE_FILES
         kgl_library/kgl_variant_factory_vcf.cc
         kgl_library/kgl_variant_factory_bam.h
         kgl_library/kgl_variant_factory_bam.cc
-        kgl_library/kgl_variant_factory_vcf_impl.h
-        kgl_library/kgl_variant_factory_vcf_impl.cc
-        kgl_library/kgl_variant_factory_vcf_utils.cc
         kgl_library/kgl_variant_mutation.h
         kgl_library/kgl_variant_db_mutation.cc
         kgl_library/kgl_variant_db_contig.h
@@ -131,7 +128,12 @@ set(SOURCE_FILES
         kgl_library/kgl_variant_db_population.h
         kgl_library/kgl_table_impl.h
         kgl_library/kgl_table_impl.cc
-        kgl_library/kgl_table_organism.h)
+        kgl_library/kgl_table_organism.h
+        kgl_library/kgl_variant_factory_fbvcf_impl.h
+        kgl_library/kgl_variant_factory_fbvcf_impl.cc
+        kgl_library/kgl_variant_factory_gatkvcf_impl.h
+        kgl_library/kgl_variant_factory_gatkvcf_impl.cc
+        kgl_library/kgl_variant_factory_vcf_impl.h kgl_library/kgl_variant_factory_vcf_impl.cc)
 
 #generate shared python library.
 add_library(kgl_lib SHARED ${SOURCE_FILES})

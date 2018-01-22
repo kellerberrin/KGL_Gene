@@ -30,6 +30,7 @@ struct Phylogenetic {
   std::string logFile{"kgl_snp.log"};
   std::string contig{"*"};
   std::string aminoTranslationTable{"NCBI_TABLE_1"};
+  bool vcfAllGATK{false};
   int max_error_count{1000};
   int max_warn_count{1000};
   bool verbose{false};

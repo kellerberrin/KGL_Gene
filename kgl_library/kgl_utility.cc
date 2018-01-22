@@ -40,10 +40,18 @@ std::string kgl::Utility::filePath(const std::string& file_name, const std::stri
 
 }
 
-// Returns the filename with the path directory appended to it "path/file".
+// Returns the filename extension.
 std::string kgl::Utility::fileExtension(const std::string& file_name) {
 
   fs::path file_path(file_name);
   return file_path.extension().string();  // returns the extension with a '.' e.g. "example.txt" returns ".txt"
+
+}
+
+// Returns the filename extension.
+std::string kgl::Utility::fileName(const std::string& file_name) {
+
+  fs::path file_path(file_name);
+  return file_path.filename().string();  // returns the file name without path. "/path/file.ext" returns "file.ext".
 
 }
