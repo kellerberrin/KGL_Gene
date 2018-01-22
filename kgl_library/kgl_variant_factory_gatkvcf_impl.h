@@ -63,6 +63,17 @@ private:
                    ContigOffset_t contig_offset,
                    size_t& variant_count) const;
 
+  bool parseDelete(const std::string& variant_source,
+                   std::shared_ptr<const ContigFeatures> contig_ptr,
+                   std::shared_ptr<GenomeVariant> genome_variants,
+                   Phred_t quality,
+                   const std::string& info,
+                   const std::string& reference,
+                   const std::string& alternate,
+                   ContigOffset_t contig_offset,
+                   size_t& variant_count) const;
+
+
 
 };
 
