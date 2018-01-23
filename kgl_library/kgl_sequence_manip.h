@@ -32,6 +32,8 @@ public:
 
   std::string compareSequencesMultiple(const std::vector<std::string>& sequence_vector) const;
 
+  CompareScore_t Levenshtein(const std::string& reference_str, const std::string& compare_str) const;
+
 private:
 
   class SequenceManipImpl;       // Forward declaration of the Sequence Manipulation implementation class

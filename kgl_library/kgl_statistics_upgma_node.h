@@ -46,9 +46,8 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Default Distance class for the UPGMA graph.
 // Mutates the contigs and then compares the mutated contigs using the Myer Hirschberg sequence comparison
-// algorthim (this is linear in space and can match large sequences such as contigs).
+// algorthim. This is linear in space - but quadratic in time. Need to find a faster comparison algorithm.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using MutatedContigMap = std::map<ContigId_t, std::shared_ptr<const DNA5SequenceContig>>;
@@ -84,6 +83,49 @@ private:
   MutatedContigMap mutated_contigs_;
 
   void mutateContigs();
+
+};
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Mutates genome proteins and then compares the mutated proteins using the Myer Hirschberg sequence comparison
+// algorthim. Myer Hirschberg is linear in space - but quadratic in time. Need to find a faster comparison algorithm.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+using MutatedProteinMap = std::map<FeatureIdent_t , std::shared_ptr<const DNA5SequenceCoding>>;
+
+class UPGMAProteinDistance : public UPGMADistanceNode {
+
+public:
+
+  UPGMAProteinDistance(std::shared_ptr<const GenomeVariant> genome_variant_ptr,
+                      std::shared_ptr<const GenomeDatabase> genome_db_ptr) : genome_variant_ptr_(genome_variant_ptr),
+                                                                             genome_db_ptr_(genome_db_ptr) {
+    mutateProteins();
+
+  }
+  UPGMAProteinDistance(const UPGMAProteinDistance&) = default;
+  ~UPGMAProteinDistance() override = default;
+
+  // UPGMA Classification functions
+  // Function to tag the nodes. Override as necessary.
+  void write_node(std::ofstream& outfile) const override { outfile << genome_variant_ptr_->genomeId(); }
+  // Pure Virtual calculates the distance between nodes.
+  DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
+
+  // Generate distance nodes from a population.
+  static std::shared_ptr<NodeVector<const UPGMADistanceNode>> upgma_matrix(std::shared_ptr<const PopulationVariant> pop_variant_ptr,
+                                                                           std::shared_ptr<const GenomeDatabase> genome_db_ptr);
+
+
+private:
+
+  std::shared_ptr<const GenomeVariant> genome_variant_ptr_;
+  std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
+  MutatedProteinMap mutated_proteins_;
+
+  void mutateProteins();
 
 };
 

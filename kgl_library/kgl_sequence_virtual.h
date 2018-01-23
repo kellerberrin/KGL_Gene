@@ -64,6 +64,7 @@ protected:
   const std::string compareSequencesDNA(const AlphabetSequence& compare, CompareScore_t& score) const;
   const std::string compareSequencesAmino(const AlphabetSequence& compare, CompareScore_t& score) const;
   CompareScore_t scoreMyerHirschberg(const AlphabetSequence& compare) const;
+  CompareScore_t scoreLevenshtein(const AlphabetSequence<Alphabet>& compare_sequence) const;
   static const std::string multipleAlign(const std::vector<std::shared_ptr<const AlphabetSequence>>& compare_vec);
 
   // Letter offset is relative to the begining of the sequence (0 is the first letter).
@@ -232,6 +233,20 @@ CompareScore_t AlphabetSequence<Alphabet>::scoreMyerHirschberg(const AlphabetSeq
 
 }
 
+
+template<typename Alphabet>
+CompareScore_t AlphabetSequence<Alphabet>::scoreLevenshtein(const AlphabetSequence<Alphabet>& compare_sequence) const {
+
+  if (length() == 0 or compare_sequence.length() == 0) {
+
+    ExecEnv::log().error("compareSequences(), Cannot compare empty sequences");
+    return 0;
+
+  }
+
+  return SequenceManipulation().Levenshtein(getSequenceAsString(), compare_sequence.getSequenceAsString());
+
+}
 
 
 

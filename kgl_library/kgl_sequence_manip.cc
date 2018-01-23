@@ -5,8 +5,12 @@
 #include <iostream>
 #include <seqan/align.h>
 #include <seqan/graph_msa.h>
+#include <edlib.h>
+
+#include "edlib.h"
 
 #include "kgl_sequence_manip.h"
+#include "kgl_exec_env.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -27,6 +31,8 @@ public:
   std::string myersHirschberg(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
 
   std::string multipleAlign(const std::vector<std::string>& compare_str_vec) const;
+
+  kgl::CompareScore_t Levenshtein(const std::string& reference_str, const std::string& compare_str) const;
 
 private:
 
@@ -145,6 +151,30 @@ std::string kgl::SequenceManipulation::SequenceManipImpl::multipleAlign(const st
 }
 
 
+kgl::CompareScore_t kgl::SequenceManipulation::SequenceManipImpl::Levenshtein(const std::string& reference_str,
+                                                                              const std::string& compare_str) const {
+
+  EdlibAlignResult result = edlibAlign(reference_str.c_str(),
+                                       reference_str.size(),
+                                       compare_str.c_str(),
+                                       compare_str.size(),
+                                       edlibNewAlignConfig(-1, EDLIB_MODE_HW, EDLIB_TASK_DISTANCE, NULL, 0));
+
+  if (result.status != EDLIB_STATUS_OK) {
+
+    kgl::ExecEnv::log().error("Problem calculating Levenshtein distance using edlib");
+    edlibFreeAlignResult(result);
+    return 0;
+  }
+
+  kgl::CompareScore_t distance = result.editDistance;
+  edlibFreeAlignResult(result);
+  return distance;
+
+
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // VcfFactory() is a public facade class that passes the functionality onto VcfFactory::FreeBayesVCFImpl.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -184,5 +214,12 @@ kgl::CompareScore_t kgl::SequenceManipulation::compareMyerHirschberg(const std::
   CompareScore_t score;
   sequence_manip_impl_ptr_->myersHirschberg(reference_str, compare_str, score);
   return score;
+
+}
+
+kgl::CompareScore_t kgl::SequenceManipulation::Levenshtein(const std::string& reference_str,
+                                                           const std::string& compare_str) const {
+
+  return sequence_manip_impl_ptr_->Levenshtein(reference_str, compare_str);
 
 }

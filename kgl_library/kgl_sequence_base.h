@@ -56,6 +56,18 @@ public:
 
   static std::string multipleCompare(const std::vector<std::shared_ptr<const DNA5SequenceCoding>>& compare_seq_vec);
 
+  CompareScore_t compareMyerHirschberg(std::shared_ptr<const DNA5SequenceCoding> compare_contig) const {
+
+    return scoreMyerHirschberg(*compare_contig);
+
+  }
+
+  CompareScore_t compareLevenshtein(std::shared_ptr<const DNA5SequenceCoding> compare_contig) const {
+
+    return scoreLevenshtein(*compare_contig);
+
+  }
+
 
 private:
 
@@ -165,6 +177,11 @@ public:
 
   }
 
+  CompareScore_t compareLevenshtein(std::shared_ptr<const DNA5SequenceContig> compare_contig) const {
+
+    return scoreLevenshtein(*compare_contig);
+
+  }
 
 private:
 

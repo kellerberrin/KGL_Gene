@@ -5,7 +5,13 @@ set(CMAKE_CXX_STANDARD 14)
 
 
 # add extra include directories
-include_directories(/usr/local/lib/spdlog/include /usr/local/lib/seqan/include /usr/include ./kgl_library)
+include_directories(/usr/local/lib/spdlog/include
+                    /usr/local/lib/seqan/include
+                    /usr/include
+                    ./kgl_library
+                    ../edlib/edlib/include)
+
+set(EDLIB_LIBRARYDIR /media/kellerberrin/WorkDisk/Kellerberrin/Software/Active/Code/Gene)
 
 # add boost library directories
 #set(BOOST_ROOT /usr/lib/boost)
@@ -133,12 +139,15 @@ set(SOURCE_FILES
         kgl_library/kgl_variant_factory_fbvcf_impl.cc
         kgl_library/kgl_variant_factory_gatkvcf_impl.h
         kgl_library/kgl_variant_factory_gatkvcf_impl.cc
-        kgl_library/kgl_variant_factory_vcf_impl.h kgl_library/kgl_variant_factory_vcf_impl.cc kgl_library/kgl_statistics_upgma_node.h kgl_library/kgl_statistics_upgma_node.cc)
+        kgl_library/kgl_variant_factory_vcf_impl.h
+        kgl_library/kgl_variant_factory_vcf_impl.cc
+        kgl_library/kgl_statistics_upgma_node.h
+        kgl_library/kgl_statistics_upgma_node.cc)
 
-#generate shared python library.
+#generate shared library.
 add_library(kgl_lib SHARED ${SOURCE_FILES})
 
-target_link_libraries(kgl_lib ${Boost_LIBRARIES})
+target_link_libraries(kgl_lib  ${Boost_LIBRARIES} ${EDLIB_LIBRARYDIR}/libedlib.so)
 
 #generate kgl_genome executable
 add_executable (kgl_genome kgl_main.cc kgl_phylogenetic_env.h kgl_phylogenetic_env.cc kgl_phylogenetic_app.cc

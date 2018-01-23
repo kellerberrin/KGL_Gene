@@ -267,7 +267,7 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
                                                       std::shared_ptr<const GenomeVariant> genome_variant) {
 
   std::string genome_id = genome_variant->genomeId();
-  std::shared_ptr<const ContigFeatures> contig_ptr= coding_sequence->getGene()->contig();
+  std::shared_ptr<const ContigFeatures> contig_ptr = coding_sequence->getGene()->contig();
   std::string gene_id = coding_sequence->getGene()->id();
   std::string sequence_id = coding_sequence->getCDSParent()->id();
   std::vector<std::string> description_vec;
@@ -353,7 +353,7 @@ bool kgl::PhylogeneticAnalysis::UPGMA(const std::string& newick_file,
                                       std::shared_ptr<const PopulationVariant> pop_variant_ptr,
                                       std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
 
-  UPGMAMatrix<const UPGMADistanceNode> upgma_matrix(UPGMAContigDistance::upgma_matrix(pop_variant_ptr, genome_db_ptr));
+  UPGMAMatrix<const UPGMADistanceNode> upgma_matrix(UPGMAProteinDistance::upgma_matrix(pop_variant_ptr, genome_db_ptr));
 
   upgma_matrix.calculateReduce();
 
