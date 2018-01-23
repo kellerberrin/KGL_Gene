@@ -94,7 +94,7 @@ void kgl::DistanceMatrix::BoostDistanceMatrix::setDistance(size_t i, size_t j, k
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Public class od the UPGMA distance matrix.
+// Public class of the UPGMA distance matrix.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 kgl::DistanceMatrix::DistanceMatrix(size_t matrix_size) : diagonal_impl_ptr_(std::make_unique<kgl::DistanceMatrix::BoostDistanceMatrix>(matrix_size)) {}

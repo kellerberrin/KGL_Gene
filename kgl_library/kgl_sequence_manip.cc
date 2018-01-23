@@ -177,3 +177,12 @@ std::string kgl::SequenceManipulation::compareSequencesMultiple(const std::vecto
   return sequence_manip_impl_ptr_->multipleAlign(sequence_vector);
 
 }
+
+kgl::CompareScore_t kgl::SequenceManipulation::compareMyerHirschberg(const std::string& reference_str,
+                                                                     const std::string& compare_str) const {
+
+  CompareScore_t score;
+  sequence_manip_impl_ptr_->myersHirschberg(reference_str, compare_str, score);
+  return score;
+
+}

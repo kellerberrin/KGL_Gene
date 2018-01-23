@@ -88,17 +88,16 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
   }
 
-  ApplicationAnalysis::outputSequenceCSV(args.outCSVFile, genome_db_ptr, pop_variant_ptr);
+//  ApplicationAnalysis::outputSequenceCSV(args.outCSVFile, genome_db_ptr, pop_variant_ptr);
 
-  std::string fasta_file = Utility::filePath(ACTIVE_SEQUENCE, args.workDirectory) + ".fasta";
-  GeneAnalysis::mutateGene(ACTIVE_CONTIG, ACTIVE_GENE, ACTIVE_SEQUENCE, pop_variant_ptr, genome_db_ptr, fasta_file);
+//  std::string fasta_file = Utility::filePath(ACTIVE_SEQUENCE, args.workDirectory) + ".fasta";
+//  GeneAnalysis::mutateGene(ACTIVE_CONTIG, ACTIVE_GENE, ACTIVE_SEQUENCE, pop_variant_ptr, genome_db_ptr, fasta_file);
 
-  GeneAnalysis::mutateGenomeRegion("gatk_SRR609052", "Pf3D7_02_v3", 534345, 30, pop_variant_ptr, genome_db_ptr);
+//  GeneAnalysis::mutateGenomeRegion("gatk_SRR609052", "Pf3D7_02_v3", 534345, 30, pop_variant_ptr, genome_db_ptr);
 
   // Perform population analysis
-  // (disabled to save CPU time)
-  std::string newick_file = Utility::filePath("file.genome_name+ UPGMA_newick", args.workDirectory) + ".txt";
-//  kgl::PhylogeneticAnalysis::UPGMA(newick_file, population_stats_ptr);
+  std::string newick_file = Utility::filePath("UPGMA_newick", args.workDirectory) + ".txt";
+  kgl::PhylogeneticAnalysis::UPGMA(newick_file, pop_variant_ptr, genome_db_ptr);
 
 }
 

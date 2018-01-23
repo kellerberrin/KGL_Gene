@@ -9,7 +9,7 @@
 namespace kgl = kellerberrin::genome;
 
 
-std::string kgl::CompoundInsert::mutation(char delimiter, VariantOutputIndex output_index) const
+std::string kgl::CompoundInsert::mutation(char /*delimiter*/, VariantOutputIndex output_index) const
 {
 
   std::stringstream ss;

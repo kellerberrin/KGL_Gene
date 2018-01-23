@@ -159,6 +159,12 @@ public:
 
   }
 
+  CompareScore_t compareMyerHirschberg(std::shared_ptr<const DNA5SequenceContig> compare_contig) const {
+
+    return scoreMyerHirschberg(*compare_contig);
+
+  }
+
 
 private:
 

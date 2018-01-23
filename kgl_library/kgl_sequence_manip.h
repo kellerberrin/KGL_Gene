@@ -28,6 +28,8 @@ public:
 
   std::string compareSequencesAmino(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
 
+  CompareScore_t compareMyerHirschberg(const std::string& reference_str, const std::string& compare_str) const;
+
   std::string compareSequencesMultiple(const std::vector<std::string>& sequence_vector) const;
 
 private:

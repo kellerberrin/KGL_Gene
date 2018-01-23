@@ -133,7 +133,7 @@ set(SOURCE_FILES
         kgl_library/kgl_variant_factory_fbvcf_impl.cc
         kgl_library/kgl_variant_factory_gatkvcf_impl.h
         kgl_library/kgl_variant_factory_gatkvcf_impl.cc
-        kgl_library/kgl_variant_factory_vcf_impl.h kgl_library/kgl_variant_factory_vcf_impl.cc)
+        kgl_library/kgl_variant_factory_vcf_impl.h kgl_library/kgl_variant_factory_vcf_impl.cc kgl_library/kgl_statistics_upgma_node.h kgl_library/kgl_statistics_upgma_node.cc)
 
 #generate shared python library.
 add_library(kgl_lib SHARED ${SOURCE_FILES})

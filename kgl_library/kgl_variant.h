@@ -108,7 +108,8 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Defined Variant Types.
-enum class VariantType { SNP, DELETE, INSERT, COMPOUND_SNP, COMPOUND_INSERT, COMPOUND_DELETE };
+enum class VariantType { SNP, DELETE, INSERT, COMPOUND_INSERT, COMPOUND_DELETE };
+
 
 class Variant : public VariantSequence {
 
@@ -141,7 +142,7 @@ public:
 
  bool isCompound() const { return size() > 1; }
   bool isSingle() const { return size() == 1; }
-  bool isSNP() const { return variantType() == VariantType::SNP or variantType() == VariantType::COMPOUND_SNP; }
+  bool isSNP() const { return variantType() == VariantType::SNP;  }
   bool isDelete() const { return variantType() == VariantType::DELETE or variantType() == VariantType::COMPOUND_DELETE; }
   bool isInsert() const { return variantType() == VariantType::INSERT or variantType() == VariantType::COMPOUND_INSERT; }
 

@@ -113,6 +113,11 @@ public:
                      std::shared_ptr<DNA5SequenceLinear>& reference_sequence,
                      std::vector<std::shared_ptr<DNA5SequenceLinear>>& mutant_sequence_vector) const;
 
+  // Does not use alternative mutations. Only mutates one path. Used for Phylogenetic analysis.
+  bool mutantContig( const ContigId_t& contig_id,
+                     const std::shared_ptr<const GenomeDatabase>& genome_db,
+                     std::shared_ptr<const DNA5SequenceContig>& reference_contig_ptr,
+                     std::shared_ptr<DNA5SequenceContig>& mutant_contig_ptr) const;
 
 
 private:

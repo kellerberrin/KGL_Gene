@@ -195,3 +195,44 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
 
 }
 
+
+bool kgl::GenomeVariant::mutantContig( const ContigId_t& contig_id,
+                                       const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                       std::shared_ptr<const DNA5SequenceContig>& reference_contig,
+                                       std::shared_ptr<DNA5SequenceContig>& mutant_contig_ptr) const {
+
+
+  // Get the contig.
+  std::shared_ptr<const ContigFeatures> contig_ptr;
+  if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
+
+    ExecEnv::log().warn("mutantProtein(), Could not find contig: {} in genome database", contig_id);
+    return false;
+
+  }
+
+  // Get the contig DNA sequence
+  reference_contig = contig_ptr->sequence_ptr();
+
+
+  // Generate the mutant sequences.
+  // Extract the variants for processing.
+  OffsetVariantMap contig_variant_map;
+  getSortedVariants(contig_id, 0, contig_ptr->contigSize(), contig_variant_map);
+
+  // There are no alternative paths used in mutating a contig.
+  // Make a copy of the contig dna.
+  mutant_contig_ptr = std::make_shared<DNA5SequenceContig>(*reference_contig);
+
+    // And mutate it.
+  if (not VariantMutation().mutateDNA(contig_variant_map, 0, mutant_contig_ptr)) {
+
+      ExecEnv::log().warn("Problem mutating genome: {},  contig: {}", contig_id);
+      return false;
+
+  }
+
+  return true;
+
+
+}

@@ -83,10 +83,10 @@ bool kgl::DeleteVariant::mutateSequence(SignedOffset_t offset_adjust,
   // Check the reference.
   if (reference() != dna_sequence_ptr->at(sequence_offset)) {
 
-    ExecEnv::log().warn("mutateSequence(), Delete reference base: {} does not match sequence base: {} at contig: {} offset: {}",
+    ExecEnv::log().warn("mutateSequence(), Delete reference base: {} does not match sequence base: {} at genome: {} contig: {} offset: {}",
                         DNA5::convertToChar(reference()),
                         DNA5::convertToChar(dna_sequence_ptr->at(sequence_offset)),
-                        contig()->contigId(), offset());
+                        sourceGenome(), contig()->contigId(), offset());
 
   }
   // Mutate the sequence

@@ -71,8 +71,6 @@ std::string kgl::Variant::name() const {
 
    case VariantType::INSERT: return "INS";
 
-   case VariantType::COMPOUND_SNP: return "CSNP";
-
    case VariantType::COMPOUND_DELETE: return "CDEL";
 
    case VariantType::COMPOUND_INSERT: return "CINS";

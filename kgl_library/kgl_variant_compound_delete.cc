@@ -10,7 +10,7 @@
 namespace kgl = kellerberrin::genome;
 
 
-std::string kgl::CompoundDelete::mutation(char delimiter, VariantOutputIndex output_index) const
+std::string kgl::CompoundDelete::mutation(char /* delimiter */, VariantOutputIndex output_index) const
 {
 
   std::stringstream ss;

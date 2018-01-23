@@ -2,6 +2,7 @@
 // Created by kellerberrin on 17/11/17.
 //
 
+#include "kgl_statistics_upgma_node.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_offset.h"
 
@@ -349,13 +350,14 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
 
 
 bool kgl::PhylogeneticAnalysis::UPGMA(const std::string& newick_file,
-                                      std::shared_ptr<const PopulationVariant> pop_variant_ptr) {
+                                      std::shared_ptr<const PopulationVariant> pop_variant_ptr,
+                                      std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
 
-//  UPGMAMatrix<const GenomeStatistics> upgma_matrix(pop_variant_ptr->initUPGMA());
+  UPGMAMatrix<const UPGMADistanceNode> upgma_matrix(UPGMAContigDistance::upgma_matrix(pop_variant_ptr, genome_db_ptr));
 
-//  upgma_matrix.calculateReduce();
+  upgma_matrix.calculateReduce();
 
-//  upgma_matrix.writeNewick(newick_file);
+  upgma_matrix.writeNewick(newick_file);
 
   return true;
 

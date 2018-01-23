@@ -54,7 +54,8 @@ public:
 
   const ContigId_t& contigId() const { return contig_id_; }
   const DNA5SequenceContig& sequence() const { return *sequence_ptr_; }
-  ContigSize_t contigSize() { return sequence_ptr_->length(); }
+  std::shared_ptr<const DNA5SequenceContig> sequence_ptr() const { return sequence_ptr_; }
+  ContigSize_t contigSize() const { return sequence_ptr_->length(); }
 
   void setupFeatureHierarchy();
   void verifyFeatureHierarchy();
