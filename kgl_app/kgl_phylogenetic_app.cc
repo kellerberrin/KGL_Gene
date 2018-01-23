@@ -4,14 +4,14 @@
 
 #include <sstream>
 #include "kgl_utility.h"
-#include "kgl_library/kgl_genome_types.h"
+#include "kgl_genome_types.h"
 #include "kgl_phylogenetic_env.h"
-#include "kgl_library/kgl_genome_db.h"
-#include "kgl_library/kgl_gff_fasta.h"
+#include "kgl_genome_db.h"
+#include "kgl_gff_fasta.h"
 #include "kgl_sam_process.h"
 #include "kgl_variant_factory.h"
-#include "kgl_library/kgl_variant_factory_compound.h"
-#include "kgl_library/kgl_filter.h"
+#include "kgl_variant_factory_compound.h"
+#include "kgl_filter.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_phylogenetic_gene.h"
 

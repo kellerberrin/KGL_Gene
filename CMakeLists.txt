@@ -36,7 +36,7 @@ set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall -pthread -W -W
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../..)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../..)
 
-set(SOURCE_FILES
+set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_logging.h
         kgl_library/kgl_logging.cc
         kgl_library/kgl_mt_queue.h
@@ -144,13 +144,53 @@ set(SOURCE_FILES
         kgl_library/kgl_statistics_upgma_node.h
         kgl_library/kgl_statistics_upgma_node.cc)
 
+set(APPLICATION_SOURCE_FILES
+        kgl_app/kgl_main.cc
+        kgl_app/kgl_phylogenetic_env.h
+        kgl_app/kgl_phylogenetic_env.cc
+        kgl_app/kgl_phylogenetic_app.cc
+        kgl_app/kgl_phylogenetic_analysis.h
+        kgl_app/kgl_phylogenetic_analysis.cc
+        kgl_app/kgl_phylogenetic_gene.h
+        kgl_app/kgl_phylogenetic_gene.cc)
+
+
+## DOXYGEN
+find_package(Doxygen)
+
+if(DOXYGEN_FOUND)
+
+    set(DOXYGEN_INPUT ${LIBRARY_SOURCE_FILES})
+    set(DOXYGEN_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+    add_custom_command(
+            OUTPUT ${DOXYGEN_OUTPUT}
+            COMMAND ${CMAKE_COMMAND} -E echo_append "Building API Documentation..."
+            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_INPUT}
+            COMMAND ${CMAKE_COMMAND} -E echo "Done."
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            DEPENDS ${DOXYGEN_INPUT}
+    )
+
+    add_custom_target(apidoc ALL DEPENDS ${DOXYGEN_OUTPUT})
+
+    add_custom_target(apidoc_forced
+            COMMAND ${CMAKE_COMMAND} -E echo_append "Building API Documentation..."
+            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_INPUT}
+            COMMAND ${CMAKE_COMMAND} -E echo "Done."
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            )
+
+endif(DOXYGEN_FOUND)
+## END DOXYGEN
+
+
 #generate shared library.
-add_library(kgl_lib SHARED ${SOURCE_FILES})
+add_library(kgl_lib SHARED ${LIBRARY_SOURCE_FILES})
 
 target_link_libraries(kgl_lib  ${Boost_LIBRARIES} ${EDLIB_LIBRARYDIR}/libedlib.so)
 
 #generate kgl_genome executable
-add_executable (kgl_genome kgl_main.cc kgl_phylogenetic_env.h kgl_phylogenetic_env.cc kgl_phylogenetic_app.cc
-                kgl_phylogenetic_analysis.h kgl_phylogenetic_analysis.cc kgl_phylogenetic_gene.h kgl_phylogenetic_gene.cc)
+add_executable (kgl_genome ${APPLICATION_SOURCE_FILES})
 
 target_link_libraries(kgl_genome kgl_lib)
