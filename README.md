@@ -8,7 +8,7 @@ A toolkit that uses SAM/BAM/VCF files to analyze Insert/Deletes (Indels) and Sin
 variants in genome populations.
 
 This software currently resides in the GitHub repository:
-https://github.com/kellerberrin/OSM-Gene
+https://github.com/kellerberrin/OSM_Gene_Cpp
 
 Software requirements:
 
@@ -31,7 +31,7 @@ The software is still under (very) active development and no stable release exis
 
 The software uses Boost and the C++ sequence analysis library Seqan.
 
-If you have any questions then please email me at: james.duncan.mcculloch@gmail.com.
+If you have any questions then please email me (James McCulloch) at: james.duncan.mcculloch@gmail.com.
 
 Or alternatively, register an issue on GitHub.
 
