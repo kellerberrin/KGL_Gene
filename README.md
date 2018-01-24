@@ -4,6 +4,8 @@ KGL_GENE
 Genome Comparison Toolkit
 -------------------------
 
+This software is under an MIT license.
+
 A toolkit that uses SAM/BAM/VCF files to analyze Insert/Deletes (Indels) and Single Nucleotide Polymorphisms (SNP)
 variants in genome populations.
 
