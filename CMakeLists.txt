@@ -5,13 +5,12 @@ set(CMAKE_CXX_STANDARD 14)
 
 
 # add extra include directories
-include_directories(/usr/local/lib/spdlog/include
-                    /usr/local/lib/seqan/include
-                    /usr/include
-                    ./kgl_library
-                    ../edlib/edlib/include)
-
-set(EDLIB_LIBRARYDIR /media/kellerberrin/WorkDisk/Kellerberrin/Software/Active/Code/Gene)
+include_directories(/usr/include
+                    kgl_library
+                    kgl_app
+                    /usr/local/lib/spdlog/include   # 3rd party logging library.
+                    /usr/local/lib/seqan/include    # 3rd party sequence analysis library.
+                    contrib/edlib) # 3rd party library for fast Leveshtein sequence matching.
 
 # add boost library directories
 #set(BOOST_ROOT /usr/lib/boost)
@@ -144,6 +143,9 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_statistics_upgma_node.h
         kgl_library/kgl_statistics_upgma_node.cc)
 
+# 3rd party library for fast Leveshtein sequence matching.
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
+
 set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_main.cc
         kgl_app/kgl_phylogenetic_env.h
@@ -160,37 +162,31 @@ find_package(Doxygen)
 
 if(DOXYGEN_FOUND)
 
-    set(DOXYGEN_INPUT ${LIBRARY_SOURCE_FILES} ${APPLICATION_SOURCE_FILES})
-    set(DOXYGEN_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
-#    doxygen_add_docs(kgl_library ${LIBRARY_SOURCE_FILES} ${APPLICATION_SOURCE_FILES})
+    # set input and output files
+    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile)
+    set(DOXYGEN_OUT ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.out)
 
-    add_custom_command(
-            OUTPUT ${DOXYGEN_OUTPUT}
-            COMMAND ${CMAKE_COMMAND} -E echo_append "Building API Documentation..."
-            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_INPUT}
-            COMMAND ${CMAKE_COMMAND} -E echo "Done."
+    # request to configure the file
+    configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+    message("Doxygen build started")
+
+    # note the option ALL which allows to build the docs together with the application
+    add_custom_target( doc_doxygen ALL
+            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            DEPENDS ${DOXYGEN_INPUT}
-    )
+            COMMENT "Generating API documentation with Doxygen"
+            VERBATIM )
 
-    add_custom_target(apidoc ALL DEPENDS ${DOXYGEN_OUTPUT})
-
-    add_custom_target(apidoc_forced
-            COMMAND ${CMAKE_COMMAND} -E echo_append "Building API Documentation..."
-            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_INPUT}
-            COMMAND ${CMAKE_COMMAND} -E echo "Done."
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            )
 
 endif(DOXYGEN_FOUND)
 ## END DOXYGEN
 
 
 #generate shared library.
-add_library(kgl_lib SHARED ${LIBRARY_SOURCE_FILES})
+add_library(kgl_lib SHARED ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES})
 
-target_link_libraries(kgl_lib  ${Boost_LIBRARIES} ${EDLIB_LIBRARYDIR}/libedlib.so)
+target_link_libraries(kgl_lib  ${Boost_LIBRARIES})
 
 #generate kgl_genome executable
 add_executable (kgl_genome ${APPLICATION_SOURCE_FILES})
