@@ -160,8 +160,10 @@ find_package(Doxygen)
 
 if(DOXYGEN_FOUND)
 
-    set(DOXYGEN_INPUT ${LIBRARY_SOURCE_FILES})
+    set(DOXYGEN_INPUT ${LIBRARY_SOURCE_FILES} ${APPLICATION_SOURCE_FILES})
     set(DOXYGEN_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+#    doxygen_add_docs(kgl_library ${LIBRARY_SOURCE_FILES} ${APPLICATION_SOURCE_FILES})
 
     add_custom_command(
             OUTPUT ${DOXYGEN_OUTPUT}
