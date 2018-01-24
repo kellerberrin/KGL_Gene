@@ -10,7 +10,7 @@ A toolkit that uses SAM/BAM/VCF files to analyze Insert/Deletes (Indels) and Sin
 variants in genome populations.
 
 This software currently resides in the GitHub repository:
-https://github.com/kellerberrin/KGL_Gene_Cpp
+https://github.com/kellerberrin/KGL_Gene
 
 Software requirements:
 
