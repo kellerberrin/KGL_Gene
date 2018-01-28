@@ -118,6 +118,16 @@ public:
 
   GenomeDatabase& operator=(const GenomeDatabase&) = default;
 
+  // Creates a genome database object.
+  // The fasta and gff files must be specified and present.
+  // The gaf file is optional (empty string if omitted)
+  // The translation Amino Acid table is optional (empty string if omitted).
+  // Note that different translation tables can be specified for individual contigs.
+  static std::shared_ptr<const GenomeDatabase> createGenomeDatabase(const std::string& fasta_file,
+                                                                    const std::string& gff_file,
+                                                                    const std::string& gaf_file,
+                                                                    const std::string& translation_table);
+
   // Return false if contig already exists.
   bool addContigSequence(const ContigId_t& contig, std::shared_ptr<DNA5SequenceContig> sequence_ptr);
   // Returns false if key not found.

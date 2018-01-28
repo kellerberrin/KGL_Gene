@@ -62,7 +62,7 @@ void getFilePath(const std::string& option_text,
 
 bool readFileList(const std::string& file_list_name,
                   fs::path& directory_path,
-                  std::vector<kgl::SAM_BAM_Info>& file_list) {
+                  std::vector<kgl::FileListInfo>& file_list) {
 
   bool result = true;
   std::ifstream list_file;
@@ -148,7 +148,7 @@ bool readFileList(const std::string& file_list_name,
 
       }
 
-      kgl::SAM_BAM_Info sam_bam_info;
+      kgl::FileListInfo sam_bam_info;
       sam_bam_info.file_name = file_path.string();
       sam_bam_info.genome_name = genome_name;
       file_list.push_back(sam_bam_info);
@@ -241,6 +241,15 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   const char* fastaFileShortFlag_ = "f";
 
   addOption(parser, seqan::ArgParseOption(fastaFileShortFlag_, fastaFileFlag_, fasta_desc, seqan::ArgParseArgument::INPUT_FILE, "FASTA_FILE"));
+
+  const char* gaf_desc =
+  R"(The gaf file that contains that annotates sequences defined in gff file. This is an optional parameter.)";
+
+  const char* gafFileFlag_ = "gafFile";
+  const char* gafFileShortFlag_ = "i";
+
+  addOption(parser, seqan::ArgParseOption(gafFileShortFlag_, gafFileFlag_, gaf_desc, seqan::ArgParseArgument::INPUT_FILE, "GAF_FILE (OPT)"));
+
 
   const char* file_list_desc =
   R"(A file with a list of all SAM files to be read and analyzed. The SAM file reads should be
@@ -455,6 +464,16 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
       ExecEnv::log().critical("No SAM/BAM files read from file list: {}", file_list);
 
     }
+
+  }
+
+  // Setup the gaf File (if specified).
+  if (seqan::isSet(parser, gafFileFlag_)) {
+
+    std::string gffFile;
+    seqan::getOptionValue(gffFile, parser, gafFileFlag_);
+    fs::path gff_file_path = directory_path / fs::path(gffFile);
+    args_.gafFile = gff_file_path.string();
 
   }
 

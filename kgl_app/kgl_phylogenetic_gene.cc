@@ -63,11 +63,13 @@ bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
       if (contig_ptr->verifyProteinSequence(mutant)) {
 
         amino_vector.push_back(mutant);
-        ExecEnv::log().info("Multiple comparison Genome: {}, protein sequence score: {}", summary.first, summary.second.sequence_score);
+        ExecEnv::log().info("Multiple comparison Genome: {}, protein score: {}, 5Prime score: {}, 3Prime score: {}",
+                            summary.first, summary.second.sequence_score, summary.second.prime5_score, summary.second.prime3_score);
 
       } else {
 
-        ExecEnv::log().info("Frame shift mutation Genome: {}, protein sequence score: {}", summary.first, summary.second.sequence_score);
+        ExecEnv::log().info("Frame shift mutation Genome: {}, protein score: {}, 5Prime score: {}, 3Prime score: {}",
+                            summary.first, summary.second.sequence_score, summary.second.prime5_score, summary.second.prime3_score);
 
 
       }
@@ -76,9 +78,9 @@ bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
 
   }
 
-  std::string amino_compare = AminoSequence::multipleCompare(amino_vector);
-  ExecEnv::log().info("Comparison of all Amino sequences for Contig: {}, Gene: {}, Sequence: {}; \n{}",
-                      contig, gene, sequence, amino_compare);
+//  std::string amino_compare = AminoSequence::multipleCompare(amino_vector);
+//  ExecEnv::log().info("Comparison of all Amino sequences for Contig: {}, Gene: {}, Sequence: {}; \n{}",
+//                      contig, gene, sequence, amino_compare);
 
 
   // Write all the amino sequences as a fasta file.

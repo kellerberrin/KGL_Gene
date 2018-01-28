@@ -232,7 +232,7 @@ bool kgl::ApplicationAnalysis::outputSequenceCSV(const std::string &file_name,
 
     }
 
-    ExecEnv::log().info("outputSequenceCSV(), genome: {} mutated: {} sequences.", genome_variant.first, sequence_count);
+    ExecEnv::log().info("outputSequenceCSV(), Genome: {} mutated: {} sequences.", genome_variant.first, sequence_count);
 
   }
 

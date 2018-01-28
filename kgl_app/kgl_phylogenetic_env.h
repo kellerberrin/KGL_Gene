@@ -12,7 +12,7 @@
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-struct SAM_BAM_Info {
+struct FileListInfo {
 
   std::string file_name;
   std::string genome_name;
@@ -25,7 +25,8 @@ struct Phylogenetic {
   std::string workDirectory{"./Work"};
   std::string fastaFile{""};
   std::string gffFile{""};
-  std::vector<SAM_BAM_Info> fileList;
+  std::string gafFile{""};
+  std::vector<FileListInfo> fileList;
   std::string outCSVFile{"kgl_out.csv"};
   std::string logFile{"kgl_snp.log"};
   std::string contig{"*"};

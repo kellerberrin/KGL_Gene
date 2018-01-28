@@ -22,9 +22,6 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 include_directories(${Boost_INCLUDE_DIRS})
 find_package( Boost COMPONENTS system filesystem timer chrono REQUIRED )
 
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pg -pthread")
-#set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall -pg")
-
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -s -DNDEBUG")
 
@@ -144,7 +141,7 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_statistics_upgma_node.cc)
 
 # 3rd party library for fast Leveshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_library/kgl_gaf_parser.h kgl_library/kgl_gaf_parser.cc)
 
 set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_main.cc
@@ -158,29 +155,38 @@ set(APPLICATION_SOURCE_FILES
 
 
 ## DOXYGEN
-find_package(Doxygen)
+option(BUILD_DOC "Use Doxygen to create the HTML/Latex based API documentation" ON)
+if(BUILD_DOC)
 
-if(DOXYGEN_FOUND)
+    find_package(Doxygen)
 
-
-    # set input and output files
-    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile)
-    set(DOXYGEN_OUT ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.out)
-
-    # request to configure the file
-    configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
-    message("Doxygen build started")
-
-    # note the option ALL which allows to build the docs together with the application
-    add_custom_target( doc_doxygen ALL
-            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            COMMENT "Generating API documentation with Doxygen"
-            VERBATIM )
+    if(DOXYGEN_FOUND)
 
 
-endif(DOXYGEN_FOUND)
-## END DOXYGEN
+        # set input and output files
+        set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile)
+        set(DOXYGEN_OUT ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.out)
+
+        # request to configure the file
+        configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+        message("Doxygen build started")
+
+        # note the option ALL which allows to build the docs together with the application
+        add_custom_target( doc_doxygen ALL
+                COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                COMMENT "Generating API documentation with Doxygen"
+                VERBATIM )
+
+#        add_custom_target( doc_doxygen
+#                    COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+#                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+#                    COMMENT "Generating API documentation with Doxygen"
+#                    VERBATIM )
+
+    endif(DOXYGEN_FOUND)
+
+endif(BUILD_DOC)
 
 
 #generate shared library.

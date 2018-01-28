@@ -5,6 +5,8 @@
 
 #include "kgl_exec_env.h"
 #include "kgl_patterns.h"
+#include "kgl_gaf_parser.h"
+#include "kgl_gff_fasta.h"
 #include "kgl_genome_feature.h"
 #include "kgl_genome_db.h"
 
@@ -14,6 +16,39 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GenomeDatabase members.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+std::shared_ptr<const kgl::GenomeDatabase> kgl::GenomeDatabase::createGenomeDatabase(const std::string& fasta_file,
+                                                                                     const std::string& gff_file,
+                                                                                     const std::string& gaf_file,
+                                                                                     const std::string& translation_table) {
+  // Create a genome database object.
+  std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr = ParseGffFasta().readFastaGffFile(fasta_file, gff_file);
+
+  // Optionally set the translation table (defaults to the standard table).
+  if (not translation_table.empty()) {
+
+    // Set the amino translation table
+    genome_db_ptr->setTranslationTable(translation_table);
+
+  }
+
+  // Wire-up the genome database.
+  genome_db_ptr->createVerifyGenomeDatabase();
+
+  // Optionally read in gaf records to add into the genome database.
+  if (not gaf_file.empty()) {
+
+    GeneOntology().readGafFile(gaf_file);
+
+  }
+
+  // return a const pointer.
+  return genome_db_ptr;
+
+}
+
+
 
 bool kgl::GenomeDatabase::addContigSequence(const kgl::ContigId_t& contig_id,
                                             std::shared_ptr<kgl::DNA5SequenceContig> sequence_ptr) {

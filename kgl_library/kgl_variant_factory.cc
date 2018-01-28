@@ -67,8 +67,6 @@ kgl::VariantFactory::createVariants(std::shared_ptr<const kgl::GenomeDatabase> g
       std::size_t gtk_prefix_length = std::strlen(GATK_FILE_PREFIX_);
       std::string file_name_prefix = file_name.substr(0, gtk_prefix_length);
 
-      ExecEnv::log().info("VCF file name prefix: {}", file_name_prefix);
-
       if (file_name_prefix == GATK_FILE_PREFIX_) {
 
         variant_ptr = createGATKVcfVariants(genome_db_ptr, genome_name, variant_file_name, variant_quality);
@@ -86,7 +84,7 @@ kgl::VariantFactory::createVariants(std::shared_ptr<const kgl::GenomeDatabase> g
 
   } else {
 
-    ExecEnv::log().critical("Unsupported file type: '{}' for variant calling. Must be SAM ('.sam'), BAM ('.bam') or freebayes VCF ('.vcf')", file_ext);
+    ExecEnv::log().critical("Unsupported file type: '{}' for variant calling. Must be SAM ('.sam'), BAM ('.bam') or  VCF ('.vcf')", file_ext);
 
   }
 
@@ -111,7 +109,9 @@ kgl::VariantFactory::createSamVariants(std::shared_ptr<const GenomeDatabase> gen
                                                                                                  sam_file_name,
                                                                                                  read_quality);
 
-  ExecEnv::log().info("Generating SAM file: {}  variants for Genome: {}", sam_file_name, genome_name);
+  ExecEnv::log().info("Processing SAM file: {}", sam_file_name);
+  ExecEnv::log().info("Generating Pileup (count) variants for Genome: {}", genome_name);
+
   // generate snp raw variants.
   std::shared_ptr<const GenomeVariant> single_variant_ptr = SingleFactory().createSingleVariants(genome_name,
                                                                                                  count_data_ptr,
@@ -120,7 +120,7 @@ kgl::VariantFactory::createSamVariants(std::shared_ptr<const GenomeDatabase> gen
                                                                                                  min_read_count,
                                                                                                  min_proportion);
 
-  ExecEnv::log().info("Generated: {} Single variants for Genome: {}", single_variant_ptr->size(), genome_name);
+  ExecEnv::log().info("Generated: {} Pileup (count) variants for Genome: {}", single_variant_ptr->size(), genome_name);
 
   std::shared_ptr<const GenomeVariant> variant_ptr = aggregateVariants(genome_db_ptr, genome_name, single_variant_ptr);
 
@@ -136,7 +136,8 @@ kgl::VariantFactory::createFreeBayesVcfVariants(std::shared_ptr<const GenomeData
                                                 Phred_t variant_quality) const {
 
 
-  ExecEnv::log().info("Generating VCF file: {}  Freebayes variants for Genome: {}", vcf_file_name, genome_name);
+  ExecEnv::log().info("Processing VCF file: {}", vcf_file_name);
+  ExecEnv::log().info("Generating Freebayes variants for Genome: {}", genome_name);
   // generate snp raw variants.
   std::shared_ptr<const GenomeVariant> fb_variant_ptr = VcfFactory().readParseFreeBayesVcf(genome_name,
                                                                                            genome_db_ptr,
@@ -160,7 +161,8 @@ kgl::VariantFactory::createGATKVcfVariants(std::shared_ptr<const GenomeDatabase>
                                            Phred_t variant_quality) const {
 
 
-  ExecEnv::log().info("Generating VCF file: {}  GATK variants for Genome: {}", vcf_file_name, genome_name);
+  ExecEnv::log().info("Processing VCF file: {}", vcf_file_name);
+  ExecEnv::log().info("Generating GATK variants for Genome: {}", genome_name);
   // generate snp raw variants.
   std::shared_ptr<const GenomeVariant> gatk_variant_ptr = VcfFactory().readParseGATKVcf(genome_name,
                                                                                         genome_db_ptr,
@@ -180,24 +182,25 @@ kgl::VariantFactory::createGATKVcfVariants(std::shared_ptr<const GenomeDatabase>
 std::shared_ptr<const kgl::GenomeVariant>
 kgl::VariantFactory::createBamVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                        const std::string& genome_name,
-                                       const std::string& vcf_file_name,
+                                       const std::string& bam_file_name,
                                        Phred_t read_quality,
                                        Phred_t variant_quality,
                                        NucleotideReadCount_t min_read_count,
                                        double min_proportion) const {
 
 
-  ExecEnv::log().info("Generating BAM file: {}  variants for Genome: {}", vcf_file_name, genome_name);
+  ExecEnv::log().info("Processing BAM file: {}", bam_file_name);
+  ExecEnv::log().info("Generating Pileup (count) variants for Genome: {}", genome_name);
   // generate snp raw variants.
   std::shared_ptr<const GenomeVariant> single_variant_ptr = BamFactory().readParseBam(genome_name,
                                                                                       genome_db_ptr,
-                                                                                      vcf_file_name,
+                                                                                      bam_file_name,
                                                                                       read_quality,
                                                                                       variant_quality,
                                                                                       min_read_count,
                                                                                       min_proportion);
 
-  ExecEnv::log().info("Generated: {} Single variants for Genome: {}", single_variant_ptr->size(), genome_name);
+  ExecEnv::log().info("Generated: {} Pileup (count) variants for Genome: {}", single_variant_ptr->size(), genome_name);
 
   std::shared_ptr<const GenomeVariant> variant_ptr = aggregateVariants(genome_db_ptr, genome_name, single_variant_ptr);
 
