@@ -320,6 +320,35 @@ template<class T> void UPGMAMatrix<T>::writeNode(std::shared_ptr<PhyloNode<T>> n
 }
 
 
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Virtual Distance class for the UPGMA graph.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class UPGMADistanceNode {
+
+public:
+
+  UPGMADistanceNode() = default;
+  UPGMADistanceNode(const UPGMADistanceNode&) = default;
+  virtual ~UPGMADistanceNode() = default;
+
+  // UPGMA Classification functions
+  // Function to tag the nodes. Override as necessary.
+  virtual void write_node(std::ofstream& outfile) const = 0;
+  // Pure Virtual calculates the distance between nodes.
+  virtual DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const = 0;
+
+
+
+private:
+
+};
+
+
+
 }   // namespace genome
 }   // namespace kellerberrin
 

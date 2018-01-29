@@ -39,7 +39,7 @@ std::shared_ptr<const kgl::GenomeDatabase> kgl::GenomeDatabase::createGenomeData
   // Optionally read in gaf records to add into the genome database.
   if (not gaf_file.empty()) {
 
-    GeneOntology().readGafFile(gaf_file);
+    genome_db_ptr->gene_ontology_.readGafFile(gaf_file);
 
   }
 

@@ -1,12 +1,10 @@
 //
-// Created by kellerberrin on 23/01/18.
+// Created by kellerberrin on 30/01/18.
 //
 
+#ifndef KGL_UPGMA_H
+#define KGL_UPGMA_H
 
-
-
-#ifndef KGL_STATISTICS_UPGMA_NODE_H
-#define KGL_STATISTICS_UPGMA_NODE_H
 
 
 #include "kgl_genome_db.h"
@@ -16,7 +14,6 @@
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
-
 
 
 
@@ -74,8 +71,8 @@ class UPGMAProteinDistance : public UPGMADistanceNode {
 public:
 
   UPGMAProteinDistance(std::shared_ptr<const GenomeVariant> genome_variant_ptr,
-                      std::shared_ptr<const GenomeDatabase> genome_db_ptr) : genome_variant_ptr_(genome_variant_ptr),
-                                                                             genome_db_ptr_(genome_db_ptr) {
+                       std::shared_ptr<const GenomeDatabase> genome_db_ptr) : genome_variant_ptr_(genome_variant_ptr),
+                                                                              genome_db_ptr_(genome_db_ptr) {
     mutateProteins();
 
   }
@@ -151,4 +148,4 @@ private:
 
 
 
-#endif //KGL_STATISTICS_UPGMA_NODE_H
+#endif //KGL_UPGMA_H

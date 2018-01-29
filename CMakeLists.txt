@@ -151,11 +151,12 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_phylogenetic_analysis.h
         kgl_app/kgl_phylogenetic_analysis.cc
         kgl_app/kgl_phylogenetic_gene.h
-        kgl_app/kgl_phylogenetic_gene.cc)
+        kgl_app/kgl_phylogenetic_gene.cc kgl_app/kgl_upgma.h kgl_app/kgl_upgma.cc)
 
 
 ## DOXYGEN
-option(BUILD_DOC "Use Doxygen to create the HTML/Latex based API documentation" ON)
+#set(BUILD_DOC OFF CACHE BOOL "Use Doxygen to create the HTML/Latex based API documentation")
+#option(BUILD_DOC "Use Doxygen to create the HTML/Latex based API documentation" ON)
 if(BUILD_DOC)
 
     find_package(Doxygen)

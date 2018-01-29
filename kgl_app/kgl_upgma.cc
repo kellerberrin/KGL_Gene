@@ -1,8 +1,9 @@
 //
-// Created by kellerberrin on 23/01/18.
+// Created by kellerberrin on 30/01/18.
 //
 
-#include "kgl_statistics_upgma_node.h"
+
+#include "kgl_upgma.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -79,7 +80,7 @@ void kgl::UPGMAContigDistance::mutateContigs() {
 
 std::shared_ptr<kgl::NodeVector<const kgl::UPGMADistanceNode>>
 kgl::UPGMAContigDistance::upgma_matrix(std::shared_ptr<const PopulationVariant> pop_variant_ptr,
-                                     std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
+                                       std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
 
   std::shared_ptr<NodeVector<const UPGMADistanceNode>> node_vector_ptr(std::make_shared<NodeVector<const UPGMADistanceNode>>());
 
@@ -142,7 +143,7 @@ kgl::DistanceType_t kgl::UPGMAProteinDistance::distance(std::shared_ptr<const UP
 
 std::shared_ptr<kgl::NodeVector<const kgl::UPGMADistanceNode>>
 kgl::UPGMAProteinDistance::upgma_matrix(std::shared_ptr<const PopulationVariant> pop_variant_ptr,
-                                       std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
+                                        std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
 
   std::shared_ptr<NodeVector<const UPGMADistanceNode>> node_vector_ptr(std::make_shared<NodeVector<const UPGMADistanceNode>>());
 
@@ -220,7 +221,7 @@ void kgl::UPGMAProteinDistance::mutateProteins() {
 
 std::shared_ptr<kgl::NodeVector<const kgl::UPGMADistanceNode>>
 kgl::UPGMAFamilyDistance::upgma_matrix(std::shared_ptr<const PopulationVariant> pop_variant_ptr,
-                                        std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                       std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                        const std::string& family_code) {
 
   std::shared_ptr<NodeVector<const UPGMADistanceNode>> node_vector_ptr(std::make_shared<NodeVector<const UPGMADistanceNode>>());

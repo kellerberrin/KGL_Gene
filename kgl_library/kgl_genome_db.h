@@ -13,6 +13,7 @@
 #include "kgl_genome_types.h"
 #include "kgl_sequence_amino.h"
 #include "kgl_genome_feature.h"
+#include "kgl_gaf_parser.h"
 #include "kgl_mt_data.h"
 
 
@@ -143,9 +144,12 @@ public:
 
   size_t contigCount() const { return getMap().size(); }
 
+  const GeneOntology& geneOntology() const { return gene_ontology_; }
+
 private:
 
   GenomeSequenceMap genome_sequence_map_;
+  GeneOntology gene_ontology_;
 
   void setupFeatureHierarchy();
   void verifyFeatureHierarchy();

@@ -254,6 +254,8 @@ std::string kgl::ApplicationAnalysis::outputSequenceHeader(char delimiter) {
   ss << "AllPaths" << delimiter;
   ss << "ValidPaths" << delimiter;
   ss << "Score" << delimiter;
+  ss << "Symbolic" << delimiter;
+  ss << "AltSymbolic" << delimiter;
   ss << "Description" << '\n';
 
   return ss.str();
@@ -270,9 +272,6 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
   std::shared_ptr<const ContigFeatures> contig_ptr = coding_sequence->getGene()->contig();
   std::string gene_id = coding_sequence->getGene()->id();
   std::string sequence_id = coding_sequence->getCDSParent()->id();
-  std::vector<std::string> description_vec;
-  coding_sequence->getGene()->getAttributes().getDescription(description_vec);
-//  coding_sequence->getGene()->getAttributes().getAllAttributes(description_vec);
 
   std::shared_ptr<AminoSequence> amino_reference_seq;
   std::vector<std::shared_ptr<AminoSequence>> amino_mutant_vec;
@@ -336,9 +335,24 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
   ss << valid_paths << delimiter;
   ss << average_score << delimiter;
 
-  for (const auto& description : description_vec) {
+  std::shared_ptr<const OntologyRecord> gene_ontology_ptr;
+  if (genome_db->geneOntology().getGafFeatureVector(gene_id, gene_ontology_ptr)) {
+
+    ss << gene_ontology_ptr->symbolicReference() << delimiter;
+    ss << gene_ontology_ptr->altSymbolicReference() << delimiter;
+    ss << gene_ontology_ptr->description();
+
+  } else {
+
+    ss << "<NULL>" << delimiter;
+    ss << "<NULL>" << delimiter;
+    std::vector<std::string> description_vec;
+    coding_sequence->getGene()->getAttributes().getDescription(description_vec);
+    for (const auto &description : description_vec) {
 
       ss << description;
+
+    }
 
   }
 
@@ -353,7 +367,9 @@ bool kgl::PhylogeneticAnalysis::UPGMA(const std::string& newick_file,
                                       std::shared_ptr<const PopulationVariant> pop_variant_ptr,
                                       std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
 
-  UPGMAMatrix<const UPGMADistanceNode> upgma_matrix(UPGMAProteinDistance::upgma_matrix(pop_variant_ptr, genome_db_ptr));
+  UPGMAMatrix<const UPGMADistanceNode> upgma_matrix(UPGMAFamilyDistance::upgma_matrix(pop_variant_ptr,
+                                                                                      genome_db_ptr,
+                                                                                      UPGMAFamilyDistance::SYMBOLIC_MAURER_FAMILY));
 
   upgma_matrix.calculateReduce();
 

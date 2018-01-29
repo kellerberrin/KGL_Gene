@@ -30,6 +30,7 @@ using CDSPhaseType_t = unsigned char;
 using FeatureIdent_t = std::string;
 using FeatureType_t = std::string;
 using VariantType_t = std::string;
+using OntologyIdent_t = std::string;
 using Phred_t = double;
 
 

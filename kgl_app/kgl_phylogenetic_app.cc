@@ -85,13 +85,13 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 //  ApplicationAnalysis::outputSequenceCSV(args.outCSVFile, genome_db_ptr, pop_variant_ptr);
 
   std::string fasta_file = Utility::filePath(ACTIVE_SEQUENCE, args.workDirectory) + ".fasta";
-  GeneAnalysis::mutateGene(ACTIVE_CONTIG, ACTIVE_GENE, ACTIVE_SEQUENCE, pop_variant_ptr, genome_db_ptr, fasta_file);
+//  GeneAnalysis::mutateGene(ACTIVE_CONTIG, ACTIVE_GENE, ACTIVE_SEQUENCE, pop_variant_ptr, genome_db_ptr, fasta_file);
 
 //  GeneAnalysis::mutateGenomeRegion("cambodia_fb_SRR2317584", "Pf3D7_02_v3", 534345, 30, pop_variant_ptr, genome_db_ptr);
 
   // Perform population analysis
   std::string newick_file = Utility::filePath("UPGMA_newick", args.workDirectory) + ".txt";
-//  kgl::PhylogeneticAnalysis::UPGMA(newick_file, pop_variant_ptr, genome_db_ptr);
+  kgl::PhylogeneticAnalysis::UPGMA(newick_file, pop_variant_ptr, genome_db_ptr);
 
 }
 
