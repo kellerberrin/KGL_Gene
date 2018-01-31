@@ -176,7 +176,7 @@ const std::string AlphabetSequence<Alphabet>::compareSequencesDNA(const Alphabet
 
   if (length() == 0 or compare_sequence.length() == 0) {
 
-    ExecEnv::log().error("compareSequences(), Cannot compare empty sequences");
+    ExecEnv::log().warn("compareSequences(), Cannot compare empty sequences");
     score = 0;
     return "";
 
@@ -192,7 +192,7 @@ const std::string AlphabetSequence<Alphabet>::compareSequencesAmino(const Alphab
 
   if (length() == 0 or compare_sequence.length() == 0) {
 
-    ExecEnv::log().error("compareSequences(), Cannot compare empty sequences");
+    ExecEnv::log().warn("compareSequences(), Cannot compare empty sequences");
     score = 0;
     return "";
 
@@ -224,7 +224,7 @@ CompareScore_t AlphabetSequence<Alphabet>::scoreMyerHirschberg(const AlphabetSeq
 
   if (length() == 0 or compare_sequence.length() == 0) {
 
-    ExecEnv::log().error("compareSequences(), Cannot compare empty sequences");
+    ExecEnv::log().warn("compareSequences(), Cannot compare empty sequences");
     return 0;
 
   }
@@ -239,7 +239,7 @@ CompareScore_t AlphabetSequence<Alphabet>::scoreLevenshtein(const AlphabetSequen
 
   if (length() == 0 or compare_sequence.length() == 0) {
 
-    ExecEnv::log().error("compareSequences(), Cannot compare empty sequences");
+    ExecEnv::log().warn("compareSequences(), Cannot compare empty sequences");
     return 0;
 
   }

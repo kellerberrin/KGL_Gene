@@ -2,9 +2,10 @@
 // Created by kellerberrin on 17/11/17.
 //
 
-#include "kgl_statistics_upgma_node.h"
+#include "kgl_upgma.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_offset.h"
+#include "kgl_phylogenetic_gene.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -209,22 +210,56 @@ bool kgl::ApplicationAnalysis::outputSequenceCSV(const std::string &file_name,
 
   }
 
-  out_file << outputSequenceHeader(CSV_delimiter);
+  out_file << GeneAnalysis::outputRegionHeader(CSV_delimiter) << CSV_delimiter;
+  out_file << outputSequenceHeader(CSV_delimiter) << '\n';
 
   for( auto genome_variant : pop_variant_ptr->getMap()) {
 
     ExecEnv::log().info("outputSequenceCSV(), Processing genome: {}", genome_variant.first);
-    ContigSize_t sequence_count = 0;
+    size_t sequence_count = 0;
 
     for (auto contig : genome_db->getMap()) {
+
+      std::shared_ptr<const CodingSequence> previous_seq_ptr = nullptr;
 
       for (auto gene : contig.second->getGeneMap()) {
 
         const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene.second);
         for (auto sequence : coding_seq_ptr->getMap()) {
 
+          ContigSize_t front_porch_size;
+          ContigOffset_t front_porch_offset;
+          if (not previous_seq_ptr) {
+
+            front_porch_offset = 0;
+            front_porch_size = sequence.second->start();
+
+          } else {
+
+            front_porch_offset = previous_seq_ptr->end();
+            if (front_porch_offset <= sequence.second->start()) {
+
+              front_porch_size = sequence.second->start() - front_porch_offset;
+
+            } else {
+
+              ExecEnv::log().info("Sequence: {} end offset: {} overlaps sequence: {} begin offset: {}",
+                                  previous_seq_ptr->getCDSParent()->id(),
+                                  previous_seq_ptr->end(),
+                                  sequence.second->getCDSParent()->id(),
+                                  sequence.second->start());
+              front_porch_size = 0;
+
+            }
+
+          }
+
+          out_file << GeneAnalysis::outputGenomeRegion(CSV_delimiter, contig.first, front_porch_offset, front_porch_size, genome_variant.second, genome_db);
+          out_file << CSV_delimiter;
           out_file << outputSequence(CSV_delimiter, sequence.second, genome_db, genome_variant.second);
+          out_file << '\n';
           ++sequence_count;
+          previous_seq_ptr = sequence.second;
 
         }
 
@@ -247,7 +282,9 @@ std::string kgl::ApplicationAnalysis::outputSequenceHeader(char delimiter) {
 
   ss << "Genome" << delimiter;
   ss << "Contig" << delimiter;
+  ss << "ContigLength" << delimiter;
   ss << "Sequence" << delimiter;
+  ss << "ContigOffset" << delimiter;
   ss << "Size(DNA)" << delimiter;
   ss << "Error" << delimiter;
   ss << "ValidReference" << delimiter;
@@ -256,7 +293,7 @@ std::string kgl::ApplicationAnalysis::outputSequenceHeader(char delimiter) {
   ss << "Score" << delimiter;
   ss << "Symbolic" << delimiter;
   ss << "AltSymbolic" << delimiter;
-  ss << "Description" << '\n';
+  ss << "Description";
 
   return ss.str();
 
@@ -272,6 +309,7 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
   std::shared_ptr<const ContigFeatures> contig_ptr = coding_sequence->getGene()->contig();
   std::string gene_id = coding_sequence->getGene()->id();
   std::string sequence_id = coding_sequence->getCDSParent()->id();
+  ContigOffset_t sequence_offset = coding_sequence->start();
 
   std::shared_ptr<AminoSequence> amino_reference_seq;
   std::vector<std::shared_ptr<AminoSequence>> amino_mutant_vec;
@@ -327,7 +365,9 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
 
   ss << genome_id << delimiter;
   ss << contig_ptr->contigId() << delimiter;
+  ss << contig_ptr->sequence().length() << delimiter;
   ss << sequence_id << delimiter;
+  ss << sequence_offset << delimiter;
   ss << coding_sequence->codingNucleotides() << delimiter;
   ss << error_flag << delimiter;
   ss << valid_reference << delimiter;
@@ -340,7 +380,7 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
 
     ss << gene_ontology_ptr->symbolicReference() << delimiter;
     ss << gene_ontology_ptr->altSymbolicReference() << delimiter;
-    ss << gene_ontology_ptr->description();
+    ss << "\"" << gene_ontology_ptr->description() << "\"";
 
   } else {
 
@@ -350,13 +390,12 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
     coding_sequence->getGene()->getAttributes().getDescription(description_vec);
     for (const auto &description : description_vec) {
 
-      ss << description;
+      ss << "\"" << description << "\"";
 
     }
 
   }
 
-  ss << '\n';
 
   return ss.str();
 

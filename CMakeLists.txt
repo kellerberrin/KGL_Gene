@@ -137,8 +137,7 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_gatkvcf_impl.cc
         kgl_library/kgl_variant_factory_vcf_impl.h
         kgl_library/kgl_variant_factory_vcf_impl.cc
-        kgl_library/kgl_statistics_upgma_node.h
-        kgl_library/kgl_statistics_upgma_node.cc)
+        )
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_library/kgl_gaf_parser.h kgl_library/kgl_gaf_parser.cc)

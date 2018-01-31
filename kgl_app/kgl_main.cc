@@ -17,10 +17,10 @@ void ctrlC(int) {
 }
 
 
-// The application() function sets up the static environment object.
-// and provides logging and commandline arguments to the
-// application object. The function is a template so that
-// different applications may be easily specified.
+/// The application() function sets up the static environment object.
+/// and provides logging and commandline arguments to the
+/// application object. The function is a template so that
+/// different applications may be easily specified.
 
 template<class T>
 int application(int argc, char const ** argv) {
@@ -53,7 +53,7 @@ int application(int argc, char const ** argv) {
 
 }
 
-// The mainline, called by the operating system and passed command line arguments.
+/// The mainline, called by the operating system and passed command line arguments.
 int main(int argc, char const ** argv)
 {
 

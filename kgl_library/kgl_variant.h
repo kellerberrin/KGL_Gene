@@ -140,7 +140,7 @@ public:
                               std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
                               SignedOffset_t& sequence_size_modify) const = 0;
 
- bool isCompound() const { return size() > 1; }
+  bool isCompound() const { return size() > 1; }
   bool isSingle() const { return size() == 1; }
   bool isSNP() const { return variantType() == VariantType::SNP;  }
   bool isDelete() const { return variantType() == VariantType::DELETE or variantType() == VariantType::COMPOUND_DELETE; }

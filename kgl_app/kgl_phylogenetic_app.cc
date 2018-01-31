@@ -8,7 +8,6 @@
 #include "kgl_phylogenetic_env.h"
 #include "kgl_genome_db.h"
 #include "kgl_gff_fasta.h"
-#include "kgl_gaf_parser.h"
 #include "kgl_sam_process.h"
 #include "kgl_variant_factory.h"
 #include "kgl_variant_factory_compound.h"
@@ -84,6 +83,8 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
 //  ApplicationAnalysis::outputSequenceCSV(args.outCSVFile, genome_db_ptr, pop_variant_ptr);
 
+  GeneAnalysis::mutateAllRegions(args.outCSVFile, 1000,  pop_variant_ptr, genome_db_ptr);
+
   std::string fasta_file = Utility::filePath(ACTIVE_SEQUENCE, args.workDirectory) + ".fasta";
 //  GeneAnalysis::mutateGene(ACTIVE_CONTIG, ACTIVE_GENE, ACTIVE_SEQUENCE, pop_variant_ptr, genome_db_ptr, fasta_file);
 
@@ -91,7 +92,7 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
   // Perform population analysis
   std::string newick_file = Utility::filePath("UPGMA_newick", args.workDirectory) + ".txt";
-  kgl::PhylogeneticAnalysis::UPGMA(newick_file, pop_variant_ptr, genome_db_ptr);
+//  kgl::PhylogeneticAnalysis::UPGMA(newick_file, pop_variant_ptr, genome_db_ptr);
 
 }
 

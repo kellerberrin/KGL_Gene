@@ -138,7 +138,7 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
   std::shared_ptr<const ContigFeatures> contig_ptr;
   if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
 
-    ExecEnv::log().warn("mutantProtein(), Could not find contig: {} in genome database", contig_id);
+    ExecEnv::log().warn("mutantRegion(), Could not find contig: {} in genome database", contig_id);
     return false;
 
   }
@@ -165,7 +165,7 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
   // There may be more than one different variant specified per offset.
   // If this is the case, then we create alternative mutation paths.
   // In other words, there can be more than one mutant protein alternative.
-  // The number of mutation is exponential. Alternatives = 2 ^ (#equal offset variants) - assuming 2 alternatives per offset.
+  // The number of mutations is exponential. Alternatives = 2 ^ (#equal offset variants) - assuming 2 alternatives per offset.
   // A message is issued if there are more than 32 alternative mutation paths (5 equal offset variants).
   // For performance reasons, a hard limit of 128 alternatives is imposed (can be varied).
   std::vector<OffsetVariantMap> variant_map_vector;

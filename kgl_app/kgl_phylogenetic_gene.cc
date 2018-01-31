@@ -225,6 +225,141 @@ bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
 }
 
 
+bool kgl::GeneAnalysis::mutateAllRegions(const std::string& file_name,
+                                         ContigSize_t region_size,
+                                         std::shared_ptr<const PopulationVariant> pop_variant_ptr,
+                                         std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
+
+  const char CSV_delimiter = ',';
+  // open the file.
+  std::fstream out_file(file_name, std::fstream::out | std::fstream::app);
+  if (!out_file) {
+
+    ExecEnv::log().error("Cannot open output CSV file (--outCSVFile): {}", file_name);
+    return false;
+
+  }
+
+  out_file << outputRegionHeader(CSV_delimiter) << '\n';
+
+  for( auto genome_variant : pop_variant_ptr->getMap()) {
+
+    ExecEnv::log().info("outputSequenceCSV(), Processing genome: {}", genome_variant.first);
+    ContigSize_t sequence_count = 0;
+
+    for (auto contig : genome_db_ptr->getMap()) {
+
+      for (ContigOffset_t offset = 0; offset < (contig.second->sequence().length() - region_size); offset += region_size) {
+
+        out_file << outputGenomeRegion(CSV_delimiter, contig.first, offset, region_size, genome_variant.second, genome_db_ptr) << '\n';
+        ++sequence_count;
+
+      }
+
+    }
+
+    ExecEnv::log().info("outputSequenceCSV(), Genome: {} mutated: {} sequences.", genome_variant.first, sequence_count);
+
+  }
+
+  return out_file.good();
+
+}
+
+
+std::string kgl::GeneAnalysis::outputRegionHeader(char delimiter) {
+
+  std::stringstream ss;
+
+  ss << "Genome" << delimiter;
+  ss << "Contig" << delimiter;
+  ss << "ContigSize" << delimiter;
+  ss << "ContigOffset" << delimiter;
+  ss << "RegionSize" << delimiter;
+  ss << "Score";
+
+  return ss.str();
+
+}
+
+
+std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
+                                                  const ContigId_t& contig_id,
+                                                  const ContigOffset_t offset,
+                                                  const ContigSize_t region_size,
+                                                  std::shared_ptr<const GenomeVariant> genome_variant_ptr,
+                                                  std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
+
+  std::stringstream ss;
+
+  std::shared_ptr<const ContigFeatures> contig_ptr;
+  if (not genome_db_ptr->getContigSequence(contig_id, contig_ptr)) {
+
+    ExecEnv::log().error("outputGenomeGene(), Unexpected could not find Contig: {}", contig_id);
+    return "<error>";
+
+  }
+  if (offset + region_size >= contig_ptr->sequence().length()) {
+
+    ExecEnv::log().error("outputGenomeGene(), Offset: {} + Region Size: {} exceed the Contig: {} size: {}",
+                         offset, region_size, contig_id, contig_ptr->sequence().length());
+    return "<error>";
+
+  }
+  if (region_size == 0) {
+
+    ss << genome_variant_ptr->genomeId() << delimiter;
+    ss << contig_id << delimiter;
+    ss << contig_ptr->sequence().length() << delimiter;
+    ss << offset << delimiter;
+    ss << region_size << delimiter;
+    ss << 0;
+
+    return ss.str();
+
+  }
+
+  std::vector<std::shared_ptr<DNA5SequenceLinear>> mutant_sequence_vector;
+  std::shared_ptr<DNA5SequenceLinear> reference_sequence;
+  OffsetVariantMap variant_map;
+  if (genome_variant_ptr->mutantRegion(contig_id,
+                                       offset,
+                                       region_size,
+                                       genome_db_ptr,
+                                       variant_map,
+                                       reference_sequence,
+                                       mutant_sequence_vector)) {
+
+    double average_score = 0;
+    for (auto mutant : mutant_sequence_vector) {
+
+      CompareScore_t score;
+      std::string comparison = reference_sequence->compareDNA5Sequences(mutant, score);
+      average_score += static_cast<double>(score);
+
+    }
+
+    average_score = average_score / static_cast<double>(mutant_sequence_vector.size());
+
+    ss << genome_variant_ptr->genomeId() << delimiter;
+    ss << contig_id << delimiter;
+    ss << contig_ptr->sequence().length() << delimiter;
+    ss << offset << delimiter;
+    ss << region_size << delimiter;
+    ss << average_score;
+
+  } else {
+
+    ExecEnv::log().error("outputGenomeGene(), Unexpected error mutating Genome: {}, Contig: {}, Offset: {}, Size: {}",
+                         genome_variant_ptr->genomeId(), contig_id, offset, region_size);
+    return "<error>";
+
+  }
+
+  return ss.str();
+
+}
+
 
 bool kgl::GeneAnalysis::mutateRegion(const ContigId_t& contig,
                                      ContigOffset_t offset,
