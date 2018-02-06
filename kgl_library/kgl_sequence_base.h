@@ -68,6 +68,7 @@ public:
 
   }
 
+  size_t countGC() const;
 
 private:
 
@@ -110,6 +111,7 @@ public:
   // Insert offset is relative to the begining of the sequence (0 is the first letter).
   bool insertSubSequence(ContigOffset_t insert_offset, const DNA5SequenceLinear& inserted_sequence);
 
+  size_t countGC() const;
 
   std::string compareDNA5Sequences(std::shared_ptr<const DNA5SequenceLinear> compare_seq, CompareScore_t& score) const {
 

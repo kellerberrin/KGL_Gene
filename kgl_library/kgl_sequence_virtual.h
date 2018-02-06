@@ -59,8 +59,6 @@ protected:
 
   AlphabetString<Alphabet> alphabet_string_;
 
-//  const std::string compareSequences(const AlphabetSequence& compare_seq) const {  return compareSequences(compare_seq, *this); }
-
   const std::string compareSequencesDNA(const AlphabetSequence& compare, CompareScore_t& score) const;
   const std::string compareSequencesAmino(const AlphabetSequence& compare, CompareScore_t& score) const;
   CompareScore_t scoreMyerHirschberg(const AlphabetSequence& compare) const;

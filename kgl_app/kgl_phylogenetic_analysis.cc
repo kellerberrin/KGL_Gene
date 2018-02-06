@@ -285,12 +285,15 @@ std::string kgl::ApplicationAnalysis::outputSequenceHeader(char delimiter) {
   ss << "ContigLength" << delimiter;
   ss << "Sequence" << delimiter;
   ss << "ContigOffset" << delimiter;
-  ss << "Size(DNA)" << delimiter;
+  ss << "DNASize" << delimiter;
+  ss << "SequenceGC" << delimiter;
   ss << "Error" << delimiter;
   ss << "ValidReference" << delimiter;
   ss << "AllPaths" << delimiter;
   ss << "ValidPaths" << delimiter;
   ss << "Score" << delimiter;
+  ss << "Strand" << delimiter;
+  ss << "DNAScore" << delimiter;
   ss << "Symbolic" << delimiter;
   ss << "AltSymbolic" << delimiter;
   ss << "Description";
@@ -310,15 +313,53 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
   std::string gene_id = coding_sequence->getGene()->id();
   std::string sequence_id = coding_sequence->getCDSParent()->id();
   ContigOffset_t sequence_offset = coding_sequence->start();
+  char strand = static_cast<char>(coding_sequence->strand());
 
-  std::shared_ptr<AminoSequence> amino_reference_seq;
-  std::vector<std::shared_ptr<AminoSequence>> amino_mutant_vec;
   bool error_flag = true;
   size_t mutant_paths = 0;
   size_t valid_paths = 0;
   double average_score = 0;
+  double proportion_GC = 0;
+  double average_DNA_score = 0;
   bool valid_reference = false;
   OffsetVariantMap variant_map;
+
+  std::shared_ptr<DNA5SequenceCoding> reference_sequence;
+  std::vector<std::shared_ptr<DNA5SequenceCoding>> mutant_sequence_vector;
+  if (genome_variant->mutantCodingDNA( contig_ptr->contigId(),
+                                       gene_id,
+                                       sequence_id,
+                                       genome_db,
+                                       variant_map,
+                                       reference_sequence,
+                                       mutant_sequence_vector)) {
+
+    for (auto mutant : mutant_sequence_vector) {
+
+      CompareScore_t DNA_score;
+      DNA_score = reference_sequence->compareMyerHirschberg(mutant);
+      average_DNA_score += static_cast<double>(DNA_score);
+
+    }
+
+    if (reference_sequence->length() > 0) {
+
+      proportion_GC = static_cast<double>(reference_sequence->countGC()) / static_cast<double>(reference_sequence->length());
+
+    }
+
+  }
+
+
+
+  if (mutant_sequence_vector.size()) {
+
+    average_DNA_score = average_DNA_score/ static_cast<double>(mutant_sequence_vector.size());
+
+  }
+
+  std::shared_ptr<AminoSequence> amino_reference_seq;
+  std::vector<std::shared_ptr<AminoSequence>> amino_mutant_vec;
   if (genome_variant->mutantProteins(contig_ptr->contigId(),
                                      gene_id,
                                      sequence_id,
@@ -369,11 +410,14 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
   ss << sequence_id << delimiter;
   ss << sequence_offset << delimiter;
   ss << coding_sequence->codingNucleotides() << delimiter;
+  ss << proportion_GC << delimiter;
   ss << error_flag << delimiter;
   ss << valid_reference << delimiter;
   ss << mutant_paths << delimiter;
   ss << valid_paths << delimiter;
   ss << average_score << delimiter;
+  ss << strand << delimiter;
+  ss << average_DNA_score << delimiter;
 
   std::shared_ptr<const OntologyRecord> gene_ontology_ptr;
   if (genome_db->geneOntology().getGafFeatureVector(gene_id, gene_ontology_ptr)) {
@@ -406,9 +450,8 @@ bool kgl::PhylogeneticAnalysis::UPGMA(const std::string& newick_file,
                                       std::shared_ptr<const PopulationVariant> pop_variant_ptr,
                                       std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
 
-  UPGMAMatrix<const UPGMADistanceNode> upgma_matrix(UPGMAFamilyDistance::upgma_matrix(pop_variant_ptr,
-                                                                                      genome_db_ptr,
-                                                                                      UPGMAFamilyDistance::SYMBOLIC_MAURER_FAMILY));
+  UPGMAMatrix<const UPGMADistanceNode> upgma_matrix(UPGMAProteinDistance::upgma_matrix(pop_variant_ptr,
+                                                                                      genome_db_ptr));
 
   upgma_matrix.calculateReduce();
 

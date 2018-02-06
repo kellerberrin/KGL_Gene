@@ -274,6 +274,7 @@ std::string kgl::GeneAnalysis::outputRegionHeader(char delimiter) {
   ss << "Genome" << delimiter;
   ss << "Contig" << delimiter;
   ss << "ContigSize" << delimiter;
+  ss << "RegionGC" << delimiter;
   ss << "ContigOffset" << delimiter;
   ss << "RegionSize" << delimiter;
   ss << "Score";
@@ -306,11 +307,15 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
     return "<error>";
 
   }
+
+  double proportion_GC = 0;
+
   if (region_size == 0) {
 
     ss << genome_variant_ptr->genomeId() << delimiter;
     ss << contig_id << delimiter;
     ss << contig_ptr->sequence().length() << delimiter;
+    ss << proportion_GC << delimiter;
     ss << offset << delimiter;
     ss << region_size << delimiter;
     ss << 0;
@@ -339,11 +344,13 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
 
     }
 
+    proportion_GC = static_cast<double>(reference_sequence->countGC()) / static_cast<double>(region_size);
     average_score = average_score / static_cast<double>(mutant_sequence_vector.size());
 
     ss << genome_variant_ptr->genomeId() << delimiter;
     ss << contig_id << delimiter;
     ss << contig_ptr->sequence().length() << delimiter;
+    ss << proportion_GC << delimiter;
     ss << offset << delimiter;
     ss << region_size << delimiter;
     ss << average_score;

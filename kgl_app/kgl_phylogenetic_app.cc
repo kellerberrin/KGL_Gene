@@ -81,9 +81,9 @@ kgl::PhylogeneticExecEnv::Application::Application(kgl::Logger& log, const kgl::
 
   }
 
-//  ApplicationAnalysis::outputSequenceCSV(args.outCSVFile, genome_db_ptr, pop_variant_ptr);
+  ApplicationAnalysis::outputSequenceCSV(args.outCSVFile, genome_db_ptr, pop_variant_ptr);
 
-  GeneAnalysis::mutateAllRegions(args.outCSVFile, 1000,  pop_variant_ptr, genome_db_ptr);
+//  GeneAnalysis::mutateAllRegions(args.outCSVFile, 1000,  pop_variant_ptr, genome_db_ptr);
 
   std::string fasta_file = Utility::filePath(ACTIVE_SEQUENCE, args.workDirectory) + ".fasta";
 //  GeneAnalysis::mutateGene(ACTIVE_CONTIG, ACTIVE_GENE, ACTIVE_SEQUENCE, pop_variant_ptr, genome_db_ptr, fasta_file);
