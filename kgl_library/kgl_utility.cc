@@ -55,3 +55,13 @@ std::string kgl::Utility::fileName(const std::string& file_name) {
   return file_path.filename().string();  // returns the file name without path. "/path/file.ext" returns "file.ext".
 
 }
+
+// Returns uppercase string.
+std::string kgl::Utility::toupper(std::string s) {
+
+  auto lambda_to_upper = [](unsigned char c){ return std::toupper(c); };
+  std::transform(s.begin(), s.end(), s.begin(), lambda_to_upper);
+
+  return s;
+
+}

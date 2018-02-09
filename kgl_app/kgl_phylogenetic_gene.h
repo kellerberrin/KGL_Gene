@@ -112,18 +112,13 @@ public:
                          std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                          const std::string& fasta_filename);
 
-  static bool mutateRegion(const ContigId_t& contig,
-                           ContigOffset_t offset,
-                           ContigSize_t region_size,
-                           std::shared_ptr<const PopulationVariant> population_ptr,
-                           std::shared_ptr<const GenomeDatabase> genome_db_ptr);
-
   static bool mutateGenomeRegion(const GenomeId_t& genome,
                                  const ContigId_t& contig,
                                  const ContigOffset_t offset,
                                  const ContigSize_t region_size,
                                  std::shared_ptr<const PopulationVariant> population_ptr,
-                                 std::shared_ptr<const GenomeDatabase> genome_db_ptr);
+                                 std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                 const std::string& fasta_file);
 
   static bool mutateAllRegions(const std::string& file_name,
                                ContigSize_t region_size,
@@ -155,7 +150,8 @@ private:
                                  const ContigOffset_t offset,
                                  const ContigSize_t region_size,
                                  std::shared_ptr<const GenomeVariant> genome_variant_ptr,
-                                 std::shared_ptr<const GenomeDatabase> genome_db_ptr);
+                                 std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                 const std::string& fasta_file);
 
 
 

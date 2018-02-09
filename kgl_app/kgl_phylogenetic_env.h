@@ -28,9 +28,10 @@ struct Phylogenetic {
   std::string gafFile{""};
   std::vector<FileListInfo> fileList;
   std::string outCSVFile{"kgl_out.csv"};
-  std::string logFile{"kgl_snp.log"};
-  std::string contig{"*"};
+  std::string logFile{"kgl_phylo.log"};
+  std::string contig{WILDCARD};
   std::string aminoTranslationTable{"NCBI_TABLE_1"};
+  std::string analysisType{WILDCARD};
   bool vcfAllGATK{false};
   int max_error_count{1000};
   int max_warn_count{1000};
@@ -39,6 +40,15 @@ struct Phylogenetic {
   double minProportion{0};
   Phred_t readQuality{30.0};
   Phred_t variantQuality{10.0};
+
+  static constexpr const char* WILDCARD = "*";  // All analytics and All contigs.
+
+  // Analytic types.
+  static constexpr const char* ANALYZE_INTERVAL = "INTERVAL";
+  static constexpr const char* ANALYZE_SEQUENCES = "SEQUENCE";
+  static constexpr const char* ANALYZE_REGION = "REGION";
+  static constexpr const char* ANALYZE_UPGMA = "UPGMA";
+  static constexpr const char* ANALYZE_GENE = "GENE";
 
 };
 
@@ -54,6 +64,7 @@ public:
   static bool parseCommandLine(int argc, char const ** argv);
   static constexpr const char* VERSION = "0.1";
   static constexpr const char* MODULE_NAME = "kgl_phylo";
+
 
   class Application;
 

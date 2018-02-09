@@ -78,9 +78,6 @@ bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
 
   }
 
-//  std::string amino_compare = AminoSequence::multipleCompare(amino_vector);
-//  ExecEnv::log().info("Comparison of all Amino sequences for Contig: {}, Gene: {}, Sequence: {}; \n{}",
-//                      contig, gene, sequence, amino_compare);
 
 
   // Write all the amino sequences as a fasta file.
@@ -368,39 +365,20 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
 }
 
 
-bool kgl::GeneAnalysis::mutateRegion(const ContigId_t& contig,
-                                     ContigOffset_t offset,
-                                     ContigSize_t region_size,
-                                     std::shared_ptr<const PopulationVariant> population_ptr,
-                                     std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
-
-
-  for (auto genome : population_ptr->getMap()) {
-
-    if (not mutateGenomeRegion(contig, offset, region_size, genome.second, genome_db_ptr)) {
-
-      return false;
-
-    }
-
-  }
-
-  return true;
-
-}
 
 bool kgl::GeneAnalysis::mutateGenomeRegion(const GenomeId_t& genome,
                                            const ContigId_t& contig,
                                            ContigOffset_t offset,
                                            ContigSize_t region_size,
                                            std::shared_ptr<const PopulationVariant> population_ptr,
-                                           std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
+                                           std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                           const std::string& fasta_file) {
 
 
   std::shared_ptr<const GenomeVariant> genome_variant_ptr;
   if (population_ptr->getGenomeVariant(genome, genome_variant_ptr)) {
 
-    return mutateGenomeRegion(contig, offset, region_size, genome_variant_ptr, genome_db_ptr);
+    return mutateGenomeRegion(contig, offset, region_size, genome_variant_ptr, genome_db_ptr, fasta_file);
 
   } else {
 
@@ -416,11 +394,11 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
                                            const ContigOffset_t offset,
                                            const ContigSize_t region_size,
                                            std::shared_ptr<const GenomeVariant> genome_variant_ptr,
-                                           std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
+                                           std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                           const std::string& fasta_file) {
 
 
-
-
+  std::vector<std::pair<std::string, std::shared_ptr<DNA5SequenceLinear>>> dna_seq_vector;
   std::vector<std::shared_ptr<DNA5SequenceLinear>> mutant_sequence_vector;
   std::shared_ptr<DNA5SequenceLinear> reference_sequence;
   OffsetVariantMap variant_map;
@@ -438,13 +416,29 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
     ExecEnv::log().info("Variants used to mutate Genome: {}, Contig: {}, Offset: {} Size: {}:\n{}",
                         genome_variant_ptr->genomeId(), contig, offset, region_size, ss.str());
 
+    std::stringstream ref_fasta_ss;
+    ref_fasta_ss << "reference_" << contig << "_" << offset << "_" << region_size;
+    std::pair<std::string, std::shared_ptr<DNA5SequenceLinear>> fasta_reference(ref_fasta_ss.str(), reference_sequence);
+    dna_seq_vector.push_back(fasta_reference);
 
+    size_t count = 0;
     for (auto mutant : mutant_sequence_vector) {
 
       CompareScore_t score;
       std::string comparison = reference_sequence->compareDNA5Sequences(mutant, score);
       ExecEnv::log().info("Genome: {}, Contig: {}, Offset: {} Size: {} score: {}, comparison:\n{}",
                           genome_variant_ptr->genomeId(), contig, offset, region_size, score, comparison);
+      count++;
+      std::stringstream mutant_fasta_ss;
+      mutant_fasta_ss << "mutant_" << count << "_" << contig << "_" << offset << "_" << region_size;
+      std::pair<std::string, std::shared_ptr<DNA5SequenceLinear>> fasta_mutant(mutant_fasta_ss.str(), mutant);
+      dna_seq_vector.push_back(fasta_mutant);
+
+    }
+
+    if (not ApplicationAnalysis::writeMutantDNA(fasta_file, dna_seq_vector)) {
+
+      ExecEnv::log().error("MutateGenomeGene(), Problem writing to fasta file: {}", fasta_file);
 
     }
 

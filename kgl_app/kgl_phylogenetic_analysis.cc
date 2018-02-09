@@ -29,6 +29,25 @@ bool kgl::ApplicationAnalysis::writeMutantProteins(const std::string& fasta_file
 
 }
 
+bool kgl::ApplicationAnalysis::writeMutantDNA(const std::string& fasta_file,
+                                              const std::vector<std::pair<std::string, std::shared_ptr<DNA5SequenceLinear>>>& dna_seq_vector) {
+
+  std::vector<WriteFastaSequence> fasta_sequence_vec;
+
+  for (auto amino_sequence : dna_seq_vector) {
+
+    WriteFastaSequence fasta_sequence;
+    fasta_sequence.first = amino_sequence.first;
+    fasta_sequence.second = amino_sequence.second;
+    fasta_sequence_vec.push_back(fasta_sequence);
+
+  }
+
+  return ParseGffFasta().writeFastaFile(fasta_file, fasta_sequence_vec);
+
+
+}
+
 
 bool kgl::ApplicationAnalysis::readFastaProteins(const std::string& fasta_file,
                                                  std::vector<std::pair<std::string, std::shared_ptr<AminoSequence>>>& amino_seq_vector) {

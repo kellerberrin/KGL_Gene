@@ -25,6 +25,7 @@ public:
   static std::string filePath(const std::string& file_name, const std::string& path); // utility for "path/file"
   static std::string fileExtension(const std::string& file_name);
   static std::string fileName(const std::string& file_name);
+  static std::string toupper(std::string s);
 
 private:
 

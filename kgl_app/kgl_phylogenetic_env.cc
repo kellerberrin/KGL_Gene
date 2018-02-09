@@ -4,11 +4,13 @@
 
 
 #include <iostream>
+#include <cctype>
 #include <seqan/arg_parse.h>
 #include "kgl_phylogenetic_env.h"
 #define BOOST_FILESYSTEM_NO_DEPRECATED // Recommended by boost filesystem documentation.
 #include <boost/filesystem.hpp>
 #include <boost/tokenizer.hpp>
+#include "kgl_utility.h"
 
 
 // Define namespace alias
@@ -269,6 +271,16 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
   addOption(parser, seqan::ArgParseOption(contigShortFlag_, contigFlag_, contig_desc, seqan::ArgParseArgument::STRING, "CONTIG_ID"));
 
+
+  const char* analysis_desc =
+  R"(Define which genome analytic to perform. Defaults to '*' for all analytics.)";
+
+  const char* analysisFlag_ = "analysisTYpe";
+  const char* analysisShortFlag_ = "z";
+
+  addOption(parser, seqan::ArgParseOption(analysisShortFlag_, analysisFlag_, analysis_desc, seqan::ArgParseArgument::STRING, "ANALYSIS_TYPE"));
+
+
   const char* log_desc =
   R"(Log file. Appends the log to any existing logs (default "kgl_snp.log").'
   'The log file always resides in the work directory.)";
@@ -502,6 +514,31 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
   // Setup Other Parameters.
   if (seqan::isSet(parser, contigFlag_)) seqan::getOptionValue(args_.contig, parser, contigFlag_);
+
+  if (seqan::isSet(parser, analysisFlag_)) {
+
+    seqan::getOptionValue(args_.analysisType, parser, analysisFlag_);
+
+    args_.analysisType = Utility::toupper(args_.analysisType);
+
+    if (args_.analysisType != Phylogenetic::WILDCARD
+        and args_.analysisType != Phylogenetic::ANALYZE_INTERVAL
+        and  args_.analysisType != Phylogenetic::ANALYZE_SEQUENCES
+        and args_.analysisType != Phylogenetic::ANALYZE_GENE
+        and args_.analysisType != Phylogenetic::ANALYZE_REGION
+        and args_.analysisType != Phylogenetic::ANALYZE_UPGMA) {
+
+      ExecEnv::log().critical("Invalid Analysis Type: {}.  Must be one of: {}, {}, {}, {}, {}.",
+                              args_.analysisType,
+                              Phylogenetic::ANALYZE_INTERVAL,
+                              Phylogenetic::ANALYZE_SEQUENCES,
+                              Phylogenetic::ANALYZE_GENE,
+                              Phylogenetic::ANALYZE_REGION,
+                              Phylogenetic::ANALYZE_UPGMA);
+
+    }
+
+  }
 
   if (seqan::isSet(parser, minimumCountFlag_)) seqan::getOptionValue(args_.minCount, parser, minimumCountFlag_);
 

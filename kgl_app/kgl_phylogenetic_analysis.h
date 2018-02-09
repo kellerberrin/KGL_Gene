@@ -36,6 +36,9 @@ public:
   static bool writeMutantProteins(const std::string& fastaFile,
                                   const std::vector<std::pair<std::string, std::shared_ptr<AminoSequence>>>& amino_seq_vector);
 
+  static bool writeMutantDNA(const std::string& fasta_file,
+                             const std::vector<std::pair<std::string, std::shared_ptr<DNA5SequenceLinear>>>& dna_seq_vector);
+
   // If sequence name = "" then the code reads all sequences in the fasta file.
   static bool readFastaProteins(const std::string& fasta_file,
                                 std::vector<std::pair<std::string, std::shared_ptr<AminoSequence>>>& amino_seq_vector);
