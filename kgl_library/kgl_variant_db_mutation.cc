@@ -144,7 +144,7 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
   }
 
   // Check offset and size.
-  if ((region_offset + region_size) >= contig_ptr->sequence().length() or region_size >= contig_ptr->sequence().length()) {
+  if ((region_offset + region_size) > contig_ptr->sequence().length() or region_size > contig_ptr->sequence().length()) {
 
     ExecEnv::log().warn("mutantRegion(), contig offset: {} and region size: {} too large for contig: {} length: {}",
                          region_offset, region_size, contig_ptr->contigId(), contig_ptr->sequence().length());

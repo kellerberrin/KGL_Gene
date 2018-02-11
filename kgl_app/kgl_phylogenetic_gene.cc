@@ -2,6 +2,7 @@
 // Created by kellerberrin on 16/01/18.
 //
 
+#include "kgl_sequence_offset.h"
 #include "kgl_phylogenetic_gene.h"
 #include "kgl_phylogenetic_analysis.h"
 
@@ -397,8 +398,8 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
                                            std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                            const std::string& fasta_file) {
 
-
-  std::vector<std::pair<std::string, std::shared_ptr<DNA5SequenceLinear>>> dna_seq_vector;
+  const size_t MAX_SEQUENCE_DISPLAY_SIZE = 25000; // largest sequence to display
+  std::vector<std::pair<std::string, std::shared_ptr<VirtualSequence>>> dna_seq_vector;
   std::vector<std::shared_ptr<DNA5SequenceLinear>> mutant_sequence_vector;
   std::shared_ptr<DNA5SequenceLinear> reference_sequence;
   OffsetVariantMap variant_map;
@@ -417,17 +418,36 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
                         genome_variant_ptr->genomeId(), contig, offset, region_size, ss.str());
 
     std::stringstream ref_fasta_ss;
-    ref_fasta_ss << "reference_" << contig << "_" << offset << "_" << region_size;
-    std::pair<std::string, std::shared_ptr<DNA5SequenceLinear>> fasta_reference(ref_fasta_ss.str(), reference_sequence);
+    ref_fasta_ss << "reference_" << contig << "_+_" << offset << "_" << region_size;
+    std::pair<std::string, std::shared_ptr<VirtualSequence>> fasta_reference(ref_fasta_ss.str(), reference_sequence);
     dna_seq_vector.push_back(fasta_reference);
+
+    std::shared_ptr<DNA5SequenceCoding> ref_reverse_complement_ptr = SequenceOffset::codingSequence(reference_sequence, StrandSense::REVERSE);
+
+    ref_fasta_ss.str("");
+    ref_fasta_ss << "reference_" << contig << "_-_" << offset << "_" << region_size;
+    std::pair<std::string, std::shared_ptr<VirtualSequence>> rev_fasta_reference(ref_fasta_ss.str(), ref_reverse_complement_ptr);
+    dna_seq_vector.push_back(rev_fasta_reference);
+
 
     size_t count = 0;
     for (auto mutant : mutant_sequence_vector) {
 
-      CompareScore_t score;
-      std::string comparison = reference_sequence->compareDNA5Sequences(mutant, score);
-      ExecEnv::log().info("Genome: {}, Contig: {}, Offset: {} Size: {} score: {}, comparison:\n{}",
-                          genome_variant_ptr->genomeId(), contig, offset, region_size, score, comparison);
+      if (reference_sequence->length() < MAX_SEQUENCE_DISPLAY_SIZE) {
+        CompareScore_t score;
+        std::string comparison = reference_sequence->compareDNA5Sequences(mutant, score);
+        double normed_score = static_cast<double>(score) * 1000.0 / static_cast<double>(mutant->length());
+        ExecEnv::log().info("Genome: {}, Contig: {}, Offset: {} Size: {} score: {} score/1000: {} comparison:\n{}",
+                            genome_variant_ptr->genomeId(), contig, offset, region_size, score, normed_score, comparison);
+      } else {
+
+        CompareScore_t score = reference_sequence->compareLevenshtein(mutant);
+        double normed_score = static_cast<double>(score) * 1000.0 / static_cast<double>(mutant->length());
+        ExecEnv::log().info("Genome: {}, Contig: {}, Offset: {} Size: {} score: {} score/1000: {} \n ....Sequence too large to display (Levenshtein Sequence Match)....",
+                            genome_variant_ptr->genomeId(), contig, offset, region_size, score, normed_score);
+
+      }
+
       count++;
       std::stringstream mutant_fasta_ss;
       mutant_fasta_ss << "mutant_" << count << "_" << contig << "_" << offset << "_" << region_size;
@@ -436,7 +456,7 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
 
     }
 
-    if (not ApplicationAnalysis::writeMutantDNA(fasta_file, dna_seq_vector)) {
+    if (not ParseGffFasta().writeFastaFile(fasta_file, dna_seq_vector)) {
 
       ExecEnv::log().error("MutateGenomeGene(), Problem writing to fasta file: {}", fasta_file);
 

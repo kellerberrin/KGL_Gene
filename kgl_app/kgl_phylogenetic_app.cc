@@ -87,6 +87,21 @@ void performAnalysis(const kgl::Phylogenetic& args,
     kgl::ExecEnv::log().info("Analyzing genome regions");
 
     std::string region_fasta_file = "malawi_fb_SRR609075";
+    region_fasta_file += "_561666";
+    region_fasta_file = kgl::Utility::filePath(region_fasta_file, args.workDirectory) + ".fasta";
+    kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075", "Pf3D7_04_v3", 561666, 11753, pop_variant_ptr, genome_db_ptr, region_fasta_file);
+
+    region_fasta_file = "malawi_fb_SRR609075";
+    region_fasta_file += "_462000";
+    region_fasta_file = kgl::Utility::filePath(region_fasta_file, args.workDirectory) + ".fasta";
+    kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075", "Pf3D7_01_v3", 462000, 2000, pop_variant_ptr, genome_db_ptr, region_fasta_file);
+
+    region_fasta_file = "malawi_fb_SRR609075";
+    region_fasta_file += "_0";
+    region_fasta_file = kgl::Utility::filePath(region_fasta_file, args.workDirectory) + ".fasta";
+    kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075", "Pf3D7_04_v3", 0, 1200490, pop_variant_ptr, genome_db_ptr, region_fasta_file);
+
+    region_fasta_file = "malawi_fb_SRR609075";
     region_fasta_file += "_944950";
     region_fasta_file = kgl::Utility::filePath(region_fasta_file, args.workDirectory) + ".fasta";
     kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075", "Pf3D7_04_v3", 944950, 135, pop_variant_ptr, genome_db_ptr, region_fasta_file);

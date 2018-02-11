@@ -119,6 +119,13 @@ public:
 
   }
 
+  CompareScore_t compareLevenshtein(std::shared_ptr<const DNA5SequenceLinear> compare_contig) const {
+
+    return scoreLevenshtein(*compare_contig);
+
+  }
+
+
 private:
 
 

@@ -275,7 +275,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   const char* analysis_desc =
   R"(Define which genome analytic to perform. Defaults to '*' for all analytics.)";
 
-  const char* analysisFlag_ = "analysisTYpe";
+  const char* analysisFlag_ = "analysisType";
   const char* analysisShortFlag_ = "z";
 
   addOption(parser, seqan::ArgParseOption(analysisShortFlag_, analysisFlag_, analysis_desc, seqan::ArgParseArgument::STRING, "ANALYSIS_TYPE"));

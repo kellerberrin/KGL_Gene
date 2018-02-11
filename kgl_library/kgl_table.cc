@@ -60,17 +60,68 @@ bool kgl::AminoTranslationTable::isStartAmino(AminoAcid::Alphabet amino) const {
 
 size_t kgl::AminoTranslationTable::index(const Codon& codon) const {
 
-  size_t table_index = (CodingDNA5::nucleotideToColumn(codon[0]) * Tables::CODING_NUCLEOTIDE_1) +
+  if (codon.containsBaseN()) {
+
+    return CONTAINS_BASE_N;
+
+  }
+
+    size_t table_index = (CodingDNA5::nucleotideToColumn(codon[0]) * Tables::CODING_NUCLEOTIDE_1) +
                        (CodingDNA5::nucleotideToColumn(codon[1]) * Tables::CODING_NUCLEOTIDE_2) +
                        CodingDNA5::nucleotideToColumn(codon[2]);
 
   if (table_index >= Tables::AMINO_TABLE_SIZE) {
 
     ExecEnv::log().error("Bad Amino Table Index: {}, codon: {}", table_index, codon.getSequenceAsString());
-    table_index = amino_table_rows_.stop_codon_index;
+    table_index = CONTAINS_BASE_N;
 
   }
 
   return table_index;
+
+}
+
+
+kgl::AminoAcid::Alphabet kgl::AminoTranslationTable::getAmino(const Codon& Codon) {
+
+  size_t table_index = index(Codon);
+
+  if (table_index == CONTAINS_BASE_N) {
+
+    return AminoAcid::AMINO_UNKNOWN;
+
+  }
+
+  return AminoAcid::convertChar(amino_table_rows_.amino_table[index(Codon)].amino_acid);
+
+}
+
+
+bool kgl::AminoTranslationTable::isStopCodon(const Codon& Codon) const {
+
+  size_t table_index = index(Codon);
+
+  if (table_index == CONTAINS_BASE_N) {
+
+    return false;
+
+  }
+
+  return (amino_table_rows_.amino_table[table_index].start == AminoAcid::STOP_CODON);
+
+}
+
+
+bool kgl::AminoTranslationTable::isStartCodon(const Codon& Codon) const {
+
+  size_t table_index = index(Codon);
+
+  if (table_index == CONTAINS_BASE_N) {
+
+    return false;
+
+  }
+
+  return amino_table_rows_.amino_table[table_index].start == AminoAcid::START_CODON;
 
 }

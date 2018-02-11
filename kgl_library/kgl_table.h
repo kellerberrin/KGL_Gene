@@ -36,29 +36,20 @@ public:
   // Get table by name.
   bool setTranslationTable(const std::string& table_name);
 
-  AminoAcid::Alphabet getAmino(const Codon& Codon) {
-
-    return AminoAcid::convertChar(amino_table_rows_.amino_table[index(Codon)].amino_acid);
-
-  }
+  // Returns an amino acid for the codon. AminoAcid::Unknown if any bases are 'N'
+  AminoAcid::Alphabet getAmino(const Codon& Codon);
 
   bool isStopAmino(AminoAcid::Alphabet amino) const { return amino == AminoAcid::AMINO_STOP; }
 
   bool isStartAmino(AminoAcid::Alphabet amino) const;
 
-  bool isStopCodon(const Codon& Codon) const {
+  bool isStopCodon(const Codon& Codon) const;
 
-    return (amino_table_rows_.amino_table[index(Codon)].start == AminoAcid::STOP_CODON);
-
-  }
-
-  bool isStartCodon(const Codon& Codon) const {
-
-    return amino_table_rows_.amino_table[index(Codon)].start == AminoAcid::START_CODON;
-
-  }
+  bool isStartCodon(const Codon& Codon) const;
 
 private:
+
+  constexpr static size_t CONTAINS_BASE_N = 1000;
 
   TranslationTable amino_table_rows_;
 
