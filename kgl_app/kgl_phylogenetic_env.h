@@ -66,22 +66,9 @@ public:
   static constexpr const char* MODULE_NAME = "kgl_phylo";
 
 
-  class Application;
-
 private:
 
   static Phylogenetic args_;
-
-};
-
-// Application class implements the mainline logic and controls
-// data object lifetimes, see kgl_phylogenetic_app.cc.
-class PhylogeneticExecEnv::Application {
-
-public:
-
-  Application(Logger& log, const Phylogenetic& args);
-  ~Application() = default;
 
 };
 

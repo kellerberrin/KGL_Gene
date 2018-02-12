@@ -554,6 +554,8 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
   if (seqan::isSet(parser, variantQualityFlag_)) seqan::getOptionValue(args_.variantQuality, parser, variantQualityFlag_);
 
+  ExecEnv::log().SetVerbose(args().verbose);  // Set the logger verbose level.
+
   return true;
 
 }

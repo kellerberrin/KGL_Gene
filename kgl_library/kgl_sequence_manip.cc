@@ -26,6 +26,8 @@ public:
 
   std::string blosum80(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
 
+  std::string localBlosum80(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
+
   std::string simplealign(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
 
   std::string myersHirschberg(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
@@ -39,6 +41,32 @@ private:
 
 };
 
+
+
+
+std::string kgl::SequenceManipulation::SequenceManipImpl::localBlosum80(const std::string& reference_str,
+                                                                   const std::string& compare_str,
+                                                                   CompareScore_t& score) const {
+  using TSequence = seqan::String<char> ;
+  using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
+  int gap = -1;
+
+  TSequence seq1 = reference_str.c_str();
+  TSequence seq2 = compare_str.c_str();
+
+  TAlign align;
+  resize(rows(align), 2);
+  seqan::assignSource(row(align, 0), seq1);
+  seqan::assignSource(row(align, 1), seq2);
+
+  std::stringstream ss;
+
+  score = seqan::localAlignment(align, seqan::Blosum80(gap, gap));
+  ss << align << std::endl;
+
+  return ss.str();
+
+}
 
 
 
@@ -200,6 +228,16 @@ std::string kgl::SequenceManipulation::compareSequencesAmino(const std::string& 
   return sequence_manip_impl_ptr_->myersHirschberg(reference_str, compare_str, score);
 
 }
+
+
+std::string kgl::SequenceManipulation::compareLocalAmino(const std::string& reference_str,
+                                                             const std::string& compare_str,
+                                                             CompareScore_t& score) const {
+
+  return sequence_manip_impl_ptr_->localBlosum80(reference_str, compare_str, score);
+
+}
+
 
 
 std::string kgl::SequenceManipulation::compareSequencesMultiple(const std::vector<std::string>& sequence_vector) const {

@@ -67,8 +67,10 @@ class UPGMAProteinDistance : public UPGMADistanceNode {
 public:
 
   UPGMAProteinDistance(std::shared_ptr<const GenomeVariant> genome_variant_ptr,
-                       std::shared_ptr<const GenomeDatabase> genome_db_ptr) : genome_variant_ptr_(genome_variant_ptr),
-                                                                              genome_db_ptr_(genome_db_ptr) {
+                       std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                       const std::string& protein_family) : protein_family_(protein_family),
+                                                            genome_variant_ptr_(genome_variant_ptr),
+                                                            genome_db_ptr_(genome_db_ptr) {
     mutateProteins();
 
   }
@@ -82,52 +84,26 @@ public:
   DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
 
 
-  const MutatedProteinMap& getMap() const { return  mutated_proteins_; }
-  const GenomeId_t& genomeId() const { return genome_variant_ptr_->genomeId(); }
-  const GeneOntology& ontology() const { return genome_db_ptr_->geneOntology(); }
+  constexpr static const char* PROTEIN_FAMILY_WILDCARD = "*";
+  constexpr static const char* SYMBOLIC_VAR_FAMILY = "VAR";
+  constexpr static const char* SYMBOLIC_RIFIN_FAMILY = "RIF";
+  constexpr static const char* SYMBOLIC_MAURER_FAMILY = "MC-2TM";
+  constexpr static const char* SYMBOLIC_Na_H_FAMILY = "NHE";  // A 1 member metabolic family for comparison.
 
 private:
 
+  std::string protein_family_;
   std::shared_ptr<const GenomeVariant> genome_variant_ptr_;
   std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
   MutatedProteinMap mutated_proteins_;
 
   void mutateProteins();
+  void getProtein(std::shared_ptr<const GeneFeature> gene_ptr);
+  const MutatedProteinMap& getMap() const { return  mutated_proteins_; }
+  const GenomeId_t& genomeId() const { return genome_variant_ptr_->genomeId(); }
+  const GeneOntology& ontology() const { return genome_db_ptr_->geneOntology(); }
 
 };
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Distance using protein families
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class UPGMAFamilyDistance : public UPGMAProteinDistance{
-
-public:
-
-  UPGMAFamilyDistance(std::shared_ptr<const GenomeVariant> genome_variant_ptr,
-                      std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                      const std::string& family_code) : UPGMAProteinDistance(genome_variant_ptr, genome_db_ptr),
-                                                        family_code_(family_code) {}
-
-  UPGMAFamilyDistance(const UPGMAFamilyDistance&) = default;
-  ~UPGMAFamilyDistance() override = default;
-
-  // Pure Virtual calculates the distance between nodes.
-  DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
-
-  constexpr static const char* SYMBOLIC_VAR_FAMILY = "VAR";
-  constexpr static const char* SYMBOLIC_RIFIN_FAMILY = "RIF";
-  constexpr static const char* SYMBOLIC_MAURER_FAMILY = "MC-2TM";
-  constexpr static const char* SYMBOLIC_Na_H_FAMILY = "NHE";
-
-private:
-
-  std::string family_code_;
-
-};
-
 
 
 
