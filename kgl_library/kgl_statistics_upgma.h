@@ -11,11 +11,59 @@
 #include <fstream>
 
 #include "kgl_exec_env.h"
+#include "kgl_genome_db.h"
+#include "kgl_variant_db_population.h"
 
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Virtual Distance class implemented elsewhere that actually calculates the UPGMA distance.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+using DistanceType_t = double;
+class PhyloNode;  // fwd.
+using PhyloNodeVector = std::vector<std::shared_ptr<PhyloNode>>;
+
+class UPGMADistanceNode {
+
+public:
+
+  UPGMADistanceNode() = default;
+  UPGMADistanceNode(const UPGMADistanceNode&) = default;
+  virtual ~UPGMADistanceNode() = default;
+
+  // UPGMA Classification functions
+  // Function to tag the nodes. Override as necessary.
+  virtual void write_node(std::ofstream& outfile) const = 0;
+  // Pure Virtual calculates the distance between nodes.
+  virtual DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const = 0;
+
+  template<typename T, typename... Args>
+  static std::shared_ptr<PhyloNodeVector> makeNodeVector(std::shared_ptr<const PopulationVariant> pop_variant_ptr,
+                                                         std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                                         Args... args) {
+
+
+    std::shared_ptr<PhyloNodeVector> node_vector_ptr(std::make_shared<PhyloNodeVector>());
+
+    for (auto genome : pop_variant_ptr->getMap()) {
+
+      std::shared_ptr<T> distance_ptr(std::make_shared<T>(genome.second, genome_db_ptr, args...));
+      std::shared_ptr<PhyloNode> phylo_node_ptr(std::make_shared<PhyloNode>(distance_ptr));
+      node_vector_ptr->push_back(phylo_node_ptr);
+
+    }
+
+    return node_vector_ptr;
+
+  }
+
+private:
+
+};
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -23,26 +71,23 @@ namespace genome {   // project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Used by the classification functions.
-using DistanceType_t = double;
-template<class T> class PhyloNode;  // fwd.
-template <class T> using OutNodes = std::multimap<DistanceType_t , std::shared_ptr<PhyloNode<T>>>;
-
-template<class T> class PhyloNode {
+using OutNodes = std::multimap<DistanceType_t , std::shared_ptr<PhyloNode>>;
+class PhyloNode {
 
 public:
 
-  explicit PhyloNode(std::shared_ptr<T> leaf) : leaf_(leaf), distance_(0) {}
+  explicit PhyloNode(std::shared_ptr<const UPGMADistanceNode> leaf) : leaf_(leaf), distance_(0) {}
   ~PhyloNode() = default;
 
-  void addOutNode(std::shared_ptr<PhyloNode<T>> node) {
-    out_nodes_.insert(std::pair<DistanceType_t , std::shared_ptr<PhyloNode<T>>>(node->distance(), node));
+  void addOutNode(std::shared_ptr<PhyloNode> node) {
+    out_nodes_.insert(std::pair<DistanceType_t , std::shared_ptr<PhyloNode>>(node->distance(), node));
   }
 
   DistanceType_t distance() const { return distance_; }
   void distance(DistanceType_t update) { distance_ = update; }
 
-  std::shared_ptr<T> leaf() const { return leaf_; }
-  const OutNodes<T>& getMap() const { return out_nodes_; }
+  std::shared_ptr<const UPGMADistanceNode> leaf() const { return leaf_; }
+  const OutNodes& getMap() const { return out_nodes_; }
 
   // Recursively counts the total number of leaf nodes.
   bool isLeaf() const { return getMap().empty(); }
@@ -50,35 +95,11 @@ public:
 
 private:
 
-  std::shared_ptr<T> leaf_;
+  std::shared_ptr<const UPGMADistanceNode> leaf_;
   DistanceType_t distance_;
-  OutNodes<T> out_nodes_;
+  OutNodes out_nodes_;
 
 };
-
-// Recursively counts the total number of leaf nodes.
-template<class T>
-size_t PhyloNode<T>::leafNodeCount() const {
-
-  size_t leaf_nodes = 0;
-
-  if (not isLeaf()) {
-
-    for (auto node : getMap()) {
-
-      leaf_nodes += node.second->leafNodeCount();
-
-    }
-
-    return leaf_nodes;
-
-  } else {
-
-    return 1;
-
-  }
-
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -112,22 +133,24 @@ private:
 };
 
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // UPGMA Distance matrix
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <class T> using NodeVector = std::vector<std::shared_ptr<PhyloNode<T>>>;
+//using MatrixNode = PhyloNode;
 
-template<class T> class UPGMAMatrix : DistanceMatrix {
+class UPGMAMatrix : DistanceMatrix {
 
 public:
 
-  explicit UPGMAMatrix(std::shared_ptr<NodeVector<T>> node_vector_ptr) : DistanceMatrix(node_vector_ptr->size()),
-                                                                         node_vector_ptr_(node_vector_ptr) {
+  explicit UPGMAMatrix(std::shared_ptr<PhyloNodeVector> node_vector_ptr) : DistanceMatrix(node_vector_ptr->size()),
+                                                                           node_vector_ptr_(node_vector_ptr) {
     initializeDistance();
 
   }
   ~UPGMAMatrix() override = default;
+
 
   void calculateReduce();
 
@@ -135,217 +158,32 @@ public:
 
 private:
 
-  DistanceType_t distance(std::shared_ptr<PhyloNode<T>> row_node, std::shared_ptr<PhyloNode<T>> column_node) const;
+  DistanceType_t distance(std::shared_ptr<PhyloNode> row_node, std::shared_ptr<PhyloNode> column_node) const;
   void initializeDistance();
   bool reduceNode(size_t row, size_t column, DistanceType_t minimum);
-  void writeNode(std::shared_ptr<PhyloNode<T>> node, std::ofstream& newick_file) const;
+  void writeNode(std::shared_ptr<PhyloNode> node, std::ofstream& newick_file) const;
   size_t getLeafCount(size_t leaf_idx) const override;
 
-  std::shared_ptr<NodeVector<T>> node_vector_ptr_;
-//  DistanceMatrix distance_matrix_;
+  std::shared_ptr<PhyloNodeVector> node_vector_ptr_;
 
 
 };
 
-template<class T>
-size_t UPGMAMatrix<T>::getLeafCount(size_t leaf_idx) const {
 
-  if (leaf_idx >= node_vector_ptr_->size()) {
+// Variadic function to combine the UPGMAMatrix and UPGMADistanceNode to produce a tree.
+template<typename T, typename... Args>
+void UPGMATree(const std::string& newick_file,
+               std::shared_ptr<const PopulationVariant> pop_variant_ptr,
+               std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+               Args... args) {
 
-    ExecEnv::log().error("getLeafCount(), bad index: {}, node vector size: {}", leaf_idx, node_vector_ptr_->size());
-    return 1;
-  }
+  UPGMAMatrix upgma_matrix(UPGMADistanceNode::makeNodeVector<T,Args...>(pop_variant_ptr, genome_db_ptr, args...));
 
-  return node_vector_ptr_->at(leaf_idx)->leafNodeCount();
+  upgma_matrix.calculateReduce();
 
-}
-
-template<class T>
-DistanceType_t UPGMAMatrix<T>::distance(std::shared_ptr<PhyloNode<T>> row_node,
-                                        std::shared_ptr<PhyloNode<T>> column_node) const {
-
-  return row_node->leaf()->distance(column_node->leaf());
+  upgma_matrix.writeNewick(newick_file);
 
 }
-
-
-template<class T> void UPGMAMatrix<T>::initializeDistance() {
-
-  for (size_t row = 0; row < node_vector_ptr_->size(); ++row) {
-
-    for (size_t column = 0; column < row; column++) {
-
-      setDistance(row, column, distance(node_vector_ptr_->at(row), node_vector_ptr_->at(column)));
-
-    }
-
-  }
-
-}
-
-
-template<class T> void UPGMAMatrix<T>::calculateReduce() {
-
-  while (node_vector_ptr_->size() > 1) {
-
-    size_t row;
-    size_t column;
-    DistanceType_t min = minimum(row, column);
-
-    reduce(row, column);
-
-    reduceNode(row, column, min);
-
-  } // while reduceNode.
-
-}
-
-
-template<class T> bool UPGMAMatrix<T>::reduceNode(size_t row, size_t column, DistanceType_t minimum) {
-
-  std::shared_ptr<NodeVector<T>> temp_node_vector_ptr(std::make_shared<NodeVector<T>>());
-  std::shared_ptr<PhyloNode<T>> column_node = nullptr;
-  std::shared_ptr<PhyloNode<T>> row_node = nullptr;
-
-  for (size_t idx = 0; idx < node_vector_ptr_->size(); idx++) {
-
-    if (not (idx == column or idx == row)) {
-
-      temp_node_vector_ptr->push_back(node_vector_ptr_->at(idx));
-
-    } else if (idx == column) {
-
-      column_node = node_vector_ptr_->at(idx);
-
-    } else if (idx == row) {
-
-      row_node = node_vector_ptr_->at(idx);
-
-    }
-
-  }
-
-  if (not column_node or not row_node) {
-
-    ExecEnv::log().error("Null pointer found, error calculating UPGMA, row: {}, column: {}, nodes: {}",
-                         row, column, node_vector_ptr_->size());
-    return false;
-
-  }
-
-  node_vector_ptr_ = temp_node_vector_ptr;
-
-  DistanceType_t node_distance = minimum / 2;
-  DistanceType_t row_distance = node_distance - row_node->distance();
-  row_node->distance(row_distance);
-  DistanceType_t column_distance = node_distance - column_node->distance();
-  column_node->distance(column_distance);
-  std::shared_ptr<PhyloNode<T>> merged_node(std::make_shared<PhyloNode<T>>(row_node->leaf()));
-  merged_node->distance(node_distance);
-  merged_node->addOutNode(row_node);
-  merged_node->addOutNode(column_node);
-  // Insert the merged node at the front of the vector.
-  // This matches the pattern of the reduction of the distance matrix (above).
-  node_vector_ptr_->insert(node_vector_ptr_->begin(), merged_node);
-
-  return true;
-
-}
-
-
-template<class T> bool UPGMAMatrix<T>::writeNewick(const std::string& file_name) const {
-
-  std::ofstream newick_file;
-
-  // Open input file.
-
-  newick_file.open(file_name);
-
-  if (not newick_file.good()) {
-
-    ExecEnv::log().error("I/O error; could not open Newick file: {}", file_name);
-    return false;
-
-  }
-
-  for (auto node : *node_vector_ptr_) {
-
-    writeNode(node, newick_file);
-
-  }
-
-  newick_file << ";";
-
-  newick_file.close();
-
-  return true;
-
-}
-
-
-template<class T> void UPGMAMatrix<T>::writeNode(std::shared_ptr<PhyloNode<T>> node, std::ofstream& newick_file) const {
-
-  if (node->getMap().size() > 0) {
-
-    newick_file << "(";
-
-    bool first_pass = true;
-    for (auto child_node : node->getMap()) {
-
-      if (first_pass) {
-
-        first_pass = false;
-
-      } else {
-
-        newick_file << ",";
-
-      }
-
-      writeNode(child_node.second, newick_file);
-
-    }
-
-    newick_file << ")";
-
-  } else {
-
-    node->leaf()->write_node(newick_file);
-
-  }
-
-  newick_file << ":";
-  newick_file << node->distance();
-
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Virtual Distance class for the UPGMA graph.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class UPGMADistanceNode {
-
-public:
-
-  UPGMADistanceNode() = default;
-  UPGMADistanceNode(const UPGMADistanceNode&) = default;
-  virtual ~UPGMADistanceNode() = default;
-
-  // UPGMA Classification functions
-  // Function to tag the nodes. Override as necessary.
-  virtual void write_node(std::ofstream& outfile) const = 0;
-  // Pure Virtual calculates the distance between nodes.
-  virtual DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const = 0;
-
-
-
-private:
-
-};
 
 
 

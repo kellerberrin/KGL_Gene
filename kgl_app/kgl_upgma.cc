@@ -78,24 +78,6 @@ void kgl::UPGMAContigDistance::mutateContigs() {
 }
 
 
-std::shared_ptr<kgl::NodeVector<const kgl::UPGMADistanceNode>>
-kgl::UPGMAContigDistance::upgma_matrix(std::shared_ptr<const PopulationVariant> pop_variant_ptr,
-                                       std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
-
-  std::shared_ptr<NodeVector<const UPGMADistanceNode>> node_vector_ptr(std::make_shared<NodeVector<const UPGMADistanceNode>>());
-
-  for (auto genome : pop_variant_ptr->getMap()) {
-
-    std::shared_ptr<const UPGMAContigDistance> distance_ptr(std::make_shared<const UPGMAContigDistance>(genome.second, genome_db_ptr));
-    std::shared_ptr<PhyloNode<const UPGMADistanceNode>> phylo_node_ptr(std::make_shared<PhyloNode<const UPGMADistanceNode>>(distance_ptr));
-    node_vector_ptr->push_back(phylo_node_ptr);
-
-  }
-
-  return node_vector_ptr;
-
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Mutates genome proteins and then compares the mutated proteins using the Myer Hirschberg sequence comparison
 // algorthim. Myer Hirschberg is linear in space - but quadratic in time. Need to find a faster comparison algorithm.
@@ -140,24 +122,6 @@ kgl::DistanceType_t kgl::UPGMAProteinDistance::distance(std::shared_ptr<const UP
 
 }
 
-
-std::shared_ptr<kgl::NodeVector<const kgl::UPGMADistanceNode>>
-kgl::UPGMAProteinDistance::upgma_matrix(std::shared_ptr<const PopulationVariant> pop_variant_ptr,
-                                        std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
-
-  std::shared_ptr<NodeVector<const UPGMADistanceNode>> node_vector_ptr(std::make_shared<NodeVector<const UPGMADistanceNode>>());
-
-  for (auto genome : pop_variant_ptr->getMap()) {
-
-    std::shared_ptr<const UPGMAProteinDistance> distance_ptr(std::make_shared<const UPGMAProteinDistance>(genome.second, genome_db_ptr));
-    std::shared_ptr<PhyloNode<const UPGMADistanceNode>> phylo_node_ptr(std::make_shared<PhyloNode<const UPGMADistanceNode>>(distance_ptr));
-    node_vector_ptr->push_back(phylo_node_ptr);
-
-  }
-
-  return node_vector_ptr;
-
-}
 
 
 void kgl::UPGMAProteinDistance::mutateProteins() {
@@ -219,39 +183,19 @@ void kgl::UPGMAProteinDistance::mutateProteins() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-std::shared_ptr<kgl::NodeVector<const kgl::UPGMADistanceNode>>
-kgl::UPGMAFamilyDistance::upgma_matrix(std::shared_ptr<const PopulationVariant> pop_variant_ptr,
-                                       std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                       const std::string& family_code) {
-
-  std::shared_ptr<NodeVector<const UPGMADistanceNode>> node_vector_ptr(std::make_shared<NodeVector<const UPGMADistanceNode>>());
-
-  for (auto genome : pop_variant_ptr->getMap()) {
-
-    std::shared_ptr<const UPGMAFamilyDistance> distance_ptr(std::make_shared<const UPGMAFamilyDistance>(genome.second, genome_db_ptr, family_code));
-    std::shared_ptr<PhyloNode<const UPGMADistanceNode>> phylo_node_ptr(std::make_shared<PhyloNode<const UPGMADistanceNode>>(distance_ptr));
-    node_vector_ptr->push_back(phylo_node_ptr);
-
-  }
-
-  return node_vector_ptr;
-
-}
-
-
-
 kgl::DistanceType_t kgl::UPGMAFamilyDistance::distance(std::shared_ptr<const UPGMADistanceNode>  distance_node) const {
 
   std::shared_ptr<const UPGMAProteinDistance> node_ptr = std::dynamic_pointer_cast<const UPGMAFamilyDistance>(distance_node);
 
   if (not node_ptr) {
 
-    ExecEnv::log().error("distance(), Unexpected error, could not up-cast node pointer");
+    ExecEnv::log().error("distance(), Unexpected error, could not down-cast node pointer to UPGMAFamilyDistance");
     return 1.0;
 
   }
 
   DistanceType_t total_distance = 0;
+  size_t gene_count = 0;
 
   for (auto protein : getMap()) {
 
@@ -266,6 +210,7 @@ kgl::DistanceType_t kgl::UPGMAFamilyDistance::distance(std::shared_ptr<const UPG
 
           CompareScore_t contig_score = protein.second->compareLevenshtein(result->second);
           total_distance += std::fabs(static_cast<DistanceType_t>(contig_score));
+          ++gene_count;
 
         }
         else {
@@ -289,8 +234,8 @@ kgl::DistanceType_t kgl::UPGMAFamilyDistance::distance(std::shared_ptr<const UPG
 
   }
 
-  ExecEnv::log().info("distance(), Genome: {}, Genome: {}; Calculated distance: {}",
-                      genomeId(), node_ptr->genomeId(), total_distance);
+  ExecEnv::log().info("distance(), Genome: {}, Genome: {}; Calculated distance: {}, Gene Family: {}, Gene Count: {}",
+                      genomeId(), node_ptr->genomeId(), total_distance, family_code_, gene_count);
   return total_distance;
 
 }

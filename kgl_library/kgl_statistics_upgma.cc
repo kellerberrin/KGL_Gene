@@ -93,6 +93,36 @@ void kgl::DistanceMatrix::BoostDistanceMatrix::setDistance(size_t i, size_t j, k
 }
 
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// UPGMA Classification Nodes.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// Recursively counts the total number of leaf nodes.
+size_t kgl::PhyloNode::leafNodeCount() const {
+
+  size_t leaf_nodes = 0;
+
+  if (not isLeaf()) {
+
+    for (auto node : getMap()) {
+
+      leaf_nodes += node.second->leafNodeCount();
+
+    }
+
+    return leaf_nodes;
+
+  } else {
+
+    return 1;
+
+  }
+
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Public class of the UPGMA distance matrix.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -133,7 +163,7 @@ void kgl::DistanceMatrix::setDistance(size_t i, size_t j, DistanceType_t value) 
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Implementation functions.
+// Distance Implementation functions.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -241,3 +271,182 @@ void kgl::DistanceMatrix::reduce(size_t i, size_t j) {
   }
 
 }
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// UPGMA Distance matrix
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+size_t kgl::UPGMAMatrix::getLeafCount(size_t leaf_idx) const {
+
+  if (leaf_idx >= node_vector_ptr_->size()) {
+
+    ExecEnv::log().error("getLeafCount(), bad index: {}, node vector size: {}", leaf_idx, node_vector_ptr_->size());
+    return 1;
+  }
+
+  return node_vector_ptr_->at(leaf_idx)->leafNodeCount();
+
+}
+
+
+kgl::DistanceType_t kgl::UPGMAMatrix::distance(std::shared_ptr<PhyloNode> row_node,
+                                     std::shared_ptr<PhyloNode> column_node) const {
+
+  return row_node->leaf()->distance(column_node->leaf());
+
+}
+
+
+void kgl::UPGMAMatrix::initializeDistance() {
+
+  for (size_t row = 0; row < node_vector_ptr_->size(); ++row) {
+
+    for (size_t column = 0; column < row; column++) {
+
+      setDistance(row, column, distance(node_vector_ptr_->at(row), node_vector_ptr_->at(column)));
+
+    }
+
+  }
+
+}
+
+
+void kgl::UPGMAMatrix::calculateReduce() {
+
+  while (node_vector_ptr_->size() > 1) {
+
+    size_t row;
+    size_t column;
+    DistanceType_t min = minimum(row, column);
+
+    reduce(row, column);
+
+    reduceNode(row, column, min);
+
+  } // while reduceNode.
+
+}
+
+
+bool kgl::UPGMAMatrix::reduceNode(size_t row, size_t column, DistanceType_t minimum) {
+
+  std::shared_ptr<PhyloNodeVector> temp_node_vector_ptr(std::make_shared<PhyloNodeVector>());
+  std::shared_ptr<PhyloNode> column_node = nullptr;
+  std::shared_ptr<PhyloNode> row_node = nullptr;
+
+  for (size_t idx = 0; idx < node_vector_ptr_->size(); idx++) {
+
+    if (not (idx == column or idx == row)) {
+
+      temp_node_vector_ptr->push_back(node_vector_ptr_->at(idx));
+
+    } else if (idx == column) {
+
+      column_node = node_vector_ptr_->at(idx);
+
+    } else if (idx == row) {
+
+      row_node = node_vector_ptr_->at(idx);
+
+    }
+
+  }
+
+  if (not column_node or not row_node) {
+
+    ExecEnv::log().error("Null pointer found, error calculating UPGMA, row: {}, column: {}, nodes: {}",
+                         row, column, node_vector_ptr_->size());
+    return false;
+
+  }
+
+  node_vector_ptr_ = temp_node_vector_ptr;
+
+  DistanceType_t node_distance = minimum / 2;
+  DistanceType_t row_distance = node_distance - row_node->distance();
+  row_node->distance(row_distance);
+  DistanceType_t column_distance = node_distance - column_node->distance();
+  column_node->distance(column_distance);
+  std::shared_ptr<PhyloNode> merged_node(std::make_shared<PhyloNode>(row_node->leaf()));
+  merged_node->distance(node_distance);
+  merged_node->addOutNode(row_node);
+  merged_node->addOutNode(column_node);
+  // Insert the merged node at the front of the vector.
+  // This matches the pattern of the reduction of the distance matrix (above).
+  node_vector_ptr_->insert(node_vector_ptr_->begin(), merged_node);
+
+  return true;
+
+}
+
+
+bool kgl::UPGMAMatrix::writeNewick(const std::string& file_name) const {
+
+  std::ofstream newick_file;
+
+  // Open input file.
+
+  newick_file.open(file_name);
+
+  if (not newick_file.good()) {
+
+    ExecEnv::log().error("I/O error; could not open Newick file: {}", file_name);
+    return false;
+
+  }
+
+  for (auto node : *node_vector_ptr_) {
+
+    writeNode(node, newick_file);
+
+  }
+
+  newick_file << ";";
+
+  newick_file.close();
+
+  return true;
+
+}
+
+
+void kgl::UPGMAMatrix::writeNode(std::shared_ptr<PhyloNode> node, std::ofstream& newick_file) const {
+
+  if (node->getMap().size() > 0) {
+
+    newick_file << "(";
+
+    bool first_pass = true;
+    for (auto child_node : node->getMap()) {
+
+      if (first_pass) {
+
+        first_pass = false;
+
+      } else {
+
+        newick_file << ",";
+
+      }
+
+      writeNode(child_node.second, newick_file);
+
+    }
+
+    newick_file << ")";
+
+  } else {
+
+    node->leaf()->write_node(newick_file);
+
+  }
+
+  newick_file << ":";
+  newick_file << node->distance();
+
+}
+

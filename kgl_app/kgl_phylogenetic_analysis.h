@@ -77,30 +77,6 @@ private:
 };
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Implements various phylogenetic algorithms using population statistics objects (genome_id indexed variants).
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class PhylogeneticAnalysis {
-
-public:
-
-  PhylogeneticAnalysis() = default;
-  virtual ~PhylogeneticAnalysis() = default;
-
-  static bool UPGMA(const std::string& newick_file, std::shared_ptr<const PopulationVariant> pop_variant_ptr,
-                    std::shared_ptr<const GenomeDatabase> genome_db_ptr);
-
-
-private:
-
-
-};
-
-
-
-
-
 
 }   // namespace genome
 }   // namespace kellerberrin

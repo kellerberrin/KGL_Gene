@@ -14,6 +14,7 @@
 #include "kgl_filter.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_phylogenetic_gene.h"
+#include "kgl_upgma.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -126,10 +127,11 @@ void performAnalysis(const kgl::Phylogenetic& args,
   if (args.analysisType == kgl::Phylogenetic::ANALYZE_UPGMA or args.analysisType == kgl::Phylogenetic::WILDCARD) {
 
     kgl::ExecEnv::log().info("Performing a UPGMA analytic");
-    // Perform population analysis
     std::string newick_file = kgl::Utility::filePath("UPGMA_newick", args.workDirectory) + ".txt";
-    kgl::PhylogeneticAnalysis::UPGMA(newick_file, pop_variant_ptr, genome_db_ptr);
-
+    kgl::UPGMATree<kgl::UPGMAFamilyDistance, std::string>(newick_file,
+                                                          pop_variant_ptr,
+                                                          genome_db_ptr,
+                                                          kgl::UPGMAFamilyDistance::SYMBOLIC_VAR_FAMILY);
   }
 
 }

@@ -43,10 +43,6 @@ public:
   // Pure Virtual calculates the distance between nodes.
   DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
 
-  // Generate distance nodes from a population.
-  static std::shared_ptr<NodeVector<const UPGMADistanceNode>> upgma_matrix(std::shared_ptr<const PopulationVariant> pop_variant_ptr,
-                                                                           std::shared_ptr<const GenomeDatabase> genome_db_ptr);
-
 private:
 
   std::shared_ptr<const GenomeVariant> genome_variant_ptr_;
@@ -85,9 +81,6 @@ public:
   // Pure Virtual calculates the distance between nodes.
   DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
 
-  // Generate distance nodes from a population.
-  static std::shared_ptr<NodeVector<const UPGMADistanceNode>> upgma_matrix(std::shared_ptr<const PopulationVariant> pop_variant_ptr,
-                                                                           std::shared_ptr<const GenomeDatabase> genome_db_ptr);
 
   const MutatedProteinMap& getMap() const { return  mutated_proteins_; }
   const GenomeId_t& genomeId() const { return genome_variant_ptr_->genomeId(); }
@@ -124,14 +117,10 @@ public:
   // Pure Virtual calculates the distance between nodes.
   DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
 
-  // Generate distance nodes from a population.
-  static std::shared_ptr<NodeVector<const UPGMADistanceNode>> upgma_matrix(std::shared_ptr<const PopulationVariant> pop_variant_ptr,
-                                                                           std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                                           const std::string& family_code);
-
   constexpr static const char* SYMBOLIC_VAR_FAMILY = "VAR";
   constexpr static const char* SYMBOLIC_RIFIN_FAMILY = "RIF";
   constexpr static const char* SYMBOLIC_MAURER_FAMILY = "MC-2TM";
+  constexpr static const char* SYMBOLIC_Na_H_FAMILY = "NHE";
 
 private:
 

@@ -464,18 +464,3 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
 
 }
 
-
-bool kgl::PhylogeneticAnalysis::UPGMA(const std::string& newick_file,
-                                      std::shared_ptr<const PopulationVariant> pop_variant_ptr,
-                                      std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
-
-  UPGMAMatrix<const UPGMADistanceNode> upgma_matrix(UPGMAProteinDistance::upgma_matrix(pop_variant_ptr,
-                                                                                      genome_db_ptr));
-
-  upgma_matrix.calculateReduce();
-
-  upgma_matrix.writeNewick(newick_file);
-
-  return true;
-
-}
