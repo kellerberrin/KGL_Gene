@@ -108,6 +108,86 @@ private:
 
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Mutates a single gene and compares to other selected genes
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class UPGMAGeneDistance : public UPGMADistanceNode {
+
+public:
+
+  UPGMAGeneDistance(std::shared_ptr<const GenomeVariant> genome_variant_ptr,
+                    std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                    std::shared_ptr<const GeneFeature> gene_ptr,
+                    const std::string& protein_family) : protein_family_(protein_family),
+                                                         genome_variant_ptr_(genome_variant_ptr),
+                                                         gene_ptr_(gene_ptr),
+                                                         genome_db_ptr_(genome_db_ptr)  {
+    mutateProtein();
+
+  }
+  UPGMAGeneDistance(const UPGMAGeneDistance&) = default;
+  ~UPGMAGeneDistance() override = default;
+
+  // UPGMA Classification functions
+  // Function to tag the nodes. Override as necessary.
+  void write_node(std::ofstream& outfile) const override;
+  // Pure Virtual calculates the distance between nodes.
+  DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
+
+  static bool geneFamily(std::shared_ptr<const GeneFeature> gene_ptr,
+                         std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                         const std::string& protein_family);
+
+  constexpr static const char* PROTEIN_FAMILY_WILDCARD = "*";
+  constexpr static const char* SYMBOLIC_VAR_FAMILY = "VAR";
+  constexpr static const char* SYMBOLIC_RIFIN_FAMILY = "RIF";
+  constexpr static const char* SYMBOLIC_MAURER_FAMILY = "MC-2TM";
+  constexpr static const char* SYMBOLIC_Na_H_FAMILY = "NHE";  // A 1 member metabolic family for comparison.
+
+protected:
+
+  std::shared_ptr<const DNA5SequenceCoding> mutated_protein_;
+  std::string protein_family_;
+  std::shared_ptr<const GenomeVariant> genome_variant_ptr_;
+  std::shared_ptr<const GeneFeature> gene_ptr_;
+  std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
+
+  void mutateProtein();
+
+};
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Compares a single gene between isolates.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class UPGMAGenePhyloDistance : public UPGMAGeneDistance {
+
+public:
+
+  UPGMAGenePhyloDistance(std::shared_ptr<const GenomeVariant> genome_variant_ptr,
+                         std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                         std::shared_ptr<const GeneFeature> gene_ptr,
+                         const std::string& protein_family) :  UPGMAGeneDistance(genome_variant_ptr,
+                                                                                 genome_db_ptr,
+                                                                                 gene_ptr,
+                                                                                 protein_family) {}
+
+  UPGMAGenePhyloDistance(const UPGMAGenePhyloDistance&) = default;
+  ~UPGMAGenePhyloDistance() override = default;
+
+  // UPGMA Classification functions
+  // Function to tag the nodes. Override as necessary.
+  void write_node(std::ofstream& outfile) const override;
+  // Pure Virtual calculates the distance between nodes.
+
+private:
+
+};
+
+
+
 }   // namespace genome
 }   // namespace kellerberrin
 

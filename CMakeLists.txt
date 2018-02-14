@@ -150,7 +150,11 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_phylogenetic_analysis.h
         kgl_app/kgl_phylogenetic_analysis.cc
         kgl_app/kgl_phylogenetic_gene.h
-        kgl_app/kgl_phylogenetic_gene.cc kgl_app/kgl_upgma.h kgl_app/kgl_upgma.cc kgl_app/kgl_phylogenetic_app_analysis.cc kgl_app/kgl_phylogenetic_app.h)
+        kgl_app/kgl_phylogenetic_gene.cc
+        kgl_app/kgl_upgma.h
+        kgl_app/kgl_upgma.cc
+        kgl_app/kgl_phylogenetic_app_analysis.cc
+        kgl_app/kgl_phylogenetic_app.h)
 
 
 ## DOXYGEN

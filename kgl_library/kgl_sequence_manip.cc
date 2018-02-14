@@ -11,6 +11,7 @@
 
 #include "kgl_sequence_manip.h"
 #include "kgl_exec_env.h"
+#include "kgl_genome_types.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -27,6 +28,8 @@ public:
   std::string blosum80(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
 
   std::string localBlosum80(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
+
+  std::string localBlosum62(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score, ContigSize_t& length) const;
 
   std::string simplealign(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
 
@@ -88,6 +91,36 @@ std::string kgl::SequenceManipulation::SequenceManipImpl::blosum80(const std::st
   std::stringstream ss;
 
   score = seqan::globalAlignment(align, seqan::Blosum80(gap, gap));
+  ss << align << std::endl;
+
+  return ss.str();
+
+}
+
+
+
+
+std::string kgl::SequenceManipulation::SequenceManipImpl::localBlosum62(const std::string& reference_str,
+                                                                        const std::string& compare_str,
+                                                                        CompareScore_t& score,
+                                                                        ContigSize_t& length) const {
+  using TSequence = seqan::String<char> ;
+  using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
+  int gap = -1;
+
+  length = 1;
+
+  TSequence seq1 = reference_str.c_str();
+  TSequence seq2 = compare_str.c_str();
+
+  TAlign align;
+  resize(rows(align), 2);
+  seqan::assignSource(row(align, 0), seq1);
+  seqan::assignSource(row(align, 1), seq2);
+
+  std::stringstream ss;
+
+  score = seqan::localAlignment(align, seqan::Blosum62(gap, gap));
   ss << align << std::endl;
 
   return ss.str();
@@ -230,14 +263,14 @@ std::string kgl::SequenceManipulation::compareSequencesAmino(const std::string& 
 }
 
 
-std::string kgl::SequenceManipulation::compareLocalAmino(const std::string& reference_str,
-                                                             const std::string& compare_str,
-                                                             CompareScore_t& score) const {
+std::string kgl::SequenceManipulation::compareAminoBlosum62(const std::string& reference_str,
+                                                            const std::string& compare_str,
+                                                            CompareScore_t& score,
+                                                            ContigSize_t& length) const {
 
-  return sequence_manip_impl_ptr_->localBlosum80(reference_str, compare_str, score);
+  return sequence_manip_impl_ptr_->localBlosum62(reference_str, compare_str, score, length);
 
 }
-
 
 
 std::string kgl::SequenceManipulation::compareSequencesMultiple(const std::vector<std::string>& sequence_vector) const {

@@ -3,6 +3,7 @@
 //
 
 
+#include <iomanip>
 #include "kgl_upgma.h"
 
 
@@ -39,7 +40,7 @@ kgl::DistanceType_t kgl::UPGMAContigDistance::distance(std::shared_ptr<const UPG
                           genome_variant_ptr_->genomeId(), contig.first, node_ptr->genome_variant_ptr_->genomeId());
       CompareScore_t contig_score = contig.second->compareLevenshtein(result->second);
       total_distance += static_cast<DistanceType_t>(contig_score);
-      ExecEnv::log().info("distance(), Calculated distance: {}", contig_score);
+      ExecEnv::log().info("distance(), Levenshtein distance: {}", contig_score);
 
     } else {
 
@@ -91,7 +92,7 @@ kgl::DistanceType_t kgl::UPGMAProteinDistance::distance(std::shared_ptr<const UP
 
   if (not node_ptr) {
 
-    ExecEnv::log().error("distance(), Unexpected error, could not down-cast node pointer to UPGMAFamilyDistance");
+    ExecEnv::log().error("distance(), Unexpected error, could not down-cast node pointer to UPGMAProteinDistance");
     return 1.0;
 
   }
@@ -118,7 +119,7 @@ kgl::DistanceType_t kgl::UPGMAProteinDistance::distance(std::shared_ptr<const UP
 
   }
 
-  ExecEnv::log().info("distance(), Genome: {}, Genome: {}; Calculated distance: {}, Gene Family: {}, Gene Count: {}",
+  ExecEnv::log().info("distance(), Genome: {}, Genome: {}; Levenshtein distance: {}, Gene Family: {}, Gene Count: {}",
                       genomeId(), node_ptr->genomeId(), total_distance, protein_family_, gene_count);
   return total_distance;
 
@@ -202,3 +203,144 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Mutates a single gene and compares to other selected genes
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool kgl::UPGMAGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> gene_ptr,
+                                        std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                        const std::string& protein_family) {
+
+  std::shared_ptr<const OntologyRecord> ontology_record_ptr;
+  if (genome_db_ptr->geneOntology().getGafFeatureVector(gene_ptr->id(), ontology_record_ptr)) {
+
+    if (ontology_record_ptr->symbolicReference() == protein_family) {
+
+      return true;
+
+    }
+
+  }
+
+  return false;
+
+}
+
+
+void kgl::UPGMAGeneDistance::mutateProtein() {
+
+  const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene_ptr_);
+
+  if (coding_seq_ptr->size() == 0) {
+
+    ExecEnv::log().critical("mutateProtein(), Gene contains no coding sequence : genome: {} gene: {}",
+                            genome_variant_ptr_->genomeId(), gene_ptr_->id());
+
+  }
+
+  std::shared_ptr<const CodingSequence> sequence = coding_seq_ptr->getFirst();
+  std::shared_ptr<const ContigFeatures> contig_ptr = sequence->getGene()->contig();
+  std::string gene_id = sequence->getGene()->id();
+  std::string sequence_id = sequence->getCDSParent()->id();
+
+  if (coding_seq_ptr->size() > 1) {
+
+    ExecEnv::log().warn("mutateProtein(),  Genome: {} gene: {} contains: {} sequences using sequence: {}",
+                        genome_variant_ptr_->genomeId(), gene_ptr_->id(), coding_seq_ptr->size(), sequence_id);
+
+  }
+
+
+  std::vector<std::shared_ptr<DNA5SequenceCoding>> mutant_sequence_vector;
+  std::shared_ptr<DNA5SequenceCoding> reference_sequence;
+  OffsetVariantMap variant_map;
+
+  if (genome_variant_ptr_->mutantCodingDNA(contig_ptr->contigId(),
+                                           gene_id,
+                                           sequence_id,
+                                           genome_db_ptr_,
+                                           variant_map,
+                                           reference_sequence,
+                                           mutant_sequence_vector)) {
+
+    if (mutant_sequence_vector.empty()) {
+
+      ExecEnv::log().error("mutateProtein(), No mutant proteins generated for : genome: {} sequence: {}",
+                          genome_variant_ptr_->genomeId(), sequence_id);
+      mutated_protein_ = reference_sequence;
+
+    } else if (mutant_sequence_vector.size() == 1) {
+
+      mutated_protein_ = mutant_sequence_vector.front();
+
+    } else {
+
+      ExecEnv::log().warn("mutateProtein(), {} mutant proteins generated for : genome: {} sequence: {} only the first mutant is analyzed",
+                          mutant_sequence_vector.size(), genome_variant_ptr_->genomeId(), sequence_id);
+
+      mutated_protein_ = mutant_sequence_vector.front();
+
+    }
+
+  }
+
+}
+
+kgl::DistanceType_t kgl::UPGMAGeneDistance::distance(std::shared_ptr<const UPGMADistanceNode>  distance_node) const {
+
+  std::shared_ptr<const UPGMAGeneDistance> node_ptr = std::dynamic_pointer_cast<const UPGMAGeneDistance>(distance_node);
+
+  if (not node_ptr) {
+
+    ExecEnv::log().error("distance(), Unexpected error, could not down-cast node pointer to UPGMAGeneDistance");
+    return 1.0;
+
+  }
+
+  CompareScore_t contig_score = mutated_protein_->compareLevenshtein(node_ptr->mutated_protein_);
+  DistanceType_t total_distance = std::fabs(static_cast<DistanceType_t>(contig_score));
+
+  ExecEnv::log().info("distance(), Genome: {}, Gene: {}, Gene: {}; Levenshtein distance: {}, Gene Family: {}",
+                      genome_variant_ptr_->genomeId(), gene_ptr_->id(), node_ptr->gene_ptr_->id(), total_distance, protein_family_);
+
+  return total_distance;
+
+}
+
+
+void kgl::UPGMAGeneDistance::write_node(std::ofstream& outfile) const {
+
+  std::stringstream ss;
+
+  double contig_proportion = static_cast<double>(gene_ptr_->sequence().begin()) / static_cast<double>(gene_ptr_->contig()->contigSize());
+  contig_proportion = contig_proportion * 100.0;
+  ss << gene_ptr_->id() << "_" << std::setprecision(3) << contig_proportion;
+
+  std::shared_ptr<const OntologyRecord> ontology_record_ptr;
+  if (genome_db_ptr_->geneOntology().getGafFeatureVector(gene_ptr_->id(), ontology_record_ptr)) {
+
+    ss << "_" << ontology_record_ptr->altSymbolicReference();
+
+  }
+
+  outfile << ss.str();
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Compares a single gene between isolates.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void kgl::UPGMAGenePhyloDistance::write_node(std::ofstream& outfile) const {
+
+  std::stringstream ss;
+
+  double contig_proportion = static_cast<double>(gene_ptr_->sequence().begin()) / static_cast<double>(gene_ptr_->contig()->contigSize());
+  contig_proportion = contig_proportion * 100.0;
+  ss << genome_variant_ptr_->genomeId() << "_" << gene_ptr_->id() << "_" << std::setprecision(3) << contig_proportion;
+
+  outfile << ss.str();
+
+}

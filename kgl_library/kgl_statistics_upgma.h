@@ -13,6 +13,7 @@
 #include "kgl_exec_env.h"
 #include "kgl_genome_db.h"
 #include "kgl_variant_db_population.h"
+#include "kgl_utility.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -41,25 +42,6 @@ public:
   // Pure Virtual calculates the distance between nodes.
   virtual DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const = 0;
 
-  template<typename T, typename... Args>
-  static std::shared_ptr<PhyloNodeVector> makeNodeVector(std::shared_ptr<const PopulationVariant> pop_variant_ptr,
-                                                         std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                         Args... args) {
-
-
-    std::shared_ptr<PhyloNodeVector> node_vector_ptr(std::make_shared<PhyloNodeVector>());
-
-    for (auto genome : pop_variant_ptr->getMap()) {
-
-      std::shared_ptr<T> distance_ptr(std::make_shared<T>(genome.second, genome_db_ptr, args...));
-      std::shared_ptr<PhyloNode> phylo_node_ptr(std::make_shared<PhyloNode>(distance_ptr));
-      node_vector_ptr->push_back(phylo_node_ptr);
-
-    }
-
-    return node_vector_ptr;
-
-  }
 
 private:
 
@@ -170,18 +152,115 @@ private:
 };
 
 
-// Variadic function to combine the UPGMAMatrix and UPGMADistanceNode to produce a tree.
+// Variadic function to combine the UPGMAMatrix and UPGMADistanceNode to produce a population tree.
 template<typename T, typename... Args>
-void UPGMATree(const std::string& newick_file,
-               std::shared_ptr<const PopulationVariant> pop_variant_ptr,
-               std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-               Args... args) {
+void UPGMAPopulationTree(const std::string& newick_file,
+                         std::shared_ptr<const PopulationVariant> pop_variant_ptr,
+                         std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                         Args... args) {
 
-  UPGMAMatrix upgma_matrix(UPGMADistanceNode::makeNodeVector<T,Args...>(pop_variant_ptr, genome_db_ptr, args...));
+  std::shared_ptr<PhyloNodeVector> node_vector_ptr(std::make_shared<PhyloNodeVector>());
+
+  for (auto genome : pop_variant_ptr->getMap()) {
+
+    std::shared_ptr<T> distance_ptr(std::make_shared<T>(genome.second, genome_db_ptr, args...));
+    std::shared_ptr<PhyloNode> phylo_node_ptr(std::make_shared<PhyloNode>(distance_ptr));
+    node_vector_ptr->push_back(phylo_node_ptr);
+
+  }
+
+  UPGMAMatrix upgma_matrix(node_vector_ptr);
 
   upgma_matrix.calculateReduce();
 
   upgma_matrix.writeNewick(newick_file);
+
+}
+
+
+// Variadic function to combine the UPGMAMatrix and UPGMADistanceNode to produce a series of Gene trees.
+template<typename T, typename... Args>
+void UPGMAGeneTree(const std::string& path,
+                   const std::string& newick_file,
+                   std::shared_ptr<const PopulationVariant> pop_variant_ptr,
+                   std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                   const std::string& protein_family,
+                   Args... args) {
+
+
+  for (auto genome_variant : pop_variant_ptr->getMap()) {
+
+    std::shared_ptr<PhyloNodeVector> node_vector_ptr(std::make_shared<PhyloNodeVector>());
+
+    for (auto contig : genome_db_ptr->getMap()) {
+
+      for (auto gene : contig.second->getGeneMap()) {
+
+        if (T::geneFamily(gene.second, genome_db_ptr, protein_family)) {
+
+          std::shared_ptr<T> distance_ptr(std::make_shared<T>(genome_variant.second, genome_db_ptr, gene.second, protein_family, args...));
+          std::shared_ptr<PhyloNode> phylo_node_ptr(std::make_shared<PhyloNode>(distance_ptr));
+          node_vector_ptr->push_back(phylo_node_ptr);
+
+        }
+
+      }
+
+    }
+
+    UPGMAMatrix upgma_matrix(node_vector_ptr);
+
+    upgma_matrix.calculateReduce();
+
+    std::string genome_newick = genome_variant.second->genomeId() + "_" + newick_file;
+    genome_newick = Utility::filePath(genome_newick, path);
+    upgma_matrix.writeNewick(genome_newick);
+
+  }
+
+
+}
+
+
+// Variadic function to combine the UPGMAMatrix and UPGMADistanceNode to produce a series of Gene trees.
+template<typename T, typename... Args>
+void UPGMAGenePhyloTree(const std::string& path,
+                        const std::string& newick_file,
+                        std::shared_ptr<const PopulationVariant> pop_variant_ptr,
+                        std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                        const std::string& protein_family,
+                        Args... args) {
+
+
+    for (auto contig : genome_db_ptr->getMap()) {
+
+      for (auto gene : contig.second->getGeneMap()) {
+
+        if (T::geneFamily(gene.second, genome_db_ptr, protein_family)) {
+
+          std::shared_ptr<PhyloNodeVector> node_vector_ptr(std::make_shared<PhyloNodeVector>());
+
+          for (auto genome_variant : pop_variant_ptr->getMap()) {
+
+          std::shared_ptr<T> distance_ptr(std::make_shared<T>(genome_variant.second, genome_db_ptr, gene.second, protein_family, args...));
+          std::shared_ptr<PhyloNode> phylo_node_ptr(std::make_shared<PhyloNode>(distance_ptr));
+          node_vector_ptr->push_back(phylo_node_ptr);
+
+        }
+
+        UPGMAMatrix upgma_matrix(node_vector_ptr);
+
+        upgma_matrix.calculateReduce();
+
+        std::string genome_newick = gene.second->id() + "_" + newick_file;
+        genome_newick = Utility::filePath(genome_newick, path);
+        upgma_matrix.writeNewick(genome_newick);
+
+      }
+
+    }
+
+  }
 
 }
 

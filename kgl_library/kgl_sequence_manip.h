@@ -10,6 +10,7 @@
 #include <string>
 #include <map>
 #include "kgl_logging.h"
+#include "kgl_genome_types.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -28,7 +29,7 @@ public:
 
   std::string compareSequencesAmino(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
 
-  std::string compareLocalAmino(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
+  std::string compareAminoBlosum62(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score, ContigSize_t& length) const;
 
   CompareScore_t compareMyerHirschberg(const std::string& reference_str, const std::string& compare_str) const;
 

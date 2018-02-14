@@ -92,11 +92,12 @@ void kgl::PhylogeneticApp::performAnalysis(const kgl::Phylogenetic& args,
   if (args.analysisType == kgl::Phylogenetic::ANALYZE_UPGMA or args.analysisType == kgl::Phylogenetic::WILDCARD) {
 
     kgl::ExecEnv::log().info("Performing a UPGMA analytic");
-    std::string newick_file = kgl::Utility::filePath("UPGMA_newick", args.workDirectory) + ".txt";
-    kgl::UPGMATree<kgl::UPGMAProteinDistance, std::string>(newick_file,
-                                                          pop_variant_ptr,
-                                                          genome_db_ptr,
-                                                          kgl::UPGMAProteinDistance::SYMBOLIC_RIFIN_FAMILY);
+    std::string newick_file = "UPGMA_newick.txt";
+    kgl::UPGMAGenePhyloTree<kgl::UPGMAGenePhyloDistance>(args.workDirectory,
+                                               newick_file,
+                                               pop_variant_ptr,
+                                               genome_db_ptr,
+                                               kgl::UPGMAProteinDistance::SYMBOLIC_RIFIN_FAMILY);
   }
 
 }
