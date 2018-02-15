@@ -1,6 +1,8 @@
 //
-// Created by kellerberrin on 4/01/18.
+// Created by kellerberrin on 15/02/18.
 //
+
+
 
 #include <iostream>
 #include <seqan/align.h>
@@ -9,7 +11,7 @@
 
 #include "edlib.h"
 
-#include "kgl_sequence_manip.h"
+#include "kgl_sequence_compare_impl.h"
 #include "kgl_exec_env.h"
 #include "kgl_genome_types.h"
 
@@ -33,11 +35,13 @@ public:
 
   std::string simplealign(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
 
-  std::string myersHirschberg(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
+  kgl::CompareScore_t MyerHirschberg(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
 
   std::string multipleAlign(const std::vector<std::string>& compare_str_vec) const;
 
-  kgl::CompareScore_t Levenshtein(const std::string& reference_str, const std::string& compare_str) const;
+  kgl::CompareDistance_t LevenshteinGlobal(const std::string& sequenceA, const std::string& sequenceB) const;
+  kgl::CompareDistance_t LevenshteinLocal(const std::string& sequenceA, const std::string& sequenceB) const;
+
 
 private:
 
@@ -48,8 +52,8 @@ private:
 
 
 std::string kgl::SequenceManipulation::SequenceManipImpl::localBlosum80(const std::string& reference_str,
-                                                                   const std::string& compare_str,
-                                                                   CompareScore_t& score) const {
+                                                                        const std::string& compare_str,
+                                                                        CompareScore_t& score) const {
   using TSequence = seqan::String<char> ;
   using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
   int gap = -1;
@@ -157,16 +161,15 @@ std::string kgl::SequenceManipulation::SequenceManipImpl::simplealign(const std:
 }
 
 
-
-std::string kgl::SequenceManipulation::SequenceManipImpl::myersHirschberg(const std::string& reference_str,
-                                                                          const std::string& compare_str,
-                                                                          CompareScore_t& score) const {
+kgl::CompareScore_t kgl::SequenceManipulation::SequenceManipImpl::MyerHirschberg(const std::string& sequenceA,
+                                                                                 const std::string& sequenceB,
+                                                                                 std::string& compare_str) const {
 
   using TSequence = seqan::String<char> ;
   using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
 
-  TSequence seq1 = reference_str.c_str();
-  TSequence seq2 = compare_str.c_str();
+  TSequence seq1 = sequenceA.c_str();
+  TSequence seq2 = sequenceB.c_str();
 
   TAlign align;
   resize(rows(align), 2);
@@ -175,10 +178,12 @@ std::string kgl::SequenceManipulation::SequenceManipImpl::myersHirschberg(const 
 
   std::stringstream ss;
 
-  score = seqan::globalAlignment(align, seqan::MyersHirschberg());
+  CompareScore_t score = seqan::globalAlignment(align, seqan::MyersHirschberg());
   ss << align << std::endl;
 
-  return ss.str();
+  compare_str = ss.str();
+
+  return score;
 
 }
 
@@ -212,28 +217,63 @@ std::string kgl::SequenceManipulation::SequenceManipImpl::multipleAlign(const st
 }
 
 
-kgl::CompareScore_t kgl::SequenceManipulation::SequenceManipImpl::Levenshtein(const std::string& reference_str,
-                                                                              const std::string& compare_str) const {
+kgl::CompareDistance_t kgl::SequenceManipulation::SequenceManipImpl::LevenshteinGlobal(const std::string& sequenceA,
+                                                                                       const std::string& sequenceB) const {
 
-  EdlibAlignResult result = edlibAlign(reference_str.c_str(),
-                                       reference_str.size(),
-                                       compare_str.c_str(),
-                                       compare_str.size(),
-                                       edlibNewAlignConfig(-1, EDLIB_MODE_HW, EDLIB_TASK_DISTANCE, NULL, 0));
+  EdlibAlignResult result = edlibAlign(sequenceA.c_str(),
+                                       sequenceA.size(),
+                                       sequenceB.c_str(),
+                                       sequenceB.size(),
+                                       edlibNewAlignConfig(-1, EDLIB_MODE_NW, EDLIB_TASK_LOC, NULL, 0));
 
   if (result.status != EDLIB_STATUS_OK) {
 
-    kgl::ExecEnv::log().error("Problem calculating Levenshtein distance using edlib");
+    kgl::ExecEnv::log().error("Problem calculating Global Levenshtein distance using edlib; sequenceA: {}, sequenceB: {}",
+                              sequenceA, sequenceB);
     edlibFreeAlignResult(result);
     return 0;
   }
 
-  kgl::CompareScore_t distance = result.editDistance;
+  kgl::CompareDistance_t distance = std::fabs(result.editDistance);
   edlibFreeAlignResult(result);
   return distance;
 
+}
+
+
+kgl::CompareDistance_t kgl::SequenceManipulation::SequenceManipImpl::LevenshteinLocal(const std::string& sequenceA,
+                                                                                      const std::string& sequenceB) const {
+
+  EdlibAlignResult result = edlibAlign(sequenceA.c_str(),
+                                       sequenceA.size(),
+                                       sequenceB.c_str(),
+                                       sequenceB.size(),
+                                       edlibNewAlignConfig(-1, EDLIB_MODE_HW, EDLIB_TASK_LOC, NULL, 0));
+
+  if (result.status != EDLIB_STATUS_OK) {
+
+    kgl::ExecEnv::log().error("Problem calculating Local Levenshtein distance using edlib; sequenceA: {}, sequenceB: {}",
+                              sequenceA, sequenceB);
+    edlibFreeAlignResult(result);
+    return 0;
+  }
+
+  kgl::CompareDistance_t distance = std::fabs(result.editDistance);
+  if (result.alignmentLength <= 0) {
+
+    kgl::ExecEnv::log().error("Problem calculating Local Levenshtein alignment, length zero or -ve {}; sequenceA: {}, sequenceB: {}",
+                              result.alignmentLength, sequenceA, sequenceB);
+    edlibFreeAlignResult(result);
+    return 0;
+
+  }
+  edlibFreeAlignResult(result);
+  return distance / static_cast<double>(result.alignmentLength);
+
 
 }
+
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -245,52 +285,26 @@ kgl::SequenceManipulation::SequenceManipulation() : sequence_manip_impl_ptr_(std
 kgl::SequenceManipulation::~SequenceManipulation() {}  // DO NOT DELETE or USE DEFAULT. Required because of incomplete pimpl type.
 
 
-std::string kgl::SequenceManipulation::compareSequencesDNA(const std::string& reference_str,
-                                                        const std::string& compare_str,
-                                                        CompareScore_t& score) const {
+kgl::CompareScore_t kgl::SequenceManipulation::MyerHirschberg(const std::string& sequenceA,
+                                                              const std::string& sequenceB,
+                                                              std::string& compare_str) const {
 
-  return sequence_manip_impl_ptr_->myersHirschberg(reference_str, compare_str, score);
-
-}
-
-
-std::string kgl::SequenceManipulation::compareSequencesAmino(const std::string& reference_str,
-                                                                const std::string& compare_str,
-                                                                CompareScore_t& score) const {
-
-  return sequence_manip_impl_ptr_->myersHirschberg(reference_str, compare_str, score);
+  return sequence_manip_impl_ptr_->MyerHirschberg(sequenceA, sequenceB, compare_str);
 
 }
 
 
-std::string kgl::SequenceManipulation::compareAminoBlosum62(const std::string& reference_str,
-                                                            const std::string& compare_str,
-                                                            CompareScore_t& score,
-                                                            ContigSize_t& length) const {
+kgl::CompareDistance_t kgl::SequenceManipulation::LevenshteinGlobal(const std::string& sequenceA,
+                                                                    const std::string& sequenceB) const {
 
-  return sequence_manip_impl_ptr_->localBlosum62(reference_str, compare_str, score, length);
+  return sequence_manip_impl_ptr_->LevenshteinGlobal(sequenceA, sequenceB);
 
 }
 
 
-std::string kgl::SequenceManipulation::compareSequencesMultiple(const std::vector<std::string>& sequence_vector) const {
+kgl::CompareDistance_t kgl::SequenceManipulation::LevenshteinLocal(const std::string& sequenceA,
+                                                                   const std::string& sequenceB) const {
 
-  return sequence_manip_impl_ptr_->multipleAlign(sequence_vector);
-
-}
-
-kgl::CompareScore_t kgl::SequenceManipulation::compareMyerHirschberg(const std::string& reference_str,
-                                                                     const std::string& compare_str) const {
-
-  CompareScore_t score;
-  sequence_manip_impl_ptr_->myersHirschberg(reference_str, compare_str, score);
-  return score;
-
-}
-
-kgl::CompareScore_t kgl::SequenceManipulation::Levenshtein(const std::string& reference_str,
-                                                           const std::string& compare_str) const {
-
-  return sequence_manip_impl_ptr_->Levenshtein(reference_str, compare_str);
+  return sequence_manip_impl_ptr_->LevenshteinLocal(sequenceA, sequenceB);
 
 }

@@ -2,6 +2,7 @@
 // Created by kellerberrin on 17/11/17.
 //
 
+#include <kgl_sequence_distance.h>
 #include "kgl_upgma.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_offset.h"
@@ -216,6 +217,8 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
 
 
 bool kgl::ApplicationAnalysis::outputSequenceCSV(const std::string &file_name,
+                                                 std::shared_ptr<const SequenceDistance> dna_distance_metric,
+                                                 std::shared_ptr<const SequenceDistance> amino_distance_metric,
                                                  std::shared_ptr<const GenomeDatabase> genome_db,
                                                  std::shared_ptr<const PopulationVariant> pop_variant_ptr) {
 
@@ -273,9 +276,9 @@ bool kgl::ApplicationAnalysis::outputSequenceCSV(const std::string &file_name,
 
           }
 
-          out_file << GeneAnalysis::outputGenomeRegion(CSV_delimiter, contig.first, front_porch_offset, front_porch_size, genome_variant.second, genome_db);
+          out_file << GeneAnalysis::outputGenomeRegion(CSV_delimiter, dna_distance_metric, contig.first, front_porch_offset, front_porch_size, genome_variant.second, genome_db);
           out_file << CSV_delimiter;
-          out_file << outputSequence(CSV_delimiter, sequence.second, genome_db, genome_variant.second);
+          out_file << outputSequence(CSV_delimiter, dna_distance_metric, amino_distance_metric, sequence.second, genome_db, genome_variant.second);
           out_file << '\n';
           ++sequence_count;
           previous_seq_ptr = sequence.second;
@@ -323,9 +326,11 @@ std::string kgl::ApplicationAnalysis::outputSequenceHeader(char delimiter) {
 
 
 std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
-                                                      std::shared_ptr<const CodingSequence> coding_sequence,
-                                                      std::shared_ptr<const GenomeDatabase> genome_db,
-                                                      std::shared_ptr<const GenomeVariant> genome_variant) {
+                                                     std::shared_ptr<const SequenceDistance> dna_distance_metric,
+                                                     std::shared_ptr<const SequenceDistance> amino_distance_metric,
+                                                     std::shared_ptr<const CodingSequence> coding_sequence,
+                                                     std::shared_ptr<const GenomeDatabase> genome_db,
+                                                     std::shared_ptr<const GenomeVariant> genome_variant) {
 
   std::string genome_id = genome_variant->genomeId();
   std::shared_ptr<const ContigFeatures> contig_ptr = coding_sequence->getGene()->contig();
@@ -355,9 +360,9 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
 
     for (auto mutant : mutant_sequence_vector) {
 
-      CompareScore_t DNA_score;
-      DNA_score = reference_sequence->compareMyerHirschberg(mutant);
-      average_DNA_score += static_cast<double>(DNA_score);
+      CompareDistance_t DNA_distance;
+      DNA_distance = dna_distance_metric->distance(reference_sequence, mutant);
+      average_DNA_score += static_cast<double>(DNA_distance);
 
     }
 
@@ -369,11 +374,13 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
 
   }
 
+  if (not mutant_sequence_vector.empty()) {
 
+    average_DNA_score = average_DNA_score / static_cast<double>(mutant_sequence_vector.size());
 
-  if (mutant_sequence_vector.size()) {
+  } else {
 
-    average_DNA_score = average_DNA_score/ static_cast<double>(mutant_sequence_vector.size());
+    average_DNA_score = 0.0;
 
   }
 
@@ -391,11 +398,10 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
     valid_reference = contig_ptr->verifyProteinSequence(amino_reference_seq);
     for (auto mutant : amino_mutant_vec) {
 
-      CompareScore_t amino_score;
-      amino_reference_seq->compareAminoSequences(mutant, amino_score);
+      CompareDistance_t amino_distance = amino_distance_metric->distance(amino_reference_seq, mutant);
       if (contig_ptr->verifyProteinSequence(mutant)) {
 
-        average_score += static_cast<double>(amino_score);
+        average_score += static_cast<double>(amino_distance);
         ++valid_paths;
 
       }

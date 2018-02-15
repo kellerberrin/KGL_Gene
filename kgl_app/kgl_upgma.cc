@@ -38,9 +38,9 @@ kgl::DistanceType_t kgl::UPGMAContigDistance::distance(std::shared_ptr<const UPG
 
       ExecEnv::log().info("distance(), Comparing Genome: {}, Contig: {} with Genome: {}",
                           genome_variant_ptr_->genomeId(), contig.first, node_ptr->genome_variant_ptr_->genomeId());
-      CompareScore_t contig_score = contig.second->compareLevenshtein(result->second);
+      CompareScore_t contig_score = sequence_distance_->distance(contig.second, result->second);
       total_distance += static_cast<DistanceType_t>(contig_score);
-      ExecEnv::log().info("distance(), Levenshtein distance: {}", contig_score);
+      ExecEnv::log().info("distance(), {} distance: {}", sequence_distance_->distanceType(), contig_score);
 
     } else {
 
@@ -106,7 +106,7 @@ kgl::DistanceType_t kgl::UPGMAProteinDistance::distance(std::shared_ptr<const UP
 
     if (result != node_ptr->getMap().end()) {
 
-      CompareScore_t contig_score = protein.second->compareLevenshtein(result->second);
+      CompareScore_t contig_score = sequence_distance_->distance(protein.second, result->second);
       total_distance += std::fabs(static_cast<DistanceType_t>(contig_score));
       ++gene_count;
 
@@ -119,8 +119,8 @@ kgl::DistanceType_t kgl::UPGMAProteinDistance::distance(std::shared_ptr<const UP
 
   }
 
-  ExecEnv::log().info("distance(), Genome: {}, Genome: {}; Levenshtein distance: {}, Gene Family: {}, Gene Count: {}",
-                      genomeId(), node_ptr->genomeId(), total_distance, protein_family_, gene_count);
+  ExecEnv::log().info("distance(), Genome: {}, Genome: {}; {} distance: {}, Gene Family: {}, Gene Count: {}",
+                      genomeId(), node_ptr->genomeId(), sequence_distance_->distanceType(), total_distance, protein_family_, gene_count);
   return total_distance;
 
 }
@@ -297,11 +297,12 @@ kgl::DistanceType_t kgl::UPGMAGeneDistance::distance(std::shared_ptr<const UPGMA
 
   }
 
-  CompareScore_t contig_score = mutated_protein_->compareLevenshtein(node_ptr->mutated_protein_);
+  CompareScore_t contig_score = sequence_distance_->distance(mutated_protein_, node_ptr->mutated_protein_);
   DistanceType_t total_distance = std::fabs(static_cast<DistanceType_t>(contig_score));
 
-  ExecEnv::log().info("distance(), Genome: {}, Gene: {}, Gene: {}; Levenshtein distance: {}, Gene Family: {}",
-                      genome_variant_ptr_->genomeId(), gene_ptr_->id(), node_ptr->gene_ptr_->id(), total_distance, protein_family_);
+  ExecEnv::log().info("distance(), Genome: {}, Gene: {}, Gene: {}; {} distance: {}, Gene Family: {}",
+                      genome_variant_ptr_->genomeId(), gene_ptr_->id(), node_ptr->gene_ptr_->id(),
+                      sequence_distance_->distanceType(), total_distance, protein_family_);
 
   return total_distance;
 

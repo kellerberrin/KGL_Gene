@@ -14,6 +14,7 @@
 #include "kgl_genome_db.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_utility.h"
+#include "kgl_sequence_compare.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -155,6 +156,7 @@ private:
 // Variadic function to combine the UPGMAMatrix and UPGMADistanceNode to produce a population tree.
 template<typename T, typename... Args>
 void UPGMAPopulationTree(const std::string& newick_file,
+                         std::shared_ptr<const SequenceDistance> sequence_distance,
                          std::shared_ptr<const PopulationVariant> pop_variant_ptr,
                          std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                          Args... args) {
@@ -163,7 +165,7 @@ void UPGMAPopulationTree(const std::string& newick_file,
 
   for (auto genome : pop_variant_ptr->getMap()) {
 
-    std::shared_ptr<T> distance_ptr(std::make_shared<T>(genome.second, genome_db_ptr, args...));
+    std::shared_ptr<T> distance_ptr(std::make_shared<T>(sequence_distance, genome.second, genome_db_ptr, args...));
     std::shared_ptr<PhyloNode> phylo_node_ptr(std::make_shared<PhyloNode>(distance_ptr));
     node_vector_ptr->push_back(phylo_node_ptr);
 
@@ -182,6 +184,7 @@ void UPGMAPopulationTree(const std::string& newick_file,
 template<typename T, typename... Args>
 void UPGMAGeneTree(const std::string& path,
                    const std::string& newick_file,
+                   std::shared_ptr<const SequenceDistance> sequence_distance,
                    std::shared_ptr<const PopulationVariant> pop_variant_ptr,
                    std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                    const std::string& protein_family,
@@ -198,7 +201,12 @@ void UPGMAGeneTree(const std::string& path,
 
         if (T::geneFamily(gene.second, genome_db_ptr, protein_family)) {
 
-          std::shared_ptr<T> distance_ptr(std::make_shared<T>(genome_variant.second, genome_db_ptr, gene.second, protein_family, args...));
+          std::shared_ptr<T> distance_ptr(std::make_shared<T>(sequence_distance,
+                                                              genome_variant.second,
+                                                              genome_db_ptr,
+                                                              gene.second,
+                                                              protein_family,
+                                                              args...));
           std::shared_ptr<PhyloNode> phylo_node_ptr(std::make_shared<PhyloNode>(distance_ptr));
           node_vector_ptr->push_back(phylo_node_ptr);
 
@@ -226,6 +234,7 @@ void UPGMAGeneTree(const std::string& path,
 template<typename T, typename... Args>
 void UPGMAGenePhyloTree(const std::string& path,
                         const std::string& newick_file,
+                        std::shared_ptr<const SequenceDistance> sequence_distance,
                         std::shared_ptr<const PopulationVariant> pop_variant_ptr,
                         std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                         const std::string& protein_family,
@@ -242,7 +251,12 @@ void UPGMAGenePhyloTree(const std::string& path,
 
           for (auto genome_variant : pop_variant_ptr->getMap()) {
 
-          std::shared_ptr<T> distance_ptr(std::make_shared<T>(genome_variant.second, genome_db_ptr, gene.second, protein_family, args...));
+          std::shared_ptr<T> distance_ptr(std::make_shared<T>(sequence_distance,
+                                                              genome_variant.second,
+                                                              genome_db_ptr,
+                                                              gene.second,
+                                                              protein_family,
+                                                              args...));
           std::shared_ptr<PhyloNode> phylo_node_ptr(std::make_shared<PhyloNode>(distance_ptr));
           node_vector_ptr->push_back(phylo_node_ptr);
 
@@ -263,7 +277,6 @@ void UPGMAGenePhyloTree(const std::string& path,
   }
 
 }
-
 
 
 }   // namespace genome

@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <fstream>
+#include <kgl_sequence_distance.h>
 #include "kgl_patterns.h"
 #include "kgl_variant_compound.h"
 #include "kgl_variant_db.h"
@@ -127,6 +128,7 @@ public:
 
   static std::string outputRegionHeader(char delimiter);
   static std::string outputGenomeRegion(char delimiter,
+                                        std::shared_ptr<const SequenceDistance> dna_distance_metric,
                                         const ContigId_t& contig_id,
                                         const ContigOffset_t offset,
                                         const ContigSize_t region_size,

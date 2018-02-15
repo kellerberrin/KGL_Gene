@@ -38,15 +38,6 @@ public:
   AminoSequence() = delete;
   ~AminoSequence() override = default;
 
-  std::string compareAminoSequences(std::shared_ptr<const AminoSequence> compare_seq, CompareScore_t& score) const {
-
-    return compareSequencesAmino(*compare_seq, score);
-
-  }
-
-  static std::string multipleCompare(const std::vector<std::shared_ptr<const AminoSequence>>& compare_seq_vec);
-
-
   bool removeTrailingStop();  // Remove the stop codon (if present).
 
 private:

@@ -3,6 +3,7 @@
 //
 
 
+#include <kgl_sequence_distance.h>
 #include "kgl_phylogenetic_app.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_phylogenetic_gene.h"
@@ -93,11 +94,13 @@ void kgl::PhylogeneticApp::performAnalysis(const kgl::Phylogenetic& args,
 
     kgl::ExecEnv::log().info("Performing a UPGMA analytic");
     std::string newick_file = "UPGMA_newick.txt";
+    std::shared_ptr<const SequenceDistance> distance_metric_ptr(std::make_shared<const LevenshteinLocal>());
     kgl::UPGMAGenePhyloTree<kgl::UPGMAGenePhyloDistance>(args.workDirectory,
-                                               newick_file,
-                                               pop_variant_ptr,
-                                               genome_db_ptr,
-                                               kgl::UPGMAProteinDistance::SYMBOLIC_RIFIN_FAMILY);
+                                                         newick_file,
+                                                         distance_metric_ptr,
+                                                         pop_variant_ptr,
+                                                         genome_db_ptr,
+                                                         kgl::UPGMAProteinDistance::SYMBOLIC_ATP4_FAMILY);
   }
 
 }

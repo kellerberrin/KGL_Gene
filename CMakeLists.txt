@@ -125,8 +125,6 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_sequence_offset.cc
         kgl_library/kgl_variant_mutation_offset.h
         kgl_library/kgl_variant_mutation_offset.cc
-        kgl_library/kgl_sequence_manip.h
-        kgl_library/kgl_sequence_manip.cc
         kgl_library/kgl_variant_db_population.h
         kgl_library/kgl_table_impl.h
         kgl_library/kgl_table_impl.cc
@@ -140,7 +138,7 @@ set(LIBRARY_SOURCE_FILES
         )
 
 # 3rd party library for fast Leveshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_library/kgl_gaf_parser.h kgl_library/kgl_gaf_parser.cc)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_library/kgl_gaf_parser.h kgl_library/kgl_gaf_parser.cc kgl_library/kgl_sequence_compare.h kgl_library/kgl_sequence_compare_impl.h kgl_library/kgl_sequence_compare_impl.cc kgl_library/kgl_sequence_distance.h)
 
 set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_main.cc

@@ -283,6 +283,7 @@ std::string kgl::GeneAnalysis::outputRegionHeader(char delimiter) {
 
 
 std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
+                                                  std::shared_ptr<const SequenceDistance> dna_distance_metric,
                                                   const ContigId_t& contig_id,
                                                   const ContigOffset_t offset,
                                                   const ContigSize_t region_size,
@@ -333,17 +334,15 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
                                        reference_sequence,
                                        mutant_sequence_vector)) {
 
-    double average_score = 0;
+    CompareDistance_t average_distance = 0;
     for (auto mutant : mutant_sequence_vector) {
 
-      CompareScore_t score;
-      std::string comparison = reference_sequence->compareDNA5Sequences(mutant, score);
-      average_score += static_cast<double>(score);
+      average_distance += dna_distance_metric->distance(reference_sequence, mutant);
 
     }
 
     proportion_GC = static_cast<double>(reference_sequence->countGC()) / static_cast<double>(region_size);
-    average_score = average_score / static_cast<double>(mutant_sequence_vector.size());
+    double distance = static_cast<double>(average_distance) / static_cast<double>(mutant_sequence_vector.size());
 
     ss << genome_variant_ptr->genomeId() << delimiter;
     ss << contig_id << delimiter;
@@ -351,7 +350,7 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
     ss << proportion_GC << delimiter;
     ss << offset << delimiter;
     ss << region_size << delimiter;
-    ss << average_score;
+    ss << distance;
 
   } else {
 
@@ -433,20 +432,10 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
     size_t count = 0;
     for (auto mutant : mutant_sequence_vector) {
 
-      if (reference_sequence->length() < MAX_SEQUENCE_DISPLAY_SIZE) {
-        CompareScore_t score;
-        std::string comparison = reference_sequence->compareDNA5Sequences(mutant, score);
-        double normed_score = static_cast<double>(score) * 1000.0 / static_cast<double>(mutant->length());
-        ExecEnv::log().info("Genome: {}, Contig: {}, Offset: {} Size: {} score: {} score/1000: {} comparison:\n{}",
-                            genome_variant_ptr->genomeId(), contig, offset, region_size, score, normed_score, comparison);
-      } else {
-
-        CompareScore_t score = reference_sequence->compareLevenshtein(mutant);
-        double normed_score = static_cast<double>(score) * 1000.0 / static_cast<double>(mutant->length());
-        ExecEnv::log().info("Genome: {}, Contig: {}, Offset: {} Size: {} score: {} score/1000: {} \n ....Sequence too large to display (Levenshtein Sequence Match)....",
-                            genome_variant_ptr->genomeId(), contig, offset, region_size, score, normed_score);
-
-      }
+      CompareDistance_t score = LevenshteinGlobal().distance(reference_sequence, mutant);
+      double normed_score = static_cast<double>(score) * 1000.0 / static_cast<double>(mutant->length());
+      ExecEnv::log().info("Genome: {}, Contig: {}, Offset: {} Size: {} score: {} score/1000: {}",
+                          genome_variant_ptr->genomeId(), contig, offset, region_size, score, normed_score);
 
       count++;
       std::stringstream mutant_fasta_ss;

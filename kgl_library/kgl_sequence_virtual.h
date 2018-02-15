@@ -8,7 +8,6 @@
 #include <string>
 #include <set>
 #include "kgl_alphabet_string.h"
-#include "kgl_sequence_manip.h"
 
 
 
@@ -58,12 +57,6 @@ public:
 protected:
 
   AlphabetString<Alphabet> alphabet_string_;
-
-  const std::string compareSequencesDNA(const AlphabetSequence& compare, CompareScore_t& score) const;
-  const std::string compareSequencesAmino(const AlphabetSequence& compare, CompareScore_t& score) const;
-  CompareScore_t scoreMyerHirschberg(const AlphabetSequence& compare) const;
-  CompareScore_t scoreLevenshtein(const AlphabetSequence<Alphabet>& compare_sequence) const;
-  static const std::string multipleAlign(const std::vector<std::shared_ptr<const AlphabetSequence>>& compare_vec);
 
   // Letter offset is relative to the begining of the sequence (0 is the first letter).
   bool modifyLetter(ContigOffset_t sequence_offset, typename Alphabet::Alphabet letter);
@@ -167,86 +160,6 @@ bool AlphabetSequence<Alphabet>::getSubsequence(ContigOffset_t substring_offset,
   return true;
 
 }
-
-template<typename Alphabet>
-const std::string AlphabetSequence<Alphabet>::compareSequencesDNA(const AlphabetSequence<Alphabet>& compare_sequence, CompareScore_t& score) const
-{
-
-  if (length() == 0 or compare_sequence.length() == 0) {
-
-    ExecEnv::log().warn("compareSequences(), Cannot compare empty sequences");
-    score = 0;
-    return "";
-
-  }
-
-  return SequenceManipulation().compareSequencesDNA(getSequenceAsString(), compare_sequence.getSequenceAsString(), score);
-
-}
-
-template<typename Alphabet>
-const std::string AlphabetSequence<Alphabet>::compareSequencesAmino(const AlphabetSequence<Alphabet>& compare_sequence, CompareScore_t& score) const
-{
-
-  if (length() == 0 or compare_sequence.length() == 0) {
-
-    ExecEnv::log().warn("compareSequences(), Cannot compare empty sequences");
-    score = 0;
-    return "";
-
-  }
-
-  return SequenceManipulation().compareSequencesAmino(getSequenceAsString(), compare_sequence.getSequenceAsString(), score);
-
-}
-
-
-template<typename Alphabet>
-const std::string AlphabetSequence<Alphabet>::multipleAlign(const std::vector<std::shared_ptr<const AlphabetSequence>>& compare_vec) {
-
-  std::vector<std::string> str_vector;
-
-  for (auto sequence : compare_vec) {
-
-    str_vector.push_back(sequence->getSequenceAsString());
-
-  }
-
-  return SequenceManipulation().compareSequencesMultiple(str_vector);
-
-}
-
-
-template<typename Alphabet>
-CompareScore_t AlphabetSequence<Alphabet>::scoreMyerHirschberg(const AlphabetSequence<Alphabet>& compare_sequence) const {
-
-  if (length() == 0 or compare_sequence.length() == 0) {
-
-    ExecEnv::log().warn("compareSequences(), Cannot compare empty sequences");
-    return 0;
-
-  }
-
-  return SequenceManipulation().compareMyerHirschberg(getSequenceAsString(), compare_sequence.getSequenceAsString());
-
-}
-
-
-template<typename Alphabet>
-CompareScore_t AlphabetSequence<Alphabet>::scoreLevenshtein(const AlphabetSequence<Alphabet>& compare_sequence) const {
-
-  if (length() == 0 or compare_sequence.length() == 0) {
-
-    ExecEnv::log().warn("compareSequences(), Cannot compare empty sequences");
-    return 0;
-
-  }
-
-  return SequenceManipulation().Levenshtein(getSequenceAsString(), compare_sequence.getSequenceAsString());
-
-}
-
-
 
 }   // namespace genome
 }   // namespace kellerberrin
