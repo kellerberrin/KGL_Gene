@@ -8,12 +8,29 @@
 #include "kgl_genome_types.h"
 #include "kgl_sequence_virtual.h"
 #include "kgl_sequence_compare_impl.h"
+#include "kgl_sequence_amino.h"
 
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Distance is conceptually different from comparison.
+// 1. Distances are always normalized for sequence length.
+// For local distances, this is the size of the match.
+// For global distances, this is the length of the sequences.
+// 2. Distances are always positive or zero.
+// 3. Distances are symmetric, d(x,y) = d(y,x)
+// 4. Distances observe the triangle inequality, d(x,y) + d(y,z) >= d(x,z)
+// 5. Distances are returned as a CompareDistance_t which is a double.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// This virtual class hierarchy enforces correct typing for different combinations of
+// local or global, dna or amino distances algorithms.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 class SequenceDistance {
@@ -25,21 +42,25 @@ public:
 
   virtual std::string distanceType() const = 0;
 
-  virtual CompareDistance_t distance(std::shared_ptr<const VirtualSequence> sequenceA,
-                                     std::shared_ptr<const VirtualSequence> sequenceB) const = 0;
+protected:
 
-private:
-
+  virtual CompareDistance_t distanceImpl(std::shared_ptr<const VirtualSequence> sequenceA,
+                                         std::shared_ptr<const VirtualSequence> sequenceB) const = 0;
 
 };
 
 
-class SequenceLocalDistance : public SequenceDistance {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Local distance algorithms for both DNA and Amino acids should inherit from here
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class LocalSequenceDistance : public virtual SequenceDistance {
 
 public:
 
-  SequenceLocalDistance() = default;
-  virtual ~SequenceLocalDistance() = default;
+  LocalSequenceDistance() = default;
+  ~LocalSequenceDistance() override = default;
 
 
 private:
@@ -48,12 +69,18 @@ private:
 };
 
 
-class SequenceGlobalDistance : public SequenceDistance {
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Global distance algorithms for both DNA and Amino acids should inherit from here
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class GlobalSequenceDistance : public virtual SequenceDistance {
 
 public:
 
-  SequenceGlobalDistance() = default;
-  virtual ~SequenceGlobalDistance() = default;
+  GlobalSequenceDistance() = default;
+  ~GlobalSequenceDistance() override = default;
 
 
 private:
@@ -62,12 +89,31 @@ private:
 };
 
 
-class DNASequenceLocalDistance : public SequenceLocalDistance {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// DNA specific distance algorithms should inherit from here
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class DNASequenceDistance : public virtual SequenceDistance {
 
 public:
 
-  DNASequenceLocalDistance() = default;
-  ~DNASequenceLocalDistance() override = default;
+  DNASequenceDistance() = default;
+  ~DNASequenceDistance() override = default;
+
+  CompareDistance_t distance(std::shared_ptr<const DNA5SequenceLinear> sequenceA,
+                             std::shared_ptr<const DNA5SequenceLinear> sequenceB) const {
+
+    return distanceImpl(sequenceA, sequenceB);
+
+  }
+
+  CompareDistance_t distance(std::shared_ptr<const DNA5SequenceCoding> sequenceA,
+                             std::shared_ptr<const DNA5SequenceCoding> sequenceB) const {
+
+    return distanceImpl(sequenceA, sequenceB);
+
+  }
 
 
 private:
@@ -76,12 +122,25 @@ private:
 };
 
 
-class AminoSequenceLocalDistance  : public SequenceLocalDistance {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Amino specific distance algorithms should inherit from here
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class AminoSequenceDistance  : public virtual SequenceDistance {
 
 public:
 
-  AminoSequenceLocalDistance() = default;
-  ~AminoSequenceLocalDistance() override = default;
+  AminoSequenceDistance() = default;
+  ~AminoSequenceDistance() override = default;
+
+
+  CompareDistance_t distance(std::shared_ptr<const AminoSequence> sequenceA,
+                             std::shared_ptr<const AminoSequence> sequenceB) const {
+
+    return distanceImpl(sequenceA, sequenceB);
+
+  }
 
 
 private:
@@ -90,12 +149,19 @@ private:
 };
 
 
-class DNASequenceGlobalDistance : public SequenceGlobalDistance {
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Amino specific distance algorithms
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class LocalAminoSequenceDistance  : public virtual AminoSequenceDistance, public virtual LocalSequenceDistance {
 
 public:
 
-  DNASequenceGlobalDistance() = default;
-  ~DNASequenceGlobalDistance() override = default;
+  LocalAminoSequenceDistance() = default;
+  ~LocalAminoSequenceDistance() override = default;
 
 
 private:
@@ -104,12 +170,13 @@ private:
 };
 
 
-class AminoSequenceGlobalDistance  : public SequenceGlobalDistance {
+
+class GlobalAminoSequenceDistance  : public virtual AminoSequenceDistance, public virtual GlobalSequenceDistance {
 
 public:
 
-  AminoSequenceGlobalDistance() = default;
-  ~AminoSequenceGlobalDistance() override = default;
+  GlobalAminoSequenceDistance() = default;
+  ~GlobalAminoSequenceDistance() override = default;
 
 
 private:
@@ -120,9 +187,51 @@ private:
 
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// DNA specific distance algorithms
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class LevenshteinGlobal: public SequenceDistance {
+class LocalDNASequenceDistance  : public virtual DNASequenceDistance, public virtual LocalSequenceDistance {
+
+public:
+
+  LocalDNASequenceDistance() = default;
+  ~LocalDNASequenceDistance() override = default;
+
+
+private:
+
+
+};
+
+
+
+class GlobalDNASequenceDistance  : public virtual DNASequenceDistance, public virtual GlobalSequenceDistance {
+
+public:
+
+  GlobalDNASequenceDistance() = default;
+  ~GlobalDNASequenceDistance() override = default;
+
+
+private:
+
+
+};
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Implementation of Distance algorithms
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Global Levenshtein (Edit) distance - any size difference is counted as an edit operation (DNA and Amino)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class LevenshteinGlobal: public GlobalAminoSequenceDistance, public GlobalDNASequenceDistance {
 
 public:
 
@@ -131,23 +240,25 @@ public:
 
   std::string distanceType() const override { return "Levenshtein Global"; }
 
-  CompareDistance_t distance(std::shared_ptr<const VirtualSequence> sequenceA,
-                             std::shared_ptr<const VirtualSequence> sequenceB) const override {
+
+
+private:
+
+  CompareDistance_t distanceImpl(std::shared_ptr<const VirtualSequence> sequenceA,
+                                 std::shared_ptr<const VirtualSequence> sequenceB) const override {
 
     return SequenceManipulation().LevenshteinGlobal(sequenceA->getSequenceAsString(), sequenceB->getSequenceAsString());
 
   }
 
-
-private:
-
-
 };
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Local Levenshtein (Edit) distance - only the local match generates edit distance (DNA and Amino)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-class LevenshteinLocal: public SequenceDistance {
+class LevenshteinLocal: public LocalAminoSequenceDistance, public LocalDNASequenceDistance {
 
 public:
 
@@ -156,16 +267,14 @@ public:
 
   std::string distanceType() const override { return "Levenshtein Local"; }
 
-  CompareDistance_t distance(std::shared_ptr<const VirtualSequence> sequenceA,
-                             std::shared_ptr<const VirtualSequence> sequenceB) const override {
+private:
+
+  CompareDistance_t distanceImpl(std::shared_ptr<const VirtualSequence> sequenceA,
+                                 std::shared_ptr<const VirtualSequence> sequenceB) const override {
 
     return SequenceManipulation().LevenshteinLocal(sequenceA->getSequenceAsString(), sequenceB->getSequenceAsString());
 
   }
-
-
-private:
-
 
 };
 

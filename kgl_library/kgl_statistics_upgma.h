@@ -14,7 +14,7 @@
 #include "kgl_genome_db.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_utility.h"
-#include "kgl_sequence_compare.h"
+#include "kgl_sequence_distance.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -154,9 +154,10 @@ private:
 
 
 // Variadic function to combine the UPGMAMatrix and UPGMADistanceNode to produce a population tree.
+// We are comparing contigs across genomes, so a global dna distance metric is required.
 template<typename T, typename... Args>
 void UPGMAPopulationTree(const std::string& newick_file,
-                         std::shared_ptr<const SequenceDistance> sequence_distance,
+                         std::shared_ptr<const GlobalDNASequenceDistance> sequence_distance,
                          std::shared_ptr<const PopulationVariant> pop_variant_ptr,
                          std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                          Args... args) {
@@ -181,10 +182,11 @@ void UPGMAPopulationTree(const std::string& newick_file,
 
 
 // Variadic function to combine the UPGMAMatrix and UPGMADistanceNode to produce a series of Gene trees.
+// We are comparing dissimilar gene types, so only a local Amino distance metric should be used
 template<typename T, typename... Args>
 void UPGMAGeneTree(const std::string& path,
                    const std::string& newick_file,
-                   std::shared_ptr<const SequenceDistance> sequence_distance,
+                   std::shared_ptr<const LocalAminoSequenceDistance> sequence_distance,
                    std::shared_ptr<const PopulationVariant> pop_variant_ptr,
                    std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                    const std::string& protein_family,
@@ -231,10 +233,11 @@ void UPGMAGeneTree(const std::string& path,
 
 
 // Variadic function to combine the UPGMAMatrix and UPGMADistanceNode to produce a series of Gene trees.
+// We are comparing between genes of the same type so we can use a local and global Amino distance classes
 template<typename T, typename... Args>
 void UPGMAGenePhyloTree(const std::string& path,
                         const std::string& newick_file,
-                        std::shared_ptr<const SequenceDistance> sequence_distance,
+                        std::shared_ptr<const AminoSequenceDistance> sequence_distance,
                         std::shared_ptr<const PopulationVariant> pop_variant_ptr,
                         std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                         const std::string& protein_family,

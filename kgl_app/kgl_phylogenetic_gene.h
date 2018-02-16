@@ -85,14 +85,14 @@ public:
   GenomeId_t genome;
   std::shared_ptr<DNA5SequenceCoding> prime5_reference;
   std::vector<std::shared_ptr<DNA5SequenceCoding>> prime5_mutant_vec;
-  CompareScore_t prime5_score;
+  CompareDistance_t prime5_distance;
   std::shared_ptr<AminoSequence> sequence_ptr;
   std::vector<std::shared_ptr<AminoSequence>> sequence_mutant_vec;
   OffsetVariantMap variant_map;
-  CompareScore_t sequence_score;
+  CompareDistance_t sequence_distance;
   std::shared_ptr<DNA5SequenceCoding> prime3_reference;
   std::vector<std::shared_ptr<DNA5SequenceCoding>> prime3_mutant_vec;
-  CompareScore_t prime3_score;
+  CompareDistance_t prime3_distance;
 
 };
 
@@ -123,12 +123,13 @@ public:
 
   static bool mutateAllRegions(const std::string& file_name,
                                ContigSize_t region_size,
+                               std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
                                std::shared_ptr<const PopulationVariant> population_ptr,
                                std::shared_ptr<const GenomeDatabase> genome_db_ptr);
 
   static std::string outputRegionHeader(char delimiter);
   static std::string outputGenomeRegion(char delimiter,
-                                        std::shared_ptr<const SequenceDistance> dna_distance_metric,
+                                        std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
                                         const ContigId_t& contig_id,
                                         const ContigOffset_t offset,
                                         const ContigSize_t region_size,

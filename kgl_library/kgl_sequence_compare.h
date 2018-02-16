@@ -14,6 +14,7 @@ namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 
+
 class SequenceComparison {
 
 public:

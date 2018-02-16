@@ -217,8 +217,8 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
 
 
 bool kgl::ApplicationAnalysis::outputSequenceCSV(const std::string &file_name,
-                                                 std::shared_ptr<const SequenceDistance> dna_distance_metric,
-                                                 std::shared_ptr<const SequenceDistance> amino_distance_metric,
+                                                 std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
+                                                 std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric,
                                                  std::shared_ptr<const GenomeDatabase> genome_db,
                                                  std::shared_ptr<const PopulationVariant> pop_variant_ptr) {
 
@@ -326,8 +326,8 @@ std::string kgl::ApplicationAnalysis::outputSequenceHeader(char delimiter) {
 
 
 std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
-                                                     std::shared_ptr<const SequenceDistance> dna_distance_metric,
-                                                     std::shared_ptr<const SequenceDistance> amino_distance_metric,
+                                                     std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
+                                                     std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric,
                                                      std::shared_ptr<const CodingSequence> coding_sequence,
                                                      std::shared_ptr<const GenomeDatabase> genome_db,
                                                      std::shared_ptr<const GenomeVariant> genome_variant) {

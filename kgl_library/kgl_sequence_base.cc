@@ -76,21 +76,6 @@ kgl::DNA5SequenceLinear::codingOffsetSubSequence(std::shared_ptr<const CodingSeq
 // A STRANDED DNA string that can be converted to an AMINO sequence.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-std::string kgl::DNA5SequenceCoding::multipleCompare(const std::vector<std::shared_ptr<const DNA5SequenceCoding>>& compare_seq_vec) {
-
-
-  std::vector<std::shared_ptr<const AlphabetSequence<CodingDNA5>>> alpha_seq_vec;
-  for (auto seq : compare_seq_vec) {
-
-    alpha_seq_vec.push_back(seq);
-
-  }
-
-  return multipleAlign(alpha_seq_vec);
-
-}
-
-
 size_t kgl::DNA5SequenceCoding::countGC() const {
 
   size_t count = 0;

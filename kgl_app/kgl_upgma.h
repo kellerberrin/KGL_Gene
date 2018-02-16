@@ -10,7 +10,7 @@
 #include "kgl_genome_db.h"
 #include "kgl_variant_db.h"
 #include "kgl_statistics_upgma.h"
-#include "kgl_sequence_compare.h"
+#include "kgl_sequence_distance.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -19,8 +19,7 @@ namespace genome {   // project level namespace
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Mutates the contigs and then compares the mutated contigs using the Myer Hirschberg sequence comparison
-// algorthim. This is linear in space - but quadratic in time. Need to find a faster comparison algorithm.
+// Mutates the contigs and then compares the mutated contigs between genomes. Global DNA distance.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using MutatedContigMap = std::map<ContigId_t, std::shared_ptr<const DNA5SequenceContig>>;
@@ -29,7 +28,7 @@ class UPGMAContigDistance : public UPGMADistanceNode {
 
 public:
 
-  UPGMAContigDistance(std::shared_ptr<const SequenceDistance> sequence_distance,
+  UPGMAContigDistance(std::shared_ptr<const GlobalDNASequenceDistance> sequence_distance,
                       std::shared_ptr<const GenomeVariant> genome_variant_ptr,
                       std::shared_ptr<const GenomeDatabase> genome_db_ptr) : sequence_distance_(sequence_distance),
                                                                              genome_variant_ptr_(genome_variant_ptr),
@@ -48,7 +47,7 @@ public:
 
 private:
 
-  std::shared_ptr<const SequenceDistance> sequence_distance_;
+  std::shared_ptr<const GlobalDNASequenceDistance> sequence_distance_;
   std::shared_ptr<const GenomeVariant> genome_variant_ptr_;
   std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
   MutatedContigMap mutated_contigs_;
@@ -60,17 +59,17 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Mutates genome proteins and then compares the mutated proteins using the Myer Hirschberg sequence comparison
-// algorthim. Myer Hirschberg is linear in space - but quadratic in time. Need to find a faster comparison algorithm.
+// Compares the mutated proteins across a single protein family (var, rifin, etc). Generates a comparison for each genome.
+// Amino Local distance.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using MutatedProteinMap = std::map<FeatureIdent_t , std::shared_ptr<const DNA5SequenceCoding>>;
+using MutatedProteinMap = std::map<FeatureIdent_t , std::shared_ptr<const AminoSequence>>;
 
 class UPGMAProteinDistance : public UPGMADistanceNode {
 
 public:
 
-  UPGMAProteinDistance(std::shared_ptr<const SequenceDistance> sequence_distance,
+  UPGMAProteinDistance(std::shared_ptr<const LocalAminoSequenceDistance> sequence_distance,
                        std::shared_ptr<const GenomeVariant> genome_variant_ptr,
                        std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                        const std::string& protein_family) : sequence_distance_(sequence_distance),
@@ -99,7 +98,7 @@ public:
 
 private:
 
-  std::shared_ptr<const SequenceDistance> sequence_distance_;
+  std::shared_ptr<const LocalAminoSequenceDistance> sequence_distance_;
   std::string protein_family_;
   std::shared_ptr<const GenomeVariant> genome_variant_ptr_;
   std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
@@ -117,14 +116,15 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Mutates a single gene and compares to other selected genes
+// For all genes that belong to a family, compares the same gene from different genomes.
+// Generates a comparison for each gene. Local or Global Amino
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class UPGMAGeneDistance : public UPGMADistanceNode {
 
 public:
 
-  UPGMAGeneDistance(std::shared_ptr<const SequenceDistance> sequence_distance,
+  UPGMAGeneDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
                     std::shared_ptr<const GenomeVariant> genome_variant_ptr,
                     std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                     std::shared_ptr<const GeneFeature> gene_ptr,
@@ -159,8 +159,8 @@ public:
 
 protected:
 
-  std::shared_ptr<const SequenceDistance> sequence_distance_;
-  std::shared_ptr<const DNA5SequenceCoding> mutated_protein_;
+  std::shared_ptr<const AminoSequenceDistance> sequence_distance_;
+  std::shared_ptr<const AminoSequence> mutated_protein_;
   std::string protein_family_;
   std::shared_ptr<const GenomeVariant> genome_variant_ptr_;
   std::shared_ptr<const GeneFeature> gene_ptr_;
@@ -172,14 +172,14 @@ protected:
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Compares a single gene between isolates.
+// Compares a single gene between isolate genomes
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class UPGMAGenePhyloDistance : public UPGMAGeneDistance {
 
 public:
 
-  UPGMAGenePhyloDistance(std::shared_ptr<const SequenceDistance> sequence_distance,
+  UPGMAGenePhyloDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
                          std::shared_ptr<const GenomeVariant> genome_variant_ptr,
                          std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                          std::shared_ptr<const GeneFeature> gene_ptr,

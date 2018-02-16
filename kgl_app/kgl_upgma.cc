@@ -38,9 +38,9 @@ kgl::DistanceType_t kgl::UPGMAContigDistance::distance(std::shared_ptr<const UPG
 
       ExecEnv::log().info("distance(), Comparing Genome: {}, Contig: {} with Genome: {}",
                           genome_variant_ptr_->genomeId(), contig.first, node_ptr->genome_variant_ptr_->genomeId());
-      CompareScore_t contig_score = sequence_distance_->distance(contig.second, result->second);
-      total_distance += static_cast<DistanceType_t>(contig_score);
-      ExecEnv::log().info("distance(), {} distance: {}", sequence_distance_->distanceType(), contig_score);
+      CompareDistance_t contig_distance = sequence_distance_->distance(contig.second, result->second);
+      total_distance += static_cast<DistanceType_t>(contig_distance);
+      ExecEnv::log().info("distance(), {} distance: {}", sequence_distance_->distanceType(), contig_distance);
 
     } else {
 
@@ -80,8 +80,7 @@ void kgl::UPGMAContigDistance::mutateContigs() {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Mutates genome proteins and then compares the mutated proteins using the Myer Hirschberg sequence comparison
-// algorthim. Myer Hirschberg is linear in space - but quadratic in time. Need to find a faster comparison algorithm.
+// Mutates genome proteins and then compares the mutated proteins.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -97,7 +96,7 @@ kgl::DistanceType_t kgl::UPGMAProteinDistance::distance(std::shared_ptr<const UP
 
   }
 
-  DistanceType_t total_distance = 0;
+  CompareDistance_t total_distance = 0;
   size_t gene_count = 0;
 
   for (auto protein : getMap()) {
@@ -106,8 +105,8 @@ kgl::DistanceType_t kgl::UPGMAProteinDistance::distance(std::shared_ptr<const UP
 
     if (result != node_ptr->getMap().end()) {
 
-      CompareScore_t contig_score = sequence_distance_->distance(protein.second, result->second);
-      total_distance += std::fabs(static_cast<DistanceType_t>(contig_score));
+      CompareDistance_t contig_distance = sequence_distance_->distance(protein.second, result->second);
+      total_distance += contig_distance;
       ++gene_count;
 
     } else {
@@ -166,11 +165,11 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
     std::shared_ptr<const ContigFeatures> contig_ptr = sequence.second->getGene()->contig();
     std::string gene_id = sequence.second->getGene()->id();
     std::string sequence_id = sequence.second->getCDSParent()->id();
-    std::vector<std::shared_ptr<DNA5SequenceCoding>> mutant_sequence_vector;
-    std::shared_ptr<DNA5SequenceCoding> reference_sequence;
+    std::vector<std::shared_ptr<AminoSequence>> mutant_sequence_vector;
+    std::shared_ptr<AminoSequence> reference_sequence;
     OffsetVariantMap variant_map;
 
-    if (genome_variant_ptr_->mutantCodingDNA(contig_ptr->contigId(),
+    if (genome_variant_ptr_->mutantProteins(contig_ptr->contigId(),
                                              gene_id,
                                              sequence_id,
                                              genome_db_ptr_,
@@ -251,11 +250,11 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
   }
 
 
-  std::vector<std::shared_ptr<DNA5SequenceCoding>> mutant_sequence_vector;
-  std::shared_ptr<DNA5SequenceCoding> reference_sequence;
+  std::vector<std::shared_ptr<AminoSequence>> mutant_sequence_vector;
+  std::shared_ptr<AminoSequence> reference_sequence;
   OffsetVariantMap variant_map;
 
-  if (genome_variant_ptr_->mutantCodingDNA(contig_ptr->contigId(),
+  if (genome_variant_ptr_->mutantProteins(contig_ptr->contigId(),
                                            gene_id,
                                            sequence_id,
                                            genome_db_ptr_,
@@ -297,8 +296,8 @@ kgl::DistanceType_t kgl::UPGMAGeneDistance::distance(std::shared_ptr<const UPGMA
 
   }
 
-  CompareScore_t contig_score = sequence_distance_->distance(mutated_protein_, node_ptr->mutated_protein_);
-  DistanceType_t total_distance = std::fabs(static_cast<DistanceType_t>(contig_score));
+  CompareDistance_t contig_score = sequence_distance_->distance(mutated_protein_, node_ptr->mutated_protein_);
+  DistanceType_t total_distance = static_cast<DistanceType_t>(contig_score);
 
   ExecEnv::log().info("distance(), Genome: {}, Gene: {}, Gene: {}; {} distance: {}, Gene Family: {}",
                       genome_variant_ptr_->genomeId(), gene_ptr_->id(), node_ptr->gene_ptr_->id(),

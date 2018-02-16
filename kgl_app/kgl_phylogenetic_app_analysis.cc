@@ -29,14 +29,17 @@ void kgl::PhylogeneticApp::performAnalysis(const kgl::Phylogenetic& args,
   if (args.analysisType == kgl::Phylogenetic::ANALYZE_SEQUENCES or args.analysisType == kgl::Phylogenetic::WILDCARD) {
 
     kgl::ExecEnv::log().info("Analyzing coding sequences");
-    kgl::ApplicationAnalysis::outputSequenceCSV(args.outCSVFile, genome_db_ptr, pop_variant_ptr);
+    std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric(std::make_shared<const LevenshteinGlobal>());
+    std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
+    kgl::ApplicationAnalysis::outputSequenceCSV(args.outCSVFile, dna_distance_metric, amino_distance_metric, genome_db_ptr, pop_variant_ptr);
 
   }
 
   if (args.analysisType == kgl::Phylogenetic::ANALYZE_INTERVAL or args.analysisType == kgl::Phylogenetic::WILDCARD) {
 
     kgl::ExecEnv::log().info("Analyzing genome intervals");
-    kgl::GeneAnalysis::mutateAllRegions(args.outCSVFile, 1000,  pop_variant_ptr, genome_db_ptr);
+    std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
+    kgl::GeneAnalysis::mutateAllRegions(args.outCSVFile, 1000,  dna_distance_metric, pop_variant_ptr, genome_db_ptr);
 
   }
 
@@ -94,7 +97,7 @@ void kgl::PhylogeneticApp::performAnalysis(const kgl::Phylogenetic& args,
 
     kgl::ExecEnv::log().info("Performing a UPGMA analytic");
     std::string newick_file = "UPGMA_newick.txt";
-    std::shared_ptr<const SequenceDistance> distance_metric_ptr(std::make_shared<const LevenshteinLocal>());
+    std::shared_ptr<const AminoSequenceDistance> distance_metric_ptr(std::make_shared<const LevenshteinGlobal>());
     kgl::UPGMAGenePhyloTree<kgl::UPGMAGenePhyloDistance>(args.workDirectory,
                                                          newick_file,
                                                          distance_metric_ptr,
