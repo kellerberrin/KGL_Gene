@@ -68,7 +68,10 @@ public:
   static CodingDNA5::Alphabet complementNucleotide(Alphabet nucleotide);
 
   // Convert to CodingDNA5 without complementary base conversion.
-  static CodingDNA5::Alphabet convertToCodingDN5(Alphabet nucleotide) { return static_cast<CodingDNA5::Alphabet>(nucleotide); }
+  static CodingDNA5::Alphabet convertToCodingDNA5(Alphabet nucleotide) { return static_cast<CodingDNA5::Alphabet>(nucleotide); }
+
+  // Convert from coding DNA5.
+  static DNA5::Alphabet convertFromCodingDNA5(CodingDNA5::Alphabet nucleotide) { return static_cast<DNA5::Alphabet>(nucleotide); }
 
   // Convert a base to an array offset.
   static ContigOffset_t nucleotideToColumn(Alphabet nucleotide);

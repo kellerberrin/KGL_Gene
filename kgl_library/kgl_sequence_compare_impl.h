@@ -23,11 +23,17 @@ public:
   explicit SequenceManipulation();
   ~SequenceManipulation();
 
-  CompareScore_t MyerHirschberg(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
+  CompareScore_t MyerHirschbergGlobal(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
+
+  CompareScore_t MyerHirschbergLocal(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
 
   CompareDistance_t LevenshteinGlobal(const std::string& sequenceA, const std::string& sequenceB) const;
 
   CompareDistance_t LevenshteinLocal(const std::string& sequenceA, const std::string& sequenceB) const;
+
+  CompareDistance_t globalblosum80Distance(const std::string& sequenceA, const std::string& sequenceB) const;
+
+  std::string editItems(const std::string& reference, const std::string& mutant, char delimiter, VariantOutputIndex index_offset);
 
 private:
 

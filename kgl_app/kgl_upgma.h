@@ -41,7 +41,7 @@ public:
 
   // UPGMA Classification functions
   // Function to tag the nodes. Override as necessary.
-  void write_node(std::ofstream& outfile) const override { outfile << genome_variant_ptr_->genomeId(); }
+  void writeNode(std::ofstream& outfile) const override { outfile << genome_variant_ptr_->genomeId(); }
   // Pure Virtual calculates the distance between nodes.
   DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
 
@@ -84,7 +84,7 @@ public:
 
   // UPGMA Classification functions
   // Function to tag the nodes. Override as necessary.
-  void write_node(std::ofstream& outfile) const override { outfile << genome_variant_ptr_->genomeId(); }
+  void writeNode(std::ofstream& outfile) const override { outfile << genome_variant_ptr_->genomeId(); }
   // Pure Virtual calculates the distance between nodes.
   DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
 
@@ -141,7 +141,7 @@ public:
 
   // UPGMA Classification functions
   // Function to tag the nodes. Override as necessary.
-  void write_node(std::ofstream& outfile) const override;
+  void writeNode(std::ofstream& outfile) const override;
   // Pure Virtual calculates the distance between nodes.
   DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
 
@@ -171,15 +171,16 @@ protected:
 };
 
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Compares a single gene between isolate genomes
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class UPGMAGenePhyloDistance : public UPGMAGeneDistance {
+class UPGMAATP4Distance : public UPGMAGeneDistance {
 
 public:
 
-  UPGMAGenePhyloDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
+  UPGMAATP4Distance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
                          std::shared_ptr<const GenomeVariant> genome_variant_ptr,
                          std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                          std::shared_ptr<const GeneFeature> gene_ptr,
@@ -187,17 +188,24 @@ public:
                                                                                  genome_variant_ptr,
                                                                                  genome_db_ptr,
                                                                                  gene_ptr,
-                                                                                 protein_family) {}
+                                                                                 protein_family) {
 
-  UPGMAGenePhyloDistance(const UPGMAGenePhyloDistance&) = default;
-  ~UPGMAGenePhyloDistance() override = default;
+    zero_metric_ptr_ = std::make_shared<const LevenshteinGlobal>();
+
+  }
+
+  UPGMAATP4Distance(const UPGMAATP4Distance&) = default;
+  ~UPGMAATP4Distance() override = default;
 
   // UPGMA Classification functions
   // Function to tag the nodes. Override as necessary.
-  void write_node(std::ofstream& outfile) const override;
-  // Pure Virtual calculates the distance between nodes.
+  void writeNode(std::ofstream& outfile) const override;
+  // virtual function ensures that idenitcal nodes have zero distance.
+  DistanceType_t zeroDistance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
 
 private:
+
+  std::shared_ptr<const AminoSequenceDistance> zero_metric_ptr_;
 
 };
 

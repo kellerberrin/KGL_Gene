@@ -97,8 +97,8 @@ void kgl::PhylogeneticApp::performAnalysis(const kgl::Phylogenetic& args,
 
     kgl::ExecEnv::log().info("Performing a UPGMA analytic");
     std::string newick_file = "UPGMA_newick.txt";
-    std::shared_ptr<const AminoSequenceDistance> distance_metric_ptr(std::make_shared<const LevenshteinGlobal>());
-    kgl::UPGMAGenePhyloTree<kgl::UPGMAGenePhyloDistance>(args.workDirectory,
+    std::shared_ptr<const AminoSequenceDistance> distance_metric_ptr(std::make_shared<const Blosum80Global>());
+    kgl::UPGMAGenePhyloTree<kgl::UPGMAATP4Distance>(args.workDirectory,
                                                          newick_file,
                                                          distance_metric_ptr,
                                                          pop_variant_ptr,

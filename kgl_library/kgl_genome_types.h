@@ -43,6 +43,15 @@ using Phred_t = double;
 static_assert( sizeof(ContigSize_t) == sizeof(std::size_t)
              , "kgl::ContigSize_t and std::size_t should both be 64bit integers");
 
+
+// Used to display output as 1 based or zero based offsets. Never, ever, use START_1_BASED internally.
+enum class VariantOutputIndex { START_1_BASED, START_0_BASED};   // Used for output functions - default START_1_BASED
+
+// helper function - only ever use for output.
+std::string offsetOutput(ContigOffset_t offset, VariantOutputIndex output_base);
+
+
+
 }   // namespace genome
 }   // namespace kellerberrin
 

@@ -59,7 +59,10 @@ public:
                                             ContigOffset_t &coding_sequence_offset,
                                             ContigSize_t &coding_sequence_length);
 
+  // Converts linear DNA to a coding DNA sequence.
   static std::shared_ptr<DNA5SequenceCoding> codingSequence(std::shared_ptr<const DNA5SequenceLinear> base_sequence, StrandSense strand);
+  // Converts a coding DNA sequence to linear DNA (swap alphabet). No strand conversion is performed.
+  static std::shared_ptr<DNA5SequenceLinear> linearSequence(std::shared_ptr<const DNA5SequenceCoding> base_sequence);
 
 private:
 

@@ -67,6 +67,8 @@ public:
   // return bool true if G or C
   static bool isNucleotideGC(Alphabet nucleotide) { return nucleotide == Alphabet::G or nucleotide == Alphabet::C; }
 
+
+
 };
 
 

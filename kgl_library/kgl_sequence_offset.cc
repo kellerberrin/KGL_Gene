@@ -190,7 +190,7 @@ kgl::SequenceOffset::codingSubSequence(const DNA5SequenceLinear& base_sequence,
       ContigOffset_t end_offset;
       ContigOffset_t relative_offset = 0;
 
-      auto convert_base = [](DNA5::Alphabet base) { return DNA5::convertToCodingDN5(base); };
+      auto convert_base = [](DNA5::Alphabet base) { return DNA5::convertToCodingDNA5(base); };
 
       // Convert to an absolute sequence based offset
       for (auto exon : exon_offset_map) {
@@ -322,7 +322,7 @@ std::shared_ptr<kgl::DNA5SequenceCoding> kgl::SequenceOffset::codingSequence(std
     case StrandSense::UNKNOWN:
       ExecEnv::log().warn("codingSequence(); has 'UNKNOWN' ('.') strand assuming 'FORWARD' ('+')");
     case StrandSense::FORWARD: {
-      auto convert_base = [](DNA5::Alphabet base) { return DNA5::convertToCodingDN5(base); };
+      auto convert_base = [](DNA5::Alphabet base) { return DNA5::convertToCodingDNA5(base); };
       std::transform(base_sequence->getAlphabetString().begin(),
                      base_sequence->getAlphabetString().end(),
                      std::back_inserter(coding_sequence), convert_base);
@@ -342,6 +342,23 @@ std::shared_ptr<kgl::DNA5SequenceCoding> kgl::SequenceOffset::codingSequence(std
   return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(coding_sequence, strand)));
 
 }
+
+
+
+std::shared_ptr<kgl::DNA5SequenceLinear> kgl::SequenceOffset::linearSequence(std::shared_ptr<const DNA5SequenceCoding> coding_sequence) {
+
+  StringDNA5 linear_string;
+  linear_string.reserve(coding_sequence->length()); // pre-allocate for efficiency
+
+  auto convert_base = [](CodingDNA5::Alphabet base) { return DNA5::convertFromCodingDNA5(base); };
+  std::transform(coding_sequence->getAlphabetString().begin(),
+                 coding_sequence->getAlphabetString().end(),
+                 std::back_inserter(linear_string), convert_base);
+
+  return std::shared_ptr<DNA5SequenceLinear>(std::make_shared<DNA5SequenceLinear>(linear_string));
+
+}
+
 
 
 

@@ -138,7 +138,7 @@ set(LIBRARY_SOURCE_FILES
         )
 
 # 3rd party library for fast Leveshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_library/kgl_gaf_parser.h kgl_library/kgl_gaf_parser.cc kgl_library/kgl_sequence_compare.h kgl_library/kgl_sequence_compare_impl.h kgl_library/kgl_sequence_compare_impl.cc kgl_library/kgl_sequence_distance.h)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_library/kgl_gaf_parser.h kgl_library/kgl_gaf_parser.cc kgl_library/kgl_sequence_compare.h kgl_library/kgl_sequence_compare_impl.h kgl_library/kgl_sequence_compare_impl.cc kgl_library/kgl_sequence_distance.h kgl_library/kgl_genome_types.cc)
 
 set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_main.cc

@@ -49,7 +49,6 @@ kgl::PhylogeneticApp::getGenomeVariants(std::shared_ptr<const kgl::GenomeDatabas
 
 kgl::PhylogeneticApp::PhylogeneticApp(const kgl::Phylogenetic& args) {
 
-
   // Create a genome database object.
   std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr = GenomeDatabase::createGenomeDatabase(args.fastaFile,
                                                                                                   args.gffFile,

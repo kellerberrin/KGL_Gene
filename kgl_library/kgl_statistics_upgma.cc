@@ -171,8 +171,6 @@ kgl::DistanceType_t kgl::DistanceMatrix::minimum(size_t& i, size_t& j) const {
 
   bool first_pass = true;
   kgl::DistanceType_t min_distance = 0;
-//  i = 0;
-//  j = 0;
   for (size_t row = 0; row < size(); ++row) {
 
     for (size_t column = 0; column < row; ++column) {
@@ -204,6 +202,46 @@ kgl::DistanceType_t kgl::DistanceMatrix::minimum(size_t& i, size_t& j) const {
   return min_distance;
 
 }
+
+
+
+
+kgl::DistanceType_t kgl::DistanceMatrix::maximum(size_t& i, size_t& j) const {
+
+  bool first_pass = true;
+  kgl::DistanceType_t max_distance = 0;
+  for (size_t row = 0; row < size(); ++row) {
+
+    for (size_t column = 0; column < row; ++column) {
+
+      if (first_pass) {
+
+        max_distance = getDistance( row, column);
+        i = row;
+        j = column;
+        first_pass = false;
+
+      } else {
+
+        kgl::DistanceType_t check_max = getDistance( row, column);
+        if (check_max > max_distance) {
+
+          max_distance = check_max;
+          i = row;
+          j = column;
+
+        }
+
+      }
+
+    }
+
+  }
+
+  return max_distance;
+
+}
+
 
 // Reduces the distance matrix.
 // The reduced column is the left most column (column, j index = 0)
@@ -300,6 +338,14 @@ kgl::DistanceType_t kgl::UPGMAMatrix::distance(std::shared_ptr<PhyloNode> row_no
 }
 
 
+kgl::DistanceType_t kgl::UPGMAMatrix::zeroDistance(std::shared_ptr<PhyloNode> row_node,
+                                                   std::shared_ptr<PhyloNode> column_node) const {
+
+  return row_node->leaf()->zeroDistance(column_node->leaf());
+
+}
+
+
 void kgl::UPGMAMatrix::initializeDistance() {
 
   for (size_t row = 0; row < node_vector_ptr_->size(); ++row) {
@@ -312,7 +358,68 @@ void kgl::UPGMAMatrix::initializeDistance() {
 
   }
 
+  normalizeDistance();
+
 }
+
+
+void kgl::UPGMAMatrix::normalizeDistance() {
+
+  rescaleDistance();
+  identityZeroDistance();
+
+}
+
+
+
+void kgl::UPGMAMatrix::identityZeroDistance() {
+
+  for (size_t row = 0; row < node_vector_ptr_->size(); ++row) {
+
+    for (size_t column = 0; column < row; column++) {
+
+      if (zeroDistance(node_vector_ptr_->at(row), node_vector_ptr_->at(column)) == 0) {
+
+          setDistance(row, column, 0.0);
+
+      }
+
+    }
+
+  }
+
+}
+
+
+void kgl::UPGMAMatrix::rescaleDistance() {
+
+  size_t row;
+  size_t column;
+  DistanceType_t min = minimum(row, column);
+  DistanceType_t max = maximum(row, column);
+  DistanceType_t range = max - min;
+
+  if (range == 0.0) {
+
+    ExecEnv::log().error("UPGMAMatrix::normalizeDistance() distance range for all nodes is zero");
+    return;
+
+  }
+
+  for (size_t row = 0; row < node_vector_ptr_->size(); ++row) {
+
+    for (size_t column = 0; column < row; column++) {
+
+      DistanceType_t raw_distance = getDistance(row, column);
+      DistanceType_t adj_distance = (raw_distance - min) / range;
+      setDistance(row, column, adj_distance);
+
+    }
+
+  }
+
+}
+
 
 
 void kgl::UPGMAMatrix::calculateReduce() {
@@ -441,7 +548,7 @@ void kgl::UPGMAMatrix::writeNode(std::shared_ptr<PhyloNode> node, std::ofstream&
 
   } else {
 
-    node->leaf()->write_node(newick_file);
+    node->leaf()->writeNode(newick_file);
 
   }
 

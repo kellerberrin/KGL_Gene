@@ -296,6 +296,7 @@ kgl::DistanceType_t kgl::UPGMAGeneDistance::distance(std::shared_ptr<const UPGMA
 
   }
 
+
   CompareDistance_t contig_score = sequence_distance_->distance(mutated_protein_, node_ptr->mutated_protein_);
   DistanceType_t total_distance = static_cast<DistanceType_t>(contig_score);
 
@@ -308,7 +309,7 @@ kgl::DistanceType_t kgl::UPGMAGeneDistance::distance(std::shared_ptr<const UPGMA
 }
 
 
-void kgl::UPGMAGeneDistance::write_node(std::ofstream& outfile) const {
+void kgl::UPGMAGeneDistance::writeNode(std::ofstream& outfile) const {
 
   std::stringstream ss;
 
@@ -333,14 +334,80 @@ void kgl::UPGMAGeneDistance::write_node(std::ofstream& outfile) const {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void kgl::UPGMAGenePhyloDistance::write_node(std::ofstream& outfile) const {
+void kgl::UPGMAATP4Distance::writeNode(std::ofstream& outfile) const {
+
+  const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene_ptr_);
+
+  if (coding_seq_ptr->size() == 0) {
+
+    ExecEnv::log().critical("write_node(), Gene contains no coding sequence : genome: {} gene: {}",
+                            genome_variant_ptr_->genomeId(), gene_ptr_->id());
+
+  }
+
+  std::shared_ptr<const CodingSequence> sequence = coding_seq_ptr->getFirst();
+  std::shared_ptr<const ContigFeatures> contig_ptr = sequence->getGene()->contig();
+  std::string gene_id = sequence->getGene()->id();
+  std::string sequence_id = sequence->getCDSParent()->id();
+
+  if (coding_seq_ptr->size() > 1) {
+
+    ExecEnv::log().warn("write_node(),  Genome: {} gene: {} contains: {} sequences using sequence: {}",
+                        genome_variant_ptr_->genomeId(), gene_ptr_->id(), coding_seq_ptr->size(), sequence_id);
+
+  }
+
+
+  std::vector<std::shared_ptr<AminoSequence>> mutant_sequence_vector;
+  std::shared_ptr<AminoSequence> reference_sequence;
+  OffsetVariantMap variant_map;
+
+  if (not genome_variant_ptr_->mutantProteins(contig_ptr->contigId(),
+                                              gene_id,
+                                              sequence_id,
+                                              genome_db_ptr_,
+                                              variant_map,
+                                              reference_sequence,
+                                              mutant_sequence_vector)) {
+
+    ExecEnv::log().critical("write_node(), Cannot mutate sequence for : genome: {} gene: {}",
+                            genome_variant_ptr_->genomeId(), gene_ptr_->id());
+
+  }
 
   std::stringstream ss;
 
-  double contig_proportion = static_cast<double>(gene_ptr_->sequence().begin()) / static_cast<double>(gene_ptr_->contig()->contigSize());
-  contig_proportion = contig_proportion * 100.0;
-  ss << genome_variant_ptr_->genomeId() << "_" << gene_ptr_->id() << "_" << std::setprecision(3) << contig_proportion;
+  ss << genome_variant_ptr_->genomeId();
+  ss << "_" << SequenceManipulation().editItems(reference_sequence->getSequenceAsString(),
+                                                mutated_protein_->getSequenceAsString(),
+                                                '_',
+                                                VariantOutputIndex::START_1_BASED);
 
   outfile << ss.str();
+
+}
+
+
+kgl::DistanceType_t kgl::UPGMAATP4Distance::zeroDistance(std::shared_ptr<const UPGMADistanceNode>  distance_node) const {
+
+  std::shared_ptr<const UPGMAATP4Distance> node_ptr = std::dynamic_pointer_cast<const UPGMAATP4Distance>(distance_node);
+
+  if (not node_ptr) {
+
+    ExecEnv::log().error("distance(), Unexpected error, could not down-cast node pointer to UPGMAATP4Distance");
+    return 1.0;
+
+  }
+
+
+
+  CompareDistance_t contig_score = zero_metric_ptr_->distance(mutated_protein_, node_ptr->mutated_protein_);
+  auto total_distance = static_cast<DistanceType_t>(contig_score);
+
+  ExecEnv::log().info("zero edit distance(), Genome: {}, Gene: {}, Gene: {}; {} distance: {}, Gene Family: {}",
+                      genome_variant_ptr_->genomeId(), gene_ptr_->id(), node_ptr->gene_ptr_->id(),
+                      zero_metric_ptr_->distanceType(), total_distance, protein_family_);
+
+  return total_distance;
 
 }

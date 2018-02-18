@@ -279,6 +279,32 @@ private:
 };
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Global Blosum80
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class Blosum80Global: public GlobalAminoSequenceDistance {
+
+public:
+
+  Blosum80Global() = default;
+  virtual ~Blosum80Global() = default;
+
+  std::string distanceType() const override { return "Blosum80 Global"; }
+
+
+
+private:
+
+  CompareDistance_t distanceImpl(std::shared_ptr<const VirtualSequence> sequenceA,
+                                 std::shared_ptr<const VirtualSequence> sequenceB) const override {
+
+    return SequenceManipulation().globalblosum80Distance(sequenceA->getSequenceAsString(), sequenceB->getSequenceAsString());
+
+  }
+
+};
+
 
 }   // namespace genome
 }   // namespace kellerberrin

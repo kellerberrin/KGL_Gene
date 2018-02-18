@@ -39,10 +39,11 @@ public:
 
   // UPGMA Classification functions
   // Function to tag the nodes. Override as necessary.
-  virtual void write_node(std::ofstream& outfile) const = 0;
+  virtual void writeNode(std::ofstream& outfile) const = 0;
   // Pure Virtual calculates the distance between nodes.
   virtual DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const = 0;
-
+  // Pure Virtual calculates the zero distance between nodes.
+  virtual DistanceType_t zeroDistance(std::shared_ptr<const UPGMADistanceNode>) const { return 1.0; }
 
 private:
 
@@ -99,8 +100,10 @@ public:
 
 
   DistanceType_t minimum(size_t& i, size_t& j) const;
+  DistanceType_t maximum(size_t& i, size_t& j) const;
   void reduce(size_t i, size_t j);
   void setDistance(size_t i, size_t j, DistanceType_t distance);
+  DistanceType_t getDistance(size_t i, size_t j) const;
 
   virtual size_t getLeafCount(size_t) const { return 1; }
 
@@ -109,7 +112,6 @@ private:
   class BoostDistanceMatrix;       // Forward declaration of the boost strict diagonal implementation class
   std::unique_ptr<BoostDistanceMatrix> diagonal_impl_ptr_;    // PIMPL
 
-  DistanceType_t getDistance(size_t i, size_t j) const;
   size_t size() const;
   void resize(size_t new_size);
 
@@ -142,7 +144,11 @@ public:
 private:
 
   DistanceType_t distance(std::shared_ptr<PhyloNode> row_node, std::shared_ptr<PhyloNode> column_node) const;
+  DistanceType_t zeroDistance(std::shared_ptr<PhyloNode> row_node, std::shared_ptr<PhyloNode> column_node) const;
   void initializeDistance();
+  virtual void normalizeDistance();
+  void rescaleDistance();
+  void identityZeroDistance();
   bool reduceNode(size_t row, size_t column, DistanceType_t minimum);
   void writeNode(std::shared_ptr<PhyloNode> node, std::ofstream& newick_file) const;
   size_t getLeafCount(size_t leaf_idx) const override;
