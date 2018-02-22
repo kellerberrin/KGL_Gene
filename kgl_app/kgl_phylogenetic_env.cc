@@ -526,15 +526,17 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
         and  args_.analysisType != Phylogenetic::ANALYZE_SEQUENCES
         and args_.analysisType != Phylogenetic::ANALYZE_GENE
         and args_.analysisType != Phylogenetic::ANALYZE_REGION
-        and args_.analysisType != Phylogenetic::ANALYZE_UPGMA) {
+        and args_.analysisType != Phylogenetic::ANALYZE_UPGMA
+        and args_.analysisType != Phylogenetic::ANALYZE_RNA) {
 
-      ExecEnv::log().critical("Invalid Analysis Type: {}.  Must be one of: {}, {}, {}, {}, {}.",
+      ExecEnv::log().critical("Invalid Analysis Type: {}.  Must be one of: {}, {}, {}, {}, {}, {}.",
                               args_.analysisType,
                               Phylogenetic::ANALYZE_INTERVAL,
                               Phylogenetic::ANALYZE_SEQUENCES,
                               Phylogenetic::ANALYZE_GENE,
                               Phylogenetic::ANALYZE_REGION,
-                              Phylogenetic::ANALYZE_UPGMA);
+                              Phylogenetic::ANALYZE_UPGMA,
+                              Phylogenetic::ANALYZE_RNA);
 
     }
 

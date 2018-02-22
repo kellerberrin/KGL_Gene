@@ -234,7 +234,7 @@ private:
                              std::shared_ptr<const VirtualSequence> sequenceB,
                              std::string& compare_str) const override {
 
-    return SequenceManipulation().MyerHirschbergGlobal(sequenceA->getSequenceAsString(),
+    return SequenceComparison().MyerHirschbergGlobal(sequenceA->getSequenceAsString(),
                                                        sequenceB->getSequenceAsString(),
                                                        compare_str);
 
@@ -260,13 +260,41 @@ private:
                              std::shared_ptr<const VirtualSequence> sequenceB,
                              std::string& compare_str) const override {
 
-    return SequenceManipulation().MyerHirschbergLocal(sequenceA->getSequenceAsString(),
+    return SequenceComparison().MyerHirschbergLocal(sequenceA->getSequenceAsString(),
                                                       sequenceB->getSequenceAsString(),
                                                       compare_str);
 
   }
 
 };
+
+
+
+class DNALocalAffineGap: public LocalDNASequenceCompare {
+
+public:
+
+  DNALocalAffineGap() = default;
+  virtual ~DNALocalAffineGap() = default;
+
+  std::string compareType() const override { return "DNALocalAffineGap"; }
+
+private:
+
+  CompareScore_t compareImpl(std::shared_ptr<const VirtualSequence> sequenceA,
+                             std::shared_ptr<const VirtualSequence> sequenceB,
+                             std::string& compare_str) const override {
+
+    return SequenceComparison().DNALocalAffineGap(sequenceA->getSequenceAsString(),
+                                                    sequenceB->getSequenceAsString(),
+                                                    compare_str);
+
+  }
+
+};
+
+
+
 
 
 }   // namespace genome

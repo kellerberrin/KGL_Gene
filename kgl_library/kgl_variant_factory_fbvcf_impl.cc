@@ -319,7 +319,7 @@ bool kgl::VcfFactory::FreeBayesVCFImpl::parseSNP(size_t cigar_count,
                                             std::shared_ptr<const ContigFeatures> contig_ptr,
                                             std::shared_ptr<GenomeVariant> genome_variants,
                                             Phred_t quality,
-                                            const std::string& info,
+                                            const std::string&, // info,
                                             const std::string& reference,
                                             const std::string& alternate,
                                             size_t& reference_index,
@@ -338,7 +338,8 @@ bool kgl::VcfFactory::FreeBayesVCFImpl::parseSNP(size_t cigar_count,
 
     }
 
-    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
+//    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
+    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>("", quality));
 
     std::shared_ptr<SNPVariant> snp_variant_ptr(std::make_shared<SNPVariant>(variant_source,
                                                                              contig_ptr,
@@ -366,7 +367,7 @@ bool kgl::VcfFactory::FreeBayesVCFImpl::parseInsert(size_t cigar_count,
                                                std::shared_ptr<const ContigFeatures> contig_ptr,
                                                std::shared_ptr<GenomeVariant> genome_variants,
                                                Phred_t quality,
-                                               const std::string& info,
+                                               const std::string&, // info,
                                                const std::string& alternate,
                                                ContigOffset_t contig_offset,
                                                size_t& alternate_index,
@@ -376,7 +377,8 @@ bool kgl::VcfFactory::FreeBayesVCFImpl::parseInsert(size_t cigar_count,
 
   for (size_t idx = 0; idx < cigar_count; ++idx) {
 
-    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
+//    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
+    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>("", quality));
 
     std::shared_ptr<InsertVariant> insert_variant_ptr(std::make_shared<InsertVariant>(variant_source,
                                                                                       contig_ptr,
@@ -425,7 +427,7 @@ bool kgl::VcfFactory::FreeBayesVCFImpl::parseDelete(size_t cigar_count,
                                                std::shared_ptr<const ContigFeatures> contig_ptr,
                                                std::shared_ptr<GenomeVariant> genome_variants,
                                                Phred_t quality,
-                                               const std::string& info,
+                                               const std::string&, // info,
                                                const std::string& reference,
                                                size_t& reference_index,
                                                ContigOffset_t& contig_offset,
@@ -444,7 +446,9 @@ bool kgl::VcfFactory::FreeBayesVCFImpl::parseDelete(size_t cigar_count,
 
     }
 
-    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
+//    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
+    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>("", quality));
+
 
     std::shared_ptr<DeleteVariant> delete_variant_ptr(std::make_shared<DeleteVariant>(variant_source,
                                                                                       contig_ptr,

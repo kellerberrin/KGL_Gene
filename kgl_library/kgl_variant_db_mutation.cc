@@ -62,7 +62,7 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
   std::shared_ptr<const ContigFeatures> contig_ptr;
   if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
 
-    ExecEnv::log().warn("mutantProtein(), Could not find contig: {} in genome database", contig_id);
+    ExecEnv::log().warn("mutantCodingDNA(), Could not find contig: {} in genome database", contig_id);
     return false;
 
   }
@@ -71,7 +71,7 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
   std::shared_ptr<const CodingSequence> coding_sequence_ptr;
   if (not contig_ptr->getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
 
-    ExecEnv::log().warn("mutantProtein(), Could not find a coding sequence for gene: {}, sequence: {}", gene_id, sequence_id);
+    ExecEnv::log().warn("mutantCodingDNA(), Could not find a coding sequence for gene: {}, sequence: {}", gene_id, sequence_id);
     return false;
 
   }

@@ -29,214 +29,32 @@ struct EditItem{
 using EditVector = std::vector<EditItem>;
 
 
-class kgl::SequenceManipulation::SequenceManipImpl {
+class kgl::SequenceComparison::SequenceManipImpl {
 
 public:
 
   SequenceManipImpl() = default;
   ~SequenceManipImpl() = default;
 
-  std::string blosum80(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
-
-  std::string localBlosum80(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
-
-  std::string localBlosum62(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score, ContigSize_t& length) const;
-
-  std::string simplealign(const std::string& reference_str, const std::string& compare_str, CompareScore_t& score) const;
-
-  kgl::CompareScore_t MyerHirschberg(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
-
-  std::string multipleAlign(const std::vector<std::string>& compare_str_vec) const;
 
   kgl::CompareScore_t MyerHirschbergGlobal(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
   kgl::CompareScore_t MyerHirschbergLocal(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
+  kgl::CompareScore_t DNALocalAffineGap(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
 
-  kgl::CompareDistance_t LevenshteinGlobal(const std::string& sequenceA, const std::string& sequenceB) const;
-  kgl::CompareDistance_t LevenshteinLocal(const std::string& sequenceA, const std::string& sequenceB) const;
-
-  kgl::CompareDistance_t globalblosum80Distance(const std::string& sequenceA, const std::string& sequenceB) const;
-
-
-  std::string editItems(const std::string& reference_str, const std::string& mutant_str, char delimiter, VariantOutputIndex display_offset);
+  std::string editItems(const std::string& reference_str, const std::string& mutant_str, char delimiter, VariantOutputIndex display_offset) const;
 
 
 private:
 
-  EditVector createEditItems(const std::string& reference_str, const std::string& mutant_str, EditVector& edit_vector);
+  EditVector createEditItems(const std::string& reference_str, const std::string& mutant_str, EditVector& edit_vector) const;
 
 };
 
 
 
 
-std::string kgl::SequenceManipulation::SequenceManipImpl::localBlosum80(const std::string& reference_str,
-                                                                        const std::string& compare_str,
-                                                                        CompareScore_t& score) const {
-  using TSequence = seqan::String<char> ;
-  using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
-  int gap = -1;
 
-  TSequence seq1 = reference_str.c_str();
-  TSequence seq2 = compare_str.c_str();
-
-  TAlign align;
-  resize(rows(align), 2);
-  seqan::assignSource(row(align, 0), seq1);
-  seqan::assignSource(row(align, 1), seq2);
-
-  std::stringstream ss;
-
-  score = seqan::localAlignment(align, seqan::Blosum80(gap, gap));
-  ss << align << std::endl;
-
-  return ss.str();
-
-}
-
-
-
-
-std::string kgl::SequenceManipulation::SequenceManipImpl::blosum80(const std::string& reference_str,
-                                                                   const std::string& compare_str,
-                                                                   CompareScore_t& score) const {
-  using TSequence = seqan::String<seqan::AminoAcid> ;
-  using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
-  int open_gap = -8;
-  int extend_gap = -3;
-
-  TSequence seq1 = reference_str.c_str();
-  TSequence seq2 = compare_str.c_str();
-
-  TAlign align;
-  resize(rows(align), 2);
-  seqan::assignSource(row(align, 0), seq1);
-  seqan::assignSource(row(align, 1), seq2);
-
-  std::stringstream ss;
-
-  score = seqan::globalAlignment(align, seqan::Blosum80(open_gap, extend_gap));
-  ss << align << std::endl;
-
-  return ss.str();
-
-}
-
-
-
-
-std::string kgl::SequenceManipulation::SequenceManipImpl::localBlosum62(const std::string& reference_str,
-                                                                        const std::string& compare_str,
-                                                                        CompareScore_t& score,
-                                                                        ContigSize_t& length) const {
-  using TSequence = seqan::String<char> ;
-  using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
-  int gap = -1;
-
-  length = 1;
-
-  TSequence seq1 = reference_str.c_str();
-  TSequence seq2 = compare_str.c_str();
-
-  TAlign align;
-  resize(rows(align), 2);
-  seqan::assignSource(row(align, 0), seq1);
-  seqan::assignSource(row(align, 1), seq2);
-
-  std::stringstream ss;
-
-  score = seqan::localAlignment(align, seqan::Blosum62(gap, gap));
-  ss << align << std::endl;
-
-  return ss.str();
-
-}
-
-
-std::string kgl::SequenceManipulation::SequenceManipImpl::simplealign(const std::string& reference_str,
-                                                                      const std::string& compare_str,
-                                                                      CompareScore_t& score) const {
-  int match = 0;
-  int mismatch = -1;
-  int gap = -1;
-
-  using TSequence = seqan::String<char> ;
-  using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
-
-  TSequence seq1 = reference_str.c_str();
-  TSequence seq2 = compare_str.c_str();
-
-  TAlign align;
-  resize(rows(align), 2);
-  seqan::assignSource(row(align, 0), seq1);
-  seqan::assignSource(row(align, 1), seq2);
-
-  std::stringstream ss;
-
-  score = seqan::globalAlignment(align, seqan::Score<int, seqan::Simple>(match, mismatch, gap));
-
-  ss << align << std::endl;
-
-  return ss.str();
-
-}
-
-
-std::string kgl::SequenceManipulation::SequenceManipImpl::multipleAlign(const std::vector<std::string>& compare_str_vec) const {
-
-  using TSequence = seqan::String<char>;
-//  using DNATAlign = seqan::Align <seqan::DnaString>;
-//  using AminoAlign = seqan::Align<seqan::AminoAcid>;
-  using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
-
-  TAlign align;
-
-  resize(rows(align), compare_str_vec.size());
-  std::vector<TSequence> seq_array;
-
-  for (size_t i = 0; i < compare_str_vec.size(); ++i) {
-
-    TSequence seq1 = compare_str_vec[i].c_str();
-    seq_array.push_back(seq1);
-    seqan::assignSource(row(align, i), seq_array.back());
-
-  }
-
-  std::stringstream ss;
-  seqan::globalMsaAlignment(align, seqan::SimpleScore(5, -3, -1, -3));
-  ss << align << std::endl;
-
-  return ss.str();
-
-}
-
-
-
-
-kgl::CompareDistance_t kgl::SequenceManipulation::SequenceManipImpl::globalblosum80Distance(const std::string& sequenceA,
-                                                                                            const std::string& sequenceB) const {
-  using TSequence = seqan::String<seqan::AminoAcid> ;
-  using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
-  int open_gap = -8;
-  int extend_gap = -3;
-
-  TSequence seq1 = sequenceA.c_str();
-  TSequence seq2 = sequenceB.c_str();
-
-  TAlign align;
-  resize(rows(align), 2);
-  seqan::assignSource(row(align, 0), seq1);
-  seqan::assignSource(row(align, 1), seq2);
-
-  std::stringstream ss;
-
-  long score = seqan::globalAlignment(align, seqan::Blosum80(open_gap, extend_gap));
-
-  return static_cast<double>(score) * -1.0;  // Invert the scores.
-
-}
-
-
-kgl::CompareScore_t kgl::SequenceManipulation::SequenceManipImpl::MyerHirschbergGlobal(const std::string& sequenceA,
+kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::MyerHirschbergGlobal(const std::string& sequenceA,
                                                                                        const std::string& sequenceB,
                                                                                        std::string& compare_str) const {
 
@@ -264,7 +82,7 @@ kgl::CompareScore_t kgl::SequenceManipulation::SequenceManipImpl::MyerHirschberg
 
 
 
-kgl::CompareScore_t kgl::SequenceManipulation::SequenceManipImpl::MyerHirschbergLocal(const std::string& sequenceA,
+kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::MyerHirschbergLocal(const std::string& sequenceA,
                                                                                       const std::string& sequenceB,
                                                                                       std::string& compare_str) const {
 
@@ -291,67 +109,45 @@ kgl::CompareScore_t kgl::SequenceManipulation::SequenceManipImpl::MyerHirschberg
 }
 
 
-kgl::CompareDistance_t kgl::SequenceManipulation::SequenceManipImpl::LevenshteinGlobal(const std::string& sequenceA,
-                                                                                       const std::string& sequenceB) const {
-
-  EdlibAlignResult result = edlibAlign(sequenceA.c_str(),
-                                       sequenceA.size(),
-                                       sequenceB.c_str(),
-                                       sequenceB.size(),
-                                       edlibNewAlignConfig(-1, EDLIB_MODE_NW, EDLIB_TASK_LOC, NULL, 0));
-
-  if (result.status != EDLIB_STATUS_OK) {
-
-    kgl::ExecEnv::log().error("Problem calculating Global Levenshtein distance using edlib; sequenceA: {}, sequenceB: {}",
-                              sequenceA, sequenceB);
-    edlibFreeAlignResult(result);
-    return 0;
-  }
-
-  kgl::CompareDistance_t distance = std::fabs(result.editDistance);
-  edlibFreeAlignResult(result);
-  return distance;
-
-}
 
 
-kgl::CompareDistance_t kgl::SequenceManipulation::SequenceManipImpl::LevenshteinLocal(const std::string& sequenceA,
-                                                                                      const std::string& sequenceB) const {
+kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::DNALocalAffineGap(const std::string& sequenceA,
+                                                                                    const std::string& sequenceB,
+                                                                                    std::string& compare_str) const {
 
-  EdlibAlignResult result = edlibAlign(sequenceA.c_str(),
-                                       sequenceA.size(),
-                                       sequenceB.c_str(),
-                                       sequenceB.size(),
-                                       edlibNewAlignConfig(-1, EDLIB_MODE_HW, EDLIB_TASK_LOC, NULL, 0));
+  using TSequence = seqan::String<char> ;
+  using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
 
-  if (result.status != EDLIB_STATUS_OK) {
+  TSequence seq1 = sequenceA.c_str();
+  TSequence seq2 = sequenceB.c_str();
 
-    kgl::ExecEnv::log().error("Problem calculating Local Levenshtein distance using edlib; sequenceA: {}, sequenceB: {}",
-                              sequenceA, sequenceB);
-    edlibFreeAlignResult(result);
-    return 0;
-  }
+  TAlign align;
+  resize(rows(align), 2);
+  seqan::assignSource(row(align, 0), seq1);
+  seqan::assignSource(row(align, 1), seq2);
 
-  kgl::CompareDistance_t distance = std::fabs(result.editDistance);
-  if (result.alignmentLength <= 0) {
+  std::stringstream ss;
 
-    kgl::ExecEnv::log().error("Problem calculating Local Levenshtein alignment, length zero or -ve {}; sequenceA: {}, sequenceB: {}",
-                              result.alignmentLength, sequenceA, sequenceB);
-    edlibFreeAlignResult(result);
-    return 0;
+//  CompareScore_t score = seqan::localAlignment(align, seqan::Score<int>(0, -1, -2, -2), seqan::DynamicGaps());
+//  CompareScore_t score = seqan::globalAlignment(align, seqan::Score<int>(0, -1, -2, -1), seqan::AlignConfig<true, false, false, true>(), seqan::AffineGaps());
+  CompareScore_t score = seqan::globalAlignment(align, seqan::Score<int>(3, -3, -20, -20), seqan::AlignConfig<true, false, false, true>(), seqan::AffineGaps());
 
-  }
-  edlibFreeAlignResult(result);
-  return distance / static_cast<double>(result.alignmentLength);
 
+  ss << align << std::endl;
+
+  compare_str = ss.str();
+
+  return score;
 
 }
 
 
-std::string kgl::SequenceManipulation::SequenceManipImpl::editItems(const std::string& reference,
+
+
+std::string kgl::SequenceComparison::SequenceManipImpl::editItems(const std::string& reference,
                                                                     const std::string& mutant,
                                                                     char delimiter,
-                                                                    VariantOutputIndex index_offset) {
+                                                                    VariantOutputIndex index_offset) const {
   EditVector edit_vector;
   createEditItems(reference, mutant, edit_vector);
   size_t last_index = edit_vector.size() - 1;
@@ -378,9 +174,9 @@ std::string kgl::SequenceManipulation::SequenceManipImpl::editItems(const std::s
 
 
 
-EditVector kgl::SequenceManipulation::SequenceManipImpl::createEditItems(const std::string& reference_str,
+EditVector kgl::SequenceComparison::SequenceManipImpl::createEditItems(const std::string& reference_str,
                                                                          const std::string& mutant_str,
-                                                                         EditVector& edit_vector)
+                                                                         EditVector& edit_vector) const
 {
   typedef seqan::String<char> TSequence;
   typedef seqan::Gaps<TSequence, seqan::ArrayGaps> TGaps;
@@ -481,17 +277,17 @@ EditVector kgl::SequenceManipulation::SequenceManipImpl::createEditItems(const s
 
 
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // VcfFactory() is a public facade class that passes the functionality onto VcfFactory::FreeBayesVCFImpl.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-kgl::SequenceManipulation::SequenceManipulation() : sequence_manip_impl_ptr_(std::make_unique<kgl::SequenceManipulation::SequenceManipImpl>()) {}
-kgl::SequenceManipulation::~SequenceManipulation() {}  // DO NOT DELETE or USE DEFAULT. Required because of incomplete pimpl type.
+kgl::SequenceComparison::SequenceComparison() : sequence_manip_impl_ptr_(std::make_unique<kgl::SequenceComparison::SequenceManipImpl>()) {}
+kgl::SequenceComparison::~SequenceComparison() {}  // DO NOT DELETE or USE DEFAULT. Required because of incomplete pimpl type.
 
+// Comparison
 
-kgl::CompareScore_t kgl::SequenceManipulation::MyerHirschbergGlobal(const std::string& sequenceA,
+kgl::CompareScore_t kgl::SequenceComparison::MyerHirschbergGlobal(const std::string& sequenceA,
                                                                     const std::string& sequenceB,
                                                                     std::string& compare_str) const {
 
@@ -500,7 +296,7 @@ kgl::CompareScore_t kgl::SequenceManipulation::MyerHirschbergGlobal(const std::s
 }
 
 
-kgl::CompareScore_t kgl::SequenceManipulation::MyerHirschbergLocal(const std::string& sequenceA,
+kgl::CompareScore_t kgl::SequenceComparison::MyerHirschbergLocal(const std::string& sequenceA,
                                                                     const std::string& sequenceB,
                                                                     std::string& compare_str) const {
 
@@ -509,34 +305,20 @@ kgl::CompareScore_t kgl::SequenceManipulation::MyerHirschbergLocal(const std::st
 }
 
 
-kgl::CompareDistance_t kgl::SequenceManipulation::LevenshteinGlobal(const std::string& sequenceA,
-                                                                    const std::string& sequenceB) const {
 
-  return sequence_manip_impl_ptr_->LevenshteinGlobal(sequenceA, sequenceB);
+kgl::CompareScore_t kgl::SequenceComparison::DNALocalAffineGap(const std::string& sequenceA,
+                                                                   const std::string& sequenceB,
+                                                                   std::string& compare_str) const {
 
-}
-
-
-kgl::CompareDistance_t kgl::SequenceManipulation::LevenshteinLocal(const std::string& sequenceA,
-                                                                   const std::string& sequenceB) const {
-
-  return sequence_manip_impl_ptr_->LevenshteinLocal(sequenceA, sequenceB);
+  return sequence_manip_impl_ptr_->DNALocalAffineGap(sequenceA, sequenceB, compare_str);
 
 }
 
 
-kgl::CompareDistance_t kgl::SequenceManipulation::globalblosum80Distance(const std::string& sequenceA,
-                                                                         const std::string& sequenceB) const {
-
-  return sequence_manip_impl_ptr_->globalblosum80Distance(sequenceA, sequenceB);
-
-}
-
-
-std::string kgl::SequenceManipulation::editItems(const std::string& reference,
+std::string kgl::SequenceComparison::editItems(const std::string& reference,
                                                  const std::string& mutant,
                                                  char delimiter,
-                                                 VariantOutputIndex index_offset) {
+                                                 VariantOutputIndex index_offset) const {
 
   return sequence_manip_impl_ptr_->editItems(reference, mutant, delimiter, index_offset);
 

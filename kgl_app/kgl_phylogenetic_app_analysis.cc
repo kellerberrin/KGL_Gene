@@ -8,6 +8,7 @@
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_phylogenetic_gene.h"
 #include "kgl_upgma.h"
+#include "kgl_rna_search.h"
 #include "kgl_utility.h"
 
 
@@ -93,6 +94,9 @@ void kgl::PhylogeneticApp::performAnalysis(const kgl::Phylogenetic& args,
 
   }
 
+//  std::string amino_mutation_file = kgl::Utility::filePath("AminoMutations", args.workDirectory) + ".csv";
+//  ApplicationAnalysis::outputMutationCSV(amino_mutation_file, PFATP4_CONTIG, PFATP4_GENE, PFATP4_SEQUENCE, genome_db_ptr, pop_variant_ptr);
+
   if (args.analysisType == kgl::Phylogenetic::ANALYZE_UPGMA or args.analysisType == kgl::Phylogenetic::WILDCARD) {
 
     kgl::ExecEnv::log().info("Performing a UPGMA analytic");
@@ -104,6 +108,30 @@ void kgl::PhylogeneticApp::performAnalysis(const kgl::Phylogenetic& args,
                                                          pop_variant_ptr,
                                                          genome_db_ptr,
                                                          kgl::UPGMAProteinDistance::SYMBOLIC_ATP4_FAMILY);
+  }
+
+
+  if (args.analysisType == kgl::Phylogenetic::ANALYZE_RNA or args.analysisType == kgl::Phylogenetic::WILDCARD) {
+
+    kgl::ExecEnv::log().info("Performing an RNA analytic");
+
+    RNAAnalysis rna_analysis;
+
+    rna_analysis.getRNARegions("Pf3D7_04_v3",
+                               956848,
+                               135,
+                               StrandSense::FORWARD,
+                               "Pf3D7_04_v3",
+                               (958066 - 1000),
+                               9000,
+                               StrandSense::FORWARD,
+                               genome_db_ptr);
+
+    std::shared_ptr<const LocalDNASequenceCompare>  compare_metric_ptr(std::make_shared<const DNALocalAffineGap>());
+    rna_analysis.compareRNARegion(0, 21, 1, compare_metric_ptr);
+
+    rna_analysis.showResults(2);
+
   }
 
 }

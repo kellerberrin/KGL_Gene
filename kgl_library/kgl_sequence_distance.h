@@ -7,7 +7,7 @@
 
 #include "kgl_genome_types.h"
 #include "kgl_sequence_virtual.h"
-#include "kgl_sequence_compare_impl.h"
+#include "kgl_sequence_distance_impl.h"
 #include "kgl_sequence_amino.h"
 
 
@@ -247,7 +247,7 @@ private:
   CompareDistance_t distanceImpl(std::shared_ptr<const VirtualSequence> sequenceA,
                                  std::shared_ptr<const VirtualSequence> sequenceB) const override {
 
-    return SequenceManipulation().LevenshteinGlobal(sequenceA->getSequenceAsString(), sequenceB->getSequenceAsString());
+    return SequenceDistanceImpl().LevenshteinGlobal(sequenceA->getSequenceAsString(), sequenceB->getSequenceAsString());
 
   }
 
@@ -272,7 +272,7 @@ private:
   CompareDistance_t distanceImpl(std::shared_ptr<const VirtualSequence> sequenceA,
                                  std::shared_ptr<const VirtualSequence> sequenceB) const override {
 
-    return SequenceManipulation().LevenshteinLocal(sequenceA->getSequenceAsString(), sequenceB->getSequenceAsString());
+    return SequenceDistanceImpl().LevenshteinLocal(sequenceA->getSequenceAsString(), sequenceB->getSequenceAsString());
 
   }
 
@@ -299,7 +299,7 @@ private:
   CompareDistance_t distanceImpl(std::shared_ptr<const VirtualSequence> sequenceA,
                                  std::shared_ptr<const VirtualSequence> sequenceB) const override {
 
-    return SequenceManipulation().globalblosum80Distance(sequenceA->getSequenceAsString(), sequenceB->getSequenceAsString());
+    return SequenceDistanceImpl().globalblosum80Distance(sequenceA->getSequenceAsString(), sequenceB->getSequenceAsString());
 
   }
 

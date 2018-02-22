@@ -93,6 +93,15 @@ public:
 
   size_t countGC() const;
 
+  // Returns an UNSTRANDED region
+  std::shared_ptr<DNA5SequenceLinear> unstrandedRegion(ContigOffset_t sub_sequence_offset, // offset
+                                                       ContigSize_t sub_sequence_length) const { // if a subsequence.
+
+    std::shared_ptr<DNA5SequenceLinear> sub_sequence(std::make_shared<DNA5SequenceLinear>());
+    getSubsequence(sub_sequence_offset, sub_sequence_length, sub_sequence);
+    return sub_sequence;
+
+  }
 
 private:
 
@@ -138,15 +147,6 @@ public:
 
   }
 
-  // Returns an UNSTRANDED region
-  std::shared_ptr<DNA5SequenceLinear> unstrandedRegion(ContigOffset_t sub_sequence_offset, // offset
-                                                       ContigSize_t sub_sequence_length) const { // if a subsequence.
-
-    std::shared_ptr<DNA5SequenceLinear> sub_sequence(std::make_shared<DNA5SequenceLinear>());
-    getSubsequence(sub_sequence_offset, sub_sequence_length, sub_sequence);
-    return sub_sequence;
-
-  }
 
 
 private:

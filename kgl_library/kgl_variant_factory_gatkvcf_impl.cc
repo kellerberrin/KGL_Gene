@@ -214,7 +214,7 @@ bool kgl::VcfFactory::GATKVCFImpl::parseSNP(const std::string& variant_source,
                                             std::shared_ptr<const ContigFeatures> contig_ptr,
                                             std::shared_ptr<GenomeVariant> genome_variants,
                                             Phred_t quality,
-                                            const std::string& info,
+                                            const std::string&, // info,
                                             const std::string& reference,
                                             const std::string& alternate,
                                             ContigOffset_t contig_offset,
@@ -237,7 +237,8 @@ bool kgl::VcfFactory::GATKVCFImpl::parseSNP(const std::string& variant_source,
 
   }
 
-  std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
+//  std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
+  std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>("", quality));
 
   std::shared_ptr<SNPVariant> snp_variant_ptr(std::make_shared<SNPVariant>(variant_source,
                                                                            contig_ptr,
@@ -258,7 +259,7 @@ bool kgl::VcfFactory::GATKVCFImpl::parseInsert(const std::string& variant_source
                                                std::shared_ptr<const ContigFeatures> contig_ptr,
                                                std::shared_ptr<GenomeVariant> genome_variants,
                                                Phred_t quality,
-                                               const std::string& info,
+                                               const std::string&, // info,
                                                const std::string& reference,
                                                const std::string& alternate,
                                                ContigOffset_t contig_offset,
@@ -291,7 +292,8 @@ bool kgl::VcfFactory::GATKVCFImpl::parseInsert(const std::string& variant_source
   ContigSize_t insert_size = alternate.size() - reference.size();
   for (size_t idx = 0; idx < insert_size; ++idx) {
 
-    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
+//    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
+    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>("", quality));
 
     std::shared_ptr<InsertVariant> insert_variant_ptr(std::make_shared<InsertVariant>(variant_source,
                                                                                       contig_ptr,
@@ -340,7 +342,7 @@ bool kgl::VcfFactory::GATKVCFImpl::parseDelete(const std::string& variant_source
                                                std::shared_ptr<const ContigFeatures> contig_ptr,
                                                std::shared_ptr<GenomeVariant> genome_variants,
                                                Phred_t quality,
-                                               const std::string& info,
+                                               const std::string&, // info,
                                                const std::string& reference,
                                                const std::string& alternate,
                                                ContigOffset_t contig_offset,
@@ -383,7 +385,8 @@ bool kgl::VcfFactory::GATKVCFImpl::parseDelete(const std::string& variant_source
 
     }
 
-    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
+//    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
+    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>("", quality));
 
     std::shared_ptr<DeleteVariant> delete_variant_ptr(std::make_shared<DeleteVariant>(variant_source,
                                                                                       contig_ptr,

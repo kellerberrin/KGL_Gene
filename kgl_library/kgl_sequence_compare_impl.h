@@ -16,24 +16,26 @@
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-class SequenceManipulation {
+
+
+class SequenceComparison {
 
 public:
 
-  explicit SequenceManipulation();
-  ~SequenceManipulation();
+  explicit SequenceComparison();
+  ~SequenceComparison();
+
+  // Comparison
 
   CompareScore_t MyerHirschbergGlobal(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
 
   CompareScore_t MyerHirschbergLocal(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
 
-  CompareDistance_t LevenshteinGlobal(const std::string& sequenceA, const std::string& sequenceB) const;
+  CompareScore_t DNALocalAffineGap(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
 
-  CompareDistance_t LevenshteinLocal(const std::string& sequenceA, const std::string& sequenceB) const;
+  // Compare sequences in mutation format.
 
-  CompareDistance_t globalblosum80Distance(const std::string& sequenceA, const std::string& sequenceB) const;
-
-  std::string editItems(const std::string& reference, const std::string& mutant, char delimiter, VariantOutputIndex index_offset);
+  std::string editItems(const std::string& reference, const std::string& mutant, char delimiter, VariantOutputIndex index_offset) const;
 
 private:
 
@@ -42,6 +44,9 @@ private:
 
 
 };
+
+
+
 
 
 }   // namespace genome

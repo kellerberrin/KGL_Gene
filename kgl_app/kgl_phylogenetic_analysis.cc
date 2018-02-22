@@ -2,7 +2,8 @@
 // Created by kellerberrin on 17/11/17.
 //
 
-#include <kgl_sequence_distance.h>
+#include "kgl_sequence_distance.h"
+#include "kgl_sequence_compare.h"
 #include "kgl_upgma.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_offset.h"
@@ -292,6 +293,65 @@ bool kgl::ApplicationAnalysis::outputSequenceCSV(const std::string &file_name,
     ExecEnv::log().info("outputSequenceCSV(), Genome: {} mutated: {} sequences.", genome_variant.first, sequence_count);
 
   }
+
+  return out_file.good();
+
+}
+
+
+bool kgl::ApplicationAnalysis::outputMutationCSV(const std::string &file_name,
+                                                 const ContigId_t& contig_id,
+                                                 const FeatureIdent_t& gene_id,
+                                                 const FeatureIdent_t& sequence_id,
+                                                 std::shared_ptr<const GenomeDatabase> genome_db,
+                                                 std::shared_ptr<const PopulationVariant> pop_variant_ptr) {
+
+  const char CSV_delimiter = ',';
+  // open the file.
+  std::fstream out_file(file_name, std::fstream::out);
+  if (!out_file) {
+
+    ExecEnv::log().error("Cannot open output CSV file (--outCSVFile): {}", file_name);
+    return false;
+
+  }
+
+  for( auto genome_variant : pop_variant_ptr->getMap()) {
+
+    ExecEnv::log().info("outputMutationCSV(), Processing genome: {}", genome_variant.first);
+    size_t sequence_count = 0;
+
+    sequence_count++;
+    OffsetVariantMap variant_map;
+    std::shared_ptr<AminoSequence> amino_reference_seq;
+    std::vector<std::shared_ptr<AminoSequence>> amino_mutant_vec;
+    if (genome_variant.second->mutantProteins(contig_id,
+                                              gene_id,
+                                              sequence_id,
+                                              genome_db,
+                                              variant_map,
+                                              amino_reference_seq,
+                                              amino_mutant_vec)) {
+
+      for (auto mutant : amino_mutant_vec) {
+
+        std::stringstream ss;
+        ss << genome_variant.first << CSV_delimiter;
+        ss << gene_id << CSV_delimiter;
+        ss << sequence_id << CSV_delimiter;
+        ss << SequenceComparison().editItems(amino_reference_seq->getSequenceAsString(),
+                                               mutant->getSequenceAsString(),
+                                               CSV_delimiter,
+                                               VariantOutputIndex::START_1_BASED) << '\n';
+        out_file << ss.str();
+
+      } // for mutant
+
+    } // if mutation
+
+    ExecEnv::log().info("outputMutantCSV(), Genome: {} mutated: {} sequences.", genome_variant.first, sequence_count);
+
+  } // for genome
 
   return out_file.good();
 

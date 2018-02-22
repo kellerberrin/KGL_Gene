@@ -49,6 +49,7 @@ struct Phylogenetic {
   static constexpr const char* ANALYZE_REGION = "REGION";
   static constexpr const char* ANALYZE_UPGMA = "UPGMA";
   static constexpr const char* ANALYZE_GENE = "GENE";
+  static constexpr const char* ANALYZE_RNA = "RNA";
 
 };
 

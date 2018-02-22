@@ -25,13 +25,10 @@
 
 
 // pfATP4 drug target ATP4 sodium pump.
-#define PFATP4_MINORITY_CONTIG "chr12"
-#define PFATP4_MINORITY_GENE "PF3D7_1211900"
-#define PFATP4_MINORITY_SEQUENCE "rna_PF3D7_1211900-1"
 
-#define PFATP4_MALAWI_CONTIG "Pf3D7_12_v3"
-#define PFATP4_MALAWI_GENE "PF3D7_1211900"
-#define PFATP4_MALAWI_SEQUENCE "PF3D7_1211900.1"
+#define PFATP4_CONTIG "Pf3D7_12_v3"
+#define PFATP4_GENE "PF3D7_1211900"
+#define PFATP4_SEQUENCE "PF3D7_1211900.1"
 
 // Erythrocyte membrane (Blood Cell Surface) protein (busy Malawi)
 #define _BCS_CONTIG "Pf3D7_12_v3"
@@ -135,6 +132,7 @@ public:
                                         const ContigSize_t region_size,
                                         std::shared_ptr<const GenomeVariant> genome_variant_ptr,
                                         std::shared_ptr<const GenomeDatabase> genome_db_ptr);
+
 
 private:
 

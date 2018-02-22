@@ -4,12 +4,11 @@
 
 
 #include <iomanip>
+#include <kgl_sequence_compare_impl.h>
 #include "kgl_upgma.h"
 
 
 namespace kgl = kellerberrin::genome;
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -377,8 +376,8 @@ void kgl::UPGMAATP4Distance::writeNode(std::ofstream& outfile) const {
 
   std::stringstream ss;
 
-  ss << genome_variant_ptr_->genomeId();
-  ss << "_" << SequenceManipulation().editItems(reference_sequence->getSequenceAsString(),
+//  ss << genome_variant_ptr_->genomeId();
+  ss << "_" << SequenceComparison().editItems(reference_sequence->getSequenceAsString(),
                                                 mutated_protein_->getSequenceAsString(),
                                                 '_',
                                                 VariantOutputIndex::START_1_BASED);
