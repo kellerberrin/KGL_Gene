@@ -11,6 +11,7 @@
 #include <map>
 #include "kgl_logging.h"
 #include "kgl_genome_types.h"
+#include "kgl_sequence_base.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -36,6 +37,13 @@ public:
   // Compare sequences in mutation format.
 
   std::string editItems(const std::string& reference, const std::string& mutant, char delimiter, VariantOutputIndex index_offset) const;
+
+  std::string editDNAItems(std::shared_ptr<const ContigFeatures> contig_ptr,
+                           std::shared_ptr<const DNA5SequenceCoding> reference,
+                           std::shared_ptr<const DNA5SequenceCoding> mutant,
+                           char delimiter,
+                           VariantOutputIndex index_offset) const;
+
 
 private:
 

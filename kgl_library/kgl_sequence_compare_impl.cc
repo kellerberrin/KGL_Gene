@@ -13,6 +13,9 @@
 #include "kgl_sequence_compare_impl.h"
 #include "kgl_exec_env.h"
 #include "kgl_genome_types.h"
+#include "kgl_genome_db.h"
+#include "kgl_sequence_base.h"
+#include "kgl_sequence_codon.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -42,6 +45,11 @@ public:
   kgl::CompareScore_t DNALocalAffineGap(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
 
   std::string editItems(const std::string& reference_str, const std::string& mutant_str, char delimiter, VariantOutputIndex display_offset) const;
+  std::string editDNAItems(std::shared_ptr<const ContigFeatures> contig_ptr,
+                           std::shared_ptr<const DNA5SequenceCoding> reference,
+                           std::shared_ptr<const DNA5SequenceCoding> mutant,
+                           char delimiter,
+                           VariantOutputIndex display_offset) const;
 
 
 private:
@@ -130,7 +138,8 @@ kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::DNALocalAffineGa
 
 //  CompareScore_t score = seqan::localAlignment(align, seqan::Score<int>(0, -1, -2, -2), seqan::DynamicGaps());
 //  CompareScore_t score = seqan::globalAlignment(align, seqan::Score<int>(0, -1, -2, -1), seqan::AlignConfig<true, false, false, true>(), seqan::AffineGaps());
-  CompareScore_t score = seqan::globalAlignment(align, seqan::Score<int>(3, -3, -20, -20), seqan::AlignConfig<true, false, false, true>(), seqan::AffineGaps());
+//  CompareScore_t score = seqan::globalAlignment(align, seqan::Score<int>(3, -3, -20, -20), seqan::AlignConfig<true, false, false, true>(), seqan::AffineGaps());
+  CompareScore_t score = seqan::globalAlignment(align, seqan::Score<int>(3, -3, -5, -2), seqan::AlignConfig<true, false, false, true>(), seqan::AffineGaps());
 
 
   ss << align << std::endl;
@@ -141,6 +150,45 @@ kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::DNALocalAffineGa
 
 }
 
+
+
+std::string kgl::SequenceComparison::SequenceManipImpl::editDNAItems(std::shared_ptr<const ContigFeatures> contig_ptr,
+                                                                     std::shared_ptr<const DNA5SequenceCoding> reference,
+                                                                     std::shared_ptr<const DNA5SequenceCoding> mutant,
+                                                                     char delimiter,
+                                                                     VariantOutputIndex index_offset) const {
+  EditVector edit_vector;
+  createEditItems(reference->getSequenceAsString(), mutant->getSequenceAsString(), edit_vector);
+  size_t last_index = edit_vector.size() - 1;
+  size_t index = 0;
+  std::stringstream ss;
+  for (auto edit_item :edit_vector) {
+
+    ContigOffset_t codon_index = static_cast<size_t>(edit_item.reference_offset / 3);
+
+    std::shared_ptr<const Codon> mutant_codon(std::make_shared<Codon>(mutant, codon_index));
+    std::shared_ptr<const Codon> ref_codon(std::make_shared<Codon>(reference, codon_index));
+
+
+    ss << edit_item.reference_char << offsetOutput(edit_item.reference_offset, index_offset) << edit_item.mutant_char;
+    ss << " " << ref_codon->getSequenceAsString() << "-" << mutant_codon->getSequenceAsString();
+    ss << " " << AminoAcid::convertToChar(contig_ptr->getAminoAcid(*ref_codon))
+       << offsetOutput(codon_index, index_offset) << AminoAcid::convertToChar(contig_ptr->getAminoAcid(*mutant_codon));
+
+    if (index != last_index) {
+
+      ss << delimiter;
+
+    }
+
+    index++;
+
+
+  }
+
+  return ss.str();
+
+}
 
 
 
@@ -321,5 +369,17 @@ std::string kgl::SequenceComparison::editItems(const std::string& reference,
                                                  VariantOutputIndex index_offset) const {
 
   return sequence_manip_impl_ptr_->editItems(reference, mutant, delimiter, index_offset);
+
+}
+
+
+
+std::string kgl::SequenceComparison::editDNAItems(std::shared_ptr<const ContigFeatures> contig_ptr,
+                                                  std::shared_ptr<const DNA5SequenceCoding> reference,
+                                                  std::shared_ptr<const DNA5SequenceCoding> mutant,
+                                                  char delimiter,
+                                                  VariantOutputIndex index_offset) const {
+
+  return sequence_manip_impl_ptr_->editDNAItems(contig_ptr, reference, mutant, delimiter, index_offset);
 
 }

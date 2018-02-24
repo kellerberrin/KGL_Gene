@@ -94,8 +94,10 @@ void kgl::PhylogeneticApp::performAnalysis(const kgl::Phylogenetic& args,
 
   }
 
-//  std::string amino_mutation_file = kgl::Utility::filePath("AminoMutations", args.workDirectory) + ".csv";
-//  ApplicationAnalysis::outputMutationCSV(amino_mutation_file, PFATP4_CONTIG, PFATP4_GENE, PFATP4_SEQUENCE, genome_db_ptr, pop_variant_ptr);
+  std::string DNA_mutation_file = kgl::Utility::filePath("DNAMutations", args.workDirectory) + ".csv";
+  ApplicationAnalysis::outputDNAMutationCSV(DNA_mutation_file, PFATP4_CONTIG, PFATP4_GENE, PFATP4_SEQUENCE, genome_db_ptr, pop_variant_ptr);
+  std::string amino_mutation_file = kgl::Utility::filePath("AminoMutations", args.workDirectory) + ".csv";
+  ApplicationAnalysis::outputAminoMutationCSV(amino_mutation_file, PFATP4_CONTIG, PFATP4_GENE, PFATP4_SEQUENCE, genome_db_ptr, pop_variant_ptr);
 
   if (args.analysisType == kgl::Phylogenetic::ANALYZE_UPGMA or args.analysisType == kgl::Phylogenetic::WILDCARD) {
 
@@ -128,7 +130,7 @@ void kgl::PhylogeneticApp::performAnalysis(const kgl::Phylogenetic& args,
                                genome_db_ptr);
 
     std::shared_ptr<const LocalDNASequenceCompare>  compare_metric_ptr(std::make_shared<const DNALocalAffineGap>());
-    rna_analysis.compareRNARegion(0, 21, 1, compare_metric_ptr);
+    rna_analysis.compareRNARegion(0, 24, 1, compare_metric_ptr);
 
     rna_analysis.showResults(2);
 
