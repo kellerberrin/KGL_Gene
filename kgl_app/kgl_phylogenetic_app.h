@@ -26,14 +26,6 @@ public:
 
 private:
 
-  std::shared_ptr<const GenomeVariant>  getGenomeVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                          const std::string& file_name,
-                                                          bool vcf_is_gatk,
-                                                          const std::string& genome_name,
-                                                          Phred_t read_quality,
-                                                          Phred_t variant_quality,
-                                                          long min_count,
-                                                          double min_proportion);
 
   void performAnalysis(const Phylogenetic& args,
                        std::shared_ptr<const GenomeDatabase> genome_db_ptr,

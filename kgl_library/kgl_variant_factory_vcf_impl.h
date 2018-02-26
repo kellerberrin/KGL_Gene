@@ -14,9 +14,8 @@
 #include <boost/algorithm/string.hpp>
 #include <seqan/vcf_io.h>
 
-
-namespace kgl = kellerberrin::genome;
-namespace bt = boost;
+namespace kellerberrin {   //  organization level namespace
+namespace genome {   // project level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -27,9 +26,9 @@ namespace bt = boost;
 // VcfFactory::FreeBayesVCFImpl does all the heavy lifting using the 3rd party libraries, seqan and boost.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using ActiveContigMap = std::map<kgl::ContigId_t, kgl::ContigSize_t>;
+using ActiveContigMap = std::map<ContigId_t, ContigSize_t>;
 
-class kgl::VcfFactory::ParseVCFImpl {
+class ParseVCFImpl {
 
 public:
 
@@ -39,7 +38,7 @@ public:
 
 protected:
 
-  constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 5000;
+  constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 10000;
 
   size_t vcf_record_count_;
   size_t vcf_record_ignored_;
@@ -74,6 +73,11 @@ protected:
                   std::vector<std::pair<char, size_t>>& parsed_cigar) const;
 
 };
+
+
+
+}   // namespace genome
+}   // namespace kellerberrin
 
 
 

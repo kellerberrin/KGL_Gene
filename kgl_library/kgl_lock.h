@@ -14,6 +14,23 @@
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
+class AutoMutex {
+
+public:
+
+  AutoMutex(std::mutex& mutex) : mutex_(mutex) { mutex_.lock(); }
+  AutoMutex(const AutoMutex&) = delete;
+  ~AutoMutex() { mutex_.unlock(); }
+
+  const AutoMutex& operator=(const AutoMutex&) = delete;
+
+private:
+
+  std::mutex& mutex_;
+
+};
+
+
 // Provides a mutex for every element of an array. Classic speed/space trade off.
 // Advantages: Can be used on any processor and underlying data type. Disadvantages : slow and memory intensive.
 // Is significantly faster, and uses significantly more memory, than the GranularityLock defined below .

@@ -13,13 +13,11 @@
 #include "kgl_variant_factory_vcf_impl.h"
 #include "kgl_variant_factory_single.h"
 
-#include <boost/tokenizer.hpp>
-#include <boost/algorithm/string.hpp>
 #include <seqan/vcf_io.h>
 
 
-namespace kgl = kellerberrin::genome;
-namespace bt = boost;
+namespace kellerberrin {   //  organization level namespace
+namespace genome {   // project level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -31,7 +29,8 @@ namespace bt = boost;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class kgl::VcfFactory::FreeBayesVCFImpl : public kgl::VcfFactory::ParseVCFImpl {
+
+class FreeBayesVCFImpl : public ParseVCFImpl {
 
 public:
 
@@ -103,6 +102,11 @@ private:
 
 
 };
+
+
+
+}   // namespace genome
+}   // namespace kellerberrin
 
 
 

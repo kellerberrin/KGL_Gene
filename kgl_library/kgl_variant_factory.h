@@ -29,18 +29,40 @@ public:
   explicit VariantFactory() = default;
   virtual ~VariantFactory() = default;
 
-  std::shared_ptr<const GenomeVariant> createVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                      const std::string& genome_name,
-                                                      const std::string& variant_file_name,
-                                                      bool vcf_is_gatk,
-                                                      Phred_t read_quality,
-                                                      Phred_t variant_quality,
-                                                      NucleotideReadCount_t min_read_count,
-                                                      double min_proportion) const;
+  void createVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                      std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                      const std::string& genome_name,
+                      const std::string& variant_file_name,
+                      bool vcf_is_gatk,
+                      Phred_t read_quality,
+                      Phred_t variant_quality,
+                      NucleotideReadCount_t min_read_count,
+                      double min_proportion) const;
+
 
   static size_t addGenomeVariant(std::shared_ptr<GenomeVariant> genome_variants, std::shared_ptr<const Variant> variant_ptr);
 
 private:
+
+  bool isPf3kFileName(const std::string& variant_file_name) const;
+
+  std::shared_ptr<const GenomeVariant> createGenomeVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                                            const std::string& genome_name,
+                                                            const std::string& variant_file_name,
+                                                            bool vcf_is_gatk,
+                                                            Phred_t read_quality,
+                                                            Phred_t variant_quality,
+                                                            NucleotideReadCount_t min_read_count,
+                                                            double min_proportion) const;
+
+  bool createPf3kVariants(std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                          std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                          const std::string &vcf_file_name,
+                          Phred_t variant_quality) const;
+
+  void addGenome(std::shared_ptr<const GenomeVariant> genome_variant_ptr,
+                 std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                 Phred_t read_quality) const;
 
   std::shared_ptr<const GenomeVariant> createSamVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                                          const std::string& genome_name,
@@ -77,6 +99,7 @@ private:
   constexpr static const char* BAM_FILE_EXTENSTION_ = ".BAM";
   constexpr static const char* VCF_FILE_EXTENSTION_ = ".VCF";
   constexpr static const char* GATK_FILE_PREFIX_ = "GATK";
+  constexpr static const char* PF3K_FILE_PREFIX_ = "PF3K";
 
 };
 

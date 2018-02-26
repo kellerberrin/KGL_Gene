@@ -11,29 +11,47 @@
 #include "kgl_variant_factory_vcf.h"
 #include "kgl_variant_factory_vcf_impl.h"
 #include "kgl_variant_factory_single.h"
+#include "kgl_variant_factory_readvcf_impl.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
 #include <seqan/vcf_io.h>
 
 
-namespace kgl = kellerberrin::genome;
-namespace bt = boost;
+namespace kellerberrin {   //  organization level namespace
+namespace genome {   // project level namespace
 
-class kgl::VcfFactory::GATKVCFImpl : public kgl::VcfFactory::ParseVCFImpl {
+
+
+class GATKVCFImpl : public ParseVCFImpl {
 
 public:
 
-  GATKVCFImpl() = default;
+  GATKVCFImpl(const std::string& genome_name,
+              std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+              const std::string& vcf_file_name,
+              Phred_t variant_quality) :   genome_name_(genome_name),
+                                           genome_db_ptr_(genome_db_ptr),
+                                           vcf_file_name_(vcf_file_name),
+                                           variant_quality_(variant_quality) {
+
+    reader_ptr_ = std::make_shared<VCFReaderMT<GATKVCFImpl>>(this, &GATKVCFImpl::ProcessVCFRecord);
+    genome_single_variants_ = GenomeVariant::emptyGenomeVariant(genome_name_, genome_db_ptr_);
+
+  }
+
   ~GATKVCFImpl() override = default;
 
-  std::shared_ptr<GenomeVariant> readParseGATKVcfFile(const std::string& genome_name,
-                                                      std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                      const std::string& vcf_file_name,
-                                                      Phred_t variant_quality);
+  std::shared_ptr<GenomeVariant> readParseGATKVcfFile();
+
+  void ProcessVCFRecord(const seqan::VcfRecord& record_ptr);
 
 private:
 
+  std::shared_ptr<GenomeVariant> processParseGATKVcfFile(const std::string& genome_name,
+                                                         std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                                         const std::string& vcf_file_name,
+                                                         Phred_t variant_quality);
 
   bool parseVcfRecord(const std::string& genome_name,
                       const seqan::VcfRecord& record,
@@ -73,12 +91,23 @@ private:
                    ContigOffset_t contig_offset,
                    size_t& variant_count) const;
 
+  const std::string& genome_name_;
+  std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
+  const std::string& vcf_file_name_;
+  Phred_t variant_quality_;
+  std::shared_ptr<GenomeVariant> genome_single_variants_;
+
+  std::shared_ptr<VCFReaderMT<GATKVCFImpl>> reader_ptr_;
+
+  mutable std::mutex mutex_;
 
 
 };
 
 
 
+}   // namespace genome
+}   // namespace kellerberrin
 
 
 

@@ -10,21 +10,66 @@
 #include "kgl_variant_factory.h"
 #include "kgl_variant_factory_single.h"
 #include "kgl_variant_factory_compound.h"
+#include "kgl_filter.h"
 
 
 namespace kgl = kellerberrin::genome;
 
 
-std::shared_ptr<const kgl::GenomeVariant>
-kgl::VariantFactory::createVariants(std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr,
-                                    const std::string& genome_name,
-                                    const std::string& variant_file_name,
-                                    bool vcf_is_gatk,
-                                    Phred_t read_quality,
-                                    Phred_t variant_quality,
-                                    NucleotideReadCount_t min_read_count,
-                                    double min_proportion) const {
+void kgl::VariantFactory::createVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                         std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                                         const std::string& genome_name,
+                                         const std::string& variant_file_name,
+                                         bool vcf_is_gatk,
+                                         Phred_t read_quality,
+                                         Phred_t variant_quality,
+                                         NucleotideReadCount_t min_read_count,
+                                         double min_proportion) const {
 
+  if (isPf3kFileName(variant_file_name)) {
+
+    createPf3kVariants( pop_variant_ptr, genome_db_ptr, variant_file_name, variant_quality);
+
+  } else {
+
+
+    std::shared_ptr<const kgl::GenomeVariant> genome_variant_ptr = createGenomeVariants(genome_db_ptr,
+                                                                                        genome_name,
+                                                                                        variant_file_name,
+                                                                                        vcf_is_gatk,
+                                                                                        read_quality,
+                                                                                        variant_quality,
+                                                                                        min_read_count,
+                                                                                        min_proportion);
+
+    addGenome(genome_variant_ptr, pop_variant_ptr, read_quality);
+
+  }
+
+}
+
+
+bool kgl::VariantFactory::isPf3kFileName(const std::string& variant_file_name) const {
+
+  std::string file_name = kgl::Utility::fileName(variant_file_name);
+  std::transform(file_name.begin(), file_name.end(), file_name.begin(), ::toupper); // convert to UC for robust comparison
+  std::size_t gtk_prefix_length = std::strlen(PF3K_FILE_PREFIX_);
+  std::string file_name_prefix = file_name.substr(0, gtk_prefix_length);
+
+  return (file_name_prefix == PF3K_FILE_PREFIX_);
+
+}
+
+
+std::shared_ptr<const kgl::GenomeVariant>
+kgl::VariantFactory::createGenomeVariants(std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr,
+                                          const std::string& genome_name,
+                                          const std::string& variant_file_name,
+                                          bool vcf_is_gatk,
+                                          Phred_t read_quality,
+                                          Phred_t variant_quality,
+                                          NucleotideReadCount_t min_read_count,
+                                          double min_proportion) const {
 
 
   std::string file_ext = kgl::Utility::fileExtension(variant_file_name);
@@ -84,6 +129,7 @@ kgl::VariantFactory::createVariants(std::shared_ptr<const kgl::GenomeDatabase> g
 
   } else {
 
+    ExecEnv::log().error("Invalid file name: {}", variant_file_name);
     ExecEnv::log().critical("Unsupported file type: '{}' for variant calling. Must be SAM ('.sam'), BAM ('.bam') or  VCF ('.vcf')", file_ext);
 
   }
@@ -93,6 +139,24 @@ kgl::VariantFactory::createVariants(std::shared_ptr<const kgl::GenomeDatabase> g
 
 }
 
+
+void kgl::VariantFactory::addGenome(std::shared_ptr<const GenomeVariant> genome_variant_ptr,
+                                    std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                                    Phred_t read_quality) const {
+
+
+// Filter on  quality >= 5.
+  read_quality = read_quality < 5 ? 5 : read_quality;
+
+  std::shared_ptr<const kgl::GenomeVariant> filter_ptr = genome_variant_ptr->filterVariants(kgl::QualityFilter(read_quality));
+
+  kgl::ExecEnv::log().info("Filtered for quality: {}, Genome: {} has: {} variants",
+                           read_quality, genome_variant_ptr->genomeId(), filter_ptr->size());
+
+// Store the organism variants in the population object.
+  pop_variant_ptr->addGenomeVariant(filter_ptr);
+
+}
 
 
 std::shared_ptr<const kgl::GenomeVariant>
@@ -248,6 +312,17 @@ kgl::VariantFactory::aggregateVariants(const std::shared_ptr<const GenomeDatabas
 }
 
 
+bool kgl::VariantFactory::createPf3kVariants(std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                                             std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                             const std::string &vcf_file_name,
+                                             Phred_t variant_quality) const {
+
+  return VcfFactory().readParsePf3kVariants(pop_variant_ptr, genome_db_ptr, vcf_file_name, variant_quality);
+
+}
+
+
+
 size_t kgl::VariantFactory::addGenomeVariant(std::shared_ptr<GenomeVariant> genome_variants,
                                              std::shared_ptr<const Variant> variant_ptr) {
 
@@ -255,4 +330,6 @@ size_t kgl::VariantFactory::addGenomeVariant(std::shared_ptr<GenomeVariant> geno
   return 1;
 
 }
+
+
 

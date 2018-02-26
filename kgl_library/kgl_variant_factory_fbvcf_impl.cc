@@ -6,12 +6,16 @@
 #include "kgl_variant_factory_fbvcf_impl.h"
 #include "kgl_variant_factory_compound.h"
 
+#include <boost/tokenizer.hpp>
+#include <boost/algorithm/string.hpp>
+
+
 namespace kgl = kellerberrin::genome;
 namespace bt = boost;
 
 
 std::shared_ptr<kgl::GenomeVariant>
-kgl::VcfFactory::FreeBayesVCFImpl::readParseFreeBayesVcfFile(const std::string& genome_name,
+kgl::FreeBayesVCFImpl::readParseFreeBayesVcfFile(const std::string& genome_name,
                                                         std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                                         const std::string& vcf_file_name,
                                                         Phred_t variant_quality) {
@@ -121,13 +125,13 @@ kgl::VcfFactory::FreeBayesVCFImpl::readParseFreeBayesVcfFile(const std::string& 
 
 }
 
-bool kgl::VcfFactory::FreeBayesVCFImpl::parseVcfRecord(const std::string& genome_name,
-                                                  const seqan::VcfRecord& record,
-                                                  std::shared_ptr<const ContigFeatures> contig_ptr,
-                                                  std::shared_ptr<GenomeVariant> genome_variants,
-                                                  Phred_t variant_quality,
-                                                  bool& quality_ok,
-                                                  size_t& record_variants) const {
+bool kgl::FreeBayesVCFImpl::parseVcfRecord(const std::string& genome_name,
+                                           const seqan::VcfRecord& record,
+                                           std::shared_ptr<const ContigFeatures> contig_ptr,
+                                           std::shared_ptr<GenomeVariant> genome_variants,
+                                           Phred_t variant_quality,
+                                           bool& quality_ok,
+                                           size_t& record_variants) const {
 
   std::string info = toCString(record.info);
   // assumes input "key_1=value_1; ...;key_n=value_n"
@@ -276,13 +280,13 @@ bool kgl::VcfFactory::FreeBayesVCFImpl::parseVcfRecord(const std::string& genome
 }
 
 
-bool kgl::VcfFactory::FreeBayesVCFImpl::parseCheck(size_t cigar_count,
-                                              std::shared_ptr<const ContigFeatures> contig_ptr,
-                                              const std::string& reference,
-                                              const std::string& alternate,
-                                              size_t& reference_index,
-                                              size_t& alternate_index,
-                                              ContigOffset_t& contig_offset) const {
+bool kgl::FreeBayesVCFImpl::parseCheck(size_t cigar_count,
+                                       std::shared_ptr<const ContigFeatures> contig_ptr,
+                                       const std::string& reference,
+                                       const std::string& alternate,
+                                       size_t& reference_index,
+                                       size_t& alternate_index,
+                                       ContigOffset_t& contig_offset) const {
 
   for (size_t idx = 0; idx < cigar_count; ++idx) {
 
@@ -314,18 +318,18 @@ bool kgl::VcfFactory::FreeBayesVCFImpl::parseCheck(size_t cigar_count,
 }
 
 
-bool kgl::VcfFactory::FreeBayesVCFImpl::parseSNP(size_t cigar_count,
-                                            const std::string& variant_source,
-                                            std::shared_ptr<const ContigFeatures> contig_ptr,
-                                            std::shared_ptr<GenomeVariant> genome_variants,
-                                            Phred_t quality,
-                                            const std::string&, // info,
-                                            const std::string& reference,
-                                            const std::string& alternate,
-                                            size_t& reference_index,
-                                            size_t& alternate_index,
-                                            ContigOffset_t& contig_offset,
-                                            size_t& variant_count) const {
+bool kgl::FreeBayesVCFImpl::parseSNP(size_t cigar_count,
+                                     const std::string& variant_source,
+                                     std::shared_ptr<const ContigFeatures> contig_ptr,
+                                     std::shared_ptr<GenomeVariant> genome_variants,
+                                     Phred_t quality,
+                                     const std::string&, // info,
+                                     const std::string& reference,
+                                     const std::string& alternate,
+                                     size_t& reference_index,
+                                     size_t& alternate_index,
+                                     ContigOffset_t& contig_offset,
+                                     size_t& variant_count) const {
 
   for (size_t idx = 0; idx < cigar_count; ++idx) {
 
@@ -362,16 +366,16 @@ bool kgl::VcfFactory::FreeBayesVCFImpl::parseSNP(size_t cigar_count,
 }
 
 
-bool kgl::VcfFactory::FreeBayesVCFImpl::parseInsert(size_t cigar_count,
-                                               const std::string& variant_source,
-                                               std::shared_ptr<const ContigFeatures> contig_ptr,
-                                               std::shared_ptr<GenomeVariant> genome_variants,
-                                               Phred_t quality,
-                                               const std::string&, // info,
-                                               const std::string& alternate,
-                                               ContigOffset_t contig_offset,
-                                               size_t& alternate_index,
-                                               size_t& variant_count) const {
+bool kgl::FreeBayesVCFImpl::parseInsert(size_t cigar_count,
+                                        const std::string& variant_source,
+                                        std::shared_ptr<const ContigFeatures> contig_ptr,
+                                        std::shared_ptr<GenomeVariant> genome_variants,
+                                        Phred_t quality,
+                                        const std::string&, // info,
+                                        const std::string& alternate,
+                                        ContigOffset_t contig_offset,
+                                        size_t& alternate_index,
+                                        size_t& variant_count) const {
 
   CompoundVariantMap compound_variant_map;
 
@@ -422,16 +426,16 @@ bool kgl::VcfFactory::FreeBayesVCFImpl::parseInsert(size_t cigar_count,
 
 }
 
-bool kgl::VcfFactory::FreeBayesVCFImpl::parseDelete(size_t cigar_count,
-                                               const std::string& variant_source,
-                                               std::shared_ptr<const ContigFeatures> contig_ptr,
-                                               std::shared_ptr<GenomeVariant> genome_variants,
-                                               Phred_t quality,
-                                               const std::string&, // info,
-                                               const std::string& reference,
-                                               size_t& reference_index,
-                                               ContigOffset_t& contig_offset,
-                                               size_t& variant_count) const {
+bool kgl::FreeBayesVCFImpl::parseDelete(size_t cigar_count,
+                                        const std::string& variant_source,
+                                        std::shared_ptr<const ContigFeatures> contig_ptr,
+                                        std::shared_ptr<GenomeVariant> genome_variants,
+                                        Phred_t quality,
+                                        const std::string&, // info,
+                                        const std::string& reference,
+                                        size_t& reference_index,
+                                        ContigOffset_t& contig_offset,
+                                        size_t& variant_count) const {
 
   CompoundVariantMap compound_variant_map;
 

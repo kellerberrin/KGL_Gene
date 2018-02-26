@@ -9,10 +9,10 @@ namespace kgl = kellerberrin::genome;
 namespace bt = boost;
 
 
-bool kgl::VcfFactory::ParseVCFImpl::parseCigar(const std::string& cigar,
-                                               size_t& check_reference_size,
-                                               size_t& check_alternate_size,
-                                               std::vector<std::pair<char, size_t>>& parsed_cigar) const {
+bool kgl::ParseVCFImpl::parseCigar(const std::string& cigar,
+                                   size_t& check_reference_size,
+                                   size_t& check_alternate_size,
+                                   std::vector<std::pair<char, size_t>>& parsed_cigar) const {
 
   parsed_cigar.clear();
   check_reference_size = 0;
@@ -83,10 +83,10 @@ bool kgl::VcfFactory::ParseVCFImpl::parseCigar(const std::string& cigar,
 }
 
 
-bool kgl::VcfFactory::ParseVCFImpl::parseVcfHeader(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                   const seqan::VcfHeader& header,
-                                                   ActiveContigMap& active_contig_map,
-                                                   bool cigar_required) const {
+bool kgl::ParseVCFImpl::parseVcfHeader(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                       const seqan::VcfHeader& header,
+                                       ActiveContigMap& active_contig_map,
+                                       bool cigar_required) const {
 
   active_contig_map.clear();
   bool has_cigar = false;
@@ -194,7 +194,7 @@ bool kgl::VcfFactory::ParseVCFImpl::parseVcfHeader(std::shared_ptr<const GenomeD
 }
 
 // assumes input "<key_1=value_1, ...,key_n=value_n>"
-bool kgl::VcfFactory::ParseVCFImpl::tokenizeVcfHeaderKeyValues(const std::string& key_value_text,
+bool kgl::ParseVCFImpl::tokenizeVcfHeaderKeyValues(const std::string& key_value_text,
                                                                std::map<std::string, std::string>& key_value_map) const {
 
   key_value_map.clear();
@@ -236,7 +236,7 @@ bool kgl::VcfFactory::ParseVCFImpl::tokenizeVcfHeaderKeyValues(const std::string
 }
 
 // assumes input "key_1=value_1; ...;key_n=value_n"
-bool kgl::VcfFactory::ParseVCFImpl::tokenizeVcfInfoKeyValues(const std::string& key_value_text,
+bool kgl::ParseVCFImpl::tokenizeVcfInfoKeyValues(const std::string& key_value_text,
                                                              std::map<std::string, std::string>& key_value_map) const {
 
   key_value_map.clear();

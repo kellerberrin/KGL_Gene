@@ -5,11 +5,113 @@
 #include "kgl_variant_factory_compound.h"
 
 
+
+namespace kgl = kellerberrin::genome;
+namespace bt = boost;
+
+
+
+std::shared_ptr<kgl::GenomeVariant> kgl::GATKVCFImpl::readParseGATKVcfFile() {
+
+
+  // Process records.
+  // Copy the file record by record.
+  vcf_record_count_ = 0;
+  vcf_record_error_ = 0;
+  vcf_record_ignored_ = 0;
+  vcf_record_rejected_ = 0;
+  vcf_variant_count_ = 0;
+
+  reader_ptr_->readVCFFile(vcf_file_name_);
+
+/*
+  // Investigate header.
+  ActiveContigMap active_contig_map;
+  if (not parseVcfHeader(genome_db_ptr_, reader.getHeader(), active_contig_map, false)) {
+
+    ExecEnv::log().error("Problem parsing header information in VCF file: {}. No variants processed.", vcf_file_name_);
+    ss.str("");
+    writeHeader(vcfOut, header);
+    ExecEnv::log().error("The VCF file header:\n{}", ss.str());
+    return genome_single_variants_;
+
+  }
+*/
+
+  ExecEnv::log().info("VCF file Records; Read: {}, Rejected: {} (quality={}), Ignored: {} (no matching contig), Error: {}",
+                      vcf_record_count_, vcf_record_rejected_, variant_quality_, vcf_record_ignored_, vcf_record_error_);
+
+  ExecEnv::log().info("VCF file Variants; Total generated: {}, Variant database contains :{}, Identical variants ignored: {}",
+                      vcf_variant_count_, genome_single_variants_->size(), vcf_variant_count_ - genome_single_variants_->size());
+
+  return genome_single_variants_;
+
+}
+
+// This is multithreaded code called from the reader defined above.
+void kgl::GATKVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& record)
+{
+
+  size_t record_variants = 0;
+
+  ++vcf_record_count_;
+
+  ContigId_t contig_id = reader_ptr_->getContig(record.rID);
+  std::shared_ptr<const ContigFeatures> contig_ptr;
+  if (genome_db_ptr_->getContigSequence(contig_id, contig_ptr)) {
+
+    bool record_quality_ok;
+
+    if (not parseVcfRecord(genome_name_,
+                           record,
+                           contig_ptr,
+                           genome_single_variants_,
+                           variant_quality_,
+                           record_quality_ok,
+                           record_variants)) {
+
+
+      ++vcf_record_error_;
+      std::stringstream ss;
+//      writeRecord(vcfOut, record);
+//      ExecEnv::log().error("Error parsing VCF record:\n{}", ss.str());
+      ExecEnv::log().error("Error parsing VCF record\n");
+
+    }
+
+    if (not record_quality_ok) {
+
+      ++vcf_record_rejected_;
+
+    }
+
+  } else {
+
+    ++vcf_record_ignored_;
+
+  }
+
+
+  for (size_t idx = 0; idx < record_variants; ++idx) {
+
+    ++vcf_variant_count_;
+
+    if (vcf_variant_count_ % VARIANT_REPORT_INTERVAL_ == 0) {
+
+      ExecEnv::log().info("VCF file, generated: {} variants", vcf_variant_count_);
+
+    }
+
+  }
+
+}
+
+
 std::shared_ptr<kgl::GenomeVariant>
-kgl::VcfFactory::GATKVCFImpl::readParseGATKVcfFile(const std::string& genome_name,
-                                                   std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                   const std::string& vcf_file_name,
-                                                   Phred_t variant_quality) {
+kgl::GATKVCFImpl::processParseGATKVcfFile(const std::string& genome_name,
+                                          std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                          const std::string& vcf_file_name,
+                                          Phred_t variant_quality) {
 
   std::shared_ptr<GenomeVariant> genome_single_variants = kgl::GenomeVariant::emptyGenomeVariant(genome_name, genome_db_ptr);
 
@@ -120,13 +222,13 @@ kgl::VcfFactory::GATKVCFImpl::readParseGATKVcfFile(const std::string& genome_nam
 }
 
 
-bool kgl::VcfFactory::GATKVCFImpl::parseVcfRecord(const std::string& genome_name,
-                                                       const seqan::VcfRecord& record,
-                                                       std::shared_ptr<const ContigFeatures> contig_ptr,
-                                                       std::shared_ptr<GenomeVariant> genome_variants,
-                                                       Phred_t variant_quality,
-                                                       bool& quality_ok,
-                                                       size_t& record_variants) const {
+bool kgl::GATKVCFImpl::parseVcfRecord(const std::string& genome_name,
+                                      const seqan::VcfRecord& record,
+                                      std::shared_ptr<const ContigFeatures> contig_ptr,
+                                      std::shared_ptr<GenomeVariant> genome_variants,
+                                      Phred_t variant_quality,
+                                      bool& quality_ok,
+                                      size_t& record_variants) const {
 
 
   Phred_t quality = record.qual;
@@ -210,15 +312,15 @@ bool kgl::VcfFactory::GATKVCFImpl::parseVcfRecord(const std::string& genome_name
 }
 
 
-bool kgl::VcfFactory::GATKVCFImpl::parseSNP(const std::string& variant_source,
-                                            std::shared_ptr<const ContigFeatures> contig_ptr,
-                                            std::shared_ptr<GenomeVariant> genome_variants,
-                                            Phred_t quality,
-                                            const std::string&, // info,
-                                            const std::string& reference,
-                                            const std::string& alternate,
-                                            ContigOffset_t contig_offset,
-                                            size_t& variant_count) const {
+bool kgl::GATKVCFImpl::parseSNP(const std::string& variant_source,
+                                std::shared_ptr<const ContigFeatures> contig_ptr,
+                                std::shared_ptr<GenomeVariant> genome_variants,
+                                Phred_t quality,
+                                const std::string&, // info,
+                                const std::string& reference,
+                                const std::string& alternate,
+                                ContigOffset_t contig_offset,
+                                size_t& variant_count) const {
 
   // Check alternate and reference sizes.
   if (not (reference.size() == alternate.size() and reference.size() == 1)) {
@@ -248,6 +350,8 @@ bool kgl::VcfFactory::GATKVCFImpl::parseSNP(const std::string& variant_source,
                                                                            DNA5::convertChar(reference[0]),
                                                                            DNA5::convertChar(alternate[0])));
 
+  AutoMutex auto_mutex(mutex_);
+
   variant_count += VariantFactory::addGenomeVariant(genome_variants, snp_variant_ptr); // Annotate with genome information
 
   return true;
@@ -255,15 +359,15 @@ bool kgl::VcfFactory::GATKVCFImpl::parseSNP(const std::string& variant_source,
 }
 
 
-bool kgl::VcfFactory::GATKVCFImpl::parseInsert(const std::string& variant_source,
-                                               std::shared_ptr<const ContigFeatures> contig_ptr,
-                                               std::shared_ptr<GenomeVariant> genome_variants,
-                                               Phred_t quality,
-                                               const std::string&, // info,
-                                               const std::string& reference,
-                                               const std::string& alternate,
-                                               ContigOffset_t contig_offset,
-                                               size_t& variant_count) const {
+bool kgl::GATKVCFImpl::parseInsert(const std::string& variant_source,
+                                   std::shared_ptr<const ContigFeatures> contig_ptr,
+                                   std::shared_ptr<GenomeVariant> genome_variants,
+                                   Phred_t quality,
+                                   const std::string&, // info,
+                                   const std::string& reference,
+                                   const std::string& alternate,
+                                   ContigOffset_t contig_offset,
+                                   size_t& variant_count) const {
 
   CompoundVariantMap compound_variant_map;
 
@@ -318,6 +422,8 @@ bool kgl::VcfFactory::GATKVCFImpl::parseInsert(const std::string& variant_source
 
   }
 
+  AutoMutex auto_mutex(mutex_);
+
   if (compound_variant_map.size() > 1) {
 
     variant_count += VariantFactory::addGenomeVariant(genome_variants,CompoundInsertFactory().createCompoundVariant(compound_variant_map));
@@ -338,15 +444,15 @@ bool kgl::VcfFactory::GATKVCFImpl::parseInsert(const std::string& variant_source
 }
 
 
-bool kgl::VcfFactory::GATKVCFImpl::parseDelete(const std::string& variant_source,
-                                               std::shared_ptr<const ContigFeatures> contig_ptr,
-                                               std::shared_ptr<GenomeVariant> genome_variants,
-                                               Phred_t quality,
-                                               const std::string&, // info,
-                                               const std::string& reference,
-                                               const std::string& alternate,
-                                               ContigOffset_t contig_offset,
-                                               size_t& variant_count) const {
+bool kgl::GATKVCFImpl::parseDelete(const std::string& variant_source,
+                                   std::shared_ptr<const ContigFeatures> contig_ptr,
+                                   std::shared_ptr<GenomeVariant> genome_variants,
+                                   Phred_t quality,
+                                   const std::string&, // info,
+                                   const std::string& reference,
+                                   const std::string& alternate,
+                                   ContigOffset_t contig_offset,
+                                   size_t& variant_count) const {
 
   CompoundVariantMap compound_variant_map;
 
@@ -408,6 +514,8 @@ bool kgl::VcfFactory::GATKVCFImpl::parseDelete(const std::string& variant_source
     ++delete_offset;
 
   }
+
+  AutoMutex auto_mutex(mutex_);
 
   if (compound_variant_map.size() > 1) {
 
