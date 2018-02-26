@@ -54,6 +54,9 @@ protected:
   constexpr static const char* ID_READ_DEPTH_ = "DPB";
   constexpr static const char* ID_PROPORTION_ = "AF";
 
+  size_t addThreadSafeGenomeVariant(std::shared_ptr<GenomeVariant> genome_variants,
+                                    std::shared_ptr<const Variant> variant_ptr) const;
+
   bool parseVcfHeader(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                       const seqan::VcfHeader& header,
                       ActiveContigMap& active_contig_map,
@@ -71,6 +74,10 @@ protected:
                   size_t& check_reference_size,
                   size_t& check_alternate_size,
                   std::vector<std::pair<char, size_t>>& parsed_cigar) const;
+
+private:
+
+  mutable std::mutex mutex_;  // mutex to lock the GenomeVariant structure when inserting veriants.
 
 };
 

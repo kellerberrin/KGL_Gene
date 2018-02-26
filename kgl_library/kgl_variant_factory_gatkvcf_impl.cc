@@ -22,21 +22,18 @@ std::shared_ptr<kgl::GenomeVariant> kgl::GATKVCFImpl::readParseGATKVcfFile() {
   vcf_record_rejected_ = 0;
   vcf_variant_count_ = 0;
 
-  reader_ptr_->readVCFFile(vcf_file_name_);
 
-/*
   // Investigate header.
   ActiveContigMap active_contig_map;
-  if (not parseVcfHeader(genome_db_ptr_, reader.getHeader(), active_contig_map, false)) {
+  if (not parseVcfHeader(genome_db_ptr_, reader_ptr_->readHeader(), active_contig_map, false)) {
 
     ExecEnv::log().error("Problem parsing header information in VCF file: {}. No variants processed.", vcf_file_name_);
-    ss.str("");
-    writeHeader(vcfOut, header);
-    ExecEnv::log().error("The VCF file header:\n{}", ss.str());
     return genome_single_variants_;
 
   }
-*/
+
+  reader_ptr_->readVCFFile();
+
 
   ExecEnv::log().info("VCF file Records; Read: {}, Rejected: {} (quality={}), Ignored: {} (no matching contig), Error: {}",
                       vcf_record_count_, vcf_record_rejected_, variant_quality_, vcf_record_ignored_, vcf_record_error_);
@@ -72,10 +69,7 @@ void kgl::GATKVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& record)
 
 
       ++vcf_record_error_;
-      std::stringstream ss;
-//      writeRecord(vcfOut, record);
-//      ExecEnv::log().error("Error parsing VCF record:\n{}", ss.str());
-      ExecEnv::log().error("Error parsing VCF record\n");
+      ExecEnv::log().error("Error parsing VCF record");
 
     }
 
@@ -106,120 +100,6 @@ void kgl::GATKVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& record)
 
 }
 
-
-std::shared_ptr<kgl::GenomeVariant>
-kgl::GATKVCFImpl::processParseGATKVcfFile(const std::string& genome_name,
-                                          std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                          const std::string& vcf_file_name,
-                                          Phred_t variant_quality) {
-
-  std::shared_ptr<GenomeVariant> genome_single_variants = kgl::GenomeVariant::emptyGenomeVariant(genome_name, genome_db_ptr);
-
-
-  // Open input file.
-  seqan::VcfFileIn vcfIn(seqan::toCString(vcf_file_name));
-
-  // Attach VcfFileOut to string stream to dump record information.
-  std::stringstream ss;
-  seqan::VcfFileOut vcfOut(vcfIn);
-  seqan::open(vcfOut, ss, seqan::Vcf());
-
-  // Copy over header.
-  seqan::VcfHeader header;
-  readHeader(header, vcfIn);
-  writeHeader(vcfOut, header);
-
-  // Investigate header.
-  ActiveContigMap active_contig_map;
-  if (not parseVcfHeader(genome_db_ptr, header, active_contig_map, false)) {
-
-    ExecEnv::log().error("Problem parsing header information in VCF file: {}. No variants processed.", vcf_file_name);
-    ss.str("");
-    writeHeader(vcfOut, header);
-    ExecEnv::log().error("The VCF file header:\n{}", ss.str());
-    return genome_single_variants;
-
-  }
-
-  // Process records.
-  // Copy the file record by record.
-  vcf_record_count_ = 0;
-  vcf_record_error_ = 0;
-  vcf_record_ignored_ = 0;
-  vcf_record_rejected_ = 0;
-  vcf_variant_count_ = 0;
-
-
-  seqan::VcfRecord record;
-
-  while (!seqan::atEnd(vcfIn))
-  {
-
-    size_t record_variants = 0;
-
-    readRecord(record, vcfIn);
-
-    ++vcf_record_count_;
-
-    ContigId_t contig_id = seqan::toCString(contigNames(context(vcfIn))[record.rID]);
-    std::shared_ptr<const ContigFeatures> contig_ptr;
-
-    if (genome_db_ptr->getContigSequence(contig_id, contig_ptr)) {
-
-      bool record_quality_ok;
-
-      if (not parseVcfRecord(genome_name,
-                             record,
-                             contig_ptr,
-                             genome_single_variants,
-                             variant_quality,
-                             record_quality_ok,
-                             record_variants)) {
-
-        ++vcf_record_error_;
-        ss.str("");
-        writeRecord(vcfOut, record);
-        ExecEnv::log().error("Error parsing VCF record:\n{}", ss.str());
-
-      }
-
-      if (not record_quality_ok) {
-
-        ++vcf_record_rejected_;
-
-      }
-
-    } else {
-
-      ++vcf_record_ignored_;
-
-    }
-
-
-    for (size_t idx = 0; idx < record_variants; ++idx) {
-
-      ++vcf_variant_count_;
-
-      if (vcf_variant_count_ % VARIANT_REPORT_INTERVAL_ == 0) {
-
-        ExecEnv::log().info("VCF file, generated: {} variants", vcf_variant_count_);
-
-      }
-
-    }
-
-  }
-
-  ExecEnv::log().info("VCF file Records; Read: {}, Rejected: {} (quality={}), Ignored: {} (no matching contig), Error: {}",
-                      vcf_record_count_, vcf_record_rejected_, variant_quality, vcf_record_ignored_, vcf_record_error_);
-
-  ExecEnv::log().info("VCF file Variants; Total generated: {}, Variant database contains :{}, Identical variants ignored: {}",
-                      vcf_variant_count_, genome_single_variants->size(), vcf_variant_count_ - genome_single_variants->size());
-
-
-  return genome_single_variants;
-
-}
 
 
 bool kgl::GATKVCFImpl::parseVcfRecord(const std::string& genome_name,
@@ -350,9 +230,7 @@ bool kgl::GATKVCFImpl::parseSNP(const std::string& variant_source,
                                                                            DNA5::convertChar(reference[0]),
                                                                            DNA5::convertChar(alternate[0])));
 
-  AutoMutex auto_mutex(mutex_);
-
-  variant_count += VariantFactory::addGenomeVariant(genome_variants, snp_variant_ptr); // Annotate with genome information
+  variant_count += addThreadSafeGenomeVariant(genome_variants, snp_variant_ptr); // Annotate with genome information
 
   return true;
 
@@ -422,15 +300,14 @@ bool kgl::GATKVCFImpl::parseInsert(const std::string& variant_source,
 
   }
 
-  AutoMutex auto_mutex(mutex_);
 
   if (compound_variant_map.size() > 1) {
 
-    variant_count += VariantFactory::addGenomeVariant(genome_variants,CompoundInsertFactory().createCompoundVariant(compound_variant_map));
+    variant_count += addThreadSafeGenomeVariant(genome_variants,CompoundInsertFactory().createCompoundVariant(compound_variant_map));
 
   } else if (compound_variant_map.size() == 1) {
 
-    variant_count += VariantFactory::addGenomeVariant(genome_variants, compound_variant_map.begin()->second); // Annotate with genome information
+    variant_count += addThreadSafeGenomeVariant(genome_variants, compound_variant_map.begin()->second); // Annotate with genome information
 
   } else {
 
@@ -515,15 +392,13 @@ bool kgl::GATKVCFImpl::parseDelete(const std::string& variant_source,
 
   }
 
-  AutoMutex auto_mutex(mutex_);
-
   if (compound_variant_map.size() > 1) {
 
-    variant_count += VariantFactory::addGenomeVariant(genome_variants,CompoundDeleteFactory().createCompoundVariant(compound_variant_map));
+    variant_count += addThreadSafeGenomeVariant(genome_variants,CompoundDeleteFactory().createCompoundVariant(compound_variant_map));
 
   } else if (compound_variant_map.size() == 1) {
 
-    variant_count += VariantFactory::addGenomeVariant(genome_variants, compound_variant_map.begin()->second); // Annotate with genome information
+    variant_count += addThreadSafeGenomeVariant(genome_variants, compound_variant_map.begin()->second); // Annotate with genome information
 
   } else {
 

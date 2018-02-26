@@ -22,9 +22,9 @@ std::shared_ptr<kgl::GenomeVariant> kgl::VcfFactory::readParseFreeBayesVcf(const
                                                                            const std::string &vcf_file_name,
                                                                            Phred_t variant_quality) const {
 
-  FreeBayesVCFImpl fb_vcf_impl;
+  FreeBayesVCFImpl reader(genome_name, genome_db_ptr, vcf_file_name, variant_quality);
 
-  return fb_vcf_impl.readParseFreeBayesVcfFile(genome_name, genome_db_ptr, vcf_file_name, variant_quality);
+  return reader.readParseFreeBayesVcfFile();
 
 }
 

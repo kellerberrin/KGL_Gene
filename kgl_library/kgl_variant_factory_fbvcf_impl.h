@@ -11,7 +11,7 @@
 #include "kgl_utility.h"
 #include "kgl_variant_factory_vcf.h"
 #include "kgl_variant_factory_vcf_impl.h"
-#include "kgl_variant_factory_single.h"
+#include "kgl_variant_factory_readvcf_impl.h"
 
 #include <seqan/vcf_io.h>
 
@@ -34,13 +34,24 @@ class FreeBayesVCFImpl : public ParseVCFImpl {
 
 public:
 
-  FreeBayesVCFImpl() = default;
+  FreeBayesVCFImpl(const std::string& genome_name,
+                   std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                   const std::string& vcf_file_name,
+                   Phred_t variant_quality) :   genome_name_(genome_name),
+                                                genome_db_ptr_(genome_db_ptr),
+                                                vcf_file_name_(vcf_file_name),
+                                                variant_quality_(variant_quality) {
+
+    reader_ptr_ = std::make_shared<VCFReaderMT<FreeBayesVCFImpl>>(vcf_file_name, this, &FreeBayesVCFImpl::ProcessVCFRecord);
+    genome_single_variants_ = GenomeVariant::emptyGenomeVariant(genome_name_, genome_db_ptr_);
+
+  }
+
   ~FreeBayesVCFImpl() override = default;
 
-  std::shared_ptr<GenomeVariant> readParseFreeBayesVcfFile(const std::string& genome_name,
-                                                           std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                           const std::string& vcf_file_name,
-                                                           Phred_t variant_quality);
+  std::shared_ptr<GenomeVariant> readParseFreeBayesVcfFile();
+
+  void ProcessVCFRecord(const seqan::VcfRecord& record_ptr);
 
 private:
 
@@ -100,6 +111,13 @@ private:
                    ContigOffset_t& contig_offset,
                    size_t& variant_count) const;
 
+  const std::string& genome_name_;
+  std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
+  const std::string& vcf_file_name_;
+  Phred_t variant_quality_;
+  std::shared_ptr<GenomeVariant> genome_single_variants_;
+
+  std::shared_ptr<VCFReaderMT<FreeBayesVCFImpl>> reader_ptr_;
 
 };
 

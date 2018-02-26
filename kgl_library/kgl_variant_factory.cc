@@ -323,8 +323,8 @@ bool kgl::VariantFactory::createPf3kVariants(std::shared_ptr<PopulationVariant> 
 
 
 
-size_t kgl::VariantFactory::addGenomeVariant(std::shared_ptr<GenomeVariant> genome_variants,
-                                             std::shared_ptr<const Variant> variant_ptr) {
+size_t kgl::VariantFactory::addGenomeSingleThreadVariant(std::shared_ptr<GenomeVariant> genome_variants,
+                                             std::shared_ptr<const Variant> variant_ptr) const {
 
   genome_variants->addVariant(variant_ptr);
   return 1;

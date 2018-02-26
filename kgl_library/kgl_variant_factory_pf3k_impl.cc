@@ -20,9 +20,9 @@ bool kgl::Pf3kVCFImpl::readParsePf3kVariants() {
 
   ExecEnv::log().info("readParsePf3kVariants(), parsing file: {}", vcf_file_name_);
 
-  VCFReaderMT<Pf3kVCFImpl> reader(this, &Pf3kVCFImpl::ProcessVCFRecord);
+  VCFReaderMT<Pf3kVCFImpl> reader(vcf_file_name_, this, &Pf3kVCFImpl::ProcessVCFRecord);
 
-  reader.readVCFFile(vcf_file_name_);
+  reader.readVCFFile();
 
   return true;
 

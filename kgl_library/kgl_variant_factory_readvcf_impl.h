@@ -28,18 +28,23 @@ public:
   using ConsumerFunctionPtr = void (ConsumerMT::*)(const seqan::VcfRecord& record_ptr);
   using ConsumerObjPtr = ConsumerMT*;
 
-  explicit VCFReaderMT(ConsumerObjPtr consumer_obj, ConsumerFunctionPtr consumer_fn_ptr) : producer_consumer_queue_(HIGH_TIDE_, LOW_TIDE_),
-                                                                                           consumer_obj_ptr_(consumer_obj),
-                                                                                           consumer_fn_ptr_(consumer_fn_ptr),
-                                                                                           vcf_header_ptr_(std::make_unique<seqan::VcfHeader>())  {
+  explicit VCFReaderMT(const std::string& vcf_file_name,
+                       ConsumerObjPtr consumer_obj,
+                       ConsumerFunctionPtr consumer_fn_ptr) : vcf_file_name_(vcf_file_name),
+                                                              producer_consumer_queue_(HIGH_TIDE_, LOW_TIDE_),
+                                                              consumer_obj_ptr_(consumer_obj),
+                                                              consumer_fn_ptr_(consumer_fn_ptr),
+                                                              vcf_header_ptr_(std::make_unique<seqan::VcfHeader>())  {
+
+    vcfIn_ptr_ = std::make_shared<seqan::VcfFileIn>(seqan::toCString(vcf_file_name_));
     report_increment_ = 0;
 
   }
   virtual ~VCFReaderMT() = default;
 
-  void readVCFFile(const std::string &vcf_file_name);
+  const seqan::VcfHeader& readHeader() const;
 
-  const seqan::VcfHeader& getHeader() const { return *vcf_header_ptr_; }
+  void readVCFFile();
 
   const std::string getContig(int32_t contig_idx) const;
 
@@ -47,6 +52,7 @@ public:
 
 private:
 
+  const std::string vcf_file_name_;
   BoundedMtQueue<std::unique_ptr<seqan::VcfRecord>> producer_consumer_queue_; // The Producer/Consumer record queue
   ConsumerObjPtr consumer_obj_ptr_;                          // Object to consumer the VCF records.
   ConsumerFunctionPtr consumer_fn_ptr_;                  // Function to consume the VCF records.
@@ -71,6 +77,7 @@ private:
 
 };
 
+
 template <class ConsumerMT>
 const std::string VCFReaderMT<ConsumerMT>::getContig(int32_t contig_idx) const {
 
@@ -83,11 +90,19 @@ const std::string VCFReaderMT<ConsumerMT>::getContig(int32_t contig_idx) const {
 }
 
 template <class ConsumerMT>
-void VCFReaderMT<ConsumerMT>::readVCFFile( const std::string &vcf_file_name) {
+const seqan::VcfHeader& VCFReaderMT<ConsumerMT>::readHeader() const {
 
-  ExecEnv::log().info("Begin processing VCF file: {}", vcf_file_name);
+  seqan::readHeader(*vcf_header_ptr_, *vcfIn_ptr_);
 
-  vcfIn_ptr_ = std::make_shared<seqan::VcfFileIn>(seqan::toCString(vcf_file_name));
+  return *vcf_header_ptr_;
+
+}
+
+
+template <class ConsumerMT>
+void VCFReaderMT<ConsumerMT>::readVCFFile() {
+
+  ExecEnv::log().info("Begin processing VCF file: {}", vcf_file_name_);
 
   // Spawn consumer threads.
   consumer_thread_count_ = std::thread::hardware_concurrency();

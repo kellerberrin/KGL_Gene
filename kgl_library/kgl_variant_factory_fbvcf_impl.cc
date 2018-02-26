@@ -14,39 +14,9 @@ namespace kgl = kellerberrin::genome;
 namespace bt = boost;
 
 
-std::shared_ptr<kgl::GenomeVariant>
-kgl::FreeBayesVCFImpl::readParseFreeBayesVcfFile(const std::string& genome_name,
-                                                        std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                        const std::string& vcf_file_name,
-                                                        Phred_t variant_quality) {
 
-  std::shared_ptr<GenomeVariant> genome_single_variants = kgl::GenomeVariant::emptyGenomeVariant(genome_name, genome_db_ptr);
+std::shared_ptr<kgl::GenomeVariant> kgl::FreeBayesVCFImpl::readParseFreeBayesVcfFile() {
 
-
-  // Open input file.
-  seqan::VcfFileIn vcfIn(seqan::toCString(vcf_file_name));
-
-  // Attach VcfFileOut to string stream to dump record information.
-  std::stringstream ss;
-  seqan::VcfFileOut vcfOut(vcfIn);
-  seqan::open(vcfOut, ss, seqan::Vcf());
-
-  // Copy over header.
-  seqan::VcfHeader header;
-  readHeader(header, vcfIn);
-  writeHeader(vcfOut, header);
-
-  // Investigate header.
-  ActiveContigMap active_contig_map;
-  if (not parseVcfHeader(genome_db_ptr, header, active_contig_map, true)) {
-
-    ExecEnv::log().error("Problem parsing header information in VCF file: {}. No variants processed.", vcf_file_name);
-    ss.str("");
-    writeHeader(vcfOut, header);
-    ExecEnv::log().error("The VCF file header:\n{}", ss.str());
-    return genome_single_variants;
-
-  }
 
   // Process records.
   // Copy the file record by record.
@@ -57,73 +27,83 @@ kgl::FreeBayesVCFImpl::readParseFreeBayesVcfFile(const std::string& genome_name,
   vcf_variant_count_ = 0;
 
 
-  seqan::VcfRecord record;
+  // Investigate header.
+  ActiveContigMap active_contig_map;
+  if (not parseVcfHeader(genome_db_ptr_, reader_ptr_->readHeader(), active_contig_map, false)) {
 
-  while (!seqan::atEnd(vcfIn))
-  {
+    ExecEnv::log().error("Problem parsing header information in VCF file: {}. No variants processed.", vcf_file_name_);
+    return genome_single_variants_;
 
-    size_t record_variants = 0;
+  }
 
-    readRecord(record, vcfIn);
+  reader_ptr_->readVCFFile();
 
-    ++vcf_record_count_;
 
-    ContigId_t contig_id = seqan::toCString(contigNames(context(vcfIn))[record.rID]);
-    std::shared_ptr<const ContigFeatures> contig_ptr;
-    if (genome_db_ptr->getContigSequence(contig_id, contig_ptr)) {
+  ExecEnv::log().info("VCF file Records; Read: {}, Rejected: {} (quality={}), Ignored: {} (no matching contig), Error: {}",
+                      vcf_record_count_, vcf_record_rejected_, variant_quality_, vcf_record_ignored_, vcf_record_error_);
 
-      bool record_quality_ok;
-      if (not parseVcfRecord(genome_name,
-                             record,
-                             contig_ptr,
-                             genome_single_variants,
-                             variant_quality,
-                             record_quality_ok,
-                             record_variants)) {
+  ExecEnv::log().info("VCF file Variants; Total generated: {}, Variant database contains :{}, Identical variants ignored: {}",
+                      vcf_variant_count_, genome_single_variants_->size(), vcf_variant_count_ - genome_single_variants_->size());
 
-        ++vcf_record_error_;
-        ss.str("");
-        writeRecord(vcfOut, record);
-        ExecEnv::log().error("Error parsing VCF record:\n{}", ss.str());
+  return genome_single_variants_;
 
-      }
+}
 
-      if (not record_quality_ok) {
+// This is multithreaded code called from the reader defined above.
+void kgl::FreeBayesVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& record)
+{
 
-        ++vcf_record_rejected_;
+  size_t record_variants = 0;
 
-      }
+  ++vcf_record_count_;
 
-    } else {
+  ContigId_t contig_id = reader_ptr_->getContig(record.rID);
+  std::shared_ptr<const ContigFeatures> contig_ptr;
+  if (genome_db_ptr_->getContigSequence(contig_id, contig_ptr)) {
 
-      ++vcf_record_ignored_;
+    bool record_quality_ok;
+
+    if (not parseVcfRecord(genome_name_,
+                           record,
+                           contig_ptr,
+                           genome_single_variants_,
+                           variant_quality_,
+                           record_quality_ok,
+                           record_variants)) {
+
+
+      ++vcf_record_error_;
+      ExecEnv::log().error("Error parsing VCF record");
 
     }
 
-    for (size_t idx = 0; idx < record_variants; ++idx) {
+    if (not record_quality_ok) {
 
-      ++vcf_variant_count_;
+      ++vcf_record_rejected_;
 
-      if (vcf_variant_count_ % VARIANT_REPORT_INTERVAL_ == 0) {
+    }
 
-        ExecEnv::log().info("VCF file, generated: {} variants", vcf_variant_count_);
+  } else {
 
-      }
+    ++vcf_record_ignored_;
+
+  }
+
+
+  for (size_t idx = 0; idx < record_variants; ++idx) {
+
+    ++vcf_variant_count_;
+
+    if (vcf_variant_count_ % VARIANT_REPORT_INTERVAL_ == 0) {
+
+      ExecEnv::log().info("VCF file, generated: {} variants", vcf_variant_count_);
 
     }
 
   }
 
-  ExecEnv::log().info("VCF file Records; Read: {}, Rejected: {} (quality={}), Ignored: {} (no matching contig), Error: {}",
-                      vcf_record_count_, vcf_record_rejected_, variant_quality, vcf_record_ignored_, vcf_record_error_);
-
-  ExecEnv::log().info("VCF file Variants; Total generated: {}, Variant database contains :{}, Identical variants ignored: {}",
-                      vcf_variant_count_, genome_single_variants->size(), vcf_variant_count_ - genome_single_variants->size());
-
-
-  return genome_single_variants;
-
 }
+
 
 bool kgl::FreeBayesVCFImpl::parseVcfRecord(const std::string& genome_name,
                                            const seqan::VcfRecord& record,
@@ -353,7 +333,7 @@ bool kgl::FreeBayesVCFImpl::parseSNP(size_t cigar_count,
                                                                              DNA5::convertChar(reference[reference_index]),
                                                                              DNA5::convertChar(alternate[alternate_index])));
 
-    variant_count += VariantFactory::addGenomeVariant(genome_variants, snp_variant_ptr); // Annotate with genome information
+    variant_count += addThreadSafeGenomeVariant(genome_variants, snp_variant_ptr); // Annotate with genome information
 
     ++reference_index;
     ++alternate_index;
@@ -409,11 +389,11 @@ bool kgl::FreeBayesVCFImpl::parseInsert(size_t cigar_count,
 
   if (compound_variant_map.size() > 1) {
 
-    variant_count += VariantFactory::addGenomeVariant(genome_variants,CompoundInsertFactory().createCompoundVariant(compound_variant_map));
+    variant_count += addThreadSafeGenomeVariant(genome_variants,CompoundInsertFactory().createCompoundVariant(compound_variant_map));
 
   } else if (compound_variant_map.size() == 1) {
 
-    variant_count += VariantFactory::addGenomeVariant(genome_variants, compound_variant_map.begin()->second); // Annotate with genome information
+    variant_count += addThreadSafeGenomeVariant(genome_variants, compound_variant_map.begin()->second); // Annotate with genome information
 
   } else {
 
@@ -477,11 +457,11 @@ bool kgl::FreeBayesVCFImpl::parseDelete(size_t cigar_count,
 
   if (compound_variant_map.size() > 1) {
 
-    variant_count += VariantFactory::addGenomeVariant(genome_variants,CompoundDeleteFactory().createCompoundVariant(compound_variant_map));
+    variant_count += addThreadSafeGenomeVariant(genome_variants,CompoundDeleteFactory().createCompoundVariant(compound_variant_map));
 
   } else if (compound_variant_map.size() == 1) {
 
-    variant_count += VariantFactory::addGenomeVariant(genome_variants, compound_variant_map.begin()->second); // Annotate with genome information
+    variant_count += addThreadSafeGenomeVariant(genome_variants, compound_variant_map.begin()->second); // Annotate with genome information
 
   } else {
 

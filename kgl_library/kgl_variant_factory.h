@@ -40,7 +40,7 @@ public:
                       double min_proportion) const;
 
 
-  static size_t addGenomeVariant(std::shared_ptr<GenomeVariant> genome_variants, std::shared_ptr<const Variant> variant_ptr);
+  size_t addGenomeSingleThreadVariant(std::shared_ptr<GenomeVariant> genome_variants, std::shared_ptr<const Variant> variant_ptr) const;
 
 private:
 
@@ -100,6 +100,7 @@ private:
   constexpr static const char* VCF_FILE_EXTENSTION_ = ".VCF";
   constexpr static const char* GATK_FILE_PREFIX_ = "GATK";
   constexpr static const char* PF3K_FILE_PREFIX_ = "PF3K";
+
 
 };
 

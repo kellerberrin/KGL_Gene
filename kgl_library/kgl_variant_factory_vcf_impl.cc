@@ -9,6 +9,19 @@ namespace kgl = kellerberrin::genome;
 namespace bt = boost;
 
 
+
+size_t kgl::ParseVCFImpl::addThreadSafeGenomeVariant(std::shared_ptr<GenomeVariant> genome_variants,
+                                                     std::shared_ptr<const Variant> variant_ptr) const {
+
+  AutoMutex auto_mutex(mutex_);
+
+  genome_variants->addVariant(variant_ptr);
+
+  return 1;
+
+}
+
+
 bool kgl::ParseVCFImpl::parseCigar(const std::string& cigar,
                                    size_t& check_reference_size,
                                    size_t& check_alternate_size,

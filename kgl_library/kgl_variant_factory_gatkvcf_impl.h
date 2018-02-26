@@ -35,7 +35,7 @@ public:
                                            vcf_file_name_(vcf_file_name),
                                            variant_quality_(variant_quality) {
 
-    reader_ptr_ = std::make_shared<VCFReaderMT<GATKVCFImpl>>(this, &GATKVCFImpl::ProcessVCFRecord);
+    reader_ptr_ = std::make_shared<VCFReaderMT<GATKVCFImpl>>(vcf_file_name, this, &GATKVCFImpl::ProcessVCFRecord);
     genome_single_variants_ = GenomeVariant::emptyGenomeVariant(genome_name_, genome_db_ptr_);
 
   }
@@ -98,8 +98,6 @@ private:
   std::shared_ptr<GenomeVariant> genome_single_variants_;
 
   std::shared_ptr<VCFReaderMT<GATKVCFImpl>> reader_ptr_;
-
-  mutable std::mutex mutex_;
 
 
 };
