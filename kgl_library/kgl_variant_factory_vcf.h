@@ -24,16 +24,18 @@ public:
   ~VcfFactory() = default;
 
   // Functionality passed to the implmentation.
-  std::shared_ptr<GenomeVariant> readParseFreeBayesVcf(const std::string &genome_name,
-                                                       std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                       const std::string &vcf_file_name,
-                                                       Phred_t variant_quality) const;
+  bool readParseFreeBayesVcf(const std::string &genome_name,
+                             std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                             std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                             const std::string &vcf_file_name,
+                             Phred_t variant_quality) const;
 
   // Functionality passed to the implmentation.
-  std::shared_ptr<GenomeVariant> readParseGATKVcf(const std::string &genome_name,
-                                                  std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                  const std::string &vcf_file_name,
-                                                  Phred_t variant_quality) const;
+  bool readParseGATKVcf(const std::string &genome_name,
+                        std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                        std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                        const std::string &vcf_file_name,
+                        Phred_t variant_quality) const;
 
   bool readParsePf3kVariants(std::shared_ptr<PopulationVariant> pop_variant_ptr,
                              std::shared_ptr<const GenomeDatabase> genome_db_ptr,

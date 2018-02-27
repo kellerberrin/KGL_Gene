@@ -14,6 +14,11 @@
 
 #include <seqan/vcf_io.h>
 
+#include <boost/tokenizer.hpp>
+#include <boost/algorithm/string.hpp>
+
+namespace bt = boost;
+
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
@@ -36,6 +41,7 @@ public:
                                                               consumer_fn_ptr_(consumer_fn_ptr),
                                                               vcf_header_ptr_(std::make_unique<seqan::VcfHeader>())  {
 
+    parseFieldNames(vcf_file_name_);
     vcfIn_ptr_ = std::make_shared<seqan::VcfFileIn>(seqan::toCString(vcf_file_name_));
     report_increment_ = 0;
 
@@ -45,6 +51,8 @@ public:
   const seqan::VcfHeader& readHeader() const;
 
   void readVCFFile();
+
+  const std::vector<std::string>& getFieldNames() const { return field_names_; }
 
   const std::string getContig(int32_t contig_idx) const;
 
@@ -56,6 +64,7 @@ private:
   BoundedMtQueue<std::unique_ptr<seqan::VcfRecord>> producer_consumer_queue_; // The Producer/Consumer record queue
   ConsumerObjPtr consumer_obj_ptr_;                          // Object to consumer the VCF records.
   ConsumerFunctionPtr consumer_fn_ptr_;                  // Function to consume the VCF records.
+  std::vector<std::string> field_names_;                // Field (genome) names for the VCF record
 
   std::shared_ptr<seqan::VcfHeader> vcf_header_ptr_; // the vcf file header record
   std::shared_ptr<seqan::VcfFileIn> vcfIn_ptr_; // Open input file.
@@ -70,12 +79,91 @@ private:
   int consumer_thread_count_{2};                      // Consumer threads (defaults to local CPU cores available)
   static constexpr int MAX_CONSUMER_THREADS_{16};     // Spawning more threads does not increase performance
 
-  // Read the SAM file and queue the record in a BoundedMtQueue.
+  static constexpr const char* FIELD_NAME_FRAGMENT_{"#CHROM"};
+  static constexpr const size_t FIELD_NAME_FRAGMENT_LENGTH_{6};
+  static constexpr const size_t SKIP_FIELD_NAMES_{9};
+
+  // Read the VCF file and queue the record in a BoundedMtQueue.
   void VCFProducer();
-  // Call the template SAM consumer class
+  // Call the template VCF consumer class
   void VCFConsumer();
 
+  void parseFieldNames(const std::string& vcf_file_name);
+
 };
+
+
+template <class ConsumerMT>
+void VCFReaderMT<ConsumerMT>::parseFieldNames(const std::string& vcf_file_name) {
+
+  std::ifstream vcf_file;
+
+  // Open input file.
+
+  vcf_file.open(vcf_file_name);
+
+  if (not vcf_file.good()) {
+
+    ExecEnv::log().critical("I/O error; could not open VCF file: {}", vcf_file_name);
+
+  }
+
+  try {
+
+    long counter = 0;
+    bool found_header = false;
+
+
+    while (true) {
+
+      std::string record_str;
+
+      if (std::getline(vcf_file, record_str).eof()) break;
+
+      std::string line_prefix = record_str.substr(0, FIELD_NAME_FRAGMENT_LENGTH_);
+
+      if (line_prefix == FIELD_NAME_FRAGMENT_) {
+
+        found_header = true;
+        size_t field_count = 0;
+        bt::char_separator<char> item_key_sep("\t");
+        bt::tokenizer<bt::char_separator<char>> tokenize_item(record_str, item_key_sep);
+        for(auto iter_item = tokenize_item.begin(); iter_item != tokenize_item.end(); ++iter_item) {
+
+          if (field_count >= SKIP_FIELD_NAMES_) {
+
+            field_names_.push_back(*iter_item);
+
+          }
+
+          ++field_count;
+
+        }
+        break;
+
+      }
+
+      ++counter;
+
+    }
+
+    vcf_file.close();
+
+    if (not found_header) {
+
+      ExecEnv::log().error("VCF Field Names Not Found");
+
+    }
+
+  }
+  catch (std::exception const &e) {
+
+    ExecEnv::log().critical("VCF file: {}, unexpected I/O exception: {}", vcf_file_name, e.what());
+
+  }
+
+}
+
 
 
 template <class ConsumerMT>

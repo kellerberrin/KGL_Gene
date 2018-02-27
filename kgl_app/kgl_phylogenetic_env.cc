@@ -338,18 +338,6 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
   addOption(parser, seqan::ArgParseOption(translationTableShortFlag_, translationTableFlag_, translation_table_desc, seqan::ArgParseArgument::STRING, "STRING"));
 
-  const char* gatk_desc =
-  R"(Flag. ALL vcf files are parsed as formatted by the GATK format caller. Any FreeBayes generated vcf files will FAIL
-  to parse if this flag is used. Note that if this flag is NOT specified, vcf file names tagged with the prefix
-  'gatk<Name>.vcf' (case insensitive) are automatically treated as GATK formatted files.
-  This allows a mixture of FreeBayes and GATK derived vcf files to be used in a single analysis.)";
-
-  const char* gatkFlag_ = "gatk_only";
-  const char* gatkShortFlag_ = "k";
-
-  addOption(parser, seqan::ArgParseOption(gatkShortFlag_, gatkFlag_, gatk_desc, seqan::ArgParseArgument::BOOL, "FLAG"));
-
-
   const char* verbose_desc =
   R"(Flag. Enables verbose logged output to screen and log file.)";
 
@@ -547,8 +535,6 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   if (seqan::isSet(parser, minimumProportionFlag_)) seqan::getOptionValue(args_.minProportion, parser, minimumProportionFlag_);
 
   if (seqan::isSet(parser, translationTableFlag_)) seqan::getOptionValue(args_.aminoTranslationTable, parser, translationTableFlag_);
-
-  if (seqan::isSet(parser, gatkFlag_)) seqan::getOptionValue(args_.vcfAllGATK, parser, gatkFlag_);
 
   if (seqan::isSet(parser, verboseFlag_)) seqan::getOptionValue(args_.verbose, parser, verboseFlag_);
 

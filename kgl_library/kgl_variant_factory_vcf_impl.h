@@ -8,10 +8,8 @@
 
 #include "kgl_utility.h"
 #include "kgl_variant_factory_vcf.h"
-#include "kgl_variant_factory_single.h"
+#include "kgl_variant_factory_readvcf_impl.h"
 
-#include <boost/tokenizer.hpp>
-#include <boost/algorithm/string.hpp>
 #include <seqan/vcf_io.h>
 
 namespace kellerberrin {   //  organization level namespace
@@ -19,11 +17,7 @@ namespace genome {   // project level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// VCF (freebayes) parser. Low-level implementation. Do not include this file in any source files except the following:
-// kgl_variant_factory_vcf_fbimpl.cc
-// kgl_variant_factory_vcf_gatkimpl.cc
-// kgl_variant_factory_vcf_impl.cc
-// VcfFactory::FreeBayesVCFImpl does all the heavy lifting using the 3rd party libraries, seqan and boost.
+// VCF parser. Multi threaded implementation.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using ActiveContigMap = std::map<ContigId_t, ContigSize_t>;
@@ -32,9 +26,26 @@ class ParseVCFImpl {
 
 public:
 
-  ParseVCFImpl() = default;
+  ParseVCFImpl(std::shared_ptr<PopulationVariant> pop_variant_ptr,
+               std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+               const std::string& vcf_file_name,
+               Phred_t variant_quality) : pop_variant_ptr_(pop_variant_ptr),
+                                          genome_db_ptr_(genome_db_ptr),
+                                          vcf_file_name_(vcf_file_name),
+                                          variant_quality_(variant_quality) {
+
+    reader_ptr_ = std::make_shared<VCFReaderMT<ParseVCFImpl>>(vcf_file_name, this, &ParseVCFImpl::ProcessVCFRecord);
+
+  }
+
+
   virtual ~ParseVCFImpl() = default;
 
+  virtual void readParseVCFImpl();
+
+  virtual void ProcessVCFRecord(const seqan::VcfRecord& record_ptr) = 0;
+
+  const std::vector<std::string>& getGenomeNames() const { return reader_ptr_->getFieldNames(); }
 
 protected:
 
@@ -75,11 +86,19 @@ protected:
                   size_t& check_alternate_size,
                   std::vector<std::pair<char, size_t>>& parsed_cigar) const;
 
+  std::shared_ptr<PopulationVariant> pop_variant_ptr_;
+  std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
+  const std::string vcf_file_name_;
+  Phred_t variant_quality_;
+
+  std::shared_ptr<VCFReaderMT<ParseVCFImpl>> reader_ptr_;
+
 private:
 
-  mutable std::mutex mutex_;  // mutex to lock the GenomeVariant structure when inserting veriants.
+  mutable std::mutex mutex_;  // mutex to lock the GenomeVariant structure when inserting variants.
 
 };
+
 
 
 

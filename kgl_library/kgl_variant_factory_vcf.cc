@@ -17,26 +17,32 @@ namespace kgl = kellerberrin::genome;
 
 
 
-std::shared_ptr<kgl::GenomeVariant> kgl::VcfFactory::readParseFreeBayesVcf(const std::string &genome_name,
-                                                                           std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                                           const std::string &vcf_file_name,
-                                                                           Phred_t variant_quality) const {
+bool kgl::VcfFactory::readParseFreeBayesVcf(const std::string &genome_name,
+                                            std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                                            std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                            const std::string &vcf_file_name,
+                                            Phred_t variant_quality) const {
 
-  FreeBayesVCFImpl reader(genome_name, genome_db_ptr, vcf_file_name, variant_quality);
+  FreeBayesVCFImpl reader(genome_name, pop_variant_ptr, genome_db_ptr, vcf_file_name, variant_quality);
 
-  return reader.readParseFreeBayesVcfFile();
+  reader.readParseVCFImpl();
+
+  return true;
 
 }
 
 
-std::shared_ptr<kgl::GenomeVariant> kgl::VcfFactory::readParseGATKVcf(const std::string &genome_name,
-                                                                      std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                                      const std::string &vcf_file_name,
-                                                                      Phred_t variant_quality) const {
+bool kgl::VcfFactory::readParseGATKVcf(const std::string &genome_name,
+                                       std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                                       std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                       const std::string &vcf_file_name,
+                                       Phred_t variant_quality) const {
 
-  GATKVCFImpl reader(genome_name, genome_db_ptr, vcf_file_name, variant_quality);
+  GATKVCFImpl reader(genome_name, pop_variant_ptr, genome_db_ptr, vcf_file_name, variant_quality);
 
-  return reader.readParseGATKVcfFile();
+  reader.readParseVCFImpl();
+
+  return true;
 
 }
 
@@ -48,7 +54,9 @@ bool kgl::VcfFactory::readParsePf3kVariants(std::shared_ptr<PopulationVariant> p
 
   Pf3kVCFImpl reader(pop_variant_ptr, genome_db_ptr, vcf_file_name, variant_quality);
 
-  return reader.readParsePf3kVariants();
+  reader.readParseVCFImpl();
+
+  return true;
 
 }
 

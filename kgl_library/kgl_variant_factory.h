@@ -33,7 +33,6 @@ public:
                       std::shared_ptr<PopulationVariant> pop_variant_ptr,
                       const std::string& genome_name,
                       const std::string& variant_file_name,
-                      bool vcf_is_gatk,
                       Phred_t read_quality,
                       Phred_t variant_quality,
                       NucleotideReadCount_t min_read_count,
@@ -42,23 +41,13 @@ public:
 
   size_t addGenomeSingleThreadVariant(std::shared_ptr<GenomeVariant> genome_variants, std::shared_ptr<const Variant> variant_ptr) const;
 
+  static std::shared_ptr<const GenomeVariant> aggregateVariants(const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
+                                                                const std::string& genome_name,
+                                                                const std::shared_ptr<const GenomeVariant>& single_variant_ptr);
+
 private:
 
-  bool isPf3kFileName(const std::string& variant_file_name) const;
-
-  std::shared_ptr<const GenomeVariant> createGenomeVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                            const std::string& genome_name,
-                                                            const std::string& variant_file_name,
-                                                            bool vcf_is_gatk,
-                                                            Phred_t read_quality,
-                                                            Phred_t variant_quality,
-                                                            NucleotideReadCount_t min_read_count,
-                                                            double min_proportion) const;
-
-  bool createPf3kVariants(std::shared_ptr<PopulationVariant> pop_variant_ptr,
-                          std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                          const std::string &vcf_file_name,
-                          Phred_t variant_quality) const;
+  bool isFileNamePrefix(const std::string& prefix, const std::string& variant_file_name) const;
 
   void addGenome(std::shared_ptr<const GenomeVariant> genome_variant_ptr,
                  std::shared_ptr<PopulationVariant> pop_variant_ptr,
@@ -80,20 +69,6 @@ private:
                                                          NucleotideReadCount_t min_read_count,
                                                          double min_proportion) const;
 
-  std::shared_ptr<const GenomeVariant> createFreeBayesVcfVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                                  const std::string &genome_name,
-                                                                  const std::string &vcf_file_name,
-                                                                  Phred_t variant_quality) const;
-
-  std::shared_ptr<const GenomeVariant> createGATKVcfVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                             const std::string &genome_name,
-                                                             const std::string &vcf_file_name,
-                                                             Phred_t variant_quality) const;
-
-
-  std::shared_ptr<const GenomeVariant> aggregateVariants(const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
-                                                         const std::string& genome_name,
-                                                         const std::shared_ptr<const GenomeVariant>& single_variant_ptr) const;
 
   constexpr static const char* SAM_FILE_EXTENSTION_ = ".SAM";
   constexpr static const char* BAM_FILE_EXTENSTION_ = ".BAM";

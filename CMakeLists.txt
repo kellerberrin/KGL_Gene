@@ -138,7 +138,7 @@ set(LIBRARY_SOURCE_FILES
         )
 
 # 3rd party library for fast Leveshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_library/kgl_gaf_parser.h kgl_library/kgl_gaf_parser.cc kgl_library/kgl_sequence_compare.h kgl_library/kgl_sequence_compare_impl.h kgl_library/kgl_sequence_compare_impl.cc kgl_library/kgl_sequence_distance.h kgl_library/kgl_genome_types.cc kgl_library/kgl_sequence_distance_impl.h kgl_library/kgl_sequence_distance_impl.cc kgl_library/kgl_variant_factory_pf3k_impl.h kgl_library/kgl_variant_factory_pf3k_impl.cc kgl_library/kgl_variant_factory_readvcf_impl.h)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_library/kgl_gaf_parser.h kgl_library/kgl_gaf_parser.cc kgl_library/kgl_sequence_compare.h kgl_library/kgl_sequence_compare_impl.h kgl_library/kgl_sequence_compare_impl.cc kgl_library/kgl_sequence_distance.h kgl_library/kgl_genome_types.cc kgl_library/kgl_sequence_distance_impl.h kgl_library/kgl_sequence_distance_impl.cc kgl_library/kgl_variant_factory_pf3k_impl.h kgl_library/kgl_variant_factory_pf3k_impl.cc kgl_library/kgl_variant_factory_readvcf_impl.h kgl_library/kgl_variant_factory_genome_vcf_impl.h kgl_library/kgl_variant_factory_genome_vcf_impl.cc)
 
 set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_main.cc

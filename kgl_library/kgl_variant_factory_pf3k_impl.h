@@ -15,35 +15,19 @@ namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 
-class Pf3kVCFImpl  {
+class Pf3kVCFImpl : public ParseVCFImpl {
 
 public:
 
   Pf3kVCFImpl(std::shared_ptr<PopulationVariant> pop_variant_ptr,
               std::shared_ptr<const GenomeDatabase> genome_db_ptr,
               const std::string &vcf_file_name,
-              Phred_t variant_quality) : pop_variant_ptr_(pop_variant_ptr),
-                                         genome_db_ptr_(genome_db_ptr),
-                                         vcf_file_name_(vcf_file_name),
-                                         variant_quality_(variant_quality) {
-
-    vcf_variant_count_ = 0;
-
-  }
+              Phred_t variant_quality) : ParseVCFImpl(pop_variant_ptr, genome_db_ptr, vcf_file_name, variant_quality) {}
   ~Pf3kVCFImpl() = default;
 
-  bool readParsePf3kVariants();
-
-  void ProcessVCFRecord(const seqan::VcfRecord& record_ptr);
+  void ProcessVCFRecord(const seqan::VcfRecord& record_ptr) override;
 
 private:
-
-
-  std::shared_ptr<PopulationVariant> pop_variant_ptr_;
-  std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
-  std::string vcf_file_name_;
-  Phred_t variant_quality_;
-  size_t vcf_variant_count_;
 
   constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 1000;
 

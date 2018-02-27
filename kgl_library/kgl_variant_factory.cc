@@ -20,112 +20,56 @@ void kgl::VariantFactory::createVariants(std::shared_ptr<const GenomeDatabase> g
                                          std::shared_ptr<PopulationVariant> pop_variant_ptr,
                                          const std::string& genome_name,
                                          const std::string& variant_file_name,
-                                         bool vcf_is_gatk,
                                          Phred_t read_quality,
                                          Phred_t variant_quality,
                                          NucleotideReadCount_t min_read_count,
                                          double min_proportion) const {
 
-  if (isPf3kFileName(variant_file_name)) {
-
-    createPf3kVariants( pop_variant_ptr, genome_db_ptr, variant_file_name, variant_quality);
-
-  } else {
-
-
-    std::shared_ptr<const kgl::GenomeVariant> genome_variant_ptr = createGenomeVariants(genome_db_ptr,
-                                                                                        genome_name,
-                                                                                        variant_file_name,
-                                                                                        vcf_is_gatk,
-                                                                                        read_quality,
-                                                                                        variant_quality,
-                                                                                        min_read_count,
-                                                                                        min_proportion);
-
-    addGenome(genome_variant_ptr, pop_variant_ptr, read_quality);
-
-  }
-
-}
-
-
-bool kgl::VariantFactory::isPf3kFileName(const std::string& variant_file_name) const {
-
-  std::string file_name = kgl::Utility::fileName(variant_file_name);
-  std::transform(file_name.begin(), file_name.end(), file_name.begin(), ::toupper); // convert to UC for robust comparison
-  std::size_t gtk_prefix_length = std::strlen(PF3K_FILE_PREFIX_);
-  std::string file_name_prefix = file_name.substr(0, gtk_prefix_length);
-
-  return (file_name_prefix == PF3K_FILE_PREFIX_);
-
-}
-
-
-std::shared_ptr<const kgl::GenomeVariant>
-kgl::VariantFactory::createGenomeVariants(std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr,
-                                          const std::string& genome_name,
-                                          const std::string& variant_file_name,
-                                          bool vcf_is_gatk,
-                                          Phred_t read_quality,
-                                          Phred_t variant_quality,
-                                          NucleotideReadCount_t min_read_count,
-                                          double min_proportion) const {
-
-
   std::string file_ext = kgl::Utility::fileExtension(variant_file_name);
   std::transform(file_ext.begin(), file_ext.end(), file_ext.begin(), ::toupper); // convert to UC for robust comparison
 
-  std::shared_ptr<const kgl::GenomeVariant> variant_ptr;
+  if (file_ext == VCF_FILE_EXTENSTION_) {
 
-  if (file_ext == SAM_FILE_EXTENSTION_) {
+    if (isFileNamePrefix(PF3K_FILE_PREFIX_, variant_file_name)) {
 
-    variant_ptr = createSamVariants(genome_db_ptr,
-                                    genome_name,
-                                    variant_file_name,
-                                    read_quality,
-                                    variant_quality,
-                                    min_read_count,
-                                    min_proportion);
+      ExecEnv::log().info("Processing Pf3k VCF file: {}", variant_file_name);
+      VcfFactory().readParsePf3kVariants(pop_variant_ptr, genome_db_ptr, variant_file_name, variant_quality);
 
-  } else if (file_ext == BAM_FILE_EXTENSTION_) {
+    } else if (isFileNamePrefix(GATK_FILE_PREFIX_, variant_file_name)) {
 
-    variant_ptr = createBamVariants(genome_db_ptr,
-                                    genome_name,
-                                    variant_file_name,
-                                    read_quality,
-                                    variant_quality,
-                                    min_read_count,
-                                    min_proportion);
+      ExecEnv::log().info("Processing VCF file: {}", variant_file_name);
+      ExecEnv::log().info("Generating GATK variants for Genome: {}", genome_name);
+      VcfFactory().readParseGATKVcf(genome_name, pop_variant_ptr, genome_db_ptr, variant_file_name, variant_quality);;
 
-  } else if (file_ext == VCF_FILE_EXTENSTION_) {
+    } else {
 
-    if (vcf_is_gatk) {
-
-
-      variant_ptr = createGATKVcfVariants(genome_db_ptr, genome_name, variant_file_name, variant_quality);
-
-
-    } else { // Check if the prefix of the file is "gatk" (case insenstive).
-
-      std::string file_name = kgl::Utility::fileName(variant_file_name);
-      std::transform(file_name.begin(), file_name.end(), file_name.begin(), ::toupper); // convert to UC for robust comparison
-      std::size_t gtk_prefix_length = std::strlen(GATK_FILE_PREFIX_);
-      std::string file_name_prefix = file_name.substr(0, gtk_prefix_length);
-
-      if (file_name_prefix == GATK_FILE_PREFIX_) {
-
-        variant_ptr = createGATKVcfVariants(genome_db_ptr, genome_name, variant_file_name, variant_quality);
-
-      } else {
-
-        variant_ptr = createFreeBayesVcfVariants(genome_db_ptr, genome_name, variant_file_name, variant_quality);
-
-      }
-
+      ExecEnv::log().info("Processing VCF file: {}", variant_file_name);
+      ExecEnv::log().info("Generating Freebayes variants for Genome: {}", genome_name);
+      VcfFactory().readParseFreeBayesVcf(genome_name, pop_variant_ptr, genome_db_ptr, variant_file_name, variant_quality);
 
     }
 
+  } else if (file_ext == SAM_FILE_EXTENSTION_) {
 
+    std::shared_ptr<const kgl::GenomeVariant> variant_ptr = createSamVariants(genome_db_ptr,
+                                                                              genome_name,
+                                                                              variant_file_name,
+                                                                              read_quality,
+                                                                              variant_quality,
+                                                                              min_read_count,
+                                                                              min_proportion);
+    addGenome(variant_ptr, pop_variant_ptr, read_quality);
+
+  } else if (file_ext == BAM_FILE_EXTENSTION_) {
+
+    std::shared_ptr<const kgl::GenomeVariant> variant_ptr = createBamVariants(genome_db_ptr,
+                                                                              genome_name,
+                                                                              variant_file_name,
+                                                                              read_quality,
+                                                                              variant_quality,
+                                                                              min_read_count,
+                                                                              min_proportion);
+    addGenome(variant_ptr, pop_variant_ptr, read_quality);
 
   } else {
 
@@ -134,8 +78,16 @@ kgl::VariantFactory::createGenomeVariants(std::shared_ptr<const kgl::GenomeDatab
 
   }
 
+}
 
-  return variant_ptr;
+
+bool kgl::VariantFactory::isFileNamePrefix(const std::string& prefix, const std::string& variant_file_name) const {
+
+  std::string file_name = kgl::Utility::fileName(variant_file_name);
+  std::transform(file_name.begin(), file_name.end(), file_name.begin(), ::toupper); // convert to UC for robust comparison
+  std::string file_name_prefix = file_name.substr(0, prefix.length());
+
+  return (file_name_prefix == prefix);
 
 }
 
@@ -194,56 +146,6 @@ kgl::VariantFactory::createSamVariants(std::shared_ptr<const GenomeDatabase> gen
 
 
 std::shared_ptr<const kgl::GenomeVariant>
-kgl::VariantFactory::createFreeBayesVcfVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                const std::string &genome_name,
-                                                const std::string &vcf_file_name,
-                                                Phred_t variant_quality) const {
-
-
-  ExecEnv::log().info("Processing VCF file: {}", vcf_file_name);
-  ExecEnv::log().info("Generating Freebayes variants for Genome: {}", genome_name);
-  // generate snp raw variants.
-  std::shared_ptr<const GenomeVariant> fb_variant_ptr = VcfFactory().readParseFreeBayesVcf(genome_name,
-                                                                                           genome_db_ptr,
-                                                                                           vcf_file_name,
-                                                                                           variant_quality);
-
-  ExecEnv::log().info("Generated: {} Freebayes variants for Genome: {}", fb_variant_ptr->size(), genome_name);
-
-  // Do we still need this step?
-  std::shared_ptr<const GenomeVariant> variant_ptr = aggregateVariants(genome_db_ptr, genome_name, fb_variant_ptr);
-
-  return variant_ptr;
-
-}
-
-
-std::shared_ptr<const kgl::GenomeVariant>
-kgl::VariantFactory::createGATKVcfVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                           const std::string &genome_name,
-                                           const std::string &vcf_file_name,
-                                           Phred_t variant_quality) const {
-
-
-  ExecEnv::log().info("Processing VCF file: {}", vcf_file_name);
-  ExecEnv::log().info("Generating GATK variants for Genome: {}", genome_name);
-  // generate snp raw variants.
-  std::shared_ptr<const GenomeVariant> gatk_variant_ptr = VcfFactory().readParseGATKVcf(genome_name,
-                                                                                        genome_db_ptr,
-                                                                                        vcf_file_name,
-                                                                                        variant_quality);
-
-  ExecEnv::log().info("Generated: {} GATK variants for Genome: {}", gatk_variant_ptr->size(), genome_name);
-
-  std::shared_ptr<const GenomeVariant> variant_ptr = aggregateVariants(genome_db_ptr, genome_name, gatk_variant_ptr);
-
-  return variant_ptr;
-
-}
-
-
-
-std::shared_ptr<const kgl::GenomeVariant>
 kgl::VariantFactory::createBamVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                        const std::string& genome_name,
                                        const std::string& bam_file_name,
@@ -277,7 +179,7 @@ kgl::VariantFactory::createBamVariants(std::shared_ptr<const GenomeDatabase> gen
 std::shared_ptr<const kgl::GenomeVariant>
 kgl::VariantFactory::aggregateVariants(const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
                                        const std::string& genome_name,
-                                       const std::shared_ptr<const kgl::GenomeVariant>& single_variant_ptr) const {
+                                       const std::shared_ptr<const kgl::GenomeVariant>& single_variant_ptr) {
 
 
   ExecEnv::log().info("Generating Compound variants for Genome: {}", genome_name);
@@ -310,17 +212,6 @@ kgl::VariantFactory::aggregateVariants(const std::shared_ptr<const GenomeDatabas
   return variant_ptr;
 
 }
-
-
-bool kgl::VariantFactory::createPf3kVariants(std::shared_ptr<PopulationVariant> pop_variant_ptr,
-                                             std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                             const std::string &vcf_file_name,
-                                             Phred_t variant_quality) const {
-
-  return VcfFactory().readParsePf3kVariants(pop_variant_ptr, genome_db_ptr, vcf_file_name, variant_quality);
-
-}
-
 
 
 size_t kgl::VariantFactory::addGenomeSingleThreadVariant(std::shared_ptr<GenomeVariant> genome_variants,

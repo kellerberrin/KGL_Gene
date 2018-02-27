@@ -31,7 +31,6 @@ kgl::PhylogeneticApp::PhylogeneticApp(const kgl::Phylogenetic& args) {
                                          pop_variant_ptr,
                                          file.genome_name,
                                          file.file_name,
-                                         args.vcfAllGATK,
                                          args.readQuality,
                                          args.variantQuality,
                                          args.minCount,

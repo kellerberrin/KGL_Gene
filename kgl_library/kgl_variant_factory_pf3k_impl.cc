@@ -16,18 +16,6 @@ namespace bt = boost;
 
 
 
-bool kgl::Pf3kVCFImpl::readParsePf3kVariants() {
-
-  ExecEnv::log().info("readParsePf3kVariants(), parsing file: {}", vcf_file_name_);
-
-  VCFReaderMT<Pf3kVCFImpl> reader(vcf_file_name_, this, &Pf3kVCFImpl::ProcessVCFRecord);
-
-  reader.readVCFFile();
-
-  return true;
-
-}
-
 // This is multithreaded code called from the reader defined above.
 void kgl::Pf3kVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& record_ptr)
 {
@@ -39,5 +27,44 @@ void kgl::Pf3kVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& record_ptr)
     ExecEnv::log().info("VCF file, generated: {} variants", vcf_variant_count_);
 
   }
+
+  if (getGenomeNames().size() != seqan::length(record_ptr.genotypeInfos)) {
+
+    ExecEnv::log().warn("Genome Name Size: {}, Genotype count: {}",
+                        getGenomeNames().size(), seqan::length(record_ptr.genotypeInfos));
+
+  }
+
+
+  static bool first_record = true;
+
+  if (first_record) {
+
+    first_record = false;
+
+    std::cout << "Alt:" << record_ptr.alt << std::endl;
+    std::cout << "Pos:" << record_ptr.beginPos << std::endl;
+    std::cout << "Filter:" << record_ptr.filter << std::endl;
+    std::cout << "Format:" << record_ptr.format << std::endl;
+    std::cout << "Id:" << record_ptr.id << std::endl;
+    std::cout << "Info:" << record_ptr.info << std::endl;
+    std::cout << "Qual:" << record_ptr.qual << std::endl;
+    std::cout << "Ref:" << record_ptr.ref << std::endl;
+    std::cout << "Rid:" << record_ptr.rID << std::endl;
+
+    auto it = seqan::begin(record_ptr.genotypeInfos);
+    auto end = seqan::end(record_ptr.genotypeInfos);
+
+    while (it != end)
+    {
+
+      std::cout << "Genotype:" << *it << std::endl;
+      ++it;
+
+    }
+
+
+  }
+
 
 }
