@@ -39,6 +39,7 @@ public:
   size_t GTOffset() const { return GT_offset_; }
   size_t GQOffset() const { return GQ_offset_; }
   size_t PLOffset() const { return PL_offset_; }
+  const std::vector<std::string>& alleles() const { return alleles_; }
 
 private:
 
@@ -50,7 +51,7 @@ private:
   size_t GQ_offset_;
   size_t PL_offset_;
   size_t required_size_;
-  AlphabetString<DNA5> reference_;
+  std::string reference_;
   std::vector<std::string> alleles_;
   ContigOffset_t allele_offset_;
   std::shared_ptr<const ContigFeatures> contig_ptr_;
@@ -88,22 +89,34 @@ class ParseVCFGenotype {
 
 public:
 
-  ParseVCFGenotype() : format_count_(0), parse_result_(false) {}
+  ParseVCFGenotype(const seqan::CharString& format_char_string) : format_count_(0),
+                                                                  parse_result_(false) {
+
+    parseGenotype(format_char_string);
+
+  }
   ~ParseVCFGenotype() = default;
 
-  bool parseGenotype(const seqan::CharString& format_char_string);
 
-  std::string getPLstring(size_t PLoffset, const seqan::CharString& format_char_string) const;
+  // Get a format field as a string.
+  std::string getFormatString(size_t format_offset, const seqan::CharString &format_char_string) const;
+
+  // Get the first char of a format field.
+  char getFormatChar(size_t format_offset, const seqan::CharString &format_char_string) const;
 
   size_t formatCount() const { return format_count_; }
 
   const FormatArray& formatOffsets() const { return format_offsets_; }
 
+  constexpr static const char FORMAT_SEPARATOR_ = ':';
+
+
 private:
 
-
   constexpr static const size_t MAX_FORMAT_SIZE_ = 100;
-  constexpr static const char FORMAT_SEPARATOR_ = ':';
+
+  // Parse format fields
+  bool parseGenotype(const seqan::CharString& format_char_string);
 
   size_t format_count_;
   FormatArray format_offsets_;
@@ -112,6 +125,31 @@ private:
 
 };
 
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Diploid genotype.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+using DiploidAlleles = std::vector<std::pair<size_t, size_t>>;  // .first is A, .second is B.
+
+class DiploidGenotypes {
+
+public:
+
+  DiploidGenotypes() {}
+  ~DiploidGenotypes() = default;
+
+  void generateGenotypeVector(size_t max_alleles);
+
+private:
+
+  DiploidAlleles generateGenetype(size_t allele_count);
+
+  std::vector<DiploidAlleles> diploid_alleles_;
+
+};
 
 
 }   // namespace genome

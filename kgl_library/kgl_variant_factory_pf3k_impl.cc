@@ -12,8 +12,7 @@ namespace kgl = kellerberrin::genome;
 
 
 // This is multithreaded code called from the reader defined above.
-void kgl::Pf3kVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& vcf_record)
-{
+void kgl::Pf3kVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& vcf_record) {
 
   static bool first_record = true;
 
@@ -63,39 +62,36 @@ void kgl::Pf3kVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& vcf_record)
 
 */
 
-  }
+    auto it = seqan::begin(vcf_record.genotypeInfos);
+    auto end = seqan::end(vcf_record.genotypeInfos);
+    size_t genotype_count = 0;
+    size_t valid_genotype_count = 0;
 
-  ParseVCFGenotype genotype_parser;
+    while (it != end)
+    {
 
-  auto it = seqan::begin(vcf_record.genotypeInfos);
-  auto end = seqan::end(vcf_record.genotypeInfos);
-  size_t genotype_count = 0;
-  size_t valid_genotype_count = 0;
+      ParseVCFGenotype genotype_parser(*it);
 
-  while (it != end)
-  {
+      if (genotype_parser.formatCount() == recordParser.requiredFormatSize()) {
 
-    genotype_parser.parseGenotype(*it);
+        if (genotype_parser.getFormatChar(recordParser.PLOffset(), *it) != PL_CHECK_ZERO_) {
 
-    if (genotype_parser.formatCount() == recordParser.requiredFormatSize()) {
+          ++valid_genotype_count;
 
-      size_t first_PL_char_offset = genotype_parser.formatOffsets()[recordParser.PLOffset()].first;
+          ExecEnv::log().info("Alleles : {}, GT : {}, GQ : {}, PL : {}",
+                              recordParser.alleles().size(),
+                              genotype_parser.getFormatString(recordParser.GTOffset(), *it),
+                              genotype_parser.getFormatString(recordParser.GQOffset(), *it),
+                              genotype_parser.getFormatString(recordParser.PLOffset(), *it));
 
-      if ((*it)[first_PL_char_offset] != PL_CHECK_ZERO_) {
-
-        ++valid_genotype_count;
-        ExecEnv::log().info("PL String : {}", genotype_parser.getPLstring(recordParser.PLOffset(), *it));
+        }
 
       }
 
+      ++genotype_count;
+      ++it;
+
     }
-
-    ++genotype_count;
-    ++it;
-
-  }
-
-  if (first_record) {
 
     ExecEnv::log().info("Genotype count: {}, Valid Genotype count: {}", genotype_count, valid_genotype_count);
 

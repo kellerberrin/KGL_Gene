@@ -51,7 +51,7 @@ bool kgl::ParseVCFRecord::parseRecord(const ContigId_t& contig_id, std::shared_p
   required_size_ = requiredFormatSize();  // Must have this many format fields in a Genotype.
 
   // Get the reference DNA
-  reference_.assignString(seqan::toCString(vcf_record_.ref));
+  reference_ = seqan::toCString(vcf_record_.ref);
 
   // Get the allelle DNA vector.
   parseString(seqan::toCString(vcf_record_.alt), ALLELE_SEPARATOR_, alleles_);
@@ -71,10 +71,10 @@ bool kgl::ParseVCFRecord::parseRecord(const ContigId_t& contig_id, std::shared_p
 
   std::shared_ptr<const DNA5SequenceLinear> contig_ref = contig_ptr->sequence().unstrandedRegion(allele_offset_, reference_.length());
 
-  if (contig_ref->getSequenceAsString() != reference_.str()) {
+  if (contig_ref->getSequenceAsString() != reference_) {
 
     ExecEnv::log().error("Variant reference: {} does not match Contig region: {} at offset: {}",
-                         reference_.str(), contig_ref->getSequenceAsString(), allele_offset_);
+                         reference_, contig_ref->getSequenceAsString(), allele_offset_);
     parse_result = false;
 
   }
@@ -196,7 +196,7 @@ bool kgl::ParseVCFGenotype::parseGenotype(const seqan::CharString& format_char_s
 }
 
 
-std::string kgl::ParseVCFGenotype::getPLstring(size_t PLoffset, const seqan::CharString& format_char_string) const {
+std::string kgl::ParseVCFGenotype::getFormatString(size_t format_offset, const seqan::CharString &format_char_string) const {
 
   if (!parse_result_) {
 
@@ -205,12 +205,78 @@ std::string kgl::ParseVCFGenotype::getPLstring(size_t PLoffset, const seqan::Cha
 
   }
 
-  size_t ptr_offset = formatOffsets()[PLoffset].first;
-  size_t size = formatOffsets()[PLoffset].second;
-  const char* PL_ptr = &(seqan::toCString(format_char_string)[ptr_offset]);
+  if (format_offset >= format_count_) {
 
-  std::string PL_string(PL_ptr, size);
+    ExecEnv::log().error("getFormatChar(), format offset: {} out of range, format count: {}", format_offset, format_count_);
+    return "";
 
-  return PL_ptr;
+  }
+
+  size_t ptr_offset = formatOffsets()[format_offset].first;
+  size_t size = formatOffsets()[format_offset].second;
+  const char* char_ptr = &(seqan::toCString(format_char_string)[ptr_offset]);
+
+  std::string format_string(char_ptr, size);
+
+  return format_string;
+
+}
+
+
+char kgl::ParseVCFGenotype::getFormatChar(size_t format_offset, const seqan::CharString &format_char_string) const {
+
+  if (!parse_result_) {
+
+    ExecEnv::log().error("ParseVCFGenotype(), Genotype has not been parsed");
+    return ' ';
+
+  }
+
+  if (format_offset >= format_count_) {
+
+    ExecEnv::log().error("getFormatChar(), format offset: {} out of range, format count: {}", format_offset, format_count_);
+    return ' ';
+
+  }
+
+  size_t first_PL_char_offset = formatOffsets()[format_offset].first;
+
+  return format_char_string[first_PL_char_offset];
+
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Diploid genotype.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+kgl::DiploidAlleles kgl::DiploidGenotypes::generateGenetype(size_t allele_count) {
+
+  DiploidAlleles diploid_alleles;
+
+  for (size_t j = 0; j <= allele_count; ++j) {
+
+    for (size_t k = 0; k <= j; ++k) {
+
+      diploid_alleles.push_back(std::pair<size_t, size_t>(j, k));
+
+    }
+
+  }
+
+  return diploid_alleles;
+
+}
+
+
+void kgl::DiploidGenotypes::generateGenotypeVector(size_t max_alleles) {
+
+  for(size_t allele_count = 1; allele_count <= max_alleles; ++allele_count) {
+
+    diploid_alleles_.push_back(generateGenetype(allele_count));
+
+  }
 
 }
