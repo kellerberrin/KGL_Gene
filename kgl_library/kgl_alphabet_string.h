@@ -68,6 +68,8 @@ public:
 
   }
 
+  void assignString(const std::string &alphabet_str) { convertFromCharString(alphabet_str); }
+
   bool insert(ContigOffset_t offset, const AlphabetString& sub_string) {
 
     try {
@@ -106,6 +108,8 @@ public:
   void modifyLetter(ContigOffset_t &offset, typename Alphabet::Alphabet letter) { base_string_[offset] = letter; }
 
   std::string str() const { return convertToCharString(); }
+
+  bool operator==(const AlphabetString& compare_string) const { return (base_string_ == compare_string.base_string_); }
 
 private:
 

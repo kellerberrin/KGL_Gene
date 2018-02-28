@@ -2,58 +2,56 @@
 // Created by kellerberrin on 25/02/18.
 //
 
+#include "kgl_variant_factory_record_vcf_impl.h"
 #include "kgl_variant_factory_vcf_impl.h"
-#include "kgl_variant_factory_readvcf_impl.h"
 #include "kgl_variant_factory_pf3k_impl.h"
-
-#include <boost/tokenizer.hpp>
-#include <boost/algorithm/string.hpp>
-#include <seqan/vcf_io.h>
 
 
 namespace kgl = kellerberrin::genome;
-namespace bt = boost;
 
 
 
 // This is multithreaded code called from the reader defined above.
-void kgl::Pf3kVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& record_ptr)
+void kgl::Pf3kVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& vcf_record)
 {
 
+  static bool first_record = true;
+
   ++vcf_variant_count_;
+
+  ParseVCFRecord recordParser(vcf_record, contigId(vcf_record.rID), genome_db_ptr_);
 
   if (vcf_variant_count_ % VARIANT_REPORT_INTERVAL_ == 0) {
 
     ExecEnv::log().info("VCF file, generated: {} variants", vcf_variant_count_);
+    first_record = true;
 
   }
 
-  if (getGenomeNames().size() != seqan::length(record_ptr.genotypeInfos)) {
+  if (getGenomeNames().size() != seqan::length(vcf_record.genotypeInfos)) {
 
     ExecEnv::log().warn("Genome Name Size: {}, Genotype count: {}",
-                        getGenomeNames().size(), seqan::length(record_ptr.genotypeInfos));
+                        getGenomeNames().size(), seqan::length(vcf_record.genotypeInfos));
 
   }
 
-
-  static bool first_record = true;
 
   if (first_record) {
 
-    first_record = false;
 
-    std::cout << "Alt:" << record_ptr.alt << std::endl;
-    std::cout << "Pos:" << record_ptr.beginPos << std::endl;
-    std::cout << "Filter:" << record_ptr.filter << std::endl;
-    std::cout << "Format:" << record_ptr.format << std::endl;
-    std::cout << "Id:" << record_ptr.id << std::endl;
-    std::cout << "Info:" << record_ptr.info << std::endl;
-    std::cout << "Qual:" << record_ptr.qual << std::endl;
-    std::cout << "Ref:" << record_ptr.ref << std::endl;
-    std::cout << "Rid:" << record_ptr.rID << std::endl;
+    std::cout << "Alt:" << vcf_record.alt << std::endl;
+    std::cout << "Pos:" << vcf_record.beginPos << std::endl;
+    std::cout << "Filter:" << vcf_record.filter << std::endl;
+    std::cout << "Format:" << vcf_record.format << std::endl;
+    std::cout << "Id:" << vcf_record.id << std::endl;
+    std::cout << "Info:" << vcf_record.info << std::endl;
+    std::cout << "Qual:" << vcf_record.qual << std::endl;
+    std::cout << "Ref:" << vcf_record.ref << std::endl;
+    std::cout << "Rid:" << vcf_record.rID << std::endl;
 
-    auto it = seqan::begin(record_ptr.genotypeInfos);
-    auto end = seqan::end(record_ptr.genotypeInfos);
+/*
+    auto it = seqan::begin(vcf_record.genotypeInfos);
+    auto end = seqan::end(vcf_record.genotypeInfos);
 
     while (it != end)
     {
@@ -63,8 +61,46 @@ void kgl::Pf3kVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& record_ptr)
 
     }
 
+*/
 
   }
 
+  ParseVCFGenotype genotype_parser;
+
+  auto it = seqan::begin(vcf_record.genotypeInfos);
+  auto end = seqan::end(vcf_record.genotypeInfos);
+  size_t genotype_count = 0;
+  size_t valid_genotype_count = 0;
+
+  while (it != end)
+  {
+
+    genotype_parser.parseGenotype(*it);
+
+    if (genotype_parser.formatCount() == recordParser.requiredFormatSize()) {
+
+      size_t first_PL_char_offset = genotype_parser.formatOffsets()[recordParser.PLOffset()].first;
+
+      if ((*it)[first_PL_char_offset] != PL_CHECK_ZERO_) {
+
+        ++valid_genotype_count;
+        ExecEnv::log().info("PL String : {}", genotype_parser.getPLstring(recordParser.PLOffset(), *it));
+
+      }
+
+    }
+
+    ++genotype_count;
+    ++it;
+
+  }
+
+  if (first_record) {
+
+    ExecEnv::log().info("Genotype count: {}, Valid Genotype count: {}", genotype_count, valid_genotype_count);
+
+  }
+
+  first_record = false;
 
 }

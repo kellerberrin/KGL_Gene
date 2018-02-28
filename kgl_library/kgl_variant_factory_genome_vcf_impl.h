@@ -37,7 +37,7 @@ public:
 
   void readParseVCFImpl() override;
 
-  void ProcessVCFRecord(const seqan::VcfRecord& record_ptr) override;
+  void ProcessVCFRecord(const seqan::VcfRecord& vcf_record) override;
 
 protected:
 

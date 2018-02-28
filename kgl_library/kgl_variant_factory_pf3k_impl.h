@@ -25,14 +25,22 @@ public:
               Phred_t variant_quality) : ParseVCFImpl(pop_variant_ptr, genome_db_ptr, vcf_file_name, variant_quality) {}
   ~Pf3kVCFImpl() = default;
 
-  void ProcessVCFRecord(const seqan::VcfRecord& record_ptr) override;
+  void ProcessVCFRecord(const seqan::VcfRecord& vcf_record) override;
 
 private:
 
   constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 1000;
+  constexpr static const char PL_CHECK_ZERO_ = '0';  // Check if the first PL character is zero, discard if true.
+
 
 };
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Parses the seqan::VcfRecord for each genotype.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 }   // namespace genome

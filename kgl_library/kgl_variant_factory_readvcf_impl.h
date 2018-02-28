@@ -54,7 +54,7 @@ public:
 
   const std::vector<std::string>& getFieldNames() const { return field_names_; }
 
-  const std::string getContig(int32_t contig_idx) const;
+  const ContigId_t getContig(int32_t contig_idx) const;
 
   void setReportIncrement(long report_increment) { report_increment_ = report_increment; }
 
@@ -81,7 +81,7 @@ private:
 
   static constexpr const char* FIELD_NAME_FRAGMENT_{"#CHROM"};
   static constexpr const size_t FIELD_NAME_FRAGMENT_LENGTH_{6};
-  static constexpr const size_t SKIP_FIELD_NAMES_{9};
+  static constexpr const size_t SKIP_FIELD_NAMES_{9};  // Skip the fixed fields to the Genome names.
 
   // Read the VCF file and queue the record in a BoundedMtQueue.
   void VCFProducer();
@@ -167,13 +167,13 @@ void VCFReaderMT<ConsumerMT>::parseFieldNames(const std::string& vcf_file_name) 
 
 
 template <class ConsumerMT>
-const std::string VCFReaderMT<ConsumerMT>::getContig(int32_t contig_idx) const {
+const ContigId_t VCFReaderMT<ConsumerMT>::getContig(int32_t contig_idx) const {
 
   AutoMutex auto_mutex(mutex_); // lock on construction, unlock on destruction
 
   std::string contig_id = seqan::toCString(contigNames(context(*vcfIn_ptr_))[contig_idx]);
 
-  return contig_id;
+  return static_cast<const ContigId_t>(contig_id);
 
 }
 

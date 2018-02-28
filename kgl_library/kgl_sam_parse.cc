@@ -69,8 +69,8 @@ bool kgl::SAMRecordParser::parseSAMFields(std::unique_ptr<const std::string>& re
 }
 
 
-bool kgl::SAMRecordParser::fastDecodeSAMCigar( std::unique_ptr<const std::string>& record_ptr
-, const std::pair<std::size_t, std::size_t>& cigar_offset) {
+bool kgl::SAMRecordParser::fastDecodeSAMCigar( std::unique_ptr<const std::string>& record_ptr,
+                                               const std::pair<std::size_t, std::size_t>& cigar_offset) {
 
   char cigar_buffer[1000]; // Should be big enough
   std::size_t char_index = 0;

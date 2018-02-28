@@ -37,9 +37,9 @@ public:
     return std::stoull(record_ptr->substr(sam_fields_[POS_OFFSET].first, sam_fields_[POS_OFFSET].second)) - 1;
 
   }
-  inline AlphabetSequence_t getSubSequence( std::unique_ptr<const std::string>& record_ptr
-  , std::size_t start
-  , std::size_t length) {
+  inline AlphabetSequence_t getSubSequence( std::unique_ptr<const std::string>& record_ptr,
+                                            std::size_t start,
+                                            std::size_t length) {
 
     return record_ptr->substr(sam_fields_[SEQUENCE_OFFSET].first + start, length);
 
@@ -84,10 +84,12 @@ private:
   std::vector<std::pair<std::size_t, std::size_t>> opt_flags_;
   std::vector<std::pair<const char, const ContigOffset_t>> cigar_fields_;
 
-  bool parseSAMFields(std::unique_ptr<const std::string>& record_ptr, bool parse_opt_fields); // False if unmapped read
-  bool fastDecodeSAMCigar( std::unique_ptr<const std::string>& record_ptr // False if unexpected cigar format
-  , const std::pair<std::size_t
-  , std::size_t>& cigar_offset);
+  // False if unmapped read
+  bool parseSAMFields(std::unique_ptr<const std::string>& record_ptr, bool parse_opt_fields);
+  // False if unexpected cigar format
+  bool fastDecodeSAMCigar( std::unique_ptr<const std::string>& record_ptr,
+                           const std::pair<std::size_t,
+                           std::size_t>& cigar_offset);
 
 };
 

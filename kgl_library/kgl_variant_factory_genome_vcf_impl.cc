@@ -3,6 +3,7 @@
 //
 
 #include "kgl_variant_factory.h"
+#include "kgl_variant_factory_vcf_parse_impl.h"
 #include "kgl_variant_factory_genome_vcf_impl.h"
 #include "kgl_filter.h"
 
@@ -24,7 +25,7 @@ void kgl::ParseGenomeVCFImpl::readParseVCFImpl() {
 
   // Investigate header.
   ActiveContigMap active_contig_map;
-  if (not parseVcfHeader(genome_db_ptr_, reader_ptr_->readHeader(), active_contig_map, false)) {
+  if (not ParseVCFMiscImpl::parseVcfHeader(genome_db_ptr_, reader_ptr_->readHeader(), active_contig_map, false)) {
 
     ExecEnv::log().error("Problem parsing header information in VCF file: {}. No variants processed.", vcf_file_name_);
     addGenome(genome_single_variants_, pop_variant_ptr_, variant_quality_);

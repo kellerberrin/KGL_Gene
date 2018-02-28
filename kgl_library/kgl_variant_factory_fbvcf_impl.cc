@@ -2,12 +2,10 @@
 // Created by kellerberrin on 22/01/18.
 //
 
-
+#include "kgl_variant_factory_vcf_parse_impl.h"
 #include "kgl_variant_factory_fbvcf_impl.h"
 #include "kgl_variant_factory_compound.h"
 
-#include <boost/tokenizer.hpp>
-#include <boost/algorithm/string.hpp>
 
 
 namespace kgl = kellerberrin::genome;
@@ -25,7 +23,7 @@ bool kgl::FreeBayesVCFImpl::parseVcfRecord(const std::string& genome_name,
   std::string info = toCString(record.info);
   // assumes input "key_1=value_1; ...;key_n=value_n"
   std::map<std::string, std::string> info_key_value_map;
-  if (not tokenizeVcfInfoKeyValues(info, info_key_value_map)) {
+  if (not ParseVCFMiscImpl::tokenizeVcfInfoKeyValues(info, info_key_value_map)) {
 
     ExecEnv::log().error("Unable to parse VCF INFO: {}", info);
     return false;
@@ -43,7 +41,7 @@ bool kgl::FreeBayesVCFImpl::parseVcfRecord(const std::string& genome_name,
   if (result_cigar != info_key_value_map.end()) {
 
     cigar = result_cigar->second;
-    if (not parseCigar(cigar, reference_size, alternate_size, parsed_cigar)) {
+    if (not ParseVCFMiscImpl::parseCigar(cigar, reference_size, alternate_size, parsed_cigar)) {
 
       return false;
 

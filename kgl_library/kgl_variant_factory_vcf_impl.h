@@ -43,9 +43,11 @@ public:
 
   virtual void readParseVCFImpl();
 
-  virtual void ProcessVCFRecord(const seqan::VcfRecord& record_ptr) = 0;
+  virtual void ProcessVCFRecord(const seqan::VcfRecord& vcf_record) = 0;
 
   const std::vector<std::string>& getGenomeNames() const { return reader_ptr_->getFieldNames(); }
+
+  const ContigId_t contigId(int32_t rId) const { return reader_ptr_->getContig(rId); }
 
 protected:
 
@@ -68,23 +70,6 @@ protected:
   size_t addThreadSafeGenomeVariant(std::shared_ptr<GenomeVariant> genome_variants,
                                     std::shared_ptr<const Variant> variant_ptr) const;
 
-  bool parseVcfHeader(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                      const seqan::VcfHeader& header,
-                      ActiveContigMap& active_contig_map,
-                      bool cigar_required) const;
-
-  // assumes input "<key_1=value_1, ...,key_n=value_n>"
-  bool tokenizeVcfHeaderKeyValues(const std::string& key_value_text,
-                                  std::map<std::string, std::string>& key_value_pairs) const;
-
-// assumes input "key_1=value_1; ...;key_n=value_n"
-  bool tokenizeVcfInfoKeyValues(const std::string& key_value_text,
-                                std::map<std::string, std::string>& key_value_map) const;
-
-  bool parseCigar(const std::string& cigar,
-                  size_t& check_reference_size,
-                  size_t& check_alternate_size,
-                  std::vector<std::pair<char, size_t>>& parsed_cigar) const;
 
   std::shared_ptr<PopulationVariant> pop_variant_ptr_;
   std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
