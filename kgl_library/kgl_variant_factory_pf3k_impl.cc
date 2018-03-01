@@ -2,7 +2,6 @@
 // Created by kellerberrin on 25/02/18.
 //
 
-#include "kgl_variant_factory_record_vcf_impl.h"
 #include "kgl_variant_factory_vcf_impl.h"
 #include "kgl_variant_factory_pf3k_impl.h"
 
@@ -78,6 +77,7 @@ void kgl::Pf3kVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& vcf_record) {
 
           ++valid_genotype_count;
 
+          ExecEnv::log().info("Diploid Genotypes : {}", diploid_genotypes_.genotypeText(recordParser.alleles().size()));
           ExecEnv::log().info("Alleles : {}, GT : {}, GQ : {}, PL : {}",
                               recordParser.alleles().size(),
                               genotype_parser.getFormatString(recordParser.GTOffset(), *it),

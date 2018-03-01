@@ -141,13 +141,16 @@ public:
   DiploidGenotypes() {}
   ~DiploidGenotypes() = default;
 
+  std::string genotypeText(size_t allele_count) const;
+  DiploidAlleles generateGenotype(size_t allele_count);
   void generateGenotypeVector(size_t max_alleles);
 
 private:
 
-  DiploidAlleles generateGenetype(size_t allele_count);
-
   std::vector<DiploidAlleles> diploid_alleles_;
+
+
+
 
 };
 

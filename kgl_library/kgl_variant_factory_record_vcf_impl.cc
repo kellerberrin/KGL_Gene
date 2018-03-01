@@ -248,11 +248,12 @@ char kgl::ParseVCFGenotype::getFormatChar(size_t format_offset, const seqan::Cha
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Diploid genotype.
+// VCF Diploid genotypes for the format PL field.
+// .first = A, .second = B
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-kgl::DiploidAlleles kgl::DiploidGenotypes::generateGenetype(size_t allele_count) {
+kgl::DiploidAlleles kgl::DiploidGenotypes::generateGenotype(size_t allele_count) {
 
   DiploidAlleles diploid_alleles;
 
@@ -260,7 +261,7 @@ kgl::DiploidAlleles kgl::DiploidGenotypes::generateGenetype(size_t allele_count)
 
     for (size_t k = 0; k <= j; ++k) {
 
-      diploid_alleles.push_back(std::pair<size_t, size_t>(j, k));
+      diploid_alleles.push_back(std::pair<size_t, size_t>(k, j));
 
     }
 
@@ -275,8 +276,36 @@ void kgl::DiploidGenotypes::generateGenotypeVector(size_t max_alleles) {
 
   for(size_t allele_count = 1; allele_count <= max_alleles; ++allele_count) {
 
-    diploid_alleles_.push_back(generateGenetype(allele_count));
+    diploid_alleles_.push_back(generateGenotype(allele_count));
 
   }
 
 }
+
+
+std::string kgl::DiploidGenotypes::genotypeText(size_t allele_count) const {
+
+
+  if (allele_count > diploid_alleles_.size() or allele_count < 1) {
+
+    ExecEnv::log().error("genotypeText(), allele count: {} out of range, max alleles defined: {}",
+                         allele_count , diploid_alleles_.size());
+    return "";
+
+  }
+
+  --allele_count; // convert to a vector index offset.
+
+  const DiploidAlleles& diploid_allele = diploid_alleles_[allele_count];
+
+  std::stringstream allele_ss;
+  for (auto allele_item : diploid_allele) {
+
+    allele_ss << "(A:" << allele_item.first << ", B:" << allele_item.second << "), ";
+
+  }
+
+  return allele_ss.str();
+
+}
+

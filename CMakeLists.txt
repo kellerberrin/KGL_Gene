@@ -151,10 +151,11 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_genome_vcf_impl.cc
         kgl_library/kgl_variant_factory_vcf_parse_impl.h
         kgl_library/kgl_variant_factory_vcf_parse_impl.cc
-        )
+        kgl_library/kgl_variant_factory_record_vcf_impl.h
+        kgl_library/kgl_variant_factory_record_vcf_impl.cc)
 
 # 3rd party library for fast Leveshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_library/kgl_variant_factory_record_vcf_impl.h kgl_library/kgl_variant_factory_record_vcf_impl.cc)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
 
 set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_main.cc
