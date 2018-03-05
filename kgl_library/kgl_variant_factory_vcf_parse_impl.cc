@@ -267,8 +267,18 @@ bool kgl::ParseVCFMiscImpl::tokenizeVcfInfoKeyValues(const std::string& key_valu
 
     } else {
 
-      ExecEnv::log().warn("Problem parsing item: {} in VCF Record line: {}, expected 'key=value;...;key=value' pairs", *iter, key_value_text);
-      return false;
+      if (item_vec.size() == 1) {
+
+        std::string item_key = item_vec[0];
+        std::transform(item_key.begin(), item_key.end(), item_key.begin(), ::toupper);
+        key_value_map[item_key] = "";
+
+      } else {
+
+        ExecEnv::log().warn("Problem parsing item: {} in VCF Record line: {}, expected 'key=value;...;key=value' pairs", *iter, key_value_text);
+        return false;
+
+      }
 
     }
 
@@ -278,3 +288,21 @@ bool kgl::ParseVCFMiscImpl::tokenizeVcfInfoKeyValues(const std::string& key_valu
 
 }
 
+
+// assumes input "key_1=value_1; ...;key_n=value_n"
+bool kgl::ParseVCFMiscImpl::tokenize(const std::string& parse_text,
+                                     const std::string& separator_text,
+                                     std::vector<std::string>& item_vector) {
+
+  item_vector.clear();
+  bt::char_separator<char> item_seperator(separator_text.c_str());
+  bt::tokenizer<bt::char_separator<char>> tokenize_item(parse_text, item_seperator);
+  for(auto iter_item = tokenize_item.begin(); iter_item != tokenize_item.end(); ++iter_item) {
+
+    item_vector.push_back(*iter_item);
+
+  }
+
+  return true;
+
+}

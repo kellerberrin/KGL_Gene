@@ -34,7 +34,7 @@ public:
 
   explicit PopulationVariant(const std::string& population_id) : population_id_(population_id) {}
   PopulationVariant(const PopulationVariant&) = default;
-  ~PopulationVariant() = default;
+  virtual ~PopulationVariant() = default;
 
   bool addGenomeVariant(std::shared_ptr<const GenomeVariant> genome_variant);
 

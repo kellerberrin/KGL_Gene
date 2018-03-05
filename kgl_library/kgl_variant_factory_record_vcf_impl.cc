@@ -48,6 +48,23 @@ bool kgl::ParseVCFRecord::parseRecord(const ContigId_t& contig_id, std::shared_p
 
   }
 
+  // Get the AD format offset.
+  if (not findString(format_fields_, AD_, AD_offset_)) {
+
+    ExecEnv::log().error("Format field: {} not found", AD_);
+    parse_result = false;
+
+  }
+
+  // Get the PL format offset.
+  if (not findString(format_fields_, DP_, DP_offset_)) {
+
+    ExecEnv::log().error("Format field: {} not found", DP_);
+    parse_result = false;
+
+  }
+
+
   required_size_ = requiredFormatSize();  // Must have this many format fields in a Genotype.
 
   // Get the reference DNA

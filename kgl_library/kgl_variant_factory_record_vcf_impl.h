@@ -39,6 +39,11 @@ public:
   size_t GTOffset() const { return GT_offset_; }
   size_t GQOffset() const { return GQ_offset_; }
   size_t PLOffset() const { return PL_offset_; }
+  size_t ADOffset() const { return AD_offset_; }
+  size_t DPOffset() const { return DP_offset_; }
+
+  Phred_t quality() const { return quality_; }
+
   const std::vector<std::string>& alleles() const { return alleles_; }
 
 private:
@@ -50,6 +55,8 @@ private:
   size_t GT_offset_;
   size_t GQ_offset_;
   size_t PL_offset_;
+  size_t AD_offset_;
+  size_t DP_offset_;
   size_t required_size_;
   std::string reference_;
   std::vector<std::string> alleles_;
@@ -62,6 +69,8 @@ private:
   constexpr static const char* GT_ = "GT";
   constexpr static const char* GQ_ = "GQ";
   constexpr static const char* PL_ = "PL";
+  constexpr static const char* AD_ = "AD";
+  constexpr static const char* DP_ = "DP";
 
   bool parseRecord(const ContigId_t& contig_id, std::shared_ptr<const GenomeDatabase> genome_db_ptr);
 

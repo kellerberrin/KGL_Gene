@@ -171,7 +171,7 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_phylogenetic_app_analysis.cc
         kgl_app/kgl_phylogenetic_app.h
         kgl_app/kgl_rna_search.cc
-        kgl_app/kgl_rna_search.h)
+        kgl_app/kgl_rna_search.h kgl_app/kgl_ploidy_analysis.h kgl_app/kgl_ploidy_analysis.cc)
 
 
 ## DOXYGEN

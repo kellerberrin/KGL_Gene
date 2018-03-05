@@ -9,7 +9,7 @@
 #include "kgl_phylogenetic_gene.h"
 #include "kgl_upgma.h"
 #include "kgl_rna_search.h"
-#include "kgl_utility.h"
+#include "kgl_ploidy_analysis.h"
 
 
 namespace kgl = kellerberrin::genome;
