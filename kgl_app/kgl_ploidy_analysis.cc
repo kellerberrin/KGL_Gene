@@ -75,7 +75,7 @@ bool kgl::PloidyAnalysis::writePloidyResults(const std::string& file_name, char 
              << ploidy_data.second.homozygous_ << delimiter
              << ploidy_data.second.hq_homozygous_ << delimiter
              << ploidy_data.second.heterozygous_ << delimiter
-             << ploidy_data.second.hq_homozygous_ << '\n';
+             << ploidy_data.second.hq_heterozygous_ << '\n';
 
   }
 

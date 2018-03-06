@@ -198,7 +198,7 @@ void kgl::Pf3kVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& vcf_record) {
           if (found_zero) {
 
 
-            if ((A_allele != A_pl_allele or B_allele != B_pl_allele) and not one_error) {
+            if ((A_allele != A_pl_allele or B_allele != B_pl_allele) and not one_error and GQ_value > 0) {
 
               AutoMutex error_info_mutex(mutex_);
 
@@ -230,7 +230,11 @@ void kgl::Pf3kVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& vcf_record) {
           }
 
           const std::string &genome = getGenomeNames()[genotype_count];
-          if (not ploidy_ptr->addPloidyRecord(genome, true, true, true, true)) {
+          bool homozygous = (A_allele == B_allele);
+          bool hq_homozygous = homozygous and GQ_value >= HQ_GQ_PLOIDY_;
+          bool heterozygous = (A_allele != B_allele);
+          bool hq_heterozygous = heterozygous and GQ_value >= HQ_GQ_PLOIDY_;
+          if (not ploidy_ptr->addPloidyRecord(genome, homozygous, hq_homozygous, heterozygous, hq_heterozygous)) {
 
             ExecEnv::log().error("Cannot add ploidy record");
 

@@ -46,7 +46,8 @@ private:
 // Quality constants.
 
   constexpr static const double MIN_VQSLOD_QUALITY_ = -10.0;
-  constexpr static const double MIN_GQ_QUALITY_ = 1.0;
+  constexpr static const double MIN_GQ_QUALITY_ = 0.0;
+  constexpr static const double HQ_GQ_PLOIDY_ = 20;
 
 // Quality counters.
 
