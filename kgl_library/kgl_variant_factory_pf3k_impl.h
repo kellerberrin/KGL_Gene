@@ -10,6 +10,7 @@
 #include "kgl_utility.h"
 #include "kgl_variant_factory_vcf.h"
 #include "kgl_variant_factory_record_vcf_impl.h"
+#include "kgl_ploidy_vcf_Pf3k_impl.h"
 
 
 
@@ -24,41 +25,21 @@ public:
   Pf3kVCFImpl(std::shared_ptr<PopulationVariant> pop_variant_ptr,
               std::shared_ptr<const GenomeDatabase> genome_db_ptr,
               const std::string &vcf_file_name,
-              Phred_t variant_quality) : ParseVCFImpl(pop_variant_ptr, genome_db_ptr, vcf_file_name, variant_quality) {
-
-    diploid_genotypes_.generateGenotypeVector(MAX_GENOTYPES_);
-    ploidy_count_ = 0;
+              Phred_t variant_quality) : ParseVCFImpl(pop_variant_ptr, genome_db_ptr, vcf_file_name, variant_quality),
+                                         process_ploidy_(getGenomeNames(), genome_db_ptr) {
 
   }
   ~Pf3kVCFImpl() = default;
 
   void ProcessVCFRecord(const seqan::VcfRecord& vcf_record) override;
+  // Processes the record in a try/catch block.
+  void TryVCFRecord(const seqan::VcfRecord& vcf_record);
+
 
 private:
 
-  constexpr static const size_t MAX_GENOTYPES_ = 10; // maximum number of alleles per VCF record.
-  constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 1000;
-  constexpr static const char PL_CHECK_ZERO_ = '0';  // Check if the first PL character is zero, discard if true.
-  constexpr static const char* VQSLOD_INFO_FIELD_ = "VQSLOD";  // In the Info record.
-  constexpr static const char* GT_FIELD_SEPARATOR_ = "/";
-  constexpr static const char* PL_FIELD_SEPARATOR_ = ",";
-
-// Quality constants.
-
-  constexpr static const double MIN_VQSLOD_QUALITY_ = -10.0;
-  constexpr static const double MIN_GQ_QUALITY_ = 0.0;
-  constexpr static const double HQ_GQ_PLOIDY_ = 20;
-
-// Quality counters.
-
-  std::atomic<uint64_t> quality_failed_{0};
-  std::atomic<uint64_t> vqslod_failed_{0};
-  std::atomic<uint64_t> GQ_failed_{0};
-
-  DiploidGenotypes diploid_genotypes_;
-  size_t ploidy_count_;
-
-  std::mutex mutex_;
+  constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 10000;
+  ProcessPloidy process_ploidy_;
 
 };
 

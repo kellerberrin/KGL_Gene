@@ -44,7 +44,10 @@ public:
 
   Phred_t quality() const { return quality_; }
 
+  const std::string& reference() const { return reference_; }
   const std::vector<std::string>& alleles() const { return alleles_; }
+
+  bool isSNP() const;
 
 private:
 
@@ -147,11 +150,11 @@ class DiploidGenotypes {
 
 public:
 
-  DiploidGenotypes() {}
+  DiploidGenotypes() = default;
   ~DiploidGenotypes() = default;
 
   std::string genotypeText(size_t allele_count) const;
-  DiploidAlleles generateGenotype(size_t allele_count);
+  DiploidAlleles generateGenotype(size_t allele_count) const;
   void generateGenotypeVector(size_t max_alleles);
 
 private:

@@ -6,8 +6,10 @@
 #define KGL_PLOIDY_ANALYSIS_H
 
 
-
 #include "kgl_variant_db.h"
+
+
+
 
 struct PloidyData {
 
@@ -15,6 +17,7 @@ struct PloidyData {
   size_t hq_homozygous_{0};
   size_t heterozygous_{0};
   size_t hq_heterozygous_{0};
+  double sum_hq_ratio_{0.0};
 
 };
 
@@ -30,9 +33,14 @@ class PloidyAnalysis : public PopulationVariant {
 public:
 
   PloidyAnalysis(const std::string& analysis) : PopulationVariant(analysis) {}
-  ~PloidyAnalysis() = default;
+  ~PloidyAnalysis() override = default;
 
-  bool addPloidyRecord(const std::string& genome, bool haploid, bool hq_haploid, bool diploid, bool hq_diploid);
+  bool addPloidyRecord(const std::string& genome,
+                       bool homozygous,
+                       bool hq_homozygous,
+                       bool heterozygous,
+                       bool hq_heterozygous,
+                       double ratio);
 
   bool writePloidyResults(const std::string& file_name, char delimiter ) const;
 
@@ -40,7 +48,11 @@ public:
 
 private:
 
+  constexpr static const size_t PLOIDY_ARRAY_SIZE_ = 100;
+
   PloidyDataMap ploidy_data_map_;
+  std::array<PloidyData, PLOIDY_ARRAY_SIZE_> ratio_array_;
+
   mutable std::mutex ploidy_mutex_;
 
 };

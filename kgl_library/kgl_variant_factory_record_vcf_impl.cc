@@ -159,6 +159,23 @@ size_t kgl::ParseVCFRecord::requiredFormatSize() const {
 }
 
 
+bool kgl::ParseVCFRecord::isSNP() const {
+
+  if (reference().size() != 1) return false;
+
+  for (auto alt : alleles()) {
+
+    if (alt.size() != 1) return false;
+
+  }
+
+  return true;
+
+}
+
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // VCF seqan genotype parser.
 // .first is the offset (in chars), .second is the size (in chars)
@@ -270,7 +287,7 @@ char kgl::ParseVCFGenotype::getFormatChar(size_t format_offset, const seqan::Cha
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-kgl::DiploidAlleles kgl::DiploidGenotypes::generateGenotype(size_t allele_count) {
+kgl::DiploidAlleles kgl::DiploidGenotypes::generateGenotype(size_t allele_count) const {
 
   DiploidAlleles diploid_alleles;
 
