@@ -152,10 +152,12 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_vcf_parse_impl.h
         kgl_library/kgl_variant_factory_vcf_parse_impl.cc
         kgl_library/kgl_variant_factory_record_vcf_impl.h
-        kgl_library/kgl_variant_factory_record_vcf_impl.cc)
+        kgl_library/kgl_variant_factory_record_vcf_impl.cc
+        kgl_library/kgl_ploidy_vcf_Pf3k_impl.cc
+        kgl_library/kgl_ploidy_vcf_Pf3k_impl.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_library/kgl_ploidy_vcf_Pf3k_impl.cc kgl_library/kgl_ploidy_vcf_Pf3k_impl.h)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
 
 set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_main.cc
@@ -171,7 +173,9 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_phylogenetic_app_analysis.cc
         kgl_app/kgl_phylogenetic_app.h
         kgl_app/kgl_rna_search.cc
-        kgl_app/kgl_rna_search.h kgl_app/kgl_ploidy_analysis.h kgl_app/kgl_ploidy_analysis.cc)
+        kgl_app/kgl_rna_search.h
+        kgl_app/kgl_ploidy_analysis.h
+        kgl_app/kgl_ploidy_analysis.cc)
 
 
 ## DOXYGEN

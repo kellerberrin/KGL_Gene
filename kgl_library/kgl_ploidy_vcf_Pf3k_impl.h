@@ -27,6 +27,7 @@ public:
 
     diploid_genotypes_.generateGenotypeVector(MAX_GENOTYPES_);
     ploidy_count_ = 0;
+    different_alleles_ = 0;
 
   }
   ~ProcessPloidy() = default;
@@ -63,6 +64,7 @@ private:
 
   constexpr static const size_t MAX_GENOTYPES_ = 10; // maximum number of alleles per VCF record.=
   size_t ploidy_count_;
+  size_t different_alleles_;
   DiploidGenotypes diploid_genotypes_;
 
   const std::vector<std::string>& genome_names_;

@@ -193,7 +193,7 @@ void VCFReaderMT<ConsumerMT>::readVCFFile() {
   ExecEnv::log().info("Begin processing VCF file: {}", vcf_file_name_);
 
   // Spawn consumer threads.
-  consumer_thread_count_ = std::thread::hardware_concurrency();
+  consumer_thread_count_ = std::thread::hardware_concurrency() - 1;
 
   // Spawn a maximum of 4 consumers.
   consumer_thread_count_ = consumer_thread_count_ > MAX_CONSUMER_THREADS_? MAX_CONSUMER_THREADS_ : consumer_thread_count_;

@@ -7,6 +7,7 @@
 #include "kgl_variant_factory_vcf_parse_impl.h"
 #include "kgl_variant_factory_vcf_impl.h"
 #include "kgl_variant_factory_pf3k_impl.h"
+#include "kgl_sequence_compare_impl.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -29,6 +30,12 @@ void kgl::ProcessPloidy::PloidyVCFRecord(const seqan::VcfRecord& vcf_record,
 
   }
 
+  for (auto allele : recordParser.alleles()) {
+
+    std::vector<SequenceEditType> edit_vector;
+    SequenceComparison().generateEditVector(recordParser.reference(), allele, edit_vector);
+
+  }
 
   auto begin = seqan::begin(vcf_record.genotypeInfos);
   auto end = seqan::end(vcf_record.genotypeInfos);
@@ -217,6 +224,13 @@ void kgl::ProcessPloidy::PloidyVCFRecord(const seqan::VcfRecord& vcf_record,
 
           }
 
+          if (A_allele != B_allele and A_allele > 0 and B_allele > 0) {
+
+            ++different_alleles_;
+
+          }
+
+
           double A_proportion = std::stof(ad_vector[A_allele]);
           double B_proportion = std::stof(ad_vector[B_allele]);
 
@@ -255,7 +269,41 @@ void kgl::ProcessPloidy::PloidyVCFRecord(const seqan::VcfRecord& vcf_record,
 
     if (ploidy_count_ % 1000000 == 0) {
 
-      ExecEnv::log().info("Processed :{} ploidy records", ploidy_count_);
+      ExecEnv::log().info("Processed :{} ploidy records, different alleles: {}", ploidy_count_, different_alleles_);
+
+      for (auto allele : recordParser.alleles()) {
+
+        std::vector<SequenceEditType> edit_vector;
+        SequenceComparison().generateEditVector(recordParser.reference(), allele, edit_vector);
+        std::string edit_string;
+        for (auto edit : edit_vector) {
+
+          switch(edit) {
+
+            case SequenceEditType::UNCHANGED:
+              edit_string += "M,";
+              break;
+
+            case SequenceEditType::INSERT:
+              edit_string += "I,";
+              break;
+
+            case SequenceEditType::DELETE:
+              edit_string += "D,";
+              break;
+
+            case SequenceEditType::CHANGED:
+              edit_string += "X,";
+              break;
+
+          }
+
+
+        }
+        ExecEnv::log().info("Reference: {}, Alternate: {}, Cigar: {}, Edit string: {}",
+                            recordParser.reference(), allele, SequenceComparison().generateCigar(recordParser.reference(), allele), edit_string);
+
+      }
 
     }
 

@@ -383,3 +383,60 @@ std::string kgl::SequenceComparison::editDNAItems(std::shared_ptr<const ContigFe
   return sequence_manip_impl_ptr_->editDNAItems(contig_ptr, reference, mutant, delimiter, index_offset);
 
 }
+
+
+// Use edlib to generate a cigar string.
+std::string kgl::SequenceComparison::generateCigar(const std::string& reference, const std::string& alternate) const {
+
+
+  std::string cigar_str;
+
+  EdlibAlignResult result = edlibAlign(alternate.c_str(), alternate.size(),reference.c_str(), reference.size(),
+                                       edlibNewAlignConfig(-1, EDLIB_MODE_NW, EDLIB_TASK_PATH, NULL, 0));
+  if (result.status == EDLIB_STATUS_OK) {
+
+    char* cigar = edlibAlignmentToCigar(result.alignment, result.alignmentLength, EDLIB_CIGAR_STANDARD);
+    cigar_str = cigar;
+    free(cigar);
+
+  } else {
+
+    ExecEnv::log().error("Edlib - problem generating cigar reference:{}, alternate: {}", reference, alternate);
+
+  }
+
+  edlibFreeAlignResult(result);
+
+  return cigar_str;
+
+}
+
+
+// Use edlib to generate a cigar string.
+void kgl::SequenceComparison::generateEditVector(const std::string& reference,
+                                                 const std::string& alternate,
+                                                 std::vector<SequenceEditType>& edit_vector) const {
+
+
+  edit_vector.clear();
+
+  EdlibAlignResult result = edlibAlign(alternate.c_str(), alternate.size(),reference.c_str(), reference.size(),
+                                       edlibNewAlignConfig(-1, EDLIB_MODE_NW, EDLIB_TASK_PATH, NULL, 0));
+  if (result.status == EDLIB_STATUS_OK) {
+
+    for (int i = 0; i < result.alignmentLength; ++i) {
+
+      edit_vector.push_back(static_cast<SequenceEditType>(result.alignment[i]));
+
+    }
+
+
+  } else {
+
+    ExecEnv::log().error("Edlib - problem generating cigar reference:{}, alternate: {}", reference, alternate);
+
+  }
+
+  edlibFreeAlignResult(result);
+
+}
