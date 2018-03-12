@@ -10,6 +10,7 @@
 
 #include "kgl_utility.h"
 #include "kgl_variant_factory_vcf.h"
+#include "kgl_variant_factory_vcf_parse_impl.h"
 #include "kgl_variant_factory_genome_vcf_impl.h"
 
 
@@ -52,53 +53,6 @@ private:
                       Phred_t variant_quality,
                       bool& quality_ok,
                       size_t& variant_count) const override;
-
-  // Parse 1M ... XM in the cigar.
-  bool parseCheck(size_t cigar_count,
-                  std::shared_ptr<const ContigFeatures> contig_ptr,
-                  const std::string& reference,
-                  const std::string& alternate,
-                  size_t& reference_index,
-                  size_t& alternate_index,
-                  ContigOffset_t& contig_offset) const;
-
-  // Parse 1X ... XX in the cigar.
-  bool parseSNP(size_t cigar_count,
-                const std::string& variant_source,
-                std::shared_ptr<const ContigFeatures> contig_ptr,
-                std::shared_ptr<GenomeVariant> genome_variants,
-                Phred_t quality,
-                const std::string& info,
-                const std::string& reference,
-                const std::string& alternate,
-                size_t& reference_index,
-                size_t& alternate_index,
-                ContigOffset_t& contig_offset,
-                size_t& variant_count) const;
-
-  // Parse 1I ... XI in the cigar.
-  bool parseInsert(size_t cigar_count,
-                   const std::string& variant_source,
-                   std::shared_ptr<const ContigFeatures> contig_ptr,
-                   std::shared_ptr<GenomeVariant> genome_variants,
-                   Phred_t quality,
-                   const std::string& info,
-                   const std::string& alternate,
-                   ContigOffset_t contig_offset,
-                   size_t& alternate_index,
-                   size_t& variant_count) const;
-
-  // Parse 1D ... XD in the cigar.
-  bool parseDelete(size_t cigar_count,
-                   const std::string& variant_source,
-                   std::shared_ptr<const ContigFeatures> contig_ptr,
-                   std::shared_ptr<GenomeVariant> genome_variants,
-                   Phred_t quality,
-                   const std::string& info,
-                   const std::string& reference,
-                   size_t& reference_index,
-                   ContigOffset_t& contig_offset,
-                   size_t& variant_count) const;
 
 
 };

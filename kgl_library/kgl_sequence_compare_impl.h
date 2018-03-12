@@ -17,8 +17,6 @@
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-// Returned from the cigar function.
-enum class SequenceEditType : unsigned char { UNCHANGED = 0, INSERT = 1, DELETE = 2, CHANGED = 3};
 
 class SequenceComparison {
 
@@ -45,12 +43,6 @@ public:
                            char delimiter,
                            VariantOutputIndex index_offset) const;
 
-  // Generate a CIGAR from two sequences.
-
-  std::string generateCigar(const std::string& reference, const std::string& alternate) const;
-
-// Use edlib to generate a cigar string.
-  void generateEditVector(const std::string& reference, const std::string& alternate, std::vector<SequenceEditType>& edit_vector) const;
 
 
 private:

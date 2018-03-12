@@ -30,7 +30,7 @@ kgl::PhylogeneticApp::PhylogeneticApp(const kgl::Phylogenetic& args) {
   // For all organisms
   for (const auto& file : args.fileList) {
 
-/*
+
     kgl::VariantFactory().createVariants(genome_db_ptr,
                                          pop_variant_ptr,
                                          file.genome_name,
@@ -39,8 +39,8 @@ kgl::PhylogeneticApp::PhylogeneticApp(const kgl::Phylogenetic& args) {
                                          args.variantQuality,
                                          args.minCount,
                                          args.minProportion);
-*/
 
+/*
     kgl::VariantFactory().createVariants(genome_db_ptr,
                                          ploidy_ptr,
                                          file.genome_name,
@@ -49,7 +49,7 @@ kgl::PhylogeneticApp::PhylogeneticApp(const kgl::Phylogenetic& args) {
                                          args.variantQuality,
                                          args.minCount,
                                          args.minProportion);
-
+*/
   }
 
   std::string ploidy_file = kgl::Utility::filePath("PloidyAnalysis", args.workDirectory) + ".csv";

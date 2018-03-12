@@ -46,6 +46,7 @@ private:
   constexpr static const char* AD_FIELD_SEPARATOR_ = ",";
   constexpr static const char* DIGITS_ = "0123456789";
   constexpr static const char* FLOAT_DIGITS_ = "+-.e0123456789";
+  constexpr static const char* UPSTREAM_ALLELE_ = "*";
 
 
 // Quality constants.

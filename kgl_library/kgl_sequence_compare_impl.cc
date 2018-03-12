@@ -55,6 +55,7 @@ public:
 private:
 
   EditVector createEditItems(const std::string& reference_str, const std::string& mutant_str, EditVector& edit_vector) const;
+  EditVector createEditItemsEdlib(const std::string& reference_str, const std::string& mutant_str, EditVector& edit_vector) const;
 
 };
 
@@ -158,7 +159,46 @@ std::string kgl::SequenceComparison::SequenceManipImpl::editDNAItems(std::shared
                                                                      char delimiter,
                                                                      VariantOutputIndex index_offset) const {
   EditVector edit_vector;
+  EditVector check_edit_vector;
   createEditItems(reference->getSequenceAsString(), mutant->getSequenceAsString(), edit_vector);
+  createEditItemsEdlib(reference->getSequenceAsString(), mutant->getSequenceAsString(), check_edit_vector);
+
+  bool match = true;
+  if (edit_vector.size() != check_edit_vector.size()) {
+
+    ExecEnv::log().error("Edit vector size mis-match, edit_vector size: {}, check edit vector size: {}", edit_vector.size(), check_edit_vector.size());
+    match = false;
+
+  } else {
+
+    for (size_t index = 0; index < edit_vector.size(); ++index) {
+
+      bool compare = edit_vector[index].mutant_char == check_edit_vector[index].mutant_char
+                     and edit_vector[index].reference_offset == check_edit_vector[index].reference_offset
+                     and edit_vector[index].reference_char == check_edit_vector[index].reference_char;
+
+
+      if (not compare) {
+
+        ExecEnv::log().error("Edit item mis-match, edit_vector: {}{}{}, check edit vector: {}{}{}",
+                             edit_vector[index].reference_char, edit_vector[index].reference_offset, edit_vector[index].mutant_char,
+                             check_edit_vector[index].reference_char, check_edit_vector[index].reference_offset, check_edit_vector[index].mutant_char);
+        match = false;
+      }
+
+    }
+
+  }
+
+  if (not match) {
+
+    std::string compare_str;
+    MyerHirschbergGlobal(reference->getSequenceAsString(), mutant->getSequenceAsString(), compare_str);
+    ExecEnv::log().info("Edit vector mis-match sequence comparison:\n {}", compare_str);
+
+  }
+
+
   size_t last_index = edit_vector.size() - 1;
   size_t index = 0;
   std::stringstream ss;
@@ -217,6 +257,68 @@ std::string kgl::SequenceComparison::SequenceManipImpl::editItems(const std::str
   }
 
   return ss.str();
+
+}
+
+
+EditVector kgl::SequenceComparison::SequenceManipImpl::createEditItemsEdlib(const std::string& reference,
+                                                                            const std::string& mutant,
+                                                                            EditVector& edit_vector) const {
+
+  edit_vector.clear();
+
+  EdlibAlignResult result = edlibAlign(mutant.c_str(), mutant.size(),reference.c_str(), reference.size(),
+                                       edlibNewAlignConfig(-1, EDLIB_MODE_NW, EDLIB_TASK_PATH, NULL, 0));
+  if (result.status == EDLIB_STATUS_OK) {
+
+    EditItem edit_item;
+    int mut_index = 0;
+    for (int ref_index = 0; ref_index < result.alignmentLength; ++ref_index) {
+
+      switch(result.alignment[ref_index]) {
+
+        case 0:
+          break;
+
+        case 1:
+          edit_item.reference_char = reference[ref_index];
+          edit_item.reference_offset = ref_index;
+          edit_item.mutant_char = '+';
+          edit_vector.push_back(edit_item);
+          ++mut_index;
+          break;
+
+        case 2:
+          edit_item.reference_char = reference[ref_index];
+          edit_item.reference_offset = ref_index;
+          edit_item.mutant_char = '-';
+          edit_vector.push_back(edit_item);
+          --mut_index;
+          break;
+
+        case 3:
+          edit_item.reference_char = reference[ref_index];
+          edit_item.reference_offset = ref_index;
+          edit_item.mutant_char = mutant[mut_index];
+          edit_vector.push_back(edit_item);
+          break;
+
+      }
+
+      ++mut_index;
+
+    }
+
+
+  } else {
+
+    ExecEnv::log().error("Edlib - problem generating cigar reference:{}, alternate: {}", reference, mutant);
+
+  }
+
+  edlibFreeAlignResult(result);
+
+  return edit_vector;
 
 }
 
@@ -384,59 +486,3 @@ std::string kgl::SequenceComparison::editDNAItems(std::shared_ptr<const ContigFe
 
 }
 
-
-// Use edlib to generate a cigar string.
-std::string kgl::SequenceComparison::generateCigar(const std::string& reference, const std::string& alternate) const {
-
-
-  std::string cigar_str;
-
-  EdlibAlignResult result = edlibAlign(alternate.c_str(), alternate.size(),reference.c_str(), reference.size(),
-                                       edlibNewAlignConfig(-1, EDLIB_MODE_NW, EDLIB_TASK_PATH, NULL, 0));
-  if (result.status == EDLIB_STATUS_OK) {
-
-    char* cigar = edlibAlignmentToCigar(result.alignment, result.alignmentLength, EDLIB_CIGAR_STANDARD);
-    cigar_str = cigar;
-    free(cigar);
-
-  } else {
-
-    ExecEnv::log().error("Edlib - problem generating cigar reference:{}, alternate: {}", reference, alternate);
-
-  }
-
-  edlibFreeAlignResult(result);
-
-  return cigar_str;
-
-}
-
-
-// Use edlib to generate a cigar string.
-void kgl::SequenceComparison::generateEditVector(const std::string& reference,
-                                                 const std::string& alternate,
-                                                 std::vector<SequenceEditType>& edit_vector) const {
-
-
-  edit_vector.clear();
-
-  EdlibAlignResult result = edlibAlign(alternate.c_str(), alternate.size(),reference.c_str(), reference.size(),
-                                       edlibNewAlignConfig(-1, EDLIB_MODE_NW, EDLIB_TASK_PATH, NULL, 0));
-  if (result.status == EDLIB_STATUS_OK) {
-
-    for (int i = 0; i < result.alignmentLength; ++i) {
-
-      edit_vector.push_back(static_cast<SequenceEditType>(result.alignment[i]));
-
-    }
-
-
-  } else {
-
-    ExecEnv::log().error("Edlib - problem generating cigar reference:{}, alternate: {}", reference, alternate);
-
-  }
-
-  edlibFreeAlignResult(result);
-
-}

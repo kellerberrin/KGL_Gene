@@ -25,6 +25,9 @@ namespace genome {   // project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // VCF parser. Miscellaneous parser functions.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Returned from the cigar functions.
+enum class CigarEditType : char { UNCHANGED = 'M', INSERT = 'I', DELETE = 'D', CHANGED = 'X'};
+using CigarEditItem = std::pair<size_t, CigarEditType>; // Used to specify edit as vector '1M,1X,3D,3I'.
 
 using ActiveContigMap = std::map<ContigId_t, ContigSize_t>;
 using VcfInfoKeyMap = std::map<std::string, std::string>;
@@ -49,16 +52,26 @@ public:
   static bool parseCigar(const std::string& cigar,
                          size_t& check_reference_size,
                          size_t& check_alternate_size,
-                         std::vector<std::pair<char, size_t>>& parsed_cigar);
+                         std::vector<CigarEditItem>& parsed_cigar);
 
 // tokenize a string
   static bool tokenize(const std::string& parse_text, const std::string& separator_text, std::vector<std::string>& item_vector);
+
+  // Generate a CIGAR from two sequences.
+  static std::string generateCigar(const std::string& reference, const std::string& alternate);
+
+// Use edlib to generate a cigar string.
+  static void generateEditVector(const std::string& reference, const std::string& alternate, std::vector<CigarEditItem>& edit_vector);
+
 
 private:
 
   // assumes input "<key_1=value_1, ...,key_n=value_n>"
   static bool tokenizeVcfHeaderKeyValues(const std::string& key_value_text,
                                          VcfInfoKeyMap& key_value_pairs);
+
+// Use edlib to generate a cigar string.
+  static void generateEditString(const std::string& reference, const std::string& alternate, std::vector<CigarEditType>& edit_vector);
 
   constexpr static const char* HEADER_CONTIG_KEY_ = "CONTIG";
   constexpr static const char* ID_KEY_ = "ID";

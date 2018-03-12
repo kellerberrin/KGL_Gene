@@ -47,6 +47,9 @@ public:
   const std::string& reference() const { return reference_; }
   const std::vector<std::string>& alleles() const { return alleles_; }
 
+  ContigOffset_t offset() const { return allele_offset_; }
+  std::shared_ptr<const ContigFeatures> contigPtr() const { return contig_ptr_; }
+
   bool isSNP() const;
 
 private:

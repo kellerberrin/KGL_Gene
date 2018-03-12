@@ -32,7 +32,8 @@ void kgl::PhylogeneticApp::performAnalysis(const kgl::Phylogenetic& args,
     kgl::ExecEnv::log().info("Analyzing coding sequences");
     std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric(std::make_shared<const LevenshteinGlobal>());
     std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
-    kgl::ApplicationAnalysis::outputSequenceCSV(args.outCSVFile, dna_distance_metric, amino_distance_metric, genome_db_ptr, pop_variant_ptr);
+    std::string coding_file = kgl::Utility::filePath("CodingAnalysis", args.workDirectory) + ".csv";
+    kgl::ApplicationAnalysis::outputSequenceCSV(coding_file, dna_distance_metric, amino_distance_metric, genome_db_ptr, pop_variant_ptr);
 
   }
 
@@ -40,7 +41,8 @@ void kgl::PhylogeneticApp::performAnalysis(const kgl::Phylogenetic& args,
 
     kgl::ExecEnv::log().info("Analyzing genome intervals");
     std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
-    kgl::GeneAnalysis::mutateAllRegions(args.outCSVFile, 1000,  dna_distance_metric, pop_variant_ptr, genome_db_ptr);
+    std::string interval_file = kgl::Utility::filePath("IntervalAnalysis", args.workDirectory) + ".csv";
+    kgl::GeneAnalysis::mutateAllRegions(interval_file, 1000,  dna_distance_metric, pop_variant_ptr, genome_db_ptr);
 
   }
 

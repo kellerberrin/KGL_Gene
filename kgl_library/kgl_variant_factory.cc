@@ -11,6 +11,7 @@
 #include "kgl_variant_factory_single.h"
 #include "kgl_variant_factory_compound.h"
 #include "kgl_filter.h"
+#include "kgl_variant_factory_vcf_impl.h"
 
 
 namespace kgl = kellerberrin::genome;

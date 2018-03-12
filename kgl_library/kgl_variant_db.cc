@@ -337,14 +337,6 @@ bool kgl::GenomeVariant::getCodingSortedVariants(std::shared_ptr<const CodingSeq
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool kgl::PopulationVariant::addGenomeVariant(std::shared_ptr<const GenomeVariant> genome_variant) {
-
-  auto result = population_variant_map_.insert(std::pair<GenomeId_t, std::shared_ptr<const GenomeVariant>>(genome_variant->genomeId(), genome_variant));
-
-  return result.second;
-
-}
-
 bool kgl::PopulationVariant::getGenomeVariant(const GenomeId_t& genome_id,
                                               std::shared_ptr<const GenomeVariant>& genome_variant) const {
 
@@ -361,5 +353,14 @@ bool kgl::PopulationVariant::getGenomeVariant(const GenomeId_t& genome_id,
     return false;
 
   }
+
+}
+
+
+bool kgl::PopulationVariant::addGenomeVariant(std::shared_ptr<const GenomeVariant> genome_variant) {
+
+  auto result = population_variant_map_.insert(std::pair<GenomeId_t, std::shared_ptr<const GenomeVariant>>(genome_variant->genomeId(), genome_variant));
+
+  return result.second;
 
 }

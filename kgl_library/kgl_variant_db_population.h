@@ -36,9 +36,10 @@ public:
   PopulationVariant(const PopulationVariant&) = default;
   virtual ~PopulationVariant() = default;
 
-  bool addGenomeVariant(std::shared_ptr<const GenomeVariant> genome_variant);
-
+  // Returns false if the genome does not exist.
   bool getGenomeVariant(const GenomeId_t& genome_id, std::shared_ptr<const GenomeVariant>& genome_variant) const;
+
+  bool addGenomeVariant(std::shared_ptr<const GenomeVariant> genome_variant);
 
   const PopulationVariantMap& getMap() const { return population_variant_map_; }
 

@@ -5,6 +5,8 @@
 
 #include "kgl_variant_factory_vcf_parse_impl.h"
 
+#include <edlib.h>
+
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -169,13 +171,13 @@ bool kgl::ParseVCFMiscImpl::tokenizeVcfHeaderKeyValues(const std::string& key_va
 bool kgl::ParseVCFMiscImpl::parseCigar(const std::string& cigar,
                                        size_t& check_reference_size,
                                        size_t& check_alternate_size,
-                                       std::vector<std::pair<char, size_t>>& parsed_cigar) {
+                                       std::vector<CigarEditItem>& parsed_cigar) {
 
   parsed_cigar.clear();
   check_reference_size = 0;
   check_alternate_size = 0;
   auto it = cigar.begin();
-  char cigar_code;
+  CigarEditType cigar_code;
   std::string cigar_size;
   while(it != cigar.end()) {
 
@@ -202,19 +204,24 @@ bool kgl::ParseVCFMiscImpl::parseCigar(const std::string& cigar,
 
         case 'I':
           check_alternate_size += size;
-          cigar_code = *it;
+          cigar_code = CigarEditType::INSERT;
           break;
 
         case 'D':
           check_reference_size += size;
-          cigar_code = *it;
+          cigar_code = CigarEditType::DELETE;
           break;
 
         case 'X':
+          check_alternate_size += size;
+          check_reference_size += size;
+          cigar_code = CigarEditType::CHANGED;
+          break;
+
         case 'M':
           check_alternate_size += size;
           check_reference_size += size;
-          cigar_code = *it;
+          cigar_code = CigarEditType::UNCHANGED;
           break;
 
         default:
@@ -223,7 +230,7 @@ bool kgl::ParseVCFMiscImpl::parseCigar(const std::string& cigar,
 
       }
 
-      parsed_cigar.push_back(std::pair<char, size_t>(cigar_code, size));
+      parsed_cigar.push_back(CigarEditItem(size, cigar_code));
       ++it;
 
     } else {
@@ -304,5 +311,120 @@ bool kgl::ParseVCFMiscImpl::tokenize(const std::string& parse_text,
   }
 
   return true;
+
+}
+
+
+
+// Use edlib to generate a cigar string.
+std::string kgl::ParseVCFMiscImpl::generateCigar(const std::string& reference, const std::string& alternate) {
+
+
+  std::vector<CigarEditItem> item_vector;
+  generateEditVector(reference, alternate, item_vector);
+
+  std::stringstream ss;
+  for(auto item : item_vector) {
+
+    ss << item.first << static_cast<char>(item.second);
+
+  }
+
+  return ss.str();
+
+}
+
+
+
+// Use edlib to generate a cigar vector.
+void kgl::ParseVCFMiscImpl::generateEditVector(const std::string& reference,
+                                                 const std::string& alternate,
+                                                 std::vector<CigarEditItem>& item_vector) {
+
+  item_vector.clear();
+  std::vector<CigarEditType> edit_string;
+  generateEditString(reference, alternate, edit_string);
+
+  size_t same_count = 0;
+  bool first_pass = true;
+  CigarEditType previous_edit_item;
+  for(auto edit : edit_string) {
+
+    if (first_pass) {
+
+      first_pass = false;
+      previous_edit_item = edit;
+
+    }
+
+    if (previous_edit_item == edit) {
+
+      ++same_count;
+
+    } else {
+
+      item_vector.emplace_back(CigarEditItem(same_count, previous_edit_item));
+      same_count = 1;
+      previous_edit_item = edit;
+
+    }
+
+  }
+
+  if (not first_pass) {
+
+    item_vector.emplace_back(CigarEditItem(same_count, previous_edit_item));
+
+  }
+
+}
+
+
+
+// Use edlib to generate a cigar string.
+void kgl::ParseVCFMiscImpl::generateEditString(const std::string& reference,
+                                                 const std::string& alternate,
+                                                 std::vector<CigarEditType>& edit_vector) {
+
+
+  edit_vector.clear();
+
+  EdlibAlignResult result = edlibAlign(alternate.c_str(), alternate.size(),reference.c_str(), reference.size(),
+                                       edlibNewAlignConfig(-1, EDLIB_MODE_NW, EDLIB_TASK_PATH, NULL, 0));
+  if (result.status == EDLIB_STATUS_OK) {
+
+    for (int i = 0; i < result.alignmentLength; ++i) {
+
+      switch(result.alignment[i]) {
+
+        case 0:
+          edit_vector.push_back(CigarEditType::UNCHANGED);
+          break;
+
+        case 1:
+          edit_vector.push_back(CigarEditType::INSERT);
+          break;
+
+        case 2:
+          edit_vector.push_back(CigarEditType::DELETE);
+          break;
+
+        case 3:
+          edit_vector.push_back(CigarEditType::CHANGED);
+          break;
+
+      }
+
+
+    }
+
+
+  } else {
+
+    ExecEnv::log().error("Edlib - problem generating cigar reference:{}, alternate: {}", reference, alternate);
+
+  }
+
+  edlibFreeAlignResult(result);
 
 }

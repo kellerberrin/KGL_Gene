@@ -32,8 +32,8 @@ void kgl::ProcessPloidy::PloidyVCFRecord(const seqan::VcfRecord& vcf_record,
 
   for (auto allele : recordParser.alleles()) {
 
-    std::vector<SequenceEditType> edit_vector;
-    SequenceComparison().generateEditVector(recordParser.reference(), allele, edit_vector);
+    std::vector<CigarEditItem> edit_vector;
+    ParseVCFMiscImpl::generateEditVector(recordParser.reference(), allele, edit_vector);
 
   }
 
@@ -94,13 +94,14 @@ void kgl::ProcessPloidy::PloidyVCFRecord(const seqan::VcfRecord& vcf_record,
 
         }
         double GQ_value = std::stof(GQ_text);
+
 //          if (GQ_value < MIN_GQ_QUALITY_) {
 //
 //            ++GQ_failed_;
 //            return;
 //
 //          }
-//
+
         std::string DP_text = genotype_parser.getFormatString(recordParser.DPOffset(), *it);
         if (DP_text.find_first_not_of(DIGITS_) !=  std::string::npos) {
 
@@ -226,7 +227,32 @@ void kgl::ProcessPloidy::PloidyVCFRecord(const seqan::VcfRecord& vcf_record,
 
           if (A_allele != B_allele and A_allele > 0 and B_allele > 0) {
 
-            ++different_alleles_;
+            bool upstream = false;
+            if (A_allele > 0) {
+
+              if (recordParser.alleles()[A_allele - 1] == UPSTREAM_ALLELE_) {
+
+                upstream = true;
+
+              }
+
+            }
+
+            if (B_allele > 0) {
+
+              if (recordParser.alleles()[B_allele - 1] == UPSTREAM_ALLELE_) {
+
+                upstream = true;
+
+              }
+
+            }
+
+            if (not upstream) {
+
+              ++different_alleles_;
+
+            }
 
           }
 
@@ -273,35 +299,8 @@ void kgl::ProcessPloidy::PloidyVCFRecord(const seqan::VcfRecord& vcf_record,
 
       for (auto allele : recordParser.alleles()) {
 
-        std::vector<SequenceEditType> edit_vector;
-        SequenceComparison().generateEditVector(recordParser.reference(), allele, edit_vector);
-        std::string edit_string;
-        for (auto edit : edit_vector) {
-
-          switch(edit) {
-
-            case SequenceEditType::UNCHANGED:
-              edit_string += "M,";
-              break;
-
-            case SequenceEditType::INSERT:
-              edit_string += "I,";
-              break;
-
-            case SequenceEditType::DELETE:
-              edit_string += "D,";
-              break;
-
-            case SequenceEditType::CHANGED:
-              edit_string += "X,";
-              break;
-
-          }
-
-
-        }
-        ExecEnv::log().info("Reference: {}, Alternate: {}, Cigar: {}, Edit string: {}",
-                            recordParser.reference(), allele, SequenceComparison().generateCigar(recordParser.reference(), allele), edit_string);
+        ExecEnv::log().info("Reference: {}, Alternate: {}, Cigar: {}",
+                            recordParser.reference(), allele, ParseVCFMiscImpl::generateCigar(recordParser.reference(), allele));
 
       }
 

@@ -27,7 +27,7 @@ struct Phylogenetic {
   std::string gffFile{""};
   std::string gafFile{""};
   std::vector<FileListInfo> fileList;
-  std::string outCSVFile{"kgl_out.csv"};
+  std::string auxCSVFile{"kgl_aux.csv"};
   std::string logFile{"kgl_phylo.log"};
   std::string contig{WILDCARD};
   std::string aminoTranslationTable{"NCBI_TABLE_1"};

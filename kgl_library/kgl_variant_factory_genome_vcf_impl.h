@@ -6,6 +6,7 @@
 #define KGL_VARIANT_FACTORY_GENOME_VCF_IMPL_H
 
 #include "kgl_variant_factory_vcf_impl.h"
+#include "kgl_variant_factory_vcf_cigar_impl.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -18,7 +19,7 @@ namespace genome {   // project level namespace
 
 
 
-class ParseGenomeVCFImpl : public ParseVCFImpl {
+class ParseGenomeVCFImpl : public ParseCigarImpl {
 
 public:
 
@@ -26,10 +27,14 @@ public:
                      std::shared_ptr<PopulationVariant> pop_variant_ptr,
                      std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                      const std::string &vcf_file_name,
-                     Phred_t variant_quality) : ParseVCFImpl(pop_variant_ptr, genome_db_ptr, vcf_file_name, variant_quality),
+                     Phred_t variant_quality) : ParseCigarImpl(pop_variant_ptr, genome_db_ptr, vcf_file_name, variant_quality),
                                                 genome_name_(genome_name)  {
 
-    genome_single_variants_ = GenomeVariant::emptyGenomeVariant(genome_name_, genome_db_ptr_);
+    if (not thread_safe_population_.getCreateGenomeVariant(genome_name, genome_db_ptr_, genome_single_variants_)) {
+
+      ExecEnv::log().error("Could not find or create genome: {}", genome_name);
+
+    }
 
   }
 

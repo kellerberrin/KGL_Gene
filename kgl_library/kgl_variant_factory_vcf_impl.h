@@ -16,6 +16,33 @@ namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 
+using ThreadSafeGenomeMap = std::map<GenomeId_t, std::shared_ptr<GenomeVariant>>;
+class ThreadSafePopulation {
+
+public:
+
+  explicit ThreadSafePopulation() = default;
+  ThreadSafePopulation(const ThreadSafePopulation&) = default;
+  virtual ~ThreadSafePopulation() = default;
+
+  // Create the genome variant if it does not exist.
+  bool getCreateGenomeVariant(const GenomeId_t& genome_id,
+                              std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                              std::shared_ptr<GenomeVariant>& genome_variant);
+
+  const ThreadSafeGenomeMap& getMap() const { return population_variant_map_; }
+
+  size_t variantCount() const;
+
+private:
+
+  ThreadSafeGenomeMap population_variant_map_;
+
+  mutable std::mutex mutex_;  // mutex to lock the GenomeVariant structure when inserting variants.
+
+};
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // VCF parser. Multi threaded implementation.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -29,10 +56,10 @@ public:
   ParseVCFImpl(std::shared_ptr<PopulationVariant> pop_variant_ptr,
                std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                const std::string& vcf_file_name,
-               Phred_t variant_quality) : pop_variant_ptr_(pop_variant_ptr),
-                                          genome_db_ptr_(genome_db_ptr),
+               Phred_t variant_quality) : genome_db_ptr_(genome_db_ptr),
                                           vcf_file_name_(vcf_file_name),
-                                          variant_quality_(variant_quality) {
+                                          variant_quality_(variant_quality),
+                                          pop_variant_ptr_(pop_variant_ptr) {
 
     reader_ptr_ = std::make_shared<VCFReaderMT<ParseVCFImpl>>(vcf_file_name, this, &ParseVCFImpl::ProcessVCFRecord);
 
@@ -71,19 +98,20 @@ protected:
                                     std::shared_ptr<const Variant> variant_ptr) const;
 
 
-  std::shared_ptr<PopulationVariant> pop_variant_ptr_;
+  ThreadSafePopulation thread_safe_population_;
   std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
   const std::string vcf_file_name_;
   Phred_t variant_quality_;
+  std::shared_ptr<PopulationVariant> pop_variant_ptr_;
 
   std::shared_ptr<VCFReaderMT<ParseVCFImpl>> reader_ptr_;
 
 private:
 
+
   mutable std::mutex mutex_;  // mutex to lock the GenomeVariant structure when inserting variants.
 
 };
-
 
 
 

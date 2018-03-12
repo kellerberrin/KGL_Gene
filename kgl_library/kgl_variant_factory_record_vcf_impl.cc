@@ -77,16 +77,15 @@ bool kgl::ParseVCFRecord::parseRecord(const ContigId_t& contig_id, std::shared_p
   allele_offset_ = static_cast<ContigOffset_t >(vcf_record_.beginPos);
 
   // Get the contig pointer.
-  std::shared_ptr<const ContigFeatures> contig_ptr;
-  if (not genome_db_ptr->getContigSequence(contig_id, contig_ptr)) {
+  if (not genome_db_ptr->getContigSequence(contig_id, contig_ptr_)) {
 
     ExecEnv::log().error("Contig: {} is not in the Genome Database", contig_id);
-    contig_ptr = nullptr;
+    contig_ptr_ = nullptr;
     parse_result = false;
 
   }
 
-  std::shared_ptr<const DNA5SequenceLinear> contig_ref = contig_ptr->sequence().unstrandedRegion(allele_offset_, reference_.length());
+  std::shared_ptr<const DNA5SequenceLinear> contig_ref = contig_ptr_->sequence().unstrandedRegion(allele_offset_, reference_.length());
 
   if (contig_ref->getSequenceAsString() != reference_) {
 

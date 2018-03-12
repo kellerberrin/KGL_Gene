@@ -11,6 +11,7 @@
 #include "kgl_variant_compound.h"
 #include "kgl_genome_db.h"
 #include "kgl_variant.h"
+#include "kgl_variant_factory_vcf_impl.h"
 
 
 namespace kellerberrin {   //  organization level namespace
