@@ -13,6 +13,7 @@
 #include "kgl_variant_db.h"
 #include "kgl_filter.h"
 #include "kgl_gff_fasta.h"
+#include "kgl_Pf3k_aux_csv.h"
 
 
 
@@ -80,6 +81,15 @@ public:
                                    const FeatureIdent_t& sequence_id,
                                    std::shared_ptr<const GenomeDatabase> genome_db,
                                    std::shared_ptr<const PopulationVariant> pop_variant_ptr);
+
+  static bool outputDNAMutationCSV(const std::string &file_name,
+                                   const ContigId_t& contig_id,
+                                   const FeatureIdent_t& gene_id,
+                                   const FeatureIdent_t& sequence_id,
+                                   std::shared_ptr<const GenomeDatabase> genome_db,
+                                   std::shared_ptr<const PopulationVariant> pop_variant_ptr,
+                                   const Pf3kAuxData& aux_Pf3k_data);
+
 
 private:
 

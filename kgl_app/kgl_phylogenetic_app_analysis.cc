@@ -3,7 +3,8 @@
 //
 
 
-#include <kgl_sequence_distance.h>
+#include "kgl_sequence_distance.h"
+#include "kgl_Pf3k_aux_csv.h"
 #include "kgl_phylogenetic_app.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_phylogenetic_gene.h"
@@ -96,8 +97,11 @@ void kgl::PhylogeneticApp::performAnalysis(const kgl::Phylogenetic& args,
 
   }
 
+  Pf3kAuxData aux_data;
+  aux_data.readParseAuxData(args.auxCSVFile);
+
   std::string DNA_mutation_file = kgl::Utility::filePath("DNAMutations", args.workDirectory) + ".csv";
-  ApplicationAnalysis::outputDNAMutationCSV(DNA_mutation_file, PFATP4_CONTIG, PFATP4_GENE, PFATP4_SEQUENCE, genome_db_ptr, pop_variant_ptr);
+  ApplicationAnalysis::outputDNAMutationCSV(DNA_mutation_file, PFATP4_CONTIG, PFATP4_GENE, PFATP4_SEQUENCE, genome_db_ptr, pop_variant_ptr, aux_data);
   std::string amino_mutation_file = kgl::Utility::filePath("AminoMutations", args.workDirectory) + ".csv";
   ApplicationAnalysis::outputAminoMutationCSV(amino_mutation_file, PFATP4_CONTIG, PFATP4_GENE, PFATP4_SEQUENCE, genome_db_ptr, pop_variant_ptr);
 

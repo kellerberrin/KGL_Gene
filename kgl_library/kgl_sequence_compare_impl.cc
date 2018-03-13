@@ -21,17 +21,6 @@
 namespace kgl = kellerberrin::genome;
 
 
-struct EditItem{
-
-  char reference_char;
-  kgl::ContigOffset_t reference_offset;
-  char mutant_char;
-
-};
-
-using EditVector = std::vector<EditItem>;
-
-
 class kgl::SequenceComparison::SequenceManipImpl {
 
 public:
@@ -45,13 +34,11 @@ public:
   kgl::CompareScore_t DNALocalAffineGap(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
 
   std::string editItems(const std::string& reference_str, const std::string& mutant_str, char delimiter, VariantOutputIndex display_offset) const;
-  std::string editDNAItems(std::shared_ptr<const ContigFeatures> contig_ptr,
-                           std::shared_ptr<const DNA5SequenceCoding> reference,
-                           std::shared_ptr<const DNA5SequenceCoding> mutant,
-                           char delimiter,
-                           VariantOutputIndex display_offset) const;
 
-
+  void editDNAItems(std::shared_ptr<const ContigFeatures> contig_ptr,
+                    std::shared_ptr<const DNA5SequenceCoding> reference,
+                    std::shared_ptr<const DNA5SequenceCoding> mutant,
+                    MutationEditVector& mutation_edit_vector) const;
 private:
 
   EditVector createEditItems(const std::string& reference_str, const std::string& mutant_str, EditVector& edit_vector) const;
@@ -152,12 +139,10 @@ kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::DNALocalAffineGa
 }
 
 
-
-std::string kgl::SequenceComparison::SequenceManipImpl::editDNAItems(std::shared_ptr<const ContigFeatures> contig_ptr,
-                                                                     std::shared_ptr<const DNA5SequenceCoding> reference,
-                                                                     std::shared_ptr<const DNA5SequenceCoding> mutant,
-                                                                     char delimiter,
-                                                                     VariantOutputIndex index_offset) const {
+void kgl::SequenceComparison::SequenceManipImpl::editDNAItems(std::shared_ptr<const ContigFeatures> contig_ptr,
+                                                              std::shared_ptr<const DNA5SequenceCoding> reference,
+                                                              std::shared_ptr<const DNA5SequenceCoding> mutant,
+                                                              MutationEditVector& mutation_edit_vector) const {
   EditVector edit_vector;
   EditVector check_edit_vector;
   createEditItems(reference->getSequenceAsString(), mutant->getSequenceAsString(), edit_vector);
@@ -198,10 +183,8 @@ std::string kgl::SequenceComparison::SequenceManipImpl::editDNAItems(std::shared
 
   }
 
-
-  size_t last_index = edit_vector.size() - 1;
-  size_t index = 0;
-  std::stringstream ss;
+  mutation_edit_vector.mutation_vector.clear();
+  MutationItem mutation_item;
   for (auto edit_item :edit_vector) {
 
     ContigOffset_t codon_index = static_cast<size_t>(edit_item.reference_offset / 3);
@@ -209,24 +192,17 @@ std::string kgl::SequenceComparison::SequenceManipImpl::editDNAItems(std::shared
     std::shared_ptr<const Codon> mutant_codon(std::make_shared<Codon>(mutant, codon_index));
     std::shared_ptr<const Codon> ref_codon(std::make_shared<Codon>(reference, codon_index));
 
+    mutation_item.DNA_mutation = edit_item;
+    mutation_item.reference_codon = ref_codon->getSequenceAsString();
+    mutation_item.mutation_codon = mutant_codon->getSequenceAsString();
 
-    ss << edit_item.reference_char << offsetOutput(edit_item.reference_offset, index_offset) << edit_item.mutant_char;
-    ss << " " << ref_codon->getSequenceAsString() << "-" << mutant_codon->getSequenceAsString();
-    ss << " " << AminoAcid::convertToChar(contig_ptr->getAminoAcid(*ref_codon))
-       << offsetOutput(codon_index, index_offset) << AminoAcid::convertToChar(contig_ptr->getAminoAcid(*mutant_codon));
+    mutation_item.amino_mutation.reference_char = AminoAcid::convertToChar(contig_ptr->getAminoAcid(*ref_codon));
+    mutation_item.amino_mutation.reference_offset = codon_index;
+    mutation_item.amino_mutation.mutant_char = AminoAcid::convertToChar(contig_ptr->getAminoAcid(*mutant_codon));
 
-    if (index != last_index) {
-
-      ss << delimiter;
-
-    }
-
-    index++;
-
+    mutation_edit_vector.mutation_vector.push_back(mutation_item);
 
   }
-
-  return ss.str();
 
 }
 
@@ -261,7 +237,7 @@ std::string kgl::SequenceComparison::SequenceManipImpl::editItems(const std::str
 }
 
 
-EditVector kgl::SequenceComparison::SequenceManipImpl::createEditItemsEdlib(const std::string& reference,
+kgl::EditVector kgl::SequenceComparison::SequenceManipImpl::createEditItemsEdlib(const std::string& reference,
                                                                             const std::string& mutant,
                                                                             EditVector& edit_vector) const {
 
@@ -283,7 +259,7 @@ EditVector kgl::SequenceComparison::SequenceManipImpl::createEditItemsEdlib(cons
         case 1:
           edit_item.reference_char = reference[ref_index];
           edit_item.reference_offset = ref_index;
-          edit_item.mutant_char = '+';
+          edit_item.mutant_char = EditItem::INSERTION;
           edit_vector.push_back(edit_item);
           ++mut_index;
           break;
@@ -291,7 +267,7 @@ EditVector kgl::SequenceComparison::SequenceManipImpl::createEditItemsEdlib(cons
         case 2:
           edit_item.reference_char = reference[ref_index];
           edit_item.reference_offset = ref_index;
-          edit_item.mutant_char = '-';
+          edit_item.mutant_char = EditItem::DELETION;
           edit_vector.push_back(edit_item);
           --mut_index;
           break;
@@ -324,7 +300,7 @@ EditVector kgl::SequenceComparison::SequenceManipImpl::createEditItemsEdlib(cons
 
 
 
-EditVector kgl::SequenceComparison::SequenceManipImpl::createEditItems(const std::string& reference_str,
+kgl::EditVector kgl::SequenceComparison::SequenceManipImpl::createEditItems(const std::string& reference_str,
                                                                          const std::string& mutant_str,
                                                                          EditVector& edit_vector) const
 {
@@ -345,7 +321,7 @@ EditVector kgl::SequenceComparison::SequenceManipImpl::createEditItems(const std
   seqan::clearGaps(gaps_reference);
   seqan::clearGaps(gaps_mutant);
 
-  seqan::globalAlignment(gaps_reference, gaps_mutant, seqan::Score<int>(0, -1, -1));
+  seqan::globalAlignment(gaps_reference, gaps_mutant, seqan::Score<int>(1, -1, -10, -7));
 
   TGapsIterator itGapsText = begin(gaps_mutant);
   TGapsIterator itGapsPattern = begin(gaps_reference);
@@ -370,7 +346,7 @@ EditVector kgl::SequenceComparison::SequenceManipImpl::createEditItems(const std
         EditItem edit_item;
         edit_item.reference_char = reference_str[ref_index];
         edit_item.reference_offset = ref_index;
-        edit_item.mutant_char = '-';
+        edit_item.mutant_char = EditItem::DELETION;
         edit_vector.push_back(edit_item);
         ++ref_index;
 
@@ -389,7 +365,7 @@ EditVector kgl::SequenceComparison::SequenceManipImpl::createEditItems(const std
         EditItem edit_item;
         edit_item.reference_char = reference_str[ref_index];
         edit_item.reference_offset = ref_index;
-        edit_item.mutant_char = '+';
+        edit_item.mutant_char = EditItem::INSERTION;
         edit_vector.push_back(edit_item);
         ++mut_index;
 
@@ -476,13 +452,53 @@ std::string kgl::SequenceComparison::editItems(const std::string& reference,
 
 
 
+void kgl::SequenceComparison::editDNAItems(std::shared_ptr<const ContigFeatures> contig_ptr,
+                                           std::shared_ptr<const DNA5SequenceCoding> reference,
+                                           std::shared_ptr<const DNA5SequenceCoding> mutant,
+                                           MutationEditVector& mutation_edit_vector) const {
+
+  sequence_manip_impl_ptr_->editDNAItems(contig_ptr, reference, mutant, mutation_edit_vector);
+
+}
+
+
+
 std::string kgl::SequenceComparison::editDNAItems(std::shared_ptr<const ContigFeatures> contig_ptr,
                                                   std::shared_ptr<const DNA5SequenceCoding> reference,
                                                   std::shared_ptr<const DNA5SequenceCoding> mutant,
                                                   char delimiter,
                                                   VariantOutputIndex index_offset) const {
 
-  return sequence_manip_impl_ptr_->editDNAItems(contig_ptr, reference, mutant, delimiter, index_offset);
+
+  MutationEditVector mutation_edit_vector;
+  editDNAItems(contig_ptr, reference, mutant, mutation_edit_vector);
+
+  size_t last_index = mutation_edit_vector.mutation_vector.size() - 1;
+  size_t index = 0;
+  std::stringstream ss;
+  for (auto edit_item : mutation_edit_vector.mutation_vector) {
+
+    ss << edit_item.DNA_mutation.reference_char
+       << offsetOutput(edit_item.DNA_mutation.reference_offset, index_offset)
+       << edit_item.DNA_mutation.mutant_char;
+    ss << " " << edit_item.reference_codon << "-" << edit_item.mutation_codon;
+    ss << " " << edit_item.amino_mutation.reference_char
+       << offsetOutput(edit_item.amino_mutation.reference_offset, index_offset)
+       << edit_item.amino_mutation.mutant_char;
+
+    if (index != last_index) {
+
+      ss << delimiter;
+
+    }
+
+    index++;
+
+
+  }
+
+  return ss.str();
 
 }
+
 

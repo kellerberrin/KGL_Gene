@@ -4,6 +4,7 @@
 
 #include "kgl_sequence_distance.h"
 #include "kgl_sequence_compare.h"
+#include "kgl_Pf3k_aux_csv.h"
 #include "kgl_upgma.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_offset.h"
@@ -370,7 +371,7 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
   std::fstream out_file(file_name, std::fstream::out);
   if (!out_file) {
 
-    ExecEnv::log().error("Cannot open output CSV file (--outCSVFile): {}", file_name);
+    ExecEnv::log().error("Cannot open output CSV file: {}", file_name);
     return false;
 
   }
@@ -426,6 +427,150 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
   return out_file.good();
 
 }
+
+
+
+
+bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name,
+                                                    const ContigId_t& contig_id,
+                                                    const FeatureIdent_t& gene_id,
+                                                    const FeatureIdent_t& sequence_id,
+                                                    std::shared_ptr<const GenomeDatabase> genome_db,
+                                                    std::shared_ptr<const PopulationVariant> pop_variant_ptr,
+                                                    const Pf3kAuxData& aux_Pf3k_data) {
+
+  const char CSV_delimiter = ',';
+  // open the file.
+  std::fstream out_file(file_name, std::fstream::out);
+  if (!out_file) {
+
+    ExecEnv::log().error("Cannot open output CSV file: {}", file_name);
+    return false;
+
+  }
+
+  // Get the contig.
+  std::shared_ptr<const ContigFeatures> contig_ptr;
+  if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
+
+    ExecEnv::log().error("outputMutationCSV(), Could not find contig: {} in genome database", contig_id);
+    return false;
+
+  }
+
+  using SNPMap = std::map<std::string, MutationItem>;
+  SNPMap master_SNP_List;
+  struct GenomeMap {
+
+    std::string genome;
+    std::string location_date;
+    SNPMap snp_map;
+
+  };
+  std::vector<GenomeMap> genome_vector;
+  for( auto genome_variant : pop_variant_ptr->getMap()) {
+
+    ExecEnv::log().info("outputMutationCSV(), Processing genome: {}", genome_variant.first);
+    size_t sequence_count = 0;
+
+    sequence_count++;
+    OffsetVariantMap variant_map;
+    std::shared_ptr<DNA5SequenceCoding> reference_sequence;
+    std::vector<std::shared_ptr<DNA5SequenceCoding>> mutant_sequence_vector;
+    if (genome_variant.second->mutantCodingDNA( contig_id,
+                                                gene_id,
+                                                sequence_id,
+                                                genome_db,
+                                                variant_map,
+                                                reference_sequence,
+                                                mutant_sequence_vector)) {
+
+      for (auto mutant : mutant_sequence_vector) {
+
+        MutationEditVector mutation_edit_vector;
+        SequenceComparison().editDNAItems(contig_ptr,
+                                          reference_sequence,
+                                          mutant,
+                                          mutation_edit_vector);
+
+        if (not mutation_edit_vector.hasIndel()) { // Only SNPs.
+
+          GenomeMap genome_map;
+
+          genome_map.genome = genome_variant.first;
+          if (aux_Pf3k_data.isFieldSample(genome_variant.first)) {
+
+            genome_map.location_date = aux_Pf3k_data.locationDate(genome_variant.first);
+
+          } else {
+
+            genome_map.location_date = genome_variant.first;
+
+          }
+
+          for (auto edit_item : mutation_edit_vector.mutation_vector) {
+
+            master_SNP_List[edit_item.mapKey()] = edit_item;
+            genome_map.snp_map[edit_item.mapKey()] = edit_item;
+
+          }
+
+          genome_vector.push_back(genome_map);
+
+        }
+
+      } // for mutant
+
+    } // if mutation
+
+// Write file header.
+
+    out_file << "Genome" << CSV_delimiter << "LocationDate" << CSV_delimiter;
+    for (auto DNA_Item : master_SNP_List) {
+
+      out_file << DNA_Item.second.DNA_mutation.reference_char
+               << offsetOutput(DNA_Item.second.DNA_mutation.reference_offset, VariantOutputIndex::START_1_BASED)
+               << DNA_Item.second.DNA_mutation.mutant_char
+               << " " << DNA_Item.second.reference_codon << "-" << DNA_Item.second.mutation_codon
+               << " " << DNA_Item.second.amino_mutation.reference_char
+               << offsetOutput(DNA_Item.second.amino_mutation.reference_offset, VariantOutputIndex::START_1_BASED)
+               << DNA_Item.second.amino_mutation.mutant_char << CSV_delimiter;
+
+    }
+    out_file << std::endl;
+
+// Write data.
+
+    for (auto genome_item : genome_vector) {
+
+      out_file << genome_item.genome << CSV_delimiter << genome_item.location_date << CSV_delimiter;
+
+      for (auto DNA_Item : master_SNP_List) {
+
+        auto result = genome_item.snp_map.find(DNA_Item.first);
+        if (result == genome_item.snp_map.end()) {
+
+          out_file << 0 << CSV_delimiter;
+
+        } else {
+
+          out_file << 1 << CSV_delimiter;
+
+        }
+
+      }
+      out_file << std::endl;
+
+    }
+
+    ExecEnv::log().info("outputMutantCSV(), Genome: {} mutated: {} sequences.", genome_variant.first, sequence_count);
+
+  } // for genome
+
+  return out_file.good();
+
+}
+
 
 
 std::string kgl::ApplicationAnalysis::outputSequenceHeader(char delimiter) {

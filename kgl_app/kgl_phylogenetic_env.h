@@ -32,6 +32,7 @@ struct Phylogenetic {
   std::string contig{WILDCARD};
   std::string aminoTranslationTable{"NCBI_TABLE_1"};
   std::string analysisType{WILDCARD};
+  size_t ploidy{1};
   int max_error_count{1000};
   int max_warn_count{1000};
   bool verbose{false};

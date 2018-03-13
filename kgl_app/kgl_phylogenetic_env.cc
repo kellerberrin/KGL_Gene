@@ -326,6 +326,14 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
   addOption(parser, seqan::ArgParseOption(minimumProportionShortFlag_, minimumProportionFlag_, min_prop_desc, seqan::ArgParseArgument::DOUBLE, "FLOAT"));
 
+  const char* ploidy_desc =
+  R"(The ploidy of the variant analysis)";
+
+  const char* ploidyFlag_ = "ploidy";
+  const char* ploidyShortFlag_ = "b";
+
+  addOption(parser, seqan::ArgParseOption(ploidyShortFlag_, ploidyFlag_, ploidy_desc, seqan::ArgParseArgument::INTEGER, "INT"));
+
   const char* translation_table_desc =
   R"(The amino acid translation table name used in gene verification and amino acid generation from CDS regions.
   The tables match the translation tables defines on the NCBI website at
@@ -533,6 +541,8 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   if (seqan::isSet(parser, minimumCountFlag_)) seqan::getOptionValue(args_.minCount, parser, minimumCountFlag_);
 
   if (seqan::isSet(parser, minimumProportionFlag_)) seqan::getOptionValue(args_.minProportion, parser, minimumProportionFlag_);
+
+  if (seqan::isSet(parser, ploidyFlag_)) seqan::getOptionValue(args_.ploidy, parser, ploidyFlag_);
 
   if (seqan::isSet(parser, translationTableFlag_)) seqan::getOptionValue(args_.aminoTranslationTable, parser, translationTableFlag_);
 
