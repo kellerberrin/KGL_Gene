@@ -48,7 +48,6 @@ private:
   bool getGenomeAttributes(const std::string& genome_name, AuxAttributeVector& attribute_vector) const;
 
   constexpr static const char* FIELD_SAMPLE = "IsFieldSample";
-  constexpr static const char* PREFERRED_SAMPLE = "PreferredSample";
   constexpr static const char* COUNTRY = "country";
   constexpr static const char* SITE = "site";
   constexpr static const char* COLLECTION_YEAR = "collection_year";

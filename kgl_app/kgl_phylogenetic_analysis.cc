@@ -523,49 +523,49 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
 
     } // if mutation
 
+    ExecEnv::log().info("outputMutantCSV(), Genome: {} mutated: {} sequences.", genome_variant.first, sequence_count);
+
+  } // for genome
+
 // Write file header.
 
-    out_file << "Genome" << CSV_delimiter << "LocationDate" << CSV_delimiter;
+  out_file << "Genome" << CSV_delimiter << "LocationDate" << CSV_delimiter;
+  for (auto DNA_Item : master_SNP_List) {
+
+    out_file << DNA_Item.second.DNA_mutation.reference_char
+             << offsetOutput(DNA_Item.second.DNA_mutation.reference_offset, VariantOutputIndex::START_1_BASED)
+             << DNA_Item.second.DNA_mutation.mutant_char
+             << " " << DNA_Item.second.reference_codon << "-" << DNA_Item.second.mutation_codon
+             << " " << DNA_Item.second.amino_mutation.reference_char
+             << offsetOutput(DNA_Item.second.amino_mutation.reference_offset, VariantOutputIndex::START_1_BASED)
+             << DNA_Item.second.amino_mutation.mutant_char << CSV_delimiter;
+
+  }
+  out_file << std::endl;
+
+// Write data.
+
+  for (auto genome_item : genome_vector) {
+
+    out_file << genome_item.genome << CSV_delimiter << genome_item.location_date << CSV_delimiter;
+
     for (auto DNA_Item : master_SNP_List) {
 
-      out_file << DNA_Item.second.DNA_mutation.reference_char
-               << offsetOutput(DNA_Item.second.DNA_mutation.reference_offset, VariantOutputIndex::START_1_BASED)
-               << DNA_Item.second.DNA_mutation.mutant_char
-               << " " << DNA_Item.second.reference_codon << "-" << DNA_Item.second.mutation_codon
-               << " " << DNA_Item.second.amino_mutation.reference_char
-               << offsetOutput(DNA_Item.second.amino_mutation.reference_offset, VariantOutputIndex::START_1_BASED)
-               << DNA_Item.second.amino_mutation.mutant_char << CSV_delimiter;
+      auto result = genome_item.snp_map.find(DNA_Item.first);
+      if (result == genome_item.snp_map.end()) {
+
+        out_file << 0 << CSV_delimiter;
+
+      } else {
+
+        out_file << 1 << CSV_delimiter;
+
+      }
 
     }
     out_file << std::endl;
 
-// Write data.
-
-    for (auto genome_item : genome_vector) {
-
-      out_file << genome_item.genome << CSV_delimiter << genome_item.location_date << CSV_delimiter;
-
-      for (auto DNA_Item : master_SNP_List) {
-
-        auto result = genome_item.snp_map.find(DNA_Item.first);
-        if (result == genome_item.snp_map.end()) {
-
-          out_file << 0 << CSV_delimiter;
-
-        } else {
-
-          out_file << 1 << CSV_delimiter;
-
-        }
-
-      }
-      out_file << std::endl;
-
-    }
-
-    ExecEnv::log().info("outputMutantCSV(), Genome: {} mutated: {} sequences.", genome_variant.first, sequence_count);
-
-  } // for genome
+  }
 
   return out_file.good();
 

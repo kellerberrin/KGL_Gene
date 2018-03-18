@@ -34,6 +34,8 @@ using FeatureType_t = std::string;
 using VariantType_t = std::string;
 using OntologyIdent_t = std::string;
 using Phred_t = double;
+using Haplotypes = std::string;
+
 
 
 // Usage and semantics : ContigOffset_t should be used when referring to the Genome and std::size_t should be used

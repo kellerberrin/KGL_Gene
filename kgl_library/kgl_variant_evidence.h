@@ -120,6 +120,7 @@ std::string ReadCountEvidence<Alphabet>::output(char delimiter, VariantOutputInd
 // The VCF evidence object
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
 class VCFEvidence : public VariantEvidence {
 
 public:
@@ -135,6 +136,7 @@ private:
 
   std::string info_;
   Phred_t quality_;
+  Haplotypes haplotypes_;
 
 };
 

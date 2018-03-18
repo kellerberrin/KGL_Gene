@@ -40,7 +40,13 @@ struct MutationItem {
   std::string mutation_codon;
   EditItem amino_mutation;
 
-  std::string mapKey() const { std::stringstream ss; ss << DNA_mutation.reference_offset << DNA_mutation.mutant_char; return ss.str(); }
+  std::string mapKey() const {
+
+    std::stringstream ss;
+    ss << amino_mutation.reference_offset << amino_mutation.reference_char << amino_mutation.mutant_char;
+    ss << DNA_mutation.reference_offset << DNA_mutation.reference_char << DNA_mutation.mutant_char;
+
+    return ss.str(); }
 
 };
 
