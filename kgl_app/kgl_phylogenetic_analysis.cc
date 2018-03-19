@@ -4,7 +4,7 @@
 
 #include "kgl_sequence_distance.h"
 #include "kgl_sequence_compare.h"
-#include "kgl_Pf3k_aux_csv.h"
+#include "kgl_genome_aux_csv.h"
 #include "kgl_upgma.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_offset.h"
@@ -437,7 +437,7 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
                                                     const FeatureIdent_t& sequence_id,
                                                     std::shared_ptr<const GenomeDatabase> genome_db,
                                                     std::shared_ptr<const PopulationVariant> pop_variant_ptr,
-                                                    const Pf3kAuxData& aux_Pf3k_data) {
+                                                    const GenomeAuxData& aux_Pf3k_data) {
 
   const char CSV_delimiter = ',';
   // open the file.

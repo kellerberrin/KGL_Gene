@@ -10,7 +10,7 @@
 #include "kgl_variant_factory.h"
 #include "kgl_filter.h"
 #include "kgl_ploidy_analysis.h"
-#include "kgl_Pf3k_aux_csv.h"
+#include "kgl_genome_aux_csv.h"
 
 
 

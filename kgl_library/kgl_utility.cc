@@ -57,11 +57,23 @@ std::string kgl::Utility::fileName(const std::string& file_name) {
 }
 
 // Returns uppercase string.
-std::string kgl::Utility::toupper(std::string s) {
+std::string kgl::Utility::toupper(const std::string& s) {
 
+  std::string upper_string;
   auto lambda_to_upper = [](unsigned char c){ return std::toupper(c); };
-  std::transform(s.begin(), s.end(), s.begin(), lambda_to_upper);
+  std::transform(s.begin(), s.end(), std::back_inserter(upper_string), lambda_to_upper);
 
-  return s;
+  return upper_string;
+
+}
+
+// Returns trimmed string.
+std::string kgl::Utility::trimWhiteSpace(const std::string& s) {
+
+  std::string clean_string;
+  auto lambda_not_whitespace = [](unsigned char c){ return not std::isspace(c); };
+  std::copy_if(s.begin(), s.end(), back_inserter(clean_string), lambda_not_whitespace);
+
+  return clean_string;
 
 }

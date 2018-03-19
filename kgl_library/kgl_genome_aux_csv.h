@@ -1,9 +1,10 @@
 //
-// Created by kellerberrin on 12/03/18.
+// Created by kellerberrin on 19/03/18.
 //
 
-#ifndef KGL_PF3K_AUX_CSV_H
-#define KGL_PF3K_AUX_CSV_H
+#ifndef KGL_GENOME_AUX_CSV_H
+#define KGL_GENOME_AUX_CSV_H
+
 
 #include <string>
 #include <vector>
@@ -19,15 +20,15 @@ namespace genome {   // project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using AuxAttributeVector = std::vector<std::string>;
-using Pf3kSampleMap = std::map<std::string, AuxAttributeVector>;
+using AuxSampleMap = std::map<std::string, AuxAttributeVector>;
 
 
-class Pf3kAuxData {
+class GenomeAuxData {
 
 public:
 
-  Pf3kAuxData() = default;
-  ~Pf3kAuxData() = default;
+  GenomeAuxData() = default;
+  ~GenomeAuxData() = default;
 
   bool readParseAuxData(const std::string& aux_file_name);
 
@@ -39,7 +40,7 @@ public:
 private:
 
   AuxAttributeVector aux_data_header_;  // Always assumed to be the first line (uppercase, query case conversion automatic).
-  Pf3kSampleMap aux_sample_information_;
+  AuxSampleMap aux_sample_information_;
 
   bool parseHeader(const std::string& record_str);
   bool parseDataline(const std::string& record_str);
@@ -66,9 +67,4 @@ private:
 
 
 
-
-
-
-
-
-#endif // KGL_PF3K_AUX_CSV_H
+#endif //KGL_KGL_GENOME_AUX_CSV_H
