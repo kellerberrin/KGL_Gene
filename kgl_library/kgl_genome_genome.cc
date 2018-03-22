@@ -7,8 +7,7 @@
 #include "kgl_patterns.h"
 #include "kgl_gaf_parser.h"
 #include "kgl_gff_fasta.h"
-#include "kgl_genome_feature.h"
-#include "kgl_genome_db.h"
+#include "kgl_sequence_offset.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -128,5 +127,37 @@ void kgl::GenomeDatabase::registerContigData(std::shared_ptr<kgl::ContigCountDat
     }
 
   }
+
+}
+
+
+
+// Given a sequence offset, returns a contig offset.
+bool kgl::GenomeDatabase::contigOffset( const ContigId_t& contig_id,
+                                        const FeatureIdent_t& gene_id,
+                                        const FeatureIdent_t& sequence_id,
+                                        ContigOffset_t sequence_offset,
+                                        ContigOffset_t& contig_offset) const {
+
+  // Get the contig.
+  std::shared_ptr<const ContigFeatures> contig_ptr;
+  if (not getContigSequence(contig_id, contig_ptr)) {
+
+    ExecEnv::log().warn("contigOffset(), Could not find contig: {} in genome database", contig_id);
+    return false;
+
+  }
+
+  // Get the coding sequence.
+  std::shared_ptr<const CodingSequence> coding_sequence_ptr;
+  if (not contig_ptr->getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
+
+    ExecEnv::log().warn("contigOffset(), Could not find a coding sequence for gene: {}, sequence: {}", gene_id, sequence_id);
+    return false;
+
+  }
+
+  ContigSize_t coding_sequence_length;
+  return SequenceOffset::refCodingSequenceContigOffset(coding_sequence_ptr, sequence_offset, contig_offset, coding_sequence_length);
 
 }

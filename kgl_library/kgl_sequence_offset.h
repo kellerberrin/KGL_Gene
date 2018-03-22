@@ -59,6 +59,15 @@ public:
                                             ContigOffset_t &coding_sequence_offset,
                                             ContigSize_t &coding_sequence_length);
 
+// Inverse of the above function. Given the stranded base offset within a coding sequence, return the corresponding contig offset.
+// Returns bool false if then coding sequence offset is not within the coding sequence defined by the coding_seq_ptr.
+// If the coding sequence_offset is in the coding sequence then a valid contig_offset and the sequence length is returned.
+// The contig offset is adjusted for strand type; the offset arithmetic is reversed for -ve strand sequences.
+  static bool refCodingSequenceContigOffset(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+                                            ContigOffset_t coding_sequence_offset,
+                                            ContigOffset_t &contig_offset,
+                                            ContigSize_t &coding_sequence_length);
+
   // Converts linear DNA to a coding DNA sequence.
   static std::shared_ptr<DNA5SequenceCoding> codingSequence(std::shared_ptr<const DNA5SequenceLinear> base_sequence, StrandSense strand);
   // Converts a coding DNA sequence to linear DNA (swap alphabet). No strand conversion is performed.
@@ -101,6 +110,14 @@ private:
                                          ContigOffset_t &coding_sequence_offset,
                                          ContigSize_t &coding_sequence_length);
 
+// Inverse of the above function. Returns bool false if the sequence_offset is not within the coding sequence defined by the coding_seq_ptr.
+// If the sequence_offset is in the coding sequence then a valid contig_offset and the sequence length is returned.
+// The contig offset is adjusted for strand type; the offset arithmetic is reversed for -ve strand sequences.
+  static bool codingSequenceContigOffset(const ExonOffsetMap& exon_offset_map,
+                                         StrandSense strand,
+                                         ContigOffset_t sequence_offset,
+                                         ContigOffset_t &contig_offset,
+                                         ContigSize_t &coding_sequence_length);
 
 };
 

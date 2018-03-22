@@ -185,7 +185,7 @@ void kgl::SequenceComparison::SequenceManipImpl::editDNAItems(std::shared_ptr<co
 
   mutation_edit_vector.mutation_vector.clear();
   MutationItem mutation_item;
-  for (auto edit_item :edit_vector) {
+  for (auto edit_item : edit_vector) {
 
     ContigOffset_t codon_index = static_cast<size_t>(edit_item.reference_offset / 3);
 

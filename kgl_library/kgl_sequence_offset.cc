@@ -377,9 +377,13 @@ bool kgl::SequenceOffset::refOffsetWithinCodingSequence(std::shared_ptr<const Co
 
 }
 
+
+
+
 // Returns bool false if contig_offset is not within the coding sequence defined by the coding_seq_ptr.
 // If the contig_offset is in the coding sequence then a valid sequence_offset and the sequence length is returned.
 // The offset is adjusted for strand type; the offset arithmetic is reversed for -ve strand sequences.
+// Assumes exon maps are half intervals [begin,end)
 bool kgl::SequenceOffset::offsetWithinCodingSequence(const ExonOffsetMap& exon_offset_map,
                                                      StrandSense strand,
                                                      ContigOffset_t sequence_offset,
@@ -410,12 +414,12 @@ bool kgl::SequenceOffset::offsetWithinCodingSequence(const ExonOffsetMap& exon_o
       for (auto exon : exon_offset_map) {
 
         // within the CDS
-        if (contig_offset >= exon.first and contig_offset <= exon.second) {
+        if (contig_offset >= exon.first and contig_offset < exon.second) {
 
           coding_offset += (contig_offset - exon.first);
           iscoding = true;
 
-        } else if (contig_offset > exon.second) {
+        } else if (contig_offset >= exon.second) {
 
           coding_offset += (exon.second - exon.first);
 
@@ -436,7 +440,7 @@ bool kgl::SequenceOffset::offsetWithinCodingSequence(const ExonOffsetMap& exon_o
         // within the CDS
         if (contig_offset >= rit->first and contig_offset < rit->second) {
 
-          coding_offset += (rit->second - contig_offset) - 1;  // Careful here.
+          coding_offset += (rit->second - contig_offset) - 1;  // Careful here, remember [begin, end)
           iscoding = true;
 
         } else if (contig_offset < rit->first) {
@@ -462,6 +466,123 @@ bool kgl::SequenceOffset::offsetWithinCodingSequence(const ExonOffsetMap& exon_o
   } else {
 
     coding_sequence_offset = 0;
+    coding_sequence_length = 0;
+
+  }
+
+  return iscoding;
+
+}
+
+
+// Inverse of the above function. Given the stranded base offset within a coding sequence, return the corresponding contig offset.
+// Returns bool false if then coding sequence offset is not within the coding sequence defined by the coding_seq_ptr.
+// If the coding sequence_offset is in the coding sequence then a valid contig_offset and the sequence length is returned.
+// The contig offset is adjusted for strand type; the offset arithmetic is reversed for -ve strand sequences.
+
+bool kgl::SequenceOffset::refCodingSequenceContigOffset(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+                                                        ContigOffset_t coding_sequence_offset,
+                                                        ContigOffset_t &contig_offset,
+                                                        ContigSize_t &coding_sequence_length) {
+
+  StrandSense strand;
+  ExonOffsetMap exon_offset_map;
+  exonOffsetAdapter(coding_seq_ptr, strand, exon_offset_map);
+  return codingSequenceContigOffset(exon_offset_map, strand, coding_sequence_offset, contig_offset, coding_sequence_length);
+
+}
+
+// Returns bool false if the sequence_offset is not within the coding sequence defined by the coding_seq_ptr.
+// If the sequence_offset is in the coding sequence then a valid contig_offset and the sequence length is returned.
+// The contig offset is adjusted for strand type; the offset arithmetic is reversed for -ve strand sequences.
+// Assumes exon maps are half intervals [begin,end)
+bool kgl::SequenceOffset::codingSequenceContigOffset(const ExonOffsetMap& exon_offset_map,
+                                                     StrandSense strand,
+                                                     ContigOffset_t sequence_offset,
+                                                     ContigOffset_t &contig_offset,
+                                                     ContigSize_t &coding_sequence_length) {
+
+  bool iscoding = false;
+  ContigSize_t coding_size = 0;
+
+  if (exon_offset_map.empty()) {
+
+    contig_offset = 0;
+    coding_sequence_length = 0;
+    ExecEnv::log().error("codingSequenceContigOffset(), coding sequence with no exon regions");
+    return false;
+
+  }
+
+
+  switch(strand) {
+
+    case StrandSense::UNKNOWN:  // Complain and assume a forward strand.
+      ExecEnv::log().error("offsetWithinCodingSequence() with UNKNOWN strand sense");
+    case StrandSense::FORWARD: {
+
+      ContigOffset_t begin_offset = 0;
+
+      for (auto exon : exon_offset_map) {
+
+        ContigOffset_t end_offset = (exon.second - exon.first) + begin_offset;
+        // within the CDS
+        if (sequence_offset >= begin_offset and sequence_offset < end_offset) {
+
+          contig_offset = exon.first + sequence_offset - begin_offset;
+          iscoding = true;
+
+        } else if (sequence_offset >= end_offset) {
+
+          begin_offset += (exon.second - exon.first);
+
+        }
+
+        coding_size += (exon.second - exon.first);
+
+      }
+
+    }
+      break;
+
+      // Careful with this logic as the CDS offsets are [begin, end). Therefore we must adjust the offset by -1.
+    case StrandSense::REVERSE: {
+
+      ContigOffset_t begin_offset = 0;
+
+      for (auto rit = exon_offset_map.rbegin(); rit != exon_offset_map.rend(); ++rit) {
+
+        ContigOffset_t end_offset = (rit->second - rit->first) + begin_offset;
+
+        // within the CDS
+        if (sequence_offset >= begin_offset and sequence_offset < end_offset) {
+
+          contig_offset = (rit->second - 1) - (sequence_offset - begin_offset);  // Careful here, remember [begin, end)
+          iscoding = true;
+
+        } else if (sequence_offset >= end_offset) {
+
+          begin_offset += (rit->second - rit->first);
+
+        }
+
+        coding_size += (rit->second - rit->first);
+
+      }
+
+    }
+      break;
+
+  } // switch
+
+  if (iscoding) {
+
+    coding_sequence_length = coding_size;
+
+  } else {
+
+    ExecEnv::log().error("codingSequenceContigOffset(), Sequence Offset: {} not in coding sequence", sequence_offset);
+    contig_offset = 0;
     coding_sequence_length = 0;
 
   }

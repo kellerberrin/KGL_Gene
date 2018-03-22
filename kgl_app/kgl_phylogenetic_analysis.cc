@@ -364,78 +364,6 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
                                                     const FeatureIdent_t& gene_id,
                                                     const FeatureIdent_t& sequence_id,
                                                     std::shared_ptr<const GenomeDatabase> genome_db,
-                                                    std::shared_ptr<const PopulationVariant> pop_variant_ptr) {
-
-  const char CSV_delimiter = ',';
-  // open the file.
-  std::fstream out_file(file_name, std::fstream::out);
-  if (!out_file) {
-
-    ExecEnv::log().error("Cannot open output CSV file: {}", file_name);
-    return false;
-
-  }
-
-  // Get the contig.
-  std::shared_ptr<const ContigFeatures> contig_ptr;
-  if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
-
-    ExecEnv::log().error("outputMutationCSV(), Could not find contig: {} in genome database", contig_id);
-    return false;
-
-  }
-
-
-  for( auto genome_variant : pop_variant_ptr->getMap()) {
-
-    ExecEnv::log().info("outputMutationCSV(), Processing genome: {}", genome_variant.first);
-    size_t sequence_count = 0;
-
-    sequence_count++;
-    OffsetVariantMap variant_map;
-    std::shared_ptr<DNA5SequenceCoding> reference_sequence;
-    std::vector<std::shared_ptr<DNA5SequenceCoding>> mutant_sequence_vector;
-    if (genome_variant.second->mutantCodingDNA( contig_id,
-                                                gene_id,
-                                                sequence_id,
-                                                genome_db,
-                                                variant_map,
-                                                reference_sequence,
-                                                mutant_sequence_vector)) {
-
-      for (auto mutant : mutant_sequence_vector) {
-
-        std::stringstream ss;
-        ss << genome_variant.first << CSV_delimiter;
-        ss << gene_id << CSV_delimiter;
-        ss << sequence_id << CSV_delimiter;
-        ss << SequenceComparison().editDNAItems(contig_ptr,
-                                                reference_sequence,
-                                                mutant,
-                                                CSV_delimiter,
-                                                VariantOutputIndex::START_1_BASED) << '\n';
-        out_file << ss.str();
-
-      } // for mutant
-
-    } // if mutation
-
-    ExecEnv::log().info("outputMutantCSV(), Genome: {} mutated: {} sequences.", genome_variant.first, sequence_count);
-
-  } // for genome
-
-  return out_file.good();
-
-}
-
-
-
-
-bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name,
-                                                    const ContigId_t& contig_id,
-                                                    const FeatureIdent_t& gene_id,
-                                                    const FeatureIdent_t& sequence_id,
-                                                    std::shared_ptr<const GenomeDatabase> genome_db,
                                                     std::shared_ptr<const PopulationVariant> pop_variant_ptr,
                                                     const GenomeAuxData& aux_Pf3k_data) {
 
@@ -493,6 +421,21 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
                                           mutant,
                                           mutation_edit_vector);
 
+        // Calculate the contig offsets of the mutations.
+        for (auto edit_item : mutation_edit_vector.mutation_vector) {
+
+          edit_item.contig_id = contig_ptr->contigId();
+          ContigOffset_t contig_offset;
+          if (not genome_db->contigOffset(contig_id, gene_id, sequence_id, edit_item.DNA_mutation.reference_offset, contig_offset)) {
+
+            ExecEnv::log().error("Edit Item {}{}{} sequence offset out of range",
+                                 edit_item.DNA_mutation.reference_char, edit_item.DNA_mutation.reference_offset, edit_item.DNA_mutation.mutant_char);
+
+          }
+          edit_item.contig_offset = contig_offset;
+
+        }
+
         if (not mutation_edit_vector.hasIndel()) { // Only SNPs.
 
           GenomeMap genome_map;
@@ -512,6 +455,8 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
 
             master_SNP_List[edit_item.mapKey()] = edit_item;
             genome_map.snp_map[edit_item.mapKey()] = edit_item;
+            ExecEnv::log().info("Edit Item Contig: {}, Contig Offset:{}, DNA Offset:{}",
+                                edit_item.contig_id, edit_item.contig_offset, master_SNP_List[edit_item.mapKey()].DNA_mutation.reference_offset);
 
           }
 
@@ -532,7 +477,9 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
   out_file << "Genome" << CSV_delimiter << "LocationDate" << CSV_delimiter;
   for (auto DNA_Item : master_SNP_List) {
 
-    out_file << DNA_Item.second.DNA_mutation.reference_char
+    out_file << DNA_Item.second.contig_id << " "
+             << offsetOutput(DNA_Item.second.contig_offset, VariantOutputIndex::START_1_BASED) << " "
+             << DNA_Item.second.DNA_mutation.reference_char
              << offsetOutput(DNA_Item.second.DNA_mutation.reference_offset, VariantOutputIndex::START_1_BASED)
              << DNA_Item.second.DNA_mutation.mutant_char
              << " " << DNA_Item.second.reference_codon << "-" << DNA_Item.second.mutation_codon

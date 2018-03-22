@@ -33,12 +33,22 @@ struct EditItem{
 
 };
 
-struct MutationItem {
+class MutationItem {
+
+public:
+
+  MutationItem() = default;
+  MutationItem(const MutationItem&) = default;
+  ~MutationItem() = default;
+
+  MutationItem& operator=(const MutationItem&) = default;
 
   EditItem DNA_mutation;
   std::string reference_codon;
   std::string mutation_codon;
   EditItem amino_mutation;
+  ContigId_t contig_id;
+  ContigOffset_t contig_offset;
 
   std::string mapKey() const {
 

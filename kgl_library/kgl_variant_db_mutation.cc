@@ -236,3 +236,4 @@ bool kgl::GenomeVariant::mutantContig( const ContigId_t& contig_id,
 
 
 }
+

@@ -146,6 +146,13 @@ public:
 
   const GeneOntology& geneOntology() const { return gene_ontology_; }
 
+  // Given a sequence offset, returns a contig offset.
+  bool contigOffset( const ContigId_t& contig_id,
+                     const FeatureIdent_t& gene_id,
+                     const FeatureIdent_t& sequence_id,
+                     ContigOffset_t sequence_offset,
+                     ContigOffset_t& contig_offset) const;
+
 private:
 
   GenomeSequenceMap genome_sequence_map_;
