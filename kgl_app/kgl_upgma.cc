@@ -376,11 +376,7 @@ void kgl::UPGMAATP4Distance::writeNode(std::ofstream& outfile) const {
 
   std::stringstream ss;
 
-//  ss << genome_variant_ptr_->genomeId();
-  ss << "_" << SequenceComparison().editItems(reference_sequence->getSequenceAsString(),
-                                                mutated_protein_->getSequenceAsString(),
-                                                '_',
-                                                VariantOutputIndex::START_1_BASED);
+  ss << genome_variant_ptr_->genomeId();
 
   outfile << ss.str();
 

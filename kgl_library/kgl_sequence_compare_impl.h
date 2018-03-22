@@ -20,7 +20,15 @@ namespace genome {   // project level namespace
 
 
 
-struct EditItem{
+class EditItem{
+
+public:
+
+  EditItem() = default;
+  EditItem(const EditItem&) = default;
+  ~EditItem() = default;
+
+  EditItem& operator=(const EditItem&) = default;
 
   char reference_char;
   ContigOffset_t reference_offset;
@@ -30,53 +38,6 @@ struct EditItem{
   constexpr static const char DELETION = '-';
 
   bool isIndel() const { return mutant_char == INSERTION or mutant_char == DELETION; }
-
-};
-
-class MutationItem {
-
-public:
-
-  MutationItem() = default;
-  MutationItem(const MutationItem&) = default;
-  ~MutationItem() = default;
-
-  MutationItem& operator=(const MutationItem&) = default;
-
-  EditItem DNA_mutation;
-  std::string reference_codon;
-  std::string mutation_codon;
-  EditItem amino_mutation;
-  ContigId_t contig_id;
-  ContigOffset_t contig_offset;
-
-  std::string mapKey() const {
-
-    std::stringstream ss;
-    ss << amino_mutation.reference_offset << amino_mutation.reference_char << amino_mutation.mutant_char;
-    ss << DNA_mutation.reference_offset << DNA_mutation.reference_char << DNA_mutation.mutant_char;
-
-    return ss.str(); }
-
-};
-
-
-struct MutationEditVector {
-
-
-  std::vector<MutationItem> mutation_vector;
-
-  bool hasIndel() const {
-
-    for (auto mutation : mutation_vector) {
-
-      if (mutation.DNA_mutation.isIndel()) return true;
-
-    }
-
-    return false;
-
-  }
 
 };
 
@@ -99,19 +60,9 @@ public:
   CompareScore_t DNALocalAffineGap(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
 
   // Compare sequences in mutation format.
-
-  std::string editItems(const std::string& reference, const std::string& mutant, char delimiter, VariantOutputIndex index_offset) const;
-
-  void editDNAItems(std::shared_ptr<const ContigFeatures> contig_ptr,
-                    std::shared_ptr<const DNA5SequenceCoding> reference,
-                    std::shared_ptr<const DNA5SequenceCoding> mutant,
-                    MutationEditVector& mutation_edit_vector) const;
-
-  std::string editDNAItems(std::shared_ptr<const ContigFeatures> contig_ptr,
-                           std::shared_ptr<const DNA5SequenceCoding> reference,
-                           std::shared_ptr<const DNA5SequenceCoding> mutant,
-                           char delimiter,
-                           VariantOutputIndex index_offset) const;
+  void editDNAItems(const std::string& reference,
+                    const std::string& mutant,
+                    EditVector& edit_vector) const;
 
 private:
 

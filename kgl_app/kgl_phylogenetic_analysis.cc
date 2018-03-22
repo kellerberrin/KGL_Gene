@@ -336,15 +336,23 @@ bool kgl::ApplicationAnalysis::outputAminoMutationCSV(const std::string &file_na
 
       for (auto mutant : amino_mutant_vec) {
 
-        std::stringstream ss;
-        ss << genome_variant.first << CSV_delimiter;
-        ss << gene_id << CSV_delimiter;
-        ss << sequence_id << CSV_delimiter;
-        ss << SequenceComparison().editItems(amino_reference_seq->getSequenceAsString(),
-                                               mutant->getSequenceAsString(),
-                                               CSV_delimiter,
-                                               VariantOutputIndex::START_1_BASED) << '\n';
-        out_file << ss.str();
+        EditVector edit_vector;
+        SequenceComparison().editDNAItems(amino_reference_seq->getSequenceAsString(),
+                                          mutant->getSequenceAsString(),
+                                          edit_vector);
+
+        for (auto edit_item : edit_vector) {
+
+          std::stringstream ss;
+          ss << genome_variant.first << CSV_delimiter;
+          ss << gene_id << CSV_delimiter;
+          ss << sequence_id << CSV_delimiter;
+          ss << edit_item.reference_char << CSV_delimiter;
+          ss << offsetOutput(edit_item.reference_offset, VariantOutputIndex::START_1_BASED) << CSV_delimiter;
+          ss << edit_item.mutant_char << '\n';
+          out_file << ss.str();
+
+        }
 
       } // for mutant
 
@@ -357,6 +365,7 @@ bool kgl::ApplicationAnalysis::outputAminoMutationCSV(const std::string &file_na
   return out_file.good();
 
 }
+
 
 
 bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name,
@@ -415,11 +424,31 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
 
       for (auto mutant : mutant_sequence_vector) {
 
+        EditVector edit_vector;
+        SequenceComparison().editDNAItems(reference_sequence->getSequenceAsString(),
+                                          mutant->getSequenceAsString(),
+                                          edit_vector);
+
         MutationEditVector mutation_edit_vector;
-        SequenceComparison().editDNAItems(contig_ptr,
-                                          reference_sequence,
-                                          mutant,
-                                          mutation_edit_vector);
+        MutationItem mutation_item;
+        for (auto edit_item : edit_vector) {
+
+          ContigOffset_t codon_index = static_cast<size_t>(edit_item.reference_offset / 3);
+
+          std::shared_ptr<const Codon> mutant_codon(std::make_shared<Codon>(mutant, codon_index));
+          std::shared_ptr<const Codon> ref_codon(std::make_shared<Codon>(reference_sequence, codon_index));
+
+          mutation_item.DNA_mutation = edit_item;
+          mutation_item.reference_codon = ref_codon->getSequenceAsString();
+          mutation_item.mutation_codon = mutant_codon->getSequenceAsString();
+
+          mutation_item.amino_mutation.reference_char = AminoAcid::convertToChar(contig_ptr->getAminoAcid(*ref_codon));
+          mutation_item.amino_mutation.reference_offset = codon_index;
+          mutation_item.amino_mutation.mutant_char = AminoAcid::convertToChar(contig_ptr->getAminoAcid(*mutant_codon));
+
+          mutation_edit_vector.mutation_vector.push_back(mutation_item);
+
+        }
 
         // Calculate the contig offsets of the mutations.
         for (auto edit_item : mutation_edit_vector.mutation_vector) {

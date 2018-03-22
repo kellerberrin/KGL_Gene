@@ -14,6 +14,7 @@
 #include "kgl_filter.h"
 #include "kgl_gff_fasta.h"
 #include "kgl_genome_aux_csv.h"
+#include "kgl_sequence_compare_impl.h"
 
 
 
@@ -24,6 +25,61 @@
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
+
+
+
+
+class MutationItem {
+
+public:
+
+  MutationItem() = default;
+  MutationItem(const MutationItem&) = default;
+  ~MutationItem() = default;
+
+  MutationItem& operator=(const MutationItem&) = default;
+
+  EditItem DNA_mutation;
+  std::string reference_codon;
+  std::string mutation_codon;
+  EditItem amino_mutation;
+  ContigId_t contig_id;
+  ContigOffset_t contig_offset;
+
+  std::string mapKey() const {
+
+    std::stringstream ss;
+    ss << amino_mutation.reference_offset << amino_mutation.reference_char << amino_mutation.mutant_char;
+    ss << DNA_mutation.reference_offset << DNA_mutation.reference_char << DNA_mutation.mutant_char;
+
+    return ss.str(); }
+
+};
+
+
+class MutationEditVector {
+
+public:
+
+  MutationEditVector() = default;
+  MutationEditVector(const MutationEditVector&) = default;
+  ~MutationEditVector() = default;
+
+  std::vector<MutationItem> mutation_vector;
+
+  bool hasIndel() const {
+
+    for (auto mutation : mutation_vector) {
+
+      if (mutation.DNA_mutation.isIndel()) return true;
+
+    }
+
+    return false;
+
+  }
+
+};
 
 
 class ApplicationAnalysis {
