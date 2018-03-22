@@ -386,6 +386,14 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
 
   }
 
+  std::fstream variant_file(file_name + ".variant", std::fstream::out);
+  if (!out_file) {
+
+    ExecEnv::log().error("Cannot open output Variant file: {}", file_name + ".variant");
+    return false;
+
+  }
+
   // Get the contig.
   std::shared_ptr<const ContigFeatures> contig_ptr;
   if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
@@ -422,6 +430,12 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
                                                 reference_sequence,
                                                 mutant_sequence_vector)) {
 
+      for (auto variant : variant_map) {
+
+        variant_file << variant.second->output(CSV_delimiter, VariantOutputIndex::START_1_BASED, false);
+
+      }
+
       for (auto mutant : mutant_sequence_vector) {
 
         EditVector edit_vector;
@@ -445,23 +459,16 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
           mutation_item.amino_mutation.reference_char = AminoAcid::convertToChar(contig_ptr->getAminoAcid(*ref_codon));
           mutation_item.amino_mutation.reference_offset = codon_index;
           mutation_item.amino_mutation.mutant_char = AminoAcid::convertToChar(contig_ptr->getAminoAcid(*mutant_codon));
-
-          mutation_edit_vector.mutation_vector.push_back(mutation_item);
-
-        }
-
-        // Calculate the contig offsets of the mutations.
-        for (auto edit_item : mutation_edit_vector.mutation_vector) {
-
-          edit_item.contig_id = contig_ptr->contigId();
+          mutation_item.contig_id = contig_ptr->contigId();
           ContigOffset_t contig_offset;
-          if (not genome_db->contigOffset(contig_id, gene_id, sequence_id, edit_item.DNA_mutation.reference_offset, contig_offset)) {
+          if (not genome_db->contigOffset(contig_id, gene_id, sequence_id, mutation_item.DNA_mutation.reference_offset, contig_offset)) {
 
             ExecEnv::log().error("Edit Item {}{}{} sequence offset out of range",
-                                 edit_item.DNA_mutation.reference_char, edit_item.DNA_mutation.reference_offset, edit_item.DNA_mutation.mutant_char);
+                                 mutation_item.DNA_mutation.reference_char, mutation_item.DNA_mutation.reference_offset, mutation_item.DNA_mutation.mutant_char);
 
           }
-          edit_item.contig_offset = contig_offset;
+          mutation_item.contig_offset = contig_offset;
+          mutation_edit_vector.mutation_vector.push_back(mutation_item);
 
         }
 
