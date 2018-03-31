@@ -111,7 +111,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
         std::string GQ_text = genotype_parser.getFormatString(recordParser.GQOffset(), *it);
         if (GQ_text.find_first_not_of(DIGITS_) !=  std::string::npos) {
 
-          ExecEnv::log().info("Non-numeric GQ_text: {}", GQ_text);
+          ExecEnv::log().error("Non-numeric GQ_text: {}", GQ_text);
           continue;
 
         }
@@ -160,7 +160,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
                             recordParser.offset(),
                             recordParser.reference(),
                             allele,
-                            recordParser.quality(),
+                            GQ_value,
                             info,
                             record_variants);
 
@@ -195,11 +195,12 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
                             recordParser.offset(),
                             recordParser.reference(),
                             allele,
-                            recordParser.quality(),
+                            GQ_value,
                             info,
                             record_variants);
 
             variant_count_ += parsed_cigar.size();
+
 
           }
 

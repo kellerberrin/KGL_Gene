@@ -412,6 +412,7 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
     SNPMap snp_map;
 
   };
+
   std::vector<GenomeMap> genome_vector;
   for( auto genome_variant : pop_variant_ptr->getMap()) {
 

@@ -57,9 +57,9 @@ private:
 
 // Quality constants.
 
-  constexpr static const double MIN_DEPTH_ = 20;
+  constexpr static const double MIN_DEPTH_ = 10;
   constexpr static const double MIN_QUALITY_ = 100.0;
-  constexpr static const double MIN_VQSLOD_QUALITY_ = 0.0;
+  constexpr static const double MIN_VQSLOD_QUALITY_ = 2.0;
   constexpr static const double MIN_GQ_QUALITY_ = 20.0;
 
   std::atomic<uint64_t> record_count_{0};
