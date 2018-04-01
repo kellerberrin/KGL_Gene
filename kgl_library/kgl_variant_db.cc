@@ -365,3 +365,75 @@ bool kgl::PopulationVariant::addGenomeVariant(std::shared_ptr<const GenomeVarian
   return result.second;
 
 }
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// A map of Genomes
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+bool kgl::Genotype::getGenome(const GenomeId_t& genome_id,
+                              std::shared_ptr<GenomeVariant>& genome) const {
+
+  auto result = genome_map_.find(genome_id);
+
+  if (result != genome_map_.end()) {
+
+    genome = result->second;
+    return true;
+
+  } else {
+
+    genome = nullptr;
+    return false;
+
+  }
+
+}
+
+
+bool kgl::Genotype::addGenome(std::shared_ptr<GenomeVariant> genome) {
+
+  auto result = genome_map_.insert(std::pair<GenomeId_t, std::shared_ptr<GenomeVariant>>(genome->genomeId(), genome));
+
+  return result.second;
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Simple container to hold genomes Genotypes
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+bool kgl::GenotypePopulation::getGenotype(const GenotypeId_t& genotype_id,
+                                          std::shared_ptr<Genotype>& genotype) const {
+
+  auto result = genotype_map_.find(genotype_id);
+
+  if (result != genotype_map_.end()) {
+
+    genotype = result->second;
+    return true;
+
+  } else {
+
+    genotype = nullptr;
+    return false;
+
+  }
+
+}
+
+
+bool kgl::GenotypePopulation::addGenotype(std::shared_ptr<Genotype> genotype) {
+
+  auto result = genotype_map_.insert(std::pair<GenomeId_t, std::shared_ptr<Genotype>>(genotype->genotypeId(), genotype));
+
+  return result.second;
+
+}
+

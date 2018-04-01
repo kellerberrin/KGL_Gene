@@ -161,7 +161,7 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_genome_aux_csv_impl.cc)
 
 # 3rd party library for fast Leveshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_library/kgl_variant_db_genotype.h)
 
 set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_main.cc

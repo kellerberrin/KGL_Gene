@@ -78,6 +78,7 @@ private:
 
   int consumer_thread_count_{2};                      // Consumer threads (defaults to local CPU cores available)
   static constexpr int MAX_CONSUMER_THREADS_{16};     // Spawning more threads does not increase performance
+  static constexpr int MIN_CONSUMER_THREADS_{1};     // Need at least 1 producer thread
 
   static constexpr const char* FIELD_NAME_FRAGMENT_{"#CHROM"};
   static constexpr const size_t FIELD_NAME_FRAGMENT_LENGTH_{6};
@@ -195,8 +196,11 @@ void VCFReaderMT<ConsumerMT>::readVCFFile() {
   // Spawn consumer threads.
   consumer_thread_count_ = std::thread::hardware_concurrency() - 1;
 
-  // Spawn a maximum of 4 consumers.
+  // Spawn a maximum number of consumers.
   consumer_thread_count_ = consumer_thread_count_ > MAX_CONSUMER_THREADS_? MAX_CONSUMER_THREADS_ : consumer_thread_count_;
+
+  // Spawn a minimum of 1 consumers.
+  consumer_thread_count_ = consumer_thread_count_ < MIN_CONSUMER_THREADS_ ? MIN_CONSUMER_THREADS_ : consumer_thread_count_;
 
   ExecEnv::log().info("Spawning: {} Consumer threads to process the VCF file", consumer_thread_count_);
 
