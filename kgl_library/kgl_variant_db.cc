@@ -37,6 +37,8 @@ bool kgl::ContigVariant::addVariant(std::shared_ptr<const Variant>& variant_ptr)
 
     if (variant_ptr->equivalent(*it->second)) {
 
+      std::string variant_str = variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false);
+      ExecEnv::log().warn("addVariant() fails, Equivalent variant already exists:\n{}", variant_str);
       return false;
 
     }
