@@ -89,7 +89,7 @@ bool kgl::SNPVariant::mutateSequence(SignedOffset_t offset_adjust,
     ExecEnv::log().warn("mutateSequence(), SNP reference base: {} does not match sequence base: {} at genome: {} contig: {} offset: {}",
                         DNA5::convertToChar(reference()),
                         DNA5::convertToChar(dna_sequence_ptr->at(sequence_offset)),
-                        sourceGenome(), contig()->contigId(), offset());
+                        genomeId(), contig()->contigId(), offset());
 
   }
   // Mutate the sequence

@@ -369,6 +369,21 @@ bool kgl::PopulationVariant::addGenomeVariant(std::shared_ptr<const GenomeVarian
 }
 
 
+size_t kgl::PopulationVariant::variantCount() const {
+
+  size_t variant_count = 0;
+  for (auto genome : getMap()) {
+
+    variant_count += genome.second->size();
+
+  }
+
+  return variant_count;
+
+}
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A map of Genomes
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

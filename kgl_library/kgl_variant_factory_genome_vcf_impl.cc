@@ -28,7 +28,7 @@ void kgl::ParseGenomeVCFImpl::readParseVCFImpl() {
   if (not ParseVCFMiscImpl::parseVcfHeader(genome_db_ptr_, reader_ptr_->readHeader(), active_contig_map, false)) {
 
     ExecEnv::log().error("Problem parsing header information in VCF file: {}. No variants processed.", vcf_file_name_);
-    addGenome(genome_single_variants_, pop_variant_ptr_, variant_quality_);
+    return;
 
   }
 
@@ -39,10 +39,10 @@ void kgl::ParseGenomeVCFImpl::readParseVCFImpl() {
   ExecEnv::log().info("VCF file Records; Read: {}, Rejected: {} (quality={}), Ignored: {} (no matching contig), Error: {}",
                       vcf_record_count_, vcf_record_rejected_, variant_quality_, vcf_record_ignored_, vcf_record_error_);
 
-  ExecEnv::log().info("VCF file Variants; Total generated: {}, Variant database contains :{}, Identical variants ignored: {}",
-                      vcf_variant_count_, genome_single_variants_->size(), vcf_variant_count_ - genome_single_variants_->size());
+  ExecEnv::log().info("VCF file Variants; Total generated: {}", vcf_variant_count_);
 
-  addGenome(genome_single_variants_, pop_variant_ptr_, variant_quality_);
+  // Now in single threaded code so transfer the variants to the population object.
+  GenomePhasing::haploidPhasing(vcf_population_, genome_db_ptr_ , pop_variant_ptr_);
 
 }
 
@@ -64,7 +64,6 @@ void kgl::ParseGenomeVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& record)
     if (not parseVcfRecord(genome_name_,
                            record,
                            contig_ptr,
-                           genome_single_variants_,
                            variant_quality_,
                            record_quality_ok,
                            record_variants)) {
@@ -102,25 +101,3 @@ void kgl::ParseGenomeVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& record)
 
 }
 
-
-void kgl::ParseGenomeVCFImpl::addGenome(std::shared_ptr<const GenomeVariant> genome_variant_ptr,
-                                        std::shared_ptr<PopulationVariant> pop_variant_ptr,
-                                        Phred_t read_quality) const {
-
-// Aggregate to compound variants.
-  std::shared_ptr<const kgl::GenomeVariant> aggregate_ptr = kgl::VariantFactory::aggregateVariants(genome_db_ptr_,
-                                                                                                   genome_name_,
-                                                                                                   genome_variant_ptr);
-
-// Filter on  quality >= 5.
-  read_quality = read_quality < 5 ? 5 : read_quality;
-
-  std::shared_ptr<const kgl::GenomeVariant> filter_ptr = aggregate_ptr->filterVariants(kgl::QualityFilter(read_quality));
-
-  kgl::ExecEnv::log().info("Filtered for quality: {}, Genome: {} has: {} variants",
-                           read_quality, genome_variant_ptr->genomeId(), filter_ptr->size());
-
-// Store the organism variants in the population object.
-  pop_variant_ptr->addGenomeVariant(filter_ptr);
-
-}

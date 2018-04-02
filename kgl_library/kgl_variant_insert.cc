@@ -90,7 +90,7 @@ bool kgl::InsertVariant::mutateSequence(SignedOffset_t offset_adjust,
     ExecEnv::log().info("mutateSequence(), Insert reference base: {} does not match sequence base: {}; Genome: {} Contig: {} Offset: {}",
                         DNA5::convertToChar(reference()),
                         DNA5::convertToChar(dna_sequence_ptr->at(sequence_offset)),
-                        sourceGenome(), contig()->contigId(), offset());
+                        genomeId(), contig()->contigId(), offset());
 
   }
   // Mutate the sequence

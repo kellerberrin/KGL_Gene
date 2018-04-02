@@ -9,38 +9,13 @@
 #include "kgl_utility.h"
 #include "kgl_variant_factory_vcf.h"
 #include "kgl_variant_factory_readvcf_impl.h"
+#include "kgl_variant_factory_vcf_phasing.h"
 
 #include <seqan/vcf_io.h>
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-
-using ThreadSafeGenomeMap = std::map<GenomeId_t, std::shared_ptr<GenomeVariant>>;
-class ThreadSafePopulation {
-
-public:
-
-  explicit ThreadSafePopulation() = default;
-  ThreadSafePopulation(const ThreadSafePopulation&) = default;
-  virtual ~ThreadSafePopulation() = default;
-
-  // Create the genome variant if it does not exist.
-  bool getCreateGenomeVariant(const GenomeId_t& genome_id,
-                              std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                              std::shared_ptr<GenomeVariant>& genome_variant);
-
-  const ThreadSafeGenomeMap& getMap() const { return population_variant_map_; }
-
-  size_t variantCount() const;
-
-private:
-
-  ThreadSafeGenomeMap population_variant_map_;
-
-  mutable std::mutex mutex_;  // mutex to lock the GenomeVariant structure when inserting variants.
-
-};
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -94,22 +69,19 @@ protected:
   constexpr static const char* ID_READ_DEPTH_ = "DPB";
   constexpr static const char* ID_PROPORTION_ = "AF";
 
-  size_t addThreadSafeGenomeVariant(std::shared_ptr<GenomeVariant> genome_variants,
-                                    std::shared_ptr<const Variant> variant_ptr) const;
+  size_t addThreadSafeGenomeVariant(std::shared_ptr<Variant> variant_ptr);
 
 
-  ThreadSafePopulation thread_safe_population_;
   std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
   const std::string vcf_file_name_;
   Phred_t variant_quality_;
   std::shared_ptr<PopulationVariant> pop_variant_ptr_;
-
+  VCFPopulation vcf_population_;   // Un-phased variants.
   std::shared_ptr<VCFReaderMT<ParseVCFImpl>> reader_ptr_;
 
 private:
 
-
-  mutable std::mutex mutex_;  // mutex to lock the GenomeVariant structure when inserting variants.
+  mutable std::mutex mutex_;  // mutex to lock the VCFPopulation structure when inserting variants.
 
 };
 

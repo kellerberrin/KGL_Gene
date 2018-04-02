@@ -42,6 +42,8 @@ public:
 
   bool addGenomeVariant(std::shared_ptr<const GenomeVariant> genome_variant);
 
+  size_t variantCount() const;
+
   const PopulationVariantMap& getMap() const { return population_variant_map_; }
 
 private:

@@ -77,7 +77,7 @@ public:
                                      quality_(quality) { }
   virtual ~VariantSequence() = default;
 
-  const std::string& sourceGenome() const { return variant_source_; }
+  const std::string& genomeId() const { return variant_source_; }
 
   std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
 

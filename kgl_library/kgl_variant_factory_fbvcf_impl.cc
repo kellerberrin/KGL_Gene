@@ -16,10 +16,9 @@ namespace bt = boost;
 bool kgl::FreeBayesVCFImpl::parseVcfRecord(const std::string& genome_name,
                                            const seqan::VcfRecord& record,
                                            std::shared_ptr<const ContigFeatures> contig_ptr,
-                                           std::shared_ptr<GenomeVariant> genome_variants,
                                            Phred_t variant_quality,
                                            bool& quality_ok,
-                                           size_t& record_variants) const {
+                                           size_t& record_variants) {
 
   std::string info = toCString(record.info);
   // assumes input "key_1=value_1; ...;key_n=value_n"
@@ -88,7 +87,6 @@ bool kgl::FreeBayesVCFImpl::parseVcfRecord(const std::string& genome_name,
 
     parseCigarItems(genome_name,
                     contig_ptr,
-                    genome_variants,
                     parsed_cigar,
                     contig_offset,
                     reference,

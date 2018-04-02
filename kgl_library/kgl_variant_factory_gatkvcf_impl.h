@@ -41,40 +41,36 @@ private:
   bool parseVcfRecord(const std::string& genome_name,
                       const seqan::VcfRecord& record,
                       std::shared_ptr<const ContigFeatures> contig_ptr,
-                      std::shared_ptr<GenomeVariant> genome_variants,
                       Phred_t variant_quality,
                       bool& quality_ok,
-                      size_t& record_variants) const override;
+                      size_t& record_variants) override;
 
   bool parseSNP(const std::string& variant_source,
                 std::shared_ptr<const ContigFeatures> contig_ptr,
-                std::shared_ptr<GenomeVariant> genome_variants,
                 Phred_t quality,
                 const std::string& info,
                 const std::string& reference,
                 const std::string& alternate,
                 ContigOffset_t contig_offset,
-                size_t& variant_count) const;
+                size_t& variant_count);
 
   bool parseInsert(const std::string& variant_source,
                    std::shared_ptr<const ContigFeatures> contig_ptr,
-                   std::shared_ptr<GenomeVariant> genome_variants,
                    Phred_t quality,
                    const std::string& info,
                    const std::string& reference,
                    const std::string& alternate,
                    ContigOffset_t contig_offset,
-                   size_t& variant_count) const;
+                   size_t& variant_count);
 
   bool parseDelete(const std::string& variant_source,
                    std::shared_ptr<const ContigFeatures> contig_ptr,
-                   std::shared_ptr<GenomeVariant> genome_variants,
                    Phred_t quality,
                    const std::string& info,
                    const std::string& reference,
                    const std::string& alternate,
                    ContigOffset_t contig_offset,
-                   size_t& variant_count) const;
+                   size_t& variant_count);
 
 
 

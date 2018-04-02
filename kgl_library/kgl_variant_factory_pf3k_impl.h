@@ -26,8 +26,9 @@ public:
   Pf3kVCFImpl(std::shared_ptr<PopulationVariant> pop_variant_ptr,
               std::shared_ptr<const GenomeDatabase> genome_db_ptr,
               const std::string &vcf_file_name,
-              Phred_t variant_quality) : ParseCigarImpl(pop_variant_ptr, genome_db_ptr, vcf_file_name, variant_quality),
-                                         process_ploidy_(getGenomeNames(), genome_db_ptr) {
+              Phred_t variant_quality) : ParseCigarImpl(pop_variant_ptr, genome_db_ptr, vcf_file_name, variant_quality) {
+
+    setupVCFPopulation();
 
   }
   ~Pf3kVCFImpl() = default;
@@ -38,11 +39,11 @@ public:
 private:
 
   constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 10000;
-  ProcessPloidy process_ploidy_;
 
   // Processes the record in a try/catch block.
   void TryVCFRecord(const seqan::VcfRecord& vcf_record);
   void ParseRecord(const seqan::VcfRecord& vcf_record, const ContigId_t& contig_id);
+  void setupVCFPopulation();
 
   constexpr static const char PL_CHECK_ZERO_ = '0';  // Check if the first PL character is zero, discard if true.
   constexpr static const char PL_CHECK_DOT_ = '.';  // Check if the first PL character is '.', discard if true.

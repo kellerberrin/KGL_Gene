@@ -49,10 +49,9 @@ private:
   bool parseVcfRecord(const std::string& genome_name,
                       const seqan::VcfRecord& record,
                       std::shared_ptr<const ContigFeatures> contig_ptr,
-                      std::shared_ptr<GenomeVariant> genome_variants,
                       Phred_t variant_quality,
                       bool& quality_ok,
-                      size_t& variant_count) const override;
+                      size_t& variant_count) override;
 
 
 };

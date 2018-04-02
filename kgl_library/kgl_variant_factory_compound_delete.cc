@@ -35,7 +35,7 @@ std::shared_ptr<kgl::Variant> kgl::CompoundDeleteFactory::createCompoundVariant(
   Phred_t quality = calculateQuality(variant_map);
 
   // create the variant
-  std::shared_ptr<Variant> compound_delete(std::make_shared<CompoundDelete>(variant_map.begin()->second->sourceGenome(),
+  std::shared_ptr<Variant> compound_delete(std::make_shared<CompoundDelete>(variant_map.begin()->second->genomeId(),
                                                                             variant_map.begin()->second->contig(),
                                                                             variant_map.begin()->second->contigOffset(),
                                                                             quality,

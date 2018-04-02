@@ -158,10 +158,13 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_vcf_cigar_impl.h
         kgl_library/kgl_variant_factory_vcf_cigar_impl.cc
         kgl_library/kgl_genome_aux_csv.h
-        kgl_library/kgl_genome_aux_csv_impl.cc)
+        kgl_library/kgl_genome_aux_csv_impl.cc
+        kgl_library/kgl_variant_db_genotype.h
+        kgl_library/kgl_variant_factory_vcf_phasing.h
+        kgl_library/kgl_variant_factory_vcf_phasing.cc)
 
 # 3rd party library for fast Leveshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_library/kgl_variant_db_genotype.h)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
 
 set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_main.cc

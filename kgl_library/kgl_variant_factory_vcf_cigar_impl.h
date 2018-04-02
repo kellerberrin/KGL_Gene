@@ -36,14 +36,13 @@ public:
 
   bool parseCigarItems(const std::string& genome_name,
                        std::shared_ptr<const ContigFeatures> contig_ptr,
-                       std::shared_ptr<GenomeVariant> genome_variants,
                        const std::vector<CigarEditItem>& parsed_cigar,
                        ContigOffset_t contig_offset,
                        const std::string& reference,
                        const std::string& alternate,
                        Phred_t quality,
                        const std::string& info,
-                       size_t& record_variants) const;
+                       size_t& record_variants);
 
 private:
 
@@ -55,13 +54,12 @@ private:
                   const std::string& alternate,
                   size_t& reference_index,
                   size_t& alternate_index,
-                  ContigOffset_t& contig_offset) const ;
+                  ContigOffset_t& contig_offset) const;
 
   // Parse 1X ... XX in the cigar.
   bool parseSNP(size_t cigar_count,
                 const std::string& variant_source,
                 std::shared_ptr<const ContigFeatures> contig_ptr,
-                std::shared_ptr<GenomeVariant> genome_variants,
                 Phred_t quality,
                 const std::string& info,
                 const std::string& reference,
@@ -69,31 +67,29 @@ private:
                 size_t& reference_index,
                 size_t& alternate_index,
                 ContigOffset_t& contig_offset,
-                size_t& variant_count) const;
+                size_t& variant_count);
 
   // Parse 1I ... XI in the cigar.
   bool parseInsert(size_t cigar_count,
                    const std::string& variant_source,
                    std::shared_ptr<const ContigFeatures> contig_ptr,
-                   std::shared_ptr<GenomeVariant> genome_variants,
                    Phred_t quality,
                    const std::string& info,
                    const std::string& alternate,
                    ContigOffset_t contig_offset,
                    size_t& alternate_index,
-                   size_t& variant_count) const;
+                   size_t& variant_count);
 
   // Parse 1D ... XD in the cigar.
   bool parseDelete(size_t cigar_count,
                    const std::string& variant_source,
                    std::shared_ptr<const ContigFeatures> contig_ptr,
-                   std::shared_ptr<GenomeVariant> genome_variants,
                    Phred_t quality,
                    const std::string& info,
                    const std::string& reference,
                    size_t& reference_index,
                    ContigOffset_t& contig_offset,
-                   size_t& variant_count) const;
+                   size_t& variant_count);
 
 
 

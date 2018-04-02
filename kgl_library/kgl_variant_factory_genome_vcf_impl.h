@@ -28,15 +28,7 @@ public:
                      std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                      const std::string &vcf_file_name,
                      Phred_t variant_quality) : ParseCigarImpl(pop_variant_ptr, genome_db_ptr, vcf_file_name, variant_quality),
-                                                genome_name_(genome_name)  {
-
-    if (not thread_safe_population_.getCreateGenomeVariant(genome_name, genome_db_ptr_, genome_single_variants_)) {
-
-      ExecEnv::log().error("Could not find or create genome: {}", genome_name);
-
-    }
-
-  }
+                                                genome_name_(genome_name)  {}
 
   ~ParseGenomeVCFImpl() override = default;
 
@@ -47,21 +39,16 @@ public:
 protected:
 
   const std::string genome_name_;
-  std::shared_ptr<GenomeVariant> genome_single_variants_;
 
 private:
 
   virtual bool parseVcfRecord(const std::string& genome_name,
                               const seqan::VcfRecord& record,
                               std::shared_ptr<const ContigFeatures> contig_ptr,
-                              std::shared_ptr<GenomeVariant> genome_variants,
                               Phred_t variant_quality,
                               bool& quality_ok,
-                              size_t& record_variants) const = 0;
+                              size_t& record_variants) = 0;
 
-  void addGenome(std::shared_ptr<const GenomeVariant> genome_variant_ptr,
-                 std::shared_ptr<PopulationVariant> pop_variant_ptr,
-                 Phred_t read_quality) const;
 
 };
 

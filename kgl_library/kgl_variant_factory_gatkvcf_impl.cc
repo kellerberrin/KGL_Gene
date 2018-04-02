@@ -16,10 +16,9 @@ namespace bt = boost;
 bool kgl::GATKVCFImpl::parseVcfRecord(const std::string& genome_name,
                                       const seqan::VcfRecord& record,
                                       std::shared_ptr<const ContigFeatures> contig_ptr,
-                                      std::shared_ptr<GenomeVariant> genome_variants,
                                       Phred_t variant_quality,
                                       bool& quality_ok,
-                                      size_t& record_variants) const {
+                                      size_t& record_variants) {
 
 
   Phred_t quality = record.qual;
@@ -44,7 +43,6 @@ bool kgl::GATKVCFImpl::parseVcfRecord(const std::string& genome_name,
 
       result = parseSNP(genome_name,
                         contig_ptr,
-                        genome_variants,
                         quality,
                         info,
                         reference,
@@ -56,7 +54,6 @@ bool kgl::GATKVCFImpl::parseVcfRecord(const std::string& genome_name,
 
       result = parseInsert(genome_name,
                            contig_ptr,
-                           genome_variants,
                            quality,
                            info,
                            reference,
@@ -69,7 +66,6 @@ bool kgl::GATKVCFImpl::parseVcfRecord(const std::string& genome_name,
 
       result = parseDelete(genome_name,
                            contig_ptr,
-                           genome_variants,
                            quality,
                            info,
                            reference,
@@ -105,13 +101,12 @@ bool kgl::GATKVCFImpl::parseVcfRecord(const std::string& genome_name,
 
 bool kgl::GATKVCFImpl::parseSNP(const std::string& variant_source,
                                 std::shared_ptr<const ContigFeatures> contig_ptr,
-                                std::shared_ptr<GenomeVariant> genome_variants,
                                 Phred_t quality,
                                 const std::string&, // info,
                                 const std::string& reference,
                                 const std::string& alternate,
                                 ContigOffset_t contig_offset,
-                                size_t& variant_count) const {
+                                size_t& variant_count) {
 
   // Check alternate and reference sizes.
   if (not (reference.size() == alternate.size() and reference.size() == 1)) {
@@ -141,7 +136,7 @@ bool kgl::GATKVCFImpl::parseSNP(const std::string& variant_source,
                                                                            DNA5::convertChar(reference[0]),
                                                                            DNA5::convertChar(alternate[0])));
 
-  variant_count += addThreadSafeGenomeVariant(genome_variants, snp_variant_ptr); // Annotate with genome information
+  variant_count += addThreadSafeGenomeVariant(snp_variant_ptr); // Annotate with genome information
 
   return true;
 
@@ -150,13 +145,12 @@ bool kgl::GATKVCFImpl::parseSNP(const std::string& variant_source,
 
 bool kgl::GATKVCFImpl::parseInsert(const std::string& variant_source,
                                    std::shared_ptr<const ContigFeatures> contig_ptr,
-                                   std::shared_ptr<GenomeVariant> genome_variants,
                                    Phred_t quality,
                                    const std::string&, // info,
                                    const std::string& reference,
                                    const std::string& alternate,
                                    ContigOffset_t contig_offset,
-                                   size_t& variant_count) const {
+                                   size_t& variant_count) {
 
   CompoundVariantMap compound_variant_map;
 
@@ -214,11 +208,12 @@ bool kgl::GATKVCFImpl::parseInsert(const std::string& variant_source,
 
   if (compound_variant_map.size() > 1) {
 
-    variant_count += addThreadSafeGenomeVariant(genome_variants,CompoundInsertFactory().createCompoundVariant(compound_variant_map));
+    variant_count += addThreadSafeGenomeVariant(CompoundInsertFactory().createCompoundVariant(compound_variant_map));
 
   } else if (compound_variant_map.size() == 1) {
 
-    variant_count += addThreadSafeGenomeVariant(genome_variants, compound_variant_map.begin()->second); // Annotate with genome information
+    std::shared_ptr<Variant> single_variant = std::const_pointer_cast<SingleVariant>(compound_variant_map.begin()->second);
+    variant_count += addThreadSafeGenomeVariant(single_variant);
 
   } else {
 
@@ -234,13 +229,12 @@ bool kgl::GATKVCFImpl::parseInsert(const std::string& variant_source,
 
 bool kgl::GATKVCFImpl::parseDelete(const std::string& variant_source,
                                    std::shared_ptr<const ContigFeatures> contig_ptr,
-                                   std::shared_ptr<GenomeVariant> genome_variants,
                                    Phred_t quality,
                                    const std::string&, // info,
                                    const std::string& reference,
                                    const std::string& alternate,
                                    ContigOffset_t contig_offset,
-                                   size_t& variant_count) const {
+                                   size_t& variant_count) {
 
   CompoundVariantMap compound_variant_map;
 
@@ -305,11 +299,12 @@ bool kgl::GATKVCFImpl::parseDelete(const std::string& variant_source,
 
   if (compound_variant_map.size() > 1) {
 
-    variant_count += addThreadSafeGenomeVariant(genome_variants,CompoundDeleteFactory().createCompoundVariant(compound_variant_map));
+    variant_count += addThreadSafeGenomeVariant(CompoundDeleteFactory().createCompoundVariant(compound_variant_map));
 
   } else if (compound_variant_map.size() == 1) {
 
-    variant_count += addThreadSafeGenomeVariant(genome_variants, compound_variant_map.begin()->second); // Annotate with genome information
+    std::shared_ptr<Variant> single_variant = std::const_pointer_cast<SingleVariant>(compound_variant_map.begin()->second);
+    variant_count += addThreadSafeGenomeVariant(single_variant);
 
   } else {
 

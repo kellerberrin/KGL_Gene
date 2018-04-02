@@ -10,6 +10,21 @@
 
 namespace kgl = kellerberrin::genome;
 
+
+// Set up the genomes first rather than on-the-fly.
+// Some genomes may have no variants (the model/reference genome).
+void kgl::Pf3kVCFImpl::setupVCFPopulation() {
+
+  for (auto genome_id : getGenomeNames())  {
+
+    std::shared_ptr<VCFGenome> genome;
+    vcf_population_.getCreateGenome(genome_id, genome);
+
+  }
+
+}
+
+
 // This is multithreaded code called from the reader defined above.
 void kgl::Pf3kVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& vcf_record) {
 
@@ -32,17 +47,7 @@ void kgl::Pf3kVCFImpl::TryVCFRecord(const seqan::VcfRecord& vcf_record) {
 
   ++vcf_variant_count_;
 
-  std::shared_ptr<PloidyAnalysis> ploidy_ptr = std::dynamic_pointer_cast<PloidyAnalysis>(pop_variant_ptr_);
-
-  if (ploidy_ptr) {
-
-    process_ploidy_.PloidyVCFRecord(vcf_record, ploidy_ptr, contigId(vcf_record.rID));
-
-  } else {
-
-    ParseRecord(vcf_record, contigId(vcf_record.rID));
-
-  }
+  ParseRecord(vcf_record, contigId(vcf_record.rID));
 
   if (vcf_variant_count_ % VARIANT_REPORT_INTERVAL_ == 0) {
 
@@ -145,17 +150,9 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
             ParseVCFMiscImpl::generateEditVector(recordParser.reference(), allele, parsed_cigar);
             std::string info;
             size_t record_variants;
-            std::shared_ptr<GenomeVariant> genome_variant;
-            if (not thread_safe_population_.getCreateGenomeVariant(genome_name, genome_db_ptr_, genome_variant)) {
-
-              ExecEnv::log().error("Could not find or create genome: {}", genome_name);
-              continue;
-
-            }
 
             parseCigarItems(genome_name,
                             recordParser.contigPtr(),
-                            genome_variant,
                             parsed_cigar,
                             recordParser.offset(),
                             recordParser.reference(),
@@ -180,17 +177,9 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
             ParseVCFMiscImpl::generateEditVector(recordParser.reference(), allele, parsed_cigar);
             std::string info;
             size_t record_variants;
-            std::shared_ptr<GenomeVariant> genome_variant;
-            if (not thread_safe_population_.getCreateGenomeVariant(genome_name, genome_db_ptr_, genome_variant)) {
-
-              ExecEnv::log().error("Could not find or create genome: {}", genome_name);
-              continue;
-
-            }
 
             parseCigarItems(genome_name,
                             recordParser.contigPtr(),
-                            genome_variant,
                             parsed_cigar,
                             recordParser.offset(),
                             recordParser.reference(),
@@ -215,7 +204,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
     if (record_count_ % 1000000 == 0) {
 
       ExecEnv::log().info("Processed :{} records, variants: {}, variants: {}",
-                          static_cast<size_t>(record_count_), variant_count_, thread_safe_population_.variantCount());
+                          static_cast<size_t>(record_count_), variant_count_, vcf_population_.variantCount());
 
       for (auto allele : recordParser.alleles()) {
 

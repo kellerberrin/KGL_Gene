@@ -11,14 +11,13 @@ namespace kgl = kellerberrin::genome;
 
 bool kgl::ParseCigarImpl::parseCigarItems(const std::string& genome_name,
                                             std::shared_ptr<const ContigFeatures> contig_ptr,
-                                            std::shared_ptr<GenomeVariant> genome_variants,
                                             const std::vector<CigarEditItem>& parsed_cigar,
                                             ContigOffset_t contig_offset,
                                             const std::string& reference,
                                             const std::string& alternate,
                                             Phred_t quality,
                                             const std::string& info,
-                                            size_t& record_variants) const {
+                                            size_t& record_variants)  {
 
 
   size_t reference_index = 0;
@@ -45,7 +44,6 @@ bool kgl::ParseCigarImpl::parseCigarItems(const std::string& genome_name,
         result = parseSNP(cigar_item.first,
                           genome_name,
                           contig_ptr,
-                          genome_variants,
                           quality,
                           info,
                           reference,
@@ -60,7 +58,6 @@ bool kgl::ParseCigarImpl::parseCigarItems(const std::string& genome_name,
         result = parseInsert(cigar_item.first,
                              genome_name,
                              contig_ptr,
-                             genome_variants,
                              quality,
                              info,
                              alternate,
@@ -73,7 +70,6 @@ bool kgl::ParseCigarImpl::parseCigarItems(const std::string& genome_name,
         result = parseDelete(cigar_item.first,
                              genome_name,
                              contig_ptr,
-                             genome_variants,
                              quality,
                              info,
                              reference,
@@ -139,7 +135,6 @@ bool kgl::ParseCigarImpl::parseCheck(size_t cigar_count,
 bool kgl::ParseCigarImpl::parseSNP(size_t cigar_count,
                                      const std::string& variant_source,
                                      std::shared_ptr<const ContigFeatures> contig_ptr,
-                                     std::shared_ptr<GenomeVariant> genome_variants,
                                      Phred_t quality,
                                      const std::string&, // info,
                                      const std::string& reference,
@@ -147,7 +142,7 @@ bool kgl::ParseCigarImpl::parseSNP(size_t cigar_count,
                                      size_t& reference_index,
                                      size_t& alternate_index,
                                      ContigOffset_t& contig_offset,
-                                     size_t& variant_count) const {
+                                     size_t& variant_count) {
 
   for (size_t idx = 0; idx < cigar_count; ++idx) {
 
@@ -171,7 +166,7 @@ bool kgl::ParseCigarImpl::parseSNP(size_t cigar_count,
                                                                              DNA5::convertChar(reference[reference_index]),
                                                                              DNA5::convertChar(alternate[alternate_index])));
 
-    variant_count += addThreadSafeGenomeVariant(genome_variants, snp_variant_ptr); // Annotate with genome information
+    variant_count += addThreadSafeGenomeVariant(snp_variant_ptr); // Annotate with genome information
 
     ++reference_index;
     ++alternate_index;
@@ -187,13 +182,12 @@ bool kgl::ParseCigarImpl::parseSNP(size_t cigar_count,
 bool kgl::ParseCigarImpl::parseInsert(size_t cigar_count,
                                         const std::string& variant_source,
                                         std::shared_ptr<const ContigFeatures> contig_ptr,
-                                        std::shared_ptr<GenomeVariant> genome_variants,
                                         Phred_t quality,
                                         const std::string&, // info,
                                         const std::string& alternate,
                                         ContigOffset_t contig_offset,
                                         size_t& alternate_index,
-                                        size_t& variant_count) const {
+                                        size_t& variant_count)  {
 
   CompoundVariantMap compound_variant_map;
 
@@ -227,11 +221,12 @@ bool kgl::ParseCigarImpl::parseInsert(size_t cigar_count,
 
   if (compound_variant_map.size() > 1) {
 
-    variant_count += addThreadSafeGenomeVariant(genome_variants,CompoundInsertFactory().createCompoundVariant(compound_variant_map));
+    variant_count += addThreadSafeGenomeVariant(CompoundInsertFactory().createCompoundVariant(compound_variant_map));
 
   } else if (compound_variant_map.size() == 1) {
 
-    variant_count += addThreadSafeGenomeVariant(genome_variants, compound_variant_map.begin()->second); // Annotate with genome information
+    std::shared_ptr<Variant> single_variant = std::const_pointer_cast<SingleVariant>(compound_variant_map.begin()->second);
+    variant_count += addThreadSafeGenomeVariant(single_variant); // Annotate with genome information
 
   } else {
 
@@ -247,13 +242,12 @@ bool kgl::ParseCigarImpl::parseInsert(size_t cigar_count,
 bool kgl::ParseCigarImpl::parseDelete(size_t cigar_count,
                                         const std::string& variant_source,
                                         std::shared_ptr<const ContigFeatures> contig_ptr,
-                                        std::shared_ptr<GenomeVariant> genome_variants,
                                         Phred_t quality,
                                         const std::string&, // info,
                                         const std::string& reference,
                                         size_t& reference_index,
                                         ContigOffset_t& contig_offset,
-                                        size_t& variant_count) const {
+                                        size_t& variant_count) {
 
   CompoundVariantMap compound_variant_map;
 
@@ -295,11 +289,12 @@ bool kgl::ParseCigarImpl::parseDelete(size_t cigar_count,
 
   if (compound_variant_map.size() > 1) {
 
-    variant_count += addThreadSafeGenomeVariant(genome_variants,CompoundDeleteFactory().createCompoundVariant(compound_variant_map));
+    variant_count += addThreadSafeGenomeVariant(CompoundDeleteFactory().createCompoundVariant(compound_variant_map));
 
   } else if (compound_variant_map.size() == 1) {
 
-    variant_count += addThreadSafeGenomeVariant(genome_variants, compound_variant_map.begin()->second); // Annotate with genome information
+    std::shared_ptr<Variant> single_variant = std::const_pointer_cast<SingleVariant>(compound_variant_map.begin()->second);
+    variant_count += addThreadSafeGenomeVariant(single_variant); // Annotate with genome information
 
   } else {
 
