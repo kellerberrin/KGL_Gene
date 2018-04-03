@@ -17,13 +17,12 @@ namespace genome {   // project level namespace
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Thread safe. This object can be used by multiple consumer threads.
 // An internal parser variant object that holds multi ploid variants until they can be phased.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using ContigMultiMap = std::multimap<ContigOffset_t, std::shared_ptr<Variant>>;
-using ThreadSafeContig = std::map<ContigId_t, std::shared_ptr<ContigMultiMap>>;
+using VCFContigMap = std::map<ContigId_t, std::shared_ptr<ContigMultiMap>>;
 class VCFGenome {
 
 public:
@@ -36,11 +35,11 @@ public:
 
   bool addVariant(std::shared_ptr<Variant> variant);
 
-  const ThreadSafeContig& getMap() const { return contig_map_; }
+  const VCFContigMap& getMap() const { return contig_map_; }
 
 private:
 
-  ThreadSafeContig contig_map_;
+  VCFContigMap contig_map_;
 
   bool getCreateContig(const ContigId_t& contig_id, std::shared_ptr<ContigMultiMap>& contig_ptr);
 
@@ -49,13 +48,12 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Thread safe. This object can be used by multiple consumer threads.
 // An internal parser variant object that holds multi ploid variants until they can be phased.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-using ThreadSafeGenome = std::map<GenomeId_t, std::shared_ptr<VCFGenome>>;
+using VCFGenomeMap = std::map<GenomeId_t, std::shared_ptr<VCFGenome>>;
 class VCFPopulation {
 
 public:
@@ -69,23 +67,21 @@ public:
 
   size_t variantCount() const;
 
-  const ThreadSafeGenome& getMap() const { return genome_map_; }
+  const VCFGenomeMap& getMap() const { return genome_map_; }
 
 
 private:
 
-  ThreadSafeGenome genome_map_;
+  VCFGenomeMap genome_map_;
 
 
 
 };
 
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Not Thread safe.
-// This object accepts holds multi ploid variants and phases them.
+// This object accepts multi ploid variants from the VCF parser and phases them.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -106,6 +102,16 @@ private:
 
 
 };
+
+
+
+
+
+
+
+
+
+
 
 
 }   // namespace genome
