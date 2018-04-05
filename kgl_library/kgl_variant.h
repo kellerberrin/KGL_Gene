@@ -68,16 +68,16 @@ class VariantSequence {
 
 public:
 
-  VariantSequence(const std::string& variant_source,
+  VariantSequence(const GenomeId_t& genome_id,
                   std::shared_ptr<const ContigFeatures>  contig_ptr,
                   ContigOffset_t contig_offset,
-                  Phred_t quality) : variant_source_(variant_source),
+                  Phred_t quality) : genome_id_(genome_id),
                                      contig_ptr_(contig_ptr),
                                      contig_offset_(contig_offset),
                                      quality_(quality) { }
   virtual ~VariantSequence() = default;
 
-  const std::string& genomeId() const { return variant_source_; }
+  const GenomeId_t& genomeId() const { return genome_id_; }
 
   std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
 
@@ -89,7 +89,7 @@ public:
 
 private:
 
-  std::string variant_source_;                          // The source of this variant
+  GenomeId_t genome_id_;                          // The source of this variant
   std::shared_ptr<const ContigFeatures> contig_ptr_;    // The contig.
   ContigOffset_t contig_offset_;                        // Location on the contig.
   Phred_t quality_;                       // Phred (-10log10) quality that the variant is not valid.
@@ -110,10 +110,10 @@ class Variant : public VariantSequence {
 public:
 
 
-  Variant(const std::string& variant_source,
+  Variant(const GenomeId_t& genome_id,
           const std::shared_ptr<const ContigFeatures> contig_ptr,
           ContigOffset_t contig_offset,
-          Phred_t quality) : VariantSequence(variant_source, contig_ptr, contig_offset, quality) {}
+          Phred_t quality) : VariantSequence(genome_id, contig_ptr, contig_offset, quality) {}
   ~Variant() override = default;
   bool filterVariant(const VariantFilter& filter) const { return applyFilter(filter); }
 

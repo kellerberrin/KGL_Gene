@@ -136,7 +136,6 @@ private:
 
   std::string info_;
   Phred_t quality_;
-  Haplotypes haplotypes_;
 
 };
 

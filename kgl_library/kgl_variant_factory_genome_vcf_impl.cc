@@ -6,6 +6,7 @@
 #include "kgl_variant_factory_vcf_parse_impl.h"
 #include "kgl_variant_factory_genome_vcf_impl.h"
 #include "kgl_filter.h"
+#include "kgl_variant_phasing_statistics.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -43,6 +44,10 @@ void kgl::ParseGenomeVCFImpl::readParseVCFImpl() {
 
   // Now in single threaded code so transfer the variants to the population object.
   GenomePhasing::haploidPhasing(vcf_population_, genome_db_ptr_ , pop_variant_ptr_);
+
+  PopulationPhasingStatistics phased_statistics;
+  phased_statistics.phasedSNPs(vcf_population_);
+  phased_statistics.outputPopulation();
 
 }
 

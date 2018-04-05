@@ -36,12 +36,12 @@ class SingleVariant : public Variant {
 
 public:
 
-  SingleVariant(const std::string& variant_source,
+  SingleVariant(const GenomeId_t& genome_id,
             std::shared_ptr<const ContigFeatures> contig_ptr,
             ContigOffset_t contig_offset,
             Phred_t quality,
             std::shared_ptr<const VariantEvidence> evidence_ptr,
-            DNA5::Alphabet reference ) : Variant(variant_source, contig_ptr, contig_offset, quality),
+            DNA5::Alphabet reference ) : Variant(genome_id, contig_ptr, contig_offset, quality),
                                            evidence_ptr_(evidence_ptr),
                                            reference_(reference) {}
 
@@ -77,13 +77,13 @@ class SNPVariant : public SingleVariant {
 
 public:
 
-  SNPVariant(const std::string& variant_source,
+  SNPVariant(const GenomeId_t& genome_id,
              std::shared_ptr<const ContigFeatures> contig_ptr,
              ContigOffset_t contig_offset,
              Phred_t quality,
              std::shared_ptr<const VariantEvidence> evidence_ptr,
              DNA5::Alphabet reference,
-             DNA5::Alphabet mutant) : SingleVariant(variant_source,
+             DNA5::Alphabet mutant) : SingleVariant(genome_id,
                                                            contig_ptr,
                                                            contig_offset,
                                                            quality,
@@ -130,12 +130,12 @@ class DeleteVariant : public SingleVariant {
 
 public:
 
-  DeleteVariant(const std::string& variant_source,
+  DeleteVariant(const GenomeId_t& genome_id,
                 std::shared_ptr<const ContigFeatures> contig_ptr,
                 ContigOffset_t contig_offset,
                 Phred_t quality,
                 std::shared_ptr<const VariantEvidence> evidence_ptr,
-                DNA5::Alphabet reference) : SingleVariant(variant_source,
+                DNA5::Alphabet reference) : SingleVariant(genome_id,
                                                               contig_ptr,
                                                               contig_offset,
                                                               quality,
@@ -177,13 +177,13 @@ class InsertVariant : public SingleVariant {
 
 public:
 
-  InsertVariant(const std::string& variant_source,
+  InsertVariant(const GenomeId_t& genome_id,
                 std::shared_ptr<const ContigFeatures> contig_ptr,
                 ContigOffset_t contig_offset,
                 Phred_t quality,
                 std::shared_ptr<const VariantEvidence> evidence_ptr,
                 DNA5::Alphabet reference,
-                DNA5::Alphabet mutant) : SingleVariant(variant_source,
+                DNA5::Alphabet mutant) : SingleVariant(genome_id,
                                                        contig_ptr,
                                                        contig_offset,
                                                        quality,

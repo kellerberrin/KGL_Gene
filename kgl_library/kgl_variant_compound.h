@@ -32,11 +32,11 @@ class CompoundVariant : public Variant {
 
 public:
 
-  CompoundVariant(const std::string& variant_source,
+  CompoundVariant(const GenomeId_t& genome_id,
                   std::shared_ptr<const ContigFeatures> contig_ptr,
                   ContigOffset_t contig_offset,
                   Phred_t quality,
-                  const CompoundVariantMap& variant_map) : Variant(variant_source, contig_ptr, contig_offset, quality),
+                  const CompoundVariantMap& variant_map) : Variant(genome_id, contig_ptr, contig_offset, quality),
                                                            variant_map_(variant_map) {}
   ~CompoundVariant() override = default;
 
@@ -64,11 +64,11 @@ class CompoundInsert : public CompoundVariant {
 
 public:
 
-  CompoundInsert(const std::string& variant_source,
+  CompoundInsert(const GenomeId_t& genome_id,
                  std::shared_ptr<const ContigFeatures> contig_ptr,
                  ContigOffset_t contig_offset,
                  Phred_t quality,
-                 const CompoundVariantMap& variant_map) : CompoundVariant(variant_source,
+                 const CompoundVariantMap& variant_map) : CompoundVariant(genome_id,
                                                                           contig_ptr,
                                                                           contig_offset,
                                                                           quality,
@@ -101,11 +101,11 @@ class CompoundDelete : public CompoundVariant {
 
 public:
 
-  CompoundDelete(const std::string& variant_source,
+  CompoundDelete(const GenomeId_t& genome_id,
                  std::shared_ptr<const ContigFeatures> contig_ptr,
                  ContigOffset_t contig_offset,
                  Phred_t quality,
-                 const CompoundVariantMap& variant_map) : CompoundVariant(variant_source,
+                 const CompoundVariantMap& variant_map) : CompoundVariant(genome_id,
                                                                           contig_ptr,
                                                                           contig_offset,
                                                                           quality,
