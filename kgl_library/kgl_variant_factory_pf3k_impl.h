@@ -63,6 +63,7 @@ private:
   constexpr static const double MIN_VQSLOD_QUALITY_ = 2.0;
   constexpr static const double MIN_GQ_QUALITY_ = 20.0;
 
+
   std::atomic<uint64_t> record_count_{0};
   size_t variant_count_{0};
 
