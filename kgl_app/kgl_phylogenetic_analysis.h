@@ -15,6 +15,8 @@
 #include "kgl_gff_fasta.h"
 #include "kgl_genome_aux_csv.h"
 #include "kgl_sequence_compare_impl.h"
+#include "kgl_variant_phasing_statistics.h"
+
 
 
 
@@ -137,7 +139,8 @@ public:
                                    const FeatureIdent_t& sequence_id,
                                    std::shared_ptr<const GenomeDatabase> genome_db,
                                    std::shared_ptr<const PopulationVariant> pop_variant_ptr,
-                                   const GenomeAuxData& aux_Pf3k_data);
+                                   const GenomeAuxData& aux_Pf3k_data,
+                                   std::shared_ptr<const PopulationPhasingStatistics> phasing_stats);
 
 
 private:

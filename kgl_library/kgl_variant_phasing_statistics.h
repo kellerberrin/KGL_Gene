@@ -85,13 +85,13 @@ private:
 
 
 using StatContigMap = std::map<ContigId_t, std::shared_ptr<ContigPhasingStatistics>>;
-class GenomePhasingStatistics {
+class DiploidPhasingStatistics {
 
 public:
 
-  explicit GenomePhasingStatistics() = default;
-  GenomePhasingStatistics(const GenomePhasingStatistics&) = default;
-  ~GenomePhasingStatistics() = default;
+  explicit DiploidPhasingStatistics() = default;
+  DiploidPhasingStatistics(const DiploidPhasingStatistics&) = default;
+  ~DiploidPhasingStatistics() = default;
 
   bool phasedSNPs(const VCFGenome& vcf_genome);
 
@@ -115,7 +115,7 @@ private:
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using GenomeStatMap = std::map<GenomeId_t, std::shared_ptr<GenomePhasingStatistics>>;
+using GenomeStatMap = std::map<GenomeId_t, std::shared_ptr<DiploidPhasingStatistics>>;
 class PopulationPhasingStatistics {
 
 public:
@@ -129,6 +129,11 @@ public:
   size_t phasedSNPCount() const;
 
   const GenomeStatMap& getMap() const { return genome_map_; }
+
+  bool getPhasing(const GenomeId_t& genome_id,
+                  const ContigId_t& contig_id,
+                  ContigOffset_t offset,
+                  std::shared_ptr<const OffsetPhasingStatistic>& snp_phasing) const;
 
   void outputPopulation() const;
 

@@ -20,7 +20,7 @@ bool kgl::ContigPhasingStatistics::insertPhasingStatistic(ContigOffset_t  offset
 }
 
 
-bool kgl::GenomePhasingStatistics::phasedSNPs(const VCFGenome& vcf_genome) {
+bool kgl::DiploidPhasingStatistics::phasedSNPs(const VCFGenome& vcf_genome) {
 
   bool return_result = true;
 
@@ -125,7 +125,7 @@ bool kgl::GenomePhasingStatistics::phasedSNPs(const VCFGenome& vcf_genome) {
 
 
 
-size_t kgl::GenomePhasingStatistics::heterozygousSNPCount() const {
+size_t kgl::DiploidPhasingStatistics::heterozygousSNPCount() const {
 
   size_t differentSNPs = 0;
   for (auto contig : getMap()) {
@@ -140,7 +140,7 @@ size_t kgl::GenomePhasingStatistics::heterozygousSNPCount() const {
 
 
 
-size_t kgl::GenomePhasingStatistics::homozygousSNPCount() const {
+size_t kgl::DiploidPhasingStatistics::homozygousSNPCount() const {
 
   size_t differentSNPs = 0;
   for (auto contig : getMap()) {
@@ -154,7 +154,7 @@ size_t kgl::GenomePhasingStatistics::homozygousSNPCount() const {
 }
 
 
-size_t kgl::GenomePhasingStatistics::singleSNPCount() const {
+size_t kgl::DiploidPhasingStatistics::singleSNPCount() const {
 
   size_t differentSNPs = 0;
   for (auto contig : getMap()) {
@@ -175,7 +175,7 @@ bool kgl::PopulationPhasingStatistics::phasedSNPs(const VCFPopulation& vcf_popul
 
   for (auto genome : vcf_population.getMap()) {
 
-    std::shared_ptr<GenomePhasingStatistics> genome_stats_ptr(std::make_shared<GenomePhasingStatistics>());
+    std::shared_ptr<DiploidPhasingStatistics> genome_stats_ptr(std::make_shared<DiploidPhasingStatistics>());
 
     if (not genome_stats_ptr->phasedSNPs(*genome.second)) {
 
@@ -198,23 +198,92 @@ bool kgl::PopulationPhasingStatistics::phasedSNPs(const VCFPopulation& vcf_popul
 }
 
 
+bool kgl::PopulationPhasingStatistics::getPhasing(const GenomeId_t& genome_id,
+                                                  const ContigId_t& contig_id,
+                                                  ContigOffset_t offset,
+                                                  std::shared_ptr<const OffsetPhasingStatistic>& snp_phasing) const {
+
+  snp_phasing = nullptr;
+  auto genome_result = getMap().find(genome_id);
+
+  if (genome_result == getMap().end()) {
+
+    return false;
+
+  }
+
+  auto contig_result = genome_result->second->getMap().find(contig_id);
+
+  if (contig_result == genome_result->second->getMap().end()) {
+
+    return false;
+
+  }
+
+  bool found = false;
+
+  auto offset_result = contig_result->second->heterozygousSNP().find(offset);
+
+  if (offset_result != contig_result->second->heterozygousSNP().end()) {
+
+    found = true;
+    snp_phasing = offset_result->second;
+
+  }
+
+  offset_result = contig_result->second->homozygousSNP().find(offset);
+
+  if (offset_result != contig_result->second->homozygousSNP().end()) {
+
+    if (found) {
+
+      ExecEnv::log().error("SNP at Genome: {}, Contig: {}, Offset: {}, recorded as both Heterozygous AND Homozygous");
+
+    }
+
+    found = true;
+    snp_phasing = offset_result->second;
+
+  }
+
+  offset_result = contig_result->second->singleSNP().find(offset);
+
+  if (offset_result != contig_result->second->singleSNP().end()) {
+
+    if (found) {
+
+      ExecEnv::log().error("SNP at Genome: {}, Contig: {}, Offset: {}, recorded as both Homozygous AND Singular");
+
+    }
+
+    found = true;
+    snp_phasing = offset_result->second;
+
+  }
+
+  return found;
+
+}
+
+
+
 void kgl::PopulationPhasingStatistics::outputPopulation() const {
 
   for (auto genome : getMap()) {
 
-    size_t different = genome.second->heterozygousSNPCount();
-    size_t identical = genome.second->homozygousSNPCount();
+    size_t heterozygous = genome.second->heterozygousSNPCount();
+    size_t homozygous = genome.second->homozygousSNPCount();
     size_t single = genome.second->singleSNPCount();
-    size_t allSNP = different + identical + single;
+    size_t allSNP = heterozygous + homozygous + single;
 
-    double percent_different = (static_cast<double>(different) * 100.0) / static_cast<double>(allSNP);
-    double percent_identical = (static_cast<double>(identical) * 100.0) / static_cast<double>(allSNP);
+    double percent_heterozygous = (static_cast<double>(heterozygous) * 100.0) / static_cast<double>(allSNP);
+    double percent_homozygous = (static_cast<double>(homozygous) * 100.0) / static_cast<double>(allSNP);
     double percent_single = (static_cast<double>(single) * 100.0) / static_cast<double>(allSNP);
 
-    ExecEnv::log().info("Diploid SNP types; Genome: {} Different: {}({}%), Identical: {}({}%), Single: {}({}%)",
+    ExecEnv::log().info("Diploid SNP types; Genome: {} Heterozygous: {}({}%), Homozygous: {}({}%), Singular: {}({}%)",
                         genome.first,
-                        different, percent_different,
-                        identical, percent_identical,
+                        heterozygous, percent_heterozygous,
+                        homozygous, percent_homozygous,
                         single, percent_single);
 
   }

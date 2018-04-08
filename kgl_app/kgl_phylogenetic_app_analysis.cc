@@ -103,8 +103,14 @@ void kgl::PhylogeneticApp::performAnalysis(const kgl::Phylogenetic& args,
     aux_data.readParseAuxData(args.auxCSVFile);
 
     std::string DNA_mutation_file = kgl::Utility::filePath("DNAMutations", args.workDirectory) + ".csv";
-    ApplicationAnalysis::outputDNAMutationCSV(DNA_mutation_file, PFATP4_CONTIG, PFATP4_GENE, PFATP4_SEQUENCE,
-                                              genome_db_ptr, parser_analysis_ptr, aux_data);
+    ApplicationAnalysis::outputDNAMutationCSV(DNA_mutation_file,
+                                              PFATP4_CONTIG,
+                                              PFATP4_GENE,
+                                              PFATP4_SEQUENCE,
+                                              genome_db_ptr,
+                                              parser_analysis_ptr,
+                                              aux_data,
+                                              parser_analysis_ptr->phasedStatistics());
     std::string amino_mutation_file = kgl::Utility::filePath("AminoMutations", args.workDirectory) + ".csv";
     ApplicationAnalysis::outputAminoMutationCSV(amino_mutation_file, PFATP4_CONTIG, PFATP4_GENE, PFATP4_SEQUENCE,
                                                 genome_db_ptr, parser_analysis_ptr);

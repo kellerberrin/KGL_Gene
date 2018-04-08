@@ -374,7 +374,8 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
                                                     const FeatureIdent_t& sequence_id,
                                                     std::shared_ptr<const GenomeDatabase> genome_db,
                                                     std::shared_ptr<const PopulationVariant> pop_variant_ptr,
-                                                    const GenomeAuxData& aux_Pf3k_data) {
+                                                    const GenomeAuxData& aux_Pf3k_data,
+                                                    std::shared_ptr<const PopulationPhasingStatistics> phasing_stats) {
 
   const char CSV_delimiter = ',';
   // open the file.
@@ -542,7 +543,42 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
 
       } else {
 
-        out_file << 1 << CSV_delimiter;
+        GenomeId_t& genome_id = genome_item.genome;
+        ContigId_t& contig_id = result->second.contig_id;
+        ContigOffset_t offset = result->second.contig_offset;
+        std::shared_ptr<const OffsetPhasingStatistic> phasing_ptr;
+        if (not phasing_stats->getPhasing(genome_id, contig_id, offset, phasing_ptr)) {
+
+          ExecEnv::log().error("Could not find phasing for SNP; Genome: {}, Contig, Offset: {}", genome_id, contig_id, offset);
+          out_file << -1 << CSV_delimiter;
+
+        } else {
+
+          if (phasing_ptr->snpVector().size() == 1) {
+
+            out_file << -1 << CSV_delimiter;
+
+          } else if (phasing_ptr->snpVector().size() == 2) {
+
+            if (phasing_ptr->snpVector()[0]->equivalent(*(phasing_ptr->snpVector()[1]))) {
+
+              out_file << 2 << CSV_delimiter;
+
+            } else {
+
+              out_file << 1 << CSV_delimiter;
+
+            }
+
+
+          } else {
+
+            ExecEnv::log().warn("Phasing not Diploid; Genome: {}, Contig, Offset: {}", genome_id, contig_id, offset);
+            out_file << 1 << CSV_delimiter;
+
+          }
+
+        }
 
       }
 
