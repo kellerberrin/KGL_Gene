@@ -50,6 +50,8 @@ struct Phylogenetic {
   static constexpr const char* ANALYZE_UPGMA = "UPGMA";
   static constexpr const char* ANALYZE_GENE = "GENE";
   static constexpr const char* ANALYZE_RNA = "RNA";
+  static constexpr const char* ANALYZE_SNP = "SNP";
+
 
 };
 

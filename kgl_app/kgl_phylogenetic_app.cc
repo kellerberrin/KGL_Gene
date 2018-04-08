@@ -11,6 +11,7 @@
 #include "kgl_filter.h"
 #include "kgl_ploidy_analysis.h"
 #include "kgl_genome_aux_csv.h"
+#include "kgl_vcf_parser_data.h"
 
 
 
@@ -25,14 +26,14 @@ kgl::PhylogeneticApp::PhylogeneticApp(const kgl::Phylogenetic& args) {
                                                                                                   args.gafFile,
                                                                                                   args.aminoTranslationTable);
   // Create a population object.
-  std::shared_ptr<kgl::PopulationVariant> pop_variant_ptr(std::make_shared<kgl::PopulationVariant>("Falciparum"));
+  std::shared_ptr<kgl::ParserAnalysis> parser_analysis_ptr(std::make_shared<kgl::ParserAnalysis>("Falciparum"));
 
   // For all organisms
   for (const auto& file : args.fileList) {
 
 
     kgl::VariantFactory().createVariants(genome_db_ptr,
-                                         pop_variant_ptr,
+                                         parser_analysis_ptr,
                                          file.genome_name,
                                          file.file_name,
                                          args.readQuality,
@@ -43,7 +44,7 @@ kgl::PhylogeneticApp::PhylogeneticApp(const kgl::Phylogenetic& args) {
   }
 
   // Analyze the population.
-  performAnalysis(args, genome_db_ptr, pop_variant_ptr);
+  performAnalysis(args, genome_db_ptr, parser_analysis_ptr);
 
 }
 

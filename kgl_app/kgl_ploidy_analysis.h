@@ -6,7 +6,9 @@
 #define KGL_PLOIDY_ANALYSIS_H
 
 
+
 #include "kgl_variant_db.h"
+#include "kgl_variant_phasing_statistics.h"
 
 
 
@@ -25,6 +27,12 @@ using PloidyDataMap = std::map<std::string, PloidyData>;
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ploidy Analysis
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
 class PloidyAnalysis : public PopulationVariant {

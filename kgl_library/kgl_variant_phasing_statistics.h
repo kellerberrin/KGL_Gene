@@ -57,18 +57,18 @@ public:
 
   bool phasedSNPs(const VCFContigMap& contig);
 
-  const ContigStatsMap& differentSNP() const { return different_snp_; }
-  const ContigStatsMap& identicalSNP() const { return identical_snp_; }
+  const ContigStatsMap& heterozygousSNP() const { return heterozygous_snp_; }
+  const ContigStatsMap& homozygousSNP() const { return homozygous_snp_; }
   const ContigStatsMap& singleSNP() const { return single_snp_; }
 
-  bool differentSNP(ContigOffset_t  offset, const PhasedSNPVector& phased_snp_vector) { return insertPhasingStatistic(offset, phased_snp_vector, different_snp_); }
-  bool identicalSNP(ContigOffset_t  offset, const PhasedSNPVector& phased_snp_vector) { return insertPhasingStatistic(offset, phased_snp_vector, identical_snp_); }
+  bool heterozygousSNP(ContigOffset_t offset, const PhasedSNPVector &phased_snp_vector) { return insertPhasingStatistic(offset, phased_snp_vector, heterozygous_snp_); }
+  bool homozygousSNP(ContigOffset_t offset, const PhasedSNPVector &phased_snp_vector) { return insertPhasingStatistic(offset, phased_snp_vector, homozygous_snp_); }
   bool singleSNP(ContigOffset_t  offset, const PhasedSNPVector& phased_snp_vector) { return insertPhasingStatistic(offset, phased_snp_vector, single_snp_); }
 
 private:
 
-  ContigStatsMap different_snp_;
-  ContigStatsMap identical_snp_;
+  ContigStatsMap heterozygous_snp_;
+  ContigStatsMap homozygous_snp_;
   ContigStatsMap single_snp_;
 
   bool insertPhasingStatistic(ContigOffset_t  offset, const PhasedSNPVector& phased_snp_vector, ContigStatsMap& stats_map);
@@ -95,8 +95,8 @@ public:
 
   bool phasedSNPs(const VCFGenome& vcf_genome);
 
-  size_t differentSNPCount() const;
-  size_t identicalSNPCount() const;
+  size_t heterozygousSNPCount() const;
+  size_t homozygousSNPCount() const;
   size_t singleSNPCount() const;
 
   const StatContigMap& getMap() const { return contig_map_; }

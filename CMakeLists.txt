@@ -14,8 +14,8 @@ include_directories(/usr/include
 
 # add boost library directories
 #set(BOOST_ROOT /usr/lib/boost)
-set(BOOST_INCLUDEDIR /usr/include/boost)
-set(BOOST_LIBRARYDIR /usr/lib/boost)
+set(BOOST_INCLUDEDIR /usr/local/include)
+set(BOOST_LIBRARYDIR /usr/local/lib/boost/lib)
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
@@ -161,7 +161,9 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_genome_aux_csv_impl.cc
         kgl_library/kgl_variant_db_genotype.h
         kgl_library/kgl_variant_factory_vcf_phasing.h
-        kgl_library/kgl_variant_factory_vcf_phasing.cc kgl_library/kgl_variant_phasing_statistics.h kgl_library/kgl_variant_phasing_statistics.cc)
+        kgl_library/kgl_variant_factory_vcf_phasing.cc
+        kgl_library/kgl_variant_phasing_statistics.h
+        kgl_library/kgl_variant_phasing_statistics.cc kgl_library/kgl_vcf_parser_data.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )

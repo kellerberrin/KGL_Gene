@@ -8,6 +8,7 @@
 #include "kgl_phylogenetic_env.h"
 #include "kgl_genome_db.h"
 #include "kgl_variant_db.h"
+#include "kgl_vcf_parser_data.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -29,7 +30,7 @@ private:
 
   void performAnalysis(const Phylogenetic& args,
                        std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                       std::shared_ptr<const PopulationVariant> pop_variant_ptr);
+                       std::shared_ptr<const ParserAnalysis> parser_analysis_ptr);
 
 };
 

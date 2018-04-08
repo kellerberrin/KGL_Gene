@@ -73,7 +73,7 @@ bool kgl::GenomePhasingStatistics::phasedSNPs(const VCFGenome& vcf_genome) {
 
         if (different_snp_vector.size() >= 2) {
 
-          if (not contig_stats_map_ptr->differentSNP(current_variant->second->offset(), different_snp_vector)) {
+          if (not contig_stats_map_ptr->heterozygousSNP(current_variant->second->offset(), different_snp_vector)) {
 
             ExecEnv::log().error("Unable to add phased SNP vector contig: {}, offset: {}", contig.first, current_variant->second->offset());
             return_result = false;
@@ -83,7 +83,7 @@ bool kgl::GenomePhasingStatistics::phasedSNPs(const VCFGenome& vcf_genome) {
         }
         if (identical_snp_vector.size() >= 2) {
 
-          if (not contig_stats_map_ptr->identicalSNP(current_variant->second->offset(), identical_snp_vector)) {
+          if (not contig_stats_map_ptr->homozygousSNP(current_variant->second->offset(), identical_snp_vector)) {
 
             ExecEnv::log().error("Unable to add phased SNP vector contig: {}, offset: {}", contig.first, current_variant->second->offset());
             return_result = false;
@@ -125,12 +125,12 @@ bool kgl::GenomePhasingStatistics::phasedSNPs(const VCFGenome& vcf_genome) {
 
 
 
-size_t kgl::GenomePhasingStatistics::differentSNPCount() const {
+size_t kgl::GenomePhasingStatistics::heterozygousSNPCount() const {
 
   size_t differentSNPs = 0;
   for (auto contig : getMap()) {
 
-    differentSNPs += contig.second->differentSNP().size();
+    differentSNPs += contig.second->heterozygousSNP().size();
 
   }
 
@@ -140,12 +140,12 @@ size_t kgl::GenomePhasingStatistics::differentSNPCount() const {
 
 
 
-size_t kgl::GenomePhasingStatistics::identicalSNPCount() const {
+size_t kgl::GenomePhasingStatistics::homozygousSNPCount() const {
 
   size_t differentSNPs = 0;
   for (auto contig : getMap()) {
 
-    differentSNPs += contig.second->identicalSNP().size();
+    differentSNPs += contig.second->homozygousSNP().size();
 
   }
 
@@ -202,8 +202,8 @@ void kgl::PopulationPhasingStatistics::outputPopulation() const {
 
   for (auto genome : getMap()) {
 
-    size_t different = genome.second->differentSNPCount();
-    size_t identical = genome.second->identicalSNPCount();
+    size_t different = genome.second->heterozygousSNPCount();
+    size_t identical = genome.second->homozygousSNPCount();
     size_t single = genome.second->singleSNPCount();
     size_t allSNP = different + identical + single;
 
