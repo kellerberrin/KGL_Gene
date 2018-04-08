@@ -95,6 +95,7 @@ public:
 
   bool phasedSNPs(const VCFGenome& vcf_genome);
 
+
   size_t heterozygousSNPCount() const;
   size_t homozygousSNPCount() const;
   size_t singleSNPCount() const;
