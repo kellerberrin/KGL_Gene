@@ -513,6 +513,7 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
 // Write file header.
 
   out_file << "Genome" << CSV_delimiter << "LocationDate" << CSV_delimiter;
+  out_file << "HomoZ" << CSV_delimiter << "HeteroZ" << CSV_delimiter << "SingleZ" << CSV_delimiter;
   for (auto DNA_Item : master_SNP_List) {
 
     out_file << DNA_Item.second.contig_id << " "
@@ -533,6 +534,17 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
   for (auto genome_item : genome_vector) {
 
     out_file << genome_item.genome << CSV_delimiter << genome_item.location_date << CSV_delimiter;
+
+    size_t heterozygous = 0;
+    size_t homozygous = 0;
+    size_t singleheterozygous = 0;
+    if (not phasing_stats->genomePhasing(genome_item.genome, heterozygous, homozygous, singleheterozygous)) {
+
+      ExecEnv::log().error("No phasing statistics found for Genome: {}", genome_item.genome);
+
+    }
+
+    out_file << homozygous << CSV_delimiter << heterozygous << CSV_delimiter << singleheterozygous << CSV_delimiter;
 
     for (auto DNA_Item : master_SNP_List) {
 
@@ -556,7 +568,7 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
 
           if (phasing_ptr->snpVector().size() == 1) {
 
-            out_file << -1 << CSV_delimiter;
+            out_file << 1 << CSV_delimiter;
 
           } else if (phasing_ptr->snpVector().size() == 2) {
 
@@ -566,7 +578,7 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
 
             } else {
 
-              out_file << 1 << CSV_delimiter;
+              out_file << 3 << CSV_delimiter;
 
             }
 
@@ -574,7 +586,7 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
           } else {
 
             ExecEnv::log().warn("Phasing not Diploid; Genome: {}, Contig, Offset: {}", genome_id, contig_id, offset);
-            out_file << 1 << CSV_delimiter;
+            out_file << 4 << CSV_delimiter;
 
           }
 

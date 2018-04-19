@@ -57,19 +57,22 @@ public:
 
   bool phasedSNPs(const VCFContigMap& contig);
 
+  // 2 different alleles "1/2"
   const ContigStatsMap& heterozygousSNP() const { return heterozygous_snp_; }
+  // 2 alleles the same "1/1"
   const ContigStatsMap& homozygousSNP() const { return homozygous_snp_; }
-  const ContigStatsMap& singleSNP() const { return single_snp_; }
+  // 1 allele only "0/1"
+  const ContigStatsMap& singleHeterozygousSNP() const { return single_heterozygous_snp_; }
 
   bool heterozygousSNP(ContigOffset_t offset, const PhasedSNPVector &phased_snp_vector) { return insertPhasingStatistic(offset, phased_snp_vector, heterozygous_snp_); }
   bool homozygousSNP(ContigOffset_t offset, const PhasedSNPVector &phased_snp_vector) { return insertPhasingStatistic(offset, phased_snp_vector, homozygous_snp_); }
-  bool singleSNP(ContigOffset_t  offset, const PhasedSNPVector& phased_snp_vector) { return insertPhasingStatistic(offset, phased_snp_vector, single_snp_); }
+  bool singleHeterozygousSNP(ContigOffset_t offset, const PhasedSNPVector &phased_snp_vector) { return insertPhasingStatistic(offset, phased_snp_vector, single_heterozygous_snp_); }
 
 private:
 
   ContigStatsMap heterozygous_snp_;
   ContigStatsMap homozygous_snp_;
-  ContigStatsMap single_snp_;
+  ContigStatsMap single_heterozygous_snp_;
 
   bool insertPhasingStatistic(ContigOffset_t  offset, const PhasedSNPVector& phased_snp_vector, ContigStatsMap& stats_map);
 
@@ -98,7 +101,7 @@ public:
 
   size_t heterozygousSNPCount() const;
   size_t homozygousSNPCount() const;
-  size_t singleSNPCount() const;
+  size_t singleHeterozygousSNPCount() const;
 
   const StatContigMap& getMap() const { return contig_map_; }
 
@@ -134,6 +137,8 @@ public:
                   const ContigId_t& contig_id,
                   ContigOffset_t offset,
                   std::shared_ptr<const OffsetPhasingStatistic>& snp_phasing) const;
+
+  bool genomePhasing(const GenomeId_t& genome_id, size_t &heterozygous, size_t &homozygous, size_t& singleheterozygous) const;
 
   void outputPopulation() const;
 

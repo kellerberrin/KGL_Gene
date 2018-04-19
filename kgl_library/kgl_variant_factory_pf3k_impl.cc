@@ -63,13 +63,6 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
 
   ParseVCFRecord recordParser(vcf_record, contig_id, genome_db_ptr_); //Each vcf record.
 
-//************ Temp code
-
-  if (recordParser.offset() < 529005 or recordParser.offset() > 532799) return;
-
-//**************Temp Code
-
-
   VCFInfoField info_key_value_map(seqan::toCString(vcf_record.info));  // Each vcf record.
 
   if (getGenomeNames().size() != seqan::length(vcf_record.genotypeInfos)) {

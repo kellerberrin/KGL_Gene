@@ -93,7 +93,7 @@ bool kgl::DiploidPhasingStatistics::phasedSNPs(const VCFGenome& vcf_genome) {
         }
         if (identical_snp_vector.size() == 1 and identical_snp_vector.size()) {
 
-          if (not contig_stats_map_ptr->singleSNP(current_variant->second->offset(), identical_snp_vector)) {
+          if (not contig_stats_map_ptr->singleHeterozygousSNP(current_variant->second->offset(), identical_snp_vector)) {
 
             ExecEnv::log().error("Unable to add phased SNP vector contig: {}, offset: {}", contig.first, current_variant->second->offset());
             return_result = false;
@@ -154,12 +154,12 @@ size_t kgl::DiploidPhasingStatistics::homozygousSNPCount() const {
 }
 
 
-size_t kgl::DiploidPhasingStatistics::singleSNPCount() const {
+size_t kgl::DiploidPhasingStatistics::singleHeterozygousSNPCount() const {
 
   size_t differentSNPs = 0;
   for (auto contig : getMap()) {
 
-    differentSNPs += contig.second->singleSNP().size();
+    differentSNPs += contig.second->singleHeterozygousSNP().size();
 
   }
 
@@ -246,9 +246,9 @@ bool kgl::PopulationPhasingStatistics::getPhasing(const GenomeId_t& genome_id,
 
   }
 
-  offset_result = contig_result->second->singleSNP().find(offset);
+  offset_result = contig_result->second->singleHeterozygousSNP().find(offset);
 
-  if (offset_result != contig_result->second->singleSNP().end()) {
+  if (offset_result != contig_result->second->singleHeterozygousSNP().end()) {
 
     if (found) {
 
@@ -266,14 +266,13 @@ bool kgl::PopulationPhasingStatistics::getPhasing(const GenomeId_t& genome_id,
 }
 
 
-
 void kgl::PopulationPhasingStatistics::outputPopulation() const {
 
   for (auto genome : getMap()) {
 
     size_t heterozygous = genome.second->heterozygousSNPCount();
     size_t homozygous = genome.second->homozygousSNPCount();
-    size_t single = genome.second->singleSNPCount();
+    size_t single = genome.second->singleHeterozygousSNPCount();
     size_t allSNP = heterozygous + homozygous + single;
 
     double percent_heterozygous = (static_cast<double>(heterozygous) * 100.0) / static_cast<double>(allSNP);
@@ -290,3 +289,27 @@ void kgl::PopulationPhasingStatistics::outputPopulation() const {
 
 }
 
+
+bool kgl::PopulationPhasingStatistics::genomePhasing(const GenomeId_t& genome_id,
+                                                     size_t& heterozygous,
+                                                     size_t& homozygous,
+                                                     size_t& singleheterozygous) const {
+
+  auto genome_result = getMap().find(genome_id);
+
+  if (genome_result == getMap().end()) {
+
+    heterozygous = 0;
+    homozygous = 0;
+    singleheterozygous =0;
+    return false;
+
+  }
+
+  heterozygous = genome_result->second->heterozygousSNPCount();
+  homozygous = genome_result->second->homozygousSNPCount();
+  singleheterozygous = genome_result->second->singleHeterozygousSNPCount();
+
+  return true;
+
+}
