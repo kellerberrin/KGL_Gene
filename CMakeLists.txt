@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD 14)
 # add extra include directories
 include_directories(/usr/include
                     kgl_library
+                    kgl_analytic
                     kgl_app
                     /usr/local/lib/spdlog/include   # 3rd party logging library.
                     /usr/local/lib/seqan/include    # 3rd party sequence analysis library.
@@ -162,11 +163,14 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_db_genotype.h
         kgl_library/kgl_variant_factory_vcf_phasing.h
         kgl_library/kgl_variant_factory_vcf_phasing.cc
-        kgl_library/kgl_variant_phasing_statistics.h
-        kgl_library/kgl_variant_phasing_statistics.cc kgl_library/kgl_vcf_parser_data.h)
+        kgl_library/kgl_vcf_parser_data.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
+
+set(ANALYTIC_SOURCE_FILES
+        kgl_analytic/kgl_variant_phasing_statistics.h
+        kgl_analytic/kgl_variant_phasing_statistics.cc)
 
 set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_main.cc
@@ -224,7 +228,7 @@ endif(BUILD_DOC)
 
 
 #generate shared library.
-add_library(kgl_lib SHARED ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES})
+add_library(kgl_lib SHARED ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES} ${ANALYTIC_SOURCE_FILES})
 
 target_link_libraries(kgl_lib  ${Boost_LIBRARIES})
 
