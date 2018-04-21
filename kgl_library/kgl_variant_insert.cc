@@ -44,7 +44,7 @@ bool kgl::InsertVariant::equivalent(const Variant& cmp_var) const {
   if (not cmp_snp) return false;
 
   return contigId() == cmp_snp->contigId()
-         and contigOffset() == cmp_snp->contigOffset()
+         and offset() == cmp_snp->offset()
          and variantType() == cmp_snp->variantType()
          and reference() == cmp_snp->reference()
          and mutant() == cmp_snp->mutant();
@@ -57,7 +57,7 @@ std::string kgl::InsertVariant::mutation(char delimiter, VariantOutputIndex outp
 
   std::stringstream ss;
 
-  ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
+  ss << DNA5::convertToChar(reference()) << offsetOutput(offset(), output_index);
   ss << mutantChar() << delimiter;
 
   return ss.str();
@@ -90,7 +90,7 @@ bool kgl::InsertVariant::mutateSequence(SignedOffset_t offset_adjust,
     ExecEnv::log().info("mutateSequence(), Insert reference base: {} does not match sequence base: {}; Genome: {} Contig: {} Offset: {}",
                         DNA5::convertToChar(reference()),
                         DNA5::convertToChar(dna_sequence_ptr->at(sequence_offset)),
-                        genomeId(), contig()->contigId(), offset());
+                        genomeId(), contigId(), offset());
 
   }
   // Mutate the sequence

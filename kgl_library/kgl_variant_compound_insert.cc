@@ -15,7 +15,7 @@ std::string kgl::CompoundInsert::mutation(char /*delimiter*/, VariantOutputIndex
   std::stringstream ss;
 
   ss << "+(" << size() << ")";
-  ss << offsetOutput(contigOffset(), output_index);
+  ss << offsetOutput(offset(), output_index);
 
   return ss.str();
 
@@ -82,7 +82,7 @@ bool kgl::CompoundInsert::mutateSequence(SignedOffset_t offset_adjust,
         "mutateSequence(), Compound Insert reference base: {} does not match sequence base: {}; Genome: {} Contig: {} Offset: {}",
         DNA5::convertToChar(insert_ptr->reference()),
         DNA5::convertToChar(dna_sequence_ptr->at(reference_offset)),
-        insert_ptr->genomeId(), insert_ptr->contig()->contigId(), insert_ptr->offset());
+        insert_ptr->genomeId(), insert_ptr->contigId(), insert_ptr->offset());
 
       }
 

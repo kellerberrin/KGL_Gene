@@ -22,7 +22,7 @@ std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputInde
   std:: stringstream ss;
 // Contig.
   ss << genomeId() << delimiter
-     << contig()->contigId() << delimiter
+     << contigId() << delimiter
      << offsetOutput(offset(), output_index) << delimiter;
 
   return ss.str();
@@ -67,11 +67,11 @@ bool kgl::Variant::offsetOverlap(const Variant& cmp_var) const {
   }
 
   // On the same contig so check for overlap.
-  ContigOffset_t start = contigOffset();
-  ContigOffset_t end = contigOffset() + size() - 1;
+  ContigOffset_t start = offset();
+  ContigOffset_t end = offset() + size() - 1;
 
-  ContigOffset_t cmp_start = cmp_var.contigOffset();
-  ContigOffset_t cmp_end = cmp_var.contigOffset() + size() - 1;
+  ContigOffset_t cmp_start = cmp_var.offset();
+  ContigOffset_t cmp_end = cmp_var.offset() + size() - 1;
 
   bool overlap_offset = ((start <= cmp_start) and (cmp_start <= end)) or ((start <= cmp_end) and (cmp_end <= end));
 

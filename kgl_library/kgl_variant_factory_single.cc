@@ -127,7 +127,7 @@ size_t kgl::SingleFactory::GenerateSNPDelete(const std::string &genome_name,
 
 
           std::shared_ptr<SNPVariant> snp_variant_ptr(std::make_shared<SNPVariant>(genome_name,
-                                                                                   contig_ptr,
+                                                                                   contig_ptr->contigId(),
                                                                                    contig_offset,
                                                                                    quality,
                                                                                    evidence_ptr,
@@ -140,7 +140,7 @@ size_t kgl::SingleFactory::GenerateSNPDelete(const std::string &genome_name,
         } else if (ExtendCountColumns::isDeletion(mutant_nucleotide)) {
 
           std::shared_ptr<DeleteVariant> delete_variant_ptr(std::make_shared<DeleteVariant>(genome_name,
-                                                                                            contig_ptr,
+                                                                                            contig_ptr->contigId(),
                                                                                             contig_offset,
                                                                                             quality,
                                                                                             evidence_ptr,
@@ -203,7 +203,7 @@ size_t kgl::SingleFactory::GenerateInsert(const std::string &genome_name,
       if (quality >= variant_quality) {
 
         std::shared_ptr<InsertVariant> insert_variant_ptr(std::make_shared<InsertVariant>(genome_name,
-                                                                                          contig_ptr,
+                                                                                          contig_ptr->contigId(),
                                                                                           contig_offset,
                                                                                           quality,
                                                                                           evidence_ptr,

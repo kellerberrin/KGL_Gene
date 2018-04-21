@@ -159,7 +159,7 @@ bool kgl::ParseCigarImpl::parseSNP(size_t cigar_count,
     std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>("", quality));
 
     std::shared_ptr<SNPVariant> snp_variant_ptr(std::make_shared<SNPVariant>(variant_source,
-                                                                             contig_ptr,
+                                                                             contig_ptr->contigId(),
                                                                              contig_offset,
                                                                              quality,
                                                                              evidence_ptr,
@@ -197,7 +197,7 @@ bool kgl::ParseCigarImpl::parseInsert(size_t cigar_count,
     std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>("", quality));
 
     std::shared_ptr<InsertVariant> insert_variant_ptr(std::make_shared<InsertVariant>(variant_source,
-                                                                                      contig_ptr,
+                                                                                      contig_ptr->contigId(),
                                                                                       contig_offset,
                                                                                       quality,
                                                                                       evidence_ptr,
@@ -267,7 +267,7 @@ bool kgl::ParseCigarImpl::parseDelete(size_t cigar_count,
 
 
     std::shared_ptr<DeleteVariant> delete_variant_ptr(std::make_shared<DeleteVariant>(variant_source,
-                                                                                      contig_ptr,
+                                                                                      contig_ptr->contigId(),
                                                                                       contig_offset,
                                                                                       quality,
                                                                                       evidence_ptr,

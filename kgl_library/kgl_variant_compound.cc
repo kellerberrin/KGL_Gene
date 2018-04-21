@@ -21,7 +21,7 @@ bool kgl::CompoundVariant::equivalent(const Variant& cmp_var) const {
   if (compound_var == nullptr) return false;
 
   bool result = contigId() == compound_var->contigId()
-                and contigOffset() == compound_var->contigOffset()
+                and offset() == compound_var->offset()
                 and variantType() == compound_var->variantType();
 
   if (not result) return false;

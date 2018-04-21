@@ -19,7 +19,7 @@ namespace kgl = kellerberrin::genome;
 
 bool kgl::ContigVariant::isElement(const Variant& variant) const {
 
-  auto result = offset_variant_map_.equal_range(variant.contigOffset());
+  auto result = offset_variant_map_.equal_range(variant.offset());
 
   for (auto it = result.first; it != result.second; ++it) {
 

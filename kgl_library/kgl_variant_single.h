@@ -37,13 +37,13 @@ class SingleVariant : public Variant {
 public:
 
   SingleVariant(const GenomeId_t& genome_id,
-            std::shared_ptr<const ContigFeatures> contig_ptr,
-            ContigOffset_t contig_offset,
-            Phred_t quality,
-            std::shared_ptr<const VariantEvidence> evidence_ptr,
-            DNA5::Alphabet reference ) : Variant(genome_id, contig_ptr, contig_offset, quality),
-                                           evidence_ptr_(evidence_ptr),
-                                           reference_(reference) {}
+                const ContigId_t& contig_id,
+                ContigOffset_t contig_offset,
+                Phred_t quality,
+                std::shared_ptr<const VariantEvidence> evidence_ptr,
+                DNA5::Alphabet reference ) : Variant(genome_id, contig_id, contig_offset, quality),
+                                             evidence_ptr_(evidence_ptr),
+                                             reference_(reference) {}
 
   ~SingleVariant() override = default;
 
@@ -78,17 +78,17 @@ class SNPVariant : public SingleVariant {
 public:
 
   SNPVariant(const GenomeId_t& genome_id,
-             std::shared_ptr<const ContigFeatures> contig_ptr,
+             const ContigId_t& contig_id,
              ContigOffset_t contig_offset,
              Phred_t quality,
              std::shared_ptr<const VariantEvidence> evidence_ptr,
              DNA5::Alphabet reference,
              DNA5::Alphabet mutant) : SingleVariant(genome_id,
-                                                           contig_ptr,
-                                                           contig_offset,
-                                                           quality,
-                                                           evidence_ptr,
-                                                           reference), mutant_(mutant) {}
+                                                    contig_id,
+                                                    contig_offset,
+                                                    quality,
+                                                    evidence_ptr,
+                                                    reference), mutant_(mutant) {}
 
   SNPVariant(const SNPVariant& variant) = default;
   ~SNPVariant() override = default;
@@ -131,16 +131,16 @@ class DeleteVariant : public SingleVariant {
 public:
 
   DeleteVariant(const GenomeId_t& genome_id,
-                std::shared_ptr<const ContigFeatures> contig_ptr,
+                const ContigId_t& contig_id,
                 ContigOffset_t contig_offset,
                 Phred_t quality,
                 std::shared_ptr<const VariantEvidence> evidence_ptr,
                 DNA5::Alphabet reference) : SingleVariant(genome_id,
-                                                              contig_ptr,
-                                                              contig_offset,
-                                                              quality,
-                                                              evidence_ptr,
-                                                              reference) {}
+                                                          contig_id,
+                                                          contig_offset,
+                                                          quality,
+                                                          evidence_ptr,
+                                                          reference) {}
 
   DeleteVariant(const DeleteVariant& variant) = default;
   ~DeleteVariant() override = default;
@@ -178,13 +178,13 @@ class InsertVariant : public SingleVariant {
 public:
 
   InsertVariant(const GenomeId_t& genome_id,
-                std::shared_ptr<const ContigFeatures> contig_ptr,
+                const ContigId_t& contig_id,
                 ContigOffset_t contig_offset,
                 Phred_t quality,
                 std::shared_ptr<const VariantEvidence> evidence_ptr,
                 DNA5::Alphabet reference,
                 DNA5::Alphabet mutant) : SingleVariant(genome_id,
-                                                       contig_ptr,
+                                                       contig_id,
                                                        contig_offset,
                                                        quality,
                                                        evidence_ptr,

@@ -41,16 +41,8 @@ struct Phylogenetic {
   Phred_t readQuality{30.0};
   Phred_t variantQuality{10.0};
 
-  static constexpr const char* WILDCARD = "*";  // All analytics and All contigs.
+  static constexpr const char* WILDCARD = "*";  // All analytics
 
-  // Analytic types.
-  static constexpr const char* ANALYZE_INTERVAL = "INTERVAL";
-  static constexpr const char* ANALYZE_SEQUENCES = "SEQUENCE";
-  static constexpr const char* ANALYZE_REGION = "REGION";
-  static constexpr const char* ANALYZE_UPGMA = "UPGMA";
-  static constexpr const char* ANALYZE_GENE = "GENE";
-  static constexpr const char* ANALYZE_RNA = "RNA";
-  static constexpr const char* ANALYZE_SNP = "SNP";
 
 
 };

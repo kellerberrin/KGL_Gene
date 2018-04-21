@@ -44,7 +44,7 @@ bool kgl::DeleteVariant::equivalent(const Variant& cmp_var) const {
   if (not cmp_snp) return false;
 
   return contigId() == cmp_snp->contigId()
-         and contigOffset() == cmp_snp->contigOffset()
+         and offset() == cmp_snp->offset()
          and variantType() == cmp_snp->variantType()
          and reference() == cmp_snp->reference();
 
@@ -55,7 +55,7 @@ std::string kgl::DeleteVariant::mutation(char delimiter, VariantOutputIndex outp
 
   std::stringstream ss;
 
-  ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
+  ss << DNA5::convertToChar(reference()) << offsetOutput(offset(), output_index);
   ss << mutantChar() << delimiter;
 
   return ss.str();
@@ -86,7 +86,7 @@ bool kgl::DeleteVariant::mutateSequence(SignedOffset_t offset_adjust,
     ExecEnv::log().warn("mutateSequence(), Delete reference base: {} does not match sequence base: {} at genome: {} contig: {} offset: {}",
                         DNA5::convertToChar(reference()),
                         DNA5::convertToChar(dna_sequence_ptr->at(sequence_offset)),
-                        genomeId(), contig()->contigId(), offset());
+                        genomeId(), contigId(), offset());
 
   }
   // Mutate the sequence

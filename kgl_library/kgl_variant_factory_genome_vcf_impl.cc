@@ -7,7 +7,6 @@
 #include "kgl_variant_factory_genome_vcf_impl.h"
 #include "kgl_filter.h"
 #include "kgl_variant_phasing_statistics.h"
-#include "kgl_vcf_parser_data.h"
 
 
 namespace kgl = kellerberrin::genome;

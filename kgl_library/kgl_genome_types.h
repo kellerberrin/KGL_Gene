@@ -23,6 +23,7 @@ using ContigId_t = std::string;
 using GenomeId_t = std::string;
 using HaplotypeId_t = std::string;
 using GenotypeId_t = std::string;
+using PhaseId_t = char;
 using CompareScore_t = long;  // Signed integer for sequence comparison.
 using CompareDistance_t = double;  // double for sequence distance.
 using ContigFeatureId_t = std::string;

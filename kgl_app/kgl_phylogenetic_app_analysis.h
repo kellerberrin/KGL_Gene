@@ -7,8 +7,8 @@
 
 
 #include "kgl_genome_db.h"
-#include "kgl_vcf_parser_data.h"
 #include "kgl_phylogenetic_env.h"
+#include "kgl_variant_factory_vcf_phasing.h"
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
@@ -27,8 +27,17 @@ public:
 
   static void performAnalysis(const Phylogenetic& args,
                               std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                              std::shared_ptr<const ParserAnalysis> parser_analysis_ptr);
+                              std::shared_ptr<const VCFPopulation> vcf_population_ptr);
+private:
 
+  // Analytic types.
+  static constexpr const char* ANALYZE_INTERVAL = "INTERVAL";
+  static constexpr const char* ANALYZE_SEQUENCES = "SEQUENCE";
+  static constexpr const char* ANALYZE_REGION = "REGION";
+  static constexpr const char* ANALYZE_UPGMA = "UPGMA";
+  static constexpr const char* ANALYZE_GENE = "GENE";
+  static constexpr const char* ANALYZE_RNA = "RNA";
+  static constexpr const char* ANALYZE_SNP = "SNP";
 
 };
 

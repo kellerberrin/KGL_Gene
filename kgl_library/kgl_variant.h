@@ -69,29 +69,33 @@ class VariantSequence {
 public:
 
   VariantSequence(const GenomeId_t& genome_id,
-                  std::shared_ptr<const ContigFeatures>  contig_ptr,
+                  const ContigId_t& contig_id,
                   ContigOffset_t contig_offset,
                   Phred_t quality) : genome_id_(genome_id),
-                                     contig_ptr_(contig_ptr),
+                                     contig_id_(contig_id),
                                      contig_offset_(contig_offset),
                                      quality_(quality) { }
   virtual ~VariantSequence() = default;
 
   const GenomeId_t& genomeId() const { return genome_id_; }
+  const ContigId_t& contigId() const { return contig_id_; }
+  const PhaseId_t& phaseId() const { return phase_id_; }
 
   std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
 
-  std::shared_ptr<const ContigFeatures> contig() const { return contig_ptr_; }
   ContigOffset_t offset() const { return contig_offset_; }
 
   Phred_t quality() const { return quality_; }
   void quality(Phred_t quality_update) { quality_ = quality_update; }
 
+  constexpr static const PhaseId_t UNPHASED_ = '*';
+
 private:
 
   GenomeId_t genome_id_;                          // The source of this variant
-  std::shared_ptr<const ContigFeatures> contig_ptr_;    // The contig.
-  ContigOffset_t contig_offset_;                        // Location on the contig.
+  ContigId_t contig_id_;                          // The contig of this variant
+  PhaseId_t phase_id_;                            // The phase of this variant (which homologous contig)
+  ContigOffset_t contig_offset_;                  // Location on the contig.
   Phred_t quality_;                       // Phred (-10log10) quality that the variant is not valid.
 
 };
@@ -111,15 +115,12 @@ public:
 
 
   Variant(const GenomeId_t& genome_id,
-          const std::shared_ptr<const ContigFeatures> contig_ptr,
+          const ContigId_t& contig_id,
           ContigOffset_t contig_offset,
-          Phred_t quality) : VariantSequence(genome_id, contig_ptr, contig_offset, quality) {}
+          Phred_t quality) : VariantSequence(genome_id, contig_id, contig_offset, quality) {}
   ~Variant() override = default;
   bool filterVariant(const VariantFilter& filter) const { return applyFilter(filter); }
 
-
-  const ContigId_t& contigId() const { return contig()->contigId(); }
-  ContigOffset_t contigOffset() const { return offset(); }
   bool operator==(const Variant& cmp_var) const { return equivalent(cmp_var); };
 
   bool offsetOverlap(const Variant& cmp_var) const;  // Particuarly relevant for compound variants.
@@ -142,10 +143,6 @@ public:
 
   virtual bool equivalent(const Variant& cmp_var) const = 0;
   virtual std::shared_ptr<Variant> clone() const = 0;  // Polymorphic copy constructor
-
-protected:
-
-  static constexpr const char CODON_BASE_SEPARATOR = ':';
 
 private:
 

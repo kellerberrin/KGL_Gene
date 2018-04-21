@@ -162,7 +162,7 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_db_genotype.h
         kgl_library/kgl_variant_factory_vcf_phasing.h
         kgl_library/kgl_variant_factory_vcf_phasing.cc
-        kgl_library/kgl_vcf_parser_data.h)
+        )
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -190,7 +190,8 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_phylogenetic_env.cc
         kgl_app/kgl_phylogenetic_app.cc
         kgl_app/kgl_phylogenetic_app_analysis.cc
-        kgl_app/kgl_phylogenetic_app.h kgl_app/kgl_phylogenetic_app_analysis.h)
+        kgl_app/kgl_phylogenetic_app.h
+        kgl_app/kgl_phylogenetic_app_analysis.h)
 
 
 ## DOXYGEN

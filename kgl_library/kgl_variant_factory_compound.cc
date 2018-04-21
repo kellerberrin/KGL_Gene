@@ -169,7 +169,7 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
             for (const auto& compound_variant_ptr : compound_variant_vec) {
 
               // If the variant is the at same offset
-              if (compound_variant_ptr->rbegin()->second->contigOffset() == variant.second->contigOffset()) {
+              if (compound_variant_ptr->rbegin()->second->offset() == variant.second->offset()) {
 
                 // If it is a different variant then copy the compound variant map, pop the last entry, push the variant and add the map.
                 if (not compound_variant_ptr->rbegin()->second->equivalent(*variant.second)) {
@@ -191,7 +191,7 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
 
                 }
 
-              } else if ((compound_variant_ptr->rbegin()->second->contigOffset() + 1) == variant.second->contigOffset()) {
+              } else if ((compound_variant_ptr->rbegin()->second->offset() + 1) == variant.second->offset()) {
 
                 // set the found flag to true.
                 found_sequence = true;
@@ -221,7 +221,7 @@ bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const Gen
             for (const auto& compound_variant_ptr : compound_variant_vec) {
 
               // if the variant is not contigous with ANY compound variant then remove the compound variant.
-              if ((compound_variant_ptr->rbegin()->second->contigOffset() + 1) < variant.second->contigOffset()) {
+              if ((compound_variant_ptr->rbegin()->second->offset() + 1) < variant.second->offset()) {
 
                 // candidate compound variants must be at least size 2.
                 if (compound_variant_ptr->size() >= 2) {

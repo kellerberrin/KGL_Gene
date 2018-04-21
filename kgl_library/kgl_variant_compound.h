@@ -33,10 +33,10 @@ class CompoundVariant : public Variant {
 public:
 
   CompoundVariant(const GenomeId_t& genome_id,
-                  std::shared_ptr<const ContigFeatures> contig_ptr,
+                  const ContigId_t& contig_id,
                   ContigOffset_t contig_offset,
                   Phred_t quality,
-                  const CompoundVariantMap& variant_map) : Variant(genome_id, contig_ptr, contig_offset, quality),
+                  const CompoundVariantMap& variant_map) : Variant(genome_id, contig_id, contig_offset, quality),
                                                            variant_map_(variant_map) {}
   ~CompoundVariant() override = default;
 
@@ -65,11 +65,11 @@ class CompoundInsert : public CompoundVariant {
 public:
 
   CompoundInsert(const GenomeId_t& genome_id,
-                 std::shared_ptr<const ContigFeatures> contig_ptr,
+                 const ContigId_t& contig_id,
                  ContigOffset_t contig_offset,
                  Phred_t quality,
                  const CompoundVariantMap& variant_map) : CompoundVariant(genome_id,
-                                                                          contig_ptr,
+                                                                          contig_id,
                                                                           contig_offset,
                                                                           quality,
                                                                           variant_map) {}
@@ -102,11 +102,11 @@ class CompoundDelete : public CompoundVariant {
 public:
 
   CompoundDelete(const GenomeId_t& genome_id,
-                 std::shared_ptr<const ContigFeatures> contig_ptr,
+                 const ContigId_t& contig_id,
                  ContigOffset_t contig_offset,
                  Phred_t quality,
                  const CompoundVariantMap& variant_map) : CompoundVariant(genome_id,
-                                                                          contig_ptr,
+                                                                          contig_id,
                                                                           contig_offset,
                                                                           quality,
                                                                           variant_map) {}

@@ -38,7 +38,7 @@ std::string kgl::SingleVariant::submutation(char delimiter, VariantOutputIndex o
 
   std::stringstream ss;
 
-  ss << DNA5::convertToChar(reference()) << offsetOutput(contigOffset(), output_index);
+  ss << DNA5::convertToChar(reference()) << offsetOutput(offset(), output_index);
   ss << mutantChar() << delimiter;
 
   return ss.str();

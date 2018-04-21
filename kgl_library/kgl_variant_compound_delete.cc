@@ -16,7 +16,7 @@ std::string kgl::CompoundDelete::mutation(char /* delimiter */, VariantOutputInd
   std::stringstream ss;
 
   ss << "-(" << size() << ")";
-  ss << offsetOutput(contigOffset(), output_index);
+  ss << offsetOutput(offset(), output_index);
 
   return ss.str();
 
@@ -76,7 +76,7 @@ bool kgl::CompoundDelete::mutateSequence(SignedOffset_t offset_adjust,
       ExecEnv::log().warn("mutateSequence(), delete reference base: {} does not match sequence base: {} at contig: {} offset: {}",
                           DNA5::convertToChar(delete_ptr->reference()),
                           DNA5::convertToChar(dna_sequence_ptr->at(reference_offset)),
-                          delete_ptr->contig()->contigId(), delete_ptr->offset());
+                          delete_ptr->contigId(), delete_ptr->offset());
 
     }
 
