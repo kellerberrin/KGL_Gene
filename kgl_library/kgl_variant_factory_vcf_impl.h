@@ -28,13 +28,13 @@ class ParseVCFImpl {
 
 public:
 
-  ParseVCFImpl(std::shared_ptr<PopulationVariant> pop_variant_ptr,
+  ParseVCFImpl(std::shared_ptr<VCFPopulation> vcf_population_ptr,
                std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                const std::string& vcf_file_name,
                Phred_t variant_quality) : genome_db_ptr_(genome_db_ptr),
                                           vcf_file_name_(vcf_file_name),
                                           variant_quality_(variant_quality),
-                                          pop_variant_ptr_(pop_variant_ptr) {
+                                          vcf_population_ptr_(vcf_population_ptr){
 
     reader_ptr_ = std::make_shared<VCFReaderMT<ParseVCFImpl>>(vcf_file_name, this, &ParseVCFImpl::ProcessVCFRecord);
 
@@ -71,12 +71,10 @@ protected:
 
   size_t addThreadSafeGenomeVariant(std::shared_ptr<Variant> variant_ptr);
 
-
   std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
   const std::string vcf_file_name_;
   Phred_t variant_quality_;
-  std::shared_ptr<PopulationVariant> pop_variant_ptr_;
-  VCFPopulation vcf_population_;   // Un-phased variants.
+  std::shared_ptr<VCFPopulation> vcf_population_ptr_;   // Un-phased variants.
   std::shared_ptr<VCFReaderMT<ParseVCFImpl>> reader_ptr_;
 
 private:

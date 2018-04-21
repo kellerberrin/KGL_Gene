@@ -10,14 +10,45 @@
 #include "kgl_phylogenetic_gene.h"
 #include "kgl_upgma.h"
 #include "kgl_rna_search.h"
-#include "kgl_ploidy_analysis.h"
+#include "kgl_phylogenetic_app_analysis.h"
 
 
 namespace kgl = kellerberrin::genome;
 
 
+bool kgl::PhylogeneticAnalysis::checkAnalysisType(const std::string& analysis_type) {
 
-void kgl::PhylogeneticApp::performAnalysis(const kgl::Phylogenetic& args,
+
+  if (analysis_type != Phylogenetic::WILDCARD
+      and analysis_type != Phylogenetic::ANALYZE_INTERVAL
+      and analysis_type != Phylogenetic::ANALYZE_SEQUENCES
+      and analysis_type != Phylogenetic::ANALYZE_GENE
+      and analysis_type != Phylogenetic::ANALYZE_REGION
+      and analysis_type != Phylogenetic::ANALYZE_UPGMA
+      and analysis_type != Phylogenetic::ANALYZE_RNA
+      and analysis_type != Phylogenetic::ANALYZE_SNP) {
+
+    ExecEnv::log().error("Invalid Analysis Type: {}.  Must be one of: {}, {}, {}, {}, {}, {}, {}.",
+                            analysis_type,
+                            Phylogenetic::ANALYZE_INTERVAL,
+                            Phylogenetic::ANALYZE_SEQUENCES,
+                            Phylogenetic::ANALYZE_GENE,
+                            Phylogenetic::ANALYZE_REGION,
+                            Phylogenetic::ANALYZE_UPGMA,
+                            Phylogenetic::ANALYZE_RNA,
+                            Phylogenetic::ANALYZE_SNP);
+
+    return false;
+
+  }
+
+
+  return true;
+
+}
+
+
+void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
                                            std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr,
                                            std::shared_ptr<const kgl::ParserAnalysis> parser_analysis_ptr) {
 

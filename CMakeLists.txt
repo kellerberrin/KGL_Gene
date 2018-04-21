@@ -6,9 +6,9 @@ set(CMAKE_CXX_STANDARD 14)
 
 # add extra include directories
 include_directories(/usr/include
-                    kgl_library
-                    kgl_analytic
-                    kgl_app
+                    kgl_library                  # Basic infrastructure library
+                    kgl_analytic                  # Genetic analysis library
+                    kgl_app                        # Application level objects
                     /usr/local/lib/spdlog/include   # 3rd party logging library.
                     /usr/local/lib/seqan/include    # 3rd party sequence analysis library.
                     contrib/edlib) # 3rd party library for fast Leveshtein sequence matching.
@@ -33,6 +33,7 @@ set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall -pthread -W -W
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../..)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../..)
 
+# Basic infrastructure library
 set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_logging.h
         kgl_library/kgl_logging.cc
@@ -154,8 +155,6 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_vcf_parse_impl.cc
         kgl_library/kgl_variant_factory_record_vcf_impl.h
         kgl_library/kgl_variant_factory_record_vcf_impl.cc
-        kgl_library/kgl_ploidy_vcf_Pf3k_impl.cc
-        kgl_library/kgl_ploidy_vcf_Pf3k_impl.h
         kgl_library/kgl_variant_factory_vcf_cigar_impl.h
         kgl_library/kgl_variant_factory_vcf_cigar_impl.cc
         kgl_library/kgl_genome_aux_csv.h
@@ -168,27 +167,30 @@ set(LIBRARY_SOURCE_FILES
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
 
+# Genetic analysis library
 set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_variant_phasing_statistics.h
-        kgl_analytic/kgl_variant_phasing_statistics.cc)
+        kgl_analytic/kgl_variant_phasing_statistics.cc
+        kgl_analytic/kgl_phylogenetic_analysis.h
+        kgl_analytic/kgl_phylogenetic_analysis.cc
+        kgl_analytic/kgl_phylogenetic_gene.h
+        kgl_analytic/kgl_phylogenetic_gene.cc
+        kgl_analytic/kgl_upgma.h
+        kgl_analytic/kgl_upgma.cc
+        kgl_analytic/kgl_rna_search.cc
+        kgl_analytic/kgl_rna_search.h
+        kgl_analytic/kgl_ploidy_analysis.h
+        )
 
+
+# Application level objects
 set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_main.cc
         kgl_app/kgl_phylogenetic_env.h
         kgl_app/kgl_phylogenetic_env.cc
         kgl_app/kgl_phylogenetic_app.cc
-        kgl_app/kgl_phylogenetic_analysis.h
-        kgl_app/kgl_phylogenetic_analysis.cc
-        kgl_app/kgl_phylogenetic_gene.h
-        kgl_app/kgl_phylogenetic_gene.cc
-        kgl_app/kgl_upgma.h
-        kgl_app/kgl_upgma.cc
         kgl_app/kgl_phylogenetic_app_analysis.cc
-        kgl_app/kgl_phylogenetic_app.h
-        kgl_app/kgl_rna_search.cc
-        kgl_app/kgl_rna_search.h
-        kgl_app/kgl_ploidy_analysis.h
-        kgl_app/kgl_ploidy_analysis.cc)
+        kgl_app/kgl_phylogenetic_app.h kgl_app/kgl_phylogenetic_app_analysis.h)
 
 
 ## DOXYGEN

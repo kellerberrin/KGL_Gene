@@ -9,6 +9,7 @@
 #include <string>
 #include <map>
 #include "kgl_variant_db.h"
+#include "kgl_variant_factory_vcf_phasing.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -23,21 +24,20 @@ public:
   VcfFactory() = default;
   ~VcfFactory() = default;
 
-  // Functionality passed to the implmentation.
+  // Functionality passed to the implementation.
   bool readParseFreeBayesVcf(const std::string &genome_name,
-                             std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                             std::shared_ptr<VCFPopulation> vcf_population_ptr,
                              std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                              const std::string &vcf_file_name,
                              Phred_t variant_quality) const;
 
-  // Functionality passed to the implmentation.
   bool readParseGATKVcf(const std::string &genome_name,
-                        std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                        std::shared_ptr<VCFPopulation> vcf_population_ptr,
                         std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                         const std::string &vcf_file_name,
                         Phred_t variant_quality) const;
 
-  bool readParsePf3kVariants(std::shared_ptr<PopulationVariant> pop_variant_ptr,
+  bool readParsePf3kVariants(std::shared_ptr<VCFPopulation> vcf_population_ptr,
                              std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                              const std::string &vcf_file_name,
                              Phred_t variant_quality) const;

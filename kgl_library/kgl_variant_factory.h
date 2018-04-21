@@ -30,15 +30,24 @@ public:
   explicit VariantFactory() = default;
   virtual ~VariantFactory() = default;
 
-  void createVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                      std::shared_ptr<PopulationVariant> pop_variant_ptr,
-                      const std::string& genome_name,
-                      const std::string& variant_file_name,
-                      Phred_t read_quality,
-                      Phred_t variant_quality,
-                      NucleotideReadCount_t min_read_count,
-                      double min_proportion) const;
+  void readCountVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                         std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                         const std::string& genome_name,
+                         const std::string& variant_file_name,
+                         Phred_t read_quality,
+                         Phred_t variant_quality,
+                         NucleotideReadCount_t min_read_count,
+                         double min_proportion) const;
 
+
+  void readVCFVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                       std::shared_ptr<VCFPopulation> vcf_population_ptr,
+                       const std::string& genome_name,
+                       const std::string& variant_file_name,
+                       Phred_t read_quality,
+                       Phred_t variant_quality,
+                       NucleotideReadCount_t min_read_count,
+                       double min_proportion) const;
 
   size_t addGenomeSingleThreadVariant(std::shared_ptr<GenomeVariant> genome_variants, std::shared_ptr<const Variant> variant_ptr) const;
 

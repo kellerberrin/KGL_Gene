@@ -17,14 +17,15 @@
 namespace kgl = kellerberrin::genome;
 
 
-void kgl::VariantFactory::createVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                         std::shared_ptr<PopulationVariant> pop_variant_ptr,
-                                         const std::string& genome_name,
-                                         const std::string& variant_file_name,
-                                         Phred_t read_quality,
-                                         Phred_t variant_quality,
-                                         NucleotideReadCount_t min_read_count,
-                                         double min_proportion) const {
+
+void kgl::VariantFactory::readVCFVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                          std::shared_ptr<VCFPopulation> vcf_population_ptr,
+                                          const std::string& genome_name,
+                                          const std::string& variant_file_name,
+                                          Phred_t read_quality,
+                                          Phred_t variant_quality,
+                                          NucleotideReadCount_t min_read_count,
+                                          double min_proportion) const {
 
   std::string file_ext = kgl::Utility::fileExtension(variant_file_name);
   std::transform(file_ext.begin(), file_ext.end(), file_ext.begin(), ::toupper); // convert to UC for robust comparison
@@ -34,23 +35,45 @@ void kgl::VariantFactory::createVariants(std::shared_ptr<const GenomeDatabase> g
     if (isFileNamePrefix(PF3K_FILE_PREFIX_, variant_file_name)) {
 
       ExecEnv::log().info("Processing Pf3k VCF file: {}", variant_file_name);
-      VcfFactory().readParsePf3kVariants(pop_variant_ptr, genome_db_ptr, variant_file_name, variant_quality);
+      VcfFactory().readParsePf3kVariants(vcf_population_ptr, genome_db_ptr, variant_file_name, variant_quality);
 
     } else if (isFileNamePrefix(GATK_FILE_PREFIX_, variant_file_name)) {
 
       ExecEnv::log().info("Processing VCF file: {}", variant_file_name);
       ExecEnv::log().info("Generating GATK variants for Genome: {}", genome_name);
-      VcfFactory().readParseGATKVcf(genome_name, pop_variant_ptr, genome_db_ptr, variant_file_name, variant_quality);;
+      VcfFactory().readParseGATKVcf(genome_name, vcf_population_ptr, genome_db_ptr, variant_file_name, variant_quality);;
 
     } else {
 
       ExecEnv::log().info("Processing VCF file: {}", variant_file_name);
       ExecEnv::log().info("Generating Freebayes variants for Genome: {}", genome_name);
-      VcfFactory().readParseFreeBayesVcf(genome_name, pop_variant_ptr, genome_db_ptr, variant_file_name, variant_quality);
+      VcfFactory().readParseFreeBayesVcf(genome_name, vcf_population_ptr, genome_db_ptr, variant_file_name, variant_quality);
 
     }
 
-  } else if (file_ext == SAM_FILE_EXTENSTION_) {
+  } else {
+
+    ExecEnv::log().error("Invalid file name: {}", variant_file_name);
+    ExecEnv::log().critical("Unsupported file type: '{}' for variant calling. Must be VCF ('.vcf')", file_ext);
+
+  }
+
+}
+
+
+void kgl::VariantFactory::readCountVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                            std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                                            const std::string& genome_name,
+                                            const std::string& variant_file_name,
+                                            Phred_t read_quality,
+                                            Phred_t variant_quality,
+                                            NucleotideReadCount_t min_read_count,
+                                            double min_proportion) const {
+
+  std::string file_ext = kgl::Utility::fileExtension(variant_file_name);
+  std::transform(file_ext.begin(), file_ext.end(), file_ext.begin(), ::toupper); // convert to UC for robust comparison
+
+  if (file_ext == SAM_FILE_EXTENSTION_) {
 
     std::shared_ptr<const kgl::GenomeVariant> variant_ptr = createSamVariants(genome_db_ptr,
                                                                               genome_name,
@@ -75,11 +98,12 @@ void kgl::VariantFactory::createVariants(std::shared_ptr<const GenomeDatabase> g
   } else {
 
     ExecEnv::log().error("Invalid file name: {}", variant_file_name);
-    ExecEnv::log().critical("Unsupported file type: '{}' for variant calling. Must be SAM ('.sam'), BAM ('.bam') or  VCF ('.vcf')", file_ext);
+    ExecEnv::log().critical("Unsupported file type: '{}' for variant calling. Must be SAM ('.sam') or BAM ('.bam')", file_ext);
 
   }
 
 }
+
 
 
 bool kgl::VariantFactory::isFileNamePrefix(const std::string& prefix, const std::string& variant_file_name) const {
@@ -129,7 +153,7 @@ kgl::VariantFactory::createSamVariants(std::shared_ptr<const GenomeDatabase> gen
   ExecEnv::log().info("Processing SAM file: {}", sam_file_name);
   ExecEnv::log().info("Generating Pileup (count) variants for Genome: {}", genome_name);
 
-  // generate snp raw variants.
+  // generate raw variants.
   std::shared_ptr<const GenomeVariant> single_variant_ptr = SingleFactory().createSingleVariants(genome_name,
                                                                                                  count_data_ptr,
                                                                                                  genome_db_ptr,
@@ -158,7 +182,7 @@ kgl::VariantFactory::createBamVariants(std::shared_ptr<const GenomeDatabase> gen
 
   ExecEnv::log().info("Processing BAM file: {}", bam_file_name);
   ExecEnv::log().info("Generating Pileup (count) variants for Genome: {}", genome_name);
-  // generate snp raw variants.
+  // generate snp variants.
   std::shared_ptr<const GenomeVariant> single_variant_ptr = BamFactory().readParseBam(genome_name,
                                                                                       genome_db_ptr,
                                                                                       bam_file_name,

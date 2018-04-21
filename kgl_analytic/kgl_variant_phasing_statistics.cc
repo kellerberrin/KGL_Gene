@@ -27,87 +27,65 @@ bool kgl::DiploidPhasingStatistics::phasedSNPs(const VCFGenome& vcf_genome) {
   for (auto contig : vcf_genome.getMap()) {
 
     std::shared_ptr<ContigPhasingStatistics> contig_stats_map_ptr(std::make_shared<ContigPhasingStatistics>());
-    auto current_variant = contig.second->begin();
-    while (current_variant != contig.second->end()) {
 
-      // Take a peek at the next variant to see if it is an SNP with the same contig offset.
-      auto next_variant = current_variant;
-      ++next_variant;
-      if (next_variant == contig.second->end()) {
+    for (auto offset : contig.second->getMap()) {
 
-        break;
+      PhasedSNPVector snp_vector;
+
+      for (auto variant : offset.second) {
+
+        if (variant->isSNP()) {
+
+          snp_vector.push_back(variant);
+
+        }
 
       }
 
-      if (current_variant->second->isSNP()) {
+      bool is_homozygousSNP = true;
+      for (auto variant : snp_vector) {
 
-        PhasedSNPVector different_snp_vector;
-        PhasedSNPVector identical_snp_vector;
-        different_snp_vector.push_back(current_variant->second);
-        identical_snp_vector.push_back(current_variant->second);
+        if (not snp_vector.front()->equivalent(*variant)) {
 
-        while (current_variant->second->offset() == next_variant->second->offset()) {
-
-          if (next_variant->second->isSNP()) {
-
-            if (current_variant->second->equivalent(*(next_variant->second))) {
-
-              identical_snp_vector.push_back(next_variant->second);
-
-            } else {
-
-              different_snp_vector.push_back(next_variant->second);
-
-            }
-
-          }
-
-          ++next_variant;
-          if (next_variant == contig.second->end()) {
-
-            break;
-
-          }
+          is_homozygousSNP = false;
+          break;
 
         }
 
-        if (different_snp_vector.size() >= 2) {
+      }
 
-          if (not contig_stats_map_ptr->heterozygousSNP(current_variant->second->offset(), different_snp_vector)) {
+      if (snp_vector.size() >= 2 and not is_homozygousSNP) {
 
-            ExecEnv::log().error("Unable to add phased SNP vector contig: {}, offset: {}", contig.first, current_variant->second->offset());
-            return_result = false;
+        if (not contig_stats_map_ptr->heterozygousSNP(offset.first, snp_vector)) {
 
-          }
-
-        }
-        if (identical_snp_vector.size() >= 2) {
-
-          if (not contig_stats_map_ptr->homozygousSNP(current_variant->second->offset(), identical_snp_vector)) {
-
-            ExecEnv::log().error("Unable to add phased SNP vector contig: {}, offset: {}", contig.first, current_variant->second->offset());
-            return_result = false;
-
-          }
-
-        }
-        if (identical_snp_vector.size() == 1 and identical_snp_vector.size()) {
-
-          if (not contig_stats_map_ptr->singleHeterozygousSNP(current_variant->second->offset(), identical_snp_vector)) {
-
-            ExecEnv::log().error("Unable to add phased SNP vector contig: {}, offset: {}", contig.first, current_variant->second->offset());
-            return_result = false;
-
-          }
+          ExecEnv::log().error("Unable to add phased SNP vector contig: {}, offset: {}", contig.first, offset.first);
+          return_result = false;
 
         }
 
-      } // current == SNP
+      }
+      if (snp_vector.size() >= 2 and is_homozygousSNP) {
 
+        if (not contig_stats_map_ptr->homozygousSNP(offset.first, snp_vector)) {
 
-      current_variant = next_variant;
+          ExecEnv::log().error("Unable to add phased SNP vector contig: {}, offset: {}", contig.first, offset.first);
+          return_result = false;
 
-    }
+          }
+
+      }
+      if (snp_vector.size() == 1) {
+
+        if (not contig_stats_map_ptr->singleHeterozygousSNP(offset.first, snp_vector)) {
+
+              ExecEnv::log().error("Unable to add phased SNP vector contig: {}, offset: {}", contig.first, offset.first);
+              return_result = false;
+
+        }
+
+      }
+
+    } // offset
 
     auto result = contig_map_.insert(StatContigMap::value_type(contig.first, contig_stats_map_ptr));
     if (not result.second) {
@@ -117,7 +95,8 @@ bool kgl::DiploidPhasingStatistics::phasedSNPs(const VCFGenome& vcf_genome) {
 
     }
 
-  }
+  } // contig
+
 
   return return_result;
 
@@ -169,11 +148,11 @@ size_t kgl::DiploidPhasingStatistics::singleHeterozygousSNPCount() const {
 
 
 
-bool kgl::PopulationPhasingStatistics::phasedSNPs(const VCFPopulation& vcf_population) {
+bool kgl::PopulationPhasingStatistics::phasedSNPs(std::shared_ptr<const VCFPopulation> vcf_population_ptr) {
 
   bool return_result = true;
 
-  for (auto genome : vcf_population.getMap()) {
+  for (auto genome : vcf_population_ptr->getMap()) {
 
     std::shared_ptr<DiploidPhasingStatistics> genome_stats_ptr(std::make_shared<DiploidPhasingStatistics>());
 

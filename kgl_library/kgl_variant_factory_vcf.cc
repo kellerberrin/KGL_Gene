@@ -18,12 +18,12 @@ namespace kgl = kellerberrin::genome;
 
 
 bool kgl::VcfFactory::readParseFreeBayesVcf(const std::string &genome_name,
-                                            std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                                            std::shared_ptr<VCFPopulation> vcf_population_ptr,
                                             std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                             const std::string &vcf_file_name,
                                             Phred_t variant_quality) const {
 
-  FreeBayesVCFImpl reader(genome_name, pop_variant_ptr, genome_db_ptr, vcf_file_name, variant_quality);
+  FreeBayesVCFImpl reader(genome_name, vcf_population_ptr, genome_db_ptr, vcf_file_name, variant_quality);
 
   reader.readParseVCFImpl();
 
@@ -33,12 +33,12 @@ bool kgl::VcfFactory::readParseFreeBayesVcf(const std::string &genome_name,
 
 
 bool kgl::VcfFactory::readParseGATKVcf(const std::string &genome_name,
-                                       std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                                       std::shared_ptr<VCFPopulation> vcf_population_ptr,
                                        std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                        const std::string &vcf_file_name,
                                        Phred_t variant_quality) const {
 
-  GATKVCFImpl reader(genome_name, pop_variant_ptr, genome_db_ptr, vcf_file_name, variant_quality);
+  GATKVCFImpl reader(genome_name, vcf_population_ptr, genome_db_ptr, vcf_file_name, variant_quality);
 
   reader.readParseVCFImpl();
 
@@ -47,12 +47,12 @@ bool kgl::VcfFactory::readParseGATKVcf(const std::string &genome_name,
 }
 
 
-bool kgl::VcfFactory::readParsePf3kVariants(std::shared_ptr<PopulationVariant> pop_variant_ptr,
+bool kgl::VcfFactory::readParsePf3kVariants(std::shared_ptr<VCFPopulation> vcf_population_ptr,
                                             std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                             const std::string &vcf_file_name,
                                             Phred_t variant_quality) const {
 
-  Pf3kVCFImpl reader(pop_variant_ptr, genome_db_ptr, vcf_file_name, variant_quality);
+  Pf3kVCFImpl reader(vcf_population_ptr, genome_db_ptr, vcf_file_name, variant_quality);
 
   reader.readParseVCFImpl();
 

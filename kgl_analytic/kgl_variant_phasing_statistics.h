@@ -127,7 +127,7 @@ public:
   PopulationPhasingStatistics(const PopulationPhasingStatistics&) = default;
   ~PopulationPhasingStatistics() = default;
 
-  bool phasedSNPs(const VCFPopulation& vcf_population);
+  bool phasedSNPs(std::shared_ptr<const VCFPopulation> vcf_population_ptr);
 
   size_t phasedSNPCount() const;
 

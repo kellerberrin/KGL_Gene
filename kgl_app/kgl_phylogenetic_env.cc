@@ -7,6 +7,7 @@
 #include <cctype>
 #include <seqan/arg_parse.h>
 #include "kgl_phylogenetic_env.h"
+#include "kgl_phylogenetic_app_analysis.h"
 #define BOOST_FILESYSTEM_NO_DEPRECATED // Recommended by boost filesystem documentation.
 #include <boost/filesystem.hpp>
 #include <boost/tokenizer.hpp>
@@ -511,32 +512,13 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   // Setup Other Parameters.
   if (seqan::isSet(parser, contigFlag_)) seqan::getOptionValue(args_.contig, parser, contigFlag_);
 
-  if (seqan::isSet(parser, analysisFlag_)) {
+  if (seqan::isSet(parser, analysisFlag_)) seqan::getOptionValue(args_.analysisType, parser, analysisFlag_);
 
-    seqan::getOptionValue(args_.analysisType, parser, analysisFlag_);
+  args_.analysisType = kgl::Utility::toupper(args_.analysisType);
 
-    args_.analysisType = Utility::toupper(args_.analysisType);
+  if (not PhylogeneticAnalysis::checkAnalysisType(args_.analysisType)) {
 
-    if (args_.analysisType != Phylogenetic::WILDCARD
-        and args_.analysisType != Phylogenetic::ANALYZE_INTERVAL
-        and  args_.analysisType != Phylogenetic::ANALYZE_SEQUENCES
-        and args_.analysisType != Phylogenetic::ANALYZE_GENE
-        and args_.analysisType != Phylogenetic::ANALYZE_REGION
-        and args_.analysisType != Phylogenetic::ANALYZE_UPGMA
-        and args_.analysisType != Phylogenetic::ANALYZE_RNA
-        and args_.analysisType != Phylogenetic::ANALYZE_SNP) {
-
-      ExecEnv::log().critical("Invalid Analysis Type: {}.  Must be one of: {}, {}, {}, {}, {}, {}, {}.",
-                              args_.analysisType,
-                              Phylogenetic::ANALYZE_INTERVAL,
-                              Phylogenetic::ANALYZE_SEQUENCES,
-                              Phylogenetic::ANALYZE_GENE,
-                              Phylogenetic::ANALYZE_REGION,
-                              Phylogenetic::ANALYZE_UPGMA,
-                              Phylogenetic::ANALYZE_RNA,
-                              Phylogenetic::ANALYZE_SNP);
-
-    }
+    ExecEnv::log().critical("Invalid Analysis Requested: {}; program terminates.", args_.analysisType);
 
   }
 

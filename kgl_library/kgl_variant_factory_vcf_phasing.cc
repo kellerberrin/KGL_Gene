@@ -7,27 +7,83 @@
 
 namespace kgl = kellerberrin::genome;
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Thread safe. This object can be used by multiple consumer threads.
 // An internal parser variant object that holds multi ploid variants until they can be phased.
+// This object hold variants for a contig.
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bool kgl::VCFContig::addVariant(std::shared_ptr<Variant> variant) {
+
+  auto result = contig_offset_map_.find(variant->offset());
+
+  if (result != contig_offset_map_.end()) {
+
+    result->second.push_back(variant);
+
+    return true;
+
+  } else {
+
+    std::pair<ContigOffset_t, std::vector<std::shared_ptr<Variant>>> new_offset;
+    new_offset.first = variant->offset();
+    new_offset.second.push_back(variant);
+    auto result = contig_offset_map_.insert(new_offset);
+
+    if (not result.second) {
+
+      ExecEnv::log().error("VCFContig::addVariant(), Could not add variant offset: {} to the genome", variant->offset());
+      return false;
+
+    }
+
+    return true;
+
+  }
+
+}
+
+
+size_t kgl::VCFContig::variantCount() const {
+
+
+  size_t variant_count = 0;
+
+  for (auto offset : getMap()) {
+
+    variant_count += offset.second.size();
+
+  }
+
+  return variant_count;
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// An internal parser variant object that holds multi ploid variants until they can be phased.
+// This object hold variants for a genome.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 bool kgl::VCFGenome::addVariant(std::shared_ptr<Variant> variant) {
 
-  std::shared_ptr<ContigMultiMap> contig_ptr;
+  std::shared_ptr<VCFContig> contig_ptr;
   getCreateContig(variant->contigId(), contig_ptr);
 
-  contig_ptr->insert(ContigMultiMap::value_type(variant->offset(), variant));
+  contig_ptr->addVariant(variant);
 
   return true;
 
 }
 
 
-bool kgl::VCFGenome::getCreateContig(const ContigId_t& contig_id, std::shared_ptr<ContigMultiMap>& contig_ptr) {
+bool kgl::VCFGenome::getCreateContig(const ContigId_t& contig_id, std::shared_ptr<VCFContig>& contig_ptr) {
 
   auto result = contig_map_.find(contig_id);
 
@@ -38,8 +94,8 @@ bool kgl::VCFGenome::getCreateContig(const ContigId_t& contig_id, std::shared_pt
 
   } else {
 
-    contig_ptr = std::make_shared<ContigMultiMap>();
-    std::pair<ContigId_t, std::shared_ptr<ContigMultiMap>> new_contig(contig_id, contig_ptr);
+    contig_ptr = std::make_shared<VCFContig>(contig_id);
+    std::pair<ContigId_t, std::shared_ptr<VCFContig>> new_contig(contig_id, contig_ptr);
     auto result = contig_map_.insert(new_contig);
 
     if (not result.second) {
@@ -62,9 +118,9 @@ size_t kgl::VCFGenome::variantCount() const {
 
   size_t variant_count = 0;
 
-  for (auto contig : contig_map_) {
+  for (auto contig : getMap()) {
 
-    variant_count += contig.second->size();
+    variant_count += contig.second->variantCount();
 
   }
 
@@ -73,11 +129,10 @@ size_t kgl::VCFGenome::variantCount() const {
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Thread safe. This object can be used by multiple consumer threads.
 // An internal parser variant object that holds multi ploid variants until they can be phased.
+// This object hold variants for a population.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -94,7 +149,7 @@ bool kgl::VCFPopulation::getCreateGenome(const GenomeId_t& genome_id,
 
   } else {
 
-    genome = std::make_shared<VCFGenome>();
+    genome = std::make_shared<VCFGenome>(genome_id);
     std::pair<GenomeId_t, std::shared_ptr<VCFGenome>> new_genome(genome_id, genome);
     auto result = genome_map_.insert(new_genome);
 
@@ -136,13 +191,13 @@ size_t kgl::VCFPopulation::variantCount() const {
 
 
 // Just copy into a population object.
-bool kgl::GenomePhasing::haploidPhasing(const VCFPopulation& vcf_population,
+bool kgl::GenomePhasing::haploidPhasing(std::shared_ptr<const VCFPopulation> vcf_population_ptr,
                                         std::shared_ptr<const GenomeDatabase> genome_db,
                                         std::shared_ptr<PopulationVariant> haploid_population)  {
 
   bool result = true;
 
-  for (auto genome : vcf_population.getMap()) {
+  for (auto genome : vcf_population_ptr->getMap()) {
 
     // Create the GenomeVariant object.
     std::shared_ptr<GenomeVariant> genome_variant = GenomeVariant::emptyGenomeVariant(genome.first, genome_db);
@@ -150,14 +205,19 @@ bool kgl::GenomePhasing::haploidPhasing(const VCFPopulation& vcf_population,
     // Add all the contig.
     for (auto contig : genome.second->getMap()) {
 
-      // Add all variants.
-      for (auto variant : *(contig.second)) {
+      // Add all offsets.
+      for (auto offset : contig.second->getMap()) {
 
-        genome_variant->addVariant(variant.second);
+        // add all the variants
+        for (auto variant : offset.second) {
 
-      }
+          genome_variant->addVariant(variant);
 
-    }
+        } // All variants.
+
+      } // All offsets
+
+    } // All contigs
 
     if (not haploid_population->addGenomeVariant(genome_variant)) {
 
@@ -166,10 +226,10 @@ bool kgl::GenomePhasing::haploidPhasing(const VCFPopulation& vcf_population,
 
     }
 
-  }
+  } // All genomes
 
   ExecEnv::log().info("Haploid Phasing, pre_phase variants: {}, genomes: {}, resultant population variants: {}, genomes: {}",
-                      vcf_population.variantCount(), vcf_population.getMap().size(),
+                      vcf_population_ptr->variantCount(), vcf_population_ptr->getMap().size(),
                       haploid_population->variantCount(), haploid_population->getMap().size());
 
   return result;
