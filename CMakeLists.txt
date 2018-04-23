@@ -70,7 +70,6 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_sequence_amino.cc
         kgl_library/kgl_alphabet_amino.h
         kgl_library/kgl_variant_db.h
-        kgl_library/kgl_variant_db.cc
         kgl_library/kgl_variant_snp.cc
         kgl_library/kgl_variant_compound.h
         kgl_library/kgl_variant_compound.cc
@@ -161,7 +160,8 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_genome_aux_csv_impl.cc
         kgl_library/kgl_variant_factory_vcf_phasing.h
         kgl_library/kgl_variant_factory_vcf_phasing.cc
-        kgl_library/kgl_variant_db_homologous.cc)
+        kgl_library/kgl_variant_db_homologous.h
+        kgl_library/kgl_variant_db_homologous.cc kgl_library/kgl_variant_db_genome.cc kgl_library/kgl_variant_db_population.cc kgl_library/kgl_variant_db_contig.cc)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -178,8 +178,7 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_upgma.cc
         kgl_analytic/kgl_rna_search.cc
         kgl_analytic/kgl_rna_search.h
-        kgl_analytic/kgl_ploidy_analysis.h
-        kgl_library/kgl_variant_db_homologous.h)
+        kgl_analytic/kgl_ploidy_analysis.h)
 
 
 # Application level objects

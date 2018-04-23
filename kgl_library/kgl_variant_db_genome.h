@@ -81,11 +81,6 @@ public:
                          ContigOffset_t end,
                          OffsetVariantMap& variant_map) const;
 
-  // Convenience routine only returns coding variants.
-//  bool getCodingSortedVariants(std::shared_ptr<const CodingSequence> coding_sequence_ptr,
-//                               OffsetVariantMap& variant_map,
-//                               bool& frame_shift) const;
-
   const Attributes& attributes() const { return attributes_; }
   Attributes& attributes() { return attributes_; }
   void attributes(const Attributes& attributes) { attributes_ = attributes; }
