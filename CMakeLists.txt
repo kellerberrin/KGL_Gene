@@ -169,8 +169,6 @@ set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES
-        kgl_analytic/kgl_variant_phasing_statistics.h
-        kgl_analytic/kgl_variant_phasing_statistics.cc
         kgl_analytic/kgl_phylogenetic_analysis.h
         kgl_analytic/kgl_phylogenetic_analysis.cc
         kgl_analytic/kgl_phylogenetic_gene.h

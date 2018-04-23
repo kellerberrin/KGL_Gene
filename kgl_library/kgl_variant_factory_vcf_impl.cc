@@ -5,7 +5,6 @@
 
 #include "kgl_variant_factory_vcf_impl.h"
 #include "kgl_variant_factory_vcf_parse_impl.h"
-#include "kgl_variant_phasing_statistics.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
