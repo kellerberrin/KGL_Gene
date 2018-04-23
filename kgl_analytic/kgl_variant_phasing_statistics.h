@@ -5,7 +5,7 @@
 #ifndef KGL_VARIANT_PHASING_STATISTICS_H
 #define KGL_VARIANT_PHASING_STATISTICS_H
 
-#include "kgl_variant_factory_vcf_phasing.h"
+#include "kgl_variant_db_unphased.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -154,5 +154,6 @@ private:
 }   // namespace kellerberrin
 
 
-
 #endif //KGL_VARIANT_PHASING_STATISTICS_H
+
+

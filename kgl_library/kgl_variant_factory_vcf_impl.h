@@ -9,7 +9,6 @@
 #include "kgl_utility.h"
 #include "kgl_variant_factory_vcf.h"
 #include "kgl_variant_factory_readvcf_impl.h"
-#include "kgl_variant_factory_vcf_phasing.h"
 
 #include <seqan/vcf_io.h>
 

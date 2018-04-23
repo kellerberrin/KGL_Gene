@@ -1,13 +1,14 @@
 //
-// Created by kellerberrin on 2/04/18.
+// Created by kellerberrin on 23/04/18.
 //
 
-#ifndef KGL_VARIANT_FACTORY_VCF_PHASING_H
-#define KGL_VARIANT_FACTORY_VCF_PHASING_H
+#ifndef KGL_VARIANT_DB_UNPHASED_H
+#define KGL_VARIANT_DB_UNPHASED_H
+
 
 
 #include "kgl_utility.h"
-#include "kgl_variant_db.h"
+#include "kgl_variant.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -37,6 +38,9 @@ public:
   size_t variantCount() const;
 
   const UnphasedOffsetMap& getMap() const { return contig_offset_map_; }
+
+  // true if vector.size() < 2
+  static bool isHomozygous(const std::vector<std::shared_ptr<Variant>>& variant_vector);
 
 private:
 
@@ -103,41 +107,23 @@ public:
 
   const UnphasedGenomeMap& getMap() const { return genome_map_; }
 
+  // Generate phasing statitics.
+  bool genomePhasingStats(const GenomeId_t& genome_id,
+                          bool snp_only,
+                          size_t& heterozygous,
+                          size_t& homozygous,
+                          size_t& singleheterozygous) const;
+
+  bool getUnphasedVariants(const GenomeId_t& genome_id,
+                           const ContigId_t& contig_id,
+                           ContigOffset_t offset,
+                           std::vector<std::shared_ptr<Variant>>& variant_vector) const;
 
 private:
 
   UnphasedGenomeMap genome_map_;
 
-
-
 };
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// This object accepts unphased variants from the VCF parser and phases them.
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class GenomePhasing {
-
-public:
-
-  explicit GenomePhasing() = default;
-  ~GenomePhasing() = default;
-
-  static bool haploidPhasing(std::shared_ptr<const UnphasedPopulation> vcf_population_ptr,
-                             std::shared_ptr<const GenomeDatabase> genome_db,
-                             std::shared_ptr<PhasedPopulation> haploid_population);
-
-private:
-
-
-
-};
-
-
 
 
 
@@ -145,6 +131,4 @@ private:
 }   // namespace kellerberrin
 
 
-
-
-#endif //KGL_KGL_VARIANT_FACTORY_VCF_PHASING_H
+#endif //KGL_KGL_VARIANT_DB_UNPHASED_H

@@ -11,6 +11,7 @@
 #include "kgl_upgma.h"
 #include "kgl_rna_search.h"
 #include "kgl_phylogenetic_app_analysis.h"
+#include "kgl_variant_phase.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -138,8 +139,8 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
     aux_data.readParseAuxData(args.auxCSVFile);
 
     // Generate SNP statistics.
-    std::shared_ptr<PopulationPhasingStatistics> phased_statistics_ptr(std::make_shared<PopulationPhasingStatistics>());
-    phased_statistics_ptr->phasedSNPs(unphased_population_ptr);
+//    std::shared_ptr<PopulationPhasingStatistics> phased_statistics_ptr(std::make_shared<PopulationPhasingStatistics>());
+//    phased_statistics_ptr->phasedSNPs(unphased_population_ptr);
 
     std::string DNA_mutation_file = kgl::Utility::filePath("DNAMutations.csv", args.workDirectory);
     ApplicationAnalysis::outputDNAMutationCSV(DNA_mutation_file,
@@ -149,12 +150,12 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
                                               genome_db_ptr,
                                               population_ptr,
                                               aux_data,
-                                              phased_statistics_ptr);
+                                              unphased_population_ptr);
     std::string amino_mutation_file = kgl::Utility::filePath("AminoMutations.csv", args.workDirectory);
     ApplicationAnalysis::outputAminoMutationCSV(amino_mutation_file, PFATP4_CONTIG, PFATP4_GENE, PFATP4_SEQUENCE,
                                                 genome_db_ptr, population_ptr);
 
-    phased_statistics_ptr->outputPopulation();
+//    phased_statistics_ptr->outputPopulation();
 
   }
 

@@ -140,8 +140,7 @@ public:
                                    std::shared_ptr<const GenomeDatabase> genome_db,
                                    std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
                                    const GenomeAuxData& aux_Pf3k_data,
-                                   std::shared_ptr<const PopulationPhasingStatistics> phasing_stats);
-
+                                   std::shared_ptr<const UnphasedPopulation> unphased_pop_ptr);
 
 private:
 

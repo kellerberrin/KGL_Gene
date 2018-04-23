@@ -378,7 +378,7 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
                                                     std::shared_ptr<const GenomeDatabase> genome_db,
                                                     std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
                                                     const GenomeAuxData& aux_Pf3k_data,
-                                                    std::shared_ptr<const PopulationPhasingStatistics> phasing_stats) {
+                                                    std::shared_ptr<const UnphasedPopulation> unphased_pop_ptr) {
 
   const char CSV_delimiter = ',';
   // open the file.
@@ -518,6 +518,8 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
 
   out_file << "Genome" << CSV_delimiter << "LocationDate" << CSV_delimiter;
   out_file << "HomoZ" << CSV_delimiter << "HeteroZ" << CSV_delimiter << "SingleZ" << CSV_delimiter;
+  out_file << "SNP_HomoZ" << CSV_delimiter << "SNP_HeteroZ" << CSV_delimiter << "SNP_SingleZ" << CSV_delimiter;
+
   for (auto DNA_Item : master_SNP_List) {
 
     out_file << DNA_Item.second.contig_id << " "
@@ -539,16 +541,28 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
 
     out_file << genome_item.genome << CSV_delimiter << genome_item.location_date << CSV_delimiter;
 
+
     size_t heterozygous = 0;
     size_t homozygous = 0;
     size_t singleheterozygous = 0;
-    if (not phasing_stats->genomePhasing(genome_item.genome, heterozygous, homozygous, singleheterozygous)) {
+    if (not unphased_pop_ptr->genomePhasingStats(genome_item.genome, false, heterozygous, homozygous, singleheterozygous)) {
 
       ExecEnv::log().error("No phasing statistics found for Genome: {}", genome_item.genome);
 
     }
 
     out_file << homozygous << CSV_delimiter << heterozygous << CSV_delimiter << singleheterozygous << CSV_delimiter;
+
+    size_t snp_heterozygous = 0;
+    size_t snp_homozygous = 0;
+    size_t snp_singleheterozygous = 0;
+    if (not unphased_pop_ptr->genomePhasingStats(genome_item.genome, true, snp_heterozygous, snp_homozygous, snp_singleheterozygous)) {
+
+      ExecEnv::log().error("No phasing statistics found for Genome: {}", genome_item.genome);
+
+    }
+
+    out_file << snp_homozygous << CSV_delimiter << snp_heterozygous << CSV_delimiter << snp_singleheterozygous << CSV_delimiter;
 
     for (auto DNA_Item : master_SNP_List) {
 
@@ -562,21 +576,21 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
         GenomeId_t& genome_id = genome_item.genome;
         ContigId_t& contig_id = result->second.contig_id;
         ContigOffset_t offset = result->second.contig_offset;
-        std::shared_ptr<const OffsetPhasingStatistic> phasing_ptr;
-        if (not phasing_stats->getPhasing(genome_id, contig_id, offset, phasing_ptr)) {
+        std::vector<std::shared_ptr<Variant>> snp_vector;
+        if (not unphased_pop_ptr->getUnphasedVariants(genome_id, contig_id, offset, snp_vector)) {
 
           ExecEnv::log().error("Could not find phasing for SNP; Genome: {}, Contig, Offset: {}", genome_id, contig_id, offset);
           out_file << -1 << CSV_delimiter;
 
         } else {
 
-          if (phasing_ptr->snpVector().size() == 1) {
+          if (snp_vector.size() == 1) {
 
             out_file << 1 << CSV_delimiter;
 
-          } else if (phasing_ptr->snpVector().size() == 2) {
+          } else if (snp_vector.size() == 2) {
 
-            if (phasing_ptr->snpVector()[0]->equivalent(*(phasing_ptr->snpVector()[1]))) {
+            if (UnphasedContig::isHomozygous(snp_vector)) {
 
               out_file << 2 << CSV_delimiter;
 

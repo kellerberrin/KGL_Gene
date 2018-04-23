@@ -9,7 +9,6 @@
 #include <string>
 #include <map>
 #include "kgl_variant_db.h"
-#include "kgl_variant_factory_vcf_phasing.h"
 
 
 namespace kellerberrin {   //  organization level namespace

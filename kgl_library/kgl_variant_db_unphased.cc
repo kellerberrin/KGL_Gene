@@ -1,8 +1,9 @@
 //
-// Created by kellerberrin on 2/04/18.
+// Created by kellerberrin on 23/04/18.
 //
 
-#include "kgl_variant_factory_vcf_phasing.h"
+
+#include "kgl_variant_db_unphased.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -10,7 +11,7 @@ namespace kgl = kellerberrin::genome;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// An internal parser variant object that holds multi ploid variants until they can be phased.
+// An object that holds variants until they can be phased.
 // This object hold variants for a contig.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,10 +63,30 @@ size_t kgl::UnphasedContig::variantCount() const {
 
 }
 
+// true if vector.size() < 2
+bool kgl::UnphasedContig::isHomozygous(const std::vector<std::shared_ptr<Variant>>& variant_vector) {
+
+  bool is_homozygous = true;
+  for (auto variant : variant_vector) {
+
+    if (not variant_vector.front()->equivalent(*variant)) {
+
+      is_homozygous = false;
+      break;
+
+    }
+
+  }
+
+  return is_homozygous;
+
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// An internal parser variant object that holds multi ploid variants until they can be phased.
+// An object that holds variants until they can be phased.
 // This object hold variants for a genome.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -131,14 +152,14 @@ size_t kgl::UnphasedGenome::variantCount() const {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// An internal parser variant object that holds multi ploid variants until they can be phased.
+// An object that holds variants until they can be phased.
 // This object hold variants for a population.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 bool kgl::UnphasedPopulation::getCreateGenome(const GenomeId_t& genome_id,
-                                         std::shared_ptr<UnphasedGenome>& genome) {
+                                              std::shared_ptr<UnphasedGenome>& genome) {
 
   auto result = genome_map_.find(genome_id);
 
@@ -181,59 +202,110 @@ size_t kgl::UnphasedPopulation::variantCount() const {
 }
 
 
+bool kgl::UnphasedPopulation::genomePhasingStats(const GenomeId_t& genome_id,
+                                                 bool snp_only,
+                                                 size_t& heterozygous,
+                                                 size_t& homozygous,
+                                                 size_t& singleheterozygous) const {
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Not Thread safe.
-// This object accepts unphased variants and trivally phases them as haploid.
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+  bool return_result = true;
 
+  heterozygous = 0;
+  homozygous = 0;
+  singleheterozygous = 0;
 
-// Just copy into a population object.
-bool kgl::GenomePhasing::haploidPhasing(std::shared_ptr<const UnphasedPopulation> unphased_population_ptr,
-                                        std::shared_ptr<const GenomeDatabase> genome_db,
-                                        std::shared_ptr<PhasedPopulation> haploid_population)  {
+  auto result = genome_map_.find(genome_id);
 
-  bool result = true;
+  if (result == genome_map_.end()) {
 
-  for (auto genome : unphased_population_ptr->getMap()) {
+    ExecEnv::log().error("UnphasedPopulation::genomePhasingStats(); Could not find genome: {}", genome_id);
+    return false;
 
-    // Create the GenomeVariant object.
-    std::shared_ptr<GenomeVariant> genome_variant = GenomeVariant::emptyGenomeVariant(genome.first, GenomeVariant::HAPLOID_GENOME, genome_db);
+  }
 
-    // Add all the contig.
-    for (auto contig : genome.second->getMap()) {
+  for (auto contig : result->second->getMap()) {
 
-      // Add all offsets.
-      for (auto offset : contig.second->getMap()) {
+    for (auto offset : contig.second->getMap()) {
 
-        // add all the variants
-        for (auto variant : offset.second) {
+      if (offset.second.size() == 0) {
 
-          std::shared_ptr<Variant> mutable_variant = std::const_pointer_cast<Variant>(variant);
-          mutable_variant->phaseId(ContigVariant::HAPLOID_HOMOLOGOUS_INDEX);   // Assign to the first (and only) homologous contig.
-          genome_variant->addVariant(variant);
+        ExecEnv::log().error("UnphasedPopulation::genomePhasingStats(); Zero sized variant vector, genome: {}, contig: {}, offset: {}",
+                             genome_id, contig.first, offset.first);
+        return_result = false;
+        continue;
 
-        } // All variants.
+      }
 
-      } // All offsets
+      if (snp_only and not offset.second.front()->isSNP()) {
 
-    } // All contigs
+        continue;
 
-    if (not haploid_population->addGenomeVariant(genome_variant)) {
+      }
 
-      ExecEnv::log().error("Unable to add genome: {} to haploid population", genome_variant->genomeId());
-      result = false;
+      bool is_homozygous = UnphasedContig::isHomozygous(offset.second);
 
-    }
+      if (offset.second.size() >= 2 and not is_homozygous) {
 
-  } // All genomes
+        ++heterozygous;
 
-  ExecEnv::log().info("Haploid Phasing, pre_phase variants: {}, genomes: {}, resultant population variants: {}, genomes: {}",
-                      unphased_population_ptr->variantCount(), unphased_population_ptr->getMap().size(),
-                      haploid_population->variantCount(), haploid_population->getMap().size());
+      }
+      if (offset.second.size() >= 2 and is_homozygous) {
 
-  return result;
+        ++homozygous;
+
+      }
+      if (offset.second.size() == 1) {
+
+        ++singleheterozygous;
+
+      }
+
+    } // offset
+
+  } // contig
+
+  return return_result;
 
 }
+
+
+bool kgl::UnphasedPopulation::getUnphasedVariants(const GenomeId_t& genome_id,
+                                                  const ContigId_t& contig_id,
+                                                  ContigOffset_t offset,
+                                                  std::vector<std::shared_ptr<Variant>>& variant_vector) const {
+
+  auto genome_result = genome_map_.find(genome_id);
+
+  if (genome_result == genome_map_.end()) {
+
+    ExecEnv::log().error("UnphasedPopulation::getUnphasedVariants(); Could not find genome: {}", genome_id);
+    return false;
+
+  }
+
+  auto contig_result = genome_result->second->getMap().find(contig_id);
+
+  if (contig_result == genome_result->second->getMap().end()) {
+
+    ExecEnv::log().error("UnphasedPopulation::getUnphasedVariants(); Could not find contig: {}", contig_id);
+    return false;
+
+  }
+
+  auto offset_result = contig_result->second->getMap().find(offset);
+
+  if (offset_result == contig_result->second->getMap().end()) {
+
+    ExecEnv::log().error("UnphasedPopulation::getUnphasedVariants(); Could not find offset: {}", offset);
+    return false;
+
+  }
+
+  variant_vector = offset_result->second;
+
+  return true;
+
+}
+
+
+

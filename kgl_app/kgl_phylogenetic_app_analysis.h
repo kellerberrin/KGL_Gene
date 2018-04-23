@@ -7,8 +7,8 @@
 
 
 #include "kgl_genome_db.h"
+#include "kgl_variant_db.h"
 #include "kgl_phylogenetic_env.h"
-#include "kgl_variant_factory_vcf_phasing.h"
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
