@@ -20,7 +20,7 @@ bool kgl::ContigPhasingStatistics::insertPhasingStatistic(ContigOffset_t  offset
 }
 
 
-bool kgl::DiploidPhasingStatistics::phasedSNPs(const VCFGenome& vcf_genome) {
+bool kgl::DiploidPhasingStatistics::phasedSNPs(const UnphasedGenome& vcf_genome) {
 
   bool return_result = true;
 
@@ -148,7 +148,7 @@ size_t kgl::DiploidPhasingStatistics::singleHeterozygousSNPCount() const {
 
 
 
-bool kgl::PopulationPhasingStatistics::phasedSNPs(std::shared_ptr<const VCFPopulation> vcf_population_ptr) {
+bool kgl::PopulationPhasingStatistics::phasedSNPs(std::shared_ptr<const UnphasedPopulation> vcf_population_ptr) {
 
   bool return_result = true;
 

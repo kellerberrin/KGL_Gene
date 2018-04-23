@@ -17,13 +17,26 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+const kgl::PhaseId_t kgl::VariantSequence::UNPHASED;
+
+
 std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputIndex output_index) const {
 
   std:: stringstream ss;
 // Contig.
   ss << genomeId() << delimiter
-     << contigId() << delimiter
-     << offsetOutput(offset(), output_index) << delimiter;
+     << contigId() << delimiter;
+  if (phaseId() == UNPHASED) {
+
+    ss << "UNPHASED" << delimiter;
+
+  } else {
+
+    ss << "PHASE:" << phaseId() << delimiter;
+
+  }
+  ss << offsetOutput(offset(), output_index) << delimiter;
+  ss << quality() << delimiter;
 
   return ss.str();
 

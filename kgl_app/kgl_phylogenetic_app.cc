@@ -18,13 +18,13 @@ kgl::PhylogeneticApp::PhylogeneticApp(const kgl::Phylogenetic& args) {
                                                                                              args.gffFile,
                                                                                              args.gafFile,
                                                                                              args.aminoTranslationTable);
-  std::shared_ptr<VCFPopulation> vcf_population_ptr(std::make_shared<VCFPopulation>());
+  std::shared_ptr<UnphasedPopulation> unphased_population_ptr(std::make_shared<UnphasedPopulation>());
 
   // For all VCF files, read in the variants.
   for (const auto& file : args.fileList) {
 
     kgl::VariantFactory().readVCFVariants(genome_db_ptr,
-                                          vcf_population_ptr,
+                                          unphased_population_ptr,
                                           file.genome_name,
                                           file.file_name,
                                           args.readQuality,
@@ -35,7 +35,7 @@ kgl::PhylogeneticApp::PhylogeneticApp(const kgl::Phylogenetic& args) {
   }
 
   // Analyze the data.
-  kgl::PhylogeneticAnalysis::performAnalysis(args, genome_db_ptr, vcf_population_ptr);
+  kgl::PhylogeneticAnalysis::performAnalysis(args, genome_db_ptr, unphased_population_ptr);
 
 }
 

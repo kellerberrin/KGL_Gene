@@ -19,10 +19,9 @@ std::string kgl::SingleVariant::suboutput(char delimiter, VariantOutputIndex out
 {
   std::stringstream ss;
   ss << genomeOutput(delimiter, output_index);
-  ss << quality() << delimiter;
   ss << subname() << delimiter << size() << delimiter;
   ss << submutation(delimiter, output_index);
-  if (detail) {
+  if (detail and evidence()) {
 
     ss << evidence()->output(delimiter, output_index);
 

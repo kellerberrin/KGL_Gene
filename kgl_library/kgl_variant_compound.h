@@ -34,9 +34,10 @@ public:
 
   CompoundVariant(const GenomeId_t& genome_id,
                   const ContigId_t& contig_id,
+                  PhaseId_t phase_id,
                   ContigOffset_t contig_offset,
                   Phred_t quality,
-                  const CompoundVariantMap& variant_map) : Variant(genome_id, contig_id, contig_offset, quality),
+                  const CompoundVariantMap& variant_map) : Variant(genome_id, contig_id, phase_id, contig_offset, quality),
                                                            variant_map_(variant_map) {}
   ~CompoundVariant() override = default;
 
@@ -66,10 +67,12 @@ public:
 
   CompoundInsert(const GenomeId_t& genome_id,
                  const ContigId_t& contig_id,
+                 PhaseId_t phase_id,
                  ContigOffset_t contig_offset,
                  Phred_t quality,
                  const CompoundVariantMap& variant_map) : CompoundVariant(genome_id,
                                                                           contig_id,
+                                                                          phase_id,
                                                                           contig_offset,
                                                                           quality,
                                                                           variant_map) {}
@@ -103,10 +106,12 @@ public:
 
   CompoundDelete(const GenomeId_t& genome_id,
                  const ContigId_t& contig_id,
+                 PhaseId_t phase_id,
                  ContigOffset_t contig_offset,
                  Phred_t quality,
                  const CompoundVariantMap& variant_map) : CompoundVariant(genome_id,
                                                                           contig_id,
+                                                                          phase_id,
                                                                           contig_offset,
                                                                           quality,
                                                                           variant_map) {}

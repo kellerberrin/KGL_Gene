@@ -21,6 +21,7 @@ bool kgl::CompoundVariant::equivalent(const Variant& cmp_var) const {
   if (compound_var == nullptr) return false;
 
   bool result = contigId() == compound_var->contigId()
+                and phaseId() == compound_var->phaseId()
                 and offset() == compound_var->offset()
                 and variantType() == compound_var->variantType();
 
@@ -48,7 +49,6 @@ std::string kgl::CompoundVariant::output(char delimiter, VariantOutputIndex outp
 
   std::stringstream ss;
   ss << genomeOutput(delimiter, output_index);
-  ss << quality() << delimiter;
   ss << name() << delimiter << size() << delimiter;
   ss << mutation(delimiter, output_index) << "\n";
 

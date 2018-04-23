@@ -31,7 +31,7 @@ public:
   virtual ~VariantFactory() = default;
 
   void readCountVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                         std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                         std::shared_ptr<PhasedPopulation> pop_variant_ptr,
                          const std::string& genome_name,
                          const std::string& variant_file_name,
                          Phred_t read_quality,
@@ -41,7 +41,7 @@ public:
 
 
   void readVCFVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                       std::shared_ptr<VCFPopulation> vcf_population_ptr,
+                       std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
                        const std::string& genome_name,
                        const std::string& variant_file_name,
                        Phred_t read_quality,
@@ -60,7 +60,7 @@ private:
   bool isFileNamePrefix(const std::string& prefix, const std::string& variant_file_name) const;
 
   void addGenome(std::shared_ptr<const GenomeVariant> genome_variant_ptr,
-                 std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                 std::shared_ptr<PhasedPopulation> pop_variant_ptr,
                  Phred_t read_quality) const;
 
   std::shared_ptr<const GenomeVariant> createSamVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,

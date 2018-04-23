@@ -16,8 +16,8 @@ void kgl::Pf3kVCFImpl::setupVCFPopulation() {
 
   for (auto genome_id : getGenomeNames())  {
 
-    std::shared_ptr<VCFGenome> genome;
-    vcf_population_ptr_->getCreateGenome(genome_id, genome);
+    std::shared_ptr<UnphasedGenome> genome;
+    unphased_population_ptr_->getCreateGenome(genome_id, genome);
 
   }
 
@@ -203,7 +203,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
     if (record_count_ % 1000000 == 0) {
 
       ExecEnv::log().info("Processed :{} records, variants: {}, variants: {}",
-                          static_cast<size_t>(record_count_), variant_count_, vcf_population_ptr_->variantCount());
+                          static_cast<size_t>(record_count_), variant_count_, unphased_population_ptr_->variantCount());
 
       for (auto allele : recordParser.alleles()) {
 

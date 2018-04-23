@@ -18,7 +18,7 @@ namespace kgl = kellerberrin::genome;
 
 
 bool kgl::VcfFactory::readParseFreeBayesVcf(const std::string &genome_name,
-                                            std::shared_ptr<VCFPopulation> vcf_population_ptr,
+                                            std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
                                             std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                             const std::string &vcf_file_name,
                                             Phred_t variant_quality) const {
@@ -33,7 +33,7 @@ bool kgl::VcfFactory::readParseFreeBayesVcf(const std::string &genome_name,
 
 
 bool kgl::VcfFactory::readParseGATKVcf(const std::string &genome_name,
-                                       std::shared_ptr<VCFPopulation> vcf_population_ptr,
+                                       std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
                                        std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                        const std::string &vcf_file_name,
                                        Phred_t variant_quality) const {
@@ -47,7 +47,7 @@ bool kgl::VcfFactory::readParseGATKVcf(const std::string &genome_name,
 }
 
 
-bool kgl::VcfFactory::readParsePf3kVariants(std::shared_ptr<VCFPopulation> vcf_population_ptr,
+bool kgl::VcfFactory::readParsePf3kVariants(std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
                                             std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                             const std::string &vcf_file_name,
                                             Phred_t variant_quality) const {

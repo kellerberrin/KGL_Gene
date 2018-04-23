@@ -15,60 +15,53 @@ namespace kgl = kellerberrin::genome;
 // ContigVariant - All the variant features that map onto that region/sequence.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+const kgl::PhaseId_t kgl::ContigVariant::HAPLOID_HOMOLOGOUS_INDEX;
 
 std::shared_ptr<kgl::ContigVariant>
 kgl::ContigVariant::filterVariants(const kgl::VariantFilter& filter) const {
 
-  std::shared_ptr<kgl::ContigVariant> filtered_contig_ptr = deepCopy();
-  // Complements the bool returned by filterVariant(filter) because the delete pattern expects bool true for deletion.
-  auto predicate = [&](const OffsetVariantMap::const_iterator& it) { return not it->second->filterVariant(filter); };
-  predicateIterableDelete(filtered_contig_ptr->offset_variant_map_,  predicate);
+  std::shared_ptr<ContigVariant> filtered_contig_ptr(std::make_shared<ContigVariant>(contigId(), ploidy()));
+
+  size_t index = 0;
+  for (auto homologous : ploidy_vector_) {
+
+    filtered_contig_ptr->ploidy_vector_[index] = homologous->filterVariants(filter);
+    index++;
+
+  }
 
   return filtered_contig_ptr;
 
 }
 
-// This function will insert multiple variants for contig offset in a std::multimap
+// This function will insert multiple different variants for contig offset in a std::multimap
 bool kgl::ContigVariant::addVariant(std::shared_ptr<const Variant>& variant_ptr) {
 
-  auto result = offset_variant_map_.equal_range(variant_ptr->offset());
 
-  for (auto it = result.first; it != result.second; ++it) {
+  if (variant_ptr->phaseId() >= ploidy()) {
 
-    if (variant_ptr->equivalent(*it->second)) {
-
-      std::string variant_str = variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false);
-      ExecEnv::log().warn("addVariant() fails, Equivalent variant already exists:\n{}", variant_str);
-      return false;
-
-    }
+    ExecEnv::log().error("ContigVariant::addVariant(); Contig ploidy: {}, Variant has incompatible phasing: {}",
+                         ploidy(), variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false));
+    return false;
 
   }
 
-  offset_variant_map_.insert(std::make_pair(variant_ptr->offset(), variant_ptr));
-
-  return true;
+  return ploidy_vector_[variant_ptr->phaseId()]->addVariant(variant_ptr);
 
 }
 
 // Returns true if variant found and erased.
 bool kgl::ContigVariant::eraseVariant(std::shared_ptr<const Variant>& variant_ptr) {
 
-  auto result = offset_variant_map_.equal_range(variant_ptr->offset());
+  if (variant_ptr->phaseId() >= ploidy()) {
 
-  for (auto it = result.first; it != result.second; ++it) {
-
-    if (variant_ptr->equivalent(*it->second)) {
-
-      // C++ 11 erase() returns next iterator to next valid (or end())
-      offset_variant_map_.erase(it);
-      return true;
-
-    }
+    ExecEnv::log().error("ContigVariant::eraseVariant(); Contig ploidy: {}, Variant has incompatible phasing: {}",
+                         ploidy(), variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false));
+    return false;
 
   }
 
-  return false;
+  return ploidy_vector_[variant_ptr->phaseId()]->eraseVariant(variant_ptr);
 
 }
 
@@ -76,11 +69,15 @@ bool kgl::ContigVariant::eraseVariant(std::shared_ptr<const Variant>& variant_pt
 // Always use deep copy when modifying this object.
 std::shared_ptr<kgl::ContigVariant> kgl::ContigVariant::deepCopy() const {
 
-  std::shared_ptr<ContigVariant> copy(std::make_shared<ContigVariant>(contigId()));
+  std::shared_ptr<ContigVariant> copy(std::make_shared<ContigVariant>(contigId(), ploidy()));
 
-  for (auto variant : getMap()) {
+  for (auto homologous : getVector()) {
 
-    copy->addVariant(variant.second);
+    for (auto variant : homologous->getMap()) {
+
+      copy->addVariant(variant.second);
+
+    }
 
   }
 
@@ -89,26 +86,56 @@ std::shared_ptr<kgl::ContigVariant> kgl::ContigVariant::deepCopy() const {
 }
 
 
-bool kgl::ContigVariant::getSortedVariants(ContigOffset_t start, ContigOffset_t end, OffsetVariantMap& variant_map) const {
+bool kgl::ContigVariant::getSortedVariants(PhaseId_t phase,
+                                           ContigOffset_t start,
+                                           ContigOffset_t end,
+                                           OffsetVariantMap& variant_map) const {
 
-  auto lower_bound = offset_variant_map_.lower_bound(start);
-  auto upper_bound = offset_variant_map_.upper_bound(end-1); //  [start, end)
+  if (phase >= ploidy()) {
 
-  for (auto it = lower_bound; it != upper_bound; ++it) {
-
-    variant_map.insert(std::pair<ContigOffset_t , std::shared_ptr<const Variant>>(it->first, it->second));
+    ExecEnv::log().error("ContigVariant::getSortedVariants(); Incompatible phase: {}, Contig ploidy: {}", phase, ploidy());
+    variant_map.clear();
+    return false;
 
   }
 
-  return true;
+  return ploidy_vector_[phase]->getSortedVariants(start, end, variant_map);
 
 }
+
+
+size_t kgl::ContigVariant::variantCount() const {
+
+  size_t variant_count = 0;
+  for (auto homologous : getVector()) {
+
+    variant_count += homologous->variantCount();
+
+  }
+
+  return variant_count;
+
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GenomeVariant - A map of contig variants
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Ploidy constants.
+const kgl::PhaseId_t kgl::GenomeVariant::HAPLOID_GENOME;
+const kgl::PhaseId_t kgl::GenomeVariant::DIPLOID_GENOME;
+
+
 bool kgl::GenomeVariant::addContigVariant(std::shared_ptr<kgl::ContigVariant>& contig_variant) {
+
+  if (contig_variant->ploidy() != ploidy()) {
+
+    ExecEnv::log().error("GenomeVariant::addContigVariant(); Ploidy mismatch - genome ploidy: {}, contig ploidy: {}"
+                         , ploidy(), contig_variant->ploidy());
+    return false;
+
+  }
 
   auto result = genome_variant_map_.insert(std::make_pair(contig_variant->contigId(), contig_variant));
 
@@ -153,7 +180,7 @@ bool kgl::GenomeVariant::addVariant(std::shared_ptr<const Variant> variant) {
 
 std::shared_ptr<kgl::GenomeVariant> kgl::GenomeVariant::filterVariants(const kgl::VariantFilter& filter) const {
 
-  std::shared_ptr<kgl::GenomeVariant> filtered_genome_ptr(std::make_shared<kgl::GenomeVariant>(genomeId()));
+  std::shared_ptr<kgl::GenomeVariant> filtered_genome_ptr(std::make_shared<kgl::GenomeVariant>(genomeId(), ploidy()));
 
   filtered_genome_ptr->attributes().insertAttribute("filter", filter.filterName());
 
@@ -173,14 +200,15 @@ std::shared_ptr<kgl::GenomeVariant> kgl::GenomeVariant::filterVariants(const kgl
 // Creates an empty genome variant with the same contig structure as the genome database.
 std::shared_ptr<kgl::GenomeVariant>
 kgl::GenomeVariant::emptyGenomeVariant(const GenomeId_t& genome_id,
+                                       PhaseId_t ploidy,
                                        const std::shared_ptr<const GenomeDatabase>& genome_db) {
 
 
-  std::shared_ptr<GenomeVariant> empty_genome_variant(std::make_shared<GenomeVariant>(genome_id));
+  std::shared_ptr<GenomeVariant> empty_genome_variant(std::make_shared<GenomeVariant>(genome_id, ploidy));
 
   for (auto contig_db : genome_db->getMap()) {
 
-    std::shared_ptr<ContigVariant> contig_variant(std::make_shared<ContigVariant>(contig_db.first));
+    std::shared_ptr<ContigVariant> contig_variant(std::make_shared<ContigVariant>(contig_db.first, ploidy));
     if (not empty_genome_variant->addContigVariant(contig_variant)) {
 
       ExecEnv::log().error("emptyGenomeVariant(), could not add contig variant: {}", contig_db.first);
@@ -196,12 +224,12 @@ kgl::GenomeVariant::emptyGenomeVariant(const GenomeId_t& genome_id,
 
 
 
-size_t kgl::GenomeVariant::size() const {
+size_t kgl::GenomeVariant::variantCount() const {
 
   size_t total_variants = 0;
   for (auto contig_variant : genome_variant_map_) {
 
-    total_variants += contig_variant.second->size();
+    total_variants += contig_variant.second->variantCount();
 
   }
 
@@ -216,9 +244,13 @@ std::string kgl::GenomeVariant::output(char field_delimter, VariantOutputIndex o
   std::stringstream ss;
   for (const auto& contig_variant : genome_variant_map_) {
 
-    for (const auto& variant : contig_variant.second->getMap()) {
+    for (const auto& homologous : contig_variant.second->getVector()) {
 
-      ss << variant.second->output(field_delimter, output_index, detail);
+      for (const auto variant : homologous->getMap()) {
+
+        ss << variant.second->output(field_delimter, output_index, detail);
+
+      }
 
     }
 
@@ -233,9 +265,13 @@ void kgl::GenomeVariant::getVariants(std::vector<std::shared_ptr<const Variant>>
 
   for (const auto& contig_variant : genome_variant_map_) {
 
-    for (const auto& variant : contig_variant.second->getMap()) {
+    for (const auto& homologous : contig_variant.second->getVector()) {
 
-      variant_vector.push_back(variant.second);
+      for (const auto &variant : homologous->getMap()) {
+
+        variant_vector.push_back(variant.second);
+
+      }
 
     }
 
@@ -246,12 +282,12 @@ void kgl::GenomeVariant::getVariants(std::vector<std::shared_ptr<const Variant>>
 // Always use deep copy when modifying this object.
 std::shared_ptr<kgl::GenomeVariant> kgl::GenomeVariant::deepCopy() const {
 
-  std::shared_ptr<GenomeVariant> copy(std::make_shared<GenomeVariant>(genomeId()));
+  std::shared_ptr<GenomeVariant> copy(std::make_shared<GenomeVariant>(genomeId(), ploidy()));
   copy->attributes(attributes());
 
   for (auto contig : getMap()) {
 
-    std::shared_ptr<ContigVariant> copy_contig(std::make_shared<ContigVariant>(contig.second->contigId()));
+    std::shared_ptr<ContigVariant> copy_contig(std::make_shared<ContigVariant>(contig.second->contigId(), contig.second->ploidy()));
     copy->addContigVariant(copy_contig);
 
   }
@@ -270,6 +306,7 @@ std::shared_ptr<kgl::GenomeVariant> kgl::GenomeVariant::deepCopy() const {
 }
 
 bool kgl::GenomeVariant::getSortedVariants(ContigId_t contig_id,
+                                           PhaseId_t phase,
                                            ContigOffset_t start,
                                            ContigOffset_t end,
                                            OffsetVariantMap& variant_map) const {
@@ -282,11 +319,11 @@ bool kgl::GenomeVariant::getSortedVariants(ContigId_t contig_id,
 
   }
 
-  return contig_variant_ptr->getSortedVariants(start, end, variant_map);
+  return contig_variant_ptr->getSortedVariants(phase, start, end, variant_map);
 
 }
 
-
+/*
 bool kgl::GenomeVariant::getCodingSortedVariants(std::shared_ptr<const CodingSequence> coding_sequence_ptr,
                                                  OffsetVariantMap& variant_map,
                                                  bool& frame_shift) const {
@@ -333,14 +370,14 @@ bool kgl::GenomeVariant::getCodingSortedVariants(std::shared_ptr<const CodingSeq
   return true;
 
 }
-
+*/
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Simple container to hold genome variants for populations
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool kgl::PopulationVariant::getGenomeVariant(const GenomeId_t& genome_id,
+bool kgl::PhasedPopulation::getGenomeVariant(const GenomeId_t& genome_id,
                                               std::shared_ptr<const GenomeVariant>& genome_variant) const {
 
   auto result = population_variant_map_.find(genome_id);
@@ -360,7 +397,7 @@ bool kgl::PopulationVariant::getGenomeVariant(const GenomeId_t& genome_id,
 }
 
 
-bool kgl::PopulationVariant::addGenomeVariant(std::shared_ptr<const GenomeVariant> genome_variant) {
+bool kgl::PhasedPopulation::addGenomeVariant(std::shared_ptr<const GenomeVariant> genome_variant) {
 
   auto result = population_variant_map_.insert(std::pair<GenomeId_t, std::shared_ptr<const GenomeVariant>>(genome_variant->genomeId(), genome_variant));
 
@@ -369,12 +406,12 @@ bool kgl::PopulationVariant::addGenomeVariant(std::shared_ptr<const GenomeVarian
 }
 
 
-size_t kgl::PopulationVariant::variantCount() const {
+size_t kgl::PhasedPopulation::variantCount() const {
 
   size_t variant_count = 0;
   for (auto genome : getMap()) {
 
-    variant_count += genome.second->size();
+    variant_count += genome.second->variantCount();
 
   }
 
@@ -382,75 +419,4 @@ size_t kgl::PopulationVariant::variantCount() const {
 
 }
 
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// A map of Genomes
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-bool kgl::Genotype::getGenome(const GenomeId_t& genome_id,
-                              std::shared_ptr<GenomeVariant>& genome) const {
-
-  auto result = genome_map_.find(genome_id);
-
-  if (result != genome_map_.end()) {
-
-    genome = result->second;
-    return true;
-
-  } else {
-
-    genome = nullptr;
-    return false;
-
-  }
-
-}
-
-
-bool kgl::Genotype::addGenome(std::shared_ptr<GenomeVariant> genome) {
-
-  auto result = genome_map_.insert(std::pair<GenomeId_t, std::shared_ptr<GenomeVariant>>(genome->genomeId(), genome));
-
-  return result.second;
-
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Simple container to hold genomes Genotypes
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-bool kgl::GenotypePopulation::getGenotype(const GenotypeId_t& genotype_id,
-                                          std::shared_ptr<Genotype>& genotype) const {
-
-  auto result = genotype_map_.find(genotype_id);
-
-  if (result != genotype_map_.end()) {
-
-    genotype = result->second;
-    return true;
-
-  } else {
-
-    genotype = nullptr;
-    return false;
-
-  }
-
-}
-
-
-bool kgl::GenotypePopulation::addGenotype(std::shared_ptr<Genotype> genotype) {
-
-  auto result = genotype_map_.insert(std::pair<GenomeId_t, std::shared_ptr<Genotype>>(genotype->genotypeId(), genotype));
-
-  return result.second;
-
-}
 

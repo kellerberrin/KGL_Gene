@@ -55,7 +55,7 @@ public:
   ContigPhasingStatistics(const ContigPhasingStatistics&) = default;
   ~ContigPhasingStatistics() = default;
 
-  bool phasedSNPs(const VCFContigMap& contig);
+  bool phasedSNPs(const UnphasedContigMap& contig);
 
   // 2 different alleles "1/2"
   const ContigStatsMap& heterozygousSNP() const { return heterozygous_snp_; }
@@ -96,7 +96,7 @@ public:
   DiploidPhasingStatistics(const DiploidPhasingStatistics&) = default;
   ~DiploidPhasingStatistics() = default;
 
-  bool phasedSNPs(const VCFGenome& vcf_genome);
+  bool phasedSNPs(const UnphasedGenome& vcf_genome);
 
 
   size_t heterozygousSNPCount() const;
@@ -127,7 +127,7 @@ public:
   PopulationPhasingStatistics(const PopulationPhasingStatistics&) = default;
   ~PopulationPhasingStatistics() = default;
 
-  bool phasedSNPs(std::shared_ptr<const VCFPopulation> vcf_population_ptr);
+  bool phasedSNPs(std::shared_ptr<const UnphasedPopulation> vcf_population_ptr);
 
   size_t phasedSNPCount() const;
 

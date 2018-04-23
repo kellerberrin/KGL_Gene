@@ -11,6 +11,7 @@
 #include <vector>
 #include <sstream>
 #include "kgl_attributes.h"
+#include "kgl_variant_db_homologous.h"
 #include "kgl_variant.h"
 
 
@@ -23,12 +24,22 @@ namespace genome {   // project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-using OffsetVariantMap = std::multimap<ContigOffset_t, std::shared_ptr<const Variant>>;
+using PloidyVector = std::vector<std::shared_ptr<HomologousVariant>>;
 class ContigVariant {
 
 public:
 
-  explicit ContigVariant(const ContigId_t& contig_id) : contig_id_(contig_id) {}
+  explicit ContigVariant(const ContigId_t& contig_id, PhaseId_t phases)
+  : contig_id_(contig_id) {
+
+    for (PhaseId_t idx = 0; idx < phases; idx++) {
+
+      std::shared_ptr<HomologousVariant> homologous_ptr(std::make_shared<HomologousVariant>(idx));
+      ploidy_vector_.push_back(homologous_ptr);
+
+    }
+
+  }
   ContigVariant(const ContigVariant&) = delete; // Use deep copy.
   ~ContigVariant() = default;
 
@@ -42,7 +53,9 @@ public:
   bool eraseVariant(std::shared_ptr<const Variant>& variant_ptr);
 
   const ContigId_t& contigId() const { return contig_id_; }
-  size_t variantCount() const { return offset_variant_map_.size(); }
+  PhaseId_t ploidy() const { return static_cast<PhaseId_t>(ploidy_vector_.size()); }
+
+  size_t variantCount() const;
 
   // Set functions.
   bool isElement(const Variant& variant) const;
@@ -52,20 +65,20 @@ public:
 
   std::shared_ptr<ContigVariant> filterVariants(const VariantFilter& filter) const;
 
-  const OffsetVariantMap& getMap() const { return offset_variant_map_; }
-
-  size_t size() const { return offset_variant_map_.size(); }
+  const PloidyVector& getVector() const { return ploidy_vector_; }
 
   // All variants in [start, end) - note that end points past the last variant; end = (last + 1).
-  bool getSortedVariants(ContigOffset_t start,
+  bool getSortedVariants(PhaseId_t phase,
+                         ContigOffset_t start,
                          ContigOffset_t end,
                          OffsetVariantMap& variant_map) const;
 
+  static constexpr PhaseId_t HAPLOID_HOMOLOGOUS_INDEX = 0;  // The first (and only) haploid homologous contig.
 
 private:
 
   ContigId_t contig_id_;
-  OffsetVariantMap offset_variant_map_;
+  PloidyVector ploidy_vector_;
 
 };
 

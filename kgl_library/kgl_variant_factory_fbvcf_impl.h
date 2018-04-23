@@ -32,7 +32,7 @@ class FreeBayesVCFImpl : public ParseGenomeVCFImpl {
 public:
 
   FreeBayesVCFImpl(const std::string& genome_name,
-                   std::shared_ptr<VCFPopulation> vcf_population_ptr,
+                   std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
                    std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                    const std::string& vcf_file_name,
                    Phred_t variant_quality) : ParseGenomeVCFImpl(genome_name,

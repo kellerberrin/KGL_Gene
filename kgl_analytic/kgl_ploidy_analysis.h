@@ -35,12 +35,12 @@ namespace genome {   // project level namespace
 
 
 
-class PloidyAnalysis : public PopulationVariant {
+class PloidyAnalysis : public PhasedPopulation {
 
 
 public:
 
-  PloidyAnalysis(const std::string& analysis) : PopulationVariant(analysis) {}
+  PloidyAnalysis(const std::string& analysis) : PhasedPopulation(analysis) {}
   ~PloidyAnalysis() override = default;
 
   bool addPloidyRecord(const std::string& genome,

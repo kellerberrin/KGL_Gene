@@ -20,7 +20,10 @@ kgl::SingleFactory::createSingleVariants(const std::string &genome_name,
                                          NucleotideReadCount_t minimum_read_count,
                                          double minimum_proportion) const {
 
-  std::shared_ptr<GenomeVariant> genome_single_variants = kgl::GenomeVariant::emptyGenomeVariant(genome_name, genome_db);
+  // Create a haploid genome for the count data.
+  std::shared_ptr<GenomeVariant> genome_single_variants = kgl::GenomeVariant::emptyGenomeVariant(genome_name,
+                                                                                                 GenomeVariant::HAPLOID_GENOME,
+                                                                                                 genome_db);
   size_t variant_count = 0;
 
   for (auto& contig_block : count_data->getMap()) {   // For each contig block.
@@ -128,6 +131,7 @@ size_t kgl::SingleFactory::GenerateSNPDelete(const std::string &genome_name,
 
           std::shared_ptr<SNPVariant> snp_variant_ptr(std::make_shared<SNPVariant>(genome_name,
                                                                                    contig_ptr->contigId(),
+                                                                                   VariantSequence::UNPHASED,
                                                                                    contig_offset,
                                                                                    quality,
                                                                                    evidence_ptr,
@@ -141,6 +145,7 @@ size_t kgl::SingleFactory::GenerateSNPDelete(const std::string &genome_name,
 
           std::shared_ptr<DeleteVariant> delete_variant_ptr(std::make_shared<DeleteVariant>(genome_name,
                                                                                             contig_ptr->contigId(),
+                                                                                            VariantSequence::UNPHASED,
                                                                                             contig_offset,
                                                                                             quality,
                                                                                             evidence_ptr,
@@ -204,6 +209,7 @@ size_t kgl::SingleFactory::GenerateInsert(const std::string &genome_name,
 
         std::shared_ptr<InsertVariant> insert_variant_ptr(std::make_shared<InsertVariant>(genome_name,
                                                                                           contig_ptr->contigId(),
+                                                                                          VariantSequence::UNPHASED,
                                                                                           contig_offset,
                                                                                           quality,
                                                                                           evidence_ptr,

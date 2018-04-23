@@ -156,13 +156,14 @@ bool kgl::ParseCigarImpl::parseSNP(size_t cigar_count,
     }
 
 //    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
-    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>("", quality));
+//    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>("", quality));
 
     std::shared_ptr<SNPVariant> snp_variant_ptr(std::make_shared<SNPVariant>(variant_source,
                                                                              contig_ptr->contigId(),
+                                                                             VariantSequence::UNPHASED,
                                                                              contig_offset,
                                                                              quality,
-                                                                             evidence_ptr,
+                                                                             nullptr,
                                                                              DNA5::convertChar(reference[reference_index]),
                                                                              DNA5::convertChar(alternate[alternate_index])));
 
@@ -194,13 +195,14 @@ bool kgl::ParseCigarImpl::parseInsert(size_t cigar_count,
   for (size_t idx = 0; idx < cigar_count; ++idx) {
 
 //    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
-    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>("", quality));
+//    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>("", quality));
 
     std::shared_ptr<InsertVariant> insert_variant_ptr(std::make_shared<InsertVariant>(variant_source,
                                                                                       contig_ptr->contigId(),
+                                                                                      VariantSequence::UNPHASED,
                                                                                       contig_offset,
                                                                                       quality,
-                                                                                      evidence_ptr,
+                                                                                      nullptr,
                                                                                       contig_ptr->sequence().at(contig_offset),
                                                                                       DNA5::convertChar(alternate[alternate_index])));
 
@@ -263,14 +265,15 @@ bool kgl::ParseCigarImpl::parseDelete(size_t cigar_count,
     }
 
 //    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
-    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>("", quality));
+//    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>("", quality));
 
 
     std::shared_ptr<DeleteVariant> delete_variant_ptr(std::make_shared<DeleteVariant>(variant_source,
                                                                                       contig_ptr->contigId(),
+                                                                                      VariantSequence::UNPHASED,
                                                                                       contig_offset,
                                                                                       quality,
-                                                                                      evidence_ptr,
+                                                                                      nullptr,
                                                                                       contig_ptr->sequence().at(contig_offset)));
 
     std::pair<ContigOffset_t, std::shared_ptr<const SingleVariant>> insert_pair(contig_offset, delete_variant_ptr);

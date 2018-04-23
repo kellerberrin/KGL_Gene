@@ -28,7 +28,7 @@ class ParseCigarImpl : public ParseVCFImpl {
 
 public:
 
-  ParseCigarImpl(std::shared_ptr<VCFPopulation> vcf_population_ptr,
+  ParseCigarImpl(std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
                  std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                  const std::string& vcf_file_name,
                  Phred_t variant_quality) : ParseVCFImpl(vcf_population_ptr, genome_db_ptr, vcf_file_name, variant_quality) {}

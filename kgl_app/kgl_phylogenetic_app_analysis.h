@@ -27,7 +27,7 @@ public:
 
   static void performAnalysis(const Phylogenetic& args,
                               std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                              std::shared_ptr<const VCFPopulation> vcf_population_ptr);
+                              std::shared_ptr<const UnphasedPopulation> unphased_population_ptr);
 private:
 
   // Analytic types.

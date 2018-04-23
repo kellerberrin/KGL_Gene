@@ -32,7 +32,7 @@ class GenomeVariant {
 
 public:
 
-  explicit GenomeVariant(const GenomeId_t& genome_id) : genome_id_(genome_id) {}
+  explicit GenomeVariant(const GenomeId_t& genome_id, PhaseId_t ploidy) : genome_id_(genome_id), ploidy_(ploidy) {}
   GenomeVariant(const GenomeVariant&) = delete; // Use deep copy.
   ~GenomeVariant() = default;
 
@@ -44,6 +44,8 @@ public:
   const GenomeId_t& genomeId() const { return genome_id_; }
   void genomeId(const GenomeId_t& contig_id) { genome_id_ = contig_id; }
 
+  PhaseId_t ploidy() const{ return ploidy_; }
+
   size_t contigCount() const { return genome_variant_map_.size(); }
 
   bool addContigVariant(std::shared_ptr<ContigVariant>& contig_variant);
@@ -51,7 +53,7 @@ public:
 
   bool addVariant(std::shared_ptr<const Variant> variant);
 
-  size_t size() const;
+  size_t variantCount() const;
 
   std::shared_ptr<GenomeVariant> filterVariants(const VariantFilter& filter) const;
 
@@ -63,6 +65,7 @@ public:
   std::shared_ptr<GenomeVariant> Difference(std::shared_ptr<const GenomeVariant> genome_variant_ptr) const;
 
   static std::shared_ptr<GenomeVariant> emptyGenomeVariant(const GenomeId_t& genome_id,
+                                                           PhaseId_t ploidy,
                                                            const std::shared_ptr<const GenomeDatabase>& genome_db);
 
   std::string output(char field_delimiter, VariantOutputIndex output_index, bool detail) const;
@@ -73,14 +76,15 @@ public:
   // All contig_id variants use the zero-based half-open convention [start, end).
   // End points past the last variant; end = (last + 1).
   bool getSortedVariants(ContigId_t contig_id,
+                         PhaseId_t phase,
                          ContigOffset_t start,
                          ContigOffset_t end,
                          OffsetVariantMap& variant_map) const;
 
   // Convenience routine only returns coding variants.
-  bool getCodingSortedVariants(std::shared_ptr<const CodingSequence> coding_sequence_ptr,
-                               OffsetVariantMap& variant_map,
-                               bool& frame_shift) const;
+//  bool getCodingSortedVariants(std::shared_ptr<const CodingSequence> coding_sequence_ptr,
+//                               OffsetVariantMap& variant_map,
+//                               bool& frame_shift) const;
 
   const Attributes& attributes() const { return attributes_; }
   Attributes& attributes() { return attributes_; }
@@ -88,6 +92,7 @@ public:
 
   // Returns a maximum of MUTATION_HARD_LIMIT_ alternative protein mutations.
   bool mutantProteins( const ContigId_t& contig_id,
+                       PhaseId_t phase,
                        const FeatureIdent_t& gene_id,
                        const FeatureIdent_t& sequence_id,
                        const std::shared_ptr<const GenomeDatabase>& genome_db,
@@ -97,6 +102,7 @@ public:
 
   // Returns a maximum of MUTATION_HARD_LIMIT_ alternative protein mutations.
   bool mutantCodingDNA( const ContigId_t& contig_id,
+                        PhaseId_t phase,
                         const FeatureIdent_t& gene_id,
                         const FeatureIdent_t& sequence_id,
                         const std::shared_ptr<const GenomeDatabase>& genome_db,
@@ -106,6 +112,7 @@ public:
 
   // Returns a maximum of MUTATION_HARD_LIMIT_ alternative mutations.
   bool mutantRegion( const ContigId_t& contig_id,
+                     PhaseId_t phase,
                      ContigOffset_t region_offset,
                      ContigSize_t region_size,
                      const std::shared_ptr<const GenomeDatabase>& genome_db,
@@ -115,14 +122,19 @@ public:
 
   // Does not use alternative mutations. Only mutates one path. Used for Phylogenetic analysis.
   bool mutantContig( const ContigId_t& contig_id,
+                     PhaseId_t phase,
                      const std::shared_ptr<const GenomeDatabase>& genome_db,
                      std::shared_ptr<const DNA5SequenceContig>& reference_contig_ptr,
                      std::shared_ptr<DNA5SequenceContig>& mutant_contig_ptr) const;
 
 
+  static constexpr PhaseId_t HAPLOID_GENOME = 1;
+  static constexpr PhaseId_t DIPLOID_GENOME = 2;
+
 private:
 
   GenomeId_t genome_id_;
+  PhaseId_t ploidy_;
   GenomeVariantMap genome_variant_map_;
   Attributes attributes_;
 

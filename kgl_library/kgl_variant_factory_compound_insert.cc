@@ -37,6 +37,7 @@ std::shared_ptr<kgl::Variant> kgl::CompoundInsertFactory::createCompoundVariant(
   // create the variant
   std::shared_ptr<Variant> compound_insert(std::make_shared<CompoundInsert>(variant_map.begin()->second->genomeId(),
                                                                             variant_map.begin()->second->contigId(),
+                                                                            VariantSequence::UNPHASED,
                                                                             variant_map.begin()->second->offset(),
                                                                             quality,
                                                                             variant_map));

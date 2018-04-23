@@ -19,7 +19,7 @@ namespace kgl = kellerberrin::genome;
 
 
 void kgl::VariantFactory::readVCFVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                          std::shared_ptr<VCFPopulation> vcf_population_ptr,
+                                          std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
                                           const std::string& genome_name,
                                           const std::string& variant_file_name,
                                           Phred_t read_quality,
@@ -62,7 +62,7 @@ void kgl::VariantFactory::readVCFVariants(std::shared_ptr<const GenomeDatabase> 
 
 
 void kgl::VariantFactory::readCountVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                            std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                                            std::shared_ptr<PhasedPopulation> pop_variant_ptr,
                                             const std::string& genome_name,
                                             const std::string& variant_file_name,
                                             Phred_t read_quality,
@@ -118,7 +118,7 @@ bool kgl::VariantFactory::isFileNamePrefix(const std::string& prefix, const std:
 
 
 void kgl::VariantFactory::addGenome(std::shared_ptr<const GenomeVariant> genome_variant_ptr,
-                                    std::shared_ptr<PopulationVariant> pop_variant_ptr,
+                                    std::shared_ptr<PhasedPopulation> pop_variant_ptr,
                                     Phred_t read_quality) const {
 
 
@@ -128,7 +128,7 @@ void kgl::VariantFactory::addGenome(std::shared_ptr<const GenomeVariant> genome_
   std::shared_ptr<const kgl::GenomeVariant> filter_ptr = genome_variant_ptr->filterVariants(kgl::QualityFilter(read_quality));
 
   kgl::ExecEnv::log().info("Filtered for quality: {}, Genome: {} has: {} variants",
-                           read_quality, genome_variant_ptr->genomeId(), filter_ptr->size());
+                           read_quality, genome_variant_ptr->genomeId(), filter_ptr->variantCount());
 
 // Store the organism variants in the population object.
   pop_variant_ptr->addGenomeVariant(filter_ptr);
@@ -161,7 +161,7 @@ kgl::VariantFactory::createSamVariants(std::shared_ptr<const GenomeDatabase> gen
                                                                                                  min_read_count,
                                                                                                  min_proportion);
 
-  ExecEnv::log().info("Generated: {} Pileup (count) variants for Genome: {}", single_variant_ptr->size(), genome_name);
+  ExecEnv::log().info("Generated: {} Pileup (count) variants for Genome: {}", single_variant_ptr->variantCount(), genome_name);
 
   std::shared_ptr<const GenomeVariant> variant_ptr = aggregateVariants(genome_db_ptr, genome_name, single_variant_ptr);
 
@@ -191,7 +191,7 @@ kgl::VariantFactory::createBamVariants(std::shared_ptr<const GenomeDatabase> gen
                                                                                       min_read_count,
                                                                                       min_proportion);
 
-  ExecEnv::log().info("Generated: {} Pileup (count) variants for Genome: {}", single_variant_ptr->size(), genome_name);
+  ExecEnv::log().info("Generated: {} Pileup (count) variants for Genome: {}", single_variant_ptr->variantCount(), genome_name);
 
   std::shared_ptr<const GenomeVariant> variant_ptr = aggregateVariants(genome_db_ptr, genome_name, single_variant_ptr);
 
@@ -219,7 +219,7 @@ kgl::VariantFactory::aggregateVariants(const std::shared_ptr<const GenomeDatabas
   // combine the compound variants
   std::shared_ptr<const kgl::GenomeVariant> compound_ptr = cmp_delete_ptr->Union(cmp_insert_ptr);
 
-  ExecEnv::log().info("Generated: {} Compound variants for Genome: {}", compound_ptr->size(), genome_name);
+  ExecEnv::log().info("Generated: {} Compound variants for Genome: {}", compound_ptr->variantCount(), genome_name);
   ExecEnv::log().info("Combining Compound and Single variants for Genome: {}", genome_name);
 
   // disaggregate the compound variants.
@@ -232,7 +232,7 @@ kgl::VariantFactory::aggregateVariants(const std::shared_ptr<const GenomeDatabas
   // add in the compound variants
   variant_ptr = variant_ptr->Union(compound_ptr);
 
-  ExecEnv::log().info("Generated: {} Total variants for Genome: {}", variant_ptr->size(), genome_name);
+  ExecEnv::log().info("Generated: {} Total variants for Genome: {}", variant_ptr->variantCount(), genome_name);
 
   return variant_ptr;
 

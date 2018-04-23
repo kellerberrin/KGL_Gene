@@ -164,7 +164,7 @@ private:
 template<typename T, typename... Args>
 void UPGMAPopulationTree(const std::string& newick_file,
                          std::shared_ptr<const GlobalDNASequenceDistance> sequence_distance,
-                         std::shared_ptr<const PopulationVariant> pop_variant_ptr,
+                         std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
                          std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                          Args... args) {
 
@@ -193,7 +193,7 @@ template<typename T, typename... Args>
 void UPGMAGeneTree(const std::string& path,
                    const std::string& newick_file,
                    std::shared_ptr<const LocalAminoSequenceDistance> sequence_distance,
-                   std::shared_ptr<const PopulationVariant> pop_variant_ptr,
+                   std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
                    std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                    const std::string& protein_family,
                    Args... args) {
@@ -244,7 +244,7 @@ template<typename T, typename... Args>
 void UPGMAGenePhyloTree(const std::string& path,
                         const std::string& newick_file,
                         std::shared_ptr<const AminoSequenceDistance> sequence_distance,
-                        std::shared_ptr<const PopulationVariant> pop_variant_ptr,
+                        std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
                         std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                         const std::string& protein_family,
                         Args... args) {

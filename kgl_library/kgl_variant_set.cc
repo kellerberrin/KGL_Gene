@@ -13,11 +13,11 @@ namespace kgl = kellerberrin::genome;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ContigVariant - All the variant features that map onto that region/sequence.
+// HomologousVariant - All the variant features that map onto a homologous contig region/sequence.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool kgl::ContigVariant::isElement(const Variant& variant) const {
+bool kgl::HomologousVariant::isElement(const Variant& variant) const {
 
   auto result = offset_variant_map_.equal_range(variant.offset());
 
@@ -32,14 +32,93 @@ bool kgl::ContigVariant::isElement(const Variant& variant) const {
 }
 
 
+std::shared_ptr<kgl::HomologousVariant>
+kgl::HomologousVariant::Union(std::shared_ptr<const kgl::HomologousVariant> homo_variant_ptr) const {
+
+  std::shared_ptr<kgl::HomologousVariant> union_variant_ptr(std::make_shared<kgl::HomologousVariant>(phaseId()));
+
+  std::set_union(offset_variant_map_.begin(), offset_variant_map_.end(),
+                 homo_variant_ptr->offset_variant_map_.begin(), homo_variant_ptr->offset_variant_map_.end(),
+                 std::inserter(union_variant_ptr->offset_variant_map_, union_variant_ptr->offset_variant_map_.begin()));
+
+  return union_variant_ptr;
+
+}
+
+
+std::shared_ptr<kgl::HomologousVariant>
+kgl::HomologousVariant::Intersection(std::shared_ptr<const kgl::HomologousVariant> homo_variant_ptr) const {
+
+  std::shared_ptr<kgl::HomologousVariant> intersect_variant_ptr = deepCopy();
+
+  auto pred = [](const OffsetVariantMap::const_iterator& mod_it,
+                 const OffsetVariantMap::const_iterator& ref_it) { return *(mod_it->second) == *(ref_it->second); };
+
+  intersectIterable(intersect_variant_ptr->offset_variant_map_, homo_variant_ptr->offset_variant_map_, pred);
+
+  return intersect_variant_ptr;
+
+}
+
+
+std::shared_ptr<kgl::HomologousVariant>
+kgl::HomologousVariant::Difference(std::shared_ptr<const kgl::HomologousVariant> homo_variant_ptr) const {
+
+  std::shared_ptr<kgl::HomologousVariant> diff_variant_ptr = deepCopy();
+
+  for (auto variant : homo_variant_ptr->getMap()) {
+
+    diff_variant_ptr->eraseVariant(variant.second);
+
+  }
+
+  return diff_variant_ptr;
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ContigVariant - All the variant features that map onto a contig region/sequence.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+bool kgl::ContigVariant::isElement(const Variant& variant) const {
+
+  if (variant.phaseId() >= ploidy()) {
+
+    ExecEnv::log().error("ContigVariant::isElement(); Contig ploidy: {}, Variant has incompatible phasing: {}",
+                         ploidy(), variant.output(' ', VariantOutputIndex::START_0_BASED, false));
+    return false;
+
+  }
+
+  return ploidy_vector_[variant.phaseId()]->isElement(variant);
+
+}
+
+
 std::shared_ptr<kgl::ContigVariant>
 kgl::ContigVariant::Union(std::shared_ptr<const kgl::ContigVariant> contig_variant_ptr) const {
 
-  std::shared_ptr<kgl::ContigVariant> union_variant_ptr(std::make_shared<kgl::ContigVariant>(contigId()));
+  std::shared_ptr<kgl::ContigVariant> union_variant_ptr(std::make_shared<ContigVariant>(contigId(),ploidy()));
 
-  std::set_union(offset_variant_map_.begin(), offset_variant_map_.end(),
-                 contig_variant_ptr->offset_variant_map_.begin(), contig_variant_ptr->offset_variant_map_.end(),
-                 std::inserter(union_variant_ptr->offset_variant_map_, union_variant_ptr->offset_variant_map_.begin()));
+  if (ploidy() != contig_variant_ptr->ploidy()) {
+
+    ExecEnv::log().error("ContigVariant::Union(); Mismatching contig ploidy: {}, union contig ploidy: {}",
+                         ploidy(), contig_variant_ptr->ploidy());
+
+    return union_variant_ptr; // empty contig.
+
+  }
+
+  size_t index = 0;
+  for (auto homologous : getVector()) {
+
+    union_variant_ptr->ploidy_vector_[index] = homologous->Union(contig_variant_ptr->ploidy_vector_[index]);
+    index++;
+
+  }
 
   return union_variant_ptr;
 
@@ -49,47 +128,56 @@ kgl::ContigVariant::Union(std::shared_ptr<const kgl::ContigVariant> contig_varia
 std::shared_ptr<kgl::ContigVariant>
 kgl::ContigVariant::Intersection(std::shared_ptr<const kgl::ContigVariant> contig_variant_ptr) const {
 
-  std::shared_ptr<kgl::ContigVariant> intersect_variant_ptr = deepCopy();
+  std::shared_ptr<kgl::ContigVariant> intersect_variant_ptr(std::make_shared<ContigVariant>(contigId(),ploidy()));
 
-  auto pred = [](const OffsetVariantMap::const_iterator& mod_it,
-                 const OffsetVariantMap::const_iterator& ref_it) { return *(mod_it->second) == *(ref_it->second); };
+  if (ploidy() != contig_variant_ptr->ploidy()) {
 
-  intersectIterable(intersect_variant_ptr->offset_variant_map_, contig_variant_ptr->offset_variant_map_, pred);
+    ExecEnv::log().error("ContigVariant::Intersection(); Mismatching contig ploidy: {}, intersection contig ploidy: {}",
+                         ploidy(), contig_variant_ptr->ploidy());
+
+    return intersect_variant_ptr; // empty contig.
+
+  }
+
+  size_t index = 0;
+  for (auto homologous : getVector()) {
+
+    intersect_variant_ptr->ploidy_vector_[index] = homologous->Intersection(contig_variant_ptr->ploidy_vector_[index]);
+    index++;
+
+  }
 
   return intersect_variant_ptr;
 
 }
 
-/*
-std::shared_ptr<kgl::ContigVariant>
-kgl::ContigVariant::Difference(std::shared_ptr<const kgl::ContigVariant> contig_variant_ptr) const {
-
-  std::shared_ptr<kgl::ContigVariant> diff_variant_ptr = deepCopy();
-
-  auto pred = [](const OffsetVariantMap::const_iterator& mod_it,
-                 const OffsetVariantMap::const_iterator& ref_it) { return *(mod_it->second) == *(ref_it->second); };
-
-  deleteIterableReference(diff_variant_ptr->offset_variant_map_, contig_variant_ptr->offset_variant_map_, pred);
-
-  return diff_variant_ptr;
-
-}
-*/
 
 std::shared_ptr<kgl::ContigVariant>
 kgl::ContigVariant::Difference(std::shared_ptr<const kgl::ContigVariant> contig_variant_ptr) const {
 
-  std::shared_ptr<kgl::ContigVariant> diff_variant_ptr = deepCopy();
+  std::shared_ptr<kgl::ContigVariant> difference_variant_ptr(std::make_shared<ContigVariant>(contigId(),ploidy()));
 
-  for (auto variant : contig_variant_ptr->getMap()) {
+  if (ploidy() != contig_variant_ptr->ploidy()) {
 
-    diff_variant_ptr->eraseVariant(variant.second);
+    ExecEnv::log().error("ContigVariant::Difference(); Mismatching contig ploidy: {}, intersection contig ploidy: {}",
+                         ploidy(), contig_variant_ptr->ploidy());
+
+    return difference_variant_ptr; // empty contig.
 
   }
 
-  return diff_variant_ptr;
+  size_t index = 0;
+  for (auto homologous : getVector()) {
+
+    difference_variant_ptr->ploidy_vector_[index] = homologous->Difference(contig_variant_ptr->ploidy_vector_[index]);
+    index++;
+
+  }
+
+  return difference_variant_ptr;
 
 }
+
 
 
 
@@ -116,7 +204,7 @@ bool kgl::GenomeVariant::isElement(const Variant& variant) const {
 std::shared_ptr<kgl::GenomeVariant>
 kgl::GenomeVariant::Union(std::shared_ptr<const kgl::GenomeVariant> genome_variant_ptr) const {
 
-  std::shared_ptr<kgl::GenomeVariant> genome_union(std::make_shared<kgl::GenomeVariant>(genomeId()));
+  std::shared_ptr<kgl::GenomeVariant> genome_union(std::make_shared<kgl::GenomeVariant>(genomeId(), ploidy()));
 
   genome_union->attributes().insertAttribute("union", genomeId() + "+" + genome_variant_ptr->genomeId());
 
@@ -169,7 +257,7 @@ std::shared_ptr<kgl::GenomeVariant>
 kgl::GenomeVariant::Intersection(std::shared_ptr<const kgl::GenomeVariant> genome_variant) const {
 
 
-  std::shared_ptr<kgl::GenomeVariant> genome_intersection(std::make_shared<kgl::GenomeVariant>(genomeId()));
+  std::shared_ptr<kgl::GenomeVariant> genome_intersection(std::make_shared<kgl::GenomeVariant>(genomeId(), ploidy()));
 
   genome_intersection->attributes().insertAttribute("intersection", genomeId() + "+" + genome_variant->genomeId());
 
@@ -186,7 +274,7 @@ kgl::GenomeVariant::Intersection(std::shared_ptr<const kgl::GenomeVariant> genom
 
     } else {
 
-      diff_contig_ptr = std::make_shared<kgl::ContigVariant>(contig_variant.first);
+      diff_contig_ptr = std::make_shared<kgl::ContigVariant>(contig_variant.first, contig_variant.second->ploidy());
       genome_intersection->addContigVariant(diff_contig_ptr);
 
     }
@@ -206,7 +294,7 @@ kgl::GenomeVariant::Intersection(std::shared_ptr<const kgl::GenomeVariant> genom
 std::shared_ptr<kgl::GenomeVariant>
 kgl::GenomeVariant::Difference(std::shared_ptr<const kgl::GenomeVariant> genome_variant) const {
 
-  std::shared_ptr<kgl::GenomeVariant> genome_difference(std::make_shared<kgl::GenomeVariant>(genomeId()));
+  std::shared_ptr<kgl::GenomeVariant> genome_difference(std::make_shared<kgl::GenomeVariant>(genomeId(), ploidy()));
 
   genome_difference->attributes().insertAttribute("difference", genomeId() + "+" + genome_variant->genomeId());
 

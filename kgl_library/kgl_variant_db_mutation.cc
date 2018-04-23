@@ -10,6 +10,7 @@ namespace kgl = kellerberrin::genome;
 
 
 bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
+                                         PhaseId_t phase,
                                          const FeatureIdent_t& gene_id,
                                          const FeatureIdent_t& sequence_id,
                                          const std::shared_ptr<const GenomeDatabase>& genome_db,
@@ -20,7 +21,7 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
 
   std::shared_ptr<DNA5SequenceCoding> DNA_reference;
   std::vector<std::shared_ptr<DNA5SequenceCoding>> DNA_mutant_vector;
-  if (not mutantCodingDNA(contig_id, gene_id, sequence_id, genome_db, variant_map, DNA_reference, DNA_mutant_vector)) {
+  if (not mutantCodingDNA(contig_id, phase, gene_id, sequence_id, genome_db, variant_map, DNA_reference, DNA_mutant_vector)) {
 
     ExecEnv::log().warn("mutantProtein(), Problem generating stranded mutant DNA");
     return false;
@@ -52,6 +53,7 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
 
 
 bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
+                                          PhaseId_t phase,
                                           const FeatureIdent_t& gene_id,
                                           const FeatureIdent_t& sequence_id,
                                           const std::shared_ptr<const GenomeDatabase>& genome_db,
@@ -92,7 +94,7 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
   // Generate the mutant sequences.
   // Extract the variants for processing.
   OffsetVariantMap coding_variant_map;
-  getSortedVariants(contig_id, coding_sequence_ptr->start(), coding_sequence_ptr->end(), coding_variant_map);
+  getSortedVariants(contig_id, phase, coding_sequence_ptr->start(), coding_sequence_ptr->end(), coding_variant_map);
   variant_map = coding_variant_map;
 
   // There may be more than one different variant specified per offset.
@@ -127,6 +129,7 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
 
 // Returns a maximum of MUTATION_HARD_LIMIT_ alternative mutations.
 bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
+                                       PhaseId_t phase,
                                        ContigOffset_t region_offset,
                                        ContigSize_t region_size,
                                        const std::shared_ptr<const GenomeDatabase>& genome_db,
@@ -159,7 +162,7 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
   // Generate the mutant sequences.
   // Extract the variants for processing.
   OffsetVariantMap region_variant_map;
-  getSortedVariants(contig_id, region_offset, region_offset + region_size, region_variant_map);
+  getSortedVariants(contig_id, phase, region_offset, region_offset + region_size, region_variant_map);
   variant_map = region_variant_map;
 
   // There may be more than one different variant specified per offset.
@@ -197,6 +200,7 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
 
 
 bool kgl::GenomeVariant::mutantContig( const ContigId_t& contig_id,
+                                       PhaseId_t phase,
                                        const std::shared_ptr<const GenomeDatabase>& genome_db,
                                        std::shared_ptr<const DNA5SequenceContig>& reference_contig,
                                        std::shared_ptr<DNA5SequenceContig>& mutant_contig_ptr) const {
@@ -218,7 +222,7 @@ bool kgl::GenomeVariant::mutantContig( const ContigId_t& contig_id,
   // Generate the mutant sequences.
   // Extract the variants for processing.
   OffsetVariantMap contig_variant_map;
-  getSortedVariants(contig_id, 0, contig_ptr->contigSize(), contig_variant_map);
+  getSortedVariants(contig_id, phase,  0, contig_ptr->contigSize(), contig_variant_map);
 
   // There are no alternative paths used in mutating a contig.
   // Make a copy of the contig dna.

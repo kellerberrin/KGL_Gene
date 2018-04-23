@@ -37,6 +37,7 @@ std::shared_ptr<kgl::Variant> kgl::CompoundDeleteFactory::createCompoundVariant(
   // create the variant
   std::shared_ptr<Variant> compound_delete(std::make_shared<CompoundDelete>(variant_map.begin()->second->genomeId(),
                                                                             variant_map.begin()->second->contigId(),
+                                                                            VariantSequence::UNPHASED,
                                                                             variant_map.begin()->second->offset(),
                                                                             quality,
                                                                             variant_map));

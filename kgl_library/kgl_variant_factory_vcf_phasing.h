@@ -16,19 +16,19 @@ namespace genome {   // project level namespace
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// An internal parser variant object that holds multi ploid variants until they can be phased.
+// An internal parser variant object that holds variants until they can be phased.
 // This object hold variants for each contig.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using ContigOffsetMap = std::map<ContigOffset_t, std::vector<std::shared_ptr<Variant>>>;
-class VCFContig {
+using UnphasedOffsetMap = std::map<ContigOffset_t, std::vector<std::shared_ptr<Variant>>>;
+class UnphasedContig {
 
 public:
 
-  explicit VCFContig(const ContigId_t& contig_id) : contig_id_(contig_id) {}
-  VCFContig(const VCFContig&) = default;
-  virtual ~VCFContig() = default;
+  explicit UnphasedContig(const ContigId_t& contig_id) : contig_id_(contig_id) {}
+  UnphasedContig(const UnphasedContig&) = default;
+  virtual ~UnphasedContig() = default;
 
   const ContigId_t& contigId() const { return contig_id_; }
 
@@ -36,30 +36,30 @@ public:
 
   size_t variantCount() const;
 
-  const ContigOffsetMap& getMap() const { return contig_offset_map_; }
+  const UnphasedOffsetMap& getMap() const { return contig_offset_map_; }
 
 private:
 
   ContigId_t contig_id_;
-  ContigOffsetMap contig_offset_map_;
+  UnphasedOffsetMap contig_offset_map_;
 
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// An internal parser variant object that holds multi ploid variants until they can be phased.
+// An internal parser variant object that holds variants until they can be phased.
 // This object hold variants for each genome.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using VCFContigMap = std::map<ContigId_t, std::shared_ptr<VCFContig>>;
-class VCFGenome {
+using UnphasedContigMap = std::map<ContigId_t, std::shared_ptr<UnphasedContig>>;
+class UnphasedGenome {
 
 public:
 
-  explicit VCFGenome(const GenomeId_t& genome_id) : genome_id_(genome_id) {}
-  VCFGenome(const VCFGenome&) = default;
-  virtual ~VCFGenome() = default;
+  explicit UnphasedGenome(const GenomeId_t& genome_id) : genome_id_(genome_id) {}
+  UnphasedGenome(const UnphasedGenome&) = default;
+  virtual ~UnphasedGenome() = default;
 
   size_t variantCount() const;
 
@@ -67,46 +67,46 @@ public:
 
   const GenomeId_t& genomeId() const { return genome_id_; }
 
-  const VCFContigMap& getMap() const { return contig_map_; }
+  const UnphasedContigMap& getMap() const { return contig_map_; }
 
 private:
 
-  VCFContigMap contig_map_;
+  UnphasedContigMap contig_map_;
   GenomeId_t genome_id_;
 
-  bool getCreateContig(const ContigId_t& contig_id, std::shared_ptr<VCFContig>& contig_ptr);
+  bool getCreateContig(const ContigId_t& contig_id, std::shared_ptr<UnphasedContig>& contig_ptr);
 
 };
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// An internal parser variant object that holds multi ploid variants until they can be phased.
+// An internal parser variant object that holds variants until they can be phased.
 // This object hold variants for a population.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-using VCFGenomeMap = std::map<GenomeId_t, std::shared_ptr<VCFGenome>>;
-class VCFPopulation {
+using UnphasedGenomeMap = std::map<GenomeId_t, std::shared_ptr<UnphasedGenome>>;
+class UnphasedPopulation {
 
 public:
 
-  explicit VCFPopulation() = default;
-  VCFPopulation(const VCFPopulation&) = default;
-  virtual ~VCFPopulation() = default;
+  explicit UnphasedPopulation() = default;
+  UnphasedPopulation(const UnphasedPopulation&) = default;
+  virtual ~UnphasedPopulation() = default;
 
   // Create the genome variant if it does not exist.
-  bool getCreateGenome(const GenomeId_t& genome_id, std::shared_ptr<VCFGenome>& genome);
+  bool getCreateGenome(const GenomeId_t& genome_id, std::shared_ptr<UnphasedGenome>& genome);
 
   size_t variantCount() const;
 
-  const VCFGenomeMap& getMap() const { return genome_map_; }
+  const UnphasedGenomeMap& getMap() const { return genome_map_; }
 
 
 private:
 
-  VCFGenomeMap genome_map_;
+  UnphasedGenomeMap genome_map_;
 
 
 
@@ -115,7 +115,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// This object accepts multi ploid variants from the VCF parser and phases them.
+// This object accepts unphased variants from the VCF parser and phases them.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -127,9 +127,9 @@ public:
   explicit GenomePhasing() = default;
   ~GenomePhasing() = default;
 
-  static bool haploidPhasing(std::shared_ptr<const VCFPopulation> vcf_population_ptr,
+  static bool haploidPhasing(std::shared_ptr<const UnphasedPopulation> vcf_population_ptr,
                              std::shared_ptr<const GenomeDatabase> genome_db,
-                             std::shared_ptr<PopulationVariant> haploid_population);
+                             std::shared_ptr<PhasedPopulation> haploid_population);
 
 private:
 

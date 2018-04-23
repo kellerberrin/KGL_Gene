@@ -16,7 +16,7 @@ namespace kgl = kellerberrin::genome;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool kgl::VCFContig::addVariant(std::shared_ptr<Variant> variant) {
+bool kgl::UnphasedContig::addVariant(std::shared_ptr<Variant> variant) {
 
   auto result = contig_offset_map_.find(variant->offset());
 
@@ -35,7 +35,7 @@ bool kgl::VCFContig::addVariant(std::shared_ptr<Variant> variant) {
 
     if (not result.second) {
 
-      ExecEnv::log().error("VCFContig::addVariant(), Could not add variant offset: {} to the genome", variant->offset());
+      ExecEnv::log().error("UnphasedContig::addVariant(), Could not add variant offset: {} to the genome", variant->offset());
       return false;
 
     }
@@ -47,7 +47,7 @@ bool kgl::VCFContig::addVariant(std::shared_ptr<Variant> variant) {
 }
 
 
-size_t kgl::VCFContig::variantCount() const {
+size_t kgl::UnphasedContig::variantCount() const {
 
 
   size_t variant_count = 0;
@@ -71,9 +71,9 @@ size_t kgl::VCFContig::variantCount() const {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool kgl::VCFGenome::addVariant(std::shared_ptr<Variant> variant) {
+bool kgl::UnphasedGenome::addVariant(std::shared_ptr<Variant> variant) {
 
-  std::shared_ptr<VCFContig> contig_ptr;
+  std::shared_ptr<UnphasedContig> contig_ptr;
   getCreateContig(variant->contigId(), contig_ptr);
 
   contig_ptr->addVariant(variant);
@@ -83,7 +83,7 @@ bool kgl::VCFGenome::addVariant(std::shared_ptr<Variant> variant) {
 }
 
 
-bool kgl::VCFGenome::getCreateContig(const ContigId_t& contig_id, std::shared_ptr<VCFContig>& contig_ptr) {
+bool kgl::UnphasedGenome::getCreateContig(const ContigId_t& contig_id, std::shared_ptr<UnphasedContig>& contig_ptr) {
 
   auto result = contig_map_.find(contig_id);
 
@@ -94,13 +94,13 @@ bool kgl::VCFGenome::getCreateContig(const ContigId_t& contig_id, std::shared_pt
 
   } else {
 
-    contig_ptr = std::make_shared<VCFContig>(contig_id);
-    std::pair<ContigId_t, std::shared_ptr<VCFContig>> new_contig(contig_id, contig_ptr);
+    contig_ptr = std::make_shared<UnphasedContig>(contig_id);
+    std::pair<ContigId_t, std::shared_ptr<UnphasedContig>> new_contig(contig_id, contig_ptr);
     auto result = contig_map_.insert(new_contig);
 
     if (not result.second) {
 
-      ExecEnv::log().critical("VCFGenome::getCreateContig(), Serious Error, could not add contig: {} to the genome", contig_id);
+      ExecEnv::log().critical("UnphasedGenome::getCreateContig(), Serious Error, could not add contig: {} to the genome", contig_id);
 
     }
 
@@ -113,7 +113,7 @@ bool kgl::VCFGenome::getCreateContig(const ContigId_t& contig_id, std::shared_pt
 
 
 
-size_t kgl::VCFGenome::variantCount() const {
+size_t kgl::UnphasedGenome::variantCount() const {
 
 
   size_t variant_count = 0;
@@ -137,8 +137,8 @@ size_t kgl::VCFGenome::variantCount() const {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool kgl::VCFPopulation::getCreateGenome(const GenomeId_t& genome_id,
-                                         std::shared_ptr<VCFGenome>& genome) {
+bool kgl::UnphasedPopulation::getCreateGenome(const GenomeId_t& genome_id,
+                                         std::shared_ptr<UnphasedGenome>& genome) {
 
   auto result = genome_map_.find(genome_id);
 
@@ -149,13 +149,13 @@ bool kgl::VCFPopulation::getCreateGenome(const GenomeId_t& genome_id,
 
   } else {
 
-    genome = std::make_shared<VCFGenome>(genome_id);
-    std::pair<GenomeId_t, std::shared_ptr<VCFGenome>> new_genome(genome_id, genome);
+    genome = std::make_shared<UnphasedGenome>(genome_id);
+    std::pair<GenomeId_t, std::shared_ptr<UnphasedGenome>> new_genome(genome_id, genome);
     auto result = genome_map_.insert(new_genome);
 
     if (not result.second) {
 
-      ExecEnv::log().critical("VCFPopulation::getCreateGenome(), Serious Error, could not add genome: {} to the population", genome_id);
+      ExecEnv::log().critical("UnphasedPopulation::getCreateGenome(), Serious Error, could not add genome: {} to the population", genome_id);
 
     }
 
@@ -166,7 +166,7 @@ bool kgl::VCFPopulation::getCreateGenome(const GenomeId_t& genome_id,
 }
 
 
-size_t kgl::VCFPopulation::variantCount() const {
+size_t kgl::UnphasedPopulation::variantCount() const {
 
   size_t variant_count = 0;
 
@@ -185,22 +185,22 @@ size_t kgl::VCFPopulation::variantCount() const {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Not Thread safe.
-// This object accepts holds multi-ploid variants and phases them.
+// This object accepts unphased variants and trivally phases them as haploid.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 // Just copy into a population object.
-bool kgl::GenomePhasing::haploidPhasing(std::shared_ptr<const VCFPopulation> vcf_population_ptr,
+bool kgl::GenomePhasing::haploidPhasing(std::shared_ptr<const UnphasedPopulation> unphased_population_ptr,
                                         std::shared_ptr<const GenomeDatabase> genome_db,
-                                        std::shared_ptr<PopulationVariant> haploid_population)  {
+                                        std::shared_ptr<PhasedPopulation> haploid_population)  {
 
   bool result = true;
 
-  for (auto genome : vcf_population_ptr->getMap()) {
+  for (auto genome : unphased_population_ptr->getMap()) {
 
     // Create the GenomeVariant object.
-    std::shared_ptr<GenomeVariant> genome_variant = GenomeVariant::emptyGenomeVariant(genome.first, genome_db);
+    std::shared_ptr<GenomeVariant> genome_variant = GenomeVariant::emptyGenomeVariant(genome.first, GenomeVariant::HAPLOID_GENOME, genome_db);
 
     // Add all the contig.
     for (auto contig : genome.second->getMap()) {
@@ -211,6 +211,8 @@ bool kgl::GenomePhasing::haploidPhasing(std::shared_ptr<const VCFPopulation> vcf
         // add all the variants
         for (auto variant : offset.second) {
 
+          std::shared_ptr<Variant> mutable_variant = std::const_pointer_cast<Variant>(variant);
+          mutable_variant->phaseId(ContigVariant::HAPLOID_HOMOLOGOUS_INDEX);   // Assign to the first (and only) homologous contig.
           genome_variant->addVariant(variant);
 
         } // All variants.
@@ -229,7 +231,7 @@ bool kgl::GenomePhasing::haploidPhasing(std::shared_ptr<const VCFPopulation> vcf
   } // All genomes
 
   ExecEnv::log().info("Haploid Phasing, pre_phase variants: {}, genomes: {}, resultant population variants: {}, genomes: {}",
-                      vcf_population_ptr->variantCount(), vcf_population_ptr->getMap().size(),
+                      unphased_population_ptr->variantCount(), unphased_population_ptr->getMap().size(),
                       haploid_population->variantCount(), haploid_population->getMap().size());
 
   return result;

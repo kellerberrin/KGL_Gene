@@ -13,7 +13,7 @@ namespace kgl = kellerberrin::genome;
 bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
                                    const FeatureIdent_t& gene,
                                    const FeatureIdent_t& sequence,
-                                   std::shared_ptr<const PopulationVariant> population_ptr,
+                                   std::shared_ptr<const PhasedPopulation> population_ptr,
                                    std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                    const std::string& fasta_filename) {
 
@@ -150,6 +150,7 @@ bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
 
 
   if (genome_variant_ptr->mutantProteins(contig,
+                                         ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
                                          gene,
                                          sequence,
                                          genome_db_ptr,
@@ -223,7 +224,7 @@ bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
 bool kgl::GeneAnalysis::mutateAllRegions(const std::string& file_name,
                                          ContigSize_t region_size,
                                          std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
-                                         std::shared_ptr<const PopulationVariant> pop_variant_ptr,
+                                         std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
                                          std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
 
   const char CSV_delimiter = ',';
@@ -325,6 +326,7 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
   std::shared_ptr<DNA5SequenceLinear> reference_sequence;
   OffsetVariantMap variant_map;
   if (genome_variant_ptr->mutantRegion(contig_id,
+                                       ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
                                        offset,
                                        region_size,
                                        genome_db_ptr,
@@ -368,7 +370,7 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const GenomeId_t& genome,
                                            const ContigId_t& contig,
                                            ContigOffset_t offset,
                                            ContigSize_t region_size,
-                                           std::shared_ptr<const PopulationVariant> population_ptr,
+                                           std::shared_ptr<const PhasedPopulation> population_ptr,
                                            std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                            const std::string& fasta_file) {
 
@@ -401,6 +403,7 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
   std::shared_ptr<DNA5SequenceLinear> reference_sequence;
   OffsetVariantMap variant_map;
   if (genome_variant_ptr->mutantRegion(contig,
+                                       ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
                                        offset,
                                        region_size,
                                        genome_db_ptr,

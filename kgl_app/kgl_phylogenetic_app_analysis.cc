@@ -50,12 +50,12 @@ bool kgl::PhylogeneticAnalysis::checkAnalysisType(const std::string& analysis_ty
 
 void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
                                                 std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr,
-                                                std::shared_ptr<const VCFPopulation> vcf_population_ptr) {
+                                                std::shared_ptr<const UnphasedPopulation> unphased_population_ptr) {
 
-  // Create a population object.
-  std::shared_ptr<PopulationVariant> population_ptr(std::make_shared<PopulationVariant>("Falciparum"));
+  // Create a phased population object.
+  std::shared_ptr<PhasedPopulation> population_ptr(std::make_shared<PhasedPopulation>("Falciparum"));
   // Phase the variants returned from the parser.
-  GenomePhasing::haploidPhasing(vcf_population_ptr, genome_db_ptr , population_ptr);
+  GenomePhasing::haploidPhasing(unphased_population_ptr, genome_db_ptr , population_ptr);
 
   if (args.analysisType == kgl::Phylogenetic::WILDCARD) {
 
@@ -139,9 +139,9 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
     // Generate SNP statistics.
     std::shared_ptr<PopulationPhasingStatistics> phased_statistics_ptr(std::make_shared<PopulationPhasingStatistics>());
-    phased_statistics_ptr->phasedSNPs(vcf_population_ptr);
+    phased_statistics_ptr->phasedSNPs(unphased_population_ptr);
 
-    std::string DNA_mutation_file = kgl::Utility::filePath("DNAMutations", args.workDirectory) + ".csv";
+    std::string DNA_mutation_file = kgl::Utility::filePath("DNAMutations.csv", args.workDirectory);
     ApplicationAnalysis::outputDNAMutationCSV(DNA_mutation_file,
                                               PFATP4_CONTIG,
                                               PFATP4_GENE,
@@ -150,7 +150,7 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
                                               population_ptr,
                                               aux_data,
                                               phased_statistics_ptr);
-    std::string amino_mutation_file = kgl::Utility::filePath("AminoMutations", args.workDirectory) + ".csv";
+    std::string amino_mutation_file = kgl::Utility::filePath("AminoMutations.csv", args.workDirectory);
     ApplicationAnalysis::outputAminoMutationCSV(amino_mutation_file, PFATP4_CONTIG, PFATP4_GENE, PFATP4_SEQUENCE,
                                                 genome_db_ptr, population_ptr);
 

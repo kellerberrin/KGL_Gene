@@ -52,8 +52,8 @@ size_t kgl::ParseVCFImpl::addThreadSafeGenomeVariant(std::shared_ptr<Variant> va
 
   AutoMutex auto_mutex(mutex_);
 
-  std::shared_ptr<VCFGenome> genome;
-  vcf_population_ptr_->getCreateGenome(variant_ptr->genomeId(), genome); // thread safe
+  std::shared_ptr<UnphasedGenome> genome;
+  unphased_population_ptr_->getCreateGenome(variant_ptr->genomeId(), genome); // thread safe
   genome->addVariant(variant_ptr); // thread safe
 
   return 1;

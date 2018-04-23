@@ -20,11 +20,10 @@ std::string kgl::SNPVariant::output(char delimiter, VariantOutputIndex output_in
 {
   std::stringstream ss;
   ss << genomeOutput(delimiter, output_index);
-  ss << quality() << delimiter;
   ss << name() << delimiter << size() << delimiter;
   ss << mutation(delimiter, output_index);
 
-  if (detail) {
+  if (detail and evidence()) {
 
     ss << evidence()->output(delimiter, output_index);
 
@@ -45,6 +44,7 @@ bool kgl::SNPVariant::equivalent(const Variant& cmp_var) const {
   if (not cmp_snp) return false;
 
   return contigId() == cmp_snp->contigId()
+         and phaseId() == cmp_snp->phaseId()
          and offset() == cmp_snp->offset()
          and variantType() == cmp_snp->variantType()
          and reference() == cmp_snp->reference()

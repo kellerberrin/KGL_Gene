@@ -70,9 +70,11 @@ public:
 
   VariantSequence(const GenomeId_t& genome_id,
                   const ContigId_t& contig_id,
+                  PhaseId_t phase_id,
                   ContigOffset_t contig_offset,
                   Phred_t quality) : genome_id_(genome_id),
                                      contig_id_(contig_id),
+                                     phase_id_(phase_id),
                                      contig_offset_(contig_offset),
                                      quality_(quality) { }
   virtual ~VariantSequence() = default;
@@ -80,6 +82,7 @@ public:
   const GenomeId_t& genomeId() const { return genome_id_; }
   const ContigId_t& contigId() const { return contig_id_; }
   const PhaseId_t& phaseId() const { return phase_id_; }
+  void phaseId(PhaseId_t phase_id) { phase_id_ = phase_id; }
 
   std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
 
@@ -88,7 +91,7 @@ public:
   Phred_t quality() const { return quality_; }
   void quality(Phred_t quality_update) { quality_ = quality_update; }
 
-  constexpr static const PhaseId_t UNPHASED_ = '*';
+  static constexpr PhaseId_t UNPHASED = 255;
 
 private:
 
@@ -116,8 +119,9 @@ public:
 
   Variant(const GenomeId_t& genome_id,
           const ContigId_t& contig_id,
+          PhaseId_t phase_id,
           ContigOffset_t contig_offset,
-          Phred_t quality) : VariantSequence(genome_id, contig_id, contig_offset, quality) {}
+          Phred_t quality) : VariantSequence(genome_id, contig_id, phase_id, contig_offset, quality) {}
   ~Variant() override = default;
   bool filterVariant(const VariantFilter& filter) const { return applyFilter(filter); }
 

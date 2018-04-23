@@ -61,7 +61,11 @@ void kgl::UPGMAContigDistance::mutateContigs() {
   std::shared_ptr<DNA5SequenceContig> mutant_contig_ptr;
   for (auto contig : genome_db_ptr_->getMap()) {
 
-    if (not genome_variant_ptr_->mutantContig(contig.first, genome_db_ptr_, reference_contig_ptr, mutant_contig_ptr)) {
+    if (not genome_variant_ptr_->mutantContig(contig.first,
+                                              ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                              genome_db_ptr_,
+                                              reference_contig_ptr,
+                                              mutant_contig_ptr)) {
 
       ExecEnv::log().error("Unexpected error mutating contig; genome: {} , contig: {}", genome_variant_ptr_->genomeId(), contig.first);
       // Fail gracefully, just insert the reference contig.
@@ -169,12 +173,13 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
     OffsetVariantMap variant_map;
 
     if (genome_variant_ptr_->mutantProteins(contig_ptr->contigId(),
-                                             gene_id,
-                                             sequence_id,
-                                             genome_db_ptr_,
-                                             variant_map,
-                                             reference_sequence,
-                                             mutant_sequence_vector)) {
+                                            ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                            gene_id,
+                                            sequence_id,
+                                            genome_db_ptr_,
+                                            variant_map,
+                                            reference_sequence,
+                                            mutant_sequence_vector)) {
 
       if (mutant_sequence_vector.empty()) {
 
@@ -254,12 +259,13 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
   OffsetVariantMap variant_map;
 
   if (genome_variant_ptr_->mutantProteins(contig_ptr->contigId(),
-                                           gene_id,
-                                           sequence_id,
-                                           genome_db_ptr_,
-                                           variant_map,
-                                           reference_sequence,
-                                           mutant_sequence_vector)) {
+                                          ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                          gene_id,
+                                          sequence_id,
+                                          genome_db_ptr_,
+                                          variant_map,
+                                          reference_sequence,
+                                          mutant_sequence_vector)) {
 
     if (mutant_sequence_vector.empty()) {
 
@@ -362,6 +368,7 @@ void kgl::UPGMAATP4Distance::writeNode(std::ofstream& outfile) const {
   OffsetVariantMap variant_map;
 
   if (not genome_variant_ptr_->mutantProteins(contig_ptr->contigId(),
+                                              ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
                                               gene_id,
                                               sequence_id,
                                               genome_db_ptr_,
