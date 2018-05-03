@@ -16,7 +16,7 @@ bool kgl::ParseCigarImpl::parseCigarItems(const std::string& genome_name,
                                             const std::string& reference,
                                             const std::string& alternate,
                                             Phred_t quality,
-                                            const std::string& info,
+                                            std::shared_ptr<const VariantEvidence> evidence_ptr,
                                             size_t& record_variants)  {
 
 
@@ -45,7 +45,7 @@ bool kgl::ParseCigarImpl::parseCigarItems(const std::string& genome_name,
                           genome_name,
                           contig_ptr,
                           quality,
-                          info,
+                          evidence_ptr,
                           reference,
                           alternate,
                           reference_index,
@@ -59,7 +59,7 @@ bool kgl::ParseCigarImpl::parseCigarItems(const std::string& genome_name,
                              genome_name,
                              contig_ptr,
                              quality,
-                             info,
+                             evidence_ptr,
                              alternate,
                              contig_offset,
                              alternate_index,
@@ -71,7 +71,7 @@ bool kgl::ParseCigarImpl::parseCigarItems(const std::string& genome_name,
                              genome_name,
                              contig_ptr,
                              quality,
-                             info,
+                             evidence_ptr,
                              reference,
                              reference_index,
                              contig_offset,
@@ -136,7 +136,7 @@ bool kgl::ParseCigarImpl::parseSNP(size_t cigar_count,
                                      const std::string& variant_source,
                                      std::shared_ptr<const ContigFeatures> contig_ptr,
                                      Phred_t quality,
-                                     const std::string&, // info,
+                                     std::shared_ptr<const VariantEvidence> evidence_ptr,
                                      const std::string& reference,
                                      const std::string& alternate,
                                      size_t& reference_index,
@@ -155,15 +155,12 @@ bool kgl::ParseCigarImpl::parseSNP(size_t cigar_count,
 
     }
 
-//    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
-//    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>("", quality));
-
     std::shared_ptr<SNPVariant> snp_variant_ptr(std::make_shared<SNPVariant>(variant_source,
                                                                              contig_ptr->contigId(),
                                                                              VariantSequence::UNPHASED,
                                                                              contig_offset,
                                                                              quality,
-                                                                             nullptr,
+                                                                             evidence_ptr,
                                                                              DNA5::convertChar(reference[reference_index]),
                                                                              DNA5::convertChar(alternate[alternate_index])));
 
@@ -184,7 +181,7 @@ bool kgl::ParseCigarImpl::parseInsert(size_t cigar_count,
                                         const std::string& variant_source,
                                         std::shared_ptr<const ContigFeatures> contig_ptr,
                                         Phred_t quality,
-                                        const std::string&, // info,
+                                        std::shared_ptr<const VariantEvidence> evidence_ptr,
                                         const std::string& alternate,
                                         ContigOffset_t contig_offset,
                                         size_t& alternate_index,
@@ -194,15 +191,13 @@ bool kgl::ParseCigarImpl::parseInsert(size_t cigar_count,
 
   for (size_t idx = 0; idx < cigar_count; ++idx) {
 
-//    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
-//    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>("", quality));
 
     std::shared_ptr<InsertVariant> insert_variant_ptr(std::make_shared<InsertVariant>(variant_source,
                                                                                       contig_ptr->contigId(),
                                                                                       VariantSequence::UNPHASED,
                                                                                       contig_offset,
                                                                                       quality,
-                                                                                      nullptr,
+                                                                                      evidence_ptr,
                                                                                       contig_ptr->sequence().at(contig_offset),
                                                                                       DNA5::convertChar(alternate[alternate_index])));
 
@@ -245,7 +240,7 @@ bool kgl::ParseCigarImpl::parseDelete(size_t cigar_count,
                                         const std::string& variant_source,
                                         std::shared_ptr<const ContigFeatures> contig_ptr,
                                         Phred_t quality,
-                                        const std::string&, // info,
+                                        std::shared_ptr<const VariantEvidence> evidence_ptr,
                                         const std::string& reference,
                                         size_t& reference_index,
                                         ContigOffset_t& contig_offset,
@@ -264,16 +259,13 @@ bool kgl::ParseCigarImpl::parseDelete(size_t cigar_count,
 
     }
 
-//    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>(info, quality));
-//    std::shared_ptr<VCFEvidence> evidence_ptr(std::make_shared<VCFEvidence>("", quality));
-
 
     std::shared_ptr<DeleteVariant> delete_variant_ptr(std::make_shared<DeleteVariant>(variant_source,
                                                                                       contig_ptr->contigId(),
                                                                                       VariantSequence::UNPHASED,
                                                                                       contig_offset,
                                                                                       quality,
-                                                                                      nullptr,
+                                                                                      evidence_ptr,
                                                                                       contig_ptr->sequence().at(contig_offset)));
 
     std::pair<ContigOffset_t, std::shared_ptr<const SingleVariant>> insert_pair(contig_offset, delete_variant_ptr);

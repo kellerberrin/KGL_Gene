@@ -92,7 +92,7 @@ bool kgl::FreeBayesVCFImpl::parseVcfRecord(const std::string& genome_name,
                     reference,
                     alternate,
                     quality,
-                    info,
+                    nullptr,
                     record_variants);
 
   } else {

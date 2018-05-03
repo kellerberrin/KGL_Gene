@@ -4,6 +4,7 @@ project(KGL)
 set(CMAKE_CXX_STANDARD 14)
 
 
+
 # add extra include directories
 include_directories(/usr/include
                     kgl_library                  # Basic infrastructure library
@@ -162,7 +163,7 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_db_homologous.cc
         kgl_library/kgl_variant_db_genome.cc
         kgl_library/kgl_variant_db_population.cc
-        kgl_library/kgl_variant_db_contig.cc kgl_library/kgl_variant_db_unphased.h kgl_library/kgl_variant_db_unphased.cc)
+        kgl_library/kgl_variant_db_contig.cc kgl_library/kgl_variant_db_unphased.h kgl_library/kgl_variant_db_unphased.cc kgl_library/kgl_application.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -236,3 +237,83 @@ target_link_libraries(kgl_lib  ${Boost_LIBRARIES})
 add_executable (kgl_genome ${APPLICATION_SOURCE_FILES})
 
 target_link_libraries(kgl_genome kgl_lib)
+
+
+############dEploid########################################################
+
+find_package(ZLIB)
+if (ZLIB_FOUND)
+    include_directories(${ZLIB_INCLUDE_DIRS})
+endif()
+
+
+include_directories(dEploid)
+include_directories(dEploid/codeCogs)
+include_directories(dEploid/gzstream)
+include_directories(dEploid/random)
+
+set(DEPLOID_LIB_SOURCE_FILES
+        dEploid/codeCogs/asympt_expn.h
+        dEploid/codeCogs/errorfn.h
+        dEploid/codeCogs/errorfnc.h
+        dEploid/codeCogs/errorfnc_exp.h
+        dEploid/codeCogs/expx2.h
+        dEploid/codeCogs/gamma.h
+        dEploid/codeCogs/ln_add1.h
+        dEploid/codeCogs/log_gamma.h
+        dEploid/codeCogs/logbeta.h
+        dEploid/codeCogs/loggammafrac.h
+        dEploid/codeCogs/loggammasum.h
+        dEploid/codeCogs/machine_epsilon.h
+        dEploid/codeCogs/mersenne.hpp
+        dEploid/codeCogs/poly_eval.h
+        dEploid/codeCogs/randomSample.hpp
+        dEploid/codeCogs/stirling.h
+        dEploid/codeCogs/xsub_ln_add1.h
+        dEploid/debug/mcmcDebug.cpp
+        dEploid/debug/vcfReaderDebug.cpp
+        dEploid/export/dEploidIOExport.cpp
+        dEploid/export/dEploidIOExportPosteriorProb.cpp
+        dEploid/export/writeMcmcRelated.cpp
+        dEploid/gzstream/gzstream.cpp
+        dEploid/gzstream/gzstream.h
+        dEploid/random/fastfunc.cpp
+        dEploid/random/fastfunc.hpp
+        dEploid/random/mersenne_twister.cpp
+        dEploid/random/mersenne_twister.hpp
+        dEploid/random/random_generator.cpp
+        dEploid/random/random_generator.hpp
+        dEploid/dEploidIO.cpp
+        dEploid/dEploidIO.hpp
+        dEploid/exceptions.hpp
+        dEploid/global.h
+        dEploid/ibd.cpp
+        dEploid/ibd.hpp
+        dEploid/mcmc.cpp
+        dEploid/mcmc.hpp
+        dEploid/panel.cpp
+        dEploid/panel.hpp
+        dEploid/txtReader.cpp
+        dEploid/txtReader.hpp
+        dEploid/updateHap.cpp
+        dEploid/updateHap.hpp
+        dEploid/utility.cpp
+        dEploid/utility.hpp
+        dEploid/variantIndex.cpp
+        dEploid/variantIndex.hpp
+        dEploid/vcfReader.cpp
+        dEploid/vcfReader.hpp)
+
+
+# Application level objects
+set(APPLICATION_SOURCE_FILES
+        dEploid/dEploid.cpp)
+
+
+add_library(dEploid_lib SHARED ${DEPLOID_LIB_SOURCE_FILES})
+
+target_link_libraries(dEploid_lib ${ZLIB_LIBRARIES})
+
+add_executable (dEploid ${APPLICATION_SOURCE_FILES})
+
+target_link_libraries(dEploid dEploid_lib)

@@ -32,7 +32,7 @@ std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputInde
 
   } else {
 
-    ss << "PHASE:" << phaseId() << delimiter;
+    ss << "PHASE:" << static_cast<size_t>(phaseId()) << delimiter;
 
   }
   ss << offsetOutput(offset(), output_index) << delimiter;

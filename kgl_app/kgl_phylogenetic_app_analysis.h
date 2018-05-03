@@ -38,6 +38,8 @@ private:
   static constexpr const char* ANALYZE_GENE = "GENE";
   static constexpr const char* ANALYZE_RNA = "RNA";
   static constexpr const char* ANALYZE_SNP = "SNP";
+  static constexpr const char* ANALYZE_MIX = "MIX";
+
 
 };
 

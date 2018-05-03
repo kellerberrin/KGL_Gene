@@ -147,7 +147,6 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
             // process A allele
             std::vector<CigarEditItem> parsed_cigar;
             ParseVCFMiscImpl::generateEditVector(recordParser.reference(), allele, parsed_cigar);
-            std::string info;
             size_t record_variants;
 
             parseCigarItems(genome_name,
@@ -157,7 +156,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
                             recordParser.reference(),
                             allele,
                             GQ_value,
-                            info,
+                            nullptr,
                             record_variants);
 
             variant_count_ += parsed_cigar.size();
@@ -174,7 +173,6 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
             // process B allele
             std::vector<CigarEditItem> parsed_cigar;
             ParseVCFMiscImpl::generateEditVector(recordParser.reference(), allele, parsed_cigar);
-            std::string info;
             size_t record_variants;
 
             parseCigarItems(genome_name,
@@ -184,7 +182,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
                             recordParser.reference(),
                             allele,
                             GQ_value,
-                            info,
+                            nullptr,
                             record_variants);
 
             variant_count_ += parsed_cigar.size();

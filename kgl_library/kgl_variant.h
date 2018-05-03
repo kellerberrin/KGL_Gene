@@ -81,7 +81,7 @@ public:
 
   const GenomeId_t& genomeId() const { return genome_id_; }
   const ContigId_t& contigId() const { return contig_id_; }
-  const PhaseId_t& phaseId() const { return phase_id_; }
+  PhaseId_t phaseId() const { return phase_id_; }
   void phaseId(PhaseId_t phase_id) { phase_id_ = phase_id; }
 
   std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.

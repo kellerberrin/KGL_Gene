@@ -27,17 +27,19 @@ bool kgl::PhylogeneticAnalysis::checkAnalysisType(const std::string& analysis_ty
       and analysis_type != ANALYZE_REGION
       and analysis_type != ANALYZE_UPGMA
       and analysis_type != ANALYZE_RNA
-      and analysis_type != ANALYZE_SNP) {
+      and analysis_type != ANALYZE_SNP
+      and analysis_type != ANALYZE_MIX) {
 
-    ExecEnv::log().error("Invalid Analysis Type: {}.  Must be one of: {}, {}, {}, {}, {}, {}, {}.",
-                            analysis_type,
-                            ANALYZE_INTERVAL,
-                            ANALYZE_SEQUENCES,
-                            ANALYZE_GENE,
-                            ANALYZE_REGION,
-                            ANALYZE_UPGMA,
-                            ANALYZE_RNA,
-                            ANALYZE_SNP);
+    ExecEnv::log().error("Invalid Analysis Type: {}.  Must be one of: {}, {}, {}, {}, {}, {}, {}, {}.",
+                         analysis_type,
+                         ANALYZE_INTERVAL,
+                         ANALYZE_SEQUENCES,
+                         ANALYZE_GENE,
+                         ANALYZE_REGION,
+                         ANALYZE_UPGMA,
+                         ANALYZE_RNA,
+                         ANALYZE_SNP,
+                         ANALYZE_MIX);
 
     return false;
 
@@ -130,6 +132,16 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
     region_fasta_file += "_584668";
     region_fasta_file = kgl::Utility::filePath(region_fasta_file, args.workDirectory) + ".fasta";
     kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075", "Pf3D7_04_v3", 584668, 7280, population_ptr, genome_db_ptr, region_fasta_file);
+
+  }
+
+  if (args.analysisType == ANALYZE_MIX or args.analysisType == kgl::Phylogenetic::WILDCARD) {
+
+    for (auto genome : population_ptr->getMap()) {
+
+      ExecEnv::log().info("Mixture Genome: {}, Variant Count: {}", genome.first, genome.second->variantCount());
+
+    }
 
   }
 

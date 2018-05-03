@@ -9,6 +9,7 @@
 
 
 #include "kgl_utility.h"
+#include "kgl_variant_evidence.h"
 #include "kgl_variant_factory_vcf.h"
 #include "kgl_variant_factory_vcf_impl.h"
 #include "kgl_variant_factory_vcf_parse_impl.h"
@@ -41,7 +42,7 @@ public:
                        const std::string& reference,
                        const std::string& alternate,
                        Phred_t quality,
-                       const std::string& info,
+                       std::shared_ptr<const VariantEvidence> evidence_ptr,
                        size_t& record_variants);
 
 private:
@@ -61,7 +62,7 @@ private:
                 const std::string& variant_source,
                 std::shared_ptr<const ContigFeatures> contig_ptr,
                 Phred_t quality,
-                const std::string& info,
+                std::shared_ptr<const VariantEvidence> evidence_ptr,
                 const std::string& reference,
                 const std::string& alternate,
                 size_t& reference_index,
@@ -74,7 +75,7 @@ private:
                    const std::string& variant_source,
                    std::shared_ptr<const ContigFeatures> contig_ptr,
                    Phred_t quality,
-                   const std::string& info,
+                   std::shared_ptr<const VariantEvidence> evidence_ptr,
                    const std::string& alternate,
                    ContigOffset_t contig_offset,
                    size_t& alternate_index,
@@ -85,7 +86,7 @@ private:
                    const std::string& variant_source,
                    std::shared_ptr<const ContigFeatures> contig_ptr,
                    Phred_t quality,
-                   const std::string& info,
+                   std::shared_ptr<const VariantEvidence> evidence_ptr,
                    const std::string& reference,
                    size_t& reference_index,
                    ContigOffset_t& contig_offset,
