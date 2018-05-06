@@ -119,6 +119,7 @@ bool kgl::dEploidExecEnv::parseCommandLine(int argc, char const ** argv) {
 
   addOption(parser, seqan::ArgParseOption(newLogFileShortFlag_, newLogFileFlag_, newlog_desc, seqan::ArgParseArgument::OUTPUT_FILE, "TRUNC_LOG_FILE"));
 
+  
   // Parse command line.
   seqan::ArgumentParser::ParseResult parse_result = seqan::parse(parser, argc, argv);
 
