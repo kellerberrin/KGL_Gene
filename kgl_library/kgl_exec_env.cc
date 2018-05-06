@@ -2,9 +2,6 @@
 // Created by kellerberrin on 30/09/17.
 //
 
-
-#include <iostream>
-#include <seqan/arg_parse.h>
 #include "kgl_exec_env.h"
 
 
@@ -34,7 +31,27 @@ void kgl::ExecEnv::createLogger(const std::string& module,
 }
 
 
+void kgl::ExecEnv::ctrlC(int) {
+
+  ExecEnv::log().warn("Control-C. Program terminates. Output files may be corrupt. Multi-threaded code may hang.");
+  std::exit(EXIT_FAILURE);
+
+}
 
 
+void kgl::ExecEnv::getCommandLine(int argc, char const ** argv) {
+
+  std::string command_line;
+
+  for (int idx = 0; idx < argc; ++idx) {
+
+    command_line += argv[idx];
+    command_line += ' ';
+
+  }
+
+  command_line_ = command_line;
+
+}
 
 

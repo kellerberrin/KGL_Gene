@@ -163,7 +163,10 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_db_homologous.cc
         kgl_library/kgl_variant_db_genome.cc
         kgl_library/kgl_variant_db_population.cc
-        kgl_library/kgl_variant_db_contig.cc kgl_library/kgl_variant_db_unphased.h kgl_library/kgl_variant_db_unphased.cc kgl_library/kgl_application.h)
+        kgl_library/kgl_variant_db_contig.cc
+        kgl_library/kgl_variant_db_unphased.h
+        kgl_library/kgl_variant_db_unphased.cc
+        )
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -178,18 +181,19 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_upgma.cc
         kgl_analytic/kgl_rna_search.cc
         kgl_analytic/kgl_rna_search.h
-        kgl_analytic/kgl_ploidy_analysis.h kgl_library/kgl_variant_phase.h kgl_library/kgl_variant_phase.cc)
+        kgl_analytic/kgl_ploidy_analysis.h
+        kgl_library/kgl_variant_phase.h
+        kgl_library/kgl_variant_phase.cc)
 
 
 # Application level objects
 set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_main.cc
-        kgl_app/kgl_phylogenetic_env.h
-        kgl_app/kgl_phylogenetic_env.cc
         kgl_app/kgl_phylogenetic_app.cc
         kgl_app/kgl_phylogenetic_app_analysis.cc
+        kgl_app/kgl_phylogenetic_app_analysis.h
         kgl_app/kgl_phylogenetic_app.h
-        kgl_app/kgl_phylogenetic_app_analysis.h)
+        kgl_app/kgl_phylogenetic_parse.cc)
 
 
 ## DOXYGEN
@@ -247,10 +251,11 @@ if (ZLIB_FOUND)
 endif()
 
 
-include_directories(dEploid)
-include_directories(dEploid/codeCogs)
-include_directories(dEploid/gzstream)
-include_directories(dEploid/random)
+include_directories(dEploid/dEploid_app
+                    dEploid/dEploid_lib
+                    dEploid/codeCogs
+                    dEploid/gzstream
+                    dEploid/random)
 
 set(DEPLOID_LIB_SOURCE_FILES
         dEploid/codeCogs/asympt_expn.h
@@ -283,37 +288,40 @@ set(DEPLOID_LIB_SOURCE_FILES
         dEploid/random/mersenne_twister.hpp
         dEploid/random/random_generator.cpp
         dEploid/random/random_generator.hpp
-        dEploid/dEploidIO.cpp
-        dEploid/dEploidIO.hpp
-        dEploid/exceptions.hpp
-        dEploid/global.h
-        dEploid/ibd.cpp
-        dEploid/ibd.hpp
-        dEploid/mcmc.cpp
-        dEploid/mcmc.hpp
-        dEploid/panel.cpp
-        dEploid/panel.hpp
-        dEploid/txtReader.cpp
-        dEploid/txtReader.hpp
-        dEploid/updateHap.cpp
-        dEploid/updateHap.hpp
-        dEploid/utility.cpp
-        dEploid/utility.hpp
-        dEploid/variantIndex.cpp
-        dEploid/variantIndex.hpp
-        dEploid/vcfReader.cpp
-        dEploid/vcfReader.hpp)
+        dEploid/dEploid_lib/dEploidIO.cpp
+        dEploid/dEploid_lib/dEploidIO.hpp
+        dEploid/dEploid_lib/exceptions.hpp
+        dEploid/dEploid_lib/global.h
+        dEploid/dEploid_lib/ibd.cpp
+        dEploid/dEploid_lib/ibd.hpp
+        dEploid/dEploid_lib/mcmc.cpp
+        dEploid/dEploid_lib/mcmc.hpp
+        dEploid/dEploid_lib/panel.cpp
+        dEploid/dEploid_lib/panel.hpp
+        dEploid/dEploid_lib/txtReader.cpp
+        dEploid/dEploid_lib/txtReader.hpp
+        dEploid/dEploid_lib/updateHap.cpp
+        dEploid/dEploid_lib/updateHap.hpp
+        dEploid/dEploid_lib/utility.cpp
+        dEploid/dEploid_lib/utility.hpp
+        dEploid/dEploid_lib/variantIndex.cpp
+        dEploid/dEploid_lib/variantIndex.hpp
+        dEploid/dEploid_lib/vcfReader.cpp
+        dEploid/dEploid_lib/vcfReader.hpp)
 
 
 # Application level objects
-set(APPLICATION_SOURCE_FILES
-        dEploid/dEploid.cpp)
+set(DEPLOID_APPLICATION_SOURCE_FILES
+        dEploid/dEploid_app/dEploid.cpp
+        dEploid/dEploid_app/kgl_dEploid_app.h
+        dEploid/dEploid_app/kgl_dEploid_app.cc
+        dEploid/dEploid_app/kgl_dEploid_app.h)
 
 
 add_library(dEploid_lib SHARED ${DEPLOID_LIB_SOURCE_FILES})
 
 target_link_libraries(dEploid_lib ${ZLIB_LIBRARIES})
 
-add_executable (dEploid ${APPLICATION_SOURCE_FILES})
+add_executable (dEploid ${DEPLOID_APPLICATION_SOURCE_FILES})
 
-target_link_libraries(dEploid dEploid_lib)
+target_link_libraries(dEploid dEploid_lib kgl_lib)

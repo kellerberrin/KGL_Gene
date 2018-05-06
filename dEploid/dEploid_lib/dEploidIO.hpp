@@ -39,8 +39,6 @@
 #ifndef PARAM
 #define PARAM
 
-#define VERSION "0.6"
-
 
 using namespace std;
 
@@ -62,7 +60,7 @@ class DEploidIO{
     DEploidIO();
     DEploidIO(const DEploidIO &currentDEploidIO);
     DEploidIO(const std::string &arg);
-    DEploidIO(int argc, char *argv[]);
+    DEploidIO(int argc, const char **argv);
     ~DEploidIO ();
 
     void printHelp(std::ostream& out);

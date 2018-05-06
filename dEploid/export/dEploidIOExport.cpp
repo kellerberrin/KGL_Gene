@@ -25,6 +25,9 @@
 
 #include "dEploidIO.hpp"
 #include "mcmc.hpp"
+#include "kgl_dEploid_app.h"
+
+namespace kgl = kellerberrin::genome;
 
 
 void DEploidIO::wrapUp(){
@@ -66,12 +69,12 @@ void DEploidIO::writeRecombProb ( Panel * panel ){
 
 
 void DEploidIO::writeLog ( ostream * writeTo ){
-    size_t nHash = 30 + string(VERSION).size();
+    size_t nHash = 30 + string(kgl::dEploidExecEnv::VERSION).size();
     for ( size_t i = 0; i < nHash; i++){
         (*writeTo) << "#";
     }
     (*writeTo) << "\n";
-    (*writeTo) << "#        dEploid "<< setw(10) << VERSION << " log        #\n";
+    (*writeTo) << "#        dEploid "<< setw(10) << kgl::dEploidExecEnv::VERSION << " log        #\n";
     for ( size_t i = 0; i < nHash; i++){
         (*writeTo) << "#";
     }

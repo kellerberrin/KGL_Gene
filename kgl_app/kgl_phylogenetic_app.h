@@ -1,34 +1,73 @@
 //
-// Created by kellerberrin on 12/02/18.
+// Created by kellerberrin on 4/05/18.
 //
 
-#ifndef KGL_PHLOGENETIC_APP_H
-#define KGL_PHLOGENETIC_APP_H
+#ifndef KGL_PHYLOGENETIC_APP_H
+#define KGL_PHYLOGENETIC_APP_H
 
-#include "kgl_phylogenetic_env.h"
-#include "kgl_genome_db.h"
-#include "kgl_variant_db.h"
+
+#include "kgl_genome_types.h"
+#include "kgl_exec_env.h"
 
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
+struct FileListInfo {
 
+  std::string file_name;
+  std::string genome_name;
 
-// Application class implements the mainline logic and controls
-// data object lifetimes, see kgl_phylogenetic_app.cc.
-class PhylogeneticApp {
+};
 
-public:
+// Holds the Phylogenetic Arguments.
+struct Phylogenetic {
 
-  PhylogeneticApp(const Phylogenetic& args);
-  ~PhylogeneticApp() = default;
+  std::string workDirectory{"./Work"};
+  std::string fastaFile{""};
+  std::string gffFile{""};
+  std::string gafFile{""};
+  std::vector<FileListInfo> fileList;
+  std::string auxCSVFile{"kgl_aux.csv"};
+  std::string logFile{"kgl_phylo.log"};
+  std::string contig{WILDCARD};
+  std::string aminoTranslationTable{"NCBI_TABLE_1"};
+  std::string analysisType{WILDCARD};
+  size_t ploidy{1};
+  int max_error_count{1000};
+  int max_warn_count{1000};
+  bool verbose{false};
+  int minCount{0};
+  double minProportion{0};
+  Phred_t readQuality{30.0};
+  Phred_t variantQuality{10.0};
 
-private:
+  static constexpr const char* WILDCARD = "*";  // All analytics
+
 
 
 };
 
+// Singleton. The Phylogenetic Runtime environment.
+class PhylogeneticExecEnv {
+
+public:
+
+  PhylogeneticExecEnv()=delete;
+  ~PhylogeneticExecEnv()=delete;
+
+// The following 4 static members are required for all applications.
+  static constexpr const char* VERSION = "0.1";
+  static constexpr const char* MODULE_NAME = "kgl_phylo";
+  static void executeApp(); // Application mainline.
+  static bool parseCommandLine(int argc, char const ** argv);  // Parse command line arguments.
+
+private:
+
+  static const Phylogenetic& getArgs();
+  static Phylogenetic args_;
+
+};
 
 
 
@@ -36,4 +75,5 @@ private:
 }  // project level namespace
 
 
-#endif // KGL_PHLOGENETIC_APP_H
+
+#endif //KGL_PHYLOGENETIC_APP_H

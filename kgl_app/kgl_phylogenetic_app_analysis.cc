@@ -5,7 +5,6 @@
 
 #include "kgl_sequence_distance.h"
 #include "kgl_genome_aux_csv.h"
-#include "kgl_phylogenetic_app.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_phylogenetic_gene.h"
 #include "kgl_upgma.h"

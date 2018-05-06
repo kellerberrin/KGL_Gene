@@ -30,6 +30,10 @@
 #include "updateHap.hpp"  // chromPainting
 #include "dEploidIO.hpp"
 #include "ibd.hpp"
+#include "kgl_dEploid_app.h"
+
+namespace kgl = kellerberrin::genome;
+
 
 DEploidIO::DEploidIO(){
     this->init();
@@ -47,7 +51,7 @@ DEploidIO::DEploidIO(const std::string &arg) {
 }
 
 
-DEploidIO::DEploidIO(int argc, char *argv[]) {
+DEploidIO::DEploidIO(int argc, const char **argv) {
     this->init();
     argv_ = std::vector<std::string>(argv + 1, argv + argc);
     this->argv_i = argv_.begin();
@@ -542,14 +546,14 @@ void DEploidIO::readNextStringto( string &readto ){
 
 void DEploidIO::printVersion(std::ostream& out){
     out << endl
-        << "dEploid " << VERSION
+        << "dEploid " << kgl::dEploidExecEnv::VERSION
         << endl
         << "Git commit: " << dEploidGitVersion_ << endl;
 }
 
 void DEploidIO::printHelp(std::ostream& out){
     out << endl
-        << "dEploid " << VERSION
+        << "dEploid " << kgl::dEploidExecEnv::VERSION
         << endl
         << endl;
     out << "Usage:"

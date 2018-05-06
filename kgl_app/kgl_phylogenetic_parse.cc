@@ -1,12 +1,13 @@
 //
-// Created by kellerberrin on 10/11/17.
+// Created by kellerberrin on 4/05/18.
 //
+
 
 
 #include <iostream>
 #include <cctype>
 #include <seqan/arg_parse.h>
-#include "kgl_phylogenetic_env.h"
+#include "kgl_phylogenetic_app.h"
 #include "kgl_phylogenetic_app_analysis.h"
 #define BOOST_FILESYSTEM_NO_DEPRECATED // Recommended by boost filesystem documentation.
 #include <boost/filesystem.hpp>
@@ -24,7 +25,7 @@ namespace kgl = kellerberrin::genome;
 kgl::Phylogenetic kgl::PhylogeneticExecEnv::args_;
 
 // Public static member functions.
-const kgl::Phylogenetic& kgl::PhylogeneticExecEnv::args() { return args_; }
+const kgl::Phylogenetic& kgl::PhylogeneticExecEnv::getArgs() { return args_; }
 
 // Constants for the executable.
 constexpr const char* kgl::PhylogeneticExecEnv::MODULE_NAME;
@@ -46,15 +47,14 @@ void getFilePath(const std::string& option_text,
 
   if (!file_exists) {
 
-    kgl::ExecEnv::log().critical("File: {}, type: {} does not exist."
-    , file_path.string(), option_text);
+    kgl::ExecEnv::log().critical("File: {}, type: {} does not exist.", file_path.string(), option_text);
 
   }
 
   if (error_code.value() != boost::system::errc::success) {
 
     kgl::ExecEnv::log().critical("File: {}, type: {}, error: {}."
-    , file_path.string(), option_text, error_code.message());
+        , file_path.string(), option_text, error_code.message());
 
   }
 
@@ -171,40 +171,25 @@ bool readFileList(const std::string& file_list_name,
 
 }
 
-std::string getCommandLine(int argc, char const ** argv) {
-
-  std::string command_line;
-
-  for (int idx = 0; idx < argc; ++idx) {
-
-    command_line += argv[idx];
-    command_line += ' ';
-
-  }
-
-  return command_line;
-
-}
-
 
 // Parse the command line.
 bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 {
-  // Get the command line.
-  kgl::ExecEnv::commandLine(getCommandLine(argc, argv));
+  // Save the command line.
+  ExecEnv::getCommandLine(argc, argv);
 
   // Setup ArgumentParser.
   seqan::ArgumentParser parser(MODULE_NAME);
   // Set short description, version, and date.
   setShortDescription(parser, "Population Genome Comparison");
   setVersion(parser, VERSION);
-  setDate(parser, "December 2017");
+  setDate(parser, "May 2018");
 
   // Define usage line and long description.
   addUsageLine(parser, "-d <work.directory>  -f <ref.fasta> -g <ref.gff> -m <fileList>");
 
   const char* program_desc =
-  R"("kgl_phylogenetic" is a fast C++ program to find genetic differences (SNPs/Indels) in a population of organisms.
+      R"("kgl_phylogenetic" is a fast C++ program to find genetic differences (SNPs/Indels) in a population of organisms.
   The entire genome of many organisms can be compared and analysed simultaneously (with sufficient memory).
   The --fileList flag" specifies a list of SAM/BAM/VCF files and associated organism names to be processed.
   This program also takes the genome FASTA file and the corresponding genetic feature  model in GFF3 (only) format
@@ -218,7 +203,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   addSection(parser, "Modification Options");
 
   const char* dir_desc =
-  R"(The work directory where log files and data files are found.
+      R"(The work directory where log files and data files are found.
   Use a Linux style directory specification with trailing forward
   slash '/' (default './Work/').
   Important - to run 'kgl_snp' this directory must exist, it will not be created.)";
@@ -229,7 +214,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   addOption(parser, seqan::ArgParseOption(workDirectoryShortFlag_, workDirectoryFlag_, dir_desc, seqan::ArgParseArgument::OUTPUT_DIRECTORY, "DIRECTORY"));
 
   const char* gff_desc =
-  R"(The gff3 (not GFF2 or GTF) file that contains the genes, exons, etc for the
+      R"(The gff3 (not GFF2 or GTF) file that contains the genes, exons, etc for the
   chromosome(s)/contiguous region(s) of interest)";
 
   const char* gffFileFlag_ = "gffFile";
@@ -238,7 +223,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   addOption(parser, seqan::ArgParseOption(gffFileShortFlag_, gffFileFlag_, gff_desc, seqan::ArgParseArgument::INPUT_FILE, "GFF_FILE"));
 
   const char* fasta_desc =
-  R"(The fasta file that contains the reference nucleotide sequence for the chromsome(s) of interest)";
+      R"(The fasta file that contains the reference nucleotide sequence for the chromsome(s) of interest)";
 
   const char* fastaFileFlag_ = "fastaFile";
   const char* fastaFileShortFlag_ = "f";
@@ -246,7 +231,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   addOption(parser, seqan::ArgParseOption(fastaFileShortFlag_, fastaFileFlag_, fasta_desc, seqan::ArgParseArgument::INPUT_FILE, "FASTA_FILE"));
 
   const char* gaf_desc =
-  R"(The gaf file that contains that annotates sequences defined in gff file. This is an optional parameter.)";
+      R"(The gaf file that contains that annotates sequences defined in gff file. This is an optional parameter.)";
 
   const char* gafFileFlag_ = "gafFile";
   const char* gafFileShortFlag_ = "i";
@@ -255,7 +240,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
 
   const char* file_list_desc =
-  R"(A file with a list of all SAM files to be read and analyzed. The SAM file reads should be
+      R"(A file with a list of all SAM files to be read and analyzed. The SAM file reads should be
    aligned with respect to the reference genome specified by the --fasta flag.)";
 
   const char* fileListFlag_ = "fileList";
@@ -264,7 +249,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   addOption(parser, seqan::ArgParseOption(fileListShortFlag_, fileListFlag_, file_list_desc, seqan::ArgParseArgument::INPUT_FILE, "SAM_FILE_LIST"));
 
   const char* contig_desc =
-  R"(Define which contiguous DNA region (chromosome/mitochondria) to process.
+      R"(Define which contiguous DNA region (chromosome/mitochondria) to process.
   Defaults to '*' for all contiguous regions.)";
 
   const char* contigFlag_ = "contig";
@@ -274,7 +259,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
 
   const char* analysis_desc =
-  R"(Define which genome analytic to perform. Defaults to '*' for all analytics.)";
+      R"(Define which genome analytic to perform. Defaults to '*' for all analytics.)";
 
   const char* analysisFlag_ = "analysisType";
   const char* analysisShortFlag_ = "z";
@@ -283,7 +268,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
 
   const char* log_desc =
-  R"(Log file. Appends the log to any existing logs (default "kgl_snp.log").'
+      R"(Log file. Appends the log to any existing logs (default "kgl_snp.log").'
   'The log file always resides in the work directory.)";
 
   const char* logFileFlag_ = "logFile";
@@ -292,7 +277,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   addOption(parser, seqan::ArgParseOption(logFileShortFlag_, logFileFlag_, log_desc, seqan::ArgParseArgument::OUTPUT_FILE, "LOG_FILE"));
 
   const char* newlog_desc =
-  R"(Flush an existing log file (file name argument optional, (default "kgl_snp.log").
+      R"(Flush an existing log file (file name argument optional, (default "kgl_snp.log").
   The log file always resides in the work directory.)";
 
   const char* newLogFileFlag_ = "newLogFile";
@@ -301,7 +286,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   addOption(parser, seqan::ArgParseOption(newLogFileShortFlag_, newLogFileFlag_, newlog_desc, seqan::ArgParseArgument::OUTPUT_FILE, "TRUNC_LOG_FILE"));
 
   const char* outCSV_desc =
-  R"(Input an comma delimiter CSV file for further, analysis specific, processing, (default "/...WorkDirectory.../kgl_aux.csv").
+      R"(Input an comma delimiter CSV file for further, analysis specific, processing, (default "/...WorkDirectory.../kgl_aux.csv").
   This file is always relative to the work directory.)";
 
   const char* CSVFileFlag_ = "auxCSVFile";
@@ -310,7 +295,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   addOption(parser, seqan::ArgParseOption(CSVFileShortFlag_, CSVFileFlag_, outCSV_desc, seqan::ArgParseArgument::OUTPUT_FILE, "AUX_CSV_FILE"));
 
   const char* min_count_desc =
-  R"(The minimum SAM/BAM count of a single nucleotide analyzed in the Parent (wild-type)
+      R"(The minimum SAM/BAM count of a single nucleotide analyzed in the Parent (wild-type)
   genome that is at variance from the reference (fasta) genome)";
 
   const char* minimumCountFlag_ = "minimumCount";
@@ -319,7 +304,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   addOption(parser, seqan::ArgParseOption(minimumCountShortFlag_, minimumCountFlag_, min_count_desc , seqan::ArgParseArgument::INTEGER, "INT"));
 
   const char* min_prop_desc =
-  R"(The minimum proportion of a single nucleotide analyzed in the Parent (wild-type)
+      R"(The minimum proportion of a single nucleotide analyzed in the Parent (wild-type)
   genome that is at variance from the reference (fasta) genome)";
 
   const char* minimumProportionFlag_ = "minimumProportion";
@@ -328,7 +313,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   addOption(parser, seqan::ArgParseOption(minimumProportionShortFlag_, minimumProportionFlag_, min_prop_desc, seqan::ArgParseArgument::DOUBLE, "FLOAT"));
 
   const char* ploidy_desc =
-  R"(The ploidy of the variant analysis)";
+      R"(The ploidy of the variant analysis)";
 
   const char* ploidyFlag_ = "ploidy";
   const char* ploidyShortFlag_ = "b";
@@ -336,7 +321,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   addOption(parser, seqan::ArgParseOption(ploidyShortFlag_, ploidyFlag_, ploidy_desc, seqan::ArgParseArgument::INTEGER, "INT"));
 
   const char* translation_table_desc =
-  R"(The amino acid translation table name used in gene verification and amino acid generation from CDS regions.
+      R"(The amino acid translation table name used in gene verification and amino acid generation from CDS regions.
   The tables match the translation tables defines on the NCBI website at
   https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi. Individual organism tables are also supported.
   The current defined tables are: 'NCBI_TABLE_1' (the standard default table), 'NCBI_TABLE_2', 'NCBI_TABLE_3',
@@ -348,7 +333,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   addOption(parser, seqan::ArgParseOption(translationTableShortFlag_, translationTableFlag_, translation_table_desc, seqan::ArgParseArgument::STRING, "STRING"));
 
   const char* verbose_desc =
-  R"(Flag. Enables verbose logged output to screen and log file.)";
+      R"(Flag. Enables verbose logged output to screen and log file.)";
 
   const char* verboseFlag_ = "verbose";
   const char* verboseShortFlag_ = "v";
@@ -356,7 +341,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   addOption(parser, seqan::ArgParseOption(verboseShortFlag_, verboseFlag_, verbose_desc, seqan::ArgParseArgument::BOOL, "FLAG"));
 
   const char* read_quality_desc =
-  R"(The nucleotide read quality as -10 log10 Pr {ReadError} e.g. 30 is a 1/1000 chance
+      R"(The nucleotide read quality as -10 log10 Pr {ReadError} e.g. 30 is a 1/1000 chance
   of an nucleotide read error. Defaults to 30.)";
 
   const char* readQualityFlag_ = "readQuality";
@@ -365,7 +350,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   addOption(parser, seqan::ArgParseOption(readQualityShortFlag_, readQualityFlag_, read_quality_desc, seqan::ArgParseArgument::DOUBLE, "FLOAT"));
 
   const char* variant_quality_desc =
-  R"(The variant quality as -10 log10 Pr {VariantError} e.g. 10 is a 1/10 chance the variant is incorrectly called. Defaults to 10.)";
+      R"(The variant quality as -10 log10 Pr {VariantError} e.g. 10 is a 1/10 chance the variant is incorrectly called. Defaults to 10.)";
 
   const char* variantQualityFlag_ = "variantQuality";
   const char* variantQualityShortFlag_ = "a";
@@ -390,7 +375,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   // Get the work directory and check that it exists
   if (seqan::isSet(parser, workDirectoryFlag_)) seqan::getOptionValue(args_.workDirectory, parser, workDirectoryFlag_);
 
-  fs::path directory_path = fs::path(args().workDirectory);
+  fs::path directory_path = fs::path(getArgs().workDirectory);
 
   boost::system::error_code error_code;
   bool valid_directory = fs::exists(directory_path, error_code);
@@ -444,7 +429,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
   }
   // Setup the Logger.
-  createLogger(MODULE_NAME, args().logFile, args().max_error_count, args().max_warn_count);
+  ExecEnv::createLogger(MODULE_NAME, getArgs().logFile, getArgs().max_error_count, getArgs().max_warn_count);
 
   std::string file_list;
 
@@ -536,7 +521,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
   if (seqan::isSet(parser, variantQualityFlag_)) seqan::getOptionValue(args_.variantQuality, parser, variantQualityFlag_);
 
-  ExecEnv::log().SetVerbose(args().verbose);  // Set the logger verbose level.
+  ExecEnv::log().SetVerbose(getArgs().verbose);  // Set the logger verbose level.
 
   return true;
 

@@ -26,9 +26,23 @@
 #include <iostream> // std::cout
 #include "mcmc.hpp"
 #include "dEploidIO.hpp"
+#include "kgl_dEploid_app.h"
+#include "dEploid.h"
+
+namespace kgl = kellerberrin::genome;
 
 
-int main( int argc, char *argv[] ) {
+
+/// The mainline.
+int main(int argc, char const ** argv)
+{
+
+    return kgl::ExecEnv::runApplication<kgl::dEploidExecEnv>(argc, argv);
+
+}
+
+/// Original mainline.
+int kgl::dEploid( int argc, const char **argv) {
 
     try {
 
@@ -99,5 +113,7 @@ int main( int argc, char *argv[] ) {
       std::cerr << "Error: " << e.what() << std::endl;
       return EXIT_FAILURE;
     }
+
+  return EXIT_SUCCESS;
 
 }
