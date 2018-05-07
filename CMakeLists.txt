@@ -233,17 +233,17 @@ endif(BUILD_DOC)
 
 
 #generate shared library.
-add_library(kgl_lib SHARED ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES} ${ANALYTIC_SOURCE_FILES})
+add_library(kgl_genome_lib SHARED ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES} ${ANALYTIC_SOURCE_FILES})
 
-target_link_libraries(kgl_lib  ${Boost_LIBRARIES})
+target_link_libraries(kgl_genome_lib  ${Boost_LIBRARIES})
 
 #generate kgl_genome executable
 add_executable (kgl_genome ${APPLICATION_SOURCE_FILES})
 
-target_link_libraries(kgl_genome kgl_lib)
+target_link_libraries(kgl_genome kgl_genome_lib)
 
 
-############dEploid########################################################
+############kgl_deploid########################################################
 
 find_package(ZLIB)
 if (ZLIB_FOUND)
@@ -251,77 +251,77 @@ if (ZLIB_FOUND)
 endif()
 
 
-include_directories(dEploid/dEploid_app
-                    dEploid/dEploid_lib
-                    dEploid/codeCogs
-                    dEploid/gzstream
-                    dEploid/random)
+include_directories(kgl_deploid/kgl_deploid_app
+        kgl_deploid/kgl_deploid_lib
+        kgl_deploid/contrib/codeCogs
+        kgl_deploid/contrib/gzstream
+        kgl_deploid/contrib/random)
 
 set(DEPLOID_LIB_SOURCE_FILES
-        dEploid/codeCogs/asympt_expn.h
-        dEploid/codeCogs/errorfn.h
-        dEploid/codeCogs/errorfnc.h
-        dEploid/codeCogs/errorfnc_exp.h
-        dEploid/codeCogs/expx2.h
-        dEploid/codeCogs/gamma.h
-        dEploid/codeCogs/ln_add1.h
-        dEploid/codeCogs/log_gamma.h
-        dEploid/codeCogs/logbeta.h
-        dEploid/codeCogs/loggammafrac.h
-        dEploid/codeCogs/loggammasum.h
-        dEploid/codeCogs/machine_epsilon.h
-        dEploid/codeCogs/mersenne.hpp
-        dEploid/codeCogs/poly_eval.h
-        dEploid/codeCogs/randomSample.hpp
-        dEploid/codeCogs/stirling.h
-        dEploid/codeCogs/xsub_ln_add1.h
-        dEploid/debug/mcmcDebug.cpp
-        dEploid/debug/vcfReaderDebug.cpp
-        dEploid/export/dEploidIOExport.cpp
-        dEploid/export/dEploidIOExportPosteriorProb.cpp
-        dEploid/export/writeMcmcRelated.cpp
-        dEploid/gzstream/gzstream.cpp
-        dEploid/gzstream/gzstream.h
-        dEploid/random/fastfunc.cpp
-        dEploid/random/fastfunc.hpp
-        dEploid/random/mersenne_twister.cpp
-        dEploid/random/mersenne_twister.hpp
-        dEploid/random/random_generator.cpp
-        dEploid/random/random_generator.hpp
-        dEploid/dEploid_lib/dEploidIO.cpp
-        dEploid/dEploid_lib/dEploidIO.hpp
-        dEploid/dEploid_lib/exceptions.hpp
-        dEploid/dEploid_lib/global.h
-        dEploid/dEploid_lib/ibd.cpp
-        dEploid/dEploid_lib/ibd.hpp
-        dEploid/dEploid_lib/mcmc.cpp
-        dEploid/dEploid_lib/mcmc.hpp
-        dEploid/dEploid_lib/panel.cpp
-        dEploid/dEploid_lib/panel.hpp
-        dEploid/dEploid_lib/txtReader.cpp
-        dEploid/dEploid_lib/txtReader.hpp
-        dEploid/dEploid_lib/updateHap.cpp
-        dEploid/dEploid_lib/updateHap.hpp
-        dEploid/dEploid_lib/utility.cpp
-        dEploid/dEploid_lib/utility.hpp
-        dEploid/dEploid_lib/variantIndex.cpp
-        dEploid/dEploid_lib/variantIndex.hpp
-        dEploid/dEploid_lib/vcfReader.cpp
-        dEploid/dEploid_lib/vcfReader.hpp)
+        kgl_deploid/contrib/codeCogs/asympt_expn.h
+        kgl_deploid/contrib/codeCogs/errorfn.h
+        kgl_deploid/contrib/codeCogs/errorfnc.h
+        kgl_deploid/contrib/codeCogs/errorfnc_exp.h
+        kgl_deploid/contrib/codeCogs/expx2.h
+        kgl_deploid/contrib/codeCogs/gamma.h
+        kgl_deploid/contrib/codeCogs/ln_add1.h
+        kgl_deploid/contrib/codeCogs/log_gamma.h
+        kgl_deploid/contrib/codeCogs/logbeta.h
+        kgl_deploid/contrib/codeCogs/loggammafrac.h
+        kgl_deploid/contrib/codeCogs/loggammasum.h
+        kgl_deploid/contrib/codeCogs/machine_epsilon.h
+        kgl_deploid/contrib/codeCogs/mersenne.hpp
+        kgl_deploid/contrib/codeCogs/poly_eval.h
+        kgl_deploid/contrib/codeCogs/randomSample.hpp
+        kgl_deploid/contrib/codeCogs/stirling.h
+        kgl_deploid/contrib/codeCogs/xsub_ln_add1.h
+        kgl_deploid/contrib/debug/mcmcDebug.cpp
+        kgl_deploid/contrib/debug/vcfReaderDebug.cpp
+        kgl_deploid/contrib/export/dEploidIOExport.cpp
+        kgl_deploid/contrib/export/dEploidIOExportPosteriorProb.cpp
+        kgl_deploid/contrib/export/writeMcmcRelated.cpp
+        kgl_deploid/contrib/gzstream/gzstream.cpp
+        kgl_deploid/contrib/gzstream/gzstream.h
+        kgl_deploid/contrib/random/fastfunc.cpp
+        kgl_deploid/contrib/random/fastfunc.hpp
+        kgl_deploid/contrib/random/mersenne_twister.cpp
+        kgl_deploid/contrib/random/mersenne_twister.hpp
+        kgl_deploid/contrib/random/random_generator.cpp
+        kgl_deploid/contrib/random/random_generator.hpp
+        kgl_deploid/kgl_deploid_lib/dEploidIO.cpp
+        kgl_deploid/kgl_deploid_lib/dEploidIO.hpp
+        kgl_deploid/kgl_deploid_lib/exceptions.hpp
+        kgl_deploid/kgl_deploid_lib/global.h
+        kgl_deploid/kgl_deploid_lib/ibd.cpp
+        kgl_deploid/kgl_deploid_lib/ibd.hpp
+        kgl_deploid/kgl_deploid_lib/mcmc.cpp
+        kgl_deploid/kgl_deploid_lib/mcmc.hpp
+        kgl_deploid/kgl_deploid_lib/panel.cpp
+        kgl_deploid/kgl_deploid_lib/panel.hpp
+        kgl_deploid/kgl_deploid_lib/txtReader.cpp
+        kgl_deploid/kgl_deploid_lib/txtReader.hpp
+        kgl_deploid/kgl_deploid_lib/updateHap.cpp
+        kgl_deploid/kgl_deploid_lib/updateHap.hpp
+        kgl_deploid/kgl_deploid_lib/utility.cpp
+        kgl_deploid/kgl_deploid_lib/utility.hpp
+        kgl_deploid/kgl_deploid_lib/variantIndex.cpp
+        kgl_deploid/kgl_deploid_lib/variantIndex.hpp
+        kgl_deploid/kgl_deploid_lib/vcfReader.cpp
+        kgl_deploid/kgl_deploid_lib/vcfReader.hpp)
 
 
 # Application level objects
 set(DEPLOID_APPLICATION_SOURCE_FILES
-        dEploid/dEploid_app/dEploid.cpp
-        dEploid/dEploid_app/kgl_dEploid_app.h
-        dEploid/dEploid_app/kgl_dEploid_app.cc
-        dEploid/dEploid_app/kgl_dEploid_app.h)
+        kgl_deploid/kgl_deploid_app/kgl_deploid_main.cc
+        kgl_deploid/kgl_deploid_app/kgl_deploid_app.h
+        kgl_deploid/kgl_deploid_app/kgl_deploid_app.cc
+        kgl_deploid/kgl_deploid_app/kgl_deploid_app.h)
 
 
-add_library(dEploid_lib SHARED ${DEPLOID_LIB_SOURCE_FILES})
+add_library(kgl_deploid_lib SHARED ${DEPLOID_LIB_SOURCE_FILES})
 
-target_link_libraries(dEploid_lib ${ZLIB_LIBRARIES})
+target_link_libraries(kgl_deploid_lib ${ZLIB_LIBRARIES})
 
-add_executable (dEploid ${DEPLOID_APPLICATION_SOURCE_FILES})
+add_executable (kgl_deploid ${DEPLOID_APPLICATION_SOURCE_FILES})
 
-target_link_libraries(dEploid dEploid_lib kgl_lib)
+target_link_libraries(kgl_deploid kgl_deploid_lib kgl_genome_lib)
