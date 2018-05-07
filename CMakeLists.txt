@@ -18,16 +18,16 @@ include_directories(/usr/include
 #set(BOOST_ROOT /usr/lib/boost)
 set(BOOST_INCLUDEDIR /usr/local/include)
 set(BOOST_LIBRARYDIR /usr/local/lib/boost/lib)
-set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF)
+set(Boost_USE_STATIC_RUNTIME ON)
 include_directories(${Boost_INCLUDE_DIRS})
 find_package( Boost COMPONENTS system filesystem timer chrono REQUIRED )
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -s -DNDEBUG")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pthread -W -Wstrict-aliasing -pedantic -Wno-variadic-macros")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pthread -W -Wstrict-aliasing -pedantic -Wno-variadic-macros ${CMAKE_CXX_FLAGS_RELEASE}")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall -pthread -W -Wstrict-aliasing -pedantic -Wno-variadic-macros")
 
 
@@ -233,7 +233,7 @@ endif(BUILD_DOC)
 
 
 #generate shared library.
-add_library(kgl_genome_lib SHARED ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES} ${ANALYTIC_SOURCE_FILES})
+add_library(kgl_genome_lib STATIC ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES} ${ANALYTIC_SOURCE_FILES})
 
 target_link_libraries(kgl_genome_lib  ${Boost_LIBRARIES})
 
@@ -318,7 +318,7 @@ set(DEPLOID_APPLICATION_SOURCE_FILES
         kgl_deploid/kgl_deploid_app/kgl_deploid_app.h)
 
 
-add_library(kgl_deploid_lib SHARED ${DEPLOID_LIB_SOURCE_FILES})
+add_library(kgl_deploid_lib STATIC ${DEPLOID_LIB_SOURCE_FILES})
 
 target_link_libraries(kgl_deploid_lib ${ZLIB_LIBRARIES})
 

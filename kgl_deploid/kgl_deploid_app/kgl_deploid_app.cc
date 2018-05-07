@@ -134,11 +134,90 @@ bool kgl::DeploidExecEnv::parseCommandLine(int argc, char const ** argv) {
   const char* plafFileFlag_ = "plafFile";
   const char* plafFileShortFlag_ = "plaf";
 
-  addOption(parser, seqan::ArgParseOption(plafFileShortFlag_, plafFileFlag_, plaf_file_desc, seqan::ArgParseArgument::INPUT_FILE, "INPUT_FILE"));
+  addOption(parser, seqan::ArgParseOption(plafFileShortFlag_, plafFileFlag_, plaf_file_desc, seqan::ArgParseArgument::INPUT_FILE, "PLAF_FILE"));
+
+  const char* outfile_file_desc =
+  R"(The output file spec. This is relative to the work directory. and the workDirectory
+  is prepended to to this path e.g. 'workDirectory/output_file_path')";
+
+  const char* outFileFlag_ = "outFile";
+  const char* outFileShortFlag_ = "o";
+
+  addOption(parser, seqan::ArgParseOption(outFileShortFlag_, outFileFlag_, outfile_file_desc, seqan::ArgParseArgument::OUTPUT_FILE, "OUTPUT_FILE"));
+
+  const char* ref_allele_file_desc =
+  R"(Reference allele count file. This is relative to the work directory. and the workDirectory
+  is prepended to to this path e.g. 'workDirectory/ref_allele_file_path')";
+
+  const char* refFileFlag_ = "referenceAlleleCountFile";
+  const char* refFileShortFlag_ = "ref";
+
+  addOption(parser, seqan::ArgParseOption(refFileShortFlag_, refFileFlag_, ref_allele_file_desc, seqan::ArgParseArgument::INPUT_FILE, "REF_FILE"));
+
+  const char* alt_allele_file_desc =
+  R"(Alternative allele count file. This is relative to the work directory. and the workDirectory
+  is prepended to to this path e.g. 'workDirectory/alt_allele_file_path')";
+
+  const char* altFileFlag_ = "alternativeAlleleCountFile";
+  const char* altFileShortFlag_ = "alt";
+
+  addOption(parser, seqan::ArgParseOption(altFileShortFlag_, altFileFlag_, alt_allele_file_desc, seqan::ArgParseArgument::INPUT_FILE, "ALT_FILE"));
+
+  const char* panel_file_desc =
+  R"(Strain panel file. This is relative to the work directory. and the workDirectory
+  is prepended to to this path e.g. 'workDirectory/strain_panel_file_path')";
+
+  const char* panelFileFlag_ = "strainPanelFile";
+  const char* panelFileShortFlag_ = "panel";
+
+  addOption(parser, seqan::ArgParseOption(panelFileShortFlag_, panelFileFlag_, panel_file_desc, seqan::ArgParseArgument::INPUT_FILE, "PANEL_FILE"));
+
+  const char* exclude_allele_file_desc =
+  R"(Excluded alleles file. This is relative to the work directory. and the workDirectory
+  is prepended to to this path e.g. 'workDirectory/exclude_allele_file_path')";
+
+  const char* excludeFileFlag_ = "excludedAllelesFile";
+  const char* excludeFileShortFlag_ = "exclude";
+
+  addOption(parser, seqan::ArgParseOption(excludeFileShortFlag_, excludeFileFlag_, exclude_allele_file_desc, seqan::ArgParseArgument::INPUT_FILE, "EXCLUDE_FILE"));
 
 
+  const char* paint_strain_file_desc =
+  R"(Paint the calculated strains to file. This is relative to the work directory. and the workDirectory
+  is prepended to to this path e.g. 'workDirectory/paint_strain_file_path')";
 
-  // Parse command line.
+  const char* paintFileFlag_ = "paintStrainsFile";
+  const char* paintFileShortFlag_ = "paint";
+
+  addOption(parser, seqan::ArgParseOption(paintFileShortFlag_, paintFileFlag_, paint_strain_file_desc, seqan::ArgParseArgument::OUTPUT_FILE, "PAINT_FILE"));
+
+  const char* strain_count_desc =
+  R"(The maximun number of canonical strains considered. The algorithm runtime is proportion to the square of this parameter.)";
+
+  const char* strainCountFlag_ = "maximumStrainCount";
+  const char* strainCountShortFlag_ = "k";
+
+  addOption(parser, seqan::ArgParseOption(strainCountShortFlag_, strainCountFlag_, strain_count_desc , seqan::ArgParseArgument::INTEGER, "INT"));
+
+  const char* nopanel_desc =
+  R"(Flag. Generate the candidate strains using IDB functionality. Do not use a pre-determined panel of strains)";
+
+  const char* nopanelFlag_ = "noPanel";
+  const char* nopanelShortFlag_ = "noPanel";
+
+  addOption(parser, seqan::ArgParseOption(nopanelShortFlag_, nopanelFlag_, nopanel_desc));
+
+  const char* idb_desc =
+  R"(Flag. Calculate the canonical strains using identity by descent.)";
+
+  const char* ibdFlag_ = "identityByDescent";
+  const char* ibdShortFlag_ = "ibd";
+
+  addOption(parser, seqan::ArgParseOption(ibdShortFlag_, ibdFlag_, idb_desc));
+
+
+    ///////////////////////////////////////////////////////////////////
+    // Parse command line.
   seqan::ArgumentParser::ParseResult parse_result = seqan::parse(parser, argc, argv);
 
   if (parse_result == seqan::ArgumentParser::PARSE_HELP) {
