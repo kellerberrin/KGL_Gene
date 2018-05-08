@@ -27,7 +27,6 @@
 #include "mcmc.hpp"
 #include "dEploidIO.hpp"
 #include "kgl_deploid_app.h"
-#include "kgl_deploid_main.h"
 
 namespace kgl = kellerberrin::genome;
 

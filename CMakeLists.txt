@@ -315,7 +315,8 @@ set(DEPLOID_APPLICATION_SOURCE_FILES
         kgl_deploid/kgl_deploid_app/kgl_deploid_main.cc
         kgl_deploid/kgl_deploid_app/kgl_deploid_app.h
         kgl_deploid/kgl_deploid_app/kgl_deploid_app.cc
-        kgl_deploid/kgl_deploid_app/kgl_deploid_app.h)
+        kgl_deploid/kgl_deploid_app/kgl_deploid_app.h
+        kgl_deploid/kgl_deploid_app/kgl_deploid_parse.cc)
 
 
 add_library(kgl_deploid_lib STATIC ${DEPLOID_LIB_SOURCE_FILES})
