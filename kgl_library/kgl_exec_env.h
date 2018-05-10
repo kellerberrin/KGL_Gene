@@ -36,6 +36,7 @@ public:
                            const std::string& log_file,
                            int max_error_message,
                            int max_warning_messages);
+  static const std::string& commandLine() { return command_line_; }
 
 
 private:
@@ -44,7 +45,6 @@ private:
   static std::unique_ptr<Logger> log_ptr_;
 
   static void ctrlC(int);
-  static const std::string& commandLine() { return command_line_; }
 
 
 };
