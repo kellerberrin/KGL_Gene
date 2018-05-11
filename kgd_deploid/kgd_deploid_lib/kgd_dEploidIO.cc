@@ -734,6 +734,7 @@ void kgd::DEploidIO::paintIBD() {
   tmpDEploidIO.refCount_ = refCount_;
   tmpDEploidIO.altCount_ = altCount_;
   tmpDEploidIO.plaf_ = plaf_;
+
   tmpDEploidIO.nLoci_ = nLoci();
   tmpDEploidIO.position_ = position_;
   tmpDEploidIO.chrom_ = chrom_;
