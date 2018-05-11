@@ -99,15 +99,17 @@ class McmcMachinery {
   friend class DEploidIO;
 
 public:
-  //McmcMachinery();
-  McmcMachinery(DEploidIO *dEplioidIO, std::shared_ptr<McmcSample> mcmcSample, RandomGenerator *rg_,
-                bool useIBD = false);
 
+  McmcMachinery(DEploidIO *dEplioidIO,
+                std::shared_ptr<McmcSample> mcmcSample,
+                std::shared_ptr<RandomGenerator> randomGenerator,
+                bool useIBD = false);
   ~McmcMachinery();
 
   void runMcmcChain(bool showProgress = true, bool useIBD = false, bool notInR = true);
 
 private:
+
   std::shared_ptr<McmcSample> mcmcSample_;
   /* Variables */
   DEploidIO *dEploidIO_;
@@ -135,10 +137,10 @@ private:
   size_t strainIndex2_;
 
   size_t seed_;
-  RandomGenerator *hapRg_;
-  RandomGenerator *mcmcEventRg_;
-  RandomGenerator *propRg_;
-  RandomGenerator *initialHapRg_;
+  std::shared_ptr<RandomGenerator> hapRg_;
+  std::shared_ptr<RandomGenerator> mcmcEventRg_;
+  std::shared_ptr<RandomGenerator> propRg_;
+  std::shared_ptr<RandomGenerator> initialHapRg_;
 
   //std::normal_distribution<double>* initialTitre_normal_distribution_;// (MN_LOG_TITRE, SD_LOG_TITRE);
   //std::normal_distribution<double>* deltaX_normal_distribution_;// (0, 1/PROP_SCALE);

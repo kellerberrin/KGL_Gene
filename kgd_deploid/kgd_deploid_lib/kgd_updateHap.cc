@@ -34,17 +34,17 @@ namespace kgl = kellerberrin::genome;
 
 
 kgd::UpdateHap::UpdateHap(std::vector<double> &refCount,
-                     std::vector<double> &altCount,
-                     std::vector<double> &plaf,
-                     std::vector<double> &expectedWsaf,
-                     std::vector<double> &proportion,
-                     std::vector<std::vector<double> > &haplotypes,
-                     RandomGenerator *rg,
-                     size_t segmentStartIndex,
-                     size_t nLoci,
-                     std::shared_ptr<Panel> panel,
-                     double missCopyProb,
-                     double scalingFactor) {
+                          std::vector<double> &altCount,
+                          std::vector<double> &plaf,
+                          std::vector<double> &expectedWsaf,
+                          std::vector<double> &proportion,
+                          std::vector<std::vector<double> > &haplotypes,
+                          std::shared_ptr<RandomGenerator> randomGenerator,
+                          size_t segmentStartIndex,
+                          size_t nLoci,
+                          std::shared_ptr<Panel> panel,
+                          double missCopyProb,
+                          double scalingFactor) {
 
   panel_ = panel;
   nPanel_ = 0; // Initialize when panel is not given
@@ -58,9 +58,9 @@ kgd::UpdateHap::UpdateHap(std::vector<double> &refCount,
   kStrain_ = proportion.size();
   missCopyProb_ = missCopyProb;
   setScalingFactor(scalingFactor);
-  recombRg_ = rg;
-  recombLevel2Rg_ = rg;
-  missCopyRg_ = rg;
+  recombRg_ = randomGenerator;
+  recombLevel2Rg_ = randomGenerator;
+  missCopyRg_ = randomGenerator;
   segmentStartIndex_ = segmentStartIndex;
   nLoci_ = nLoci;
 
@@ -97,7 +97,7 @@ kgd::UpdateSingleHap::UpdateSingleHap(std::vector<double> &refCount,
                                  std::vector<double> &expectedWsaf,
                                  std::vector<double> &proportion,
                                  std::vector<std::vector<double> > &haplotypes,
-                                 RandomGenerator *rg,
+                                 std::shared_ptr<RandomGenerator> randomGenerator,
                                  size_t segmentStartIndex,
                                  size_t nLoci,
                                  std::shared_ptr<Panel> panel, double missCopyProb, double scalingFactor,
@@ -107,7 +107,7 @@ kgd::UpdateSingleHap::UpdateSingleHap(std::vector<double> &refCount,
                                                                  plaf,
                                                                  proportion,
                                                                  haplotypes,
-                                                                 rg,
+                                                                 randomGenerator,
                                                                  segmentStartIndex,
                                                                  nLoci,
                                                                  panel,
@@ -121,11 +121,11 @@ kgd::UpdateSingleHap::UpdateSingleHap(std::vector<double> &refCount,
 
 
 void kgd::UpdateSingleHap::core(std::vector<double> &refCount,
-                           std::vector<double> &altCount,
-                           std::vector<double> &plaf,
-                           std::vector<double> &expectedWsaf,
-                           std::vector<double> &proportion,
-                           std::vector<std::vector<double> > &haplotypes) {
+                                std::vector<double> &altCount,
+                                std::vector<double> &plaf,
+                                std::vector<double> &expectedWsaf,
+                                std::vector<double> &proportion,
+                                std::vector<std::vector<double> > &haplotypes) {
 
   calcExpectedWsaf(expectedWsaf, proportion, haplotypes);
   calcHapLLKs(refCount, altCount);
@@ -149,10 +149,10 @@ void kgd::UpdateSingleHap::core(std::vector<double> &refCount,
 
 
 void kgd::UpdateSingleHap::painting(std::vector<double> &refCount,
-                               std::vector<double> &altCount,
-                               std::vector<double> &expectedWsaf,
-                               std::vector<double> &proportion,
-                               std::vector<std::vector<double> > &haplotypes) {
+                                    std::vector<double> &altCount,
+                                    std::vector<double> &expectedWsaf,
+                                    std::vector<double> &proportion,
+                                    std::vector<std::vector<double> > &haplotypes) {
 
   calcExpectedWsaf(expectedWsaf, proportion, haplotypes);
   calcHapLLKs(refCount, altCount);
@@ -244,8 +244,9 @@ void kgd::UpdateSingleHap::calcFwdBwdProbs() {
 
 }
 
-void kgd::UpdateSingleHap::calcExpectedWsaf(std::vector<double> &expectedWsaf, std::vector<double> &proportion,
-                                       std::vector<std::vector<double> > &haplotypes) {
+void kgd::UpdateSingleHap::calcExpectedWsaf(std::vector<double> &expectedWsaf,
+                                            std::vector<double> &proportion,
+                                            std::vector<std::vector<double> > &haplotypes) {
 
   assert (expectedWsaf0_.size() == 0);
   assert (expectedWsaf1_.size() == 0);
@@ -506,7 +507,7 @@ kgd::UpdatePairHap::UpdatePairHap(std::vector<double> &refCount,
                              std::vector<double> &expectedWsaf,
                              std::vector<double> &proportion,
                              std::vector<std::vector<double> > &haplotypes,
-                             RandomGenerator *rg,
+                             std::shared_ptr<RandomGenerator> randomGenerator,
                              size_t segmentStartIndex,
                              size_t nLoci,
                              std::shared_ptr<Panel> panel, double missCopyProb, double scalingFactor,
@@ -518,7 +519,7 @@ kgd::UpdatePairHap::UpdatePairHap(std::vector<double> &refCount,
                                                               expectedWsaf,
                                                               proportion,
                                                               haplotypes,
-                                                              rg,
+                                                              randomGenerator,
                                                               segmentStartIndex,
                                                               nLoci,
                                                               panel,

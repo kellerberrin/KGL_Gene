@@ -150,7 +150,7 @@ double min_value(std::vector<double> x);
 
 double max_value(std::vector<double> x);
 
-std::vector<double> computeCdf(std::vector<double> &dist);
+std::vector<double> computeCdf(const std::vector<double>& dist);
 
 double sumOfMat(std::vector<std::vector<double> > &matrix);
 
@@ -160,13 +160,17 @@ void normalizeByMax(std::vector<double> &array);
 
 void normalizeBySumMat(std::vector<std::vector<double> > &matrix);
 
-std::vector<double>
-calcLLKs(std::vector<double> &refCount, std::vector<double> &altCount, std::vector<double> &expectedWsaf,
-         size_t firstIndex, size_t length, double fac, double err = 0.01);
+std::vector<double> calcLLKs(std::vector<double> &refCount,
+                             std::vector<double> &altCount,
+                             std::vector<double> &expectedWsaf,
+                             size_t firstIndex,
+                             size_t length,
+                             double fac,
+                             double err = 0.01);
 
 double calcLLK(double ref, double alt, double unadjustedWsaf, double err, double fac);
 
-size_t sampleIndexGivenProp(RandomGenerator *rg, std::vector<double> proportion);
+size_t sampleIndexGivenProp(std::shared_ptr<RandomGenerator> randomGenerator, const std::vector<double>& proportion);
 
 std::vector<double> reshapeMatToVec(std::vector<std::vector<double> > &Mat);
 
@@ -177,7 +181,7 @@ double logBetaPdf(double x, double a, double b);
 double binomialPdf(int s, int n, double p);
 
 //double betaDistConst( double a , double b);
-double rBeta(double alpha, double beta, RandomGenerator *rg);
+double rBeta(double alpha, double beta, std::shared_ptr<RandomGenerator> randomGenerator);
 
 
 }   // organization level namespace

@@ -38,19 +38,20 @@ namespace kgd = kellerberrin::deploid;
 
 
 
+// initialiseMCMCmachinery
 kgd::McmcMachinery::McmcMachinery(DEploidIO *dEploidIO,
                                   std::shared_ptr<McmcSample> mcmcSample,
-                                  RandomGenerator *rg_,
-                                  bool useIBD) { // initialiseMCMCmachinery
+                                  std::shared_ptr<RandomGenerator> randomGenerator,
+                                  bool useIBD) {
 
   dEploidIO_ = dEploidIO;
   panel_ = dEploidIO->panel;
   mcmcSample_ = mcmcSample;
-  seed_ = rg_->seed();
-  hapRg_ = rg_;
-  mcmcEventRg_ = hapRg_;
-  propRg_ = hapRg_;
-  initialHapRg_ = hapRg_;
+  seed_ = randomGenerator->seed();
+  hapRg_ = randomGenerator;
+  mcmcEventRg_ = randomGenerator;
+  propRg_ = randomGenerator;
+  initialHapRg_ = randomGenerator;
 
   if (useIBD == true) {
 
@@ -863,14 +864,23 @@ void kgd::McmcMachinery::updatePairHaps() {
                            dEploidIO_->altCount_,
                            dEploidIO_->plaf_,
                            currentExpectedWsaf_,
-                           currentProp_, currentHap_, hapRg_,
-                           start, length,
-                           panel_, dEploidIO_->missCopyProb_, dEploidIO_->scalingFactor(),
+                           currentProp_,
+                           currentHap_,
+                           hapRg_,
+                           start,
+                           length,
+                           panel_,
+                           dEploidIO_->missCopyProb_,
+                           dEploidIO_->scalingFactor(),
                            dEploidIO_->forbidCopyFromSame(),
                            strainIndex1_,
                            strainIndex2_);
 
-    updating.core(dEploidIO_->refCount_, dEploidIO_->altCount_, dEploidIO_->plaf_, currentExpectedWsaf_, currentProp_,
+    updating.core(dEploidIO_->refCount_,
+                  dEploidIO_->altCount_,
+                  dEploidIO_->plaf_,
+                  currentExpectedWsaf_,
+                  currentProp_,
                   currentHap_);
 
     size_t updateIndex = 0;

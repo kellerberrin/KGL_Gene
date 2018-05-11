@@ -42,9 +42,6 @@ struct DeploidArgs {
   int max_warn_count{1000};
   bool verbose{false};
 
-  int argc;
-  char const ** argv;
-
   static constexpr const char* NOT_SPECIFIED = "NOT_SPECIFIED";
 
 };
@@ -57,7 +54,7 @@ public:
   DeploidExecEnv()=delete;
   ~DeploidExecEnv()=delete;
 
-// The following 4 static members are required for all applications.
+// The following static members are required for all applications.
   static constexpr const char* VERSION = "0.1";
   static constexpr const char* MODULE_NAME = "kgd_deploid";
   static void executeApp(); // Application mainline.
@@ -71,8 +68,6 @@ private:
 
 };
 
-/// The original mainline.
-int deploidMain();
 
 
 }   // organization level namespace

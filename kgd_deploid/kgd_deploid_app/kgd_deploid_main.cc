@@ -23,14 +23,10 @@
  *
  */
 
-#include <iostream>
-#include "kgd_mcmc.h"
-#include "kgd_dEploidIO.h"
 #include "kgd_deploid_app.h"
 
 namespace kgl = kellerberrin::genome;
 namespace kgd = kellerberrin::deploid;
-
 
 
 /// The mainline.
@@ -41,64 +37,3 @@ int main(int argc, char const ** argv)
 
 }
 
-/// Original mainline.
-int kgd::deploidMain() {
-
-  try {
-
-    DEploidIO dEploidIO;
-
-    if ( dEploidIO.doComputeLLK() ) {
-
-        dEploidIO.computeLLKfromInitialHap();
-
-    } else if ( dEploidIO.doLsPainting() ) {
-
-        dEploidIO.chromPainting();
-
-    } else if ( dEploidIO.doIbdPainting() ) {
-
-        dEploidIO.paintIBD();
-
-    }else{
-
-        if (dEploidIO.useIBD()) { // ibd
-
-            std::shared_ptr<McmcSample> ibdMcmcSample(std::make_shared<McmcSample>());
-
-            MersenneTwister ibdRg(dEploidIO.randomSeed());
-
-            McmcMachinery ibdMcmcMachinery(&dEploidIO, ibdMcmcSample, &ibdRg, true);
-
-            ibdMcmcMachinery.runMcmcChain(true, // show progress
-                                          true);  // use IBD
-
-        }
-
-        std::shared_ptr<McmcSample> mcmcSample(std::make_shared<McmcSample>());
-
-        MersenneTwister rg(dEploidIO.randomSeed());
-
-        McmcMachinery mcmcMachinery(&dEploidIO,
-                                    mcmcSample,
-                                    &rg,
-                                    false); // use IBD
-
-        mcmcMachinery.runMcmcChain(true, // show progress
-                                   false); // use IBD
-
-        dEploidIO.paintIBD();
-
-    }
-    // Finishing, write log
-    dEploidIO.wrapUp();
-
-  }
-  catch (const std::exception &e) {
-    std::cerr << "Error: " << e.what() << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  return EXIT_SUCCESS;
-
-}

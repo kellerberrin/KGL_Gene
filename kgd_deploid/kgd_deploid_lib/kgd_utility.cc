@@ -68,7 +68,7 @@ double kgd::max_value(std::vector<double> x) {
 }
 
 
-std::vector<double> kgd::computeCdf(std::vector<double> &dist) {
+std::vector<double> kgd::computeCdf(const std::vector<double>& dist) {
 
   std::vector<double> cdf;
 
@@ -194,7 +194,7 @@ double kgd::calcLLK(double ref, double alt, double unadjustedWsaf, double err, d
 }
 
 
-size_t kgd::sampleIndexGivenProp(RandomGenerator *rg, std::vector<double> proportion) {
+size_t kgd::sampleIndexGivenProp(std::shared_ptr<RandomGenerator> randomGenerator, const std::vector<double>& proportion) {
 
   #ifndef NDEBUG
 
@@ -203,20 +203,31 @@ size_t kgd::sampleIndexGivenProp(RandomGenerator *rg, std::vector<double> propor
 
   #else
   std::vector <size_t> tmpIndex;
+
   for ( size_t i = 0; i < proportion.size(); i++ ){
+
       tmpIndex.push_back(i);
+
   }
+
   std::vector <double> tmpCdf = computeCdf(proportion);
 
-  double u = rg->sample();
+  double u = randomGenerator->sample();
+
   size_t i = 0;
+
   for ( ; i < tmpCdf.size() ; i++){
+
       if ( u < tmpCdf[i] ){
           break;
+
       }
+
   }
+
   return i;
-#endif
+
+  #endif
 
 }
 
@@ -283,14 +294,21 @@ double kgd::binomialPdf(int s, int n, double p) {
 }
 
 
-double kgd::rBeta(double alpha, double beta, RandomGenerator *rg) {
+double kgd::rBeta(double alpha, double beta, std::shared_ptr<RandomGenerator> randomGenerator) {
+
   double mxAt = (alpha - 1.0) / (alpha + beta - 2.0);
+
   double mx = betaPdf(mxAt, alpha, beta);
+
   double y, u;
+
   do {
-    u = rg->sample();
-    y = rg->sample();
+
+    u = randomGenerator->sample();
+    y = randomGenerator->sample();
+
   } while (u > (betaPdf(y, alpha, beta) / mx));
 
   return y;
+
 }

@@ -459,9 +459,9 @@ bool kgd::twoVectorsAreSame(std::vector<int> vec1, std::vector<int> vec2) {
 
 
 
-void kgd::IBDpath::init(DEploidIO &dEploidIO, RandomGenerator *rg) {
+void kgd::IBDpath::init(DEploidIO &dEploidIO, std::shared_ptr<RandomGenerator> randomGenerator) {
 
-  this->ibdRg_ = rg;
+  this->ibdRg_ = randomGenerator;
   this->setNLoci(dEploidIO.nLoci());
   this->setKstrain(dEploidIO.kStrain());
   this->setTheta(1.0 / (double) kStrain());

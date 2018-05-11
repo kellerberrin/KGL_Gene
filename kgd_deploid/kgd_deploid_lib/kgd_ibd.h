@@ -166,7 +166,7 @@ class IBDpath {
 
   friend class DEploidIO;
 
-  RandomGenerator *ibdRg_;
+  std::shared_ptr<RandomGenerator> ibdRg_;
 
   double fSum;
   Hprior hprior;
@@ -249,7 +249,7 @@ class IBDpath {
 public:
   std::vector<std::string> getIBDprobsHeader();
 
-  void init(DEploidIO &dEploidIO, RandomGenerator *rg);
+  void init(DEploidIO &dEploidIO, std::shared_ptr<RandomGenerator> randomGenerator);
 };
 
 

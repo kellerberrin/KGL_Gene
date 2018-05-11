@@ -66,7 +66,7 @@ private:
             std::vector<double> &expectedWsaf,
             std::vector<double> &proportion,
             std::vector<std::vector<double> > &haplotypes,
-            RandomGenerator *rg,
+            std::shared_ptr<RandomGenerator> randomGenerator,
             size_t segmentStartIndex,
             size_t nLoci,
             std::shared_ptr<Panel> panel,
@@ -77,9 +77,9 @@ private:
 
   std::shared_ptr<Panel> panel_;
   double missCopyProb_;
-  RandomGenerator *recombRg_;
-  RandomGenerator *recombLevel2Rg_;
-  RandomGenerator *missCopyRg_;
+  std::shared_ptr<RandomGenerator> recombRg_;
+  std::shared_ptr<RandomGenerator> recombLevel2Rg_;
+  std::shared_ptr<RandomGenerator> missCopyRg_;
 
   size_t kStrain_;
   size_t nPanel_;
@@ -141,7 +141,7 @@ private:
                   std::vector<double> &expectedWsaf,
                   std::vector<double> &proportion,
                   std::vector<std::vector<double> > &haplotypes,
-                  RandomGenerator *rg,
+                  std::shared_ptr<RandomGenerator> randomGenerator,
                   size_t segmentStartIndex,
                   size_t nLoci,
                   std::shared_ptr<Panel> panel, double missCopyProb,
@@ -221,7 +221,7 @@ public:
                 std::vector<double> &expectedWsaf,
                 std::vector<double> &proportion,
                 std::vector<std::vector<double> > &haplotypes,
-                RandomGenerator *rg,
+                std::shared_ptr<RandomGenerator> randomGenerator,
                 size_t segmentStartIndex,
                 size_t nLoci,
                 std::shared_ptr<Panel> panel, double missCopyProb,

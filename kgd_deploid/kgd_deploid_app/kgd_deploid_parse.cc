@@ -66,9 +66,6 @@ void getFilePath(const std::string& option_text,
 
 bool kgd::DeploidExecEnv::parseCommandLine(int argc, char const ** argv) {
 
-  args_.argc = argc;
-  args_.argv = argv;
-
   // Save the command line.
   kgl::ExecEnv::getCommandLine(argc, argv);
 

@@ -536,7 +536,7 @@ void kgd::DEploidIO::chromPainting() {
 
   std::vector<double> expectedWsaf = computeExpectedWsafFromInitialHap();
 
-  MersenneTwister tmpRg(randomSeed());
+  std::shared_ptr<MersenneTwister> tmpRg(std::make_shared<MersenneTwister>(randomSeed()));
 
   if (doAllowInbreeding() == true) {
 
@@ -563,9 +563,13 @@ void kgd::DEploidIO::chromPainting() {
                                      altCount_,
                                      plaf_,
                                      expectedWsaf,
-                                     finalProp_, initialHap_, &tmpRg,
-                                     start, length,
-                                     panel, missCopyProb_, scalingFactor(),
+                                     finalProp_, initialHap_,
+                                     tmpRg,
+                                     start,
+                                     length,
+                                     panel,
+                                     missCopyProb_,
+                                     scalingFactor(),
                                      tmpk);
 
       if (doAllowInbreeding() == true) {
@@ -738,9 +742,9 @@ void kgd::DEploidIO::paintIBD() {
 
   //tmpDEploidIO.writeLog (&std::cout);
 
-  MersenneTwister tmpRg(randomSeed());
+  std::shared_ptr<MersenneTwister> tmpRg(std::make_shared<MersenneTwister>(randomSeed()));
   IBDpath tmpIBDpath;
-  tmpIBDpath.init(tmpDEploidIO, &tmpRg);
+  tmpIBDpath.init(tmpDEploidIO, tmpRg);
   tmpIBDpath.buildPathProbabilityForPainting(goodProp);
   ibdLLK_ = tmpIBDpath.bestPath(goodProp);
   ibdProbsHeader_ = tmpIBDpath.getIBDprobsHeader();
