@@ -34,7 +34,7 @@
 #include <kgd_exceptions.h>
 #include <sstream>
 #include "kgd_utility.h"
-#include "mersenne_twister.hpp"
+#include "kgd_mersenne_twister.h"
 #include "kgd_dEploidIO.h"
 
 

@@ -23,24 +23,36 @@
  *
  */
 
-#include "mersenne_twister.hpp"
+#include "kgd_mersenne_twister.h"
 
-void MersenneTwister::construct_common(const size_t seed){
+
+namespace kgd = kellerberrin::deploid;
+
+
+void kgd::MersenneTwister::construct_common(const size_t seed){
+
   unif_ = std::uniform_real_distribution<>(0, 1);
-  this->set_seed(seed);
+  set_seed(seed);
+
 }
 
-MersenneTwister::MersenneTwister() {
-  this->construct_common(generateRandomSeed());
+kgd::MersenneTwister::MersenneTwister() {
+
+  construct_common(generateRandomSeed());
+
 }
 
-MersenneTwister::MersenneTwister(const size_t seed){
-  this->construct_common(seed);
+kgd::MersenneTwister::MersenneTwister(const size_t seed){
+
+  construct_common(seed);
+
 }
 
-MersenneTwister::MersenneTwister(const bool use_seed, size_t seed){
+kgd::MersenneTwister::MersenneTwister(const bool use_seed, size_t seed){
+
   if (!use_seed) seed = generateRandomSeed();
-  this->construct_common(seed);
+  construct_common(seed);
+
 }
 
 /**
@@ -49,15 +61,20 @@ MersenneTwister::MersenneTwister(const bool use_seed, size_t seed){
  *
  * @return A random int between 0 and 2^32
  */
-size_t MersenneTwister::generateRandomSeed() const {
+size_t kgd::MersenneTwister::generateRandomSeed() const {
+
   std::random_device rd;
   std::uniform_int_distribution<size_t> dist(0, 4294967295); // 0 - 2^32-1
+
   return(dist(rd));
+
 }
 
-void MersenneTwister::set_seed(const size_t seed) {
+void kgd::MersenneTwister::set_seed(const size_t seed) {
+
   RandomGenerator::set_seed(seed);
   mt_ = std::mt19937_64(seed);
-  this->initializeUnitExponential();
+  initializeUnitExponential();
+
 }
 

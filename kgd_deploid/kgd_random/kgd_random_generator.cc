@@ -23,19 +23,26 @@
  *
  */
 
-#include "random_generator.hpp"
+#include "kgd_random_generator.h"
 #include <iostream>
 #include <cmath>
+
+
+namespace kgd = kellerberrin::deploid;
+
 
 // Samples waiting time, with limit, for a process with an exponentially changing rate:
 //  rate(t) = b exp( c t )
 // This code allows c=0, and falls back to a standard exponential if so
 // For a p ~ unif(0,1), a waiting time sample is (1/c) log[ 1 - (c/b) log p ]
 // It returns -1 if no event occurred; this can happen even if limit == +infinity (if c<0)
-double RandomGenerator::sampleExpoExpoLimit(double b, double c, double limit){
+double kgd::RandomGenerator::sampleExpoExpoLimit(double b, double c, double limit){
+
   if (b == 0.0) return -1;
+
   assert (b>0);
   assert (limit>=0);
+
   // for any c, the no-event condition (t=maximum waiting time) is
   //  (b/c) (exp(c t)-1) < -log p
   // For c<0 and c>0 respectively this becomes
@@ -45,37 +52,63 @@ double RandomGenerator::sampleExpoExpoLimit(double b, double c, double limit){
   //  -c log p < b (exp_up(c t)-1)    [c<0]
   //  -c log p > b (exp_lo(c t)-1)    [c>0]
   // where exp_up and exp_lo are upper and lower bounds for the exp(x) function resp.
+
   if (c < 0) {
+
     double c_logp_limit = b*(this->ff()->fastexp_lo(c*limit)-1);  // negative
+
     if (c*unit_exponential_ < c_logp_limit) {
+
       unit_exponential_ -= c_logp_limit / c;
       return -1;
+
     }
+
     double y = 1.0 + c*unit_exponential_ / b;
     unit_exponential_ = sampleUnitExponential();
+
     if (y <= 0.0) return -1; // no event at all
+
     y = this->ff()->fastlog( y )/c;
+
     if (y > limit) return -1;  // the event time; can still be beyond limit
+
     return y;
+
   } else if (c > 0) {
+
     double c_logp_limit = b*(this->ff()->fastexp_up( c*limit )-1);  // positive
+
     if (c*unit_exponential_ > c_logp_limit) {
+
       unit_exponential_ -= c_logp_limit / c;
       return -1;
+
     }
+
     double y = this->ff()->fastlog( 1.0 + c*unit_exponential_ / b ) / c;
+
     unit_exponential_ = sampleUnitExponential();
+
     if (y > limit) return -1;
+
     return y;
+
   } else {
+
     if (unit_exponential_ >= limit * b) {
       unit_exponential_ -= limit * b;
       return -1;
+
     } else {
+
       double result = unit_exponential_ / b;
       unit_exponential_ = sampleUnitExponential();
       assert( result > 0 );
       return result;
+
     }
-    }
+
+  }
+
 }

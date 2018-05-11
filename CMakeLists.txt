@@ -257,7 +257,7 @@ include_directories(kgd_deploid/kgd_deploid_app
         kgd_deploid/kgd_deploid_lib
         kgd_deploid/contrib/codeCogs
         kgd_deploid/contrib/gzstream
-        kgd_deploid/contrib/random)
+        kgd_deploid/kgd_random)
 
 set(DEPLOID_LIB_SOURCE_FILES
         kgd_deploid/contrib/codeCogs/asympt_expn.h
@@ -284,12 +284,12 @@ set(DEPLOID_LIB_SOURCE_FILES
         kgd_deploid/kgd_deploid_lib/kgd_writeMcmcRelated.cc
         kgd_deploid/contrib/gzstream/gzstream.cpp
         kgd_deploid/contrib/gzstream/gzstream.h
-        kgd_deploid/contrib/random/fastfunc.cpp
-        kgd_deploid/contrib/random/fastfunc.hpp
-        kgd_deploid/contrib/random/mersenne_twister.cpp
-        kgd_deploid/contrib/random/mersenne_twister.hpp
-        kgd_deploid/contrib/random/random_generator.cpp
-        kgd_deploid/contrib/random/random_generator.hpp
+        kgd_deploid/kgd_random/kgd_fastfunc.cc
+        kgd_deploid/kgd_random/kgd_fastfunc.h
+        kgd_deploid/kgd_random/kgd_mersenne_twister.cc
+        kgd_deploid/kgd_random/kgd_mersenne_twister.h
+        kgd_deploid/kgd_random/kgd_random_generator.cc
+        kgd_deploid/kgd_random/kgd_random_generator.h
         kgd_deploid/kgd_deploid_lib/kgd_dEploidIO.cc
         kgd_deploid/kgd_deploid_lib/kgd_dEploidIO.h
         kgd_deploid/kgd_deploid_lib/kgd_exceptions.h

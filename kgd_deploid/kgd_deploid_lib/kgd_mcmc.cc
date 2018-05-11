@@ -922,7 +922,7 @@ void kgd::McmcMachinery::findUpdatingStrainPair() {
 
   while (m < 2) {
 
-    u = mcmcEventRg_->sample(); // call a uniform(0,1) random number generator
+    u = mcmcEventRg_->sample(); // call a uniform(0,1) kgd_random number generator
 
     if ((kStrain_ - t) * u < 2 - m) {
       strainIndex[m] = t;

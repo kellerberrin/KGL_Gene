@@ -23,12 +23,18 @@
  *
  */
 
-#include "fastfunc.hpp"
+#include "kgd_fastfunc.h"
 
-void FastFunc::build_fastlog_double_table(int size) {
+
+namespace kgd = kellerberrin::deploid;
+
+
+void kgd::FastFunc::build_fastlog_double_table(int size) {
+
   fastlog_double_table_ = std::vector<double>(size+1);
   double prevx = 1.0;
   double prevy = 0.0;
+
   for (int index=0; index<size+1; index++) {
 
     // calculate x coordinate at which linear approximation is exactly equal
@@ -48,5 +54,7 @@ void FastFunc::build_fastlog_double_table(int size) {
     fastlog_double_table_.at(index) = (double)(prevy);
     prevx = targetx;
     prevy = targety;
+
   }
+
 }

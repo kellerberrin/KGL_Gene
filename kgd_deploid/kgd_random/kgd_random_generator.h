@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef dEploid_src_random_random_generator
-#define dEploid_src_random_random_generator
+#ifndef KGD_RANDOM_GENERATOR_H
+#define KGD_RANDOM_GENERATOR_H
 
 //#include "../macros.h" // Needs to be before cassert
 
@@ -32,51 +32,49 @@
 #include <cmath>
 #include <memory>
 
-#include "fastfunc.hpp"
+#include "kgd_fastfunc.h"
+
+
+
+namespace kellerberrin {    // organization level namespace
+namespace deploid {          // project level namespace
+
 
 
 class RandomGenerator
 {
+
  friend class MersenneTwister;
  friend class RRandomGenerator;
+
  public:
+
   RandomGenerator() : ff_(std::make_shared<FastFunc>()) { };
   RandomGenerator(std::shared_ptr<FastFunc> ff) : ff_(ff) { };
-  virtual ~RandomGenerator() { }
+  virtual ~RandomGenerator() = default;
 
   //Getters & Setters
   size_t seed() const { return seed_; }
 
-  virtual void set_seed(const size_t seed) {
-    this->seed_ = seed;
-  }
-
+  virtual void set_seed(const size_t seed) { seed_ = seed; }
   virtual double sample() =0;
 
   // Base class methods
-  // Initialize unit_exponential; must be called when the random generator is up and running
-  void initializeUnitExponential() {
-    this->unit_exponential_ = sampleUnitExponential();
-  }
+  // Initialize unit_exponential; must be called when the kgd_random generator is up and running
+  void initializeUnitExponential() { unit_exponential_ = sampleUnitExponential(); }
 
   // Uniformly samples a number out of 0, ..., range-1
   // Unit tested
-  int sampleInt(const int max_value) {
-    return(static_cast<int>(this->sample()*max_value));
-  }
+  int sampleInt(const int max_value) {  return(static_cast<int>(this->sample()*max_value));  }
 
   // Samples from an exponential distribution
   // Unit tested
-  double sampleExpo(const double lambda) {
-    return sampleUnitExponential() / lambda;
-  }
+  double sampleExpo(const double lambda) { return sampleUnitExponential() / lambda;  }
 
   // Samples from an exponential distribution; return -1 if beyond limit
   // If a limit is known, this version is faster than the standard one
   // Unit tested
-  double sampleExpoLimit(const double lambda, const double limit) {
-    return sampleExpoExpoLimit(lambda, 0, limit);
-  }
+  double sampleExpoLimit(const double lambda, const double limit) {  return sampleExpoExpoLimit(lambda, 0, limit); }
 
   double sampleExpoExpoLimit(const double b, const double c, const double limit);
 
@@ -99,10 +97,19 @@ class RandomGenerator
 
  protected:
   // seed
+
   size_t seed_;
   // cache for a unit-exponentially distributed variable
+
   double unit_exponential_;
   std::shared_ptr<FastFunc> ff_;
 };
+
+
+
+}   // organization level namespace
+}   // project level namespace
+
+
 
 #endif

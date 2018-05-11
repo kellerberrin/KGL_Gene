@@ -32,7 +32,7 @@
 #include <iostream>
 #include <algorithm>    /* min_element, max_element */
 
-#include "mersenne_twister.hpp"
+#include "kgd_mersenne_twister.h"
 #include "kgd_global.h"
 
 #include "kgd_variantIndex.h"

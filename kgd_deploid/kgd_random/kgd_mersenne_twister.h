@@ -23,28 +23,38 @@
  *
  */
 
-#ifndef dEploid_src_random_mersenne_twister
-#define dEploid_src_random_mersenne_twister
+#ifndef KGD_MERSENNE_TWISTER_H
+#define KGD_MERSENNE_TWISTER_H
 
 #include <random>
-#include "random_generator.hpp"
+#include "kgd_random_generator.h"
+
+
+namespace kellerberrin {    // organization level namespace
+namespace deploid {          // project level namespace
+
+
 
 class MersenneTwister : public RandomGenerator
 {
+
  public:
+
   MersenneTwister();
   MersenneTwister(const size_t seed);
   MersenneTwister(const bool use_seed, size_t seed);
-
   MersenneTwister(std::shared_ptr<FastFunc> ff):RandomGenerator(ff) {
-      this->construct_common(generateRandomSeed());
-  }
 
+      construct_common(generateRandomSeed());
+
+  }
   MersenneTwister(const size_t seed, std::shared_ptr<FastFunc> ff):RandomGenerator(ff) {
-      this->construct_common(seed);
+
+      construct_common(seed);
+
   }
 
-  ~MersenneTwister() {};
+  ~MersenneTwister() = default;
 
   void set_seed(const size_t seed);
   void construct_common(const size_t seed);
@@ -52,11 +62,20 @@ class MersenneTwister : public RandomGenerator
   double sample() { return unif_(mt_); }
 
  protected:
+
   std::mt19937_64 mt_;
   std::uniform_real_distribution<> unif_;
 
  private:
+
   size_t generateRandomSeed() const;
+
 };
+
+
+}   // organization level namespace
+}   // project level namespace
+
+
 
 #endif

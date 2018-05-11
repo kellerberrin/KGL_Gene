@@ -27,7 +27,7 @@
 
 //#include "utility.hpp"
 //#include <math.h>       /* ceil */
-//#include <random>
+//#include <kgd_random>
 //#include "updateHap.hpp"
 //#include <stdio.h>
 

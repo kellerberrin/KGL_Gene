@@ -201,7 +201,7 @@ This is relative to the work directory the workDirectory is prepended to to this
   addOption(parser, seqan::ArgParseOption(MCMCRateShortFlag_, MCMCRateFlag_, MCMC_rate_desc , seqan::ArgParseArgument::INTEGER, "INT"));
 
   const char* MCMC_random_seed =
-  R"(The MCMC random seed (default uses time()))";
+  R"(The MCMC kgd_random seed (default uses time()))";
 
   const char* MCMCRandomSeedFlag_ = "MCMCRandomSeed";
   const char* MCMCRandomSeedShortFlag_ = "seed";

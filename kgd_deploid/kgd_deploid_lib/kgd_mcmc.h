@@ -31,7 +31,7 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>      // std::setw
-#include "mersenne_twister.hpp"
+#include "kgd_mersenne_twister.h"
 #include "kgd_dEploidIO.h"
 #include "kgd_panel.h"
 #include "randomSample.hpp"   // src/codeCogs/randomSample.hpp

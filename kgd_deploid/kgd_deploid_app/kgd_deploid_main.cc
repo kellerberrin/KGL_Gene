@@ -46,7 +46,6 @@ int kgd::deploidMain() {
 
   try {
 
-
     DEploidIO dEploidIO;
 
     if ( dEploidIO.doComputeLLK() ) {

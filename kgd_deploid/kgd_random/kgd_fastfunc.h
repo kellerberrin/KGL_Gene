@@ -23,22 +23,27 @@
  *
  */
 
-#ifndef dEploid_src_random_fastfunc
-#define dEploid_src_random_fastfunc
+#ifndef KGD_FASTFUNC_H
+#define KGD_FASTFUNC_H
+
 
 #include <iostream>
 #include <cmath>
 #include <vector>
 
 
+namespace kellerberrin {    // organization level namespace
+namespace deploid {          // project level namespace
+
+
 // Number of interpolation points.  If this is changed, several constants in fastlog must also be changed.
 #define SIZE_DOUBLE 1024
 
 class FastFunc {
+
  public:
-  FastFunc() {
-    this->build_fastlog_double_table(SIZE_DOUBLE);
-  }
+
+  FastFunc() { build_fastlog_double_table(SIZE_DOUBLE); }
 
   // Methods
   double fastlog(double);       /* about as fast as division; about as accurate as logf */
@@ -46,6 +51,7 @@ class FastFunc {
   double fastexp_lo(double y);  /* lower bound to exp; at most 5.792% too low.  10x as fast as exp */
 
  private:
+
   void build_fastlog_double_table(int);
 
   static constexpr double LN2 = 0.693147180559945309417; //ln(2)
@@ -54,6 +60,7 @@ class FastFunc {
   static constexpr long long EXP_C_UP = -1;
 
   std::vector<double> fastlog_double_table_;
+
 };
 
 // Fast and fairly tight upper and lower bounds for exp(x)
@@ -62,28 +69,40 @@ class FastFunc {
 // http://nic.schraudolph.org/pubs/Schraudolph99.pdf
 
 inline double FastFunc::fastexp_up(double y) {
+
   if (y<-700) return 0.0;
+
   if (y>700) return INFINITY;
+
   union {
     double d;
     int64_t i;
   } n;
+
   n.i = (((long long)(EXP_A*y)) + (1072693248 - EXP_C_UP)) << 32;
+
   return n.d;
+
 }
 
 inline double FastFunc::fastexp_lo(double y) {
+
   if (y<-700) return 0.0;
   if (y>700) return INFINITY;
+
   union {
     double d;
     int64_t i;
   } n;
+
   n.i = (((long long)(EXP_A*y)) + (1072693248 - EXP_C_LO)) << 32;
+
   return n.d;
+
 }
 
 inline double FastFunc::fastlog(double x) {
+
   const float offset = 2047;                // as int64_t: 0x409ffc00000....
   double y = x;
   int64_t* yint = (int64_t*)(&y);
@@ -91,9 +110,18 @@ inline double FastFunc::fastlog(double x) {
   int index = ((*yint) >> (52-10)) & 1023;  // upper 10 bits of mantissa
   *yint |= 0x7ffffc0000000000;              // convert float into remainder of mantissa; and
   *yint &= 0x409fffffffffffff;              // modify exponent to get into proper range
+
   return (expon * LN2 +                     // contribution of base-2 log
 	  fastlog_double_table_[index] +          // table lookup, and linear interpolation
 	  (fastlog_double_table_[index+1] - fastlog_double_table_[index]) * (*(double*)(yint) - offset) );
+
 }
+
+
+
+}   // organization level namespace
+}   // project level namespace
+
+
 
 #endif
