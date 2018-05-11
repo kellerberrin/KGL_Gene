@@ -27,11 +27,13 @@
 #include "kgd_utility.h"
 #include <iterator>     // std::distance
 #include <algorithm> // find
+#include <kgl_exec_env.h>
 #include "loggammasum.h" // which includes log_gamma.h
 #include "gamma.h"
 
 
 namespace kgd = kellerberrin::deploid;
+namespace kgl = kellerberrin::genome;
 
 
 // See http://stackoverflow.com/questions/10847007/using-the-gaussian-probability-density-function-in-c
@@ -308,6 +310,7 @@ double kgd::rBeta(double alpha, double beta, std::shared_ptr<RandomGenerator> ra
     y = randomGenerator->sample();
 
   } while (u > (betaPdf(y, alpha, beta) / mx));
+
 
   return y;
 

@@ -128,7 +128,7 @@ class Hprior {
 
   void setKstrain(const size_t setTo) { this->kStrain_ = setTo; }
 
-  size_t kStrain() const { return this->kStrain_; }
+  size_t getkStrain() const { return this->kStrain_; }
 
   size_t nLoci_;
 

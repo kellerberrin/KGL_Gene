@@ -40,6 +40,7 @@
 #include "kgd_exceptions.h"
 #include "kgd_panel.h"
 #include "kgd_vcfReader.h"
+#include "kgd_random_generator.h"
 
 
 
@@ -73,7 +74,7 @@ public:
   ~DEploidIO() = default;
 
   // Painting related
-  void chromPainting();
+  void chromPainting(std::shared_ptr<RandomGenerator> random_generator);
 
   bool doLsPainting() const { return this->doLsPainting_; }
 
@@ -85,7 +86,7 @@ public:
 
   bool useIBD() const { return this->useIBD_; }
 
-  void paintIBD();
+  void paintIBD(std::shared_ptr<RandomGenerator> random_generator);
 
   double ibdLLK_;
 

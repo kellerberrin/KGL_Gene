@@ -309,7 +309,7 @@ set(DEPLOID_LIB_SOURCE_FILES
         kgd_deploid/kgd_deploid_lib/kgd_variantIndex.cc
         kgd_deploid/kgd_deploid_lib/kgd_variantIndex.h
         kgd_deploid/kgd_deploid_lib/kgd_vcfReader.cc
-        kgd_deploid/kgd_deploid_lib/kgd_vcfReader.h)
+        kgd_deploid/kgd_deploid_lib/kgd_vcfReader.h kgd_deploid/kgd_random/kgd_mt_random.h)
 
 
 # Application level objects

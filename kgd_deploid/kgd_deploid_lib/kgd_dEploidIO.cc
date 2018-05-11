@@ -495,7 +495,7 @@ void kgd::DEploidIO::computeLLKfromInitialHap() {
 }
 
 
-void kgd::DEploidIO::chromPainting() {
+void kgd::DEploidIO::chromPainting(std::shared_ptr<RandomGenerator> random_generator) {
 
   kgl::ExecEnv::log().info("Painting haplotypes in :{}", initialHapFileName_);
 
@@ -536,8 +536,6 @@ void kgd::DEploidIO::chromPainting() {
 
   std::vector<double> expectedWsaf = computeExpectedWsafFromInitialHap();
 
-  std::shared_ptr<MersenneTwister> tmpRg(std::make_shared<MersenneTwister>(randomSeed()));
-
   if (doAllowInbreeding() == true) {
 
     panel->initializeUpdatePanel(panel->truePanelSize() + kStrain_ - 1);
@@ -564,7 +562,7 @@ void kgd::DEploidIO::chromPainting() {
                                      plaf_,
                                      expectedWsaf,
                                      finalProp_, initialHap_,
-                                     tmpRg,
+                                     random_generator,
                                      start,
                                      length,
                                      panel,
@@ -700,7 +698,7 @@ void kgd::DEploidIO::computeAdjustedEffectiveKstrain() {
 }
 
 
-void kgd::DEploidIO::paintIBD() {
+void kgd::DEploidIO::paintIBD(std::shared_ptr<RandomGenerator> randomGenerator) {
 
   std::vector<double> goodProp;
   std::vector<size_t> goodStrainIdx;
@@ -734,7 +732,6 @@ void kgd::DEploidIO::paintIBD() {
   tmpDEploidIO.refCount_ = refCount_;
   tmpDEploidIO.altCount_ = altCount_;
   tmpDEploidIO.plaf_ = plaf_;
-
   tmpDEploidIO.nLoci_ = nLoci();
   tmpDEploidIO.position_ = position_;
   tmpDEploidIO.chrom_ = chrom_;
@@ -743,9 +740,8 @@ void kgd::DEploidIO::paintIBD() {
 
   //tmpDEploidIO.writeLog (&std::cout);
 
-  std::shared_ptr<MersenneTwister> tmpRg(std::make_shared<MersenneTwister>(randomSeed()));
   IBDpath tmpIBDpath;
-  tmpIBDpath.init(tmpDEploidIO, tmpRg);
+  tmpIBDpath.init(tmpDEploidIO, randomGenerator);
   tmpIBDpath.buildPathProbabilityForPainting(goodProp);
   ibdLLK_ = tmpIBDpath.bestPath(goodProp);
   ibdProbsHeader_ = tmpIBDpath.getIBDprobsHeader();

@@ -39,7 +39,7 @@ namespace kgd = kellerberrin::deploid;
 
 
 // initialiseMCMCmachinery
-kgd::McmcMachinery::McmcMachinery(DEploidIO *dEploidIO,
+kgd::McmcMachinery::McmcMachinery(std::shared_ptr<DEploidIO> dEploidIO,
                                   std::shared_ptr<McmcSample> mcmcSample,
                                   std::shared_ptr<RandomGenerator> randomGenerator,
                                   bool useIBD) {

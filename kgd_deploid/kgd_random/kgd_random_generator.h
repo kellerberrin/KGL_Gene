@@ -44,9 +44,6 @@ namespace deploid {          // project level namespace
 class RandomGenerator
 {
 
- friend class MersenneTwister;
- friend class RRandomGenerator;
-
  public:
 
   RandomGenerator() : ff_(std::make_shared<FastFunc>()) { };
@@ -57,7 +54,7 @@ class RandomGenerator
   size_t seed() const { return seed_; }
 
   virtual void set_seed(const size_t seed) { seed_ = seed; }
-  virtual double sample() =0;
+  virtual double sample() = 0;
 
   // Base class methods
   // Initialize unit_exponential; must be called when the kgd_random generator is up and running

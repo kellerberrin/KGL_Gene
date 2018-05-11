@@ -31,7 +31,7 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>      // std::setw
-#include "kgd_mersenne_twister.h"
+#include "kgd_random_generator.h"
 #include "kgd_dEploidIO.h"
 #include "kgd_panel.h"
 #include "randomSample.hpp"   // src/codeCogs/randomSample.hpp
@@ -100,7 +100,7 @@ class McmcMachinery {
 
 public:
 
-  McmcMachinery(DEploidIO *dEplioidIO,
+  McmcMachinery(std::shared_ptr<DEploidIO> dEplioidIO,
                 std::shared_ptr<McmcSample> mcmcSample,
                 std::shared_ptr<RandomGenerator> randomGenerator,
                 bool useIBD = false);
@@ -112,7 +112,7 @@ private:
 
   std::shared_ptr<McmcSample> mcmcSample_;
   /* Variables */
-  DEploidIO *dEploidIO_;
+  std::shared_ptr<DEploidIO> dEploidIO_;
   std::shared_ptr<Panel> panel_;
   size_t kStrain_;
 
