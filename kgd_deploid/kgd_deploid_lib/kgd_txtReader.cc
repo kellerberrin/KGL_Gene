@@ -29,116 +29,174 @@
 #include "kgd_exceptions.h"
 #include "kgd_txtReader.h"
 
-void TxtReader::readFromFileBase(const char inchar[]){
-    fileName = std::string (inchar);
-    tmpChromInex_ = -1;
 
-    std::ifstream in_file(inchar);
-    std::string tmp_line;
-    if ( in_file.good() ){
-        getline ( in_file, tmp_line ); // skip the first line, which is the header
-        getline ( in_file, tmp_line );
-        while ( tmp_line.size() > 0 ){
-            size_t field_start = 0;
-            size_t field_end = 0;
-            size_t field_index = 0;
-            std::vector <double> contentRow;
-            while ( field_end < tmp_line.size() ){
-                field_end = std::min ( std::min ( tmp_line.find(',',field_start),
-                                        tmp_line.find('\t',field_start) ),
-                                  tmp_line.find('\n', field_start) );
+namespace kgd = kellerberrin::deploid;
 
-                std::string tmp_str = tmp_line.substr( field_start, field_end - field_start );
-                if ( field_index > 1 ){
-                    contentRow.push_back( strtod(tmp_str.c_str(), NULL) );
-                } else if ( field_index == 0 ){
-                    this->extractChrom( tmp_str );
-                } else if ( field_index == 1 ){
-                    this->extractPOS ( tmp_str );
-                }
 
-                field_start = field_end+1;
-                field_index++;
-            }
-            this->content_.push_back(contentRow);
-            getline ( in_file, tmp_line );
+void kgd::TxtReader::readFromFileBase(const char inchar[]) {
+
+  fileName = std::string(inchar);
+  tmpChromInex_ = -1;
+
+  std::ifstream in_file(inchar);
+  std::string tmp_line;
+
+  if (in_file.good()) {
+
+    getline(in_file, tmp_line); // skip the first line, which is the header
+    getline(in_file, tmp_line);
+
+    while (tmp_line.size() > 0) {
+
+      size_t field_start = 0;
+      size_t field_end = 0;
+      size_t field_index = 0;
+      std::vector<double> contentRow;
+
+      while (field_end < tmp_line.size()) {
+
+        field_end = std::min(std::min(tmp_line.find(',', field_start),
+                                      tmp_line.find('\t', field_start)),
+                             tmp_line.find('\n', field_start));
+
+        std::string tmp_str = tmp_line.substr(field_start, field_end - field_start);
+
+        if (field_index > 1) {
+
+          contentRow.push_back(strtod(tmp_str.c_str(), NULL));
+
+        } else if (field_index == 0) {
+
+          extractChrom(tmp_str);
+
+        } else if (field_index == 1) {
+
+          extractPOS(tmp_str);
+
         }
-    } else {
-        throw InvalidInputFile(fileName);
+
+        field_start = field_end + 1;
+        field_index++;
+
+      }
+
+      content_.push_back(contentRow);
+      getline(in_file, tmp_line);
 
     }
-    in_file.close();
 
-    this->position_.push_back( this->tmpPosition_ );
+  } else {
 
-    this->nLoci_ = this->content_.size();
-    this->nInfoLines_ = this->content_.back().size();
+    throw InvalidInputFile(fileName);
 
-    if ( this->nInfoLines_ == 1 ){
-        this->reshapeContentToInfo();
-    }
+  }
 
-    this->getIndexOfChromStarts();
-    assert ( tmpChromInex_ > -1 );
-    assert ( chrom_.size() == position_.size() );
-    assert(this->doneGetIndexOfChromStarts_ == true);
+  in_file.close();
+
+  position_.push_back(tmpPosition_);
+
+  nLoci_ = content_.size();
+  nInfoLines_ = content_.back().size();
+
+  if (nInfoLines_ == 1) {
+
+    reshapeContentToInfo();
+
+  }
+
+  getIndexOfChromStarts();
+
+  assert (tmpChromInex_ > -1);
+  assert (chrom_.size() == position_.size());
+  assert(doneGetIndexOfChromStarts_ == true);
+
 }
 
 
-void TxtReader::extractChrom( std::string & tmp_str ){
-    if ( tmpChromInex_ >= 0 ){
-        if ( tmp_str != this->chrom_.back() ){
-            tmpChromInex_++;
-            // save current positions
-            this->position_.push_back(this->tmpPosition_);
+void kgd::TxtReader::extractChrom(std::string &tmp_str) {
 
-            // start new chrom
-            this->tmpPosition_.clear();
-            this->chrom_.push_back(tmp_str);
-        }
-    } else {
-        tmpChromInex_++;
-        assert (this->chrom_.size() == 0);
-        this->chrom_.push_back( tmp_str );
-        assert ( this->tmpPosition_.size() == 0 );
-        assert ( this->position_.size() == 0);
+  if (tmpChromInex_ >= 0) {
+
+    if (tmp_str != chrom_.back()) {
+
+      tmpChromInex_++;
+      // save current positions
+      position_.push_back(tmpPosition_);
+
+      // start new chrom
+      tmpPosition_.clear();
+      chrom_.push_back(tmp_str);
+
     }
+
+  } else {
+
+    tmpChromInex_++;
+
+    assert (chrom_.size() == 0);
+
+    chrom_.push_back(tmp_str);
+
+    assert (tmpPosition_.size() == 0);
+    assert (position_.size() == 0);
+
+  }
+
 }
 
 
-void TxtReader::extractPOS( std::string & tmp_str ){
-    int ret;
-    try {
-        ret = std::stoi(tmp_str.c_str(), NULL);
-    } catch ( const std::exception &e ){
-        throw BadConversion(tmp_str, fileName);
-    }
-    this->tmpPosition_.push_back(ret);
+void kgd::TxtReader::extractPOS(std::string &tmp_str) {
+  int ret;
+
+  try {
+
+    ret = std::stoi(tmp_str.c_str(), NULL);
+
+  } catch (const std::exception &e) {
+
+    throw BadConversion(tmp_str, fileName);
+  }
+
+  tmpPosition_.push_back(ret);
+
 }
 
 
-void TxtReader::reshapeContentToInfo(){
-    assert ( this->info_.size() == 0 );
-    for ( size_t i = 0; i < this->content_.size(); i++){
-        this->info_.push_back( this->content_[i][0] );
-    }
+void kgd::TxtReader::reshapeContentToInfo() {
+
+  assert (info_.size() == 0);
+
+  for (size_t i = 0; i < content_.size(); i++) {
+
+    info_.push_back(content_[i][0]);
+
+  }
+
 }
 
 
-void TxtReader::removeMarkers ( ){
-    assert( this->keptContent_.size() == (size_t)0 );
-    for ( auto const &value: this->indexOfContentToBeKept){
-        this->keptContent_.push_back(this->content_[value] );
-    }
+void kgd::TxtReader::removeMarkers() {
 
-    this->content_.clear();
-    assert(this->content_.size() == (size_t)0);
-    this->content_ = this->keptContent_;
-    this->keptContent_.clear();
+  assert(keptContent_.size() == 0);
 
-    if ( this->nInfoLines_ == 1 ){
-        this->info_.clear();
-        this->reshapeContentToInfo();
-    }
-    this->nLoci_ = this->content_.size();
+  for (auto const &value: indexOfContentToBeKept) {
+
+    keptContent_.push_back(content_[value]);
+
+  }
+
+  content_.clear();
+  assert(content_.size() == (size_t) 0);
+  content_ = keptContent_;
+  keptContent_.clear();
+
+  if (nInfoLines_ == 1) {
+
+    info_.clear();
+    reshapeContentToInfo();
+
+  }
+
+  nLoci_ = content_.size();
+
 }

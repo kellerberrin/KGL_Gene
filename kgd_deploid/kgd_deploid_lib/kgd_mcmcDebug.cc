@@ -24,26 +24,37 @@
  */
 
 #include "kgd_mcmc.h"
+
 //#include "utility.hpp"
 //#include <math.h>       /* ceil */
 //#include <random>
 //#include "updateHap.hpp"
 //#include <stdio.h>
 
+namespace kgd = kellerberrin::deploid;
 
-bool McmcMachinery::doutProp(){
-    dout << "  Update proportion to: ";
 
-    for ( auto const& value: this->currentProp_ ){
-        dout << value << " ";
-    }
+bool kgd::McmcMachinery::doutProp() {
 
-    dout<<endl;
-    return true;
+  dout << "  Update proportion to: ";
+
+  for (auto const &value: this->currentProp_) {
+
+    dout << value << " ";
+
+  }
+
+  dout << std::endl;
+
+  return true;
+
 }
 
 
-bool McmcMachinery::doutLLK(){
-    dout << " Current log likelihood = " << sumOfVec( this->currentLLks_ ) << endl;
-    return true;
+bool kgd::McmcMachinery::doutLLK() {
+
+  dout << " Current log likelihood = " << sumOfVec(this->currentLLks_) << std::endl;
+
+  return true;
+
 }

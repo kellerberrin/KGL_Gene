@@ -24,61 +24,84 @@
  */
 
 
-#ifndef TXTREADER
-#define TXTREADER
+#ifndef KGD_TXTREADER_H
+#define KGD_TXTREADER_H
+
 
 #include "kgd_variantIndex.h"
 #include "kgd_exceptions.h"
 
+
+namespace kellerberrin {    // organization level namespace
+namespace deploid {          // project level namespace
+
+
 class TxtReader : public VariantIndex {
 #ifdef UNITTEST
- friend class TestPanel;
- friend class TestTxtReader;
- friend class TestInitialHaplotypes;
+  friend class TestPanel;
+  friend class TestTxtReader;
+  friend class TestInitialHaplotypes;
 #endif
- friend class McmcMachinery;
- friend class UpdateSingleHap;
- friend class UpdatePairHap;
- friend class UpdateHap;
- friend class Panel;
- friend class DEploidIO;
-  private:
-    // Members
 
-    // content is a matrix of n.loci by n.strains, i.e. content length is n.loci
-    std::vector < std::vector < double > > content_;
-    std::vector < std::vector < double > > keptContent_;
-    // info_ only refers to the first column of the content
-    std::vector <double> info_;
+  friend class McmcMachinery;
 
-    size_t nInfoLines_;
+  friend class UpdateSingleHap;
 
-    int tmpChromInex_;
-    std::vector < int > tmpPosition_;
+  friend class UpdatePairHap;
 
-    // Methods
-    void extractChrom( std::string & tmp_str );
-    void extractPOS ( std::string & tmp_str );
-    void reshapeContentToInfo();
-    std::string fileName;
+  friend class UpdateHap;
 
-  public: // move the following to private
-    TxtReader (){};
-    virtual void readFromFile( const char inchar[] ){ this->readFromFileBase( inchar ); };
-    void readFromFileBase( const char inchar[] );
-    virtual ~TxtReader(){ };
-    void removeMarkers ( );
+  friend class Panel;
+
+  friend class DEploidIO;
+
+private:
+  // Members
+
+  // content is a matrix of n.loci by n.strains, i.e. content length is n.loci
+  std::vector<std::vector<double> > content_;
+  std::vector<std::vector<double> > keptContent_;
+  // info_ only refers to the first column of the content
+  std::vector<double> info_;
+
+  size_t nInfoLines_;
+
+  int tmpChromInex_;
+  std::vector<int> tmpPosition_;
+
+  // Methods
+  void extractChrom(std::string &tmp_str);
+
+  void extractPOS(std::string &tmp_str);
+
+  void reshapeContentToInfo();
+
+  std::string fileName;
+
+public: // move the following to private
+  TxtReader() {};
+
+  virtual void readFromFile(const char inchar[]) { this->readFromFileBase(inchar); };
+
+  void readFromFileBase(const char inchar[]);
+
+  virtual ~TxtReader() {};
+
+  void removeMarkers();
 };
-
-
 
 
 class ExcludeMarker : public TxtReader {
   // sorting
-  public:
-    ExcludeMarker():TxtReader(){};
-    ~ExcludeMarker(){};
+public:
+  ExcludeMarker() : TxtReader() {};
+
+  ~ExcludeMarker() {};
 };
+
+
+}   // organization level namespace
+}   // project level namespace
 
 
 #endif

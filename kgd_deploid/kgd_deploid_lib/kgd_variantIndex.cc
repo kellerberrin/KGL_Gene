@@ -29,86 +29,104 @@
 #include <iostream>
 
 
+namespace kgd = kellerberrin::deploid;
 
-VariantIndex::VariantIndex(){
-    this->init();
-};
 
-void VariantIndex::findWhoToBeKept(std::shared_ptr<ExcludeMarker> excludedMarkers ){
+kgd::VariantIndex::VariantIndex() {
 
-    dout << " Starts findWhoToBeKept " << std::endl;
-    assert ( this->indexOfContentToBeKept.size() == 0 );
-    assert ( this->indexOfPosToBeKept.size() == 0 );
+  init();
 
-    for ( size_t chromI = 0; chromI < this->chrom_.size(); chromI++){
-        dout << "   Going through chrom "<< chrom_[chromI] << std::endl;
-        std::vector < size_t > tmpindexOfPosToBeKept;
+}
 
-        // detemine if something needs to be removed from the current chrom.
-        std::vector<std::string>::iterator chromIt = find ( excludedMarkers->chrom_.begin(),  excludedMarkers->chrom_.end(), this->chrom_[chromI]);
+void kgd::VariantIndex::findWhoToBeKept(std::shared_ptr<ExcludeMarker> excludedMarkers) {
 
-        size_t hapIndex = indexOfChromStarts_[ chromI ];
-        size_t chromIndexInExclude = std::distance(excludedMarkers->chrom_.begin(), chromIt);
-        for ( size_t posI = 0; posI < this->position_[chromI].size(); posI++){
-            if ( chromIt == excludedMarkers->chrom_.end() ){
-                indexOfContentToBeKept.push_back(hapIndex);
-                tmpindexOfPosToBeKept.push_back(posI);
-            } else if (  std::find( excludedMarkers->position_[chromIndexInExclude].begin(),
-                             excludedMarkers->position_[chromIndexInExclude].end(),
-                             this->position_[chromI][posI]) == excludedMarkers->position_[chromIndexInExclude].end() ){
-                indexOfContentToBeKept.push_back(hapIndex);
-                tmpindexOfPosToBeKept.push_back(posI);
-            }
-            hapIndex++;
-        }
-        indexOfPosToBeKept.push_back(tmpindexOfPosToBeKept);
+  dout << " Starts findWhoToBeKept " << std::endl;
+
+  assert (indexOfContentToBeKept.size() == 0);
+  assert (indexOfPosToBeKept.size() == 0);
+
+  for (size_t chromI = 0; chromI < chrom_.size(); chromI++) {
+
+    dout << "   Going through chrom " << chrom_[chromI] << std::endl;
+
+    std::vector<size_t> tmpindexOfPosToBeKept;
+
+    // detemine if something needs to be removed from the current chrom.
+    std::vector<std::string>::iterator chromIt = find(excludedMarkers->chrom_.begin(), excludedMarkers->chrom_.end(),
+                                                      chrom_[chromI]);
+
+    size_t hapIndex = indexOfChromStarts_[chromI];
+    size_t chromIndexInExclude = std::distance(excludedMarkers->chrom_.begin(), chromIt);
+    for (size_t posI = 0; posI < position_[chromI].size(); posI++) {
+
+      if (chromIt == excludedMarkers->chrom_.end()) {
+
+        indexOfContentToBeKept.push_back(hapIndex);
+        tmpindexOfPosToBeKept.push_back(posI);
+
+      } else if (std::find(excludedMarkers->position_[chromIndexInExclude].begin(),
+                           excludedMarkers->position_[chromIndexInExclude].end(),
+                           position_[chromI][posI]) == excludedMarkers->position_[chromIndexInExclude].end()) {
+
+        indexOfContentToBeKept.push_back(hapIndex);
+        tmpindexOfPosToBeKept.push_back(posI);
+
+      }
+
+      hapIndex++;
+
     }
-    assert ( indexOfPosToBeKept.size() == this->chrom_.size() );
 
-    dout << indexOfContentToBeKept.size() << " sites need to be Kept " << std::endl;
+    indexOfPosToBeKept.push_back(tmpindexOfPosToBeKept);
+
+  }
+
+  assert (indexOfPosToBeKept.size() == chrom_.size());
+
+  dout << indexOfContentToBeKept.size() << " sites need to be Kept " << std::endl;
 }
 
 
-void VariantIndex::findAndKeepMarkers(std::shared_ptr<ExcludeMarker> excludedMarkers ){
-    this->setDoneGetIndexOfChromStarts( false );
-    dout << " findAndKeepMarkers called" << std::endl;
-    this->findWhoToBeKept (excludedMarkers );
-    this->removePositions();
-    this->getIndexOfChromStarts();
-    this->removeMarkers ();
+void kgd::VariantIndex::findAndKeepMarkers(std::shared_ptr<ExcludeMarker> excludedMarkers) {
+  setDoneGetIndexOfChromStarts(false);
+  dout << " findAndKeepMarkers called" << std::endl;
+  findWhoToBeKept(excludedMarkers);
+  removePositions();
+  getIndexOfChromStarts();
+  removeMarkers();
 }
 
 
-void VariantIndex::removePositions(){
-    assert ( this->keptPosition_.size() == (size_t)0 );
-    for ( size_t chromI = 0; chromI < this->chrom_.size(); chromI++){
-        std::vector <int> tmpKeptPosition_;
-        for ( size_t i = 0; i < this->indexOfPosToBeKept[chromI].size(); i++ ){
-            tmpKeptPosition_.push_back( this->position_[chromI][this->indexOfPosToBeKept[chromI][i]] );
-        }
-        this->keptPosition_.push_back(tmpKeptPosition_);
+void kgd::VariantIndex::removePositions() {
+  assert (keptPosition_.size() == (size_t) 0);
+  for (size_t chromI = 0; chromI < chrom_.size(); chromI++) {
+    std::vector<int> tmpKeptPosition_;
+    for (size_t i = 0; i < indexOfPosToBeKept[chromI].size(); i++) {
+      tmpKeptPosition_.push_back(position_[chromI][indexOfPosToBeKept[chromI][i]]);
     }
-    this->position_.clear();
-    this->position_ = this->keptPosition_;
-    this->keptPosition_.clear();
+    keptPosition_.push_back(tmpKeptPosition_);
+  }
+  position_.clear();
+  position_ = keptPosition_;
+  keptPosition_.clear();
 }
 
 
-void VariantIndex::getIndexOfChromStarts(){
-    assert(this->doneGetIndexOfChromStarts_ == false);
-    this->indexOfChromStarts_.clear();
-    assert( indexOfChromStarts_.size() == 0 );
-    this->indexOfChromStarts_.push_back( (size_t) 0);
-    for ( size_t tmpChrom = 0 ; indexOfChromStarts_.size() < this->chrom_.size(); tmpChrom++ ){
-        indexOfChromStarts_.push_back(indexOfChromStarts_.back()+this->position_[tmpChrom].size());
-    }
-    assert( indexOfChromStarts_.size() == this->chrom_.size() );
-    this->setDoneGetIndexOfChromStarts( true );
+void kgd::VariantIndex::getIndexOfChromStarts() {
+  assert(doneGetIndexOfChromStarts_ == false);
+  indexOfChromStarts_.clear();
+  assert(indexOfChromStarts_.size() == 0);
+  indexOfChromStarts_.push_back((size_t) 0);
+  for (size_t tmpChrom = 0; indexOfChromStarts_.size() < chrom_.size(); tmpChrom++) {
+    indexOfChromStarts_.push_back(indexOfChromStarts_.back() + position_[tmpChrom].size());
+  }
+  assert(indexOfChromStarts_.size() == chrom_.size());
+  setDoneGetIndexOfChromStarts(true);
 }
 
 
-void VariantIndex::init(){
-    this->setDoneGetIndexOfChromStarts( false );
+void kgd::VariantIndex::init() {
+  setDoneGetIndexOfChromStarts(false);
 }
 
-void VariantIndex::removeMarkers () { throw VirtualFunctionShouldNotBeCalled();}
+void kgd::VariantIndex::removeMarkers() { throw VirtualFunctionShouldNotBeCalled(); }

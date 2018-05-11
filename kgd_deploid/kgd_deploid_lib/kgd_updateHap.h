@@ -23,84 +23,105 @@
  *
  */
 
+
+#ifndef KGD_HAP_H
+#define KGD_HAP_H
+
+
 #include <vector>
 #include <iostream>
 #include "kgd_utility.h"
 #include "kgd_panel.h"
 
-#ifndef HAP
-#define HAP
+
+namespace kellerberrin {    // organization level namespace
+namespace deploid {          // project level namespace
 
 
 
-
-class UpdateHap{
+class UpdateHap {
 #ifdef UNITTEST
   friend class TestUpdatePairHap;
   friend class TestUpdateSingleHap;
   friend class TestUpdateHap;
 #endif
+
   friend class McmcMachinery;
+
   friend class UpdateSingleHap;
+
   friend class UpdatePairHap;
+
   friend class DEploidIO;
 
-  public:
+public:
 
-    size_t nPanel() const { return this->nPanel_; }
+  size_t nPanel() const { return this->nPanel_; }
 
-  private:
+private:
 
-    UpdateHap( std::vector <double> &refCount,
-               std::vector <double> &altCount,
-               std::vector <double> &plaf,
-               std::vector <double> &expectedWsaf,
-               std::vector <double> &proportion,
-               std::vector < std::vector <double> > &haplotypes,
-               RandomGenerator* rg,
-               size_t segmentStartIndex,
-               size_t nLoci,
-               std::shared_ptr<Panel> panel,
-               double missCopyProb,
-               double scalingFactor);
-    virtual ~UpdateHap() = default;
+  UpdateHap(std::vector<double> &refCount,
+            std::vector<double> &altCount,
+            std::vector<double> &plaf,
+            std::vector<double> &expectedWsaf,
+            std::vector<double> &proportion,
+            std::vector<std::vector<double> > &haplotypes,
+            RandomGenerator *rg,
+            size_t segmentStartIndex,
+            size_t nLoci,
+            std::shared_ptr<Panel> panel,
+            double missCopyProb,
+            double scalingFactor);
 
-    std::shared_ptr<Panel> panel_;
-    double missCopyProb_;
-    RandomGenerator* recombRg_;
-    RandomGenerator* recombLevel2Rg_;
-    RandomGenerator* missCopyRg_;
+  virtual ~UpdateHap() = default;
 
-    size_t kStrain_;
-    size_t nPanel_;
-    void setPanelSize ( const size_t setTo ){ this->nPanel_ = setTo; }
+  std::shared_ptr<Panel> panel_;
+  double missCopyProb_;
+  RandomGenerator *recombRg_;
+  RandomGenerator *recombLevel2Rg_;
+  RandomGenerator *missCopyRg_;
 
-    std::vector <double> newLLK;
+  size_t kStrain_;
+  size_t nPanel_;
 
-    size_t segmentStartIndex_;
-    size_t nLoci_;
+  void setPanelSize(const size_t setTo) { this->nPanel_ = setTo; }
 
-    std::vector < std::vector <double> > emission_;
-    double scalingFactor_;
-    double scalingFactor() const {return this->scalingFactor_; }
-    void setScalingFactor ( const double setTo ){ this->scalingFactor_ = setTo; }
+  std::vector<double> newLLK;
 
-    // Methods
-    virtual void core(std::vector <double> &refCount,
-                           std::vector <double> &altCount,
-                           std::vector <double> &plaf,
-                           std::vector <double> &expectedWsaf,
-                           std::vector <double> &proportion,
-                           std::vector < std::vector <double> > &haplotypes );
-    virtual void calcExpectedWsaf( std::vector <double> & expectedWsaf, std::vector <double> &proportion, std::vector < std::vector <double> > &haplotypes);
-    virtual void calcHapLLKs( std::vector <double> &refCount, std::vector <double> &altCount);
-    virtual void buildEmission( double missCopyProb );
-    // calcFwdProbs() differ for class UpdateSingleHap and UpdatePairHap
-    //virtual void calcFwdProbs();
-    virtual void samplePaths();
-    virtual void addMissCopying( double missCopyProb );
-    virtual void updateLLK();
-    virtual void sampleHapIndependently(std::vector <double> &plaf);
+  size_t segmentStartIndex_;
+  size_t nLoci_;
+
+  std::vector<std::vector<double> > emission_;
+  double scalingFactor_;
+
+  double scalingFactor() const { return this->scalingFactor_; }
+
+  void setScalingFactor(const double setTo) { this->scalingFactor_ = setTo; }
+
+  // Methods
+  virtual void core(std::vector<double> &refCount,
+                    std::vector<double> &altCount,
+                    std::vector<double> &plaf,
+                    std::vector<double> &expectedWsaf,
+                    std::vector<double> &proportion,
+                    std::vector<std::vector<double> > &haplotypes);
+
+  virtual void calcExpectedWsaf(std::vector<double> &expectedWsaf, std::vector<double> &proportion,
+                                std::vector<std::vector<double> > &haplotypes);
+
+  virtual void calcHapLLKs(std::vector<double> &refCount, std::vector<double> &altCount);
+
+  virtual void buildEmission(double missCopyProb);
+
+  // calcFwdProbs() differ for class UpdateSingleHap and UpdatePairHap
+  //virtual void calcFwdProbs();
+  virtual void samplePaths();
+
+  virtual void addMissCopying(double missCopyProb);
+
+  virtual void updateLLK();
+
+  virtual void sampleHapIndependently(std::vector<double> &plaf);
 };
 
 
@@ -108,134 +129,171 @@ class UpdateSingleHap : public UpdateHap {
 #ifdef UNITTEST
   friend class TestUpdateSingleHap;
 #endif
- friend class McmcMachinery;
- friend class DEploidIO;
+
+  friend class McmcMachinery;
+
+  friend class DEploidIO;
   //public:
-  private:
-    UpdateSingleHap( std::vector <double> &refCount,
-                      std::vector <double> &altCount,
-                      std::vector <double> &plaf,
-                      std::vector <double> &expectedWsaf,
-                      std::vector <double> &proportion,
-                      std::vector < std::vector <double> > &haplotypes,
-                      RandomGenerator* rg,
-                      size_t segmentStartIndex,
-                      size_t nLoci,
-                      std::shared_ptr<Panel> panel, double missCopyProb,
-                      double scalingFactor,
-                      size_t strainIndex );
-    ~UpdateSingleHap() =default;
+private:
+  UpdateSingleHap(std::vector<double> &refCount,
+                  std::vector<double> &altCount,
+                  std::vector<double> &plaf,
+                  std::vector<double> &expectedWsaf,
+                  std::vector<double> &proportion,
+                  std::vector<std::vector<double> > &haplotypes,
+                  RandomGenerator *rg,
+                  size_t segmentStartIndex,
+                  size_t nLoci,
+                  std::shared_ptr<Panel> panel, double missCopyProb,
+                  double scalingFactor,
+                  size_t strainIndex);
 
-    std::vector <double> siteOfOneSwitchOne;
-    std::vector <double> siteOfOneMissCopyOne;
-    std::vector < std::vector <double> > fwdProbs_;
-    std::vector < std::vector < double > > bwdProbs_;
-    std::vector < std::vector <double> > fwdBwdProbs_;
+  ~UpdateSingleHap() = default;
 
-    size_t strainIndex_;
-    std::vector <double> expectedWsaf0_;
-    std::vector <double> expectedWsaf1_;
-    std::vector <double> llk0_;
-    std::vector <double> llk1_;
+  std::vector<double> siteOfOneSwitchOne;
+  std::vector<double> siteOfOneMissCopyOne;
+  std::vector<std::vector<double> > fwdProbs_;
+  std::vector<std::vector<double> > bwdProbs_;
+  std::vector<std::vector<double> > fwdBwdProbs_;
 
-    std::vector <double> path_;
-    std::vector <double> hap_;
+  size_t strainIndex_;
+  std::vector<double> expectedWsaf0_;
+  std::vector<double> expectedWsaf1_;
+  std::vector<double> llk0_;
+  std::vector<double> llk1_;
 
-    // Methods
-    void core( std::vector <double> &refCount,
-               std::vector <double> &altCount,
-               std::vector <double> &plaf,
-               std::vector <double> &expectedWsaf,
-               std::vector <double> &proportion,
-               std::vector < std::vector <double> > &haplotypes );
-    void painting( std::vector <double> &refCount,
-                   std::vector <double> &altCount,
-                   std::vector <double> &expectedWsaf,
-                   std::vector <double> &proportion,
-                   std::vector < std::vector <double> > &haplotypes );
-    void calcExpectedWsaf( std::vector <double> & expectedWsaf, std::vector <double> &proportion, std::vector < std::vector <double> > &haplotypes);
-    void calcHapLLKs( std::vector <double> &refCount, std::vector <double> &altCount);
-    void buildEmission( double missCopyProb );
-    void buildEmissionBasicVersion( double missCopyProb );
-    void calcFwdProbs();
-    void calcBwdProbs();
-    void calcFwdBwdProbs();
-    void samplePaths();
-    void addMissCopying( double missCopyProb );
-    void sampleHapIndependently(std::vector <double> &plaf);
-    void updateLLK();
+  std::vector<double> path_;
+  std::vector<double> hap_;
+
+  // Methods
+  void core(std::vector<double> &refCount,
+            std::vector<double> &altCount,
+            std::vector<double> &plaf,
+            std::vector<double> &expectedWsaf,
+            std::vector<double> &proportion,
+            std::vector<std::vector<double> > &haplotypes);
+
+  void painting(std::vector<double> &refCount,
+                std::vector<double> &altCount,
+                std::vector<double> &expectedWsaf,
+                std::vector<double> &proportion,
+                std::vector<std::vector<double> > &haplotypes);
+
+  void calcExpectedWsaf(std::vector<double> &expectedWsaf, std::vector<double> &proportion,
+                        std::vector<std::vector<double> > &haplotypes);
+
+  void calcHapLLKs(std::vector<double> &refCount, std::vector<double> &altCount);
+
+  void buildEmission(double missCopyProb);
+
+  void buildEmissionBasicVersion(double missCopyProb);
+
+  void calcFwdProbs();
+
+  void calcBwdProbs();
+
+  void calcFwdBwdProbs();
+
+  void samplePaths();
+
+  void addMissCopying(double missCopyProb);
+
+  void sampleHapIndependently(std::vector<double> &plaf);
+
+  void updateLLK();
 };
 
 
-class UpdatePairHap : public UpdateHap{
+class UpdatePairHap : public UpdateHap {
 #ifdef UNITTEST
- friend class TestUpdatePairHap;
+  friend class TestUpdatePairHap;
 #endif
- friend class McmcMachinery;
- friend class DEploidIO;
-  public:
 
-     UpdatePairHap( std::vector <double> &refCount,
-                      std::vector <double> &altCount,
-                      std::vector <double> &plaf,
-                      std::vector <double> &expectedWsaf,
-                      std::vector <double> &proportion,
-                      std::vector < std::vector <double> > &haplotypes,
-                      RandomGenerator* rg,
-                      size_t segmentStartIndex,
-                      size_t nLoci,
-                      std::shared_ptr<Panel> panel, double missCopyProb,
-                      double scalingFactor, bool forbidCopyFromSame,
-                      size_t strainIndex1,
-                      size_t strainIndex2 );
-    ~UpdatePairHap() =default;
+  friend class McmcMachinery;
 
-  private:
-    std::vector <double> siteOfTwoSwitchOne;
-    std::vector <double> siteOfTwoMissCopyOne;
-    std::vector <double> siteOfTwoSwitchTwo;
-    std::vector <double> siteOfTwoMissCopyTwo;
-    std::vector< std::vector < std::vector <double> > > fwdProbs_;
+  friend class DEploidIO;
 
-    size_t strainIndex1_;
-    size_t strainIndex2_;
-    bool forbidCopyFromSame_;
+public:
 
-    std::vector <double> expectedWsaf00_;
-    std::vector <double> expectedWsaf01_;
-    std::vector <double> expectedWsaf10_;
-    std::vector <double> expectedWsaf11_;
-    std::vector <double> llk00_;
-    std::vector <double> llk01_;
-    std::vector <double> llk10_;
-    std::vector <double> llk11_;
-    std::vector <double> path1_;
-    std::vector <double> path2_;
-    std::vector <double> hap1_;
-    std::vector <double> hap2_;
+  UpdatePairHap(std::vector<double> &refCount,
+                std::vector<double> &altCount,
+                std::vector<double> &plaf,
+                std::vector<double> &expectedWsaf,
+                std::vector<double> &proportion,
+                std::vector<std::vector<double> > &haplotypes,
+                RandomGenerator *rg,
+                size_t segmentStartIndex,
+                size_t nLoci,
+                std::shared_ptr<Panel> panel, double missCopyProb,
+                double scalingFactor, bool forbidCopyFromSame,
+                size_t strainIndex1,
+                size_t strainIndex2);
 
-    // Methods
-    void core(std::vector <double> &refCount,
-                           std::vector <double> &altCount,
-                           std::vector <double> &plaf,
-                           std::vector <double> &expectedWsaf,
-                           std::vector <double> &proportion,
-                           std::vector < std::vector <double> > &haplotypes );
+  ~UpdatePairHap() = default;
 
-    void calcExpectedWsaf( std::vector <double> & expectedWsaf, std::vector <double> &proportion, std::vector < std::vector <double> > &haplotypes);
-    void calcHapLLKs( std::vector <double> &refCount, std::vector <double> &altCount);
-    void buildEmission( double missCopyProb );
-    void calcFwdProbs( bool forbidCopyFromSame );
-    void samplePaths();
-    void addMissCopying( double missCopyProb );
-    void sampleHapIndependently(std::vector <double> &plaf);
-    void updateLLK();
+private:
+  std::vector<double> siteOfTwoSwitchOne;
+  std::vector<double> siteOfTwoMissCopyOne;
+  std::vector<double> siteOfTwoSwitchTwo;
+  std::vector<double> siteOfTwoMissCopyTwo;
+  std::vector<std::vector<std::vector<double> > > fwdProbs_;
 
-    // Own methods
-    std::vector <double> computeRowMarginalDist( std::vector < std::vector < double > > & probDist );
-    std::vector <double> computeColMarginalDist( std::vector < std::vector < double > > & probDist );
-    std::vector <size_t> sampleMatrixIndex( std::vector < std::vector < double > > &probDist );
+  size_t strainIndex1_;
+  size_t strainIndex2_;
+  bool forbidCopyFromSame_;
+
+  std::vector<double> expectedWsaf00_;
+  std::vector<double> expectedWsaf01_;
+  std::vector<double> expectedWsaf10_;
+  std::vector<double> expectedWsaf11_;
+  std::vector<double> llk00_;
+  std::vector<double> llk01_;
+  std::vector<double> llk10_;
+  std::vector<double> llk11_;
+  std::vector<double> path1_;
+  std::vector<double> path2_;
+  std::vector<double> hap1_;
+  std::vector<double> hap2_;
+
+  // Methods
+  void core(std::vector<double> &refCount,
+            std::vector<double> &altCount,
+            std::vector<double> &plaf,
+            std::vector<double> &expectedWsaf,
+            std::vector<double> &proportion,
+            std::vector<std::vector<double> > &haplotypes);
+
+  void calcExpectedWsaf(std::vector<double> &expectedWsaf, std::vector<double> &proportion,
+                        std::vector<std::vector<double> > &haplotypes);
+
+  void calcHapLLKs(std::vector<double> &refCount, std::vector<double> &altCount);
+
+  void buildEmission(double missCopyProb);
+
+  void calcFwdProbs(bool forbidCopyFromSame);
+
+  void samplePaths();
+
+  void addMissCopying(double missCopyProb);
+
+  void sampleHapIndependently(std::vector<double> &plaf);
+
+  void updateLLK();
+
+  // Own methods
+  std::vector<double> computeRowMarginalDist(std::vector<std::vector<double> > &probDist);
+
+  std::vector<double> computeColMarginalDist(std::vector<std::vector<double> > &probDist);
+
+  std::vector<size_t> sampleMatrixIndex(std::vector<std::vector<double> > &probDist);
 
 };
+
+
+
+}   // organization level namespace
+}   // project level namespace
+
+
 
 #endif

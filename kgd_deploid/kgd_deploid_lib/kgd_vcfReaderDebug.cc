@@ -27,9 +27,13 @@
 #include <iostream>      // std::cout
 #include "kgd_vcfReader.h"
 
-using namespace std;
 
-bool VcfReader::printSampleName(){
-    dout << "Sample name is " << this->sampleName << endl;
-    return true;
+namespace kgd = kellerberrin::deploid;
+
+
+bool kgd::VcfReader::printSampleName() {
+
+  dout << "Sample name is " << this->sampleName << std::endl;
+  return true;
+
 }

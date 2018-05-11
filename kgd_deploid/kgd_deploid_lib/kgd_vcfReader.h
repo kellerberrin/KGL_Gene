@@ -23,6 +23,12 @@
  *
  */
 
+
+#ifndef KGD_VCF_H
+#define KGD_VCF_H
+
+
+
 #include <string>  /* string */
 #include <vector>  /* vector */
 #include <fstream>
@@ -31,45 +37,59 @@
 #include "kgd_variantIndex.h"
 #include "gzstream.h"
 
-#ifndef VCF
-#define VCF
 
-using namespace std;
 
-struct InvalidVcf : public InvalidInput{
-    InvalidVcf( string str ):InvalidInput( str ){
-    }
-    virtual ~InvalidVcf() throw() {}
-    //virtual const char* what () const noexcept {
-        //return throwMsg.c_str();
-    //}
+namespace kellerberrin {    // organization level namespace
+namespace deploid {          // project level namespace
+
+
+  
+struct InvalidVcf : public InvalidInput {
+
+  InvalidVcf(std::string str) : InvalidInput(str) {}
+
+  virtual ~InvalidVcf() throw() {}
+  //virtual const char* what () const noexcept {
+  //return throwMsg.c_str();
+  //}
 };
 
 
-struct VcfInvalidHeaderFieldNames : public InvalidVcf{
-    VcfInvalidHeaderFieldNames( string str1, string str2 ):InvalidVcf( str1 ){
-        this->reason = " VCF field header expects: ";
-        throwMsg = this->reason + this->src + ", " + str2 + " was found!" ;
-    }
-    ~VcfInvalidHeaderFieldNames() throw() {}
+struct VcfInvalidHeaderFieldNames : public InvalidVcf {
+
+  VcfInvalidHeaderFieldNames(std::string str1, std::string str2) : InvalidVcf(str1) {
+
+    this->reason = " VCF field header expects: ";
+    throwMsg = this->reason + this->src + ", " + str2 + " was found!";
+
+  }
+
+  ~VcfInvalidHeaderFieldNames() throw() {}
 };
 
 
-struct VcfInvalidVariantEntry : public InvalidVcf{
-    VcfInvalidVariantEntry( string str ):InvalidVcf( str ){}
-    virtual ~VcfInvalidVariantEntry() throw() {}
-    //virtual const char* what () const noexcept {
-        //return throwMsg.c_str();
-    //}
+struct VcfInvalidVariantEntry : public InvalidVcf {
+
+  VcfInvalidVariantEntry(std::string str) : InvalidVcf(str) {}
+
+  virtual ~VcfInvalidVariantEntry() throw() {}
+  //virtual const char* what () const noexcept {
+  //return throwMsg.c_str();
+  //}
 };
 
 
-struct VcfCoverageFieldNotFound : public VcfInvalidVariantEntry{
-    VcfCoverageFieldNotFound( string str ):VcfInvalidVariantEntry( str ){
-        this->reason = "Coverage field AD was not found in the FORMAT, found: ";
-        throwMsg = this->reason + this->src ;
-    }
-    ~VcfCoverageFieldNotFound() throw() {}
+struct VcfCoverageFieldNotFound : public VcfInvalidVariantEntry {
+
+  VcfCoverageFieldNotFound(std::string str) : VcfInvalidVariantEntry(str) {
+
+    this->reason = "Coverage field AD was not found in the FORMAT, found: ";
+    throwMsg = this->reason + this->src;
+
+  }
+
+  ~VcfCoverageFieldNotFound() throw() {}
+
 };
 
 // This requires more thinking, check for data type?
@@ -78,92 +98,127 @@ struct VcfCoverageFieldNotFound : public VcfInvalidVariantEntry{
 // More informative exceptions for vcf related errors
 
 
-class VariantLine{
- friend class VcfReader;
- friend class DEploidIO;
-  public:
-    VariantLine ( string tmpLine );
-    ~VariantLine(){}
+class VariantLine {
+  friend class VcfReader;
 
-  private:
-    string tmpLine_;
-    string tmpStr_;
+  friend class DEploidIO;
 
-    void init( string tmpLine );
+public:
 
-    void extract_field_CHROM   ( );
-    void extract_field_POS     ( );
-    void extract_field_ID      ( );
-    void extract_field_REF     ( );
-    void extract_field_ALT     ( );
-    void extract_field_QUAL    ( );
-    void extract_field_FILTER  ( );
-    void extract_field_INFO    ( );
-    void extract_field_FORMAT  ( );
-    void extract_field_VARIANT ( );
 
-    size_t feildStart_;
-    size_t fieldEnd_;
-    size_t fieldIndex_;
+  VariantLine(std::string tmpLine);
 
-    string chromStr;
-    string posStr;
-    string idStr;
-    string refStr;
-    string altStr;
-    string qualStr;
-    string filterStr;
-    string infoStr;
-    string formatStr;
-    int adFieldIndex_;
+  ~VariantLine() = default;
 
-    int ref;
-    int alt;
+private:
+
+  std::string tmpLine_;
+  std::string tmpStr_;
+
+  void init(std::string tmpLine);
+
+  void extract_field_CHROM();
+
+  void extract_field_POS();
+
+  void extract_field_ID();
+
+  void extract_field_REF();
+
+  void extract_field_ALT();
+
+  void extract_field_QUAL();
+
+  void extract_field_FILTER();
+
+  void extract_field_INFO();
+
+  void extract_field_FORMAT();
+
+  void extract_field_VARIANT();
+
+  size_t feildStart_;
+  size_t fieldEnd_;
+  size_t fieldIndex_;
+
+  std::string chromStr;
+  std::string posStr;
+  std::string idStr;
+  std::string refStr;
+  std::string altStr;
+  std::string qualStr;
+  std::string filterStr;
+  std::string infoStr;
+  std::string formatStr;
+
+  int adFieldIndex_;
+  int ref;
+  int alt;
 };
-
 
 
 /*! \brief VCF file reader @ingroup group_data */
 class VcfReader : public VariantIndex {
 
 #ifdef UNITTEST
- friend class TestVCF;
+  friend class TestVCF;
 #endif
- friend class DEploidIO;
-  public:
-    // Constructors and Destructors
-    VcfReader(string fileName); // parse in exclude sites
-    ~VcfReader(){};
 
-  private:
-    vector <VariantLine> variants;
-    vector <VariantLine> keptVariants;
-    vector <double> refCount;
-    vector <double> altCount;
-    vector <string> headerLines ;
-    string fileName_;
-    ifstream inFile;
-    igzstream inFileGz;
-    bool isCompressed_;
-    bool isCompressed() const { return this->isCompressed_; }
-    void setIsCompressed ( const bool compressed ){ this->isCompressed_ = compressed; }
-    void checkFileCompressed();
-    string sampleName;
-    string tmpLine_;
-    string tmpStr_;
+  friend class DEploidIO;
 
-    // Methods
-    void init( string fileName );
-    void finalize();
-    void readVariants();
-    void readHeader( );
-    void checkFeilds( );
+public:
+  // Constructors and Destructors
+  VcfReader(std::string fileName); // parse in exclude sites
+  ~VcfReader() = default;
 
-    void getChromList();
-    void removeMarkers ( );
+private:
 
-    // Debug tools
-    bool printSampleName();
+  std::vector<VariantLine> variants;
+  std::vector<VariantLine> keptVariants;
+  std::vector<double> refCount;
+  std::vector<double> altCount;
+  std::vector<std::string> headerLines;
+  std::string fileName_;
+  std::ifstream inFile;
+  igzstream inFileGz;
+  bool isCompressed_;
+
+  bool isCompressed() const { return this->isCompressed_; }
+
+  void setIsCompressed(const bool compressed) { this->isCompressed_ = compressed; }
+
+  void checkFileCompressed();
+
+  std::string sampleName;
+  std::string tmpLine_;
+  std::string tmpStr_;
+
+  // Methods
+  void init(std::string fileName);
+
+  void finalize();
+
+  void readVariants();
+
+  void readHeader();
+
+  void checkFeilds();
+
+  void getChromList();
+
+  void removeMarkers();
+
+  // Debug tools
+  bool printSampleName();
+
+
 };
+
+
+
+}   // organization level namespace
+}   // project level namespace
+
+
 
 #endif

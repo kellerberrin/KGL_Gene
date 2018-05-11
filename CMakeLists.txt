@@ -28,9 +28,9 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -s -DNDEBUG")
 set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-ggdb")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pthread -W -Wstrict-aliasing -pedantic -Wno-variadic-macros ${CMAKE_CXX_FLAGS_DEBUG}")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall -pthread -W -Wstrict-aliasing -pedantic -Wno-variadic-macros ${CMAKE_EXE_LINKER_FLAGS_DEBUG}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wall -pthread -W -Wstrict-aliasing -pedantic -Wno-variadic-macros ${CMAKE_EXE_LINKER_FLAGS_DEBUG}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pthread -W -Wstrict-aliasing -pedantic -Wno-variadic-macros ${CMAKE_CXX_FLAGS_RELEASE}")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall -pthread -W -Wstrict-aliasing -pedantic -Wno-variadic-macros")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wall -pthread -W -Wstrict-aliasing -pedantic -Wno-variadic-macros")
 
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../..)

@@ -23,6 +23,12 @@
  *
  */
 
+
+
+#ifndef KGD_IBD_H
+#define KGD_IBD_H
+
+
 #include <vector>
 #include <iostream>
 #include <kgd_exceptions.h>
@@ -31,163 +37,227 @@
 #include "mersenne_twister.hpp"
 #include "kgd_dEploidIO.h"
 
-#ifndef IBD
-#define IBD
+
+
+namespace kellerberrin {    // organization level namespace
+namespace deploid {          // project level namespace
 
 
 
 int nchoose2(int n);
-bool twoVectorsAreSame(vector<int> vec1, vector<int> vec2);
-vector < vector<int> > unique( vector < vector<int> > &mat );
-vector<int> convertIntToBinary(int x, size_t len);
-vector < vector <int> > enumerateBinaryMatrixOfK(size_t k);
+
+bool twoVectorsAreSame(std::vector<int> vec1, std::vector<int> vec2);
+
+std::vector<std::vector<int> > unique(std::vector<std::vector<int> > &mat);
+
+std::vector<int> convertIntToBinary(int x, size_t len);
+
+std::vector<std::vector<int> > enumerateBinaryMatrixOfK(size_t k);
 
 // The IBDconfiguration is used for index, which should be non-negative, use int, any thing below zero should throw.
-class IBDconfiguration{
+class IBDconfiguration {
 #ifdef UNITTEST
   friend class TestIBDconfig;
   friend class TestHprior;
 #endif
+
   friend class Hprior;
+
   friend class McmcMachinery;
-    IBDconfiguration();
-    ~IBDconfiguration();
 
-    void buildIBDconfiguration(size_t k = 5);
-    size_t kStrain_;
-    void setKstrain(const size_t setTo) {this->kStrain_ = setTo;}
-    size_t kStrain() const {return this->kStrain_;}
+  IBDconfiguration() = default;
+  ~IBDconfiguration() = default;
 
-    vector < vector<int> > op;
-    vector < vector<int> > pairToEmission;
-    vector < vector<size_t> > pairList;
-    vector < vector<int> > states;
-    vector < size_t > effectiveK;
+  void buildIBDconfiguration(size_t k = 5);
 
-    size_t stateSize() const { return this->states.size(); }
-    void enumerateOp();
-    void makePairList();
-    void makePairToEmission();
-    void findUniqueState();
-    void findEffectiveK();
+  size_t kStrain_;
 
-    vector <int> makeTmpRow();
-    vector <size_t> findWhichIsOne(vector <int> tmpOp);
-    bool twoVectorsAreSame(vector<int> vec1, vector<int> vec2);
-    vector <string> getIBDconfigureHeader();
+  void setKstrain(const size_t setTo) { this->kStrain_ = setTo; }
+
+  size_t kStrain() const { return this->kStrain_; }
+
+  std::vector<std::vector<int> > op;
+  std::vector<std::vector<int> > pairToEmission;
+  std::vector<std::vector<size_t> > pairList;
+  std::vector<std::vector<int> > states;
+  std::vector<size_t> effectiveK;
+
+  size_t stateSize() const { return this->states.size(); }
+
+  void enumerateOp();
+
+  void makePairList();
+
+  void makePairToEmission();
+
+  void findUniqueState();
+
+  void findEffectiveK();
+
+  std::vector<int> makeTmpRow();
+
+  std::vector<size_t> findWhichIsOne(std::vector<int> tmpOp);
+
+  bool twoVectorsAreSame(std::vector<int> vec1, std::vector<int> vec2);
+
+  std::vector<std::string> getIBDconfigureHeader();
+
 };
 
 
-class Hprior{
+class Hprior {
 #ifdef UNITTEST
   friend class TestHprior;
   friend class TestMcmcMachinery;
   friend class TestIBDpath;
 #endif
+
   friend class IBDpath;
+
   friend class McmcMachinery;
+
   friend class DEploidIO;
-    Hprior();
-    ~Hprior();
 
-    void buildHprior(size_t kStrain, vector <double> &plaf);
+  Hprior() = default;
+  ~Hprior() = default;
 
-    IBDconfiguration ibdConfig;
-    size_t kStrain_;
-    void setKstrain(const size_t setTo) {this->kStrain_ = setTo;}
-    size_t kStrain() const {return this->kStrain_;}
+  void buildHprior(size_t kStrain, std::vector<double> &plaf);
 
-    size_t nLoci_;
-    void setnLoci(const size_t setTo) {this->nLoci_ = setTo;}
-    size_t nLoci() const {return this->nLoci_;}
+  IBDconfiguration ibdConfig;
+  size_t kStrain_;
 
-    vector <double> plaf_;
-    vector < vector <double> > priorProb; // size: nState x nLoci
-    vector < vector <double> > priorProbTrans; // size: nLoci x nState
-    void transposePriorProbs();
+  void setKstrain(const size_t setTo) { this->kStrain_ = setTo; }
 
-    vector <size_t> stateIdx; // size: nState
-    vector <size_t> stateIdxFreq;
+  size_t kStrain() const { return this->kStrain_; }
 
-    vector <vector <int> > hSet; // size: nState x kStrain
-    size_t nState_;
-    size_t nState() const {return this->nState_;}
+  size_t nLoci_;
 
-    vector < size_t > effectiveK;
-    size_t nPattern() const {return this->effectiveK.size();}
-    vector <string> getIBDconfigureHeader();
+  void setnLoci(const size_t setTo) { this->nLoci_ = setTo; }
+
+  size_t nLoci() const { return this->nLoci_; }
+
+  std::vector<double> plaf_;
+  std::vector<std::vector<double> > priorProb; // size: nState x nLoci
+  std::vector<std::vector<double> > priorProbTrans; // size: nLoci x nState
+  void transposePriorProbs();
+
+  std::vector<size_t> stateIdx; // size: nState
+  std::vector<size_t> stateIdxFreq;
+
+  std::vector<std::vector<int> > hSet; // size: nState x kStrain
+  size_t nState_;
+
+  size_t nState() const { return this->nState_; }
+
+  std::vector<size_t> effectiveK;
+
+  size_t nPattern() const { return this->effectiveK.size(); }
+
+  std::vector<std::string> getIBDconfigureHeader();
 };
 
 
-class IBDpath{
+class IBDpath {
 #ifdef UNITTEST
   friend class TestIBDpath;
 #endif
+
   friend class McmcMachinery;
+
   friend class DEploidIO;
-    RandomGenerator* ibdRg_;
 
-    double fSum;
-    Hprior hprior;
-    IBDrecombProbs ibdRecombProbs;
-    vector < vector<double> > ibdTransProbs;
-    vector < vector <double> > fm;
-    vector <double> fSumState;
-    vector <size_t> ibdConfigurePath;
+  RandomGenerator *ibdRg_;
 
-    vector < vector <double> > bwd;
-    vector < vector <double> > fwdbwd;
+  double fSum;
+  Hprior hprior;
+  IBDrecombProbs ibdRecombProbs;
+  std::vector<std::vector<double> > ibdTransProbs;
+  std::vector<std::vector<double> > fm;
+  std::vector<double> fSumState;
+  std::vector<size_t> ibdConfigurePath;
 
-    IBDpath();
+  std::vector<std::vector<double> > bwd;
+  std::vector<std::vector<double> > fwdbwd;
 
-    ~IBDpath() =default;
+  IBDpath() = default;
+  ~IBDpath() = default;
 
-    size_t kStrain_;
-    void setKstrain ( const size_t setTo ){ this->kStrain_ = setTo;}
-    size_t kStrain() const { return this->kStrain_;}
+  size_t kStrain_;
 
-    size_t nLoci_;
-    void setNLoci ( const size_t setTo ){ this->nLoci_ = setTo;}
-    size_t nLoci() const { return this->nLoci_; }
+  void setKstrain(const size_t setTo) { this->kStrain_ = setTo; }
 
-    double theta_;
-    void setTheta(const double setTo) {this->theta_ = setTo;}
-    double theta() const {return this->theta_;}
+  size_t kStrain() const { return this->kStrain_; }
 
-    vector <double> currentIBDpathChangeAt;
+  size_t nLoci_;
 
-    vector < vector <double> > llkSurf;
-    vector <int> uniqueEffectiveKCount;
+  void setNLoci(const size_t setTo) { this->nLoci_ = setTo; }
 
-    vector <double> IBDpathChangeAt;
-    // Methods
-    void computeAndUpdateTheta();
-    void updateFmAtSiteI(vector <double> & prior,
-                         vector <double> & llk);
-    void ibdSamplePath(vector <double> statePrior);
-    void makeIbdTransProbs();
-    vector <double> computeEffectiveKPrior(double theta);
-    vector <double> computeStatePrior(vector <double> effectiveKPrior);
-    void makeLlkSurf(vector <double> altCount,
-                     vector <double> refCount,
-                     double scalingConst = 100.0,
-                     double err = 0.01,
-                     size_t gridSize=99);
-    void computeUniqueEffectiveKCount();
-    vector <double> computeLlkOfStatesAtSiteI(vector<double> proportion, size_t siteI, double err = 0.01);
-    vector <size_t> findWhichIsSomething(vector <size_t> tmpOp, size_t something);
+  size_t nLoci() const { return this->nLoci_; }
 
-    // For painting IBD
-    void buildPathProbabilityForPainting(vector <double> proportion);
-    void computeIbdPathFwdProb(vector <double> proportion, vector <double> statePrior);
-    void computeIbdPathBwdProb(vector <double> proportion, vector <double> effectiveKPrior, vector <double> statePrior);
-    void combineFwdBwd(vector < vector <double>> &reshapedFwd, vector < vector <double>> &reshapedBwd);
-    vector < vector <double> > reshapeProbs(vector < vector <double> >& probs);
-    double bestPath(vector <double> proportion, double err = 0.01);
+  double theta_;
+
+  void setTheta(const double setTo) { this->theta_ = setTo; }
+
+  double theta() const { return this->theta_; }
+
+  std::vector<double> currentIBDpathChangeAt;
+
+  std::vector<std::vector<double> > llkSurf;
+  std::vector<int> uniqueEffectiveKCount;
+
+  std::vector<double> IBDpathChangeAt;
+
+  // Methods
+  void computeAndUpdateTheta();
+
+  void updateFmAtSiteI(std::vector<double> &prior,
+                       std::vector<double> &llk);
+
+  void ibdSamplePath(std::vector<double> statePrior);
+
+  void makeIbdTransProbs();
+
+  std::vector<double> computeEffectiveKPrior(double theta);
+
+  std::vector<double> computeStatePrior(std::vector<double> effectiveKPrior);
+
+  void makeLlkSurf(std::vector<double> altCount,
+                   std::vector<double> refCount,
+                   double scalingConst = 100.0,
+                   double err = 0.01,
+                   size_t gridSize = 99);
+
+  void computeUniqueEffectiveKCount();
+
+  std::vector<double> computeLlkOfStatesAtSiteI(std::vector<double> proportion, size_t siteI, double err = 0.01);
+
+  std::vector<size_t> findWhichIsSomething(std::vector<size_t> tmpOp, size_t something);
+
+  // For painting IBD
+  void buildPathProbabilityForPainting(std::vector<double> proportion);
+
+  void computeIbdPathFwdProb(std::vector<double> proportion, std::vector<double> statePrior);
+
+  void computeIbdPathBwdProb(std::vector<double> proportion, std::vector<double> effectiveKPrior, std::vector<double> statePrior);
+
+  void combineFwdBwd(std::vector<std::vector<double>> &reshapedFwd, std::vector<std::vector<double>> &reshapedBwd);
+
+  std::vector<std::vector<double> > reshapeProbs(std::vector<std::vector<double> > &probs);
+
+  double bestPath(std::vector<double> proportion, double err = 0.01);
 
 public:
-    vector <string> getIBDprobsHeader();
-    void init(DEploidIO &dEploidIO, RandomGenerator* rg);
+  std::vector<std::string> getIBDprobsHeader();
+
+  void init(DEploidIO &dEploidIO, RandomGenerator *rg);
 };
+
+
+
+
+}   // organization level namespace
+}   // project level namespace
+
+
 
 #endif

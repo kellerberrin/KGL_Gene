@@ -23,98 +23,146 @@
  *
  */
 
-#ifndef PANEL
-#define PANEL
+#ifndef KGD_PANEL_H
+#define KGD_PANEL_H
+
 
 #include "kgd_txtReader.h"
 #include "kgd_exceptions.h"
 
 
 
-class Panel: public TxtReader{
+namespace kellerberrin {    // organization level namespace
+namespace deploid {          // project level namespace
+
+
+
+class Panel : public TxtReader {
 #ifdef UNITTEST
- friend class TestPanel;
- friend class TestInitialHaplotypes;
- friend class TestUpdateHap;
- friend class TestUpdatePairHap;
- friend class TestUpdateSingleHap;
+  friend class TestPanel;
+  friend class TestInitialHaplotypes;
+  friend class TestUpdateHap;
+  friend class TestUpdatePairHap;
+  friend class TestUpdateSingleHap;
 #endif
- friend class McmcMachinery;
- friend class UpdateSingleHap;
- friend class UpdatePairHap;
- friend class UpdateHap;
- friend class DEploidIO;
- friend class InitialHaplotypes;
+
+  friend class McmcMachinery;
+
+  friend class UpdateSingleHap;
+
+  friend class UpdatePairHap;
+
+  friend class UpdateHap;
+
+  friend class DEploidIO;
+
+  friend class InitialHaplotypes;
 
 public:
 
   Panel();
-  virtual ~Panel(){};
+
+  virtual ~Panel() {};
 
 private:
-    // Members
-    std::vector < double > pRec_;
-    // Used in update single haplotype
-    std::vector < double > pRecEachHap_; // = pRec / nPanel_;
-    std::vector < double > pNoRec_; // = 1.0 - pRec;
-    // Used in update pair of haplotypes
-    std::vector < double > pRecRec_; // pRecEachHap * pRecEachHap;
-    std::vector < double > pRecNoRec_; // pRecEachHap * pNoRec;
-    std::vector < double > pNoRecNoRec_; // pNoRec * pNoRec;
+  // Members
+  std::vector<double> pRec_;
+  // Used in update single haplotype
+  std::vector<double> pRecEachHap_; // = pRec / nPanel_;
+  std::vector<double> pNoRec_; // = 1.0 - pRec;
+  // Used in update pair of haplotypes
+  std::vector<double> pRecRec_; // pRecEachHap * pRecEachHap;
+  std::vector<double> pRecNoRec_; // pRecEachHap * pNoRec;
+  std::vector<double> pNoRecNoRec_; // pNoRec * pNoRec;
 
-    size_t truePanelSize_;
-    void setTruePanelSize ( const size_t setTo ){ this->truePanelSize_ = setTo; }
+  size_t truePanelSize_;
 
-    size_t inbreedingPanelSize_;
-    void setInbreedingPanelSize ( const size_t setTo ){ this->inbreedingPanelSize_ = setTo; }
+  void setTruePanelSize(const size_t setTo) { this->truePanelSize_ = setTo; }
 
-    size_t inbreedingPanelSize() const { return this->inbreedingPanelSize_; }
-    size_t truePanelSize() const { return this->truePanelSize_; }
+  size_t inbreedingPanelSize_;
 
-    // Methods
-    void readFromFile( const char inchar[] );
-    void computeRecombProbs( double averageCentimorganDistance, double Ne, bool useConstRecomb, double constRecombProb, bool forbidCopyFromSame );
-    void checkForExceptions( size_t nLoci, std::string panelFileName );
-    void initializeUpdatePanel( size_t inbreedingPanelSizeSetTo);
-    void updatePanelWithHaps( size_t inbreedingPanelSizeSetTo, size_t excludedStrain, std::vector < std::vector<double> > & haps);
+  void setInbreedingPanelSize(const size_t setTo) { this->inbreedingPanelSize_ = setTo; }
 
-    void print();
-    void buildExamplePanelContent();
-    void buildExamplePanel1();
-    void buildExamplePanel2();
+  size_t inbreedingPanelSize() const { return this->inbreedingPanelSize_; }
+
+  size_t truePanelSize() const { return this->truePanelSize_; }
+
+  // Methods
+  void readFromFile(const char inchar[]);
+
+  void computeRecombProbs(double averageCentimorganDistance,
+                          double Ne,
+                          bool useConstRecomb,
+                          double constRecombProb,
+                          bool forbidCopyFromSame);
+
+  void checkForExceptions(size_t nLoci, std::string panelFileName);
+
+  void initializeUpdatePanel(size_t inbreedingPanelSizeSetTo);
+
+  void updatePanelWithHaps(size_t inbreedingPanelSizeSetTo,
+                           size_t excludedStrain,
+                           std::vector<std::vector<double> > &haps);
+
+  void print();
+
+  void buildExamplePanelContent();
+
+  void buildExamplePanel1();
+
+  void buildExamplePanel2();
+
 };
 
 
-class InitialHaplotypes: public Panel{
-#ifdef UNITTEST
- friend class TestInitialHaplotypes;
+class InitialHaplotypes : public Panel {
+
+  #ifdef UNITTEST
+  friend class TestInitialHaplotypes;
 #endif
- friend class DEploidIO;
-    InitialHaplotypes():Panel(){}
-    ~InitialHaplotypes(){}
+
+  friend class DEploidIO;
+
+  InitialHaplotypes() : Panel() {}
+  ~InitialHaplotypes() = default;
+
 };
 
 
-class IBDrecombProbs: public VariantIndex{
- friend class IBDpath;
+class IBDrecombProbs : public VariantIndex {
+
+  friend class IBDpath;
 
 #ifdef UNITTEST
- friend class TestIBDpath;
+  friend class TestIBDpath;
 #endif
 
-  private:
-    std::vector < double > pRec_;
-    std::vector < double > pNoRec_; // = 1.0 - pRec;
+private:
 
-    void computeRecombProbs( double averageCentimorganDistance, double Ne, bool useConstRecomb, double constRecombProb );
+  std::vector<double> pRec_;
+  std::vector<double> pNoRec_; // = 1.0 - pRec;
 
-  public:
-    IBDrecombProbs():VariantIndex(){};
-    IBDrecombProbs(std::vector < std::vector < int> > position, size_t nLoci){
-        this->position_ = position;
-        this->nLoci_ = nLoci;
-    }
-    ~IBDrecombProbs(){}
+  void computeRecombProbs(double averageCentimorganDistance, double Ne, bool useConstRecomb, double constRecombProb);
+
+public:
+
+  IBDrecombProbs() = default;
+  IBDrecombProbs(std::vector<std::vector<int> > position, size_t nLoci) {
+
+    this->position_ = position;
+    this->nLoci_ = nLoci;
+
+  }
+
+  ~IBDrecombProbs() = default;
+
 };
+
+
+
+}   // organization level namespace
+}   // project level namespace
+
+
 
 #endif

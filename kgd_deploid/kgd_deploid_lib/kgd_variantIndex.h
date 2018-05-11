@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef VARIANTINDEX
-#define VARIANTINDEX
+#ifndef KGD_VARIANTINDEX_H
+#define KGD_VARIANTINDEX_H
 
 
 #include <vector>
@@ -34,52 +34,83 @@
 #include "kgd_global.h"
 
 
+namespace kellerberrin {    // organization level namespace
+namespace deploid {          // project level namespace
+
+
+
+// Forward Def.
 class ExcludeMarker;
 
+
 class VariantIndex {
+
+public:
+
+  VariantIndex();
+
+  virtual ~VariantIndex() = default;
+
+  void findAndKeepMarkers(std::shared_ptr<ExcludeMarker> excludedMarkers);
+
+
 #ifdef UNITTEST
- friend class TestPanel;
- friend class TestTxtReader;
- friend class TestInitialHaplotypes;
+  friend class TestPanel;
+  friend class TestTxtReader;
+  friend class TestInitialHaplotypes;
 #endif
- friend class DEploidIO;
- friend class TxtReader;
- friend class ExcludeMarker;
- friend class Panel;
- friend class IBDrecombProbs;
- friend class VcfReader;
 
-  private:
-    // Members
-    std::vector <std::string> chrom_;
-    std::vector < size_t > indexOfChromStarts_;
-    std::vector < std::vector < int> > position_;
-    std::vector < std::vector < int> > keptPosition_;
-    size_t nLoci_;
+  friend class DEploidIO;
 
-    // For removing markers and positions
-    void findWhoToBeKept (std::shared_ptr<ExcludeMarker> excludedMarkers );
-    virtual void removeMarkers ();
+  friend class TxtReader;
 
-    /* Index of content/info will be kept */
-    std::vector < size_t > indexOfContentToBeKept;
-    /* Index of positions entry to be kept, this will have the same size as this->chrom_, */
-    std::vector < std::vector < size_t > > indexOfPosToBeKept;
+  friend class ExcludeMarker;
 
-    bool doneGetIndexOfChromStarts_;
-    bool doneGetIndexOfChromStarts() const { return doneGetIndexOfChromStarts_; }
-    void setDoneGetIndexOfChromStarts ( const bool setTo ){ this->doneGetIndexOfChromStarts_ = setTo; }
+  friend class Panel;
 
-    // Methods
-    void init();
-    void getIndexOfChromStarts();
-    void removePositions();
+  friend class IBDrecombProbs;
 
-  public:
-    VariantIndex();
-    virtual ~VariantIndex(){};
-    void findAndKeepMarkers(std::shared_ptr<ExcludeMarker> excludedMarkers );
+  friend class VcfReader;
+
+private:
+  // Members
+
+  std::vector<std::string> chrom_;
+  std::vector<size_t> indexOfChromStarts_;
+  std::vector<std::vector<int> > position_;
+  std::vector<std::vector<int> > keptPosition_;
+  size_t nLoci_;
+
+  // For removing markers and positions
+  void findWhoToBeKept(std::shared_ptr<ExcludeMarker> excludedMarkers);
+
+  virtual void removeMarkers();
+
+  /* Index of content/info will be kept */
+  std::vector<size_t> indexOfContentToBeKept;
+  /* Index of positions entry to be kept, this will have the same size as this->chrom_, */
+  std::vector<std::vector<size_t> > indexOfPosToBeKept;
+
+  bool doneGetIndexOfChromStarts_;
+
+  bool doneGetIndexOfChromStarts() const { return doneGetIndexOfChromStarts_; }
+
+  void setDoneGetIndexOfChromStarts(const bool setTo) { this->doneGetIndexOfChromStarts_ = setTo; }
+
+  // Methods
+  void init();
+
+  void getIndexOfChromStarts();
+
+  void removePositions();
+
+
 };
+
+
+}   // organization level namespace
+}   // project level namespace
+
 
 
 #endif
