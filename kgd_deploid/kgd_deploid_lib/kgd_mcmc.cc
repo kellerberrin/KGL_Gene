@@ -30,6 +30,8 @@
 #include <kgl_exec_env.h>
 #include "kgd_global.h"     // dout
 #include "kgd_updateHap.h"
+#include "kgd_updateSingleHap.h"  // chromPainting
+#include "kgd_updatePairHap.h"
 #include "kgd_mcmc.h"
 #include "kgd_utility.h"
 
@@ -144,8 +146,6 @@ void kgd::McmcMachinery::initializeMcmcChain(bool useIBD) {
 
   assert (doutProp());
   assert (doutLLK());
-
-  kgl::ExecEnv::log().info("############ initializeMcmcChain() Complete ###########");
 
 }
 
@@ -339,22 +339,15 @@ void kgd::McmcMachinery::runMcmcChain(bool showProgress, bool useIBD, bool notIn
 
   for (currentMcmcIteration_ = 0; currentMcmcIteration_ < maxIteration_; currentMcmcIteration_++) {
 
-    kgl::ExecEnv::log().info("MCMC iteration: {}/{}", currentMcmcIteration_, maxIteration_);
-
     if (currentMcmcIteration_ > 0 && currentMcmcIteration_ % 100 == 0 && showProgress) {
 
-#ifndef RBUILD
-      std::clog << "\r" << " MCMC step" << std::setw(4) << int(currentMcmcIteration_ * 100 / maxIteration_) << "% completed." << std::flush;
-#endif
+      kgl::ExecEnv::log().info("MCMC iteration: {}/{}, completed: {}%", currentMcmcIteration_, maxIteration_, int(currentMcmcIteration_ * 100 / maxIteration_));
 
     }
 
     sampleMcmcEvent(useIBD);
-  }
 
-#ifndef RBUILD
-  std::clog << "\r" << " MCMC step" << std::setw(4) << 100 << "% completed." << std::endl;
-#endif
+  }
 
   mcmcSample_->hap = currentHap_;
 
@@ -387,7 +380,7 @@ void kgd::McmcMachinery::runMcmcChain(bool showProgress, bool useIBD, bool notIn
 
     }
 
-    std::clog << "Proportion update acceptance rate: " << acceptUpdate / (kStrain() * 1.0 * maxIteration_) << std::endl;
+    kgl::ExecEnv::log().info("Proportion update acceptance rate:", acceptUpdate / (kStrain() * 1.0 * maxIteration_));
 
     dEploidIO_->initialProp_ = averageProportion(mcmcSample_->proportion);
     dEploidIO_->setInitialPropWasGiven(true);
@@ -399,16 +392,12 @@ void kgd::McmcMachinery::runMcmcChain(bool showProgress, bool useIBD, bool notIn
 
   computeDiagnostics();
 
+  kgl::ExecEnv::log().info("#### MCMC RUN finished ####");
 
-  dout << "###########################################" << std::endl;
-  dout << "#            MCMC RUN finished            #" << std::endl;
-  dout << "###########################################" << std::endl;
 }
 
 
 void kgd::McmcMachinery::computeDiagnostics() {
-
-  //clog << "Proportion update acceptance rate: "<<acceptUpdate / (kStrain()*1.0*maxIteration_)<<endl;
 
   dEploidIO_->setacceptRatio(acceptUpdate / (1.0 * maxIteration_));
 
@@ -434,7 +423,9 @@ void kgd::McmcMachinery::computeDiagnostics() {
 
     double wsaf = dEploidIO_->altCount_[i] / (dEploidIO_->refCount_[i] + dEploidIO_->altCount_[i] + 0.00000000000001);
     double adjustedWsaf = wsaf * (1 - 0.01) + (1 - wsaf) * 0.01;
+
     wsaf_vec.push_back(adjustedWsaf);
+
     //llkOfData.push_back( logBetaPdf(adjustedWsaf, llkSurf[i][0], llkSurf[i][1]));
 
   }
@@ -449,9 +440,12 @@ void kgd::McmcMachinery::computeDiagnostics() {
   dEploidIO_->setmaxLLKs(sumOfVec(tmpLLKs));
 
   double sum = std::accumulate(mcmcSample_->sumLLKs.begin(), mcmcSample_->sumLLKs.end(), 0.0);
+
   double mean = sum / mcmcSample_->sumLLKs.size();
+
   double sq_sum = std::inner_product(mcmcSample_->sumLLKs.begin(), mcmcSample_->sumLLKs.end(),
                                      mcmcSample_->sumLLKs.begin(), 0.0);
+
   double varLLKs = sq_sum / mcmcSample_->sumLLKs.size() - mean * mean;
   double stdev = std::sqrt(varLLKs);
 
@@ -460,11 +454,14 @@ void kgd::McmcMachinery::computeDiagnostics() {
 
   double dicByVar = (-2 * mean) + 4 * varLLKs / 2;
   dEploidIO_->setdicByVar(dicByVar);
+
   //return (  mean(-2*tmpllk) + var(-2*tmpllk)/2 )# D_bar + 1/2 var (D_theta), where D_theta = -2*tmpllk, and D_bar = mean(D_theta)
 
   double dicWSAFBar = -2 * sumOfVec(tmpLLKs1);
   double dicByTheta = (-2 * mean) + (-2 * mean) - dicWSAFBar;
+
   dEploidIO_->setdicByTheta(dicByTheta);
+
   //DIC.WSAF.bar = -2 * sum(thetallk)
   //return (  mean(-2*tmpllk) + (mean(-2*tmpllk) - DIC.WSAF.bar) ) # D_bar + pD, where pD = D_bar - D_theta, and D_bar = mean(D_theta)
 
@@ -525,7 +522,9 @@ void kgd::McmcMachinery::sampleMcmcEvent(bool useIBD) {
   assert(doutLLK());
 
   if (recordingMcmcBool_) {
+
     recordMcmcMachinery();
+
   }
 
 }

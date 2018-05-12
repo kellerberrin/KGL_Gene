@@ -24,13 +24,24 @@ set(Boost_USE_STATIC_RUNTIME ON)
 include_directories(${Boost_INCLUDE_DIRS})
 find_package( Boost COMPONENTS system filesystem timer chrono REQUIRED )
 
+# Debug g++
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -s -DNDEBUG")
 set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-ggdb")
+# Release g++
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -s -DNDEBUG")
+# Profile g++
+set(CMAKE_CXX_FLAGS_PROFILE "-pg -g -O3")
+set(CMAKE_EXE_LINKER_FLAGS_PROFILE "-pg -g -O3")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pthread -W -Wstrict-aliasing -pedantic -Wno-variadic-macros ${CMAKE_CXX_FLAGS_RELEASE}")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall -pthread -W -Wstrict-aliasing -pedantic -Wno-variadic-macros")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wall -pthread -W -Wstrict-aliasing -pedantic -Wno-variadic-macros")
+# All possible warnings
+#set(CMAKE_ERROR_WARNING_FLAGS "-std=c++17 -Wall -pthread -Wextra -Werror -Wpedantic -pedantic-errors -Wstrict-aliasing -Wno-variadic-macros")
+# Relax slightly to temporarily allow unused parameters.
+set(CMAKE_ERROR_WARNING_FLAGS "-std=c++17 -Wall -pthread -Wextra -Wpedantic -Wstrict-aliasing -Wno-variadic-macros")
+
+# Actually set the g++ flags.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_CXX_FLAGS_PROFILE}")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_PROFILE}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_PROFILE}")
 
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../..)
@@ -309,7 +320,8 @@ set(DEPLOID_LIB_SOURCE_FILES
         kgd_deploid/kgd_deploid_lib/kgd_variantIndex.cc
         kgd_deploid/kgd_deploid_lib/kgd_variantIndex.h
         kgd_deploid/kgd_deploid_lib/kgd_vcfReader.cc
-        kgd_deploid/kgd_deploid_lib/kgd_vcfReader.h kgd_deploid/kgd_random/kgd_mt_random.h)
+        kgd_deploid/kgd_deploid_lib/kgd_vcfReader.h
+        kgd_deploid/kgd_random/kgd_mt_random.h kgd_deploid/kgd_deploid_lib/kgd_updateSingleHap.h kgd_deploid/kgd_deploid_lib/kgd_updateSingleHap.cc kgd_deploid/kgd_deploid_lib/kgd_updatePairHap.h kgd_deploid/kgd_deploid_lib/kgd_updatePairHap.cc)
 
 
 # Application level objects

@@ -186,14 +186,21 @@ std::vector<double> kgd::calcLLKs(std::vector<double> &refCount,
 
 double kgd::calcLLK(double ref, double alt, double unadjustedWsaf, double err, double fac) {
 
-  double adjustedWsaf = unadjustedWsaf + err * (1 - 2 * unadjustedWsaf);
+  double adjustedWsaf = unadjustedWsaf + err * (1 - (2 * unadjustedWsaf));
 
-  double llk = Maths::Special::Gamma::logBeta(alt + adjustedWsaf * fac, ref + (1 - adjustedWsaf) * fac) -
-               Maths::Special::Gamma::logBeta(adjustedWsaf * fac, (1 - adjustedWsaf) * fac);
+  double a2_arg = adjustedWsaf * fac;
+  double b2_arg = (1 - adjustedWsaf) * fac;
+
+  double a1_arg = alt + a2_arg;
+  double b1_arg = ref + b2_arg;
+
+  double llk = Maths::Special::Gamma::logBeta(a1_arg, b1_arg) - Maths::Special::Gamma::logBeta(a2_arg, b2_arg);
 
   return llk;
 
 }
+
+
 
 
 size_t kgd::sampleIndexGivenProp(std::shared_ptr<RandomGenerator> randomGenerator, const std::vector<double>& proportion) {

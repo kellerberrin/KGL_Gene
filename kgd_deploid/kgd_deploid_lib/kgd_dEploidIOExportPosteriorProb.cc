@@ -25,6 +25,7 @@
 
 #include "kgd_dEploidIO.h"
 #include "kgd_updateHap.h"
+#include "kgd_updateSingleHap.h"
 #include "kgd_mcmc.h"
 
 

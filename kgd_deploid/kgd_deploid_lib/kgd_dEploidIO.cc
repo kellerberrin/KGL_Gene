@@ -28,6 +28,7 @@
 #include <iomanip>        // std::setw
 #include "kgd_utility.h"    // normailize by sum
 #include "kgd_updateHap.h"  // chromPainting
+#include "kgd_updateSingleHap.h"  // chromPainting
 #include "kgd_dEploidIO.h"
 #include "kgd_ibd.h"
 #include "kgd_deploid_app.h"
