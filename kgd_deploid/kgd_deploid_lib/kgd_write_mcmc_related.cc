@@ -24,7 +24,7 @@
  */
 
 #include <kgd_deploid_app.h>
-#include "kgd_dEploidIO.h"
+#include "kgd_deploid_io.h"
 #include "kgd_mcmc.h"
 
 

@@ -5,7 +5,7 @@
 #include <iostream>
 #include "kgd_mt_random.h"
 #include "kgd_mcmc.h"
-#include "kgd_dEploidIO.h"
+#include "kgd_deploid_io.h"
 
 #include "kgd_deploid_app.h"
 #include "kgl_utility.h"
@@ -31,8 +31,6 @@ void kgd::DeploidExecEnv::executeApp() {
   try {
 
     std::shared_ptr<DEploidIO> dEploidIO_ptr(std::make_shared<DEploidIO>());
-
-//    std::shared_ptr<MTRandomGenerator<MersenneTwister>> random_generator(std::make_shared<MTRandomGenerator<MersenneTwister>>(dEploidIO_ptr->randomSeed()));
 
     std::shared_ptr<MersenneTwister> random_generator(std::make_shared<MersenneTwister>(dEploidIO_ptr->randomSeed()));
 

@@ -29,9 +29,9 @@
 #include <math.h>       // ceil
 #include <kgl_exec_env.h>
 #include "kgd_global.h"     // dout
-#include "kgd_updateHap.h"
-#include "kgd_updateSingleHap.h"  // chromPainting
-#include "kgd_updatePairHap.h"
+#include "kgd_update_haplotype.h"
+#include "kgd_update_single_haplotype.h"  // chromPainting
+#include "kgd_update_pair_haplotype.h"
 #include "kgd_mcmc.h"
 #include "kgd_utility.h"
 
@@ -69,22 +69,11 @@ kgd::McmcMachinery::McmcMachinery(std::shared_ptr<DEploidIO> dEploidIO,
   SD_LOG_TITRE = (useIBD == true) ? dEploidIO_->ibdSigma() : dEploidIO_->parameterSigma();
   PROP_SCALE = 40.0;
 
-  stdNorm_ = new StandNormalRandomSample(seed_);
+  stdNorm_ = std::make_shared<StandNormalRandomSample>(seed_);
 
   setKstrain(dEploidIO_->kStrain());
   setNLoci(dEploidIO_->plaf_.size());
   initializeMcmcChain(useIBD);
-
-}
-
-
-kgd::McmcMachinery::~McmcMachinery() {
-
-  if (stdNorm_) {
-
-    delete stdNorm_;
-
-  }
 
 }
 
@@ -207,6 +196,7 @@ void kgd::McmcMachinery::updateReferencePanel(size_t inbreedingPanelSizeSetTo, s
   //return;
   //}
   panel_->updatePanelWithHaps(inbreedingPanelSizeSetTo, excludedStrain, currentHap_);
+
 }
 
 
@@ -540,7 +530,9 @@ void kgd::McmcMachinery::ibdInitializeEssentials() {
   for (size_t i = 0; i < nLoci(); i++) {
 
     double wsaf = dEploidIO_->altCount_[i] / (dEploidIO_->refCount_[i] + dEploidIO_->altCount_[i] + 0.00000000000001);
+
     double adjustedWsaf = wsaf * (1 - 0.01) + (1 - wsaf) * 0.01;
+
     llkOfData.push_back(logBetaPdf(adjustedWsaf, ibdPath.llkSurf[i][0], ibdPath.llkSurf[i][1]));
 
   }
@@ -691,11 +683,11 @@ void kgd::McmcMachinery::recordMcmcMachinery() {
 
 void kgd::McmcMachinery::updateProportion() {
 
-  dout << " Attempt of update proportion";
+  kgl::ExecEnv::log().vinfo("MCMC Attempt of update proportion");
 
   if (kStrain_ < 2) {
 
-    dout << "(failed)" << std::endl;
+    kgl::ExecEnv::log().vinfo("MCMC Update failed (only 1 strain)");
     return;
 
   }
@@ -706,34 +698,42 @@ void kgd::McmcMachinery::updateProportion() {
 
   if (min_value(tmpProp) < 0 || max_value(tmpProp) > 1) {
 
-    dout << "(failed)" << std::endl;
+    kgl::ExecEnv::log().vinfo("MCMC Update failed, tmpProp < 0 or tmpProp > 1");
     return;
 
   }
 
   std::vector<double> tmpExpecedWsaf = calcExpectedWsaf(tmpProp);
+
   std::vector<double> tmpLLKs = calcLLKs(dEploidIO_->refCount_,
                                          dEploidIO_->altCount_,
-                                         tmpExpecedWsaf, 0,
+                                         tmpExpecedWsaf,
+                                         0,
                                          tmpExpecedWsaf.size(),
                                          dEploidIO_->scalingFactor());
 
   double diffLLKs = deltaLLKs(tmpLLKs);
+
   double tmpLogPriorTitre = calcLogPriorTitre(tmpTitre);
+
   double priorPropRatio = exp(tmpLogPriorTitre - currentLogPriorTitre_);
+
   double hastingsRatio = 1.0;
 
-  //runif(1)<prior.prop.ratio*hastings.ratio*exp(del.llk))
-  if (propRg_->sample() > priorPropRatio * hastingsRatio * exp(diffLLKs)) {
+  double sample_value = propRg_->sample();
 
-    dout << "(failed)" << std::endl;
+  double priorRatio = priorPropRatio * hastingsRatio * exp(diffLLKs);
+
+  if (sample_value > priorRatio) {
+
+    kgl::ExecEnv::log().vinfo("MCMC Update failed, sample: {}, priorRatio :{}", sample_value, priorRatio);
     return;
 
   }
 
-  dout << "(successed) " << std::endl;
-  acceptUpdate++;
+  kgl::ExecEnv::log().vinfo("MCMC Update succeeded, sample: {}, priorRatio :{}", sample_value, priorRatio);
 
+  acceptUpdate++;
   currentExpectedWsaf_ = tmpExpecedWsaf;
   currentLLks_ = tmpLLKs;
   currentLogPriorTitre_ = tmpLogPriorTitre;
@@ -772,7 +772,7 @@ std::vector<double> kgd::McmcMachinery::calcTmpTitre() {
 
 void kgd::McmcMachinery::updateSingleHap() {
 
-  kgl::ExecEnv::log().info("McmcMachinery::updateSingleHap()");
+  kgl::ExecEnv::log().vinfo("McmcMachinery::updateSingleHap()");
 
   findUpdatingStrainSingle();
 
@@ -788,7 +788,7 @@ void kgd::McmcMachinery::updateSingleHap() {
     size_t start = dEploidIO_->indexOfChromStarts_[chromi];
     size_t length = dEploidIO_->position_[chromi].size();
 
-    kgl::ExecEnv::log().info("Update Chrom with index: {}, starts at: {}, with: {} sites", chromi, start, length);
+    kgl::ExecEnv::log().vinfo("Update Chrom with index: {}, starts at: {}, with: {} sites", chromi, start, length);
 
     UpdateSingleHap updating(dEploidIO_->refCount_,
                              dEploidIO_->altCount_,
@@ -846,10 +846,13 @@ void kgd::McmcMachinery::updateSingleHap() {
 void kgd::McmcMachinery::updatePairHaps() {
 
   if (kStrain() == 1) {
+
     return;
+
   }
 
-  dout << " Update Pair Hap " << std::endl;
+  kgl::ExecEnv::log().vinfo(" Update Pair Hap ");
+
   findUpdatingStrainPair();
 
   for (size_t chromi = 0; chromi < dEploidIO_->indexOfChromStarts_.size(); chromi++) {
@@ -857,7 +860,7 @@ void kgd::McmcMachinery::updatePairHaps() {
     size_t start = dEploidIO_->indexOfChromStarts_[chromi];
     size_t length = dEploidIO_->position_[chromi].size();
 
-    dout << "   Update Chrom with index " << chromi << ", starts at " << start << ", with " << length << " sites" << std::endl;
+    kgl::ExecEnv::log().vinfo("Update Chrom with index: {}, starts at: {}, with: {} sites", chromi, start, length);
 
     UpdatePairHap updating(dEploidIO_->refCount_,
                            dEploidIO_->altCount_,
@@ -904,6 +907,7 @@ void kgd::McmcMachinery::updatePairHaps() {
       mcmcSample_->currentsiteOfTwoMissCopyTwo[start + siteI] = updating.siteOfTwoMissCopyTwo[siteI];
 
     }
+
   }
 
   currentExpectedWsaf_ = calcExpectedWsaf(currentProp_);
@@ -916,6 +920,7 @@ void kgd::McmcMachinery::findUpdatingStrainSingle() {
   std::vector<double> eventProb(kStrain_, 1);
 
   normalizeBySum(eventProb);
+
   strainIndex_ = sampleIndexGivenProp(mcmcEventRg_, eventProb);
 
 }
@@ -934,8 +939,10 @@ void kgd::McmcMachinery::findUpdatingStrainPair() {
     u = mcmcEventRg_->sample(); // call a uniform(0,1) kgd_random number generator
 
     if ((kStrain_ - t) * u < 2 - m) {
+
       strainIndex[m] = t;
       m++;
+
     }
 
     t++;
@@ -946,7 +953,8 @@ void kgd::McmcMachinery::findUpdatingStrainPair() {
   strainIndex2_ = strainIndex[1];
 
   assert(strainIndex1_ != strainIndex2_);
-  dout << "  Updating hap: " << strainIndex1_ << " and " << strainIndex2_ << std::endl;
+
+  kgl::ExecEnv::log().info("  Updating haplotype (1): {} and haplotype (2): {}", strainIndex1_, strainIndex2_);
 
 }
 

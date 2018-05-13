@@ -26,7 +26,7 @@
 #include "kgd_global.h"
 #include <cassert>       // assert
 #include <iostream>      // std::cout
-#include "kgd_vcfReader.h"
+#include "kgd_vcf_reader.h"
 
 
 namespace kgd = kellerberrin::deploid;

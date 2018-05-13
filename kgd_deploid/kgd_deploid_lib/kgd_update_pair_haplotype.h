@@ -10,7 +10,7 @@
 #include <iostream>
 #include "kgd_utility.h"
 #include "kgd_panel.h"
-#include "kgd_updateHap.h"
+#include "kgd_update_haplotype.h"
 
 
 namespace kellerberrin {    // organization level namespace

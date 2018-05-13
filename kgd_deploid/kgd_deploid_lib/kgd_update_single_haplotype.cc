@@ -2,7 +2,7 @@
 // Created by kellerberrin on 12/05/18.
 //
 
-#include "kgd_updateSingleHap.h"
+#include "kgd_update_single_haplotype.h"
 #include "kgl_exec_env.h"
 #include <algorithm>    // std::reverse
 #include <cstdlib>      // div
@@ -21,7 +21,9 @@ kgd::UpdateSingleHap::UpdateSingleHap(std::vector<double> &refCount,
                                       std::shared_ptr<RandomGenerator> randomGenerator,
                                       size_t segmentStartIndex,
                                       size_t nLoci,
-                                      std::shared_ptr<Panel> panel, double missCopyProb, double scalingFactor,
+                                      std::shared_ptr<Panel> panel,
+                                      double missCopyProb,
+                                      double scalingFactor,
                                       size_t strainIndex) : UpdateHap(refCount,
                                                                       altCount,
                                                                       expectedWsaf,

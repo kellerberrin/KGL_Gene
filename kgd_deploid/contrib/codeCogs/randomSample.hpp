@@ -23,6 +23,7 @@
 //! Generates random numbers following a standard normal distribution.
 
 class StandNormalRandomSample : public Mersenne {
+
   public:
 
     //! Class constructor.

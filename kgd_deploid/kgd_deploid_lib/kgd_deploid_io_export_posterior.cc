@@ -23,9 +23,9 @@
  *
  */
 
-#include "kgd_dEploidIO.h"
-#include "kgd_updateHap.h"
-#include "kgd_updateSingleHap.h"
+#include "kgd_deploid_io.h"
+#include "kgd_update_haplotype.h"
+#include "kgd_update_single_haplotype.h"
 #include "kgd_mcmc.h"
 
 

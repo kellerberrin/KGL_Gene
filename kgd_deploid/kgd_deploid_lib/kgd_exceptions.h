@@ -29,6 +29,7 @@
 
 
 #include <string>  /* string */
+#include <vector>
 #include <exception>
 
 
@@ -230,7 +231,7 @@ struct InitialPropUngiven : public InvalidInput {
 };
 
 
-
+std::vector<std::vector<int>> enumerateBinaryMatrixOfK(size_t k);
 }   // organization level namespace
 }   // project level namespace
 

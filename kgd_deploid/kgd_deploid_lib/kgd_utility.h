@@ -35,7 +35,7 @@
 #include "kgd_mersenne_twister.h"
 #include "kgd_global.h"
 
-#include "kgd_variantIndex.h"
+#include "kgd_variant_index.h"
 #include "kgd_exceptions.h"
 
 

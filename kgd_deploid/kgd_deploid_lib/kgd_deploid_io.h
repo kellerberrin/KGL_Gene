@@ -39,7 +39,7 @@
 #include "kgd_global.h"
 #include "kgd_exceptions.h"
 #include "kgd_panel.h"
-#include "kgd_vcfReader.h"
+#include "kgd_vcf_reader.h"
 #include "kgd_random_generator.h"
 
 

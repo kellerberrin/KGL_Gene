@@ -288,11 +288,11 @@ set(DEPLOID_LIB_SOURCE_FILES
         kgd_deploid/contrib/codeCogs/randomSample.hpp
         kgd_deploid/contrib/codeCogs/stirling.h
         kgd_deploid/contrib/codeCogs/xsub_ln_add1.h
-        kgd_deploid/kgd_deploid_lib/kgd_mcmcDebug.cc
-        kgd_deploid/kgd_deploid_lib/kgd_vcfReaderDebug.cc
-        kgd_deploid/kgd_deploid_lib/kgd_dEploidIOExport.cc
-        kgd_deploid/kgd_deploid_lib/kgd_dEploidIOExportPosteriorProb.cc
-        kgd_deploid/kgd_deploid_lib/kgd_writeMcmcRelated.cc
+        kgd_deploid/kgd_deploid_lib/kgd_mcmc_debug.cc
+        kgd_deploid/kgd_deploid_lib/kgd_vcf_reader_debug.cc
+        kgd_deploid/kgd_deploid_lib/kgd_deploid_io_export.cc
+        kgd_deploid/kgd_deploid_lib/kgd_deploid_io_export_posterior.cc
+        kgd_deploid/kgd_deploid_lib/kgd_write_mcmc_related.cc
         kgd_deploid/contrib/gzstream/gzstream.cpp
         kgd_deploid/contrib/gzstream/gzstream.h
         kgd_deploid/kgd_random/kgd_fastfunc.cc
@@ -301,28 +301,35 @@ set(DEPLOID_LIB_SOURCE_FILES
         kgd_deploid/kgd_random/kgd_mersenne_twister.h
         kgd_deploid/kgd_random/kgd_random_generator.cc
         kgd_deploid/kgd_random/kgd_random_generator.h
-        kgd_deploid/kgd_deploid_lib/kgd_dEploidIO.cc
-        kgd_deploid/kgd_deploid_lib/kgd_dEploidIO.h
+        kgd_deploid/kgd_deploid_lib/kgd_deploid_io.cc
+        kgd_deploid/kgd_deploid_lib/kgd_deploid_io.h
         kgd_deploid/kgd_deploid_lib/kgd_exceptions.h
         kgd_deploid/kgd_deploid_lib/kgd_global.h
-        kgd_deploid/kgd_deploid_lib/kgd_ibd.cc
-        kgd_deploid/kgd_deploid_lib/kgd_ibd.h
+        kgd_deploid/kgd_deploid_lib/kgd_ibdconfig.cc
+        kgd_deploid/kgd_deploid_lib/kgd_ibdconfig.h
         kgd_deploid/kgd_deploid_lib/kgd_mcmc.cc
         kgd_deploid/kgd_deploid_lib/kgd_mcmc.h
         kgd_deploid/kgd_deploid_lib/kgd_panel.cc
         kgd_deploid/kgd_deploid_lib/kgd_panel.h
-        kgd_deploid/kgd_deploid_lib/kgd_txtReader.cc
-        kgd_deploid/kgd_deploid_lib/kgd_txtReader.h
-        kgd_deploid/kgd_deploid_lib/kgd_updateHap.cc
-        kgd_deploid/kgd_deploid_lib/kgd_updateHap.h
+        kgd_deploid/kgd_deploid_lib/kgd_txt_reader.cc
+        kgd_deploid/kgd_deploid_lib/kgd_txt_reader.h
+        kgd_deploid/kgd_deploid_lib/kgd_update_haplotype.cc
+        kgd_deploid/kgd_deploid_lib/kgd_update_haplotype.h
         kgd_deploid/kgd_deploid_lib/kgd_utility.cc
         kgd_deploid/kgd_deploid_lib/kgd_utility.h
-        kgd_deploid/kgd_deploid_lib/kgd_variantIndex.cc
-        kgd_deploid/kgd_deploid_lib/kgd_variantIndex.h
-        kgd_deploid/kgd_deploid_lib/kgd_vcfReader.cc
-        kgd_deploid/kgd_deploid_lib/kgd_vcfReader.h
-        kgd_deploid/kgd_random/kgd_mt_random.h kgd_deploid/kgd_deploid_lib/kgd_updateSingleHap.h kgd_deploid/kgd_deploid_lib/kgd_updateSingleHap.cc kgd_deploid/kgd_deploid_lib/kgd_updatePairHap.h kgd_deploid/kgd_deploid_lib/kgd_updatePairHap.cc)
-
+        kgd_deploid/kgd_deploid_lib/kgd_variant_index.cc
+        kgd_deploid/kgd_deploid_lib/kgd_variant_index.h
+        kgd_deploid/kgd_deploid_lib/kgd_vcf_reader.cc
+        kgd_deploid/kgd_deploid_lib/kgd_vcf_reader.h
+        kgd_deploid/kgd_random/kgd_mt_random.h
+        kgd_deploid/kgd_deploid_lib/kgd_update_single_haplotype.h
+        kgd_deploid/kgd_deploid_lib/kgd_update_single_haplotype.cc
+        kgd_deploid/kgd_deploid_lib/kgd_update_pair_haplotype.h
+        kgd_deploid/kgd_deploid_lib/kgd_update_pair_haplotype.cc
+        kgd_deploid/kgd_deploid_lib/kgd_hprior.h
+        kgd_deploid/kgd_deploid_lib/kgd_hprior.cc
+        kgd_deploid/kgd_deploid_lib/kgd_ibdpath.h
+        kgd_deploid/kgd_deploid_lib/kgd_idbpath.cc)
 
 # Application level objects
 set(DEPLOID_APPLICATION_SOURCE_FILES

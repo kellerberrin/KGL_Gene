@@ -27,10 +27,10 @@
 #include <cassert>        // assert
 #include <iomanip>        // std::setw
 #include "kgd_utility.h"    // normailize by sum
-#include "kgd_updateHap.h"  // chromPainting
-#include "kgd_updateSingleHap.h"  // chromPainting
-#include "kgd_dEploidIO.h"
-#include "kgd_ibd.h"
+#include "kgd_update_haplotype.h"  // chromPainting
+#include "kgd_update_single_haplotype.h"  // chromPainting
+#include "kgd_deploid_io.h"
+#include "kgd_ibdpath.h"
 #include "kgd_deploid_app.h"
 
 namespace kgl = kellerberrin::genome;

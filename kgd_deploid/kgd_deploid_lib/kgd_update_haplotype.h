@@ -56,7 +56,7 @@ class UpdateHap {
 
 public:
 
-  size_t nPanel() const { return this->nPanel_; }
+  size_t nPanel() const { return nPanel_; }
 
 private:
 
@@ -80,23 +80,18 @@ private:
   std::shared_ptr<RandomGenerator> recombRg_;
   std::shared_ptr<RandomGenerator> recombLevel2Rg_;
   std::shared_ptr<RandomGenerator> missCopyRg_;
-
   size_t kStrain_;
   size_t nPanel_;
-
-  void setPanelSize(const size_t setTo) { this->nPanel_ = setTo; }
-
   std::vector<double> newLLK;
-
   size_t segmentStartIndex_;
   size_t nLoci_;
-
   std::vector<std::vector<double> > emission_;
   double scalingFactor_;
 
-  double scalingFactor() const { return this->scalingFactor_; }
+  void setPanelSize(const size_t setTo) { nPanel_ = setTo; }
 
-  void setScalingFactor(const double setTo) { this->scalingFactor_ = setTo; }
+  double scalingFactor() const { return scalingFactor_; }
+  void setScalingFactor(const double setTo) { scalingFactor_ = setTo; }
 
   // Methods
   virtual void core(std::vector<double> &refCount,
@@ -122,6 +117,7 @@ private:
   virtual void updateLLK();
 
   virtual void sampleHapIndependently(std::vector<double> &plaf);
+
 };
 
 

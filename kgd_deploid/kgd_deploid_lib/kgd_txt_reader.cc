@@ -27,7 +27,7 @@
 #include <iostream>
 #include <iterator>     // std::distance
 #include "kgd_exceptions.h"
-#include "kgd_txtReader.h"
+#include "kgd_txt_reader.h"
 
 
 namespace kgd = kellerberrin::deploid;

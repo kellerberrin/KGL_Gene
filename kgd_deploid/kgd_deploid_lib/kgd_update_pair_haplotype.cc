@@ -2,7 +2,7 @@
 // Created by kellerberrin on 12/05/18.
 //
 
-#include "kgd_updatePairHap.h"
+#include "kgd_update_pair_haplotype.h"
 #include "kgl_exec_env.h"
 #include <algorithm>    // std::reverse
 #include <cstdlib>      // div
@@ -21,7 +21,9 @@ kgd::UpdatePairHap::UpdatePairHap(std::vector<double> &refCount,
                                   std::shared_ptr<RandomGenerator> randomGenerator,
                                   size_t segmentStartIndex,
                                   size_t nLoci,
-                                  std::shared_ptr<Panel> panel, double missCopyProb, double scalingFactor,
+                                  std::shared_ptr<Panel> panel,
+                                  double missCopyProb,
+                                  double scalingFactor,
                                   bool forbidCopyFromSame,
                                   size_t strainIndex1,
                                   size_t strainIndex2) : UpdateHap(refCount,

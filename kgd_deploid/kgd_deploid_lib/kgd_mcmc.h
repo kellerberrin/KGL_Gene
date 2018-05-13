@@ -27,15 +27,14 @@
 #define KGD_MCMC_H
 
 
-
 #include <vector>
 #include <iostream>
 #include <iomanip>      // std::setw
 #include "kgd_random_generator.h"
-#include "kgd_dEploidIO.h"
+#include "kgd_deploid_io.h"
 #include "kgd_panel.h"
 #include "randomSample.hpp"   // src/codeCogs/randomSample.hpp
-#include "kgd_ibd.h"
+#include "kgd_ibdpath.h"
 
 
 namespace kellerberrin {    // organization level namespace
@@ -104,7 +103,7 @@ public:
                 std::shared_ptr<McmcSample> mcmcSample,
                 std::shared_ptr<RandomGenerator> randomGenerator,
                 bool useIBD = false);
-  ~McmcMachinery();
+  ~McmcMachinery() =default;
 
   void runMcmcChain(bool showProgress = true, bool useIBD = false, bool notInR = true);
 
@@ -116,15 +115,8 @@ private:
   std::shared_ptr<Panel> panel_;
   size_t kStrain_;
 
-  void setKstrain(const size_t setTo) { this->kStrain_ = setTo; }
-
-  size_t kStrain() const { return this->kStrain_; }
 
   size_t nLoci_;
-
-  void setNLoci(const size_t setTo) { this->nLoci_ = setTo; }
-
-  size_t nLoci() const { return this->nLoci_; }
 
   double burnIn_;
   size_t maxIteration_;
@@ -144,12 +136,7 @@ private:
 
   //std::normal_distribution<double>* initialTitre_normal_distribution_;// (MN_LOG_TITRE, SD_LOG_TITRE);
   //std::normal_distribution<double>* deltaX_normal_distribution_;// (0, 1/PROP_SCALE);
-  StandNormalRandomSample *stdNorm_;
-
-  double initialTitreNormalVariable() { return this->stdNorm_->genReal() * SD_LOG_TITRE + MN_LOG_TITRE; }
-
-  //double deltaXnormalVariable(){ return this->stdNorm_->genReal() * 1.0/PROP_SCALE + MN_LOG_TITRE; }
-  double deltaXnormalVariable() { return this->stdNorm_->genReal() * SD_LOG_TITRE * 1.0 / PROP_SCALE + MN_LOG_TITRE; }
+  std::shared_ptr<StandNormalRandomSample> stdNorm_;
 
   double MN_LOG_TITRE;
   double SD_LOG_TITRE;
@@ -163,6 +150,25 @@ private:
   std::vector<std::vector<double> > currentHap_;
   std::vector<double> currentExpectedWsaf_;
   std::vector<double> cumExpectedWsaf_;
+  bool recordingMcmcBool_;
+
+  IBDpath ibdPath; /* IBD */
+
+  int acceptUpdate;
+
+  void setKstrain(const size_t setTo) { kStrain_ = setTo; }
+
+  size_t kStrain() const { return kStrain_; }
+
+
+  void setNLoci(const size_t setTo) { nLoci_ = setTo; }
+
+  size_t nLoci() const { return nLoci_; }
+
+  double initialTitreNormalVariable() { return stdNorm_->genReal() * SD_LOG_TITRE + MN_LOG_TITRE; }
+
+  //double deltaXnormalVariable(){ return stdNorm_->genReal() * 1.0/PROP_SCALE + MN_LOG_TITRE; }
+  double deltaXnormalVariable() { return stdNorm_->genReal() * SD_LOG_TITRE * 1.0 / PROP_SCALE + MN_LOG_TITRE; }
 
   /* Methods */
   void calcMaxIteration(size_t nSample, size_t McmcMachineryRate, double burnIn);
@@ -190,7 +196,7 @@ private:
 
   void printArray(std::vector<double> array) {
 
-    for (auto const &value: array) {
+    for (auto const &value : array) {
 
       std::cout << value << " ";
 
@@ -204,7 +210,6 @@ private:
 
   void recordMcmcMachinery();
 
-  bool recordingMcmcBool_;
 
   void writeLastFwdProb(bool useIBD);
 
@@ -213,9 +218,6 @@ private:
   void initializeUpdateReferencePanel(size_t inbreedingPanelSizeSetTo);
 
   void computeDiagnostics();
-
-  /* IBD */
-  IBDpath ibdPath;
 
   std::vector<double> computeLlkAtAllSites(double err = 0.01);
 
@@ -240,7 +242,6 @@ private:
   void ibdUpdateProportionGivenHap(std::vector<double> &llkAtAllSites);
   //vector <double> getIBDprobsIntegrated(vector < vector <double> > &prob);
 
-
   /* Moves */
   void updateProportion();
 
@@ -262,7 +263,7 @@ private:
 
   bool doutLLK();
 
-  int acceptUpdate;
+
 };
 
 

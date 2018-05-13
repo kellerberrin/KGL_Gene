@@ -34,7 +34,7 @@
 #include <fstream>
 #include <stdlib.h>     /* strtol, strtod */
 #include "kgd_exceptions.h"
-#include "kgd_variantIndex.h"
+#include "kgd_variant_index.h"
 #include "gzstream.h"
 
 

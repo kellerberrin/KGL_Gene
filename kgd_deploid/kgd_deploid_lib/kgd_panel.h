@@ -27,7 +27,7 @@
 #define KGD_PANEL_H
 
 
-#include "kgd_txtReader.h"
+#include "kgd_txt_reader.h"
 #include "kgd_exceptions.h"
 
 

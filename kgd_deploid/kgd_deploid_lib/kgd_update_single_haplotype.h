@@ -6,7 +6,7 @@
 #define KGD_UPDATESINGLEHAP_H
 
 
-#include "kgd_updateHap.h"
+#include "kgd_update_haplotype.h"
 
 
 namespace kellerberrin {    // organization level namespace

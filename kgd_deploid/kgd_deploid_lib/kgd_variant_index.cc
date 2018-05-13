@@ -24,7 +24,7 @@
  */
 
 #include "kgd_exceptions.h"
-#include "kgd_txtReader.h"
+#include "kgd_txt_reader.h"
 #include <algorithm> // find
 #include <iostream>
 

@@ -28,7 +28,7 @@
 #define KGD_TXTREADER_H
 
 
-#include "kgd_variantIndex.h"
+#include "kgd_variant_index.h"
 #include "kgd_exceptions.h"
 
 

@@ -24,7 +24,7 @@
  */
 
 #include "kgl_exec_env.h"
-#include "kgd_updateHap.h"
+#include "kgd_update_haplotype.h"
 #include <algorithm>    // std::reverse
 #include <cstdlib>      // div
 
@@ -47,11 +47,14 @@ kgd::UpdateHap::UpdateHap(std::vector<double> &refCount,
                           double scalingFactor) {
 
   panel_ = panel;
-  nPanel_ = 0; // Initialize when panel is not given
 
   if (panel_) {
 
     setPanelSize(panel_->truePanelSize());
+
+  } else {
+
+    setPanelSize(0);
 
   }
 
