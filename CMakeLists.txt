@@ -210,9 +210,9 @@ set(APPLICATION_SOURCE_FILES
 
 
 ## DOXYGEN
-#set(BUILD_DOC OFF CACHE BOOL "Use Doxygen to create the HTML/Latex based API documentation")
+#set(BUILD_KGL_KGD_DOC ON CACHE BOOL "Use Doxygen to create the HTML/Latex based API documentation")
 #option(BUILD_DOC "Use Doxygen to create the HTML/Latex based API documentation" ON)
-if(BUILD_DOC)
+if(BUILD_KGL_KGD_DOC)
 
     find_package(Doxygen)
 
@@ -242,7 +242,7 @@ if(BUILD_DOC)
 
     endif(DOXYGEN_FOUND)
 
-endif(BUILD_DOC)
+endif(BUILD_KGL_KGD_DOC)
 
 
 #generate shared library.
