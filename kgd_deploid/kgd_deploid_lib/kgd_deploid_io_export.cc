@@ -297,7 +297,7 @@ void kgd::DEploidIO::writeEventCount() {
   // HEADER
   ofstreamExportTmp_ << "CHROM" << "\t"
                     << "POS" << "\t"
-                    << "IBDpathChangeAt" << "\t"
+                    << "IBD_path_change_at_" << "\t"
                     << "finalIBDpathChangeAt" << "\t"
 
                     << "siteOfTwoSwitchOne" << "\t"
@@ -361,7 +361,7 @@ void kgd::DEploidIO::writeEventCount() {
 }
 
 
-void kgd::DEploidIO::writeIBDpostProb(std::vector<std::vector<double> > &reshapedProbs, std::vector<std::string> header) {
+void kgd::DEploidIO::writeIBDpostProb(const std::vector<std::vector<double> > &reshapedProbs, std::vector<std::string> header) {
 
   std::ostream *writeTo;
 

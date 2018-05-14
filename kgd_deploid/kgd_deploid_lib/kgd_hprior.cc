@@ -17,20 +17,20 @@ namespace kgd = kellerberrin::deploid;
 namespace kgl = kellerberrin::genome;
 
 
-void kgd::Hprior::buildHprior(size_t kStrain, std::vector<double> &plaf) {
+void kgd::Hprior::buildHprior(size_t kStrain, const std::vector<double> &plaf) {
 
-  ibdConfig.buildIBDconfiguration(kStrain);
+  ibd_config_.buildIBDconfiguration(kStrain);
 
-  effectiveK = ibdConfig.effectiveK;
+  effectiveK = ibd_config_.effectiveK();
   nState_ = 0;
-  plaf_ = plaf;
+  pop_allele_freq_ = plaf;
   setKstrain(kStrain);
-  setnLoci(plaf_.size());
+  setnLoci(pop_allele_freq_.size());
 
   std::vector<std::vector<int> > hSetBase = IBDconfiguration::enumerateBinaryMatrixOfK(getkStrain());
   size_t stateI = 0;
 
-  for (std::vector<int> state : ibdConfig.states) {
+  for (auto state : ibd_config_.states()) {
 
     std::set<int> stateUnique(state.begin(), state.end());
 
@@ -52,7 +52,7 @@ void kgd::Hprior::buildHprior(size_t kStrain, std::vector<double> &plaf) {
 
     size_t sizeOfhSetBaseTmpUnique = hSetBaseTmpUnique.size();
 
-    stateIdxFreq.push_back(sizeOfhSetBaseTmpUnique);
+    state_idx_freq_.push_back(sizeOfhSetBaseTmpUnique);
     //h.prior.i<-array(0, c(size.h.set.i, n.loci));
 
     for (size_t i = 0; i < sizeOfhSetBaseTmpUnique; i++) {
@@ -70,17 +70,17 @@ void kgd::Hprior::buildHprior(size_t kStrain, std::vector<double> &plaf) {
       std::vector<double> hPriorTmp(nLoci());
 
       for (size_t site = 0; site < nLoci(); site++) {
-        //cout << (1.0-plaf_[site]) << " " << tmpDiff << " " <<pow((1.0-plaf_[site]),(double)tmpDiff) << endl;
+        //cout << (1.0-pop_allele_freq_[site]) << " " << tmpDiff << " " <<pow((1.0-pop_allele_freq_[site]),(double)tmpDiff) << endl;
 
-        hPriorTmp[site] = pow(plaf_[site], (double) tmpSum) * pow((1.0 - plaf_[site]), (double) tmpDiff);
+        hPriorTmp[site] = pow(pop_allele_freq_[site], (double) tmpSum) * pow((1.0 - pop_allele_freq_[site]), (double) tmpDiff);
 
       }
 
-      priorProb.push_back(hPriorTmp);
-      hSet.push_back(hSetBaseTmpUnique[i]);
+      prior_probs_.push_back(hPriorTmp);
+      h_set_.push_back(hSetBaseTmpUnique[i]);
 
       nState_++;
-      stateIdx.push_back(stateI);
+      state_idx_.push_back(stateI);
 
     }
 
@@ -93,7 +93,7 @@ void kgd::Hprior::buildHprior(size_t kStrain, std::vector<double> &plaf) {
 
 void kgd::Hprior::transposePriorProbs() {
 
-  assert(priorProbTrans.size() == 0);
+  assert(prior_probs_trans_.size() == 0);
 
   for (size_t i = 0; i < nLoci(); i++) {
 
@@ -101,20 +101,20 @@ void kgd::Hprior::transposePriorProbs() {
 
     for (size_t j = 0; j < nState(); j++) {
 
-      priorProbTransTmp[j] = priorProb[j][i];
-      //cout << priorProb[j][i] << " ";
+      priorProbTransTmp[j] = prior_probs_[j][i];
+      //cout << prior_probs_[j][i] << " ";
     }
 
-    priorProbTrans.push_back(priorProbTransTmp);
+    prior_probs_trans_.push_back(priorProbTransTmp);
     //cout << endl;
   }
 
 }
 
 
-std::vector<std::string> kgd::Hprior::getIBDconfigureHeader() {
+std::vector<std::string> kgd::Hprior::getIBDconfigureHeader() const {
 
-  return ibdConfig.getIBDconfigureHeader();
+  return ibd_config_.getIBDconfigureHeader();
 
 }
 

@@ -29,27 +29,41 @@ class Hprior {
   friend class TestIBDpath;
 #endif
 
-  friend class IBDpath;
-  friend class McmcMachinery;
-  friend class DEploidIO;
+public:
 
   Hprior() = default;
   ~Hprior() = default;
 
+  const std::vector<std::vector<int> >& gethSet() const { return h_set_; }
+  const std::vector<size_t>& getStateIdx() const { return state_idx_; }
+  size_t nPattern() const { return effectiveK.size(); }
+  size_t nState() const { return nState_; }
+  const std::vector<size_t>& getStateIdxFreq() const { return state_idx_freq_; }
+  const std::vector<std::vector<double> >& getPriorProb() const { return prior_probs_; }
+  const std::vector<std::vector<double> >& getPriorProbTrans() const { return prior_probs_trans_; }
+  const std::vector<size_t>& getEffectiveK() const { return effectiveK; }
 
-  IBDconfiguration ibdConfig;
+  std::vector<std::string> getIBDconfigureHeader() const;
+
+  void initializeHprior(size_t kStrain, const std::vector<double> &plaf) { buildHprior(kStrain, plaf); transposePriorProbs(); }
+
+private:
+
+  IBDconfiguration ibd_config_;
   size_t kStrain_;
   size_t nLoci_;
-  std::vector<double> plaf_;
-  std::vector<std::vector<double> > priorProb; // size: nState x nLoci
-  std::vector<std::vector<double> > priorProbTrans; // size: nLoci x nState
-  std::vector<size_t> stateIdx; // size: nState
-  std::vector<size_t> stateIdxFreq;
-
-  std::vector<std::vector<int> > hSet; // size: nState x kStrain
+  std::vector<double> pop_allele_freq_;
+  std::vector<std::vector<double> > prior_probs_; // size: nState x nLoci
+  std::vector<std::vector<double> > prior_probs_trans_; // size: nLoci x nState
+  std::vector<size_t> state_idx_; // size: nState
+  std::vector<size_t> state_idx_freq_;
+  std::vector<std::vector<int> > h_set_; // size: nState x kStrain
   size_t nState_;
+  std::vector<size_t> effectiveK;
 
-  void buildHprior(size_t kStrain, std::vector<double> &plaf);
+  void buildHprior(size_t kStrain, const std::vector<double> &plaf);
+
+  void transposePriorProbs();
 
   void setKstrain(const size_t setTo) { kStrain_ = setTo; }
 
@@ -59,15 +73,6 @@ class Hprior {
 
   size_t nLoci() const { return nLoci_; }
 
-  void transposePriorProbs();
-
-  size_t nState() const { return nState_; }
-
-  std::vector<size_t> effectiveK;
-
-  size_t nPattern() const { return effectiveK.size(); }
-
-  std::vector<std::string> getIBDconfigureHeader();
 
 };
 

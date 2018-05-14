@@ -85,14 +85,14 @@ void kgd::McmcMachinery::writeLastFwdProb(bool useIBD) {
     }
     //UpdatePairHap updating( dEploidIO_->refCount_,
     //dEploidIO_->altCount_,
-    //dEploidIO_->plaf_,
+    //dEploidIO_->pop_allele_freq_,
     //currentExpectedWsaf_,
     //currentProp_, currentHap_, hapRg_,
     //start, length,
     //panel_, dEploidIO_->missCopyProb_, dEploidIO_->forbidCopyFromSame(),
     //(size_t)0,
     //(size_t)1);
-    //updating.core ( dEploidIO_->refCount_, dEploidIO_->altCount_, dEploidIO_->plaf_, currentExpectedWsaf_, currentProp_, currentHap_);
+    //updating.core ( dEploidIO_->refCount_, dEploidIO_->altCount_, dEploidIO_->pop_allele_freq_, currentExpectedWsaf_, currentProp_, currentHap_);
     //dEploidIO_->writeLastPairFwdProb( updating, chromi );
   }
 }

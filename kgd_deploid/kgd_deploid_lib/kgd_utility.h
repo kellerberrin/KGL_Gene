@@ -79,7 +79,7 @@ std::vector<T> vecSum(std::vector<T> &vecA, std::vector<T> &vecB) {
 
 
 template<typename T>
-std::vector<T> vecProd(std::vector<T> &vecA, std::vector<T> &vecB) {
+std::vector<T> vecProd(const std::vector<T> &vecA, const std::vector<T> &vecB) {
 
   assert(vecA.size() == vecB.size());
 

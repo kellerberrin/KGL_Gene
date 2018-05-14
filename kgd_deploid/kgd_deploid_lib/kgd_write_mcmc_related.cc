@@ -60,8 +60,8 @@ void kgd::DEploidIO::writeMcmcRelated(std::shared_ptr<McmcSample> mcmcSample, bo
     //writeEventCount( );
   } else {
   
-    //IBDpathChangeAt = mcmcSample->IBDpathChangeAt;
-    //finalIBDpathChangeAt = mcmcSample->currentIBDpathChangeAt;
+    //IBD_path_change_at_ = mcmcSample->IBD_path_change_at_;
+    //finalIBDpathChangeAt = mcmcSample->current_IBD_path_change_at_;
 
   }
 

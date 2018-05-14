@@ -366,11 +366,11 @@ void kgd::McmcMachinery::runMcmcChain(bool showProgress, bool useIBD, bool notIn
 
     for (size_t atSiteI = 0; atSiteI < nLoci(); atSiteI++) {
 
-      ibdPath.IBDpathChangeAt[atSiteI] /= (double) maxIteration_;
+      ibdPath.IBDPathChangeAt(atSiteI,  static_cast<double>(maxIteration_));
 
     }
 
-    kgl::ExecEnv::log().info("Proportion update acceptance rate:", acceptUpdate / (kStrain() * 1.0 * maxIteration_));
+    kgl::ExecEnv::log().info("Proportion update acceptance rate: {}", acceptUpdate / (kStrain() * 1.0 * maxIteration_));
 
     dEploidIO_->initialProp_ = averageProportion(mcmcSample_->proportion);
     dEploidIO_->setInitialPropWasGiven(true);
@@ -416,7 +416,7 @@ void kgd::McmcMachinery::computeDiagnostics() {
 
     wsaf_vec.push_back(adjustedWsaf);
 
-    //llkOfData.push_back( logBetaPdf(adjustedWsaf, llkSurf[i][0], llkSurf[i][1]));
+    //llkOfData.push_back( logBetaPdf(adjustedWsaf, llk_surf_[i][0], llk_surf_[i][1]));
 
   }
 
@@ -533,7 +533,7 @@ void kgd::McmcMachinery::ibdInitializeEssentials() {
 
     double adjustedWsaf = wsaf * (1 - 0.01) + (1 - wsaf) * 0.01;
 
-    llkOfData.push_back(logBetaPdf(adjustedWsaf, ibdPath.llkSurf[i][0], ibdPath.llkSurf[i][1]));
+    llkOfData.push_back(logBetaPdf(adjustedWsaf, ibdPath.getLogLikelihoodSurface()[i][0], ibdPath.getLogLikelihoodSurface()[i][1]));
 
   }
 
@@ -544,23 +544,19 @@ void kgd::McmcMachinery::ibdInitializeEssentials() {
 
 void kgd::McmcMachinery::ibdSampleMcmcEventStep() {
 
-  std::vector<double> effectiveKPrior = ibdPath.computeEffectiveKPrior(ibdPath.theta());
-  std::vector<double> statePrior = ibdPath.computeStatePrior(effectiveKPrior);
-  // First building the path likelihood
-  ibdPath.computeIbdPathFwdProb(currentProp_, statePrior);
-
-  ////#Now sample path given matrix
-  ibdPath.ibdSamplePath(statePrior);
+  // Update the idb path.
+  ibdPath.McmcUpdateStep(currentProp_);
 
   //#Get haplotypes and update LLK for each site
   ibdUpdateHaplotypesFromPrior();
+
   std::vector<double> llkAtAllSites = computeLlkAtAllSites();
   ////#Given current haplotypes, sample titres 1 by 1 using MH
+
   ibdUpdateProportionGivenHap(llkAtAllSites);
-  // Compute new theta after all proportion and haplotypes are up to date.
-  ibdPath.computeAndUpdateTheta();
 
   currentLLks_ = llkAtAllSites;
+
   currentExpectedWsaf_ = calcExpectedWsaf(currentProp_);
 
 }
@@ -568,11 +564,11 @@ void kgd::McmcMachinery::ibdSampleMcmcEventStep() {
 
 void kgd::McmcMachinery::ibdUpdateHaplotypesFromPrior() {
 
-  for (size_t i = 0; i < nLoci(); i++) {
+  for (size_t loci = 0; loci < nLoci(); ++loci) {
 
-    for (size_t j = 0; j < kStrain(); j++) {
+    for (size_t strain = 0; strain < kStrain(); ++strain) {
 
-      currentHap_[i][j] = (double) ibdPath.hprior.hSet[ibdPath.ibdConfigurePath[i]][j];
+      currentHap_[loci][strain] = ibdPath.UpdateHaplotypesFromPrior(strain, loci);
 
     }
 
@@ -618,19 +614,19 @@ std::vector<double> kgd::McmcMachinery::computeLlkAtAllSites(double err) {
 
   std::vector<double> ret;
 
-  for (size_t site = 0; site < nLoci(); site++) {
+  for (size_t loci = 0; loci < nLoci(); ++loci) {
 
     double qs = 0;
 
-    for (size_t j = 0; j < kStrain(); j++) {
+    for (size_t strain = 0; strain < kStrain(); ++strain) {
 
-      qs += (double) currentHap_[site][j] * currentProp_[j];
+      qs += (double) currentHap_[loci][strain] * currentProp_[strain];
 
     }
 
     double qs2 = qs * (1 - err) + (1 - qs) * err;
 
-    ret.push_back(logBetaPdf(qs2, ibdPath.llkSurf[site][0], ibdPath.llkSurf[site][1]));
+    ret.push_back(logBetaPdf(qs2, ibdPath.getLogLikelihoodSurface()[loci][0], ibdPath.getLogLikelihoodSurface()[loci][1]));
 
   }
 
@@ -954,7 +950,7 @@ void kgd::McmcMachinery::findUpdatingStrainPair() {
 
   assert(strainIndex1_ != strainIndex2_);
 
-  kgl::ExecEnv::log().info("  Updating haplotype (1): {} and haplotype (2): {}", strainIndex1_, strainIndex2_);
+  kgl::ExecEnv::log().vinfo("  Updating haplotype (1): {} and haplotype (2): {}", strainIndex1_, strainIndex2_);
 
 }
 

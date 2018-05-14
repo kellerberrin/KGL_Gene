@@ -90,7 +90,7 @@ public:
 
   double ibdLLK_;
 
-  void getIBDprobsIntegrated(std::vector<std::vector<double> > &prob);
+  void getIBDprobsIntegrated(const std::vector<std::vector<double> > &prob);
 
   // Log
   void wrapUp();
@@ -321,7 +321,7 @@ private:
   // log and export resutls
   void writeRecombProb(std::shared_ptr<Panel> panel);
 
-  void writeIBDpostProb(std::vector<std::vector<double> > &reshapedProbs, std::vector<std::string> header);
+  void writeIBDpostProb(const std::vector<std::vector<double> > &reshapedProbs, std::vector<std::string> header);
 
   std::vector<std::string> ibdProbsHeader_;
   std::vector<double> ibdProbsIntegrated_;

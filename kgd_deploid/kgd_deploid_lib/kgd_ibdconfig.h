@@ -43,36 +43,43 @@ namespace kellerberrin {    // organization level namespace
 namespace deploid {          // project level namespace
 
 
-
-
 // The IBDconfiguration is used for index, which should be non-negative, use int, any thing below zero should throw.
 class IBDconfiguration {
+
 #ifdef UNITTEST
   friend class TestIBDconfig;
   friend class TestHprior;
 #endif
 
-  friend class Hprior;
-
-  friend class McmcMachinery;
+public:
 
   IBDconfiguration() = default;
   ~IBDconfiguration() = default;
 
-  size_t kStrain_;
-  std::vector<std::vector<int> > op;
-  std::vector<std::vector<int> > pairToEmission;
-  std::vector<std::vector<size_t> > pairList;
-  std::vector<std::vector<int> > states;
-  std::vector<size_t> effectiveK;
-
   void buildIBDconfiguration(size_t k = 5);
+
+  static std::vector<std::vector<int> > unique(std::vector<std::vector<int> > &mat);
+  static std::vector<std::vector<int> > enumerateBinaryMatrixOfK(size_t k);
+
+  const std::vector<size_t>& effectiveK() const { return effectiveK_; }
+  const std::vector<std::vector<int> >& states() const { return states_; }
+  std::vector<std::string> getIBDconfigureHeader() const;
+
+private:
+
+  size_t kStrain_;
+  std::vector<std::vector<int> > pairs_permutation_;
+  std::vector<std::vector<int> > pair_to_emission_;
+  std::vector<std::vector<size_t> > pair_list_;
+  std::vector<std::vector<int> > states_;
+  std::vector<size_t> effectiveK_;
+
 
   void setKstrain(const size_t setTo) { kStrain_ = setTo; }
 
   size_t kStrain() const { return kStrain_; }
 
-  size_t stateSize() const { return states.size(); }
+  size_t stateSize() const { return states_.size(); }
 
   void enumerateOp();
 
@@ -84,21 +91,16 @@ class IBDconfiguration {
 
   void findEffectiveK();
 
-  std::vector<int> makeTmpRow();
+  std::vector<int> makeEnumeratedArray();
 
-  std::vector<size_t> findWhichIsOne(std::vector<int> tmpOp);
-
-  std::vector<std::string> getIBDconfigureHeader();
+  std::vector<size_t> activePairsArray(std::vector<int> pair_permute_row);
 
   static int nchoose2(int n);
 
   static bool twoVectorsAreSame(std::vector<int> vec1, std::vector<int> vec2);
 
-  static std::vector<std::vector<int> > unique(std::vector<std::vector<int> > &mat);
-
   static std::vector<int> convertIntToBinary(int x, size_t len);
 
-  static std::vector<std::vector<int> > enumerateBinaryMatrixOfK(size_t k);
 
 };
 

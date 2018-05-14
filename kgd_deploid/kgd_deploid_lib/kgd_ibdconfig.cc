@@ -53,95 +53,84 @@ void kgd::IBDconfiguration::buildIBDconfiguration(size_t k) {
 void kgd::IBDconfiguration::enumerateOp() {
   //#For each configuration, identify which pairs are IBD
 
-  op = enumerateBinaryMatrixOfK(nchoose2(kStrain()));
+  /// Generates a matrix of 2^ (k * (k -1 ) /2) rows where each row is a binary representation of all [0, 2^ (k * (k -1 ) /2))
+  /// This causes an exponential tial explosition.
+  pairs_permutation_ = enumerateBinaryMatrixOfK(nchoose2(kStrain()));
 
 }
 
 
 void kgd::IBDconfiguration::makePairList() {
   //#Make a map of pairs to pair value
+  /// Creates a pair list (a,b) where we have k items. This will be (k * (k -1 ) /2) paired items.
 
-  assert(pairList.size() == 0);
+  assert(pair_list_.size() == 0);
 
   for (size_t i = 0; i < kStrain(); i++) { // 0-indexed
 
     for (size_t j = i + 1; j < kStrain(); j++) {
 
-      pairList.push_back(std::vector<size_t>({i, j}));
+      pair_list_.push_back(std::vector<size_t>({i, j}));
 
     }
 
   }
 
-  assert(pairList.size() == (size_t) nchoose2(kStrain()));
+  assert(pair_list_.size() == (size_t) nchoose2(kStrain()));
 
 }
 
 
 void kgd::IBDconfiguration::makePairToEmission() {
 
-  assert(pairToEmission.size() == 0);
-  //prs2ems<-array(0, c(nrow(op), k));
-  //for ( size_t i = 0; i < op.size(); i++ ){
+  assert(pair_to_emission_.size() == 0);
 
-  for (std::vector<int> tmpOp : op) {
+  /// For all permuted pair combinations.
+  for (auto pair_permute_row : pairs_permutation_) {
 
-    std::vector<int> tmpRow = makeTmpRow();
-    //for ( size_t i = 0 ; i <(*opIt).size(); i++){
-    //cout << (*opIt)[i] << " ";
-    //}
-    //cout<<endl;
+    /// Create a vector of size k which is pre-initialized to [0, ..., (k -1)]
+    std::vector<int> enumerated_array = makeEnumeratedArray();
 
-    std::vector<size_t> ii = findWhichIsOne(tmpOp);
-    //ii <- which(op[rowI,]==1);
-    //cout << ii.size()<<endl;
-    //cout << "##############" <<endl;
+    /// For each permutation create an array of indexes of active pairs.
+    std::vector<size_t> active_pairs_array = activePairsArray(pair_permute_row);
 
-    if (ii.size() > 0) {
+    /// If we have active pairs, create an active pair list.
+    if (active_pairs_array.size() > 0) {
 
-      std::vector<std::vector<size_t> > tmpIBDPairs;
+      std::vector<std::vector<size_t> > active_pair_list;
 
-      for (size_t j = 0; j < ii.size(); j++) {
-        //cout << "j = " << j <<" ii[j] = "<<ii[j]<<endl;
-        tmpIBDPairs.push_back(pairList[ii[j]]);
+      for (size_t j = 0; j < active_pairs_array.size(); j++) {
 
-        //cout << tmpIBDPairs.back()[0]<< " "<<tmpIBDPairs.back()[1]<<endl;
+        active_pair_list.push_back(pair_list_[active_pairs_array[j]]);
+
       }
 
-      int tmpIndex = (tmpIBDPairs.size() - 1);
-
+      int tmpIndex = (active_pair_list.size() - 1);
+      /// For all active pairs (a, b), array[a] = array[b]
       while (tmpIndex >= 0) {
 
-        //cout << "replacing element "<< tmpIBDPairs[tmpIndex][0] << " by element " << tmpIBDPairs[tmpIndex][1] <<endl;
-        tmpRow[tmpIBDPairs[tmpIndex][0]] = tmpRow[tmpIBDPairs[tmpIndex][1]];
+        enumerated_array[active_pair_list[tmpIndex][0]] = enumerated_array[active_pair_list[tmpIndex][1]];
         tmpIndex--;
 
       }
 
     }
 
-    pairToEmission.push_back(tmpRow);
-    //for (size_t i = 0 ; i < pairToEmission.back().size(); i++){
-    //cout << pairToEmission.back()[i]<<" ";
-    //}
-    //cout <<endl;
+    pair_to_emission_.push_back(enumerated_array);
+
   }
-  //for (size_t i = 0; i < pairToEmission.size(); i++){
-  //for (size_t ii = 0 ; ii < pairToEmission.back().size(); ii++){
-  //cout << pairToEmission[i][ii]<<" ";
-  //}
-  //cout <<endl;
-  //}
 
 }
 
 
-std::vector<int> kgd::IBDconfiguration::makeTmpRow() {
+std::vector<int> kgd::IBDconfiguration::makeEnumeratedArray() {
 
   std::vector<int> ret(kStrain());
 
   for (size_t i = 0; i < ret.size(); i++) {
+
     ret[i] = (int) i;
+
   }
 
   return ret;
@@ -149,13 +138,14 @@ std::vector<int> kgd::IBDconfiguration::makeTmpRow() {
 }
 
 
-std::vector<size_t> kgd::IBDconfiguration::findWhichIsOne(std::vector<int> tmpOp) {
+std::vector<size_t> kgd::IBDconfiguration::activePairsArray(std::vector<int> pair_permute_row) {
 
+/// This function returns an array of indexes of active pairs for a pair_permute_row.
   std::vector<size_t> ret;
 
-  for (size_t i = 0; i < tmpOp.size(); i++) {
+  for (size_t i = 0; i < pair_permute_row.size(); i++) {
 
-    if (tmpOp[i] == 1) {
+    if (pair_permute_row[i] == 1) {
 
       ret.push_back(i);
 
@@ -170,64 +160,46 @@ std::vector<size_t> kgd::IBDconfiguration::findWhichIsOne(std::vector<int> tmpOp
 
 void kgd::IBDconfiguration::findUniqueState() {
 
-  kgl::ExecEnv::log().info("pairToEmission size:{}, states size: {}", pairToEmission.size(), states.size());
-  assert (states.size() == 0);
-  //states.push_back(pairToEmission[0]);
-  //for (size_t i = 1; i < pairToEmission.size(); i++){
-  //bool aNewState = true;
-  //for ( vector<int> state : states){
-  //if ( twoVectorsAreSame(state, pairToEmission[i]) ){
-  //aNewState = false;
-  //break;
-  //}
-  //}
-  //if ( aNewState ){
-  //states.push_back(pairToEmission[i]);
-  //}
-  //}
+  assert (states_.size() == 0);
 
-  states = unique(pairToEmission);
+  /// Only unique pairs to to emission.
+  states_ = unique(pair_to_emission_);
 
-  //for ( vector<int> state : states){
-  //for (int i : state){
-  //cout << i <<" ";
-  //}
-  //cout <<endl;
-  //}
+  kgl::ExecEnv::log().info("pair_to_emission_ size:{}, states_ size: {}, states_[0] size:{}", pair_to_emission_.size(), states_.size(), states_[0].size());
 
 }
 
 
 void kgd::IBDconfiguration::findEffectiveK() {
 
-  assert(effectiveK.size() == 0);
+  assert(effectiveK_.size() == 0);
 
-  for (std::vector<int> state : states) {
+  for (auto state : states_) {
 
     std::set<int> tmpSet(state.begin(), state.end());
-    //cout << tmpSet.size() <<endl;
-    effectiveK.push_back(tmpSet.size());
+
+    effectiveK_.push_back(tmpSet.size());
 
   }
 
-  assert(effectiveK.size() == states.size());
+  assert(effectiveK_.size() == states_.size());
 
 }
 
 
-std::vector<std::string> kgd::IBDconfiguration::getIBDconfigureHeader() {
+std::vector<std::string> kgd::IBDconfiguration::getIBDconfigureHeader() const {
 
   std::vector<std::string> ret;
 
-  for (size_t i = 0; i < states.size(); i++) {
+  for (size_t i = 0; i < states_.size(); i++) {
 
     std::string tmp;
 
-    for (size_t j = 0; j < states[i].size(); j++) {
+    for (size_t j = 0; j < states_[i].size(); j++) {
 
       std::stringstream tmp_ss;
-      tmp_ss << states[i][j];
-      tmp += tmp_ss.str() + ((j < (states[i].size() - 1)) ? "-" : "");
+      tmp_ss << states_[i][j];
+      tmp += tmp_ss.str() + ((j < (states_[i].size() - 1)) ? "-" : "");
 
     }
 
@@ -250,17 +222,21 @@ std::vector<std::vector<int> > kgd::IBDconfiguration::unique(std::vector<std::ve
 
     bool aNewState = true;
 
-    for (std::vector<int> state : ret) {
+    for (auto state : ret) {
 
       if (twoVectorsAreSame(state, mat[i])) {
+
         aNewState = false;
         break;
+
       }
 
     }
 
     if (aNewState) {
+
       ret.push_back(mat[i]);
+
     }
 
   }
@@ -273,6 +249,7 @@ std::vector<std::vector<int> > kgd::IBDconfiguration::unique(std::vector<std::ve
 std::vector<std::vector<int> > kgd::IBDconfiguration::enumerateBinaryMatrixOfK(size_t k) {
   // This function enumerate all possible binary combinations of k elements
 
+  //TODO: Exponential explosion causes memory exhaustion for (k > 5). Replace/remove this logic.
   int ksq = pow(2, k);
 
   std::vector<std::vector<int> > ret;
@@ -298,7 +275,6 @@ std::vector<int> kgd::IBDconfiguration::convertIntToBinary(int x, size_t len) {
 
     ret[idx] = (x & 1) ? 1 : 0;
     idx++;
-    //cout << "x " <<x<< " idx "<<idx<<" len "<< len<<endl;
 
     if (idx > len) {
 
@@ -310,10 +286,7 @@ std::vector<int> kgd::IBDconfiguration::convertIntToBinary(int x, size_t len) {
   }
 
   std::reverse(ret.begin(), ret.end());
-  //for (size_t i = 0; i < ret.size(); i++){
-  //cout << ret[i] << " ";
-  //}
-  //cout<<endl;
+
   return ret;
 }
 

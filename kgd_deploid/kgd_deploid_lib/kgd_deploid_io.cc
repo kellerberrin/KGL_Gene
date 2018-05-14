@@ -619,7 +619,7 @@ void kgd::DEploidIO::readPanel() {
 }
 
 
-void kgd::DEploidIO::getIBDprobsIntegrated(std::vector<std::vector<double> > &prob) {
+void kgd::DEploidIO::getIBDprobsIntegrated(const std::vector<std::vector<double> > &prob) {
 
   if (prob.size() != nLoci()) {
 
@@ -746,8 +746,8 @@ void kgd::DEploidIO::paintIBD(std::shared_ptr<RandomGenerator> randomGenerator) 
   tmpIBDpath.buildPathProbabilityForPainting(goodProp);
   ibdLLK_ = tmpIBDpath.bestPath(goodProp);
   ibdProbsHeader_ = tmpIBDpath.getIBDprobsHeader();
-  getIBDprobsIntegrated(tmpIBDpath.fwdbwd);
-  writeIBDpostProb(tmpIBDpath.fwdbwd, ibdProbsHeader_);
+  getIBDprobsIntegrated(tmpIBDpath.getFwdBwd());
+  writeIBDpostProb(tmpIBDpath.getFwdBwd(), ibdProbsHeader_);
 
 }
 
