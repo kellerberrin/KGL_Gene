@@ -61,7 +61,6 @@ class Panel : public TxtReader {
 public:
 
   Panel();
-
   virtual ~Panel() {};
 
 private:
@@ -76,10 +75,10 @@ private:
   std::vector<double> pNoRecNoRec_; // pNoRec * pNoRec;
 
   size_t truePanelSize_;
+  size_t inbreedingPanelSize_;
+
 
   void setTruePanelSize(const size_t setTo) { this->truePanelSize_ = setTo; }
-
-  size_t inbreedingPanelSize_;
 
   void setInbreedingPanelSize(const size_t setTo) { this->inbreedingPanelSize_ = setTo; }
 

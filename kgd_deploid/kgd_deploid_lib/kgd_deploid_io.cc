@@ -49,8 +49,8 @@ kgd::DEploidIO::DEploidIO() {
 
 void kgd::DEploidIO::init() {
 
-  excludedMarkers = std::make_shared<ExcludeMarker>();
-  panel = nullptr;
+  excludedMarkers_ = std::make_shared<ExcludeMarker>();
+  panel_ = nullptr;
   vcfReaderPtr_ = std::make_shared<VcfReader>(kgd::DeploidExecEnv::getArgs().vcfFile);
 
   setDoExportRecombProb(false);
@@ -169,7 +169,7 @@ void kgd::DEploidIO::finalize() {
 
   if (excludeSites()) {
 
-    excludedMarkers->readFromFile(excludeFileName_.c_str());
+    excludedMarkers_->readFromFile(excludeFileName_.c_str());
 
   }
 
@@ -177,7 +177,7 @@ void kgd::DEploidIO::finalize() {
 
     if (excludeSites()) {
 
-      vcfReaderPtr_->findAndKeepMarkers(excludedMarkers);
+      vcfReaderPtr_->findAndKeepMarkers(excludedMarkers_);
 
     }
 
@@ -191,7 +191,7 @@ void kgd::DEploidIO::finalize() {
     ref.readFromFile(refFileName_.c_str());
     if (excludeSites()) {
 
-      ref.findAndKeepMarkers(excludedMarkers);
+      ref.findAndKeepMarkers(excludedMarkers_);
 
     }
 
@@ -202,7 +202,7 @@ void kgd::DEploidIO::finalize() {
 
     if (excludeSites()) {
 
-      alt.findAndKeepMarkers(excludedMarkers);
+      alt.findAndKeepMarkers(excludedMarkers_);
 
     }
 
@@ -215,7 +215,7 @@ void kgd::DEploidIO::finalize() {
 
   if (excludeSites()) {
 
-    plaf.findAndKeepMarkers(excludedMarkers);
+    plaf.findAndKeepMarkers(excludedMarkers_);
 
   }
 
@@ -356,7 +356,7 @@ void kgd::DEploidIO::parse() {
 
   plafFileName_ = args.plafFile;  // -plaf
 
-  if (args.panelFile != kgd::DeploidArgs::NOT_SPECIFIED) { // -panel
+  if (args.panelFile != kgd::DeploidArgs::NOT_SPECIFIED) { // -panel_
 
     panelFileName_ = args.panelFile;
     setUsePanel(true);
@@ -426,7 +426,7 @@ void kgd::DEploidIO::checkInput() {
   }
   if (usePanel() && panelFileName_.size() == 0 && !doIbdPainting() && !doComputeLLK()) {
 
-    throw FileNameMissing("Reference panel");
+    throw FileNameMissing("Reference panel_");
 
   }
   if (initialPropWasGiven() && (abs(Utility::sumOfVec(initialProp_) - 1.0) > 0.00001) && pleaseCheckInitialP()) {
@@ -538,7 +538,7 @@ void kgd::DEploidIO::chromPainting(std::shared_ptr<RandomGenerator> random_gener
 
   if (doAllowInbreeding() == true) {
 
-    panel->initializeUpdatePanel(panel->truePanelSize() + kStrain_ - 1);
+    panel_->initializeUpdatePanel(panel_->truePanelSize() + kStrain_ - 1);
 
   }
 
@@ -546,7 +546,7 @@ void kgd::DEploidIO::chromPainting(std::shared_ptr<RandomGenerator> random_gener
 
     if (doAllowInbreeding() == true) {
 
-      panel->updatePanelWithHaps(panel->truePanelSize() + kStrain_ - 1, tmpk, initialHap_);
+      panel_->updatePanelWithHaps(panel_->truePanelSize() + kStrain_ - 1, tmpk, initialHap_);
 
     }
 
@@ -566,14 +566,14 @@ void kgd::DEploidIO::chromPainting(std::shared_ptr<RandomGenerator> random_gener
                                      random_generator,
                                      start,
                                      length,
-                                     panel,
+                                     panel_,
                                      missCopyProb_,
                                      scalingFactor(),
                                      tmpk);
 
       if (doAllowInbreeding() == true) {
 
-        updatingSingle.setPanelSize(panel->inbreedingPanelSize());
+        updatingSingle.setPanelSize(panel_->inbreedingPanelSize());
 
       }
 
@@ -602,19 +602,19 @@ void kgd::DEploidIO::readPanel() {
 
   }
 
-  panel = std::make_shared<Panel>();
-  panel->readFromFile(panelFileName_.c_str());
+  panel_ = std::make_shared<Panel>();
+  panel_->readFromFile(panelFileName_.c_str());
 
   if (excludeSites()) {
 
-    panel->findAndKeepMarkers(excludedMarkers);
+    panel_->findAndKeepMarkers(excludedMarkers_);
 
   }
 
-  panel->computeRecombProbs(averageCentimorganDistance(), parameterG(), useConstRecomb(), constRecombProb(),
+  panel_->computeRecombProbs(averageCentimorganDistance(), parameterG(), useConstRecomb(), constRecombProb(),
                             forbidCopyFromSame());
 
-  panel->checkForExceptions(nLoci(), panelFileName_);
+  panel_->checkForExceptions(nLoci(), panelFileName_);
 
 }
 

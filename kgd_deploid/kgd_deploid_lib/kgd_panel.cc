@@ -175,9 +175,9 @@ void kgd::Panel::initializeUpdatePanel(size_t inbreedingPanelSizeSetTo) {
 
   setInbreedingPanelSize(inbreedingPanelSizeSetTo);
 
-  // If allows inbreeding, update reference panel by including strain haplotypes
+  // If allows inbreeding, update reference panel_ by including strain haplotypes
   dout << "************* Allow inbreeding ************" << std::endl;
-  dout << "** Initialize inbreeding reference panel **" << std::endl;
+  dout << "** Initialize inbreeding reference panel_ **" << std::endl;
 
   if (truePanelSize() == inbreedingPanelSize()) {
 
@@ -206,9 +206,9 @@ void kgd::Panel::updatePanelWithHaps(size_t inbreedingPanelSizeSetTo,
 
   setInbreedingPanelSize(inbreedingPanelSizeSetTo);
 
-  // If allows inbreeding, update reference panel by including strain haplotypes
+  // If allows inbreeding, update reference panel_ by including strain haplotypes
   dout << "*************** Allow inbreeding **************" << std::endl;
-  dout << "*** Update reference panel without strain " << excludedStrain << " ***" << std::endl;
+  dout << "*** Update reference panel_ without strain " << excludedStrain << " ***" << std::endl;
 
   if (truePanelSize() == inbreedingPanelSize()) {
 

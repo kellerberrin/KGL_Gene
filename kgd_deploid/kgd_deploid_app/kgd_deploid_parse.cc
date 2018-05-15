@@ -137,11 +137,11 @@ This is relative to the work directory the workDirectory is prepended to to this
   addOption(parser, seqan::ArgParseOption(outFileShortFlag_, outFileFlag_, outfile_file_desc, seqan::ArgParseArgument::STRING, "OUTPUT"));
 
   const char* panel_file_desc =
-  R"(Strain panel file. This is relative to the work directory. and the workDirectory
+  R"(Strain panel_ file. This is relative to the work directory. and the workDirectory
   is prepended to to this path e.g. 'workDirectory/strain_panel_file_path')";
 
   const char* panelFileFlag_ = "strainPanelFile";
-  const char* panelFileShortFlag_ = "panel";
+  const char* panelFileShortFlag_ = "panel_";
 
   addOption(parser, seqan::ArgParseOption(panelFileShortFlag_, panelFileFlag_, panel_file_desc, seqan::ArgParseArgument::INPUT_FILE, "PANEL_FILE"));
 
@@ -215,7 +215,7 @@ This is relative to the work directory the workDirectory is prepended to to this
 
 
   const char* nopanel_desc =
-  R"(Flag. Generate the candidate strains using IDB functionality. Do not use a pre-determined panel of strains)";
+  R"(Flag. Generate the candidate strains using IDB functionality. Do not use a pre-determined panel_ of strains)";
 
   const char* nopanelFlag_ = "noPanel";
   const char* nopanelShortFlag_ = "noPanel";

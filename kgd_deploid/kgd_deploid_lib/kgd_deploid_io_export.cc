@@ -33,7 +33,7 @@ namespace kgd = kellerberrin::deploid;
 
 void kgd::DEploidIO::wrapUp() {
 
-  writeRecombProb(panel);
+  writeRecombProb(panel_);
 
   // Get End time before writing the log
   getTime(false);
