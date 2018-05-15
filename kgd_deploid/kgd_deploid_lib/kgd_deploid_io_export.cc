@@ -63,14 +63,14 @@ void kgd::DEploidIO::writeRecombProb(std::shared_ptr<Panel> panel) {
                       << "p.rec.norec" << "\t"
                       << "p.norec.norec" << "\n";
 
-    for (size_t i = 0; i < panel->pRec_.size(); i++) {
+    for (size_t i = 0; i < panel->getRec().size(); i++) {
 
-      ofstreamExportTmp_ << panel->pRec_[i] << "\t"
-                        << panel->pRecEachHap_[i] << "\t"
-                        << panel->pNoRec_[i] << "\t"
-                        << panel->pRecRec_[i] << "\t"
-                        << panel->pRecNoRec_[i] << "\t"
-                        << panel->pNoRecNoRec_[i] << "\n";
+      ofstreamExportTmp_ << panel->getRecIndex(i) << "\t"
+                        << panel->getRecEachHapIndex(i) << "\t"
+                        << panel->getNoRecIndex(i) << "\t"
+                        << panel->getRecRecIndex(i) << "\t"
+                        << panel->getRecNoRecIndex(i) << "\t"
+                        << panel->getNoRecNoRecIndex(i) << "\n";
     }
 
     ofstreamExportTmp_.close();

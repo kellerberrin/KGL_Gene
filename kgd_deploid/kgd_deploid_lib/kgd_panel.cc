@@ -202,7 +202,7 @@ void kgd::Panel::initializeUpdatePanel(size_t inbreedingPanelSizeSetTo) {
 
 void kgd::Panel::updatePanelWithHaps(size_t inbreedingPanelSizeSetTo,
                                      size_t excludedStrain,
-                                     std::vector<std::vector<double> > &haps) {
+                                     const std::vector<std::vector<double> > &haps) {
 
   setInbreedingPanelSize(inbreedingPanelSizeSetTo);
 

@@ -38,6 +38,7 @@ namespace deploid {          // project level namespace
 
 
 class Panel : public TxtReader {
+
 #ifdef UNITTEST
   friend class TestPanel;
   friend class TestInitialHaplotypes;
@@ -46,24 +47,37 @@ class Panel : public TxtReader {
   friend class TestUpdateSingleHap;
 #endif
 
-  friend class McmcMachinery;
-
-  friend class UpdateSingleHap;
-
-  friend class UpdatePairHap;
-
-  friend class UpdateHap;
-
-  friend class DEploidIO;
-
-  friend class InitialHaplotypes;
-
 public:
 
   Panel();
-  virtual ~Panel() {};
+  virtual ~Panel() = default;
+
+  // Access functions.
+  size_t truePanelSize() const { return this->truePanelSize_; }
+  size_t inbreedingPanelSize() const { return this->inbreedingPanelSize_; }
+  const std::vector<double>& getRec() const { return pRec_; }
+  double getRecIndex(size_t index) const { return pRec_[index]; }
+  double getRecEachHapIndex(size_t index) const { return pRecEachHap_[index]; }
+  double getNoRecIndex(size_t index) const { return pNoRec_[index]; }
+  double getRecRecIndex(size_t index) const { return pRecRec_[index]; }
+  double getRecNoRecIndex(size_t index) const { return pRecNoRec_[index]; }
+  double getNoRecNoRecIndex(size_t index) const { return pNoRecNoRec_[index]; }
+
+  // Methods
+  void initializeUpdatePanel(size_t inbreedingPanelSizeSetTo);
+  void updatePanelWithHaps(size_t inbreedingPanelSizeSetTo,
+                           size_t excludedStrain,
+                           const std::vector<std::vector<double> > &haps);
+  void readFromFile(const char inchar[]);
+  void checkForExceptions(size_t nLoci, std::string panelFileName);
+  void computeRecombProbs(double averageCentimorganDistance,
+                          double Ne,
+                          bool useConstRecomb,
+                          double constRecombProb,
+                          bool forbidCopyFromSame);
 
 private:
+
   // Members
   std::vector<double> pRec_;
   // Used in update single haplotype
@@ -77,71 +91,26 @@ private:
   size_t truePanelSize_;
   size_t inbreedingPanelSize_;
 
-
+  // Setters and Getters.
   void setTruePanelSize(const size_t setTo) { this->truePanelSize_ = setTo; }
-
   void setInbreedingPanelSize(const size_t setTo) { this->inbreedingPanelSize_ = setTo; }
 
-  size_t inbreedingPanelSize() const { return this->inbreedingPanelSize_; }
-
-  size_t truePanelSize() const { return this->truePanelSize_; }
-
   // Methods
-  void readFromFile(const char inchar[]);
-
-  void computeRecombProbs(double averageCentimorganDistance,
-                          double Ne,
-                          bool useConstRecomb,
-                          double constRecombProb,
-                          bool forbidCopyFromSame);
-
-  void checkForExceptions(size_t nLoci, std::string panelFileName);
-
-  void initializeUpdatePanel(size_t inbreedingPanelSizeSetTo);
-
-  void updatePanelWithHaps(size_t inbreedingPanelSizeSetTo,
-                           size_t excludedStrain,
-                           std::vector<std::vector<double> > &haps);
-
   void print();
-
   void buildExamplePanelContent();
-
   void buildExamplePanel1();
-
   void buildExamplePanel2();
 
 };
 
 
-class InitialHaplotypes : public Panel {
-
-  #ifdef UNITTEST
-  friend class TestInitialHaplotypes;
-#endif
-
-  friend class DEploidIO;
-
-  InitialHaplotypes() : Panel() {}
-  ~InitialHaplotypes() = default;
-
-};
 
 
 class IBDrecombProbs : public VariantIndex {
 
-  friend class IBDpath;
-
 #ifdef UNITTEST
   friend class TestIBDpath;
 #endif
-
-private:
-
-  std::vector<double> pRec_;
-  std::vector<double> pNoRec_; // = 1.0 - pRec;
-
-  void computeRecombProbs(double averageCentimorganDistance, double Ne, bool useConstRecomb, double constRecombProb);
 
 public:
 
@@ -155,13 +124,24 @@ public:
 
   ~IBDrecombProbs() = default;
 
+  double getRecIndex(size_t index) const { return pRec_[index]; }
+  double getNoRecIndex(size_t index) const { return pNoRec_[index]; }
+
+  // Methods
+  void computeRecombProbs(double averageCentimorganDistance, double Ne, bool useConstRecomb, double constRecombProb);
+
+private:
+
+  std::vector<double> pRec_;
+  std::vector<double> pNoRec_; // = 1.0 - pRec;
+
+
 };
 
 
 
 }   // organization level namespace
 }   // project level namespace
-
 
 
 #endif

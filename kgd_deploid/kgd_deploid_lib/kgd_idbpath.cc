@@ -111,8 +111,8 @@ void kgd::IBDpath::ibdSamplePath(const std::vector<double>& statePrior) {
 
     for (size_t i = 0; i < prop.size(); i++) {
 
-      prop[i] = vNoRecomb[i] * ibd_recomb_probs_.pNoRec_[lociIdx] +
-                vRecomb[i] * ibd_recomb_probs_.pRec_[lociIdx] * statePrior[ibd_configure_path_[lociIdx + 1]];
+      prop[i] = vNoRecomb[i] * ibd_recomb_probs_.getNoRecIndex(lociIdx) +
+                vRecomb[i] * ibd_recomb_probs_.getRecIndex(lociIdx) * statePrior[ibd_configure_path_[lociIdx + 1]];
 
     }
 
@@ -227,12 +227,12 @@ void kgd::IBDpath::computeIbdPathBwdProb(const std::vector<double>& proportion,
 
       for (size_t j = 0; j < lk.size(); j++) {
 
-        tmpBw[i] += (lk[j] * bwd_.back()[j]) * ibd_recomb_probs_.pRec_[siteI - 1];
+        tmpBw[i] += (lk[j] * bwd_.back()[j]) * ibd_recomb_probs_.getRecIndex(siteI - 1);
 
       }
 
       tmpBw[i] *= statePrior[i];
-      tmpBw[i] += lk[i] * (ibd_recomb_probs_.pNoRec_[siteI - 1]) * vNoRecomb[i];
+      tmpBw[i] += lk[i] * (ibd_recomb_probs_.getNoRecIndex(siteI - 1)) * vNoRecomb[i];
       tmpBw[i] *= h_prior_.getPriorProb()[i][siteI];
 
     }
@@ -269,7 +269,8 @@ void kgd::IBDpath::computeIbdPathFwdProb(const std::vector<double>& proportion, 
 
     for (size_t i = 0; i < h_prior_.nState(); i++) {
 
-      vPrior[i] = (vNoRec[i] * ibd_recomb_probs_.pNoRec_[siteI] + f_sum_ * ibd_recomb_probs_.pRec_[siteI] * statePrior[i]) * h_prior_.getPriorProbTrans()[siteI][i];
+      vPrior[i] = ((vNoRec[i] * ibd_recomb_probs_.getNoRecIndex(siteI)) + (f_sum_ * ibd_recomb_probs_.getRecIndex(siteI) * statePrior[i]))
+                  * h_prior_.getPriorProbTrans()[siteI][i];
 
     }
 

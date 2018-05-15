@@ -141,7 +141,7 @@ This is relative to the work directory the workDirectory is prepended to to this
   is prepended to to this path e.g. 'workDirectory/strain_panel_file_path')";
 
   const char* panelFileFlag_ = "strainPanelFile";
-  const char* panelFileShortFlag_ = "panel_";
+  const char* panelFileShortFlag_ = "panel";
 
   addOption(parser, seqan::ArgParseOption(panelFileShortFlag_, panelFileFlag_, panel_file_desc, seqan::ArgParseArgument::INPUT_FILE, "PANEL_FILE"));
 

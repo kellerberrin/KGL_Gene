@@ -104,8 +104,8 @@ void kgd::UpdateSingleHap::calcBwdProbs() {
 
     size_t hapIndexBack = segmentStartIndex_ + j;
     std::vector<double> bwdTmp(nPanel_, 1.0);
-    double pRecEachHap = panel_->pRecEachHap_[hapIndexBack - 1];
-    double pNoRec = panel_->pNoRec_[hapIndexBack - 1];
+    double pRecEachHap = panel_->getRecEachHapIndex(hapIndexBack - 1);
+    double pNoRec = panel_->getNoRecIndex(hapIndexBack - 1);
 
     for (size_t i = 0; i < nPanel_; i++) {
 
@@ -266,8 +266,8 @@ void kgd::UpdateSingleHap::calcFwdProbs() {
 
   for (size_t j = 1; j < nLoci_; j++) {
 
-    double pRecEachHap = panel_->pRecEachHap_[hapIndex];
-    double pNoRec = panel_->pNoRec_[hapIndex];
+    double pRecEachHap = panel_->getRecEachHapIndex(hapIndex);
+    double pNoRec = panel_->getNoRecIndex(hapIndex);
 
     hapIndex++;
 
@@ -317,8 +317,8 @@ void kgd::UpdateSingleHap::samplePaths() {
   for (size_t j = (nLoci_ - 1); j > 0; j--) {
 
     contentIndex--;
-    double pRecEachHap = panel_->pRecEachHap_[contentIndex];
-    double pNoRec = panel_->pNoRec_[contentIndex];
+    double pRecEachHap = panel_->getRecEachHapIndex(contentIndex);
+    double pNoRec = panel_->getNoRecIndex(contentIndex);
 
     size_t previous_site = j - 1;
     std::vector<double> previousDist = fwdProbs_[previous_site];

@@ -68,19 +68,18 @@ public:
 
 
   // Access Routines.
-
   std::shared_ptr<Panel> getPanel() { return panel_; }
 
   size_t randomSeed() const { return randomSeed_; }
-  bool doExportPostProb() const { return this->doExportPostProb_; }
-  bool doAllowInbreeding() const { return this->doAllowInbreeding_; }
+  bool doExportPostProb() const { return doExportPostProb_; }
+  bool doAllowInbreeding() const { return doAllowInbreeding_; }
   bool initialPropWasGiven() const { return initialPropWasGiven_; }
   bool initialHapWasGiven() const { return initialHapWasGiven_; }
-  bool doUpdateProp() const { return this->doUpdateProp_; }
-  bool doUpdateSingle() const { return this->doUpdateSingle_; }
-  bool doUpdatePair() const { return this->doUpdatePair_; }
-  bool forbidCopyFromSame() const { return this->forbidCopyFromSame_; }
-  bool useConstRecomb() const { return this->useConstRecomb_; }
+  bool doUpdateProp() const { return doUpdateProp_; }
+  bool doUpdateSingle() const { return doUpdateSingle_; }
+  bool doUpdatePair() const { return doUpdatePair_; }
+  bool forbidCopyFromSame() const { return forbidCopyFromSame_; }
+  bool useConstRecomb() const { return useConstRecomb_; }
 
   const std::vector<size_t>& indexOfChromStarts() const { return indexOfChromStarts_; }
   const std::vector<int>& getIndexPosition(size_t index) const { return position_[index]; }
@@ -89,45 +88,45 @@ public:
   const std::vector<double>& getRefCount() const { return refCount_; }
   const std::vector<double>& getAltCount() const { return altCount_; }
 
-  double scalingFactor() const { return this->scalingFactor_; }
+  double scalingFactor() const { return scalingFactor_; }
   double getMissCopyProb() const { return missCopyProb_; }
-  size_t getMcmcSample() const { return this->nMcmcSample_; }
+  size_t getMcmcSample() const { return nMcmcSample_; }
   size_t getMcmcMachineryRate() const { return mcmcMachineryRate_; }
   double getMcmcBurn() const { return mcmcBurn_; }
-  size_t kStrain() const { return this->kStrain_; }
-  double ibdSigma() const { return this->ibdSigma_; }
-  double parameterSigma() const { return this->parameterSigma_; }
+  size_t kStrain() const { return kStrain_; }
+  double ibdSigma() const { return ibdSigma_; }
+  double parameterSigma() const { return parameterSigma_; }
   const std::vector<std::vector<double> >& getInitialHap() const { return initialHap_; }
   const std::vector<double>& getInitialProp() const { return  initialProp_; }
-  size_t nLoci() const { return this->nLoci_; }
-  double averageCentimorganDistance() const { return this->averageCentimorganDistance_; }
-  double parameterG() const { return this->parameterG_; }
-  double constRecombProb() const { return this->constRecombProb_; }
+  size_t nLoci() const { return nLoci_; }
+  double averageCentimorganDistance() const { return averageCentimorganDistance_; }
+  double parameterG() const { return parameterG_; }
+  double constRecombProb() const { return constRecombProb_; }
 
   // Modifiers.
   void writeLastSingleFwdProb(const std::vector<std::vector<double> > &probabilities, size_t chromIndex, size_t strainIndex, bool useIBD);
   void setFinalProp(const std::vector<double>& finalProp) { finalProp_ = finalProp; }
   void writeMcmcRelated(std::shared_ptr<McmcSample> mcmcSample, bool useIBD = false);
   void setInitialProp(const std::vector<double>& initial_prop) { initialProp_ = initial_prop; }
-  void setInitialPropWasGiven(const bool setTo) { this->initialPropWasGiven_ = setTo; }
-  void setDoUpdateProp(const bool setTo) { this->doUpdateProp_ = setTo; }
+  void setInitialPropWasGiven(const bool setTo) { initialPropWasGiven_ = setTo; }
+  void setDoUpdateProp(const bool setTo) { doUpdateProp_ = setTo; }
   void setInitialHap(const std::vector<std::vector<double> >& initial_hap) { initialHap_ = initial_hap; }
-  void setInitialHapWasGiven(const bool setTo) { this->initialHapWasGiven_ = setTo; }
-  void setacceptRatio(const double setTo) { this->acceptRatio_ = setTo; }
-  void setmeanThetallks(const double setTo) { this->meanThetallks_ = setTo; }
-  void setmaxLLKs(const double setTo) { this->maxLLKs_ = setTo; }
-  void setmeanllks(const double setTo) { this->meanllks_ = setTo; }
-  void setstdvllks(const double setTo) { this->stdvllks_ = setTo; }
-  void setdicByVar(const double setTo) { this->dicByVar_ = setTo; }
-  void setdicByTheta(const double setTo) { this->dicByTheta_ = setTo; }
+  void setInitialHapWasGiven(const bool setTo) { initialHapWasGiven_ = setTo; }
+  void setacceptRatio(const double setTo) { acceptRatio_ = setTo; }
+  void setmeanThetallks(const double setTo) { meanThetallks_ = setTo; }
+  void setmaxLLKs(const double setTo) { maxLLKs_ = setTo; }
+  void setmeanllks(const double setTo) { meanllks_ = setTo; }
+  void setstdvllks(const double setTo) { stdvllks_ = setTo; }
+  void setdicByVar(const double setTo) { dicByVar_ = setTo; }
+  void setdicByTheta(const double setTo) { dicByTheta_ = setTo; }
 
   // Painting related
   void chromPainting(std::shared_ptr<RandomGenerator> random_generator);
-  bool doLsPainting() const { return this->doLsPainting_; }
-  bool doIbdPainting() const { return this->doIbdPainting_; }
-  bool doComputeLLK() const { return this->doComputeLLK_; }
+  bool doLsPainting() const { return doLsPainting_; }
+  bool doIbdPainting() const { return doIbdPainting_; }
+  bool doComputeLLK() const { return doComputeLLK_; }
   void computeLLKfromInitialHap();
-  bool useIBD() const { return this->useIBD_; }
+  bool useIBD() const { return useIBD_; }
   void paintIBD(std::shared_ptr<RandomGenerator> random_generator);
   void getIBDprobsIntegrated(const std::vector<std::vector<double> > &prob);
 
@@ -280,7 +279,7 @@ private:
   void parse();
   void checkInput();
   void finalize();
-  void set_seed(const size_t seed) { this->randomSeed_ = seed; }
+  void set_seed(const size_t seed) { randomSeed_ = seed; }
   void removeFilesWithSameName();
   std::vector<double> computeExpectedWsafFromInitialHap();
   void computeEffectiveKstrain(std::vector<double> proportion);
@@ -289,44 +288,44 @@ private:
   void readPanel();
 
   // Getters and Setters
-  void setDoUpdateSingle(const bool setTo) { this->doUpdateSingle_ = setTo; }
-  void setDoUpdatePair(const bool setTo) { this->doUpdatePair_ = setTo; }
-  void setDoExportPostProb(const bool setTo) { this->doExportPostProb_ = setTo; }
-  void setDoExportSwitchMissCopy(const bool setTo) { this->doExportSwitchMissCopy_ = setTo; }
-  bool doExportSwitchMissCopy() const { return this->doExportSwitchMissCopy_; }
-  void setDoAllowInbreeding(const bool setTo) { this->doAllowInbreeding_ = setTo; }
-  void setDoLsPainting(const bool setTo) { this->doLsPainting_ = setTo; }
-  void setDoIbdPainting(const bool setTo) { this->doIbdPainting_ = setTo; }
-  void setUseIBD(const bool setTo) { this->useIBD_ = setTo; }
+  void setDoUpdateSingle(const bool setTo) { doUpdateSingle_ = setTo; }
+  void setDoUpdatePair(const bool setTo) { doUpdatePair_ = setTo; }
+  void setDoExportPostProb(const bool setTo) { doExportPostProb_ = setTo; }
+  void setDoExportSwitchMissCopy(const bool setTo) { doExportSwitchMissCopy_ = setTo; }
+  bool doExportSwitchMissCopy() const { return doExportSwitchMissCopy_; }
+  void setDoAllowInbreeding(const bool setTo) { doAllowInbreeding_ = setTo; }
+  void setDoLsPainting(const bool setTo) { doLsPainting_ = setTo; }
+  void setDoIbdPainting(const bool setTo) { doIbdPainting_ = setTo; }
+  void setUseIBD(const bool setTo) { useIBD_ = setTo; }
   bool pleaseCheckInitialP() const { return pleaseCheckInitialP_; }
-  void setPleaseCheckInitialP(const bool setTo) { this->pleaseCheckInitialP_ = setTo; }
-  bool randomSeedWasGiven() const { return this->randomSeedWasGiven_; }
-  void setUsePanel(const bool setTo) { this->usePanel_ = setTo; }
-  void setUseVcf(const bool useVcf) { this->useVcf_ = useVcf; }
-  bool useVcf() const { return this->useVcf_; }
-  void setDoExportVcf(const bool exportVcf) { this->doExportVcf_ = exportVcf; }
-  bool doExportVcf() const { return this->doExportVcf_; }
-  void setCompressVcf(const bool compress) { this->compressVcf_ = compress; }
-  bool compressVcf() const { return this->compressVcf_; }
-  void setDoExportRecombProb(const bool exportRecombProb) { this->doExportRecombProb_ = exportRecombProb; }
-  bool doExportRecombProb() const { return this->doExportRecombProb_; }
-  void setDoComputeLLK(const bool setTo) { this->doComputeLLK_ = setTo; }
-  void setrandomSeedWasGiven(const bool random) { this->randomSeedWasGiven_ = random; }
-  void setParameterG(const double setTo) { this->parameterG_ = setTo; }
-  void setParameterSigma(const double setTo) { this->parameterSigma_ = setTo; }
-  void setIBDSigma(const double setTo) { this->ibdSigma_ = setTo; }
-  void setNLoci(const size_t setTo) { this->nLoci_ = setTo; }
-  void setKstrain(const size_t setTo) { this->kStrain_ = setTo; }
-  void setKStrainWasManuallySet(const size_t setTo) { this->kStrainWasManuallySet_ = setTo; }
-  bool kStrainWasSetByHap() const { return this->kStrainWasSetByHap_; }
-  void setKStrainWasSetByHap(const size_t setTo) { this->kStrainWasSetByHap_ = setTo; }
-  bool kStrainWasManuallySet() const { return this->kStrainWasManuallySet_; }
-  void setKStrainWasSetByProp(const size_t setTo) { this->kStrainWasSetByProp_ = setTo; }
-  bool kStrainWasSetByProp() const { return this->kStrainWasSetByProp_; }
-  void setScalingFactor(const double setTo) { this->scalingFactor_ = setTo; }
-  bool excludeSites() const { return this->excludeSites_; }
-  void setExcludeSites(const size_t exclude) { this->excludeSites_ = exclude; }
-  void setForbidCopyFromSame(const bool forbid) { this->forbidCopyFromSame_ = forbid; }
+  void setPleaseCheckInitialP(const bool setTo) { pleaseCheckInitialP_ = setTo; }
+  bool randomSeedWasGiven() const { return randomSeedWasGiven_; }
+  void setUsePanel(const bool setTo) { usePanel_ = setTo; }
+  void setUseVcf(const bool useVcf) { useVcf_ = useVcf; }
+  bool useVcf() const { return useVcf_; }
+  void setDoExportVcf(const bool exportVcf) { doExportVcf_ = exportVcf; }
+  bool doExportVcf() const { return doExportVcf_; }
+  void setCompressVcf(const bool compress) { compressVcf_ = compress; }
+  bool compressVcf() const { return compressVcf_; }
+  void setDoExportRecombProb(const bool exportRecombProb) { doExportRecombProb_ = exportRecombProb; }
+  bool doExportRecombProb() const { return doExportRecombProb_; }
+  void setDoComputeLLK(const bool setTo) { doComputeLLK_ = setTo; }
+  void setrandomSeedWasGiven(const bool random) { randomSeedWasGiven_ = random; }
+  void setParameterG(const double setTo) { parameterG_ = setTo; }
+  void setParameterSigma(const double setTo) { parameterSigma_ = setTo; }
+  void setIBDSigma(const double setTo) { ibdSigma_ = setTo; }
+  void setNLoci(const size_t setTo) { nLoci_ = setTo; }
+  void setKstrain(const size_t setTo) { kStrain_ = setTo; }
+  void setKStrainWasManuallySet(const size_t setTo) { kStrainWasManuallySet_ = setTo; }
+  bool kStrainWasSetByHap() const { return kStrainWasSetByHap_; }
+  void setKStrainWasSetByHap(const size_t setTo) { kStrainWasSetByHap_ = setTo; }
+  bool kStrainWasManuallySet() const { return kStrainWasManuallySet_; }
+  void setKStrainWasSetByProp(const size_t setTo) { kStrainWasSetByProp_ = setTo; }
+  bool kStrainWasSetByProp() const { return kStrainWasSetByProp_; }
+  void setScalingFactor(const double setTo) { scalingFactor_ = setTo; }
+  bool excludeSites() const { return excludeSites_; }
+  void setExcludeSites(const size_t exclude) { excludeSites_ = exclude; }
+  void setForbidCopyFromSame(const bool forbid) { forbidCopyFromSame_ = forbid; }
   bool usePanel() const { return usePanel_; }
 
   // log and export results

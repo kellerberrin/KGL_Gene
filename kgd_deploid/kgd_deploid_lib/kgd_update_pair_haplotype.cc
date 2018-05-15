@@ -266,9 +266,9 @@ void kgd::UpdatePairHap::calcFwdProbs(bool forbidCopyFromSame) {
 
   for (size_t j = 1; j < nLoci_; j++) {
 
-    double recRec = panel_->pRecRec_[hapIndex];
-    double recNorec = panel_->pRecNoRec_[hapIndex];
-    double norecNorec = panel_->pNoRecNoRec_[hapIndex];
+    double recRec = panel_->getRecRecIndex(hapIndex);
+    double recNorec = panel_->getRecNoRecIndex(hapIndex);
+    double norecNorec = panel_->getNoRecNoRecIndex(hapIndex);
     hapIndex++;
 
     std::vector<double> marginalOfRows = computeRowMarginalDist(fwdProbs_.back());
@@ -329,9 +329,9 @@ void kgd::UpdatePairHap::samplePaths() {
   for (size_t j = (nLoci_ - 1); j > 0; j--) {
 
     --contentIndex;
-    double recRec = panel_->pRecRec_[contentIndex];
-    double recNorec = panel_->pRecNoRec_[contentIndex];
-    double norecNorec = panel_->pNoRecNoRec_[contentIndex];
+    double recRec = panel_->getRecRecIndex(contentIndex);
+    double recNorec = panel_->getRecNoRecIndex(contentIndex);
+    double norecNorec = panel_->getNoRecNoRecIndex(contentIndex);
 
     size_t previous_site = j - 1;
     std::vector<std::vector<double> > previousDist = fwdProbs_[previous_site];
