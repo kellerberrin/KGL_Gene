@@ -33,12 +33,12 @@ namespace kgd = kellerberrin::deploid;
 namespace kgl = kellerberrin::genome;
 
 
-kgd::UpdateHap::UpdateHap(std::vector<double> &refCount,
-                          std::vector<double> &altCount,
-                          std::vector<double> &plaf,
-                          std::vector<double> &expectedWsaf,
-                          std::vector<double> &proportion,
-                          std::vector<std::vector<double> > &haplotypes,
+kgd::UpdateHap::UpdateHap(const std::vector<double> &refCount,
+                          const std::vector<double> &altCount,
+                          const std::vector<double> &plaf,
+                          const std::vector<double> &expectedWsaf,
+                          const std::vector<double> &proportion,
+                          const std::vector<std::vector<double> > &haplotypes,
                           std::shared_ptr<RandomGenerator> randomGenerator,
                           size_t segmentStartIndex,
                           size_t nLoci,

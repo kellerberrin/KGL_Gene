@@ -23,18 +23,15 @@ class UpdatePairHap : public UpdateHap {
   friend class TestUpdatePairHap;
 #endif
 
-  friend class McmcMachinery;
-
-  friend class DEploidIO;
 
 public:
 
-  UpdatePairHap(std::vector<double> &refCount,
-                std::vector<double> &altCount,
-                std::vector<double> &plaf,
-                std::vector<double> &expectedWsaf,
-                std::vector<double> &proportion,
-                std::vector<std::vector<double> > &haplotypes,
+  UpdatePairHap(const std::vector<double> &refCount,
+                const std::vector<double> &altCount,
+                const std::vector<double> &plaf,
+                const std::vector<double> &expectedWsaf,
+                const std::vector<double> &proportion,
+                const std::vector<std::vector<double> > &haplotypes,
                 std::shared_ptr<RandomGenerator> randomGenerator,
                 size_t segmentStartIndex,
                 size_t nLoci,
@@ -45,11 +42,27 @@ public:
 
   ~UpdatePairHap() = default;
 
+  // Methods
+  void core(const std::vector<double> &refCount,
+            const std::vector<double> &altCount,
+            const std::vector<double> &plaf,
+            const std::vector<double> &expectedWsaf,
+            const std::vector<double> &proportion,
+            const std::vector<std::vector<double> > &haplotypes);
+
+  double getHap1Index(size_t index) const { return hap1_[index]; }
+  double getHap2Index(size_t index) const { return hap2_[index]; }
+  double getTwoSwitchOneIndex(size_t index) const { return siteOfTwoSwitchOne_[index]; }
+  double getTwoMissCopyOneIndex(size_t index) const { return siteOfTwoMissCopyOne_[index]; }
+  double getTwoSwitchTwoIndex(size_t index) const { return siteOfTwoSwitchTwo_[index]; }
+  double getTwoMissCopyTwoIndex(size_t index) const { return siteOfTwoMissCopyTwo_[index]; }
+
 private:
-  std::vector<double> siteOfTwoSwitchOne;
-  std::vector<double> siteOfTwoMissCopyOne;
-  std::vector<double> siteOfTwoSwitchTwo;
-  std::vector<double> siteOfTwoMissCopyTwo;
+
+  std::vector<double> siteOfTwoSwitchOne_;
+  std::vector<double> siteOfTwoMissCopyOne_;
+  std::vector<double> siteOfTwoSwitchTwo_;
+  std::vector<double> siteOfTwoMissCopyTwo_;
   std::vector<std::vector<std::vector<double> > > fwdProbs_;
 
   size_t strainIndex1_;
@@ -69,18 +82,12 @@ private:
   std::vector<double> hap1_;
   std::vector<double> hap2_;
 
-  // Methods
-  void core(std::vector<double> &refCount,
-            std::vector<double> &altCount,
-            std::vector<double> &plaf,
-            std::vector<double> &expectedWsaf,
-            std::vector<double> &proportion,
-            std::vector<std::vector<double> > &haplotypes);
 
-  void calcExpectedWsaf(std::vector<double> &expectedWsaf, std::vector<double> &proportion,
-                        std::vector<std::vector<double> > &haplotypes);
+  void calcExpectedWsaf(const std::vector<double> &expectedWsaf,
+                        const std::vector<double> &proportion,
+                        const std::vector<std::vector<double> > &haplotypes);
 
-  void calcHapLLKs(std::vector<double> &refCount, std::vector<double> &altCount);
+  void calcHapLLKs(const std::vector<double> &refCount, const std::vector<double> &altCount);
 
   void buildEmission(double missCopyProb);
 
@@ -90,7 +97,7 @@ private:
 
   void addMissCopying(double missCopyProb);
 
-  void sampleHapIndependently(std::vector<double> &plaf);
+  void sampleHapIndependently(const std::vector<double> &plaf);
 
   void updateLLK();
 

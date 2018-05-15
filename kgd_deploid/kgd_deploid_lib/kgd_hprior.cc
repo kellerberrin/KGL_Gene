@@ -27,9 +27,11 @@ void kgd::Hprior::buildHprior(size_t kStrain, const std::vector<double> &plaf) {
   setKstrain(kStrain);
   setnLoci(pop_allele_freq_.size());
 
+  /// Get all the permutations (including 0, ..., 0) of k strains.
   std::vector<std::vector<int> > hSetBase = IBDconfiguration::enumerateBinaryMatrixOfK(getkStrain());
   size_t stateI = 0;
 
+  /// For all states generated.
   for (auto state : ibd_config_.states()) {
 
     std::set<int> stateUnique(state.begin(), state.end());

@@ -89,16 +89,13 @@ private:
 
   double theta() const { return theta_; }
 
-
   // Methods
 
   void updateFmAtSiteI(const std::vector<double> &prior, const std::vector<double> &llk);
 
-
   void makeIbdTransProbs();
 
   std::vector<double> computeEffectiveKPrior(double theta);
-
 
   void makeLlkSurf(const std::vector<double>& altCount,
                    const std::vector<double>& refCount,
@@ -117,7 +114,6 @@ private:
   void combineFwdBwd(const std::vector<std::vector<double>> &reshapedFwd, const std::vector<std::vector<double>> &reshapedBwd);
 
   std::vector<std::vector<double> > reshapeProbs(const std::vector<std::vector<double> > &probs) const;
-
 
 
 };

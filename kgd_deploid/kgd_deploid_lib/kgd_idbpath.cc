@@ -29,10 +29,10 @@ void kgd::IBDpath::init(DEploidIO &dEploidIO, std::shared_ptr<RandomGenerator> r
   IBD_path_change_at_ = std::vector<double>(nLoci());
 
   // compute likelihood surface
-  makeLlkSurf(dEploidIO.altCount_, dEploidIO.refCount_);
+  makeLlkSurf(dEploidIO.getAltCount(), dEploidIO.getRefCount());
 
   // initialize haplotype prior
-  h_prior_.initializeHprior(kStrain(), dEploidIO.plaf_);
+  h_prior_.initializeHprior(kStrain(), dEploidIO.getPlaf());
 
   makeIbdTransProbs();
 
@@ -43,12 +43,12 @@ void kgd::IBDpath::init(DEploidIO &dEploidIO, std::shared_ptr<RandomGenerator> r
   ibd_configure_path_ = std::vector<size_t>(nLoci());
 
   // initialize recombination probabilities;
-  ibd_recomb_probs_ = IBDrecombProbs(dEploidIO.position_, dEploidIO.nLoci());
+  ibd_recomb_probs_ = IBDrecombProbs(dEploidIO.getPosition(), dEploidIO.nLoci());
 
   ibd_recomb_probs_.computeRecombProbs(dEploidIO.averageCentimorganDistance(),
-                                    dEploidIO.parameterG(),
-                                    dEploidIO.useConstRecomb(),
-                                    dEploidIO.constRecombProb());
+                                       dEploidIO.parameterG(),
+                                       dEploidIO.useConstRecomb(),
+                                       dEploidIO.constRecombProb());
 
   current_IBD_path_change_at_ = std::vector<double>(nLoci());
 
@@ -89,9 +89,9 @@ void kgd::IBDpath::ibdSamplePath(const std::vector<double>& statePrior) {
   int lociIdx = nLoci() - 1;
 
   std::vector<double> tmpProp = fm_[lociIdx];
-  (void) normalizeBySum(tmpProp);
+  Utility::normalizeBySum(tmpProp);
 
-  ibd_configure_path_[lociIdx] = sampleIndexGivenProp(ibd_random_generator_, tmpProp);
+  ibd_configure_path_[lociIdx] = Utility::sampleIndexGivenProp(ibd_random_generator_, tmpProp);
 
   assert(fm_.size() == nLoci());
 
@@ -99,7 +99,7 @@ void kgd::IBDpath::ibdSamplePath(const std::vector<double>& statePrior) {
 
     lociIdx--;
 
-    std::vector<double> vNoRecomb = vecProd(ibd_trans_probs_[h_prior_.getStateIdx()[ibd_configure_path_[lociIdx + 1]]], fm_[lociIdx]);
+    std::vector<double> vNoRecomb = Utility::vecProd(ibd_trans_probs_[h_prior_.getStateIdx()[ibd_configure_path_[lociIdx + 1]]], fm_[lociIdx]);
 
     assert(vNoRecomb.size() == h_prior_.nState());
 
@@ -117,8 +117,8 @@ void kgd::IBDpath::ibdSamplePath(const std::vector<double>& statePrior) {
     }
 
     tmpProp = prop;
-    normalizeBySum(tmpProp);
-    ibd_configure_path_[lociIdx] = sampleIndexGivenProp(ibd_random_generator_, tmpProp);
+    Utility::normalizeBySum(tmpProp);
+    ibd_configure_path_[lociIdx] = Utility::sampleIndexGivenProp(ibd_random_generator_, tmpProp);
 
     assert(ibd_configure_path_[lociIdx] < h_prior_.nState());
 
@@ -237,7 +237,7 @@ void kgd::IBDpath::computeIbdPathBwdProb(const std::vector<double>& proportion,
 
     }
 
-    normalizeBySum(tmpBw);
+    Utility::normalizeBySum(tmpBw);
     bwd_.push_back(tmpBw);
 
   }
@@ -251,7 +251,7 @@ void kgd::IBDpath::computeIbdPathFwdProb(const std::vector<double>& proportion, 
 
   fm_.clear();
 
-  std::vector<double> vPrior = vecProd(statePrior, h_prior_.getPriorProbTrans()[0]);
+  std::vector<double> vPrior = Utility::vecProd(statePrior, h_prior_.getPriorProbTrans()[0]);
 
   std::vector<double> lk = computeLlkOfStatesAtSiteI(proportion, 0);
 
@@ -286,13 +286,13 @@ void kgd::IBDpath::computeIbdPathFwdProb(const std::vector<double>& proportion, 
 
 void kgd::IBDpath::updateFmAtSiteI(const std::vector<double> &prior, const std::vector<double> &llk) {
 
-  std::vector<double> postAtSiteI = vecProd(prior, llk);
+  std::vector<double> postAtSiteI = Utility::vecProd(prior, llk);
   //normalizeByMax(postAtSiteI);
 
-  normalizeBySum(postAtSiteI);
+  Utility::normalizeBySum(postAtSiteI);
 
   fm_.push_back(postAtSiteI);
-  f_sum_ = sumOfVec(postAtSiteI);
+  f_sum_ = Utility::sumOfVec(postAtSiteI);
 
   for (size_t i = 0; i < f_sum_state_.size(); i++) {
 
@@ -323,7 +323,7 @@ double kgd::IBDpath::bestPath(const std::vector<double>& proportion, double err)
 
     }
 
-    normalizeBySum(tmp);
+    Utility::normalizeBySum(tmp);
 
     size_t indx = std::distance(tmp.begin(), std::max_element(tmp.begin(), tmp.end()));
 
@@ -341,7 +341,7 @@ double kgd::IBDpath::bestPath(const std::vector<double>& proportion, double err)
 
     if ((qs > 0) & (qs < 1)) {
 
-      sumLLK += logBetaPdf(qs2, llk_surf_[i][0], llk_surf_[i][1]);
+      sumLLK += Utility::logBetaPdf(qs2, llk_surf_[i][0], llk_surf_[i][1]);
 
     }
 
@@ -370,7 +370,7 @@ void kgd::IBDpath::combineFwdBwd(const std::vector<std::vector<double>> &reshape
 
     }
 
-    normalizeBySum(tmp);
+    Utility::normalizeBySum(tmp);
     fwdbwd_.push_back(tmp);
 
   }
@@ -432,7 +432,7 @@ std::vector<std::vector<double> > kgd::IBDpath::reshapeProbs(const std::vector<s
     }
 
     tmpRow.push_back(cumProb);
-    normalizeBySum(tmpRow);
+    Utility::normalizeBySum(tmpRow);
     ret.push_back(tmpRow);
 
   }
@@ -449,7 +449,7 @@ std::vector<double> kgd::IBDpath::computeEffectiveKPrior(double theta) {
 
   for (int i = 0; i < (int) pr0.size(); i++) {
 
-    pr0[i] = binomialPdf(i, (int) (kStrain() - 1), theta);
+    pr0[i] = Utility::binomialPdf(i, (int) (kStrain() - 1), theta);
 
   }
 
@@ -526,7 +526,7 @@ void kgd::IBDpath::computeAndUpdateTheta() {
   }
   //setTheta(rBeta(sccs+1.0, sumOfKeffStates+1.0, propRg_));
 
-  setTheta(rBeta(sccs + 1.0, sumOfKeffStates + 1.0, ibd_random_generator_));
+  setTheta(Utility::rBeta(sccs + 1.0, sumOfKeffStates + 1.0, ibd_random_generator_));
 
 }
 
@@ -579,11 +579,11 @@ void kgd::IBDpath::makeLlkSurf(const std::vector<double>& altCount,
 
     for (double unadjustedP : pGrid) {
 
-      ll.push_back(calcLLK(ref, alt, unadjustedP, err, scalingConst));
+      ll.push_back(Utility::calcLLK(ref, alt, unadjustedP, err, scalingConst));
 
     }
 
-    double llmax = max_value(ll);
+    double llmax = Utility::max_value(ll);
     std::vector<double> ln;
 
     for (double lltmp : ll) {
@@ -592,18 +592,18 @@ void kgd::IBDpath::makeLlkSurf(const std::vector<double>& altCount,
 
     }
 
-    double lnSum = sumOfVec(ln);
+    double lnSum = Utility::sumOfVec(ln);
     for (size_t i = 0; i < ln.size(); i++) {
 
       ln[i] = ln[i] / lnSum;
 
     }
 
-    std::vector<double> tmpVec1 = vecProd(ln, pGrid);
-    double mn = sumOfVec(tmpVec1);
-    std::vector<double> pGridSq = vecProd(pGrid, pGrid);
-    std::vector<double> tmpVec2 = vecProd(ln, pGridSq);
-    double vr = sumOfVec(tmpVec2) - mn * mn;
+    std::vector<double> tmpVec1 = Utility::vecProd(ln, pGrid);
+    double mn = Utility::sumOfVec(tmpVec1);
+    std::vector<double> pGridSq = Utility::vecProd(pGrid, pGrid);
+    std::vector<double> tmpVec2 = Utility::vecProd(ln, pGridSq);
+    double vr = Utility::sumOfVec(tmpVec2) - mn * mn;
 
     double comm = (mn * (1.0 - mn) / vr - 1.0);
     llk_surf_.push_back(std::vector<double>{mn * comm, (1 - mn) * comm});
@@ -632,11 +632,11 @@ std::vector<double> kgd::IBDpath::computeLlkOfStatesAtSiteI(const std::vector<do
     double qs2 = qs * (1 - err) + (1 - qs) * err;
     //cout << qs2 << endl;
 
-    llks.push_back(logBetaPdf(qs2, llk_surf_[siteI][0], llk_surf_[siteI][1]));
+    llks.push_back(Utility::logBetaPdf(qs2, llk_surf_[siteI][0], llk_surf_[siteI][1]));
 
   }
 
-  double maxllk = max_value(llks);
+  double maxllk = Utility::max_value(llks);
   std::vector<double> ret;
 
   for (double llk : llks) {

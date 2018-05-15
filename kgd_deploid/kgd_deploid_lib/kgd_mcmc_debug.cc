@@ -53,7 +53,7 @@ bool kgd::McmcMachinery::doutProp() {
 
 bool kgd::McmcMachinery::doutLLK() {
 
-  dout << " Current log likelihood = " << sumOfVec(this->currentLLks_) << std::endl;
+  dout << " Current log likelihood = " << Utility::sumOfVec(this->currentLLks_) << std::endl;
 
   return true;
 

@@ -37,7 +37,7 @@ namespace kgl = kellerberrin::genome;
 
 
 // See http://stackoverflow.com/questions/10847007/using-the-gaussian-probability-density-function-in-c
-double kgd::normal_pdf(double x, double m, double s) {
+double kgd::Utility::normal_pdf(double x, double m, double s) {
 
   static const double inv_sqrt_2pi = 0.3989422804014327;
 
@@ -48,7 +48,7 @@ double kgd::normal_pdf(double x, double m, double s) {
 }
 
 
-double kgd::min_value(std::vector<double> x) {
+double kgd::Utility::min_value(std::vector<double> x) {
 
   assert(x.size() > 0);
 
@@ -59,7 +59,7 @@ double kgd::min_value(std::vector<double> x) {
 }
 
 
-double kgd::max_value(std::vector<double> x) {
+double kgd::Utility::max_value(std::vector<double> x) {
 
   assert(x.size() > 0);
 
@@ -70,7 +70,7 @@ double kgd::max_value(std::vector<double> x) {
 }
 
 
-std::vector<double> kgd::computeCdf(const std::vector<double>& dist) {
+std::vector<double> kgd::Utility::computeCdf(const std::vector<double>& dist) {
 
   std::vector<double> cdf;
 
@@ -90,7 +90,7 @@ std::vector<double> kgd::computeCdf(const std::vector<double>& dist) {
 }
 
 
-double kgd::sumOfMat(std::vector<std::vector<double> > &matrix) {
+double kgd::Utility::sumOfMat(std::vector<std::vector<double> > &matrix) {
 
   double tmp = 0.0;
 
@@ -108,7 +108,7 @@ double kgd::sumOfMat(std::vector<std::vector<double> > &matrix) {
 }
 
 
-void kgd::normalizeBySum(std::vector<double> &array) {
+void kgd::Utility::normalizeBySum(std::vector<double> &array) {
 
   double sumOfArray = sumOfVec(array);
 
@@ -121,7 +121,7 @@ void kgd::normalizeBySum(std::vector<double> &array) {
 }
 
 
-void kgd::normalizeByMax(std::vector<double> &array) {
+void kgd::Utility::normalizeByMax(std::vector<double> &array) {
 
   double maxOfArray = max_value(array);
 
@@ -134,7 +134,7 @@ void kgd::normalizeByMax(std::vector<double> &array) {
 }
 
 
-void kgd::normalizeBySumMat(std::vector<std::vector<double> > &matrix) {
+void kgd::Utility::normalizeBySumMat(std::vector<std::vector<double> > &matrix) {
 
   double tmpsum = sumOfMat(matrix);
 
@@ -151,13 +151,13 @@ void kgd::normalizeBySumMat(std::vector<std::vector<double> > &matrix) {
 }
 
 
-std::vector<double> kgd::calcLLKs(std::vector<double> &refCount,
-                                  std::vector<double> &altCount,
-                                  std::vector<double> &expectedWsaf,
-                                  size_t firstIndex,
-                                  size_t length,
-                                  double fac,
-                                  double err) {
+std::vector<double> kgd::Utility::calcLLKs(const std::vector<double> &refCount,
+                                           const std::vector<double> &altCount,
+                                           const std::vector<double> &expectedWsaf,
+                                           size_t firstIndex,
+                                           size_t length,
+                                           double fac,
+                                           double err) {
 
   assert (expectedWsaf.size() == length);
 
@@ -184,7 +184,7 @@ std::vector<double> kgd::calcLLKs(std::vector<double> &refCount,
 }
 
 
-double kgd::calcLLK(double ref, double alt, double unadjustedWsaf, double err, double fac) {
+double kgd::Utility::calcLLK(double ref, double alt, double unadjustedWsaf, double err, double fac) {
 
   double adjustedWsaf = unadjustedWsaf + err * (1 - (2 * unadjustedWsaf));
 
@@ -203,7 +203,7 @@ double kgd::calcLLK(double ref, double alt, double unadjustedWsaf, double err, d
 
 
 
-size_t kgd::sampleIndexGivenProp(std::shared_ptr<RandomGenerator> randomGenerator, const std::vector<double>& proportion) {
+size_t kgd::Utility::sampleIndexGivenProp(std::shared_ptr<RandomGenerator> randomGenerator, const std::vector<double>& proportion) {
 
   #ifndef NDEBUG
 
@@ -241,7 +241,7 @@ size_t kgd::sampleIndexGivenProp(std::shared_ptr<RandomGenerator> randomGenerato
 }
 
 
-std::vector<double> kgd::reshapeMatToVec(std::vector<std::vector<double> > &Mat) {
+std::vector<double> kgd::Utility::reshapeMatToVec(std::vector<std::vector<double> > &Mat) {
 
   std::vector<double> tmp;
 
@@ -260,7 +260,7 @@ std::vector<double> kgd::reshapeMatToVec(std::vector<std::vector<double> > &Mat)
 }
 
 
-double kgd::betaPdf(double x, double a, double b) {
+double kgd::Utility::betaPdf(double x, double a, double b) {
 
   assert(x >= 0 && x <= 1);
   assert(a >= 0);
@@ -273,7 +273,7 @@ double kgd::betaPdf(double x, double a, double b) {
 }
 
 
-double kgd::logBetaPdf(double x, double a, double b) {
+double kgd::Utility::logBetaPdf(double x, double a, double b) {
 
   assert(x >= 0 && x <= 1);
   assert(a >= 0);
@@ -289,7 +289,7 @@ double kgd::logBetaPdf(double x, double a, double b) {
 }
 
 
-double kgd::binomialPdf(int s, int n, double p) {
+double kgd::Utility::binomialPdf(int s, int n, double p) {
 
   assert(p >= 0 && p <= 1);
 
@@ -303,7 +303,7 @@ double kgd::binomialPdf(int s, int n, double p) {
 }
 
 
-double kgd::rBeta(double alpha, double beta, std::shared_ptr<RandomGenerator> randomGenerator) {
+double kgd::Utility::rBeta(double alpha, double beta, std::shared_ptr<RandomGenerator> randomGenerator) {
 
   double mxAt = (alpha - 1.0) / (alpha + beta - 2.0);
 

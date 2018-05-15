@@ -47,12 +47,6 @@ class McmcSample {
   friend class TestMcmcMachinery;
 #endif
 
-  friend class McmcMachinery;
-
-  friend class DEploidIO;
-
-  friend class RMcmcSample;
-
 public:
 
   McmcSample() = default;
@@ -83,8 +77,6 @@ public:
   std::vector<std::vector<double> > hap;
   std::vector<double> sumLLKs;
 
-private:
-
   std::vector<int> moves;
 
 };
@@ -94,8 +86,6 @@ class McmcMachinery {
 #ifdef UNITTEST
   friend class TestMcmcMachinery;
 #endif
-
-  friend class DEploidIO;
 
 public:
 

@@ -47,7 +47,7 @@ kgd::McmcMachinery::McmcMachinery(std::shared_ptr<DEploidIO> dEploidIO,
                                   bool useIBD) {
 
   dEploidIO_ = dEploidIO;
-  panel_ = dEploidIO->panel;
+  panel_ = dEploidIO->getPanel();
   mcmcSample_ = mcmcSample;
   seed_ = randomGenerator->seed();
   hapRg_ = randomGenerator;
@@ -61,7 +61,7 @@ kgd::McmcMachinery::McmcMachinery(std::shared_ptr<DEploidIO> dEploidIO,
 
   } else {
 
-    calcMaxIteration(dEploidIO_->nMcmcSample_, dEploidIO_->mcmcMachineryRate_, dEploidIO_->mcmcBurn_);
+    calcMaxIteration(dEploidIO_->getMcmcSample(), dEploidIO_->getMcmcMachineryRate(), dEploidIO_->getMcmcBurn());
 
   }
 
@@ -72,7 +72,7 @@ kgd::McmcMachinery::McmcMachinery(std::shared_ptr<DEploidIO> dEploidIO,
   stdNorm_ = std::make_shared<StandNormalRandomSample>(seed_);
 
   setKstrain(dEploidIO_->kStrain());
-  setNLoci(dEploidIO_->plaf_.size());
+  setNLoci(dEploidIO_->getPlaf().size());
   initializeMcmcChain(useIBD);
 
 }
@@ -98,16 +98,16 @@ void kgd::McmcMachinery::initializeMcmcChain(bool useIBD) {
   initializeHap();
   initializeProp();
   initializeExpectedWsaf(); // This requires currentHap_ and currentProp_
-  currentLLks_ = calcLLKs(dEploidIO_->refCount_,
-                          dEploidIO_->altCount_,
-                          currentExpectedWsaf_,
-                          0,
-                          currentExpectedWsaf_.size(),
-                          dEploidIO_->scalingFactor());
+  currentLLks_ = Utility::calcLLKs(dEploidIO_->getRefCount(),
+                                   dEploidIO_->getAltCount(),
+                                   currentExpectedWsaf_,
+                                   0,
+                                   currentExpectedWsaf_.size(),
+                                   dEploidIO_->scalingFactor());
 
   acceptUpdate = 0;
 
-  if (dEploidIO_->doAllowInbreeding() == true) {
+  if (dEploidIO_->doAllowInbreeding()) {
 
     initializeUpdateReferencePanel(panel_->truePanelSize() + kStrain_ - 1);
 
@@ -145,13 +145,13 @@ void kgd::McmcMachinery::initializeHap() {
 
   if (dEploidIO_->initialHapWasGiven()) {
 
-    currentHap_ = dEploidIO_->initialHap_;
+    currentHap_ = dEploidIO_->getInitialHap();
 
   } else {
 
-    for (size_t i = 0; i < dEploidIO_->plaf_.size(); i++) {
+    for (size_t i = 0; i < dEploidIO_->getPlaf().size(); i++) {
 
-      double currentPlaf = dEploidIO_->plaf_[i];
+      double currentPlaf = dEploidIO_->getPlaf()[i];
       std::vector<double> tmpVec;
 
       for (size_t k = 0; k < kStrain_; k++) {
@@ -173,7 +173,7 @@ void kgd::McmcMachinery::initializeHap() {
 
 void kgd::McmcMachinery::initializeUpdateReferencePanel(size_t inbreedingPanelSizeSetTo) {
 
-  if (dEploidIO_->doAllowInbreeding() != true) {
+  if (dEploidIO_->doAllowInbreeding()) {
 
     return;
 
@@ -236,15 +236,15 @@ void kgd::McmcMachinery::initializeProp() {
 
   assert(currentProp_.size() == (size_t) 0);
 
-  currentProp_ = (dEploidIO_->initialPropWasGiven()) ? dEploidIO_->initialProp_ : titre2prop(currentTitre_);
+  currentProp_ = (dEploidIO_->initialPropWasGiven()) ? dEploidIO_->getInitialProp() : titre2prop(currentTitre_);
 
   if (dEploidIO_->initialPropWasGiven()) {
 
     currentTitre_.clear();
 
-    for (size_t i = 0; i < dEploidIO_->initialProp_.size(); i++) {
+    for (size_t i = 0; i < dEploidIO_->getInitialProp().size(); i++) {
 
-      currentTitre_.push_back(log(dEploidIO_->initialProp_[i]));
+      currentTitre_.push_back(log(dEploidIO_->getInitialProp()[i]));
 
     }
 
@@ -260,11 +260,11 @@ double kgd::McmcMachinery::calcLogPriorTitre(std::vector<double> &tmpTitre) {
 
   for (auto const &value: tmpTitre) {
 
-    tmp.push_back(log(normal_pdf(value, MN_LOG_TITRE, SD_LOG_TITRE)));
+    tmp.push_back(log(Utility::normal_pdf(value, MN_LOG_TITRE, SD_LOG_TITRE)));
 
   }
 
-  return sumOfVec(tmp);
+  return Utility::sumOfVec(tmp);
 
 }
 
@@ -301,7 +301,7 @@ std::vector<double> kgd::McmcMachinery::titre2prop(std::vector<double> &tmpTitre
 
   }
 
-  double tmpSum = sumOfVec(tmpExpTitre);
+  double tmpSum = Utility::sumOfVec(tmpExpTitre);
 
   std::vector<double> tmpProp;
 
@@ -320,7 +320,7 @@ std::vector<double> kgd::McmcMachinery::titre2prop(std::vector<double> &tmpTitre
 
 void kgd::McmcMachinery::initializePropIBD() {
 
-  currentProp_ = (dEploidIO_->initialPropWasGiven()) ? dEploidIO_->initialProp_ : titre2prop(currentTitre_);
+  currentProp_ = (dEploidIO_->initialPropWasGiven()) ? dEploidIO_->getInitialProp() : titre2prop(currentTitre_);
 
 }
 
@@ -343,7 +343,7 @@ void kgd::McmcMachinery::runMcmcChain(bool showProgress, bool useIBD, bool notIn
 
   writeLastFwdProb(useIBD);
 
-  dEploidIO_->finalProp_ = mcmcSample_->proportion.back();
+  dEploidIO_->setFinalProp(mcmcSample_->proportion.back());
 
   for (size_t atSiteI = 0; atSiteI < nLoci(); atSiteI++) {
 
@@ -372,10 +372,10 @@ void kgd::McmcMachinery::runMcmcChain(bool showProgress, bool useIBD, bool notIn
 
     kgl::ExecEnv::log().info("Proportion update acceptance rate: {}", acceptUpdate / (kStrain() * 1.0 * maxIteration_));
 
-    dEploidIO_->initialProp_ = averageProportion(mcmcSample_->proportion);
+    dEploidIO_->setInitialProp(averageProportion(mcmcSample_->proportion));
     dEploidIO_->setInitialPropWasGiven(true);
     dEploidIO_->setDoUpdateProp(false);
-    dEploidIO_->initialHap_ = mcmcSample_->hap;
+    dEploidIO_->setInitialHap(mcmcSample_->hap);
     dEploidIO_->setInitialHapWasGiven(true);
 
   }
@@ -394,24 +394,24 @@ void kgd::McmcMachinery::computeDiagnostics() {
   // average cumulate expectedWSAF
   for (size_t i = 0; i < cumExpectedWsaf_.size(); i++) {
 
-    cumExpectedWsaf_[i] /= dEploidIO_->nMcmcSample_;
+    cumExpectedWsaf_[i] /= dEploidIO_->getMcmcSample();
 
   }
 
-  std::vector<double> tmpLLKs1 = calcLLKs(dEploidIO_->refCount_,
-                                          dEploidIO_->altCount_,
-                                          cumExpectedWsaf_,
-                                          0,
-                                          cumExpectedWsaf_.size(),
-                                          dEploidIO_->scalingFactor());
+  std::vector<double> tmpLLKs1 = Utility::calcLLKs(dEploidIO_->getRefCount(),
+                                                   dEploidIO_->getAltCount(),
+                                                   cumExpectedWsaf_,
+                                                   0,
+                                                   cumExpectedWsaf_.size(),
+                                                   dEploidIO_->scalingFactor());
 
-  dEploidIO_->setmeanThetallks(sumOfVec(tmpLLKs1));
+  dEploidIO_->setmeanThetallks(Utility::sumOfVec(tmpLLKs1));
 
   std::vector<double> wsaf_vec;
 
   for (size_t i = 0; i < nLoci(); i++) {
 
-    double wsaf = dEploidIO_->altCount_[i] / (dEploidIO_->refCount_[i] + dEploidIO_->altCount_[i] + 0.00000000000001);
+    double wsaf = dEploidIO_->getAltCount()[i] / (dEploidIO_->getRefCount()[i] + dEploidIO_->getAltCount()[i] + 0.00000000000001);
     double adjustedWsaf = wsaf * (1 - 0.01) + (1 - wsaf) * 0.01;
 
     wsaf_vec.push_back(adjustedWsaf);
@@ -420,14 +420,14 @@ void kgd::McmcMachinery::computeDiagnostics() {
 
   }
 
-  std::vector<double> tmpLLKs = calcLLKs(dEploidIO_->refCount_,
-                                         dEploidIO_->altCount_,
-                                         wsaf_vec,
-                                         0,
-                                         wsaf_vec.size(),
-                                         dEploidIO_->scalingFactor());
+  std::vector<double> tmpLLKs = Utility::calcLLKs(dEploidIO_->getRefCount(),
+                                                  dEploidIO_->getAltCount(),
+                                                  wsaf_vec,
+                                                  0,
+                                                  wsaf_vec.size(),
+                                                  dEploidIO_->scalingFactor());
 
-  dEploidIO_->setmaxLLKs(sumOfVec(tmpLLKs));
+  dEploidIO_->setmaxLLKs(Utility::sumOfVec(tmpLLKs));
 
   double sum = std::accumulate(mcmcSample_->sumLLKs.begin(), mcmcSample_->sumLLKs.end(), 0.0);
 
@@ -447,7 +447,7 @@ void kgd::McmcMachinery::computeDiagnostics() {
 
   //return (  mean(-2*tmpllk) + var(-2*tmpllk)/2 )# D_bar + 1/2 var (D_theta), where D_theta = -2*tmpllk, and D_bar = mean(D_theta)
 
-  double dicWSAFBar = -2 * sumOfVec(tmpLLKs1);
+  double dicWSAFBar = -2 * Utility::sumOfVec(tmpLLKs1);
   double dicByTheta = (-2 * mean) + (-2 * mean) - dicWSAFBar;
 
   dEploidIO_->setdicByTheta(dicByTheta);
@@ -475,7 +475,7 @@ std::vector<double> kgd::McmcMachinery::averageProportion(std::vector<std::vecto
 
   }
 
-  normalizeBySum(ret);
+  Utility::normalizeBySum(ret);
 
   return ret;
 }
@@ -529,15 +529,15 @@ void kgd::McmcMachinery::ibdInitializeEssentials() {
 
   for (size_t i = 0; i < nLoci(); i++) {
 
-    double wsaf = dEploidIO_->altCount_[i] / (dEploidIO_->refCount_[i] + dEploidIO_->altCount_[i] + 0.00000000000001);
+    double wsaf = dEploidIO_->getAltCount()[i] / (dEploidIO_->getRefCount()[i] + dEploidIO_->getAltCount()[i] + 0.00000000000001);
 
     double adjustedWsaf = wsaf * (1 - 0.01) + (1 - wsaf) * 0.01;
 
-    llkOfData.push_back(logBetaPdf(adjustedWsaf, ibdPath.getLogLikelihoodSurface()[i][0], ibdPath.getLogLikelihoodSurface()[i][1]));
+    llkOfData.push_back(Utility::logBetaPdf(adjustedWsaf, ibdPath.getLogLikelihoodSurface()[i][0], ibdPath.getLogLikelihoodSurface()[i][1]));
 
   }
 
-  dout << "LLK of data = " << sumOfVec(llkOfData) << std::endl;
+  dout << "LLK of data = " << Utility::sumOfVec(llkOfData) << std::endl;
 
 }
 
@@ -590,8 +590,8 @@ void kgd::McmcMachinery::ibdUpdateProportionGivenHap(std::vector<double> &llkAtA
     currentProp_ = titre2prop(currentTitre_);
     std::vector<double> vv = computeLlkAtAllSites();
 
-    double rr = normal_pdf(currentTitre_[i], 0, 1) /
-                normal_pdf(v0, 0, 1) * exp(sumOfVec(vv) - sumOfVec(llkAtAllSites));
+    double rr = Utility::normal_pdf(currentTitre_[i], 0, 1) /
+    Utility::normal_pdf(v0, 0, 1) * exp(Utility::sumOfVec(vv) - Utility::sumOfVec(llkAtAllSites));
 
     if (propRg_->sample() < rr) {
 
@@ -626,7 +626,7 @@ std::vector<double> kgd::McmcMachinery::computeLlkAtAllSites(double err) {
 
     double qs2 = qs * (1 - err) + (1 - qs) * err;
 
-    ret.push_back(logBetaPdf(qs2, ibdPath.getLogLikelihoodSurface()[loci][0], ibdPath.getLogLikelihoodSurface()[loci][1]));
+    ret.push_back(Utility::logBetaPdf(qs2, ibdPath.getLogLikelihoodSurface()[loci][0], ibdPath.getLogLikelihoodSurface()[loci][1]));
 
   }
 
@@ -664,7 +664,7 @@ void kgd::McmcMachinery::recordMcmcMachinery() {
   dout << "***Record mcmc sample " << std::endl;
 
   mcmcSample_->proportion.push_back(currentProp_);
-  mcmcSample_->sumLLKs.push_back(sumOfVec(currentLLks_));
+  mcmcSample_->sumLLKs.push_back(Utility::sumOfVec(currentLLks_));
   mcmcSample_->moves.push_back(eventInt_);
 
   // Cumulate expectedWSAF for computing the mean expectedWSAF
@@ -692,7 +692,7 @@ void kgd::McmcMachinery::updateProportion() {
   std::vector<double> tmpTitre = calcTmpTitre();
   std::vector<double> tmpProp = titre2prop(tmpTitre);
 
-  if (min_value(tmpProp) < 0 || max_value(tmpProp) > 1) {
+  if (Utility::min_value(tmpProp) < 0 || Utility::max_value(tmpProp) > 1) {
 
     kgl::ExecEnv::log().vinfo("MCMC Update failed, tmpProp < 0 or tmpProp > 1");
     return;
@@ -701,12 +701,12 @@ void kgd::McmcMachinery::updateProportion() {
 
   std::vector<double> tmpExpecedWsaf = calcExpectedWsaf(tmpProp);
 
-  std::vector<double> tmpLLKs = calcLLKs(dEploidIO_->refCount_,
-                                         dEploidIO_->altCount_,
-                                         tmpExpecedWsaf,
-                                         0,
-                                         tmpExpecedWsaf.size(),
-                                         dEploidIO_->scalingFactor());
+  std::vector<double> tmpLLKs = Utility::calcLLKs(dEploidIO_->getRefCount(),
+                                                  dEploidIO_->getAltCount(),
+                                                  tmpExpecedWsaf,
+                                                  0,
+                                                  tmpExpecedWsaf.size(),
+                                                  dEploidIO_->scalingFactor());
 
   double diffLLKs = deltaLLKs(tmpLLKs);
 
@@ -743,9 +743,9 @@ void kgd::McmcMachinery::updateProportion() {
 
 double kgd::McmcMachinery::deltaLLKs(std::vector<double> &newLLKs) {
 
-  std::vector<double> tmpdiff = vecDiff(newLLKs, currentLLks_);
+  std::vector<double> tmpdiff = Utility::vecDiff(newLLKs, currentLLks_);
 
-  return sumOfVec(tmpdiff);
+  return Utility::sumOfVec(tmpdiff);
 
 }
 
@@ -772,23 +772,22 @@ void kgd::McmcMachinery::updateSingleHap() {
 
   findUpdatingStrainSingle();
 
-  if (dEploidIO_->doAllowInbreeding() == true) {
+  if (dEploidIO_->doAllowInbreeding()) {
 
     updateReferencePanel(panel_->truePanelSize() + kStrain_ - 1, strainIndex_);
 
   }
 
+  for (size_t chromi = 0; chromi < dEploidIO_->indexOfChromStarts().size(); chromi++) {
 
-  for (size_t chromi = 0; chromi < dEploidIO_->indexOfChromStarts_.size(); chromi++) {
-
-    size_t start = dEploidIO_->indexOfChromStarts_[chromi];
-    size_t length = dEploidIO_->position_[chromi].size();
+    size_t start = dEploidIO_->indexOfChromStarts()[chromi];
+    size_t length = dEploidIO_->getIndexPosition(chromi).size();
 
     kgl::ExecEnv::log().vinfo("Update Chrom with index: {}, starts at: {}, with: {} sites", chromi, start, length);
 
-    UpdateSingleHap updating(dEploidIO_->refCount_,
-                             dEploidIO_->altCount_,
-                             dEploidIO_->plaf_,
+    UpdateSingleHap updating(dEploidIO_->getRefCount(),
+                             dEploidIO_->getAltCount(),
+                             dEploidIO_->getPlaf(),
                              currentExpectedWsaf_,
                              currentProp_,
                              currentHap_,
@@ -796,7 +795,7 @@ void kgd::McmcMachinery::updateSingleHap() {
                              start,
                              length,
                              panel_,
-                             dEploidIO_->missCopyProb_,
+                             dEploidIO_->getMissCopyProb(),
                              dEploidIO_->scalingFactor(),
                              strainIndex_);
 
@@ -806,9 +805,9 @@ void kgd::McmcMachinery::updateSingleHap() {
 
     }
 
-    updating.core(dEploidIO_->refCount_,
-                  dEploidIO_->altCount_,
-                  dEploidIO_->plaf_,
+    updating.core(dEploidIO_->getRefCount(),
+                  dEploidIO_->getAltCount(),
+                  dEploidIO_->getPlaf(),
                   currentExpectedWsaf_,
                   currentProp_,
                   currentHap_);
@@ -817,18 +816,19 @@ void kgd::McmcMachinery::updateSingleHap() {
 
     for (size_t ii = start; ii < (start + length); ii++) {
 
-      currentHap_[ii][strainIndex_] = updating.hap_[updateIndex];
-      currentLLks_[ii] = updating.newLLK[updateIndex];
+      currentHap_[ii][strainIndex_] = updating.getHapIndex(updateIndex);
+      currentLLks_[ii] = updating.getNewLLKIndex(updateIndex);
       updateIndex++;
 
     }
 
     for (size_t siteI = 0; siteI < length; siteI++) {
 
-      mcmcSample_->siteOfOneSwitchOne[start + siteI] += updating.siteOfOneSwitchOne[siteI];
-      mcmcSample_->siteOfOneMissCopyOne[start + siteI] += updating.siteOfOneMissCopyOne[siteI];
-      mcmcSample_->siteOfOneSwitchOne[start + siteI] = updating.siteOfOneSwitchOne[siteI];
-      mcmcSample_->siteOfOneMissCopyOne[start + siteI] = updating.siteOfOneMissCopyOne[siteI];
+      mcmcSample_->siteOfOneSwitchOne[start + siteI] += updating.getOneSwitchOneIndex(siteI);
+      mcmcSample_->siteOfOneMissCopyOne[start + siteI] += updating.getOneMissCopyOneIndex(siteI);
+      /// (K) These modified from site... to currentsite...
+      mcmcSample_->currentsiteOfOneSwitchOne[start + siteI] = updating.getOneSwitchOneIndex(siteI);
+      mcmcSample_->currentsiteOfOneMissCopyOne[start + siteI] = updating.getOneMissCopyOneIndex(siteI);
 
     }
 
@@ -851,16 +851,16 @@ void kgd::McmcMachinery::updatePairHaps() {
 
   findUpdatingStrainPair();
 
-  for (size_t chromi = 0; chromi < dEploidIO_->indexOfChromStarts_.size(); chromi++) {
+  for (size_t chromi = 0; chromi < dEploidIO_->indexOfChromStarts().size(); chromi++) {
 
-    size_t start = dEploidIO_->indexOfChromStarts_[chromi];
-    size_t length = dEploidIO_->position_[chromi].size();
+    size_t start = dEploidIO_->indexOfChromStarts()[chromi];
+    size_t length = dEploidIO_->getIndexPosition(chromi).size();
 
     kgl::ExecEnv::log().vinfo("Update Chrom with index: {}, starts at: {}, with: {} sites", chromi, start, length);
 
-    UpdatePairHap updating(dEploidIO_->refCount_,
-                           dEploidIO_->altCount_,
-                           dEploidIO_->plaf_,
+    UpdatePairHap updating(dEploidIO_->getRefCount(),
+                           dEploidIO_->getAltCount(),
+                           dEploidIO_->getPlaf(),
                            currentExpectedWsaf_,
                            currentProp_,
                            currentHap_,
@@ -868,15 +868,15 @@ void kgd::McmcMachinery::updatePairHaps() {
                            start,
                            length,
                            panel_,
-                           dEploidIO_->missCopyProb_,
+                           dEploidIO_->getMissCopyProb(),
                            dEploidIO_->scalingFactor(),
                            dEploidIO_->forbidCopyFromSame(),
                            strainIndex1_,
                            strainIndex2_);
 
-    updating.core(dEploidIO_->refCount_,
-                  dEploidIO_->altCount_,
-                  dEploidIO_->plaf_,
+    updating.core(dEploidIO_->getRefCount(),
+                  dEploidIO_->getAltCount(),
+                  dEploidIO_->getPlaf(),
                   currentExpectedWsaf_,
                   currentProp_,
                   currentHap_);
@@ -884,23 +884,23 @@ void kgd::McmcMachinery::updatePairHaps() {
     size_t updateIndex = 0;
     for (size_t ii = start; ii < (start + length); ii++) {
 
-      currentHap_[ii][strainIndex1_] = updating.hap1_[updateIndex];
-      currentHap_[ii][strainIndex2_] = updating.hap2_[updateIndex];
-      currentLLks_[ii] = updating.newLLK[updateIndex];
+      currentHap_[ii][strainIndex1_] = updating.getHap1Index(updateIndex);
+      currentHap_[ii][strainIndex2_] = updating.getHap2Index(updateIndex);
+      currentLLks_[ii] = updating.getNewLLKIndex(updateIndex);
       updateIndex++;
 
     }
 
     for (size_t siteI = 0; siteI < length; siteI++) {
 
-      mcmcSample_->siteOfTwoSwitchOne[start + siteI] += updating.siteOfTwoSwitchOne[siteI];
-      mcmcSample_->siteOfTwoMissCopyOne[start + siteI] += updating.siteOfTwoMissCopyOne[siteI];
-      mcmcSample_->siteOfTwoSwitchTwo[start + siteI] += updating.siteOfTwoSwitchTwo[siteI];
-      mcmcSample_->siteOfTwoMissCopyTwo[start + siteI] += updating.siteOfTwoMissCopyTwo[siteI];
-      mcmcSample_->currentsiteOfTwoSwitchOne[start + siteI] = updating.siteOfTwoSwitchOne[siteI];
-      mcmcSample_->currentsiteOfTwoMissCopyOne[start + siteI] = updating.siteOfTwoMissCopyOne[siteI];
-      mcmcSample_->currentsiteOfTwoSwitchTwo[start + siteI] = updating.siteOfTwoSwitchTwo[siteI];
-      mcmcSample_->currentsiteOfTwoMissCopyTwo[start + siteI] = updating.siteOfTwoMissCopyTwo[siteI];
+      mcmcSample_->siteOfTwoSwitchOne[start + siteI] += updating.getTwoSwitchOneIndex(siteI);
+      mcmcSample_->siteOfTwoMissCopyOne[start + siteI] += updating.getTwoMissCopyOneIndex(siteI);
+      mcmcSample_->siteOfTwoSwitchTwo[start + siteI] += updating.getTwoSwitchTwoIndex(siteI);
+      mcmcSample_->siteOfTwoMissCopyTwo[start + siteI] += updating.getTwoMissCopyTwoIndex(siteI);
+      mcmcSample_->currentsiteOfTwoSwitchOne[start + siteI] = updating.getTwoSwitchOneIndex(siteI);
+      mcmcSample_->currentsiteOfTwoMissCopyOne[start + siteI] = updating.getTwoMissCopyOneIndex(siteI);
+      mcmcSample_->currentsiteOfTwoSwitchTwo[start + siteI] = updating.getTwoSwitchTwoIndex(siteI);
+      mcmcSample_->currentsiteOfTwoMissCopyTwo[start + siteI] = updating.getTwoMissCopyTwoIndex(siteI);
 
     }
 
@@ -915,9 +915,9 @@ void kgd::McmcMachinery::findUpdatingStrainSingle() {
 
   std::vector<double> eventProb(kStrain_, 1);
 
-  normalizeBySum(eventProb);
+  Utility::normalizeBySum(eventProb);
 
-  strainIndex_ = sampleIndexGivenProp(mcmcEventRg_, eventProb);
+  strainIndex_ = Utility::sampleIndexGivenProp(mcmcEventRg_, eventProb);
 
 }
 

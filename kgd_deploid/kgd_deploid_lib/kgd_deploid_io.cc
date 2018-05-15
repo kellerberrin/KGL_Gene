@@ -429,9 +429,9 @@ void kgd::DEploidIO::checkInput() {
     throw FileNameMissing("Reference panel");
 
   }
-  if (initialPropWasGiven() && (abs(sumOfVec(initialProp_) - 1.0) > 0.00001) && pleaseCheckInitialP()) {
+  if (initialPropWasGiven() && (abs(Utility::sumOfVec(initialProp_) - 1.0) > 0.00001) && pleaseCheckInitialP()) {
 
-    throw SumOfPropNotOne(std::to_string(sumOfVec(initialProp_)));
+    throw SumOfPropNotOne(std::to_string(Utility::sumOfVec(initialProp_)));
 
   }
   if (initialPropWasGiven()) {
@@ -489,9 +489,9 @@ void kgd::DEploidIO::computeLLKfromInitialHap() {
 
   }
 
-  std::vector<double> llk = calcLLKs(refCount_, altCount_, expectedWsaf, 0, expectedWsaf.size(), scalingFactor());
+  std::vector<double> llk = Utility::calcLLKs(refCount_, altCount_, expectedWsaf, 0, expectedWsaf.size(), scalingFactor());
 
-  llkFromInitialHap_ = sumOfVec(llk);
+  llkFromInitialHap_ = Utility::sumOfVec(llk);
 
 }
 
@@ -520,18 +520,17 @@ void kgd::DEploidIO::chromPainting(std::shared_ptr<RandomGenerator> random_gener
 
   }
 
-  // Painting posterior probabilities
-
-  // Export the p'
-  // Make this a separate class
-  //vector < vector <double> > hap;
-  //for ( size_t siteI = 0; siteI < decovolutedStrainsToBeRead.content_.size(); siteI++ ){
-  //vector <double> tmpHap;
-  //for ( size_t tmpk = 0; tmpk < kStrain_; tmpk++ ){
-  //tmpHap.push_back(decovolutedStrainsToBeRead.content_[siteI][tmpk]);
-  //}
-  //hap.push_back(tmpHap);
-  //}
+  /// Painting posterior probabilities
+  /// Export the p'
+  /// Make this a separate class
+  /// vector < vector <double> > hap;
+  /// for ( size_t siteI = 0; siteI < decovolutedStrainsToBeRead.content_.size(); siteI++ ){
+  /// vector <double> tmpHap;
+  /// for ( size_t tmpk = 0; tmpk < kStrain_; tmpk++ ){
+  /// tmpHap.push_back(decovolutedStrainsToBeRead.content_[siteI][tmpk]);
+  /// }
+  /// hap.push_back(tmpHap);
+  /// }
 
   //vector < vector <double>> hap = decovolutedStrainsToBeRead.content_;
 
@@ -562,7 +561,8 @@ void kgd::DEploidIO::chromPainting(std::shared_ptr<RandomGenerator> random_gener
                                      altCount_,
                                      plaf_,
                                      expectedWsaf,
-                                     finalProp_, initialHap_,
+                                     finalProp_,
+                                     initialHap_,
                                      random_generator,
                                      start,
                                      length,
@@ -579,7 +579,7 @@ void kgd::DEploidIO::chromPainting(std::shared_ptr<RandomGenerator> random_gener
 
       updatingSingle.painting(refCount_, altCount_, expectedWsaf, finalProp_, initialHap_);
       //writeLastSingleFwdProb( updatingSingle.fwdProbs_, chromi, tmpk, false ); // false as not using ibd
-      writeLastSingleFwdProb(updatingSingle.fwdBwdProbs_, chromi, tmpk, false); // false as not using ibd
+      writeLastSingleFwdProb(updatingSingle.getFwdBwdProbs(), chromi, tmpk, false); // false as not using ibd
 
     }
 
@@ -645,7 +645,7 @@ void kgd::DEploidIO::getIBDprobsIntegrated(const std::vector<std::vector<double>
 
   }
 
-  normalizeBySum(ibdProbsIntegrated_);
+  Utility::normalizeBySum(ibdProbsIntegrated_);
 
 }
 

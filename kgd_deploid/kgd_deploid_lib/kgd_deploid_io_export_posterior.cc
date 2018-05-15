@@ -42,20 +42,20 @@ void kgd::McmcMachinery::writeLastFwdProb(bool useIBD) {
 
   for (size_t tmpk = 0; tmpk < kStrain_; tmpk++) {
 
-    if (dEploidIO_->doAllowInbreeding() == true) {
+    if (dEploidIO_->doAllowInbreeding()) {
 
       updateReferencePanel(panel_->truePanelSize() + kStrain_ - 1, tmpk);
 
     }
 
-    for (size_t chromi = 0; chromi < dEploidIO_->indexOfChromStarts_.size(); chromi++) {
+    for (size_t chromi = 0; chromi < dEploidIO_->indexOfChromStarts().size(); chromi++) {
 
-      size_t start = dEploidIO_->indexOfChromStarts_[chromi];
-      size_t length = dEploidIO_->position_[chromi].size();
+      size_t start = dEploidIO_->indexOfChromStarts()[chromi];
+      size_t length = dEploidIO_->getIndexPosition(chromi).size();
 
-      UpdateSingleHap updatingSingle(dEploidIO_->refCount_,
-                                     dEploidIO_->altCount_,
-                                     dEploidIO_->plaf_,
+      UpdateSingleHap updatingSingle(dEploidIO_->getRefCount(),
+                                     dEploidIO_->getAltCount(),
+                                     dEploidIO_->getPlaf(),
                                      currentExpectedWsaf_,
                                      currentProp_,
                                      currentHap_,
@@ -63,7 +63,7 @@ void kgd::McmcMachinery::writeLastFwdProb(bool useIBD) {
                                      start,
                                      length,
                                      panel_,
-                                     dEploidIO_->missCopyProb_,
+                                     dEploidIO_->getMissCopyProb(),
                                      dEploidIO_->scalingFactor(),
                                      tmpk);
 
@@ -73,14 +73,14 @@ void kgd::McmcMachinery::writeLastFwdProb(bool useIBD) {
 
       }
 
-      updatingSingle.core(dEploidIO_->refCount_,
-                          dEploidIO_->altCount_,
-                          dEploidIO_->plaf_,
+      updatingSingle.core(dEploidIO_->getRefCount(),
+                          dEploidIO_->getAltCount(),
+                          dEploidIO_->getPlaf(),
                           currentExpectedWsaf_,
                           currentProp_,
                           currentHap_);
 
-      dEploidIO_->writeLastSingleFwdProb(updatingSingle.fwdProbs_, chromi, tmpk, useIBD);
+      dEploidIO_->writeLastSingleFwdProb(updatingSingle.getFwdProbs(), chromi, tmpk, useIBD);
 
     }
     //UpdatePairHap updating( dEploidIO_->refCount_,
@@ -98,7 +98,7 @@ void kgd::McmcMachinery::writeLastFwdProb(bool useIBD) {
 }
 
 
-void kgd::DEploidIO::writeLastSingleFwdProb(std::vector<std::vector<double> > &probabilities,
+void kgd::DEploidIO::writeLastSingleFwdProb(const std::vector<std::vector<double> > &probabilities,
                                             size_t chromIndex,
                                             size_t strainIndex,
                                             bool useIBD) {

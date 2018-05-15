@@ -300,16 +300,16 @@ void kgd::DEploidIO::writeEventCount() {
                     << "IBD_path_change_at_" << "\t"
                     << "finalIBDpathChangeAt" << "\t"
 
-                    << "siteOfTwoSwitchOne" << "\t"
+                    << "siteOfTwoSwitchOne_" << "\t"
                     << "finalSiteOfTwoSwitchOne" << "\t"
 
-                    << "siteOfTwoMissCopyOne" << "\t"
+                    << "siteOfTwoMissCopyOne_" << "\t"
                     << "finalSiteOfTwoMissCopyOne" << "\t"
 
-                    << "siteOfTwoSwitchTwo" << "\t"
+                    << "siteOfTwoSwitchTwo_" << "\t"
                     << "finalSiteOfTwoSwitchTwo" << "\t"
 
-                    << "siteOfTwoMissCopyTwo" << "\t"
+                    << "siteOfTwoMissCopyTwo_" << "\t"
                     << "finalSiteOfTwoMissCopyTwo" << "\t"
 
                     << "siteOfOneSwitchOne" << "\t"

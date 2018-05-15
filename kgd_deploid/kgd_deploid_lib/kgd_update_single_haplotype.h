@@ -18,25 +18,45 @@ class UpdateSingleHap : public UpdateHap {
   friend class TestUpdateSingleHap;
 #endif
 
-  friend class McmcMachinery;
+public:
 
-  friend class DEploidIO;
-  //public:
-private:
-  UpdateSingleHap(std::vector<double> &refCount,
-                  std::vector<double> &altCount,
-                  std::vector<double> &plaf,
-                  std::vector<double> &expectedWsaf,
-                  std::vector<double> &proportion,
-                  std::vector<std::vector<double> > &haplotypes,
+  UpdateSingleHap(const std::vector<double> &refCount,
+                  const std::vector<double> &altCount,
+                  const std::vector<double> &plaf,
+                  const std::vector<double> &expectedWsaf,
+                  const std::vector<double> &proportion,
+                  const std::vector<std::vector<double> > &haplotypes,
                   std::shared_ptr<RandomGenerator> randomGenerator,
                   size_t segmentStartIndex,
                   size_t nLoci,
-                  std::shared_ptr<Panel> panel, double missCopyProb,
+                  std::shared_ptr<Panel> panel,
+                  double missCopyProb,
                   double scalingFactor,
                   size_t strainIndex);
 
   ~UpdateSingleHap() = default;
+
+  const std::vector<std::vector<double> >& getFwdProbs() const { return fwdProbs_; }
+  const std::vector<std::vector<double> >& getFwdBwdProbs() const { return fwdBwdProbs_; }
+  double getHapIndex(size_t index) const { return hap_[index]; }
+  double getOneSwitchOneIndex(size_t index) const { return siteOfOneSwitchOne[index]; }
+  double getOneMissCopyOneIndex(size_t index) const { return siteOfOneMissCopyOne[index]; }
+
+  // Methods
+  void core(const std::vector<double> &refCount,
+            const std::vector<double> &altCount,
+            const std::vector<double> &plaf,
+            const std::vector<double> &expectedWsaf,
+            const std::vector<double> &proportion,
+            const std::vector<std::vector<double> > &haplotypes);
+
+  void painting(std::vector<double> &refCount,
+                std::vector<double> &altCount,
+                std::vector<double> &expectedWsaf,
+                std::vector<double> &proportion,
+                std::vector<std::vector<double> > &haplotypes);
+
+private:
 
   std::vector<double> siteOfOneSwitchOne;
   std::vector<double> siteOfOneMissCopyOne;
@@ -53,24 +73,12 @@ private:
   std::vector<double> path_;
   std::vector<double> hap_;
 
-  // Methods
-  void core(std::vector<double> &refCount,
-            std::vector<double> &altCount,
-            std::vector<double> &plaf,
-            std::vector<double> &expectedWsaf,
-            std::vector<double> &proportion,
-            std::vector<std::vector<double> > &haplotypes);
 
-  void painting(std::vector<double> &refCount,
-                std::vector<double> &altCount,
-                std::vector<double> &expectedWsaf,
-                std::vector<double> &proportion,
-                std::vector<std::vector<double> > &haplotypes);
+  void calcExpectedWsaf(const std::vector<double> &expectedWsaf,
+                        const std::vector<double> &proportion,
+                        const std::vector<std::vector<double> > &haplotypes);
 
-  void calcExpectedWsaf(std::vector<double> &expectedWsaf, std::vector<double> &proportion,
-                        std::vector<std::vector<double> > &haplotypes);
-
-  void calcHapLLKs(std::vector<double> &refCount, std::vector<double> &altCount);
+  void calcHapLLKs(const std::vector<double> &refCount, const std::vector<double> &altCount);
 
   void buildEmission(double missCopyProb);
 
@@ -86,7 +94,7 @@ private:
 
   void addMissCopying(double missCopyProb);
 
-  void sampleHapIndependently(std::vector<double> &plaf);
+  void sampleHapIndependently(const std::vector<double> &plaf);
 
   void updateLLK();
 };

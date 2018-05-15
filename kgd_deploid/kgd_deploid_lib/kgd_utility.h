@@ -42,146 +42,158 @@
 namespace kellerberrin {    // organization level namespace
 namespace deploid {          // project level namespace
 
+/// A static singleton class to control visibility and access to misc. utility functions.
+class Utility {
 
-template<typename T>
-std::vector<T> vecDiff(std::vector<T> &vecA, std::vector<T> &vecB) {
+public:
 
-  assert(vecA.size() == vecB.size());
+  Utility() = delete;
+  ~Utility() = delete;
 
-  std::vector<T> difference(vecA.size(), (T) 0);
+  template<typename T>
+  static std::vector<T> vecDiff(std::vector<T> &vecA, std::vector<T> &vecB) {
 
-  for (size_t i = 0; i < vecA.size(); i++) {
+    assert(vecA.size() == vecB.size());
 
-    difference[i] = vecA[i] - vecB[i];
+    std::vector<T> difference(vecA.size(), (T) 0);
 
-  }
+    for (size_t i = 0; i < vecA.size(); i++) {
 
-  return difference;
+      difference[i] = vecA[i] - vecB[i];
 
-}
+    }
 
-
-template<typename T>
-std::vector<T> vecSum(std::vector<T> &vecA, std::vector<T> &vecB) {
-
-  assert(vecA.size() == vecB.size());
-
-  std::vector<T> tmpSum(vecA.size(), (T) 0);
-
-  for (size_t i = 0; i < vecA.size(); i++) {
-
-    tmpSum[i] = vecA[i] + vecB[i];
+    return difference;
 
   }
 
-  return tmpSum;
-}
+
+  template<typename T>
+  static std::vector<T> vecSum(std::vector<T> &vecA, std::vector<T> &vecB) {
+
+    assert(vecA.size() == vecB.size());
+
+    std::vector<T> tmpSum(vecA.size(), (T) 0);
+
+    for (size_t i = 0; i < vecA.size(); i++) {
+
+      tmpSum[i] = vecA[i] + vecB[i];
+
+    }
+
+    return tmpSum;
+  }
 
 
-template<typename T>
-std::vector<T> vecProd(const std::vector<T> &vecA, const std::vector<T> &vecB) {
+  template<typename T>
+  static std::vector<T> vecProd(const std::vector<T> &vecA, const std::vector<T> &vecB) {
 
-  assert(vecA.size() == vecB.size());
+    assert(vecA.size() == vecB.size());
 
-  std::vector<T> tmpProd(vecA.size(), (T) 0);
+    std::vector<T> tmpProd(vecA.size(), (T) 0);
 
-  for (size_t i = 0; i < vecA.size(); i++) {
+    for (size_t i = 0; i < vecA.size(); i++) {
 
-    tmpProd[i] = vecA[i] * vecB[i];
+      tmpProd[i] = vecA[i] * vecB[i];
+
+    }
+
+    return tmpProd;
 
   }
 
-  return tmpProd;
 
-}
+  template<typename T>
+  static T sumOfVec(std::vector<T> &array) {
 
+    T tmp = 0;
 
-template<typename T>
-T sumOfVec(std::vector<T> &array) {
+    for (auto const &value: array) {
 
-  T tmp = 0;
+      tmp += value;
 
-  for (auto const &value: array) {
+    }
 
-    tmp += value;
+    return tmp;
 
   }
-
-  return tmp;
-
-}
 
 /*! \brief Compute factorial of a \return double a! */
-template<class T>
-T factorial(T a) {
+  template<class T>
+  static  T factorial(T a) {
 
-  if (a > 1) return (a * factorial(a - 1));
+    if (a > 1) return (a * factorial(a - 1));
 
-  else return (1);
+    else return (1);
 
-}
+  }
 
 /*! \brief Compute a permutations of n \return double */
-template<class T>
-T n_permu_a(T n, T a) {
+  template<class T>
+  static T n_permu_a(T n, T a) {
 
-  if (a > 1) return (n * n_permu_a(n - 1, a - 1));
+    if (a > 1) return (n * n_permu_a(n - 1, a - 1));
 
-  else if (a == 1) return (n);
+    else if (a == 1) return (n);
 
-  else return (1);
+    else return (1);
 
-}
+  }
 
 /*! \brief Compute n choose k \return double */
-template<class T>
-T n_choose_k(T n, T k) {
+  template<class T>
+  static  T n_choose_k(T n, T k) {
 
-  if (k < (n / 2)) return (n_choose_k(n, n - k));
+    if (k < (n / 2)) return (n_choose_k(n, n - k));
 
-  else return (n_permu_a(n, k) / factorial(k));
+    else return (n_permu_a(n, k) / factorial(k));
 
-}
+  }
 
 
-double normal_pdf(double x, double m, double s);
+  static double normal_pdf(double x, double m, double s);
 
-double min_value(std::vector<double> x);
+  static double min_value(std::vector<double> x);
 
-double max_value(std::vector<double> x);
+  static double max_value(std::vector<double> x);
 
-std::vector<double> computeCdf(const std::vector<double>& dist);
+  static std::vector<double> computeCdf(const std::vector<double> &dist);
 
-double sumOfMat(std::vector<std::vector<double> > &matrix);
+  static double sumOfMat(std::vector<std::vector<double> > &matrix);
 
-void normalizeBySum(std::vector<double> &array);
+  static void normalizeBySum(std::vector<double> &array);
 
-void normalizeByMax(std::vector<double> &array);
+  static void normalizeBySumMat(std::vector<std::vector<double> > &matrix);
 
-void normalizeBySumMat(std::vector<std::vector<double> > &matrix);
+  static std::vector<double> calcLLKs(const std::vector<double> &refCount,
+                                      const std::vector<double> &altCount,
+                                      const std::vector<double> &expectedWsaf,
+                                      size_t firstIndex,
+                                      size_t length,
+                                      double fac,
+                                      double err = 0.01);
 
-std::vector<double> calcLLKs(std::vector<double> &refCount,
-                             std::vector<double> &altCount,
-                             std::vector<double> &expectedWsaf,
-                             size_t firstIndex,
-                             size_t length,
-                             double fac,
-                             double err = 0.01);
+  static double calcLLK(double ref, double alt, double unadjustedWsaf, double err, double fac);
 
-double calcLLK(double ref, double alt, double unadjustedWsaf, double err, double fac);
+  static size_t sampleIndexGivenProp(std::shared_ptr<RandomGenerator> randomGenerator, const std::vector<double> &proportion);
 
-size_t sampleIndexGivenProp(std::shared_ptr<RandomGenerator> randomGenerator, const std::vector<double>& proportion);
+  static std::vector<double> reshapeMatToVec(std::vector<std::vector<double> > &Mat);
 
-std::vector<double> reshapeMatToVec(std::vector<std::vector<double> > &Mat);
+  static double betaPdf(double x, double a, double b);
 
-double betaPdf(double x, double a, double b);
+  static double logBetaPdf(double x, double a, double b);
 
-double logBetaPdf(double x, double a, double b);
+  static double binomialPdf(int s, int n, double p);
 
-double binomialPdf(int s, int n, double p);
+  static double rBeta(double alpha, double beta, std::shared_ptr<RandomGenerator> randomGenerator);
 
+private: /// Deprecated utility functions are banished here.
+
+  static void normalizeByMax(std::vector<double> &array);
 //double betaDistConst( double a , double b);
-double rBeta(double alpha, double beta, std::shared_ptr<RandomGenerator> randomGenerator);
+
+};
+
 
 
 }   // organization level namespace

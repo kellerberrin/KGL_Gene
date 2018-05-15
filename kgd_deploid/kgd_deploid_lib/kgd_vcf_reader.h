@@ -93,8 +93,6 @@ struct VcfCoverageFieldNotFound : public VcfInvalidVariantEntry {
 };
 
 // This requires more thinking, check for data type?
-
-
 // More informative exceptions for vcf related errors
 
 
@@ -107,7 +105,6 @@ public:
 
 
   VariantLine(std::string tmpLine);
-
   ~VariantLine() = default;
 
 private:
@@ -154,6 +151,7 @@ private:
   int adFieldIndex_;
   int ref;
   int alt;
+
 };
 
 

@@ -331,7 +331,9 @@ set(DEPLOID_LIB_SOURCE_FILES
         kgd_deploid/kgd_deploid_lib/kgd_hprior.h
         kgd_deploid/kgd_deploid_lib/kgd_hprior.cc
         kgd_deploid/kgd_deploid_lib/kgd_ibdpath.h
-        kgd_deploid/kgd_deploid_lib/kgd_idbpath.cc)
+        kgd_deploid/kgd_deploid_lib/kgd_idbpath.cc
+        kgd_deploid/kgd_deploid_lib/kgd_combinatorial.h
+        kgd_deploid/kgd_deploid_lib/kgd_combinatorial.cc)
 
 # Application level objects
 set(DEPLOID_APPLICATION_SOURCE_FILES

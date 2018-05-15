@@ -43,16 +43,13 @@
 #include "kgd_random_generator.h"
 
 
-
 namespace kellerberrin {    // organization level namespace
 namespace deploid {          // project level namespace
 
 
-
+// Forward declarations.
 class McmcSample;
-
 class UpdateSingleHap;
-
 class UpdatePairHap;
 
 class DEploidIO {
@@ -62,16 +59,105 @@ class DEploidIO {
   friend class TestIBDpath;
 #endif
 
-  friend class McmcMachinery;
-
-  friend class RMcmcSample;
-
-  friend class IBDpath;
 
 public:
 
   DEploidIO();
   ~DEploidIO() = default;
+
+  // Access Routines.
+  size_t randomSeed() const { return randomSeed_; }
+
+  bool doExportPostProb() const { return this->doExportPostProb_; }
+
+  bool doAllowInbreeding() const { return this->doAllowInbreeding_; }
+
+  const std::vector<size_t>& indexOfChromStarts() const { return indexOfChromStarts_; }
+
+  const std::vector<int>& getIndexPosition(size_t index) const { return position_[index]; }
+
+  const std::vector<std::vector<int>>& getPosition() const { return position_; }
+
+  const std::vector<double>& getPlaf() const { return plaf_; }
+
+  const std::vector<double>& getRefCount() const { return refCount_; }
+
+  const std::vector<double>& getAltCount() const { return altCount_; }
+
+  double scalingFactor() const { return this->scalingFactor_; }
+
+  double getMissCopyProb() const { return missCopyProb_; }
+
+  void writeLastSingleFwdProb(const std::vector<std::vector<double> > &probabilities, size_t chromIndex, size_t strainIndex, bool useIBD);
+
+  std::shared_ptr<Panel> getPanel() { return panel; }
+
+  size_t getMcmcSample() const { return this->nMcmcSample_; }
+
+  size_t getMcmcMachineryRate() const { return mcmcMachineryRate_; }
+
+  double getMcmcBurn() const { return mcmcBurn_; }
+
+  size_t kStrain() const { return this->kStrain_; }
+
+  double ibdSigma() const { return this->ibdSigma_; }
+
+  double parameterSigma() const { return this->parameterSigma_; }
+
+  bool initialHapWasGiven() const { return initialHapWasGiven_; }
+
+  const std::vector<std::vector<double> >& getInitialHap() const { return initialHap_; }
+
+  bool initialPropWasGiven() const { return initialPropWasGiven_; }
+
+  const std::vector<double>& getInitialProp() const { return  initialProp_; }
+
+  bool doUpdateProp() const { return this->doUpdateProp_; }
+
+  bool doUpdateSingle() const { return this->doUpdateSingle_; }
+
+  bool doUpdatePair() const { return this->doUpdatePair_; }
+
+  bool forbidCopyFromSame() const { return this->forbidCopyFromSame_; }
+
+  size_t nLoci() const { return this->nLoci_; }
+
+  double averageCentimorganDistance() const { return this->averageCentimorganDistance_; }
+
+  double parameterG() const { return this->parameterG_; }
+
+  bool useConstRecomb() const { return this->useConstRecomb_; }
+
+  double constRecombProb() const { return this->constRecombProb_; }
+
+  // Modifiers.
+  void setFinalProp(const std::vector<double>& finalProp) { finalProp_ = finalProp; }
+
+  void writeMcmcRelated(std::shared_ptr<McmcSample> mcmcSample, bool useIBD = false);
+
+  void setInitialProp(const std::vector<double>& initial_prop) { initialProp_ = initial_prop; }
+
+  void setInitialPropWasGiven(const bool setTo) { this->initialPropWasGiven_ = setTo; }
+
+  void setDoUpdateProp(const bool setTo) { this->doUpdateProp_ = setTo; }
+
+  void setInitialHap(const std::vector<std::vector<double> >& initial_hap) { initialHap_ = initial_hap; }
+
+  void setInitialHapWasGiven(const bool setTo) { this->initialHapWasGiven_ = setTo; }
+
+  void setacceptRatio(const double setTo) { this->acceptRatio_ = setTo; }
+
+  void setmeanThetallks(const double setTo) { this->meanThetallks_ = setTo; }
+
+  void setmaxLLKs(const double setTo) { this->maxLLKs_ = setTo; }
+
+  void setmeanllks(const double setTo) { this->meanllks_ = setTo; }
+
+  void setstdvllks(const double setTo) { this->stdvllks_ = setTo; }
+
+  void setdicByVar(const double setTo) { this->dicByVar_ = setTo; }
+
+  void setdicByTheta(const double setTo) { this->dicByTheta_ = setTo; }
 
   // Painting related
   void chromPainting(std::shared_ptr<RandomGenerator> random_generator);
@@ -88,14 +174,10 @@ public:
 
   void paintIBD(std::shared_ptr<RandomGenerator> random_generator);
 
-  double ibdLLK_;
-
   void getIBDprobsIntegrated(const std::vector<std::vector<double> > &prob);
 
   // Log
   void wrapUp();
-
-  size_t randomSeed() const { return randomSeed_; }
 
 private:
 
@@ -116,8 +198,6 @@ private:
   std::string prefix_;
   size_t randomSeed_;
   bool randomSeedWasGiven_;
-
-  void setrandomSeedWasGiven(const bool random) { this->randomSeedWasGiven_ = random; }
 
 
   bool initialPropWasGiven_;
@@ -155,12 +235,12 @@ private:
   std::vector<double> altCount_;
   size_t nLoci_;
 
+  double ibdLLK_;
 
   // Panel related
   bool usePanel_;
 
   void setUsePanel(const bool setTo) { this->usePanel_ = setTo; }
-
 
   bool useVcf_;
 
@@ -190,6 +270,9 @@ private:
 
   void setDoComputeLLK(const bool setTo) { this->doComputeLLK_ = setTo; }
 
+  void setrandomSeedWasGiven(const bool random) { this->randomSeedWasGiven_ = random; }
+
+
   // Parameters
   double missCopyProb_;
   double averageCentimorganDistance_;// = 15000.0,
@@ -200,31 +283,23 @@ private:
   // Diagnostics
   double maxLLKs_;
 
-  void setmaxLLKs(const double setTo) { this->maxLLKs_ = setTo; }
 
   double meanThetallks_;
 
-  void setmeanThetallks(const double setTo) { this->meanThetallks_ = setTo; }
 
   double meanllks_;
 
-  void setmeanllks(const double setTo) { this->meanllks_ = setTo; }
-
   double stdvllks_;
 
-  void setstdvllks(const double setTo) { this->stdvllks_ = setTo; }
 
   double dicByTheta_;
 
-  void setdicByTheta(const double setTo) { this->dicByTheta_ = setTo; }
 
   double dicByVar_;
 
-  void setdicByVar(const double setTo) { this->dicByVar_ = setTo; }
 
   double acceptRatio_;
 
-  void setacceptRatio(const double setTo) { this->acceptRatio_ = setTo; }
 
   // Output stream
   std::string dEploidGitVersion_;
@@ -274,21 +349,13 @@ private:
 
 
   // Getters and Setters
-  void setDoUpdateProp(const bool setTo) { this->doUpdateProp_ = setTo; }
-
-  bool doUpdateProp() const { return this->doUpdateProp_; }
 
   void setDoUpdateSingle(const bool setTo) { this->doUpdateSingle_ = setTo; }
 
-  bool doUpdateSingle() const { return this->doUpdateSingle_; }
-
   void setDoUpdatePair(const bool setTo) { this->doUpdatePair_ = setTo; }
-
-  bool doUpdatePair() const { return this->doUpdatePair_; }
 
   void setDoExportPostProb(const bool setTo) { this->doExportPostProb_ = setTo; }
 
-  bool doExportPostProb() const { return this->doExportPostProb_; }
 
   void setDoExportSwitchMissCopy(const bool setTo) { this->doExportSwitchMissCopy_ = setTo; }
 
@@ -296,7 +363,6 @@ private:
 
   void setDoAllowInbreeding(const bool setTo) { this->doAllowInbreeding_ = setTo; }
 
-  bool doAllowInbreeding() const { return this->doAllowInbreeding_; }
 
   void setDoLsPainting(const bool setTo) { this->doLsPainting_ = setTo; }
 
@@ -304,17 +370,10 @@ private:
 
   void setUseIBD(const bool setTo) { this->useIBD_ = setTo; }
 
-  bool initialPropWasGiven() const { return initialPropWasGiven_; }
-
-  void setInitialPropWasGiven(const bool setTo) { this->initialPropWasGiven_ = setTo; }
-
   bool pleaseCheckInitialP() const { return pleaseCheckInitialP_; }
 
   void setPleaseCheckInitialP(const bool setTo) { this->pleaseCheckInitialP_ = setTo; }
 
-  bool initialHapWasGiven() const { return initialHapWasGiven_; }
-
-  void setInitialHapWasGiven(const bool setTo) { this->initialHapWasGiven_ = setTo; }
 
   bool randomSeedWasGiven() const { return this->randomSeedWasGiven_; }
 
@@ -333,9 +392,6 @@ private:
   void writeHap(std::shared_ptr<McmcSample> mcmcSample, bool useIBD = false);
 
   void writeVcf(std::shared_ptr<McmcSample> mcmcSample);
-
-  void
-  writeLastSingleFwdProb(std::vector<std::vector<double> > &probabilities, size_t chromIndex, size_t strainIndex, bool useIBD);
 
   void writeLastPairFwdProb(UpdatePairHap &updatePair, size_t chromIndex);
 
@@ -361,8 +417,6 @@ private:
   std::vector<double> finalSiteOfOneMissCopyOne_;
 
 
-  void writeMcmcRelated(std::shared_ptr<McmcSample> mcmcSample, bool useIBD = false);
-
   void readPanel();
 
   // Panel related
@@ -373,27 +427,17 @@ private:
 
   void setParameterG(const double setTo) { this->parameterG_ = setTo; }
 
-  double parameterG() const { return this->parameterG_; }
-
   double parameterSigma_;
 
   void setParameterSigma(const double setTo) { this->parameterSigma_ = setTo; }
-
-  double parameterSigma() const { return this->parameterSigma_; }
 
   double ibdSigma_;
 
   void setIBDSigma(const double setTo) { this->ibdSigma_ = setTo; }
 
-  double ibdSigma() const { return this->ibdSigma_; }
-
   void setNLoci(const size_t setTo) { this->nLoci_ = setTo; }
 
-  size_t nLoci() const { return this->nLoci_; }
-
   void setKstrain(const size_t setTo) { this->kStrain_ = setTo; }
-
-  size_t kStrain() const { return this->kStrain_; }
 
   void setKStrainWasManuallySet(const size_t setTo) { this->kStrainWasManuallySet_ = setTo; }
 
@@ -407,26 +451,14 @@ private:
 
   bool kStrainWasSetByProp() const { return this->kStrainWasSetByProp_; }
 
-  size_t nMcmcSample() const { return this->nMcmcSample_; }
-
-  double averageCentimorganDistance() const { return this->averageCentimorganDistance_; }
-
-  //double Ne() const { return this->Ne_; }
-  double scalingFactor() const { return this->scalingFactor_; }
-
   void setScalingFactor(const double setTo) { this->scalingFactor_ = setTo; }
 
-  double constRecombProb() const { return this->constRecombProb_; }
-
-  bool useConstRecomb() const { return this->useConstRecomb_; }
 
   bool excludeSites_;
 
   bool excludeSites() const { return this->excludeSites_; }
 
   void setExcludeSites(const size_t exclude) { this->excludeSites_ = exclude; }
-
-  bool forbidCopyFromSame() const { return this->forbidCopyFromSame_; }
 
   void setForbidCopyFromSame(const bool forbid) { this->forbidCopyFromSame_ = forbid; }
 

@@ -46,26 +46,15 @@ class UpdateHap {
   friend class TestUpdateHap;
 #endif
 
-  friend class McmcMachinery;
-
-  friend class UpdateSingleHap;
-
-  friend class UpdatePairHap;
-
-  friend class DEploidIO;
 
 public:
 
-  size_t nPanel() const { return nPanel_; }
-
-private:
-
-  UpdateHap(std::vector<double> &refCount,
-            std::vector<double> &altCount,
-            std::vector<double> &plaf,
-            std::vector<double> &expectedWsaf,
-            std::vector<double> &proportion,
-            std::vector<std::vector<double> > &haplotypes,
+  UpdateHap(const std::vector<double> &refCount,
+            const std::vector<double> &altCount,
+            const std::vector<double> &plaf,
+            const std::vector<double> &expectedWsaf,
+            const std::vector<double> &proportion,
+            const std::vector<std::vector<double> > &haplotypes,
             std::shared_ptr<RandomGenerator> randomGenerator,
             size_t segmentStartIndex,
             size_t nLoci,
@@ -74,6 +63,15 @@ private:
             double scalingFactor);
 
   virtual ~UpdateHap() = default;
+
+  // Access functions.
+  size_t nPanel() const { return nPanel_; }
+  double getNewLLKIndex(size_t index) const { return newLLK[index]; }
+
+  // Modification functions.
+  void setPanelSize(const size_t setTo) { nPanel_ = setTo; }
+
+protected:
 
   std::shared_ptr<Panel> panel_;
   double missCopyProb_;
@@ -88,7 +86,6 @@ private:
   std::vector<std::vector<double> > emission_;
   double scalingFactor_;
 
-  void setPanelSize(const size_t setTo) { nPanel_ = setTo; }
 
   double scalingFactor() const { return scalingFactor_; }
   void setScalingFactor(const double setTo) { scalingFactor_ = setTo; }

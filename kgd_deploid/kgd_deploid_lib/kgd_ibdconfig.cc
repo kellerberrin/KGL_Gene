@@ -54,7 +54,7 @@ void kgd::IBDconfiguration::enumerateOp() {
   //#For each configuration, identify which pairs are IBD
 
   /// Generates a matrix of 2^ (k * (k -1 ) /2) rows where each row is a binary representation of all [0, 2^ (k * (k -1 ) /2))
-  /// This causes an exponential tial explosition.
+  /// This causes an exponential explosion.
   pairs_permutation_ = enumerateBinaryMatrixOfK(nchoose2(kStrain()));
 
 }

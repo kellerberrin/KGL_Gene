@@ -12,12 +12,12 @@ namespace kgd = kellerberrin::deploid;
 namespace kgl = kellerberrin::genome;
 
 
-kgd::UpdatePairHap::UpdatePairHap(std::vector<double> &refCount,
-                                  std::vector<double> &altCount,
-                                  std::vector<double> &plaf,
-                                  std::vector<double> &expectedWsaf,
-                                  std::vector<double> &proportion,
-                                  std::vector<std::vector<double> > &haplotypes,
+kgd::UpdatePairHap::UpdatePairHap(const std::vector<double> &refCount,
+                                  const std::vector<double> &altCount,
+                                  const std::vector<double> &plaf,
+                                  const std::vector<double> &expectedWsaf,
+                                  const std::vector<double> &proportion,
+                                  const std::vector<std::vector<double> > &haplotypes,
                                   std::shared_ptr<RandomGenerator> randomGenerator,
                                   size_t segmentStartIndex,
                                   size_t nLoci,
@@ -41,20 +41,20 @@ kgd::UpdatePairHap::UpdatePairHap(std::vector<double> &refCount,
   strainIndex1_ = strainIndex1;
   strainIndex2_ = strainIndex2;
   forbidCopyFromSame_ = forbidCopyFromSame;
-  siteOfTwoSwitchOne = std::vector<double>(nLoci);
-  siteOfTwoMissCopyOne = std::vector<double>(nLoci);
-  siteOfTwoSwitchTwo = std::vector<double>(nLoci);
-  siteOfTwoMissCopyTwo = std::vector<double>(nLoci);
+  siteOfTwoSwitchOne_ = std::vector<double>(nLoci);
+  siteOfTwoMissCopyOne_ = std::vector<double>(nLoci);
+  siteOfTwoSwitchTwo_ = std::vector<double>(nLoci);
+  siteOfTwoMissCopyTwo_ = std::vector<double>(nLoci);
 
 }
 
 
-void kgd::UpdatePairHap::core(std::vector<double> &refCount,
-                              std::vector<double> &altCount,
-                              std::vector<double> &plaf,
-                              std::vector<double> &expectedWsaf,
-                              std::vector<double> &proportion,
-                              std::vector<std::vector<double> > &haplotypes) {
+void kgd::UpdatePairHap::core(const std::vector<double> &refCount,
+                              const std::vector<double> &altCount,
+                              const std::vector<double> &plaf,
+                              const std::vector<double> &expectedWsaf,
+                              const std::vector<double> &proportion,
+                              const std::vector<std::vector<double> > &haplotypes) {
 
   calcExpectedWsaf(expectedWsaf, proportion, haplotypes);
   calcHapLLKs(refCount, altCount);
@@ -77,9 +77,9 @@ void kgd::UpdatePairHap::core(std::vector<double> &refCount,
 }
 
 
-void kgd::UpdatePairHap::calcExpectedWsaf(std::vector<double> &expectedWsaf,
-                                          std::vector<double> &proportion,
-                                          std::vector<std::vector<double> > &haplotypes) {
+void kgd::UpdatePairHap::calcExpectedWsaf(const std::vector<double> &expectedWsaf,
+                                          const std::vector<double> &proportion,
+                                          const std::vector<std::vector<double> > &haplotypes) {
 
 
   expectedWsaf00_ = std::vector<double>(expectedWsaf.begin() + segmentStartIndex_,
@@ -133,12 +133,12 @@ void kgd::UpdatePairHap::calcExpectedWsaf(std::vector<double> &expectedWsaf,
 }
 
 
-void kgd::UpdatePairHap::calcHapLLKs(std::vector<double> &refCount, std::vector<double> &altCount) {
+void kgd::UpdatePairHap::calcHapLLKs(const std::vector<double> &refCount, const std::vector<double> &altCount) {
 
-  llk00_ = calcLLKs(refCount, altCount, expectedWsaf00_, segmentStartIndex_, nLoci_, scalingFactor());
-  llk10_ = calcLLKs(refCount, altCount, expectedWsaf10_, segmentStartIndex_, nLoci_, scalingFactor());
-  llk01_ = calcLLKs(refCount, altCount, expectedWsaf01_, segmentStartIndex_, nLoci_, scalingFactor());
-  llk11_ = calcLLKs(refCount, altCount, expectedWsaf11_, segmentStartIndex_, nLoci_, scalingFactor());
+  llk00_ = Utility::calcLLKs(refCount, altCount, expectedWsaf00_, segmentStartIndex_, nLoci_, scalingFactor());
+  llk10_ = Utility::calcLLKs(refCount, altCount, expectedWsaf10_, segmentStartIndex_, nLoci_, scalingFactor());
+  llk01_ = Utility::calcLLKs(refCount, altCount, expectedWsaf01_, segmentStartIndex_, nLoci_, scalingFactor());
+  llk11_ = Utility::calcLLKs(refCount, altCount, expectedWsaf11_, segmentStartIndex_, nLoci_, scalingFactor());
   assert(llk00_.size() == nLoci_);
   assert(llk10_.size() == nLoci_);
   assert(llk01_.size() == nLoci_);
@@ -151,29 +151,29 @@ void kgd::UpdatePairHap::buildEmission(double missCopyProb) {
 
   std::vector<double> noMissProb(nLoci_, log(1.0 - missCopyProb));
   std::vector<double> missProb(nLoci_, log(missCopyProb));
-  std::vector<double> noNo = vecSum(noMissProb, noMissProb);
-  std::vector<double> misMis = vecSum(missProb, missProb);
-  std::vector<double> misNo = vecSum(noMissProb, missProb);
+  std::vector<double> noNo = Utility::vecSum(noMissProb, noMissProb);
+  std::vector<double> misMis = Utility::vecSum(missProb, missProb);
+  std::vector<double> misNo = Utility::vecSum(noMissProb, missProb);
 
-  std::vector<double> tmp_00_1 = vecSum(llk00_, noNo);
-  std::vector<double> tmp_00_2 = vecSum(llk10_, misNo);
-  std::vector<double> tmp_00_3 = vecSum(llk01_, misNo);
-  std::vector<double> tmp_00_4 = vecSum(llk11_, misMis);
+  std::vector<double> tmp_00_1 = Utility::vecSum(llk00_, noNo);
+  std::vector<double> tmp_00_2 = Utility::vecSum(llk10_, misNo);
+  std::vector<double> tmp_00_3 = Utility::vecSum(llk01_, misNo);
+  std::vector<double> tmp_00_4 = Utility::vecSum(llk11_, misMis);
 
-  std::vector<double> tmp_01_1 = vecSum(llk01_, noNo);
-  std::vector<double> tmp_01_2 = vecSum(llk00_, misNo);
-  std::vector<double> tmp_01_3 = vecSum(llk11_, misNo);
-  std::vector<double> tmp_01_4 = vecSum(llk10_, misMis);
+  std::vector<double> tmp_01_1 = Utility::vecSum(llk01_, noNo);
+  std::vector<double> tmp_01_2 = Utility::vecSum(llk00_, misNo);
+  std::vector<double> tmp_01_3 = Utility::vecSum(llk11_, misNo);
+  std::vector<double> tmp_01_4 = Utility::vecSum(llk10_, misMis);
 
-  std::vector<double> tmp_10_1 = vecSum(llk10_, noNo);
-  std::vector<double> tmp_10_2 = vecSum(llk00_, misNo);
-  std::vector<double> tmp_10_3 = vecSum(llk11_, misNo);
-  std::vector<double> tmp_10_4 = vecSum(llk01_, misMis);
+  std::vector<double> tmp_10_1 = Utility::vecSum(llk10_, noNo);
+  std::vector<double> tmp_10_2 = Utility::vecSum(llk00_, misNo);
+  std::vector<double> tmp_10_3 = Utility::vecSum(llk11_, misNo);
+  std::vector<double> tmp_10_4 = Utility::vecSum(llk01_, misMis);
 
-  std::vector<double> tmp_11_1 = vecSum(llk11_, noNo);
-  std::vector<double> tmp_11_2 = vecSum(llk10_, misNo);
-  std::vector<double> tmp_11_3 = vecSum(llk01_, misNo);
-  std::vector<double> tmp_11_4 = vecSum(llk00_, misMis);
+  std::vector<double> tmp_11_1 = Utility::vecSum(llk11_, noNo);
+  std::vector<double> tmp_11_2 = Utility::vecSum(llk10_, misNo);
+  std::vector<double> tmp_11_3 = Utility::vecSum(llk01_, misNo);
+  std::vector<double> tmp_11_4 = Utility::vecSum(llk00_, misMis);
 
   assert(emission_.size() == 0);
 
@@ -184,7 +184,7 @@ void kgd::UpdatePairHap::buildEmission(double missCopyProb) {
                              tmp_10_1[i], tmp_10_2[i], tmp_10_3[i], tmp_10_4[i],
                              tmp_11_1[i], tmp_11_2[i], tmp_11_3[i], tmp_11_4[i]});
 
-    double tmaxTmp = max_value(tmp);
+    double tmaxTmp = Utility::max_value(tmp);
 
     std::vector<double> emissRow(
     {exp(tmp_00_1[i] - tmaxTmp) + exp(tmp_00_2[i] - tmaxTmp) + exp(tmp_00_3[i] - tmaxTmp) + exp(tmp_00_4[i] - tmaxTmp),
@@ -208,7 +208,7 @@ std::vector<double> kgd::UpdatePairHap::computeRowMarginalDist(std::vector<std::
 
   for (size_t i = 0; i < probDist.size(); i++) {
 
-    marginalDist[i] = sumOfVec(probDist[i]);
+    marginalDist[i] = Utility::sumOfVec(probDist[i]);
 
   }
 
@@ -261,7 +261,7 @@ void kgd::UpdatePairHap::calcFwdProbs(bool forbidCopyFromSame) {
 
   }
 
-  normalizeBySumMat(fwd1st);
+  Utility::normalizeBySumMat(fwd1st);
   fwdProbs_.push_back(fwd1st);
 
   for (size_t j = 1; j < nLoci_; j++) {
@@ -284,7 +284,7 @@ void kgd::UpdatePairHap::calcFwdProbs(bool forbidCopyFromSame) {
 
         size_t colObs = (size_t) panel_->content_[hapIndex][ii];
         size_t obs = rowObs * 2 + colObs;
-        fwdTmpRow[ii] = emission_[j][obs] * (sumOfMat(fwdProbs_.back()) * recRec +
+        fwdTmpRow[ii] = emission_[j][obs] * (Utility::sumOfMat(fwdProbs_.back()) * recRec +
                                              fwdProbs_.back()[i][ii] * norecNorec +
                                              recNorec * (marginalOfRows[ii] + marginalOfCols[i]));
 
@@ -294,7 +294,7 @@ void kgd::UpdatePairHap::calcFwdProbs(bool forbidCopyFromSame) {
 
     }
 
-    normalizeBySumMat(fwdTmp);
+    Utility::normalizeBySumMat(fwdTmp);
     fwdProbs_.push_back(fwdTmp);
 
   }
@@ -304,7 +304,7 @@ void kgd::UpdatePairHap::calcFwdProbs(bool forbidCopyFromSame) {
 
 std::vector<size_t> kgd::UpdatePairHap::sampleMatrixIndex(std::vector<std::vector<double> > &probDist) {
 
-  size_t tmp = sampleIndexGivenProp(recombLevel2Rg_, reshapeMatToVec(probDist));
+  size_t tmp = Utility::sampleIndexGivenProp(recombLevel2Rg_, Utility::reshapeMatToVec(probDist));
   div_t divresult;
   divresult = div((int) tmp, (int) nPanel_);
 
@@ -338,7 +338,7 @@ void kgd::UpdatePairHap::samplePaths() {
     double previousProbij = previousDist[rowI][colJ];
 
     std::vector<double> rowIdist = previousDist[rowI];
-    double tmpRowSum = sumOfVec(rowIdist);
+    double tmpRowSum = Utility::sumOfVec(rowIdist);
 
     std::vector<double> colJdist;
     for (auto const &array: previousDist) {
@@ -349,21 +349,21 @@ void kgd::UpdatePairHap::samplePaths() {
 
     assert(nPanel_ == colJdist.size());
 
-    double tmpColSum = sumOfVec(colJdist);
+    double tmpColSum = Utility::sumOfVec(colJdist);
 
     std::vector<double> weightOfFourCases(
-    {recRec * sumOfMat(previousDist),           // recombination happened on both strains
+    {recRec * Utility::sumOfMat(previousDist),           // recombination happened on both strains
      recNorec * tmpRowSum,  // first strain no recombine, second strain recombine
      recNorec * tmpColSum,  // first strain recombine, second strain no recombine
      norecNorec * previousProbij}); // no recombine on either strain
 
-    normalizeBySum(weightOfFourCases);
+    Utility::normalizeBySum(weightOfFourCases);
 
-    size_t tmpCase = sampleIndexGivenProp(recombRg_, weightOfFourCases);
+    size_t tmpCase = Utility::sampleIndexGivenProp(recombRg_, weightOfFourCases);
 
     if (tmpCase == (size_t) 0) { // switching both strains
 
-      siteOfTwoSwitchTwo[j] += 1.0;
+      siteOfTwoSwitchTwo_[j] += 1.0;
       tmpPath = sampleMatrixIndex(previousDist);
       rowI = tmpPath[0];
       colJ = tmpPath[1];
@@ -371,16 +371,16 @@ void kgd::UpdatePairHap::samplePaths() {
 
     } else if (tmpCase == 1) { // switching second strain
 
-      siteOfTwoSwitchOne[j] += 0.5;
-      normalizeBySum(rowIdist);
-      colJ = sampleIndexGivenProp(recombLevel2Rg_, rowIdist);
+      siteOfTwoSwitchOne_[j] += 0.5;
+      Utility::normalizeBySum(rowIdist);
+      colJ = Utility::sampleIndexGivenProp(recombLevel2Rg_, rowIdist);
       //assert (rowI != colJ); // OFF, as by default, allow copying the same strain
 
     } else if (tmpCase == (size_t) 2) { // switching first strain
 
-      siteOfTwoSwitchOne[j] += 0.5;
-      normalizeBySum(colJdist);
-      rowI = sampleIndexGivenProp(recombLevel2Rg_, colJdist);
+      siteOfTwoSwitchOne_[j] += 0.5;
+      Utility::normalizeBySum(colJdist);
+      rowI = Utility::sampleIndexGivenProp(recombLevel2Rg_, colJdist);
       colJ = colJ;
       //assert (rowI != colJ); // OFF, as by default, allow copying the same strain
 
@@ -417,7 +417,7 @@ void kgd::UpdatePairHap::addMissCopying(double missCopyProb) {
 
   for (size_t i = 0; i < nLoci_; i++) {
 
-    double tmpMax = max_value(std::vector<double>({llk00_[i], llk01_[i], llk10_[i], llk11_[i]}));
+    double tmpMax = Utility::max_value(std::vector<double>({llk00_[i], llk01_[i], llk10_[i], llk11_[i]}));
 
     std::vector<double> emissionTmp(
     {exp(llk00_[i] - tmpMax), exp(llk01_[i] - tmpMax), exp(llk10_[i] - tmpMax), exp(llk11_[i] - tmpMax)});
@@ -430,9 +430,9 @@ void kgd::UpdatePairHap::addMissCopying(double missCopyProb) {
                                    (1.0 - missCopyProb),         // probability of same2diff1
                                    emissionTmp[(size_t) (2 * (1 - path1_[i]) + (1 - path2_[i]))] * missCopyProb *
                                    missCopyProb});              // probability of both differ
-    normalizeBySum(casesDist);
+    Utility::normalizeBySum(casesDist);
 
-    size_t tmpCase = sampleIndexGivenProp(missCopyRg_, casesDist);
+    size_t tmpCase = Utility::sampleIndexGivenProp(missCopyRg_, casesDist);
 
     if (tmpCase == 0) {
 
@@ -441,19 +441,19 @@ void kgd::UpdatePairHap::addMissCopying(double missCopyProb) {
 
     } else if (tmpCase == 1) {
 
-      siteOfTwoMissCopyOne[i] += 0.5;
+      siteOfTwoMissCopyOne_[i] += 0.5;
       hap1_.push_back(path1_[i]);
       hap2_.push_back(1.0 - path2_[i]);
 
     } else if (tmpCase == 2) {
 
-      siteOfTwoMissCopyOne[i] += 0.5;
+      siteOfTwoMissCopyOne_[i] += 0.5;
       hap1_.push_back(1.0 - path1_[i]);
       hap2_.push_back(path2_[i]);
 
     } else if (tmpCase == 3) {
 
-      siteOfTwoMissCopyTwo[i] += 1.0;
+      siteOfTwoMissCopyTwo_[i] += 1.0;
       hap1_.push_back(1.0 - path1_[i]);
       hap2_.push_back(1.0 - path2_[i]);
 
@@ -471,7 +471,7 @@ void kgd::UpdatePairHap::addMissCopying(double missCopyProb) {
 }
 
 
-void kgd::UpdatePairHap::sampleHapIndependently(std::vector<double> &plaf) {
+void kgd::UpdatePairHap::sampleHapIndependently(const std::vector<double> &plaf) {
 
   assert(hap1_.size() == 0);
   assert(hap2_.size() == 0);
@@ -480,16 +480,16 @@ void kgd::UpdatePairHap::sampleHapIndependently(std::vector<double> &plaf) {
 
   for (size_t i = 0; i < nLoci_; i++) {
 
-    double tmpMax = max_value(std::vector<double>({llk00_[i], llk01_[i], llk10_[i], llk11_[i]}));
+    double tmpMax = Utility::max_value(std::vector<double>({llk00_[i], llk01_[i], llk10_[i], llk11_[i]}));
 
     std::vector<double> tmpDist({exp(llk00_[i] - tmpMax) * (1.0 - plaf[plafIndex]) * (1.0 - plaf[plafIndex]),
                                  exp(llk01_[i] - tmpMax) * (1.0 - plaf[plafIndex]) * plaf[plafIndex],
                                  exp(llk10_[i] - tmpMax) * (1.0 - plaf[plafIndex]) * plaf[plafIndex],
                                  exp(llk11_[i] - tmpMax) * plaf[plafIndex] * plaf[plafIndex]});
 
-    normalizeBySum(tmpDist);
+    Utility::normalizeBySum(tmpDist);
 
-    size_t tmpCase = sampleIndexGivenProp(recombRg_, tmpDist);
+    size_t tmpCase = Utility::sampleIndexGivenProp(recombRg_, tmpDist);
 
     if (tmpCase == 0) {
 
