@@ -258,7 +258,7 @@ add_executable (kgl_genome ${APPLICATION_SOURCE_FILES})
 target_link_libraries(kgl_genome kgl_genome_lib)
 
 
-############kgd_deploid########################################################
+############kgd_deconvolv########################################################
 
 find_package(ZLIB)
 if (ZLIB_FOUND)
@@ -266,88 +266,88 @@ if (ZLIB_FOUND)
 endif()
 
 
-include_directories(kgd_deploid/kgd_deploid_app
-        kgd_deploid/kgd_deploid_lib
-        kgd_deploid/contrib/codeCogs
-        kgd_deploid/contrib/gzstream
-        kgd_deploid/kgd_random)
+include_directories(kgd_deconvolv/kgd_deconvolv_app
+        kgd_deconvolv/kgd_deconvolv_lib
+        kgd_deconvolv/contrib/codeCogs
+        kgd_deconvolv/contrib/gzstream
+        kgd_deconvolv/kgd_random)
 
-set(DEPLOID_LIB_SOURCE_FILES
-        kgd_deploid/contrib/codeCogs/asympt_expn.h
-        kgd_deploid/contrib/codeCogs/errorfn.h
-        kgd_deploid/contrib/codeCogs/errorfnc.h
-        kgd_deploid/contrib/codeCogs/errorfnc_exp.h
-        kgd_deploid/contrib/codeCogs/expx2.h
-        kgd_deploid/contrib/codeCogs/gamma.h
-        kgd_deploid/contrib/codeCogs/ln_add1.h
-        kgd_deploid/contrib/codeCogs/log_gamma.h
-        kgd_deploid/contrib/codeCogs/logbeta.h
-        kgd_deploid/contrib/codeCogs/loggammafrac.h
-        kgd_deploid/contrib/codeCogs/loggammasum.h
-        kgd_deploid/contrib/codeCogs/machine_epsilon.h
-        kgd_deploid/contrib/codeCogs/mersenne.hpp
-        kgd_deploid/contrib/codeCogs/poly_eval.h
-        kgd_deploid/contrib/codeCogs/randomSample.hpp
-        kgd_deploid/contrib/codeCogs/stirling.h
-        kgd_deploid/contrib/codeCogs/xsub_ln_add1.h
-        kgd_deploid/kgd_deploid_lib/kgd_mcmc_debug.cc
-        kgd_deploid/kgd_deploid_lib/kgd_vcf_reader_debug.cc
-        kgd_deploid/kgd_deploid_lib/kgd_deploid_io_export.cc
-        kgd_deploid/kgd_deploid_lib/kgd_deploid_io_export_posterior.cc
-        kgd_deploid/kgd_deploid_lib/kgd_write_mcmc_related.cc
-        kgd_deploid/contrib/gzstream/gzstream.cpp
-        kgd_deploid/contrib/gzstream/gzstream.h
-        kgd_deploid/kgd_random/kgd_fastfunc.cc
-        kgd_deploid/kgd_random/kgd_fastfunc.h
-        kgd_deploid/kgd_random/kgd_mersenne_twister.cc
-        kgd_deploid/kgd_random/kgd_mersenne_twister.h
-        kgd_deploid/kgd_random/kgd_random_generator.cc
-        kgd_deploid/kgd_random/kgd_random_generator.h
-        kgd_deploid/kgd_deploid_lib/kgd_deploid_io.cc
-        kgd_deploid/kgd_deploid_lib/kgd_deploid_io.h
-        kgd_deploid/kgd_deploid_lib/kgd_exceptions.h
-        kgd_deploid/kgd_deploid_lib/kgd_global.h
-        kgd_deploid/kgd_deploid_lib/kgd_ibdconfig.cc
-        kgd_deploid/kgd_deploid_lib/kgd_ibdconfig.h
-        kgd_deploid/kgd_deploid_lib/kgd_mcmc.cc
-        kgd_deploid/kgd_deploid_lib/kgd_mcmc.h
-        kgd_deploid/kgd_deploid_lib/kgd_panel.cc
-        kgd_deploid/kgd_deploid_lib/kgd_panel.h
-        kgd_deploid/kgd_deploid_lib/kgd_txt_reader.cc
-        kgd_deploid/kgd_deploid_lib/kgd_txt_reader.h
-        kgd_deploid/kgd_deploid_lib/kgd_update_haplotype.cc
-        kgd_deploid/kgd_deploid_lib/kgd_update_haplotype.h
-        kgd_deploid/kgd_deploid_lib/kgd_utility.cc
-        kgd_deploid/kgd_deploid_lib/kgd_utility.h
-        kgd_deploid/kgd_deploid_lib/kgd_variant_index.cc
-        kgd_deploid/kgd_deploid_lib/kgd_variant_index.h
-        kgd_deploid/kgd_deploid_lib/kgd_vcf_reader.cc
-        kgd_deploid/kgd_deploid_lib/kgd_vcf_reader.h
-        kgd_deploid/kgd_random/kgd_mt_random.h
-        kgd_deploid/kgd_deploid_lib/kgd_update_single_haplotype.h
-        kgd_deploid/kgd_deploid_lib/kgd_update_single_haplotype.cc
-        kgd_deploid/kgd_deploid_lib/kgd_update_pair_haplotype.h
-        kgd_deploid/kgd_deploid_lib/kgd_update_pair_haplotype.cc
-        kgd_deploid/kgd_deploid_lib/kgd_hprior.h
-        kgd_deploid/kgd_deploid_lib/kgd_hprior.cc
-        kgd_deploid/kgd_deploid_lib/kgd_ibdpath.h
-        kgd_deploid/kgd_deploid_lib/kgd_idbpath.cc
-        kgd_deploid/kgd_deploid_lib/kgd_combinatorial.h
-        kgd_deploid/kgd_deploid_lib/kgd_combinatorial.cc)
+set(DECONVOLV_LIB_SOURCE_FILES
+        kgd_deconvolv/contrib/codeCogs/asympt_expn.h
+        kgd_deconvolv/contrib/codeCogs/errorfn.h
+        kgd_deconvolv/contrib/codeCogs/errorfnc.h
+        kgd_deconvolv/contrib/codeCogs/errorfnc_exp.h
+        kgd_deconvolv/contrib/codeCogs/expx2.h
+        kgd_deconvolv/contrib/codeCogs/gamma.h
+        kgd_deconvolv/contrib/codeCogs/ln_add1.h
+        kgd_deconvolv/contrib/codeCogs/log_gamma.h
+        kgd_deconvolv/contrib/codeCogs/logbeta.h
+        kgd_deconvolv/contrib/codeCogs/loggammafrac.h
+        kgd_deconvolv/contrib/codeCogs/loggammasum.h
+        kgd_deconvolv/contrib/codeCogs/machine_epsilon.h
+        kgd_deconvolv/contrib/codeCogs/mersenne.hpp
+        kgd_deconvolv/contrib/codeCogs/poly_eval.h
+        kgd_deconvolv/contrib/codeCogs/randomSample.hpp
+        kgd_deconvolv/contrib/codeCogs/stirling.h
+        kgd_deconvolv/contrib/codeCogs/xsub_ln_add1.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_debug.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_vcf_reader_debug.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_deploid_io_export.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_deploid_io_export_posterior.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_write_mcmc_related.cc
+        kgd_deconvolv/contrib/gzstream/gzstream.cpp
+        kgd_deconvolv/contrib/gzstream/gzstream.h
+        kgd_deconvolv/kgd_random/kgd_fastfunc.cc
+        kgd_deconvolv/kgd_random/kgd_fastfunc.h
+        kgd_deconvolv/kgd_random/kgd_mersenne_twister.cc
+        kgd_deconvolv/kgd_random/kgd_mersenne_twister.h
+        kgd_deconvolv/kgd_random/kgd_random_generator.cc
+        kgd_deconvolv/kgd_random/kgd_random_generator.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_deploid_io.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_deploid_io.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_exceptions.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_global.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdconfig.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdconfig.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_panel.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_panel.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_txt_reader.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_txt_reader.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_update_haplotype.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_update_haplotype.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_utility.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_utility.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_variant_index.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_variant_index.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_vcf_reader.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_vcf_reader.h
+        kgd_deconvolv/kgd_random/kgd_mt_random.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_update_single_haplotype.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_update_single_haplotype.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_update_pair_haplotype.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_update_pair_haplotype.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_hprior.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_hprior.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdpath.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_idbpath.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_combinatorial.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_combinatorial.cc)
 
 # Application level objects
-set(DEPLOID_APPLICATION_SOURCE_FILES
-        kgd_deploid/kgd_deploid_app/kgd_deploid_main.cc
-        kgd_deploid/kgd_deploid_app/kgd_deploid_app.h
-        kgd_deploid/kgd_deploid_app/kgd_deploid_app.cc
-        kgd_deploid/kgd_deploid_app/kgd_deploid_app.h
-        kgd_deploid/kgd_deploid_app/kgd_deploid_parse.cc)
+set(DECONVOLV_APPLICATION_SOURCE_FILES
+        kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_main.cc
+        kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_app.h
+        kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_app.cc
+        kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_app.h
+        kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_parse.cc)
 
 
-add_library(kgd_deploid_lib STATIC ${DEPLOID_LIB_SOURCE_FILES})
+add_library(kgd_deconvolv_lib STATIC ${DECONVOLV_LIB_SOURCE_FILES})
 
-target_link_libraries(kgd_deploid_lib ${ZLIB_LIBRARIES})
+target_link_libraries(kgd_deconvolv_lib ${ZLIB_LIBRARIES})
 
-add_executable (kgd_deploid ${DEPLOID_APPLICATION_SOURCE_FILES})
+add_executable (kgd_deconvolv ${DECONVOLV_APPLICATION_SOURCE_FILES})
 
-target_link_libraries(kgd_deploid kgd_deploid_lib kgl_genome_lib)
+target_link_libraries(kgd_deconvolv kgd_deconvolv_lib kgl_genome_lib)
