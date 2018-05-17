@@ -333,7 +333,7 @@ set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdpath.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_idbpath.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_combinatorial.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_combinatorial.cc)
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_combinatorial.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_sample.h)
 
 # Application level objects
 set(DECONVOLV_APPLICATION_SOURCE_FILES

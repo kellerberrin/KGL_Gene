@@ -117,19 +117,7 @@ void kgd::McmcMachinery::initializeMcmcChain(bool useIBD) {
 
   }
 
-  mcmcSample_->siteOfTwoSwitchOne = std::vector<double>(nLoci());
-  mcmcSample_->siteOfTwoMissCopyOne = std::vector<double>(nLoci());
-  mcmcSample_->siteOfTwoSwitchTwo = std::vector<double>(nLoci());
-  mcmcSample_->siteOfTwoMissCopyTwo = std::vector<double>(nLoci());
-  mcmcSample_->siteOfOneSwitchOne = std::vector<double>(nLoci());
-  mcmcSample_->siteOfOneMissCopyOne = std::vector<double>(nLoci());
-
-  mcmcSample_->currentsiteOfTwoSwitchOne = std::vector<double>(nLoci());
-  mcmcSample_->currentsiteOfTwoMissCopyOne = std::vector<double>(nLoci());
-  mcmcSample_->currentsiteOfTwoSwitchTwo = std::vector<double>(nLoci());
-  mcmcSample_->currentsiteOfTwoMissCopyTwo = std::vector<double>(nLoci());
-  mcmcSample_->currentsiteOfOneSwitchOne = std::vector<double>(nLoci());
-  mcmcSample_->currentsiteOfOneMissCopyOne = std::vector<double>(nLoci());
+  mcmcSample_->setVectorSize(nLoci());
 
   assert (doutProp());
   assert (doutLLK());
@@ -337,22 +325,13 @@ void kgd::McmcMachinery::runMcmcChain(bool showProgress, bool useIBD, bool notIn
 
   }
 
-  mcmcSample_->hap = currentHap_;
+  mcmcSample_->setHap(currentHap_);
 
   writeLastFwdProb(useIBD);
 
-  dEploidIO_->setFinalProp(mcmcSample_->proportion.back());
+  dEploidIO_->setFinalProp(mcmcSample_->getProportion().back());
 
-  for (size_t atSiteI = 0; atSiteI < nLoci(); atSiteI++) {
-
-    mcmcSample_->siteOfTwoSwitchOne[atSiteI] /= (double) maxIteration_;
-    mcmcSample_->siteOfTwoMissCopyOne[atSiteI] /= (double) maxIteration_;
-    mcmcSample_->siteOfTwoSwitchTwo[atSiteI] /= (double) maxIteration_;
-    mcmcSample_->siteOfTwoMissCopyTwo[atSiteI] /= (double) maxIteration_;
-    mcmcSample_->siteOfOneSwitchOne[atSiteI] /= (double) maxIteration_;
-    mcmcSample_->siteOfOneMissCopyOne[atSiteI] /= (double) maxIteration_;
-
-  }
+  mcmcSample_->divideSiteVectors(static_cast<double>(maxIteration_));
 
   if (notInR) {
 
@@ -360,7 +339,7 @@ void kgd::McmcMachinery::runMcmcChain(bool showProgress, bool useIBD, bool notIn
 
   }
 
-  if (useIBD == true) {
+  if (useIBD) {
 
     for (size_t atSiteI = 0; atSiteI < nLoci(); atSiteI++) {
 
@@ -370,10 +349,10 @@ void kgd::McmcMachinery::runMcmcChain(bool showProgress, bool useIBD, bool notIn
 
     ExecEnv::log().info("Proportion update acceptance rate: {}", acceptUpdate / (kStrain() * 1.0 * maxIteration_));
 
-    dEploidIO_->setInitialProp(averageProportion(mcmcSample_->proportion));
+    dEploidIO_->setInitialProp(averageProportion(mcmcSample_->getProportion()));
     dEploidIO_->setInitialPropWasGiven(true);
     dEploidIO_->setDoUpdateProp(false);
-    dEploidIO_->setInitialHap(mcmcSample_->hap);
+    dEploidIO_->setInitialHap(mcmcSample_->getHap());
     dEploidIO_->setInitialHapWasGiven(true);
 
   }
@@ -427,14 +406,14 @@ void kgd::McmcMachinery::computeDiagnostics() {
 
   dEploidIO_->setmaxLLKs(Utility::sumOfVec(tmpLLKs));
 
-  double sum = std::accumulate(mcmcSample_->sumLLKs.begin(), mcmcSample_->sumLLKs.end(), 0.0);
+  double sum = std::accumulate(mcmcSample_->getSumLLKs().begin(), mcmcSample_->getSumLLKs().end(), 0.0);
 
-  double mean = sum / mcmcSample_->sumLLKs.size();
+  double mean = sum / mcmcSample_->getSumLLKs().size();
 
-  double sq_sum = std::inner_product(mcmcSample_->sumLLKs.begin(), mcmcSample_->sumLLKs.end(),
-                                     mcmcSample_->sumLLKs.begin(), 0.0);
+  double sq_sum = std::inner_product(mcmcSample_->getSumLLKs().begin(), mcmcSample_->getSumLLKs().end(),
+                                     mcmcSample_->getSumLLKs().begin(), 0.0);
 
-  double varLLKs = sq_sum / mcmcSample_->sumLLKs.size() - mean * mean;
+  double varLLKs = sq_sum / mcmcSample_->getSumLLKs().size() - mean * mean;
   double stdev = std::sqrt(varLLKs);
 
   dEploidIO_->setmeanllks(mean);
@@ -455,7 +434,7 @@ void kgd::McmcMachinery::computeDiagnostics() {
 
 }
 
-std::vector<double> kgd::McmcMachinery::averageProportion(std::vector<std::vector<double> > &proportion) {
+std::vector<double> kgd::McmcMachinery::averageProportion(const std::vector<std::vector<double> > &proportion) {
 
   assert(proportion.size() > 0);
 
@@ -661,9 +640,9 @@ void kgd::McmcMachinery::recordMcmcMachinery() {
 
   dout << "***Record mcmc sample " << std::endl;
 
-  mcmcSample_->proportion.push_back(currentProp_);
-  mcmcSample_->sumLLKs.push_back(Utility::sumOfVec(currentLLks_));
-  mcmcSample_->moves.push_back(eventInt_);
+  mcmcSample_->addProportion(currentProp_);
+  mcmcSample_->addSumLLKs(Utility::sumOfVec(currentLLks_));
+  mcmcSample_->addMove(eventInt_);
 
   // Cumulate expectedWSAF for computing the mean expectedWSAF
   for (size_t i = 0; i < cumExpectedWsaf_.size(); i++) {
@@ -819,11 +798,11 @@ void kgd::McmcMachinery::updateSingleHap() {
 
     for (size_t siteI = 0; siteI < length; siteI++) {
 
-      mcmcSample_->siteOfOneSwitchOne[start + siteI] += updating.getOneSwitchOneIndex(siteI);
-      mcmcSample_->siteOfOneMissCopyOne[start + siteI] += updating.getOneMissCopyOneIndex(siteI);
+      mcmcSample_->sumSiteOfOneSwitchOne(start + siteI, updating.getOneSwitchOneIndex(siteI));
+      mcmcSample_->sumSiteOfOneMissCopyOne(start + siteI, updating.getOneMissCopyOneIndex(siteI));
       /// (Keller) These modified from site... to currentsite...
-      mcmcSample_->currentsiteOfOneSwitchOne[start + siteI] = updating.getOneSwitchOneIndex(siteI);
-      mcmcSample_->currentsiteOfOneMissCopyOne[start + siteI] = updating.getOneMissCopyOneIndex(siteI);
+      mcmcSample_->setCurrentsiteOfOneSwitchOne(start + siteI, updating.getOneSwitchOneIndex(siteI));
+      mcmcSample_->setCurrentsiteOfOneMissCopyOne(start + siteI, updating.getOneMissCopyOneIndex(siteI));
 
     }
 
@@ -885,14 +864,15 @@ void kgd::McmcMachinery::updatePairHaps() {
 
     for (size_t siteI = 0; siteI < length; siteI++) {
 
-      mcmcSample_->siteOfTwoSwitchOne[start + siteI] += updating.getTwoSwitchOneIndex(siteI);
-      mcmcSample_->siteOfTwoMissCopyOne[start + siteI] += updating.getTwoMissCopyOneIndex(siteI);
-      mcmcSample_->siteOfTwoSwitchTwo[start + siteI] += updating.getTwoSwitchTwoIndex(siteI);
-      mcmcSample_->siteOfTwoMissCopyTwo[start + siteI] += updating.getTwoMissCopyTwoIndex(siteI);
-      mcmcSample_->currentsiteOfTwoSwitchOne[start + siteI] = updating.getTwoSwitchOneIndex(siteI);
-      mcmcSample_->currentsiteOfTwoMissCopyOne[start + siteI] = updating.getTwoMissCopyOneIndex(siteI);
-      mcmcSample_->currentsiteOfTwoSwitchTwo[start + siteI] = updating.getTwoSwitchTwoIndex(siteI);
-      mcmcSample_->currentsiteOfTwoMissCopyTwo[start + siteI] = updating.getTwoMissCopyTwoIndex(siteI);
+      mcmcSample_->sumSiteOfTwoSwitchOne(start + siteI, updating.getTwoSwitchOneIndex(siteI));
+      mcmcSample_->sumSiteOfTwoMissCopyOne(start + siteI, updating.getTwoMissCopyOneIndex(siteI));
+      mcmcSample_->sumSiteOfTwoSwitchTwo(start + siteI, updating.getTwoSwitchTwoIndex(siteI));
+      mcmcSample_->sumSiteOfTwoMissCopyTwo(start + siteI, updating.getTwoMissCopyTwoIndex(siteI));
+
+      mcmcSample_->setCurrentsiteOfTwoSwitchOne(start + siteI, updating.getTwoSwitchOneIndex(siteI));
+      mcmcSample_->setCurrentsiteOfTwoMissCopyOne(start + siteI, updating.getTwoMissCopyOneIndex(siteI));
+      mcmcSample_->setCurrentsiteOfTwoSwitchTwo(start + siteI, updating.getTwoSwitchTwoIndex(siteI));
+      mcmcSample_->setCurrentsiteOfTwoMissCopyTwo(start + siteI, updating.getTwoMissCopyTwoIndex(siteI));
 
     }
 

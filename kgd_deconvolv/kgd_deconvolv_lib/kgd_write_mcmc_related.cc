@@ -42,19 +42,19 @@ void kgd::DEploidIO::writeMcmcRelated(std::shared_ptr<McmcSample> mcmcSample, bo
   if (useIBD == false) {
 
     writeVcf(mcmcSample);
-    siteOfTwoSwitchOne_ = mcmcSample->siteOfTwoSwitchOne;
-    siteOfTwoMissCopyOne_ = mcmcSample->siteOfTwoMissCopyOne;
-    siteOfTwoSwitchTwo_ = mcmcSample->siteOfTwoSwitchTwo;
-    siteOfTwoMissCopyTwo_ = mcmcSample->siteOfTwoMissCopyTwo;
-    siteOfOneSwitchOne_ = mcmcSample->siteOfOneSwitchOne;
-    siteOfOneMissCopyOne_ = mcmcSample->siteOfOneMissCopyOne;
+    siteOfTwoSwitchOne_ = mcmcSample->getSiteOfTwoSwitchOne();
+    siteOfTwoMissCopyOne_ = mcmcSample->getSiteOfTwoMissCopyOne();
+    siteOfTwoSwitchTwo_ = mcmcSample->getSiteOfTwoSwitchTwo();
+    siteOfTwoMissCopyTwo_ = mcmcSample->getSiteOfTwoMissCopyTwo();
+    siteOfOneSwitchOne_ = mcmcSample->getSiteOfOneSwitchOne();
+    siteOfOneMissCopyOne_ = mcmcSample->getSiteOfOneMissCopyOne();
 
-    finalSiteOfTwoSwitchOne_ = mcmcSample->currentsiteOfTwoSwitchOne;
-    finalSiteOfTwoMissCopyOne_ = mcmcSample->currentsiteOfTwoMissCopyOne;
-    finalSiteOfTwoSwitchTwo_ = mcmcSample->currentsiteOfTwoSwitchTwo;
-    finalSiteOfTwoMissCopyTwo_ = mcmcSample->currentsiteOfTwoMissCopyTwo;
-    finalSiteOfOneSwitchOne_ = mcmcSample->currentsiteOfOneSwitchOne;
-    finalSiteOfOneMissCopyOne_ = mcmcSample->currentsiteOfOneMissCopyOne;
+    finalSiteOfTwoSwitchOne_ = mcmcSample->getCurrentsiteOfTwoSwitchOne();
+    finalSiteOfTwoMissCopyOne_ = mcmcSample->getCurrentsiteOfTwoMissCopyOne();
+    finalSiteOfTwoSwitchTwo_ = mcmcSample->getCurrentsiteOfTwoSwitchTwo();
+    finalSiteOfTwoMissCopyTwo_ = mcmcSample->getCurrentsiteOfTwoMissCopyTwo();
+    finalSiteOfOneSwitchOne_ = mcmcSample->getCurrentsiteOfOneSwitchOne();
+    finalSiteOfOneMissCopyOne_ = mcmcSample->getCurrentsiteOfOneMissCopyOne();
 
     //writeEventCount( );
   } else {
@@ -79,12 +79,12 @@ void kgd::DEploidIO::writeProp(std::shared_ptr<McmcSample> mcmcSample, bool useI
 
   }
 
-  for (size_t i = 0; i < mcmcSample->proportion.size(); i++) {
+  for (size_t i = 0; i < mcmcSample->getProportion().size(); i++) {
 
-    for (size_t ii = 0; ii < mcmcSample->proportion[i].size(); ii++) {
+    for (size_t ii = 0; ii < mcmcSample->getProportionIndex(i).size(); ii++) {
 
-      ofstreamExportTmp_ << std::setw(10) << mcmcSample->proportion[i][ii];
-      ofstreamExportTmp_ << ((ii < (mcmcSample->proportion[i].size() - 1)) ? "\t" : "\n");
+      ofstreamExportTmp_ << std::setw(10) << mcmcSample->getProportionIndex(i, ii);
+      ofstreamExportTmp_ << ((ii < (mcmcSample->getProportionIndex(i).size() - 1)) ? "\t" : "\n");
 
     }
 
@@ -107,9 +107,9 @@ void kgd::DEploidIO::writeLLK(std::shared_ptr<McmcSample> mcmcSample, bool useIB
 
   }
 
-  for (size_t i = 0; i < mcmcSample->sumLLKs.size(); i++) {
+  for (size_t i = 0; i < mcmcSample->getSumLLKs().size(); i++) {
 
-    ofstreamExportTmp_ << mcmcSample->moves[i] << "\t" << mcmcSample->sumLLKs[i] << std::endl;
+    ofstreamExportTmp_ << mcmcSample->getMovesIndex(i) << "\t" << mcmcSample-> getSumLLKsIndex(i) << std::endl;
 
   }
 
@@ -147,10 +147,10 @@ void kgd::DEploidIO::writeHap(std::shared_ptr<McmcSample> mcmcSample, bool useIB
 
       ofstreamExportTmp_ << chrom_[chromI] << "\t" << (int) position_[chromI][posI] << "\t";
 
-      for (size_t ii = 0; ii < mcmcSample->hap[siteIndex].size(); ii++) {
+      for (size_t ii = 0; ii < mcmcSample->getHapIndex(siteIndex).size(); ii++) {
 
-        ofstreamExportTmp_ << mcmcSample->hap[siteIndex][ii];
-        ofstreamExportTmp_ << ((ii < (mcmcSample->hap[siteIndex].size() - 1)) ? "\t" : "\n");
+        ofstreamExportTmp_ << mcmcSample->getHapIndex(siteIndex, ii);
+        ofstreamExportTmp_ << ((ii < (mcmcSample->getHapIndex(siteIndex).size() - 1)) ? "\t" : "\n");
 
       }
 
@@ -212,7 +212,7 @@ void kgd::DEploidIO::writeVcf(std::shared_ptr<McmcSample> mcmcSample) {
     (*writeTo) << "##Proportion of strain "
                << (useVcf() ? sampleName : "h")
                << "." << (ii + 1)
-               << "=" << mcmcSample->proportion.back()[ii] << std::endl;
+               << "=" << mcmcSample->getProportionIndex(ii).back() << std::endl;
 
   }
 
@@ -267,10 +267,10 @@ void kgd::DEploidIO::writeVcf(std::shared_ptr<McmcSample> mcmcSample) {
                    << "GT" << "\t";
       }
 
-      for (size_t ii = 0; ii < mcmcSample->hap[siteIndex].size(); ii++) {
+      for (size_t ii = 0; ii < mcmcSample->getHapIndex(siteIndex).size(); ii++) {
 
-        (*writeTo) << mcmcSample->hap[siteIndex][ii];
-        (*writeTo) << ((ii < (mcmcSample->hap[siteIndex].size() - 1)) ? "\t" : "\n");
+        (*writeTo) << mcmcSample->getHapIndex(siteIndex, ii);
+        (*writeTo) << ((ii < (mcmcSample->getHapIndex(siteIndex).size() - 1)) ? "\t" : "\n");
 
       }
 

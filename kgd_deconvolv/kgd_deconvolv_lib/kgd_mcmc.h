@@ -35,51 +35,13 @@
 #include "kgd_panel.h"
 #include "randomSample.hpp"   // src/codeCogs/randomSample.hpp
 #include "kgd_ibdpath.h"
+#include "kgd_mcmc_sample.h"
+
 
 
 namespace kellerberrin {    // organization level namespace
 namespace deconvolv {          // project level namespace
 
-
-
-class McmcSample {
-#ifdef UNITTEST
-  friend class TestMcmcMachinery;
-#endif
-
-public:
-
-  McmcSample() = default;
-  ~McmcSample() = default;
-
-  void clear() {
-
-    proportion.clear();
-    sumLLKs.clear();
-    moves.clear();
-
-  }
-
-  std::vector<double> siteOfTwoSwitchOne;
-  std::vector<double> siteOfTwoMissCopyOne;
-  std::vector<double> siteOfTwoSwitchTwo;
-  std::vector<double> siteOfTwoMissCopyTwo;
-  std::vector<double> siteOfOneSwitchOne;
-  std::vector<double> siteOfOneMissCopyOne;
-
-  std::vector<double> currentsiteOfTwoSwitchOne;
-  std::vector<double> currentsiteOfTwoMissCopyOne;
-  std::vector<double> currentsiteOfTwoSwitchTwo;
-  std::vector<double> currentsiteOfTwoMissCopyTwo;
-  std::vector<double> currentsiteOfOneSwitchOne;
-  std::vector<double> currentsiteOfOneMissCopyOne;
-  std::vector<std::vector<double> > proportion;
-  std::vector<std::vector<double> > hap;
-  std::vector<double> sumLLKs;
-
-  std::vector<int> moves;
-
-};
 
 
 class McmcMachinery {
@@ -211,7 +173,7 @@ private:
 
   std::vector<double> computeLlkAtAllSites(double err = 0.01);
 
-  std::vector<double> averageProportion(std::vector<std::vector<double> > &proportion);
+  std::vector<double> averageProportion(const std::vector<std::vector<double> > &proportion);
 
   void ibdInitializeEssentials();
 
