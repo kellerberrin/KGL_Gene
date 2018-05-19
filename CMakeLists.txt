@@ -331,9 +331,9 @@ set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_lib/kgd_hprior.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_hprior.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdpath.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_idbpath.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdpath.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_combinatorial.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_combinatorial.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_sample.h)
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_combinatorial.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_sample.h kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdrecombprobs.h kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdrecombprobs.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_types.h kgd_deconvolv/kgd_deconvolv_lib/kgd_allelefreq.h kgd_deconvolv/kgd_deconvolv_lib/kgd_allelefreq.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_alleleread.h kgd_deconvolv/kgd_deconvolv_lib/kgd_alleleread.cc)
 
 # Application level objects
 set(DECONVOLV_APPLICATION_SOURCE_FILES

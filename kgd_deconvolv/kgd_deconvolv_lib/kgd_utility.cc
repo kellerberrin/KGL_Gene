@@ -321,3 +321,15 @@ double kgd::Utility::rBeta(double alpha, double beta, std::shared_ptr<RandomGene
   return y;
 
 }
+
+
+// Returns trimmed string.
+std::string kgd::Utility::trimWhiteSpace(const std::string& s) {
+
+  std::string clean_string;
+  auto lambda_not_whitespace = [](unsigned char c){ return not std::isspace(c); };
+  std::copy_if(s.begin(), s.end(), back_inserter(clean_string), lambda_not_whitespace);
+
+  return clean_string;
+
+}

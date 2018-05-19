@@ -187,10 +187,16 @@ public:
 
   static double rBeta(double alpha, double beta, std::shared_ptr<RandomGenerator> randomGenerator);
 
+// Returns trimmed string.
+  static std::string trimWhiteSpace(const std::string& s);
+
+
 private: /// Deprecated utility functions are banished here.
 
   static void normalizeByMax(std::vector<double> &array);
 //double betaDistConst( double a , double b);
+
+
 
 };
 

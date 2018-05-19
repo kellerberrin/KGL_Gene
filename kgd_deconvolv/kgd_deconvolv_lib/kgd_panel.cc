@@ -160,13 +160,13 @@ void kgd::Panel::buildExamplePanel2() {
 
 void kgd::Panel::buildExamplePanelContent() {
 
-  setContent(std::vector<double>({0, 0, 0, 1}));
-  setContent(std::vector<double>({0, 0, 0, 1}));
-  setContent(std::vector<double>({0, 0, 0, 1}));
-  setContent(std::vector<double>({0, 0, 0, 1}));
-  setContent(std::vector<double>({0, 1, 1, 0}));
-  setContent(std::vector<double>({0, 0, 1, 0}));
-  setContent(std::vector<double>({0, 0, 1, 0}));
+  addContent(std::vector<double>({0, 0, 0, 1}));
+  addContent(std::vector<double>({0, 0, 0, 1}));
+  addContent(std::vector<double>({0, 0, 0, 1}));
+  addContent(std::vector<double>({0, 0, 0, 1}));
+  addContent(std::vector<double>({0, 1, 1, 0}));
+  addContent(std::vector<double>({0, 0, 1, 0}));
+  addContent(std::vector<double>({0, 0, 1, 0}));
   setLoci(getContent().size());
   setInfoLines(getContent().back().size());
   setTruePanelSize(getInfoLines());
@@ -248,47 +248,3 @@ void kgd::Panel::updatePanelWithHaps(size_t inbreedingPanelSizeSetTo,
 
 }
 
-
-void kgd::IBDrecombProbs::computeRecombProbs(double averageCentimorganDistance,
-                                             double G,
-                                             bool useConstRecomb,
-                                             double constRecombProb) {
-
-  assert(pRec_.size() == 0);
-  assert(pNoRec_.size() == 0);
-
-  double averageMorganDistance = averageCentimorganDistance * 100;
-  double geneticDistance;
-  double rho;
-
-  for (size_t i = 0; i < getPosition().size(); i++) {
-
-    for (size_t j = 1; j < getPosition()[i].size(); j++) {
-
-      geneticDistance = (getPositionIndexFloat(i,j) - getPositionIndexFloat(i, j - 1)) / averageMorganDistance;
-      //rho = geneticDistance * 2 * Ne;
-      rho = geneticDistance * G;
-      double pRecTmp = (useConstRecomb) ? constRecombProb : 1.0 - exp(-rho);
-      pRec_.push_back(pRecTmp);
-      double pNoRecTmp = 1.0 - pRecTmp;
-      pNoRec_.push_back(pNoRecTmp);
-
-    }
-
-    pRec_.push_back(1.0);
-    pNoRec_.push_back(0.0);
-
-  }
-
-  assert(pRec_.size() == nLoci_);
-  assert(pNoRec_.size() == nLoci_);
-
-}
-
-
-
-//vector<vector<double>> outtrans(out[0].size(),
-//vector<double>(out.size()));
-//for (size_t i = 0; i < out.size(); ++i)
-//for (size_t j = 0; j < out[0].size(); ++j)
-//outtrans[j][i] = out[i][j];

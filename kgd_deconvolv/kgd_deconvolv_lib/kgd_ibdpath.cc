@@ -41,12 +41,12 @@ void kgd::IBDpath::init(DEploidIO &dEploidIO, std::shared_ptr<RandomGenerator> r
   ibd_configure_path_ = std::vector<size_t>(nLoci());
 
   // initialize recombination probabilities;
-  ibd_recomb_probs_ = IBDrecombProbs(dEploidIO.getPosition(), dEploidIO.nLoci());
-
-  ibd_recomb_probs_.computeRecombProbs(dEploidIO.averageCentimorganDistance(),
-                                       dEploidIO.parameterG(),
-                                       dEploidIO.useConstRecomb(),
-                                       dEploidIO.constRecombProb());
+  ibd_recomb_probs_ = std::make_shared<const IBDRecombProbs>(dEploidIO.getPosition(),
+                                                             dEploidIO.nLoci(),
+                                                             dEploidIO.averageCentimorganDistance(),
+                                                             dEploidIO.parameterG(),
+                                                             dEploidIO.useConstRecomb(),
+                                                             dEploidIO.constRecombProb());
 
   current_IBD_path_change_at_ = std::vector<double>(nLoci());
 
@@ -109,8 +109,8 @@ void kgd::IBDpath::ibdSamplePath(const std::vector<double>& statePrior) {
 
     for (size_t i = 0; i < prop.size(); i++) {
 
-      prop[i] = vNoRecomb[i] * ibd_recomb_probs_.getNoRecIndex(lociIdx) +
-                vRecomb[i] * ibd_recomb_probs_.getRecIndex(lociIdx) * statePrior[ibd_configure_path_[lociIdx + 1]];
+      prop[i] = vNoRecomb[i] * ibd_recomb_probs_->getNoRecombProbAtLoci(lociIdx) +
+                vRecomb[i] * ibd_recomb_probs_->getRecombProbAtLoci(lociIdx) * statePrior[ibd_configure_path_[lociIdx + 1]];
 
     }
 
@@ -225,12 +225,12 @@ void kgd::IBDpath::computeIbdPathBwdProb(const std::vector<double>& proportion,
 
       for (size_t j = 0; j < lk.size(); j++) {
 
-        tmpBw[i] += (lk[j] * bwd_.back()[j]) * ibd_recomb_probs_.getRecIndex(siteI - 1);
+        tmpBw[i] += (lk[j] * bwd_.back()[j]) * ibd_recomb_probs_->getRecombProbAtLoci(siteI - 1);
 
       }
 
       tmpBw[i] *= statePrior[i];
-      tmpBw[i] += lk[i] * (ibd_recomb_probs_.getNoRecIndex(siteI - 1)) * vNoRecomb[i];
+      tmpBw[i] += lk[i] * (ibd_recomb_probs_->getNoRecombProbAtLoci(siteI - 1)) * vNoRecomb[i];
       tmpBw[i] *= h_prior_.getPriorProb()[i][siteI];
 
     }
@@ -267,7 +267,8 @@ void kgd::IBDpath::computeIbdPathFwdProb(const std::vector<double>& proportion, 
 
     for (size_t i = 0; i < h_prior_.nState(); i++) {
 
-      vPrior[i] = ((vNoRec[i] * ibd_recomb_probs_.getNoRecIndex(siteI)) + (f_sum_ * ibd_recomb_probs_.getRecIndex(siteI) * statePrior[i]))
+      vPrior[i] = ((vNoRec[i] * ibd_recomb_probs_->getNoRecombProbAtLoci(siteI)) + (f_sum_ *
+      ibd_recomb_probs_->getRecombProbAtLoci(siteI) * statePrior[i]))
                   * h_prior_.getPriorProbTrans()[siteI][i];
 
     }

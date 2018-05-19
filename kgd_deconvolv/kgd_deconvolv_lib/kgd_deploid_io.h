@@ -65,8 +65,6 @@ public:
   DEploidIO();
   ~DEploidIO() = default;
 
-
-
   // Access Routines.
   std::shared_ptr<Panel> getPanel() { return panel_; }
 
@@ -185,10 +183,8 @@ private:
   size_t nMcmcSample_;
   size_t mcmcMachineryRate_;
   double mcmcBurn_;
-  size_t nLoci_;
-  double ibdLLK_;
-  double llkFromInitialHap_;
   size_t randomSeed_;
+
 
   // Parameters
   double missCopyProb_;
@@ -213,6 +209,8 @@ private:
   double effectiveKstrain_;
   int inferredKstrain_;
   double adjustedEffectiveKstrain_;
+  double ibdLLK_;
+  double llkFromInitialHap_;
 
   std::vector<double> initialProp_;
   std::vector<double> finalProp_;
@@ -223,7 +221,7 @@ private:
   std::vector<double> plaf_;
   std::vector<double> refCount_;
   std::vector<double> altCount_;
-
+  size_t nLoci_;
 
   std::vector<double> IBDpathChangeAt_;
   std::vector<double> finalIBDpathChangeAt_;

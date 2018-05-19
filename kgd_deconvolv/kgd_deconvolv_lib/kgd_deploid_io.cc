@@ -605,8 +605,11 @@ void kgd::DEploidIO::readPanel() {
 
   }
 
-  panel_->computeRecombProbs(averageCentimorganDistance(), parameterG(), useConstRecomb(), constRecombProb(),
-                            forbidCopyFromSame());
+  panel_->computeRecombProbs(averageCentimorganDistance(),
+                             parameterG(),
+                             useConstRecomb(),
+                             constRecombProb(),
+                             forbidCopyFromSame());
 
   panel_->checkForExceptions(nLoci(), panelFileName_);
 

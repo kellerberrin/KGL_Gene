@@ -14,6 +14,7 @@
 #include "kgd_mersenne_twister.h"
 #include "kgd_deploid_io.h"
 #include "kgd_hprior.h"
+#include "kgd_ibdrecombprobs.h"
 
 
 namespace kellerberrin {    // organization level namespace
@@ -45,9 +46,9 @@ public:
 private:
 
   std::shared_ptr<RandomGenerator> ibd_random_generator_;
+  std::shared_ptr<const IBDRecombProbs> ibd_recomb_probs_;
   double f_sum_;
   Hprior h_prior_;
-  IBDrecombProbs ibd_recomb_probs_;
   std::vector<std::vector<double> > ibd_trans_probs_;
   std::vector<std::vector<double> > fm_;
   std::vector<double> f_sum_state_;

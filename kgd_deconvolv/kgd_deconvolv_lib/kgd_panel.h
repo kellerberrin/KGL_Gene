@@ -105,41 +105,6 @@ private:
 
 
 
-
-class IBDrecombProbs : public VariantIndex {
-
-#ifdef UNITTEST
-  friend class TestIBDpath;
-#endif
-
-public:
-
-  IBDrecombProbs() = default;
-  IBDrecombProbs(std::vector<std::vector<int> > position, size_t nLoci) {
-
-    setPosition(position);
-    setLoci(nLoci);
-
-  }
-
-  ~IBDrecombProbs() = default;
-
-  double getRecIndex(size_t index) const { return pRec_[index]; }
-  double getNoRecIndex(size_t index) const { return pNoRec_[index]; }
-
-  // Methods
-  void computeRecombProbs(double averageCentimorganDistance, double Ne, bool useConstRecomb, double constRecombProb);
-
-private:
-
-  std::vector<double> pRec_;
-  std::vector<double> pNoRec_; // = 1.0 - pRec;
-
-
-};
-
-
-
 }   // organization level namespace
 }   // project level namespace
 

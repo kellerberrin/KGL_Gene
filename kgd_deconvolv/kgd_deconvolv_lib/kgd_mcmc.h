@@ -65,9 +65,8 @@ private:
   /* Variables */
   std::shared_ptr<DEploidIO> dEploidIO_;
   std::shared_ptr<Panel> panel_;
+
   size_t kStrain_;
-
-
   size_t nLoci_;
 
   double burnIn_;
@@ -75,12 +74,12 @@ private:
   size_t mcmcThresh_;
   size_t McmcMachineryRate_;
   int eventInt_;
+  size_t seed_;
 
   size_t strainIndex_;
   size_t strainIndex1_;
   size_t strainIndex2_;
 
-  size_t seed_;
   std::shared_ptr<RandomGenerator> hapRg_;
   std::shared_ptr<RandomGenerator> mcmcEventRg_;
   std::shared_ptr<RandomGenerator> propRg_;

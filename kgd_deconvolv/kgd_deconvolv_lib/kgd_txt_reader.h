@@ -62,7 +62,7 @@ public: // move the following to private
   const std::vector<double>& getInfo() const { return info_; }
 
   void setInfoLines(size_t lines) { nInfoLines_ = lines; }
-  void setContent(const std::vector<double>& content) { content_.push_back(content); }
+  void addContent(const std::vector<double>& content) { content_.push_back(content); }
   std::vector<std::vector<double> >& setContent() { return content_; }
 
 private:
