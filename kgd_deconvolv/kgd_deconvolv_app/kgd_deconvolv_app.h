@@ -29,7 +29,7 @@ struct DeconvolvArgs {
   size_t MCMCSampleRate{5};
   long MCMCRandomSeed{1};
   double MCMCBurnRate{0.5};
-  bool noPanelFlag{true};
+  bool noPanelFlag{false};
   bool identityByDescentFlag{false};
   bool identityByDescentPainting{false};
   bool inbreedingProbabilitiesFlag{false};

@@ -93,6 +93,8 @@ void kgd::TxtReader::readFromFileBase(const char inchar[]) {
 
   in_file.close();
 
+  allele_reader_.parseFile(fileName_);
+
   addPosition(tmpPosition_);
 
   setLoci(content_.size());
@@ -107,7 +109,7 @@ void kgd::TxtReader::readFromFileBase(const char inchar[]) {
   IndexOfChromStarts();
 
   assert (tmpChromInex_ > -1);
-  assert (chrom_.size() == position_.size());
+  assert (getChrom().size() == getPosition().size());
   assert(getDoneIndexOfChromStarts());
 
 }
@@ -133,12 +135,12 @@ void kgd::TxtReader::extractChrom(std::string &tmp_str) {
 
     tmpChromInex_++;
 
-    assert (chrom_.size() == 0);
+    assert (getChrom().size() == 0);
 
     addChrom(tmp_str);
 
     assert (tmpPosition_.size() == 0);
-    assert (position_.size() == 0);
+    assert (getPosition().size() == 0);
 
   }
 

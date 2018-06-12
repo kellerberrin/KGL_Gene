@@ -152,7 +152,7 @@ void kgd::McmcMachinery::initializeHap() {
 
   }
 
-  assert(currentHap_.size() == dEploidIO_->plaf_.size());
+  assert(currentHap_.size() == dEploidIO_->getPlaf().size());
 
 }
 

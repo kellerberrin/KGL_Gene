@@ -84,7 +84,7 @@ void kgd::Panel::computeRecombProbs(double averageCentimorganDistance,
   double geneticDistance;
   double rho;
   double nPanelDouble = (double) truePanelSize();
-  double nPanlelMinus1 = nPanelDouble - 1.0;
+  double nPanelMinus1 = nPanelDouble - 1.0;
 
   for (size_t i = 0; i < getPosition().size(); i++) {
 
@@ -103,8 +103,7 @@ void kgd::Panel::computeRecombProbs(double averageCentimorganDistance,
       double pNoRecTmp = 1.0 - pRecTmp;
       pNoRec_.push_back(pNoRecTmp);
 
-      double secondPRecEachHapTmp = (forbidCopyFromSame) ? (pRecTmp / nPanlelMinus1)
-                                                         : pRecEachHapTmp; // allowing copy from the same
+      double secondPRecEachHapTmp = (forbidCopyFromSame) ? (pRecTmp / nPanelMinus1) : pRecEachHapTmp; // allowing copy from the same
 
       pRecRec_.push_back(pRecEachHapTmp * secondPRecEachHapTmp);
       pRecNoRec_.push_back(secondPRecEachHapTmp * pNoRecTmp);
@@ -116,18 +115,18 @@ void kgd::Panel::computeRecombProbs(double averageCentimorganDistance,
     pRecEachHap_.push_back(1.0 / nPanelDouble);
     pNoRec_.push_back(0.0);
     pRecRec_.push_back(
-    ((forbidCopyFromSame) ? (1.0 / nPanelDouble / nPanlelMinus1) : (1.0 / nPanelDouble / nPanelDouble)));
+    ((forbidCopyFromSame) ? (1.0 / nPanelDouble / nPanelMinus1) : (1.0 / nPanelDouble / nPanelDouble)));
     pRecNoRec_.push_back(0.0);
     pNoRecNoRec_.push_back(0.0);
 
   }
 
-  assert(pRec_.size() == nLoci_);
-  assert(pRecEachHap_.size() == nLoci_);
-  assert(pNoRec_.size() == nLoci_);
-  assert(pRecRec_.size() == nLoci_);
-  assert(pRecNoRec_.size() == nLoci_);
-  assert(pNoRecNoRec_.size() == nLoci_);
+  assert(pRec_.size() == getLoci());
+  assert(pRecEachHap_.size() == getLoci());
+  assert(pNoRec_.size() == getLoci());
+  assert(pRecRec_.size() == getLoci());
+  assert(pRecNoRec_.size() == getLoci());
+  assert(pNoRecNoRec_.size() == getLoci());
 
 }
 
@@ -197,7 +196,7 @@ void kgd::Panel::initializeUpdatePanel(size_t inbreedingPanelSizeSetTo) {
 
     }
 
-    assert(inbreedingPanelSizeSetTo == content_[siteI].size());
+    assert(inbreedingPanelSizeSetTo == getContent()[siteI].size());
 
   }
 

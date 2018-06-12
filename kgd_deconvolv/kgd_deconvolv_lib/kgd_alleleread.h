@@ -30,14 +30,17 @@ public: // move the following to private
 private:
 
   GenomeAlleleVector genome_allele_vector_;
+  std::vector<std::string> headers_;
 
-  constexpr static const char COMMENT_CHARACTER_ = '#';
+  constexpr static const char COMMENT_CHARACTER_ = '!';
+  constexpr static const char HEADER_CHARACTER_ = '#';
   constexpr static const char* DELIMITER_CHARACTERS_ = "\t,"; // accept tabbed and csv files.
+  constexpr static const size_t MINIMUM_FIELD_COUNT_ = 3;  // #chrom offset value
 
   // Methods
 
   bool parseDataLine(const std::vector<std::string>& text_fields);
-
+  bool parseHeaderLine(const std::vector<std::string>& text_fields);
 
 };
 

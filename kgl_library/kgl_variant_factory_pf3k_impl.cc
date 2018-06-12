@@ -132,7 +132,37 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
         size_t A_allele = std::stoll(gt_vector[0]);
         size_t B_allele = std::stoll(gt_vector[1]);
 
+        // Get ad allele depths.
+        std::vector<std::string> ad_vector;
+        ParseVCFMiscImpl::tokenize(genotype_parser.getFormatString(recordParser.ADOffset(), *it), AD_FIELD_SEPARATOR_, ad_vector);
+        // Allele depths should be the number of alleles + the reference
+        if (ad_vector.size() != (recordParser.alleles().size() + 1)) {
+
+          ExecEnv::log().error("Parsing Pf3k VCF, Expected:{} AD allele depths, actually:{}",
+                               (recordParser.alleles().size() + 1), ad_vector.size());
+          continue;
+
+        }
+
+        std::vector<size_t> ad_count_vector;
+        size_t ad_total_count = 0;
+        for (auto depth_count_text : ad_vector) {
+
+          if (depth_count_text.find_first_not_of(DIGITS_) !=  std::string::npos) {
+
+            ExecEnv::log().error("Parsing Pf3k VCF, Expected numeric value AD allele depths, actually:{}", depth_count_text);
+            continue;
+
+          }
+
+          size_t ad_count = std::stoll(depth_count_text);
+          ad_total_count += ad_count;
+          ad_count_vector.push_back(ad_count);
+
+        }
+
         const std::string &genome_name = getGenomeNames()[genotype_count];
+
         bool valid_record = vqslod >= MIN_VQSLOD_QUALITY_
                             and recordParser.quality() >= MIN_QUALITY_
                             and GQ_value >= MIN_GQ_QUALITY_
@@ -141,8 +171,16 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
 
         if (valid_record and A_allele > 0) {
 
-          const std::string allele = recordParser.alleles()[A_allele-1];
+          size_t allele_index = A_allele - 1;   // 0 is the reference
+
+          const std::string allele = recordParser.alleles()[allele_index];
+
           if (allele != UPSTREAM_ALLELE_) {
+
+            // Evidence object
+            size_t ref_count = ad_count_vector[0];
+            size_t alt_count = ad_count_vector[A_allele];
+            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(ref_count, alt_count, DP_value, GQ_value, recordParser.quality()));
 
             // process A allele
             std::vector<CigarEditItem> parsed_cigar;
@@ -156,7 +194,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
                             recordParser.reference(),
                             allele,
                             GQ_value,
-                            nullptr,
+                            evidence_ptr,
                             record_variants);
 
             variant_count_ += parsed_cigar.size();
@@ -167,8 +205,15 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
 
         if (valid_record and B_allele > 0) {
 
-          const std::string allele = recordParser.alleles()[B_allele-1];
+          size_t allele_index = B_allele - 1;   // 0 is the reference
+
+          const std::string allele = recordParser.alleles()[allele_index];
           if (allele != UPSTREAM_ALLELE_) {
+
+            // Evidence object
+            size_t ref_count = ad_count_vector[0];
+            size_t alt_count = ad_count_vector[B_allele];
+            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(ref_count, alt_count, DP_value, GQ_value, recordParser.quality()));
 
             // process B allele
             std::vector<CigarEditItem> parsed_cigar;
@@ -182,7 +227,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
                             recordParser.reference(),
                             allele,
                             GQ_value,
-                            nullptr,
+                            evidence_ptr,
                             record_variants);
 
             variant_count_ += parsed_cigar.size();

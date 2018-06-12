@@ -53,8 +53,8 @@ public:
   ~Panel() override = default;
 
   // Access functions.
-  size_t truePanelSize() const { return this->truePanelSize_; }
-  size_t inbreedingPanelSize() const { return this->inbreedingPanelSize_; }
+  size_t truePanelSize() const { return truePanelSize_; }
+  size_t inbreedingPanelSize() const { return inbreedingPanelSize_; }
   const std::vector<double>& getRec() const { return pRec_; }
   double getRecIndex(size_t index) const { return pRec_[index]; }
   double getRecEachHapIndex(size_t index) const { return pRecEachHap_[index]; }

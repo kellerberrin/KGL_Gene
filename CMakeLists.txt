@@ -16,8 +16,8 @@ include_directories(/usr/include
 
 # add boost library directories
 #set(BOOST_ROOT /usr/lib/boost)
-set(BOOST_INCLUDEDIR /usr/local/include)
-set(BOOST_LIBRARYDIR /usr/local/lib/boost/lib)
+#set(BOOST_INCLUDEDIR /usr/local/include)
+#set(BOOST_LIBRARYDIR /usr/local/lib/boost/lib)
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME ON)
@@ -41,9 +41,9 @@ set(CMAKE_EXE_LINKER_FLAGS_PROFILE "-pg -g -O3")
 set(CMAKE_ERROR_WARNING_FLAGS "-std=c++17 -Wall -pthread -Wextra -Wpedantic -Wstrict-aliasing -Wno-variadic-macros")
 
 # Actually set the g++ flags.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_RELEASE}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_RELEASE}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_DEBUG}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_DEBUG}")
 
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../..)
@@ -333,7 +333,15 @@ set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdpath.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdpath.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_combinatorial.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_combinatorial.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_sample.h kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdrecombprobs.h kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdrecombprobs.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_types.h kgd_deconvolv/kgd_deconvolv_lib/kgd_allelefreq.h kgd_deconvolv/kgd_deconvolv_lib/kgd_allelefreq.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_alleleread.h kgd_deconvolv/kgd_deconvolv_lib/kgd_alleleread.cc)
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_combinatorial.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_sample.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdrecombprobs.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdrecombprobs.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_types.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_allelefreq.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_allelefreq.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_alleleread.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_alleleread.cc)
 
 # Application level objects
 set(DECONVOLV_APPLICATION_SOURCE_FILES

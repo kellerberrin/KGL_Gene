@@ -160,7 +160,7 @@ void kgd::DEploidIO::writeHap(std::shared_ptr<McmcSample> mcmcSample, bool useIB
 
   }
 
-  assert (siteIndex == mcmcSample->hap.size());
+  assert (siteIndex == mcmcSample->getHap().size());
   ofstreamExportTmp_.close();
 
 }
@@ -280,7 +280,7 @@ void kgd::DEploidIO::writeVcf(std::shared_ptr<McmcSample> mcmcSample) {
 
   }
 
-  assert (siteIndex == mcmcSample->hap.size());
+  assert (siteIndex == mcmcSample->getHap().size());
 
   if (compressVcf()) {
 

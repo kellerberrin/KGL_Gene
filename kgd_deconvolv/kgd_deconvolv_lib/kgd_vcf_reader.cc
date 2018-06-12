@@ -44,7 +44,7 @@ kgd::VcfReader::VcfReader(std::string fileName) {
   getChromList();
   IndexOfChromStarts();
 
-  assert(doneGetIndexOfChromStarts_);
+  assert(getDoneIndexOfChromStarts());
 
 }
 
@@ -281,8 +281,8 @@ void kgd::VcfReader::getChromList() {
   InitChrom();
   InitPosition();
 
-  assert (chrom_.size() == (size_t) 0);
-  assert (position_.size() == (size_t) 0);
+  assert (getChrom().size() == (size_t) 0);
+  assert (getPosition().size() == (size_t) 0);
 
   std::string previousChrom("");
   std::vector<int> positionOfChrom_;
@@ -304,7 +304,7 @@ void kgd::VcfReader::getChromList() {
 
   addChrom(previousChrom);
   addPosition(positionOfChrom_);
-  assert (position_.size() == chrom_.size());
+  assert (getPosition().size() == getChrom().size());
 
 }
 

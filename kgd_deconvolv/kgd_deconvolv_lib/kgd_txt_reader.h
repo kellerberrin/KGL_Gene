@@ -28,6 +28,7 @@
 #define KGD_TXTREADER_H
 
 
+#include "kgd_alleleread.h"
 #include "kgd_variant_index.h"
 #include "kgd_exceptions.h"
 
@@ -79,6 +80,8 @@ private:
   int tmpChromInex_;
 
   std::string fileName_;
+
+  AlleleReader allele_reader_;
 
   // Methods
   void extractChrom(std::string &tmp_str);

@@ -139,6 +139,43 @@ private:
 
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Basic count evidence
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class CountEvidence : public VariantEvidence {
+
+public:
+
+  explicit CountEvidence(size_t ref_count,
+                         size_t alt_count,
+                         size_t DP_count,
+                         Phred_t GQ_value,
+                         Phred_t quality ) : ref_count_(ref_count),
+                                             alt_count_(alt_count),
+                                             DP_count_(DP_count),
+                                             GQ_value_(GQ_value),
+                                             quality_(quality) {}
+  virtual ~CountEvidence() = default;
+
+  size_t refCount() const { return ref_count_; }
+  size_t altCount() const { return alt_count_; }
+  size_t DPCount() const { return DP_count_; }
+  Phred_t GQValue() const { return GQ_value_; }
+
+  std::string output(char, VariantOutputIndex) const override { return "not defined"; }
+  virtual Phred_t calculateQuality() const override { return quality_; }
+
+private:
+
+  size_t ref_count_;
+  size_t alt_count_;
+  size_t DP_count_;
+  Phred_t GQ_value_;
+  Phred_t quality_;
+
+};
 
 
 }   // namespace genome

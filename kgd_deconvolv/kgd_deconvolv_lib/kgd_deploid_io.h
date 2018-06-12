@@ -326,6 +326,7 @@ private:
   void setForbidCopyFromSame(const bool forbid) { forbidCopyFromSame_ = forbid; }
   bool usePanel() const { return usePanel_; }
 
+
   // log and export results
   void writeRecombProb(std::shared_ptr<Panel> panel);
   void writeIBDpostProb(const std::vector<std::vector<double> > &reshapedProbs, std::vector<std::string> header);
