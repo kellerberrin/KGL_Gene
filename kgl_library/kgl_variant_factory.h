@@ -35,7 +35,6 @@ public:
                          const std::string& genome_name,
                          const std::string& variant_file_name,
                          Phred_t read_quality,
-                         Phred_t variant_quality,
                          NucleotideReadCount_t min_read_count,
                          double min_proportion) const;
 
@@ -44,7 +43,6 @@ public:
                        std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
                        const std::string& genome_name,
                        const std::string& variant_file_name,
-                       Phred_t read_quality,
                        Phred_t variant_quality,
                        NucleotideReadCount_t min_read_count,
                        double min_proportion) const;
@@ -67,7 +65,6 @@ private:
                                                          const std::string& genome_name,
                                                          const std::string& sam_file_name,
                                                          Phred_t read_quality,
-                                                         Phred_t variant_quality,
                                                          NucleotideReadCount_t min_read_count,
                                                          double min_proportion) const;
 
@@ -75,7 +72,6 @@ private:
                                                          const std::string& genome_name,
                                                          const std::string& sam_file_name,
                                                          Phred_t read_quality,
-                                                         Phred_t variant_quality,
                                                          NucleotideReadCount_t min_read_count,
                                                          double min_proportion) const;
 

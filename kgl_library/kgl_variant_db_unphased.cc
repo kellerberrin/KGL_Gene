@@ -308,4 +308,26 @@ bool kgl::UnphasedPopulation::getUnphasedVariants(const GenomeId_t& genome_id,
 }
 
 
+void kgl::UnphasedPopulation::popStatistics() const {
 
+  for (auto genome : getMap()) {
+
+    ExecEnv::log().info("Genome: {}, Unphased Variant Count:{}", genome.first, genome.second->variantCount());
+
+  }
+
+}
+
+std::vector<kgl::GenomeId_t> kgl::UnphasedPopulation::genomeList() const {
+
+  std::vector<kgl::GenomeId_t> genome_list;
+
+  for (auto genome : getMap()) {
+
+    genome_list.push_back(genome.first);
+
+  }
+
+  return genome_list;
+
+}

@@ -13,6 +13,7 @@
 #include "kgl_alphabet_amino.h"
 #include "kgl_genome_db.h"
 #include "kgl_sequence_base.h"
+#include "kgl_variant_evidence.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,24 +73,22 @@ public:
                   const ContigId_t& contig_id,
                   PhaseId_t phase_id,
                   ContigOffset_t contig_offset,
-                  Phred_t quality) : genome_id_(genome_id),
-                                     contig_id_(contig_id),
-                                     phase_id_(phase_id),
-                                     contig_offset_(contig_offset),
-                                     quality_(quality) { }
+                  std::shared_ptr<const VariantEvidence> evidence_ptr) : genome_id_(genome_id),
+                                                                         contig_id_(contig_id),
+                                                                         phase_id_(phase_id),
+                                                                         contig_offset_(contig_offset),
+                                                                         evidence_ptr_(evidence_ptr) {}
   virtual ~VariantSequence() = default;
 
   const GenomeId_t& genomeId() const { return genome_id_; }
   const ContigId_t& contigId() const { return contig_id_; }
+  ContigOffset_t offset() const { return contig_offset_; }
   PhaseId_t phaseId() const { return phase_id_; }
   void phaseId(PhaseId_t phase_id) { phase_id_ = phase_id; }
 
+  std::shared_ptr<const VariantEvidence> evidence() const { return evidence_ptr_; }
+
   std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
-
-  ContigOffset_t offset() const { return contig_offset_; }
-
-  Phred_t quality() const { return quality_; }
-  void quality(Phred_t quality_update) { quality_ = quality_update; }
 
   static constexpr PhaseId_t UNPHASED = 255;
 
@@ -99,7 +98,7 @@ private:
   ContigId_t contig_id_;                          // The contig of this variant
   PhaseId_t phase_id_;                            // The phase of this variant (which homologous contig)
   ContigOffset_t contig_offset_;                  // Location on the contig.
-  Phred_t quality_;                       // Phred (-10log10) quality that the variant is not valid.
+  const std::shared_ptr<const VariantEvidence> evidence_ptr_;  // Addition information about the variant.
 
 };
 
@@ -121,11 +120,14 @@ public:
           const ContigId_t& contig_id,
           PhaseId_t phase_id,
           ContigOffset_t contig_offset,
-          Phred_t quality) : VariantSequence(genome_id, contig_id, phase_id, contig_offset, quality) {}
+          std::shared_ptr<const VariantEvidence> evidence_ptr) : VariantSequence(genome_id,
+                                                                                 contig_id,
+                                                                                 phase_id,
+                                                                                 contig_offset,
+                                                                                 evidence_ptr) {}
   ~Variant() override = default;
   bool filterVariant(const VariantFilter& filter) const { return applyFilter(filter); }
 
-  bool operator==(const Variant& cmp_var) const { return equivalent(cmp_var); };
 
   bool offsetOverlap(const Variant& cmp_var) const;  // Particuarly relevant for compound variants.
 
@@ -146,6 +148,11 @@ public:
   bool isInsert() const { return variantType() == VariantType::INSERT or variantType() == VariantType::COMPOUND_INSERT; }
 
   virtual bool equivalent(const Variant& cmp_var) const = 0;
+  bool operator==(const Variant& cmp_var) const { return equivalent(cmp_var); };
+
+  virtual bool lessThan(const Variant& cmp_var) const = 0;
+  bool operator<(const Variant& cmp_var) const { return lessThan(cmp_var); };
+
   virtual std::shared_ptr<Variant> clone() const = 0;  // Polymorphic copy constructor
 
 private:

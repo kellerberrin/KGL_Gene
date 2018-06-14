@@ -36,14 +36,15 @@ public:
                   const ContigId_t& contig_id,
                   PhaseId_t phase_id,
                   ContigOffset_t contig_offset,
-                  Phred_t quality,
-                  const CompoundVariantMap& variant_map) : Variant(genome_id, contig_id, phase_id, contig_offset, quality),
+                  std::shared_ptr<const VariantEvidence> evidence_ptr,
+                  const CompoundVariantMap& variant_map) : Variant(genome_id, contig_id, phase_id, contig_offset, evidence_ptr),
                                                            variant_map_(variant_map) {}
   ~CompoundVariant() override = default;
 
   size_t size() const override { return variant_map_.size(); }
 
   bool equivalent(const Variant& cmp_var) const override;
+  bool lessThan(const Variant& cmp_var) const override;
 
   const CompoundVariantMap& getMap() const { return variant_map_; }
 
@@ -69,12 +70,12 @@ public:
                  const ContigId_t& contig_id,
                  PhaseId_t phase_id,
                  ContigOffset_t contig_offset,
-                 Phred_t quality,
+                 std::shared_ptr<const VariantEvidence> evidence_ptr,
                  const CompoundVariantMap& variant_map) : CompoundVariant(genome_id,
                                                                           contig_id,
                                                                           phase_id,
                                                                           contig_offset,
-                                                                          quality,
+                                                                          evidence_ptr,
                                                                           variant_map) {}
   CompoundInsert(const CompoundInsert&) = default;
   ~CompoundInsert() override = default;
@@ -108,12 +109,12 @@ public:
                  const ContigId_t& contig_id,
                  PhaseId_t phase_id,
                  ContigOffset_t contig_offset,
-                 Phred_t quality,
+                 std::shared_ptr<const VariantEvidence> evidence_ptr,
                  const CompoundVariantMap& variant_map) : CompoundVariant(genome_id,
                                                                           contig_id,
                                                                           phase_id,
                                                                           contig_offset,
-                                                                          quality,
+                                                                          evidence_ptr,
                                                                           variant_map) {}
   CompoundDelete(const CompoundDelete&) = default;
   ~CompoundDelete() override = default;

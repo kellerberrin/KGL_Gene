@@ -36,7 +36,6 @@ std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputInde
 
   }
   ss << offsetOutput(offset(), output_index) << delimiter;
-  ss << quality() << delimiter;
 
   return ss.str();
 

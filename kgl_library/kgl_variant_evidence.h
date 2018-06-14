@@ -8,7 +8,7 @@
 
 #include <sstream>
 #include "kgl_genome_types.h"
-#include "kgl_variant.h"
+#include "kgl_alphabet_readcount.h"
 
 
 
@@ -35,7 +35,6 @@ public:
   virtual ~VariantEvidence() = default;
 
   virtual std::string output(char delimiter, VariantOutputIndex output_index) const = 0;
-  virtual Phred_t calculateQuality() const = 0;
 
   virtual bool isReadCount() const { return false; }
   virtual bool isVCF() const { return false; }
@@ -87,9 +86,9 @@ public:
 
   std::string output(char delimiter, VariantOutputIndex output_index) const override;
 
-  virtual Phred_t calculateQuality() const override { return 100.0; }
+  Phred_t Quality() const { return 100.0; }
 
-  bool isReadCount() const override { return true; }
+  bool isReadCount() const { return true; }
 
 private:
 
@@ -129,7 +128,8 @@ public:
   virtual ~VCFEvidence() = default;
 
   std::string output(char, VariantOutputIndex) const override { return info_; }
-  Phred_t calculateQuality() const override { return quality_; }
+
+  Phred_t Quality() const { return quality_; }
   bool isVCF() const override { return true; }
 
 private:
@@ -163,9 +163,9 @@ public:
   size_t altCount() const { return alt_count_; }
   size_t DPCount() const { return DP_count_; }
   Phred_t GQValue() const { return GQ_value_; }
+  Phred_t Quality() const { return quality_; }
 
   std::string output(char, VariantOutputIndex) const override { return "not defined"; }
-  virtual Phred_t calculateQuality() const override { return quality_; }
 
 private:
 

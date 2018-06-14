@@ -99,35 +99,6 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Filter variants by quality (-10log10 {prob variant is in error})
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class QualityFilter : public VariantFilter {
-
-public:
-
-  explicit QualityFilter(Phred_t quality) : quality_(quality) {}
-  ~QualityFilter() override = default;
-
-  std::string filterName() const final;
-
-  bool applyFilter(const SNPVariant& variant) const override { return variant.quality() >= quality_; }
-  bool applyFilter(const DeleteVariant& variant) const override { return variant.quality() >= quality_; }
-  bool applyFilter(const InsertVariant& variant) const override { return variant.quality() >= quality_; }
-  bool applyFilter(const CompoundDelete& variant) const override { return variant.quality() >= quality_; }
-  bool applyFilter(const CompoundInsert& variant) const override { return variant.quality() >= quality_; }
-
-  std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<QualityFilter>(*this); }
-
-private:
-
-  const Phred_t quality_;
-
-};
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Filter SNPs to a particular contig.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

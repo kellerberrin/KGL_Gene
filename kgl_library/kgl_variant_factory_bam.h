@@ -28,7 +28,6 @@ public:
                                               std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                               const std::string& bam_file_name,
                                               Phred_t read_quality,
-                                              Phred_t variant_quality,
                                               NucleotideReadCount_t min_read_count,
                                               double min_proportion);
 

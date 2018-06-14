@@ -22,7 +22,6 @@ void kgl::VariantFactory::readVCFVariants(std::shared_ptr<const GenomeDatabase> 
                                           std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
                                           const std::string& genome_name,
                                           const std::string& variant_file_name,
-                                          Phred_t read_quality,
                                           Phred_t variant_quality,
                                           NucleotideReadCount_t min_read_count,
                                           double min_proportion) const {
@@ -66,7 +65,6 @@ void kgl::VariantFactory::readCountVariants(std::shared_ptr<const GenomeDatabase
                                             const std::string& genome_name,
                                             const std::string& variant_file_name,
                                             Phred_t read_quality,
-                                            Phred_t variant_quality,
                                             NucleotideReadCount_t min_read_count,
                                             double min_proportion) const {
 
@@ -79,7 +77,6 @@ void kgl::VariantFactory::readCountVariants(std::shared_ptr<const GenomeDatabase
                                                                               genome_name,
                                                                               variant_file_name,
                                                                               read_quality,
-                                                                              variant_quality,
                                                                               min_read_count,
                                                                               min_proportion);
     addGenome(variant_ptr, pop_variant_ptr, read_quality);
@@ -90,7 +87,6 @@ void kgl::VariantFactory::readCountVariants(std::shared_ptr<const GenomeDatabase
                                                                               genome_name,
                                                                               variant_file_name,
                                                                               read_quality,
-                                                                              variant_quality,
                                                                               min_read_count,
                                                                               min_proportion);
     addGenome(variant_ptr, pop_variant_ptr, read_quality);
@@ -122,16 +118,8 @@ void kgl::VariantFactory::addGenome(std::shared_ptr<const GenomeVariant> genome_
                                     Phred_t read_quality) const {
 
 
-// Filter on  quality >= 5.
-  read_quality = read_quality < 5 ? 5 : read_quality;
-
-  std::shared_ptr<const kgl::GenomeVariant> filter_ptr = genome_variant_ptr->filterVariants(kgl::QualityFilter(read_quality));
-
-  kgl::ExecEnv::log().info("Filtered for quality: {}, Genome: {} has: {} variants",
-                           read_quality, genome_variant_ptr->genomeId(), filter_ptr->variantCount());
-
 // Store the organism variants in the population object.
-  pop_variant_ptr->addGenomeVariant(filter_ptr);
+  pop_variant_ptr->addGenomeVariant(genome_variant_ptr);
 
 }
 
@@ -141,7 +129,6 @@ kgl::VariantFactory::createSamVariants(std::shared_ptr<const GenomeDatabase> gen
                                        const std::string& genome_name,
                                        const std::string& sam_file_name,
                                        Phred_t read_quality,
-                                       Phred_t variant_quality,
                                        NucleotideReadCount_t min_read_count,
                                        double min_proportion) const {
 
@@ -157,7 +144,6 @@ kgl::VariantFactory::createSamVariants(std::shared_ptr<const GenomeDatabase> gen
   std::shared_ptr<const GenomeVariant> single_variant_ptr = SingleFactory().createSingleVariants(genome_name,
                                                                                                  count_data_ptr,
                                                                                                  genome_db_ptr,
-                                                                                                 variant_quality,
                                                                                                  min_read_count,
                                                                                                  min_proportion);
 
@@ -175,7 +161,6 @@ kgl::VariantFactory::createBamVariants(std::shared_ptr<const GenomeDatabase> gen
                                        const std::string& genome_name,
                                        const std::string& bam_file_name,
                                        Phred_t read_quality,
-                                       Phred_t variant_quality,
                                        NucleotideReadCount_t min_read_count,
                                        double min_proportion) const {
 
@@ -187,7 +172,6 @@ kgl::VariantFactory::createBamVariants(std::shared_ptr<const GenomeDatabase> gen
                                                                                       genome_db_ptr,
                                                                                       bam_file_name,
                                                                                       read_quality,
-                                                                                      variant_quality,
                                                                                       min_read_count,
                                                                                       min_proportion);
 

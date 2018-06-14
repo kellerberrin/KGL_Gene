@@ -132,7 +132,6 @@ bool kgl::GATKVCFImpl::parseSNP(const std::string& variant_source,
                                                                            contig_ptr->contigId(),
                                                                            VariantSequence::UNPHASED,
                                                                            contig_offset,
-                                                                           quality,
                                                                            evidence_ptr,
                                                                            DNA5::convertChar(reference[0]),
                                                                            DNA5::convertChar(alternate[0])));
@@ -187,7 +186,6 @@ bool kgl::GATKVCFImpl::parseInsert(const std::string& variant_source,
                                                                                       contig_ptr->contigId(),
                                                                                       VariantSequence::UNPHASED,
                                                                                       insert_offset,
-                                                                                      quality,
                                                                                       evidence_ptr,
                                                                                       contig_ptr->sequence().at(insert_offset),
                                                                                       DNA5::convertChar(alternate[alternate_offset])));
@@ -282,7 +280,6 @@ bool kgl::GATKVCFImpl::parseDelete(const std::string& variant_source,
                                                                                       contig_ptr->contigId(),
                                                                                       VariantSequence::UNPHASED,
                                                                                       delete_offset,
-                                                                                      quality,
                                                                                       evidence_ptr,
                                                                                       contig_ptr->sequence().at(delete_offset)));
 

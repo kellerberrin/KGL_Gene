@@ -41,7 +41,6 @@ public:
                        ContigOffset_t contig_offset,
                        const std::string& reference,
                        const std::string& alternate,
-                       Phred_t quality,
                        std::shared_ptr<const VariantEvidence> evidence_ptr,
                        size_t& record_variants);
 
@@ -61,7 +60,6 @@ private:
   bool parseSNP(size_t cigar_count,
                 const std::string& variant_source,
                 std::shared_ptr<const ContigFeatures> contig_ptr,
-                Phred_t quality,
                 std::shared_ptr<const VariantEvidence> evidence_ptr,
                 const std::string& reference,
                 const std::string& alternate,
@@ -74,7 +72,6 @@ private:
   bool parseInsert(size_t cigar_count,
                    const std::string& variant_source,
                    std::shared_ptr<const ContigFeatures> contig_ptr,
-                   Phred_t quality,
                    std::shared_ptr<const VariantEvidence> evidence_ptr,
                    const std::string& alternate,
                    ContigOffset_t contig_offset,
@@ -85,7 +82,6 @@ private:
   bool parseDelete(size_t cigar_count,
                    const std::string& variant_source,
                    std::shared_ptr<const ContigFeatures> contig_ptr,
-                   Phred_t quality,
                    std::shared_ptr<const VariantEvidence> evidence_ptr,
                    const std::string& reference,
                    size_t& reference_index,

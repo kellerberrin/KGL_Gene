@@ -27,14 +27,6 @@ std::string kgl::ContigFilter::filterName() const {
 }
 
 
-std::string kgl::QualityFilter::filterName() const {
-
-  std::stringstream ss;
-  ss << "Variants with Quality >= " << quality_;
-  return ss.str();
-
-}
-
 
 std::string kgl::RegionFilter::filterName() const {
 

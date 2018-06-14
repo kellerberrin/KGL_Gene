@@ -104,6 +104,9 @@ public:
   bool getCreateGenome(const GenomeId_t& genome_id, std::shared_ptr<UnphasedGenome>& genome);
 
   size_t variantCount() const;
+  void popStatistics() const; // output to logger
+  std::vector<GenomeId_t> genomeList() const;
+
 
   const UnphasedGenomeMap& getMap() const { return genome_map_; }
 
@@ -129,6 +132,9 @@ private:
 
 }   // namespace genome
 }   // namespace kellerberrin
+
+std::ostream& operator<<(std::ostream& ostream, std::shared_ptr<const kellerberrin::genome::UnphasedPopulation> unphased_ptr);
+std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::UnphasedPopulation& unphased);
 
 
 #endif //KGL_KGL_VARIANT_DB_UNPHASED_H

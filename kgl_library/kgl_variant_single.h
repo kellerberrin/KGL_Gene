@@ -40,17 +40,13 @@ public:
                 const ContigId_t& contig_id,
                 PhaseId_t phase_id,
                 ContigOffset_t contig_offset,
-                Phred_t quality,
                 std::shared_ptr<const VariantEvidence> evidence_ptr,
-                DNA5::Alphabet reference ) : Variant(genome_id, contig_id, phase_id, contig_offset, quality),
-                                             evidence_ptr_(evidence_ptr),
+                DNA5::Alphabet reference ) : Variant(genome_id, contig_id, phase_id, contig_offset, evidence_ptr),
                                              reference_(reference) {}
 
   ~SingleVariant() override = default;
 
   size_t size() const override { return 1; }
-
-  std::shared_ptr<const VariantEvidence> evidence() const { return evidence_ptr_; }
 
   DNA5::Alphabet reference() const { return reference_; }
 
@@ -60,7 +56,6 @@ public:
 
 private:
 
-  const std::shared_ptr<const VariantEvidence> evidence_ptr_;
   DNA5::Alphabet reference_;
 
   std::string submutation(char delimiter, VariantOutputIndex output_index) const;
@@ -82,14 +77,12 @@ public:
              const ContigId_t& contig_id,
              PhaseId_t phase_id,
              ContigOffset_t contig_offset,
-             Phred_t quality,
              std::shared_ptr<const VariantEvidence> evidence_ptr,
              DNA5::Alphabet reference,
              DNA5::Alphabet mutant) : SingleVariant(genome_id,
                                                     contig_id,
                                                     phase_id,
                                                     contig_offset,
-                                                    quality,
                                                     evidence_ptr,
                                                     reference), mutant_(mutant) {}
 
@@ -102,6 +95,7 @@ public:
   VariantType variantType() const override { return VariantType::SNP; }
 
   bool equivalent(const Variant& cmp_var) const override;
+  bool lessThan(const Variant& cmp_var) const override;
 
   std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const override;
 
@@ -137,13 +131,11 @@ public:
                 const ContigId_t& contig_id,
                 PhaseId_t phase_id,
                 ContigOffset_t contig_offset,
-                Phred_t quality,
                 std::shared_ptr<const VariantEvidence> evidence_ptr,
                 DNA5::Alphabet reference) : SingleVariant(genome_id,
                                                           contig_id,
                                                           phase_id,
                                                           contig_offset,
-                                                          quality,
                                                           evidence_ptr,
                                                           reference) {}
 
@@ -156,6 +148,7 @@ public:
   VariantType variantType() const override { return VariantType::DELETE; }
 
   bool equivalent(const Variant& cmp_var) const override;
+  bool lessThan(const Variant& cmp_var) const override;
 
   std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const override;
 
@@ -186,14 +179,12 @@ public:
                 const ContigId_t& contig_id,
                 PhaseId_t phase_id,
                 ContigOffset_t contig_offset,
-                Phred_t quality,
                 std::shared_ptr<const VariantEvidence> evidence_ptr,
                 DNA5::Alphabet reference,
                 DNA5::Alphabet mutant) : SingleVariant(genome_id,
                                                        contig_id,
                                                        phase_id,
                                                        contig_offset,
-                                                       quality,
                                                        evidence_ptr,
                                                        reference), mutant_(mutant) {}
 
@@ -206,6 +197,7 @@ public:
   VariantType variantType() const override { return VariantType::INSERT; }
 
   bool equivalent(const Variant& cmp_var) const override;
+  bool lessThan(const Variant& cmp_var) const override;
 
   DNA5::Alphabet mutant() const { return mutant_; }
 

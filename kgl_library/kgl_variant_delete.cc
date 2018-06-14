@@ -50,6 +50,67 @@ bool kgl::DeleteVariant::equivalent(const Variant& cmp_var) const {
 
 }
 
+
+
+// Order variant types.
+bool kgl::DeleteVariant::lessThan(const Variant& cmp_var) const {
+
+
+  if (contigId() < cmp_var.contigId()) {
+
+    return true;
+
+  } else if (contigId() > cmp_var.contigId()) {
+
+    return false;
+
+  } else if (phaseId() < cmp_var.phaseId()) {
+
+    return true;
+
+  } else if (phaseId() > cmp_var.phaseId()) {
+
+    return false;
+
+  } else if (offset() < cmp_var.offset()) {
+
+    return true;
+
+  } else if (offset() > cmp_var.offset()) {
+
+    return false;
+
+  } else if (variantType() < cmp_var.variantType()) {
+
+    return true;
+
+  } else if (variantType() > cmp_var.variantType()) {
+
+    return false;
+
+  }
+
+  auto cmp_delete = dynamic_cast<const DeleteVariant*>(&cmp_var);
+
+  if (not cmp_delete) {
+
+    // Must be a variant type == delete type.
+    ExecEnv::log().error("DeleteVariant::lessThan; Expected DeleteVariant, got: {}", cmp_var.output(' ', VariantOutputIndex::START_0_BASED, false));
+    return false;
+
+  }
+
+  if (reference() < cmp_delete->reference()) {
+
+    return true;
+
+  }
+
+  return false;
+
+}
+
+
 std::string kgl::DeleteVariant::mutation(char delimiter, VariantOutputIndex output_index) const
 {
 

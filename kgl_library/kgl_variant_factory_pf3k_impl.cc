@@ -193,7 +193,6 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
                             recordParser.offset(),
                             recordParser.reference(),
                             allele,
-                            GQ_value,
                             evidence_ptr,
                             record_variants);
 
@@ -226,7 +225,6 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
                             recordParser.offset(),
                             recordParser.reference(),
                             allele,
-                            GQ_value,
                             evidence_ptr,
                             record_variants);
 

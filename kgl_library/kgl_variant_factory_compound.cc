@@ -91,26 +91,6 @@ kgl::CompoundFactory::create(const std::shared_ptr<const GenomeVariant>& genome_
 }
 
 
-// Assumes the component subordinate quality probabilities are independent.
-// Needs to be re-coded.
-kgl::Phred_t kgl::CompoundFactory::calculateQuality(const CompoundVariantMap& variant_map) const
-{
-
-  double probability = 0.0;
-  double adjust_log;
-  for (auto variant : variant_map) {
-
-    adjust_log = variant.second->quality() / -10.0;
-    probability += ::pow10(adjust_log);
-
-  }
-
-  adjust_log = ::log10(probability) * -10.0;
-
-  return adjust_log > 0 ? adjust_log : 0.0;
-
-}
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Generate the compound variant maps for insert/delete
@@ -118,17 +98,8 @@ kgl::Phred_t kgl::CompoundFactory::calculateQuality(const CompoundVariantMap& va
 
 
 
-// The logic of this function is very convoluted so read the following carefully before modifying this function.
+// The logic of this function is very convoluted so read the code carefully before modifying this function.
 
-// This function aggregates variants that occur consecutively in coding sequences (only).
-// Aggregate/Compound variants are not defined for non-coding sequence variants.
-// Aggregate variants exist because of the aggregate interaction with the underlying codon structure of the protein.
-
-// 1. It is important to remember that variants in coding sequences (only) are unique to each coding sequence
-// 2. There can be multiple coding sequences defined over a contig (chromosome) interval (within a gene).
-// 3. Therefore there can be multiple SNP variants defined for a particular coding sequence contig offset.
-// 4. These can only be distinguished by examining the coding sequence membership.
-// 5. Thus coding sequences can create multiple aggregated variants for the same contig (chromosome) interval.
 
 bool kgl::InsertDeleteFactory::aggregateVariants(const std::shared_ptr<const GenomeVariant>& genome_variant_ptr,
                                                  std::vector<std::shared_ptr<const CompoundVariantMap>>& aggregated_variants_vec) const {

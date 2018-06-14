@@ -2,6 +2,7 @@
 // Created by kellerberrin on 10/11/17.
 //
 
+#include "kgl_variant_phase.h"
 #include "kgl_phylogenetic_app.h"
 #include "kgl_variant_factory.h"
 #include "kgl_phylogenetic_app_analysis.h"
@@ -29,12 +30,14 @@ void kgl::PhylogeneticExecEnv::executeApp() {
                                           unphased_population_ptr,
                                           file.genome_name,
                                           file.file_name,
-                                          args.readQuality,
                                           args.variantQuality,
                                           args.minCount,
                                           args.minProportion);
 
   }
+
+  // Basic statistics to output
+  unphased_population_ptr->popStatistics();
 
   // Analyze the data.
   kgl::PhylogeneticAnalysis::performAnalysis(args, genome_db_ptr, unphased_population_ptr);

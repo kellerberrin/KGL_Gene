@@ -91,7 +91,6 @@ bool kgl::FreeBayesVCFImpl::parseVcfRecord(const std::string& genome_name,
                     contig_offset,
                     reference,
                     alternate,
-                    quality,
                     nullptr,
                     record_variants);
 

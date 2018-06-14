@@ -53,6 +53,73 @@ bool kgl::SNPVariant::equivalent(const Variant& cmp_var) const {
 }
 
 
+// Order variant types.
+bool kgl::SNPVariant::lessThan(const Variant& cmp_var) const {
+
+
+  if (contigId() < cmp_var.contigId()) {
+
+    return true;
+
+  } else if (contigId() > cmp_var.contigId()) {
+
+    return false;
+
+  } else if (phaseId() < cmp_var.phaseId()) {
+
+    return true;
+
+  } else if (phaseId() > cmp_var.phaseId()) {
+
+    return false;
+
+  } else if (offset() < cmp_var.offset()) {
+
+    return true;
+
+  } else if (offset() > cmp_var.offset()) {
+
+    return false;
+
+  } else if (variantType() < cmp_var.variantType()) {
+
+    return true;
+
+  } else if (variantType() > cmp_var.variantType()) {
+
+    return false;
+
+  }
+
+  auto cmp_snp = dynamic_cast<const SNPVariant*>(&cmp_var);
+
+  if (not cmp_snp) {
+
+    // Must be a variant type == snp type.
+    ExecEnv::log().error("SNPVariant::lessThan; Expected SNP, got: {}", cmp_var.output(' ', VariantOutputIndex::START_0_BASED, false));
+    return false;
+
+  }
+
+  if (reference() < cmp_snp->reference()) {
+
+    return true;
+
+  } else if (reference() > cmp_snp->reference()) {
+
+    return false;
+
+  } else if (mutant() < cmp_snp->mutant()) {
+
+    return true;
+
+  }
+
+  return false;
+
+}
+
+
 std::string kgl::SNPVariant::mutation(char delimiter, VariantOutputIndex output_index) const
 {
 

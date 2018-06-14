@@ -45,6 +45,87 @@ bool kgl::CompoundVariant::equivalent(const Variant& cmp_var) const {
 }
 
 
+// Order variant types.
+bool kgl::CompoundVariant::lessThan(const Variant& cmp_var) const {
+
+
+  if (contigId() < cmp_var.contigId()) {
+
+    return true;
+
+  } else if (contigId() > cmp_var.contigId()) {
+
+    return false;
+
+  } else if (phaseId() < cmp_var.phaseId()) {
+
+    return true;
+
+  } else if (phaseId() > cmp_var.phaseId()) {
+
+    return false;
+
+  } else if (offset() < cmp_var.offset()) {
+
+    return true;
+
+  } else if (offset() > cmp_var.offset()) {
+
+    return false;
+
+  } else if (variantType() < cmp_var.variantType()) {
+
+    return true;
+
+  } else if (variantType() > cmp_var.variantType()) {
+
+    return false;
+
+  }
+
+  auto cmp_compound = dynamic_cast<const CompoundVariant*>(&cmp_var);
+
+  if (not cmp_compound) {
+
+    // Must be a variant type == compound type.
+    ExecEnv::log().error("CompoundVariant::lessThan; Expected Compound, got: {}", cmp_var.output(' ', VariantOutputIndex::START_0_BASED, false));
+    return false;
+
+  }
+
+  if (getMap().size() < cmp_compound->getMap().size()) {
+
+    return true;
+
+  } else if (getMap().size() > cmp_compound->getMap().size()) {
+
+    return false;
+
+  }
+
+  auto cmp_iterator = cmp_compound->getMap().begin();
+  for (auto variant : getMap()) {
+
+    if(cmp_iterator == cmp_compound->getMap().end()) return false; // should not happen.
+
+    if (variant.second->lessThan(*(cmp_iterator->second))) {
+
+      return true;
+
+    } else if (not variant.second->equivalent(*(cmp_iterator->second))) {
+
+      return false;
+    }
+
+    cmp_iterator++;
+
+  }
+
+  return false;
+
+}
+
+
 std::string kgl::CompoundVariant::output(char delimiter, VariantOutputIndex output_index, bool detail) const {
 
   std::stringstream ss;

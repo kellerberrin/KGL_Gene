@@ -35,7 +35,6 @@ public:
   std::shared_ptr<const GenomeVariant> createSingleVariants(const std::string &genome_name,
                                                             const std::shared_ptr<const ContigCountData> &count_data,
                                                             const std::shared_ptr<const GenomeDatabase> &genome_db_ptr,
-                                                            Phred_t variant_quality,
                                                             NucleotideReadCount_t minimum_read_count,
                                                             double minimum_proportion) const;
 
@@ -46,7 +45,6 @@ private:
                            ContigOffset_t contig_offset,
                            DNA5::Alphabet reference_nucleotide,
                            const NucleotideReadCount_t nucleotide_count_array[],
-                           Phred_t variant_quality,
                            NucleotideReadCount_t minimum_read_count,
                            double minimum_proportion,
                            std::shared_ptr<GenomeVariant> genome_single_variants) const;
@@ -56,7 +54,6 @@ private:
                         ContigOffset_t contig_offset,
                         DNA5::Alphabet reference_nucleotide,
                         const NucleotideReadCount_t nucleotide_count_array[],
-                        Phred_t variant_quality,
                         NucleotideReadCount_t minimum_read_count,
                         double minimum_proportion,
                         std::shared_ptr<GenomeVariant> genome_single_variants) const;
