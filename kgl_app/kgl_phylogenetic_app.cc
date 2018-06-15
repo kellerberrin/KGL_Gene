@@ -2,7 +2,7 @@
 // Created by kellerberrin on 10/11/17.
 //
 
-#include "kgl_variant_phase.h"
+#include "../kgl_mixture/kgl_variant_phase.h"
 #include "kgl_phylogenetic_app.h"
 #include "kgl_variant_factory.h"
 #include "kgl_phylogenetic_app_analysis.h"

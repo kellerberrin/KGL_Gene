@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD 14)
 # add extra include directories
 include_directories(/usr/include
                     kgl_library                  # Basic infrastructure library
+                    kgl_mixture                  # Deconvolution and mixture library
                     kgl_analytic                  # Genetic analysis library
                     kgl_app                        # Application level objects
                     /usr/local/lib/spdlog/include   # 3rd party logging library.
@@ -197,8 +198,12 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_rna_search.cc
         kgl_analytic/kgl_rna_search.h
         kgl_analytic/kgl_ploidy_analysis.h
-        kgl_library/kgl_variant_phase.h
+        kgl_mixture/kgl_variant_phase.h
         kgl_library/kgl_variant_phase.cc)
+
+# Deconvolution and mixture files.
+
+set(MIXTURE_SOURCE_FILES )
 
 
 # Application level objects
@@ -248,7 +253,7 @@ endif(BUILD_KGL_KGD_DOC)
 
 
 #generate shared library.
-add_library(kgl_genome_lib STATIC ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES} ${ANALYTIC_SOURCE_FILES})
+add_library(kgl_genome_lib STATIC ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES} ${ANALYTIC_SOURCE_FILES} ${MIXTURE_SOURCE_FILES})
 
 target_link_libraries(kgl_genome_lib  ${Boost_LIBRARIES})
 

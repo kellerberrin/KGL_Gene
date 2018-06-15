@@ -2,7 +2,7 @@
 // Created by kellerberrin on 23/04/18.
 //
 
-#include "kgl_variant_phase.h"
+#include "../kgl_mixture/kgl_variant_phase.h"
 #include "kgl_variant_evidence.h"
 #include "kgl_variant_single.h"
 #include <fstream>
