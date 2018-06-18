@@ -31,8 +31,8 @@ void kgl::VariantFactory::readVCFVariants(std::shared_ptr<const GenomeDatabase> 
 
   if (file_ext == VCF_FILE_EXTENSTION_) {
 
-      ExecEnv::log().info("Processing VCF file: {}", variant_file_name);
-      VcfFactory().readParseVCFVariants(vcf_population_ptr, genome_db_ptr, variant_file_name, variant_quality);
+    ExecEnv::log().info("Processing VCF file: {}", variant_file_name);
+    VcfFactory().readParseVCFVariants(vcf_population_ptr, genome_db_ptr, variant_file_name, variant_quality);
 
   } else {
 

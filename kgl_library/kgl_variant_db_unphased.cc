@@ -310,11 +310,19 @@ bool kgl::UnphasedPopulation::getUnphasedVariants(const GenomeId_t& genome_id,
 
 void kgl::UnphasedPopulation::popStatistics() const {
 
+  size_t total_variants = 0;
+
   for (auto genome : getMap()) {
 
-    ExecEnv::log().info("Genome: {}, Unphased Variant Count:{}", genome.first, genome.second->variantCount());
+    size_t genome_variant_count = genome.second->variantCount();
+
+    ExecEnv::log().info("Genome: {}, Unphased Variant Count:{}", genome.first, genome_variant_count);
+
+    total_variants += genome_variant_count;
 
   }
+
+  ExecEnv::log().info("Total Unphased Variant Count:{}", total_variants);
 
 }
 
