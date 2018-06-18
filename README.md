@@ -4,7 +4,9 @@ KGL_Gene
 C++ Population Genome Comparison Toolkit
 ----------------------------------------
 
-This software is under an MIT license, do with it as you please.
+This software is under an MIT license, you may use or modify any part of the code for any purpose.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OR GUARANTEE OF ANY KIND.
 
 A toolkit that uses SAM/BAM/VCF files to analyze Insert/Deletes (Indels) and Single Nucleotide Polymorphisms (SNP)
 variants in genome populations.
@@ -27,7 +29,8 @@ cmake -version >= 3.8
 
 Hardware requirements:
 
-A 64 bit Intel/AMD PC or laptop with at least 4GB memory (>= 16GB best) and 10GB free disk space.
+A multi-core (minimum 4 cores) 64 bit Intel/AMD PC or laptop with at least 16GB memory (>= 32GB best)
+and 100GB free disk space.
 
 The fast install procedure.
 ---------------------------
