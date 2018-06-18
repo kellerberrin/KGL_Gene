@@ -31,24 +31,8 @@ void kgl::VariantFactory::readVCFVariants(std::shared_ptr<const GenomeDatabase> 
 
   if (file_ext == VCF_FILE_EXTENSTION_) {
 
-    if (isFileNamePrefix(PF3K_FILE_PREFIX_, variant_file_name)) {
-
-      ExecEnv::log().info("Processing Pf3k VCF file: {}", variant_file_name);
-      VcfFactory().readParsePf3kVariants(vcf_population_ptr, genome_db_ptr, variant_file_name, variant_quality);
-
-    } else if (isFileNamePrefix(GATK_FILE_PREFIX_, variant_file_name)) {
-
       ExecEnv::log().info("Processing VCF file: {}", variant_file_name);
-      ExecEnv::log().info("Generating GATK variants for Genome: {}", genome_name);
-      VcfFactory().readParseGATKVcf(genome_name, vcf_population_ptr, genome_db_ptr, variant_file_name, variant_quality);;
-
-    } else {
-
-      ExecEnv::log().info("Processing VCF file: {}", variant_file_name);
-      ExecEnv::log().info("Generating Freebayes variants for Genome: {}", genome_name);
-      VcfFactory().readParseFreeBayesVcf(genome_name, vcf_population_ptr, genome_db_ptr, variant_file_name, variant_quality);
-
-    }
+      VcfFactory().readParseVCFVariants(vcf_population_ptr, genome_db_ptr, variant_file_name, variant_quality);
 
   } else {
 

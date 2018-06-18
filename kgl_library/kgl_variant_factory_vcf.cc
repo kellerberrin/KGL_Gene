@@ -3,8 +3,6 @@
 //
 
 #include "kgl_variant_factory_vcf.h"
-#include "kgl_variant_factory_fbvcf_impl.h"
-#include "kgl_variant_factory_gatkvcf_impl.h"
 #include "kgl_variant_factory_pf3k_impl.h"
 
 
@@ -17,37 +15,8 @@ namespace kgl = kellerberrin::genome;
 
 
 
-bool kgl::VcfFactory::readParseFreeBayesVcf(const std::string &genome_name,
-                                            std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
-                                            std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                            const std::string &vcf_file_name,
-                                            Phred_t variant_quality) const {
 
-  FreeBayesVCFImpl reader(genome_name, vcf_population_ptr, genome_db_ptr, vcf_file_name, variant_quality);
-
-  reader.readParseVCFImpl();
-
-  return true;
-
-}
-
-
-bool kgl::VcfFactory::readParseGATKVcf(const std::string &genome_name,
-                                       std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
-                                       std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                       const std::string &vcf_file_name,
-                                       Phred_t variant_quality) const {
-
-  GATKVCFImpl reader(genome_name, vcf_population_ptr, genome_db_ptr, vcf_file_name, variant_quality);
-
-  reader.readParseVCFImpl();
-
-  return true;
-
-}
-
-
-bool kgl::VcfFactory::readParsePf3kVariants(std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
+bool kgl::VcfFactory::readParseVCFVariants(std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
                                             std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                             const std::string &vcf_file_name,
                                             Phred_t variant_quality) const {

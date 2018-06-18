@@ -40,14 +40,6 @@ bool kgl::ParseVCFRecord::parseRecord(const ContigId_t& contig_id, std::shared_p
 
   }
 
-  // Get the PL format offset.
-  if (not findString(format_fields_, PL_, PL_offset_)) {
-
-    ExecEnv::log().error("Format field: {} not found", PL_);
-    parse_result = false;
-
-  }
-
   // Get the AD format offset.
   if (not findString(format_fields_, AD_, AD_offset_)) {
 
@@ -64,6 +56,18 @@ bool kgl::ParseVCFRecord::parseRecord(const ContigId_t& contig_id, std::shared_p
 
   }
 
+  // Get the PL format offset.
+  // Not available in the Free Bayes vcf
+  if (not findString(format_fields_, PL_, PL_GL_offset_)) {
+
+    if (not findString(format_fields_, GL_, PL_GL_offset_)) {
+
+      ExecEnv::log().error("Format fields: {} or {} not found", PL_, GL_);
+      parse_result = false;
+
+    }
+
+  }
 
   required_size_ = requiredFormatSize();  // Must have this many format fields in a Genotype.
 
@@ -150,7 +154,7 @@ size_t kgl::ParseVCFRecord::requiredFormatSize() const {
   size_t required_size = 0;
 
   required_size = GT_offset_ >= GQ_offset_ ? GT_offset_ : GQ_offset_;
-  required_size = PL_offset_ >= required_size ? PL_offset_ : required_size;
+  required_size = PL_GL_offset_ >= required_size ? PL_GL_offset_ : required_size;
   ++required_size; // Convert offset to a size.
 
   return required_size;

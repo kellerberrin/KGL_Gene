@@ -86,20 +86,25 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
           and genotype_parser.getFormatChar(recordParser.PLOffset(), *it) != PL_CHECK_DOT_) {
 
         std::string vqslod_text;
+        bool vqslod_found = true;
         if ( not info_key_value_map.getInfoField(VQSLOD_INFO_FIELD_, vqslod_text)) {
 
-          ExecEnv::log().error("Parsing Pf3k VCF, Info field : {} not found", VQSLOD_INFO_FIELD_);
-          continue;
+          vqslod_found = false;
 
         }
 
-        if (vqslod_text.find_first_not_of(FLOAT_DIGITS_) !=  std::string::npos) {
+        double vqslod = 0.0;
+        if (vqslod_found) {
 
-          ExecEnv::log().info("Non-numeric vqslod text: {}", vqslod_text);
-          continue;
+          if (vqslod_text.find_first_not_of(FLOAT_DIGITS_) !=  std::string::npos) {
+
+            ExecEnv::log().info("Non-numeric vqslod text: {}", vqslod_text);
+            continue;
+
+          }
+          vqslod = std::atof(vqslod_text.c_str());
 
         }
-        double vqslod = std::atof(vqslod_text.c_str());
 
         std::vector<std::string> gt_vector;
         ParseVCFMiscImpl::tokenize(genotype_parser.getFormatString(recordParser.GTOffset(), *it), GT_FIELD_SEPARATOR_, gt_vector);
@@ -163,11 +168,15 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
 
         const std::string &genome_name = getGenomeNames()[genotype_count];
 
-        bool valid_record = vqslod >= MIN_VQSLOD_QUALITY_
-                            and recordParser.quality() >= MIN_QUALITY_
+        bool valid_record = recordParser.quality() >= MIN_QUALITY_
                             and GQ_value >= MIN_GQ_QUALITY_
                             and DP_value >= MIN_DEPTH_;
 
+        if (vqslod_found) {
+
+          valid_record = valid_record and vqslod >= MIN_VQSLOD_QUALITY_;
+
+        }
 
         if (valid_record and A_allele > 0) {
 

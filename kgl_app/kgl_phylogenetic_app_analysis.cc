@@ -10,7 +10,8 @@
 #include "kgl_upgma.h"
 #include "kgl_rna_search.h"
 #include "kgl_phylogenetic_app_analysis.h"
-#include "../kgl_mixture/kgl_variant_phase.h"
+#include "kgl_variant_classify.h"
+#include "kgl_variant_phase.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -138,11 +139,10 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
     // Index variants by ref/alt count.
     VariantClassifier classifier(unphased_population_ptr);
-    char delimiter = ',';
-    std::string variant_ref_file = kgl::Utility::filePath("variant_ref_file", args.workDirectory) + ".csv";
-    classifier.writeVariants(delimiter, variant_ref_file, 30, true);
-    std::string variant_alt_file = kgl::Utility::filePath("variant_alt_file", args.workDirectory) + ".csv";
-    classifier.writeVariants(delimiter, variant_alt_file, 30, false);
+    char delimiter = '\t';
+    std::string variant_ref_file = kgl::Utility::filePath("variant_ref_file", args.workDirectory) + ".tab";
+    std::string variant_alt_file = kgl::Utility::filePath("variant_alt_file", args.workDirectory) + ".tab";
+    classifier.writeOrderedVariants(delimiter, variant_ref_file, variant_alt_file, 30, 25000);
 
   }
 

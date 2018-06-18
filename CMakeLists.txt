@@ -147,10 +147,6 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_table_impl.h
         kgl_library/kgl_table_impl.cc
         kgl_library/kgl_table_organism.h
-        kgl_library/kgl_variant_factory_fbvcf_impl.h
-        kgl_library/kgl_variant_factory_fbvcf_impl.cc
-        kgl_library/kgl_variant_factory_gatkvcf_impl.h
-        kgl_library/kgl_variant_factory_gatkvcf_impl.cc
         kgl_library/kgl_variant_factory_vcf_impl.h
         kgl_library/kgl_variant_factory_vcf_impl.cc
         kgl_library/kgl_gaf_parser.h
@@ -165,8 +161,6 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_pf3k_impl.h
         kgl_library/kgl_variant_factory_pf3k_impl.cc
         kgl_library/kgl_variant_factory_readvcf_impl.h
-        kgl_library/kgl_variant_factory_genome_vcf_impl.h
-        kgl_library/kgl_variant_factory_genome_vcf_impl.cc
         kgl_library/kgl_variant_factory_vcf_parse_impl.h
         kgl_library/kgl_variant_factory_vcf_parse_impl.cc
         kgl_library/kgl_variant_factory_record_vcf_impl.h
@@ -198,12 +192,13 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_rna_search.cc
         kgl_analytic/kgl_rna_search.h
         kgl_analytic/kgl_ploidy_analysis.h
-        kgl_mixture/kgl_variant_phase.h
-        kgl_library/kgl_variant_phase.cc)
+        )
 
 # Deconvolution and mixture files.
 
-set(MIXTURE_SOURCE_FILES )
+set(MIXTURE_SOURCE_FILES
+        kgl_mixture/kgl_variant_phase.h
+        kgl_mixture/kgl_variant_phase.cc kgl_mixture/kgl_variant_classify.h kgl_mixture/kgl_variant_classify.cc)
 
 
 # Application level objects

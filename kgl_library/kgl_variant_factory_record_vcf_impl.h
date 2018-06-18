@@ -38,7 +38,7 @@ public:
   size_t requiredFormatSize() const;
   size_t GTOffset() const { return GT_offset_; }
   size_t GQOffset() const { return GQ_offset_; }
-  size_t PLOffset() const { return PL_offset_; }
+  size_t PLOffset() const { return PL_GL_offset_; }
   size_t ADOffset() const { return AD_offset_; }
   size_t DPOffset() const { return DP_offset_; }
 
@@ -60,7 +60,7 @@ private:
   std::vector<std::string> format_fields_;  // GT:AD:DP:GQ:PGT:PID:PL
   size_t GT_offset_;
   size_t GQ_offset_;
-  size_t PL_offset_;
+  size_t PL_GL_offset_;
   size_t AD_offset_;
   size_t DP_offset_;
   size_t required_size_;
@@ -74,7 +74,8 @@ private:
   constexpr static const char* ALLELE_SEPARATOR_ = ",";
   constexpr static const char* GT_ = "GT";
   constexpr static const char* GQ_ = "GQ";
-  constexpr static const char* PL_ = "PL";
+  constexpr static const char* PL_ = "PL";    // Gatk uses PL (integers)
+  constexpr static const char* GL_ = "GL";    // FreeBayes uses GL (floats)
   constexpr static const char* AD_ = "AD";
   constexpr static const char* DP_ = "DP";
 
