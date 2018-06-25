@@ -45,7 +45,7 @@ void kgd::ExecEnv::executeApp() {
 
       dEploidIO_ptr->paintIBD(random_generator);
 
-    }else{
+    } else {
 
       if (dEploidIO_ptr->useIBD()) { // ibd
 

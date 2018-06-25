@@ -11,7 +11,7 @@ namespace kgl = kellerberrin::genome;
 
 
 // Set up the genomes first rather than on-the-fly.
-// Some genomes may have no variants (the model/reference genome).
+// Some genomes may have no variants (the model/reference genome) and thus would not be created.
 void kgl::Pf3kVCFImpl::setupVCFPopulation() {
 
   for (auto genome_id : getGenomeNames())  {

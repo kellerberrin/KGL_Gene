@@ -399,7 +399,7 @@ void kgd::DEploidIO::parse() {
 
   if (args.identityByDescentPainting) setDoIbdPainting(true); // -idbPainting
 
-  initialProp_ = args.initialStrainProportions; // -initialP
+  setInitialProp(args.initialStrainProportions); // -initialP
   setUseIBD(args.identityByDescentFlag); // -idb
 
   set_seed(args.MCMCRandomSeed); // -seed
@@ -451,15 +451,15 @@ std::vector<double> kgd::DEploidIO::computeExpectedWsafFromInitialHap() {
   // Make this a separate function
   // calculate expected wsaf
 
-  std::vector<double> expectedWsaf(initialHap_.size(), 0.0);
+  std::vector<double> expectedWsaf(getInitialHap().size(), 0.0);
 
-  for (size_t i = 0; i < initialHap_.size(); i++) {
+  for (size_t i = 0; i < getInitialHap().size(); i++) {
 
-    assert(kStrain_ == initialHap_[i].size());
+    assert(kStrain_ == getInitialHap()[i].size());
 
     for (size_t k = 0; k < kStrain_; k++) {
 
-      expectedWsaf[i] += initialHap_[i][k] * finalProp_[k];
+      expectedWsaf[i] += getInitialHap()[i][k] * finalProp_[k];
 
     }
 
@@ -545,7 +545,7 @@ void kgd::DEploidIO::chromPainting(std::shared_ptr<RandomGenerator> random_gener
 
     if (doAllowInbreeding()) {
 
-      panel_->updatePanelWithHaps(panel_->truePanelSize() + kStrain_ - 1, tmpk, initialHap_);
+      panel_->updatePanelWithHaps(panel_->truePanelSize() + kStrain_ - 1, tmpk, getInitialHap());
 
     }
 
@@ -725,7 +725,7 @@ void kgd::DEploidIO::paintIBD(std::shared_ptr<RandomGenerator> randomGenerator) 
   DEploidIO tmpDEploidIO; // (*this);
   tmpDEploidIO.setKstrain(goodProp.size());
   tmpDEploidIO.setInitialPropWasGiven(true);
-  tmpDEploidIO.initialProp_ = goodProp;
+  tmpDEploidIO.setInitialProp(goodProp);
   tmpDEploidIO.finalProp_ = goodProp;
   tmpDEploidIO.refCount_ = refCount_;
   tmpDEploidIO.altCount_ = altCount_;
