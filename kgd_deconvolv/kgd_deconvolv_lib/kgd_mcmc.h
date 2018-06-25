@@ -161,7 +161,6 @@ private:
 
   void recordMcmcMachinery();
 
-
   void writeLastFwdProb(bool useIBD);
 
   void updateReferencePanel(size_t inbreedingPanelSizeSetTo, size_t excludedStrain);

@@ -34,6 +34,7 @@
 namespace kgd = kellerberrin::deconvolv;
 
 
+
 bool kgd::McmcMachinery::doutProp() {
 
   dout << "  Update proportion to: ";

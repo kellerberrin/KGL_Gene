@@ -38,8 +38,7 @@ void kgd::DEploidIO::writeMcmcRelated(std::shared_ptr<McmcSample> mcmcSample, bo
   writeLLK(mcmcSample, useIBD);
   writeHap(mcmcSample, useIBD);
 
-  
-  if (useIBD == false) {
+  if (not useIBD) {
 
     writeVcf(mcmcSample);
     siteOfTwoSwitchOne_ = mcmcSample->getSiteOfTwoSwitchOne();
