@@ -74,6 +74,8 @@ void kgd::DEploidIO::init() {
   setKstrain(5);
 
   nMcmcSample_ = 800;
+  mcmcBurn_ = 0.5;
+  mcmcMachineryRate_ = 5;
 
   setDoUpdateProp(true);
   setDoUpdatePair(true);
@@ -85,13 +87,11 @@ void kgd::DEploidIO::init() {
   setDoExportSwitchMissCopy(true);
   setDoAllowInbreeding(false);
 
-  mcmcBurn_ = 0.5;
-  mcmcMachineryRate_ = 5;
-  missCopyProb_ = 0.01;
   useConstRecomb_ = false;
 
   setForbidCopyFromSame(false);
 
+  missCopyProb_ = 0.01;
   constRecombProb_ = 1.0;
   averageCentimorganDistance_ = 15000.0;
 

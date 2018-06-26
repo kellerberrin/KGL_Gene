@@ -41,14 +41,15 @@ private:
   std::shared_ptr<RandomGenerator> mcmcEventRg_;
   double currentLogPriorTitre_;
 
+  /* Structural Subroutines */
+  void initializeMcmcChain();
+
   int sampleMcmcEvent() override;
 
   void finalizeMcmc() override;
 
+  /* Implementation Subroutines */
   double deltaXnormalVariable() { return stdNorm_->genReal() * SD_LOG_TITRE * 1.0 / PROP_SCALE + MN_LOG_TITRE; }
-
-  /* Initialize */
-  void initializeMcmcChain();
 
   double calcLogPriorTitre(std::vector<double> &tmpTitre);
 
@@ -58,7 +59,6 @@ private:
 
   void initializeUpdateReferencePanel(size_t inbreedingPanelSizeSetTo);
 
-  /* Moves */
   void updateProportion();
 
   std::vector<double> calcTmpTitre();

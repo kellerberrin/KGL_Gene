@@ -4,9 +4,9 @@
 
 
 #include <random>
-#include <stdio.h>
+#include <cstdio>
 #include <limits>       // std::numeric_limits< double >::min()
-#include <math.h>       // ceil
+#include <cmath>       // ceil
 #include "kgd_deconvolv_app.h"
 #include "kgd_global.h"     // dout
 #include "kgd_update_haplotype.h"
@@ -14,6 +14,7 @@
 #include "kgd_update_pair_haplotype.h"
 #include "kgd_mcmc_hap.h"
 #include "kgd_utility.h"
+
 
 namespace kgd = kellerberrin::deconvolv;
 
@@ -23,7 +24,7 @@ kgd::MCMCHAP::MCMCHAP(std::shared_ptr<DEploidIO> dEploidIO,
                                   std::shared_ptr<McmcSample> mcmcSample,
                                   std::shared_ptr<RandomGenerator> randomGenerator) : MCMCBASE(dEploidIO, mcmcSample, randomGenerator) {
 
-  mcmcEventRg_ = randomGenerator;
+  mcmcEventRg_ = randomGenerator_;
 
   calcMaxIteration(dEploidIO_->getMcmcSample(), dEploidIO_->getMcmcMachineryRate(), dEploidIO_->getMcmcBurn());
 
@@ -68,50 +69,6 @@ void kgd::MCMCHAP::initializeMcmcChain() {
 
 
 
-void kgd::MCMCHAP::initializeUpdateReferencePanel(size_t inbreedingPanelSizeSetTo) {
-
-  if (dEploidIO_->doAllowInbreeding()) {
-
-    return;
-
-  }
-
-  panel_->initializeUpdatePanel(inbreedingPanelSizeSetTo);
-
-}
-
-
-void kgd::MCMCHAP::updateReferencePanel(size_t inbreedingPanelSizeSetTo, size_t excludedStrain) {
-
-  if (burnIn_ > currentMcmcIteration_) {
-
-    return;
-
-  }
-
-  panel_->updatePanelWithHaps(inbreedingPanelSizeSetTo, excludedStrain, currentHap_);
-
-}
-
-
-
-
-
-double kgd::MCMCHAP::calcLogPriorTitre(std::vector<double> &tmpTitre) {
-  //sum(dnorm(titre, MN_LOG_TITRE, SD_LOG_TITRE, log=TRUE));
-
-  std::vector<double> tmp;
-
-  for (auto const &value: tmpTitre) {
-
-    tmp.push_back(log(Utility::normal_pdf(value, MN_LOG_TITRE, SD_LOG_TITRE)));
-
-  }
-
-  return Utility::sumOfVec(tmp);
-
-}
-
 
 
 void kgd::MCMCHAP::finalizeMcmc() {
@@ -123,7 +80,7 @@ void kgd::MCMCHAP::finalizeMcmc() {
 
   dEploidIO_->setFinalProp(mcmcSample_->getProportion().back());
 
-  mcmcSample_->divideSiteVectors(static_cast<double>(maxIteration_));
+  mcmcSample_->divideSiteVectors(static_cast<double>(total_MCMC_iterations()));
 
   dEploidIO_->writeMcmcRelated(mcmcSample_, false);
 
@@ -131,8 +88,6 @@ void kgd::MCMCHAP::finalizeMcmc() {
 
 
 int kgd::MCMCHAP::sampleMcmcEvent() {
-
-  recordingMcmcBool_ = (currentMcmcIteration_ > mcmcThresh_ && currentMcmcIteration_ % McmcMachineryRate_ == 0);
 
   int eventInt = mcmcEventRg_->sampleInt(3);
 
@@ -152,17 +107,52 @@ int kgd::MCMCHAP::sampleMcmcEvent() {
 
   assert(doutLLK());
 
-  if (recordingMcmcBool_) {
-
-    recordMcmcMachinery();
-
-  }
-
   return eventInt;
 
 }
 
 
+void kgd::MCMCHAP::initializeUpdateReferencePanel(size_t inbreedingPanelSizeSetTo) {
+
+  if (dEploidIO_->doAllowInbreeding()) {
+
+    return;
+
+  }
+
+  panel_->initializeUpdatePanel(inbreedingPanelSizeSetTo);
+
+}
+
+
+void kgd::MCMCHAP::updateReferencePanel(size_t inbreedingPanelSizeSetTo, size_t excludedStrain) {
+
+  if (burnin_MCMC_iterations() > current_MCMC_iteration()) {
+
+    return;
+
+  }
+
+  panel_->updatePanelWithHaps(inbreedingPanelSizeSetTo, excludedStrain, currentHap_);
+
+}
+
+
+double kgd::MCMCHAP::calcLogPriorTitre(std::vector<double> &tmpTitre) {
+
+  //sum(dnorm(titre, MN_LOG_TITRE, SD_LOG_TITRE, log=TRUE));
+
+  std::vector<double> tmp;
+
+  for (auto const &value: tmpTitre) {
+
+    tmp.push_back(log(Utility::normal_pdf(value, MN_LOG_TITRE, SD_LOG_TITRE)));
+
+  }
+
+  return Utility::sumOfVec(tmp);
+
+}
 
 
 void kgd::MCMCHAP::updateProportion() {

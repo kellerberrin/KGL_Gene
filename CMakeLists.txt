@@ -341,7 +341,7 @@ set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_lib/kgd_allelefreq.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_allelefreq.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_alleleread.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_alleleread.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_ibd.h kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_ibd.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_base.h kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_base.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_hap.h kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_hap.cc)
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_alleleread.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_ibd.h kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_ibd.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_base.h kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_base.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_hap.h kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_hap.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_virtual.h kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_virtual.cc)
 
 # Application level objects
 set(DECONVOLV_APPLICATION_SOURCE_FILES

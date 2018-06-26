@@ -86,11 +86,13 @@ public:
   const std::vector<double>& getRefCount() const { return refCount_; }
   const std::vector<double>& getAltCount() const { return altCount_; }
 
-  double scalingFactor() const { return scalingFactor_; }
-  double getMissCopyProb() const { return missCopyProb_; }
+
   size_t getMcmcSample() const { return nMcmcSample_; }
   size_t getMcmcMachineryRate() const { return mcmcMachineryRate_; }
   double getMcmcBurn() const { return mcmcBurn_; }
+
+  double scalingFactor() const { return scalingFactor_; }
+  double getMissCopyProb() const { return missCopyProb_; }
   size_t kStrain() const { return kStrain_; }
   double ibdSigma() const { return ibdSigma_; }
   double parameterSigma() const { return parameterSigma_; }
@@ -178,13 +180,13 @@ private:
   bool excludeSites_;
 
 
+  size_t nMcmcSample_;    // Number of MCMC samples (default value 800).
+  size_t mcmcMachineryRate_;  // MCMC sample rate (default value 5).
+  double mcmcBurn_;  // MCMC burn rate (default value 0.5).
+
   size_t kStrain_;
   size_t precision_;
-  size_t nMcmcSample_;
-  size_t mcmcMachineryRate_;
-  double mcmcBurn_;
   size_t randomSeed_;
-
 
   // Parameters
   double missCopyProb_;

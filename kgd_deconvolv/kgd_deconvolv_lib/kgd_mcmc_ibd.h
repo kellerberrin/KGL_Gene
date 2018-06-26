@@ -33,18 +33,16 @@ public:
 
 private:
 
-
   IBDpath ibdPath; /* IBD */
-  /* Methods */
 
-  /* Initialize */
+  /* Structural Subroutines */
   void initializeMcmcChain();
-
-  double calcLogPriorTitre(std::vector<double> &tmpTitre);
 
   int sampleMcmcEvent() override;
 
   void finalizeMcmc() override;
+
+  /* Implementation Subroutines */
 
   void initializeUpdateReferencePanel(size_t inbreedingPanelSizeSetTo);
 

@@ -2,20 +2,13 @@
 // Created by kellerberrin on 25/06/18.
 //
 
-#ifndef KGL_KGD_MCMC_BASE_H
-#define KGL_KGD_MCMC_BASE_H
+#ifndef KGD_MCMC_BASE_H
+#define KGD_MCMC_BASE_H
 
 
 
-#include <vector>
-#include <iostream>
-#include <iomanip>      // std::setw
-#include "kgd_random_generator.h"
-#include "randomSample.hpp"   // src/codeCogs/randomSample.hpp
-#include "kgd_deploid_io.h"
 #include "kgd_panel.h"
-#include "kgd_mcmc_sample.h"
-
+#include "kgd_mcmc_virtual.h"
 
 
 namespace kellerberrin {    // organization level namespace
@@ -23,7 +16,7 @@ namespace deconvolv {          // project level namespace
 
 
 
-class MCMCBASE {
+class MCMCBASE : public MCMCVIRTUAL {
 
 public:
 
@@ -31,21 +24,15 @@ public:
            std::shared_ptr<McmcSample> mcmcSample,
            std::shared_ptr<RandomGenerator> randomGenerator);
 
-  ~MCMCBASE() = default;
-
-  void runMcmcChain(bool showProgress = true);
+  virtual ~MCMCBASE() = default;
 
 protected:
 
 
-  std::shared_ptr<McmcSample> mcmcSample_;
-  std::shared_ptr<DEploidIO> dEploidIO_;
   std::shared_ptr<Panel> panel_;
-  size_t seed_;
   std::shared_ptr<RandomGenerator> hapRg_;
   std::shared_ptr<RandomGenerator> propRg_;
   std::shared_ptr<RandomGenerator> initialHapRg_;
-  std::shared_ptr<StandNormalRandomSample> stdNorm_;
 
   std::vector<double> currentProp_;
   std::vector<double> currentLLks_;
@@ -60,18 +47,9 @@ protected:
   double SD_LOG_TITRE;
   double PROP_SCALE;
 
-  double burnIn_;
-  size_t maxIteration_;
-  size_t mcmcThresh_;
-  size_t McmcMachineryRate_;
 
-  int eventInt_;
-
-  size_t currentMcmcIteration_;
-  bool recordingMcmcBool_;
-
-  virtual int sampleMcmcEvent() = 0;
-  virtual void finalizeMcmc() = 0;
+  void computeDiagnostics() override;
+  void recordMcmcMachinery() override;
 
   void writeLastFwdProb(bool useIBD);
 
@@ -101,21 +79,10 @@ protected:
 
   double initialTitreNormalVariable() { return stdNorm_->genReal() * SD_LOG_TITRE + MN_LOG_TITRE; }
 
-  void computeDiagnostics();
-
-  void calcMaxIteration(size_t nSample, size_t McmcMachineryRate, double burnIn);
-
-  void recordMcmcMachinery();
-
-  void incrementAccept() { ++acceptUpdate_; }
-  int acceptCount() const { return acceptUpdate_; }
-
 private:
 
   size_t kStrain_;
   size_t nLoci_;
-
-  int acceptUpdate_;
 
 };
 

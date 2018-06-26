@@ -61,10 +61,8 @@ void kgd::ExecEnv::executeApp() {
 
       std::shared_ptr<McmcSample> mcmcSample(std::make_shared<McmcSample>());
 
-//      McmcMachinery mcmcMachinery(dEploidIO_ptr, mcmcSample, random_generator, false /* don't use IBD */);
-//      mcmcMachinery.runMcmcChain(true /* show progress */, false /* don't use IBD */);
-
       MCMCHAP hapMcmc(dEploidIO_ptr, mcmcSample, random_generator);
+
       hapMcmc.runMcmcChain(true /* show progress */);
 
       dEploidIO_ptr->paintIBD(random_generator);

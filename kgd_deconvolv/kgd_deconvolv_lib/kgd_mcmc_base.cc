@@ -3,38 +3,28 @@
 //
 
 
-#include <random>
-#include <stdio.h>
-#include <limits>       // std::numeric_limits< double >::min()
-#include <math.h>       // ceil
 #include "kgd_deconvolv_app.h"
 #include "kgd_global.h"     // dout
-#include "kgd_mcmc_base.h"
 #include "kgd_utility.h"
+#include "kgd_mcmc_base.h"
+
 
 namespace kgd = kellerberrin::deconvolv;
 
 
 kgd::MCMCBASE::MCMCBASE(std::shared_ptr<DEploidIO> dEploidIO,
-                      std::shared_ptr<McmcSample> mcmcSample,
-                      std::shared_ptr<RandomGenerator> randomGenerator) {
+                        std::shared_ptr<McmcSample> mcmcSample,
+                        std::shared_ptr<RandomGenerator> randomGenerator) : MCMCVIRTUAL(dEploidIO, mcmcSample, randomGenerator) {
 
-  dEploidIO_ = dEploidIO;
-  panel_ = dEploidIO->getPanel();
-  mcmcSample_ = mcmcSample;
-  seed_ = randomGenerator->seed();
-  hapRg_ = randomGenerator;
-  propRg_ = randomGenerator;
-  initialHapRg_ = randomGenerator;
-  stdNorm_ = std::make_shared<StandNormalRandomSample>(seed_);
-
-  acceptUpdate_ = 0;
+  panel_ = dEploidIO_->getPanel();
+  hapRg_ = randomGenerator_;
+  propRg_ = randomGenerator_;
+  initialHapRg_ = randomGenerator_;
 
   setKstrain(dEploidIO_->kStrain());
   setNLoci(dEploidIO_->getPlaf().size());
 
 }
-
 
 
 void kgd::MCMCBASE::initializeHap() {
@@ -67,30 +57,6 @@ void kgd::MCMCBASE::initializeHap() {
   assert(currentHap_.size() == dEploidIO_->getPlaf().size());
 
 }
-
-
-void kgd::MCMCBASE::runMcmcChain(bool showProgress) {
-
-  for (currentMcmcIteration_ = 0; currentMcmcIteration_ < maxIteration_; currentMcmcIteration_++) {
-
-    if (currentMcmcIteration_ > 0 && currentMcmcIteration_ % 100 == 0 && showProgress) {
-
-      ExecEnv::log().info("MCMC iteration: {}/{}, completed: {}%", currentMcmcIteration_, maxIteration_, int(currentMcmcIteration_ * 100 / maxIteration_));
-
-    }
-
-    eventInt_ = sampleMcmcEvent();
-
-  }
-
-  finalizeMcmc();
-
-  computeDiagnostics();
-
-  ExecEnv::log().info("#### MCMC RUN finished ####");
-
-}
-
 
 
 double kgd::MCMCBASE::rBernoulli(double p) {
@@ -211,18 +177,9 @@ std::vector<double> kgd::MCMCBASE::calcExpectedWsaf(std::vector<double> &proport
 }
 
 
-void kgd::MCMCBASE::calcMaxIteration(size_t nSample, size_t McmcMachineryRate, double burnIn) {
-
-  burnIn_ = burnIn;
-  McmcMachineryRate_ = McmcMachineryRate;
-  maxIteration_ = (size_t) ceil((double) nSample * (double) McmcMachineryRate / (1.0 - burnIn_)) + 1;
-  mcmcThresh_ = (size_t) ceil((double) nSample * (double) McmcMachineryRate * burnIn_ / (1.0 - burnIn_));
-
-}
-
 void kgd::MCMCBASE::computeDiagnostics() {
 
-  dEploidIO_->setacceptRatio(acceptCount() / static_cast<double>(maxIteration_));
+  dEploidIO_->setacceptRatio(acceptCount() / static_cast<double>(total_MCMC_iterations()));
 
   // average cumulate expectedWSAF
   for (size_t i = 0; i < cumExpectedWsaf_.size(); i++) {
@@ -293,7 +250,7 @@ void kgd::MCMCBASE::recordMcmcMachinery() {
 
   mcmcSample_->addProportion(currentProp_);
   mcmcSample_->addSumLLKs(Utility::sumOfVec(currentLLks_));
-  mcmcSample_->addMove(eventInt_);
+  mcmcSample_->addMove(eventType());
 
   // Cumulate expectedWSAF for computing the mean expectedWSAF
   for (size_t i = 0; i < cumExpectedWsaf_.size(); i++) {

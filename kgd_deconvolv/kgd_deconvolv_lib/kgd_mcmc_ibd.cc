@@ -65,41 +65,14 @@ void kgd::MCMCIBD::initializeMcmcChain() {
 }
 
 
+int kgd::MCMCIBD::sampleMcmcEvent() {
 
-void kgd::MCMCIBD::initializeUpdateReferencePanel(size_t inbreedingPanelSizeSetTo) {
+  ibdSampleMcmcEventStep();
 
-  if (dEploidIO_->doAllowInbreeding()) {
+  assert(doutProp());
+  assert(doutLLK());
 
-    return;
-
-  }
-
-  panel_->initializeUpdatePanel(inbreedingPanelSizeSetTo);
-
-}
-
-
-
-double kgd::MCMCIBD::calcLogPriorTitre(std::vector<double> &tmpTitre) {
-  //sum(dnorm(titre, MN_LOG_TITRE, SD_LOG_TITRE, log=TRUE));
-
-  std::vector<double> tmp;
-
-  for (auto const &value: tmpTitre) {
-
-    tmp.push_back(log(Utility::normal_pdf(value, MN_LOG_TITRE, SD_LOG_TITRE)));
-
-  }
-
-  return Utility::sumOfVec(tmp);
-
-}
-
-
-
-void kgd::MCMCIBD::initializePropIBD() {
-
-  currentProp_ = (dEploidIO_->initialPropWasGiven()) ? dEploidIO_->getInitialProp() : titre2prop(currentTitre_);
+  return 0;
 
 }
 
@@ -112,23 +85,43 @@ void kgd::MCMCIBD::finalizeMcmc() {
 
   dEploidIO_->setFinalProp(mcmcSample_->getProportion().back());
 
-  mcmcSample_->divideSiteVectors(static_cast<double>(maxIteration_));
+  mcmcSample_->divideSiteVectors(static_cast<double>(total_MCMC_iterations()));
 
   dEploidIO_->writeMcmcRelated(mcmcSample_, true);
 
   for (size_t atSiteI = 0; atSiteI < nLoci(); atSiteI++) {
 
-    ibdPath.IBDPathChangeAt(atSiteI,  static_cast<double>(maxIteration_));
+    ibdPath.IBDPathChangeAt(atSiteI,  static_cast<double>(total_MCMC_iterations()));
 
   }
 
-  ExecEnv::log().info("Proportion update acceptance rate: {}", acceptCount() / (kStrain() * 1.0 * maxIteration_));
+  ExecEnv::log().info("Proportion update acceptance rate: {}", acceptCount() / (kStrain() * 1.0 * total_MCMC_iterations()));
 
   dEploidIO_->setInitialProp(averageProportion(mcmcSample_->getProportion()));
   dEploidIO_->setInitialPropWasGiven(true);
   dEploidIO_->setDoUpdateProp(false);
   dEploidIO_->setInitialHap(mcmcSample_->getHap());
   dEploidIO_->setInitialHapWasGiven(true);
+
+}
+
+
+void kgd::MCMCIBD::initializePropIBD() {
+
+  currentProp_ = (dEploidIO_->initialPropWasGiven()) ? dEploidIO_->getInitialProp() : titre2prop(currentTitre_);
+
+}
+
+
+void kgd::MCMCIBD::initializeUpdateReferencePanel(size_t inbreedingPanelSizeSetTo) {
+
+  if (dEploidIO_->doAllowInbreeding()) {
+
+    return;
+
+  }
+
+  panel_->initializeUpdatePanel(inbreedingPanelSizeSetTo);
 
 }
 
@@ -154,26 +147,6 @@ std::vector<double> kgd::MCMCIBD::averageProportion(const std::vector<std::vecto
   Utility::normalizeBySum(ret);
 
   return ret;
-}
-
-
-int kgd::MCMCIBD::sampleMcmcEvent() {
-
-  recordingMcmcBool_ = (currentMcmcIteration_ > mcmcThresh_ && currentMcmcIteration_ % McmcMachineryRate_ == 0);
-
-  ibdSampleMcmcEventStep();
-
-  assert(doutProp());
-  assert(doutLLK());
-
-  if (recordingMcmcBool_) {
-
-    recordMcmcMachinery();
-
-  }
-
-  return 0;
-
 }
 
 
