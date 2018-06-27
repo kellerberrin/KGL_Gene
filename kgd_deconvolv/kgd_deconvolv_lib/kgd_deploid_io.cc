@@ -42,7 +42,7 @@ kgd::DEploidIO::DEploidIO() {
   parse();
   checkInput();
   finalize();
-
+  removeFilesWithSameName();
 }
 
 
@@ -66,7 +66,7 @@ void kgd::DEploidIO::init() {
   setUsePanel(true);
 
   precision_ = 8;
-  prefix_ = "pf3k-kgd_deconvolv";
+  prefix_ = "kgd_deconvolv";
 
   setKStrainWasManuallySet(false);
   setKStrainWasSetByHap(false);

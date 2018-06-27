@@ -29,7 +29,6 @@ public:
 protected:
 
 
-  std::shared_ptr<Panel> panel_;
   std::shared_ptr<RandomGenerator> hapRg_;
   std::shared_ptr<RandomGenerator> propRg_;
   std::shared_ptr<RandomGenerator> initialHapRg_;

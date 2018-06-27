@@ -16,7 +16,6 @@ kgd::MCMCBASE::MCMCBASE(std::shared_ptr<DEploidIO> dEploidIO,
                         std::shared_ptr<McmcSample> mcmcSample,
                         std::shared_ptr<RandomGenerator> randomGenerator) : MCMCVIRTUAL(dEploidIO, mcmcSample, randomGenerator) {
 
-  panel_ = dEploidIO_->getPanel();
   hapRg_ = randomGenerator_;
   propRg_ = randomGenerator_;
   initialHapRg_ = randomGenerator_;
@@ -85,15 +84,13 @@ void kgd::MCMCBASE::initializeExpectedWsaf() {
 void kgd::MCMCBASE::initializeTitre() {
   /*   titre<-rnorm(initial.k, MN_LOG_TITRE, SD_LOG_TITRE); */
 
-  assert(currentTitre_.size() == 0);
-
-  currentTitre_ = std::vector<double>(kStrain(), 0.0);
+  currentTitre_.clear();
 
   if (dEploidIO_->doUpdateProp()) {
 
-    for (size_t k = 0; k < kStrain(); k++) {
+    for (size_t k = 0; k < kStrain(); ++k) {
 
-      currentTitre_[k] = initialTitreNormalVariable();
+      currentTitre_.push_back(initialTitreNormalVariable());
 
     }
 
@@ -156,20 +153,24 @@ std::vector<double> kgd::MCMCBASE::titre2prop(std::vector<double> &tmpTitre) {
 std::vector<double> kgd::MCMCBASE::calcExpectedWsaf(std::vector<double> &proportion) {
   //assert ( sumOfVec(proportion) == 1.0); // this fails ...
 
-  std::vector<double> expectedWsaf(nLoci(), 0.0);
+  std::vector<double> expectedWsaf;
 
-  for (size_t i = 0; i < currentHap_.size(); i++) {
+  for (auto allele_site : currentHap_) {
 
-    assert(kStrain_ == currentHap_[i].size());
+    assert(kStrain_ == allele_site.size());
+
+    double expectedWsaf_i = 0.0;
 
     for (size_t k = 0; k < kStrain(); k++) {
 
-      expectedWsaf[i] += currentHap_[i][k] * proportion[k];
+      expectedWsaf_i += allele_site[k] * proportion[k];
 
     }
 
-    assert (expectedWsaf[i] >= 0);
-    //assert ( expectedWsaf[i] <= 1.0 );
+    assert (expectedWsaf_i >= 0);
+
+    expectedWsaf.push_back(expectedWsaf_i);
+
   }
 
   return expectedWsaf;
@@ -182,7 +183,7 @@ void kgd::MCMCBASE::computeDiagnostics() {
   dEploidIO_->setacceptRatio(acceptCount() / static_cast<double>(total_MCMC_iterations()));
 
   // average cumulate expectedWSAF
-  for (size_t i = 0; i < cumExpectedWsaf_.size(); i++) {
+  for (size_t i = 0; i < cumExpectedWsaf_.size(); ++i) {
 
     cumExpectedWsaf_[i] /= dEploidIO_->getMcmcSample();
 
@@ -199,7 +200,7 @@ void kgd::MCMCBASE::computeDiagnostics() {
 
   std::vector<double> wsaf_vec;
 
-  for (size_t i = 0; i < nLoci(); i++) {
+  for (size_t i = 0; i < nLoci(); ++i) {
 
     double wsaf = dEploidIO_->getAltCount()[i] / (dEploidIO_->getRefCount()[i] + dEploidIO_->getAltCount()[i] + 0.00000000000001);
     double adjustedWsaf = wsaf * (1 - 0.01) + (1 - wsaf) * 0.01;
@@ -246,14 +247,12 @@ void kgd::MCMCBASE::computeDiagnostics() {
 
 void kgd::MCMCBASE::recordMcmcMachinery() {
 
-  dout << "***Record mcmc sample " << std::endl;
-
   mcmcSample_->addProportion(currentProp_);
   mcmcSample_->addSumLLKs(Utility::sumOfVec(currentLLks_));
   mcmcSample_->addMove(eventType());
 
-  // Cumulate expectedWSAF for computing the mean expectedWSAF
-  for (size_t i = 0; i < cumExpectedWsaf_.size(); i++) {
+  // Accumulate expectedWSAF for computing the mean expectedWSAF
+  for (size_t i = 0; i < cumExpectedWsaf_.size(); ++i) {
 
     cumExpectedWsaf_[i] += currentExpectedWsaf_[i];
 
@@ -264,15 +263,17 @@ void kgd::MCMCBASE::recordMcmcMachinery() {
 
 bool kgd::MCMCBASE::doutProp() {
 
-  dout << "  Update proportion to: ";
+  std::stringstream ss;
+
+  ss << "  Update strain proportions: ";
 
   for (auto const &value: this->currentProp_) {
 
-    dout << value << " ";
+    ss << value << " ";
 
   }
 
-  dout << std::endl;
+  ExecEnv::log().info("{}", ss.str());
 
   return true;
 
@@ -281,7 +282,7 @@ bool kgd::MCMCBASE::doutProp() {
 
 bool kgd::MCMCBASE::doutLLK() {
 
-  dout << " Current log likelihood = " << Utility::sumOfVec(this->currentLLks_) << std::endl;
+  ExecEnv::log().info(" Current log likelihood = {}", Utility::sumOfVec(this->currentLLks_));
 
   return true;
 

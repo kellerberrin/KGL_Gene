@@ -6,7 +6,6 @@
 #include <kgd_mcmc_ibd.h>
 #include <kgd_mcmc_hap.h>
 #include "kgd_mt_random.h"
-#include "kgd_mcmc.h"
 #include "kgd_deploid_io.h"
 
 #include "kgd_deconvolv_app.h"
@@ -57,6 +56,8 @@ void kgd::ExecEnv::executeApp() {
 
         ibdMcmcMachinery.runMcmcChain(true /* show progress */);
 
+        dEploidIO_ptr->writeMcmcRelated(ibdMcmcSample, true /* ibd */);
+
       }
 
       std::shared_ptr<McmcSample> mcmcSample(std::make_shared<McmcSample>());
@@ -64,6 +65,8 @@ void kgd::ExecEnv::executeApp() {
       MCMCHAP hapMcmc(dEploidIO_ptr, mcmcSample, random_generator);
 
       hapMcmc.runMcmcChain(true /* show progress */);
+
+//      dEploidIO_ptr->writeMcmcRelated(mcmcSample, false /* mcmchap */);
 
       dEploidIO_ptr->paintIBD(random_generator);
 

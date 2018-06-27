@@ -23,8 +23,8 @@
  *
  */
 
+#include <iomanip>      // std::setw
 #include "kgd_deploid_io.h"
-#include "kgd_mcmc.h"
 #include "kgd_deconvolv_app.h"
 
 
@@ -408,3 +408,73 @@ void kgd::DEploidIO::writeIBDpostProb(const std::vector<std::vector<double> > &r
   ofstreamExportTmp_.close();
 #endif
 }
+
+
+void kgd::DEploidIO::writeLastSingleFwdProb(const std::vector<std::vector<double> > &probabilities,
+                                            size_t chromIndex,
+                                            size_t strainIndex,
+                                            bool useIBD) {
+
+  if (probabilities.size() == 0) {
+
+    return;
+
+  }
+
+  size_t panelSize = probabilities[0].size();
+
+  std::string strExportFwdProb = ((useIBD == true) ? strIbdExportSingleFwdProbPrefix_ : strExportSingleFwdProbPrefix_) + std::to_string(strainIndex);
+
+  ofstreamExportFwdProb_.open(strExportFwdProb.c_str(), std::ios::out | std::ios::app | std::ios::binary);
+
+  if (chromIndex == 0) { // Print header
+
+    ofstreamExportFwdProb_ << "CHROM" << "\t" << "POS" << "\t";
+
+    for (size_t ii = 0; ii < probabilities[0].size(); ii++) {
+
+      if (doAllowInbreeding() == true) {
+
+        if (ii <= (panelSize - kStrain())) {
+
+          ofstreamExportFwdProb_ << "P" << (ii + 1);
+
+        } else {
+
+          ofstreamExportFwdProb_ << "I" << (ii) - (panelSize - kStrain());
+
+        }
+
+      } else {
+
+        ofstreamExportFwdProb_ << (ii + 1);
+
+      }
+
+      ofstreamExportFwdProb_ << ((ii < (panelSize - 1)) ? "\t" : "\n");
+
+    }
+
+  }
+
+  size_t siteIndex = 0;
+
+  for (size_t posI = 0; posI < position_[chromIndex].size(); posI++) {
+
+    ofstreamExportFwdProb_ << chrom_[chromIndex] << "\t" << (int) position_[chromIndex][posI] << "\t";
+
+    for (size_t ii = 0; ii < probabilities[siteIndex].size(); ii++) {
+
+      ofstreamExportFwdProb_ << probabilities[siteIndex][ii];
+      ofstreamExportFwdProb_ << ((ii < (probabilities[siteIndex].size() - 1)) ? "\t" : "\n");
+
+    }
+
+    siteIndex++;
+
+  }
+
+  ofstreamExportFwdProb_.close();
+
+}
+

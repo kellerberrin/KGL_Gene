@@ -39,9 +39,9 @@ void kgd::Hprior::buildHprior(size_t kStrain, const std::vector<double> &plaf) {
 
     std::vector<std::vector<int> > hSetBaseTmp = hSetBase;
 
-    for (size_t j = 0; j < (size_t) getkStrain(); j++) {
+    for (size_t j = 0; j < getkStrain(); ++j) {
 
-      for (size_t i = 0; i < hSetBase.size(); i++) {
+      for (size_t i = 0; i < hSetBase.size(); ++i) {
 
         hSetBaseTmp[i][j] = hSetBase[i][state[j]];
 
@@ -60,7 +60,7 @@ void kgd::Hprior::buildHprior(size_t kStrain, const std::vector<double> &plaf) {
       //vector<int> hSetBaseTmpUniqueSubSet(); // uu[i,a.u,drop=F]
       int tmpSum = 0;
 
-      for (int uniqSt : stateUnique) {
+      for (auto uniqSt : stateUnique) {
 
         tmpSum += hSetBaseTmpUnique[i][uniqSt];
 
@@ -68,12 +68,13 @@ void kgd::Hprior::buildHprior(size_t kStrain, const std::vector<double> &plaf) {
       // sumOfVec(hSetBaseTmpUnique[i]);
       int tmpDiff = stateUnique.size() - tmpSum;
       //cout << stateUnique.size() << " " << tmpSum << " " << tmpDiff<< endl;
-      std::vector<double> hPriorTmp(nLoci());
+      std::vector<double> hPriorTmp;
 
       for (size_t site = 0; site < nLoci(); site++) {
         //cout << (1.0-pop_allele_freq_[site]) << " " << tmpDiff << " " <<pow((1.0-pop_allele_freq_[site]),(double)tmpDiff) << endl;
 
-        hPriorTmp[site] = pow(pop_allele_freq_[site], (double) tmpSum) * pow((1.0 - pop_allele_freq_[site]), (double) tmpDiff);
+        double site_value = pow(pop_allele_freq_[site], static_cast<double>(tmpSum)) * pow((1.0 - pop_allele_freq_[site]), static_cast<double>(tmpDiff));
+        hPriorTmp.push_back(site_value);
 
       }
 

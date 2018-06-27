@@ -23,9 +23,10 @@
  *
  */
 
+#include <iomanip>      // std::setw
 #include <kgd_deconvolv_app.h>
 #include "kgd_deploid_io.h"
-#include "kgd_mcmc.h"
+#include "kgd_mcmc_sample.h"
 
 
 namespace kgd = kellerberrin::deconvolv;
@@ -41,25 +42,6 @@ void kgd::DEploidIO::writeMcmcRelated(std::shared_ptr<McmcSample> mcmcSample, bo
   if (not useIBD) {
 
     writeVcf(mcmcSample);
-    siteOfTwoSwitchOne_ = mcmcSample->getSiteOfTwoSwitchOne();
-    siteOfTwoMissCopyOne_ = mcmcSample->getSiteOfTwoMissCopyOne();
-    siteOfTwoSwitchTwo_ = mcmcSample->getSiteOfTwoSwitchTwo();
-    siteOfTwoMissCopyTwo_ = mcmcSample->getSiteOfTwoMissCopyTwo();
-    siteOfOneSwitchOne_ = mcmcSample->getSiteOfOneSwitchOne();
-    siteOfOneMissCopyOne_ = mcmcSample->getSiteOfOneMissCopyOne();
-
-    finalSiteOfTwoSwitchOne_ = mcmcSample->getCurrentsiteOfTwoSwitchOne();
-    finalSiteOfTwoMissCopyOne_ = mcmcSample->getCurrentsiteOfTwoMissCopyOne();
-    finalSiteOfTwoSwitchTwo_ = mcmcSample->getCurrentsiteOfTwoSwitchTwo();
-    finalSiteOfTwoMissCopyTwo_ = mcmcSample->getCurrentsiteOfTwoMissCopyTwo();
-    finalSiteOfOneSwitchOne_ = mcmcSample->getCurrentsiteOfOneSwitchOne();
-    finalSiteOfOneMissCopyOne_ = mcmcSample->getCurrentsiteOfOneMissCopyOne();
-
-    //writeEventCount( );
-  } else {
-  
-    //IBD_path_change_at_ = mcmcSample->IBD_path_change_at_;
-    //finalIBDpathChangeAt = mcmcSample->current_IBD_path_change_at_;
 
   }
 
@@ -68,28 +50,47 @@ void kgd::DEploidIO::writeMcmcRelated(std::shared_ptr<McmcSample> mcmcSample, bo
 
 void kgd::DEploidIO::writeProp(std::shared_ptr<McmcSample> mcmcSample, bool useIBD) {
 
+  std::string filename;
+
   if (useIBD) {
 
-    ofstreamExportTmp_.open(strIbdExportProp_.c_str(), std::ios::out | std::ios::app | std::ios::binary);
+    filename = strIbdExportProp_;
 
   } else {
 
-    ofstreamExportTmp_.open(strExportProp_.c_str(), std::ios::out | std::ios::app | std::ios::binary);
+    filename = strExportProp_;
 
   }
 
+  filename = "/home/kellerberrin/test.txt";
+
+  std::ofstream fExport(filename);
+
+  if (fExport.good()) {
+
+    ExecEnv::log().info("Write strain proportions to file: {}", filename);
+
+  } else {
+
+    ExecEnv::log().warn("Unable to write to file: {}", filename);
+    return;
+
+  }
+
+  size_t count = 0;
   for (size_t i = 0; i < mcmcSample->getProportion().size(); i++) {
 
     for (size_t ii = 0; ii < mcmcSample->getProportionIndex(i).size(); ii++) {
 
-      ofstreamExportTmp_ << std::setw(10) << mcmcSample->getProportionIndex(i, ii);
-      ofstreamExportTmp_ << ((ii < (mcmcSample->getProportionIndex(i).size() - 1)) ? "\t" : "\n");
+      fExport << std::setw(10) << mcmcSample->getProportionIndex(i, ii);
+      fExport << ((ii < (mcmcSample->getProportionIndex(i).size() - 1)) ? "\t" : "\n");
+      ++count;
 
     }
 
   }
 
-  ofstreamExportTmp_.close();
+  ExecEnv::log().info("{} strain proportions written", count);
 
 }
 

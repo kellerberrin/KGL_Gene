@@ -290,10 +290,8 @@ set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/contrib/codeCogs/randomSample.hpp
         kgd_deconvolv/contrib/codeCogs/stirling.h
         kgd_deconvolv/contrib/codeCogs/xsub_ln_add1.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_debug.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_vcf_reader_debug.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_deploid_io_export.cc
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_deploid_io_export_posterior.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_write_mcmc_related.cc
         kgd_deconvolv/contrib/gzstream/gzstream.cpp
         kgd_deconvolv/contrib/gzstream/gzstream.h
@@ -309,8 +307,6 @@ set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_lib/kgd_global.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdconfig.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdconfig.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc.cc
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_panel.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_panel.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_txt_reader.cc
@@ -341,7 +337,15 @@ set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_lib/kgd_allelefreq.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_allelefreq.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_alleleread.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_alleleread.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_ibd.h kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_ibd.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_base.h kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_base.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_hap.h kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_hap.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_virtual.h kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_virtual.cc)
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_alleleread.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_ibd.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_ibd.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_base.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_base.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_hap.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_hap.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_virtual.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_virtual.cc)
 
 # Application level objects
 set(DECONVOLV_APPLICATION_SOURCE_FILES

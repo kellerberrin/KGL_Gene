@@ -80,8 +80,6 @@ double kgd::IBDpath::UpdateHaplotypesFromPrior(size_t strain, size_t loci) const
 }
 
 
-
-
 void kgd::IBDpath::ibdSamplePath(const std::vector<double>& statePrior) {
 
   int lociIdx = nLoci() - 1;
@@ -358,23 +356,18 @@ void kgd::IBDpath::combineFwdBwd(const std::vector<std::vector<double>> &reshape
 
     std::vector<double> tmp;
 
-    //cout << " site " << i << endl;
-
     for (size_t j = 0; j < reshapedFwd[i].size(); j++) {
 
-
       tmp.push_back(exp(log(reshapedFwd[i][j]) + log(reshapedBwd[i][j])));
-      //tmp.push_back(exp(log(bwd_[i][j])));
-      //tmp.push_back(exp(log(fm_[i][j])));
-      //cout << "fwd = "<<fm_[i][j]<<" "<< ", bwd_ = "<<bwd_[i][j]<< ", fwdbwd = "<< tmp.back()<<endl;
 
     }
 
     Utility::normalizeBySum(tmp);
+
     fwdbwd_.push_back(tmp);
 
   }
-//post = exp(log(fmNomalized) + log(bwdNormalized))
+
 }
 
 
@@ -445,22 +438,26 @@ std::vector<std::vector<double> > kgd::IBDpath::reshapeProbs(const std::vector<s
 std::vector<double> kgd::IBDpath::computeEffectiveKPrior(double theta) {
   //#Calculate state prior given theta (theta is prob IBD)
 
-  std::vector<double> pr0(kStrain());
+  std::vector<double> binomial_vector;
 
-  for (int i = 0; i < (int) pr0.size(); i++) {
+  for (size_t i = 0; i < kStrain(); ++i) {
 
-    pr0[i] = Utility::binomialPdf(i, (int) (kStrain() - 1), theta);
+    double binomial_i = Utility::binomialPdf(static_cast<int>(i), static_cast<int>(kStrain() - 1), theta);
+    binomial_vector.push_back(binomial_i);
 
   }
 
   std::vector<double> effectiveKPrior;
 
-  for (size_t effectiveKtmp : h_prior_.getEffectiveK()) {
+  for (auto effectiveKtmp : h_prior_.getEffectiveK()) {
 
-    int effectiveKidx = effectiveKtmp - 1;
+    size_t effectiveKidx = effectiveKtmp - 1;
+
     assert(effectiveKidx >= 0);
-    assert(effectiveKidx < (int) kStrain());
-    effectiveKPrior.push_back(pr0[effectiveKidx] / unique_effectiveK_count_[effectiveKidx]);
+    assert(effectiveKidx < kStrain());
+
+    double  binomial_ratio = binomial_vector[effectiveKidx] / unique_effectiveK_count_[effectiveKidx];
+    effectiveKPrior.push_back(binomial_ratio);
 
   }
 

@@ -44,8 +44,6 @@ private:
 
   /* Implementation Subroutines */
 
-  void initializeUpdateReferencePanel(size_t inbreedingPanelSizeSetTo);
-
   std::vector<double> computeLlkAtAllSites(double err = 0.01);
 
   std::vector<double> averageProportion(const std::vector<std::vector<double> > &proportion);

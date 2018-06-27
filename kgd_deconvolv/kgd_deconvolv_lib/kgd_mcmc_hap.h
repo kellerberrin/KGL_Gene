@@ -40,6 +40,7 @@ private:
 
   std::shared_ptr<RandomGenerator> mcmcEventRg_;
   double currentLogPriorTitre_;
+  std::shared_ptr<Panel> panel_;
 
   /* Structural Subroutines */
   void initializeMcmcChain();

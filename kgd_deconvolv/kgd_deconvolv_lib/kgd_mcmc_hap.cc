@@ -25,6 +25,7 @@ kgd::MCMCHAP::MCMCHAP(std::shared_ptr<DEploidIO> dEploidIO,
                                   std::shared_ptr<RandomGenerator> randomGenerator) : MCMCBASE(dEploidIO, mcmcSample, randomGenerator) {
 
   mcmcEventRg_ = randomGenerator_;
+  panel_ = dEploidIO_->getPanel();
 
   calcMaxIteration(dEploidIO_->getMcmcSample(), dEploidIO_->getMcmcMachineryRate(), dEploidIO_->getMcmcBurn());
 
@@ -70,23 +71,6 @@ void kgd::MCMCHAP::initializeMcmcChain() {
 
 
 
-
-void kgd::MCMCHAP::finalizeMcmc() {
-
-
-  mcmcSample_->setHap(currentHap_);
-
-  writeLastFwdProb(false);
-
-  dEploidIO_->setFinalProp(mcmcSample_->getProportion().back());
-
-  mcmcSample_->divideSiteVectors(static_cast<double>(total_MCMC_iterations()));
-
-  dEploidIO_->writeMcmcRelated(mcmcSample_, false);
-
-}
-
-
 int kgd::MCMCHAP::sampleMcmcEvent() {
 
   int eventInt = mcmcEventRg_->sampleInt(3);
@@ -108,6 +92,20 @@ int kgd::MCMCHAP::sampleMcmcEvent() {
   assert(doutLLK());
 
   return eventInt;
+
+}
+
+
+void kgd::MCMCHAP::finalizeMcmc() {
+
+
+  mcmcSample_->setHap(currentHap_);
+
+  writeLastFwdProb(false);
+
+  dEploidIO_->setFinalProp(mcmcSample_->getProportion().back());
+
+  mcmcSample_->divideSiteVectors(static_cast<double>(total_MCMC_iterations()));
 
 }
 
