@@ -272,7 +272,8 @@ include_directories(kgd_deconvolv/kgd_deconvolv_app
         kgd_deconvolv/contrib/gzstream
         kgd_deconvolv/kgd_random)
 
-set(DECONVOLV_LIB_SOURCE_FILES
+
+set(DECONVOLV_LIB_CONTRIB_FILES
         kgd_deconvolv/contrib/codeCogs/asympt_expn.h
         kgd_deconvolv/contrib/codeCogs/errorfn.h
         kgd_deconvolv/contrib/codeCogs/errorfnc.h
@@ -290,9 +291,6 @@ set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/contrib/codeCogs/randomSample.hpp
         kgd_deconvolv/contrib/codeCogs/stirling.h
         kgd_deconvolv/contrib/codeCogs/xsub_ln_add1.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_vcf_reader_debug.cc
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_deploid_io_export.cc
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_write_mcmc_related.cc
         kgd_deconvolv/contrib/gzstream/gzstream.cpp
         kgd_deconvolv/contrib/gzstream/gzstream.h
         kgd_deconvolv/kgd_random/kgd_fastfunc.cc
@@ -301,6 +299,12 @@ set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/kgd_random/kgd_mersenne_twister.h
         kgd_deconvolv/kgd_random/kgd_random_generator.cc
         kgd_deconvolv/kgd_random/kgd_random_generator.h
+        kgd_deconvolv/kgd_random/kgd_mt_random.h)
+
+set(DECONVOLV_LIB_SOURCE_FILES
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_vcf_reader_debug.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_deploid_io_export.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_write_mcmc_related.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_deploid_io.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_deploid_io.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_exceptions.h
@@ -319,7 +323,6 @@ set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_lib/kgd_variant_index.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_vcf_reader.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_vcf_reader.h
-        kgd_deconvolv/kgd_random/kgd_mt_random.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_update_single_haplotype.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_update_single_haplotype.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_update_pair_haplotype.h
@@ -345,7 +348,9 @@ set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_hap.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_hap.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_virtual.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_virtual.cc)
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_virtual.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_titre.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_titre.cc)
 
 # Application level objects
 set(DECONVOLV_APPLICATION_SOURCE_FILES
@@ -355,10 +360,11 @@ set(DECONVOLV_APPLICATION_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_app.h
         kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_parse.cc)
 
+add_library(kgd_contrib_lib STATIC ${DECONVOLV_LIB_CONTRIB_FILES})
 
 add_library(kgd_deconvolv_lib STATIC ${DECONVOLV_LIB_SOURCE_FILES})
 
-target_link_libraries(kgd_deconvolv_lib ${ZLIB_LIBRARIES})
+target_link_libraries(kgd_deconvolv_lib kgd_contrib_lib ${ZLIB_LIBRARIES})
 
 add_executable (kgd_deconvolv ${DECONVOLV_APPLICATION_SOURCE_FILES})
 

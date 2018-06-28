@@ -150,8 +150,9 @@ public:
 
   }
 
+  static double lognormal_pdf(double x, double mean, double std_dev);
 
-  static double normal_pdf(double x, double m, double s);
+  static double normal_pdf(double x, double mean, double std_dev);
 
   static double min_value(std::vector<double> x);
 

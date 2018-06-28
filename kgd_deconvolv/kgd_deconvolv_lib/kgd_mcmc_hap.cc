@@ -144,7 +144,7 @@ double kgd::MCMCHAP::calcLogPriorTitre(std::vector<double> &tmpTitre) {
 
   for (auto const &value: tmpTitre) {
 
-    tmp.push_back(log(Utility::normal_pdf(value, MN_LOG_TITRE, SD_LOG_TITRE)));
+    tmp.push_back(std::log(Utility::normal_pdf(value, MN_LOG_TITRE, SD_LOG_TITRE)));
 
   }
 
@@ -159,7 +159,7 @@ void kgd::MCMCHAP::updateProportion() {
 
   if (kStrain() < 2) {
 
-    ExecEnv::log().vinfo("MCMC Update failed (only 1 strain)");
+    ExecEnv::log().error("MCMC Update failed (only 1 strain)");
     return;
 
   }
@@ -175,38 +175,36 @@ void kgd::MCMCHAP::updateProportion() {
 
   }
 
-  std::vector<double> tmpExpecedWsaf = calcExpectedWsaf(tmpProp);
+  std::vector<double> tmpExpectedWsaf = calcExpectedWsaf(tmpProp);
 
   std::vector<double> tmpLLKs = Utility::calcLLKs(dEploidIO_->getRefCount(),
                                                   dEploidIO_->getAltCount(),
-                                                  tmpExpecedWsaf,
+                                                  tmpExpectedWsaf,
                                                   0,
-                                                  tmpExpecedWsaf.size(),
+                                                  tmpExpectedWsaf.size(),
                                                   dEploidIO_->scalingFactor());
 
   double diffLLKs = deltaLLKs(tmpLLKs);
 
+  double ratio_likelihood = std::exp(diffLLKs);
+
   double tmpLogPriorTitre = calcLogPriorTitre(tmpTitre);
 
-  double priorPropRatio = exp(tmpLogPriorTitre - currentLogPriorTitre_);
+  double prior_prop_ratio = std::exp(tmpLogPriorTitre - currentLogPriorTitre_);
 
-  double hastingsRatio = 1.0;
+  double proposal_ratio = prior_prop_ratio * ratio_likelihood;
 
-  double sample_value = propRg_->sample();
+  double acceptance_draw = propRg_->sample();
 
-  double priorRatio = priorPropRatio * hastingsRatio * exp(diffLLKs);
+  if (acceptance_draw > proposal_ratio) {
 
-  if (sample_value > priorRatio) {
-
-    ExecEnv::log().vinfo("MCMC Update failed, sample: {}, priorRatio :{}", sample_value, priorRatio);
-    return;
+    return;  // proposal rejected.
 
   }
 
-  ExecEnv::log().vinfo("MCMC Update succeeded, sample: {}, priorRatio :{}", sample_value, priorRatio);
 
   incrementAccept();
-  currentExpectedWsaf_ = tmpExpecedWsaf;
+  currentExpectedWsaf_ = tmpExpectedWsaf;
   currentLLks_ = tmpLLKs;
   currentLogPriorTitre_ = tmpLogPriorTitre;
   currentTitre_ = tmpTitre;
@@ -381,7 +379,6 @@ void kgd::MCMCHAP::updatePairHaps() {
 
 }
 
-
 void kgd::MCMCHAP::findUpdatingStrainSingle() {
 
   std::vector<double> eventProb(kStrain(), 1);
@@ -389,6 +386,8 @@ void kgd::MCMCHAP::findUpdatingStrainSingle() {
   Utility::normalizeBySum(eventProb);
 
   strainIndex_ = Utility::sampleIndexGivenProp(mcmcEventRg_, eventProb);
+
+  ExecEnv::log().vinfo("Updating haplotype (1 of 1): {}", strainIndex_);
 
 }
 
@@ -421,7 +420,7 @@ void kgd::MCMCHAP::findUpdatingStrainPair() {
 
   assert(strainIndex1_ != strainIndex2_);
 
-  ExecEnv::log().vinfo("  Updating haplotype (1): {} and haplotype (2): {}", strainIndex1_, strainIndex2_);
+  ExecEnv::log().vinfo("Updating haplotype (1 of 2): {} and haplotype (2 of 2): {}", strainIndex1_, strainIndex2_);
 
 }
 

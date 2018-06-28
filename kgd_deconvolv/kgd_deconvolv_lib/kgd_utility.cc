@@ -35,14 +35,24 @@
 namespace kgd = kellerberrin::deconvolv;
 
 
-// See http://stackoverflow.com/questions/10847007/using-the-gaussian-probability-density-function-in-c
-double kgd::Utility::normal_pdf(double x, double m, double s) {
+double kgd::Utility::lognormal_pdf(double x, double mean, double std_dev) {
 
   static const double inv_sqrt_2pi = 0.3989422804014327;
 
-  double a = (x - m) / s;
+  double a = (std::log(x) - mean) / std_dev;
 
-  return inv_sqrt_2pi / s * std::exp(-(0.5) * a * a);
+  return (inv_sqrt_2pi / (x * std_dev)) * std::exp(-0.5 * a * a);
+
+}
+
+
+double kgd::Utility::normal_pdf(double x, double mean, double std_dev) {
+
+  static const double inv_sqrt_2pi = 0.3989422804014327;
+
+  double a = (x - mean) / std_dev;
+
+  return (inv_sqrt_2pi / std_dev) * std::exp(-0.5 * a * a);
 
 }
 
@@ -111,7 +121,7 @@ void kgd::Utility::normalizeBySum(std::vector<double> &array) {
 
   double sumOfArray = sumOfVec(array);
 
-  for (std::vector<double>::iterator it = array.begin(); it != array.end(); ++it) {
+  for (auto it = array.begin(); it != array.end(); ++it) {
 
     *it /= sumOfArray;
 

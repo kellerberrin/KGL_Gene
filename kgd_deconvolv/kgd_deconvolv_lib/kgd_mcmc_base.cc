@@ -114,7 +114,7 @@ void kgd::MCMCBASE::initializeProp() {
 
     for (size_t i = 0; i < dEploidIO_->getInitialProp().size(); i++) {
 
-      currentTitre_.push_back(log(dEploidIO_->getInitialProp()[i]));
+      currentTitre_.push_back(std::log(dEploidIO_->getInitialProp()[i]));
 
     }
 

@@ -18,7 +18,9 @@ namespace kgd = kellerberrin::deconvolv;
 // initialiseMCMCmachinery
 kgd::MCMCIBD::MCMCIBD(std::shared_ptr<DEploidIO> dEploidIO,
                       std::shared_ptr<McmcSample> mcmcSample,
-                      std::shared_ptr<RandomGenerator> randomGenerator) : MCMCBASE(dEploidIO, mcmcSample, randomGenerator) {
+                      std::shared_ptr<RandomGenerator> randomGenerator)
+  : MCMCBASE(dEploidIO, mcmcSample, randomGenerator),
+    titre_proportions_(kStrain(), 0.0 /* mean */, dEploidIO_->ibdSigma(), 40.0 /*update */) {
 
   calcMaxIteration(100, 10, 0.5);  // TODO: Get these values from Deploid_io.
 
@@ -41,6 +43,8 @@ void kgd::MCMCIBD::initializeMcmcChain() {
   initializeTitre();
   initializeHap();
   initializeProp();
+
+
   initializeExpectedWsaf(); // This requires currentHap_ and currentProp_
   currentLLks_ = Utility::calcLLKs(dEploidIO_->getRefCount(),
                                    dEploidIO_->getAltCount(),
@@ -100,6 +104,13 @@ void kgd::MCMCIBD::finalizeMcmc() {
 
 void kgd::MCMCIBD::initializePropIBD() {
 
+
+  if (dEploidIO_->initialPropWasGiven()) {
+
+    titre_proportions_.proportion2Titre(dEploidIO_->getInitialProp());
+
+  }
+
   currentProp_ = (dEploidIO_->initialPropWasGiven()) ? dEploidIO_->getInitialProp() : titre2prop(currentTitre_);
 
 }
@@ -110,29 +121,35 @@ std::vector<double> kgd::MCMCIBD::averageProportion(const std::vector<std::vecto
 
   assert(proportion.size() > 0);
 
-  std::vector<double> ret(kStrain());
+  std::vector<double> average_proportion;
 
   for (size_t i = 0; i < kStrain(); i++) {
 
-    for (std::vector<double> p : proportion) {
+    double strain_average = 0;
 
-      ret[i] += p[i];
+    for (auto prop_strain : proportion) {
+
+      strain_average += prop_strain[i];
 
     }
 
-    ret[i] /= (1.0 * proportion.size());
+    strain_average = strain_average / static_cast<double>(proportion.size());
+
+    average_proportion.push_back(strain_average);
 
   }
 
-  Utility::normalizeBySum(ret);
+  Utility::normalizeBySum(average_proportion);
 
-  return ret;
+  return average_proportion;
+
 }
 
 
-void kgd::MCMCIBD::ibdInitializeEssentials() {
+void kgd::MCMCIBD::ibdInitializeEssentials(double err) {
 
   initializePropIBD();
+
   ibdPath.init(*dEploidIO_, hapRg_);
 
   std::vector<double> llkOfData;
@@ -141,9 +158,11 @@ void kgd::MCMCIBD::ibdInitializeEssentials() {
 
     double wsaf = dEploidIO_->getAltCount()[i] / (dEploidIO_->getRefCount()[i] + dEploidIO_->getAltCount()[i] + 0.00000000000001);
 
-    double adjustedWsaf = wsaf * (1 - 0.01) + (1 - wsaf) * 0.01;
+    double adjustedWsaf = (wsaf * (1 - err)) + ((1 - wsaf) * err);
 
-    llkOfData.push_back(Utility::logBetaPdf(adjustedWsaf, ibdPath.getLogLikelihoodSurface()[i][0], ibdPath.getLogLikelihoodSurface()[i][1]));
+    double loci_likelihood = Utility::logBetaPdf(adjustedWsaf, ibdPath.getLogLikelihoodSurface()[i][0], ibdPath.getLogLikelihoodSurface()[i][1]);
+
+    llkOfData.push_back(loci_likelihood);
 
   }
 
@@ -160,12 +179,9 @@ void kgd::MCMCIBD::ibdSampleMcmcEventStep() {
   //#Get haplotypes and update LLK for each site
   ibdUpdateHaplotypesFromPrior();
 
-  std::vector<double> llkAtAllSites = computeLlkAtAllSites();
   ////#Given current haplotypes, sample titres 1 by 1 using MH
 
-  ibdUpdateProportionGivenHap(llkAtAllSites);
-
-  currentLLks_ = llkAtAllSites;
+  ibdUpdateProportionGivenHap();
 
   currentExpectedWsaf_ = calcExpectedWsaf(currentProp_);
 
@@ -187,33 +203,44 @@ void kgd::MCMCIBD::ibdUpdateHaplotypesFromPrior() {
 }
 
 
-void kgd::MCMCIBD::ibdUpdateProportionGivenHap(std::vector<double> &llkAtAllSites) {
+void kgd::MCMCIBD::ibdUpdateProportionGivenHap() {
 
   // For each strain perform a Metropolis-Hastings update of currentTitre, currentProportion
 
+  std::vector<double> llkAtAllSites = computeLlkAtAllSites(currentProp_);
+
   for (size_t i = 0; i < kStrain(); i++) {
+
+    MCMCTITRE proposal(titre_proportions_);
+
+    proposal.updateTitreIndex(i);
 
     double titre_i = currentTitre_[i];
 
     std::vector<double> oldProp = currentProp_;
 
-    currentTitre_[i] += (stdNorm_->genReal() * SD_LOG_TITRE * 1.0 / PROP_SCALE + 0.0); // tit.0[i]+rnorm(1, 0, scale.t.prop);
-
+    currentTitre_[i] += ((stdNorm_->genReal() * (SD_LOG_TITRE / PROP_SCALE)) + MN_LOG_TITRE); // tit.0[i]+rnorm(1, 0, scale.t.prop);
     currentProp_ = titre2prop(currentTitre_);
 
-    std::vector<double> llk_loci_vector = computeLlkAtAllSites();
+    std::vector<double> llk_loci_vector = computeLlkAtAllSites(currentProp_);
 
-    double ratio_normal = Utility::normal_pdf(currentTitre_[i], 0, 1) / Utility::normal_pdf(titre_i, 0, 1);
-    double ratio_likelihood = exp(Utility::sumOfVec(llk_loci_vector) - Utility::sumOfVec(llkAtAllSites));
-    double proposal_ratio = ratio_normal * ratio_likelihood;
+//    double hastings_ratio = Utility::normal_pdf(currentTitre_[i], 0, 1) / Utility::normal_pdf(titre_i, 0, 1);
+    double prior_ratio = Utility::normal_pdf(currentTitre_[i], MN_LOG_TITRE, SD_LOG_TITRE) / Utility::normal_pdf(titre_i, MN_LOG_TITRE, SD_LOG_TITRE);
+    double likelihood_ratio = exp(Utility::sumOfVec(llk_loci_vector) - Utility::sumOfVec(llkAtAllSites));
+    double proposal_ratio = prior_ratio * likelihood_ratio;
 
-    if (propRg_->sample() < proposal_ratio) {
+    double acceptance_draw = propRg_->sample();
 
+    ExecEnv::log().info("IDB prop[{}]: {}, h_ratio: {}, l_ratio: {}, pr_ratio: {}, accept_draw: {}, {}",
+                        i, currentProp_[i], prior_ratio, likelihood_ratio, proposal_ratio, acceptance_draw, acceptance_draw <= proposal_ratio ? "ACCEPT" : "REJECT");
+
+    if (acceptance_draw <= proposal_ratio) {
+      // Accept
       llkAtAllSites = llk_loci_vector;
       incrementAccept();
 
     } else {
-
+      // Reject
       currentTitre_[i] = titre_i;
       currentProp_ = oldProp;
 
@@ -221,10 +248,12 @@ void kgd::MCMCIBD::ibdUpdateProportionGivenHap(std::vector<double> &llkAtAllSite
 
   }
 
+  currentLLks_ = llkAtAllSites;
+
 }
 
 
-std::vector<double> kgd::MCMCIBD::computeLlkAtAllSites(double err) {
+std::vector<double> kgd::MCMCIBD::computeLlkAtAllSites(const std::vector<double>& proportion, double err) {
 
   std::vector<double> llk_vector;
 
@@ -234,11 +263,11 @@ std::vector<double> kgd::MCMCIBD::computeLlkAtAllSites(double err) {
 
     for (size_t strain = 0; strain < kStrain(); ++strain) {
 
-      loci_proportion += (double) currentHap_[loci][strain] * currentProp_[strain];
+      loci_proportion += (double) currentHap_[loci][strain] * proportion[strain];
 
     }
 
-    double loc_proportion_err = loci_proportion * (1 - err) + (1 - loci_proportion) * err;
+    double loc_proportion_err = (loci_proportion * (1 - err)) + ((1 - loci_proportion) * err);
 
     double llk_loci = Utility::logBetaPdf(loc_proportion_err, ibdPath.getLogLikelihoodSurface()[loci][0], ibdPath.getLogLikelihoodSurface()[loci][1]);
 

@@ -14,6 +14,7 @@
 #include "kgd_mcmc_base.h"
 #include "kgd_ibdpath.h"
 #include "kgd_mcmc_sample.h"
+#include "kgd_mcmc_titre.h"
 
 
 namespace kellerberrin {    // organization level namespace
@@ -34,6 +35,7 @@ public:
 private:
 
   IBDpath ibdPath; /* IBD */
+  MCMCTITRE titre_proportions_;
 
   /* Structural Subroutines */
   void initializeMcmcChain();
@@ -44,11 +46,11 @@ private:
 
   /* Implementation Subroutines */
 
-  std::vector<double> computeLlkAtAllSites(double err = 0.01);
+  std::vector<double> computeLlkAtAllSites(const std::vector<double>& proportion, double err = 0.01);
 
   std::vector<double> averageProportion(const std::vector<std::vector<double> > &proportion);
 
-  void ibdInitializeEssentials();
+  void ibdInitializeEssentials(double err = 0.01);
 
   void ibdSampleMcmcEventStep();
 
@@ -56,7 +58,7 @@ private:
 
   void ibdUpdateHaplotypesFromPrior();
 
-  void ibdUpdateProportionGivenHap(std::vector<double> &llkAtAllSites);
+  void ibdUpdateProportionGivenHap();
 
 };
 
