@@ -84,6 +84,12 @@ void kgd::MCMCTITRE::updateTitre() {
 
 void kgd::MCMCTITRE::updateTitreIndex(size_t index) {
 
+  if (index >= kStrain()) {
+
+    ExecEnv::log().critical("MCMCTITRE::updateTitreIndex(); Invalid Index: {} for titre size: {}", index, currentTitre_.size());
+
+  }
+
   double dt = deltaXnormalVariable();
 
   currentTitre_[index] += dt;
@@ -117,6 +123,7 @@ double kgd::MCMCTITRE::calcPriorTitreIndex(size_t index) const {
   }
 
   return Utility::normal_pdf(currentTitre_[index], mean_log_titre_, sd_log_titre_);
+//  return Utility::lognormal_pdf(proportions_[index], mean_log_titre_, sd_log_titre_);
 
 }
 
@@ -139,7 +146,7 @@ void kgd::MCMCTITRE::calcProportions() {
 
   proportions_.clear();
 
-  for (auto const &value : currentTitre_) {
+  for (auto value : currentTitre_) {
 
     proportions_.push_back(std::exp(value));
 

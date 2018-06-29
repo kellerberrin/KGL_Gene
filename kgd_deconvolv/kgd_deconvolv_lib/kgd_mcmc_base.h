@@ -24,7 +24,7 @@ public:
            std::shared_ptr<McmcSample> mcmcSample,
            std::shared_ptr<RandomGenerator> randomGenerator);
 
-  virtual ~MCMCBASE() = default;
+  ~MCMCBASE() override = default;
 
 protected:
 
@@ -33,27 +33,18 @@ protected:
   std::shared_ptr<RandomGenerator> propRg_;
   std::shared_ptr<RandomGenerator> initialHapRg_;
 
-  std::vector<double> currentProp_;
   std::vector<double> currentLLks_;
 
   std::vector<std::vector<double> > currentHap_;
-  std::vector<double> currentTitre_;
 
   std::vector<double> currentExpectedWsaf_;
   std::vector<double> cumExpectedWsaf_;
 
-  double MN_LOG_TITRE;
-  double SD_LOG_TITRE;
-  double PROP_SCALE;
-
-
   void computeDiagnostics() override;
-  void recordMcmcMachinery() override;
 
   void writeLastFwdProb(bool useIBD);
 
   /* Debug */
-  bool doutProp();
   bool doutLLK();
 
   void setKstrain(const size_t setTo) { kStrain_ = setTo; }
@@ -62,21 +53,13 @@ protected:
   void setNLoci(const size_t setTo) { nLoci_ = setTo; }
   size_t nLoci() const { return nLoci_; }
 
-  void initializeProp();
-
-  void initializeTitre();
-
   void initializeHap();
 
-  void initializeExpectedWsaf();
+  void initializeExpectedWsaf(const std::vector<double>& proportion);
 
   double rBernoulli(double p);
 
-  std::vector<double> titre2prop(std::vector<double> &tmpTitre);
-
-  std::vector<double> calcExpectedWsaf(std::vector<double> &proportion);
-
-  double initialTitreNormalVariable() { return stdNorm_->genReal() * SD_LOG_TITRE + MN_LOG_TITRE; }
+  std::vector<double> calcExpectedWsaf(const std::vector<double>& proportion);
 
 private:
 

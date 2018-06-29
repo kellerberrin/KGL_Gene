@@ -29,13 +29,13 @@ public:
   MCMCIBD(std::shared_ptr<DEploidIO> dEplioidIO,
           std::shared_ptr<McmcSample> mcmcSample,
           std::shared_ptr<RandomGenerator> randomGenerator);
-  ~MCMCIBD() =default;
+  ~MCMCIBD() override =default;
 
 
 private:
 
   IBDpath ibdPath; /* IBD */
-  MCMCTITRE titre_proportions_;
+  MCMCTITRE titre_proportions_; /* MCMC proportions */
 
   /* Structural Subroutines */
   void initializeMcmcChain();
@@ -44,8 +44,9 @@ private:
 
   void finalizeMcmc() override;
 
-  /* Implementation Subroutines */
+  void recordMcmcMachinery() override;
 
+  /* Implementation Subroutines */
   std::vector<double> computeLlkAtAllSites(const std::vector<double>& proportion, double err = 0.01);
 
   std::vector<double> averageProportion(const std::vector<std::vector<double> > &proportion);
@@ -53,8 +54,6 @@ private:
   void ibdInitializeEssentials(double err = 0.01);
 
   void ibdSampleMcmcEventStep();
-
-  void initializePropIBD();
 
   void ibdUpdateHaplotypesFromPrior();
 

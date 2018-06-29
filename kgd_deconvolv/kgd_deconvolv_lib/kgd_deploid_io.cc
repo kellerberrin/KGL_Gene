@@ -99,6 +99,7 @@ void kgd::DEploidIO::init() {
   setParameterG(20.0);
   setParameterSigma(5.0);
   setIBDSigma(20.0);
+  setIBDSigma(10.0);
   setUseVcf(false);
   setDoExportVcf(false);
   setDoComputeLLK(false);

@@ -22,16 +22,20 @@ namespace kgd = kellerberrin::deconvolv;
 // initialiseMCMCmachinery
 kgd::MCMCHAP::MCMCHAP(std::shared_ptr<DEploidIO> dEploidIO,
                                   std::shared_ptr<McmcSample> mcmcSample,
-                                  std::shared_ptr<RandomGenerator> randomGenerator) : MCMCBASE(dEploidIO, mcmcSample, randomGenerator) {
+                                  std::shared_ptr<RandomGenerator> randomGenerator)
+  : MCMCBASE(dEploidIO, mcmcSample, randomGenerator) ,
+    titre_proportions_(kStrain(), 0.0 /* mean */, dEploidIO_->parameterSigma(), 40.0 /*update */) {
 
   mcmcEventRg_ = randomGenerator_;
   panel_ = dEploidIO_->getPanel();
 
   calcMaxIteration(dEploidIO_->getMcmcSample(), dEploidIO_->getMcmcMachineryRate(), dEploidIO_->getMcmcBurn());
 
-  MN_LOG_TITRE = 0.0;
-  SD_LOG_TITRE = dEploidIO_->parameterSigma();
-  PROP_SCALE = 40.0;
+  if (dEploidIO_->initialPropWasGiven()) {
+
+    titre_proportions_.proportion2Titre(dEploidIO_->getInitialProp());
+
+  }
 
   initializeMcmcChain();
 
@@ -43,11 +47,8 @@ void kgd::MCMCHAP::initializeMcmcChain() {
 
   ExecEnv::log().info("############ initializeMcmcChain() ###########");
 
-  initializeTitre();
-  currentLogPriorTitre_ = calcLogPriorTitre(currentTitre_);
   initializeHap();
-  initializeProp();
-  initializeExpectedWsaf(); // This requires currentHap_ and currentProp_
+  initializeExpectedWsaf(titre_proportions_.Proportions()); // This requires currentHap_ and currentProp_
   currentLLks_ = Utility::calcLLKs(dEploidIO_->getRefCount(),
                                    dEploidIO_->getAltCount(),
                                    currentExpectedWsaf_,
@@ -63,12 +64,9 @@ void kgd::MCMCHAP::initializeMcmcChain() {
 
   mcmcSample_->setVectorSize(nLoci());
 
-  assert (doutProp());
   assert (doutLLK());
 
 }
-
-
 
 
 int kgd::MCMCHAP::sampleMcmcEvent() {
@@ -81,11 +79,11 @@ int kgd::MCMCHAP::sampleMcmcEvent() {
 
   } else if ((eventInt == 1) && (dEploidIO_->doUpdateSingle())) {
 
-    updateSingleHap();
+    updateSingleHap(titre_proportions_.Proportions());
 
   } else if ((eventInt == 2) && (dEploidIO_->doUpdatePair())) {
 
-    updatePairHaps();
+    updatePairHaps(titre_proportions_.Proportions());
 
   }
 
@@ -101,7 +99,7 @@ void kgd::MCMCHAP::finalizeMcmc() {
 
   mcmcSample_->setHap(currentHap_);
 
-  writeLastFwdProb(false);
+  writeLastFwdProb(titre_proportions_.Proportions(), false);
 
   dEploidIO_->setFinalProp(mcmcSample_->getProportion().back());
 
@@ -136,46 +134,14 @@ void kgd::MCMCHAP::updateReferencePanel(size_t inbreedingPanelSizeSetTo, size_t 
 }
 
 
-double kgd::MCMCHAP::calcLogPriorTitre(std::vector<double> &tmpTitre) {
-
-  //sum(dnorm(titre, MN_LOG_TITRE, SD_LOG_TITRE, log=TRUE));
-
-  std::vector<double> tmp;
-
-  for (auto const &value: tmpTitre) {
-
-    tmp.push_back(std::log(Utility::normal_pdf(value, MN_LOG_TITRE, SD_LOG_TITRE)));
-
-  }
-
-  return Utility::sumOfVec(tmp);
-
-}
-
-
 void kgd::MCMCHAP::updateProportion() {
 
-  ExecEnv::log().vinfo("MCMC Attempt of update proportion");
 
-  if (kStrain() < 2) {
+  MCMCTITRE proposal(titre_proportions_);
 
-    ExecEnv::log().error("MCMC Update failed (only 1 strain)");
-    return;
+  proposal.updateTitre();
 
-  }
-
-  // calculate dt
-  std::vector<double> tmpTitre = calcTmpTitre();
-  std::vector<double> tmpProp = titre2prop(tmpTitre);
-
-  if (Utility::min_value(tmpProp) < 0 || Utility::max_value(tmpProp) > 1) {
-
-    ExecEnv::log().vinfo("MCMC Update failed, tmpProp < 0 or tmpProp > 1");
-    return;
-
-  }
-
-  std::vector<double> tmpExpectedWsaf = calcExpectedWsaf(tmpProp);
+  std::vector<double> tmpExpectedWsaf = calcExpectedWsaf(proposal.Proportions());
 
   std::vector<double> tmpLLKs = Utility::calcLLKs(dEploidIO_->getRefCount(),
                                                   dEploidIO_->getAltCount(),
@@ -188,11 +154,9 @@ void kgd::MCMCHAP::updateProportion() {
 
   double ratio_likelihood = std::exp(diffLLKs);
 
-  double tmpLogPriorTitre = calcLogPriorTitre(tmpTitre);
+  double prior_prop_ratio = std::exp(proposal.calcLogPriorTitre() - titre_proportions_.calcLogPriorTitre());
 
-  double prior_prop_ratio = std::exp(tmpLogPriorTitre - currentLogPriorTitre_);
-
-  double proposal_ratio = prior_prop_ratio * ratio_likelihood;
+  double proposal_ratio = prior_prop_ratio * ratio_likelihood * proposal.hastingsRatio();
 
   double acceptance_draw = propRg_->sample();
 
@@ -202,15 +166,10 @@ void kgd::MCMCHAP::updateProportion() {
 
   }
 
-
   incrementAccept();
   currentExpectedWsaf_ = tmpExpectedWsaf;
   currentLLks_ = tmpLLKs;
-  currentLogPriorTitre_ = tmpLogPriorTitre;
-  currentTitre_ = tmpTitre;
-  currentProp_ = tmpProp;
-
-  assert (doutProp());
+  titre_proportions_ = proposal;
 
 }
 
@@ -224,23 +183,7 @@ double kgd::MCMCHAP::deltaLLKs(std::vector<double> &newLLKs) {
 }
 
 
-std::vector<double> kgd::MCMCHAP::calcTmpTitre() {
-
-  std::vector<double> tmpTitre;
-
-  for (size_t k = 0; k < kStrain(); k++) {
-
-    double dt = deltaXnormalVariable();
-    tmpTitre.push_back(currentTitre_[k] + dt);
-
-  }
-
-  return tmpTitre;
-
-}
-
-
-void kgd::MCMCHAP::updateSingleHap() {
+void kgd::MCMCHAP::updateSingleHap(const std::vector<double>& proportions) {
 
   ExecEnv::log().vinfo("McmcMachinery::updateSingleHap()");
 
@@ -280,7 +223,7 @@ void kgd::MCMCHAP::updateSingleHap() {
                   dEploidIO_->getAltCount(),
                   dEploidIO_->getPlaf(),
                   currentExpectedWsaf_,
-                  currentProp_,
+                  proportions,
                   currentHap_);
 
     size_t updateIndex = 0;
@@ -305,12 +248,12 @@ void kgd::MCMCHAP::updateSingleHap() {
 
   }
 
-  currentExpectedWsaf_ = calcExpectedWsaf(currentProp_);
+  currentExpectedWsaf_ = calcExpectedWsaf(proportions);
 
 }
 
 
-void kgd::MCMCHAP::updatePairHaps() {
+void kgd::MCMCHAP::updatePairHaps(const std::vector<double>& proportions) {
 
   if (kStrain() == 1) {
 
@@ -346,7 +289,7 @@ void kgd::MCMCHAP::updatePairHaps() {
                   dEploidIO_->getAltCount(),
                   dEploidIO_->getPlaf(),
                   currentExpectedWsaf_,
-                  currentProp_,
+                  proportions,
                   currentHap_);
 
     size_t updateIndex = 0;
@@ -375,7 +318,7 @@ void kgd::MCMCHAP::updatePairHaps() {
 
   }
 
-  currentExpectedWsaf_ = calcExpectedWsaf(currentProp_);
+  currentExpectedWsaf_ = calcExpectedWsaf(proportions);
 
 }
 
@@ -425,7 +368,7 @@ void kgd::MCMCHAP::findUpdatingStrainPair() {
 }
 
 
-void kgd::MCMCHAP::writeLastFwdProb(bool useIBD) {
+void kgd::MCMCHAP::writeLastFwdProb(const std::vector<double>& proportions, bool useIBD) {
 
   if (not dEploidIO_->doExportPostProb()) {
 
@@ -466,7 +409,7 @@ void kgd::MCMCHAP::writeLastFwdProb(bool useIBD) {
                           dEploidIO_->getAltCount(),
                           dEploidIO_->getPlaf(),
                           currentExpectedWsaf_,
-                          currentProp_,
+                          proportions,
                           currentHap_);
 
       dEploidIO_->writeLastSingleFwdProb(updatingSingle.getFwdProbs(), chromi, tmpk, useIBD);
@@ -476,4 +419,21 @@ void kgd::MCMCHAP::writeLastFwdProb(bool useIBD) {
   }
 
 }
+
+
+void kgd::MCMCHAP::recordMcmcMachinery() {
+
+  mcmcSample_->addProportion(titre_proportions_.Proportions());
+  mcmcSample_->addSumLLKs(Utility::sumOfVec(currentLLks_));
+  mcmcSample_->addMove(eventType());
+
+  // Accumulate expectedWSAF for computing the mean expectedWSAF
+  for (size_t i = 0; i < cumExpectedWsaf_.size(); ++i) {
+
+    cumExpectedWsaf_[i] += currentExpectedWsaf_[i];
+
+  }
+
+}
+
 

@@ -66,11 +66,11 @@ double kgd::MCMCBASE::rBernoulli(double p) {
 }
 
 
-void kgd::MCMCBASE::initializeExpectedWsaf() {
+void kgd::MCMCBASE::initializeExpectedWsaf(const std::vector<double> &proportion) {
 
   assert(currentExpectedWsaf_.size() == 0);
 
-  currentExpectedWsaf_ = calcExpectedWsaf(currentProp_);
+  currentExpectedWsaf_ = calcExpectedWsaf(proportion);
 
   assert(currentExpectedWsaf_.size() == nLoci_);
 
@@ -79,78 +79,7 @@ void kgd::MCMCBASE::initializeExpectedWsaf() {
 }
 
 
-
-
-void kgd::MCMCBASE::initializeTitre() {
-  /*   titre<-rnorm(initial.k, MN_LOG_TITRE, SD_LOG_TITRE); */
-
-  currentTitre_.clear();
-
-  if (dEploidIO_->doUpdateProp()) {
-
-    for (size_t k = 0; k < kStrain(); ++k) {
-
-      currentTitre_.push_back(initialTitreNormalVariable());
-
-    }
-
-  }
-
-  assert(currentTitre_.size() == kStrain_);
-
-}
-
-
-
-void kgd::MCMCBASE::initializeProp() {
-
-  assert(currentProp_.size() == (size_t) 0);
-
-  currentProp_ = (dEploidIO_->initialPropWasGiven()) ? dEploidIO_->getInitialProp() : titre2prop(currentTitre_);
-
-  if (dEploidIO_->initialPropWasGiven()) {
-
-    currentTitre_.clear();
-
-    for (size_t i = 0; i < dEploidIO_->getInitialProp().size(); i++) {
-
-      currentTitre_.push_back(std::log(dEploidIO_->getInitialProp()[i]));
-
-    }
-
-  }
-
-}
-
-
-std::vector<double> kgd::MCMCBASE::titre2prop(std::vector<double> &tmpTitre) {
-
-  std::vector<double> tmpExpTitre;
-
-  for (auto const &value: tmpTitre) {
-
-    tmpExpTitre.push_back(exp(value));
-
-  }
-
-  double tmpSum = Utility::sumOfVec(tmpExpTitre);
-
-  std::vector<double> tmpProp;
-
-  for (auto const &value: tmpExpTitre) {
-
-    tmpProp.push_back(value / tmpSum);
-    assert (tmpProp.back() > 0);
-    assert (tmpProp.back() <= 1);
-
-  }
-
-  return tmpProp;
-
-}
-
-
-std::vector<double> kgd::MCMCBASE::calcExpectedWsaf(std::vector<double> &proportion) {
+std::vector<double> kgd::MCMCBASE::calcExpectedWsaf(const std::vector<double> &proportion) {
   //assert ( sumOfVec(proportion) == 1.0); // this fails ...
 
   std::vector<double> expectedWsaf;
@@ -241,41 +170,6 @@ void kgd::MCMCBASE::computeDiagnostics() {
 
   dEploidIO_->setdicByTheta(dicByTheta);
 
-
-}
-
-
-void kgd::MCMCBASE::recordMcmcMachinery() {
-
-  mcmcSample_->addProportion(currentProp_);
-  mcmcSample_->addSumLLKs(Utility::sumOfVec(currentLLks_));
-  mcmcSample_->addMove(eventType());
-
-  // Accumulate expectedWSAF for computing the mean expectedWSAF
-  for (size_t i = 0; i < cumExpectedWsaf_.size(); ++i) {
-
-    cumExpectedWsaf_[i] += currentExpectedWsaf_[i];
-
-  }
-
-}
-
-
-bool kgd::MCMCBASE::doutProp() {
-
-  std::stringstream ss;
-
-  ss << "  Update strain proportions: ";
-
-  for (auto const &value: this->currentProp_) {
-
-    ss << value << " ";
-
-  }
-
-  ExecEnv::log().info("{}", ss.str());
-
-  return true;
 
 }
 

@@ -33,6 +33,7 @@ public:
   double calcLogPriorTitre() const; // calc the sum of the log of the titre probability
   double calcPriorTitreIndex(size_t index) const; // calc the the titre index probability.
   const std::vector<double>& Proportions() const { return proportions_; }
+  double hastingsRatio() const { return 1.0; }  // symmetric proposal
 
 private:
 

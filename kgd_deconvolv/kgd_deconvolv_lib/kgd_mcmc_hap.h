@@ -12,11 +12,11 @@
 #include "kgd_ibdpath.h"
 #include "kgd_mcmc_base.h"
 #include "kgd_mcmc_sample.h"
+#include "kgd_mcmc_titre.h"
 
 
 namespace kellerberrin {    // organization level namespace
 namespace deconvolv {          // project level namespace
-
 
 
 class MCMCHAP : public MCMCBASE {
@@ -29,7 +29,7 @@ public:
   MCMCHAP(std::shared_ptr<DEploidIO> dEplioidIO,
           std::shared_ptr<McmcSample> mcmcSample,
           std::shared_ptr<RandomGenerator> randomGenerator);
-  ~MCMCHAP() =default;
+  ~MCMCHAP() override = default;
 
 private:
 
@@ -39,8 +39,9 @@ private:
   size_t strainIndex2_;
 
   std::shared_ptr<RandomGenerator> mcmcEventRg_;
-  double currentLogPriorTitre_;
   std::shared_ptr<Panel> panel_;
+  MCMCTITRE titre_proportions_; /* MCMC proportions */
+
 
   /* Structural Subroutines */
   void initializeMcmcChain();
@@ -49,12 +50,11 @@ private:
 
   void finalizeMcmc() override;
 
+  void recordMcmcMachinery() override;
+
   /* Implementation Subroutines */
-  double deltaXnormalVariable() { return stdNorm_->genReal() * SD_LOG_TITRE * 1.0 / PROP_SCALE + MN_LOG_TITRE; }
 
-  double calcLogPriorTitre(std::vector<double> &tmpTitre);
-
-  void writeLastFwdProb(bool useIBD);
+  void writeLastFwdProb(const std::vector<double>& proportions, bool useIBD);
 
   void updateReferencePanel(size_t inbreedingPanelSizeSetTo, size_t excludedStrain);
 
@@ -62,17 +62,16 @@ private:
 
   void updateProportion();
 
-  std::vector<double> calcTmpTitre();
-
   double deltaLLKs(std::vector<double> &newLLKs);
 
-  void updateSingleHap();
+  void updateSingleHap(const std::vector<double>& proportions);
 
   void findUpdatingStrainSingle();
 
-  void updatePairHaps();
+  void updatePairHaps(const std::vector<double>& proportions);
 
   void findUpdatingStrainPair();
+
 
 
 };
