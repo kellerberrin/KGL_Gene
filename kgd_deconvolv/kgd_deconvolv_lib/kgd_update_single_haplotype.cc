@@ -60,10 +60,10 @@ void kgd::UpdateSingleHap::core(const std::vector<double> &refCount,
 }
 
 
-void kgd::UpdateSingleHap::painting(std::vector<double> &refCount,
-                                    std::vector<double> &altCount,
-                                    std::vector<double> &expectedWsaf,
-                                    std::vector<double> &proportion,
+void kgd::UpdateSingleHap::painting(const std::vector<double> &refCount,
+                                    const std::vector<double> &altCount,
+                                    const std::vector<double> &expectedWsaf,
+                                    const std::vector<double> &proportion,
                                     std::vector<std::vector<double> > &haplotypes) {
 
   calcExpectedWsaf(expectedWsaf, proportion, haplotypes);

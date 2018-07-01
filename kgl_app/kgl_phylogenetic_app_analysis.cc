@@ -13,8 +13,11 @@
 #include "kgl_variant_classify.h"
 #include "kgl_variant_phase.h"
 
+#include "kgd_deconvolv_app.h"
+
 
 namespace kgl = kellerberrin::genome;
+namespace kgd = kellerberrin::deconvolv;
 
 
 bool kgl::PhylogeneticAnalysis::checkAnalysisType(const std::string& analysis_type) {
@@ -143,6 +146,8 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
     std::string variant_ref_file = kgl::Utility::filePath("variant_ref_file", args.workDirectory) + ".tab";
     std::string variant_alt_file = kgl::Utility::filePath("variant_alt_file", args.workDirectory) + ".tab";
     classifier.writeOrderedVariants(delimiter, variant_ref_file, variant_alt_file, 30, 25000);
+
+    kgd::ExecEnv::executeApp();
 
   }
 

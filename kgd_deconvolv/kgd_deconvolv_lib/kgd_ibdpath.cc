@@ -453,7 +453,6 @@ std::vector<double> kgd::IBDpath::computeEffectiveKPrior(double theta) {
 
     size_t effectiveKidx = effectiveKtmp - 1;
 
-    assert(effectiveKidx >= 0);
     assert(effectiveKidx < kStrain());
 
     double  binomial_ratio = binomial_vector[effectiveKidx] / unique_effectiveK_count_[effectiveKidx];

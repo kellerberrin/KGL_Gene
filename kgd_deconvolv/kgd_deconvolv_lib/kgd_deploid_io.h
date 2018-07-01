@@ -32,7 +32,7 @@
 #include <memory>
 #include <vector>
 #include <fstream>
-#include <stdlib.h>             // strtol, strtod
+#include <cstdlib>             // strtol, strtod
 #include <stdexcept>            // std::invalid_argument
 #include <iostream>             // std::cout
 #include <sstream>              // std::stringstream
@@ -40,6 +40,7 @@
 #include "kgd_exceptions.h"
 #include "kgd_panel.h"
 #include "kgd_vcf_reader.h"
+#include "kgd_ctl_data.h"
 #include "kgd_random_generator.h"
 
 
@@ -79,13 +80,15 @@ public:
   bool forbidCopyFromSame() const { return forbidCopyFromSame_; }
   bool useConstRecomb() const { return useConstRecomb_; }
 
-  const std::vector<size_t>& indexOfChromStarts() const { return indexOfChromStarts_; }
-  const std::vector<int>& getIndexPosition(size_t index) const { return position_[index]; }
-  const std::vector<std::vector<int>>& getPosition() const { return position_; }
-  const std::vector<double>& getPlaf() const { return plaf_; }
-  const std::vector<double>& getRefCount() const { return refCount_; }
-  const std::vector<double>& getAltCount() const { return altCount_; }
+  const std::vector<size_t>& indexOfChromStarts() const { return getMixtureData().indexOfChromStarts(); }
+  const std::vector<int>& getIndexPosition(size_t index) const { return getMixtureData().getPosition()[index]; }
+  const std::vector<std::vector<int>>& getPosition() const { return getMixtureData().getPosition(); }
+  const std::vector<double>& getPlaf() const { return getMixtureData().getPlaf(); }
+  const std::vector<double>& getRefCount() const { return getMixtureData().getRefCount(); }
+  const std::vector<double>& getAltCount() const { return getMixtureData().getAltCount(); }
+  size_t nLoci() const { return getMixtureData().nLoci(); }
 
+  const MixtureData& getMixtureData() const { return mixture_data; }
 
   size_t getMcmcSample() const { return nMcmcSample_; }
   size_t getMcmcMachineryRate() const { return mcmcMachineryRate_; }
@@ -98,7 +101,6 @@ public:
   double parameterSigma() const { return parameterSigma_; }
   const std::vector<std::vector<double> >& getInitialHap() const { return initialHap_; }
   const std::vector<double>& getInitialProp() const { return  initialProp_; }
-  size_t nLoci() const { return nLoci_; }
   double averageCentimorganDistance() const { return averageCentimorganDistance_; }
   double parameterG() const { return parameterG_; }
   double constRecombProb() const { return constRecombProb_; }
@@ -136,9 +138,7 @@ public:
 private:
 
   // Object pointers.
-  std::shared_ptr<VcfReader> vcfReaderPtr_;
   std::shared_ptr<Panel> panel_;
-  std::shared_ptr<ExcludeMarker> excludedMarkers_;
 
   // Read in input
   std::string plafFileName_;
@@ -217,13 +217,18 @@ private:
   std::vector<double> initialProp_;
   std::vector<double> finalProp_;
   std::vector<std::vector<double> > initialHap_;
-  std::vector<std::string> chrom_;
-  std::vector<size_t> indexOfChromStarts_;
-  std::vector<std::vector<int> > position_;
-  std::vector<double> plaf_;
-  std::vector<double> refCount_;
-  std::vector<double> altCount_;
-  size_t nLoci_;
+
+
+  // Genetic input data.
+//  std::vector<std::string> chrom_;
+//  std::vector<size_t> indexOfChromStarts_;
+//  std::vector<std::vector<int> > position_;
+//  std::vector<double> plaf_;
+//  std::vector<double> refCount_;
+//  std::vector<double> altCount_;
+//  size_t nLoci_;
+
+  MixtureData mixture_data;
 
   std::vector<double> IBDpathChangeAt_;
   std::vector<double> finalIBDpathChangeAt_;
@@ -314,7 +319,6 @@ private:
   void setParameterG(const double setTo) { parameterG_ = setTo; }
   void setParameterSigma(const double setTo) { parameterSigma_ = setTo; }
   void setIBDSigma(const double setTo) { ibdSigma_ = setTo; }
-  void setNLoci(const size_t setTo) { nLoci_ = setTo; }
   void setKstrain(const size_t setTo) { kStrain_ = setTo; }
   void setKStrainWasManuallySet(const size_t setTo) { kStrainWasManuallySet_ = setTo; }
   bool kStrainWasSetByHap() const { return kStrainWasSetByHap_; }

@@ -64,8 +64,6 @@ void kgd::MCMCHAP::initializeMcmcChain() {
 
   mcmcSample_->setVectorSize(nLoci());
 
-  assert (doutLLK());
-
 }
 
 
@@ -86,8 +84,6 @@ int kgd::MCMCHAP::sampleMcmcEvent() {
     updatePairHaps(titre_proportions_.Proportions());
 
   }
-
-  assert(doutLLK());
 
   return eventInt;
 

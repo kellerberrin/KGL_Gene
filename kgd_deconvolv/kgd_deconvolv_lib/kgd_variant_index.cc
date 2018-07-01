@@ -41,14 +41,11 @@ kgd::VariantIndex::VariantIndex() {
 
 void kgd::VariantIndex::findWhoToBeKept(std::shared_ptr<ExcludeMarker> excludedMarkers) {
 
-  dout << " Starts findWhoToBeKept " << std::endl;
 
   assert (indexOfContentToBeKept.size() == 0);
   assert (indexOfPosToBeKept.size() == 0);
 
   for (size_t chromI = 0; chromI < chrom_.size(); chromI++) {
-
-    dout << "   Going through chrom " << chrom_[chromI] << std::endl;
 
     std::vector<size_t> tmpindexOfPosToBeKept;
 
@@ -85,16 +82,12 @@ void kgd::VariantIndex::findWhoToBeKept(std::shared_ptr<ExcludeMarker> excludedM
 
   assert (indexOfPosToBeKept.size() == chrom_.size());
 
-  dout << indexOfContentToBeKept.size() << " sites need to be Kept " << std::endl;
-
 }
 
 
 void kgd::VariantIndex::findAndKeepMarkers(std::shared_ptr<ExcludeMarker> excludedMarkers) {
 
   setDoneGetIndexOfChromStarts(false);
-
-  dout << " findAndKeepMarkers called" << std::endl;
 
   findWhoToBeKept(excludedMarkers);
   removePositions();

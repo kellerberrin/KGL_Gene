@@ -33,19 +33,16 @@ protected:
   std::shared_ptr<RandomGenerator> propRg_;
   std::shared_ptr<RandomGenerator> initialHapRg_;
 
-  std::vector<double> currentLLks_;
-
   std::vector<std::vector<double> > currentHap_;
-
   std::vector<double> currentExpectedWsaf_;
   std::vector<double> cumExpectedWsaf_;
+  std::vector<double> currentLLks_;
 
   void computeDiagnostics() override;
 
   void writeLastFwdProb(bool useIBD);
 
   /* Debug */
-  bool doutLLK();
 
   void setKstrain(const size_t setTo) { kStrain_ = setTo; }
   size_t kStrain() const { return kStrain_; }

@@ -252,10 +252,6 @@ add_library(kgl_genome_lib STATIC ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES} 
 
 target_link_libraries(kgl_genome_lib  ${Boost_LIBRARIES})
 
-#generate kgl_genome executable
-add_executable (kgl_genome ${APPLICATION_SOURCE_FILES})
-
-target_link_libraries(kgl_genome kgl_genome_lib)
 
 
 ############kgd_deconvolv########################################################
@@ -350,14 +346,23 @@ set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_virtual.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_virtual.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_titre.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_titre.cc)
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_titre.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_data.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_data.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_parameter.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_parameter.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_function.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_function.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_output.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_output.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_input.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_input.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_app.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_app.cc)
 
 # Application level objects
 set(DECONVOLV_APPLICATION_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_main.cc
-        kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_app.h
-        kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_app.cc
-        kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_app.h
         kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_parse.cc)
 
 add_library(kgd_contrib_lib STATIC ${DECONVOLV_LIB_CONTRIB_FILES})
@@ -369,3 +374,9 @@ target_link_libraries(kgd_deconvolv_lib kgd_contrib_lib ${ZLIB_LIBRARIES})
 add_executable (kgd_deconvolv ${DECONVOLV_APPLICATION_SOURCE_FILES})
 
 target_link_libraries(kgd_deconvolv kgd_deconvolv_lib kgl_genome_lib)
+
+
+#generate kgl_genome executable
+add_executable (kgl_genome ${APPLICATION_SOURCE_FILES})
+
+target_link_libraries(kgl_genome kgl_genome_lib kgd_deconvolv_lib )

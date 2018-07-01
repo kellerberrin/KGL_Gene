@@ -141,11 +141,11 @@ void kgd::DEploidIO::writeHap(std::shared_ptr<McmcSample> mcmcSample, bool useIB
 
   size_t siteIndex = 0;
 
-  for (size_t chromI = 0; chromI < chrom_.size(); chromI++) {
+  for (size_t chromI = 0; chromI < getMixtureData().getChrom().size(); chromI++) {
 
-    for (size_t posI = 0; posI < position_[chromI].size(); posI++) {
+    for (size_t posI = 0; posI < getMixtureData().getPosition()[chromI].size(); posI++) {
 
-      ofstreamExportTmp_ << chrom_[chromI] << "\t" << (int) position_[chromI][posI] << "\t";
+      ofstreamExportTmp_ << getMixtureData().getChrom()[chromI] << "\t" << static_cast<int>(getMixtureData().getPosition()[chromI][posI]) << "\t";
 
       for (size_t ii = 0; ii < mcmcSample->getHapIndex(siteIndex).size(); ii++) {
 
@@ -170,6 +170,13 @@ void kgd::DEploidIO::writeVcf(std::shared_ptr<McmcSample> mcmcSample) {
 
   if (!doExportVcf()) return;
 
+  if (not useVcf()) {
+
+    ExecEnv::log().warn("Can only export VCF if VCF file specified");
+    return;
+
+  }
+
   ogzstream ogstreamExport;
   std::ostream *writeTo;
 
@@ -185,10 +192,12 @@ void kgd::DEploidIO::writeVcf(std::shared_ptr<McmcSample> mcmcSample) {
 
   }
 
+  VcfReader VCF_reader(vcfFileName_);
+
   // VCF HEADER
   if (useVcf()) {
 
-    for (auto const &headerLine: vcfReaderPtr_->getHeaderLines()) {
+    for (auto const &headerLine: VCF_reader.getHeaderLines()) {
 
       (*writeTo) << headerLine << std::endl;
 
@@ -207,7 +216,7 @@ void kgd::DEploidIO::writeVcf(std::shared_ptr<McmcSample> mcmcSample) {
   // Include proportions
   for (size_t ii = 0; ii < kStrain_; ii++) {
 
-    std::string sampleName = vcfReaderPtr_->getSampleName();
+    std::string sampleName = VCF_reader.getSampleName();
 
     (*writeTo) << "##Proportion of strain "
                << (useVcf() ? sampleName : "h")
@@ -229,7 +238,7 @@ void kgd::DEploidIO::writeVcf(std::shared_ptr<McmcSample> mcmcSample) {
 
   for (size_t ii = 0; ii < kStrain_; ii++) {
 
-    std::string sampleName = vcfReaderPtr_->getSampleName();
+    std::string sampleName = VCF_reader.getSampleName();
 
     (*writeTo) << (useVcf() ? sampleName : "h")
                << "." << (ii + 1);
@@ -239,25 +248,25 @@ void kgd::DEploidIO::writeVcf(std::shared_ptr<McmcSample> mcmcSample) {
 
   size_t siteIndex = 0;
 
-  for (size_t chromI = 0; chromI < chrom_.size(); chromI++) {
+  for (size_t chromI = 0; chromI < getMixtureData().getChrom().size(); chromI++) {
 
-    for (size_t posI = 0; posI < position_[chromI].size(); posI++) {
+    for (size_t posI = 0; posI < getMixtureData().getPosition()[chromI].size(); posI++) {
 
       if (useVcf()) {
 
-        (*writeTo) << vcfReaderPtr_->getVariantLine(siteIndex).getChromStr() << "\t"
-                   << vcfReaderPtr_->getVariantLine(siteIndex).getPosStr() << "\t"
-                   << vcfReaderPtr_->getVariantLine(siteIndex).getIdStr() << "\t"
-                   << vcfReaderPtr_->getVariantLine(siteIndex).getRefStr() << "\t"
-                   << vcfReaderPtr_->getVariantLine(siteIndex).getAltStr() << "\t"
-                   << vcfReaderPtr_->getVariantLine(siteIndex).getQualStr() << "\t"
-                   << vcfReaderPtr_->getVariantLine(siteIndex).getFilterStr() << "\t"
-                   << vcfReaderPtr_->getVariantLine(siteIndex).getInfoStr() << "\t"
+        (*writeTo) << VCF_reader.getVariantLine(siteIndex).getChromStr() << "\t"
+                   << VCF_reader.getVariantLine(siteIndex).getPosStr() << "\t"
+                   << VCF_reader.getVariantLine(siteIndex).getIdStr() << "\t"
+                   << VCF_reader.getVariantLine(siteIndex).getRefStr() << "\t"
+                   << VCF_reader.getVariantLine(siteIndex).getAltStr() << "\t"
+                   << VCF_reader.getVariantLine(siteIndex).getQualStr() << "\t"
+                   << VCF_reader.getVariantLine(siteIndex).getFilterStr() << "\t"
+                   << VCF_reader.getVariantLine(siteIndex).getInfoStr() << "\t"
                    << "GT" << "\t";
       } else {
 
-        (*writeTo) << chrom_[chromI] << "\t"
-                   << (int) position_[chromI][posI] << "\t"
+        (*writeTo) << getMixtureData().getChrom()[chromI] << "\t"
+                   << static_cast<int>(getMixtureData().getPosition()[chromI][posI]) << "\t"
                    << "." << "\t"
                    << "." << "\t"
                    << "." << "\t"

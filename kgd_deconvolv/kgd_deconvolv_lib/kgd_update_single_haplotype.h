@@ -45,10 +45,10 @@ public:
             const std::vector<double> &proportion,
             const std::vector<std::vector<double> > &haplotypes);
 
-  void painting(std::vector<double> &refCount,
-                std::vector<double> &altCount,
-                std::vector<double> &expectedWsaf,
-                std::vector<double> &proportion,
+  void painting(const std::vector<double> &refCount,
+                const std::vector<double> &altCount,
+                const std::vector<double> &expectedWsaf,
+                const std::vector<double> &proportion,
                 std::vector<std::vector<double> > &haplotypes);
 
 private:

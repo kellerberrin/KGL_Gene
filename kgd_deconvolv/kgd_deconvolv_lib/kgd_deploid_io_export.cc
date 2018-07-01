@@ -320,12 +320,12 @@ void kgd::DEploidIO::writeEventCount() {
 
   size_t siteIndex = 0;
 
-  for (size_t chromI = 0; chromI < chrom_.size(); chromI++) {
+  for (size_t chromI = 0; chromI < getMixtureData().getChrom().size(); chromI++) {
 
-    for (size_t posI = 0; posI < position_[chromI].size(); posI++) {
+    for (size_t posI = 0; posI < getMixtureData().getPosition()[chromI].size(); posI++) {
 
-      ofstreamExportTmp_ << chrom_[chromI] << "\t"
-                        << (int) position_[chromI][posI] << "\t"
+      ofstreamExportTmp_ << getMixtureData().getChrom()[chromI] << "\t"
+                        << static_cast<int>(getMixtureData().getPosition()[chromI][posI]) << "\t"
 
                         << IBDpathChangeAt_[siteIndex] << "\t"
                         << finalIBDpathChangeAt_[siteIndex] << "\t"
@@ -384,11 +384,11 @@ void kgd::DEploidIO::writeIBDpostProb(const std::vector<std::vector<double> > &r
 
   size_t siteIndex = 0;
 
-  for (size_t chromIndex = 0; chromIndex < position_.size(); chromIndex++) {
+  for (size_t chromIndex = 0; chromIndex < getMixtureData().getPosition().size(); chromIndex++) {
 
-    for (size_t posI = 0; posI < position_[chromIndex].size(); posI++) {
+    for (size_t posI = 0; posI < getMixtureData().getPosition()[chromIndex].size(); posI++) {
 
-      (*writeTo) << chrom_[chromIndex] << "\t" << (int) position_[chromIndex][posI] << "\t";
+      (*writeTo) << getMixtureData().getChrom()[chromIndex] << "\t" << static_cast<int>(getMixtureData().getPosition()[chromIndex][posI]) << "\t";
 
       for (size_t ij = 0; ij < reshapedProbs[siteIndex].size(); ij++) {
 
@@ -459,9 +459,9 @@ void kgd::DEploidIO::writeLastSingleFwdProb(const std::vector<std::vector<double
 
   size_t siteIndex = 0;
 
-  for (size_t posI = 0; posI < position_[chromIndex].size(); posI++) {
+  for (size_t posI = 0; posI < getMixtureData().getPosition()[chromIndex].size(); posI++) {
 
-    ofstreamExportFwdProb_ << chrom_[chromIndex] << "\t" << (int) position_[chromIndex][posI] << "\t";
+    ofstreamExportFwdProb_ << getMixtureData().getChrom()[chromIndex] << "\t" << static_cast<int>(getMixtureData().getPosition()[chromIndex][posI]) << "\t";
 
     for (size_t ii = 0; ii < probabilities[siteIndex].size(); ii++) {
 

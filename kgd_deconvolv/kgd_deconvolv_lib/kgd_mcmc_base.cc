@@ -173,11 +173,3 @@ void kgd::MCMCBASE::computeDiagnostics() {
 
 }
 
-
-bool kgd::MCMCBASE::doutLLK() {
-
-  ExecEnv::log().info(" Current log likelihood = {}", Utility::sumOfVec(this->currentLLks_));
-
-  return true;
-
-}

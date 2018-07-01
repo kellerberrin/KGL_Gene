@@ -66,7 +66,7 @@ void kgd::ExecEnv::executeApp() {
 
       hapMcmc.runMcmcChain(true /* show progress */);
 
-//      dEploidIO_ptr->writeMcmcRelated(mcmcSample, false /* mcmchap */);
+      dEploidIO_ptr->writeMcmcRelated(mcmcSample, false /* mcmchap */);
 
       dEploidIO_ptr->paintIBD(random_generator);
 

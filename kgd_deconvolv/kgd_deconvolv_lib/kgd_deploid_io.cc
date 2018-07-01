@@ -48,9 +48,7 @@ kgd::DEploidIO::DEploidIO() {
 
 void kgd::DEploidIO::init() {
 
-  excludedMarkers_ = std::make_shared<ExcludeMarker>();
   panel_ = nullptr;
-  vcfReaderPtr_ = std::make_shared<VcfReader>(ExecEnv::getArgs().vcfFile);
 
   setDoExportRecombProb(false);
   setrandomSeedWasGiven(false);
@@ -167,74 +165,29 @@ void kgd::DEploidIO::finalize() {
 
   }
 
-  if (excludeSites()) {
-
-    excludedMarkers_->readFromFile(excludeFileName_.c_str());
-
-  }
-
   if (useVcf()) { // read vcf files, and parse it to refCount and altCount
 
     if (excludeSites()) {
 
-      vcfReaderPtr_->findAndKeepMarkers(excludedMarkers_);
+      mixture_data.readVCFPlafExclude(vcfFileName_, plafFileName_, excludeFileName_);
+
+    } else {
+
+      mixture_data.readVCFPlaf(vcfFileName_, plafFileName_);
 
     }
-
-    vcfReaderPtr_->finalize(); // Finalize after remove variantlines
-    refCount_ = vcfReaderPtr_->getRefCount();
-    altCount_ = vcfReaderPtr_->getAltCount();
 
   } else {
 
-    TxtReader ref;
-    ref.readFromFile(refFileName_.c_str());
     if (excludeSites()) {
 
-      ref.findAndKeepMarkers(excludedMarkers_);
+      mixture_data.readRefAltPlafExclude(refFileName_, altFileName_, plafFileName_, excludeFileName_);
+
+    } else {
+
+      mixture_data.readRefAltPlaf(refFileName_, altFileName_, plafFileName_);
 
     }
-
-    refCount_ = ref.getInfo();
-
-    TxtReader alt;
-    alt.readFromFile(altFileName_.c_str());
-
-    if (excludeSites()) {
-
-      alt.findAndKeepMarkers(excludedMarkers_);
-
-    }
-
-    altCount_ = alt.getInfo();
-
-  }
-
-  TxtReader plaf;
-  plaf.readFromFile(plafFileName_.c_str());
-
-  if (excludeSites()) {
-
-    plaf.findAndKeepMarkers(excludedMarkers_);
-
-  }
-
-  plaf_ = plaf.getInfo();
-  chrom_ = plaf.getChrom();
-  position_ = plaf.getPosition();
-  indexOfChromStarts_ = plaf.getIndexChromStarts();
-
-  nLoci_ = refCount_.size();
-
-  if (nLoci_ != plaf_.size()) {
-
-    throw LociNumberUnequal(plafFileName_);
-
-  }
-
-  if (nLoci_ != altCount_.size()) {
-
-    throw LociNumberUnequal(altFileName_);
 
   }
 
@@ -483,13 +436,18 @@ void kgd::DEploidIO::computeLLKfromInitialHap() {
 
   std::vector<double> expectedWsaf = computeExpectedWsafFromInitialHap();
 
-  if (expectedWsaf.size() != refCount_.size()) {
+  if (expectedWsaf.size() != getMixtureData().getRefCount().size()) {
 
     throw LociNumberUnequal("Hap length differs from data!");
 
   }
 
-  std::vector<double> llk = Utility::calcLLKs(refCount_, altCount_, expectedWsaf, 0, expectedWsaf.size(), scalingFactor());
+  std::vector<double> llk = Utility::calcLLKs(getMixtureData().getRefCount(),
+                                              getMixtureData().getAltCount(),
+                                              expectedWsaf,
+                                              0,
+                                              expectedWsaf.size(),
+                                              scalingFactor());
 
   llkFromInitialHap_ = Utility::sumOfVec(llk);
 
@@ -550,10 +508,10 @@ void kgd::DEploidIO::chromPainting(std::shared_ptr<RandomGenerator> random_gener
 
     }
 
-    for (size_t chromi = 0; chromi < indexOfChromStarts_.size(); chromi++) {
+    for (size_t chromi = 0; chromi < getMixtureData().indexOfChromStarts().size(); chromi++) {
 
-      size_t start = indexOfChromStarts_[chromi];
-      size_t length = position_[chromi].size();
+      size_t start = getMixtureData().indexOfChromStarts()[chromi];
+      size_t length = getMixtureData().getPosition()[chromi].size();
 
       ExecEnv::log().info("Painting Chrom: {} from site: {} to: {}", chromi, start, start + length);
 
@@ -572,7 +530,7 @@ void kgd::DEploidIO::chromPainting(std::shared_ptr<RandomGenerator> random_gener
 
       }
 
-      updatingSingle.painting(refCount_, altCount_, expectedWsaf, finalProp_, initialHap_);
+      updatingSingle.painting(getMixtureData().getRefCount(), getMixtureData().getAltCount(), expectedWsaf, finalProp_, initialHap_);
       //writeLastSingleFwdProb( updatingSingle.fwdProbs_, chromi, tmpk, false ); // false as not using ibd
       writeLastSingleFwdProb(updatingSingle.getFwdBwdProbs(), chromi, tmpk, false); // false as not using ibd
 
@@ -602,7 +560,9 @@ void kgd::DEploidIO::readPanel() {
 
   if (excludeSites()) {
 
-    panel_->findAndKeepMarkers(excludedMarkers_);
+    std::shared_ptr<ExcludeMarker> excluded_reader_ptr(std::make_shared<ExcludeMarker>());
+    excluded_reader_ptr->readFromFile(excludeFileName_.c_str());
+    panel_->findAndKeepMarkers(excluded_reader_ptr);
 
   }
 
@@ -728,12 +688,7 @@ void kgd::DEploidIO::paintIBD(std::shared_ptr<RandomGenerator> randomGenerator) 
   tmpDEploidIO.setInitialPropWasGiven(true);
   tmpDEploidIO.setInitialProp(goodProp);
   tmpDEploidIO.finalProp_ = goodProp;
-  tmpDEploidIO.refCount_ = refCount_;
-  tmpDEploidIO.altCount_ = altCount_;
-  tmpDEploidIO.plaf_ = plaf_;
-  tmpDEploidIO.nLoci_ = nLoci();
-  tmpDEploidIO.position_ = position_;
-  tmpDEploidIO.chrom_ = chrom_;
+  tmpDEploidIO.mixture_data = mixture_data;
   //tmpDEploidIO.useConstRecomb_ = true;
   //tmpDEploidIO.constRecombProb_ = 0.000001;
 
