@@ -168,9 +168,9 @@ void kgd::DEploidIO::writeHap(std::shared_ptr<McmcSample> mcmcSample, bool useIB
 
 void kgd::DEploidIO::writeVcf(std::shared_ptr<McmcSample> mcmcSample) {
 
-  if (!doExportVcf()) return;
+  if (not getMixtureControl().doExportVcf()) return;
 
-  if (not useVcf()) {
+  if (not getMixtureControl().useVcf()) {
 
     ExecEnv::log().warn("Can only export VCF if VCF file specified");
     return;
@@ -180,7 +180,7 @@ void kgd::DEploidIO::writeVcf(std::shared_ptr<McmcSample> mcmcSample) {
   ogzstream ogstreamExport;
   std::ostream *writeTo;
 
-  if (compressVcf()) {
+  if (getMixtureControl().compressVcf()) {
 
     ogstreamExport.open(strExportVcf_.c_str(), std::ios::out);
     writeTo = &ogstreamExport;
@@ -195,7 +195,7 @@ void kgd::DEploidIO::writeVcf(std::shared_ptr<McmcSample> mcmcSample) {
   VcfReader VCF_reader(vcfFileName_);
 
   // VCF HEADER
-  if (useVcf()) {
+  if (getMixtureControl().useVcf()) {
 
     for (auto const &headerLine: VCF_reader.getHeaderLines()) {
 
@@ -219,7 +219,7 @@ void kgd::DEploidIO::writeVcf(std::shared_ptr<McmcSample> mcmcSample) {
     std::string sampleName = VCF_reader.getSampleName();
 
     (*writeTo) << "##Proportion of strain "
-               << (useVcf() ? sampleName : "h")
+               << (getMixtureControl().useVcf() ? sampleName : "h")
                << "." << (ii + 1)
                << "=" << mcmcSample->getProportionIndex(ii).back() << std::endl;
 
@@ -240,7 +240,7 @@ void kgd::DEploidIO::writeVcf(std::shared_ptr<McmcSample> mcmcSample) {
 
     std::string sampleName = VCF_reader.getSampleName();
 
-    (*writeTo) << (useVcf() ? sampleName : "h")
+    (*writeTo) << (getMixtureControl().useVcf() ? sampleName : "h")
                << "." << (ii + 1);
     (*writeTo) << ((ii < (kStrain_ - 1)) ? "\t" : "\n");
 
@@ -252,7 +252,7 @@ void kgd::DEploidIO::writeVcf(std::shared_ptr<McmcSample> mcmcSample) {
 
     for (size_t posI = 0; posI < getMixtureData().getPosition()[chromI].size(); posI++) {
 
-      if (useVcf()) {
+      if (getMixtureControl().useVcf()) {
 
         (*writeTo) << VCF_reader.getVariantLine(siteIndex).getChromStr() << "\t"
                    << VCF_reader.getVariantLine(siteIndex).getPosStr() << "\t"
@@ -291,7 +291,7 @@ void kgd::DEploidIO::writeVcf(std::shared_ptr<McmcSample> mcmcSample) {
 
   assert (siteIndex == mcmcSample->getHap().size());
 
-  if (compressVcf()) {
+  if (getMixtureControl().compressVcf()) {
 
     ogstreamExport.close();
 

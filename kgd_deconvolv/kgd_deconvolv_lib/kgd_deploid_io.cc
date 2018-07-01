@@ -50,44 +50,17 @@ void kgd::DEploidIO::init() {
 
   panel_ = nullptr;
 
-  setDoExportRecombProb(false);
-  setrandomSeedWasGiven(false);
-  setCompressVcf(false);
-  setInitialPropWasGiven(false);
-  setInitialHapWasGiven(false);
-
   initialProp_.clear();
 
-  setPleaseCheckInitialP(true);
-  setExcludeSites(false);
   set_seed((unsigned) 0);
-  setUsePanel(true);
 
-  precision_ = 8;
   prefix_ = "kgd_deconvolv";
 
-  setKStrainWasManuallySet(false);
-  setKStrainWasSetByHap(false);
-  setKStrainWasSetByProp(false);
   setKstrain(5);
 
   nMcmcSample_ = 800;
   mcmcBurn_ = 0.5;
   mcmcMachineryRate_ = 5;
-
-  setDoUpdateProp(true);
-  setDoUpdatePair(true);
-  setDoUpdateSingle(true);
-  setDoExportPostProb(false);
-  setDoLsPainting(false);
-  setDoIbdPainting(false);
-  setUseIBD(false);
-  setDoExportSwitchMissCopy(true);
-  setDoAllowInbreeding(false);
-
-  useConstRecomb_ = false;
-
-  setForbidCopyFromSame(false);
 
   missCopyProb_ = 0.01;
   constRecombProb_ = 1.0;
@@ -98,9 +71,6 @@ void kgd::DEploidIO::init() {
   setParameterSigma(5.0);
   setIBDSigma(20.0);
   setIBDSigma(10.0);
-  setUseVcf(false);
-  setDoExportVcf(false);
-  setDoComputeLLK(false);
 
   refFileName_.clear();
   altFileName_.clear();
@@ -137,7 +107,7 @@ void kgd::DEploidIO::getTime(bool isStartingTime) {
 
 void kgd::DEploidIO::finalize() {
 
-  if (doIbdPainting() | doComputeLLK()) {
+  if (getMixtureControl().doIbdPainting() or getMixtureControl().doComputeLLK()) {
 
     if (!initialPropWasGiven()) {
 
@@ -153,21 +123,21 @@ void kgd::DEploidIO::finalize() {
 
   }
 
-  if (compressVcf() && !doExportVcf()) {
+  if (getMixtureControl().compressVcf() && !getMixtureControl().doExportVcf()) {
 
     throw VcfOutUnSpecified("");
 
   }
 
-  if (!randomSeedWasGiven_) {
+  if (!getMixtureControl().randomSeedWasGiven()) {
 
     set_seed((unsigned) (time(0)));
 
   }
 
-  if (useVcf()) { // read vcf files, and parse it to refCount and altCount
+  if (getMixtureControl().useVcf()) { // read vcf files, and parse it to refCount and altCount
 
-    if (excludeSites()) {
+    if (getMixtureControl().excludeSites()) {
 
       mixture_data.readVCFPlafExclude(vcfFileName_, plafFileName_, excludeFileName_);
 
@@ -179,7 +149,7 @@ void kgd::DEploidIO::finalize() {
 
   } else {
 
-    if (excludeSites()) {
+    if (getMixtureControl().excludeSites()) {
 
       mixture_data.readRefAltPlafExclude(refFileName_, altFileName_, plafFileName_, excludeFileName_);
 
@@ -227,18 +197,18 @@ void kgd::DEploidIO::removeFilesWithSameName() {
 
   strExportVcf_ = prefix_ + ".vcf";
 
-  if (compressVcf()) {
+  if (getMixtureControl().compressVcf()) {
 
     strExportVcf_ += ".gz";
 
   }
 
-  strExportLog_ = prefix_ + ((doLsPainting()) ? ".painting" : "") + ".log";
+  strExportLog_ = prefix_ + ((getMixtureControl().doLsPainting()) ? ".painting" : "") + ".log";
   strExportRecombProb_ = prefix_ + ".recomb";
 
   strExportExtra_ = prefix_ + ".extra";
 
-  if (doLsPainting() == false) {
+  if (getMixtureControl().doLsPainting()) {
 
     if (useIBD()) {
 
@@ -257,7 +227,7 @@ void kgd::DEploidIO::removeFilesWithSameName() {
 
   }
 
-  if (doLsPainting() || doExportPostProb()) {
+  if (getMixtureControl().doLsPainting() || getMixtureControl().doExportPostProb()) {
 
     if (useIBD()) {
 
@@ -299,11 +269,11 @@ void kgd::DEploidIO::parse() {
   const kgd::DeconvolvArgs &args = ExecEnv::getArgs();
 
   vcfFileName_ = args.vcfFile; // -vcf
-  setUseVcf(true);
+  getMixtureControl().setUseVcf(true);
 
   if (args.vcfOutFile != kgd::DeconvolvArgs::NOT_SPECIFIED) {  // -vcfOut
 
-    setDoExportVcf(true);
+    getMixtureControl().setDoExportVcf(true);
 
   }
 
@@ -312,89 +282,79 @@ void kgd::DEploidIO::parse() {
   if (args.panelFile != kgd::DeconvolvArgs::NOT_SPECIFIED) { // -panel_
 
     panelFileName_ = args.panelFile;
-    setUsePanel(true);
+    getMixtureControl().setUsePanel(true);
 
   } else {
 
-    setUsePanel(false);
+    getMixtureControl().setUsePanel(false);
 
   }
 
-  setUsePanel(not args.noPanelFlag);  // The -noPanel flag is the compliment of UsePanel.
+  getMixtureControl().setUsePanel(not args.noPanelFlag);
 
   if (not usePanel()) {
 
-    setDoExportPostProb(false);
-    setDoExportSwitchMissCopy(false);
-    setDoAllowInbreeding(false);
+    getMixtureControl().setDoExportPostProb(false);
+    getMixtureControl().setDoExportSwitchMissCopy(false);
+    getMixtureControl().setDoAllowInbreeding(false);
 
   }
 
   if (args.excludeFile != kgd::DeconvolvArgs::NOT_SPECIFIED) {  // -exclude
 
-    setExcludeSites(true);
+    getMixtureControl().setExcludeSites(true);
     excludeFileName_ = args.excludeFile;
 
   }
 
   prefix_ = args.outputTemplate; // -o
   kStrain_ = args.maxStrains; // -k
-  setKStrainWasManuallySet(true);
+  getMixtureControl().setKStrainWasManuallySet(true);
   nMcmcSample_ = args.MCMCSamples; // -nSamples
   mcmcBurn_ = args.MCMCBurnRate;  // -burn
   mcmcMachineryRate_ = args.MCMCSampleRate;  // -rate
 
   if (args.inbreedingProbabilitiesFlag) { // -inbreeding
 
-    setDoAllowInbreeding(true);
-    setDoExportPostProb(true);
+    getMixtureControl().setDoAllowInbreeding(true);
+    getMixtureControl().setDoExportPostProb(true);
 
   }
 
-  if (args.identityByDescentPainting) setDoIbdPainting(true); // -idbPainting
+  if (args.identityByDescentPainting) getMixtureControl().setDoIbdPainting(true); // -idbPainting
 
   setInitialProp(args.initialStrainProportions); // -initialP
-  setUseIBD(args.identityByDescentFlag); // -idb
+  getMixtureControl().setUseIBD(args.identityByDescentFlag); // -idb
 
   set_seed(args.MCMCRandomSeed); // -seed
-  setrandomSeedWasGiven(true);
+  getMixtureControl().setrandomSeedWasGiven(true);
 
 }
 
 void kgd::DEploidIO::checkInput() {
 
-  if (refFileName_.size() == 0 && useVcf() == false) {
+  if (refFileName_.empty() && not getMixtureControl().useVcf()) {
 
     throw FileNameMissing("Ref count");
 
   }
-  if (altFileName_.size() == 0 && useVcf() == false) {
+  if (altFileName_.empty() && not getMixtureControl().useVcf()) {
 
     throw FileNameMissing("Alt count");
 
   }
-  if (plafFileName_.size() == 0) {
+  if (plafFileName_.empty()) {
 
     throw FileNameMissing("PLAF");
   }
-  if (usePanel() && panelFileName_.size() == 0 && !doIbdPainting() && !doComputeLLK()) {
+  if (usePanel() && panelFileName_.empty() && not getMixtureControl().doIbdPainting() && not getMixtureControl().doComputeLLK()) {
 
     throw FileNameMissing("Reference panel_");
 
   }
-  if (initialPropWasGiven() && (abs(Utility::sumOfVec(initialProp_) - 1.0) > 0.00001) && pleaseCheckInitialP()) {
+  if (initialPropWasGiven() && (abs(Utility::sumOfVec(initialProp_) - 1.0) > 0.00001)) {
 
     throw SumOfPropNotOne(std::to_string(Utility::sumOfVec(initialProp_)));
-
-  }
-  if (initialPropWasGiven()) {
-
-    if (kStrainWasManuallySet() == true) {
-
-    } else {
-
-      // set k strain by proportion length
-    }
 
   }
 
@@ -549,7 +509,7 @@ void kgd::DEploidIO::readPanel() {
 
   }
 
-  if (doIbdPainting() | doComputeLLK()) {
+  if (getMixtureControl().doIbdPainting() or getMixtureControl().doComputeLLK()) {
 
     return;
 
@@ -558,7 +518,7 @@ void kgd::DEploidIO::readPanel() {
   panel_ = std::make_shared<Panel>();
   panel_->readFromFile(panelFileName_.c_str());
 
-  if (excludeSites()) {
+  if (getMixtureControl().excludeSites()) {
 
     std::shared_ptr<ExcludeMarker> excluded_reader_ptr(std::make_shared<ExcludeMarker>());
     excluded_reader_ptr->readFromFile(excludeFileName_.c_str());
@@ -662,7 +622,7 @@ void kgd::DEploidIO::paintIBD(std::shared_ptr<RandomGenerator> randomGenerator) 
   std::vector<double> goodProp;
   std::vector<size_t> goodStrainIdx;
 
-  if (doIbdPainting()) {
+  if (getMixtureControl().doIbdPainting()) {
 
     finalProp_ = initialProp_;
 

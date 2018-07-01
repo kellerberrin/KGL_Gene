@@ -15,14 +15,14 @@ namespace kellerberrin {    // organization level namespace
 namespace deconvolv {          // project level namespace
 
 
-class MixtureData {
+class MixtureDataObj {
 
 public:
 
-  MixtureData() = default;
-  ~MixtureData() = default;
+  MixtureDataObj() = default;
+  ~MixtureDataObj() = default;
 
-  MixtureData& operator=(const MixtureData& copy) = default;
+  MixtureDataObj& operator=(const MixtureDataObj& copy) = default;
 
   // Access functions
   const std::vector<size_t>& indexOfChromStarts() const { return indexOfChromStarts_; }

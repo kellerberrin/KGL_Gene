@@ -51,7 +51,7 @@ void kgd::DEploidIO::wrapUp() {
 
 void kgd::DEploidIO::writeRecombProb(std::shared_ptr<Panel> panel) {
 
-  if (!doExportRecombProb()) return;
+  if (!getMixtureControl().doExportRecombProb()) return;
 
   if (panel) {
 
@@ -113,17 +113,17 @@ void kgd::DEploidIO::writeLog(std::ostream *writeTo) {
 
   (*writeTo) << std::setw(12) << "PLAF: " << plafFileName_ << "\n";
 
-  if (useVcf()) (*writeTo) << std::setw(12) << "VCF: " << vcfFileName_ << "\n";
+  if (getMixtureControl().useVcf()) (*writeTo) << std::setw(12) << "VCF: " << vcfFileName_ << "\n";
 
   if (refFileName_.size() > 0) (*writeTo) << std::setw(12) << "REF count: " << refFileName_ << "\n";
 
   if (altFileName_.size() > 0) (*writeTo) << std::setw(12) << "ALT count: " << altFileName_ << "\n";
 
-  if (excludeSites()) { (*writeTo) << std::setw(12) << "Exclude: " << excludeFileName_ << "\n"; }
+  if (getMixtureControl().excludeSites()) { (*writeTo) << std::setw(12) << "Exclude: " << excludeFileName_ << "\n"; }
 
   (*writeTo) << "\n";
 
-  if ((doLsPainting() == false) & (doIbdPainting() == false)) {
+  if ((not getMixtureControl().doLsPainting()) && (not getMixtureControl().doIbdPainting())) {
 
     (*writeTo) << "MCMC parameters: " << "\n";
     (*writeTo) << std::setw(19) << " MCMC burn: " << mcmcBurn_ << "\n";
@@ -146,7 +146,7 @@ void kgd::DEploidIO::writeLog(std::ostream *writeTo) {
 
   (*writeTo) << "Other parameters:" << "\n";
 
-  if (forbidCopyFromSame_) {
+  if (getMixtureControl().forbidCopyFromSame()) {
 
     (*writeTo) << " Update pair haplotypes move forbid copying from the same strain!!! \n";
 
@@ -182,7 +182,9 @@ void kgd::DEploidIO::writeLog(std::ostream *writeTo) {
 
   (*writeTo) << "\n";
 
-  if ((doLsPainting() == false) & (doIbdPainting() == false) & (doComputeLLK() == false)) {
+  if ((not getMixtureControl().doLsPainting())
+      and (not getMixtureControl().doIbdPainting())
+      and (not getMixtureControl().doComputeLLK())) {
 
     (*writeTo) << "MCMC diagnostic:" << "\n";
     (*writeTo) << std::setw(19) << " Accept_ratio: " << acceptRatio_ << "\n";
@@ -201,7 +203,7 @@ void kgd::DEploidIO::writeLog(std::ostream *writeTo) {
   (*writeTo) << std::setw(14) << "End at: " << endTime_;
   (*writeTo) << "\n";
 
-  if (doComputeLLK()) {
+  if (getMixtureControl().doComputeLLK()) {
 
     (*writeTo) << "Input likelihood: " << llkFromInitialHap_;
     (*writeTo) << "\n";
@@ -210,7 +212,7 @@ void kgd::DEploidIO::writeLog(std::ostream *writeTo) {
 
     (*writeTo) << "Output saved to:\n";
 
-    if (doLsPainting()) {
+    if (getMixtureControl().doLsPainting()) {
 
       for (size_t i = 0; i < kStrain(); i++) {
 
@@ -218,7 +220,7 @@ void kgd::DEploidIO::writeLog(std::ostream *writeTo) {
 
       }
 
-    } else if (doIbdPainting()) {
+    } else if (getMixtureControl().doIbdPainting()) {
 
       if (ibdProbsIntegrated_.size() > 1) {
 
@@ -239,7 +241,7 @@ void kgd::DEploidIO::writeLog(std::ostream *writeTo) {
       (*writeTo) << std::setw(14) << "Proportions: " << strExportProp_ << "\n";
       (*writeTo) << std::setw(14) << "Haplotypes: " << strExportHap_ << "\n";
 
-      if (doExportVcf()) { (*writeTo) << std::setw(14) << "Vcf: " << strExportVcf_ << "\n"; }
+      if (getMixtureControl().doExportVcf()) { (*writeTo) << std::setw(14) << "Vcf: " << strExportVcf_ << "\n"; }
 
       if (useIBD()) {
 

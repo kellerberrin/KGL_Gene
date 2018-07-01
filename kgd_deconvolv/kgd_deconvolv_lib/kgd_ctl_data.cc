@@ -9,7 +9,7 @@
 namespace kgd = kellerberrin::deconvolv;
 
 
-bool kgd::MixtureData::readVCFPlafExclude(const std::string& vcf_filename,
+bool kgd::MixtureDataObj::readVCFPlafExclude(const std::string& vcf_filename,
                                           const std::string& plaf_filename,
                                           const std::string& exclude_filename) {
 
@@ -59,7 +59,7 @@ bool kgd::MixtureData::readVCFPlafExclude(const std::string& vcf_filename,
 }
 
 
-bool kgd::MixtureData::readVCFPlaf(const std::string& vcf_filename,
+bool kgd::MixtureDataObj::readVCFPlaf(const std::string& vcf_filename,
                                    const std::string& plaf_filename) {
 
   std::shared_ptr<ExcludeMarker> excluded_reader_ptr = std::make_shared<ExcludeMarker>();
@@ -105,7 +105,7 @@ bool kgd::MixtureData::readVCFPlaf(const std::string& vcf_filename,
 }
 
 
-bool kgd::MixtureData::readRefAltPlafExclude(const std::string& ref_filename,
+bool kgd::MixtureDataObj::readRefAltPlafExclude(const std::string& ref_filename,
                                              const std::string& alt_filename,
                                              const std::string& plaf_filename,
                                              const std::string& exclude_filename) {
@@ -162,7 +162,7 @@ bool kgd::MixtureData::readRefAltPlafExclude(const std::string& ref_filename,
 
 
 
-bool kgd::MixtureData::readRefAltPlaf(const std::string& ref_filename,
+bool kgd::MixtureDataObj::readRefAltPlaf(const std::string& ref_filename,
                                       const std::string& alt_filename,
                                       const std::string& plaf_filename) {
 

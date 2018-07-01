@@ -34,15 +34,15 @@ void kgd::ExecEnv::executeApp() {
 
     std::shared_ptr<MersenneTwister> random_generator(std::make_shared<MersenneTwister>(dEploidIO_ptr->randomSeed()));
 
-    if ( dEploidIO_ptr->doComputeLLK() ) {
+    if ( dEploidIO_ptr->getMixtureControl().doComputeLLK() ) {
 
       dEploidIO_ptr->computeLLKfromInitialHap();
 
-    } else if ( dEploidIO_ptr->doLsPainting() ) {
+    } else if ( dEploidIO_ptr->getMixtureControl().doLsPainting() ) {
 
       dEploidIO_ptr->chromPainting(random_generator);
 
-    } else if ( dEploidIO_ptr->doIbdPainting() ) {
+    } else if ( dEploidIO_ptr->getMixtureControl().doIbdPainting() ) {
 
       dEploidIO_ptr->paintIBD(random_generator);
 
