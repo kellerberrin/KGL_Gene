@@ -9,6 +9,8 @@
 
 #include "kgd_panel.h"
 #include "kgd_mcmc_virtual.h"
+#include "kgd_ctl_parameter.h"
+#include "kgd_mcmc_titre.h"
 
 
 namespace kellerberrin {    // organization level namespace
@@ -22,12 +24,15 @@ public:
 
   MCMCBASE(std::shared_ptr<DEploidIO> dEplioidIO,
            std::shared_ptr<McmcSample> mcmcSample,
-           std::shared_ptr<RandomGenerator> randomGenerator);
+           std::shared_ptr<RandomGenerator> randomGenerator,
+           const MCMCParameterObj& MCMCParameters);
 
   ~MCMCBASE() override = default;
 
 protected:
 
+  MCMCParameterObj MCMCParameters_;
+  MCMCTITRE titre_proportions_; /* MCMC proportions */
 
   std::shared_ptr<RandomGenerator> hapRg_;
   std::shared_ptr<RandomGenerator> propRg_;

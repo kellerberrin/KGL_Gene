@@ -21,21 +21,12 @@ namespace kgd = kellerberrin::deconvolv;
 
 // initialiseMCMCmachinery
 kgd::MCMCHAP::MCMCHAP(std::shared_ptr<DEploidIO> dEploidIO,
-                                  std::shared_ptr<McmcSample> mcmcSample,
-                                  std::shared_ptr<RandomGenerator> randomGenerator)
-  : MCMCBASE(dEploidIO, mcmcSample, randomGenerator) ,
-    titre_proportions_(kStrain(), 0.0 /* mean */, dEploidIO_->parameterSigma(), 40.0 /*update */) {
+                      std::shared_ptr<McmcSample> mcmcSample,
+                      std::shared_ptr<RandomGenerator> randomGenerator)
+  : MCMCBASE(dEploidIO, mcmcSample, randomGenerator, dEploidIO->hapParameters()) {
 
   mcmcEventRg_ = randomGenerator_;
   panel_ = dEploidIO_->getPanel();
-
-  calcMaxIteration(dEploidIO_->getMcmcSample(), dEploidIO_->getMcmcMachineryRate(), dEploidIO_->getMcmcBurn());
-
-  if (dEploidIO_->initialPropWasGiven()) {
-
-    titre_proportions_.proportion2Titre(dEploidIO_->getInitialProp());
-
-  }
 
   initializeMcmcChain();
 
@@ -54,7 +45,7 @@ void kgd::MCMCHAP::initializeMcmcChain() {
                                    currentExpectedWsaf_,
                                    0,
                                    currentExpectedWsaf_.size(),
-                                   dEploidIO_->scalingFactor());
+                                   MCMCParameters_.proposalUpdateScaling());
 
   if (dEploidIO_->doAllowInbreeding()) {
 
@@ -144,7 +135,7 @@ void kgd::MCMCHAP::updateProportion() {
                                                   tmpExpectedWsaf,
                                                   0,
                                                   tmpExpectedWsaf.size(),
-                                                  dEploidIO_->scalingFactor());
+                                                  MCMCParameters_.proposalUpdateScaling());
 
   double diffLLKs = deltaLLKs(tmpLLKs);
 
@@ -205,8 +196,8 @@ void kgd::MCMCHAP::updateSingleHap(const std::vector<double>& proportions) {
                              length,
                              kStrain,
                              panel_,
-                             dEploidIO_->getMissCopyProb(),
-                             dEploidIO_->scalingFactor(),
+                             MCMCParameters_.getMissCopyProb(),
+                             MCMCParameters_.proposalUpdateScaling(),
                              strainIndex_);
 
     if (dEploidIO_->doAllowInbreeding()) {
@@ -275,8 +266,8 @@ void kgd::MCMCHAP::updatePairHaps(const std::vector<double>& proportions) {
                            length,
                            kStrain,
                            panel_,
-                           dEploidIO_->getMissCopyProb(),
-                           dEploidIO_->scalingFactor(),
+                           MCMCParameters_.getMissCopyProb(),
+                           MCMCParameters_.proposalUpdateScaling(),
                            dEploidIO_->forbidCopyFromSame(),
                            strainIndex1_,
                            strainIndex2_);
@@ -391,8 +382,8 @@ void kgd::MCMCHAP::writeLastFwdProb(const std::vector<double>& proportions, bool
                                      length,
                                      kStrain,
                                      panel_,
-                                     dEploidIO_->getMissCopyProb(),
-                                     dEploidIO_->scalingFactor(),
+                                     MCMCParameters_.getMissCopyProb(),
+                                     MCMCParameters_.proposalUpdateScaling(),
                                      tmpk);
 
       if (dEploidIO_->doAllowInbreeding()) {

@@ -42,6 +42,7 @@
 #include "kgd_vcf_reader.h"
 #include "kgd_ctl_data.h"
 #include "kgd_ctl_function.h"
+#include "kgd_ctl_parameter.h"
 #include "kgd_random_generator.h"
 
 
@@ -99,30 +100,26 @@ public:
   const MixtureControlObj& getMixtureControl() const { return mixture_control; }
   MixtureControlObj& getMixtureControl() { return mixture_control; }
 
-  // Get results.
+  // Parameters for the haplotype MCMC
+  const HapParameterObj& hapParameters() const { return hap_parameters; }
+  HapParameterObj& hapParameters() { return hap_parameters; }
+  // Parameters for the IBD MCMC
+  const IBDParameterObj& ibdParameters() const { return ibd_parameters; }
+  IBDParameterObj& ibdParameters() { return ibd_parameters; }
 
-  // Get Parameters
-  size_t getMcmcSample() const { return nMcmcSample_; }
-  size_t kStrain() const { return kStrain_; }
-  size_t getMcmcMachineryRate() const { return mcmcMachineryRate_; }
-  double getMcmcBurn() const { return mcmcBurn_; }
-  double scalingFactor() const { return scalingFactor_; }
-  double getMissCopyProb() const { return missCopyProb_; }
-  double ibdSigma() const { return ibdSigma_; }
-  double parameterSigma() const { return parameterSigma_; }
   const std::vector<std::vector<double> >& getInitialHap() const { return initialHap_; }
   const std::vector<double>& getInitialProp() const { return  initialProp_; }
-  double averageCentimorganDistance() const { return averageCentimorganDistance_; }
-  double parameterG() const { return parameterG_; }
-  double constRecombProb() const { return constRecombProb_; }
-  size_t randomSeed() const { return randomSeed_; }
+
+  size_t kStrain() const { return k_strain_; }
+  void setkStrain(size_t setTo) { k_strain_ = setTo; }
+
+  size_t getRandomSeed() const { return random_seed_; }
+  void setRandomSeed(size_t setTo) { random_seed_ = setTo; }
+
 
   // Parameter Modifier.
   void writeLastSingleFwdProb(const std::vector<std::vector<double> > &probabilities, size_t chromIndex, size_t strainIndex, bool useIBD);
-  void setFinalProp(const std::vector<double>& finalProp) { finalProp_ = finalProp; }
   void writeMcmcRelated(std::shared_ptr<McmcSample> mcmcSample, bool useIBD = false);
-  void setInitialProp(const std::vector<double>& initial_prop) { initialProp_ = initial_prop; }
-  void setInitialHap(const std::vector<std::vector<double> >& initial_hap) { initialHap_ = initial_hap; }
   void setacceptRatio(const double setTo) { acceptRatio_ = setTo; }
   void setmeanThetallks(const double setTo) { meanThetallks_ = setTo; }
   void setmaxLLKs(const double setTo) { maxLLKs_ = setTo; }
@@ -131,6 +128,9 @@ public:
   void setdicByVar(const double setTo) { dicByVar_ = setTo; }
   void setdicByTheta(const double setTo) { dicByTheta_ = setTo; }
 
+  void setFinalProp(const std::vector<double>& finalProp) { finalProp_ = finalProp; }
+  void setInitialProp(const std::vector<double>& initial_prop) { initialProp_ = initial_prop; }
+  void setInitialHap(const std::vector<std::vector<double> >& initial_hap) { initialHap_ = initial_hap; }
 
   // Painting related
   void chromPainting(std::shared_ptr<RandomGenerator> random_generator);
@@ -147,6 +147,12 @@ private:
   std::shared_ptr<Panel> panel_;
   MixtureDataObj mixture_data;
   MixtureControlObj mixture_control;
+  HapParameterObj hap_parameters; // Parameters for the haplotype MCMC
+  IBDParameterObj ibd_parameters;   // Parameters for the IBD MCMC
+
+  // Max Number of strains
+  size_t k_strain_;
+  size_t random_seed_;
 
   // Read in input
   std::string plafFileName_;
@@ -159,23 +165,6 @@ private:
 
   std::string panelFileName_;
 
-
-  size_t nMcmcSample_;    // Number of MCMC samples (default value 800).
-  size_t mcmcMachineryRate_;  // MCMC sample rate (default value 5).
-  double mcmcBurn_;  // MCMC burn rate (default value 0.5).
-
-  size_t kStrain_;
-  size_t randomSeed_;
-
-  // Parameters
-  double missCopyProb_;
-  double averageCentimorganDistance_;// = 15000.0,
-  double constRecombProb_;
-  double scalingFactor_; // 100.0
-
-  double parameterG_;
-  double parameterSigma_;
-  double ibdSigma_;
 
   // Diagnostics
   double maxLLKs_;
@@ -260,13 +249,6 @@ private:
   void computeInferredKstrain(std::vector<double> proportion);
   void computeAdjustedEffectiveKstrain();
   void readPanel();
-
-  void set_seed(const size_t seed) { randomSeed_ = seed; }
-  void setParameterG(const double setTo) { parameterG_ = setTo; }
-  void setParameterSigma(const double setTo) { parameterSigma_ = setTo; }
-  void setIBDSigma(const double setTo) { ibdSigma_ = setTo; }
-  void setKstrain(const size_t setTo) { kStrain_ = setTo; }
-  void setScalingFactor(const double setTo) { scalingFactor_ = setTo; }
 
   // log and export results
   void writeRecombProb(std::shared_ptr<Panel> panel);

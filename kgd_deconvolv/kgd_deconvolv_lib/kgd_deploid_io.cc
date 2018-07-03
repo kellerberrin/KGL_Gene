@@ -43,34 +43,18 @@ kgd::DEploidIO::DEploidIO() {
   checkInput();
   finalize();
   removeFilesWithSameName();
+
 }
 
 
 void kgd::DEploidIO::init() {
 
-  panel_ = nullptr;
+  getTime(true);
 
+  panel_ = nullptr;
   initialProp_.clear();
 
-  set_seed((unsigned) 0);
-
-  prefix_ = "kgd_deconvolv";
-
-  setKstrain(5);
-
-  nMcmcSample_ = 800;
-  mcmcBurn_ = 0.5;
-  mcmcMachineryRate_ = 5;
-
-  missCopyProb_ = 0.01;
-  constRecombProb_ = 1.0;
-  averageCentimorganDistance_ = 15000.0;
-
-  setScalingFactor(100.0);
-  setParameterG(20.0);
-  setParameterSigma(5.0);
-  setIBDSigma(20.0);
-  setIBDSigma(10.0);
+  setkStrain(5);
 
   refFileName_.clear();
   altFileName_.clear();
@@ -78,12 +62,14 @@ void kgd::DEploidIO::init() {
   panelFileName_.clear();
   excludeFileName_.clear();
 
-  getTime(true);
-
+  prefix_ = "kgd_deconvolv";
   compileTime_ = "";
   dEploidGitVersion_ = ExecEnv::VERSION;
 
 }
+
+
+
 
 
 void kgd::DEploidIO::getTime(bool isStartingTime) {
@@ -102,6 +88,7 @@ void kgd::DEploidIO::getTime(bool isStartingTime) {
     endTime_ = dt;
 
   }
+
 }
 
 
@@ -131,7 +118,7 @@ void kgd::DEploidIO::finalize() {
 
   if (!getMixtureControl().randomSeedWasGiven()) {
 
-    set_seed((unsigned) (time(0)));
+    setRandomSeed(static_cast<size_t>(time(nullptr)));
 
   }
 
@@ -233,7 +220,7 @@ void kgd::DEploidIO::removeFilesWithSameName() {
 
       strIbdExportSingleFwdProbPrefix_ = prefix_ + ".ibd.single";
 
-      for (size_t i = 0; i < kStrain_; i++) {
+      for (size_t i = 0; i < kStrain(); i++) {
 
         std::string tmpStrExportSingleFwdProb = strIbdExportSingleFwdProbPrefix_ + std::to_string(i);
         remove(tmpStrExportSingleFwdProb.c_str());
@@ -247,7 +234,7 @@ void kgd::DEploidIO::removeFilesWithSameName() {
 
     strExportSingleFwdProbPrefix_ = prefix_ + ".single";
 
-    for (size_t i = 0; i < kStrain_; i++) {
+    for (size_t i = 0; i < kStrain(); i++) {
 
       std::string tmpStrExportSingleFwdProb = strExportSingleFwdProbPrefix_ + std::to_string(i);
       remove(tmpStrExportSingleFwdProb.c_str());
@@ -308,11 +295,11 @@ void kgd::DEploidIO::parse() {
   }
 
   prefix_ = args.outputTemplate; // -o
-  kStrain_ = args.maxStrains; // -k
+  setkStrain(args.maxStrains); // -k
   getMixtureControl().setKStrainWasManuallySet(true);
-  nMcmcSample_ = args.MCMCSamples; // -nSamples
-  mcmcBurn_ = args.MCMCBurnRate;  // -burn
-  mcmcMachineryRate_ = args.MCMCSampleRate;  // -rate
+  hapParameters().setMcmcSample(args.MCMCSamples); // -nSamples
+  hapParameters().setMcmcBurn(args.MCMCBurnRate);  // -burn
+  hapParameters().setMcmcMachineryRate(args.MCMCSampleRate);  // -rate
 
   if (args.inbreedingProbabilitiesFlag) { // -inbreeding
 
@@ -326,7 +313,7 @@ void kgd::DEploidIO::parse() {
   setInitialProp(args.initialStrainProportions); // -initialP
   getMixtureControl().setUseIBD(args.identityByDescentFlag); // -idb
 
-  set_seed(args.MCMCRandomSeed); // -seed
+  setRandomSeed(args.MCMCRandomSeed); // -seed
   getMixtureControl().setrandomSeedWasGiven(true);
 
 }
@@ -369,16 +356,16 @@ std::vector<double> kgd::DEploidIO::computeExpectedWsafFromInitialHap() {
 
   for (size_t i = 0; i < getInitialHap().size(); i++) {
 
-    assert(kStrain_ == getInitialHap()[i].size());
+    assert(kStrain() == getInitialHap()[i].size());
 
-    for (size_t k = 0; k < kStrain_; k++) {
+    for (size_t k = 0; k < kStrain(); k++) {
 
       expectedWsaf[i] += getInitialHap()[i][k] * finalProp_[k];
 
     }
 
     assert (expectedWsaf[i] >= 0);
-    //assert ( expectedWsaf[i] <= 1.0 );
+
   }
 
   return expectedWsaf;
@@ -407,7 +394,7 @@ void kgd::DEploidIO::computeLLKfromInitialHap() {
                                               expectedWsaf,
                                               0,
                                               expectedWsaf.size(),
-                                              scalingFactor());
+                                              hapParameters().proposalUpdateScaling());
 
   llkFromInitialHap_ = Utility::sumOfVec(llk);
 
@@ -456,15 +443,15 @@ void kgd::DEploidIO::chromPainting(std::shared_ptr<RandomGenerator> random_gener
 
   if (doAllowInbreeding() == true) {
 
-    panel_->initializeUpdatePanel(panel_->truePanelSize() + kStrain_ - 1);
+    panel_->initializeUpdatePanel(panel_->truePanelSize() + kStrain() - 1);
 
   }
 
-  for (size_t tmpk = 0; tmpk < kStrain_; tmpk++) {
+  for (size_t tmpk = 0; tmpk < kStrain(); tmpk++) {
 
     if (doAllowInbreeding()) {
 
-      panel_->updatePanelWithHaps(panel_->truePanelSize() + kStrain_ - 1, tmpk, getInitialHap());
+      panel_->updatePanelWithHaps(panel_->truePanelSize() + kStrain() - 1, tmpk, getInitialHap());
 
     }
 
@@ -480,8 +467,8 @@ void kgd::DEploidIO::chromPainting(std::shared_ptr<RandomGenerator> random_gener
                                      length,
                                      kStrain(),
                                      panel_,
-                                     missCopyProb_,
-                                     scalingFactor(),
+                                     hapParameters().getMissCopyProb(),
+                                     hapParameters().proposalUpdateScaling(),
                                      tmpk);
 
       if (doAllowInbreeding()) {
@@ -491,7 +478,7 @@ void kgd::DEploidIO::chromPainting(std::shared_ptr<RandomGenerator> random_gener
       }
 
       updatingSingle.painting(getMixtureData().getRefCount(), getMixtureData().getAltCount(), expectedWsaf, finalProp_, initialHap_);
-      //writeLastSingleFwdProb( updatingSingle.fwdProbs_, chromi, tmpk, false ); // false as not using ibd
+
       writeLastSingleFwdProb(updatingSingle.getFwdBwdProbs(), chromi, tmpk, false); // false as not using ibd
 
     }
@@ -526,10 +513,10 @@ void kgd::DEploidIO::readPanel() {
 
   }
 
-  panel_->computeRecombProbs(averageCentimorganDistance(),
-                             parameterG(),
+  panel_->computeRecombProbs(hapParameters().averageCentimorganDistance(),
+                             hapParameters().parameterG(),
                              useConstRecomb(),
-                             constRecombProb(),
+                             hapParameters().constRecombProb(),
                              forbidCopyFromSame());
 
   panel_->checkForExceptions(nLoci(), panelFileName_);
@@ -644,15 +631,15 @@ void kgd::DEploidIO::paintIBD(std::shared_ptr<RandomGenerator> randomGenerator) 
   }
 
   DEploidIO tmpDEploidIO; // (*this);
-  tmpDEploidIO.setKstrain(goodProp.size());
+  tmpDEploidIO.setkStrain(goodProp.size());
   tmpDEploidIO.setInitialPropWasGiven(true);
   tmpDEploidIO.setInitialProp(goodProp);
   tmpDEploidIO.finalProp_ = goodProp;
   tmpDEploidIO.mixture_data = mixture_data;
-  //tmpDEploidIO.useConstRecomb_ = true;
-  //tmpDEploidIO.constRecombProb_ = 0.000001;
+  tmpDEploidIO.mixture_control = mixture_control;
+  tmpDEploidIO.hapParameters() = hapParameters();
+  tmpDEploidIO.ibdParameters() = ibdParameters();
 
-  //tmpDEploidIO.writeLog (&std::cout);
 
   IBDpath tmpIBDpath;
   tmpIBDpath.init(tmpDEploidIO, randomGenerator);

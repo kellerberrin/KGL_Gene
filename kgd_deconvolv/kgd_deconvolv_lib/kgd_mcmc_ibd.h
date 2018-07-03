@@ -35,7 +35,6 @@ public:
 private:
 
   IBDpath ibdPath; /* IBD */
-  MCMCTITRE titre_proportions_; /* MCMC proportions */
 
   /* Structural Subroutines */
   void initializeMcmcChain();
@@ -47,11 +46,11 @@ private:
   void recordMcmcMachinery() override;
 
   /* Implementation Subroutines */
-  std::vector<double> computeLlkAtAllSites(const std::vector<double>& proportion, double err = 0.01);
+  std::vector<double> computeLlkAtAllSites(const std::vector<double>& proportion, double read_error_prob);
 
   std::vector<double> averageProportion(const std::vector<std::vector<double> > &proportion);
 
-  void ibdInitializeEssentials(double err = 0.01);
+  void ibdInitializeEssentials(double read_error_prob);
 
   void ibdSampleMcmcEventStep();
 

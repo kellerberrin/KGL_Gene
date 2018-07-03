@@ -10,61 +10,152 @@
 namespace kellerberrin {    // organization level namespace
 namespace deconvolv {          // project level namespace
 
+//************************************************************************************
+//
+// Holds parameters common to the IBD and Haplotype MCMC objects.
+//
+//************************************************************************************
+
 
 class MixtureParameterObj {
 
 public:
 
   explicit MixtureParameterObj();
-  ~MixtureParameterObj() = default;
+  MixtureParameterObj(const MixtureParameterObj& copy) = default;
+  virtual ~MixtureParameterObj() = default;
 
   MixtureParameterObj &operator=(const MixtureParameterObj &copy) = default;
 
   // Get parameters.
-  size_t kStrain() const { return kStrain_; }
-  size_t getMcmcSample() const { return nMcmcSample_; }
-  size_t getMcmcMachineryRate() const { return mcmcMachineryRate_; }
-  double getMcmcBurn() const { return mcmcBurn_; }
-  double scalingFactor() const { return scalingFactor_; }
-  double getMissCopyProb() const { return missCopyProb_; }
-  double ibdSigma() const { return ibdSigma_; }
-  double parameterSigma() const { return parameterSigma_; }
-  double averageCentimorganDistance() const { return averageCentimorganDistance_; }
-  double parameterG() const { return parameterG_; }
-  double constRecombProb() const { return constRecombProb_; }
   size_t randomSeed() const { return randomSeed_; }
 
+  double parameterG() const { return parameterG_; }
+  double getMissCopyProb() const { return missCopyProb_; }
+  double constRecombProb() const { return constRecombProb_; }
+  double averageCentimorganDistance() const { return averageCentimorganDistance_; }
+  double baseCountError() const { return baseCountError_; }
+
   // Set parameters.
-  void set_seed(const size_t seed) { randomSeed_ = seed; }
-  void setParameterG(const double setTo) { parameterG_ = setTo; }
-  void setParameterSigma(const double setTo) { parameterSigma_ = setTo; }
-  void setIBDSigma(const double setTo) { ibdSigma_ = setTo; }
-  void setKstrain(const size_t setTo) { kStrain_ = setTo; }
-  void setScalingFactor(const double setTo) { scalingFactor_ = setTo; }
+  void setRandomSeed(size_t seed) { randomSeed_ = seed; }
+
+  void setParameterG(double setTo) { parameterG_ = setTo; }
+  void setMissCopyProb(double setTo) { missCopyProb_ = setTo; }
+  void setConstRecomProb(double setTo) { constRecombProb_ = setTo; }
+  void setAvCentiMorgonDistance(double setTo) { averageCentimorganDistance_ = setTo; }
+  void setBaseCountError(double setTo) { baseCountError_ = setTo; }
 
 
 private:
 
 
-  size_t nMcmcSample_;    // Number of MCMC samples (default value 800).
-  size_t mcmcMachineryRate_;  // MCMC sample rate (default value 5).
-  double mcmcBurn_;  // MCMC burn rate (default value 0.5).
+  size_t randomSeed_;  // Random seed the RG
 
-  size_t kStrain_;
-  size_t randomSeed_;
-
-  // Parameters
-  double missCopyProb_;
-  double averageCentimorganDistance_;// = 15000.0,
-  double constRecombProb_;
-  double scalingFactor_; // 100.0
-
-  double parameterG_;
-  double parameterSigma_;
-  double ibdSigma_;
+  double baseCountError_; // Probability that a base is miss-counted as reference or alternative.
+  double missCopyProb_;  // Probability of miss copy during recombination.
+  double averageCentimorganDistance_; // Av recombination distance in centiMorgans.
+  double constRecombProb_;  // Recombination scaling factor 1.
+  double parameterG_;  // Recombination scaling factor 3.
 
 
 };
+
+
+//************************************************************************************
+//
+// Holds parameters unique to each of the IBD and Haplotype MCMC parameter objects.
+//
+//************************************************************************************
+
+class MCMCParameterObj : public MixtureParameterObj {
+
+protected:
+
+  MCMCParameterObj() = default;
+
+public:
+
+  MCMCParameterObj(const MCMCParameterObj& copy) = default;
+  ~MCMCParameterObj() override = default;
+
+  MCMCParameterObj &operator=(const MCMCParameterObj &copy) = default;
+
+  // Get
+  size_t McmcSample() const { return nMcmcSample_; }
+  size_t McmcMachineryRate() const { return mcmcMachineryRate_; }
+  double McmcBurn() const { return mcmcBurn_; }
+  double proposalSigma() const { return parameterSigma_; }
+  double proposalMean() const { return hapMean_; }
+  double proposalUpdateScaling() const { return scalingFactor_; }
+  // Set
+  void setMcmcSample(size_t setTo) { nMcmcSample_ = setTo; }
+  void setMcmcMachineryRate(size_t setTo) { mcmcMachineryRate_ = setTo; }
+  void setMcmcBurn(double setTo) { mcmcBurn_ = setTo; }
+  void setProposalSigma(double setTo) { parameterSigma_ = setTo; }
+  void setProposalMean(double setTo) { hapMean_ = setTo; }
+  void setProposalScaling(double setTo) { scalingFactor_ = setTo; }
+
+private:
+
+  size_t nMcmcSample_;    // Number of MCMC samples (default value 800).
+  size_t mcmcMachineryRate_;  // MCMC sample rate (default value 5).
+  double mcmcBurn_;  // MCMC burn sample proportion (default value 0.5).
+
+  double parameterSigma_;  // S.D. of the haplotype MCMC proposal
+  double scalingFactor_; // haplotype proposal scaling factor.
+  double hapMean_; // haplotype proposal mean.
+
+};
+
+
+//************************************************************************************
+//
+// The parameter object for the Haplotype MCMC
+//
+//************************************************************************************
+
+
+class HapParameterObj : public MCMCParameterObj {
+
+public:
+
+  explicit HapParameterObj();
+  HapParameterObj(const HapParameterObj& copy) = default;
+  ~HapParameterObj() override = default;
+
+  HapParameterObj &operator=(const HapParameterObj &copy) = default;
+
+
+private:
+
+
+};
+
+
+//************************************************************************************
+//
+// The parameter object for the IBD MCMC
+//
+//************************************************************************************
+
+class IBDParameterObj : public MCMCParameterObj {
+
+public:
+
+  explicit IBDParameterObj();
+  IBDParameterObj(const IBDParameterObj& copy) = default;
+  ~IBDParameterObj() override = default;
+
+  IBDParameterObj &operator=(const IBDParameterObj &copy) = default;
+
+
+private:
+
+
+};
+
+
+
 
 
 

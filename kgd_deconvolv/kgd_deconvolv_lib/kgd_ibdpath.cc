@@ -43,10 +43,10 @@ void kgd::IBDpath::init(DEploidIO &dEploidIO, std::shared_ptr<RandomGenerator> r
   // initialize recombination probabilities;
   ibd_recomb_probs_ = std::make_shared<const IBDRecombProbs>(dEploidIO.getPosition(),
                                                              dEploidIO.nLoci(),
-                                                             dEploidIO.averageCentimorganDistance(),
-                                                             dEploidIO.parameterG(),
+                                                             dEploidIO.ibdParameters().averageCentimorganDistance(),
+                                                             dEploidIO.ibdParameters().parameterG(),
                                                              dEploidIO.useConstRecomb(),
-                                                             dEploidIO.constRecombProb());
+                                                             dEploidIO.ibdParameters().constRecombProb());
 
   current_IBD_path_change_at_ = std::vector<double>(nLoci());
 

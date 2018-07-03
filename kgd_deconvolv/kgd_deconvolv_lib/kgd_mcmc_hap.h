@@ -40,7 +40,6 @@ private:
 
   std::shared_ptr<RandomGenerator> mcmcEventRg_;
   std::shared_ptr<Panel> panel_;
-  MCMCTITRE titre_proportions_; /* MCMC proportions */
 
 
   /* Structural Subroutines */

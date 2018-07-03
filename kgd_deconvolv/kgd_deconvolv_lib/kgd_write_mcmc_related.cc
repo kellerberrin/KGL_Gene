@@ -132,10 +132,10 @@ void kgd::DEploidIO::writeHap(std::shared_ptr<McmcSample> mcmcSample, bool useIB
   // HEADER
   ofstreamExportTmp_ << "CHROM" << "\t" << "POS" << "\t";;
 
-  for (size_t ii = 0; ii < kStrain_; ii++) {
+  for (size_t ii = 0; ii < kStrain(); ii++) {
 
     ofstreamExportTmp_ << "h" << (ii + 1);
-    ofstreamExportTmp_ << ((ii < (kStrain_ - 1)) ? "\t" : "\n");
+    ofstreamExportTmp_ << ((ii < (kStrain() - 1)) ? "\t" : "\n");
 
   }
 
@@ -214,7 +214,7 @@ void kgd::DEploidIO::writeVcf(std::shared_ptr<McmcSample> mcmcSample) {
   (*writeTo) << ExecEnv::commandLine() << std::endl;
 
   // Include proportions
-  for (size_t ii = 0; ii < kStrain_; ii++) {
+  for (size_t ii = 0; ii < kStrain(); ii++) {
 
     std::string sampleName = VCF_reader.getSampleName();
 
@@ -236,13 +236,13 @@ void kgd::DEploidIO::writeVcf(std::shared_ptr<McmcSample> mcmcSample) {
              << "INFO" << "\t"
              << "FORMAT" << "\t";
 
-  for (size_t ii = 0; ii < kStrain_; ii++) {
+  for (size_t ii = 0; ii < kStrain(); ii++) {
 
     std::string sampleName = VCF_reader.getSampleName();
 
     (*writeTo) << (getMixtureControl().useVcf() ? sampleName : "h")
                << "." << (ii + 1);
-    (*writeTo) << ((ii < (kStrain_ - 1)) ? "\t" : "\n");
+    (*writeTo) << ((ii < (kStrain() - 1)) ? "\t" : "\n");
 
   }
 

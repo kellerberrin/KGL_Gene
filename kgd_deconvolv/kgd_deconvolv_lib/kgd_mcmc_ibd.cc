@@ -19,16 +19,7 @@ namespace kgd = kellerberrin::deconvolv;
 kgd::MCMCIBD::MCMCIBD(std::shared_ptr<DEploidIO> dEploidIO,
                       std::shared_ptr<McmcSample> mcmcSample,
                       std::shared_ptr<RandomGenerator> randomGenerator)
-  : MCMCBASE(dEploidIO, mcmcSample, randomGenerator),
-    titre_proportions_(kStrain(), 0.0 /* mean */, dEploidIO_->ibdSigma(), 40.0 /*update */) {
-
-  calcMaxIteration(100, 10, 0.5);  // TODO: Get these values from Deploid_io.
-
-  if (dEploidIO_->initialPropWasGiven()) {
-
-    titre_proportions_.proportion2Titre(dEploidIO_->getInitialProp());
-
-  }
+  : MCMCBASE(dEploidIO, mcmcSample, randomGenerator, dEploidIO->ibdParameters()) {
 
   initializeMcmcChain();
 
@@ -49,9 +40,9 @@ void kgd::MCMCIBD::initializeMcmcChain() {
                                    currentExpectedWsaf_,
                                    0,
                                    currentExpectedWsaf_.size(),
-                                   dEploidIO_->scalingFactor());
+                                   dEploidIO_->ibdParameters().proposalUpdateScaling());
 
-  ibdInitializeEssentials();
+  ibdInitializeEssentials(MCMCParameters_.baseCountError());
 
   mcmcSample_->setVectorSize(nLoci());
 
@@ -178,7 +169,7 @@ void kgd::MCMCIBD::ibdUpdateHaplotypesFromPrior() {
 void kgd::MCMCIBD::ibdUpdateProportionGivenHap() {
 
   // For each strain perform a Metropolis-Hastings update of currentTitre, currentProportion
-  std::vector<double> llkAtAllSites = computeLlkAtAllSites(titre_proportions_.Proportions());
+  std::vector<double> llkAtAllSites = computeLlkAtAllSites(titre_proportions_.Proportions(), MCMCParameters_.baseCountError());
 
   for (size_t i = 0; i < kStrain(); i++) {
 
@@ -186,7 +177,7 @@ void kgd::MCMCIBD::ibdUpdateProportionGivenHap() {
 
     proposal.updateTitreIndex(i);
 
-    std::vector<double> llk_loci_vector = computeLlkAtAllSites(proposal.Proportions());
+    std::vector<double> llk_loci_vector = computeLlkAtAllSites(proposal.Proportions(), MCMCParameters_.baseCountError());
 
     double prior_titre_ratio = proposal.calcPriorTitreIndex(i) / titre_proportions_.calcPriorTitreIndex(i);
     double likelihood_ratio = exp(Utility::sumOfVec(llk_loci_vector) - Utility::sumOfVec(llkAtAllSites));
@@ -212,7 +203,7 @@ void kgd::MCMCIBD::ibdUpdateProportionGivenHap() {
 }
 
 
-std::vector<double> kgd::MCMCIBD::computeLlkAtAllSites(const std::vector<double>& proportion, double err) {
+std::vector<double> kgd::MCMCIBD::computeLlkAtAllSites(const std::vector<double>& proportion, double read_error_prob) {
 
   std::vector<double> llk_vector;
 
@@ -226,7 +217,7 @@ std::vector<double> kgd::MCMCIBD::computeLlkAtAllSites(const std::vector<double>
 
     }
 
-    double loci_prop_err = (loci_proportion * (1 - err)) + ((1 - loci_proportion) * err);
+    double loci_prop_err = (loci_proportion * (1 - read_error_prob)) + ((1 - loci_proportion) * read_error_prob);
 
     double llk_loci = Utility::logBetaPdf(loci_prop_err, ibdPath.getLogLikelihoodSurface()[loci][0], ibdPath.getLogLikelihoodSurface()[loci][1]);
 

@@ -14,7 +14,24 @@ namespace kgd = kellerberrin::deconvolv;
 
 kgd::MCMCBASE::MCMCBASE(std::shared_ptr<DEploidIO> dEploidIO,
                         std::shared_ptr<McmcSample> mcmcSample,
-                        std::shared_ptr<RandomGenerator> randomGenerator) : MCMCVIRTUAL(dEploidIO, mcmcSample, randomGenerator) {
+                        std::shared_ptr<RandomGenerator> randomGenerator,
+                        const MCMCParameterObj& MCMCParameters)
+  : MCMCVIRTUAL(dEploidIO, mcmcSample, randomGenerator),
+    MCMCParameters_(MCMCParameters),
+    titre_proportions_(dEploidIO->kStrain(),
+                       MCMCParameters.proposalMean(),
+                       MCMCParameters.proposalSigma(),
+                       MCMCParameters.proposalUpdateScaling()) {
+
+  calcMaxIteration(MCMCParameters.McmcSample(),
+                   MCMCParameters.McmcMachineryRate(),
+                   MCMCParameters.McmcBurn());
+
+  if (dEploidIO_->initialPropWasGiven()) {
+
+    titre_proportions_.proportion2Titre(dEploidIO_->getInitialProp());
+
+  }
 
   hapRg_ = randomGenerator_;
   propRg_ = randomGenerator_;
@@ -114,7 +131,7 @@ void kgd::MCMCBASE::computeDiagnostics() {
   // average cumulate expectedWSAF
   for (size_t i = 0; i < cumExpectedWsaf_.size(); ++i) {
 
-    cumExpectedWsaf_[i] /= dEploidIO_->getMcmcSample();
+    cumExpectedWsaf_[i] /= static_cast<double>(MCMCParameters_.McmcSample());
 
   }
 
@@ -123,7 +140,7 @@ void kgd::MCMCBASE::computeDiagnostics() {
                                                    cumExpectedWsaf_,
                                                    0,
                                                    cumExpectedWsaf_.size(),
-                                                   dEploidIO_->scalingFactor());
+                                                   MCMCParameters_.proposalUpdateScaling());
 
   dEploidIO_->setmeanThetallks(Utility::sumOfVec(tmpLLKs1));
 
@@ -145,7 +162,7 @@ void kgd::MCMCBASE::computeDiagnostics() {
                                                   wsaf_vec,
                                                   0,
                                                   wsaf_vec.size(),
-                                                  dEploidIO_->scalingFactor());
+                                                  MCMCParameters_.proposalUpdateScaling());
 
   dEploidIO_->setmaxLLKs(Utility::sumOfVec(tmpLLKs));
 

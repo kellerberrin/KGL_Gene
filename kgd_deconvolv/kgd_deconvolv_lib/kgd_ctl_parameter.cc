@@ -8,22 +8,42 @@
 namespace kgd = kellerberrin::deconvolv;
 
 
+
+
 kgd::MixtureParameterObj::MixtureParameterObj() {
 
+  setRandomSeed(0);
 
-  nMcmcSample_ = 800;
-  mcmcBurn_ = 0.5;
-  mcmcMachineryRate_ = 5;
-
-  missCopyProb_ = 0.01;
-  constRecombProb_ = 1.0;
-  averageCentimorganDistance_ = 15000.0;
-
-  setScalingFactor(100.0);
+  setMissCopyProb(0.01);
+  setConstRecomProb(1.0);
+  setAvCentiMorgonDistance(15000.0);
   setParameterG(20.0);
-  setParameterSigma(5.0);
-  setIBDSigma(20.0);
-  set_seed(0);
-  setKstrain(5);
+  setBaseCountError(0.01);
+
+}
+
+
+kgd::HapParameterObj::HapParameterObj() {
+
+  setMcmcSample(800);
+  setMcmcMachineryRate(5);
+  setMcmcBurn(0.5);
+
+  setProposalSigma(5.0);
+  setProposalMean(0.0);
+  setProposalScaling(100.0);
+
+}
+
+
+kgd::IBDParameterObj::IBDParameterObj() {
+
+  setMcmcSample(100);
+  setMcmcMachineryRate(10);
+  setMcmcBurn(0.5);
+
+  setProposalSigma(20.0);
+  setProposalMean(0.0);
+  setProposalScaling(40.0);
 
 }

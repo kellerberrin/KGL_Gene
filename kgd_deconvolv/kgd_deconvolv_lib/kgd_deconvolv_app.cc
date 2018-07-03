@@ -32,7 +32,7 @@ void kgd::ExecEnv::executeApp() {
 
     std::shared_ptr<DEploidIO> dEploidIO_ptr(std::make_shared<DEploidIO>());
 
-    std::shared_ptr<MersenneTwister> random_generator(std::make_shared<MersenneTwister>(dEploidIO_ptr->randomSeed()));
+    std::shared_ptr<MersenneTwister> random_generator(std::make_shared<MersenneTwister>(dEploidIO_ptr->getRandomSeed()));
 
     if ( dEploidIO_ptr->getMixtureControl().doComputeLLK() ) {
 

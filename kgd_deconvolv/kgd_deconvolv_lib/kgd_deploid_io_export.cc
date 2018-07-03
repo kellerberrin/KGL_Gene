@@ -126,10 +126,10 @@ void kgd::DEploidIO::writeLog(std::ostream *writeTo) {
   if ((not getMixtureControl().doLsPainting()) && (not getMixtureControl().doIbdPainting())) {
 
     (*writeTo) << "MCMC parameters: " << "\n";
-    (*writeTo) << std::setw(19) << " MCMC burn: " << mcmcBurn_ << "\n";
-    (*writeTo) << std::setw(19) << " MCMC sample: " << nMcmcSample_ << "\n";
-    (*writeTo) << std::setw(19) << " MCMC sample rate: " << mcmcMachineryRate_ << "\n";
-    (*writeTo) << std::setw(19) << " Random seed: " << randomSeed() << "\n";
+    (*writeTo) << std::setw(19) << " MCMC burn: " << hapParameters().McmcBurn() << "\n";
+    (*writeTo) << std::setw(19) << " MCMC sample: " << hapParameters().McmcSample() << "\n";
+    (*writeTo) << std::setw(19) << " MCMC sample rate: " << hapParameters().McmcMachineryRate() << "\n";
+    (*writeTo) << std::setw(19) << " Random seed: " << hapParameters().randomSeed() << "\n";
 
     if (useIBD()) {
 
@@ -152,21 +152,21 @@ void kgd::DEploidIO::writeLog(std::ostream *writeTo) {
 
   }
 
-  (*writeTo) << std::setw(20) << " Miss copy prob: " << missCopyProb_ << "\n";
-  (*writeTo) << std::setw(20) << " Avrg Cent Morgan: " << averageCentimorganDistance_ << "\n";
-  (*writeTo) << std::setw(20) << " G: " << parameterG() << "\n";
+  (*writeTo) << std::setw(20) << " Miss copy prob: " << hapParameters().getMissCopyProb() << "\n";
+  (*writeTo) << std::setw(20) << " Avrg Cent Morgan: " << hapParameters().averageCentimorganDistance() << "\n";
+  (*writeTo) << std::setw(20) << " G: " << hapParameters().parameterG() << "\n";
 
   if (useIBD()) {
 
-    (*writeTo) << std::setw(20) << " IBD sigma: " << ibdSigma() << "\n";
+    (*writeTo) << std::setw(20) << " IBD sigma: " << ibdParameters().proposalSigma() << "\n";
 
   } else {
 
-    (*writeTo) << std::setw(20) << " sigma: " << parameterSigma() << "\n";
+    (*writeTo) << std::setw(20) << " sigma: " << hapParameters().proposalSigma() << "\n";
 
   }
 
-  (*writeTo) << std::setw(20) << " ScalingFactor: " << scalingFactor() << "\n";
+  (*writeTo) << std::setw(20) << " ScalingFactor: " << hapParameters().proposalUpdateScaling() << "\n";
 
   if (initialPropWasGiven()) {
 
@@ -174,7 +174,7 @@ void kgd::DEploidIO::writeLog(std::ostream *writeTo) {
 
     for (size_t i = 0; i < initialProp_.size(); i++) {
 
-      (*writeTo) << initialProp_[i] << ((i != (kStrain_ - 1)) ? " " : "\n");
+      (*writeTo) << initialProp_[i] << ((i != (kStrain() - 1)) ? " " : "\n");
 
     }
 
