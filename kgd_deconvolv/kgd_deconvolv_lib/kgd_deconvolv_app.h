@@ -17,7 +17,9 @@ namespace deconvolv {          // project level namespace
 // Holds the kgd_deconvolv Arguments.
 struct DeconvolvArgs {
 
-  std::string vcfFile{"kgd_deconvolv.vcf"};
+  std::string refFile{NOT_SPECIFIED};
+  std::string altFile{NOT_SPECIFIED};
+  std::string vcfFile{NOT_SPECIFIED};
   std::string plafFile{"kgl_plaf.txt"};
   std::string outputTemplate{"kgl_deconvolv_out"};
   std::string panelFile{NOT_SPECIFIED};

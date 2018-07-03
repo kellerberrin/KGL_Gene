@@ -171,6 +171,166 @@ bool kgl::VariantClassifier::writeVariants(char delimiter,
 }
 
 
+// Write ref/alt counts into separate files by variant order.
+bool kgl::VariantClassifier::writePlaf(char delimiter,
+                                       const std::string& plaf_file_name,
+                                       const std::string& ref_file_prefix,
+                                       const std::string& alt_file_prefix,
+                                       size_t min_count) const {
+
+  std::ofstream plaf_file(plaf_file_name);
+
+  if (not plaf_file.good()) {
+
+    ExecEnv::log().error("VariantClassifier; Unable to open plaf file: {}", plaf_file_name);
+    return false;
+
+  }
+
+  plaf_file << "#Contig" <<	delimiter << "Offset"	<< delimiter << "VariantFreq" << '\n';
+
+  std::vector<std::shared_ptr<std::ofstream>> genome_ref_files;
+  std::vector<std::shared_ptr<std::ofstream>> genome_alt_files;
+  // Open all the genome files.
+  for (auto genome : getGenomes()) {
+
+    std::string ref_file_name = ref_file_prefix + genome + ".tab";
+
+    std::shared_ptr<std::ofstream> ref_file_ptr(std::make_shared<std::ofstream>(ref_file_name));
+    if (not ref_file_ptr->good()) {
+
+      ExecEnv::log().error("VariantClassifier; Unable to open ref file: {}", ref_file_name);
+      return false;
+
+    }
+
+    std::string alt_file_name = alt_file_prefix + genome + ".tab";
+
+    std::shared_ptr<std::ofstream> alt_file_ptr(std::make_shared<std::ofstream>(alt_file_name));
+    if (not alt_file_ptr->good()) {
+
+      ExecEnv::log().error("VariantClassifier; Unable to open ref file: {}", alt_file_name);
+      return false;
+
+    }
+
+    genome_ref_files.push_back(ref_file_ptr);
+    genome_alt_files.push_back(alt_file_ptr);
+
+  }
+
+  if (genome_ref_files.size() != getGenomes().size()) {
+
+    ExecEnv::log().error("VariantClassifier; Mismatch between genomes size: {} and number of genome ref files: {}",
+                         getGenomes().size(), genome_ref_files.size());
+    return false;
+
+
+  }
+
+  if (genome_alt_files.size() != getGenomes().size()) {
+
+    ExecEnv::log().error("VariantClassifier; Mismatch between genomes size: {} and number of genome alt files: {}",
+                         getGenomes().size(), genome_alt_files.size());
+    return false;
+
+
+  }
+
+  // write the header to each file.
+  for (auto file_ptr : genome_ref_files) {
+
+    (*file_ptr) << "#Contig" <<	delimiter << "Offset"	<< delimiter << "Variant" << '\n';
+
+  }
+
+  for (auto file_ptr : genome_alt_files) {
+
+    (*file_ptr) << "#Contig" <<	delimiter << "Offset"	<< delimiter << "Variant" << '\n';
+
+  }
+
+  // for all variant offsets.
+  for (auto variant_offset : getMap()) {
+
+    size_t allele_count = 0;
+    size_t genome_offset = 0;
+    for (auto genome : getGenomes()) {
+
+      auto find_result = variant_offset.second.find(genome);
+
+      if (find_result != variant_offset.second.end()) {
+
+        std::shared_ptr<const CountEvidence> count_evidence_ptr = std::dynamic_pointer_cast<const CountEvidence>(
+        find_result->second->evidence());
+
+        if (count_evidence_ptr) {
+
+          size_t total_count = count_evidence_ptr->refCount() + count_evidence_ptr->altCount();
+
+          if (total_count >= min_count) {
+
+            ++allele_count;
+            *(genome_ref_files[genome_offset]) << variant_offset.first.variant()->contigId() << delimiter << variant_offset.first.variant()->offset()
+                                               << delimiter << count_evidence_ptr->refCount() << '\n';
+
+            *(genome_alt_files[genome_offset]) << variant_offset.first.variant()->contigId() << delimiter << variant_offset.first.variant()->offset()
+                                               << delimiter << count_evidence_ptr->altCount() << '\n';
+
+
+          } else {
+
+            *(genome_ref_files[genome_offset]) << variant_offset.first.variant()->contigId() << delimiter << variant_offset.first.variant()->offset()
+                                               << delimiter << static_cast<size_t>(0) << '\n';
+
+            *(genome_alt_files[genome_offset]) << variant_offset.first.variant()->contigId() << delimiter << variant_offset.first.variant()->offset()
+                                               << delimiter << static_cast<size_t>(0) << '\n';
+
+          }
+
+        } else {
+
+          ExecEnv::log().error("Variant without count evidence: {}",
+                               find_result->second->output(' ', VariantOutputIndex::START_0_BASED, false));
+
+        }
+
+      } else {
+
+        *(genome_ref_files[genome_offset]) << variant_offset.first.variant()->contigId() << delimiter << variant_offset.first.variant()->offset()
+                                           << delimiter << static_cast<size_t>(0) << '\n';
+
+        *(genome_alt_files[genome_offset]) << variant_offset.first.variant()->contigId() << delimiter << variant_offset.first.variant()->offset()
+                                           << delimiter << static_cast<size_t>(0) << '\n';
+
+      }
+
+      ++genome_offset;
+
+    } // all genomes;
+
+    if (allele_count > 0) {
+
+      double allele_population_freq = static_cast<double>(allele_count) / static_cast<double>(getGenomes().size());
+
+      plaf_file << variant_offset.first.variant()->contigId() << delimiter << variant_offset.first.variant()->offset()
+                << delimiter << allele_population_freq << std::endl;
+
+    } else {
+
+
+      plaf_file << variant_offset.first.variant()->contigId() << delimiter << variant_offset.first.variant()->offset()
+                << delimiter << static_cast<double>(0.0) << std::endl;
+
+    }
+
+  }  // all variants.
+
+  return true;
+
+}
+
+
 bool kgl::VariantClassifier::writeOrderedVariants(char delimiter,
                                                   const std::string& ref_file_name,
                                                   const std::string& alt_file_name,

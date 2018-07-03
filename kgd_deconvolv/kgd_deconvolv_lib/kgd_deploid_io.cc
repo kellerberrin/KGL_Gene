@@ -255,8 +255,26 @@ void kgd::DEploidIO::parse() {
 
   const kgd::DeconvolvArgs &args = ExecEnv::getArgs();
 
-  vcfFileName_ = args.vcfFile; // -vcf
-  getMixtureControl().setUseVcf(true);
+  if (args.vcfFile!= kgd::DeconvolvArgs::NOT_SPECIFIED) {  // -vcfOut
+
+    vcfFileName_ = args.vcfFile; // -vcf
+    getMixtureControl().setUseVcf(true);
+
+  } else {
+
+    if (args.refFile!= kgd::DeconvolvArgs::NOT_SPECIFIED && args.altFile!= kgd::DeconvolvArgs::NOT_SPECIFIED) {
+
+      refFileName_  = args.refFile;
+      altFileName_ = args.altFile;
+      getMixtureControl().setUseVcf(false);
+
+    } else {
+
+      ExecEnv::log().critical("Argument error - Must specify VCF '-vcf' or ALT and REF files '-ref', '-alt'");
+
+    }
+
+  }
 
   if (args.vcfOutFile != kgd::DeconvolvArgs::NOT_SPECIFIED) {  // -vcfOut
 

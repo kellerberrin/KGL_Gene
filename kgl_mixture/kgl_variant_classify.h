@@ -73,6 +73,13 @@ public:
                      const std::string& alt_file_name,
                      size_t min_count) const;
 
+// Write population allele frequency.
+  bool writePlaf(char delimiter,
+                 const std::string& plaf_file_name,
+                 const std::string& ref_file_prefix,
+                 const std::string& alt_file_prefix,
+                 size_t min_count) const;
+
 // Write ref/alt counts simultaneously into separate files by total genome alt count order.
 // The maximum number of genomes with non-zero alt counts.
 // This is used in initial 'R' testing of the the J. O'brien MCMC mixture algorithm

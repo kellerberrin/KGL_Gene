@@ -117,6 +117,22 @@ bool kgd::ExecEnv::parseCommandLine(int argc, char const ** argv) {
 
   addOption(parser, seqan::ArgParseOption(vcfFileShortFlag_, vcfFileFlag_, vcf_file_desc, seqan::ArgParseArgument::INPUT_FILE, "VCF_FILE"));
 
+  const char* ref_file_desc =
+  R"(The Ref count file path. This is relative to the work directory. and the workDirectory is prepended to to this path e.g. 'workDirectory/ref_file_path')";
+
+  const char* refFileFlag_ = "refFile";
+  const char* refFileShortFlag_ = "ref";
+
+  addOption(parser, seqan::ArgParseOption(refFileShortFlag_, refFileFlag_, ref_file_desc, seqan::ArgParseArgument::INPUT_FILE, "REF_FILE"));
+
+  const char* alt_file_desc =
+  R"(The Alt count file path. This is relative to the work directory. and the workDirectory is prepended to to this path e.g. 'workDirectory/alt_file_path')";
+
+  const char* altFileFlag_ = "altFile";
+  const char* altFileShortFlag_ = "alt";
+
+  addOption(parser, seqan::ArgParseOption(altFileShortFlag_, altFileFlag_, alt_file_desc, seqan::ArgParseArgument::INPUT_FILE, "ALT_FILE"));
+
   const char* plaf_file_desc =
   R"(The Population Allele Frequency file path (plaf). This is relative to the work directory. and the workDirectory
   is prepended to to this path e.g. 'workDirectory/plaf_file_path')";
@@ -331,6 +347,8 @@ This option must be used with option -initialP.)";
   ExecEnv::createLogger(MODULE_NAME, getArgs().logFile, getArgs().max_error_count, getArgs().max_warn_count);
 
   // Setup input files.
+  getFilePath(refFileFlag_, parser, directory_path, args_.refFile, true);
+  getFilePath(altFileFlag_, parser, directory_path, args_.altFile, true);
   getFilePath(vcfFileFlag_, parser, directory_path, args_.vcfFile, true);
   getFilePath(plafFileFlag_, parser, directory_path, args_.plafFile, true);
   getFilePath(panelFileFlag_, parser, directory_path, args_.panelFile, true);
