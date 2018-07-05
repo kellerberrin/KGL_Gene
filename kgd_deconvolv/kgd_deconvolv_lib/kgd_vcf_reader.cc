@@ -285,7 +285,7 @@ void kgd::VcfReader::getChromList() {
   assert (getPosition().size() == (size_t) 0);
 
   std::string previousChrom("");
-  std::vector<int> positionOfChrom_;
+  std::vector<size_t> positionOfChrom_;
 
   for (size_t i = 0; i < variants_.size(); i++) {
 
@@ -297,7 +297,7 @@ void kgd::VcfReader::getChromList() {
 
     }
 
-    positionOfChrom_.push_back(std::stoi(variants_[i].getPosStr().c_str(), NULL));
+    positionOfChrom_.push_back(std::stoull(variants_[i].getPosStr(), NULL));
     previousChrom = variants_[i].getChromStr();
 
   }

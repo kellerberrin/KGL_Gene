@@ -74,7 +74,7 @@ private:
   // info_ only refers to the first column of the content
   std::vector<double> info_;
 
-  std::vector<int> tmpPosition_;
+  std::vector<size_t> tmpPosition_;
 
   size_t nInfoLines_;
   int tmpChromInex_;

@@ -40,8 +40,6 @@ kgd::MixtureControlObj::MixtureControlObj() {
   setDoExportVcf(false);
   setDoComputeLLK(false);
 
-
-
-
+  setDirectData(false);
 
 }

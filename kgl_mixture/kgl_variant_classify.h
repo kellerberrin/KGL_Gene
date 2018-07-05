@@ -6,14 +6,16 @@
 #define KGL_VARIANT_CLASSIFY_H
 
 
-
+#include <kgd_ctl_data.h>
 #include "kgl_utility.h"
 #include "kgl_variant_db.h"
-
+#include "kgd_ctl_data.h"
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
+
+namespace kgd = kellerberrin::deconvolv;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -67,7 +69,11 @@ public:
   const VariantMap& getMap() const { return variant_map_; }
   const std::vector<GenomeId_t>& getGenomes() const { return genomes_; }
 
-// Write ref/alt counts into separate files by variant order.
+  // Produce a kgd data object.
+  kgd::MixtureDataObj convertToMixture(const GenomeId_t& genome_count, size_t min_count) const;
+
+  // IO routines - to produce files for testing.
+  // Write ref/alt counts into separate files by variant order.
   bool writeVariants(char delimiter,
                      const std::string& ref_file_name,
                      const std::string& alt_file_name,

@@ -198,7 +198,7 @@ set(ANALYTIC_SOURCE_FILES
 
 set(MIXTURE_SOURCE_FILES
         kgl_mixture/kgl_variant_phase.h
-        kgl_mixture/kgl_variant_phase.cc kgl_mixture/kgl_variant_classify.h kgl_mixture/kgl_variant_classify.cc)
+        kgl_mixture/kgl_variant_phase.cc kgl_mixture/kgl_variant_classify.h kgl_mixture/kgl_variant_classify.cc kgl_mixture/kgl_variant_classify_io.cc)
 
 
 # Application level objects

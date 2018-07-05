@@ -32,9 +32,9 @@ bool kgd::MixtureDataObj::readVCFPlafExclude(const std::string& vcf_filename,
   chrom_ = plaf.getChrom();
   position_ = plaf.getPosition();
   indexOfChromStarts_ = plaf.getIndexChromStarts();
-  nLoci_ = plaf_.size();
 
-  if (nLoci_ != refCount_.size()) {
+  // nLoci() can only be used after plaf is set.
+  if (nLoci() != refCount_.size()) {
 
     // Fatal error program terminates.
     ExecEnv::log().error("Error reading VCF file: {}, Exclude file: {}, PLAF file: {}",
@@ -44,7 +44,7 @@ bool kgd::MixtureDataObj::readVCFPlafExclude(const std::string& vcf_filename,
 
   }
 
-  if (nLoci_ != altCount_.size()) {
+  if (nLoci() != altCount_.size()) {
 
     // Fatal error program terminates.
     ExecEnv::log().error("Error reading VCF file: {}, Exclude file: {}, PLAF file: {}",
@@ -78,9 +78,9 @@ bool kgd::MixtureDataObj::readVCFPlaf(const std::string& vcf_filename,
   chrom_ = plaf.getChrom();
   position_ = plaf.getPosition();
   indexOfChromStarts_ = plaf.getIndexChromStarts();
-  nLoci_ = plaf_.size();
 
-  if (nLoci_ != refCount_.size()) {
+  // nLoci() can only be used after plaf is set.
+  if (nLoci() != refCount_.size()) {
 
     // Fatal error program terminates.
     ExecEnv::log().error("Error reading VCF file: {}, Exclude file: {}, PLAF file: {}",
@@ -90,7 +90,7 @@ bool kgd::MixtureDataObj::readVCFPlaf(const std::string& vcf_filename,
 
   }
 
-  if (nLoci_ != altCount_.size()) {
+  if (nLoci() != altCount_.size()) {
 
     // Fatal error program terminates.
     ExecEnv::log().error("Error reading VCF file: {}, Exclude file: {}, PLAF file: {}",
@@ -134,9 +134,9 @@ bool kgd::MixtureDataObj::readRefAltPlafExclude(const std::string& ref_filename,
   chrom_ = plaf.getChrom();
   position_ = plaf.getPosition();
   indexOfChromStarts_ = plaf.getIndexChromStarts();
-  nLoci_ = plaf_.size();
 
-  if (nLoci_ != refCount_.size()) {
+  // nLoci() can only be used after plaf is set.
+  if (nLoci() != refCount_.size()) {
 
     // Fatal error program terminates.
     ExecEnv::log().error("Error reading Ref file: {}, Alt file: {}, Exclude file: {}, PLAF file: {}",
@@ -146,7 +146,7 @@ bool kgd::MixtureDataObj::readRefAltPlafExclude(const std::string& ref_filename,
 
   }
 
-  if (nLoci_ != altCount_.size()) {
+  if (nLoci() != altCount_.size()) {
 
     // Fatal error program terminates.
     ExecEnv::log().error("Error reading Ref file: {}, Alt file: {}, Exclude file: {}, PLAF file: {}",
@@ -184,9 +184,9 @@ bool kgd::MixtureDataObj::readRefAltPlaf(const std::string& ref_filename,
   chrom_ = plaf.getChrom();
   position_ = plaf.getPosition();
   indexOfChromStarts_ = plaf.getIndexChromStarts();
-  nLoci_ = plaf_.size();
 
-  if (nLoci_ != refCount_.size()) {
+  // nLoci() can only be used after plaf is set.
+  if (nLoci() != refCount_.size()) {
 
     // Fatal error program terminates.
     ExecEnv::log().error("Error reading Ref file: {}, Alt file: {}, PLAF file: {}",
@@ -196,7 +196,7 @@ bool kgd::MixtureDataObj::readRefAltPlaf(const std::string& ref_filename,
 
   }
 
-  if (nLoci_ != altCount_.size()) {
+  if (nLoci() != altCount_.size()) {
 
     // Fatal error program terminates.
     ExecEnv::log().error("Error reading Ref file: {}, Alt file: {}, PLAF file: {}",

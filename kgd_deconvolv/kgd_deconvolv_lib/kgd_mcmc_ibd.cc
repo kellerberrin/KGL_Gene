@@ -185,8 +185,9 @@ void kgd::MCMCIBD::ibdUpdateProportionGivenHap() {
 
     double acceptance_draw = propRg_->sample();
 
-    ExecEnv::log().info("IDB prop[{}]: {}, h_ratio: {}, l_ratio: {}, pr_ratio: {}, accept_draw: {}, {}",
-                        i, proposal.Proportions()[i], prior_titre_ratio, likelihood_ratio, proposal_ratio, acceptance_draw, acceptance_draw <= proposal_ratio ? "ACCEPT" : "REJECT");
+    ExecEnv::log().info("{}, IDB [{}]: {}/{}, h_ratio: {}, l_ratio: {}, h*r: {}, accept: {}, {}",
+                        current_MCMC_iteration(), i, proposal.Proportions()[i], titre_proportions_.Proportions()[i],
+                        prior_titre_ratio, likelihood_ratio, proposal_ratio, acceptance_draw, acceptance_draw <= proposal_ratio ? "ACCEPT" : "REJECT");
 
     if (acceptance_draw <= proposal_ratio) {
       // Accept

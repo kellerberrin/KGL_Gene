@@ -26,12 +26,12 @@ public:
 
   // Access functions
   const std::vector<size_t>& indexOfChromStarts() const { return indexOfChromStarts_; }
-  const std::vector<std::vector<int>>& getPosition() const { return position_; }
+  const std::vector<std::vector<size_t>>& getPosition() const { return position_; }
   const std::vector<double>& getPlaf() const { return plaf_; }
   const std::vector<double>& getRefCount() const { return refCount_; }
   const std::vector<double>& getAltCount() const { return altCount_; }
   std::vector<std::string> getChrom() const { return chrom_; }
-  size_t nLoci() const { return nLoci_; }
+  size_t nLoci() const { return plaf_.size(); }
 
   // Read functions
   bool readVCFPlaf(const std::string& filename,
@@ -52,11 +52,10 @@ private:
 
   std::vector<std::string> chrom_;
   std::vector<size_t> indexOfChromStarts_;
-  std::vector<std::vector<int> > position_;
+  std::vector<std::vector<size_t> > position_;
   std::vector<double> plaf_;
   std::vector<double> refCount_;
   std::vector<double> altCount_;
-  size_t nLoci_;
 
 };
 

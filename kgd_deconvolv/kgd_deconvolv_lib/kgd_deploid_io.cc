@@ -39,9 +39,16 @@ namespace kgd = kellerberrin::deconvolv;
 kgd::DEploidIO::DEploidIO() {
 
   init(); // Reset to default values before parsing
-  parse();
-  checkInput();
-  finalize();
+
+  if (not getMixtureControl().directData()) {
+
+    parse();
+    checkInput();
+    readFiles();
+    finalize();
+
+  }
+
   removeFilesWithSameName();
 
 }
@@ -91,6 +98,37 @@ void kgd::DEploidIO::getTime(bool isStartingTime) {
 
 }
 
+void kgd::DEploidIO::readFiles() {
+
+  if (getMixtureControl().useVcf()) { // read vcf files, and parse it to refCount and altCount
+
+    if (getMixtureControl().excludeSites()) {
+
+      mixture_data.readVCFPlafExclude(vcfFileName_, plafFileName_, excludeFileName_);
+
+    } else {
+
+      mixture_data.readVCFPlaf(vcfFileName_, plafFileName_);
+
+    }
+
+  } else {
+
+    if (getMixtureControl().excludeSites()) {
+
+      mixture_data.readRefAltPlafExclude(refFileName_, altFileName_, plafFileName_, excludeFileName_);
+
+    } else {
+
+      mixture_data.readRefAltPlaf(refFileName_, altFileName_, plafFileName_);
+
+    }
+
+  }
+
+  readPanel();
+
+}
 
 void kgd::DEploidIO::finalize() {
 
@@ -122,34 +160,7 @@ void kgd::DEploidIO::finalize() {
 
   }
 
-  if (getMixtureControl().useVcf()) { // read vcf files, and parse it to refCount and altCount
-
-    if (getMixtureControl().excludeSites()) {
-
-      mixture_data.readVCFPlafExclude(vcfFileName_, plafFileName_, excludeFileName_);
-
-    } else {
-
-      mixture_data.readVCFPlaf(vcfFileName_, plafFileName_);
-
-    }
-
-  } else {
-
-    if (getMixtureControl().excludeSites()) {
-
-      mixture_data.readRefAltPlafExclude(refFileName_, altFileName_, plafFileName_, excludeFileName_);
-
-    } else {
-
-      mixture_data.readRefAltPlaf(refFileName_, altFileName_, plafFileName_);
-
-    }
-
-  }
-
   removeFilesWithSameName();
-  readPanel();
 
   IBDpathChangeAt_ = std::vector<double>(nLoci());
   finalIBDpathChangeAt_ = std::vector<double>(nLoci());

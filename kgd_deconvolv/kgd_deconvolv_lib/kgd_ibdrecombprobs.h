@@ -18,7 +18,7 @@ class IBDRecombProbs {
 
 public:
 
-  IBDRecombProbs(const std::vector<std::vector<int> >& position,
+  IBDRecombProbs(const std::vector<std::vector<size_t> >& position,
                  size_t nLoci,
                  double averageCentimorganDistance,
                  double Gfactor,
@@ -42,7 +42,7 @@ private:
   std::vector<double> recomb_probs_;
 
   // Methods
-  void computeRecombProbs(const std::vector<std::vector<int> >& position,
+  void computeRecombProbs(const std::vector<std::vector<size_t> >& position,
                           size_t nLoci,
                           double averageCentimorganDistance,
                           double Gfactor,

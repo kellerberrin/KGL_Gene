@@ -20,23 +20,22 @@ public:
   MixtureControlObj& operator=(const MixtureControlObj& copy) = default;
 
   // Set Control
-  void setInitialPropWasGiven(const bool setTo) { initialPropWasGiven_ = setTo; }
-  void setDoUpdateProp(const bool setTo) { doUpdateProp_ = setTo; }
-  void setInitialHapWasGiven(const bool setTo) { initialHapWasGiven_ = setTo; }
-  void setUseVcf(const bool useVcf) { useVcf_ = useVcf; }
-  void setUsePanel(const bool setTo) { usePanel_ = setTo; }
-  void setDoExportPostProb(const bool setTo) { doExportPostProb_ = setTo; }
-  void setDoExportSwitchMissCopy(const bool setTo) { doExportSwitchMissCopy_ = setTo; }
-  void setDoAllowInbreeding(const bool setTo) { doAllowInbreeding_ = setTo; }
-  void setDoIbdPainting(const bool setTo) { doIbdPainting_ = setTo; }
-  void setExcludeSites(const bool exclude) { excludeSites_ = exclude; }
-  void setKStrainWasManuallySet(const bool setTo) { kStrainWasManuallySet_ = setTo; }
-  void setrandomSeedWasGiven(const bool random) { randomSeedWasGiven_ = random; }
-  bool excludeSites() const { return excludeSites_; }
-  bool usePanel() const { return usePanel_; }
-  void setDoExportVcf(const bool exportVcf) { doExportVcf_ = exportVcf; }
-  void setUseIBD(const bool setTo) { useIBD_ = setTo; }
-  bool compressVcf() const { return compressVcf_; }
+  void setInitialPropWasGiven(bool setTo) { initialPropWasGiven_ = setTo; }
+  void setDoUpdateProp(bool setTo) { doUpdateProp_ = setTo; }
+  void setInitialHapWasGiven(bool setTo) { initialHapWasGiven_ = setTo; }
+  void setUseVcf(bool useVcf) { useVcf_ = useVcf; }
+  void setUsePanel(bool setTo) { usePanel_ = setTo; }
+  void setDoExportPostProb(bool setTo) { doExportPostProb_ = setTo; }
+  void setDoExportSwitchMissCopy(bool setTo) { doExportSwitchMissCopy_ = setTo; }
+  void setDoAllowInbreeding(bool setTo) { doAllowInbreeding_ = setTo; }
+  void setDoIbdPainting(bool setTo) { doIbdPainting_ = setTo; }
+  void setExcludeSites(bool exclude) { excludeSites_ = exclude; }
+  void setKStrainWasManuallySet(bool setTo) { kStrainWasManuallySet_ = setTo; }
+  void setrandomSeedWasGiven(bool random) { randomSeedWasGiven_ = random; }
+  void setDoExportVcf(bool exportVcf) { doExportVcf_ = exportVcf; }
+  void setUseIBD(bool setTo) { useIBD_ = setTo; }
+  void setDirectData(bool setTo) { directData_ = setTo; }
+
   // Get Control
   bool doExportPostProb() const { return doExportPostProb_; }
   bool doAllowInbreeding() const { return doAllowInbreeding_; }
@@ -49,12 +48,16 @@ public:
   bool useConstRecomb() const { return useConstRecomb_; }
   bool useIBD() const { return useIBD_; }
   bool useVcf() const { return useVcf_; }
+  bool compressVcf() const { return compressVcf_; }
   bool doExportVcf() const { return doExportVcf_; }
   bool randomSeedWasGiven() const { return randomSeedWasGiven_; }
   bool doExportRecombProb() const { return doExportRecombProb_; }
   bool doLsPainting() const { return doLsPainting_; }
   bool doIbdPainting() const { return doIbdPainting_; }
   bool doComputeLLK() const { return doComputeLLK_; }
+  bool excludeSites() const { return excludeSites_; }
+  bool usePanel() const { return usePanel_; }
+  bool directData() const { return directData_; }
 
 private:
 
@@ -83,6 +86,7 @@ private:
   bool doExportRecombProb_;
   bool doComputeLLK_;
   bool excludeSites_;
+  bool directData_;   // Data is injected directly from calling program (kgl).
 
 
   bool doExportSwitchMissCopy() const { return doExportSwitchMissCopy_; }
@@ -92,16 +96,16 @@ private:
   bool kStrainWasSetByProp() const { return kStrainWasSetByProp_; }
 
   // Getters and Setters
-  void setDoUpdateSingle(const bool setTo) { doUpdateSingle_ = setTo; }
-  void setDoUpdatePair(const bool setTo) { doUpdatePair_ = setTo; }
-  void setDoLsPainting(const bool setTo) { doLsPainting_ = setTo; }
-  void setPleaseCheckInitialP(const bool setTo) { pleaseCheckInitialP_ = setTo; }
-  void setCompressVcf(const bool compress) { compressVcf_ = compress; }
-  void setDoComputeLLK(const bool setTo) { doComputeLLK_ = setTo; }
-  void setKStrainWasSetByHap(const bool setTo) { kStrainWasSetByHap_ = setTo; }
-  void setKStrainWasSetByProp(const bool setTo) { kStrainWasSetByProp_ = setTo; }
-  void setForbidCopyFromSame(const bool forbid) { forbidCopyFromSame_ = forbid; }
-  void setDoExportRecombProb(const bool exportRecombProb) { doExportRecombProb_ = exportRecombProb; }
+  void setDoUpdateSingle(bool setTo) { doUpdateSingle_ = setTo; }
+  void setDoUpdatePair(bool setTo) { doUpdatePair_ = setTo; }
+  void setDoLsPainting(bool setTo) { doLsPainting_ = setTo; }
+  void setPleaseCheckInitialP(bool setTo) { pleaseCheckInitialP_ = setTo; }
+  void setCompressVcf(bool compress) { compressVcf_ = compress; }
+  void setDoComputeLLK(bool setTo) { doComputeLLK_ = setTo; }
+  void setKStrainWasSetByHap(bool setTo) { kStrainWasSetByHap_ = setTo; }
+  void setKStrainWasSetByProp(bool setTo) { kStrainWasSetByProp_ = setTo; }
+  void setForbidCopyFromSame(bool forbid) { forbidCopyFromSame_ = forbid; }
+  void setDoExportRecombProb(bool exportRecombProb) { doExportRecombProb_ = exportRecombProb; }
 
 };
 

@@ -73,8 +73,8 @@ public:
 
   // Data
   const std::vector<size_t>& indexOfChromStarts() const { return getMixtureData().indexOfChromStarts(); }
-  const std::vector<int>& getIndexPosition(size_t index) const { return getMixtureData().getPosition()[index]; }
-  const std::vector<std::vector<int>>& getPosition() const { return getMixtureData().getPosition(); }
+  const std::vector<size_t>& getIndexPosition(size_t index) const { return getMixtureData().getPosition()[index]; }
+  const std::vector<std::vector<size_t>>& getPosition() const { return getMixtureData().getPosition(); }
   const std::vector<double>& getPlaf() const { return getMixtureData().getPlaf(); }
   const std::vector<double>& getRefCount() const { return getMixtureData().getRefCount(); }
   const std::vector<double>& getAltCount() const { return getMixtureData().getAltCount(); }
@@ -241,6 +241,7 @@ private:
   void getTime(bool isStartingTime);
   void init();
   void parse();
+  void readFiles();
   void checkInput();
   void finalize();
   void removeFilesWithSameName();

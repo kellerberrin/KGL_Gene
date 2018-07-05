@@ -8,7 +8,7 @@
 namespace kgd = kellerberrin::deconvolv;
 
 
-void kgd::IBDRecombProbs::computeRecombProbs(const std::vector<std::vector<int> >& position,
+void kgd::IBDRecombProbs::computeRecombProbs(const std::vector<std::vector<size_t> >& position,
                                              size_t nLoci,
                                              double averageCentimorganDistance,
                                              double GFactor,

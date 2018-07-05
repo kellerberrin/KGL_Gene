@@ -103,7 +103,7 @@ void kgd::VariantIndex::removePositions() {
 
   for (size_t chromI = 0; chromI < chrom_.size(); chromI++) {
 
-    std::vector<int> tmpKeptPosition_;
+    std::vector<size_t> tmpKeptPosition_;
 
     for (size_t i = 0; i < indexOfPosToBeKept[chromI].size(); i++) {
 

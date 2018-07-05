@@ -134,7 +134,7 @@ void kgd::Panel::computeRecombProbs(double averageCentimorganDistance,
 void kgd::Panel::buildExamplePanel1() {
 
   addChrom("Pf3D7_01_v3");
-  addPosition(std::vector<int>({93157, 94422, 94459, 94487, 95518, 95632, 95641}));
+  addPosition(std::vector<size_t>({93157, 94422, 94459, 94487, 95518, 95632, 95641}));
   addIndexOfChromStarts(0);
   buildExamplePanelContent();
 
@@ -146,9 +146,9 @@ void kgd::Panel::buildExamplePanel2() {
   addChrom("Pf3D7_01_v3");
   addChrom("Pf3D7_02_v3");
   addChrom("Pf3D7_03_v3");
-  addPosition(std::vector<int>({93157}));
-  addPosition(std::vector<int>({94422, 94459, 94487, 95518, 95632}));
-  addPosition(std::vector<int>({95641}));
+  addPosition(std::vector<size_t>({93157}));
+  addPosition(std::vector<size_t>({94422, 94459, 94487, 95518, 95632}));
+  addPosition(std::vector<size_t>({95641}));
   addIndexOfChromStarts(0);
   addIndexOfChromStarts(1);
   addIndexOfChromStarts(6);
