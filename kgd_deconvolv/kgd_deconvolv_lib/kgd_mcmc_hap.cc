@@ -147,6 +147,10 @@ void kgd::MCMCHAP::updateProportion() {
 
   double acceptance_draw = propRg_->sample();
 
+  ExecEnv::log().info("{}, Update: {}, p_ratio: {}, l_ratio: {}, p*l: {}, accept: {}, {}",
+                      current_MCMC_iteration(), proposal.proportionsText(),
+                      prior_prop_ratio, ratio_likelihood, proposal_ratio, acceptance_draw, acceptance_draw <= proposal_ratio ? "ACCEPT" : "REJECT");
+
   if (acceptance_draw > proposal_ratio) {
 
     return;  // proposal rejected.

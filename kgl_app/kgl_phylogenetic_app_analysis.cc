@@ -142,18 +142,19 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
     // Index variants by ref/alt count.
     VariantClassifier classifier(unphased_population_ptr);
-    char delimiter = '\t';
-    std::string prefix_ref_file = kgl::Utility::filePath("ref_", args.workDirectory);
-    std::string prefix_alt_file = kgl::Utility::filePath("alt_", args.workDirectory);
-    std::string variant_plaf_file = kgl::Utility::filePath("variant_plaf_file", args.workDirectory) + ".tab";
 
+//    char delimiter = '\t';
+//    std::string prefix_ref_file = kgl::Utility::filePath("ref_", args.workDirectory);
+//    std::string prefix_alt_file = kgl::Utility::filePath("alt_", args.workDirectory);
+//    std::string variant_plaf_file = kgl::Utility::filePath("variant_plaf_file", args.workDirectory) + ".tab";
 
 //    classifier.writeOrderedVariants(delimiter, variant_ref_file, variant_alt_file, 30, 25000);
 //    classifier.writeVariants(delimiter, variant_ref_file, variant_alt_file, 20);
-
-    classifier.writePlaf(delimiter, variant_plaf_file, prefix_ref_file, prefix_alt_file, 20);
-
-    kgd::ExecEnv::executeApp();
+//
+//    classifier.writePlaf(delimiter, variant_plaf_file, prefix_ref_file, prefix_alt_file, 20);
+//
+    kgd::MixtureDataObj mixture_data = classifier.convertToMixture("SRR609052", 10);
+    kgd::ExecEnv::executeLib(mixture_data);
 
   }
 

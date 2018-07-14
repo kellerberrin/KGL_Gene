@@ -79,7 +79,7 @@ kgl::VariantClassifier::VariantClassifier(std::shared_ptr<const UnphasedPopulati
 
 }
 
-kgd::MixtureDataObj kgl::VariantClassifier::convertToMixture(const GenomeId_t& genome_count, size_t min_count) const {
+kgd::MixtureDataObj kgl::VariantClassifier::convertToMixture(const GenomeId_t& analysis_genome, size_t min_count) const {
 
   std::vector<std::string> contig_vector;
   std::vector<size_t> indexOfContigStarts;
@@ -88,41 +88,47 @@ kgd::MixtureDataObj kgl::VariantClassifier::convertToMixture(const GenomeId_t& g
   std::vector<double> refCount;
   std::vector<double> altCount;
 
-  kgd::MixtureDataObj mixture_data;
   std::vector<size_t> current_position;
+  size_t chrom_start_offset = 0;
   ContigId_t current_contig;
   bool first_contig = true;
+
+  ExecEnv::log().info("Converting Genome: {} to Mixture Format, Minimum (Alt+Ref) Count: {}", analysis_genome, min_count);
 
   // for all variant offsets.
   for (auto variant_offset : getMap()) {
 
-    size_t allele_count = 0;
 
     // Initialize the current contig.
     if (first_contig) {
 
       current_contig = variant_offset.first.variant()->contigId();
       contig_vector.push_back(current_contig);
+      indexOfContigStarts.push_back(chrom_start_offset);  // setup the contig start vector.
       first_contig = false;
 
     }
 
+    size_t allele_count = 0;
     for (auto genome : getGenomes()) {
 
+      // Does this genome have this variant?
       auto find_result = variant_offset.second.find(genome);
 
+      // If yes then increment the allele counter.
       if (find_result != variant_offset.second.end()) {
 
-        std::shared_ptr<const CountEvidence> count_evidence_ptr = std::dynamic_pointer_cast<const CountEvidence>(
-        find_result->second->evidence());
+        std::shared_ptr<const CountEvidence> count_evidence_ptr = std::dynamic_pointer_cast<const CountEvidence>(find_result->second->evidence());
 
         if (count_evidence_ptr) {
 
           size_t total_count = count_evidence_ptr->refCount() + count_evidence_ptr->altCount();
 
+          // check that minimum ref+alt count requirement is achieved.
           if (total_count >= min_count) {
 
-            ++allele_count;
+
+            ++allele_count; // increment the allele count.
 
           }
 
@@ -137,37 +143,105 @@ kgd::MixtureDataObj kgl::VariantClassifier::convertToMixture(const GenomeId_t& g
 
     } // all genomes;
 
+    // If more than one genome had this allele.
     if (allele_count > 0) {
 
+      // Check if there has been a change of contig.
       if (variant_offset.first.variant()->contigId() == current_contig) {
 
+        // store the variant position.
         current_position.push_back(variant_offset.first.variant()->offset());
 
       } else {   // new contig.
 
-        indexOfContigStarts.push_back(current_position.size());
-        position.push_back(current_position);
-        current_position.clear();
-        current_position.push_back(variant_offset.first.variant()->offset());
+        chrom_start_offset += current_position.size();
+        indexOfContigStarts.push_back(chrom_start_offset);  // setup the contig start vector.
+        position.push_back(current_position);  // store the positions for the the current contig.
+        current_position.clear(); // clear the position vector fot the next contig
+        current_position.push_back(variant_offset.first.variant()->offset()); // and add this variant to it.
 
-        // Set to new contig.
-        current_contig = variant_offset.first.variant()->contigId();
-        contig_vector.push_back(current_contig);
+        current_contig = variant_offset.first.variant()->contigId(); // Set to new contig.
+        contig_vector.push_back(current_contig); // push the new contig onto the contig vector.
 
       }
 
       double allele_population_freq = static_cast<double>(allele_count) / static_cast<double>(getGenomes().size());
-      plaf_vector.push_back(allele_population_freq);
+      plaf_vector.push_back(allele_population_freq);  // push the plaf for this variant.
 
     } // allele count > 0
+
+
+    // If yes then setup the ref and alt fields.
+
+    if (allele_count > 0) {
+
+      // Does the analysis genome have this variant.
+      auto find_result = variant_offset.second.find(analysis_genome);
+
+      if (find_result != variant_offset.second.end()) {
+
+        std::shared_ptr<const CountEvidence> count_evidence_ptr = std::dynamic_pointer_cast<const CountEvidence>(find_result->second->evidence());
+
+        if (count_evidence_ptr) {
+
+          size_t total_count = count_evidence_ptr->refCount() + count_evidence_ptr->altCount();
+
+          // check that minimum ref+alt count requirement is achieved.
+          if (total_count >= min_count) {
+
+            refCount.push_back(count_evidence_ptr->refCount()); // Record counts
+            altCount.push_back(count_evidence_ptr->altCount());
+
+
+          } else {
+
+            refCount.push_back(0.0); // No counts.
+            altCount.push_back(0.0);
+
+          }
+
+        } else {
+
+          ExecEnv::log().error("Analysis Genome Variant without count evidence: {}",
+                               find_result->second->output(' ', VariantOutputIndex::START_0_BASED, false));
+
+          refCount.push_back(0.0); // No counts
+          altCount.push_back(0.0);
+
+        }
+
+      } else {
+
+        refCount.push_back(0.0); // No counts.
+        altCount.push_back(0.0);
+
+      }
+
+
+    }
+
 
   }  // all variants.
 
   // insert final position count.
   if (not current_position.empty()) {
 
-    indexOfContigStarts.push_back(current_position.size());
-    position.push_back(current_position);
+    position.push_back(current_position); // store the positions for the the current contig.
+
+  }
+
+
+  // Return the kgd data object.
+  kgd::MixtureDataObj mixture_data( contig_vector,
+                                    indexOfContigStarts,
+                                    position,
+                                    plaf_vector,
+                                    refCount,
+                                    altCount);
+
+  if (not mixture_data.verifyPrint(true /* true - print object details */)) {
+
+    ExecEnv::log().critical("VariantClassifier::convertToMixture(); Mixture object did not pass integrity checks.");
 
   }
 

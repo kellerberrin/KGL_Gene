@@ -34,7 +34,6 @@ public:
   void setrandomSeedWasGiven(bool random) { randomSeedWasGiven_ = random; }
   void setDoExportVcf(bool exportVcf) { doExportVcf_ = exportVcf; }
   void setUseIBD(bool setTo) { useIBD_ = setTo; }
-  void setDirectData(bool setTo) { directData_ = setTo; }
 
   // Get Control
   bool doExportPostProb() const { return doExportPostProb_; }
@@ -57,7 +56,6 @@ public:
   bool doComputeLLK() const { return doComputeLLK_; }
   bool excludeSites() const { return excludeSites_; }
   bool usePanel() const { return usePanel_; }
-  bool directData() const { return directData_; }
 
 private:
 
@@ -86,8 +84,6 @@ private:
   bool doExportRecombProb_;
   bool doComputeLLK_;
   bool excludeSites_;
-  bool directData_;   // Data is injected directly from calling program (kgl).
-
 
   bool doExportSwitchMissCopy() const { return doExportSwitchMissCopy_; }
   bool pleaseCheckInitialP() const { return pleaseCheckInitialP_; }

@@ -83,3 +83,61 @@ void kgd::ExecEnv::executeApp() {
 
 }
 
+
+void kgd::ExecEnv::executeLib(const MixtureDataObj& mixture_data) {
+
+  try {
+
+    std::shared_ptr<DEploidIO> dEploidIO_ptr(std::make_shared<DEploidIO>(mixture_data));
+
+    std::shared_ptr<MersenneTwister> random_generator(std::make_shared<MersenneTwister>(dEploidIO_ptr->getRandomSeed()));
+
+    if ( dEploidIO_ptr->getMixtureControl().doComputeLLK() ) {
+
+      dEploidIO_ptr->computeLLKfromInitialHap();
+
+    } else if ( dEploidIO_ptr->getMixtureControl().doLsPainting() ) {
+
+      dEploidIO_ptr->chromPainting(random_generator);
+
+    } else if ( dEploidIO_ptr->getMixtureControl().doIbdPainting() ) {
+
+      dEploidIO_ptr->paintIBD(random_generator);
+
+    } else {
+
+      if (dEploidIO_ptr->useIBD()) { // ibd
+
+        std::shared_ptr<McmcSample> ibdMcmcSample(std::make_shared<McmcSample>());
+
+        MCMCIBD ibdMcmcMachinery(dEploidIO_ptr, ibdMcmcSample, random_generator);
+
+        ibdMcmcMachinery.runMcmcChain(true /* show progress */);
+
+        dEploidIO_ptr->writeMcmcRelated(ibdMcmcSample, true /* ibd */);
+
+      }
+
+      std::shared_ptr<McmcSample> mcmcSample(std::make_shared<McmcSample>());
+
+      MCMCHAP hapMcmc(dEploidIO_ptr, mcmcSample, random_generator);
+
+      hapMcmc.runMcmcChain(true /* show progress */);
+
+      dEploidIO_ptr->writeMcmcRelated(mcmcSample, false /* mcmchap */);
+
+      dEploidIO_ptr->paintIBD(random_generator);
+
+    }
+    // Finishing, write log
+    dEploidIO_ptr->wrapUp();
+
+  }
+  catch (const std::exception &e) {
+
+    ExecEnv::log().critical("Caught Runtime Error: {}", e.what());
+
+  }
+
+}
+

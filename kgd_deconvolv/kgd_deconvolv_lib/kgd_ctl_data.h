@@ -20,6 +20,13 @@ class MixtureDataObj {
 public:
 
   MixtureDataObj() = default;
+  MixtureDataObj(  std::vector<std::string>& chrom,
+                   std::vector<size_t>& indexOfChromStarts,
+                   std::vector<std::vector<size_t> >& position,
+                   std::vector<double>& plaf,
+                   std::vector<double>& refCount,
+                   std::vector<double>& altCount) : chrom_(chrom), indexOfChromStarts_(indexOfChromStarts), position_(position),
+                                                    plaf_(plaf), refCount_(refCount), altCount_(altCount) {}
   ~MixtureDataObj() = default;
 
   MixtureDataObj& operator=(const MixtureDataObj& copy) = default;
@@ -46,6 +53,9 @@ public:
                              const std::string& alt_filename,
                              const std::string& plaf_filename,
                              const std::string& exclude_filename);
+
+// Verifies the data structure and (optional) prints out contigs and variant stats.
+  bool verifyPrint(bool print = false /* check only */) const;
 
 private:
 

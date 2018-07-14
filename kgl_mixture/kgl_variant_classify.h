@@ -29,7 +29,7 @@ class ContigOffsetVariants {
 public:
 
   explicit ContigOffsetVariants(std::shared_ptr<const Variant> variant) : variant_(variant) {}
-  explicit ContigOffsetVariants(const ContigOffsetVariants& copy) = default;
+  ContigOffsetVariants(const ContigOffsetVariants& copy) = default;
   ~ContigOffsetVariants() = default;
 
   std::shared_ptr<const Variant> variant() const { return variant_; }

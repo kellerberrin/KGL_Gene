@@ -4,6 +4,7 @@
 
 #include <ctime>
 #include <cstdio>
+#include <sstream>
 #include "kgd_utility.h"
 #include "kgd_mcmc_titre.h"
 #include "kgd_deconvolv_app.h"
@@ -123,7 +124,6 @@ double kgd::MCMCTITRE::calcPriorTitreIndex(size_t index) const {
   }
 
   return Utility::normal_pdf(currentTitre_[index], mean_log_titre_, sd_log_titre_);
-//  return Utility::lognormal_pdf(proportions_[index], mean_log_titre_, sd_log_titre_);
 
 }
 
@@ -156,3 +156,15 @@ void kgd::MCMCTITRE::calcProportions() {
 
 }
 
+std::string kgd::MCMCTITRE::proportionsText() const {
+
+  std::stringstream ss;
+  for (auto value : proportions_) {
+
+    ss << value << ", ";
+
+  }
+
+  return ss.str();
+
+}

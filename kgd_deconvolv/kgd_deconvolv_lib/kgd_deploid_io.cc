@@ -39,16 +39,20 @@ namespace kgd = kellerberrin::deconvolv;
 kgd::DEploidIO::DEploidIO() {
 
   init(); // Reset to default values before parsing
+  parse();
+  checkInput();
+  readFiles();
+  finalize();
+  removeFilesWithSameName();
 
-  if (not getMixtureControl().directData()) {
+}
 
-    parse();
-    checkInput();
-    readFiles();
-    finalize();
 
-  }
+kgd::DEploidIO::DEploidIO(const MixtureDataObj& mixture_data) {
 
+  init(); // Reset to default values before parsing
+  setMixtureData(mixture_data);
+  finalize();
   removeFilesWithSameName();
 
 }

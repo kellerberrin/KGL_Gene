@@ -66,6 +66,7 @@ class DEploidIO {
 public:
 
   DEploidIO();
+  DEploidIO(const MixtureDataObj& mixture_data);
   ~DEploidIO() = default;
 
   // Panel.
@@ -80,6 +81,8 @@ public:
   const std::vector<double>& getAltCount() const { return getMixtureData().getAltCount(); }
   size_t nLoci() const { return getMixtureData().nLoci(); }
   const MixtureDataObj& getMixtureData() const { return mixture_data; }
+  void setMixtureData(const MixtureDataObj& setTo) { mixture_data = setTo; }
+
 
   // Set Control
   void setInitialPropWasGiven(const bool setTo) { getMixtureControl().setInitialPropWasGiven(setTo); }

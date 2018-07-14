@@ -9,6 +9,7 @@
 #include "kgl_genome_types.h"
 #include "kgl_exec_env.h"
 
+#include "kgd_ctl_data.h"
 
 namespace kellerberrin {    // organization level namespace
 namespace deconvolv {          // project level namespace
@@ -60,6 +61,7 @@ public:
   static constexpr const char* VERSION = "0.1";
   static constexpr const char* MODULE_NAME = "kgd_deconvolv";
   static void executeApp(); // Application mainline.
+  static void executeLib(const MixtureDataObj& mixture_data); // Application mainline.
   static bool parseCommandLine(int argc, char const ** argv);  // Parse command line arguments.
 
   static const DeconvolvArgs& getArgs();

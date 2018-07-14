@@ -35,6 +35,8 @@ public:
   const std::vector<double>& Proportions() const { return proportions_; }
   double hastingsRatio() const { return 1.0; }  // symmetric proposal
 
+  std::string proportionsText() const;
+
 private:
 
   size_t k_strains_;  // number of strains;
