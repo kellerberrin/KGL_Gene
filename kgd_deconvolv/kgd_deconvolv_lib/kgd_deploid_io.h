@@ -80,8 +80,8 @@ public:
   const std::vector<double>& getRefCount() const { return getMixtureData().getRefCount(); }
   const std::vector<double>& getAltCount() const { return getMixtureData().getAltCount(); }
   size_t nLoci() const { return getMixtureData().nLoci(); }
-  const MixtureDataObj& getMixtureData() const { return mixture_data; }
-  void setMixtureData(const MixtureDataObj& setTo) { mixture_data = setTo; }
+  const MixtureDataObj& getMixtureData() const { return mixture_data_; }
+  void setMixtureData(const MixtureDataObj& setTo) { mixture_data_ = setTo; }
 
 
   // Set Control
@@ -100,15 +100,15 @@ public:
   bool useConstRecomb() const { return getMixtureControl().useConstRecomb(); }
   bool usePanel() const { return getMixtureControl().usePanel(); }
   bool useIBD() const { return getMixtureControl().useIBD(); }
-  const MixtureControlObj& getMixtureControl() const { return mixture_control; }
-  MixtureControlObj& getMixtureControl() { return mixture_control; }
+  const MixtureControlObj& getMixtureControl() const { return mixture_control_; }
+  MixtureControlObj& getMixtureControl() { return mixture_control_; }
 
   // Parameters for the haplotype MCMC
-  const HapParameterObj& hapParameters() const { return hap_parameters; }
-  HapParameterObj& hapParameters() { return hap_parameters; }
+  const HapParameterObj& hapParameters() const { return hap_parameters_; }
+  HapParameterObj& hapParameters() { return hap_parameters_; }
   // Parameters for the IBD MCMC
-  const IBDParameterObj& ibdParameters() const { return ibd_parameters; }
-  IBDParameterObj& ibdParameters() { return ibd_parameters; }
+  const IBDParameterObj& ibdParameters() const { return ibd_parameters_; }
+  IBDParameterObj& ibdParameters() { return ibd_parameters_; }
 
   const std::vector<std::vector<double> >& getInitialHap() const { return initialHap_; }
   const std::vector<double>& getInitialProp() const { return  initialProp_; }
@@ -148,10 +148,10 @@ private:
 
   // Objects.
   std::shared_ptr<Panel> panel_;
-  MixtureDataObj mixture_data;
-  MixtureControlObj mixture_control;
-  HapParameterObj hap_parameters; // Parameters for the haplotype MCMC
-  IBDParameterObj ibd_parameters;   // Parameters for the IBD MCMC
+  MixtureDataObj mixture_data_;
+  MixtureControlObj mixture_control_;
+  HapParameterObj hap_parameters_; // Parameters for the haplotype MCMC
+  IBDParameterObj ibd_parameters_;   // Parameters for the IBD MCMC
 
   // Max Number of strains
   size_t k_strain_;

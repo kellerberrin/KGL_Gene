@@ -195,7 +195,7 @@ std::vector<double> kgd::Utility::calcLLKs(const std::vector<double> &refCount,
 
 double kgd::Utility::calcLLK(double ref, double alt, double unadjustedWsaf, double err, double fac) {
 
-  double adjustedWsaf = unadjustedWsaf + err * (1 - (2 * unadjustedWsaf));
+  double adjustedWsaf = unadjustedWsaf + ((1 - (2 * unadjustedWsaf)) * err);
 
   double a2_arg = adjustedWsaf * fac;
   double b2_arg = (1 - adjustedWsaf) * fac;

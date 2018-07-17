@@ -84,7 +84,7 @@ void kgd::UpdatePairHap::calcExpectedWsaf(const std::vector<double> &expectedWsa
 
     if (update < 0 or update >= 1) {
 
-      ExecEnv::log().error("file: {}, line: {}, bounds error not in [0, 1) update: {}, expectedWsaf00_[{}] = {}, reduction: {}",
+      ExecEnv::log().warn("file: {}, line: {}, bounds error not in [0, 1) update: {}, expectedWsaf00_[{}] = {}, reduction: {}",
                            __FILE__, __LINE__, update, i, expectedWsaf00_[i], reduction);
 
     }

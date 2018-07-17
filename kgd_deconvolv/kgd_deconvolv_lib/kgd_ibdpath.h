@@ -15,10 +15,12 @@
 #include "kgd_deploid_io.h"
 #include "kgd_hprior.h"
 #include "kgd_ibdrecombprobs.h"
+#include "kgd_prob_cache.h"
 
 
 namespace kellerberrin {    // organization level namespace
 namespace deconvolv {          // project level namespace
+
 
 
 class IBDpath {
@@ -33,7 +35,7 @@ public:
 
   std::vector<std::string> getIBDprobsHeader() const;
   const std::vector<std::vector<double> >& getFwdBwd() const { return fwdbwd_; }
-  const std::vector<std::vector<double> >& getLogLikelihoodSurface() const { return llk_surf_; }
+  const std::vector<std::vector<double> >& getLogLikelihoodSurface() const { return ibd_prob_cache_->getLogLikelihoodSurface(); }
   double UpdateHaplotypesFromPrior(size_t strain, size_t loci) const;
   double bestPath(const std::vector<double>& proportion, double err = 0.01) const;
 
@@ -47,6 +49,7 @@ private:
 
   std::shared_ptr<RandomGenerator> ibd_random_generator_;
   std::shared_ptr<const IBDRecombProbs> ibd_recomb_probs_;
+  std::shared_ptr<const SiteProbabilityCache> ibd_prob_cache_;
   double f_sum_;
   Hprior h_prior_;
   std::vector<std::vector<double> > ibd_trans_probs_;
@@ -62,7 +65,6 @@ private:
   double theta_;
 
   std::vector<double> current_IBD_path_change_at_;
-  std::vector<std::vector<double> > llk_surf_;
   std::vector<int> unique_effectiveK_count_;
   std::vector<double> IBD_path_change_at_;
 

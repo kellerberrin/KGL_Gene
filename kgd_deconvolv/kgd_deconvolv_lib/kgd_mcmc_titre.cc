@@ -31,10 +31,30 @@ kgd::MCMCTITRE::MCMCTITRE(size_t k_strains,
 
   stdNorm_ = std::make_shared<StandNormalRandomSample>(random_seed);
 
+//  randomizeProportions();
   randomizeTitre();
+
+  ExecEnv::log().info("Titre initialization values: {}", titreText());
+  ExecEnv::log().info("Proportion initialization values: {}", proportionsText());
 
 }
 
+
+void kgd::MCMCTITRE::randomizeProportions() {
+
+  std::vector<double> proportions;
+
+  for (size_t k = 0; k < kStrain(); ++k) {
+
+    proportions.push_back(std::fabs(initialTitreNormalVariable()));
+
+  }
+
+  Utility::normalizeBySum(proportions);
+
+  proportion2Titre(proportions);
+
+}
 
 void kgd::MCMCTITRE::randomizeTitre() {
 
@@ -160,6 +180,19 @@ std::string kgd::MCMCTITRE::proportionsText() const {
 
   std::stringstream ss;
   for (auto value : proportions_) {
+
+    ss << value << ", ";
+
+  }
+
+  return ss.str();
+
+}
+
+std::string kgd::MCMCTITRE::titreText() const {
+
+  std::stringstream ss;
+  for (auto value : currentTitre_) {
 
     ss << value << ", ";
 

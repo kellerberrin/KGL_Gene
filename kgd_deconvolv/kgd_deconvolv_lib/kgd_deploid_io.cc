@@ -108,11 +108,11 @@ void kgd::DEploidIO::readFiles() {
 
     if (getMixtureControl().excludeSites()) {
 
-      mixture_data.readVCFPlafExclude(vcfFileName_, plafFileName_, excludeFileName_);
+      mixture_data_.readVCFPlafExclude(vcfFileName_, plafFileName_, excludeFileName_);
 
     } else {
 
-      mixture_data.readVCFPlaf(vcfFileName_, plafFileName_);
+      mixture_data_.readVCFPlaf(vcfFileName_, plafFileName_);
 
     }
 
@@ -120,11 +120,11 @@ void kgd::DEploidIO::readFiles() {
 
     if (getMixtureControl().excludeSites()) {
 
-      mixture_data.readRefAltPlafExclude(refFileName_, altFileName_, plafFileName_, excludeFileName_);
+      mixture_data_.readRefAltPlafExclude(refFileName_, altFileName_, plafFileName_, excludeFileName_);
 
     } else {
 
-      mixture_data.readRefAltPlaf(refFileName_, altFileName_, plafFileName_);
+      mixture_data_.readRefAltPlaf(refFileName_, altFileName_, plafFileName_);
 
     }
 
@@ -285,7 +285,7 @@ void kgd::DEploidIO::parse() {
 
     } else {
 
-      ExecEnv::log().critical("Argument error - Must specify VCF '-vcf' or ALT and REF files '-ref', '-alt'");
+      ExecEnv::log().warn("No VCF '-vcf' or ALT and REF files '-ref', '-alt' specified. Assuming direct call.");
 
     }
 
@@ -663,13 +663,12 @@ void kgd::DEploidIO::paintIBD(std::shared_ptr<RandomGenerator> randomGenerator) 
 
   }
 
-  DEploidIO tmpDEploidIO; // (*this);
+  DEploidIO tmpDEploidIO(getMixtureData()); // (*this);
   tmpDEploidIO.setkStrain(goodProp.size());
   tmpDEploidIO.setInitialPropWasGiven(true);
   tmpDEploidIO.setInitialProp(goodProp);
   tmpDEploidIO.finalProp_ = goodProp;
-  tmpDEploidIO.mixture_data = mixture_data;
-  tmpDEploidIO.mixture_control = mixture_control;
+  tmpDEploidIO.mixture_control_ = mixture_control_;
   tmpDEploidIO.hapParameters() = hapParameters();
   tmpDEploidIO.ibdParameters() = ibdParameters();
 

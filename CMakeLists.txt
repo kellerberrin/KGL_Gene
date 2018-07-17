@@ -33,8 +33,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -s -DNDEBUG")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE " -O3 -s -DNDEBUG")
 
 # Profile g++
-set(CMAKE_CXX_FLAGS_PROFILE "-pg -g -O3")
-set(CMAKE_EXE_LINKER_FLAGS_PROFILE "-pg -g -O3")
+set(CMAKE_CXX_FLAGS_PROFILE "-pg -g -ggdb -O3")
+set(CMAKE_EXE_LINKER_FLAGS_PROFILE "-pg -g -ggdb -O3")
 
 # All possible warnings
 #set(CMAKE_ERROR_WARNING_FLAGS "-std=c++17 -Wall -pthread -Wextra -Werror -Wpedantic -pedantic-errors -Wstrict-aliasing -Wno-variadic-macros")
@@ -42,9 +42,9 @@ set(CMAKE_EXE_LINKER_FLAGS_PROFILE "-pg -g -O3")
 set(CMAKE_ERROR_WARNING_FLAGS "-std=c++17 -Wall -pthread -Wextra -Wpedantic -Wstrict-aliasing -Wno-variadic-macros")
 
 # Actually set the g++ flags.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_DEBUG}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_DEBUG}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_CXX_FLAGS_PROFILE}")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_PROFILE}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_PROFILE}")
 
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../..)
@@ -198,7 +198,10 @@ set(ANALYTIC_SOURCE_FILES
 
 set(MIXTURE_SOURCE_FILES
         kgl_mixture/kgl_variant_phase.h
-        kgl_mixture/kgl_variant_phase.cc kgl_mixture/kgl_variant_classify.h kgl_mixture/kgl_variant_classify.cc kgl_mixture/kgl_variant_classify_io.cc)
+        kgl_mixture/kgl_variant_phase.cc
+        kgl_mixture/kgl_variant_classify.h
+        kgl_mixture/kgl_variant_classify.cc
+        kgl_mixture/kgl_variant_classify_io.cc)
 
 
 # Application level objects
@@ -211,46 +214,6 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_phylogenetic_parse.cc)
 
 
-## DOXYGEN
-#set(BUILD_KGL_KGD_DOC ON CACHE BOOL "Use Doxygen to create the HTML/Latex based API documentation")
-#option(BUILD_DOC "Use Doxygen to create the HTML/Latex based API documentation" ON)
-if(BUILD_KGL_KGD_DOC)
-
-    find_package(Doxygen)
-
-    if(DOXYGEN_FOUND)
-
-
-        # set input and output files
-        set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile)
-        set(DOXYGEN_OUT ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.out)
-
-        # request to configure the file
-        configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
-        message("Doxygen build started")
-
-        # note the option ALL which allows to build the docs together with the application
-        add_custom_target( doc_doxygen ALL
-                COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                COMMENT "Generating API documentation with Doxygen"
-                VERBATIM )
-
-#        add_custom_target( doc_doxygen
-#                    COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-#                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#                    COMMENT "Generating API documentation with Doxygen"
-#                    VERBATIM )
-
-    endif(DOXYGEN_FOUND)
-
-endif(BUILD_KGL_KGD_DOC)
-
-
-#generate shared library.
-add_library(kgl_genome_lib STATIC ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES} ${ANALYTIC_SOURCE_FILES} ${MIXTURE_SOURCE_FILES})
-
-target_link_libraries(kgl_genome_lib  ${Boost_LIBRARIES})
 
 
 
@@ -358,12 +321,17 @@ set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_input.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_input.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_app.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_app.cc)
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_app.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.h kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.cc)
 
 # Application level objects
 set(DECONVOLV_APPLICATION_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_main.cc
         kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_parse.cc)
+
+#generate libraries.
+add_library(kgl_genome_lib STATIC ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES} ${ANALYTIC_SOURCE_FILES} ${MIXTURE_SOURCE_FILES})
+
+target_link_libraries(kgl_genome_lib  ${Boost_LIBRARIES})
 
 add_library(kgd_contrib_lib STATIC ${DECONVOLV_LIB_CONTRIB_FILES})
 
@@ -371,12 +339,49 @@ add_library(kgd_deconvolv_lib STATIC ${DECONVOLV_LIB_SOURCE_FILES})
 
 target_link_libraries(kgd_deconvolv_lib kgd_contrib_lib ${ZLIB_LIBRARIES})
 
+#generate kgd_deconvolv executable
 add_executable (kgd_deconvolv ${DECONVOLV_APPLICATION_SOURCE_FILES})
 
 target_link_libraries(kgd_deconvolv kgd_deconvolv_lib kgl_genome_lib)
-
 
 #generate kgl_genome executable
 add_executable (kgl_genome ${APPLICATION_SOURCE_FILES})
 
 target_link_libraries(kgl_genome kgl_genome_lib kgd_deconvolv_lib )
+
+
+## DOXYGEN
+#set(BUILD_KGL_KGD_DOC ON CACHE BOOL "Use Doxygen to create the HTML/Latex based API documentation")
+#option(BUILD_DOC "Use Doxygen to create the HTML/Latex based API documentation" ON)
+if(BUILD_KGL_KGD_DOC)
+
+    find_package(Doxygen)
+
+    if(DOXYGEN_FOUND)
+
+
+        # set input and output files
+        set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile)
+        set(DOXYGEN_OUT ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.out)
+
+        # request to configure the file
+        configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+        message("Doxygen build started")
+
+        # note the option ALL which allows to build the docs together with the application
+        add_custom_target( doc_doxygen ALL
+                COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                COMMENT "Generating API documentation with Doxygen"
+                VERBATIM )
+
+        #        add_custom_target( doc_doxygen
+        #                    COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+        #                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        #                    COMMENT "Generating API documentation with Doxygen"
+        #                    VERBATIM )
+
+    endif(DOXYGEN_FOUND)
+
+endif(BUILD_KGL_KGD_DOC)
+

@@ -34,7 +34,7 @@ public:
 
 private:
 
-  IBDpath ibdPath; /* IBD */
+  IBDpath ibdPath_; /* IBD */
 
   /* Structural Subroutines */
   void initializeMcmcChain();

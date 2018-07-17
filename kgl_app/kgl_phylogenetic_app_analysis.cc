@@ -143,6 +143,13 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
     // Index variants by ref/alt count.
     VariantClassifier classifier(unphased_population_ptr);
 
+    for (auto genome : classifier.getGenomes()) {
+
+      kgd::MixtureDataObj mixture_data = classifier.convertToMixture(genome, 10);
+      kgd::ExecEnv::executeLib(mixture_data);
+
+    }
+
 //    char delimiter = '\t';
 //    std::string prefix_ref_file = kgl::Utility::filePath("ref_", args.workDirectory);
 //    std::string prefix_alt_file = kgl::Utility::filePath("alt_", args.workDirectory);
@@ -153,8 +160,6 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 //
 //    classifier.writePlaf(delimiter, variant_plaf_file, prefix_ref_file, prefix_alt_file, 20);
 //
-    kgd::MixtureDataObj mixture_data = classifier.convertToMixture("SRR609052", 10);
-    kgd::ExecEnv::executeLib(mixture_data);
 
   }
 

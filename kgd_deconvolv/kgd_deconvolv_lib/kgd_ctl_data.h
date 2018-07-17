@@ -42,10 +42,10 @@ public:
 
   // Read functions
   bool readVCFPlaf(const std::string& filename,
-                   const std::string& plaf_filename);  // Either read this
+                   const std::string& plaf_filename);
   bool readVCFPlafExclude(const std::string& vcf_filename,
                           const std::string& plaf_filename,
-                          const std::string& exclude_filename);  // Either read this
+                          const std::string& exclude_filename);
   bool readRefAltPlaf(const std::string& ref_filename,
                       const std::string& alt_filename,
                       const std::string& plaf_filename);

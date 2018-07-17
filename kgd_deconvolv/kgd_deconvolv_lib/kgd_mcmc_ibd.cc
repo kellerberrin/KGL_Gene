@@ -68,7 +68,7 @@ void kgd::MCMCIBD::finalizeMcmc() {
 
   for (size_t atSiteI = 0; atSiteI < nLoci(); atSiteI++) {
 
-    ibdPath.IBDPathChangeAt(atSiteI,  static_cast<double>(total_MCMC_iterations()));
+    ibdPath_.IBDPathChangeAt(atSiteI,  static_cast<double>(total_MCMC_iterations()));
 
   }
 
@@ -114,7 +114,7 @@ std::vector<double> kgd::MCMCIBD::averageProportion(const std::vector<std::vecto
 
 void kgd::MCMCIBD::ibdInitializeEssentials(double err) {
 
-  ibdPath.init(*dEploidIO_, hapRg_);
+  ibdPath_.init(*dEploidIO_, hapRg_);
 
   std::vector<double> llkOfData;
 
@@ -124,7 +124,7 @@ void kgd::MCMCIBD::ibdInitializeEssentials(double err) {
 
     double adjustedWsaf = (wsaf * (1 - err)) + ((1 - wsaf) * err);
 
-    double loci_likelihood = Utility::logBetaPdf(adjustedWsaf, ibdPath.getLogLikelihoodSurface()[i][0], ibdPath.getLogLikelihoodSurface()[i][1]);
+    double loci_likelihood = Utility::logBetaPdf(adjustedWsaf, ibdPath_.getLogLikelihoodSurface()[i][0], ibdPath_.getLogLikelihoodSurface()[i][1]);
 
     llkOfData.push_back(loci_likelihood);
 
@@ -138,7 +138,7 @@ void kgd::MCMCIBD::ibdInitializeEssentials(double err) {
 void kgd::MCMCIBD::ibdSampleMcmcEventStep() {
 
   // Update the idb path.
-  ibdPath.McmcUpdateStep(titre_proportions_.Proportions());
+  ibdPath_.McmcUpdateStep(titre_proportions_.Proportions());
 
   //#Get haplotypes and update LLK for each site
   ibdUpdateHaplotypesFromPrior();
@@ -157,7 +157,7 @@ void kgd::MCMCIBD::ibdUpdateHaplotypesFromPrior() {
 
     for (size_t strain = 0; strain < kStrain(); ++strain) {
 
-      currentHap_[loci][strain] = ibdPath.UpdateHaplotypesFromPrior(strain, loci);
+      currentHap_[loci][strain] = ibdPath_.UpdateHaplotypesFromPrior(strain, loci);
 
     }
 
@@ -220,7 +220,7 @@ std::vector<double> kgd::MCMCIBD::computeLlkAtAllSites(const std::vector<double>
 
     double loci_prop_err = (loci_proportion * (1 - read_error_prob)) + ((1 - loci_proportion) * read_error_prob);
 
-    double llk_loci = Utility::logBetaPdf(loci_prop_err, ibdPath.getLogLikelihoodSurface()[loci][0], ibdPath.getLogLikelihoodSurface()[loci][1]);
+    double llk_loci = Utility::logBetaPdf(loci_prop_err, ibdPath_.getLogLikelihoodSurface()[loci][0], ibdPath_.getLogLikelihoodSurface()[loci][1]);
 
     llk_vector.push_back(llk_loci);
 

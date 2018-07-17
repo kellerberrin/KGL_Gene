@@ -90,6 +90,14 @@ void kgd::ExecEnv::executeLib(const MixtureDataObj& mixture_data) {
 
     std::shared_ptr<DEploidIO> dEploidIO_ptr(std::make_shared<DEploidIO>(mixture_data));
 
+    dEploidIO_ptr->hapParameters().setMcmcSample(500);
+    dEploidIO_ptr->hapParameters().setMcmcMachineryRate(2);
+    dEploidIO_ptr->ibdParameters().setMcmcSample(50);
+    dEploidIO_ptr->ibdParameters().setMcmcMachineryRate(2);
+    dEploidIO_ptr->ibdParameters().setProposalScaling(50.0);
+
+    dEploidIO_ptr->getMixtureControl().setUseIBD(true);
+
     std::shared_ptr<MersenneTwister> random_generator(std::make_shared<MersenneTwister>(dEploidIO_ptr->getRandomSeed()));
 
     if ( dEploidIO_ptr->getMixtureControl().doComputeLLK() ) {

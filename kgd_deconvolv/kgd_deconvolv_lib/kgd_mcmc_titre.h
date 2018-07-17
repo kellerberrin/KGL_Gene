@@ -26,6 +26,7 @@ public:
   MCMCTITRE& operator=(const MCMCTITRE&) = default;
 
   void randomizeTitre(); // generate an initial titre state.
+  void randomizeProportions(); // generate an initial proportion state
   void proportion2Titre(const std::vector<double>& proportions);  // initialize the titre with and proportion vector
   void updateTitre();  // update all the titre elements.
   void updateTitreIndex(size_t index);  // update the indexed element
@@ -36,6 +37,8 @@ public:
   double hastingsRatio() const { return 1.0; }  // symmetric proposal
 
   std::string proportionsText() const;
+  std::string titreText() const;
+
 
 private:
 
