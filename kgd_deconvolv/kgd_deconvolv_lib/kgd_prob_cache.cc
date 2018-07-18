@@ -16,6 +16,17 @@ kgd::SiteProbabilityCache::SiteProbabilityCache(const std::vector<double>& altCo
                                                 double err,
                                                 size_t gridSize) {
 
+  armaProbabilityCache(altCount, refCount, scalingConst, err, gridSize);
+
+}
+
+
+void kgd::SiteProbabilityCache::stlProbabilityCache(const std::vector<double>& altCount,
+                                                    const std::vector<double>& refCount,
+                                                    double scalingConst,
+                                                    double err,
+                                                    size_t gridSize) {
+
   double pGridSpacing = 1.0 / static_cast<double>(gridSize + 1);
 
   std::vector<double> pGrid;
@@ -84,8 +95,85 @@ kgd::SiteProbabilityCache::SiteProbabilityCache(const std::vector<double>& altCo
 }
 
 
-double kgd::SiteProbabilityCache::siteLogBetaLLK(size_t site, double x) const {
+void kgd::SiteProbabilityCache::armaProbabilityCache(const std::vector<double>& altCount,
+                                                     const std::vector<double>& refCount,
+                                                     double scalingConst,
+                                                     double err,
+                                                     size_t gridSize) {
+
+  arma::rowvec ref_count(refCount);
+  arma::rowvec alt_count(altCount);
+
+  arma::rowvec grid(gridSize);
+
+  double pGridSpacing = 1.0 / static_cast<double>(gridSize + 1);
+
+  for (size_t i = 0; i < gridSize; ++i) {
+
+    grid(i) = static_cast<double>(i + 1) * pGridSpacing;
+
+  }
+
+  llk_surf_vec_.resize(alt_count.n_cols, 2);
+  log_beta_gamma_vec_.resize(alt_count.n_cols);
+
+  for (size_t site = 0; site < alt_count.n_cols; ++site) {
+
+    arma::rowvec ll(gridSize);
+
+    for (size_t i = 0; i < gridSize; ++i) {
+
+      ll(i) = Utility::calcLLK(ref_count(site), alt_count(site), grid(i), err, scalingConst);
+
+    }
+
+    double llmax = ll.max();
+
+    arma::rowvec ln(gridSize);
+
+    for (size_t i = 0; i < gridSize; ++i) {
+
+      ln(i) = std::exp(ll(i) - llmax);
+
+    }
+
+    double lnSum = arma::accu(ln);
+    for (size_t i = 0; i < ln.size(); ++i) {
+
+      ln(i) = ln(i) / lnSum;
+
+    }
+
+    arma::rowvec mn_vec(ln % grid);
+
+    double mn = arma::accu(mn_vec);
+
+    double vr = arma::accu(mn_vec % grid) - (mn * mn);
+
+    double comm = (mn * ((1.0 - mn) / vr)) - 1.0;
+
+    double a = mn * comm;
+    double b = (1 - mn) * comm;
+
+    llk_surf_vec_(site,0) = a;
+    llk_surf_vec_(site,1) = b;
+
+    log_beta_gamma_vec_(site) = Utility::logBetaGamma(a, b);
+
+  }
+
+}
+
+
+double kgd::SiteProbabilityCache::stlSiteLogBetaLLK(size_t site, double x) const {
 
   return log_beta_gamma_[site] + Utility::partialLogBetaPdf(x, llk_surf_[site][0], llk_surf_[site][1]);
 
 }
+
+double kgd::SiteProbabilityCache::armaSiteLogBetaLLK(size_t site, double x) const {
+
+  return log_beta_gamma_vec_(site) + Utility::partialLogBetaPdf(x, llk_surf_vec_(site, 0), llk_surf_vec_(site, 1));
+
+}
+

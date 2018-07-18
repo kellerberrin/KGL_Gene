@@ -339,7 +339,7 @@ add_library(kgd_contrib_lib STATIC ${DECONVOLV_LIB_CONTRIB_FILES})
 
 add_library(kgd_deconvolv_lib STATIC ${DECONVOLV_LIB_SOURCE_FILES})
 
-target_link_libraries(kgd_deconvolv_lib kgd_contrib_lib ${ZLIB_LIBRARIES})
+target_link_libraries(kgd_deconvolv_lib kgd_contrib_lib ${ZLIB_LIBRARIES} armadillo)
 
 #generate kgd_deconvolv executable
 add_executable (kgd_deconvolv ${DECONVOLV_APPLICATION_SOURCE_FILES})

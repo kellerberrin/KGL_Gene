@@ -31,7 +31,7 @@ void kgd::IBDpath::init(DEploidIO &dEploidIO, std::shared_ptr<RandomGenerator> r
                                                                  dEploidIO.getRefCount(),
                                                                  100.0, /*  double scalingConst */
                                                                  0.01, /* double err */
-                                                                 99 /* cache size */ );
+                                                                 999 /* cache size */ );
 
   // initialize haplotype prior
   h_prior_.initializeHprior(kStrain(), dEploidIO.getPlaf());
