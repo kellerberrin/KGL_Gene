@@ -35,7 +35,7 @@ public:
 
   std::vector<std::string> getIBDprobsHeader() const;
   const std::vector<std::vector<double> >& getFwdBwd() const { return fwdbwd_; }
-  double siteLogBetaLLK(size_t site, double x) const { return ibd_prob_cache_->sitelogBetaLLK(site, x); }
+  double siteLogBetaLLK(size_t site, double x) const { return ibd_prob_cache_->siteLogBetaLLK(site, x); }
 //  const std::vector<std::vector<double> >& getLogLikelihoodSurface() const { return ibd_prob_cache_->getLogLikelihoodSurface(); }
   double UpdateHaplotypesFromPrior(size_t strain, size_t loci) const;
   double bestPath(const std::vector<double>& proportion, double err = 0.01) const;
