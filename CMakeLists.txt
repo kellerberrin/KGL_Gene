@@ -13,7 +13,7 @@ include_directories(/usr/include
                     kgl_app                        # Application level objects
                     /usr/local/lib/spdlog/include   # 3rd party logging library.
                     /usr/local/lib/seqan/include    # 3rd party sequence analysis library.
-                    contrib/edlib) # 3rd party library for fast Leveshtein sequence matching.
+                    contrib/edlib) # 3rd party library for fast Levenshtein sequence matching.
 
 # add boost library directories
 #set(BOOST_ROOT /usr/lib/boost)
@@ -321,7 +321,9 @@ set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_input.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_input.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_app.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_app.cc kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.h kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.cc)
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_app.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.h
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.cc)
 
 # Application level objects
 set(DECONVOLV_APPLICATION_SOURCE_FILES

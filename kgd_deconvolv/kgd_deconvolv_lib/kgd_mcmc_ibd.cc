@@ -118,13 +118,13 @@ void kgd::MCMCIBD::ibdInitializeEssentials(double err) {
 
   std::vector<double> llkOfData;
 
-  for (size_t i = 0; i < nLoci(); i++) {
+  for (size_t site = 0; site < nLoci(); ++site) {
 
-    double wsaf = dEploidIO_->getAltCount()[i] / (dEploidIO_->getRefCount()[i] + dEploidIO_->getAltCount()[i] + 0.00000000000001);
+    double wsaf = dEploidIO_->getAltCount()[site] / (dEploidIO_->getRefCount()[site] + dEploidIO_->getAltCount()[site] + 0.00000000000001);
 
     double adjustedWsaf = (wsaf * (1 - err)) + ((1 - wsaf) * err);
 
-    double loci_likelihood = Utility::logBetaPdf(adjustedWsaf, ibdPath_.getLogLikelihoodSurface()[i][0], ibdPath_.getLogLikelihoodSurface()[i][1]);
+    double loci_likelihood = ibdPath_.siteLogBetaLLK(site, adjustedWsaf);
 
     llkOfData.push_back(loci_likelihood);
 
@@ -220,7 +220,7 @@ std::vector<double> kgd::MCMCIBD::computeLlkAtAllSites(const std::vector<double>
 
     double loci_prop_err = (loci_proportion * (1 - read_error_prob)) + ((1 - loci_proportion) * read_error_prob);
 
-    double llk_loci = Utility::logBetaPdf(loci_prop_err, ibdPath_.getLogLikelihoodSurface()[loci][0], ibdPath_.getLogLikelihoodSurface()[loci][1]);
+    double llk_loci = ibdPath_.siteLogBetaLLK(loci, loci_prop_err);
 
     llk_vector.push_back(llk_loci);
 

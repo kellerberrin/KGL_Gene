@@ -30,8 +30,8 @@ void kgd::IBDpath::init(DEploidIO &dEploidIO, std::shared_ptr<RandomGenerator> r
   ibd_prob_cache_ = std::make_shared<const SiteProbabilityCache>(dEploidIO.getAltCount(),
                                                                  dEploidIO.getRefCount(),
                                                                  100.0, /*  double scalingConst */
-                                                                 0.01, /* double err = */
-                                                                 99 /* double err = */ );
+                                                                 0.01, /* double err */
+                                                                 99 /* cache size */ );
 
   // initialize haplotype prior
   h_prior_.initializeHprior(kStrain(), dEploidIO.getPlaf());
@@ -271,17 +271,15 @@ void kgd::IBDpath::computeIbdPathFwdProb(const std::vector<double>& proportion, 
 
     for (size_t i = 0; i < h_prior_.nState(); i++) {
 
-      vPrior[i] = ((vNoRec[i] * ibd_recomb_probs_->getNoRecombProbAtLoci(siteI)) + (f_sum_ *
-                                                                                    ibd_recomb_probs_->getRecombProbAtLoci(siteI) * statePrior[i]))
+      vPrior[i] = ((vNoRec[i] * ibd_recomb_probs_->getNoRecombProbAtLoci(siteI))
+                   + (f_sum_ * ibd_recomb_probs_->getRecombProbAtLoci(siteI) * statePrior[i]))
                   * h_prior_.getPriorProbTrans()[siteI][i];
 
     }
 
     lk = computeLlkOfStatesAtSiteI(proportion, siteI);
-    //cout << "lk = " ; for (double l :lk){cout << l << " ";}cout<<endl;
 
     updateFmAtSiteI(vPrior, lk);
-    //for (double p : fm_.back()){printf("%8.4f ", p);}cout<<endl;
 
   }
 
@@ -296,6 +294,7 @@ void kgd::IBDpath::updateFmAtSiteI(const std::vector<double> &prior, const std::
   Utility::normalizeBySum(postAtSiteI);
 
   fm_.push_back(postAtSiteI);
+
   f_sum_ = Utility::sumOfVec(postAtSiteI);
 
   for (size_t i = 0; i < f_sum_state_.size(); i++) {
@@ -345,7 +344,7 @@ double kgd::IBDpath::bestPath(const std::vector<double>& proportion, double err)
 
     if ((qs > 0) & (qs < 1)) {
 
-      sumLLK += Utility::logBetaPdf(qs2, getLogLikelihoodSurface()[siteI][0], getLogLikelihoodSurface()[siteI][1]);
+      sumLLK += siteLogBetaLLK(siteI, qs2);
 
     }
 
@@ -526,7 +525,6 @@ void kgd::IBDpath::computeAndUpdateTheta() {
     sccs += kStrain() - h_prior_.getEffectiveK()[obs];
 
   }
-  //setTheta(rBeta(sccs+1.0, sumOfKeffStates+1.0, propRg_));
 
   setTheta(Utility::rBeta(sccs + 1.0, sumOfKeffStates + 1.0, ibd_random_generator_));
 
@@ -567,11 +565,14 @@ std::vector<double> kgd::IBDpath::computeLlkOfStatesAtSiteI(const std::vector<do
     double qs2 = qs * (1 - err) + (1 - qs) * err;
     //cout << qs2 << endl;
 
-    llks.push_back(Utility::logBetaPdf(qs2, getLogLikelihoodSurface()[siteI][0], getLogLikelihoodSurface()[siteI][1]));
+    double logBetaLLK = siteLogBetaLLK(siteI, qs2);
+
+    llks.push_back(logBetaLLK);
 
   }
 
   double maxllk = Utility::max_value(llks);
+
   std::vector<double> ret;
 
   for (double llk : llks) {

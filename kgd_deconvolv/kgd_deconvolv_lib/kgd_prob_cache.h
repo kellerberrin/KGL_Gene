@@ -31,13 +31,13 @@ public:
                        size_t gridSize = 99);
   ~SiteProbabilityCache() = default;
 
+  double sitelogBetaLLK(size_t site, double x) const;
   const std::vector<std::vector<double> >& getLogLikelihoodSurface() const { return llk_surf_; }
-
 
 private:
 
   std::vector<std::vector<double> > llk_surf_;
-
+  std::vector<double> logBetaGamma_;
 
 };
 

@@ -182,6 +182,10 @@ public:
 
   static double betaPdf(double x, double a, double b);
 
+  static double logBetaGamma(double a, double b);
+
+  static double partialLogBetaPdf(double x, double a, double b);
+
   static double logBetaPdf(double x, double a, double b);
 
   static double binomialPdf(int s, int n, double p);

@@ -72,6 +72,20 @@ kgd::SiteProbabilityCache::SiteProbabilityCache(const std::vector<double>& altCo
 
   }
 
+  for (auto sitellk : llk_surf_) {
+
+    logBetaGamma_.push_back(Utility::logBetaGamma(sitellk[0], sitellk[1]));
+
+  }
+
   assert(llk_surf_.size() == refCount.size());
+  assert(logBetaGamma_.size() == llk_surf_.size());
+
+}
+
+
+double kgd::SiteProbabilityCache::sitelogBetaLLK(size_t site, double x) const {
+
+  return logBetaGamma_[site] + Utility::partialLogBetaPdf(x, llk_surf_[site][0], llk_surf_[site][1]);
 
 }

@@ -282,16 +282,39 @@ double kgd::Utility::betaPdf(double x, double a, double b) {
 }
 
 
+double kgd::Utility::logBetaGamma(double a, double b) {
+
+  assert(a >= 0);
+  assert(b >= 0);
+
+  double log_gamma = Maths::Special::Gamma::log_gamma(a + b)
+                     - Maths::Special::Gamma::log_gamma(a) -
+                     Maths::Special::Gamma::log_gamma(b);
+
+  return log_gamma;
+
+}
+
+
+double kgd::Utility::partialLogBetaPdf(double x, double a, double b) {
+
+  assert(x >= 0 && x <= 1);
+  assert(a >= 0);
+  assert(b >= 0);
+
+  double ret =  (b - 1) * log(1 - x) + (a - 1) * log(x);
+
+  return ret;
+
+}
+
 double kgd::Utility::logBetaPdf(double x, double a, double b) {
 
   assert(x >= 0 && x <= 1);
   assert(a >= 0);
   assert(b >= 0);
 
-  double ret = Maths::Special::Gamma::log_gamma(a + b) -
-               Maths::Special::Gamma::log_gamma(a) -
-               Maths::Special::Gamma::log_gamma(b) +
-               (b - 1) * log(1 - x) + (a - 1) * log(x);
+  double ret =  logBetaGamma(a, b) + partialLogBetaPdf(x, a, b);
 
   return ret;
 
