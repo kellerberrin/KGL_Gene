@@ -35,6 +35,67 @@
 namespace kgd = kellerberrin::deconvolv;
 
 
+
+std::vector<std::vector<size_t> > kgd::Utility::uniqueMatrixColumns(std::vector<std::vector<size_t> > &matrix) {
+
+  std::vector<std::vector<size_t> > ret;
+
+  ret.push_back(matrix[0]);
+
+  for (size_t i = 1; i < matrix.size(); i++) {
+
+    bool is_new_column = true;
+
+    for (auto state : ret) {
+
+      if (vectorEquivalence(state, matrix[i])) {
+
+        is_new_column = false;
+        break;
+
+      }
+
+    }
+
+    if (is_new_column) {
+
+      ret.push_back(matrix[i]);
+
+    }
+
+  }
+
+  return ret;
+
+}
+
+
+bool kgd::Utility::vectorEquivalence(std::vector<size_t> vec1, std::vector<size_t> vec2) {
+
+  if (vec1.size() != vec2.size()) {
+
+    return false;
+
+  }
+
+  bool ret = true;
+
+  for (size_t i = 0; i < vec1.size(); i++) {
+
+    if (vec1[i] != vec2[i]) {
+
+      ret = false;
+      break;
+
+    }
+
+  }
+
+  return ret;
+
+}
+
+
 double kgd::Utility::lognormal_pdf(double x, double mean, double std_dev) {
 
   static const double inv_sqrt_2pi = 0.3989422804014327;
@@ -121,9 +182,9 @@ void kgd::Utility::normalizeBySum(std::vector<double> &array) {
 
   double sumOfArray = sumOfVec(array);
 
-  for (auto it = array.begin(); it != array.end(); ++it) {
+  for (size_t idx = 0; idx < array.size(); ++idx) {
 
-    *it /= sumOfArray;
+    array[idx] = array[idx] / sumOfArray;
 
   }
 
@@ -232,9 +293,9 @@ size_t kgd::Utility::sampleIndexGivenProp(std::shared_ptr<RandomGenerator> rando
 
   double u = randomGenerator->sample();
 
-  size_t i = 0;
 
-  for ( ; i < tmpCdf.size() ; i++){
+
+  for (size_t i = 0; ; i < tmpCdf.size() ; i++){
 
       if ( u < tmpCdf[i] ){
           break;
@@ -321,14 +382,14 @@ double kgd::Utility::logBetaPdf(double x, double a, double b) {
 }
 
 
-double kgd::Utility::binomialPdf(int s, int n, double p) {
+double kgd::Utility::binomialPdf(size_t s, size_t n, double p) {
 
   assert(p >= 0 && p <= 1);
 
   double ret = n_choose_k(n, s);
 
-  ret *= pow(p, (double) s);
-  ret *= pow((1.0 - p), (double) (n - s));
+  ret *= pow(p, static_cast<double>(s));
+  ret *= pow((1.0 - p), static_cast<double>(n - s));
 
   return ret;
 

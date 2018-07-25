@@ -114,7 +114,7 @@ void kgd::SiteProbabilityCache::armaProbabilityCache(const std::vector<double>& 
 
   }
 
-  llk_surf_vec_.resize(alt_count.n_cols, 2);
+  llk_surf_mat_.resize(alt_count.n_cols, 2);
   log_beta_gamma_vec_.resize(alt_count.n_cols);
 
   for (size_t site = 0; site < alt_count.n_cols; ++site) {
@@ -129,22 +129,22 @@ void kgd::SiteProbabilityCache::armaProbabilityCache(const std::vector<double>& 
 
     double llmax = ll.max();
 
-    arma::rowvec ln(gridSize);
+    arma::rowvec lln(gridSize);
 
     for (size_t i = 0; i < gridSize; ++i) {
 
-      ln(i) = std::exp(ll(i) - llmax);
+      lln(i) = std::exp(ll(i) - llmax);
 
     }
 
-    double lnSum = arma::accu(ln);
-    for (size_t i = 0; i < ln.size(); ++i) {
+    double lnSum = arma::accu(lln);
+    for (size_t i = 0; i < lln.size(); ++i) {
 
-      ln(i) = ln(i) / lnSum;
+      lln(i) = lln(i) / lnSum;
 
     }
 
-    arma::rowvec mn_vec(ln % grid);
+    arma::rowvec mn_vec(lln % grid);
 
     double mn = arma::accu(mn_vec);
 
@@ -155,8 +155,8 @@ void kgd::SiteProbabilityCache::armaProbabilityCache(const std::vector<double>& 
     double a = mn * comm;
     double b = (1 - mn) * comm;
 
-    llk_surf_vec_(site,0) = a;
-    llk_surf_vec_(site,1) = b;
+    llk_surf_mat_(site, A_INDEX) = a;
+    llk_surf_mat_(site, B_INDEX) = b;
 
     log_beta_gamma_vec_(site) = Utility::logBetaGamma(a, b);
 
@@ -173,7 +173,7 @@ double kgd::SiteProbabilityCache::stlSiteLogBetaLLK(size_t site, double x) const
 
 double kgd::SiteProbabilityCache::armaSiteLogBetaLLK(size_t site, double x) const {
 
-  return log_beta_gamma_vec_(site) + Utility::partialLogBetaPdf(x, llk_surf_vec_(site, 0), llk_surf_vec_(site, 1));
+  return log_beta_gamma_vec_(site) + Utility::partialLogBetaPdf(x, llk_surf_mat_(site, A_INDEX), llk_surf_mat_(site, B_INDEX));
 
 }
 

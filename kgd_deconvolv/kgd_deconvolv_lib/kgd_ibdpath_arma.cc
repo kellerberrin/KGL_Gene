@@ -1,5 +1,5 @@
 //
-// Created by kellerberrin on 13/05/18.
+// Created by kellerberrin on 19/07/18.
 //
 
 
@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <cassert>
 #include "kgd_deconvolv_app.h"
-#include "kgd_ibdpath.h"
+#include "kgd_ibdpath_arma.h"
 
 
 
@@ -17,7 +17,7 @@ namespace kgd = kellerberrin::deconvolv;
 
 
 
-void kgd::IBDpath::init(DEploidIO &dEploidIO, std::shared_ptr<RandomGenerator> randomGenerator) {
+void kgd::IBDPath::init(DEploidIO &dEploidIO, std::shared_ptr<RandomGenerator> randomGenerator) {
 
   ibd_random_generator_ = randomGenerator;
   setNLoci(dEploidIO.nLoci());
@@ -31,7 +31,7 @@ void kgd::IBDpath::init(DEploidIO &dEploidIO, std::shared_ptr<RandomGenerator> r
                                                                  dEploidIO.getRefCount(),
                                                                  100.0, /*  double scalingConst */
                                                                  0.01, /* double err */
-                                                                 99 /* cache size */ );
+                                                                 999 /* cache size */ );
 
   // initialize haplotype prior
   h_prior_.initializeHprior(kStrain(), dEploidIO.getPlaf());
@@ -39,7 +39,7 @@ void kgd::IBDpath::init(DEploidIO &dEploidIO, std::shared_ptr<RandomGenerator> r
   makeIbdTransProbs();
 
   // initialize fm_
-  f_sum_state_ = std::vector<double>(h_prior_.nStates());
+  f_sum_state_ = std::vector<double>(h_prior_.nPattern());
 
   // initialize ibd_configure_path_
   ibd_configure_path_ = std::vector<size_t>(nLoci());
@@ -60,14 +60,13 @@ void kgd::IBDpath::init(DEploidIO &dEploidIO, std::shared_ptr<RandomGenerator> r
 }
 
 
-void kgd::IBDpath::McmcUpdateStep(const std::vector<double>& CurrentProportion) {
+void kgd::IBDPath::McmcUpdateStep(const std::vector<double>& CurrentProportion) {
 
-  std::vector<double> effectiveKPrior = computeEffectiveKPrior(theta());
+  arma::rowvec effectiveKPrior;
+  computeEffectiveKPrior(effectiveKPrior, theta());
 
-  std::vector<double> statePrior = computeStatePrior(effectiveKPrior);
-
-  ExecEnv::log().info("effectiveKPrior.size: {}, statePrior.size: {}, theta: {}", effectiveKPrior.size(), statePrior.size(), theta());
-
+  arma::rowvec statePrior;
+  computeStatePrior(statePrior, effectiveKPrior);
   /// First build the path likelihood
   computeIbdPathFwdProb(CurrentProportion, statePrior);
   /// Now sample path given matrix
@@ -78,7 +77,7 @@ void kgd::IBDpath::McmcUpdateStep(const std::vector<double>& CurrentProportion) 
 }
 
 
-double kgd::IBDpath::UpdateHaplotypesFromPrior(size_t strain, size_t loci) const {
+double kgd::IBDPath::UpdateHaplotypesFromPrior(size_t strain, size_t loci) const {
 
   size_t config_idx = idbConfigurePath()[loci];
 
@@ -89,35 +88,39 @@ double kgd::IBDpath::UpdateHaplotypesFromPrior(size_t strain, size_t loci) const
 }
 
 
-void kgd::IBDpath::ibdSamplePath(const std::vector<double>& statePrior) {
+void kgd::IBDPath::ibdSamplePath(const arma::rowvec& statePrior) {
 
-  int lociIdx = nLoci() - 1;
+  size_t lociIdx = nLoci() - 1;
 
-  std::vector<double> tmpProp = fm_[lociIdx];
+  // Find the max strain value from fm_(loci, strains)
+  double max_value = 0.0;
+  size_t max_index = 0;
+  for (size_t i = 0; i < fm_.n_cols; ++i) {
 
-  Utility::normalizeBySum(tmpProp);
+    if (fm_(lociIdx, i) > max_value) {
 
-  ibd_configure_path_[lociIdx] = Utility::sampleIndexGivenProp(ibd_random_generator_, tmpProp);
+      max_value = fm_(lociIdx, i);
+      max_index = i;
 
-  assert(fm_.size() == nLoci());
+    }
+
+  }
+
+  ibd_configure_path_(lociIdx) = max_index;
+
+  assert(fm_.n_rows == nLoci());
 
   while (lociIdx > 0) {
 
     lociIdx--;
 
-    std::vector<double> vNoRecomb = Utility::vecProd(ibd_trans_probs_[h_prior_.getStateIdx()[ibd_configure_path_[lociIdx + 1]]], fm_[lociIdx]);
+    arma::vec vNoRecomb = ibd_trans_probs_(h_prior_.getStateIdx()[ibd_configure_path_(lociIdx + 1)]) % fm_(lociIdx);
 
-    assert(vNoRecomb.size() == h_prior_.nStateEntries());
+    assert(vNoRecomb.n_rows == h_prior_.nState());
 
-    std::vector<double> vRecomb = fm_[lociIdx];
+    for (size_t i = 0; i < h_prior_.nState(); i++) {
 
-    assert(vRecomb.size() == h_prior_.nStateEntries());
-
-    std::vector<double> prop(h_prior_.nStateEntries());
-
-    for (size_t i = 0; i < prop.size(); i++) {
-
-      prop[i] = vNoRecomb[i] * ibd_recomb_probs_->getNoRecombProbAtLoci(lociIdx) +
+      prop  vNoRecomb[i] * ibd_recomb_probs_->getNoRecombProbAtLoci(lociIdx) +
                 vRecomb[i] * ibd_recomb_probs_->getRecombProbAtLoci(lociIdx) * statePrior[ibd_configure_path_[lociIdx + 1]];
 
     }
@@ -126,23 +129,21 @@ void kgd::IBDpath::ibdSamplePath(const std::vector<double>& statePrior) {
     Utility::normalizeBySum(tmpProp);
     ibd_configure_path_[lociIdx] = Utility::sampleIndexGivenProp(ibd_random_generator_, tmpProp);
 
-    assert(ibd_configure_path_[lociIdx] < h_prior_.nStateEntries());
+    assert(ibd_configure_path_[lociIdx] < h_prior_.nState());
 
   }
 
 }
 
 
-std::vector<size_t> kgd::IBDpath::findAllIndex(const std::vector<size_t> &index_array, size_t index) {
+std::vector<size_t> kgd::IBDPath::findWhichIsSomething(const std::vector<size_t>& tmpOp, size_t something) {
 
   std::vector<size_t> ret;
 
-  for (size_t i = 0; i < index_array.size(); i++) {
+  for (size_t i = 0; i < tmpOp.size(); i++) {
 
-    if (index_array[i] == index) {
-
+    if (tmpOp[i] == something) {
       ret.push_back(i);
-
     }
 
   }
@@ -152,10 +153,10 @@ std::vector<size_t> kgd::IBDpath::findAllIndex(const std::vector<size_t> &index_
 }
 
 
-void kgd::IBDpath::buildPathProbabilityForPainting(const std::vector<double>& proportion) {
+void kgd::IBDPath::buildPathProbabilityForPainting(const std::vector<double>& proportion) {
 
   //vector <double> effectiveKPrior = computeEffectiveKPrior(theta());
-  std::vector<double> effectiveKPrior = std::vector<double>(h_prior_.nStates(), 1.0 / h_prior_.nStates());
+  std::vector<double> effectiveKPrior = std::vector<double>(h_prior_.nPattern(), 1.0 / h_prior_.nPattern());
   std::vector<double> statePrior = computeStatePrior(effectiveKPrior);
 
   // First building the path likelihood
@@ -174,7 +175,7 @@ void kgd::IBDpath::buildPathProbabilityForPainting(const std::vector<double>& pr
 }
 
 
-void kgd::IBDpath::computeIbdPathBwdProb(const std::vector<double>& proportion,
+void kgd::IBDPath::computeIbdPathBwdProb(const std::vector<double>& proportion,
                                          const std::vector<double>& effectiveKPrior,
                                          const std::vector<double>& statePrior) {
 
@@ -190,7 +191,7 @@ void kgd::IBDpath::computeIbdPathBwdProb(const std::vector<double>& proportion,
 
   }
 
-  std::vector<double> tmpBw = std::vector<double>(h_prior_.nStateEntries());
+  std::vector<double> tmpBw = std::vector<double>(h_prior_.nState());
 
   for (size_t j = 0; j < tmpBw.size(); j++) {
 
@@ -204,17 +205,17 @@ void kgd::IBDpath::computeIbdPathBwdProb(const std::vector<double>& proportion,
 
   bwd_.push_back(tmpBw);
 
-  for (size_t rev_site_i = 1; rev_site_i < nLoci(); ++rev_site_i) {
+  for (size_t rev_siteI = 1; rev_siteI < nLoci(); rev_siteI++) {
 
-    size_t site_i = nLoci() - rev_site_i;
+    size_t siteI = nLoci() - rev_siteI;
 
-    std::vector<double> lk = computeLlkOfStatesAtSiteI(proportion, site_i);
+    std::vector<double> lk = computeLlkOfStatesAtSiteI(proportion, siteI);
 
     //vector<double> lk = vector <double> (h_prior_.nState(), 1.0);
-    std::vector<double> bSumState = std::vector<double>(h_prior_.nStates());
+    std::vector<double> bSumState = std::vector<double>(h_prior_.nPattern());
     for (size_t i = 0; i < bSumState.size(); i++) {
 
-      for (size_t j = 0; j < h_prior_.nStateEntries(); j++) {
+      for (size_t j = 0; j < h_prior_.nState(); j++) {
 
         bSumState[i] += ibd_trans_probs_[i][j] * bwd_.back()[j];
 
@@ -222,51 +223,51 @@ void kgd::IBDpath::computeIbdPathBwdProb(const std::vector<double>& proportion,
 
     }
 
-    std::vector<double> vNoRecomb(h_prior_.nStateEntries());
+    std::vector<double> vNoRecomb(h_prior_.nState());
     for (size_t i = 0; i < h_prior_.getStateIdx().size(); i++) {
 
       vNoRecomb[i] = bSumState[h_prior_.getStateIdx()[i]];
 
     }
 
-    for (size_t state = 0; state < h_prior_.nStateEntries(); ++state) {
+    for (size_t i = 0; i < h_prior_.nState(); i++) {
 
-      tmpBw[state] = 0;
+      tmpBw[i] = 0;
 
       for (size_t j = 0; j < lk.size(); j++) {
 
-        tmpBw[state] += (lk[j] * bwd_.back()[j]) * ibd_recomb_probs_->getRecombProbAtLoci(site_i - 1);
+        tmpBw[i] += (lk[j] * bwd_.back()[j]) * ibd_recomb_probs_->getRecombProbAtLoci(siteI - 1);
 
       }
 
-      tmpBw[state] *= statePrior[state];
-      tmpBw[state] += lk[state] * (ibd_recomb_probs_->getNoRecombProbAtLoci(site_i - 1)) * vNoRecomb[state];
-      tmpBw[state] *= h_prior_.getPriorProb()[site_i][state];
+      tmpBw[i] *= statePrior[i];
+      tmpBw[i] += lk[i] * (ibd_recomb_probs_->getNoRecombProbAtLoci(siteI - 1)) * vNoRecomb[i];
+      tmpBw[i] *= h_prior_.getPriorProb()[i][siteI];
 
     }
 
     Utility::normalizeBySum(tmpBw);
-
     bwd_.push_back(tmpBw);
 
   }
 
-  std::reverse(bwd_.begin(), bwd_.end());
+  reverse(bwd_.begin(), bwd_.end());
 
 }
 
 
-void kgd::IBDpath::computeIbdPathFwdProb(const std::vector<double>& proportion, const std::vector<double>& statePrior) {
+void kgd::IBDPath::computeIbdPathFwdProb(const std::vector<double>& proportion, const arma::rowvec& statePrior) {
 
-  fm_.clear();
+  fm_.reset();
 
-  std::vector<double> vPrior = Utility::vecProd(statePrior, h_prior_.getPriorProb()[0]);
+  arma::rowvec priorProbTrans(h_prior_.getPriorProbTrans()[0]);
 
-  std::vector<double> lk = computeLlkOfStatesAtSiteI(proportion, 0);
+  arma::rowvec lk;
+  computeLlkOfStatesAtSiteI(lk, proportion, 0);
 
-  updateFmAtSiteI(vPrior, lk);
+  updateFmAtSiteI((statePrior % priorProbTrans), lk);
 
-  for (size_t site_i = 1; site_i < nLoci(); ++site_i) {
+  for (size_t siteI = 1; siteI < nLoci(); siteI++) {
 
     std::vector<double> vNoRec;
 
@@ -276,15 +277,15 @@ void kgd::IBDpath::computeIbdPathFwdProb(const std::vector<double>& proportion, 
 
     }
 
-    for (size_t state = 0; state < h_prior_.nStateEntries(); state++) {
+    for (size_t i = 0; i < h_prior_.nState(); i++) {
 
-      vPrior[state] = ((vNoRec[state] * ibd_recomb_probs_->getNoRecombProbAtLoci(site_i))
-                   + (f_sum_ * ibd_recomb_probs_->getRecombProbAtLoci(site_i) * statePrior[state]))
-                  * h_prior_.getPriorProb()[site_i][state];
+      vPrior[i] = ((vNoRec[i] * ibd_recomb_probs_->getNoRecombProbAtLoci(siteI))
+                   + (f_sum_ * ibd_recomb_probs_->getRecombProbAtLoci(siteI) * statePrior[i]))
+                  * h_prior_.getPriorProbTrans()[siteI][i];
 
     }
 
-    lk = computeLlkOfStatesAtSiteI(proportion, site_i);
+    lk = computeLlkOfStatesAtSiteI(proportion, siteI);
 
     updateFmAtSiteI(vPrior, lk);
 
@@ -293,12 +294,13 @@ void kgd::IBDpath::computeIbdPathFwdProb(const std::vector<double>& proportion, 
 }
 
 
-void kgd::IBDpath::updateFmAtSiteI(const std::vector<double> &prior, const std::vector<double> &llk) {
+void kgd::IBDPath::updateFmAtSiteI(const arma::rowvec &prior, const arma::rowvec &llk) {
 
-  std::vector<double> postAtSiteI = Utility::vecProd(prior, llk);
-  //normalizeByMax(postAtSiteI);
+  arma::rowvec postAtSiteI(prior % llk);
 
-  Utility::normalizeBySum(postAtSiteI);
+  double vecsum = arma::accu(postAtSiteI);
+
+  postAtSiteI = postAtSiteI / vecsum;
 
   fm_.push_back(postAtSiteI);
 
@@ -308,7 +310,7 @@ void kgd::IBDpath::updateFmAtSiteI(const std::vector<double> &prior, const std::
 
     f_sum_state_[i] = 0;
 
-    for (size_t j = 0; j < h_prior_.nStateEntries(); j++) {
+    for (size_t j = 0; j < h_prior_.nState(); j++) {
 
       f_sum_state_[i] += ibd_trans_probs_[i][j] * postAtSiteI[j];
 
@@ -319,7 +321,7 @@ void kgd::IBDpath::updateFmAtSiteI(const std::vector<double> &prior, const std::
 }
 
 
-double kgd::IBDpath::bestPath(const std::vector<double>& proportion, double err) const {
+double kgd::IBDPath::bestPath(const std::vector<double>& proportion, double err) const {
 
   double sumLLK = 0.0;
 
@@ -337,7 +339,7 @@ double kgd::IBDpath::bestPath(const std::vector<double>& proportion, double err)
 
     size_t indx = std::distance(tmp.begin(), std::max_element(tmp.begin(), tmp.end()));
 
-    std::vector<size_t> hSetI = h_prior_.gethSet()[indx];
+    std::vector<int> hSetI = h_prior_.gethSet()[indx];
 
     double qs = 0;
 
@@ -362,7 +364,7 @@ double kgd::IBDpath::bestPath(const std::vector<double>& proportion, double err)
 }
 
 
-void kgd::IBDpath::combineFwdBwd(const std::vector<std::vector<double>> &reshapedFwd, const std::vector<std::vector<double>> &reshapedBwd) {
+void kgd::IBDPath::combineFwdBwd(const std::vector<std::vector<double>> &reshapedFwd, const std::vector<std::vector<double>> &reshapedBwd) {
 
   for (size_t i = 0; i < nLoci(); i++) {
 
@@ -383,16 +385,14 @@ void kgd::IBDpath::combineFwdBwd(const std::vector<std::vector<double>> &reshape
 }
 
 
-void kgd::IBDpath::makeIbdTransProbs() {
+void kgd::IBDPath::makeIbdTransProbs() {
 
   assert(ibd_trans_probs_.size() == 0);
 
-  for (size_t i = 0; i < h_prior_.nStates(); i++) {
+  for (size_t i = 0; i < h_prior_.nPattern(); i++) {
 
-    std::vector<double> transProbRow(h_prior_.nStateEntries());
-    std::vector<size_t> wi = findAllIndex(h_prior_.getStateIdx(), i);
-
-    ExecEnv::log().info("IBDPath; transProbRow.size: {}, wi.size: {}", transProbRow.size(), wi.size());
+    std::vector<double> transProbRow(h_prior_.nState());
+    std::vector<size_t> wi = findWhichIsSomething(h_prior_.getStateIdx(), i);
 
     for (size_t wii : wi) {
 
@@ -407,14 +407,14 @@ void kgd::IBDpath::makeIbdTransProbs() {
 }
 
 
-std::vector<std::string> kgd::IBDpath::getIBDprobsHeader() const {
+std::vector<std::string> kgd::IBDPath::getIBDprobsHeader() const {
 
   return h_prior_.getIBDconfigureHeader();
 
 }
 
 
-std::vector<std::vector<double> > kgd::IBDpath::reshapeProbs(const std::vector<std::vector<double> > &probs) const {
+std::vector<std::vector<double> > kgd::IBDPath::reshapeProbs(const std::vector<std::vector<double> > &probs) const {
 
   assert(nLoci() == probs.size());
 
@@ -449,20 +449,19 @@ std::vector<std::vector<double> > kgd::IBDpath::reshapeProbs(const std::vector<s
 }
 
 
-std::vector<double> kgd::IBDpath::computeEffectiveKPrior(double theta) {
+void kgd::IBDPath::computeEffectiveKPrior(arma::rowvec& effectiveKPrior, double theta) {
   //#Calculate state prior given theta (theta is prob IBD)
 
-  std::vector<double> binomial_vector;
+  arma::rowvec binomial_vector;
 
   for (size_t i = 0; i < kStrain(); ++i) {
 
-    double binomial_i = Utility::binomialPdf(i, (kStrain() - 1), theta);
-
-    binomial_vector.push_back(binomial_i);
+    double binomial_i = Utility::binomialPdf( i, (kStrain() - 1), theta);
+    binomial_vector << binomial_i;
 
   }
 
-  std::vector<double> effectiveKPrior;
+  effectiveKPrior.reset();
 
   for (auto effectiveKtmp : h_prior_.getEffectiveK()) {
 
@@ -472,31 +471,27 @@ std::vector<double> kgd::IBDpath::computeEffectiveKPrior(double theta) {
 
     double  binomial_ratio = binomial_vector[effectiveKidx] / static_cast<double>(unique_effectiveK_count_[effectiveKidx]);
 
-    effectiveKPrior.push_back(binomial_ratio);
+    effectiveKPrior << binomial_ratio;
 
   }
-
-  return effectiveKPrior;
 
 }
 
 
-std::vector<double> kgd::IBDpath::computeStatePrior(const std::vector<double>& effectiveKPrior) {
+void kgd::IBDPath::computeStatePrior(arma::rowvec& statePrior, const arma::rowvec& effectiveKPrior) {
 
-  std::vector<double> ret;
+  statePrior.reset();
 
   for (size_t stateIdxTmp : h_prior_.getStateIdx()) {
 
-    ret.push_back(effectiveKPrior[stateIdxTmp]);
+    statePrior << effectiveKPrior(stateIdxTmp);
 
   }
-
-  return ret;
 
 }
 
 
-void kgd::IBDpath::computeAndUpdateTheta() {
+void kgd::IBDPath::computeAndUpdateTheta() {
 
   std::vector<size_t> obsState;
 
@@ -542,9 +537,9 @@ void kgd::IBDpath::computeAndUpdateTheta() {
 }
 
 
-void kgd::IBDpath::computeUniqueEffectiveKCount() {
+void kgd::IBDPath::computeUniqueEffectiveKCount() {
 
-  unique_effectiveK_count_ = std::vector<size_t>(kStrain());
+  unique_effectiveK_count_ = std::vector<int>(kStrain());
 
   for (size_t effectiveKtmp : h_prior_.getEffectiveK()) {
 
@@ -559,11 +554,13 @@ void kgd::IBDpath::computeUniqueEffectiveKCount() {
 }
 
 
-std::vector<double> kgd::IBDpath::computeLlkOfStatesAtSiteI(const std::vector<double>& proportion, size_t siteI, double err) {
+void kgd::IBDPath::computeLlkOfStatesAtSiteI(arma::rowvec& lk, const std::vector<double>& proportion, size_t siteI, double err) {
 
-  std::vector<double> llks;
+  lk.reset();
 
-  for (std::vector<size_t> hSetI : h_prior_.gethSet()) {
+  arma::rowvec llks;
+
+  for (std::vector<int> hSetI : h_prior_.gethSet()) {
 
     double qs = 0;
 
@@ -573,19 +570,17 @@ std::vector<double> kgd::IBDpath::computeLlkOfStatesAtSiteI(const std::vector<do
 
     }
 
-    double qs2 = qs * (1 - err) + (1 - qs) * err;
+    double qs2 = qs + (1 - (2 * qs)) * err;
 
     double logBetaLLK = siteLogBetaLLK(siteI, qs2);
 
-    llks.push_back(logBetaLLK);
+    llks << logBetaLLK;
 
   }
 
-  double maxllk = Utility::max_value(llks);
+  double maxllk = llks.max();
 
-  std::vector<double> ret;
-
-  for (double llk : llks) {
+  for (auto llk : llks) {
 
     double normalized = std::exp(llk - maxllk);
 
@@ -595,11 +590,10 @@ std::vector<double> kgd::IBDpath::computeLlkOfStatesAtSiteI(const std::vector<do
 
     }
 
-    ret.push_back(normalized);
+    lk << normalized;
 
   }
 
-  return ret;
 }
 
 

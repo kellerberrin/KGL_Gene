@@ -43,13 +43,9 @@ namespace kellerberrin {    // organization level namespace
 namespace deconvolv {          // project level namespace
 
 
-// The IBDconfiguration is used for index, which should be non-negative, use int, any thing below zero should throw.
-class IBDconfiguration {
+// The IBDconfiguration is used for indexing.
 
-#ifdef UNITTEST
-  friend class TestIBDconfig;
-  friend class TestHprior;
-#endif
+class IBDconfiguration {
 
 public:
 
@@ -58,20 +54,14 @@ public:
 
   void buildIBDconfiguration(size_t k = 5);
 
-  static std::vector<std::vector<int> > unique(std::vector<std::vector<int> > &mat);
-  static std::vector<std::vector<int> > enumerateBinaryMatrixOfK(size_t k);
-
   const std::vector<size_t>& effectiveK() const { return effectiveK_; }
-  const std::vector<std::vector<int> >& states() const { return states_; }
+  const std::vector<std::vector<size_t> >& states() const { return states_; }
   std::vector<std::string> getIBDconfigureHeader() const;
 
 private:
 
   size_t kStrain_;
-  std::vector<std::vector<int> > pairs_permutation_;
-  std::vector<std::vector<int> > pair_to_emission_;
-  std::vector<std::vector<size_t> > pair_list_;
-  std::vector<std::vector<int> > states_;
+  std::vector<std::vector<size_t> > states_;
   std::vector<size_t> effectiveK_;
 
 
@@ -79,27 +69,19 @@ private:
 
   size_t kStrain() const { return kStrain_; }
 
-  size_t stateSize() const { return states_.size(); }
+  void makePairList(std::vector< std::vector<size_t>>& pairs_list);
 
-  void enumerateOp();
-
-  void makePairList();
-
-  void makePairToEmission();
-
-  void findUniqueState();
+  void makePairToEmission(const std::vector< std::vector<size_t>>& pairs_list,
+                          std::vector<std::vector<size_t> >& pairs_to_emission);
 
   void findEffectiveK();
 
-  std::vector<int> makeEnumeratedArray();
+  std::vector<size_t> makeEnumeratedArray();
 
-  std::vector<size_t> activePairsArray(std::vector<int> pair_permute_row);
+  std::vector<size_t> activePairsArray(const std::vector<size_t>& pair_permute_row);
 
-  static int nchoose2(int n);
+  static size_t nchoose2(size_t n);
 
-  static bool twoVectorsAreSame(std::vector<int> vec1, std::vector<int> vec2);
-
-  static std::vector<int> convertIntToBinary(int x, size_t len);
 
 
 };

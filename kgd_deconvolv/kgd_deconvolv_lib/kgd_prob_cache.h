@@ -38,8 +38,11 @@ private:
   std::vector<std::vector<double> > llk_surf_;
   std::vector<double> log_beta_gamma_;
 
-  arma::mat llk_surf_vec_;
+  arma::mat llk_surf_mat_;
   arma::rowvec log_beta_gamma_vec_;
+
+  static constexpr size_t A_INDEX = 0;
+  static constexpr size_t B_INDEX = 1;
 
   void stlProbabilityCache(const std::vector<double>& altCount,
                            const std::vector<double>& refCount,

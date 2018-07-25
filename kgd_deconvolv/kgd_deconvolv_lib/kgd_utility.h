@@ -150,6 +150,10 @@ public:
 
   }
 
+  static std::vector<std::vector<size_t> > uniqueMatrixColumns(std::vector<std::vector<size_t> > &matrix);
+
+  static bool vectorEquivalence(std::vector<size_t> vec1, std::vector<size_t> vec2);
+
   static double lognormal_pdf(double x, double mean, double std_dev);
 
   static double normal_pdf(double x, double mean, double std_dev);
@@ -188,7 +192,7 @@ public:
 
   static double logBetaPdf(double x, double a, double b);
 
-  static double binomialPdf(int s, int n, double p);
+  static double binomialPdf(size_t s, size_t n, double p);
 
   static double rBeta(double alpha, double beta, std::shared_ptr<RandomGenerator> randomGenerator);
 

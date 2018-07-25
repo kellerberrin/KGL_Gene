@@ -14,8 +14,6 @@ namespace kellerberrin {    // organization level namespace
 namespace deconvolv {          // project level namespace
 
 
-/// Max 64 bits.
-using BitVector = std::bitset<std::numeric_limits<size_t>::digits>;
 
 /// This class removes the need to generate a vector of binary bit patterns by
 /// returning the bit pattern for any arbitrary index.
@@ -23,45 +21,20 @@ class BinaryPermutations {
 
 public:
 
-  BinaryPermutations(size_t bits) : bits_(bits) { checkBitSize(); }
+  explicit BinaryPermutations(size_t bits) : bits_(bits) { bit_array_size_ = 0x1u << bits_; }
   ~BinaryPermutations() = default;
 
-  size_t bitSize() const { return bits_; }
-
-  size_t maxIndex() const { return max_index_; }
-
-  template<typename T> std::vector<T> getBitpattern(size_t index) const {
-
-    BitVector bit_index = index;
-
-    if (index > maxIndex()) {
-
-      bit_index &= bitmask_;
-      ExecEnv::log().error("BinaryPermutations() index: {} out of bounds, masked to: {}", index, bit_index.to_ullong());
-
-    }
-
-    std::vector<T> bit_array;
-
-    for (size_t idx = 0; idx < bits_; ++idx) {
-
-      T bit_value = bit_index.test(idx) ? 1 : 0;
-
-      bit_array.push_back(bit_value);
-
-    }
-
-    return bit_array;
-
-  }
+  // Return a matrix of all reversed array of bits.
+  std::vector<std::vector<size_t> > enumerateBinaryMatrix() const;
+  // The maximum size of the bit array
+  size_t bitArraySize() const { return bit_array_size_; }
+  // A reverse bit array of bits length for the specified number n.
+  std::vector<size_t> reverseBitArray(size_t n) const;
 
 private:
 
   size_t bits_;
-  size_t max_index_;
-  BitVector bitmask_;
-
-  void checkBitSize();
+  size_t bit_array_size_;
 
 };
 

@@ -42,7 +42,7 @@ kgd::IBDParameterObj::IBDParameterObj() {
   setMcmcMachineryRate(10);
   setMcmcBurn(0.5);
 
-  setProposalSigma(10.0);  // Originally 20.0
+  setProposalSigma(10.0);  // Originally 20.0 (10.0 may be better)
   setProposalMean(0.0);
   setProposalScaling(40.0);
 

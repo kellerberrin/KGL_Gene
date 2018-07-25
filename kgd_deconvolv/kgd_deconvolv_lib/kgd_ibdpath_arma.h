@@ -1,9 +1,9 @@
 //
-// Created by kellerberrin on 13/05/18.
+// Created by kellerberrin on 19/07/18.
 //
 
-#ifndef KGD_IBDPATH_H
-#define KGD_IBDPATH_H
+#ifndef KGL_KGD_IBDPATH_ARMA_H
+#define KGL_KGD_IBDPATH_ARMA_H
 
 
 #include <vector>
@@ -23,20 +23,19 @@ namespace deconvolv {          // project level namespace
 
 
 
-class IBDpath {
+class IBDPath {
 #ifdef UNITTEST
   friend class TestIBDpath;
 #endif
 
 public:
 
-  IBDpath() = default;
-  ~IBDpath() = default;
+  IBDPath() = default;
+  ~IBDPath() = default;
 
   std::vector<std::string> getIBDprobsHeader() const;
   const std::vector<std::vector<double> >& getFwdBwd() const { return fwdbwd_; }
   double siteLogBetaLLK(size_t site, double x) const { return ibd_prob_cache_->siteLogBetaLLK(site, x); }
-//  const std::vector<std::vector<double> >& getLogLikelihoodSurface() const { return ibd_prob_cache_->getLogLikelihoodSurface(); }
   double UpdateHaplotypesFromPrior(size_t strain, size_t loci) const;
   double bestPath(const std::vector<double>& proportion, double err = 0.01) const;
 
@@ -54,29 +53,29 @@ private:
   Hprior h_prior_;
 
   double f_sum_;
-  std::vector<std::vector<double> > ibd_trans_probs_;
-  std::vector<std::vector<double> > fm_;
-  std::vector<double> f_sum_state_;
-  std::vector<size_t> ibd_configure_path_;
+  arma::mat ibd_trans_probs_;
+  arma::mat fm_;
+  arma::rowvec f_sum_state_;
+  arma::Row<size_t> ibd_configure_path_;
 
-  std::vector<std::vector<double> > bwd_;
-  std::vector<std::vector<double> > fwdbwd_;
+  arma::mat bwd_;
+  arma::mat fwdbwd_;
 
+  double theta_;
   size_t kStrain_;
   size_t nLoci_;
-  double theta_;
 
-  std::vector<double> current_IBD_path_change_at_;
-  std::vector<size_t> unique_effectiveK_count_;
-  std::vector<double> IBD_path_change_at_;
+  arma::rowvec current_IBD_path_change_at_;
+  arma::Row<size_t> unique_effectiveK_count_;
+  arma::rowvec IBD_path_change_at_;
 
   void computeAndUpdateTheta();
 
-  void ibdSamplePath(const std::vector<double>& statePrior);
+  void ibdSamplePath(const arma::rowvec& statePrior);
 
-  void computeIbdPathFwdProb(const std::vector<double>& proportion, const std::vector<double>& statePrior);
+  void computeIbdPathFwdProb(const std::vector<double>& proportion, const arma::rowvec& statePrior);
 
-  std::vector<double> computeStatePrior(const std::vector<double>& effectiveKPrior);
+  void computeStatePrior(arma::rowvec& statePrior, const arma::rowvec& effectiveKPrior);
 
   const Hprior& getHprior() const { return h_prior_; }
 
@@ -96,17 +95,17 @@ private:
 
   // Methods
 
-  void updateFmAtSiteI(const std::vector<double> &prior, const std::vector<double> &llk);
+  void updateFmAtSiteI(const arma::rowvec &prior, const arma::rowvec &llk);
 
   void makeIbdTransProbs();
 
-  std::vector<double> computeEffectiveKPrior(double theta);
+  void computeEffectiveKPrior(arma::rowvec& effectiveKPrior, double theta);
 
   void computeUniqueEffectiveKCount();
 
-  std::vector<double> computeLlkOfStatesAtSiteI(const std::vector<double>& proportion, size_t siteI, double err = 0.01);
+  void computeLlkOfStatesAtSiteI(arma::rowvec& lk, const std::vector<double>& proportion, size_t siteI, double err = 0.01);
 
-  std::vector<size_t> findAllIndex(const std::vector<size_t> &index_array, size_t index);
+  std::vector<size_t> findWhichIsSomething(const std::vector<size_t>& tmpOp, size_t something);
 
   void computeIbdPathBwdProb(const std::vector<double>& proportion, const std::vector<double>& effectiveKPrior, const std::vector<double>& statePrior);
 
@@ -124,4 +123,4 @@ private:
 
 
 
-#endif //KGD_IBDPATH_H
+#endif //KGL_KGD_IBDPATH_ARMA_H
