@@ -148,9 +148,17 @@ public:
 
   IBDParameterObj &operator=(const IBDParameterObj &copy) = default;
 
+  double betaBinomialConstant() const { return  beta_binomial_constant_; }
+  void setBinomialConstant(double setTo) { beta_binomial_constant_ = setTo; }
+
+  size_t cacheGridSize() const { return  cache_grid_size_; }
+  void setCacheGridSize(size_t setTo) { cache_grid_size_ = setTo; }
 
 private:
 
+
+  double beta_binomial_constant_;
+  size_t cache_grid_size_;
 
 };
 

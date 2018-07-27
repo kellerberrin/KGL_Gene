@@ -46,4 +46,7 @@ kgd::IBDParameterObj::IBDParameterObj() {
   setProposalMean(0.0);
   setProposalScaling(40.0);
 
+  setBinomialConstant(100.0); // The constant used to construct the beta binomial parameters.
+  setCacheGridSize(99); // Used to set the probability grid size used in SiteProbabilityCache.
+
 }

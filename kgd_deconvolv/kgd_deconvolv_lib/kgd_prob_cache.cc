@@ -2,7 +2,7 @@
 // Created by kellerberrin on 17/07/18.
 //
 
-
+#include "kgd_deconvolv_app.h"
 #include "kgd_prob_cache.h"
 
 
@@ -154,6 +154,14 @@ void kgd::SiteProbabilityCache::armaProbabilityCache(const std::vector<double>& 
 
     double a = mn * comm;
     double b = (1 - mn) * comm;
+
+    if (a <= 0 or b <= 0) {
+
+      ExecEnv::log().error("SiteProbabilityCache; Invalid a: {}, b: {} generated for allele index (site): {}, ref count: {}, alt count: {}",
+                           a, b, site, ref_count(site), alt_count(site));
+
+    }
+
 
     llk_surf_mat_(site, A_INDEX) = a;
     llk_surf_mat_(site, B_INDEX) = b;

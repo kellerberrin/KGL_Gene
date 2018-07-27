@@ -29,9 +29,9 @@ void kgd::IBDpath::init(DEploidIO &dEploidIO, std::shared_ptr<RandomGenerator> r
   // compute likelihood surface
   ibd_prob_cache_ = std::make_shared<const SiteProbabilityCache>(dEploidIO.getAltCount(),
                                                                  dEploidIO.getRefCount(),
-                                                                 100.0, /*  double scalingConst */
-                                                                 0.01, /* double err */
-                                                                 99 /* cache size */ );
+                                                                 dEploidIO.ibdParameters().betaBinomialConstant(), /*  double scalingConst */
+                                                                 dEploidIO.ibdParameters().baseCountError(), /* double err */
+                                                                 dEploidIO.ibdParameters().cacheGridSize()); /* cache size */
 
   // initialize haplotype prior
   h_prior_.initializeHprior(kStrain(), dEploidIO.getPlaf());
@@ -382,7 +382,8 @@ void kgd::IBDpath::combineFwdBwd(const std::vector<std::vector<double>> &reshape
 
 }
 
-
+// This creates a matrix rows = states (52), columns = state_entries (454).
+// For each state (row) only the entries that correspond to that state are set to 1.0, else 0.0.
 void kgd::IBDpath::makeIbdTransProbs() {
 
   assert(ibd_trans_probs_.size() == 0);

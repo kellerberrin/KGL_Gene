@@ -205,6 +205,8 @@ private: /// Deprecated utility functions are banished here.
   static void normalizeByMax(std::vector<double> &array);
 //double betaDistConst( double a , double b);
 
+  static double cg_logBetaGamma(double a, double b);
+  static double b_logBetaGamma(double a, double b);
 
 
 };

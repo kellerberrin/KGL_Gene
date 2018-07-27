@@ -34,6 +34,8 @@ public:
   void setrandomSeedWasGiven(bool random) { randomSeedWasGiven_ = random; }
   void setDoExportVcf(bool exportVcf) { doExportVcf_ = exportVcf; }
   void setUseIBD(bool setTo) { useIBD_ = setTo; }
+  void setUseConstRecomb(bool setTo) { useConstRecomb_ = setTo; }
+
 
   // Get Control
   bool doExportPostProb() const { return doExportPostProb_; }

@@ -32,6 +32,9 @@
 #include "gamma.h"
 
 
+#include <boost/math/special_functions/gamma.hpp>
+
+namespace bm = boost::math;
 namespace kgd = kellerberrin::deconvolv;
 
 
@@ -348,9 +351,25 @@ double kgd::Utility::logBetaGamma(double a, double b) {
   assert(a >= 0);
   assert(b >= 0);
 
+  return b_logBetaGamma(a, b);
+
+}
+
+// Codecogs implementation
+double kgd::Utility::cg_logBetaGamma(double a, double b) {
+
   double log_gamma = Maths::Special::Gamma::log_gamma(a + b)
                      - Maths::Special::Gamma::log_gamma(a) -
                      Maths::Special::Gamma::log_gamma(b);
+
+  return log_gamma;
+
+}
+
+// boost implementation
+double kgd::Utility::b_logBetaGamma(double a, double b) {
+
+  double log_gamma = bm::lgamma(a + b) - bm::lgamma(a) - bm::lgamma(b);
 
   return log_gamma;
 
@@ -363,7 +382,7 @@ double kgd::Utility::partialLogBetaPdf(double x, double a, double b) {
   assert(a >= 0);
   assert(b >= 0);
 
-  double ret =  (b - 1) * log(1 - x) + (a - 1) * log(x);
+  double ret =  (b - 1) * std::log(1 - x) + (a - 1) * std::log(x);
 
   return ret;
 
