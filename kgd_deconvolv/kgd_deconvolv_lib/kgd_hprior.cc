@@ -139,7 +139,24 @@ void kgd::Hprior::buildHprior(size_t kStrain, const std::vector<double> &plaf) {
 
 //*******Debug
 
+  generateEntryOffsets();
+
   transposePriorProbs(prior_probs);
+
+
+}
+
+
+void kgd::Hprior::generateEntryOffsets() {
+
+  size_t state_entry_offset = 0;
+  for (auto state_size : getStateIdxFreq()) {
+
+    state_entry_offset_.push_back(state_entry_offset);
+
+    state_entry_offset += state_size;
+
+  }
 
 }
 

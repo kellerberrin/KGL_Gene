@@ -33,18 +33,17 @@ public:
   IBDpath() = default;
   ~IBDpath() = default;
 
-  std::vector<std::string> getIBDprobsHeader() const;
-  const std::vector<std::vector<double> >& getFwdBwd() const { return fwdbwd_; }
-  double siteLogBetaLLK(size_t site, double x) const { return ibd_prob_cache_->siteLogBetaLLK(site, x); }
-//  const std::vector<std::vector<double> >& getLogLikelihoodSurface() const { return ibd_prob_cache_->getLogLikelihoodSurface(); }
-  double UpdateHaplotypesFromPrior(size_t strain, size_t loci) const;
-  double bestPath(const std::vector<double>& proportion, double err = 0.01) const;
-
   void init(DEploidIO &dEploidIO, std::shared_ptr<RandomGenerator> randomGenerator);
   void McmcUpdateStep(const std::vector<double>& CurrentProportion);
 
   void buildPathProbabilityForPainting(const std::vector<double>& proportion); // For painting IBD
   void IBDPathChangeAt(size_t site_idx, double update_divisor) { IBD_path_change_at_[site_idx] /= update_divisor; }
+
+  std::vector<std::string> getIBDprobsHeader() const;
+  double UpdateHaplotypesFromPrior(size_t strain, size_t loci) const;
+  double bestPath(const std::vector<double>& proportion, double err = 0.01) const;
+  const std::vector<std::vector<double> >& getFwdBwd() const { return fwdbwd_; }
+  double siteLogBetaLLK(size_t site, double x) const { return ibd_prob_cache_->siteLogBetaLLK(site, x); }
 
 private:
 
@@ -65,6 +64,7 @@ private:
   size_t kStrain_;
   size_t nLoci_;
   double theta_;
+  double recomb_miss_copy_prob_;
 
   std::vector<double> current_IBD_path_change_at_;
   std::vector<size_t> unique_effectiveK_count_;
@@ -74,7 +74,7 @@ private:
 
   void ibdSamplePath(const std::vector<double>& statePrior);
 
-  void computeIbdPathFwdProb(const std::vector<double>& proportion, const std::vector<double>& statePrior);
+  void computeIbdPathFwdProb(const std::vector<double>& proportion, const std::vector<double>& state_prior);
 
   std::vector<double> computeStatePrior(const std::vector<double>& effectiveKPrior);
 
@@ -96,6 +96,8 @@ private:
 
   // Methods
 
+
+
   void updateFmAtSiteI(const std::vector<double> &prior, const std::vector<double> &llk);
 
   void makeIbdTransProbs();
@@ -104,7 +106,7 @@ private:
 
   void computeUniqueEffectiveKCount();
 
-  std::vector<double> computeLlkOfStatesAtSiteI(const std::vector<double>& proportion, size_t siteI, double err = 0.01);
+  std::vector<double> computeLlkOfStatesAtSiteI(const std::vector<double>& proportion, size_t site_i, double miss_copy_error);
 
   std::vector<size_t> findAllIndex(const std::vector<size_t> &index_array, size_t index);
 

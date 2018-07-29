@@ -183,11 +183,11 @@ double kgd::Utility::sumOfMat(std::vector<std::vector<double> > &matrix) {
 
 void kgd::Utility::normalizeBySum(std::vector<double> &array) {
 
-  double sumOfArray = sumOfVec(array);
+  double inverse_sum = 1.0 / sumOfVec(array);
 
   for (size_t idx = 0; idx < array.size(); ++idx) {
 
-    array[idx] = array[idx] / sumOfArray;
+    array[idx] = array[idx] * inverse_sum;
 
   }
 
@@ -267,7 +267,12 @@ double kgd::Utility::calcLLK(double ref, double alt, double unadjustedWsaf, doub
   double a1_arg = alt + a2_arg;
   double b1_arg = ref + b2_arg;
 
-  double llk = Maths::Special::Gamma::logBeta(a1_arg, b1_arg) - Maths::Special::Gamma::logBeta(a2_arg, b2_arg);
+
+  //double log_bin_coeff = std::log(n_choose_k((ref+alt), alt));
+  //Binomial coefficients can be expressed in terms of the beta function
+  double inverse_log_binonimal_coeff = (alt + ref + 1.0) * Maths::Special::Gamma::logBeta(ref+1.0, alt+1.0);
+
+  double llk = Maths::Special::Gamma::logBeta(a1_arg, b1_arg) - Maths::Special::Gamma::logBeta(a2_arg, b2_arg) - inverse_log_binonimal_coeff;
 
   return llk;
 

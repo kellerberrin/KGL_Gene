@@ -24,6 +24,8 @@ void kgd::IBDpath::init(DEploidIO &dEploidIO, std::shared_ptr<RandomGenerator> r
   setKstrain(dEploidIO.kStrain());
   setTheta(1.0 / (double) kStrain());
 
+  recomb_miss_copy_prob_ = dEploidIO.ibdParameters().getMissCopyProb();
+
   IBD_path_change_at_ = std::vector<double>(nLoci());
 
   // compute likelihood surface
@@ -91,25 +93,26 @@ double kgd::IBDpath::UpdateHaplotypesFromPrior(size_t strain, size_t loci) const
 
 void kgd::IBDpath::ibdSamplePath(const std::vector<double>& statePrior) {
 
-  int lociIdx = nLoci() - 1;
-
-  std::vector<double> tmpProp = fm_[lociIdx];
-
-  Utility::normalizeBySum(tmpProp);
-
-  ibd_configure_path_[lociIdx] = Utility::sampleIndexGivenProp(ibd_random_generator_, tmpProp);
-
   assert(fm_.size() == nLoci());
 
-  while (lociIdx > 0) {
+  size_t site_i = nLoci() - 1;
 
-    lociIdx--;
+  std::vector<double> tmpProp = fm_[site_i];
 
-    std::vector<double> vNoRecomb = Utility::vecProd(ibd_trans_probs_[h_prior_.getStateIdx()[ibd_configure_path_[lociIdx + 1]]], fm_[lociIdx]);
+  // Redundant as column vector is already normalized.
+//  Utility::normalizeBySum(tmpProp);
+
+  ibd_configure_path_[site_i] = Utility::sampleIndexGivenProp(ibd_random_generator_, tmpProp);
+
+  while (site_i > 0) {
+
+    site_i--;
+
+    std::vector<double> vNoRecomb = Utility::vecProd(ibd_trans_probs_[h_prior_.getStateIdx()[ibd_configure_path_[site_i + 1]]], fm_[site_i]);
 
     assert(vNoRecomb.size() == h_prior_.nStateEntries());
 
-    std::vector<double> vRecomb = fm_[lociIdx];
+    std::vector<double> vRecomb = fm_[site_i];
 
     assert(vRecomb.size() == h_prior_.nStateEntries());
 
@@ -117,16 +120,16 @@ void kgd::IBDpath::ibdSamplePath(const std::vector<double>& statePrior) {
 
     for (size_t i = 0; i < prop.size(); i++) {
 
-      prop[i] = vNoRecomb[i] * ibd_recomb_probs_->getNoRecombProbAtLoci(lociIdx) +
-                vRecomb[i] * ibd_recomb_probs_->getRecombProbAtLoci(lociIdx) * statePrior[ibd_configure_path_[lociIdx + 1]];
+      prop[i] = vNoRecomb[i] * ibd_recomb_probs_->getNoRecombProbAtLoci(site_i) +
+                vRecomb[i] * ibd_recomb_probs_->getRecombProbAtLoci(site_i) * statePrior[ibd_configure_path_[site_i + 1]];
 
     }
 
     tmpProp = prop;
     Utility::normalizeBySum(tmpProp);
-    ibd_configure_path_[lociIdx] = Utility::sampleIndexGivenProp(ibd_random_generator_, tmpProp);
+    ibd_configure_path_[site_i] = Utility::sampleIndexGivenProp(ibd_random_generator_, tmpProp);
 
-    assert(ibd_configure_path_[lociIdx] < h_prior_.nStateEntries());
+    assert(ibd_configure_path_[site_i] < h_prior_.nStateEntries());
 
   }
 
@@ -154,8 +157,8 @@ std::vector<size_t> kgd::IBDpath::findAllIndex(const std::vector<size_t> &index_
 
 void kgd::IBDpath::buildPathProbabilityForPainting(const std::vector<double>& proportion) {
 
-  //vector <double> effectiveKPrior = computeEffectiveKPrior(theta());
   std::vector<double> effectiveKPrior = std::vector<double>(h_prior_.nStates(), 1.0 / h_prior_.nStates());
+
   std::vector<double> statePrior = computeStatePrior(effectiveKPrior);
 
   // First building the path likelihood
@@ -179,7 +182,7 @@ void kgd::IBDpath::computeIbdPathBwdProb(const std::vector<double>& proportion,
                                          const std::vector<double>& statePrior) {
 
   //# assuming each ibd state has equal probabilities, transform it into ibd configurations
-  //dout << " start building ibd bwd_ "<< endl;
+
   std::vector<double> tmp = std::vector<double>(h_prior_.getStateIdxFreq().size());
 
   assert(effectiveKPrior.size() == h_prior_.getStateIdxFreq().size());
@@ -192,11 +195,11 @@ void kgd::IBDpath::computeIbdPathBwdProb(const std::vector<double>& proportion,
 
   std::vector<double> tmpBw = std::vector<double>(h_prior_.nStateEntries());
 
-  for (size_t j = 0; j < tmpBw.size(); j++) {
+  for (size_t state_entry = 0; state_entry < tmpBw.size(); ++state_entry) {
 
-    for (size_t i = 0; i < tmp.size(); i++) {
+    for (size_t state = 0; state < tmp.size(); ++state) {
 
-      tmpBw[j] += tmp[i] * ibd_trans_probs_[i][j];
+      tmpBw[state_entry] += tmp[state] * ibd_trans_probs_[state][state_entry];
 
     }
 
@@ -208,7 +211,7 @@ void kgd::IBDpath::computeIbdPathBwdProb(const std::vector<double>& proportion,
 
     size_t site_i = nLoci() - rev_site_i;
 
-    std::vector<double> lk = computeLlkOfStatesAtSiteI(proportion, site_i);
+    std::vector<double> lk = computeLlkOfStatesAtSiteI(proportion, site_i, recomb_miss_copy_prob_);
 
     //vector<double> lk = vector <double> (h_prior_.nState(), 1.0);
     std::vector<double> bSumState = std::vector<double>(h_prior_.nStates());
@@ -256,35 +259,35 @@ void kgd::IBDpath::computeIbdPathBwdProb(const std::vector<double>& proportion,
 }
 
 
-void kgd::IBDpath::computeIbdPathFwdProb(const std::vector<double>& proportion, const std::vector<double>& statePrior) {
+void kgd::IBDpath::computeIbdPathFwdProb(const std::vector<double>& proportion, const std::vector<double>& state_prior) {
 
   fm_.clear();
 
-  std::vector<double> vPrior = Utility::vecProd(statePrior, h_prior_.getPriorProb()[0]);
+  std::vector<double> vPrior = Utility::vecProd(state_prior, h_prior_.getPriorProb()[0]);
 
-  std::vector<double> lk = computeLlkOfStatesAtSiteI(proportion, 0);
+  std::vector<double> lk = computeLlkOfStatesAtSiteI(proportion, 0, recomb_miss_copy_prob_);
 
   updateFmAtSiteI(vPrior, lk);
 
   for (size_t site_i = 1; site_i < nLoci(); ++site_i) {
 
-    std::vector<double> vNoRec;
+    std::vector<double> no_recomb;
 
     for (size_t stateIdxTmp : h_prior_.getStateIdx()) {
 
-      vNoRec.push_back(f_sum_state_[stateIdxTmp]);
+      no_recomb.push_back(f_sum_state_[stateIdxTmp]);
 
     }
 
-    for (size_t state = 0; state < h_prior_.nStateEntries(); state++) {
+    for (size_t state_entry = 0; state_entry < h_prior_.nStateEntries(); ++state_entry) {
 
-      vPrior[state] = ((vNoRec[state] * ibd_recomb_probs_->getNoRecombProbAtLoci(site_i))
-                   + (f_sum_ * ibd_recomb_probs_->getRecombProbAtLoci(site_i) * statePrior[state]))
-                  * h_prior_.getPriorProb()[site_i][state];
+      vPrior[state_entry] = ((no_recomb[state_entry] * ibd_recomb_probs_->getNoRecombProbAtLoci(site_i))
+                   + (f_sum_ * ibd_recomb_probs_->getRecombProbAtLoci(site_i) * state_prior[state_entry]))
+                  * h_prior_.getPriorProb()[site_i][state_entry];
 
     }
 
-    lk = computeLlkOfStatesAtSiteI(proportion, site_i);
+    lk = computeLlkOfStatesAtSiteI(proportion, site_i, recomb_miss_copy_prob_);
 
     updateFmAtSiteI(vPrior, lk);
 
@@ -302,15 +305,29 @@ void kgd::IBDpath::updateFmAtSiteI(const std::vector<double> &prior, const std::
 
   fm_.push_back(postAtSiteI);
 
-  f_sum_ = Utility::sumOfVec(postAtSiteI);
+  // This always sums to 1.0!
+//  f_sum_ = Utility::sumOfVec(postAtSiteI);
+  f_sum_ = 1.0;
 
-  for (size_t i = 0; i < f_sum_state_.size(); i++) {
+//  for (size_t state = 0; state < f_sum_state_.size(); ++state) {
+  for (size_t state = 0; state < h_prior_.nStates(); ++state) {
 
-    f_sum_state_[i] = 0;
+    f_sum_state_[state] = 0;
 
-    for (size_t j = 0; j < h_prior_.nStateEntries(); j++) {
+// Inefficent code in an inside loop
+//    for (size_t state_entry = 0; state_entry < h_prior_.nStateEntries(); ++state_entry) {
+//
+//      f_sum_state_[state] += ibd_trans_probs_[state][state_entry] * postAtSiteI[state_entry];
+//
+//    }
 
-      f_sum_state_[i] += ibd_trans_probs_[i][j] * postAtSiteI[j];
+    size_t entry_count = h_prior_.getStateIdxFreq()[state];
+    size_t entry_start_offset = h_prior_.getStateEntryOffsets()[state];
+    size_t entry_end_offset = entry_start_offset + entry_count;
+
+    for (size_t entry_idx = entry_start_offset; entry_idx <  entry_end_offset; ++entry_idx) {
+
+      f_sum_state_[state] += postAtSiteI[entry_idx];
 
     }
 
@@ -557,50 +574,78 @@ void kgd::IBDpath::computeUniqueEffectiveKCount() {
 
   }
 
-}
+// debug *****
 
+  for (auto effectiveK : unique_effectiveK_count_) {
 
-std::vector<double> kgd::IBDpath::computeLlkOfStatesAtSiteI(const std::vector<double>& proportion, size_t siteI, double err) {
-
-  std::vector<double> llks;
-
-  for (std::vector<size_t> hSetI : h_prior_.gethSet()) {
-
-    double qs = 0;
-
-    for (size_t j = 0; j < kStrain(); j++) {
-
-      qs += static_cast<double>(hSetI[j]) * proportion[j];
-
-    }
-
-    double qs2 = qs * (1 - err) + (1 - qs) * err;
-
-    double logBetaLLK = siteLogBetaLLK(siteI, qs2);
-
-    llks.push_back(logBetaLLK);
+    ExecEnv::log().info("EffectiveK count: {}", effectiveK);
 
   }
 
-  double maxllk = Utility::max_value(llks);
+// debug *****
 
-  std::vector<double> ret;
 
-  for (double llk : llks) {
+}
 
-    double normalized = std::exp(llk - maxllk);
 
-    if (normalized == 0) {
+std::vector<double> kgd::IBDpath::computeLlkOfStatesAtSiteI(const std::vector<double>& proportion, size_t site_i, double miss_copy_error) {
+
+  std::vector<double> llks(h_prior_.nStateEntries());
+  bool first_pass = true;
+  double maxllk = 0.0;
+
+//  for (std::vector<size_t> state_entry : h_prior_.gethSet()) {
+  for (size_t entry = 0; entry < h_prior_.nStateEntries(); ++entry) {
+
+    double wtd_lk = 0;
+
+    for (size_t k = 0; k < kStrain(); ++k) {
+
+      if (h_prior_.gethSet()[entry][k] > 0) {
+
+        wtd_lk += proportion[k];
+
+      }
+
+    }
+
+    double adj_wtd_lk = wtd_lk + (1 - (2 * wtd_lk)) * miss_copy_error;
+
+    double logBetaLLK = siteLogBetaLLK(site_i, adj_wtd_lk);
+
+    if (first_pass) {
+
+      maxllk = logBetaLLK;
+      first_pass = false;
+
+    } else if (logBetaLLK > maxllk) {
+
+      maxllk = logBetaLLK;
+
+    }
+
+    llks[entry] = logBetaLLK;
+
+  }
+
+//  maxllk = Utility::max_value(llks);
+
+  for (size_t idx =  0; idx < llks.size(); ++idx) {
+
+    double normalized = std::exp(llks[idx] - maxllk);
+
+    if (normalized == 0.0) {
 
       normalized = std::numeric_limits<double>::min();
 
     }
 
-    ret.push_back(normalized);
+    llks[idx] = normalized;
 
   }
 
-  return ret;
+  return llks;
+
 }
 
 

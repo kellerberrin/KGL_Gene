@@ -38,9 +38,11 @@ public:
   const std::vector<size_t>& getStateIdx() const { return state_idx_; }
   size_t nStates() const { return effectiveK_.size(); }
   size_t nStateEntries() const { return n_state_entries_; }
+  const std::vector<size_t>& getStateEntryOffsets() const { return state_entry_offset_; }
   const std::vector<size_t>& getStateIdxFreq() const { return state_idx_freq_; }
   const std::vector<std::vector<double> >& getPriorProb() const { return prior_probs_trans_; }
   const std::vector<size_t>& getEffectiveK() const { return effectiveK_; }
+
 
   std::vector<std::string> getIBDconfigureHeader() const;
 
@@ -55,6 +57,7 @@ private:
   std::vector<std::vector<double> > prior_probs_trans_; // size: nLoci x (nState x entries)
   std::vector<size_t> state_idx_; // size: (nState x entries) // state index.
   std::vector<size_t> state_idx_freq_;  // size: nstate (2^(effectiveK[state])
+  std::vector<size_t> state_entry_offset_;  // size nStates, the offset of stateEntries for each state.
   std::vector<std::vector<size_t> > h_set_; // size: (nState x entries) x kStrain
   size_t n_state_entries_; // (nState x entries) increment from 0
   std::vector<size_t> effectiveK_; // nState
@@ -71,8 +74,9 @@ private:
 
   size_t nLoci() const { return nLoci_; }
 
+  void generateEntryOffsets();
 
-};
+  };
 
 
 
