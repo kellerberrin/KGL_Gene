@@ -11,15 +11,13 @@
 namespace kgd = kellerberrin::deconvolv;
 
 
-kgd::UpdateSingleHap::UpdateSingleHap(std::shared_ptr<RandomGenerator> randomGenerator,
-                                      size_t segmentStartIndex,
+kgd::UpdateSingleHap::UpdateSingleHap(size_t segmentStartIndex,
                                       size_t nLoci,
                                       size_t kStrain,
                                       std::shared_ptr<Panel> panel,
                                       double missCopyProb,
                                       double scalingFactor,
                                       size_t strainIndex) : UpdateHap(kStrain,  // strains
-                                                                      randomGenerator,
                                                                       segmentStartIndex,
                                                                       nLoci,
                                                                       panel,
@@ -298,7 +296,7 @@ void kgd::UpdateSingleHap::samplePaths() {
   assert (path_.size() == 0);
   // Sample path at the last position
 
-  size_t pathTmp = Utility::sampleIndexGivenProp(recombRg_, fwdProbs_.back());
+  size_t pathTmp = Utility::sampleIndexGivenProp(fwdProbs_.back());
   size_t contentIndex = segmentStartIndex_ + nLoci_ - 1;
 
   path_.push_back(panel_->getContentIndex(contentIndex,pathTmp));
@@ -317,9 +315,9 @@ void kgd::UpdateSingleHap::samplePaths() {
 
     Utility::normalizeBySum(weightOfNoRecAndRec);
 
-    if (Utility::sampleIndexGivenProp(recombRg_, weightOfNoRecAndRec) == (size_t) 1) { // Switch one
+    if (Utility::sampleIndexGivenProp(weightOfNoRecAndRec) == (size_t) 1) { // Switch one
 
-      pathTmp = Utility::sampleIndexGivenProp(recombLevel2Rg_, previousDist);
+      pathTmp = Utility::sampleIndexGivenProp(previousDist);
       siteOfOneSwitchOne[j] += 1.0;
 
     }
@@ -350,7 +348,7 @@ void kgd::UpdateSingleHap::addMissCopying(double missCopyProb) {
 
     Utility::normalizeBySum(sameDiffDist);
 
-    if (Utility::sampleIndexGivenProp(missCopyRg_, sameDiffDist) == 1) {
+    if (Utility::sampleIndexGivenProp(sameDiffDist) == 1) {
 
       hap_.push_back(1 - path_[i]); // differ
       siteOfOneMissCopyOne[i] += 1.0;
@@ -380,7 +378,7 @@ void kgd::UpdateSingleHap::sampleHapIndependently(const std::vector<double> &pla
     std::vector<double> tmpDist({exp(llk0_[i] - tmpMax) * (1.0 - plaf[plafIndex]),
                                  exp(llk1_[i] - tmpMax) * plaf[plafIndex]});
     Utility::normalizeBySum(tmpDist);
-    hap_.push_back((double) Utility::sampleIndexGivenProp(recombRg_, tmpDist));
+    hap_.push_back((double) Utility::sampleIndexGivenProp(tmpDist));
     plafIndex++;
 
   }

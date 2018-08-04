@@ -270,7 +270,7 @@ double kgd::Utility::calcLLK(double ref, double alt, double unadjustedWsaf, doub
 
   //double log_bin_coeff = std::log(n_choose_k((ref+alt), alt));
   //Binomial coefficients can be expressed in terms of the beta function
-  double inverse_log_binonimal_coeff = (alt + ref + 1.0) * Maths::Special::Gamma::logBeta(ref+1.0, alt+1.0);
+  double inverse_log_binonimal_coeff = std::log(alt + ref + 1.0) + Maths::Special::Gamma::logBeta(ref+1.0, alt+1.0);
 
   double llk = Maths::Special::Gamma::logBeta(a1_arg, b1_arg) - Maths::Special::Gamma::logBeta(a2_arg, b2_arg) - inverse_log_binonimal_coeff;
 
@@ -281,14 +281,16 @@ double kgd::Utility::calcLLK(double ref, double alt, double unadjustedWsaf, doub
 
 
 
-size_t kgd::Utility::sampleIndexGivenProp(std::shared_ptr<RandomGenerator> randomGenerator, const std::vector<double>& proportion) {
+size_t kgd::Utility::sampleIndexGivenProp(const std::vector<double>& proportion) {
 
-  #ifndef NDEBUG
+// Linear search is costly.
 
   auto biggest = std::max_element(std::begin(proportion), std::end(proportion));
+
   return std::distance(proportion.begin(), biggest);
 
-  #else
+#ifdef LEGACY_CODE_
+
   std::vector <size_t> tmpIndex;
 
   for ( size_t i = 0; i < proportion.size(); i++ ){
@@ -314,7 +316,7 @@ size_t kgd::Utility::sampleIndexGivenProp(std::shared_ptr<RandomGenerator> rando
 
   return i;
 
-  #endif
+#endif
 
 }
 
@@ -356,12 +358,13 @@ double kgd::Utility::logBetaGamma(double a, double b) {
   assert(a >= 0);
   assert(b >= 0);
 
-  return b_logBetaGamma(a, b);
+  return boost_logBetaGamma(a, b);
+//  return codeCogs_logBetaGamma(a, b);
 
 }
 
 // Codecogs implementation
-double kgd::Utility::cg_logBetaGamma(double a, double b) {
+double kgd::Utility::codeCogs_logBetaGamma(double a, double b) {
 
   double log_gamma = Maths::Special::Gamma::log_gamma(a + b)
                      - Maths::Special::Gamma::log_gamma(a) -
@@ -372,7 +375,7 @@ double kgd::Utility::cg_logBetaGamma(double a, double b) {
 }
 
 // boost implementation
-double kgd::Utility::b_logBetaGamma(double a, double b) {
+double kgd::Utility::boost_logBetaGamma(double a, double b) {
 
   double log_gamma = bm::lgamma(a + b) - bm::lgamma(a) - bm::lgamma(b);
 
@@ -422,7 +425,13 @@ double kgd::Utility::binomialPdf(size_t s, size_t n, double p) {
 
 double kgd::Utility::rBeta(double alpha, double beta, std::shared_ptr<RandomGenerator> randomGenerator) {
 
-  double mxAt = (alpha - 1.0) / (alpha + beta - 2.0);
+  double mxAt = 0.1;
+
+  if (alpha > 1.0 and alpha + beta > 2.0) {
+
+    mxAt = (alpha - 1.0) / (alpha + beta - 2.0);
+
+  }
 
   double mx = betaPdf(mxAt, alpha, beta);
 
@@ -430,8 +439,8 @@ double kgd::Utility::rBeta(double alpha, double beta, std::shared_ptr<RandomGene
 
   do {
 
-    u = randomGenerator->sample();
-    y = randomGenerator->sample();
+    u = randomGenerator->unitUniformRand();
+    y = randomGenerator->unitUniformRand();
 
   } while (u > (betaPdf(y, alpha, beta) / mx));
 

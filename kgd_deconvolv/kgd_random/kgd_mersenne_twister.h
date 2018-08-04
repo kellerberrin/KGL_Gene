@@ -40,37 +40,22 @@ class MersenneTwister : public RandomGenerator
 
  public:
 
-  MersenneTwister();
-  MersenneTwister(const size_t seed);
-  MersenneTwister(const bool use_seed, size_t seed);
-  MersenneTwister(std::shared_ptr<FastFunc> ff):RandomGenerator(ff) {
-
-      construct_common(generateRandomSeed());
-
-  }
-  MersenneTwister(const size_t seed, std::shared_ptr<FastFunc> ff):RandomGenerator(ff) {
-
-      construct_common(seed);
-
-  }
-
+  MersenneTwister() : mt_(rd_()) {}
   ~MersenneTwister() = default;
 
-  void set_seed(const size_t seed);
-  void construct_common(const size_t seed);
-
-  double sample() { return unif_(mt_); }
-
- protected:
-
-  std::mt19937_64 mt_;
-  std::uniform_real_distribution<> unif_;
+  double unitUniformRand() { return unif_(mt_); }
 
  private:
 
-  size_t generateRandomSeed() const;
+  // Order is important! The random device must be created first.
+  std::random_device rd_;
+  std::mt19937_64 mt_;
+  std::uniform_real_distribution<> unif_;
 
 };
+
+
+
 
 
 }   // organization level namespace

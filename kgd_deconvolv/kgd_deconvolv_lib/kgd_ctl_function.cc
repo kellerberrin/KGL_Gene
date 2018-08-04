@@ -12,7 +12,6 @@ kgd::MixtureControlObj::MixtureControlObj() {
 
   setDoExportRecombProb(false);
   setUseConstRecomb(false);
-  setrandomSeedWasGiven(false);
   setCompressVcf(false);
   setInitialPropWasGiven(false);
   setInitialHapWasGiven(false);

@@ -50,7 +50,6 @@ class UpdateHap {
 public:
 
   UpdateHap(size_t kStrain,
-            std::shared_ptr<RandomGenerator> randomGenerator,
             size_t segmentStartIndex,
             size_t nLoci,
             std::shared_ptr<Panel> panel,
@@ -69,9 +68,6 @@ public:
 protected:
 
   std::shared_ptr<Panel> panel_;
-  std::shared_ptr<RandomGenerator> recombRg_;
-  std::shared_ptr<RandomGenerator> recombLevel2Rg_;
-  std::shared_ptr<RandomGenerator> missCopyRg_;
   double missCopyProb_;
   size_t kStrain_;
   size_t nPanel_;

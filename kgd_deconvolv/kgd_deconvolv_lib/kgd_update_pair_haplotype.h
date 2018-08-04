@@ -26,8 +26,7 @@ class UpdatePairHap : public UpdateHap {
 
 public:
 
-  UpdatePairHap(std::shared_ptr<RandomGenerator> randomGenerator,
-                size_t segmentStartIndex,
+  UpdatePairHap(size_t segmentStartIndex,
                 size_t nLoci,
                 size_t kStrain,
                 std::shared_ptr<Panel> panel, double missCopyProb,

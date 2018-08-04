@@ -11,8 +11,7 @@
 namespace kgd = kellerberrin::deconvolv;
 
 
-kgd::UpdatePairHap::UpdatePairHap(std::shared_ptr<RandomGenerator> randomGenerator,
-                                  size_t segmentStartIndex,
+kgd::UpdatePairHap::UpdatePairHap(size_t segmentStartIndex,
                                   size_t nLoci,
                                   size_t kStrain,
                                   std::shared_ptr<Panel> panel,
@@ -21,7 +20,6 @@ kgd::UpdatePairHap::UpdatePairHap(std::shared_ptr<RandomGenerator> randomGenerat
                                   bool forbidCopyFromSame,
                                   size_t strainIndex1,
                                   size_t strainIndex2) : UpdateHap(kStrain,  // strains.
-                                                                   randomGenerator,
                                                                    segmentStartIndex,
                                                                    nLoci,
                                                                    panel,
@@ -293,7 +291,7 @@ void kgd::UpdatePairHap::calcFwdProbs(bool forbidCopyFromSame) {
 
 std::vector<size_t> kgd::UpdatePairHap::sampleMatrixIndex(std::vector<std::vector<double> > &probDist) {
 
-  size_t tmp = Utility::sampleIndexGivenProp(recombLevel2Rg_, Utility::reshapeMatToVec(probDist));
+  size_t tmp = Utility::sampleIndexGivenProp(Utility::reshapeMatToVec(probDist));
   div_t divresult;
   divresult = div((int) tmp, (int) nPanel_);
 
@@ -348,7 +346,7 @@ void kgd::UpdatePairHap::samplePaths() {
 
     Utility::normalizeBySum(weightOfFourCases);
 
-    size_t tmpCase = Utility::sampleIndexGivenProp(recombRg_, weightOfFourCases);
+    size_t tmpCase = Utility::sampleIndexGivenProp(weightOfFourCases);
 
     if (tmpCase == (size_t) 0) { // switching both strains
 
@@ -362,14 +360,14 @@ void kgd::UpdatePairHap::samplePaths() {
 
       siteOfTwoSwitchOne_[j] += 0.5;
       Utility::normalizeBySum(rowIdist);
-      colJ = Utility::sampleIndexGivenProp(recombLevel2Rg_, rowIdist);
+      colJ = Utility::sampleIndexGivenProp(rowIdist);
       //assert (rowI != colJ); // OFF, as by default, allow copying the same strain
 
     } else if (tmpCase == (size_t) 2) { // switching first strain
 
       siteOfTwoSwitchOne_[j] += 0.5;
       Utility::normalizeBySum(colJdist);
-      rowI = Utility::sampleIndexGivenProp(recombLevel2Rg_, colJdist);
+      rowI = Utility::sampleIndexGivenProp(colJdist);
       colJ = colJ;
       //assert (rowI != colJ); // OFF, as by default, allow copying the same strain
 
@@ -421,7 +419,7 @@ void kgd::UpdatePairHap::addMissCopying(double missCopyProb) {
                                    missCopyProb});              // probability of both differ
     Utility::normalizeBySum(casesDist);
 
-    size_t tmpCase = Utility::sampleIndexGivenProp(missCopyRg_, casesDist);
+    size_t tmpCase = Utility::sampleIndexGivenProp(casesDist);
 
     if (tmpCase == 0) {
 
@@ -478,7 +476,7 @@ void kgd::UpdatePairHap::sampleHapIndependently(const std::vector<double> &plaf)
 
     Utility::normalizeBySum(tmpDist);
 
-    size_t tmpCase = Utility::sampleIndexGivenProp(recombRg_, tmpDist);
+    size_t tmpCase = Utility::sampleIndexGivenProp(tmpDist);
 
     if (tmpCase == 0) {
 

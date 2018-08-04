@@ -31,7 +31,6 @@ public:
   void setDoIbdPainting(bool setTo) { doIbdPainting_ = setTo; }
   void setExcludeSites(bool exclude) { excludeSites_ = exclude; }
   void setKStrainWasManuallySet(bool setTo) { kStrainWasManuallySet_ = setTo; }
-  void setrandomSeedWasGiven(bool random) { randomSeedWasGiven_ = random; }
   void setDoExportVcf(bool exportVcf) { doExportVcf_ = exportVcf; }
   void setUseIBD(bool setTo) { useIBD_ = setTo; }
   void setUseConstRecomb(bool setTo) { useConstRecomb_ = setTo; }
@@ -51,7 +50,6 @@ public:
   bool useVcf() const { return useVcf_; }
   bool compressVcf() const { return compressVcf_; }
   bool doExportVcf() const { return doExportVcf_; }
-  bool randomSeedWasGiven() const { return randomSeedWasGiven_; }
   bool doExportRecombProb() const { return doExportRecombProb_; }
   bool doLsPainting() const { return doLsPainting_; }
   bool doIbdPainting() const { return doIbdPainting_; }
@@ -61,7 +59,6 @@ public:
 
 private:
 
-  bool randomSeedWasGiven_;
   bool initialPropWasGiven_;
   bool pleaseCheckInitialP_;
   bool initialHapWasGiven_;

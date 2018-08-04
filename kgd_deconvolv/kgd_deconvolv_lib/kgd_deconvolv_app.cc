@@ -5,7 +5,6 @@
 #include <iostream>
 #include <kgd_mcmc_ibd.h>
 #include <kgd_mcmc_hap.h>
-#include "kgd_mt_random.h"
 #include "kgd_deploid_io.h"
 
 #include "kgd_deconvolv_app.h"
@@ -32,19 +31,17 @@ void kgd::ExecEnv::executeApp() {
 
     std::shared_ptr<DEploidIO> dEploidIO_ptr(std::make_shared<DEploidIO>());
 
-    std::shared_ptr<MersenneTwister> random_generator(std::make_shared<MersenneTwister>(dEploidIO_ptr->getRandomSeed()));
-
     if ( dEploidIO_ptr->getMixtureControl().doComputeLLK() ) {
 
       dEploidIO_ptr->computeLLKfromInitialHap();
 
     } else if ( dEploidIO_ptr->getMixtureControl().doLsPainting() ) {
 
-      dEploidIO_ptr->chromPainting(random_generator);
+      dEploidIO_ptr->chromPainting();
 
     } else if ( dEploidIO_ptr->getMixtureControl().doIbdPainting() ) {
 
-      dEploidIO_ptr->paintIBD(random_generator);
+      dEploidIO_ptr->paintIBD();
 
     } else {
 
@@ -52,7 +49,7 @@ void kgd::ExecEnv::executeApp() {
 
         std::shared_ptr<McmcSample> ibdMcmcSample(std::make_shared<McmcSample>());
 
-        MCMCIBD ibdMcmcMachinery(dEploidIO_ptr, ibdMcmcSample, random_generator);
+        MCMCIBD ibdMcmcMachinery(dEploidIO_ptr, ibdMcmcSample);
 
         ibdMcmcMachinery.runMcmcChain(true /* show progress */);
 
@@ -62,13 +59,13 @@ void kgd::ExecEnv::executeApp() {
 
       std::shared_ptr<McmcSample> mcmcSample(std::make_shared<McmcSample>());
 
-      MCMCHAP hapMcmc(dEploidIO_ptr, mcmcSample, random_generator);
+      MCMCHAP hapMcmc(dEploidIO_ptr, mcmcSample);
 
       hapMcmc.runMcmcChain(true /* show progress */);
 
       dEploidIO_ptr->writeMcmcRelated(mcmcSample, false /* mcmchap */);
 
-      dEploidIO_ptr->paintIBD(random_generator);
+      dEploidIO_ptr->paintIBD();
 
     }
     // Finishing, write log
@@ -98,19 +95,17 @@ void kgd::ExecEnv::executeLib(const MixtureDataObj& mixture_data) {
 
     dEploidIO_ptr->getMixtureControl().setUseIBD(true);
 
-    std::shared_ptr<MersenneTwister> random_generator(std::make_shared<MersenneTwister>(dEploidIO_ptr->getRandomSeed()));
-
     if ( dEploidIO_ptr->getMixtureControl().doComputeLLK() ) {
 
       dEploidIO_ptr->computeLLKfromInitialHap();
 
     } else if ( dEploidIO_ptr->getMixtureControl().doLsPainting() ) {
 
-      dEploidIO_ptr->chromPainting(random_generator);
+      dEploidIO_ptr->chromPainting();
 
     } else if ( dEploidIO_ptr->getMixtureControl().doIbdPainting() ) {
 
-      dEploidIO_ptr->paintIBD(random_generator);
+      dEploidIO_ptr->paintIBD();
 
     } else {
 
@@ -118,7 +113,7 @@ void kgd::ExecEnv::executeLib(const MixtureDataObj& mixture_data) {
 
         std::shared_ptr<McmcSample> ibdMcmcSample(std::make_shared<McmcSample>());
 
-        MCMCIBD ibdMcmcMachinery(dEploidIO_ptr, ibdMcmcSample, random_generator);
+        MCMCIBD ibdMcmcMachinery(dEploidIO_ptr, ibdMcmcSample);
 
         ibdMcmcMachinery.runMcmcChain(true /* show progress */);
 
@@ -128,13 +123,13 @@ void kgd::ExecEnv::executeLib(const MixtureDataObj& mixture_data) {
 
       std::shared_ptr<McmcSample> mcmcSample(std::make_shared<McmcSample>());
 
-      MCMCHAP hapMcmc(dEploidIO_ptr, mcmcSample, random_generator);
+      MCMCHAP hapMcmc(dEploidIO_ptr, mcmcSample);
 
       hapMcmc.runMcmcChain(true /* show progress */);
 
       dEploidIO_ptr->writeMcmcRelated(mcmcSample, false /* mcmchap */);
 
-      dEploidIO_ptr->paintIBD(random_generator);
+      dEploidIO_ptr->paintIBD();
 
     }
     // Finishing, write log

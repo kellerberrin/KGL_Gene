@@ -33,7 +33,6 @@ namespace kgd = kellerberrin::deconvolv;
 
 
 kgd::UpdateHap::UpdateHap(size_t kStrain,
-                          std::shared_ptr<RandomGenerator> randomGenerator,
                           size_t segmentStartIndex,
                           size_t nLoci,
                           std::shared_ptr<Panel> panel,
@@ -55,9 +54,6 @@ kgd::UpdateHap::UpdateHap(size_t kStrain,
   kStrain_ = kStrain;
   missCopyProb_ = missCopyProb;
   setScalingFactor(scalingFactor);
-  recombRg_ = randomGenerator;
-  recombLevel2Rg_ = randomGenerator;
-  missCopyRg_ = randomGenerator;
   segmentStartIndex_ = segmentStartIndex;
   nLoci_ = nLoci;
 

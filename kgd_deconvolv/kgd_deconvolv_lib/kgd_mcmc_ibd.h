@@ -27,14 +27,15 @@ class MCMCIBD :public MCMCBASE {
 public:
 
   MCMCIBD(std::shared_ptr<DEploidIO> dEplioidIO,
-          std::shared_ptr<McmcSample> mcmcSample,
-          std::shared_ptr<RandomGenerator> randomGenerator);
+          std::shared_ptr<McmcSample> mcmcSample);
   ~MCMCIBD() override =default;
 
 
 private:
 
   IBDpath ibdPath_;
+
+  size_t theta_accept_;
 
   /* Structural Subroutines */
   void initializeMcmcChain();
@@ -57,6 +58,10 @@ private:
   void ibdUpdateHaplotypesFromPrior();
 
   void ibdUpdateProportionGivenHap();
+
+  void ibdUpdateThetaGivenHap(double previous_theta, const std::vector<double>& llkAtAllSites);
+
+  void updateProportion();
 
 };
 

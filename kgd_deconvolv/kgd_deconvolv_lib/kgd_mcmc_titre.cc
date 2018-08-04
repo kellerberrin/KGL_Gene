@@ -16,22 +16,15 @@ namespace kgd = kellerberrin::deconvolv;
 kgd::MCMCTITRE::MCMCTITRE(size_t k_strains,
                           double mean_log_titre,
                           double sd_log_titre,
-                          double update_scale,
-                          size_t random_seed) : k_strains_(k_strains) ,
+                          double update_scale) : k_strains_(k_strains) ,
                                                 mean_log_titre_(mean_log_titre),
                                                 sd_log_titre_(sd_log_titre),
                                                 update_scale_(update_scale) {
 
-  if (random_seed == 0) {
 
-    std::time_t ticks = std::time( nullptr );
-    random_seed = static_cast<size_t>(ticks);
+  std_norm_ = std::make_shared<RandomStdNormal>();
+  entropy_source_ = std::make_shared<EntropySource>();
 
-  }
-
-  stdNorm_ = std::make_shared<StandNormalRandomSample>(random_seed);
-
-//  randomizeProportions();
   randomizeTitre();
 
   ExecEnv::log().info("Titre initialization values: {}", titreText());
@@ -150,14 +143,14 @@ double kgd::MCMCTITRE::calcPriorTitreIndex(size_t index) const {
 
 double kgd::MCMCTITRE::deltaXnormalVariable() const {
 
-  return (stdNorm_->genReal() * (sd_log_titre_ / update_scale_)) + mean_log_titre_;
+  return (std_norm_->generate(entropy_source_->generator()) * (sd_log_titre_ / update_scale_)) + mean_log_titre_;
 
 }
 
 
 double kgd::MCMCTITRE::initialTitreNormalVariable() const {
 
-  return (stdNorm_->genReal() * sd_log_titre_) + mean_log_titre_;
+  return (std_norm_->generate(entropy_source_->generator()) * sd_log_titre_) + mean_log_titre_;
 
 }
 

@@ -8,6 +8,7 @@
 #include <vector>
 #include <cstdio>
 #include <memory>
+#include "kgd_random_generator.h"
 #include "randomSample.hpp"
 
 namespace kellerberrin {    // organization level namespace
@@ -19,7 +20,7 @@ class MCMCTITRE  {
 
 public:
 
-  MCMCTITRE(size_t strains, double mean_log_titre, double sd_log_titre, double update_scale, size_t random_seed = 0);
+  MCMCTITRE(size_t strains, double mean_log_titre, double sd_log_titre, double update_scale);
   MCMCTITRE(const MCMCTITRE&) = default;
   ~MCMCTITRE() =default;
 
@@ -50,7 +51,8 @@ private:
   std::vector<double> currentTitre_;
   std::vector<double> proportions_;
 
-  mutable std::shared_ptr<StandNormalRandomSample> stdNorm_;
+  std::shared_ptr<RandomStdNormal> std_norm_;
+  std::shared_ptr<EntropySource> entropy_source_;
 
   size_t kStrain() const { return k_strains_; }
   double deltaXnormalVariable() const;

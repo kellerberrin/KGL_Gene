@@ -252,13 +252,9 @@ set(DECONVOLV_LIB_CONTRIB_FILES
         kgd_deconvolv/contrib/codeCogs/xsub_ln_add1.h
         kgd_deconvolv/contrib/gzstream/gzstream.cpp
         kgd_deconvolv/contrib/gzstream/gzstream.h
-        kgd_deconvolv/kgd_random/kgd_fastfunc.cc
-        kgd_deconvolv/kgd_random/kgd_fastfunc.h
         kgd_deconvolv/kgd_random/kgd_mersenne_twister.cc
         kgd_deconvolv/kgd_random/kgd_mersenne_twister.h
-        kgd_deconvolv/kgd_random/kgd_random_generator.cc
-        kgd_deconvolv/kgd_random/kgd_random_generator.h
-        kgd_deconvolv/kgd_random/kgd_mt_random.h)
+        kgd_deconvolv/kgd_random/kgd_random_generator.h)
 
 set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_lib/kgd_vcf_reader_debug.cc

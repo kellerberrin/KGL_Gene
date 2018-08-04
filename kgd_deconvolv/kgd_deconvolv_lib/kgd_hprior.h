@@ -23,11 +23,6 @@ namespace deconvolv {          // project level namespace
 
 class Hprior {
 
-#ifdef UNITTEST
-  friend class TestHprior;
-  friend class TestMcmcMachinery;
-  friend class TestIBDpath;
-#endif
 
 public:
 

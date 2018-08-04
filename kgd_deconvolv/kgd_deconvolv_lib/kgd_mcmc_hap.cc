@@ -21,11 +21,9 @@ namespace kgd = kellerberrin::deconvolv;
 
 // initialiseMCMCmachinery
 kgd::MCMCHAP::MCMCHAP(std::shared_ptr<DEploidIO> dEploidIO,
-                      std::shared_ptr<McmcSample> mcmcSample,
-                      std::shared_ptr<RandomGenerator> randomGenerator)
-  : MCMCBASE(dEploidIO, mcmcSample, randomGenerator, dEploidIO->hapParameters()) {
+                      std::shared_ptr<McmcSample> mcmcSample)
+  : MCMCBASE(dEploidIO, mcmcSample, dEploidIO->hapParameters()) , rand_strain_(dEploidIO_->kStrain()) {
 
-  mcmcEventRg_ = randomGenerator_;
   panel_ = dEploidIO_->getPanel();
 
   initializeMcmcChain();
@@ -60,23 +58,25 @@ void kgd::MCMCHAP::initializeMcmcChain() {
 
 int kgd::MCMCHAP::sampleMcmcEvent() {
 
-  int eventInt = mcmcEventRg_->sampleInt(3);
+  HapUpdateType Update = rand_update_type_.generateUpdate();
 
-  if ((eventInt == 0) && (dEploidIO_->doUpdateProp())) {
+  switch(Update) {
 
-    updateProportion();
+    case HapUpdateType::UPDATE_PROPORTION:
+      if (dEploidIO_->doUpdateProp()) updateProportion();
+      break;
 
-  } else if ((eventInt == 1) && (dEploidIO_->doUpdateSingle())) {
+    case HapUpdateType::UPDATE_SINGLE_HAPLOTYPE:
+      if (dEploidIO_->doUpdateSingle()) updateSingleHap(titre_proportions_.Proportions());
+      break;
 
-    updateSingleHap(titre_proportions_.Proportions());
-
-  } else if ((eventInt == 2) && (dEploidIO_->doUpdatePair())) {
-
-    updatePairHaps(titre_proportions_.Proportions());
+    case HapUpdateType::UPDATE_PAIR_HAPLOTYPE:
+      if (dEploidIO_->doUpdatePair()) updatePairHaps(titre_proportions_.Proportions());
+      break;
 
   }
 
-  return eventInt;
+  return static_cast<int>(Update);
 
 }
 
@@ -145,7 +145,7 @@ void kgd::MCMCHAP::updateProportion() {
 
   double proposal_ratio = prior_prop_ratio * ratio_likelihood * proposal.hastingsRatio();
 
-  double acceptance_draw = propRg_->sample();
+  double acceptance_draw = random_unit_.generate(entropy_source_.generator());
 
   ExecEnv::log().info("{}, Update: {}, p_ratio: {}, l_ratio: {}, p*l: {}, accept: {}, {}",
                       current_MCMC_iteration(), proposal.proportionsText(),
@@ -178,11 +178,11 @@ void kgd::MCMCHAP::updateSingleHap(const std::vector<double>& proportions) {
 
   ExecEnv::log().vinfo("McmcMachinery::updateSingleHap()");
 
-  findUpdatingStrainSingle();
+  size_t strain_index = rand_strain_.getRandomStrain();
 
   if (dEploidIO_->doAllowInbreeding()) {
 
-    updateReferencePanel(panel_->truePanelSize() + kStrain() - 1, strainIndex_);
+    updateReferencePanel(panel_->truePanelSize() + kStrain() - 1, strain_index);
 
   }
 
@@ -195,14 +195,13 @@ void kgd::MCMCHAP::updateSingleHap(const std::vector<double>& proportions) {
 
     ExecEnv::log().vinfo("Update Chrom with index: {}, starts at: {}, with: {} sites", chromi, start, length);
 
-    UpdateSingleHap updating(hapRg_,
-                             start,
+    UpdateSingleHap updating(start,
                              length,
                              kStrain,
                              panel_,
                              MCMCParameters_.getMissCopyProb(),
                              MCMCParameters_.proposalUpdateScaling(),
-                             strainIndex_);
+                             strain_index);
 
     if (dEploidIO_->doAllowInbreeding()) {
 
@@ -221,7 +220,7 @@ void kgd::MCMCHAP::updateSingleHap(const std::vector<double>& proportions) {
 
     for (size_t ii = start; ii < (start + length); ii++) {
 
-      currentHap_[ii][strainIndex_] = updating.getHapIndex(updateIndex);
+      currentHap_[ii][strain_index] = updating.getHapIndex(updateIndex);
       currentLLks_[ii] = updating.getNewLLKIndex(updateIndex);
       updateIndex++;
 
@@ -254,7 +253,9 @@ void kgd::MCMCHAP::updatePairHaps(const std::vector<double>& proportions) {
 
   ExecEnv::log().vinfo(" Update Pair Hap ");
 
-  findUpdatingStrainPair();
+//  findUpdatingStrainPair();
+
+  std::pair<size_t, size_t> strain_pair = rand_strain_.getRandomStrainPair();
 
   for (size_t chromi = 0; chromi < dEploidIO_->indexOfChromStarts().size(); chromi++) {
 
@@ -265,16 +266,15 @@ void kgd::MCMCHAP::updatePairHaps(const std::vector<double>& proportions) {
 
     ExecEnv::log().vinfo("Update Chrom with index: {}, starts at: {}, with: {} sites", chromi, start, length);
 
-    UpdatePairHap updating(hapRg_,
-                           start,
+    UpdatePairHap updating(start,
                            length,
                            kStrain,
                            panel_,
                            MCMCParameters_.getMissCopyProb(),
                            MCMCParameters_.proposalUpdateScaling(),
                            dEploidIO_->forbidCopyFromSame(),
-                           strainIndex1_,
-                           strainIndex2_);
+                           strain_pair.first,
+                           strain_pair.second);
 
     updating.core(dEploidIO_->getRefCount(),
                   dEploidIO_->getAltCount(),
@@ -286,8 +286,8 @@ void kgd::MCMCHAP::updatePairHaps(const std::vector<double>& proportions) {
     size_t updateIndex = 0;
     for (size_t ii = start; ii < (start + length); ii++) {
 
-      currentHap_[ii][strainIndex1_] = updating.getHap1Index(updateIndex);
-      currentHap_[ii][strainIndex2_] = updating.getHap2Index(updateIndex);
+      currentHap_[ii][strain_pair.first] = updating.getHap1Index(updateIndex);
+      currentHap_[ii][strain_pair.second] = updating.getHap2Index(updateIndex);
       currentLLks_[ii] = updating.getNewLLKIndex(updateIndex);
       updateIndex++;
 
@@ -310,51 +310,6 @@ void kgd::MCMCHAP::updatePairHaps(const std::vector<double>& proportions) {
   }
 
   currentExpectedWsaf_ = calcExpectedWsaf(proportions);
-
-}
-
-void kgd::MCMCHAP::findUpdatingStrainSingle() {
-
-  std::vector<double> eventProb(kStrain(), 1);
-
-  Utility::normalizeBySum(eventProb);
-
-  strainIndex_ = Utility::sampleIndexGivenProp(mcmcEventRg_, eventProb);
-
-  ExecEnv::log().vinfo("Updating haplotype (1 of 1): {}", strainIndex_);
-
-}
-
-
-void kgd::MCMCHAP::findUpdatingStrainPair() {
-
-  std::vector<size_t> strainIndex(2, 0);
-
-  int t = 0; // total input records dealt with
-  int m = 0; // number of items selected so far
-  double u;
-
-  while (m < 2) {
-
-    u = mcmcEventRg_->sample(); // call a uniform(0,1) kgd_random number generator
-
-    if ((kStrain() - t) * u < 2 - m) {
-
-      strainIndex[m] = t;
-      m++;
-
-    }
-
-    t++;
-
-  }
-
-  strainIndex1_ = strainIndex[0];
-  strainIndex2_ = strainIndex[1];
-
-  assert(strainIndex1_ != strainIndex2_);
-
-  ExecEnv::log().vinfo("Updating haplotype (1 of 2): {} and haplotype (2 of 2): {}", strainIndex1_, strainIndex2_);
 
 }
 
@@ -381,8 +336,7 @@ void kgd::MCMCHAP::writeLastFwdProb(const std::vector<double>& proportions, bool
       size_t length = dEploidIO_->getIndexPosition(chromi).size();
       size_t kStrain = dEploidIO_->kStrain();
 
-      UpdateSingleHap updatingSingle(hapRg_,
-                                     start,
+      UpdateSingleHap updatingSingle(start,
                                      length,
                                      kStrain,
                                      panel_,

@@ -158,12 +158,6 @@ void kgd::DEploidIO::finalize() {
 
   }
 
-  if (!getMixtureControl().randomSeedWasGiven()) {
-
-    setRandomSeed(static_cast<size_t>(time(nullptr)));
-
-  }
-
   removeFilesWithSameName();
 
   IBDpathChangeAt_ = std::vector<double>(nLoci());
@@ -346,9 +340,6 @@ void kgd::DEploidIO::parse() {
   setInitialProp(args.initialStrainProportions); // -initialP
   getMixtureControl().setUseIBD(args.identityByDescentFlag); // -idb
 
-  setRandomSeed(args.MCMCRandomSeed); // -seed
-  getMixtureControl().setrandomSeedWasGiven(true);
-
 }
 
 void kgd::DEploidIO::checkInput() {
@@ -434,7 +425,7 @@ void kgd::DEploidIO::computeLLKfromInitialHap() {
 }
 
 
-void kgd::DEploidIO::chromPainting(std::shared_ptr<RandomGenerator> random_generator) {
+void kgd::DEploidIO::chromPainting() {
 
   ExecEnv::log().info("Painting haplotypes in :{}", initialHapFileName_);
 
@@ -495,8 +486,7 @@ void kgd::DEploidIO::chromPainting(std::shared_ptr<RandomGenerator> random_gener
 
       ExecEnv::log().info("Painting Chrom: {} from site: {} to: {}", chromi, start, start + length);
 
-      UpdateSingleHap updatingSingle(random_generator,
-                                     start,
+      UpdateSingleHap updatingSingle(start,
                                      length,
                                      kStrain(),
                                      panel_,
@@ -637,7 +627,7 @@ void kgd::DEploidIO::computeAdjustedEffectiveKstrain() {
 }
 
 
-void kgd::DEploidIO::paintIBD(std::shared_ptr<RandomGenerator> randomGenerator) {
+void kgd::DEploidIO::paintIBD() {
 
   std::vector<double> goodProp;
   std::vector<size_t> goodStrainIdx;
@@ -674,7 +664,7 @@ void kgd::DEploidIO::paintIBD(std::shared_ptr<RandomGenerator> randomGenerator) 
 
 
   IBDpath tmpIBDpath;
-  tmpIBDpath.init(tmpDEploidIO, randomGenerator);
+  tmpIBDpath.init(tmpDEploidIO);
   tmpIBDpath.buildPathProbabilityForPainting(goodProp);
   ibdLLK_ = tmpIBDpath.bestPath(goodProp);
   ibdProbsHeader_ = tmpIBDpath.getIBDprobsHeader();

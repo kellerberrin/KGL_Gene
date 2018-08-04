@@ -25,8 +25,7 @@ class MCMCVIRTUAL {
 public:
 
   MCMCVIRTUAL(std::shared_ptr<DEploidIO> dEplioidIO,
-              std::shared_ptr<McmcSample> mcmcSample,
-              std::shared_ptr<RandomGenerator> randomGenerator);
+              std::shared_ptr<McmcSample> mcmcSample);
 
   virtual ~MCMCVIRTUAL() = default;
 
@@ -41,8 +40,6 @@ protected:
 
   std::shared_ptr<McmcSample> mcmcSample_;
   std::shared_ptr<DEploidIO> dEploidIO_;
-  std::shared_ptr<RandomGenerator> randomGenerator_;
-  std::shared_ptr<StandNormalRandomSample> stdNorm_;
 
   void calcMaxIteration(size_t nSample, size_t McmcMachineryRate, double burnIn);
 

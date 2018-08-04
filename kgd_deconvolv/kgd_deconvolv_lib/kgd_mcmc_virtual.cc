@@ -15,13 +15,10 @@ namespace kgd = kellerberrin::deconvolv;
 
 
 kgd::MCMCVIRTUAL::MCMCVIRTUAL(std::shared_ptr<DEploidIO> dEploidIO,
-                              std::shared_ptr<McmcSample> mcmcSample,
-                              std::shared_ptr<RandomGenerator> randomGenerator) {
+                              std::shared_ptr<McmcSample> mcmcSample) {
 
   dEploidIO_ = dEploidIO;
   mcmcSample_ = mcmcSample;
-  randomGenerator_ = randomGenerator;
-  stdNorm_ = std::make_shared<StandNormalRandomSample>(randomGenerator->seed());
   acceptUpdate_ = 0;
 
 }

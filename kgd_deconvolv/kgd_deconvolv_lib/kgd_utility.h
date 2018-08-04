@@ -50,6 +50,8 @@ public:
   Utility() = delete;
   ~Utility() = delete;
 
+
+
   template<typename T>
   static std::vector<T> vecDiff(std::vector<T> &vecA, std::vector<T> &vecB) {
 
@@ -104,7 +106,7 @@ public:
 
 
   template<typename T>
-  static T sumOfVec(std::vector<T> &array) {
+  static T sumOfVec(const std::vector<T> &array) {
 
     T tmp = 0;
 
@@ -180,7 +182,7 @@ public:
 
   static double calcLLK(double ref, double alt, double unadjustedWsaf, double err, double fac);
 
-  static size_t sampleIndexGivenProp(std::shared_ptr<RandomGenerator> randomGenerator, const std::vector<double> &proportion);
+  static size_t sampleIndexGivenProp(const std::vector<double> &proportion);
 
   static std::vector<double> reshapeMatToVec(std::vector<std::vector<double> > &Mat);
 
@@ -205,8 +207,8 @@ private: /// Deprecated utility functions are banished here.
   static void normalizeByMax(std::vector<double> &array);
 //double betaDistConst( double a , double b);
 
-  static double cg_logBetaGamma(double a, double b);
-  static double b_logBetaGamma(double a, double b);
+  static double codeCogs_logBetaGamma(double a, double b);
+  static double boost_logBetaGamma(double a, double b);
 
 
 };

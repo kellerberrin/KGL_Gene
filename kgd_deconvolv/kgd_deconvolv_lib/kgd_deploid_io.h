@@ -116,9 +116,6 @@ public:
   size_t kStrain() const { return k_strain_; }
   void setkStrain(size_t setTo) { k_strain_ = setTo; }
 
-  size_t getRandomSeed() const { return random_seed_; }
-  void setRandomSeed(size_t setTo) { random_seed_ = setTo; }
-
 
   // Parameter Modifier.
   void writeLastSingleFwdProb(const std::vector<std::vector<double> > &probabilities, size_t chromIndex, size_t strainIndex, bool useIBD);
@@ -136,9 +133,9 @@ public:
   void setInitialHap(const std::vector<std::vector<double> >& initial_hap) { initialHap_ = initial_hap; }
 
   // Painting related
-  void chromPainting(std::shared_ptr<RandomGenerator> random_generator);
+  void chromPainting();
   void computeLLKfromInitialHap();
-  void paintIBD(std::shared_ptr<RandomGenerator> random_generator);
+  void paintIBD();
   void getIBDprobsIntegrated(const std::vector<std::vector<double> > &prob);
 
   // Log
@@ -155,7 +152,6 @@ private:
 
   // Max Number of strains
   size_t k_strain_;
-  size_t random_seed_;
 
   // Read in input
   std::string plafFileName_;

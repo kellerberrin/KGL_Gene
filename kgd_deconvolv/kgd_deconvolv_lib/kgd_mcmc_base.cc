@@ -14,9 +14,8 @@ namespace kgd = kellerberrin::deconvolv;
 
 kgd::MCMCBASE::MCMCBASE(std::shared_ptr<DEploidIO> dEploidIO,
                         std::shared_ptr<McmcSample> mcmcSample,
-                        std::shared_ptr<RandomGenerator> randomGenerator,
                         const MCMCParameterObj& MCMCParameters)
-  : MCMCVIRTUAL(dEploidIO, mcmcSample, randomGenerator),
+  : MCMCVIRTUAL(dEploidIO, mcmcSample),
     MCMCParameters_(MCMCParameters),
     titre_proportions_(dEploidIO->kStrain(),
                        MCMCParameters.proposalMean(),
@@ -32,10 +31,6 @@ kgd::MCMCBASE::MCMCBASE(std::shared_ptr<DEploidIO> dEploidIO,
     titre_proportions_.proportion2Titre(dEploidIO_->getInitialProp());
 
   }
-
-  hapRg_ = randomGenerator_;
-  propRg_ = randomGenerator_;
-  initialHapRg_ = randomGenerator_;
 
   setKstrain(dEploidIO_->kStrain());
   setNLoci(dEploidIO_->getPlaf().size());
@@ -58,7 +53,7 @@ void kgd::MCMCBASE::initializeHap() {
       double currentPlaf = dEploidIO_->getPlaf()[i];
       std::vector<double> tmpVec;
 
-      for (size_t k = 0; k < kStrain_; k++) {
+      for (size_t k = 0; k < kStrain_; ++k) {
 
         tmpVec.push_back(rBernoulli(currentPlaf));
 
@@ -77,7 +72,8 @@ void kgd::MCMCBASE::initializeHap() {
 
 double kgd::MCMCBASE::rBernoulli(double p) {
 
-  double u = initialHapRg_->sample();
+  double u = random_unit_.generate(entropy_source_.generator());
+
   return (u < p) ? 1.0 : 0.0;
 
 }

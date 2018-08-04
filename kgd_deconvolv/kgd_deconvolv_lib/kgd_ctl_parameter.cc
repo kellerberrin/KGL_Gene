@@ -42,9 +42,9 @@ kgd::IBDParameterObj::IBDParameterObj() {
   setMcmcMachineryRate(10);
   setMcmcBurn(0.5);
 
-  setProposalSigma(10.0);  // Originally 20.0 (10.0 may be better)
+  setProposalSigma(5.0);  // Originally 20.0 (10.0 may be better)
   setProposalMean(0.0);
-  setProposalScaling(40.0);
+  setProposalScaling(100.0); // Originally 40.0
 
   setBinomialConstant(100.0); // The constant used to construct the beta binomial parameters.
   setCacheGridSize(99); // Used to set the probability grid size used in SiteProbabilityCache.

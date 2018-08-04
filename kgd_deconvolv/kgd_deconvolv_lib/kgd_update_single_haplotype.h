@@ -20,8 +20,7 @@ class UpdateSingleHap : public UpdateHap {
 
 public:
 
-  UpdateSingleHap(std::shared_ptr<RandomGenerator> randomGenerator,
-                  size_t segmentStartIndex,
+  UpdateSingleHap(size_t segmentStartIndex,
                   size_t nLoci,
                   size_t kStrain,
                   std::shared_ptr<Panel> panel,

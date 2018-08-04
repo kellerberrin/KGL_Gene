@@ -17,9 +17,8 @@ namespace kgd = kellerberrin::deconvolv;
 
 // initialiseMCMCmachinery
 kgd::MCMCIBD::MCMCIBD(std::shared_ptr<DEploidIO> dEploidIO,
-                      std::shared_ptr<McmcSample> mcmcSample,
-                      std::shared_ptr<RandomGenerator> randomGenerator)
-  : MCMCBASE(dEploidIO, mcmcSample, randomGenerator, dEploidIO->ibdParameters()) {
+                      std::shared_ptr<McmcSample> mcmcSample)
+  : MCMCBASE(dEploidIO, mcmcSample, dEploidIO->ibdParameters()) {
 
   initializeMcmcChain();
 
@@ -45,6 +44,8 @@ void kgd::MCMCIBD::initializeMcmcChain() {
   ibdInitializeEssentials(MCMCParameters_.baseCountError());
 
   mcmcSample_->setVectorSize(nLoci());
+
+  theta_accept_ = 0;
 
 }
 
@@ -114,7 +115,7 @@ std::vector<double> kgd::MCMCIBD::averageProportion(const std::vector<std::vecto
 
 void kgd::MCMCIBD::ibdInitializeEssentials(double err) {
 
-  ibdPath_.init(*dEploidIO_, hapRg_);
+  ibdPath_.init(*dEploidIO_);
 
   std::vector<double> llkOfData;
 
@@ -137,14 +138,35 @@ void kgd::MCMCIBD::ibdInitializeEssentials(double err) {
 
 void kgd::MCMCIBD::ibdSampleMcmcEventStep() {
 
+  const double theta_proposal_size = 0.1;
+  std::vector<double> llkAtAllSites = computeLlkAtAllSites(titre_proportions_.Proportions(), MCMCParameters_.baseCountError());
+
+  double previous_theta = ibdPath_.theta();
+
+//  double proposed_theta = previous_theta;
+
+//  do {
+
+//    proposed_theta += ((propRg_->sample() * theta_proposal_size) - (theta_proposal_size / 2.0));
+
+//  } while (proposed_theta < 0 or proposed_theta > 1);
+
+  double theta = random_unit_.generate(entropy_source_.generator());
+
+  ibdPath_.setTheta(theta);
+
   // Update the idb path.
   ibdPath_.McmcUpdateStep(titre_proportions_.Proportions());
 
   //#Get haplotypes and update LLK for each site
   ibdUpdateHaplotypesFromPrior();
 
+  /// Experimental: update theta using MCMC
+  ibdUpdateThetaGivenHap(previous_theta, llkAtAllSites);
+
   ///#Given current haplotypes, sample titres 1 by 1 using MH
-  ibdUpdateProportionGivenHap();
+  updateProportion();
+//  ibdUpdateProportionGivenHap();
 
   currentExpectedWsaf_ = calcExpectedWsaf(titre_proportions_.Proportions());
 
@@ -153,11 +175,11 @@ void kgd::MCMCIBD::ibdSampleMcmcEventStep() {
 
 void kgd::MCMCIBD::ibdUpdateHaplotypesFromPrior() {
 
-  for (size_t loci = 0; loci < nLoci(); ++loci) {
+  for (size_t site_i = 0; site_i < nLoci(); ++site_i) {
 
     for (size_t strain = 0; strain < kStrain(); ++strain) {
 
-      currentHap_[loci][strain] = ibdPath_.UpdateHaplotypesFromPrior(strain, loci);
+      currentHap_[site_i][strain] = ibdPath_.UpdateHaplotypesFromPrior(strain, site_i);
 
     }
 
@@ -166,28 +188,100 @@ void kgd::MCMCIBD::ibdUpdateHaplotypesFromPrior() {
 }
 
 
+void kgd::MCMCIBD::ibdUpdateThetaGivenHap(double previous_theta, const std::vector<double>& llkAtAllSites) {
+
+
+  std::vector<double> updated_llkAtAllSites = computeLlkAtAllSites(titre_proportions_.Proportions(), MCMCParameters_.baseCountError());
+
+  double prior_ratio = 1.0;  // Since we are sampling from the uniform distribution.
+
+  double log_likelihood_ratio = Utility::sumOfVec(updated_llkAtAllSites) - Utility::sumOfVec(llkAtAllSites);
+  double likelihood_ratio = std::exp(log_likelihood_ratio);
+  double proposal_ratio = prior_ratio * likelihood_ratio;
+  double acceptance_draw = random_unit_.generate(entropy_source_.generator());
+
+  if (acceptance_draw > proposal_ratio) {
+    // Reject
+    ibdPath_.setTheta(previous_theta);
+
+  } else {
+
+    theta_accept_ += 1;
+
+  }
+
+  ExecEnv::log().info("{}, Theta: {}/{}, ll_r: {}, l_r: {}, h*r: {}, accept: {}, ratio: {}, {}",
+                      current_MCMC_iteration(), ibdPath_.theta(), previous_theta, log_likelihood_ratio,
+                      likelihood_ratio, proposal_ratio, acceptance_draw,
+                      static_cast<double>(theta_accept_)/static_cast<double>(current_MCMC_iteration()),
+                      acceptance_draw <= proposal_ratio ? "ACCEPT" : "REJECT");
+
+
+}
+
+
+
+void kgd::MCMCIBD::updateProportion() {
+
+
+  // For each strain perform a Metropolis-Hastings update of currentTitre, currentProportion
+  std::vector<double> llkAtAllSites = computeLlkAtAllSites(titre_proportions_.Proportions(), MCMCParameters_.baseCountError());
+
+  MCMCTITRE proposal(titre_proportions_);
+
+  proposal.updateTitre();
+
+  std::vector<double> llk_loci_vector = computeLlkAtAllSites(proposal.Proportions(), MCMCParameters_.baseCountError());
+
+  double prior_prop_ratio = std::exp(proposal.calcLogPriorTitre() - titre_proportions_.calcLogPriorTitre());
+
+  double log_likelihood_ratio = Utility::sumOfVec(llk_loci_vector) - Utility::sumOfVec(llkAtAllSites);
+
+  double likelihood_ratio = std::exp(log_likelihood_ratio);
+
+  double proposal_ratio = prior_prop_ratio * likelihood_ratio * proposal.hastingsRatio();
+
+  double acceptance_draw = random_unit_.generate(entropy_source_.generator());
+
+  ExecEnv::log().info("{}, Update: {}, p_ratio: {}, ll_r: {}, l_r: {}, p*l: {}, accept: {}, {}",
+                      current_MCMC_iteration(), proposal.proportionsText(),
+                      prior_prop_ratio, log_likelihood_ratio, likelihood_ratio, proposal_ratio, acceptance_draw, acceptance_draw <= proposal_ratio ? "ACCEPT" : "REJECT");
+
+  if (acceptance_draw <= proposal_ratio) {
+  // Accept
+    incrementAccept();
+    llkAtAllSites = llk_loci_vector;
+    titre_proportions_ = proposal;
+
+  }
+
+}
+
+
+
 void kgd::MCMCIBD::ibdUpdateProportionGivenHap() {
 
   // For each strain perform a Metropolis-Hastings update of currentTitre, currentProportion
   std::vector<double> llkAtAllSites = computeLlkAtAllSites(titre_proportions_.Proportions(), MCMCParameters_.baseCountError());
 
-  for (size_t i = 0; i < kStrain(); i++) {
+  for (size_t k = 0; k < kStrain(); k++) {
 
     MCMCTITRE proposal(titre_proportions_);
 
-    proposal.updateTitreIndex(i);
+    proposal.updateTitreIndex(k);
 
     std::vector<double> llk_loci_vector = computeLlkAtAllSites(proposal.Proportions(), MCMCParameters_.baseCountError());
 
-    double prior_titre_ratio = proposal.calcPriorTitreIndex(i) / titre_proportions_.calcPriorTitreIndex(i);
-    double likelihood_ratio = exp(Utility::sumOfVec(llk_loci_vector) - Utility::sumOfVec(llkAtAllSites));
+    double prior_titre_ratio = proposal.calcPriorTitreIndex(k) / titre_proportions_.calcPriorTitreIndex(k);
+    double log_likelihood_ratio = Utility::sumOfVec(llk_loci_vector) - Utility::sumOfVec(llkAtAllSites);
+    double likelihood_ratio = std::exp(log_likelihood_ratio);
     double proposal_ratio = prior_titre_ratio * likelihood_ratio;
+    double acceptance_draw = random_unit_.generate(entropy_source_.generator());
 
-    double acceptance_draw = propRg_->sample();
-
-    ExecEnv::log().info("{}, IDB [{}]: {}/{}, h_ratio: {}, l_ratio: {}, h*r: {}, accept: {}, {}",
-                        current_MCMC_iteration(), i, proposal.Proportions()[i], titre_proportions_.Proportions()[i],
-                        prior_titre_ratio, likelihood_ratio, proposal_ratio, acceptance_draw, acceptance_draw <= proposal_ratio ? "ACCEPT" : "REJECT");
+    ExecEnv::log().info("{}, IDB [{}]: {}/{}, h_ratio: {}, ll_r: {}, l_r: {}, h*r: {}, accept: {}, {}",
+                        current_MCMC_iteration(), k, proposal.Proportions()[k], titre_proportions_.Proportions()[k],
+                        prior_titre_ratio, log_likelihood_ratio, likelihood_ratio, proposal_ratio, acceptance_draw,
+                        acceptance_draw <= proposal_ratio ? "ACCEPT" : "REJECT");
 
     if (acceptance_draw <= proposal_ratio) {
       // Accept
@@ -198,6 +292,7 @@ void kgd::MCMCIBD::ibdUpdateProportionGivenHap() {
     }
 
   }
+
 
   currentLLks_ = llkAtAllSites;
 
@@ -214,7 +309,7 @@ std::vector<double> kgd::MCMCIBD::computeLlkAtAllSites(const std::vector<double>
 
     for (size_t strain = 0; strain < kStrain(); ++strain) {
 
-      loci_proportion += (double) currentHap_[loci][strain] * proportion[strain];
+      loci_proportion += currentHap_[loci][strain] * proportion[strain];
 
     }
 

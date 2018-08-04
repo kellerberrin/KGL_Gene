@@ -33,7 +33,7 @@ public:
   IBDpath() = default;
   ~IBDpath() = default;
 
-  void init(DEploidIO &dEploidIO, std::shared_ptr<RandomGenerator> randomGenerator);
+  void init(DEploidIO &dEploidIO);
   void McmcUpdateStep(const std::vector<double>& CurrentProportion);
 
   void buildPathProbabilityForPainting(const std::vector<double>& proportion); // For painting IBD
@@ -45,17 +45,20 @@ public:
   const std::vector<std::vector<double> >& getFwdBwd() const { return fwdbwd_; }
   double siteLogBetaLLK(size_t site, double x) const { return ibd_prob_cache_->siteLogBetaLLK(site, x); }
 
+  void setTheta(const double setTo) { theta_ = setTo; }
+  double theta() const { return theta_; }
+
 private:
 
-  std::shared_ptr<RandomGenerator> ibd_random_generator_;
   std::shared_ptr<const IBDRecombProbs> ibd_recomb_probs_;
   std::shared_ptr<const SiteProbabilityCache> ibd_prob_cache_;
   Hprior h_prior_;
 
   double f_sum_;
-  std::vector<std::vector<double> > ibd_trans_probs_;
   std::vector<std::vector<double> > fm_;
   std::vector<double> f_sum_state_;
+
+  std::vector<std::vector<double> > ibd_trans_probs_;
   std::vector<size_t> ibd_configure_path_;
 
   std::vector<std::vector<double> > bwd_;
@@ -90,9 +93,6 @@ private:
 
   size_t nLoci() const { return nLoci_; }
 
-  void setTheta(const double setTo) { theta_ = setTo; }
-
-  double theta() const { return theta_; }
 
   // Methods
 

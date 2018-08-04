@@ -26,14 +26,11 @@
 #ifndef KGD_RANDOM_GENERATOR_H
 #define KGD_RANDOM_GENERATOR_H
 
-//#include "../macros.h" // Needs to be before cassert
 
 #include <cassert>
 #include <cmath>
 #include <memory>
-
-#include "kgd_fastfunc.h"
-
+#include <random>
 
 
 namespace kellerberrin {    // organization level namespace
@@ -46,60 +43,187 @@ class RandomGenerator
 
  public:
 
-  RandomGenerator() : ff_(std::make_shared<FastFunc>()) { };
-  RandomGenerator(std::shared_ptr<FastFunc> ff) : ff_(ff) { };
+  RandomGenerator() = default;
   virtual ~RandomGenerator() = default;
 
-  //Getters & Setters
-  size_t seed() const { return seed_; }
+  virtual double unitUniformRand() = 0;
+  int sampleInt(const int max_value) {  return(static_cast<int>(this->unitUniformRand()*max_value));  }
 
-  virtual void set_seed(const size_t seed) { seed_ = seed; }
-  virtual double sample() = 0;
+};
 
-  // Base class methods
-  // Initialize unit_exponential; must be called when the kgd_random generator is up and running
-  void initializeUnitExponential() { unit_exponential_ = sampleUnitExponential(); }
 
-  // Uniformly samples a number out of 0, ..., range-1
-  // Unit tested
-  int sampleInt(const int max_value) {  return(static_cast<int>(this->sample()*max_value));  }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Various random number generators, with the 64 bit Mersenne Twister as the entropy source.
+// Note that copy semantics have been disabled as there seems no reasonable reason to do this, and may be dangerous.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // Samples from an exponential distribution
-  // Unit tested
-  double sampleExpo(const double lambda) { return sampleUnitExponential() / lambda;  }
 
-  // Samples from an exponential distribution; return -1 if beyond limit
-  // If a limit is known, this version is faster than the standard one
-  // Unit tested
-  double sampleExpoLimit(const double lambda, const double limit) {  return sampleExpoExpoLimit(lambda, 0, limit); }
+using EntropyGenerator = std::mt19937_64;
+class RandomEntropySource
+{
 
-  double sampleExpoExpoLimit(const double b, const double c, const double limit);
+public:
 
-#ifdef UNITTEST
-  friend class TestRandomGenerator;
+  RandomEntropySource() : generator_(rd_()) {}
+  RandomEntropySource(const RandomEntropySource&) = delete;
+  ~RandomEntropySource() = default;
+
+  RandomEntropySource& operator=(const RandomEntropySource&) = delete;
+
+  EntropyGenerator& generator() const { return generator_; }
+
+private:
+
+  // Order is important! The random device must be created first.
+  std::random_device rd_;
+  mutable EntropyGenerator generator_;
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The oxymoronic DeterministicEntropySource object starts the Mersenne Twister from a known point and
+// commits the code to a deterministic path. This may be useful for debugging. The start point (seed) can be varied.
+// Production code should always use the RandomEntropySource object.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class DeterministicEntropySource
+{
+
+public:
+
+  DeterministicEntropySource(size_t seed = 1234) : generator_(seed) {}
+  DeterministicEntropySource(const DeterministicEntropySource&) = delete;
+  ~DeterministicEntropySource() = default;
+
+  DeterministicEntropySource& operator=(const DeterministicEntropySource&) = delete;
+
+  EntropyGenerator& generator() const { return generator_; }
+
+private:
+
+  mutable EntropyGenerator generator_;
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Select the entropy source and recompile.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+#define RANDOM_ENTROPY_    // Must be enabled for production.
+#ifdef RANDOM_ENTROPY_
+
+using EntropySource = RandomEntropySource;
+
+#else
+
+using EntropySource = DeterministicEntropySource;
+
 #endif
 
-  // fast functions
-  std::shared_ptr<FastFunc> ff() { return this->ff_; }
 
- protected:
-  // Sample from a unit exponential distribution
-  // Unit tested
-  // fastlog can return 0, which causes a bug in kgd_deconvolv.
-  // log or fastlog does seems to have an influence on the runtime.
-  virtual double sampleUnitExponential() {
-    return -(this->ff()->fastlog(sample()));
-    //return -std::log(sample());
-  }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Double floating random on the interval [lower_bound, upper_bound]
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
- protected:
-  // seed
 
-  size_t seed_;
-  // cache for a unit-exponentially distributed variable
+class RandomUniform
+{
 
-  double unit_exponential_;
-  std::shared_ptr<FastFunc> ff_;
+public:
+
+  RandomUniform(double lower_bound, double upper_bound) : uniform_real_(lower_bound, upper_bound) {}
+  RandomUniform(const RandomUniform&) = delete;
+  virtual ~RandomUniform() = default;
+
+  RandomUniform& operator=(const RandomUniform&) = delete;
+
+  double generate(EntropyGenerator& source) const { return uniform_real_(source); }
+
+private:
+
+  mutable std::uniform_real_distribution<> uniform_real_;
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Random numbers on the unit interval [0, 1]
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class RandomUnitUniform : public RandomUniform {
+
+public:
+
+  RandomUnitUniform() : RandomUniform(0.0, 1.0) {}
+  ~RandomUnitUniform() override = default;
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Integer random numbers between, and including, lower_bound to upper_bound.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class RandomInteger
+{
+
+public:
+
+  RandomInteger(size_t lower_bound, size_t upper_bound) : uniform_integer_(lower_bound, upper_bound) {}
+  virtual ~RandomInteger() = default;
+
+  size_t generate(EntropyGenerator& source) const { return uniform_integer_(source); }
+
+private:
+
+  mutable std::uniform_int_distribution<size_t> uniform_integer_;
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Double float normally distributed random numbers with mean and std_deviation.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class RandomNormal
+{
+
+public:
+
+  RandomNormal(double mean, double std_deviation) : normal_real_(mean, std_deviation) {}
+  RandomNormal(const RandomNormal&) = delete;
+  virtual ~RandomNormal() = default;
+
+  RandomNormal& operator=(RandomNormal&) = delete;
+
+  double generate(EntropyGenerator& source) const { return normal_real_(source); }
+
+private:
+
+  mutable std::normal_distribution<> normal_real_;
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Double float standard normally distributed random numbers with mean = 0.0 and std_deviation = 1.0.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class RandomStdNormal : public RandomNormal {
+
+public:
+
+  RandomStdNormal() : RandomNormal(0.0, 1.0) {}
+  ~RandomStdNormal() override = default;
+
 };
 
 

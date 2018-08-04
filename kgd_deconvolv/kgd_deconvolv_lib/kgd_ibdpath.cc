@@ -17,9 +17,8 @@ namespace kgd = kellerberrin::deconvolv;
 
 
 
-void kgd::IBDpath::init(DEploidIO &dEploidIO, std::shared_ptr<RandomGenerator> randomGenerator) {
+void kgd::IBDpath::init(DEploidIO &dEploidIO) {
 
-  ibd_random_generator_ = randomGenerator;
   setNLoci(dEploidIO.nLoci());
   setKstrain(dEploidIO.kStrain());
   setTheta(1.0 / (double) kStrain());
@@ -97,37 +96,39 @@ void kgd::IBDpath::ibdSamplePath(const std::vector<double>& statePrior) {
 
   size_t site_i = nLoci() - 1;
 
-  std::vector<double> tmpProp = fm_[site_i];
+  std::vector<double>& site_i_prop = fm_[site_i];
 
   // Redundant as column vector is already normalized.
 //  Utility::normalizeBySum(tmpProp);
 
-  ibd_configure_path_[site_i] = Utility::sampleIndexGivenProp(ibd_random_generator_, tmpProp);
+  ibd_configure_path_[site_i] = Utility::sampleIndexGivenProp(site_i_prop);
 
   while (site_i > 0) {
 
-    site_i--;
+    --site_i;  // Next lower allele site.
 
-    std::vector<double> vNoRecomb = Utility::vecProd(ibd_trans_probs_[h_prior_.getStateIdx()[ibd_configure_path_[site_i + 1]]], fm_[site_i]);
+    size_t max_state = h_prior_.getStateIdx()[ibd_configure_path_[site_i + 1]];
 
-    assert(vNoRecomb.size() == h_prior_.nStateEntries());
+    std::vector<double>& max_state_mask = ibd_trans_probs_[max_state];
 
-    std::vector<double> vRecomb = fm_[site_i];
+    std::vector<double> no_recomb_entries = Utility::vecProd(max_state_mask, fm_[site_i]);
 
-    assert(vRecomb.size() == h_prior_.nStateEntries());
+    assert(no_recomb_entries.size() == h_prior_.nStateEntries());
 
-    std::vector<double> prop(h_prior_.nStateEntries());
+    std::vector<double>& recomb_all_entries = fm_[site_i];
 
-    for (size_t i = 0; i < prop.size(); i++) {
+    assert(recomb_all_entries.size() == h_prior_.nStateEntries());
 
-      prop[i] = vNoRecomb[i] * ibd_recomb_probs_->getNoRecombProbAtLoci(site_i) +
-                vRecomb[i] * ibd_recomb_probs_->getRecombProbAtLoci(site_i) * statePrior[ibd_configure_path_[site_i + 1]];
+    std::vector<double> prop_i_site(h_prior_.nStateEntries());
+
+    for (size_t state_entry = 0; state_entry < h_prior_.nStateEntries(); ++state_entry) {
+
+      prop_i_site[state_entry] = no_recomb_entries[state_entry] * ibd_recomb_probs_->getNoRecombProbAtLoci(site_i) +
+                recomb_all_entries[state_entry] * ibd_recomb_probs_->getRecombProbAtLoci(site_i) * statePrior[ibd_configure_path_[site_i + 1]];
 
     }
 
-    tmpProp = prop;
-    Utility::normalizeBySum(tmpProp);
-    ibd_configure_path_[site_i] = Utility::sampleIndexGivenProp(ibd_random_generator_, tmpProp);
+    ibd_configure_path_[site_i] = Utility::sampleIndexGivenProp(prop_i_site);
 
     assert(ibd_configure_path_[site_i] < h_prior_.nStateEntries());
 
@@ -292,6 +293,8 @@ void kgd::IBDpath::computeIbdPathFwdProb(const std::vector<double>& proportion, 
     updateFmAtSiteI(vPrior, lk);
 
   }
+
+
 
 }
 
@@ -501,61 +504,98 @@ std::vector<double> kgd::IBDpath::computeEffectiveKPrior(double theta) {
 
 std::vector<double> kgd::IBDpath::computeStatePrior(const std::vector<double>& effectiveKPrior) {
 
-  std::vector<double> ret;
+  std::vector<double> state_entry_prior;
 
   for (size_t stateIdxTmp : h_prior_.getStateIdx()) {
 
-    ret.push_back(effectiveKPrior[stateIdxTmp]);
+    state_entry_prior.push_back(effectiveKPrior[stateIdxTmp]);
 
   }
 
-  return ret;
+  return state_entry_prior;
 
 }
 
 
 void kgd::IBDpath::computeAndUpdateTheta() {
 
-  std::vector<size_t> obsState;
+  std::vector<size_t> state_changes;
 
-  size_t previousState = 0;
-  size_t atSiteI = 0;
+  size_t previous_state_entry = 0;
+  size_t site_i = 0;
 
-  for (size_t a : ibd_configure_path_) {
+  for (size_t site_state_entry : ibd_configure_path_) {
 
-    if (a != previousState) {
+// Instead of state entry changes, only state changes.
+//    if (site_state_entry != previous_state_entry) {
+//
+//     state_entry_changes.push_back(site_state_entry);
+//
+//    }
 
-      obsState.push_back(a);
+    if (h_prior_.getStateIdx()[site_state_entry] != h_prior_.getStateIdx()[previous_state_entry]) {
 
-    }
-
-    if (h_prior_.getStateIdx()[a] != h_prior_.getStateIdx()[previousState]) {
-
-      IBD_path_change_at_[atSiteI] += 1.0;
-      current_IBD_path_change_at_[atSiteI] = 1.0;
+      state_changes.push_back(h_prior_.getStateIdx()[site_state_entry]);
+      IBD_path_change_at_[site_i] += 1.0;
+      current_IBD_path_change_at_[site_i] = 1.0;
 
     } else {
 
-      current_IBD_path_change_at_[atSiteI] = 0.0;
+      current_IBD_path_change_at_[site_i] = 0.0;
 
     }
 
-    previousState = a;
-    atSiteI++;
+    previous_state_entry = site_state_entry;
+    site_i++;
 
   }
 
   size_t sumOfKeffStates = 0;
   size_t sccs = 0;
 
-  for (size_t obs : obsState) {
+  for (size_t state : state_changes) {
 
-    sumOfKeffStates += h_prior_.getEffectiveK()[obs] - 1;
-    sccs += kStrain() - h_prior_.getEffectiveK()[obs];
+    sumOfKeffStates += h_prior_.getEffectiveK()[state] - 1;
+    sccs += kStrain() - h_prior_.getEffectiveK()[state];
 
   }
 
-  setTheta(Utility::rBeta(sccs + 1.0, sumOfKeffStates + 1.0, ibd_random_generator_));
+//  setTheta(Utility::rBeta(sccs + 1.0, sumOfKeffStates + 1.0, ibd_random_generator_));
+
+//  setTheta(ibd_random_generator_->sample());
+//  if (theta() >= 1.0) {
+//
+//    setTheta(0.01);
+//
+//  }
+
+  //**** debug.
+
+  ExecEnv::log().info("theta: {}, obsState.size: {}/{}, sccs: {}, sumOfKeffStates: {}", theta(),  state_changes.size(), nLoci(), sumOfKeffStates, sccs);
+  std::stringstream ss;
+  for (auto state : state_changes) {
+
+    ss << state << ", ";
+
+  }
+
+  ExecEnv::log().info("states: {}", ss.str());
+
+  std::vector<size_t> state_count(h_prior_.nStates());
+  for (auto site_state_entry : ibd_configure_path_) {
+
+    state_count[h_prior_.getStateIdx()[site_state_entry]]++;
+
+  }
+  std::stringstream sss;
+  for (size_t idx = 0; idx < h_prior_.nStates(); ++idx) {
+
+    sss << idx << "/" << state_count[idx] << ", ";
+
+  }
+  ExecEnv::log().info("State Counts: {}", sss.str());
+
+  //**** debug
 
 }
 
@@ -595,13 +635,13 @@ std::vector<double> kgd::IBDpath::computeLlkOfStatesAtSiteI(const std::vector<do
   double maxllk = 0.0;
 
 //  for (std::vector<size_t> state_entry : h_prior_.gethSet()) {
-  for (size_t entry = 0; entry < h_prior_.nStateEntries(); ++entry) {
+  for (size_t state_entry = 0; state_entry < h_prior_.nStateEntries(); ++state_entry) {
 
     double wtd_lk = 0;
 
     for (size_t k = 0; k < kStrain(); ++k) {
 
-      if (h_prior_.gethSet()[entry][k] > 0) {
+      if (h_prior_.gethSet()[state_entry][k] > 0) {
 
         wtd_lk += proportion[k];
 
@@ -624,7 +664,7 @@ std::vector<double> kgd::IBDpath::computeLlkOfStatesAtSiteI(const std::vector<do
 
     }
 
-    llks[entry] = logBetaLLK;
+    llks[state_entry] = logBetaLLK;
 
   }
 

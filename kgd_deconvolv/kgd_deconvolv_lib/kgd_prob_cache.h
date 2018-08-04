@@ -18,7 +18,12 @@ namespace kellerberrin {    // organization level namespace
 namespace deconvolv {          // project level namespace
 
 
-
+// Two implementations of the log beta probability cache.
+// The first uses the Armadillo matrix library (SiteProbabilityCache).
+// The second just implements using std::vector (stlSiteProbabilityCache).
+// This function is a code 'hot spot' and thus an optimization priority.
+// Armadillo appears to be about 5% faster for this function.
+// This implies that there is no real motivation for converting the rest of the kgd code to Armadillo.
 
 class SiteProbabilityCache {
 
@@ -89,4 +94,4 @@ private:
 }   // project level namespace
 
 
-#endif //KGL_KGD_PROB_CACHE_H
+#endif //KGD_PROB_CACHE_H

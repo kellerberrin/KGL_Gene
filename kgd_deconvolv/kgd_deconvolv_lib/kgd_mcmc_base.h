@@ -24,7 +24,6 @@ public:
 
   MCMCBASE(std::shared_ptr<DEploidIO> dEplioidIO,
            std::shared_ptr<McmcSample> mcmcSample,
-           std::shared_ptr<RandomGenerator> randomGenerator,
            const MCMCParameterObj& MCMCParameters);
 
   ~MCMCBASE() override = default;
@@ -34,9 +33,10 @@ protected:
   MCMCParameterObj MCMCParameters_;
   MCMCTITRE titre_proportions_; /* MCMC proportions */
 
+  EntropySource entropy_source_;  // Entropy for the random generators.
+  RandomUnitUniform random_unit_;  // Uniform [0, 1] random generator;
+
   std::shared_ptr<RandomGenerator> hapRg_;
-  std::shared_ptr<RandomGenerator> propRg_;
-  std::shared_ptr<RandomGenerator> initialHapRg_;
 
   std::vector<std::vector<double> > currentHap_;
   std::vector<double> currentExpectedWsaf_;
