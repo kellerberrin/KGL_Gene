@@ -43,7 +43,7 @@
 #include "kgd_ctl_data.h"
 #include "kgd_ctl_function.h"
 #include "kgd_ctl_parameter.h"
-#include "kgd_random.h"
+#include "kgd_distribution.h"
 
 
 namespace kellerberrin {    // organization level namespace

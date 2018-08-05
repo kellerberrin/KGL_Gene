@@ -73,7 +73,8 @@ void kgd::MCMCIBD::finalizeMcmc() {
 
   }
 
-  ExecEnv::log().info("Proportion update acceptance rate: {}", acceptCount() / (kStrain() * 1.0 * total_MCMC_iterations()));
+//  ExecEnv::log().info("Proportion update acceptance rate: {}", acceptCount() / (kStrain() * 1.0 * total_MCMC_iterations()));
+  ExecEnv::log().info("Proportion update acceptance rate: {}", acceptCount() / ( 1.0 * total_MCMC_iterations()));
 
   dEploidIO_->setInitialProp(averageProportion(mcmcSample_->getProportion()));
   dEploidIO_->setInitialPropWasGiven(true);
@@ -138,7 +139,8 @@ void kgd::MCMCIBD::ibdInitializeEssentials(double err) {
 
 void kgd::MCMCIBD::ibdSampleMcmcEventStep() {
 
-  const double theta_proposal_size = 0.1;
+  static BetaDistribution random_beta(2.0,2.0);
+  //  const double theta_proposal_size = 0.1;
   std::vector<double> llkAtAllSites = computeLlkAtAllSites(titre_proportions_.Proportions(), MCMCParameters_.baseCountError());
 
   double previous_theta = ibdPath_.theta();
@@ -151,8 +153,8 @@ void kgd::MCMCIBD::ibdSampleMcmcEventStep() {
 
 //  } while (proposed_theta < 0 or proposed_theta > 1);
 
-  double theta = random_unit_.generate(entropy_source_.generator());
-
+//  double theta = random_unit_.generate(entropy_source_.generator());
+  double theta = random_beta.random(entropy_source_.generator());
   ibdPath_.setTheta(theta);
 
   // Update the idb path.
@@ -198,7 +200,13 @@ void kgd::MCMCIBD::ibdUpdateThetaGivenHap(double previous_theta, const std::vect
   double log_likelihood_ratio = Utility::sumOfVec(updated_llkAtAllSites) - Utility::sumOfVec(llkAtAllSites);
   double likelihood_ratio = std::exp(log_likelihood_ratio);
   double proposal_ratio = prior_ratio * likelihood_ratio;
-  double acceptance_draw = random_unit_.generate(entropy_source_.generator());
+  double acceptance_draw = random_unit_.random(entropy_source_.generator());
+
+  ExecEnv::log().info("{}, Theta: {}/{}, ll_r: {}, l_r: {}, h*r: {}, accept: {}, ratio: {}, {}",
+                      current_MCMC_iteration(), ibdPath_.theta(), previous_theta, log_likelihood_ratio,
+                      likelihood_ratio, proposal_ratio, acceptance_draw,
+                      static_cast<double>(theta_accept_)/static_cast<double>(current_MCMC_iteration()),
+                      acceptance_draw <= proposal_ratio ? "ACCEPT" : "REJECT");
 
   if (acceptance_draw > proposal_ratio) {
     // Reject
@@ -209,13 +217,6 @@ void kgd::MCMCIBD::ibdUpdateThetaGivenHap(double previous_theta, const std::vect
     theta_accept_ += 1;
 
   }
-
-  ExecEnv::log().info("{}, Theta: {}/{}, ll_r: {}, l_r: {}, h*r: {}, accept: {}, ratio: {}, {}",
-                      current_MCMC_iteration(), ibdPath_.theta(), previous_theta, log_likelihood_ratio,
-                      likelihood_ratio, proposal_ratio, acceptance_draw,
-                      static_cast<double>(theta_accept_)/static_cast<double>(current_MCMC_iteration()),
-                      acceptance_draw <= proposal_ratio ? "ACCEPT" : "REJECT");
-
 
 }
 
@@ -241,11 +242,14 @@ void kgd::MCMCIBD::updateProportion() {
 
   double proposal_ratio = prior_prop_ratio * likelihood_ratio * proposal.hastingsRatio();
 
-  double acceptance_draw = random_unit_.generate(entropy_source_.generator());
+  double acceptance_draw = random_unit_.random(entropy_source_.generator());
 
-  ExecEnv::log().info("{}, Update: {}, p_ratio: {}, ll_r: {}, l_r: {}, p*l: {}, accept: {}, {}",
+  double ratio = static_cast<double>(acceptCount()) / static_cast<double>(current_MCMC_iteration());
+
+  ExecEnv::log().info("{}, Update: {}, p_r: {}, ll_r: {}, l_r: {}, p*l: {}, accept: {}, {}, ratio: {}",
                       current_MCMC_iteration(), proposal.proportionsText(),
-                      prior_prop_ratio, log_likelihood_ratio, likelihood_ratio, proposal_ratio, acceptance_draw, acceptance_draw <= proposal_ratio ? "ACCEPT" : "REJECT");
+                      prior_prop_ratio, log_likelihood_ratio, likelihood_ratio, proposal_ratio, acceptance_draw,
+                      acceptance_draw <= proposal_ratio ? "ACCEPT" : "REJECT", ratio);
 
   if (acceptance_draw <= proposal_ratio) {
   // Accept
@@ -276,7 +280,7 @@ void kgd::MCMCIBD::ibdUpdateProportionGivenHap() {
     double log_likelihood_ratio = Utility::sumOfVec(llk_loci_vector) - Utility::sumOfVec(llkAtAllSites);
     double likelihood_ratio = std::exp(log_likelihood_ratio);
     double proposal_ratio = prior_titre_ratio * likelihood_ratio;
-    double acceptance_draw = random_unit_.generate(entropy_source_.generator());
+    double acceptance_draw = random_unit_.random(entropy_source_.generator());
 
     ExecEnv::log().info("{}, IDB [{}]: {}/{}, h_ratio: {}, ll_r: {}, l_r: {}, h*r: {}, accept: {}, {}",
                         current_MCMC_iteration(), k, proposal.Proportions()[k], titre_proportions_.Proportions()[k],

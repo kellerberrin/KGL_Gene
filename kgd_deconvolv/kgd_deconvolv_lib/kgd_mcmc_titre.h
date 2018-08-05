@@ -8,7 +8,7 @@
 #include <vector>
 #include <cstdio>
 #include <memory>
-#include "kgd_random.h"
+#include "kgd_distribution.h"
 #include "randomSample.hpp"
 
 namespace kellerberrin {    // organization level namespace
@@ -28,7 +28,7 @@ public:
 
   void randomizeTitre(); // generate an initial titre state.
   void randomizeProportions(); // generate an initial proportion state
-  void proportion2Titre(const std::vector<double>& proportions);  // initialize the titre with and proportion vector
+  void proportion2Titre(const std::vector<double>& proportions);  // initialize the titre with a proportion vector
   void updateTitre();  // update all the titre elements.
   void updateTitreIndex(size_t index);  // update the indexed element
 
@@ -51,7 +51,7 @@ private:
   std::vector<double> currentTitre_;
   std::vector<double> proportions_;
 
-  std::shared_ptr<RandomStdNormal> std_norm_;
+  std::shared_ptr<StdNormalDistribution> std_norm_;
   std::shared_ptr<EntropySource> entropy_source_;
 
   size_t kStrain() const { return k_strains_; }

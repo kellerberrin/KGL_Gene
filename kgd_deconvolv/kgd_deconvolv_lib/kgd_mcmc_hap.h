@@ -26,14 +26,14 @@ namespace deconvolv {          // project level namespace
 
 
 enum class HapUpdateType : size_t { UPDATE_PROPORTION = 0, UPDATE_SINGLE_HAPLOTYPE = 1, UPDATE_PAIR_HAPLOTYPE = 2 };
-class RandomUpdateType : private RandomInteger {
+class RandomUpdateType : private UniformIntegerDistribution {
 
 public:
 
-  RandomUpdateType() : RandomInteger(static_cast<size_t>(HapUpdateType::UPDATE_PROPORTION), static_cast<size_t>(HapUpdateType::UPDATE_PAIR_HAPLOTYPE)) {}
+  RandomUpdateType() : UniformIntegerDistribution(static_cast<size_t>(HapUpdateType::UPDATE_PROPORTION), static_cast<size_t>(HapUpdateType::UPDATE_PAIR_HAPLOTYPE)) {}
   ~RandomUpdateType() override = default;
 
-  HapUpdateType generateUpdate() const { return static_cast<HapUpdateType>(generate(entropy_source_.generator())); }
+  HapUpdateType generateUpdate() const { return static_cast<HapUpdateType>(random(entropy_source_.generator())); }
 
 private:
 
@@ -42,15 +42,15 @@ private:
 };
 
 
-class RandomStrain : private RandomInteger {
+class RandomStrain : private UniformIntegerDistribution {
 
 public:
 
-  RandomStrain(size_t k_strains) : RandomInteger(0, k_strains - 1) {}
+  RandomStrain(size_t k_strains) : UniformIntegerDistribution(0, k_strains - 1) {}
   ~RandomStrain() override = default;
 
   // Returns a random number 0,..., strain-1
-  size_t getRandomStrain() const { return generate(entropy_source_.generator()); }
+  size_t getRandomStrain() const { return random(entropy_source_.generator()); }
 
   // Returns a random pair of different k1 != k2 of strains.
   std::pair<size_t, size_t> getRandomStrainPair() {

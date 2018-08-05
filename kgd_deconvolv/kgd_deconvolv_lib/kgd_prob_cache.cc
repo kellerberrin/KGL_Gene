@@ -3,6 +3,7 @@
 //
 
 #include "kgd_deconvolv_app.h"
+#include "kgd_distribution.h"
 #include "kgd_prob_cache.h"
 
 
@@ -92,7 +93,7 @@ void kgd::SiteProbabilityCache::armaProbabilityCache(const std::vector<double>& 
     llk_surf_mat_(site, A_INDEX) = a;
     llk_surf_mat_(site, B_INDEX) = b;
 
-    log_beta_gamma_vec_(site) = Utility::logBetaGamma(a, b);
+    log_beta_gamma_vec_(site) = BetaDistribution::logInverseBetaFunction(a, b);
 
   }
 
@@ -101,7 +102,7 @@ void kgd::SiteProbabilityCache::armaProbabilityCache(const std::vector<double>& 
 
 double kgd::SiteProbabilityCache::armaSiteLogBetaLLK(size_t site, double x) const {
 
-  return log_beta_gamma_vec_(site) + Utility::partialLogBetaPdf(x, llk_surf_mat_(site, A_INDEX), llk_surf_mat_(site, B_INDEX));
+  return log_beta_gamma_vec_(site) + BetaDistribution::logPartialPdf(x, llk_surf_mat_(site, A_INDEX), llk_surf_mat_(site, B_INDEX));
 
 }
 
@@ -186,7 +187,7 @@ void kgd::stlSiteProbabilityCache::stlProbabilityCache(const std::vector<double>
 
   for (auto sitellk : llk_surf_) {
 
-    log_beta_gamma_.push_back(Utility::logBetaGamma(sitellk[0], sitellk[1]));
+    log_beta_gamma_.push_back(BetaDistribution::logInverseBetaFunction(sitellk[0], sitellk[1]));
 
   }
 
@@ -197,6 +198,6 @@ void kgd::stlSiteProbabilityCache::stlProbabilityCache(const std::vector<double>
 
 double kgd::stlSiteProbabilityCache::stlSiteLogBetaLLK(size_t site, double x) const {
 
-  return log_beta_gamma_[site] + Utility::partialLogBetaPdf(x, llk_surf_[site][0], llk_surf_[site][1]);
+  return log_beta_gamma_[site] + BetaDistribution::logPartialPdf(x, llk_surf_[site][0], llk_surf_[site][1]);
 
 }

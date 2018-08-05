@@ -477,7 +477,7 @@ std::vector<double> kgd::IBDpath::computeEffectiveKPrior(double theta) {
 
   for (size_t i = 0; i < kStrain(); ++i) {
 
-    double binomial_i = Utility::binomialPdf(i, (kStrain() - 1), theta);
+    double binomial_i = BinomialDistribution::pdf((kStrain() - 1), i, theta);
 
     binomial_vector.push_back(binomial_i);
 

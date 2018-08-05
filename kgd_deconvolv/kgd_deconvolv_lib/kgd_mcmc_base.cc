@@ -72,7 +72,7 @@ void kgd::MCMCBASE::initializeHap() {
 
 double kgd::MCMCBASE::rBernoulli(double p) {
 
-  double u = random_unit_.generate(entropy_source_.generator());
+  double u = random_unit_.random(entropy_source_.generator());
 
   return (u < p) ? 1.0 : 0.0;
 

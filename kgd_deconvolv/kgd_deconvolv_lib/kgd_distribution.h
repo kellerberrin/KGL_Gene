@@ -1,6 +1,6 @@
 
-#ifndef KGD_RANDOM_H
-#define KGD_RANDOM_H
+#ifndef KGD_DISTRIBUTION_H
+#define KGD_DISTRIBUTION_H
 
 
 #include <memory>
@@ -26,7 +26,7 @@ public:
 
   RandomEntropySource() : generator_(rd_()) {}
   RandomEntropySource(const RandomEntropySource&) = delete;
-  ~RandomEntropySource() = default;
+  virtual ~RandomEntropySource() = default;
 
   RandomEntropySource& operator=(const RandomEntropySource&) = delete;
 
@@ -55,7 +55,7 @@ public:
 
   DeterministicEntropySource(size_t seed = 1111) : generator_(seed) {}
   DeterministicEntropySource(const DeterministicEntropySource&) = delete;
-  ~DeterministicEntropySource() = default;
+  virtual ~DeterministicEntropySource() = default;
 
   DeterministicEntropySource& operator=(const DeterministicEntropySource&) = delete;
 
@@ -90,18 +90,18 @@ using EntropySource = DeterministicEntropySource;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class RandomUniform
+class UniformRealDistribution
 {
 
 public:
 
-  RandomUniform(double lower_bound, double upper_bound) : uniform_real_(lower_bound, upper_bound) {}
-  RandomUniform(const RandomUniform&) = delete;
-  virtual ~RandomUniform() = default;
+  UniformRealDistribution(double lower_bound, double upper_bound) : uniform_real_(lower_bound, upper_bound) {}
+  UniformRealDistribution(const UniformRealDistribution&) = delete;
+  virtual ~UniformRealDistribution() = default;
 
-  RandomUniform& operator=(const RandomUniform&) = delete;
+  UniformRealDistribution& operator=(const UniformRealDistribution&) = delete;
 
-  double generate(EntropyGenerator& source) const { return uniform_real_(source); }
+  double random(EntropyGenerator &source) const { return uniform_real_(source); }
 
 private:
 
@@ -115,12 +115,12 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class RandomUnitUniform : public RandomUniform {
+class UniformUnitDistribution : public UniformRealDistribution {
 
 public:
 
-  RandomUnitUniform() : RandomUniform(0.0, 1.0) {}
-  ~RandomUnitUniform() override = default;
+  UniformUnitDistribution() : UniformRealDistribution(0.0, 1.0) {}
+  virtual ~UniformUnitDistribution() override = default;
 
 };
 
@@ -130,15 +130,15 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class RandomInteger
+class UniformIntegerDistribution
 {
 
 public:
 
-  RandomInteger(size_t lower_bound, size_t upper_bound) : uniform_integer_(lower_bound, upper_bound) {}
-  virtual ~RandomInteger() = default;
+  UniformIntegerDistribution(size_t lower_bound, size_t upper_bound) : uniform_integer_(lower_bound, upper_bound) {}
+  virtual ~UniformIntegerDistribution() = default;
 
-  size_t generate(EntropyGenerator& source) const { return uniform_integer_(source); }
+  size_t random(EntropyGenerator &source) const { return uniform_integer_(source); }
 
 private:
 
@@ -152,18 +152,20 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class RandomNormal
+class NormalDistribution
 {
 
 public:
 
-  RandomNormal(double mean, double std_deviation) : normal_real_(mean, std_deviation) {}
-  RandomNormal(const RandomNormal&) = delete;
-  virtual ~RandomNormal() = default;
+  NormalDistribution(double mean, double std_deviation) : normal_real_(mean, std_deviation) {}
+  NormalDistribution(const NormalDistribution&) = delete;
+  virtual ~NormalDistribution() = default;
 
-  RandomNormal& operator=(RandomNormal&) = delete;
+  NormalDistribution& operator=(NormalDistribution&) = delete;
 
-  double generate(EntropyGenerator& source) const { return normal_real_(source); }
+  double random(EntropyGenerator &source) const { return normal_real_(source); }
+
+  static double pdf(double x, double mean, double std_dev);
 
 private:
 
@@ -177,12 +179,12 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class RandomStdNormal : public RandomNormal {
+class StdNormalDistribution : public NormalDistribution {
 
 public:
 
-  RandomStdNormal() : RandomNormal(0.0, 1.0) {}
-  ~RandomStdNormal() override = default;
+  StdNormalDistribution() : NormalDistribution(0.0, 1.0) {}
+  virtual ~StdNormalDistribution() override = default;
 
 };
 
@@ -192,18 +194,27 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class RandomBeta
+class BetaDistribution
 {
 
 public:
 
-  RandomBeta(double a, double b) : x_(a, 1), y_(b, 1) {}
-  RandomBeta(const RandomNormal&) = delete;
-  virtual ~RandomBeta() = default;
+  BetaDistribution(double a, double b) : x_(a, 1), y_(b, 1) {}
+  BetaDistribution(const BetaDistribution&) = delete;
+  virtual ~BetaDistribution() = default;
 
-  RandomNormal& operator=(RandomNormal&) = delete;
+  BetaDistribution& operator=(BetaDistribution&) = delete;
 
-  double generate(EntropyGenerator& source) const {  double x = x_(source);  return x / (x + y_(source)); }
+  double random(EntropyGenerator &source) const {  double x = x_(source);  return x / (x + y_(source)); }
+
+  static double logInverseBetaFunction(double a, double b);
+
+  static double logPartialPdf(double x, double a, double b);
+
+  static double logPdf(double x, double a, double b);
+
+  static double pdf(double x, double a, double b);
+
 
 private:
 
@@ -212,6 +223,50 @@ private:
 
 };
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Beta Binomial Distribution.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class BetaBinomialDistribution {
+
+public:
+
+  BetaBinomialDistribution() = delete;
+  ~BetaBinomialDistribution() = delete;
+
+  static double pdf(size_t n, size_t k, double alpha, double beta);
+  // Uses loggamma functions.
+  static double logPdf(double n, double k, double alpha, double beta);
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Binomial Distribution.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class BinomialDistribution {
+
+public:
+
+  BinomialDistribution(size_t trials, double prob_success) :  binomial_integer_(trials, prob_success) {}
+  BinomialDistribution(const BinomialDistribution &) = delete;
+  virtual ~BinomialDistribution() = default;
+
+  BinomialDistribution &operator=(BinomialDistribution &) = delete;
+
+  size_t random(EntropyGenerator &source) const { return binomial_integer_(source); }
+
+  static double pdf(size_t n, size_t k, double prob_success);
+
+private:
+
+  mutable std::binomial_distribution<> binomial_integer_;
+
+};
 
 
 }   // organization level namespace

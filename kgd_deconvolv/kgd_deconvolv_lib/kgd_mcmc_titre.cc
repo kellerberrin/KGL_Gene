@@ -22,7 +22,7 @@ kgd::MCMCTITRE::MCMCTITRE(size_t k_strains,
                                                 update_scale_(update_scale) {
 
 
-  std_norm_ = std::make_shared<RandomStdNormal>();
+  std_norm_ = std::make_shared<StdNormalDistribution>();
   entropy_source_ = std::make_shared<EntropySource>();
 
   randomizeTitre();
@@ -119,7 +119,7 @@ double kgd::MCMCTITRE::calcLogPriorTitre() const {
 
   for (auto value: currentTitre_) {
 
-    log_sum += std::log(Utility::normal_pdf(value, mean_log_titre_, sd_log_titre_));
+    log_sum += std::log(NormalDistribution::pdf(value, mean_log_titre_, sd_log_titre_));
 
   }
 
@@ -136,21 +136,21 @@ double kgd::MCMCTITRE::calcPriorTitreIndex(size_t index) const {
 
   }
 
-  return Utility::normal_pdf(currentTitre_[index], mean_log_titre_, sd_log_titre_);
+  return NormalDistribution::pdf(currentTitre_[index], mean_log_titre_, sd_log_titre_);
 
 }
 
 
 double kgd::MCMCTITRE::deltaXnormalVariable() const {
 
-  return (std_norm_->generate(entropy_source_->generator()) * (sd_log_titre_ / update_scale_)) + mean_log_titre_;
+  return (std_norm_->random(entropy_source_->generator()) * (sd_log_titre_ / update_scale_)) + mean_log_titre_;
 
 }
 
 
 double kgd::MCMCTITRE::initialTitreNormalVariable() const {
 
-  return (std_norm_->generate(entropy_source_->generator()) * sd_log_titre_) + mean_log_titre_;
+  return (std_norm_->random(entropy_source_->generator()) * sd_log_titre_) + mean_log_titre_;
 
 }
 

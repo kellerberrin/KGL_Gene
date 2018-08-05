@@ -34,7 +34,7 @@ protected:
   MCMCTITRE titre_proportions_; /* MCMC proportions */
 
   EntropySource entropy_source_;  // Entropy for the random generators.
-  RandomUnitUniform random_unit_;  // Uniform [0, 1] random generator;
+  UniformUnitDistribution random_unit_;  // Uniform [0, 1] random generator;
 
   std::vector<std::vector<double> > currentHap_;
   std::vector<double> currentExpectedWsaf_;

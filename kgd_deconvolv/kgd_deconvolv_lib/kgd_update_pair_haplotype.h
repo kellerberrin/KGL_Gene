@@ -29,8 +29,10 @@ public:
   UpdatePairHap(size_t segmentStartIndex,
                 size_t nLoci,
                 size_t kStrain,
-                std::shared_ptr<Panel> panel, double missCopyProb,
-                double scalingFactor, bool forbidCopyFromSame,
+                std::shared_ptr<Panel> panel,
+                double missCopyProb,
+                double scalingFactor,
+                bool forbidCopyFromSame,
                 size_t strainIndex1,
                 size_t strainIndex2);
 

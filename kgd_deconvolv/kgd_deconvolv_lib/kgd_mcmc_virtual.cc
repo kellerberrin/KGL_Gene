@@ -26,9 +26,9 @@ kgd::MCMCVIRTUAL::MCMCVIRTUAL(std::shared_ptr<DEploidIO> dEploidIO,
 
 void kgd::MCMCVIRTUAL::runMcmcChain(bool showProgress) {
 
-  for (currentMcmcIteration_ = 0; currentMcmcIteration_ < maxIteration_; currentMcmcIteration_++) {
+  for (currentMcmcIteration_ = 1; currentMcmcIteration_ < maxIteration_; ++currentMcmcIteration_) {
 
-    if (currentMcmcIteration_ > 0 && currentMcmcIteration_ % 100 == 0 && showProgress) {
+    if (currentMcmcIteration_ % 100 == 0 && showProgress) {
 
       ExecEnv::log().info("MCMC iteration: {}/{}, completed: {}%", currentMcmcIteration_, maxIteration_, int(currentMcmcIteration_ * 100 / maxIteration_));
 

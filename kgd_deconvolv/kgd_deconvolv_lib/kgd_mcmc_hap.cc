@@ -145,7 +145,7 @@ void kgd::MCMCHAP::updateProportion() {
 
   double proposal_ratio = prior_prop_ratio * ratio_likelihood * proposal.hastingsRatio();
 
-  double acceptance_draw = random_unit_.generate(entropy_source_.generator());
+  double acceptance_draw = random_unit_.random(entropy_source_.generator());
 
   ExecEnv::log().info("{}, Update: {}, p_ratio: {}, l_ratio: {}, p*l: {}, accept: {}, {}",
                       current_MCMC_iteration(), proposal.proportionsText(),

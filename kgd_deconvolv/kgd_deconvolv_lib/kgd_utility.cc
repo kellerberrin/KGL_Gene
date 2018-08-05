@@ -23,13 +23,14 @@
  *
  */
 
-#include "logbeta.h"
-#include "kgd_utility.h"
+//#include "logbeta.h"
 #include <iterator>     // std::distance
 #include <algorithm> // find
+#include "kgd_utility.h"
 #include "kgd_deconvolv_app.h"
-#include "loggammasum.h" // which includes log_gamma.h
-#include "gamma.h"
+#include "kgd_distribution.h"
+//#include "loggammasum.h" // which includes log_gamma.h
+//#include "gamma.h"
 
 
 #include <boost/math/special_functions/gamma.hpp>
@@ -99,17 +100,6 @@ bool kgd::Utility::vectorEquivalence(std::vector<size_t> vec1, std::vector<size_
 }
 
 
-double kgd::Utility::lognormal_pdf(double x, double mean, double std_dev) {
-
-  static const double inv_sqrt_2pi = 0.3989422804014327;
-
-  double a = (std::log(x) - mean) / std_dev;
-
-  return (inv_sqrt_2pi / (x * std_dev)) * std::exp(-0.5 * a * a);
-
-}
-
-
 double kgd::Utility::normal_pdf(double x, double mean, double std_dev) {
 
   static const double inv_sqrt_2pi = 0.3989422804014327;
@@ -139,26 +129,6 @@ double kgd::Utility::max_value(std::vector<double> x) {
   auto tmpMaxIt = std::max_element(std::begin(x), std::end(x));
 
   return *tmpMaxIt;
-
-}
-
-
-std::vector<double> kgd::Utility::computeCdf(const std::vector<double>& dist) {
-
-  std::vector<double> cdf;
-
-  double cumsum = 0;
-
-  for (double p : dist) {
-
-    cumsum += p;
-    cdf.push_back(cumsum);
-
-  }
-
-  assert(cdf.size() == dist.size());
-  //assert( cdf.back() == 1.0 );
-  return cdf;
 
 }
 
@@ -242,11 +212,26 @@ std::vector<double> kgd::Utility::calcLLKs(const std::vector<double> &refCount,
 
     assert (expectedWsaf[i] >= 0);
     //assert (expectedWsaf[i] <= 1);
-    tmpLLKs[i] = calcLLK(refCount[index],
-                         altCount[index],
-                         expectedWsaf[i],
-                         err,
-                         fac);
+
+    double adjustedWsaf = expectedWsaf[i] + ((1 - (2 * expectedWsaf[i])) * err);
+
+    double a2_arg = adjustedWsaf * fac;
+    double b2_arg = (1 - adjustedWsaf) * fac;
+
+    size_t n = static_cast<size_t>(std::round(refCount[index]+altCount[index]));
+    size_t k = static_cast<size_t>(std::round(altCount[index]));
+
+    double prob = BetaBinomialDistribution::pdf(n, k, a2_arg, b2_arg);
+
+    tmpLLKs[i] =  std::log(prob);
+
+//
+//
+//    tmpLLKs[i] = calcLLK(refCount[index],
+//                         altCount[index],
+//                         expectedWsaf[i],
+//                         err,
+//                         fac);
 
     index++;
 
@@ -264,17 +249,30 @@ double kgd::Utility::calcLLK(double ref, double alt, double unadjustedWsaf, doub
   double a2_arg = adjustedWsaf * fac;
   double b2_arg = (1 - adjustedWsaf) * fac;
 
+#define BOOST_BBD_  1
+#ifdef BOOST_BBD_
+
+  size_t n = static_cast<size_t>(std::round(ref+alt));
+  size_t k = static_cast<size_t>(std::round(alt));
+
+  double prob = BetaBinomialDistribution::pdf(n, k, a2_arg, b2_arg);
+
+  return std::log(prob);
+
+//  return BetaBinomialDistribution::logPdf(ref + alt, alt, a2_arg, b2_arg);
+
+#else
+
   double a1_arg = alt + a2_arg;
   double b1_arg = ref + b2_arg;
 
-
-  //double log_bin_coeff = std::log(n_choose_k((ref+alt), alt));
-  //Binomial coefficients can be expressed in terms of the beta function
+  //Binomial coefficients are expressed in terms of the (log) beta function
   double inverse_log_binonimal_coeff = std::log(alt + ref + 1.0) + Maths::Special::Gamma::logBeta(ref+1.0, alt+1.0);
-
   double llk = Maths::Special::Gamma::logBeta(a1_arg, b1_arg) - Maths::Special::Gamma::logBeta(a2_arg, b2_arg) - inverse_log_binonimal_coeff;
 
   return llk;
+
+#endif
 
 }
 
@@ -339,74 +337,6 @@ std::vector<double> kgd::Utility::reshapeMatToVec(std::vector<std::vector<double
 
 }
 
-
-double kgd::Utility::betaPdf(double x, double a, double b) {
-
-  assert(x >= 0 && x <= 1);
-  assert(a >= 0);
-  assert(b >= 0);
-
-  double p = Maths::Special::Gamma::gamma(a + b) / (Maths::Special::Gamma::gamma(a) * Maths::Special::Gamma::gamma(b));
-  double q = pow(1 - x, b - 1) * pow(x, a - 1);
-  return p * q;
-
-}
-
-
-double kgd::Utility::logBetaGamma(double a, double b) {
-
-  assert(a >= 0);
-  assert(b >= 0);
-
-  return boost_logBetaGamma(a, b);
-//  return codeCogs_logBetaGamma(a, b);
-
-}
-
-// Codecogs implementation
-double kgd::Utility::codeCogs_logBetaGamma(double a, double b) {
-
-  double log_gamma = Maths::Special::Gamma::log_gamma(a + b)
-                     - Maths::Special::Gamma::log_gamma(a) -
-                     Maths::Special::Gamma::log_gamma(b);
-
-  return log_gamma;
-
-}
-
-// boost implementation
-double kgd::Utility::boost_logBetaGamma(double a, double b) {
-
-  double log_gamma = bm::lgamma(a + b) - bm::lgamma(a) - bm::lgamma(b);
-
-  return log_gamma;
-
-}
-
-
-double kgd::Utility::partialLogBetaPdf(double x, double a, double b) {
-
-  assert(x >= 0 && x <= 1);
-  assert(a >= 0);
-  assert(b >= 0);
-
-  double ret =  (b - 1) * std::log(1 - x) + (a - 1) * std::log(x);
-
-  return ret;
-
-}
-
-double kgd::Utility::logBetaPdf(double x, double a, double b) {
-
-  assert(x >= 0 && x <= 1);
-  assert(a >= 0);
-  assert(b >= 0);
-
-  double ret =  logBetaGamma(a, b) + partialLogBetaPdf(x, a, b);
-
-  return ret;
-
-}
 
 
 double kgd::Utility::binomialPdf(size_t s, size_t n, double p) {

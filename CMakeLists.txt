@@ -252,7 +252,7 @@ set(DECONVOLV_LIB_CONTRIB_FILES
         kgd_deconvolv/contrib/codeCogs/xsub_ln_add1.h
         kgd_deconvolv/contrib/gzstream/gzstream.cpp
         kgd_deconvolv/contrib/gzstream/gzstream.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_random.h)
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_distribution.h)
 
 set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_lib/kgd_vcf_reader_debug.cc
@@ -318,7 +318,7 @@ set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_app.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.cc
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdpath_arma.h )
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdpath_arma.h kgd_deconvolv/kgd_deconvolv_lib/kgd_distribution.cc)
 #        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdpath_arma.cc)
 
 # Application level objects

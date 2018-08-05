@@ -155,15 +155,11 @@ public:
 
   static bool vectorEquivalence(std::vector<size_t> vec1, std::vector<size_t> vec2);
 
-  static double lognormal_pdf(double x, double mean, double std_dev);
-
   static double normal_pdf(double x, double mean, double std_dev);
 
   static double min_value(std::vector<double> x);
 
   static double max_value(std::vector<double> x);
-
-  static std::vector<double> computeCdf(const std::vector<double> &dist);
 
   static double sumOfMat(std::vector<std::vector<double> > &matrix);
 
@@ -185,14 +181,6 @@ public:
 
   static std::vector<double> reshapeMatToVec(std::vector<std::vector<double> > &Mat);
 
-  static double betaPdf(double x, double a, double b);
-
-  static double logBetaGamma(double a, double b);
-
-  static double partialLogBetaPdf(double x, double a, double b);
-
-  static double logBetaPdf(double x, double a, double b);
-
   static double binomialPdf(size_t s, size_t n, double p);
 
 // Returns trimmed string.
@@ -203,10 +191,6 @@ private: /// Deprecated utility functions are banished here.
 
   static void normalizeByMax(std::vector<double> &array);
 //double betaDistConst( double a , double b);
-
-  static double codeCogs_logBetaGamma(double a, double b);
-  static double boost_logBetaGamma(double a, double b);
-
 
 };
 
