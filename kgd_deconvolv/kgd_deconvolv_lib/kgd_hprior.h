@@ -11,7 +11,6 @@
 #include <kgd_exceptions.h>
 #include <sstream>
 #include "kgd_utility.h"
-#include "kgd_mersenne_twister.h"
 #include "kgd_deploid_io.h"
 #include "kgd_ibdconfig.h"
 

@@ -32,7 +32,6 @@
 #include <iostream>
 #include <algorithm>    /* min_element, max_element */
 
-#include "kgd_mersenne_twister.h"
 #include "kgd_global.h"
 
 #include "kgd_variant_index.h"
@@ -195,8 +194,6 @@ public:
   static double logBetaPdf(double x, double a, double b);
 
   static double binomialPdf(size_t s, size_t n, double p);
-
-  static double rBeta(double alpha, double beta, std::shared_ptr<RandomGenerator> randomGenerator);
 
 // Returns trimmed string.
   static std::string trimWhiteSpace(const std::string& s);

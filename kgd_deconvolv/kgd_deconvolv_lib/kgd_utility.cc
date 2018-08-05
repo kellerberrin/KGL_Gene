@@ -423,33 +423,6 @@ double kgd::Utility::binomialPdf(size_t s, size_t n, double p) {
 }
 
 
-double kgd::Utility::rBeta(double alpha, double beta, std::shared_ptr<RandomGenerator> randomGenerator) {
-
-  double mxAt = 0.1;
-
-  if (alpha > 1.0 and alpha + beta > 2.0) {
-
-    mxAt = (alpha - 1.0) / (alpha + beta - 2.0);
-
-  }
-
-  double mx = betaPdf(mxAt, alpha, beta);
-
-  double y, u;
-
-  do {
-
-    u = randomGenerator->unitUniformRand();
-    y = randomGenerator->unitUniformRand();
-
-  } while (u > (betaPdf(y, alpha, beta) / mx));
-
-
-  return y;
-
-}
-
-
 // Returns trimmed string.
 std::string kgd::Utility::trimWhiteSpace(const std::string& s) {
 

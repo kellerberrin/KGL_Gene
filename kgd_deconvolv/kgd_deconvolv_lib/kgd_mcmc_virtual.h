@@ -9,7 +9,7 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>      // std::setw
-#include "kgd_random_generator.h"
+#include "kgd_random.h"
 #include "randomSample.hpp"   // src/codeCogs/randomSample.hpp
 #include "kgd_deploid_io.h"
 #include "kgd_mcmc_sample.h"

@@ -1,34 +1,8 @@
-/*
- * kgd_deconvolv is used for deconvoluting Plasmodium falciparum genome from
- * mix-infected patient sample.
- *
- * Copyright (C) 2016-2017 University of Oxford
- *
- * Author: Sha (Joe) Zhu
- *
- * This file is part of kgd_deconvolv.
- *
- * kgd_deconvolv is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- */
 
-#ifndef KGD_RANDOM_GENERATOR_H
-#define KGD_RANDOM_GENERATOR_H
+#ifndef KGD_RANDOM_H
+#define KGD_RANDOM_H
 
 
-#include <cassert>
-#include <cmath>
 #include <memory>
 #include <random>
 
@@ -38,23 +12,9 @@ namespace deconvolv {          // project level namespace
 
 
 
-class RandomGenerator
-{
-
- public:
-
-  RandomGenerator() = default;
-  virtual ~RandomGenerator() = default;
-
-  virtual double unitUniformRand() = 0;
-  int sampleInt(const int max_value) {  return(static_cast<int>(this->unitUniformRand()*max_value));  }
-
-};
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Various random number generators, with the 64 bit Mersenne Twister as the entropy source.
-// Note that copy semantics have been disabled as there seems no reasonable reason to do this, and may be dangerous.
+// Note that copy semantics have been disabled as there seems no reasonable reason to do this, and is probably dangerous.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -93,7 +53,7 @@ class DeterministicEntropySource
 
 public:
 
-  DeterministicEntropySource(size_t seed = 1234) : generator_(seed) {}
+  DeterministicEntropySource(size_t seed = 1111) : generator_(seed) {}
   DeterministicEntropySource(const DeterministicEntropySource&) = delete;
   ~DeterministicEntropySource() = default;
 
@@ -188,7 +148,7 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Double float normally distributed random numbers with mean and std_deviation.
+// Normally distributed random numbers with mean and std_deviation.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -213,7 +173,7 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Double float standard normally distributed random numbers with mean = 0.0 and std_deviation = 1.0.
+// Standard normally distributed random numbers with mean = 0.0 and std_deviation = 1.0.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -223,6 +183,32 @@ public:
 
   RandomStdNormal() : RandomNormal(0.0, 1.0) {}
   ~RandomStdNormal() override = default;
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Beta distributed random number implemented as a ratio of gamma random variates.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class RandomBeta
+{
+
+public:
+
+  RandomBeta(double a, double b) : x_(a, 1), y_(b, 1) {}
+  RandomBeta(const RandomNormal&) = delete;
+  virtual ~RandomBeta() = default;
+
+  RandomNormal& operator=(RandomNormal&) = delete;
+
+  double generate(EntropyGenerator& source) const {  double x = x_(source);  return x / (x + y_(source)); }
+
+private:
+
+  mutable std::gamma_distribution<> x_;
+  mutable std::gamma_distribution<> y_;
 
 };
 
