@@ -317,7 +317,7 @@ void kgd::IBDpath::updateFmAtSiteI(const std::vector<double> &prior, const std::
 
     f_sum_state_[state] = 0;
 
-// Inefficent code in an inside loop
+// Inefficient code in an inside loop
 //    for (size_t state_entry = 0; state_entry < h_prior_.nStateEntries(); ++state_entry) {
 //
 //      f_sum_state_[state] += ibd_trans_probs_[state][state_entry] * postAtSiteI[state_entry];
@@ -667,8 +667,6 @@ std::vector<double> kgd::IBDpath::computeLlkOfStatesAtSiteI(const std::vector<do
     llks[state_entry] = logBetaLLK;
 
   }
-
-//  maxllk = Utility::max_value(llks);
 
   for (size_t idx =  0; idx < llks.size(); ++idx) {
 

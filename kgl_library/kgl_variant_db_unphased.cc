@@ -83,6 +83,30 @@ bool kgl::UnphasedContig::isHomozygous(const std::vector<std::shared_ptr<Variant
 }
 
 
+bool kgl::UnphasedContig::removeConflictingVariants() {
+
+  for (auto variant_vector : getMap()) {
+
+    if (not variant_vector.second.empty()) {
+
+      std::shared_ptr<Variant> first_variant = variant_vector.second.front();
+      variant_vector.second.clear();
+      variant_vector.second.push_back(first_variant); // add the first vartint back into the vector.
+
+    } else {
+
+      ExecEnv::log().warn("removeConflictingVariants(); empty variant vector in unphased variant contig: {}, offset: {}",
+                          contig_id_, variant_vector.first);
+      contig_offset_map_.erase(variant_vector.first); // erase the empty vector.
+
+    }
+
+  }
+
+  return true;
+
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //

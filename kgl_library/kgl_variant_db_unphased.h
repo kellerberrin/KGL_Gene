@@ -18,7 +18,7 @@ namespace genome {   // project level namespace
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // An internal parser variant object that holds variants until they can be phased.
-// This object hold variants for each contig.
+// This object holds variants for each contig.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -41,6 +41,9 @@ public:
 
   // true if vector.size() < 2
   static bool isHomozygous(const std::vector<std::shared_ptr<Variant>>& variant_vector);
+
+  // Removes variants
+  bool removeConflictingVariants();
 
 private:
 
@@ -70,6 +73,8 @@ public:
   bool addVariant(std::shared_ptr<Variant> variant);
 
   const GenomeId_t& genomeId() const { return genome_id_; }
+
+  bool removeConflictingVariants();
 
   const UnphasedContigMap& getMap() const { return contig_map_; }
 

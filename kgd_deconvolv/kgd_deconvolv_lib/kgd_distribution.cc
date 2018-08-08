@@ -5,8 +5,6 @@
 
 #include "kgd_distribution.h"
 
-#include "logbeta.h"
-
 #include <boost/math/special_functions/gamma.hpp>
 #include <boost/math/special_functions/binomial.hpp>
 #include <boost/math/special_functions/beta.hpp>
@@ -99,6 +97,22 @@ double kgd::BetaBinomialDistribution::pdf(size_t n, size_t k, double alpha, doub
 
 }
 
+
+double kgd::BetaBinomialDistribution::partialPdf(double n, double k, double alpha, double beta) {
+
+  assert(k <= n);
+  assert(alpha > 0);
+  assert(beta > 0);
+
+  double a1 = k + alpha;
+  double b1 = n - k + beta;
+
+  double p = bm::beta<double>(a1, b1);
+  double q = bm::beta<double>(alpha, beta);
+
+  return (p / q);
+
+}
 
 double kgd::BetaBinomialDistribution::logPdf(double n, double k, double alpha, double beta) {
 

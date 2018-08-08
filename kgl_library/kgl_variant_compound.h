@@ -43,6 +43,8 @@ public:
 
   size_t size() const override { return variant_map_.size(); }
 
+  void updatePhaseId(PhaseId_t phase_id) override;
+
   bool equivalent(const Variant& cmp_var) const override;
   bool lessThan(const Variant& cmp_var) const override;
 

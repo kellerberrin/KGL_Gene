@@ -84,13 +84,17 @@ public:
   const ContigId_t& contigId() const { return contig_id_; }
   ContigOffset_t offset() const { return contig_offset_; }
   PhaseId_t phaseId() const { return phase_id_; }
-  void phaseId(PhaseId_t phase_id) { phase_id_ = phase_id; }
+  virtual void updatePhaseId(PhaseId_t phase_id) { protectedPhaseId(phase_id); }
 
   std::shared_ptr<const VariantEvidence> evidence() const { return evidence_ptr_; }
 
   std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
 
   static constexpr PhaseId_t UNPHASED = 255;
+
+protected:
+
+  void protectedPhaseId(PhaseId_t phase_id) { phase_id_ = phase_id; }
 
 private:
 

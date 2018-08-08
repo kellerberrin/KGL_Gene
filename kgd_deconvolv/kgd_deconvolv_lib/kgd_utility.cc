@@ -23,15 +23,14 @@
  *
  */
 
-//#include "logbeta.h"
+#include "logbeta.h"
 #include <iterator>     // std::distance
 #include <algorithm> // find
 #include "kgd_utility.h"
 #include "kgd_deconvolv_app.h"
 #include "kgd_distribution.h"
-//#include "loggammasum.h" // which includes log_gamma.h
-//#include "gamma.h"
-
+#include "loggammasum.h" // which includes log_gamma.h
+#include "gamma.h"
 
 #include <boost/math/special_functions/gamma.hpp>
 
@@ -100,28 +99,6 @@ bool kgd::Utility::vectorEquivalence(std::vector<size_t> vec1, std::vector<size_
 }
 
 
-double kgd::Utility::normal_pdf(double x, double mean, double std_dev) {
-
-  static const double inv_sqrt_2pi = 0.3989422804014327;
-
-  double a = (x - mean) / std_dev;
-
-  return (inv_sqrt_2pi / std_dev) * std::exp(-0.5 * a * a);
-
-}
-
-
-double kgd::Utility::min_value(std::vector<double> x) {
-
-  assert(x.size() > 0);
-
-  auto tmpMaxIt = std::min_element(std::begin(x), std::end(x));
-
-  return *tmpMaxIt;
-
-}
-
-
 double kgd::Utility::max_value(std::vector<double> x) {
 
   assert(x.size() > 0);
@@ -164,19 +141,6 @@ void kgd::Utility::normalizeBySum(std::vector<double> &array) {
 }
 
 
-void kgd::Utility::normalizeByMax(std::vector<double> &array) {
-
-  double maxOfArray = max_value(array);
-
-  for (std::vector<double>::iterator it = array.begin(); it != array.end(); ++it) {
-
-    *it /= maxOfArray;
-
-  }
-
-}
-
-
 void kgd::Utility::normalizeBySumMat(std::vector<std::vector<double> > &matrix) {
 
   double tmpsum = sumOfMat(matrix);
@@ -213,25 +177,11 @@ std::vector<double> kgd::Utility::calcLLKs(const std::vector<double> &refCount,
     assert (expectedWsaf[i] >= 0);
     //assert (expectedWsaf[i] <= 1);
 
-    double adjustedWsaf = expectedWsaf[i] + ((1 - (2 * expectedWsaf[i])) * err);
-
-    double a2_arg = adjustedWsaf * fac;
-    double b2_arg = (1 - adjustedWsaf) * fac;
-
-    size_t n = static_cast<size_t>(std::round(refCount[index]+altCount[index]));
-    size_t k = static_cast<size_t>(std::round(altCount[index]));
-
-    double prob = BetaBinomialDistribution::pdf(n, k, a2_arg, b2_arg);
-
-    tmpLLKs[i] =  std::log(prob);
-
-//
-//
-//    tmpLLKs[i] = calcLLK(refCount[index],
-//                         altCount[index],
-//                         expectedWsaf[i],
-//                         err,
-//                         fac);
+    tmpLLKs[i] = calcLLK(refCount[index],
+                         altCount[index],
+                         expectedWsaf[i],
+                         err,
+                         fac);
 
     index++;
 
@@ -249,17 +199,23 @@ double kgd::Utility::calcLLK(double ref, double alt, double unadjustedWsaf, doub
   double a2_arg = adjustedWsaf * fac;
   double b2_arg = (1 - adjustedWsaf) * fac;
 
+  if (b2_arg <= 0 or a2_arg <= 0) {
+
+    ExecEnv::log().error("calcLLK(); BetaBinomialDistribution Invalid Alpha:{} or Beta: {}, unadjustedWsaf: {}, fac: {}, adjustedWsaf: {}",
+                         a2_arg, b2_arg, unadjustedWsaf, fac, adjustedWsaf);
+
+  }
+
 #define BOOST_BBD_  1
 #ifdef BOOST_BBD_
 
   size_t n = static_cast<size_t>(std::round(ref+alt));
   size_t k = static_cast<size_t>(std::round(alt));
 
+
   double prob = BetaBinomialDistribution::pdf(n, k, a2_arg, b2_arg);
 
   return std::log(prob);
-
-//  return BetaBinomialDistribution::logPdf(ref + alt, alt, a2_arg, b2_arg);
 
 #else
 
@@ -337,20 +293,6 @@ std::vector<double> kgd::Utility::reshapeMatToVec(std::vector<std::vector<double
 
 }
 
-
-
-double kgd::Utility::binomialPdf(size_t s, size_t n, double p) {
-
-  assert(p >= 0 && p <= 1);
-
-  double ret = n_choose_k(n, s);
-
-  ret *= pow(p, static_cast<double>(s));
-  ret *= pow((1.0 - p), static_cast<double>(n - s));
-
-  return ret;
-
-}
 
 
 // Returns trimmed string.

@@ -139,9 +139,9 @@ bool kgd::MixtureDataObj::verifyPrint(bool print) const {
   }
 
   size_t total_positions = 0;
-  for (const auto& contig_poisitions : getPosition()) {
+  for (const auto& contig_positions : getPosition()) {
 
-    total_positions += contig_poisitions.size();
+    total_positions += contig_positions.size();
 
   }
 

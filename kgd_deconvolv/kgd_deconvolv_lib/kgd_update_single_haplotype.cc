@@ -193,16 +193,17 @@ void kgd::UpdateSingleHap::calcExpectedWsaf(const std::vector<double> &expectedW
 
 void kgd::UpdateSingleHap::buildEmission(double missCopyProb) {
 
-  std::vector<double> noMissProb(nLoci_, log(1.0 - missCopyProb));
+  assert(llk0_.size() == nLoci_);
+  assert(llk1_.size() == nLoci_);
+  assert(emission_.empty());
+
+  std::vector<double> noMissProb(nLoci_, std::log(1.0 - missCopyProb));
   std::vector<double> t1omu = Utility::vecSum(llk0_, noMissProb); // t1 one minus u
   std::vector<double> t2omu = Utility::vecSum(llk1_, noMissProb); // t2 one minus u
 
-
-  std::vector<double> missProb(nLoci_, log(missCopyProb));
+  std::vector<double> missProb(nLoci_, std::log(missCopyProb));
   std::vector<double> t1u = Utility::vecSum(llk0_, missProb);
   std::vector<double> t2u = Utility::vecSum(llk1_, missProb);
-
-  assert(emission_.size() == 0);
 
   for (size_t i = 0; i < nLoci_; i++) {
 

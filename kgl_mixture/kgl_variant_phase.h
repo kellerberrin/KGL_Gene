@@ -30,6 +30,8 @@ public:
   explicit GenomePhasing() = default;
   ~GenomePhasing() = default;
 
+
+  // A simple phasing strategy that removes all conflicting variants randomly.
   static bool haploidPhasing(std::shared_ptr<const UnphasedPopulation> vcf_population_ptr,
                              std::shared_ptr<const GenomeDatabase> genome_db,
                              std::shared_ptr<PhasedPopulation> haploid_population);

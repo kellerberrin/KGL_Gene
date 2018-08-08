@@ -41,7 +41,7 @@ bool kgl::GenomePhasing::haploidPhasing(std::shared_ptr<const UnphasedPopulation
         for (auto variant : offset.second) {
 
           std::shared_ptr<Variant> mutable_variant = std::const_pointer_cast<Variant>(variant);
-          mutable_variant->phaseId(ContigVariant::HAPLOID_HOMOLOGOUS_INDEX);   // Assign to the first (and only) homologous contig.
+          mutable_variant->updatePhaseId(ContigVariant::HAPLOID_HOMOLOGOUS_INDEX);   // Assign to the first (and only) homologous contig.
           genome_variant->addVariant(variant);
 
         } // All variants.

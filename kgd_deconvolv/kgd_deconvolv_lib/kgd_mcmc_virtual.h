@@ -52,6 +52,8 @@ protected:
 
   int eventType() const { return eventInt_; }
 
+  size_t recordCount() const { return record_count_; }
+
 private:
 
   size_t acceptUpdate_;
@@ -64,6 +66,7 @@ private:
   size_t maxIteration_;
   size_t mcmcThresh_;
   size_t McmcMachineryRate_;
+  size_t record_count_;
 
 };
 

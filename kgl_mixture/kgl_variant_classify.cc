@@ -42,7 +42,7 @@ kgl::VariantClassifier::VariantClassifier(std::shared_ptr<const UnphasedPopulati
           if (result != variant_map_.end()) {
 
 
-            // We ignore duplicate inserts, since this is just the variant caller calling
+            // We ignore duplicate insert errors, since this is just the variant caller calling
             // 2 identical variants under the ploidy = 2 setting. Both variants have identical ref/alt ratios.
             // with a small (generally zero) ref count and a much larger alt count.
             result->second.insert(GenomeOffsetMap::value_type(variant->genomeId(), variant));
@@ -60,7 +60,7 @@ kgl::VariantClassifier::VariantClassifier(std::shared_ptr<const UnphasedPopulati
 
             } else {
 
-              // We ignore duplicate inserts, since this is just the variant caller calling
+              // We ignore duplicate insert errors, since this is just the variant caller calling
               // 2 identical variants under the ploidy = 2 setting. Both variants have identical ref/alt ratios.
               // with a small (generally zero) ref count and a much larger alt count.
               insert_result.first->second.insert(GenomeOffsetMap::value_type(variant->genomeId(), variant));
@@ -108,6 +108,9 @@ kgd::MixtureDataObj kgl::VariantClassifier::convertToMixture(const GenomeId_t& a
       first_contig = false;
 
     }
+
+    // Check if this is an SNP.
+    if (not variant_offset.first.variant()->isSNP()) continue; // If not then skip to next variant.
 
     size_t allele_count = 0;
     for (auto genome : getGenomes()) {

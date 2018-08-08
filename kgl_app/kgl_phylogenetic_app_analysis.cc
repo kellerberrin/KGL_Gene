@@ -61,7 +61,7 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
   // Create a phased population object.
   std::shared_ptr<PhasedPopulation> population_ptr(std::make_shared<PhasedPopulation>("Falciparum"));
   // Phase the variants returned from the parser.
-//  GenomePhasing::haploidPhasing(unphased_population_ptr, genome_db_ptr , population_ptr);
+  GenomePhasing::haploidPhasing(unphased_population_ptr, genome_db_ptr , population_ptr);
 
   if (args.analysisType == kgl::Phylogenetic::WILDCARD) {
 

@@ -20,13 +20,16 @@ kgd::MCMCVIRTUAL::MCMCVIRTUAL(std::shared_ptr<DEploidIO> dEploidIO,
   dEploidIO_ = dEploidIO;
   mcmcSample_ = mcmcSample;
   acceptUpdate_ = 0;
+  record_count_ = 0;
 
 }
 
 
 void kgd::MCMCVIRTUAL::runMcmcChain(bool showProgress) {
 
-  for (currentMcmcIteration_ = 1; currentMcmcIteration_ < maxIteration_; ++currentMcmcIteration_) {
+  for (currentMcmcIteration_ = 1; currentMcmcIteration_ <= maxIteration_; ++currentMcmcIteration_) {
+
+    eventInt_ = sampleMcmcEvent();
 
     if (currentMcmcIteration_ % 100 == 0 && showProgress) {
 
@@ -34,12 +37,11 @@ void kgd::MCMCVIRTUAL::runMcmcChain(bool showProgress) {
 
     }
 
-    eventInt_ = sampleMcmcEvent();
-
     recordingMcmcBool_ = (currentMcmcIteration_ > mcmcThresh_ && currentMcmcIteration_ % McmcMachineryRate_ == 0);
 
     if (recordingMcmcBool_) {
 
+      ++record_count_;
       recordMcmcMachinery();
 
     }
@@ -62,7 +64,7 @@ void kgd::MCMCVIRTUAL::calcMaxIteration(size_t nSample, size_t McmcMachineryRate
 
   // MCMC iterations including burnin.
   double fmax_iter = static_cast<double>(nSample) * static_cast<double>(McmcMachineryRate) / (1.0 - burnIn_);
-  maxIteration_ = static_cast<size_t>(std::ceil(fmax_iter)) + 1;
+  maxIteration_ = static_cast<size_t>(std::ceil(fmax_iter));
 
   // MCMC iterations after burnin
   double fmcmc_thresh = static_cast<double>(nSample) * static_cast<double>(McmcMachineryRate) * burnIn_ / (1.0 - burnIn_);

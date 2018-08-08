@@ -96,6 +96,7 @@ std::vector<double> kgd::MCMCBASE::calcExpectedWsaf(const std::vector<double> &p
   //assert ( sumOfVec(proportion) == 1.0); // this fails ...
 
   std::vector<double> expectedWsaf;
+  size_t hap_offset = 0;
 
   for (auto allele_site : currentHap_) {
 
@@ -103,7 +104,7 @@ std::vector<double> kgd::MCMCBASE::calcExpectedWsaf(const std::vector<double> &p
 
     double expectedWsaf_i = 0.0;
 
-    for (size_t k = 0; k < kStrain(); k++) {
+    for (size_t k = 0; k < kStrain(); ++k) {
 
       expectedWsaf_i += allele_site[k] * proportion[k];
 
@@ -111,7 +112,25 @@ std::vector<double> kgd::MCMCBASE::calcExpectedWsaf(const std::vector<double> &p
 
     assert (expectedWsaf_i >= 0);
 
+    if (expectedWsaf_i > 1.0) {
+
+      expectedWsaf_i = 1.0;
+
+      if (expectedWsaf_i > 1.000001) {
+
+        ExecEnv::log().error("calcExpectedWsaf(); Invalid expectedWsaf_i: {}, currentHap_ offset: {}", expectedWsaf_i, hap_offset);
+        for (size_t k = 0; k < kStrain(); ++k) {
+
+          ExecEnv::log().error("calcExpectedWsaf(); strain k: {},  currentHap_[{}][k]: {}, proportion k: {}", k, hap_offset, allele_site[k], proportion[k]);
+
+        }
+
+      }
+
+    }
+
     expectedWsaf.push_back(expectedWsaf_i);
+    ++hap_offset;
 
   }
 
@@ -124,10 +143,28 @@ void kgd::MCMCBASE::computeDiagnostics() {
 
   dEploidIO_->setacceptRatio(acceptCount() / static_cast<double>(total_MCMC_iterations()));
 
+  bool error_once = true;
   // average cumulate expectedWSAF
   for (size_t i = 0; i < cumExpectedWsaf_.size(); ++i) {
 
-    cumExpectedWsaf_[i] /= static_cast<double>(MCMCParameters_.McmcSample());
+    double mean_expected_wsaf = cumExpectedWsaf_[i] / static_cast<double>(recordCount());
+
+    if (mean_expected_wsaf > 1.0) {
+
+      if (error_once) {
+
+        ExecEnv::log().error("computeDiagnostics(); mean_expected_wsaf[{}] : {} > 1.0, sample_count: {}", i, mean_expected_wsaf, recordCount());
+        ExecEnv::log().error("computeDiagnostics(); further errors suppressed");
+        error_once = false;
+      }
+
+      cumExpectedWsaf_[i] = 1.0;
+
+    } else {
+
+      cumExpectedWsaf_[i] = mean_expected_wsaf;
+
+    }
 
   }
 

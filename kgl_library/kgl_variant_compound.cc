@@ -126,6 +126,20 @@ bool kgl::CompoundVariant::lessThan(const Variant& cmp_var) const {
 }
 
 
+void kgl::CompoundVariant::updatePhaseId(PhaseId_t phase_id) {
+
+  protectedPhaseId(phase_id);
+
+  for (auto sub_variant : getMap()) {
+
+    std::shared_ptr<SingleVariant> mutable_sub_variant = std::const_pointer_cast<SingleVariant>(sub_variant.second);
+    mutable_sub_variant->updatePhaseId(phase_id);
+
+  }
+
+}
+
+
 std::string kgl::CompoundVariant::output(char delimiter, VariantOutputIndex output_index, bool detail) const {
 
   std::stringstream ss;

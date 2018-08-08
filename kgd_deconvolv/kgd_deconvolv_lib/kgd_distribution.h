@@ -11,10 +11,15 @@ namespace kellerberrin {    // organization level namespace
 namespace deconvolv {          // project level namespace
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Random number generators and Pdfs for the Uniform, Discrete Uniform, Guassian, Binomial and BetaBinomial distributions.
+// Note that object copy semantics have been disabled as there seems no reasonable reason to do this,
+// and in the case of the random number generators, is probably dangerous.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Various random number generators, with the 64 bit Mersenne Twister as the entropy source.
-// Note that copy semantics have been disabled as there seems no reasonable reason to do this, and is probably dangerous.
+// Use the 64 bit Mersenne Twister as the random number entropy source.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -44,7 +49,7 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The oxymoronic DeterministicEntropySource object starts the Mersenne Twister from a known point and
 // commits the code to a deterministic path. This may be useful for debugging. The start point (seed) can be varied.
-// Production code should always use the RandomEntropySource object.
+// Production code should always use the RandomEntropySource object defined above.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -86,7 +91,7 @@ using EntropySource = DeterministicEntropySource;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Double floating random on the interval [lower_bound, upper_bound]
+// Real (double) random number generator on the interval [lower_bound, upper_bound]
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -126,7 +131,7 @@ public:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Integer random numbers between, and including, lower_bound to upper_bound.
+// Positive integer random numbers between, and including, lower_bound to upper_bound.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -190,7 +195,7 @@ public:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Beta distributed random number implemented as a ratio of gamma random variates.
+// Beta distributed random numbers implemented as a ratio of gamma random variates.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -236,9 +241,12 @@ public:
   BetaBinomialDistribution() = delete;
   ~BetaBinomialDistribution() = delete;
 
+  // Uses boost beta functions.
   static double pdf(size_t n, size_t k, double alpha, double beta);
-  // Uses loggamma functions.
+  // Uses boost lgamma functions.
   static double logPdf(double n, double k, double alpha, double beta);
+  // No binomial coefficient term.
+  static double partialPdf(double n, double k, double alpha, double beta);
 
 };
 
