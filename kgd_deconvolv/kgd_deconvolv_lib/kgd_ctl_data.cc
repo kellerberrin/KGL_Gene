@@ -6,6 +6,8 @@
 #include "kgd_vcf_reader.h"
 #include "kgd_txt_reader.h"
 
+#include <algorithm>
+
 namespace kgd = kellerberrin::deconvolv;
 
 
@@ -191,6 +193,9 @@ bool kgd::MixtureDataObj::verifyPrint(bool print) const {
 
   if (print) {
 
+    std::vector<double> median_ref;
+    std::vector<double> median_alt;
+
     for (size_t idx = 0; idx < indexOfChromStarts().size(); ++idx) {
 
       size_t variant_count = 0;
@@ -201,6 +206,8 @@ bool kgd::MixtureDataObj::verifyPrint(bool print) const {
           if ((getRefCount()[count_idx] + getAltCount()[count_idx]) > 0) {
 
             variant_count++;
+            median_ref.push_back(getRefCount()[count_idx]);
+            median_alt.push_back(getAltCount()[count_idx]);
 
           }
 
@@ -213,6 +220,8 @@ bool kgd::MixtureDataObj::verifyPrint(bool print) const {
           if (getRefCount()[count_idx] + getAltCount()[count_idx] > 0) {
 
             variant_count++;
+            median_ref.push_back(getRefCount()[count_idx]);
+            median_alt.push_back(getAltCount()[count_idx]);
 
           }
 
@@ -220,13 +229,38 @@ bool kgd::MixtureDataObj::verifyPrint(bool print) const {
 
       }
 
-      ExecEnv::log().info("MixtureDataObj::verifyPrint(); contig: {}, total variants: {}, genome variants:{}",
-                          getChrom()[idx], getPosition()[idx].size(), variant_count);
+      ExecEnv::log().info("MixtureDataObj::verifyPrint(); contig: {}, total variants: {}, genome variants:{}, median ref count: {}, median alt count: {}",
+                          getChrom()[idx], getPosition()[idx].size(), variant_count, calcMedianCount(median_ref), calcMedianCount(median_alt));
 
     }
 
   }
 
   return true;
+
+}
+
+
+double kgd::MixtureDataObj::calcMedianCount(std::vector<double>& countVector) const {
+
+  std::sort(countVector.begin(), countVector.end());
+  size_t vectorSize = countVector.size();
+  double median = 0.0;
+
+  if (vectorSize == 0) {
+
+    ExecEnv::log().warn("Attempted to calculate median of zero-sized vector");
+
+  } else if (vectorSize % 2 == 0) {
+
+    median = (countVector[(vectorSize/2) - 1] + countVector[vectorSize/2]) / 2;
+
+  } else {
+
+    median = countVector[vectorSize/2];
+
+  }
+
+  return median;
 
 }

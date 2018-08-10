@@ -17,6 +17,9 @@
 namespace kgd = kellerberrin::deconvolv;
 
 
+//#define HPRIOR_DEBUG 1
+
+
 void kgd::Hprior::buildHprior(size_t kStrain, const std::vector<double> &plaf) {
 
   ibd_config_.buildIBDconfiguration(kStrain);
@@ -56,6 +59,8 @@ void kgd::Hprior::buildHprior(size_t kStrain, const std::vector<double> &plaf) {
 
     std::vector<std::vector<size_t>> hSetBaseTmpUnique = Utility::uniqueMatrixColumns(hSetBaseTmp); // uu
 
+#ifdef HPRIOR_DEBUG
+
 //*****Debug.
     ExecEnv::log().info("hPrior::hSetBaseTmpUnique.size: {}", hSetBaseTmpUnique.size());
     for (auto colvec : hSetBaseTmpUnique) {
@@ -71,6 +76,8 @@ void kgd::Hprior::buildHprior(size_t kStrain, const std::vector<double> &plaf) {
 
     }
 //*****Debug.
+
+#endif
 
     size_t sizeOfhSetBaseTmpUnique = hSetBaseTmpUnique.size();
 
@@ -113,6 +120,9 @@ void kgd::Hprior::buildHprior(size_t kStrain, const std::vector<double> &plaf) {
 
       }
 
+#ifdef HPRIOR_DEBUG
+
+
 //*****Debug.
       size_t prob_index = 250;
 
@@ -120,6 +130,8 @@ void kgd::Hprior::buildHprior(size_t kStrain, const std::vector<double> &plaf) {
                           hPriorTmp.size(), tmpSum, tmpDiff, state_i, prob_index, hPriorTmp[prob_index], prob_index,
                           pop_allele_freq_[prob_index], hSetBaseTmpUnique[i].size());
 //*****Debug.
+
+#endif
 
       prior_probs.push_back(hPriorTmp);
       h_set_.push_back(hSetBaseTmpUnique[i]);
@@ -133,11 +145,15 @@ void kgd::Hprior::buildHprior(size_t kStrain, const std::vector<double> &plaf) {
 
   }
 
+#ifdef HPRIOR_DEBUG
+
 //******Debug
   ExecEnv::log().info("h_set_.size:{}, prior_probs.size: {}, prior_probs[0].size: {}, state_idx_.size: {}, state_idx_freq_.size: {},",
                       h_set_.size(), prior_probs.size(), prior_probs[0].size(), state_idx_.size(), state_idx_freq_.size());
 
 //*******Debug
+
+#endif
 
   generateEntryOffsets();
 

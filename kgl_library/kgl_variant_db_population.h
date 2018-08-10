@@ -33,8 +33,10 @@ class PhasedPopulation {
 public:
 
   explicit PhasedPopulation(const std::string& population_id) : population_id_(population_id) {}
-  PhasedPopulation(const PhasedPopulation&) = default;
+  PhasedPopulation(const PhasedPopulation&) = delete;
   virtual ~PhasedPopulation() = default;
+
+  PhasedPopulation& operator=(const PhasedPopulation&) = delete; // Use deep copy.
 
   // Returns false if the genome does not exist.
   bool getGenomeVariant(const GenomeId_t& genome_id, std::shared_ptr<const GenomeVariant>& genome_variant) const;
@@ -44,6 +46,10 @@ public:
   size_t variantCount() const;
 
   const PopulationVariantMap& getMap() const { return population_variant_map_; }
+
+  std::shared_ptr<PhasedPopulation> filterVariants(const VariantFilter& filter) const;
+
+  const std::string& populationId() const { return population_id_; }
 
 private:
 

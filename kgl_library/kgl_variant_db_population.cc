@@ -61,3 +61,19 @@ size_t kgl::PhasedPopulation::variantCount() const {
 }
 
 
+std::shared_ptr<kgl::PhasedPopulation> kgl::PhasedPopulation::filterVariants(const kgl::VariantFilter& filter) const {
+
+  std::shared_ptr<kgl::PhasedPopulation> filtered_population_ptr(std::make_shared<kgl::PhasedPopulation>(populationId()));
+
+  for (const auto& genome_variant : population_variant_map_) {
+
+    std::shared_ptr<kgl::GenomeVariant> filtered_genome_ptr = genome_variant.second->filterVariants(filter);
+    filtered_population_ptr->addGenomeVariant(filtered_genome_ptr);
+    ExecEnv::log().vinfo("Genome: {} has: {} filtered variants", genome_variant.first, filtered_genome_ptr->variantCount());
+
+  }
+
+  return filtered_population_ptr;
+
+}
+

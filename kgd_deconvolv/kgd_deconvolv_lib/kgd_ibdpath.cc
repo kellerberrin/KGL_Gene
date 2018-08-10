@@ -15,6 +15,7 @@
 
 namespace kgd = kellerberrin::deconvolv;
 
+//#define IBDPATH_DEBUG 1
 
 
 void kgd::IBDpath::init(DEploidIO &dEploidIO) {
@@ -67,7 +68,11 @@ void kgd::IBDpath::McmcUpdateStep(const std::vector<double>& CurrentProportion) 
 
   std::vector<double> statePrior = computeStatePrior(effectiveKPrior);
 
+#ifdef IBDPATH_DEBUG
+
   ExecEnv::log().info("effectiveKPrior.size: {}, statePrior.size: {}, theta: {}", effectiveKPrior.size(), statePrior.size(), theta());
+
+#endif
 
   /// First build the path likelihood
   computeIbdPathFwdProb(CurrentProportion, statePrior);
@@ -413,7 +418,11 @@ void kgd::IBDpath::makeIbdTransProbs() {
     std::vector<double> transProbRow(h_prior_.nStateEntries());
     std::vector<size_t> wi = findAllIndex(h_prior_.getStateIdx(), i);
 
+#ifdef IBDPATH_DEBUG
+
     ExecEnv::log().info("IBDPath; transProbRow.size: {}, wi.size: {}", transProbRow.size(), wi.size());
+
+#endif
 
     for (size_t wii : wi) {
 
@@ -569,6 +578,8 @@ void kgd::IBDpath::computeAndUpdateTheta() {
 //
 //  }
 
+#ifdef IBDPATH_DEBUG
+
   //**** debug.
 
   ExecEnv::log().info("theta: {}, obsState.size: {}/{}, sccs: {}, sumOfKeffStates: {}", theta(),  state_changes.size(), nLoci(), sumOfKeffStates, sccs);
@@ -589,6 +600,8 @@ void kgd::IBDpath::computeAndUpdateTheta() {
 
   //**** debug
 
+#endif
+
 }
 
 
@@ -606,6 +619,9 @@ void kgd::IBDpath::computeUniqueEffectiveKCount() {
 
   }
 
+#ifdef IBDPATH_DEBUG
+
+
 // debug *****
 
   for (auto effectiveK : unique_effectiveK_count_) {
@@ -616,6 +632,7 @@ void kgd::IBDpath::computeUniqueEffectiveKCount() {
 
 // debug *****
 
+#endif
 
 }
 

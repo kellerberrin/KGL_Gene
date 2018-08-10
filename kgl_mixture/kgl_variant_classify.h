@@ -70,7 +70,7 @@ public:
   const std::vector<GenomeId_t>& getGenomes() const { return genomes_; }
 
   // Produce a kgd data object.
-  kgd::MixtureDataObj convertToMixture(const GenomeId_t& genome_count, size_t min_count) const;
+  kgd::MixtureDataObj convertToMixture(const GenomeId_t& genome_count, size_t min_count, size_t max_count) const;
 
   // IO routines - to produce files for testing.
   // Write ref/alt counts into separate files by variant order.

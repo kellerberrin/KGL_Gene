@@ -79,7 +79,7 @@ kgl::VariantClassifier::VariantClassifier(std::shared_ptr<const UnphasedPopulati
 
 }
 
-kgd::MixtureDataObj kgl::VariantClassifier::convertToMixture(const GenomeId_t& analysis_genome, size_t min_count) const {
+kgd::MixtureDataObj kgl::VariantClassifier::convertToMixture(const GenomeId_t& analysis_genome, size_t min_count, size_t max_count) const {
 
   std::vector<std::string> contig_vector;
   std::vector<size_t> indexOfContigStarts;
@@ -93,7 +93,8 @@ kgd::MixtureDataObj kgl::VariantClassifier::convertToMixture(const GenomeId_t& a
   ContigId_t current_contig;
   bool first_contig = true;
 
-  ExecEnv::log().info("Converting Genome: {} to Mixture Format, Minimum (Alt+Ref) Count: {}", analysis_genome, min_count);
+  ExecEnv::log().info("Converting Genome: {} to Mixture Format, Minimum (Alt+Ref) Count: {}, Maximum Count: {}",
+                      analysis_genome, min_count, max_count);
 
   // for all variant offsets.
   for (auto variant_offset : getMap()) {
@@ -127,7 +128,7 @@ kgd::MixtureDataObj kgl::VariantClassifier::convertToMixture(const GenomeId_t& a
           size_t total_count = count_evidence_ptr->refCount() + count_evidence_ptr->altCount();
 
           // check that minimum ref+alt count requirement is achieved.
-          if (total_count >= min_count) {
+          if (total_count >= min_count and total_count <= max_count) {
 
 
             ++allele_count; // increment the allele count.
@@ -189,7 +190,7 @@ kgd::MixtureDataObj kgl::VariantClassifier::convertToMixture(const GenomeId_t& a
           size_t total_count = count_evidence_ptr->refCount() + count_evidence_ptr->altCount();
 
           // check that minimum ref+alt count requirement is achieved.
-          if (total_count >= min_count) {
+          if (total_count >= min_count and total_count <= max_count) {
 
             refCount.push_back(count_evidence_ptr->refCount()); // Record counts
             altCount.push_back(count_evidence_ptr->altCount());

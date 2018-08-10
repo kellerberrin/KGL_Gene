@@ -79,12 +79,10 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
   if (args.analysisType == ANALYZE_INTERVAL or args.analysisType == kgl::Phylogenetic::WILDCARD) {
 
-    // Convert unphased to mutable.
-    std::shared_ptr<UnphasedPopulation> mutable_unphased = std::const_pointer_cast<UnphasedPopulation>(unphased_population_ptr);
     // Remove conflicting variants.
-    mutable_unphased->removeConflictingVariants();
-    // Phase the variants returned from the parser.
-    GenomePhasing::haploidPhasing(mutable_unphased, genome_db_ptr , population_ptr);
+    std::shared_ptr<UnphasedPopulation> filtered_unphased = unphased_population_ptr->removeConflictingVariants();
+    // Phase the variants.
+    GenomePhasing::haploidPhasing(filtered_unphased, genome_db_ptr , population_ptr);
 
     kgl::ExecEnv::log().info("Analyzing genome intervals");
     std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
@@ -150,7 +148,9 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
     for (auto genome : classifier.getGenomes()) {
 
-      kgd::MixtureDataObj mixture_data = classifier.convertToMixture(genome, 25);
+      const size_t minimum_offset_base_count = 25;
+      const size_t maximum_offset_base_count = 150;
+      kgd::MixtureDataObj mixture_data = classifier.convertToMixture(genome, minimum_offset_base_count, maximum_offset_base_count);
       kgd::ExecEnv::executeLib(mixture_data);
 
     }

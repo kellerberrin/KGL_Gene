@@ -14,6 +14,7 @@
 
 namespace kgd = kellerberrin::deconvolv;
 
+//#define MCMCIBD_DEBUG 1
 
 // initialiseMCMCmachinery
 kgd::MCMCIBD::MCMCIBD(std::shared_ptr<DEploidIO> dEploidIO,
@@ -202,11 +203,15 @@ void kgd::MCMCIBD::ibdUpdateThetaGivenHap(double previous_theta, const std::vect
   double proposal_ratio = prior_ratio * likelihood_ratio;
   double acceptance_draw = random_unit_.random(entropy_source_.generator());
 
+#ifdef MCMCIBD_DEBUG
+
   ExecEnv::log().info("{}, Theta: {}/{}, ll_r: {}, l_r: {}, h*r: {}, accept: {}, ratio: {}, {}",
                       current_MCMC_iteration(), ibdPath_.theta(), previous_theta, log_likelihood_ratio,
                       likelihood_ratio, proposal_ratio, acceptance_draw,
                       static_cast<double>(theta_accept_)/static_cast<double>(current_MCMC_iteration()),
                       acceptance_draw <= proposal_ratio ? "ACCEPT" : "REJECT");
+
+#endif
 
   if (acceptance_draw > proposal_ratio) {
     // Reject
@@ -244,12 +249,16 @@ void kgd::MCMCIBD::updateProportion() {
 
   double acceptance_draw = random_unit_.random(entropy_source_.generator());
 
+#ifdef MCMCIBD_DEBUG
+
   double ratio = static_cast<double>(acceptCount()) / static_cast<double>(current_MCMC_iteration());
 
   ExecEnv::log().info("{}, Update: {}, p_r: {}, ll_r: {}, l_r: {}, p*l: {}, accept: {}, {}, ratio: {}",
                       current_MCMC_iteration(), proposal.proportionsText(),
                       prior_prop_ratio, log_likelihood_ratio, likelihood_ratio, proposal_ratio, acceptance_draw,
                       acceptance_draw <= proposal_ratio ? "ACCEPT" : "REJECT", ratio);
+
+#endif
 
   if (acceptance_draw <= proposal_ratio) {
   // Accept
@@ -282,10 +291,14 @@ void kgd::MCMCIBD::ibdUpdateProportionGivenHap() {
     double proposal_ratio = prior_titre_ratio * likelihood_ratio;
     double acceptance_draw = random_unit_.random(entropy_source_.generator());
 
+#ifdef MCMCIBD_DEBUG
+
     ExecEnv::log().info("{}, IDB [{}]: {}/{}, h_ratio: {}, ll_r: {}, l_r: {}, h*r: {}, accept: {}, {}",
                         current_MCMC_iteration(), k, proposal.Proportions()[k], titre_proportions_.Proportions()[k],
                         prior_titre_ratio, log_likelihood_ratio, likelihood_ratio, proposal_ratio, acceptance_draw,
                         acceptance_draw <= proposal_ratio ? "ACCEPT" : "REJECT");
+
+#endif
 
     if (acceptance_draw <= proposal_ratio) {
       // Accept
@@ -333,8 +346,12 @@ std::vector<double> kgd::MCMCIBD::computeLlkAtAllSites(const std::vector<double>
 void kgd::MCMCIBD::recordMcmcMachinery() {
 
   mcmcSample_->addProportion(titre_proportions_.Proportions());
-  mcmcSample_->addSumLLKs(Utility::sumOfVec(currentLLks_));
+  double sumLLKS = Utility::sumOfVec(currentLLks_);
+  mcmcSample_->addSumLLKs(sumLLKS);
   mcmcSample_->addMove(eventType());
+
+  ExecEnv::log().info("Iterations: {}, Proportions: {} Sum Log Likelihoods: {}",
+                      current_MCMC_iteration(), titre_proportions_.proportionsText(), sumLLKS);
 
   // Accumulate expectedWSAF for computing the mean expectedWSAF
   for (size_t i = 0; i < cumExpectedWsaf_.size(); ++i) {

@@ -35,7 +35,7 @@
 
 namespace kgd = kellerberrin::deconvolv;
 
-
+//#define IBDCONFIG_DEBUG 1
 
 void kgd::IBDconfiguration::buildIBDconfiguration(size_t k) {
 
@@ -52,6 +52,8 @@ void kgd::IBDconfiguration::buildIBDconfiguration(size_t k) {
 
   findEffectiveK();
 
+#ifdef IBDCONFIG_DEBUG
+
   ExecEnv::log().info("pairs_to_emission.size:{}, states_ size: {}, states_[0].size:{}, effective_k.size: {}",
                       pairs_to_emission.size(), states_.size(), states_[0].size(), effectiveK_.size());
 
@@ -62,6 +64,8 @@ void kgd::IBDconfiguration::buildIBDconfiguration(size_t k) {
     index++;
 
   }
+
+#endif
 
 }
 

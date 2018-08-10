@@ -28,8 +28,10 @@ class UnphasedContig {
 public:
 
   explicit UnphasedContig(const ContigId_t& contig_id) : contig_id_(contig_id) {}
-  UnphasedContig(const UnphasedContig&) = default;
+  UnphasedContig(const UnphasedContig&) = delete;
   virtual ~UnphasedContig() = default;
+
+  UnphasedContig& operator=(const UnphasedContig&) = delete; // Use deep copy.
 
   const ContigId_t& contigId() const { return contig_id_; }
 
@@ -43,7 +45,7 @@ public:
   static bool isHomozygous(const std::vector<std::shared_ptr<Variant>>& variant_vector);
 
   // Removes variants
-  bool removeConflictingVariants();
+  std::shared_ptr<UnphasedContig> removeConflictingVariants() const;
 
 private:
 
@@ -65,8 +67,10 @@ class UnphasedGenome {
 public:
 
   explicit UnphasedGenome(const GenomeId_t& genome_id) : genome_id_(genome_id) {}
-  UnphasedGenome(const UnphasedGenome&) = default;
+  UnphasedGenome(const UnphasedGenome&) = delete;
   virtual ~UnphasedGenome() = default;
+
+  UnphasedGenome& operator=(const UnphasedGenome&) = delete; // Use deep copy.
 
   size_t variantCount() const;
 
@@ -74,7 +78,9 @@ public:
 
   const GenomeId_t& genomeId() const { return genome_id_; }
 
-  bool removeConflictingVariants();
+  std::shared_ptr<UnphasedGenome> removeConflictingVariants() const;
+
+  std::shared_ptr<UnphasedGenome> filterVariants(const VariantFilter& filter) const;
 
   const UnphasedContigMap& getMap() const { return contig_map_; }
 
@@ -84,6 +90,7 @@ private:
   GenomeId_t genome_id_;
 
   bool getCreateContig(const ContigId_t& contig_id, std::shared_ptr<UnphasedContig>& contig_ptr);
+  bool addContig(std::shared_ptr<UnphasedContig> contig_ptr);
 
 };
 
@@ -102,8 +109,10 @@ class UnphasedPopulation {
 public:
 
   explicit UnphasedPopulation() = default;
-  UnphasedPopulation(const UnphasedPopulation&) = default;
+  UnphasedPopulation(const UnphasedPopulation&) = delete;
   virtual ~UnphasedPopulation() = default;
+
+  UnphasedPopulation& operator=(const UnphasedPopulation&) = delete; // Use deep copy.
 
   // Create the genome variant if it does not exist.
   bool getCreateGenome(const GenomeId_t& genome_id, std::shared_ptr<UnphasedGenome>& genome);
@@ -112,7 +121,9 @@ public:
   void popStatistics() const; // output to logger
   std::vector<GenomeId_t> genomeList() const;
 
-  bool removeConflictingVariants();
+  std::shared_ptr<UnphasedPopulation> removeConflictingVariants() const;
+
+  std::shared_ptr<UnphasedPopulation> filterVariants(const VariantFilter& filter) const;
 
   const UnphasedGenomeMap& getMap() const { return genome_map_; }
 
@@ -131,6 +142,8 @@ public:
 private:
 
   UnphasedGenomeMap genome_map_;
+
+  bool addGenome(std::shared_ptr<UnphasedGenome> genome);
 
 };
 

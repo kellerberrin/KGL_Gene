@@ -16,6 +16,8 @@
 #include "kgd_utility.h"
 
 
+//#define MCMCHAP_DEBUG 1
+
 namespace kgd = kellerberrin::deconvolv;
 
 
@@ -147,9 +149,13 @@ void kgd::MCMCHAP::updateProportion() {
 
   double acceptance_draw = random_unit_.random(entropy_source_.generator());
 
+#ifdef MCMCHAP_DEBUG
+
   ExecEnv::log().info("{}, Update: {}, p_ratio: {}, l_ratio: {}, p*l: {}, accept: {}, {}",
                       current_MCMC_iteration(), proposal.proportionsText(),
                       prior_prop_ratio, ratio_likelihood, proposal_ratio, acceptance_draw, acceptance_draw <= proposal_ratio ? "ACCEPT" : "REJECT");
+
+#endif
 
   if (acceptance_draw > proposal_ratio) {
 

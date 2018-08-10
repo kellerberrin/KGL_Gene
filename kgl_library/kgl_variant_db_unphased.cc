@@ -83,44 +83,25 @@ bool kgl::UnphasedContig::isHomozygous(const std::vector<std::shared_ptr<Variant
 }
 
 
-bool kgl::UnphasedContig::removeConflictingVariants() {
+std::shared_ptr<kgl::UnphasedContig> kgl::UnphasedContig::removeConflictingVariants() const {
 
-  for (auto& variant_vector : contig_offset_map_) {
+  std::shared_ptr<UnphasedContig> filtered_contig_ptr(std::make_shared<UnphasedContig>(contigId()));
+
+  for (auto& variant_vector : getMap()) {
 
     if (not variant_vector.second.empty()) {
-      // remove all but the first SNP variant
-      auto variant_iter = variant_vector.second.begin();
-      while (variant_iter != variant_vector.second.end()) {
 
-        if ((*variant_iter)->isSNP()) break;
-        ++variant_iter;
-
-      }
-
-      if (variant_iter != variant_vector.second.end()) {
-
-        std::shared_ptr<Variant> first_variant = *variant_iter;
-        variant_vector.second.clear();
-        variant_vector.second.push_back(first_variant); // add the first variant back into the vector.
-
-      } else {
-
-        contig_offset_map_.erase(variant_vector.first); // erase the vector.
-
-      }
-
+      filtered_contig_ptr->addVariant(variant_vector.second.front());
 
     } else {
 
       ExecEnv::log().warn("removeConflictingVariants(); empty variant vector in unphased variant contig: {}, offset: {}",
                           contig_id_, variant_vector.first);
-      contig_offset_map_.erase(variant_vector.first); // erase the empty vector.
-
     }
 
   }
 
-  return true;
+  return filtered_contig_ptr;
 
 }
 
@@ -172,15 +153,34 @@ bool kgl::UnphasedGenome::getCreateContig(const ContigId_t& contig_id, std::shar
 
 }
 
-bool kgl::UnphasedGenome::removeConflictingVariants() {
 
-  for (auto contig : getMap()) {
+bool kgl::UnphasedGenome::addContig(std::shared_ptr<UnphasedContig> contig_ptr) {
 
-    contig.second->removeConflictingVariants();
+  std::pair<ContigId_t, std::shared_ptr<UnphasedContig>> add_contig(contig_ptr->contigId(), contig_ptr);
+  auto result = contig_map_.insert(add_contig);
+
+  if (not result.second) {
+
+    ExecEnv::log().error("UnphasedGenome::addContig(); could not add contig: {} to the genome", contig_ptr->contigId());
 
   }
 
-  return true;
+  return result.second;
+
+}
+
+
+std::shared_ptr<kgl::UnphasedGenome> kgl::UnphasedGenome::removeConflictingVariants() const {
+
+  std::shared_ptr<UnphasedGenome> filtered_genome_ptr(std::make_shared<UnphasedGenome>(genomeId()));
+
+  for (auto contig : getMap()) {
+
+    filtered_genome_ptr->addContig(contig.second->removeConflictingVariants());
+
+  }
+
+  return filtered_genome_ptr;
 
 }
 
@@ -238,15 +238,33 @@ bool kgl::UnphasedPopulation::getCreateGenome(const GenomeId_t& genome_id,
 }
 
 
-bool kgl::UnphasedPopulation::removeConflictingVariants() {
+bool kgl::UnphasedPopulation::addGenome(std::shared_ptr<UnphasedGenome> genome_ptr) {
 
-  for (auto genome : getMap()) {
+  std::pair<GenomeId_t, std::shared_ptr<UnphasedGenome>> add_genome(genome_ptr->genomeId(), genome_ptr);
+  auto result = genome_map_.insert(add_genome);
 
-    genome.second->removeConflictingVariants();
+  if (not result.second) {
+
+    ExecEnv::log().error("UnphasedPopulation::addGenome(), could not add genome: {} to the population", genome_ptr->genomeId());
 
   }
 
-  return true;
+  return result.second;
+
+}
+
+
+std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::removeConflictingVariants() const {
+
+  std::shared_ptr<UnphasedPopulation> filtered_population_ptr(std::make_shared<UnphasedPopulation>());
+
+  for (auto genome : getMap()) {
+
+    filtered_population_ptr->addGenome(genome.second->removeConflictingVariants());
+
+  }
+
+  return filtered_population_ptr;
 
 }
 

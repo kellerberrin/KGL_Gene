@@ -67,6 +67,8 @@ private:
   std::vector<double> refCount_;
   std::vector<double> altCount_;
 
+  double calcMedianCount(std::vector<double>& countVector) const;
+
 };
 
 

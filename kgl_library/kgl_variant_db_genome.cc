@@ -80,7 +80,6 @@ std::shared_ptr<kgl::GenomeVariant> kgl::GenomeVariant::filterVariants(const kgl
 
   filtered_genome_ptr->attributes().insertAttribute("filter", filter.filterName());
 
-  ExecEnv::log().info("Applying filter: {}", filter.filterName());
   for (const auto& contig_variant : genome_variant_map_) {
 
     std::shared_ptr<kgl::ContigVariant> filtered_contig = contig_variant.second->filterVariants(filter);
