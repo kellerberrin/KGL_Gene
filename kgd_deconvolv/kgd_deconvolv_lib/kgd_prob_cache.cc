@@ -71,6 +71,8 @@ void kgd::SiteProbabilityCache::armaProbabilityCache(const std::vector<double>& 
 
     }
 
+
+
     arma::rowvec mn_vec(lln % grid);
 
     double mn = arma::accu(mn_vec);
@@ -81,14 +83,6 @@ void kgd::SiteProbabilityCache::armaProbabilityCache(const std::vector<double>& 
 
     double a = mn * comm;
     double b = (1 - mn) * comm;
-
-    if (a <= 0 or b <= 0) {
-
-      ExecEnv::log().error("SiteProbabilityCache; Invalid a: {}, b: {} generated for allele index (site): {}, ref count: {}, alt count: {}",
-                           a, b, site, ref_count(site), alt_count(site));
-
-    }
-
 
     llk_surf_mat_(site, A_INDEX) = a;
     llk_surf_mat_(site, B_INDEX) = b;
@@ -145,16 +139,18 @@ void kgd::stlSiteProbabilityCache::stlProbabilityCache(const std::vector<double>
 
   assert(llk_surf_.size() == 0);
 
-  for (size_t i = 0; i < altCount.size(); i++) {
+  for (size_t site = 0; site < altCount.size(); ++site) {
 
-    double alt = altCount[i];
-    double ref = refCount[i];
+    double alt = altCount[site];
+    double ref = refCount[site];
 
     std::vector<double> ll;
 
     for (double unadjustedP : pGrid) {
 
-      ll.push_back(Utility::calcLLK(ref, alt, unadjustedP, err, scalingConst));
+      double llk = Utility::calcLLK(ref, alt, unadjustedP, err, scalingConst);
+
+      ll.push_back(llk);
 
     }
 
@@ -181,9 +177,11 @@ void kgd::stlSiteProbabilityCache::stlProbabilityCache(const std::vector<double>
     double vr = Utility::sumOfVec(tmpVec2) - (mn * mn);
 
     double comm = (mn * ((1.0 - mn) / vr)) - 1.0;
+
     llk_surf_.push_back(std::vector<double>{mn * comm, (1 - mn) * comm});
 
   }
+
 
   for (auto sitellk : llk_surf_) {
 

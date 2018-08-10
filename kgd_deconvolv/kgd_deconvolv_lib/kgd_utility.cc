@@ -209,13 +209,9 @@ double kgd::Utility::calcLLK(double ref, double alt, double unadjustedWsaf, doub
 #define BOOST_BBD_  1
 #ifdef BOOST_BBD_
 
-  size_t n = static_cast<size_t>(std::round(ref+alt));
-  size_t k = static_cast<size_t>(std::round(alt));
+  double prob = BetaBinomialDistribution::logPartialPdf(ref+alt, alt, a2_arg, b2_arg);
 
-
-  double prob = BetaBinomialDistribution::pdf(n, k, a2_arg, b2_arg);
-
-  return std::log(prob);
+  return prob;
 
 #else
 

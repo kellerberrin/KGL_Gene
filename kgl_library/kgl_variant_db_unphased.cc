@@ -85,13 +85,30 @@ bool kgl::UnphasedContig::isHomozygous(const std::vector<std::shared_ptr<Variant
 
 bool kgl::UnphasedContig::removeConflictingVariants() {
 
-  for (auto variant_vector : getMap()) {
+  for (auto& variant_vector : contig_offset_map_) {
 
     if (not variant_vector.second.empty()) {
+      // remove all but the first SNP variant
+      auto variant_iter = variant_vector.second.begin();
+      while (variant_iter != variant_vector.second.end()) {
 
-      std::shared_ptr<Variant> first_variant = variant_vector.second.front();
-      variant_vector.second.clear();
-      variant_vector.second.push_back(first_variant); // add the first vartint back into the vector.
+        if ((*variant_iter)->isSNP()) break;
+        ++variant_iter;
+
+      }
+
+      if (variant_iter != variant_vector.second.end()) {
+
+        std::shared_ptr<Variant> first_variant = *variant_iter;
+        variant_vector.second.clear();
+        variant_vector.second.push_back(first_variant); // add the first variant back into the vector.
+
+      } else {
+
+        contig_offset_map_.erase(variant_vector.first); // erase the vector.
+
+      }
+
 
     } else {
 
@@ -155,7 +172,17 @@ bool kgl::UnphasedGenome::getCreateContig(const ContigId_t& contig_id, std::shar
 
 }
 
+bool kgl::UnphasedGenome::removeConflictingVariants() {
 
+  for (auto contig : getMap()) {
+
+    contig.second->removeConflictingVariants();
+
+  }
+
+  return true;
+
+}
 
 
 size_t kgl::UnphasedGenome::variantCount() const {
@@ -207,6 +234,19 @@ bool kgl::UnphasedPopulation::getCreateGenome(const GenomeId_t& genome_id,
     return result.second;
 
   }
+
+}
+
+
+bool kgl::UnphasedPopulation::removeConflictingVariants() {
+
+  for (auto genome : getMap()) {
+
+    genome.second->removeConflictingVariants();
+
+  }
+
+  return true;
 
 }
 

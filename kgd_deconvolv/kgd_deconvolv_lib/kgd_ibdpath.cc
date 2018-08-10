@@ -572,14 +572,6 @@ void kgd::IBDpath::computeAndUpdateTheta() {
   //**** debug.
 
   ExecEnv::log().info("theta: {}, obsState.size: {}/{}, sccs: {}, sumOfKeffStates: {}", theta(),  state_changes.size(), nLoci(), sumOfKeffStates, sccs);
-  std::stringstream ss;
-  for (auto state : state_changes) {
-
-    ss << state << ", ";
-
-  }
-
-  ExecEnv::log().info("states: {}", ss.str());
 
   std::vector<size_t> state_count(h_prior_.nStates());
   for (auto site_state_entry : ibd_configure_path_) {

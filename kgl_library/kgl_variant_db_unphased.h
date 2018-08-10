@@ -112,6 +112,7 @@ public:
   void popStatistics() const; // output to logger
   std::vector<GenomeId_t> genomeList() const;
 
+  bool removeConflictingVariants();
 
   const UnphasedGenomeMap& getMap() const { return genome_map_; }
 

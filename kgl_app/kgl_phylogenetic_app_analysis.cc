@@ -60,8 +60,6 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
   // Create a phased population object.
   std::shared_ptr<PhasedPopulation> population_ptr(std::make_shared<PhasedPopulation>("Falciparum"));
-  // Phase the variants returned from the parser.
-  GenomePhasing::haploidPhasing(unphased_population_ptr, genome_db_ptr , population_ptr);
 
   if (args.analysisType == kgl::Phylogenetic::WILDCARD) {
 
@@ -80,6 +78,13 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
   }
 
   if (args.analysisType == ANALYZE_INTERVAL or args.analysisType == kgl::Phylogenetic::WILDCARD) {
+
+    // Convert unphased to mutable.
+    std::shared_ptr<UnphasedPopulation> mutable_unphased = std::const_pointer_cast<UnphasedPopulation>(unphased_population_ptr);
+    // Remove conflicting variants.
+    mutable_unphased->removeConflictingVariants();
+    // Phase the variants returned from the parser.
+    GenomePhasing::haploidPhasing(mutable_unphased, genome_db_ptr , population_ptr);
 
     kgl::ExecEnv::log().info("Analyzing genome intervals");
     std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
@@ -145,21 +150,10 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
     for (auto genome : classifier.getGenomes()) {
 
-      kgd::MixtureDataObj mixture_data = classifier.convertToMixture(genome, 10);
+      kgd::MixtureDataObj mixture_data = classifier.convertToMixture(genome, 25);
       kgd::ExecEnv::executeLib(mixture_data);
 
     }
-
-//    char delimiter = '\t';
-//    std::string prefix_ref_file = kgl::Utility::filePath("ref_", args.workDirectory);
-//    std::string prefix_alt_file = kgl::Utility::filePath("alt_", args.workDirectory);
-//    std::string variant_plaf_file = kgl::Utility::filePath("variant_plaf_file", args.workDirectory) + ".tab";
-
-//    classifier.writeOrderedVariants(delimiter, variant_ref_file, variant_alt_file, 30, 25000);
-//    classifier.writeVariants(delimiter, variant_ref_file, variant_alt_file, 20);
-//
-//    classifier.writePlaf(delimiter, variant_plaf_file, prefix_ref_file, prefix_alt_file, 20);
-//
 
   }
 

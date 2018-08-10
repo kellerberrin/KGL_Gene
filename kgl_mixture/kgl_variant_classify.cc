@@ -98,7 +98,6 @@ kgd::MixtureDataObj kgl::VariantClassifier::convertToMixture(const GenomeId_t& a
   // for all variant offsets.
   for (auto variant_offset : getMap()) {
 
-
     // Initialize the current contig.
     if (first_contig) {
 

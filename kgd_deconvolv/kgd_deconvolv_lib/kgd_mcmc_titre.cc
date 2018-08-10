@@ -76,6 +76,8 @@ void kgd::MCMCTITRE::proportion2Titre(const std::vector<double>& proportions) {
 
   proportions_ = proportions;
 
+  ExecEnv::log().info("Proportions updated to values: {}", proportionsText());
+
 }
 
 

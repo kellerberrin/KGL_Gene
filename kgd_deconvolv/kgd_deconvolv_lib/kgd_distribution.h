@@ -246,6 +246,8 @@ public:
   // Uses boost lgamma functions.
   static double logPdf(double n, double k, double alpha, double beta);
   // No binomial coefficient term.
+  static double logPartialPdf(double n, double k, double alpha, double beta);
+  // No binomial coefficient term.
   static double partialPdf(double n, double k, double alpha, double beta);
 
 };
