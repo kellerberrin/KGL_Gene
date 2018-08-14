@@ -73,11 +73,11 @@ private:
 
   mutable std::mutex mutex_;
 
-  static constexpr long HIGH_TIDE_{100000};          // Maximum BoundedMtQueue size
-  static constexpr long LOW_TIDE_{50000};            // Low water mark to begin queueing VCF records
+  static constexpr long HIGH_TIDE_{10000};          // Maximum BoundedMtQueue size
+  static constexpr long LOW_TIDE_{1000};            // Low water mark to begin queueing VCF records
 
   int consumer_thread_count_{2};                      // Consumer threads (defaults to local CPU cores available)
-  static constexpr int MAX_CONSUMER_THREADS_{16};     // Spawning more threads does not increase performance
+  static constexpr int MAX_CONSUMER_THREADS_{4};     // Spawning more threads does not increase performance
   static constexpr int MIN_CONSUMER_THREADS_{1};     // Need at least 1 producer thread
 
   static constexpr const char* FIELD_NAME_FRAGMENT_{"#CHROM"};
@@ -271,7 +271,7 @@ template <class ConsumerMT>
 void VCFReaderMT<ConsumerMT>::VCFConsumer() {
 
   long counter = 0;
-  std::unique_ptr<seqan::VcfRecord> record_ptr;
+  std::unique_ptr<seqan::VcfRecord> record_ptr = nullptr;
   const std::unique_ptr<seqan::VcfRecord> EOF_INDICATOR{nullptr};
 
   while (true) {
@@ -283,6 +283,8 @@ void VCFReaderMT<ConsumerMT>::VCFConsumer() {
     if (record_ptr == EOF_INDICATOR) break;  // Eof encountered, terminate processing.
 
     (consumer_obj_ptr_->*consumer_fn_ptr_)(*record_ptr);
+
+    record_ptr = nullptr; // explicitly free the record.
 
   }
 

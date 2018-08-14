@@ -426,8 +426,8 @@ void kgl::UPGMAMatrix::calculateReduce() {
 
   while (node_vector_ptr_->size() > 1) {
 
-    size_t row;
-    size_t column;
+    size_t row = 0;
+    size_t column = 0;
     DistanceType_t min = minimum(row, column);
 
     reduce(row, column);

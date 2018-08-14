@@ -71,4 +71,4 @@ private:
 
 
 
-#endif //KGL_KGL_PLOIDY_ANALYSIS_H
+#endif //KGL_PLOIDY_ANALYSIS_H

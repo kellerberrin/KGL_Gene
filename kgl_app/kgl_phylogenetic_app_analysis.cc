@@ -12,6 +12,8 @@
 #include "kgl_phylogenetic_app_analysis.h"
 #include "kgl_variant_classify.h"
 #include "kgl_variant_phase.h"
+#include "kgl_unphased_analysis.h"
+#include "kgl_upgma_unphased.h"
 
 #include "kgd_deconvolv_app.h"
 
@@ -79,15 +81,23 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
   if (args.analysisType == ANALYZE_INTERVAL or args.analysisType == kgl::Phylogenetic::WILDCARD) {
 
-    // Remove conflicting variants.
-    std::shared_ptr<UnphasedPopulation> filtered_unphased = unphased_population_ptr->removeConflictingVariants();
-    // Phase the variants.
-    GenomePhasing::haploidPhasing(filtered_unphased, genome_db_ptr , population_ptr);
+    //Filter out the Pf3D7_API_v3 and Pf_M76611 contigs
+//    NotFilter not_contig_filter(AndFilter(ContigFilter("Pf3D7_API_v3"),ContigFilter("Pf_M76611")));
+//    std::shared_ptr<UnphasedPopulation> filtered_unphased = unphased_population_ptr->filterVariants(not_contig_filter);
+    //Filter only to only SNPs
+//    std::shared_ptr<UnphasedPopulation> filtered_unphased = unphased_population_ptr->filterVariants(SNPFilter());
+    // Remove conflicting SNP variants (1 variant per contig offset).
+//    filtered_unphased = filtered_unphased->removeConflictingVariants();
+    // Phase the filtered SNP variants.
+//    GenomePhasing::haploidPhasing(filtered_unphased, genome_db_ptr , population_ptr);
 
     kgl::ExecEnv::log().info("Analyzing genome intervals");
-    std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
+    AggregateVariantDistribution variant_distribution(1000, 25);
+    variant_distribution.variantDistribution(unphased_population_ptr);
     std::string interval_file = kgl::Utility::filePath("IntervalAnalysis", args.workDirectory) + ".csv";
-    kgl::GeneAnalysis::mutateAllRegions(interval_file, 1000,  dna_distance_metric, population_ptr, genome_db_ptr);
+    variant_distribution.writeDistribution(genome_db_ptr, interval_file, ',');
+//    std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
+//    kgl::GeneAnalysis::mutateAllRegions(interval_file, 1000,  dna_distance_metric, population_ptr, genome_db_ptr);
 
   }
 
@@ -182,14 +192,18 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
   if (args.analysisType == ANALYZE_UPGMA or args.analysisType == kgl::Phylogenetic::WILDCARD) {
 
     kgl::ExecEnv::log().info("Performing a UPGMA analytic");
-    std::string newick_file = "UPGMA_newick.txt";
-    std::shared_ptr<const AminoSequenceDistance> distance_metric_ptr(std::make_shared<const Blosum80Global>());
-    kgl::UPGMAGenePhyloTree<kgl::UPGMAATP4Distance>(args.workDirectory,
-                                                    newick_file,
-                                                    distance_metric_ptr,
-                                                    population_ptr,
-                                                    genome_db_ptr,
-                                                    kgl::UPGMAProteinDistance::SYMBOLIC_ATP4_FAMILY);
+//    std::shared_ptr<const AminoSequenceDistance> distance_metric_ptr(std::make_shared<const Blosum80Global>());
+//    kgl::UPGMAGenePhyloTree<kgl::UPGMAATP4Distance>(args.workDirectory,
+//                                                    newick_file,
+//                                                    distance_metric_ptr,
+//                                                    population_ptr,
+//                                                    genome_db_ptr,
+//                                                    kgl::UPGMAProteinDistance::SYMBOLIC_ATP4_FAMILY);
+
+    std::string newick_file = kgl::Utility::filePath("UPGMA_newick", args.workDirectory) + ".txt";
+    std::shared_ptr<const UnphasedPopulation> filtered_ptr = unphased_population_ptr->filterVariants(CountFilter(25));
+    kgl::UPGMAUnphasedTree<kgl::UPGMAUnphasedDistance>(newick_file, filtered_ptr);
+
   }
 
 

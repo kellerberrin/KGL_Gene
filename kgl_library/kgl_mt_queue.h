@@ -42,6 +42,7 @@ public:
     value = std::move(data_queue_.front());
 
     data_queue_.pop();
+
   }
 
   std::shared_ptr<T> waitAndPop() {

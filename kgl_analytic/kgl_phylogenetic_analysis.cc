@@ -576,7 +576,7 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
         GenomeId_t& genome_id = genome_item.genome;
         ContigId_t& contig_id = result->second.contig_id;
         ContigOffset_t offset = result->second.contig_offset;
-        std::vector<std::shared_ptr<Variant>> snp_vector;
+        std::vector<std::shared_ptr<const Variant>> snp_vector;
         if (not unphased_pop_ptr->getUnphasedVariants(genome_id, contig_id, offset, snp_vector)) {
 
           ExecEnv::log().error("Could not find phasing for SNP; Genome: {}, Contig, Offset: {}", genome_id, contig_id, offset);

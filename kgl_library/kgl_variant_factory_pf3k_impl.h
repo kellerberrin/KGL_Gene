@@ -27,8 +27,6 @@ public:
               const std::string &vcf_file_name,
               Phred_t variant_quality) : ParseCigarImpl(vcf_population_ptr, genome_db_ptr, vcf_file_name, variant_quality) {
 
-    setupVCFPopulation();
-
   }
   ~Pf3kVCFImpl() = default;
 
@@ -42,7 +40,6 @@ private:
   // Processes the record in a try/catch block.
   void TryVCFRecord(const seqan::VcfRecord& vcf_record);
   void ParseRecord(const seqan::VcfRecord& vcf_record, const ContigId_t& contig_id);
-  void setupVCFPopulation();
 
   constexpr static const char PL_CHECK_ZERO_ = '0';  // Check if the first PL character is zero, discard if true.
   constexpr static const char PL_CHECK_DOT_ = '.';  // Check if the first PL character is '.', discard if true.

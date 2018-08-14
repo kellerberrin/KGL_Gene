@@ -10,18 +10,6 @@
 namespace kgl = kellerberrin::genome;
 
 
-// Set up the genomes first rather than on-the-fly.
-// Some genomes may have no variants (the model/reference genome) and thus would not be created.
-void kgl::Pf3kVCFImpl::setupVCFPopulation() {
-
-  for (auto genome_id : getGenomeNames())  {
-
-    std::shared_ptr<UnphasedGenome> genome;
-    unphased_population_ptr_->getCreateGenome(genome_id, genome);
-
-  }
-
-}
 
 
 // This is multithreaded code called from the reader defined above.
@@ -252,15 +240,8 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
 
     if (record_count_ % 1000000 == 0) {
 
-      ExecEnv::log().info("Processed :{} records, variants: {}, variants: {}",
-                          static_cast<size_t>(record_count_), variant_count_, unphased_population_ptr_->variantCount());
-
-      for (auto allele : recordParser.alleles()) {
-
-        ExecEnv::log().info("Reference: {}, Alternate: {}, Cigar: {}",
-                            recordParser.reference(), allele, ParseVCFMiscImpl::generateCigar(recordParser.reference(), allele));
-
-      }
+      ExecEnv::log().info("Processed :{} records, total variants: {}", static_cast<size_t>(record_count_), variant_count_);
+      ExecEnv::log().info("Contig: {}, offset: {}", recordParser.contigPtr()->contigId(), recordParser.offset());
 
     }
 

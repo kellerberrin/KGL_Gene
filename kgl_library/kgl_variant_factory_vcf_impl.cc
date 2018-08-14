@@ -47,7 +47,7 @@ void kgl::ParseVCFImpl::readParseVCFImpl() {
 
 
 
-size_t kgl::ParseVCFImpl::addThreadSafeGenomeVariant(std::shared_ptr<Variant> variant_ptr) {
+size_t kgl::ParseVCFImpl::addThreadSafeGenomeVariant(std::shared_ptr<const Variant>& variant_ptr) {
 
   AutoMutex auto_mutex(mutex_);
 
@@ -59,4 +59,19 @@ size_t kgl::ParseVCFImpl::addThreadSafeGenomeVariant(std::shared_ptr<Variant> va
 
 }
 
+
+// Set up the genomes first rather than on-the-fly.
+// Some genomes may have no variants (the model/reference genome) and thus would not be created.
+void kgl::ParseVCFImpl::setupVCFPopulation() {
+
+  AutoMutex auto_mutex(mutex_);
+
+  for (auto genome_id : getGenomeNames())  {
+
+    std::shared_ptr<UnphasedGenome> genome;
+    unphased_population_ptr_->getCreateGenome(genome_id, genome);
+
+  }
+
+}
 

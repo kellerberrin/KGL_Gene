@@ -20,11 +20,11 @@ namespace kgl = kellerberrin::genome;
 
 void kgl::VariantFactory::readVCFVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                                           std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
-                                          const std::string& genome_name,
+                                          const std::string& /* genome_name */,
                                           const std::string& variant_file_name,
                                           Phred_t variant_quality,
-                                          NucleotideReadCount_t min_read_count,
-                                          double min_proportion) const {
+                                          NucleotideReadCount_t /* min_read_count */,
+                                          double /* min_proportion */) const {
 
   std::string file_ext = kgl::Utility::fileExtension(variant_file_name);
   std::transform(file_ext.begin(), file_ext.end(), file_ext.begin(), ::toupper); // convert to UC for robust comparison
@@ -99,7 +99,7 @@ bool kgl::VariantFactory::isFileNamePrefix(const std::string& prefix, const std:
 
 void kgl::VariantFactory::addGenome(std::shared_ptr<const GenomeVariant> genome_variant_ptr,
                                     std::shared_ptr<PhasedPopulation> pop_variant_ptr,
-                                    Phred_t read_quality) const {
+                                    Phred_t /* read_quality */) const {
 
 
 // Store the organism variants in the population object.

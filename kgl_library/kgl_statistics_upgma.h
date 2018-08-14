@@ -15,6 +15,7 @@
 #include "kgl_variant_db_population.h"
 #include "kgl_utility.h"
 #include "kgl_sequence_distance.h"
+#include "kgl_variant_db.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -43,6 +44,8 @@ public:
   // Pure Virtual calculates the distance between nodes.
   virtual DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const = 0;
   // Pure Virtual calculates the zero distance between nodes.
+  // This function is only re-defined and used if the distance metric needs to set a particular
+  // condition for a zero distance. Most distance metrics will not need to re-define this function.
   virtual DistanceType_t zeroDistance(std::shared_ptr<const UPGMADistanceNode>) const { return 1.0; }
 
 private:
@@ -157,6 +160,33 @@ private:
 
 
 };
+
+
+// Variadic function to combine the UPGMAMatrix and UPGMADistanceNode to produce a population tree.
+// We are comparing contigs across genomes. The distance metric will be based on the difference in
+// the unphased variants held for each contig.
+template<typename T, typename... Args>
+void UPGMAUnphasedTree(const std::string& newick_file,
+                       std::shared_ptr<const UnphasedPopulation> pop_unphased_ptr,
+                       Args... args) {
+
+  std::shared_ptr<PhyloNodeVector> node_vector_ptr(std::make_shared<PhyloNodeVector>());
+
+  for (auto genome : pop_unphased_ptr->getMap()) {
+
+    std::shared_ptr<T> distance_ptr(std::make_shared<T>(genome.second, args...));
+    std::shared_ptr<PhyloNode> phylo_node_ptr(std::make_shared<PhyloNode>(distance_ptr));
+    node_vector_ptr->push_back(phylo_node_ptr);
+
+  }
+
+  UPGMAMatrix upgma_matrix(node_vector_ptr);
+
+  upgma_matrix.calculateReduce();
+
+  upgma_matrix.writeNewick(newick_file);
+
+}
 
 
 // Variadic function to combine the UPGMAMatrix and UPGMADistanceNode to produce a population tree.

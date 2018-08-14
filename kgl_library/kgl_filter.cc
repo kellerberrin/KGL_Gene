@@ -9,6 +9,38 @@
 namespace kgl = kellerberrin::genome;
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter variants to a base count.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool kgl::CountFilter::implementFilter(const Variant& variant) const {
+
+  std::shared_ptr<const CountEvidence> count_evidence_ptr = std::dynamic_pointer_cast<const CountEvidence>(variant.evidence());
+
+  if (count_evidence_ptr) {
+
+    size_t total_count = count_evidence_ptr->refCount() + count_evidence_ptr->altCount();
+    return total_count >= minimum_count_;
+
+  } else {
+
+    ExecEnv::log().info("CountFilter; variant does not have base count evidence");
+
+  }
+
+  return true;
+
+}
+
+
+std::string kgl::CountFilter::filterName() const {
+
+  std::stringstream ss;
+  ss << "Variants with minimum base count:" << minimum_count_;
+  return ss.str();
+
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Filter variants to a particular contig.

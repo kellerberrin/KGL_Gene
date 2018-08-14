@@ -17,6 +17,37 @@ namespace genome {   // project level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter variants to a specified minimum base counts.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class CountFilter : public VariantFilter {
+
+public:
+
+  explicit CountFilter(size_t minimum_count) : minimum_count_(minimum_count) {}
+  ~CountFilter() override = default;
+
+  std::string filterName() const final;
+
+  bool applyFilter(const SNPVariant& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const DeleteVariant& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const InsertVariant& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const CompoundInsert& variant) const override { return implementFilter(variant); }
+
+  std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<CountFilter>(*this); }
+
+private:
+
+  size_t minimum_count_;
+
+  bool implementFilter(const Variant& variant) const;
+
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Filter variants to SNPs (single and compound)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

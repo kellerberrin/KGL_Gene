@@ -33,8 +33,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -s -DNDEBUG -DBOOST_
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE " -O3 -s -DNDEBUG -DBOOST_MATH_DISABLE_FLOAT128")
 
 # Profile g++
-set(CMAKE_CXX_FLAGS_PROFILE "-pg -g -ggdb -O3 -DBOOST_MATH_DISABLE_FLOAT128")
-set(CMAKE_EXE_LINKER_FLAGS_PROFILE "-pg -g -ggdb -O3 -DBOOST_MATH_DISABLE_FLOAT128")
+set(CMAKE_CXX_FLAGS_PROFILE "-pg -g -ggdb -O3 -DBOOST_MATH_DISABLE_FLOAT128 -Xlinker -Map=output.map ")
+set(CMAKE_EXE_LINKER_FLAGS_PROFILE "-pg -g -ggdb -O3 -DBOOST_MATH_DISABLE_FLOAT128 -Xlinker -Map=output.map ")
 
 # All possible warnings
 #set(CMAKE_ERROR_WARNING_FLAGS "-std=c++17 -Wall -pthread -Wextra -Werror -Wpedantic -pedantic-errors -Wstrict-aliasing -Wno-variadic-macros")
@@ -192,7 +192,8 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_rna_search.cc
         kgl_analytic/kgl_rna_search.h
         kgl_analytic/kgl_ploidy_analysis.h
-        )
+        kgl_analytic/kgl_unphased_analysis.h
+        kgl_analytic/kgl_unphased_analysis.cc)
 
 # Deconvolution and mixture files.
 
@@ -201,7 +202,7 @@ set(MIXTURE_SOURCE_FILES
         kgl_mixture/kgl_variant_phase.cc
         kgl_mixture/kgl_variant_classify.h
         kgl_mixture/kgl_variant_classify.cc
-        kgl_mixture/kgl_variant_classify_io.cc)
+        kgl_mixture/kgl_variant_classify_io.cc kgl_library/kgl_variant_db_unphased_population.h kgl_library/kgl_variant_db_unphased_population.cc kgl_analytic/kgl_upgma_unphased.h kgl_analytic/kgl_upgma_unphased.cc)
 
 
 # Application level objects
@@ -318,8 +319,7 @@ set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_app.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.cc
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdpath_arma.h kgd_deconvolv/kgd_deconvolv_lib/kgd_distribution.cc)
-#        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdpath_arma.cc)
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_distribution.cc)
 
 # Application level objects
 set(DECONVOLV_APPLICATION_SOURCE_FILES

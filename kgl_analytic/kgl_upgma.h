@@ -200,7 +200,7 @@ public:
   // UPGMA Classification functions
   // Function to tag the nodes. Override as necessary.
   void writeNode(std::ofstream& outfile) const override;
-  // virtual function ensures that idenitcal nodes have zero distance.
+  // virtual function ensures that identical nodes have zero distance.
   DistanceType_t zeroDistance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
 
 private:

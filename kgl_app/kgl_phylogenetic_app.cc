@@ -6,6 +6,7 @@
 #include "kgl_phylogenetic_app.h"
 #include "kgl_variant_factory.h"
 #include "kgl_phylogenetic_app_analysis.h"
+#include "kgl_unphased_analysis.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -21,10 +22,11 @@ void kgl::PhylogeneticExecEnv::executeApp() {
                                                                                              args.gafFile,
                                                                                              args.aminoTranslationTable);
 
-  std::shared_ptr<UnphasedPopulation> unphased_population_ptr(std::make_shared<UnphasedPopulation>());
-
+  HeterozygousStatistics heterozygous_statistics;
   // For all VCF files, read in the variants.
   for (const auto& file : args.fileList) {
+
+    std::shared_ptr<UnphasedPopulation> unphased_population_ptr(std::make_shared<UnphasedPopulation>());
 
     kgl::VariantFactory().readVCFVariants(genome_db_ptr,
                                           unphased_population_ptr,
@@ -34,13 +36,18 @@ void kgl::PhylogeneticExecEnv::executeApp() {
                                           args.minCount,
                                           args.minProportion);
 
+    // Basic statistics to output
+    unphased_population_ptr->popStatistics();
+
+    heterozygous_statistics.heterozygousStatistics(unphased_population_ptr);
+
+    // Analyze the data.
+    kgl::PhylogeneticAnalysis::performAnalysis(args, genome_db_ptr, unphased_population_ptr);
+
   }
 
-  // Basic statistics to output
-  unphased_population_ptr->popStatistics();
-
-  // Analyze the data.
-  kgl::PhylogeneticAnalysis::performAnalysis(args, genome_db_ptr, unphased_population_ptr);
+  std::string heterozygous_file = kgl::Utility::filePath("HeterozygousAnalysis", args.workDirectory) + ".csv";
+  heterozygous_statistics.writeHeterozygousStatistics(heterozygous_file, ',');
 
 }
 

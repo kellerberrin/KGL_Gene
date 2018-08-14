@@ -158,7 +158,8 @@ bool kgl::ParseCigarImpl::parseSNP(size_t cigar_count,
                                                                              DNA5::convertChar(reference[reference_index]),
                                                                              DNA5::convertChar(alternate[alternate_index])));
 
-    variant_count += addThreadSafeGenomeVariant(snp_variant_ptr); // Annotate with genome information
+    std::shared_ptr<const Variant> variant_ptr(snp_variant_ptr);
+    variant_count += addThreadSafeGenomeVariant(variant_ptr); // Annotate with genome information
 
     ++reference_index;
     ++alternate_index;
@@ -210,11 +211,12 @@ bool kgl::ParseCigarImpl::parseInsert(size_t cigar_count,
 
   if (compound_variant_map.size() > 1) {
 
-    variant_count += addThreadSafeGenomeVariant(CompoundInsertFactory().createCompoundVariant(compound_variant_map));
+    std::shared_ptr<const Variant> compound_variant = CompoundInsertFactory().createCompoundVariant(compound_variant_map);
+    variant_count += addThreadSafeGenomeVariant(compound_variant);
 
   } else if (compound_variant_map.size() == 1) {
 
-    std::shared_ptr<Variant> single_variant = std::const_pointer_cast<SingleVariant>(compound_variant_map.begin()->second);
+    std::shared_ptr<const Variant> single_variant = compound_variant_map.begin()->second;
     variant_count += addThreadSafeGenomeVariant(single_variant); // Annotate with genome information
 
   } else {
@@ -274,11 +276,12 @@ bool kgl::ParseCigarImpl::parseDelete(size_t cigar_count,
 
   if (compound_variant_map.size() > 1) {
 
-    variant_count += addThreadSafeGenomeVariant(CompoundDeleteFactory().createCompoundVariant(compound_variant_map));
+    std::shared_ptr<const Variant> compound_variant = CompoundDeleteFactory().createCompoundVariant(compound_variant_map);
+    variant_count += addThreadSafeGenomeVariant(compound_variant);
 
   } else if (compound_variant_map.size() == 1) {
 
-    std::shared_ptr<Variant> single_variant = std::const_pointer_cast<SingleVariant>(compound_variant_map.begin()->second);
+    std::shared_ptr<const Variant> single_variant = compound_variant_map.begin()->second;
     variant_count += addThreadSafeGenomeVariant(single_variant); // Annotate with genome information
 
   } else {

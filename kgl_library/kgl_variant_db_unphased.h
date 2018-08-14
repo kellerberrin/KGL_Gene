@@ -22,7 +22,8 @@ namespace genome {   // project level namespace
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using UnphasedOffsetMap = std::map<ContigOffset_t, std::vector<std::shared_ptr<Variant>>>;
+using UnphasedVariantVector = std::vector<std::shared_ptr<const Variant>>;
+using UnphasedOffsetMap = std::map<ContigOffset_t, UnphasedVariantVector>;
 class UnphasedContig {
 
 public:
@@ -35,17 +36,20 @@ public:
 
   const ContigId_t& contigId() const { return contig_id_; }
 
-  bool addVariant(std::shared_ptr<Variant> variant);
+  bool addVariant(std::shared_ptr<const Variant> variant);
 
   size_t variantCount() const;
 
   const UnphasedOffsetMap& getMap() const { return contig_offset_map_; }
 
   // true if vector.size() < 2
-  static bool isHomozygous(const std::vector<std::shared_ptr<Variant>>& variant_vector);
+  static bool isHomozygous(const std::vector<std::shared_ptr<const Variant>>& variant_vector);
+
 
   // Removes variants
   std::shared_ptr<UnphasedContig> removeConflictingVariants() const;
+
+  std::shared_ptr<UnphasedContig> filterVariants(const VariantFilter& filter) const;
 
 private:
 
@@ -74,7 +78,7 @@ public:
 
   size_t variantCount() const;
 
-  bool addVariant(std::shared_ptr<Variant> variant);
+  bool addVariant(std::shared_ptr<const Variant> variant);
 
   const GenomeId_t& genomeId() const { return genome_id_; }
 
@@ -95,65 +99,9 @@ private:
 };
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// An internal parser variant object that holds variants until they can be phased.
-// This object hold variants for a population.
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-using UnphasedGenomeMap = std::map<GenomeId_t, std::shared_ptr<UnphasedGenome>>;
-class UnphasedPopulation {
-
-public:
-
-  explicit UnphasedPopulation() = default;
-  UnphasedPopulation(const UnphasedPopulation&) = delete;
-  virtual ~UnphasedPopulation() = default;
-
-  UnphasedPopulation& operator=(const UnphasedPopulation&) = delete; // Use deep copy.
-
-  // Create the genome variant if it does not exist.
-  bool getCreateGenome(const GenomeId_t& genome_id, std::shared_ptr<UnphasedGenome>& genome);
-
-  size_t variantCount() const;
-  void popStatistics() const; // output to logger
-  std::vector<GenomeId_t> genomeList() const;
-
-  std::shared_ptr<UnphasedPopulation> removeConflictingVariants() const;
-
-  std::shared_ptr<UnphasedPopulation> filterVariants(const VariantFilter& filter) const;
-
-  const UnphasedGenomeMap& getMap() const { return genome_map_; }
-
-  // Generate phasing statitics.
-  bool genomePhasingStats(const GenomeId_t& genome_id,
-                          bool snp_only,
-                          size_t& heterozygous,
-                          size_t& homozygous,
-                          size_t& singleheterozygous) const;
-
-  bool getUnphasedVariants(const GenomeId_t& genome_id,
-                           const ContigId_t& contig_id,
-                           ContigOffset_t offset,
-                           std::vector<std::shared_ptr<Variant>>& variant_vector) const;
-
-private:
-
-  UnphasedGenomeMap genome_map_;
-
-  bool addGenome(std::shared_ptr<UnphasedGenome> genome);
-
-};
-
-
 
 }   // namespace genome
 }   // namespace kellerberrin
-
-std::ostream& operator<<(std::ostream& ostream, std::shared_ptr<const kellerberrin::genome::UnphasedPopulation> unphased_ptr);
-std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::UnphasedPopulation& unphased);
 
 
 #endif //KGL_KGL_VARIANT_DB_UNPHASED_H
