@@ -59,6 +59,8 @@ public:
 
   bool heterozygousStatistics(const std::string& file_name, const char delimiter = ',') const;
 
+
+
 private:
 
   UnphasedGenomeMap genome_map_;

@@ -90,6 +90,38 @@ kgl::DistanceType_t kgl::UPGMAUnphasedDistance::distance(std::shared_ptr<const U
 
           }
 
+          if (offset.first == cmp_offset_iter->first) {
+
+            // If the offsets are equal then calculate how many variants match
+            size_t variants_found = 0;
+            for (auto variant : offset.second) {
+
+              for (auto cmp_variant : cmp_offset_iter->second) {
+
+                if (variant->equivalent(*cmp_variant)) {
+
+                  ++variants_found;
+                  break;
+
+                }
+
+              }
+
+            }
+
+            size_t max_size = offset.second.size() >= cmp_offset_iter->second.size() ? offset.second.size() : cmp_offset_iter->second.size();
+            distance += (max_size - variants_found);
+            // increment to next cmp offset.
+            ++cmp_offset_iter;
+
+          }
+          // Check for the end condition again.
+          if (cmp_offset_iter == cmp_contig_iter->second->getMap().end()) {
+
+            break;
+
+          }
+
         }
 
       } else if (offset.first < cmp_offset_iter->first) {
@@ -99,6 +131,14 @@ kgl::DistanceType_t kgl::UPGMAUnphasedDistance::distance(std::shared_ptr<const U
       }
 
     } // for all offsets.
+
+    // If any cmp offsets remain then add these to the distance
+    while (cmp_offset_iter != cmp_contig_iter->second->getMap().end()) {
+
+      distance += cmp_offset_iter->second.size();
+      ++cmp_offset_iter;
+
+    }
 
   }
 

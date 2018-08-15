@@ -88,12 +88,13 @@ public:
 
   const UnphasedContigMap& getMap() const { return contig_map_; }
 
+  bool getCreateContig(const ContigId_t& contig_id, std::shared_ptr<UnphasedContig>& contig_ptr);
+
 private:
 
   UnphasedContigMap contig_map_;
   GenomeId_t genome_id_;
 
-  bool getCreateContig(const ContigId_t& contig_id, std::shared_ptr<UnphasedContig>& contig_ptr);
   bool addContig(std::shared_ptr<UnphasedContig> contig_ptr);
 
 };

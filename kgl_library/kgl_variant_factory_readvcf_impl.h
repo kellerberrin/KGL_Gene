@@ -154,7 +154,12 @@ void VCFReaderMT<ConsumerMT>::parseFieldNames(const std::string& vcf_file_name) 
 
       ExecEnv::log().error("VCF Field Names Not Found");
 
+    } else {
+
+      ExecEnv::log().info("{} Genomes in VCF file {}", field_names_.size(), vcf_file_name);
+
     }
+
 
   }
   catch (std::exception const &e) {

@@ -23,9 +23,7 @@ class AggregateVariantDistribution {
 public:
 
 
-  explicit AggregateVariantDistribution(ContigSize_t interval, size_t min_count) : interval_(interval),
-                                                                                   analysis_genome_("analysis"),
-                                                                                   minimum_base_count_(min_count) {}
+  explicit AggregateVariantDistribution(ContigSize_t interval) : interval_(interval), analysis_genome_("analysis") {}
   ~AggregateVariantDistribution() = default;
 
   bool variantDistribution(std::shared_ptr<const UnphasedPopulation> unphased_population);
@@ -38,7 +36,6 @@ private:
 
   ContigSize_t interval_;
   UnphasedGenome analysis_genome_;
-  size_t minimum_base_count_;
 
   bool writeData(std::shared_ptr<const GenomeDatabase> genome_db, std::ostream& output, const char delimiter) const;
   bool writeHeader(std::ostream& output, const char delimiter) const;

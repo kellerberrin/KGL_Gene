@@ -92,7 +92,7 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 //    GenomePhasing::haploidPhasing(filtered_unphased, genome_db_ptr , population_ptr);
 
     kgl::ExecEnv::log().info("Analyzing genome intervals");
-    AggregateVariantDistribution variant_distribution(1000, 25);
+    AggregateVariantDistribution variant_distribution(1000);
     variant_distribution.variantDistribution(unphased_population_ptr);
     std::string interval_file = kgl::Utility::filePath("IntervalAnalysis", args.workDirectory) + ".csv";
     variant_distribution.writeDistribution(genome_db_ptr, interval_file, ',');

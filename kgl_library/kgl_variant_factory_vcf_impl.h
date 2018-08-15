@@ -37,10 +37,10 @@ public:
 
     reader_ptr_ = std::make_shared<VCFReaderMT<ParseVCFImpl>>(vcf_file_name, this, &ParseVCFImpl::ProcessVCFRecord);
 
-    // Pre-initializes the UnphasedPopulation with a list of genomes.
+    // Pre-initializes the UnphasedPopulation with a list of genomes/contigs.
     // Since some genomes may not have a variant (3D7).
     // The initialization of the reader above generates a list of genomes in the VCF file.
-    setupVCFPopulation();
+    setupPopulationStructure(genome_db_ptr_);
 
   }
 
@@ -74,7 +74,7 @@ protected:
   constexpr static const char* ID_PROPORTION_ = "AF";
 
   size_t addThreadSafeGenomeVariant(std::shared_ptr<const Variant>& variant_ptr);
-  void setupVCFPopulation();
+  void setupPopulationStructure(std::shared_ptr<const GenomeDatabase> genome_db_ptr);
 
   std::shared_ptr<const GenomeDatabase> genome_db_ptr_; // read access only.
   const std::string vcf_file_name_;

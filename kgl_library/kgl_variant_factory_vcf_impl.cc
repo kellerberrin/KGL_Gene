@@ -60,16 +60,39 @@ size_t kgl::ParseVCFImpl::addThreadSafeGenomeVariant(std::shared_ptr<const Varia
 }
 
 
-// Set up the genomes first rather than on-the-fly.
-// Some genomes may have no variants (the model/reference genome) and thus would not be created.
-void kgl::ParseVCFImpl::setupVCFPopulation() {
+// Set up the genomes/contigs first rather than on-the-fly.
+// Some genomes may have no variants (e.g. the model/reference genome 3D7)
+// and thus these genomes/contigs would not be created on-the-fly.
+void kgl::ParseVCFImpl::setupPopulationStructure(std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
 
   AutoMutex auto_mutex(mutex_);
 
+  ExecEnv::log().info("setupPopulationStructure; Creating a population of {} genomes and {} contigs",
+                      getGenomeNames().size(), genome_db_ptr->getMap().size());
+
   for (auto genome_id : getGenomeNames())  {
 
-    std::shared_ptr<UnphasedGenome> genome;
-    unphased_population_ptr_->getCreateGenome(genome_id, genome);
+    std::shared_ptr<UnphasedGenome> genome_ptr = nullptr;
+    unphased_population_ptr_->getCreateGenome(genome_id, genome_ptr);
+
+    if (not genome_ptr) {
+
+      ExecEnv::log().critical("Could not create genome: {} in the unphased population", genome_id);
+
+    }
+
+    for (auto contig : genome_db_ptr->getMap()) {
+
+      std::shared_ptr<UnphasedContig> contig_ptr = nullptr;
+      genome_ptr->getCreateContig(contig.first, contig_ptr);
+
+      if (not contig_ptr) {
+
+        ExecEnv::log().critical("Could not create contig: {} in genome: {} in the unphased population", contig.first, genome_id);
+
+      }
+
+    }
 
   }
 

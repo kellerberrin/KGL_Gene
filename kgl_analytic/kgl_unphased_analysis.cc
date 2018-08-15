@@ -113,15 +113,6 @@ bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDa
 
           for (auto variant : offset_iter->second) {
 
-            std::shared_ptr<const CountEvidence> count_evidence_ptr = std::dynamic_pointer_cast<const CountEvidence>(variant->evidence());
-
-            if (count_evidence_ptr) {
-
-              size_t total_count = count_evidence_ptr->refCount() + count_evidence_ptr->altCount();
-              if (total_count < minimum_base_count_) continue; // Skip this variant.
-
-            }
-
             if (variant->isSNP()) {
 
               ++snp_count;
