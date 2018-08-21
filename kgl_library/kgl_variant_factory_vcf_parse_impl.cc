@@ -413,6 +413,11 @@ void kgl::ParseVCFMiscImpl::generateEditString(const std::string& reference,
           edit_vector.push_back(CigarEditType::CHANGED);
           break;
 
+        default:
+          ExecEnv::log().error("ParseVCFMiscImpl::generateEditString; Unknown Cigar Code: {}, reference: {}, alternate: {}",
+                               result.alignment[i], reference, alternate);
+          break;
+
       }
 
 
@@ -421,7 +426,7 @@ void kgl::ParseVCFMiscImpl::generateEditString(const std::string& reference,
 
   } else {
 
-    ExecEnv::log().error("Edlib - problem generating cigar reference:{}, alternate: {}", reference, alternate);
+    ExecEnv::log().error("ParseVCFMiscImpl::generateEditString; problem generating cigar reference:{}, alternate: {}", reference, alternate);
 
   }
 

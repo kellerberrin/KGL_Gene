@@ -49,7 +49,7 @@ public:
 
   virtual void readParseVCFImpl();
 
-  virtual void ProcessVCFRecord(const seqan::VcfRecord& vcf_record) = 0;
+  virtual void ProcessVCFRecord(size_t vcf_record_count, const seqan::VcfRecord& vcf_record) = 0;
 
   const std::vector<std::string>& getGenomeNames() const { return reader_ptr_->getFieldNames(); }
 

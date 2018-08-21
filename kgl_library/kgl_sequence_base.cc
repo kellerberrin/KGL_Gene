@@ -72,6 +72,25 @@ kgl::DNA5SequenceLinear::codingOffsetSubSequence(std::shared_ptr<const CodingSeq
 
 }
 
+
+
+
+std::shared_ptr<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::linearSequence(std::shared_ptr<const DNA5SequenceCoding> coding_sequence) {
+
+  StringDNA5 linear_string;
+  linear_string.reserve(coding_sequence->length()); // pre-allocate for efficiency
+
+  auto convert_base = [](CodingDNA5::Alphabet base) { return DNA5::convertFromCodingDNA5(base); };
+  std::transform(coding_sequence->getAlphabetString().begin(),
+                 coding_sequence->getAlphabetString().end(),
+                 std::back_inserter(linear_string), convert_base);
+
+  return std::shared_ptr<DNA5SequenceLinear>(std::make_shared<DNA5SequenceLinear>(linear_string));
+
+}
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A STRANDED DNA string that can be converted to an AMINO sequence.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -13,11 +13,11 @@ namespace kgl = kellerberrin::genome;
 
 
 // This is multithreaded code called from the reader defined above.
-void kgl::Pf3kVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& vcf_record) {
+void kgl::Pf3kVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const seqan::VcfRecord& vcf_record) {
 
   try {
 
-    TryVCFRecord(vcf_record);
+    TryVCFRecord(vcf_record_count, vcf_record);
 
   }
   catch(const std::exception& e) {
@@ -30,11 +30,11 @@ void kgl::Pf3kVCFImpl::ProcessVCFRecord(const seqan::VcfRecord& vcf_record) {
 }
 
 // This is multithreaded code called from the reader defined above.
-void kgl::Pf3kVCFImpl::TryVCFRecord(const seqan::VcfRecord& vcf_record) {
+void kgl::Pf3kVCFImpl::TryVCFRecord(size_t vcf_record_count, const seqan::VcfRecord& vcf_record) {
 
   ++vcf_variant_count_;
 
-  ParseRecord(vcf_record, contigId(vcf_record.rID));
+  ParseRecord(vcf_record_count, vcf_record, contigId(vcf_record.rID));
 
   if (vcf_variant_count_ % VARIANT_REPORT_INTERVAL_ == 0) {
 
@@ -46,7 +46,7 @@ void kgl::Pf3kVCFImpl::TryVCFRecord(const seqan::VcfRecord& vcf_record) {
 
 
 // This is multithreaded code called from the reader defined above.
-void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const ContigId_t& contig_id) {
+void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const seqan::VcfRecord& vcf_record, const ContigId_t& contig_id) {
 
   ParseVCFRecord recordParser(vcf_record, contig_id, genome_db_ptr_); //Each vcf record.
 
@@ -177,8 +177,12 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
             // Evidence object
             size_t ref_count = ad_count_vector[0];
             size_t alt_count = ad_count_vector[A_allele];
-            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(ref_count, alt_count, DP_value, GQ_value, recordParser.quality()));
-
+            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(ref_count,
+                                                                                          alt_count,
+                                                                                          DP_value,
+                                                                                          GQ_value,
+                                                                                          recordParser.quality(),
+                                                                                          vcf_record_count));
             // process A allele
             std::vector<CigarEditItem> parsed_cigar;
             ParseVCFMiscImpl::generateEditVector(recordParser.reference(), allele, parsed_cigar);
@@ -209,7 +213,12 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
             // Evidence object
             size_t ref_count = ad_count_vector[0];
             size_t alt_count = ad_count_vector[B_allele];
-            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(ref_count, alt_count, DP_value, GQ_value, recordParser.quality()));
+            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(ref_count,
+                                                                                          alt_count,
+                                                                                          DP_value,
+                                                                                          GQ_value,
+                                                                                          recordParser.quality(),
+                                                                                          vcf_record_count));
 
             // process B allele
             std::vector<CigarEditItem> parsed_cigar;
@@ -226,7 +235,6 @@ void kgl::Pf3kVCFImpl::ParseRecord(const seqan::VcfRecord& vcf_record, const Con
                             record_variants);
 
             variant_count_ += parsed_cigar.size();
-
 
           }
 

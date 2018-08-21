@@ -47,7 +47,6 @@ public:
 
   // Generate phasing statitics.
   bool genomePhasingStats(const GenomeId_t& genome_id,
-                          bool snp_only,
                           size_t& heterozygous,
                           size_t& homozygous,
                           size_t& singleheterozygous) const;
@@ -55,7 +54,7 @@ public:
   bool getUnphasedVariants(const GenomeId_t& genome_id,
                            const ContigId_t& contig_id,
                            ContigOffset_t offset,
-                           std::vector<std::shared_ptr<const Variant>>& variant_vector) const;
+                           UnphasedVectorVariantCount& variant_vector) const;
 
   bool heterozygousStatistics(const std::string& file_name, const char delimiter = ',') const;
 

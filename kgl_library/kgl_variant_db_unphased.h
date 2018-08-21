@@ -22,8 +22,11 @@ namespace genome {   // project level namespace
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using UnphasedVariantVector = std::vector<std::shared_ptr<const Variant>>;
-using UnphasedOffsetMap = std::map<ContigOffset_t, UnphasedVariantVector>;
+
+
+using UnphasedVariantCount = std::pair<std::shared_ptr<const Variant>, size_t>;
+using UnphasedVectorVariantCount = std::vector<UnphasedVariantCount>;
+using UnphasedOffsetMap = std::map<ContigOffset_t, UnphasedVectorVariantCount>;
 class UnphasedContig {
 
 public:
@@ -41,9 +44,6 @@ public:
   size_t variantCount() const;
 
   const UnphasedOffsetMap& getMap() const { return contig_offset_map_; }
-
-  // true if vector.size() < 2
-  static bool isHomozygous(const std::vector<std::shared_ptr<const Variant>>& variant_vector);
 
 
   // Removes variants

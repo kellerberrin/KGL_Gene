@@ -22,7 +22,7 @@ bool kgl::AggregateVariantDistribution::variantDistribution(std::shared_ptr<cons
 
         for (auto variant : offset.second) {
 
-          analysis_genome_.addVariant(variant);
+          analysis_genome_.addVariant(variant.first);
 
         } // offset vector
 
@@ -113,19 +113,19 @@ bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDa
 
           for (auto variant : offset_iter->second) {
 
-            if (variant->isSNP()) {
+            if (variant.first->isSNP()) {
 
-              ++snp_count;
+              snp_count += variant.second;
 
-            } else if (variant->isDelete()) {
+            } else if (variant.first->isDelete()) {
 
               ++delete_count;
-              delete_base_count += variant->size();
+              delete_base_count += (variant.first->size() * variant.second);
 
-            } else if (variant->isInsert()) {
+            } else if (variant.first->isInsert()) {
 
               ++insert_count;
-              insert_base_count += variant->size();
+              insert_base_count += (variant.first->size() * variant.second);
 
             } else {
 
@@ -175,7 +175,7 @@ bool kgl::HeterozygousStatistics::heterozygousStatistics(std::shared_ptr<const U
     size_t homozygous = 0;
     size_t singleheterozygous = 0;
 
-    if (not unphased_population->genomePhasingStats(genome.first, false, heterozygous, homozygous, singleheterozygous)) {
+    if (not unphased_population->genomePhasingStats(genome.first, heterozygous, homozygous, singleheterozygous)) {
 
       ExecEnv::log().error("No phasing statistics found for Genome: {}", genome.first);
 

@@ -16,6 +16,33 @@
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// VCF variant ordering counter.
+// Gives each variant a unique number consistent with it's position in the VCF file and order of parsing.
+// This is encoded as 2 counters.
+// The first counter is the position of the VCF record in the VCF file (vcf_record_count).
+// The second counter is the order in which the individual variants are parsed from a single VCF record (parse_count).
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class ParseVCFCounter {
+
+  ParseVCFCounter(size_t vcf_record_count, size_t parse_count) : vcf_record_count_(vcf_record_count), parse_count_(parse_count) {}
+  ParseVCFCounter(const ParseVCFCounter&) = default;
+  ~ParseVCFCounter() = default;
+
+  ParseVCFCounter& operator=(const ParseVCFCounter&) = default;
+
+  void updateParseCount(size_t parse_count) { parse_count_ = parse_count; }
+  size_t parseCount() const { return parse_count_; }
+  size_t vcfRecordCount() const { return vcf_record_count_; }
+
+private:
+
+  size_t vcf_record_count_;
+  size_t parse_count_;
+
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // VCF seqan record parser.

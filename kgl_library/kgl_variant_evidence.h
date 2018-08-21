@@ -152,11 +152,12 @@ public:
                          size_t alt_count,
                          size_t DP_count,
                          Phred_t GQ_value,
-                         Phred_t quality ) : ref_count_(ref_count),
-                                             alt_count_(alt_count),
-                                             DP_count_(DP_count),
-                                             GQ_value_(GQ_value),
-                                             quality_(quality) {}
+                         Phred_t quality,
+                         size_t vcf_record_count) : ref_count_(ref_count),
+                                                    alt_count_(alt_count),
+                                                    DP_count_(DP_count),
+                                                    GQ_value_(GQ_value),
+                                                    quality_(quality), vcf_record_count_(vcf_record_count) {}
   virtual ~CountEvidence() = default;
 
   size_t refCount() const { return ref_count_; }
@@ -164,6 +165,7 @@ public:
   size_t DPCount() const { return DP_count_; }
   Phred_t GQValue() const { return GQ_value_; }
   Phred_t Quality() const { return quality_; }
+  size_t vcfRecoredCount() const { return vcf_record_count_; }
 
   std::string output(char, VariantOutputIndex) const override { return "not defined"; }
 
@@ -174,6 +176,7 @@ private:
   size_t DP_count_;
   Phred_t GQ_value_;
   Phred_t quality_;
+  size_t vcf_record_count_;
 
 };
 

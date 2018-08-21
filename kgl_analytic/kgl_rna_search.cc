@@ -46,7 +46,7 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
   // Get the reference DNA sequence
   rna_sequence_ = contig_ptr->sequence().unstrandedRegion(rna_offset, rna_region_size);
   std::shared_ptr<DNA5SequenceCoding> stranded_rna_sequence = SequenceOffset::codingSequence(rna_sequence_, rna_strand);
-  rna_sequence_ = SequenceOffset::linearSequence(stranded_rna_sequence);
+  rna_sequence_ = DNA5SequenceLinear::linearSequence(stranded_rna_sequence);
 
   // Get the contig.
   if (not genome_db_ptr->getContigSequence(rna_target_contig, contig_ptr)) {
@@ -72,7 +72,7 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
   // Get the RNA target sequence
   rna_target_ = contig_ptr->sequence().unstrandedRegion(rna_target_offset, rna_target_size);
   stranded_rna_sequence = SequenceOffset::codingSequence(rna_target_, rna_target_strand);
-  rna_target_ = SequenceOffset::linearSequence(stranded_rna_sequence);
+  rna_target_ = DNA5SequenceLinear::linearSequence(stranded_rna_sequence);
 
   return true;
 
@@ -86,7 +86,7 @@ bool kgl::RNAAnalysis::compareRNARegion(ContigSize_t rna_region_comparison_start
 
   if (not rna_sequence_ and rna_target_) {
 
-    ExecEnv::log().warn("compareRNARegion(), Sequence and Target SEquences have not been defined");
+    ExecEnv::log().warn("compareRNARegion(), Sequence and Target Sewquences have not been defined");
     return false;
 
   }
@@ -137,8 +137,8 @@ void kgl::RNAAnalysis::showResults(size_t limit) {
   for (auto result : search_results_) {
 
     std::cout << "Score:" << result.second.score_ << " RNA Offset:" << result.second.rna_offset_
-              << " " << result.second.rna_sequence
-              << '\n' << result.second.comparison_
+//              << " " << result.second.rna_sequence
+//              << '\n' << result.second.comparison_
               << '\n';
 
     counter++;

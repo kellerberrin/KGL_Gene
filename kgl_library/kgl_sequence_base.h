@@ -61,6 +61,7 @@ private:
 // A linear and contiguous DNA5 sequence that cannot be used to directly generate an Amino Acid sequence
 // This sequence is NOT STRANDED.
 // However, it can return the STRANDED sequence DNA5SequenceCoding using a CodingSequence (array of CDS).
+// It can also be down-converted from a stranded sequence using the static linearSequence function.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A string of the standard 5 nucleotide DNA/RNA alphabet A, C, G, T/U, N
 using StringDNA5 = AlphabetString<DNA5>;
@@ -92,6 +93,10 @@ public:
   bool insertSubSequence(ContigOffset_t insert_offset, const DNA5SequenceLinear& inserted_sequence);
 
   size_t countGC() const;
+
+  // Down-converts a coding DNA sequence to a linear DNA5 alphabet (swaps the logical alphabet from CodingDNA5).
+  // No strand conversion is performed (or defined).
+  static std::shared_ptr<DNA5SequenceLinear> linearSequence(std::shared_ptr<const DNA5SequenceCoding> base_sequence);
 
   // Returns an UNSTRANDED region
   std::shared_ptr<DNA5SequenceLinear> unstrandedRegion(ContigOffset_t sub_sequence_offset, // offset

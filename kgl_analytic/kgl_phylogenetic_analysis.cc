@@ -545,24 +545,13 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
     size_t heterozygous = 0;
     size_t homozygous = 0;
     size_t singleheterozygous = 0;
-    if (not unphased_pop_ptr->genomePhasingStats(genome_item.genome, false, heterozygous, homozygous, singleheterozygous)) {
+    if (not unphased_pop_ptr->genomePhasingStats(genome_item.genome, heterozygous, homozygous, singleheterozygous)) {
 
       ExecEnv::log().error("No phasing statistics found for Genome: {}", genome_item.genome);
 
     }
 
     out_file << homozygous << CSV_delimiter << heterozygous << CSV_delimiter << singleheterozygous << CSV_delimiter;
-
-    size_t snp_heterozygous = 0;
-    size_t snp_homozygous = 0;
-    size_t snp_singleheterozygous = 0;
-    if (not unphased_pop_ptr->genomePhasingStats(genome_item.genome, true, snp_heterozygous, snp_homozygous, snp_singleheterozygous)) {
-
-      ExecEnv::log().error("No phasing statistics found for Genome: {}", genome_item.genome);
-
-    }
-
-    out_file << snp_homozygous << CSV_delimiter << snp_heterozygous << CSV_delimiter << snp_singleheterozygous << CSV_delimiter;
 
     for (auto DNA_Item : master_SNP_List) {
 
@@ -576,7 +565,7 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
         GenomeId_t& genome_id = genome_item.genome;
         ContigId_t& contig_id = result->second.contig_id;
         ContigOffset_t offset = result->second.contig_offset;
-        std::vector<std::shared_ptr<const Variant>> snp_vector;
+        UnphasedVectorVariantCount snp_vector;
         if (not unphased_pop_ptr->getUnphasedVariants(genome_id, contig_id, offset, snp_vector)) {
 
           ExecEnv::log().error("Could not find phasing for SNP; Genome: {}, Contig, Offset: {}", genome_id, contig_id, offset);
@@ -586,27 +575,27 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
 
           if (snp_vector.size() == 1) {
 
-            out_file << 1 << CSV_delimiter;
 
-          } else if (snp_vector.size() == 2) {
+            if(snp_vector.front().second == 1) {
 
-            if (UnphasedContig::isHomozygous(snp_vector)) {
-
-              out_file << 2 << CSV_delimiter;
+              out_file << 1 << CSV_delimiter;
 
             } else {
 
-              out_file << 3 << CSV_delimiter;
+              out_file << 2 << CSV_delimiter;
 
             }
 
+            } else if (snp_vector.size() == 2) {
 
-          } else {
+              out_file << 3 << CSV_delimiter;
 
-            ExecEnv::log().warn("Phasing not Diploid; Genome: {}, Contig, Offset: {}", genome_id, contig_id, offset);
-            out_file << 4 << CSV_delimiter;
+            } else {
 
-          }
+              ExecEnv::log().warn("Phasing not Diploid; Genome: {}, Contig, Offset: {}", genome_id, contig_id, offset);
+              out_file << 4 << CSV_delimiter;
+
+            }
 
         }
 

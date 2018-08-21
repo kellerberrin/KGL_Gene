@@ -345,22 +345,6 @@ std::shared_ptr<kgl::DNA5SequenceCoding> kgl::SequenceOffset::codingSequence(std
 
 
 
-std::shared_ptr<kgl::DNA5SequenceLinear> kgl::SequenceOffset::linearSequence(std::shared_ptr<const DNA5SequenceCoding> coding_sequence) {
-
-  StringDNA5 linear_string;
-  linear_string.reserve(coding_sequence->length()); // pre-allocate for efficiency
-
-  auto convert_base = [](CodingDNA5::Alphabet base) { return DNA5::convertFromCodingDNA5(base); };
-  std::transform(coding_sequence->getAlphabetString().begin(),
-                 coding_sequence->getAlphabetString().end(),
-                 std::back_inserter(linear_string), convert_base);
-
-  return std::shared_ptr<DNA5SequenceLinear>(std::make_shared<DNA5SequenceLinear>(linear_string));
-
-}
-
-
-
 
 // Returns bool false if contig_offset is not within the coding sequence defined by the coding_seq_ptr.
 // If the contig_offset is in the coding sequence then a valid sequence_offset and the sequence length is returned.

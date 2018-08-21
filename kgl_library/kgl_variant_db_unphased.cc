@@ -23,21 +23,41 @@ bool kgl::UnphasedContig::addVariant(std::shared_ptr<const Variant> variant) {
   auto result = contig_offset_map_.find(variant->offset());
 
   if (result != contig_offset_map_.end()) {
+  // Variant offset exists.
 
-    result->second.push_back(variant);
+    bool found = false;
+    for (auto iter = result->second.begin(); iter != result->second.end(); ++iter) {
+
+      if (iter->first->equivalent(*variant)) {
+      // Found the variant at the offset.
+        ++(iter->second); // Increment the variant counter.
+        found = true;
+        break;
+
+      }
+
+    }
+
+    if (not found) {
+
+      UnphasedVariantCount new_variant(variant, 1);
+      result->second.push_back(new_variant);
+
+    }
 
     return true;
 
   } else {
-
-    std::pair<ContigOffset_t, std::vector<std::shared_ptr<const Variant>>> new_offset;
+    // add the new offset.
+    std::pair<ContigOffset_t, UnphasedVectorVariantCount> new_offset;
     new_offset.first = variant->offset();
-    new_offset.second.push_back(variant);
+    UnphasedVariantCount new_variant(variant, 1);
+    new_offset.second.push_back(new_variant);
     auto result = contig_offset_map_.insert(new_offset);
 
     if (not result.second) {
 
-      ExecEnv::log().error("UnphasedContig::addVariant(), Could not add variant offset: {} to the genome", variant->offset());
+      ExecEnv::log().error("UnphasedContig::addVariant(); Could not add variant offset: {} to the genome", variant->offset());
       return false;
 
     }
@@ -56,7 +76,11 @@ size_t kgl::UnphasedContig::variantCount() const {
 
   for (auto offset : getMap()) {
 
-    variant_count += offset.second.size();
+    for (auto variant : offset.second) {
+
+      variant_count += variant.second;
+
+    }
 
   }
 
@@ -64,26 +88,8 @@ size_t kgl::UnphasedContig::variantCount() const {
 
 }
 
-// true if vector.size() < 2
-bool kgl::UnphasedContig::isHomozygous(const std::vector<std::shared_ptr<const Variant>>& variant_vector) {
 
-  bool is_homozygous = true;
-  for (auto variant : variant_vector) {
-
-    if (not variant_vector.front()->equivalent(*variant)) {
-
-      is_homozygous = false;
-      break;
-
-    }
-
-  }
-
-  return is_homozygous;
-
-}
-
-
+// Just one variant per offset.
 std::shared_ptr<kgl::UnphasedContig> kgl::UnphasedContig::removeConflictingVariants() const {
 
   std::shared_ptr<UnphasedContig> filtered_contig_ptr(std::make_shared<UnphasedContig>(contigId()));
@@ -92,7 +98,7 @@ std::shared_ptr<kgl::UnphasedContig> kgl::UnphasedContig::removeConflictingVaria
 
     if (not variant_vector.second.empty()) {
 
-      filtered_contig_ptr->addVariant(variant_vector.second.front());
+      filtered_contig_ptr->addVariant(variant_vector.second.front().first);
 
     } else {
 
@@ -112,17 +118,26 @@ std::shared_ptr<kgl::UnphasedContig> kgl::UnphasedContig::filterVariants(const k
   std::shared_ptr<kgl::UnphasedContig> filtered_contig_ptr(std::make_shared<kgl::UnphasedContig>(contigId()));
 
   // Complements the bool returned by filterVariant(filter) because the delete pattern expects bool true for deletion.
-  auto predicate = [&](const UnphasedVariantVector::const_iterator& it) { return not (*it)->filterVariant(filter); };
+  auto predicate = [&](const UnphasedVectorVariantCount::const_iterator& it) { return not (it->first)->filterVariant(filter); };
 
   for (auto offset_vector : getMap()) {
 
-    std::vector<std::shared_ptr<const Variant>> copy_offset_vector = offset_vector.second;
+    UnphasedVectorVariantCount copy_offset_vector = offset_vector.second;
 
     predicateIterableDelete(copy_offset_vector,  predicate);
 
-    for (auto variant : copy_offset_vector) {
+    if (not copy_offset_vector.empty()) {
 
-      filtered_contig_ptr->addVariant(variant);
+      std::pair<ContigOffset_t, UnphasedVectorVariantCount> new_offset;
+      new_offset.first = copy_offset_vector.front().first->offset();
+      new_offset.second = copy_offset_vector;
+      auto result = filtered_contig_ptr->contig_offset_map_.insert(new_offset);
+
+      if (not result.second) {
+
+        ExecEnv::log().error("UnphasedContig::filterVariants; Unable to add duplicate offset: {}, contig: {}", new_offset.first, contigId());
+
+      }
 
     }
 

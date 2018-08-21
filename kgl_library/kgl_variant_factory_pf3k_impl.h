@@ -30,7 +30,7 @@ public:
   }
   ~Pf3kVCFImpl() = default;
 
-  void ProcessVCFRecord(const seqan::VcfRecord& vcf_record) override;
+  void ProcessVCFRecord(size_t vcf_record_count, const seqan::VcfRecord& vcf_record) override;
 
 
 private:
@@ -38,8 +38,8 @@ private:
   constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 10000;
 
   // Processes the record in a try/catch block.
-  void TryVCFRecord(const seqan::VcfRecord& vcf_record);
-  void ParseRecord(const seqan::VcfRecord& vcf_record, const ContigId_t& contig_id);
+  void TryVCFRecord(size_t vcf_record_count, const seqan::VcfRecord& vcf_record);
+  void ParseRecord(size_t vcf_record_count, const seqan::VcfRecord& vcf_record, const ContigId_t& contig_id);
 
   constexpr static const char PL_CHECK_ZERO_ = '0';  // Check if the first PL character is zero, discard if true.
   constexpr static const char PL_CHECK_DOT_ = '.';  // Check if the first PL character is '.', discard if true.

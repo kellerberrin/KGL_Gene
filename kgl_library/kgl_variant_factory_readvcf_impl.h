@@ -22,15 +22,14 @@ namespace bt = boost;
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-//template<class ConsumerMT>
-//using ConsumerFunctionPtr = void (ConsumerMT::*)(const seqan::VcfRecord& record_ptr);
-
+// The vcf record in seqan format and a counter to indicate which vcf record.
 template<class ConsumerMT>
 class VCFReaderMT {
 
 public:
 
-  using ConsumerFunctionPtr = void (ConsumerMT::*)(const seqan::VcfRecord& record_ptr);
+  using ReaderQueueRecord = std::pair<size_t, std::unique_ptr<seqan::VcfRecord>>;
+  using ConsumerFunctionPtr = void (ConsumerMT::*)(size_t vcf_record_count, const seqan::VcfRecord& record_ptr);
   using ConsumerObjPtr = ConsumerMT*;
 
   explicit VCFReaderMT(const std::string& vcf_file_name,
@@ -43,7 +42,6 @@ public:
 
     parseFieldNames(vcf_file_name_);
     vcfIn_ptr_ = std::make_shared<seqan::VcfFileIn>(seqan::toCString(vcf_file_name_));
-    report_increment_ = 0;
 
   }
   virtual ~VCFReaderMT() = default;
@@ -56,12 +54,10 @@ public:
 
   const ContigId_t getContig(int32_t contig_idx) const;
 
-  void setReportIncrement(long report_increment) { report_increment_ = report_increment; }
-
 private:
 
   const std::string vcf_file_name_;
-  BoundedMtQueue<std::unique_ptr<seqan::VcfRecord>> producer_consumer_queue_; // The Producer/Consumer record queue
+  BoundedMtQueue<ReaderQueueRecord> producer_consumer_queue_; // The Producer/Consumer record queue
   ConsumerObjPtr consumer_obj_ptr_;                          // Object to consumer the VCF records.
   ConsumerFunctionPtr consumer_fn_ptr_;                  // Function to consume the VCF records.
   std::vector<std::string> field_names_;                // Field (genome) names for the VCF record
@@ -69,16 +65,16 @@ private:
   std::shared_ptr<seqan::VcfHeader> vcf_header_ptr_; // the vcf file header record
   std::shared_ptr<seqan::VcfFileIn> vcfIn_ptr_; // Open input file.
 
-  long report_increment_;
-
   mutable std::mutex mutex_;
 
-  static constexpr long HIGH_TIDE_{10000};          // Maximum BoundedMtQueue size
-  static constexpr long LOW_TIDE_{1000};            // Low water mark to begin queueing VCF records
+  int consumer_thread_count_{2};                      // Consumer threads (defaults to local CPU cores available or max)
+  static constexpr const int MAX_CONSUMER_THREADS_{6};     // Spawning more threads does not increase performance
+  static constexpr const int MIN_CONSUMER_THREADS_{1};     // Need at least 1 consumer thread
 
-  int consumer_thread_count_{2};                      // Consumer threads (defaults to local CPU cores available)
-  static constexpr int MAX_CONSUMER_THREADS_{4};     // Spawning more threads does not increase performance
-  static constexpr int MIN_CONSUMER_THREADS_{1};     // Need at least 1 producer thread
+  static constexpr const size_t report_increment_{10000};
+
+  static constexpr const long HIGH_TIDE_{10000};          // Maximum BoundedMtQueue size
+  static constexpr const long LOW_TIDE_{1000};            // Low water mark to begin queueing VCF records
 
   static constexpr const char* FIELD_NAME_FRAGMENT_{"#CHROM"};
   static constexpr const size_t FIELD_NAME_FRAGMENT_LENGTH_{6};
@@ -236,21 +232,23 @@ void VCFReaderMT<ConsumerMT>::VCFProducer() {
 
     seqan::readHeader(*vcf_header_ptr_, *vcfIn_ptr_);
 
-    long counter = 0;
+    size_t counter = 1;
     while (!seqan::atEnd(*vcfIn_ptr_)) {
 
       std::unique_ptr<seqan::VcfRecord> record_ptr(std::make_unique<seqan::VcfRecord>());
       seqan::readRecord(*record_ptr, *vcfIn_ptr_);
 
-      producer_consumer_queue_.push(std::move(record_ptr));
+      ReaderQueueRecord queue_record(counter, std::move(record_ptr));
 
-      ++counter;
+      producer_consumer_queue_.push(std::move(queue_record));
 
-      if (report_increment_ != 0 and counter % report_increment_ == 0) {
+      if (counter % report_increment_ == 0) {
 
         ExecEnv::log().info("Producer thread read: {} VCF records", counter);
 
       }
+
+      ++counter;
 
     }
 
@@ -258,7 +256,10 @@ void VCFReaderMT<ConsumerMT>::VCFProducer() {
     for(int i = 0; i < consumer_thread_count_; ++i) {
 
       std::unique_ptr<seqan::VcfRecord> EOF_INDICATOR{nullptr};  // Enqueued by producer to indicate VCF eof.
-      producer_consumer_queue_.push(std::move(EOF_INDICATOR));
+
+      ReaderQueueRecord queue_record(counter, std::move(EOF_INDICATOR));
+
+      producer_consumer_queue_.push(std::move(queue_record));
 
     }
 
@@ -276,20 +277,18 @@ template <class ConsumerMT>
 void VCFReaderMT<ConsumerMT>::VCFConsumer() {
 
   long counter = 0;
-  std::unique_ptr<seqan::VcfRecord> record_ptr = nullptr;
+  ReaderQueueRecord queue_record;
   const std::unique_ptr<seqan::VcfRecord> EOF_INDICATOR{nullptr};
 
   while (true) {
 
-    producer_consumer_queue_.waitAndPop(record_ptr);
+    producer_consumer_queue_.waitAndPop(queue_record);
 
     ++counter;
 
-    if (record_ptr == EOF_INDICATOR) break;  // Eof encountered, terminate processing.
+    if (queue_record.second == EOF_INDICATOR) break;  // Eof encountered, terminate processing.
 
-    (consumer_obj_ptr_->*consumer_fn_ptr_)(*record_ptr);
-
-    record_ptr = nullptr; // explicitly free the record.
+    (consumer_obj_ptr_->*consumer_fn_ptr_)(queue_record.first, *queue_record.second);
 
   }
 
