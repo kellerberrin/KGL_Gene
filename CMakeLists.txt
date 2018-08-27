@@ -202,7 +202,7 @@ set(MIXTURE_SOURCE_FILES
         kgl_mixture/kgl_variant_phase.cc
         kgl_mixture/kgl_variant_classify.h
         kgl_mixture/kgl_variant_classify.cc
-        kgl_mixture/kgl_variant_classify_io.cc kgl_library/kgl_variant_db_unphased_population.h kgl_library/kgl_variant_db_unphased_population.cc kgl_analytic/kgl_upgma_unphased.h kgl_analytic/kgl_upgma_unphased.cc)
+        kgl_mixture/kgl_variant_classify_io.cc kgl_library/kgl_variant_db_unphased_population.h kgl_library/kgl_variant_db_unphased_population.cc kgl_analytic/kgl_upgma_unphased.h kgl_analytic/kgl_upgma_unphased.cc kgl_library/kgl_variant_evidence.cc)
 
 
 # Application level objects

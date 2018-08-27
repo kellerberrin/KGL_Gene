@@ -81,23 +81,12 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
   if (args.analysisType == ANALYZE_INTERVAL or args.analysisType == kgl::Phylogenetic::WILDCARD) {
 
-    //Filter out the Pf3D7_API_v3 and Pf_M76611 contigs
-//    NotFilter not_contig_filter(AndFilter(ContigFilter("Pf3D7_API_v3"),ContigFilter("Pf_M76611")));
-//    std::shared_ptr<UnphasedPopulation> filtered_unphased = unphased_population_ptr->filterVariants(not_contig_filter);
-    //Filter only to only SNPs
-//    std::shared_ptr<UnphasedPopulation> filtered_unphased = unphased_population_ptr->filterVariants(SNPFilter());
-    // Remove conflicting SNP variants (1 variant per contig offset).
-//    filtered_unphased = filtered_unphased->removeConflictingVariants();
-    // Phase the filtered SNP variants.
-//    GenomePhasing::haploidPhasing(filtered_unphased, genome_db_ptr , population_ptr);
 
     kgl::ExecEnv::log().info("Analyzing genome intervals");
-    AggregateVariantDistribution variant_distribution(1000);
+    AggregateVariantDistribution variant_distribution;
     variant_distribution.variantDistribution(unphased_population_ptr);
     std::string interval_file = kgl::Utility::filePath("IntervalAnalysis", args.workDirectory) + ".csv";
-    variant_distribution.writeDistribution(genome_db_ptr, interval_file, ',');
-//    std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
-//    kgl::GeneAnalysis::mutateAllRegions(interval_file, 1000,  dna_distance_metric, population_ptr, genome_db_ptr);
+    variant_distribution.writeDistribution(genome_db_ptr, 1000, interval_file, ',');
 
   }
 

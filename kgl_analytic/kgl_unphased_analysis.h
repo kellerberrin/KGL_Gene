@@ -16,30 +16,35 @@ namespace genome {   // project level namespace
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
+// Some simple analysis objects that generate statistics from unphased variants.
 //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+using IntervalVariantMap = std::multimap<ContigOffset_t, std::shared_ptr<const Variant>>;
+using IntervalContigMap = std::map<ContigId_t, IntervalVariantMap>;
 class AggregateVariantDistribution {
 
 public:
 
 
-  explicit AggregateVariantDistribution(ContigSize_t interval) : interval_(interval), analysis_genome_("analysis") {}
+  explicit AggregateVariantDistribution() = default;
   ~AggregateVariantDistribution() = default;
 
   bool variantDistribution(std::shared_ptr<const UnphasedPopulation> unphased_population);
 
   bool writeDistribution(std::shared_ptr<const GenomeDatabase> genome_db,
+                         size_t interval_size,
                          const std::string& filename,
-                         const char delimiter = ',') const;
+                         char delimiter = ',') const;
 
 private:
 
-  ContigSize_t interval_;
-  UnphasedGenome analysis_genome_;
+  IntervalContigMap interval_contig_map_;
 
-  bool writeData(std::shared_ptr<const GenomeDatabase> genome_db, std::ostream& output, const char delimiter) const;
-  bool writeHeader(std::ostream& output, const char delimiter) const;
-
+  bool writeData(std::shared_ptr<const GenomeDatabase> genome_db, size_t interval_size, std::ostream& output, const char delimiter) const;
+  bool writeHeader(std::ostream& output, char delimiter) const;
+  bool addVariant(std::shared_ptr<const Variant> variant);
 
 };
 

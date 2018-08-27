@@ -22,7 +22,11 @@ bool kgl::AggregateVariantDistribution::variantDistribution(std::shared_ptr<cons
 
         for (auto variant : offset.second) {
 
-          analysis_genome_.addVariant(variant.first);
+          for (size_t count = 0; count < variant.second; ++count) {
+
+            addVariant(variant.first);
+
+          } // Homozygous variants.
 
         } // offset vector
 
@@ -32,29 +36,61 @@ bool kgl::AggregateVariantDistribution::variantDistribution(std::shared_ptr<cons
 
   } // genome
 
-  ExecEnv::log().info("AggregatVariantDistribution; variants processed: {}", analysis_genome_.variantCount());
+  ExecEnv::log().info("AggregatVariantDistribution; variants processed: {}", unphased_population->variantCount());
 
   return true;
 
 }
 
 
+bool kgl::AggregateVariantDistribution::addVariant(std::shared_ptr<const Variant> variant) {
+
+  auto contig_map = interval_contig_map_.find(variant->contigId());
+
+  if (contig_map == interval_contig_map_.end()) {
+
+    std::pair<ContigId_t, IntervalVariantMap> insert_contig(variant->contigId(), IntervalVariantMap());
+    auto insert_result = interval_contig_map_.insert(insert_contig);
+
+    if (not insert_result.second) {
+
+      ExecEnv::log().error("AggregateVariantDistribution::addVariant; unable to add contig: {}", variant->contigId());
+      return false;
+
+    }
+
+    contig_map = insert_result.first;
+
+  }
+
+  std::pair<ContigOffset_t, std::shared_ptr<const Variant>> insert_offset(variant->offset(), variant);
+  contig_map->second.insert(insert_offset);
+
+  return true;
+
+}
+
+
+
+
+
 bool kgl::AggregateVariantDistribution::writeDistribution(std::shared_ptr<const GenomeDatabase> genome_db,
+                                                         size_t interval_size,
                                                          const std::string& filename,
-                                                         const char delimiter) const {
+                                                         char delimiter) const {
 
   std::ofstream outfile;
   outfile.open(filename, std::ofstream::out | std::ofstream::app);
 
   if (not outfile.good()) {
 
-    ExecEnv::log().error("AggregatVariantDistribution; could open results file: {}", filename);
+    ExecEnv::log().error("AggregatVariantDistribution; could not open results file: {}", filename);
     return false;
 
   }
 
   writeHeader(outfile, delimiter);
-  writeData(genome_db, outfile, delimiter);
+  writeData(genome_db, interval_size, outfile, delimiter);
 
   return outfile.good();
 
@@ -62,7 +98,7 @@ bool kgl::AggregateVariantDistribution::writeDistribution(std::shared_ptr<const 
 
 
 
-bool kgl::AggregateVariantDistribution::writeHeader(std::ostream& output, const char delimiter) const {
+bool kgl::AggregateVariantDistribution::writeHeader(std::ostream& output, char delimiter) const {
 
   output << "contig" << delimiter;
   output << "interval_start" << delimiter;
@@ -79,19 +115,20 @@ bool kgl::AggregateVariantDistribution::writeHeader(std::ostream& output, const 
 
 
 bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDatabase> genome_db,
+                                                 size_t interval_size,
                                                  std::ostream& output,
-                                                 const char delimiter) const {
+                                                 char delimiter) const {
   for (auto contig : genome_db->getMap()) {
 
     ContigSize_t contig_size = contig.second->contigSize();
     ContigId_t contig_id = contig.second->contigId();
 
     ContigOffset_t contig_from = 0;
-    ContigOffset_t contig_to = interval_;
+    ContigOffset_t contig_to = interval_size;
 
-    auto contig_iter  = analysis_genome_.getMap().find(contig_id);
+    auto contig_iter  = interval_contig_map_.find(contig_id);
 
-    if (contig_iter != analysis_genome_.getMap().end()) {
+    if (contig_iter != interval_contig_map_.end()) {
 
       while (contig_from < contig_size) {
 
@@ -106,32 +143,28 @@ bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDa
         size_t insert_count = 0;
         size_t insert_base_count = 0;
 
-        auto begin_offset_iter = contig_iter->second->getMap().lower_bound(contig_from);
-        auto end_offset_iter = contig_iter->second->getMap().upper_bound(contig_to);
+        auto begin_offset_iter = contig_iter->second.lower_bound(contig_from);
+        auto end_offset_iter = contig_iter->second.upper_bound(contig_to);
 
         for (auto offset_iter = begin_offset_iter; offset_iter != end_offset_iter; ++offset_iter) {
 
-          for (auto variant : offset_iter->second) {
+          if (offset_iter->second->isSNP()) {
 
-            if (variant.first->isSNP()) {
+            ++snp_count;
 
-              snp_count += variant.second;
+          } else if (offset_iter->second->isDelete()) {
 
-            } else if (variant.first->isDelete()) {
+            ++delete_count;
+            delete_base_count += offset_iter->second->size();
 
-              ++delete_count;
-              delete_base_count += (variant.first->size() * variant.second);
+          } else if (offset_iter->second->isInsert()) {
 
-            } else if (variant.first->isInsert()) {
+            ++insert_count;
+            insert_base_count += offset_iter->second->size();
 
-              ++insert_count;
-              insert_base_count += (variant.first->size() * variant.second);
+          } else {
 
-            } else {
-
-              ExecEnv::log().critical("AggregatVariantDistribution; encounted unknown variant type");
-
-            }
+            ExecEnv::log().critical("AggregatVariantDistribution; encounted unknown variant type");
 
           }
 
@@ -144,9 +177,9 @@ bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDa
         output << insert_base_count << '\n';
 
         contig_from = contig_to;
-        if (contig_to + interval_ < contig_size) {
+        if (contig_to + interval_size < contig_size) {
 
-          contig_to += interval_;
+          contig_to += interval_size;
 
         } else {
 

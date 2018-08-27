@@ -40,7 +40,7 @@ void kgl::PhylogeneticExecEnv::executeApp() {
     // Basic statistics to output
     unphased_population_ptr->popStatistics();
     // Filtered Unphased Heterozygous Statistics
-    std::shared_ptr<UnphasedPopulation> filtered_unphased_ptr = unphased_population_ptr->filterVariants(CountFilter(10));
+    std::shared_ptr<UnphasedPopulation> filtered_unphased_ptr = unphased_population_ptr->filterVariants(CountFilter(30));
     // Filtered Basic statistics to output
     filtered_unphased_ptr->popStatistics();
     // Analyze the data.
