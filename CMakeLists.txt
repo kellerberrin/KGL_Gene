@@ -116,6 +116,7 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_alphabet_coding_dna5.cc
         kgl_library/kgl_variant_factory.cc
         kgl_library/kgl_variant_evidence.h
+        kgl_library/kgl_variant_evidence.cc
         kgl_library/kgl_statistics_upgma.h
         kgl_library/kgl_statistics_upgma.cc
         kgl_library/kgl_variant_mutation.cc
@@ -176,6 +177,8 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_db_contig.cc
         kgl_library/kgl_variant_db_unphased.h
         kgl_library/kgl_variant_db_unphased.cc
+        kgl_library/kgl_variant_db_unphased_population.h
+        kgl_library/kgl_variant_db_unphased_population.cc
         )
 
 # 3rd party library for fast Leveshtein sequence matching.
@@ -193,7 +196,9 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_rna_search.h
         kgl_analytic/kgl_ploidy_analysis.h
         kgl_analytic/kgl_unphased_analysis.h
-        kgl_analytic/kgl_unphased_analysis.cc)
+        kgl_analytic/kgl_unphased_analysis.cc
+        kgl_analytic/kgl_upgma_unphased.h
+        kgl_analytic/kgl_upgma_unphased.cc)
 
 # Deconvolution and mixture files.
 
@@ -202,7 +207,9 @@ set(MIXTURE_SOURCE_FILES
         kgl_mixture/kgl_variant_phase.cc
         kgl_mixture/kgl_variant_classify.h
         kgl_mixture/kgl_variant_classify.cc
-        kgl_mixture/kgl_variant_classify_io.cc kgl_library/kgl_variant_db_unphased_population.h kgl_library/kgl_variant_db_unphased_population.cc kgl_analytic/kgl_upgma_unphased.h kgl_analytic/kgl_upgma_unphased.cc kgl_library/kgl_variant_evidence.cc)
+        kgl_mixture/kgl_variant_classify_io.cc
+        kgl_mixture/kgl_read_phasing.h
+        kgl_mixture/kgl_read_phasing.cc)
 
 
 # Application level objects
@@ -212,7 +219,9 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_phylogenetic_app_analysis.cc
         kgl_app/kgl_phylogenetic_app_analysis.h
         kgl_app/kgl_phylogenetic_app.h
-        kgl_app/kgl_phylogenetic_parse.cc)
+        kgl_app/kgl_phylogenetic_parse.cc
+        kgl_app/kgl_phylogenetic_option.h
+        kgl_app/kgl_phylogenetic_option.cc)
 
 
 

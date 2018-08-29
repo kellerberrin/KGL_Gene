@@ -82,9 +82,9 @@ size_t kgl::AminoTranslationTable::index(const Codon& codon) const {
 }
 
 
-kgl::AminoAcid::Alphabet kgl::AminoTranslationTable::getAmino(const Codon& Codon) {
+kgl::AminoAcid::Alphabet kgl::AminoTranslationTable::getAmino(const Codon& codon) {
 
-  size_t table_index = index(Codon);
+  size_t table_index = index(codon);
 
   if (table_index == CONTAINS_BASE_N) {
 
@@ -92,14 +92,14 @@ kgl::AminoAcid::Alphabet kgl::AminoTranslationTable::getAmino(const Codon& Codon
 
   }
 
-  return AminoAcid::convertChar(amino_table_rows_.amino_table[index(Codon)].amino_acid);
+  return AminoAcid::convertChar(amino_table_rows_.amino_table[index(codon)].amino_acid);
 
 }
 
 
-bool kgl::AminoTranslationTable::isStopCodon(const Codon& Codon) const {
+bool kgl::AminoTranslationTable::isStopCodon(const Codon& codon) const {
 
-  size_t table_index = index(Codon);
+  size_t table_index = index(codon);
 
   if (table_index == CONTAINS_BASE_N) {
 
@@ -112,9 +112,9 @@ bool kgl::AminoTranslationTable::isStopCodon(const Codon& Codon) const {
 }
 
 
-bool kgl::AminoTranslationTable::isStartCodon(const Codon& Codon) const {
+bool kgl::AminoTranslationTable::isStartCodon(const Codon& codon) const {
 
-  size_t table_index = index(Codon);
+  size_t table_index = index(codon);
 
   if (table_index == CONTAINS_BASE_N) {
 

@@ -37,15 +37,15 @@ public:
   bool setTranslationTable(const std::string& table_name);
 
   // Returns an amino acid for the codon. AminoAcid::Unknown if any bases are 'N'
-  AminoAcid::Alphabet getAmino(const Codon& Codon);
+  AminoAcid::Alphabet getAmino(const Codon& codon);
 
   bool isStopAmino(AminoAcid::Alphabet amino) const { return amino == AminoAcid::AMINO_STOP; }
 
   bool isStartAmino(AminoAcid::Alphabet amino) const;
 
-  bool isStopCodon(const Codon& Codon) const;
+  bool isStopCodon(const Codon& codon) const;
 
-  bool isStartCodon(const Codon& Codon) const;
+  bool isStartCodon(const Codon& codon) const;
 
 private:
 

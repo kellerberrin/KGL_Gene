@@ -213,6 +213,38 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
   addOption(parser, seqan::ArgParseOption(workDirectoryShortFlag_, workDirectoryFlag_, dir_desc, seqan::ArgParseArgument::OUTPUT_DIRECTORY, "DIRECTORY"));
 
+  const char* option_desc =
+  R"(Specifies the options file. This file contains all runtime options. The file path is relative to the work directory)";
+
+  const char* optionFlag_ = "optionFile";
+  const char* optionShortFlag_ = "e";
+
+  addOption(parser, seqan::ArgParseOption(optionShortFlag_, optionFlag_, option_desc, seqan::ArgParseArgument::INPUT_FILE, "OPTION_FILE"));
+
+  const char* log_desc =
+  R"(Log file. Appends the log to any existing logs (default "kgl_snp.log").'
+  'The log file always resides in the work directory.)";
+
+  const char* logFileFlag_ = "logFile";
+  const char* logFileShortFlag_ = "l";
+
+  addOption(parser, seqan::ArgParseOption(logFileShortFlag_, logFileFlag_, log_desc, seqan::ArgParseArgument::OUTPUT_FILE, "LOG_FILE"));
+
+  const char* newlog_desc =
+  R"(Flush an existing log file (file name argument optional, (default "kgl_snp.log").
+  The log file always resides in the work directory.)";
+
+  const char* newLogFileFlag_ = "newLogFile";
+  const char* newLogFileShortFlag_ = "n";
+
+  addOption(parser, seqan::ArgParseOption(newLogFileShortFlag_, newLogFileFlag_, newlog_desc, seqan::ArgParseArgument::OUTPUT_FILE, "TRUNC_LOG_FILE"));
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Move the following options to the options file.
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   const char* gff_desc =
       R"(The gff3 (not GFF2 or GTF) file that contains the genes, exons, etc for the
   chromosome(s)/contiguous region(s) of interest)";
@@ -265,25 +297,6 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   const char* analysisShortFlag_ = "z";
 
   addOption(parser, seqan::ArgParseOption(analysisShortFlag_, analysisFlag_, analysis_desc, seqan::ArgParseArgument::STRING, "ANALYSIS_TYPE"));
-
-
-  const char* log_desc =
-      R"(Log file. Appends the log to any existing logs (default "kgl_snp.log").'
-  'The log file always resides in the work directory.)";
-
-  const char* logFileFlag_ = "logFile";
-  const char* logFileShortFlag_ = "l";
-
-  addOption(parser, seqan::ArgParseOption(logFileShortFlag_, logFileFlag_, log_desc, seqan::ArgParseArgument::OUTPUT_FILE, "LOG_FILE"));
-
-  const char* newlog_desc =
-      R"(Flush an existing log file (file name argument optional, (default "kgl_snp.log").
-  The log file always resides in the work directory.)";
-
-  const char* newLogFileFlag_ = "newLogFile";
-  const char* newLogFileShortFlag_ = "n";
-
-  addOption(parser, seqan::ArgParseOption(newLogFileShortFlag_, newLogFileFlag_, newlog_desc, seqan::ArgParseArgument::OUTPUT_FILE, "TRUNC_LOG_FILE"));
 
   const char* outCSV_desc =
       R"(Input an comma delimiter CSV file for further, analysis specific, processing, (default "/...WorkDirectory.../kgl_aux.csv").
