@@ -221,7 +221,7 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_phylogenetic_app.h
         kgl_app/kgl_phylogenetic_parse.cc
         kgl_app/kgl_phylogenetic_option.h
-        kgl_app/kgl_phylogenetic_option.cc)
+        kgl_app/kgl_phylogenetic_option.cc kgl_app/kgl_phylogenetic_option_definitions.cc)
 
 
 

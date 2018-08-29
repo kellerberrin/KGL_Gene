@@ -16,6 +16,7 @@ namespace kgl = kellerberrin::genome;
 void kgl::PhylogeneticExecEnv::executeApp() {
 
   const Phylogenetic& args = getArgs();
+  const RuntimeOptions& runtime_options = getRuntimeOptions();
 
   // Create a genome database object.
   std::shared_ptr<const GenomeDatabase> genome_db_ptr = GenomeDatabase::createGenomeDatabase(args.fastaFile,
@@ -44,7 +45,7 @@ void kgl::PhylogeneticExecEnv::executeApp() {
     // Filtered Basic statistics to output
     filtered_unphased_ptr->popStatistics();
     // Analyze the data.
-    kgl::PhylogeneticAnalysis::performAnalysis(args, genome_db_ptr, filtered_unphased_ptr);
+    kgl::PhylogeneticAnalysis::performAnalysis(args, runtime_options, genome_db_ptr, filtered_unphased_ptr);
     // Process Filtered Unphased Heterozygous Statistics
     heterozygous_statistics.heterozygousStatistics(filtered_unphased_ptr);
 

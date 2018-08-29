@@ -8,6 +8,7 @@
 
 #include "kgl_genome_types.h"
 #include "kgl_exec_env.h"
+#include "kgl_phylogenetic_option.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -65,7 +66,9 @@ public:
 private:
 
   static const Phylogenetic& getArgs();
+  static const RuntimeOptions& getRuntimeOptions();
   static Phylogenetic args_;
+  static RuntimeOptions runtime_options_;
 
 };
 

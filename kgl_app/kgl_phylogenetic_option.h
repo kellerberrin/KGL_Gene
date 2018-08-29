@@ -79,12 +79,8 @@ public:
   RuntimeOptions() = default;
   ~RuntimeOptions() = default;
 
-  const RuntimOptionsMap& getMap() const { return runtime_option_map_; }
-  // Returns false if no genome found, mixture_statistics is zeroed.
-  bool getRuntimeOption(const RuntimeOptionTag& option, RuntimeOptionVector& option_values) const;
-  // Read the mixture file. Can be more than 1 char used as field delimiter.
   bool readRuntimeOptions(const std::string& file_name);
-
+  bool getMixtureFile(std::string& file_name) const { return getRuntimeOption(MIXTURE_FILE_, file_name); }
   static void printHelp(std::ostream& stream);
 
 private:
@@ -95,8 +91,15 @@ private:
   constexpr static const char* FIELD_DELIMITER_ = "=,\t"; // Valid separators
   constexpr static const char COMMENT_CHAR_ = '#';
 
-  bool checkArrayType(const RuntimeOptionTag& option);
-  bool checkArgumentType(const RuntimeOptionTag& option);
+  // Option names.
+  constexpr static const char* MIXTURE_FILE_ = "mixtureFile";
+  constexpr static const char* VCF_PLOIDY_ = "vcf_ploidy";
+
+  const RuntimOptionsMap& getMap() const { return runtime_option_map_; }
+  // Returns false if no genome found, mixture_statistics is zeroed.
+  bool getRuntimeOptionArray(const RuntimeOptionTag& option, RuntimeOptionVector& option_values) const;
+  bool getRuntimeOption(const RuntimeOptionTag& option, std::string& option_value) const;
+  // Read the mixture file. Can be more than 1 char used as field delimiter.
   bool checkRequiredOptions();
   bool getDefinedOption(const RuntimeOptionTag& option, PredefinedOptionType& defined_option);
   bool parseOption(const RuntimeOptionTag& option, const RuntimeOptionVector& arguments);

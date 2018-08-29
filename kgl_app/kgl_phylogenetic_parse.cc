@@ -23,9 +23,12 @@ namespace kgl = kellerberrin::genome;
 
 // Static private member declarations.
 kgl::Phylogenetic kgl::PhylogeneticExecEnv::args_;
+// Static storage for the runtime options.
+kgl::RuntimeOptions kgl::PhylogeneticExecEnv::runtime_options_;
 
 // Public static member functions.
 const kgl::Phylogenetic& kgl::PhylogeneticExecEnv::getArgs() { return args_; }
+const kgl::RuntimeOptions& kgl::PhylogeneticExecEnv::getRuntimeOptions() { return runtime_options_; }
 
 // Constants for the executable.
 constexpr const char* kgl::PhylogeneticExecEnv::MODULE_NAME;
@@ -183,10 +186,10 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   // Set short description, version, and date.
   setShortDescription(parser, "Population Genome Comparison");
   setVersion(parser, VERSION);
-  setDate(parser, "May 2018");
+  setDate(parser, "September 2018");
 
   // Define usage line and long description.
-  addUsageLine(parser, "-d <work.directory>  -f <ref.fasta> -g <ref.gff> -m <fileList>");
+  addUsageLine(parser, "--workDirectory <work.directory>  --newLogFile <new_log_file> --optionFile <optionFile>");
 
   const char* program_desc =
       R"("kgl_phylogenetic" is a fast C++ program to find genetic differences (SNPs/Indels) in a population of organisms.
@@ -200,7 +203,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   addDescription(parser, program_desc);
 
   // Define Options -- Section Modification Options
-  addSection(parser, "Modification Options");
+  addSection(parser, "Required Program Options");
 
   const char* dir_desc =
       R"(The work directory where log files and data files are found.
@@ -443,6 +446,15 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   }
   // Setup the Logger.
   ExecEnv::createLogger(MODULE_NAME, getArgs().logFile, getArgs().max_error_count, getArgs().max_warn_count);
+
+  // Read the options file.
+  if (seqan::isSet(parser, optionFlag_)) {
+
+    std::string options_file;
+    getFilePath(optionFlag_ ,parser , directory_path, options_file);
+    runtime_options_.readRuntimeOptions(options_file);
+
+  }
 
   std::string file_list;
 
