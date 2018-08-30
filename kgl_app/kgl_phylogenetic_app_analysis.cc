@@ -70,7 +70,8 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
   if (runtime_options.getMixtureFile(mixture_file)) {
 
     GenomeMixtureStatistics mixture_statistics;
-    mixture_statistics.readMixtureStatistics(mixture_file);
+
+    mixture_statistics.readMixtureStatistics(kgl::Utility::filePath(mixture_file, args.workDirectory));
 
   }
 

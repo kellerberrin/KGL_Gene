@@ -11,6 +11,7 @@
 #include "kgl_variant_factory_vcf.h"
 #include "kgl_variant_factory_record_vcf_impl.h"
 #include "kgl_variant_factory_vcf_cigar_impl.h"
+#include "kgl_variant_factory_vcf_cigar.h"
 
 
 

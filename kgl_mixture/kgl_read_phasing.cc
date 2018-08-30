@@ -73,7 +73,7 @@ bool kgl::GenomeMixtureStatistics::readMixtureStatistics(const std::string& file
 
     if (field_vector.size() < MIN_FIELD_COUNT_) {
 
-      ExecEnv::log().error("GenomeMixtureStatistics::readMixtureStatistics; Required minimum fields : {}, actual fields: {}, in line: {}: {}",
+      ExecEnv::log().error("GenomeMixtureStatistics::readMixtureStatistics; Required minimum fields : {}, actual fields: {}, in line: {} text: {}",
                            MIN_FIELD_COUNT_, field_vector.size(), line_count, record_str);
       continue;
 
@@ -95,7 +95,7 @@ bool kgl::GenomeMixtureStatistics::readMixtureStatistics(const std::string& file
 
       if (std::fabs(1.0-(p1+p2+p3+p4+p5)) > TOLERANCE_) {
 
-        ExecEnv::log().error("GenomeMixtureStatistics::readMixtureStatistics; Strain proportions: {} do not sum to 1.0 in line: {}: {}",
+        ExecEnv::log().warn("GenomeMixtureStatistics::readMixtureStatistics; Strain proportions: {} do not sum to 1.0 in line: {} text: {}",
                              (p1+p2+p3+p4+p5), line_count, record_str);
         continue;
 
@@ -103,7 +103,7 @@ bool kgl::GenomeMixtureStatistics::readMixtureStatistics(const std::string& file
 
       if (strain == 1 and max < SINGLE_STRAIN_) {
 
-        ExecEnv::log().error("GenomeMixtureStatistics::readMixtureStatistics; Single Strain proportion: {} less than :{} in line: {}: {}",
+        ExecEnv::log().warn("GenomeMixtureStatistics::readMixtureStatistics; Single Strain proportion: {} less than : {} in line: {} text: {}",
                              max, SINGLE_STRAIN_, line_count, record_str);
         continue;
 
@@ -122,14 +122,14 @@ bool kgl::GenomeMixtureStatistics::readMixtureStatistics(const std::string& file
 
       if (not result.second) {
 
-        ExecEnv::log().error("GenomeMixtureStatistics::readMixtureStatistics; Unable to add mixture record for genome: {} (duplicate) for line: {}: {}",
+        ExecEnv::log().error("GenomeMixtureStatistics::readMixtureStatistics; Unable to add mixture record for genome: {} (duplicate) for line: {} text: {}",
                              field_vector[0], line_count, record_str);
 
       }
 
     } catch(...) {
 
-      ExecEnv::log().error("GenomeMixtureStatistics::readMixtureStatistics; Unexpected numeric field format in line: {}: {}", line_count, record_str);
+      ExecEnv::log().error("GenomeMixtureStatistics::readMixtureStatistics; Unexpected numeric field format in line: {} text: {}", line_count, record_str);
 
     }
 

@@ -141,7 +141,6 @@ bool kgl::RuntimeOptions::readRuntimeOptions(const std::string& file_name) {
   }
 
   readfile.close();
-  ExecEnv::log().info("RuntimeOptions::readRuntimeOptions; Options file: {}, read: {} options", file_name, option_count);
   return true;
 
 }

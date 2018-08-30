@@ -37,10 +37,6 @@ public:
 
   virtual std::shared_ptr<Variant> createCompoundVariant(const CompoundVariantMap& variant_map) const = 0;
 
-protected:
-
-  Phred_t calculateQuality(const CompoundVariantMap& variant_map) const;
-
 private:
 
   virtual bool aggregateVariants(const std::shared_ptr<const GenomeVariant>& genome_variants,

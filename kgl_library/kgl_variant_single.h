@@ -156,7 +156,7 @@ public:
                       std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
                       SignedOffset_t& sequence_size_modify) const override;
 
-  virtual char mutantChar() const override { return '-'; }
+  char mutantChar() const override { return '-'; }
 
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
 
@@ -201,7 +201,7 @@ public:
 
   DNA5::Alphabet mutant() const { return mutant_; }
 
-  virtual char mutantChar() const override { return DNA5::convertToChar(mutant()); }
+  char mutantChar() const override { return DNA5::convertToChar(mutant()); }
 
   bool mutateSequence(SignedOffset_t offset_adjust,
                       std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
@@ -219,6 +219,8 @@ private:
   DNA5::Alphabet mutant_;
 
 };
+
+
 
 
 }   // namespace genome

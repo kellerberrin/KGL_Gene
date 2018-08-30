@@ -88,7 +88,6 @@ bool kgl::CompoundInsert::mutateSequence(SignedOffset_t offset_adjust,
 
     }
 
-
     seq_string.push_back(insert_ptr->mutant());
 
     ++reference_offset;
