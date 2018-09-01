@@ -18,6 +18,9 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   const Phylogenetic& args = getArgs();
   const RuntimeOptions& runtime_options = getRuntimeOptions();
 
+  // Create a phased population object.
+  std::shared_ptr<PhasedPopulation> population_ptr(std::make_shared<PhasedPopulation>("Falciparum"));
+
   // Create a genome database object.
   std::shared_ptr<const GenomeDatabase> genome_db_ptr = GenomeDatabase::createGenomeDatabase(args.fastaFile,
                                                                                              args.gffFile,
@@ -42,10 +45,15 @@ void kgl::PhylogeneticExecEnv::executeApp() {
     unphased_population_ptr->popStatistics();
     // Filtered Unphased Heterozygous Statistics
     std::shared_ptr<UnphasedPopulation> filtered_unphased_ptr = unphased_population_ptr->filterVariants(CountFilter(30));
-    // Filtered Basic statistics to output
-    filtered_unphased_ptr->popStatistics();
+    // If the mixture file is defined then read it and phase the variants.
+    std::string mixture_file;
+    if (runtime_options.getMixtureFile(mixture_file)) {
+
+      GenomePhasing::fileHaploidPhasing(mixture_file, 2, unphased_population_ptr, genome_db_ptr, population_ptr);
+
+    }
     // Analyze the data.
-    kgl::PhylogeneticAnalysis::performAnalysis(args, runtime_options, genome_db_ptr, filtered_unphased_ptr);
+    kgl::PhylogeneticAnalysis::performAnalysis(args, runtime_options, genome_db_ptr, filtered_unphased_ptr, population_ptr);
     // Process Filtered Unphased Heterozygous Statistics
     heterozygous_statistics.heterozygousStatistics(filtered_unphased_ptr);
 

@@ -451,8 +451,8 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   if (seqan::isSet(parser, optionFlag_)) {
 
     std::string options_file;
-    getFilePath(optionFlag_ ,parser , directory_path, options_file);
-    runtime_options_.readRuntimeOptions(options_file);
+    seqan::getOptionValue(options_file, parser, optionFlag_);
+    runtime_options_.readRuntimeOptions(options_file, getArgs().workDirectory);
 
   }
 

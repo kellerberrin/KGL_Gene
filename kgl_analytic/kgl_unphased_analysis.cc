@@ -84,7 +84,7 @@ bool kgl::AggregateVariantDistribution::writeDistribution(std::shared_ptr<const 
 
   if (not outfile.good()) {
 
-    ExecEnv::log().error("AggregatVariantDistribution; could not open results file: {}", filename);
+    ExecEnv::log().error("AggregateVariantDistribution; could not open results file: {}", filename);
     return false;
 
   }
@@ -104,10 +104,7 @@ bool kgl::AggregateVariantDistribution::writeHeader(std::ostream& output, char d
   output << "interval_start" << delimiter;
   output << "interval_size" << delimiter;
   output << "snp_count" << delimiter;
-  output << "delete_count" << delimiter;
-  output << "delete_bases" << delimiter;
-  output << "insert_count" << delimiter;
-  output << "insert_bases" << '\n';
+  output << "variant_count" << '\n';
 
   return output.good();
 
@@ -138,10 +135,7 @@ bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDa
 
 
         size_t snp_count = 0;
-        size_t delete_count = 0;
-        size_t delete_base_count = 0;
-        size_t insert_count = 0;
-        size_t insert_base_count = 0;
+        size_t variant_count = 0;
 
         auto begin_offset_iter = contig_iter->second.lower_bound(contig_from);
         auto end_offset_iter = contig_iter->second.upper_bound(contig_to);
@@ -152,29 +146,14 @@ bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDa
 
             ++snp_count;
 
-          } else if (offset_iter->second->isDelete()) {
-
-            ++delete_count;
-            delete_base_count += offset_iter->second->size();
-
-          } else if (offset_iter->second->isInsert()) {
-
-            ++insert_count;
-            insert_base_count += offset_iter->second->size();
-
-          } else {
-
-            ExecEnv::log().critical("AggregatVariantDistribution; encounted unknown variant type");
-
           }
+
+          ++variant_count;
 
         }
 
         output << snp_count << delimiter;
-        output << delete_count << delimiter;
-        output << delete_base_count << delimiter;
-        output << insert_count << delimiter;
-        output << insert_base_count << '\n';
+        output << variant_count << '\n';
 
         contig_from = contig_to;
         if (contig_to + interval_size < contig_size) {

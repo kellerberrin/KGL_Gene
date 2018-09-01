@@ -60,20 +60,10 @@ bool kgl::PhylogeneticAnalysis::checkAnalysisType(const std::string& analysis_ty
 void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
                                                 const kgl::RuntimeOptions& runtime_options,
                                                 std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr,
-                                                std::shared_ptr<const UnphasedPopulation> unphased_population_ptr) {
+                                                std::shared_ptr<const UnphasedPopulation> unphased_population_ptr,
+                                                std::shared_ptr<const PhasedPopulation> population_ptr) {
 
-  // Create a phased population object.
-  std::shared_ptr<PhasedPopulation> population_ptr(std::make_shared<PhasedPopulation>("Falciparum"));
 
-  // If the mixture file is defined then read it.
-  std::string mixture_file;
-  if (runtime_options.getMixtureFile(mixture_file)) {
-
-    GenomeMixtureStatistics mixture_statistics;
-
-    mixture_statistics.readMixtureStatistics(kgl::Utility::filePath(mixture_file, args.workDirectory));
-
-  }
 
   if (args.analysisType == kgl::Phylogenetic::WILDCARD) {
 

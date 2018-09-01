@@ -6,6 +6,7 @@
 #define KGL_FILTER_H
 
 #include "kgl_variant_single.h"
+#include "kgl_variant_vcf.h"
 #include "kgl_variant_compound.h"
 #include "kgl_genome_db.h"
 
@@ -32,6 +33,7 @@ public:
   bool applyFilter(const SNPVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const DeleteVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const InsertVariant& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundInsert& variant) const override { return implementFilter(variant); }
 
@@ -63,6 +65,7 @@ public:
   bool applyFilter(const SNPVariant&) const override { return true; }
   bool applyFilter(const DeleteVariant&) const override { return false; }
   bool applyFilter(const InsertVariant&) const override { return false; }
+  bool applyFilter(const VCFVariant& variant) const override { return variant.isSNP(); }
   bool applyFilter(const CompoundDelete&) const override { return false; }
   bool applyFilter(const CompoundInsert&) const override { return false; }
 
@@ -90,6 +93,7 @@ public:
   bool applyFilter(const SNPVariant&) const override { return false; }
   bool applyFilter(const DeleteVariant&) const override { return true; }
   bool applyFilter(const InsertVariant&) const override { return false; }
+  bool applyFilter(const VCFVariant&) const override { return false; }
   bool applyFilter(const CompoundDelete&) const override { return true; }
   bool applyFilter(const CompoundInsert&) const override { return false; }
 
@@ -117,6 +121,7 @@ public:
   bool applyFilter(const SNPVariant&) const override { return false; }
   bool applyFilter(const DeleteVariant&) const override { return false; }
   bool applyFilter(const InsertVariant&) const override { return true; }
+  bool applyFilter(const VCFVariant&) const override { return false; }
   bool applyFilter(const CompoundDelete&) const override { return false; }
   bool applyFilter(const CompoundInsert&) const override { return true; }
 
@@ -145,6 +150,7 @@ public:
   bool applyFilter(const SNPVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const DeleteVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const InsertVariant& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundInsert& variant) const override { return implementFilter(variant); }
 
@@ -176,6 +182,7 @@ public:
   bool applyFilter(const SNPVariant& variant) const override { return variant.offset() >= start_ and variant.offset() < end_; }
   bool applyFilter(const InsertVariant& variant) const override { return variant.offset() >= start_ and variant.offset() < end_; }
   bool applyFilter(const DeleteVariant& variant) const override { return variant.offset() >= start_ and variant.offset() < end_; }
+  bool applyFilter(const VCFVariant& variant) const override { return variant.offset() >= start_ and variant.offset() < end_; }
   bool applyFilter(const CompoundDelete& variant) const override { return variant.offset() >= start_ and variant.offset() < end_; }
   bool applyFilter(const CompoundInsert& variant) const override { return variant.offset() >= start_ and variant.offset() < end_; }
 
@@ -203,6 +210,7 @@ public:
   bool applyFilter(const SNPVariant& variant) const override { return not filter_ptr_->applyFilter(variant); }
   bool applyFilter(const DeleteVariant& variant) const override { return not filter_ptr_->applyFilter(variant); }
   bool applyFilter(const InsertVariant& variant) const override { return not filter_ptr_->applyFilter(variant); }
+  bool applyFilter(const VCFVariant& variant) const override { return not filter_ptr_->applyFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return not filter_ptr_->applyFilter(variant); }
   bool applyFilter(const CompoundInsert& variant) const override { return not filter_ptr_->applyFilter(variant); }
 
@@ -231,6 +239,7 @@ public:
   bool applyFilter(const SNPVariant& variant) const override { return filter1_ptr_->applyFilter(variant) and filter2_ptr_->applyFilter(variant); }
   bool applyFilter(const DeleteVariant& variant) const override { return filter1_ptr_->applyFilter(variant) and filter2_ptr_->applyFilter(variant); }
   bool applyFilter(const InsertVariant& variant) const override { return filter1_ptr_->applyFilter(variant) and filter2_ptr_->applyFilter(variant); }
+  bool applyFilter(const VCFVariant& variant) const override { return filter1_ptr_->applyFilter(variant) and filter2_ptr_->applyFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return filter1_ptr_->applyFilter(variant) and filter2_ptr_->applyFilter(variant); }
   bool applyFilter(const CompoundInsert& variant) const override { return filter1_ptr_->applyFilter(variant) and filter2_ptr_->applyFilter(variant); }
 
@@ -260,6 +269,7 @@ public:
   bool applyFilter(const SNPVariant& variant) const override { return filter1_ptr_->applyFilter(variant) or filter2_ptr_->applyFilter(variant); }
   bool applyFilter(const DeleteVariant& variant) const override { return filter1_ptr_->applyFilter(variant) or filter2_ptr_->applyFilter(variant); }
   bool applyFilter(const InsertVariant& variant) const override { return filter1_ptr_->applyFilter(variant) or filter2_ptr_->applyFilter(variant); }
+  bool applyFilter(const VCFVariant& variant) const override { return filter1_ptr_->applyFilter(variant) or filter2_ptr_->applyFilter(variant); }
   bool applyFilter(const CompoundDelete& variant) const override { return filter1_ptr_->applyFilter(variant) or filter2_ptr_->applyFilter(variant); }
   bool applyFilter(const CompoundInsert& variant) const override { return filter1_ptr_->applyFilter(variant) or filter2_ptr_->applyFilter(variant); }
 

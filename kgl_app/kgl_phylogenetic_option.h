@@ -41,8 +41,8 @@ namespace genome {   // project level namespace
 
 
 enum class OptionOptional { REQUIRED, OPTIONAL };
-enum class OptionArrayType { ARRAY, SINGULAR, FLAG };  // If FLAG is specified then no argument is expected.
-enum class OptionArgumentType { STRING, FLOAT, INTEGER };
+enum class OptionArrayType { ARRAY, SINGULAR, FLAG};  // If FLAG is specified then no argument is expected.
+enum class OptionArgumentType { STRING, FLOAT, INTEGER, FILE_NAME }; // The work directory is automatically to FILE_NAME
 
 // If the option is an array then the "option_defaults" arguments must be separated using a valid field separator char
 // defined below as one of the chars in RuntimeOptions::FIELD_DELIMITER_ (private).
@@ -79,7 +79,7 @@ public:
   RuntimeOptions() = default;
   ~RuntimeOptions() = default;
 
-  bool readRuntimeOptions(const std::string& file_name);
+  bool readRuntimeOptions(const std::string& file_path, const std::string& work_directory);
   bool getMixtureFile(std::string& file_name) const { return getRuntimeOption(MIXTURE_FILE_, file_name); }
   static void printHelp(std::ostream& stream);
 
@@ -102,7 +102,7 @@ private:
   // Read the mixture file. Can be more than 1 char used as field delimiter.
   bool checkRequiredOptions();
   bool getDefinedOption(const RuntimeOptionTag& option, PredefinedOptionType& defined_option);
-  bool parseOption(const RuntimeOptionTag& option, const RuntimeOptionVector& arguments);
+  bool parseOption(const RuntimeOptionTag& option, RuntimeOptionVector& arguments, const std::string& work_directory);
 
 };
 

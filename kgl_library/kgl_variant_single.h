@@ -17,12 +17,6 @@
 #include "kgl_genome_db.h"
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// The abstract VariantFilter class uses the visitor pattern.
-// Concrete variant filters are defined in kgl_filter.h
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
@@ -108,6 +102,8 @@ public:
   char mutantChar() const override { return DNA5::convertToChar(mutant()); }
 
   std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
+
+  bool isSNP() const override { return true; }
 
 private:
 

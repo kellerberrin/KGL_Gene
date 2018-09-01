@@ -69,13 +69,17 @@ bool kgl::RuntimeOptions::getRuntimeOption(const RuntimeOptionTag& option, std::
 
 
 
-bool kgl::RuntimeOptions::readRuntimeOptions(const std::string& file_name) {
+bool kgl::RuntimeOptions::readRuntimeOptions(const std::string& file_name, const std::string& work_directory) {
 
-  std::ifstream readfile(file_name);
+  // concatonate work directory and file number.
+
+  std::string file_path = kgl::Utility::filePath(file_name, work_directory);
+
+  std::ifstream readfile(file_path);
 
   if (not readfile.good()) {
 
-    ExecEnv::log().critical("RuntimeOptions::readRuntimeOptions; could not open options file: {}", file_name);
+    ExecEnv::log().critical("RuntimeOptions::readRuntimeOptions; could not open options file: {}", file_path);
     return false; // never reached.
 
   }
@@ -110,10 +114,10 @@ bool kgl::RuntimeOptions::readRuntimeOptions(const std::string& file_name) {
     RuntimeOptionVector arguments = field_vector;
     arguments.erase(arguments.begin()); // Erase the first element (the option name).
 
-    if (not parseOption(option, arguments)) {
+    if (not parseOption(option, arguments, work_directory)) {
 
       ExecEnv::log().critical("RuntimeOptions::readRuntimeOptions; Error Parsing Options file: {}, line number: {} line: {}",
-                              file_name, line_count, record_str);
+                              file_path, line_count, record_str);
       return false; // never reached.
 
     }
@@ -127,7 +131,7 @@ bool kgl::RuntimeOptions::readRuntimeOptions(const std::string& file_name) {
       printHelp(ss);
       ExecEnv::log().info("{}", ss.str());
       ExecEnv::log().critical("RuntimeOptions::readRuntimeOptions; Duplicate Option, file: {}, line number: {} line: {}",
-                              file_name, line_count, record_str);
+                              file_path, line_count, record_str);
 
     }
 
@@ -135,7 +139,7 @@ bool kgl::RuntimeOptions::readRuntimeOptions(const std::string& file_name) {
 
   if (not checkRequiredOptions()) {
 
-    ExecEnv::log().critical("RuntimeOptions::readRuntimeOptions; Required option missing from options file: {}", file_name);
+    ExecEnv::log().critical("RuntimeOptions::readRuntimeOptions; Required option missing from options file: {}", file_path);
     return false; // never reached
 
   }
@@ -146,7 +150,7 @@ bool kgl::RuntimeOptions::readRuntimeOptions(const std::string& file_name) {
 }
 
 
-bool kgl::RuntimeOptions::parseOption(const RuntimeOptionTag& option, const RuntimeOptionVector& arguments) {
+bool kgl::RuntimeOptions::parseOption(const RuntimeOptionTag& option, RuntimeOptionVector& arguments, const std::string& work_directory) {
 
   PredefinedOptionType defined_option;
   if (not getDefinedOption(option, defined_option)) {
@@ -198,6 +202,19 @@ bool kgl::RuntimeOptions::parseOption(const RuntimeOptionTag& option, const Runt
   }
 
   switch(defined_option.option_arument_type) {
+
+    case OptionArgumentType::FILE_NAME: {
+
+      for (auto& arg : arguments) {
+
+        // If the arg is a filename then pre-pend the work directory to it.
+        arg = kgl::Utility::filePath(arg, work_directory);
+
+      }
+
+    }
+
+      break;
 
     case OptionArgumentType::STRING:
       break;

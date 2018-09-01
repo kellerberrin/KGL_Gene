@@ -31,6 +31,7 @@ namespace genome {   // project level namespace
 class SNPVariant; // Forward decl.
 class DeleteVariant; // Forward decl.
 class InsertVariant; // Forward decl.
+class VCFVariant;   // Forward decl.
 class CompoundDelete; // Forward decl.
 class CompoundInsert; // Forward decl.
 
@@ -44,6 +45,7 @@ public:
   virtual bool applyFilter(const SNPVariant& variant) const = 0;
   virtual bool applyFilter(const DeleteVariant& variant) const = 0;
   virtual bool applyFilter(const InsertVariant& variant) const = 0;
+  virtual bool applyFilter(const VCFVariant& variant) const = 0;
   virtual bool applyFilter(const CompoundDelete& variant) const = 0;
   virtual bool applyFilter(const CompoundInsert& variant) const = 0;
 
@@ -112,7 +114,7 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Defined Variant Types.
-enum class VariantType { SNP, DELETE, INSERT, COMPOUND_INSERT, COMPOUND_DELETE };
+enum class VariantType { SNP, DELETE, INSERT, VCF_VARIANT, COMPOUND_INSERT, COMPOUND_DELETE };
 
 
 class Variant : public VariantSequence {
@@ -147,7 +149,7 @@ public:
 
   bool isCompound() const { return size() > 1; }
   bool isSingle() const { return size() == 1; }
-  bool isSNP() const { return variantType() == VariantType::SNP;  }
+  virtual bool isSNP() const { return false; }
   bool isDelete() const { return variantType() == VariantType::DELETE or variantType() == VariantType::COMPOUND_DELETE; }
   bool isInsert() const { return variantType() == VariantType::INSERT or variantType() == VariantType::COMPOUND_INSERT; }
 

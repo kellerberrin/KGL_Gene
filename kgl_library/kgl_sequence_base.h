@@ -73,7 +73,7 @@ class DNA5SequenceLinear: public  AlphabetSequence<DNA5> {
 public:
 
 
-  explicit DNA5SequenceLinear(StringDNA5 sequence) :  AlphabetSequence<DNA5>(std::move(sequence)) {}
+  DNA5SequenceLinear(StringDNA5 sequence) :  AlphabetSequence<DNA5>(std::move(sequence)) {}
   explicit DNA5SequenceLinear() = default;
   explicit DNA5SequenceLinear(const DNA5SequenceLinear&) = default;
   ~DNA5SequenceLinear() override = default;

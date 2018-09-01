@@ -19,14 +19,14 @@ namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 
-class Pf3kVCFImpl : public ParseCigarImpl {
+class Pf3kVCFImpl : public ParseCigar {
 
 public:
 
   Pf3kVCFImpl(std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
               std::shared_ptr<const GenomeDatabase> genome_db_ptr,
               const std::string &vcf_file_name,
-              Phred_t variant_quality) : ParseCigarImpl(vcf_population_ptr, genome_db_ptr, vcf_file_name, variant_quality) {
+              Phred_t variant_quality) : ParseCigar(vcf_population_ptr, genome_db_ptr, vcf_file_name, variant_quality) {
 
   }
   ~Pf3kVCFImpl() = default;
