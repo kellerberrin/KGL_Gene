@@ -104,8 +104,20 @@ bool kgl::GenomePhasing::fileHaploidPhasing(const std::string& phase_file,
   size_t homozygous_count = 0;
   for (auto genome : unphased_population_ptr->getMap()) {
 
+    std::shared_ptr<GenomeVariant> genome_variant;
+    if (not haploid_population->getGenomeVariant(genome.first, genome_variant)) {
+
+      genome_variant = GenomeVariant::emptyGenomeVariant(genome.first, GenomeVariant::HAPLOID_GENOME, genome_db);
+      if (not haploid_population->addGenomeVariant(genome_variant)) {
+
+        ExecEnv::log().error("Haploid Phasing; Unable to add genome: {} to haploid population", genome_variant->genomeId());
+        return false;
+
+      }
+
+    }
+
     // Create the GenomeVariant object.
-    std::shared_ptr<GenomeVariant> genome_variant = GenomeVariant::emptyGenomeVariant(genome.first, GenomeVariant::HAPLOID_GENOME, genome_db);
 
     MixtureStatistics genome_statistics;
     if (not mixture_statistics.getMixtureStatistics(genome.first, genome_statistics)) {
@@ -159,13 +171,6 @@ bool kgl::GenomePhasing::fileHaploidPhasing(const std::string& phase_file,
       } // All offsets
 
     } // All contigs
-
-    if (not haploid_population->addGenomeVariant(genome_variant)) {
-
-      ExecEnv::log().error("Haploid Phasing; Unable to add genome: {} to haploid population", genome_variant->genomeId());
-      result = false;
-
-    }
 
   } // All genomes
 
