@@ -95,6 +95,9 @@ bool kgl::HomologousVariant::getSortedVariants(ContigOffset_t start, ContigOffse
   auto lower_bound = offset_variant_map_.lower_bound(start);
   auto upper_bound = offset_variant_map_.upper_bound(end-1); //  [start, end)
 
+  for (auto iter = lower_bound; iter )
+
+
   for (auto it = lower_bound; it != upper_bound; ++it) {
 
     variant_map.insert(std::pair<ContigOffset_t , std::shared_ptr<const Variant>>(it->first, it->second));

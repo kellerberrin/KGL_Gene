@@ -86,6 +86,23 @@ public:
 
   }
 
+  bool append(const AlphabetString& sub_string) {
+
+    try {
+
+      base_string_.append(sub_string.base_string_);
+      return true;
+
+    }
+    catch(...) {
+
+      return false;
+
+    }
+
+  }
+
+
   bool substring(ContigOffset_t offset, ContigSize_t size, AlphabetString& substring) const {
 
     try {

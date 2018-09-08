@@ -218,7 +218,7 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
 
   }
 
-  ExecEnv::log().info("Verified {} found: {} Genes; Malformed Genes: {}", contigId(), gene_count, ill_formed_genes);
+  ExecEnv::log().info("Verified {} found: {} Genes; Malformed (Pseudo) Genes: {}", contigId(), gene_count, ill_formed_genes);
 
 }
 

@@ -45,11 +45,12 @@ void kgl::PhylogeneticExecEnv::executeApp() {
     unphased_population_ptr->popStatistics();
     // Filtered Unphased Heterozygous Statistics
     std::shared_ptr<UnphasedPopulation> filtered_unphased_ptr = unphased_population_ptr->filterVariants(CountFilter(30));
+    // filtered_unphased_ptr = filtered_unphased_ptr->filterVariants(SNPFilter());
     // If the mixture file is defined then read it and phase the variants.
     std::string mixture_file;
     if (runtime_options.getMixtureFile(mixture_file)) {
 
-      GenomePhasing::fileHaploidPhasing(mixture_file, 2, unphased_population_ptr, genome_db_ptr, population_ptr);
+      GenomePhasing::fileHaploidPhasing(mixture_file, 2, filtered_unphased_ptr, genome_db_ptr, population_ptr);
 
     }
     // Analyze the data.

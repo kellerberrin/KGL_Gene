@@ -104,18 +104,6 @@ bool kgl::GenomePhasing::fileHaploidPhasing(const std::string& phase_file,
   size_t homozygous_count = 0;
   for (auto genome : unphased_population_ptr->getMap()) {
 
-    std::shared_ptr<GenomeVariant> genome_variant;
-    if (not haploid_population->getGenomeVariant(genome.first, genome_variant)) {
-
-      genome_variant = GenomeVariant::emptyGenomeVariant(genome.first, GenomeVariant::HAPLOID_GENOME, genome_db);
-      if (not haploid_population->addGenomeVariant(genome_variant)) {
-
-        ExecEnv::log().error("Haploid Phasing; Unable to add genome: {} to haploid population", genome_variant->genomeId());
-        return false;
-
-      }
-
-    }
 
     // Create the GenomeVariant object.
 
@@ -137,6 +125,15 @@ bool kgl::GenomePhasing::fileHaploidPhasing(const std::string& phase_file,
     }
 
     ++mono_strain_count;
+
+    // Is a mono strain so create the phased genome object.
+    std::shared_ptr<GenomeVariant> genome_variant;
+    if (not haploid_population->getCreateGenome(genome.first, GenomeVariant::HAPLOID_GENOME, genome_db, genome_variant)) {
+
+      ExecEnv::log().error("Haploid Phasing; Problem adding genome: {} to haploid population", genome_variant->genomeId());
+      return false;
+
+    }
 
     // Add all the contig.
     for (auto contig : genome.second->getMap()) {
@@ -210,7 +207,7 @@ bool kgl::GenomePhasing::analyseCountStatistics(const UnphasedVectorVariantCount
     }
 
     double proportion_alternate = static_cast<double>(read_evidence_ptr->altCount())
-                                  / static_cast<double>(read_evidence_ptr->altCount() + read_evidence_ptr->refCount());
+                                  / static_cast<double>(read_evidence_ptr->DPCount());
 
     if (proportion_alternate >= HETEROZYGOUS_PROPORTION_) {
 

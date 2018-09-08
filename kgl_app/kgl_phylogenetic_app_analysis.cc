@@ -170,8 +170,7 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
                                               PFATP4_SEQUENCE,
                                               genome_db_ptr,
                                               population_ptr,
-                                              aux_data,
-                                              unphased_population_ptr);
+                                              aux_data);
     std::string amino_mutation_file = kgl::Utility::filePath("AminoMutations.csv", args.workDirectory);
     ApplicationAnalysis::outputAminoMutationCSV(amino_mutation_file, PFATP4_CONTIG, PFATP4_GENE, PFATP4_SEQUENCE,
                                                 genome_db_ptr, population_ptr);

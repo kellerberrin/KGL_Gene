@@ -157,7 +157,7 @@ bool kgl::VCFVariant::mutateSequence(SignedOffset_t offset_adjust,
   if (reference().length() > max_delete_size) {
 
     delete_size = max_delete_size;
-    ExecEnv::log().vinfo("mutateSequence(), compound deletion size: {},  offset: {}, sequence size: {}, max delete size: {}",
+    ExecEnv::log().info("mutateSequence(), compound deletion size: {},  offset: {}, sequence size: {}, max delete size: {}",
                          size(), sequence_offset, dna_sequence_ptr->length(), max_delete_size);
 
   } else {
@@ -176,10 +176,21 @@ bool kgl::VCFVariant::mutateSequence(SignedOffset_t offset_adjust,
     // Check the reference.
     if (reference().at(idx) != dna_sequence_ptr->at(reference_offset)) {
 
-      ExecEnv::log().warn("mutateSequence(), reference base: {} does not match sequence base: {} at contig: {} offset: {}",
+      ExecEnv::log().warn("mutateSequence(), reference base: {} does not match sequence base: {} at contig: {} offset: {}, reference offset: {}",
                           DNA5::convertToChar(reference().at(idx)),
                           DNA5::convertToChar(dna_sequence_ptr->at(reference_offset)),
-                          contigId(), offset());
+                          contigId(), offset(), idx);
+
+      std::string seq_reference = dna_sequence_ptr->unstrandedRegion(sequence_offset, delete_size)->getSequenceAsString();
+      const ContigSize_t front_porch = 10;
+      SignedOffset_t preface_offset = (sequence_offset - front_porch);
+      const ContigOffset_t porch_offset = preface_offset < 0 ? 0 : (sequence_offset - front_porch);
+      std::string porch_str = dna_sequence_ptr->unstrandedRegion(porch_offset, (sequence_offset - porch_offset))->getSequenceAsString();
+      ExecEnv::log().warn("mutateSequence(), seq preface: {}, seq reference: {}, seq length: {}, seq index: {}, offset adjust: {}",
+                          porch_str, seq_reference, dna_sequence_ptr->length(), reference_offset, offset_adjust);
+      ExecEnv::log().warn("mutateSequence(), mutation variant: {}", output(' ', VariantOutputIndex::START_0_BASED, true));
+
+
 
     }
 

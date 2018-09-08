@@ -269,20 +269,32 @@ bool kgl::ApplicationAnalysis::outputSequenceCSV(const std::string &file_name,
 
             } else {
 
-              ExecEnv::log().info("Sequence: {} end offset: {} overlaps sequence: {} begin offset: {}",
+              ExecEnv::log().vinfo("Sequence: {} end offset: {} overlaps sequence: {} begin offset: {}",
                                   previous_seq_ptr->getCDSParent()->id(),
                                   previous_seq_ptr->end(),
                                   sequence.second->getCDSParent()->id(),
                                   sequence.second->start());
+
               front_porch_size = 0;
 
             }
 
           }
 
-          out_file << GeneAnalysis::outputGenomeRegion(CSV_delimiter, dna_distance_metric, contig.first, front_porch_offset, front_porch_size, genome_variant.second, genome_db);
+          out_file << GeneAnalysis::outputGenomeRegion(CSV_delimiter,
+                                                       dna_distance_metric,
+                                                       contig.first,
+                                                       front_porch_offset,
+                                                       front_porch_size,
+                                                       genome_variant.second,
+                                                       genome_db);
           out_file << CSV_delimiter;
-          out_file << outputSequence(CSV_delimiter, dna_distance_metric, amino_distance_metric, sequence.second, genome_db, genome_variant.second);
+          out_file << outputSequence(CSV_delimiter,
+                                     dna_distance_metric,
+                                     amino_distance_metric,
+                                     sequence.second,
+                                     genome_db,
+                                     genome_variant.second);
           out_file << '\n';
           ++sequence_count;
           previous_seq_ptr = sequence.second;
@@ -377,8 +389,7 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
                                                     const FeatureIdent_t& sequence_id,
                                                     std::shared_ptr<const GenomeDatabase> genome_db,
                                                     std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
-                                                    const GenomeAuxData& aux_Pf3k_data,
-                                                    std::shared_ptr<const UnphasedPopulation> unphased_pop_ptr) {
+                                                    const GenomeAuxData& aux_Pf3k_data) {
 
   const char CSV_delimiter = ',';
   // open the file.
@@ -517,8 +528,6 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
 // Write file header.
 
   out_file << "Genome" << CSV_delimiter << "LocationDate" << CSV_delimiter;
-  out_file << "HomoZ" << CSV_delimiter << "HeteroZ" << CSV_delimiter << "SingleZ" << CSV_delimiter;
-  out_file << "SNP_HomoZ" << CSV_delimiter << "SNP_HeteroZ" << CSV_delimiter << "SNP_SingleZ" << CSV_delimiter;
 
   for (auto DNA_Item : master_SNP_List) {
 
@@ -541,18 +550,6 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
 
     out_file << genome_item.genome << CSV_delimiter << genome_item.location_date << CSV_delimiter;
 
-
-    size_t heterozygous = 0;
-    size_t homozygous = 0;
-    size_t singleheterozygous = 0;
-    if (not unphased_pop_ptr->genomePhasingStats(genome_item.genome, heterozygous, homozygous, singleheterozygous)) {
-
-      ExecEnv::log().error("No phasing statistics found for Genome: {}", genome_item.genome);
-
-    }
-
-    out_file << homozygous << CSV_delimiter << heterozygous << CSV_delimiter << singleheterozygous << CSV_delimiter;
-
     for (auto DNA_Item : master_SNP_List) {
 
       auto result = genome_item.snp_map.find(DNA_Item.first);
@@ -562,46 +559,12 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
 
       } else {
 
-        GenomeId_t& genome_id = genome_item.genome;
-        ContigId_t& contig_id = result->second.contig_id;
-        ContigOffset_t offset = result->second.contig_offset;
-        UnphasedVectorVariantCount snp_vector;
-        if (not unphased_pop_ptr->getUnphasedVariants(genome_id, contig_id, offset, snp_vector)) {
-
-          ExecEnv::log().error("Could not find phasing for SNP; Genome: {}, Contig, Offset: {}", genome_id, contig_id, offset);
-          out_file << -1 << CSV_delimiter;
-
-        } else {
-
-          if (snp_vector.size() == 1) {
-
-
-            if(snp_vector.front().second == 1) {
-
-              out_file << 1 << CSV_delimiter;
-
-            } else {
-
-              out_file << 2 << CSV_delimiter;
-
-            }
-
-            } else if (snp_vector.size() == 2) {
-
-              out_file << 3 << CSV_delimiter;
-
-            } else {
-
-              ExecEnv::log().warn("Phasing not Diploid; Genome: {}, Contig, Offset: {}", genome_id, contig_id, offset);
-              out_file << 4 << CSV_delimiter;
-
-            }
-
-        }
+        out_file << 1 << CSV_delimiter;
 
       }
 
     }
+
     out_file << std::endl;
 
   }

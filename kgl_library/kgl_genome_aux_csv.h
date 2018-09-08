@@ -36,7 +36,10 @@ public:
 
   bool isFieldSample(const std::string& genome_name) const;
 
-
+  bool locationDate(const std::string& genome_name,
+                    std::string& country,
+                    std::string& location,
+                    std::string& year) const;
 private:
 
   AuxAttributeVector aux_data_header_;  // Always assumed to be the first line (uppercase, query case conversion automatic).

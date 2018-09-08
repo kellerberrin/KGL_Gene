@@ -19,8 +19,7 @@ bool kgl::CountFilter::implementFilter(const Variant& variant) const {
 
   if (count_evidence_ptr) {
 
-    size_t total_count = count_evidence_ptr->refCount() + count_evidence_ptr->altCount();
-    return total_count >= minimum_count_;
+    return count_evidence_ptr->DPCount() >= minimum_count_;
 
   } else {
 

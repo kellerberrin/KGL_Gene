@@ -201,6 +201,29 @@ std::string kgl::GenomeAuxData::locationDate(const std::string& genome_name) con
 
 }
 
+
+bool kgl::GenomeAuxData::locationDate(const std::string& genome_name,
+                                      std::string& country,
+                                      std::string& location,
+                                      std::string& year) const {
+
+  AuxAttributeVector attribute_vector;
+  if (not getGenomeAttributes(genome_name, attribute_vector)) {
+
+    return false;
+
+  }
+
+  country = attribute_vector[fieldOffset(COUNTRY)];
+  location = attribute_vector[fieldOffset(SITE)];
+  year = attribute_vector[fieldOffset(COLLECTION_YEAR)];
+
+  return true;
+
+}
+
+
+
 bool kgl::GenomeAuxData::isFieldSample(const std::string& genome_name) const {
 
   AuxAttributeVector attribute_vector;

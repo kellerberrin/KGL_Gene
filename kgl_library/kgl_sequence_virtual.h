@@ -117,21 +117,34 @@ bool AlphabetSequence<Alphabet>::deleteOffset(ContigOffset_t delete_offset, Cont
 template<typename Alphabet>
 bool AlphabetSequence<Alphabet>::insertOffset(ContigOffset_t insert_offset, const AlphabetSequence& inserted_sequence) {
 
-  if (insert_offset >= length()) {
+  if (insert_offset < length()) {
 
-    ExecEnv::log().error("Attempt to insert past the end a sequence string, insert offset: {}, insert sub-sequence: {}",
-                         insert_offset, inserted_sequence.getSequenceAsString());
+    if (not alphabet_string_.insert(insert_offset, inserted_sequence.alphabet_string_)) {
+
+      ExecEnv::log().error("Problem inserting a sub-sequence , insert offset: {}, insert sub-sequence: {}",
+                           insert_offset, inserted_sequence.getSequenceAsString());
+      return false;
+
+    }
+
+  } else if (insert_offset == length()) {
+
+    if (not alphabet_string_.append(inserted_sequence.alphabet_string_)) {
+
+      ExecEnv::log().error("Problem appending a sub-sequence , insert offset: {}, insert sub-sequence: {}",
+                           insert_offset, inserted_sequence.getSequenceAsString());
+      return false;
+
+    }
+
+  } else {
+
+    ExecEnv::log().error("Attempt to insert past the end a sequence string length:{}, insert offset: {}, insert sub-sequence: {}",
+                         length(), insert_offset, inserted_sequence.getSequenceAsString());
     return false;
 
   }
 
-  if (not alphabet_string_.insert(insert_offset, inserted_sequence.alphabet_string_)) {
-
-    ExecEnv::log().error("Problem inserting a sub-sequence , insert offset: {}, insert sub-sequence: {}",
-                         insert_offset, inserted_sequence.getSequenceAsString());
-    return false;
-
-  }
 
   return true;
 
