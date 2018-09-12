@@ -17,7 +17,6 @@
 #include "kgl_genome_db.h"
 
 
-
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
@@ -51,6 +50,8 @@ public:
 
   size_t size() const override { return alternate_.length(); }
 
+  size_t reference_size() const override { return reference_.length(); }
+
   VariantType variantType() const override { return VariantType::VCF_VARIANT; }
 
   bool isSNP() const override { return reference().length() == 1 and alternate().length() == 1; }
@@ -71,12 +72,24 @@ public:
                       std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
                       SignedOffset_t& sequence_size_modify) const override;
 
+
 private:
 
   const DNA5SequenceLinear reference_;
   const DNA5SequenceLinear alternate_;
 
   bool applyFilter(const VariantFilter& filter) const override { return filter.applyFilter(*this); }
+
+  // Generate a CIGAR by comparing the reference to the alternate.
+  std::string alternateCigar() const;
+  size_t alternateSize(size_t reference_size) const;
+
+  // Mutate a sequence by adding and subtracting subsequences at the designated offset
+  static bool performMutation(ContigOffset_t offset,
+                              std::shared_ptr<DNA5SequenceLinear> mutated_sequence_ptr,
+                              const DNA5SequenceLinear& delete_subsequence,
+                              const DNA5SequenceLinear& add_subsequence);
+
 
 };
 

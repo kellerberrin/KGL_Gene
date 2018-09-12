@@ -317,14 +317,10 @@ bool kgl::ParseVCFMiscImpl::tokenize(const std::string& parse_text,
 
 
 // Use edlib to generate a cigar string.
-std::string kgl::ParseVCFMiscImpl::generateCigar(const std::string& reference, const std::string& alternate) {
-
-
-  std::vector<CigarEditItem> item_vector;
-  generateEditVector(reference, alternate, item_vector);
+std::string kgl::ParseVCFMiscImpl::generateCigar(const CigarVector& cigar_vector) {
 
   std::stringstream ss;
-  for(auto item : item_vector) {
+  for(auto item : cigar_vector) {
 
     ss << item.first << static_cast<char>(item.second);
 
@@ -335,13 +331,19 @@ std::string kgl::ParseVCFMiscImpl::generateCigar(const std::string& reference, c
 }
 
 
+// Use edlib to generate a cigar string.
+std::string kgl::ParseVCFMiscImpl::generateCigar(const std::string& reference, const std::string& alternate) {
+
+  return generateCigar(generateEditVector(reference, alternate));
+
+}
+
 
 // Use edlib to generate a cigar vector.
-void kgl::ParseVCFMiscImpl::generateEditVector(const std::string& reference,
-                                                 const std::string& alternate,
-                                                 std::vector<CigarEditItem>& item_vector) {
+std::vector<kgl::CigarEditItem> kgl::ParseVCFMiscImpl::generateEditVector(const std::string& reference,
+                                                                          const std::string& alternate) {
 
-  item_vector.clear();
+  std::vector<kgl::CigarEditItem> item_vector;
   std::vector<CigarEditType> edit_string;
   generateEditString(reference, alternate, edit_string);
 
@@ -376,6 +378,8 @@ void kgl::ParseVCFMiscImpl::generateEditVector(const std::string& reference,
     item_vector.emplace_back(CigarEditItem(same_count, previous_edit_item));
 
   }
+
+  return item_vector;
 
 }
 
@@ -431,5 +435,70 @@ void kgl::ParseVCFMiscImpl::generateEditString(const std::string& reference,
   }
 
   edlibFreeAlignResult(result);
+
+}
+
+
+// Given a reference count and a cigar vector compute a number that calculates the equivalent
+// size of the alternate string.
+// For UNCHANGED = 'M' and CHANGED = 'X' cigar items the reference_count and alternate count are incremented.
+// For INSERT = 'I' the alternate is incremented and the reference_count is not.
+// For DELETE = 'D' the reference count is incremented and the alternate is not.
+size_t kgl::ParseVCFMiscImpl::alternateCount(size_t reference_count, const CigarVector& cigar_vector) {
+
+  size_t reference_counter = 0;
+  size_t alternate_counter = 0;
+  auto cigar_ptr = cigar_vector.begin();
+
+  while (reference_counter < reference_count and cigar_ptr != cigar_vector.end()) {
+
+    switch(cigar_ptr->second) {
+
+      case CigarEditType::UNCHANGED:
+      case CigarEditType::CHANGED:
+        if (reference_counter + cigar_ptr->first > reference_count) {
+
+          alternate_counter += (reference_count - reference_counter);
+          reference_counter = reference_count;
+
+        } else {
+
+          reference_counter += cigar_ptr->first;
+          alternate_counter += cigar_ptr->first;
+
+        }
+        break;
+
+      case CigarEditType::INSERT:
+        alternate_counter += cigar_ptr->first;
+        break;
+
+      case CigarEditType::DELETE:
+        if (reference_counter + cigar_ptr->first > reference_count) {
+
+          reference_counter = reference_count;
+
+        } else {
+
+          reference_counter += cigar_ptr->first;
+
+        }
+        break;
+
+    }
+
+    ++cigar_ptr;
+
+  }
+
+  if (reference_counter != reference_count) {
+
+    ExecEnv::log().error("ParseVCFMiscImpl::alternateCount(), unable to calculate alternate count for reference count: {}, cigar: {}",
+                         reference_count, generateCigar(cigar_vector));
+    alternate_counter = 0;
+
+  }
+
+  return alternate_counter;
 
 }

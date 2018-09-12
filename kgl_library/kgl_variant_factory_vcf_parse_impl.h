@@ -28,6 +28,7 @@ namespace genome {   // project level namespace
 // Returned from the cigar functions.
 enum class CigarEditType : char { UNCHANGED = 'M', INSERT = 'I', DELETE = 'D', CHANGED = 'X'};
 using CigarEditItem = std::pair<size_t, CigarEditType>; // Used to specify edit as vector '1M,1X,3D,3I'.
+using CigarVector = std::vector<CigarEditItem>;
 
 using ActiveContigMap = std::map<ContigId_t, ContigSize_t>;
 using VcfInfoKeyMap = std::map<std::string, std::string>;
@@ -60,8 +61,18 @@ public:
   // Generate a CIGAR from two sequences.
   static std::string generateCigar(const std::string& reference, const std::string& alternate);
 
-// Use edlib to generate a cigar string.
-  static void generateEditVector(const std::string& reference, const std::string& alternate, std::vector<CigarEditItem>& edit_vector);
+  // Generate a CIGAR from a cigar vector
+  static std::string generateCigar(const CigarVector& cigar_vector);
+
+// Use edlib to generate a cigar vector.
+  static CigarVector generateEditVector(const std::string& reference, const std::string& alternate);
+
+  // Given a reference count and a cigar vector compute a number that calculates the equivalent
+  // size of the alternate string.
+  // For UNCHANGED = 'M' and CHANGED = 'X' cigar items the reference_count and alternate count are incremented.
+  // For INSERT = 'I' the alternate is incremented and the reference_count is not.
+  // For DELETE = 'D' the reference count is incremented and the alternate is not.
+  static size_t alternateCount(size_t reference_count, const CigarVector& cigar_vector);
 
 
 private:

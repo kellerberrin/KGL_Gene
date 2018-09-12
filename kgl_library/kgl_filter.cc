@@ -13,7 +13,39 @@ namespace kgl = kellerberrin::genome;
 // Filter variants to a base count.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool kgl::CountFilter::implementFilter(const Variant& variant) const {
+bool kgl::RefAltCountFilter::implementFilter(const Variant& variant) const {
+
+  std::shared_ptr<const CountEvidence> count_evidence_ptr = std::dynamic_pointer_cast<const CountEvidence>(variant.evidence());
+
+  if (count_evidence_ptr) {
+
+    return (count_evidence_ptr->refCount() + count_evidence_ptr->altCount()) >= minimum_count_;
+
+  } else {
+
+    ExecEnv::log().info("RefAltCountFilter; variant does not have Ref+Alt base count evidence");
+
+  }
+
+  return true;
+
+}
+
+
+std::string kgl::RefAltCountFilter::filterName() const {
+
+  std::stringstream ss;
+  ss << "Variants with minimum Ref+Alt base count:" << minimum_count_;
+  return ss.str();
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter variants to a base count.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool kgl::DPCountFilter::implementFilter(const Variant& variant) const {
 
   std::shared_ptr<const CountEvidence> count_evidence_ptr = std::dynamic_pointer_cast<const CountEvidence>(variant.evidence());
 
@@ -23,7 +55,7 @@ bool kgl::CountFilter::implementFilter(const Variant& variant) const {
 
   } else {
 
-    ExecEnv::log().info("CountFilter; variant does not have base count evidence");
+    ExecEnv::log().info("DPCountFilter; variant does not have base count evidence");
 
   }
 
@@ -32,10 +64,10 @@ bool kgl::CountFilter::implementFilter(const Variant& variant) const {
 }
 
 
-std::string kgl::CountFilter::filterName() const {
+std::string kgl::DPCountFilter::filterName() const {
 
   std::stringstream ss;
-  ss << "Variants with minimum base count:" << minimum_count_;
+  ss << "Variants with minimum DP base count:" << minimum_count_;
   return ss.str();
 
 }

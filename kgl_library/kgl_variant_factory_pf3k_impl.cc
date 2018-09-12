@@ -172,11 +172,16 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const seqan::VcfReco
 
           const std::string allele = recordParser.alleles()[allele_index];
 
-          if (allele != UPSTREAM_ALLELE_) {
+          size_t ref_count = ad_count_vector[0];
+          size_t alt_count = ad_count_vector[A_allele];
+
+          // VCF variants with zero alt+ref counts are flagged as spanning (downstream)
+          // deletion. There is a spanning upstream delete. The downstream variant is ignored.
+          bool downstream_variant = ref_count == 0 and alt_count == 0;
+
+          if (allele != UPSTREAM_ALLELE_ and not downstream_variant) {
 
             // Evidence object
-            size_t ref_count = ad_count_vector[0];
-            size_t alt_count = ad_count_vector[A_allele];
             std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(ref_count,
                                                                                           alt_count,
                                                                                           DP_value,
@@ -184,8 +189,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const seqan::VcfReco
                                                                                           recordParser.quality(),
                                                                                           vcf_record_count));
             // process A allele
-            std::vector<CigarEditItem> parsed_cigar;
-            ParseVCFMiscImpl::generateEditVector(recordParser.reference(), allele, parsed_cigar);
+            std::vector<CigarEditItem> parsed_cigar = ParseVCFMiscImpl::generateEditVector(recordParser.reference(), allele);
             size_t record_variants;
 
             parseCigarItems(genome_name,
@@ -208,11 +212,17 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const seqan::VcfReco
           size_t allele_index = B_allele - 1;   // 0 is the reference
 
           const std::string allele = recordParser.alleles()[allele_index];
-          if (allele != UPSTREAM_ALLELE_) {
+
+          size_t ref_count = ad_count_vector[0];
+          size_t alt_count = ad_count_vector[B_allele];
+
+          // VCF variants with zero alt+ref counts are flagged as spanning (downstream)
+          // deletion. There is a spanning upstream delete. The downstream variant is ignored.
+          bool downstream_variant = ref_count == 0 and alt_count == 0;
+
+          if (allele != UPSTREAM_ALLELE_ and not downstream_variant) {
 
             // Evidence object
-            size_t ref_count = ad_count_vector[0];
-            size_t alt_count = ad_count_vector[B_allele];
             std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(ref_count,
                                                                                           alt_count,
                                                                                           DP_value,
@@ -221,8 +231,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const seqan::VcfReco
                                                                                           vcf_record_count));
 
             // process B allele
-            std::vector<CigarEditItem> parsed_cigar;
-            ParseVCFMiscImpl::generateEditVector(recordParser.reference(), allele, parsed_cigar);
+            std::vector<CigarEditItem> parsed_cigar = ParseVCFMiscImpl::generateEditVector(recordParser.reference(), allele);
             size_t record_variants;
 
             parseCigarItems(genome_name,

@@ -45,6 +45,8 @@ public:
 
   const UnphasedGenomeMap& getMap() const { return genome_map_; }
 
+  void clear() { genome_map_.clear(); }
+
   // Generate phasing statitics.
   bool genomePhasingStats(const GenomeId_t& genome_id,
                           size_t& heterozygous,

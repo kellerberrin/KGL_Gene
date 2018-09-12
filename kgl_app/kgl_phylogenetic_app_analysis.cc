@@ -191,7 +191,7 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 //                                                    kgl::UPGMAProteinDistance::SYMBOLIC_ATP4_FAMILY);
 
     std::string newick_file = kgl::Utility::filePath("UPGMA_newick", args.workDirectory) + ".txt";
-    std::shared_ptr<const UnphasedPopulation> filtered_ptr = unphased_population_ptr->filterVariants(CountFilter(25));
+    std::shared_ptr<const UnphasedPopulation> filtered_ptr = unphased_population_ptr->filterVariants(DPCountFilter(25));
     kgl::UPGMAUnphasedTree<kgl::UPGMAUnphasedDistance>(newick_file, filtered_ptr);
 
   }

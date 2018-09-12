@@ -18,15 +18,15 @@ namespace genome {   // project level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Filter variants to a specified minimum base counts.
+// Filter variants to a specified minimum DP counts.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class CountFilter : public VariantFilter {
+class RefAltCountFilter : public VariantFilter {
 
 public:
 
-  explicit CountFilter(size_t minimum_count) : minimum_count_(minimum_count) {}
-  ~CountFilter() override = default;
+  explicit RefAltCountFilter(size_t minimum_count) : minimum_count_(minimum_count) {}
+  ~RefAltCountFilter() override = default;
 
   std::string filterName() const final;
 
@@ -37,7 +37,40 @@ public:
   bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
   bool applyFilter(const CompoundInsert& variant) const override { return implementFilter(variant); }
 
-  std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<CountFilter>(*this); }
+  std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<RefAltCountFilter>(*this); }
+
+private:
+
+  size_t minimum_count_;
+
+  bool implementFilter(const Variant& variant) const;
+
+
+};
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter variants to a specified minimum DP counts.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class DPCountFilter : public VariantFilter {
+
+public:
+
+  explicit DPCountFilter(size_t minimum_count) : minimum_count_(minimum_count) {}
+  ~DPCountFilter() override = default;
+
+  std::string filterName() const final;
+
+  bool applyFilter(const SNPVariant& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const DeleteVariant& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const InsertVariant& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const CompoundDelete& variant) const override { return implementFilter(variant); }
+  bool applyFilter(const CompoundInsert& variant) const override { return implementFilter(variant); }
+
+  std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<DPCountFilter>(*this); }
 
 private:
 

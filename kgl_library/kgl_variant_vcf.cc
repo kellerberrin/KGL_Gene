@@ -5,6 +5,7 @@
 
 #include "kgl_variant_vcf.h"
 #include "kgl_sequence_offset.h"
+#include "kgl_variant_factory_vcf_parse_impl.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -29,8 +30,6 @@ std::string kgl::VCFVariant::output(char delimiter, VariantOutputIndex output_in
     ss << evidence()->output(delimiter, output_index);
 
   }
-
-  ss << '\n';
 
   return ss.str();
 
@@ -139,104 +138,190 @@ bool kgl::VCFVariant::mutateSequence(SignedOffset_t offset_adjust,
                                      SignedOffset_t& sequence_size_modify) const {
 
 
+  sequence_size_modify = 0;
+
   SignedOffset_t adjusted_offset = offset() + offset_adjust;
 
-  // Check the offset
-  if (adjusted_offset < 0 or adjusted_offset >= static_cast<SignedOffset_t>(dna_sequence_ptr->length())) {
+  // Check the adjusted offset
+  if (adjusted_offset >= static_cast<SignedOffset_t>(dna_sequence_ptr->length())) {
 
     ExecEnv::log().error("mutateSequence(), calculated sequence offset: {} is out of range for sequence size: {}, variant: {}",
                          adjusted_offset, dna_sequence_ptr->length(), output(' ', VariantOutputIndex::START_0_BASED, true));
     return false;
   }
 
-  auto sequence_offset = static_cast<ContigOffset_t>(adjusted_offset);
-  ContigOffset_t max_delete_size = dna_sequence_ptr->length() - sequence_offset;
-  ContigSize_t delete_size;
+  // Check the offset to see if variant preceded the start of the sequence.
+  if (adjusted_offset < 0) {
 
-  // Check that we are not deleting beyond the end of the sequence.
-  if (reference().length() > max_delete_size) {
+    if (adjusted_offset + reference_size() > 0) {
 
-    delete_size = max_delete_size;
-    ExecEnv::log().info("mutateSequence(), compound deletion size: {},  offset: {}, sequence size: {}, max delete size: {}",
-                         size(), sequence_offset, dna_sequence_ptr->length(), max_delete_size);
+      auto ref_offset = static_cast<ContigOffset_t>(std::abs(adjusted_offset));
+      auto ref_size = static_cast<ContigSize_t>(adjusted_offset + reference_size());
 
-  } else {
+      std::shared_ptr<DNA5SequenceLinear> adjusted_reference = reference().unstrandedRegion(ref_offset, ref_size);
 
-    delete_size = reference().length();
+      ContigOffset_t alt_offset = alternateSize(ref_offset);
+      ContigSize_t  alt_size = alternate().length() - alt_offset;
+
+      std::shared_ptr<DNA5SequenceLinear> adjusted_alternate = alternate().unstrandedRegion(alt_offset, alt_size);
+
+      if (not performMutation(0, dna_sequence_ptr, *adjusted_reference, *adjusted_alternate)) {
+
+        ExecEnv::log().error("mutateSequence(), problem mutating sequence with preceeding overlapping variant: {}",
+                             output(' ', VariantOutputIndex::START_0_BASED, true));
+        ExecEnv::log().error("mutateSequence(), preceeding overlapping adj. reference: {} adj. alternate: {}, alternate cigar: {}",
+                            adjusted_reference->getSequenceAsString(), adjusted_alternate->getSequenceAsString(), alternateCigar());
+
+        return false;
+
+      }
+
+      sequence_size_modify = adjusted_alternate->length() - adjusted_reference->length();
+
+      return true;
+
+    } else {
+
+      ExecEnv::log().error("mutateSequence(), calculated sequence offset: {} is out of range for sequence size: {}, variant: {}",
+                           adjusted_offset, dna_sequence_ptr->length(), output(' ', VariantOutputIndex::START_0_BASED, true));
+      return false;
+
+    }
 
   }
 
-  auto reference_offset = sequence_offset;
-  ContigSize_t reference_count = 0;
 
-  for (size_t idx = 0; idx < reference().length(); ++idx) {
+  auto sequence_offset = static_cast<ContigOffset_t>(adjusted_offset);
+  ContigOffset_t max_delete_size = dna_sequence_ptr->length() - sequence_offset;
 
-    if (reference_count >= delete_size) break;
+  // Check that we are not deleting beyond the end of the sequence.
+  if (reference().length() < max_delete_size) {
+
+    if (not performMutation(sequence_offset, dna_sequence_ptr, reference(), alternate())) {
+
+      ExecEnv::log().error("mutateSequence(), problem mutating sequence cigar: {}, variant: {}",
+                           alternateCigar(), output(' ', VariantOutputIndex::START_0_BASED, true));
+
+      return false;
+
+    }
+
+    sequence_size_modify = alternate().length() - reference().length();
+
+  } else {
+
+
+    std::shared_ptr<DNA5SequenceLinear> adjusted_reference = reference().unstrandedRegion(0, max_delete_size);
+
+    size_t alternate_length = alternateSize(max_delete_size);
+
+    std::shared_ptr<DNA5SequenceLinear> adjusted_alternate = alternate().unstrandedRegion(0, alternate_length);
+
+    if (not performMutation(sequence_offset, dna_sequence_ptr, *adjusted_reference, *adjusted_alternate)) {
+
+      ExecEnv::log().error("mutateSequence(), problem mutating sequence with overlapping variant: {}",
+                           output(' ', VariantOutputIndex::START_0_BASED, true));
+      ExecEnv::log().error("mutateSequence(), overlapping adj. reference: {} adj. alternate: {}, alternate cigar: {}",
+                           adjusted_reference->getSequenceAsString(), adjusted_alternate->getSequenceAsString(), alternateCigar());
+
+      return false;
+
+    }
+
+    sequence_size_modify = adjusted_alternate->length() - adjusted_reference->length();
+
+  }
+
+
+  return true;
+
+}
+
+
+bool kgl::VCFVariant::performMutation(ContigOffset_t offset,
+                                      std::shared_ptr<DNA5SequenceLinear> mutated_sequence_ptr,
+                                      const DNA5SequenceLinear& delete_subsequence,
+                                      const DNA5SequenceLinear& add_subsequence) {
+
+
+  auto reference_offset = offset;
+  bool reference_check = true;
+
+  // Check the offset
+  if (offset + delete_subsequence.length() > mutated_sequence_ptr->length()) {
+
+    ExecEnv::log().error("performMutation(), sequence offset: {} + delete sequence size: {} is out of range for mutate sequence size: {}",
+                         offset, delete_subsequence.length(), mutated_sequence_ptr->length());
+    return false;
+  }
+
+  for (size_t idx = 0; idx < delete_subsequence.length(); ++idx) {
 
     // Check the reference.
-    if (reference().at(idx) != dna_sequence_ptr->at(reference_offset)) {
+    if (delete_subsequence[idx] != mutated_sequence_ptr->at(reference_offset)) {
 
-      ExecEnv::log().warn("mutateSequence(), reference base: {} does not match sequence base: {} at contig: {} offset: {}, reference offset: {}",
-                          DNA5::convertToChar(reference().at(idx)),
-                          DNA5::convertToChar(dna_sequence_ptr->at(reference_offset)),
-                          contigId(), offset(), idx);
+      ExecEnv::log().warn("performMutation(), deleted (reference) base: {} does not match sequence base: {} at offset: {}, delete (reference) offset: {}",
+                          DNA5::convertToChar(delete_subsequence[idx]),
+                          DNA5::convertToChar(mutated_sequence_ptr->at(reference_offset)),
+                          offset, idx);
 
-      std::string seq_reference = dna_sequence_ptr->unstrandedRegion(sequence_offset, delete_size)->getSequenceAsString();
-      const ContigSize_t front_porch = 10;
-      SignedOffset_t preface_offset = (sequence_offset - front_porch);
-      const ContigOffset_t porch_offset = preface_offset < 0 ? 0 : (sequence_offset - front_porch);
-      std::string porch_str = dna_sequence_ptr->unstrandedRegion(porch_offset, (sequence_offset - porch_offset))->getSequenceAsString();
-      ExecEnv::log().warn("mutateSequence(), seq preface: {}, seq reference: {}, seq length: {}, seq index: {}, offset adjust: {}",
-                          porch_str, seq_reference, dna_sequence_ptr->length(), reference_offset, offset_adjust);
-      ExecEnv::log().warn("mutateSequence(), mutation variant: {}", output(' ', VariantOutputIndex::START_0_BASED, true));
+      std::string sequence_string = mutated_sequence_ptr->unstrandedRegion(offset, delete_subsequence.length())->getSequenceAsString();
+      ExecEnv::log().warn("performMutation(), subsequence: {}, delete (reference) sequence: {}",
+                          sequence_string, delete_subsequence.getSequenceAsString());
 
-
+      reference_check =false;
 
     }
 
     ++reference_offset;
-    ++reference_count;
 
   }
 
-  sequence_size_modify = 0;
+  if (not reference_check) return false;
 
-  // If the variant is an SNP then just modify the relevant base for performance reasons.
-  if (isSNP()) {
+  if (delete_subsequence.length() == 1 and add_subsequence.length() == 1) {
 
     // Mutate the sequence
     // SNPs do not modify the sequence size.
-    dna_sequence_ptr->modifyBase(sequence_offset, alternate().at(0));
+    mutated_sequence_ptr->modifyBase(offset, add_subsequence[0]);
 
   } else {
 
     // Mutate the sequence
     // Delete the reference
-    if (not dna_sequence_ptr->deleteSubSequence(sequence_offset, delete_size)) {
+    if (not mutated_sequence_ptr->deleteSubSequence(offset, delete_subsequence.length())) {
 
-      ExecEnv::log().error("mutateSequence(), could not delete at offset: {}, delete size: {}, sequence length: {} , variant: {}",
-                           sequence_offset, delete_size, dna_sequence_ptr->length(), output(' ', VariantOutputIndex::START_0_BASED, true));
+      ExecEnv::log().error("performMutation(), could not delete at offset: {}, delete size: {}, sequence length: {} , variant: {}",
+                           offset, delete_subsequence.length(), mutated_sequence_ptr->length());
       return false;
 
     }
 
-    sequence_size_modify -= delete_size;
-
-    // Mutate the sequence
     // Insert the alternate
-    DNA5SequenceLinear insert_seq(alternate().getAlphabetString());
+    if (not mutated_sequence_ptr->insertSubSequence(offset, add_subsequence)) {
 
-    if (not dna_sequence_ptr->insertSubSequence(sequence_offset, insert_seq)) {
-
-      ExecEnv::log().error("mutateSequence(), could not insert at offset: {}, alternate size: {}, sequence length: {} , variant: {}",
-                           sequence_offset, alternate().length(), dna_sequence_ptr->length(), output(' ', VariantOutputIndex::START_0_BASED, true));
+      ExecEnv::log().error("performMutation(), could not insert at offset: {}, insert size: {}, sequence length: {}",
+                           offset, add_subsequence.length(), mutated_sequence_ptr->length());
       return false;
     }
-
-    sequence_size_modify += alternate().length();
 
   }
 
   return true;
+
+}
+
+
+std::string kgl::VCFVariant::alternateCigar() const {
+
+  return ParseVCFMiscImpl::generateCigar(reference().getSequenceAsString(), alternate().getSequenceAsString());
+
+}
+
+
+size_t kgl::VCFVariant::alternateSize(size_t reference_size) const {
+
+  CigarVector cigar_vector = ParseVCFMiscImpl::generateEditVector(reference().getSequenceAsString(), alternate().getSequenceAsString());
+  return ParseVCFMiscImpl::alternateCount(reference_size, cigar_vector);
 
 }
