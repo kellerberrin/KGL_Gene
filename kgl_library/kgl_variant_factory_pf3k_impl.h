@@ -10,7 +10,6 @@
 #include "kgl_utility.h"
 #include "kgl_variant_factory_vcf.h"
 #include "kgl_variant_factory_record_vcf_impl.h"
-#include "kgl_variant_factory_vcf_cigar_impl.h"
 #include "kgl_variant_factory_vcf_cigar.h"
 
 
@@ -25,8 +24,7 @@ public:
 
   Pf3kVCFImpl(std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
               std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-              const std::string &vcf_file_name,
-              Phred_t variant_quality) : ParseCigar(vcf_population_ptr, genome_db_ptr, vcf_file_name, variant_quality) {
+              const std::string &vcf_file_name) : ParseCigar(vcf_population_ptr, genome_db_ptr, vcf_file_name) {
 
   }
   ~Pf3kVCFImpl() = default;

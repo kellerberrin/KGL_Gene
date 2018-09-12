@@ -16,12 +16,12 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
                                          const std::shared_ptr<const GenomeDatabase>& genome_db,
                                          OffsetVariantMap& variant_map,
                                          std::shared_ptr<AminoSequence>& reference_sequence,
-                                         std::vector<std::shared_ptr<AminoSequence>>& mutant_sequence_vector) const {
+                                         std::shared_ptr<AminoSequence>& mutant_sequence) const {
 
 
   std::shared_ptr<DNA5SequenceCoding> DNA_reference;
-  std::vector<std::shared_ptr<DNA5SequenceCoding>> DNA_mutant_vector;
-  if (not mutantCodingDNA(contig_id, phase, gene_id, sequence_id, genome_db, variant_map, DNA_reference, DNA_mutant_vector)) {
+  std::shared_ptr<DNA5SequenceCoding> DNA_mutant;
+  if (not mutantCodingDNA(contig_id, phase, gene_id, sequence_id, genome_db, variant_map, DNA_reference, DNA_mutant)) {
 
     ExecEnv::log().warn("mutantProtein(), Problem generating stranded mutant DNA");
     return false;
@@ -40,12 +40,7 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
   // The reference Amino sequence.
   reference_sequence = contig_ptr->getAminoSequence(DNA_reference);
 
-  // Mutant Amino vector
-  for (const auto& mutant_sequence : DNA_mutant_vector) {
-
-    mutant_sequence_vector.push_back(contig_ptr->getAminoSequence(mutant_sequence));
-
-  }
+  mutant_sequence = contig_ptr->getAminoSequence(DNA_mutant);
 
   return true;
 
@@ -59,7 +54,7 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
                                           const std::shared_ptr<const GenomeDatabase>& genome_db,
                                           OffsetVariantMap& variant_map,
                                           std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
-                                          std::vector<std::shared_ptr<DNA5SequenceCoding>>& mutant_sequence_vector) const {
+                                          std::shared_ptr<DNA5SequenceCoding>& mutant_sequence) const {
   // Get the contig.
   std::shared_ptr<const ContigFeatures> contig_ptr;
   if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
@@ -88,7 +83,7 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
 
   }
 
-  // Return the reference amino sequence.
+  // Return the reference sequence.
   reference_sequence = stranded_sequence_ptr;
 
   // Generate the mutant sequences.
@@ -97,29 +92,11 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
   getSortedVariants(contig_id, phase, coding_sequence_ptr->start(), coding_sequence_ptr->end(), coding_variant_map);
   variant_map = coding_variant_map;
 
-  // There may be more than one different variant specified per offset.
-  // If this is the case, then we create alternative mutation paths.
-  // In other words, there can be more than one mutant protein alternative.
-  // The number of mutation is exponential. Alternatives = 2 ^ (#equal offset variants) - assuming 2 alternatives per offset.
-  // A message is issued if there are more than 32 alternative mutation paths (5 equal offset variants).
-  // For performance reasons, a hard limit of 128 alternatives is imposed (can be varied).
-  std::vector<OffsetVariantMap> variant_map_vector;
-  size_t alternative_count = 0;
-  std::shared_ptr<const OffsetVariantMap> variant_map_ptr(std::make_shared<OffsetVariantMap>(coding_variant_map));
-  VariantMutation::getMutationAlternatives(variant_map_ptr, variant_map_vector, alternative_count);
+  if (not VariantMutation().mutateDNA(coding_variant_map, contig_ptr, coding_sequence_ptr, mutant_sequence)) {
 
-  for (auto variant_map : variant_map_vector) {
-
-    std::shared_ptr<DNA5SequenceCoding> mutant_coding_dna;
-    if (not VariantMutation().mutateDNA(variant_map, contig_ptr, coding_sequence_ptr, mutant_coding_dna)) {
-
-      ExecEnv::log().warn("Problem mutating DNA sequence for contig: {}, gene: {}, sequence id: {}",
-                          contig_id, gene_id, sequence_id);
-      return false;
-
-    }
-
-    mutant_sequence_vector.push_back(mutant_coding_dna);
+    ExecEnv::log().warn("Problem mutating DNA sequence for contig: {}, gene: {}, sequence id: {}",
+                        contig_id, gene_id, sequence_id);
+    return false;
 
   }
 
@@ -135,7 +112,7 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
                                        const std::shared_ptr<const GenomeDatabase>& genome_db,
                                        OffsetVariantMap& variant_map,
                                        std::shared_ptr<DNA5SequenceLinear>& reference_sequence,
-                                       std::vector<std::shared_ptr<DNA5SequenceLinear>>& mutant_sequence_vector) const {
+                                       std::shared_ptr<DNA5SequenceLinear>& mutant_sequence) const {
 
   // Get the contig.
   std::shared_ptr<const ContigFeatures> contig_ptr;
@@ -165,32 +142,15 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
   getSortedVariants(contig_id, phase, region_offset, region_offset + region_size, region_variant_map);
   variant_map = region_variant_map;
 
-  // There may be more than one different variant specified per offset.
-  // If this is the case, then we create alternative mutation paths.
-  // In other words, there can be more than one mutant protein alternative.
-  // The number of mutations is exponential. Alternatives = 2 ^ (#equal offset variants) - assuming 2 alternatives per offset.
-  // A message is issued if there are more than 32 alternative mutation paths (5 equal offset variants).
-  // For performance reasons, a hard limit of 128 alternatives is imposed (can be varied).
-  std::vector<OffsetVariantMap> variant_map_vector;
-  size_t alternative_count = 0;
-  std::shared_ptr<const OffsetVariantMap> variant_map_ptr(std::make_shared<OffsetVariantMap>(region_variant_map));
-  VariantMutation::getMutationAlternatives(variant_map_ptr, variant_map_vector, alternative_count);
+  // Make a copy of the linear dna.
+  mutant_sequence = std::make_shared<DNA5SequenceLinear>(*reference_sequence);
 
-  for (auto variant_map : variant_map_vector) {
+  // And mutate it.
+  if (not VariantMutation().mutateDNA(region_variant_map, region_offset, mutant_sequence)) {
 
-    // Make a copy of the linear dna.
-    std::shared_ptr<DNA5SequenceLinear> copy_dna_sequence_ptr(std::make_shared<DNA5SequenceLinear>(*reference_sequence));
-
-    // And mutate it.
-    if (not VariantMutation().mutateDNA(variant_map, region_offset, copy_dna_sequence_ptr)) {
-
-      ExecEnv::log().warn("Problem mutating region DNA sequence for contig: {}, offset: {}, size: {}",
-                          contig_id, region_offset, region_size);
-      return false;
-
-    }
-
-    mutant_sequence_vector.push_back(copy_dna_sequence_ptr);
+    ExecEnv::log().warn("Problem mutating region DNA sequence for contig: {}, offset: {}, size: {}",
+                        contig_id, region_offset, region_size);
+    return false;
 
   }
 

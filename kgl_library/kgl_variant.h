@@ -28,12 +28,7 @@ namespace genome {   // project level namespace
 
 
 
-class SNPVariant; // Forward decl.
-class DeleteVariant; // Forward decl.
-class InsertVariant; // Forward decl.
 class VCFVariant;   // Forward decl.
-class CompoundDelete; // Forward decl.
-class CompoundInsert; // Forward decl.
 
 class VariantFilter {
 
@@ -42,12 +37,7 @@ public:
   VariantFilter() = default;
   virtual ~VariantFilter() = default;
 
-  virtual bool applyFilter(const SNPVariant& variant) const = 0;
-  virtual bool applyFilter(const DeleteVariant& variant) const = 0;
-  virtual bool applyFilter(const InsertVariant& variant) const = 0;
   virtual bool applyFilter(const VCFVariant& variant) const = 0;
-  virtual bool applyFilter(const CompoundDelete& variant) const = 0;
-  virtual bool applyFilter(const CompoundInsert& variant) const = 0;
 
   virtual std::string filterName() const = 0;
   virtual std::shared_ptr<VariantFilter> clone() const = 0;
@@ -114,7 +104,7 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Defined Variant Types.
-enum class VariantType { SNP, DELETE, INSERT, VCF_VARIANT, COMPOUND_INSERT, COMPOUND_DELETE };
+enum class VariantType { VCF_VARIANT };
 
 
 class Variant : public VariantSequence {
@@ -134,9 +124,6 @@ public:
   ~Variant() override = default;
   bool filterVariant(const VariantFilter& filter) const { return applyFilter(filter); }
 
-
-  bool offsetOverlap(const Variant& cmp_var) const;  // Particuarly relevant for compound variants.
-
   std::string name() const;
 
   virtual VariantType variantType() const = 0;
@@ -151,8 +138,6 @@ public:
   bool isCompound() const { return size() > 1; }
   bool isSingle() const { return size() == 1; }
   virtual bool isSNP() const { return false; }
-  bool isDelete() const { return variantType() == VariantType::DELETE or variantType() == VariantType::COMPOUND_DELETE; }
-  bool isInsert() const { return variantType() == VariantType::INSERT or variantType() == VariantType::COMPOUND_INSERT; }
 
   virtual bool equivalent(const Variant& cmp_var) const = 0;
   bool operator==(const Variant& cmp_var) const { return equivalent(cmp_var); };

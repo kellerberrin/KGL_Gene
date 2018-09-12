@@ -116,21 +116,6 @@ void kgl::GenomeDatabase::setTranslationTable(const std::string& table) {
 }
 
 
-void kgl::GenomeDatabase::registerContigData(std::shared_ptr<kgl::ContigCountData>& contig_data_ptr) const {
-// Create data blocks for each contig in the genome database
-  for (const auto &contig_pair : genome_sequence_map_) {
-
-    if (not contig_data_ptr->insertContig(contig_pair.first, contig_pair.second->sequence().length())) {
-
-      kgl::ExecEnv::log().error("ContigCountData; attempted to add duplicate contig; {}", contig_pair.first);
-
-    }
-
-  }
-
-}
-
-
 
 // Given a sequence offset, returns a contig offset.
 bool kgl::GenomeDatabase::contigOffset( const ContigId_t& contig_id,

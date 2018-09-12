@@ -38,8 +38,8 @@ void kgl::ParseVCFImpl::readParseVCFImpl() {
   reader_ptr_->readVCFFile();
   // single threaded
 
-  ExecEnv::log().info("VCF file Records; Read: {}, Rejected: {} (quality={}), Ignored: {} (no matching contig), Error: {}",
-                      vcf_record_count_, vcf_record_rejected_, variant_quality_, vcf_record_ignored_, vcf_record_error_);
+  ExecEnv::log().info("VCF file Records; Read: {}, Rejected: {}, Ignored: {} (no matching contig), Error: {}",
+                      vcf_record_count_, vcf_record_rejected_, vcf_record_ignored_, vcf_record_error_);
 
 
 

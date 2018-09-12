@@ -92,7 +92,7 @@ bool kgl::ApplicationAnalysis::compare5Prime(const ContigId_t& contig_id,
                                              const std::shared_ptr<const GenomeDatabase>& genome_db,
                                              const std::shared_ptr<const GenomeVariant>& genome_variant,
                                              std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
-                                             std::vector<std::shared_ptr<DNA5SequenceCoding>>& mutant_sequence_vector) {
+                                             std::shared_ptr<DNA5SequenceCoding>& mutant_sequence) {
 
   // Get the contig.
   std::shared_ptr<const ContigFeatures> contig_ptr;
@@ -119,7 +119,7 @@ bool kgl::ApplicationAnalysis::compare5Prime(const ContigId_t& contig_id,
   ExecEnv::log().info("Analyzing the 5 Prime Region for Sequence {} at offset {}, size {}, 5 prime {}",
                       coding_sequence_ptr->getCDSParent()->id(), offset_5_prime, size_5_prime, coding_sequence_ptr->prime_5());
 
-  std::vector<std::shared_ptr<DNA5SequenceLinear>> linear_mutant_sequence_vector;
+  std::shared_ptr<DNA5SequenceLinear> linear_mutant_sequence;
   std::shared_ptr<DNA5SequenceLinear> linear_reference_sequence;
   OffsetVariantMap variant_map;
 
@@ -130,15 +130,10 @@ bool kgl::ApplicationAnalysis::compare5Prime(const ContigId_t& contig_id,
                                    genome_db,
                                    variant_map,
                                    linear_reference_sequence,
-                                   linear_mutant_sequence_vector)) {
+                                   linear_mutant_sequence)) {
 
     reference_sequence = SequenceOffset::codingSequence(linear_reference_sequence, coding_sequence_ptr->strand());
-    for (auto dna_sequence : linear_mutant_sequence_vector) {
-
-      std::shared_ptr<DNA5SequenceCoding> sequence_coding = SequenceOffset::codingSequence(dna_sequence, coding_sequence_ptr->strand());
-      mutant_sequence_vector.push_back(sequence_coding);
-
-    }
+    mutant_sequence = SequenceOffset::codingSequence(linear_mutant_sequence, coding_sequence_ptr->strand());
 
   } else {
 
@@ -159,7 +154,7 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
                                              const std::shared_ptr<const GenomeDatabase>& genome_db,
                                              const std::shared_ptr<const GenomeVariant>& genome_variant,
                                              std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
-                                             std::vector<std::shared_ptr<DNA5SequenceCoding>>& mutant_sequence_vector) {
+                                             std::shared_ptr<DNA5SequenceCoding>& mutant_sequence) {
 
   // Get the contig.
   std::shared_ptr<const ContigFeatures> contig_ptr;
@@ -187,7 +182,7 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
                       coding_sequence_ptr->getCDSParent()->id(), offset_3_prime, size_3_prime, coding_sequence_ptr->prime_3());
 
 
-  std::vector<std::shared_ptr<DNA5SequenceLinear>> linear_mutant_sequence_vector;
+  std::shared_ptr<DNA5SequenceLinear> linear_mutant_sequence;
   std::shared_ptr<DNA5SequenceLinear> linear_reference_sequence;
   OffsetVariantMap variant_map;
 
@@ -198,15 +193,10 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
                                    genome_db,
                                    variant_map,
                                    linear_reference_sequence,
-                                   linear_mutant_sequence_vector)) {
+                                   linear_mutant_sequence)) {
 
     reference_sequence = SequenceOffset::codingSequence(linear_reference_sequence, coding_sequence_ptr->strand());
-    for (auto dna_sequence : linear_mutant_sequence_vector) {
-
-      std::shared_ptr<DNA5SequenceCoding> sequence_coding = SequenceOffset::codingSequence(dna_sequence, coding_sequence_ptr->strand());
-      mutant_sequence_vector.push_back(sequence_coding);
-
-    }
+    mutant_sequence = SequenceOffset::codingSequence(linear_mutant_sequence, coding_sequence_ptr->strand());
 
   } else {
 
@@ -339,7 +329,7 @@ bool kgl::ApplicationAnalysis::outputAminoMutationCSV(const std::string &file_na
     sequence_count++;
     OffsetVariantMap variant_map;
     std::shared_ptr<AminoSequence> amino_reference_seq;
-    std::vector<std::shared_ptr<AminoSequence>> amino_mutant_vec;
+    std::shared_ptr<AminoSequence> amino_mutant;
     if (genome_variant.second->mutantProteins(contig_id,
                                               ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
                                               gene_id,
@@ -347,27 +337,23 @@ bool kgl::ApplicationAnalysis::outputAminoMutationCSV(const std::string &file_na
                                               genome_db,
                                               variant_map,
                                               amino_reference_seq,
-                                              amino_mutant_vec)) {
-
-      for (auto mutant : amino_mutant_vec) {
+                                              amino_mutant)) {
 
         EditVector edit_vector;
         SequenceComparison().editDNAItems(amino_reference_seq->getSequenceAsString(),
-                                          mutant->getSequenceAsString(),
+                                          amino_mutant->getSequenceAsString(),
                                           edit_vector);
 
-        for (auto edit_item : edit_vector) {
+      for (auto edit_item : edit_vector) {
 
-          std::stringstream ss;
-          ss << genome_variant.first << CSV_delimiter;
-          ss << gene_id << CSV_delimiter;
-          ss << sequence_id << CSV_delimiter;
-          ss << edit_item.reference_char << CSV_delimiter;
-          ss << offsetOutput(edit_item.reference_offset, VariantOutputIndex::START_1_BASED) << CSV_delimiter;
-          ss << edit_item.mutant_char << '\n';
-          out_file << ss.str();
-
-        }
+        std::stringstream ss;
+        ss << genome_variant.first << CSV_delimiter;
+        ss << gene_id << CSV_delimiter;
+        ss << sequence_id << CSV_delimiter;
+        ss << edit_item.reference_char << CSV_delimiter;
+        ss << offsetOutput(edit_item.reference_offset, VariantOutputIndex::START_1_BASED) << CSV_delimiter;
+        ss << edit_item.mutant_char << '\n';
+        out_file << ss.str();
 
       } // for mutant
 
@@ -437,7 +423,7 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
     sequence_count++;
     OffsetVariantMap variant_map;
     std::shared_ptr<DNA5SequenceCoding> reference_sequence;
-    std::vector<std::shared_ptr<DNA5SequenceCoding>> mutant_sequence_vector;
+    std::shared_ptr<DNA5SequenceCoding> mutant_sequence;
     if (genome_variant.second->mutantCodingDNA( contig_id,
                                                 ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
                                                 gene_id,
@@ -445,7 +431,7 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
                                                 genome_db,
                                                 variant_map,
                                                 reference_sequence,
-                                                mutant_sequence_vector)) {
+                                                mutant_sequence)) {
 
       for (auto variant : variant_map) {
 
@@ -453,71 +439,67 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
 
       }
 
-      for (auto mutant : mutant_sequence_vector) {
+      EditVector edit_vector;
+      SequenceComparison().editDNAItems(reference_sequence->getSequenceAsString(),
+                                        mutant_sequence->getSequenceAsString(),
+                                        edit_vector);
 
-        EditVector edit_vector;
-        SequenceComparison().editDNAItems(reference_sequence->getSequenceAsString(),
-                                          mutant->getSequenceAsString(),
-                                          edit_vector);
+      MutationEditVector mutation_edit_vector;
+      MutationItem mutation_item;
+      for (auto edit_item : edit_vector) {
 
-        MutationEditVector mutation_edit_vector;
-        MutationItem mutation_item;
-        for (auto edit_item : edit_vector) {
+        ContigOffset_t codon_index = static_cast<size_t>(edit_item.reference_offset / 3);
 
-          ContigOffset_t codon_index = static_cast<size_t>(edit_item.reference_offset / 3);
+        std::shared_ptr<const Codon> mutant_codon(std::make_shared<Codon>(mutant_sequence, codon_index));
+        std::shared_ptr<const Codon> ref_codon(std::make_shared<Codon>(reference_sequence, codon_index));
 
-          std::shared_ptr<const Codon> mutant_codon(std::make_shared<Codon>(mutant, codon_index));
-          std::shared_ptr<const Codon> ref_codon(std::make_shared<Codon>(reference_sequence, codon_index));
+        mutation_item.DNA_mutation = edit_item;
+        mutation_item.reference_codon = ref_codon->getSequenceAsString();
+        mutation_item.mutation_codon = mutant_codon->getSequenceAsString();
 
-          mutation_item.DNA_mutation = edit_item;
-          mutation_item.reference_codon = ref_codon->getSequenceAsString();
-          mutation_item.mutation_codon = mutant_codon->getSequenceAsString();
+        mutation_item.amino_mutation.reference_char = AminoAcid::convertToChar(contig_ptr->getAminoAcid(*ref_codon));
+        mutation_item.amino_mutation.reference_offset = codon_index;
+        mutation_item.amino_mutation.mutant_char = AminoAcid::convertToChar(contig_ptr->getAminoAcid(*mutant_codon));
+        mutation_item.contig_id = contig_ptr->contigId();
+        ContigOffset_t contig_offset;
+        if (not genome_db->contigOffset(contig_id, gene_id, sequence_id, mutation_item.DNA_mutation.reference_offset, contig_offset)) {
 
-          mutation_item.amino_mutation.reference_char = AminoAcid::convertToChar(contig_ptr->getAminoAcid(*ref_codon));
-          mutation_item.amino_mutation.reference_offset = codon_index;
-          mutation_item.amino_mutation.mutant_char = AminoAcid::convertToChar(contig_ptr->getAminoAcid(*mutant_codon));
-          mutation_item.contig_id = contig_ptr->contigId();
-          ContigOffset_t contig_offset;
-          if (not genome_db->contigOffset(contig_id, gene_id, sequence_id, mutation_item.DNA_mutation.reference_offset, contig_offset)) {
+          ExecEnv::log().error("Edit Item {}{}{} sequence offset out of range",
+                               mutation_item.DNA_mutation.reference_char, mutation_item.DNA_mutation.reference_offset, mutation_item.DNA_mutation.mutant_char);
 
-            ExecEnv::log().error("Edit Item {}{}{} sequence offset out of range",
-                                 mutation_item.DNA_mutation.reference_char, mutation_item.DNA_mutation.reference_offset, mutation_item.DNA_mutation.mutant_char);
+        }
+        mutation_item.contig_offset = contig_offset;
+        mutation_edit_vector.mutation_vector.push_back(mutation_item);
 
-          }
-          mutation_item.contig_offset = contig_offset;
-          mutation_edit_vector.mutation_vector.push_back(mutation_item);
+      }
+
+      if (not mutation_edit_vector.hasIndel()) { // Only SNPs.
+
+        GenomeMap genome_map;
+
+        genome_map.genome = genome_variant.first;
+        if (aux_Pf3k_data.isFieldSample(genome_variant.first)) {
+
+          genome_map.location_date = aux_Pf3k_data.locationDate(genome_variant.first);
+
+        } else {
+
+          genome_map.location_date = genome_variant.first;
 
         }
 
-        if (not mutation_edit_vector.hasIndel()) { // Only SNPs.
+        for (auto edit_item : mutation_edit_vector.mutation_vector) {
 
-          GenomeMap genome_map;
-
-          genome_map.genome = genome_variant.first;
-          if (aux_Pf3k_data.isFieldSample(genome_variant.first)) {
-
-            genome_map.location_date = aux_Pf3k_data.locationDate(genome_variant.first);
-
-          } else {
-
-            genome_map.location_date = genome_variant.first;
-
-          }
-
-          for (auto edit_item : mutation_edit_vector.mutation_vector) {
-
-            master_SNP_List[edit_item.mapKey()] = edit_item;
-            genome_map.snp_map[edit_item.mapKey()] = edit_item;
-            ExecEnv::log().info("Edit Item Contig: {}, Contig Offset:{}, DNA Offset:{}",
-                                edit_item.contig_id, edit_item.contig_offset, master_SNP_List[edit_item.mapKey()].DNA_mutation.reference_offset);
-
-          }
-
-          genome_vector.push_back(genome_map);
+          master_SNP_List[edit_item.mapKey()] = edit_item;
+          genome_map.snp_map[edit_item.mapKey()] = edit_item;
+          ExecEnv::log().info("Edit Item Contig: {}, Contig Offset:{}, DNA Offset:{}",
+                              edit_item.contig_id, edit_item.contig_offset, master_SNP_List[edit_item.mapKey()].DNA_mutation.reference_offset);
 
         }
 
-      } // for mutant
+        genome_vector.push_back(genome_map);
+
+      }
 
     } // if mutation
 
@@ -626,7 +608,7 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
   OffsetVariantMap variant_map;
 
   std::shared_ptr<DNA5SequenceCoding> reference_sequence;
-  std::vector<std::shared_ptr<DNA5SequenceCoding>> mutant_sequence_vector;
+  std::shared_ptr<DNA5SequenceCoding> mutant_sequence;
   if (genome_variant->mutantCodingDNA( contig_ptr->contigId(),
                                        ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
                                        gene_id,
@@ -634,15 +616,11 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
                                        genome_db,
                                        variant_map,
                                        reference_sequence,
-                                       mutant_sequence_vector)) {
+                                       mutant_sequence)) {
 
-    for (auto mutant : mutant_sequence_vector) {
-
-      CompareDistance_t DNA_distance;
-      DNA_distance = dna_distance_metric->distance(reference_sequence, mutant);
-      average_DNA_score += static_cast<double>(DNA_distance);
-
-    }
+    CompareDistance_t DNA_distance;
+    DNA_distance = dna_distance_metric->distance(reference_sequence, mutant_sequence);
+    average_DNA_score += static_cast<double>(DNA_distance);
 
     if (reference_sequence->length() > 0) {
 
@@ -652,18 +630,8 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
 
   }
 
-  if (not mutant_sequence_vector.empty()) {
-
-    average_DNA_score = average_DNA_score / static_cast<double>(mutant_sequence_vector.size());
-
-  } else {
-
-    average_DNA_score = 0.0;
-
-  }
-
   std::shared_ptr<AminoSequence> amino_reference_seq;
-  std::vector<std::shared_ptr<AminoSequence>> amino_mutant_vec;
+  std::shared_ptr<AminoSequence> amino_mutant;
   if (genome_variant->mutantProteins(contig_ptr->contigId(),
                                      ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
                                      gene_id,
@@ -671,22 +639,19 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
                                      genome_db,
                                      variant_map,
                                      amino_reference_seq,
-                                     amino_mutant_vec)) {
+                                     amino_mutant)) {
 
     error_flag = false;
     valid_reference = contig_ptr->verifyProteinSequence(amino_reference_seq);
-    for (auto mutant : amino_mutant_vec) {
 
-      CompareDistance_t amino_distance = amino_distance_metric->distance(amino_reference_seq, mutant);
-      if (contig_ptr->verifyProteinSequence(mutant)) {
+    CompareDistance_t amino_distance = amino_distance_metric->distance(amino_reference_seq, amino_mutant);
+    if (contig_ptr->verifyProteinSequence(amino_mutant)) {
 
-        average_score += static_cast<double>(amino_distance);
-        ++valid_paths;
-
-      }
-      ++mutant_paths;
+      average_score += static_cast<double>(amino_distance);
+      ++valid_paths;
 
     }
+    ++mutant_paths;
 
     if (valid_paths > 0) {
 

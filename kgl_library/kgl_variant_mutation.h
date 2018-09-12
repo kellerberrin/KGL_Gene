@@ -46,34 +46,10 @@ public:
                  std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr);
 
 
-  static void getMutationAlternatives(std::shared_ptr<const OffsetVariantMap> variant_map_ptr,
-                                      std::vector<OffsetVariantMap> &variant_map_vector,
-                                      size_t &alternative_count) {
-
-    getMutationAlternatives(variant_map_ptr, variant_map_vector, alternative_count, MUTATION_SOFT_LIMIT_, MUTATION_HARD_LIMIT_);
-
-  }
-
 
 private:
 
-  constexpr static size_t MUTATION_SOFT_LIMIT_ = 32;
-  constexpr static size_t MUTATION_HARD_LIMIT_ = 128;
-
   VariantMutationOffset variant_mutation_offset_;
-
-  // Returns a vector of alternative mutation paths based on the number of equal offset mutations in the coding variants.
-  // There maybe more than one variant specified per offset.
-  // If there are equal offset variants then we create alternative mutation paths.
-  // This function is exponential. Alternative Mutations = 2 ^ (#equal offset variants).
-  // A warning is issued if the soft limit is reached; default 32 alternatives (5 equal offset variants).
-  // The number of variant paths is capped by the hard limit; default 128 alternatives (9 equal offset variants)
-  static void getMutationAlternatives(std::shared_ptr<const OffsetVariantMap> variant_map_ptr,
-                                      std::vector<OffsetVariantMap> &variant_map_vector,
-                                      size_t &alternative_count,
-                                      size_t soft_limit,
-                                      size_t hard_limit);
-
 
 };
 

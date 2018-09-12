@@ -260,14 +260,15 @@ bool kgl::VCFVariant::performMutation(ContigOffset_t offset,
     // Check the reference.
     if (delete_subsequence[idx] != mutated_sequence_ptr->at(reference_offset)) {
 
-      ExecEnv::log().warn("performMutation(), deleted (reference) base: {} does not match sequence base: {} at offset: {}, delete (reference) offset: {}",
+      ExecEnv::log().warn("performMutation(), deleted (reference) base: {} does not match sequence base: {} at (size: {}) offset: {}, delete (reference) offset: {}",
                           DNA5::convertToChar(delete_subsequence[idx]),
                           DNA5::convertToChar(mutated_sequence_ptr->at(reference_offset)),
+                          mutated_sequence_ptr->length(),
                           offset, idx);
 
       std::string sequence_string = mutated_sequence_ptr->unstrandedRegion(offset, delete_subsequence.length())->getSequenceAsString();
-      ExecEnv::log().warn("performMutation(), subsequence: {}, delete (reference) sequence: {}",
-                          sequence_string, delete_subsequence.getSequenceAsString());
+      ExecEnv::log().warn("performMutation(), subsequence: {}, delete (reference) sequence: {}, alternate: {}",
+                          sequence_string, delete_subsequence.getSequenceAsString(), add_subsequence.getSequenceAsString());
 
       reference_check =false;
 

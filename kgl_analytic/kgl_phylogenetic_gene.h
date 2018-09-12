@@ -11,7 +11,6 @@
 #include <fstream>
 #include <kgl_sequence_distance.h>
 #include "kgl_patterns.h"
-#include "kgl_variant_compound.h"
 #include "kgl_variant_db.h"
 #include "kgl_filter.h"
 #include "kgl_gff_fasta.h"
@@ -81,14 +80,14 @@ public:
 
   GenomeId_t genome;
   std::shared_ptr<DNA5SequenceCoding> prime5_reference;
-  std::vector<std::shared_ptr<DNA5SequenceCoding>> prime5_mutant_vec;
+  std::shared_ptr<DNA5SequenceCoding> prime5_mutant;
   CompareDistance_t prime5_distance;
   std::shared_ptr<AminoSequence> sequence_ptr;
-  std::vector<std::shared_ptr<AminoSequence>> sequence_mutant_vec;
+  std::shared_ptr<AminoSequence> sequence_mutant;
   OffsetVariantMap variant_map;
   CompareDistance_t sequence_distance;
   std::shared_ptr<DNA5SequenceCoding> prime3_reference;
-  std::vector<std::shared_ptr<DNA5SequenceCoding>> prime3_mutant_vec;
+  std::shared_ptr<DNA5SequenceCoding> prime3_mutant;
   CompareDistance_t prime3_distance;
 
 };

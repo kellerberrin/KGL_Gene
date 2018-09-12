@@ -11,6 +11,7 @@
 #include <fstream>
 #include "kgl_mt_queue.h"
 #include "kgl_exec_env.h"
+#include "kgl_lock.h"
 
 #include <seqan/vcf_io.h>
 

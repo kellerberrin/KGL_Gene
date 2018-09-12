@@ -12,7 +12,6 @@
 #include "kgl_variant_factory_vcf.h"
 #include "kgl_variant_factory_vcf_impl.h"
 #include "kgl_variant_factory_vcf_parse_impl.h"
-#include "kgl_variant_compound.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -31,8 +30,7 @@ public:
 
   ParseCigar(std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
                  std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                 const std::string& vcf_file_name,
-                 Phred_t variant_quality) : ParseVCFImpl(vcf_population_ptr, genome_db_ptr, vcf_file_name, variant_quality) {}
+                 const std::string& vcf_file_name) : ParseVCFImpl(vcf_population_ptr, genome_db_ptr, vcf_file_name) {}
   ~ParseCigar() override = default;
 
   bool parseCigarItems(const std::string& genome_name,

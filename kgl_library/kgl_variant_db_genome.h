@@ -93,7 +93,7 @@ public:
                        const std::shared_ptr<const GenomeDatabase>& genome_db,
                        OffsetVariantMap& variant_map,
                        std::shared_ptr<AminoSequence>& reference_sequence,
-                       std::vector<std::shared_ptr<AminoSequence>>& mutant_sequence_vector) const;
+                       std::shared_ptr<AminoSequence>& sequence_vector) const;
 
   // Returns a maximum of MUTATION_HARD_LIMIT_ alternative protein mutations.
   bool mutantCodingDNA( const ContigId_t& contig_id,
@@ -103,7 +103,7 @@ public:
                         const std::shared_ptr<const GenomeDatabase>& genome_db,
                         OffsetVariantMap& variant_map,
                         std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
-                        std::vector<std::shared_ptr<DNA5SequenceCoding>>& mutant_sequence_vector) const;
+                        std::shared_ptr<DNA5SequenceCoding>& mutant_sequence) const;
 
   // Returns a maximum of MUTATION_HARD_LIMIT_ alternative mutations.
   bool mutantRegion( const ContigId_t& contig_id,
@@ -113,7 +113,7 @@ public:
                      const std::shared_ptr<const GenomeDatabase>& genome_db,
                      OffsetVariantMap& variant_map,
                      std::shared_ptr<DNA5SequenceLinear>& reference_sequence,
-                     std::vector<std::shared_ptr<DNA5SequenceLinear>>& mutant_sequence_vector) const;
+                     std::shared_ptr<DNA5SequenceLinear>& mutant_sequence) const;
 
   // Does not use alternative mutations. Only mutates one path. Used for Phylogenetic analysis.
   bool mutantContig( const ContigId_t& contig_id,

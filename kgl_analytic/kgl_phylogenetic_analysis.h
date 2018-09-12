@@ -9,7 +9,6 @@
 #include <memory>
 #include <fstream>
 #include "kgl_patterns.h"
-#include "kgl_variant_compound.h"
 #include "kgl_variant_db.h"
 #include "kgl_filter.h"
 #include "kgl_gff_fasta.h"
@@ -108,7 +107,7 @@ public:
                             const std::shared_ptr<const GenomeDatabase>& genome_db,
                             const std::shared_ptr<const GenomeVariant>& genome_variant,
                             std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
-                            std::vector<std::shared_ptr<DNA5SequenceCoding>>& mutant_sequence_vector);
+                            std::shared_ptr<DNA5SequenceCoding>& mutant_sequence);
 
   static bool compare3Prime(const ContigId_t& contig_id,
                             const FeatureIdent_t& gene_id,
@@ -117,7 +116,7 @@ public:
                             const std::shared_ptr<const GenomeDatabase>& genome_db,
                             const std::shared_ptr<const GenomeVariant>& genome_variant,
                             std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
-                            std::vector<std::shared_ptr<DNA5SequenceCoding>>& mutant_sequence_vector);
+                            std::shared_ptr<DNA5SequenceCoding>& mutant_sequence_vector);
 
   static bool outputSequenceCSV(const std::string &file_name,
                                 std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,

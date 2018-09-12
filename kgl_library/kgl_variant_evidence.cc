@@ -13,12 +13,12 @@ std::string kgl::CountEvidence::output(char delimiter, VariantOutputIndex) const
 
   std::stringstream ss;
 
-  ss << delimiter << "refCount:" << refCount();
-  ss << delimiter << "altCount:" << altCount();
+  ss << delimiter << "RefCount:" << refCount();
+  ss << delimiter << "AltCount:" << altCount();
   ss << delimiter << "DPCount:" << DPCount();
   ss << delimiter << "GQValue:" << GQValue();
   ss << delimiter << "Quality:" << Quality();
-  ss << delimiter << "vcfRecord:" << vcfRecordCount();
+  ss << delimiter << "VCFRecord:" << vcfRecordCount();
 
   return ss.str();
 

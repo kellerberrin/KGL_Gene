@@ -36,8 +36,9 @@ public:
                                  std::shared_ptr<const GenomeDatabase> genome_db,
                                  std::shared_ptr<PhasedPopulation> haploid_population);
 
-  // A simple phasing strategy that removes all conflicting variants randomly.
-  static bool haploidPhasing(std::shared_ptr<const UnphasedPopulation> vcf_population_ptr,
+  // A simple phasing strategy that removes all conflicting variants.
+  static bool haploidPhasing(size_t vcf_ploidy,
+                             std::shared_ptr<const UnphasedPopulation> vcf_population_ptr,
                              std::shared_ptr<const GenomeDatabase> genome_db,
                              std::shared_ptr<PhasedPopulation> haploid_population);
 

@@ -55,13 +55,9 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_logging.h
         kgl_library/kgl_logging.cc
         kgl_library/kgl_mt_queue.h
-        kgl_library/kgl_mt_data.h
         kgl_library/kgl_genome_types.h
         kgl_library/kgl_lock.h
-        kgl_library/kgl_mt_numpy.h
-        kgl_library/kgl_mt_contig.h
         kgl_library/kgl_exec_env.cc
-        kgl_library/kgl_mt_insert.h
         kgl_library/kgl_gff_fasta.h
         kgl_library/kgl_gff_fasta.cc
         kgl_library/kgl_genome_db.h
@@ -75,11 +71,6 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_set.cc
         kgl_library/kgl_table.h
         kgl_library/kgl_table.cc
-        kgl_library/kgl_sam_parse.h
-        kgl_library/kgl_sam_parse.cc
-        kgl_library/kgl_sam_read.h
-        kgl_library/kgl_sam_consume.h
-        kgl_library/kgl_sam_process.h
         kgl_library/kgl_table_ncbi.h
         kgl_library/kgl_sequence_base.h
         kgl_library/kgl_sequence_base.cc
@@ -87,9 +78,6 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_sequence_amino.cc
         kgl_library/kgl_alphabet_amino.h
         kgl_library/kgl_variant_db.h
-        kgl_library/kgl_variant_snp.cc
-        kgl_library/kgl_variant_compound.h
-        kgl_library/kgl_variant_compound.cc
         kgl_library/kgl_genome_prelim.h
         kgl_library/kgl_genome_prelim.cc
         kgl_library/kgl_attributes.h
@@ -106,12 +94,6 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_alphabet_dna5.h
         kgl_library/kgl_alphabet_dna5.cc
         kgl_library/kgl_variant_factory.h
-        kgl_library/kgl_variant_factory_compound.cc
-        kgl_library/kgl_variant_factory_compound_delete.cc
-        kgl_library/kgl_variant_factory_compound.h
-        kgl_library/kgl_variant_factory_compound_insert.cc
-        kgl_library/kgl_variant_compound_insert.cc
-        kgl_library/kgl_variant_compound_delete.cc
         kgl_library/kgl_alphabet_coding_dna5.h
         kgl_library/kgl_alphabet_coding_dna5.cc
         kgl_library/kgl_variant_factory.cc
@@ -120,22 +102,14 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_statistics_upgma.h
         kgl_library/kgl_statistics_upgma.cc
         kgl_library/kgl_variant_mutation.cc
-        kgl_library/kgl_variant_single.h
-        kgl_library/kgl_variant_delete.cc
-        kgl_library/kgl_variant_insert.cc
-        kgl_library/kgl_variant_single.cc
-        kgl_library/kgl_variant_factory_single.cc
         kgl_library/kgl_alphabet_readcount.cc
         kgl_library/kgl_alphabet_readcount.h
         kgl_library/kgl_alphabet_extend.h
         kgl_library/kgl_alphabet_extend.cc
-        kgl_library/kgl_variant_factory_single.h
         kgl_library/kgl_variant_factory_vcf.h
         kgl_library/kgl_utility.h
         kgl_library/kgl_utility.cc
         kgl_library/kgl_variant_factory_vcf.cc
-        kgl_library/kgl_variant_factory_bam.h
-        kgl_library/kgl_variant_factory_bam.cc
         kgl_library/kgl_variant_mutation.h
         kgl_library/kgl_variant_db_mutation.cc
         kgl_library/kgl_variant_db_contig.h
@@ -166,8 +140,6 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_vcf_parse_impl.cc
         kgl_library/kgl_variant_factory_record_vcf_impl.h
         kgl_library/kgl_variant_factory_record_vcf_impl.cc
-        kgl_library/kgl_variant_factory_vcf_cigar_impl.h
-        kgl_library/kgl_variant_factory_vcf_cigar_impl.cc
         kgl_library/kgl_genome_aux_csv.h
         kgl_library/kgl_genome_aux_csv_impl.cc
         kgl_library/kgl_variant_db_homologous.h

@@ -11,7 +11,6 @@
 #include <kgl_sequence_distance.h>
 #include <kgl_sequence_compare.h>
 #include "kgl_patterns.h"
-#include "kgl_variant_compound.h"
 #include "kgl_variant_db.h"
 #include "kgl_filter.h"
 #include "kgl_gff_fasta.h"

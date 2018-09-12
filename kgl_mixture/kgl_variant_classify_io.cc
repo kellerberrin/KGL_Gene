@@ -6,7 +6,6 @@
 
 #include "kgl_variant_classify.h"
 #include "kgl_variant_evidence.h"
-#include "kgl_variant_single.h"
 #include <fstream>
 #include <algorithm>
 

@@ -38,13 +38,7 @@ void kgl::PhylogeneticExecEnv::executeApp() {
     unphased_population_ptr->clear();
 
     // Read variants.
-    kgl::VariantFactory().readVCFVariants(genome_db_ptr,
-                                          unphased_population_ptr,
-                                          file.genome_name,
-                                          file.file_name,
-                                          args.variantQuality,
-                                          args.minCount,
-                                          args.minProportion);
+    VariantFactory().readVCFVariants(genome_db_ptr, unphased_population_ptr, file.file_name);
 
     // Basic statistics to output
     unphased_population_ptr->popStatistics();
@@ -56,6 +50,11 @@ void kgl::PhylogeneticExecEnv::executeApp() {
     if (runtime_options.getMixtureFile(mixture_file)) {
 
       GenomePhasing::fileHaploidPhasing(mixture_file, 2, filtered_unphased_ptr, genome_db_ptr, population_ptr);
+
+    } else {
+
+      // No mixture file, so assume all genomes are unmixed.
+      GenomePhasing::haploidPhasing(2, filtered_unphased_ptr, genome_db_ptr, population_ptr);
 
     }
     // Process Filtered Unphased Heterozygous Statistics

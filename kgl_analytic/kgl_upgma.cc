@@ -168,7 +168,7 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
     std::shared_ptr<const ContigFeatures> contig_ptr = sequence.second->getGene()->contig();
     std::string gene_id = sequence.second->getGene()->id();
     std::string sequence_id = sequence.second->getCDSParent()->id();
-    std::vector<std::shared_ptr<AminoSequence>> mutant_sequence_vector;
+    std::shared_ptr<AminoSequence> mutant_sequence;
     std::shared_ptr<AminoSequence> reference_sequence;
     OffsetVariantMap variant_map;
 
@@ -179,25 +179,9 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
                                             genome_db_ptr_,
                                             variant_map,
                                             reference_sequence,
-                                            mutant_sequence_vector)) {
+                                            mutant_sequence)) {
 
-      if (mutant_sequence_vector.empty()) {
-
-        ExecEnv::log().warn("mutateProteins(), No mutant proteins generated for : genome: {} sequence: {}",
-                            genome_variant_ptr_->genomeId(), sequence_id);
-
-      } else if (mutant_sequence_vector.size() == 1) {
-
-        mutated_proteins_[gene_id] = mutant_sequence_vector.front();
-
-      } else {
-
-        ExecEnv::log().warn("mutateProteins(), {} mutant proteins generated for : genome: {} sequence: {} only the first mutant is analyzed",
-                            mutant_sequence_vector.size(), genome_variant_ptr_->genomeId(), sequence_id);
-
-        mutated_proteins_[gene_id] = mutant_sequence_vector.front();
-
-      }
+      mutated_proteins_[gene_id] = mutant_sequence;
 
     }
 
@@ -254,7 +238,7 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
   }
 
 
-  std::vector<std::shared_ptr<AminoSequence>> mutant_sequence_vector;
+  std::shared_ptr<AminoSequence> mutant_sequence;
   std::shared_ptr<AminoSequence> reference_sequence;
   OffsetVariantMap variant_map;
 
@@ -265,26 +249,9 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
                                           genome_db_ptr_,
                                           variant_map,
                                           reference_sequence,
-                                          mutant_sequence_vector)) {
+                                          mutant_sequence)) {
 
-    if (mutant_sequence_vector.empty()) {
-
-      ExecEnv::log().error("mutateProtein(), No mutant proteins generated for : genome: {} sequence: {}",
-                          genome_variant_ptr_->genomeId(), sequence_id);
-      mutated_protein_ = reference_sequence;
-
-    } else if (mutant_sequence_vector.size() == 1) {
-
-      mutated_protein_ = mutant_sequence_vector.front();
-
-    } else {
-
-      ExecEnv::log().warn("mutateProtein(), {} mutant proteins generated for : genome: {} sequence: {} only the first mutant is analyzed",
-                          mutant_sequence_vector.size(), genome_variant_ptr_->genomeId(), sequence_id);
-
-      mutated_protein_ = mutant_sequence_vector.front();
-
-    }
+    mutated_protein_ = mutant_sequence;
 
   }
 
@@ -363,7 +330,7 @@ void kgl::UPGMAATP4Distance::writeNode(std::ofstream& outfile) const {
   }
 
 
-  std::vector<std::shared_ptr<AminoSequence>> mutant_sequence_vector;
+  std::shared_ptr<AminoSequence> mutant_sequence;
   std::shared_ptr<AminoSequence> reference_sequence;
   OffsetVariantMap variant_map;
 
@@ -374,7 +341,7 @@ void kgl::UPGMAATP4Distance::writeNode(std::ofstream& outfile) const {
                                               genome_db_ptr_,
                                               variant_map,
                                               reference_sequence,
-                                              mutant_sequence_vector)) {
+                                              mutant_sequence)) {
 
     ExecEnv::log().critical("write_node(), Cannot mutate sequence for : genome: {} gene: {}",
                             genome_variant_ptr_->genomeId(), gene_ptr_->id());

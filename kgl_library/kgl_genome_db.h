@@ -14,7 +14,6 @@
 #include "kgl_sequence_amino.h"
 #include "kgl_genome_feature.h"
 #include "kgl_gaf_parser.h"
-#include "kgl_mt_data.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -137,8 +136,6 @@ public:
   void createVerifyGenomeDatabase();
 
   void setTranslationTable(const std::string& table);
-
-  void registerContigData(std::shared_ptr<ContigCountData>& contig_data_ptr) const;
 
   const GenomeSequenceMap& getMap() const { return genome_sequence_map_; }
 
