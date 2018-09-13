@@ -56,15 +56,15 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& region_variant_map,
     // Mutate the sequence
     if (not variant.second->mutateSequence(adjusted_offset, dna_sequence_ptr, sequence_size_modify)) {
 
-      ExecEnv::log().warn("mutateDNA(), DNA mutation failed for variant: {}",
+      ExecEnv::log().info("mutateDNA(), DNA mutation failed for variant: {}",
                           variant.second->output(' ',VariantOutputIndex::START_0_BASED, true));
 
-      ExecEnv::log().warn("mutateDNA(), Offset: {}, Sequence Length: {}, list of all sequence variants follows:",
+      ExecEnv::log().info("mutateDNA(), Offset: {}, Sequence Length: {}, list of all sequence variants follows:",
                           sequence_offset, dna_sequence_ptr->length());
 
       for(auto map_variant : region_variant_map) {
 
-        ExecEnv::log().warn("mutateDNA(), sequence variant: {}",
+        ExecEnv::log().info("mutateDNA(), sequence variant: {}",
                             map_variant.second->output(' ',VariantOutputIndex::START_0_BASED, true));
 
       }

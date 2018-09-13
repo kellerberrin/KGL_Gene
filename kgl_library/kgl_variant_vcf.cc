@@ -7,6 +7,8 @@
 #include "kgl_sequence_offset.h"
 #include "kgl_variant_factory_vcf_parse_impl.h"
 
+#include <algorithm>
+
 
 namespace kgl = kellerberrin::genome;
 
@@ -167,9 +169,9 @@ bool kgl::VCFVariant::mutateSequence(SignedOffset_t offset_adjust,
 
       if (not performMutation(0, dna_sequence_ptr, *adjusted_reference, *adjusted_alternate)) {
 
-        ExecEnv::log().error("mutateSequence(), problem mutating sequence with preceeding overlapping variant: {}",
+        ExecEnv::log().info("mutateSequence(), problem mutating sequence with preceeding overlapping variant: {}",
                              output(' ', VariantOutputIndex::START_0_BASED, true));
-        ExecEnv::log().error("mutateSequence(), preceeding overlapping adj. reference: {} adj. alternate: {}, alternate cigar: {}",
+        ExecEnv::log().info("mutateSequence(), preceeding overlapping adj. reference: {} adj. alternate: {}, alternate cigar: {}",
                             adjusted_reference->getSequenceAsString(), adjusted_alternate->getSequenceAsString(), alternateCigar());
 
         return false;
@@ -182,7 +184,7 @@ bool kgl::VCFVariant::mutateSequence(SignedOffset_t offset_adjust,
 
     } else {
 
-      ExecEnv::log().error("mutateSequence(), calculated sequence offset: {} is out of range for sequence size: {}, variant: {}",
+      ExecEnv::log().info("mutateSequence(), calculated sequence offset: {} is out of range for sequence size: {}, variant: {}",
                            adjusted_offset, dna_sequence_ptr->length(), output(' ', VariantOutputIndex::START_0_BASED, true));
       return false;
 
@@ -199,7 +201,7 @@ bool kgl::VCFVariant::mutateSequence(SignedOffset_t offset_adjust,
 
     if (not performMutation(sequence_offset, dna_sequence_ptr, reference(), alternate())) {
 
-      ExecEnv::log().error("mutateSequence(), problem mutating sequence cigar: {}, variant: {}",
+      ExecEnv::log().info("mutateSequence(), problem mutating sequence cigar: {}, variant: {}",
                            alternateCigar(), output(' ', VariantOutputIndex::START_0_BASED, true));
 
       return false;
@@ -219,9 +221,9 @@ bool kgl::VCFVariant::mutateSequence(SignedOffset_t offset_adjust,
 
     if (not performMutation(sequence_offset, dna_sequence_ptr, *adjusted_reference, *adjusted_alternate)) {
 
-      ExecEnv::log().error("mutateSequence(), problem mutating sequence with overlapping variant: {}",
+      ExecEnv::log().info("mutateSequence(), problem mutating sequence with overlapping variant: {}",
                            output(' ', VariantOutputIndex::START_0_BASED, true));
-      ExecEnv::log().error("mutateSequence(), overlapping adj. reference: {} adj. alternate: {}, alternate cigar: {}",
+      ExecEnv::log().info("mutateSequence(), overlapping adj. reference: {} adj. alternate: {}, alternate cigar: {}",
                            adjusted_reference->getSequenceAsString(), adjusted_alternate->getSequenceAsString(), alternateCigar());
 
       return false;
@@ -244,6 +246,7 @@ bool kgl::VCFVariant::performMutation(ContigOffset_t offset,
                                       const DNA5SequenceLinear& add_subsequence) {
 
 
+  const size_t suffix_prefix = 10;
   auto reference_offset = offset;
   bool reference_check = true;
 
@@ -260,15 +263,18 @@ bool kgl::VCFVariant::performMutation(ContigOffset_t offset,
     // Check the reference.
     if (delete_subsequence[idx] != mutated_sequence_ptr->at(reference_offset)) {
 
-      ExecEnv::log().warn("performMutation(), deleted (reference) base: {} does not match sequence base: {} at (size: {}) offset: {}, delete (reference) offset: {}",
+      ExecEnv::log().info("performMutation(), reference base: {} does not match sequence base: {} at (size: {}) offset: {}, delete (reference) offset: {}",
                           DNA5::convertToChar(delete_subsequence[idx]),
                           DNA5::convertToChar(mutated_sequence_ptr->at(reference_offset)),
                           mutated_sequence_ptr->length(),
                           offset, idx);
 
+      SignedOffset_t prefix_offset = offset - suffix_prefix;
+      ContigOffset_t p_offset = prefix_offset < 0 ? 0 : static_cast<ContigOffset_t>(prefix_offset);
+      std::string prefix_string = mutated_sequence_ptr->unstrandedRegion(p_offset, ((2 * suffix_prefix)+delete_subsequence.length()))->getSequenceAsString();
       std::string sequence_string = mutated_sequence_ptr->unstrandedRegion(offset, delete_subsequence.length())->getSequenceAsString();
-      ExecEnv::log().warn("performMutation(), subsequence: {}, delete (reference) sequence: {}, alternate: {}",
-                          sequence_string, delete_subsequence.getSequenceAsString(), add_subsequence.getSequenceAsString());
+      ExecEnv::log().info("performMutation(), seq (-10/ref/+10) section: {}, seq: {}, reference: {}, alternate: {}",
+                          prefix_string, sequence_string, delete_subsequence.getSequenceAsString(), add_subsequence.getSequenceAsString());
 
       reference_check =false;
 

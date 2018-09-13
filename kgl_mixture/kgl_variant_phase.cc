@@ -230,8 +230,11 @@ bool kgl::GenomePhasing::analyseCountStatistics(const UnphasedVectorVariantCount
 
     }
 
-    double proportion_alternate = static_cast<double>(read_evidence_ptr->altCount())
-                                  / static_cast<double>(read_evidence_ptr->DPCount());
+    auto total_counts = read_evidence_ptr->refCount() + read_evidence_ptr->altCount();
+
+    if (total_counts == 0) return false;
+
+    double proportion_alternate = static_cast<double>(read_evidence_ptr->altCount()) / static_cast<double>(total_counts);
 
     if (proportion_alternate >= HETEROZYGOUS_PROPORTION_) {
 

@@ -48,7 +48,7 @@ private:
   static bool analyseCountStatistics(const UnphasedVectorVariantCount& unphased_vector, size_t& phase_index);
 
   // The proportion required for a heterozygous variant to be accepted as the haploid variant.
-  constexpr static const double HETEROZYGOUS_PROPORTION_ = 0.8;
+  constexpr static const double HETEROZYGOUS_PROPORTION_ = 0.9;
 
 };
 

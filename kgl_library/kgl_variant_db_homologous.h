@@ -67,6 +67,8 @@ private:
   PhaseId_t phase_id_;
   OffsetVariantMap offset_variant_map_;
 
+  void checkUpstreamDeletion(OffsetVariantMap& variant_map) const;
+
 };
 
 

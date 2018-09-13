@@ -115,6 +115,35 @@ bool kgl::HomologousVariant::getSortedVariants(ContigOffset_t start, ContigOffse
 
   }
 
+  checkUpstreamDeletion(variant_map);
+
   return true;
+
+}
+
+
+void kgl::HomologousVariant::checkUpstreamDeletion(OffsetVariantMap& variant_map) const {
+
+  for (auto iter = variant_map.begin(); iter != variant_map.end(); ++iter) {
+
+    if (iter == variant_map.begin()) continue;
+
+    int delete_size = std::prev(iter)->second->reference_size() - std::prev(iter)->second->size();
+
+    int offset_gap = iter->second->offset() - std::prev(iter)->second->offset();
+
+    if (delete_size >= offset_gap) {
+
+      ExecEnv::log().vinfo("checkUpstreamDeletion(), Upstream deletion detected: {}",
+                          std::prev(iter)->second->output(' ', VariantOutputIndex::START_0_BASED, true));
+
+      ExecEnv::log().vinfo("checkUpstreamDeletion(), Downstream variant removed from mutation: {}",
+                          iter->second->output(' ', VariantOutputIndex::START_0_BASED, true));
+
+      iter = variant_map.erase(iter);
+
+    }
+
+  }
 
 }
