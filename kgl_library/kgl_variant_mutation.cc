@@ -64,7 +64,7 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& region_variant_map,
 
       for(auto map_variant : region_variant_map) {
 
-        ExecEnv::log().info("mutateDNA(), sequence variant: {}",
+        ExecEnv::log().info("mutateDNA(), variant: {}",
                             map_variant.second->output(' ',VariantOutputIndex::START_0_BASED, true));
 
       }

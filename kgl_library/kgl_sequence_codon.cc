@@ -19,7 +19,7 @@ kgl::Codon::Codon(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr, Contig
     codon_index = 0;
   }
 
-  codon_index = static_cast<ContigOffset_t>(codon_index * 3);
+  codon_index = static_cast<ContigOffset_t>(codon_index * Codon::CODON_SIZE);
 
   bases_[0] = sequence_ptr->at(codon_index);
   ++codon_index;

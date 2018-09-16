@@ -28,11 +28,11 @@ std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputInde
      << contigId() << delimiter;
   if (phaseId() == UNPHASED) {
 
-    ss << "UNPHASED" << delimiter;
+    ss << "Unphased" << delimiter;
 
   } else {
 
-    ss << "PHASE:" << static_cast<size_t>(phaseId()) << delimiter;
+    ss << "Phase:" << static_cast<size_t>(phaseId()) << delimiter;
 
   }
   ss << offsetOutput(offset(), output_index) << delimiter;

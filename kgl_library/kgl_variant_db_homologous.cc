@@ -101,7 +101,7 @@ bool kgl::HomologousVariant::getSortedVariants(ContigOffset_t start, ContigOffse
 
     --previous_variant_ptr;
 
-    if (previous_variant_ptr->second->offset() + previous_variant_ptr->second->reference_size() > start) {
+    if (previous_variant_ptr->second->offset() + previous_variant_ptr->second->referenceSize() > start) {
 
       variant_map.insert(std::pair<ContigOffset_t , std::shared_ptr<const Variant>>(previous_variant_ptr->first, previous_variant_ptr->second));
 
@@ -128,7 +128,7 @@ void kgl::HomologousVariant::checkUpstreamDeletion(OffsetVariantMap& variant_map
 
     if (iter == variant_map.begin()) continue;
 
-    int delete_size = std::prev(iter)->second->reference_size() - std::prev(iter)->second->size();
+    int delete_size = std::prev(iter)->second->referenceSize() - std::prev(iter)->second->size();
 
     int offset_gap = iter->second->offset() - std::prev(iter)->second->offset();
 
@@ -141,6 +141,8 @@ void kgl::HomologousVariant::checkUpstreamDeletion(OffsetVariantMap& variant_map
                           iter->second->output(' ', VariantOutputIndex::START_0_BASED, true));
 
       iter = variant_map.erase(iter);
+
+      iter = std::prev(iter); // reset back to the previous iterator.
 
     }
 

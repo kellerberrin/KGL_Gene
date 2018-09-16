@@ -128,7 +128,7 @@ public:
 
   virtual VariantType variantType() const = 0;
   virtual size_t size() const = 0;
-  virtual size_t reference_size() const { return 1; }
+  virtual size_t referenceSize() const { return 1; }
   virtual std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const = 0;
   virtual std::string mutation(char delimiter, VariantOutputIndex output_index) const = 0;
   virtual bool mutateSequence(SignedOffset_t offset_adjust,

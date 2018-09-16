@@ -38,14 +38,8 @@ struct Phylogenetic {
   int max_error_count{1000};
   int max_warn_count{1000};
   bool verbose{false};
-  int minCount{0};
-  double minProportion{0};
-  Phred_t readQuality{30.0};
-  Phred_t variantQuality{10.0};
 
   static constexpr const char* WILDCARD = "*";  // All analytics
-
-
 
 };
 

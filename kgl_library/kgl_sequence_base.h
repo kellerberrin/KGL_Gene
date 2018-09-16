@@ -48,6 +48,8 @@ public:
   DNA5SequenceCoding() = delete;
   ~DNA5SequenceCoding() override = default;
 
+  bool verifySequence() const;
+
   size_t countGC() const;
 
 private:

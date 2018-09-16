@@ -310,24 +310,6 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
   addOption(parser, seqan::ArgParseOption(CSVFileShortFlag_, CSVFileFlag_, outCSV_desc, seqan::ArgParseArgument::OUTPUT_FILE, "AUX_CSV_FILE"));
 
-  const char* min_count_desc =
-      R"(The minimum SAM/BAM count of a single nucleotide analyzed in the Parent (wild-type)
-  genome that is at variance from the reference (fasta) genome)";
-
-  const char* minimumCountFlag_ = "minimumCount";
-  const char* minimumCountShortFlag_ = "c";
-
-  addOption(parser, seqan::ArgParseOption(minimumCountShortFlag_, minimumCountFlag_, min_count_desc , seqan::ArgParseArgument::INTEGER, "INT"));
-
-  const char* min_prop_desc =
-      R"(The minimum proportion of a single nucleotide analyzed in the Parent (wild-type)
-  genome that is at variance from the reference (fasta) genome)";
-
-  const char* minimumProportionFlag_ = "minimumProportion";
-  const char* minimumProportionShortFlag_ = "p";
-
-  addOption(parser, seqan::ArgParseOption(minimumProportionShortFlag_, minimumProportionFlag_, min_prop_desc, seqan::ArgParseArgument::DOUBLE, "FLOAT"));
-
   const char* ploidy_desc =
       R"(The ploidy of the variant analysis)";
 
@@ -355,23 +337,6 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   const char* verboseShortFlag_ = "v";
 
   addOption(parser, seqan::ArgParseOption(verboseShortFlag_, verboseFlag_, verbose_desc, seqan::ArgParseArgument::BOOL, "FLAG"));
-
-  const char* read_quality_desc =
-      R"(The nucleotide read quality as -10 log10 Pr {ReadError} e.g. 30 is a 1/1000 chance
-  of an nucleotide read error. Defaults to 30.)";
-
-  const char* readQualityFlag_ = "readQuality";
-  const char* readQualityShortFlag_ = "q";
-
-  addOption(parser, seqan::ArgParseOption(readQualityShortFlag_, readQualityFlag_, read_quality_desc, seqan::ArgParseArgument::DOUBLE, "FLOAT"));
-
-  const char* variant_quality_desc =
-      R"(The variant quality as -10 log10 Pr {VariantError} e.g. 10 is a 1/10 chance the variant is incorrectly called. Defaults to 10.)";
-
-  const char* variantQualityFlag_ = "variantQuality";
-  const char* variantQualityShortFlag_ = "a";
-
-  addOption(parser, seqan::ArgParseOption(variantQualityShortFlag_, variantQualityFlag_, variant_quality_desc, seqan::ArgParseArgument::DOUBLE, "FLOAT"));
 
   // Parse command line.
   seqan::ArgumentParser::ParseResult parse_result = seqan::parse(parser, argc, argv);
@@ -532,19 +497,11 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
   }
 
-  if (seqan::isSet(parser, minimumCountFlag_)) seqan::getOptionValue(args_.minCount, parser, minimumCountFlag_);
-
-  if (seqan::isSet(parser, minimumProportionFlag_)) seqan::getOptionValue(args_.minProportion, parser, minimumProportionFlag_);
-
   if (seqan::isSet(parser, ploidyFlag_)) seqan::getOptionValue(args_.ploidy, parser, ploidyFlag_);
 
   if (seqan::isSet(parser, translationTableFlag_)) seqan::getOptionValue(args_.aminoTranslationTable, parser, translationTableFlag_);
 
   if (seqan::isSet(parser, verboseFlag_)) seqan::getOptionValue(args_.verbose, parser, verboseFlag_);
-
-  if (seqan::isSet(parser, readQualityFlag_)) seqan::getOptionValue(args_.readQuality, parser, readQualityFlag_);
-
-  if (seqan::isSet(parser, variantQualityFlag_)) seqan::getOptionValue(args_.variantQuality, parser, variantQualityFlag_);
 
   ExecEnv::log().SetVerbose(getArgs().verbose);  // Set the logger verbose level.
 

@@ -72,7 +72,9 @@ size_t kgl::AminoTranslationTable::index(const Codon& codon) const {
 
   if (table_index >= Tables::AMINO_TABLE_SIZE) {
 
-    ExecEnv::log().error("Bad Amino Table Index: {}, codon: {}", table_index, codon.getSequenceAsString());
+    ExecEnv::log().error("Out of Range Amino Table Index: {}, codon: {}, (int) base1: {}, (int) base2: {}, (int) base3: {}",
+                         table_index, codon.getSequenceAsString(),
+                         static_cast<int>(codon[0]), static_cast<int>(codon[1]), static_cast<int>(codon[2]));
     table_index = CONTAINS_BASE_N;
 
   }

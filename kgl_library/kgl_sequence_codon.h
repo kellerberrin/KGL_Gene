@@ -29,9 +29,9 @@ public:
   Codon(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr, ContigOffset_t codon_index);
   ~Codon() = default;
 
-  static ContigOffset_t codonLength(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) {
+  static ContigSize_t codonLength(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) {
 
-    return static_cast<ContigOffset_t>(sequence_ptr->length() / CODON_SIZE);
+    return static_cast<ContigSize_t>(sequence_ptr->length() / CODON_SIZE);
 
   }
 
@@ -41,9 +41,9 @@ public:
   std::string getSequenceAsString() const {
 
     std::string codon_string;
-    codon_string = static_cast<char>(bases_[0]);
-    codon_string += static_cast<char>(bases_[1]);
-    codon_string += static_cast<char>(bases_[2]);
+    codon_string = CodingDNA5::convertToChar(bases_[0]);
+    codon_string += CodingDNA5::convertToChar(bases_[1]);
+    codon_string += CodingDNA5::convertToChar(bases_[2]);
     return codon_string;
 
   }

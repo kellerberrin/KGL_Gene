@@ -50,7 +50,7 @@ public:
 
   size_t size() const override { return alternate_.length(); }
 
-  size_t reference_size() const override { return reference_.length(); }
+  size_t referenceSize() const override { return reference_.length(); }
 
   VariantType variantType() const override { return VariantType::VCF_VARIANT; }
 
@@ -82,6 +82,7 @@ private:
 
   // Generate a CIGAR by comparing the reference to the alternate.
   std::string alternateCigar() const;
+
   size_t alternateSize(size_t reference_size) const;
 
   // Mutate a sequence by adding and subtracting subsequences at the designated offset

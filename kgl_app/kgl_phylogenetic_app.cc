@@ -43,7 +43,7 @@ void kgl::PhylogeneticExecEnv::executeApp() {
     // Basic statistics to output
     unphased_population_ptr->popStatistics();
     // Filtered Unphased Heterozygous Statistics
-    std::shared_ptr<UnphasedPopulation> filtered_unphased_ptr = unphased_population_ptr->filterVariants(AndFilter(DPCountFilter(30), RefAltCountFilter(30)));
+    std::shared_ptr<UnphasedPopulation> filtered_unphased_ptr = unphased_population_ptr->filterVariants(AndFilter(DPCountFilter(10), RefAltCountFilter(10)));
     // filtered_unphased_ptr = filtered_unphased_ptr->filterVariants(SNPFilter());
     // If the mixture file is defined then read it and phase the variants.
     std::string mixture_file;

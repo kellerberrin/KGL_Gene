@@ -129,6 +129,7 @@ std::string kgl::VCFVariant::mutation(char delimiter, VariantOutputIndex output_
 
   ss << reference().getSequenceAsString() << ">" << offsetOutput(offset(), output_index) << ">";
   ss << alternate().getSequenceAsString() << delimiter;
+  ss << alternateCigar() << delimiter;
 
   return ss.str();
 
@@ -155,10 +156,10 @@ bool kgl::VCFVariant::mutateSequence(SignedOffset_t offset_adjust,
   // Check the offset to see if variant preceded the start of the sequence.
   if (adjusted_offset < 0) {
 
-    if (adjusted_offset + reference_size() > 0) {
+    if (adjusted_offset + referenceSize() > 0) {
 
       auto ref_offset = static_cast<ContigOffset_t>(std::abs(adjusted_offset));
-      auto ref_size = static_cast<ContigSize_t>(adjusted_offset + reference_size());
+      auto ref_size = static_cast<ContigSize_t>(adjusted_offset + referenceSize());
 
       std::shared_ptr<DNA5SequenceLinear> adjusted_reference = reference().unstrandedRegion(ref_offset, ref_size);
 
@@ -171,8 +172,8 @@ bool kgl::VCFVariant::mutateSequence(SignedOffset_t offset_adjust,
 
         ExecEnv::log().info("mutateSequence(), problem mutating sequence with preceeding overlapping variant: {}",
                              output(' ', VariantOutputIndex::START_0_BASED, true));
-        ExecEnv::log().info("mutateSequence(), preceeding overlapping adj. reference: {} adj. alternate: {}, alternate cigar: {}",
-                            adjusted_reference->getSequenceAsString(), adjusted_alternate->getSequenceAsString(), alternateCigar());
+        ExecEnv::log().info("mutateSequence(), preceeding overlapping adj. reference: {} adj. alternate: {}",
+                            adjusted_reference->getSequenceAsString(), adjusted_alternate->getSequenceAsString());
 
         return false;
 
@@ -201,8 +202,8 @@ bool kgl::VCFVariant::mutateSequence(SignedOffset_t offset_adjust,
 
     if (not performMutation(sequence_offset, dna_sequence_ptr, reference(), alternate())) {
 
-      ExecEnv::log().info("mutateSequence(), problem mutating sequence cigar: {}, variant: {}",
-                           alternateCigar(), output(' ', VariantOutputIndex::START_0_BASED, true));
+      ExecEnv::log().info("mutateSequence(), problem mutating sequence; variant: {}",
+                           output(' ', VariantOutputIndex::START_0_BASED, true));
 
       return false;
 
@@ -223,8 +224,8 @@ bool kgl::VCFVariant::mutateSequence(SignedOffset_t offset_adjust,
 
       ExecEnv::log().info("mutateSequence(), problem mutating sequence with overlapping variant: {}",
                            output(' ', VariantOutputIndex::START_0_BASED, true));
-      ExecEnv::log().info("mutateSequence(), overlapping adj. reference: {} adj. alternate: {}, alternate cigar: {}",
-                           adjusted_reference->getSequenceAsString(), adjusted_alternate->getSequenceAsString(), alternateCigar());
+      ExecEnv::log().info("mutateSequence(), overlapping adj. reference: {} adj. alternate: {}",
+                           adjusted_reference->getSequenceAsString(), adjusted_alternate->getSequenceAsString());
 
       return false;
 

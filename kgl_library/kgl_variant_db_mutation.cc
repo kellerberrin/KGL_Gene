@@ -37,8 +37,29 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
 
   }
 
+  // Check the reference sequence for good measure.
+  if (not DNA_reference->verifySequence()) {
+
+    ExecEnv::log().error("mutantProteins(), corrupted reference sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
+
+  }
+
   // The reference Amino sequence.
   reference_sequence = contig_ptr->getAminoSequence(DNA_reference);
+
+  // Check that the DNA corruption is acquired by mutating the reference sequence
+  // NOT from a problem with the codon arithmetic (tested separately).
+  if (not DNA_mutant->verifySequence()) {
+
+    ExecEnv::log().error("mutantProteins(), corrupted mutant sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
+    for (auto variant : variant_map) {
+
+      ExecEnv::log().info("mutantProteins(), variant map: {}", variant.second->output(' ', VariantOutputIndex::START_1_BASED, true));
+
+    }
+
+
+  }
 
   mutant_sequence = contig_ptr->getAminoSequence(DNA_mutant);
 
