@@ -456,7 +456,7 @@ size_t kgl::ParseVCFMiscImpl::alternateCount(size_t reference_count, const Cigar
 
       case CigarEditType::UNCHANGED:
       case CigarEditType::CHANGED:
-        if (reference_counter + cigar_ptr->first > reference_count) {
+        if ((reference_counter + cigar_ptr->first) > reference_count) {
 
           alternate_counter += (reference_count - reference_counter);
           reference_counter = reference_count;
@@ -474,7 +474,7 @@ size_t kgl::ParseVCFMiscImpl::alternateCount(size_t reference_count, const Cigar
         break;
 
       case CigarEditType::DELETE:
-        if (reference_counter + cigar_ptr->first > reference_count) {
+        if ((reference_counter + cigar_ptr->first) > reference_count) {
 
           reference_counter = reference_count;
 

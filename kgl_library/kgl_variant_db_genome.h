@@ -81,11 +81,8 @@ public:
                          ContigOffset_t end,
                          OffsetVariantMap& variant_map) const;
 
-  const Attributes& attributes() const { return attributes_; }
-  Attributes& attributes() { return attributes_; }
-  void attributes(const Attributes& attributes) { attributes_ = attributes; }
 
-  // Returns a maximum of MUTATION_HARD_LIMIT_ alternative protein mutations.
+  // Returns reference and protein mutations.
   bool mutantProteins( const ContigId_t& contig_id,
                        PhaseId_t phase,
                        const FeatureIdent_t& gene_id,
@@ -95,7 +92,7 @@ public:
                        std::shared_ptr<AminoSequence>& reference_sequence,
                        std::shared_ptr<AminoSequence>& sequence_vector) const;
 
-  // Returns a maximum of MUTATION_HARD_LIMIT_ alternative protein mutations.
+  // Returns reference and mutant stranded DNA.
   bool mutantCodingDNA( const ContigId_t& contig_id,
                         PhaseId_t phase,
                         const FeatureIdent_t& gene_id,
@@ -105,7 +102,7 @@ public:
                         std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
                         std::shared_ptr<DNA5SequenceCoding>& mutant_sequence) const;
 
-  // Returns a maximum of MUTATION_HARD_LIMIT_ alternative mutations.
+  // Returns reference and mutant unstranded DNA region
   bool mutantRegion( const ContigId_t& contig_id,
                      PhaseId_t phase,
                      ContigOffset_t region_offset,
@@ -115,7 +112,7 @@ public:
                      std::shared_ptr<DNA5SequenceLinear>& reference_sequence,
                      std::shared_ptr<DNA5SequenceLinear>& mutant_sequence) const;
 
-  // Does not use alternative mutations. Only mutates one path. Used for Phylogenetic analysis.
+  // Returns reference and mutant unstranded contig.
   bool mutantContig( const ContigId_t& contig_id,
                      PhaseId_t phase,
                      const std::shared_ptr<const GenomeDatabase>& genome_db,
@@ -131,7 +128,6 @@ private:
   GenomeId_t genome_id_;
   PhaseId_t ploidy_;
   GenomeVariantMap genome_variant_map_;
-  Attributes attributes_;
 
 };
 

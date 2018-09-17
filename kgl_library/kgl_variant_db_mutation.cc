@@ -37,31 +37,44 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
 
   }
 
-  // Check the reference sequence for good measure.
+  // Check the DNA5 reference sequence.
   if (not DNA_reference->verifySequence()) {
 
-    ExecEnv::log().error("mutantProteins(), corrupted reference sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
+    ExecEnv::log().error("mutantProteins(), corrupted CodingDNA5 reference sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
 
   }
 
   // The reference Amino sequence.
   reference_sequence = contig_ptr->getAminoSequence(DNA_reference);
 
-  // Check that the DNA corruption is acquired by mutating the reference sequence
-  // NOT from a problem with the codon arithmetic (tested separately).
+  // Check the reference amino sequence.
+  if (not reference_sequence->verifySequence()) {
+
+    ExecEnv::log().error("mutantProteins(), corrupted amino reference sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
+
+  }
+
+  // Check for any DNA corruption acquired by mutating the reference sequence
   if (not DNA_mutant->verifySequence()) {
 
     ExecEnv::log().error("mutantProteins(), corrupted mutant sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
+    // List out the variants.
     for (auto variant : variant_map) {
 
       ExecEnv::log().info("mutantProteins(), variant map: {}", variant.second->output(' ', VariantOutputIndex::START_1_BASED, true));
 
     }
 
-
   }
 
   mutant_sequence = contig_ptr->getAminoSequence(DNA_mutant);
+
+  // Check the mutant amino sequence.
+  if (not mutant_sequence->verifySequence()) {
+
+    ExecEnv::log().error("mutantProteins(), corrupted amino mutant sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
+
+  }
 
   return true;
 
@@ -121,6 +134,26 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
 
   }
 
+  // Check the reference sequence for good measure.
+  if (not reference_sequence->verifySequence()) {
+
+    ExecEnv::log().error("mutantCodingDNA(), corrupted reference sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
+
+  }
+
+  // Check for any DNA corruption acquired by mutating the reference sequence
+  if (not mutant_sequence->verifySequence()) {
+
+    ExecEnv::log().error("mutantCodingDNA(), corrupted mutant sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
+    // List out the variants.
+    for (auto variant : variant_map) {
+
+      ExecEnv::log().info("mutantCodingDNA(), variant map: {}", variant.second->output(' ', VariantOutputIndex::START_1_BASED, true));
+
+    }
+
+  }
+
   return true;
 
 }
@@ -175,6 +208,27 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
 
   }
 
+  // Check the reference sequence for good measure.
+  if (not reference_sequence->verifySequence()) {
+
+    ExecEnv::log().error("mutantRegion(), corrupted reference contig: {}, offset: {}, size: {}",
+                         contig_id, region_offset, region_size);
+
+  }
+
+  // Check for any DNA corruption acquired by mutating the reference sequence
+  if (not mutant_sequence->verifySequence()) {
+
+    ExecEnv::log().error("mutantRegion(), corrupted mutant contig: {}, offset: {}, size: {}", contig_id, region_offset, region_size);
+    // List out the variants.
+    for (auto variant : variant_map) {
+
+      ExecEnv::log().info("mutantRegion(), variant map: {}", variant.second->output(' ', VariantOutputIndex::START_1_BASED, true));
+
+    }
+
+  }
+
   return true;
 
 }
@@ -214,6 +268,20 @@ bool kgl::GenomeVariant::mutantContig( const ContigId_t& contig_id,
 
       ExecEnv::log().warn("Problem mutating genome: {},  contig: {}", contig_id);
       return false;
+
+  }
+
+  // Check the reference sequence for good measure.
+  if (not reference_contig->verifySequence()) {
+
+    ExecEnv::log().error("mutantContig(), corrupted reference contig: {}", contig_id);
+
+  }
+
+  // Check for any DNA corruption acquired by mutating the reference contig
+  if (not mutant_contig_ptr->verifySequence()) {
+
+    ExecEnv::log().error("mutantContig(), corrupted mutant contig: {}", contig_id);
 
   }
 

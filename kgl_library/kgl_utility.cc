@@ -20,7 +20,7 @@ namespace kgl = kellerberrin::genome;
 // Hide the boost cpu timer in an anonymous namespace.
 namespace {  bt::cpu_timer cpu_timer; }
 
-void kgl::Utility::getElpasedTime(double& Clock, double& User, double& System) {
+void kgl::Utility::getElapsedTime(double &Clock, double &User, double &System) {
 
   Clock = 0; User = 0; System = 0;
   bt::cpu_times elapsedtime = cpu_timer.elapsed();

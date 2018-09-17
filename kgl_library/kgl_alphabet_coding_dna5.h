@@ -58,6 +58,9 @@ public:
     N = N_NUCLEOTIDE
   };
 
+  // Checks for possible memory corruption.
+  static bool validAlphabet(Alphabet nucleotide);
+
   // Convert a base to an array offset.
   static ContigOffset_t nucleotideToColumn(Alphabet nucleotide);
 

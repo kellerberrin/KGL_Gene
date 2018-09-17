@@ -25,6 +25,23 @@ const kgl::Nucleotide_t kgl::DNA5::N_NUCLEOTIDE;
 const kgl::ContigOffset_t kgl::DNA5::N_NUCLEOTIDE_OFFSET;
 
 
+bool kgl::DNA5::validAlphabet(Alphabet nucleotide) {
+
+  auto int_value = static_cast<size_t>(nucleotide);
+
+// We DO NOT use a switch here.
+// Because the switch assumes we can only have 5 base types (and a memory corrupted sequence may not).
+  bool compare = int_value == static_cast<size_t>(Alphabet::A)
+                 or int_value == static_cast<size_t>(Alphabet::C)
+                 or int_value == static_cast<size_t>(Alphabet::G)
+                 or int_value == static_cast<size_t>(Alphabet::T)
+                 or int_value == static_cast<size_t>(Alphabet::N);
+
+  return compare;
+
+}
+
+
 
 // Convert char to Alphabet enum type.
 kgl::DNA5::Alphabet kgl::DNA5::convertChar(char chr_base) {

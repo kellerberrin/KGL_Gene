@@ -206,8 +206,6 @@ kgl::GenomeVariant::Union(std::shared_ptr<const kgl::GenomeVariant> genome_varia
 
   std::shared_ptr<kgl::GenomeVariant> genome_union(std::make_shared<kgl::GenomeVariant>(genomeId(), ploidy()));
 
-  genome_union->attributes().insertAttribute("union", genomeId() + "+" + genome_variant_ptr->genomeId());
-
   for (auto contig_variant : genome_variant_map_) {
 
     auto result = genome_variant_ptr->genome_variant_map_.find(contig_variant.first);
@@ -259,8 +257,6 @@ kgl::GenomeVariant::Intersection(std::shared_ptr<const kgl::GenomeVariant> genom
 
   std::shared_ptr<kgl::GenomeVariant> genome_intersection(std::make_shared<kgl::GenomeVariant>(genomeId(), ploidy()));
 
-  genome_intersection->attributes().insertAttribute("intersection", genomeId() + "+" + genome_variant->genomeId());
-
   for (auto contig_variant : genome_variant_map_) {
 
     auto result = genome_variant->genome_variant_map_.find(contig_variant.first);
@@ -295,8 +291,6 @@ std::shared_ptr<kgl::GenomeVariant>
 kgl::GenomeVariant::Difference(std::shared_ptr<const kgl::GenomeVariant> genome_variant) const {
 
   std::shared_ptr<kgl::GenomeVariant> genome_difference(std::make_shared<kgl::GenomeVariant>(genomeId(), ploidy()));
-
-  genome_difference->attributes().insertAttribute("difference", genomeId() + "+" + genome_variant->genomeId());
 
   for (auto contig_variant : genome_variant_map_) {
 

@@ -38,7 +38,7 @@ public:
 
 
 template<typename Alphabet>
-class AlphabetSequence : public VirtualSequence {
+class  AlphabetSequence : public VirtualSequence {
 
 public:
 
@@ -53,6 +53,9 @@ public:
   ContigSize_t length() const { return alphabet_string_.length(); }
   std::string getSequenceAsString() const override { return alphabet_string_.str(); }
   const AlphabetString<Alphabet>& getAlphabetString() const { return alphabet_string_; }
+
+  // Check for memory corruption.
+  bool verifySequence() const;
 
 protected:
 
@@ -71,6 +74,35 @@ private:
 
 
 };
+
+
+
+template<typename Alphabet>
+bool AlphabetSequence<Alphabet>::verifySequence() const {
+
+  for (ContigSize_t idx = 0; idx < length(); ++idx) {
+
+    bool compare = Alphabet::validAlphabet(at(idx));
+
+    if (not compare) {
+
+      const ContigSize_t sub_sequence_size = 10;
+      ContigSize_t display_size = (length() - idx) >= sub_sequence_size ? sub_sequence_size: (length() - idx);
+      std::shared_ptr<AlphabetSequence<Alphabet>> sub_sequence;
+      getSubsequence(idx, display_size, sub_sequence);
+
+      ExecEnv::log().error("AlphabetSequence::verifySequence(), invalid Alphabet value (int): {} found at index: {}, sequence[{}, {}]: {}"
+      , static_cast<size_t>(at(idx)), idx, idx, (idx + display_size - 1), sub_sequence->getSequenceAsString());
+
+      return false;
+
+    }
+
+  }
+
+  return true;
+
+}
 
 
 template<typename Alphabet>

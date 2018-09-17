@@ -102,10 +102,6 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_statistics_upgma.h
         kgl_library/kgl_statistics_upgma.cc
         kgl_library/kgl_variant_mutation.cc
-        kgl_library/kgl_alphabet_readcount.cc
-        kgl_library/kgl_alphabet_readcount.h
-        kgl_library/kgl_alphabet_extend.h
-        kgl_library/kgl_alphabet_extend.cc
         kgl_library/kgl_variant_factory_vcf.h
         kgl_library/kgl_utility.h
         kgl_library/kgl_utility.cc

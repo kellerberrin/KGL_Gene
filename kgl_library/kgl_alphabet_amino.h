@@ -83,17 +83,20 @@ public:
     D = ASPARTIC,
     E = GLUTAMIC,
     G = GLYCINE,
-    // Rare - The additional two amino acids encoded using stop codons by some species.
+    // Rare - The additional two amino acids encoded as stop codons by some species.
     U = SELENOCYSTEINE,
     O = PYRROLYSINE,
-    // The three stop codons.
+    // Represents all stop codons, including the two above.
     _ = STOP_CODON,
-    // The special unknown amino acid generated when the DNA5 codon
+    // The special unknown amino acid generated when the CodingDNA5 codon
     // contains the unknown base 'N'.
     Z = UNKNOWN_AMINO};
 
   static constexpr Alphabet AMINO_STOP = Alphabet::_;
   static constexpr Alphabet AMINO_UNKNOWN = Alphabet::Z;
+
+  // Checks for possible memory corruption.
+  static bool validAlphabet(Alphabet nucleotide);
 
   // The Alphabet convertChar(char) function must be defined -see kgl_alphabet_string.h
   static Alphabet convertChar(char chr_base);

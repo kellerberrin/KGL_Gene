@@ -91,36 +91,10 @@ std::shared_ptr<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::linearSequence
 
 
 
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A STRANDED DNA string that can be converted to an AMINO sequence.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-bool kgl::DNA5SequenceCoding::verifySequence() const {
-
-  for (ContigSize_t idx = 0; idx < length(); ++idx) {
-
-    auto int_value = static_cast<size_t>(at(idx));
-
-    // We DO NOT use a switch here because the switch assumes we can only have 5 base types (and a memory corrupted sequence may not).
-    bool compare = int_value == static_cast<size_t>(CodingDNA5::A_NUCLEOTIDE)
-    or int_value == static_cast<size_t>(CodingDNA5::C_NUCLEOTIDE)
-    or int_value == static_cast<size_t>(CodingDNA5::G_NUCLEOTIDE)
-    or int_value == static_cast<size_t>(CodingDNA5::T_NUCLEOTIDE)
-    or int_value == static_cast<size_t>(CodingDNA5::N_NUCLEOTIDE);
-
-    if (not compare) {
-
-      ExecEnv::log().error("verifySequence(), invalid Nucleotide value (int): {} found at index: {}", int_value, idx);
-      return false;
-
-    }
-
-  }
-
-  return true;
-
-}
 
 
 

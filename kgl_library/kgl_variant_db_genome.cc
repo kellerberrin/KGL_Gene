@@ -77,8 +77,6 @@ std::shared_ptr<kgl::GenomeVariant> kgl::GenomeVariant::filterVariants(const kgl
 
   std::shared_ptr<kgl::GenomeVariant> filtered_genome_ptr(std::make_shared<kgl::GenomeVariant>(genomeId(), ploidy()));
 
-  filtered_genome_ptr->attributes().insertAttribute("filter", filter.filterName());
-
   for (const auto& contig_variant : genome_variant_map_) {
 
     std::shared_ptr<kgl::ContigVariant> filtered_contig = contig_variant.second->filterVariants(filter);
@@ -177,7 +175,6 @@ void kgl::GenomeVariant::getVariants(std::vector<std::shared_ptr<const Variant>>
 std::shared_ptr<kgl::GenomeVariant> kgl::GenomeVariant::deepCopy() const {
 
   std::shared_ptr<GenomeVariant> copy(std::make_shared<GenomeVariant>(genomeId(), ploidy()));
-  copy->attributes(attributes());
 
   for (auto contig : getMap()) {
 

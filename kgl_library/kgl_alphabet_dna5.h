@@ -61,6 +61,10 @@ public:
     N = N_NUCLEOTIDE
   };
 
+
+  // Checks for possible memory corruption.
+  static bool validAlphabet(Alphabet nucleotide);
+
   // The Alphabet convertChar(char) function must be defined -see kgl_alphabet_string.h
   static Alphabet convertChar(char chr_base);
 

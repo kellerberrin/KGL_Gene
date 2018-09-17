@@ -52,3 +52,39 @@ kgl::AminoAcid::Alphabet kgl::AminoAcid::convertChar(char chr_base) {
   }
 
 }
+
+
+bool kgl::AminoAcid::validAlphabet(Alphabet amino) {
+
+  auto int_value = static_cast<size_t>(amino);
+
+// We DO NOT use a switch here.
+// Because the switch always assumes we can only have the enum values (and a memory corrupted sequence may not).
+  bool compare = int_value == static_cast<size_t>(Alphabet::F)
+                 or int_value == static_cast<size_t>(Alphabet::L)
+                 or int_value == static_cast<size_t>(Alphabet::S)
+                 or int_value == static_cast<size_t>(Alphabet::Y)
+                 or int_value == static_cast<size_t>(Alphabet::C)
+                 or int_value == static_cast<size_t>(Alphabet::W)
+                 or int_value == static_cast<size_t>(Alphabet::P)
+                 or int_value == static_cast<size_t>(Alphabet::H)
+                 or int_value == static_cast<size_t>(Alphabet::Q)
+                 or int_value == static_cast<size_t>(Alphabet::R)
+                 or int_value == static_cast<size_t>(Alphabet::I)
+                 or int_value == static_cast<size_t>(Alphabet::M)
+                 or int_value == static_cast<size_t>(Alphabet::T)
+                 or int_value == static_cast<size_t>(Alphabet::N)
+                 or int_value == static_cast<size_t>(Alphabet::K)
+                 or int_value == static_cast<size_t>(Alphabet::V)
+                 or int_value == static_cast<size_t>(Alphabet::A)
+                 or int_value == static_cast<size_t>(Alphabet::D)
+                 or int_value == static_cast<size_t>(Alphabet::E)
+                 or int_value == static_cast<size_t>(Alphabet::G)
+                 or int_value == static_cast<size_t>(Alphabet::U)
+                 or int_value == static_cast<size_t>(Alphabet::O)
+                 or int_value == static_cast<size_t>(Alphabet::_)
+                 or int_value == static_cast<size_t>(Alphabet::Z);
+
+  return compare;
+
+}
