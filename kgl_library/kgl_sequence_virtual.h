@@ -88,7 +88,7 @@ bool AlphabetSequence<Alphabet>::verifySequence() const {
 
       const ContigSize_t sub_sequence_size = 10;
       ContigSize_t display_size = (length() - idx) >= sub_sequence_size ? sub_sequence_size: (length() - idx);
-      std::shared_ptr<AlphabetSequence<Alphabet>> sub_sequence;
+      std::shared_ptr<AlphabetSequence<Alphabet>> sub_sequence(std::make_shared<AlphabetSequence<Alphabet>>(*this));
       getSubsequence(idx, display_size, sub_sequence);
 
       ExecEnv::log().error("AlphabetSequence::verifySequence(), invalid Alphabet value (int): {} found at index: {}, sequence[{}, {}]: {}"
