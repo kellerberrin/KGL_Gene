@@ -43,10 +43,12 @@ class DNA5SequenceCoding: public AlphabetSequence<CodingDNA5> {
 public:
 
 
-  explicit DNA5SequenceCoding(StringCodingDNA5 sequence, StrandSense strand) : AlphabetSequence<CodingDNA5>(std::move(sequence)), strand_(strand) {}
-  explicit DNA5SequenceCoding(const DNA5SequenceCoding&) = default;
-  DNA5SequenceCoding() = delete;
+  explicit DNA5SequenceCoding(StringCodingDNA5&& sequence, StrandSense strand) noexcept : AlphabetSequence<CodingDNA5>(std::move(sequence)), strand_(strand) {}
+  DNA5SequenceCoding() : strand_(StrandSense::FORWARD) {}
+  DNA5SequenceCoding(DNA5SequenceCoding& copy) = delete;
   ~DNA5SequenceCoding() override = default;
+
+  DNA5SequenceCoding& operator=(DNA5SequenceCoding& copy) = delete;
 
   size_t countGC() const;
 
@@ -73,10 +75,12 @@ class DNA5SequenceLinear: public  AlphabetSequence<DNA5> {
 public:
 
 
-  DNA5SequenceLinear(StringDNA5 sequence) :  AlphabetSequence<DNA5>(std::move(sequence)) {}
-  explicit DNA5SequenceLinear() = default;
-  explicit DNA5SequenceLinear(const DNA5SequenceLinear&) = default;
+  explicit DNA5SequenceLinear(StringDNA5&& sequence) :  AlphabetSequence<DNA5>(std::move(sequence)) {}
+  DNA5SequenceLinear() = default;
+  DNA5SequenceLinear(const DNA5SequenceLinear&) = delete;
   ~DNA5SequenceLinear() override = default;
+
+  DNA5SequenceLinear operator=(const DNA5SequenceLinear&) = delete;
 
   // Returns a defined subsequence (generally a single/group of codons) of the coding sequence
   // Setting sub_sequence_offset and sub_sequence_length to zero copies the entire sequence defined by the SortedCDS.
@@ -124,10 +128,13 @@ class DNA5SequenceContig: public DNA5SequenceLinear {
 public:
 
 
-  explicit DNA5SequenceContig(StringDNA5 sequence) : DNA5SequenceLinear(std::move(sequence)) {}
+  explicit DNA5SequenceContig(StringDNA5&& sequence) : DNA5SequenceLinear(std::move(sequence)) {}
+  explicit DNA5SequenceContig(const StringDNA5& sequence) { alphabet_string_ = sequence; }
+  DNA5SequenceContig(const DNA5SequenceContig&) = delete;
   DNA5SequenceContig() = delete;
   ~DNA5SequenceContig() override = default;
 
+  DNA5SequenceContig& operator=(const DNA5SequenceContig&) = delete;
 
   // Returns the codon offset of the contig offset within a coding sequence, returns false if not within the coding sequence.
   bool codonOffset(std::shared_ptr<const CodingSequence> coding_seq_ptr,

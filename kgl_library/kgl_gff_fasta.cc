@@ -106,7 +106,7 @@ void kgl::ParseGffFasta::GffFastaImpl::readFastaFile(const std::string& fasta_fi
 
     const std::string& contig_id = sequence.first;
     StringDNA5 DNA5sequence(*sequence.second); // convert to alphabet DNA5.
-    std::shared_ptr<DNA5SequenceContig> sequence_ptr(std::make_shared<DNA5SequenceContig>(DNA5sequence));
+    std::shared_ptr<DNA5SequenceContig> sequence_ptr(std::make_shared<DNA5SequenceContig>(std::move(DNA5sequence)));
 
     if (not genome_db_ptr->addContigSequence(contig_id, sequence_ptr)) {
 

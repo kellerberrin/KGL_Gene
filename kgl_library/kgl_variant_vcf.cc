@@ -166,6 +166,14 @@ bool kgl::VCFVariant::mutateSequence(SignedOffset_t offset_adjust,
       ContigOffset_t alt_offset = alternateSize(ref_offset);
       ContigSize_t  alt_size = alternate().length() - alt_offset;
 
+      if (alt_offset >= alternate().length()) {
+
+        ExecEnv::log().info("mutateSequence(), problem mutating overlapping variant: {}, calc. alt. offset: {} exceeds alternate size: {}",
+                            output(' ', VariantOutputIndex::START_0_BASED, true), alt_offset, alternate().length());
+        return false;
+
+      }
+
       std::shared_ptr<DNA5SequenceLinear> adjusted_alternate = alternate().unstrandedRegion(alt_offset, alt_size);
 
       if (not performMutation(0, dna_sequence_ptr, *adjusted_reference, *adjusted_alternate)) {

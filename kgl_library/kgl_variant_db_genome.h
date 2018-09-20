@@ -115,9 +115,9 @@ public:
   // Returns reference and mutant unstranded contig.
   bool mutantContig( const ContigId_t& contig_id,
                      PhaseId_t phase,
-                     const std::shared_ptr<const GenomeDatabase>& genome_db,
+                     std::shared_ptr<const GenomeDatabase> genome_db,
                      std::shared_ptr<const DNA5SequenceContig>& reference_contig_ptr,
-                     std::shared_ptr<DNA5SequenceContig>& mutant_contig_ptr) const;
+                     std::shared_ptr<const DNA5SequenceContig>& mutant_contig_ptr) const;
 
 
   static constexpr PhaseId_t HAPLOID_GENOME = 1;

@@ -129,8 +129,7 @@ kgl::SequenceOffset::codingSubSequence(const DNA5SequenceLinear& base_sequence,
   // If no cds then return null string.
   if (exon_offset_map.empty()) {
 
-    StringCodingDNA5 null_seq;
-    return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(null_seq, StrandSense::FORWARD)));
+    return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>());
 
   }
 
@@ -141,8 +140,8 @@ kgl::SequenceOffset::codingSubSequence(const DNA5SequenceLinear& base_sequence,
                          exon_offset_map.rbegin()->second,
                          base_sequence.length(),
                          contig_offset);
-    StringCodingDNA5 null_seq;
-    return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(null_seq, StrandSense::FORWARD)));
+
+    return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>());
 
   }
 
@@ -168,8 +167,8 @@ kgl::SequenceOffset::codingSubSequence(const DNA5SequenceLinear& base_sequence,
                          sub_sequence_offset,
                          sub_sequence_length,
                          calculated_seq_size);
-    StringCodingDNA5 null_seq;
-    return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(null_seq, StrandSense::FORWARD)));
+
+    return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>());
 
   }
 
@@ -305,7 +304,11 @@ kgl::SequenceOffset::codingSubSequence(const DNA5SequenceLinear& base_sequence,
 
   }
 
-  return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(coding_sequence, strand)));
+
+  std::shared_ptr<DNA5SequenceCoding> coding_ptr(std::make_shared<DNA5SequenceCoding>(std::move(coding_sequence), strand));
+
+  return coding_ptr;
+
 
 }
 
@@ -339,7 +342,7 @@ std::shared_ptr<kgl::DNA5SequenceCoding> kgl::SequenceOffset::codingSequence(std
 
   }
 
-  return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(DNA5SequenceCoding(coding_sequence, strand)));
+  return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(std::move(coding_sequence), strand));
 
 }
 

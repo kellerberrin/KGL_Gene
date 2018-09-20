@@ -85,7 +85,7 @@ std::shared_ptr<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::linearSequence
                  coding_sequence->getAlphabetString().end(),
                  std::back_inserter(linear_string), convert_base);
 
-  return std::shared_ptr<DNA5SequenceLinear>(std::make_shared<DNA5SequenceLinear>(linear_string));
+  return std::shared_ptr<DNA5SequenceLinear>(std::make_shared<DNA5SequenceLinear>(std::move(linear_string)));
 
 }
 

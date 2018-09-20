@@ -42,10 +42,14 @@ public:
                  std::shared_ptr<DNA5SequenceCoding> &dna_sequence_ptr);
 
   bool mutateDNA(const OffsetVariantMap &insert_variant_map,
+                 std::shared_ptr<const ContigFeatures> contig_ptr,
                  ContigOffset_t contig_offset,
-                 std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr);
+                 ContigSize_t sequence_size,
+                 std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr);
 
-
+  bool mutateDNA(const OffsetVariantMap &variant_map,
+                 std::shared_ptr<const ContigFeatures> contig_ptr,
+                 std::shared_ptr<const DNA5SequenceContig>& contig_sequence_ptr);
 
 private:
 

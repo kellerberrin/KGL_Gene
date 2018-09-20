@@ -37,16 +37,13 @@ public:
              PhaseId_t phase_id,
              ContigOffset_t contig_offset,
              std::shared_ptr<const VariantEvidence> evidence_ptr,
-             const DNA5SequenceLinear& reference,
-             const DNA5SequenceLinear& alternate)
+             StringDNA5&& reference,
+             StringDNA5&& alternate)
   : Variant(genome_id, contig_id, phase_id, contig_offset, evidence_ptr),
-    reference_(reference),
-    alternate_(alternate) {}
+    reference_(std::move(reference)),
+    alternate_(std::move(alternate)) {}
 
   ~VCFVariant() override = default;
-
-  // Polymorphic copy constructor
-  std::shared_ptr<Variant> clone() const override { return std::shared_ptr<VCFVariant>(std::make_shared<VCFVariant>(*this)); }
 
   size_t size() const override { return alternate_.length(); }
 

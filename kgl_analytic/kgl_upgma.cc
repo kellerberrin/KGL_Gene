@@ -58,7 +58,7 @@ kgl::DistanceType_t kgl::UPGMAContigDistance::distance(std::shared_ptr<const UPG
 void kgl::UPGMAContigDistance::mutateContigs() {
 
   std::shared_ptr<const DNA5SequenceContig> reference_contig_ptr;
-  std::shared_ptr<DNA5SequenceContig> mutant_contig_ptr;
+  std::shared_ptr<const DNA5SequenceContig> mutant_contig_ptr;
   for (auto contig : genome_db_ptr_->getMap()) {
 
     if (not genome_variant_ptr_->mutantContig(contig.first,

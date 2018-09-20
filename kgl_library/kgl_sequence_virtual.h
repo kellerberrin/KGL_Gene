@@ -42,10 +42,12 @@ class  AlphabetSequence : public VirtualSequence {
 
 public:
 
-  explicit AlphabetSequence(AlphabetString<Alphabet> sequence) : alphabet_string_(std::move(sequence)) {}
-  explicit AlphabetSequence(const AlphabetSequence&) = default;
+  explicit AlphabetSequence(AlphabetString<Alphabet>&& sequence) noexcept : alphabet_string_(std::move(sequence)) {}
   AlphabetSequence() = default;
+  AlphabetSequence(const AlphabetSequence&) = delete;
   ~AlphabetSequence() override = default;
+
+  AlphabetSequence& operator=(const AlphabetSequence&) = delete;
 
   auto operator[] (ContigOffset_t offset) const { return alphabet_string_[offset]; }
   auto at(ContigOffset_t offset) const { return alphabet_string_[offset]; }
@@ -55,7 +57,10 @@ public:
   const AlphabetString<Alphabet>& getAlphabetString() const { return alphabet_string_; }
 
   // Check for memory corruption.
-  bool verifySequence() const;
+  bool verifySequence() const { return alphabet_string_.verifyString(); }
+
+  // A hash value of the sequence.
+  size_t hashSequence() const { return alphabet_string_.hashString(); }
 
 protected:
 
@@ -68,7 +73,7 @@ protected:
   // Insert offset is relative to the begining of the sequence (0 is the first letter).
   bool insertOffset(ContigOffset_t insert_offset, const AlphabetSequence& inserted_sequence);
   // Returns bool false if offset and/or size are out of bounds.
-  bool getSubsequence(ContigOffset_t substring_offset, ContigSize_t delete_size, std::shared_ptr<AlphabetSequence> sub_sequence) const;
+  bool getSubsequence(ContigOffset_t substring_offset, ContigSize_t substring_size, std::shared_ptr<AlphabetSequence> sub_sequence) const;
 
 private:
 
@@ -76,33 +81,6 @@ private:
 };
 
 
-
-template<typename Alphabet>
-bool AlphabetSequence<Alphabet>::verifySequence() const {
-
-  for (ContigSize_t idx = 0; idx < length(); ++idx) {
-
-    bool compare = Alphabet::validAlphabet(at(idx));
-
-    if (not compare) {
-
-      const ContigSize_t sub_sequence_size = 10;
-      ContigSize_t display_size = (length() - idx) >= sub_sequence_size ? sub_sequence_size: (length() - idx);
-      std::shared_ptr<AlphabetSequence<Alphabet>> sub_sequence(std::make_shared<AlphabetSequence<Alphabet>>(*this));
-      getSubsequence(idx, display_size, sub_sequence);
-
-      ExecEnv::log().error("AlphabetSequence::verifySequence(), invalid Alphabet value (int): {} found at index: {}, sequence[{}, {}]: {}"
-      , static_cast<size_t>(at(idx)), idx, idx, (idx + display_size - 1), sub_sequence->getSequenceAsString());
-
-      return false;
-
-    }
-
-  }
-
-  return true;
-
-}
 
 
 template<typename Alphabet>
@@ -184,7 +162,9 @@ bool AlphabetSequence<Alphabet>::insertOffset(ContigOffset_t insert_offset, cons
 
 
 template<typename Alphabet>
-bool AlphabetSequence<Alphabet>::getSubsequence(ContigOffset_t substring_offset, ContigSize_t substring_size, std::shared_ptr<AlphabetSequence> sub_sequence) const {
+bool AlphabetSequence<Alphabet>::getSubsequence(ContigOffset_t substring_offset,
+                                                ContigSize_t substring_size,
+                                                std::shared_ptr<AlphabetSequence> sub_sequence) const {
 
   if ((substring_offset + substring_size) > length()) {
 

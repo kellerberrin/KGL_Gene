@@ -9,6 +9,7 @@
 
 #include <string>
 #include <algorithm>
+#include <functional>
 #include "kgl_genome_types.h"
 #include "kgl_alphabet_dna5.h"
 #include "kgl_alphabet_amino.h"
@@ -30,6 +31,8 @@ class AlphabetString {
 public:
 
   explicit AlphabetString() = default;
+  AlphabetString(AlphabetString<Alphabet>&& alphabet_string) noexcept : base_string_(std::move(alphabet_string.base_string_)) {}
+  AlphabetString(const AlphabetString<Alphabet>& alphabet_string) : base_string_(alphabet_string.base_string_) {}
   explicit AlphabetString(const std::string& alphabet_str) { convertFromCharString(alphabet_str); }
   ~AlphabetString() = default;
 
@@ -128,6 +131,10 @@ public:
 
   bool operator==(const AlphabetString& compare_string) const { return (base_string_ == compare_string.base_string_); }
 
+  bool verifyString() const;
+
+  size_t hashString() const;
+
 private:
 
   std::basic_string<typename Alphabet::Alphabet> base_string_;
@@ -137,6 +144,36 @@ private:
 
 
 };
+
+
+template<typename Alphabet>
+size_t AlphabetString<Alphabet>::hashString() const {
+
+  return std::hash<std::string>{}(str());
+
+}
+
+
+
+template<typename Alphabet>
+bool AlphabetString<Alphabet>::verifyString() const {
+
+  for (ContigSize_t idx = 0; idx < length(); ++idx) {
+
+    bool compare = Alphabet::validAlphabet(base_string_.at(idx));
+
+    if (not compare) {
+
+      ExecEnv::log().error("AlphabetString::verifyString(), invalid Alphabet value (int): {} found at index: {}", static_cast<size_t>(base_string_.at(idx)), idx);
+      return false;
+
+    }
+
+  }
+
+  return true;
+
+}
 
 
 template<typename Alphabet>

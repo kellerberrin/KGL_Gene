@@ -18,13 +18,16 @@ bool kgl::ParseCigar::parseCigarItems(const std::string& genome_name,
                                       std::shared_ptr<const VariantEvidence> evidence_ptr,
                                       size_t& record_variants)  {
 
+  StringDNA5 reference_str(reference_text);
+  StringDNA5 alternate_str(alternate_text);
+
   std::shared_ptr<const Variant> variant_ptr(std::make_shared<VCFVariant>(genome_name,
                                                                           contig_ptr->contigId(),
                                                                           VariantSequence::UNPHASED,
                                                                           contig_offset,
                                                                           evidence_ptr,
-                                                                          AlphabetString<DNA5>(reference_text),
-                                                                          AlphabetString<DNA5>(alternate_text)));
+                                                                          std::move(reference_str),
+                                                                          std::move(alternate_str)));
 
   record_variants = addThreadSafeGenomeVariant(variant_ptr);
 

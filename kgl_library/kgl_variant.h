@@ -135,8 +135,6 @@ public:
                               std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
                               SignedOffset_t& sequence_size_modify) const = 0;
 
-  bool isCompound() const { return size() > 1; }
-  bool isSingle() const { return size() == 1; }
   virtual bool isSNP() const { return false; }
 
   virtual bool equivalent(const Variant& cmp_var) const = 0;
@@ -144,8 +142,6 @@ public:
 
   virtual bool lessThan(const Variant& cmp_var) const = 0;
   bool operator<(const Variant& cmp_var) const { return lessThan(cmp_var); };
-
-  virtual std::shared_ptr<Variant> clone() const = 0;  // Polymorphic copy constructor
 
 private:
 

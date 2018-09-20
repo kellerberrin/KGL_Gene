@@ -95,11 +95,10 @@ bool kgl::HomologousVariant::getSortedVariants(ContigOffset_t start, ContigOffse
   auto upper_bound = offset_variant_map_.upper_bound(end-1); //  [start, end)
 
   // If there is a prior variant that overlaps the start address, then push this onto the variant map.
+
   if (lower_bound != offset_variant_map_.end() and lower_bound != offset_variant_map_.begin()) {
 
-    auto previous_variant_ptr = lower_bound;
-
-    --previous_variant_ptr;
+    auto previous_variant_ptr = std::prev(lower_bound);
 
     if (previous_variant_ptr->second->offset() + previous_variant_ptr->second->referenceSize() > start) {
 
@@ -108,6 +107,7 @@ bool kgl::HomologousVariant::getSortedVariants(ContigOffset_t start, ContigOffse
     }
 
   }
+
 
   for (auto it = lower_bound; it != upper_bound; ++it) {
 
