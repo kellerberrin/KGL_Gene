@@ -159,22 +159,20 @@ bool kgl::VCFVariant::mutateSequence(SignedOffset_t offset_adjust,
     if (adjusted_offset + referenceSize() > 0) {
 
       auto ref_offset = static_cast<ContigOffset_t>(std::abs(adjusted_offset));
-      auto ref_size = static_cast<ContigSize_t>(adjusted_offset + referenceSize());
+      auto ref_size = static_cast<ContigSize_t>(referenceSize() - ref_offset);
 
-      std::shared_ptr<DNA5SequenceLinear> adjusted_reference = reference().unstrandedRegion(ref_offset, ref_size);
+      if (ref_size > alternate().length()) {
 
-      ContigOffset_t alt_offset = alternateSize(ref_offset);
-      ContigSize_t  alt_size = alternate().length() - alt_offset;
-
-      if (alt_offset >= alternate().length()) {
-
-        ExecEnv::log().info("mutateSequence(), problem mutating overlapping variant: {}, calc. alt. offset: {} exceeds alternate size: {}",
-                            output(' ', VariantOutputIndex::START_0_BASED, true), alt_offset, alternate().length());
-        return false;
+        // no further action.
+        return true;
 
       }
 
-      std::shared_ptr<DNA5SequenceLinear> adjusted_alternate = alternate().unstrandedRegion(alt_offset, alt_size);
+      std::shared_ptr<DNA5SequenceLinear> adjusted_reference = reference().unstrandedRegion(ref_offset, ref_size);
+
+      ContigOffset_t alt_offset = size() - ref_size;
+
+      std::shared_ptr<DNA5SequenceLinear> adjusted_alternate = alternate().unstrandedRegion(alt_offset, ref_size);
 
       if (not performMutation(0, dna_sequence_ptr, *adjusted_reference, *adjusted_alternate)) {
 
