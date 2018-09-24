@@ -166,7 +166,7 @@ size_t kgl::GenomeAuxData::fieldOffset(const std::string& field_name) const {
 }
 
 
-bool kgl::GenomeAuxData::getGenomeAttributes(const std::string& genome_name, AuxAttributeVector& attribute_vector) const {
+bool kgl::GenomeAuxData::getGenomeAttributes(const GenomeId_t& genome_name, AuxAttributeVector& attribute_vector) const {
 
   auto result = aux_sample_information_.find(genome_name);
 
@@ -183,7 +183,7 @@ bool kgl::GenomeAuxData::getGenomeAttributes(const std::string& genome_name, Aux
 
 }
 
-std::string kgl::GenomeAuxData::locationDate(const std::string& genome_name) const {
+std::string kgl::GenomeAuxData::locationDate(const GenomeId_t& genome_name) const {
 
   AuxAttributeVector attribute_vector;
   if (not getGenomeAttributes(genome_name, attribute_vector)) {
@@ -202,7 +202,7 @@ std::string kgl::GenomeAuxData::locationDate(const std::string& genome_name) con
 }
 
 
-bool kgl::GenomeAuxData::locationDate(const std::string& genome_name,
+bool kgl::GenomeAuxData::locationDate(const GenomeId_t& genome_name,
                                       std::string& country,
                                       std::string& location,
                                       std::string& year) const {
@@ -224,7 +224,7 @@ bool kgl::GenomeAuxData::locationDate(const std::string& genome_name,
 
 
 
-bool kgl::GenomeAuxData::isFieldSample(const std::string& genome_name) const {
+bool kgl::GenomeAuxData::isFieldSample(const GenomeId_t& genome_name) const {
 
   AuxAttributeVector attribute_vector;
   if (not getGenomeAttributes(genome_name, attribute_vector)) {
@@ -235,5 +235,100 @@ bool kgl::GenomeAuxData::isFieldSample(const std::string& genome_name) const {
   }
 
   return attribute_vector[fieldOffset(FIELD_SAMPLE)] == TRUE_FLAG;
+
+}
+
+
+bool kgl::GenomeAuxData::isPreferredSample(const GenomeId_t& genome_name) const {
+
+  AuxAttributeVector attribute_vector;
+  if (not getGenomeAttributes(genome_name, attribute_vector)) {
+
+    ExecEnv::log().error("Could not find genome: {} in auxiliary data", genome_name);
+    return false;
+
+  }
+
+  return attribute_vector[fieldOffset(PREFERRED_SAMPLE)] == TRUE_FLAG;
+
+}
+
+
+std::vector<std::string> kgl::GenomeAuxData::countryList() const {
+
+  std::set<std::string> unique_country;
+
+  for (auto genomes : getMap()) {
+
+    std::string country = genomes.second[fieldOffset(COUNTRY)];
+    unique_country.insert(country);
+
+  }
+
+  std::vector<std::string> country_list;
+  for (auto country : unique_country) {
+
+    country_list.push_back(country);
+
+  }
+
+  return country_list;
+
+}
+
+
+std::vector<kgl::GenomeId_t> kgl::GenomeAuxData::getCountry(const std::string& country) const {
+
+  std::vector<GenomeId_t> genome_list;
+
+  for (auto genomes : getMap()) {
+
+    if (country == genomes.second[fieldOffset(COUNTRY)]) {
+
+      genome_list.push_back(genomes.first);
+
+    }
+
+  }
+
+  return genome_list;
+
+}
+
+
+std::vector<kgl::GenomeId_t> kgl::GenomeAuxData::getFieldSamples() const {
+
+  std::vector<GenomeId_t> genome_list;
+
+  for (auto genomes : getMap()) {
+
+    if (isFieldSample(genomes.first)) {
+
+      genome_list.push_back(genomes.first);
+
+    }
+
+  }
+
+  return genome_list;
+
+}
+
+
+std::vector<kgl::GenomeId_t> kgl::GenomeAuxData::getPreferredSamples() const {
+
+  std::vector<GenomeId_t> genome_list;
+
+  for (auto genomes : getMap()) {
+
+    if (isPreferredSample(genomes.first)) {
+
+      genome_list.push_back(genomes.first);
+
+    }
+
+  }
+
+  return genome_list;
 
 }

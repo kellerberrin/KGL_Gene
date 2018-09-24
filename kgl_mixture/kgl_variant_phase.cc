@@ -82,11 +82,19 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
                       unphased_population_ptr->variantCount(), unphased_population_ptr->getMap().size(),
                       haploid_population->variantCount(), haploid_population->getMap().size());
 
-  double percent_homozygous = (static_cast<double>(homozygous_count) / static_cast<double>(homozygous_count + heterozygous_count)) * 100.0;
-  double percent_accepted_heterozygous = (static_cast<double>(accepted_heterozygous_count) / static_cast<double>(heterozygous_count)) * 100.0;
+  if (heterozygous_count > 0) {
 
-  ExecEnv::log().info("Haploid Phasing; Homozygous variants: {}%, Accepted Heterozygous: {}% (proportion alternate >= {})",
-                      percent_homozygous, percent_accepted_heterozygous, HETEROZYGOUS_PROPORTION_);
+    double percent_homozygous = (static_cast<double>(homozygous_count) / static_cast<double>(homozygous_count + heterozygous_count)) * 100.0;
+    double percent_accepted_heterozygous = (static_cast<double>(accepted_heterozygous_count) / static_cast<double>(heterozygous_count)) * 100.0;
+    ExecEnv::log().info("Haploid Phasing; Homozygous variants: {}%, Accepted Heterozygous: {}% (proportion alternate >= {})",
+                        percent_homozygous, percent_accepted_heterozygous, HETEROZYGOUS_PROPORTION_);
+
+  } else {
+
+    ExecEnv::log().info("Haploid Phasing; Homozygous variants: 100%");
+
+  }
+
 
   return result;
 

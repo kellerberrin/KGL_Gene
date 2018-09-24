@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include "kgl_genome_types.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -34,12 +35,22 @@ public:
 
   std::string locationDate(const std::string& genome_name) const;
 
-  bool isFieldSample(const std::string& genome_name) const;
+  bool isFieldSample(const GenomeId_t& genome_name) const;
+
+  bool isPreferredSample(const GenomeId_t& genome_name) const;
 
   bool locationDate(const std::string& genome_name,
                     std::string& country,
                     std::string& location,
                     std::string& year) const;
+
+  const AuxSampleMap& getMap() const { return aux_sample_information_; }
+
+  std::vector<std::string> countryList() const;
+  std::vector<GenomeId_t> getCountry(const std::string& country) const;
+  std::vector<GenomeId_t> getFieldSamples() const;
+  std::vector<GenomeId_t> getPreferredSamples() const;
+
 private:
 
   AuxAttributeVector aux_data_header_;  // Always assumed to be the first line (uppercase, query case conversion automatic).
@@ -52,6 +63,7 @@ private:
   bool getGenomeAttributes(const std::string& genome_name, AuxAttributeVector& attribute_vector) const;
 
   constexpr static const char* FIELD_SAMPLE = "IsFieldSample";
+  constexpr static const char* PREFERRED_SAMPLE = "PreferredSample";
   constexpr static const char* COUNTRY = "country";
   constexpr static const char* SITE = "site";
   constexpr static const char* COLLECTION_YEAR = "collection_year";

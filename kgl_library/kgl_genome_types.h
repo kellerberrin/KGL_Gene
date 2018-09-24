@@ -21,6 +21,7 @@ using Amino_t = Alphabet_t; // Semantic alias for Amino Acids. Python only, do n
 using AlphabetSequence_t = std::basic_string<Alphabet_t>;  // Only used to link to Python code. Do not use in C++.
 using ContigId_t = std::string;
 using GenomeId_t = std::string;
+using PopulationId_t = std::string;
 using HaplotypeId_t = std::string;
 using GenotypeId_t = std::string;
 using PhaseId_t = unsigned char;

@@ -120,3 +120,36 @@ std::shared_ptr<kgl::PhasedPopulation> kgl::PhasedPopulation::filterVariants(con
 
 }
 
+
+std::shared_ptr<kgl::PhasedPopulation> kgl::PhasedPopulation::filterGenomes(const PopulationId_t& population_id,
+                                                                            const std::vector<GenomeId_t>& list) const {
+
+  std::shared_ptr<kgl::PhasedPopulation> filtered_population_ptr(std::make_shared<kgl::PhasedPopulation>(population_id));
+
+  for (const auto& genome_variant : population_variant_map_) {
+
+    for (auto genome : list) {
+
+      if (genome == genome_variant.first) {
+
+        if (not filtered_population_ptr->addGenomeVariant(genome_variant.second->deepCopy())) {
+
+          ExecEnv::log().error("Filtered Population: {} unable to add genome: {} (duplicate)",
+                              filtered_population_ptr->populationId(), genome_variant.first);
+
+        }
+
+        break;
+
+      }
+
+    }
+
+  }
+
+  ExecEnv::log().info("Filtered Population: {} has: {} filtered genomes with: {} variants",
+                      filtered_population_ptr->populationId(), filtered_population_ptr->getMap().size(), filtered_population_ptr->variantCount());
+
+  return filtered_population_ptr;
+
+}

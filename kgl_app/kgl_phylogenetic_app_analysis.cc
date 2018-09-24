@@ -64,6 +64,23 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
                                                 std::shared_ptr<const PhasedPopulation> population_ptr) {
 
 
+  // Write Filtered Unphased Heterozygous Statistics
+  HeterozygousStatistics heterozygous_statistics;
+  // Process Filtered Unphased Heterozygous Statistics
+  heterozygous_statistics.heterozygousStatistics(unphased_population_ptr);
+  std::string heterozygous_file = kgl::Utility::filePath("HeterozygousAnalysis", args.workDirectory) + ".csv";
+  heterozygous_statistics.writeHeterozygousStatistics(heterozygous_file, ',');
+
+
+  GenomeAuxData aux_data;
+  aux_data.readParseAuxData(args.auxCSVFile);
+  std::vector<std::string> countries = aux_data.countryList();
+  std::shared_ptr<const PhasedPopulation> preferred_pop_ptr = population_ptr->filterGenomes("Preferred", aux_data.getPreferredSamples());
+  for (auto country : countries) {
+
+    std::shared_ptr<const PhasedPopulation> country_pop_ptr = population_ptr->filterGenomes(country, aux_data.getCountry(country));
+
+  }
 
   if (args.analysisType == kgl::Phylogenetic::WILDCARD) {
 

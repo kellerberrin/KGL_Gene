@@ -32,7 +32,7 @@ class PhasedPopulation {
 
 public:
 
-  explicit PhasedPopulation(const std::string& population_id) : population_id_(population_id) {}
+  explicit PhasedPopulation(const PopulationId_t& population_id) : population_id_(population_id) {}
   PhasedPopulation(const PhasedPopulation&) = delete;
   virtual ~PhasedPopulation() = default;
 
@@ -55,12 +55,14 @@ public:
 
   std::shared_ptr<PhasedPopulation> filterVariants(const VariantFilter& filter) const;
 
-  const std::string& populationId() const { return population_id_; }
+  std::shared_ptr<PhasedPopulation> filterGenomes(const PopulationId_t& population_id, const std::vector<GenomeId_t>& list) const;
+
+  const PopulationId_t& populationId() const { return population_id_; }
 
 private:
 
   PopulationVariantMap population_variant_map_;
-  std::string population_id_;
+  PopulationId_t population_id_;
 
 };
 

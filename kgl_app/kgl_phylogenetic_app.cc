@@ -30,7 +30,6 @@ void kgl::PhylogeneticExecEnv::executeApp() {
                                                                                              args.gafFile,
                                                                                              args.aminoTranslationTable);
 
-  HeterozygousStatistics heterozygous_statistics;
   // For all VCF files, read in the variants.
   for (const auto& file : args.fileList) {
 
@@ -57,14 +56,9 @@ void kgl::PhylogeneticExecEnv::executeApp() {
       GenomePhasing::haploidPhasing(2, filtered_unphased_ptr, genome_db_ptr, population_ptr);
 
     }
-    // Process Filtered Unphased Heterozygous Statistics
-    heterozygous_statistics.heterozygousStatistics(filtered_unphased_ptr);
 
   }
 
-  // Write Filtered Unphased Heterozygous Statistics
-  std::string heterozygous_file = kgl::Utility::filePath("HeterozygousAnalysis", args.workDirectory) + ".csv";
-  heterozygous_statistics.writeHeterozygousStatistics(heterozygous_file, ',');
 
   // Analyze the data.
   kgl::PhylogeneticAnalysis::performAnalysis(args, runtime_options, genome_db_ptr, unphased_population_ptr, population_ptr);
