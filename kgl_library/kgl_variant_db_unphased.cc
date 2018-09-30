@@ -124,29 +124,6 @@ size_t kgl::UnphasedContig::variantCount() const {
 }
 
 
-// Just one variant per offset.
-std::shared_ptr<kgl::UnphasedContig> kgl::UnphasedContig::removeConflictingVariants() const {
-
-  std::shared_ptr<UnphasedContig> filtered_contig_ptr(std::make_shared<UnphasedContig>(contigId()));
-
-  for (auto& variant_vector : getMap()) {
-
-    if (not variant_vector.second.empty()) {
-
-      filtered_contig_ptr->addVariant(variant_vector.second.front().first);
-
-    } else {
-
-      ExecEnv::log().warn("removeConflictingVariants(); empty variant vector in unphased variant contig: {}, offset: {}",
-                          contig_id_, variant_vector.first);
-    }
-
-  }
-
-  return filtered_contig_ptr;
-
-}
-
 
 std::shared_ptr<kgl::UnphasedContig> kgl::UnphasedContig::filterVariants(const kgl::VariantFilter& filter) const {
 
@@ -246,20 +223,6 @@ bool kgl::UnphasedGenome::addContig(std::shared_ptr<UnphasedContig> contig_ptr) 
 
 }
 
-
-std::shared_ptr<kgl::UnphasedGenome> kgl::UnphasedGenome::removeConflictingVariants() const {
-
-  std::shared_ptr<UnphasedGenome> filtered_genome_ptr(std::make_shared<UnphasedGenome>(genomeId()));
-
-  for (auto contig : getMap()) {
-
-    filtered_genome_ptr->addContig(contig.second->removeConflictingVariants());
-
-  }
-
-  return filtered_genome_ptr;
-
-}
 
 
 size_t kgl::UnphasedGenome::variantCount() const {

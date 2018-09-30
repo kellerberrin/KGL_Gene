@@ -7,6 +7,7 @@
 #define KGL_UNPHASED_ANALYSIS_H
 
 
+#include <kgl_variant_db.h>
 #include "kgl_variant_db_unphased_population.h"
 
 
@@ -32,6 +33,8 @@ public:
   ~AggregateVariantDistribution() = default;
 
   bool variantDistribution(std::shared_ptr<const UnphasedPopulation> unphased_population);
+
+  bool variantDistribution(std::shared_ptr<const PhasedPopulation> population_ptr);
 
   bool writeDistribution(std::shared_ptr<const GenomeDatabase> genome_db,
                          size_t interval_size,

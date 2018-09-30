@@ -6,7 +6,7 @@
 #include "kgl_phylogenetic_app.h"
 #include "kgl_variant_factory.h"
 #include "kgl_phylogenetic_app_analysis.h"
-#include "kgl_unphased_analysis.h"
+#include "kgl_distribution_analysis.h"
 #include "kgl_filter.h"
 
 
@@ -29,6 +29,8 @@ void kgl::PhylogeneticExecEnv::executeApp() {
                                                                                              args.gffFile,
                                                                                              args.gafFile,
                                                                                              args.aminoTranslationTable);
+// Write Filtered Unphased Heterozygous Statistics
+  HeterozygousStatistics heterozygous_statistics;
 
   // For all VCF files, read in the variants.
   for (const auto& file : args.fileList) {
@@ -41,9 +43,13 @@ void kgl::PhylogeneticExecEnv::executeApp() {
 
     // Basic statistics to output
     unphased_population_ptr->popStatistics();
+
     // Filtered Unphased Heterozygous Statistics
     std::shared_ptr<UnphasedPopulation> filtered_unphased_ptr = unphased_population_ptr->filterVariants(AndFilter(DPCountFilter(10), RefAltCountFilter(10)));
-    // filtered_unphased_ptr = filtered_unphased_ptr->filterVariants(SNPFilter());
+
+    // Process Filtered Unphased Heterozygous Statistics
+    heterozygous_statistics.heterozygousStatistics(filtered_unphased_ptr);
+
     // If the mixture file is defined then read it and phase the variants.
     std::string mixture_file;
     if (runtime_options.getMixtureFile(mixture_file)) {
@@ -59,6 +65,9 @@ void kgl::PhylogeneticExecEnv::executeApp() {
 
   }
 
+  // Write the unphased hetero/homozygous statistics.
+  std::string heterozygous_file = kgl::Utility::filePath("HeterozygousAnalysis", args.workDirectory) + ".csv";
+  heterozygous_statistics.writeHeterozygousStatistics(heterozygous_file, ',');
 
   // Analyze the data.
   kgl::PhylogeneticAnalysis::performAnalysis(args, runtime_options, genome_db_ptr, unphased_population_ptr, population_ptr);

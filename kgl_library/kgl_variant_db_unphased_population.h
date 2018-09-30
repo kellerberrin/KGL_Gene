@@ -27,7 +27,7 @@ class UnphasedPopulation {
 public:
 
   explicit UnphasedPopulation() = default;
-  UnphasedPopulation(const UnphasedPopulation&) = delete;
+  UnphasedPopulation(const UnphasedPopulation&) = delete; // Use deep copy.
   virtual ~UnphasedPopulation() = default;
 
   UnphasedPopulation& operator=(const UnphasedPopulation&) = delete; // Use deep copy.
@@ -38,8 +38,6 @@ public:
   size_t variantCount() const;
   void popStatistics() const; // output to logger
   std::vector<GenomeId_t> genomeList() const;
-
-  std::shared_ptr<UnphasedPopulation> removeConflictingVariants() const;
 
   std::shared_ptr<UnphasedPopulation> filterVariants(const VariantFilter& filter) const;
 
@@ -52,15 +50,6 @@ public:
                           size_t& heterozygous,
                           size_t& homozygous,
                           size_t& singleheterozygous) const;
-
-  bool getUnphasedVariants(const GenomeId_t& genome_id,
-                           const ContigId_t& contig_id,
-                           ContigOffset_t offset,
-                           UnphasedVectorVariantCount& variant_vector) const;
-
-  bool heterozygousStatistics(const std::string& file_name, const char delimiter = ',') const;
-
-
 
 private:
 

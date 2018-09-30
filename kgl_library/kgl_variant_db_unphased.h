@@ -45,10 +45,6 @@ public:
 
   const UnphasedOffsetMap& getMap() const { return contig_offset_map_; }
 
-
-  // Removes variants
-  std::shared_ptr<UnphasedContig> removeConflictingVariants() const;
-
   std::shared_ptr<UnphasedContig> filterVariants(const VariantFilter& filter) const;
 
 private:
@@ -81,8 +77,6 @@ public:
   bool addVariant(std::shared_ptr<const Variant> variant);
 
   const GenomeId_t& genomeId() const { return genome_id_; }
-
-  std::shared_ptr<UnphasedGenome> removeConflictingVariants() const;
 
   std::shared_ptr<UnphasedGenome> filterVariants(const VariantFilter& filter) const;
 

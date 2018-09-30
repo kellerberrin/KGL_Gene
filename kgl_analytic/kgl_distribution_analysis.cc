@@ -2,7 +2,7 @@
 // Created by kellerberrin on 11/08/18.
 //
 
-#include "kgl_unphased_analysis.h"
+#include "kgl_distribution_analysis.h"
 
 #include <fstream>
 
@@ -36,7 +36,35 @@ bool kgl::AggregateVariantDistribution::variantDistribution(std::shared_ptr<cons
 
   } // genome
 
-  ExecEnv::log().info("AggregatVariantDistribution; variants processed: {}", unphased_population->variantCount());
+  ExecEnv::log().info("AggregatVariantDistribution; Unphased variants processed: {}", unphased_population->variantCount());
+
+  return true;
+
+}
+
+
+bool kgl::AggregateVariantDistribution::variantDistribution(std::shared_ptr<const PhasedPopulation> population_ptr) {
+
+
+  for (auto genome : population_ptr->getMap()) {
+
+    for (auto contig : genome.second->getMap()) {
+
+      for (auto homologous : contig.second->getVector()) {
+
+        for (auto variant : homologous->getMap()) {
+
+          addVariant(variant.second);
+
+        } // offset vector
+
+      } // offset
+
+    } // contig
+
+  } // genome
+
+  ExecEnv::log().info("AggregatVariantDistribution; Phased variants processed: {}", population_ptr->variantCount());
 
   return true;
 

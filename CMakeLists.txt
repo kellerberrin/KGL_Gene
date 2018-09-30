@@ -164,8 +164,8 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_rna_search.cc
         kgl_analytic/kgl_rna_search.h
         kgl_analytic/kgl_ploidy_analysis.h
-        kgl_analytic/kgl_unphased_analysis.h
-        kgl_analytic/kgl_unphased_analysis.cc
+        kgl_analytic/kgl_distribution_analysis.h
+        kgl_analytic/kgl_distribution_analysis.cc
         kgl_analytic/kgl_upgma_unphased.h
         kgl_analytic/kgl_upgma_unphased.cc)
 
@@ -178,7 +178,7 @@ set(MIXTURE_SOURCE_FILES
         kgl_mixture/kgl_variant_classify.cc
         kgl_mixture/kgl_variant_classify_io.cc
         kgl_mixture/kgl_read_phasing.h
-        kgl_mixture/kgl_read_phasing.cc kgl_library/kgl_variant_vcf.h kgl_library/kgl_variant_vcf.cc)
+        kgl_mixture/kgl_read_phasing.cc kgl_library/kgl_variant_vcf.h kgl_library/kgl_variant_vcf.cc kgl_analytic/kgl_finestructure_analysis.h kgl_analytic/kgl_finestructure_analysis.cc)
 
 
 # Application level objects

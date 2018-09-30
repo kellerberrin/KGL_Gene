@@ -10,6 +10,7 @@
 #include <vector>
 #include <map>
 #include "kgl_genome_types.h"
+#include "kgl_variant_db.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -19,6 +20,8 @@ namespace genome {   // project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Reads up the Pf3k auxiliary data description file in csv format, 1 line for each sample.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+using CountryPair = std::pair<GenomeId_t, std::shared_ptr<const PhasedPopulation>>;
 
 using AuxAttributeVector = std::vector<std::string>;
 using AuxSampleMap = std::map<std::string, AuxAttributeVector>;
@@ -30,6 +33,9 @@ public:
 
   GenomeAuxData() = default;
   ~GenomeAuxData() = default;
+
+// Convenience function splits the phased populations into different countries (preferred genomes only).
+  static std::vector<CountryPair> getCountries(const std::string& aux_file, std::shared_ptr<const PhasedPopulation> population_ptr);
 
   bool readParseAuxData(const std::string& aux_file_name);
 

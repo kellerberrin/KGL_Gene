@@ -332,3 +332,38 @@ std::vector<kgl::GenomeId_t> kgl::GenomeAuxData::getPreferredSamples() const {
   return genome_list;
 
 }
+
+
+// Convenience static function splits the phased populations into different countries (preferred genomes only).
+std::vector<kgl::CountryPair> kgl::GenomeAuxData::getCountries(const std::string& aux_file,
+                                                               std::shared_ptr<const kgl::PhasedPopulation> population_ptr) {
+
+  std::vector<CountryPair> pair_vector;
+
+  // Read the AUX data.
+  kgl::GenomeAuxData aux_data;
+  aux_data.readParseAuxData(aux_file);
+
+  // Get a list of countries.
+  std::vector<std::string> countries = aux_data.countryList();
+
+  // Only preferred genomes.
+  std::shared_ptr<const kgl::PhasedPopulation> preferred_pop_ptr = population_ptr->filterGenomes("Preferred", aux_data.getPreferredSamples());
+
+  // Create a vector of all countries
+  for (auto country : countries) {
+
+    std::shared_ptr<const kgl::PhasedPopulation> country_pop_ptr = population_ptr->filterGenomes(country, aux_data.getCountry(country));
+
+    // Ignore empty populations
+    if (not country_pop_ptr->getMap().empty()) {
+
+      pair_vector.emplace_back(CountryPair(country, country_pop_ptr));
+
+    }
+
+  }
+
+  return pair_vector;
+
+}

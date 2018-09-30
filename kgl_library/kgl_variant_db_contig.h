@@ -67,6 +67,8 @@ public:
 
   const PloidyVector& getVector() const { return ploidy_vector_; }
 
+  std::shared_ptr<const HomologousVariant> getHomologous(size_t index) const { return ploidy_vector_[index]; }
+
   // All variants in [start, end) - note that end points past the last variant; end = (last + 1).
   bool getSortedVariants(PhaseId_t phase,
                          ContigOffset_t start,

@@ -65,20 +65,6 @@ bool kgl::UnphasedPopulation::addGenome(std::shared_ptr<UnphasedGenome> genome_p
 }
 
 
-std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::removeConflictingVariants() const {
-
-  std::shared_ptr<UnphasedPopulation> filtered_population_ptr(std::make_shared<UnphasedPopulation>());
-
-  for (auto genome : getMap()) {
-
-    filtered_population_ptr->addGenome(genome.second->removeConflictingVariants());
-
-  }
-
-  return filtered_population_ptr;
-
-}
-
 
 size_t kgl::UnphasedPopulation::variantCount() const {
 
@@ -177,44 +163,6 @@ bool kgl::UnphasedPopulation::genomePhasingStats(const GenomeId_t& genome_id,
 }
 
 
-bool kgl::UnphasedPopulation::getUnphasedVariants(const GenomeId_t& genome_id,
-                                                  const ContigId_t& contig_id,
-                                                  ContigOffset_t offset,
-                                                  UnphasedVectorVariantCount& variant_vector) const {
-
-  auto genome_result = genome_map_.find(genome_id);
-
-  if (genome_result == genome_map_.end()) {
-
-    ExecEnv::log().error("UnphasedPopulation::getUnphasedVariants(); Could not find genome: {}", genome_id);
-    return false;
-
-  }
-
-  auto contig_result = genome_result->second->getMap().find(contig_id);
-
-  if (contig_result == genome_result->second->getMap().end()) {
-
-    ExecEnv::log().error("UnphasedPopulation::getUnphasedVariants(); Could not find contig: {}", contig_id);
-    return false;
-
-  }
-
-  auto offset_result = contig_result->second->getMap().find(offset);
-
-  if (offset_result == contig_result->second->getMap().end()) {
-
-    ExecEnv::log().error("UnphasedPopulation::getUnphasedVariants(); Could not find offset: {}", offset);
-    return false;
-
-  }
-
-  variant_vector = offset_result->second;
-
-  return true;
-
-}
-
 
 void kgl::UnphasedPopulation::popStatistics() const {
 
@@ -265,48 +213,3 @@ std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::filterVariants
 
 }
 
-
-bool kgl::UnphasedPopulation::heterozygousStatistics(const std::string& file_name, const char delimiter) const {
-// Write data.
-
-  std::ofstream out_file(file_name);
-
-  if (not out_file.good()) {
-
-    ExecEnv::log().error("heterozygousStatistics; Unable to open output file: {}", file_name);
-    return false;
-
-  }
-
-  // Write header.
-  out_file << "genome" << delimiter;
-  out_file << "homozygous" << delimiter;
-  out_file << "heterozygous" << delimiter;
-  out_file << "singleheterozygous" << delimiter;
-  out_file << std::endl;
-
-  for (auto genome : getMap()) {
-
-    out_file << genome.first << delimiter;
-
-
-    size_t heterozygous = 0;
-    size_t homozygous = 0;
-    size_t singleheterozygous = 0;
-
-    if (not genomePhasingStats(genome.first, heterozygous, homozygous, singleheterozygous)) {
-
-      ExecEnv::log().error("No phasing statistics found for Genome: {}", genome.first);
-
-    }
-
-    out_file << homozygous << delimiter;
-    out_file << heterozygous << delimiter;
-    out_file << singleheterozygous << delimiter;
-    out_file << std::endl;
-
-  }
-
-  return out_file.good();
-
-}

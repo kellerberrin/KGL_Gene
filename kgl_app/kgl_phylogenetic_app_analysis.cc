@@ -13,7 +13,8 @@
 #include "kgl_phylogenetic_app_analysis.h"
 #include "kgl_variant_classify.h"
 #include "kgl_variant_phase.h"
-#include "kgl_unphased_analysis.h"
+#include "kgl_distribution_analysis.h"
+#include "kgl_finestructure_analysis.h"
 #include "kgl_upgma_unphased.h"
 
 #include "kgd_deconvolv_app.h"
@@ -57,6 +58,8 @@ bool kgl::PhylogeneticAnalysis::checkAnalysisType(const std::string& analysis_ty
 }
 
 
+
+
 void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
                                                 const kgl::RuntimeOptions& runtime_options,
                                                 std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr,
@@ -64,23 +67,10 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
                                                 std::shared_ptr<const PhasedPopulation> population_ptr) {
 
 
-  // Write Filtered Unphased Heterozygous Statistics
-  HeterozygousStatistics heterozygous_statistics;
-  // Process Filtered Unphased Heterozygous Statistics
-  heterozygous_statistics.heterozygousStatistics(unphased_population_ptr);
-  std::string heterozygous_file = kgl::Utility::filePath("HeterozygousAnalysis", args.workDirectory) + ".csv";
-  heterozygous_statistics.writeHeterozygousStatistics(heterozygous_file, ',');
+  // Split into country populations.
+  std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(args.auxCSVFile, population_ptr);
 
 
-  GenomeAuxData aux_data;
-  aux_data.readParseAuxData(args.auxCSVFile);
-  std::vector<std::string> countries = aux_data.countryList();
-  std::shared_ptr<const PhasedPopulation> preferred_pop_ptr = population_ptr->filterGenomes("Preferred", aux_data.getPreferredSamples());
-  for (auto country : countries) {
-
-    std::shared_ptr<const PhasedPopulation> country_pop_ptr = population_ptr->filterGenomes(country, aux_data.getCountry(country));
-
-  }
 
   if (args.analysisType == kgl::Phylogenetic::WILDCARD) {
 
@@ -102,10 +92,22 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
 
     kgl::ExecEnv::log().info("Analyzing genome intervals");
+
     AggregateVariantDistribution variant_distribution;
-    variant_distribution.variantDistribution(unphased_population_ptr);
-    std::string interval_file = kgl::Utility::filePath("IntervalAnalysis", args.workDirectory) + ".csv";
+    variant_distribution.variantDistribution(population_ptr);
+    std::string file_name = "IntervalAnalysis_all";
+    std::string interval_file = kgl::Utility::filePath(file_name, args.workDirectory) + ".csv";
     variant_distribution.writeDistribution(genome_db_ptr, 1000, interval_file, ',');
+
+    for (auto country : country_pairs) {
+
+      AggregateVariantDistribution variant_distribution;
+      variant_distribution.variantDistribution(country.second);
+      std::string file_name = "IntervalAnalysis_" + country.first;
+      std::string interval_file = kgl::Utility::filePath(file_name, args.workDirectory) + ".csv";
+      variant_distribution.writeDistribution(genome_db_ptr, 1000, interval_file, ',');
+
+    }
 
   }
 
@@ -198,6 +200,19 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
   if (args.analysisType == ANALYZE_UPGMA or args.analysisType == kgl::Phylogenetic::WILDCARD) {
 
+    kgl::ExecEnv::log().info("Generating FineStructure Files.");
+
+#define BASES_PER_CENTIMORGAN 15000.0
+
+    for (auto country : country_pairs) {
+
+      std::string file_name = "FS/" + country.first;
+      std::string fine_structure_file = kgl::Utility::filePath(file_name, args.workDirectory);
+      FineStructureAnalysis::generateFiles(fine_structure_file, country.second, BASES_PER_CENTIMORGAN);
+
+    }
+
+
     kgl::ExecEnv::log().info("Performing a UPGMA analytic");
 //    std::shared_ptr<const AminoSequenceDistance> distance_metric_ptr(std::make_shared<const Blosum80Global>());
 //    kgl::UPGMAGenePhyloTree<kgl::UPGMAATP4Distance>(args.workDirectory,
@@ -207,9 +222,9 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 //                                                    genome_db_ptr,
 //                                                    kgl::UPGMAProteinDistance::SYMBOLIC_ATP4_FAMILY);
 
-    std::string newick_file = kgl::Utility::filePath("UPGMA_newick", args.workDirectory) + ".txt";
-    std::shared_ptr<const UnphasedPopulation> filtered_ptr = unphased_population_ptr->filterVariants(DPCountFilter(25));
-    kgl::UPGMAUnphasedTree<kgl::UPGMAUnphasedDistance>(newick_file, filtered_ptr);
+//    std::string newick_file = kgl::Utility::filePath("newick", args.workDirectory) + ".txt";
+//    std::shared_ptr<const UnphasedPopulation> filtered_ptr = unphased_population_ptr->filterVariants(DPCountFilter(25));
+//    kgl::UPGMAUnphasedTree<kgl::UPGMAUnphasedDistance>(newick_file, filtered_ptr);
 
   }
 
