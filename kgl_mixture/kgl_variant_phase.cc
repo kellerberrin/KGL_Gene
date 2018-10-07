@@ -25,15 +25,22 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
                                         std::shared_ptr<const GenomeDatabase> genome_db,
                                         std::shared_ptr<PhasedPopulation> haploid_population)  {
 
-  bool result = true;
-
   size_t heterozygous_count = 0;
   size_t accepted_heterozygous_count = 0;
   size_t homozygous_count = 0;
   for (auto genome : unphased_population_ptr->getMap()) {
 
     // Create the GenomeVariant object.
-    std::shared_ptr<GenomeVariant> genome_variant = GenomeVariant::emptyGenomeVariant(genome.first, GenomeVariant::HAPLOID_GENOME, genome_db);
+    std::shared_ptr<GenomeVariant> genome_variant;
+    if (not haploid_population->getCreateGenome(genome.first,
+                                                GenomeVariant::HAPLOID_GENOME,
+                                                genome_db,
+                                                genome_variant)) {
+
+      ExecEnv::log().error("Haploid Phasing; Unable to get/create genome: {} to haploid population", genome.first);
+      return false;
+
+    }
 
     // Add all the contig.
     for (auto contig : genome.second->getMap()) {
@@ -69,13 +76,6 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
 
     } // All contigs
 
-    if (not haploid_population->addGenomeVariant(genome_variant)) {
-
-      ExecEnv::log().error("Unable to add genome: {} to haploid population", genome_variant->genomeId());
-      result = false;
-
-    }
-
   } // All genomes
 
   ExecEnv::log().info("Haploid Phasing; pre_phase variants: {}, genomes: {}, resultant population variants: {}, genomes: {}",
@@ -96,7 +96,7 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
   }
 
 
-  return result;
+  return true;
 
 }
 

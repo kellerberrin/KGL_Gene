@@ -118,11 +118,24 @@ public:
                             std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
                             std::shared_ptr<DNA5SequenceCoding>& mutant_sequence_vector);
 
-  static bool outputSequenceCSV(const std::string &file_name,
+
+  static bool outputRegionCSV(const std::string &file_name,
+                              std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
+                              std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric,
+                              std::shared_ptr<const GenomeDatabase> genome_db,
+                              std::shared_ptr<const PhasedPopulation> pop_variant_ptr);
+
+
+  static bool outputDNASequenceCSV(const std::string &file_name,
                                 std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
-                                std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric,
                                 std::shared_ptr<const GenomeDatabase> genome_db,
                                 std::shared_ptr<const PhasedPopulation> pop_variant_ptr);
+
+  static bool outputAminoSequenceCSV(const std::string &file_name,
+                                   std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric,
+                                   std::shared_ptr<const GenomeDatabase> genome_db,
+                                   std::shared_ptr<const PhasedPopulation> pop_variant_ptr);
+
 
   static bool outputAminoMutationCSV(const std::string &file_name,
                                      const ContigId_t& contig_id,
@@ -141,7 +154,8 @@ public:
 
 private:
 
-  static std::string outputSequenceHeader(char delimiter);
+  static std::string outputSequenceHeader(char delimiter, std::shared_ptr<const PhasedPopulation> pop_variant_ptr);
+  static std::string outputRegionHeader(char delimiter);
   static std::string outputSequence(char delimiter,
                                     std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
                                     std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric,

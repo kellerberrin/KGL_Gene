@@ -42,10 +42,10 @@ void kgl::PhylogeneticExecEnv::executeApp() {
     VariantFactory().readVCFVariants(genome_db_ptr, unphased_population_ptr, file.file_name);
 
     // Basic statistics to output
-    unphased_population_ptr->popStatistics();
+    // unphased_population_ptr->popStatistics();
 
     // Filtered Unphased Heterozygous Statistics
-    std::shared_ptr<UnphasedPopulation> filtered_unphased_ptr = unphased_population_ptr->filterVariants(AndFilter(DPCountFilter(10), RefAltCountFilter(10)));
+    std::shared_ptr<UnphasedPopulation> filtered_unphased_ptr = unphased_population_ptr->filterVariants(AndFilter(DPCountFilter(30), RefAltCountFilter(30)));
 
     // Process Filtered Unphased Heterozygous Statistics
     heterozygous_statistics.heterozygousStatistics(filtered_unphased_ptr);

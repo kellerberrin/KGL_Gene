@@ -210,7 +210,7 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
 }
 
 
-bool kgl::ApplicationAnalysis::outputSequenceCSV(const std::string &file_name,
+bool kgl::ApplicationAnalysis::outputRegionCSV(const std::string &file_name,
                                                  std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
                                                  std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric,
                                                  std::shared_ptr<const GenomeDatabase> genome_db,
@@ -227,7 +227,7 @@ bool kgl::ApplicationAnalysis::outputSequenceCSV(const std::string &file_name,
   }
 
   out_file << GeneAnalysis::outputRegionHeader(CSV_delimiter) << CSV_delimiter;
-  out_file << outputSequenceHeader(CSV_delimiter) << '\n';
+  out_file << outputRegionHeader(CSV_delimiter) << '\n';
 
   for( auto genome_variant : pop_variant_ptr->getMap()) {
 
@@ -300,6 +300,309 @@ bool kgl::ApplicationAnalysis::outputSequenceCSV(const std::string &file_name,
   }
 
   return out_file.good();
+
+}
+
+
+bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name,
+                                               std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
+                                               std::shared_ptr<const GenomeDatabase> genome_db,
+                                               std::shared_ptr<const PhasedPopulation> pop_variant_ptr) {
+
+  const char CSV_delimiter = ',';
+  // open the file.
+  std::ofstream out_file(file_name);
+  if (not out_file.good()) {
+
+    ExecEnv::log().error("outputDNASequenceCSV, Cannot open output CSV file: {}", file_name);
+    return false;
+
+  }
+
+  out_file << outputSequenceHeader(CSV_delimiter, pop_variant_ptr) << '\n';
+
+  for (auto contig : genome_db->getMap()) {
+
+    ExecEnv::log().info("outputDNASequenceCSV(), Processing contig: {}", contig.first);
+
+    size_t sequence_count = 0;
+
+    for (auto gene : contig.second->getGeneMap()) {
+
+      const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene.second);
+      for (auto sequence : coding_seq_ptr->getMap()) {
+
+
+        out_file << contig.first << CSV_delimiter;
+        out_file << gene.second->id() << CSV_delimiter;
+        out_file << sequence.first << CSV_delimiter;
+        out_file << sequence.second->start() << CSV_delimiter;
+        out_file << sequence.second->codingNucleotides() << CSV_delimiter;
+
+        std::shared_ptr<DNA5SequenceCoding> coding_dna_sequence;
+        if (contig.second->getDNA5SequenceCoding(sequence.second, coding_dna_sequence)) {
+
+          out_file << (contig.second->verifyDNACodingSequence(coding_dna_sequence) ? "1" : "0") << CSV_delimiter;
+
+        } else {
+
+          out_file << "0" << CSV_delimiter;
+
+        }
+
+        std::shared_ptr<const OntologyRecord> gene_ontology_ptr;
+        if (genome_db->geneOntology().getGafFeatureVector(gene.second->id(), gene_ontology_ptr)) {
+
+          out_file << gene_ontology_ptr->symbolicReference() << CSV_delimiter;
+          out_file << gene_ontology_ptr->altSymbolicReference() << CSV_delimiter;
+          out_file << "\"" << gene_ontology_ptr->description() << "\"" << CSV_delimiter;
+
+          std::set<std::string> uniqueGOrecords;
+          for (auto gorec : gene_ontology_ptr->goRecords()) {
+
+            uniqueGOrecords.insert(gorec.first);
+
+          }
+          std::string GOrecords;
+          for (auto gorec : uniqueGOrecords) {
+
+            GOrecords += gorec;
+            GOrecords += ";";
+
+          }
+
+          out_file << "\"" << GOrecords << "\"" << CSV_delimiter;
+
+        } else {
+
+          out_file << CSV_delimiter;
+          out_file << CSV_delimiter;
+          std::vector<std::string> description_vec;
+          gene.second->getAttributes().getDescription(description_vec);
+          std::string description;
+          for (const auto &desc : description_vec) {
+
+            description += desc;
+            description += ";";
+
+          }
+
+          out_file << "\"" << description << "\"" << CSV_delimiter;
+          out_file << CSV_delimiter;
+
+        }
+
+
+        for( auto genome_variant : pop_variant_ptr->getMap()) {
+
+          std::shared_ptr<DNA5SequenceCoding> reference_sequence;
+          std::shared_ptr<DNA5SequenceCoding> mutant_sequence;
+          OffsetVariantMap variant_map;
+
+          if (genome_variant.second->mutantCodingDNA( contig.first,
+                                                      ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                                      gene.second->id(),
+                                                      sequence.first,
+                                                      genome_db,
+                                                      variant_map,
+                                                      reference_sequence,
+                                                      mutant_sequence)) {
+
+            CompareDistance_t DNA_distance;
+            DNA_distance = dna_distance_metric->distance(reference_sequence, mutant_sequence);
+            out_file << DNA_distance << CSV_delimiter;
+
+          } else {
+
+            ExecEnv::log().error("outputDNASequenceCSV(), Error Processing sequence: {}", sequence.first);
+            return false;
+
+          }
+
+          ++sequence_count;
+
+        }
+
+        out_file << '\n';
+
+      }
+
+    }
+
+    ExecEnv::log().info("outputDNASequenceCSV(), mutated: {} sequences.", sequence_count);
+
+  }
+
+  return out_file.good();
+
+}
+
+
+bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_name,
+                                                      std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric,
+                                                      std::shared_ptr<const GenomeDatabase> genome_db,
+                                                      std::shared_ptr<const PhasedPopulation> pop_variant_ptr) {
+
+  const char CSV_delimiter = ',';
+  // open the file.
+  std::ofstream out_file(file_name);
+  if (not out_file.good()) {
+
+    ExecEnv::log().error("outputAminoSequenceCSV, Cannot open output CSV file: {}", file_name);
+    return false;
+
+  }
+
+  out_file << outputSequenceHeader(CSV_delimiter, pop_variant_ptr) << '\n';
+
+  for (auto contig : genome_db->getMap()) {
+
+    ExecEnv::log().info("outputAminoSequenceCSV(), Processing contig: {}", contig.first);
+
+    size_t sequence_count = 0;
+
+    for (auto gene : contig.second->getGeneMap()) {
+
+      const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene.second);
+      for (auto sequence : coding_seq_ptr->getMap()) {
+
+
+        out_file << contig.first << CSV_delimiter;
+        out_file << gene.second->id() << CSV_delimiter;
+        out_file << sequence.first << CSV_delimiter;
+        out_file << sequence.second->start() << CSV_delimiter;
+        out_file << sequence.second->codingNucleotides() << CSV_delimiter;
+
+        std::shared_ptr<DNA5SequenceCoding> coding_dna_sequence;
+        if (contig.second->getDNA5SequenceCoding(sequence.second, coding_dna_sequence)) {
+
+          out_file << (contig.second->verifyDNACodingSequence(coding_dna_sequence) ? "1" : "0") << CSV_delimiter;
+
+        } else {
+
+          out_file << "0" << CSV_delimiter;
+
+        }
+
+        std::shared_ptr<const OntologyRecord> gene_ontology_ptr;
+        if (genome_db->geneOntology().getGafFeatureVector(gene.second->id(), gene_ontology_ptr)) {
+
+          out_file << gene_ontology_ptr->symbolicReference() << CSV_delimiter;
+          out_file << gene_ontology_ptr->altSymbolicReference() << CSV_delimiter;
+          out_file << "\"" << gene_ontology_ptr->description() << "\"" << CSV_delimiter;
+
+          std::set<std::string> uniqueGOrecords;
+          for (auto gorec : gene_ontology_ptr->goRecords()) {
+
+            uniqueGOrecords.insert(gorec.first);
+
+          }
+          std::string GOrecords;
+          for (auto gorec : uniqueGOrecords) {
+
+            GOrecords += gorec;
+            GOrecords += ";";
+
+          }
+
+          out_file << "\"" << GOrecords << "\"" << CSV_delimiter;
+
+        } else {
+
+          out_file << CSV_delimiter;
+          out_file << CSV_delimiter;
+          std::vector<std::string> description_vec;
+          gene.second->getAttributes().getDescription(description_vec);
+          std::string description;
+          for (const auto &desc : description_vec) {
+
+            description += desc;
+            description += ";";
+
+          }
+
+          out_file << "\"" << description << "\"" << CSV_delimiter;
+          out_file << CSV_delimiter;
+
+        }
+
+
+        for( auto genome_variant : pop_variant_ptr->getMap()) {
+
+          OffsetVariantMap variant_map;
+          std::shared_ptr<AminoSequence> amino_reference_seq;
+          std::shared_ptr<AminoSequence> amino_mutant;
+          if (genome_variant.second->mutantProteins(contig.first,
+                                                    ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                                    gene.second->id(),
+                                                    sequence.first,
+                                                    genome_db,
+                                                    variant_map,
+                                                    amino_reference_seq,
+                                                    amino_mutant)) {
+
+            if (contig.second->verifyProteinSequence(amino_mutant)) {
+
+              CompareDistance_t amino_distance = amino_distance_metric->distance(amino_reference_seq, amino_mutant);
+              out_file << amino_distance << CSV_delimiter;
+
+            } else {
+
+              out_file << -1 << CSV_delimiter;
+
+            }
+
+          } else {
+
+            ExecEnv::log().error("outputSequenceCSV(), Error Processing sequence: {}", sequence.first);
+            return false;
+
+          }
+
+          ++sequence_count;
+
+        }
+
+        out_file << '\n';
+
+      }
+
+    }
+
+    ExecEnv::log().info("outputAminoSequenceCSV(), mutated: {} sequences.", sequence_count);
+
+  }
+
+  return out_file.good();
+
+}
+
+
+
+std::string kgl::ApplicationAnalysis::outputSequenceHeader(char delimiter,
+                                                           std::shared_ptr<const PhasedPopulation> pop_variant_ptr) {
+
+  std::stringstream ss;
+
+  ss << "Contig" << delimiter;
+  ss << "Gene" << delimiter;
+  ss << "Sequence" << delimiter;
+  ss << "Offset" << delimiter;
+  ss << "DNALength" << delimiter;
+  ss << "ValidORF" << delimiter;
+  ss << "Symbolic" << delimiter;
+  ss << "AltSymbolic" << delimiter;
+  ss << "Description" << delimiter;
+  ss << "GO_Records" << delimiter;
+
+
+  for (auto genome : pop_variant_ptr->getMap()) {
+
+    ss << genome.first << delimiter;
+
+  }
+
+  return ss.str();
 
 }
 
@@ -557,7 +860,7 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
 
 
 
-std::string kgl::ApplicationAnalysis::outputSequenceHeader(char delimiter) {
+std::string kgl::ApplicationAnalysis::outputRegionHeader(char delimiter) {
 
   std::stringstream ss;
 
@@ -582,6 +885,7 @@ std::string kgl::ApplicationAnalysis::outputSequenceHeader(char delimiter) {
   return ss.str();
 
 }
+
 
 
 std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
@@ -675,8 +979,8 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
 
   ss << genome_id << delimiter;
   ss << contig_ptr->contigId() << delimiter;
-  ss << contig_ptr->sequence().length() << delimiter;
   ss << sequence_id << delimiter;
+  ss << contig_ptr->sequence().length() << delimiter;
   ss << sequence_offset << delimiter;
   ss << coding_sequence->codingNucleotides() << delimiter;
   ss << proportion_GC << delimiter;

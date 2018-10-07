@@ -45,7 +45,8 @@ bool kgl::VCFVariant::equivalent(const Variant& cmp_var) const {
 
   if (not cmp_snp) return false;
 
-  return contigId() == cmp_snp->contigId()
+  return genomeId() == cmp_snp->genomeId()
+         and contigId() == cmp_snp->contigId()
          and phaseId() == cmp_snp->phaseId()
          and offset() == cmp_snp->offset()
          and variantType() == cmp_snp->variantType()
@@ -59,7 +60,11 @@ bool kgl::VCFVariant::equivalent(const Variant& cmp_var) const {
 bool kgl::VCFVariant::lessThan(const Variant& cmp_var) const {
 
 
-  if (contigId() < cmp_var.contigId()) {
+  if (genomeId() < cmp_var.genomeId()) {
+
+    return true;
+
+  } else if (contigId() < cmp_var.contigId()) {
 
     return true;
 

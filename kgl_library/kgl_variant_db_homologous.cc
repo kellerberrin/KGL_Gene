@@ -31,21 +31,35 @@ kgl::HomologousVariant::filterVariants(const kgl::VariantFilter& filter) const {
 // This function will insert multiple different variants for contig offset in a std::multimap
 bool kgl::HomologousVariant::addVariant(std::shared_ptr<const Variant>& variant_ptr) {
 
-  auto result = offset_variant_map_.equal_range(variant_ptr->offset());
+  auto result = offset_variant_map_.find(variant_ptr->offset());
 
-  for (auto it = result.first; it != result.second; ++it) {
+  if (result != offset_variant_map_.end()) {
 
-    if (variant_ptr->equivalent(*it->second)) {
+    if (variant_ptr->equivalent(*(result->second))) {
 
-      std::string variant_str = variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false);
-      ExecEnv::log().warn("addVariant() fails, Equivalent variant already exists:\n{}", variant_str);
+      return true;  // Variant already exists.
+
+    } else {
+
+      // Another variant at the same offset.
+      ExecEnv::log().warn("addVariant() fails, for variant:\n{}\nDifferent variant already exists at offset:\n{}",
+                          variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, true),
+                          result->second->output(' ', VariantOutputIndex::START_0_BASED, true));
       return false;
 
     }
 
   }
 
-  offset_variant_map_.insert(std::make_pair(variant_ptr->offset(), variant_ptr));
+  auto insert_result = offset_variant_map_.insert(std::make_pair(variant_ptr->offset(), variant_ptr));
+
+  if (not insert_result.second) {
+
+    ExecEnv::log().warn("addVariant() fails, could not insert variant:\n{}",
+                        variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, true));
+    return false;
+
+  }
 
   return true;
 
@@ -54,21 +68,35 @@ bool kgl::HomologousVariant::addVariant(std::shared_ptr<const Variant>& variant_
 // Returns true if variant found and erased.
 bool kgl::HomologousVariant::eraseVariant(std::shared_ptr<const Variant>& variant_ptr) {
 
-  auto result = offset_variant_map_.equal_range(variant_ptr->offset());
+  auto result = offset_variant_map_.find(variant_ptr->offset());
 
-  for (auto it = result.first; it != result.second; ++it) {
+  if (result != offset_variant_map_.end()) {
 
-    if (variant_ptr->equivalent(*it->second)) {
+    if (variant_ptr->equivalent(*(result->second))) {
 
       // C++ 11 erase() returns next iterator to next valid (or end())
-      offset_variant_map_.erase(it);
-      return true;
+      offset_variant_map_.erase(result);
+
+    } else {
+
+      // Another variant at the same offset.
+      ExecEnv::log().warn("eraseVariant() fails, for variant:\n{}\nDifferent variant exists at offset:\n{}",
+                          variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, true),
+                          result->second->output(' ', VariantOutputIndex::START_0_BASED, true));
+      return false;
 
     }
 
+  } else {
+
+    ExecEnv::log().warn("eraseVariant() fails, could not find variant:\n{}",
+                        variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, true));
+
+    return false;
+
   }
 
-  return false;
+  return true;
 
 }
 

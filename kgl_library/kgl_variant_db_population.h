@@ -57,6 +57,11 @@ public:
 
   std::shared_ptr<PhasedPopulation> filterGenomes(const PopulationId_t& population_id, const std::vector<GenomeId_t>& list) const;
 
+  // First element of the pair is the population genome name which is renamed to the second element of the pair
+  std::shared_ptr<PhasedPopulation> filterRenameGenomes(const PopulationId_t& population_id,
+                                                        const std::vector<std::pair<GenomeId_t, GenomeId_t >>& source_pairs) const;
+
+
   const PopulationId_t& populationId() const { return population_id_; }
 
 private:

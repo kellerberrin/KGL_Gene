@@ -247,6 +247,7 @@ std::string kgl::GeneAnalysis::outputRegionHeader(char delimiter) {
 }
 
 
+
 std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
                                                   std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
                                                   const ContigId_t& contig_id,

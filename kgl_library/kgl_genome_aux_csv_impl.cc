@@ -43,6 +43,16 @@ bool kgl::GenomeAuxData::readParseAuxData(const std::string& aux_file_name) {
 
       if (std::getline(aux_file, record_str).eof()) break;
 
+      if (not record_str.empty()) {
+
+        if (record_str[0] == COMMENT) {
+
+          continue;  // Skip comment lines.
+
+        }
+
+      }
+
       if (first_line) {
 
         if (not parseHeader(record_str)) {
@@ -88,12 +98,11 @@ bool kgl::GenomeAuxData::parseHeader(const std::string& record_str) {
   tokenize( record_str, lc_aux_data_header);
 
   // Covert Header to trimmed uppercase.
-  for (auto item : lc_aux_data_header) {
+  for (const auto& item : lc_aux_data_header) {
 
-    aux_data_header_.push_back(Utility::trimWhiteSpace(Utility::toupper(item)));
+    aux_data_header_.emplace_back(Utility::trimWhiteSpace(Utility::toupper(item)));
 
   }
-
 
   return true;
 
@@ -141,29 +150,53 @@ bool kgl::GenomeAuxData::tokenize(const std::string& parse_text,
 
 }
 
-
-size_t kgl::GenomeAuxData::fieldOffset(const std::string& field_name) const {
+// Returns the field offset or boolean false if field not found.
+bool kgl::GenomeAuxData::fieldOffset(const std::string& field_name, size_t& field_offset) const {
 
   std::string uc_field_name = Utility::trimWhiteSpace(Utility::toupper(field_name));
 
-  size_t field_offset = 0;
-  for (auto header_field : aux_data_header_) {
+  for (size_t idx = 0; idx < aux_data_header_.size(); ++idx) {
 
-    if (uc_field_name == header_field) {
+    if (uc_field_name == aux_data_header_[idx]) {
 
-      return field_offset;
+      field_offset = idx;
+      return true;
 
     }
-
-    ++field_offset;
 
   }
 
   ExecEnv::log().warn("GenomeAuxData; could not find field: {}", uc_field_name);
 
-  return 0;
+  field_offset = FIELD_NOT_FOUND;
+  return false;
 
 }
+
+std::string kgl::GenomeAuxData::attributeValue(AuxAttributeVector& attribute_vector, const std::string& attribute_name) const {
+
+  size_t field_offset;
+
+  if (fieldOffset(attribute_name, field_offset)) {
+
+    if (field_offset >= attribute_vector.size()) {
+
+      ExecEnv::log().error("GenomeAuxData::attributeValue; field offset: {} for attribute: {} exceeds attribute vector size: {}",
+                           field_offset, attribute_name, attribute_vector.size());
+      std::string Empty;
+      return Empty;
+
+    }
+
+    return attribute_vector[field_offset];
+
+  }
+
+  std::string Empty;
+  return Empty;
+
+}
+
 
 
 bool kgl::GenomeAuxData::getGenomeAttributes(const GenomeId_t& genome_name, AuxAttributeVector& attribute_vector) const {
@@ -193,11 +226,9 @@ std::string kgl::GenomeAuxData::locationDate(const GenomeId_t& genome_name) cons
 
   }
 
-  std::string Country = attribute_vector[fieldOffset(COUNTRY)];
-  std::string Site = attribute_vector[fieldOffset(SITE)];
-  std::string Year = attribute_vector[fieldOffset(COLLECTION_YEAR)];
-
-  return Country + " " + Site + " " + Year;
+  return attributeValue(attribute_vector, COUNTRY) + " "
+         + attributeValue(attribute_vector, SITE) + " "
+         + attributeValue(attribute_vector, COLLECTION_YEAR);
 
 }
 
@@ -214,14 +245,30 @@ bool kgl::GenomeAuxData::locationDate(const GenomeId_t& genome_name,
 
   }
 
-  country = attribute_vector[fieldOffset(COUNTRY)];
-  location = attribute_vector[fieldOffset(SITE)];
-  year = attribute_vector[fieldOffset(COLLECTION_YEAR)];
+  country = attributeValue(attribute_vector, COUNTRY);
+  location = attributeValue(attribute_vector, SITE);
+  year = attributeValue(attribute_vector, COLLECTION_YEAR);
 
   return true;
 
 }
 
+
+
+kgl::GenomeId_t kgl::GenomeAuxData::source(const GenomeId_t& genome_name) const {
+
+  AuxAttributeVector attribute_vector;
+  if (not getGenomeAttributes(genome_name, attribute_vector)) {
+
+    ExecEnv::log().error("Could not find genome: {} in auxiliary data", genome_name);
+    GenomeId_t empty;
+    return empty;
+
+  }
+
+  return attributeValue(attribute_vector, SOURCE_GENOME);
+
+}
 
 
 bool kgl::GenomeAuxData::isFieldSample(const GenomeId_t& genome_name) const {
@@ -234,7 +281,7 @@ bool kgl::GenomeAuxData::isFieldSample(const GenomeId_t& genome_name) const {
 
   }
 
-  return attribute_vector[fieldOffset(FIELD_SAMPLE)] == TRUE_FLAG;
+  return attributeValue(attribute_vector, FIELD_SAMPLE) == TRUE_FLAG;
 
 }
 
@@ -249,7 +296,7 @@ bool kgl::GenomeAuxData::isPreferredSample(const GenomeId_t& genome_name) const 
 
   }
 
-  return attribute_vector[fieldOffset(PREFERRED_SAMPLE)] == TRUE_FLAG;
+  return attributeValue(attribute_vector, PREFERRED_SAMPLE) == TRUE_FLAG;
 
 }
 
@@ -260,7 +307,7 @@ std::vector<std::string> kgl::GenomeAuxData::countryList() const {
 
   for (auto genomes : getMap()) {
 
-    std::string country = genomes.second[fieldOffset(COUNTRY)];
+    std::string country = attributeValue(genomes.second, COUNTRY);
     unique_country.insert(country);
 
   }
@@ -283,7 +330,7 @@ std::vector<kgl::GenomeId_t> kgl::GenomeAuxData::getCountry(const std::string& c
 
   for (auto genomes : getMap()) {
 
-    if (country == genomes.second[fieldOffset(COUNTRY)]) {
+    if (country == attributeValue(genomes.second, COUNTRY)) {
 
       genome_list.push_back(genomes.first);
 
@@ -338,8 +385,6 @@ std::vector<kgl::GenomeId_t> kgl::GenomeAuxData::getPreferredSamples() const {
 std::vector<kgl::CountryPair> kgl::GenomeAuxData::getCountries(const std::string& aux_file,
                                                                std::shared_ptr<const kgl::PhasedPopulation> population_ptr) {
 
-  std::vector<CountryPair> pair_vector;
-
   // Read the AUX data.
   kgl::GenomeAuxData aux_data;
   aux_data.readParseAuxData(aux_file);
@@ -350,10 +395,31 @@ std::vector<kgl::CountryPair> kgl::GenomeAuxData::getCountries(const std::string
   // Only preferred genomes.
   std::shared_ptr<const kgl::PhasedPopulation> preferred_pop_ptr = population_ptr->filterGenomes("Preferred", aux_data.getPreferredSamples());
 
+  std::vector<CountryPair> pair_vector;
   // Create a vector of all countries
   for (auto country : countries) {
 
-    std::shared_ptr<const kgl::PhasedPopulation> country_pop_ptr = population_ptr->filterGenomes(country, aux_data.getCountry(country));
+    std::vector<GenomeId_t> genome_list = aux_data.getCountry(country);
+    // First element is the genome name; second element is the genome name in the (VCF) population.
+    std::vector<std::pair<GenomeId_t, GenomeId_t >> source_pairs;
+
+    for (auto genome : genome_list) {
+
+      GenomeId_t vcf_source = aux_data.source(genome);
+
+      if (not vcf_source.empty()) {
+
+        source_pairs.emplace_back(std::pair<GenomeId_t, GenomeId_t >(genome, vcf_source));
+
+      } else {
+
+        ExecEnv::log().warn("getCountries; Could not find source (vcf genome id) for genome id: {}", genome);
+
+      }
+
+    }
+
+    std::shared_ptr<const kgl::PhasedPopulation> country_pop_ptr = preferred_pop_ptr->filterRenameGenomes(country, source_pairs);
 
     // Ignore empty populations
     if (not country_pop_ptr->getMap().empty()) {

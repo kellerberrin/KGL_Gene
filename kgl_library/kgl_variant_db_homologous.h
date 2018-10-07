@@ -24,7 +24,7 @@ namespace genome {   // project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-using OffsetVariantMap = std::multimap<ContigOffset_t, std::shared_ptr<const Variant>>;
+using OffsetVariantMap = std::map<ContigOffset_t, std::shared_ptr<const Variant>>;
 class HomologousVariant {
 
 public:

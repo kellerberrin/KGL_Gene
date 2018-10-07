@@ -153,3 +153,43 @@ std::shared_ptr<kgl::PhasedPopulation> kgl::PhasedPopulation::filterGenomes(cons
   return filtered_population_ptr;
 
 }
+
+
+std::shared_ptr<kgl::PhasedPopulation> kgl::PhasedPopulation::filterRenameGenomes(const PopulationId_t& population_id,
+                                                                                  const std::vector<std::pair<GenomeId_t, GenomeId_t >>& source_pairs) const {
+
+  std::shared_ptr<kgl::PhasedPopulation> filtered_population_ptr(std::make_shared<kgl::PhasedPopulation>(population_id));
+
+  // First element is the genome name; second element is the genome name in the (VCF) population.
+  for (auto genome_pair : source_pairs) {
+
+    auto result = population_variant_map_.find(genome_pair.second);
+
+    if (result == population_variant_map_.end()) {
+      // Not found.
+
+      ExecEnv::log().warn("filterRenameGenomes; for genome: {}, unable to find source genome: {}", genome_pair.first, genome_pair.second);
+      continue; // Next pair.
+
+    }
+
+    std::shared_ptr<GenomeVariant> genome_copy = result->second->deepCopy();
+
+    genome_copy->genomeId(genome_pair.first);
+
+    if (not filtered_population_ptr->addGenomeVariant(genome_copy)) {
+
+      ExecEnv::log().error("Filtered Population: {} unable to add genome: {} (duplicate)",
+                           filtered_population_ptr->populationId(), genome_pair.first);
+
+    }
+
+
+  }
+
+  ExecEnv::log().info("Filtered Population: {} has: {} filtered genomes with: {} variants",
+                      filtered_population_ptr->populationId(), filtered_population_ptr->getMap().size(), filtered_population_ptr->variantCount());
+
+  return filtered_population_ptr;
+
+}
