@@ -83,8 +83,18 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
     kgl::ExecEnv::log().info("Analyzing coding sequences");
 
     std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
+
     std::string coding_file = kgl::Utility::filePath("All_DNA_CodingAnalysis", args.workDirectory) + ".csv";
-    kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, dna_distance_metric,  genome_db_ptr, population_ptr);
+    kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::DNA, dna_distance_metric,  genome_db_ptr, population_ptr);
+
+    coding_file = kgl::Utility::filePath("All_Variant_CodingAnalysis", args.workDirectory) + ".csv";
+    kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::VARIANT, dna_distance_metric,  genome_db_ptr, population_ptr);
+
+    coding_file = kgl::Utility::filePath("All_SNP_CodingAnalysis", args.workDirectory) + ".csv";
+    kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::SNP, dna_distance_metric,  genome_db_ptr, population_ptr);
+
+    coding_file = kgl::Utility::filePath("All_SIZE_CodingAnalysis", args.workDirectory) + ".csv";
+    kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::SIZE, dna_distance_metric,  genome_db_ptr, population_ptr);
 
     std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric(std::make_shared<const LevenshteinGlobal>());
     coding_file = kgl::Utility::filePath("All_Amino_CodingAnalysis", args.workDirectory) + ".csv";
@@ -92,8 +102,17 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
     for (auto country : country_pairs) {
 
+      coding_file = kgl::Utility::filePath(country.first + "Variant_CodingAnalysis", args.workDirectory) + ".csv";
+      kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::VARIANT, dna_distance_metric,  genome_db_ptr, country.second);
+
+      coding_file = kgl::Utility::filePath(country.first + "SNP_CodingAnalysis", args.workDirectory) + ".csv";
+      kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::SNP, dna_distance_metric,  genome_db_ptr, country.second);
+
+      coding_file = kgl::Utility::filePath(country.first + "SIZE_CodingAnalysis", args.workDirectory) + ".csv";
+      kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::SIZE, dna_distance_metric,  genome_db_ptr, country.second);
+
       coding_file = kgl::Utility::filePath(country.first + "DNA_CodingAnalysis", args.workDirectory) + ".csv";
-      kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, dna_distance_metric,  genome_db_ptr, country.second);
+      kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::DNA, dna_distance_metric,  genome_db_ptr, country.second);
 
       coding_file = kgl::Utility::filePath(country.first + "Amino_CodingAnalysis", args.workDirectory) + ".csv";
       kgl::ApplicationAnalysis::outputAminoSequenceCSV(coding_file, amino_distance_metric, genome_db_ptr, country.second);

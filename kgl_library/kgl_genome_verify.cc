@@ -316,6 +316,29 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Gene
 }
 
 
+bool kgl::ContigFeatures::verifyCodingSequence(const FeatureIdent_t& gene_id, const FeatureIdent_t& sequence_id) const {
+
+  std::shared_ptr<const CodingSequence> coding_sequence_ptr;
+  if (not getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
+
+    ExecEnv::log().info("Unable to retrieve coding sequence for gene: {}, sequence: {}", gene_id, sequence_id);
+    return false;
+
+  }
+
+  std::shared_ptr<DNA5SequenceCoding> coding_dna_sequence;
+  if (not getDNA5SequenceCoding(coding_sequence_ptr, coding_dna_sequence)) {
+
+    ExecEnv::log().info("Unable to retrieve coding DNA sequence for gene: {}, sequence: {}", gene_id, sequence_id);
+    return false;
+
+  }
+
+  return verifyDNACodingSequence(coding_dna_sequence);
+
+}
+
+
 // Verifies a coding sequence using the amino coding table defined for the contig.
 bool kgl::ContigFeatures::verifyDNACodingSequence(std::shared_ptr<const DNA5SequenceCoding> coding_sequence_ptr) const {
 

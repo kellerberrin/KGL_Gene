@@ -148,7 +148,7 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_db_unphased_population.h
         kgl_library/kgl_variant_db_unphased_population.cc
         kgl_library/kgl_variant_factory_vcf_cigar.h
-        kgl_library/kgl_variant_factory_vcf_cigar.cc)
+        kgl_library/kgl_variant_factory_vcf_cigar.cc kgl_library/kgl_variant_vcf_mutation.cc)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )

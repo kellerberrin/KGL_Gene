@@ -82,6 +82,8 @@ public:
 };
 
 
+enum class SequenceAnalysisType { DNA, VARIANT, SNP, SIZE};
+
 class ApplicationAnalysis {
 
 public:
@@ -127,14 +129,15 @@ public:
 
 
   static bool outputDNASequenceCSV(const std::string &file_name,
-                                std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
-                                std::shared_ptr<const GenomeDatabase> genome_db,
-                                std::shared_ptr<const PhasedPopulation> pop_variant_ptr);
-
-  static bool outputAminoSequenceCSV(const std::string &file_name,
-                                   std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric,
+                                   SequenceAnalysisType ansalysis_type,
+                                   std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
                                    std::shared_ptr<const GenomeDatabase> genome_db,
                                    std::shared_ptr<const PhasedPopulation> pop_variant_ptr);
+
+  static bool outputAminoSequenceCSV(const std::string &file_name,
+                                     std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric,
+                                     std::shared_ptr<const GenomeDatabase> genome_db,
+                                     std::shared_ptr<const PhasedPopulation> pop_variant_ptr);
 
 
   static bool outputAminoMutationCSV(const std::string &file_name,

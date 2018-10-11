@@ -61,6 +61,7 @@ public:
   void verifyFeatureHierarchy();
   void verifyCDSPhasePeptide();
 
+  bool verifyCodingSequence(const FeatureIdent_t& gene_id, const FeatureIdent_t& sequence_id) const;
   bool verifyDNACodingSequence(std::shared_ptr<const DNA5SequenceCoding> coding_dna_ptr) const;
   bool verifyProteinSequence(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const;
 

@@ -305,9 +305,10 @@ bool kgl::ApplicationAnalysis::outputRegionCSV(const std::string &file_name,
 
 
 bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name,
-                                               std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
-                                               std::shared_ptr<const GenomeDatabase> genome_db,
-                                               std::shared_ptr<const PhasedPopulation> pop_variant_ptr) {
+                                                    SequenceAnalysisType analysis_type,
+                                                    std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
+                                                    std::shared_ptr<const GenomeDatabase> genome_db,
+                                                    std::shared_ptr<const PhasedPopulation> pop_variant_ptr) {
 
   const char CSV_delimiter = ',';
   // open the file.
@@ -333,12 +334,13 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
       for (auto sequence : coding_seq_ptr->getMap()) {
 
 
-        out_file << contig.first << CSV_delimiter;
+        out_file << contig.second->contigSize() << CSV_delimiter;
         out_file << gene.second->id() << CSV_delimiter;
         out_file << sequence.first << CSV_delimiter;
         out_file << sequence.second->start() << CSV_delimiter;
         out_file << sequence.second->codingNucleotides() << CSV_delimiter;
 
+        // Valid ORF
         std::shared_ptr<DNA5SequenceCoding> coding_dna_sequence;
         if (contig.second->getDNA5SequenceCoding(sequence.second, coding_dna_sequence)) {
 
@@ -349,6 +351,8 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
           out_file << "0" << CSV_delimiter;
 
         }
+
+        out_file << coding_dna_sequence->countGC() << CSV_delimiter;  // GC count.
 
         std::shared_ptr<const OntologyRecord> gene_ontology_ptr;
         if (genome_db->geneOntology().getGafFeatureVector(gene.second->id(), gene_ontology_ptr)) {
@@ -410,7 +414,47 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
 
             CompareDistance_t DNA_distance;
             DNA_distance = dna_distance_metric->distance(reference_sequence, mutant_sequence);
-            out_file << DNA_distance << CSV_delimiter;
+
+            if (gene.second->id() == "PF3D7_0212900" and analysis_type == SequenceAnalysisType::VARIANT) {
+
+              for (auto variant : variant_map) {
+
+                ExecEnv::log().info("PF3D7_0212900: {}", variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
+
+              }
+
+            }
+
+            switch(analysis_type) {
+
+              case SequenceAnalysisType::DNA:
+                out_file << DNA_distance << CSV_delimiter;
+                break;
+
+              case SequenceAnalysisType::SIZE:
+                out_file << mutant_sequence->length() << CSV_delimiter;
+                break;
+
+              case SequenceAnalysisType::VARIANT:
+                out_file << variant_map.size() << CSV_delimiter;
+                break;
+
+              case SequenceAnalysisType::SNP: {
+
+                size_t snp_count = 0;
+                for (auto variant : variant_map) {
+
+                  if (variant.second->isSNP()) ++snp_count;
+
+                }
+
+                out_file << variant_map.size() << CSV_delimiter;
+
+              }
+                break;
+
+            }
+
 
           } else {
 
@@ -467,7 +511,7 @@ bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_na
       for (auto sequence : coding_seq_ptr->getMap()) {
 
 
-        out_file << contig.first << CSV_delimiter;
+        out_file << contig.second->contigSize() << CSV_delimiter;
         out_file << gene.second->id() << CSV_delimiter;
         out_file << sequence.first << CSV_delimiter;
         out_file << sequence.second->start() << CSV_delimiter;
@@ -483,6 +527,8 @@ bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_na
           out_file << "0" << CSV_delimiter;
 
         }
+
+        out_file << coding_dna_sequence->countGC() << CSV_delimiter;  // GC count.
 
         std::shared_ptr<const OntologyRecord> gene_ontology_ptr;
         if (genome_db->geneOntology().getGafFeatureVector(gene.second->id(), gene_ontology_ptr)) {
@@ -590,6 +636,7 @@ std::string kgl::ApplicationAnalysis::outputSequenceHeader(char delimiter,
   ss << "Offset" << delimiter;
   ss << "DNALength" << delimiter;
   ss << "ValidORF" << delimiter;
+  ss << "GC_count" << delimiter;
   ss << "Symbolic" << delimiter;
   ss << "AltSymbolic" << delimiter;
   ss << "Description" << delimiter;
