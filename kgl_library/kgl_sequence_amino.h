@@ -40,6 +40,16 @@ public:
 
   bool removeTrailingStop();  // Remove the stop codon (if present).
 
+  // Returns a sub-sequence
+  std::shared_ptr<AminoSequence> subSequence(ContigOffset_t sub_sequence_offset, // offset
+                                             ContigSize_t sub_sequence_length) const { // if a subsequence.
+
+    std::shared_ptr<AminoSequence> sub_sequence(std::make_shared<AminoSequence>(getAlphabetString()));
+    getSubsequence(sub_sequence_offset, sub_sequence_length, sub_sequence);
+    return sub_sequence;
+
+  }
+
 private:
 
 

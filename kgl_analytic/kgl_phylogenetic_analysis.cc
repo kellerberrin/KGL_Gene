@@ -415,11 +415,13 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
             CompareDistance_t DNA_distance;
             DNA_distance = dna_distance_metric->distance(reference_sequence, mutant_sequence);
 
-            if (gene.second->id() == "PF3D7_0212900" and analysis_type == SequenceAnalysisType::VARIANT) {
+#define EXAMINE_GENE_1 "PF3D7_1254800"
+
+            if (gene.second->id() == EXAMINE_GENE_1 and analysis_type == SequenceAnalysisType::VARIANT) {
 
               for (auto variant : variant_map) {
 
-                ExecEnv::log().info("PF3D7_0212900: {}", variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
+                ExecEnv::log().info("{}: {}", EXAMINE_GENE_1, variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
 
               }
 
@@ -587,14 +589,40 @@ bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_na
                                                     amino_reference_seq,
                                                     amino_mutant)) {
 
-            if (contig.second->verifyProteinSequence(amino_mutant)) {
+            switch (contig.second->proteinSequenceAnalysis(amino_mutant)) {
 
-              CompareDistance_t amino_distance = amino_distance_metric->distance(amino_reference_seq, amino_mutant);
-              out_file << amino_distance << CSV_delimiter;
+              case ProteinSequenceAnalysis::VALID_SEQUENCE: {
 
-            } else {
+                CompareDistance_t amino_distance = amino_distance_metric->distance(amino_reference_seq, amino_mutant);
+                out_file << amino_distance << CSV_delimiter;
 
-              out_file << -1 << CSV_delimiter;
+              }
+                break;
+
+              case ProteinSequenceAnalysis::NO_START_CODON:
+                out_file << -1 << CSV_delimiter;
+                break;
+
+              case ProteinSequenceAnalysis::NONSENSE_MUTATION: {
+
+                size_t valid_seq_size = contig.second->proteinSequenceSize(amino_mutant) + 1;  // +1 to include the stop codon.
+                double proportion = (static_cast<double>(valid_seq_size) * -100.0) / static_cast<double>(amino_reference_seq->length());
+                out_file << proportion << CSV_delimiter;
+
+                if (gene.second->id() == EXAMINE_GENE_1) {
+
+                  std::shared_ptr<AminoSequence> amino_truncated = amino_mutant->subSequence(0, valid_seq_size - 1);
+                  ExecEnv::log().info("{}:{}:{}:({})", genome_variant.first, EXAMINE_GENE_1, amino_truncated->getSequenceAsString(), valid_seq_size - 1);
+
+                }
+
+
+              }
+                break;
+
+              case ProteinSequenceAnalysis::NO_STOP_CODON:
+                out_file << -3 << CSV_delimiter;
+                break;
 
             }
 

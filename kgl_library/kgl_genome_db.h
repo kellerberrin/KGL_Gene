@@ -24,6 +24,7 @@ namespace genome {   // project level namespace
 // ContigFeatures - A contiguous region, the associated sequence, and all features that map onto that region/sequence.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+enum class ProteinSequenceAnalysis { VALID_SEQUENCE, NO_START_CODON, NONSENSE_MUTATION, NO_STOP_CODON };
 
 using OffsetFeatureMap = std::multimap<ContigOffset_t, std::shared_ptr<Feature>>; // Contig features indexed by offset.
 using IdFeatureMap = std::multimap<FeatureIdent_t, std::shared_ptr<Feature>>; // Contig features indexed by ident.
@@ -61,9 +62,12 @@ public:
   void verifyFeatureHierarchy();
   void verifyCDSPhasePeptide();
 
-  bool verifyCodingSequence(const FeatureIdent_t& gene_id, const FeatureIdent_t& sequence_id) const;
   bool verifyDNACodingSequence(std::shared_ptr<const DNA5SequenceCoding> coding_dna_ptr) const;
   bool verifyProteinSequence(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const;
+  ProteinSequenceAnalysis proteinSequenceAnalysis(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const;
+  // Returns the protein sequence as the distance is amino acids between the start codon and stop codon.
+  // No start and stop codon returns 0.
+  size_t proteinSequenceSize(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const;
 
   // Given a gene id and an mRNA (sequence id) return the CDS coding sequence.
   bool getCodingSequence(const FeatureIdent_t& gene_id,
@@ -75,7 +79,6 @@ public:
                              std::shared_ptr<DNA5SequenceCoding>& coding_dna_ptr) const;
 
   // Generate Amino acid sequences using the table specified for this contig.
-  std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr) const;
   std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const;
   AminoAcid::Alphabet getAminoAcid(const Codon& codon) const { return coding_table_.getAmino(codon); }
 

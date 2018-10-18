@@ -88,6 +88,9 @@ private:
                               const DNA5SequenceLinear& delete_subsequence,
                               const DNA5SequenceLinear& add_subsequence);
 
+  bool preceedingMutation(SignedOffset_t adjusted_offset,
+                          std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
+                          SignedOffset_t& sequence_size_modify) const;
 
 };
 

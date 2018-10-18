@@ -316,29 +316,6 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Gene
 }
 
 
-bool kgl::ContigFeatures::verifyCodingSequence(const FeatureIdent_t& gene_id, const FeatureIdent_t& sequence_id) const {
-
-  std::shared_ptr<const CodingSequence> coding_sequence_ptr;
-  if (not getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
-
-    ExecEnv::log().info("Unable to retrieve coding sequence for gene: {}, sequence: {}", gene_id, sequence_id);
-    return false;
-
-  }
-
-  std::shared_ptr<DNA5SequenceCoding> coding_dna_sequence;
-  if (not getDNA5SequenceCoding(coding_sequence_ptr, coding_dna_sequence)) {
-
-    ExecEnv::log().info("Unable to retrieve coding DNA sequence for gene: {}, sequence: {}", gene_id, sequence_id);
-    return false;
-
-  }
-
-  return verifyDNACodingSequence(coding_dna_sequence);
-
-}
-
-
 // Verifies a coding sequence using the amino coding table defined for the contig.
 bool kgl::ContigFeatures::verifyDNACodingSequence(std::shared_ptr<const DNA5SequenceCoding> coding_sequence_ptr) const {
 
@@ -359,6 +336,55 @@ bool kgl::ContigFeatures::verifyProteinSequence(std::shared_ptr<const AminoSeque
   result = result and coding_table_.checkNonsenseMutation(amino_sequence_ptr) == 0;
 
   return result;
+
+}
+
+
+// Verifies a coding sequence using the amino coding table defined for the contig.
+kgl::ProteinSequenceAnalysis kgl::ContigFeatures::proteinSequenceAnalysis(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const {
+
+  if (not coding_table_.checkStartCodon(amino_sequence_ptr)) {
+
+    return ProteinSequenceAnalysis::NO_START_CODON;
+
+  }
+
+  if (coding_table_.checkNonsenseMutation(amino_sequence_ptr) != 0) {
+
+    return ProteinSequenceAnalysis::NONSENSE_MUTATION;
+
+  }
+
+  if (not coding_table_.checkStopCodon(amino_sequence_ptr)) {
+
+    return ProteinSequenceAnalysis::NO_STOP_CODON;
+
+  }
+
+  return ProteinSequenceAnalysis::VALID_SEQUENCE;
+
+}
+
+
+size_t kgl::ContigFeatures::proteinSequenceSize(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const {
+
+  switch(proteinSequenceAnalysis(amino_sequence_ptr)) {
+
+    case ProteinSequenceAnalysis::NO_START_CODON:
+      return 0;
+
+    case ProteinSequenceAnalysis::NONSENSE_MUTATION:
+      return coding_table_.checkNonsenseMutation(amino_sequence_ptr);
+
+    case ProteinSequenceAnalysis::NO_STOP_CODON:
+      return 0;
+
+    case ProteinSequenceAnalysis::VALID_SEQUENCE:
+      return amino_sequence_ptr->length();
+
+  }
+
+  return 0; // Never reached, to keep the compiler happy.
 
 }
 

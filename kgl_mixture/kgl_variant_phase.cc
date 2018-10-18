@@ -238,7 +238,8 @@ bool kgl::GenomePhasing::analyseCountStatistics(const UnphasedVectorVariantCount
 
     }
 
-    auto total_counts = read_evidence_ptr->refCount() + read_evidence_ptr->altCount();
+//    auto total_counts = read_evidence_ptr->refCount() + read_evidence_ptr->altCount();
+    auto total_counts = read_evidence_ptr->DPCount();
 
     if (total_counts == 0) return false;
 
