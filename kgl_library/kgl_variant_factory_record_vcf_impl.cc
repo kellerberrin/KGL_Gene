@@ -89,7 +89,8 @@ bool kgl::ParseVCFRecord::parseRecord(const ContigId_t& contig_id, std::shared_p
 
   }
 
-  std::shared_ptr<const DNA5SequenceLinear> contig_ref = contig_ptr_->sequence().unstrandedRegion(allele_offset_, reference_.length());
+  std::shared_ptr<const DNA5SequenceLinear> contig_ref = contig_ptr_->sequence().subSequence(allele_offset_,
+                                                                                             reference_.length());
 
   if (contig_ref->getSequenceAsString() != reference_) {
 

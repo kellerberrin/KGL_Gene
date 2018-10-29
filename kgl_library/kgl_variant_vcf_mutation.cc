@@ -59,11 +59,11 @@ bool kgl::VCFVariant::mutateSequence(SignedOffset_t offset_adjust,
   } else {
 
 
-    std::shared_ptr<DNA5SequenceLinear> adjusted_reference = reference().unstrandedRegion(0, max_delete_size);
+    std::shared_ptr<DNA5SequenceLinear> adjusted_reference = reference().subSequence(0, max_delete_size);
 
     size_t alternate_length = alternateSize(max_delete_size);
 
-    std::shared_ptr<DNA5SequenceLinear> adjusted_alternate = alternate().unstrandedRegion(0, alternate_length);
+    std::shared_ptr<DNA5SequenceLinear> adjusted_alternate = alternate().subSequence(0, alternate_length);
 
     if (not performMutation(sequence_offset, dna_sequence_ptr, *adjusted_reference, *adjusted_alternate)) {
 
@@ -102,11 +102,11 @@ bool kgl::VCFVariant::preceedingMutation(SignedOffset_t adjusted_offset,
 
     }
 
-    std::shared_ptr<DNA5SequenceLinear> adjusted_reference = reference().unstrandedRegion(ref_offset, ref_size);
+    std::shared_ptr<DNA5SequenceLinear> adjusted_reference = reference().subSequence(ref_offset, ref_size);
 
     ContigOffset_t alt_offset = size() - ref_size;
 
-    std::shared_ptr<DNA5SequenceLinear> adjusted_alternate = alternate().unstrandedRegion(alt_offset, ref_size);
+    std::shared_ptr<DNA5SequenceLinear> adjusted_alternate = alternate().subSequence(alt_offset, ref_size);
 
     if (not performMutation(0, dna_sequence_ptr, *adjusted_reference, *adjusted_alternate)) {
 
@@ -166,8 +166,9 @@ bool kgl::VCFVariant::performMutation(ContigOffset_t offset,
 
       SignedOffset_t prefix_offset = offset - suffix_prefix;
       ContigOffset_t p_offset = prefix_offset < 0 ? 0 : static_cast<ContigOffset_t>(prefix_offset);
-      std::string prefix_string = mutated_sequence_ptr->unstrandedRegion(p_offset, ((2 * suffix_prefix)+delete_subsequence.length()))->getSequenceAsString();
-      std::string sequence_string = mutated_sequence_ptr->unstrandedRegion(offset, delete_subsequence.length())->getSequenceAsString();
+      std::string prefix_string = mutated_sequence_ptr->subSequence(p_offset,
+                                                                    ((2 * suffix_prefix) + delete_subsequence.length()))->getSequenceAsString();
+      std::string sequence_string = mutated_sequence_ptr->subSequence(offset, delete_subsequence.length())->getSequenceAsString();
       ExecEnv::log().info("performMutation(), seq (-10/ref/+10) section: {}, seq: {}, reference: {}, alternate: {}",
                           prefix_string, sequence_string, delete_subsequence.getSequenceAsString(), add_subsequence.getSequenceAsString());
 

@@ -3,6 +3,7 @@
 //
 
 #include "kgl_distribution_analysis.h"
+#include "kgl_sequence_complexity.h"
 
 #include <fstream>
 
@@ -107,8 +108,7 @@ bool kgl::AggregateVariantDistribution::writeDistribution(std::shared_ptr<const 
                                                          const std::string& filename,
                                                          char delimiter) const {
 
-  std::ofstream outfile;
-  outfile.open(filename, std::ofstream::out | std::ofstream::app);
+  std::ofstream outfile(filename);
 
   if (not outfile.good()) {
 
@@ -128,11 +128,17 @@ bool kgl::AggregateVariantDistribution::writeDistribution(std::shared_ptr<const 
 
 bool kgl::AggregateVariantDistribution::writeHeader(std::ostream& output, char delimiter) const {
 
-  output << "contig" << delimiter;
-  output << "interval_start" << delimiter;
-  output << "interval_size" << delimiter;
-  output << "snp_count" << delimiter;
-  output << "variant_count" << '\n';
+  output << "Contig" << delimiter;
+  output << "Interval_start" << delimiter;
+  output << "Interval_size" << delimiter;
+  output << "Snp_count" << delimiter;
+  output << "Variant_count" << delimiter;
+  output << "GCRatio" << delimiter;
+  output << "LempelZiv" << delimiter;
+  output << "Entropy_2" << delimiter;
+  output << "Entropy_3" << delimiter;
+  output << "Entropy_4" << delimiter;
+  output << "Entropy_8" << "\n";
 
   return output.good();
 
@@ -161,7 +167,6 @@ bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDa
         output << contig_from << delimiter;
         output << (contig_to - contig_from) << delimiter;
 
-
         size_t snp_count = 0;
         size_t variant_count = 0;
 
@@ -181,7 +186,7 @@ bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDa
         }
 
         output << snp_count << delimiter;
-        output << variant_count << '\n';
+        output << variant_count << delimiter;
 
         contig_from = contig_to;
         if (contig_to + interval_size < contig_size) {
@@ -193,6 +198,42 @@ bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDa
           contig_to = contig_size;
 
         }
+
+        if (contig_to >= contig.second->contigSize()) {
+
+          ExecEnv::log().info("AggregateVariantDistribution::writeData; processed contig: {}", contig.first);
+
+        }
+
+        size_t interval_size = contig_to - contig_from;
+
+        std::shared_ptr<DNA5SequenceLinear> sequence = contig.second->sequence_ptr()->subSequence(contig_from,
+                                                                                                  interval_size);
+
+        if (not sequence) {
+
+          ExecEnv::log().error("AggregateVariantDistribution::writeData; no subsequence returned from contig: {}, offset: {}, size: {}",
+                               contig.first, contig_from, interval_size);
+          break;
+
+        } else {
+
+          if (sequence->length() != interval_size) {
+
+            ExecEnv::log().error("AggregateVariantDistribution::writeData; unexpected sequence size: {} returned from contig: {}, offset: {}, size: {}",
+                                 sequence->length(), contig.first, contig_from, interval_size);
+            break;
+
+          }
+
+        }
+
+        output << SequenceComplexity::propGC(sequence) << delimiter;
+        output << SequenceComplexity::complexityLempelZiv(sequence) << delimiter;
+        output << SequenceComplexity::sequenceEntropy(sequence, 2) << delimiter;
+        output << SequenceComplexity::sequenceEntropy(sequence, 3) << delimiter;
+        output << SequenceComplexity::sequenceEntropy(sequence, 4) << delimiter;
+        output << SequenceComplexity::sequenceEntropy(sequence, 8) << '\n';
 
       }
 

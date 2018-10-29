@@ -50,8 +50,6 @@ public:
 
   DNA5SequenceCoding& operator=(DNA5SequenceCoding& copy) = delete;
 
-  size_t countGC() const;
-
 private:
 
   StrandSense strand_;
@@ -96,15 +94,13 @@ public:
   // Insert offset is relative to the begining of the sequence (0 is the first letter).
   bool insertSubSequence(ContigOffset_t insert_offset, const DNA5SequenceLinear& inserted_sequence);
 
-  size_t countGC() const;
-
-  // Down-converts a coding DNA sequence to a linear DNA5 alphabet (swaps the logical alphabet from CodingDNA5).
+  // Down-converts a coding DNA sequence to a linear DNA5 alphabet (swaps the logical alphabet from CodingDNA5 to DNA5).
   // No strand conversion is performed (or defined).
   static std::shared_ptr<DNA5SequenceLinear> linearSequence(std::shared_ptr<const DNA5SequenceCoding> base_sequence);
 
-  // Returns an UNSTRANDED region
-  std::shared_ptr<DNA5SequenceLinear> unstrandedRegion(ContigOffset_t sub_sequence_offset, // offset
-                                                       ContigSize_t sub_sequence_length) const { // if a subsequence.
+  // Returns an UNSTRANDED subsequence.
+  std::shared_ptr<DNA5SequenceLinear> subSequence(ContigOffset_t sub_sequence_offset, // offset
+                                                  ContigSize_t sub_sequence_length) const { // if a subsequence.
 
     std::shared_ptr<DNA5SequenceLinear> sub_sequence(std::make_shared<DNA5SequenceLinear>());
     getSubsequence(sub_sequence_offset, sub_sequence_length, sub_sequence);

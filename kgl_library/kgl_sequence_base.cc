@@ -42,23 +42,6 @@ bool kgl::DNA5SequenceLinear::insertSubSequence(ContigOffset_t insert_offset, co
 
 }
 
-size_t kgl::DNA5SequenceLinear::countGC() const {
-
-  size_t count = 0;
-  for(ContigSize_t index = 0; index < length(); ++index) {
-
-    if (DNA5::isNucleotideGC(at(index))) {
-
-      ++count;
-
-    }
-
-  }
-
-  return count;
-
-}
-
 
 // The contig_offset adjusts for the offset in the contig from which the DNASequenceLinear was copied.
 // Setting sub_sequence_offset and sub_sequence_length to zero copies the entire sequence defined by the CodingSequence.
@@ -97,23 +80,6 @@ std::shared_ptr<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::linearSequence
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
-size_t kgl::DNA5SequenceCoding::countGC() const {
-
-  size_t count = 0;
-  for(ContigSize_t index = 0; index < length(); ++index) {
-
-    if (CodingDNA5::isNucleotideGC(at(index))) {
-
-      ++count;
-
-    }
-
-  }
-
-  return count;
-
-}
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -148,7 +148,10 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_db_unphased_population.h
         kgl_library/kgl_variant_db_unphased_population.cc
         kgl_library/kgl_variant_factory_vcf_cigar.h
-        kgl_library/kgl_variant_factory_vcf_cigar.cc kgl_library/kgl_variant_vcf_mutation.cc)
+        kgl_library/kgl_variant_factory_vcf_cigar.cc
+        kgl_library/kgl_variant_vcf.h
+        kgl_library/kgl_variant_vcf.cc
+        kgl_library/kgl_variant_vcf_mutation.cc)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -167,7 +170,11 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_distribution_analysis.h
         kgl_analytic/kgl_distribution_analysis.cc
         kgl_analytic/kgl_upgma_unphased.h
-        kgl_analytic/kgl_upgma_unphased.cc)
+        kgl_analytic/kgl_upgma_unphased.cc
+        kgl_analytic/kgl_finestructure_analysis.h
+        kgl_analytic/kgl_finestructure_analysis.cc
+        kgl_analytic/kgl_sequence_complexity.h
+        kgl_analytic/kgl_sequence_complexity.cc)
 
 # Deconvolution and mixture files.
 
@@ -178,7 +185,7 @@ set(MIXTURE_SOURCE_FILES
         kgl_mixture/kgl_variant_classify.cc
         kgl_mixture/kgl_variant_classify_io.cc
         kgl_mixture/kgl_read_phasing.h
-        kgl_mixture/kgl_read_phasing.cc kgl_library/kgl_variant_vcf.h kgl_library/kgl_variant_vcf.cc kgl_analytic/kgl_finestructure_analysis.h kgl_analytic/kgl_finestructure_analysis.cc)
+        kgl_mixture/kgl_read_phasing.cc)
 
 
 # Application level objects

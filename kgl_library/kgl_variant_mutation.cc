@@ -42,7 +42,7 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& region_variant_map,
                                      ContigSize_t sequence_size,
                                      std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr) {
 
-  dna_sequence_ptr = contig_ptr->sequence().unstrandedRegion(contig_offset, sequence_size);
+  dna_sequence_ptr = contig_ptr->sequence().subSequence(contig_offset, sequence_size);
 
   SignedOffset_t sequence_size_modify;
   variant_mutation_offset_.clearIndelOffset();

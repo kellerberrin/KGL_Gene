@@ -85,9 +85,6 @@ public:
   // Return nucleotide as a char.
   static char convertToChar(Alphabet nucleotide) { return static_cast<char>(nucleotide); }
 
-  // return bool true if G or C
-  static bool isNucleotideGC(Alphabet nucleotide) { return nucleotide == Alphabet::G or nucleotide == Alphabet::C; }
-
   // Converts an array offset into a base.
   static Alphabet offsetToNucleotide(ContigOffset_t offset) {
 

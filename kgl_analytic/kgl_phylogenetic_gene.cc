@@ -5,6 +5,7 @@
 #include "kgl_sequence_offset.h"
 #include "kgl_phylogenetic_gene.h"
 #include "kgl_phylogenetic_analysis.h"
+#include "kgl_sequence_complexity.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -303,7 +304,7 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
 
 
     double distance = static_cast<double>(dna_distance_metric->distance(reference_sequence, mutant_sequence));
-    proportion_GC = static_cast<double>(reference_sequence->countGC()) / static_cast<double>(region_size);
+    proportion_GC = SequenceComplexity::propGC(reference_sequence);
 
     ss << genome_variant_ptr->genomeId() << delimiter;
     ss << contig_id << delimiter;

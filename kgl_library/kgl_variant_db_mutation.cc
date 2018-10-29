@@ -181,7 +181,7 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
   }
 
   // Get the reference DNA sequence
-  reference_sequence = contig_ptr->sequence().unstrandedRegion(region_offset, region_size);
+  reference_sequence = contig_ptr->sequence().subSequence(region_offset, region_size);
 
   // Generate the mutant sequences.
   // Extract the variants for processing.

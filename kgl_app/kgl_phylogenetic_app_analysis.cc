@@ -123,6 +123,7 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
   if (args.analysisType == ANALYZE_INTERVAL or args.analysisType == kgl::Phylogenetic::WILDCARD) {
 
+#define INTERVAL_SIZE 1000
 
     kgl::ExecEnv::log().info("Analyzing genome intervals");
 
@@ -130,7 +131,7 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
     variant_distribution.variantDistribution(population_ptr);
     std::string file_name = "IntervalAnalysis_all";
     std::string interval_file = kgl::Utility::filePath(file_name, args.workDirectory) + ".csv";
-    variant_distribution.writeDistribution(genome_db_ptr, 1000, interval_file, ',');
+    variant_distribution.writeDistribution(genome_db_ptr, INTERVAL_SIZE, interval_file, ',');
 
     for (auto country : country_pairs) {
 
@@ -138,7 +139,7 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
       variant_distribution.variantDistribution(country.second);
       std::string file_name = "IntervalAnalysis_" + country.first;
       std::string interval_file = kgl::Utility::filePath(file_name, args.workDirectory) + ".csv";
-      variant_distribution.writeDistribution(genome_db_ptr, 1000, interval_file, ',');
+      variant_distribution.writeDistribution(genome_db_ptr, INTERVAL_SIZE, interval_file, ',');
 
     }
 

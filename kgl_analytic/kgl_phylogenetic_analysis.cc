@@ -9,6 +9,7 @@
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_offset.h"
 #include "kgl_phylogenetic_gene.h"
+#include "kgl_sequence_complexity.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -352,7 +353,7 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
 
         }
 
-        out_file << coding_dna_sequence->countGC() << CSV_delimiter;  // GC count.
+        out_file << SequenceComplexity::propGC(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;  // GC count.
 
         std::shared_ptr<const OntologyRecord> gene_ontology_ptr;
         if (genome_db->geneOntology().getGafFeatureVector(gene.second->id(), gene_ontology_ptr)) {
@@ -530,7 +531,7 @@ bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_na
 
         }
 
-        out_file << coding_dna_sequence->countGC() << CSV_delimiter;  // GC count.
+        out_file << SequenceComplexity::propGC(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;  // GC count.
 
         std::shared_ptr<const OntologyRecord> gene_ontology_ptr;
         if (genome_db->geneOntology().getGafFeatureVector(gene.second->id(), gene_ontology_ptr)) {
@@ -1003,7 +1004,7 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
 
     if (reference_sequence->length() > 0) {
 
-      proportion_GC = static_cast<double>(reference_sequence->countGC()) / static_cast<double>(reference_sequence->length());
+      proportion_GC = SequenceComplexity::propGC(DNA5SequenceLinear::linearSequence(reference_sequence));
 
     }
 
