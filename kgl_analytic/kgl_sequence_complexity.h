@@ -19,8 +19,10 @@ public:
   SequenceComplexity() = delete;
   ~SequenceComplexity() = delete;
 
+  static double cumulativeEntropy(std::shared_ptr<const DNA5SequenceLinear> sequence, size_t word_size);
+
   // Calculate Shannon Entropy
-  static double sequenceEntropy(std::shared_ptr<const DNA5SequenceLinear> sequence, size_t word_size);
+  static double shannonEntropy(std::shared_ptr<const DNA5SequenceLinear> sequence);
 
   static size_t complexityLempelZiv(std::shared_ptr<const DNA5SequenceLinear> sequence);
   // Calculate GC content.

@@ -354,6 +354,8 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
         }
 
         out_file << SequenceComplexity::propGC(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;  // GC count.
+        out_file << SequenceComplexity::shannonEntropy(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;
+        out_file << SequenceComplexity::complexityLempelZiv(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;
 
         std::shared_ptr<const OntologyRecord> gene_ontology_ptr;
         if (genome_db->geneOntology().getGafFeatureVector(gene.second->id(), gene_ontology_ptr)) {
@@ -413,25 +415,16 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
                                                       reference_sequence,
                                                       mutant_sequence)) {
 
-            CompareDistance_t DNA_distance;
-            DNA_distance = dna_distance_metric->distance(reference_sequence, mutant_sequence);
-
-#define EXAMINE_GENE_1 "PF3D7_1254800"
-
-            if (gene.second->id() == EXAMINE_GENE_1 and analysis_type == SequenceAnalysisType::VARIANT) {
-
-              for (auto variant : variant_map) {
-
-                ExecEnv::log().info("{}: {}", EXAMINE_GENE_1, variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
-
-              }
-
-            }
 
             switch(analysis_type) {
 
-              case SequenceAnalysisType::DNA:
+              case SequenceAnalysisType::DNA: {
+
+                CompareDistance_t DNA_distance;
+                DNA_distance = dna_distance_metric->distance(reference_sequence, mutant_sequence);
                 out_file << DNA_distance << CSV_delimiter;
+
+              }
                 break;
 
               case SequenceAnalysisType::SIZE:
@@ -454,6 +447,14 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
                 out_file << variant_map.size() << CSV_delimiter;
 
               }
+                break;
+
+              case SequenceAnalysisType::ENTROPY:
+                out_file << SequenceComplexity::shannonEntropy(DNA5SequenceLinear::linearSequence(mutant_sequence)) << CSV_delimiter;
+                break;
+
+              case SequenceAnalysisType::LEMPEL_ZIV:
+                out_file << SequenceComplexity::complexityLempelZiv(DNA5SequenceLinear::linearSequence(mutant_sequence)) << CSV_delimiter;
                 break;
 
             }
@@ -532,6 +533,8 @@ bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_na
         }
 
         out_file << SequenceComplexity::propGC(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;  // GC count.
+        out_file << SequenceComplexity::shannonEntropy(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;
+        out_file << SequenceComplexity::complexityLempelZiv(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;
 
         std::shared_ptr<const OntologyRecord> gene_ontology_ptr;
         if (genome_db->geneOntology().getGafFeatureVector(gene.second->id(), gene_ontology_ptr)) {
@@ -610,14 +613,6 @@ bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_na
                 double proportion = (static_cast<double>(valid_seq_size) * -100.0) / static_cast<double>(amino_reference_seq->length());
                 out_file << proportion << CSV_delimiter;
 
-                if (gene.second->id() == EXAMINE_GENE_1) {
-
-                  std::shared_ptr<AminoSequence> amino_truncated = amino_mutant->subSequence(0, valid_seq_size - 1);
-                  ExecEnv::log().info("{}:{}:{}:({})", genome_variant.first, EXAMINE_GENE_1, amino_truncated->getSequenceAsString(), valid_seq_size - 1);
-
-                }
-
-
               }
                 break;
 
@@ -665,7 +660,9 @@ std::string kgl::ApplicationAnalysis::outputSequenceHeader(char delimiter,
   ss << "Offset" << delimiter;
   ss << "DNALength" << delimiter;
   ss << "ValidORF" << delimiter;
-  ss << "GC_count" << delimiter;
+  ss << "GCProportion" << delimiter;
+  ss << "Entropy" << delimiter;
+  ss << "LempelZiv" << delimiter;
   ss << "Symbolic" << delimiter;
   ss << "AltSymbolic" << delimiter;
   ss << "Description" << delimiter;

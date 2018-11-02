@@ -95,7 +95,7 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
     coding_file = kgl::Utility::filePath("All_SIZE_CodingAnalysis", args.workDirectory) + ".csv";
     kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::SIZE, dna_distance_metric,  genome_db_ptr, population_ptr);
-
+    
     std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric(std::make_shared<const LevenshteinGlobal>());
     coding_file = kgl::Utility::filePath("All_Amino_CodingAnalysis", args.workDirectory) + ".csv";
     kgl::ApplicationAnalysis::outputAminoSequenceCSV(coding_file, amino_distance_metric, genome_db_ptr, population_ptr);

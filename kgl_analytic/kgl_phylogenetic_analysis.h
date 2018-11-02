@@ -82,7 +82,7 @@ public:
 };
 
 
-enum class SequenceAnalysisType { DNA, VARIANT, SNP, SIZE};
+enum class SequenceAnalysisType { DNA, VARIANT, SNP, SIZE, ENTROPY, LEMPEL_ZIV};
 
 class ApplicationAnalysis {
 

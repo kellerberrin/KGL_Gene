@@ -135,7 +135,7 @@ bool kgl::AggregateVariantDistribution::writeHeader(std::ostream& output, char d
   output << "Variant_count" << delimiter;
   output << "GCRatio" << delimiter;
   output << "LempelZiv" << delimiter;
-  output << "Entropy_2" << delimiter;
+  output << "ShannonEntropy" << delimiter;
   output << "Entropy_3" << delimiter;
   output << "Entropy_4" << delimiter;
   output << "Entropy_8" << "\n";
@@ -188,16 +188,6 @@ bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDa
         output << snp_count << delimiter;
         output << variant_count << delimiter;
 
-        contig_from = contig_to;
-        if (contig_to + interval_size < contig_size) {
-
-          contig_to += interval_size;
-
-        } else {
-
-          contig_to = contig_size;
-
-        }
 
         if (contig_to >= contig.second->contigSize()) {
 
@@ -209,6 +199,13 @@ bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDa
 
         std::shared_ptr<DNA5SequenceLinear> sequence = contig.second->sequence_ptr()->subSequence(contig_from,
                                                                                                   interval_size);
+        if (sequence->length() == 0) {
+
+          ExecEnv::log().info("AggregateVariantDistribution::writeData; zero sized sequence, offset: {}, size: {}, contig: {} contig size: {}",
+                              contig_from, interval_size, contig.first, contig.second->contigSize());
+
+        }
+
 
         if (not sequence) {
 
@@ -230,10 +227,21 @@ bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDa
 
         output << SequenceComplexity::propGC(sequence) << delimiter;
         output << SequenceComplexity::complexityLempelZiv(sequence) << delimiter;
-        output << SequenceComplexity::sequenceEntropy(sequence, 2) << delimiter;
-        output << SequenceComplexity::sequenceEntropy(sequence, 3) << delimiter;
-        output << SequenceComplexity::sequenceEntropy(sequence, 4) << delimiter;
-        output << SequenceComplexity::sequenceEntropy(sequence, 8) << '\n';
+        output << SequenceComplexity::shannonEntropy(sequence) << delimiter;
+        output << SequenceComplexity::cumulativeEntropy(sequence, 3) << delimiter;
+        output << SequenceComplexity::cumulativeEntropy(sequence, 4) << delimiter;
+        output << SequenceComplexity::cumulativeEntropy(sequence, 8) << '\n';
+
+        contig_from = contig_to;
+        if (contig_to + interval_size < contig_size) {
+
+          contig_to += interval_size;
+
+        } else {
+
+          contig_to = contig_size;
+
+        }
 
       }
 

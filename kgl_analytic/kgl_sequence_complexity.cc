@@ -9,7 +9,7 @@
 namespace kgl = kellerberrin::genome;
 
 
-double kgl::SequenceComplexity::sequenceEntropy(std::shared_ptr<const DNA5SequenceLinear> sequence, size_t word_size) {
+double kgl::SequenceComplexity::cumulativeEntropy(std::shared_ptr<const DNA5SequenceLinear> sequence, size_t word_size) {
 
   std::map<std::string, size_t> word_map;
 
@@ -61,6 +61,63 @@ double kgl::SequenceComplexity::sequenceEntropy(std::shared_ptr<const DNA5Sequen
 }
 
 
+double kgl::SequenceComplexity::shannonEntropy(std::shared_ptr<const DNA5SequenceLinear> sequence) {
+
+  size_t A_count = 0;
+  size_t T_count = 0;
+  size_t G_count = 0;
+  size_t C_count = 0;
+
+  for(ContigSize_t index = 0; index < sequence->length(); ++index) {
+
+    switch(sequence->at(index)) {
+
+      case DNA5::Alphabet::A:
+        ++A_count;
+        break;
+
+      case DNA5::Alphabet::T:
+        ++T_count;
+        break;
+
+      case DNA5::Alphabet::G:
+        ++G_count;
+        break;
+
+      case DNA5::Alphabet::C:
+        ++C_count;
+        break;
+
+      case DNA5::Alphabet::N:
+        break;
+
+      default:
+      ExecEnv::log().error("SequenceComplexity::shannonEntropy; bad nucleotide in sequence: {}", sequence->getSequenceAsString());
+      break;
+
+    }
+
+  }
+
+  size_t total = A_count + T_count + G_count + C_count;
+
+  double A_ratio = static_cast<double>(A_count) / static_cast<double>(total);
+  double entropy = A_ratio * std::log(A_ratio);
+
+  double T_ratio = static_cast<double>(T_count) / static_cast<double>(total);
+  entropy += T_ratio * std::log(T_ratio);
+
+  double G_ratio = static_cast<double>(G_count) / static_cast<double>(total);
+  entropy += G_ratio * std::log(G_ratio);
+
+  double C_ratio = static_cast<double>(C_count) / static_cast<double>(total);
+  entropy += C_ratio * std::log(C_ratio);
+
+  return entropy * -0.5;
+
+}
+
+
 
 double kgl::SequenceComplexity::propGC(std::shared_ptr<const DNA5SequenceLinear> sequence) {
 
@@ -87,8 +144,6 @@ double kgl::SequenceComplexity::propGC(std::shared_ptr<const DNA5SequenceLinear>
   }
 
 }
-
-
 
 
 
