@@ -95,6 +95,10 @@ public:
   static constexpr Alphabet AMINO_STOP = Alphabet::_;
   static constexpr Alphabet AMINO_UNKNOWN = Alphabet::Z;
 
+  // Return a vector of all valid alphabet values (only the 20 'natural'
+  // and the 'unknown'  amino acids are returned).
+  static std::vector<Alphabet> enumerateAlphabet();
+
   // Checks for possible memory corruption.
   static bool validAlphabet(Alphabet nucleotide);
 

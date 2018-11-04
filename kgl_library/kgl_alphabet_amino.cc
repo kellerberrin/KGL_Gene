@@ -88,3 +88,40 @@ bool kgl::AminoAcid::validAlphabet(Alphabet amino) {
   return compare;
 
 }
+
+
+std::vector<kgl::AminoAcid::Alphabet> kgl::AminoAcid::enumerateAlphabet() {
+
+  std::vector<Alphabet> alphabet_vector;
+
+  alphabet_vector.emplace_back(Alphabet::F);
+  alphabet_vector.emplace_back(Alphabet::L);
+  alphabet_vector.emplace_back(Alphabet::S);
+  alphabet_vector.emplace_back(Alphabet::Y);
+  alphabet_vector.emplace_back(Alphabet::C);
+  alphabet_vector.emplace_back(Alphabet::W);
+  alphabet_vector.emplace_back(Alphabet::P);
+  alphabet_vector.emplace_back(Alphabet::H);
+  alphabet_vector.emplace_back(Alphabet::Q);
+  alphabet_vector.emplace_back(Alphabet::R);
+  alphabet_vector.emplace_back(Alphabet::I);
+  alphabet_vector.emplace_back(Alphabet::M);
+  alphabet_vector.emplace_back(Alphabet::T);
+  alphabet_vector.emplace_back(Alphabet::N);
+  alphabet_vector.emplace_back(Alphabet::K);
+  alphabet_vector.emplace_back(Alphabet::V);
+  alphabet_vector.emplace_back(Alphabet::A);
+  alphabet_vector.emplace_back(Alphabet::D);
+  alphabet_vector.emplace_back(Alphabet::E);
+  alphabet_vector.emplace_back(Alphabet::G);
+  // The special unknown amino acid generated when the DNA5 codon
+  // contains the unknown base 'N'.
+  alphabet_vector.emplace_back(Alphabet::Z);
+  // Generic stop codon.
+  alphabet_vector.emplace_back(Alphabet::_);
+
+  return alphabet_vector;
+
+
+
+}

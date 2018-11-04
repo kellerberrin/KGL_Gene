@@ -133,12 +133,13 @@ bool kgl::AggregateVariantDistribution::writeHeader(std::ostream& output, char d
   output << "Interval_size" << delimiter;
   output << "Snp_count" << delimiter;
   output << "Variant_count" << delimiter;
-  output << "GCRatio" << delimiter;
   output << "LempelZiv" << delimiter;
   output << "ShannonEntropy" << delimiter;
-  output << "Entropy_3" << delimiter;
-  output << "Entropy_4" << delimiter;
-  output << "Entropy_8" << "\n";
+  output << "CpG" << delimiter;
+  output << "Prop_A" << delimiter;
+  output << "Prop_C" << delimiter;
+  output << "Prop_G" << delimiter;
+  output << "Prop_T" << "\n";
 
   return output.good();
 
@@ -225,12 +226,18 @@ bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDa
 
         }
 
-        output << SequenceComplexity::propGC(sequence) << delimiter;
         output << SequenceComplexity::complexityLempelZiv(sequence) << delimiter;
-        output << SequenceComplexity::shannonEntropy(sequence) << delimiter;
-        output << SequenceComplexity::cumulativeEntropy(sequence, 3) << delimiter;
-        output << SequenceComplexity::cumulativeEntropy(sequence, 4) << delimiter;
-        output << SequenceComplexity::cumulativeEntropy(sequence, 8) << '\n';
+        output << SequenceComplexity::alphabetEntropy<DNA5>(sequence) << delimiter;
+        output << SequenceComplexity::relativeCpGIslands(sequence) << delimiter;
+        double A_prop;
+        double C_prop;
+        double G_prop;
+        double T_prop;
+        SequenceComplexity::proportionNucleotides(sequence, A_prop, C_prop, G_prop, T_prop);
+        output << A_prop << delimiter;
+        output << C_prop << delimiter;
+        output << G_prop << delimiter;
+        output << T_prop << '\n';
 
         contig_from = contig_to;
         if (contig_to + interval_size < contig_size) {

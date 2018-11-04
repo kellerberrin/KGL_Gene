@@ -9,64 +9,16 @@
 namespace kgl = kellerberrin::genome;
 
 
-double kgl::SequenceComplexity::cumulativeEntropy(std::shared_ptr<const DNA5SequenceLinear> sequence, size_t word_size) {
+void kgl::SequenceComplexity::countNucleotides(std::shared_ptr<const DNA5SequenceLinear> sequence,
+                                               size_t& A_count,
+                                               size_t& C_count,
+                                               size_t& G_count,
+                                               size_t& T_count) {
 
-  std::map<std::string, size_t> word_map;
-
-  std::string sequence_string = sequence->getSequenceAsString();
-
-  for (size_t i = 0; i < sequence->length(); i++) {
-
-    if (i + word_size >= sequence->length()) break;
-
-    std::string word = sequence_string.substr(i, word_size);
-
-    auto result = word_map.find(word);
-
-    if (result == word_map.end()) {
-
-      std::pair<std::string, size_t> insert_word(word, 1);
-
-      auto insert_result = word_map.insert(insert_word);
-
-      if (not insert_result.second) {
-
-        ExecEnv::log().warn("sequenceEntropy; Unable to insert word: {}", word);
-
-      }
-
-    } else {
-
-
-      ++result->second;
-
-    }
-
-  }
-
-  double entropy = 0;
-
-  for (auto word : word_map) {
-
-    double word_ratio = static_cast<double>(word.second) / static_cast<double>(sequence->length());
-
-    double log_word_ratio = std::log(word_ratio) / word_size;
-
-    entropy += word_ratio * log_word_ratio * -1.0;
-
-  }
-
-  return entropy;
-
-}
-
-
-double kgl::SequenceComplexity::shannonEntropy(std::shared_ptr<const DNA5SequenceLinear> sequence) {
-
-  size_t A_count = 0;
-  size_t T_count = 0;
-  size_t G_count = 0;
-  size_t C_count = 0;
+  A_count = 0;
+  C_count = 0;
+  G_count = 0;
+  T_count = 0;
 
   for(ContigSize_t index = 0; index < sequence->length(); ++index) {
 
@@ -76,72 +28,96 @@ double kgl::SequenceComplexity::shannonEntropy(std::shared_ptr<const DNA5Sequenc
         ++A_count;
         break;
 
-      case DNA5::Alphabet::T:
-        ++T_count;
+      case DNA5::Alphabet::C:
+        ++C_count;
         break;
 
       case DNA5::Alphabet::G:
         ++G_count;
         break;
 
-      case DNA5::Alphabet::C:
-        ++C_count;
+      case DNA5::Alphabet::T:
+        ++T_count;
         break;
 
       case DNA5::Alphabet::N:
         break;
 
       default:
-      ExecEnv::log().error("SequenceComplexity::shannonEntropy; bad nucleotide in sequence: {}", sequence->getSequenceAsString());
+      ExecEnv::log().error("SequenceComplexity::countNucleotides; bad nucleotide in sequence: {}", sequence->getSequenceAsString());
       break;
 
     }
 
   }
 
-  size_t total = A_count + T_count + G_count + C_count;
+}
 
-  double A_ratio = static_cast<double>(A_count) / static_cast<double>(total);
-  double entropy = A_ratio * std::log(A_ratio);
 
-  double T_ratio = static_cast<double>(T_count) / static_cast<double>(total);
-  entropy += T_ratio * std::log(T_ratio);
+double  kgl::SequenceComplexity::relativeCpGIslands(std::shared_ptr<const DNA5SequenceLinear> sequence) {
 
-  double G_ratio = static_cast<double>(G_count) / static_cast<double>(total);
-  entropy += G_ratio * std::log(G_ratio);
+  if (sequence->length() == 0) {
 
-  double C_ratio = static_cast<double>(C_count) / static_cast<double>(total);
-  entropy += C_ratio * std::log(C_ratio);
+    ExecEnv::log().error("SequenceComplexity::relativeCpGIslands; zero sized sequence");
+    return 0.0;
 
-  return entropy * -0.5;
+  }
+
+  size_t A_count = 0;
+  size_t C_count = 0;
+  size_t G_count = 0;
+  size_t T_count = 0;
+
+  countNucleotides(sequence, A_count, C_count, G_count,  T_count);
+
+  if (C_count + G_count == 0) {
+
+    return 0.0;
+
+  }
+
+  std::shared_ptr<const DNA5SequenceLinear> CpG(std::make_shared<const DNA5SequenceLinear>(StringDNA5("CG")));
+
+  size_t CpG_count = kmerCount<DNA5>(sequence, CpG);
+
+  double expected_CpG = (static_cast<double>(C_count) * static_cast<double>(G_count)) / static_cast<double>(sequence->length());
+
+  return static_cast<double>(CpG_count) / expected_CpG;
 
 }
 
 
 
-double kgl::SequenceComplexity::propGC(std::shared_ptr<const DNA5SequenceLinear> sequence) {
+void kgl::SequenceComplexity::proportionNucleotides(std::shared_ptr<const DNA5SequenceLinear> sequence,
+                                                    double& A_prop,
+                                                    double& C_prop,
+                                                    double& G_prop,
+                                                    double& T_prop) {
 
-  size_t count = 0;
-  for(ContigSize_t index = 0; index < sequence->length(); ++index) {
 
-    if (sequence->at(index) == DNA5::Alphabet::C or sequence->at(index) == DNA5::Alphabet::G) {
+  A_prop = 0.0;
+  C_prop = 0.0;
+  G_prop = 0.0;
+  T_prop = 0.0;
 
-      ++count;
+  if (sequence->length() == 0) {
 
-    }
-
-  }
-
-  if (sequence->length() > 0) {
-
-    return static_cast<double>(count) / static_cast<double>(sequence->length());
-
-  } else {
-
-    ExecEnv::log().warn("SequenceComplexity::propGC; analysis of zero sized sequence");
-    return 0.0;
+    ExecEnv::log().error("SequenceComplexity::proportionNucleotides; zero sized sequence");
+    return;
 
   }
+
+  size_t A_count = 0;
+  size_t C_count = 0;
+  size_t G_count = 0;
+  size_t T_count = 0;
+
+  countNucleotides(sequence, A_count, C_count, G_count,  T_count);
+
+  A_prop = static_cast<double>(A_count) / static_cast<double>(sequence->length());
+  C_prop = static_cast<double>(C_count) / static_cast<double>(sequence->length());
+  G_prop = static_cast<double>(G_count) / static_cast<double>(sequence->length());
+  T_prop = static_cast<double>(T_count) / static_cast<double>(sequence->length());
 
 }
 

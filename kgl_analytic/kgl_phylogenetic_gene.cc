@@ -238,10 +238,14 @@ std::string kgl::GeneAnalysis::outputRegionHeader(char delimiter) {
   ss << "Genome" << delimiter;
   ss << "Contig" << delimiter;
   ss << "ContigSize" << delimiter;
-  ss << "RegionGC" << delimiter;
   ss << "ContigOffset" << delimiter;
   ss << "RegionSize" << delimiter;
-  ss << "Score";
+  ss << "Score" << delimiter;
+  ss << "CpG" << delimiter;
+  ss << "A_prop" << delimiter;
+  ss << "C_prop" << delimiter;
+  ss << "G_prop" << delimiter;
+  ss << "T_prop";
 
   return ss.str();
 
@@ -274,17 +278,20 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
 
   }
 
-  double proportion_GC = 0;
 
   if (region_size == 0) {
 
     ss << genome_variant_ptr->genomeId() << delimiter;
     ss << contig_id << delimiter;
     ss << contig_ptr->sequence().length() << delimiter;
-    ss << proportion_GC << delimiter;
     ss << offset << delimiter;
     ss << region_size << delimiter;
-    ss << 0;
+    ss << 0 << delimiter;
+    ss << 0.0 << delimiter;
+    ss << 0.0 << delimiter;
+    ss << 0.0 << delimiter;
+    ss << 0.0 << delimiter;
+    ss << 0.0;
 
     return ss.str();
 
@@ -304,15 +311,22 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
 
 
     double distance = static_cast<double>(dna_distance_metric->distance(reference_sequence, mutant_sequence));
-    proportion_GC = SequenceComplexity::propGC(reference_sequence);
-
     ss << genome_variant_ptr->genomeId() << delimiter;
     ss << contig_id << delimiter;
     ss << contig_ptr->sequence().length() << delimiter;
-    ss << proportion_GC << delimiter;
     ss << offset << delimiter;
     ss << region_size << delimiter;
-    ss << distance;
+    ss << distance << delimiter;
+    ss << SequenceComplexity::relativeCpGIslands(reference_sequence) << delimiter;
+    double A_prop;
+    double C_prop;
+    double G_prop;
+    double T_prop;
+    SequenceComplexity::proportionNucleotides(reference_sequence, A_prop, C_prop, G_prop, T_prop);
+    ss << A_prop << delimiter;
+    ss << C_prop << delimiter;
+    ss << G_prop << delimiter;
+    ss << T_prop;
 
   } else {
 

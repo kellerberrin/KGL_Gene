@@ -58,6 +58,9 @@ public:
     N = N_NUCLEOTIDE
   };
 
+  // Return a vector of all valid alphabet values.
+  static std::vector<Alphabet> enumerateAlphabet();
+
   // Checks for possible memory corruption.
   static bool validAlphabet(Alphabet nucleotide);
 

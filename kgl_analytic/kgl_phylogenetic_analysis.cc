@@ -353,9 +353,18 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
 
         }
 
-        out_file << SequenceComplexity::propGC(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;  // GC count.
-        out_file << SequenceComplexity::shannonEntropy(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;
+        out_file << SequenceComplexity::alphabetEntropy<CodingDNA5>(coding_dna_sequence) << CSV_delimiter;
         out_file << SequenceComplexity::complexityLempelZiv(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;
+        out_file << SequenceComplexity::relativeCpGIslands(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;  // GC count.
+        double A_prop;
+        double C_prop;
+        double G_prop;
+        double T_prop;
+        SequenceComplexity::proportionNucleotides(DNA5SequenceLinear::linearSequence(coding_dna_sequence), A_prop, C_prop, G_prop, T_prop);
+        out_file << A_prop << CSV_delimiter;
+        out_file << C_prop << CSV_delimiter;
+        out_file << G_prop << CSV_delimiter;
+        out_file << T_prop << CSV_delimiter;
 
         std::shared_ptr<const OntologyRecord> gene_ontology_ptr;
         if (genome_db->geneOntology().getGafFeatureVector(gene.second->id(), gene_ontology_ptr)) {
@@ -450,7 +459,7 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
                 break;
 
               case SequenceAnalysisType::ENTROPY:
-                out_file << SequenceComplexity::shannonEntropy(DNA5SequenceLinear::linearSequence(mutant_sequence)) << CSV_delimiter;
+                out_file << SequenceComplexity::alphabetEntropy<CodingDNA5>(mutant_sequence) << CSV_delimiter;
                 break;
 
               case SequenceAnalysisType::LEMPEL_ZIV:
@@ -532,9 +541,19 @@ bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_na
 
         }
 
-        out_file << SequenceComplexity::propGC(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;  // GC count.
-        out_file << SequenceComplexity::shannonEntropy(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;
+        std::shared_ptr<AminoSequence> amino_reference  = contig.second->getAminoSequence(coding_dna_sequence);
+        out_file << SequenceComplexity::alphabetEntropy<AminoAcid>(amino_reference) << CSV_delimiter;
         out_file << SequenceComplexity::complexityLempelZiv(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;
+        out_file << SequenceComplexity::relativeCpGIslands(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;  // GC count.
+        double A_prop;
+        double C_prop;
+        double G_prop;
+        double T_prop;
+        SequenceComplexity::proportionNucleotides(DNA5SequenceLinear::linearSequence(coding_dna_sequence), A_prop, C_prop, G_prop, T_prop);
+        out_file << A_prop << CSV_delimiter;
+        out_file << C_prop << CSV_delimiter;
+        out_file << G_prop << CSV_delimiter;
+        out_file << T_prop << CSV_delimiter;
 
         std::shared_ptr<const OntologyRecord> gene_ontology_ptr;
         if (genome_db->geneOntology().getGafFeatureVector(gene.second->id(), gene_ontology_ptr)) {
@@ -660,9 +679,13 @@ std::string kgl::ApplicationAnalysis::outputSequenceHeader(char delimiter,
   ss << "Offset" << delimiter;
   ss << "DNALength" << delimiter;
   ss << "ValidORF" << delimiter;
-  ss << "GCProportion" << delimiter;
   ss << "Entropy" << delimiter;
   ss << "LempelZiv" << delimiter;
+  ss << "CpG" << delimiter;
+  ss << "A_prop" << delimiter;
+  ss << "C_prop" << delimiter;
+  ss << "G_prop" << delimiter;
+  ss << "T_prop" << delimiter;
   ss << "Symbolic" << delimiter;
   ss << "AltSymbolic" << delimiter;
   ss << "Description" << delimiter;
@@ -943,7 +966,11 @@ std::string kgl::ApplicationAnalysis::outputRegionHeader(char delimiter) {
   ss << "Sequence" << delimiter;
   ss << "ContigOffset" << delimiter;
   ss << "DNASize" << delimiter;
-  ss << "SequenceGC" << delimiter;
+  ss << "CpG" << delimiter;
+  ss << "A_prop" << delimiter;
+  ss << "C_prop" << delimiter;
+  ss << "G_prop" << delimiter;
+  ss << "T_prop" << delimiter;
   ss << "Error" << delimiter;
   ss << "ValidReference" << delimiter;
   ss << "AllPaths" << delimiter;
@@ -979,7 +1006,6 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
   size_t mutant_paths = 0;
   size_t valid_paths = 0;
   double average_score = 0;
-  double proportion_GC = 0;
   double average_DNA_score = 0;
   bool valid_reference = false;
   OffsetVariantMap variant_map;
@@ -998,12 +1024,6 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
     CompareDistance_t DNA_distance;
     DNA_distance = dna_distance_metric->distance(reference_sequence, mutant_sequence);
     average_DNA_score += static_cast<double>(DNA_distance);
-
-    if (reference_sequence->length() > 0) {
-
-      proportion_GC = SequenceComplexity::propGC(DNA5SequenceLinear::linearSequence(reference_sequence));
-
-    }
 
   }
 
@@ -1056,7 +1076,16 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
   ss << contig_ptr->sequence().length() << delimiter;
   ss << sequence_offset << delimiter;
   ss << coding_sequence->codingNucleotides() << delimiter;
-  ss << proportion_GC << delimiter;
+  ss << SequenceComplexity::relativeCpGIslands(DNA5SequenceLinear::linearSequence(reference_sequence)) << delimiter;  // GC count.
+  double A_prop;
+  double C_prop;
+  double G_prop;
+  double T_prop;
+  SequenceComplexity::proportionNucleotides(DNA5SequenceLinear::linearSequence(reference_sequence), A_prop, C_prop, G_prop, T_prop);
+  ss << A_prop << delimiter;
+  ss << C_prop << delimiter;
+  ss << G_prop << delimiter;
+  ss << T_prop << delimiter;
   ss << error_flag << delimiter;
   ss << valid_reference << delimiter;
   ss << mutant_paths << delimiter;
