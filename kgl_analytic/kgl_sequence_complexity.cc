@@ -80,7 +80,7 @@ double  kgl::SequenceComplexity::relativeCpGIslands(std::shared_ptr<const DNA5Se
 
   size_t CpG_count = kmerCount<DNA5>(sequence, CpG);
 
-  double expected_CpG = (static_cast<double>(C_count) * static_cast<double>(G_count)) / static_cast<double>(sequence->length());
+  double expected_CpG = static_cast<double>(sequence->length()) / 32.0;
 
   return static_cast<double>(CpG_count) / expected_CpG;
 

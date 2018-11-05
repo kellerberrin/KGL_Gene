@@ -2,6 +2,7 @@
 // Created by kellerberrin on 10/11/17.
 //
 
+#include <kgl_gff_fasta.h>
 #include "../kgl_mixture/kgl_variant_phase.h"
 #include "kgl_phylogenetic_app.h"
 #include "kgl_variant_factory.h"
@@ -29,7 +30,15 @@ void kgl::PhylogeneticExecEnv::executeApp() {
                                                                                              args.gffFile,
                                                                                              args.gafFile,
                                                                                              args.aminoTranslationTable);
-// Write Filtered Unphased Heterozygous Statistics
+  std::string tss_file;
+  if (runtime_options.getTSSFile(tss_file)) {
+
+    std::shared_ptr<GenomeDatabase> mutable_genome_db_ptr = std::const_pointer_cast<GenomeDatabase>(genome_db_ptr);
+    ParseGffFasta().readTssGffFile(tss_file, mutable_genome_db_ptr);
+
+  }
+
+  // Write Filtered Unphased Heterozygous Statistics
   HeterozygousStatistics heterozygous_statistics;
 
   // For all VCF files, read in the variants.

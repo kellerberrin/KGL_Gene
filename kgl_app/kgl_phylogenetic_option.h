@@ -81,6 +81,7 @@ public:
 
   bool readRuntimeOptions(const std::string& file_path, const std::string& work_directory);
   bool getMixtureFile(std::string& file_name) const { return getRuntimeOption(MIXTURE_FILE_, file_name); }
+  bool getTSSFile(std::string& file_name) const { return getRuntimeOption(TSS_FILE_, file_name); }
   static void printHelp(std::ostream& stream);
 
 private:
@@ -94,6 +95,7 @@ private:
   // Option names.
   constexpr static const char* MIXTURE_FILE_ = "mixtureFile";
   constexpr static const char* VCF_PLOIDY_ = "vcf_ploidy";
+  constexpr static const char* TSS_FILE_ = "tssFile";
 
   const RuntimOptionsMap& getMap() const { return runtime_option_map_; }
   // Returns false if no genome found, mixture_statistics is zeroed.

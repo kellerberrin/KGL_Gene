@@ -124,7 +124,7 @@ private:
   constexpr static const size_t GO_FIELD_COUNT_ = 17;
 
   void parseGafRecord(const std::string& record_str);
-  void semantiacGafParse(const std::vector<std::string>& field_vec);
+  void semanticGafParse(const std::vector<std::string> &field_vec);
 
   GafRecordMap gaf_record_map_;
 

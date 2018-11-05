@@ -49,6 +49,7 @@ public:
   std::shared_ptr<GenomeDatabase> readFastaGffFile(const std::string& fasta_file_name,
                                                    const std::string& gff_file_name);
 
+  void readTssGffFile(const std::string& tss_gff_file_name, std::shared_ptr<GenomeDatabase> genome_db_ptr);
 
 private:
 

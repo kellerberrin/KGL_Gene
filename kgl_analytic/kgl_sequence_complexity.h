@@ -156,13 +156,13 @@ size_t SequenceComplexity::kmerCount(std::shared_ptr<const AlphabetSequence<Alph
 
     if (result != word_map.end()) {
 
-      ++result->second;
+      ++(result->second);
 
     }
 
   }
 
-  return word_map.size();
+  return word_map.begin()->second;
 
 }
 

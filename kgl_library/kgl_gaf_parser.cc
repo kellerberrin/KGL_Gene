@@ -101,7 +101,7 @@ void kgl::GeneOntology::parseGafRecord(const std::string& record_str) {
 
   } else {
 
-    semantiacGafParse(field_vec);
+    semanticGafParse(field_vec);
 
   }
 
@@ -109,7 +109,7 @@ void kgl::GeneOntology::parseGafRecord(const std::string& record_str) {
 }
 
 
-void kgl::GeneOntology::semantiacGafParse(const std::vector<std::string>& field_vec) {
+void kgl::GeneOntology::semanticGafParse(const std::vector<std::string> &field_vec) {
 
 
   GAFRecord gaf_record;

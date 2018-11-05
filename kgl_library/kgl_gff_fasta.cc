@@ -29,17 +29,30 @@ public:
   GffFastaImpl() = default;
   ~GffFastaImpl() = default;
 
+  using GffParser = bool (*)(std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr, seqan::GffRecord& record, long gff_line_counter);
+
+  template <GffParser parser>
   void readGffFile(const std::string &gff_file_name, std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr);
+
   bool writeFastaFile(const std::string& fasta_file_name, const std::vector<WriteFastaSequence>& fasta_sequences);
+
   void readFastaFile(const std::string& fasta_file_name, std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr);
+
   bool readFastaFile(const std::string& fasta_file_name, std::vector<ReadFastaSequence>& fasta_sequences);
+
+  // This parses the plasmodb gff records.
+  static bool parseGffRecord(std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr,
+                      seqan::GffRecord& record,
+                      long gff_line_counter);
+
+  // This parses the TSS_block gff created by Adjalley and Chabbert
+  static bool parseTssGffRecord(std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr,
+                                seqan::GffRecord& record,
+                                long gff_line_counter);
 
 private:
 
 
-  bool parseGffRecord(std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr,
-                      seqan::GffRecord& record,
-                      long gff_line_counter);
 
 
 };
@@ -121,6 +134,7 @@ void kgl::ParseGffFasta::GffFastaImpl::readFastaFile(const std::string& fasta_fi
 }
 
 
+template <kgl::ParseGffFasta::GffFastaImpl::GffParser parser>
 void kgl::ParseGffFasta::GffFastaImpl::readGffFile(const std::string &gff_file_name,
                                                    std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr) {
 
@@ -147,7 +161,7 @@ void kgl::ParseGffFasta::GffFastaImpl::readGffFile(const std::string &gff_file_n
 
       ++gff_line_counter;
 
-      if (not parseGffRecord(genome_db_ptr, record, gff_line_counter)) {
+      if (not parser(genome_db_ptr, record, gff_line_counter)) {
 
         ExecEnv::log().error("Parse error, unable to load feature at Gff line: {}", gff_line_counter);
         seqan::writeRecord(gff_file_out, record);
@@ -160,7 +174,7 @@ void kgl::ParseGffFasta::GffFastaImpl::readGffFile(const std::string &gff_file_n
 
   } catch(seqan::Exception const & e) {
 
-    ExecEnv::log().critical("Error: {} reading fasta file: {}", e.what(), gff_file_name);
+    ExecEnv::log().critical("Error: {} reading Gff file: {}", e.what(), gff_file_name);
 
   }
 
@@ -324,6 +338,87 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
 }
 
 
+bool kgl::ParseGffFasta::GffFastaImpl::parseTssGffRecord(std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr,
+                                                         seqan::GffRecord& record,
+                                                         long gff_line_counter) {
+  // Get the attributes.
+  kgl::Attributes record_attributes;
+  for (unsigned i = 0; i < length(record.tagNames); i++) {
+
+    std::string key = seqan::toCString(record.tagNames[i]);
+    std::string value = seqan::toCString(record.tagValues[i]);
+
+
+    bt::char_separator<char> sep(",");
+    bt::tokenizer<bt::char_separator<char>> tokenize(value, sep);
+    for(auto iter = tokenize.begin(); iter != tokenize.end(); ++iter) {
+
+      record_attributes.insertAttribute(key, *iter);
+
+    }
+
+
+  }
+  // Create a sequence object.
+  ContigOffset_t begin = record.beginPos;
+  ContigOffset_t end = record.endPos;
+  kgl::StrandSense strand;
+  // Check validity of the strand character
+  switch(record.strand) {
+
+    case '+':
+    case '-':
+    case '.':
+      strand = static_cast<kgl::StrandSense>(record.strand);
+      break;
+
+    default:
+      ExecEnv::log().error("Strand Sense character: {} is not one of ['+', '-', '.']", record.strand);
+      return false;
+
+  }
+  FeatureSequence sequence (begin, end, strand);
+  // Get the feature type and convert to upper case.
+  kgl::FeatureType_t type = toCString(record.type);
+  std::transform(type.begin(), type.end(), type.begin(), ::toupper);
+  // Get (or construct) the feature ID.
+  std::vector<kgl::FeatureIdent_t> feature_id_vec;
+  kgl::FeatureIdent_t feature_id;
+  if (not record_attributes.getIds(feature_id_vec)) {
+
+    // Construct an id
+    feature_id = type + std::to_string(begin);
+    ExecEnv::log().warn("Gff line: {}, 'ID' key not found; ID: {} generated", gff_line_counter, feature_id);
+
+  } else if (feature_id_vec.size() > 1) {
+
+    ExecEnv::log().warn("Gff line: {}, Has {} 'ID' values, choosing first value"
+    , gff_line_counter, feature_id_vec.size());
+
+    feature_id = feature_id_vec[0];
+
+  } else {
+
+    feature_id = feature_id_vec[0];
+
+  }
+  // Get the contig id.
+  kgl::ContigId_t contig_id = toCString(record.ref);
+  // Get a pointer to the contig.
+  std::shared_ptr<const kgl::ContigFeatures> contig_ptr;
+  if (not genome_db_ptr->getContigSequence(contig_id, contig_ptr)) {
+
+    ExecEnv::log().error("Could not find contig: {}", contig_id);
+    return false;
+
+  }
+
+  return true;
+
+}
+
+
+
 bool kgl::ParseGffFasta::GffFastaImpl::writeFastaFile(const std::string& fasta_file_name,
                                                       const std::vector<WriteFastaSequence>& fasta_sequences) {
 
@@ -399,8 +494,14 @@ std::shared_ptr<kgl::GenomeDatabase> kgl::ParseGffFasta::readFastaGffFile(const 
                                                                           const std::string& gff_file_name ) {
 
   std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr = readFastaFile(fasta_file_name);
-  gff_fasta_impl_ptr_->readGffFile(gff_file_name, genome_db_ptr);
+  gff_fasta_impl_ptr_->readGffFile<kgl::ParseGffFasta::GffFastaImpl::parseGffRecord>(gff_file_name, genome_db_ptr);
   return genome_db_ptr;
+
+}
+
+void kgl::ParseGffFasta::readTssGffFile(const std::string& tss_gff_file_name, std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr) {
+
+  gff_fasta_impl_ptr_->readGffFile<kgl::ParseGffFasta::GffFastaImpl::parseTssGffRecord>(tss_gff_file_name, genome_db_ptr);
 
 }
 

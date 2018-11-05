@@ -123,7 +123,7 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
   if (args.analysisType == ANALYZE_INTERVAL or args.analysisType == kgl::Phylogenetic::WILDCARD) {
 
-#define INTERVAL_SIZE 1000
+#define INTERVAL_SIZE 100
 
     kgl::ExecEnv::log().info("Analyzing genome intervals");
 
