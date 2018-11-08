@@ -38,11 +38,13 @@ public:
   // Attribute keys.
   constexpr static const char* ID_KEY = "ID";
   constexpr static const char* SUPER_FEATURE_KEY = "PARENT";
+  constexpr static const char* ASSIGNED_FEATURE_KEY = "ASSIGNEDFEAT";
   constexpr static const char* DESCRIPTION_KEY = "DESCRIPTION";
 
   // Convenience access routines.
   bool getIds(std::vector<std::string> &value_vec) const { return getAttributes(ID_KEY, value_vec); }
   bool getSuperFeatureIds(std::vector<std::string> &value_vec) const { return getAttributes(SUPER_FEATURE_KEY, value_vec); }
+  bool getAssignedFeatureIds(std::vector<std::string> &value_vec) const { return getAttributes(ASSIGNED_FEATURE_KEY, value_vec); }
   bool getDescription(std::vector<std::string> &value_vec) const { return getAttributes(DESCRIPTION_KEY, value_vec); }
 
 

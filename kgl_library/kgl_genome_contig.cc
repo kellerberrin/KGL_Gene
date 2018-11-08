@@ -59,13 +59,25 @@ void kgl::ContigFeatures::setupFeatureHierarchy() {
     // For each feature lookup a list of super_features
     std::vector<FeatureIdent_t> super_features;
     feature.getAttributes().getSuperFeatureIds(super_features);
+    // TSS features are assigned to GENES
+    std::vector<FeatureIdent_t> assigned_features;
+    feature.getAttributes().getAssignedFeatureIds(assigned_features);
+    // Merge TSS assigned features into super features.
+    super_features.insert( super_features.end(), assigned_features.begin(), assigned_features.end() );
     // Add parent pointers for the child and child pointers for the super_features.
     for (auto super_feature_id : super_features) {
 
       std::vector<std::shared_ptr<kgl::Feature>> super_feature_ptr_vec;
       if (not findFeatureId(super_feature_id, super_feature_ptr_vec)) {
 
-        // Error; could not find super feature.
+        // If the feature is a TSS and is unassigned then continue.
+        if (feature.isTSS() and super_feature_id == TSSFeature::TSS_UNASSIGNED) {
+
+          continue;
+
+        }
+
+        // Otherwise flag an Error; could not find super feature.
         kgl::ExecEnv::log().error("Feature: {}; Super Feature: {} does not exist", feature.id(), super_feature_id);
 
       }
@@ -205,5 +217,32 @@ bool kgl::ContigFeatures::getDNA5SequenceCoding(const std::shared_ptr<const Codi
 
   ExecEnv::log().error("getDNA5SequenceCoding(), coding_sequence_ptr is null");
   return false;
+
+}
+
+
+kgl::TSSVector kgl::ContigFeatures::getTSSVector() const {
+
+  TSSVector tss_vector;
+
+  for (auto feature : offset_feature_map_) {
+
+    if (not feature.second->isTSS()) continue;
+
+    std::shared_ptr<const TSSFeature> tss_feature = std::dynamic_pointer_cast<TSSFeature>(feature.second);
+
+    if (not tss_feature) {
+
+      ExecEnv::log().error("Unexpected feature type for feature: {}", feature.second->id());
+
+    } else {
+
+      tss_vector.push_back(tss_feature);
+
+    }
+
+  }
+
+  return tss_vector;
 
 }

@@ -52,6 +52,8 @@ public:
   virtual bool isGene() const { return false; }
   virtual bool ismRNA() const { return false; }
   virtual bool isEXON() const { return false; }
+  virtual bool isTSS() const { return false; }
+
 
   const SuperFeatureMap& superFeatures() const { return super_features_; }
   const SubFeatureMap& subFeatures() const { return sub_features_; }
@@ -72,6 +74,37 @@ private:
 
   bool verifyMod3(const SortedCDS& sorted_cds) const;
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// A Transcription Start Sequence, can be multiple TSS per gene.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class TSSFeature : public Feature {
+
+public:
+
+  TSSFeature(const FeatureIdent_t &id,
+              const std::shared_ptr<const ContigFeatures> &contig_ptr,
+              const FeatureSequence &sequence) : Feature(id, TSS_TYPE, contig_ptr, sequence) {}
+
+  TSSFeature(const TSSFeature &) = default;
+  ~TSSFeature() override = default;
+
+  TSSFeature &operator=(const TSSFeature &) = default;
+
+  bool isTSS() const final { return true; }
+
+  // TSS Type.
+  constexpr static const char* TSS_TYPE = "TSS_BLOCK";
+  // Unassigned to a feature.
+  constexpr static const char* TSS_UNASSIGNED = "NewTranscript";
+
+private:
+
+
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A Coding CDS Feature

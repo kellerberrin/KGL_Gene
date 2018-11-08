@@ -65,6 +65,7 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class Feature; // Forward decl.
+class TSSFeature; // Forward decl
 class CDSFeature; // Forward decl
 class EXONFeature; // Forward decl
 class GeneFeature; // Forward decl.

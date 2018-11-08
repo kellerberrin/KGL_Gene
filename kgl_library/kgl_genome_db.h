@@ -29,6 +29,7 @@ enum class ProteinSequenceAnalysis { VALID_SEQUENCE, NO_START_CODON, NONSENSE_MU
 using OffsetFeatureMap = std::multimap<ContigOffset_t, std::shared_ptr<Feature>>; // Contig features indexed by offset.
 using IdFeatureMap = std::multimap<FeatureIdent_t, std::shared_ptr<Feature>>; // Contig features indexed by ident.
 using GeneMap = std::multimap<ContigOffset_t, std::shared_ptr<GeneFeature>>;  // Inserted using the END offset as key.
+using TSSVector = std::vector<std::shared_ptr<const TSSFeature>>;  // Inserted using the END offset as key.
 
 
 class ContigFeatures {
@@ -49,6 +50,9 @@ public:
   // false if offset is not in a gene, else (true) returns a vector of ptrs to the genes.
   bool findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const;
   const GeneMap& getGeneMap() const { return gene_map_; }
+
+  // Return all TSS features in this contig.
+  TSSVector getTSSVector() const;
 
   bool setTranslationTable(const std::string& table_name) { return coding_table_.settranslationTable(table_name); }
   std::string translationTableName() const { return coding_table_.translationTableName(); }
@@ -124,11 +128,13 @@ public:
 
   // Creates a genome database object.
   // The fasta and gff files must be specified and present.
+  // The tss_gff file is optional (empty string if omitted)
   // The gaf file is optional (empty string if omitted)
   // The translation Amino Acid table is optional (empty string if omitted).
   // Note that different translation tables can be specified for individual contigs.
   static std::shared_ptr<const GenomeDatabase> createGenomeDatabase(const std::string& fasta_file,
                                                                     const std::string& gff_file,
+                                                                    const std::string& tss_gff_file,
                                                                     const std::string& gaf_file,
                                                                     const std::string& translation_table);
 

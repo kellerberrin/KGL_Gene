@@ -95,8 +95,15 @@ void kgl::ContigFeatures::verifySubFeatureSuperFeatureDimensions() {
   for (auto feature_pair : id_feature_map_) {
     Feature &feature = *feature_pair.second;
 
+    // TSS blocks can overlap superfeatures (Genes).
+    if (feature.isTSS()) continue;
+
     for (auto sub_feature_pair : feature.subFeatures()) {
       Feature &sub_feature = *sub_feature_pair.second;
+
+      // TSS blocks can overlap superfeatures (Genes).
+      if (sub_feature.isTSS()) continue;
+
       if (sub_feature.sequence().begin() < feature.sequence().begin()
           or sub_feature.sequence().end() > feature.sequence().end()) {
 
