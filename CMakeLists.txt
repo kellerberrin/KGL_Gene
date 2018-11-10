@@ -17,8 +17,8 @@ include_directories(/usr/include
 
 # add boost library directories
 #set(BOOST_ROOT /usr/lib/boost)
-#set(BOOST_INCLUDEDIR /usr/local/include)
-#set(BOOST_LIBRARYDIR /usr/local/lib/boost/lib)
+set(BOOST_INCLUDEDIR /usr/local/include)
+set(BOOST_LIBRARYDIR /usr/local/lib/boost/lib)
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME ON)
@@ -174,7 +174,9 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_finestructure_analysis.h
         kgl_analytic/kgl_finestructure_analysis.cc
         kgl_analytic/kgl_sequence_complexity.h
-        kgl_analytic/kgl_sequence_complexity.cc)
+        kgl_analytic/kgl_sequence_complexity.cc
+        kgl_analytic/kgl_epigenetic_motif.cc
+        kgl_analytic/kgl_epigenetic_motif.cc)
 
 # Deconvolution and mixture files.
 
@@ -321,7 +323,7 @@ add_library(kgd_contrib_lib STATIC ${DECONVOLV_LIB_CONTRIB_FILES})
 
 add_library(kgd_deconvolv_lib STATIC ${DECONVOLV_LIB_SOURCE_FILES})
 
-target_link_libraries(kgd_deconvolv_lib kgd_contrib_lib ${ZLIB_LIBRARIES} armadillo)
+target_link_libraries(kgd_deconvolv_lib kgd_contrib_lib ${ZLIB_LIBRARIES})
 
 #generate kgd_deconvolv executable
 add_executable (kgd_deconvolv ${DECONVOLV_APPLICATION_SOURCE_FILES})

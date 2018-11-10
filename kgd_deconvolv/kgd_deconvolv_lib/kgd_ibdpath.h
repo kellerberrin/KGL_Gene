@@ -50,7 +50,7 @@ public:
 private:
 
   std::shared_ptr<const IBDRecombProbs> ibd_recomb_probs_;
-  std::shared_ptr<const SiteProbabilityCache> ibd_prob_cache_;
+  std::shared_ptr<const stlSiteProbabilityCache> ibd_prob_cache_;
   Hprior h_prior_;
 
   double f_sum_;

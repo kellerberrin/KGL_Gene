@@ -16,6 +16,7 @@
 #include "kgl_distribution_analysis.h"
 #include "kgl_finestructure_analysis.h"
 #include "kgl_upgma_unphased.h"
+#include "kgl_epigenetic_motif.h"
 
 #include "kgd_deconvolv_app.h"
 
@@ -35,9 +36,10 @@ bool kgl::PhylogeneticAnalysis::checkAnalysisType(const std::string& analysis_ty
       and analysis_type != ANALYZE_UPGMA
       and analysis_type != ANALYZE_RNA
       and analysis_type != ANALYZE_SNP
-      and analysis_type != ANALYZE_MIX) {
+      and analysis_type != ANALYZE_MIX
+      and analysis_type != ANALYZE_MOTIF) {
 
-    ExecEnv::log().error("Invalid Analysis Type: {}.  Must be one of: {}, {}, {}, {}, {}, {}, {}, {}.",
+    ExecEnv::log().error("Invalid Analysis Type: {}.  Must be one of: {}, {}, {}, {}, {}, {}, {}, {}, {}.",
                          analysis_type,
                          ANALYZE_INTERVAL,
                          ANALYZE_SEQUENCES,
@@ -46,7 +48,8 @@ bool kgl::PhylogeneticAnalysis::checkAnalysisType(const std::string& analysis_ty
                          ANALYZE_UPGMA,
                          ANALYZE_RNA,
                          ANALYZE_SNP,
-                         ANALYZE_MIX);
+                         ANALYZE_MIX,
+                         ANALYZE_MOTIF);
 
     return false;
 
@@ -75,6 +78,12 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
   if (args.analysisType == kgl::Phylogenetic::WILDCARD) {
 
     kgl::ExecEnv::log().info("No analytic specified - performing all analytics (time consuming)");
+
+  }
+
+  if (args.analysisType == ANALYZE_MOTIF or args.analysisType == kgl::Phylogenetic::WILDCARD) {
+
+    PromoterMotif::displayTFFMotif(genome_db_ptr);
 
   }
 

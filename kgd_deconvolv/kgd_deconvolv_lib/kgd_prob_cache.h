@@ -9,7 +9,6 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
-#include <armadillo>
 #include "kgd_utility.h"
 
 
@@ -25,37 +24,6 @@ namespace deconvolv {          // project level namespace
 // Armadillo appears to be about 5% faster for this function.
 // This implies that there is no real motivation for converting the rest of the kgd code to Armadillo.
 
-class SiteProbabilityCache {
-
-public:
-
-  SiteProbabilityCache(const std::vector<double>& altCount,
-                       const std::vector<double>& refCount,
-                       double scalingConst = 100.0,
-                       double err = 0.01,
-                       size_t gridSize = 99);
-  ~SiteProbabilityCache() = default;
-
-  double siteLogBetaLLK(size_t site, double x) const { return armaSiteLogBetaLLK(site, x); }
-
-private:
-
-  arma::mat llk_surf_mat_;
-  arma::rowvec log_beta_gamma_vec_;
-
-  static constexpr size_t A_INDEX = 0;
-  static constexpr size_t B_INDEX = 1;
-
-
-  void armaProbabilityCache(const std::vector<double>& altCount,
-                            const std::vector<double>& refCount,
-                            double scalingConst,
-                            double err,
-                            size_t gridSize);
-
-  double armaSiteLogBetaLLK(size_t site, double x) const;
-
-};
 
 
 

@@ -81,11 +81,6 @@ private:
 
 
 
-
-
-
-
-
 }   // namespace genome
 }   // namespace kellerberrin
 

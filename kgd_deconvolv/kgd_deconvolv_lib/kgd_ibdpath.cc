@@ -29,7 +29,7 @@ void kgd::IBDpath::init(DEploidIO &dEploidIO) {
   IBD_path_change_at_ = std::vector<double>(nLoci());
 
   // compute likelihood surface
-  ibd_prob_cache_ = std::make_shared<const SiteProbabilityCache>(dEploidIO.getAltCount(),
+  ibd_prob_cache_ = std::make_shared<const stlSiteProbabilityCache>(dEploidIO.getAltCount(),
                                                                  dEploidIO.getRefCount(),
                                                                  dEploidIO.ibdParameters().betaBinomialConstant(), /*  double scalingConst */
                                                                  dEploidIO.ibdParameters().baseCountError(), /* double err */
