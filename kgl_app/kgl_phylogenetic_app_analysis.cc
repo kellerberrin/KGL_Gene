@@ -28,8 +28,7 @@ namespace kgd = kellerberrin::deconvolv;
 bool kgl::PhylogeneticAnalysis::checkAnalysisType(const std::string& analysis_type) {
 
 
-  if (analysis_type != Phylogenetic::WILDCARD
-      and analysis_type != ANALYZE_INTERVAL
+  if (analysis_type != ANALYZE_INTERVAL
       and analysis_type != ANALYZE_SEQUENCES
       and analysis_type != ANALYZE_GENE
       and analysis_type != ANALYZE_REGION
@@ -64,7 +63,7 @@ bool kgl::PhylogeneticAnalysis::checkAnalysisType(const std::string& analysis_ty
 
 
 void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
-                                                const kgl::RuntimeOptions& runtime_options,
+                                                const kgl::PropertyTree& runtime_options,
                                                 std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr,
                                                 std::shared_ptr<const UnphasedPopulation> unphased_population_ptr,
                                                 std::shared_ptr<const PhasedPopulation> population_ptr) {
@@ -75,19 +74,14 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
 
 
-  if (args.analysisType == kgl::Phylogenetic::WILDCARD) {
+  if (args.analysisType == ANALYZE_MOTIF) {
 
-    kgl::ExecEnv::log().info("No analytic specified - performing all analytics (time consuming)");
-
-  }
-
-  if (args.analysisType == ANALYZE_MOTIF or args.analysisType == kgl::Phylogenetic::WILDCARD) {
-
-    PromoterMotif::displayTFFMotif(genome_db_ptr);
+    std::string motif_file = kgl::Utility::filePath("Motif", args.workDirectory) + ".txt";
+    PromoterMotif::displayTFFMotif(genome_db_ptr, motif_file);
 
   }
 
-  if (args.analysisType == ANALYZE_SEQUENCES or args.analysisType == kgl::Phylogenetic::WILDCARD) {
+  if (args.analysisType == ANALYZE_SEQUENCES) {
 
     kgl::ExecEnv::log().info("Analyzing coding sequences");
 
@@ -130,7 +124,7 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
   }
 
-  if (args.analysisType == ANALYZE_INTERVAL or args.analysisType == kgl::Phylogenetic::WILDCARD) {
+  if (args.analysisType == ANALYZE_INTERVAL) {
 
 #define INTERVAL_SIZE 100
 
@@ -154,7 +148,7 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
   }
 
-  if (args.analysisType == ANALYZE_GENE or args.analysisType == kgl::Phylogenetic::WILDCARD) {
+  if (args.analysisType == ANALYZE_GENE) {
 
     kgl::ExecEnv::log().info("Analyzing a specific sequence");
     std::string fasta_file = kgl::Utility::filePath(ACTIVE_SEQUENCE, args.workDirectory) + ".fasta";
@@ -163,7 +157,7 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
   }
 
 
-  if (args.analysisType == ANALYZE_REGION or args.analysisType == kgl::Phylogenetic::WILDCARD) {
+  if (args.analysisType == ANALYZE_REGION) {
 
     kgl::ExecEnv::log().info("Analyzing genome regions");
 
@@ -204,7 +198,7 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
   }
 
-  if (args.analysisType == ANALYZE_MIX or args.analysisType == kgl::Phylogenetic::WILDCARD) {
+  if (args.analysisType == ANALYZE_MIX) {
 
     // Index variants by ref/alt count.
     VariantClassifier classifier(unphased_population_ptr);
@@ -220,7 +214,7 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
   }
 
-  if (args.analysisType == ANALYZE_SNP or args.analysisType == kgl::Phylogenetic::WILDCARD) {
+  if (args.analysisType == ANALYZE_SNP) {
 
     GenomeAuxData aux_data;
     aux_data.readParseAuxData(args.auxCSVFile);
@@ -241,7 +235,7 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
   }
 
-  if (args.analysisType == ANALYZE_UPGMA or args.analysisType == kgl::Phylogenetic::WILDCARD) {
+  if (args.analysisType == ANALYZE_UPGMA) {
 
     kgl::ExecEnv::log().info("Generating FineStructure Files.");
 
@@ -272,7 +266,7 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
   }
 
 
-  if (args.analysisType == ANALYZE_RNA or args.analysisType == kgl::Phylogenetic::WILDCARD) {
+  if (args.analysisType == ANALYZE_RNA) {
 
     kgl::ExecEnv::log().info("Performing an RNA analytic");
 
@@ -296,6 +290,5 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
   }
 
 }
-
 
 

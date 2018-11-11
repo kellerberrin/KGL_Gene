@@ -198,9 +198,7 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_phylogenetic_app_analysis.h
         kgl_app/kgl_phylogenetic_app.h
         kgl_app/kgl_phylogenetic_parse.cc
-        kgl_app/kgl_phylogenetic_option.h
-        kgl_app/kgl_phylogenetic_option.cc
-        kgl_app/kgl_phylogenetic_option_definitions.cc)
+        kgl_app/kgl_properties.cc)
 
 
 
@@ -331,7 +329,7 @@ add_executable (kgd_deconvolv ${DECONVOLV_APPLICATION_SOURCE_FILES})
 target_link_libraries(kgd_deconvolv kgd_deconvolv_lib kgl_genome_lib)
 
 #generate kgl_genome executable
-add_executable (kgl_genome ${APPLICATION_SOURCE_FILES})
+add_executable (kgl_genome ${APPLICATION_SOURCE_FILES} kgl_app/kgl_properties.h)
 
 target_link_libraries(kgl_genome kgl_genome_lib kgd_deconvolv_lib )
 

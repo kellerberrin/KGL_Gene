@@ -30,7 +30,7 @@ public:
   PromoterMotif() = default;
   ~PromoterMotif() = default;
 
-  static void displayTFFMotif(std::shared_ptr<const GenomeDatabase> genome_db_ptr);
+  static void displayTFFMotif(std::shared_ptr<const GenomeDatabase> genome_db_ptr, const std::string& file_name);
 
 
 };

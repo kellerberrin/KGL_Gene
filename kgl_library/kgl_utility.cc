@@ -68,12 +68,66 @@ std::string kgl::Utility::toupper(const std::string& s) {
 }
 
 // Returns trimmed string.
-std::string kgl::Utility::trimWhiteSpace(const std::string& s) {
+std::string kgl::Utility::trimAllWhiteSpace(const std::string &s) {
 
   std::string clean_string;
   auto lambda_not_whitespace = [](unsigned char c){ return not std::isspace(c); };
   std::copy_if(s.begin(), s.end(), back_inserter(clean_string), lambda_not_whitespace);
 
   return clean_string;
+
+}
+
+// Only trim whitespace at either end of the string.
+std::string kgl::Utility::trimEndWhiteSpace(const std::string &s) {
+
+  std::string start_trimmed_string;
+
+  auto it = s.begin();
+  while (it != s.end()) {
+
+    if (not std::isspace(*it)) {
+
+      break;
+
+    }
+
+    ++it;
+
+  }
+
+  while(it != s.end()) {
+
+    start_trimmed_string.push_back(*it);
+    ++it;
+
+  }
+
+  std::string trimmed_string;
+
+  auto rit = start_trimmed_string.rbegin();
+
+  while(rit != start_trimmed_string.rend()) {
+
+    if (not std::isspace(*rit)) {
+
+      break;
+
+    }
+
+    ++rit;
+
+  }
+
+  while(rit != start_trimmed_string.rend()) {
+
+    trimmed_string.push_back(*rit);
+    ++rit;
+
+  }
+
+  std::reverse(trimmed_string.begin(), trimmed_string.end());
+
+  return trimmed_string;
 
 }

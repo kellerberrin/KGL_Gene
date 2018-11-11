@@ -24,11 +24,11 @@ namespace kgl = kellerberrin::genome;
 // Static private member declarations.
 kgl::Phylogenetic kgl::PhylogeneticExecEnv::args_;
 // Static storage for the runtime options.
-kgl::RuntimeOptions kgl::PhylogeneticExecEnv::runtime_options_;
+kgl::PropertyTree kgl::PhylogeneticExecEnv::runtime_options_;
 
 // Public static member functions.
 const kgl::Phylogenetic& kgl::PhylogeneticExecEnv::getArgs() { return args_; }
-const kgl::RuntimeOptions& kgl::PhylogeneticExecEnv::getRuntimeOptions() { return runtime_options_; }
+const kgl::PropertyTree& kgl::PhylogeneticExecEnv::getRuntimeOptions() { return runtime_options_; }
 
 // Constants for the executable.
 constexpr const char* kgl::PhylogeneticExecEnv::MODULE_NAME;
@@ -417,7 +417,12 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
     std::string options_file;
     seqan::getOptionValue(options_file, parser, optionFlag_);
-    runtime_options_.readRuntimeOptions(options_file, getArgs().workDirectory);
+    std::string options_file_path = kgl::Utility::filePath(options_file, getArgs().workDirectory);
+    if (not runtime_options_.readProperties(options_file_path)) {
+
+      ExecEnv::log().critical("parseCommandLine; could not read specified property tree file: {}", options_file_path);
+
+    }
 
   }
 
@@ -445,7 +450,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
     } else if (args_.fileList.empty()){
 
-      ExecEnv::log().critical("No SAM/BAM files read from file list: {}", file_list);
+      ExecEnv::log().warn("No VCF files read from file list: {}", file_list);
 
     }
 

@@ -100,7 +100,7 @@ bool kgl::GenomeAuxData::parseHeader(const std::string& record_str) {
   // Covert Header to trimmed uppercase.
   for (const auto& item : lc_aux_data_header) {
 
-    aux_data_header_.emplace_back(Utility::trimWhiteSpace(Utility::toupper(item)));
+    aux_data_header_.emplace_back(Utility::trimAllWhiteSpace(Utility::toupper(item)));
 
   }
 
@@ -142,7 +142,7 @@ bool kgl::GenomeAuxData::tokenize(const std::string& parse_text,
   tokenizer tokenize_item{parse_text};
   for(auto iter_item = tokenize_item.begin(); iter_item != tokenize_item.end(); ++iter_item) {
 
-    attribute_vector.push_back(Utility::trimWhiteSpace(*iter_item));
+    attribute_vector.push_back(Utility::trimAllWhiteSpace(*iter_item));
 
   }
 
@@ -153,7 +153,7 @@ bool kgl::GenomeAuxData::tokenize(const std::string& parse_text,
 // Returns the field offset or boolean false if field not found.
 bool kgl::GenomeAuxData::fieldOffset(const std::string& field_name, size_t& field_offset) const {
 
-  std::string uc_field_name = Utility::trimWhiteSpace(Utility::toupper(field_name));
+  std::string uc_field_name = Utility::trimAllWhiteSpace(Utility::toupper(field_name));
 
   for (size_t idx = 0; idx < aux_data_header_.size(); ++idx) {
 

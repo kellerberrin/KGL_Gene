@@ -12,7 +12,7 @@
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-// Singleton. Defines (boost) file and time utility function.
+// Singleton. Defines (boost) file and time utility functions and misc string functions.
 
 class Utility {
 
@@ -26,7 +26,8 @@ public:
   static std::string fileExtension(const std::string& file_name);
   static std::string fileName(const std::string& file_name);
   static std::string toupper(const std::string& s);
-  static std::string trimWhiteSpace(const std::string& s);
+  static std::string trimAllWhiteSpace(const std::string &s); // Trim any whitespace in a string
+  static std::string trimEndWhiteSpace(const std::string &s); // Only trim whitespace at either end of the string.
 
 private:
 

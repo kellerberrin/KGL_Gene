@@ -26,7 +26,7 @@ public:
   static bool checkAnalysisType(const std::string& AnalysisType);
 
   static void performAnalysis(const Phylogenetic& args,
-                              const RuntimeOptions& runtime_options,
+                              const PropertyTree& runtime_options,
                               std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                               std::shared_ptr<const UnphasedPopulation> unphased_population_ptr,
                               std::shared_ptr<const PhasedPopulation> population_ptr);

@@ -8,7 +8,7 @@
 
 #include "kgl_genome_types.h"
 #include "kgl_exec_env.h"
-#include "kgl_phylogenetic_option.h"
+#include "kgl_properties.h"
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -31,15 +31,13 @@ struct Phylogenetic {
   std::vector<FileListInfo> fileList;
   std::string auxCSVFile{"kgl_aux.csv"};
   std::string logFile{"kgl_phylo.log"};
-  std::string contig{WILDCARD};
+  std::string contig{""};
   std::string aminoTranslationTable{"NCBI_TABLE_1"};
-  std::string analysisType{WILDCARD};
+  std::string analysisType{""};
   size_t ploidy{1};
   int max_error_count{1000};
   int max_warn_count{1000};
   bool verbose{false};
-
-  static constexpr const char* WILDCARD = "*";  // All analytics
 
 };
 
@@ -60,9 +58,9 @@ public:
 private:
 
   static const Phylogenetic& getArgs();
-  static const RuntimeOptions& getRuntimeOptions();
+  static const PropertyTree& getRuntimeOptions();
   static Phylogenetic args_;
-  static RuntimeOptions runtime_options_;
+  static PropertyTree runtime_options_;
 
 };
 

@@ -4,12 +4,16 @@
 
 #include "kgl_epigenetic_motif.h"
 
+#include <fstream>
+#include <sstream>
+
 
 namespace kgl = kellerberrin::genome;
 
 
-void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
+void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeDatabase> genome_db_ptr, const std::string& file_name) {
 
+  std::ofstream motif_file(file_name);
 
   for (auto contig : genome_db_ptr->getMap()) {
 
@@ -18,24 +22,29 @@ void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeDatabase> g
     size_t assigned_count = 0;
     for (auto tss_feature : vector) {
 
+      std::stringstream ss;
+
       if (tss_feature->superFeatures().size() > 0) {
 
         ++assigned_count;
+
+        ss << "Gene ID: " << tss_feature->superFeatures().begin()->first;
+        ss << " [" << tss_feature->superFeatures().begin()->second->sequence().begin();
+        ss << ", " << tss_feature->superFeatures().begin()->second->sequence().end();
+        ss << ")" << static_cast<char>(tss_feature->superFeatures().begin()->second->sequence().strand());
+        ss << ", ID:" << tss_feature->id();
+        ss << " [" << tss_feature->sequence().begin();
+        ss << ", " << tss_feature->sequence().end();
+        ss << ")" << static_cast<char>(tss_feature->sequence().strand());
+        ss << " size:" << (tss_feature->sequence().end()-tss_feature->sequence().begin());
         long offset = tss_feature->superFeatures().begin()->second->sequence().begin();
         offset -= tss_feature->sequence().end();
-        ExecEnv::log().info("Gene ID: {} [{},{}){}, ID: {} [{},{}){} size: {} offset: {}",
-                            tss_feature->superFeatures().begin()->first,
-                            tss_feature->superFeatures().begin()->second->sequence().begin(),
-                            tss_feature->superFeatures().begin()->second->sequence().end(),
-                            static_cast<char>(tss_feature->superFeatures().begin()->second->sequence().strand()),
-                            tss_feature->id(),
-                            tss_feature->sequence().begin(),
-                            tss_feature->sequence().end(),
-                            static_cast<char>(tss_feature->sequence().strand()),
-                            (tss_feature->sequence().end()-tss_feature->sequence().begin()),
-                            offset);
+        ss << " offset:" << offset;
+
+        motif_file << ss.str() << '\n';
 
       }
+
 
     }
 
