@@ -4,6 +4,7 @@
 
 #include "kgl_utility.h"
 #include "kgl_properties.h"
+#include "kgl_table_impl.h"
 
 
 #include <boost/property_tree/ptree.hpp>
@@ -32,6 +33,8 @@ public:
   bool readPropertiesFile(const std::string& properties_file);
 
   bool getProperty(const std::string& property_name, std::string& property) const;
+
+  bool getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const;
 
   bool getProperty(const std::string& property_name, size_t& property) const;
 
@@ -121,6 +124,33 @@ bool kgl::PropertyTree::PropertyImpl::getProperty(const std::string& property_na
   return true;
 
 }
+
+
+bool kgl::PropertyTree::PropertyImpl::getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const {
+
+  try {
+
+    for (auto child : property_tree_.get_child(property_name)) {
+      // The data function is used to access the data stored in a node.
+      property_vector.push_back(Utility::trimEndWhiteSpace(child.second.data()));
+
+    }
+
+  }
+  catch (...) {
+
+    ExecEnv::log().error("PropertyTree; Property: {} not found", property_name);
+    ExecEnv::log().error("***********Property Tree Contents*************");
+    treeTraversal();
+    ExecEnv::log().error("**********************************************");
+    return false;
+
+  }
+
+  return true;
+
+}
+
 
 
 bool kgl::PropertyTree::PropertyImpl::getProperty(const std::string& property_name, size_t& property) const {
@@ -222,3 +252,151 @@ bool kgl::PropertyTree::checkProperty(const std::string& property_name) const {
   return properties_impl_ptr_->checkProperty(property_name);
 
 }
+
+
+bool kgl::PropertyTree::getFileProperty(const std::string& property_name, const std::string& work_directory, std::string& file_path) const {
+
+  std::string file_name;
+
+  if (not getProperty(property_name, file_name)) {
+
+    ExecEnv::log().warn("PropertyTree::getFileProperty; Requested file property: {} not found. A list of all valid properties follows:",
+                        property_name);
+
+    treeTraversal();
+    return false;
+
+  }
+
+  file_path = Utility::filePath(file_name, work_directory);
+
+  return Utility::fileExists(file_path);
+
+}
+
+
+bool kgl::PropertyTree::getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const {
+
+  return properties_impl_ptr_->getPropertyVector(property_name, property_vector);
+
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// High level application specific property retrieval
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void kgl::RuntimeProperties::getGenomeDBFiles(const std::string& workdirectory,
+                                              std::string& fasta_file,
+                                              std::string& gff_file,
+                                              std::string& gaf_file,
+                                              std::string& tss_file,
+                                              std::string& translationTable) const {
+
+
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(TSS_FILE_) + std::string(VALUE_);
+  property_tree_.getFileProperty(key, workdirectory, tss_file);
+
+  key = std::string(RUNTIME_ROOT_) + std::string(GAF_FILE_) + std::string(VALUE_);
+  property_tree_.getFileProperty(key, workdirectory, gaf_file);
+
+  key = std::string(RUNTIME_ROOT_) + std::string(FASTA_FILE_) + std::string(VALUE_);
+  if (not property_tree_.getFileProperty(key, workdirectory, fasta_file)) {
+
+    ExecEnv::log().critical("Required Fasta File: {} does not exist.", fasta_file);
+
+  }
+
+  key = std::string(RUNTIME_ROOT_) + std::string(GFF_FILE_) + std::string(VALUE_);
+  if (not property_tree_.getFileProperty(key, workdirectory, gff_file)) {
+
+    ExecEnv::log().critical("Required GFF3 File: {} does not exist.", gff_file);
+
+  }
+
+  key = std::string(RUNTIME_ROOT_) + std::string(TRANSLATION_TABLE_) + std::string(VALUE_);
+  if (not property_tree_.getProperty(key, translationTable)) {
+
+    ExecEnv::log().warn("Amino Acid translation table not specified");
+
+  } else {
+
+    translationTable = Tables::STANDARDTABLE->table_name; // The standard amino acid translation table.
+
+  }
+
+}
+
+
+
+size_t kgl::RuntimeProperties::getVCFPloidy() const {
+
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(VCF_PLOIDY_) + std::string(VALUE_);
+  size_t ploidy;
+
+  if (not property_tree_.getProperty(key, ploidy)) {
+
+    ExecEnv::log().warn("VCF ploidy is not defined (need not be organism ploidy)");
+    ploidy = DEFAULT_PLOIDY_;
+
+  }
+
+  return ploidy;
+
+}
+
+
+bool kgl::RuntimeProperties::getMixtureFile(const std::string& workdirectory, std::string& mixture_file) const {
+
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(MIXTURE_FILE_) + std::string(VALUE_);
+  if (not property_tree_.getProperty(key, mixture_file)) {
+
+    return false;
+
+  }
+
+  mixture_file = Utility::filePath(mixture_file, workdirectory);
+
+  return Utility::fileExists(mixture_file);
+
+}
+
+
+bool kgl::RuntimeProperties::getAuxFile(const std::string& workdirectory, std::string& aux_file) const {
+
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(AUX_FILE_) + std::string(VALUE_);
+  if (not property_tree_.getProperty(key, aux_file)) {
+
+    return false;
+
+  }
+
+  aux_file = Utility::filePath(aux_file, workdirectory);
+
+  return Utility::fileExists(aux_file);
+
+}
+
+
+bool kgl::RuntimeProperties::getVCFFiles(const std::string& workdirectory, std::vector<std::string>& vcf_files) const {
+
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(VCF_LIST_) + std::string(FILE_LIST_);
+  std::vector<std::string> truncated_vcf_vector;
+  if (not property_tree_.getPropertyVector(key, truncated_vcf_vector)) {
+
+    return false;
+
+  }
+
+  for (auto file : truncated_vcf_vector) {
+
+    vcf_files.push_back(Utility::filePath(file, workdirectory));
+
+  }
+
+  return true;
+
+}
+

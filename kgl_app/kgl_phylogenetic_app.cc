@@ -18,7 +18,7 @@ namespace kgl = kellerberrin::genome;
 void kgl::PhylogeneticExecEnv::executeApp() {
 
   const Phylogenetic& args = getArgs();
-  const PropertyTree& runtime_options = getRuntimeOptions();
+  const RuntimeProperties& runtime_options = getRuntimeOptions();
 
 
   // Create a phased population object.
@@ -27,49 +27,54 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   // Create an unphased population object.
   std::shared_ptr<UnphasedPopulation> unphased_population_ptr(std::make_shared<UnphasedPopulation>());
 
-  std::string tss_file;
-  runtime_options.getProperty("tssFile", tss_file);
-  tss_file = kgl::Utility::filePath(tss_file, args.workDirectory);
+  // Get the genome database runtime parameters.
+  std::string fasta_file, gff_file, gaf_file, tss_file, amino_translation_table;
+  runtime_options.getGenomeDBFiles(args.workDirectory, fasta_file, gff_file, gaf_file, tss_file, amino_translation_table);
 
   // Create a genome database object.
-  std::shared_ptr<const GenomeDatabase> genome_db_ptr = GenomeDatabase::createGenomeDatabase(args.fastaFile,
-                                                                                             args.gffFile,
+  std::shared_ptr<const GenomeDatabase> genome_db_ptr = GenomeDatabase::createGenomeDatabase(fasta_file,
+                                                                                             gff_file,
                                                                                              tss_file,
-                                                                                             args.gafFile,
-                                                                                             args.aminoTranslationTable);
+                                                                                             gaf_file,
+                                                                                             amino_translation_table);
 
   // Write Filtered Unphased Heterozygous Statistics
   HeterozygousStatistics heterozygous_statistics;
 
+  std::vector<std::string> vcf_list;
+  runtime_options.getVCFFiles(args.workDirectory, vcf_list);
+
   // For all VCF files, read in the variants.
-  for (const auto& file : args.fileList) {
+  for (const auto& file : vcf_list) {
 
     // clear the unphased population object.
     unphased_population_ptr->clear();
 
     // Read variants.
-    VariantFactory().readVCFVariants(genome_db_ptr, unphased_population_ptr, file.file_name);
+    VariantFactory().readVCFVariants(genome_db_ptr, unphased_population_ptr, file);
 
     // Basic statistics to output
     // unphased_population_ptr->popStatistics();
 
-    // Filtered Unphased Heterozygous Statistics
+    // Filter unphased variants for minimum read statistics.
     std::shared_ptr<UnphasedPopulation> filtered_unphased_ptr = unphased_population_ptr->filterVariants(AndFilter(DPCountFilter(30), RefAltCountFilter(30)));
 
     // Process Filtered Unphased Heterozygous Statistics
     heterozygous_statistics.heterozygousStatistics(filtered_unphased_ptr);
 
-    // If the mixture file is defined then read it and phase the variants.
+    // Get the VCF ploidy (need not be the organism ploidy).
+    size_t ploidy = runtime_options.getVCFPloidy();
+    // If the mixture file is defined and exists then read it and phase the variants.
     std::string mixture_file;
-    if (runtime_options.checkProperty("mixtureFile")) {
+    if (runtime_options.getMixtureFile(args.workDirectory, mixture_file)) {
 
-      runtime_options.getProperty("mixtureFile", mixture_file);
-      GenomePhasing::fileHaploidPhasing(mixture_file, 2, filtered_unphased_ptr, genome_db_ptr, population_ptr);
+      // The mixture file indicates which VCF samples have Complexity Of Infection (COI), only clonal infections are used.
+      GenomePhasing::fileHaploidPhasing(mixture_file, ploidy, filtered_unphased_ptr, genome_db_ptr, population_ptr);
 
     } else {
 
-      // No mixture file, so assume all genomes are unmixed.
-      GenomePhasing::haploidPhasing(2, filtered_unphased_ptr, genome_db_ptr, population_ptr);
+      // No mixture file, so assume all genomes are unmixed and clonal
+      GenomePhasing::haploidPhasing(ploidy, filtered_unphased_ptr, genome_db_ptr, population_ptr);
 
     }
 

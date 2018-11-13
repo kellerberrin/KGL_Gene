@@ -63,14 +63,12 @@ bool kgl::PhylogeneticAnalysis::checkAnalysisType(const std::string& analysis_ty
 
 
 void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
-                                                const kgl::PropertyTree& runtime_options,
+                                                const kgl::RuntimeProperties& runtime_options,
                                                 std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr,
                                                 std::shared_ptr<const UnphasedPopulation> unphased_population_ptr,
                                                 std::shared_ptr<const PhasedPopulation> population_ptr) {
 
 
-  // Split into country populations.
-  std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(args.auxCSVFile, population_ptr);
 
 
 
@@ -102,6 +100,16 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
     std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric(std::make_shared<const LevenshteinGlobal>());
     coding_file = kgl::Utility::filePath("All_Amino_CodingAnalysis", args.workDirectory) + ".csv";
     kgl::ApplicationAnalysis::outputAminoSequenceCSV(coding_file, amino_distance_metric, genome_db_ptr, population_ptr);
+
+    // Split into country populations.
+    std::string aux_file_path;
+    if (not runtime_options.getAuxFile(args.workDirectory, aux_file_path)) {
+
+      ExecEnv::log().critical("Aux Genome information file not found");
+
+    }
+
+    std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr);
 
     for (auto country : country_pairs) {
 
@@ -135,6 +143,16 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
     std::string file_name = "IntervalAnalysis_all";
     std::string interval_file = kgl::Utility::filePath(file_name, args.workDirectory) + ".csv";
     variant_distribution.writeDistribution(genome_db_ptr, INTERVAL_SIZE, interval_file, ',');
+
+    // Split into country populations.
+    std::string aux_file_path;
+    if (not runtime_options.getAuxFile(args.workDirectory, aux_file_path)) {
+
+      ExecEnv::log().critical("Aux Genome information file not found");
+
+    }
+
+    std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr);
 
     for (auto country : country_pairs) {
 
@@ -216,8 +234,17 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 
   if (args.analysisType == ANALYZE_SNP) {
 
+    // Split into country populations.
+    std::string aux_file_path;
+    if (not runtime_options.getAuxFile(args.workDirectory, aux_file_path)) {
+
+      ExecEnv::log().critical("Aux Genome information file not found");
+
+    }
+
+    std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr);
     GenomeAuxData aux_data;
-    aux_data.readParseAuxData(args.auxCSVFile);
+    aux_data.readParseAuxData(aux_file_path);
 
     std::string DNA_mutation_file = kgl::Utility::filePath("DNAMutations.csv", args.workDirectory);
     ApplicationAnalysis::outputDNAMutationCSV(DNA_mutation_file,
@@ -240,6 +267,16 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
     kgl::ExecEnv::log().info("Generating FineStructure Files.");
 
 #define BASES_PER_CENTIMORGAN 15000.0
+
+    // Split into country populations.
+    std::string aux_file_path;
+    if (not runtime_options.getAuxFile(args.workDirectory, aux_file_path)) {
+
+      ExecEnv::log().critical("Aux Genome information file not found");
+
+    }
+
+    std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr);
 
     for (auto country : country_pairs) {
 

@@ -23,6 +23,7 @@ public:
 
   static void getElapsedTime(double &Clock, double &System, double &User);
   static std::string filePath(const std::string& file_name, const std::string& path); // utility for "path/file"
+  static bool fileExists(const std::string& file_path); // Check that a file exists at the file path
   static std::string fileExtension(const std::string& file_name);
   static std::string fileName(const std::string& file_name);
   static std::string toupper(const std::string& s);

@@ -14,27 +14,13 @@
 namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
-struct FileListInfo {
-
-  std::string file_name;
-  std::string genome_name;
-
-};
 
 // Holds the Phylogenetic Arguments.
 struct Phylogenetic {
 
   std::string workDirectory{"./Work"};
-  std::string fastaFile{""};
-  std::string gffFile{""};
-  std::string gafFile{""};
-  std::vector<FileListInfo> fileList;
-  std::string auxCSVFile{"kgl_aux.csv"};
   std::string logFile{"kgl_phylo.log"};
-  std::string contig{""};
-  std::string aminoTranslationTable{"NCBI_TABLE_1"};
   std::string analysisType{""};
-  size_t ploidy{1};
   int max_error_count{1000};
   int max_warn_count{1000};
   bool verbose{false};
@@ -58,9 +44,9 @@ public:
 private:
 
   static const Phylogenetic& getArgs();
-  static const PropertyTree& getRuntimeOptions();
+  static const RuntimeProperties& getRuntimeOptions();
   static Phylogenetic args_;
-  static PropertyTree runtime_options_;
+  static RuntimeProperties runtime_options_;
 
 };
 

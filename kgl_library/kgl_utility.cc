@@ -40,6 +40,22 @@ std::string kgl::Utility::filePath(const std::string& file_name, const std::stri
 
 }
 
+// Check that a file exists at the file path.
+bool kgl::Utility::fileExists(const std::string& file_path) {
+
+  boost::system::error_code error_code;
+  bool file_exists = fs::exists(fs::path(file_path), error_code);
+
+  if (error_code.value() != boost::system::errc::success) {
+
+    return false;
+
+  }
+
+  return file_exists;
+
+}
+
 // Returns the filename extension.
 std::string kgl::Utility::fileExtension(const std::string& file_name) {
 
