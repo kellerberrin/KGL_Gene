@@ -25,270 +25,278 @@ namespace kgl = kellerberrin::genome;
 namespace kgd = kellerberrin::deconvolv;
 
 
-bool kgl::PhylogeneticAnalysis::checkAnalysisType(const std::string& analysis_type) {
+void kgl::PhylogeneticAnalysis::performAnalysis(const std::string& analysis_type) {
 
+  auto result = analysis_map_.find(analysis_type);
 
-  if (analysis_type != ANALYZE_INTERVAL
-      and analysis_type != ANALYZE_SEQUENCES
-      and analysis_type != ANALYZE_GENE
-      and analysis_type != ANALYZE_REGION
-      and analysis_type != ANALYZE_UPGMA
-      and analysis_type != ANALYZE_RNA
-      and analysis_type != ANALYZE_SNP
-      and analysis_type != ANALYZE_MIX
-      and analysis_type != ANALYZE_MOTIF) {
+  if (result == analysis_map_.end()) {
 
-    ExecEnv::log().error("Invalid Analysis Type: {}.  Must be one of: {}, {}, {}, {}, {}, {}, {}, {}, {}.",
-                         analysis_type,
-                         ANALYZE_INTERVAL,
-                         ANALYZE_SEQUENCES,
-                         ANALYZE_GENE,
-                         ANALYZE_REGION,
-                         ANALYZE_UPGMA,
-                         ANALYZE_RNA,
-                         ANALYZE_SNP,
-                         ANALYZE_MIX,
-                         ANALYZE_MOTIF);
+    ExecEnv::log().error("Invalid Analysis Type: '{}'. Must be one of the following (case insensitive):", analysis_type);
 
-    return false;
+    for (auto analysis: analysis_map_) {
+
+      ExecEnv::log().info("Valid Analysis Type: '{}'", analysis.first);
+
+    }
+
+    return;
 
   }
 
+  kgl::ExecEnv::log().info("**********Performing Analysis: {} **************", result->first);
 
-  return true;
+  // Call the analysis.
+  (this->*(result->second))();
+
+  kgl::ExecEnv::log().info("**********Completed Analysis: {} **************", result->first);
 
 }
 
 
 
-
-void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
-                                                const kgl::RuntimeProperties& runtime_options,
-                                                std::shared_ptr<const kgl::GenomeDatabase> genome_db_ptr,
-                                                std::shared_ptr<const UnphasedPopulation> unphased_population_ptr,
-                                                std::shared_ptr<const PhasedPopulation> population_ptr) {
+void kgl::PhylogeneticAnalysis::performMotif() {
 
 
+  std::string motif_file = kgl::Utility::filePath("Motif", work_directory_) + ".txt";
+  PromoterMotif::displayTFFMotif(genome_db_ptr_, motif_file);
+
+}
 
 
+void kgl::PhylogeneticAnalysis::performSequence() {
 
-  if (args.analysisType == ANALYZE_MOTIF) {
 
-    std::string motif_file = kgl::Utility::filePath("Motif", args.workDirectory) + ".txt";
-    PromoterMotif::displayTFFMotif(genome_db_ptr, motif_file);
+  std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
 
-  }
+  std::string coding_file = kgl::Utility::filePath("All_DNA_CodingAnalysis", work_directory_) + ".csv";
+  kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::DNA, dna_distance_metric,
+                                                 genome_db_ptr_, population_ptr_);
 
-  if (args.analysisType == ANALYZE_SEQUENCES) {
+  coding_file = kgl::Utility::filePath("All_Variant_CodingAnalysis", work_directory_) + ".csv";
+  kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::VARIANT, dna_distance_metric,
+                                                 genome_db_ptr_, population_ptr_);
 
-    kgl::ExecEnv::log().info("Analyzing coding sequences");
+  coding_file = kgl::Utility::filePath("All_SNP_CodingAnalysis", work_directory_) + ".csv";
+  kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::SNP, dna_distance_metric,
+                                                 genome_db_ptr_, population_ptr_);
 
-    std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
+  coding_file = kgl::Utility::filePath("All_SIZE_CodingAnalysis", work_directory_) + ".csv";
+  kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::SIZE, dna_distance_metric,
+                                                 genome_db_ptr_, population_ptr_);
 
-    std::string coding_file = kgl::Utility::filePath("All_DNA_CodingAnalysis", args.workDirectory) + ".csv";
-    kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::DNA, dna_distance_metric,  genome_db_ptr, population_ptr);
+  std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric(
+      std::make_shared<const LevenshteinGlobal>());
+  coding_file = kgl::Utility::filePath("All_Amino_CodingAnalysis", work_directory_) + ".csv";
+  kgl::ApplicationAnalysis::outputAminoSequenceCSV(coding_file, amino_distance_metric, genome_db_ptr_,
+                                                   population_ptr_);
 
-    coding_file = kgl::Utility::filePath("All_Variant_CodingAnalysis", args.workDirectory) + ".csv";
-    kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::VARIANT, dna_distance_metric,  genome_db_ptr, population_ptr);
+  // Split into country populations.
+  std::string aux_file_path;
+  if (not runtime_options_.getAuxFile(work_directory_, aux_file_path)) {
 
-    coding_file = kgl::Utility::filePath("All_SNP_CodingAnalysis", args.workDirectory) + ".csv";
-    kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::SNP, dna_distance_metric,  genome_db_ptr, population_ptr);
-
-    coding_file = kgl::Utility::filePath("All_SIZE_CodingAnalysis", args.workDirectory) + ".csv";
-    kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::SIZE, dna_distance_metric,  genome_db_ptr, population_ptr);
-    
-    std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric(std::make_shared<const LevenshteinGlobal>());
-    coding_file = kgl::Utility::filePath("All_Amino_CodingAnalysis", args.workDirectory) + ".csv";
-    kgl::ApplicationAnalysis::outputAminoSequenceCSV(coding_file, amino_distance_metric, genome_db_ptr, population_ptr);
-
-    // Split into country populations.
-    std::string aux_file_path;
-    if (not runtime_options.getAuxFile(args.workDirectory, aux_file_path)) {
-
-      ExecEnv::log().critical("Aux Genome information file not found");
-
-    }
-
-    std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr);
-
-    for (auto country : country_pairs) {
-
-      coding_file = kgl::Utility::filePath(country.first + "Variant_CodingAnalysis", args.workDirectory) + ".csv";
-      kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::VARIANT, dna_distance_metric,  genome_db_ptr, country.second);
-
-      coding_file = kgl::Utility::filePath(country.first + "SNP_CodingAnalysis", args.workDirectory) + ".csv";
-      kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::SNP, dna_distance_metric,  genome_db_ptr, country.second);
-
-      coding_file = kgl::Utility::filePath(country.first + "SIZE_CodingAnalysis", args.workDirectory) + ".csv";
-      kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::SIZE, dna_distance_metric,  genome_db_ptr, country.second);
-
-      coding_file = kgl::Utility::filePath(country.first + "DNA_CodingAnalysis", args.workDirectory) + ".csv";
-      kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::DNA, dna_distance_metric,  genome_db_ptr, country.second);
-
-      coding_file = kgl::Utility::filePath(country.first + "Amino_CodingAnalysis", args.workDirectory) + ".csv";
-      kgl::ApplicationAnalysis::outputAminoSequenceCSV(coding_file, amino_distance_metric, genome_db_ptr, country.second);
-
-    }
+    ExecEnv::log().critical("Aux Genome information file not found");
 
   }
 
-  if (args.analysisType == ANALYZE_INTERVAL) {
+  std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr_);
 
-#define INTERVAL_SIZE 100
+  for (auto country : country_pairs) {
 
-    kgl::ExecEnv::log().info("Analyzing genome intervals");
+    coding_file = kgl::Utility::filePath(country.first + "Variant_CodingAnalysis", work_directory_) + ".csv";
+    kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::VARIANT, dna_distance_metric,
+                                                   genome_db_ptr_, country.second);
+
+    coding_file = kgl::Utility::filePath(country.first + "SNP_CodingAnalysis", work_directory_) + ".csv";
+    kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::SNP, dna_distance_metric,
+                                                   genome_db_ptr_, country.second);
+
+    coding_file = kgl::Utility::filePath(country.first + "SIZE_CodingAnalysis", work_directory_) + ".csv";
+    kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::SIZE, dna_distance_metric,
+                                                   genome_db_ptr_, country.second);
+
+    coding_file = kgl::Utility::filePath(country.first + "DNA_CodingAnalysis", work_directory_) + ".csv";
+    kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::DNA, dna_distance_metric,
+                                                   genome_db_ptr_, country.second);
+
+    coding_file = kgl::Utility::filePath(country.first + "Amino_CodingAnalysis", work_directory_) + ".csv";
+    kgl::ApplicationAnalysis::outputAminoSequenceCSV(coding_file, amino_distance_metric, genome_db_ptr_,
+                                                     country.second);
+
+  }
+
+}
+
+void kgl::PhylogeneticAnalysis::performInterval() {
+
+
+#define INTERVAL_SIZE 1000
+
+
+  AggregateVariantDistribution variant_distribution;
+  variant_distribution.variantDistribution(population_ptr_);
+  std::string file_name = "IntervalAnalysis_all";
+  std::string interval_file = kgl::Utility::filePath(file_name, work_directory_) + ".csv";
+  variant_distribution.writeDistribution(genome_db_ptr_, INTERVAL_SIZE, interval_file, ',');
+
+  // Split into country populations.
+  std::string aux_file_path;
+  if (not runtime_options_.getAuxFile(work_directory_, aux_file_path)) {
+
+    ExecEnv::log().critical("Aux Genome information file not found");
+
+  }
+
+  std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr_);
+
+  for (auto country : country_pairs) {
 
     AggregateVariantDistribution variant_distribution;
-    variant_distribution.variantDistribution(population_ptr);
-    std::string file_name = "IntervalAnalysis_all";
-    std::string interval_file = kgl::Utility::filePath(file_name, args.workDirectory) + ".csv";
-    variant_distribution.writeDistribution(genome_db_ptr, INTERVAL_SIZE, interval_file, ',');
-
-    // Split into country populations.
-    std::string aux_file_path;
-    if (not runtime_options.getAuxFile(args.workDirectory, aux_file_path)) {
-
-      ExecEnv::log().critical("Aux Genome information file not found");
-
-    }
-
-    std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr);
-
-    for (auto country : country_pairs) {
-
-      AggregateVariantDistribution variant_distribution;
-      variant_distribution.variantDistribution(country.second);
-      std::string file_name = "IntervalAnalysis_" + country.first;
-      std::string interval_file = kgl::Utility::filePath(file_name, args.workDirectory) + ".csv";
-      variant_distribution.writeDistribution(genome_db_ptr, INTERVAL_SIZE, interval_file, ',');
-
-    }
-
-  }
-
-  if (args.analysisType == ANALYZE_GENE) {
-
-    kgl::ExecEnv::log().info("Analyzing a specific sequence");
-    std::string fasta_file = kgl::Utility::filePath(ACTIVE_SEQUENCE, args.workDirectory) + ".fasta";
-    kgl::GeneAnalysis::mutateGene(ACTIVE_CONTIG, ACTIVE_GENE, ACTIVE_SEQUENCE, population_ptr, genome_db_ptr, fasta_file);
+    variant_distribution.variantDistribution(country.second);
+    std::string file_name = "IntervalAnalysis_" + country.first;
+    std::string interval_file = kgl::Utility::filePath(file_name, work_directory_) + ".csv";
+    variant_distribution.writeDistribution(genome_db_ptr_, INTERVAL_SIZE, interval_file, ',');
 
   }
 
 
-  if (args.analysisType == ANALYZE_REGION) {
+}
 
-    kgl::ExecEnv::log().info("Analyzing genome regions");
 
-    std::string region_fasta_file = "malawi_fb_SRR609075";
-    region_fasta_file += "_561666";
-    region_fasta_file = kgl::Utility::filePath(region_fasta_file, args.workDirectory) + ".fasta";
-    kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075", "Pf3D7_04_v3", 561666, 11753, population_ptr, genome_db_ptr, region_fasta_file);
+void kgl::PhylogeneticAnalysis::performGene() {
 
-    region_fasta_file = "malawi_fb_SRR609075";
-    region_fasta_file += "_462000";
-    region_fasta_file = kgl::Utility::filePath(region_fasta_file, args.workDirectory) + ".fasta";
-    kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075", "Pf3D7_01_v3", 462000, 2000, population_ptr, genome_db_ptr, region_fasta_file);
+    std::string fasta_file = kgl::Utility::filePath(ACTIVE_SEQUENCE, work_directory_) + ".fasta";
+    kgl::GeneAnalysis::mutateGene(ACTIVE_CONTIG, ACTIVE_GENE, ACTIVE_SEQUENCE, population_ptr_, genome_db_ptr_,
+                                  fasta_file);
 
-    region_fasta_file = "malawi_fb_SRR609075";
-    region_fasta_file += "_0";
-    region_fasta_file = kgl::Utility::filePath(region_fasta_file, args.workDirectory) + ".fasta";
-    kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075", "Pf3D7_04_v3", 0, 1200490, population_ptr, genome_db_ptr, region_fasta_file);
+}
 
-    region_fasta_file = "malawi_fb_SRR609075";
-    region_fasta_file += "_944950";
-    region_fasta_file = kgl::Utility::filePath(region_fasta_file, args.workDirectory) + ".fasta";
-    kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075", "Pf3D7_04_v3", 944950, 135, population_ptr, genome_db_ptr, region_fasta_file);
 
-    region_fasta_file = "malawi_fb_SRR609075";
-    region_fasta_file += "_941875";
-    region_fasta_file = kgl::Utility::filePath(region_fasta_file, args.workDirectory) + ".fasta";
-    kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075", "Pf3D7_04_v3", 941875, 4293, population_ptr, genome_db_ptr, region_fasta_file);
+void kgl::PhylogeneticAnalysis::performRegion() {
 
-    region_fasta_file = "malawi_fb_SRR609075";
-    region_fasta_file += "_569342";
-    region_fasta_file = kgl::Utility::filePath(region_fasta_file, args.workDirectory) + ".fasta";
-    kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075", "Pf3D7_04_v3", 569342, 7467, population_ptr, genome_db_ptr, region_fasta_file);
+  std::string region_fasta_file = "malawi_fb_SRR609075";
+  region_fasta_file += "_561666";
+  region_fasta_file = kgl::Utility::filePath(region_fasta_file, work_directory_) + ".fasta";
+  kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075", "Pf3D7_04_v3", 561666, 11753, population_ptr_,
+                                        genome_db_ptr_, region_fasta_file);
 
-    region_fasta_file = "malawi_fb_SRR609075";
-    region_fasta_file += "_584668";
-    region_fasta_file = kgl::Utility::filePath(region_fasta_file, args.workDirectory) + ".fasta";
-    kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075", "Pf3D7_04_v3", 584668, 7280, population_ptr, genome_db_ptr, region_fasta_file);
+  region_fasta_file = "malawi_fb_SRR609075";
+  region_fasta_file += "_462000";
+  region_fasta_file = kgl::Utility::filePath(region_fasta_file, work_directory_) + ".fasta";
+  kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075", "Pf3D7_01_v3", 462000, 2000, population_ptr_,
+                                        genome_db_ptr_, region_fasta_file);
+
+  region_fasta_file = "malawi_fb_SRR609075";
+  region_fasta_file += "_0";
+  region_fasta_file = kgl::Utility::filePath(region_fasta_file, work_directory_) + ".fasta";
+  kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075", "Pf3D7_04_v3", 0, 1200490, population_ptr_,
+                                        genome_db_ptr_, region_fasta_file);
+
+  region_fasta_file = "malawi_fb_SRR609075";
+  region_fasta_file += "_944950";
+  region_fasta_file = kgl::Utility::filePath(region_fasta_file, work_directory_) + ".fasta";
+  kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075", "Pf3D7_04_v3", 944950, 135, population_ptr_,
+                                        genome_db_ptr_, region_fasta_file);
+
+  region_fasta_file = "malawi_fb_SRR609075";
+  region_fasta_file += "_941875";
+  region_fasta_file = kgl::Utility::filePath(region_fasta_file, work_directory_) + ".fasta";
+  kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075", "Pf3D7_04_v3", 941875, 4293, population_ptr_,
+                                        genome_db_ptr_, region_fasta_file);
+
+  region_fasta_file = "malawi_fb_SRR609075";
+  region_fasta_file += "_569342";
+  region_fasta_file = kgl::Utility::filePath(region_fasta_file, work_directory_) + ".fasta";
+  kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075", "Pf3D7_04_v3", 569342, 7467, population_ptr_,
+                                        genome_db_ptr_, region_fasta_file);
+
+  region_fasta_file = "malawi_fb_SRR609075";
+  region_fasta_file += "_584668";
+  region_fasta_file = kgl::Utility::filePath(region_fasta_file, work_directory_) + ".fasta";
+  kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075", "Pf3D7_04_v3", 584668, 7280, population_ptr_,
+                                        genome_db_ptr_, region_fasta_file);
+
+
+}
+
+
+void kgl::PhylogeneticAnalysis::performMix() {
+
+  // Index variants by ref/alt count.
+  VariantClassifier classifier(unphased_population_ptr_);
+
+  for (auto genome : classifier.getGenomes()) {
+
+    const size_t minimum_offset_base_count = 25;
+    const size_t maximum_offset_base_count = 150;
+    kgd::MixtureDataObj mixture_data = classifier.convertToMixture(genome, minimum_offset_base_count,
+                                                                   maximum_offset_base_count);
+    kgd::ExecEnv::executeLib(mixture_data);
 
   }
 
-  if (args.analysisType == ANALYZE_MIX) {
+}
 
-    // Index variants by ref/alt count.
-    VariantClassifier classifier(unphased_population_ptr);
 
-    for (auto genome : classifier.getGenomes()) {
+void kgl::PhylogeneticAnalysis::performSNP() {
 
-      const size_t minimum_offset_base_count = 25;
-      const size_t maximum_offset_base_count = 150;
-      kgd::MixtureDataObj mixture_data = classifier.convertToMixture(genome, minimum_offset_base_count, maximum_offset_base_count);
-      kgd::ExecEnv::executeLib(mixture_data);
 
-    }
+  // Split into country populations.
+  std::string aux_file_path;
+  if (not runtime_options_.getAuxFile(work_directory_, aux_file_path)) {
+
+    ExecEnv::log().critical("Aux Genome information file not found");
 
   }
 
-  if (args.analysisType == ANALYZE_SNP) {
+  std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr_);
+  GenomeAuxData aux_data;
+  aux_data.readParseAuxData(aux_file_path);
 
-    // Split into country populations.
-    std::string aux_file_path;
-    if (not runtime_options.getAuxFile(args.workDirectory, aux_file_path)) {
-
-      ExecEnv::log().critical("Aux Genome information file not found");
-
-    }
-
-    std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr);
-    GenomeAuxData aux_data;
-    aux_data.readParseAuxData(aux_file_path);
-
-    std::string DNA_mutation_file = kgl::Utility::filePath("DNAMutations.csv", args.workDirectory);
-    ApplicationAnalysis::outputDNAMutationCSV(DNA_mutation_file,
+  std::string DNA_mutation_file = kgl::Utility::filePath("DNAMutations.csv", work_directory_);
+  ApplicationAnalysis::outputDNAMutationCSV(DNA_mutation_file,
+                                            PFATP4_CONTIG,
+                                            PFATP4_GENE,
+                                            PFATP4_SEQUENCE,
+                                            genome_db_ptr_,
+                                            population_ptr_,
+                                            aux_data);
+  std::string amino_mutation_file = kgl::Utility::filePath("AminoMutations.csv", work_directory_);
+  ApplicationAnalysis::outputAminoMutationCSV(amino_mutation_file,
                                               PFATP4_CONTIG,
                                               PFATP4_GENE,
                                               PFATP4_SEQUENCE,
-                                              genome_db_ptr,
-                                              population_ptr,
-                                              aux_data);
-    std::string amino_mutation_file = kgl::Utility::filePath("AminoMutations.csv", args.workDirectory);
-    ApplicationAnalysis::outputAminoMutationCSV(amino_mutation_file, PFATP4_CONTIG, PFATP4_GENE, PFATP4_SEQUENCE,
-                                                genome_db_ptr, population_ptr);
+                                              genome_db_ptr_,
+                                              population_ptr_);
 
-//    phased_statistics_ptr->outputPopulation();
 
-  }
+}
 
-  if (args.analysisType == ANALYZE_UPGMA) {
 
-    kgl::ExecEnv::log().info("Generating FineStructure Files.");
+void kgl::PhylogeneticAnalysis::performUPGMA() {
+
 
 #define BASES_PER_CENTIMORGAN 15000.0
 
-    // Split into country populations.
-    std::string aux_file_path;
-    if (not runtime_options.getAuxFile(args.workDirectory, aux_file_path)) {
+  // Split into country populations.
+  std::string aux_file_path;
+  if (not runtime_options_.getAuxFile(work_directory_, aux_file_path)) {
 
-      ExecEnv::log().critical("Aux Genome information file not found");
+    ExecEnv::log().critical("Aux Genome information file not found");
 
-    }
+  }
 
-    std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr);
+  std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr_);
 
-    for (auto country : country_pairs) {
+  for (auto country : country_pairs) {
 
-      std::string file_name = "FS/" + country.first;
-      std::string fine_structure_file = kgl::Utility::filePath(file_name, args.workDirectory);
-      FineStructureAnalysis::generateFiles(fine_structure_file, country.second, BASES_PER_CENTIMORGAN);
+    std::string file_name = "FS/" + country.first;
+    std::string fine_structure_file = kgl::Utility::filePath(file_name, work_directory_);
+    FineStructureAnalysis::generateFiles(fine_structure_file, country.second, BASES_PER_CENTIMORGAN);
 
-    }
+  }
 
 
-    kgl::ExecEnv::log().info("Performing a UPGMA analytic");
-//    std::shared_ptr<const AminoSequenceDistance> distance_metric_ptr(std::make_shared<const Blosum80Global>());
+ //    std::shared_ptr<const AminoSequenceDistance> distance_metric_ptr(std::make_shared<const Blosum80Global>());
 //    kgl::UPGMAGenePhyloTree<kgl::UPGMAATP4Distance>(args.workDirectory,
 //                                                    newick_file,
 //                                                    distance_metric_ptr,
@@ -300,31 +308,30 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const kgl::Phylogenetic& args,
 //    std::shared_ptr<const UnphasedPopulation> filtered_ptr = unphased_population_ptr->filterVariants(DPCountFilter(25));
 //    kgl::UPGMAUnphasedTree<kgl::UPGMAUnphasedDistance>(newick_file, filtered_ptr);
 
-  }
+
+}
 
 
-  if (args.analysisType == ANALYZE_RNA) {
+void kgl::PhylogeneticAnalysis::performRNA() {
 
-    kgl::ExecEnv::log().info("Performing an RNA analytic");
 
-    RNAAnalysis rna_analysis;
+  RNAAnalysis rna_analysis;
 
-    rna_analysis.getRNARegions("Pf3D7_04_v3",
-                               956848,
-                               135,
-                               StrandSense::FORWARD,
-                               "Pf3D7_04_v3",
-                               (958066 - 1000),
-                               9000,
-                               StrandSense::FORWARD,
-                               genome_db_ptr);
+  rna_analysis.getRNARegions("Pf3D7_04_v3",
+                             956848,
+                             135,
+                             StrandSense::FORWARD,
+                             "Pf3D7_04_v3",
+                             (958066 - 1000),
+                             9000,
+                             StrandSense::FORWARD,
+                             genome_db_ptr_);
 
-    std::shared_ptr<const LocalDNASequenceCompare>  compare_metric_ptr(std::make_shared<const DNALocalAffineGap>());
-    rna_analysis.compareRNARegion(0, 24, 1, compare_metric_ptr);
+  std::shared_ptr<const LocalDNASequenceCompare>  compare_metric_ptr(std::make_shared<const DNALocalAffineGap>());
+  rna_analysis.compareRNARegion(0, 24, 1, compare_metric_ptr);
 
-    rna_analysis.showResults(2);
+  rna_analysis.showResults(2);
 
-  }
 
 }
 

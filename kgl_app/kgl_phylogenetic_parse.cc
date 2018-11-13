@@ -47,7 +47,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   // Set short description, version, and date.
   setShortDescription(parser, "Population Genome Comparison");
   setVersion(parser, VERSION);
-  setDate(parser, "September 2018");
+  setDate(parser, "December 2018");
 
   // Define usage line and long description.
   addUsageLine(parser, "--workDirectory <work.directory>  --newLogFile <new_log_file> --optionFile <optionFile>");
@@ -55,16 +55,14 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   const char* program_desc =
       R"("kgl_phylogenetic" is a fast C++ program to find genetic differences (SNPs/Indels) in a population of organisms.
   The entire genome of many organisms can be compared and analysed simultaneously (with sufficient memory).
-  The --fileList flag" specifies a list of SAM/BAM/VCF files and associated organism names to be processed.
+  The options xml file specifies a list of VCF files and associated organism attributes to be processed.
   This program also takes the genome FASTA file and the corresponding genetic feature  model in GFF3 (only) format
-  and builds a memory database of the genetic structure of the target organism to facilitate analysis.
-  Source FASTQ files should be filtered for quality and aligned to the FASTA reference genome with a tool
-  such as BowTie2 or bwa, and output in SAM/BAM format. The program will read VCF files without further processing)";
+  and builds a memory database of the genetic structure of the target organism to facilitate analysis.)";
 
   addDescription(parser, program_desc);
 
   // Define Options -- Section Modification Options
-  addSection(parser, "Required Program Options");
+  addSection(parser, "Command Line Program Options");
 
   const char* dir_desc =
       R"(The work directory where log files and data files are found.
@@ -227,12 +225,6 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   if (seqan::isSet(parser, analysisFlag_)) seqan::getOptionValue(args_.analysisType, parser, analysisFlag_);
 
   args_.analysisType = kgl::Utility::toupper(args_.analysisType);
-
-  if (not PhylogeneticAnalysis::checkAnalysisType(args_.analysisType)) {
-
-    ExecEnv::log().critical("Invalid Analysis Requested: {}; program terminates.", args_.analysisType);
-
-  }
 
   if (seqan::isSet(parser, verboseFlag_)) seqan::getOptionValue(args_.verbose, parser, verboseFlag_);
 

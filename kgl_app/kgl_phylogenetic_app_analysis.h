@@ -14,23 +14,63 @@ namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The top level analysis object.
+// Dispatches analytics.
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 class PhylogeneticAnalysis {
 
 public:
 
-  PhylogeneticAnalysis() = delete; // Singleton
-  ~PhylogeneticAnalysis() = delete;
+using AnalysisFuncPtr = void (PhylogeneticAnalysis::*)();
+using AnalysisMap = std::map<std::string, AnalysisFuncPtr>;
 
-  static bool checkAnalysisType(const std::string& AnalysisType);
 
-  static void performAnalysis(const Phylogenetic& args,
-                              const RuntimeProperties& runtime_options,
-                              std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                              std::shared_ptr<const UnphasedPopulation> unphased_population_ptr,
-                              std::shared_ptr<const PhasedPopulation> population_ptr);
+  PhylogeneticAnalysis(const std::string& work_directory,
+                       const RuntimeProperties& runtime_options,
+                       std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                       std::shared_ptr<const UnphasedPopulation> unphased_population_ptr,
+                       std::shared_ptr<const PhasedPopulation> population_ptr) :  work_directory_(work_directory),
+                                                                                  runtime_options_(runtime_options),
+                                                                                  genome_db_ptr_(genome_db_ptr),
+                                                                                  unphased_population_ptr_(unphased_population_ptr),
+                                                                                  population_ptr_(population_ptr) {
+
+    analysis_map_[ANALYZE_INTERVAL] = &PhylogeneticAnalysis::performInterval;
+    analysis_map_[ANALYZE_SEQUENCES] = &PhylogeneticAnalysis::performSequence;
+    analysis_map_[ANALYZE_REGION] = &PhylogeneticAnalysis::performRegion;
+    analysis_map_[ANALYZE_UPGMA] = &PhylogeneticAnalysis::performUPGMA;
+    analysis_map_[ANALYZE_GENE] = &PhylogeneticAnalysis::performGene;
+    analysis_map_[ANALYZE_RNA] = &PhylogeneticAnalysis::performRNA;
+    analysis_map_[ANALYZE_SNP] = &PhylogeneticAnalysis::performSNP;
+    analysis_map_[ANALYZE_MIX] = &PhylogeneticAnalysis::performMix;
+    analysis_map_[ANALYZE_MOTIF] = &PhylogeneticAnalysis::performMotif;
+
+  }
+  ~PhylogeneticAnalysis() = default;
+
+  void performAnalysis(const std::string& analysis_type);
+
+  void performMotif();
+  void performSequence();
+  void performInterval();
+  void performGene();
+  void performRegion();
+  void performMix();
+  void performSNP();
+  void performUPGMA();
+  void performRNA();
+
 private:
+
+  AnalysisMap analysis_map_;
+
+  const std::string work_directory_;
+  const RuntimeProperties& runtime_options_;
+  std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
+  std::shared_ptr<const UnphasedPopulation> unphased_population_ptr_;
+  std::shared_ptr<const PhasedPopulation> population_ptr_;
 
   // Analytic types.
   static constexpr const char* ANALYZE_INTERVAL = "INTERVAL";

@@ -47,7 +47,7 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   // For all VCF files, read in the variants.
   for (const auto& file : vcf_list) {
 
-    // clear the unphased population object.
+    // Clear the unphased population object.
     unphased_population_ptr->clear();
 
     // Read variants.
@@ -85,7 +85,8 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   heterozygous_statistics.writeHeterozygousStatistics(heterozygous_file, ',');
 
   // Analyze the data.
-  kgl::PhylogeneticAnalysis::performAnalysis(args, runtime_options, genome_db_ptr, unphased_population_ptr, population_ptr);
+  kgl::PhylogeneticAnalysis Analysis(args.workDirectory, runtime_options, genome_db_ptr, unphased_population_ptr, population_ptr);
+  Analysis.performAnalysis(args.analysisType);
 
 }
 

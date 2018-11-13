@@ -151,7 +151,7 @@ bool kgl::GenomePhasing::fileHaploidPhasing(const std::string& phase_file,
 
     if (genome_statistics.first > 1) {
 
-      ExecEnv::log().info("GenomePhasing::fileHaploidPhasing; Strains: {} mix for genome: {}", genome_statistics.first, genome.first);
+//      ExecEnv::log().info("GenomePhasing::fileHaploidPhasing; Strains: {} mix for genome: {}", genome_statistics.first, genome.first);
       continue;
 
     }
@@ -210,7 +210,7 @@ bool kgl::GenomePhasing::fileHaploidPhasing(const std::string& phase_file,
   double percent_statistics = (static_cast<double>(statistics_count) / static_cast<double>(unphased_population_ptr->getMap().size())) * 100.0;
   double percent_mono = (static_cast<double>(mono_strain_count) / static_cast<double>(unphased_population_ptr->getMap().size())) * 100.0;
 
-  ExecEnv::log().info("Haploid Phasing; Genomes with phasing statistics: {}%, Mono strain genomes: {}%", percent_statistics, percent_mono);
+  ExecEnv::log().info("Haploid Phasing; Genomes with phasing statistics: {}%, Mono strain (Clonal) genomes: {}%", percent_statistics, percent_mono);
 
   double percent_homozygous = (static_cast<double>(homozygous_count) / static_cast<double>(homozygous_count + heterozygous_count)) * 100.0;
   double percent_accepted_heterozygous = (static_cast<double>(accepted_heterozygous_count) / static_cast<double>(heterozygous_count)) * 100.0;
