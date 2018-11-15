@@ -66,22 +66,25 @@ public:
   RuntimeProperties() = default;
   ~RuntimeProperties() = default;
 
-  bool readProperties(const std::string& properties_file) { return property_tree_.readProperties(properties_file); }
+  bool readProperties(const std::string& properties_file);
 
-  bool getMixtureFile(const std::string& workdirectory, std::string& mixture_file) const;
+  void setWorkDirectory(const std::string& work_directory) { work_directory_ = work_directory; }
 
-  bool getAuxFile(const std::string& workdirectory, std::string& aux_file) const;
+  const std::string& workDirectory() const { return work_directory_; }
+
+  bool getMixtureFile(std::string& mixture_file) const;
+
+  bool getAuxFile(std::string& aux_file) const;
 
   size_t getVCFPloidy() const;
 
-  void getGenomeDBFiles(const std::string& work_directory,
-                        std::string& fasta_file,
+  void getGenomeDBFiles(std::string& fasta_file,
                         std::string& gff_file,
                         std::string& gaf_file,
                         std::string& tss_file,
                         std::string& tranlation_table) const;
 
-  bool getVCFFiles(const std::string& workdirectory, std::vector<std::string>& vcf_files) const;
+  bool getVCFFiles(std::vector<std::string>& vcf_files) const;
 
 private:
 
@@ -103,7 +106,8 @@ private:
   // Defaults
   constexpr static const size_t DEFAULT_PLOIDY_ = 2;
 
-  PropertyTree property_tree_;
+  std::string work_directory_;  // The work directory, all files are specified 'work_directory/file_name'
+  PropertyTree property_tree_;   // All the option XML files.
 
 };
 

@@ -212,9 +212,10 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
     std::string options_file;
     seqan::getOptionValue(options_file, parser, optionFlag_);
-    std::string options_file_path = kgl::Utility::filePath(options_file, getArgs().workDirectory);
-    if (not runtime_options_.readProperties(options_file_path)) {
+    runtime_options_.setWorkDirectory(args_.workDirectory);
+    if (not runtime_options_.readProperties(options_file)) {
 
+      std::string options_file_path = Utility::filePath(options_file, args_.workDirectory);
       ExecEnv::log().critical("parseCommandLine; could not read specified runtime properties file: {}", options_file_path);
 
     }

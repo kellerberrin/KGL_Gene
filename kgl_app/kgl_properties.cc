@@ -75,7 +75,7 @@ bool kgl::PropertyTree::PropertyImpl::readPropertiesFile(const std::string& prop
   }
   catch(...) {
 
-    ExecEnv::log().error("PropertyTree; Malformed property tree in file: {}", properties_file);
+    ExecEnv::log().error("PropertyTree; Missing or Malformed property tree in file: {}", properties_file);
     return false;
 
   }
@@ -287,9 +287,16 @@ bool kgl::PropertyTree::getPropertyVector(const std::string& property_name, std:
 // High level application specific property retrieval
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+bool kgl::RuntimeProperties::readProperties(const std::string& properties_file) {
 
-void kgl::RuntimeProperties::getGenomeDBFiles(const std::string& workdirectory,
-                                              std::string& fasta_file,
+  std::string properties_path = Utility::filePath(properties_file, work_directory_);
+  return property_tree_.readProperties(properties_path);
+
+}
+
+
+
+void kgl::RuntimeProperties::getGenomeDBFiles(std::string& fasta_file,
                                               std::string& gff_file,
                                               std::string& gaf_file,
                                               std::string& tss_file,
@@ -297,20 +304,20 @@ void kgl::RuntimeProperties::getGenomeDBFiles(const std::string& workdirectory,
 
 
   std::string key = std::string(RUNTIME_ROOT_) + std::string(TSS_FILE_) + std::string(VALUE_);
-  property_tree_.getFileProperty(key, workdirectory, tss_file);
+  property_tree_.getFileProperty(key, work_directory_, tss_file);
 
   key = std::string(RUNTIME_ROOT_) + std::string(GAF_FILE_) + std::string(VALUE_);
-  property_tree_.getFileProperty(key, workdirectory, gaf_file);
+  property_tree_.getFileProperty(key, work_directory_, gaf_file);
 
   key = std::string(RUNTIME_ROOT_) + std::string(FASTA_FILE_) + std::string(VALUE_);
-  if (not property_tree_.getFileProperty(key, workdirectory, fasta_file)) {
+  if (not property_tree_.getFileProperty(key, work_directory_, fasta_file)) {
 
     ExecEnv::log().critical("Required Fasta File: {} does not exist.", fasta_file);
 
   }
 
   key = std::string(RUNTIME_ROOT_) + std::string(GFF_FILE_) + std::string(VALUE_);
-  if (not property_tree_.getFileProperty(key, workdirectory, gff_file)) {
+  if (not property_tree_.getFileProperty(key, work_directory_, gff_file)) {
 
     ExecEnv::log().critical("Required GFF3 File: {} does not exist.", gff_file);
 
@@ -348,7 +355,7 @@ size_t kgl::RuntimeProperties::getVCFPloidy() const {
 }
 
 
-bool kgl::RuntimeProperties::getMixtureFile(const std::string& workdirectory, std::string& mixture_file) const {
+bool kgl::RuntimeProperties::getMixtureFile(std::string& mixture_file) const {
 
   std::string key = std::string(RUNTIME_ROOT_) + std::string(MIXTURE_FILE_) + std::string(VALUE_);
   if (not property_tree_.getProperty(key, mixture_file)) {
@@ -357,14 +364,14 @@ bool kgl::RuntimeProperties::getMixtureFile(const std::string& workdirectory, st
 
   }
 
-  mixture_file = Utility::filePath(mixture_file, workdirectory);
+  mixture_file = Utility::filePath(mixture_file, work_directory_);
 
   return Utility::fileExists(mixture_file);
 
 }
 
 
-bool kgl::RuntimeProperties::getAuxFile(const std::string& workdirectory, std::string& aux_file) const {
+bool kgl::RuntimeProperties::getAuxFile(std::string& aux_file) const {
 
   std::string key = std::string(RUNTIME_ROOT_) + std::string(AUX_FILE_) + std::string(VALUE_);
   if (not property_tree_.getProperty(key, aux_file)) {
@@ -373,14 +380,14 @@ bool kgl::RuntimeProperties::getAuxFile(const std::string& workdirectory, std::s
 
   }
 
-  aux_file = Utility::filePath(aux_file, workdirectory);
+  aux_file = Utility::filePath(aux_file, work_directory_);
 
   return Utility::fileExists(aux_file);
 
 }
 
 
-bool kgl::RuntimeProperties::getVCFFiles(const std::string& workdirectory, std::vector<std::string>& vcf_files) const {
+bool kgl::RuntimeProperties::getVCFFiles(std::vector<std::string>& vcf_files) const {
 
   std::string key = std::string(RUNTIME_ROOT_) + std::string(VCF_LIST_) + std::string(FILE_LIST_);
   std::vector<std::string> truncated_vcf_vector;
@@ -392,7 +399,7 @@ bool kgl::RuntimeProperties::getVCFFiles(const std::string& workdirectory, std::
 
   for (auto file : truncated_vcf_vector) {
 
-    vcf_files.push_back(Utility::filePath(file, workdirectory));
+    vcf_files.push_back(Utility::filePath(file, work_directory_));
 
   }
 

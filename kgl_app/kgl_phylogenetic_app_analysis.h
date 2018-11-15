@@ -27,12 +27,10 @@ using AnalysisFuncPtr = void (PhylogeneticAnalysis::*)();
 using AnalysisMap = std::map<std::string, AnalysisFuncPtr>;
 
 
-  PhylogeneticAnalysis(const std::string& work_directory,
-                       const RuntimeProperties& runtime_options,
+  PhylogeneticAnalysis(const RuntimeProperties& runtime_options,
                        std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                        std::shared_ptr<const UnphasedPopulation> unphased_population_ptr,
-                       std::shared_ptr<const PhasedPopulation> population_ptr) :  work_directory_(work_directory),
-                                                                                  runtime_options_(runtime_options),
+                       std::shared_ptr<const PhasedPopulation> population_ptr) :  runtime_options_(runtime_options),
                                                                                   genome_db_ptr_(genome_db_ptr),
                                                                                   unphased_population_ptr_(unphased_population_ptr),
                                                                                   population_ptr_(population_ptr) {
@@ -50,23 +48,16 @@ using AnalysisMap = std::map<std::string, AnalysisFuncPtr>;
   }
   ~PhylogeneticAnalysis() = default;
 
+  // Analysis dispatcher
   void performAnalysis(const std::string& analysis_type);
 
-  void performMotif();
-  void performSequence();
-  void performInterval();
-  void performGene();
-  void performRegion();
-  void performMix();
-  void performSNP();
-  void performUPGMA();
-  void performRNA();
 
 private:
 
+  // Dynamic analysis dispatcher map
   AnalysisMap analysis_map_;
 
-  const std::string work_directory_;
+  // Analysis data and options.
   const RuntimeProperties& runtime_options_;
   std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
   std::shared_ptr<const UnphasedPopulation> unphased_population_ptr_;
@@ -83,6 +74,16 @@ private:
   static constexpr const char* ANALYZE_MIX = "MIX";
   static constexpr const char* ANALYZE_MOTIF = "MOTIF";
 
+  // Analysis routines
+  void performMotif();
+  void performSequence();
+  void performInterval();
+  void performGene();
+  void performRegion();
+  void performMix();
+  void performSNP();
+  void performUPGMA();
+  void performRNA();
 
 };
 
