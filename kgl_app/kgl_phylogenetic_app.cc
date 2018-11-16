@@ -86,8 +86,7 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   heterozygous_statistics.writeHeterozygousStatistics(heterozygous_file, ',');
 
   // Analyze the data.
-  kgl::PhylogeneticAnalysis Analysis(runtime_options, genome_db_ptr, unphased_population_ptr, population_ptr);
-  Analysis.performAnalysis(args.analysisType);
+  kgl::PhylogeneticAnalysis(runtime_options, genome_db_ptr, unphased_population_ptr, population_ptr).performAnalysis(args.analysisType);
 
 }
 

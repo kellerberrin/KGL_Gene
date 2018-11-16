@@ -168,7 +168,7 @@ std::shared_ptr<kgl::PhasedPopulation> kgl::PhasedPopulation::filterRenameGenome
     if (result == population_variant_map_.end()) {
       // Not found.
 
-      ExecEnv::log().warn("filterRenameGenomes; for genome: {}, unable to find source genome: {}", genome_pair.first, genome_pair.second);
+      // ExecEnv::log().warn("filterRenameGenomes; for genome: {}, unable to find source genome: {}", genome_pair.first, genome_pair.second);
       continue; // Next pair.
 
     }
