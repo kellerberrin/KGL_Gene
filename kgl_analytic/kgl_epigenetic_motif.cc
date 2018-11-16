@@ -11,9 +11,11 @@
 namespace kgl = kellerberrin::genome;
 
 
-void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeDatabase> genome_db_ptr, const std::string& file_name) {
+void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeDatabase> genome_db_ptr, const std::string& file_name, const char delimiter) {
 
   std::ofstream motif_file(file_name);
+
+  headerTFFMotif(motif_file, delimiter);
 
   for (auto contig : genome_db_ptr->getMap()) {
 
@@ -25,42 +27,39 @@ void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeDatabase> g
       ContigSize_t tss_size = (tss_feature->sequence().end()-tss_feature->sequence().begin());
       ContigOffset_t tss_offset = tss_feature->sequence().begin();
 
-      // Check offset and size.
-      if ((tss_offset + tss_size) > contig.second->sequence().length() or tss_size > contig.second->sequence().length()) {
-
-        ExecEnv::log().warn("displayTFFMotif; contig offset: {} and region size: {} too large for contig: {} length: {}",
-                            tss_offset, tss_size, contig.first, contig.second->sequence().length());
-        continue;
-
-      }
-
       // Get the reference DNA sequence
       std::shared_ptr<DNA5SequenceLinear> tss_sequence = contig.second->sequence().subSequence(tss_offset, tss_size);
+      // Strand it.
+      std::shared_ptr<DNA5SequenceCoding> tss_coding = tss_sequence->codingSequence(tss_feature->sequence().strand());
 
-      std::stringstream ss;
-
-      if (tss_feature->superFeatures().size() > 0) {
+      if (not tss_feature->superFeatures().empty()) {
 
         ++assigned_count;
 
-        ss << "Gene ID: " << tss_feature->superFeatures().begin()->first;
-        ss << " [" << tss_feature->superFeatures().begin()->second->sequence().begin();
-        ss << ", " << tss_feature->superFeatures().begin()->second->sequence().end();
-        ss << ")" << static_cast<char>(tss_feature->superFeatures().begin()->second->sequence().strand());
-        ss << ", ID:" << tss_feature->id();
-        ss << " [" << tss_feature->sequence().begin();
-        ss << ", " << tss_feature->sequence().end();
-        ss << ")" << static_cast<char>(tss_feature->sequence().strand());
-        ss << " size:" << tss_size;
+        motif_file << tss_feature->superFeatures().begin()->first << delimiter;
+        motif_file << tss_feature->superFeatures().begin()->second->sequence().begin() << delimiter;
+        motif_file << tss_feature->superFeatures().begin()->second->sequence().end() << delimiter;
+        motif_file << static_cast<char>(tss_feature->superFeatures().begin()->second->sequence().strand()) << delimiter;
         long offset = tss_feature->superFeatures().begin()->second->sequence().begin();
         offset -= tss_feature->sequence().end();
-        ss << " offset:" << offset;
-        ss << " " << tss_sequence->getSequenceAsString();
+        motif_file << offset << delimiter;
 
-        motif_file << ss.str() << '\n';
+      } else {
+
+        motif_file << delimiter;
+        motif_file << delimiter;
+        motif_file << delimiter;
+        motif_file << delimiter;
+        motif_file << delimiter;
 
       }
 
+      motif_file << tss_feature->id() << delimiter;
+      motif_file << tss_feature->sequence().begin() << delimiter;
+      motif_file << tss_feature->sequence().end() << delimiter;
+      motif_file << static_cast<char>(tss_feature->sequence().strand()) << delimiter;
+      motif_file << tss_size << delimiter;
+      motif_file << tss_coding->getSequenceAsString() << delimiter << '\n';
 
     }
 
@@ -72,3 +71,18 @@ void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeDatabase> g
 }
 
 
+void kgl::PromoterMotif::headerTFFMotif(std::ofstream& motif_file, const char delimiter) {
+
+  motif_file << "GENE" << delimiter;
+  motif_file << "Begin" << delimiter;
+  motif_file << "End" << delimiter;
+  motif_file << "Strand" << delimiter;
+  motif_file << "TFFOffset" << delimiter;
+  motif_file << "TFF" << delimiter;
+  motif_file << "TFFBegin" << delimiter;
+  motif_file << "TFFEnd" << delimiter;
+  motif_file << "TFFStrand" << delimiter;
+  motif_file << "TFFSize" << delimiter;
+  motif_file << "TFFSequence" << delimiter << '\n';
+
+}

@@ -57,8 +57,8 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const std::string& analysis_type
 void kgl::PhylogeneticAnalysis::performMotif() {
 
 
-  std::string motif_file = kgl::Utility::filePath("Motif", runtime_options_.workDirectory()) + ".txt";
-  PromoterMotif::displayTFFMotif(genome_db_ptr_, motif_file);
+  std::string motif_file = kgl::Utility::filePath("Motif", runtime_options_.workDirectory()) + ".csv";
+  PromoterMotif::displayTFFMotif(genome_db_ptr_, motif_file, ',');
 
 }
 

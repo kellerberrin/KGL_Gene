@@ -246,3 +246,4 @@ kgl::TSSVector kgl::ContigFeatures::getTSSVector() const {
   return tss_vector;
 
 }
+

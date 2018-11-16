@@ -56,8 +56,30 @@ kgl::DNA5SequenceLinear::codingOffsetSubSequence(std::shared_ptr<const CodingSeq
 }
 
 
+// Returns an UNSTRANDED subsequence. Returned sequence is valid but zero-sized if offset/size are out-of-bounds.
+std::shared_ptr<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::subSequence(ContigOffset_t offset, ContigSize_t sub_length) const {
+
+  std::shared_ptr<DNA5SequenceLinear> sub_sequence(std::make_shared<DNA5SequenceLinear>());
+
+  // Check offset and size.
+  if ((offset + sub_length) > length() or sub_length > length()) {
+
+    ExecEnv::log().warn("DNA5SequenceLinear::subSequence; sub sequence offset: {} and sub sequence size: {} too large for seuqence length: {}",
+                        offset, sub_length, length());
+    // Return an empty sequence
+    return sub_sequence;
+
+  }
+
+  getSubsequence(offset, sub_length, sub_sequence);
+
+  return sub_sequence;
+
+}
 
 
+// Down-converts a coding DNA sequence to a linear DNA5 alphabet (swaps the logical alphabet from CodingDNA5 to DNA5).
+// No strand conversion is performed (or defined).
 std::shared_ptr<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::linearSequence(std::shared_ptr<const DNA5SequenceCoding> coding_sequence) {
 
   StringDNA5 linear_string;
@@ -72,7 +94,39 @@ std::shared_ptr<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::linearSequence
 
 }
 
+// Up-converts a linear UNSTANDED DNA sequence to a STRANDED coding sequence (swaps the logical alphabet from DNA5 to CodingDNA5).
+// A -ve strand returns the reverse complement as expected.
+std::shared_ptr<kgl::DNA5SequenceCoding> kgl::DNA5SequenceLinear::codingSequence(StrandSense strand) const {
 
+
+  StringCodingDNA5 coding_string;
+  coding_string.reserve(length()); // pre-allocate for efficiency
+
+  if (strand == StrandSense::REVERSE) {
+
+    for (auto rit = getAlphabetString().rbegin(); rit != getAlphabetString().rend(); ++rit) {
+
+      coding_string.push_back(DNA5::complementNucleotide(*rit));
+
+    }
+
+  } else { // Strand is positive or unknown.
+
+    auto convert_coding = [](DNA5::Alphabet base) { return DNA5::convertToCodingDNA5(base); };
+
+    std::transform(getAlphabetString().begin(),
+                   getAlphabetString().end(),
+                   std::back_inserter(coding_string),
+                   convert_coding);
+
+  }
+
+
+  std::shared_ptr<DNA5SequenceCoding> coding_sequence(std::make_shared<DNA5SequenceCoding>(std::move(coding_string), strand));
+
+  return coding_sequence;
+
+}
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

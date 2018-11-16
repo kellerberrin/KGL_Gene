@@ -31,6 +31,7 @@ namespace genome {   // project level namespace
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This is a DNA5 coding sequence that has been generated using a CodingSequence (CDS) object.
+// Or upconverted from a DNA5SequenceLinear sequence (see function codingSequence(StrandSense strand) below).
 // Only this object can be used to generate an amino acid sequence.
 // This sequence is ALWAYS STRANDED.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -98,15 +99,13 @@ public:
   // No strand conversion is performed (or defined).
   static std::shared_ptr<DNA5SequenceLinear> linearSequence(std::shared_ptr<const DNA5SequenceCoding> base_sequence);
 
-  // Returns an UNSTRANDED subsequence.
-  std::shared_ptr<DNA5SequenceLinear> subSequence(ContigOffset_t sub_sequence_offset, // offset
-                                                  ContigSize_t sub_sequence_length) const { // if a subsequence.
+  // Up-converts a linear UNSTANDED DNA sequence to a STRANDED coding sequence (swaps the logical alphabet from DNA5 to CodingDNA5).
+  // A -ve strand returns the reverse complement as expected.
+  std::shared_ptr<DNA5SequenceCoding> codingSequence(StrandSense strand) const;
 
-    std::shared_ptr<DNA5SequenceLinear> sub_sequence(std::make_shared<DNA5SequenceLinear>());
-    getSubsequence(sub_sequence_offset, sub_sequence_length, sub_sequence);
-    return sub_sequence;
+  // Returns an UNSTRANDED subsequence. Returned sequence is valid but zero-sized if offset/size are out-of-bounds.
+  std::shared_ptr<DNA5SequenceLinear> subSequence(ContigOffset_t sub_sequence_offset, ContigSize_t sub_sequence_length) const;
 
-  }
 
 private:
 
