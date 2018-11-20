@@ -64,7 +64,7 @@ std::shared_ptr<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::subSequence(Co
   // Check offset and size.
   if ((offset + sub_length) > length() or sub_length > length()) {
 
-    ExecEnv::log().warn("DNA5SequenceLinear::subSequence; sub sequence offset: {} and sub sequence size: {} too large for seuqence length: {}",
+    ExecEnv::log().warn("DNA5SequenceLinear::subSequence; sub sequence offset: {} and sub sequence size: {} too large for sequence length: {}",
                         offset, sub_length, length());
     // Return an empty sequence
     return sub_sequence;

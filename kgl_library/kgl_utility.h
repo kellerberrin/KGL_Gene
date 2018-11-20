@@ -29,6 +29,8 @@ public:
   static std::string toupper(const std::string& s);
   static std::string trimAllWhiteSpace(const std::string &s); // Trim any whitespace in a string
   static std::string trimEndWhiteSpace(const std::string &s); // Only trim whitespace at either end of the string.
+  static std::string findAndReplaceAll(const std::string source, const std::string& search, const std::string& replace);
+
 
 private:
 

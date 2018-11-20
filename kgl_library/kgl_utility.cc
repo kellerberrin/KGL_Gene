@@ -147,3 +147,25 @@ std::string kgl::Utility::trimEndWhiteSpace(const std::string &s) {
   return trimmed_string;
 
 }
+
+
+std::string kgl::Utility::findAndReplaceAll(const std::string source, const std::string& search, const std::string& replace)
+{
+
+  std::string modified = source;
+  // Get the first occurrence
+  size_t pos = modified.find(search);
+
+  // Repeat till end is reached
+  while( pos != std::string::npos)
+  {
+    // Replace this occurrence of Sub String
+    modified.replace(pos, search.size(), replace);
+    // Get the next occurrence from the position after the replaced string.
+    pos = modified.find(search, pos + replace.size());
+
+  }
+
+  return modified;
+
+}
