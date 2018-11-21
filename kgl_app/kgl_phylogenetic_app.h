@@ -15,7 +15,7 @@ namespace kellerberrin {   //  organization level namespace
 namespace genome {   // project level namespace
 
 
-// Holds the Phylogenetic Arguments.
+// Holds the Phylogenetic Commandline Arguments.
 struct Phylogenetic {
 
   std::string workDirectory{"./Work"};

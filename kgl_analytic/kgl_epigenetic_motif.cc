@@ -27,28 +27,28 @@ void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeDatabase> g
       ContigSize_t tss_size = (tss_feature->sequence().end()-tss_feature->sequence().begin());
       ContigOffset_t tss_offset = tss_feature->sequence().begin();
 
-      // Get the reference DNA sequence
-      std::shared_ptr<DNA5SequenceLinear> tss_sequence = contig.second->sequence().subSequence(tss_offset, tss_size);
+      // Get the motif DNA sequence.
+      std::shared_ptr<const DNA5SequenceLinear> tss_sequence = contig.second->sequence().subSequence(tss_offset, tss_size);
       // Strand it.
-      std::shared_ptr<DNA5SequenceCoding> tss_coding = tss_sequence->codingSequence(tss_feature->sequence().strand());
+      std::shared_ptr<const DNA5SequenceCoding> tss_coding = tss_sequence->codingSequence(tss_feature->sequence().strand());
 
 #define PREFACE_SIZE 10
 
       ContigOffset_t preface_offset;
       if (tss_feature->sequence().strand() == StrandSense::REVERSE) {
 
-        preface_offset = tss_feature->sequence().end() +  PREFACE_SIZE - 2;
+        preface_offset = tss_feature->sequence().end();
 
       } else {
 
-        preface_offset = tss_feature->sequence().begin() -  PREFACE_SIZE + 1;
+        preface_offset = tss_feature->sequence().begin() -  PREFACE_SIZE;
 
       }
 
-      // Get the reference DNA sequence
-      std::shared_ptr<DNA5SequenceLinear> tss_preface = contig.second->sequence().subSequence(preface_offset, PREFACE_SIZE);
+      // Get the preface DNA sequence
+      std::shared_ptr<const DNA5SequenceLinear> tss_preface = contig.second->sequence().subSequence(preface_offset, PREFACE_SIZE);
       // Strand it.
-      std::shared_ptr<DNA5SequenceCoding> tss_preface_coding = tss_preface->codingSequence(tss_feature->sequence().strand());
+      std::shared_ptr<const DNA5SequenceCoding> tss_preface_coding = tss_preface->codingSequence(tss_feature->sequence().strand());
 
 
       if (not tss_feature->superFeatures().empty()) {
@@ -101,7 +101,6 @@ void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeDatabase> g
         }
 
         long prime_5_offset;
-
         if (tss_feature->sequence().strand() == StrandSense::REVERSE) {
 
           prime_5_offset = tss_feature->sequence().end();
@@ -113,11 +112,10 @@ void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeDatabase> g
           prime_5_offset -= tss_feature->sequence().begin();
 
         }
+
         motif_file << prime_5_offset << delimiter;
 
         long offset;
-
-
         offset = gene->sequence().begin();
         offset -= tss_feature->sequence().begin();
 

@@ -129,14 +129,17 @@ void kgl::PhylogeneticAnalysis::performSequence() {
 void kgl::PhylogeneticAnalysis::performInterval() {
 
 
-#define INTERVAL_SIZE 1000
+#define INTERVAL_SIZE 100
+#define ANALYSIS_CONTIG "Pf3D7_04_v3"
+#define ANALYSIS_START 938000
+#define ANALYSIS_END 962000
 
 
   AggregateVariantDistribution variant_distribution;
   variant_distribution.variantDistribution(population_ptr_);
   std::string file_name = "IntervalAnalysis_all";
   std::string interval_file = kgl::Utility::filePath(file_name, runtime_options_.workDirectory()) + ".csv";
-  variant_distribution.writeDistribution(genome_db_ptr_, INTERVAL_SIZE, interval_file, ',');
+  variant_distribution.writeDistribution(genome_db_ptr_, INTERVAL_SIZE, ANALYSIS_CONTIG, ANALYSIS_START, ANALYSIS_END, true, interval_file, ',');
 
   // Split into country populations.
   std::string aux_file_path;
@@ -154,7 +157,7 @@ void kgl::PhylogeneticAnalysis::performInterval() {
     variant_distribution.variantDistribution(country.second);
     std::string file_name = "IntervalAnalysis_" + country.first;
     std::string interval_file = kgl::Utility::filePath(file_name, runtime_options_.workDirectory()) + ".csv";
-    variant_distribution.writeDistribution(genome_db_ptr_, INTERVAL_SIZE, interval_file, ',');
+    variant_distribution.writeDistribution(genome_db_ptr_, INTERVAL_SIZE, ANALYSIS_CONTIG, 0, 0, true, interval_file, ',');
 
   }
 

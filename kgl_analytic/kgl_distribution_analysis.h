@@ -38,6 +38,10 @@ public:
 
   bool writeDistribution(std::shared_ptr<const GenomeDatabase> genome_db,
                          size_t interval_size,
+                         const ContigId_t analysis_contig,
+                         ContigOffset_t start_offset,
+                         ContigOffset_t end_offset,
+                         bool display_sequence,
                          const std::string& filename,
                          char delimiter = ',') const;
 
@@ -45,8 +49,15 @@ private:
 
   IntervalContigMap interval_contig_map_;
 
-  bool writeData(std::shared_ptr<const GenomeDatabase> genome_db, size_t interval_size, std::ostream& output, const char delimiter) const;
-  bool writeHeader(std::ostream& output, char delimiter) const;
+  bool writeData(std::shared_ptr<const GenomeDatabase> genome_db,
+                 size_t interval_size,
+                 const ContigId_t analysis_contig,
+                 ContigOffset_t start_offset,
+                 ContigOffset_t end_offset,
+                 bool display_sequence,
+                 std::ostream& output,
+                 const char delimiter) const;
+  bool writeHeader(std::ostream& output, char delimiter, bool display_sequence) const;
   bool addVariant(std::shared_ptr<const Variant> variant);
 
 };

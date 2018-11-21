@@ -104,9 +104,13 @@ bool kgl::AggregateVariantDistribution::addVariant(std::shared_ptr<const Variant
 
 
 bool kgl::AggregateVariantDistribution::writeDistribution(std::shared_ptr<const GenomeDatabase> genome_db,
-                                                         size_t interval_size,
-                                                         const std::string& filename,
-                                                         char delimiter) const {
+                                                          size_t interval_size,
+                                                          const ContigId_t analysis_contig,
+                                                          ContigOffset_t start_offset,
+                                                          ContigOffset_t end_offset,
+                                                          bool display_sequence,
+                                                          const std::string& filename,
+                                                          char delimiter) const {
 
   std::ofstream outfile(filename);
 
@@ -117,8 +121,8 @@ bool kgl::AggregateVariantDistribution::writeDistribution(std::shared_ptr<const 
 
   }
 
-  writeHeader(outfile, delimiter);
-  writeData(genome_db, interval_size, outfile, delimiter);
+  writeHeader(outfile, delimiter, display_sequence);
+  writeData(genome_db, interval_size, analysis_contig, start_offset, end_offset, display_sequence, outfile, delimiter);
 
   return outfile.good();
 
@@ -126,7 +130,7 @@ bool kgl::AggregateVariantDistribution::writeDistribution(std::shared_ptr<const 
 
 
 
-bool kgl::AggregateVariantDistribution::writeHeader(std::ostream& output, char delimiter) const {
+bool kgl::AggregateVariantDistribution::writeHeader(std::ostream& output, char delimiter, bool display_sequence) const {
 
   output << "Contig" << delimiter;
   output << "Interval_start" << delimiter;
@@ -139,7 +143,17 @@ bool kgl::AggregateVariantDistribution::writeHeader(std::ostream& output, char d
   output << "Prop_A" << delimiter;
   output << "Prop_C" << delimiter;
   output << "Prop_G" << delimiter;
-  output << "Prop_T" << "\n";
+  output << "Prop_T";
+
+  if (display_sequence) {
+
+    output << delimiter << "Sequence" << '\n';
+
+  } else {
+
+    output << '\n';
+
+  }
 
   return output.good();
 
@@ -147,16 +161,41 @@ bool kgl::AggregateVariantDistribution::writeHeader(std::ostream& output, char d
 
 
 bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDatabase> genome_db,
-                                                 size_t interval_size,
-                                                 std::ostream& output,
-                                                 char delimiter) const {
+                                                  size_t interval_size,
+                                                  const ContigId_t analysis_contig,
+                                                  ContigOffset_t start_offset,
+                                                  ContigOffset_t end_offset,
+                                                  bool display_sequence,
+                                                  std::ostream& output,
+                                                  char delimiter) const {
   for (auto contig : genome_db->getMap()) {
 
-    ContigSize_t contig_size = contig.second->contigSize();
-    ContigId_t contig_id = contig.second->contigId();
-
     ContigOffset_t contig_from = 0;
-    ContigOffset_t contig_to = interval_size;
+    ContigSize_t contig_size = contig.second->contigSize();
+    ContigId_t contig_id = contig.first;
+
+    if (not analysis_contig.empty()) {
+
+      if (analysis_contig == contig_id) {
+
+        contig_from = start_offset;
+        if (end_offset > contig_from) {
+
+          contig_size = end_offset;
+
+        }
+
+        ExecEnv::log().info("AggregateVariantDistribution; Contig: {}, From: {}, To: {}", analysis_contig, contig_from, contig_size);
+
+      } else {
+
+        continue;
+
+      }
+
+    }
+
+    ContigOffset_t contig_to = interval_size + contig_from;
 
     auto contig_iter  = interval_contig_map_.find(contig_id);
 
@@ -198,8 +237,7 @@ bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDa
 
         size_t interval_size = contig_to - contig_from;
 
-        std::shared_ptr<DNA5SequenceLinear> sequence = contig.second->sequence_ptr()->subSequence(contig_from,
-                                                                                                  interval_size);
+        std::shared_ptr<DNA5SequenceLinear> sequence = contig.second->sequence_ptr()->subSequence(contig_from, interval_size);
         if (sequence->length() == 0) {
 
           ExecEnv::log().info("AggregateVariantDistribution::writeData; zero sized sequence, offset: {}, size: {}, contig: {} contig size: {}",
@@ -237,7 +275,17 @@ bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDa
         output << A_prop << delimiter;
         output << C_prop << delimiter;
         output << G_prop << delimiter;
-        output << T_prop << '\n';
+        output << T_prop;
+
+        if (display_sequence) {
+
+          output << delimiter << sequence->getSequenceAsString() << '\n';
+
+        } else {
+
+          output << '\n';
+
+        }
 
         contig_from = contig_to;
         if (contig_to + interval_size < contig_size) {
