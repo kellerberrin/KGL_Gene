@@ -131,8 +131,8 @@ void kgl::PhylogeneticAnalysis::performInterval() {
 
 #define INTERVAL_SIZE 100
 #define ANALYSIS_CONTIG "Pf3D7_04_v3"
-#define ANALYSIS_START 938000
-#define ANALYSIS_END 962000
+#define ANALYSIS_START 540000
+#define ANALYSIS_END 604000
 
 
   AggregateVariantDistribution variant_distribution;
@@ -278,6 +278,27 @@ void kgl::PhylogeneticAnalysis::performSNP() {
 void kgl::PhylogeneticAnalysis::performUPGMA() {
 
 
+  std::string newick_file = kgl::Utility::filePath("newick_VAR", runtime_options_.workDirectory()) + ".txt";
+
+  std::shared_ptr<const AminoSequenceDistance> distance_metric_ptr(std::make_shared<const Blosum80Global>());
+  kgl::UPGMAGenePhyloTree<kgl::UPGMAATP4Distance>(runtime_options_.workDirectory(),
+                                                  newick_file,
+                                                  distance_metric_ptr,
+                                                  population_ptr_,
+                                                  genome_db_ptr_,
+                                                  kgl::UPGMAProteinDistance::SYMBOLIC_VAR_FAMILY);
+
+//  std::shared_ptr<const UnphasedPopulation> filtered_ptr = unphased_population_ptr->filterVariants(DPCountFilter(25));
+//  kgl::UPGMAUnphasedTree<kgl::UPGMAUnphasedDistance>(newick_file, filtered_ptr);
+
+
+}
+
+
+
+void kgl::PhylogeneticAnalysis::performFineStructure() {
+
+
 #define BASES_PER_CENTIMORGAN 15000.0
 
   // Split into country populations.
@@ -299,20 +320,11 @@ void kgl::PhylogeneticAnalysis::performUPGMA() {
   }
 
 
- //    std::shared_ptr<const AminoSequenceDistance> distance_metric_ptr(std::make_shared<const Blosum80Global>());
-//    kgl::UPGMAGenePhyloTree<kgl::UPGMAATP4Distance>(args.workDirectory,
-//                                                    newick_file,
-//                                                    distance_metric_ptr,
-//                                                    population_ptr,
-//                                                    genome_db_ptr,
-//                                                    kgl::UPGMAProteinDistance::SYMBOLIC_ATP4_FAMILY);
-
-//    std::string newick_file = kgl::Utility::filePath("newick", args.workDirectory) + ".txt";
-//    std::shared_ptr<const UnphasedPopulation> filtered_ptr = unphased_population_ptr->filterVariants(DPCountFilter(25));
-//    kgl::UPGMAUnphasedTree<kgl::UPGMAUnphasedDistance>(newick_file, filtered_ptr);
-
-
 }
+
+
+
+
 
 
 void kgl::PhylogeneticAnalysis::performRNA() {

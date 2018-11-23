@@ -32,7 +32,7 @@ void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeDatabase> g
       // Strand it.
       std::shared_ptr<const DNA5SequenceCoding> tss_coding = tss_sequence->codingSequence(tss_feature->sequence().strand());
 
-#define PREFACE_SIZE 10
+#define PREFACE_SIZE 100
 
       ContigOffset_t preface_offset;
       if (tss_feature->sequence().strand() == StrandSense::REVERSE) {

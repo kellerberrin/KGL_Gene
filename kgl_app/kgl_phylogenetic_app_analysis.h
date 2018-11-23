@@ -35,15 +35,16 @@ using AnalysisMap = std::map<std::string, AnalysisFuncPtr>;
                                                                                   unphased_population_ptr_(unphased_population_ptr),
                                                                                   population_ptr_(population_ptr) {
 
-    analysis_map_[ANALYZE_INTERVAL] = &PhylogeneticAnalysis::performInterval;
-    analysis_map_[ANALYZE_SEQUENCES] = &PhylogeneticAnalysis::performSequence;
-    analysis_map_[ANALYZE_REGION] = &PhylogeneticAnalysis::performRegion;
-    analysis_map_[ANALYZE_UPGMA] = &PhylogeneticAnalysis::performUPGMA;
-    analysis_map_[ANALYZE_GENE] = &PhylogeneticAnalysis::performGene;
-    analysis_map_[ANALYZE_RNA] = &PhylogeneticAnalysis::performRNA;
-    analysis_map_[ANALYZE_SNP] = &PhylogeneticAnalysis::performSNP;
-    analysis_map_[ANALYZE_MIX] = &PhylogeneticAnalysis::performMix;
-    analysis_map_[ANALYZE_MOTIF] = &PhylogeneticAnalysis::performMotif;
+    analysis_map_[ANALYZE_INTERVAL_] = &PhylogeneticAnalysis::performInterval;
+    analysis_map_[ANALYZE_SEQUENCES_] = &PhylogeneticAnalysis::performSequence;
+    analysis_map_[ANALYZE_REGION_] = &PhylogeneticAnalysis::performRegion;
+    analysis_map_[ANALYZE_UPGMA_] = &PhylogeneticAnalysis::performUPGMA;
+    analysis_map_[ANALYZE_GENE_] = &PhylogeneticAnalysis::performGene;
+    analysis_map_[ANALYZE_RNA_] = &PhylogeneticAnalysis::performRNA;
+    analysis_map_[ANALYZE_SNP_] = &PhylogeneticAnalysis::performSNP;
+    analysis_map_[ANALYZE_MIX_] = &PhylogeneticAnalysis::performMix;
+    analysis_map_[ANALYZE_MOTIF_] = &PhylogeneticAnalysis::performMotif;
+    analysis_map_[ANALYZE_FINESTRUCTURE_] = &PhylogeneticAnalysis::performFineStructure;
 
   }
   ~PhylogeneticAnalysis() = default;
@@ -64,15 +65,16 @@ private:
   std::shared_ptr<const PhasedPopulation> population_ptr_;
 
   // Analytic types.
-  static constexpr const char* ANALYZE_INTERVAL = "INTERVAL";
-  static constexpr const char* ANALYZE_SEQUENCES = "SEQUENCE";
-  static constexpr const char* ANALYZE_REGION = "REGION";
-  static constexpr const char* ANALYZE_UPGMA = "UPGMA";
-  static constexpr const char* ANALYZE_GENE = "GENE";
-  static constexpr const char* ANALYZE_RNA = "RNA";
-  static constexpr const char* ANALYZE_SNP = "SNP";
-  static constexpr const char* ANALYZE_MIX = "MIX";
-  static constexpr const char* ANALYZE_MOTIF = "MOTIF";
+  static constexpr const char* ANALYZE_INTERVAL_ = "INTERVAL";
+  static constexpr const char* ANALYZE_SEQUENCES_ = "SEQUENCE";
+  static constexpr const char* ANALYZE_REGION_ = "REGION";
+  static constexpr const char* ANALYZE_UPGMA_ = "UPGMA";
+  static constexpr const char* ANALYZE_GENE_ = "GENE";
+  static constexpr const char* ANALYZE_RNA_ = "RNA";
+  static constexpr const char* ANALYZE_SNP_ = "SNP";
+  static constexpr const char* ANALYZE_MIX_ = "MIX";
+  static constexpr const char* ANALYZE_MOTIF_ = "MOTIF";
+  static constexpr const char* ANALYZE_FINESTRUCTURE_ = "FINE_STRUCTURE";
 
   // Analysis routines
   void performMotif();
@@ -84,6 +86,7 @@ private:
   void performSNP();
   void performUPGMA();
   void performRNA();
+  void performFineStructure();
 
 };
 
