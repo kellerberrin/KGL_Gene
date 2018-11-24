@@ -236,7 +236,7 @@ public:
 
   // UPGMA Classification functions
   // Function to tag the nodes. Override as necessary.
-  void writeNode(std::ofstream& outfile) const override { outfile << gene_ptr_->id(); }
+  void writeNode(std::ofstream& outfile) const override;
   // Pure Virtual calculates the distance between nodes.
   DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
 

@@ -459,3 +459,34 @@ bool kgl::ReferenceGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> g
   return false;
 
 }
+
+
+void kgl::ReferenceGeneDistance::writeNode(std::ofstream& outfile) const {
+
+  std::string alt_symbolic;
+  std::shared_ptr<const OntologyRecord> ontology_record_ptr;
+  if (genome_db_ptr_->geneOntology().getGafFeatureVector(gene_ptr_->id(), ontology_record_ptr)) {
+
+    if (ontology_record_ptr) {
+
+      alt_symbolic = "-";
+      alt_symbolic += ontology_record_ptr->altSymbolicReference();
+
+    } else {
+
+      ExecEnv::log().error("ReferenceGeneDistance::writeNode; NULL OntologyRecord pointer returned");
+      alt_symbolic = "-*";
+
+    }
+
+
+  } else {
+
+    alt_symbolic = "-*";
+
+  }
+
+
+  outfile << gene_ptr_->id() << alt_symbolic;
+
+}
