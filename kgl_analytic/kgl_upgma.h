@@ -6,7 +6,7 @@
 #define KGL_UPGMA_H
 
 
-
+#include <kgl_sequence_distance.h>
 #include "kgl_genome_db.h"
 #include "kgl_variant_db.h"
 #include "kgl_statistics_upgma.h"
@@ -208,6 +208,63 @@ private:
   std::shared_ptr<const AminoSequenceDistance> zero_metric_ptr_;
 
 };
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Compares refernce (unmutated) genes across a single protein family (var, rifin, etc).
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class ReferenceGeneDistance : public UPGMADistanceNode {
+
+public:
+
+  ReferenceGeneDistance(std::shared_ptr<const DNASequenceDistance> sequence_distance,
+                        std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                        std::shared_ptr<const GeneFeature> gene_ptr,
+                        const std::string& protein_family) : sequence_distance_(sequence_distance),
+                                                             genome_db_ptr_(genome_db_ptr),
+                                                             gene_ptr_(gene_ptr),
+                                                             protein_family_(protein_family) {
+    getSequence();
+
+  }
+
+  explicit ReferenceGeneDistance(const ReferenceGeneDistance&) = default;
+  ~ReferenceGeneDistance() override = default;
+
+  // UPGMA Classification functions
+  // Function to tag the nodes. Override as necessary.
+  void writeNode(std::ofstream& outfile) const override { outfile << gene_ptr_->id(); }
+  // Pure Virtual calculates the distance between nodes.
+  DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
+
+
+  constexpr static const char* SYMBOLIC_VAR_FAMILY = "VAR";
+  constexpr static const char* SYMBOLIC_RIFIN_FAMILY = "RIF";
+  constexpr static const char* SYMBOLIC_MAURER_FAMILY = "MC-2TM";
+
+  static bool geneFamily(std::shared_ptr<const GeneFeature> gene_ptr,
+                         std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                         const std::string& protein_family);
+
+private:
+
+  std::shared_ptr<const DNASequenceDistance> sequence_distance_;
+  std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
+  std::shared_ptr<const GeneFeature> gene_ptr_;
+  std::string protein_family_;
+
+  std::shared_ptr<const DNA5SequenceLinear> sequence_ptr_;
+
+  void getSequence();
+
+};
+
+
+
+
 
 
 

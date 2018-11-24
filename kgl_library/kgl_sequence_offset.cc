@@ -126,17 +126,39 @@ bool kgl::SequenceOffset::intronOffsetAdapter(std::shared_ptr<const CodingSequen
 
   }
 
+  // If exon size <= 1 then no introns.
+  if (coding_seq_ptr->getSortedCDS().size() <= 1) {
+
+    intron_offset_map.clear();
+    return return_result;
+
+  }
+
+  auto CDS_iter = coding_seq_ptr->getSortedCDS().begin();
+
   // All CDS offsets are relative to the underlying contig and are half intervals [begin, end).
-  for (auto CDS : coding_seq_ptr->getSortedCDS()) {
+  while (CDS_iter != coding_seq_ptr->getSortedCDS().end()) {
 
-    std::pair<ContigOffset_t, ContigOffset_t> exon_offsets(CDS.second->sequence().begin(), CDS.second->sequence().end());
+    ContigOffset_t begin_intron = CDS_iter->second->sequence().end();
 
-    auto result = intron_offset_map.insert(exon_offsets);
+    ++CDS_iter;
+
+    if (CDS_iter == coding_seq_ptr->getSortedCDS().end()) {
+
+      break;
+
+    }
+
+    ContigOffset_t end_intron = CDS_iter->second->sequence().begin();
+
+    std::pair<ContigOffset_t, ContigOffset_t> intron_offsets(begin_intron, end_intron);
+
+    auto result = intron_offset_map.insert(intron_offsets);
 
     if (not result.second) {
 
-      ExecEnv::log().error("exonOffsetAdapter(), Duplicate exon offset: {} for coding sequence id:",
-                           exon_offsets.first, coding_seq_ptr->getCDSParent()->id());
+      ExecEnv::log().error("intronOffsetAdapter(), Duplicate intron offset: {} for coding sequence id:",
+                           intron_offsets.first, coding_seq_ptr->getCDSParent()->id());
       return_result = false;
 
     }

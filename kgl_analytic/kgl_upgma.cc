@@ -380,3 +380,82 @@ kgl::DistanceType_t kgl::UPGMAATP4Distance::zeroDistance(std::shared_ptr<const U
   return total_distance;
 
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Compares reference (unmutated) genes between gene familes (VAR, RIF, STEVOR, MAURER).
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void kgl::ReferenceGeneDistance::getSequence() {
+
+  const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene_ptr_);
+
+  if (coding_seq_ptr->size() == 0) {
+
+    ExecEnv::log().critical("ReferenceGeneDistance::getSequence(); Gene contains no coding sequence : gene: {}", gene_ptr_->id());
+
+  }
+
+  std::shared_ptr<const CodingSequence> coding_sequence = coding_seq_ptr->getFirst();
+
+  if (coding_seq_ptr->size() > 1) {
+
+    std::string gene_id = coding_sequence->getGene()->id();
+    std::string sequence_id = coding_sequence->getCDSParent()->id();
+
+    ExecEnv::log().warn("ReferenceGeneDistance::getSequence;  Gene: {} contains: {} CDS sequences. Using sequence: {}",
+                        gene_ptr_->id(), coding_seq_ptr->size(), sequence_id);
+
+  }
+
+  std::shared_ptr<const ContigFeatures> contig_ptr = gene_ptr_->contig();
+
+  std::shared_ptr<const DNA5SequenceCoding> dna_coding_sequence = contig_ptr->sequence().codingSequence(coding_sequence);
+
+  sequence_ptr_ = DNA5SequenceLinear::linearSequence(dna_coding_sequence);
+
+}
+
+
+kgl::DistanceType_t kgl::ReferenceGeneDistance::distance(std::shared_ptr<const UPGMADistanceNode>  distance_node) const {
+
+  std::shared_ptr<const ReferenceGeneDistance> node_ptr = std::dynamic_pointer_cast<const ReferenceGeneDistance>(distance_node);
+
+  if (not node_ptr) {
+
+    ExecEnv::log().error("distance(), Unexpected error, could not down-cast node pointer to ReferenceGeneDistance");
+    return 1.0;
+
+  }
+
+
+  CompareDistance_t contig_score = sequence_distance_->distance(sequence_ptr_, node_ptr->sequence_ptr_);
+  DistanceType_t total_distance = static_cast<DistanceType_t>(contig_score);
+
+  ExecEnv::log().info("distance();  {} | {}, {} |  =  {}; Gene Family: {}",
+                      sequence_distance_->distanceType(), gene_ptr_->id(), node_ptr->gene_ptr_->id(), total_distance, protein_family_);
+
+  return total_distance;
+
+}
+
+
+bool kgl::ReferenceGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> gene_ptr,
+                                            std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                            const std::string& protein_family) {
+
+  std::shared_ptr<const OntologyRecord> ontology_record_ptr;
+  if (genome_db_ptr->geneOntology().getGafFeatureVector(gene_ptr->id(), ontology_record_ptr)) {
+
+    if (ontology_record_ptr->symbolicReference() == protein_family) {
+
+      return true;
+
+    }
+
+  }
+
+  return false;
+
+}

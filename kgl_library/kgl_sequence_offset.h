@@ -121,7 +121,6 @@ private:
 // Returns bool false if contig_offset is not within the coding sequence defined by the coding_seq_ptr.
 // If the contig_offset is in the coding sequence then a valid sequence_offset and the sequence length is returned.
 // The offset is adjusted for strand type; the offset arithmetic is reversed for -ve strand sequences.
-
   static bool offsetWithinCodingSequence(const ExonOffsetMap& exon_offset_map,
                                          StrandSense strand,
                                          ContigOffset_t sequence_offset,

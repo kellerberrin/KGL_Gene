@@ -318,6 +318,49 @@ void UPGMAGenePhyloTree(const std::string& path,
 }
 
 
+
+// Function (not variadic) to combine the UPGMAMatrix and UPGMADistanceNode to compare a family of reference genes (unmutated)
+// We are comparing between genes of the same type so we can use a local and global Amino distance classes
+template<typename T>
+void UPGMAGeneFamilyTree(const std::string& newick_file,
+                          std::shared_ptr<const DNASequenceDistance> sequence_distance,
+                          std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                          const std::string& protein_family) {
+
+
+  std::shared_ptr<PhyloNodeVector> node_vector_ptr(std::make_shared<PhyloNodeVector>());
+
+  for (auto contig : genome_db_ptr->getMap()) {
+
+    for (auto gene : contig.second->getGeneMap()) {
+
+      if (T::geneFamily(gene.second, genome_db_ptr, protein_family)) {
+
+        std::shared_ptr<T> distance_ptr(std::make_shared<T>(sequence_distance,
+                                                            genome_db_ptr,
+                                                            gene.second,
+                                                            protein_family));
+
+        std::shared_ptr<PhyloNode> phylo_node_ptr(std::make_shared<PhyloNode>(distance_ptr));
+        node_vector_ptr->push_back(phylo_node_ptr);
+
+
+      }
+
+    }
+
+  }
+
+  UPGMAMatrix upgma_matrix(node_vector_ptr);
+
+  upgma_matrix.calculateReduce();
+
+  upgma_matrix.writeNewick(newick_file);
+
+}
+
+
+
 }   // namespace genome
 }   // namespace kellerberrin
 

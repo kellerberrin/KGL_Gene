@@ -99,17 +99,21 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::Levenshtein
   }
 
   kgl::CompareDistance_t distance = std::fabs(result.editDistance);
-  if (result.alignmentLength <= 0) {
 
-    kgl::ExecEnv::log().error("Problem calculating Local Levenshtein alignment, length zero or -ve {}; sequenceA: {}, sequenceB: {}",
-                              result.alignmentLength, sequenceA, sequenceB);
-    edlibFreeAlignResult(result);
-    return 0;
-
-  }
   edlibFreeAlignResult(result);
-  return distance / static_cast<double>(result.alignmentLength);
 
+  return distance;
+
+//  if (result.alignmentLength <= 0) {
+
+//    kgl::ExecEnv::log().error("Problem calculating Local Levenshtein alignment, length zero or -ve {}; sequenceA: {}, sequenceB: {}",
+//                              result.alignmentLength, sequenceA, sequenceB);
+//    edlibFreeAlignResult(result);
+//    return 0;
+
+ // }
+//  edlibFreeAlignResult(result);
+//  return distance / static_cast<double>(result.alignmentLength);
 
 }
 
