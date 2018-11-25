@@ -227,7 +227,7 @@ public:
                                                              genome_db_ptr_(genome_db_ptr),
                                                              gene_ptr_(gene_ptr),
                                                              protein_family_(protein_family) {
-    getSequence();
+    getIntronSequence();
 
   }
 
@@ -258,7 +258,9 @@ private:
 
   std::shared_ptr<const DNA5SequenceLinear> sequence_ptr_;
 
-  void getSequence();
+  std::shared_ptr<const CodingSequence>  getCodingSequence();
+  void  getExonSequence();
+  void  getIntronSequence();
 
 };
 

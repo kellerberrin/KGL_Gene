@@ -88,6 +88,13 @@ public:
                                                               ContigSize_t sub_sequence_length,
                                                               ContigOffset_t contig_offset) const;
 
+  // The contig_offset adjusts for the offset in the contig from which the DNASequenceLinear was copied.
+  // Setting sub_sequence_offset and sub_sequence_length to zero copies the entire intron sequence defined by the CodingSequence.
+  std::shared_ptr<DNA5SequenceCoding> intronOffsetSubSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+                                                              ContigOffset_t sub_sequence_offset,
+                                                              ContigSize_t sub_sequence_length,
+                                                              ContigOffset_t contig_offset) const;
+
   // Offset is the relative sequence offset.
   bool modifyBase(ContigOffset_t base_offset, DNA5::Alphabet Nucleotide);
   // Delete offset is relative to the begining of the sequence (0 is the first letter).
@@ -154,6 +161,12 @@ public:
 
   }
 
+  // The entire intron sequence defined by the CodingSequence is returned.
+  std::shared_ptr<DNA5SequenceCoding> intronSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr) const {
+
+    return intronOffsetSubSequence(coding_seq_ptr, 0, 0, 0);
+
+  }
 
 
 private:

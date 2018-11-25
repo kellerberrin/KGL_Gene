@@ -84,11 +84,31 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::Levenshtein
 kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::LevenshteinLocal(const std::string& sequenceA,
                                                                                     const std::string& sequenceB) const {
 
-  EdlibAlignResult result = edlibAlign(sequenceA.c_str(),
-                                       sequenceA.size(),
-                                       sequenceB.c_str(),
-                                       sequenceB.size(),
-                                       edlibNewAlignConfig(-1, EDLIB_MODE_HW, EDLIB_TASK_LOC, NULL, 0));
+
+
+  EdlibAlignResult result;
+  // The smaller sequence is presented first with local sequence matching.
+  // A distance metric must always be symmetric -> d(x,y) = d(y,x).
+  // This could be a bug in EDLIB.
+  if (sequenceA.size() <= sequenceB.size()) {
+
+    result = edlibAlign(sequenceA.c_str(),
+                        sequenceA.size(),
+                        sequenceB.c_str(),
+                        sequenceB.size(),
+                        edlibNewAlignConfig(-1, EDLIB_MODE_HW, EDLIB_TASK_LOC, NULL, 0));
+
+
+  } else {
+
+    result = edlibAlign(sequenceB.c_str(),
+                        sequenceB.size(),
+                        sequenceA.c_str(),
+                        sequenceA.size(),
+                        edlibNewAlignConfig(-1, EDLIB_MODE_HW, EDLIB_TASK_LOC, NULL, 0));
+
+  }
+
 
   if (result.status != EDLIB_STATUS_OK) {
 

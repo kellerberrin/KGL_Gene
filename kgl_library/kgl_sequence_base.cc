@@ -56,6 +56,20 @@ kgl::DNA5SequenceLinear::codingOffsetSubSequence(std::shared_ptr<const CodingSeq
 }
 
 
+// The contig_offset adjusts for the offset in the contig from which the DNASequenceLinear was copied.
+// Setting sub_sequence_offset and sub_sequence_length to zero copies the entire intron sequence defined by the CodingSequence.
+std::shared_ptr<kgl::DNA5SequenceCoding>
+kgl::DNA5SequenceLinear::intronOffsetSubSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+                                                 ContigOffset_t sub_sequence_offset,
+                                                 ContigSize_t sub_sequence_length,
+                                                 ContigOffset_t contig_offset) const {
+
+  return SequenceOffset::refIntronSubSequence(coding_seq_ptr, *this, sub_sequence_offset, sub_sequence_length, contig_offset);
+
+}
+
+
+
 // Returns an UNSTRANDED subsequence. Returned sequence is valid but zero-sized if offset/size are out-of-bounds.
 std::shared_ptr<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::subSequence(ContigOffset_t offset, ContigSize_t sub_length) const {
 

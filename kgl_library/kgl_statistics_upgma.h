@@ -320,7 +320,7 @@ void UPGMAGenePhyloTree(const std::string& path,
 
 
 // Function (not variadic) to combine the UPGMAMatrix and UPGMADistanceNode to compare a family of reference genes (unmutated)
-// We are comparing between genes of the same type so we can use a local and global Amino distance classes
+// We are comparing between genes of the same type so we can use both local and global Amino distance classes
 template<typename T>
 void UPGMAGeneFamilyTree(const std::string& newick_file,
                           std::shared_ptr<const DNASequenceDistance> sequence_distance,
@@ -334,27 +334,62 @@ void UPGMAGeneFamilyTree(const std::string& newick_file,
 
     for (auto gene : contig.second->getGeneMap()) {
 
+      // Is this gene a member of the requested family.
       if (T::geneFamily(gene.second, genome_db_ptr, protein_family)) {
 
-        std::shared_ptr<T> distance_ptr(std::make_shared<T>(sequence_distance,
-                                                            genome_db_ptr,
-                                                            gene.second,
-                                                            protein_family));
+        const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = GeneFeature::getCodingSequences(gene.second);
 
-        std::shared_ptr<PhyloNode> phylo_node_ptr(std::make_shared<PhyloNode>(distance_ptr));
-        node_vector_ptr->push_back(phylo_node_ptr);
+        if (coding_seq_ptr->empty()) {
+
+          ExecEnv::log().critical("ReferenceGeneDistance::getSequence(); Gene contains no coding sequence : gene: {}", gene.second->id());
+
+        }
+
+        std::shared_ptr<const CodingSequence> coding_sequence = coding_seq_ptr->getFirst();
+        std::shared_ptr<DNA5SequenceCoding> coding_dna_sequence;
+
+        // Only add genes with valid coding sequences (no pseudo genes).
+        if (contig.second->getDNA5SequenceCoding(coding_sequence, coding_dna_sequence)) {
 
 
-      }
+          if (contig.second->verifyDNACodingSequence(coding_dna_sequence)) {
 
-    }
+#define MIN_INTRON_LENGTH 10
+            // Do we have a valid intron (VAR only)?
+            std::shared_ptr<const DNA5SequenceCoding> intron_sequence = contig.second->sequence().intronSequence(coding_sequence);
+            if (intron_sequence->length() > MIN_INTRON_LENGTH) {
 
-  }
+              std::shared_ptr<T> distance_ptr(std::make_shared<T>(sequence_distance,
+                                                                  genome_db_ptr,
+                                                                  gene.second,
+                                                                  protein_family));
 
+              std::shared_ptr<PhyloNode> phylo_node_ptr(std::make_shared<PhyloNode>(distance_ptr));
+              node_vector_ptr->push_back(phylo_node_ptr);
+
+
+              ExecEnv::log().info("ReferenceGeneDistance::getSequence(); Gene: {} intron ({}):\n {}-{}",
+                                  gene.second->id(), intron_sequence->length(), gene.second->id(),
+                                  intron_sequence->getSequenceAsString());
+
+            }
+
+          } // Valid Gene.
+
+        } // Get coding sequence
+
+      } // Is family member.
+
+    } // All genes.
+
+  } // All contigs.
+
+
+  // Assemble the UPGMA structure.
   UPGMAMatrix upgma_matrix(node_vector_ptr);
-
+  // Calculate.
   upgma_matrix.calculateReduce();
-
+  // Report Results.
   upgma_matrix.writeNewick(newick_file);
 
 }

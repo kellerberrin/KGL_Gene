@@ -387,11 +387,11 @@ kgl::DistanceType_t kgl::UPGMAATP4Distance::zeroDistance(std::shared_ptr<const U
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void kgl::ReferenceGeneDistance::getSequence() {
+std::shared_ptr<const kgl::CodingSequence>  kgl::ReferenceGeneDistance::getCodingSequence() {
 
-  const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene_ptr_);
+  const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = GeneFeature::getCodingSequences(gene_ptr_);
 
-  if (coding_seq_ptr->size() == 0) {
+  if (coding_seq_ptr->empty()) {
 
     ExecEnv::log().critical("ReferenceGeneDistance::getSequence(); Gene contains no coding sequence : gene: {}", gene_ptr_->id());
 
@@ -409,9 +409,27 @@ void kgl::ReferenceGeneDistance::getSequence() {
 
   }
 
+  return coding_sequence;
+
+}
+
+
+void  kgl::ReferenceGeneDistance::getExonSequence() {
+
   std::shared_ptr<const ContigFeatures> contig_ptr = gene_ptr_->contig();
 
-  std::shared_ptr<const DNA5SequenceCoding> dna_coding_sequence = contig_ptr->sequence().codingSequence(coding_sequence);
+  std::shared_ptr<const DNA5SequenceCoding> dna_coding_sequence = contig_ptr->sequence().codingSequence(getCodingSequence());
+
+  sequence_ptr_ = DNA5SequenceLinear::linearSequence(dna_coding_sequence);
+
+}
+
+
+void  kgl::ReferenceGeneDistance::getIntronSequence() {
+
+  std::shared_ptr<const ContigFeatures> contig_ptr = gene_ptr_->contig();
+
+  std::shared_ptr<const DNA5SequenceCoding> dna_coding_sequence = contig_ptr->sequence().intronSequence(getCodingSequence());
 
   sequence_ptr_ = DNA5SequenceLinear::linearSequence(dna_coding_sequence);
 
@@ -430,11 +448,17 @@ kgl::DistanceType_t kgl::ReferenceGeneDistance::distance(std::shared_ptr<const U
   }
 
 
+  ExecEnv::log().info("distance();  {} Comparing | {}({}), {}({}) |; Gene Family: {}",
+                      sequence_distance_->distanceType(), gene_ptr_->id(), sequence_ptr_->length(),
+                      node_ptr->gene_ptr_->id(), node_ptr->sequence_ptr_->length(), protein_family_);
+
   CompareDistance_t contig_score = sequence_distance_->distance(sequence_ptr_, node_ptr->sequence_ptr_);
   DistanceType_t total_distance = static_cast<DistanceType_t>(contig_score);
 
-  ExecEnv::log().info("distance();  {} | {}, {} |  =  {}; Gene Family: {}",
-                      sequence_distance_->distanceType(), gene_ptr_->id(), node_ptr->gene_ptr_->id(), total_distance, protein_family_);
+  ExecEnv::log().info("distance();  {} | {}({}), {}({}) |  =  {}; Gene Family: {}",
+                      sequence_distance_->distanceType(), gene_ptr_->id(), sequence_ptr_->length(),
+                      node_ptr->gene_ptr_->id(), node_ptr->sequence_ptr_->length(),
+                      total_distance, protein_family_);
 
   return total_distance;
 

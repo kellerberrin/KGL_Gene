@@ -126,10 +126,15 @@ bool kgl::SequenceOffset::intronOffsetAdapter(std::shared_ptr<const CodingSequen
 
   }
 
+  ExecEnv::log().info("intronOffsetAdapter(), Sequence: {}, Exons: {}",
+                      coding_seq_ptr->getCDSParent()->id(),
+                      coding_seq_ptr->getSortedCDS().size());
+
+  intron_offset_map.clear();
+
   // If exon size <= 1 then no introns.
   if (coding_seq_ptr->getSortedCDS().size() <= 1) {
 
-    intron_offset_map.clear();
     return return_result;
 
   }
@@ -145,7 +150,7 @@ bool kgl::SequenceOffset::intronOffsetAdapter(std::shared_ptr<const CodingSequen
 
     if (CDS_iter == coding_seq_ptr->getSortedCDS().end()) {
 
-      break;
+      continue;
 
     }
 
@@ -163,7 +168,13 @@ bool kgl::SequenceOffset::intronOffsetAdapter(std::shared_ptr<const CodingSequen
 
     }
 
+    ExecEnv::log().info("intronOffsetAdapter(), Intron: {} [{}, {}) ({})",
+                        coding_seq_ptr->getCDSParent()->id(), intron_offsets.first, intron_offsets.second,
+                        intron_offsets.second - intron_offsets.first);
+
   }
+
+  ExecEnv::log().info("intronOffsetAdapter(), Introns: {}", intron_offset_map.size());
 
   return return_result;
 
