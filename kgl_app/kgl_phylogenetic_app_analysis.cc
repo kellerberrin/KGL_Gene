@@ -279,10 +279,12 @@ void kgl::PhylogeneticAnalysis::performUPGMA() {
 
 
   std::string newick_file = kgl::Utility::filePath("newick_VAR", runtime_options_.workDirectory()) + ".txt";
+  std::string intron_file = kgl::Utility::filePath("intron_VAR", runtime_options_.workDirectory()) + ".csv";
 
   std::shared_ptr<const DNASequenceDistance> distance_metric_ptr(std::make_shared<const LevenshteinLocal>());
 
   UPGMAGeneFamilyTree<kgl::ReferenceGeneDistance>(newick_file,
+                                                  intron_file,
                                                   distance_metric_ptr,
                                                   genome_db_ptr_,
                                                   kgl::ReferenceGeneDistance::SYMBOLIC_VAR_FAMILY);

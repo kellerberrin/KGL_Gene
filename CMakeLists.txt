@@ -162,8 +162,8 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_phylogenetic_analysis.cc
         kgl_analytic/kgl_phylogenetic_gene.h
         kgl_analytic/kgl_phylogenetic_gene.cc
-        kgl_analytic/kgl_upgma.h
-        kgl_analytic/kgl_upgma.cc
+        kgl_analytic/kgl_upgma_node.h
+        kgl_analytic/kgl_upgma_node.cc
         kgl_analytic/kgl_rna_search.cc
         kgl_analytic/kgl_rna_search.h
         kgl_analytic/kgl_ploidy_analysis.h
@@ -176,7 +176,8 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_sequence_complexity.h
         kgl_analytic/kgl_sequence_complexity.cc
         kgl_analytic/kgl_epigenetic_motif.cc
-        kgl_analytic/kgl_epigenetic_motif.cc)
+        kgl_analytic/kgl_epigenetic_motif.cc
+        kgl_analytic/kgl_upgma.h)
 
 # Deconvolution and mixture files.
 

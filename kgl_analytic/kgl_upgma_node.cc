@@ -5,7 +5,7 @@
 
 #include <iomanip>
 #include <kgl_sequence_compare_impl.h>
-#include "kgl_upgma.h"
+#include "kgl_upgma_node.h"
 
 
 namespace kgl = kellerberrin::genome;
