@@ -98,6 +98,8 @@ void kgl::GenomeDatabase::setupFeatureHierarchy() {
 
     contig_pair.second->setupFeatureHierarchy();
 
+    contig_pair.second->setupVerifyFeatures();
+
   }
 
 }

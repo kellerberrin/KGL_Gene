@@ -22,7 +22,36 @@ bool kgl::ContigFeatures::addFeature(std::shared_ptr<kgl::Feature>& feature_ptr)
 
   offset_feature_map_.insert(std::make_pair(feature_ptr->sequence().begin(), feature_ptr));
 
-  gene_exon_features_.addFeature(feature_ptr);
+  if (feature_ptr->isTSS()) {
+
+    auto result = auxillary_features_.find(AdjalleyTSSFeatures::ADJALLEY_TSS_FEATURE_);
+
+    if (result == auxillary_features_.end()) {
+
+      StructuredFeatureMap::value_type insert_pair(AdjalleyTSSFeatures::ADJALLEY_TSS_FEATURE_, std::make_shared<AdjalleyTSSFeatures>());
+      auto insert_result = auxillary_features_.insert(insert_pair);
+
+      if (not insert_result.second) {
+
+        ExecEnv::log().error("ContigFeatures::addFeature; Unable to add AdjalleyTSSFeatures structure");
+
+      } else {
+
+        insert_result.first->second->checkAddFeature(feature_ptr);
+
+      };
+
+    } else {
+
+      result->second->checkAddFeature(feature_ptr);
+
+    }
+
+  } else {
+
+    gene_exon_features_.checkAddFeature(feature_ptr);
+
+  }
 
   return true;
 
@@ -44,6 +73,29 @@ bool kgl::ContigFeatures::findFeatureId(const FeatureIdent_t& feature_id,
 
 }
 
+
+void kgl::ContigFeatures::setupVerifyFeatures() {
+
+  // Setup the Gene feature structure first.
+  gene_exon_features_.setupVerifyHierarchy();
+  // Setup the auxillary feature hierarchies.
+  for (auto aux_hierarchy : auxillary_features_) {
+
+    if (aux_hierarchy.second->featureType() == AdjalleyTSSFeatures::ADJALLEY_TSS_FEATURE_) {
+
+      std::shared_ptr<AdjalleyTSSFeatures> aux_ptr = std::dynamic_pointer_cast<AdjalleyTSSFeatures>(aux_hierarchy.second);
+
+      if (aux_ptr) {
+
+        aux_ptr->setupVerifyHierarchy(gene_exon_features_);
+
+      }
+
+    }
+
+  }
+
+}
 
 
 void kgl::ContigFeatures::setupFeatureHierarchy() {

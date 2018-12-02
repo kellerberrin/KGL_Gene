@@ -39,30 +39,44 @@ class StructuredFeatures {
 
 public:
 
-  explicit StructuredFeatures(const std::string& feature_type) : feature_type_(feature_type) {}
+  StructuredFeatures() = default;
   StructuredFeatures(const StructuredFeatures&) = default;
   virtual ~StructuredFeatures() = default;
 
-  const std::string& featureType() const { return feature_type_; }
+  // Make this a virtual object.
+  virtual const std::string featureType() const = 0;
+  // Checks the feature type before adding.
+  virtual bool checkAddFeature(std::shared_ptr<Feature>& feature_ptr) = 0;
 
-  bool addFeature(std::shared_ptr<Feature>& feature_ptr);
-
-  // false if not found.
+  // False if not found.
   bool findFeatureId(const FeatureIdent_t& feature_id, std::vector<std::shared_ptr<Feature>>& feature_ptr_vec) const;
 
-  const OffsetFeatureMap offetFeatureMap() const { return offset_feature_map_; }
+  const OffsetFeatureMap& offsetFeatureMap() const { return offset_feature_map_; }
+  const IdFeatureMap& idFeatureMap() const { return id_feature_map_; }
+
+
+protected:
+
+  // Indexes by id and offset.
+  void addFeature(std::shared_ptr<Feature>& feature_ptr);
+  void verifyFeatureHierarchy();
+  void clearHierarchy();
 
 private:
 
-  const std::string feature_type_;
   OffsetFeatureMap offset_feature_map_;
   IdFeatureMap id_feature_map_;
+
+  void verifyContigOverlap();
+  void verifySubFeatureDuplicates();
+  void verifySuperFeatureDuplicates();
+  void removeSubFeatureDuplicates();
+  void removeSuperFeatureDuplicates();
 
 };
 
 
-using StruturedFeatureMap = std::map<std::string, std::shared_ptr<StructuredFeatures>>;
-
+using StructuredFeatureMap = std::map<std::string, std::shared_ptr<StructuredFeatures>>;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -76,14 +90,35 @@ class GeneExonFeatures : public StructuredFeatures {
 
 public:
 
-  GeneExonFeatures() : StructuredFeatures(GENE_EXON_FEATURE_) {}
+  GeneExonFeatures() = default;
   GeneExonFeatures(const GeneExonFeatures&) = default;
-  ~GeneExonFeatures() = default;
+  ~GeneExonFeatures() override = default;
+
+  const std::string featureType() const override { return GENE_EXON_FEATURE_; }
+
+  void setupVerifyHierarchy();
+
+  bool findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const;
+
+  // Given a gene id and an mRNA (sequence id) return the CDS coding sequence.
+  bool getCodingSequence(const FeatureIdent_t& gene_id,
+                         const FeatureIdent_t& sequence_id,
+                         std::shared_ptr<const CodingSequence>& coding_sequence_ptr) const;
+
+  // Checks the feature type before adding (not TSS).
+  bool checkAddFeature(std::shared_ptr<Feature>& feature_ptr) override;
 
   static constexpr const char* GENE_EXON_FEATURE_{"GeneExonFeatures"};
 
+
 private:
 
+  GeneMap gene_map_;
+
+  void verifySubFeatureSuperFeatureDimensions();
+  void createGeneMap();
+  void setupFeatureHierarchy();
+  void verifyGeneExonHierarchy();
 
 };
 
@@ -96,20 +131,29 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class TSSFeatures : public StructuredFeatures {
+class AdjalleyTSSFeatures : public StructuredFeatures {
 
 public:
 
-  TSSFeatures() : StructuredFeatures(TSS_FEATURE_) {}
-  TSSFeatures(const TSSFeatures&) = default;
-  ~TSSFeatures() = default;
+  AdjalleyTSSFeatures() = default;
+  AdjalleyTSSFeatures(const AdjalleyTSSFeatures&) = default;
+  ~AdjalleyTSSFeatures() override = default;
 
-  static constexpr const char* TSS_FEATURE_{"TSSFeatures"};
+  const std::string featureType() const override { return ADJALLEY_TSS_FEATURE_; }
+
+  void setupVerifyHierarchy(const StructuredFeatures& gene_super_features);
+
+  // Checks the feature type before adding (must be TSS).
+  bool checkAddFeature(std::shared_ptr<Feature>& feature_ptr) override;
 
   // Return all TSS features in this contig.
   TSSVector getTSSVector() const;
 
+  static constexpr const char* ADJALLEY_TSS_FEATURE_{"AdjalleyTSSFeatures"};
+
 private:
+
+  void setupFeatureHierarchy(const StructuredFeatures& gene_super_features);
 
 
 };

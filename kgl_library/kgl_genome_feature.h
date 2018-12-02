@@ -170,7 +170,6 @@ private:
 // A Gene - can have multiple coding CDSFeatures/mRNAFeature sequences
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using GeneVector = std::vector<std::shared_ptr<const GeneFeature>>;  // Multiple alternative genes for sequence region.
 class GeneFeature : public Feature {
 
 public:
@@ -202,6 +201,8 @@ private:
 
 };
 
+using GeneVector = std::vector<std::shared_ptr<const GeneFeature>>;  // Multiple alternative genes for sequence region.
+using GeneMap = std::multimap<ContigOffset_t, std::shared_ptr<GeneFeature>>;  // Inserted using the END offset as key.
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

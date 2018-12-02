@@ -325,6 +325,7 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
   feature_ptr->setAttributes(record_attributes);
   // Annotate the contig.
   std::shared_ptr<kgl::ContigFeatures> mutable_contig_ptr = std::const_pointer_cast<kgl::ContigFeatures>(contig_ptr);
+
   if (not mutable_contig_ptr->addFeature(feature_ptr)) {
 
     ExecEnv::log().error("Could not add duplicate feature: {} to contig: {}", feature_id, contig_id);

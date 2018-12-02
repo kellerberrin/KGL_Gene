@@ -27,8 +27,6 @@ namespace genome {   // project level namespace
 
 enum class ProteinSequenceAnalysis { VALID_SEQUENCE, NO_START_CODON, NONSENSE_MUTATION, NO_STOP_CODON };
 
-using GeneMap = std::multimap<ContigOffset_t, std::shared_ptr<GeneFeature>>;  // Inserted using the END offset as key.
-
 
 class ContigFeatures {
 
@@ -64,10 +62,12 @@ public:
   void verifyFeatureHierarchy();
   void verifyCDSPhasePeptide();
 
+  void setupVerifyFeatures();
+
   bool verifyDNACodingSequence(std::shared_ptr<const DNA5SequenceCoding> coding_dna_ptr) const;
   bool verifyProteinSequence(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const;
   ProteinSequenceAnalysis proteinSequenceAnalysis(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const;
-  // Returns the protein sequence as the distance is amino acids between the start codon and stop codon.
+  // Returns the protein sequence as the distance in amino acids between the start codon and stop codon.
   // No start and stop codon returns 0.
   size_t proteinSequenceSize(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const;
 
@@ -84,13 +84,12 @@ public:
   std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const;
   AminoAcid::Alphabet getAminoAcid(const Codon& codon) const { return coding_table_.getAmino(codon); }
 
-
 private:
 
   ContigId_t contig_id_;
-  std::shared_ptr<DNA5SequenceContig> sequence_ptr_;
-  GeneExonFeatures gene_exon_features_;
-  TSSFeatures tss_features_;
+  std::shared_ptr<DNA5SequenceContig> sequence_ptr_;  // The contig unstranded DNA sequence.
+  GeneExonFeatures gene_exon_features_;  // All the genes and exons defined for this contig.
+  StructuredFeatureMap auxillary_features_;  // A named map of feature structures from different sources.
   OffsetFeatureMap offset_feature_map_;
   IdFeatureMap id_feature_map_;
   GeneMap gene_map_;
