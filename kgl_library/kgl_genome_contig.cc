@@ -22,6 +22,8 @@ bool kgl::ContigFeatures::addFeature(std::shared_ptr<kgl::Feature>& feature_ptr)
 
   offset_feature_map_.insert(std::make_pair(feature_ptr->sequence().begin(), feature_ptr));
 
+  gene_exon_features_.addFeature(feature_ptr);
+
   return true;
 
 }
@@ -55,9 +57,11 @@ void kgl::ContigFeatures::setupFeatureHierarchy() {
 
   // Establish or re-establish the hierarchies for all features.
   for (auto feature_pair : id_feature_map_) {
+
     Feature& feature = *feature_pair.second;
     // For each feature lookup a list of super_features
     std::vector<FeatureIdent_t> super_features;
+
     feature.getAttributes().getSuperFeatureIds(super_features);
     // TSS features are assigned to GENES
     std::vector<FeatureIdent_t> assigned_features;

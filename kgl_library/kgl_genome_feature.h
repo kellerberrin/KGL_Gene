@@ -76,34 +76,8 @@ private:
 };
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// A Transcription Start Sequence, can be multiple TSS per gene.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class TSSFeature : public Feature {
-
-public:
-
-  TSSFeature(const FeatureIdent_t &id,
-              const std::shared_ptr<const ContigFeatures> &contig_ptr,
-              const FeatureSequence &sequence) : Feature(id, TSS_TYPE, contig_ptr, sequence) {}
-
-  TSSFeature(const TSSFeature &) = default;
-  ~TSSFeature() override = default;
-
-  TSSFeature &operator=(const TSSFeature &) = default;
-
-  bool isTSS() const final { return true; }
-
-  // TSS Type.
-  constexpr static const char* TSS_TYPE = "TSS_BLOCK";
-  // Unassigned to a feature.
-  constexpr static const char* TSS_UNASSIGNED = "NewTranscript";
-
-private:
-
-
-};
+using OffsetFeatureMap = std::multimap<ContigOffset_t, std::shared_ptr<Feature>>; // Contig features indexed by offset.
+using IdFeatureMap = std::multimap<FeatureIdent_t, std::shared_ptr<Feature>>; // Contig features indexed by ident.
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -227,6 +201,42 @@ private:
 
 
 };
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// A Transcription Start Sequence, can be multiple TSS per gene.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class TSSFeature : public Feature {
+
+public:
+
+  TSSFeature(const FeatureIdent_t &id,
+             const std::shared_ptr<const ContigFeatures> &contig_ptr,
+             const FeatureSequence &sequence) : Feature(id, TSS_TYPE, contig_ptr, sequence) {}
+
+  TSSFeature(const TSSFeature &) = default;
+  ~TSSFeature() override = default;
+
+  TSSFeature &operator=(const TSSFeature &) = default;
+
+  bool isTSS() const final { return true; }
+
+  // TSS Type.
+  constexpr static const char* TSS_TYPE = "TSS_BLOCK";
+  // Unassigned to a feature.
+  constexpr static const char* TSS_UNASSIGNED = "NewTranscript";
+
+private:
+
+
+};
+
+
+using TSSVector = std::vector<std::shared_ptr<const TSSFeature>>;
+
 
 
 }   // namespace genome

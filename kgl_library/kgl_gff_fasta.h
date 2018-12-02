@@ -19,16 +19,16 @@ namespace genome {   // project level namespace
 
 // Creates an instance of a Genome database object.
 // Parses the input gff(3) file and annotates it with a fasta sequence
-// This class is a facade; the file reading details are handled by a 3rd party library.
+// This class is a facade; the file reading details are handled by a 3rd party library (Seqan).
 
 // Passed in a vector to write a fasta sequence.
 // WriteFastaSequence.first is the sequence name.
-// WriteFastaSequence.second is the virtual sequence (Base or Amino).
+// WriteFastaSequence.second is the virtual sequence (DNA or Amino).
 using WriteFastaSequence = std::pair<std::string, std::shared_ptr<VirtualSequence>>;
 // Passed in a vector from fasta sequence read.
 // ReadFastaSequence.first is the sequence name.
 // ReadFastaSequence.second is a std::string of the fasta sequence.
-// Note that AlphabetSequence and AlphabetSequence_t are very different.
+// Note that AlphabetSequence and AlphabetSequence_t are very different data types.
 using ReadFastaSequence = std::pair<std::string, std::shared_ptr<AlphabetSequence_t>>;
 
 

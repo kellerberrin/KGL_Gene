@@ -13,6 +13,7 @@
 #include "kgl_genome_types.h"
 #include "kgl_sequence_amino.h"
 #include "kgl_genome_feature.h"
+#include "kgl_genome_contig_feature.h"
 #include "kgl_gaf_parser.h"
 
 
@@ -26,10 +27,7 @@ namespace genome {   // project level namespace
 
 enum class ProteinSequenceAnalysis { VALID_SEQUENCE, NO_START_CODON, NONSENSE_MUTATION, NO_STOP_CODON };
 
-using OffsetFeatureMap = std::multimap<ContigOffset_t, std::shared_ptr<Feature>>; // Contig features indexed by offset.
-using IdFeatureMap = std::multimap<FeatureIdent_t, std::shared_ptr<Feature>>; // Contig features indexed by ident.
 using GeneMap = std::multimap<ContigOffset_t, std::shared_ptr<GeneFeature>>;  // Inserted using the END offset as key.
-using TSSVector = std::vector<std::shared_ptr<const TSSFeature>>;  // Inserted using the END offset as key.
 
 
 class ContigFeatures {
@@ -91,6 +89,8 @@ private:
 
   ContigId_t contig_id_;
   std::shared_ptr<DNA5SequenceContig> sequence_ptr_;
+  GeneExonFeatures gene_exon_features_;
+  TSSFeatures tss_features_;
   OffsetFeatureMap offset_feature_map_;
   IdFeatureMap id_feature_map_;
   GeneMap gene_map_;
