@@ -17,20 +17,12 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-std::shared_ptr<const kgl::GenomeDatabase> kgl::GenomeDatabase::createGenomeDatabase(const std::string& fasta_file,
-                                                                                     const std::string& gff_file,
-                                                                                     const std::string& tss_gff_file,
-                                                                                     const std::string& gaf_file,
-                                                                                     const std::string& translation_table) {
+std::shared_ptr<kgl::GenomeDatabase> kgl::GenomeDatabase::createGenomeDatabase(const std::string& fasta_file,
+                                                                               const std::string& gff_file,
+                                                                               const std::string& gaf_file,
+                                                                               const std::string& translation_table) {
   // Create a genome database object.
   std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr = ParseGffFasta().readFastaGffFile(fasta_file, gff_file);
-
-  // Optionally read in tss_gff records into the genome database.
-  if (not tss_gff_file.empty()) {
-
-    ParseGffFasta().readTssGffFile(tss_gff_file, genome_db_ptr);
-
-  }
 
   // Optionally set the translation table (defaults to the standard table).
   if (not translation_table.empty()) {
@@ -55,6 +47,21 @@ std::shared_ptr<const kgl::GenomeDatabase> kgl::GenomeDatabase::createGenomeData
 
 }
 
+
+
+void kgl::GenomeDatabase::readAuxillary(std::shared_ptr<GenomeDatabase> genome_db_ptr, const std::string& tss_gff_file) {
+
+  // Optionally read in tss_gff records into the genome database.
+  if (not tss_gff_file.empty()) {
+
+    ParseGffFasta().readTssGffFile(tss_gff_file, genome_db_ptr);
+
+  }
+
+  // Wire-up the genome auxillary database.
+  genome_db_ptr->createVerifyAuxillary();
+
+}
 
 
 bool kgl::GenomeDatabase::addContigSequence(const kgl::ContigId_t& contig_id,
@@ -96,6 +103,16 @@ void kgl::GenomeDatabase::createVerifyGenomeDatabase() {
 
 }
 
+
+void kgl::GenomeDatabase::createVerifyAuxillary() {
+
+  for (auto contig_pair : genome_sequence_map_) {
+
+    contig_pair.second->verifyAuxillaryHierarchy();
+
+  }
+
+}
 
 
 void kgl::GenomeDatabase::setTranslationTable(const std::string& table) {

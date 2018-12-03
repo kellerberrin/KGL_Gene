@@ -60,8 +60,6 @@ public:
   std::shared_ptr<const DNA5SequenceContig> sequence_ptr() const { return sequence_ptr_; }
   ContigSize_t contigSize() const { return sequence_ptr_->length(); }
 
-  void verifyFeatureHierarchy();
-  void verifyCDSPhasePeptide();
 
   bool verifyDNACodingSequence(std::shared_ptr<const DNA5SequenceCoding> coding_dna_ptr) const;
   bool verifyProteinSequence(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const;
@@ -82,6 +80,11 @@ public:
   // Generate Amino acid sequences using the table specified for this contig.
   std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const;
   AminoAcid::Alphabet getAminoAcid(const Codon& codon) const { return coding_table_.getAmino(codon); }
+
+  // Wire-up the contig features
+  void verifyFeatureHierarchy();
+  void verifyAuxillaryHierarchy();
+  void verifyCDSPhasePeptide();
 
 private:
 
@@ -116,22 +119,20 @@ public:
 
   // Creates a genome database object.
   // The fasta and gff files must be specified and present.
-  // The tss_gff file is optional (empty string if omitted)
   // The gaf file is optional (empty string if omitted)
   // The translation Amino Acid table is optional (empty string if omitted).
   // Note that different translation tables can be specified for individual contigs.
-  static std::shared_ptr<const GenomeDatabase> createGenomeDatabase(const std::string& fasta_file,
-                                                                    const std::string& gff_file,
-                                                                    const std::string& tss_gff_file,
-                                                                    const std::string& gaf_file,
-                                                                    const std::string& translation_table);
+  static std::shared_ptr<GenomeDatabase> createGenomeDatabase(const std::string& fasta_file,
+                                                              const std::string& gff_file,
+                                                              const std::string& gaf_file,
+                                                              const std::string& translation_table);
 
+  // Read the auxillary genome database features.
+  static void readAuxillary(std::shared_ptr<GenomeDatabase> genome_db_ptr, const std::string& tss_gff_file);
   // Return false if contig already exists.
   bool addContigSequence(const ContigId_t& contig, std::shared_ptr<DNA5SequenceContig> sequence_ptr);
   // Returns false if key not found.
   bool getContigSequence(const ContigId_t& contig, std::shared_ptr<const ContigFeatures>& contig_ptr) const;
-
-  void createVerifyGenomeDatabase();
 
   void setTranslationTable(const std::string& table);
 
@@ -152,6 +153,9 @@ private:
 
   GenomeSequenceMap genome_sequence_map_;
   GeneOntology gene_ontology_;
+
+  void createVerifyGenomeDatabase();
+  void createVerifyAuxillary();
 
 
 };

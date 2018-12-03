@@ -40,11 +40,16 @@ void kgl::ContigFeatures::verifyFeatureHierarchy() {
   gene_exon_features_.setupVerifyHierarchy();
   // Verify the Genes.
   verifyCDSPhasePeptide();
+
+}
+
+
+void kgl::ContigFeatures::verifyAuxillaryHierarchy() {
+
   // Setup the Aux feature hierarchy using the gene exon hierarchy.
   aux_contig_features_.setupVerifyHierarchy(gene_exon_features_);
 
 }
-
 
 
 // Convenience routine for Amino sequences.

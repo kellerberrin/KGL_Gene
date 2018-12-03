@@ -31,17 +31,19 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   std::string fasta_file, gff_file, gaf_file, amino_translation_table;
   runtime_options.getGenomeDBFiles(fasta_file, gff_file, gaf_file, amino_translation_table);
 
-  // Get the database auxillary features (TSS, Promoter sites, Histone modification, etc.
-  std::string tss_file;
-  runtime_options.getGenomeAuxFiles(tss_file);
 
 
   // Create a genome database object.
-  std::shared_ptr<const GenomeDatabase> genome_db_ptr = GenomeDatabase::createGenomeDatabase(fasta_file,
-                                                                                             gff_file,
-                                                                                             tss_file,
-                                                                                             gaf_file,
-                                                                                             amino_translation_table);
+  std::shared_ptr<GenomeDatabase> genome_db_ptr = GenomeDatabase::createGenomeDatabase(fasta_file,
+                                                                                       gff_file,
+                                                                                       gaf_file,
+                                                                                       amino_translation_table);
+
+  // The database auxillary features files (TSS, Promoter sites, Histone modification, etc.
+  std::string tss_file;
+  runtime_options.getGenomeAuxFiles(tss_file);
+  // Read the auxillary genome database features.
+  GenomeDatabase::readAuxillary(genome_db_ptr, tss_file);
 
   // Write Filtered Unphased Heterozygous Statistics
   HeterozygousStatistics heterozygous_statistics;
