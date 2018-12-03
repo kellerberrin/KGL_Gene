@@ -299,14 +299,10 @@ bool kgl::RuntimeProperties::readProperties(const std::string& properties_file) 
 void kgl::RuntimeProperties::getGenomeDBFiles(std::string& fasta_file,
                                               std::string& gff_file,
                                               std::string& gaf_file,
-                                              std::string& tss_file,
                                               std::string& translationTable) const {
 
 
-  std::string key = std::string(RUNTIME_ROOT_) + std::string(TSS_FILE_) + std::string(VALUE_);
-  property_tree_.getFileProperty(key, work_directory_, tss_file);
-
-  key = std::string(RUNTIME_ROOT_) + std::string(GAF_FILE_) + std::string(VALUE_);
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(GAF_FILE_) + std::string(VALUE_);
   property_tree_.getFileProperty(key, work_directory_, gaf_file);
 
   key = std::string(RUNTIME_ROOT_) + std::string(FASTA_FILE_) + std::string(VALUE_);
@@ -326,16 +322,21 @@ void kgl::RuntimeProperties::getGenomeDBFiles(std::string& fasta_file,
   key = std::string(RUNTIME_ROOT_) + std::string(TRANSLATION_TABLE_) + std::string(VALUE_);
   if (not property_tree_.getProperty(key, translationTable)) {
 
-    ExecEnv::log().warn("Amino Acid translation table not specified");
-
-  } else {
-
     translationTable = Tables::STANDARDTABLE->table_name; // The standard amino acid translation table.
+    ExecEnv::log().warn("Amino Acid translation table not specified, using standard table: {}", translationTable);
 
   }
 
 }
 
+
+
+void kgl::RuntimeProperties::getGenomeAuxFiles(std::string& tss_file) const {
+
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(TSS_FILE_) + std::string(VALUE_);
+  property_tree_.getFileProperty(key, work_directory_, tss_file);
+
+}
 
 
 size_t kgl::RuntimeProperties::getVCFPloidy() const {

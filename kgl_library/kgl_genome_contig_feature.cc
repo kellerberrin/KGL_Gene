@@ -97,24 +97,6 @@ void kgl::StructuredFeatures::verifySubFeatureDuplicates() {
 }
 
 
-void kgl::StructuredFeatures::verifySuperFeatureDuplicates() {
-
-  for (auto feature_pair : idFeatureMap()) {
-    Feature &feature = *feature_pair.second;
-
-    long duplicates = checkDuplicates(feature.superFeatures());
-
-    if (duplicates > 0) {
-
-      kgl::ExecEnv::log().warn("Feature: {}; has {} duplicate super-features", feature.id(), duplicates);
-
-    }
-
-  }
-
-}
-
-
 
 void kgl::StructuredFeatures::removeSubFeatureDuplicates() {
 
@@ -128,24 +110,6 @@ void kgl::StructuredFeatures::removeSubFeatureDuplicates() {
     if (duplicates_removed > 0) {
 
       kgl::ExecEnv::log().info("{} duplicate sub-features removed from super feature: {}", duplicates_removed, feature.id());
-
-    }
-
-  }
-
-}
-
-void kgl::StructuredFeatures::removeSuperFeatureDuplicates() {
-
-  for (auto feature_pair : idFeatureMap()) {
-
-    Feature &feature = *feature_pair.second;
-
-    long duplicates_removed = deleteIterableDuplicates(feature.superFeatures());
-
-    if (duplicates_removed > 0) {
-
-      kgl::ExecEnv::log().info("{} duplicate super-features removed from sub-feature: {}", duplicates_removed, feature.id());
 
     }
 
@@ -173,9 +137,7 @@ void kgl::StructuredFeatures::verifyFeatureHierarchy() {
 
   verifyContigOverlap();
   removeSubFeatureDuplicates();
-  removeSuperFeatureDuplicates();
   verifySubFeatureDuplicates();
-  verifySuperFeatureDuplicates();
 
 }
 
@@ -242,11 +204,10 @@ void kgl::GeneExonFeatures::setupFeatureHierarchy() {
                                  super_feature_id, super_feature_ptr_vec.size());
 
       }
-      for (auto& super_feature_ptr : super_feature_ptr_vec) {
+      if (not super_feature_ptr_vec.empty()) {
 
-        feature.addSuperFeature(super_feature_id, super_feature_ptr);
-
-        std::const_pointer_cast<Feature>(super_feature_ptr)->addSubFeature(feature.id(), feature_pair.second);
+        feature.setSuperFeature(super_feature_ptr_vec.front());
+        std::const_pointer_cast<Feature>(super_feature_ptr_vec.front())->addSubFeature(feature.id(), feature_pair.second);
 
       } // For all super_features with same id.
 
@@ -418,10 +379,10 @@ void kgl::GeneExonFeatures::verifySubFeatureSuperFeatureDimensions() {
 
     } // for all sub-features.
 
-    // Check that features fit within super-feature.
-    for (auto super_feature_pair : feature.superFeatures()) {
+    // Check that features fit within the super-feature.
+    if (feature.hasSuperfeature()) {
 
-      const Feature &super_feature = *super_feature_pair.second;
+      const Feature &super_feature = *feature.getSuperFeature();
 
       if (feature.sequence().begin() < super_feature.sequence().begin()
           or feature.sequence().end() > super_feature.sequence().end()) {
@@ -436,117 +397,9 @@ void kgl::GeneExonFeatures::verifySubFeatureSuperFeatureDimensions() {
 
       } // If feature overlaps super-feature.
 
-    } // for all super features.
-
-  } // for all features.
-
-}
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// AdjalleyTSSFeatures members.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-bool kgl::AdjalleyTSSFeatures::checkAddFeature(std::shared_ptr<Feature>& feature_ptr) {
-
-  if (not feature_ptr->isTSS()) {
-
-    ExecEnv::log().error("AdjalleyTSSFeatures::checkAddFeature; Feature: {}, can only add TSS features to the TSS feature structure",
-                         feature_ptr->id());
-    return false;
-
-  }
-
-  addFeature(feature_ptr);
-
-  return true;
-
-}
-
-
-void kgl::AdjalleyTSSFeatures::setupVerifyHierarchy(const StructuredFeatures& gene_super_features) {
-
-  setupFeatureHierarchy(gene_super_features);
-  verifyFeatureHierarchy();
-
-}
-
-
-kgl::TSSVector kgl::AdjalleyTSSFeatures::getTSSVector() const {
-
-  TSSVector tss_vector;
-
-  for (auto feature : offsetFeatureMap()) {
-
-    std::shared_ptr<const TSSFeature> tss_feature = std::dynamic_pointer_cast<TSSFeature>(feature.second);
-
-    if (not tss_feature) {
-
-      ExecEnv::log().error("Unexpected feature type for TSS feature: {}", feature.second->id());
-
-    } else {
-
-      tss_vector.push_back(tss_feature);
-
     }
 
-  }
-
-  return tss_vector;
-
-}
-
-
-void kgl::AdjalleyTSSFeatures::setupFeatureHierarchy(const StructuredFeatures& gene_super_features) {
-
-  // Remove all hierarchies for all features.
-  clearHierarchy();
-
-  // Establish or re-establish the hierarchies for all features.
-  for (auto feature_pair : idFeatureMap()) {
-
-    Feature& feature = *feature_pair.second;
-
-    // TSS features are assigned to GENES
-    std::vector<FeatureIdent_t> assigned_features;
-    feature.getAttributes().getAssignedFeatureIds(assigned_features);
-
-    // Add parent pointers for the child and child pointers for the super_features.
-    for (auto super_feature_id : assigned_features) {
-
-      std::vector<std::shared_ptr<const Feature>> super_feature_ptr_vec;
-      if (not gene_super_features.findFeatureId(super_feature_id, super_feature_ptr_vec)) {
-
-        // If the super feature is unassigned then continue.
-        if (super_feature_id == TSSFeature::TSS_UNASSIGNED) {
-
-          continue;
-
-        }
-
-        // Otherwise flag an Error; could not find super feature.
-        kgl::ExecEnv::log().error("Feature: {}; Super Feature: {} does not exist", feature.id(), super_feature_id);
-
-      }
-      if (super_feature_ptr_vec.size() > 1) {
-
-        // Warning, more than 1 super feature.
-        kgl::ExecEnv::log().warn("Super Feature id: {} returned : {} Super Features",
-                                 super_feature_id, super_feature_ptr_vec.size());
-
-      }
-      for (auto& super_feature_ptr : super_feature_ptr_vec) {
-
-        feature.addSuperFeature(super_feature_id, super_feature_ptr);
-        std::const_pointer_cast<Feature>(super_feature_ptr)->addSubFeature(feature.id(), feature_pair.second);
-
-      } // For all super_features with same id.
-
-    } // For all parent ids.
-
-  } // For all features.
+  } // for all features.
 
 }
 

@@ -15,11 +15,6 @@
 #include "kgl_genome_feature.h"
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// These objects contain auxillary genome information sources e.g. TSS, Histone modification, Promoter sites etc.
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -69,9 +64,7 @@ private:
 
   void verifyContigOverlap();
   void verifySubFeatureDuplicates();
-  void verifySuperFeatureDuplicates();
   void removeSubFeatureDuplicates();
-  void removeSuperFeatureDuplicates();
 
 };
 
@@ -123,44 +116,6 @@ private:
   void verifyGeneExonHierarchy();
 
 };
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// A specialized container for Transcription Start Sequence (TSS) features.
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class AdjalleyTSSFeatures : public StructuredFeatures {
-
-public:
-
-  AdjalleyTSSFeatures() = default;
-  AdjalleyTSSFeatures(const AdjalleyTSSFeatures&) = default;
-  ~AdjalleyTSSFeatures() override = default;
-
-  const std::string featureType() const override { return ADJALLEY_TSS_FEATURE_; }
-
-  void setupVerifyHierarchy(const StructuredFeatures& gene_super_features);
-
-  // Checks the feature type before adding (must be TSS).
-  bool checkAddFeature(std::shared_ptr<Feature>& feature_ptr) override;
-
-  // Return all TSS features in this contig.
-  TSSVector getTSSVector() const;
-
-  static constexpr const char* ADJALLEY_TSS_FEATURE_{"AdjalleyTSSFeatures"};
-
-private:
-
-  void setupFeatureHierarchy(const StructuredFeatures& gene_super_features);
-
-
-};
-
-
 
 
 

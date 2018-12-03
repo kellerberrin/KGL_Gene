@@ -28,8 +28,13 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   std::shared_ptr<UnphasedPopulation> unphased_population_ptr(std::make_shared<UnphasedPopulation>());
 
   // Get the genome database runtime parameters.
-  std::string fasta_file, gff_file, gaf_file, tss_file, amino_translation_table;
-  runtime_options.getGenomeDBFiles(fasta_file, gff_file, gaf_file, tss_file, amino_translation_table);
+  std::string fasta_file, gff_file, gaf_file, amino_translation_table;
+  runtime_options.getGenomeDBFiles(fasta_file, gff_file, gaf_file, amino_translation_table);
+
+  // Get the database auxillary features (TSS, Promoter sites, Histone modification, etc.
+  std::string tss_file;
+  runtime_options.getGenomeAuxFiles(tss_file);
+
 
   // Create a genome database object.
   std::shared_ptr<const GenomeDatabase> genome_db_ptr = GenomeDatabase::createGenomeDatabase(fasta_file,

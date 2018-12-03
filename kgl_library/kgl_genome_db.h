@@ -14,6 +14,7 @@
 #include "kgl_sequence_amino.h"
 #include "kgl_genome_feature.h"
 #include "kgl_genome_contig_feature.h"
+#include "kgl_genome_contig_aux.h"
 #include "kgl_gaf_parser.h"
 
 
@@ -49,7 +50,7 @@ public:
   const GeneMap& getGeneMap() const { return gene_exon_features_.geneMap(); }
 
   // Return all TSS features in this contig.
-  TSSVector getTSSVector() const { return adjalley_TSS_Features_.getTSSVector(); }
+  TSSVector getTSSVector() const { return aux_contig_features_.getTSSfeatures().getTSSVector(); }
 
   bool setTranslationTable(const std::string& table_name) { return coding_table_.settranslationTable(table_name); }
   std::string translationTableName() const { return coding_table_.translationTableName(); }
@@ -87,7 +88,7 @@ private:
   ContigId_t contig_id_;
   std::shared_ptr<DNA5SequenceContig> sequence_ptr_;  // The contig unstranded DNA sequence.
   GeneExonFeatures gene_exon_features_;  // All the genes and exons defined for this contig.
-  AdjalleyTSSFeatures adjalley_TSS_Features_; // TSS feature map.
+  AuxContigFeatures aux_contig_features_;
   TranslateToAmino coding_table_;  // Amino Acid translation table, unique for contig (e.g. mitochondria)
 
   // Check all gene coding sequences for start and end codons and nonsense (intermediate stop codon) mutations.

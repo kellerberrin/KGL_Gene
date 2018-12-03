@@ -100,6 +100,8 @@ void kgl::GenomeDatabase::createVerifyGenomeDatabase() {
 
 void kgl::GenomeDatabase::setTranslationTable(const std::string& table) {
 
+  ExecEnv::log().info("GenomeDatabase::setTranslationTable; All contigs set to Amino translation table: {}", table);
+
   for (auto contig_pair : genome_sequence_map_) {
 
     contig_pair.second->setTranslationTable(table);

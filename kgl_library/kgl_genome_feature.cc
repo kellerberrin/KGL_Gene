@@ -15,13 +15,6 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void kgl::Feature::addSuperFeature(const kgl::FeatureIdent_t &super_feature_id, std::shared_ptr<const Feature> super_feature_ptr) {
-
-  super_features_.insert(std::make_pair(super_feature_id, super_feature_ptr));
-
-}
-
-
 void kgl::Feature::addSubFeature(const FeatureIdent_t& sub_feature_id, std::shared_ptr<const Feature> sub_feature_ptr) {
 
   sub_features_.insert(std::make_pair(sub_feature_id, sub_feature_ptr));
@@ -119,23 +112,22 @@ bool kgl::Feature::verifyStrand(const SortedCDS& sorted_cds) const {
 
 std::shared_ptr<const kgl::Feature> kgl::Feature::getGene() const {
 
-  // recursivly search upward
+  // Recursively search upward
 
-  for (auto feature : super_features_) {
+  if (hasSuperfeature()) {
 
-    if (feature.second->isGene()) {
+    if (getSuperFeature()->isGene()) {
 
-      return feature.second;
+      return getSuperFeature();
 
     } else {
 
-      return feature.second->getGene();
+      return getSuperFeature()->getGene();
 
     }
   }
 
-  std::shared_ptr<kgl::Feature> null;
-  return null;
+  return nullptr;
 
 }
 

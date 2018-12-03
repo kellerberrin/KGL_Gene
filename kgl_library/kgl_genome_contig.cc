@@ -20,7 +20,7 @@ bool kgl::ContigFeatures::addFeature(std::shared_ptr<kgl::Feature>& feature_ptr)
 
   if (feature_ptr->isTSS()) {
 
-    adjalley_TSS_Features_.checkAddFeature(feature_ptr);
+    aux_contig_features_.checkAddFeature(feature_ptr);
 
   } else {
 
@@ -40,8 +40,8 @@ void kgl::ContigFeatures::verifyFeatureHierarchy() {
   gene_exon_features_.setupVerifyHierarchy();
   // Verify the Genes.
   verifyCDSPhasePeptide();
-  // Setup the TSS feature hierarchy using the gene exon hierarchy.
-  adjalley_TSS_Features_.setupVerifyHierarchy(gene_exon_features_);
+  // Setup the Aux feature hierarchy using the gene exon hierarchy.
+  aux_contig_features_.setupVerifyHierarchy(gene_exon_features_);
 
 }
 

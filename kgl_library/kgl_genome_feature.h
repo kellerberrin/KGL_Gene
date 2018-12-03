@@ -19,7 +19,7 @@ namespace genome {   // project level namespace
 
 class ContigFeatures; // Forward decl;
 using SubFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<const Feature>>;
-using SuperFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<const Feature>>;
+using SuperFeaturePtr = std::weak_ptr<const Feature>;
 
 class Feature {
 
@@ -45,8 +45,7 @@ public:
   std::shared_ptr<const Feature> getGene() const; // returns null pointer if not found
   void recusivelyPrintsubfeatures(long feature_level = 1) const; // useful debug function.
   // Hierarchy routines.
-  void clearHierachy() { sub_features_.clear(); super_features_.clear(); }
-  void addSuperFeature(const FeatureIdent_t &super_feature_id, std::shared_ptr<const Feature> super_feature_ptr);
+  void clearHierachy() { sub_features_.clear(); super_feature_ptr_.reset(); }
   void addSubFeature(const FeatureIdent_t& sub_feature_id, std::shared_ptr<const Feature> sub_feature_ptr);
   virtual bool isCDS() const { return false; }
   virtual bool isGene() const { return false; }
@@ -55,9 +54,12 @@ public:
   virtual bool isTSS() const { return false; }
 
 
-  const SuperFeatureMap& superFeatures() const { return super_features_; }
+  // Always check for a NULL pointer with super feature.
+  bool hasSuperfeature() const { return getSuperFeature() != nullptr; }
+  std::shared_ptr<const Feature> getSuperFeature() const { return super_feature_ptr_.lock(); }
+  void setSuperFeature(std::shared_ptr<const Feature> shared_super_feature) { super_feature_ptr_ = shared_super_feature; }
+
   const SubFeatureMap& subFeatures() const { return sub_features_; }
-  SuperFeatureMap& superFeatures() { return super_features_; }
   SubFeatureMap& subFeatures() { return sub_features_; }
 
   std::shared_ptr<const ContigFeatures> contig() const { return contig_ptr_; }
@@ -69,7 +71,7 @@ private:
   std::shared_ptr<const ContigFeatures> contig_ptr_;
   FeatureSequence sequence_;
   SubFeatureMap sub_features_;
-  SuperFeatureMap super_features_;
+  SuperFeaturePtr super_feature_ptr_;
   Attributes attributes_;
 
   bool verifyMod3(const SortedCDS& sorted_cds) const;

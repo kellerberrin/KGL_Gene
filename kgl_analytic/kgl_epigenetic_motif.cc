@@ -51,11 +51,11 @@ void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeDatabase> g
       std::shared_ptr<const DNA5SequenceCoding> tss_preface_coding = tss_preface->codingSequence(tss_feature->sequence().strand());
 
 
-      if (not tss_feature->superFeatures().empty()) {
+      if (tss_feature->hasSuperfeature()) {
 
         ++assigned_count;
 
-        std::shared_ptr<const Feature> gene = tss_feature->superFeatures().begin()->second;
+        std::shared_ptr<const Feature> gene = tss_feature->getSuperFeature();
 
         if (not gene->isGene()) {
 
