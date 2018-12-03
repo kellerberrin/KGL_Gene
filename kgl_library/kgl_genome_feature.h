@@ -18,8 +18,8 @@ namespace genome {   // project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class ContigFeatures; // Forward decl;
-using SubFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<Feature>>;
-using SuperFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<Feature>>;
+using SubFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<const Feature>>;
+using SuperFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<const Feature>>;
 
 class Feature {
 
@@ -42,12 +42,12 @@ public:
   const FeatureType_t& featureType() const { return type_; }
   bool verifyStrand(const SortedCDS& sorted_cds) const;   // Check feature strand consistency
   bool verifyCDSPhase(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const; // Check the CDS phase for -ve and +ve strand genes
-  std::shared_ptr<Feature> getGene() const; // returns null pointer if not found
+  std::shared_ptr<const Feature> getGene() const; // returns null pointer if not found
   void recusivelyPrintsubfeatures(long feature_level = 1) const; // useful debug function.
   // Hierarchy routines.
   void clearHierachy() { sub_features_.clear(); super_features_.clear(); }
-  void addSuperFeature(const FeatureIdent_t &super_feature_id, const std::shared_ptr<Feature> &super_feature_ptr);
-  void addSubFeature(const FeatureIdent_t& sub_feature_id, const std::shared_ptr<Feature>& sub_feature_ptr);
+  void addSuperFeature(const FeatureIdent_t &super_feature_id, std::shared_ptr<const Feature> super_feature_ptr);
+  void addSubFeature(const FeatureIdent_t& sub_feature_id, std::shared_ptr<const Feature> sub_feature_ptr);
   virtual bool isCDS() const { return false; }
   virtual bool isGene() const { return false; }
   virtual bool ismRNA() const { return false; }

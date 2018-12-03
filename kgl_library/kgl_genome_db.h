@@ -42,13 +42,14 @@ public:
 
   bool addFeature(std::shared_ptr<Feature>& feature_ptr);
   // false if not found.
-  bool findFeatureId(const FeatureIdent_t& feature_id, std::vector<std::shared_ptr<Feature>>& feature_ptr_vec) const;
+  bool findFeatureId(const FeatureIdent_t& feature_id,
+                     std::vector<std::shared_ptr<const Feature>>& feature_ptr_vec) const { return gene_exon_features_.findFeatureId(feature_id, feature_ptr_vec); }
   // false if offset is not in a gene, else (true) returns a vector of ptrs to the genes.
   bool findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const;
-  const GeneMap& getGeneMap() const { return gene_map_; }
+  const GeneMap& getGeneMap() const { return gene_exon_features_.geneMap(); }
 
   // Return all TSS features in this contig.
-  TSSVector getTSSVector() const;
+  TSSVector getTSSVector() const { return adjalley_TSS_Features_.getTSSVector(); }
 
   bool setTranslationTable(const std::string& table_name) { return coding_table_.settranslationTable(table_name); }
   std::string translationTableName() const { return coding_table_.translationTableName(); }
@@ -58,11 +59,8 @@ public:
   std::shared_ptr<const DNA5SequenceContig> sequence_ptr() const { return sequence_ptr_; }
   ContigSize_t contigSize() const { return sequence_ptr_->length(); }
 
-  void setupFeatureHierarchy();
   void verifyFeatureHierarchy();
   void verifyCDSPhasePeptide();
-
-  void setupVerifyFeatures();
 
   bool verifyDNACodingSequence(std::shared_ptr<const DNA5SequenceCoding> coding_dna_ptr) const;
   bool verifyProteinSequence(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const;
@@ -89,19 +87,9 @@ private:
   ContigId_t contig_id_;
   std::shared_ptr<DNA5SequenceContig> sequence_ptr_;  // The contig unstranded DNA sequence.
   GeneExonFeatures gene_exon_features_;  // All the genes and exons defined for this contig.
-  StructuredFeatureMap auxillary_features_;  // A named map of feature structures from different sources.
-  OffsetFeatureMap offset_feature_map_;
-  IdFeatureMap id_feature_map_;
-  GeneMap gene_map_;
+  AdjalleyTSSFeatures adjalley_TSS_Features_; // TSS feature map.
   TranslateToAmino coding_table_;  // Amino Acid translation table, unique for contig (e.g. mitochondria)
 
-  void verifyContigOverlap();
-  void verifySubFeatureSuperFeatureDimensions();
-  void verifySubFeatureDuplicates();
-  void verifySuperFeatureDuplicates();
-  void removeSubFeatureDuplicates();
-  void removeSuperFeatureDuplicates();
-  void createGeneMap();
   // Check all gene coding sequences for start and end codons and nonsense (intermediate stop codon) mutations.
   bool verifyCodingSequences(const std::shared_ptr<const GeneFeature> gene_ptr,
                              std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const;
@@ -164,8 +152,6 @@ private:
   GenomeSequenceMap genome_sequence_map_;
   GeneOntology gene_ontology_;
 
-  void setupFeatureHierarchy();
-  void verifyFeatureHierarchy();
 
 };
 

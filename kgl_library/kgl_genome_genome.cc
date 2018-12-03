@@ -85,27 +85,8 @@ bool kgl::GenomeDatabase::getContigSequence(const kgl::ContigId_t& contig_id,
 
 }
 
+
 void kgl::GenomeDatabase::createVerifyGenomeDatabase() {
-
-  setupFeatureHierarchy();
-  verifyFeatureHierarchy();
-
-}
-
-void kgl::GenomeDatabase::setupFeatureHierarchy() {
-
-  for (auto contig_pair : genome_sequence_map_) {
-
-    contig_pair.second->setupFeatureHierarchy();
-
-    contig_pair.second->setupVerifyFeatures();
-
-  }
-
-}
-
-
-void kgl::GenomeDatabase::verifyFeatureHierarchy() {
 
   for (auto contig_pair : genome_sequence_map_) {
 
@@ -114,6 +95,8 @@ void kgl::GenomeDatabase::verifyFeatureHierarchy() {
   }
 
 }
+
+
 
 void kgl::GenomeDatabase::setTranslationTable(const std::string& table) {
 
@@ -124,7 +107,6 @@ void kgl::GenomeDatabase::setTranslationTable(const std::string& table) {
   }
 
 }
-
 
 
 // Given a sequence offset, returns a contig offset.

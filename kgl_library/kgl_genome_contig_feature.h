@@ -49,7 +49,7 @@ public:
   virtual bool checkAddFeature(std::shared_ptr<Feature>& feature_ptr) = 0;
 
   // False if not found.
-  bool findFeatureId(const FeatureIdent_t& feature_id, std::vector<std::shared_ptr<Feature>>& feature_ptr_vec) const;
+  bool findFeatureId(const FeatureIdent_t& feature_id, std::vector<std::shared_ptr<const Feature>>& feature_ptr_vec) const;
 
   const OffsetFeatureMap& offsetFeatureMap() const { return offset_feature_map_; }
   const IdFeatureMap& idFeatureMap() const { return id_feature_map_; }
@@ -97,6 +97,8 @@ public:
   const std::string featureType() const override { return GENE_EXON_FEATURE_; }
 
   void setupVerifyHierarchy();
+
+  const GeneMap& geneMap() const { return gene_map_; }
 
   bool findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const;
 

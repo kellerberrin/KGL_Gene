@@ -25,11 +25,12 @@ void kgl::StructuredFeatures::addFeature(std::shared_ptr<kgl::Feature>& feature_
 }
 
 bool kgl::StructuredFeatures::findFeatureId(const FeatureIdent_t& feature_id,
-                                           std::vector<std::shared_ptr<kgl::Feature>>& feature_ptr_vec) const {
+                                           std::vector<std::shared_ptr<const Feature>>& feature_ptr_vec) const {
 
   auto iter_pair = id_feature_map_.equal_range(feature_id);
 
   feature_ptr_vec.clear();
+
   for (auto iter = iter_pair.first; iter != iter_pair.second; ++iter) {
 
     feature_ptr_vec.emplace_back(iter->second);
@@ -226,7 +227,8 @@ void kgl::GeneExonFeatures::setupFeatureHierarchy() {
     // Add parent pointers for the child and child pointers for the super_features.
     for (auto super_feature_id : super_features) {
 
-      std::vector<std::shared_ptr<kgl::Feature>> super_feature_ptr_vec;
+      std::vector<std::shared_ptr<const Feature>> super_feature_ptr_vec;
+
       if (not findFeatureId(super_feature_id, super_feature_ptr_vec)) {
 
         // Flag an Error; could not find super feature.
@@ -243,7 +245,8 @@ void kgl::GeneExonFeatures::setupFeatureHierarchy() {
       for (auto& super_feature_ptr : super_feature_ptr_vec) {
 
         feature.addSuperFeature(super_feature_id, super_feature_ptr);
-        super_feature_ptr->addSubFeature(feature.id(), feature_pair.second);
+
+        std::const_pointer_cast<Feature>(super_feature_ptr)->addSubFeature(feature.id(), feature_pair.second);
 
       } // For all super_features with same id.
 
@@ -289,8 +292,10 @@ bool kgl::GeneExonFeatures::getCodingSequence(const FeatureIdent_t& gene_id,
                                             const FeatureIdent_t& sequence_id,
                                             std::shared_ptr<const CodingSequence>& coding_sequence_ptr) const {
 
-  std::vector<std::shared_ptr<Feature>> feature_ptr_vec;
+  std::vector<std::shared_ptr<const Feature>> feature_ptr_vec;
+
   std::shared_ptr<const GeneFeature> gene_ptr;
+
   if (findFeatureId(gene_id, feature_ptr_vec)) {
 
     for (const auto& feature_ptr : feature_ptr_vec) {
@@ -392,7 +397,7 @@ void kgl::GeneExonFeatures::verifySubFeatureSuperFeatureDimensions() {
 
     for (auto sub_feature_pair : feature.subFeatures()) {
 
-      Feature &sub_feature = *sub_feature_pair.second;
+      const Feature &sub_feature = *sub_feature_pair.second;
 
       // TSS blocks can overlap superfeatures (Genes).
       if (sub_feature.isTSS()) continue;
@@ -415,7 +420,9 @@ void kgl::GeneExonFeatures::verifySubFeatureSuperFeatureDimensions() {
 
     // Check that features fit within super-feature.
     for (auto super_feature_pair : feature.superFeatures()) {
-      Feature &super_feature = *super_feature_pair.second;
+
+      const Feature &super_feature = *super_feature_pair.second;
+
       if (feature.sequence().begin() < super_feature.sequence().begin()
           or feature.sequence().end() > super_feature.sequence().end()) {
 
@@ -509,7 +516,7 @@ void kgl::AdjalleyTSSFeatures::setupFeatureHierarchy(const StructuredFeatures& g
     // Add parent pointers for the child and child pointers for the super_features.
     for (auto super_feature_id : assigned_features) {
 
-      std::vector<std::shared_ptr<kgl::Feature>> super_feature_ptr_vec;
+      std::vector<std::shared_ptr<const Feature>> super_feature_ptr_vec;
       if (not gene_super_features.findFeatureId(super_feature_id, super_feature_ptr_vec)) {
 
         // If the super feature is unassigned then continue.
@@ -533,7 +540,7 @@ void kgl::AdjalleyTSSFeatures::setupFeatureHierarchy(const StructuredFeatures& g
       for (auto& super_feature_ptr : super_feature_ptr_vec) {
 
         feature.addSuperFeature(super_feature_id, super_feature_ptr);
-        super_feature_ptr->addSubFeature(feature.id(), feature_pair.second);
+        std::const_pointer_cast<Feature>(super_feature_ptr)->addSubFeature(feature.id(), feature_pair.second);
 
       } // For all super_features with same id.
 
