@@ -49,8 +49,8 @@ public:
   bool findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const;
   const GeneMap& getGeneMap() const { return gene_exon_features_.geneMap(); }
 
-  // Return all TSS features in this contig.
-  TSSVector getTSSVector() const { return aux_contig_features_.getTSSfeatures().getTSSVector(); }
+  // Return all Aux genome features in this contig.
+  const AuxContigFeatures& getAuxContigFeatures() const { return aux_contig_features_; }
 
   bool setTranslationTable(const std::string& table_name) { return coding_table_.settranslationTable(table_name); }
   std::string translationTableName() const { return coding_table_.translationTableName(); }

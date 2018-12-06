@@ -17,7 +17,9 @@ namespace kgl = kellerberrin::genome;
 
 void kgl::PhylogeneticExecEnv::executeApp() {
 
+  // Command line arguments
   const Phylogenetic& args = getArgs();
+  // XML program run options
   const RuntimeProperties& runtime_options = getRuntimeOptions();
 
 
@@ -52,13 +54,13 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   runtime_options.getVCFFiles(vcf_list);
 
   // For all VCF files, read in the variants.
-  for (const auto& file : vcf_list) {
+  for (auto vcf_file : vcf_list) {
 
     // Clear the unphased population object.
     unphased_population_ptr->clear();
 
     // Read variants.
-    VariantFactory().readVCFVariants(genome_db_ptr, unphased_population_ptr, file);
+    VariantFactory().readVCFVariants(genome_db_ptr, unphased_population_ptr, vcf_file);
 
     // Basic statistics to output
     // unphased_population_ptr->popStatistics();

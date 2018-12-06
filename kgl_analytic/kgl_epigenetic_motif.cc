@@ -19,7 +19,7 @@ void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeDatabase> g
 
   for (auto contig : genome_db_ptr->getMap()) {
 
-    TSSVector vector = contig.second->getTSSVector();
+    TSSVector vector = contig.second->getAuxContigFeatures().getTSSfeatures().getTSSVector();
 
     size_t assigned_count = 0;
     for (auto const tss_feature : vector) {
