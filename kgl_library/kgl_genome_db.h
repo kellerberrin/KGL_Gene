@@ -41,10 +41,15 @@ public:
 
   ContigFeatures& operator=(const ContigFeatures&) = default;
 
-  bool addFeature(std::shared_ptr<Feature>& feature_ptr);
+  // Add parsed features to the different feature structures.
+  bool addGeneExonFeature(std::shared_ptr<Feature>& feature_ptr);
+  bool addAuxFeature(std::shared_ptr<Feature>& feature_ptr);
+
   // false if not found.
   bool findFeatureId(const FeatureIdent_t& feature_id,
-                     std::vector<std::shared_ptr<const Feature>>& feature_ptr_vec) const { return gene_exon_features_.findFeatureId(feature_id, feature_ptr_vec); }
+                     std::vector<std::shared_ptr<const Feature>>& feature_ptr_vec) const {
+    return gene_exon_features_.findFeatureId(feature_id, feature_ptr_vec);
+  }
   // false if offset is not in a gene, else (true) returns a vector of ptrs to the genes.
   bool findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const;
   const GeneMap& getGeneMap() const { return gene_exon_features_.geneMap(); }

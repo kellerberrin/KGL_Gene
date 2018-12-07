@@ -29,10 +29,9 @@ public:
   GffFastaImpl() = default;
   ~GffFastaImpl() = default;
 
-  using GffParser = bool (*)(std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr, seqan::GffRecord& record, long gff_line_counter);
+  using FeatureSinkPtr = bool (kgl::ContigFeatures::*)(std::shared_ptr<kgl::Feature>&);
 
-  template <GffParser parser>
-  void readGffFile(const std::string &gff_file_name, std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr);
+  void readGffFile(const std::string &gff_file_name, std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr, FeatureSinkPtr feature_sink);
 
   bool writeFastaFile(const std::string& fasta_file_name, const std::vector<WriteFastaSequence>& fasta_sequences);
 
@@ -40,14 +39,15 @@ public:
 
   bool readFastaFile(const std::string& fasta_file_name, std::vector<ReadFastaSequence>& fasta_sequences);
 
+
   // This parses the plasmodb gff records and TSS gff records..
-  static bool parseGffRecord(std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr,
-                      seqan::GffRecord& record,
-                      long gff_line_counter);
 
 private:
 
 
+  bool parseGffRecord(std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr,
+                      seqan::GffRecord& record, long gff_line_counter,
+                      FeatureSinkPtr feature_sink);
 
 
 };
@@ -129,9 +129,9 @@ void kgl::ParseGffFasta::GffFastaImpl::readFastaFile(const std::string& fasta_fi
 }
 
 
-template <kgl::ParseGffFasta::GffFastaImpl::GffParser parser>
 void kgl::ParseGffFasta::GffFastaImpl::readGffFile(const std::string &gff_file_name,
-                                                   std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr) {
+                                                   std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr,
+                                                   FeatureSinkPtr feature_sink) {
 
   seqan::GffFileIn gff_file_in;
   if (!seqan::open(gff_file_in, gff_file_name.c_str())) {
@@ -156,7 +156,7 @@ void kgl::ParseGffFasta::GffFastaImpl::readGffFile(const std::string &gff_file_n
 
       ++gff_line_counter;
 
-      if (not parser(genome_db_ptr, record, gff_line_counter)) {
+      if (not parseGffRecord(genome_db_ptr, record, gff_line_counter, feature_sink)) {
 
         ExecEnv::log().error("Parse error, unable to load feature at Gff line: {}", gff_line_counter);
         seqan::writeRecord(gff_file_out, record);
@@ -179,7 +179,8 @@ void kgl::ParseGffFasta::GffFastaImpl::readGffFile(const std::string &gff_file_n
 
 bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr,
                                                       seqan::GffRecord& record,
-                                                      long gff_line_counter) {
+                                                      long gff_line_counter,
+                                                      FeatureSinkPtr feature_sink) {
   // Get the attributes.
   kgl::Attributes record_attributes;
   for (unsigned i = 0; i < length(record.tagNames); i++) {
@@ -325,8 +326,10 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord(std::shared_ptr<kgl::Genom
   feature_ptr->setAttributes(record_attributes);
   // Annotate the contig.
   std::shared_ptr<kgl::ContigFeatures> mutable_contig_ptr = std::const_pointer_cast<kgl::ContigFeatures>(contig_ptr);
+  // Ya gotta love this syntax - NOT.
+  bool result = ((mutable_contig_ptr.get())->*feature_sink)(feature_ptr);
 
-  if (not mutable_contig_ptr->addFeature(feature_ptr)) {
+  if (not result) {
 
     ExecEnv::log().error("Could not add duplicate feature: {} to contig: {}", feature_id, contig_id);
     return false;
@@ -414,14 +417,14 @@ std::shared_ptr<kgl::GenomeDatabase> kgl::ParseGffFasta::readFastaGffFile(const 
                                                                           const std::string& gff_file_name ) {
 
   std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr = readFastaFile(fasta_file_name);
-  gff_fasta_impl_ptr_->readGffFile<kgl::ParseGffFasta::GffFastaImpl::parseGffRecord>(gff_file_name, genome_db_ptr);
+  gff_fasta_impl_ptr_->readGffFile(gff_file_name, genome_db_ptr, &ContigFeatures::addGeneExonFeature);
   return genome_db_ptr;
 
 }
 
 void kgl::ParseGffFasta::readTssGffFile(const std::string& tss_gff_file_name, std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr) {
 
-  gff_fasta_impl_ptr_->readGffFile<kgl::ParseGffFasta::GffFastaImpl::parseGffRecord>(tss_gff_file_name, genome_db_ptr);
+  gff_fasta_impl_ptr_->readGffFile(tss_gff_file_name, genome_db_ptr, &ContigFeatures::addAuxFeature);
 
 }
 

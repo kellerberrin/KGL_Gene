@@ -16,21 +16,23 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool kgl::ContigFeatures::addFeature(std::shared_ptr<kgl::Feature>& feature_ptr) {
+bool kgl::ContigFeatures::addGeneExonFeature(std::shared_ptr<kgl::Feature>& feature_ptr) {
 
-  if (feature_ptr->isTSS()) {
-
-    aux_contig_features_.checkAddFeature(feature_ptr);
-
-  } else {
-
-    gene_exon_features_.checkAddFeature(feature_ptr);
-
-  }
+  gene_exon_features_.checkAddFeature(feature_ptr);
 
   return true;
 
 }
+
+
+bool kgl::ContigFeatures::addAuxFeature(std::shared_ptr<kgl::Feature>& feature_ptr) {
+
+  aux_contig_features_.checkAddFeature(feature_ptr);
+
+  return true;
+
+}
+
 
 
 
