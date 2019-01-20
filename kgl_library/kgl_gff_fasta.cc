@@ -396,9 +396,10 @@ kgl::ParseGffFasta::~ParseGffFasta() {}  // DO NOT DELETE or USE DEFAULT. Requir
 
 // Functionality passed to the implmentation.
 
-std::shared_ptr<kgl::GenomeDatabase> kgl::ParseGffFasta::readFastaFile(const std::string& fasta_file_name) {
+std::shared_ptr<kgl::GenomeDatabase> kgl::ParseGffFasta::readFastaFile(const std::string& organism,
+                                                                       const std::string& fasta_file_name) {
 
-  std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr(std::make_shared<kgl::GenomeDatabase>());
+  std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr(std::make_shared<kgl::GenomeDatabase>(organism));
   gff_fasta_impl_ptr_->readFastaFile(fasta_file_name, genome_db_ptr);
   return genome_db_ptr;
 
@@ -413,10 +414,11 @@ bool kgl::ParseGffFasta::writeFastaFile(const std::string& fasta_file_name,
 }
 
 
-std::shared_ptr<kgl::GenomeDatabase> kgl::ParseGffFasta::readFastaGffFile(const std::string& fasta_file_name,
+std::shared_ptr<kgl::GenomeDatabase> kgl::ParseGffFasta::readFastaGffFile(const std::string& organism,
+                                                                          const std::string& fasta_file_name,
                                                                           const std::string& gff_file_name ) {
 
-  std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr = readFastaFile(fasta_file_name);
+  std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr = readFastaFile(organism, fasta_file_name);
   gff_fasta_impl_ptr_->readGffFile(gff_file_name, genome_db_ptr, &ContigFeatures::addGeneExonFeature);
   return genome_db_ptr;
 

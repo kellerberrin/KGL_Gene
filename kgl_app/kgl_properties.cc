@@ -296,30 +296,33 @@ bool kgl::RuntimeProperties::readProperties(const std::string& properties_file) 
 
 
 
-void kgl::RuntimeProperties::getGenomeDBFiles(std::string& fasta_file,
+void kgl::RuntimeProperties::getGenomeDBFiles(const std::string& organism,
+                                              std::string& fasta_file,
                                               std::string& gff_file,
                                               std::string& gaf_file,
                                               std::string& translationTable) const {
 
 
-  std::string key = std::string(RUNTIME_ROOT_) + std::string(GAF_FILE_) + std::string(VALUE_);
+  const std::string dot = ".";
+
+  std::string key = std::string(RUNTIME_ROOT_) + organism + dot + std::string(GAF_FILE_) + std::string(VALUE_);
   property_tree_.getFileProperty(key, work_directory_, gaf_file);
 
-  key = std::string(RUNTIME_ROOT_) + std::string(FASTA_FILE_) + std::string(VALUE_);
+  key = std::string(RUNTIME_ROOT_) + organism + dot + std::string(FASTA_FILE_) + std::string(VALUE_);
   if (not property_tree_.getFileProperty(key, work_directory_, fasta_file)) {
 
     ExecEnv::log().critical("Required Fasta File: {} does not exist.", fasta_file);
 
   }
 
-  key = std::string(RUNTIME_ROOT_) + std::string(GFF_FILE_) + std::string(VALUE_);
+  key = std::string(RUNTIME_ROOT_) + organism + dot + std::string(GFF_FILE_) + std::string(VALUE_);
   if (not property_tree_.getFileProperty(key, work_directory_, gff_file)) {
 
     ExecEnv::log().critical("Required GFF3 File: {} does not exist.", gff_file);
 
   }
 
-  key = std::string(RUNTIME_ROOT_) + std::string(TRANSLATION_TABLE_) + std::string(VALUE_);
+  key = std::string(RUNTIME_ROOT_) + organism + dot + std::string(TRANSLATION_TABLE_) + std::string(VALUE_);
   if (not property_tree_.getProperty(key, translationTable)) {
 
     translationTable = Tables::STANDARDTABLE->table_name; // The standard amino acid translation table.
@@ -331,10 +334,15 @@ void kgl::RuntimeProperties::getGenomeDBFiles(std::string& fasta_file,
 
 
 
-void kgl::RuntimeProperties::getGenomeAuxFiles(std::string& tss_file) const {
+bool kgl::RuntimeProperties::getGenomeAuxFiles(const std::string& organism,
+                                               const std::string& aux_file_name,
+                                               std::string& aux_file) const {
 
-  std::string key = std::string(RUNTIME_ROOT_) + std::string(TSS_FILE_) + std::string(VALUE_);
-  property_tree_.getFileProperty(key, work_directory_, tss_file);
+  const std::string dot = ".";
+
+  std::string key = std::string(RUNTIME_ROOT_)  + organism + dot + aux_file_name + std::string(VALUE_);
+
+  return property_tree_.getFileProperty(key, work_directory_, aux_file);
 
 }
 

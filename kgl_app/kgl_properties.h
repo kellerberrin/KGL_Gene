@@ -78,12 +78,13 @@ public:
 
   size_t getVCFPloidy() const;
 
-  void getGenomeDBFiles(std::string& fasta_file,
+  void getGenomeDBFiles(const std::string& organism,
+                        std::string& fasta_file,
                         std::string& gff_file,
                         std::string& gaf_file,
                         std::string& tranlation_table) const;
 
-  void getGenomeAuxFiles(std::string& tss_file) const;
+  bool getGenomeAuxFiles(const std::string& organism, const std::string& aux_file_name, std::string& aux_file) const;
 
   bool getVCFFiles(std::vector<std::string>& vcf_files) const;
 

@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <kgl_properties.h>
 #include "kgl_genome_types.h"
 #include "kgl_sequence_amino.h"
 #include "kgl_genome_feature.h"
@@ -110,27 +111,26 @@ private:
 // GenomeDatabase - A map of contigs
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+using GenomeContigMap = std::map<ContigId_t, std::shared_ptr<ContigFeatures>>;
+class GenomeDatabase; //fwd decl.
+using GenomeMap = std::map<GenomeId_t, std::shared_ptr<GenomeDatabase>>;
 
-using GenomeSequenceMap = std::map<ContigId_t, std::shared_ptr<ContigFeatures>>;
 class GenomeDatabase {
 
 public:
 
-  explicit GenomeDatabase() {}
+  explicit GenomeDatabase(const GenomeId_t& genome_id) : _genome_id(genome_id) {}
   GenomeDatabase(const GenomeDatabase&) = default;
   ~GenomeDatabase() = default;
 
   GenomeDatabase& operator=(const GenomeDatabase&) = default;
 
-  // Creates a genome database object.
-  // The fasta and gff files must be specified and present.
-  // The gaf file is optional (empty string if omitted)
-  // The translation Amino Acid table is optional (empty string if omitted).
-  // Note that different translation tables can be specified for individual contigs.
-  static std::shared_ptr<GenomeDatabase> createGenomeDatabase(const std::string& fasta_file,
-                                                              const std::string& gff_file,
-                                                              const std::string& gaf_file,
-                                                              const std::string& translation_table);
+  // High level function creates a genome database.
+  static std::shared_ptr<GenomeDatabase> createGenomeDatabase(const RuntimeProperties& runtime_options,
+                                                              const std::string& organism,
+                                                              const std::vector<std::string>& aux_file_list);
+  // Organism identifier
+  const GenomeId_t& genomeId() const { return _genome_id; }
 
   // Read the auxillary genome database features.
   static void readAuxillary(std::shared_ptr<GenomeDatabase> genome_db_ptr, const std::string& tss_gff_file);
@@ -141,7 +141,7 @@ public:
 
   void setTranslationTable(const std::string& table);
 
-  const GenomeSequenceMap& getMap() const { return genome_sequence_map_; }
+  const GenomeContigMap& getMap() const { return genome_sequence_map_; }
 
   size_t contigCount() const { return getMap().size(); }
 
@@ -156,11 +156,22 @@ public:
 
 private:
 
-  GenomeSequenceMap genome_sequence_map_;
+  const GenomeId_t _genome_id;
+  GenomeContigMap genome_sequence_map_;
   GeneOntology gene_ontology_;
 
   void createVerifyGenomeDatabase();
   void createVerifyAuxillary();
+  // Creates a genome database object.
+  // The fasta and gff files must be specified and present.
+  // The gaf file is optional (empty string if omitted)
+  // The translation Amino Acid table is optional (empty string if omitted).
+  // Note that different translation tables can be specified for individual contigs.
+  static std::shared_ptr<GenomeDatabase> createGenomeDatabase(const std::string& organism,
+                                                              const std::string& fasta_file,
+                                                              const std::string& gff_file,
+                                                              const std::string& gaf_file,
+                                                              const std::string& translation_table);
 
 
 };

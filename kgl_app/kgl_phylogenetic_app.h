@@ -48,7 +48,8 @@ private:
   static Phylogenetic args_;
   static RuntimeProperties runtime_options_;
 
-};
+
+  };
 
 
 
