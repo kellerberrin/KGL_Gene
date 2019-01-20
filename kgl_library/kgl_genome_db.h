@@ -108,12 +108,10 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// GenomeDatabase - A map of contigs
+// GenomeDatabase - A map of contigs defining the genome of an organism.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using GenomeContigMap = std::map<ContigId_t, std::shared_ptr<ContigFeatures>>;
-class GenomeDatabase; //fwd decl.
-using GenomeMap = std::map<GenomeId_t, std::shared_ptr<GenomeDatabase>>;
 
 class GenomeDatabase {
 
@@ -175,6 +173,40 @@ private:
 
 
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// GenomeCollection - A map of different organism genomes.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+using GenomeMap = std::map<GenomeId_t, std::shared_ptr<const GenomeDatabase>>;
+
+class GenomeCollection {
+
+public:
+
+  explicit GenomeCollection() = default;
+  GenomeCollection(const GenomeCollection&) = default;
+  virtual ~GenomeCollection() = default;
+
+  GenomeCollection& operator=(const GenomeCollection&) = default;
+
+  // Returns false if the genome does not exist.
+  bool getGenome(const GenomeId_t& genome_id, std::shared_ptr<const GenomeDatabase>& genome_variant) const;
+  // Returns false if the genome already exists.
+  bool addGenome(std::shared_ptr<const GenomeDatabase> genome_database);
+
+  const GenomeMap& getMap() const { return genome_map_; }
+
+  // High level function creates a collection of genomes.
+  static std::shared_ptr<GenomeCollection> createGenomeCollection(const RuntimeProperties& runtime_options);
+
+private:
+
+  GenomeMap genome_map_;
+
+};
+
 
 
 }   // namespace genome

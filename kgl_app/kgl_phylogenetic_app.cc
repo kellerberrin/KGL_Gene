@@ -23,12 +23,14 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   // XML program run options
   const RuntimeProperties& runtime_options = getRuntimeOptions();
 
-  // A collection of genomes.
+  std::shared_ptr<kgl::GenomeCollection> genome_collection = GenomeCollection::createGenomeCollection(runtime_options);
+
+  // A map of all active genomes.
   GenomeMap genome_map;
 
   // Define the organism as the pf3D7 strain, PlasmoDB version 41.
   // Specify any auxiliary genome database files.
-  const std::vector<std::string> Pf3D7_aux_file_list = { "tssFile" };
+  const std::vector<std::string> Pf3D7_aux_file_list;
   // Create the 3D7 database.
   std::shared_ptr<GenomeDatabase> genome_3D7_ptr = GenomeDatabase::createGenomeDatabase(runtime_options, kgl::PhylogeneticAnalysis::Pf3D7_41_, Pf3D7_aux_file_list);
   genome_map[genome_3D7_ptr->genomeId()] = genome_3D7_ptr;

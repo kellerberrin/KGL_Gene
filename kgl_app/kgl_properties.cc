@@ -32,11 +32,12 @@ public:
 
   bool readPropertiesFile(const std::string& properties_file);
 
-  bool getProperty(const std::string& property_name, std::string& property) const;
+  bool getProperty(const std::string& property_name, std::string& property) const { return getProperty(property_tree_, property_name, property); }
 
   bool getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const;
 
   bool getProperty(const std::string& property_name, size_t& property) const;
+
 
   void treeTraversal() const;
 
@@ -51,6 +52,8 @@ private:
   pt::ptree property_tree_;
 
   void printTree(const std::string& parent, const pt::ptree& property_tree) const;
+  bool getProperty(const pt::ptree& property_tree, const std::string& property_name, std::string& property) const;
+  bool getTreeVector(const std::string& property_name, std::vector<pt::ptree> tree_vector) const;
 
 };
 
@@ -103,11 +106,11 @@ bool kgl::PropertyTree::PropertyImpl::checkProperty(const std::string& property_
 }
 
 
-bool kgl::PropertyTree::PropertyImpl::getProperty(const std::string& property_name, std::string& property) const {
+bool kgl::PropertyTree::PropertyImpl::getProperty(const pt::ptree& property_tree, const std::string& property_name,  std::string& property) const {
 
   try {
 
-    property = property_tree_.get<std::string>(property_name);
+    property = property_tree.get<std::string>(property_name);
     property = Utility::trimEndWhiteSpace(property);
 
   }
@@ -131,6 +134,7 @@ bool kgl::PropertyTree::PropertyImpl::getPropertyVector(const std::string& prope
   try {
 
     for (auto child : property_tree_.get_child(property_name)) {
+
       // The data function is used to access the data stored in a node.
       property_vector.push_back(Utility::trimEndWhiteSpace(child.second.data()));
 
@@ -150,6 +154,34 @@ bool kgl::PropertyTree::PropertyImpl::getPropertyVector(const std::string& prope
   return true;
 
 }
+
+
+bool kgl::PropertyTree::PropertyImpl::getTreeVector(const std::string& property_name, std::vector<pt::ptree> tree_vector) const {
+
+  try {
+
+    for (auto child : property_tree_.get_child(property_name)) {
+
+      // The data function is used to access the data stored in a node.
+      tree_vector.push_back(child.second);
+
+    }
+
+  }
+  catch (...) {
+
+    ExecEnv::log().error("PropertyTree; Property: {} not found", property_name);
+    ExecEnv::log().error("***********Property Tree Contents*************");
+    treeTraversal();
+    ExecEnv::log().error("**********************************************");
+    return false;
+
+  }
+
+  return true;
+
+}
+
 
 
 
@@ -416,3 +448,31 @@ bool kgl::RuntimeProperties::getVCFFiles(std::vector<std::string>& vcf_files) co
 
 }
 
+
+bool kgl::RuntimeProperties::getActiveGenomes(std::vector<std::string>& genome_list) const {
+
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(GENOME_LIST_) + std::string(ACTIVE_);
+  if (not property_tree_.getPropertyVector(key, genome_list)) {
+
+    return false;
+
+  }
+
+  for (auto genome : genome_list) {
+
+    ExecEnv::log().info("Loading Genome: {}", genome);
+
+  }
+
+  return true;
+
+}
+
+
+bool kgl::RuntimeProperties::getGenomeAuxFiles(const std::string& organism, std::vector<AuxFileProperty>& auxfiles) const {
+
+
+
+  return true;
+
+}

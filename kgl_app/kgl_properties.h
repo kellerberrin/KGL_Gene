@@ -59,6 +59,26 @@ private:
 // High level object extracts application specific properties.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+class AuxFileProperty {
+
+public:
+
+  AuxFileProperty(const std::string& file_name, const std::string& aux_type) : file_name_(file_name), aux_type_(aux_type) {}
+  AuxFileProperty(const AuxFileProperty&) = default;
+  ~AuxFileProperty() = default;
+
+  constexpr static const char* FILE_NAME_ = "fileName.";
+  constexpr static const char* VCF_LIST_ = "auxType.";
+
+private:
+
+  std::string file_name_;
+  std::string aux_type_;
+
+
+};
+
+
 class RuntimeProperties {
 
 public:
@@ -86,7 +106,11 @@ public:
 
   bool getGenomeAuxFiles(const std::string& organism, const std::string& aux_file_name, std::string& aux_file) const;
 
+  bool getGenomeAuxFiles(const std::string& organism, std::vector<AuxFileProperty>& auxfiles) const;
+
   bool getVCFFiles(std::vector<std::string>& vcf_files) const;
+
+  bool getActiveGenomes(std::vector<std::string>& genome_list) const;
 
 private:
 
@@ -96,14 +120,16 @@ private:
   constexpr static const char* VALUE_ = ".value";
   // Runtime categories.
   constexpr static const char* VCF_LIST_ = "vcfList.";
+  constexpr static const char* GENOME_LIST_ = "genomeList.";
+  constexpr static const char* ACTIVE_ = "active";
   constexpr static const char* FILE_LIST_ = "fileList";
   constexpr static const char* VCF_PLOIDY_ = "vcfPloidy";
   constexpr static const char* FASTA_FILE_ = "fastaFile";
   constexpr static const char* GFF_FILE_ = "gffFile";
   constexpr static const char* GAF_FILE_ = "gafFile";
-  constexpr static const char* TSS_FILE_ = "tssFile";
   constexpr static const char* MIXTURE_FILE_ = "mixtureFile";
   constexpr static const char* AUX_FILE_ = "auxFile";
+  constexpr static const char* AUX_GENOME_FILE_ = "auxGenomeFile";
   constexpr static const char* TRANSLATION_TABLE_ = "translationTable";
   // Defaults
   constexpr static const size_t DEFAULT_PLOIDY_ = 2;

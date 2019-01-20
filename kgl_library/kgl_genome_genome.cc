@@ -198,3 +198,66 @@ bool kgl::GenomeDatabase::contigOffset( const ContigId_t& contig_id,
   return SequenceOffset::refCodingSequenceContigOffset(coding_sequence_ptr, sequence_offset, contig_offset, coding_sequence_length);
 
 }
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// GenomeCollection - A map of different organism genomes.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+bool kgl::GenomeCollection::getGenome(const GenomeId_t& genome_id, std::shared_ptr<const GenomeDatabase>& genome_database) const {
+
+  auto result = genome_map_.find(genome_id);
+
+  if (result != genome_map_.end()) {
+
+    genome_database = result->second;
+    return true;
+
+  } else {
+
+    genome_database = nullptr;
+    return false;
+
+  }
+
+}
+
+
+bool kgl::GenomeCollection::addGenome(std::shared_ptr<const GenomeDatabase> genome_database) {
+
+  auto result = genome_map_.insert(std::pair<GenomeId_t, std::shared_ptr<const GenomeDatabase>>(genome_database->genomeId(), genome_database));
+
+  return result.second;
+
+}
+
+
+std::shared_ptr<kgl::GenomeCollection> kgl::GenomeCollection::createGenomeCollection(const RuntimeProperties& runtime_options) {
+
+  std::vector<std::string> genome_list;
+  runtime_options.getActiveGenomes(genome_list);
+
+  std::shared_ptr<kgl::GenomeCollection> genome_collection(std::make_shared<kgl::GenomeCollection>());
+
+  for (auto genome : genome_list) {
+
+    // Define the organism as the pf3D7 strain, PlasmoDB version 41.
+    // Specify any auxiliary genome database files.
+    const std::vector<std::string> aux_file_list;
+    // Create the 3D7 database.
+    std::shared_ptr<GenomeDatabase> genome_ptr = GenomeDatabase::createGenomeDatabase(runtime_options, genome, aux_file_list);
+
+    if (not genome_collection->addGenome(genome_ptr)) {
+
+      ExecEnv::log().error("GenomeCollection::createGenomeCollection; Unable to add Genome Database: {} (probable duplicate)", genome_ptr->genomeId());
+
+    }
+
+  }
+
+  return genome_collection;
+
+}
+
