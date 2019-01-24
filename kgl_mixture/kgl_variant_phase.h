@@ -30,11 +30,8 @@ public:
   explicit GenomePhasing() = default;
   ~GenomePhasing() = default;
 
-  static bool fileHaploidPhasing(const std::string& phase_file,
-                                 size_t vcf_ploidy,
-                                 std::shared_ptr<const UnphasedPopulation> vcf_population_ptr,
-                                 std::shared_ptr<const GenomeDatabase> genome_db,
-                                 std::shared_ptr<PhasedPopulation> haploid_population);
+  static std::shared_ptr<UnphasedPopulation> filterClonal(const std::string& phase_file,
+                                                          std::shared_ptr<const UnphasedPopulation> unphased_population_ptr);
 
   // A simple phasing strategy that removes all conflicting variants.
   static bool haploidPhasing(size_t vcf_ploidy,

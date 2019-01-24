@@ -17,6 +17,25 @@ namespace kgl = kellerberrin::genome;
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Use this to copy the object.
+std::shared_ptr<kgl::UnphasedContig> kgl::UnphasedContig::deepCopy() const {
+
+  std::shared_ptr<UnphasedContig> contig_copy(std::make_shared<UnphasedContig>(contigId()));
+
+  for(auto offset : getMap()) {
+
+    for (auto variant_count : offset.second) {
+
+      contig_copy->addVariant(variant_count.first);
+
+    }
+
+  }
+
+  return contig_copy;
+
+}
+
 
 bool kgl::UnphasedContig::addVariant(std::shared_ptr<const Variant> variant) {
 
@@ -166,6 +185,21 @@ std::shared_ptr<kgl::UnphasedContig> kgl::UnphasedContig::filterVariants(const k
 // This object hold variants for a genome.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Use this to copy the object.
+std::shared_ptr<kgl::UnphasedGenome> kgl::UnphasedGenome::deepCopy() const {
+
+  std::shared_ptr<UnphasedGenome> genome_copy(std::make_shared<UnphasedGenome>(genomeId()));
+
+  for (auto contig :  getMap()) {
+
+    genome_copy->addContig(contig.second->deepCopy());
+
+  }
+
+  return genome_copy;
+
+}
 
 
 bool kgl::UnphasedGenome::addVariant(std::shared_ptr<const Variant> variant) {

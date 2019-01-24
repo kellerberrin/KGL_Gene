@@ -32,6 +32,9 @@ public:
 
   UnphasedPopulation& operator=(const UnphasedPopulation&) = delete; // Use deep copy.
 
+  // Use this to copy the object.
+  std::shared_ptr<UnphasedPopulation> deepCopy() const;
+
   // Create the genome variant if it does not exist.
   bool getCreateGenome(const GenomeId_t& genome_id, std::shared_ptr<UnphasedGenome>& genome);
 
@@ -51,11 +54,12 @@ public:
                           size_t& homozygous,
                           size_t& singleheterozygous) const;
 
+  bool addGenome(std::shared_ptr<UnphasedGenome> genome);
+
 private:
 
   UnphasedGenomeMap genome_map_;
 
-  bool addGenome(std::shared_ptr<UnphasedGenome> genome);
 
 };
 

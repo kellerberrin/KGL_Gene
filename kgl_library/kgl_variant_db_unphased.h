@@ -37,6 +37,8 @@ public:
 
   UnphasedContig& operator=(const UnphasedContig&) = delete; // Use deep copy.
 
+  std::shared_ptr<UnphasedContig> deepCopy() const; // Use this to copy the object.
+
   const ContigId_t& contigId() const { return contig_id_; }
 
   bool addVariant(std::shared_ptr<const Variant> variant);
@@ -46,6 +48,7 @@ public:
   const UnphasedOffsetMap& getMap() const { return contig_offset_map_; }
 
   std::shared_ptr<UnphasedContig> filterVariants(const VariantFilter& filter) const;
+
 
 private:
 
@@ -71,6 +74,8 @@ public:
   virtual ~UnphasedGenome() = default;
 
   UnphasedGenome& operator=(const UnphasedGenome&) = delete; // Use deep copy.
+
+  std::shared_ptr<UnphasedGenome> deepCopy() const; // Use this to copy the object.
 
   size_t variantCount() const;
 

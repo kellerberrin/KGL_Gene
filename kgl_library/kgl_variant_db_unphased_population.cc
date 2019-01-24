@@ -20,6 +20,21 @@ namespace kgl = kellerberrin::genome;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::deepCopy() const {
+
+  std::shared_ptr<UnphasedPopulation> population_copy(std::make_shared<UnphasedPopulation>());
+
+  for (auto genome : getMap()) {
+
+    population_copy->addGenome(genome.second->deepCopy());
+
+  }
+
+  return population_copy;
+
+}
+
+
 bool kgl::UnphasedPopulation::getCreateGenome(const GenomeId_t& genome_id,
                                               std::shared_ptr<UnphasedGenome>& genome) {
 

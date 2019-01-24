@@ -65,14 +65,11 @@ void kgl::PhylogeneticExecEnv::executeApp() {
     if (runtime_options.getMixtureFile(mixture_file)) {
 
       // The mixture file indicates which VCF samples have Complexity Of Infection (COI), only clonal infections are used.
-      GenomePhasing::fileHaploidPhasing(mixture_file, ploidy, filtered_unphased_ptr, genome_collection->get3D7Genome(), population_ptr);
-
-    } else {
-
-      // No mixture file, so assume all genomes are unmixed and clonal
-      GenomePhasing::haploidPhasing(ploidy, filtered_unphased_ptr, genome_collection->get3D7Genome(), population_ptr);
+      GenomePhasing::filterClonal(mixture_file, filtered_unphased_ptr);
 
     }
+      // No mixture file, so assume all genomes are unmixed and clonal
+    GenomePhasing::haploidPhasing(ploidy, filtered_unphased_ptr, genome_collection->get3D7Genome(), population_ptr);
 
   }
 
