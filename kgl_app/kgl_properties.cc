@@ -22,12 +22,15 @@ namespace pt = boost::property_tree;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+using ImplSubTree = std::pair<std::string, kgl::PropertyTree::PropertyImpl>;
 
 class kgl::PropertyTree::PropertyImpl {
 
 public:
 
   PropertyImpl() = default;
+  PropertyImpl(const pt::ptree& property_tree) : property_tree_(property_tree) {}
+  PropertyImpl(const PropertyImpl&) =default;
   ~PropertyImpl() = default;
 
   bool readPropertiesFile(const std::string& properties_file);
@@ -43,6 +46,8 @@ public:
 
   bool checkProperty(const std::string& property_name) const;
 
+  bool getTreeVector(const std::string& property_name, std::vector<ImplSubTree>& tree_vector) const;
+
 
 private:
 
@@ -53,7 +58,6 @@ private:
 
   void printTree(const std::string& parent, const pt::ptree& property_tree) const;
   bool getProperty(const pt::ptree& property_tree, const std::string& property_name, std::string& property) const;
-  bool getTreeVector(const std::string& property_name, std::vector<pt::ptree> tree_vector) const;
 
 };
 
@@ -156,33 +160,29 @@ bool kgl::PropertyTree::PropertyImpl::getPropertyVector(const std::string& prope
 }
 
 
-bool kgl::PropertyTree::PropertyImpl::getTreeVector(const std::string& property_name, std::vector<pt::ptree> tree_vector) const {
+bool kgl::PropertyTree::PropertyImpl::getTreeVector(const std::string& property_name, std::vector<std::pair<std::string, PropertyImpl>>& tree_vector) const {
+
+  tree_vector.clear();
 
   try {
 
-    for (auto child : property_tree_.get_child(property_name)) {
+    for (auto sub_tree : property_tree_.get_child(property_name)) {
 
-      // The data function is used to access the data stored in a node.
-      tree_vector.push_back(child.second);
+      tree_vector.emplace_back(ImplSubTree(sub_tree.first, PropertyImpl(sub_tree.second)));
 
     }
 
   }
   catch (...) {
 
-    ExecEnv::log().error("PropertyTree; Property: {} not found", property_name);
-    ExecEnv::log().error("***********Property Tree Contents*************");
-    treeTraversal();
-    ExecEnv::log().error("**********************************************");
-    return false;
+    // No sub-tree is not an error.
+    return true;
 
   }
 
   return true;
 
 }
-
-
 
 
 bool kgl::PropertyTree::PropertyImpl::getProperty(const std::string& property_name, size_t& property) const {
@@ -217,7 +217,10 @@ void kgl::PropertyTree::PropertyImpl::treeTraversal() const {
 
 }
 
+
+
 void kgl::PropertyTree::PropertyImpl::printTree(const std::string& parent, const pt::ptree& property_tree) const {
+
 
   for (auto item : property_tree) {
 
@@ -243,12 +246,18 @@ void kgl::PropertyTree::PropertyImpl::printTree(const std::string& parent, const
 
 
 
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // PropertyTree is a public facade class that passes the functionality onto PropertyTree::PropertyImpl.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 kgl::PropertyTree::PropertyTree() : properties_impl_ptr_(std::make_unique<kgl::PropertyTree::PropertyImpl>()) {}
+
+kgl::PropertyTree::PropertyTree(const PropertyTree& property_tree) : properties_impl_ptr_(std::make_unique<kgl::PropertyTree::PropertyImpl>(*(property_tree.properties_impl_ptr_))) {}
+
+kgl::PropertyTree::PropertyTree(const PropertyImpl& properties_impl) : properties_impl_ptr_(std::make_unique<kgl::PropertyTree::PropertyImpl>(properties_impl)) {}
+
 kgl::PropertyTree::~PropertyTree() {}  // DO NOT DELETE or USE DEFAULT. Required because of incomplete pimpl type.
 
 // Functionality passed to the implmentation.
@@ -279,6 +288,7 @@ void kgl::PropertyTree::treeTraversal() const {
 
 }
 
+
 bool kgl::PropertyTree::checkProperty(const std::string& property_name) const {
 
   return properties_impl_ptr_->checkProperty(property_name);
@@ -302,7 +312,14 @@ bool kgl::PropertyTree::getFileProperty(const std::string& property_name, const 
 
   file_path = Utility::filePath(file_name, work_directory);
 
-  return Utility::fileExists(file_path);
+  if (not Utility::fileExists(file_path)) {
+
+    ExecEnv::log().warn("PropertyTree::getFileProperty; File: {} does not exist", file_path);
+    return false;
+
+  }
+
+  return true;
 
 }
 
@@ -313,6 +330,27 @@ bool kgl::PropertyTree::getPropertyVector(const std::string& property_name, std:
 
 }
 
+
+bool kgl::PropertyTree::getPropertyTreeVector(const std::string& property_name, std::vector<SubPropertyTree>& property_tree_vector) const {
+
+  property_tree_vector.clear();
+
+  std::vector<ImplSubTree> tree_vector;
+  if (not properties_impl_ptr_->getTreeVector(property_name, tree_vector)) {
+
+    return false;
+
+  }
+
+  for (auto impl_tree : tree_vector) {
+
+    property_tree_vector.emplace_back(SubPropertyTree(impl_tree.first, PropertyTree(impl_tree.second)));
+
+  }
+
+  return true;
+
+}
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -365,20 +403,6 @@ void kgl::RuntimeProperties::getGenomeDBFiles(const std::string& organism,
 }
 
 
-
-bool kgl::RuntimeProperties::getGenomeAuxFiles(const std::string& organism,
-                                               const std::string& aux_file_name,
-                                               std::string& aux_file) const {
-
-  const std::string dot = ".";
-
-  std::string key = std::string(RUNTIME_ROOT_)  + organism + dot + aux_file_name + std::string(VALUE_);
-
-  return property_tree_.getFileProperty(key, work_directory_, aux_file);
-
-}
-
-
 size_t kgl::RuntimeProperties::getVCFPloidy() const {
 
   std::string key = std::string(RUNTIME_ROOT_) + std::string(VCF_PLOIDY_) + std::string(VALUE_);
@@ -408,22 +432,6 @@ bool kgl::RuntimeProperties::getMixtureFile(std::string& mixture_file) const {
   mixture_file = Utility::filePath(mixture_file, work_directory_);
 
   return Utility::fileExists(mixture_file);
-
-}
-
-
-bool kgl::RuntimeProperties::getAuxFile(std::string& aux_file) const {
-
-  std::string key = std::string(RUNTIME_ROOT_) + std::string(AUX_FILE_) + std::string(VALUE_);
-  if (not property_tree_.getProperty(key, aux_file)) {
-
-    return false;
-
-  }
-
-  aux_file = Utility::filePath(aux_file, work_directory_);
-
-  return Utility::fileExists(aux_file);
 
 }
 
@@ -471,8 +479,65 @@ bool kgl::RuntimeProperties::getActiveGenomes(std::vector<std::string>& genome_l
 
 bool kgl::RuntimeProperties::getGenomeAuxFiles(const std::string& organism, std::vector<AuxFileProperty>& auxfiles) const {
 
+  auxfiles.clear();
 
+  std::string key = std::string(RUNTIME_ROOT_) + organism;
+
+//  std::string key = std::string(RUNTIME_ROOT_) + organism + dot + AUX_GENOME_FILE_;
+
+  std::vector<SubPropertyTree> property_tree_vector;
+  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
+
+    return false;
+
+  }
+
+  for (auto sub_tree : property_tree_vector) {
+
+    if (sub_tree.first == AUX_GENOME_FILE_) {
+
+      std::string aux_file;
+      if (not sub_tree.second.getFileProperty(AuxFileProperty::AUX_FILE_NAME_, work_directory_, aux_file)) {
+
+        ExecEnv::log().error("RuntimeProperties::getGenomeAuxFiles, problem retrieving auxiliary file name");
+        sub_tree.second.treeTraversal();
+        continue;
+
+      }
+
+      std::string aux_type;
+      if (not sub_tree.second.getProperty(AuxFileProperty::AUX_FILE_TYPE_, aux_type)) {
+
+        ExecEnv::log().error("RuntimeProperties::getGenomeAuxFiles, problem retrieving auxiliary file type");
+        sub_tree.second.treeTraversal();
+        continue;
+
+      }
+
+      auxfiles.emplace_back(AuxFileProperty(aux_file, aux_type));
+
+    }
+
+  }
 
   return true;
 
 }
+
+
+bool kgl::RuntimeProperties::getPropertiesAuxFile(std::string &aux_file) const {
+
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(AUX_FILE_) + std::string(VALUE_);
+  if (not property_tree_.getProperty(key, aux_file)) {
+
+    return false;
+
+  }
+
+  aux_file = Utility::filePath(aux_file, work_directory_);
+
+  return Utility::fileExists(aux_file);
+
+}
+
+

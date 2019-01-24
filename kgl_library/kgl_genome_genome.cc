@@ -19,8 +19,7 @@ namespace kgl = kellerberrin::genome;
 
 
 std::shared_ptr<kgl::GenomeDatabase> kgl::GenomeDatabase::createGenomeDatabase(const kgl::RuntimeProperties& runtime_options,
-                                                                               const std::string& organism,
-                                                                               const std::vector<std::string>& aux_file_list) {
+                                                                               const GenomeId_t& organism) {
 
   // Get the genome database runtime parameters.
   std::string fasta_file, gff_file, gaf_file, amino_translation_table;
@@ -35,18 +34,15 @@ std::shared_ptr<kgl::GenomeDatabase> kgl::GenomeDatabase::createGenomeDatabase(c
                                                                             gaf_file,
                                                                             amino_translation_table);
 
-  // Read the database auxillary features files (TSS, Promoter sites, Histone modification, etc.
+  if (not genome_db_ptr) {
 
-  for (const std::string& aux_file_name : aux_file_list) {
+    ExecEnv::log().critical("GenomeDatabase::createGenomeDatabase; severe error NULL genome object for organism: {}", organism);
 
-    std::string aux_file;
+  }
 
-    if (runtime_options.getGenomeAuxFiles(organism , aux_file_name, aux_file)) {
+  if (not genome_db_ptr->readGenomeAuxiliary(runtime_options)) {
 
-      // Read the auxillary genome database features.
-      kgl::GenomeDatabase::readAuxillary(genome_db_ptr, aux_file);
-
-    }
+    ExecEnv::log().info("GenomeDatabase::createGenomeDatabase; Problem reading auxiliary genome data for organism: {}", organism);
 
   }
 
@@ -89,18 +85,46 @@ std::shared_ptr<kgl::GenomeDatabase> kgl::GenomeDatabase::createGenomeDatabase(c
 }
 
 
+bool kgl::GenomeDatabase::readGenomeAuxiliary(const RuntimeProperties& runtime_options) {
 
-void kgl::GenomeDatabase::readAuxillary(std::shared_ptr<GenomeDatabase> genome_db_ptr, const std::string& tss_gff_file) {
+  std::vector<AuxFileProperty> aux_file_list;
+
+  if (not runtime_options.getGenomeAuxFiles(genomeId(), aux_file_list)) {
+
+    ExecEnv::log().error("GenomeDatabase::readGenomeAuxiliary; problem reading runtime genome auxiliary file list for organism: {}", genomeId());
+    return false;
+
+  }
+
+  for (auto aux_file : aux_file_list) {
+
+    if (aux_file.auxType() == AuxFileProperty::ADJALLEY_TSS_GFF_) {
+
+      readAuxillary(aux_file.fileName());
+
+    } else {
+
+      ExecEnv::log().error("GenomeDatabase::readGenomeAuxiliary; genome aux file type: {} not supported for organism: {}", aux_file.auxType(), genomeId());
+
+    }
+
+  }
+
+  return true;
+
+}
+
+void kgl::GenomeDatabase::readAuxillary(const std::string& tss_gff_file) {
 
   // Optionally read in tss_gff records into the genome database.
   if (not tss_gff_file.empty()) {
 
-    ParseGffFasta().readTssGffFile(tss_gff_file, genome_db_ptr);
+    ParseGffFasta().readTssGffFile(tss_gff_file, *this);
 
   }
 
   // Wire-up the genome auxillary database.
-  genome_db_ptr->createVerifyAuxillary();
+  createVerifyAuxillary();
 
 }
 
@@ -234,6 +258,21 @@ bool kgl::GenomeCollection::addGenome(std::shared_ptr<const GenomeDatabase> geno
 }
 
 
+std::shared_ptr<const kgl::GenomeDatabase> kgl::GenomeCollection::get3D7Genome() const {
+
+  std::shared_ptr<const GenomeDatabase> genome_3D7;
+
+  if (not getGenome(Pf3D7_ID_, genome_3D7)) {
+
+    ExecEnv::log().critical("GenomeCollection::get3D7Genome; 3D7 canonical genome: {} not found", Pf3D7_ID_);
+
+  }
+
+  return genome_3D7;
+
+}
+
+
 std::shared_ptr<kgl::GenomeCollection> kgl::GenomeCollection::createGenomeCollection(const RuntimeProperties& runtime_options) {
 
   std::vector<std::string> genome_list;
@@ -243,11 +282,8 @@ std::shared_ptr<kgl::GenomeCollection> kgl::GenomeCollection::createGenomeCollec
 
   for (auto genome : genome_list) {
 
-    // Define the organism as the pf3D7 strain, PlasmoDB version 41.
-    // Specify any auxiliary genome database files.
-    const std::vector<std::string> aux_file_list;
-    // Create the 3D7 database.
-    std::shared_ptr<GenomeDatabase> genome_ptr = GenomeDatabase::createGenomeDatabase(runtime_options, genome, aux_file_list);
+    // Create the genome database.
+    std::shared_ptr<GenomeDatabase> genome_ptr = GenomeDatabase::createGenomeDatabase(runtime_options, genome);
 
     if (not genome_collection->addGenome(genome_ptr)) {
 

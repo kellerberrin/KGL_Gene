@@ -125,13 +125,10 @@ public:
 
   // High level function creates a genome database.
   static std::shared_ptr<GenomeDatabase> createGenomeDatabase(const RuntimeProperties& runtime_options,
-                                                              const std::string& organism,
-                                                              const std::vector<std::string>& aux_file_list);
+                                                              const GenomeId_t& organism);
   // Organism identifier
   const GenomeId_t& genomeId() const { return _genome_id; }
 
-  // Read the auxillary genome database features.
-  static void readAuxillary(std::shared_ptr<GenomeDatabase> genome_db_ptr, const std::string& tss_gff_file);
   // Return false if contig already exists.
   bool addContigSequence(const ContigId_t& contig, std::shared_ptr<DNA5SequenceContig> sequence_ptr);
   // Returns false if key not found.
@@ -165,12 +162,16 @@ private:
   // The gaf file is optional (empty string if omitted)
   // The translation Amino Acid table is optional (empty string if omitted).
   // Note that different translation tables can be specified for individual contigs.
-  static std::shared_ptr<GenomeDatabase> createGenomeDatabase(const std::string& organism,
+  static std::shared_ptr<GenomeDatabase> createGenomeDatabase(const GenomeId_t& organism,
                                                               const std::string& fasta_file,
                                                               const std::string& gff_file,
                                                               const std::string& gaf_file,
                                                               const std::string& translation_table);
 
+  // Reads auxiliary genome information about the database. Promoter sites, motifs, tss etc.
+  bool readGenomeAuxiliary(const RuntimeProperties& runtime_options);
+  // Read the auxillary genome database features.
+  void readAuxillary(const std::string& tss_gff_file);
 
 };
 
@@ -191,19 +192,26 @@ public:
 
   GenomeCollection& operator=(const GenomeCollection&) = default;
 
-  // Returns false if the genome does not exist.
-  bool getGenome(const GenomeId_t& genome_id, std::shared_ptr<const GenomeDatabase>& genome_variant) const;
-  // Returns false if the genome already exists.
-  bool addGenome(std::shared_ptr<const GenomeDatabase> genome_database);
-
-  const GenomeMap& getMap() const { return genome_map_; }
-
   // High level function creates a collection of genomes.
   static std::shared_ptr<GenomeCollection> createGenomeCollection(const RuntimeProperties& runtime_options);
 
+  // Returns false if the genome does not exist.
+  bool getGenome(const GenomeId_t& genome_id, std::shared_ptr<const GenomeDatabase>& genome_variant) const;
+
+  // Get the canonical organism.
+  std::shared_ptr<const GenomeDatabase> get3D7Genome() const;
+
+  const GenomeMap& getMap() const { return genome_map_; }
+
 private:
 
+  // A map of all active genome databases.
   GenomeMap genome_map_;
+
+  // Must match the relevant XML tag in the options file.
+  static constexpr const char* Pf3D7_ID_ = "Pf3D7_41";
+  // Returns false if the genome already exists.
+  bool addGenome(std::shared_ptr<const GenomeDatabase> genome_database);
 
 };
 

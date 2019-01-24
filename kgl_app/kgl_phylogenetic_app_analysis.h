@@ -28,10 +28,10 @@ using AnalysisMap = std::map<std::string, AnalysisFuncPtr>;
 
 
   PhylogeneticAnalysis(const RuntimeProperties& runtime_options,
-                       GenomeMap genome_map,
+                       std::shared_ptr<const GenomeCollection> genome_collection_ptr,
                        std::shared_ptr<const UnphasedPopulation> unphased_population_ptr,
                        std::shared_ptr<const PhasedPopulation> population_ptr) :  runtime_options_(runtime_options),
-                                                                                  genome_map_(genome_map),
+                                                                                  genome_collection_ptr_(genome_collection_ptr),
                                                                                   unphased_population_ptr_(unphased_population_ptr),
                                                                                   population_ptr_(population_ptr) {
 
@@ -52,14 +52,6 @@ using AnalysisMap = std::map<std::string, AnalysisFuncPtr>;
   // Analysis dispatcher
   void performAnalysis(const std::string& analysis_type);
 
-  // Must match the relevant XML tag in the options file.
-  static constexpr const char* Pf3D7_41_ = "Pf3D7_41";
-  static constexpr const char* PfHB3_41_ = "PfHB3_41";
-  static constexpr const char* PfIT_41_ = "PfIT_41";
-  static constexpr const char* PfGB4_41_ = "PfGB4_41";
-  static constexpr const char* PfDd2_41_ = "PfDd2_41";
-  static constexpr const char* Pf7G8_41_ = "Pf7G8_41";
-
 
 private:
 
@@ -68,7 +60,7 @@ private:
 
   // Analysis data and options.
   const RuntimeProperties& runtime_options_;
-  GenomeMap genome_map_;
+  std::shared_ptr<const GenomeCollection> genome_collection_ptr_;
   std::shared_ptr<const UnphasedPopulation> unphased_population_ptr_;
   std::shared_ptr<const PhasedPopulation> population_ptr_;
 
@@ -96,8 +88,7 @@ private:
   void performRNA();
   void performFineStructure();
 
-  std::shared_ptr<const GenomeDatabase> getGenome(const GenomeId_t& genome_id) const;
-  std::shared_ptr<const GenomeDatabase> get3D7Genome() const { return getGenome(Pf3D7_41_); }
+  std::shared_ptr<const GenomeDatabase> get3D7Genome() const { return genome_collection_ptr_->get3D7Genome(); }
 
 };
 

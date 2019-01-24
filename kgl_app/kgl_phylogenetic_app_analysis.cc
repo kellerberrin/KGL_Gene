@@ -25,21 +25,6 @@ namespace kgl = kellerberrin::genome;
 namespace kgd = kellerberrin::deconvolv;
 
 
-std::shared_ptr<const kgl::GenomeDatabase> kgl::PhylogeneticAnalysis::getGenome(const GenomeId_t& genome_id) const {
-
-  auto result = genome_map_.find(genome_id);
-
-  if (result == genome_map_.end()) {
-
-    ExecEnv::log().critical("PhylogeneticAnalysis::getGenome; could not find requested genome: {}", genome_id);
-
-  }
-
-  return result->second;
-
-}
-
-
 
 void kgl::PhylogeneticAnalysis::performAnalysis(const std::string& analysis_type) {
 
@@ -108,7 +93,7 @@ void kgl::PhylogeneticAnalysis::performSequence() {
 
   // Split into country populations.
   std::string aux_file_path;
-  if (not runtime_options_.getAuxFile(aux_file_path)) {
+  if (not runtime_options_.getPropertiesAuxFile(aux_file_path)) {
 
     ExecEnv::log().critical("Aux Genome information file not found");
 
@@ -159,7 +144,7 @@ void kgl::PhylogeneticAnalysis::performInterval() {
 
   // Split into country populations.
   std::string aux_file_path;
-  if (not runtime_options_.getAuxFile(aux_file_path)) {
+  if (not runtime_options_.getPropertiesAuxFile(aux_file_path)) {
 
     ExecEnv::log().critical("Aux Genome information file not found");
 
@@ -261,7 +246,7 @@ void kgl::PhylogeneticAnalysis::performSNP() {
 
   // Split into country populations.
   std::string aux_file_path;
-  if (not runtime_options_.getAuxFile(aux_file_path)) {
+  if (not runtime_options_.getPropertiesAuxFile(aux_file_path)) {
 
     ExecEnv::log().critical("Aux Genome information file not found");
 
@@ -328,7 +313,7 @@ void kgl::PhylogeneticAnalysis::performFineStructure() {
 
   // Split into country populations.
   std::string aux_file_path;
-  if (not runtime_options_.getAuxFile(aux_file_path)) {
+  if (not runtime_options_.getPropertiesAuxFile(aux_file_path)) {
 
     ExecEnv::log().critical("Aux Genome information file not found");
 
