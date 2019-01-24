@@ -60,15 +60,16 @@ void kgl::PhylogeneticExecEnv::executeApp() {
     // Get the VCF ploidy (need not be the organism ploidy).
     size_t ploidy = runtime_options.getVCFPloidy();
 
-    // If the mixture file is defined and exists then read it and phase the variants.
+    // If the mixture file is defined and exists then read it and generate a population of clonal genomes.
     std::string mixture_file;
     if (runtime_options.getMixtureFile(mixture_file)) {
 
-      // The mixture file indicates which VCF samples have Complexity Of Infection (COI), only clonal infections are used.
-      GenomePhasing::filterClonal(mixture_file, filtered_unphased_ptr);
+      // The mixture file (Pf3k only) indicates the Complexity Of Infection (COI) of VCF samples, this function filtered only clonal infections.
+      std::shared_ptr<UnphasedPopulation> clonal_unphased = GenomePhasing::filterClonal(mixture_file, filtered_unphased_ptr);
 
     }
-      // No mixture file, so assume all genomes are unmixed and clonal
+
+    // Phase the homozygous and heterozygous variants into a haploid population.
     GenomePhasing::haploidPhasing(ploidy, filtered_unphased_ptr, genome_collection->get3D7Genome(), population_ptr);
 
   }
