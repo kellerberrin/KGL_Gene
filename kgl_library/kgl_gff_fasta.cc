@@ -2,15 +2,16 @@
 // Created by kellerberrin on 3/10/17.
 //
 
-#include "kgl_exec_env.h"
-#include "kgl_gff_fasta.h"
-#include "kgl_sequence_base.h"
 
 #include <seqan/sequence.h>
 #include <seqan/stream.h>
 #include <seqan/seq_io.h>
 
 #include <boost/tokenizer.hpp>
+
+#include "kgl_exec_env.h"
+#include "kgl_gff_fasta.h"
+#include "kgl_sequence_base.h"
 
 
 namespace kgl = kellerberrin::genome;

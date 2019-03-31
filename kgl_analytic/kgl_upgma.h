@@ -196,8 +196,18 @@ void UPGMAGeneFamilyTree(const std::string& newick_file,
 
   }
 
+#define I_PROMOTER "TGTATGTG"
+#define I_COMPLEMENT_PROMOTER "ACATACAC"
+#define I_5_PROMOTER "TCATA"
   // Header.
-  intron << "Gene" << delimiter<< "IStart" << delimiter << "IEnd" << delimiter << "IStrand" << delimiter << "ISequence" << '\n';
+  intron << "Gene" << delimiter
+         << "IStart" << delimiter
+         << "IEnd" << delimiter
+         << "IStrand" << delimiter
+         << I_PROMOTER << delimiter
+         << I_COMPLEMENT_PROMOTER << delimiter
+         << I_5_PROMOTER << delimiter
+         << "ISequence" << '\n';
 
   std::shared_ptr<PhyloNodeVector> node_vector_ptr(std::make_shared<PhyloNodeVector>());
 
@@ -239,6 +249,12 @@ void UPGMAGeneFamilyTree(const std::string& newick_file,
                    << intron_seq.first << delimiter
                    << intron_seq.second << delimiter
                    << static_cast<char>(strand) << delimiter
+                   << DNA5SequenceLinear::linearSequence(intron_sequence)->findAll(DNA5SequenceLinear(StringDNA5(I_PROMOTER))).size()
+                   << delimiter
+                   << DNA5SequenceLinear::linearSequence(intron_sequence)->findAll(DNA5SequenceLinear(StringDNA5(I_COMPLEMENT_PROMOTER))).size()
+                   << delimiter
+                   << DNA5SequenceLinear::linearSequence(intron_sequence)->findAll(DNA5SequenceLinear(StringDNA5(I_5_PROMOTER))).size()
+                   << delimiter
                    << intron_sequence->getSequenceAsString() << '\n';
 
           }

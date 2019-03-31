@@ -131,6 +131,22 @@ public:
 
   bool operator==(const AlphabetString& compare_string) const { return (base_string_ == compare_string.base_string_); }
 
+  std::vector<ContigOffset_t> findAll(const AlphabetString& sub_string) const {
+
+    std::vector<ContigOffset_t> offset_vector;
+    size_t offset = base_string_.find(sub_string.base_string_);
+
+    while (offset != std::basic_string<Alphabet>::npos) {
+
+      offset_vector.push_back(static_cast<ContigOffset_t>(offset));
+      offset = base_string_.find(sub_string.base_string_, offset + 1);
+
+    }
+
+    return offset_vector;
+
+  }
+
   bool verifyString() const;
 
   size_t hashString() const;

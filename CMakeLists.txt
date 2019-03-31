@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(KGL)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 
 
@@ -11,14 +11,14 @@ include_directories(/usr/include
                     kgl_mixture                  # Deconvolution and mixture library
                     kgl_analytic                  # Genetic analysis library
                     kgl_app                        # Application level objects
-                    /usr/local/lib/spdlog/include   # 3rd party logging library.
-                    /usr/local/lib/seqan/include    # 3rd party sequence analysis library.
+                    /usr/include          # 3rd party logging library.
+                    /usr/local/include    # 3rd party sequence analysis library.
                     contrib/edlib) # 3rd party library for fast Levenshtein sequence matching.
 
 # add boost library directories
 #set(BOOST_ROOT /usr/lib/boost)
-set(BOOST_INCLUDEDIR /usr/local/include)
-set(BOOST_LIBRARYDIR /usr/local/lib/boost/lib)
+set(BOOST_INCLUDEDIR /usr/local/include/boost)
+set(BOOST_LIBRARYDIR /usr/local/lib)
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME ON)

@@ -62,6 +62,10 @@ public:
   // A hash value of the sequence.
   size_t hashSequence() const { return alphabet_string_.hashString(); }
 
+  // Search for all subsequences.
+  std::vector<ContigOffset_t> findAll(const AlphabetSequence& sub_sequence) const { return alphabet_string_.findAll(sub_sequence.alphabet_string_); }
+
+
 protected:
 
   AlphabetString<Alphabet> alphabet_string_;

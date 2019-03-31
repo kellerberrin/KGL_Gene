@@ -61,7 +61,9 @@ kgl::ContigOffset_t kgl::CodingSequence::prime_5() const {
   switch(strand()) {
 
     case StrandSense::UNKNOWN:
-      ExecEnv::log().error("prime_5(), unknown strand sense for gene id: {}", getGene()->id());
+      ExecEnv::log().error("prime_5(), unknown strand sense (assumed forward) for gene id: {}", getGene()->id());
+      return sorted_cds_.begin()->second->sequence().begin() - 1;
+
     case StrandSense::FORWARD:
       return sorted_cds_.begin()->second->sequence().begin() - 1;
 
@@ -91,7 +93,11 @@ void kgl::CodingSequence::prime_5_region(ContigSize_t requested_size, ContigOffs
   switch(strand()) {
 
     case StrandSense::UNKNOWN:
-      ExecEnv::log().error("prime_5_region(), unknown strand sense for gene id: {}", getGene()->id());
+      ExecEnv::log().error("prime_5_region(), unknown strand sense (assumed forward) for gene id: {}", getGene()->id());
+      begin_offset = sorted_cds_.begin()->second->sequence().begin() - requested_size;
+      size = requested_size;
+      break;
+
     case StrandSense::FORWARD:
       begin_offset = sorted_cds_.begin()->second->sequence().begin() - requested_size;
       size = requested_size;
@@ -115,14 +121,19 @@ kgl::ContigOffset_t kgl::CodingSequence::prime_3() const {
   // Safety first.
   if (sorted_cds_.empty()) {
 
-    ExecEnv::log().error("prime_5(), coding sequence for gene id: {} is empty", getGene()->id());
+    ExecEnv::log().error("CodingSequence::prime_3; coding sequence for gene id: {} is empty", getGene()->id());
     return getGene()->sequence().strand() == StrandSense::REVERSE ? getGene()->sequence().begin() - 1 : getGene()->sequence().end();
+  }
+
+  if (strand() == StrandSense::UNKNOWN) {
+
+    ExecEnv::log().error("CodingSequence::prime_3; unknown strand sense for gene id: {}", getGene()->id());
+
   }
 
   switch(strand()) {
 
     case StrandSense::UNKNOWN:
-      ExecEnv::log().error("prime_3(), unknown strand sense for gene id: {}", getGene()->id());
     case StrandSense::FORWARD:
       return sorted_cds_.rbegin()->second->sequence().end();
 
@@ -141,17 +152,22 @@ void kgl::CodingSequence::prime_3_region(ContigSize_t requested_size, ContigOffs
   // Safety first.
   if (sorted_cds_.empty()) {
 
-    ExecEnv::log().error("prime_5(), coding sequence for gene id: {} is empty", getGene()->id());
+    ExecEnv::log().error("CodingSequence::prime_3_region; coding sequence for gene id: {} is empty", getGene()->id());
     begin_offset = 0;
     size = 0;
     return;
 
   }
 
+  if (strand() == StrandSense::UNKNOWN) {
+
+    ExecEnv::log().error("CodingSequence::prime_3_region; unknown strand sense for gene id: {}", getGene()->id());
+
+  }
+
   switch(strand()) {
 
     case StrandSense::UNKNOWN:
-      ExecEnv::log().error("prime_3_region(), unknown strand sense for gene id: {}", getGene()->id());
     case StrandSense::FORWARD:
       begin_offset = sorted_cds_.rbegin()->second->sequence().end();
       size = requested_size;

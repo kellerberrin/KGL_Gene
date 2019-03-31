@@ -234,7 +234,7 @@ kgl::SequenceOffset::codingSubSequence(const DNA5SequenceLinear& base_sequence,
   // Check bounds.
   if (exon_offset_map.rbegin()->second > contig_offset + base_sequence.length()) {
 
-    ExecEnv::log().error("codingSubSequence(), CDS end offset: {} > (target sequence size: {} + offset : {})",
+    ExecEnv::log().error("SequenceOffset::codingSubSequence(), CDS end offset: {} > (target sequence size: {} + offset : {})",
                          exon_offset_map.rbegin()->second,
                          base_sequence.length(),
                          contig_offset);
@@ -261,7 +261,7 @@ kgl::SequenceOffset::codingSubSequence(const DNA5SequenceLinear& base_sequence,
   // Make sure the requested offset and length are within the coding sequence.
   if ((sub_sequence_offset + sub_sequence_length)  > calculated_seq_size) {
 
-    ExecEnv::log().error("codingSubSequence(), Sub-seq offset: {} + Sub seq length: {} > sequence size: {}",
+    ExecEnv::log().error("SequenceOffset::codingSubSequence(); Sub-seq offset: {} + Sub seq length: {} > sequence size: {}",
                          sub_sequence_offset,
                          sub_sequence_length,
                          calculated_seq_size);
@@ -273,12 +273,16 @@ kgl::SequenceOffset::codingSubSequence(const DNA5SequenceLinear& base_sequence,
   StringCodingDNA5 coding_sequence;
   coding_sequence.reserve(sub_sequence_length + 1); // Just to make sure.
 
+  if (strand == StrandSense::UNKNOWN) {
+
+    ExecEnv::log().warn("SequenceOffset::codingSubSequence(); has 'UNKNOWN' ('.') strand assuming 'FORWARD' ('+')");
+
+  }
+
   // Get the strand and copy or reverse copy the base complement.
   switch(strand) {
 
     case StrandSense::UNKNOWN:
-      ExecEnv::log().warn("codingSubSequence(); has 'UNKNOWN' ('.') strand assuming 'FORWARD' ('+')");
-
     case StrandSense::FORWARD: {
 
       StringDNA5::const_iterator begin;
@@ -396,7 +400,7 @@ kgl::SequenceOffset::codingSubSequence(const DNA5SequenceLinear& base_sequence,
   // Check the sub sequence size.
   if (coding_sequence.length() != sub_sequence_length) {
 
-    ExecEnv::log().error("Coding SubSequence length: {} NOT EQUAL to specified subsequence: {}",
+    ExecEnv::log().error("SequenceOffset::codingSubSequence(); Coding SubSequence length: {} NOT EQUAL to specified subsequence: {}",
                          coding_sequence.length(),
                          calculated_seq_size);
 
@@ -418,10 +422,15 @@ std::shared_ptr<kgl::DNA5SequenceCoding> kgl::SequenceOffset::codingSequence(std
   StringCodingDNA5 coding_sequence;
   coding_sequence.reserve(base_sequence->length() + 1); // Just to make sure.
 
+  if (strand == StrandSense::UNKNOWN) {
+
+    ExecEnv::log().warn("SequenceOffset::codingSequence; has 'UNKNOWN' ('.') strand assuming 'FORWARD' ('+')");
+
+  }
+
   switch(strand) {
 
     case StrandSense::UNKNOWN:
-      ExecEnv::log().warn("codingSequence(); has 'UNKNOWN' ('.') strand assuming 'FORWARD' ('+')");
     case StrandSense::FORWARD: {
       auto convert_base = [](DNA5::Alphabet base) { return DNA5::convertToCodingDNA5(base); };
       std::transform(base_sequence->getAlphabetString().begin(),
@@ -490,10 +499,15 @@ bool kgl::SequenceOffset::offsetWithinCodingSequence(const ExonOffsetMap& exon_o
 
   ContigOffset_t contig_offset = sequence_offset + sequence_contig_offset;
 
+  if (strand == StrandSense::UNKNOWN) {
+
+    ExecEnv::log().warn("SequenceOffset::offsetWithinCodingSequence; has 'UNKNOWN' ('.') strand assuming 'FORWARD' ('+')");
+
+  }
+
   switch(strand) {
 
     case StrandSense::UNKNOWN:  // Complain and assume a forward strand.
-      ExecEnv::log().error("offsetWithinCodingSequence() with UNKNOWN strand sense");
     case StrandSense::FORWARD: {
 
       for (auto exon : exon_offset_map) {
@@ -594,16 +608,20 @@ bool kgl::SequenceOffset::codingSequenceContigOffset(const ExonOffsetMap& exon_o
 
     contig_offset = 0;
     coding_sequence_length = 0;
-    ExecEnv::log().error("codingSequenceContigOffset(), coding sequence with no exon regions");
+    ExecEnv::log().error("SequenceOffset::codingSequenceContigOffset(), coding sequence with no exon regions");
     return false;
 
   }
 
+  if (strand == StrandSense::UNKNOWN) {
+
+    ExecEnv::log().error("SequenceOffset::offsetWithinCodingSequence() with UNKNOWN strand sense");
+
+  }
 
   switch(strand) {
 
     case StrandSense::UNKNOWN:  // Complain and assume a forward strand.
-      ExecEnv::log().error("offsetWithinCodingSequence() with UNKNOWN strand sense");
     case StrandSense::FORWARD: {
 
       ContigOffset_t begin_offset = 0;
@@ -666,7 +684,7 @@ bool kgl::SequenceOffset::codingSequenceContigOffset(const ExonOffsetMap& exon_o
 
   } else {
 
-    ExecEnv::log().error("codingSequenceContigOffset(), Sequence Offset: {} not in coding sequence", sequence_offset);
+    ExecEnv::log().error("SequenceOffset::codingSequenceContigOffset(), Sequence Offset: {} not in coding sequence", sequence_offset);
     contig_offset = 0;
     coding_sequence_length = 0;
 

@@ -34,6 +34,7 @@ public:
   void SetMaxErrorMessages(int max_messages) { max_error_messages_ = max_messages; }
   void SetMaxwarningMessages(int max_messages) { max_warn_messages_ = max_messages; }
 
+
   template<typename M, typename... Args> void trace(M& message, Args... args) noexcept;
   template<typename M, typename... Args> void info(M& message, Args... args) noexcept;
   template<typename M, typename... Args> void warn(M& message, Args... args) noexcept;
@@ -76,6 +77,7 @@ template<typename M, typename... Args> void Logger::vinfo(M& message, Args... ar
 
 }
 
+
 template<typename M, typename... Args> void Logger::info(M& message, Args... args) noexcept {
 
   plog_impl_->info(message, args...);
@@ -111,7 +113,7 @@ template<typename M, typename... Args> void Logger::warn(M& message, Args... arg
 
 template<typename M, typename... Args> void Logger::error(M& message, Args... args) noexcept {
 
-  plog_impl_->error(message, args...);
+  plog_impl_->error(message , args...);
   plog_impl_->flush();
 
   ++error_message_count_;

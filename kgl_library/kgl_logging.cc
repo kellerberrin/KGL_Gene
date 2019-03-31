@@ -56,3 +56,4 @@ void kgl::Logger::SetFormat(const std::string& log_format) noexcept {
 }
 
 
+
