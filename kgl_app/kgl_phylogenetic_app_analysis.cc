@@ -287,8 +287,8 @@ void kgl::PhylogeneticAnalysis::performUPGMA() {
   UPGMAGeneFamilyTree<kgl::ReferenceGeneDistance>(newick_file,
                                                   intron_file,
                                                   distance_metric_ptr,
-                                                  get3D7Genome(),
-                                                  kgl::ReferenceGeneDistance::SYMBOLIC_VAR_FAMILY);
+                                                  getITGenome(),
+                                                  "PFEMP1");
 
 //  std::shared_ptr<const AminoSequenceDistance> distance_metric_ptr(std::make_shared<const Blosum80Global>());
 //  kgl::UPGMAGenePhyloTree<kgl::UPGMAATP4Distance>(runtime_options_.workDirectory(),

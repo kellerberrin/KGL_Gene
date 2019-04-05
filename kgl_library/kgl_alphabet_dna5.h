@@ -104,8 +104,6 @@ public:
         return Alphabet::N;
     }
 
-    return Alphabet::N; // Never reached, to keep the compiler happy.
-
   }
 
 };

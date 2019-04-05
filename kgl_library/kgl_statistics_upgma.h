@@ -40,7 +40,7 @@ public:
 
   // UPGMA Classification functions
   // Function to tag the nodes. Override as necessary.
-  virtual void writeNode(std::ofstream& outfile) const = 0;
+  virtual void writeNode(std::ostream& outfile) const = 0;
   // Pure Virtual calculates the distance between nodes.
   virtual DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const = 0;
   // Pure Virtual calculates the zero distance between nodes.

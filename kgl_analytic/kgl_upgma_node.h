@@ -41,7 +41,7 @@ public:
 
   // UPGMA Classification functions
   // Function to tag the nodes. Override as necessary.
-  void writeNode(std::ofstream& outfile) const override { outfile << genome_variant_ptr_->genomeId(); }
+  void writeNode(std::ostream& outfile) const override { outfile << genome_variant_ptr_->genomeId(); }
   // Pure Virtual calculates the distance between nodes.
   DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
 
@@ -84,7 +84,7 @@ public:
 
   // UPGMA Classification functions
   // Function to tag the nodes. Override as necessary.
-  void writeNode(std::ofstream& outfile) const override { outfile << genome_variant_ptr_->genomeId(); }
+  void writeNode(std::ostream& outfile) const override { outfile << genome_variant_ptr_->genomeId(); }
   // Pure Virtual calculates the distance between nodes.
   DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
 
@@ -141,7 +141,7 @@ public:
 
   // UPGMA Classification functions
   // Function to tag the nodes. Override as necessary.
-  void writeNode(std::ofstream& outfile) const override;
+  void writeNode(std::ostream& outfile) const override;
   // Pure Virtual calculates the distance between nodes.
   DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
 
@@ -199,7 +199,7 @@ public:
 
   // UPGMA Classification functions
   // Function to tag the nodes. Override as necessary.
-  void writeNode(std::ofstream& outfile) const override;
+  void writeNode(std::ostream& outfile) const override;
   // virtual function ensures that identical nodes have zero distance.
   DistanceType_t zeroDistance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
 
@@ -212,7 +212,7 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Compares refernce (unmutated) genes across a single protein family (var, rifin, etc).
+// Compares reference (unmutated) genes across a single protein family (var, rifin, etc).
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -236,7 +236,7 @@ public:
 
   // UPGMA Classification functions
   // Function to tag the nodes. Override as necessary.
-  void writeNode(std::ofstream& outfile) const override;
+  void writeNode(std::ostream& outfile) const override;
   // Pure Virtual calculates the distance between nodes.
   DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
 
@@ -248,6 +248,7 @@ public:
   static bool geneFamily(std::shared_ptr<const GeneFeature> gene_ptr,
                          std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                          const std::string& protein_family);
+
 
 private:
 
@@ -263,11 +264,6 @@ private:
   void  getIntronSequence();
 
 };
-
-
-
-
-
 
 
 }   // namespace genome

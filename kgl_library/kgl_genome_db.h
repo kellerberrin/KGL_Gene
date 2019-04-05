@@ -198,8 +198,12 @@ public:
   // Returns false if the genome does not exist.
   bool getGenome(const GenomeId_t& genome_id, std::shared_ptr<const GenomeDatabase>& genome_variant) const;
 
-  // Get the canonical organism.
-  std::shared_ptr<const GenomeDatabase> get3D7Genome() const;
+  // Get a particular organism.
+  std::shared_ptr<const GenomeDatabase> get3D7Genome() const { return getGenome(Pf3D7_ID_); }
+  std::shared_ptr<const GenomeDatabase> getHB3Genome() const { return getGenome(PfHB3_ID_); }
+  std::shared_ptr<const GenomeDatabase> getITGenome() const { return getGenome(PfIT_ID_); }
+  std::shared_ptr<const GenomeDatabase> getDD2Genome() const { return getGenome(PfDD2_ID_); }
+  std::shared_ptr<const GenomeDatabase> get7GBGenome() const { return getGenome(Pf7GB_ID_); }
 
   const GenomeMap& getMap() const { return genome_map_; }
 
@@ -210,8 +214,13 @@ private:
 
   // Must match the relevant XML tag in the options file.
   static constexpr const char* Pf3D7_ID_ = "Pf3D7_41";
+  static constexpr const char* PfHB3_ID_ = "PfHB3_41";
+  static constexpr const char* PfIT_ID_ = "PfIT_41";
+  static constexpr const char* PfDD2_ID_ = "PfDD2_41";
+  static constexpr const char* Pf7GB_ID_ = "Pf7GB_41";
   // Returns false if the genome already exists.
   bool addGenome(std::shared_ptr<const GenomeDatabase> genome_database);
+  std::shared_ptr<const GenomeDatabase> getGenome(const std::string& GenomeID) const;
 
 };
 

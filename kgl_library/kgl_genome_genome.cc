@@ -258,19 +258,20 @@ bool kgl::GenomeCollection::addGenome(std::shared_ptr<const GenomeDatabase> geno
 }
 
 
-std::shared_ptr<const kgl::GenomeDatabase> kgl::GenomeCollection::get3D7Genome() const {
+std::shared_ptr<const kgl::GenomeDatabase> kgl::GenomeCollection::getGenome(const std::string& GenomeID) const {
 
-  std::shared_ptr<const GenomeDatabase> genome_3D7;
+  std::shared_ptr<const GenomeDatabase> genome_ptr;
 
-  if (not getGenome(Pf3D7_ID_, genome_3D7)) {
+  if (not getGenome(GenomeID, genome_ptr)) {
 
-    ExecEnv::log().critical("GenomeCollection::get3D7Genome; 3D7 canonical genome: {} not found", Pf3D7_ID_);
+    ExecEnv::log().critical("GenomeCollection::getGenome; genome: {} not found", GenomeID);
 
   }
 
-  return genome_3D7;
+  return genome_ptr;
 
 }
+
 
 
 std::shared_ptr<kgl::GenomeCollection> kgl::GenomeCollection::createGenomeCollection(const RuntimeProperties& runtime_options) {

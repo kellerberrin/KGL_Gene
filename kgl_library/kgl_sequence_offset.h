@@ -44,6 +44,15 @@ public:
                                                                   ContigSize_t sub_sequence_length,
                                                                   ContigOffset_t contig_offset);
 
+// Convenience routine that returns an array of exons (strand adjusted) from an unmutated (reference) sequence.
+// Returned sequences are in transcription (strand) order with array[0] being the first exon.
+  static std::vector<std::shared_ptr<DNA5SequenceCoding>> refExonArraySequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+                                                                               const DNA5SequenceLinear& sequence,
+                                                                               ContigOffset_t sub_sequence_offset,
+                                                                               ContigSize_t sub_sequence_length,
+                                                                               ContigOffset_t contig_offset);
+
+
 // Returns a defined subsequence (generally a single/group of codons) of all the introns of the coding sequence concatonated.
 // Setting sub_sequence_offset and sub_sequence_length to zero copies the entire intron sequence defined by the SortedCDS.
   static std::shared_ptr<DNA5SequenceCoding> refIntronSubSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
@@ -51,6 +60,14 @@ public:
                                                                   ContigOffset_t sub_sequence_offset,
                                                                   ContigSize_t sub_sequence_length,
                                                                   ContigOffset_t contig_offset);
+
+// Convenience routine that returns an array of introns (strand adjusted) from an unmutated (reference) sequence
+// Returned sequences are in transcription (strand) order with array[0] being the first intron.
+  static std::vector<std::shared_ptr<DNA5SequenceCoding>> refIntronArraySequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+                                                                               const DNA5SequenceLinear& sequence,
+                                                                               ContigOffset_t sub_sequence_offset,
+                                                                               ContigSize_t sub_sequence_length,
+                                                                               ContigOffset_t contig_offset);
 
   // Convenience routine that returns a coding sequence from an unmutated (reference) sequence
   static std::shared_ptr<DNA5SequenceCoding> mutantCodingSubSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,

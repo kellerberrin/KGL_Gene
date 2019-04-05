@@ -108,13 +108,7 @@ kgl::ContigOffset_t kgl::DNA5::nucleotideToColumn(Alphabet nucleotide) {
 
 std::vector<kgl::DNA5::Alphabet> kgl::DNA5::enumerateAlphabet() {
 
-  std::vector<Alphabet> alphabet_vector;
-
-  alphabet_vector.emplace_back(Alphabet::A);
-  alphabet_vector.emplace_back(Alphabet::C);
-  alphabet_vector.emplace_back(Alphabet::G);
-  alphabet_vector.emplace_back(Alphabet::T);
-  alphabet_vector.emplace_back(Alphabet::N);
+  std::vector<Alphabet> alphabet_vector = {Alphabet::A, Alphabet::C, Alphabet::G, Alphabet::T, Alphabet::N};
 
   return alphabet_vector;
 

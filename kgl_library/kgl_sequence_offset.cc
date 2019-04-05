@@ -23,6 +23,38 @@ kgl::SequenceOffset::refCodingSubSequence(std::shared_ptr<const CodingSequence> 
 
 }
 
+// Convenience routine that returns an array of exons (strand adjusted) from an unmutated (reference) sequence.
+// Returned sequences are in transcription (strand) order with array[0] being the first exon.
+std::vector<std::shared_ptr<kgl::DNA5SequenceCoding>>
+kgl::SequenceOffset::refExonArraySequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+                                          const DNA5SequenceLinear& sequence_ptr,
+                                          ContigOffset_t sub_sequence_offset,
+                                          ContigSize_t sub_sequence_length,
+                                          ContigOffset_t contig_offset) {
+
+  std::vector<std::shared_ptr<kgl::DNA5SequenceCoding>> exon_vector;
+  StrandSense strand;
+  ExonOffsetMap exon_offset_map;
+  exonOffsetAdapter(coding_seq_ptr, strand, exon_offset_map);
+
+  for (auto exon_offset : exon_offset_map) {
+
+    ExonOffsetMap offset_map = { exon_offset };
+    std::shared_ptr<DNA5SequenceCoding> exon_sequence = codingSubSequence(sequence_ptr,
+                                                                          offset_map,
+                                                                          coding_seq_ptr->strand(),
+                                                                          sub_sequence_offset,
+                                                                          sub_sequence_length,
+                                                                          contig_offset);
+    exon_vector.emplace_back(exon_sequence);
+
+  }
+
+  return exon_vector;
+
+}
+
+
 
 // Returns a defined subsequence of all the introns of the coding sequence
 // Setting sub_sequence_offset and sub_sequence_length to zero copies the entire intron sequence defined by the SortedCDS.
@@ -41,6 +73,36 @@ kgl::SequenceOffset::refIntronSubSequence(std::shared_ptr<const CodingSequence> 
 }
 
 
+// Convenience routine that returns an array of intron (strand adjusted) from an unmutated (reference) sequence.
+// Returned sequences are in transcription (strand) order with array[0] being the first intron.
+std::vector<std::shared_ptr<kgl::DNA5SequenceCoding>>
+kgl::SequenceOffset::refIntronArraySequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+                                            const DNA5SequenceLinear& sequence_ptr,
+                                            ContigOffset_t sub_sequence_offset,
+                                            ContigSize_t sub_sequence_length,
+                                            ContigOffset_t contig_offset) {
+
+  std::vector<std::shared_ptr<kgl::DNA5SequenceCoding>> intron_vector;
+  StrandSense strand;
+  IntronOffsetMap intron_offset_map;
+  intronOffsetAdapter(coding_seq_ptr, strand, intron_offset_map);
+
+  for (auto intron_offset : intron_offset_map) {
+
+    ExonOffsetMap offset_map = { intron_offset };
+    std::shared_ptr<DNA5SequenceCoding> exon_sequence = codingSubSequence(sequence_ptr,
+                                                                          offset_map,
+                                                                          coding_seq_ptr->strand(),
+                                                                          sub_sequence_offset,
+                                                                          sub_sequence_length,
+                                                                          contig_offset);
+    intron_vector.emplace_back(exon_sequence);
+
+  }
+
+  return intron_vector;
+
+}
 
 
 std::shared_ptr<kgl::DNA5SequenceCoding>

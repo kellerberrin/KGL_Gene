@@ -88,12 +88,24 @@ public:
                                                               ContigSize_t sub_sequence_length,
                                                               ContigOffset_t contig_offset) const;
 
+  // Convenience routine that returns an array of exons (strand adjusted), these will, in general, not be on codon boundaries.
+  // Returned sequences are in transcription (strand) order with array[0] being the first exon.
+  // The optional second offset argument is onlu used if the linear sequence is not a complete contig/chromosome.
+  std::vector<std::shared_ptr<DNA5SequenceCoding>> exonArraySequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+                                                                     ContigOffset_t contig_offset = 0) const;
+
   // The contig_offset adjusts for the offset in the contig from which the DNASequenceLinear was copied.
   // Setting sub_sequence_offset and sub_sequence_length to zero copies the entire intron sequence defined by the CodingSequence.
   std::shared_ptr<DNA5SequenceCoding> intronOffsetSubSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                                                               ContigOffset_t sub_sequence_offset,
                                                               ContigSize_t sub_sequence_length,
                                                               ContigOffset_t contig_offset) const;
+
+  // Convenience routine that returns an array of introns (strand adjusted).
+  // Returned sequences are in transcription (strand) order with array[0] being the first intron.
+  // The optional second offset argument is onlu used if the linear sequence is not a complete contig/chromosome.
+  std::vector<std::shared_ptr<DNA5SequenceCoding>> intronArraySequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+                                                                       ContigOffset_t contig_offset = 0) const;
 
   // Offset is the relative sequence offset.
   bool modifyBase(ContigOffset_t base_offset, DNA5::Alphabet Nucleotide);

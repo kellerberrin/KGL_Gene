@@ -57,6 +57,17 @@ kgl::DNA5SequenceLinear::codingOffsetSubSequence(std::shared_ptr<const CodingSeq
 
 
 // The contig_offset adjusts for the offset in the contig from which the DNASequenceLinear was copied.
+// Setting sub_sequence_offset and sub_sequence_length to zero copies the entire sequence defined by the CodingSequence.
+std::vector<std::shared_ptr<kgl::DNA5SequenceCoding>>
+kgl::DNA5SequenceLinear::exonArraySequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+                                           ContigOffset_t contig_offset) const {
+
+  return SequenceOffset::refExonArraySequence(coding_seq_ptr, *this, 0, 0, contig_offset);
+
+}
+
+
+// The contig_offset adjusts for the offset in the contig from which the DNASequenceLinear was copied.
 // Setting sub_sequence_offset and sub_sequence_length to zero copies the entire intron sequence defined by the CodingSequence.
 std::shared_ptr<kgl::DNA5SequenceCoding>
 kgl::DNA5SequenceLinear::intronOffsetSubSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
@@ -68,7 +79,16 @@ kgl::DNA5SequenceLinear::intronOffsetSubSequence(std::shared_ptr<const CodingSeq
 
 }
 
+// Convenience routine that returns an array of introns (strand adjusted).
+// Returned sequences are in transcription (strand) order with array[0] being the first intron.
+// The optional second offset argument is onlu used if the linear sequence is not a complete contig/chromosome.
+std::vector<std::shared_ptr<kgl::DNA5SequenceCoding>>
+kgl::DNA5SequenceLinear::intronArraySequence( std::shared_ptr<const CodingSequence> coding_seq_ptr,
+                                              ContigOffset_t contig_offset) const {
 
+  return SequenceOffset::refIntronArraySequence(coding_seq_ptr, *this, 0, 0, contig_offset);
+
+}
 
 // Returns an UNSTRANDED subsequence. Returned sequence is valid but zero-sized if offset/size are out-of-bounds.
 std::shared_ptr<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::subSequence(ContigOffset_t offset, ContigSize_t sub_length) const {

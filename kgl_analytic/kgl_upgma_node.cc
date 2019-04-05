@@ -281,7 +281,7 @@ kgl::DistanceType_t kgl::UPGMAGeneDistance::distance(std::shared_ptr<const UPGMA
 }
 
 
-void kgl::UPGMAGeneDistance::writeNode(std::ofstream& outfile) const {
+void kgl::UPGMAGeneDistance::writeNode(std::ostream& outfile) const {
 
   std::stringstream ss;
 
@@ -306,7 +306,7 @@ void kgl::UPGMAGeneDistance::writeNode(std::ofstream& outfile) const {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void kgl::UPGMAATP4Distance::writeNode(std::ofstream& outfile) const {
+void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
 
   const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene_ptr_);
 
@@ -485,7 +485,7 @@ bool kgl::ReferenceGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> g
 }
 
 
-void kgl::ReferenceGeneDistance::writeNode(std::ofstream& outfile) const {
+void kgl::ReferenceGeneDistance::writeNode(std::ostream& outfile) const {
 
   std::string alt_symbolic;
   std::shared_ptr<const OntologyRecord> ontology_record_ptr;
