@@ -135,13 +135,6 @@ bool kgl::SequenceOffset::exonOffsetAdapter(std::shared_ptr<const CodingSequence
 
   strand = coding_seq_ptr->strand();
 
-  if (strand == StrandSense::UNKNOWN) {
-
-    ExecEnv::log().error("exonOffsetAdapter(), Unknown strand (assuming +) for coding sequence id:", coding_seq_ptr->getCDSParent()->id());
-    strand = StrandSense::FORWARD;
-    return_result = false;
-
-  }
 
   // All CDS offsets are relative to the underlying contig and are half intervals [begin, end).
   for (auto CDS : coding_seq_ptr->getSortedCDS()) {
@@ -179,14 +172,6 @@ bool kgl::SequenceOffset::intronOffsetAdapter(std::shared_ptr<const CodingSequen
   bool return_result = true;
 
   strand = coding_seq_ptr->strand();
-
-  if (strand == StrandSense::UNKNOWN) {
-
-    ExecEnv::log().error("intronOffsetAdapter(), Unknown strand (assuming +) for coding sequence id:", coding_seq_ptr->getCDSParent()->id());
-    strand = StrandSense::FORWARD;
-    return_result = false;
-
-  }
 
   ExecEnv::log().info("intronOffsetAdapter(), Sequence: {}, Exons: {}",
                       coding_seq_ptr->getCDSParent()->id(),
@@ -335,16 +320,10 @@ kgl::SequenceOffset::codingSubSequence(const DNA5SequenceLinear& base_sequence,
   StringCodingDNA5 coding_sequence;
   coding_sequence.reserve(sub_sequence_length + 1); // Just to make sure.
 
-  if (strand == StrandSense::UNKNOWN) {
-
-    ExecEnv::log().warn("SequenceOffset::codingSubSequence(); has 'UNKNOWN' ('.') strand assuming 'FORWARD' ('+')");
-
-  }
 
   // Get the strand and copy or reverse copy the base complement.
   switch(strand) {
 
-    case StrandSense::UNKNOWN:
     case StrandSense::FORWARD: {
 
       StringDNA5::const_iterator begin;
@@ -484,15 +463,9 @@ std::shared_ptr<kgl::DNA5SequenceCoding> kgl::SequenceOffset::codingSequence(std
   StringCodingDNA5 coding_sequence;
   coding_sequence.reserve(base_sequence->length() + 1); // Just to make sure.
 
-  if (strand == StrandSense::UNKNOWN) {
-
-    ExecEnv::log().warn("SequenceOffset::codingSequence; has 'UNKNOWN' ('.') strand assuming 'FORWARD' ('+')");
-
-  }
 
   switch(strand) {
 
-    case StrandSense::UNKNOWN:
     case StrandSense::FORWARD: {
       auto convert_base = [](DNA5::Alphabet base) { return DNA5::convertToCodingDNA5(base); };
       std::transform(base_sequence->getAlphabetString().begin(),
@@ -561,15 +534,9 @@ bool kgl::SequenceOffset::offsetWithinCodingSequence(const ExonOffsetMap& exon_o
 
   ContigOffset_t contig_offset = sequence_offset + sequence_contig_offset;
 
-  if (strand == StrandSense::UNKNOWN) {
-
-    ExecEnv::log().warn("SequenceOffset::offsetWithinCodingSequence; has 'UNKNOWN' ('.') strand assuming 'FORWARD' ('+')");
-
-  }
 
   switch(strand) {
 
-    case StrandSense::UNKNOWN:  // Complain and assume a forward strand.
     case StrandSense::FORWARD: {
 
       for (auto exon : exon_offset_map) {
@@ -675,15 +642,9 @@ bool kgl::SequenceOffset::codingSequenceContigOffset(const ExonOffsetMap& exon_o
 
   }
 
-  if (strand == StrandSense::UNKNOWN) {
-
-    ExecEnv::log().error("SequenceOffset::offsetWithinCodingSequence() with UNKNOWN strand sense");
-
-  }
 
   switch(strand) {
 
-    case StrandSense::UNKNOWN:  // Complain and assume a forward strand.
     case StrandSense::FORWARD: {
 
       ContigOffset_t begin_offset = 0;

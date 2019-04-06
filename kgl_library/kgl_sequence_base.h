@@ -25,7 +25,7 @@ namespace genome {   // project level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// The actual sequence is contained in this base class. This also includes access routines.
+// The actual sequence is contained in the base class. This also includes access routines.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -50,6 +50,13 @@ public:
   ~DNA5SequenceCoding() override = default;
 
   DNA5SequenceCoding& operator=(DNA5SequenceCoding& copy) = delete;
+
+  // The reverse complement of the sequence is returned.
+  // The strand is flipped. If the original strand was '+' then the returned sequence is tagged with the '-' strand and vice versa.
+  std::shared_ptr<DNA5SequenceCoding> reverseComplement() const;
+
+  // Returns the sequence strand. A '-' is the reverse complement of the underlying contig/chromosome.
+  StrandSense strand() const { return strand_; }
 
 private:
 
@@ -103,7 +110,7 @@ public:
 
   // Convenience routine that returns an array of introns (strand adjusted).
   // Returned sequences are in transcription (strand) order with array[0] being the first intron.
-  // The optional second offset argument is onlu used if the linear sequence is not a complete contig/chromosome.
+  // The optional second offset argument is only used if the linear sequence is not a complete contig/chromosome.
   std::vector<std::shared_ptr<DNA5SequenceCoding>> intronArraySequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                                                                        ContigOffset_t contig_offset = 0) const;
 

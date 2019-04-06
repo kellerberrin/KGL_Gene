@@ -22,7 +22,7 @@ namespace genome {   // project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-enum class StrandSense { FORWARD = '+', REVERSE = '-', UNKNOWN = '.'};
+enum class StrandSense { FORWARD = '+', REVERSE = '-'};
 class FeatureSequence {
 
 public:

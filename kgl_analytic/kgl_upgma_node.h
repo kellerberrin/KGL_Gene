@@ -227,7 +227,8 @@ public:
                                                              genome_db_ptr_(genome_db_ptr),
                                                              gene_ptr_(gene_ptr),
                                                              protein_family_(protein_family) {
-    getIntronSequence();
+//    getIntronSequence();
+    getExonSequence();
 
   }
 

@@ -182,7 +182,7 @@ template<typename T>
 void UPGMAGeneFamilyTree(const std::string& newick_file,
                          const std::string& intron_file,
                          std::shared_ptr<const DNASequenceDistance> sequence_distance,
-                         std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                         std::shared_ptr<const GenomeCollection> genome_collection_ptr,
                          const std::string& protein_family) {
 
 
@@ -215,21 +215,31 @@ void UPGMAGeneFamilyTree(const std::string& newick_file,
 
   std::shared_ptr<PhyloNodeVector> node_vector_ptr(std::make_shared<PhyloNodeVector>());
 
-  for (auto contig : genome_db_ptr->getMap()) {
+  for (auto genome : genome_collection_ptr->getMap()) {
 
-    for (auto gene : contig.second->getGeneMap()) {
+    std::shared_ptr<const GenomeDatabase> genome_db_ptr = genome.second;
 
-      std::string alt_symbolic;
-      std::string symbolic;
-      std::string description;
-      std::shared_ptr<const OntologyRecord> ontology_record_ptr;
-      if (genome_db_ptr->geneOntology().getGafFeatureVector(gene.second->id(), ontology_record_ptr)) {
+    for (auto contig : genome_db_ptr->getMap()) {
 
-        if (ontology_record_ptr) {
+      for (auto gene : contig.second->getGeneMap()) {
 
-          description = Utility::findAndReplaceAll(ontology_record_ptr->description(), ",", ";");
-          symbolic = Utility::findAndReplaceAll(ontology_record_ptr->symbolicReference(), ",", ";");
-          alt_symbolic = Utility::findAndReplaceAll(ontology_record_ptr->altSymbolicReference(), ",", ";");
+        std::string alt_symbolic;
+        std::string symbolic;
+        std::string description;
+        std::shared_ptr<const OntologyRecord> ontology_record_ptr;
+        if (genome_db_ptr->geneOntology().getGafFeatureVector(gene.second->id(), ontology_record_ptr)) {
+
+          if (ontology_record_ptr) {
+
+            description = Utility::findAndReplaceAll(ontology_record_ptr->description(), ",", ";");
+            symbolic = Utility::findAndReplaceAll(ontology_record_ptr->symbolicReference(), ",", ";");
+            alt_symbolic = Utility::findAndReplaceAll(ontology_record_ptr->altSymbolicReference(), ",", ";");
+
+          } else {
+
+            continue;
+
+          }
 
         } else {
 
@@ -237,103 +247,125 @@ void UPGMAGeneFamilyTree(const std::string& newick_file,
 
         }
 
-      } else {
+        // Is this gene a member of the requested family.
+        if (Utility::toupper(description).find(protein_family) != std::string::npos) {
 
-        continue;
+          const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = GeneFeature::getCodingSequences(
+          gene.second);
 
-      }
+          if (coding_seq_ptr->empty()) {
 
-      // Is this gene a member of the requested family.
-      if (Utility::toupper(description).find(protein_family) != std::string::npos) {
-
-        const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = GeneFeature::getCodingSequences(gene.second);
-
-        if (coding_seq_ptr->empty()) {
-
-          ExecEnv::log().critical("ReferenceGeneDistance::getSequence(); Gene contains no coding sequence : gene: {}", gene.second->id());
-
-        }
-
-        std::shared_ptr<const CodingSequence> coding_sequence = coding_seq_ptr->getFirst();
-        std::shared_ptr<DNA5SequenceCoding> coding_dna_sequence;
-
-
-        if (contig.second->getDNA5SequenceCoding(coding_sequence, coding_dna_sequence)) {
-
-          // Do we have a valid intron (VAR only)?
-          std::vector<std::shared_ptr<DNA5SequenceCoding>> intron_sequence_array = contig.second->sequence().intronArraySequence(coding_sequence);
-          std::shared_ptr<T> distance_ptr(std::make_shared<T>(sequence_distance,
-                                                              genome_db_ptr,
-                                                              gene.second,
-                                                              protein_family));
-
-          StrandSense strand;
-          IntronOffsetMap intron_offset_map;
-          SequenceOffset::intronOffsetAdapter(coding_sequence, strand, intron_offset_map);
-
-          if (intron_offset_map.size() != intron_sequence_array.size()) {
-
-            ExecEnv::log().error("UPGMAGeneFamilyTree, Intron map size: {} different from Inron sequence size: {}",
-                                 intron_offset_map.size(), intron_sequence_array.size());
-            continue;
+            ExecEnv::log().critical("ReferenceGeneDistance::getSequence(); Gene contains no coding sequence : gene: {}",
+                                    gene.second->id());
 
           }
 
-          auto intron_sequence_iter = intron_sequence_array.begin();
+          std::shared_ptr<const CodingSequence> coding_sequence = coding_seq_ptr->getFirst();
+          std::shared_ptr<DNA5SequenceCoding> coding_dna_sequence;
 
 
-          for (auto intron_seq : intron_offset_map) {
+          if (contig.second->getDNA5SequenceCoding(coding_sequence, coding_dna_sequence)) {
 
-            std::stringstream ss;
-            distance_ptr->writeNode(ss);
+            // Do we have a valid intron (VAR only)?
+            std::vector<std::shared_ptr<DNA5SequenceCoding>> intron_sequence_array = contig.second->sequence().intronArraySequence(
+            coding_sequence);
+            std::shared_ptr<T> distance_ptr(std::make_shared<T>(sequence_distance,
+                                                                genome_db_ptr,
+                                                                gene.second,
+                                                                protein_family));
 
-            intron << gene.second->id() << delimiter
-                   << description << delimiter
-                   << symbolic << delimiter
-                   << alt_symbolic << delimiter
-                   << intron_seq.first << delimiter
-                   << intron_seq.second << delimiter
-                   << static_cast<char>(strand) << delimiter
-                   << DNA5SequenceLinear::linearSequence((*intron_sequence_iter))->findAll(DNA5SequenceLinear(StringDNA5(I_PROMOTER))).size()
-                   << delimiter
-                   << DNA5SequenceLinear::linearSequence((*intron_sequence_iter))->findAll(DNA5SequenceLinear(StringDNA5(I_COMPLEMENT_PROMOTER))).size()
-                   << delimiter
-                   << DNA5SequenceLinear::linearSequence((*intron_sequence_iter))->findAll(DNA5SequenceLinear(StringDNA5(I_5_PROMOTER))).size()
-                   << delimiter
-                   << (*intron_sequence_iter)->length()
-                   << delimiter
-                   << (*intron_sequence_iter)->getSequenceAsString() << '\n';
+            StrandSense strand;
+            IntronOffsetMap intron_offset_map;
+            SequenceOffset::intronOffsetAdapter(coding_sequence, strand, intron_offset_map);
 
-            ++intron_sequence_iter;
+            if (intron_offset_map.size() != intron_sequence_array.size()) {
 
-          }
+              ExecEnv::log().error("UPGMAGeneFamilyTree, Intron map size: {} different from Inron sequence size: {}",
+                                   intron_offset_map.size(), intron_sequence_array.size());
+              continue;
 
-          // Only add genes with valid coding sequences (no pseudo genes).
-          if (contig.second->verifyDNACodingSequence(coding_dna_sequence)) {
+            }
 
-            // Only 1 intron (var genes)
-            if (intron_sequence_array.size() == 1) {
+
+            // Only add genes with valid coding sequences (no pseudo genes).
+            if (contig.second->verifyDNACodingSequence(coding_dna_sequence)) {
+
+              // Only 1 intron (var genes)
+              if (intron_sequence_array.size() == 1) {
+
+
+                auto intron_sequence_iter = intron_sequence_array.begin();
+
+
+                for (auto intron_seq : intron_offset_map) {
+
+                  std::stringstream pss;
+                  std::vector<ContigOffset_t> offset_vec = DNA5SequenceLinear::linearSequence((*intron_sequence_iter))->findAll(DNA5SequenceLinear(StringDNA5(I_PROMOTER)));
+                  for (auto offset : offset_vec) {
+
+                    pss << offset << ":";
+
+                  }
+
+                  std::stringstream css;
+                  offset_vec = DNA5SequenceLinear::linearSequence((*intron_sequence_iter))->findAll(DNA5SequenceLinear(StringDNA5(I_COMPLEMENT_PROMOTER)));
+                  for (auto offset : offset_vec) {
+
+                    css << offset << ":";
+
+                  }
+
+                  std::stringstream fss;
+                  offset_vec = DNA5SequenceLinear::linearSequence((*intron_sequence_iter))->findAll(DNA5SequenceLinear(StringDNA5(I_5_PROMOTER)));
+                  for (auto offset : offset_vec) {
+
+                    fss << offset << ":";
+
+                  }
+
+                  intron << gene.second->id() << delimiter
+                         << description << delimiter
+                         << symbolic << delimiter
+                         << alt_symbolic << delimiter
+                         << intron_seq.first << delimiter
+                         << intron_seq.second << delimiter
+                         << static_cast<char>(strand) << delimiter
+                         << pss.str()
+                         << delimiter
+                         << css.str()
+                         << delimiter
+                         << fss.str()
+                         << delimiter
+                         << (*intron_sequence_iter)->length()
+                         << delimiter
+                         << (*intron_sequence_iter)->getSequenceAsString() << '\n';
+
+                  ++intron_sequence_iter;
+
+                }
+
 
 #define MIN_INTRON_LENGTH 10
-              if (intron_sequence_array.front()->length() >= MIN_INTRON_LENGTH) {
+                if (intron_sequence_array.front()->length() >= MIN_INTRON_LENGTH) {
 
-                std::shared_ptr<PhyloNode> phylo_node_ptr(std::make_shared<PhyloNode>(distance_ptr));
-                node_vector_ptr->push_back(phylo_node_ptr);
+                  std::shared_ptr<PhyloNode> phylo_node_ptr(std::make_shared<PhyloNode>(distance_ptr));
+                  node_vector_ptr->push_back(phylo_node_ptr);
 
-              } // min length
+                } // min length
 
-            } // 1 intron
+              } // 1 intron
 
-          } // Valid Gene.
+            } // Valid Gene.
 
-        } // Get coding sequence
+          } // Get coding sequence
 
-      } // Is family member.
+        } // Is family member.
 
-    } // All genes.
+      } // All genes.
 
-  } // All contigs.
+    } // All contigs.
 
+  } // All Genomes
 
   // Assemble the UPGMA structure.
   UPGMAMatrix upgma_matrix(node_vector_ptr);

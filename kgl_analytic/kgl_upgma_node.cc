@@ -511,6 +511,6 @@ void kgl::ReferenceGeneDistance::writeNode(std::ostream& outfile) const {
   }
 
 
-  outfile << gene_ptr_->id() << alt_symbolic;
+  outfile << gene_ptr_->id();
 
 }

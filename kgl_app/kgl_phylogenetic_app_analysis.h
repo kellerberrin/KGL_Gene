@@ -92,7 +92,7 @@ private:
   std::shared_ptr<const GenomeDatabase> getHB3Genome() const { return genome_collection_ptr_->getHB3Genome(); }
   std::shared_ptr<const GenomeDatabase> getITGenome() const { return genome_collection_ptr_->getITGenome(); }
   std::shared_ptr<const GenomeDatabase> getDD2Genome() const { return genome_collection_ptr_->getDD2Genome(); }
-  std::shared_ptr<const GenomeDatabase> get7GBGenome() const { return genome_collection_ptr_->get7GBGenome(); }
+  std::shared_ptr<const GenomeDatabase> get7G8Genome() const { return genome_collection_ptr_->get7G8Genome(); }
   std::shared_ptr<const GenomeDatabase> firstGenome() const { return genome_collection_ptr_->getMap().begin()->second; }
 
 };
