@@ -354,13 +354,13 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
         }
 
         out_file << SequenceComplexity::alphabetEntropy<CodingDNA5>(coding_dna_sequence) << CSV_delimiter;
-        out_file << SequenceComplexity::complexityLempelZiv(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;
-        out_file << SequenceComplexity::relativeCpGIslands(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;  // GC count.
+        out_file << SequenceComplexity::complexityLempelZiv(DNA5SequenceLinear::downConvertToLinear(coding_dna_sequence)) << CSV_delimiter;
+        out_file << SequenceComplexity::relativeCpGIslands(DNA5SequenceLinear::downConvertToLinear(coding_dna_sequence)) << CSV_delimiter;  // GC count.
         double A_prop;
         double C_prop;
         double G_prop;
         double T_prop;
-        SequenceComplexity::proportionNucleotides(DNA5SequenceLinear::linearSequence(coding_dna_sequence), A_prop, C_prop, G_prop, T_prop);
+        SequenceComplexity::proportionNucleotides(DNA5SequenceLinear::downConvertToLinear(coding_dna_sequence), A_prop, C_prop, G_prop, T_prop);
         out_file << A_prop << CSV_delimiter;
         out_file << C_prop << CSV_delimiter;
         out_file << G_prop << CSV_delimiter;
@@ -463,7 +463,8 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
                 break;
 
               case SequenceAnalysisType::LEMPEL_ZIV:
-                out_file << SequenceComplexity::complexityLempelZiv(DNA5SequenceLinear::linearSequence(mutant_sequence)) << CSV_delimiter;
+                out_file << SequenceComplexity::complexityLempelZiv(
+                DNA5SequenceLinear::downConvertToLinear(mutant_sequence)) << CSV_delimiter;
                 break;
 
             }
@@ -543,13 +544,13 @@ bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_na
 
         std::shared_ptr<AminoSequence> amino_reference  = contig.second->getAminoSequence(coding_dna_sequence);
         out_file << SequenceComplexity::alphabetEntropy<AminoAcid>(amino_reference) << CSV_delimiter;
-        out_file << SequenceComplexity::complexityLempelZiv(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;
-        out_file << SequenceComplexity::relativeCpGIslands(DNA5SequenceLinear::linearSequence(coding_dna_sequence)) << CSV_delimiter;  // GC count.
+        out_file << SequenceComplexity::complexityLempelZiv(DNA5SequenceLinear::downConvertToLinear(coding_dna_sequence)) << CSV_delimiter;
+        out_file << SequenceComplexity::relativeCpGIslands(DNA5SequenceLinear::downConvertToLinear(coding_dna_sequence)) << CSV_delimiter;  // GC count.
         double A_prop;
         double C_prop;
         double G_prop;
         double T_prop;
-        SequenceComplexity::proportionNucleotides(DNA5SequenceLinear::linearSequence(coding_dna_sequence), A_prop, C_prop, G_prop, T_prop);
+        SequenceComplexity::proportionNucleotides(DNA5SequenceLinear::downConvertToLinear(coding_dna_sequence), A_prop, C_prop, G_prop, T_prop);
         out_file << A_prop << CSV_delimiter;
         out_file << C_prop << CSV_delimiter;
         out_file << G_prop << CSV_delimiter;
@@ -1076,12 +1077,12 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
   ss << contig_ptr->sequence().length() << delimiter;
   ss << sequence_offset << delimiter;
   ss << coding_sequence->codingNucleotides() << delimiter;
-  ss << SequenceComplexity::relativeCpGIslands(DNA5SequenceLinear::linearSequence(reference_sequence)) << delimiter;  // GC count.
+  ss << SequenceComplexity::relativeCpGIslands(DNA5SequenceLinear::downConvertToLinear(reference_sequence)) << delimiter;  // GC count.
   double A_prop;
   double C_prop;
   double G_prop;
   double T_prop;
-  SequenceComplexity::proportionNucleotides(DNA5SequenceLinear::linearSequence(reference_sequence), A_prop, C_prop, G_prop, T_prop);
+  SequenceComplexity::proportionNucleotides(DNA5SequenceLinear::downConvertToLinear(reference_sequence), A_prop, C_prop, G_prop, T_prop);
   ss << A_prop << delimiter;
   ss << C_prop << delimiter;
   ss << G_prop << delimiter;

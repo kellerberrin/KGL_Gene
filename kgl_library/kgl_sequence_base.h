@@ -51,11 +51,7 @@ public:
 
   DNA5SequenceCoding& operator=(DNA5SequenceCoding& copy) = delete;
 
-  // The reverse complement of the sequence is returned.
-  // The strand is flipped. If the original strand was '+' then the returned sequence is tagged with the '-' strand and vice versa.
-  std::shared_ptr<DNA5SequenceCoding> reverseComplement() const;
-
-  // Returns the sequence strand. A '-' is the reverse complement of the underlying contig/chromosome.
+  // Returns the sequence strand, FORWARD '+' or REVERSE '-'.
   StrandSense strand() const { return strand_; }
 
 private:
@@ -122,8 +118,13 @@ public:
   bool insertSubSequence(ContigOffset_t insert_offset, const DNA5SequenceLinear& inserted_sequence);
 
   // Down-converts a coding DNA sequence to a linear DNA5 alphabet (swaps the logical alphabet from CodingDNA5 to DNA5).
-  // No strand conversion is performed (or defined).
-  static std::shared_ptr<DNA5SequenceLinear> linearSequence(std::shared_ptr<const DNA5SequenceCoding> base_sequence);
+  // Important - No strand conversion is performed.
+  static std::shared_ptr<DNA5SequenceLinear> downConvertToLinear(std::shared_ptr<const DNA5SequenceCoding> stranded_sequence);
+
+
+  // Down-converts a coding DNA sequence to a linear DNA5 alphabet (swaps the logical alphabet from CodingDNA5 to DNA5).
+  // Important - Strand Conversion of a reverse complement is performed for a -ve strand
+  static std::shared_ptr<DNA5SequenceLinear> strandedDownConvert(std::shared_ptr<const DNA5SequenceCoding> stranded_sequence);
 
   // Up-converts a linear UNSTANDED DNA sequence to a STRANDED coding sequence (swaps the logical alphabet from DNA5 to CodingDNA5).
   // A -ve strand returns the reverse complement as expected.
@@ -134,6 +135,10 @@ public:
 
 
 private:
+
+  // Down-converts a coding DNA sequence to a linear DNA5 alphabet (swaps the logical alphabet from CodingDNA5 to DNA5).
+  // Important - Always returns the reverse complement of the stranded sequence.
+  static std::shared_ptr<DNA5SequenceLinear> reverseDownConvert(std::shared_ptr<const DNA5SequenceCoding> stranded_sequence);
 
 
 };

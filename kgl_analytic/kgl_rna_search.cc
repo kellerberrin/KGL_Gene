@@ -46,7 +46,7 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
   // Get the reference DNA sequence
   rna_sequence_ = contig_ptr->sequence().subSequence(rna_offset, rna_region_size);
   std::shared_ptr<DNA5SequenceCoding> stranded_rna_sequence = SequenceOffset::codingSequence(rna_sequence_, rna_strand);
-  rna_sequence_ = DNA5SequenceLinear::linearSequence(stranded_rna_sequence);
+  rna_sequence_ = DNA5SequenceLinear::downConvertToLinear(stranded_rna_sequence);
 
   // Get the contig.
   if (not genome_db_ptr->getContigSequence(rna_target_contig, contig_ptr)) {
@@ -72,7 +72,7 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
   // Get the RNA target sequence
   rna_target_ = contig_ptr->sequence().subSequence(rna_target_offset, rna_target_size);
   stranded_rna_sequence = SequenceOffset::codingSequence(rna_target_, rna_target_strand);
-  rna_target_ = DNA5SequenceLinear::linearSequence(stranded_rna_sequence);
+  rna_target_ = DNA5SequenceLinear::downConvertToLinear(stranded_rna_sequence);
 
   return true;
 

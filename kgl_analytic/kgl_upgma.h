@@ -181,7 +181,7 @@ void UPGMAGenePhyloTree(const std::string& path,
 template<typename T>
 void UPGMAGeneFamilyTree(const std::string& newick_file,
                          const std::string& intron_file,
-                         std::shared_ptr<const DNASequenceDistance> sequence_distance,
+                         std::shared_ptr<const LevenshteinLocal> sequence_distance,
                          std::shared_ptr<const GenomeCollection> genome_collection_ptr,
                          const std::string& protein_family) {
 
@@ -200,6 +200,18 @@ void UPGMAGeneFamilyTree(const std::string& newick_file,
 #define I_COMPLEMENT_PROMOTER "ACATACAC"
 #define I_5_PROMOTER "TCATA"
   // Header.
+  std::shared_ptr<DNA5SequenceLinear> i_promoter_ptr(std::make_shared<DNA5SequenceLinear>(StringDNA5(I_PROMOTER)));
+  std::shared_ptr<DNA5SequenceLinear> i_promoter_ptr_rev = DNA5SequenceLinear::downConvertToLinear(i_promoter_ptr->codingSequence(StrandSense::REVERSE));
+//  i_promoter_ptr = i_promoter_ptr_rev;
+
+  std::shared_ptr<DNA5SequenceLinear> i_complement_promoter_ptr(std::make_shared<DNA5SequenceLinear>(StringDNA5(I_COMPLEMENT_PROMOTER)));
+  std::shared_ptr<DNA5SequenceLinear> i_complement_promoter_ptr_rev = DNA5SequenceLinear::downConvertToLinear(i_complement_promoter_ptr->codingSequence(StrandSense::REVERSE));
+//  i_complement_promoter_ptr = i_complement_promoter_ptr_rev;
+
+  std::shared_ptr<DNA5SequenceLinear> i_5_promoter_ptr(std::make_shared<DNA5SequenceLinear>(StringDNA5(I_5_PROMOTER)));
+  std::shared_ptr<DNA5SequenceLinear> i_5_promoter_ptr_rev = DNA5SequenceLinear::downConvertToLinear(i_5_promoter_ptr->codingSequence(StrandSense::REVERSE));
+//  i_5_promoter_ptr = i_5_promoter_ptr_rev;
+
   intron << "Gene" << delimiter
          << "description" << delimiter
          << "Symbolic" << delimiter
@@ -207,9 +219,9 @@ void UPGMAGeneFamilyTree(const std::string& newick_file,
          << "IStart" << delimiter
          << "IEnd" << delimiter
          << "IStrand" << delimiter
-         << I_PROMOTER << delimiter
-         << I_COMPLEMENT_PROMOTER << delimiter
-         << I_5_PROMOTER << delimiter
+         << i_promoter_ptr->getSequenceAsString() << delimiter
+         << i_complement_promoter_ptr->getSequenceAsString() << delimiter
+         << i_5_promoter_ptr->getSequenceAsString() << delimiter
          << "Size" << delimiter
          << "ISequence" << '\n';
 
@@ -299,8 +311,14 @@ void UPGMAGeneFamilyTree(const std::string& newick_file,
 
                 for (auto intron_seq : intron_offset_map) {
 
+                  std::shared_ptr<DNA5SequenceLinear> intron_ptr = DNA5SequenceLinear::downConvertToLinear((*intron_sequence_iter));
+                  std::shared_ptr<DNA5SequenceLinear> intron_seq_ptr_rev = DNA5SequenceLinear::downConvertToLinear(intron_ptr->codingSequence(StrandSense::REVERSE));
+                  std::shared_ptr<DNA5SequenceLinear> intron_seq_ptr = DNA5SequenceLinear::strandedDownConvert(*intron_sequence_iter);
+//                  intron_seq_ptr = intron_ptr;
+
+
                   std::stringstream pss;
-                  std::vector<ContigOffset_t> offset_vec = DNA5SequenceLinear::linearSequence((*intron_sequence_iter))->findAll(DNA5SequenceLinear(StringDNA5(I_PROMOTER)));
+                  std::vector<ContigOffset_t> offset_vec = intron_seq_ptr->findAll(*i_promoter_ptr);
                   for (auto offset : offset_vec) {
 
                     pss << offset << ":";
@@ -308,7 +326,7 @@ void UPGMAGeneFamilyTree(const std::string& newick_file,
                   }
 
                   std::stringstream css;
-                  offset_vec = DNA5SequenceLinear::linearSequence((*intron_sequence_iter))->findAll(DNA5SequenceLinear(StringDNA5(I_COMPLEMENT_PROMOTER)));
+                  offset_vec = intron_seq_ptr->findAll(*i_complement_promoter_ptr);
                   for (auto offset : offset_vec) {
 
                     css << offset << ":";
@@ -316,7 +334,7 @@ void UPGMAGeneFamilyTree(const std::string& newick_file,
                   }
 
                   std::stringstream fss;
-                  offset_vec = DNA5SequenceLinear::linearSequence((*intron_sequence_iter))->findAll(DNA5SequenceLinear(StringDNA5(I_5_PROMOTER)));
+                  offset_vec = intron_seq_ptr->findAll(*i_5_promoter_ptr);
                   for (auto offset : offset_vec) {
 
                     fss << offset << ":";
@@ -336,9 +354,9 @@ void UPGMAGeneFamilyTree(const std::string& newick_file,
                          << delimiter
                          << fss.str()
                          << delimiter
-                         << (*intron_sequence_iter)->length()
+                         << intron_seq_ptr->length()
                          << delimiter
-                         << (*intron_sequence_iter)->getSequenceAsString() << '\n';
+                         << intron_seq_ptr->getSequenceAsString() << '\n';
 
                   ++intron_sequence_iter;
 

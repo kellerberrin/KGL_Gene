@@ -282,25 +282,13 @@ void kgl::PhylogeneticAnalysis::performUPGMA() {
   std::string newick_file = kgl::Utility::filePath("newick_VAR", runtime_options_.workDirectory()) + ".txt";
   std::string intron_file = kgl::Utility::filePath("intron_VAR", runtime_options_.workDirectory()) + ".csv";
 
-  std::shared_ptr<const DNASequenceDistance> distance_metric_ptr(std::make_shared<const LevenshteinLocal>());
+  std::shared_ptr<const LevenshteinLocal> distance_metric_ptr(std::make_shared<const LevenshteinLocal>());
 
-  UPGMAGeneFamilyTree<kgl::ReferenceGeneDistance>(newick_file,
+  UPGMAGeneFamilyTree<kgl::AminoGeneDistance>(newick_file,
                                                   intron_file,
                                                   distance_metric_ptr,
                                                   genome_collection_ptr_,
                                                   "PFEMP1");
-
-//  std::shared_ptr<const AminoSequenceDistance> distance_metric_ptr(std::make_shared<const Blosum80Global>());
-//  kgl::UPGMAGenePhyloTree<kgl::UPGMAATP4Distance>(runtime_options_.workDirectory(),
-//                                                  newick_file,
-//                                                  distance_metric_ptr,
-//                                                  population_ptr_,
-//                                                  genome_db_ptr_,
-//                                                  kgl::UPGMAProteinDistance::SYMBOLIC_VAR_FAMILY);
-
-//  std::shared_ptr<const UnphasedPopulation> filtered_ptr = unphased_population_ptr->filterVariants(DPCountFilter(25));
-//  kgl::UPGMAUnphasedTree<kgl::UPGMAUnphasedDistance>(newick_file, filtered_ptr);
-
 
 }
 

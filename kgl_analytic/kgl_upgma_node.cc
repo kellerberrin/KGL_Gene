@@ -414,35 +414,67 @@ std::shared_ptr<const kgl::CodingSequence>  kgl::ReferenceGeneDistance::getCodin
 }
 
 
-void  kgl::ReferenceGeneDistance::getExonSequence() {
+void kgl::ReferenceGeneDistance::writeNode(std::ostream& outfile) const {
+
+  std::string alt_symbolic;
+  std::shared_ptr<const OntologyRecord> ontology_record_ptr;
+  if (genome_db_ptr_->geneOntology().getGafFeatureVector(gene_ptr_->id(), ontology_record_ptr)) {
+
+    if (ontology_record_ptr) {
+
+      alt_symbolic = "-";
+      alt_symbolic += ontology_record_ptr->altSymbolicReference();
+
+    } else {
+
+      ExecEnv::log().error("ReferenceGeneDistance::writeNode; NULL OntologyRecord pointer returned");
+      alt_symbolic = "-*";
+
+    }
+
+
+  } else {
+
+    alt_symbolic = "-*";
+
+  }
+
+
+  outfile << gene_ptr_->id();
+
+}
+
+
+void  kgl::DNAGeneDistance::getExonSequence() {
 
   std::shared_ptr<const ContigFeatures> contig_ptr = gene_ptr_->contig();
 
   std::shared_ptr<const DNA5SequenceCoding> dna_coding_sequence = contig_ptr->sequence().codingSequence(getCodingSequence());
 
-  sequence_ptr_ = DNA5SequenceLinear::linearSequence(dna_coding_sequence);
+  sequence_ptr_ = DNA5SequenceLinear::downConvertToLinear(dna_coding_sequence);
+
 
 }
 
 
-void  kgl::ReferenceGeneDistance::getIntronSequence() {
+void  kgl::DNAGeneDistance::getIntronSequence() {
 
   std::shared_ptr<const ContigFeatures> contig_ptr = gene_ptr_->contig();
 
   std::shared_ptr<const DNA5SequenceCoding> dna_coding_sequence = contig_ptr->sequence().intronSequence(getCodingSequence());
 
-  sequence_ptr_ = DNA5SequenceLinear::linearSequence(dna_coding_sequence);
+  sequence_ptr_ = DNA5SequenceLinear::downConvertToLinear(dna_coding_sequence);
 
 }
 
 
-kgl::DistanceType_t kgl::ReferenceGeneDistance::distance(std::shared_ptr<const UPGMADistanceNode>  distance_node) const {
+kgl::DistanceType_t kgl::DNAGeneDistance::distance(std::shared_ptr<const UPGMADistanceNode>  distance_node) const {
 
-  std::shared_ptr<const ReferenceGeneDistance> node_ptr = std::dynamic_pointer_cast<const ReferenceGeneDistance>(distance_node);
+  std::shared_ptr<const DNAGeneDistance> node_ptr = std::dynamic_pointer_cast<const DNAGeneDistance>(distance_node);
 
   if (not node_ptr) {
 
-    ExecEnv::log().error("distance(), Unexpected error, could not down-cast node pointer to ReferenceGeneDistance");
+    ExecEnv::log().error("distance(), Unexpected error, could not down-cast node pointer to DNAGeneDistance");
     return 1.0;
 
   }
@@ -452,7 +484,9 @@ kgl::DistanceType_t kgl::ReferenceGeneDistance::distance(std::shared_ptr<const U
                       sequence_distance_->distanceType(), gene_ptr_->id(), sequence_ptr_->length(),
                       node_ptr->gene_ptr_->id(), node_ptr->sequence_ptr_->length(), protein_family_);
 
+
   CompareDistance_t contig_score = sequence_distance_->distance(sequence_ptr_, node_ptr->sequence_ptr_);
+
   DistanceType_t total_distance = static_cast<DistanceType_t>(contig_score);
 
   ExecEnv::log().info("distance();  {} | {}({}), {}({}) |  =  {}; Gene Family: {}",
@@ -485,32 +519,44 @@ bool kgl::ReferenceGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> g
 }
 
 
-void kgl::ReferenceGeneDistance::writeNode(std::ostream& outfile) const {
 
-  std::string alt_symbolic;
-  std::shared_ptr<const OntologyRecord> ontology_record_ptr;
-  if (genome_db_ptr_->geneOntology().getGafFeatureVector(gene_ptr_->id(), ontology_record_ptr)) {
+void  kgl::AminoGeneDistance::getAminoSequence() {
 
-    if (ontology_record_ptr) {
+  std::shared_ptr<const ContigFeatures> contig_ptr = gene_ptr_->contig();
 
-      alt_symbolic = "-";
-      alt_symbolic += ontology_record_ptr->altSymbolicReference();
+  std::shared_ptr<const DNA5SequenceCoding> dna_coding_sequence = contig_ptr->sequence().codingSequence(getCodingSequence());
 
-    } else {
+  sequence_ptr_ = contig_ptr->getAminoSequence(dna_coding_sequence);
 
-      ExecEnv::log().error("ReferenceGeneDistance::writeNode; NULL OntologyRecord pointer returned");
-      alt_symbolic = "-*";
-
-    }
+}
 
 
-  } else {
+kgl::DistanceType_t kgl::AminoGeneDistance::distance(std::shared_ptr<const UPGMADistanceNode>  distance_node) const {
 
-    alt_symbolic = "-*";
+  std::shared_ptr<const AminoGeneDistance> node_ptr = std::dynamic_pointer_cast<const AminoGeneDistance>(distance_node);
+
+  if (not node_ptr) {
+
+    ExecEnv::log().error("distance(), Unexpected error, could not down-cast node pointer to DNAGeneDistance");
+    return 1.0;
 
   }
 
 
-  outfile << gene_ptr_->id();
+  ExecEnv::log().info("distance();  {} Comparing | {}({}), {}({}) |; Gene Family: {}",
+                      sequence_distance_->distanceType(), gene_ptr_->id(), sequence_ptr_->length(),
+                      node_ptr->gene_ptr_->id(), node_ptr->sequence_ptr_->length(), protein_family_);
+
+
+  CompareDistance_t contig_score = sequence_distance_->distance(sequence_ptr_, node_ptr->sequence_ptr_);
+
+  DistanceType_t total_distance = static_cast<DistanceType_t>(contig_score);
+
+  ExecEnv::log().info("distance();  {} | {}({}), {}({}) |  =  {}; Gene Family: {}",
+                      sequence_distance_->distanceType(), gene_ptr_->id(), sequence_ptr_->length(),
+                      node_ptr->gene_ptr_->id(), node_ptr->sequence_ptr_->length(),
+                      total_distance, protein_family_);
+
+  return total_distance;
 
 }

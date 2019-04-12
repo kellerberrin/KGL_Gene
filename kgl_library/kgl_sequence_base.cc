@@ -113,20 +113,56 @@ std::shared_ptr<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::subSequence(Co
 
 
 // Down-converts a coding DNA sequence to a linear DNA5 alphabet (swaps the logical alphabet from CodingDNA5 to DNA5).
-// No strand conversion is performed (or defined).
-std::shared_ptr<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::linearSequence(std::shared_ptr<const DNA5SequenceCoding> coding_sequence) {
+// Important - No strand conversion is performed.
+std::shared_ptr<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::downConvertToLinear(std::shared_ptr<const DNA5SequenceCoding> stranded_sequence) {
 
   StringDNA5 linear_string;
-  linear_string.reserve(coding_sequence->length()); // pre-allocate for efficiency
+  linear_string.reserve(stranded_sequence->length()); // pre-allocate for efficiency
 
   auto convert_base = [](CodingDNA5::Alphabet base) { return DNA5::convertFromCodingDNA5(base); };
-  std::transform(coding_sequence->getAlphabetString().begin(),
-                 coding_sequence->getAlphabetString().end(),
+  std::transform(stranded_sequence->getAlphabetString().begin(),
+                 stranded_sequence->getAlphabetString().end(),
                  std::back_inserter(linear_string), convert_base);
 
   return std::shared_ptr<DNA5SequenceLinear>(std::make_shared<DNA5SequenceLinear>(std::move(linear_string)));
 
 }
+
+// Down-converts a coding DNA sequence to a linear DNA5 alphabet (swaps the logical alphabet from CodingDNA5 to DNA5).
+// Important - Always returns the reverse complement of the stranded sequence.
+std::shared_ptr<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::reverseDownConvert(std::shared_ptr<const DNA5SequenceCoding> stranded_sequence) {
+
+  StringDNA5 linear_string;
+  linear_string.reserve(stranded_sequence->length()); // pre-allocate for efficiency
+
+  auto complement_base = [](CodingDNA5::Alphabet coding_base) { return DNA5::convertComplementNucleotide(coding_base); };
+  std::transform(stranded_sequence->getAlphabetString().rbegin(),
+                 stranded_sequence->getAlphabetString().rend(),
+                 std::back_inserter(linear_string), complement_base);
+
+  return std::shared_ptr<DNA5SequenceLinear>(std::make_shared<DNA5SequenceLinear>(std::move(linear_string)));
+
+}
+
+// Down-converts a coding DNA sequence to a linear DNA5 alphabet (swaps the logical alphabet from CodingDNA5 to DNA5).
+// Important - Strand Conversion of a reverse complement is performed for a -ve strand
+std::shared_ptr<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::strandedDownConvert(std::shared_ptr<const DNA5SequenceCoding> stranded_sequence) {
+
+  switch(stranded_sequence->strand()) {
+
+    case StrandSense::FORWARD:
+      return downConvertToLinear(stranded_sequence);
+
+    case StrandSense::REVERSE:
+      return reverseDownConvert(stranded_sequence);
+
+  }
+
+  return downConvertToLinear(stranded_sequence); // Never reached. To keep compiler happy.
+
+}
+
+
 
 // Up-converts a linear UNSTANDED DNA sequence to a STRANDED coding sequence (swaps the logical alphabet from DNA5 to CodingDNA5).
 // A -ve strand returns the reverse complement as expected.
@@ -166,16 +202,6 @@ std::shared_ptr<kgl::DNA5SequenceCoding> kgl::DNA5SequenceLinear::codingSequence
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A STRANDED DNA string that can be converted to an AMINO sequence.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-std::shared_ptr<kgl::DNA5SequenceCoding> kgl::DNA5SequenceCoding::reverseComplement() const {
-
-
-  std::shared_ptr<DNA5SequenceCoding> reversedSequence;
-
-  return reversedSequence;
-
-}
 
 
 
