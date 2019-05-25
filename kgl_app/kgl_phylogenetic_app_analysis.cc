@@ -282,13 +282,17 @@ void kgl::PhylogeneticAnalysis::performUPGMA() {
   std::string newick_file = kgl::Utility::filePath("newick_VAR", runtime_options_.workDirectory()) + ".txt";
   std::string intron_file = kgl::Utility::filePath("intron_VAR", runtime_options_.workDirectory()) + ".csv";
 
-  std::shared_ptr<const LevenshteinLocal> distance_metric_ptr(std::make_shared<const LevenshteinLocal>());
+  std::shared_ptr<const LevenshteinLocal> levenshtein_distance_ptr(std::make_shared<const LevenshteinLocal>());
+  std::shared_ptr<const Blosum80Local> blosum80_distance_ptr(std::make_shared<const Blosum80Local>());
 
-  UPGMAGeneFamilyTree<kgl::AminoGeneDistance>(newick_file,
-                                                  intron_file,
-                                                  distance_metric_ptr,
-                                                  genome_collection_ptr_,
-                                                  "PFEMP1");
+  UPGMAMatrix upgma_matrix;
+
+  GeneFamilyTree<kgl::AminoGeneDistance>(upgma_matrix,
+                                         newick_file,
+                                         intron_file,
+                                         levenshtein_distance_ptr,
+                                         genome_collection_ptr_,
+                                         "PFEMP1");
 
 }
 

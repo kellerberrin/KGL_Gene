@@ -33,6 +33,7 @@ public:
 
   CompareDistance_t globalblosum80Distance(const std::string& sequenceA, const std::string& sequenceB) const;
 
+  CompareDistance_t localblosum80Distance(const std::string& sequenceA, const std::string& sequenceB) const;
 
 private:
 

@@ -11,14 +11,19 @@ include_directories(/usr/include
                     kgl_mixture                  # Deconvolution and mixture library
                     kgl_analytic                  # Genetic analysis library
                     kgl_app                        # Application level objects
-                    /usr/include          # 3rd party logging library.
-                    /usr/local/include    # 3rd party sequence analysis library.
-                    contrib/edlib) # 3rd party library for fast Levenshtein sequence matching.
+# desktop                    /usr/include          # 3rd party logging library (desktop).
+# desktop                    /usr/local/include    # 3rd party sequence analysis library (desktop).
+                    /usr/local/lib/spdlog/include   # 3rd party logging library (laptop).
+                    /usr/local/lib/seqan/include    # 3rd party sequence analysis library (laptop).
+                    contrib/edlib) # 3rd party library for fast Levenshtein seqence matching.
 
 # add boost library directories
-#set(BOOST_ROOT /usr/lib/boost)
-set(BOOST_INCLUDEDIR /usr/local/include/boost)
-set(BOOST_LIBRARYDIR /usr/local/lib)
+#desktop
+#set(BOOST_INCLUDEDIR /usr/local/include/boost)
+#set(BOOST_LIBRARYDIR /usr/local/lib)
+#laptop
+set(BOOST_INCLUDEDIR /usr/local/include)
+set(BOOST_LIBRARYDIR /usr/local/lib/boost/lib)
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME ON)
@@ -155,7 +160,7 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_genome_contig_feature.h
         kgl_library/kgl_genome_contig_feature.cc
         kgl_library/kgl_genome_contig_aux.cc
-        kgl_library/kgl_genome_contig_aux.h)
+        kgl_library/kgl_genome_contig_aux.h kgl_library/kgl_phylogenetic_tree.cc kgl_library/kgl_phylogenetic_tree.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )

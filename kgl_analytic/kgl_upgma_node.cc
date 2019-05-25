@@ -17,7 +17,7 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-kgl::DistanceType_t kgl::UPGMAContigDistance::distance(std::shared_ptr<const UPGMADistanceNode>  distance_node) const {
+kgl::DistanceType_t kgl::UPGMAContigDistance::distance(std::shared_ptr<const VirtualDistanceNode>  distance_node) const {
 
   std::shared_ptr<const UPGMAContigDistance> node_ptr = std::dynamic_pointer_cast<const UPGMAContigDistance>(distance_node);
 
@@ -88,7 +88,7 @@ void kgl::UPGMAContigDistance::mutateContigs() {
 
 
 
-kgl::DistanceType_t kgl::UPGMAProteinDistance::distance(std::shared_ptr<const UPGMADistanceNode>  distance_node) const {
+kgl::DistanceType_t kgl::UPGMAProteinDistance::distance(std::shared_ptr<const VirtualDistanceNode>  distance_node) const {
 
   std::shared_ptr<const UPGMAProteinDistance> node_ptr = std::dynamic_pointer_cast<const UPGMAProteinDistance>(distance_node);
 
@@ -257,7 +257,7 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
 
 }
 
-kgl::DistanceType_t kgl::UPGMAGeneDistance::distance(std::shared_ptr<const UPGMADistanceNode>  distance_node) const {
+kgl::DistanceType_t kgl::UPGMAGeneDistance::distance(std::shared_ptr<const VirtualDistanceNode>  distance_node) const {
 
   std::shared_ptr<const UPGMAGeneDistance> node_ptr = std::dynamic_pointer_cast<const UPGMAGeneDistance>(distance_node);
 
@@ -357,7 +357,7 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
 }
 
 
-kgl::DistanceType_t kgl::UPGMAATP4Distance::zeroDistance(std::shared_ptr<const UPGMADistanceNode>  distance_node) const {
+kgl::DistanceType_t kgl::UPGMAATP4Distance::zeroDistance(std::shared_ptr<const VirtualDistanceNode>  distance_node) const {
 
   std::shared_ptr<const UPGMAATP4Distance> node_ptr = std::dynamic_pointer_cast<const UPGMAATP4Distance>(distance_node);
 
@@ -468,7 +468,7 @@ void  kgl::DNAGeneDistance::getIntronSequence() {
 }
 
 
-kgl::DistanceType_t kgl::DNAGeneDistance::distance(std::shared_ptr<const UPGMADistanceNode>  distance_node) const {
+kgl::DistanceType_t kgl::DNAGeneDistance::distance(std::shared_ptr<const VirtualDistanceNode>  distance_node) const {
 
   std::shared_ptr<const DNAGeneDistance> node_ptr = std::dynamic_pointer_cast<const DNAGeneDistance>(distance_node);
 
@@ -531,7 +531,7 @@ void  kgl::AminoGeneDistance::getAminoSequence() {
 }
 
 
-kgl::DistanceType_t kgl::AminoGeneDistance::distance(std::shared_ptr<const UPGMADistanceNode>  distance_node) const {
+kgl::DistanceType_t kgl::AminoGeneDistance::distance(std::shared_ptr<const VirtualDistanceNode>  distance_node) const {
 
   std::shared_ptr<const AminoGeneDistance> node_ptr = std::dynamic_pointer_cast<const AminoGeneDistance>(distance_node);
 
