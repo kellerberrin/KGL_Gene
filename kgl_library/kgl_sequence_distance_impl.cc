@@ -27,6 +27,7 @@ public:
   kgl::CompareDistance_t LevenshteinGlobal(const std::string& sequenceA, const std::string& sequenceB) const;
   kgl::CompareDistance_t LevenshteinLocal(const std::string& sequenceA, const std::string& sequenceB) const;
   kgl::CompareDistance_t globalblosum80Distance(const std::string& sequenceA, const std::string& sequenceB) const;
+  kgl::CompareDistance_t localblosum80Distance(const std::string& sequenceA, const std::string& sequenceB) const;
 
   
 };
@@ -55,6 +56,33 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::globalblosu
   return static_cast<double>(score) * -1.0;  // Invert the scores.
 
 }
+
+
+
+
+kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::localblosum80Distance(const std::string& sequenceA,
+                                                                                            const std::string& sequenceB) const {
+  using TSequence = seqan::String<seqan::AminoAcid> ;
+  using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
+  int open_gap = -8;
+  int extend_gap = -3;
+
+  TSequence seq1 = sequenceA.c_str();
+  TSequence seq2 = sequenceB.c_str();
+
+  TAlign align;
+  resize(rows(align), 2);
+  seqan::assignSource(row(align, 0), seq1);
+  seqan::assignSource(row(align, 1), seq2);
+
+  std::stringstream ss;
+
+  long score = seqan::localAlignment(align, seqan::Blosum80(open_gap, extend_gap));
+
+  return static_cast<double>(score) * -1.0;  // Invert the scores.
+
+}
+
 
 
 kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::LevenshteinGlobal(const std::string& sequenceA,
@@ -124,16 +152,6 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::Levenshtein
 
   return distance;
 
-//  if (result.alignmentLength <= 0) {
-
-//    kgl::ExecEnv::log().error("Problem calculating Local Levenshtein alignment, length zero or -ve {}; sequenceA: {}, sequenceB: {}",
-//                              result.alignmentLength, sequenceA, sequenceB);
-//    edlibFreeAlignResult(result);
-//    return 0;
-
- // }
-//  edlibFreeAlignResult(result);
-//  return distance / static_cast<double>(result.alignmentLength);
 
 }
 
@@ -170,6 +188,15 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::globalblosum80Distance(const s
                                                                        const std::string& sequenceB) const {
 
   return sequence_manip_impl_ptr_->globalblosum80Distance(sequenceA, sequenceB);
+
+}
+
+
+
+kgl::CompareDistance_t kgl::SequenceDistanceImpl::localblosum80Distance(const std::string& sequenceA,
+                                                                         const std::string& sequenceB) const {
+
+  return sequence_manip_impl_ptr_->localblosum80Distance(sequenceA, sequenceB);
 
 }
 

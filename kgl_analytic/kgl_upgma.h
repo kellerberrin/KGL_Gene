@@ -181,7 +181,7 @@ void UPGMAGenePhyloTree(const std::string& path,
 template<typename T>
 void UPGMAGeneFamilyTree(const std::string& newick_file,
                          const std::string& intron_file,
-                         std::shared_ptr<const LevenshteinLocal> sequence_distance,
+                         std::shared_ptr<const LocalSequenceDistance> sequence_distance,
                          std::shared_ptr<const GenomeCollection> genome_collection_ptr,
                          const std::string& protein_family) {
 

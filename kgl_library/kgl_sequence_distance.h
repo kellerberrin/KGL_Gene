@@ -306,6 +306,34 @@ private:
 };
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Local Blosum80
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class Blosum80Local: public LocalAminoSequenceDistance {
+
+public:
+
+  Blosum80Local() = default;
+  virtual ~Blosum80Local() = default;
+
+  std::string distanceType() const override { return "Blosum80 Local"; }
+
+
+
+private:
+
+  CompareDistance_t distanceImpl(std::shared_ptr<const VirtualSequence> sequenceA,
+                                 std::shared_ptr<const VirtualSequence> sequenceB) const override {
+
+    return SequenceDistanceImpl().localblosum80Distance(sequenceA->getSequenceAsString(), sequenceB->getSequenceAsString());
+
+  }
+
+};
+
+
+
 }   // namespace genome
 }   // namespace kellerberrin
 

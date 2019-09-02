@@ -262,7 +262,7 @@ class DNAGeneDistance : public ReferenceGeneDistance {
 
 public:
 
-  DNAGeneDistance(std::shared_ptr<const DNASequenceDistance> sequence_distance,
+  DNAGeneDistance(std::shared_ptr<const LocalDNASequenceDistance> sequence_distance,
                   std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                   std::shared_ptr<const GeneFeature> gene_ptr,
                   const std::string& protein_family)
@@ -283,7 +283,7 @@ public:
 
 private:
 
-  std::shared_ptr<const DNASequenceDistance> sequence_distance_;
+  std::shared_ptr<const LocalDNASequenceDistance> sequence_distance_;
   std::shared_ptr<const DNA5SequenceLinear> sequence_ptr_;
 
   void  getExonSequence();
@@ -296,12 +296,20 @@ class AminoGeneDistance : public ReferenceGeneDistance {
 
 public:
 
-  AminoGeneDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
+  AminoGeneDistance(std::shared_ptr<const LocalSequenceDistance> sequence_distance,
                   std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                   std::shared_ptr<const GeneFeature> gene_ptr,
                   const std::string& protein_family)
-  : ReferenceGeneDistance(genome_db_ptr, gene_ptr, protein_family),
-    sequence_distance_(sequence_distance) {
+  : ReferenceGeneDistance(genome_db_ptr, gene_ptr, protein_family) {
+
+    sequence_distance_ = std::dynamic_pointer_cast<const LocalAminoSequenceDistance>(sequence_distance);
+
+    if (not sequence_distance_) {
+
+      ExecEnv::log().critical("AminoGeneDistance::AminoGeneDistance; distance metric: {} is not a superclass of 'LocalAminoSequenceDistance'",
+                              sequence_distance->distanceType());
+
+    }
 
     getAminoSequence();
 
@@ -315,7 +323,7 @@ public:
 
 private:
 
-  std::shared_ptr<const AminoSequenceDistance> sequence_distance_;
+  std::shared_ptr<const LocalAminoSequenceDistance> sequence_distance_;
   std::shared_ptr<const AminoSequence> sequence_ptr_;
 
   void  getAminoSequence();
