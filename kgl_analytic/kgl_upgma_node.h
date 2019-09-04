@@ -24,7 +24,7 @@ namespace genome {   // project level namespace
 
 using MutatedContigMap = std::map<ContigId_t, std::shared_ptr<const DNA5SequenceContig>>;
 
-class UPGMAContigDistance : public UPGMADistanceNode {
+class UPGMAContigDistance : public VirtualDistanceNode {
 
 public:
 
@@ -43,7 +43,7 @@ public:
   // Function to tag the nodes. Override as necessary.
   void writeNode(std::ostream& outfile) const override { outfile << genome_variant_ptr_->genomeId(); }
   // Pure Virtual calculates the distance between nodes.
-  DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
+  DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const override;
 
 private:
 
@@ -65,7 +65,7 @@ private:
 
 using MutatedProteinMap = std::map<FeatureIdent_t , std::shared_ptr<const AminoSequence>>;
 
-class UPGMAProteinDistance : public UPGMADistanceNode {
+class UPGMAProteinDistance : public VirtualDistanceNode {
 
 public:
 
@@ -86,7 +86,7 @@ public:
   // Function to tag the nodes. Override as necessary.
   void writeNode(std::ostream& outfile) const override { outfile << genome_variant_ptr_->genomeId(); }
   // Pure Virtual calculates the distance between nodes.
-  DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
+  DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const override;
 
 
   constexpr static const char* PROTEIN_FAMILY_WILDCARD = "*";
@@ -120,7 +120,7 @@ private:
 // Generates a comparison for each gene. Local or Global Amino
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class UPGMAGeneDistance : public UPGMADistanceNode {
+class UPGMAGeneDistance : public VirtualDistanceNode {
 
 public:
 
@@ -143,7 +143,7 @@ public:
   // Function to tag the nodes. Override as necessary.
   void writeNode(std::ostream& outfile) const override;
   // Pure Virtual calculates the distance between nodes.
-  DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
+  DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const override;
 
   static bool geneFamily(std::shared_ptr<const GeneFeature> gene_ptr,
                          std::shared_ptr<const GenomeDatabase> genome_db_ptr,
@@ -201,7 +201,7 @@ public:
   // Function to tag the nodes. Override as necessary.
   void writeNode(std::ostream& outfile) const override;
   // virtual function ensures that identical nodes have zero distance.
-  DistanceType_t zeroDistance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
+  DistanceType_t zeroDistance(std::shared_ptr<const VirtualDistanceNode> distance_node) const override;
 
 private:
 
@@ -216,7 +216,7 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class ReferenceGeneDistance : public UPGMADistanceNode {
+class ReferenceGeneDistance : public VirtualDistanceNode {
 
 public:
 
@@ -278,7 +278,7 @@ public:
   ~DNAGeneDistance() override = default;
 
   // Pure Virtual calculates the distance between nodes.
-  DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
+  DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const override;
 
 
 private:
@@ -319,7 +319,7 @@ public:
   ~AminoGeneDistance() override = default;
 
   // Pure Virtual calculates the distance between nodes.
-  DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
+  DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const override;
 
 private:
 

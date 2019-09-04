@@ -17,7 +17,7 @@ namespace genome {   // project level namespace
 
 
 
-class UPGMAUnphasedDistance : public UPGMADistanceNode {
+class UPGMAUnphasedDistance : public VirtualDistanceNode {
 
 public:
 
@@ -29,7 +29,7 @@ public:
   // Function to tag the nodes. Override as necessary.
   void writeNode(std::ostream& outfile) const override { outfile << genome_variant_ptr_->genomeId(); }
   // Pure Virtual calculates the distance between nodes.
-  DistanceType_t distance(std::shared_ptr<const UPGMADistanceNode> distance_node) const override;
+  DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const override;
 
 private:
 

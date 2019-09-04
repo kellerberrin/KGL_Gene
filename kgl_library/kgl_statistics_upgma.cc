@@ -94,38 +94,13 @@ void kgl::DistanceMatrix::BoostDistanceMatrix::setDistance(size_t i, size_t j, k
 
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// UPGMA Classification Nodes.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-// Recursively counts the total number of leaf nodes.
-size_t kgl::PhyloNode::leafNodeCount() const {
-
-  size_t leaf_nodes = 0;
-
-  if (not isLeaf()) {
-
-    for (auto node : getMap()) {
-
-      leaf_nodes += node.second->leafNodeCount();
-
-    }
-
-    return leaf_nodes;
-
-  } else {
-
-    return 1;
-
-  }
-
-}
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Public class of the UPGMA distance matrix.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+kgl::DistanceMatrix::DistanceMatrix() : diagonal_impl_ptr_(std::make_unique<kgl::DistanceMatrix::BoostDistanceMatrix>(1)) {}
 
 kgl::DistanceMatrix::DistanceMatrix(size_t matrix_size) : diagonal_impl_ptr_(std::make_unique<kgl::DistanceMatrix::BoostDistanceMatrix>(matrix_size)) {}
 
@@ -205,7 +180,6 @@ kgl::DistanceType_t kgl::DistanceMatrix::minimum(size_t& i, size_t& j) const {
 
 
 
-
 kgl::DistanceType_t kgl::DistanceMatrix::maximum(size_t& i, size_t& j) const {
 
   bool first_pass = true;
@@ -241,75 +215,6 @@ kgl::DistanceType_t kgl::DistanceMatrix::maximum(size_t& i, size_t& j) const {
   return max_distance;
 
 }
-
-
-// Reduces the distance matrix.
-// The reduced column is the left most column (column, j index = 0)
-void kgl::DistanceMatrix::reduce(size_t i, size_t j) {
-
-  // Save and resize
-  DistanceMatrix temp_distance(*this);
-
-  size_t reduce_size = size() - 1;
-
-  resize(reduce_size);
-
-  // re-populate merged distances.
-  size_t idx_row = 1;
-  for(size_t row = 0; row < temp_distance.size(); ++row) {
-
-    if (row != i and row != j) {
-
-      kgl::DistanceType_t i_leaf = getLeafCount(i);
-      kgl::DistanceType_t j_leaf = getLeafCount(j);
-      kgl::DistanceType_t calc_dist = (i_leaf * temp_distance.getDistance(row, i)) + (j_leaf * temp_distance.getDistance(row, j));
-      calc_dist = calc_dist / (i_leaf + j_leaf);
-      setDistance(idx_row, 0, calc_dist);
-      ++idx_row;
-
-    }
-
-  }
-
-  // re-populate other distances.
-  if (size() <= 2) {
-
-    return;
-
-  }
-
-  idx_row = 2;  // shift down 2 rows.
-  bool update = false;
-  for (size_t row = 0; row < temp_distance.size(); ++row) {
-
-    if (row != i and row != j) {
-
-      size_t idx_column = 1;  // shift to column = 1
-      for (size_t column = 0; column < row; ++column) {
-
-        if (column != i and column != j) {
-
-          setDistance(idx_row, idx_column, temp_distance.getDistance(row, column));
-          idx_column++;
-          update = true;
-
-        }
-
-      }
-
-      if (update) {
-
-        idx_row++;
-        update = false;
-
-      }
-
-    }
-
-  }
-
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -352,7 +257,7 @@ void kgl::UPGMAMatrix::initializeDistance() {
 
     for (size_t column = 0; column < row; column++) {
 
-      setDistance(row, column, distance(node_vector_ptr_->at(row), node_vector_ptr_->at(column)));
+      distance_matrix_.setDistance(row, column, distance(node_vector_ptr_->at(row), node_vector_ptr_->at(column)));
 
     }
 
@@ -380,7 +285,7 @@ void kgl::UPGMAMatrix::identityZeroDistance() {
 
       if (zeroDistance(node_vector_ptr_->at(row), node_vector_ptr_->at(column)) == 0) {
 
-          setDistance(row, column, 0.0);
+        distance_matrix_.setDistance(row, column, 0.0);
 
       }
 
@@ -395,8 +300,8 @@ void kgl::UPGMAMatrix::rescaleDistance() {
 
   size_t row;
   size_t column;
-  DistanceType_t min = minimum(row, column);
-  DistanceType_t max = maximum(row, column);
+  DistanceType_t min = distance_matrix_.minimum(row, column);
+  DistanceType_t max = distance_matrix_.maximum(row, column);
   DistanceType_t range = max - min;
 
   if (range == 0.0) {
@@ -410,9 +315,9 @@ void kgl::UPGMAMatrix::rescaleDistance() {
 
     for (size_t column = 0; column < row; column++) {
 
-      DistanceType_t raw_distance = getDistance(row, column);
+      DistanceType_t raw_distance = distance_matrix_.getDistance(row, column);
       DistanceType_t adj_distance = (raw_distance - min) / range;
-      setDistance(row, column, adj_distance);
+      distance_matrix_.setDistance(row, column, adj_distance);
 
     }
 
@@ -422,21 +327,74 @@ void kgl::UPGMAMatrix::rescaleDistance() {
 
 
 
-void kgl::UPGMAMatrix::calculateReduce() {
+// Reduces the distance matrix.
+// The reduced column is the left most column (column, j index = 0)
+void kgl::UPGMAMatrix::reduceDistance(size_t i, size_t j) {
 
-  while (node_vector_ptr_->size() > 1) {
+  // Save and resize
+  DistanceMatrix temp_distance(distance_matrix_);
 
-    size_t row = 0;
-    size_t column = 0;
-    DistanceType_t min = minimum(row, column);
+  size_t reduce_size = distance_matrix_.size() - 1;
 
-    reduce(row, column);
+  distance_matrix_.resize(reduce_size);
 
-    reduceNode(row, column, min);
+  // re-populate merged distances.
+  size_t idx_row = 1;
+  for(size_t row = 0; row < temp_distance.size(); ++row) {
 
-  } // while reduceNode.
+    if (row != i and row != j) {
+
+      kgl::DistanceType_t i_leaf = getLeafCount(i);
+      kgl::DistanceType_t j_leaf = getLeafCount(j);
+      kgl::DistanceType_t calc_dist = (i_leaf * temp_distance.getDistance(row, i)) + (j_leaf * temp_distance.getDistance(row, j));
+      calc_dist = calc_dist / (i_leaf + j_leaf);
+      distance_matrix_.setDistance(idx_row, 0, calc_dist);
+      ++idx_row;
+
+    }
+
+  }
+
+  // re-populate other distances.
+  if (distance_matrix_.size() <= 2) {
+
+    return;
+
+  }
+
+  idx_row = 2;  // shift down 2 rows.
+  bool update = false;
+  for (size_t row = 0; row < temp_distance.size(); ++row) {
+
+    if (row != i and row != j) {
+
+      size_t idx_column = 1;  // shift to column = 1
+      for (size_t column = 0; column < row; ++column) {
+
+        if (column != i and column != j) {
+
+          distance_matrix_.setDistance(idx_row, idx_column, temp_distance.getDistance(row, column));
+          idx_column++;
+          update = true;
+
+        }
+
+      }
+
+      if (update) {
+
+        idx_row++;
+        update = false;
+
+      }
+
+    }
+
+  }
 
 }
+
+
 
 
 bool kgl::UPGMAMatrix::reduceNode(size_t row, size_t column, DistanceType_t minimum) {
@@ -491,6 +449,23 @@ bool kgl::UPGMAMatrix::reduceNode(size_t row, size_t column, DistanceType_t mini
 }
 
 
+void kgl::UPGMAMatrix::UPGMATree() {
+
+  while (node_vector_ptr_->size() > 1) {
+
+    size_t row = 0;
+    size_t column = 0;
+    DistanceType_t min = distance_matrix_.minimum(row, column);
+
+    reduceDistance(row, column);
+
+    reduceNode(row, column, min);
+
+  } // while reduceNode.
+
+}
+
+
 bool kgl::UPGMAMatrix::writeNewick(const std::string& file_name) const {
 
   std::ofstream newick_file;
@@ -506,7 +481,7 @@ bool kgl::UPGMAMatrix::writeNewick(const std::string& file_name) const {
 
   }
 
-  for (auto node : *node_vector_ptr_) {
+  for (const auto& node : *node_vector_ptr_) {
 
     writeNode(node, newick_file);
 
@@ -521,14 +496,14 @@ bool kgl::UPGMAMatrix::writeNewick(const std::string& file_name) const {
 }
 
 
-void kgl::UPGMAMatrix::writeNode(std::shared_ptr<PhyloNode> node, std::ofstream& newick_file) const {
+void kgl::UPGMAMatrix::writeNode(const std::shared_ptr<PhyloNode>& node, std::ofstream& newick_file) const {
 
   if (node->getMap().size() > 0) {
 
     newick_file << "(";
 
     bool first_pass = true;
-    for (auto child_node : node->getMap()) {
+    for (const auto& child_node : node->getMap()) {
 
       if (first_pass) {
 
