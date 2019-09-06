@@ -23,9 +23,10 @@ namespace genome {   // project level namespace
 // We are comparing contigs across genomes. The distance metric will be based on the difference in
 // the unphased variants held for each contig.
 template<typename T, typename... Args>
-void UPGMAUnphasedTree(const std::string& newick_file,
-                       std::shared_ptr<const UnphasedPopulation> pop_unphased_ptr,
-                       Args... args) {
+void UnphasedDistanceTree(DistanceTree& distance_tree,
+                          const std::string& newick_file,
+                          std::shared_ptr<const UnphasedPopulation> pop_unphased_ptr,
+                          Args... args) {
 
   std::shared_ptr<PhyloNodeVector> node_vector_ptr(std::make_shared<PhyloNodeVector>());
 
@@ -37,11 +38,9 @@ void UPGMAUnphasedTree(const std::string& newick_file,
 
   }
 
-  UPGMAMatrix upgma_matrix(node_vector_ptr);
+  distance_tree.calculateTree(node_vector_ptr);
 
-  upgma_matrix.calculateReduce();
-
-  upgma_matrix.writeNewick(newick_file);
+  distance_tree.writeNewick(newick_file);
 
 }
 
@@ -49,11 +48,12 @@ void UPGMAUnphasedTree(const std::string& newick_file,
 // Variadic function to combine the UPGMAMatrix and UPGMADistanceNode to produce a population tree.
 // We are comparing contigs across genomes, so a global dna distance metric is required.
 template<typename T, typename... Args>
-void UPGMAPopulationTree(const std::string& newick_file,
-                         std::shared_ptr<const GlobalDNASequenceDistance> sequence_distance,
-                         std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
-                         std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                         Args... args) {
+void PopulationDistanceTree(DistanceTree& distance_tree,
+                            const std::string& newick_file,
+                            std::shared_ptr<const GlobalDNASequenceDistance> sequence_distance,
+                            std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
+                            std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                            Args... args) {
 
   std::shared_ptr<PhyloNodeVector> node_vector_ptr(std::make_shared<PhyloNodeVector>());
 
@@ -65,11 +65,9 @@ void UPGMAPopulationTree(const std::string& newick_file,
 
   }
 
-  UPGMAMatrix upgma_matrix(node_vector_ptr);
+  distance_tree.calculateTree(node_vector_ptr);
 
-  upgma_matrix.calculateReduce();
-
-  upgma_matrix.writeNewick(newick_file);
+  distance_tree.writeNewick(newick_file);
 
 }
 
@@ -77,13 +75,13 @@ void UPGMAPopulationTree(const std::string& newick_file,
 // Variadic function to combine the UPGMAMatrix and UPGMADistanceNode to produce a series of Gene trees.
 // We are comparing dissimilar gene types, so only a local Amino distance metric should be used
 template<typename T, typename... Args>
-void UPGMAGeneTree(const std::string& path,
-                   const std::string& newick_file,
-                   std::shared_ptr<const LocalAminoSequenceDistance> sequence_distance,
-                   std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
-                   std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                   const std::string& protein_family,
-                   Args... args) {
+void GeneDistanceTree(DistanceTree& distance_tree,
+                      const std::string& newick_file,
+                      std::shared_ptr<const LocalAminoSequenceDistance> sequence_distance,
+                      std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
+                      std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                      const std::string& protein_family,
+                      Args... args) {
 
 
   for (auto genome_variant : pop_variant_ptr->getMap()) {
@@ -111,13 +109,9 @@ void UPGMAGeneTree(const std::string& path,
 
     }
 
-    UPGMAMatrix upgma_matrix(node_vector_ptr);
+    distance_tree.calculateTree(node_vector_ptr);
 
-    upgma_matrix.calculateReduce();
-
-    std::string genome_newick = genome_variant.second->genomeId() + "_" + newick_file;
-    genome_newick = Utility::filePath(genome_newick, path);
-    upgma_matrix.writeNewick(genome_newick);
+    distance_tree.writeNewick(newick_file);
 
   }
 
@@ -128,13 +122,13 @@ void UPGMAGeneTree(const std::string& path,
 // Variadic function to combine the UPGMAMatrix and UPGMADistanceNode to produce a series of Gene trees.
 // We are comparing between genes of the same type so we can use a local and global Amino distance classes
 template<typename T, typename... Args>
-void UPGMAGenePhyloTree(const std::string& path,
-                        const std::string& newick_file,
-                        std::shared_ptr<const AminoSequenceDistance> sequence_distance,
-                        std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
-                        std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                        const std::string& protein_family,
-                        Args... args) {
+void GenePhyloTree(DistanceTree& distance_tree,
+                   const std::string& newick_file,
+                   std::shared_ptr<const AminoSequenceDistance> sequence_distance,
+                   std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
+                   std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                   const std::string& protein_family,
+                   Args... args) {
 
 
   for (auto contig : genome_db_ptr->getMap()) {
@@ -158,13 +152,9 @@ void UPGMAGenePhyloTree(const std::string& path,
 
         }
 
-        UPGMAMatrix upgma_matrix(node_vector_ptr);
+        distance_tree.calculateTree(node_vector_ptr);
 
-        upgma_matrix.calculateReduce();
-
-        std::string genome_newick = gene.second->id() + "_" + newick_file;
-        genome_newick = Utility::filePath(genome_newick, path);
-        upgma_matrix.writeNewick(genome_newick);
+        distance_tree.writeNewick(newick_file);
 
       }
 
@@ -179,11 +169,12 @@ void UPGMAGenePhyloTree(const std::string& path,
 // Function (not variadic) to combine the UPGMAMatrix and UPGMADistanceNode to compare a family of reference genes (unmutated)
 // We are comparing between genes of the same type so we can use both local and global Amino distance classes
 template<typename T>
-void UPGMAGeneFamilyTree(const std::string& newick_file,
-                         const std::string& intron_file,
-                         std::shared_ptr<const LocalSequenceDistance> sequence_distance,
-                         std::shared_ptr<const GenomeCollection> genome_collection_ptr,
-                         const std::string& protein_family) {
+void GeneFamilyTree( DistanceTree& distance_tree,
+                     const std::string& newick_file,
+                     const std::string& intron_file,
+                     std::shared_ptr<const LocalSequenceDistance> sequence_distance,
+                     std::shared_ptr<const GenomeCollection> genome_collection_ptr,
+                     const std::string& protein_family) {
 
 
   // Open a file to receive csv delimited intron information.
@@ -385,12 +376,10 @@ void UPGMAGeneFamilyTree(const std::string& newick_file,
 
   } // All Genomes
 
-  // Assemble the UPGMA structure.
-  UPGMAMatrix upgma_matrix(node_vector_ptr);
   // Calculate.
-  upgma_matrix.calculateReduce();
+  distance_tree.calculateTree(node_vector_ptr);
   // Report Results.
-  upgma_matrix.writeNewick(newick_file);
+  distance_tree.writeNewick(newick_file);
 
 }
 
