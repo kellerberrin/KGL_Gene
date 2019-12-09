@@ -60,7 +60,7 @@ class PhyloNode {
 
 public:
 
-  explicit PhyloNode(std::shared_ptr<const VirtualDistanceNode> leaf) : leaf_(leaf), distance_(0) {}
+  explicit PhyloNode(std::shared_ptr<const VirtualDistanceNode> leaf) : leaf_(leaf), distance_(0.0) {}
   ~PhyloNode() = default;
 
   void addOutNode(std::shared_ptr<PhyloNode> node) {

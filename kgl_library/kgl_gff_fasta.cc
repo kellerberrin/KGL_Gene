@@ -3,9 +3,9 @@
 //
 
 
-#include <seqan/sequence.h>
 #include <seqan/stream.h>
 #include <seqan/seq_io.h>
+#include <seqan/sequence.h>
 
 #include <boost/tokenizer.hpp>
 

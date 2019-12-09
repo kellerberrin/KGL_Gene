@@ -4,15 +4,26 @@
 
 
 #include <iostream>
+
+#include <tuple>                        // for std::make_pair
+#include <iterator>
+//#include <span>
+
 #include <seqan/align.h>
 #include <seqan/graph_msa.h>
-#include <edlib.h>
 
+#include <seqan3/alphabet/all.hpp>
+#include <seqan3/std/ranges>                    // include all of the standard library's views
+#include <seqan3/range/view/all.hpp>            // include all of SeqAn's views
+#include <seqan3/alignment/configuration/align_config_edit.hpp>
+#include <seqan3/alignment/pairwise/align_pairwise.hpp>
+#include <seqan3/alignment/scoring/nucleotide_scoring_scheme.hpp>
+
+#include <edlib.h>
 
 #include "kgl_sequence_distance_impl.h"
 #include "kgl_exec_env.h"
 #include "kgl_genome_types.h"
-
 
 namespace kgl = kellerberrin::genome;
 
@@ -23,7 +34,9 @@ public:
 
   SequenceManipImpl() = default;
   ~SequenceManipImpl() = default;
-  
+
+  kgl::CompareDistance_t LevenshteinGlobalSeqan3(const std::string& sequenceA, const std::string& sequenceB) const;
+
   kgl::CompareDistance_t LevenshteinGlobal(const std::string& sequenceA, const std::string& sequenceB) const;
   kgl::CompareDistance_t LevenshteinLocal(const std::string& sequenceA, const std::string& sequenceB) const;
   kgl::CompareDistance_t globalblosum80Distance(const std::string& sequenceA, const std::string& sequenceB) const;
@@ -85,6 +98,26 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::localblosum
 
 
 
+kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::LevenshteinGlobalSeqan3(const std::string& sequenceA,
+                                                                                             const std::string& sequenceB) const {
+
+  std::vector<seqan3::dna5> Asequence{sequenceA | seqan3::view::char_to<seqan3::dna5>};
+  std::vector<seqan3::dna5> Bsequence{sequenceB | seqan3::view::char_to<seqan3::dna5>};
+
+  auto config = seqan3::align_cfg::edit;
+
+  kgl::CompareDistance_t edit_distance = 0.0;
+
+  for (auto const & res : seqan3::align_pairwise(std::tie(Asequence, Bsequence), config))
+  {
+    edit_distance = std::fabs(res.score());
+  }
+
+  return edit_distance;
+
+}
+
+
 kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::LevenshteinGlobal(const std::string& sequenceA,
                                                                                      const std::string& sequenceB) const {
 
@@ -104,6 +137,7 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::Levenshtein
 
   kgl::CompareDistance_t distance = std::fabs(result.editDistance);
   edlibFreeAlignResult(result);
+
   return distance;
 
 }
@@ -149,6 +183,10 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::Levenshtein
   kgl::CompareDistance_t distance = std::fabs(result.editDistance);
 
   edlibFreeAlignResult(result);
+
+  kgl::CompareDistance_t compare = LevenshteinGlobalSeqan3(sequenceA, sequenceB);
+
+  kgl::ExecEnv::log().info("Local Levenshtein distance using edlib: {}, Global seqan3: {}", distance, compare);
 
   return distance;
 

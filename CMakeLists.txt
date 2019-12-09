@@ -1,21 +1,18 @@
 cmake_minimum_required(VERSION 3.5)
 project(KGL)
 
-set(CMAKE_CXX_STANDARD 17)
-
+set(CMAKE_CXX_STANDARD 20)
 
 
 # add extra include directories
-include_directories(/usr/include
+include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # the range library required by seqan3.
+                    /usr/local/include/seqan3/submodules/sdsl-lite/include   # the sdsl library required by seqan3.
+                    contrib/edlib # 3rd party library for fast Levenshtein seqence matching.
                     kgl_library                  # Basic infrastructure library
                     kgl_mixture                  # Deconvolution and mixture library
                     kgl_analytic                  # Genetic analysis library
-                    kgl_app                        # Application level objects
-# desktop                    /usr/include          # 3rd party logging library (desktop).
-# desktop                    /usr/local/include    # 3rd party sequence analysis library (desktop).
-                    /usr/local/lib/spdlog/include   # 3rd party logging library (laptop).
-                    /usr/local/lib/seqan/include    # 3rd party sequence analysis library (laptop).
-                    contrib/edlib) # 3rd party library for fast Levenshtein seqence matching.
+                    kgl_app)
+
 
 # add boost library directories
 #desktop
@@ -31,14 +28,14 @@ include_directories(${Boost_INCLUDE_DIRS})
 find_package( Boost COMPONENTS system filesystem timer chrono REQUIRED )
 
 # Debug g++
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb -DBOOST_MATH_DISABLE_FLOAT128")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fconcepts -ggdb -DBOOST_MATH_DISABLE_FLOAT128")
 set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-ggdb -DBOOST_MATH_DISABLE_FLOAT128")
 # Release g++
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -s -DNDEBUG -DBOOST_MATH_DISABLE_FLOAT128")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fconcepts -O3 -s -DNDEBUG -DBOOST_MATH_DISABLE_FLOAT128")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE " -O3 -s -DNDEBUG -DBOOST_MATH_DISABLE_FLOAT128")
 
 # Profile g++
-set(CMAKE_CXX_FLAGS_PROFILE "-pg -g -ggdb -O3 -DBOOST_MATH_DISABLE_FLOAT128 -Xlinker -Map=output.map ")
+set(CMAKE_CXX_FLAGS_PROFILE "-fconcepts -pg -g -ggdb -O3 -DBOOST_MATH_DISABLE_FLOAT128 -Xlinker -Map=output.map ")
 set(CMAKE_EXE_LINKER_FLAGS_PROFILE "-pg -g -ggdb -O3 -DBOOST_MATH_DISABLE_FLOAT128 -Xlinker -Map=output.map ")
 
 # All possible warnings
@@ -160,7 +157,9 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_genome_contig_feature.h
         kgl_library/kgl_genome_contig_feature.cc
         kgl_library/kgl_genome_contig_aux.cc
-        kgl_library/kgl_genome_contig_aux.h kgl_library/kgl_phylogenetic_tree.cc kgl_library/kgl_phylogenetic_tree.h)
+        kgl_library/kgl_genome_contig_aux.h
+        kgl_library/kgl_phylogenetic_tree.cc
+        kgl_library/kgl_phylogenetic_tree.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
