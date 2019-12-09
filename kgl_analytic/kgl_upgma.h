@@ -169,7 +169,7 @@ void GenePhyloTree(DistanceTree& distance_tree,
 // Function (not variadic) to combine the UPGMAMatrix and UPGMADistanceNode to compare a family of reference genes (unmutated)
 // We are comparing between genes of the same type so we can use both local and global Amino distance classes
 template<typename T>
-void GeneFamilyTree( DistanceTree& distance_tree,
+void VarGeneFamilyTree( DistanceTree& distance_tree,
                      const std::string& newick_file,
                      const std::string& intron_file,
                      std::shared_ptr<const LocalSequenceDistance> sequence_distance,

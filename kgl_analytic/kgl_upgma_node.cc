@@ -357,31 +357,6 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
 }
 
 
-kgl::DistanceType_t kgl::UPGMAATP4Distance::zeroDistance(std::shared_ptr<const VirtualDistanceNode>  distance_node) const {
-
-  std::shared_ptr<const UPGMAATP4Distance> node_ptr = std::dynamic_pointer_cast<const UPGMAATP4Distance>(distance_node);
-
-  if (not node_ptr) {
-
-    ExecEnv::log().error("distance(), Unexpected error, could not down-cast node pointer to UPGMAATP4Distance");
-    return 1.0;
-
-  }
-
-
-
-  CompareDistance_t contig_score = zero_metric_ptr_->distance(mutated_protein_, node_ptr->mutated_protein_);
-  auto total_distance = static_cast<DistanceType_t>(contig_score);
-
-  ExecEnv::log().info("zero edit distance(), Genome: {}, Gene: {}, Gene: {}; {} distance: {}, Gene Family: {}",
-                      genome_variant_ptr_->genomeId(), gene_ptr_->id(), node_ptr->gene_ptr_->id(),
-                      zero_metric_ptr_->distanceType(), total_distance, protein_family_);
-
-  return total_distance;
-
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Compares reference (unmutated) genes between gene familes (VAR, RIF, STEVOR, MAURER).
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

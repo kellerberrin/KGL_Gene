@@ -278,6 +278,14 @@ void kgl::PhylogeneticAnalysis::performSNP() {
 
 void kgl::PhylogeneticAnalysis::performUPGMA() {
 
+  performPFEMP1UPGMA();
+
+}
+
+
+
+void kgl::PhylogeneticAnalysis::performPFEMP1UPGMA() {
+
 
   std::string newick_file = kgl::Utility::filePath("newick_VAR", runtime_options_.workDirectory()) + ".txt";
   std::string intron_file = kgl::Utility::filePath("intron_VAR", runtime_options_.workDirectory()) + ".csv";
@@ -287,14 +295,17 @@ void kgl::PhylogeneticAnalysis::performUPGMA() {
 
   UPGMAMatrix upgma_matrix;
 
-  GeneFamilyTree<kgl::AminoGeneDistance>(upgma_matrix,
-                                         newick_file,
-                                         intron_file,
-                                         levenshtein_distance_ptr,
-                                         genome_collection_ptr_,
-                                         "PFEMP1");
+  VarGeneFamilyTree<kgl::AminoGeneDistance>(upgma_matrix,
+                                             newick_file,
+                                             intron_file,
+                                             levenshtein_distance_ptr,
+                                             genome_collection_ptr_,
+                                             "PFEMP1");
 
 }
+
+
+
 
 
 

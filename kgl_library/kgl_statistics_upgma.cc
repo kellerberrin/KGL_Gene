@@ -243,14 +243,6 @@ kgl::DistanceType_t kgl::UPGMAMatrix::distance(std::shared_ptr<PhyloNode> row_no
 }
 
 
-kgl::DistanceType_t kgl::UPGMAMatrix::zeroDistance(std::shared_ptr<PhyloNode> row_node,
-                                                   std::shared_ptr<PhyloNode> column_node) const {
-
-  return row_node->leaf()->zeroDistance(column_node->leaf());
-
-}
-
-
 void kgl::UPGMAMatrix::initializeDistance() {
 
   for (size_t row = 0; row < node_vector_ptr_->size(); ++row) {
@@ -283,7 +275,7 @@ void kgl::UPGMAMatrix::identityZeroDistance() {
 
     for (size_t column = 0; column < row; column++) {
 
-      if (zeroDistance(node_vector_ptr_->at(row), node_vector_ptr_->at(column)) == 0) {
+      if (node_vector_ptr_->at(row)->leaf()->zeroDistance(node_vector_ptr_->at(column)->leaf())) {
 
         distance_matrix_.setDistance(row, column, 0.0);
 

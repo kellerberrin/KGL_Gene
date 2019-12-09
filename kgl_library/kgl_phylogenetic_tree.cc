@@ -11,6 +11,19 @@ namespace kgl = kellerberrin::genome;
 // Tree Classification Nodes.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+bool kgl::VirtualDistanceNode::zeroDistance(std::shared_ptr<const VirtualDistanceNode> node) const {
+
+  if (not node) {
+
+    ExecEnv::log().critical("VirtualDistanceNode::zeroDistance; null pointer passed as argument");
+
+  }
+
+  return dynamic_cast<const void*>(this) == dynamic_cast<const void*>(node.get()) ;
+
+}
+
+
 
 // Recursively counts the total number of leaf nodes.
 size_t kgl::PhyloNode::leafNodeCount() const {

@@ -37,10 +37,10 @@ public:
   virtual void writeNode(std::ostream& outfile) const = 0;
   // Pure Virtual calculates the distance between nodes.
   virtual DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const = 0;
-  // Pure Virtual calculates the zero distance between nodes.
+  // Two identical distance node objects (same const void*) have zero distance.
   // This function is only re-defined and used if the distance metric needs to set a particular
   // condition for a zero distance. Most distance metrics will not need to re-define this function.
-  virtual DistanceType_t zeroDistance(std::shared_ptr<const VirtualDistanceNode>) const { return 1.0; }
+  virtual bool zeroDistance(std::shared_ptr<const VirtualDistanceNode> node) const;
 
 private:
 

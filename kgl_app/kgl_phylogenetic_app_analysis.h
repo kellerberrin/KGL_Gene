@@ -76,19 +76,23 @@ private:
   static constexpr const char* ANALYZE_MOTIF_ = "MOTIF";
   static constexpr const char* ANALYZE_FINESTRUCTURE_ = "FINE_STRUCTURE";
 
-  // Analysis routines
-  void performMotif();
-  void performSequence();
-  void performInterval();
-  void performGene();
-  void performRegion();
-  void performMix();
-  void performSNP();
-  void performUPGMA();
-  void performRNA();
-  void performFineStructure();
+  // Analysis routines that are called by text.
+  void performMotif();  // MOTIF
+  void performSequence(); // SEQUENCE
+  void performInterval(); // INTERVAL
+  void performGene(); // GENE
+  void performRegion(); // REGION
+  void performMix(); // MIX
+  void performSNP(); // SNP
+  void performUPGMA(); // UPGMA
+  void performRNA(); // RNA
+  void performFineStructure(); // FINE_STRUCTURE
 
   std::shared_ptr<const GenomeDatabase> getGenome() const { return genome_collection_ptr_->get3D7Genome(); }
+
+  // Sub analysis functions
+  void performPFEMP1UPGMA();  // UPGMA
+
 
 };
 

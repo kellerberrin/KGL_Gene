@@ -190,8 +190,6 @@ public:
                                                                                  gene_ptr,
                                                                                  protein_family) {
 
-    zero_metric_ptr_ = std::make_shared<const LevenshteinGlobal>();
-
   }
 
   UPGMAATP4Distance(const UPGMAATP4Distance&) = default;
@@ -200,12 +198,8 @@ public:
   // UPGMA Classification functions
   // Function to tag the nodes. Override as necessary.
   void writeNode(std::ostream& outfile) const override;
-  // virtual function ensures that identical nodes have zero distance.
-  DistanceType_t zeroDistance(std::shared_ptr<const VirtualDistanceNode> distance_node) const override;
 
 private:
-
-  std::shared_ptr<const AminoSequenceDistance> zero_metric_ptr_;
 
 };
 

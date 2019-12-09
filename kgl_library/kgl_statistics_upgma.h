@@ -75,7 +75,6 @@ public:
 private:
 
   DistanceType_t distance(std::shared_ptr<PhyloNode> row_node, std::shared_ptr<PhyloNode> column_node) const;
-  DistanceType_t zeroDistance(std::shared_ptr<PhyloNode> row_node, std::shared_ptr<PhyloNode> column_node) const;
   void initializeDistance();
   virtual void normalizeDistance();
   void rescaleDistance();
