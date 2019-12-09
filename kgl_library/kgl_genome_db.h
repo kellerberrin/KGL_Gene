@@ -216,7 +216,7 @@ private:
   static constexpr const char* Pf3D7_ID_ = "Pf3D7_46";
   static constexpr const char* PfHB3_ID_ = "PfHB3_46";
   static constexpr const char* PfIT_ID_ = "PfIT_46";
-  static constexpr const char* PfDD2_ID_ = "PfDd2_46";
+  static constexpr const char* PfDD2_ID_ = "PfDd2_45";
   static constexpr const char* Pf7G8_ID_ = "Pf7G8_46";
   // Returns false if the genome already exists.
   bool addGenome(std::shared_ptr<const GenomeDatabase> genome_database);
