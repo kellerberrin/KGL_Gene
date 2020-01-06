@@ -238,7 +238,7 @@ size_t kgl::UPGMAMatrix::getLeafCount(size_t leaf_idx) const {
 kgl::DistanceType_t kgl::UPGMAMatrix::distance(std::shared_ptr<PhyloNode> row_node,
                                      std::shared_ptr<PhyloNode> column_node) const {
 
-  return row_node->leaf()->distance(column_node->leaf());
+  return row_node->node()->distance(column_node->node());
 
 }
 
@@ -275,7 +275,7 @@ void kgl::UPGMAMatrix::identityZeroDistance() {
 
     for (size_t column = 0; column < row; column++) {
 
-      if (node_vector_ptr_->at(row)->leaf()->zeroDistance(node_vector_ptr_->at(column)->leaf())) {
+      if (node_vector_ptr_->at(row)->node()->zeroDistance(node_vector_ptr_->at(column)->node())) {
 
         distance_matrix_.setDistance(row, column, 0.0);
 
@@ -428,7 +428,7 @@ bool kgl::UPGMAMatrix::reduceNode(size_t row, size_t column, DistanceType_t mini
   row_node->distance(row_distance);
   DistanceType_t column_distance = node_distance - column_node->distance();
   column_node->distance(column_distance);
-  std::shared_ptr<PhyloNode> merged_node(std::make_shared<PhyloNode>(row_node->leaf()));
+  std::shared_ptr<PhyloNode> merged_node(std::make_shared<PhyloNode>(row_node->node()));
   merged_node->distance(node_distance);
   merged_node->addOutNode(row_node);
   merged_node->addOutNode(column_node);
@@ -490,12 +490,12 @@ bool kgl::UPGMAMatrix::writeNewick(const std::string& file_name) const {
 
 void kgl::UPGMAMatrix::writeNode(const std::shared_ptr<PhyloNode>& node, std::ofstream& newick_file) const {
 
-  if (node->getMap().size() > 0) {
+  if (node->outNodes().size() > 0) {
 
     newick_file << "(";
 
     bool first_pass = true;
-    for (const auto& child_node : node->getMap()) {
+    for (const auto& child_node : node->outNodes()) {
 
       if (first_pass) {
 
@@ -515,7 +515,7 @@ void kgl::UPGMAMatrix::writeNode(const std::shared_ptr<PhyloNode>& node, std::of
 
   } else {
 
-    node->leaf()->writeNode(newick_file);
+    node->node()->writeNode(newick_file);
 
   }
 

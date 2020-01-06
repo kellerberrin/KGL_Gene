@@ -60,26 +60,26 @@ class PhyloNode {
 
 public:
 
-  explicit PhyloNode(std::shared_ptr<const VirtualDistanceNode> leaf) : leaf_(leaf), distance_(0.0) {}
+  explicit PhyloNode(std::shared_ptr<const VirtualDistanceNode> node) : node_(node), distance_(0.0) {}
   ~PhyloNode() = default;
 
   void addOutNode(std::shared_ptr<PhyloNode> node) {
     out_nodes_.insert(std::pair<DistanceType_t , std::shared_ptr<PhyloNode>>(node->distance(), node));
   }
 
-  DistanceType_t distance() const { return distance_; }
+  [[nodiscard]] DistanceType_t distance() const { return distance_; }
   void distance(DistanceType_t update) { distance_ = update; }
 
-  std::shared_ptr<const VirtualDistanceNode> leaf() const { return leaf_; }
-  const OutNodes& getMap() const { return out_nodes_; }
+  [[nodiscard]] std::shared_ptr<const VirtualDistanceNode> node() const { return node_; }
+  [[nodiscard]] const OutNodes& outNodes() const { return out_nodes_; }
 
-  // Recursively counts the total number of leaf nodes.
-  bool isLeaf() const { return getMap().empty(); }
-  size_t leafNodeCount() const;
+  [[nodiscard]] bool isLeaf() const { return outNodes().empty(); }
+  // Recursively counts the total number of leaf nodes, returns 1 if this is a node
+  [[nodiscard]] size_t leafNodeCount() const;
 
 private:
 
-  std::shared_ptr<const VirtualDistanceNode> leaf_;
+  std::shared_ptr<const VirtualDistanceNode> node_;
   DistanceType_t distance_;
   OutNodes out_nodes_;
 

@@ -32,7 +32,7 @@ size_t kgl::PhyloNode::leafNodeCount() const {
 
   if (not isLeaf()) {
 
-    for (auto node : getMap()) {
+    for (auto node : outNodes()) {
 
       leaf_nodes += node.second->leafNodeCount();
 

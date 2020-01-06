@@ -8,24 +8,22 @@ set(CMAKE_CXX_STANDARD 20)
 include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # the range library required by seqan3.
                     /usr/local/include/seqan3/submodules/sdsl-lite/include   # the sdsl library required by seqan3.
                     contrib/edlib # 3rd party library for fast Levenshtein seqence matching.
+                     /usr/local/include/libhmsbeagle-1  # the beagle mcmc library used by kpl
                     kgl_library                  # Basic infrastructure library
                     kgl_mixture                  # Deconvolution and mixture library
                     kgl_analytic                  # Genetic analysis library
                     kgl_app)
 
 
+
 # add boost library directories
-#desktop
-#set(BOOST_INCLUDEDIR /usr/local/include/boost)
-#set(BOOST_LIBRARYDIR /usr/local/lib)
-#laptop
 set(BOOST_INCLUDEDIR /usr/local/include)
-set(BOOST_LIBRARYDIR /usr/local/lib/boost/lib)
+set(BOOST_LIBRARYDIR /usr/local/lib/boost)
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME ON)
 include_directories(${Boost_INCLUDE_DIRS})
-find_package( Boost COMPONENTS system filesystem timer chrono REQUIRED )
+find_package( Boost COMPONENTS system filesystem timer chrono program_options REQUIRED )
 
 # Debug g++
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fconcepts -ggdb -DBOOST_MATH_DISABLE_FLOAT128")
@@ -342,6 +340,90 @@ add_executable (kgl_genome ${APPLICATION_SOURCE_FILES} kgl_app/kgl_properties.h)
 
 target_link_libraries(kgl_genome kgl_genome_lib kgd_deconvolv_lib )
 
+############################################################################################################
+# Generate the kpl executable.
+
+
+
+set(KPL_LIBRARY_SOURCE_FILES
+        kpl_phylogenetic/kpl_node.h
+        kpl_phylogenetic/kpl_tree.h
+        kpl_phylogenetic/kpl_treemanip.h
+        kpl_phylogenetic/kpl_xstrom.h
+        kpl_phylogenetic/kpl_splittree.h
+        kpl_phylogenetic/kpl_treesummary.h
+        kpl_phylogenetic/kpl_strom.h
+        kpl_phylogenetic/kpl_geneticcode.h
+        kpl_phylogenetic/kpl_genetictype.h
+        kpl_phylogenetic/kpl_partition.h
+        kpl_phylogenetic/kpl_geneticdata.h
+        kpl_phylogenetic/kpl_geneticcode.cc
+        kpl_phylogenetic/kpl_geneticdata.cc
+        kpl_phylogenetic/kpl_genetictype.cc
+        kpl_phylogenetic/kpl_node.cc
+        kpl_phylogenetic/kpl_partition.cc
+        kpl_phylogenetic/kpl_splittree.cc
+        kpl_phylogenetic/kpl_strom.cc
+        kpl_phylogenetic/kpl_tree.cc
+        kpl_phylogenetic/kpl_treemanip.cc
+        kpl_phylogenetic/kpl_treesummary.cc
+        kpl_phylogenetic/kpl_xstrom.cc
+        kpl_phylogenetic/kpl_likelihood.cc
+        kpl_phylogenetic/kpl_likelihood.h
+        kpl_phylogenetic/kpl_model.cc
+        kpl_phylogenetic/kpl_model.h
+        kpl_phylogenetic/kpl_qmatrix.cc
+        kpl_phylogenetic/kpl_qmatrix.h
+        kpl_phylogenetic/kpl_qmatrixnucleotide.cc
+        kpl_phylogenetic/kpl_qmatrixnucleotide.h
+        kpl_phylogenetic/kpl_qmatrixcodon.cc
+        kpl_phylogenetic/kpl_qmatrixcodon.h
+        kpl_phylogenetic/kpl_asrv.cc
+        kpl_phylogenetic/kpl_asrv.h
+        kpl_phylogenetic/kpl_random.cc
+        kpl_phylogenetic/kpl_random.h
+        kpl_phylogenetic/kpl_mcmc_updater.cc
+        kpl_phylogenetic/kpl_mcmc_updater.h
+        kpl_phylogenetic/kpl_mcmc_gamma.cc
+        kpl_phylogenetic/kpl_mcmc_gamma.h
+        kpl_phylogenetic/kpl_mcmc_chain.cc
+        kpl_phylogenetic/kpl_mcmc_chain.h
+        kpl_phylogenetic/kpl_mcmc_output.cc
+        kpl_phylogenetic/kpl_mcmc_output.h
+        kpl_phylogenetic/kpl_mcmc_dirichlet.cc
+        kpl_phylogenetic/kpl_mcmc_dirichlet.h
+        kpl_phylogenetic/kpl_mcmc_statefrequpdater.cc
+        kpl_phylogenetic/kpl_mcmc_statefrequpdater.h
+        kpl_phylogenetic/kpl_mcmc_exchangeupdater.cc
+        kpl_phylogenetic/kpl_mcmc_exchangeupdater.h
+        kpl_phylogenetic/kpl_mcmc_subsetupdater.cc
+        kpl_phylogenetic/kpl_mcmc_subsetupdater.h
+        kpl_phylogenetic/kpl_mcmc_pinvarupdater.cc
+        kpl_phylogenetic/kpl_mcmc_pinvarupdater.h
+        kpl_phylogenetic/kpl_mcmc_omegaupdater.cc
+        kpl_phylogenetic/kpl_mcmc_omegaupdater.h
+        kpl_phylogenetic/kpl_mcmc_treeupdater.cc
+        kpl_phylogenetic/kpl_mcmc_treeupdater.h
+        kpl_phylogenetic/kpl_mcmc_treelength.cc
+        kpl_phylogenetic/kpl_mcmc_treelength.h
+        kpl_phylogenetic/kpl_mcmc_polytomyupdater.cc
+        kpl_phylogenetic/kpl_mcmc_polytomyupdater.h
+        kpl_phylogenetic/kpl_mcmc_polytomyprior.cc
+        kpl_phylogenetic/kpl_mcmc_polytomyprior.h)
+
+link_directories(/usr/local/lib)
+
+link_directories(/usr/local/lib/ncl)
+
+link_directories(/usr/local/lib/boost)
+
+link_directories(/usr/local/lib/beagle/lib)
+
+#generate kpl executable
+add_executable (kpl kpl_phylogenetic/kpl_main.cpp ${KPL_LIBRARY_SOURCE_FILES})
+
+#specify link libraries.
+target_link_libraries(kpl libncl.a libboost_program_options.a libboost_filesystem.a libboost_system.a hmsbeagle)
 
 ## DOXYGEN
 #set(BUILD_KGL_KGD_DOC ON CACHE BOOL "Use Doxygen to create the HTML/Latex based API documentation")
