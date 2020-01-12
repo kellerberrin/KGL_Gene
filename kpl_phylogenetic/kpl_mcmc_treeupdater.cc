@@ -209,14 +209,14 @@ void kpl::TreeUpdater::proposeNewState() {
   double u = lot()->uniform();
   double new_attachment_point = u*new_focal_path_length;
 
-  if (new_attachment_point <= Node::_smallest_edge_length) {
+  if (new_attachment_point <= Node::smallestEdgeLength()) {
 
-    new_attachment_point = Node::_smallest_edge_length;
+    new_attachment_point = Node::smallestEdgeLength();
 
   }
-  else if (new_focal_path_length - new_attachment_point <= Node::_smallest_edge_length) {
+  else if (new_focal_path_length - new_attachment_point <= Node::smallestEdgeLength()) {
 
-    new_attachment_point = new_focal_path_length - Node::_smallest_edge_length;
+    new_attachment_point = new_focal_path_length - Node::smallestEdgeLength();
 
   }
 

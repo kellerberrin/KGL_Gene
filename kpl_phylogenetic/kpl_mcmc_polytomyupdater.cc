@@ -506,7 +506,7 @@ void kpl::PolytomyUpdater::refreshPolytomies() {
   Tree::SharedPtr tree = treeManipulator()->getTree();
   _polytomies.clear();
 
-  for (auto nd : tree->_preorder) {
+  for (auto nd : tree->getConstPreOrder()) {
 
     unsigned s = treeManipulator()->countChildren(nd);
 

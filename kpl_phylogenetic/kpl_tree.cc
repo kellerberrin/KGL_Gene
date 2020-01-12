@@ -3,28 +3,32 @@
 //
 
 #include "kpl_tree.h"
+#include "kpl_xstrom.h"
+
+#include <boost/format.hpp>
+
 
 namespace kpl = kellerberrin::phylogenetic;
 
 // member function bodies go here
 
-kpl::Tree::Tree() {
+kpl::Tree::Tree(unsigned num_nodes)
+{
 
-//  std::cout << "Constructing a Tree" << std::endl;
   clear();
 
-}
+  if (num_nodes > 0) {
 
+    _nodes.resize(num_nodes);
 
-kpl::Tree::~Tree() {
-//  std::cout << "Destroying a Tree" << std::endl;
+  }
+
 }
 
 
 void kpl::Tree::clear() {
 
-  _is_rooted = false;
-  _root = 0;
+  _root = nullptr;
   _nodes.clear();
   _preorder.clear();
   _levelorder.clear();
@@ -32,9 +36,66 @@ void kpl::Tree::clear() {
 }
 
 
+// Only used in TreeManip.
+kpl::Node::PtrNode kpl::Tree::getNode(size_t node_index) {
+
+  if (node_index >= _nodes.size()) {
+
+    throw XStrom(boost::str(boost::format("Tree has %d nodes, Invalid node index %d") % _nodes.size() % node_index));
+
+  }
+
+  return &(_nodes[node_index]);
+
+}
+
+// Only used in TreeManip.
+kpl::Node::ConstPtrNode kpl::Tree::getConstNode(size_t node_index) const {
+
+  if (node_index >= _nodes.size()) {
+
+    throw XStrom(boost::str(boost::format("Tree has %d nodes, Invalid node index %d") % _nodes.size() % node_index));
+
+  }
+
+  return &(_nodes[node_index]);
+
+}
+
+
+kpl::Node::ConstPtrVector kpl::Tree::getConstNodes() const {
+
+  Node::ConstPtrVector nodes;
+
+  for (auto& node : _nodes) {
+
+    nodes.push_back(&node);
+
+  }
+
+  return nodes;
+
+}
+
+
+kpl::Node::PtrVector kpl::Tree::getNodes() {
+
+  Node::PtrVector nodes;
+
+  for (auto& node : _nodes) {
+
+    nodes.push_back(&node);
+
+  }
+
+  return nodes;
+
+}
+
+
 bool kpl::Tree::isRooted() const {
 
-  return _is_rooted;
+  return static_cast<bool>(_root);
 
 }
 

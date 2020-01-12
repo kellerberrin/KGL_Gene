@@ -10,35 +10,34 @@ namespace kpl = kellerberrin::phylogenetic;
 
 // member function bodies go here
 
-kpl::Node::Node() {
-
-//  std::cout << "Creating Node object" << std::endl;
-  clear();
-
-}
-
-
-kpl::Node::~Node() {
-
-//  std::cout << "Destroying Node object" << std::endl;
-
-}
-
 
 void kpl::Node::clear() {
 
   _flags = 0;
-  clearPointers();
-  _number = -1;
+  inValidNumber();
   _name = "";
-  _edge_length = _smallest_edge_length;
+  _edge_length = _SMALLEST_EDGE_LENGTH;
+  _left_child = nullNode();
+  _right_sib = nullNode();
+  _parent = nullNode();
 
 }
+
+
+void kpl::Node::clearPointers() {
+
+  _left_child = nullNode();
+  _right_sib = nullNode();
+  _parent = nullNode();
+
+}
+
 
 
 void kpl::Node::setEdgeLength(double v) {
 
-  _edge_length = (v < _smallest_edge_length ? _smallest_edge_length : v);
+  _edge_length = (v < _SMALLEST_EDGE_LENGTH ? _SMALLEST_EDGE_LENGTH : v);
 
 }
+
 

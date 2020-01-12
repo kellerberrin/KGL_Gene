@@ -16,38 +16,48 @@ namespace kellerberrin {   //  organization level namespace
 namespace phylogenetic {   // project level namespace
 
 
-//class Tree;
-//class TreeManip;
-class Likelihood;
-//class Updater;
 
 class Node {
 
-  friend class Tree;
-
-  friend class TreeManip;
-  friend class Likelihood;
-//  friend class Updater;
 
 public:
 
   using PtrNode = Node*;
+  using ConstPtrNode = Node const *;
   using PtrVector = std::vector<PtrNode>;
+  using ConstPtrVector = std::vector<ConstPtrNode>;
   using Vector = std::vector<Node>;
 
-  Node();
-  ~Node();
+  Node() { clear(); }
+  Node(const Node& node) = default;
+  ~Node() = default;
 
-  PtrNode getParent() { return _parent; }
-  PtrNode getLeftChild() { return _left_child; }
-  PtrNode getRightSib() { return _right_sib; }
+  Node& operator=(const Node& node) = default;
 
-  int getNumber() { return _number; }
+// Access
+  [[nodiscard]] const PtrNode& getParent() const { return _parent; }
+  [[nodiscard]] const PtrNode& getLeftChild() const { return _left_child; }
+  [[nodiscard]] const PtrNode& getRightSib() const { return _right_sib; }
+  [[nodiscard]] long getNumber() const { return _number; }
+  [[nodiscard]] std::string getName() const { return _name; }
+  [[nodiscard]] const Split& getConstSplit() { return _split; }
+  [[nodiscard]] double getEdgeLength() const { return _edge_length; }
+  [[nodiscard]] bool checkValidNumber() const { return getNumber() != _NO_NUMBER; }  // true if valid.
 
-  std::string getName() { return _name; }
+  [[nodiscard]] static double smallestEdgeLength() { return _SMALLEST_EDGE_LENGTH; }
+  [[nodiscard]] static PtrNode nullNode() { return nullptr; }
+  [[nodiscard]] static bool isNullNode(ConstPtrNode node) { return node == nullNode(); }
+  // Modify
 
-  Split getSplit() { return _split; }
-
+  [[nodiscard]] Split& getSplit() { return _split; }
+  void setParent(const PtrNode& parent) { _parent = parent; }
+  void setLeftChild(const PtrNode& left_child) { _left_child = left_child; }
+  void setRightSib(const PtrNode& right_sib) { _right_sib = right_sib; }
+  void setEdgeLength(double v);
+  void setName(const std::string& name) { _name = name; }
+  void setNumber(long number) { _number = number; }
+  void inValidNumber() { _number = _NO_NUMBER; }
+// Flags
   bool                isSelected() { return _flags & Flag::Selected; }
   void                select() { _flags |= Flag::Selected; }
   void                deselect() { _flags &= ~Flag::Selected; }
@@ -72,13 +82,9 @@ public:
   void                setAltTMatrix() { _flags |= Flag::AltTMatrix; }
   void                clearAltTMatrix() { _flags &= ~Flag::AltTMatrix; }
 
-  [[nodiscard]] double getEdgeLength() const { return _edge_length; }
 
-  void setEdgeLength(double v);
+  void clearPointers();
 
-  void clearPointers() { _left_child = _right_sib = _parent = nullptr; }
-
-  static const double _smallest_edge_length;
 
 private:
 
@@ -95,11 +101,14 @@ private:
   PtrNode _left_child;
   PtrNode _right_sib;
   PtrNode _parent;
-  int _number;
+  long _number;
   std::string _name;
   double _edge_length;
   Split _split;
   unsigned _flags;
+
+  static constexpr const double _SMALLEST_EDGE_LENGTH = 1.0e-12; // This appears to be a "magic number".
+  static constexpr const double _NO_NUMBER = -1; // Used as an initialization flag, replace ASAP.
 
 };
 

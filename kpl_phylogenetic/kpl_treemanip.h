@@ -32,24 +32,64 @@ class TreeManip {
 public:
 
   TreeManip();
-
   TreeManip(Tree::SharedPtr t);
-
   ~TreeManip();
 
-  void                        setTree(Tree::SharedPtr t);
-  Tree::SharedPtr             getTree();
+///////////////////////////////////////////////////////////////////////////////////
+// Static functions that perform the actual manipulations.
+  static double scalcTreeLength(Tree::ConstSharedPtr tree);
+  static void sscaleAllEdgeLengths(Tree::SharedPtr tree, double scaler);
+  [[nodiscard]] static Tree::SharedPtr screateTestTree();
+  static void srefreshPreorder(Tree::SharedPtr tree);
+  [[nodiscard]] static Node::PtrNode findNextPreorder(Node::ConstPtrNode  node);
+  static void srefreshLevelorder(Tree::SharedPtr tree);
+  static void srenumberInternals(Tree::SharedPtr tree);
+  static void srerootAtNodeNumber(Tree::SharedPtr tree, int node_number);
+  static void srerootAtNode(Tree::SharedPtr tree, Node::PtrNode prospective_root);
+  static void sstoreSplits(Tree::SharedPtr tree, std::set<Split> &splitset);
+  static void sselectAllPartials(Tree::SharedPtr tree);
+  static void sdeselectAllPartials(Tree::SharedPtr tree);
+  static void sselectAllTMatrices(Tree::SharedPtr tree);
+  static void sdeselectAllTMatrices(Tree::SharedPtr tree);
+  static void selectPartialsHereToRoot(Node::PtrNode  a);
+  static void sflipPartialsAndTMatrices(Tree::SharedPtr tree);
+  static void sLargetSimonSwap(Tree::SharedPtr tree, Node::PtrNode  a, Node::PtrNode  b);
+  [[nodiscard]] static Node::PtrNode  srandomInternalEdge(Tree::SharedPtr tree, double uniform_deviate);
+  [[nodiscard]] static unsigned scountEdges(Tree::ConstSharedPtr tree);
+  [[nodiscard]] static unsigned scalcResolutionClass(Tree::ConstSharedPtr tree);
+  [[nodiscard]] static unsigned countChildren(Node::ConstPtrNode  nd);
+  [[nodiscard]] static unsigned scountInternals(Tree::ConstSharedPtr tree);
+  [[nodiscard]] static Node::PtrNode findLeftSib(Node::ConstPtrNode  node);
+  [[nodiscard]] static Node::PtrNode findRightmostChild(Node::ConstPtrNode  node);
+  [[nodiscard]] static Node::PtrNode findLastPreorderInClade(Node::PtrNode  start);
+  static void insertSubtreeOnLeft(Node::PtrNode  subtree, Node::PtrNode  parent);
+  static void insertSubtreeOnRight(Node::PtrNode  subtree, Node::PtrNode  parent);
+  static void detachSubtree(Node::PtrNode  subtree);
+  static void srectifyNumInternals(Tree::SharedPtr tree, int incr);
+  static void srefreshNavigationPointers(Tree::SharedPtr tree);
+  [[nodiscard]] static Node::PtrNode sgetUnusedNode(Tree::SharedPtr tree);
+  static void sputUnusedNode(Tree::SharedPtr tree, Node::PtrNode  node);
 
-  double                      calcTreeLength() const;
-  unsigned                    calcResolutionClass() const;
-  unsigned                    countEdges() const;
-  unsigned                    countInternals() const;
-  void                        scaleAllEdgeLengths(double scaler);
 
-  void                        createTestTree();
-  std::string                 makeNewick(unsigned precision) const;
+////////////////////////////////////////////////////////////////////////////////////
 
-  void                        buildFromNewick(const std::string newick, bool rooted, bool allow_polytomies);
+  [[nodiscard]] Node::ConstPtrNode getConstNode(size_t node_index) const { return  getConstTree()->getConstNode(node_index); }
+  [[nodiscard]] Tree::ConstSharedPtr getConstTree() const { return _tree; }
+
+  void setTree(Tree::SharedPtr tree) { assert(tree); _tree = tree; }
+  [[nodiscard]] Tree::SharedPtr getTree() { return _tree; }
+  [[nodiscard]] Node::PtrNode getNode(size_t node_index) { return  getTree()->getNode(node_index); }
+
+  double calcTreeLength() const;
+  unsigned calcResolutionClass() const;
+  unsigned countEdges() const;
+  unsigned countInternals() const;
+  void scaleAllEdgeLengths(double scaler);
+
+  void createTestTree();
+  std::string makeNewick(unsigned precision) const;
+
+  void                        buildFromNewick(const std::string& newick, bool rooted, bool allow_polytomies);
   void                        storeSplits(std::set<Split> & splitset);
   void                        rerootAtNodeNumber(int node_number);
 
@@ -57,27 +97,16 @@ public:
   Node::PtrNode                       randomInternalEdge(double uniform01);
 
   void                        nniNodeSwap(Node::PtrNode  a, Node::PtrNode  b);
-  unsigned                    countChildren(Node::PtrNode  nd) const;
-  Node::PtrNode                       findLeftSib(Node::PtrNode  nd);
-  Node::PtrNode                       findNextPreorder(Node::PtrNode  nd);
-  Node::PtrNode                       findRightmostChild(Node::PtrNode  nd);
-  Node::PtrNode                       findLastPreorderInClade(Node::PtrNode  start);
-  void                        insertSubtreeOnLeft(Node::PtrNode  s, Node::PtrNode  u);
-  void                        insertSubtreeOnRight(Node::PtrNode  s, Node::PtrNode  u);
-  void                        detachSubtree(Node::PtrNode  s);
   void                        rectifyNumInternals(int incr);
   void                        refreshNavigationPointers();
   Node::PtrNode                       getUnusedNode();
-  void                        putUnusedNode(Node::PtrNode  nd);
+  void                        putUnusedNode(Node::PtrNode  node);
 
-  void                        selectAll();
-  void                        deselectAll();
   void                        selectAllPartials();
   void                        deselectAllPartials();
   void                        selectAllTMatrices();
   void                        deselectAllTMatrices();
 
-  void                        selectPartialsHereToRoot(Node::PtrNode  a);
   void                        flipPartialsAndTMatrices();
 
   void                        clear();
@@ -88,11 +117,6 @@ private:
   void                        refreshLevelorder();
   void                        renumberInternals();
   void                        rerootAtNode(Node::PtrNode  prospective_root);
-  void                        extractNodeNumberFromName(Node::PtrNode  nd, std::set<unsigned> & used);
-  void                        extractEdgeLen(Node::PtrNode  nd, std::string edge_length_string);
-  unsigned                    countNewickLeaves(const std::string newick);
-  void                        stripOutNexusComments(std::string & newick);
-  bool                        canHaveSibling(Node::PtrNode  nd, bool rooted, bool allow_polytomies);
 
   Tree::SharedPtr             _tree;
 

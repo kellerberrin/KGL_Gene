@@ -308,7 +308,7 @@ double kpl::Updater::calcEdgeLengthPrior() const {
 
   if (c != 1.0) {
 
-    for (auto nd : tree->preOrder()) {
+    for (auto nd : tree->getConstPreOrder()) {
 
       double edge_length_proportion = nd->getEdgeLength()/TL;
       log_edge_length_proportions_prior += (c - 1.0)*log(edge_length_proportion);

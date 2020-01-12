@@ -409,7 +409,7 @@ set(KPL_LIBRARY_SOURCE_FILES
         kpl_phylogenetic/kpl_mcmc_polytomyupdater.cc
         kpl_phylogenetic/kpl_mcmc_polytomyupdater.h
         kpl_phylogenetic/kpl_mcmc_polytomyprior.cc
-        kpl_phylogenetic/kpl_mcmc_polytomyprior.h)
+        kpl_phylogenetic/kpl_mcmc_polytomyprior.h kpl_phylogenetic/kpl_tree_io.cc kpl_phylogenetic/kpl_tree_io.h)
 
 link_directories(/usr/local/lib)
 

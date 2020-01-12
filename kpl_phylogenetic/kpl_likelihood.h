@@ -89,10 +89,10 @@ private:
   void                                    setAmongSiteRateHeterogenetity();
   void                                    setModelRateMatrix();
   void                                    addOperation(InstanceInfo & info, Node::PtrNode  nd, Node::PtrNode  lchild, Node::PtrNode  rchild, unsigned subset_index);
-  void                                    defineOperations(Tree::SharedPtr t);
+  void                                    defineOperations(Tree::SharedPtr tree);
   void                                    updateTransitionMatrices();
   void                                    calculatePartials();
-  double                                  calcInstanceLogLikelihood(InstanceInfo & inst, Tree::SharedPtr t);
+  double                                  calcInstanceLogLikelihood(InstanceInfo & inst, Tree::SharedPtr tree);
 
   Model::SharedPtr _model;
   std::vector<InstanceInfo> _instances;

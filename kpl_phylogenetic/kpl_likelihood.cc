@@ -702,11 +702,11 @@ void kpl::Likelihood::setModelRateMatrix() {
 }
 
 
-void kpl::Likelihood::defineOperations(Tree::SharedPtr t) {
+void kpl::Likelihood::defineOperations(Tree::SharedPtr tree) {
 
   assert(_instances.size() > 0);
-  assert(t);
-  assert(t->isRooted() == _rooted);
+  assert(tree);
+  assert(tree->isRooted() == _rooted);
 
   double relrate_normalizing_constant = _model->calcNormalizingConstantForSubsetRelRates();
   Model::subset_relrate_vect_t & subset_relrates = _model->getSubsetRelRates();
@@ -726,32 +726,32 @@ void kpl::Likelihood::defineOperations(Tree::SharedPtr t) {
       double subset_relative_rate = subset_relrates[s]/relrate_normalizing_constant;
 
       // Loop through all nodes in reverse level order
-      for (auto nd : boost::adaptors::reverse(t->_levelorder)) {
-        assert(nd->_number >= 0);
-        if (!nd->_left_child) {
+      for (auto node : boost::adaptors::reverse(tree->getConstLevelOrder())) {
+        assert(node->getNumber() >= 0);
+        if (Node::isNullNode(node->getLeftChild())) {
           // This is a leaf
-          if (nd->isSelTMatrix()) {
-            unsigned tindex = getTMatrixIndex(nd, info, instance_specific_subset_index);
+          if (node->isSelTMatrix()) {
+            unsigned tindex = getTMatrixIndex(node, info, instance_specific_subset_index);
             _pmatrix_index[info.handle].push_back(tindex);
-            _edge_lengths[info.handle].push_back(nd->_edge_length*subset_relative_rate);;
+            _edge_lengths[info.handle].push_back(node->getEdgeLength() * subset_relative_rate);;
           }
         }
         else {
           // This is an internal node
-          if (nd->isSelTMatrix()) {
-            unsigned tindex = getTMatrixIndex(nd, info, instance_specific_subset_index);
+          if (node->isSelTMatrix()) {
+            unsigned tindex = getTMatrixIndex(node, info, instance_specific_subset_index);
             _pmatrix_index[info.handle].push_back(tindex);
-            _edge_lengths[info.handle].push_back(nd->_edge_length*subset_relative_rate);
+            _edge_lengths[info.handle].push_back(node->getEdgeLength() * subset_relative_rate);
           }
 
           // Internal nodes have partials to be calculated, so define
           // an operation to compute the partials for this node
-          if (nd->isSelPartial()) {
-            Node::PtrNode  lchild = nd->_left_child;
+          if (node->isSelPartial()) {
+            Node::PtrNode  lchild = node->getLeftChild();
             assert(lchild);
-            Node::PtrNode  rchild = lchild->_right_sib;
+            Node::PtrNode  rchild = lchild->getRightSib();
             assert(rchild);
-            addOperation(info, nd, lchild, rchild, instance_specific_subset_index);
+            addOperation(info, node, lchild, rchild, instance_specific_subset_index);
           }   // isSelPartial
         }   // internal node
       }   // nd loop
@@ -894,7 +894,7 @@ void kpl::Likelihood::calculatePartials() {
 }
 
 
-double kpl::Likelihood::calcInstanceLogLikelihood(InstanceInfo & info, Tree::SharedPtr t) {
+double kpl::Likelihood::calcInstanceLogLikelihood(InstanceInfo & info, Tree::SharedPtr tree) {
 
   int code = 0;
   unsigned nsubsets = (unsigned)info.subsets.size();
@@ -906,9 +906,9 @@ double kpl::Likelihood::calcInstanceLogLikelihood(InstanceInfo & info, Tree::Sha
   int stateFrequencyIndex  = 0;
   int categoryWeightsIndex = 0;
   int cumulativeScalingIndex = (_underflow_scaling ? 0 : BEAGLE_OP_NONE);
-  int child_partials_index   = getPartialIndex(t->_root, info);
-  int parent_partials_index  = getPartialIndex(t->_preorder[0], info);
-  int parent_tmatrix_index   = getTMatrixIndex(t->_preorder[0], info, 0);
+  int child_partials_index   = getPartialIndex(tree->getRoot(), info);
+  int parent_partials_index  = getPartialIndex(tree->getConstPreOrder()[0], info);
+  int parent_tmatrix_index   = getTMatrixIndex(tree->getConstPreOrder()[0], info, 0);
 
   // storage for results of the likelihood calculation
   std::vector<double> subset_log_likelihoods(nsubsets, 0.0);
@@ -929,7 +929,7 @@ double kpl::Likelihood::calcInstanceLogLikelihood(InstanceInfo & info, Tree::Sha
       _scaling_indices[s]  = (_underflow_scaling ? s : BEAGLE_OP_NONE);
       _subset_indices[s]  = s;
       _freqs_indices[s]   = s;
-      _tmatrix_indices[s] = getTMatrixIndex(t->_preorder[0], info, s); //index_focal_child + s*tmatrix_skip;
+      _tmatrix_indices[s] = getTMatrixIndex(tree->getConstPreOrder()[0], info, s); //index_focal_child + s*tmatrix_skip;
 
     }
 
@@ -1059,7 +1059,7 @@ double kpl::Likelihood::calcLogLikelihood(Tree::SharedPtr t) {
   assert(_data);
   assert(_model);
 
-  if (t->_is_rooted) {
+  if (t->isRooted()) {
 
     throw XStrom("This version of the program can only compute likelihoods for unrooted trees");
 
@@ -1086,9 +1086,9 @@ double kpl::Likelihood::calcLogLikelihood(Tree::SharedPtr t) {
 
 unsigned kpl::Likelihood::getPartialIndex(Node::PtrNode  nd, InstanceInfo & info) const {
 
-  unsigned pindex = nd->_number;
+  unsigned pindex = nd->getNumber();
   // do not be tempted to subtract _ntaxa from pindex: BeagleLib does this itself
-  if (nd->_parent && nd->_left_child) {
+  if (nd->getParent() && nd->getLeftChild()) {
     if (nd->isAltPartial()) {
 
       pindex += info.partial_offset;
@@ -1103,7 +1103,7 @@ unsigned kpl::Likelihood::getPartialIndex(Node::PtrNode  nd, InstanceInfo & info
 
 unsigned kpl::Likelihood::getTMatrixIndex(Node::PtrNode  nd, InstanceInfo & info, unsigned subset_index) const {
 
-  unsigned tindex = 2*subset_index*info.tmatrix_offset + nd->_number;
+  unsigned tindex = 2*subset_index*info.tmatrix_offset + nd->getNumber();
   if (nd->isAltTMatrix()) {
 
     tindex += info.tmatrix_offset;
@@ -1129,7 +1129,7 @@ void kpl::Likelihood::addOperation(InstanceInfo & info, Node::PtrNode  nd, Node:
   // 2. destination scaling buffer index to write to
   if (_underflow_scaling) {
 
-    _operations[info.handle].push_back(nd->_number - _ntaxa + num_subsets);
+    _operations[info.handle].push_back(nd->getNumber() - _ntaxa + num_subsets);
 
   }
   else {

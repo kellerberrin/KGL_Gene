@@ -12,7 +12,6 @@ namespace kpl = kellerberrin::phylogenetic;
 std::string  kpl::Strom::_program_name        = "strom";
 unsigned     kpl::Strom::_major_version       = 1;
 unsigned     kpl::Strom::_minor_version       = 0;
-const double kpl::Node::_smallest_edge_length = 1.0e-12;
 
 
 // member function bodies go here

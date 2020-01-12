@@ -4,6 +4,7 @@
 
 
 #include "kpl_treemanip.h"
+#include "kpl_tree_io.h"
 
 #include  <cmath>
 
@@ -35,28 +36,20 @@ void kpl::TreeManip::clear() {
 
 }
 
-void kpl::TreeManip::setTree(Tree::SharedPtr t) {
-
-  assert(t);
-  _tree = t;
-
-}
-
-
-kpl::Tree::SharedPtr kpl::TreeManip::getTree() {
-
-  return _tree;
-
-}
-
 
 double kpl::TreeManip::calcTreeLength() const {
 
+  return scalcTreeLength(getConstTree());
+
+}
+
+double kpl::TreeManip::scalcTreeLength(Tree::ConstSharedPtr tree) {
+
   double TL = 0.0;
 
-  for (auto nd : _tree->_preorder) {
+  for (auto nd : tree->getConstPreOrder()) {
 
-    TL += nd->_edge_length;
+    TL += nd->getEdgeLength();
 
   }
 
@@ -67,26 +60,38 @@ double kpl::TreeManip::calcTreeLength() const {
 
 void kpl::TreeManip::scaleAllEdgeLengths(double scaler) {
 
-  for (auto nd : _tree->_preorder) {
+  sscaleAllEdgeLengths(getTree(), scaler);
 
-    nd->setEdgeLength(scaler * nd->_edge_length);
+}
+
+void kpl::TreeManip::sscaleAllEdgeLengths(Tree::SharedPtr tree, double scaler) {
+
+  for (auto nd : tree->getConstPreOrder()) {
+
+    nd->setEdgeLength(scaler * nd->getEdgeLength());
 
   }
 
 }
 
+
 void kpl::TreeManip::createTestTree() {
 
   clear();
-  _tree = Tree::SharedPtr(new Tree());
-  _tree->_nodes.resize(6);
+  setTree(screateTestTree());
 
-  Node::PtrNode root_node = &_tree->_nodes[0];
-  Node::PtrNode first_internal = &_tree->_nodes[1];
-  Node::PtrNode second_internal = &_tree->_nodes[2];
-  Node::PtrNode first_leaf = &_tree->_nodes[3];
-  Node::PtrNode second_leaf = &_tree->_nodes[4];
-  Node::PtrNode third_leaf = &_tree->_nodes[5];
+}
+
+kpl::Tree::SharedPtr kpl::TreeManip::screateTestTree() {
+
+  Tree::SharedPtr tree(std::make_shared<Tree>(6));
+
+  Node::PtrNode root_node = tree->getNode(0);
+  Node::PtrNode first_internal = tree->getNode(1);
+  Node::PtrNode second_internal = tree->getNode(2);
+  Node::PtrNode first_leaf = tree->getNode(3);
+  Node::PtrNode second_leaf = tree->getNode(4);
+  Node::PtrNode third_leaf = tree->getNode(5);
 
   // Here is the structure of the tree (numbers in
   // parentheses are node numbers, other numbers
@@ -106,220 +111,103 @@ void kpl::TreeManip::createTestTree() {
   //                        |
   //                    root_node (5)
   //
-  root_node->_parent = 0;
-  root_node->_left_child = first_internal;
-  root_node->_right_sib = 0;
-  root_node->_number = 5;
-  root_node->_name = "root node";
-  root_node->_edge_length = 0.0;
+  root_node->setParent(Node::nullNode());
+  root_node->setLeftChild(first_internal);
+  root_node->setRightSib(Node::nullNode());
+  root_node->setNumber(5);
+  root_node->setName("root node");
+  root_node->setEdgeLength(0.0);
 
-  first_internal->_parent = root_node;
-  first_internal->_left_child = second_internal;
-  first_internal->_right_sib = 0;
-  first_internal->_number = 4;
-  first_internal->_name = "first internal node";
-  first_internal->_edge_length = 0.1;
+  first_internal->setParent(root_node);
+  first_internal->setLeftChild(second_internal);
+  first_internal->setRightSib(Node::nullNode());
+  first_internal->setNumber(4);
+  first_internal->setName("first internal node");
+  first_internal->setEdgeLength(0.1);
 
-  second_internal->_parent = first_internal;
-  second_internal->_left_child = first_leaf;
-  second_internal->_right_sib = third_leaf;
-  second_internal->_number = 3;
-  second_internal->_name = "second internal node";
-  second_internal->_edge_length = 0.1;
+  second_internal->setParent(first_internal);
+  second_internal->setLeftChild(first_leaf);
+  second_internal->setRightSib(third_leaf);
+  second_internal->setNumber(3);
+  second_internal->setName("second internal node");
+  second_internal->setEdgeLength(0.1);
 
-  first_leaf->_parent = second_internal;
-  first_leaf->_left_child = 0;
-  first_leaf->_right_sib = second_leaf;
-  first_leaf->_number = 0;
-  first_leaf->_name = "first leaf";
-  first_leaf->_edge_length = 0.1;
+  first_leaf->setParent(second_internal);
+  first_leaf->setLeftChild(Node::nullNode());
+  first_leaf->setRightSib(second_leaf);
+  first_leaf->setNumber(0);
+  first_leaf->setName("first leaf");
+  first_leaf->setEdgeLength(0.1);
 
-  second_leaf->_parent = second_internal;
-  second_leaf->_left_child = 0;
-  second_leaf->_right_sib = 0;
-  second_leaf->_number = 1;
-  second_leaf->_name = "second leaf";
-  second_leaf->_edge_length = 0.1;
+  second_leaf->setParent(second_internal);
+  second_leaf->setLeftChild(Node::nullNode());
+  second_leaf->setRightSib(Node::nullNode());
+  second_leaf->setNumber(1);
+  second_leaf->setName("second leaf");
+  second_leaf->setEdgeLength(0.1);
 
-  third_leaf->_parent = first_internal;
-  third_leaf->_left_child = 0;
-  third_leaf->_right_sib = 0;
-  third_leaf->_number = 2;
-  third_leaf->_name = "third leaf";
-  third_leaf->_edge_length = 0.2;
+  third_leaf->setParent(first_internal);
+  third_leaf->setLeftChild(Node::nullNode());
+  third_leaf->setRightSib(Node::nullNode());
+  third_leaf->setNumber(2);
+  third_leaf->setName("third leaf");
+  third_leaf->setEdgeLength(0.2);
 
-  _tree->_is_rooted = true;
-  _tree->_root = root_node;
-  _tree->_nleaves = 3;
+  tree->setRoot(root_node);
+  tree->setLeaves(3);
 
-  // Note that root node is not included in _preorder
-  _tree->_preorder.push_back(first_internal);
-  _tree->_preorder.push_back(second_internal);
-  _tree->_preorder.push_back(first_leaf);
-  _tree->_preorder.push_back(second_leaf);
-  _tree->_preorder.push_back(third_leaf);
+  // Note that root node is not included in preorder or levelorder
+  tree->pushPreOrder(first_internal);
+  tree->pushPreOrder(second_internal);
+  tree->pushPreOrder(first_leaf);
+  tree->pushPreOrder(second_leaf);
+  tree->pushPreOrder(third_leaf);
 
-  _tree->_levelorder.push_back(first_internal);
-  _tree->_levelorder.push_back(second_internal);
-  _tree->_levelorder.push_back(third_leaf);
-  _tree->_levelorder.push_back(first_leaf);
-  _tree->_levelorder.push_back(second_leaf);
+  tree->pushLevelOrder(first_internal);
+  tree->pushLevelOrder(second_internal);
+  tree->pushLevelOrder(third_leaf);
+  tree->pushLevelOrder(first_leaf);
+  tree->pushLevelOrder(second_leaf);
+
+  return tree;
 
 }
 
 
 std::string kpl::TreeManip::makeNewick(unsigned precision) const {
 
-  std::string newick;
-  const boost::format tip_node_format(boost::str(boost::format("%%d:%%.%df") % precision));
-  const boost::format internal_node_format(boost::str(boost::format("):%%.%df") % precision));
-  std::stack<Node::PtrNode > node_stack;
-
-
-  Node::PtrNode root_tip = (_tree->_is_rooted ? 0 : _tree->_root);
-  for (auto nd : _tree->_preorder) {
-    //...
-    if (nd->_left_child) {
-
-      newick += "(";
-      node_stack.push(nd);
-
-      if (root_tip) {
-
-        newick += boost::str(boost::format(tip_node_format) % (root_tip->_number + 1) % nd->_edge_length);
-        newick += ",";
-        root_tip = 0;
-
-      }
-
-    } else {
-
-      newick += boost::str(boost::format(tip_node_format) % (nd->_number + 1) % nd->_edge_length);
-      if (nd->_right_sib) {
-
-        newick += ",";
-
-      }
-      else {
-        Node::PtrNode popped = (node_stack.empty() ? 0 : node_stack.top());
-        while (popped && !popped->_right_sib) {
-          node_stack.pop();
-          if (node_stack.empty()) {
-            newick += ")";
-            popped = 0;
-          } else {
-            newick += boost::str(boost::format(internal_node_format) % popped->_edge_length);
-            popped = node_stack.top();
-          }
-        }
-        if (popped && popped->_right_sib) {
-          node_stack.pop();
-          newick += boost::str(boost::format(internal_node_format) % popped->_edge_length);
-          newick += ",";
-        }
-      }
-    }
-  }
-
-
-  return newick;
-
-}
-
-void kpl::TreeManip::extractNodeNumberFromName(Node::PtrNode nd, std::set<unsigned> &used) {
-  assert(nd);
-  bool success = true;
-  unsigned x = 0;
-  try {
-    x = std::stoi(nd->_name);
-  }
-  catch (std::invalid_argument &) {
-    // node name could not be converted to an integer value
-    success = false;
-  }
-
-  if (success) {
-    // conversion succeeded
-    // attempt to insert x into the set of node numbers already used
-    std::pair<std::set<unsigned>::iterator, bool> insert_result = used.insert(x);
-    if (insert_result.second) {
-      // insertion was made, so x has NOT already been used
-      nd->_number = x - 1;
-    } else {
-      // insertion was not made, so set already contained x
-      throw XStrom(boost::str(boost::format("leaf number %d used more than once") % x));
-    }
-  } else {
-
-    throw XStrom(boost::str(boost::format("node name (%s) not interpretable as a positive integer") % nd->_name));
-
-  }
-}
-
-
-void kpl::TreeManip::extractEdgeLen(Node::PtrNode nd, std::string edge_length_string) {
-  assert(nd);
-  bool success = true;
-  double d = 0.0;
-  try {
-    d = std::stod(edge_length_string);
-  }
-  catch (std::invalid_argument &) {
-    // edge_length_string could not be converted to a double value
-    success = false;
-  }
-
-  if (success) {
-    // conversion succeeded
-    nd->setEdgeLength(d);
-
-  } else {
-
-    throw XStrom(boost::str(boost::format("%s is not interpretable as an edge length") % edge_length_string));
-
-  }
-
-}
-
-unsigned kpl::TreeManip::countNewickLeaves(const std::string newick) {
-
-  std::regex taxonexpr("[(,]\\s*(\\d+|\\S+?|['].+?['])\\s*(?=[,):])");
-  std::sregex_iterator m1(newick.begin(), newick.end(), taxonexpr);
-  std::sregex_iterator m2;
-
-  return (unsigned) std::distance(m1, m2);
+  return TreeIO::smakeNewick(getConstTree(), precision);
 
 }
 
 
-void kpl::TreeManip::stripOutNexusComments(std::string &newick) {
-
-  std::regex commentexpr("\\[.*?\\]");
-  newick = std::regex_replace(newick, commentexpr, std::string(""));
-
-}
 
 
 void kpl::TreeManip::refreshPreorder() {
 
+  srefreshPreorder(getTree());
+
+}
+
+void kpl::TreeManip::srefreshPreorder(Tree::SharedPtr tree) {
+
   // Create vector of node pointers in preorder sequence
 
-  _tree->_preorder.clear();
-  _tree->_preorder.reserve(_tree->_nodes.size() - 1); // _preorder does not include root node
+  tree->clearPreOrder();
 
-  if (!_tree->_root) {
+  if (not tree->getConstRoot()) {
 
     return;
 
   }
 
-  Node::PtrNode first_preorder = _tree->_root->_left_child;
+  Node::PtrNode first_preorder = tree->getConstRoot()->getLeftChild();
 
   // sanity check: first preorder node should be the only child of the root node
   assert(first_preorder->_right_sib == 0);
 
   Node::PtrNode nd = first_preorder;
-  _tree->_preorder.push_back(nd);
+  tree->pushPreOrder(nd);
 
   while (true) {
 
@@ -327,7 +215,7 @@ void kpl::TreeManip::refreshPreorder() {
 
     if (nd) {
 
-      _tree->_preorder.push_back(nd);
+      tree->pushPreOrder(nd);
 
     }
     else {
@@ -342,17 +230,26 @@ void kpl::TreeManip::refreshPreorder() {
 
 
 void kpl::TreeManip::refreshLevelorder() {
-  if (!_tree->_root)
+
+  srefreshLevelorder(getTree());
+
+}
+
+void kpl::TreeManip::srefreshLevelorder(Tree::SharedPtr tree) {
+
+  if (not tree->getConstRoot()) {
+
     return;
+
+  }
 
   // q is the buffer queue
   std::queue<Node::PtrNode > q;
 
-  // _tree->_levelorder is the stack vector
-  _tree->_levelorder.clear();
-  _tree->_levelorder.reserve(_tree->_nodes.size() - 1);
+  // getTree()->_levelorder is the stack vector
+  tree->clearLevelOrder();
 
-  Node::PtrNode nd = _tree->_root->_left_child;
+  Node::PtrNode nd = tree->getConstRoot()->getLeftChild();
 
   // sanity check: first node should be the only child of the root node
   assert(nd->_right_sib == 0);
@@ -366,16 +263,21 @@ void kpl::TreeManip::refreshLevelorder() {
     q.pop();
 
     // and push it onto the stack
-    _tree->_levelorder.push_back(nd);
+    tree->pushLevelOrder(nd);
 
     // add all children of nd to back of queue
-    Node::PtrNode child = nd->_left_child;
+    Node::PtrNode child = nd->getLeftChild();
+
     if (child) {
+
       q.push(child);
-      child = child->_right_sib;
+      child = child->getRightSib();
+
       while (child) {
+
         q.push(child);
-        child = child->_right_sib;
+        child = child->getRightSib();
+
       }
 
     }
@@ -387,95 +289,78 @@ void kpl::TreeManip::refreshLevelorder() {
 
 void kpl::TreeManip::renumberInternals() {
 
-  assert(_tree->_preorder.size() > 0);
+  srenumberInternals(getTree());
+
+}
+
+void kpl::TreeManip::srenumberInternals(Tree::SharedPtr tree) {
+
+  assert(getTree()->getConstPreOrder().size() > 0);
 
   // Renumber internal nodes in postorder sequence
-  int curr_internal = _tree->_nleaves;
-  for (auto nd : boost::adaptors::reverse(_tree->_preorder)) {
+  unsigned  curr_internal = tree->numLeaves();
 
-    if (nd->_left_child) {
+  for (auto nd : boost::adaptors::reverse(tree->getConstPreOrder())) {
+
+    if (not Node::isNullNode(nd->getLeftChild())) {
 
       // nd is an internal node
-      nd->_number = curr_internal;
+      nd->setNumber(curr_internal);
       curr_internal++;
 
     }
 
   }
 
-  // Root node is not included in _tree->_preorder, so if the root node
+  // Root node is not included in getTree()->_preorder, so if the root node
   // is an internal node we need to number it here
-  if (_tree->_is_rooted) {
+  if (tree->isRooted()) {
 
-    _tree->_root->_number = curr_internal;
+    tree->getRoot()->setNumber(curr_internal);
     curr_internal++;
 
   }
 
-  _tree->_ninternals = curr_internal - _tree->_nleaves;
+  tree->setInternals(curr_internal - tree->numLeaves());
 
   // If the tree has polytomies, then there are Node objects stored in
-  // the _tree->_nodes vector that have not yet been numbered. These can
-  // be identified because their _number is currently equal to -1.
+  // the getTree()->_nodes vector that have not yet been numbered. These can
+  // be identified because their _number is invalid.
 
-  assert(_tree->_unused_nodes.empty());
-  for (; curr_internal < _tree->_nodes.size(); curr_internal++) {
+  assert(tree->getUnUsed().empty());
 
-    Node::PtrNode  curr = &_tree->_nodes[curr_internal];
-    putUnusedNode(curr);
+  for (; curr_internal < tree->getConstNodes().size(); curr_internal++) {
 
-    assert(curr->_number == -1);
+    Node::PtrNode  curr = tree->getNode(curr_internal);
+    tree->pushUnused(curr);
 
-    curr->_number = curr_internal;
+    assert(not curr->checkValidNumber());
 
-  }
-
-}
-
-
-bool kpl::TreeManip::canHaveSibling(Node::PtrNode nd, bool rooted, bool allow_polytomies) {
-
-  assert(nd);
-  if (!nd->_parent) {
-    // trying to give root node a sibling
-    return false;
-  }
-
-  if (allow_polytomies) {
-
-    return true;
+    curr->setNumber(curr_internal);
 
   }
-
-  bool nd_can_have_sibling = true;
-  if (nd != nd->_parent->_left_child) {
-    if (nd->_parent->_parent) {
-      // trying to give a sibling to a sibling of nd, and nd's parent is not the root
-      nd_can_have_sibling = false;
-    } else {
-      if (rooted) {
-        // root node has exactly 2 children in rooted trees
-        nd_can_have_sibling = false;
-      } else if (nd != nd->_parent->_left_child->_right_sib) {
-        // trying to give root node more than 3 children
-        nd_can_have_sibling = false;
-      }
-    }
-  }
-
-  return nd_can_have_sibling;
 
 }
 
 
 void kpl::TreeManip::rerootAtNodeNumber(int node_number) {
 
-  // Locate node having _number equal to node_number
-  Node::PtrNode nd = 0;
-  for (auto &curr : _tree->_nodes) {
+  srerootAtNodeNumber(getTree(), node_number);
 
-    if (curr._number == node_number) {
-      nd = &curr;
+}
+
+
+void kpl::TreeManip::srerootAtNodeNumber(Tree::SharedPtr tree, int node_number) {
+
+  // Locate node having _number equal to node_number
+  Node::PtrNode nd = Node::nullNode();
+
+  for (auto curr : tree->getNodes()) {
+
+    if (curr->getNumber() == node_number) {
+
+      nd = curr;
+
       break;
 
     }
@@ -488,16 +373,16 @@ void kpl::TreeManip::rerootAtNodeNumber(int node_number) {
 
   }
 
-  if (nd != _tree->_root) {
+  if (nd != tree->getConstRoot()) {
 
-    if (nd->_left_child) {
+    if (not Node::isNullNode(nd->getLeftChild())) {
 
       throw XStrom(
-          boost::str(boost::format("cannot currently root trees at internal nodes (e.g. node %d)") % nd->_number));
+          boost::str(boost::format("cannot currently root trees at internal nodes (e.g. node %d)") % nd->getNumber()));
 
     }
 
-    rerootAtNode(nd);
+    srerootAtNode(tree, nd);
 
   }
 
@@ -506,69 +391,75 @@ void kpl::TreeManip::rerootAtNodeNumber(int node_number) {
 
 void kpl::TreeManip::rerootAtNode(Node::PtrNode prospective_root) {
 
+  srerootAtNode(getTree(), prospective_root);
+
+}
+
+void kpl::TreeManip::srerootAtNode(Tree::SharedPtr tree, Node::PtrNode prospective_root) {
+
   Node::PtrNode a = prospective_root;
-  Node::PtrNode b = prospective_root->_parent;
-  Node::PtrNode c = 0;
-  Node::PtrNode d = 0;
-  Node::PtrNode p = 0;
-  a->_parent = 0;
+  Node::PtrNode b = prospective_root->getParent();
+  Node::PtrNode c = Node::nullNode();
+  Node::PtrNode d = Node::nullNode();
+  Node::PtrNode p = Node::nullNode();
+  a->setParent(Node::nullNode());
   double tmp_edgelen = 0.0;
   double prev_edgelen = a->getEdgeLength();
 
-  while (b) {
+  while (not Node::isNullNode(b)) {
     // Prune node a from b
-    if (a == b->_left_child) {
+    if (a == b->getLeftChild()) {
 
-      if (a->_right_sib) {
+      if (not Node::isNullNode(a->getRightSib())) {
 
-        b->_left_child = a->_right_sib;
-        a->_right_sib = 0;
+        b->setLeftChild(a->getRightSib());
+        a->setRightSib(Node::nullNode());
 
       } else {
 
-        b->_left_child = 0;
+        b->setLeftChild(Node::nullNode());
 
       }
 
     } else {
 
-      c = b->_left_child;
+      c = b->getLeftChild();
 
-      while (c->_right_sib != a) {
+      while (c->getRightSib() != a) {
 
-        c = c->_right_sib;
+        c = c->getRightSib();
 
       }
 
-      d = a->_right_sib;
-      c->_right_sib = d;
+      d = a->getRightSib();
+      c->setRightSib(d);
 
     }
 
     // Graft node b onto node a (but don't unhook node b from its parent just yet)
-    if (a->_left_child) {
+    if (not Node::isNullNode(a->getRightSib())) {
 
-      c = a->_left_child;
+      c = a->getLeftChild();
 
-      while (c->_right_sib) {
+      while (not Node::isNullNode(c->getRightSib())) {
 
-        c = c->_right_sib;
+        c = c->getRightSib();
 
       }
 
-      c->_right_sib = b;
+      c->setRightSib(b);
 
     } else {
 
-      a->_left_child = b;
+      a->setLeftChild(b);
 
     }
 
     // Rotate
     p = a;
     a = b;
-    b = b->_parent;
-    a->_parent = p;
+    b = b->getParent();
+    a->setParent(p);
 
     // Swap nd's edge length with its new parent's edge length
     tmp_edgelen = a->getEdgeLength();
@@ -576,414 +467,50 @@ void kpl::TreeManip::rerootAtNode(Node::PtrNode prospective_root) {
     prev_edgelen = tmp_edgelen;
   }
   prospective_root->setEdgeLength(0.0);
-  _tree->_root = prospective_root;
-  refreshPreorder();
-  refreshLevelorder();
+  tree->setRoot(prospective_root);
+  srefreshPreorder(tree);
+  srefreshLevelorder(tree);
 
 }
 
 
-void kpl::TreeManip::buildFromNewick(const std::string newick, bool rooted, bool allow_polytomies) {
+void kpl::TreeManip::buildFromNewick(const std::string& newick, bool rooted, bool allow_polytomies) {
 
-  _tree.reset(new Tree());
-  _tree->_is_rooted = rooted;
-
-  std::set<unsigned> used; // used to ensure that no two leaf nodes have the same number
-  unsigned curr_leaf = 0;
-  unsigned num_edge_lengths = 0;
-  unsigned curr_node_index = 0;
-
-  // Remove comments from the supplied newick string
-  std::string commentless_newick = newick;
-  stripOutNexusComments(commentless_newick);
-
-  // Resize the _nodes vector
-  _tree->_nleaves = countNewickLeaves(commentless_newick);
-  if (_tree->_nleaves < 4) {
-
-    throw XStrom("Expecting newick tree description to have at least 4 leaves");
-
-  }
-  unsigned max_nodes = 2 * _tree->_nleaves - (rooted ? 0 : 2);
-  _tree->_nodes.resize(max_nodes);
-  for (auto &nd : _tree->_nodes) {
-
-    nd._number = -1;
-
-  }
-
-  try {
-    // Root node
-    Node::PtrNode nd = &_tree->_nodes[curr_node_index];
-    _tree->_root = nd;
-
-    if (_tree->_is_rooted) {
-      nd = &_tree->_nodes[++curr_node_index];
-      nd->_parent = &_tree->_nodes[curr_node_index - 1];
-      nd->_parent->_left_child = nd;
-    }
-
-    // Some flags to keep track of what we did last
-    enum {
-      Prev_Tok_LParen = 0x01,  // previous token was a left parenthesis ('(')
-      Prev_Tok_RParen = 0x02,  // previous token was a right parenthesis (')')
-      Prev_Tok_Colon = 0x04,  // previous token was a colon (':')
-      Prev_Tok_Comma = 0x08,  // previous token was a comma (',')
-      Prev_Tok_Name = 0x10,  // previous token was a node name (e.g. '2', 'P._articulata')
-      Prev_Tok_EdgeLen = 0x20  // previous token was an edge length (e.g. '0.1', '1.7e-3')
-    };
-    unsigned previous = Prev_Tok_LParen;
-
-    // Some useful flag combinations
-    unsigned LParen_Valid = (Prev_Tok_LParen | Prev_Tok_Comma);
-    unsigned RParen_Valid = (Prev_Tok_RParen | Prev_Tok_Name | Prev_Tok_EdgeLen);
-    unsigned Comma_Valid = (Prev_Tok_RParen | Prev_Tok_Name | Prev_Tok_EdgeLen);
-    unsigned Colon_Valid = (Prev_Tok_RParen | Prev_Tok_Name);
-    unsigned Name_Valid = (Prev_Tok_RParen | Prev_Tok_LParen | Prev_Tok_Comma);
-
-    // Set to true while reading an edge length
-    bool inside_edge_length = false;
-    std::string edge_length_str;
-    unsigned edge_length_position = 0;
-
-    // Set to true while reading a node name surrounded by (single) quotes
-    bool inside_quoted_name = false;
-
-    // Set to true while reading a node name not surrounded by (single) quotes
-    bool inside_unquoted_name = false;
-
-    // Set to start of each node name and used in case of error
-    unsigned node_name_position = 0;
-
-    // loop through the characters in newick, building up tree as we go
-    unsigned position_in_string = 0;
-    for (auto ch : commentless_newick) {
-
-      position_in_string++;
-
-      if (inside_quoted_name) {
-
-        if (ch == '\'') {
-
-          inside_quoted_name = false;
-          node_name_position = 0;
-          if (!nd->_left_child) {
-
-            extractNodeNumberFromName(nd, used);
-            curr_leaf++;
-
-          }
-
-          previous = Prev_Tok_Name;
-
-        } else if (iswspace(ch)) {
-
-          nd->_name += ' ';
-
-        }
-        else {
-
-          nd->_name += ch;
-
-        }
-
-        continue;
-
-      } else if (inside_unquoted_name) {
-
-        if (ch == '(') {
-
-          throw XStrom(boost::str(
-              boost::format("Unexpected left parenthesis inside node name at position %d in tree description") %
-              node_name_position));
-
-        }
-
-        if (iswspace(ch) || ch == ':' || ch == ',' || ch == ')') {
-
-          inside_unquoted_name = false;
-
-          // Expect node name only after a left paren (child's name), a comma (sib's name) or a right paren (parent's name)
-          if (!(previous & Name_Valid)) {
-
-            throw XStrom(boost::str(
-                boost::format("Unexpected node name (%s) at position %d in tree description") % nd->_name %
-                node_name_position));
-
-          }
-
-          if (!nd->_left_child) {
-            extractNodeNumberFromName(nd, used);
-            curr_leaf++;
-          }
-
-          previous = Prev_Tok_Name;
-        } else {
-
-          nd->_name += ch;
-          continue;
-
-        }
-
-      } else if (inside_edge_length) {
-
-        if (ch == ',' || ch == ')' || iswspace(ch)) {
-
-          inside_edge_length = false;
-          edge_length_position = 0;
-          extractEdgeLen(nd, edge_length_str);
-          ++num_edge_lengths;
-          previous = Prev_Tok_EdgeLen;
-
-        } else {
-
-          bool valid = (ch == 'e' || ch == 'E' || ch == '.' || ch == '-' || ch == '+' || isdigit(ch));
-
-          if (!valid) {
-
-            throw XStrom(boost::str(
-                boost::format("Invalid branch length character (%c) at position %d in tree description") % ch %
-                position_in_string));
-
-          }
-          edge_length_str += ch;
-          continue;
-        }
-      }
-
-      if (iswspace(ch)) {
-
-        continue;
-
-      }
-
-      switch (ch) {
-        case ';':
-          break;
-
-        case ')':
-          // If nd is bottommost node, expecting left paren or semicolon, but not right paren
-          if (!nd->_parent) {
-
-            throw XStrom(boost::str(
-                boost::format("Too many right parentheses at position %d in tree description") % position_in_string));
-
-          }
-
-          // Expect right paren only after an edge length, a node name, or another right paren
-          if (!(previous & RParen_Valid)) {
-
-            throw XStrom(boost::str(
-                boost::format("Unexpected right parenthesisat position %d in tree description") % position_in_string));
-
-          }
-
-          // Go down a level
-          nd = nd->_parent;
-          if (!nd->_left_child->_right_sib) {
-
-            throw XStrom(boost::str(
-                boost::format("Internal node has only one child at position %d in tree description") %
-                position_in_string));
-
-          }
-          previous = Prev_Tok_RParen;
-          break;
-
-        case ':':
-          // Expect colon only after a node name or another right paren
-          if (!(previous & Colon_Valid)) {
-
-            throw XStrom(
-                boost::str(boost::format("Unexpected colon at position %d in tree description") % position_in_string));
-
-          }
-          previous = Prev_Tok_Colon;
-          break;
-
-        case ',':
-          // Expect comma only after an edge length, a node name, or a right paren
-          if (!nd->_parent || !(previous & Comma_Valid)) {
-
-            throw XStrom(
-                boost::str(boost::format("Unexpected comma at position %d in tree description") % position_in_string));
-
-          }
-
-          // Check for polytomies
-          if (!canHaveSibling(nd, rooted, allow_polytomies)) {
-
-            throw XStrom(boost::str(
-                boost::format("Polytomy found in the following tree description but polytomies prohibited:\n%s") %
-                newick));
-          }
-
-          // Create the sibling
-          curr_node_index++;
-          if (curr_node_index == _tree->_nodes.size()) {
-
-            throw XStrom(boost::str(
-                boost::format("Too many nodes specified by tree description (%d nodes allocated for %d leaves)") %
-                _tree->_nodes.size() % _tree->_nleaves));
-
-          }
-          nd->_right_sib = &_tree->_nodes[curr_node_index];
-          nd->_right_sib->_parent = nd->_parent;
-          nd = nd->_right_sib;
-          previous = Prev_Tok_Comma;
-          break;
-
-        case '(':
-          // Expect left paren only after a comma or another left paren
-          if (!(previous & LParen_Valid)) {
-
-            throw XStrom(boost::str(boost::format("Not expecting left parenthesis at position %d in tree description") %
-                                    position_in_string));
-
-          }
-
-          // Create new node above and to the left of the current node
-          assert(!nd->_left_child);
-          curr_node_index++;
-          if (curr_node_index == _tree->_nodes.size()) {
-
-            throw XStrom(boost::str(
-                boost::format("malformed tree description (more than %d nodes specified)") % _tree->_nodes.size()));
-
-          }
-          nd->_left_child = &_tree->_nodes[curr_node_index];
-          nd->_left_child->_parent = nd;
-          nd = nd->_left_child;
-          previous = Prev_Tok_LParen;
-          break;
-
-        case '\'':
-          // Encountered an apostrophe, which always indicates the start of a
-          // node name (but note that node names do not have to be quoted)
-
-          // Expect node name only after a left paren (child's name), a comma (sib's name)
-          // or a right paren (parent's name)
-          if (!(previous & Name_Valid)) {
-
-            throw XStrom(boost::str(
-                boost::format("Not expecting node name at position %d in tree description") % position_in_string));
-
-          }
-
-          // Get the rest of the name
-          nd->_name.clear();
-
-          inside_quoted_name = true;
-          node_name_position = position_in_string;
-
-          break;
-
-        default:
-          // Get here if ch is not one of ();:,'
-
-          // Expecting either an edge length or an unquoted node name
-          if (previous == Prev_Tok_Colon) {
-            // Edge length expected (e.g. "235", "0.12345", "1.7e-3")
-            inside_edge_length = true;
-            edge_length_position = position_in_string;
-            edge_length_str = ch;
-
-          } else {
-            // Get the node name
-            nd->_name = ch;
-
-            inside_unquoted_name = true;
-            node_name_position = position_in_string;
-
-          }
-
-      }   // end of switch statement
-
-    }   // loop over characters in newick string
-
-    if (inside_unquoted_name) {
-
-      throw XStrom(boost::str(
-          boost::format("Tree description ended before end of node name starting at position %d was found") %
-          node_name_position));
-
-    }
-    if (inside_edge_length) {
-
-      throw XStrom(boost::str(
-          boost::format("Tree description ended before end of edge length starting at position %d was found") %
-          edge_length_position));
-
-    }
-    if (inside_quoted_name) {
-
-      throw XStrom(boost::str(
-          boost::format("Expecting single quote to mark the end of node name at position %d in tree description") %
-          node_name_position));
-
-    }
-
-    if (!_tree->_is_rooted) {
-      // Root at leaf whose _number = 0
-      rerootAtNodeNumber(0);
-    }
-
-    refreshPreorder();
-    refreshLevelorder();
-    renumberInternals();
-  }
-  catch (XStrom& x) {
-    clear();
-    throw x;
-  }
+  setTree(TreeIO::sbuildFromNewick(newick, rooted, allow_polytomies));
 
 }
 
 
 void kpl::TreeManip::storeSplits(std::set<Split> &splitset) {
+
+  sstoreSplits(getTree(), splitset);
+
+}
+
+void kpl::TreeManip::sstoreSplits(Tree::SharedPtr tree, std::set<Split> &splitset) {
   // Start by clearing and resizing all splits
-  for (auto &nd : _tree->_nodes) {
-    nd._split.resize(_tree->_nleaves);
+  for (auto nd : tree->getNodes()) {
+
+    nd->getSplit().resize(tree->numLeaves());
+
   }
 
   // Now do a postorder traversal and add the bit corresponding
   // to the current node in its parent node's split
-  for (auto nd : boost::adaptors::reverse(_tree->_preorder)) {
-    if (nd->_left_child) {
+  for (auto nd : boost::adaptors::reverse(tree->getConstPreOrder())) {
+    if (nd->getLeftChild()) {
       // add this internal node's split to splitset
-      splitset.insert(nd->_split);
+      splitset.insert(nd->getSplit());
     } else {
       // set bit corresponding to this leaf node's number
-      nd->_split.setBitAt(nd->_number);
+      nd->getSplit().setBitAt(nd->getNumber());
     }
 
-    if (nd->_parent) {
+    if (nd->getParent()) {
       // parent's bits are the union of the bits set in all its children
-      nd->_parent->_split.addSplit(nd->_split);
+      nd->getParent()->getSplit().addSplit(nd->getSplit());
 
     }
-
-  }
-
-}
-
-
-void kpl::TreeManip::selectAll() {
-
-  for (auto & nd : _tree->_nodes) {
-
-    nd.select();
-
-  }
-
-}
-
-
-void kpl::TreeManip::deselectAll() {
-
-  for (auto & nd : _tree->_nodes) {
-
-    nd.deselect();
 
   }
 
@@ -992,9 +519,15 @@ void kpl::TreeManip::deselectAll() {
 
 void kpl::TreeManip::selectAllPartials() {
 
-  for (auto & nd : _tree->_nodes) {
+  sselectAllPartials(getTree());
 
-    nd.selectPartial();
+}
+
+void kpl::TreeManip::sselectAllPartials(Tree::SharedPtr tree) {
+
+  for (auto nd : tree->getNodes()) {
+
+    nd->selectPartial();
 
   }
 
@@ -1003,20 +536,32 @@ void kpl::TreeManip::selectAllPartials() {
 
 void kpl::TreeManip::deselectAllPartials() {
 
-  for (auto & nd : _tree->_nodes) {
+  sdeselectAllPartials(getTree());
 
-    nd.deselectPartial();
+}
+
+void kpl::TreeManip::sdeselectAllPartials(Tree::SharedPtr tree) {
+
+  for (auto nd : tree->getNodes()) {
+
+    nd->deselectPartial();
 
   }
 
 }
 
-
 void kpl::TreeManip::selectAllTMatrices() {
 
-  for (auto & nd : _tree->_nodes) {
+  sselectAllTMatrices(getTree());
 
-    nd.selectTMatrix();
+}
+
+
+void kpl::TreeManip::sselectAllTMatrices(Tree::SharedPtr tree) {
+
+  for (auto nd : tree->getNodes()) {
+
+    nd->selectTMatrix();
 
   }
 
@@ -1025,9 +570,15 @@ void kpl::TreeManip::selectAllTMatrices() {
 
 void kpl::TreeManip::deselectAllTMatrices() {
 
-  for (auto & nd : _tree->_nodes) {
+  sdeselectAllTMatrices(getTree());
 
-    nd.deselectTMatrix();
+}
+
+void kpl::TreeManip::sdeselectAllTMatrices(Tree::SharedPtr tree) {
+
+  for (auto nd : tree->getNodes()) {
+
+    nd->deselectTMatrix();
 
   }
 
@@ -1038,9 +589,9 @@ void kpl::TreeManip::selectPartialsHereToRoot(Node::PtrNode  a) {
 
   a->selectPartial();
 
-  while (a->_parent) {
+  while (a->getParent()) {
 
-    a = a->_parent;
+    a = a->getParent();
     a->selectPartial();
 
   }
@@ -1049,32 +600,40 @@ void kpl::TreeManip::selectPartialsHereToRoot(Node::PtrNode  a) {
 
 
 void kpl::TreeManip::flipPartialsAndTMatrices() {
-  for (auto & nd : _tree->_nodes) {
-    if (nd.isSelPartial()) {
 
-      if (nd.isAltPartial()) {
+  sflipPartialsAndTMatrices(getTree());
 
-        nd.clearAltPartial();
+}
+
+void kpl::TreeManip::sflipPartialsAndTMatrices(Tree::SharedPtr tree) {
+
+  for (auto nd : tree->getNodes()) {
+
+    if (nd->isSelPartial()) {
+
+      if (nd->isAltPartial()) {
+
+        nd->clearAltPartial();
 
       }
       else {
 
-        nd.setAltPartial();
+        nd->setAltPartial();
 
       }
 
     }
 
-    if (nd.isSelTMatrix()) {
+    if (nd->isSelTMatrix()) {
 
-      if (nd.isAltTMatrix()) {
+      if (nd->isAltTMatrix()) {
 
-        nd.clearAltTMatrix();
+        nd->clearAltTMatrix();
 
       }
       else {
 
-        nd.setAltTMatrix();
+        nd->setAltTMatrix();
 
       }
 
@@ -1084,20 +643,26 @@ void kpl::TreeManip::flipPartialsAndTMatrices() {
 
 }
 
-
 void kpl::TreeManip::LargetSimonSwap(Node::PtrNode  a, Node::PtrNode  b) {
+
+  sLargetSimonSwap(getTree(), a, b);
+
+}
+
+
+void kpl::TreeManip::sLargetSimonSwap(Tree::SharedPtr tree, Node::PtrNode  a, Node::PtrNode  b) {
   // a and b are the ends of the selected 3-edge path in a Larget-Simon move
   // The 3-edge path is indicated by parentheses around the nodes involved.
   // x is always the parent of a
   // y can be the parent of b (case 1) or the child of b (case 2)
 
-  Node::PtrNode  x = a->_parent;
+  Node::PtrNode  x = a->getParent();
   assert(x);
 
-  Node::PtrNode  y = x->_parent;
+  Node::PtrNode  y = x->getParent();
   assert(y);
 
-  if (y == b->_parent) {
+  if (y == b->getParent()) {
     // Case 1: y is the parent of b
     //
     //    (a) d  e             (b) d  e
@@ -1113,57 +678,59 @@ void kpl::TreeManip::LargetSimonSwap(Node::PtrNode  a, Node::PtrNode  b) {
     //
 
     // Detach a from tree
-    if (a == x->_left_child) {
+    if (a == x->getLeftChild()) {
 
-      x->_left_child = a->_right_sib;
+      x->setLeftChild(a->getRightSib());
 
     } else {
 
-      Node::PtrNode  child = x->_left_child;
+      Node::PtrNode  child = x->getLeftChild();
 
-      while (child->_right_sib != a) {
+      while (child->getRightSib() != a) {
 
-        child = child->_right_sib;
+        child = child->getRightSib();
 
       }
 
-      child->_right_sib = a->_right_sib;
+      child->setRightSib(a->getRightSib());
 
     }
 
-    a->_parent = 0;
-    a->_right_sib = 0;
+    // Detach a
+    a->setParent(Node::nullNode());
+    a->setRightSib(Node::nullNode());
 
     // Detach b from tree
-    if (b == y->_left_child) {
+    if (b == y->getLeftChild()) {
 
-      y->_left_child = b->_right_sib;
+      y->setLeftChild(b->getRightSib());
 
     } else {
 
-      Node::PtrNode  child = y->_left_child;
+      Node::PtrNode  child = y->getLeftChild();
 
-      while (child->_right_sib != b) {
+      while (child->getRightSib() != b) {
 
-        child = child->_right_sib;
+        child = child->getRightSib();
 
       }
-      child->_right_sib = b->_right_sib;
+      child->setRightSib(b->getRightSib());
 
     }
 
-    b->_parent = 0;
-    b->_right_sib = 0;
+    // Detach b
+    b->setParent(Node::nullNode());
+    b->setRightSib(Node::nullNode());
 
-    // Reattach a to y
-    a->_right_sib = y->_left_child;
-    y->_left_child = a;
-    a->_parent = y;
+    // Reattach a to y as left child
+    a->setRightSib(y->getLeftChild());
+    y->setLeftChild(a);
+    a->setParent(y);
 
-    // Reattach b to x
-    b->_right_sib = x->_left_child;
-    x->_left_child = b;
-    b->_parent = x;
+    // Reattach b to x as left child
+    b->setRightSib(x->getLeftChild());
+    x->setLeftChild(b);
+    b->setParent(x);
 
   }
   else {
@@ -1179,128 +746,86 @@ void kpl::TreeManip::LargetSimonSwap(Node::PtrNode  a, Node::PtrNode  b) {
     //           |                   |
     //           |                   |
     //          (b)                 (b)
-    assert(b == y->_parent);
+    assert(b == y->getParent());
 
-    // Remove x's children from tree and store in xchildren stack
+    // Create a stack of x children excluding a
     std::stack<Node::PtrNode > xchildren;
-    Node::PtrNode  child = x->_left_child;
-    Node::PtrNode  prevchild = 0;
-    while (child) {
+    Node::PtrNode  xchild = x->getLeftChild();
+    while(not Node::isNullNode(xchild)) {
 
-      if (child == a) {
+      if (xchild != a) {
 
-        prevchild = child;
-        child = child->_right_sib;
-
-      } else {
-
-        if (child == x->_left_child) {
-
-          x->_left_child = child->_right_sib;
-          child->_right_sib = 0;
-          child->_parent = 0;
-          xchildren.push(child);
-          child = x->_left_child;
-
-        } else if (child->_right_sib) {
-
-          prevchild->_right_sib = child->_right_sib;
-          child->_right_sib = 0;
-          child->_parent = 0;
-          xchildren.push(child);
-          child = prevchild->_right_sib;
-
-        } else {
-
-          assert(prevchild == a);
-          a->_right_sib = 0;
-          child->_parent = 0;
-          xchildren.push(child);
-          child = 0;
-          prevchild = 0;
-
-        }
+        xchildren.push(xchild);
 
       }
 
+      xchild = xchild->getRightSib();
+
     }
 
-    // Remove y's children from tree and store in ychildren stack
+    // Create a stack of y children excluding x
     std::stack<Node::PtrNode > ychildren;
-    child = y->_left_child;
-    prevchild = 0;
+    Node::PtrNode  ychild = y->getLeftChild();
+    while(not Node::isNullNode(ychild)) {
 
-    while (child) {
+      if (ychild != x) {
 
-      if (child == x) {
-
-        prevchild = child;
-        child = child->_right_sib;
-
-      } else {
-
-        if (child == y->_left_child) {
-
-          y->_left_child = child->_right_sib;
-          child->_right_sib = 0;
-          child->_parent = 0;
-          ychildren.push(child);
-          child = y->_left_child;
-
-        } else if (child->_right_sib) {
-
-          prevchild->_right_sib = child->_right_sib;
-          child->_right_sib = 0;
-          child->_parent = 0;
-          ychildren.push(child);
-          child = prevchild->_right_sib;
-
-        } else {
-
-          assert(prevchild == x);
-          x->_right_sib = 0;
-          child->_parent = 0;
-          ychildren.push(child);
-          child = 0;
-          prevchild = 0;
-
-        }
+        ychildren.push(ychild);
 
       }
 
-    }
-
-    // Reattach xchildren to y
-    while (!xchildren.empty()) {
-
-      Node::PtrNode  popped = xchildren.top();
-      xchildren.pop();
-      popped->_right_sib = y->_left_child;
-      y->_left_child = popped;
-      popped->_parent = y;
+      ychild = ychild->getRightSib();
 
     }
 
-    // Reattach ychildren to x
-    while (!ychildren.empty()) {
+  // Reattach the y children to the right of a
+  x->setLeftChild(a);
+  a->setParent(x);
+  a->setRightSib(Node::nullNode());
+  Node::PtrNode left_child = a;
+  while(not ychildren.empty()) {
 
-      Node::PtrNode  popped = ychildren.top();
-      ychildren.pop();
-      popped->_right_sib = x->_left_child;
-      x->_left_child = popped;
-      popped->_parent = x;
-
-    }
+    Node::PtrNode child = ychildren.top();
+    ychildren.pop();
+    child->setParent(x);
+    child->setRightSib(Node::nullNode());
+    left_child->setRightSib(child);
+    left_child = child;
 
   }
 
-  refreshPreorder();
-  refreshLevelorder();
+    // Reattach the x children as siblings to the right of x
+    x->getParent()->setLeftChild(x);
+    x->setRightSib(Node::nullNode());
+    left_child = x;
+    while(not xchildren.empty()) {
+
+      Node::PtrNode child = xchildren.top();
+      xchildren.pop();
+      child->setParent(x->getParent());
+      child->setRightSib(Node::nullNode());
+      left_child->setRightSib(child);
+      left_child = child;
+
+    }
+
+
+  }
+
+  srefreshPreorder(tree);
+  srefreshLevelorder(tree);
 
 }
 
 
 kpl::Node::PtrNode  kpl::TreeManip::randomInternalEdge(double uniform_deviate) {   ///begin_randomInternalEdge
+
+  return srandomInternalEdge(getTree(), uniform_deviate);
+
+}
+
+kpl::Node::PtrNode  kpl::TreeManip::srandomInternalEdge(Tree::SharedPtr tree, double uniform_deviate) {   ///begin_randomInternalEdge
+
   assert(uniform_deviate >= 0.0);
   assert(uniform_deviate < 1.0);
 
@@ -1325,10 +850,10 @@ kpl::Node::PtrNode  kpl::TreeManip::randomInternalEdge(double uniform_deviate) {
   // Note: _preorder is actually a vector of T *, but is shown here as a
   // vector of integers solely to illustrate the algorithm below
 
-  int num_internal_edges = (unsigned)_tree->_preorder.size() - _tree->_nleaves - (_tree->_is_rooted ? 0 : 1);
+  int num_internal_edges = tree->getConstPreOrder().size() - tree->numLeaves() - (tree->isRooted() ? 0 : 1);
   if (num_internal_edges < 0) {
     // Star tree: return hub node, which is the first node in the preorder sequence
-    return _tree->_preorder[0];
+    return tree->getPreOrder()[0];
   }
 
   // Add one to skip first node in _preorder vector, which is an internal node whose edge
@@ -1336,16 +861,24 @@ kpl::Node::PtrNode  kpl::TreeManip::randomInternalEdge(double uniform_deviate) {
   unsigned index_of_chosen = 1 + (unsigned)std::floor(uniform_deviate*num_internal_edges);
 
   unsigned internal_nodes_visited = 0;
-  Node::PtrNode  chosen_node = 0;
-  for (auto nd : _tree->_preorder) {
-    if (nd->_left_child) {
+  Node::PtrNode  chosen_node = Node::nullNode();
+  for (auto nd : tree->getPreOrder()) {
+
+    if (not Node::isNullNode(nd->getLeftChild())) {
+
       if (internal_nodes_visited == index_of_chosen) {
         chosen_node = nd;
         break;
+
       }
-      else
+      else {
+
         ++internal_nodes_visited;
+
+      }
+
     }
+
   }
   assert(chosen_node);
   return chosen_node;
@@ -1380,7 +913,7 @@ kpl::Node::PtrNode  kpl::TreeManip::randomInternalEdge(double uniform_deviate) {
   // Note: _preorder is actually a vector of T *, but is shown here as a
   // vector of integers solely to illustrate the algorithm below
 
-  unsigned num_internal_edges = (unsigned)_tree->_preorder.size() - _tree->_nleaves - (_tree->_is_rooted ? 0 : 1);
+  unsigned num_internal_edges = (unsigned)getTree()->_preorder.size() - getTree()->_nleaves - (getTree()->_is_rooted ? 0 : 1);
 
   // Add one to skip first node in _preorder vector, which is an internal node whose edge
   // is either a terminal edge (if tree is unrooted) or invalid (if tree is rooted)
@@ -1388,7 +921,7 @@ kpl::Node::PtrNode  kpl::TreeManip::randomInternalEdge(double uniform_deviate) {
 
   unsigned internal_nodes_visited = 0;
   Node::PtrNode  chosen_node = 0;
-  for (auto nd : _tree->_preorder) {
+  for (auto nd : getTree()->_preorder) {
 
     if (nd->_left_child) {
 
@@ -1417,19 +950,30 @@ kpl::Node::PtrNode  kpl::TreeManip::randomInternalEdge(double uniform_deviate) {
 
 unsigned kpl::TreeManip::calcResolutionClass() const {
 
-  return _tree->_ninternals;
+  return scalcResolutionClass(getConstTree());
 
 }
 
+unsigned kpl::TreeManip::scalcResolutionClass(Tree::ConstSharedPtr tree) {
+
+  return tree->numInternals();
+
+}
 
 unsigned kpl::TreeManip::countEdges() const {
 
-  return (unsigned)_tree->_preorder.size();
+  return scountEdges(getConstTree());
+
+}
+
+unsigned kpl::TreeManip::scountEdges(Tree::ConstSharedPtr tree)  {
+
+  return tree->getConstPreOrder().size();
 
 }
 
 
-unsigned kpl::TreeManip::countChildren(Node::PtrNode  nd) const {
+unsigned kpl::TreeManip::countChildren(Node::ConstPtrNode  nd) {
 
   assert(nd);
 
@@ -1451,58 +995,64 @@ unsigned kpl::TreeManip::countChildren(Node::PtrNode  nd) const {
 
 unsigned kpl::TreeManip::countInternals() const {
 
-  unsigned m = 0;
+  return scountInternals(getConstTree()) ;
 
-  for (auto nd : _tree->_preorder) {
+}
 
-    if (nd->_left_child) {
+unsigned kpl::TreeManip::scountInternals(Tree::ConstSharedPtr tree) {
 
-      m++;
+  unsigned internals = 0;
+
+  for (auto nd : tree->getConstPreOrder()) {
+
+    if (not Node::isNullNode(nd->getLeftChild())) {
+
+      internals++;
 
     }
 
   }
 
-  return m;
+  return internals;
 
 }
 
 
-kpl::Node::PtrNode  kpl::TreeManip::findNextPreorder(Node::PtrNode  nd) {
+kpl::Node::PtrNode  kpl::TreeManip::findNextPreorder(Node::ConstPtrNode  node) {
 
-  assert(nd);
+  assert(node);
 
-  Node::PtrNode  next = 0;
+  Node::PtrNode  next = Node::nullNode();
 
-  if (!nd->_left_child && !nd->_right_sib) {
+  if (Node::isNullNode(node->getLeftChild()) && Node::isNullNode(node->getRightSib())) {
     // nd has no children and no siblings, so next preorder is the right sibling of
     // the first ancestral node that has a right sibling.
-    Node::PtrNode  anc = nd->_parent;
-    while (anc && !anc->_right_sib) {
+    Node::PtrNode  ancestor = node->getParent();
+    while (not Node::isNullNode(ancestor) && Node::isNullNode(ancestor->getRightSib())) {
 
-      anc = anc->_parent;
+      ancestor = ancestor->getParent();
 
     }
-    if (anc) {
+    if (not Node::isNullNode(ancestor)) {
       // We found an ancestor with a right sibling
-      next = anc->_right_sib;
+      next = ancestor->getRightSib();
     }
     else {
       // nd is last preorder node in the tree
-      next = 0;
+      next = Node::nullNode();
     }
   }
-  else if (nd->_right_sib && !nd->_left_child) {
+  else if (not Node::isNullNode(node->getRightSib()) && Node::isNullNode(node->getLeftChild())) {
     // nd has no children (it is a tip), but does have a sibling on its right
-    next = nd->_right_sib;
+    next = node->getRightSib();
   }
-  else if (nd->_left_child && !nd->_right_sib) {
+  else if (not Node::isNullNode(node->getLeftChild()) && Node::isNullNode(node->getRightSib())) {
     // nd has children (it is an internal node) but no siblings on its right
-    next = nd->_left_child;
+    next = node->getLeftChild();
   }
   else {
     // nd has both children and siblings on its right
-    next = nd->_left_child;
+    next = node->getLeftChild();
   }
 
   return next;
@@ -1510,16 +1060,16 @@ kpl::Node::PtrNode  kpl::TreeManip::findNextPreorder(Node::PtrNode  nd) {
 }
 
 
-kpl::Node::PtrNode  kpl::TreeManip::findLeftSib(Node::PtrNode  nd) {
+kpl::Node::PtrNode  kpl::TreeManip::findLeftSib(Node::ConstPtrNode  node) {
 
-  assert(nd);
-  assert(nd->_parent);
+  assert(node);
+  assert(node->getParent());
 
-  Node::PtrNode  child = nd->_parent->_left_child;
+  Node::PtrNode  child = node->getParent()->getLeftChild();
 
-  while (child && child->_right_sib != nd) {
+  while (not Node::isNullNode(child) && child->getRightSib() != node) {
 
-    child = child->_right_sib;
+    child = child->getRightSib();
 
   }
 
@@ -1528,7 +1078,7 @@ kpl::Node::PtrNode  kpl::TreeManip::findLeftSib(Node::PtrNode  nd) {
 }
 
 
-kpl::Node::PtrNode  kpl::TreeManip::findRightmostChild(Node::PtrNode  nd) {
+kpl::Node::PtrNode  kpl::TreeManip::findRightmostChild(Node::ConstPtrNode  nd) {
 
   assert(nd);
 
@@ -1552,7 +1102,7 @@ kpl::Node::PtrNode  kpl::TreeManip::findLastPreorderInClade(Node::PtrNode  start
   Node::PtrNode  curr = start;
   Node::PtrNode  rchild = findRightmostChild(curr);
 
-  while (rchild) {
+  while (not Node::isNullNode(rchild)) {
 
     curr = rchild;
     rchild = findRightmostChild(curr);
@@ -1564,99 +1114,121 @@ kpl::Node::PtrNode  kpl::TreeManip::findLastPreorderInClade(Node::PtrNode  start
 }
 
 
-void kpl::TreeManip::insertSubtreeOnLeft(Node::PtrNode  s, Node::PtrNode  u) {
+void kpl::TreeManip::insertSubtreeOnLeft(Node::PtrNode  subtree, Node::PtrNode  parent) {
 
-  assert(u);
-  assert(s);
-  s->_right_sib  = u->_left_child;
-  s->_parent     = u;
-  u->_left_child = s;
+  assert(parent);
+  assert(subtree);
+  subtree->setRightSib(parent->getLeftChild());
+  subtree->setParent(parent);
+  parent->setLeftChild(subtree);
 
 }
 
 
-void kpl::TreeManip::insertSubtreeOnRight(Node::PtrNode  s, Node::PtrNode  u) {
+void kpl::TreeManip::insertSubtreeOnRight(Node::PtrNode  subtree, Node::PtrNode  parent) {
 
-  assert(u);
-  assert(s);
+  assert(parent);
+  assert(subtree);
 
-  s->_right_sib = 0;
-  s->_parent    = u;
+  subtree->setRightSib(Node::nullNode());
+  subtree->setParent(parent);
 
-  if (u->_left_child) {
+  if (not Node::isNullNode(parent->getLeftChild())) {
 
-    Node::PtrNode  u_rchild = findRightmostChild(u);
-    u_rchild->_right_sib = s;
+    Node::PtrNode  u_rchild = findRightmostChild(parent);
+    u_rchild->setRightSib(subtree);
 
   }
   else {
 
-    u->_left_child = s;
+    parent->setLeftChild(subtree);
 
   }
 
 }
 
 
-void kpl::TreeManip::detachSubtree(Node::PtrNode  s) {
+void kpl::TreeManip::detachSubtree(Node::PtrNode  subtree) {
 
-  assert(s);
-  assert(s->_parent);
+  assert(subtree);
+  assert(subtree->_parent);
 
   // Save pointers to relevant nodes
-  Node::PtrNode  s_leftsib  = findLeftSib(s);
-  Node::PtrNode  s_rightsib = s->_right_sib;
-  Node::PtrNode  s_parent   = s->_parent;
+  Node::PtrNode  subtree_leftsib  = findLeftSib(subtree);
+  Node::PtrNode  subtree_rightsib = subtree->getRightSib();
+  Node::PtrNode  subtree_parent   = subtree->getParent();
 
   // Completely detach s and seal up the wound
-  s->_parent = 0;
-  s->_right_sib = 0;
+  subtree->setParent(Node::nullNode());
+  subtree->setRightSib(Node::nullNode());
 
-  if (s_leftsib) {
+  if (not Node::isNullNode(subtree_leftsib)) {
 
-    s_leftsib->_right_sib = s_rightsib;
+    subtree_leftsib->setRightSib(subtree_rightsib);
 
   }
   else {
 
-    s_parent->_left_child = s_rightsib;
+    subtree_parent->setLeftChild(subtree_rightsib);
 
   }
 
 }
-
 
 void kpl::TreeManip::rectifyNumInternals(int incr) {
 
-  assert(_tree->_nodes.size() == _tree->_unused_nodes.size() + _tree->_nleaves + _tree->_ninternals + incr);
-  _tree->_ninternals += incr;
+  srectifyNumInternals(getTree(), incr);
+
+}
+
+void kpl::TreeManip::srectifyNumInternals(Tree::SharedPtr tree, int incr) {
+
+  assert(tree->_nodes.size() == tree->getUnUsed().size() + tree->numLeaves() + tree->numInternals() + incr);
+  tree->setInternals(incr + tree->numInternals());
 
 }
 
 
 void kpl::TreeManip::refreshNavigationPointers() {
 
-  refreshPreorder();
-  refreshLevelorder();
+  srefreshNavigationPointers(getTree());
+
+}
+
+void kpl::TreeManip::srefreshNavigationPointers(Tree::SharedPtr tree) {
+
+  srefreshPreorder(tree);
+  srefreshLevelorder(tree);
 
 }
 
 
 kpl::Node::PtrNode  kpl::TreeManip::getUnusedNode() {
 
-  assert(_tree->_unused_nodes.size() > 0);
-
-  Node::PtrNode  nd = _tree->_unused_nodes.top();
-  _tree->_unused_nodes.pop();
-  nd->clearPointers();
-
-  return nd;
+  return sgetUnusedNode(getTree());
 
 }
 
+kpl::Node::PtrNode  kpl::TreeManip::sgetUnusedNode(Tree::SharedPtr tree) {
 
-void kpl::TreeManip::putUnusedNode(Node::PtrNode  nd) {
+  assert(tree->getUnUsed().size() > 0);
 
-  _tree->_unused_nodes.push(nd);
+  Node::PtrNode  node = tree->getUnUsed().top();
+  tree ->popUnused();
+  node->clearPointers();
+
+  return node;
+
+}
+
+void kpl::TreeManip::putUnusedNode(Node::PtrNode  node) {
+
+  sputUnusedNode(getTree(), node);
+
+}
+
+void kpl::TreeManip::sputUnusedNode(Tree::SharedPtr tree, Node::PtrNode  node) {
+
+  tree->pushUnused(node);
 
 }

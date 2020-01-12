@@ -20,25 +20,6 @@ kpl::Split::Split() {
 
 }
 
-
-kpl::Split::Split(const Split &other) {
-
-  _mask = other._mask;
-  _nleaves = other._nleaves;
-  _bits_per_unit = (CHAR_BIT) * sizeof(Split::split_unit_t);
-  _bits = other._bits;
-  //std::cout << "Constructing a Split by copying an existing split" << std::endl;
-
-}
-
-
-kpl::Split::~Split() {
-
-  //std::cout << "Destroying a Split" << std::endl;
-
-}
-
-
 void kpl::Split::clear() {
 
   for (auto &u : _bits) {
@@ -49,15 +30,6 @@ void kpl::Split::clear() {
 
 }
 
-
-kpl::Split& kpl::Split::operator=(const Split & other) {
-
-  _nleaves = other._nleaves;
-  _bits = other._bits;
-
-  return *this;
-
-}
 
 
 bool kpl::Split::operator==(const Split & other) const {

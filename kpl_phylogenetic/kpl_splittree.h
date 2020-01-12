@@ -21,13 +21,18 @@ class Split {
 
 public:
 
+  using split_unit_t = unsigned long ;
+  using split_t = std::vector<split_unit_t> ;
+  using treeid_t = std::set<Split> ;
+  using treemap_t = std::map<treeid_t, std::vector<unsigned> > ;
+  using split_metrics_t = std::tuple<unsigned, unsigned, unsigned>;
+
   Split();
 
-  Split(const Split &other);
+  Split(const Split &other) = default;
+  ~Split() = default;
 
-  ~Split();
-
-  Split &operator=(const Split &other);
+  Split& operator=(const Split &copy) = default;
 
   bool operator==(const Split &other) const;
 
@@ -37,11 +42,6 @@ public:
 
   void resize(unsigned nleaves);
 
-  typedef unsigned long split_unit_t;
-  typedef std::vector<split_unit_t> split_t;
-  typedef std::set<Split> treeid_t;
-  typedef std::map<treeid_t, std::vector<unsigned> > treemap_t;
-  typedef std::tuple<unsigned, unsigned, unsigned> split_metrics_t;
 
   split_unit_t getBits(unsigned unit_index) const;
 
