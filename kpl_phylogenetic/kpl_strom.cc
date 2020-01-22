@@ -64,7 +64,7 @@ void kpl::Strom::clear() {
 }
 
 
-void kpl::Strom::processCommandLineOptions(int argc, const char * argv[]) {
+void kpl::Strom::parseCommandLine(int argc, const char **argv) {
 
   std::vector<std::string> partition_statefreq;
   std::vector<std::string> partition_rmatrix;
@@ -178,6 +178,9 @@ void kpl::Strom::processCommandLineOptions(int argc, const char * argv[]) {
     _likelihoods.push_back(likelihood);
 
   }
+
+  ExecEnv::createLogger(MODULE_NAME, "kpl.log", 1000, 1000);
+
 
 }
 
@@ -579,7 +582,7 @@ void kpl::Strom::sample(unsigned iteration, Chain & chain) {
 
 
 
-void kpl::Strom::run() {
+void kpl::Strom::executeApp() {
 
   std::cout << "Starting..." << std::endl;
   std::cout << "Current working directory: " << boost::filesystem::current_path() << std::endl;

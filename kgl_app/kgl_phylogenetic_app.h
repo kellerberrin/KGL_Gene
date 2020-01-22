@@ -27,13 +27,13 @@ struct Phylogenetic {
 
 };
 
-// Singleton. The Phylogenetic Runtime environment.
+// The Phylogenetic Runtime environment.
 class PhylogeneticExecEnv {
 
 public:
 
-  PhylogeneticExecEnv()=delete;
-  ~PhylogeneticExecEnv()=delete;
+  PhylogeneticExecEnv()=default;
+  ~PhylogeneticExecEnv()=default;
 
 // The following 4 static members are required for all applications.
   static constexpr const char* VERSION = "0.1";

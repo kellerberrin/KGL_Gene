@@ -62,7 +62,9 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
 
   try {
 
-    Environment::parseCommandLine(argc, argv);  // Setup the static ExecEnv runtime environment and create the logger.
+    Environment environment;
+
+    environment.parseCommandLine(argc, argv);  // Setup the static ExecEnv runtime environment and create the logger.
 
     signal(SIGINT, ctrlC);
 
@@ -70,7 +72,7 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
     log().info("Command Line: {}", commandLine());
 
 
-    Environment::executeApp(); // Run the application.
+    environment.executeApp(); // Run the application.
 
     double Clock, System, User;
     Utility::getElapsedTime(Clock, System, User);

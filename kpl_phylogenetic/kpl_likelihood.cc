@@ -1066,7 +1066,7 @@ double kpl::Likelihood::calcLogLikelihood(Tree::SharedPtr t) {
   }
 
   // Assuming "root" is leaf 0
-  assert(t->_root->_number == 0 && t->_root->_left_child == t->_preorder[0] && !t->_preorder[0]->_right_sib);
+  assert(t->getRoot()->getNumber() == 0 && t->getRoot()->getLeftChild() == t->getPreOrder()[0] && Node::isNullNode(t->getPreOrder()[0]->getRightSib()));
 
   setModelRateMatrix();
   setAmongSiteRateHeterogenetity();

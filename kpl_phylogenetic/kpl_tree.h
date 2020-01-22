@@ -16,10 +16,10 @@ namespace phylogenetic {   // project level namespace
 
 
 
-
 class Tree {
 
 public:
+
 
   using SharedPtr = std::shared_ptr<Tree> ;
   using ConstSharedPtr = std::shared_ptr<const Tree> ;
@@ -40,6 +40,7 @@ public:
   [[nodiscard]] const std::stack<Node::PtrNode >& getUnUsed() const { return _unused_nodes; }
   [[nodiscard]] Node::ConstPtrNode getConstNode(size_t node_index) const;
   [[nodiscard]] Node::ConstPtrNode getConstRoot() const { return _root; }
+  [[nodiscard]] std::string treeDescription() const;
 // Modify
   [[nodiscard]] Node::PtrNode getNode(size_t node_index);    // Only used in TreeManip.
   [[nodiscard]] Node::PtrNode getRoot() { return _root; }
@@ -54,6 +55,7 @@ public:
   void setRoot(Node::PtrNode root) { _root = root; } // Only used in TreeManip.
   void setLeaves(unsigned leaves) { _nleaves = leaves; } // Only used in TreeManip.
   void setInternals(unsigned internals) { _ninternals = internals; } // Only used in TreeManip.
+
 
 private:
 

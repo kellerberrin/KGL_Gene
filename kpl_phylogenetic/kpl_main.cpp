@@ -4,15 +4,14 @@
 
 #include <iostream>
 
-#include <iostream>
-#include "kpl_node.h"
-#include "kpl_tree.h"
-#include "kpl_treemanip.h"
-#include "kpl_treesummary.h"
+#include "kgl_exec_env.h"
 #include "kpl_strom.h"
 
 
 namespace kpl = kellerberrin::phylogenetic;
+
+#define EXECENV 1
+#ifndef EXECENV
 
 
 int main(int argc, const char * argv[]) {
@@ -22,8 +21,8 @@ int main(int argc, const char * argv[]) {
 
   try {
 
-    strom.processCommandLineOptions(argc, argv);
-    strom.run();
+    strom.parseCommandLine(argc, argv);
+    strom.executeApp();
 
   }
   catch(std::exception & x) {
@@ -43,3 +42,15 @@ int main(int argc, const char * argv[]) {
 }
 
 
+#else
+
+/// The mainline.
+int main(int argc, char const ** argv)
+{
+
+  return kpl::ExecEnv::runApplication<kpl::Strom>(argc, argv);
+
+}
+
+
+#endif

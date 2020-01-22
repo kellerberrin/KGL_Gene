@@ -204,7 +204,7 @@ void kpl::TreeManip::srefreshPreorder(Tree::SharedPtr tree) {
   Node::PtrNode first_preorder = tree->getConstRoot()->getLeftChild();
 
   // sanity check: first preorder node should be the only child of the root node
-  assert(first_preorder->_right_sib == 0);
+  assert(Node::isNullNode(first_preorder->getRightSib()));
 
   Node::PtrNode nd = first_preorder;
   tree->pushPreOrder(nd);
@@ -252,7 +252,7 @@ void kpl::TreeManip::srefreshLevelorder(Tree::SharedPtr tree) {
   Node::PtrNode nd = tree->getConstRoot()->getLeftChild();
 
   // sanity check: first node should be the only child of the root node
-  assert(nd->_right_sib == 0);
+  assert(Node::isNullNode(nd->getRightSib()));
 
   // Push nd onto back of queue
   q.push(nd);
@@ -295,7 +295,7 @@ void kpl::TreeManip::renumberInternals() {
 
 void kpl::TreeManip::srenumberInternals(Tree::SharedPtr tree) {
 
-  assert(getTree()->getConstPreOrder().size() > 0);
+  assert(tree->getConstPreOrder().size() > 0);
 
   // Renumber internal nodes in postorder sequence
   unsigned  curr_internal = tree->numLeaves();
@@ -476,7 +476,7 @@ void kpl::TreeManip::srerootAtNode(Tree::SharedPtr tree, Node::PtrNode prospecti
 
 void kpl::TreeManip::buildFromNewick(const std::string& newick, bool rooted, bool allow_polytomies) {
 
-  setTree(TreeIO::sbuildFromNewick(newick, rooted, allow_polytomies));
+  setTree(TreeIO::buildFromNewick(newick, rooted, allow_polytomies));
 
 }
 
@@ -1151,7 +1151,7 @@ void kpl::TreeManip::insertSubtreeOnRight(Node::PtrNode  subtree, Node::PtrNode 
 void kpl::TreeManip::detachSubtree(Node::PtrNode  subtree) {
 
   assert(subtree);
-  assert(subtree->_parent);
+  assert(not Node::isNullNode(subtree->getParent()));
 
   // Save pointers to relevant nodes
   Node::PtrNode  subtree_leftsib  = findLeftSib(subtree);
@@ -1183,7 +1183,7 @@ void kpl::TreeManip::rectifyNumInternals(int incr) {
 
 void kpl::TreeManip::srectifyNumInternals(Tree::SharedPtr tree, int incr) {
 
-  assert(tree->_nodes.size() == tree->getUnUsed().size() + tree->numLeaves() + tree->numInternals() + incr);
+  assert(tree->getConstNodes().size() == tree->getUnUsed().size() + tree->numLeaves() + tree->numInternals() + incr);
   tree->setInternals(incr + tree->numInternals());
 
 }

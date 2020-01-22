@@ -32,7 +32,7 @@ namespace kgd = kellerberrin::deconvolv;
 int main(int argc, char const ** argv)
 {
 
-    return kgd::ExecEnv::runApplication<kgd::ExecEnv>(argc, argv);
+    return kgd::DeconvolvApp::runApplication<kgd::Deconvolv>(argc, argv);
 
 }
 

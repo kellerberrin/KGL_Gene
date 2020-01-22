@@ -138,7 +138,7 @@ void kgd::VariantIndex::IndexOfChromStarts() {
 
     indexOfChromStarts_.push_back(chrom_start);
 
-    ExecEnv::log().info("IndexOfChromStarts(); Chrom: {}, positions: {}, chrom_start: {}", tmpChrom, position_[tmpChrom].size(), chrom_start);
+    DeconvolvApp::log().info("IndexOfChromStarts(); Chrom: {}, positions: {}, chrom_start: {}", tmpChrom, position_[tmpChrom].size(), chrom_start);
 
   }
 

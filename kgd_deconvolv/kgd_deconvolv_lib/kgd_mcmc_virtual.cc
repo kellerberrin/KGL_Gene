@@ -33,7 +33,7 @@ void kgd::MCMCVIRTUAL::runMcmcChain(bool showProgress) {
 
     if (currentMcmcIteration_ % 100 == 0 && showProgress) {
 
-      ExecEnv::log().info("MCMC iteration: {}/{}, completed: {}%", currentMcmcIteration_, maxIteration_, int(currentMcmcIteration_ * 100 / maxIteration_));
+      DeconvolvApp::log().info("MCMC iteration: {}/{}, completed: {}%", currentMcmcIteration_, maxIteration_, int(currentMcmcIteration_ * 100 / maxIteration_));
 
     }
 
@@ -52,7 +52,7 @@ void kgd::MCMCVIRTUAL::runMcmcChain(bool showProgress) {
 
   computeDiagnostics();
 
-  ExecEnv::log().info("#### MCMC RUN finished ####");
+  DeconvolvApp::log().info("#### MCMC RUN finished ####");
 
 }
 

@@ -82,7 +82,7 @@ void kgd::DEploidIO::writeRecombProb(std::shared_ptr<Panel> panel) {
 
 void kgd::DEploidIO::writeLog(std::ostream *writeTo) {
 
-  size_t nHash = 30 + std::string(ExecEnv::VERSION).size();
+  size_t nHash = 30 + std::string(Deconvolv::VERSION).size();
 
   for (size_t i = 0; i < nHash; i++) {
 
@@ -91,7 +91,7 @@ void kgd::DEploidIO::writeLog(std::ostream *writeTo) {
   }
 
   (*writeTo) << "\n";
-  (*writeTo) << "#        kgd_deconvolv " << std::setw(10) << ExecEnv::VERSION << " log        #\n";
+  (*writeTo) << "#        kgd_deconvolv " << std::setw(10) << Deconvolv::VERSION << " log        #\n";
 
   for (size_t i = 0; i < nHash; i++) {
 

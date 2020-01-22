@@ -15,12 +15,14 @@
 namespace kellerberrin {   //  organization level namespace
 namespace phylogenetic {   // project level namespace
 
-
+class TreeIO;
 
 class Node {
 
 
 public:
+
+  friend TreeIO;
 
   using PtrNode = Node*;
   using ConstPtrNode = Node const *;
@@ -47,6 +49,7 @@ public:
   [[nodiscard]] static double smallestEdgeLength() { return _SMALLEST_EDGE_LENGTH; }
   [[nodiscard]] static PtrNode nullNode() { return nullptr; }
   [[nodiscard]] static bool isNullNode(ConstPtrNode node) { return node == nullNode(); }
+  [[nodiscard]] static std::string printNode(Node::ConstPtrNode Node);
   // Modify
 
   [[nodiscard]] Split& getSplit() { return _split; }

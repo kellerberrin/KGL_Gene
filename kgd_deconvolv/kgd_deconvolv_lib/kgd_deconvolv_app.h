@@ -49,24 +49,29 @@ struct DeconvolvArgs {
 
 };
 
+using DeconvolvApp = kellerberrin::genome::ExecEnv;
+
 // Static Singleton. The kgd_deconvolv Runtime environment.
-class ExecEnv : public kellerberrin::genome::ExecEnv {
+//class DeconvolvApp : public kellerberrin::genome::ExecEnv {
+class Deconvolv  {
+
 
 public:
 
-  ExecEnv()=delete;
-  ~ExecEnv()=delete;
+  Deconvolv()=default;
+  ~Deconvolv()=default;
 
 // The following static members are required for all applications.
+  static void executeApp(); // Application mainline.
+  static bool parseCommandLine(int argc, char const ** argv);  // Parse command line arguments.
   static constexpr const char* VERSION = "0.1";
   static constexpr const char* MODULE_NAME = "kgd_deconvolv";
-  static void executeApp(); // Application mainline.
-  static void executeLib(const MixtureDataObj& mixture_data); // Application mainline.
-  static bool parseCommandLine(int argc, char const ** argv);  // Parse command line arguments.
-
   static const DeconvolvArgs& getArgs();
+  static void executeLib(const MixtureDataObj& mixture_data); // Application mainline.
+
 
 private:
+
 
   static DeconvolvArgs args_;
 

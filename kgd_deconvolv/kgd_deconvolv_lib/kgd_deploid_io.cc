@@ -75,7 +75,7 @@ void kgd::DEploidIO::init() {
 
   prefix_ = "kgd_deconvolv";
   compileTime_ = "";
-  dEploidGitVersion_ = ExecEnv::VERSION;
+  dEploidGitVersion_ = Deconvolv::VERSION;
 
 }
 
@@ -262,7 +262,7 @@ void kgd::DEploidIO::removeFilesWithSameName() {
 
 void kgd::DEploidIO::parse() {
 
-  const kgd::DeconvolvArgs &args = ExecEnv::getArgs();
+  const kgd::DeconvolvArgs &args = Deconvolv::getArgs();
 
   if (args.vcfFile!= kgd::DeconvolvArgs::NOT_SPECIFIED) {  // -vcfOut
 
@@ -279,7 +279,7 @@ void kgd::DEploidIO::parse() {
 
     } else {
 
-      ExecEnv::log().warn("No VCF '-vcf' or ALT and REF files '-ref', '-alt' specified. Assuming direct call.");
+      DeconvolvApp::log().warn("No VCF '-vcf' or ALT and REF files '-ref', '-alt' specified. Assuming direct call.");
 
     }
 
@@ -427,11 +427,11 @@ void kgd::DEploidIO::computeLLKfromInitialHap() {
 
 void kgd::DEploidIO::chromPainting() {
 
-  ExecEnv::log().info("Painting haplotypes in :{}", initialHapFileName_);
+  DeconvolvApp::log().info("Painting haplotypes in :{}", initialHapFileName_);
 
   if (initialPropWasGiven() == false) {
 
-    ExecEnv::log().info("Initial proportion was not specified. Set even proportions");
+    DeconvolvApp::log().info("Initial proportion was not specified. Set even proportions");
 
     double evenProp = 1.0 / (double) kStrain();
 
@@ -484,7 +484,7 @@ void kgd::DEploidIO::chromPainting() {
       size_t start = getMixtureData().indexOfChromStarts()[chromi];
       size_t length = getMixtureData().getPosition()[chromi].size();
 
-      ExecEnv::log().info("Painting Chrom: {} from site: {} to: {}", chromi, start, start + length);
+      DeconvolvApp::log().info("Painting Chrom: {} from site: {} to: {}", chromi, start, start + length);
 
       UpdateSingleHap updatingSingle(start,
                                      length,

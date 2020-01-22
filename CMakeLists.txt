@@ -42,9 +42,9 @@ set(CMAKE_EXE_LINKER_FLAGS_PROFILE "-pg -g -ggdb -O3 -DBOOST_MATH_DISABLE_FLOAT1
 set(CMAKE_ERROR_WARNING_FLAGS "-std=c++17 -Wall -pthread -Wextra -Wpedantic -Wstrict-aliasing -Wno-variadic-macros")
 
 # Actually set the g++ flags.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_RELEASE}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_RELEASE}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_DEBUG}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_DEBUG}")
 
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../..)
@@ -409,7 +409,9 @@ set(KPL_LIBRARY_SOURCE_FILES
         kpl_phylogenetic/kpl_mcmc_polytomyupdater.cc
         kpl_phylogenetic/kpl_mcmc_polytomyupdater.h
         kpl_phylogenetic/kpl_mcmc_polytomyprior.cc
-        kpl_phylogenetic/kpl_mcmc_polytomyprior.h kpl_phylogenetic/kpl_tree_io.cc kpl_phylogenetic/kpl_tree_io.h)
+        kpl_phylogenetic/kpl_mcmc_polytomyprior.h
+        kpl_phylogenetic/kpl_tree_io.cc
+        kpl_phylogenetic/kpl_tree_io.h)
 
 link_directories(/usr/local/lib)
 
@@ -423,7 +425,7 @@ link_directories(/usr/local/lib/beagle/lib)
 add_executable (kpl kpl_phylogenetic/kpl_main.cpp ${KPL_LIBRARY_SOURCE_FILES})
 
 #specify link libraries.
-target_link_libraries(kpl libncl.a libboost_program_options.a libboost_filesystem.a libboost_system.a hmsbeagle)
+target_link_libraries(kpl kgl_genome_lib libncl.a libboost_program_options.a libboost_filesystem.a libboost_system.a hmsbeagle)
 
 ## DOXYGEN
 #set(BUILD_KGL_KGD_DOC ON CACHE BOOL "Use Doxygen to create the HTML/Latex based API documentation")

@@ -5,6 +5,7 @@
 #ifndef KPL_STROM_H
 #define KPL_STROM_H
 
+#include "kgl_exec_env.h"
 
 #include "kpl_geneticdata.h"
 #include "kpl_treesummary.h"
@@ -26,6 +27,7 @@ namespace kellerberrin {   //  organization level namespace
 namespace phylogenetic {   // project level namespace
 
 
+using ExecEnv = kellerberrin::genome::ExecEnv;
 
 class Strom {
 
@@ -33,11 +35,15 @@ public:
   Strom();
   ~Strom();
 
-  void                                    clear();
-  void                                    processCommandLineOptions(int argc, const char * argv[]);
-  void                                    run();
+  void                                    parseCommandLine(int argc, const char **argv);
+  void                                    executeApp();
+
+  static constexpr const char* VERSION = "0.1";
+  static constexpr const char* MODULE_NAME = "kpl_phyloTree";
 
 private:
+
+  void                                    clear();
   bool                                    processAssignmentString(Model::SharedPtr m, const std::string & which, const std::string & definition);
   void                                    handleAssignmentStrings(Model::SharedPtr m, const boost::program_options::variables_map & vm, std::string label, const std::vector<std::string> & definitions, std::string default_definition);
   bool                                    splitAssignmentString(const std::string & definition, std::vector<std::string> & vector_of_subset_names, std::vector<double>  & vector_of_values);

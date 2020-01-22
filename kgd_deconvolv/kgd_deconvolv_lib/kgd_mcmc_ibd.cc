@@ -31,7 +31,7 @@ kgd::MCMCIBD::MCMCIBD(std::shared_ptr<DEploidIO> dEploidIO,
 void kgd::MCMCIBD::initializeMcmcChain() {
   // Initialization
 
-  ExecEnv::log().info("############ initializeMcmcChain() ###########");
+  DeconvolvApp::log().info("############ initializeMcmcChain() ###########");
 
   initializeHap();
   initializeExpectedWsaf(titre_proportions_.Proportions()); // This requires currentHap_ and currentProp_
@@ -75,7 +75,7 @@ void kgd::MCMCIBD::finalizeMcmc() {
   }
 
 //  ExecEnv::log().info("Proportion update acceptance rate: {}", acceptCount() / (kStrain() * 1.0 * total_MCMC_iterations()));
-  ExecEnv::log().info("Proportion update acceptance rate: {}", acceptCount() / ( 1.0 * total_MCMC_iterations()));
+  DeconvolvApp::log().info("Proportion update acceptance rate: {}", acceptCount() / (1.0 * total_MCMC_iterations()));
 
   dEploidIO_->setInitialProp(averageProportion(mcmcSample_->getProportion()));
   dEploidIO_->setInitialPropWasGiven(true);
@@ -133,7 +133,7 @@ void kgd::MCMCIBD::ibdInitializeEssentials(double err) {
 
   }
 
-  ExecEnv::log().info("LLK of data = {}", Utility::sumOfVec(llkOfData));
+  DeconvolvApp::log().info("LLK of data = {}", Utility::sumOfVec(llkOfData));
 
 }
 
@@ -350,8 +350,8 @@ void kgd::MCMCIBD::recordMcmcMachinery() {
   mcmcSample_->addSumLLKs(sumLLKS);
   mcmcSample_->addMove(eventType());
 
-  ExecEnv::log().info("Iterations: {}, Proportions: {} Sum Log Likelihoods: {}",
-                      current_MCMC_iteration(), titre_proportions_.proportionsText(), sumLLKS);
+  DeconvolvApp::log().info("Iterations: {}, Proportions: {} Sum Log Likelihoods: {}",
+                           current_MCMC_iteration(), titre_proportions_.proportionsText(), sumLLKS);
 
   // Accumulate expectedWSAF for computing the mean expectedWSAF
   for (size_t i = 0; i < cumExpectedWsaf_.size(); ++i) {

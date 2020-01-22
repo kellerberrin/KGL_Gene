@@ -3,6 +3,7 @@
 //
 
 #include "kpl_mcmc_treeupdater.h"
+#include "kpl_strom.h"
 
 
 namespace kpl = kellerberrin::phylogenetic;
@@ -138,6 +139,16 @@ void kpl::TreeUpdater::proposeNewState() {
 
   _case = 0;
   _topology_changed = false;
+
+//  ExecEnv::log().info("TreeUpdater::proposeNewState() {}", treeManipulator()->getTree()->treeDescription());
+//  if (treeManipulator()->getTree()->isRooted()) {
+
+//    ExecEnv::log().info("TreeUpdater::proposeNewState() Tree is unrooted");
+//    treeManipulator()->getTree()->setRoot(Node::nullNode());
+//    ExecEnv::log().info("TreeUpdater::proposeNewState() {}", treeManipulator()->getTree()->treeDescription());
+
+//  }
+
   assert(!treeManipulator()->getTree()->isRooted());
 
   // Choose random internal node x that is not the root and has parent y that is also not the root.

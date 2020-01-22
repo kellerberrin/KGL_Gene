@@ -26,7 +26,7 @@ public:
 
   [[nodiscard]] static Tree::SharedPtr sbuildFromNewick(const std::string& newick, bool rooted, bool allow_polytomies);
   [[nodiscard]] static std::string smakeNewick(Tree::ConstSharedPtr tree, unsigned precision);
-
+  [[nodiscard]] static Tree::SharedPtr buildFromNewick(const std::string& newick, bool rooted, bool allow_polytomies);
 
 private:
 

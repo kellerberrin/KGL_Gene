@@ -118,10 +118,10 @@ std::vector<double> kgd::MCMCBASE::calcExpectedWsaf(const std::vector<double> &p
 
       if (expectedWsaf_i > 1.000001) {
 
-        ExecEnv::log().error("calcExpectedWsaf(); Invalid expectedWsaf_i: {}, currentHap_ offset: {}", expectedWsaf_i, hap_offset);
+        DeconvolvApp::log().error("calcExpectedWsaf(); Invalid expectedWsaf_i: {}, currentHap_ offset: {}", expectedWsaf_i, hap_offset);
         for (size_t k = 0; k < kStrain(); ++k) {
 
-          ExecEnv::log().error("calcExpectedWsaf(); strain k: {},  currentHap_[{}][k]: {}, proportion k: {}", k, hap_offset, allele_site[k], proportion[k]);
+          DeconvolvApp::log().error("calcExpectedWsaf(); strain k: {},  currentHap_[{}][k]: {}, proportion k: {}", k, hap_offset, allele_site[k], proportion[k]);
 
         }
 
@@ -153,8 +153,8 @@ void kgd::MCMCBASE::computeDiagnostics() {
 
       if (error_once) {
 
-        ExecEnv::log().error("computeDiagnostics(); mean_expected_wsaf[{}] : {} > 1.0, sample_count: {}", i, mean_expected_wsaf, recordCount());
-        ExecEnv::log().error("computeDiagnostics(); further errors suppressed");
+        DeconvolvApp::log().error("computeDiagnostics(); mean_expected_wsaf[{}] : {} > 1.0, sample_count: {}", i, mean_expected_wsaf, recordCount());
+        DeconvolvApp::log().error("computeDiagnostics(); further errors suppressed");
         error_once = false;
       }
 

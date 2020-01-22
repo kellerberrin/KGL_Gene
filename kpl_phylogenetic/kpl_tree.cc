@@ -7,6 +7,7 @@
 
 #include <boost/format.hpp>
 
+#include <sstream>
 
 namespace kpl = kellerberrin::phylogenetic;
 
@@ -119,3 +120,43 @@ unsigned kpl::Tree::numNodes() const {
   return (unsigned) _nodes.size();
 
 }
+
+
+std::string kpl::Tree::treeDescription() const {
+
+  std::stringstream ss;
+
+  ss << "\n****************\n";
+  ss << "Is Rooted:" << (isRooted() ? "ROOTED" : "NotRooted") << '\n';
+  if (isRooted()) {
+
+    ss << "Rooted Node:" << Node::printNode(getConstRoot()) << '\n';
+
+  }
+  ss << "Tree Node Count:" << getConstNodes().size() << '\n';
+  for (auto node : getConstNodes()) {
+
+    ss << Node::printNode( node) << '\n';
+
+  }
+  ss << "Leaves Count:" << numLeaves() << '\n';
+  ss << "Internal Nodes Count:" << numInternals() << '\n';
+  ss << "Unused Nodes Count:" << getUnUsed().size() << '\n';
+  ss << "Preorder Nodes Count:" << getConstPreOrder().size() << '\n';
+  for (auto node : getConstPreOrder()) {
+
+//    ss << static_cast<const void *>(node) << '\n';
+
+  }
+  ss << "Level Nodes Count:" << getConstLevelOrder().size() << '\n';
+  for (auto node : getConstLevelOrder()) {
+
+//    ss << static_cast<const void *>(node) << '\n';
+
+  }
+  ss << "****************\n" << std::endl;
+
+  return ss.str();
+
+}
+

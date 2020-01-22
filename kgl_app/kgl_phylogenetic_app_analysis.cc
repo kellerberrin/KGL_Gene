@@ -234,7 +234,7 @@ void kgl::PhylogeneticAnalysis::performMix() {
     const size_t maximum_offset_base_count = 150;
     kgd::MixtureDataObj mixture_data = classifier.convertToMixture(genome, minimum_offset_base_count,
                                                                    maximum_offset_base_count);
-    kgd::ExecEnv::executeLib(mixture_data);
+    kgd::Deconvolv::executeLib(mixture_data);
 
   }
 

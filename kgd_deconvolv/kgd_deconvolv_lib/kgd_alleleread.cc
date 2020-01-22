@@ -25,7 +25,7 @@ bool kgd::AlleleReader::parseFile(const std::string& file_name, const std::strin
 
   if (not data_file.good()) {
 
-    ExecEnv::log().critical("AlleleReader; I/O error; could not open data file: {}", file_name);
+    DeconvolvApp::log().critical("AlleleReader; I/O error; could not open data file: {}", file_name);
 
   }
 
@@ -64,7 +64,7 @@ bool kgd::AlleleReader::parseFile(const std::string& file_name, const std::strin
 
         if (not parseHeaderLine(text_fields)) {
 
-          ExecEnv::log().error("AlleleReader, Problem parsing header, file: {}, line record: {}", file_name, record_str);
+          DeconvolvApp::log().error("AlleleReader, Problem parsing header, file: {}, line record: {}", file_name, record_str);
 
         }
 
@@ -74,7 +74,7 @@ bool kgd::AlleleReader::parseFile(const std::string& file_name, const std::strin
 
         if (not parseDataLine(text_fields)) {
 
-          ExecEnv::log().error("AlleleReader, Problem parsing data line, file: {}, line record: {}", file_name, record_str);
+          DeconvolvApp::log().error("AlleleReader, Problem parsing data line, file: {}, line record: {}", file_name, record_str);
 
         }
 
@@ -89,11 +89,11 @@ bool kgd::AlleleReader::parseFile(const std::string& file_name, const std::strin
   }
   catch (std::exception const &e) {
 
-    ExecEnv::log().critical("AlleleReader, File: {}, unexpected I/O exception: {}", file_name, e.what());
+    DeconvolvApp::log().critical("AlleleReader, File: {}, unexpected I/O exception: {}", file_name, e.what());
 
   }
 
-  ExecEnv::log().info("AlleleReader, Parsed: {} lines from file: {}", counter, file_name);
+  DeconvolvApp::log().info("AlleleReader, Parsed: {} lines from file: {}", counter, file_name);
 
   return true;
 
@@ -107,7 +107,7 @@ bool kgd::AlleleReader::parseHeaderLine(const std::vector<std::string>& text_fie
 
   if (text_fields.size() < MINIMUM_FIELD_COUNT_) {
 
-    ExecEnv::log().error("AlleleReader, Header items below minimum count: {} (#chrom, offset, value", MINIMUM_FIELD_COUNT_);
+    DeconvolvApp::log().error("AlleleReader, Header items below minimum count: {} (#chrom, offset, value", MINIMUM_FIELD_COUNT_);
     result = false;
 
   } else {
@@ -137,7 +137,7 @@ bool kgd::AlleleReader::parseDataLine(const std::vector<std::string>& text_field
 
   if (text_fields.size() != headers_.size()) {
 
-    ExecEnv::log().error("AlleleReader, Mismatch between header size: {} and data line size: {}", headers_.size(), text_fields.size());
+    DeconvolvApp::log().error("AlleleReader, Mismatch between header size: {} and data line size: {}", headers_.size(), text_fields.size());
     return false;
 
   }
@@ -162,8 +162,8 @@ bool kgd::AlleleReader::parseDataLine(const std::vector<std::string>& text_field
 
       if (array_offset >= genome_allele_vector_.size()) {
 
-        ExecEnv::log().error("AlleleReader, Mismatch between data line size: {} and genome array size: {}",
-                             text_fields.size(), genome_allele_vector_.size());
+        DeconvolvApp::log().error("AlleleReader, Mismatch between data line size: {} and genome array size: {}",
+                                  text_fields.size(), genome_allele_vector_.size());
         return false;
 
       }
@@ -179,7 +179,7 @@ bool kgd::AlleleReader::parseDataLine(const std::vector<std::string>& text_field
   }
   catch (std::exception const &e) {
 
-    ExecEnv::log().error("AlleleReader, Conversion problem: {}", e.what());
+    DeconvolvApp::log().error("AlleleReader, Conversion problem: {}", e.what());
     result = false;
 
   }

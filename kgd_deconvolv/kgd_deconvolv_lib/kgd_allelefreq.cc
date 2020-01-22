@@ -22,7 +22,7 @@ kgd::ContigAlleles& kgd::GenomeAlleles::getCreateContigAllele(const ContigId_t& 
   if (not insert_result.second) {
 
     // Something very wrong with memory alloc.
-    ExecEnv::log().critical("GenomeAlleles.getCreateContigAllele(); could not add ContigAlleles:{}", contig_id);
+    DeconvolvApp::log().critical("GenomeAlleles.getCreateContigAllele(); could not add ContigAlleles:{}", contig_id);
 
   }
 

@@ -27,8 +27,8 @@ kgd::MCMCTITRE::MCMCTITRE(size_t k_strains,
 
   randomizeTitre();
 
-  ExecEnv::log().info("Titre initialization values: {}", titreText());
-  ExecEnv::log().info("Proportion initialization values: {}", proportionsText());
+  DeconvolvApp::log().info("Titre initialization values: {}", titreText());
+  DeconvolvApp::log().info("Proportion initialization values: {}", proportionsText());
 
 }
 
@@ -76,7 +76,7 @@ void kgd::MCMCTITRE::proportion2Titre(const std::vector<double>& proportions) {
 
   proportions_ = proportions;
 
-  ExecEnv::log().info("Proportions updated to values: {}", proportionsText());
+  DeconvolvApp::log().info("Proportions updated to values: {}", proportionsText());
 
 }
 
@@ -102,7 +102,7 @@ void kgd::MCMCTITRE::updateTitreIndex(size_t index) {
 
   if (index >= kStrain()) {
 
-    ExecEnv::log().critical("MCMCTITRE::updateTitreIndex(); Invalid Index: {} for titre size: {}", index, currentTitre_.size());
+    DeconvolvApp::log().critical("MCMCTITRE::updateTitreIndex(); Invalid Index: {} for titre size: {}", index, currentTitre_.size());
 
   }
 
@@ -134,7 +134,7 @@ double kgd::MCMCTITRE::calcPriorTitreIndex(size_t index) const {
 
   if (index >= kStrain()) {
 
-    ExecEnv::log().critical("MCMCTITRE::calcLogPriorTitreIndex(); Invalid Index: {} for titre size: {}", index, currentTitre_.size());
+    DeconvolvApp::log().critical("MCMCTITRE::calcLogPriorTitreIndex(); Invalid Index: {} for titre size: {}", index, currentTitre_.size());
 
   }
 

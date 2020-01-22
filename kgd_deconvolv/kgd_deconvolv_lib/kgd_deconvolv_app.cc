@@ -15,17 +15,17 @@ namespace kgd = kellerberrin::deconvolv;
 
 
 // Static private member declarations.
-kgd::DeconvolvArgs kgd::ExecEnv::args_;
+kgd::DeconvolvArgs kgd::Deconvolv::args_;
 
 // Public static member functions.
-const kgd::DeconvolvArgs& kgd::ExecEnv::getArgs() { return args_; }
+const kgd::DeconvolvArgs& kgd::Deconvolv::getArgs() { return args_; }
 
 // Constants for the executable.
-constexpr const char* kgd::ExecEnv::MODULE_NAME;
-constexpr const char* kgd::ExecEnv::VERSION;
+constexpr const char* kgd::Deconvolv::MODULE_NAME;
+constexpr const char* kgd::Deconvolv::VERSION;
 
 
-void kgd::ExecEnv::executeApp() {
+void kgd::Deconvolv::executeApp() {
 
   try {
 
@@ -74,14 +74,14 @@ void kgd::ExecEnv::executeApp() {
   }
   catch (const std::exception &e) {
 
-    ExecEnv::log().critical("Caught Runtime Error: {}", e.what());
+    DeconvolvApp::log().critical("Caught Runtime Error: {}", e.what());
 
   }
 
 }
 
 
-void kgd::ExecEnv::executeLib(const MixtureDataObj& mixture_data) {
+void kgd::Deconvolv::executeLib(const MixtureDataObj& mixture_data) {
 
   try {
 
@@ -138,7 +138,7 @@ void kgd::ExecEnv::executeLib(const MixtureDataObj& mixture_data) {
   }
   catch (const std::exception &e) {
 
-    ExecEnv::log().critical("Caught Runtime Error: {}", e.what());
+    DeconvolvApp::log().critical("Caught Runtime Error: {}", e.what());
 
   }
 
