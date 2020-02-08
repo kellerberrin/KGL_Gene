@@ -45,7 +45,7 @@ void kpl::Updater::clear() {
 void kpl::Updater::reset() {
 
   _log_hastings_ratio = 0.0;
-  _log_jacobian       = 0.0;
+  logJacobian(0.0);
 
 }
 
@@ -213,6 +213,7 @@ double kpl::Updater::calcLogLikelihood() const {
 
 double kpl::Updater::update(double prev_lnL) {
 
+
   double prev_log_prior = calcLogPrior();
 
   // Clear any nodes previously selected so that we can detect those nodes
@@ -221,7 +222,9 @@ double kpl::Updater::update(double prev_lnL) {
   _tree_manipulator->deselectAllTMatrices();
 
   // Set model to proposed state and calculate _log_hastings_ratio
+  std::cout << "\n*************** Pre Update *************\n" << _tree_manipulator->getTree()->treeDescription() << std::endl;
   proposeNewState();
+  std::cout << "\n*************** Post Update *************\n" << _tree_manipulator->getTree()->treeDescription() << std::endl;
 
   // Use alternative partials and transition probability buffer for any selected nodes
   // This allows us to easily revert to the previous values if the move is rejected
@@ -233,15 +236,18 @@ double kpl::Updater::update(double prev_lnL) {
 
   // Decide whether to accept or reject the proposed state
   bool accept = true;
+  double log_R = 0.0;
+  double logu = 0.0;
+
   if (log_prior > _log_zero) {
 
-    double log_R = 0.0;
+    log_R = 0.0;
     log_R += _heating_power*(log_likelihood - prev_lnL);
     log_R += _heating_power*(log_prior - prev_log_prior);
     log_R += _log_hastings_ratio;
-    log_R += _log_jacobian;
+    log_R += logJacobian();
 
-    double logu = _lot->logUniform();
+    logu = _lot->logUniform();
 
     if (logu > log_R) {
 
@@ -271,6 +277,7 @@ double kpl::Updater::update(double prev_lnL) {
 
   tune(accept);
   reset();
+
 
   return log_likelihood;
 

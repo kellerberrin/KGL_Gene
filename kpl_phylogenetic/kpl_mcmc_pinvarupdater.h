@@ -21,21 +21,21 @@ class PinvarUpdater : public Updater {
 public:
   typedef std::shared_ptr<PinvarUpdater> SharedPtr;
 
-  PinvarUpdater(ASRV::SharedPtr asrv);
-  ~PinvarUpdater();
+  explicit PinvarUpdater(ASRV::SharedPtr asrv);
+  ~PinvarUpdater() override;
 
-  virtual void                clear();
-  double                      getCurrentPoint() const;
+  void clear() override;
+  double getCurrentPoint() const;
 
   // mandatory overrides of pure virtual functions
-  virtual double              calcLogPrior();
-  virtual void                revert();
-  virtual void                proposeNewState();
+  double calcLogPrior() override;
+  void revert() override;
+  void proposeNewState() override;
 
 private:
 
-  double                      _prev_point;
-  ASRV::SharedPtr             _asrv;
+  double _prev_point;
+  ASRV::SharedPtr _asrv;
 };
 
 

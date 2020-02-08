@@ -21,19 +21,19 @@ public:
   TreeLengthUpdater();
   ~TreeLengthUpdater();
 
-  virtual void                clear();
-  virtual void                proposeNewState();
-  virtual void                revert();
+  virtual void clear();
+  virtual void proposeNewState();
+  virtual void revert();
 
-  virtual double              calcLogPrior();
+  double calcLogPrior() override;
 
-  void                        pullFromModel();
-  void                        pushToModel();
+  void  pullFromModel();
+  void  pushToModel();
 
 private:
 
-  double                      _prev_point;
-  double                      _curr_point;
+  double _prev_point;
+  double _curr_point;
 
 };
 

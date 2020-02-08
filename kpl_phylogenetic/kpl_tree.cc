@@ -30,6 +30,7 @@ kpl::Tree::Tree(unsigned num_nodes)
 void kpl::Tree::clear() {
 
   _root = nullptr;
+  _rooted = false;
   _nodes.clear();
   _preorder.clear();
   _levelorder.clear();
@@ -64,21 +65,6 @@ kpl::Node::ConstPtrNode kpl::Tree::getConstNode(size_t node_index) const {
 }
 
 
-kpl::Node::ConstPtrVector kpl::Tree::getConstNodes() const {
-
-  Node::ConstPtrVector nodes;
-
-  for (auto& node : _nodes) {
-
-    nodes.push_back(&node);
-
-  }
-
-  return nodes;
-
-}
-
-
 kpl::Node::PtrVector kpl::Tree::getNodes() {
 
   Node::PtrVector nodes;
@@ -94,33 +80,6 @@ kpl::Node::PtrVector kpl::Tree::getNodes() {
 }
 
 
-bool kpl::Tree::isRooted() const {
-
-  return static_cast<bool>(_root);
-
-}
-
-
-unsigned kpl::Tree::numLeaves() const {
-
-  return _nleaves;
-
-}
-
-
-unsigned kpl::Tree::numInternals() const {
-
-  return _ninternals;
-
-}
-
-
-unsigned kpl::Tree::numNodes() const {
-
-  return (unsigned) _nodes.size();
-
-}
-
 
 std::string kpl::Tree::treeDescription() const {
 
@@ -130,13 +89,17 @@ std::string kpl::Tree::treeDescription() const {
   ss << "Is Rooted:" << (isRooted() ? "ROOTED" : "NotRooted") << '\n';
   if (isRooted()) {
 
-    ss << "Rooted Node:" << Node::printNode(getConstRoot()) << '\n';
+    ss << "Root Node:" << Node::printNode(getConstRoot()) << '\n';
+
+  } else {
+
+    ss << "Prime Node:" << Node::printNode(getConstRoot()) << '\n';
 
   }
   ss << "Tree Node Count:" << getConstNodes().size() << '\n';
-  for (auto node : getConstNodes()) {
+  for (auto& node : getConstNodes()) {
 
-    ss << Node::printNode( node) << '\n';
+    ss << Node::printNode(&node) << '\n';
 
   }
   ss << "Leaves Count:" << numLeaves() << '\n';
@@ -145,15 +108,11 @@ std::string kpl::Tree::treeDescription() const {
   ss << "Preorder Nodes Count:" << getConstPreOrder().size() << '\n';
   for (auto node : getConstPreOrder()) {
 
-//    ss << static_cast<const void *>(node) << '\n';
+    ss << Node::printNode(node) << '\n';
 
   }
+
   ss << "Level Nodes Count:" << getConstLevelOrder().size() << '\n';
-  for (auto node : getConstLevelOrder()) {
-
-//    ss << static_cast<const void *>(node) << '\n';
-
-  }
   ss << "****************\n" << std::endl;
 
   return ss.str();

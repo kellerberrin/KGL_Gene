@@ -20,25 +20,26 @@ class DirichletUpdater : public Updater {
 //  friend class Chain;
 
 public:
-  typedef std::vector<double>                 point_t;
+
+  typedef std::vector<double> point_t;
   typedef std::shared_ptr< DirichletUpdater > SharedPtr;
 
   DirichletUpdater();
-  virtual                             ~DirichletUpdater();
+  ~DirichletUpdater() override;
 
-  void                                clear();
-  virtual double                      calcLogPrior();
+  void clear() override;
+  double calcLogPrior() override;
 
 protected:
 
-  virtual void                        pullFromModel() = 0;
-  virtual void                        pushToModel() = 0;
+  virtual void pullFromModel() = 0;
+  virtual void pushToModel() = 0;
 
-  void                                proposeNewState();
-  void                                revert();
+  void proposeNewState() override;
+  void revert() override;
 
-  point_t                             _curr_point;
-  point_t                             _prev_point;
+  point_t _curr_point;
+  point_t _prev_point;
 
 
 };

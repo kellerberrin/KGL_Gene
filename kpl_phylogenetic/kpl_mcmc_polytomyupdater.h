@@ -27,35 +27,36 @@ public:
   typedef std::shared_ptr< PolytomyUpdater >          SharedPtr;
 
   PolytomyUpdater();
-  ~PolytomyUpdater();
+  ~PolytomyUpdater() override;
 
-  virtual double                      calcLogPrior();
+  double calcLogPrior() override;
 
 private:
 
-  virtual void                        revert();
-  virtual void                        proposeNewState();
-  virtual void                        reset();
+  void revert() override;
+  void proposeNewState() override;
+  void reset() override;
 
-  void                                proposeAddEdgeMove(Node::PtrNode  nd);
-  void                                proposeDeleteEdgeMove(Node::PtrNode  nd);
+  void proposeAddEdgeMove(Node::PtrNode  nd);
+  void proposeDeleteEdgeMove(Node::PtrNode  nd);
 
-  _partition_vect_t &                 computePolytomyDistribution(unsigned nspokes);
-  void                                refreshPolytomies();
+  _partition_vect_t& computePolytomyDistribution(unsigned nspokes);
+  void refreshPolytomies();
 
-  _partition_map_t                    _poly_prob;
-  _polytomy_vect_t                    _polytomies;
+  _partition_map_t _poly_prob;
+  _polytomy_vect_t _polytomies;
 
-  Node::PtrNode                               _orig_par;
-  Node::PtrNode                               _orig_lchild;
+  Node::PtrNode _orig_par;
+  Node::PtrNode _orig_lchild;
 
-  bool                                _add_edge_proposed;
-  double                              _new_edge_proportion;
-  double                              _orig_edge_proportion;
-  double                              _tree_length;
-  double                              _phi;
-  unsigned                            _polytomy_size;
-  unsigned                            _num_polytomies;
+  bool _add_edge_proposed;
+  double _new_edge_proportion;
+  double _orig_edge_proportion;
+  double _tree_length;
+  double _phi;
+  unsigned _polytomy_size;
+  unsigned _num_polytomies;
+
 };
 
 

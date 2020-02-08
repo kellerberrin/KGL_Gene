@@ -153,7 +153,8 @@ kpl::Tree::SharedPtr kpl::TreeManip::screateTestTree() {
   third_leaf->setName("third leaf");
   third_leaf->setEdgeLength(0.2);
 
-  tree->setRoot(root_node);
+  tree->setRooted(true);
+  tree->setRootNode(root_node);
   tree->setLeaves(3);
 
   // Note that root node is not included in preorder or levelorder
@@ -206,19 +207,19 @@ void kpl::TreeManip::srefreshPreorder(Tree::SharedPtr tree) {
   // sanity check: first preorder node should be the only child of the root node
   assert(Node::isNullNode(first_preorder->getRightSib()));
 
-  Node::PtrNode nd = first_preorder;
-  tree->pushPreOrder(nd);
+  Node::PtrNode pNode = first_preorder;
+
+  tree->pushPreOrder(pNode);
 
   while (true) {
 
-    nd = findNextPreorder(nd);
+    pNode = findNextPreorder(pNode);
 
-    if (nd) {
+    if (not Node::isNullNode(pNode)) {
 
-      tree->pushPreOrder(nd);
+      tree->pushPreOrder(pNode);
 
-    }
-    else {
+    } else {
 
       break;
 
@@ -244,7 +245,7 @@ void kpl::TreeManip::srefreshLevelorder(Tree::SharedPtr tree) {
   }
 
   // q is the buffer queue
-  std::queue<Node::PtrNode > q;
+  std::queue<Node::PtrNode > node_queue;
 
   // getTree()->_levelorder is the stack vector
   tree->clearLevelOrder();
@@ -255,12 +256,12 @@ void kpl::TreeManip::srefreshLevelorder(Tree::SharedPtr tree) {
   assert(Node::isNullNode(nd->getRightSib()));
 
   // Push nd onto back of queue
-  q.push(nd);
+  node_queue.push(nd);
 
-  while (!q.empty()) {
+  while (!node_queue.empty()) {
     // pop nd off front of queue
-    nd = q.front();
-    q.pop();
+    nd = node_queue.front();
+    node_queue.pop();
 
     // and push it onto the stack
     tree->pushLevelOrder(nd);
@@ -270,12 +271,12 @@ void kpl::TreeManip::srefreshLevelorder(Tree::SharedPtr tree) {
 
     if (child) {
 
-      q.push(child);
+      node_queue.push(child);
       child = child->getRightSib();
 
       while (child) {
 
-        q.push(child);
+        node_queue.push(child);
         child = child->getRightSib();
 
       }
@@ -316,7 +317,7 @@ void kpl::TreeManip::srenumberInternals(Tree::SharedPtr tree) {
   // is an internal node we need to number it here
   if (tree->isRooted()) {
 
-    tree->getRoot()->setNumber(curr_internal);
+    tree->getRootNode()->setNumber(curr_internal);
     curr_internal++;
 
   }
@@ -467,7 +468,7 @@ void kpl::TreeManip::srerootAtNode(Tree::SharedPtr tree, Node::PtrNode prospecti
     prev_edgelen = tmp_edgelen;
   }
   prospective_root->setEdgeLength(0.0);
-  tree->setRoot(prospective_root);
+  tree->setRootNode(prospective_root);
   srefreshPreorder(tree);
   srefreshLevelorder(tree);
 
@@ -824,6 +825,8 @@ kpl::Node::PtrNode  kpl::TreeManip::randomInternalEdge(double uniform_deviate) {
 
 }
 
+
+/*
 kpl::Node::PtrNode  kpl::TreeManip::srandomInternalEdge(Tree::SharedPtr tree, double uniform_deviate) {   ///begin_randomInternalEdge
 
   assert(uniform_deviate >= 0.0);
@@ -883,6 +886,62 @@ kpl::Node::PtrNode  kpl::TreeManip::srandomInternalEdge(Tree::SharedPtr tree, do
   assert(chosen_node);
   return chosen_node;
 }   ///end_randomInternalEdge
+
+*/
+
+kpl::Node::PtrNode  kpl::TreeManip::srandomInternalEdge(Tree::SharedPtr tree, double uniform_deviate) {   ///begin_randomInternalEdge
+
+  assert(uniform_deviate >= 0.0);
+  assert(uniform_deviate < 1.0);
+
+  // Unrooted case:                        Rooted case:
+  //
+  // 2     3     4     5                   1     2     3     4
+  //  \   /     /     /                     \   /     /     /
+  //   \ /     /     /                       \ /     /     /
+  //    8     /     /                         7     /     /
+  //     \   /     /                           \   /     /
+  //      \ /     /                             \ /     /
+  //       7     /                               6     /
+  //        \   /                                 \   /
+  //         \ /                                   \ /
+  //          6   nleaves = 5                       5   nleaves = 4
+  //          |   num_internal_edges = 2            |   num_internal_edges = 2
+  //          |   choose node 7 or node 8           |   choose node 6 or node 7
+  //          1                                    root
+  //
+  // _preorder = [6, 7, 8, 2, 3, 4, 5]     _preorder = [5, 6, 7, 1, 2, 3, 4]
+  //
+  // Note: _preorder is actually a vector of T *, but is shown here as a
+  // vector of integers solely to illustrate the algorithm below
+
+  int num_internal_edges = (unsigned) tree->_preorder.size() - tree->_nleaves - (tree->isRooted() ? 0 : 1);
+  if (num_internal_edges < 0) {
+    // Star tree: return hub node, which is the first node in the preorder sequence
+    return tree->_preorder[0];
+  }
+
+  // Add one to skip first node in _preorder vector, which is an internal node whose edge
+  // is either a terminal edge (if tree is unrooted) or invalid (if tree is rooted)
+  unsigned index_of_chosen = 1 + (unsigned)std::floor(uniform_deviate*num_internal_edges);
+
+  unsigned internal_nodes_visited = 0;
+  Node::PtrNode  chosen_node = 0;
+  for (auto nd : tree->_preorder) {
+    if (nd->getLeftChild()) {
+      if (internal_nodes_visited == index_of_chosen) {
+        chosen_node = nd;
+        break;
+      }
+      else
+        ++internal_nodes_visited;
+    }
+  }
+  assert(chosen_node);
+  return chosen_node;
+}   ///end_randomInternalEdge
+
+
 
 
 /*
@@ -1060,6 +1119,7 @@ kpl::Node::PtrNode  kpl::TreeManip::findNextPreorder(Node::ConstPtrNode  node) {
 }
 
 
+
 kpl::Node::PtrNode  kpl::TreeManip::findLeftSib(Node::ConstPtrNode  node) {
 
   assert(node);
@@ -1078,11 +1138,11 @@ kpl::Node::PtrNode  kpl::TreeManip::findLeftSib(Node::ConstPtrNode  node) {
 }
 
 
-kpl::Node::PtrNode  kpl::TreeManip::findRightmostChild(Node::ConstPtrNode  nd) {
+kpl::Node::PtrNode  kpl::TreeManip::findRightmostChild(Node::ConstPtrNode  pNode) {
 
-  assert(nd);
+  assert(pNode);
 
-  Node::PtrNode  child = nd->getLeftChild();
+  Node::PtrNode  child = pNode->getLeftChild();
 
   while (child->getRightSib()) {
 

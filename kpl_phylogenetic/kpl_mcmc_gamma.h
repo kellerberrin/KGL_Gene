@@ -18,23 +18,24 @@ namespace phylogenetic {   // project level namespace
 class GammaRateVarUpdater : public Updater {
 
 public:
+
   typedef std::shared_ptr<GammaRateVarUpdater> SharedPtr;
 
-  GammaRateVarUpdater(ASRV::SharedPtr asrv);
-  ~GammaRateVarUpdater();
+  explicit GammaRateVarUpdater(ASRV::SharedPtr asrv);
+  ~GammaRateVarUpdater() override;
 
-  virtual void                clear();
-  double                      getCurrentPoint() const;
+  void clear() override;
+  double  getCurrentPoint() const;
 
   // mandatory overrides of pure virtual functions
-  virtual double              calcLogPrior();
-  virtual void                revert();
-  virtual void                proposeNewState();
+  double calcLogPrior() override;
+  void revert() override;
+  void proposeNewState() override;
 
 private:
 
-  double                      _prev_point;
-  ASRV::SharedPtr             _asrv;
+  double _prev_point;
+  ASRV::SharedPtr _asrv;
 
 };
 

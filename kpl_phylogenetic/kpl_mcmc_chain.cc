@@ -456,6 +456,7 @@ void kpl::Chain::nextStep(int iteration) {
   }
 
   assert(i < _updaters.size());
+
   _log_likelihood = _updaters[i]->update(_log_likelihood);
 
 }

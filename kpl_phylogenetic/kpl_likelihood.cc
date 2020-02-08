@@ -906,7 +906,7 @@ double kpl::Likelihood::calcInstanceLogLikelihood(InstanceInfo & info, Tree::Sha
   int stateFrequencyIndex  = 0;
   int categoryWeightsIndex = 0;
   int cumulativeScalingIndex = (_underflow_scaling ? 0 : BEAGLE_OP_NONE);
-  int child_partials_index   = getPartialIndex(tree->getRoot(), info);
+  int child_partials_index   = getPartialIndex(tree->getRootNode(), info);
   int parent_partials_index  = getPartialIndex(tree->getConstPreOrder()[0], info);
   int parent_tmatrix_index   = getTMatrixIndex(tree->getConstPreOrder()[0], info, 0);
 
@@ -1045,7 +1045,7 @@ double kpl::Likelihood::calcInstanceLogLikelihood(InstanceInfo & info, Tree::Sha
 }
 
 
-double kpl::Likelihood::calcLogLikelihood(Tree::SharedPtr t) {
+double kpl::Likelihood::calcLogLikelihood(Tree::SharedPtr tree) {
 
   assert(_instances.size() > 0);
 
@@ -1059,24 +1059,27 @@ double kpl::Likelihood::calcLogLikelihood(Tree::SharedPtr t) {
   assert(_data);
   assert(_model);
 
-  if (t->isRooted()) {
+  if (tree->isRooted()) {
 
     throw XStrom("This version of the program can only compute likelihoods for unrooted trees");
 
   }
 
   // Assuming "root" is leaf 0
-  assert(t->getRoot()->getNumber() == 0 && t->getRoot()->getLeftChild() == t->getPreOrder()[0] && Node::isNullNode(t->getPreOrder()[0]->getRightSib()));
+  assert(tree->getRootNode()->getNumber() == 0 && tree->getRootNode()->getLeftChild() == tree->getPreOrder()[0] && Node::isNullNode(tree->getPreOrder()[0]->getRightSib()));
 
   setModelRateMatrix();
   setAmongSiteRateHeterogenetity();
-  defineOperations(t);
+  defineOperations(tree);
   updateTransitionMatrices();
   calculatePartials();
 
   double log_likelihood = 0.0;
+
   for (auto & info : _instances) {
-    log_likelihood += calcInstanceLogLikelihood(info, t);
+
+    log_likelihood += calcInstanceLogLikelihood(info, tree);
+
   }
 
   return log_likelihood;

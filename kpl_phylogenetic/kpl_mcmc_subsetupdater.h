@@ -23,7 +23,7 @@ public:
   SubsetRelRateUpdater(Model::SharedPtr model);
   ~SubsetRelRateUpdater();
 
-  double                          calcLogPrior();
+  double calcLogPrior() override;
 
 private:
 

@@ -19,13 +19,13 @@ class ExchangeabilityUpdater : public DirichletUpdater {
 public:
   typedef std::shared_ptr< ExchangeabilityUpdater > SharedPtr;
 
-  ExchangeabilityUpdater(QMatrix::SharedPtr qmatrix);
-  ~ExchangeabilityUpdater();
+  explicit ExchangeabilityUpdater(QMatrix::SharedPtr qmatrix);
+  ~ExchangeabilityUpdater() override;
 
 private:
 
-  void                            pullFromModel();
-  void                            pushToModel();
+  void pullFromModel() override;
+  void pushToModel() override;
 
   QMatrix::SharedPtr              _qmatrix;
 

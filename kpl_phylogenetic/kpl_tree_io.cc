@@ -149,6 +149,7 @@ std::string kpl::TreeIO::smakeNewick(Tree::ConstSharedPtr tree, unsigned precisi
 
 
   Node::ConstPtrNode root_tip = (tree->isRooted() ? nullptr : tree->getConstRoot());
+
   for (auto node : tree->getConstPreOrder()) {
     //...
     if (not Node::isNullNode(node->getLeftChild())) {
@@ -230,7 +231,7 @@ kpl::Tree::SharedPtr kpl::TreeIO::sbuildFromNewick(const std::string& newick, bo
 
     if (rooted) {
 
-      tree->setRoot(nd);
+      tree->setRootNode(nd);
       ++curr_node_index;
       nd = tree->getNode(curr_node_index);
       nd->setParent(tree->getNode(curr_node_index - 1));
@@ -585,10 +586,13 @@ kpl::Tree::SharedPtr kpl::TreeIO::buildFromNewick(const std::string& newick, boo
     ExecEnv::log().critical("Expecting newick file: {} to have at least 4 leaves; contains; {} leaves", newick, leaves);
 
   }
+
   unsigned max_nodes = (2 * leaves) - (rooted ? 0 : 2);
 
   Tree::SharedPtr tree(std::make_shared<Tree>(max_nodes));
   tree->setLeaves(leaves);
+  tree->setRooted(rooted);
+
   ExecEnv::log().info("3. Number of Leaves: {} in the tree, number of leaves: {} in the newick file: {}", tree->numLeaves(), leaves, newick);
   
   for (auto &nd : tree->getNodes()) {
@@ -601,12 +605,14 @@ kpl::Tree::SharedPtr kpl::TreeIO::buildFromNewick(const std::string& newick, boo
     // Root node
     Node::PtrNode nd = tree->getNode(curr_node_index);
 
-    if (rooted) {
-      tree->setRoot(nd);
+    if (tree->isRooted()) {
+
+      tree->setRootNode(nd);
       ++curr_node_index;
       nd = tree->getNode(curr_node_index);
       nd->_parent = tree->getNode(curr_node_index - 1);
       nd->_parent->_left_child = nd;
+
     }
 
     // Some flags to keep track of what we did last
@@ -909,9 +915,7 @@ kpl::Tree::SharedPtr kpl::TreeIO::buildFromNewick(const std::string& newick, boo
 
     }
 
-    ExecEnv::log().info("TreeIO::buildFromNewick(), Before Adjust: {}", tree->treeDescription());
-
-    if (!rooted) {
+    if (not tree->isRooted()) {
       // Root at leaf whose _number = 0
       TreeManip::srerootAtNodeNumber(tree, 0);
     }
@@ -919,8 +923,6 @@ kpl::Tree::SharedPtr kpl::TreeIO::buildFromNewick(const std::string& newick, boo
     TreeManip::srefreshPreorder(tree);
     TreeManip::srefreshLevelorder(tree);
     TreeManip::srenumberInternals(tree);
-
-    ExecEnv::log().info("TreeIO::buildFromNewick(), After Adjust: {}", tree->treeDescription());
 
   }
   catch (XStrom& x) {

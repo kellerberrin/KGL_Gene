@@ -45,7 +45,7 @@ public:
   void                                    initBeagleLib();
   void                                    finalizeBeagleLib(bool use_exceptions);
 
-  double                                  calcLogLikelihood(Tree::SharedPtr t);
+  double                                  calcLogLikelihood(Tree::SharedPtr tree);
 
   Data::SharedPtr                         getData();
   void                                    setData(Data::SharedPtr d);

@@ -30,10 +30,9 @@ class Updater {
 public:
   typedef std::shared_ptr<Updater>    SharedPtr;
 
-  TreeManip::SharedPtr                getTreeManip() const;
 
   Updater();
-  virtual                             ~Updater();
+  virtual ~Updater();
 
   // Modify
   void setLikelihood(Likelihood::SharedPtr likelihood);
@@ -54,6 +53,7 @@ public:
 
 
   // Access
+  [[nodiscard]] TreeManip::SharedPtr getTreeManip() const;
   [[nodiscard]] double getLambda() const;
   [[nodiscard]] double getWeight() const;
   [[nodiscard]] double getProb() const;
@@ -91,7 +91,6 @@ protected:
 private:
 
   virtual void tune(bool accepted);
-
   virtual void revert() = 0;
   virtual void proposeNewState() = 0;
 

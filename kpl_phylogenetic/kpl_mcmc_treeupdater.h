@@ -28,31 +28,31 @@ public:
   TreeUpdater();
   ~TreeUpdater();
 
-  virtual double                      calcLogPrior();
+  double calcLogPrior() override;
 
 private:
 
-  virtual void                        revert();
-  virtual void                        proposeNewState();
+  virtual void revert();
+  virtual void proposeNewState();
 
-  Node::PtrNode                               chooseRandomChild(Node::PtrNode  x, Node::PtrNode  avoid, bool parent_included);
+  Node::PtrNode chooseRandomChild(Node::PtrNode  x, Node::PtrNode  avoid, bool parent_included);
 
-  virtual void                        reset();
+  virtual void reset();
 
-  void                                starTreeMove();
+  void starTreeMove();
 
-  double                              _orig_edgelen_top;
-  double                              _orig_edgelen_middle;
-  double                              _orig_edgelen_bottom;
+  double _orig_edgelen_top;
+  double _orig_edgelen_middle;
+  double _orig_edgelen_bottom;
 
-  unsigned                            _case;
-  bool                                _topology_changed;
-  Node::PtrNode                               _x;
-  Node::PtrNode                               _y;
-  Node::PtrNode                               _a;
-  Node::PtrNode                               _b;
+  unsigned _case;
+  bool _topology_changed;
+  Node::PtrNode _x;
+  Node::PtrNode _y;
+  Node::PtrNode _a;
+  Node::PtrNode _b;
 
-  bool                                _star_tree_move;
+  bool _star_tree_move;
 
 };
 

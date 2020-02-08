@@ -38,7 +38,6 @@ void kpl::PolytomyUpdater::reset() {
 
 }
 
-
 double kpl::PolytomyUpdater::calcLogPrior() {
 
   double log_prior = 0.0;
@@ -48,6 +47,7 @@ double kpl::PolytomyUpdater::calcLogPrior() {
 // function name in the derived class function "double kpl::PolytomyUpdater::calcLogPrior()" and was modified.
 // to use "double calcEdgeLengthPrior() const" instead.
   log_prior += Updater::calcEdgeLengthPrior();
+
   return log_prior;
 
 }
@@ -170,7 +170,8 @@ void kpl::PolytomyUpdater::proposeNewState() {
   else {
     // Choose an internal edge at random and delete it to create a polytomy
     // (or a bigger polytomy if there is already a polytomy)
-    nd = treeManipulator()->randomInternalEdge(lot()->uniform());
+    double select_rand = lot()->uniform();
+    nd = treeManipulator()->randomInternalEdge(select_rand);
     proposeDeleteEdgeMove(nd);
 
     double TL_after_del_edge = treeManipulator()->calcTreeLength();
@@ -213,6 +214,7 @@ void kpl::PolytomyUpdater::proposeNewState() {
   }
 
 }
+
 
 
 void kpl::PolytomyUpdater::proposeAddEdgeMove(Node::PtrNode  u) {

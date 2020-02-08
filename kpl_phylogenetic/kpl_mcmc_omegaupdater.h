@@ -21,21 +21,21 @@ class OmegaUpdater : public Updater {
 public:
   typedef std::shared_ptr<OmegaUpdater> SharedPtr;
 
-  OmegaUpdater(QMatrix::SharedPtr q);
-  ~OmegaUpdater();
+  explicit OmegaUpdater(QMatrix::SharedPtr q);
+  ~OmegaUpdater() override;
 
-  virtual void                clear();
-  double                      getCurrentPoint() const;
+  void clear() override;
+  double getCurrentPoint() const;
 
   // mandatory overrides of pure virtual functions
-  virtual double              calcLogPrior();
-  virtual void                revert();
-  virtual void                proposeNewState();
+  double calcLogPrior() override;
+  void revert() override;
+  void proposeNewState() override;
 
 private:
 
-  double                      _prev_point;
-  QMatrix::SharedPtr          _q;
+  double _prev_point;
+  QMatrix::SharedPtr _q;
 };
 
 

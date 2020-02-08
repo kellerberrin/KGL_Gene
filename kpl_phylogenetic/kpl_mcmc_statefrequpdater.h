@@ -20,15 +20,15 @@ public:
 
   typedef std::shared_ptr< StateFreqUpdater > SharedPtr;
 
-  StateFreqUpdater(QMatrix::SharedPtr qmatrix);
-  ~StateFreqUpdater();
+  explicit StateFreqUpdater(QMatrix::SharedPtr qmatrix);
+  ~StateFreqUpdater() override;
 
 private:
 
-  void                            pullFromModel();
-  void                            pushToModel();
+  void pullFromModel() override;
+  void pushToModel() override;
 
-  QMatrix::SharedPtr              _qmatrix;
+  QMatrix::SharedPtr _qmatrix;
 
 };
 
