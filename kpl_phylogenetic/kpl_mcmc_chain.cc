@@ -449,8 +449,13 @@ void kpl::Chain::nextStep(int iteration) {
   for (auto updater : _updaters) {
 
     cumprob += updater->probability();
-    if (u <= cumprob)
+
+    if (u <= cumprob) {
+
       break;
+
+    }
+
     i++;
 
   }

@@ -18,7 +18,7 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
 
 # add boost library directories
 set(BOOST_INCLUDEDIR /usr/local/include)
-set(BOOST_LIBRARYDIR /usr/local/lib/boost)
+set(BOOST_LIBRARYDIR /usr/local/lib/boost/lib)
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME ON)
@@ -425,7 +425,8 @@ link_directories(/usr/local/lib/beagle/lib)
 add_executable (kpl kpl_phylogenetic/kpl_main.cpp ${KPL_LIBRARY_SOURCE_FILES})
 
 #specify link libraries.
-target_link_libraries(kpl kgl_genome_lib libncl.a libboost_program_options.a libboost_filesystem.a libboost_system.a hmsbeagle)
+#target_link_libraries(kpl kgl_genome_lib libncl.a libboost_program_options.a libboost_filesystem.a libboost_system.a hmsbeagle)
+target_link_libraries(kpl kgl_genome_lib libncl.a ${Boost_LIBRARIES} hmsbeagle)
 
 ## DOXYGEN
 #set(BUILD_KGL_KGD_DOC ON CACHE BOOL "Use Doxygen to create the HTML/Latex based API documentation")

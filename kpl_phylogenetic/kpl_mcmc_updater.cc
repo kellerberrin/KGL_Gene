@@ -222,9 +222,7 @@ double kpl::Updater::update(double prev_lnL) {
   _tree_manipulator->deselectAllTMatrices();
 
   // Set model to proposed state and calculate _log_hastings_ratio
-  std::cout << "\n*************** Pre Update *************\n" << _tree_manipulator->getTree()->treeDescription() << std::endl;
   proposeNewState();
-  std::cout << "\n*************** Post Update *************\n" << _tree_manipulator->getTree()->treeDescription() << std::endl;
 
   // Use alternative partials and transition probability buffer for any selected nodes
   // This allows us to easily revert to the previous values if the move is rejected

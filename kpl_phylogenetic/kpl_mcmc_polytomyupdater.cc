@@ -118,17 +118,19 @@ void kpl::PolytomyUpdater::proposeNewState() {
 
   }
 
-  Node::PtrNode  nd = 0;
   if (_add_edge_proposed) {
     // Choose a polytomy at random to split
+
     unsigned i = lot()->randint(0, _num_polytomies-1);
-    nd = _polytomies[i];
-    _polytomy_size = 1 + treeManipulator()->countChildren(nd);
+
+    Node::PtrNode pNode = _polytomies[i];
+
+    _polytomy_size = 1 + treeManipulator()->countChildren(pNode);
 
     // Add an edge to split up polytomy at nd, moving a random subset
     // of the spokes to the (new) left child of nd
-    proposeAddEdgeMove(nd);
-    Node::PtrNode  new_nd = nd->getLeftChild();
+    proposeAddEdgeMove(pNode);
+    Node::PtrNode  new_nd = pNode->getLeftChild();
 
     double TL_after_add_edge = treeManipulator()->calcTreeLength();
     assert(std::fabs(_tree_length - TL_after_add_edge) < 1.e-8);
@@ -171,8 +173,10 @@ void kpl::PolytomyUpdater::proposeNewState() {
     // Choose an internal edge at random and delete it to create a polytomy
     // (or a bigger polytomy if there is already a polytomy)
     double select_rand = lot()->uniform();
-    nd = treeManipulator()->randomInternalEdge(select_rand);
-    proposeDeleteEdgeMove(nd);
+
+    Node::PtrNode pNode = treeManipulator()->randomInternalEdge(select_rand);
+
+    proposeDeleteEdgeMove(pNode);
 
     double TL_after_del_edge = treeManipulator()->calcTreeLength();
     assert(std::fabs(_tree_length - TL_after_del_edge) < 1.e-8);
@@ -209,7 +213,7 @@ void kpl::PolytomyUpdater::proposeNewState() {
     logJacobian(log_jacobian);
 
     // flag partials and transition matrices for recalculation
-    treeManipulator()->selectPartialsHereToRoot(nd);
+    treeManipulator()->selectPartialsHereToRoot(pNode);
 
   }
 

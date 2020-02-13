@@ -644,12 +644,12 @@ void kpl::TreeManip::sflipPartialsAndTMatrices(Tree::SharedPtr tree) {
 
 }
 
+
 void kpl::TreeManip::LargetSimonSwap(Node::PtrNode  a, Node::PtrNode  b) {
 
   sLargetSimonSwap(getTree(), a, b);
 
 }
-
 
 void kpl::TreeManip::sLargetSimonSwap(Tree::SharedPtr tree, Node::PtrNode  a, Node::PtrNode  b) {
   // a and b are the ends of the selected 3-edge path in a Larget-Simon move
@@ -658,10 +658,10 @@ void kpl::TreeManip::sLargetSimonSwap(Tree::SharedPtr tree, Node::PtrNode  a, No
   // y can be the parent of b (case 1) or the child of b (case 2)
 
   Node::PtrNode  x = a->getParent();
-  assert(x);
+  assert(not Node::isNullNode(x));
 
   Node::PtrNode  y = x->getParent();
-  assert(y);
+  assert(not Node::isNullNode(y));
 
   if (y == b->getParent()) {
     // Case 1: y is the parent of b
@@ -686,9 +686,11 @@ void kpl::TreeManip::sLargetSimonSwap(Tree::SharedPtr tree, Node::PtrNode  a, No
     } else {
 
       Node::PtrNode  child = x->getLeftChild();
+      assert(not Node::isNullNode(child));
 
       while (child->getRightSib() != a) {
 
+        assert(not Node::isNullNode(child));
         child = child->getRightSib();
 
       }
@@ -697,7 +699,6 @@ void kpl::TreeManip::sLargetSimonSwap(Tree::SharedPtr tree, Node::PtrNode  a, No
 
     }
 
-    // Detach a
     a->setParent(Node::nullNode());
     a->setRightSib(Node::nullNode());
 
@@ -712,29 +713,29 @@ void kpl::TreeManip::sLargetSimonSwap(Tree::SharedPtr tree, Node::PtrNode  a, No
 
       while (child->getRightSib() != b) {
 
+        assert(not Node::isNullNode(child));
         child = child->getRightSib();
 
       }
+
       child->setRightSib(b->getRightSib());
 
     }
 
-    // Detach b
     b->setParent(Node::nullNode());
     b->setRightSib(Node::nullNode());
 
-    // Reattach a to y as left child
+    // Reattach a to y
     a->setRightSib(y->getLeftChild());
     y->setLeftChild(a);
     a->setParent(y);
 
-    // Reattach b to x as left child
+    // Reattach b to x
     b->setRightSib(x->getLeftChild());
     x->setLeftChild(b);
     b->setParent(x);
 
-  }
-  else {
+  } else {
     // Case 2: y is the child of b
     //
     //    (a) d  e             (a) f  c
@@ -749,67 +750,116 @@ void kpl::TreeManip::sLargetSimonSwap(Tree::SharedPtr tree, Node::PtrNode  a, No
     //          (b)                 (b)
     assert(b == y->getParent());
 
-    // Create a stack of x children excluding a
+    // Remove x's children from tree and store in xchildren stack
     std::stack<Node::PtrNode > xchildren;
-    Node::PtrNode  xchild = x->getLeftChild();
-    while(not Node::isNullNode(xchild)) {
+    Node::PtrNode  child = x->getLeftChild();
+    Node::PtrNode  prevchild = Node::nullNode();
+    while (not Node::isNullNode(child)) {
 
-      if (xchild != a) {
+      if (child == a) {
 
-        xchildren.push(xchild);
+        prevchild = child;
+        child = child->getRightSib();
+
+      } else {
+
+        if (child == x->getLeftChild()) {
+
+          x->setLeftChild(child->getRightSib());
+          child->setRightSib(Node::nullNode());
+          child->setParent(Node::nullNode());
+          xchildren.push(child);
+          child = x->getLeftChild();
+
+        } else if (child->getRightSib()) {
+
+          prevchild->setRightSib(child->getRightSib());
+          child->setRightSib(Node::nullNode());
+          child->setParent(Node::nullNode());
+          xchildren.push(child);
+          child = prevchild->getRightSib();
+
+        } else {
+
+          assert(prevchild == a);
+          a->setRightSib(Node::nullNode());
+          child->setParent(Node::nullNode());
+          xchildren.push(child);
+          child = Node::nullNode();
+          prevchild = Node::nullNode();
+
+        }
 
       }
 
-      xchild = xchild->getRightSib();
-
     }
 
-    // Create a stack of y children excluding x
+    // Remove y's children from tree and store in ychildren stack
     std::stack<Node::PtrNode > ychildren;
-    Node::PtrNode  ychild = y->getLeftChild();
-    while(not Node::isNullNode(ychild)) {
+    child = y->getLeftChild();
+    prevchild = Node::nullNode();
 
-      if (ychild != x) {
+    while (child) {
 
-        ychildren.push(ychild);
+      if (child == x) {
+
+        prevchild = child;
+        child = child->getRightSib();
+
+      } else {
+
+        if (child == y->getLeftChild()) {
+
+          y->setLeftChild(child->getRightSib());
+          child->setRightSib(Node::nullNode());
+          child->setParent(Node::nullNode());
+          ychildren.push(child);
+          child = y->getLeftChild();
+
+        } else if (child->getRightSib()) {
+
+          prevchild->setRightSib(child->getRightSib());
+          child->setRightSib(Node::nullNode());
+          child->setParent(Node::nullNode());
+          ychildren.push(child);
+          child = prevchild->getRightSib();
+
+        } else {
+
+          assert(prevchild == x);
+          x->setRightSib(Node::nullNode());
+          child->setParent(Node::nullNode());
+          ychildren.push(child);
+          child = Node::nullNode();
+          prevchild = Node::nullNode();
+
+        }
 
       }
 
-      ychild = ychild->getRightSib();
-
     }
 
-  // Reattach the y children to the right of a
-  x->setLeftChild(a);
-  a->setParent(x);
-  a->setRightSib(Node::nullNode());
-  Node::PtrNode left_child = a;
-  while(not ychildren.empty()) {
+    // Reattach xchildren to y
+    while (not xchildren.empty()) {
 
-    Node::PtrNode child = ychildren.top();
-    ychildren.pop();
-    child->setParent(x);
-    child->setRightSib(Node::nullNode());
-    left_child->setRightSib(child);
-    left_child = child;
-
-  }
-
-    // Reattach the x children as siblings to the right of x
-    x->getParent()->setLeftChild(x);
-    x->setRightSib(Node::nullNode());
-    left_child = x;
-    while(not xchildren.empty()) {
-
-      Node::PtrNode child = xchildren.top();
+      Node::PtrNode  popped = xchildren.top();
       xchildren.pop();
-      child->setParent(x->getParent());
-      child->setRightSib(Node::nullNode());
-      left_child->setRightSib(child);
-      left_child = child;
+      popped->setRightSib(y->getLeftChild());
+      y->setLeftChild(popped);
+      popped->setParent(y);
 
     }
 
+    // Reattach ychildren to x
+    while (not ychildren.empty()) {
+
+      Node::PtrNode  popped = ychildren.top();
+      ychildren.pop();
+      popped->setRightSib(x->getLeftChild());
+      x->setLeftChild(popped);
+      popped->setParent(x);
+
+    }
 
   }
 
@@ -825,69 +875,6 @@ kpl::Node::PtrNode  kpl::TreeManip::randomInternalEdge(double uniform_deviate) {
 
 }
 
-
-/*
-kpl::Node::PtrNode  kpl::TreeManip::srandomInternalEdge(Tree::SharedPtr tree, double uniform_deviate) {   ///begin_randomInternalEdge
-
-  assert(uniform_deviate >= 0.0);
-  assert(uniform_deviate < 1.0);
-
-  // Unrooted case:                        Rooted case:
-  //
-  // 2     3     4     5                   1     2     3     4
-  //  \   /     /     /                     \   /     /     /
-  //   \ /     /     /                       \ /     /     /
-  //    8     /     /                         7     /     /
-  //     \   /     /                           \   /     /
-  //      \ /     /                             \ /     /
-  //       7     /                               6     /
-  //        \   /                                 \   /
-  //         \ /                                   \ /
-  //          6   nleaves = 5                       5   nleaves = 4
-  //          |   num_internal_edges = 2            |   num_internal_edges = 2
-  //          |   choose node 7 or node 8           |   choose node 6 or node 7
-  //          1                                    root
-  //
-  // _preorder = [6, 7, 8, 2, 3, 4, 5]     _preorder = [5, 6, 7, 1, 2, 3, 4]
-  //
-  // Note: _preorder is actually a vector of T *, but is shown here as a
-  // vector of integers solely to illustrate the algorithm below
-
-  int num_internal_edges = tree->getConstPreOrder().size() - tree->numLeaves() - (tree->isRooted() ? 0 : 1);
-  if (num_internal_edges < 0) {
-    // Star tree: return hub node, which is the first node in the preorder sequence
-    return tree->getPreOrder()[0];
-  }
-
-  // Add one to skip first node in _preorder vector, which is an internal node whose edge
-  // is either a terminal edge (if tree is unrooted) or invalid (if tree is rooted)
-  unsigned index_of_chosen = 1 + (unsigned)std::floor(uniform_deviate*num_internal_edges);
-
-  unsigned internal_nodes_visited = 0;
-  Node::PtrNode  chosen_node = Node::nullNode();
-  for (auto nd : tree->getPreOrder()) {
-
-    if (not Node::isNullNode(nd->getLeftChild())) {
-
-      if (internal_nodes_visited == index_of_chosen) {
-        chosen_node = nd;
-        break;
-
-      }
-      else {
-
-        ++internal_nodes_visited;
-
-      }
-
-    }
-
-  }
-  assert(chosen_node);
-  return chosen_node;
-}   ///end_randomInternalEdge
-
-*/
 
 kpl::Node::PtrNode  kpl::TreeManip::srandomInternalEdge(Tree::SharedPtr tree, double uniform_deviate) {   ///begin_randomInternalEdge
 

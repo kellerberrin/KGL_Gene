@@ -745,9 +745,9 @@ void kpl::Strom::initChains() {
   // Initialize chains
   for (unsigned chain_index = 0; chain_index < _num_chains; ++chain_index) {
 
-    auto & c        = _chains[chain_index];
+    auto& c = _chains[chain_index];
     auto likelihood = _likelihoods[chain_index];
-    auto m          = likelihood->getModel();
+    auto m = likelihood->getModel();
 
     // Finish setting up models
     m->setTopologyPriorOptions(_allow_polytomies, _resolution_class_prior, _topo_prior_C);

@@ -21,10 +21,10 @@ class PolytomyUpdater : public Updater {
 
 public:
 
-  typedef std::vector<double>                         _partition_vect_t;
-  typedef std::map<unsigned, _partition_vect_t >      _partition_map_t;
-  typedef std::vector<Node::PtrNode >                         _polytomy_vect_t;
-  typedef std::shared_ptr< PolytomyUpdater >          SharedPtr;
+  typedef std::vector<double> _partition_vect_t;
+  typedef std::map<unsigned, _partition_vect_t > _partition_map_t;
+  typedef std::vector<Node::PtrNode > _polytomy_vect_t;
+  typedef std::shared_ptr< PolytomyUpdater > SharedPtr;
 
   PolytomyUpdater();
   ~PolytomyUpdater() override;
