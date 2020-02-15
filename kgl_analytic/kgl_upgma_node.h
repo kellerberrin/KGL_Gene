@@ -13,9 +13,7 @@
 #include "kgl_sequence_distance.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
-
+namespace kellerberrin::genome {   //  organization level namespace
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -326,9 +324,7 @@ private:
 
 
 
-}   // namespace genome
-}   // namespace kellerberrin
-
+}   // end namespace genome
 
 
 #endif //KGL_UPGMA_NODE_H

@@ -24,8 +24,7 @@ struct PloidyData {
 
 using PloidyDataMap = std::map<std::string, PloidyData>;
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -66,8 +65,7 @@ private:
 
 
 
-}   // namespace genome
-}   // namespace kellerberrin
+}   // end namespace genome
 
 
 

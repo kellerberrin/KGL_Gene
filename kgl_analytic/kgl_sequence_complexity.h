@@ -7,9 +7,7 @@
 
 #include "kgl_sequence_base.h"
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
-
+namespace kellerberrin::genome {   //  organization level namespace
 
 
 class SequenceComplexity {
@@ -170,8 +168,7 @@ size_t SequenceComplexity::kmerCount(std::shared_ptr<const AlphabetSequence<Alph
 
 
 
-}   // namespace genome
-}   // namespace kellerberrin
+}   // end namespace genome
 
 
 
