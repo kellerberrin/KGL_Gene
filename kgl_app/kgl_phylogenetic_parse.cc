@@ -39,8 +39,6 @@ constexpr const char* kgl::PhylogeneticExecEnv::VERSION;
 // Parse the command line.
 bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 {
-  // Save the command line.
-  ExecEnv::getCommandLine(argc, argv);
 
   // Setup ArgumentParser.
   seqan::ArgumentParser parser(MODULE_NAME);
@@ -56,7 +54,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
       R"("kgl_phylogenetic" is a fast C++ program to find genetic differences (SNPs/Indels) in a population of organisms.
   The entire genome of many organisms can be compared and analysed simultaneously (with sufficient memory).
   The options xml file specifies a list of VCF files and associated organism attributes to be processed.
-  This program also takes the genome FASTA file and the corresponding genetic feature  model in GFF3 (only) format
+  This program also takes the genome FASTA file and the corresponding genetic feature model in GFF3 (only) format
   and builds a memory database of the genetic structure of the target organism to facilitate analysis.)";
 
   addDescription(parser, program_desc);

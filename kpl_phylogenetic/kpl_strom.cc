@@ -7,26 +7,7 @@
 
 namespace kpl = kellerberrin::phylogenetic;
 
-
-// Used by the boost program options library
-std::string  kpl::Strom::_program_name        = "strom";
-unsigned     kpl::Strom::_major_version       = 1;
-unsigned     kpl::Strom::_minor_version       = 0;
-
-
 // member function bodies go here
-
-
-kpl::Strom::Strom() {
-  //std::cout << "Constructing a Strom" << std::endl;
-  clear();
-}
-
-
-kpl::Strom::~Strom() {
-  //std::cout << "Destroying a Strom" << std::endl;
-}
-
 
 void kpl::Strom::clear() {
 
@@ -126,7 +107,7 @@ void kpl::Strom::parseCommandLine(int argc, const char **argv) {
 
   // If user specified --version on command line, output version and quit
   if (vm.count("version") > 0) {
-    std::cout << boost::str(boost::format("This is %s version %d.%d") % _program_name % _major_version % _minor_version) << std::endl;
+    std::cout << boost::str(boost::format("This is %s version %s") % MODULE_NAME % VERSION) << std::endl;
     std::exit(1);
   }
 
@@ -165,16 +146,16 @@ void kpl::Strom::parseCommandLine(int argc, const char **argv) {
     Likelihood::SharedPtr likelihood = Likelihood::SharedPtr(new Likelihood());
     likelihood->setPreferGPU(_use_gpu);
     likelihood->setAmbiguityEqualsMissing(_ambig_missing);
-    Model::SharedPtr m = likelihood->getModel();
-    m->setSubsetDataTypes(_partition->getSubsetDataTypes());
-    handleAssignmentStrings(m, vm, "statefreq", partition_statefreq, "default:equal");
-    handleAssignmentStrings(m, vm, "rmatrix",   partition_rmatrix,   "default:equal");
-    handleAssignmentStrings(m, vm, "omega",     partition_omega,     "default:0.1"  );
-    handleAssignmentStrings(m, vm, "ncateg",    partition_ncateg,    "default:1"    );
-    handleAssignmentStrings(m, vm, "ratevar",   partition_ratevar,   "default:1.0"  );
-    handleAssignmentStrings(m, vm, "pinvar",    partition_pinvar,    "default:0.0"  );
-    handleAssignmentStrings(m, vm, "relrate",   partition_relrates,  "default:equal");
-    handleAssignmentStrings(m, vm, "tree",      partition_tree,      "default:1");
+    std::shared_ptr<Model> model_ptr = likelihood->getModel();
+    model_ptr->setSubsetDataTypes(_partition->getSubsetDataTypes());
+    handleAssignmentStrings(model_ptr, vm, "statefreq", partition_statefreq, "default:equal");
+    handleAssignmentStrings(model_ptr, vm, "rmatrix", partition_rmatrix, "default:equal");
+    handleAssignmentStrings(model_ptr, vm, "omega", partition_omega, "default:0.1"  );
+    handleAssignmentStrings(model_ptr, vm, "ncateg", partition_ncateg, "default:1"    );
+    handleAssignmentStrings(model_ptr, vm, "ratevar", partition_ratevar, "default:1.0"  );
+    handleAssignmentStrings(model_ptr, vm, "pinvar", partition_pinvar, "default:0.0"  );
+    handleAssignmentStrings(model_ptr, vm, "relrate", partition_relrates, "default:equal");
+    handleAssignmentStrings(model_ptr, vm, "tree", partition_tree, "default:1");
     _likelihoods.push_back(likelihood);
 
   }
@@ -185,7 +166,7 @@ void kpl::Strom::parseCommandLine(int argc, const char **argv) {
 }
 
 
-void kpl::Strom::handleAssignmentStrings(Model::SharedPtr m, const boost::program_options::variables_map & vm, std::string label, const std::vector<std::string> & definitions, std::string default_definition) {
+void kpl::Strom::handleAssignmentStrings(std::shared_ptr<Model> model_ptr, const boost::program_options::variables_map & vm, std::string label, const std::vector<std::string> & definitions, std::string default_definition) {
 
   if (vm.count(label) > 0) {
 
@@ -193,7 +174,7 @@ void kpl::Strom::handleAssignmentStrings(Model::SharedPtr m, const boost::progra
 
     for (auto s : definitions) {
 
-      bool is_default = processAssignmentString(m, label, s);
+      bool is_default = processAssignmentString(model_ptr, label, s);
       if (is_default && !first) {
 
         throw XStrom(boost::format("default specification must be first %s encountered") % label);
@@ -207,14 +188,14 @@ void kpl::Strom::handleAssignmentStrings(Model::SharedPtr m, const boost::progra
   }
   else {
 
-    processAssignmentString(m, label, default_definition);
+    processAssignmentString(model_ptr, label, default_definition);
 
   }
 
 }
 
 
-bool kpl::Strom::processAssignmentString(Model::SharedPtr m, const std::string & which, const std::string & definition) {
+bool kpl::Strom::processAssignmentString(std::shared_ptr<Model> model_ptr, const std::string & which, const std::string & definition) {
 
   unsigned num_subsets_defined = _partition->getNumSubsets();
   std::vector<std::string> vector_of_subset_names;
@@ -240,7 +221,7 @@ bool kpl::Strom::processAssignmentString(Model::SharedPtr m, const std::string &
 
       for (unsigned i = 0; i < num_subsets_defined; i++) {
 
-        m->setSubsetStateFreqs(freqs, i, fixed);
+        model_ptr->setSubsetStateFreqs(freqs, i, fixed);
 
       }
 
@@ -249,7 +230,7 @@ bool kpl::Strom::processAssignmentString(Model::SharedPtr m, const std::string &
 
       for (auto s : vector_of_subset_names) {
 
-        m->setSubsetStateFreqs(freqs, _partition->findSubsetByName(s), fixed);
+        model_ptr->setSubsetStateFreqs(freqs, _partition->findSubsetByName(s), fixed);
 
       }
 
@@ -266,7 +247,7 @@ bool kpl::Strom::processAssignmentString(Model::SharedPtr m, const std::string &
 
       for (unsigned i = 0; i < num_subsets_defined; i++) {
 
-        m->setSubsetExchangeabilities(xchg, i, fixed);
+        model_ptr->setSubsetExchangeabilities(xchg, i, fixed);
 
       }
 
@@ -275,7 +256,7 @@ bool kpl::Strom::processAssignmentString(Model::SharedPtr m, const std::string &
 
       for (auto s : vector_of_subset_names) {
 
-        m->setSubsetExchangeabilities(xchg, _partition->findSubsetByName(s), fixed);
+        model_ptr->setSubsetExchangeabilities(xchg, _partition->findSubsetByName(s), fixed);
 
       }
 
@@ -298,7 +279,7 @@ bool kpl::Strom::processAssignmentString(Model::SharedPtr m, const std::string &
 
       for (unsigned i = 0; i < num_subsets_defined; i++) {
 
-        m->setSubsetOmega(omega, i, fixed);
+        model_ptr->setSubsetOmega(omega, i, fixed);
 
       }
 
@@ -307,7 +288,7 @@ bool kpl::Strom::processAssignmentString(Model::SharedPtr m, const std::string &
 
       for (auto s : vector_of_subset_names) {
 
-        m->setSubsetOmega(omega, _partition->findSubsetByName(s), fixed);
+        model_ptr->setSubsetOmega(omega, _partition->findSubsetByName(s), fixed);
 
       }
 
@@ -330,8 +311,8 @@ bool kpl::Strom::processAssignmentString(Model::SharedPtr m, const std::string &
 
       for (unsigned i = 0; i < num_subsets_defined; i++) {
 
-        m->setSubsetIsInvarModel(invar_model, i);
-        m->setSubsetPinvar(p, i, fixed);
+        model_ptr->setSubsetIsInvarModel(invar_model, i);
+        model_ptr->setSubsetPinvar(p, i, fixed);
 
       }
 
@@ -341,8 +322,8 @@ bool kpl::Strom::processAssignmentString(Model::SharedPtr m, const std::string &
       for (auto s : vector_of_subset_names) {
 
         unsigned i = _partition->findSubsetByName(s);
-        m->setSubsetIsInvarModel(invar_model, i);
-        m->setSubsetPinvar(p, i, fixed);
+        model_ptr->setSubsetIsInvarModel(invar_model, i);
+        model_ptr->setSubsetPinvar(p, i, fixed);
 
       }
 
@@ -364,7 +345,7 @@ bool kpl::Strom::processAssignmentString(Model::SharedPtr m, const std::string &
 
       for (unsigned i = 0; i < num_subsets_defined; i++) {
 
-        m->setSubsetRateVar(rv, i, fixed);
+        model_ptr->setSubsetRateVar(rv, i, fixed);
 
       }
     }
@@ -372,7 +353,7 @@ bool kpl::Strom::processAssignmentString(Model::SharedPtr m, const std::string &
 
       for (auto s : vector_of_subset_names) {
 
-        m->setSubsetRateVar(rv, _partition->findSubsetByName(s), fixed);
+        model_ptr->setSubsetRateVar(rv, _partition->findSubsetByName(s), fixed);
 
       }
 
@@ -394,7 +375,7 @@ bool kpl::Strom::processAssignmentString(Model::SharedPtr m, const std::string &
 
       for (unsigned i = 0; i < num_subsets_defined; i++) {
 
-        m->setSubsetNumCateg(ncat, i);
+        model_ptr->setSubsetNumCateg(ncat, i);
 
       }
 
@@ -403,7 +384,7 @@ bool kpl::Strom::processAssignmentString(Model::SharedPtr m, const std::string &
 
       for (auto s : vector_of_subset_names) {
 
-        m->setSubsetNumCateg(ncat, _partition->findSubsetByName(s));
+        model_ptr->setSubsetNumCateg(ncat, _partition->findSubsetByName(s));
 
       }
 
@@ -422,7 +403,7 @@ bool kpl::Strom::processAssignmentString(Model::SharedPtr m, const std::string &
 
     assert(tree_index > 0);
 
-    m->setTreeIndex(tree_index - 1, fixed);
+    model_ptr->setTreeIndex(tree_index - 1, fixed);
 
     if (vector_of_subset_names[0] != "default") {
 
@@ -441,7 +422,7 @@ bool kpl::Strom::processAssignmentString(Model::SharedPtr m, const std::string &
 
     }
 
-    m->setSubsetRelRates(vector_of_values, fixed);
+    model_ptr->setSubsetRelRates(vector_of_values, fixed);
 
   }
 
@@ -758,8 +739,7 @@ void kpl::Strom::initChains() {
 
       std::cout << "\n" << m->describeModel() << std::endl;
 
-    }
-    else {
+    } else {
 
       m->describeModel();
 
@@ -898,7 +878,7 @@ void kpl::Strom::swapChains() {
   unsigned j = i + 1 + _lot->randint(0, _num_chains-2);
   j %= _num_chains;
 
-  assert(i != j && i >=0 && i < _num_chains && j >= 0 && j < _num_chains);
+  assert(i != j && i < _num_chains && j < _num_chains);
 
   // Determine upper and lower triangle cells in _swaps vector
   unsigned smaller = _num_chains;

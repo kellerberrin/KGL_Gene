@@ -14,8 +14,7 @@
 
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization::project level namespace
 
 // Singleton. This class sets up the application runtime environment as a series of static variables
 // and member functions. The class is never instantiated and is the first and only statement in main() (see kgl_main.cc).
@@ -46,7 +45,6 @@ private:
 
   static void ctrlC(int);
 
-
 };
 
 
@@ -62,6 +60,10 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
 
   try {
 
+    // Save the command line.
+    getCommandLine(argc, argv);
+
+    // Create the template execution environment
     Environment environment;
 
     environment.parseCommandLine(argc, argv);  // Setup the static ExecEnv runtime environment and create the logger.
@@ -91,9 +93,6 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
 }
 
 
-
-
-}   // namespace genome
-}   // namespace kellerberrin
+}   // end namespace
 
 #endif //KGL_EXEC_ENV_H

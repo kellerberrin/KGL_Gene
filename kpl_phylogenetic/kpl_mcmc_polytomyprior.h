@@ -10,8 +10,7 @@
 #include "kpl_random.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
+namespace kellerberrin::phylogenetic {   //  organization level namespace
 
 
 class PolytomyTopoPriorCalculator {
@@ -86,8 +85,7 @@ private:
 };
 
 
-} // phylogenetic
-} // kellerberrin
+} // end namespace
 
 
 #endif // KPL_MCMC_POLYTOMYPRIOR_H

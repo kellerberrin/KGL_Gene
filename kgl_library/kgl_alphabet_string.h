@@ -15,8 +15,7 @@
 #include "kgl_alphabet_amino.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -217,8 +216,7 @@ void AlphabetString<Alphabet>::convertFromCharString(const std::string &alphabet
 
 
 
-}
-}
+}  // end namespace
 
 
 #endif //KGL_ALPHABET_STRING_H

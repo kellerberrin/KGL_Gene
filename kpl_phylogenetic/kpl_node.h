@@ -12,8 +12,7 @@
 #include  <iostream>
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
+namespace kellerberrin::phylogenetic {   //  organization::project level namespace
 
 class TreeIO;
 
@@ -111,13 +110,12 @@ private:
   unsigned _flags;
 
   static constexpr const double _SMALLEST_EDGE_LENGTH = 1.0e-12; // This appears to be a "magic number".
-  static constexpr const double _NO_NUMBER = -1; // Used as an initialization flag, replace ASAP.
+  static constexpr const double _NO_NUMBER = -1; // Used as an initialization flag, todo::replace ASAP.
 
 };
 
 
-} // phylogenetic
-} // kellerberrin
+} // end namespace
 
 
 #endif // KPL_NODE_H

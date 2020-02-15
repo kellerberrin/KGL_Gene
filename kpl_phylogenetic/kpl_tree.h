@@ -11,8 +11,7 @@
 #include <iostream>
 #include <stack>
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
+namespace kellerberrin::phylogenetic {   //  organization level namespace
 
 class TreeManip;
 
@@ -80,8 +79,7 @@ private:
 
 
 
-}   // phylogenetic
-}  // kellerberrin
+}   // end namespace
 
 
 #endif // KPL_TREE_H

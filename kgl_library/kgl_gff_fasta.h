@@ -14,8 +14,7 @@
 #include "kgl_logging.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization::project level namespace
 
 // Creates an instance of a Genome database object.
 // Parses the input gff(3) file and annotates it with a fasta sequence
@@ -60,7 +59,6 @@ private:
 };
 
 
-}   // namespace genome
-}   // namespace kellerberrin
+}   // end namespace
 
 #endif //KGL_GFF_FASTA_H

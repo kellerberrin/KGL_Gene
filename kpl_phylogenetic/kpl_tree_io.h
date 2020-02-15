@@ -11,8 +11,7 @@
 #include <iostream>
 #include <stack>
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
+namespace kellerberrin::phylogenetic {   //  organization level namespace
 
 
 // Performs TreeIO to and from the Newick tree format.
@@ -40,7 +39,6 @@ private:
 };
 
 
-}
-}
+} // end namespace
 
 #endif //KGL_KPL_TREE_IO_H

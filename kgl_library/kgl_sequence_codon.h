@@ -16,9 +16,7 @@
 #include "kgl_sequence_base.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
-
+namespace kellerberrin::genome {   //  organization level namespace
 
 
 class Codon  {
@@ -67,7 +65,6 @@ private:
 
 
 } // namespace genome
-} // namespace kellerberrin
 
 
 #endif //KGL_SEQUENCE_CODON_H

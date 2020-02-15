@@ -12,8 +12,7 @@
 
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
+namespace kellerberrin::phylogenetic {   //  organization::project level namespace
 
 
 class PinvarUpdater : public Updater {
@@ -21,7 +20,7 @@ class PinvarUpdater : public Updater {
 public:
   typedef std::shared_ptr<PinvarUpdater> SharedPtr;
 
-  explicit PinvarUpdater(ASRV::SharedPtr asrv);
+  explicit PinvarUpdater(std::shared_ptr<ASRV> asrv);
   ~PinvarUpdater() override;
 
   void clear() override;
@@ -35,14 +34,12 @@ public:
 private:
 
   double _prev_point;
-  ASRV::SharedPtr _asrv;
+  std::shared_ptr<ASRV> _asrv;
 };
 
 
 
-} // phylogenetic
-} // kellerberrin
-
+} // end namespace
 
 
 

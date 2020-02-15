@@ -11,33 +11,30 @@
 
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
-
+namespace kellerberrin::phylogenetic {   //  organization::project level namespace
 
 
 class SubsetRelRateUpdater : public DirichletUpdater {
 public:
   typedef std::shared_ptr< SubsetRelRateUpdater > SharedPtr;
 
-  SubsetRelRateUpdater(Model::SharedPtr model);
+  SubsetRelRateUpdater(std::shared_ptr<Model> model);
   ~SubsetRelRateUpdater();
 
   double calcLogPrior() override;
 
 private:
 
-  void                            pullFromModel();
-  void                            pushToModel();
+  void pullFromModel();
+  void pushToModel();
 
-  Model::SharedPtr                _model;
+  std::shared_ptr<Model> _model;
 
 };
 
 
 
-} // phylogenetic
-} // kellerberrin
+} // end namespace
 
 
 #endif // KPL_MCMC_SUBSETUPDATER_H

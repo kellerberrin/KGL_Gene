@@ -23,8 +23,7 @@
 #include <iostream>
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
+namespace kellerberrin::phylogenetic {   //  organization level namespace
 
 
 using ExecEnv = kellerberrin::genome::ExecEnv;
@@ -32,84 +31,78 @@ using ExecEnv = kellerberrin::genome::ExecEnv;
 class Strom {
 
 public:
-  Strom();
-  ~Strom();
+  Strom() { clear(); }
+  ~Strom() = default;
 
-  void                                    parseCommandLine(int argc, const char **argv);
-  void                                    executeApp();
+  void parseCommandLine(int argc, const char **argv);
+  void executeApp();
 
   static constexpr const char* VERSION = "0.1";
   static constexpr const char* MODULE_NAME = "kpl_phyloTree";
 
 private:
 
-  void                                    clear();
-  bool                                    processAssignmentString(Model::SharedPtr m, const std::string & which, const std::string & definition);
-  void                                    handleAssignmentStrings(Model::SharedPtr m, const boost::program_options::variables_map & vm, std::string label, const std::vector<std::string> & definitions, std::string default_definition);
-  bool                                    splitAssignmentString(const std::string & definition, std::vector<std::string> & vector_of_subset_names, std::vector<double>  & vector_of_values);
-  void                                    sample(unsigned iter, Chain & chain);
+  void clear();
+  bool processAssignmentString(std::shared_ptr<Model> model_ptr, const std::string & which, const std::string & definition);
+  void handleAssignmentStrings(std::shared_ptr<Model> model_ptr, const boost::program_options::variables_map & vm, std::string label, const std::vector<std::string> & definitions, std::string default_definition);
+  bool splitAssignmentString(const std::string & definition, std::vector<std::string> & vector_of_subset_names, std::vector<double>  & vector_of_values);
+  void sample(unsigned iter, Chain & chain);
 
-  void                                    readData();
-  void                                    readTrees();
-  void                                    showPartitionInfo();
-  void                                    showBeagleInfo();
-  void                                    showMCMCInfo();
-  void                                    calcHeatingPowers();
-  void                                    initChains();
-  void                                    startTuningChains();
-  void                                    stopTuningChains();
-  void                                    stepChains(unsigned iteration, bool sampling);
-  void                                    swapChains();
-  void                                    stopChains();
-  void                                    swapSummary() const;
-  void                                    showChainTuningInfo() const;
+  void readData();
+  void readTrees();
+  void showPartitionInfo();
+  void showBeagleInfo();
+  void showMCMCInfo();
+  void calcHeatingPowers();
+  void initChains();
+  void startTuningChains();
+  void stopTuningChains();
+  void stepChains(unsigned iteration, bool sampling);
+  void swapChains();
+  void stopChains();
+  void swapSummary() const;
+  void showChainTuningInfo() const;
 
-  double                                  _expected_log_likelihood;
+  double _expected_log_likelihood;
 
-  double                                  _topo_prior_C;
-  bool                                    _allow_polytomies;
-  bool                                    _resolution_class_prior;
+  double _topo_prior_C;
+  bool _allow_polytomies;
+  bool _resolution_class_prior;
 
-  std::string                             _data_file_name;
-  std::string                             _tree_file_name;
-  Partition::SharedPtr                    _partition;
+  std::string _data_file_name;
+  std::string _tree_file_name;
+  Partition::SharedPtr _partition;
 
-  Data::SharedPtr                         _data;
-  std::vector<Likelihood::SharedPtr>      _likelihoods;
-  //Model::SharedPtr                        _model;
-  //Likelihood::SharedPtr                   _likelihood;
-  TreeSummary::SharedPtr                  _tree_summary;
-  Lot::SharedPtr                          _lot;
+  Data::SharedPtr _data;
+  std::vector<Likelihood::SharedPtr> _likelihoods;
+  TreeSummary::SharedPtr _tree_summary;
+  Lot::SharedPtr _lot;
 
-  unsigned                                _random_seed;
-  unsigned                                _num_iter;
-  unsigned                                _print_freq;
-  unsigned                                _sample_freq;
+  unsigned _random_seed;
+  unsigned _num_iter;
+  unsigned _print_freq;
+  unsigned _sample_freq;
 
-  unsigned                                _num_burnin_iter;
-  unsigned                                _num_chains;
-  double                                  _heating_lambda;
-  bool                                    _using_stored_data;
-  std::vector<Chain>                      _chains;
-  std::vector<double>                     _heating_powers;
-  std::vector<unsigned>                   _swaps;
+  unsigned _num_burnin_iter;
+  unsigned _num_chains;
+  double _heating_lambda;
+  bool _using_stored_data;
+  std::vector<Chain> _chains;
+  std::vector<double> _heating_powers;
+  std::vector<unsigned> _swaps;
 
-  bool                                    _use_gpu;
-  bool                                    _ambig_missing;
-  bool                                    _use_underflow_scaling;
+  bool _use_gpu;
+  bool _ambig_missing;
+  bool _use_underflow_scaling;
 
-  static std::string                      _program_name;
-  static unsigned                         _major_version;
-  static unsigned                         _minor_version;
+  OutputManager::SharedPtr _output_manager;
 
-  OutputManager::SharedPtr                _output_manager;
 
 };
 
 
 
-} // phylogenetic
-} // kellerberrin
+} // end namespace
 
 
 #endif //KPL_STROM_H

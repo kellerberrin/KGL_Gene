@@ -11,8 +11,7 @@
 #include "kpl_asrv.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
+namespace kellerberrin::phylogenetic {   //  organization level namespace
 
 
 class GammaRateVarUpdater : public Updater {
@@ -21,7 +20,7 @@ public:
 
   typedef std::shared_ptr<GammaRateVarUpdater> SharedPtr;
 
-  explicit GammaRateVarUpdater(ASRV::SharedPtr asrv);
+  explicit GammaRateVarUpdater(std::shared_ptr<ASRV> asrv);
   ~GammaRateVarUpdater() override;
 
   void clear() override;
@@ -35,14 +34,12 @@ public:
 private:
 
   double _prev_point;
-  ASRV::SharedPtr _asrv;
+  std::shared_ptr<ASRV> _asrv;
 
 };
 
 
-} // phylogenetic
-} // kellerberrin
-
+} // end namespace
 
 
 #endif // KPL_MCMC_GAMMA_H

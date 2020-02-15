@@ -12,8 +12,7 @@
 #include "kgl_sequence_virtual.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization::project level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -120,8 +119,7 @@ private:
 };
 
 
-}   // namespace genome
-}   // namespace kellerberrin
+}   // end namespace
 
 
 #endif //KGL_SEQUENCE_AMINO_H

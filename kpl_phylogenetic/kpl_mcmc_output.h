@@ -16,9 +16,7 @@
 
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
-
+namespace kellerberrin::phylogenetic {   //  organization::project level namespace
 
 
 class OutputManager {
@@ -28,34 +26,33 @@ public:
   OutputManager();
   ~OutputManager();
 
-  void                       setModel(Model::SharedPtr model) {_model = model;}
-  void                       setTreeManip(TreeManip::SharedPtr tm) {_tree_manip = tm;}
+  void setModel(std::shared_ptr<Model> model) {_model = model;}
+  void setTreeManip(TreeManip::SharedPtr tm) {_tree_manip = tm;}
 
-  void                       openTreeFile(std::string filename, Data::SharedPtr data);
-  void                       openParameterFile(std::string filename, Model::SharedPtr model);
+  void openTreeFile(std::string filename, Data::SharedPtr data);
+  void openParameterFile(std::string filename, std::shared_ptr<Model> model);
 
-  void                       closeTreeFile();
-  void                       closeParameterFile();
+  void closeTreeFile();
+  void closeParameterFile();
 
-  void                       outputConsole(std::string s);
-  void                       outputTree(unsigned iter, TreeManip::SharedPtr tm);
-  void                       outputParameters(unsigned iter, double lnL, double lnP, double TL, unsigned m, Model::SharedPtr model);
+  void outputConsole(std::string s);
+  void outputTree(unsigned iter, TreeManip::SharedPtr tm);
+  void outputParameters(unsigned iter, double lnL, double lnP, double TL, unsigned m, std::shared_ptr<Model> model);
 
 
 private:
 
-  TreeManip::SharedPtr       _tree_manip;
-  Model::SharedPtr           _model;
-  std::ofstream              _treefile;
-  std::ofstream              _parameterfile;
-  std::string                _tree_file_name;
-  std::string                _param_file_name;
+  TreeManip::SharedPtr _tree_manip;
+  std::shared_ptr<Model> _model;
+  std::ofstream _treefile;
+  std::ofstream _parameterfile;
+  std::string _tree_file_name;
+  std::string _param_file_name;
 };
 
 
 
-} // phylogenetic
-} // kellerberrin
+} // end namespace
 
 
 

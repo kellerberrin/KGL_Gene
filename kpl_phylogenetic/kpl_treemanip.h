@@ -23,8 +23,7 @@
 #include <regex>
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
+namespace kellerberrin::phylogenetic {   //  organization level namespace
 
 
 class TreeManip {
@@ -121,10 +120,7 @@ public:
 };
 
 
-
-
-} // phylogenetic
-} // kellerberrin
+} // end namespace
 
 
 #endif // KPL_TREEMANIP_H

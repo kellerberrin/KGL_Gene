@@ -17,8 +17,7 @@
 #include "kgl_genome_db.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization::project level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,11 +94,7 @@ private:
 };
 
 
-
-
-
-}   // namespace genome
-}   // namespace kellerberrin
+}   // end namespace
 
 
 

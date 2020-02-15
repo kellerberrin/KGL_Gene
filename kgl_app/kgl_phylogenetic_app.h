@@ -11,8 +11,7 @@
 #include "kgl_properties.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization::project level namespace
 
 
 // Holds the Phylogenetic Commandline Arguments.
@@ -49,12 +48,11 @@ private:
   static RuntimeProperties runtime_options_;
 
 
-  };
+};
 
 
 
-} //  organization level namespace
-}  // project level namespace
+} //  end namespace
 
 
 

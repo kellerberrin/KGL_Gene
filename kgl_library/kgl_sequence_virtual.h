@@ -11,8 +11,7 @@
 
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -190,8 +189,6 @@ bool AlphabetSequence<Alphabet>::getSubsequence(ContigOffset_t substring_offset,
 
 }
 
-}   // namespace genome
-}   // namespace kellerberrin
-
+}   // end namespace
 
 #endif //KGL_SEQUENCE_VIRTUAL_H

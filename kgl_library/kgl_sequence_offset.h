@@ -10,8 +10,7 @@
 
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization level namespace
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A sorted map of coding sequence offsets.
@@ -53,7 +52,7 @@ public:
                                                                                ContigOffset_t contig_offset);
 
 
-// Returns a defined subsequence (generally a single/group of codons) of all the introns of the coding sequence concatonated.
+// Returns a defined subsequence of all the introns of the coding sequence concatonated.
 // Setting sub_sequence_offset and sub_sequence_length to zero copies the entire intron sequence defined by the SortedCDS.
   static std::shared_ptr<DNA5SequenceCoding> refIntronSubSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
                                                                   const DNA5SequenceLinear& sequence_ptr,
@@ -159,9 +158,7 @@ private:
 
 
 
-}   // namespace genome
-}   // namespace kellerberrin
-
+}   // end namespace
 
 
 #endif //KGL_SEQUENCE_OFFSET_H

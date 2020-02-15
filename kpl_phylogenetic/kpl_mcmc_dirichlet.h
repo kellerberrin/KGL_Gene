@@ -9,8 +9,7 @@
 #include "kpl_mcmc_updater.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
+namespace kellerberrin::phylogenetic {   //  organization level namespace
 
 
 class Chain;
@@ -46,8 +45,7 @@ protected:
 
 
 
-} // phylogenetic
-} // kellerberrin
+} // end namespace
 
 
 #endif //KPL_MCMC_DIRICHLET_H

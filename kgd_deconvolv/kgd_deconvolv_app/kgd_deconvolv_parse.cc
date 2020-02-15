@@ -65,9 +65,6 @@ void getFilePath(const std::string& option_text,
 
 bool kgd::Deconvolv::parseCommandLine(int argc, char const ** argv) {
 
-  // Save the command line.
-  DeconvolvApp::getCommandLine(argc, argv);
-
   // Setup ArgumentParser.
   seqan::ArgumentParser parser(MODULE_NAME);
   // Set short description, version, and date.

@@ -10,8 +10,7 @@
 #include <spdlog/spdlog.h>  // Implement the logger using the spdlog library
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization::project level namespace
 
 
 class Logger {
@@ -137,8 +136,9 @@ template<typename M, typename... Args> void Logger::critical(M& message, Args...
 
 }
 
-}   // namespace genome
-}   // namespace kellerberrin
+
+}   // end namespace
+
 
 #endif //KGL_LOGGING_H
 

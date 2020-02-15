@@ -32,8 +32,7 @@
 
 // Generic code patterns for the project.
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization level namespace
 
 
 // Pattern to delete duplicates from an iterable container.
@@ -210,8 +209,7 @@ long intersectIterable(T& modified_container, const T& reference_container, P bo
 }
 
 
-  }   // namespace genome
-}   // namespace kellerberrin
+}   // end namespace
 
 
 #endif // KGL_PATTERNS_H

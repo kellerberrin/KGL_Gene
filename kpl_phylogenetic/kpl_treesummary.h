@@ -23,8 +23,7 @@
 #include <algorithm>
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
+namespace kellerberrin::phylogenetic {   //  organization level namespace
 
 
 class TreeSummary {
@@ -55,8 +54,7 @@ public:
 
 
 
-} // phylogenetic
-} // kellerberrin
+} // end namespace
 
 
 #endif // KPL_TREESUMMARY_H

@@ -13,17 +13,6 @@ namespace kpl = kellerberrin::phylogenetic;
 // member function bodies go here
 
 
-kpl::Model::Model() {
-  //std::cout << "Constructing a Model" << std::endl;
-  clear();
-}
-
-
-kpl::Model::~Model() {
-  //std::cout << "Destroying a Model" << std::endl;
-}
-
-
 void kpl::Model::clear() {
 
   _num_subsets = 0;
@@ -40,41 +29,6 @@ void kpl::Model::clear() {
   _subset_datatypes.clear();
   _qmatrix.clear();
   _asrv.clear();
-
-}
-
-
-kpl::Model::state_freq_params_t& kpl::Model::getStateFreqParams() {
-
-  return _state_freq_params;
-
-}
-
-
-kpl::Model::exchangeability_params_t& kpl::Model::getExchangeabilityParams() {
-
-  return _exchangeability_params;
-
-}
-
-
-kpl::Model::omega_params_t& kpl::Model::getOmegaParams() {
-
-  return _omega_params;
-
-}
-
-
-kpl::Model::ratevar_params_t& kpl::Model::getRateVarParams() {
-
-  return _ratevar_params;
-
-}
-
-
-kpl::Model::pinvar_params_t& kpl::Model::getPinvarParams() {
-
-  return _pinvar_params;
 
 }
 
@@ -522,7 +476,7 @@ std::string kpl::Model::describeModel() {
 
     if (_asrv[i]->getNumCateg() > 1) {
 
-      double ratevar = *(_asrv[i]->getRateVarSharedPtr());
+      double ratevar = _asrv[i]->getRateVar();
       s += boost::str(boost::format("  %12d: %g\n") % (i+1) % ratevar);
 
     }
@@ -566,20 +520,6 @@ unsigned kpl::Model::getSubsetNumSites(unsigned subset) const { ///begin_getNumS
 }   ///end_getNumSites
 
 
-unsigned kpl::Model::getNumSites() const {
-
-  return _num_sites;
-
-}
-
-
-unsigned kpl::Model::getNumSubsets() const { ///begin_getNumSubsets
-
-  return _num_subsets;
-
-} ///end_getNumSubsets
-
-
 unsigned kpl::Model::getSubsetNumCateg(unsigned subset) const { ///begin_getSubsetNumRateCategories
 
   assert(subset < _num_subsets);
@@ -617,20 +557,14 @@ const kpl::ASRV& kpl::Model::getASRV(unsigned subset) const { ///begin_getASRV
 double kpl::Model::calcNormalizingConstantForSubsetRelRates() const {
   // normalize _relrates so that expected relative rate across subsets equals 1.0
   double normalizing_constant = 0.0;
-  for (unsigned s = 0; s < _num_subsets; s++) {
 
-    normalizing_constant += _subset_sizes[s]*_subset_relrates[s]/_num_sites;
+  for (unsigned subset_idx = 0; subset_idx < _num_subsets; subset_idx++) {
+
+    normalizing_constant += (_subset_sizes[subset_idx] * _subset_relrates[subset_idx]) / _num_sites;
 
   }
 
   return normalizing_constant;
-
-}
-
-
-kpl::Model::subset_sizes_t& kpl::Model::getSubsetSizes() {
-
-  return _subset_sizes;
 
 }
 
@@ -828,20 +762,6 @@ void kpl::Model::setTreeIndex(unsigned i, bool fixed) {
 }
 
 
-unsigned kpl::Model::getTreeIndex() const {
-
-  return _tree_index;
-
-}
-
-
-bool kpl::Model::isFixedTree() const {
-
-  return _tree_fixed;
-
-}
-
-
 void kpl::Model::setSubsetRelRates(subset_relrate_vect_t & relrates, bool fixed) {
 
   assert(_num_subsets > 0);
@@ -863,16 +783,9 @@ void kpl::Model::setSubsetRelRates(subset_relrate_vect_t & relrates, bool fixed)
 }
 
 
-kpl::Model::subset_relrate_vect_t& kpl::Model::getSubsetRelRates() {
+const kpl::Model::subset_relrate_vect_t& kpl::Model::getSubsetRelRates() const {
 
   return _subset_relrates;
-
-}
-
-
-bool kpl::Model::isFixedSubsetRelRates() const {
-
-  return _subset_relrates_fixed;
 
 }
 
@@ -899,72 +812,6 @@ void kpl::Model::inactivate() {
 }
 
 
-int kpl::Model::setBeagleEigenDecomposition(int beagle_instance, unsigned subset, unsigned instance_subset) {
-
-  assert(subset < _qmatrix.size());
-
-  const double * pevec = _qmatrix[subset]->getEigenvectors();
-  const double * pivec = _qmatrix[subset]->getInverseEigenvectors();
-  const double * pival = _qmatrix[subset]->getEigenvalues();
-
-  int code = beagleSetEigenDecomposition(
-      beagle_instance,    // Instance number (input)
-      instance_subset,    // Index of eigen-decomposition buffer (input)
-      pevec,              // Flattened matrix (stateCount x stateCount) of eigen-vectors (input)
-      pivec,              // Flattened matrix (stateCount x stateCount) of inverse-eigen- vectors (input)
-      pival);             // Vector of eigenvalues
-
-  return code;
-
-}
-
-
-int kpl::Model::setBeagleStateFrequencies(int beagle_instance, unsigned subset, unsigned instance_subset) {
-
-  assert(subset < _qmatrix.size());
-
-  const double * pfreq = _qmatrix[subset]->getStateFreqs();
-
-  int code = beagleSetStateFrequencies(
-      beagle_instance,   // Instance number (input)
-      instance_subset,   // Index of state frequencies buffer (input)
-      pfreq);            // State frequencies array (stateCount) (input)
-
-  return code;
-
-}
-
-
-int kpl::Model::setBeagleAmongSiteRateVariationRates(int beagle_instance, unsigned subset, unsigned instance_subset) {
-
-  assert(subset < _asrv.size());
-  const double * prates = _asrv[subset]->getRates();
-
-  int code = beagleSetCategoryRatesWithIndex(
-      beagle_instance,    // Instance number (input)
-      instance_subset,    // Index of category rates buffer (input)
-      prates);            // Array containing categoryCount rate scalers (input)
-
-  return code;
-
-}
-
-
-int kpl::Model::setBeagleAmongSiteRateVariationProbs(int beagle_instance, unsigned subset, unsigned instance_subset) {
-
-  assert(subset < _asrv.size());
-  const double * pprobs = _asrv[subset]->getProbs();
-
-  int code = beagleSetCategoryWeights(
-      beagle_instance,    // Instance number (input)
-      instance_subset,    // Index of category weights buffer (input)
-      pprobs);            // Category weights array (categoryCount) (input)
-
-  return code;
-
-}
-
-
 void kpl::Model::setTopologyPriorOptions(bool allow_polytomies, bool resclass, double C) {
 
   _allow_polytomies       = allow_polytomies;
@@ -974,23 +821,8 @@ void kpl::Model::setTopologyPriorOptions(bool allow_polytomies, bool resclass, d
 }
 
 
-bool kpl::Model::isAllowPolytomies() const {
-
-  return _allow_polytomies;
-
-}
 
 
-bool kpl::Model::isResolutionClassTopologyPrior() const {
-
-  return _resolution_class_prior;
-
-}
 
 
-double kpl::Model::getTopologyPriorC() const {
-
-  return _topo_prior_C;
-
-}
 

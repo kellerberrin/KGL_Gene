@@ -11,9 +11,7 @@
 
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
-
+namespace kellerberrin::phylogenetic {   //  organization::project level namespace
 
 
 class OmegaUpdater : public Updater {
@@ -39,8 +37,7 @@ private:
 };
 
 
-} // phylogenetic
-} // kellerberrin
+} // end namespace
 
 
 

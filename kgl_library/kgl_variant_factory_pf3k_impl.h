@@ -14,8 +14,7 @@
 
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization level namespace
 
 
 class Pf3kVCFImpl : public ParseCigar {
@@ -27,7 +26,7 @@ public:
               const std::string &vcf_file_name) : ParseCigar(vcf_population_ptr, genome_db_ptr, vcf_file_name) {
 
   }
-  ~Pf3kVCFImpl() = default;
+  ~Pf3kVCFImpl() override = default;
 
   void ProcessVCFRecord(size_t vcf_record_count, const seqan::VcfRecord& vcf_record) override;
 
@@ -73,8 +72,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-}   // namespace genome
-}   // namespace kellerberrin
+}   // end namespace
 
 
 

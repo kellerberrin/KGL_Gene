@@ -10,8 +10,7 @@
 #include <cassert>
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization::project level namespace
 
 // Types used to represent genome data.
 
@@ -57,7 +56,6 @@ std::string offsetOutput(ContigOffset_t offset, VariantOutputIndex output_base);
 
 
 
-}   // namespace genome
-}   // namespace kellerberrin
+}   // end namespace
 
 #endif // KGL_GENOME_TYPES_H

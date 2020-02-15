@@ -15,10 +15,7 @@
 // This class holds the evidence that resulted in the creation of a variant.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
-
-
+namespace kellerberrin::genome {   //  organization::project level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,8 +82,7 @@ private:
 };
 
 
-}   // namespace genome
-}   // namespace kellerberrin
+}   // end namespace
 
 
 #endif //KGL_VARIANT_EVIDENCE_H

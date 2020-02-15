@@ -24,8 +24,7 @@
 #include <memory>
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
+namespace kellerberrin::phylogenetic {   //  organization::project level namespace
 
 
 class Chain {
@@ -40,55 +39,54 @@ public:
   Chain();
   ~Chain();
 
-  void                                    clear();
+  void clear();
 
-  void                                    startTuning();
-  void                                    stopTuning();
+  void startTuning();
+  void stopTuning();
 
-  void                                    setTreeFromNewick(std::string & newick);
-  unsigned                                createUpdaters(Model::SharedPtr model, Lot::SharedPtr lot, Likelihood::SharedPtr likelihood);
+  void setTreeFromNewick(std::string & newick);
+  unsigned createUpdaters(std::shared_ptr<Model> model_ptr, Lot::SharedPtr lot, Likelihood::SharedPtr likelihood);
 
-  TreeManip::SharedPtr                    getTreeManip();
-  Model::SharedPtr                        getModel();
-  double                                  getLogLikelihood() const;
+  TreeManip::SharedPtr getTreeManip();
+  std::shared_ptr<Model> getModel();
+  double getLogLikelihood() const;
 
 
-  void                                    setHeatingPower(double p);
-  double                                  getHeatingPower() const;
+  void setHeatingPower(double p);
+  double getHeatingPower() const;
 
-  void                                    setChainIndex(unsigned idx);
-  double                                  getChainIndex() const;
+  void setChainIndex(unsigned idx);
+  double getChainIndex() const;
 
-  Updater::SharedPtr                      findUpdaterByName(std::string name);
-  std::vector<std::string>                getUpdaterNames() const;
-  std::vector<double>                     getAcceptPercentages() const;
-  std::vector<unsigned>                   getNumUpdates() const;
-  std::vector<double>                     getLambdas() const;
-  void                                    setLambdas(std::vector<double> & v);
+  Updater::SharedPtr findUpdaterByName(std::string name);
+  std::vector<std::string> getUpdaterNames() const;
+  std::vector<double> getAcceptPercentages() const;
+  std::vector<unsigned> getNumUpdates() const;
+  std::vector<double> getLambdas() const;
+  void setLambdas(std::vector<double> & v);
 
-  double                                  calcLogLikelihood() const;
-  double                                  calcLogJointPrior() const;
+  double calcLogLikelihood() const;
+  double calcLogJointPrior() const;
 
-  void                                    start();
-  void                                    stop();
-  void                                    nextStep(int iteration);
+  void start();
+  void stop();
+  void nextStep(int iteration);
 
 private:
 
-  Model::SharedPtr                        _model;
-  Lot::SharedPtr                          _lot;
-  TreeManip::SharedPtr                    _tree_manipulator;
+  std::shared_ptr<Model> _model;
+  Lot::SharedPtr _lot;
+  TreeManip::SharedPtr _tree_manipulator;
 
-  updater_vect_t                          _updaters;
+  updater_vect_t _updaters;
 
-  unsigned                                _chain_index;
-  double                                  _heating_power;
-  double                                  _log_likelihood;
+  unsigned _chain_index;
+  double _heating_power;
+  double _log_likelihood;
 };
 
 
-} // phylogenetic
-} // kellerberrin
+} // end namespace
 
 
 #endif //KPL_MCMC_CHAIN_H

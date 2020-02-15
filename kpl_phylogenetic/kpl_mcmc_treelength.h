@@ -8,8 +8,7 @@
 #include "kpl_mcmc_updater.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
+namespace kellerberrin::phylogenetic {   //  organization level namespace
 
 
 class TreeLengthUpdater : public Updater {
@@ -38,8 +37,7 @@ private:
 };
 
 
-} // phylogenetic
-} // kellerberrin
+} // end namespace
 
 
 

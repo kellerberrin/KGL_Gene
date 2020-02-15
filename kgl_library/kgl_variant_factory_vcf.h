@@ -11,9 +11,7 @@
 #include "kgl_variant_db.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
-
+namespace kellerberrin::genome {   //  organization level namespace
 
 
 class VcfFactory  {
@@ -33,8 +31,7 @@ private:
 };
 
 
-}   // namespace genome
-}   // namespace kellerberrin
+}   // end namespace
 
 
 #endif //KGL_VARIANT_FACTORY_VCF_H

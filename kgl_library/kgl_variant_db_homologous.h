@@ -15,8 +15,7 @@
 #include "kgl_variant.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization::project level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,8 +71,7 @@ private:
 };
 
 
-}   // namespace genome
-}   // namespace kellerberrin
+}   // end namespace
 
 // Not in kgl:: namespace.
 std::ostream & operator<<(std::ostream &os, const kellerberrin::genome::OffsetVariantMap& variant_map);

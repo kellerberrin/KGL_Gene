@@ -16,8 +16,7 @@
 #include <memory>
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
+namespace kellerberrin::phylogenetic {   //  organization level namespace
 
 
 class Lot {
@@ -57,8 +56,7 @@ private:
 };
 
 
-} // phylogenetic
-} // kellerberrin
+} // end namespace
 
 
 #endif // KPL_RANDOM_H

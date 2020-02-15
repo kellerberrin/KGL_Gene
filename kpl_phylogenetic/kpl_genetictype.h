@@ -11,9 +11,7 @@
 #include <boost/format.hpp>
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
-
+namespace kellerberrin::phylogenetic {   //  organization level namespace
 
 class DataType {
 public:
@@ -62,8 +60,7 @@ private:
 
 
 
-} // Namespace phylogenetic
-} // kellerberrin
+} // end Namespace
 
 
 #endif //KPL_GENETICTYPE_H

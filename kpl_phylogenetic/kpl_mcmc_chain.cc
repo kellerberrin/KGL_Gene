@@ -79,9 +79,9 @@ void kpl::Chain::setTreeFromNewick(std::string & newick) {
 }
 
 
-unsigned kpl::Chain::createUpdaters(Model::SharedPtr model, Lot::SharedPtr lot, Likelihood::SharedPtr likelihood) {
+unsigned kpl::Chain::createUpdaters(std::shared_ptr<Model> model_ptr, Lot::SharedPtr lot, Likelihood::SharedPtr likelihood) {
 
-  _model = model;
+  _model = model_ptr;
   _lot = lot;
   _updaters.clear();
 
@@ -101,92 +101,92 @@ unsigned kpl::Chain::createUpdaters(Model::SharedPtr model, Lot::SharedPtr lot, 
   }
 
   // Add state frequency parameter updaters to _updaters
-  Model::state_freq_params_t & statefreq_shptr_vect = _model->getStateFreqParams();
-  for (auto statefreq_shptr : statefreq_shptr_vect) {
+  const Model::state_freq_params_t& statefreq_shptr_vect = _model->getStateFreqParams();
+  for (auto& statefreq_shptr : statefreq_shptr_vect) {
 
-    Updater::SharedPtr u = StateFreqUpdater::SharedPtr(new StateFreqUpdater(statefreq_shptr));
-    u->setLikelihood(likelihood);
-    u->setLot(lot);
-    u->setLambda(0.001);
-    u->setTargetAcceptanceRate(0.3);
-    u->setPriorParameters(std::vector<double>(statefreq_shptr->getStateFreqsSharedPtr()->size(), 1.0));
-    u->setWeight(wstd); sum_weights += wstd;
-    _updaters.push_back(u);
+    Updater::SharedPtr local_updater_ptr = std::make_shared<StateFreqUpdater>(statefreq_shptr);
+    local_updater_ptr->setLikelihood(likelihood);
+    local_updater_ptr->setLot(lot);
+    local_updater_ptr->setLambda(0.001);
+    local_updater_ptr->setTargetAcceptanceRate(0.3);
+    local_updater_ptr->setPriorParameters(std::vector<double>(statefreq_shptr->getStateFreqsSharedPtr()->size(), 1.0));
+    local_updater_ptr->setWeight(wstd); sum_weights += wstd;
+    _updaters.push_back(local_updater_ptr);
 
   }
 
   // Add exchangeability parameter updaters to _updaters
-  Model::exchangeability_params_t & exchangeability_shptr_vect = _model->getExchangeabilityParams();
-  for (auto exchangeability_shptr : exchangeability_shptr_vect) {
+  const Model::exchangeability_params_t& exchangeability_shptr_vect = _model->getExchangeabilityParams();
+  for (auto& exchangeability_shptr : exchangeability_shptr_vect) {
 
-    Updater::SharedPtr u = ExchangeabilityUpdater::SharedPtr(new ExchangeabilityUpdater(exchangeability_shptr));
-    u->setLikelihood(likelihood);
-    u->setLot(lot);
-    u->setLambda(1.0);
-    u->setTargetAcceptanceRate(0.3);
-    u->setPriorParameters({1.0, 1.0, 1.0, 1.0, 1.0, 1.0});
-    u->setWeight(wstd); sum_weights += wstd;
-    _updaters.push_back(u);
+    Updater::SharedPtr local_updater_ptr = std::make_shared<ExchangeabilityUpdater>(exchangeability_shptr);
+    local_updater_ptr->setLikelihood(likelihood);
+    local_updater_ptr->setLot(lot);
+    local_updater_ptr->setLambda(1.0);
+    local_updater_ptr->setTargetAcceptanceRate(0.3);
+    local_updater_ptr->setPriorParameters({1.0, 1.0, 1.0, 1.0, 1.0, 1.0});
+    local_updater_ptr->setWeight(wstd); sum_weights += wstd;
+    _updaters.push_back(local_updater_ptr);
 
   }
 
   // Add rate variance parameter updaters to _updaters
-  Model::ratevar_params_t & ratevar_shptr_vect = _model->getRateVarParams();
-  for (auto ratevar_shptr : ratevar_shptr_vect) {
+  const Model::ratevar_params_t & ratevar_shptr_vect = _model->getRateVarParams();
+  for (auto& ratevar_shptr : ratevar_shptr_vect) {
 
-    Updater::SharedPtr u = GammaRateVarUpdater::SharedPtr(new GammaRateVarUpdater(ratevar_shptr));
-    u->setLikelihood(likelihood);
-    u->setLot(lot);
-    u->setLambda(1.0);
-    u->setTargetAcceptanceRate(0.3);
-    u->setPriorParameters({1.0, 1.0});
-    u->setWeight(wstd); sum_weights += wstd;
-    _updaters.push_back(u);
+    Updater::SharedPtr local_updater_ptr = std::make_shared<GammaRateVarUpdater>(ratevar_shptr);
+    local_updater_ptr->setLikelihood(likelihood);
+    local_updater_ptr->setLot(lot);
+    local_updater_ptr->setLambda(1.0);
+    local_updater_ptr->setTargetAcceptanceRate(0.3);
+    local_updater_ptr->setPriorParameters({1.0, 1.0});
+    local_updater_ptr->setWeight(wstd); sum_weights += wstd;
+    _updaters.push_back(local_updater_ptr);
 
   }
 
   // Add pinvar parameter updaters to _updaters
-  Model::pinvar_params_t & pinvar_shptr_vect = _model->getPinvarParams();
-  for (auto pinvar_shptr : pinvar_shptr_vect) {
+  const Model::pinvar_params_t& pinvar_shptr_vect = _model->getPinvarParams();
+  for (auto& pinvar_shptr : pinvar_shptr_vect) {
 
-    Updater::SharedPtr u = PinvarUpdater::SharedPtr(new PinvarUpdater(pinvar_shptr));
-    u->setLikelihood(likelihood);
-    u->setLot(lot);
-    u->setLambda(0.5);
-    u->setTargetAcceptanceRate(0.3);
-    u->setPriorParameters({1.0, 1.0});
-    u->setWeight(wstd); sum_weights += wstd;
-    _updaters.push_back(u);
+    Updater::SharedPtr local_updater_ptr = std::make_shared<PinvarUpdater>(pinvar_shptr);
+    local_updater_ptr->setLikelihood(likelihood);
+    local_updater_ptr->setLot(lot);
+    local_updater_ptr->setLambda(0.5);
+    local_updater_ptr->setTargetAcceptanceRate(0.3);
+    local_updater_ptr->setPriorParameters({1.0, 1.0});
+    local_updater_ptr->setWeight(wstd); sum_weights += wstd;
+    _updaters.push_back(local_updater_ptr);
 
   }
 
   // Add omega parameter updaters to _updaters
-  Model::omega_params_t & omega_shptr_vect = _model->getOmegaParams();
+  const Model::omega_params_t& omega_shptr_vect = _model->getOmegaParams();
   std::cout << "Num Omega Params:" << omega_shptr_vect.size() << std::endl;
-  for (auto omega_shptr : omega_shptr_vect) {
+  for (auto& omega_shptr : omega_shptr_vect) {
 
-    Updater::SharedPtr u = OmegaUpdater::SharedPtr(new OmegaUpdater(omega_shptr));
-    u->setLikelihood(likelihood);
-    u->setLot(lot);
-    u->setLambda(1.0);
-    u->setTargetAcceptanceRate(0.3);
-    u->setPriorParameters({1.0, 1.0});
-    u->setWeight(wstd); sum_weights += wstd;
-    _updaters.push_back(u);
+    Updater::SharedPtr local_updater_ptr = std::make_shared<OmegaUpdater>(omega_shptr);
+    local_updater_ptr->setLikelihood(likelihood);
+    local_updater_ptr->setLot(lot);
+    local_updater_ptr->setLambda(1.0);
+    local_updater_ptr->setTargetAcceptanceRate(0.3);
+    local_updater_ptr->setPriorParameters({1.0, 1.0});
+    local_updater_ptr->setWeight(wstd); sum_weights += wstd;
+    _updaters.push_back(local_updater_ptr);
 
   }
 
   // Add subset relative rate parameter updater to _updaters
   if (!_model->isFixedSubsetRelRates()) {
 
-    Updater::SharedPtr u = SubsetRelRateUpdater::SharedPtr(new SubsetRelRateUpdater(_model));
-    u->setLikelihood(likelihood);
-    u->setLot(lot);
-    u->setLambda(1.0);
-    u->setTargetAcceptanceRate(0.3);
-    u->setPriorParameters(std::vector<double>(_model->getNumSubsets(), 1.0));
-    u->setWeight(wstd); sum_weights += wstd;
-    _updaters.push_back(u);
+    Updater::SharedPtr local_updater_ptr = std::make_shared<SubsetRelRateUpdater>(_model);
+    local_updater_ptr->setLikelihood(likelihood);
+    local_updater_ptr->setLot(lot);
+    local_updater_ptr->setLambda(1.0);
+    local_updater_ptr->setTargetAcceptanceRate(0.3);
+    local_updater_ptr->setPriorParameters(std::vector<double>(_model->getNumSubsets(), 1.0));
+    local_updater_ptr->setWeight(wstd); sum_weights += wstd;
+    _updaters.push_back(local_updater_ptr);
 
   }
 
@@ -197,48 +197,48 @@ unsigned kpl::Chain::createUpdaters(Model::SharedPtr model, Lot::SharedPtr lot, 
     double tree_length_scale = 10.0;
     double dirichlet_param   = 1.0;
 
-    Updater::SharedPtr u = TreeUpdater::SharedPtr(new TreeUpdater());
-    u->setLikelihood(likelihood);
-    u->setLot(lot);
-    u->setLambda(0.5);
-    u->setTargetAcceptanceRate(0.3);
-    u->setPriorParameters({tree_length_shape, tree_length_scale, dirichlet_param});
-    u->setTopologyPriorOptions(_model->isResolutionClassTopologyPrior(), _model->getTopologyPriorC());
-    u->setWeight(wtreetopology); sum_weights += wtreetopology;
+    Updater::SharedPtr updater_ptr = std::make_shared<TreeUpdater>();
+    updater_ptr->setLikelihood(likelihood);
+    updater_ptr->setLot(lot);
+    updater_ptr->setLambda(0.5);
+    updater_ptr->setTargetAcceptanceRate(0.3);
+    updater_ptr->setPriorParameters({tree_length_shape, tree_length_scale, dirichlet_param});
+    updater_ptr->setTopologyPriorOptions(_model->isResolutionClassTopologyPrior(), _model->getTopologyPriorC());
+    updater_ptr->setWeight(wtreetopology); sum_weights += wtreetopology;
 
-    _updaters.push_back(u);
+    _updaters.push_back(updater_ptr);
 
     if (_model->isAllowPolytomies()) {
 
-      Updater::SharedPtr u = PolytomyUpdater::SharedPtr(new PolytomyUpdater());
-      u->setLikelihood(likelihood);
-      u->setLot(lot);
-      u->setLambda(0.05);
-      u->setTargetAcceptanceRate(0.3);
-      u->setPriorParameters({tree_length_shape, tree_length_scale, dirichlet_param});
-      u->setTopologyPriorOptions(_model->isResolutionClassTopologyPrior(), _model->getTopologyPriorC());
-      u->setWeight(wpolytomy); sum_weights += wpolytomy;
+      Updater::SharedPtr local_updater_ptr = std::make_shared<PolytomyUpdater>();
+      local_updater_ptr->setLikelihood(likelihood);
+      local_updater_ptr->setLot(lot);
+      local_updater_ptr->setLambda(0.05);
+      local_updater_ptr->setTargetAcceptanceRate(0.3);
+      local_updater_ptr->setPriorParameters({tree_length_shape, tree_length_scale, dirichlet_param});
+      local_updater_ptr->setTopologyPriorOptions(_model->isResolutionClassTopologyPrior(), _model->getTopologyPriorC());
+      local_updater_ptr->setWeight(wpolytomy); sum_weights += wpolytomy;
 
-      _updaters.push_back(u);
+      _updaters.push_back(local_updater_ptr);
 
     }
 
-    u = TreeLengthUpdater::SharedPtr(new TreeLengthUpdater());
-    u->setLikelihood(likelihood);
-    u->setLot(lot);
-    u->setLambda(0.2);
-    u->setTargetAcceptanceRate(0.3);
-    u->setPriorParameters({tree_length_shape, tree_length_scale, dirichlet_param});
-    u->setTopologyPriorOptions(_model->isResolutionClassTopologyPrior(), _model->getTopologyPriorC());
-    u->setWeight(wtreelength); sum_weights += wtreelength;
+    updater_ptr = std::make_shared<TreeLengthUpdater>();
+    updater_ptr->setLikelihood(likelihood);
+    updater_ptr->setLot(lot);
+    updater_ptr->setLambda(0.2);
+    updater_ptr->setTargetAcceptanceRate(0.3);
+    updater_ptr->setPriorParameters({tree_length_shape, tree_length_scale, dirichlet_param});
+    updater_ptr->setTopologyPriorOptions(_model->isResolutionClassTopologyPrior(), _model->getTopologyPriorC());
+    updater_ptr->setWeight(wtreelength); sum_weights += wtreelength;
 
-    _updaters.push_back(u);
+    _updaters.push_back(updater_ptr);
 
   }
 
-  for (auto u : _updaters) {
+  for (auto& updater : _updaters) {
 
-    u->calcProb(sum_weights);
+    updater->calcProb(sum_weights);
 
   }
 
@@ -255,7 +255,7 @@ kpl::TreeManip::SharedPtr kpl::Chain::getTreeManip() {
 }
 
 
-kpl::Model::SharedPtr kpl::Chain::getModel() {
+std::shared_ptr<kpl::Model> kpl::Chain::getModel() {
 
   return _model;
 

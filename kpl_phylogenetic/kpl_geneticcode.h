@@ -15,19 +15,12 @@
 #include <iostream>
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
+namespace kellerberrin::phylogenetic {   //  organization::project level namespace
 
 
-class Data;
-class Model;
-class QMatrix;
 
 class GeneticCode {
 
-//  friend class Data;
-//  friend class Model;
-//  friend class QMatrix;
 
 public:
 
@@ -98,10 +91,7 @@ public:
 };
 
 
-
-}  // phylogenetic
-}  // kellerberrin
-
+}  // end namespace
 
 
 #endif //KPL_GENETICCODE_H

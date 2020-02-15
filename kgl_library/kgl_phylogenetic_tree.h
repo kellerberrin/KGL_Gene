@@ -14,8 +14,7 @@
 #include "kgl_exec_env.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization level namespace
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -111,12 +110,7 @@ protected:
 
 
 
-}   // namespace genome
-}   // namespace kellerberrin
-
-
-
-
+}   // end namespace
 
 
 #endif //KGL_PHYLOGENETIC_TREE_H

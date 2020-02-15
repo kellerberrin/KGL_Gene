@@ -24,9 +24,7 @@
 #include <map>
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
-
+namespace kellerberrin::phylogenetic {   //  organization::project level namespace
 
 
 class Data {
@@ -117,8 +115,7 @@ private:
 
 
 
-} // phylogenetic
-} // kellerberrin
+} // end namespace
 
 
 #endif //KPL_GENETICDATA_H

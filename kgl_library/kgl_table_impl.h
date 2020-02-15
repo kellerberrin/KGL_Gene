@@ -10,8 +10,7 @@
 #include "kgl_genome_types.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization level namespace
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Defines DNA/RNA to Amino Acid translation tables.
@@ -65,10 +64,7 @@ public:
 
 
 
-}   // namespace genome
-}   // namespace kellerberrin
-
-
+}   // end namespace
 
 
 

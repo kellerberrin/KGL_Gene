@@ -11,8 +11,8 @@ namespace kpl = kellerberrin::phylogenetic;
 
 // member function bodies go here
 
-kpl::PinvarUpdater::PinvarUpdater(ASRV::SharedPtr asrv) {
-  //std::cout << "PinvarUpdater being created" << std::endl;
+kpl::PinvarUpdater::PinvarUpdater(std::shared_ptr<ASRV> asrv) {
+
   clear();
   name("Proportion of Invariable Sites");
   assert(asrv);
@@ -22,7 +22,7 @@ kpl::PinvarUpdater::PinvarUpdater(ASRV::SharedPtr asrv) {
 
 
 kpl::PinvarUpdater::~PinvarUpdater() {
-  //std::cout << "PinvarUpdater being destroyed" << std::endl;
+
   _asrv.reset();
 
 }

@@ -9,8 +9,7 @@
 #include "kgl_genome_prelim.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -211,6 +210,8 @@ using GeneMap = std::multimap<ContigOffset_t, std::shared_ptr<GeneFeature>>;  //
 // A Transcription Start Sequence, can be multiple TSS per gene.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+class TSSFeature;
+using TSSVector = std::vector<std::shared_ptr<const TSSFeature>>;
 
 class TSSFeature : public Feature {
 
@@ -238,12 +239,9 @@ private:
 };
 
 
-using TSSVector = std::vector<std::shared_ptr<const TSSFeature>>;
 
 
-
-}   // namespace genome
-}   // namespace kellerberrin
+}   // end namespace
 
 
 #endif //KGL_GENOME_FEATURE_H

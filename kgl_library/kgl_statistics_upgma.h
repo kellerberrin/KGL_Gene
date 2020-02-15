@@ -13,8 +13,7 @@
 #include "kgl_variant_db.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization level namespace
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -91,9 +90,7 @@ private:
 };
 
 
-}   // namespace genome
-}   // namespace kellerberrin
-
+}   // end namespace
 
 
 #endif //KGL_STATISTICS_UPGMA_H

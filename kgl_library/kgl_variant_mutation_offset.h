@@ -10,9 +10,7 @@
 #include "kgl_variant.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
-
+namespace kellerberrin::genome {   //  organization::project level namespace
 
 
 // The indel offset accounting map records previous indels so that inserts and deletes can be properly aligned.
@@ -51,8 +49,7 @@ private:
 
 
 
-}   // namespace genome
-}   // namespace kellerberrin
+}   // end namespace
 
 
 

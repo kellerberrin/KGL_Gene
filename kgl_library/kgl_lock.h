@@ -11,8 +11,7 @@
 #include <vector>
 #include "kgl_genome_types.h"
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization::project level namespace
 
 class AutoMutex {
 
@@ -173,7 +172,6 @@ public:
 
 };
 
-}   // namespace genome
-}   // namespace kellerberrin
+}   // end namespace
 
 #endif //KGL_LOCK_H

@@ -8,11 +8,11 @@
 namespace kpl = kellerberrin::phylogenetic;
 
 
-kpl::SubsetRelRateUpdater::SubsetRelRateUpdater(Model::SharedPtr model) {
+kpl::SubsetRelRateUpdater::SubsetRelRateUpdater(std::shared_ptr<Model> model_ptr) {
   //std::cout << "Creating a SubsetRelRateUpdater" << std::endl;
   DirichletUpdater::clear();
   name("Subset Relative Rates");
-  _model = model;
+  _model = model_ptr;
 
 }
 
@@ -24,7 +24,7 @@ kpl::SubsetRelRateUpdater::~SubsetRelRateUpdater() {
 
 double kpl::SubsetRelRateUpdater::calcLogPrior() {
 
-  Model::subset_sizes_t & subset_sizes = _model->getSubsetSizes();
+  const Model::subset_sizes_t & subset_sizes = _model->getSubsetSizes();
   double log_num_sites = std::log(_model->getNumSites());
   unsigned num_subsets = _model->getNumSubsets();
   double log_prior = DirichletUpdater::calcLogPrior();
@@ -42,8 +42,8 @@ double kpl::SubsetRelRateUpdater::calcLogPrior() {
 
 void kpl::SubsetRelRateUpdater::pullFromModel() {
 
-  Model::subset_relrate_vect_t & relative_rates = _model->getSubsetRelRates();
-  Model::subset_sizes_t &        subset_sizes   = _model->getSubsetSizes();
+  const Model::subset_relrate_vect_t& relative_rates = _model->getSubsetRelRates();
+  const Model::subset_sizes_t& subset_sizes   = _model->getSubsetSizes();
 
   unsigned num_sites   = _model->getNumSites();
   unsigned num_subsets = _model->getNumSubsets();
@@ -64,7 +64,7 @@ void kpl::SubsetRelRateUpdater::pullFromModel() {
 
 void kpl::SubsetRelRateUpdater::pushToModel() {
 
-  Model::subset_sizes_t & subset_sizes = _model->getSubsetSizes();
+  const Model::subset_sizes_t& subset_sizes = _model->getSubsetSizes();
   unsigned num_sites   = _model->getNumSites();
   unsigned num_subsets = _model->getNumSubsets();
   point_t tmp(num_subsets);

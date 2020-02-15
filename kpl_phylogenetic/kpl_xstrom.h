@@ -9,9 +9,7 @@
 #include <boost/format.hpp>
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
-
+namespace kellerberrin::phylogenetic {   //  organization level namespace
 
 
 class XStrom : public std::exception {
@@ -35,8 +33,7 @@ private:
 };
 
 
-}  // phylogenetic
-} // kellerberrin
+}  // end namespace
 
 
 #endif // KPL_XSTROM_H

@@ -11,9 +11,7 @@
 
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
-
+namespace kellerberrin::genome {   //  organization::project level namespace
 
 
 using MixtureStatistics = std::pair<size_t, std::array<double, 5>>;  // The sample mixture data. size_t is the strain count.
@@ -45,8 +43,7 @@ private:
 
 
 
-}   // namespace genome
-}   // namespace kellerberrin
+}   // end namespace
 
 
 

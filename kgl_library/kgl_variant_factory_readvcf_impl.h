@@ -20,8 +20,7 @@
 
 namespace bt = boost;
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization::project level namespace
 
 // The vcf record in seqan format and a counter to indicate which vcf record.
 template<class ConsumerMT>
@@ -298,10 +297,7 @@ void VCFReaderMT<ConsumerMT>::VCFConsumer() {
 }
 
 
-
-}   // namespace genome
-}   // namespace kellerberrin
-
+}   // end namespace
 
 
 #endif //KGL_VARIANT_FACTORY_READVCF_IMPL_H

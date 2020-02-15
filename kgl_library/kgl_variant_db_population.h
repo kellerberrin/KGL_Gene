@@ -18,8 +18,7 @@
 #include "kgl_variant_db_genome.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,8 +72,7 @@ private:
 
 
 
-}   // namespace genome
-}   // namespace kellerberrin
+}   // end namespace
 
 
 

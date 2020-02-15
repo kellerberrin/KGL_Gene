@@ -5,73 +5,69 @@
 #ifndef KPL_ASRV_H
 #define KPL_ASRV_H
 
-#include <boost/math/distributions/gamma.hpp>
-
 #include <vector>
 #include <memory>
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
-
+namespace kellerberrin::phylogenetic {   //  organization::project level namespace
 
 class ASRV {
 
 public:
-  typedef std::vector<double>         rate_prob_t;
-  typedef std::shared_ptr<double>     relrate_ptr_t;
-  typedef std::shared_ptr<double>     ratevar_ptr_t;
-  typedef std::shared_ptr<double>     pinvar_ptr_t;
-  typedef std::shared_ptr<ASRV>       SharedPtr;
 
-  ASRV();
-  virtual                             ~ASRV();
+  using rate_prob_t = std::vector<double>;
+  using relrate_ptr_t = std::shared_ptr<double>;
+  using ratevar_ptr_t = std::shared_ptr<double>;
+  using pinvar_ptr_t = std::shared_ptr<double>;
 
-  void                                clear();
+  ASRV() { clear(); }
+  ~ASRV() = default;
 
-  void                                setNumCateg(unsigned ncateg);
-  unsigned                            getNumCateg() const;
+// Modify
+  void setNumCateg(unsigned ncateg);
+  void setRateVarSharedPtr(ratevar_ptr_t ratevar);
+  void setRateVar(double v);
+  void fixRateVar(bool is_fixed);
+  void setPinvarSharedPtr(pinvar_ptr_t pinvar);
+  void setPinvar(double p);
+  void fixPinvar(bool is_fixed);
+  void setIsInvarModel(bool is_invar_model);
 
-  void                                setRateVarSharedPtr(ratevar_ptr_t ratevar);
-  void                                setRateVar(double v);
-  const ratevar_ptr_t                 getRateVarSharedPtr() const;
-  double                              getRateVar() const;
-  void                                fixRateVar(bool is_fixed);
-  bool                                isFixedRateVar() const;
+// Access
+  [[nodiscard]] unsigned getNumCateg() const;
+  [[nodiscard]] const ratevar_ptr_t getRateVarSharedPtr() const;
+  [[nodiscard]] double getRateVar() const;
+  [[nodiscard]] bool isFixedRateVar() const;
+  [[nodiscard]] const pinvar_ptr_t getPinvarSharedPtr() const;
+  [[nodiscard]] double getPinvar() const;
+  [[nodiscard]] bool isFixedPinvar() const;
+  [[nodiscard]] bool getIsInvarModel() const;
 
-  void                                setPinvarSharedPtr(pinvar_ptr_t pinvar);
-  void                                setPinvar(double p);
-  const pinvar_ptr_t                  getPinvarSharedPtr() const;
-  double                              getPinvar() const;
-  void                                fixPinvar(bool is_fixed);
-  bool                                isFixedPinvar() const;
-
-  void                                setIsInvarModel(bool is_invar_model);
-  bool                                getIsInvarModel() const;
-
-  const double *                      getRates() const;
-  const double *                      getProbs() const;
+  [[nodiscard]] const double* getRates() const;
+  [[nodiscard]] const double* getProbs() const;
 
 private:
 
-  virtual void                        recalcASRV();
+  virtual void recalcASRV();
+  void clear();
 
-  unsigned                            _num_categ;
-  bool                                _invar_model;
+  unsigned _num_categ;
+  bool _invar_model;
 
-  ratevar_ptr_t                       _ratevar;
-  pinvar_ptr_t                        _pinvar;
+  ratevar_ptr_t _ratevar;
+  pinvar_ptr_t _pinvar;
 
-  bool                                _ratevar_fixed;
-  bool                                _pinvar_fixed;
+  bool  _ratevar_fixed;
+  bool  _pinvar_fixed;
 
-  rate_prob_t                         _rates;
-  rate_prob_t                         _probs;
+  rate_prob_t _rates;
+  rate_prob_t _probs;
+
+
 };
 
 
-} // phylogenetic
-} // kellerberrin
+} // end namespace
 
 
 #endif //STROM_KPL_ASRV_H

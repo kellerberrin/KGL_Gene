@@ -9,9 +9,7 @@
 #include "kpl_mcmc_dirichlet.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
-
+namespace kellerberrin::phylogenetic {   //  organization level namespace
 
 
 class ExchangeabilityUpdater : public DirichletUpdater {
@@ -32,7 +30,7 @@ private:
 };
 
 
-} // phylogenetic
-} // kellerberrin
+} // end namespace
+
 
 #endif //KPL_MCMC_EXCHANGEUPDATER_H

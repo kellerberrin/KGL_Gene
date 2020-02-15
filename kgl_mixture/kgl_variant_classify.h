@@ -11,9 +11,7 @@
 #include "kgl_variant_db.h"
 #include "kgd_ctl_data.h"
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
-
+namespace kellerberrin::genome {   //  organization::project level namespace
 
 namespace kgd = kellerberrin::deconvolv;
 
@@ -110,8 +108,7 @@ private:
 };
 
 
-}   // namespace genome
-}   // namespace kellerberrin
+}   // end::namespace
 
 
 #endif //KGL_VARIANT_CLASSIFY_H

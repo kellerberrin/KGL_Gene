@@ -9,8 +9,7 @@
 #include <string>
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization level namespace
 
 // Singleton. Defines (boost) file and time utility functions and misc string functions.
 
@@ -29,7 +28,7 @@ public:
   static std::string toupper(const std::string& s);
   static std::string trimAllWhiteSpace(const std::string &s); // Trim any whitespace in a string
   static std::string trimEndWhiteSpace(const std::string &s); // Only trim whitespace at either end of the string.
-  static std::string findAndReplaceAll(const std::string source, const std::string& search, const std::string& replace);
+  static std::string findAndReplaceAll(const std::string& source, const std::string& search, const std::string& replace);
 
 
 private:
@@ -38,8 +37,6 @@ private:
 
 
 
-}   // namespace genome
-}   // namespace kellerberrin
-
+}   // end namespace
 
 #endif //KGL_UTILITY_H

@@ -22,17 +22,17 @@ kpl::Likelihood::~Likelihood() {
 }
 
 
-kpl::Model::SharedPtr kpl::Likelihood::getModel() {
+std::shared_ptr<kpl::Model> kpl::Likelihood::getModel() {
 
   return _model;
 
 }
 
 
-void kpl::Likelihood::setModel(Model::SharedPtr m) {
+void kpl::Likelihood::setModel(std::shared_ptr<Model> model_ptr) {
 
   assert(_instances.size() == 0); // can't change model after initBeagleLib called
-  _model = m;
+  _model = model_ptr;
 
 }
 
@@ -97,7 +97,7 @@ void kpl::Likelihood::clear() {
   _underflow_scaling          = false;
   _data                       = nullptr;
 
-  _model = Model::SharedPtr(new Model());
+  _model = std::make_shared<Model>();
 
   _operations.clear();
   _pmatrix_index.clear();
@@ -645,7 +645,7 @@ void kpl::Likelihood::setAmongSiteRateHeterogenetity() {
     unsigned instance_specific_subset_index = 0;
     for (unsigned s : info.subsets) {
 
-      code = _model->setBeagleAmongSiteRateVariationRates(info.handle, s, instance_specific_subset_index);
+      code = setBeagleAmongSiteRateVariationRates(_model, info.handle, s, instance_specific_subset_index);
 
       if (code != 0) {
 
@@ -653,7 +653,7 @@ void kpl::Likelihood::setAmongSiteRateHeterogenetity() {
 
       }
 
-      code = _model->setBeagleAmongSiteRateVariationProbs(info.handle, s, instance_specific_subset_index);
+      code = setBeagleAmongSiteRateVariationProbs(_model, info.handle, s, instance_specific_subset_index);
 
       if (code != 0) {
 
@@ -680,7 +680,7 @@ void kpl::Likelihood::setModelRateMatrix() {
 
     for (unsigned s : info.subsets) {
 
-      int code = _model->setBeagleStateFrequencies(info.handle, s, instance_specific_subset_index);
+      int code = setBeagleStateFrequencies(_model, info.handle, s, instance_specific_subset_index);
 
       if (code != 0) {
 
@@ -688,7 +688,7 @@ void kpl::Likelihood::setModelRateMatrix() {
 
       }
 
-      code = _model->setBeagleEigenDecomposition(info.handle, s, instance_specific_subset_index);
+      code = setBeagleEigenDecomposition(_model, info.handle, s, instance_specific_subset_index);
 
       if (code != 0) {
 
@@ -709,7 +709,7 @@ void kpl::Likelihood::defineOperations(Tree::SharedPtr tree) {
   assert(tree->isRooted() == _rooted);
 
   double relrate_normalizing_constant = _model->calcNormalizingConstantForSubsetRelRates();
-  Model::subset_relrate_vect_t & subset_relrates = _model->getSubsetRelRates();
+  const Model::subset_relrate_vect_t & subset_relrates = _model->getSubsetRelRates();
 
   // Loop through all instances
   for (auto & info : _instances) {
@@ -926,7 +926,16 @@ double kpl::Likelihood::calcInstanceLogLikelihood(InstanceInfo & info, Tree::Sha
 
     for (unsigned s = 0; s < nsubsets; s++) {
 
-      _scaling_indices[s]  = (_underflow_scaling ? s : BEAGLE_OP_NONE);
+      if (_underflow_scaling) {
+
+        _scaling_indices[s]  = s;
+
+      } else {
+
+        _scaling_indices[s]  = static_cast<unsigned>(BEAGLE_OP_NONE);
+
+      }
+
       _subset_indices[s]  = s;
       _freqs_indices[s]   = s;
       _tmatrix_indices[s] = getTMatrixIndex(tree->getConstPreOrder()[0], info, s); //index_focal_child + s*tmatrix_skip;
@@ -1179,3 +1188,64 @@ void kpl::Likelihood::addOperation(InstanceInfo & info, Node::PtrNode  nd, Node:
   }
 
 }
+
+
+int kpl::Likelihood::setBeagleEigenDecomposition(std::shared_ptr<const Model> model_ptr, int beagle_instance, unsigned subset, unsigned instance_subset) {
+
+  const double * pevec = model_ptr->getQMatrix(subset).getEigenvectors();
+  const double * pivec = model_ptr->getQMatrix(subset).getInverseEigenvectors();
+  const double * pival = model_ptr->getQMatrix(subset).getEigenvalues();
+
+  int code = beagleSetEigenDecomposition(
+      beagle_instance,    // Instance number (input)
+      instance_subset,    // Index of eigen-decomposition buffer (input)
+      pevec,              // Flattened matrix (stateCount x stateCount) of eigen-vectors (input)
+      pivec,              // Flattened matrix (stateCount x stateCount) of inverse-eigen- vectors (input)
+      pival);             // Vector of eigenvalues
+
+  return code;
+
+}
+
+
+int kpl::Likelihood::setBeagleStateFrequencies(std::shared_ptr<const Model> model_ptr, int beagle_instance, unsigned subset, unsigned instance_subset) {
+
+  const double *pfreq = model_ptr->getQMatrix(subset).getStateFreqs();
+
+  int code = beagleSetStateFrequencies(
+      beagle_instance,   // Instance number (input)
+      instance_subset,   // Index of state frequencies buffer (input)
+      pfreq);            // State frequencies array (stateCount) (input)
+
+  return code;
+
+}
+
+
+int kpl::Likelihood::setBeagleAmongSiteRateVariationRates(std::shared_ptr<const Model> model_ptr, int beagle_instance, unsigned subset, unsigned instance_subset) {
+
+  const double * prates = model_ptr->getASRV(subset).getRates();
+
+  int code = beagleSetCategoryRatesWithIndex(
+      beagle_instance,    // Instance number (input)
+      instance_subset,    // Index of category rates buffer (input)
+      prates);            // Array containing categoryCount rate scalers (input)
+
+  return code;
+
+}
+
+
+int kpl::Likelihood::setBeagleAmongSiteRateVariationProbs(std::shared_ptr<const Model> model_ptr, int beagle_instance, unsigned subset, unsigned instance_subset) {
+
+  const double * pprobs = model_ptr->getASRV(subset).getProbs();
+
+  int code = beagleSetCategoryWeights(
+      beagle_instance,    // Instance number (input)
+      instance_subset,    // Index of category weights buffer (input)
+      pprobs);            // Category weights array (categoryCount) (input)
+
+  return code;
+
+}
+

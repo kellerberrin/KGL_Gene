@@ -149,7 +149,7 @@ std::string kgl::Utility::trimEndWhiteSpace(const std::string &s) {
 }
 
 
-std::string kgl::Utility::findAndReplaceAll(const std::string source, const std::string& search, const std::string& replace)
+std::string kgl::Utility::findAndReplaceAll(const std::string& source, const std::string& search, const std::string& replace)
 {
 
   std::string modified = source;

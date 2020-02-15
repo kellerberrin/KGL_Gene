@@ -4,19 +4,11 @@
 
 #include "kpl_asrv.h"
 
+#include <boost/math/distributions/gamma.hpp>
+
+
 
 namespace kpl = kellerberrin::phylogenetic;
-
-
-kpl::ASRV::ASRV() {
-  //std::cout << "Constructing a ASRV" << std::endl;
-  clear();
-}
-
-
-kpl::ASRV::~ASRV() {
-  //std::cout << "Destroying a ASRV" << std::endl;
-}
 
 
 void kpl::ASRV::clear() {

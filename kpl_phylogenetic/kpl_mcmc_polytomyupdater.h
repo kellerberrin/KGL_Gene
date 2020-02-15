@@ -12,8 +12,7 @@
 #include <memory>
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
+namespace kellerberrin::phylogenetic {   //  organization level namespace
 
 class PolytomyUpdater : public Updater {
 
@@ -61,8 +60,7 @@ private:
 
 
 
-} // phylogenetic
-} // kellerberrin
+} // end namespace
 
 
 #endif //KPL_MCMC_POLYTOMYUPDATER_H

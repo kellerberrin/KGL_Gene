@@ -51,9 +51,9 @@ void kpl::OutputManager::closeTreeFile() {
 }
 
 
-void kpl::OutputManager::openParameterFile(std::string filename, Model::SharedPtr model) {
+void kpl::OutputManager::openParameterFile(std::string filename, std::shared_ptr<Model> model_ptr) {
 
-  assert(model);
+  assert(model_ptr);
   assert(!_parameterfile.is_open());
 
   _param_file_name = filename;
@@ -65,7 +65,7 @@ void kpl::OutputManager::openParameterFile(std::string filename, Model::SharedPt
 
   }
 
-  _parameterfile << boost::str(boost::format("%s\t%s\t%s\t%s\t%s\t%s") % "iter" % "lnL" % "lnPr" % "TL" % "m" % model->paramNamesAsString("\t")) << std::endl;
+  _parameterfile << boost::str(boost::format("%s\t%s\t%s\t%s\t%s\t%s") % "iter" % "lnL" % "lnPr" % "TL" % "m" % model_ptr->paramNamesAsString("\t")) << std::endl;
 
 }
 
@@ -94,11 +94,11 @@ void kpl::OutputManager::outputTree(unsigned iter, TreeManip::SharedPtr tm) {
 }
 
 
-void kpl::OutputManager::outputParameters(unsigned iter, double lnL, double lnP, double TL, unsigned m, Model::SharedPtr model) {
+void kpl::OutputManager::outputParameters(unsigned iter, double lnL, double lnP, double TL, unsigned m, std::shared_ptr<Model> model_ptr) {
 
-  assert(model);
+  assert(model_ptr);
   assert(_parameterfile.is_open());
 
-  _parameterfile << boost::str(boost::format("%d\t%.5f\t%.5f\t%.5f\t%d\t%s") % iter % lnL % lnP % TL % m % model->paramValuesAsString("\t")) << std::endl;
+  _parameterfile << boost::str(boost::format("%d\t%.5f\t%.5f\t%.5f\t%d\t%s") % iter % lnL % lnP % TL % m % model_ptr->paramValuesAsString("\t")) << std::endl;
 
 }

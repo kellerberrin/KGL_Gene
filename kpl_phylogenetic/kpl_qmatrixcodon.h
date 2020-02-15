@@ -10,9 +10,7 @@
 #include "kpl_qmatrix.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
-
+namespace kellerberrin::phylogenetic {   //  organization level namespace
 
 
 class QMatrixCodon : public QMatrix {
@@ -71,8 +69,7 @@ private:
 };
 
 
-} // phylogenetic
-} // kellerberrin
+} // end namespace
 
 
 #endif //KPL_QMATRIXCODON_H

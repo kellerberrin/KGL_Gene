@@ -9,7 +9,7 @@ namespace kpl = kellerberrin::phylogenetic;
 
 
 
-kpl::GammaRateVarUpdater::GammaRateVarUpdater(ASRV::SharedPtr asrv) {
+kpl::GammaRateVarUpdater::GammaRateVarUpdater(std::shared_ptr<ASRV> asrv) {
 
   //std::cout << "GammaRateVarUpdater being created" << std::endl;
   clear();
@@ -40,7 +40,7 @@ void kpl::GammaRateVarUpdater::clear() {
 
 double kpl::GammaRateVarUpdater::getCurrentPoint() const {
 
-  return *(_asrv->getRateVarSharedPtr());
+  return _asrv->getRateVar();
 
 }
 

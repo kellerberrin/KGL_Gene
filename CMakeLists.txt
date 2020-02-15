@@ -157,7 +157,7 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_genome_contig_aux.cc
         kgl_library/kgl_genome_contig_aux.h
         kgl_library/kgl_phylogenetic_tree.cc
-        kgl_library/kgl_phylogenetic_tree.h)
+        kgl_library/kgl_phylogenetic_tree.h kgl_library/kgl_property_tree.cc kgl_library/kgl_property_tree.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )

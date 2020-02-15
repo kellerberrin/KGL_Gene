@@ -15,8 +15,7 @@
 #include "kgl_alphabet_coding_dna5.h"
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
+namespace kellerberrin::genome {   //  organization::project level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -119,8 +118,7 @@ public:
 
 
 
-}   // namespace genome
-}   // namespace kellerberrin
+}   // end namespace
 
 
 

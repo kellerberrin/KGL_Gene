@@ -20,43 +20,45 @@
 #include <map>
 
 
-namespace kellerberrin {   //  organization level namespace
-namespace phylogenetic {   // project level namespace
-
+namespace kellerberrin::phylogenetic {   //  organization level namespace
 
 class Likelihood {
+
 public:
+
+  using SharedPtr = std::shared_ptr<Likelihood>;
+
   Likelihood();
   ~Likelihood();
 
-  void                                    setRooted(bool is_rooted);
-  void                                    setPreferGPU(bool prefer_gpu);
-  void                                    setAmbiguityEqualsMissing(bool ambig_equals_missing);
+  void setRooted(bool is_rooted);
+  void setPreferGPU(bool prefer_gpu);
+  void setAmbiguityEqualsMissing(bool ambig_equals_missing);
 
-  bool                                    usingStoredData() const;
-  void                                    useStoredData(bool using_data);
+  bool usingStoredData() const;
+  void useStoredData(bool using_data);
 
-  void                                    useUnderflowScaling(bool do_scaling);
+  void useUnderflowScaling(bool do_scaling);
 
-  std::string                             beagleLibVersion() const;
-  std::string                             availableResources() const;
-  std::string                             usedResources() const;
+  std::string beagleLibVersion() const;
+  std::string availableResources() const;
+  std::string usedResources() const;
 
-  void                                    initBeagleLib();
-  void                                    finalizeBeagleLib(bool use_exceptions);
+  void initBeagleLib();
+  void finalizeBeagleLib(bool use_exceptions);
 
-  double                                  calcLogLikelihood(Tree::SharedPtr tree);
+  double calcLogLikelihood(Tree::SharedPtr tree);
 
-  Data::SharedPtr                         getData();
-  void                                    setData(Data::SharedPtr d);
+  Data::SharedPtr getData();
+  void setData(Data::SharedPtr d);
 
-  void                                    clear();
+  void clear();
 
-  unsigned                                calcNumEdgesInFullyResolvedTree() const;
-  unsigned                                calcNumInternalsInFullyResolvedTree() const;
+  unsigned calcNumEdgesInFullyResolvedTree() const;
+  unsigned calcNumInternalsInFullyResolvedTree() const;
 
-  Model::SharedPtr                        getModel();
-  void                                    setModel(Model::SharedPtr m);
+  std::shared_ptr<Model> getModel();
+  void setModel(std::shared_ptr<Model> model_ptr);
 
 private:
 
@@ -76,25 +78,32 @@ private:
 
   };
 
-  typedef std::pair<unsigned, int>        instance_pair_t;
+  using instance_pair_t = std::pair<unsigned, int>;
 
-  unsigned                                getPartialIndex(Node::PtrNode  nd, InstanceInfo & info) const;
-  unsigned                                getTMatrixIndex(Node::PtrNode  nd, InstanceInfo & info, unsigned subset_index) const;
-  void                                    updateInstanceMap(instance_pair_t & p, unsigned subset);
-  void                                    newInstance(unsigned nstates, int nrates, std::vector<unsigned> & subset_indices);
-  void                                    setTipStates();
-  void                                    setTipPartials();
-  void                                    setPatternPartitionAssignments();
-  void                                    setPatternWeights();
-  void                                    setAmongSiteRateHeterogenetity();
-  void                                    setModelRateMatrix();
-  void                                    addOperation(InstanceInfo & info, Node::PtrNode  nd, Node::PtrNode  lchild, Node::PtrNode  rchild, unsigned subset_index);
-  void                                    defineOperations(Tree::SharedPtr tree);
-  void                                    updateTransitionMatrices();
-  void                                    calculatePartials();
-  double                                  calcInstanceLogLikelihood(InstanceInfo & inst, Tree::SharedPtr tree);
+  unsigned getPartialIndex(Node::PtrNode  nd, InstanceInfo & info) const;
+  unsigned getTMatrixIndex(Node::PtrNode  nd, InstanceInfo & info, unsigned subset_index) const;
+  void updateInstanceMap(instance_pair_t & p, unsigned subset);
+  void newInstance(unsigned nstates, int nrates, std::vector<unsigned> & subset_indices);
+  void setTipStates();
+  void setTipPartials();
+  void setPatternPartitionAssignments();
+  void setPatternWeights();
+  void setAmongSiteRateHeterogenetity();
+  void setModelRateMatrix();
+  void addOperation(InstanceInfo & info, Node::PtrNode  nd, Node::PtrNode  lchild, Node::PtrNode  rchild, unsigned subset_index);
+  void defineOperations(Tree::SharedPtr tree);
+  void updateTransitionMatrices();
+  void calculatePartials();
+  double calcInstanceLogLikelihood(InstanceInfo & inst, Tree::SharedPtr tree);
 
-  Model::SharedPtr _model;
+// Setup Beagle.
+  [[nodiscard]] static int setBeagleEigenDecomposition(std::shared_ptr<const Model> model_ptr, int beagle_instance, unsigned subset, unsigned instance_subset);
+  [[nodiscard]] static int setBeagleStateFrequencies(std::shared_ptr<const Model> model_ptr, int beagle_instance, unsigned subset, unsigned instance_subset);
+  [[nodiscard]] static int setBeagleAmongSiteRateVariationRates(std::shared_ptr<const Model> model_ptr, int beagle_instance, unsigned subset, unsigned instance_subset);
+  [[nodiscard]] static int setBeagleAmongSiteRateVariationProbs(std::shared_ptr<const Model> model_ptr, int beagle_instance, unsigned subset, unsigned instance_subset);
+
+
+  std::shared_ptr<Model> _model;
   std::vector<InstanceInfo> _instances;
   std::map<int, std::string> _beagle_error;
   std::map<int, std::vector<int> > _operations;
@@ -119,14 +128,11 @@ private:
 
   bool _using_data;
 
-public:
-  typedef std::shared_ptr< Likelihood >   SharedPtr;
 };
 
 
 
-} // Namespace phylogenetic
-} // kellerberrin
+} // end Namespace
 
 
 #endif // KPL_LIKELIHOOD_H
