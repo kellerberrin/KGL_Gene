@@ -94,13 +94,13 @@ void kgl::AdjalleyTSSFeatures::setupFeatureHierarchy(const StructuredFeatures& g
         }
 
         // Otherwise flag an Error; could not find super feature.
-        kgl::ExecEnv::log().error("Feature: {}; Super Feature: {} does not exist", feature.id(), super_feature_id);
+        ExecEnv::log().error("Feature: {}; Super Feature: {} does not exist", feature.id(), super_feature_id);
 
       }
       if (super_feature_ptr_vec.size() > 1) {
 
         // Warning, more than 1 super feature.
-        kgl::ExecEnv::log().warn("Super Feature id: {} returned : {} Super Features",
+        ExecEnv::log().warn("Super Feature id: {} returned : {} Super Features",
                                  super_feature_id, super_feature_ptr_vec.size());
 
       }

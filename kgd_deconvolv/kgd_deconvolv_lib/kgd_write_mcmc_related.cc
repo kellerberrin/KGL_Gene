@@ -68,11 +68,11 @@ void kgd::DEploidIO::writeProp(std::shared_ptr<McmcSample> mcmcSample, bool useI
 
   if (fExport.good()) {
 
-    DeconvolvApp::log().info("Write strain proportions to file: {}", filename);
+    ExecEnv::log().info("Write strain proportions to file: {}", filename);
 
   } else {
 
-    DeconvolvApp::log().warn("Unable to write to file: {}", filename);
+    ExecEnv::log().warn("Unable to write to file: {}", filename);
     return;
 
   }
@@ -90,7 +90,7 @@ void kgd::DEploidIO::writeProp(std::shared_ptr<McmcSample> mcmcSample, bool useI
 
   }
 
-  DeconvolvApp::log().info("{} strain proportions written", count);
+  ExecEnv::log().info("{} strain proportions written", count);
 
 }
 
@@ -172,7 +172,7 @@ void kgd::DEploidIO::writeVcf(std::shared_ptr<McmcSample> mcmcSample) {
 
   if (not getMixtureControl().useVcf()) {
 
-    DeconvolvApp::log().warn("Can only export VCF if VCF file specified");
+    ExecEnv::log().warn("Can only export VCF if VCF file specified");
     return;
 
   }
@@ -211,7 +211,7 @@ void kgd::DEploidIO::writeVcf(std::shared_ptr<McmcSample> mcmcSample) {
   // DEploid call
 
   (*writeTo) << "##DEploid call: kgd_deconvolv ";
-  (*writeTo) << DeconvolvApp::commandLine() << std::endl;
+  (*writeTo) << ExecEnv::commandLine() << std::endl;
 
   // Include proportions
   for (size_t ii = 0; ii < kStrain(); ii++) {

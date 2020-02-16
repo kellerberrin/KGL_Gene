@@ -3,15 +3,14 @@
 //
 #include "kgl_phylogenetic_app.h"
 
-
-namespace kgl = kellerberrin::genome;
-
-
 /// The mainline.
 int main(int argc, char const ** argv)
 {
 
-  return kgl::ExecEnv::runApplication<kgl::PhylogeneticExecEnv>(argc, argv);
+  namespace kgl = kellerberrin::genome;
+  namespace kel = kellerberrin;
+
+  return kel::ExecEnv::runApplication<kgl::PhylogeneticExecEnv>(argc, argv);
 
 }
 

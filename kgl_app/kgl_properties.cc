@@ -2,7 +2,11 @@
 // Created by kellerberrin on 11/11/18.
 //
 
+#include "kgl_properties.h"
+#include "kgl_table_impl.h"
 
+
+namespace kgl = kellerberrin::genome;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // High level application specific property retrieval

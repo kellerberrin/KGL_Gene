@@ -48,11 +48,11 @@ std::vector<size_t> kgd::BinaryPermutations::reverseBitArray(size_t n) const {
 
   if (ret.size() > bits_) {
 
-    DeconvolvApp::log().critical("BinaryPermutations; Vector Binary length: {} greater than specified: {}", ret.size(), bits_);
+    ExecEnv::log().critical("BinaryPermutations; Vector Binary length: {} greater than specified: {}", ret.size(), bits_);
 
   } else if (ret.size() < bits_){
 
-    DeconvolvApp::log().warn("BinaryPermutations; Vector Binary length: {} less than specified: {}", ret.size(), bits_);
+    ExecEnv::log().warn("BinaryPermutations; Vector Binary length: {} less than specified: {}", ret.size(), bits_);
 
   }
 

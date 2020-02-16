@@ -7,7 +7,7 @@
 
 
 #include "kgl_genome_types.h"
-#include "kgl_exec_env.h"
+#include "kel_exec_env.h"
 
 #include "kgd_ctl_data.h"
 
@@ -49,7 +49,6 @@ struct DeconvolvArgs {
 
 };
 
-using DeconvolvApp = kellerberrin::genome::ExecEnv;
 
 // Static Singleton. The kgd_deconvolv Runtime environment.
 //class DeconvolvApp : public kellerberrin::genome::ExecEnv {

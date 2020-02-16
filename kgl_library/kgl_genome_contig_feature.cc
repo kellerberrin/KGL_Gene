@@ -88,7 +88,7 @@ void kgl::StructuredFeatures::verifySubFeatureDuplicates() {
 
     if (duplicates > 0) {
 
-      kgl::ExecEnv::log().warn("Feature: {}; has {} duplicate sub-features", feature.id(), duplicates);
+      ExecEnv::log().warn("Feature: {}; has {} duplicate sub-features", feature.id(), duplicates);
 
     }
 
@@ -109,7 +109,7 @@ void kgl::StructuredFeatures::removeSubFeatureDuplicates() {
 
     if (duplicates_removed > 0) {
 
-      kgl::ExecEnv::log().info("{} duplicate sub-features removed from super feature: {}", duplicates_removed, feature.id());
+      ExecEnv::log().info("{} duplicate sub-features removed from super feature: {}", duplicates_removed, feature.id());
 
     }
 
@@ -194,13 +194,13 @@ void kgl::GeneExonFeatures::setupFeatureHierarchy() {
       if (not findFeatureId(super_feature_id, super_feature_ptr_vec)) {
 
         // Flag an Error; could not find super feature.
-        kgl::ExecEnv::log().error("Feature: {}; Super Feature: {} does not exist", feature.id(), super_feature_id);
+        ExecEnv::log().error("Feature: {}; Super Feature: {} does not exist", feature.id(), super_feature_id);
 
       }
       if (super_feature_ptr_vec.size() > 1) {
 
         // Warning, more than 1 super feature.
-        kgl::ExecEnv::log().warn("Super Feature id: {} returned : {} Super Features",
+        ExecEnv::log().warn("Super Feature id: {} returned : {} Super Features",
                                  super_feature_id, super_feature_ptr_vec.size());
 
       }
@@ -366,7 +366,7 @@ void kgl::GeneExonFeatures::verifySubFeatureSuperFeatureDimensions() {
       if (sub_feature.sequence().begin() < feature.sequence().begin()
           or sub_feature.sequence().end() > feature.sequence().end()) {
 
-        kgl::ExecEnv::log().error("SubFeature: {}; [{}:{}] overlaps Feature {}; [{}:{}]",
+        ExecEnv::log().error("SubFeature: {}; [{}:{}] overlaps Feature {}; [{}:{}]",
                                   sub_feature.id(),
                                   sub_feature.sequence().begin(),
                                   sub_feature.sequence().end(),
@@ -387,7 +387,7 @@ void kgl::GeneExonFeatures::verifySubFeatureSuperFeatureDimensions() {
       if (feature.sequence().begin() < super_feature.sequence().begin()
           or feature.sequence().end() > super_feature.sequence().end()) {
 
-        kgl::ExecEnv::log().error("Feature: {}; [{}:{}] overlaps SuperFeature {}; [{}:{}]",
+        ExecEnv::log().error("Feature: {}; [{}:{}] overlaps SuperFeature {}; [{}:{}]",
                                   feature.id(),
                                   feature.sequence().begin(),
                                   feature.sequence().end(),

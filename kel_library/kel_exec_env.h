@@ -9,12 +9,11 @@
 #include <iostream>
 #include <string>
 #include <memory>
-#include "kgl_logging.h"
-#include "kgl_utility.h"
+#include "kel_logging.h"
+#include "kel_utility.h"
 
 
-
-namespace kellerberrin::genome {   //  organization::project level namespace
+namespace kellerberrin {   //  organization level namespace
 
 // Singleton. This class sets up the application runtime environment as a series of static variables
 // and member functions. The class is never instantiated and is the first and only statement in main() (see kgl_main.cc).

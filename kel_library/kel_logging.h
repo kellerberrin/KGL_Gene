@@ -10,7 +10,7 @@
 #include <spdlog/spdlog.h>  // Implement the logger using the spdlog library
 
 
-namespace kellerberrin::genome {   //  organization::project level namespace
+namespace kellerberrin {   //  organization level namespace
 
 
 class Logger {

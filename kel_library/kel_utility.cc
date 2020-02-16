@@ -4,7 +4,7 @@
 
 
 #include <iostream>
-#include "kgl_utility.h"
+#include "kel_utility.h"
 #include <boost/timer/timer.hpp>
 #define BOOST_FILESYSTEM_NO_DEPRECATED // Recommended by boost filesystem documentation.
 #include <boost/filesystem.hpp>
@@ -13,14 +13,14 @@
 // Define namespace alias
 namespace bt = boost::timer;
 namespace fs = boost::filesystem;
-namespace kgl = kellerberrin::genome;
+namespace kel = kellerberrin;
 
 
 
 // Hide the boost cpu timer in an anonymous namespace.
 namespace {  bt::cpu_timer cpu_timer; }
 
-void kgl::Utility::getElapsedTime(double &Clock, double &User, double &System) {
+void kel::Utility::getElapsedTime(double &Clock, double &User, double &System) {
 
   Clock = 0; User = 0; System = 0;
   bt::cpu_times elapsedtime = cpu_timer.elapsed();
@@ -32,7 +32,7 @@ void kgl::Utility::getElapsedTime(double &Clock, double &User, double &System) {
 
 
 // Returns the filename with the path directory appended to it "path/file".
-std::string kgl::Utility::filePath(const std::string& file_name, const std::string& path) {
+std::string kel::Utility::filePath(const std::string& file_name, const std::string& path) {
 
   fs::path directory_path = fs::path(path);
   fs::path file_path = directory_path / fs::path(file_name);
@@ -41,7 +41,7 @@ std::string kgl::Utility::filePath(const std::string& file_name, const std::stri
 }
 
 // Check that a file exists at the file path.
-bool kgl::Utility::fileExists(const std::string& file_path) {
+bool kel::Utility::fileExists(const std::string& file_path) {
 
   boost::system::error_code error_code;
   bool file_exists = fs::exists(fs::path(file_path), error_code);
@@ -57,7 +57,7 @@ bool kgl::Utility::fileExists(const std::string& file_path) {
 }
 
 // Returns the filename extension.
-std::string kgl::Utility::fileExtension(const std::string& file_name) {
+std::string kel::Utility::fileExtension(const std::string& file_name) {
 
   fs::path file_path(file_name);
   return file_path.extension().string();  // returns the extension with a '.' e.g. "example.txt" returns ".txt"
@@ -65,7 +65,7 @@ std::string kgl::Utility::fileExtension(const std::string& file_name) {
 }
 
 // Returns the filename extension.
-std::string kgl::Utility::fileName(const std::string& file_name) {
+std::string kel::Utility::fileName(const std::string& file_name) {
 
   fs::path file_path(file_name);
   return file_path.filename().string();  // returns the file name without path. "/path/file.ext" returns "file.ext".
@@ -73,7 +73,7 @@ std::string kgl::Utility::fileName(const std::string& file_name) {
 }
 
 // Returns uppercase string.
-std::string kgl::Utility::toupper(const std::string& s) {
+std::string kel::Utility::toupper(const std::string& s) {
 
   std::string upper_string;
   auto lambda_to_upper = [](unsigned char c){ return std::toupper(c); };
@@ -84,7 +84,7 @@ std::string kgl::Utility::toupper(const std::string& s) {
 }
 
 // Returns trimmed string.
-std::string kgl::Utility::trimAllWhiteSpace(const std::string &s) {
+std::string kel::Utility::trimAllWhiteSpace(const std::string &s) {
 
   std::string clean_string;
   auto lambda_not_whitespace = [](unsigned char c){ return not std::isspace(c); };
@@ -95,7 +95,7 @@ std::string kgl::Utility::trimAllWhiteSpace(const std::string &s) {
 }
 
 // Only trim whitespace at either end of the string.
-std::string kgl::Utility::trimEndWhiteSpace(const std::string &s) {
+std::string kel::Utility::trimEndWhiteSpace(const std::string &s) {
 
   std::string start_trimmed_string;
 
@@ -149,7 +149,7 @@ std::string kgl::Utility::trimEndWhiteSpace(const std::string &s) {
 }
 
 
-std::string kgl::Utility::findAndReplaceAll(const std::string& source, const std::string& search, const std::string& replace)
+std::string kel::Utility::findAndReplaceAll(const std::string& source, const std::string& search, const std::string& replace)
 {
 
   std::string modified = source;

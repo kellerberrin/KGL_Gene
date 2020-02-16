@@ -9,7 +9,8 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
                     /usr/local/include/seqan3/submodules/sdsl-lite/include   # the sdsl library required by seqan3.
                     contrib/edlib # 3rd party library for fast Levenshtein seqence matching.
                      /usr/local/include/libhmsbeagle-1  # the beagle mcmc library used by kpl
-                    kgl_library                  # Basic infrastructure library
+                    kel_library                 # Basic Infrastructure library
+                    kgl_library                  # Basic Genetic library
                     kgl_mixture                  # Deconvolution and mixture library
                     kgl_analytic                  # Genetic analysis library
                     kgl_app)
@@ -52,12 +53,18 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../..)
 
 # Basic infrastructure library
 set(LIBRARY_SOURCE_FILES
-        kgl_library/kgl_logging.h
-        kgl_library/kgl_logging.cc
+        kel_library/kel_logging.h
+        kel_library/kel_logging.cc
+        kel_library/kel_utility.h
+        kel_library/kel_utility.cc
+        kel_library/kel_exec_env.h
+        kel_library/kel_exec_env.cc)
+
+# Basic Genetic infrastructure library
+set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_mt_queue.h
         kgl_library/kgl_genome_types.h
         kgl_library/kgl_lock.h
-        kgl_library/kgl_exec_env.cc
         kgl_library/kgl_gff_fasta.h
         kgl_library/kgl_gff_fasta.cc
         kgl_library/kgl_genome_db.h
@@ -103,8 +110,6 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_statistics_upgma.cc
         kgl_library/kgl_variant_mutation.cc
         kgl_library/kgl_variant_factory_vcf.h
-        kgl_library/kgl_utility.h
-        kgl_library/kgl_utility.cc
         kgl_library/kgl_variant_factory_vcf.cc
         kgl_library/kgl_variant_mutation.h
         kgl_library/kgl_variant_db_mutation.cc
@@ -157,7 +162,9 @@ set(LIBRARY_SOURCE_FILES
         kgl_library/kgl_genome_contig_aux.cc
         kgl_library/kgl_genome_contig_aux.h
         kgl_library/kgl_phylogenetic_tree.cc
-        kgl_library/kgl_phylogenetic_tree.h kgl_library/kgl_property_tree.cc kgl_library/kgl_property_tree.h)
+        kgl_library/kgl_phylogenetic_tree.h
+        kgl_library/kgl_property_tree.cc
+        kgl_library/kgl_property_tree.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -320,25 +327,28 @@ set(DECONVOLV_APPLICATION_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_parse.cc)
 
 #generate libraries.
-add_library(kgl_genome_lib STATIC ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES} ${ANALYTIC_SOURCE_FILES} ${MIXTURE_SOURCE_FILES})
 
-target_link_libraries(kgl_genome_lib  ${Boost_LIBRARIES})
+add_library(kel_library_lib STATIC ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES})
+
+add_library(kgl_genome_lib STATIC ${GENETIC_LIBRARY_SOURCE_FILES} ${ANALYTIC_SOURCE_FILES} ${MIXTURE_SOURCE_FILES})
+
+target_link_libraries(kgl_genome_lib  kel_library ${Boost_LIBRARIES})
 
 add_library(kgd_contrib_lib STATIC ${DECONVOLV_LIB_CONTRIB_FILES})
 
 add_library(kgd_deconvolv_lib STATIC ${DECONVOLV_LIB_SOURCE_FILES})
 
-target_link_libraries(kgd_deconvolv_lib kgd_contrib_lib ${ZLIB_LIBRARIES})
+target_link_libraries(kgd_deconvolv_lib kgd_contrib_lib kel_library_lib ${ZLIB_LIBRARIES})
 
 #generate kgd_deconvolv executable
 add_executable (kgd_deconvolv ${DECONVOLV_APPLICATION_SOURCE_FILES})
 
-target_link_libraries(kgd_deconvolv kgd_deconvolv_lib kgl_genome_lib)
+target_link_libraries(kgd_deconvolv kgd_deconvolv_lib kgl_genome_lib kel_library_lib)
 
 #generate kgl_genome executable
 add_executable (kgl_genome ${APPLICATION_SOURCE_FILES} kgl_app/kgl_properties.h)
 
-target_link_libraries(kgl_genome kgl_genome_lib kgd_deconvolv_lib )
+target_link_libraries(kgl_genome kgl_genome_lib kgd_deconvolv_lib kel_library_lib)
 
 ############################################################################################################
 # Generate the kpl executable.
@@ -413,6 +423,8 @@ set(KPL_LIBRARY_SOURCE_FILES
         kpl_phylogenetic/kpl_tree_io.cc
         kpl_phylogenetic/kpl_tree_io.h)
 
+add_library(kpl_library_lib STATIC ${KPL_LIBRARY_SOURCE_FILES})
+
 link_directories(/usr/local/lib)
 
 link_directories(/usr/local/lib/ncl)
@@ -422,11 +434,10 @@ link_directories(/usr/local/lib/boost)
 link_directories(/usr/local/lib/beagle/lib)
 
 #generate kpl executable
-add_executable (kpl kpl_phylogenetic/kpl_main.cpp ${KPL_LIBRARY_SOURCE_FILES})
+add_executable (kpl kpl_phylogenetic/kpl_main.cpp)
 
 #specify link libraries.
-#target_link_libraries(kpl kgl_genome_lib libncl.a libboost_program_options.a libboost_filesystem.a libboost_system.a hmsbeagle)
-target_link_libraries(kpl kgl_genome_lib libncl.a ${Boost_LIBRARIES} hmsbeagle)
+target_link_libraries(kpl kpl_library_lib kgl_genome_lib kel_library_lib libncl.a ${Boost_LIBRARIES} hmsbeagle)
 
 ## DOXYGEN
 #set(BUILD_KGL_KGD_DOC ON CACHE BOOL "Use Doxygen to create the HTML/Latex based API documentation")

@@ -25,14 +25,16 @@
 
 #include "kgd_deconvolv_app.h"
 
-namespace kgd = kellerberrin::deconvolv;
 
 
 /// The mainline.
 int main(int argc, char const ** argv)
 {
 
-    return kgd::DeconvolvApp::runApplication<kgd::Deconvolv>(argc, argv);
+  namespace kgd = kellerberrin::deconvolv;
+  namespace kel = kellerberrin;
+
+  return kel::ExecEnv::runApplication<kgd::Deconvolv>(argc, argv);
 
 }
 

@@ -5,12 +5,12 @@
 
 #include <iostream>
 
-#include "kgl_logging.h"
+#include "kel_logging.h"
 
 
-namespace kgl = kellerberrin::genome;
+namespace kel = kellerberrin;
 
-kgl::Logger::Logger(const std::string& module, const std::string& log_file) {
+kel::Logger::Logger(const std::string& module, const std::string& log_file) {
 
   SetFormat(SPDLOG_DEFAULT_FORMAT);
   SetLevel(Severity::Trace);
@@ -21,7 +21,7 @@ kgl::Logger::Logger(const std::string& module, const std::string& log_file) {
 
 }
 
-void kgl::Logger::SetLevel(Severity level) noexcept {
+void kel::Logger::SetLevel(Severity level) noexcept {
 
   switch(level) {
 
@@ -49,7 +49,7 @@ void kgl::Logger::SetLevel(Severity level) noexcept {
 
 }
 
-void kgl::Logger::SetFormat(const std::string& log_format) noexcept {
+void kel::Logger::SetFormat(const std::string& log_format) noexcept {
 
   spdlog::set_pattern(log_format);
 

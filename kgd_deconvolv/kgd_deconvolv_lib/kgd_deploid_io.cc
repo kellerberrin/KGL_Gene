@@ -279,7 +279,7 @@ void kgd::DEploidIO::parse() {
 
     } else {
 
-      DeconvolvApp::log().warn("No VCF '-vcf' or ALT and REF files '-ref', '-alt' specified. Assuming direct call.");
+      ExecEnv::log().warn("No VCF '-vcf' or ALT and REF files '-ref', '-alt' specified. Assuming direct call.");
 
     }
 
@@ -427,11 +427,11 @@ void kgd::DEploidIO::computeLLKfromInitialHap() {
 
 void kgd::DEploidIO::chromPainting() {
 
-  DeconvolvApp::log().info("Painting haplotypes in :{}", initialHapFileName_);
+  ExecEnv::log().info("Painting haplotypes in :{}", initialHapFileName_);
 
   if (initialPropWasGiven() == false) {
 
-    DeconvolvApp::log().info("Initial proportion was not specified. Set even proportions");
+    ExecEnv::log().info("Initial proportion was not specified. Set even proportions");
 
     double evenProp = 1.0 / (double) kStrain();
 
@@ -484,7 +484,7 @@ void kgd::DEploidIO::chromPainting() {
       size_t start = getMixtureData().indexOfChromStarts()[chromi];
       size_t length = getMixtureData().getPosition()[chromi].size();
 
-      DeconvolvApp::log().info("Painting Chrom: {} from site: {} to: {}", chromi, start, start + length);
+      ExecEnv::log().info("Painting Chrom: {} from site: {} to: {}", chromi, start, start + length);
 
       UpdateSingleHap updatingSingle(start,
                                      length,

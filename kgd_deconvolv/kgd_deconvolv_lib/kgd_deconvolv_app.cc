@@ -8,7 +8,7 @@
 #include "kgd_deploid_io.h"
 
 #include "kgd_deconvolv_app.h"
-#include "kgl_utility.h"
+#include "kel_utility.h"
 
 
 namespace kgd = kellerberrin::deconvolv;
@@ -74,7 +74,7 @@ void kgd::Deconvolv::executeApp() {
   }
   catch (const std::exception &e) {
 
-    DeconvolvApp::log().critical("Caught Runtime Error: {}", e.what());
+    ExecEnv::log().critical("Caught Runtime Error: {}", e.what());
 
   }
 
@@ -138,7 +138,7 @@ void kgd::Deconvolv::executeLib(const MixtureDataObj& mixture_data) {
   }
   catch (const std::exception &e) {
 
-    DeconvolvApp::log().critical("Caught Runtime Error: {}", e.what());
+    ExecEnv::log().critical("Caught Runtime Error: {}", e.what());
 
   }
 

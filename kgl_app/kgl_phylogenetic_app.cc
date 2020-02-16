@@ -75,7 +75,7 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   }
 
   // Write the unphased hetero/homozygous statistics.
-  std::string heterozygous_file = kgl::Utility::filePath("HeterozygousAnalysis", args.workDirectory) + ".csv";
+  std::string heterozygous_file = Utility::filePath("HeterozygousAnalysis", args.workDirectory) + ".csv";
   heterozygous_statistics.writeHeterozygousStatistics(heterozygous_file, ',');
 
   // Analyze the data.

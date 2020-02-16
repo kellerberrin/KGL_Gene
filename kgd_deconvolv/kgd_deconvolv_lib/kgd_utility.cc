@@ -201,7 +201,7 @@ double kgd::Utility::calcLLK(double ref, double alt, double unadjustedWsaf, doub
 
   if (b2_arg <= 0 or a2_arg <= 0) {
 
-    DeconvolvApp::log().error("calcLLK(); BetaBinomialDistribution Invalid Alpha:{} or Beta: {}, unadjustedWsaf: {}, fac: {}, adjustedWsaf: {}",
+    ExecEnv::log().error("calcLLK(); BetaBinomialDistribution Invalid Alpha:{} or Beta: {}, unadjustedWsaf: {}, fac: {}, adjustedWsaf: {}",
                               a2_arg, b2_arg, unadjustedWsaf, fac, adjustedWsaf);
 
   }

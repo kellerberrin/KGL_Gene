@@ -12,7 +12,7 @@
 #define BOOST_FILESYSTEM_NO_DEPRECATED // Recommended by boost filesystem documentation.
 #include <boost/filesystem.hpp>
 #include <boost/tokenizer.hpp>
-#include "kgl_utility.h"
+#include "kel_utility.h"
 
 
 // Define namespace alias
@@ -223,7 +223,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
   if (seqan::isSet(parser, analysisFlag_)) seqan::getOptionValue(args_.analysisType, parser, analysisFlag_);
 
-  args_.analysisType = kgl::Utility::toupper(args_.analysisType);
+  args_.analysisType = Utility::toupper(args_.analysisType);
 
   if (seqan::isSet(parser, verboseFlag_)) seqan::getOptionValue(args_.verbose, parser, verboseFlag_);
 

@@ -11,7 +11,7 @@
 #include <map>
 #include "kgl_genome_db.h"
 #include "kgl_sequence_virtual.h"
-#include "kgl_logging.h"
+#include "kel_logging.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

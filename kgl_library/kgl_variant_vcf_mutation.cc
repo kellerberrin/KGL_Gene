@@ -5,7 +5,6 @@
 
 
 #include "kgl_variant_vcf.h"
-#include "kgl_sequence_offset.h"
 #include "kgl_variant_factory_vcf_parse_impl.h"
 
 #include <algorithm>

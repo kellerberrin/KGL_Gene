@@ -4,7 +4,7 @@
 
 
 #include "kgd_deconvolv_app.h"
-#include "kgl_utility.h"
+#include "kel_utility.h"
 
 #include <iostream>
 #include <ctime>
@@ -49,13 +49,13 @@ void getFilePath(const std::string& option_text,
 
   if (!file_exists) {
 
-    kgd::DeconvolvApp::log().critical("Option --{}, File: {} does not exist.", option_text, file_path.string());
+    kellerberrin::ExecEnv::log().critical("Option --{}, File: {} does not exist.", option_text, file_path.string());
 
   }
 
   if (error_code.value() != boost::system::errc::success) {
 
-    kgd::DeconvolvApp::log().critical("Option --{}, File: {}, error: {}.", option_text, file_path.string(), error_code.message());
+    kellerberrin::ExecEnv::log().critical("Option --{}, File: {}, error: {}.", option_text, file_path.string(), error_code.message());
 
   }
 
@@ -341,7 +341,7 @@ This option must be used with option -initialP.)";
 
   }
   // Setup the Logger.
-  DeconvolvApp::createLogger(MODULE_NAME, getArgs().logFile, getArgs().max_error_count, getArgs().max_warn_count);
+  ExecEnv::createLogger(MODULE_NAME, getArgs().logFile, getArgs().max_error_count, getArgs().max_warn_count);
 
   // Setup input files.
   getFilePath(refFileFlag_, parser, directory_path, args_.refFile, true);
@@ -370,7 +370,7 @@ This option must be used with option -initialP.)";
   // noPanel and Panel are mutually exclusive
   if (seqan::isSet(parser, nopanelFlag_) and seqan::isSet(parser, panelFileFlag_)) {
 
-    DeconvolvApp::log().critical("Command line error. Option --{} and Option --{} are mutually exclusive", nopanelFlag_, panelFileFlag_);
+    ExecEnv::log().critical("Command line error. Option --{} and Option --{} are mutually exclusive", nopanelFlag_, panelFileFlag_);
 
   }
 
@@ -387,7 +387,7 @@ This option must be used with option -initialP.)";
 
   if (seqan::isSet(parser, StrainProportionList_) and seqan::isSet(parser, strainCountFlag_)) {
 
-    DeconvolvApp::log().critical("Command line error. Option --{} and Option --{} are mutually exclusive", StrainProportionList_, strainCountFlag_);
+    ExecEnv::log().critical("Command line error. Option --{} and Option --{} are mutually exclusive", StrainProportionList_, strainCountFlag_);
 
   }
 

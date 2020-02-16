@@ -6,7 +6,7 @@
 #define KGL_VARIANT_FACTORY_VCF_IMPL_H
 
 
-#include "kgl_utility.h"
+#include "kel_utility.h"
 #include "kgl_variant_factory_vcf.h"
 #include "kgl_variant_factory_readvcf_impl.h"
 

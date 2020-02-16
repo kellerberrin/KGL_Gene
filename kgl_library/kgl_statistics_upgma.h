@@ -8,7 +8,7 @@
 #include "kgl_phylogenetic_tree.h"
 #include "kgl_genome_db.h"
 #include "kgl_variant_db_population.h"
-#include "kgl_utility.h"
+#include "kel_utility.h"
 #include "kgl_sequence_distance.h"
 #include "kgl_variant_db.h"
 

@@ -4,7 +4,7 @@
 //
 
 #include <algorithm>
-#include "kgl_exec_env.h"
+#include "kel_exec_env.h"
 #include "kgl_patterns.h"
 #include "kgl_variant_db.h"
 
@@ -239,7 +239,7 @@ kgl::GenomeVariant::Union(std::shared_ptr<const kgl::GenomeVariant> genome_varia
 
   for (auto contig_variant : genome_union->genome_variant_map_) {
 
-    kgl::ExecEnv::log().vinfo("Union Contig: {} contains: {} variants",
+    ExecEnv::log().vinfo("Union Contig: {} contains: {} variants",
                               contig_variant.first,
                               contig_variant.second->variantCount());
 
@@ -275,7 +275,7 @@ kgl::GenomeVariant::Intersection(std::shared_ptr<const kgl::GenomeVariant> genom
 
     }
 
-    kgl::ExecEnv::log().vinfo("Intersection Contig: {} contains: {} variants",
+    ExecEnv::log().vinfo("Intersection Contig: {} contains: {} variants",
                               contig_variant.first,
                               diff_contig_ptr->variantCount());
 
@@ -309,7 +309,7 @@ kgl::GenomeVariant::Difference(std::shared_ptr<const kgl::GenomeVariant> genome_
 
     }
 
-    kgl::ExecEnv::log().vinfo("Difference Contig: {} contains: {} variants",
+    ExecEnv::log().vinfo("Difference Contig: {} contains: {} variants",
                               contig_variant.first,
                               diff_contig_ptr->variantCount());
 

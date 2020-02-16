@@ -6,7 +6,7 @@
 #include <boost/numeric/ublas/triangular.hpp>
 // #include <boost/numeric/ublas/io.hpp>
 
-#include "kgl_exec_env.h"
+#include "kel_exec_env.h"
 #include "kgl_statistics_upgma.h"
 
 
@@ -46,7 +46,7 @@ kgl::DistanceType_t kgl::DistanceMatrix::BoostDistanceMatrix::getDistance(size_t
 
   if (i >= size() or i >= size()) {
 
-    kgl::ExecEnv::log().error("Index too large i: {}, j:{} for distance matrix size: {}", i, j, size());
+    ExecEnv::log().error("Index too large i: {}, j:{} for distance matrix size: {}", i, j, size());
     return 0;
 
   }
@@ -71,7 +71,7 @@ void kgl::DistanceMatrix::BoostDistanceMatrix::setDistance(size_t i, size_t j, k
 
   if (i >= size() or i >= size()) {
 
-    kgl::ExecEnv::log().error("Index too large i: {}, j:{} for distance matrix size: {}", i, j, size());
+    ExecEnv::log().error("Index too large i: {}, j:{} for distance matrix size: {}", i, j, size());
     return;
 
   }

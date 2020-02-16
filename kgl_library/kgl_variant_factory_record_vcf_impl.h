@@ -6,7 +6,7 @@
 #define KGL_VARIANT_FACTORY_RECORD_VCF_IMPL_H
 
 
-#include "kgl_utility.h"
+#include "kel_utility.h"
 #include "kgl_alphabet_dna5.h"
 #include "kgl_alphabet_string.h"
 #include "kgl_genome_db.h"

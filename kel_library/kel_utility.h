@@ -9,7 +9,7 @@
 #include <string>
 
 
-namespace kellerberrin::genome {   //  organization level namespace
+namespace kellerberrin {   //  organization level namespace
 
 // Singleton. Defines (boost) file and time utility functions and misc string functions.
 

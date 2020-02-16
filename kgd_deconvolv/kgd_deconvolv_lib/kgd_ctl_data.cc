@@ -135,7 +135,7 @@ bool kgd::MixtureDataObj::verifyPrint(bool print) const {
   // The number contigs should equal the size of the position vector.
   if (getChrom().size() != getPosition().size()) {
 
-    DeconvolvApp::log().error("MixtureDataObj::verifyPrint(); Contig count: {}, does not equal Position size: {}", getChrom().size(), getPosition().size());
+    ExecEnv::log().error("MixtureDataObj::verifyPrint(); Contig count: {}, does not equal Position size: {}", getChrom().size(), getPosition().size());
     return false;
 
   }
@@ -149,21 +149,21 @@ bool kgd::MixtureDataObj::verifyPrint(bool print) const {
 
   if (getPlaf().size() != total_positions) {
 
-    DeconvolvApp::log().error("MixtureDataObj::verifyPrint(); Plaf size: {}, does not equal Variant count: {}", getPlaf().size(), total_positions);
+    ExecEnv::log().error("MixtureDataObj::verifyPrint(); Plaf size: {}, does not equal Variant count: {}", getPlaf().size(), total_positions);
     return false;
 
   }
 
   if (getRefCount().size() != total_positions) {
 
-    DeconvolvApp::log().error("MixtureDataObj::verifyPrint(); Refcount size: {}, does not equal Variant count: {}", getRefCount().size(), total_positions);
+    ExecEnv::log().error("MixtureDataObj::verifyPrint(); Refcount size: {}, does not equal Variant count: {}", getRefCount().size(), total_positions);
     return false;
 
   }
 
   if (getAltCount().size() != total_positions) {
 
-    DeconvolvApp::log().error("MixtureDataObj::verifyPrint(); Altcount size: {}, does not equal Variant count: {}", getAltCount().size(), total_positions);
+    ExecEnv::log().error("MixtureDataObj::verifyPrint(); Altcount size: {}, does not equal Variant count: {}", getAltCount().size(), total_positions);
     return false;
 
   }
@@ -171,7 +171,7 @@ bool kgd::MixtureDataObj::verifyPrint(bool print) const {
   // Check that the offsets correspond to the positions sizes.
   if (indexOfChromStarts().size() != getPosition().size()) {
 
-    DeconvolvApp::log().error("MixtureDataObj::verifyPrint(); indexOfChromStarts size: {}, does not equal does not equal Position size: {}",
+    ExecEnv::log().error("MixtureDataObj::verifyPrint(); indexOfChromStarts size: {}, does not equal does not equal Position size: {}",
                               indexOfChromStarts().size(), getPosition().size());
     return false;
 
@@ -183,7 +183,7 @@ bool kgd::MixtureDataObj::verifyPrint(bool print) const {
     position_offset += getPosition()[idx-1].size();
     if (indexOfChromStarts()[idx] != position_offset) {
 
-      DeconvolvApp::log().error("MixtureDataObj::verifyPrint(); indexOfChromStarts[{}]: {}, does not equal does not summed Position[{}] size: {}",
+      ExecEnv::log().error("MixtureDataObj::verifyPrint(); indexOfChromStarts[{}]: {}, does not equal does not summed Position[{}] size: {}",
                                 idx, indexOfChromStarts()[idx], idx-1, position_offset);
       return false;
 
@@ -229,7 +229,7 @@ bool kgd::MixtureDataObj::verifyPrint(bool print) const {
 
       }
 
-      DeconvolvApp::log().info("MixtureDataObj::verifyPrint(); contig: {}, total variants: {}, genome variants:{}, median ref count: {}, median alt count: {}",
+      ExecEnv::log().info("MixtureDataObj::verifyPrint(); contig: {}, total variants: {}, genome variants:{}, median ref count: {}, median alt count: {}",
                                getChrom()[idx], getPosition()[idx].size(), variant_count, calcMedianCount(median_ref), calcMedianCount(median_alt));
 
     }
@@ -249,7 +249,7 @@ double kgd::MixtureDataObj::calcMedianCount(std::vector<double>& countVector) co
 
   if (vectorSize == 0) {
 
-    DeconvolvApp::log().warn("Attempted to calculate median of zero-sized vector");
+    ExecEnv::log().warn("Attempted to calculate median of zero-sized vector");
 
   } else if (vectorSize % 2 == 0) {
 

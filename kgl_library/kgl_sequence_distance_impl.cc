@@ -22,7 +22,7 @@
 #include <edlib.h>
 
 #include "kgl_sequence_distance_impl.h"
-#include "kgl_exec_env.h"
+#include "kel_exec_env.h"
 #include "kgl_genome_types.h"
 
 namespace kgl = kellerberrin::genome;
@@ -129,7 +129,7 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::Levenshtein
 
   if (result.status != EDLIB_STATUS_OK) {
 
-    kgl::ExecEnv::log().error("Problem calculating Global Levenshtein distance using edlib; sequenceA: {}, sequenceB: {}",
+    ExecEnv::log().error("Problem calculating Global Levenshtein distance using edlib; sequenceA: {}, sequenceB: {}",
                               sequenceA, sequenceB);
     edlibFreeAlignResult(result);
     return 0;
@@ -174,7 +174,7 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::Levenshtein
 
   if (result.status != EDLIB_STATUS_OK) {
 
-    kgl::ExecEnv::log().error("Problem calculating Local Levenshtein distance using edlib; sequenceA: {}, sequenceB: {}",
+    ExecEnv::log().error("Problem calculating Local Levenshtein distance using edlib; sequenceA: {}, sequenceB: {}",
                               sequenceA, sequenceB);
     edlibFreeAlignResult(result);
     return 0;
@@ -186,7 +186,7 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::Levenshtein
 
   kgl::CompareDistance_t compare = LevenshteinGlobalSeqan3(sequenceA, sequenceB);
 
-  kgl::ExecEnv::log().info("Local Levenshtein distance using edlib: {}, Global seqan3: {}", distance, compare);
+  ExecEnv::log().info("Local Levenshtein distance using edlib: {}, Global seqan3: {}", distance, compare);
 
   return distance;
 

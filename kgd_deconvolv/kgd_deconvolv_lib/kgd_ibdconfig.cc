@@ -220,7 +220,7 @@ size_t kgd::IBDconfiguration::nchoose2(size_t n) {
 
   if (n < 2) {
 
-    DeconvolvApp::log().critical("IBDconfiguration::nchoose2(n); Domain error n: {} must be >= 2", n);
+    ExecEnv::log().critical("IBDconfiguration::nchoose2(n); Domain error n: {} must be >= 2", n);
 
   }
 

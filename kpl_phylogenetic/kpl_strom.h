@@ -5,7 +5,7 @@
 #ifndef KPL_STROM_H
 #define KPL_STROM_H
 
-#include "kgl_exec_env.h"
+#include "kel_exec_env.h"
 
 #include "kpl_geneticdata.h"
 #include "kpl_treesummary.h"
@@ -26,7 +26,6 @@
 namespace kellerberrin::phylogenetic {   //  organization level namespace
 
 
-using ExecEnv = kellerberrin::genome::ExecEnv;
 
 class Strom {
 

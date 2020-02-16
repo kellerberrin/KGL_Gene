@@ -36,7 +36,7 @@ kgd::MCMCHAP::MCMCHAP(std::shared_ptr<DEploidIO> dEploidIO,
 void kgd::MCMCHAP::initializeMcmcChain() {
   // Initialization
 
-  DeconvolvApp::log().info("############ initializeMcmcChain() ###########");
+  ExecEnv::log().info("############ initializeMcmcChain() ###########");
 
   initializeHap();
   initializeExpectedWsaf(titre_proportions_.Proportions()); // This requires currentHap_ and currentProp_
@@ -182,7 +182,7 @@ double kgd::MCMCHAP::deltaLLKs(std::vector<double> &newLLKs) {
 
 void kgd::MCMCHAP::updateSingleHap(const std::vector<double>& proportions) {
 
-  DeconvolvApp::log().vinfo("McmcMachinery::updateSingleHap()");
+  ExecEnv::log().vinfo("McmcMachinery::updateSingleHap()");
 
   size_t strain_index = rand_strain_.getRandomStrain();
 
@@ -199,7 +199,7 @@ void kgd::MCMCHAP::updateSingleHap(const std::vector<double>& proportions) {
     size_t kStrain = dEploidIO_->kStrain();
 
 
-    DeconvolvApp::log().vinfo("Update Chrom with index: {}, starts at: {}, with: {} sites", chromi, start, length);
+    ExecEnv::log().vinfo("Update Chrom with index: {}, starts at: {}, with: {} sites", chromi, start, length);
 
     UpdateSingleHap updating(start,
                              length,
@@ -257,7 +257,7 @@ void kgd::MCMCHAP::updatePairHaps(const std::vector<double>& proportions) {
 
   }
 
-  DeconvolvApp::log().vinfo(" Update Pair Hap ");
+  ExecEnv::log().vinfo(" Update Pair Hap ");
 
 //  findUpdatingStrainPair();
 
@@ -270,7 +270,7 @@ void kgd::MCMCHAP::updatePairHaps(const std::vector<double>& proportions) {
     size_t kStrain = dEploidIO_->kStrain();
 
 
-    DeconvolvApp::log().vinfo("Update Chrom with index: {}, starts at: {}, with: {} sites", chromi, start, length);
+    ExecEnv::log().vinfo("Update Chrom with index: {}, starts at: {}, with: {} sites", chromi, start, length);
 
     UpdatePairHap updating(start,
                            length,

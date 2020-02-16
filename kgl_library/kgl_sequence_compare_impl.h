@@ -10,7 +10,7 @@
 #include <string>
 #include <map>
 #include <sstream>
-#include "kgl_logging.h"
+#include "kel_logging.h"
 #include "kgl_genome_types.h"
 #include "kgl_sequence_base.h"
 

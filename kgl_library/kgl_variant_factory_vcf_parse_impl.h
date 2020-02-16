@@ -9,7 +9,7 @@
 
 #include <map>
 
-#include "kgl_utility.h"
+#include "kel_utility.h"
 #include "kgl_genome_types.h"
 #include "kgl_genome_db.h"
 #include "kgl_variant_db.h"

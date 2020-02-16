@@ -3,8 +3,7 @@
 //
 
 #include "kgl_property_tree.h"
-#include "kgl_utility.h"
-#include "kgl_table_impl.h"
+#include "kel_utility.h"
 
 
 #include <boost/property_tree/ptree.hpp>

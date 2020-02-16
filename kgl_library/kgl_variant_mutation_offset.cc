@@ -4,7 +4,6 @@
 
 
 #include "kgl_variant_mutation_offset.h"
-#include "kgl_variant_mutation.h"
 
 
 namespace kgl = kellerberrin::genome;

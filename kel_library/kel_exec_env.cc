@@ -2,36 +2,36 @@
 // Created by kellerberrin on 30/09/17.
 //
 
-#include "kgl_exec_env.h"
+#include "kel_exec_env.h"
 
 
 // Define namespace alias
-namespace kgl = kellerberrin::genome;
+namespace kel = kellerberrin;
 
 
 // Static private member declarations.
-std::unique_ptr<kgl::Logger> kgl::ExecEnv::log_ptr_;
+std::unique_ptr<kel::Logger> kel::ExecEnv::log_ptr_;
 
-std::string kgl::ExecEnv::command_line_;
+std::string kel::ExecEnv::command_line_;
 
 // Public static member functions.
-kgl::Logger& kgl::ExecEnv::log() { return *log_ptr_; }
+kel::Logger& kel::ExecEnv::log() { return *log_ptr_; }
 
-void kgl::ExecEnv::createLogger(const std::string& module,
+void kel::ExecEnv::createLogger(const std::string& module,
                                 const std::string& log_file,
                                 int max_error_messages,
                                 int max_warning_messages) {
 
-  kgl::ExecEnv::log_ptr_ = std::make_unique<kgl::Logger>(module, log_file);
+  kel::ExecEnv::log_ptr_ = std::make_unique<kel::Logger>(module, log_file);
 
-  kgl::ExecEnv::log_ptr_->SetMaxErrorMessages(max_error_messages);
+  kel::ExecEnv::log_ptr_->SetMaxErrorMessages(max_error_messages);
 
-  kgl::ExecEnv::log_ptr_->SetMaxwarningMessages(max_warning_messages);
+  kel::ExecEnv::log_ptr_->SetMaxwarningMessages(max_warning_messages);
 
 }
 
 
-void kgl::ExecEnv::ctrlC(int) {
+void kel::ExecEnv::ctrlC(int) {
 
   ExecEnv::log().warn("Control-C. Program terminates. Output files may be corrupt. Multi-threaded code may hang.");
   std::exit(EXIT_FAILURE);
@@ -39,7 +39,7 @@ void kgl::ExecEnv::ctrlC(int) {
 }
 
 
-void kgl::ExecEnv::getCommandLine(int argc, char const ** argv) {
+void kel::ExecEnv::getCommandLine(int argc, char const ** argv) {
 
   std::string command_line;
 
