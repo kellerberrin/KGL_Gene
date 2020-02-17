@@ -8,7 +8,7 @@
 #include <vector>
 #include <cstdio>
 #include <memory>
-#include "kgd_distribution.h"
+#include "kel_distribution.h"
 #include "randomSample.hpp"
 
 namespace kellerberrin {    // organization level namespace

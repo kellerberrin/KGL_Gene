@@ -2,7 +2,7 @@
 // Created by kellerberrin on 15/2/20.
 //
 
-#include "kgl_property_tree.h"
+#include "kel_property_tree.h"
 #include "kel_utility.h"
 
 
@@ -11,7 +11,7 @@
 #include <boost/property_tree/json_parser.hpp>
 
 
-namespace kgl = kellerberrin::genome;
+namespace kel = kellerberrin;
 namespace pt = boost::property_tree;
 
 
@@ -20,9 +20,9 @@ namespace pt = boost::property_tree;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-using ImplSubTree = std::pair<std::string, kgl::PropertyTree::PropertyImpl>;
+using ImplSubTree = std::pair<std::string, kel::PropertyTree::PropertyImpl>;
 
-class kgl::PropertyTree::PropertyImpl {
+class kel::PropertyTree::PropertyImpl {
 
 public:
 
@@ -61,7 +61,7 @@ private:
 
 
 
-bool kgl::PropertyTree::PropertyImpl::readPropertiesFile(const std::string& properties_file) {
+bool kel::PropertyTree::PropertyImpl::readPropertiesFile(const std::string& properties_file) {
 
   std::string uc_file_extenstion = Utility::toupper(Utility::fileExtension(properties_file));
 
@@ -90,7 +90,7 @@ bool kgl::PropertyTree::PropertyImpl::readPropertiesFile(const std::string& prop
 }
 
 
-bool kgl::PropertyTree::PropertyImpl::checkProperty(const std::string& property_name) const {
+bool kel::PropertyTree::PropertyImpl::checkProperty(const std::string& property_name) const {
 
   try {
 
@@ -108,7 +108,7 @@ bool kgl::PropertyTree::PropertyImpl::checkProperty(const std::string& property_
 }
 
 
-bool kgl::PropertyTree::PropertyImpl::getProperty(const pt::ptree& property_tree, const std::string& property_name,  std::string& property) const {
+bool kel::PropertyTree::PropertyImpl::getProperty(const pt::ptree& property_tree, const std::string& property_name,  std::string& property) const {
 
   try {
 
@@ -131,7 +131,7 @@ bool kgl::PropertyTree::PropertyImpl::getProperty(const pt::ptree& property_tree
 }
 
 
-bool kgl::PropertyTree::PropertyImpl::getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const {
+bool kel::PropertyTree::PropertyImpl::getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const {
 
   try {
 
@@ -158,7 +158,7 @@ bool kgl::PropertyTree::PropertyImpl::getPropertyVector(const std::string& prope
 }
 
 
-bool kgl::PropertyTree::PropertyImpl::getTreeVector(const std::string& property_name, std::vector<std::pair<std::string, PropertyImpl>>& tree_vector) const {
+bool kel::PropertyTree::PropertyImpl::getTreeVector(const std::string& property_name, std::vector<std::pair<std::string, PropertyImpl>>& tree_vector) const {
 
   tree_vector.clear();
 
@@ -183,7 +183,7 @@ bool kgl::PropertyTree::PropertyImpl::getTreeVector(const std::string& property_
 }
 
 
-bool kgl::PropertyTree::PropertyImpl::getProperty(const std::string& property_name, size_t& property) const {
+bool kel::PropertyTree::PropertyImpl::getProperty(const std::string& property_name, size_t& property) const {
 
   std::string size_string;
   if (not getProperty(property_name, size_string)) {
@@ -209,7 +209,7 @@ bool kgl::PropertyTree::PropertyImpl::getProperty(const std::string& property_na
 }
 
 
-void kgl::PropertyTree::PropertyImpl::treeTraversal() const {
+void kel::PropertyTree::PropertyImpl::treeTraversal() const {
 
   printTree("", property_tree_);
 
@@ -217,7 +217,7 @@ void kgl::PropertyTree::PropertyImpl::treeTraversal() const {
 
 
 
-void kgl::PropertyTree::PropertyImpl::printTree(const std::string& parent, const pt::ptree& property_tree) const {
+void kel::PropertyTree::PropertyImpl::printTree(const std::string& parent, const pt::ptree& property_tree) const {
 
 
   for (auto item : property_tree) {
@@ -250,51 +250,51 @@ void kgl::PropertyTree::PropertyImpl::printTree(const std::string& parent, const
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-kgl::PropertyTree::PropertyTree() : properties_impl_ptr_(std::make_unique<kgl::PropertyTree::PropertyImpl>()) {}
+kel::PropertyTree::PropertyTree() : properties_impl_ptr_(std::make_unique<kel::PropertyTree::PropertyImpl>()) {}
 
-kgl::PropertyTree::PropertyTree(const PropertyTree& property_tree) : properties_impl_ptr_(std::make_unique<kgl::PropertyTree::PropertyImpl>(*(property_tree.properties_impl_ptr_))) {}
+kel::PropertyTree::PropertyTree(const PropertyTree& property_tree) : properties_impl_ptr_(std::make_unique<kel::PropertyTree::PropertyImpl>(*(property_tree.properties_impl_ptr_))) {}
 
-kgl::PropertyTree::PropertyTree(const PropertyImpl& properties_impl) : properties_impl_ptr_(std::make_unique<kgl::PropertyTree::PropertyImpl>(properties_impl)) {}
+kel::PropertyTree::PropertyTree(const PropertyImpl& properties_impl) : properties_impl_ptr_(std::make_unique<kel::PropertyTree::PropertyImpl>(properties_impl)) {}
 
-kgl::PropertyTree::~PropertyTree() {}  // DO NOT DELETE or USE DEFAULT. Required because of incomplete pimpl type.
+kel::PropertyTree::~PropertyTree() {}  // DO NOT DELETE or USE DEFAULT. Required because of incomplete pimpl type.
 
 // Functionality passed to the implmentation.
 
-bool kgl::PropertyTree::readProperties(const std::string& properties_file) {
+bool kel::PropertyTree::readProperties(const std::string& properties_file) {
 
   return properties_impl_ptr_->readPropertiesFile(properties_file);
 
 }
 
 
-bool kgl::PropertyTree::getProperty(const std::string& property_name, std::string& property) const {
+bool kel::PropertyTree::getProperty(const std::string& property_name, std::string& property) const {
 
   return properties_impl_ptr_->getProperty(property_name, property);
 
 }
 
 
-bool kgl::PropertyTree::getProperty(const std::string& property_name, size_t& property) const {
+bool kel::PropertyTree::getProperty(const std::string& property_name, size_t& property) const {
 
   return properties_impl_ptr_->getProperty(property_name, property);
 
 }
 
-void kgl::PropertyTree::treeTraversal() const {
+void kel::PropertyTree::treeTraversal() const {
 
   return properties_impl_ptr_->treeTraversal();
 
 }
 
 
-bool kgl::PropertyTree::checkProperty(const std::string& property_name) const {
+bool kel::PropertyTree::checkProperty(const std::string& property_name) const {
 
   return properties_impl_ptr_->checkProperty(property_name);
 
 }
 
 
-bool kgl::PropertyTree::getFileProperty(const std::string& property_name, const std::string& work_directory, std::string& file_path) const {
+bool kel::PropertyTree::getFileProperty(const std::string& property_name, const std::string& work_directory, std::string& file_path) const {
 
   std::string file_name;
 
@@ -322,14 +322,14 @@ bool kgl::PropertyTree::getFileProperty(const std::string& property_name, const 
 }
 
 
-bool kgl::PropertyTree::getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const {
+bool kel::PropertyTree::getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const {
 
   return properties_impl_ptr_->getPropertyVector(property_name, property_vector);
 
 }
 
 
-bool kgl::PropertyTree::getPropertyTreeVector(const std::string& property_name, std::vector<SubPropertyTree>& property_tree_vector) const {
+bool kel::PropertyTree::getPropertyTreeVector(const std::string& property_name, std::vector<SubPropertyTree>& property_tree_vector) const {
 
   property_tree_vector.clear();
 

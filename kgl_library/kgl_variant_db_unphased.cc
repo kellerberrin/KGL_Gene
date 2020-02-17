@@ -4,7 +4,7 @@
 
 
 #include "kgl_variant_db_unphased.h"
-#include "kgl_patterns.h"
+#include "kel_patterns.h"
 
 
 namespace kgl = kellerberrin::genome;

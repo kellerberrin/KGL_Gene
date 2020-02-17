@@ -58,17 +58,19 @@ set(LIBRARY_SOURCE_FILES
         kel_library/kel_utility.h
         kel_library/kel_utility.cc
         kel_library/kel_exec_env.h
-        kel_library/kel_exec_env.cc)
+        kel_library/kel_exec_env.cc
+        kel_library/kel_property_tree.cc
+        kel_library/kel_property_tree.h)
 
 # Basic Genetic infrastructure library
 set(GENETIC_LIBRARY_SOURCE_FILES
-        kgl_library/kgl_mt_queue.h
+        kel_library/kel_mt_queue.h
         kgl_library/kgl_genome_types.h
-        kgl_library/kgl_lock.h
+        kel_library/kel_lock.h
         kgl_library/kgl_gff_fasta.h
         kgl_library/kgl_gff_fasta.cc
         kgl_library/kgl_genome_db.h
-        kgl_library/kgl_patterns.h
+        kel_library/kel_patterns.h
         kgl_library/kgl_genome_feature.h
         kgl_library/kgl_genome_feature.cc
         kgl_library/kgl_variant.h
@@ -162,9 +164,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_genome_contig_aux.cc
         kgl_library/kgl_genome_contig_aux.h
         kgl_library/kgl_phylogenetic_tree.cc
-        kgl_library/kgl_phylogenetic_tree.h
-        kgl_library/kgl_property_tree.cc
-        kgl_library/kgl_property_tree.h)
+        kgl_library/kgl_phylogenetic_tree.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -253,7 +253,7 @@ set(DECONVOLV_LIB_CONTRIB_FILES
         kgd_deconvolv/contrib/codeCogs/xsub_ln_add1.h
         kgd_deconvolv/contrib/gzstream/gzstream.cpp
         kgd_deconvolv/contrib/gzstream/gzstream.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_distribution.h)
+        kel_library/kel_distribution.h)
 
 set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_lib/kgd_vcf_reader_debug.cc
@@ -319,7 +319,7 @@ set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_app.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.cc
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_distribution.cc)
+        kel_library/kel_distribution.cc)
 
 # Application level objects
 set(DECONVOLV_APPLICATION_SOURCE_FILES
@@ -332,7 +332,7 @@ add_library(kel_library_lib STATIC ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES}
 
 add_library(kgl_genome_lib STATIC ${GENETIC_LIBRARY_SOURCE_FILES} ${ANALYTIC_SOURCE_FILES} ${MIXTURE_SOURCE_FILES})
 
-target_link_libraries(kgl_genome_lib  kel_library ${Boost_LIBRARIES})
+target_link_libraries(kgl_genome_lib  kel_library_lib ${Boost_LIBRARIES})
 
 add_library(kgd_contrib_lib STATIC ${DECONVOLV_LIB_CONTRIB_FILES})
 

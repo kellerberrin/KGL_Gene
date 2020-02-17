@@ -38,8 +38,7 @@
 #include "kgd_exceptions.h"
 
 
-namespace kellerberrin {    // organization level namespace
-namespace deconvolv {          // project level namespace
+namespace kellerberrin::deconvolv {    // organization level namespace
 
 /// A static singleton class to control visibility and access to misc. utility functions.
 class Utility {
@@ -154,8 +153,7 @@ private:
 
 
 
-}   // organization level namespace
-}   // project level namespace
+}   // end namespace
 
 
 #endif

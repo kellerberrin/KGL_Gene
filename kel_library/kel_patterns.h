@@ -32,7 +32,7 @@
 
 // Generic code patterns for the project.
 
-namespace kellerberrin::genome {   //  organization level namespace
+namespace kellerberrin {   //  organization level namespace
 
 
 // Pattern to delete duplicates from an iterable container.

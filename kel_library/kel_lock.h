@@ -11,7 +11,7 @@
 #include <vector>
 #include "kgl_genome_types.h"
 
-namespace kellerberrin::genome {   //  organization::project level namespace
+namespace kellerberrin {   //  organization level namespace
 
 class AutoMutex {
 
@@ -119,7 +119,7 @@ public:
 // If the nucleotide count array is not locked then some counts will be lost.
 
 // Use a mutex strategy, potentially slow and memory intensive (ArrayMutex) but very general.
-template <class LockStrategy = ArrayMutex, typename CountType = NucleotideReadCount_t>
+template < typename CountType, class LockStrategy = ArrayMutex>
 class MutexCountLock : protected LockStrategy {
 
 public:
@@ -139,13 +139,14 @@ public:
 
 // Does not use mutexes. Uses Intel assembler (xaddl) to implement fast locks.
 // Advantage: fast. Disadvantages: Only valid on Intel processors and NucleotideReadCount_t (unsigned long) counters.
+template <typename CountType>
 class X86CountLock {
 
 public:
 
   explicit X86CountLock(const std::size_t) {}
 
-  inline void incrementCount(NucleotideReadCount_t& counter, std::size_t) {
+  inline void incrementCount(CountType& counter, std::size_t) {
 
     int inc = 1;
 
@@ -161,7 +162,7 @@ public:
 
 // Only use with single thread access.
 // With multi-thread nucleotide count updates, this will be fast, but you will lose some (small number) counts.
-template <typename CountType = NucleotideReadCount_t>
+template <typename CountType>
 class NullCountLock {
 
 public:

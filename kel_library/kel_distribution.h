@@ -8,7 +8,6 @@
 
 
 namespace kellerberrin {    // organization level namespace
-namespace deconvolv {          // project level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -279,9 +278,7 @@ private:
 };
 
 
-}   // organization level namespace
-}   // project level namespace
-
+}   // end namespace
 
 
 #endif

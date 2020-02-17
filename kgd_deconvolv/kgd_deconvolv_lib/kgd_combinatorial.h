@@ -10,8 +10,7 @@
 #include <limits>
 #include "kgd_deconvolv_app.h"
 
-namespace kellerberrin {    // organization level namespace
-namespace deconvolv {          // project level namespace
+namespace kellerberrin::deconvolv {    // organization level namespace
 
 
 
@@ -41,8 +40,7 @@ private:
 
 
 
-}   // organization level namespace
-}   // project level namespace
+}   // end namespace
 
 
 

@@ -9,9 +9,9 @@
 #include <string>
 #include <thread>
 #include <fstream>
-#include "kgl_mt_queue.h"
+#include "kel_mt_queue.h"
 #include "kel_exec_env.h"
-#include "kgl_lock.h"
+#include "kel_lock.h"
 
 #include <seqan/vcf_io.h>
 

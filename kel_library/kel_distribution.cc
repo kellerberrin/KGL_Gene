@@ -4,14 +4,14 @@
 
 
 #include "kgd_deconvolv_app.h"
-#include "kgd_distribution.h"
+#include "kel_distribution.h"
 
 #include <boost/math/special_functions/gamma.hpp>
 #include <boost/math/special_functions/binomial.hpp>
 #include <boost/math/special_functions/beta.hpp>
 
 namespace bm = boost::math;
-namespace kgd = kellerberrin::deconvolv;
+namespace kel = kellerberrin;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -21,7 +21,7 @@ namespace kgd = kellerberrin::deconvolv;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-double kgd::NormalDistribution::pdf(double x, double mean, double std_dev) {
+double kel::NormalDistribution::pdf(double x, double mean, double std_dev) {
 
   static const double inv_sqrt_2pi = 0.3989422804014327;
 
@@ -31,7 +31,7 @@ double kgd::NormalDistribution::pdf(double x, double mean, double std_dev) {
 
 }
 
-double kgd::BetaDistribution::logInverseBetaFunction(double a, double b) {
+double kel::BetaDistribution::logInverseBetaFunction(double a, double b) {
 
   assert(a > 0.0);
   assert(b > 0.0);
@@ -43,7 +43,7 @@ double kgd::BetaDistribution::logInverseBetaFunction(double a, double b) {
 }
 
 
-double kgd::BetaDistribution::logPartialPdf(double x, double a, double b) {
+double kel::BetaDistribution::logPartialPdf(double x, double a, double b) {
 
   assert(x >= 0 && x <= 1);
   assert(a >= 0);
@@ -56,7 +56,7 @@ double kgd::BetaDistribution::logPartialPdf(double x, double a, double b) {
 }
 
 
-double kgd::BetaDistribution::logPdf(double x, double a, double b) {
+double kel::BetaDistribution::logPdf(double x, double a, double b) {
 
   assert(x >= 0 && x <= 1);
   assert(a > 0);
@@ -68,7 +68,7 @@ double kgd::BetaDistribution::logPdf(double x, double a, double b) {
 
 }
 
-double kgd::BetaDistribution::pdf(double x, double a, double b) {
+double kel::BetaDistribution::pdf(double x, double a, double b) {
 
   assert(x >= 0 && x <= 1);
   assert(a > 0);
@@ -80,7 +80,7 @@ double kgd::BetaDistribution::pdf(double x, double a, double b) {
 
 }
 
-double kgd::BetaBinomialDistribution::pdf(size_t n, size_t k, double alpha, double beta) {
+double kel::BetaBinomialDistribution::pdf(size_t n, size_t k, double alpha, double beta) {
 
   assert(k <= n);
   assert(alpha > 0);
@@ -99,7 +99,7 @@ double kgd::BetaBinomialDistribution::pdf(size_t n, size_t k, double alpha, doub
 }
 
 
-double kgd::BetaBinomialDistribution::partialPdf(double n, double k, double alpha, double beta) {
+double kel::BetaBinomialDistribution::partialPdf(double n, double k, double alpha, double beta) {
 
   assert(k <= n);
   assert(alpha > 0);
@@ -116,7 +116,7 @@ double kgd::BetaBinomialDistribution::partialPdf(double n, double k, double alph
 }
 
 
-double kgd::BetaBinomialDistribution::logPartialPdf(double n, double k, double alpha, double beta) {
+double kel::BetaBinomialDistribution::logPartialPdf(double n, double k, double alpha, double beta) {
 
   assert(k <= n);
   assert(alpha > 0.0);
@@ -134,7 +134,7 @@ double kgd::BetaBinomialDistribution::logPartialPdf(double n, double k, double a
 
 }
 
-double kgd::BetaBinomialDistribution::logPdf(double n, double k, double alpha, double beta) {
+double kel::BetaBinomialDistribution::logPdf(double n, double k, double alpha, double beta) {
 
   assert(k <= n);
   assert(alpha > 0.0);
@@ -155,7 +155,7 @@ double kgd::BetaBinomialDistribution::logPdf(double n, double k, double alpha, d
 }
 
 
-double kgd::BinomialDistribution::pdf(size_t n, size_t k, double prob_success) {
+double kel::BinomialDistribution::pdf(size_t n, size_t k, double prob_success) {
 
   assert(k <= n);
   assert(prob_success >= 0);

@@ -11,7 +11,6 @@
 #include <memory>
 
 namespace kellerberrin {   //  organization level namespace
-namespace genome {   // project level namespace
 
 // threadsafe queue for multiple consumers and producers
 template<typename T> class MtQueue {
@@ -173,8 +172,7 @@ private:
 
 };
 
-}   // namespace genome
-}   // namespace kellerberrin
+}   // end namespace
 
 
 #endif // KGL_MtQueue_H

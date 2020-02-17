@@ -6,7 +6,7 @@
 #ifndef KGL_PROPERTIES_H
 #define KGL_PROPERTIES_H
 
-#include "kgl_property_tree.h"
+#include "kel_property_tree.h"
 
 #include <memory>
 #include <string>

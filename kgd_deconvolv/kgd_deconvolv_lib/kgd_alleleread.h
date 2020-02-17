@@ -9,8 +9,7 @@
 
 
 
-namespace kellerberrin {    // organization level namespace
-namespace deconvolv {          // project level namespace
+namespace kellerberrin::deconvolv {    // organization level namespace
 
 
 using GenomeAlleleVector = std::vector<GenomeAlleles>;
@@ -45,8 +44,7 @@ private:
 };
 
 
-}   // organization level namespace
-}   // project level namespace
+}   // end  namespace
 
 
 #endif //KGL_KGD_ALLELEREAD_H

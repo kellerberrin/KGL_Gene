@@ -13,8 +13,7 @@
 
 
 
-namespace kellerberrin {    // organization level namespace
-namespace deconvolv {          // project level namespace
+namespace kellerberrin::deconvolv {    // organization level namespace
 
 
 /// Single allele frequency paired with the contig offset.
@@ -70,14 +69,14 @@ class GenomeAlleles {
 
 public:
 
-  GenomeAlleles(const GenomeId_t& genome_id) : genome_id_(genome_id) {}
+  explicit GenomeAlleles(const GenomeId_t& genome_id) : genome_id_(genome_id) {}
   GenomeAlleles() : genome_id_(GENOME_NOT_SPECIFIED_) {}
   GenomeAlleles(const GenomeAlleles&) = default;
   ~GenomeAlleles() = default;
 
   // Access routines
-  const GenomeId_t& genomeId() const { return genome_id_; }
-  const ContigAlleleMap& getMap() const { return contig_allele_map_; }
+  [[nodiscard]] const GenomeId_t& genomeId() const { return genome_id_; }
+  [[nodiscard]] const ContigAlleleMap& getMap() const { return contig_allele_map_; }
 
   void addAlleleFreq(const ContigId_t& contig_id, ContigOffset_t offset, AlleleFreq_t frequency);
 
@@ -98,9 +97,7 @@ private:
 
 
 
-}   // organization level namespace
-}   // project level namespace
-
+}   // end amespace
 
 
 #endif //KGD_ALLELEFREQ_H

@@ -13,7 +13,7 @@
 #include <set>
 
 
-namespace kellerberrin::genome {  //  organization::project level namespace
+namespace kellerberrin {  //  organization level namespace
 
 
 // This object is a facade over the boost:: property tree object

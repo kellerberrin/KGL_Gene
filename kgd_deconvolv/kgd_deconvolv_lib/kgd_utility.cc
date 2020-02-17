@@ -28,7 +28,7 @@
 #include <algorithm> // find
 #include "kgd_utility.h"
 #include "kgd_deconvolv_app.h"
-#include "kgd_distribution.h"
+#include "kel_distribution.h"
 #include "loggammasum.h" // which includes log_gamma.h
 #include "gamma.h"
 

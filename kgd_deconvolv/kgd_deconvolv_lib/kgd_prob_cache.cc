@@ -3,7 +3,7 @@
 //
 
 #include "kgd_deconvolv_app.h"
-#include "kgd_distribution.h"
+#include "kel_distribution.h"
 #include "kgd_prob_cache.h"
 
 
