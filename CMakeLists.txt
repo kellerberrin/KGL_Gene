@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(KGL)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 
 
 # add extra include directories
@@ -19,7 +19,7 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
 
 # add boost library directories
 set(BOOST_INCLUDEDIR /usr/local/include)
-set(BOOST_LIBRARYDIR /usr/local/lib/boost/lib)
+set(BOOST_LIBRARYDIR /usr/local/lib/boost)
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME ON)
@@ -60,7 +60,9 @@ set(LIBRARY_SOURCE_FILES
         kel_library/kel_exec_env.h
         kel_library/kel_exec_env.cc
         kel_library/kel_property_tree.cc
-        kel_library/kel_property_tree.h)
+        kel_library/kel_property_tree.h
+        kel_library/kel_distribution.h
+        kel_library/kel_distribution.cc)
 
 # Basic Genetic infrastructure library
 set(GENETIC_LIBRARY_SOURCE_FILES
@@ -318,8 +320,7 @@ set(DECONVOLV_LIB_SOURCE_FILES
         kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_app.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_app.cc
         kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.cc
-        kel_library/kel_distribution.cc)
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.cc)
 
 # Application level objects
 set(DECONVOLV_APPLICATION_SOURCE_FILES

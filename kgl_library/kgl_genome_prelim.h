@@ -39,6 +39,7 @@ public:
   ContigOffset_t begin() const { return begin_offset_; }
   ContigOffset_t end() const { return end_offset_; }
   StrandSense strand() const { return strand_sense_; }
+  char strandText() const { return static_cast<char>(strand()); }
   void begin(ContigOffset_t begin) { begin_offset_ = begin; }
   void end(ContigOffset_t end) { end_offset_ = end; }
   void strand(StrandSense strand) { strand_sense_ = strand; }

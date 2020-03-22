@@ -15,36 +15,38 @@ class ASRV {
 
 public:
 
-  using rate_prob_t = std::vector<double>;
-  using relrate_ptr_t = std::shared_ptr<double>;
-  using ratevar_ptr_t = std::shared_ptr<double>;
-  using pinvar_ptr_t = std::shared_ptr<double>;
-
   ASRV() { clear(); }
   ~ASRV() = default;
 
+
+
 // Modify
-  void setNumCateg(unsigned ncateg);
-  void setRateVarSharedPtr(ratevar_ptr_t ratevar);
-  void setRateVar(double v);
-  void fixRateVar(bool is_fixed);
-  void setPinvarSharedPtr(pinvar_ptr_t pinvar);
-  void setPinvar(double p);
-  void fixPinvar(bool is_fixed);
-  void setIsInvarModel(bool is_invar_model);
+  void setNumCateg(unsigned ncateg) { _num_categ = ncateg; recalcASRV(); }
+  void setRateVarSharedPtr(std::shared_ptr<double> ratevar_ptr) { _ratevar_ptr = ratevar_ptr; recalcASRV(); }
+  void setRateVar(double v) { *_ratevar_ptr = v; recalcASRV(); }
+  void setPinvarSharedPtr(std::shared_ptr<double> pinvar) { _pinvar_ptr = pinvar; recalcASRV(); }
+  void setPinvar(double p) { *_pinvar_ptr = p; recalcASRV(); }
+  void setIsInvarModel(bool is_invar_model) { _invar_model = is_invar_model; recalcASRV(); }
+
+  void fixRateVar(bool is_fixed) { _ratevar_fixed = is_fixed; }
+  void fixPinvar(bool is_fixed) {  _pinvar_fixed = is_fixed; }
 
 // Access
-  [[nodiscard]] unsigned getNumCateg() const;
-  [[nodiscard]] const ratevar_ptr_t getRateVarSharedPtr() const;
-  [[nodiscard]] double getRateVar() const;
-  [[nodiscard]] bool isFixedRateVar() const;
-  [[nodiscard]] const pinvar_ptr_t getPinvarSharedPtr() const;
-  [[nodiscard]] double getPinvar() const;
-  [[nodiscard]] bool isFixedPinvar() const;
-  [[nodiscard]] bool getIsInvarModel() const;
 
-  [[nodiscard]] const double* getRates() const;
-  [[nodiscard]] const double* getProbs() const;
+
+  [[nodiscard]] unsigned getNumCateg() const { return _num_categ; }
+
+  [[nodiscard]] std::shared_ptr<const double> getRateVarSharedPtr() const { return _ratevar_ptr; }
+  [[nodiscard]] std::shared_ptr<const double> getPinvarSharedPtr() const { return  _pinvar_ptr; }
+  [[nodiscard]] double getRateVar() const { return *_ratevar_ptr; }
+  [[nodiscard]] double getPinvar() const { return *_pinvar_ptr; }
+
+  [[nodiscard]] bool isFixedRateVar() const { return _ratevar_fixed; }
+  [[nodiscard]] bool isFixedPinvar() const { return _pinvar_fixed; }
+  [[nodiscard]] bool getIsInvarModel() const { return _invar_model; }
+
+  [[nodiscard]] const double* getRates() const { return &_rates[0]; }
+  [[nodiscard]] const double* getProbs() const { return &_probs[0]; }
 
 private:
 
@@ -54,14 +56,14 @@ private:
   unsigned _num_categ;
   bool _invar_model;
 
-  ratevar_ptr_t _ratevar;
-  pinvar_ptr_t _pinvar;
+  std::shared_ptr<double> _ratevar_ptr;
+  std::shared_ptr<double> _pinvar_ptr;
 
   bool  _ratevar_fixed;
   bool  _pinvar_fixed;
 
-  rate_prob_t _rates;
-  rate_prob_t _probs;
+  std::vector<double> _rates;
+  std::vector<double> _probs;
 
 
 };

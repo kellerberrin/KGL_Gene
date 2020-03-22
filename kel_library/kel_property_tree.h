@@ -42,6 +42,8 @@ public:
 
   bool getProperty(const std::string& property_name, std::string& property) const;
 
+  bool getOptionalProperty(const std::string& property_name, std::string& property) const;
+
   bool getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const;
 
   bool getPropertyTreeVector(const std::string& property_name, std::vector<SubPropertyTree>& property_tree_vector) const;
@@ -49,6 +51,8 @@ public:
   bool getProperty(const std::string& property_name, size_t& property) const;
 
   bool getFileProperty(const std::string& property_name, const std::string& work_directory, std::string& file_path) const;
+
+  bool getOptionalFileProperty(const std::string& property_name, const std::string& work_directory, std::string& file_path) const;
 
   // Checks for the existence of a property.
   bool checkProperty(const std::string& property_name) const;

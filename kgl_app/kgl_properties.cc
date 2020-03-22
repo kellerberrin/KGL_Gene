@@ -31,7 +31,7 @@ void kgl::RuntimeProperties::getGenomeDBFiles(const std::string& organism,
   const std::string dot = ".";
 
   std::string key = std::string(RUNTIME_ROOT_) + organism + dot + std::string(GAF_FILE_) + std::string(VALUE_);
-  property_tree_.getFileProperty(key, work_directory_, gaf_file);
+  property_tree_.getOptionalFileProperty(key, work_directory_, gaf_file);
 
   key = std::string(RUNTIME_ROOT_) + organism + dot + std::string(FASTA_FILE_) + std::string(VALUE_);
   if (not property_tree_.getFileProperty(key, work_directory_, fasta_file)) {

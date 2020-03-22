@@ -31,6 +31,10 @@ MANIFEST
 .DS_Store
 /dist
 /build
+/docs
+Doxyfile.out
+/cmake-build-debug
+/cmake-build-release
 /cmake/
 .cache/
 sosize-*.txt

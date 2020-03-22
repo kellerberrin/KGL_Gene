@@ -302,7 +302,8 @@ bool kpl::Strom::processAssignmentString(std::shared_ptr<Model> model_ptr, const
       throw XStrom(boost::format("expecting 1 value for pinvar, found %d values") % vector_of_values.size());
 
     }
-    ASRV::pinvar_ptr_t p = std::make_shared<double>(vector_of_values[0]);
+
+    std::shared_ptr<double> p = std::make_shared<double>(vector_of_values[0]);
     bool invar_model = (*p > 0);
 
     if (vector_of_subset_names[0] == "default") {
@@ -337,7 +338,7 @@ bool kpl::Strom::processAssignmentString(std::shared_ptr<Model> model_ptr, const
 
     }
 
-    ASRV::ratevar_ptr_t rv = std::make_shared<double>(vector_of_values[0]);
+    std::shared_ptr<double> rv = std::make_shared<double>(vector_of_values[0]);
 
     if (vector_of_subset_names[0] == "default") {
 

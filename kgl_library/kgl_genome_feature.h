@@ -43,6 +43,7 @@ public:
   bool verifyCDSPhase(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const; // Check the CDS phase for -ve and +ve strand genes
   std::shared_ptr<const Feature> getGene() const; // returns null pointer if not found
   void recusivelyPrintsubfeatures(long feature_level = 1) const; // useful debug function.
+  std::string featureText() const; // also useful for debug
   // Hierarchy routines.
   void clearHierachy() { sub_features_.clear(); super_feature_ptr_.reset(); }
   void addSubFeature(const FeatureIdent_t& sub_feature_id, std::shared_ptr<const Feature> sub_feature_ptr);

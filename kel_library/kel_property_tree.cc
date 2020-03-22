@@ -145,7 +145,7 @@ bool kel::PropertyTree::PropertyImpl::getPropertyVector(const std::string& prope
   }
   catch (...) {
 
-    ExecEnv::log().error("PropertyTree; Property: {} not found", property_name);
+    ExecEnv::log().error("PropertyTree; Property Vector: {} not found", property_name);
     ExecEnv::log().error("***********Property Tree Contents*************");
     treeTraversal();
     ExecEnv::log().error("**********************************************");
@@ -280,6 +280,22 @@ bool kel::PropertyTree::getProperty(const std::string& property_name, size_t& pr
 
 }
 
+
+bool kel::PropertyTree::getOptionalProperty(const std::string& property_name, std::string& property) const {
+
+  if (checkProperty(property_name)) {
+
+    return properties_impl_ptr_->getProperty(property_name, property);
+
+  } else {
+
+    ExecEnv::log().info("PropertyTree::getOptionalProperty; Optional Property Not Found: {}", property_name);
+    return false;
+
+  }
+
+}
+
 void kel::PropertyTree::treeTraversal() const {
 
   return properties_impl_ptr_->treeTraversal();
@@ -304,6 +320,30 @@ bool kel::PropertyTree::getFileProperty(const std::string& property_name, const 
                         property_name);
 
     treeTraversal();
+    return false;
+
+  }
+
+  file_path = Utility::filePath(file_name, work_directory);
+
+  if (not Utility::fileExists(file_path)) {
+
+    ExecEnv::log().warn("PropertyTree::getFileProperty; File: {} does not exist", file_path);
+    return false;
+
+  }
+
+  return true;
+
+}
+
+
+bool kel::PropertyTree::getOptionalFileProperty(const std::string& property_name, const std::string& work_directory, std::string& file_path) const {
+
+  std::string file_name;
+
+  if (not getOptionalProperty(property_name, file_name)) {
+
     return false;
 
   }

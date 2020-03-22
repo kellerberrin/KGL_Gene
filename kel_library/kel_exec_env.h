@@ -82,7 +82,7 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
 
   } catch(std::exception& e) { // Code should not throw any exceptions, so complain and exit.
 
-    std::cerr << Environment::MODULE_NAME << " " << Environment::VERSION << " - Unexpected Exception: " << e.what() << std::endl;
+    std::cerr << Environment::MODULE_NAME << " " << Environment::VERSION << "ExecEnv::runApplication - Unexpected/Uncaught Exception: " << e.what() << std::endl;
     std::exit(EXIT_FAILURE);
 
   }

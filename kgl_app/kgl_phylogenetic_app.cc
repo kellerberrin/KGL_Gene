@@ -27,7 +27,7 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   std::shared_ptr<kgl::GenomeCollection> genome_collection = GenomeCollection::createGenomeCollection(runtime_options);
 
   // Create a phased population object.
-  std::shared_ptr<PhasedPopulation> population_ptr(std::make_shared<PhasedPopulation>("Pfalciparum"));
+  std::shared_ptr<PhasedPopulation> population_ptr(std::make_shared<PhasedPopulation>("Organism"));
 
   // Create an unphased population object.
   std::shared_ptr<UnphasedPopulation> unphased_population_ptr(std::make_shared<UnphasedPopulation>());
@@ -64,7 +64,7 @@ void kgl::PhylogeneticExecEnv::executeApp() {
     std::string mixture_file;
     if (runtime_options.getMixtureFile(mixture_file)) {
 
-      // The mixture file (Pf3k only) indicates the Complexity Of Infection (COI) of VCF samples, this function filtered only clonal infections.
+      // The mixture file (Pf3k only) indicates the Complexity Of Infection (COI) of VCF samples, this function includes only clonal infections.
       std::shared_ptr<UnphasedPopulation> clonal_unphased = GenomePhasing::filterClonal(mixture_file, filtered_unphased_ptr);
 
     }

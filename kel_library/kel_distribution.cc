@@ -9,6 +9,7 @@
 #include <boost/math/special_functions/gamma.hpp>
 #include <boost/math/special_functions/binomial.hpp>
 #include <boost/math/special_functions/beta.hpp>
+#include <boost/math/distributions/gamma.hpp>
 
 namespace bm = boost::math;
 namespace kel = kellerberrin;
@@ -30,6 +31,27 @@ double kel::NormalDistribution::pdf(double x, double mean, double std_dev) {
   return (inv_sqrt_2pi / std_dev) * std::exp(-0.5 * a * a);
 
 }
+
+
+double kel::GammaDistribution::pdf(double x) const {
+
+  return bm::pdf(bm::gamma_distribution<>(_a, _b), x);
+
+}
+
+double kel::GammaDistribution::cdf(double x) const {
+
+  return bm::cdf(bm::gamma_distribution<>(_a, _b), x);
+
+}
+
+double kel::GammaDistribution::quantile(double p) const {
+
+  return bm::quantile(bm::gamma_distribution<>(_a, _b), p);
+
+}
+
+
 
 double kel::BetaDistribution::logInverseBetaFunction(double a, double b) {
 

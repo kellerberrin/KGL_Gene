@@ -170,16 +170,16 @@ std::string kpl::Model::describeModel() {
   std::set<double *> freqset;
   std::set<double *> xchgset;
   std::set<double *> omegaset;
-  std::set<double *> ratevarset;
-  std::set<double *> pinvarset;
+  std::set<const double*> ratevarset;
+  std::set<const double *> pinvarset;
   std::set<double *> relrateset;
 
   // Vectors of pointers to distinct parameters
   std::vector<double *> unique_freq;
   std::vector<double *> unique_xchg;
   std::vector<double *> unique_omega;
-  std::vector<double *> unique_ratevar;
-  std::vector<double *> unique_pinvar;
+  std::vector<const double *> unique_ratevar;
+  std::vector<const double *> unique_pinvar;
   std::vector<double *> unique_relrate;
 
   // Map for storing strings that will contain the information for each row
@@ -319,9 +319,7 @@ std::string kpl::Model::describeModel() {
     }
 
     // Determine whether rate variance is unique for this subset
-    ASRV::ratevar_ptr_t pratevar = _asrv[i]->getRateVarSharedPtr();
-    double & ratevar = *pratevar;
-    double * ratevar_addr = &ratevar;
+    const double* ratevar_addr = _asrv[i]->getRateVarSharedPtr().get();
     auto r = ratevarset.insert(ratevar_addr);
 
     if (r.second) {
@@ -347,9 +345,7 @@ std::string kpl::Model::describeModel() {
     // Determine whether pinvar is unique for this subset
     if (_asrv[i]->getIsInvarModel()) {
 
-      ASRV::pinvar_ptr_t ppinvar = _asrv[i]->getPinvarSharedPtr();
-      double & pinvar = *ppinvar;
-      double * pinvar_addr = &pinvar;
+      const double* pinvar_addr = _asrv[i]->getPinvarSharedPtr().get();
       auto r = pinvarset.insert(pinvar_addr);
 
       if (r.second) {
@@ -644,7 +640,7 @@ void kpl::Model::setSubsetNumCateg(unsigned ncateg, unsigned subset) {
 }
 
 
-void kpl::Model::setSubsetRateVar(ASRV::ratevar_ptr_t ratevar, unsigned subset, bool fixed) {
+void kpl::Model::setSubsetRateVar(std::shared_ptr<double> ratevar, unsigned subset, bool fixed) {
 
   assert(subset < _num_subsets);
   assert(ratevar);
@@ -661,7 +657,7 @@ void kpl::Model::setSubsetRateVar(ASRV::ratevar_ptr_t ratevar, unsigned subset, 
 }
 
 
-void kpl::Model::setSubsetPinvar(ASRV::pinvar_ptr_t pinvar, unsigned subset, bool fixed) {
+void kpl::Model::setSubsetPinvar(std::shared_ptr<double> pinvar, unsigned subset, bool fixed) {
 
   assert(subset < _num_subsets);
   assert(pinvar);

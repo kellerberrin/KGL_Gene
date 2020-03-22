@@ -7,6 +7,8 @@
 #include "kgl_genome_feature.h"
 #include "kgl_genome_db.h"
 
+#include <sstream>
+
 namespace kgl = kellerberrin::genome;
 
 
@@ -26,13 +28,7 @@ void kgl::Feature::recusivelyPrintsubfeatures(long feature_level) const {
 
   for (const auto& feature : sub_features_) {
 
-    ExecEnv::log().info("Level: {}, Feature: {}, Type: {}, begin: {}, end: {} strand: {}",
-                        feature_level,
-                        feature.second->id(),
-                        feature.second->featureType(),
-                        feature.second->sequence().begin(),
-                        feature.second->sequence().end(),
-                        static_cast<char>(feature.second->sequence().strand()));
+    ExecEnv::log().info("Level: {},  {}", feature_level, feature.second->featureText());
 
     feature.second->recusivelyPrintsubfeatures(feature_level + 1); // Recursive call for the sub-feature.
 
@@ -40,6 +36,27 @@ void kgl::Feature::recusivelyPrintsubfeatures(long feature_level) const {
 
 }
 
+
+std::string kgl::Feature::featureText() const {
+
+  std::stringstream ss;
+
+  ss << "Contig Id:"
+     << contig()->contigId()
+     << " Feature Id:"
+     << id() 
+     << " Type:"
+     << featureType() 
+     <<  " Offset:["
+     << sequence().begin() 
+     << ", "
+     << sequence().end() 
+     << ") Strand:"
+     << sequence().strandText();
+
+  return ss.str();
+
+}
 
 
 bool kgl::Feature::verifyCDSPhase(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const {
@@ -161,15 +178,21 @@ bool kgl::GeneFeature::getCodingSequences(std::shared_ptr<const GeneFeature> gen
       auto insert = parent_cds.insert(std::make_pair(sub_feature.second->sequence().begin(),
                                                      std::static_pointer_cast<const CDSFeature>(sub_feature.second)));
 
+      // Some GFF files may have multiple coding features at the same logical level and the same begin offset.
+      // The is true of the GFF supplied with the SARS-COV-2 organism with multiple coding for the RdRp gene.
+      // todo: This logic should be changed so that the coding features are separated and become multiple gene sequences.
+      // Just report a warning for now. 
       if (not insert.second) {
 
-        ExecEnv::log().warn("Duplicate coding feature: {} at contig offset: {}",
+        ExecEnv::log().warn("Gene: {}, Duplicate coding feature: {} at contig offset: {}",
+                            gene_ptr->id(),
                             sub_feature.second->id(),
                             sub_feature.second->sequence().begin());
+        gene_ptr->recusivelyPrintsubfeatures();
         result = false;
       }
 
-    } else { // recursively call this function
+    } else { // Assume feature is a higher feature such as mRNA and recursively call this function for sub-features.
 
       result = result and getCodingSequences(gene_ptr, sub_feature.second, sequence_array_ptr);
 

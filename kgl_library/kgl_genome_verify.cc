@@ -24,7 +24,7 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
   size_t ill_formed_genes = 0;
   size_t empty_genes = 0;
 
-  ExecEnv::log().info("Verifying {} Genes using amino translation table: {}", contigId(), coding_table_.translationTableName());
+  ExecEnv::log().info("ContigFeatures::verifyCDSPhasePeptide; Verifying {} Genes using amino translation table: {}", contigId(), coding_table_.translationTableName());
 
   for(const auto& feature : gene_exon_features_.offsetFeatureMap()) {
 
@@ -62,7 +62,7 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
 
   }
 
-  ExecEnv::log().info("Verified {} found: {} Genes; Malformed (Pseudo) Genes: {}", contigId(), gene_count, ill_formed_genes);
+  ExecEnv::log().info("ContigFeatures::verifyCDSPhasePeptide; Verified {} found: {} Genes; Malformed (Pseudo) Genes: {}", contigId(), gene_count, ill_formed_genes);
 
 }
 

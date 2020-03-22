@@ -198,6 +198,38 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+class GammaDistribution
+{
+
+public:
+
+  GammaDistribution(double a, double b) : x_(a, b), _a(a), _b(b) {}
+  GammaDistribution(const GammaDistribution&) = delete;
+  virtual ~GammaDistribution() = default;
+
+  GammaDistribution& operator=(GammaDistribution&) = delete;
+
+  double random(EntropyGenerator &source) const {  return x_(source); }
+
+  double pdf(double x) const;
+
+  double cdf(double x) const;
+
+  double quantile(double p) const;
+
+private:
+
+  mutable std::gamma_distribution<> x_;
+  double _a;
+  double _b;
+
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Beta distributed random numbers implemented as a ratio of gamma random variates.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 class BetaDistribution
 {
 

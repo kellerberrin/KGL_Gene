@@ -4,8 +4,11 @@
 
 #include "kpl_asrv.h"
 
+#include "kel_distribution.h"
+
 #include <boost/math/distributions/gamma.hpp>
 
+namespace kel = kellerberrin;
 
 
 namespace kpl = kellerberrin::phylogenetic;
@@ -17,146 +20,15 @@ void kpl::ASRV::clear() {
   _invar_model = false;
   _ratevar_fixed = false;
   _pinvar_fixed = false;
-  _ratevar = std::make_shared<double>(1.0);
-  _pinvar = std::make_shared<double>(0.0);
+  _ratevar_ptr = std::make_shared<double>(1.0);
+  _pinvar_ptr = std::make_shared<double>(0.0);
   _num_categ = 1;
   recalcASRV();
 
 }
 
 
-const kpl::ASRV::ratevar_ptr_t kpl::ASRV::getRateVarSharedPtr() const {
 
-  return _ratevar;
-
-}
-
-
-double kpl::ASRV::getRateVar() const {
-
-  assert(_ratevar);
-  return *_ratevar;
-
-}
-
-
-const kpl::ASRV::pinvar_ptr_t kpl::ASRV::getPinvarSharedPtr() const {
-
-  return _pinvar;
-
-}
-
-
-double kpl::ASRV::getPinvar() const {
-
-  assert(_pinvar);
-  return *_pinvar;
-
-}
-
-
-const double* kpl::ASRV::getRates() const {
-
-  return &_rates[0];
-
-}
-
-
-const double* kpl::ASRV::getProbs() const {
-
-  return &_probs[0];
-
-}
-
-
-bool kpl::ASRV::getIsInvarModel() const {
-
-  return _invar_model;
-
-}
-
-
-unsigned kpl::ASRV::getNumCateg() const {
-
-  return _num_categ;
-
-}
-
-
-void kpl::ASRV::setNumCateg(unsigned ncateg) {
-
-  _num_categ = ncateg;
-  recalcASRV();
-
-}
-
-
-void kpl::ASRV::setRateVarSharedPtr(ratevar_ptr_t ratevar) {
-
-  _ratevar = ratevar;
-  recalcASRV();
-
-}
-
-
-void kpl::ASRV::setRateVar(double v) {
-
-  *_ratevar = v;
-  recalcASRV();
-
-}
-
-
-void kpl::ASRV::setPinvarSharedPtr(pinvar_ptr_t pinvar) {
-
-  _pinvar = pinvar;
-  recalcASRV();
-
-}
-
-
-void kpl::ASRV::setPinvar(double p) {
-
-  *_pinvar = p;
-  recalcASRV();
-
-}
-
-
-void kpl::ASRV::setIsInvarModel(bool is_invar_model) {
-
-  _invar_model = is_invar_model;
-  recalcASRV();
-
-}
-
-
-void kpl::ASRV::fixRateVar(bool is_fixed) {
-
-  _ratevar_fixed = is_fixed;
-
-}
-
-
-void kpl::ASRV::fixPinvar(bool is_fixed) {
-
-  _pinvar_fixed = is_fixed;
-
-}
-
-
-bool kpl::ASRV::isFixedRateVar() const {
-
-  return _ratevar_fixed;
-
-}
-
-
-bool kpl::ASRV::isFixedPinvar() const {
-
-  return _pinvar_fixed;
-
-}
 
 
 void kpl::ASRV::recalcASRV() {
@@ -168,31 +40,31 @@ void kpl::ASRV::recalcASRV() {
   // sites component of the model is handled outside the ASRV class.
 
   // _num_categ, _rate_var, and _pinvar must all have been assigned in order to compute rates and probs
-  if ( (!_ratevar) || (!_num_categ) || (!_pinvar) ) {
+  if ((not _ratevar_ptr) || (_num_categ == 0) || (not _pinvar_ptr) ) {
 
     return;
 
   }
 
-  double pinvar = *_pinvar;
+  double pinvar = *_pinvar_ptr;
   assert(pinvar >= 0.0);
   assert(pinvar <  1.0);
 
   assert(_num_categ > 0);
 
-  double equal_prob = 1.0/_num_categ;
+  double equal_prob = 1.0 /_num_categ;
   double mean_rate_variable_sites = 1.0;
 
   if (_invar_model) {
 
-    mean_rate_variable_sites /= (1.0 - pinvar);
+    mean_rate_variable_sites = 1.0 / (1.0 - pinvar);
 
   }
 
   _rates.assign(_num_categ, mean_rate_variable_sites);
   _probs.assign(_num_categ, equal_prob);
 
-  double rate_variance = *_ratevar;
+  double rate_variance = *_ratevar_ptr;
   assert(rate_variance >= 0.0);
 
   if (_num_categ == 1 || rate_variance == 0.0)
@@ -201,8 +73,14 @@ void kpl::ASRV::recalcASRV() {
   double alpha = 1.0/rate_variance;
   double beta = rate_variance;
 
+// #define USE_BOOST  1 // Check the timing between the two gamma distribution functions.
+#ifdef USE_BOOST
   boost::math::gamma_distribution<> my_gamma(alpha, beta);
   boost::math::gamma_distribution<> my_gamma_plus(alpha + 1.0, beta);
+#else
+  kel::GammaDistribution k_gamma(alpha, beta);
+  kel::GammaDistribution k_gamma_plus(alpha + 1.0, beta);
+#endif
 
   double cum_upper        = 0.0;
   double cum_upper_plus   = 0.0;
@@ -216,9 +94,16 @@ void kpl::ASRV::recalcASRV() {
     cum_prob                    += equal_prob;
 
     if (i < _num_categ) {
+
+#ifdef USE_BOOST
       upper                   = boost::math::quantile(my_gamma, cum_prob);
       cum_upper_plus          = boost::math::cdf(my_gamma_plus, upper);
       cum_upper               = boost::math::cdf(my_gamma, upper);
+#else
+      upper                   = k_gamma.quantile(cum_prob);
+      cum_upper_plus          = k_gamma_plus.cdf(upper);
+      cum_upper               = k_gamma.cdf(upper);
+#endif
     }
     else {
       cum_upper_plus          = 1.0;

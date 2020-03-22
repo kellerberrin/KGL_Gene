@@ -53,8 +53,8 @@ public:
 
 // Modify
   void setSubsetDataTypes(const subset_datatype_t & datatype_vect);
-  void setSubsetRateVar(ASRV::ratevar_ptr_t ratevar, unsigned subset, bool fixed);
-  void setSubsetPinvar(ASRV::pinvar_ptr_t pinvar, unsigned subset, bool fixed);
+  void setSubsetRateVar(std::shared_ptr<double> ratevar_ptr, unsigned subset, bool fixed);
+  void setSubsetPinvar(std::shared_ptr<double> pinvar_ptr, unsigned subset, bool fixed);
   void setSubsetExchangeabilities(QMatrix::freq_xchg_ptr_t exchangeabilities, unsigned subset, bool fixed);
   void setSubsetStateFreqs(QMatrix::freq_xchg_ptr_t state_frequencies, unsigned subset, bool fixed);
   void setSubsetOmega(QMatrix::omega_ptr_t omega, unsigned subset, bool fixed);
