@@ -196,9 +196,11 @@ public:
 private:
 
   // Initializes the map_ptr with a list of coding sequences found for the gene. Recursive.
+  // Specifying an optional identifier is used 
   static bool getCodingSequences(std::shared_ptr<const GeneFeature> gene,
                                  std::shared_ptr<const Feature> cds_parent,
-                                 std::shared_ptr<CodingSequenceArray>& sequence_array_ptr);
+                                 std::shared_ptr<CodingSequenceArray>& sequence_array_ptr,
+                                 const FeatureIdent_t& optional_identifier = FeatureIdent_t(""));
 
 
 };

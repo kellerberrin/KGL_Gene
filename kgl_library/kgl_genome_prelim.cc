@@ -225,8 +225,11 @@ void kgl::CodingSequenceArray::printCodingSequence(std::shared_ptr<const CodingS
 
 bool kgl::CodingSequenceArray::insertCodingSequence(std::shared_ptr<const CodingSequence> coding_sequence_ptr) {
 
+#ifdef CODING_SEQUENCE_ISMAP // Using a map
+
   auto insert = coding_sequence_map_.insert(std::make_pair(coding_sequence_ptr->getCDSParent()->id(),
                                                            coding_sequence_ptr));
+
   if (not insert.second) {
 
     ExecEnv::log().warn("Duplicate CDS parent: {} at contig offset: {}",
@@ -235,6 +238,14 @@ bool kgl::CodingSequenceArray::insertCodingSequence(std::shared_ptr<const Coding
   }
 
   return insert.second;
+
+#else // Using a multimap. Same parent features permitted 
+
+  coding_sequence_map_.insert(std::make_pair(coding_sequence_ptr->getCDSParent()->id(), coding_sequence_ptr));
+
+  return true;
+
+#endif
 
 }
 

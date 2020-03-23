@@ -104,8 +104,15 @@ private:
 
 };
 
-// A sorted array of coding sequences. Sorted by CDS parent (mRNA) feature ident.
-using CodingSequenceMap = std::map<const FeatureIdent_t, std::shared_ptr<const CodingSequence>>;
+// A sorted array of coding sequences. Sorted by CDS parent (generally mRNA) feature ident.
+
+// #define CODING_SEQUENCE_ISMAP 1  // Uncomment this if the requirement is for distinct CDS parent features.
+#ifdef CODING_SEQUENCE_ISMAP
+using CodingSequenceMap = std::map<const FeatureIdent_t, std::shared_ptr<const CodingSequence>>; // For distinct parent features.
+#else
+using CodingSequenceMap = std::multimap<const FeatureIdent_t, std::shared_ptr<const CodingSequence>>;  // Same parent features permitted.
+#endif
+
 class CodingSequenceArray {
 
 public:

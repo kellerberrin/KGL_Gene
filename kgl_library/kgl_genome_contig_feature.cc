@@ -82,6 +82,7 @@ void kgl::StructuredFeatures::verifyContigOverlap() {
 void kgl::StructuredFeatures::verifySubFeatureDuplicates() {
 
   for (auto feature_pair : idFeatureMap()) {
+  
     Feature &feature = *feature_pair.second;
 
     long duplicates = checkDuplicates(feature.subFeatures());

@@ -158,6 +158,9 @@ kgl::GeneFeature::getCodingSequences(std::shared_ptr<const GeneFeature> gene) {
 
   std::shared_ptr<CodingSequenceArray> sequence_array_ptr(std::make_shared<CodingSequenceArray>());
   getCodingSequences(gene, gene, sequence_array_ptr);
+
+  ExecEnv::log().info("Gene: {} has: {} coding feature(s).", gene->id(), sequence_array_ptr->size());
+
   return sequence_array_ptr;
 
 }
@@ -165,40 +168,83 @@ kgl::GeneFeature::getCodingSequences(std::shared_ptr<const GeneFeature> gene) {
 // This routine is recursive. Assumes all the CDS/EXONS are on the same sub-feature level.
 bool kgl::GeneFeature::getCodingSequences(std::shared_ptr<const GeneFeature> gene_ptr,
                                           std::shared_ptr<const Feature> cds_parent_ptr,
-                                          std::shared_ptr<CodingSequenceArray>& sequence_array_ptr) {
+                                          std::shared_ptr<CodingSequenceArray>& sequence_array_ptr,
+                                          const FeatureIdent_t& feature_ident /* optional argument*/ ) {
 
   bool result = true;
   SortedCDS parent_cds;
 
-  for (auto sub_feature : cds_parent_ptr->subFeatures()) {
+  // loop through all sub_features
+  for (const auto& sub_feature : cds_parent_ptr->subFeatures()) {
 
-    if (sub_feature.second->isCDS()) {
+    // if feature_ident is not set.
+    if (feature_ident.empty()) {
+ 
+      if (sub_feature.second->isCDS()) {
 
 
-      auto insert = parent_cds.insert(std::make_pair(sub_feature.second->sequence().begin(),
-                                                     std::static_pointer_cast<const CDSFeature>(sub_feature.second)));
+        auto insert = parent_cds.insert(std::make_pair(sub_feature.second->sequence().begin(),
+                                        std::static_pointer_cast<const CDSFeature>(sub_feature.second)));
 
-      // Some GFF files may have multiple coding features at the same logical level and the same begin offset.
-      // The is true of the GFF supplied with the SARS-COV-2 organism with multiple coding for the RdRp gene.
-      // todo: This logic should be changed so that the coding features are separated and become multiple gene sequences.
-      // Just report a warning for now. 
-      if (not insert.second) {
+        // Some GFF files may have multiple coding features at the same logical level and the same begin offset.
+        // The is true of the GFF supplied by NCBI for the SARS-COV-2 organism with multiple gene coding for the RdRp gene.
 
-        ExecEnv::log().warn("Gene: {}, Duplicate coding feature: {} at contig offset: {}",
-                            gene_ptr->id(),
-                            sub_feature.second->id(),
-                            sub_feature.second->sequence().begin());
-        gene_ptr->recusivelyPrintsubfeatures();
-        result = false;
+        if (not insert.second) {
+
+          
+
+          ExecEnv::log().warn("Gene: {}, Duplicate coding feature: {} at contig offset: {}",
+                              gene_ptr->id(),
+                              sub_feature.second->id(),
+                              sub_feature.second->sequence().begin());
+          gene_ptr->recusivelyPrintsubfeatures();
+
+
+          // Call the coding sequence function recursively with the feature_ident argument set.
+          ExecEnv::log().info("Called GeneFeature::getCodingSequences() with feature identifier: {}", sub_feature.second->id());
+          result = result and getCodingSequences(gene_ptr, cds_parent_ptr, sequence_array_ptr, sub_feature.second->id());
+
+        }
+
+      } else { // Assume feature is a higher feature such as mRNA and recursively call this function for sub-features.
+
+        result = result and getCodingSequences(gene_ptr, sub_feature.second, sequence_array_ptr);
+
       }
 
-    } else { // Assume feature is a higher feature such as mRNA and recursively call this function for sub-features.
+    } else { // feature_ident specified.
 
-      result = result and getCodingSequences(gene_ptr, sub_feature.second, sequence_array_ptr);
+      if (sub_feature.second->isCDS() and sub_feature.second->id() == feature_ident) {
 
-    }
+        ExecEnv::log().info("GeneFeature::getCodingSequences(), Match with feature identifier: {} and sub_feature identifier: {}", feature_ident, sub_feature.second->id());
 
-  }
+        auto insert = parent_cds.insert(std::make_pair(sub_feature.second->sequence().begin(),
+                                        std::static_pointer_cast<const CDSFeature>(sub_feature.second)));
+
+        // Some GFF files may have multiple coding features at the same logical level and the same begin offset.
+        // The is true of the GFF supplied by NCBI for the SARS-COV-2 organism with multiple gene coding for the RdRp gene.
+        // todo: This logic should be changed so that the coding features are separated and become multiple gene sequences.
+        // Just report a warning for now. 
+        if (not insert.second) {
+
+          ExecEnv::log().warn("Gene: {}, Duplicate coding feature: {} at contig offset: {}",
+                              gene_ptr->id(),
+                              sub_feature.second->id(),
+                              sub_feature.second->sequence().begin());
+          gene_ptr->recusivelyPrintsubfeatures();
+          result = false;
+
+        }
+
+      } else {
+
+          ExecEnv::log().info("GeneFeature::getCodingSequences(), Mismatch with feature identifier: {} and sub_feature identifier: {}", feature_ident, sub_feature.second->id());
+
+      } 
+
+    } // feature_ident specified.
+
+  } // for loop
 
   if (not parent_cds.empty()) {
 

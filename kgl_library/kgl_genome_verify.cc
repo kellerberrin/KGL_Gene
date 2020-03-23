@@ -21,7 +21,8 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
 
   // Iterate through all the features looking for Genes.
   size_t gene_count = 0;
-  size_t ill_formed_genes = 0;
+  size_t well_formed_sequences = 0;
+  size_t ill_formed_sequences = 0;
   size_t empty_genes = 0;
 
   ExecEnv::log().info("ContigFeatures::verifyCDSPhasePeptide; Verifying {} Genes using amino translation table: {}", contigId(), coding_table_.translationTableName());
@@ -50,9 +51,13 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
 
         }
 
-        if (not verifyCodingSequences(gene_ptr, coding_seq_ptr)) {
+        if (verifyCodingSequences(gene_ptr, coding_seq_ptr)) {
 
-          ++ill_formed_genes;
+          well_formed_sequences += coding_seq_ptr->size();
+
+        } else {
+
+          ill_formed_sequences += coding_seq_ptr->size();
 
         }
 
@@ -62,7 +67,11 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
 
   }
 
-  ExecEnv::log().info("ContigFeatures::verifyCDSPhasePeptide; Verified {} found: {} Genes; Malformed (Pseudo) Genes: {}", contigId(), gene_count, ill_formed_genes);
+  ExecEnv::log().info("Verified {} found: {} Genes with {} well-formed and {} mal-formed (pseudo) coding sequences",
+                      contigId(),
+                      gene_count,
+                      well_formed_sequences,
+                      ill_formed_sequences);
 
 }
 
