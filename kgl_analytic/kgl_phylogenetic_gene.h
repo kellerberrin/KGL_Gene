@@ -131,11 +131,15 @@ public:
                                         std::shared_ptr<const GenomeVariant> genome_variant_ptr,
                                         std::shared_ptr<const GenomeDatabase> genome_db_ptr);
 
+  static bool translateGene( const GenomeId_t& genome_id, 
+                             const FeatureIdent_t& gene_id, 
+                             std::shared_ptr<const GenomeCollection>& genomes, 
+                             const std::string& fasta_file_name);
 
 private:
 
 
-  constexpr static const ContigSize_t PRIME_REGION_SIZE = 1000;   // Size of the 5 prime and 3 prime regions.
+  constexpr static const ContigSize_t PRIME_REGION_SIZE = 1000;   // Default size of the 5 prime and 3 prime regions.
 
   static bool mutateGenomeGene(const ContigId_t& contig,
                                const FeatureIdent_t& gene,

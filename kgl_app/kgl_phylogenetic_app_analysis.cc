@@ -20,6 +20,7 @@
 
 #include "kgd_deconvolv_app.h"
 
+#include <functional>
 
 namespace kgl = kellerberrin::genome;
 namespace kgd = kellerberrin::deconvolv;
@@ -47,7 +48,7 @@ void kgl::PhylogeneticAnalysis::performAnalysis(const std::string& analysis_type
   ExecEnv::log().info("**********Performing Analysis: {} **************", result->first);
 
   // Call the analysis.
-  (this->*(result->second))();
+  std::invoke(result->second, this);
 
   ExecEnv::log().info("**********Completed Analysis: {} **************", result->first);
 
@@ -169,6 +170,9 @@ void kgl::PhylogeneticAnalysis::performInterval() {
 void kgl::PhylogeneticAnalysis::performGene() {
 
     std::string fasta_file = Utility::filePath(ACTIVE_SEQUENCE, runtime_options_.workDirectory()) + ".fasta";
+
+    kgl::GeneAnalysis::translateGene( "NC_045512_2", "gene-GU280_gp01", genome_collection_ptr_, fasta_file);
+
     kgl::GeneAnalysis::mutateGene(ACTIVE_CONTIG, ACTIVE_GENE, ACTIVE_SEQUENCE, population_ptr_, getGenome(),
                                   fasta_file);
 

@@ -7,8 +7,91 @@
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_complexity.h"
 
+#include <memory>
+
 
 namespace kgl = kellerberrin::genome;
+
+
+bool kgl::GeneAnalysis::translateGene( const GenomeId_t& genome_id, 
+                                       const FeatureIdent_t& gene_id,
+                                       std::shared_ptr<const GenomeCollection>& genomes, 
+                                       const std::string& fasta_file_name) {
+
+  // Get the genome object
+  std::shared_ptr<const GenomeDatabase> genome_db_ptr;
+  if (not genomes->getGenome(genome_id, genome_db_ptr)) {
+
+    ExecEnv::log().warn("Could not find Genome: {} in genome collection", genome_id);
+    return false;
+    
+  }
+
+  // Look through the contigs for the gene.
+  bool found = false;
+  std::vector<std::shared_ptr<const Feature>> feature_ptr_vec;
+  for (const auto& contig : genome_db_ptr->getMap() ) {
+
+    if (contig.second->findFeatureId(gene_id, feature_ptr_vec)) {
+
+      found = true;
+      break;   
+
+    }
+
+  }
+
+  if (not found or feature_ptr_vec.empty()) {
+
+    ExecEnv::log().warn("Did not find Gene: {} in Genome: {}", gene_id, genome_id);
+    return false;
+
+  }
+
+  std::vector<std::pair<std::string, std::shared_ptr<AminoSequence>>> amino_fasta_vector;
+  for (const auto& feature_ptr : feature_ptr_vec) {
+
+    
+    if (feature_ptr->isGene()) {
+
+      std::shared_ptr<const kgl::CodingSequenceArray> coding_sequence_array_ptr;
+      coding_sequence_array_ptr = GeneFeature::getCodingSequences(std::static_pointer_cast<const GeneFeature>(feature_ptr)); 
+
+      for (const auto& coding_sequence : coding_sequence_array_ptr->getMap()) {
+
+        std::shared_ptr<DNA5SequenceCoding> coding_dna_ptr;
+        if (coding_sequence.second->contig()->getDNA5SequenceCoding(coding_sequence.second, coding_dna_ptr)) {
+
+          std::shared_ptr<AminoSequence> peptide_ptr = coding_sequence.second->contig()->getAminoSequence(coding_dna_ptr);
+          std::string reference_name = gene_id;
+          std::pair<std::string, std::shared_ptr<AminoSequence>> fasta_entry(reference_name, peptide_ptr);
+          amino_fasta_vector.push_back(fasta_entry);
+
+        } else {
+
+          ExecEnv::log().error("Cannot generate a DNA coding sequence for Gene: {} in Genome: {}", gene_id, genome_id);
+          return false;
+
+        }
+
+      }
+
+    }
+
+  }
+
+  // Sequences are presented as a pair of a sequence name and an amino sequences.
+  if (not ApplicationAnalysis::writeMutantProteins(fasta_file_name, amino_fasta_vector)) {
+
+    ExecEnv::log().warn("Problem writing peptide fasta for Gene: {} in file: {}", gene_id, fasta_file_name);
+    return false;
+
+  }
+
+  return true;
+
+}
+
 
 
 bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,

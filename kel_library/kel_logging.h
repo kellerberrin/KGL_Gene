@@ -34,14 +34,16 @@ public:
   void SetMaxwarningMessages(int max_messages) { max_warn_messages_ = max_messages; }
 
 
-  template<typename M, typename... Args> void trace(M& message, Args... args) noexcept;
-  template<typename M, typename... Args> void info(M& message, Args... args) noexcept;
-  template<typename M, typename... Args> void warn(M& message, Args... args) noexcept;
-  template<typename M, typename... Args> void vtrace(M& message, Args... args) noexcept;
-  template<typename M, typename... Args> void vinfo(M& message, Args... args) noexcept;
-  template<typename M, typename... Args> void vwarn(M& message, Args... args) noexcept;
-  template<typename M, typename... Args> void error(M& message, Args... args) noexcept;
-  template<typename M, typename... Args> void critical(M& message, Args... args) noexcept;
+  template<typename... Args> void trace(const char* message, Args... args) noexcept;
+  template<typename... Args> void info(const char* message, Args... args) noexcept;
+  template<typename... Args> void warn(const char* message, Args... args) noexcept;
+  template<typename... Args> void error(const char* message, Args... args) noexcept;
+  template<typename... Args> void critical(const char* message, Args... args) noexcept;
+  // These function only report if the verbose flag is set; see "setVerbose(true)" above.
+  template<typename... Args> void vtrace(const char* message, Args... args) noexcept;
+  template<typename... Args> void vinfo(const char* message, Args... args) noexcept;
+  template<typename... Args> void vwarn(const char* message, Args... args) noexcept;
+
 
 private:
 
@@ -57,40 +59,40 @@ private:
 };
 
 
-template<typename M, typename... Args> void Logger::vtrace(M& message, Args... args) noexcept {
+template<typename... Args> void Logger::vtrace(const char* message, Args... args) noexcept {
 
   if (verbose_) trace(message, args...);
 
 }
 
-template<typename M, typename... Args> void Logger::trace(M& message, Args... args) noexcept {
+template<typename... Args> void Logger::trace(const char* message, Args... args) noexcept {
 
   plog_impl_->trace(message, args...);
   plog_impl_->flush();
 
 }
 
-template<typename M, typename... Args> void Logger::vinfo(M& message, Args... args) noexcept {
+template<typename... Args> void Logger::vinfo(const char* message, Args... args) noexcept {
 
   if (verbose_) info(message, args...);
 
 }
 
 
-template<typename M, typename... Args> void Logger::info(M& message, Args... args) noexcept {
+template<typename... Args> void Logger::info(const char* message, Args... args) noexcept {
 
   plog_impl_->info(message, args...);
   plog_impl_->flush();
 
 }
 
-template<typename M, typename... Args> void Logger::vwarn(M& message, Args... args) noexcept {
+template<typename... Args> void Logger::vwarn(const char* message, Args... args) noexcept {
 
   if (verbose_) warn(message, args...);
 
 }
 
-template<typename M, typename... Args> void Logger::warn(M& message, Args... args) noexcept {
+template<typename... Args> void Logger::warn(const char* message, Args... args) noexcept {
 
   if (max_warn_messages_ < 0 or warn_message_count_ <= max_warn_messages_) {
 
@@ -110,7 +112,7 @@ template<typename M, typename... Args> void Logger::warn(M& message, Args... arg
 
 }
 
-template<typename M, typename... Args> void Logger::error(M& message, Args... args) noexcept {
+template<typename... Args> void Logger::error(const char* message, Args... args) noexcept {
 
   plog_impl_->error(message , args...);
   plog_impl_->flush();
@@ -127,7 +129,7 @@ template<typename M, typename... Args> void Logger::error(M& message, Args... ar
 
 }
 
-template<typename M, typename... Args> void Logger::critical(M& message, Args... args) noexcept {
+template<typename... Args> void Logger::critical(const char* message, Args... args) noexcept {
 
   plog_impl_->critical(message, args...);
   plog_impl_->flush();
@@ -136,9 +138,7 @@ template<typename M, typename... Args> void Logger::critical(M& message, Args...
 
 }
 
-
-}   // end namespace
-
+} // end namespace.
 
 #endif //KGL_LOGGING_H
 

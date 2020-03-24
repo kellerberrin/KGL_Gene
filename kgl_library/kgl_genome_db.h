@@ -52,12 +52,14 @@ public:
   }
   // false if offset is not in a gene, else (true) returns a vector of ptrs to the genes.
   bool findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const;
+ 
   const GeneMap& getGeneMap() const { return gene_exon_features_.geneMap(); }
 
   // Return all Aux genome features in this contig.
   const AuxContigFeatures& getAuxContigFeatures() const { return aux_contig_features_; }
 
   bool setTranslationTable(const std::string& table_name) { return coding_table_.settranslationTable(table_name); }
+ 
   std::string translationTableName() const { return coding_table_.translationTableName(); }
 
   const ContigId_t& contigId() const { return contig_id_; }
@@ -141,7 +143,7 @@ public:
 
   const GeneOntology& geneOntology() const { return gene_ontology_; }
 
-  // Given a sequence offset, returns a contig offset.
+  // Given a gene sequence offset with 5' start = 0 (strand adjusted), returns a strand adjusted offset within the contig.
   bool contigOffset( const ContigId_t& contig_id,
                      const FeatureIdent_t& gene_id,
                      const FeatureIdent_t& sequence_id,

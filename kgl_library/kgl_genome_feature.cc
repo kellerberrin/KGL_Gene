@@ -159,8 +159,6 @@ kgl::GeneFeature::getCodingSequences(std::shared_ptr<const GeneFeature> gene) {
   std::shared_ptr<CodingSequenceArray> sequence_array_ptr(std::make_shared<CodingSequenceArray>());
   getCodingSequences(gene, gene, sequence_array_ptr);
 
-  ExecEnv::log().info("Gene: {} has: {} coding feature(s).", gene->id(), sequence_array_ptr->size());
-
   return sequence_array_ptr;
 
 }
@@ -197,11 +195,10 @@ bool kgl::GeneFeature::getCodingSequences(std::shared_ptr<const GeneFeature> gen
                               gene_ptr->id(),
                               sub_feature.second->id(),
                               sub_feature.second->sequence().begin());
-          gene_ptr->recusivelyPrintsubfeatures();
+//          gene_ptr->recusivelyPrintsubfeatures();
 
 
           // Call the coding sequence function recursively with the feature_ident argument set.
-          ExecEnv::log().info("Called GeneFeature::getCodingSequences() with feature identifier: {}", sub_feature.second->id());
           result = result and getCodingSequences(gene_ptr, cds_parent_ptr, sequence_array_ptr, sub_feature.second->id());
 
         }
@@ -216,8 +213,6 @@ bool kgl::GeneFeature::getCodingSequences(std::shared_ptr<const GeneFeature> gen
 
       if (sub_feature.second->isCDS() and sub_feature.second->id() == feature_ident) {
 
-        ExecEnv::log().info("GeneFeature::getCodingSequences(), Match with feature identifier: {} and sub_feature identifier: {}", feature_ident, sub_feature.second->id());
-
         auto insert = parent_cds.insert(std::make_pair(sub_feature.second->sequence().begin(),
                                         std::static_pointer_cast<const CDSFeature>(sub_feature.second)));
 
@@ -231,17 +226,13 @@ bool kgl::GeneFeature::getCodingSequences(std::shared_ptr<const GeneFeature> gen
                               gene_ptr->id(),
                               sub_feature.second->id(),
                               sub_feature.second->sequence().begin());
-          gene_ptr->recusivelyPrintsubfeatures();
+//          gene_ptr->recusivelyPrintsubfeatures();
           result = false;
 
         }
 
-      } else {
-
-          ExecEnv::log().info("GeneFeature::getCodingSequences(), Mismatch with feature identifier: {} and sub_feature identifier: {}", feature_ident, sub_feature.second->id());
-
       } 
-
+      
     } // feature_ident specified.
 
   } // for loop
