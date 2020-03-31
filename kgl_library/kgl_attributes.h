@@ -45,7 +45,7 @@ public:
   bool getSuperFeatureIds(std::vector<std::string> &value_vec) const { return getAttributes(SUPER_FEATURE_KEY, value_vec); }
   bool getAssignedFeatureIds(std::vector<std::string> &value_vec) const { return getAttributes(ASSIGNED_FEATURE_KEY, value_vec); }
   bool getDescription(std::vector<std::string> &value_vec) const { return getAttributes(DESCRIPTION_KEY, value_vec); }
-
+  const AttributeMap& getMap() const { return attributes_; }
 
 private:
 

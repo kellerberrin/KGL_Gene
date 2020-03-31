@@ -8,9 +8,102 @@
 #include "kgl_sequence_complexity.h"
 
 #include <memory>
+#include <sstream>
 
 
 namespace kgl = kellerberrin::genome;
+
+
+
+bool kgl::GeneAnalysis::translateContig( const GenomeId_t& genome_id, 
+                                         const ContigId_t& contig_id,
+                                         std::shared_ptr<const GenomeCollection>& genomes, 
+                                         const std::string& fasta_file_name) {
+  // Get the genome object
+  std::shared_ptr<const GenomeDatabase> genome_db_ptr;
+  if (not genomes->getGenome(genome_id, genome_db_ptr)) {
+
+    ExecEnv::log().warn("Could not find Genome: {} in genome collection", genome_id);
+    return false;
+    
+  }
+
+  // Look through the contigs for the contig.
+  bool found = false;
+  std::shared_ptr<const ContigFeatures> contig_ptr;
+  for (const auto& contig : genome_db_ptr->getMap() ) {
+
+    contig_ptr = contig.second;
+    if (contig_ptr->contigId() == contig_id) {
+
+      found = true;
+      break;   
+
+    }
+
+  }
+
+  if (not found or not contig_ptr) {
+
+    ExecEnv::log().warn("Did not find Contig: {} in Genome: {}", contig_id, genome_id);
+    return false;
+
+  }
+
+  std::vector<std::pair<std::string, std::shared_ptr<AminoSequence>>> amino_fasta_vector;  
+  for (const auto& gene : contig_ptr->getGeneMap()) {
+    
+    std::shared_ptr<const kgl::CodingSequenceArray> coding_sequence_array_ptr;
+    coding_sequence_array_ptr = GeneFeature::getCodingSequences(gene.second); 
+
+    size_t coding_count = 0;
+    for (const auto& coding_sequence : coding_sequence_array_ptr->getMap()) {
+
+      ExecEnv::log().info("Sequence Id", coding_sequence.first);
+
+      for (const auto& cds : coding_sequence.second->getSortedCDS()) {
+
+      ExecEnv::log().info("CDS Id", cds.first);
+
+        for (const auto& attribute : cds.second->getAttributes().getMap()) {
+
+          ExecEnv::log().info("CDS Attribute Key: {} Value: {}", attribute.first, attribute.second);
+
+        }
+
+      }
+    
+      std::shared_ptr<DNA5SequenceCoding> coding_dna_ptr;
+      if (contig_ptr->getDNA5SequenceCoding(coding_sequence.second, coding_dna_ptr)) {
+
+        std::shared_ptr<AminoSequence> peptide_ptr = coding_sequence.second->contig()->getAminoSequence(coding_dna_ptr);
+        std::stringstream ss;
+        ss << gene.second->id() << "_" << ++coding_count;
+        std::pair<std::string, std::shared_ptr<AminoSequence>> fasta_entry(ss.str(), peptide_ptr);
+        amino_fasta_vector.push_back(fasta_entry);
+
+      } else {
+
+        ExecEnv::log().error("Cannot generate a DNA coding sequence for Gene: {} in Genome: {}", gene.second->id(), genome_id);
+        return false;
+
+      } // Coding DNA 
+
+    } // For all sequences
+
+  }
+
+  // Sequences are presented as a pair of a sequence name and an amino sequences.
+  if (not ApplicationAnalysis::writeMutantProteins(fasta_file_name, amino_fasta_vector)) {
+
+    ExecEnv::log().warn("Problem writing peptide fasta for Contig: {} in file: {}", contig_id, fasta_file_name);
+    return false;
+
+  }
+
+  return true;
+
+}
 
 
 bool kgl::GeneAnalysis::translateGene( const GenomeId_t& genome_id, 
@@ -29,10 +122,12 @@ bool kgl::GeneAnalysis::translateGene( const GenomeId_t& genome_id,
 
   // Look through the contigs for the gene.
   bool found = false;
+  std::shared_ptr<const ContigFeatures> contig_ptr;
   std::vector<std::shared_ptr<const Feature>> feature_ptr_vec;
   for (const auto& contig : genome_db_ptr->getMap() ) {
 
-    if (contig.second->findFeatureId(gene_id, feature_ptr_vec)) {
+    contig_ptr = contig.second;
+    if (contig_ptr->findFeatureId(gene_id, feature_ptr_vec)) {
 
       found = true;
       break;   
@@ -41,7 +136,7 @@ bool kgl::GeneAnalysis::translateGene( const GenomeId_t& genome_id,
 
   }
 
-  if (not found or feature_ptr_vec.empty()) {
+  if (not found or feature_ptr_vec.empty() or not contig_ptr) {
 
     ExecEnv::log().warn("Did not find Gene: {} in Genome: {}", gene_id, genome_id);
     return false;
@@ -57,14 +152,16 @@ bool kgl::GeneAnalysis::translateGene( const GenomeId_t& genome_id,
       std::shared_ptr<const kgl::CodingSequenceArray> coding_sequence_array_ptr;
       coding_sequence_array_ptr = GeneFeature::getCodingSequences(std::static_pointer_cast<const GeneFeature>(feature_ptr)); 
 
+      size_t coding_count = 0;
       for (const auto& coding_sequence : coding_sequence_array_ptr->getMap()) {
 
         std::shared_ptr<DNA5SequenceCoding> coding_dna_ptr;
-        if (coding_sequence.second->contig()->getDNA5SequenceCoding(coding_sequence.second, coding_dna_ptr)) {
+        if (contig_ptr->getDNA5SequenceCoding(coding_sequence.second, coding_dna_ptr)) {
 
           std::shared_ptr<AminoSequence> peptide_ptr = coding_sequence.second->contig()->getAminoSequence(coding_dna_ptr);
-          std::string reference_name = gene_id;
-          std::pair<std::string, std::shared_ptr<AminoSequence>> fasta_entry(reference_name, peptide_ptr);
+          std::stringstream ss;
+          ss << gene_id << "_" << ++coding_count;
+          std::pair<std::string, std::shared_ptr<AminoSequence>> fasta_entry(ss.str(), peptide_ptr);
           amino_fasta_vector.push_back(fasta_entry);
 
         } else {

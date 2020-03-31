@@ -136,6 +136,12 @@ public:
                              std::shared_ptr<const GenomeCollection>& genomes, 
                              const std::string& fasta_file_name);
 
+
+  static bool translateContig( const GenomeId_t& genome_id, 
+                               const ContigId_t& gene_id,
+                               std::shared_ptr<const GenomeCollection>& genomes, 
+                               const std::string& fasta_file_name);
+
 private:
 
 

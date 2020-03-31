@@ -171,10 +171,10 @@ void kgl::PhylogeneticAnalysis::performGene() {
 
     std::string fasta_file = Utility::filePath(ACTIVE_SEQUENCE, runtime_options_.workDirectory()) + ".fasta";
 
-    kgl::GeneAnalysis::translateGene( "NC_045512_2", "gene-GU280_gp01", genome_collection_ptr_, fasta_file);
+    kgl::GeneAnalysis::translateContig( "NC_045512_2", "NC_045512.2", genome_collection_ptr_, fasta_file);
 
-    kgl::GeneAnalysis::mutateGene(ACTIVE_CONTIG, ACTIVE_GENE, ACTIVE_SEQUENCE, population_ptr_, getGenome(),
-                                  fasta_file);
+//    kgl::GeneAnalysis::mutateGene(ACTIVE_CONTIG, ACTIVE_GENE, ACTIVE_SEQUENCE, population_ptr_, getGenome(),
+//                                  fasta_file);
 
 }
 
