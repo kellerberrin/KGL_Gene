@@ -197,31 +197,18 @@ public:
   static std::shared_ptr<GenomeCollection> createGenomeCollection(const RuntimeProperties& runtime_options);
 
   // Returns false if the genome does not exist.
+  [[nodiscard]] std::shared_ptr<const GenomeDatabase> getGenome(const std::string& GenomeID) const;
   bool getGenome(const GenomeId_t& genome_id, std::shared_ptr<const GenomeDatabase>& genome_variant) const;
 
-  // Convenience Routines. Get a particular XML tagged organism (see tags below).
-  std::shared_ptr<const GenomeDatabase> get3D7Genome() const { return getGenome(Pf3D7_ID_); }
-  std::shared_ptr<const GenomeDatabase> getHB3Genome() const { return getGenome(PfHB3_ID_); }
-  std::shared_ptr<const GenomeDatabase> getITGenome() const { return getGenome(PfIT_ID_); }
-  std::shared_ptr<const GenomeDatabase> getDD2Genome() const { return getGenome(PfDD2_ID_); }
-  std::shared_ptr<const GenomeDatabase> get7G8Genome() const { return getGenome(Pf7G8_ID_); }
-
-  const GenomeMap& getMap() const { return genome_map_; }
+  [[nodiscard]] const GenomeMap& getMap() const { return genome_map_; }
 
 private:
 
   // A map of all active genome databases.
   GenomeMap genome_map_;
 
-  // Must match the relevant XML tag in the runtime options file.
-  static constexpr const char* Pf3D7_ID_ = "Pf3D7_46";
-  static constexpr const char* PfHB3_ID_ = "PfHB3_46";
-  static constexpr const char* PfIT_ID_ = "PfIT_46";
-  static constexpr const char* PfDD2_ID_ = "PfDd2_46";
-  static constexpr const char* Pf7G8_ID_ = "Pf7G8_46";
-  // Returns false if the genome already exists.
+ // Returns false if the genome already exists.
   bool addGenome(std::shared_ptr<const GenomeDatabase> genome_database);
-  std::shared_ptr<const GenomeDatabase> getGenome(const std::string& GenomeID) const;
 
 };
 

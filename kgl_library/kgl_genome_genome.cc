@@ -87,7 +87,7 @@ std::shared_ptr<kgl::GenomeDatabase> kgl::GenomeDatabase::createGenomeDatabase(c
 
 bool kgl::GenomeDatabase::readGenomeAuxiliary(const RuntimeProperties& runtime_options) {
 
-  std::vector<AuxFileProperty> aux_file_list;
+  std::vector<AuxFileInfo> aux_file_list;
 
   if (not runtime_options.getGenomeAuxFiles(genomeId(), aux_file_list)) {
 
@@ -98,7 +98,7 @@ bool kgl::GenomeDatabase::readGenomeAuxiliary(const RuntimeProperties& runtime_o
 
   for (auto aux_file : aux_file_list) {
 
-    if (aux_file.auxType() == AuxFileProperty::ADJALLEY_TSS_GFF_) {
+    if (aux_file.auxType() == AuxFileInfo::ADJALLEY_TSS_GFF_) {
 
       readAuxillary(aux_file.fileName());
 

@@ -33,7 +33,9 @@ public:
 
   bool readPropertiesFile(const std::string& properties_file);
 
-  bool getProperty(const std::string& property_name, std::string& property) const { return getProperty(property_tree_, property_name, property); }
+//  bool getProperty(const std::string& property_name, std::string& property) const { return getProperty(property_tree_, property_name, property); }
+
+  bool getProperty(const std::string& property_name, std::string& property) const;
 
   bool getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const;
 
@@ -99,6 +101,35 @@ bool kel::PropertyTree::PropertyImpl::checkProperty(const std::string& property_
   }
   catch (...) {
 
+    return false;
+
+  }
+
+  return true;
+
+}
+
+
+bool kel::PropertyTree::PropertyImpl::getProperty(const std::string& property_name,  std::string& property) const {
+
+  try {
+
+    property = property_tree_.get<std::string>(property_name);
+    property = Utility::trimEndWhiteSpace(property);
+    if (property.empty()) {
+
+      ExecEnv::log().error("PropertyTree; Well-formed Property Tree but Property: {} not found or NULL", property_name);
+      throw std::runtime_error("Property Tree Value Missing");
+
+    }
+
+  }
+  catch (...) {
+
+    ExecEnv::log().error("PropertyTree; Property: {} not found", property_name);
+    ExecEnv::log().error("***********Property Tree Contents*************");
+    treeTraversal();
+    ExecEnv::log().error("**********************************************");
     return false;
 
   }
@@ -235,7 +266,15 @@ void kel::PropertyTree::PropertyImpl::printTree(const std::string& parent, const
     }
     std::string value = property_tree.get<std::string>(key);
     value = Utility::trimEndWhiteSpace(value);
-    ExecEnv::log().info("PropertyTree; key: {}, value: {}", parent_key, value);
+    if (not value.empty()) {
+
+      ExecEnv::log().info("PropertyTree; key: {}, value: {}", parent_key, value);
+
+    } else {
+
+      ExecEnv::log().info("PropertyTree; key: {}", parent_key);
+
+    }
     printTree(parent_key, item.second);
 
   }

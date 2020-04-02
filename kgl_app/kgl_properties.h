@@ -20,18 +20,18 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 // Object to hold genome auxiliary file information.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class AuxFileProperty {
+class AuxFileInfo {
 
 public:
 
-  AuxFileProperty(const std::string& file_name, const std::string& aux_type) : file_name_(file_name), aux_type_(aux_type) {}
-  AuxFileProperty(const AuxFileProperty&) = default;
-  ~AuxFileProperty() = default;
+  AuxFileInfo(const std::string& file_name, const std::string& aux_type) : file_name_(file_name), aux_type_(aux_type) {}
+  AuxFileInfo(const AuxFileInfo&) = default;
+  ~AuxFileInfo() = default;
 
-  const std::string& fileName() const { return file_name_; }
-  const std::string& auxType() const { return aux_type_; }
+  [[nodiscard]] const std::string& fileName() const { return file_name_; }
+  [[nodiscard]] const std::string& auxType() const { return aux_type_; }
 
-  bool supportedFile(const std::string& aux_type) const { return supported_types_.find(aux_type) != supported_types_.end(); }
+  [[nodiscard]] bool supportedFile(const std::string& aux_type) const { return supported_types_.find(aux_type) != supported_types_.end(); }
 
   constexpr static const char* AUX_FILE_NAME_ = "fileName.";
   constexpr static const char* AUX_FILE_TYPE_ = "auxType.";
@@ -50,6 +50,39 @@ private:
 
 };
 
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Object to vcf file infomation.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class VCFFileInfo {
+
+public:
+
+  VCFFileInfo(const std::string& file_name, const std::string& reference_genome, size_t ploidy) : file_name_(file_name),
+                                                                                                  reference_genome_(reference_genome),
+                                                                                                  ploidy_(ploidy) {}
+  VCFFileInfo(const VCFFileInfo&) = default;
+  ~VCFFileInfo() = default;
+
+  [[nodiscard]] const std::string& fileName() const { return file_name_; }
+  [[nodiscard]] const std::string& referenceGenome() const { return reference_genome_; }
+  [[nodiscard]] size_t ploidy() const { return ploidy_; }
+
+  constexpr static const char* AUX_FILE_NAME_ = "fileName.";
+  constexpr static const char* AUX_FILE_TYPE_ = "auxType.";
+
+
+private:
+
+
+  std::string file_name_;
+  std::string reference_genome_;
+  size_t ploidy_;
+
+
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // High level object extracts application specific properties.
@@ -73,7 +106,6 @@ public:
 
   bool getPropertiesAuxFile(std::string &aux_file) const;
 
-  size_t getVCFPloidy() const;
 
   void getGenomeDBFiles(const std::string& organism,
                         std::string& fasta_file,
@@ -81,22 +113,28 @@ public:
                         std::string& gaf_file,
                         std::string& tranlation_table) const;
 
-  bool getGenomeAuxFiles(const std::string& organism, std::vector<AuxFileProperty>& auxfiles) const;
+  bool getGenomeAuxFiles(const std::string& organism, std::vector<AuxFileInfo>& auxfiles) const;
 
-  bool getVCFFiles(std::vector<std::string>& vcf_files) const;
 
   bool getActiveGenomes(std::vector<std::string>& genome_list) const;
 
+  [[nodiscard]] std::vector<VCFFileInfo> getVCFFileVector() const;
+
 private:
 
+  constexpr static const char* DOT_ = ".";
   // Node categories.
-  constexpr static const char* RUNTIME_ROOT_ = "runTime.";
-  constexpr static const char* HELP_ = ".help";
-  constexpr static const char* VALUE_ = ".value";
-  // Runtime categories.
-  constexpr static const char* VCF_LIST_ = "vcfList.";
-  constexpr static const char* GENOME_LIST_ = "genomeList.";
+  constexpr static const char* RUNTIME_ROOT_ = "runTime";
+  constexpr static const char* HELP_ = "help";
   constexpr static const char* ACTIVE_ = "active";
+  constexpr static const char* VALUE_ = "value";
+  // Runtime categories.
+  constexpr static const char* VCF_LIST_ = "vcfList";
+  constexpr static const char* VCF_FILE_ = "vcfFile";
+  constexpr static const char* VCF_FILE_NAME_ = "vcfFileName";
+  constexpr static const char* VCF_FILE_GENOME_ =  "vcfGenome";
+  constexpr static const char* VCF_FILE_PLOIDY_ =  "vcfPloidy";
+  constexpr static const char* GENOME_LIST_ = "genomeList";
   constexpr static const char* FILE_LIST_ = "fileList";
   constexpr static const char* VCF_PLOIDY_ = "vcfPloidy";
   constexpr static const char* FASTA_FILE_ = "fastaFile";

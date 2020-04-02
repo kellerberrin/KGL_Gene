@@ -51,7 +51,6 @@ using AnalysisMap = std::map<std::string, AnalysisFuncPtr>;
   // Analysis dispatcher
   void performAnalysis(const std::string& analysis_type);
 
-
 private:
 
   // Dynamic analysis dispatcher map
@@ -62,6 +61,7 @@ private:
   std::shared_ptr<const GenomeCollection> genome_collection_ptr_;
   std::shared_ptr<const UnphasedPopulation> unphased_population_ptr_;
   std::shared_ptr<const PhasedPopulation> population_ptr_;
+  std::shared_ptr<const PhasedPopulation> reference_genome_ptr_;
 
   // Analytic types.
   static constexpr const char* ANALYZE_INTERVAL_ = "INTERVAL";
@@ -86,8 +86,6 @@ private:
   void performUPGMA(); // UPGMA
   void performRNA(); // RNA
   void performFineStructure(); // FINE_STRUCTURE
-
-  std::shared_ptr<const GenomeDatabase> getGenome() const { return genome_collection_ptr_->get3D7Genome(); }
 
   // Sub analysis functions
   void performPFEMP1UPGMA();  // UPGMA
