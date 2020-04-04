@@ -3,11 +3,13 @@
 //
 
 
+#include <algorithm>
 #include <iostream>
 #include "kel_utility.h"
 #include <boost/timer/timer.hpp>
 #define BOOST_FILESYSTEM_NO_DEPRECATED // Recommended by boost filesystem documentation.
 #include <boost/filesystem.hpp>
+#include <boost/tokenizer.hpp>
 
 
 // Define namespace alias
@@ -168,4 +170,15 @@ std::string kel::Utility::findAndReplaceAll(const std::string& source, const std
 
   return modified;
 
+}
+
+
+std::vector<std::string> kel::Utility::tokenizer(const std::string& str, const std::string& delims)
+{
+  std::vector<std::string> token_vector;
+
+  boost::tokenizer<boost::char_separator<char>> tokens(str, boost::char_separator<char>(delims.c_str()));
+  std::copy(tokens.begin(), tokens.end(), std::back_inserter(token_vector));
+
+  return token_vector;
 }

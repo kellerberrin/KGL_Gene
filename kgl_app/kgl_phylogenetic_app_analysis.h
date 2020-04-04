@@ -48,10 +48,16 @@ using AnalysisMap = std::map<std::string, AnalysisFuncPtr>;
   }
   ~PhylogeneticAnalysis() = default;
 
-  // Analysis dispatcher
+  // Simple analysis parser. Perform a list a analysis types
+  // Delimited by one of the following characters ",;-".
+  // For example "GENE;INTERVAL;UPGMA" performs the 3 analysis types.
   void performAnalysis(const std::string& analysis_type);
 
 private:
+
+  static constexpr const char* ANALYSIS_SEPARATORS_ = ",;-";
+  // Analysis dispatcher. Perform each individual analysis
+  void dispatchAnalysis(const std::string& analysis_type);
 
   // Dynamic analysis dispatcher map
   AnalysisMap analysis_map_;

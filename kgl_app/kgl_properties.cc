@@ -149,7 +149,7 @@ std::vector<kgl::VCFFileInfo> kgl::RuntimeProperties::getVCFFileVector() const {
 
   std::vector<kgl::VCFFileInfo> vcf_files;
 
-  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + VCF_LIST_;
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + VCF_LIST_ + std::string(DOT_) + std::string(ACTIVE_);
 
   std::vector<SubPropertyTree> property_tree_vector;
   if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
@@ -159,41 +159,37 @@ std::vector<kgl::VCFFileInfo> kgl::RuntimeProperties::getVCFFileVector() const {
 
   }
 
-  for (const auto& [sub_item, sub_tree] : property_tree_vector) {
+  for (const auto& sub_tree : property_tree_vector) {
 
-    if (sub_item == ACTIVE_) {
+    key = std::string(VCF_FILE_NAME_) + std::string(DOT_) + std::string(VALUE_);
+    std::string vcf_file_name;
+    if (not sub_tree.second.getFileProperty( key, workDirectory(), vcf_file_name)) {
 
-      key = std::string(VCF_FILE_) + std::string(DOT_) + std::string(VCF_FILE_NAME_) + std::string(DOT_) + std::string(VALUE_);
-      std::string vcf_file_name;
-      if (not sub_tree.getFileProperty( key, workDirectory(), vcf_file_name)) {
-
-        ExecEnv::log().error("RuntimeProperties::getVCFFileVector, No VCF file name information");
-        continue;
-
-      }
-
-      key = std::string(VCF_FILE_) + std::string(DOT_) + std::string(VCF_FILE_GENOME_) + std::string(DOT_) + std::string(VALUE_);
-      std::string vcf_reference_genome;
-
-      if (not sub_tree.getProperty( key, vcf_reference_genome)) {
-
-        ExecEnv::log().error("RuntimeProperties::getVCFFileVector, No reference genome information for VCF file: {}", vcf_file_name);
-        continue;
-
-      }
-
-      key = std::string(VCF_FILE_) + std::string(DOT_) + std::string(VCF_FILE_PLOIDY_) + std::string(DOT_) + std::string(VALUE_);
-      size_t vcf_ploidy;
-      if (not sub_tree.getProperty( key, vcf_ploidy)) {
-
-        ExecEnv::log().error("RuntimeProperties::getVCFFileVector, No ploidy information for VCF file: {}", vcf_file_name);
-        continue;
-
-      }
-
-      vcf_files.emplace_back(VCFFileInfo(vcf_file_name, vcf_reference_genome, vcf_ploidy));
+      ExecEnv::log().error("RuntimeProperties::getVCFFileVector, No VCF file name information");
+      continue;
 
     }
+
+    key = std::string(VCF_FILE_GENOME_) + std::string(DOT_) + std::string(VALUE_);
+    std::string vcf_reference_genome;
+
+    if (not sub_tree.second.getProperty( key, vcf_reference_genome)) {
+
+      ExecEnv::log().error("RuntimeProperties::getVCFFileVector, No reference genome information for VCF file: {}", vcf_file_name);
+      continue;
+
+    }
+
+    key = std::string(VCF_FILE_PLOIDY_) + std::string(DOT_) + std::string(VALUE_);
+    size_t vcf_ploidy;
+    if (not sub_tree.second.getProperty( key, vcf_ploidy)) {
+
+      ExecEnv::log().error("RuntimeProperties::getVCFFileVector, No ploidy information for VCF file: {}", vcf_file_name);
+      continue;
+
+    }
+
+    vcf_files.emplace_back(VCFFileInfo(vcf_file_name, vcf_reference_genome, vcf_ploidy));
 
   }
 

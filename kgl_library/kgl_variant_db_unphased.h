@@ -34,19 +34,19 @@ public:
   UnphasedContig(const UnphasedContig&) = delete;
   virtual ~UnphasedContig() = default;
 
-  UnphasedContig& operator=(const UnphasedContig&) = delete; // Use deep copy.
+  [[nodiscard]] UnphasedContig& operator=(const UnphasedContig&) = delete; // Use deep copy.
 
-  std::shared_ptr<UnphasedContig> deepCopy() const; // Use this to copy the object.
+  [[nodiscard]] std::shared_ptr<UnphasedContig> deepCopy() const; // Use this to copy the object.
 
-  const ContigId_t& contigId() const { return contig_id_; }
+  [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
 
-  bool addVariant(std::shared_ptr<const Variant> variant);
+  [[nodiscard]]  bool addVariant(std::shared_ptr<const Variant> variant);
 
-  size_t variantCount() const;
+  [[nodiscard]]  size_t variantCount() const;
 
-  const UnphasedOffsetMap& getMap() const { return contig_offset_map_; }
+  [[nodiscard]] const UnphasedOffsetMap& getMap() const { return contig_offset_map_; }
 
-  std::shared_ptr<UnphasedContig> filterVariants(const VariantFilter& filter) const;
+  [[nodiscard]] std::shared_ptr<UnphasedContig> filterVariants(const VariantFilter& filter) const;
 
 
 private:
@@ -72,21 +72,21 @@ public:
   UnphasedGenome(const UnphasedGenome&) = delete;
   virtual ~UnphasedGenome() = default;
 
-  UnphasedGenome& operator=(const UnphasedGenome&) = delete; // Use deep copy.
+  [[nodiscard]] UnphasedGenome& operator=(const UnphasedGenome&) = delete; // Use deep copy.
 
-  std::shared_ptr<UnphasedGenome> deepCopy() const; // Use this to copy the object.
+  [[nodiscard]] std::shared_ptr<UnphasedGenome> deepCopy() const; // Use this to copy the object.
 
-  size_t variantCount() const;
+  [[nodiscard]] size_t variantCount() const;
 
-  bool addVariant(std::shared_ptr<const Variant> variant);
+  [[nodiscard]] bool addVariant(std::shared_ptr<const Variant> variant);
 
-  const GenomeId_t& genomeId() const { return genome_id_; }
+  [[nodiscard]] const GenomeId_t& genomeId() const { return genome_id_; }
 
-  std::shared_ptr<UnphasedGenome> filterVariants(const VariantFilter& filter) const;
+  [[nodiscard]] std::shared_ptr<UnphasedGenome> filterVariants(const VariantFilter& filter) const;
 
-  const UnphasedContigMap& getMap() const { return contig_map_; }
+  [[nodiscard]] const UnphasedContigMap& getMap() const { return contig_map_; }
 
-  bool getCreateContig(const ContigId_t& contig_id, std::shared_ptr<UnphasedContig>& contig_ptr);
+  [[nodiscard]] bool getCreateContig(const ContigId_t& contig_id, std::shared_ptr<UnphasedContig>& contig_ptr);
 
 private:
 

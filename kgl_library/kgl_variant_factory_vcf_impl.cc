@@ -49,11 +49,17 @@ void kgl::ParseVCFImpl::readParseVCFImpl() {
 
 size_t kgl::ParseVCFImpl::addThreadSafeGenomeVariant(std::shared_ptr<const Variant>& variant_ptr) {
 
-  AutoMutex auto_mutex(mutex_);
+  AutoMutex auto_mutex(mutex_); // Write Locked
 
   std::shared_ptr<UnphasedGenome> genome;
   unphased_population_ptr_->getCreateGenome(variant_ptr->genomeId(), genome); // thread safe
-  genome->addVariant(variant_ptr); // thread safe
+
+  if (not genome->addVariant(variant_ptr)) { // thread safe
+
+    ExecEnv::log().error("ParseVCFImpl::addThreadSafeGenomeVariant; Could not add variant to genome: {}", variant_ptr->genomeId());
+    return 0;
+
+  }
 
   return 1;
 
@@ -84,9 +90,8 @@ void kgl::ParseVCFImpl::setupPopulationStructure(std::shared_ptr<const GenomeDat
     for (auto contig : genome_db_ptr->getMap()) {
 
       std::shared_ptr<UnphasedContig> contig_ptr = nullptr;
-      genome_ptr->getCreateContig(contig.first, contig_ptr);
 
-      if (not contig_ptr) {
+      if (not genome_ptr->getCreateContig(contig.first, contig_ptr)) {
 
         ExecEnv::log().critical("Could not create contig: {} in genome: {} in the unphased population", contig.first, genome_id);
 

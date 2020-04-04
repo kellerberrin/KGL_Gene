@@ -26,7 +26,11 @@ std::shared_ptr<kgl::UnphasedContig> kgl::UnphasedContig::deepCopy() const {
 
     for (auto variant_count : offset.second) {
 
-      contig_copy->addVariant(variant_count.first);
+      if (not contig_copy->addVariant(variant_count.first)) {
+
+        ExecEnv::log().error("UnphasedContig::deepCopy; Cannot add Variant to Contig Copy : {}", contig_copy->contigId());
+
+      }
 
     }
 
@@ -205,9 +209,19 @@ std::shared_ptr<kgl::UnphasedGenome> kgl::UnphasedGenome::deepCopy() const {
 bool kgl::UnphasedGenome::addVariant(std::shared_ptr<const Variant> variant) {
 
   std::shared_ptr<UnphasedContig> contig_ptr;
-  getCreateContig(variant->contigId(), contig_ptr);
+  if (not getCreateContig(variant->contigId(), contig_ptr)) {
 
-  contig_ptr->addVariant(variant);
+    ExecEnv::log().error("UnphasedGenome::addVariant(), Genome: {} could not get or create Contig: {}", genomeId(), variant->contigId());
+    return false;
+
+  }
+
+  if (not contig_ptr->addVariant(variant)) {
+
+    ExecEnv::log().error("UnphasedGenome::addVariant(), Genome: {} could not add variant to Contig: {}", genomeId(), variant->contigId());
+    return false;
+
+  }
 
   return true;
 

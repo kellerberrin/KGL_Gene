@@ -24,7 +24,7 @@ std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::deepCopy() con
 
   std::shared_ptr<UnphasedPopulation> population_copy(std::make_shared<UnphasedPopulation>());
 
-  for (auto genome : getMap()) {
+  for (auto const& genome : getMap()) {
 
     population_copy->addGenome(genome.second->deepCopy());
 

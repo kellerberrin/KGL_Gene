@@ -3,6 +3,7 @@
 //
 
 
+#include <kel_utility.h>
 #include <kgl_read_phasing.h>
 #include "kgl_sequence_distance.h"
 #include "kgl_genome_aux_csv.h"
@@ -26,10 +27,20 @@ namespace kgl = kellerberrin::genome;
 namespace kgd = kellerberrin::deconvolv;
 
 
-const kgl::GenomeId_t analysis_genome = "Pf3D7_45";
+const kgl::GenomeId_t analysis_genome = "Pf3D7_47";
 
 
 void kgl::PhylogeneticAnalysis::performAnalysis(const std::string& analysis_type) {
+
+  for (auto const& analysis : Utility::tokenizer(analysis_type, ANALYSIS_SEPARATORS_)) {
+
+    dispatchAnalysis(analysis);
+
+  }
+
+}
+
+void kgl::PhylogeneticAnalysis::dispatchAnalysis(const std::string& analysis_type) {
 
   auto result = analysis_map_.find(analysis_type);
 
@@ -145,26 +156,38 @@ void kgl::PhylogeneticAnalysis::performSequence() {
 
 }
 
+// Analysis code "INTERVAL"
 void kgl::PhylogeneticAnalysis::performInterval() {
 
 
-#define INTERVAL_SIZE 100
+//#define INTERVAL_SIZE 100
 #define ANALYSIS_CONTIG "Pf3D7_04_v3"
-#define ANALYSIS_START 540000
-#define ANALYSIS_END 604000
-
+//#define ANALYSIS_START 540000
+//#define ANALYSIS_END 604000
+#define INTERVAL_SIZE 1000
+#define ANALYSIS_CONTIG "Pf3D7_04_v3"
+#define ANALYSIS_START 0
+#define ANALYSIS_END 1200490
 
   AggregateVariantDistribution variant_distribution;
-  variant_distribution.variantDistribution(population_ptr_);
-  std::string file_name = "IntervalAnalysis_all";
-  std::string interval_file = Utility::filePath(file_name, runtime_options_.workDirectory()) + ".csv";
-  variant_distribution.writeDistribution( genome_collection_ptr_->getGenome(analysis_genome),
-                                          INTERVAL_SIZE,
-                                          ANALYSIS_CONTIG,
-                                          ANALYSIS_START,
-                                          ANALYSIS_END,
-                                          true,
-                                          interval_file, ',');
+//  variant_distribution.variantDistribution(population_ptr_);
+  variant_distribution.variantDistribution(unphased_population_ptr_);
+
+  for (auto const& [contig_id, contig_ptr] : genome_collection_ptr_->getGenome(analysis_genome)->getMap()) {
+
+    std::string file_name = "IntervalAnalysis_all_" +  contig_id;
+    std::string interval_file = Utility::filePath(file_name, runtime_options_.workDirectory()) + ".csv";
+    ExecEnv::log().info("PerformInterval, Processing File: {}", interval_file);
+    ContigSize_t analysis_end = contig_ptr->sequence().length();
+    variant_distribution.writeDistribution( genome_collection_ptr_->getGenome(analysis_genome),
+                                            INTERVAL_SIZE,
+                                            contig_id,
+                                            ANALYSIS_START,
+                                            analysis_end,
+                                            false,
+                                            interval_file, ',');
+  }
+
 
   // Split into country populations.
   std::string aux_file_path;

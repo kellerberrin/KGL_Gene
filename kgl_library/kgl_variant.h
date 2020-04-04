@@ -35,10 +35,10 @@ public:
   VariantFilter() = default;
   virtual ~VariantFilter() = default;
 
-  virtual bool applyFilter(const VCFVariant& variant) const = 0;
+  [[nodiscard]] virtual bool applyFilter(const VCFVariant& variant) const = 0;
 
-  virtual std::string filterName() const = 0;
-  virtual std::shared_ptr<VariantFilter> clone() const = 0;
+  [[nodiscard]] virtual std::string filterName() const = 0;
+  [[nodiscard]] virtual std::shared_ptr<VariantFilter> clone() const = 0;
 
 private:
 
@@ -70,15 +70,15 @@ public:
                                                                          evidence_ptr_(evidence_ptr) {}
   virtual ~VariantSequence() = default;
 
-  const GenomeId_t& genomeId() const { return genome_id_; }
-  const ContigId_t& contigId() const { return contig_id_; }
-  ContigOffset_t offset() const { return contig_offset_; }
-  PhaseId_t phaseId() const { return phase_id_; }
+  [[nodiscard]] const GenomeId_t& genomeId() const { return genome_id_; }
+  [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
+  [[nodiscard]] ContigOffset_t offset() const { return contig_offset_; }
+  [[nodiscard]] PhaseId_t phaseId() const { return phase_id_; }
   virtual void updatePhaseId(PhaseId_t phase_id) { protectedPhaseId(phase_id); }
 
-  std::shared_ptr<const VariantEvidence> evidence() const { return evidence_ptr_; }
+  [[nodiscard]] std::shared_ptr<const VariantEvidence> evidence() const { return evidence_ptr_; }
 
-  std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
+  [[nodiscard]] std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
 
   static constexpr PhaseId_t UNPHASED = 255;
 
@@ -120,30 +120,30 @@ public:
                                                                                  contig_offset,
                                                                                  evidence_ptr) {}
   ~Variant() override = default;
-  bool filterVariant(const VariantFilter& filter) const { return applyFilter(filter); }
+  [[nodiscard]] bool filterVariant(const VariantFilter& filter) const { return applyFilter(filter); }
 
-  std::string name() const;
+  [[nodiscard]] std::string name() const;
 
-  virtual VariantType variantType() const = 0;
-  virtual size_t size() const = 0;
-  virtual size_t referenceSize() const { return 1; }
-  virtual std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const = 0;
-  virtual std::string mutation(char delimiter, VariantOutputIndex output_index) const = 0;
-  virtual bool mutateSequence(SignedOffset_t offset_adjust,
-                              std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
-                              SignedOffset_t& sequence_size_modify) const = 0;
+  [[nodiscard]] virtual VariantType variantType() const = 0;
+  [[nodiscard]] virtual size_t size() const = 0;
+  [[nodiscard]] virtual size_t referenceSize() const { return 1; }
+  [[nodiscard]] virtual std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const = 0;
+  [[nodiscard]] virtual std::string mutation(char delimiter, VariantOutputIndex output_index) const = 0;
+  [[nodiscard]] virtual bool mutateSequence(SignedOffset_t offset_adjust,
+                                            std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
+                                            SignedOffset_t& sequence_size_modify) const = 0;
 
-  virtual bool isSNP() const { return false; }
+  [[nodiscard]] virtual bool isSNP() const { return false; }
 
-  virtual bool equivalent(const Variant& cmp_var) const = 0;
-  bool operator==(const Variant& cmp_var) const { return equivalent(cmp_var); };
+  [[nodiscard]] virtual bool equivalent(const Variant& cmp_var) const = 0;
+  [[nodiscard]] bool operator==(const Variant& cmp_var) const { return equivalent(cmp_var); };
 
-  virtual bool lessThan(const Variant& cmp_var) const = 0;
-  bool operator<(const Variant& cmp_var) const { return lessThan(cmp_var); };
+  [[nodiscard]] virtual bool lessThan(const Variant& cmp_var) const = 0;
+  [[nodiscard]] bool operator<(const Variant& cmp_var) const { return lessThan(cmp_var); };
 
 private:
 
-  virtual bool applyFilter(const VariantFilter& filter) const = 0;
+  [[nodiscard]] virtual bool applyFilter(const VariantFilter& filter) const = 0;
 
 };
 
