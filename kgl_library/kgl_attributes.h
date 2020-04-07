@@ -41,11 +41,11 @@ public:
   constexpr static const char* DESCRIPTION_KEY = "DESCRIPTION";
 
   // Convenience access routines.
-  bool getIds(std::vector<std::string> &value_vec) const { return getAttributes(ID_KEY, value_vec); }
-  bool getSuperFeatureIds(std::vector<std::string> &value_vec) const { return getAttributes(SUPER_FEATURE_KEY, value_vec); }
-  bool getAssignedFeatureIds(std::vector<std::string> &value_vec) const { return getAttributes(ASSIGNED_FEATURE_KEY, value_vec); }
-  bool getDescription(std::vector<std::string> &value_vec) const { return getAttributes(DESCRIPTION_KEY, value_vec); }
-  const AttributeMap& getMap() const { return attributes_; }
+  [[nodiscard]] bool getIds(std::vector<std::string> &value_vec) const { return getAttributes(ID_KEY, value_vec); }
+  void getSuperFeatureIds(std::vector<std::string> &value_vec) const { getAttributes(SUPER_FEATURE_KEY, value_vec); }
+  void getAssignedFeatureIds(std::vector<std::string> &value_vec) const { getAttributes(ASSIGNED_FEATURE_KEY, value_vec); }
+  [[nodiscard]] bool getDescription(std::vector<std::string> &value_vec) const { return getAttributes(DESCRIPTION_KEY, value_vec); }
+  [[nodiscard]] const AttributeMap& getMap() const { return attributes_; }
 
 private:
 

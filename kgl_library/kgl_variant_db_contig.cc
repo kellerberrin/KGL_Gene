@@ -74,7 +74,12 @@ std::shared_ptr<kgl::ContigVariant> kgl::ContigVariant::deepCopy() const {
 
     for (auto variant : homologous->getMap()) {
 
-      copy->addVariant(variant.second);
+      if (not copy->addVariant(variant.second)) {
+
+        ExecEnv::log().error("ContigVariant::deepCopy(); contig: {}, cannot add variant: {}",
+                             contigId(), variant.second->output(' ', VariantOutputIndex::START_0_BASED, false));
+
+      }
 
     }
 

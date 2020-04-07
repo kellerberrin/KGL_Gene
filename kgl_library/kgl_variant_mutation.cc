@@ -21,7 +21,13 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& variant_map,
 
   // Perform the mutation
   std::shared_ptr<DNA5SequenceLinear> unstranded_ptr;
-  mutateDNA(variant_map, contig_ptr, coding_sequence_ptr->start(), sequence_size, unstranded_ptr);
+  if (not mutateDNA(variant_map, contig_ptr, coding_sequence_ptr->start(), sequence_size, unstranded_ptr)) {
+
+    ExecEnv::log().error("mutateDNA(), DNA mutation failed for contig: {}", contig_ptr->contigId());
+
+    return false;
+
+  }
 
   // Convert to stranded DNA.
   dna_sequence_ptr = kgl::SequenceOffset::mutantCodingSubSequence(coding_sequence_ptr,
@@ -74,7 +80,12 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& region_variant_map,
     }
 
     // Update the mutation offset for indels.
-    variant_mutation_offset_.updateIndelAccounting(variant.second, sequence_size_modify);
+    if (not variant_mutation_offset_.updateIndelAccounting(variant.second, sequence_size_modify)) {
+
+      ExecEnv::log().error( "Problem updating indel mutated sequence length by variant: {}",
+                            variant.second->output(' ',VariantOutputIndex::START_0_BASED, true));
+
+    }
 
   }
 

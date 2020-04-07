@@ -7,8 +7,6 @@
 namespace kgl = kellerberrin::genome;
 
 
-const kgl::AminoAcid::Alphabet kgl::AminoAcid::AMINO_STOP;
-const kgl::AminoAcid::Alphabet kgl::AminoAcid::AMINO_UNKNOWN;
 
 // Covert from char to alphabet
 kgl::AminoAcid::Alphabet kgl::AminoAcid::convertChar(char chr_base) {

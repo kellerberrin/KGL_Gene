@@ -42,8 +42,8 @@ public:
 
 protected:
 
-  virtual CompareDistance_t distanceImpl(std::shared_ptr<const VirtualSequence> sequenceA,
-                                         std::shared_ptr<const VirtualSequence> sequenceB) const = 0;
+  [[nodiscard]] virtual CompareDistance_t distanceImpl( std::shared_ptr<const VirtualSequence> sequenceA,
+                                                        std::shared_ptr<const VirtualSequence> sequenceB) const = 0;
 
 };
 
@@ -99,15 +99,15 @@ public:
   DNASequenceDistance() = default;
   ~DNASequenceDistance() override = default;
 
-  CompareDistance_t distance(std::shared_ptr<const DNA5SequenceLinear> sequenceA,
-                             std::shared_ptr<const DNA5SequenceLinear> sequenceB) const {
+  [[nodiscard]] CompareDistance_t distance( std::shared_ptr<const DNA5SequenceLinear> sequenceA,
+                                            std::shared_ptr<const DNA5SequenceLinear> sequenceB) const {
 
     return distanceImpl(sequenceA, sequenceB);
 
   }
 
-  CompareDistance_t distance(std::shared_ptr<const DNA5SequenceCoding> sequenceA,
-                             std::shared_ptr<const DNA5SequenceCoding> sequenceB) const {
+  [[nodiscard]] CompareDistance_t distance( std::shared_ptr<const DNA5SequenceCoding> sequenceA,
+                                            std::shared_ptr<const DNA5SequenceCoding> sequenceB) const {
 
     return distanceImpl(sequenceA, sequenceB);
 
@@ -133,8 +133,8 @@ public:
   ~AminoSequenceDistance() override = default;
 
 
-  CompareDistance_t distance(std::shared_ptr<const AminoSequence> sequenceA,
-                             std::shared_ptr<const AminoSequence> sequenceB) const {
+  [[nodiscard]] CompareDistance_t distance( std::shared_ptr<const AminoSequence> sequenceA,
+                                            std::shared_ptr<const AminoSequence> sequenceB) const {
 
     return distanceImpl(sequenceA, sequenceB);
 
@@ -236,14 +236,14 @@ public:
   LevenshteinGlobal() = default;
   virtual ~LevenshteinGlobal() = default;
 
-  std::string distanceType() const override { return "Levenshtein Global"; }
+  [[nodiscard]] std::string distanceType() const override { return "Levenshtein Global"; }
 
 
 
 private:
 
-  CompareDistance_t distanceImpl(std::shared_ptr<const VirtualSequence> sequenceA,
-                                 std::shared_ptr<const VirtualSequence> sequenceB) const override {
+  [[nodiscard]] CompareDistance_t distanceImpl( std::shared_ptr<const VirtualSequence> sequenceA,
+                                                std::shared_ptr<const VirtualSequence> sequenceB) const override {
 
     return SequenceDistanceImpl().LevenshteinGlobal(sequenceA->getSequenceAsString(), sequenceB->getSequenceAsString());
 
@@ -263,12 +263,12 @@ public:
   LevenshteinLocal() = default;
   virtual ~LevenshteinLocal() = default;
 
-  std::string distanceType() const override { return "Levenshtein Local"; }
+  [[nodiscard]] std::string distanceType() const override { return "Levenshtein Local"; }
 
 private:
 
-  CompareDistance_t distanceImpl(std::shared_ptr<const VirtualSequence> sequenceA,
-                                 std::shared_ptr<const VirtualSequence> sequenceB) const override {
+  [[nodiscard]] CompareDistance_t distanceImpl( std::shared_ptr<const VirtualSequence> sequenceA,
+                                                std::shared_ptr<const VirtualSequence> sequenceB) const override {
 
     return SequenceDistanceImpl().LevenshteinLocal(sequenceA->getSequenceAsString(), sequenceB->getSequenceAsString());
 
@@ -288,14 +288,14 @@ public:
   Blosum80Global() = default;
   virtual ~Blosum80Global() = default;
 
-  std::string distanceType() const override { return "Blosum80 Global"; }
+  [[nodiscard]] std::string distanceType() const override { return "Blosum80 Global"; }
 
 
 
 private:
 
-  CompareDistance_t distanceImpl(std::shared_ptr<const VirtualSequence> sequenceA,
-                                 std::shared_ptr<const VirtualSequence> sequenceB) const override {
+  [[nodiscard]] CompareDistance_t distanceImpl( std::shared_ptr<const VirtualSequence> sequenceA,
+                                                std::shared_ptr<const VirtualSequence> sequenceB) const override {
 
     return SequenceDistanceImpl().globalblosum80Distance(sequenceA->getSequenceAsString(), sequenceB->getSequenceAsString());
 
@@ -315,14 +315,14 @@ public:
   Blosum80Local() = default;
   virtual ~Blosum80Local() = default;
 
-  std::string distanceType() const override { return "Blosum80 Local"; }
+  [[nodiscard]] std::string distanceType() const override { return "Blosum80 Local"; }
 
 
 
 private:
 
-  CompareDistance_t distanceImpl(std::shared_ptr<const VirtualSequence> sequenceA,
-                                 std::shared_ptr<const VirtualSequence> sequenceB) const override {
+  [[nodiscard]] CompareDistance_t distanceImpl( std::shared_ptr<const VirtualSequence> sequenceA,
+                                                std::shared_ptr<const VirtualSequence> sequenceB) const override {
 
     return SequenceDistanceImpl().localblosum80Distance(sequenceA->getSequenceAsString(), sequenceB->getSequenceAsString());
 

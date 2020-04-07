@@ -36,10 +36,10 @@ public:
 
   FeatureSequence& operator=(const FeatureSequence&) = default;
 
-  ContigOffset_t begin() const { return begin_offset_; }
-  ContigOffset_t end() const { return end_offset_; }
-  StrandSense strand() const { return strand_sense_; }
-  char strandText() const { return static_cast<char>(strand()); }
+  [[nodiscard]] ContigOffset_t begin() const { return begin_offset_; }
+  [[nodiscard]] ContigOffset_t end() const { return end_offset_; }
+  [[nodiscard]] StrandSense strand() const { return strand_sense_; }
+  [[nodiscard]] char strandText() const { return static_cast<char>(strand()); }
   void begin(ContigOffset_t begin) { begin_offset_ = begin; }
   void end(ContigOffset_t end) { end_offset_ = end; }
   void strand(StrandSense strand) { strand_sense_ = strand; }
@@ -83,18 +83,18 @@ public:
                                         sorted_cds_(std::move(sorted_cds)) {}
   ~CodingSequence() = default;
 
-  const SortedCDS& getSortedCDS() const { return sorted_cds_; }
-  std::shared_ptr<const ContigFeatures> contig() const;
-  std::shared_ptr<const GeneFeature> getGene() const { return gene_ptr_; }
-  std::shared_ptr<const Feature> getCDSParent() const { return cds_parent_ptr_; }
-  StrandSense strand() const;
-  ContigOffset_t prime_5() const; // Offset of the 5 prime nucleotide closest to the sequence (strand adjusted start - 1).
+  [[nodiscard]] const SortedCDS& getSortedCDS() const { return sorted_cds_; }
+  [[nodiscard]] std::shared_ptr<const ContigFeatures> contig() const;
+  [[nodiscard]] std::shared_ptr<const GeneFeature> getGene() const { return gene_ptr_; }
+  [[nodiscard]] std::shared_ptr<const Feature> getCDSParent() const { return cds_parent_ptr_; }
+  [[nodiscard]] StrandSense strand() const;
+  [[nodiscard]] ContigOffset_t prime_5() const; // Offset of the 5 prime nucleotide closest to the sequence (strand adjusted start - 1).
   void prime_5_region(ContigSize_t requested_size, ContigOffset_t& begin_offset, ContigSize_t& size) const;
-  ContigOffset_t prime_3() const; // Offset of the 3 prime nucleotide closest to the sequence (strand adjusted end).
+  [[nodiscard]] ContigOffset_t prime_3() const; // Offset of the 3 prime nucleotide closest to the sequence (strand adjusted end).
   void prime_3_region(ContigSize_t requested_size, ContigOffset_t& begin_offset, ContigSize_t& size) const;
-  ContigOffset_t start() const; // Offset of the start of the sequence - not strand adjusted.
-  ContigOffset_t end() const; // Offset of the end of the sequence (last nucleotide + 1) - not strand adjusted.
-  ContigSize_t codingNucleotides() const;
+  [[nodiscard]] ContigOffset_t start() const; // Offset of the start of the sequence - not strand adjusted.
+  [[nodiscard]] ContigOffset_t end() const; // Offset of the end of the sequence (last nucleotide + 1) - not strand adjusted.
+  [[nodiscard]] ContigSize_t codingNucleotides() const;
 
 private:
 
@@ -120,15 +120,15 @@ public:
   CodingSequenceArray() = default;
   ~CodingSequenceArray() = default;
 
-  const CodingSequenceMap& getMap() const { return coding_sequence_map_; }
-  CodingSequenceMap& getMap() { return coding_sequence_map_; }
+  [[nodiscard]] const CodingSequenceMap& getMap() const { return coding_sequence_map_; }
+  [[nodiscard]] CodingSequenceMap& getMap() { return coding_sequence_map_; }
 
-  bool insertCodingSequence(std::shared_ptr<const CodingSequence> coding_sequence);
+  [[nodiscard]] bool insertCodingSequence(std::shared_ptr<const CodingSequence> coding_sequence);
 
-  size_t size() const { return coding_sequence_map_.size(); }
-  bool empty() const { return size() == 0; }
+  [[nodiscard]] size_t size() const { return coding_sequence_map_.size(); }
+  [[nodiscard]] bool empty() const { return size() == 0; }
 
-  std::shared_ptr<const CodingSequence> getFirst() const;
+  [[nodiscard]] std::shared_ptr<const CodingSequence> getFirst() const;
 
   static void printCodingSequence(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr);
 

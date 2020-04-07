@@ -28,23 +28,23 @@ public:
   explicit AminoTranslationTable() : amino_table_rows_(*Tables::STANDARDTABLE) {}
   ~AminoTranslationTable() = default;
 
-  std::string TableName() const { return amino_table_rows_.table_name; }
+  [[nodiscard]] std::string TableName() const { return amino_table_rows_.table_name; }
 
-  std::string TableDescription() const { return amino_table_rows_.table_description; }
+  [[nodiscard]] std::string TableDescription() const { return amino_table_rows_.table_description; }
 
   // Get table by name.
-  bool setTranslationTable(const std::string& table_name);
+  [[nodiscard]] bool setTranslationTable(const std::string& table_name);
 
   // Returns an amino acid for the codon. AminoAcid::Unknown if any bases are 'N'
-  AminoAcid::Alphabet getAmino(const Codon& codon);
+  [[nodiscard]] AminoAcid::Alphabet getAmino(const Codon& codon);
 
-  bool isStopAmino(AminoAcid::Alphabet amino) const { return amino == AminoAcid::AMINO_STOP; }
+  [[nodiscard]] bool isStopAmino(AminoAcid::Alphabet amino) const { return amino == AminoAcid::AMINO_STOP; }
 
-  bool isStartAmino(AminoAcid::Alphabet amino) const;
+  [[nodiscard]] bool isStartAmino(AminoAcid::Alphabet amino) const;
 
-  bool isStopCodon(const Codon& codon) const;
+  [[nodiscard]] bool isStopCodon(const Codon& codon) const;
 
-  bool isStartCodon(const Codon& codon) const;
+  [[nodiscard]] bool isStartCodon(const Codon& codon) const;
 
 private:
 
@@ -52,7 +52,7 @@ private:
 
   TranslationTable amino_table_rows_;
 
-  size_t index(const Codon& Codon) const;
+  [[nodiscard]] size_t index(const Codon& Codon) const;
 
 };
 

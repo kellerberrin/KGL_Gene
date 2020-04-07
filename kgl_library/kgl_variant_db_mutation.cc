@@ -118,7 +118,17 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
   // Generate the mutant sequences.
   // Extract the variants for processing.
   OffsetVariantMap coding_variant_map;
-  getSortedVariants(contig_id, phase, coding_sequence_ptr->start(), coding_sequence_ptr->end(), coding_variant_map);
+
+  if (not getSortedVariants( contig_id,
+                             phase,
+                             coding_sequence_ptr->start(),
+                             coding_sequence_ptr->end(),
+                             coding_variant_map)) {
+
+    ExecEnv::log().error("mutantCodingDNA(), could not get sorted variants for, gene: {}, contig: {}", gene_id, contig_id);
+
+  }
+
   variant_map = coding_variant_map;
 
   if (not VariantMutation().mutateDNA(coding_variant_map, contig_ptr, coding_sequence_ptr, mutant_sequence)) {
@@ -186,7 +196,15 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
   // Generate the mutant sequences.
   // Extract the variants for processing.
   OffsetVariantMap region_variant_map;
-  getSortedVariants(contig_id, phase, region_offset, region_offset + region_size, region_variant_map);
+
+  if (not getSortedVariants(contig_id, phase, region_offset, region_offset + region_size, region_variant_map)) {
+
+    ExecEnv::log().warn("Problem retrieving sorted variants to mutate region DNA sequence for contig: {}, offset: {}, size: {}",
+                        contig_id, region_offset, region_size);
+    return false;
+
+  }
+
   variant_map = region_variant_map;
 
   // And mutate the sequence.
@@ -247,7 +265,13 @@ bool kgl::GenomeVariant::mutantContig( const ContigId_t& contig_id,
   // Generate the mutant sequences.
   // Extract the variants for processing.
   OffsetVariantMap contig_variant_map;
-  getSortedVariants(contig_id, phase,  0, contig_ptr->contigSize(), contig_variant_map);
+
+  if (not getSortedVariants(contig_id, phase,  0, contig_ptr->contigSize(), contig_variant_map)) {
+
+    ExecEnv::log().warn("Problem retrieving sorted variants to mutate region DNA sequence contig: {}", contig_id);
+    return false;
+
+  }
 
     // And mutate it.
   if (not VariantMutation().mutateDNA(contig_variant_map, contig_ptr, mutant_contig_ptr)) {

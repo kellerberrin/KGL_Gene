@@ -48,9 +48,9 @@ public:
 
   virtual void ProcessVCFRecord(size_t vcf_record_count, const seqan::VcfRecord& vcf_record) = 0;
 
-  const std::vector<std::string>& getGenomeNames() const { return reader_ptr_->getFieldNames(); }
+  [[nodiscard]] const std::vector<std::string>& getGenomeNames() const { return reader_ptr_->getFieldNames(); }
 
-  const ContigId_t contigId(int32_t rId) const { return reader_ptr_->getContig(rId); }
+  [[nodiscard]] const ContigId_t contigId(int32_t rId) const { return reader_ptr_->getContig(rId); }
 
 protected:
 
@@ -70,7 +70,7 @@ protected:
   constexpr static const char* ID_READ_DEPTH_ = "DPB";
   constexpr static const char* ID_PROPORTION_ = "AF";
 
-  size_t addThreadSafeGenomeVariant(std::shared_ptr<const Variant>& variant_ptr);
+  [[nodiscard]] size_t addThreadSafeGenomeVariant(std::shared_ptr<const Variant>& variant_ptr);
   void setupPopulationStructure(std::shared_ptr<const GenomeDatabase> genome_db_ptr);
 
   std::shared_ptr<const GenomeDatabase> genome_db_ptr_; // read access only.

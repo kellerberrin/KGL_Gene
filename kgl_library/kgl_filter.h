@@ -24,17 +24,17 @@ public:
   explicit RefAltCountFilter(size_t minimum_count) : minimum_count_(minimum_count) {}
   ~RefAltCountFilter() override = default;
 
-  std::string filterName() const final;
+  [[nodiscard]] std::string filterName() const final;
 
-  bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
+  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
 
-  std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<RefAltCountFilter>(*this); }
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<RefAltCountFilter>(*this); }
 
 private:
 
   size_t minimum_count_;
 
-  bool implementFilter(const Variant& variant) const;
+  [[nodiscard]] bool implementFilter(const Variant& variant) const;
 
 
 };
@@ -52,17 +52,17 @@ public:
   explicit DPCountFilter(size_t minimum_count) : minimum_count_(minimum_count) {}
   ~DPCountFilter() override = default;
 
-  std::string filterName() const final;
+  [[nodiscard]] std::string filterName() const final;
 
-  bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
+  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
 
-  std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<DPCountFilter>(*this); }
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<DPCountFilter>(*this); }
 
 private:
 
   size_t minimum_count_;
 
-  bool implementFilter(const Variant& variant) const;
+  [[nodiscard]] bool implementFilter(const Variant& variant) const;
 
 
 };
@@ -76,14 +76,14 @@ class SNPFilter : public VariantFilter {
 
 public:
 
-  explicit SNPFilter() {}
+  explicit SNPFilter() = default;
   ~SNPFilter() override = default;
 
-  std::string filterName() const final { return "SNP and MNP Variants)"; }
+  [[nodiscard]] std::string filterName() const final { return "SNP and MNP Variants)"; }
 
-  bool applyFilter(const VCFVariant& variant) const override { return variant.isSNP(); }
+  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return variant.isSNP(); }
 
-  std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<SNPFilter>(*this); }
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<SNPFilter>(*this); }
 
 private:
 
@@ -99,14 +99,14 @@ class DeleteFilter : public VariantFilter {
 
 public:
 
-  explicit DeleteFilter() {}
+  explicit DeleteFilter() = default;
   ~DeleteFilter() override = default;
 
-  std::string filterName() const final { return "Delete Variants"; }
+  [[nodiscard]] std::string filterName() const final { return "Delete Variants"; }
 
-  bool applyFilter(const VCFVariant&) const override { return false; }
+  [[nodiscard]] bool applyFilter(const VCFVariant&) const override { return false; }
 
-  std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<DeleteFilter>(*this); }
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<DeleteFilter>(*this); }
 
 private:
 
@@ -122,14 +122,14 @@ class InsertFilter : public VariantFilter {
 
 public:
 
-  explicit InsertFilter() {}
+  explicit InsertFilter() = default;
   ~InsertFilter() override = default;
 
-  std::string filterName() const final { return "Insert Variants"; }
+  [[nodiscard]] std::string filterName() const final { return "Insert Variants"; }
 
-  bool applyFilter(const VCFVariant&) const override { return false; }
+  [[nodiscard]] bool applyFilter(const VCFVariant&) const override { return false; }
 
-  std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InsertFilter>(*this); }
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InsertFilter>(*this); }
 
 private:
 
@@ -149,17 +149,17 @@ public:
   explicit ContigFilter(const ContigId_t& contig_ident) : contig_ident_(contig_ident) {}
   ~ContigFilter() override = default;
 
-  std::string filterName() const final;
+  [[nodiscard]] std::string filterName() const final;
 
-  bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
+  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
 
-  std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<ContigFilter>(*this); }
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<ContigFilter>(*this); }
 
 private:
 
   const ContigId_t contig_ident_;
 
-  bool implementFilter(const Variant& variant) const;
+  [[nodiscard]] bool implementFilter(const Variant& variant) const;
 
 };
 
@@ -176,11 +176,11 @@ public:
   explicit RegionFilter(ContigOffset_t start, ContigOffset_t end) : start_(start), end_(end) {}
   ~RegionFilter() override = default;
 
-  std::string filterName() const final;
+  [[nodiscard]] std::string filterName() const final;
 
-  bool applyFilter(const VCFVariant& variant) const override { return variant.offset() >= start_ and variant.offset() < end_; }
+  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return variant.offset() >= start_ and variant.offset() < end_; }
 
-  std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<RegionFilter>(*this); }
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<RegionFilter>(*this); }
 
 private:
 
@@ -201,11 +201,11 @@ public:
   explicit NotFilter(const VariantFilter& filter) : filter_ptr_(filter.clone()) {}
   ~NotFilter() override = default;
 
-  bool applyFilter(const VCFVariant& variant) const override { return not filter_ptr_->applyFilter(variant); }
+  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return not filter_ptr_->applyFilter(variant); }
 
-  std::string filterName() const final { return "NOT(" + filter_ptr_->filterName() + ")"; }
+  [[nodiscard]] std::string filterName() const final { return "NOT(" + filter_ptr_->filterName() + ")"; }
 
-  std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<NotFilter>(*this); }
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<NotFilter>(*this); }
 
 private:
 
@@ -225,11 +225,11 @@ public:
   explicit AndFilter(const VariantFilter& filter1, const VariantFilter& filter2) : filter1_ptr_(filter1.clone()), filter2_ptr_(filter2.clone()) {}
   ~AndFilter() override = default;
 
-  bool applyFilter(const VCFVariant& variant) const override { return filter1_ptr_->applyFilter(variant) and filter2_ptr_->applyFilter(variant); }
+  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return filter1_ptr_->applyFilter(variant) and filter2_ptr_->applyFilter(variant); }
 
-  std::string filterName() const final { return "AND(" + filter1_ptr_->filterName() + ", " + filter2_ptr_->filterName() + ")"; }
+  [[nodiscard]] std::string filterName() const final { return "AND(" + filter1_ptr_->filterName() + ", " + filter2_ptr_->filterName() + ")"; }
 
-  std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<AndFilter>(*this); }
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<AndFilter>(*this); }
 
 private:
 
@@ -250,11 +250,11 @@ public:
   explicit OrFilter(const VariantFilter& filter1, const VariantFilter& filter2) : filter1_ptr_(filter1.clone()), filter2_ptr_(filter2.clone()) {}
   ~OrFilter() override = default;
 
-  bool applyFilter(const VCFVariant& variant) const override { return filter1_ptr_->applyFilter(variant) or filter2_ptr_->applyFilter(variant); }
+  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return filter1_ptr_->applyFilter(variant) or filter2_ptr_->applyFilter(variant); }
 
-  std::string filterName() const final { return "OR(" + filter1_ptr_->filterName() + ", " + filter2_ptr_->filterName() + ")"; }
+  [[nodiscard]] std::string filterName() const final { return "OR(" + filter1_ptr_->filterName() + ", " + filter2_ptr_->filterName() + ")"; }
 
-  std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<OrFilter>(*this); }
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<OrFilter>(*this); }
 
 private:
 

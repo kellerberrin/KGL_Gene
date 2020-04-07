@@ -96,15 +96,15 @@ public:
   RuntimeProperties() = default;
   ~RuntimeProperties() = default;
 
-  bool readProperties(const std::string& properties_file);
+  [[nodiscard]] bool readProperties(const std::string& properties_file);
 
   void setWorkDirectory(const std::string& work_directory) { work_directory_ = work_directory; }
 
-  const std::string& workDirectory() const { return work_directory_; }
+  [[nodiscard]] const std::string& workDirectory() const { return work_directory_; }
 
-  bool getMixtureFile(std::string& mixture_file) const;
+  [[nodiscard]] bool getMixtureFile(std::string& mixture_file) const;
 
-  bool getPropertiesAuxFile(std::string &aux_file) const;
+  [[nodiscard]] bool getPropertiesAuxFile(std::string &aux_file) const;
 
 
   void getGenomeDBFiles(const std::string& organism,
@@ -113,10 +113,10 @@ public:
                         std::string& gaf_file,
                         std::string& tranlation_table) const;
 
-  bool getGenomeAuxFiles(const std::string& organism, std::vector<AuxFileInfo>& auxfiles) const;
+  [[nodiscard]] bool getGenomeAuxFiles(const std::string& organism, std::vector<AuxFileInfo>& auxfiles) const;
 
 
-  bool getActiveGenomes(std::vector<std::string>& genome_list) const;
+  [[nodiscard]] bool getActiveGenomes(std::vector<std::string>& genome_list) const;
 
   [[nodiscard]] std::vector<VCFFileInfo> getVCFFileVector() const;
 

@@ -52,7 +52,13 @@ size_t kgl::ParseVCFImpl::addThreadSafeGenomeVariant(std::shared_ptr<const Varia
   AutoMutex auto_mutex(mutex_); // Write Locked
 
   std::shared_ptr<UnphasedGenome> genome;
-  unphased_population_ptr_->getCreateGenome(variant_ptr->genomeId(), genome); // thread safe
+
+  if (not unphased_population_ptr_->getCreateGenome(variant_ptr->genomeId(), genome)) {
+
+    ExecEnv::log().error("ParseVCFImpl::addThreadSafeGenomeVariant; Could not add/create genome: {}", variant_ptr->genomeId());
+    return 0;
+
+  }
 
   if (not genome->addVariant(variant_ptr)) { // thread safe
 
@@ -79,9 +85,8 @@ void kgl::ParseVCFImpl::setupPopulationStructure(std::shared_ptr<const GenomeDat
   for (auto genome_id : getGenomeNames())  {
 
     std::shared_ptr<UnphasedGenome> genome_ptr = nullptr;
-    unphased_population_ptr_->getCreateGenome(genome_id, genome_ptr);
 
-    if (not genome_ptr) {
+    if (not unphased_population_ptr_->getCreateGenome(genome_id, genome_ptr)) {
 
       ExecEnv::log().critical("Could not create genome: {} in the unphased population", genome_id);
 

@@ -27,16 +27,16 @@ public:
   Codon(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr, ContigOffset_t codon_index);
   ~Codon() = default;
 
-  static ContigSize_t codonLength(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) {
+  [[nodiscard]] static ContigSize_t codonLength(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) {
 
     return static_cast<ContigSize_t>(sequence_ptr->length() / CODON_SIZE);
 
   }
 
-  CodingDNA5::Alphabet operator[](size_t index) const { return bases_[index]; };
+  [[nodiscard]] CodingDNA5::Alphabet operator[](size_t index) const { return bases_[index]; };
   void modifyBase(size_t index, CodingDNA5::Alphabet base);
 
-  std::string getSequenceAsString() const {
+  [[nodiscard]] std::string getSequenceAsString() const {
 
     std::string codon_string;
     codon_string = CodingDNA5::convertToChar(bases_[0]);
@@ -46,7 +46,7 @@ public:
 
   }
 
-  bool containsBaseN() const {
+  [[nodiscard]] bool containsBaseN() const {
 
     return bases_[0] == CodingDNA5::Alphabet::N
            or bases_[1] == CodingDNA5::Alphabet::N

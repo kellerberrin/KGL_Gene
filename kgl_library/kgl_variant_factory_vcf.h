@@ -21,9 +21,9 @@ public:
   VcfFactory() = default;
   ~VcfFactory() = default;
 
-  bool readParseVCFVariants(std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
-                            std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                            const std::string &vcf_file_name) const;
+  [[nodiscard]] bool readParseVCFVariants( std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
+                                           std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                           const std::string &vcf_file_name) const;
 
 private:
 

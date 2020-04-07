@@ -42,51 +42,51 @@ public:
   ContigFeatures& operator=(const ContigFeatures&) = default;
 
   // Add parsed features to the different feature structures.
-  bool addGeneExonFeature(std::shared_ptr<Feature>& feature_ptr);
-  bool addAuxFeature(std::shared_ptr<Feature>& feature_ptr);
+  [[nodiscard]] bool addGeneExonFeature(std::shared_ptr<Feature>& feature_ptr);
+  [[nodiscard]] bool addAuxFeature(std::shared_ptr<Feature>& feature_ptr);
 
   // false if not found.
-  bool findFeatureId(const FeatureIdent_t& feature_id,
-                     std::vector<std::shared_ptr<const Feature>>& feature_ptr_vec) const {
+  [[nodiscard]] bool findFeatureId( const FeatureIdent_t& feature_id,
+                                    std::vector<std::shared_ptr<const Feature>>& feature_ptr_vec) const {
     return gene_exon_features_.findFeatureId(feature_id, feature_ptr_vec);
   }
   // false if offset is not in a gene, else (true) returns a vector of ptrs to the genes.
-  bool findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const;
- 
-  const GeneMap& getGeneMap() const { return gene_exon_features_.geneMap(); }
+  [[nodiscard]] bool findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const;
+
+  [[nodiscard]] const GeneMap& getGeneMap() const { return gene_exon_features_.geneMap(); }
 
   // Return all Aux genome features in this contig.
-  const AuxContigFeatures& getAuxContigFeatures() const { return aux_contig_features_; }
+  [[nodiscard]] const AuxContigFeatures& getAuxContigFeatures() const { return aux_contig_features_; }
 
-  bool setTranslationTable(const std::string& table_name) { return coding_table_.settranslationTable(table_name); }
- 
-  std::string translationTableName() const { return coding_table_.translationTableName(); }
+  [[nodiscard]] bool setTranslationTable(const std::string& table_name) { return coding_table_.settranslationTable(table_name); }
 
-  const ContigId_t& contigId() const { return contig_id_; }
-  const DNA5SequenceContig& sequence() const { return *sequence_ptr_; }
-  std::shared_ptr<const DNA5SequenceContig> sequence_ptr() const { return sequence_ptr_; }
-  ContigSize_t contigSize() const { return sequence_ptr_->length(); }
+  [[nodiscard]] std::string translationTableName() const { return coding_table_.translationTableName(); }
+
+  [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
+  [[nodiscard]] const DNA5SequenceContig& sequence() const { return *sequence_ptr_; }
+  [[nodiscard]] std::shared_ptr<const DNA5SequenceContig> sequence_ptr() const { return sequence_ptr_; }
+  [[nodiscard]] ContigSize_t contigSize() const { return sequence_ptr_->length(); }
 
 
-  bool verifyDNACodingSequence(std::shared_ptr<const DNA5SequenceCoding> coding_dna_ptr) const;
-  bool verifyProteinSequence(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const;
-  ProteinSequenceAnalysis proteinSequenceAnalysis(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const;
+  [[nodiscard]] bool verifyDNACodingSequence(std::shared_ptr<const DNA5SequenceCoding> coding_dna_ptr) const;
+  [[nodiscard]] bool verifyProteinSequence(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const;
+  [[nodiscard]] ProteinSequenceAnalysis proteinSequenceAnalysis(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const;
   // Returns the protein sequence as the distance in amino acids between the start codon and stop codon.
   // No start and stop codon returns 0.
-  size_t proteinSequenceSize(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const;
+  [[nodiscard]] size_t proteinSequenceSize(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const;
 
   // Given a gene id and an mRNA (sequence id) return the CDS coding sequence.
-  bool getCodingSequence(const FeatureIdent_t& gene_id,
-                         const FeatureIdent_t& sequence_id,
-                         std::shared_ptr<const CodingSequence>& coding_sequence_ptr) const;
+  [[nodiscard]] bool getCodingSequence( const FeatureIdent_t& gene_id,
+                                        const FeatureIdent_t& sequence_id,
+                                        std::shared_ptr<const CodingSequence>& coding_sequence_ptr) const;
 
   // Given a CDS coding sequence, return the corresponding DNA base sequence (strand adjusted).
-  bool getDNA5SequenceCoding(const std::shared_ptr<const CodingSequence>& coding_sequence_ptr,
-                             std::shared_ptr<DNA5SequenceCoding>& coding_dna_ptr) const;
+  [[nodiscard]] bool getDNA5SequenceCoding( const std::shared_ptr<const CodingSequence>& coding_sequence_ptr,
+                                            std::shared_ptr<DNA5SequenceCoding>& coding_dna_ptr) const;
 
   // Generate Amino acid sequences using the table specified for this contig.
-  std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const;
-  AminoAcid::Alphabet getAminoAcid(const Codon& codon) const { return coding_table_.getAmino(codon); }
+  [[nodiscard]] std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const;
+  [[nodiscard]] AminoAcid::Alphabet getAminoAcid(const Codon& codon) const { return coding_table_.getAmino(codon); }
 
   // Wire-up the contig features
   void verifyFeatureHierarchy();
@@ -102,8 +102,8 @@ private:
   TranslateToAmino coding_table_;  // Amino Acid translation table, unique for contig (e.g. mitochondria)
 
   // Check all gene coding sequences for start and end codons and nonsense (intermediate stop codon) mutations.
-  bool verifyCodingSequences(const std::shared_ptr<const GeneFeature> gene_ptr,
-                             std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const;
+  [[nodiscard]] bool verifyCodingSequences( const std::shared_ptr<const GeneFeature> gene_ptr,
+                                            std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const;
 
 };
 
@@ -125,30 +125,30 @@ public:
   GenomeDatabase& operator=(const GenomeDatabase&) = default;
 
   // High level function creates a genome database.
-  static std::shared_ptr<GenomeDatabase> createGenomeDatabase(const RuntimeProperties& runtime_options,
-                                                              const GenomeId_t& organism);
+  [[nodiscard]] static std::shared_ptr<GenomeDatabase> createGenomeDatabase( const RuntimeProperties& runtime_options,
+                                                                             const GenomeId_t& organism);
   // Organism identifier
-  const GenomeId_t& genomeId() const { return _genome_id; }
+  [[nodiscard]] const GenomeId_t& genomeId() const { return _genome_id; }
 
   // Return false if contig already exists.
-  bool addContigSequence(const ContigId_t& contig, std::shared_ptr<DNA5SequenceContig> sequence_ptr);
+  [[nodiscard]] bool addContigSequence(const ContigId_t& contig, std::shared_ptr<DNA5SequenceContig> sequence_ptr);
   // Returns false if key not found.
-  bool getContigSequence(const ContigId_t& contig, std::shared_ptr<const ContigFeatures>& contig_ptr) const;
+  [[nodiscard]] bool getContigSequence(const ContigId_t& contig, std::shared_ptr<const ContigFeatures>& contig_ptr) const;
 
   void setTranslationTable(const std::string& table);
 
-  const GenomeContigMap& getMap() const { return genome_sequence_map_; }
+  [[nodiscard]] const GenomeContigMap& getMap() const { return genome_sequence_map_; }
 
-  size_t contigCount() const { return getMap().size(); }
+  [[nodiscard]] size_t contigCount() const { return getMap().size(); }
 
-  const GeneOntology& geneOntology() const { return gene_ontology_; }
+  [[nodiscard]] const GeneOntology& geneOntology() const { return gene_ontology_; }
 
   // Given a gene sequence offset with 5' start = 0 (strand adjusted), returns a strand adjusted offset within the contig.
-  bool contigOffset( const ContigId_t& contig_id,
-                     const FeatureIdent_t& gene_id,
-                     const FeatureIdent_t& sequence_id,
-                     ContigOffset_t sequence_offset,
-                     ContigOffset_t& contig_offset) const;
+  [[nodiscard]] bool contigOffset( const ContigId_t& contig_id,
+                                   const FeatureIdent_t& gene_id,
+                                   const FeatureIdent_t& sequence_id,
+                                   ContigOffset_t sequence_offset,
+                                   ContigOffset_t& contig_offset) const;
 
 private:
 
@@ -163,14 +163,14 @@ private:
   // The gaf file is optional (empty string if omitted)
   // The translation Amino Acid table is optional (empty string if omitted).
   // Note that different translation tables can be specified for individual contigs.
-  static std::shared_ptr<GenomeDatabase> createGenomeDatabase(const GenomeId_t& organism,
-                                                              const std::string& fasta_file,
-                                                              const std::string& gff_file,
-                                                              const std::string& gaf_file,
-                                                              const std::string& translation_table);
+  [[nodiscard]] static std::shared_ptr<GenomeDatabase> createGenomeDatabase( const GenomeId_t& organism,
+                                                                             const std::string& fasta_file,
+                                                                             const std::string& gff_file,
+                                                                             const std::string& gaf_file,
+                                                                             const std::string& translation_table);
 
   // Reads auxiliary genome information about the database. Promoter sites, motifs, tss etc.
-  bool readGenomeAuxiliary(const RuntimeProperties& runtime_options);
+  [[nodiscard]] bool readGenomeAuxiliary(const RuntimeProperties& runtime_options);
   // Read the auxillary genome database features.
   void readAuxillary(const std::string& tss_gff_file);
 
@@ -194,11 +194,11 @@ public:
   GenomeCollection& operator=(const GenomeCollection&) = default;
 
   // High level function creates a collection of genomes.
-  static std::shared_ptr<GenomeCollection> createGenomeCollection(const RuntimeProperties& runtime_options);
+  [[nodiscard]] static std::shared_ptr<GenomeCollection> createGenomeCollection(const RuntimeProperties& runtime_options);
 
   // Returns false if the genome does not exist.
   [[nodiscard]] std::shared_ptr<const GenomeDatabase> getGenome(const std::string& GenomeID) const;
-  bool getGenome(const GenomeId_t& genome_id, std::shared_ptr<const GenomeDatabase>& genome_variant) const;
+  [[nodiscard]] bool getGenome(const GenomeId_t& genome_id, std::shared_ptr<const GenomeDatabase>& genome_variant) const;
 
   [[nodiscard]] const GenomeMap& getMap() const { return genome_map_; }
 
@@ -208,7 +208,7 @@ private:
   GenomeMap genome_map_;
 
  // Returns false if the genome already exists.
-  bool addGenome(std::shared_ptr<const GenomeDatabase> genome_database);
+  [[nodiscard]] bool addGenome(std::shared_ptr<const GenomeDatabase> genome_database);
 
 };
 

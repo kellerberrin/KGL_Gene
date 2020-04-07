@@ -101,7 +101,12 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Gene
     if (not coding_table_.checkStartCodon(coding_sequence_ptr)) {
 
       std::vector<std::string> description_vec;
-      gene_ptr->getAttributes().getDescription(description_vec);
+      if (not gene_ptr->getAttributes().getDescription(description_vec)) {
+
+        ExecEnv::log().error("Cannot get description vector for Gene: {}", gene_ptr->id());
+        description_vec.clear();
+
+      }
 
       if (description_vec.empty()) {
 
@@ -121,7 +126,13 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Gene
     if (not coding_table_.checkStopCodon(coding_sequence_ptr)) {
 
       std::vector<std::string> description_vec;
-      gene_ptr->getAttributes().getDescription(description_vec);
+
+      if (not gene_ptr->getAttributes().getDescription(description_vec)) {
+
+        ExecEnv::log().error("Cannot get description vector for Gene: {}", gene_ptr->id());
+        description_vec.clear();
+
+      }
 
       if (description_vec.empty()) {
 
@@ -143,7 +154,12 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Gene
     if (nonsense_index > 0) {
 
       std::vector<std::string> description_vec;
-      gene_ptr->getAttributes().getDescription(description_vec);
+      if (not gene_ptr->getAttributes().getDescription(description_vec)) {
+
+        ExecEnv::log().error("Cannot get description vector for Gene: {}", gene_ptr->id());
+        description_vec.clear();
+
+      }
 
       if (description_vec.empty()) {
 

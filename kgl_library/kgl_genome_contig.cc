@@ -18,9 +18,7 @@ namespace kgl = kellerberrin::genome;
 
 bool kgl::ContigFeatures::addGeneExonFeature(std::shared_ptr<kgl::Feature>& feature_ptr) {
 
-  gene_exon_features_.checkAddFeature(feature_ptr);
-
-  return true;
+  return gene_exon_features_.checkAddFeature(feature_ptr);
 
 }
 

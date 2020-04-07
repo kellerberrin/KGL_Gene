@@ -18,15 +18,15 @@ public:
   ~SequenceComplexity() = delete;
 
   template<typename Alphabet>
-  static size_t kmerCount(std::shared_ptr<const AlphabetSequence<Alphabet>> sequence,
+  [[nodiscard]] static size_t kmerCount(std::shared_ptr<const AlphabetSequence<Alphabet>> sequence,
                           std::shared_ptr<const AlphabetSequence<Alphabet>> kmer);
 
-  static double relativeCpGIslands(std::shared_ptr<const DNA5SequenceLinear> sequence);
+  [[nodiscard]] static double relativeCpGIslands(std::shared_ptr<const DNA5SequenceLinear> sequence);
   // Calculate Entropy
   template<typename Alphabet>
-  static double alphabetEntropy(std::shared_ptr<const AlphabetSequence<Alphabet>> sequence);
+  [[nodiscard]] static double alphabetEntropy(std::shared_ptr<const AlphabetSequence<Alphabet>> sequence);
   // Different for different sequence lengths.
-  static size_t complexityLempelZiv(std::shared_ptr<const DNA5SequenceLinear> sequence);
+  [[nodiscard]] static size_t complexityLempelZiv(std::shared_ptr<const DNA5SequenceLinear> sequence);
   // Calculate Nucleotide content.
   static void proportionNucleotides(std::shared_ptr<const DNA5SequenceLinear> sequence,
                                     double& A_prop,

@@ -38,24 +38,24 @@ public:
 
   ~PropertyTree(); // defined in implementation file
 
-  bool readProperties(const std::string& properties_file);
+  [[nodiscard]] bool readProperties(const std::string& properties_file);
 
-  bool getProperty(const std::string& property_name, std::string& property) const;
+  [[nodiscard]] bool getProperty(const std::string& property_name, std::string& property) const;
 
-  bool getOptionalProperty(const std::string& property_name, std::string& property) const;
+  [[nodiscard]] bool getOptionalProperty(const std::string& property_name, std::string& property) const;
 
-  bool getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const;
+  [[nodiscard]] bool getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const;
 
-  bool getPropertyTreeVector(const std::string& property_name, std::vector<SubPropertyTree>& property_tree_vector) const;
+  [[nodiscard]] bool getPropertyTreeVector(const std::string& property_name, std::vector<SubPropertyTree>& property_tree_vector) const;
 
-  bool getProperty(const std::string& property_name, size_t& property) const;
+  [[nodiscard]] bool getProperty(const std::string& property_name, size_t& property) const;
 
-  bool getFileProperty(const std::string& property_name, const std::string& work_directory, std::string& file_path) const;
+  [[nodiscard]] bool getFileProperty(const std::string& property_name, const std::string& work_directory, std::string& file_path) const;
 
-  bool getOptionalFileProperty(const std::string& property_name, const std::string& work_directory, std::string& file_path) const;
+  [[nodiscard]] bool getOptionalFileProperty(const std::string& property_name, const std::string& work_directory, std::string& file_path) const;
 
   // Checks for the existence of a property.
-  bool checkProperty(const std::string& property_name) const;
+  [[nodiscard]] bool checkProperty(const std::string& property_name) const;
 
   void treeTraversal() const;
 

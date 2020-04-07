@@ -105,9 +105,14 @@ bool kgl::FineStructureAnalysis::generatePhaseFile(const std::string& Filename,
     for (auto genome : snp_population_ptr->getMap()) {
 
       std::shared_ptr<ContigVariant> contig_variant_ptr;
-      genome.second->getContigVariant(contig, contig_variant_ptr);
 
-      if (not contig_variant_ptr) continue; // continue on to next genome.
+      if (not genome.second->getContigVariant(contig, contig_variant_ptr)) {
+
+        continue; // continue on to next genome.
+
+      }
+
+      if (not contig_variant_ptr)
 
       ploidy = contig_variant_ptr->getVector().size();
 
@@ -194,8 +199,7 @@ bool kgl::FineStructureAnalysis::generatePhaseFile(const std::string& Filename,
     for (auto genome : snp_population_ptr->getMap()) {
 
       std::shared_ptr<ContigVariant> contig_variant_ptr;
-      genome.second->getContigVariant(contig, contig_variant_ptr);
-      if (not contig_variant_ptr) {
+      if (not genome.second->getContigVariant(contig, contig_variant_ptr)) {
 
         ExecEnv::log().error("FineStructureAnalysis::generatePhaseFile; Genome: {} does not contain contig: {}",
                              genome.first, contig);

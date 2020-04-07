@@ -195,9 +195,13 @@ std::shared_ptr<kgl::UnphasedGenome> kgl::UnphasedGenome::deepCopy() const {
 
   std::shared_ptr<UnphasedGenome> genome_copy(std::make_shared<UnphasedGenome>(genomeId()));
 
-  for (auto contig :  getMap()) {
+  for (auto const& [contig_id, contig_ptr] :  getMap()) {
 
-    genome_copy->addContig(contig.second->deepCopy());
+    if (not genome_copy->addContig(contig_ptr->deepCopy())) {
+
+      ExecEnv::log().critical("UnphasedGenome::deepCopy(), Genome: {}, Unable to deepcopy Contig: {}", genomeId(), contig_id);
+
+    }
 
   }
 
@@ -297,7 +301,12 @@ std::shared_ptr<kgl::UnphasedGenome> kgl::UnphasedGenome::filterVariants(const k
   for (const auto& contig_variant : getMap()) {
 
     std::shared_ptr<kgl::UnphasedContig> filtered_contig = contig_variant.second->filterVariants(filter);
-    filtered_genome_ptr->addContig(filtered_contig);
+    if (not filtered_genome_ptr->addContig(filtered_contig)) {
+
+      ExecEnv::log().critical("UnphasedGenome::filterVariants(), Genome: {}, Unable to inserted filtered Contig: {}", genomeId(), filtered_contig->contigId());
+
+    }
+
     ExecEnv::log().vinfo("Contig: {} has: {} filtered variants", contig_variant.first, filtered_contig->variantCount());
 
   }

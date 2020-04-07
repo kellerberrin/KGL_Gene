@@ -27,13 +27,13 @@ public:
   SequenceCompare() = default;
   virtual ~SequenceCompare() = default;
 
-  virtual std::string compareType() const = 0;
+  [[nodiscard]] virtual std::string compareType() const = 0;
 
 protected:
 
-  virtual CompareScore_t compareImpl(std::shared_ptr<const VirtualSequence> sequenceA,
-                                     std::shared_ptr<const VirtualSequence> sequenceB,
-                                     std::string& compare_str) const = 0;
+  [[nodiscard]]virtual CompareScore_t compareImpl( std::shared_ptr<const VirtualSequence> sequenceA,
+                                                   std::shared_ptr<const VirtualSequence> sequenceB,
+                                                   std::string& compare_str) const = 0;
 
 };
 
@@ -88,17 +88,17 @@ public:
   DNASequenceCompare() = default;
   ~DNASequenceCompare() override = default;
 
-  CompareScore_t compare(std::shared_ptr<const DNA5SequenceLinear> sequenceA,
-                         std::shared_ptr<const DNA5SequenceLinear> sequenceB,
-                         std::string& compare_str) const {
+  [[nodiscard]] CompareScore_t compare( std::shared_ptr<const DNA5SequenceLinear> sequenceA,
+                                        std::shared_ptr<const DNA5SequenceLinear> sequenceB,
+                                        std::string& compare_str) const {
 
     return compareImpl(sequenceA, sequenceB, compare_str);
 
   }
 
-  CompareScore_t compare(std::shared_ptr<const DNA5SequenceCoding> sequenceA,
-                         std::shared_ptr<const DNA5SequenceCoding> sequenceB,
-                         std::string& compare_str) const {
+  [[nodiscard]] CompareScore_t compare( std::shared_ptr<const DNA5SequenceCoding> sequenceA,
+                                        std::shared_ptr<const DNA5SequenceCoding> sequenceB,
+                                        std::string& compare_str) const {
 
     return compareImpl(sequenceA, sequenceB, compare_str);
 
@@ -124,9 +124,9 @@ public:
   ~AminoSequenceCompare() override = default;
 
 
-  CompareDistance_t distance(std::shared_ptr<const AminoSequence> sequenceA,
-                             std::shared_ptr<const AminoSequence> sequenceB,
-                             std::string& compare_str) const {
+  [[nodiscard]] CompareDistance_t distance( std::shared_ptr<const AminoSequence> sequenceA,
+                                            std::shared_ptr<const AminoSequence> sequenceB,
+                                            std::string& compare_str) const {
 
     return compareImpl(sequenceA, sequenceB, compare_str);
 
@@ -224,13 +224,13 @@ public:
   MyerHirschbergGlobal() = default;
   virtual ~MyerHirschbergGlobal() = default;
 
-  std::string compareType() const override { return "MyerHirschberg Global"; }
+  [[nodiscard]] std::string compareType() const override { return "MyerHirschberg Global"; }
 
 private:
 
-  CompareScore_t compareImpl(std::shared_ptr<const VirtualSequence> sequenceA,
-                             std::shared_ptr<const VirtualSequence> sequenceB,
-                             std::string& compare_str) const override {
+  [[nodiscard]] CompareScore_t compareImpl( std::shared_ptr<const VirtualSequence> sequenceA,
+                                            std::shared_ptr<const VirtualSequence> sequenceB,
+                                            std::string& compare_str) const override {
 
     return SequenceComparison().MyerHirschbergGlobal(sequenceA->getSequenceAsString(),
                                                        sequenceB->getSequenceAsString(),
@@ -250,13 +250,13 @@ public:
   MyerHirschbergLocal() = default;
   virtual ~MyerHirschbergLocal() = default;
 
-  std::string compareType() const override { return "MyerHirschberg Local"; }
+  [[nodiscard]] std::string compareType() const override { return "MyerHirschberg Local"; }
 
 private:
 
-  CompareScore_t compareImpl(std::shared_ptr<const VirtualSequence> sequenceA,
-                             std::shared_ptr<const VirtualSequence> sequenceB,
-                             std::string& compare_str) const override {
+  [[nodiscard]] CompareScore_t compareImpl( std::shared_ptr<const VirtualSequence> sequenceA,
+                                            std::shared_ptr<const VirtualSequence> sequenceB,
+                                            std::string& compare_str) const override {
 
     return SequenceComparison().MyerHirschbergLocal(sequenceA->getSequenceAsString(),
                                                       sequenceB->getSequenceAsString(),
@@ -275,13 +275,13 @@ public:
   DNALocalAffineGap() = default;
   virtual ~DNALocalAffineGap() = default;
 
-  std::string compareType() const override { return "DNALocalAffineGap"; }
+  [[nodiscard]] std::string compareType() const override { return "DNALocalAffineGap"; }
 
 private:
 
-  CompareScore_t compareImpl(std::shared_ptr<const VirtualSequence> sequenceA,
-                             std::shared_ptr<const VirtualSequence> sequenceB,
-                             std::string& compare_str) const override {
+  [[nodiscard]] CompareScore_t compareImpl( std::shared_ptr<const VirtualSequence> sequenceA,
+                                            std::shared_ptr<const VirtualSequence> sequenceB,
+                                            std::string& compare_str) const override {
 
     return SequenceComparison().DNALocalAffineGap(sequenceA->getSequenceAsString(),
                                                     sequenceB->getSequenceAsString(),

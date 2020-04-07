@@ -26,15 +26,15 @@ public:
   AdjalleyTSSFeatures(const AdjalleyTSSFeatures&) = default;
   ~AdjalleyTSSFeatures() override = default;
 
-  const std::string featureType() const override { return ADJALLEY_TSS_FEATURE_; }
+  [[nodiscard]] const std::string featureType() const override { return ADJALLEY_TSS_FEATURE_; }
 
   void setupVerifyHierarchy(const StructuredFeatures& gene_super_features);
 
   // Checks the feature type before adding (must be TSS).
-  bool checkAddFeature(std::shared_ptr<Feature>& feature_ptr) override;
+  [[nodiscard]] bool checkAddFeature(std::shared_ptr<Feature>& feature_ptr) override;
 
   // Return all TSS features in this contig.
-  TSSVector getTSSVector() const;
+  [[nodiscard]] TSSVector getTSSVector() const;
 
   static constexpr const char* ADJALLEY_TSS_FEATURE_{"AdjalleyTSSFeatures"};
 

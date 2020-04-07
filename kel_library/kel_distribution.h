@@ -34,7 +34,7 @@ public:
 
   RandomEntropySource& operator=(const RandomEntropySource&) = delete;
 
-  EntropyGenerator& generator() const { return generator_; }
+  [[nodiscard]] EntropyGenerator& generator() const { return generator_; }
 
 private:
 
@@ -57,13 +57,13 @@ class DeterministicEntropySource
 
 public:
 
-  DeterministicEntropySource(size_t seed = 1111) : generator_(seed) {}
+  explicit DeterministicEntropySource(size_t seed = 1111) : generator_(seed) {}
   DeterministicEntropySource(const DeterministicEntropySource&) = delete;
   virtual ~DeterministicEntropySource() = default;
 
-  DeterministicEntropySource& operator=(const DeterministicEntropySource&) = delete;
+  [[nodiscard]] DeterministicEntropySource& operator=(const DeterministicEntropySource&) = delete;
 
-  EntropyGenerator& generator() const { return generator_; }
+  [[nodiscard]] EntropyGenerator& generator() const { return generator_; }
 
 private:
 
@@ -105,7 +105,7 @@ public:
 
   UniformRealDistribution& operator=(const UniformRealDistribution&) = delete;
 
-  double random(EntropyGenerator &source) const { return uniform_real_(source); }
+  [[nodiscard]] double random(EntropyGenerator &source) const { return uniform_real_(source); }
 
 private:
 
@@ -142,7 +142,7 @@ public:
   UniformIntegerDistribution(size_t lower_bound, size_t upper_bound) : uniform_integer_(lower_bound, upper_bound) {}
   virtual ~UniformIntegerDistribution() = default;
 
-  size_t random(EntropyGenerator &source) const { return uniform_integer_(source); }
+  [[nodiscard]] size_t random(EntropyGenerator &source) const { return uniform_integer_(source); }
 
 private:
 
@@ -167,9 +167,9 @@ public:
 
   NormalDistribution& operator=(NormalDistribution&) = delete;
 
-  double random(EntropyGenerator &source) const { return normal_real_(source); }
+  [[nodiscard]] double random(EntropyGenerator &source) const { return normal_real_(source); }
 
-  static double pdf(double x, double mean, double std_dev);
+  [[nodiscard]] static double pdf(double x, double mean, double std_dev);
 
 private:
 
@@ -209,13 +209,13 @@ public:
 
   GammaDistribution& operator=(GammaDistribution&) = delete;
 
-  double random(EntropyGenerator &source) const {  return x_(source); }
+  [[nodiscard]] double random(EntropyGenerator &source) const {  return x_(source); }
 
-  double pdf(double x) const;
+  [[nodiscard]] double pdf(double x) const;
 
-  double cdf(double x) const;
+  [[nodiscard]] double cdf(double x) const;
 
-  double quantile(double p) const;
+  [[nodiscard]] double quantile(double p) const;
 
 private:
 
@@ -241,15 +241,15 @@ public:
 
   BetaDistribution& operator=(BetaDistribution&) = delete;
 
-  double random(EntropyGenerator &source) const {  double x = x_(source);  return x / (x + y_(source)); }
+  [[nodiscard]] double random(EntropyGenerator &source) const {  double x = x_(source);  return x / (x + y_(source)); }
 
-  static double logInverseBetaFunction(double a, double b);
+  [[nodiscard]] static double logInverseBetaFunction(double a, double b);
 
-  static double logPartialPdf(double x, double a, double b);
+  [[nodiscard]] static double logPartialPdf(double x, double a, double b);
 
-  static double logPdf(double x, double a, double b);
+  [[nodiscard]] static double logPdf(double x, double a, double b);
 
-  static double pdf(double x, double a, double b);
+  [[nodiscard]] static double pdf(double x, double a, double b);
 
 
 private:
@@ -273,13 +273,13 @@ public:
   ~BetaBinomialDistribution() = delete;
 
   // Uses boost beta functions.
-  static double pdf(size_t n, size_t k, double alpha, double beta);
+  [[nodiscard]] static double pdf(size_t n, size_t k, double alpha, double beta);
   // Uses boost lgamma functions.
-  static double logPdf(double n, double k, double alpha, double beta);
+  [[nodiscard]] static double logPdf(double n, double k, double alpha, double beta);
   // No binomial coefficient term.
-  static double logPartialPdf(double n, double k, double alpha, double beta);
+  [[nodiscard]] static double logPartialPdf(double n, double k, double alpha, double beta);
   // No binomial coefficient term.
-  static double partialPdf(double n, double k, double alpha, double beta);
+  [[nodiscard]] static double partialPdf(double n, double k, double alpha, double beta);
 
 };
 
@@ -299,9 +299,9 @@ public:
 
   BinomialDistribution &operator=(BinomialDistribution &) = delete;
 
-  size_t random(EntropyGenerator &source) const { return binomial_integer_(source); }
+  [[nodiscard]] size_t random(EntropyGenerator &source) const { return binomial_integer_(source); }
 
-  static double pdf(size_t n, size_t k, double prob_success);
+  [[nodiscard]] static double pdf(size_t n, size_t k, double prob_success);
 
 private:
 

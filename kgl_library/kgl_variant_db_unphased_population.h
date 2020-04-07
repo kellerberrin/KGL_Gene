@@ -32,28 +32,28 @@ public:
   UnphasedPopulation& operator=(const UnphasedPopulation&) = delete; // Use deep copy.
 
   // Use this to copy the object.
-  std::shared_ptr<UnphasedPopulation> deepCopy() const;
+  [[nodiscard]] std::shared_ptr<UnphasedPopulation> deepCopy() const;
 
   // Create the genome variant if it does not exist.
-  bool getCreateGenome(const GenomeId_t& genome_id, std::shared_ptr<UnphasedGenome>& genome);
+  [[nodiscard]] bool getCreateGenome(const GenomeId_t& genome_id, std::shared_ptr<UnphasedGenome>& genome);
 
-  size_t variantCount() const;
+  [[nodiscard]] size_t variantCount() const;
   void popStatistics() const; // output to logger
-  std::vector<GenomeId_t> genomeList() const;
+  [[nodiscard]] std::vector<GenomeId_t> genomeList() const;
 
-  std::shared_ptr<UnphasedPopulation> filterVariants(const VariantFilter& filter) const;
+  [[nodiscard]] std::shared_ptr<UnphasedPopulation> filterVariants(const VariantFilter& filter) const;
 
-  const UnphasedGenomeMap& getMap() const { return genome_map_; }
+  [[nodiscard]] const UnphasedGenomeMap& getMap() const { return genome_map_; }
 
   void clear() { genome_map_.clear(); }
 
   // Generate phasing statitics.
-  bool genomePhasingStats(const GenomeId_t& genome_id,
-                          size_t& heterozygous,
-                          size_t& homozygous,
-                          size_t& singleheterozygous) const;
+  [[nodiscard]] bool genomePhasingStats( const GenomeId_t& genome_id,
+                                         size_t& heterozygous,
+                                         size_t& homozygous,
+                                         size_t& singleheterozygous) const;
 
-  bool addGenome(std::shared_ptr<UnphasedGenome> genome);
+  [[nodiscard]] bool addGenome(std::shared_ptr<UnphasedGenome> genome);
 
 private:
 
@@ -65,8 +65,8 @@ private:
 
 }   // end namespace
 
-std::ostream& operator<<(std::ostream& ostream, std::shared_ptr<const kellerberrin::genome::UnphasedPopulation> unphased_ptr);
-std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::UnphasedPopulation& unphased);
+[[nodiscard]] std::ostream& operator<<(std::ostream& ostream, std::shared_ptr<const kellerberrin::genome::UnphasedPopulation> unphased_ptr);
+[[nodiscard]] std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::UnphasedPopulation& unphased);
 
 
 #endif //KGL_VARIANT_DB_UNPHASED_POPULATION_H

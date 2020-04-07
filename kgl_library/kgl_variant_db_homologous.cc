@@ -107,7 +107,12 @@ std::shared_ptr<kgl::HomologousVariant> kgl::HomologousVariant::deepCopy() const
 
   for (auto variant : getMap()) {
 
-    copy->addVariant(variant.second);
+    if (not copy->addVariant(variant.second)) {
+
+      ExecEnv::log().warn("HomologousVariant::deepCopy() fails, could not add variant:\n{}",
+                          variant.second->output(' ', VariantOutputIndex::START_0_BASED, false));
+
+    }
 
   }
 

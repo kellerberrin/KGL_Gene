@@ -24,9 +24,13 @@ std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::deepCopy() con
 
   std::shared_ptr<UnphasedPopulation> population_copy(std::make_shared<UnphasedPopulation>());
 
-  for (auto const& genome : getMap()) {
+  for (auto const& [genome_id, genome_ptr] : getMap()) {
 
-    population_copy->addGenome(genome.second->deepCopy());
+    if (not population_copy->addGenome(genome_ptr->deepCopy())) {
+
+      ExecEnv::log().critical("UnphasedPopulation::deepCopy(), probable duplicate, could not add genome: {} to the population", genome_id);
+
+    }
 
   }
 
@@ -57,7 +61,7 @@ bool kgl::UnphasedPopulation::getCreateGenome(const GenomeId_t& genome_id,
 
     }
 
-    return result.second;
+    return true;
 
   }
 
@@ -216,11 +220,16 @@ std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::filterVariants
 
   std::shared_ptr<kgl::UnphasedPopulation> filtered_population_ptr(std::make_shared<kgl::UnphasedPopulation>());
 
-  for (const auto& genome_variant : getMap()) {
+  for (const auto& [genome_id, genome_ptr] : getMap()) {
 
-    std::shared_ptr<kgl::UnphasedGenome> filtered_genome_ptr = genome_variant.second->filterVariants(filter);
-    filtered_population_ptr->addGenome(filtered_genome_ptr);
-    ExecEnv::log().vinfo("Genome: {} has: {} filtered variants", genome_variant.first, filtered_genome_ptr->variantCount());
+    std::shared_ptr<kgl::UnphasedGenome> filtered_genome_ptr = genome_ptr->filterVariants(filter);
+    if (not filtered_population_ptr->addGenome(filtered_genome_ptr)) {
+
+      ExecEnv::log().critical("UnphasedPopulation::filterVariants(), could not add filtered genome: {} to the population", genome_ptr->genomeId());
+
+    }
+
+    ExecEnv::log().vinfo("Genome: {} has: {} filtered variants", genome_id, filtered_genome_ptr->variantCount());
 
   }
 

@@ -32,7 +32,12 @@ bool kgl::ParseVCFMiscImpl::parseVcfHeader(std::shared_ptr<const GenomeDatabase>
 
       std::map<std::string, std::string> item_map;
       std::string value = seqan::toCString(header[idx].value);
-      tokenizeVcfHeaderKeyValues(value, item_map);
+
+      if (not tokenizeVcfHeaderKeyValues(value, item_map)) {
+
+        ExecEnv::log().warn("VCF header. Cannot tokenize VCF file header string: {}", value);
+
+      }
 
       auto id_result = item_map.find(ID_KEY_);
       auto length_result = item_map.find(CONTIG_LENGTH_KEY_);
@@ -69,7 +74,12 @@ bool kgl::ParseVCFMiscImpl::parseVcfHeader(std::shared_ptr<const GenomeDatabase>
 
       std::map<std::string, std::string> item_map;
       std::string value = seqan::toCString(header[idx].value);
-      tokenizeVcfHeaderKeyValues(value, item_map);
+
+      if (not tokenizeVcfHeaderKeyValues(value, item_map)) {
+
+        ExecEnv::log().warn("VCF header. Cannot tokenize VCF file header string: {}", value);
+
+      }
 
       auto id_result = item_map.find(ID_KEY_);
 

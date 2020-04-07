@@ -61,11 +61,11 @@ public:
 
   void addGafRecord(GAFRecord gaf_record);
 
-  const FeatureIdent_t& gene_id() const { return gene_id_; }
-  const std::string& symbolicReference() const { return symbolic_ref_;	}
-  const std::string& description() const { return description_; }
-  const std::string& altSymbolicReference() const { return alt_symbolic_ref_; }
-  const GafGoMap& goRecords() const { return go_records_; }
+  [[nodiscard]] const FeatureIdent_t& gene_id() const { return gene_id_; }
+  [[nodiscard]] const std::string& symbolicReference() const { return symbolic_ref_;	}
+  [[nodiscard]] const std::string& description() const { return description_; }
+  [[nodiscard]] const std::string& altSymbolicReference() const { return alt_symbolic_ref_; }
+  [[nodiscard]] const GafGoMap& goRecords() const { return go_records_; }
 
 private:
 

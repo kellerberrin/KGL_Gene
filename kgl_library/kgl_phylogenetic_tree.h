@@ -35,11 +35,11 @@ public:
   // Function to tag the nodes. Override as necessary.
   virtual void writeNode(std::ostream& outfile) const = 0;
   // Pure Virtual calculates the distance between nodes.
-  virtual DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const = 0;
+  [[nodiscard]] virtual DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const = 0;
   // Two identical distance node objects (same const void*) have zero distance.
   // This function is only re-defined and used if the distance metric needs to set a particular
   // condition for a zero distance. Most distance metrics will not need to re-define this function.
-  virtual bool zeroDistance(std::shared_ptr<const VirtualDistanceNode> node) const;
+  [[nodiscard]] virtual bool zeroDistance(std::shared_ptr<const VirtualDistanceNode> node) const;
 
 private:
 

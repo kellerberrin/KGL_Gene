@@ -34,41 +34,41 @@ public:
   ~GenomeAuxData() = default;
 
 // Convenience function splits the phased populations into different countries (preferred genomes only).
-  static std::vector<CountryPair> getCountries(const std::string& aux_file, std::shared_ptr<const PhasedPopulation> population_ptr);
+  [[nodiscard]] static std::vector<CountryPair> getCountries(const std::string& aux_file, std::shared_ptr<const PhasedPopulation> population_ptr);
 
-  bool readParseAuxData(const std::string& aux_file_name);
+  [[nodiscard]] bool readParseAuxData(const std::string& aux_file_name);
 
-  std::string locationDate(const GenomeId_t& genome_name) const;
+  [[nodiscard]] std::string locationDate(const GenomeId_t& genome_name) const;
 
-  GenomeId_t source(const GenomeId_t& genome_name) const;
+  [[nodiscard]] GenomeId_t source(const GenomeId_t& genome_name) const;
 
-  bool isFieldSample(const GenomeId_t& genome_name) const;
+  [[nodiscard]] bool isFieldSample(const GenomeId_t& genome_name) const;
 
-  bool isPreferredSample(const GenomeId_t& genome_name) const;
+  [[nodiscard]] bool isPreferredSample(const GenomeId_t& genome_name) const;
 
-  bool locationDate(const std::string& genome_name,
-                    std::string& country,
-                    std::string& location,
-                    std::string& year) const;
+  [[nodiscard]] bool locationDate( const std::string& genome_name,
+                                   std::string& country,
+                                   std::string& location,
+                                   std::string& year) const;
 
-  const AuxSampleMap& getMap() const { return aux_sample_information_; }
+  [[nodiscard]] const AuxSampleMap& getMap() const { return aux_sample_information_; }
 
-  std::vector<std::string> countryList() const;
-  std::vector<GenomeId_t> getCountry(const std::string& country) const;
-  std::vector<GenomeId_t> getFieldSamples() const;
-  std::vector<GenomeId_t> getPreferredSamples() const;
+  [[nodiscard]] std::vector<std::string> countryList() const;
+  [[nodiscard]] std::vector<GenomeId_t> getCountry(const std::string& country) const;
+  [[nodiscard]] std::vector<GenomeId_t> getFieldSamples() const;
+  [[nodiscard]] std::vector<GenomeId_t> getPreferredSamples() const;
 
 private:
 
   AuxAttributeVector aux_data_header_;  // Always assumed to be the first line (uppercase, query case conversion automatic).
   AuxSampleMap aux_sample_information_;
 
-  bool parseHeader(const std::string& record_str);
-  bool parseDataline(const std::string& record_str);
-  bool tokenize(const std::string& parse_text, AuxAttributeVector& attribute_vector);
-  bool fieldOffset(const std::string& field_name, size_t& field_offset) const;
-  std::string attributeValue(AuxAttributeVector& attribute_vector, const std::string& attribute_name) const;
-  bool getGenomeAttributes(const std::string& genome_name, AuxAttributeVector& attribute_vector) const;
+  [[nodiscard]] bool parseHeader(const std::string& record_str);
+  [[nodiscard]] bool parseDataline(const std::string& record_str);
+  [[nodiscard]] bool tokenize(const std::string& parse_text, AuxAttributeVector& attribute_vector);
+  [[nodiscard]] bool fieldOffset(const std::string& field_name, size_t& field_offset) const;
+  [[nodiscard]] std::string attributeValue(AuxAttributeVector& attribute_vector, const std::string& attribute_name) const;
+  [[nodiscard]] bool getGenomeAttributes(const std::string& genome_name, AuxAttributeVector& attribute_vector) const;
 
   constexpr static const char COMMENT = '#';
   constexpr static const char* FIELD_SAMPLE = "IsFieldSample";

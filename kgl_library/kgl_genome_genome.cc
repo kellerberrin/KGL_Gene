@@ -184,9 +184,13 @@ void kgl::GenomeDatabase::setTranslationTable(const std::string& table) {
 
   ExecEnv::log().info("GenomeDatabase::setTranslationTable; All contigs set to Amino translation table: {}", table);
 
-  for (auto contig_pair : genome_sequence_map_) {
+  for (auto [contig_id, contig_ptr] : genome_sequence_map_) {
 
-    contig_pair.second->setTranslationTable(table);
+    if (not contig_ptr->setTranslationTable(table)) {
+
+      ExecEnv::log().error("setTranslationTable(), Could not set translation table: {} for contig: {}", table, contig_id);
+
+    }
 
   }
 
@@ -277,7 +281,11 @@ std::shared_ptr<const kgl::GenomeDatabase> kgl::GenomeCollection::getGenome(cons
 std::shared_ptr<kgl::GenomeCollection> kgl::GenomeCollection::createGenomeCollection(const RuntimeProperties& runtime_options) {
 
   std::vector<std::string> genome_list;
-  runtime_options.getActiveGenomes(genome_list);
+  if (not runtime_options.getActiveGenomes(genome_list)) {
+
+    ExecEnv::log().error("GenomeCollection::createGenomeCollection; Problem retrieving runtime genome list");
+
+  }
 
   std::shared_ptr<kgl::GenomeCollection> genome_collection(std::make_shared<kgl::GenomeCollection>());
 

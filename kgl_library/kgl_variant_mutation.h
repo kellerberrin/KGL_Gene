@@ -34,20 +34,20 @@ public:
   ~VariantMutation() = default;
 
   // The coding variants in the variant_map are used to mutate the dna_sequence.
-  bool mutateDNA(const OffsetVariantMap &variant_map,
-                 std::shared_ptr<const ContigFeatures> contig_ptr,
-                 std::shared_ptr<const CodingSequence> coding_sequence_ptr,
-                 std::shared_ptr<DNA5SequenceCoding> &dna_sequence_ptr);
+  [[nodiscard]] bool mutateDNA( const OffsetVariantMap &variant_map,
+                                std::shared_ptr<const ContigFeatures> contig_ptr,
+                                std::shared_ptr<const CodingSequence> coding_sequence_ptr,
+                                std::shared_ptr<DNA5SequenceCoding> &dna_sequence_ptr);
 
-  bool mutateDNA(const OffsetVariantMap &insert_variant_map,
-                 std::shared_ptr<const ContigFeatures> contig_ptr,
-                 ContigOffset_t contig_offset,
-                 ContigSize_t sequence_size,
-                 std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr);
+  [[nodiscard]] bool mutateDNA( const OffsetVariantMap &insert_variant_map,
+                                std::shared_ptr<const ContigFeatures> contig_ptr,
+                                ContigOffset_t contig_offset,
+                                ContigSize_t sequence_size,
+                                std::shared_ptr<DNA5SequenceLinear>& dna_sequence_ptr);
 
-  bool mutateDNA(const OffsetVariantMap &variant_map,
-                 std::shared_ptr<const ContigFeatures> contig_ptr,
-                 std::shared_ptr<const DNA5SequenceContig>& contig_sequence_ptr);
+  [[nodiscard]] bool mutateDNA( const OffsetVariantMap &variant_map,
+                                std::shared_ptr<const ContigFeatures> contig_ptr,
+                                std::shared_ptr<const DNA5SequenceContig>& contig_sequence_ptr);
 
 private:
 

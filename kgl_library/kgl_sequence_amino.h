@@ -44,7 +44,16 @@ public:
                                              ContigSize_t sub_sequence_length) const { // if a subsequence.
 
     std::shared_ptr<AminoSequence> sub_sequence(std::make_shared<AminoSequence>(getAlphabetString()));
-    getSubsequence(sub_sequence_offset, sub_sequence_length, sub_sequence);
+
+    if (not getSubsequence(sub_sequence_offset, sub_sequence_length, sub_sequence)) {
+
+      ExecEnv::log().error("AminoSequence::subSequence; Cannot get sub-sequence offset: {} and sub sequence size: {} from sequence length: {}",
+                           sub_sequence_offset, sub_sequence_length, length());
+      // Return an empty sequence
+      return sub_sequence;
+
+    }
+
     return sub_sequence;
 
   }

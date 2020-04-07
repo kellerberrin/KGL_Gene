@@ -65,7 +65,13 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
     // Create the template execution environment
     Environment environment;
 
-    environment.parseCommandLine(argc, argv);  // Setup the static ExecEnv runtime environment and create the logger.
+    // Setup the static ExecEnv runtime environment and create the logger.
+    if (not environment.parseCommandLine(argc, argv)) {
+
+      std::cerr << Environment::MODULE_NAME << " " << Environment::VERSION << "ExecEnv::runApplication - cannot parse command line" << std::endl;
+      std::exit(EXIT_FAILURE);
+
+    }  
 
     signal(SIGINT, ctrlC);
 

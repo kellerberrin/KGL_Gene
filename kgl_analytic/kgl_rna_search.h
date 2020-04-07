@@ -44,20 +44,20 @@ public:
   RNAAnalysis() = default;
   ~RNAAnalysis() = default;
 
-  bool getRNARegions(const ContigId_t& rna_contig,
-                     ContigOffset_t rna_offset,
-                     ContigSize_t rna_region_size,
-                     StrandSense rna_strand,
-                     const ContigId_t& rna_target_contig,
-                     ContigOffset_t rna_target_offset,
-                     ContigSize_t rna_target_size,
-                     StrandSense rna_target_strand,
-                     std::shared_ptr<const GenomeDatabase> genome_db_ptr);
+  [[nodiscard]] bool getRNARegions( const ContigId_t& rna_contig,
+                                    ContigOffset_t rna_offset,
+                                    ContigSize_t rna_region_size,
+                                    StrandSense rna_strand,
+                                    const ContigId_t& rna_target_contig,
+                                    ContigOffset_t rna_target_offset,
+                                    ContigSize_t rna_target_size,
+                                    StrandSense rna_target_strand,
+                                    std::shared_ptr<const GenomeDatabase> genome_db_ptr);
 
-  bool compareRNARegion(ContigSize_t rna_region_comparison_start,
-                        ContigSize_t rna_region_subsize,
-                        ContigSize_t rna_region_comparison_increment,
-                        std::shared_ptr<const LocalDNASequenceCompare> dna_compare_metric);
+  [[nodiscard]] bool compareRNARegion( ContigSize_t rna_region_comparison_start,
+                                       ContigSize_t rna_region_subsize,
+                                       ContigSize_t rna_region_comparison_increment,
+                                       std::shared_ptr<const LocalDNASequenceCompare> dna_compare_metric);
 
   void showResults(size_t limit);
 

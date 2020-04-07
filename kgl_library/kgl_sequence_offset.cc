@@ -18,7 +18,14 @@ kgl::SequenceOffset::refCodingSubSequence(std::shared_ptr<const CodingSequence> 
 
   StrandSense strand;
   ExonOffsetMap exon_offset_map;
-  exonOffsetAdapter(coding_seq_ptr, strand, exon_offset_map);
+  if (not exonOffsetAdapter(coding_seq_ptr, strand, exon_offset_map)) {
+
+    ExecEnv::log().error("refCodingSubSequence(), DNA Sequence length: {} cannot generate EXON map for subsequence offset: {}, length: {}",
+                         sequence_ptr.length(), sub_sequence_offset, sub_sequence_length);
+    exon_offset_map.clear();
+
+  }
+
   return codingSubSequence(sequence_ptr, exon_offset_map, coding_seq_ptr->strand(), sub_sequence_offset, sub_sequence_length, contig_offset);
 
 }
@@ -35,7 +42,14 @@ kgl::SequenceOffset::refExonArraySequence(std::shared_ptr<const CodingSequence> 
   std::vector<std::shared_ptr<kgl::DNA5SequenceCoding>> exon_vector;
   StrandSense strand;
   ExonOffsetMap exon_offset_map;
-  exonOffsetAdapter(coding_seq_ptr, strand, exon_offset_map);
+
+  if (not exonOffsetAdapter(coding_seq_ptr, strand, exon_offset_map)) {
+
+    ExecEnv::log().error("refExonArraySequence(), DNA Sequence length: {} cannot generate EXON map for subsequence offset: {}, length: {}",
+                         sequence_ptr.length(), sub_sequence_offset, sub_sequence_length);
+    exon_offset_map.clear();
+
+  }
 
   for (auto exon_offset : exon_offset_map) {
 
@@ -67,7 +81,14 @@ kgl::SequenceOffset::refIntronSubSequence(std::shared_ptr<const CodingSequence> 
 
   StrandSense strand;
   IntronOffsetMap intron_offset_map;
-  intronOffsetAdapter(coding_seq_ptr, strand, intron_offset_map);
+  if (not intronOffsetAdapter(coding_seq_ptr, strand, intron_offset_map)) {
+
+    ExecEnv::log().error("refIntronSubSequence(), DNA Sequence length: {} cannot generate INTRON map for subsequence offset: {}, length: {}",
+                         sequence_ptr.length(), sub_sequence_offset, sub_sequence_length);
+    intron_offset_map.clear();
+
+  }
+
   return codingSubSequence(sequence_ptr, intron_offset_map, coding_seq_ptr->strand(), sub_sequence_offset, sub_sequence_length, contig_offset);
 
 }
@@ -85,7 +106,13 @@ kgl::SequenceOffset::refIntronArraySequence(std::shared_ptr<const CodingSequence
   std::vector<std::shared_ptr<kgl::DNA5SequenceCoding>> intron_vector;
   StrandSense strand;
   IntronOffsetMap intron_offset_map;
-  intronOffsetAdapter(coding_seq_ptr, strand, intron_offset_map);
+  if (not intronOffsetAdapter(coding_seq_ptr, strand, intron_offset_map)) {
+
+    ExecEnv::log().error("refIntronArraySequence(), DNA Sequence length: {} cannot generate INTRON map for subsequence offset: {}, length: {}",
+                         sequence_ptr.length(), sub_sequence_offset, sub_sequence_length);
+    intron_offset_map.clear();
+
+  }
 
   for (auto intron_offset : intron_offset_map) {
 
@@ -115,7 +142,14 @@ kgl::SequenceOffset::mutantCodingSubSequence(std::shared_ptr<const CodingSequenc
 
   StrandSense strand;
   ExonOffsetMap exon_offset_map;
-  exonMutantOffset(coding_seq_ptr, indel_adjust, strand, exon_offset_map);
+  if (not exonMutantOffset(coding_seq_ptr, indel_adjust, strand, exon_offset_map)) {
+
+    ExecEnv::log().error("mutantCodingSubSequence(), DNA Sequence length: {} cannot generate EXON map for INDEL adjusted subsequence offset: {}, length: {}",
+                         sequence_ptr.length(), sub_sequence_offset, sub_sequence_length);
+    exon_offset_map.clear();
+
+  }
+
   return codingSubSequence(sequence_ptr, exon_offset_map, coding_seq_ptr->strand(), sub_sequence_offset, sub_sequence_length, contig_offset);
 
 }
@@ -501,7 +535,13 @@ bool kgl::SequenceOffset::refOffsetWithinCodingSequence(std::shared_ptr<const Co
 
   StrandSense strand;
   ExonOffsetMap exon_offset_map;
-  exonOffsetAdapter(coding_seq_ptr, strand, exon_offset_map);
+  if (not exonOffsetAdapter(coding_seq_ptr, strand, exon_offset_map)) {
+
+    ExecEnv::log().error("refOffsetWithinCodingSequence(), Contig: {}, Gene: {},  cannot generate EXON map for contig offset: {}",
+                         coding_seq_ptr->contig()->contigId(), coding_seq_ptr->getGene()->id(), contig_offset);
+    return false;
+  }
+
   return offsetWithinCodingSequence(exon_offset_map, coding_seq_ptr->strand(), contig_offset, 0, coding_sequence_offset, coding_sequence_length);
 
 }
@@ -615,7 +655,14 @@ bool kgl::SequenceOffset::refCodingSequenceContigOffset(std::shared_ptr<const Co
 
   StrandSense strand;
   ExonOffsetMap exon_offset_map;
-  exonOffsetAdapter(coding_seq_ptr, strand, exon_offset_map);
+  if (not exonOffsetAdapter(coding_seq_ptr, strand, exon_offset_map)) {
+
+    ExecEnv::log().error("refCodingSequenceContigOffset(), Contig: {}, Gene: {},  cannot generate EXON map for CODING sequence offset: {}",
+                         coding_seq_ptr->contig()->contigId(), coding_seq_ptr->getGene()->id(), contig_offset);
+    return false;
+
+  }
+
   return codingSequenceContigOffset(exon_offset_map, strand, coding_sequence_offset, contig_offset, coding_sequence_length);
 
 }

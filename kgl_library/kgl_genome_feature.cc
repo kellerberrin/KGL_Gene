@@ -157,7 +157,11 @@ std::shared_ptr<const kgl::CodingSequenceArray>
 kgl::GeneFeature::getCodingSequences(std::shared_ptr<const GeneFeature> gene) {
 
   std::shared_ptr<CodingSequenceArray> sequence_array_ptr(std::make_shared<CodingSequenceArray>());
-  getCodingSequences(gene, gene, sequence_array_ptr);
+  if (not getCodingSequences(gene, gene, sequence_array_ptr)) {
+
+    ExecEnv::log().error("getCodingSequences(), Unable to retrieve coding sequences for Gene: {}", gene->id());
+
+  }
 
   return sequence_array_ptr;
 

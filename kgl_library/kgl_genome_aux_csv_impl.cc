@@ -95,7 +95,13 @@ bool kgl::GenomeAuxData::readParseAuxData(const std::string& aux_file_name) {
 bool kgl::GenomeAuxData::parseHeader(const std::string& record_str) {
 
   AuxAttributeVector lc_aux_data_header;
-  tokenize( record_str, lc_aux_data_header);
+
+  if (not tokenize( record_str, lc_aux_data_header)) {
+
+    ExecEnv::log().error("GenomeAuxData::parseHeader(); Problem tokenizing  line: {}", record_str);
+    return false;
+
+  }
 
   // Covert Header to trimmed uppercase.
   for (const auto& item : lc_aux_data_header) {
@@ -112,7 +118,13 @@ bool kgl::GenomeAuxData::parseHeader(const std::string& record_str) {
 bool kgl::GenomeAuxData::parseDataline(const std::string& record_str) {
 
   AuxAttributeVector attributes;
-  tokenize( record_str, attributes);
+
+  if (not tokenize( record_str, attributes)) {
+
+    ExecEnv::log().error("GenomeAuxData::parseDataline(); Problem tokenizing record line: {}", record_str);
+    return false;
+
+  }
 
   if (attributes.size() != aux_data_header_.size() or attributes.size() == 0) {
 
@@ -387,7 +399,12 @@ std::vector<kgl::CountryPair> kgl::GenomeAuxData::getCountries(const std::string
 
   // Read the AUX data.
   kgl::GenomeAuxData aux_data;
-  aux_data.readParseAuxData(aux_file);
+
+  if (not aux_data.readParseAuxData(aux_file)) {
+
+    ExecEnv::log().warn("GenomeAuxData::getCountries(); Problem parsing Auxiliary file:{}", aux_file);
+
+  }
 
   // Get a list of countries.
   std::vector<std::string> countries = aux_data.countryList();

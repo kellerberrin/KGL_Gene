@@ -35,20 +35,20 @@ public:
   DNA5() = delete; // Singleton
   ~DNA5() = delete;
 
-  static constexpr ContigOffset_t NUCLEOTIDE_COLUMNS = 5;
+  inline static constexpr ContigOffset_t NUCLEOTIDE_COLUMNS = 5;
 
-  static constexpr Nucleotide_t A_NUCLEOTIDE = 'A';
-  static constexpr ContigOffset_t A_NUCLEOTIDE_OFFSET = 0;
-  static constexpr Nucleotide_t C_NUCLEOTIDE = 'C';
-  static constexpr ContigOffset_t C_NUCLEOTIDE_OFFSET = 1;
-  static constexpr Nucleotide_t G_NUCLEOTIDE = 'G';
-  static constexpr ContigOffset_t G_NUCLEOTIDE_OFFSET = 2;
-  static constexpr Nucleotide_t U_NUCLEOTIDE = 'U';
-  static constexpr ContigOffset_t U_NUCLEOTIDE_OFFSET = 3;
-  static constexpr Nucleotide_t T_NUCLEOTIDE = 'T';
-  static constexpr ContigOffset_t T_NUCLEOTIDE_OFFSET = 3;
-  static constexpr Nucleotide_t N_NUCLEOTIDE = 'N';
-  static constexpr ContigOffset_t N_NUCLEOTIDE_OFFSET = 4;
+  inline static constexpr Nucleotide_t A_NUCLEOTIDE = 'A';
+  inline static constexpr ContigOffset_t A_NUCLEOTIDE_OFFSET = 0;
+  inline static constexpr Nucleotide_t C_NUCLEOTIDE = 'C';
+  inline static constexpr ContigOffset_t C_NUCLEOTIDE_OFFSET = 1;
+  inline static constexpr Nucleotide_t G_NUCLEOTIDE = 'G';
+  inline static constexpr ContigOffset_t G_NUCLEOTIDE_OFFSET = 2;
+  inline static constexpr Nucleotide_t U_NUCLEOTIDE = 'U';
+  inline static constexpr ContigOffset_t U_NUCLEOTIDE_OFFSET = 3;
+  inline static constexpr Nucleotide_t T_NUCLEOTIDE = 'T';
+  inline static constexpr ContigOffset_t T_NUCLEOTIDE_OFFSET = 3;
+  inline static constexpr Nucleotide_t N_NUCLEOTIDE = 'N';
+  inline static constexpr ContigOffset_t N_NUCLEOTIDE_OFFSET = 4;
 
 
   // The Alphabet enum type must be defined -see kgl_alphabet_string.h
@@ -61,41 +61,41 @@ public:
   };
 
   // Return a vector of all valid alphabet values.
-  static std::vector<Alphabet> enumerateAlphabet();
+  [[nodiscard]] static std::vector<Alphabet> enumerateAlphabet();
 
   // Checks for possible memory corruption.
-  static bool validAlphabet(Alphabet nucleotide);
+  [[nodiscard]] static bool validAlphabet(Alphabet nucleotide);
 
   // The Alphabet convertChar(char) function must be defined -see kgl_alphabet_string.h
-  static Alphabet convertChar(char chr_base);
+  [[nodiscard]] static Alphabet convertChar(char chr_base);
 
   // Find complementary bases.
-  static CodingDNA5::Alphabet complementNucleotide(Alphabet nucleotide);
+  [[nodiscard]] static CodingDNA5::Alphabet complementNucleotide(Alphabet nucleotide);
 
 
   // Convert to CodingDNA5 without complementary base conversion.
   // Warning - assumes that CodingDNA5::Alphabet and DNA5::Alphabet nucleotides have the same enum values.
-  static CodingDNA5::Alphabet convertToCodingDNA5(Alphabet nucleotide) { return static_cast<CodingDNA5::Alphabet>(nucleotide); }
+  [[nodiscard]] static CodingDNA5::Alphabet convertToCodingDNA5(Alphabet nucleotide) { return static_cast<CodingDNA5::Alphabet>(nucleotide); }
 
   // Convert from coding DNA5.
   // Warning - assumes that CodingDNA5::Alphabet and DNA5::Alphabet nucleotides have the same enum values.
-  static DNA5::Alphabet convertFromCodingDNA5(CodingDNA5::Alphabet nucleotide) { return static_cast<DNA5::Alphabet>(nucleotide); }
+  [[nodiscard]] static DNA5::Alphabet convertFromCodingDNA5(CodingDNA5::Alphabet nucleotide) { return static_cast<DNA5::Alphabet>(nucleotide); }
 
   // Find complementary bases and convert to DNA5.
-  static DNA5::Alphabet convertComplementNucleotide(CodingDNA5::Alphabet nucleotide) {
+  [[nodiscard]] static DNA5::Alphabet convertComplementNucleotide(CodingDNA5::Alphabet nucleotide) {
 
     return convertFromCodingDNA5(complementNucleotide(convertFromCodingDNA5(nucleotide)));
 
   }
 
   // Convert a base to an array offset.
-  static ContigOffset_t nucleotideToColumn(Alphabet nucleotide);
+  [[nodiscard]] static ContigOffset_t nucleotideToColumn(Alphabet nucleotide);
 
   // Return nucleotide as a char.
-  static char convertToChar(Alphabet nucleotide) { return static_cast<char>(nucleotide); }
+  [[nodiscard]] static char convertToChar(Alphabet nucleotide) { return static_cast<char>(nucleotide); }
 
   // Converts an array offset into a base.
-  static Alphabet offsetToNucleotide(ContigOffset_t offset) {
+  [[nodiscard]] static Alphabet offsetToNucleotide(ContigOffset_t offset) {
 
     // Translate the nucleotide to an array column
     switch (offset) {

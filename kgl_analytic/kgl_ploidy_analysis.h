@@ -41,14 +41,14 @@ public:
   PloidyAnalysis(const std::string& analysis) : PhasedPopulation(analysis) {}
   ~PloidyAnalysis() override = default;
 
-  bool addPloidyRecord(const std::string& genome,
-                       bool homozygous,
-                       bool hq_homozygous,
-                       bool heterozygous,
-                       bool hq_heterozygous,
-                       double ratio);
+  [[nodiscard]] bool addPloidyRecord( const std::string& genome,
+                                      bool homozygous,
+                                      bool hq_homozygous,
+                                      bool heterozygous,
+                                      bool hq_heterozygous,
+                                      double ratio);
 
-  bool writePloidyResults(const std::string& file_name, char delimiter ) const;
+  [[nodiscard]] bool writePloidyResults(const std::string& file_name, char delimiter ) const;
 
   constexpr static const char CSV_DELIMITER_ = ',';
 

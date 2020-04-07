@@ -31,7 +31,12 @@ void kgl::RuntimeProperties::getGenomeDBFiles(const std::string& organism,
 
   // The GAF file is optional.
   std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + organism + std::string(DOT_) + std::string(GAF_FILE_) + std::string(DOT_) + std::string(VALUE_);
-  property_tree_.getOptionalFileProperty(key, work_directory_, gaf_file);
+
+  if (not property_tree_.getOptionalFileProperty(key, work_directory_, gaf_file)) {
+
+    ExecEnv::log().info("Optional runtime XML property not present: {}", key);
+
+  }
 
   key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + organism + std::string(DOT_) + std::string(FASTA_FILE_) + std::string(DOT_) + std::string(VALUE_);
   if (not property_tree_.getFileProperty(key, work_directory_, fasta_file)) {

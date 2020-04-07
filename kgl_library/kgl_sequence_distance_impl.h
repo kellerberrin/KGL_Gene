@@ -26,13 +26,13 @@ public:
 
   // Distance
 
-  CompareDistance_t LevenshteinGlobal(const std::string& sequenceA, const std::string& sequenceB) const;
+  [[nodiscard]] CompareDistance_t LevenshteinGlobal(const std::string& sequenceA, const std::string& sequenceB) const;
 
-  CompareDistance_t LevenshteinLocal(const std::string& sequenceA, const std::string& sequenceB) const;
+  [[nodiscard]] CompareDistance_t LevenshteinLocal(const std::string& sequenceA, const std::string& sequenceB) const;
 
-  CompareDistance_t globalblosum80Distance(const std::string& sequenceA, const std::string& sequenceB) const;
+  [[nodiscard]] CompareDistance_t globalblosum80Distance(const std::string& sequenceA, const std::string& sequenceB) const;
 
-  CompareDistance_t localblosum80Distance(const std::string& sequenceA, const std::string& sequenceB) const;
+  [[nodiscard]] CompareDistance_t localblosum80Distance(const std::string& sequenceA, const std::string& sequenceB) const;
 
 private:
 

@@ -25,7 +25,12 @@ bool kgl::AggregateVariantDistribution::variantDistribution(std::shared_ptr<cons
 
           for (size_t count = 0; count < variant.second; ++count) {
 
-            addVariant(variant.first);
+            if (not addVariant(variant.first)) {
+
+              ExecEnv::log().error( "AggregatVariantDistribution; Cannot add variant: {}",
+                                    variant.first->output(' ', VariantOutputIndex::START_0_BASED, false));
+
+            }
 
           } // Homozygous variants.
 
@@ -55,7 +60,12 @@ bool kgl::AggregateVariantDistribution::variantDistribution(std::shared_ptr<cons
 
         for (auto variant : homologous->getMap()) {
 
-          addVariant(variant.second);
+          if (not addVariant(variant.second)) {
+
+            ExecEnv::log().error( "AggregatVariantDistribution; Cannot add variant: {}",
+                                 variant.second->output(' ', VariantOutputIndex::START_0_BASED, false));
+
+          }
 
         } // offset vector
 
@@ -121,8 +131,18 @@ bool kgl::AggregateVariantDistribution::writeDistribution(std::shared_ptr<const 
 
   }
 
-  writeHeader(outfile, delimiter, display_sequence);
-  writeData(genome_db, interval_size, analysis_contig, start_offset, end_offset, display_sequence, outfile, delimiter);
+  if (not writeHeader(outfile, delimiter, display_sequence)) {
+
+    ExecEnv::log().error("AggregateVariantDistribution; could not write header to file: {}", filename);
+    return false;
+
+  }
+  if (not writeData(genome_db, interval_size, analysis_contig, start_offset, end_offset, display_sequence, outfile, delimiter)) {
+
+    ExecEnv::log().error("AggregateVariantDistribution; could not write results to file: {}", filename);
+    return false;
+
+  }
 
   return outfile.good();
 

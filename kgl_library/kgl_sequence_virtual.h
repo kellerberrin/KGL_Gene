@@ -26,7 +26,7 @@ public:
   VirtualSequence() = default;
   virtual ~VirtualSequence() = default;
 
-  virtual std::string getSequenceAsString() const = 0;
+  [[nodiscard]] virtual std::string getSequenceAsString() const = 0;
 
 };
 
@@ -46,23 +46,23 @@ public:
   AlphabetSequence(const AlphabetSequence&) = delete;
   ~AlphabetSequence() override = default;
 
-  AlphabetSequence& operator=(const AlphabetSequence&) = delete;
+  [[nodiscard]] AlphabetSequence& operator=(const AlphabetSequence&) = delete;
 
-  auto operator[] (ContigOffset_t offset) const { return alphabet_string_[offset]; }
-  auto at(ContigOffset_t offset) const { return alphabet_string_[offset]; }
+  [[nodiscard]] auto operator[] (ContigOffset_t offset) const { return alphabet_string_[offset]; }
+  [[nodiscard]] auto at(ContigOffset_t offset) const { return alphabet_string_[offset]; }
 
-  ContigSize_t length() const { return alphabet_string_.length(); }
-  std::string getSequenceAsString() const override { return alphabet_string_.str(); }
-  const AlphabetString<Alphabet>& getAlphabetString() const { return alphabet_string_; }
+  [[nodiscard]] ContigSize_t length() const { return alphabet_string_.length(); }
+  [[nodiscard]] std::string getSequenceAsString() const override { return alphabet_string_.str(); }
+  [[nodiscard]] const AlphabetString<Alphabet>& getAlphabetString() const { return alphabet_string_; }
 
   // Check for memory corruption.
-  bool verifySequence() const { return alphabet_string_.verifyString(); }
+  [[nodiscard]] bool verifySequence() const { return alphabet_string_.verifyString(); }
 
   // A hash value of the sequence.
-  size_t hashSequence() const { return alphabet_string_.hashString(); }
+  [[nodiscard]] size_t hashSequence() const { return alphabet_string_.hashString(); }
 
   // Search for all subsequences.
-  std::vector<ContigOffset_t> findAll(const AlphabetSequence& sub_sequence) const { return alphabet_string_.findAll(sub_sequence.alphabet_string_); }
+  [[nodiscard]] std::vector<ContigOffset_t> findAll(const AlphabetSequence& sub_sequence) const { return alphabet_string_.findAll(sub_sequence.alphabet_string_); }
 
 
 protected:
@@ -70,13 +70,13 @@ protected:
   AlphabetString<Alphabet> alphabet_string_;
 
   // Letter offset is relative to the begining of the sequence (0 is the first letter).
-  bool modifyLetter(ContigOffset_t sequence_offset, typename Alphabet::Alphabet letter);
+  [[nodiscard]] bool modifyLetter(ContigOffset_t sequence_offset, typename Alphabet::Alphabet letter);
   // Delete offset is relative to the begining of the sequence (0 is the first letter).
-  bool deleteOffset(ContigOffset_t delete_offset, ContigSize_t delete_size);
+  [[nodiscard]] bool deleteOffset(ContigOffset_t delete_offset, ContigSize_t delete_size);
   // Insert offset is relative to the begining of the sequence (0 is the first letter).
-  bool insertOffset(ContigOffset_t insert_offset, const AlphabetSequence& inserted_sequence);
+  [[nodiscard]] bool insertOffset(ContigOffset_t insert_offset, const AlphabetSequence& inserted_sequence);
   // Returns bool false if offset and/or size are out of bounds.
-  bool getSubsequence(ContigOffset_t substring_offset, ContigSize_t substring_size, std::shared_ptr<AlphabetSequence> sub_sequence) const;
+  [[nodiscard]] bool getSubsequence(ContigOffset_t substring_offset, ContigSize_t substring_size, std::shared_ptr<AlphabetSequence> sub_sequence) const;
 
 private:
 

@@ -34,22 +34,22 @@ public:
   }
   ~ParseVCFRecord() = default;
 
-  size_t requiredFormatSize() const;
-  size_t GTOffset() const { return GT_offset_; }
-  size_t GQOffset() const { return GQ_offset_; }
-  size_t PLOffset() const { return PL_GL_offset_; }
-  size_t ADOffset() const { return AD_offset_; }
-  size_t DPOffset() const { return DP_offset_; }
+  [[nodiscard]] size_t requiredFormatSize() const;
+  [[nodiscard]] size_t GTOffset() const { return GT_offset_; }
+  [[nodiscard]] size_t GQOffset() const { return GQ_offset_; }
+  [[nodiscard]] size_t PLOffset() const { return PL_GL_offset_; }
+  [[nodiscard]] size_t ADOffset() const { return AD_offset_; }
+  [[nodiscard]] size_t DPOffset() const { return DP_offset_; }
 
-  Phred_t quality() const { return quality_; }
+  [[nodiscard]] Phred_t quality() const { return quality_; }
 
-  const std::string& reference() const { return reference_; }
-  const std::vector<std::string>& alleles() const { return alleles_; }
+  [[nodiscard]] const std::string& reference() const { return reference_; }
+  [[nodiscard]] const std::vector<std::string>& alleles() const { return alleles_; }
 
-  ContigOffset_t offset() const { return allele_offset_; }
-  std::shared_ptr<const ContigFeatures> contigPtr() const { return contig_ptr_; }
+  [[nodiscard]] ContigOffset_t offset() const { return allele_offset_; }
+  [[nodiscard]] std::shared_ptr<const ContigFeatures> contigPtr() const { return contig_ptr_; }
 
-  bool isSNP() const;
+  [[nodiscard]] bool isSNP() const;
 
 private:
 
@@ -78,7 +78,7 @@ private:
   constexpr static const char* AD_ = "AD";
   constexpr static const char* DP_ = "DP";
 
-  bool parseRecord(const ContigId_t& contig_id, std::shared_ptr<const GenomeDatabase> genome_db_ptr);
+  [[nodiscard]] bool parseRecord(const ContigId_t& contig_id, std::shared_ptr<const GenomeDatabase> genome_db_ptr);
 
   static void parseString(const std::string& parse_string,
                           const std::string& separator_string,

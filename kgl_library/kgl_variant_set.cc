@@ -68,7 +68,12 @@ kgl::HomologousVariant::Difference(std::shared_ptr<const kgl::HomologousVariant>
 
   for (auto variant : homo_variant_ptr->getMap()) {
 
-    diff_variant_ptr->eraseVariant(variant.second);
+    if (not diff_variant_ptr->eraseVariant(variant.second)) {
+
+      ExecEnv::log().error( "HomologousVariant::Difference(); Cannot erase variant {}",
+                            variant.second->output(' ', VariantOutputIndex::START_0_BASED, false));
+
+    }
 
   }
 
@@ -210,16 +215,28 @@ kgl::GenomeVariant::Union(std::shared_ptr<const kgl::GenomeVariant> genome_varia
 
     auto result = genome_variant_ptr->genome_variant_map_.find(contig_variant.first);
 
-    std::shared_ptr<kgl::ContigVariant> union_contig_ptr;
-
+    // If found, then add the union of the contigs.
     if (result != genome_variant_map_.end()) {
 
-      union_contig_ptr = contig_variant.second->Union(result->second);
-      genome_union->addContigVariant(union_contig_ptr);
+      std::shared_ptr<kgl::ContigVariant> union_contig_ptr = contig_variant.second->Union(result->second);
+      if (not genome_union->addContigVariant(union_contig_ptr)) {
 
+        ExecEnv::log().error("GenomeVariant::Union(): Union Genome: {}, problem adding Union Contig: {}",
+                             genomeId(),
+                             union_contig_ptr->contigId());
+
+      }
+
+    // Just add the contig.
     } else {
 
-      genome_union->addContigVariant(contig_variant.second);
+      if (not genome_union->addContigVariant(contig_variant.second)) {
+
+        ExecEnv::log().error("GenomeVariant::Union(): Union Genome: {}, problem adding Contig: {}",
+                             genomeId(),
+                             contig_variant.second->contigId());
+
+      }
 
     }
 
@@ -229,19 +246,23 @@ kgl::GenomeVariant::Union(std::shared_ptr<const kgl::GenomeVariant> genome_varia
 
     auto result = genome_union->genome_variant_map_.find(contig_variant.first);
 
+    // If not found then add then just add contig.
     if (result == genome_union->genome_variant_map_.end()) {
 
-      genome_union->addContigVariant(result->second);
+      if (not genome_union->addContigVariant(contig_variant.second)) {
+
+        ExecEnv::log().error("GenomeVariant::Union(): Union Genome: {}, problem adding Contig: {}",
+                             genomeId(),
+                             contig_variant.second->contigId());
+      }
 
     }
 
   }
 
-  for (auto contig_variant : genome_union->genome_variant_map_) {
+  for (auto const& [contig_id, contig_ptr] : genome_union->genome_variant_map_) {
 
-    ExecEnv::log().vinfo("Union Contig: {} contains: {} variants",
-                              contig_variant.first,
-                              contig_variant.second->variantCount());
+    ExecEnv::log().vinfo("Union Contig: {} contains: {} variants", contig_id, contig_ptr->variantCount());
 
   }
 
@@ -261,23 +282,29 @@ kgl::GenomeVariant::Intersection(std::shared_ptr<const kgl::GenomeVariant> genom
 
     auto result = genome_variant->genome_variant_map_.find(contig_variant.first);
 
-    std::shared_ptr<kgl::ContigVariant> diff_contig_ptr;
-
+    // If Found add the variant intersection of the contigs.
     if (result != genome_variant_map_.end()) {
 
-      diff_contig_ptr = contig_variant.second->Intersection(result->second);
-      genome_intersection->addContigVariant(diff_contig_ptr);
+      std::shared_ptr<kgl::ContigVariant> intersection_contig_ptr = contig_variant.second->Intersection(result->second);
+      if (not genome_intersection->addContigVariant(intersection_contig_ptr)) {
 
+        ExecEnv::log().error("GenomeVariant::Intersection(): Intersection Genome: {}, problem adding Contig: {}",
+                             genomeId(),
+                             intersection_contig_ptr->contigId());
+      }
+
+    // Else add an empty Contig
     } else {
 
-      diff_contig_ptr = std::make_shared<kgl::ContigVariant>(contig_variant.first, contig_variant.second->ploidy());
-      genome_intersection->addContigVariant(diff_contig_ptr);
+      std::shared_ptr<kgl::ContigVariant> empty_contig_ptr = std::make_shared<kgl::ContigVariant>(contig_variant.first, contig_variant.second->ploidy());
+      if (not genome_intersection->addContigVariant(empty_contig_ptr)) {
+
+        ExecEnv::log().error("GenomeVariant::Intersection(): Intersection Genome: {}, problem adding empty Contig: {}",
+                             genomeId(),
+                             empty_contig_ptr->contigId());
+      }
 
     }
-
-    ExecEnv::log().vinfo("Intersection Contig: {} contains: {} variants",
-                              contig_variant.first,
-                              diff_contig_ptr->variantCount());
 
   }
 
@@ -292,26 +319,32 @@ kgl::GenomeVariant::Difference(std::shared_ptr<const kgl::GenomeVariant> genome_
 
   std::shared_ptr<kgl::GenomeVariant> genome_difference(std::make_shared<kgl::GenomeVariant>(genomeId(), ploidy()));
 
-  for (auto contig_variant : genome_variant_map_) {
+  for (auto [contig_id, contig_ptr] : genome_variant_map_) {
 
-    auto result = genome_variant->genome_variant_map_.find(contig_variant.first);
-
-    std::shared_ptr<kgl::ContigVariant> diff_contig_ptr;
+    auto result = genome_variant->genome_variant_map_.find(contig_id);
 
     if (result != genome_variant_map_.end()) {
 
-      diff_contig_ptr = contig_variant.second->Difference(result->second);
-      genome_difference->addContigVariant(diff_contig_ptr);
+      std::shared_ptr<kgl::ContigVariant> diff_contig_ptr = contig_ptr->Difference(result->second);
+
+      if (not genome_difference->addContigVariant(diff_contig_ptr)) {
+
+        ExecEnv::log().error("GenomeVariant::Difference(): Difference Genome: {}, problem adding differenced Contig: {}",
+                             genomeId(),
+                             diff_contig_ptr->contigId());
+      }
+
 
     } else {
 
-      genome_difference->addContigVariant(contig_variant.second);
+      if (not genome_difference->addContigVariant(contig_ptr)) {
+
+        ExecEnv::log().error("GenomeVariant::Difference(): Difference Genome: {}, problem adding Contig: {}",
+                             genomeId(),
+                             contig_ptr->contigId());
+      }
 
     }
-
-    ExecEnv::log().vinfo("Difference Contig: {} contains: {} variants",
-                              contig_variant.first,
-                              diff_contig_ptr->variantCount());
 
   }
 

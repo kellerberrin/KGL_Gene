@@ -30,12 +30,12 @@ public:
   virtual ~DistanceMatrix();  // Do not use the default destructor, see PIMPL fwd decl below.
 
 
-  DistanceType_t minimum(size_t& i, size_t& j) const;
-  DistanceType_t maximum(size_t& i, size_t& j) const;
+  [[nodiscard]] DistanceType_t minimum(size_t& i, size_t& j) const;
+  [[nodiscard]] DistanceType_t maximum(size_t& i, size_t& j) const;
   void setDistance(size_t i, size_t j, DistanceType_t distance);
-  DistanceType_t getDistance(size_t i, size_t j) const;
+  [[nodiscard]] DistanceType_t getDistance(size_t i, size_t j) const;
 
-  size_t size() const;
+  [[nodiscard]] size_t size() const;
   void resize(size_t new_size);
 
 private:
@@ -69,11 +69,11 @@ public:
 
   }
 
-  bool writeNewick(const std::string& file_name) const override ;
+  [[nodiscard]] bool writeNewick(const std::string& file_name) const override ;
 
 private:
 
-  DistanceType_t distance(std::shared_ptr<PhyloNode> row_node, std::shared_ptr<PhyloNode> column_node) const;
+  [[nodiscard]] DistanceType_t distance(std::shared_ptr<PhyloNode> row_node, std::shared_ptr<PhyloNode> column_node) const;
   void initializeDistance();
   virtual void normalizeDistance();
   void rescaleDistance();
@@ -81,7 +81,7 @@ private:
   bool reduceNode(size_t row, size_t column, DistanceType_t minimum);
   void reduceDistance(size_t i, size_t j);
   void writeNode(const std::shared_ptr<PhyloNode>& node, std::ofstream& newick_file) const;
-  size_t getLeafCount(size_t leaf_idx) const;
+  [[nodiscard]] size_t getLeafCount(size_t leaf_idx) const;
   void UPGMATree();
 
   DistanceMatrix distance_matrix_;

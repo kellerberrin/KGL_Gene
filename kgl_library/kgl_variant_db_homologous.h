@@ -6,7 +6,6 @@
 #define KGL_VARIANT_DB_HOMOLOGOUS_H
 
 
-
 #include <map>
 #include <memory>
 #include <vector>
@@ -35,31 +34,31 @@ public:
   HomologousVariant& operator=(const HomologousVariant&) = delete; // Use deep copy.
 
   // Always use deep copy when modifying this object (filter and set operations).
-  std::shared_ptr<HomologousVariant> deepCopy() const;
+  [[nodiscard]] std::shared_ptr<HomologousVariant> deepCopy() const;
 
-  bool addVariant(std::shared_ptr<const Variant>& variant_ptr);
+  [[nodiscard]] bool addVariant(std::shared_ptr<const Variant>& variant_ptr);
   // Returns true if variant found and erased.
-  bool eraseVariant(std::shared_ptr<const Variant>& variant_ptr);
+  [[nodiscard]] bool eraseVariant(std::shared_ptr<const Variant>& variant_ptr);
 
-  PhaseId_t phaseId() const { return phase_id_; }
-  size_t variantCount() const { return offset_variant_map_.size(); }
+  [[nodiscard]] PhaseId_t phaseId() const { return phase_id_; }
+  [[nodiscard]] size_t variantCount() const { return offset_variant_map_.size(); }
 
   // Set functions.
-  bool isElement(const Variant& variant) const;
-  std::shared_ptr<HomologousVariant> Union(std::shared_ptr<const HomologousVariant> contig_variant_ptr) const;
-  std::shared_ptr<HomologousVariant> Intersection(std::shared_ptr<const HomologousVariant> contig_variant_ptr) const;
-  std::shared_ptr<HomologousVariant> Difference(std::shared_ptr<const HomologousVariant> contig_variant_ptr) const;
+  [[nodiscard]] bool isElement(const Variant& variant) const;
+  [[nodiscard]] std::shared_ptr<HomologousVariant> Union(std::shared_ptr<const HomologousVariant> contig_variant_ptr) const;
+  [[nodiscard]] std::shared_ptr<HomologousVariant> Intersection(std::shared_ptr<const HomologousVariant> contig_variant_ptr) const;
+  [[nodiscard]] std::shared_ptr<HomologousVariant> Difference(std::shared_ptr<const HomologousVariant> contig_variant_ptr) const;
 
-  std::shared_ptr<HomologousVariant> filterVariants(const VariantFilter& filter) const;
+  [[nodiscard]] std::shared_ptr<HomologousVariant> filterVariants(const VariantFilter& filter) const;
 
-  const OffsetVariantMap& getMap() const { return offset_variant_map_; }
+  [[nodiscard]] const OffsetVariantMap& getMap() const { return offset_variant_map_; }
 
-  size_t size() const { return offset_variant_map_.size(); }
+  [[nodiscard]] size_t size() const { return offset_variant_map_.size(); }
 
   // All variants in [start, end) - note that end points past the last variant; end = (last + 1).
-  bool getSortedVariants(ContigOffset_t start,
-                         ContigOffset_t end,
-                         OffsetVariantMap& variant_map) const;
+  [[nodiscard]] bool getSortedVariants( ContigOffset_t start,
+                                        ContigOffset_t end,
+                                        OffsetVariantMap& variant_map) const;
 
 private:
 
@@ -74,6 +73,6 @@ private:
 }   // end namespace
 
 // Not in kgl:: namespace.
-std::ostream & operator<<(std::ostream &os, const kellerberrin::genome::OffsetVariantMap& variant_map);
+[[nodiscard]] std::ostream & operator<<(std::ostream &os, const kellerberrin::genome::OffsetVariantMap& variant_map);
 
 #endif //KGL_KGL_VARIANT_DB_HOMOLOGOUS_H

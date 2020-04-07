@@ -35,33 +35,33 @@ public:
   PhasedPopulation(const PhasedPopulation&) = delete;
   virtual ~PhasedPopulation() = default;
 
-  PhasedPopulation& operator=(const PhasedPopulation&) = delete; // Use deep copy.
+  [[nodiscard]] PhasedPopulation& operator=(const PhasedPopulation&) = delete; // Use deep copy.
 
   // Create the genome variant if it does not exist.
-  bool getCreateGenome(const GenomeId_t& genome_id,
-                       PhaseId_t ploidy,
-                       const std::shared_ptr<const GenomeDatabase>& genome_db,
-                       std::shared_ptr<GenomeVariant>& genome);
+  [[nodiscard]] bool getCreateGenome( const GenomeId_t& genome_id,
+                                      PhaseId_t ploidy,
+                                      const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                      std::shared_ptr<GenomeVariant>& genome);
 
   // Returns false if the genome does not exist.
-  bool getGenomeVariant(const GenomeId_t& genome_id, std::shared_ptr<const GenomeVariant>& genome_variant) const;
+  [[nodiscard]] bool getGenomeVariant(const GenomeId_t& genome_id, std::shared_ptr<const GenomeVariant>& genome_variant) const;
 
-  bool addGenomeVariant(std::shared_ptr<const GenomeVariant> genome_variant);
+  [[nodiscard]] bool addGenomeVariant(std::shared_ptr<const GenomeVariant> genome_variant);
 
-  size_t variantCount() const;
+  [[nodiscard]] size_t variantCount() const;
 
-  const PopulationVariantMap& getMap() const { return population_variant_map_; }
+  [[nodiscard]] const PopulationVariantMap& getMap() const { return population_variant_map_; }
 
-  std::shared_ptr<PhasedPopulation> filterVariants(const VariantFilter& filter) const;
+  [[nodiscard]] std::shared_ptr<PhasedPopulation> filterVariants(const VariantFilter& filter) const;
 
-  std::shared_ptr<PhasedPopulation> filterGenomes(const PopulationId_t& population_id, const std::vector<GenomeId_t>& list) const;
+  [[nodiscard]] std::shared_ptr<PhasedPopulation> filterGenomes(const PopulationId_t& population_id, const std::vector<GenomeId_t>& list) const;
 
   // First element of the pair is the population genome name which is renamed to the second element of the pair
-  std::shared_ptr<PhasedPopulation> filterRenameGenomes(const PopulationId_t& population_id,
-                                                        const std::vector<std::pair<GenomeId_t, GenomeId_t >>& source_pairs) const;
+  [[nodiscard]] std::shared_ptr<PhasedPopulation> filterRenameGenomes( const PopulationId_t& population_id,
+                                                                       const std::vector<std::pair<GenomeId_t, GenomeId_t >>& source_pairs) const;
 
 
-  const PopulationId_t& populationId() const { return population_id_; }
+  [[nodiscard]] const PopulationId_t& populationId() const { return population_id_; }
 
 private:
 

@@ -26,14 +26,14 @@ public:
 
   // Important - Call this routine before mutation.
   // Important - calculate indel offset adjustment with (this routine) adjustIndelOffsets() BEFORE calling updateIndelAccounting().
-  SignedOffset_t adjustIndelOffsets(ContigOffset_t contig_offset) const;
+  [[nodiscard]] SignedOffset_t adjustIndelOffsets(ContigOffset_t contig_offset) const;
 
   // Important - Call this routine after mutation.
   // Important - Call this to update the indel offset accounting structure AFTER the actual indel offset has been calculated with adjustIndelOffsets().
-  bool updateIndelAccounting(std::shared_ptr<const Variant> variant_ptr, SignedOffset_t sequence_size_modify);
+  [[nodiscard]] bool updateIndelAccounting(std::shared_ptr<const Variant> variant_ptr, SignedOffset_t sequence_size_modify);
 
   // Total indel offset - can be used to check the sequence size after mutation is complete.
-  SignedOffset_t totalIndelOffset() const;
+  [[nodiscard]] SignedOffset_t totalIndelOffset() const;
 
   // Reset the count.
   void clearIndelOffset() { indel_accounting_map_.clear(); }

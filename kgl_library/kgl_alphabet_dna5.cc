@@ -9,22 +9,6 @@
 namespace kgl = kellerberrin::genome;
 
 
-const kgl::ContigOffset_t kgl::DNA5::NUCLEOTIDE_COLUMNS;
-
-const kgl::Nucleotide_t kgl::DNA5::A_NUCLEOTIDE;
-const kgl::ContigOffset_t kgl::DNA5::A_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_t kgl::DNA5::C_NUCLEOTIDE;
-const kgl::ContigOffset_t kgl::DNA5::C_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_t kgl::DNA5::G_NUCLEOTIDE;
-const kgl::ContigOffset_t kgl::DNA5::G_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_t kgl::DNA5::U_NUCLEOTIDE;
-const kgl::ContigOffset_t kgl::DNA5::U_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_t kgl::DNA5::T_NUCLEOTIDE;
-const kgl::ContigOffset_t kgl::DNA5::T_NUCLEOTIDE_OFFSET;
-const kgl::Nucleotide_t kgl::DNA5::N_NUCLEOTIDE;
-const kgl::ContigOffset_t kgl::DNA5::N_NUCLEOTIDE_OFFSET;
-
-
 bool kgl::DNA5::validAlphabet(Alphabet nucleotide) {
 
   auto int_value = static_cast<size_t>(nucleotide);

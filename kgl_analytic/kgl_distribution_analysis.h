@@ -31,33 +31,33 @@ public:
   explicit AggregateVariantDistribution() = default;
   ~AggregateVariantDistribution() = default;
 
-  bool variantDistribution(std::shared_ptr<const UnphasedPopulation> unphased_population);
+  [[nodiscard]] bool variantDistribution(std::shared_ptr<const UnphasedPopulation> unphased_population);
 
-  bool variantDistribution(std::shared_ptr<const PhasedPopulation> population_ptr);
+  [[nodiscard]] bool variantDistribution(std::shared_ptr<const PhasedPopulation> population_ptr);
 
-  bool writeDistribution(std::shared_ptr<const GenomeDatabase> genome_db,
-                         size_t interval_size,
-                         const ContigId_t analysis_contig,
-                         ContigOffset_t start_offset,
-                         ContigOffset_t end_offset,
-                         bool display_sequence,
-                         const std::string& filename,
-                         char delimiter = ',') const;
+  [[nodiscard]] bool writeDistribution( std::shared_ptr<const GenomeDatabase> genome_db,
+                                        size_t interval_size,
+                                        const ContigId_t analysis_contig,
+                                        ContigOffset_t start_offset,
+                                        ContigOffset_t end_offset,
+                                        bool display_sequence,
+                                        const std::string& filename,
+                                        char delimiter = ',') const;
 
 private:
 
   IntervalContigMap interval_contig_map_;
 
-  bool writeData(std::shared_ptr<const GenomeDatabase> genome_db,
-                 size_t interval_size,
-                 const ContigId_t analysis_contig,
-                 ContigOffset_t start_offset,
-                 ContigOffset_t end_offset,
-                 bool display_sequence,
-                 std::ostream& output,
-                 const char delimiter) const;
-  bool writeHeader(std::ostream& output, char delimiter, bool display_sequence) const;
-  bool addVariant(std::shared_ptr<const Variant> variant);
+  [[nodiscard]] bool writeData( std::shared_ptr<const GenomeDatabase> genome_db,
+                                size_t interval_size,
+                                const ContigId_t analysis_contig,
+                                ContigOffset_t start_offset,
+                                ContigOffset_t end_offset,
+                                bool display_sequence,
+                                std::ostream& output,
+                                const char delimiter) const;
+  [[nodiscard]] bool writeHeader(std::ostream& output, char delimiter, bool display_sequence) const;
+  [[nodiscard]] bool addVariant(std::shared_ptr<const Variant> variant);
 
 };
 
@@ -71,12 +71,12 @@ public:
   HeterozygousStatistics() = default;
   ~HeterozygousStatistics() = default;
 
-  bool heterozygousStatistics(std::shared_ptr<const UnphasedPopulation> unphased_population);
-  bool writeHeterozygousStatistics(const std::string& file_name, const char delimiter) const;
+  [[nodiscard]] bool heterozygousStatistics(std::shared_ptr<const UnphasedPopulation> unphased_population);
+  [[nodiscard]] bool writeHeterozygousStatistics(const std::string& file_name, const char delimiter) const;
 
 private:
 
-  const HeteroResults& getMap() const { return hetero_results_; }
+  [[nodiscard]]  const HeteroResults& getMap() const { return hetero_results_; }
 
   constexpr static const size_t HOMOZYGOUS_{0};
   constexpr static const size_t HETEROZYGOUS_{1};

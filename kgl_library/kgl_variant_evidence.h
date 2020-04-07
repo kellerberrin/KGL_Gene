@@ -30,7 +30,7 @@ public:
   explicit VariantEvidence() = default;
   virtual ~VariantEvidence() = default;
 
-  virtual std::string output(char delimiter, VariantOutputIndex output_index) const = 0;
+  [[nodiscard]] virtual std::string output(char delimiter, VariantOutputIndex output_index) const = 0;
 
 private:
 

@@ -33,36 +33,36 @@ public:
 
   Feature& operator=(const Feature&) = default;
 
-  const FeatureIdent_t& id() const { return id_; }
-  const FeatureSequence& sequence() const { return sequence_; }
+  [[nodiscard]] const FeatureIdent_t& id() const { return id_; }
+  [[nodiscard]] const FeatureSequence& sequence() const { return sequence_; }
   void sequence(const FeatureSequence& new_sequence) { sequence_ = new_sequence; }
   void setAttributes(const Attributes& attributes) { attributes_ = attributes; }
-  const Attributes& getAttributes() const { return attributes_; }
-  const FeatureType_t& featureType() const { return type_; }
-  bool verifyStrand(const SortedCDS& sorted_cds) const;   // Check feature strand consistency
-  bool verifyCDSPhase(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const; // Check the CDS phase for -ve and +ve strand genes
-  std::shared_ptr<const Feature> getGene() const; // returns null pointer if not found
+  [[nodiscard]] const Attributes& getAttributes() const { return attributes_; }
+  [[nodiscard]] const FeatureType_t& featureType() const { return type_; }
+  [[nodiscard]] bool verifyStrand(const SortedCDS& sorted_cds) const;   // Check feature strand consistency
+  [[nodiscard]] bool verifyCDSPhase(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const; // Check the CDS phase for -ve and +ve strand genes
+  [[nodiscard]] std::shared_ptr<const Feature> getGene() const; // returns null pointer if not found
   void recusivelyPrintsubfeatures(long feature_level = 1) const; // useful debug function.
-  std::string featureText() const; // also useful for debug
+  [[nodiscard]] std::string featureText() const; // also useful for debug
   // Hierarchy routines.
   void clearHierachy() { sub_features_.clear(); super_feature_ptr_.reset(); }
   void addSubFeature(const FeatureIdent_t& sub_feature_id, std::shared_ptr<const Feature> sub_feature_ptr);
-  virtual bool isCDS() const { return false; }
-  virtual bool isGene() const { return false; }
-  virtual bool ismRNA() const { return false; }
-  virtual bool isEXON() const { return false; }
-  virtual bool isTSS() const { return false; }
+  [[nodiscard]] virtual bool isCDS() const { return false; }
+  [[nodiscard]] virtual bool isGene() const { return false; }
+  [[nodiscard]] virtual bool ismRNA() const { return false; }
+  [[nodiscard]] virtual bool isEXON() const { return false; }
+  [[nodiscard]] virtual bool isTSS() const { return false; }
 
 
   // Always check for a NULL pointer with super feature.
-  bool hasSuperfeature() const { return getSuperFeature() != nullptr; }
-  std::shared_ptr<const Feature> getSuperFeature() const { return super_feature_ptr_.lock(); }
+  [[nodiscard]] bool hasSuperfeature() const { return getSuperFeature() != nullptr; }
+  [[nodiscard]] std::shared_ptr<const Feature> getSuperFeature() const { return super_feature_ptr_.lock(); }
   void setSuperFeature(std::shared_ptr<const Feature> shared_super_feature) { super_feature_ptr_ = shared_super_feature; }
 
-  const SubFeatureMap& subFeatures() const { return sub_features_; }
-  SubFeatureMap& subFeatures() { return sub_features_; }
+  [[nodiscard]] const SubFeatureMap& subFeatures() const { return sub_features_; }
+  [[nodiscard]] SubFeatureMap& subFeatures() { return sub_features_; }
 
-  std::shared_ptr<const ContigFeatures> contig() const { return contig_ptr_; }
+  [[nodiscard]] std::shared_ptr<const ContigFeatures> contig() const { return contig_ptr_; }
 
 private:
 
@@ -74,7 +74,7 @@ private:
   SuperFeaturePtr super_feature_ptr_;
   Attributes attributes_;
 
-  bool verifyMod3(const SortedCDS& sorted_cds) const;
+  [[nodiscard]] bool verifyMod3(const SortedCDS& sorted_cds) const;
 };
 
 
@@ -100,10 +100,10 @@ public:
 
   CDSFeature &operator=(const CDSFeature &) = default;
 
-  CDSPhaseType_t phase() const { return phase_; }
+  [[nodiscard]] CDSPhaseType_t phase() const { return phase_; }
   void phase(CDSPhaseType_t _phase) { phase_ = _phase; }
 
-  virtual bool isCDS() const final { return true; }
+  [[nodiscard]] virtual bool isCDS() const final { return true; }
   // CDS Type.
   constexpr static const char* CDS_TYPE = "CDS";
 
@@ -130,7 +130,7 @@ public:
 
   EXONFeature &operator=(const EXONFeature &) = default;
 
-  bool isEXON() const final { return true; }
+  [[nodiscard]] bool isEXON() const final { return true; }
 
   // EXON Type.
   constexpr static const char* EXON_TYPE = "EXON";
@@ -158,7 +158,7 @@ public:
 
   mRNAFeature &operator=(const mRNAFeature &) = default;
 
-  bool ismRNA() const final { return true; }
+  [[nodiscard]] bool ismRNA() const final { return true; }
 
   // MRNA Type.
   constexpr static const char* MRNA_TYPE = "MRNA";
@@ -186,9 +186,9 @@ public:
   GeneFeature &operator=(const GeneFeature &) = default;
 
   // Public function returns a sequence map.
-  static std::shared_ptr<const CodingSequenceArray> getCodingSequences(std::shared_ptr<const GeneFeature> gene);
+  [[nodiscard]] static std::shared_ptr<const CodingSequenceArray> getCodingSequences(std::shared_ptr<const GeneFeature> gene);
 
-  bool isGene() const final { return true; }
+  [[nodiscard]] bool isGene() const final { return true; }
 
   // GENE Type.
   constexpr static const char* GENE_TYPE = "GENE";
@@ -197,10 +197,10 @@ private:
 
   // Initializes the map_ptr with a list of coding sequences found for the gene. Recursive.
   // Specifying an optional identifier is used 
-  static bool getCodingSequences(std::shared_ptr<const GeneFeature> gene,
-                                 std::shared_ptr<const Feature> cds_parent,
-                                 std::shared_ptr<CodingSequenceArray>& sequence_array_ptr,
-                                 const FeatureIdent_t& optional_identifier = FeatureIdent_t(""));
+  [[nodiscard]] static bool getCodingSequences( std::shared_ptr<const GeneFeature> gene,
+                                                std::shared_ptr<const Feature> cds_parent,
+                                                std::shared_ptr<CodingSequenceArray>& sequence_array_ptr,
+                                                const FeatureIdent_t& optional_identifier = FeatureIdent_t(""));
 
 
 };
@@ -229,7 +229,7 @@ public:
 
   TSSFeature &operator=(const TSSFeature &) = default;
 
-  bool isTSS() const final { return true; }
+  [[nodiscard]] bool isTSS() const final { return true; }
 
   // TSS Type.
   constexpr static const char* TSS_TYPE = "TSS_BLOCK";

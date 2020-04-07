@@ -35,7 +35,7 @@ public:
   constexpr static const char INSERTION = '+';
   constexpr static const char DELETION = '-';
 
-  bool isIndel() const { return mutant_char == INSERTION or mutant_char == DELETION; }
+  [[nodiscard]] bool isIndel() const { return mutant_char == INSERTION or mutant_char == DELETION; }
 
 };
 
@@ -51,11 +51,11 @@ public:
 
   // Comparison
 
-  CompareScore_t MyerHirschbergGlobal(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
+  [[nodiscard]] CompareScore_t MyerHirschbergGlobal(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
 
-  CompareScore_t MyerHirschbergLocal(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
+  [[nodiscard]] CompareScore_t MyerHirschbergLocal(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
 
-  CompareScore_t DNALocalAffineGap(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
+  [[nodiscard]] CompareScore_t DNALocalAffineGap(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
 
   // Compare sequences in mutation format.
   void editDNAItems(const std::string& reference,

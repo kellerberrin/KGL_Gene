@@ -46,13 +46,13 @@ public:
   }
   virtual ~VCFReaderMT() = default;
 
-  const seqan::VcfHeader& readHeader() const;
+  [[nodiscard]] const seqan::VcfHeader& readHeader() const;
 
   void readVCFFile();
 
-  const std::vector<std::string>& getFieldNames() const { return field_names_; }
+  [[nodiscard]] const std::vector<std::string>& getFieldNames() const { return field_names_; }
 
-  const ContigId_t getContig(int32_t contig_idx) const;
+  [[nodiscard]] const ContigId_t getContig(int32_t contig_idx) const;
 
 private:
 

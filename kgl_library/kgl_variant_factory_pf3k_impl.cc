@@ -95,7 +95,14 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const seqan::VcfReco
         }
 
         std::vector<std::string> gt_vector;
-        ParseVCFMiscImpl::tokenize(genotype_parser.getFormatString(recordParser.GTOffset(), *it), GT_FIELD_SEPARATOR_, gt_vector);
+
+        if (not ParseVCFMiscImpl::tokenize(genotype_parser.getFormatString(recordParser.GTOffset(), *it), GT_FIELD_SEPARATOR_, gt_vector)) {
+
+          ExecEnv::log().error("Parsing Pf3k VCF, Problem tokenizing PT format field: {}.",
+                               genotype_parser.getFormatString(recordParser.GTOffset(), *it));
+          continue;
+
+        }
 
         if (gt_vector.size() != 2) {
 
@@ -127,7 +134,14 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const seqan::VcfReco
 
         // Get ad allele depths.
         std::vector<std::string> ad_vector;
-        ParseVCFMiscImpl::tokenize(genotype_parser.getFormatString(recordParser.ADOffset(), *it), AD_FIELD_SEPARATOR_, ad_vector);
+
+        if (not ParseVCFMiscImpl::tokenize(genotype_parser.getFormatString(recordParser.ADOffset(), *it), AD_FIELD_SEPARATOR_, ad_vector)) {
+
+          ExecEnv::log().error("Parsing Pf3k VCF, Problem tokenizing AD format field");
+          continue;
+
+        }
+
         // Allele depths should be the number of alleles + the reference
         if (ad_vector.size() != (recordParser.alleles().size() + 1)) {
 
@@ -192,14 +206,18 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const seqan::VcfReco
             std::vector<CigarEditItem> parsed_cigar = ParseVCFMiscImpl::generateEditVector(recordParser.reference(), allele);
             size_t record_variants;
 
-            parseCigarItems(genome_name,
-                            recordParser.contigPtr(),
-                            parsed_cigar,
-                            recordParser.offset(),
-                            recordParser.reference(),
-                            allele,
-                            evidence_ptr,
-                            record_variants);
+            if (not parseCigarItems( genome_name,
+                                     recordParser.contigPtr(),
+                                     parsed_cigar,
+                                     recordParser.offset(),
+                                     recordParser.reference(),
+                                     allele,
+                                     evidence_ptr,
+                                  record_variants)) {
+
+              ExecEnv::log().error("Parsing Pf3k VCF, Problem parsing A allele CIGAR items");
+
+            }
 
             variant_count_ += parsed_cigar.size();
 
@@ -234,14 +252,18 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const seqan::VcfReco
             std::vector<CigarEditItem> parsed_cigar = ParseVCFMiscImpl::generateEditVector(recordParser.reference(), allele);
             size_t record_variants;
 
-            parseCigarItems(genome_name,
-                            recordParser.contigPtr(),
-                            parsed_cigar,
-                            recordParser.offset(),
-                            recordParser.reference(),
-                            allele,
-                            evidence_ptr,
-                            record_variants);
+            if (not parseCigarItems( genome_name,
+                                     recordParser.contigPtr(),
+                                     parsed_cigar,
+                                     recordParser.offset(),
+                                     recordParser.reference(),
+                                     allele,
+                                     evidence_ptr,
+                                  record_variants)) {
+
+              ExecEnv::log().error("Parsing Pf3k VCF, Problem parsing B allele CIGAR items");
+
+            }
 
             variant_count_ += parsed_cigar.size();
 

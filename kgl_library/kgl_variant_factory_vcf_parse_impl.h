@@ -40,45 +40,45 @@ public:
   ~ParseVCFMiscImpl() = default;
 
 
-  static bool parseVcfHeader(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                             const seqan::VcfHeader& header,
-                             ActiveContigMap& active_contig_map,
-                             bool cigar_required);
+  [[nodiscard]] static bool parseVcfHeader( std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                            const seqan::VcfHeader& header,
+                                            ActiveContigMap& active_contig_map,
+                                            bool cigar_required);
 
 // assumes input "key_1=value_1; ...;key_n=value_n"
-  static bool tokenizeVcfInfoKeyValues(const std::string& key_value_text,
-                                       std::map<std::string, std::string>& key_value_map);
+  [[nodiscard]] static bool tokenizeVcfInfoKeyValues( const std::string& key_value_text,
+                                                      std::map<std::string, std::string>& key_value_map);
 
-  static bool parseCigar(const std::string& cigar,
-                         size_t& check_reference_size,
-                         size_t& check_alternate_size,
-                         std::vector<CigarEditItem>& parsed_cigar);
+  [[nodiscard]] static bool parseCigar( const std::string& cigar,
+                                        size_t& check_reference_size,
+                                        size_t& check_alternate_size,
+                                        std::vector<CigarEditItem>& parsed_cigar);
 
 // tokenize a string
-  static bool tokenize(const std::string& parse_text, const std::string& separator_text, std::vector<std::string>& item_vector);
+  [[nodiscard]] static bool tokenize(const std::string& parse_text, const std::string& separator_text, std::vector<std::string>& item_vector);
 
   // Generate a CIGAR from two sequences.
-  static std::string generateCigar(const std::string& reference, const std::string& alternate);
+  [[nodiscard]] static std::string generateCigar(const std::string& reference, const std::string& alternate);
 
   // Generate a CIGAR from a cigar vector
-  static std::string generateCigar(const CigarVector& cigar_vector);
+  [[nodiscard]] static std::string generateCigar(const CigarVector& cigar_vector);
 
 // Use edlib to generate a cigar vector.
-  static CigarVector generateEditVector(const std::string& reference, const std::string& alternate);
+  [[nodiscard]] static CigarVector generateEditVector(const std::string& reference, const std::string& alternate);
 
   // Given a reference count and a cigar vector compute a number that calculates the equivalent
   // size of the alternate string.
   // For UNCHANGED = 'M' and CHANGED = 'X' cigar items the reference_count and alternate count are incremented.
   // For INSERT = 'I' the alternate is incremented and the reference_count is not.
   // For DELETE = 'D' the reference count is incremented and the alternate is not.
-  static size_t alternateCount(size_t reference_count, const CigarVector& cigar_vector);
+  [[nodiscard]] static size_t alternateCount(size_t reference_count, const CigarVector& cigar_vector);
 
 
 private:
 
   // assumes input "<key_1=value_1, ...,key_n=value_n>"
-  static bool tokenizeVcfHeaderKeyValues(const std::string& key_value_text,
-                                         VcfInfoKeyMap& key_value_pairs);
+  [[nodiscard]] static bool tokenizeVcfHeaderKeyValues( const std::string& key_value_text,
+                                                        VcfInfoKeyMap& key_value_pairs);
 
 // Use edlib to generate a cigar string.
   static void generateEditString(const std::string& reference, const std::string& alternate, std::vector<CigarEditType>& edit_vector);

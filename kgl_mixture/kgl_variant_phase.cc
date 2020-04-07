@@ -14,7 +14,7 @@ namespace kgl = kellerberrin::genome;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Not Thread safe.
-// This object accepts unphased variants and trivally phases them as haploid.
+// This object accepts unphased variants and trivially phases them as haploid.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -37,7 +37,7 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
                                                 genome_db,
                                                 genome_variant)) {
 
-      ExecEnv::log().error("Haploid Phasing; Unable to get/create genome: {} to haploid population", genome.first);
+      ExecEnv::log().error("GenomePhasing::Haploid Phasing(); Unable to get/create genome: {} to haploid population", genome.first);
       return false;
 
     }
@@ -53,7 +53,13 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
 
           std::shared_ptr<Variant> mutable_variant = std::const_pointer_cast<Variant>(offset.second.front().first);
           mutable_variant->updatePhaseId(ContigVariant::HAPLOID_HOMOLOGOUS_INDEX);   // Assign to the first (and only) homologous contig.
-          genome_variant->addVariant(mutable_variant);
+
+          if (not genome_variant->addVariant(mutable_variant)) {
+
+            ExecEnv::log().error("GenomePhasing::Haploid Phasing(); Haploid Genome: {} Unable to add Homozygous variant", genome.first);
+
+          }
+
           ++homozygous_count;
 
         } else {  // the variant is heterozygous, we analyze the count statistics.
@@ -65,7 +71,13 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
 
             std::shared_ptr<Variant> mutable_variant = std::const_pointer_cast<Variant>(offset.second.at(variant_index).first);
             mutable_variant->updatePhaseId(ContigVariant::HAPLOID_HOMOLOGOUS_INDEX);   // Assign to the first (and only) homologous contig.
-            genome_variant->addVariant(mutable_variant);
+
+            if (not genome_variant->addVariant(mutable_variant)) {
+
+              ExecEnv::log().error("GenomePhasing::Haploid Phasing(); Haploid Genome: {} Unable to add Heterozygous variant", genome.first);
+
+            }
+
             ++accepted_heterozygous_count;
 
           }

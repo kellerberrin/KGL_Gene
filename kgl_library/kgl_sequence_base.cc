@@ -105,7 +105,14 @@ std::shared_ptr<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::subSequence(Co
 
   }
 
-  getSubsequence(offset, sub_length, sub_sequence);
+  if (not getSubsequence(offset, sub_length, sub_sequence)) {
+
+    ExecEnv::log().warn("DNA5SequenceLinear::subSequence; Cannot get sub-sequence offset: {} and sub sequence size: {} from sequence length: {}",
+                        offset, sub_length, length());
+    // Return an empty sequence
+    return sub_sequence;
+
+  }
 
   return sub_sequence;
 

@@ -116,9 +116,9 @@ public:
   FineStructureAnalysis() = default;
   ~FineStructureAnalysis() = default;
 
-  static bool generateFiles(const std::string& Filename,
-                            std::shared_ptr<const PhasedPopulation> population_ptr,
-                            double bases_per_centimorgan);
+  [[nodiscard]] static bool generateFiles( const std::string& Filename,
+                                           std::shared_ptr<const PhasedPopulation> population_ptr,
+                                           double bases_per_centimorgan);
 
 
 private:
@@ -126,12 +126,12 @@ private:
 
   constexpr static const char DELIMITER_ = ' ';
 
-  static bool generateIDFile(const std::string& Filename,
-                             std::shared_ptr<const PhasedPopulation> population_ptr);
+  [[nodiscard]] static bool generateIDFile( const std::string& Filename,
+                                            std::shared_ptr<const PhasedPopulation> population_ptr);
 
-  static bool generatePhaseFile(const std::string& Filename,
-                                std::shared_ptr<const PhasedPopulation> population_ptr,
-                                double bases_per_centimorgan);
+  [[nodiscard]] static bool generatePhaseFile( const std::string& Filename,
+                                               std::shared_ptr<const PhasedPopulation> population_ptr,
+                                               double bases_per_centimorgan);
 
 };
 

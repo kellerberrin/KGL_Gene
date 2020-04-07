@@ -93,7 +93,7 @@ private:
   UnphasedContigMap contig_map_;
   GenomeId_t genome_id_;
 
-  bool addContig(std::shared_ptr<UnphasedContig> contig_ptr);
+  [[nodiscard]] bool addContig(std::shared_ptr<UnphasedContig> contig_ptr);
 
 };
 

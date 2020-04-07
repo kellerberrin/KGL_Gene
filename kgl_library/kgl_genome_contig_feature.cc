@@ -184,7 +184,6 @@ void kgl::GeneExonFeatures::setupFeatureHierarchy() {
     Feature& feature = *feature_pair.second;
     // For each feature lookup a list of super_features
     std::vector<FeatureIdent_t> super_features;
-
     feature.getAttributes().getSuperFeatureIds(super_features);
 
     // Add parent pointers for the child and child pointers for the super_features.

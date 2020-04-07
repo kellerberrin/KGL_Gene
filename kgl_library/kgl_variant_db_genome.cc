@@ -76,11 +76,18 @@ std::shared_ptr<kgl::GenomeVariant> kgl::GenomeVariant::filterVariants(const kgl
 
   std::shared_ptr<kgl::GenomeVariant> filtered_genome_ptr(std::make_shared<kgl::GenomeVariant>(genomeId(), ploidy()));
 
-  for (const auto& contig_variant : genome_variant_map_) {
+  for (const auto& [contig_id, contig_ptr] : genome_variant_map_) {
 
-    std::shared_ptr<kgl::ContigVariant> filtered_contig = contig_variant.second->filterVariants(filter);
-    filtered_genome_ptr->addContigVariant(filtered_contig);
-    ExecEnv::log().vinfo("Contig: {} has: {} filtered variants", contig_variant.first, filtered_contig->variantCount());
+    std::shared_ptr<kgl::ContigVariant> filtered_contig = contig_ptr->filterVariants(filter);
+
+    if (not filtered_genome_ptr->addContigVariant(filtered_contig)) {
+
+      ExecEnv::log().error("GenomeVariant::filterVariants() fails, could not add contig:{}", contig_id);
+
+    }
+
+
+    ExecEnv::log().vinfo("Contig: {} has: {} filtered variants", contig_id, filtered_contig->variantCount());
 
   }
 
@@ -175,10 +182,15 @@ std::shared_ptr<kgl::GenomeVariant> kgl::GenomeVariant::deepCopy() const {
 
   std::shared_ptr<GenomeVariant> copy(std::make_shared<GenomeVariant>(genomeId(), ploidy()));
 
-  for (auto contig : getMap()) {
+  for (auto [contig_id, contig_ptr] : getMap()) {
 
-    std::shared_ptr<ContigVariant> copy_contig(std::make_shared<ContigVariant>(contig.second->contigId(), contig.second->ploidy()));
-    copy->addContigVariant(copy_contig);
+    std::shared_ptr<ContigVariant> copy_contig(std::make_shared<ContigVariant>(contig_id, contig_ptr->ploidy()));
+
+    if (not copy->addContigVariant(copy_contig)) {
+
+      ExecEnv::log().error("GenomeVariant::deepCopy(), Genome: {}, cannot add Contig {}", genomeId(), contig_id);
+
+    }
 
   }
 
@@ -187,7 +199,12 @@ std::shared_ptr<kgl::GenomeVariant> kgl::GenomeVariant::deepCopy() const {
 
   for (auto variant : variant_vector) {
 
-    copy->addVariant(variant);
+    if (not copy->addVariant(variant)) {
+
+      ExecEnv::log().error("GenomeVariant::deepCopy(), Genome: {}, cannot add Variant {}",
+                           genomeId(), variant->output(' ', VariantOutputIndex::START_0_BASED, true));
+
+    }
 
   }
 

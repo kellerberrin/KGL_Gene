@@ -277,7 +277,13 @@ void VarGeneFamilyTree( DistanceTree& distance_tree,
 
             StrandSense strand;
             IntronOffsetMap intron_offset_map;
-            SequenceOffset::intronOffsetAdapter(coding_sequence, strand, intron_offset_map);
+            if (not SequenceOffset::intronOffsetAdapter(coding_sequence, strand, intron_offset_map)) {
+
+              ExecEnv::log().error("VarGeneFamilyTree(), Contig: {}, Gene: {},  cannot generate INTRON map",
+                                   coding_sequence->contig()->contigId(), coding_sequence->getGene()->id());
+              intron_offset_map.clear();
+
+            }
 
             if (intron_offset_map.size() != intron_sequence_array.size()) {
 

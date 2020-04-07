@@ -185,7 +185,12 @@ bool kgl::VCFVariant::performMutation(ContigOffset_t offset,
 
     // Mutate the sequence
     // SNPs do not modify the sequence size.
-    mutated_sequence_ptr->modifyBase(offset, add_subsequence[0]);
+    if (not mutated_sequence_ptr->modifyBase(offset, add_subsequence[0])) {
+
+      ExecEnv::log().error("performMutation(), could not modify base (SNP) at offset: {}", offset);
+      return false;
+
+    }
 
   } else {
 

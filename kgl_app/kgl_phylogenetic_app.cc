@@ -55,8 +55,11 @@ void kgl::PhylogeneticExecEnv::executeApp() {
     std::shared_ptr<UnphasedPopulation> filtered_unphased_ptr = unphased_population_ptr->filterVariants(AndFilter(DPCountFilter(30), RefAltCountFilter(30)));
 
     // Process Filtered Unphased Heterozygous Statistics
-    heterozygous_statistics.heterozygousStatistics(filtered_unphased_ptr);
+    if (not heterozygous_statistics.heterozygousStatistics(filtered_unphased_ptr)) {
 
+      ExecEnv::log().error("PhylogeneticExecEnv::executeApp(), Cannot generate heterozygous statistics for VCF file: {}", vcf_file.fileName());
+
+    }
 
     // If the mixture file is defined and exists then read it and generate a population of clonal genomes.
     std::string mixture_file;
@@ -76,7 +79,11 @@ void kgl::PhylogeneticExecEnv::executeApp() {
 
   // Write the unphased hetero/homozygous statistics.
   std::string heterozygous_file = Utility::filePath("HeterozygousAnalysis", args.workDirectory) + ".csv";
-  heterozygous_statistics.writeHeterozygousStatistics(heterozygous_file, ',');
+  if (not heterozygous_statistics.writeHeterozygousStatistics(heterozygous_file, ',')) {
+
+    ExecEnv::log().error("PhylogeneticExecEnv::executeApp(), Cannot write heterozygous statistics to file: {}", heterozygous_file);
+
+  }
 
   // Analyze the data.
   kgl::PhylogeneticAnalysis(runtime_options, genome_collection, unphased_population_ptr, population_ptr).performAnalysis(args.analysisType);

@@ -42,37 +42,37 @@ public:
   ContigVariant(const ContigVariant&) = delete; // Use deep copy.
   ~ContigVariant() = default;
 
-  ContigVariant& operator=(const ContigVariant&) = delete; // Use deep copy.
+  [[nodiscard]] ContigVariant& operator=(const ContigVariant&) = delete; // Use deep copy.
 
   // Always use deep copy when modifying this object (filter and set operations).
-  std::shared_ptr<ContigVariant> deepCopy() const;
+  [[nodiscard]] std::shared_ptr<ContigVariant> deepCopy() const;
 
-  bool addVariant(std::shared_ptr<const Variant>& variant_ptr);
+  [[nodiscard]] bool addVariant(std::shared_ptr<const Variant>& variant_ptr);
   // Returns true if variant found and erased.
-  bool eraseVariant(std::shared_ptr<const Variant>& variant_ptr);
+  [[nodiscard]] bool eraseVariant(std::shared_ptr<const Variant>& variant_ptr);
 
-  const ContigId_t& contigId() const { return contig_id_; }
-  PhaseId_t ploidy() const { return static_cast<PhaseId_t>(ploidy_vector_.size()); }
+  [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
+  [[nodiscard]] PhaseId_t ploidy() const { return static_cast<PhaseId_t>(ploidy_vector_.size()); }
 
-  size_t variantCount() const;
+  [[nodiscard]] size_t variantCount() const;
 
   // Set functions.
-  bool isElement(const Variant& variant) const;
-  std::shared_ptr<ContigVariant> Union(std::shared_ptr<const ContigVariant> contig_variant_ptr) const;
-  std::shared_ptr<ContigVariant> Intersection(std::shared_ptr<const ContigVariant> contig_variant_ptr) const;
-  std::shared_ptr<ContigVariant> Difference(std::shared_ptr<const ContigVariant> contig_variant_ptr) const;
+  [[nodiscard]] bool isElement(const Variant& variant) const;
+  [[nodiscard]] std::shared_ptr<ContigVariant> Union(std::shared_ptr<const ContigVariant> contig_variant_ptr) const;
+  [[nodiscard]] std::shared_ptr<ContigVariant> Intersection(std::shared_ptr<const ContigVariant> contig_variant_ptr) const;
+  [[nodiscard]] std::shared_ptr<ContigVariant> Difference(std::shared_ptr<const ContigVariant> contig_variant_ptr) const;
 
-  std::shared_ptr<ContigVariant> filterVariants(const VariantFilter& filter) const;
+  [[nodiscard]] std::shared_ptr<ContigVariant> filterVariants(const VariantFilter& filter) const;
 
-  const PloidyVector& getVector() const { return ploidy_vector_; }
+  [[nodiscard]] const PloidyVector& getVector() const { return ploidy_vector_; }
 
-  std::shared_ptr<const HomologousVariant> getHomologous(size_t index) const { return ploidy_vector_[index]; }
+  [[nodiscard]] std::shared_ptr<const HomologousVariant> getHomologous(size_t index) const { return ploidy_vector_[index]; }
 
   // All variants in [start, end) - note that end points past the last variant; end = (last + 1).
-  bool getSortedVariants(PhaseId_t phase,
-                         ContigOffset_t start,
-                         ContigOffset_t end,
-                         OffsetVariantMap& variant_map) const;
+  [[nodiscard]] bool getSortedVariants( PhaseId_t phase,
+                                        ContigOffset_t start,
+                                        ContigOffset_t end,
+                                        OffsetVariantMap& variant_map) const;
 
   static constexpr PhaseId_t HAPLOID_HOMOLOGOUS_INDEX = 0;  // The first (and only) haploid homologous contig.
 
@@ -87,7 +87,7 @@ private:
 }   // end namespace
 
 // Not in namespace.
-std::ostream & operator<<(std::ostream &os, const kellerberrin::genome::OffsetVariantMap& variant_map);
+[[nodiscard]] std::ostream & operator<<(std::ostream &os, const kellerberrin::genome::OffsetVariantMap& variant_map);
 
 
 #endif //KGL_VARIANT_DB_CONTIG_H

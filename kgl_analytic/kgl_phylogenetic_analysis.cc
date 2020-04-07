@@ -394,7 +394,11 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
           out_file << CSV_delimiter;
           out_file << CSV_delimiter;
           std::vector<std::string> description_vec;
-          gene.second->getAttributes().getDescription(description_vec);
+          if (not gene.second->getAttributes().getDescription(description_vec)) {
+
+            ExecEnv::log().error("outputSequenceCSV(), Cannot get description vector for Gene: {}", gene.second->id());
+
+          }
           std::string description;
           for (const auto &desc : description_vec) {
 
@@ -584,7 +588,13 @@ bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_na
           out_file << CSV_delimiter;
           out_file << CSV_delimiter;
           std::vector<std::string> description_vec;
-          gene.second->getAttributes().getDescription(description_vec);
+
+          if (not gene.second->getAttributes().getDescription(description_vec)) {
+
+            ExecEnv::log().error("outputSequenceCSV(), Cannot get description vector for Gene: {}", gene.second->id());
+
+          }
+
           std::string description;
           for (const auto &desc : description_vec) {
 
@@ -1107,7 +1117,11 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
     ss << "<NULL>" << delimiter;
     ss << "<NULL>" << delimiter;
     std::vector<std::string> description_vec;
-    coding_sequence->getGene()->getAttributes().getDescription(description_vec);
+    if (not coding_sequence->getGene()->getAttributes().getDescription(description_vec)) {
+
+      ExecEnv::log().error("Cannot get description vector for Gene: {}", coding_sequence->getGene()->id());
+
+    }
     for (const auto &description : description_vec) {
 
       ss << "\"" << description << "\"";

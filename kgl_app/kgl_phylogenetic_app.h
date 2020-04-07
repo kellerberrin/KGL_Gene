@@ -38,12 +38,12 @@ public:
   static constexpr const char* VERSION = "0.1";
   static constexpr const char* MODULE_NAME = "kgl_phylo";
   static void executeApp(); // Application mainline.
-  static bool parseCommandLine(int argc, char const ** argv);  // Parse command line arguments.
+  [[nodiscard]] static bool parseCommandLine(int argc, char const ** argv);  // Parse command line arguments.
 
 private:
 
-  static const Phylogenetic& getArgs();
-  static const RuntimeProperties& getRuntimeOptions();
+  [[nodiscard]] static const Phylogenetic& getArgs();
+  [[nodiscard]] static const RuntimeProperties& getRuntimeOptions();
   static Phylogenetic args_;
   static RuntimeProperties runtime_options_;
 

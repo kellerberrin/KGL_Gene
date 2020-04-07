@@ -40,21 +40,21 @@ public:
   using const_reverse_iterator = typename std::basic_string<typename Alphabet::Alphabet>::const_reverse_iterator;
   using value_type = typename Alphabet::Alphabet;
 
-  const_iterator begin() const { return base_string_.begin(); }
-  const_reverse_iterator rbegin() const { return base_string_.rbegin(); }
-  const_iterator end() const { return base_string_.end(); }
-  const_reverse_iterator rend() const { return base_string_.rend(); }
+  [[nodiscard]] const_iterator begin() const { return base_string_.begin(); }
+  [[nodiscard]] const_reverse_iterator rbegin() const { return base_string_.rbegin(); }
+  [[nodiscard]] const_iterator end() const { return base_string_.end(); }
+  [[nodiscard]] const_reverse_iterator rend() const { return base_string_.rend(); }
   void push_back(typename Alphabet::Alphabet nucleotide) { base_string_.push_back(nucleotide); }
   void pop_back() { base_string_.pop_back(); }
 
   AlphabetString& operator=(const AlphabetString& copy) = default;
 
-  ContigSize_t length() const { return base_string_.length(); }
-  bool empty() const { return base_string_.empty(); }
+  [[nodiscard]] ContigSize_t length() const { return base_string_.length(); }
+  [[nodiscard]] bool empty() const { return base_string_.empty(); }
 
   void reserve(ContigSize_t string_size) { base_string_.reserve(string_size); }
 
-  bool erase(ContigOffset_t offset, ContigSize_t size) {
+  [[nodiscard]] bool erase(ContigOffset_t offset, ContigSize_t size) {
 
     try {
 
@@ -72,7 +72,7 @@ public:
 
   void assignString(const std::string &alphabet_str) { convertFromCharString(alphabet_str); }
 
-  bool insert(ContigOffset_t offset, const AlphabetString& sub_string) {
+  [[nodiscard]] bool insert(ContigOffset_t offset, const AlphabetString& sub_string) {
 
     try {
 
@@ -88,7 +88,7 @@ public:
 
   }
 
-  bool append(const AlphabetString& sub_string) {
+  [[nodiscard]] bool append(const AlphabetString& sub_string) {
 
     try {
 
@@ -105,7 +105,7 @@ public:
   }
 
 
-  bool substring(ContigOffset_t offset, ContigSize_t size, AlphabetString& substring) const {
+  [[nodiscard]] bool substring(ContigOffset_t offset, ContigSize_t size, AlphabetString& substring) const {
 
     try {
 
@@ -126,7 +126,7 @@ public:
 
   void modifyLetter(ContigOffset_t &offset, typename Alphabet::Alphabet letter) { base_string_[offset] = letter; }
 
-  std::string str() const { return convertToCharString(); }
+  [[nodiscard]] std::string str() const { return convertToCharString(); }
 
   bool operator==(const AlphabetString& compare_string) const { return (base_string_ == compare_string.base_string_); }
 
@@ -146,15 +146,15 @@ public:
 
   }
 
-  bool verifyString() const;
+  [[nodiscard]] bool verifyString() const;
 
-  size_t hashString() const;
+  [[nodiscard]] size_t hashString() const;
 
 private:
 
   std::basic_string<typename Alphabet::Alphabet> base_string_;
 
-  std::string convertToCharString() const;
+  [[nodiscard]] std::string convertToCharString() const;
   void convertFromCharString(const std::string &alphabet_str);
 
 

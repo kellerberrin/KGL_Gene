@@ -94,7 +94,7 @@ void kgl::AdjalleyTSSFeatures::setupFeatureHierarchy(const StructuredFeatures& g
         }
 
         // Otherwise flag an Error; could not find super feature.
-        ExecEnv::log().error("Feature: {}; Super Feature: {} does not exist", feature.id(), super_feature_id);
+        ExecEnv::log().warn("Feature: {}; Super Feature: {} does not exist", feature.id(), super_feature_id);
 
       }
       if (super_feature_ptr_vec.size() > 1) {
@@ -134,6 +134,10 @@ void kgl::AuxContigFeatures::setupVerifyHierarchy(const StructuredFeatures& gene
 
 void kgl::AuxContigFeatures::checkAddFeature(std::shared_ptr<Feature>& feature_ptr) {
 
-  adjalley_TSS_Features_.checkAddFeature(feature_ptr);
+  if (not adjalley_TSS_Features_.checkAddFeature(feature_ptr)) {
+
+    ExecEnv::log().error("AuxContigFeatures::checkAddFeature(), Problem adding TSS feature: {}", feature_ptr->id());
+
+  }
 
 }

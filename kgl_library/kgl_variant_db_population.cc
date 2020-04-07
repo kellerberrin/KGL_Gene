@@ -108,11 +108,17 @@ std::shared_ptr<kgl::PhasedPopulation> kgl::PhasedPopulation::filterVariants(con
 
   std::shared_ptr<kgl::PhasedPopulation> filtered_population_ptr(std::make_shared<kgl::PhasedPopulation>(populationId()));
 
-  for (const auto& genome_variant : population_variant_map_) {
+  for (const auto& [genome_id, genome_ptr] : population_variant_map_) {
 
-    std::shared_ptr<kgl::GenomeVariant> filtered_genome_ptr = genome_variant.second->filterVariants(filter);
-    filtered_population_ptr->addGenomeVariant(filtered_genome_ptr);
-    ExecEnv::log().vinfo("Genome: {} has: {} filtered variants", genome_variant.first, filtered_genome_ptr->variantCount());
+    std::shared_ptr<kgl::GenomeVariant> filtered_genome_ptr = genome_ptr->filterVariants(filter);
+
+    if (not filtered_population_ptr->addGenomeVariant(filtered_genome_ptr)) {
+
+      ExecEnv::log().error("PhasedPopulation::filterVariants, Cannot add filtered Genome: {} to filtered population", genome_id);
+
+    }
+
+//    ExecEnv::log().vinfo("Genome: {} has: {} filtered variants", genome_variant.first, filtered_genome_ptr->variantCount());
 
   }
 
