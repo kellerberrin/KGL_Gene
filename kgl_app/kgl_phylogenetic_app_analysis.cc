@@ -81,7 +81,7 @@ void kgl::PhylogeneticAnalysis::performMotif() {
 void kgl::PhylogeneticAnalysis::performSequence() {
 
 
-  std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
+  std::shared_ptr<const DNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
 
   std::string coding_file = Utility::filePath("All_DNA_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
   if (not kgl::ApplicationAnalysis::outputDNASequenceCSV( coding_file,
@@ -121,8 +121,8 @@ void kgl::PhylogeneticAnalysis::performSequence() {
 
   }
 
-  std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric(
-      std::make_shared<const LevenshteinGlobal>());
+  std::shared_ptr<const AminoSequenceDistance> amino_distance_metric(std::make_shared<const LevenshteinGlobal>());
+
   coding_file = Utility::filePath("All_Amino_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
   if (not kgl::ApplicationAnalysis::outputAminoSequenceCSV(coding_file, amino_distance_metric,
                                                    genome_collection_ptr_->getGenome(analysis_genome),

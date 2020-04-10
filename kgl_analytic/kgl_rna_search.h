@@ -52,20 +52,20 @@ public:
                                     ContigOffset_t rna_target_offset,
                                     ContigSize_t rna_target_size,
                                     StrandSense rna_target_strand,
-                                    std::shared_ptr<const GenomeDatabase> genome_db_ptr);
+                                    const std::shared_ptr<const GenomeDatabase>& genome_db_ptr);
 
   [[nodiscard]] bool compareRNARegion( ContigSize_t rna_region_comparison_start,
                                        ContigSize_t rna_region_subsize,
                                        ContigSize_t rna_region_comparison_increment,
-                                       std::shared_ptr<const LocalDNASequenceCompare> dna_compare_metric);
+                                       const std::shared_ptr<const LocalDNASequenceCompare>& dna_compare_metric);
 
   void showResults(size_t limit);
 
 
 private:
 
-  std::shared_ptr<DNA5SequenceLinear> rna_sequence_;
-  std::shared_ptr<DNA5SequenceLinear> rna_target_;
+  DNA5SequenceLinear rna_sequence_;
+  DNA5SequenceLinear rna_target_;
   RNASearchResults search_results_;
 
 };

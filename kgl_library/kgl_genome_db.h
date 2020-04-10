@@ -34,8 +34,7 @@ class ContigFeatures {
 public:
 
   ContigFeatures(const ContigId_t& contig_id,
-                 std::shared_ptr<DNA5SequenceContig> sequence_ptr) : contig_id_(contig_id),
-                                                                     sequence_ptr_(sequence_ptr) {}
+                 const std::shared_ptr<const DNA5SequenceContig>& sequence_ptr) : contig_id_(contig_id), sequence_ptr_(sequence_ptr) {}
   ContigFeatures(const ContigFeatures&) = default;
   ~ContigFeatures() = default;
 
@@ -51,7 +50,7 @@ public:
     return gene_exon_features_.findFeatureId(feature_id, feature_ptr_vec);
   }
   // false if offset is not in a gene, else (true) returns a vector of ptrs to the genes.
-  [[nodiscard]] bool findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const;
+//  [[nodiscard]] bool findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const;
 
   [[nodiscard]] const GeneMap& getGeneMap() const { return gene_exon_features_.geneMap(); }
 
@@ -68,12 +67,12 @@ public:
   [[nodiscard]] ContigSize_t contigSize() const { return sequence_ptr_->length(); }
 
 
-  [[nodiscard]] bool verifyDNACodingSequence(std::shared_ptr<const DNA5SequenceCoding> coding_dna_ptr) const;
-  [[nodiscard]] bool verifyProteinSequence(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const;
-  [[nodiscard]] ProteinSequenceAnalysis proteinSequenceAnalysis(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const;
+  [[nodiscard]] bool verifyDNACodingSequence(const DNA5SequenceCoding& coding_dna) const;
+  [[nodiscard]] bool verifyProteinSequence(const AminoSequence& amino_sequence) const;
+  [[nodiscard]] ProteinSequenceAnalysis proteinSequenceAnalysis(const AminoSequence& amino_sequence) const;
   // Returns the protein sequence as the distance in amino acids between the start codon and stop codon.
   // No start and stop codon returns 0.
-  [[nodiscard]] size_t proteinSequenceSize(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const;
+  [[nodiscard]] size_t proteinSequenceSize(const AminoSequence& amino_sequence) const;
 
   // Given a gene id and an mRNA (sequence id) return the CDS coding sequence.
   [[nodiscard]] bool getCodingSequence( const FeatureIdent_t& gene_id,
@@ -82,10 +81,10 @@ public:
 
   // Given a CDS coding sequence, return the corresponding DNA base sequence (strand adjusted).
   [[nodiscard]] bool getDNA5SequenceCoding( const std::shared_ptr<const CodingSequence>& coding_sequence_ptr,
-                                            std::shared_ptr<DNA5SequenceCoding>& coding_dna_ptr) const;
+                                            DNA5SequenceCoding& dna_coding) const;
 
   // Generate Amino acid sequences using the table specified for this contig.
-  [[nodiscard]] std::shared_ptr<AminoSequence> getAminoSequence(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const;
+  [[nodiscard]] AminoSequence getAminoSequence(const DNA5SequenceCoding& sequence_ptr) const;
   [[nodiscard]] AminoAcid::Alphabet getAminoAcid(const Codon& codon) const { return coding_table_.getAmino(codon); }
 
   // Wire-up the contig features
@@ -96,14 +95,14 @@ public:
 private:
 
   ContigId_t contig_id_;
-  std::shared_ptr<DNA5SequenceContig> sequence_ptr_;  // The contig unstranded DNA sequence.
+  std::shared_ptr<const DNA5SequenceContig> sequence_ptr_;  // The contig unstranded DNA sequence.
   GeneExonFeatures gene_exon_features_;  // All the genes and exons defined for this contig.
   AuxContigFeatures aux_contig_features_;
   TranslateToAmino coding_table_;  // Amino Acid translation table, unique for contig (e.g. mitochondria)
 
   // Check all gene coding sequences for start and end codons and nonsense (intermediate stop codon) mutations.
-  [[nodiscard]] bool verifyCodingSequences( const std::shared_ptr<const GeneFeature> gene_ptr,
-                                            std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const;
+  [[nodiscard]] bool verifyCodingSequences( const std::shared_ptr<const GeneFeature>& gene_ptr,
+                                            const std::shared_ptr<const CodingSequenceArray>& coding_seq_ptr) const;
 
 };
 

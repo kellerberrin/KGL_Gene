@@ -19,15 +19,13 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
                                      ContigOffset_t rna_target_offset,
                                      ContigSize_t rna_target_size,
                                      StrandSense rna_target_strand,
-                                     std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
+                                     const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) {
 
   // Get the contig.
   std::shared_ptr<const ContigFeatures> contig_ptr;
   if (not genome_db_ptr->getContigSequence(rna_contig, contig_ptr)) {
 
     ExecEnv::log().warn("getRNARegions(), Could not find contig: {} in genome database", rna_contig);
-    rna_sequence_ = nullptr;
-    rna_target_ = nullptr;
     return false;
 
   }
@@ -37,23 +35,19 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
 
     ExecEnv::log().warn("getRNARegions(), contig offset: {} and region size: {} too large for contig: {} length: {}",
                         rna_offset, rna_region_size, contig_ptr->contigId(), contig_ptr->sequence().length());
-    rna_sequence_ = nullptr;
-    rna_target_ = nullptr;
     return false;
 
   }
 
   // Get the reference DNA sequence
   rna_sequence_ = contig_ptr->sequence().subSequence(rna_offset, rna_region_size);
-  std::shared_ptr<DNA5SequenceCoding> stranded_rna_sequence = SequenceOffset::codingSequence(rna_sequence_, rna_strand);
+  DNA5SequenceCoding stranded_rna_sequence = SequenceOffset::codingSequence(rna_sequence_, rna_strand);
   rna_sequence_ = DNA5SequenceLinear::downConvertToLinear(stranded_rna_sequence);
 
   // Get the contig.
   if (not genome_db_ptr->getContigSequence(rna_target_contig, contig_ptr)) {
 
     ExecEnv::log().warn("getRNARegions(), Could not find contig: {} in genome database", rna_target_contig);
-    rna_sequence_ = nullptr;
-    rna_target_ = nullptr;
     return false;
 
   }
@@ -63,8 +57,6 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
 
     ExecEnv::log().warn("getRNARegions(), contig offset: {} and region size: {} too large for contig: {} length: {}",
                         rna_target_offset, rna_target_size, contig_ptr->contigId(), contig_ptr->sequence().length());
-    rna_sequence_ = nullptr;
-    rna_target_ = nullptr;
     return false;
 
   }
@@ -82,23 +74,17 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
 bool kgl::RNAAnalysis::compareRNARegion(ContigSize_t rna_region_comparison_start,
                                         ContigSize_t rna_region_subsize,
                                         ContigSize_t rna_region_comparison_increment,
-                                        std::shared_ptr<const LocalDNASequenceCompare> dna_compare_metric) {
+                                        const std::shared_ptr<const LocalDNASequenceCompare>& dna_compare_metric) {
 
-  if (not rna_sequence_ and rna_target_) {
-
-    ExecEnv::log().warn("compareRNARegion(), Sequence and Target Sewquences have not been defined");
-    return false;
-
-  }
 
   size_t counter = 0;
   const size_t report_frequency = 10;
 
   for (size_t idx = rna_region_comparison_start;
-       idx < (rna_sequence_->length() - rna_region_subsize);
+       idx < (rna_sequence_.length() - rna_region_subsize);
        idx += rna_region_comparison_increment) {
 
-    std::shared_ptr<DNA5SequenceLinear> rna_sub_region = rna_sequence_->subSequence(idx, rna_region_subsize);
+    DNA5SequenceLinear rna_sub_region = rna_sequence_.subSequence(idx, rna_region_subsize);
 
     std::string compare_str;
     CompareScore_t score = dna_compare_metric->compare(rna_target_, rna_sub_region, compare_str);
@@ -111,7 +97,7 @@ bool kgl::RNAAnalysis::compareRNARegion(ContigSize_t rna_region_comparison_start
     analysis_results.score_ = score;
     analysis_results.target_offset_ = 0;
     analysis_results.comparison_ = compare_str;
-    analysis_results.rna_sequence = rna_sub_region->getSequenceAsString();
+    analysis_results.rna_sequence = rna_sub_region.getSequenceAsString();
 
     search_results_.insert(RNASearchResults::value_type(index_score, analysis_results));
 
@@ -120,7 +106,7 @@ bool kgl::RNAAnalysis::compareRNARegion(ContigSize_t rna_region_comparison_start
     if (counter % report_frequency == 0) {
 
       ExecEnv::log().info("compareRNARegion() just compared: {}, total comparisons: {}",
-                          rna_sub_region->getSequenceAsString(), counter);
+                          rna_sub_region.getSequenceAsString(), counter);
 
     }
 

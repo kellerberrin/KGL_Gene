@@ -48,7 +48,7 @@ void UnphasedDistanceTree(DistanceTree& distance_tree,
 template<typename T, typename... Args>
 void PopulationDistanceTree(DistanceTree& distance_tree,
                             const std::string& newick_file,
-                            std::shared_ptr<const GlobalDNASequenceDistance> sequence_distance,
+                            std::shared_ptr<const DNASequenceDistance> sequence_distance,
                             std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
                             std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                             Args... args) {
@@ -75,7 +75,7 @@ void PopulationDistanceTree(DistanceTree& distance_tree,
 template<typename T, typename... Args>
 void GeneDistanceTree(DistanceTree& distance_tree,
                       const std::string& newick_file,
-                      std::shared_ptr<const LocalAminoSequenceDistance> sequence_distance,
+                      std::shared_ptr<const AminoSequenceDistance> sequence_distance,
                       std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
                       std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                       const std::string& protein_family,
@@ -170,7 +170,7 @@ template<typename T>
 void VarGeneFamilyTree( DistanceTree& distance_tree,
                      const std::string& newick_file,
                      const std::string& intron_file,
-                     std::shared_ptr<const LocalSequenceDistance> sequence_distance,
+                     std::shared_ptr<const AnySequenceDistance> sequence_distance,
                      std::shared_ptr<const GenomeCollection> genome_collection_ptr,
                      const std::string& protein_family) {
 
@@ -189,16 +189,16 @@ void VarGeneFamilyTree( DistanceTree& distance_tree,
 #define I_COMPLEMENT_PROMOTER "ACATACAC"
 #define I_5_PROMOTER "TCATA"
   // Header.
-  std::shared_ptr<DNA5SequenceLinear> i_promoter_ptr(std::make_shared<DNA5SequenceLinear>(StringDNA5(I_PROMOTER)));
-  std::shared_ptr<DNA5SequenceLinear> i_promoter_ptr_rev = DNA5SequenceLinear::downConvertToLinear(i_promoter_ptr->codingSequence(StrandSense::REVERSE));
+  DNA5SequenceLinear i_promoter(StringDNA5(I_PROMOTER));
+  DNA5SequenceLinear i_promoter_rev = DNA5SequenceLinear::downConvertToLinear(i_promoter.codingSequence(StrandSense::REVERSE));
 //  i_promoter_ptr = i_promoter_ptr_rev;
 
-  std::shared_ptr<DNA5SequenceLinear> i_complement_promoter_ptr(std::make_shared<DNA5SequenceLinear>(StringDNA5(I_COMPLEMENT_PROMOTER)));
-  std::shared_ptr<DNA5SequenceLinear> i_complement_promoter_ptr_rev = DNA5SequenceLinear::downConvertToLinear(i_complement_promoter_ptr->codingSequence(StrandSense::REVERSE));
+  DNA5SequenceLinear i_complement_promoter(StringDNA5(I_COMPLEMENT_PROMOTER));
+  DNA5SequenceLinear i_complement_promoter_rev = DNA5SequenceLinear::downConvertToLinear(i_complement_promoter.codingSequence(StrandSense::REVERSE));
 //  i_complement_promoter_ptr = i_complement_promoter_ptr_rev;
 
-  std::shared_ptr<DNA5SequenceLinear> i_5_promoter_ptr(std::make_shared<DNA5SequenceLinear>(StringDNA5(I_5_PROMOTER)));
-  std::shared_ptr<DNA5SequenceLinear> i_5_promoter_ptr_rev = DNA5SequenceLinear::downConvertToLinear(i_5_promoter_ptr->codingSequence(StrandSense::REVERSE));
+  DNA5SequenceLinear i_5_promoter(StringDNA5(I_5_PROMOTER));
+  DNA5SequenceLinear i_5_promoter_rev = DNA5SequenceLinear::downConvertToLinear(i_5_promoter.codingSequence(StrandSense::REVERSE));
 //  i_5_promoter_ptr = i_5_promoter_ptr_rev;
 
   intron << "Gene" << delimiter
@@ -208,9 +208,9 @@ void VarGeneFamilyTree( DistanceTree& distance_tree,
          << "IStart" << delimiter
          << "IEnd" << delimiter
          << "IStrand" << delimiter
-         << i_promoter_ptr->getSequenceAsString() << delimiter
-         << i_complement_promoter_ptr->getSequenceAsString() << delimiter
-         << i_5_promoter_ptr->getSequenceAsString() << delimiter
+         << i_promoter.getSequenceAsString() << delimiter
+         << i_complement_promoter.getSequenceAsString() << delimiter
+         << i_5_promoter.getSequenceAsString() << delimiter
          << "Size" << delimiter
          << "ISequence" << '\n';
 
@@ -262,14 +262,12 @@ void VarGeneFamilyTree( DistanceTree& distance_tree,
           }
 
           std::shared_ptr<const CodingSequence> coding_sequence = coding_seq_ptr->getFirst();
-          std::shared_ptr<DNA5SequenceCoding> coding_dna_sequence;
-
+          DNA5SequenceCoding coding_dna_sequence;
 
           if (contig.second->getDNA5SequenceCoding(coding_sequence, coding_dna_sequence)) {
 
             // Do we have a valid intron (VAR only)?
-            std::vector<std::shared_ptr<DNA5SequenceCoding>> intron_sequence_array = contig.second->sequence().intronArraySequence(
-            coding_sequence);
+            std::vector<DNA5SequenceCoding> intron_sequence_array = contig.second->sequence().intronArraySequence(coding_sequence);
             std::shared_ptr<T> distance_ptr(std::make_shared<T>(sequence_distance,
                                                                 genome_db_ptr,
                                                                 gene.second,
@@ -306,14 +304,14 @@ void VarGeneFamilyTree( DistanceTree& distance_tree,
 
                 for (auto intron_seq : intron_offset_map) {
 
-                  std::shared_ptr<DNA5SequenceLinear> intron_ptr = DNA5SequenceLinear::downConvertToLinear((*intron_sequence_iter));
-                  std::shared_ptr<DNA5SequenceLinear> intron_seq_ptr_rev = DNA5SequenceLinear::downConvertToLinear(intron_ptr->codingSequence(StrandSense::REVERSE));
-                  std::shared_ptr<DNA5SequenceLinear> intron_seq_ptr = DNA5SequenceLinear::strandedDownConvert(*intron_sequence_iter);
+                  DNA5SequenceLinear intron_ptr = DNA5SequenceLinear::downConvertToLinear(*intron_sequence_iter);
+                  DNA5SequenceLinear intron_seq_ptr_rev = DNA5SequenceLinear::downConvertToLinear(intron_ptr.codingSequence(StrandSense::REVERSE));
+                  DNA5SequenceLinear intron_seq_ptr = DNA5SequenceLinear::strandedDownConvert(*intron_sequence_iter);
 //                  intron_seq_ptr = intron_ptr;
 
 
                   std::stringstream pss;
-                  std::vector<ContigOffset_t> offset_vec = intron_seq_ptr->findAll(*i_promoter_ptr);
+                  std::vector<ContigOffset_t> offset_vec = intron_seq_ptr.findAll(i_promoter);
                   for (auto offset : offset_vec) {
 
                     pss << offset << ":";
@@ -321,7 +319,7 @@ void VarGeneFamilyTree( DistanceTree& distance_tree,
                   }
 
                   std::stringstream css;
-                  offset_vec = intron_seq_ptr->findAll(*i_complement_promoter_ptr);
+                  offset_vec = intron_seq_ptr.findAll(i_complement_promoter);
                   for (auto offset : offset_vec) {
 
                     css << offset << ":";
@@ -329,7 +327,7 @@ void VarGeneFamilyTree( DistanceTree& distance_tree,
                   }
 
                   std::stringstream fss;
-                  offset_vec = intron_seq_ptr->findAll(*i_5_promoter_ptr);
+                  offset_vec = intron_seq_ptr.findAll(i_5_promoter);
                   for (auto offset : offset_vec) {
 
                     fss << offset << ":";
@@ -349,9 +347,9 @@ void VarGeneFamilyTree( DistanceTree& distance_tree,
                          << delimiter
                          << fss.str()
                          << delimiter
-                         << intron_seq_ptr->length()
+                         << intron_seq_ptr.length()
                          << delimiter
-                         << intron_seq_ptr->getSequenceAsString() << '\n';
+                         << intron_seq_ptr.getSequenceAsString() << '\n';
 
                   ++intron_sequence_iter;
 
@@ -359,7 +357,7 @@ void VarGeneFamilyTree( DistanceTree& distance_tree,
 
 
 #define MIN_INTRON_LENGTH 10
-                if (intron_sequence_array.front()->length() >= MIN_INTRON_LENGTH) {
+                if (intron_sequence_array.front().length() >= MIN_INTRON_LENGTH) {
 
                   std::shared_ptr<PhyloNode> phylo_node_ptr(std::make_shared<PhyloNode>(distance_ptr));
                   node_vector_ptr->push_back(phylo_node_ptr);

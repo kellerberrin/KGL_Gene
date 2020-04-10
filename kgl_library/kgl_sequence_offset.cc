@@ -9,12 +9,11 @@ namespace kgl = kellerberrin::genome;
 
 // Returns a defined subsequence (generally a single/group of codons) of the coding sequence
 // Setting sub_sequence_offset and sub_sequence_length to zero copies the entire sequence defined by the SortedCDS.
-std::shared_ptr<kgl::DNA5SequenceCoding>
-kgl::SequenceOffset::refCodingSubSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                              const DNA5SequenceLinear& sequence_ptr,
-                                              ContigOffset_t sub_sequence_offset,
-                                              ContigSize_t sub_sequence_length,
-                                              ContigOffset_t contig_offset) {
+kgl::DNA5SequenceCoding kgl::SequenceOffset::refCodingSubSequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+                                                                   const DNA5SequenceLinear& sequence_ptr,
+                                                                   ContigOffset_t sub_sequence_offset,
+                                                                   ContigSize_t sub_sequence_length,
+                                                                   ContigOffset_t contig_offset) {
 
   StrandSense strand;
   ExonOffsetMap exon_offset_map;
@@ -32,14 +31,13 @@ kgl::SequenceOffset::refCodingSubSequence(std::shared_ptr<const CodingSequence> 
 
 // Convenience routine that returns an array of exons (strand adjusted) from an unmutated (reference) sequence.
 // Returned sequences are in transcription (strand) order with array[0] being the first exon.
-std::vector<std::shared_ptr<kgl::DNA5SequenceCoding>>
-kgl::SequenceOffset::refExonArraySequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                          const DNA5SequenceLinear& sequence_ptr,
-                                          ContigOffset_t sub_sequence_offset,
-                                          ContigSize_t sub_sequence_length,
-                                          ContigOffset_t contig_offset) {
+ std::vector<kgl::DNA5SequenceCoding> kgl::SequenceOffset::refExonArraySequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+                                                                                 const DNA5SequenceLinear& sequence_ptr,
+                                                                                 ContigOffset_t sub_sequence_offset,
+                                                                                 ContigSize_t sub_sequence_length,
+                                                                                 ContigOffset_t contig_offset) {
 
-  std::vector<std::shared_ptr<kgl::DNA5SequenceCoding>> exon_vector;
+  std::vector<kgl::DNA5SequenceCoding> exon_vector;
   StrandSense strand;
   ExonOffsetMap exon_offset_map;
 
@@ -54,13 +52,13 @@ kgl::SequenceOffset::refExonArraySequence(std::shared_ptr<const CodingSequence> 
   for (auto exon_offset : exon_offset_map) {
 
     ExonOffsetMap offset_map = { exon_offset };
-    std::shared_ptr<DNA5SequenceCoding> exon_sequence = codingSubSequence(sequence_ptr,
-                                                                          offset_map,
-                                                                          coding_seq_ptr->strand(),
-                                                                          sub_sequence_offset,
-                                                                          sub_sequence_length,
-                                                                          contig_offset);
-    exon_vector.emplace_back(exon_sequence);
+    DNA5SequenceCoding exon_sequence = codingSubSequence( sequence_ptr,
+                                                          offset_map,
+                                                          coding_seq_ptr->strand(),
+                                                          sub_sequence_offset,
+                                                          sub_sequence_length,
+                                                          contig_offset);
+    exon_vector.push_back(std::move(exon_sequence));
 
   }
 
@@ -72,12 +70,11 @@ kgl::SequenceOffset::refExonArraySequence(std::shared_ptr<const CodingSequence> 
 
 // Returns a defined subsequence of all the introns of the coding sequence
 // Setting sub_sequence_offset and sub_sequence_length to zero copies the entire intron sequence defined by the SortedCDS.
-std::shared_ptr<kgl::DNA5SequenceCoding>
-kgl::SequenceOffset::refIntronSubSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                          const DNA5SequenceLinear& sequence_ptr,
-                                          ContigOffset_t sub_sequence_offset,
-                                          ContigSize_t sub_sequence_length,
-                                          ContigOffset_t contig_offset) {
+kgl::DNA5SequenceCoding kgl::SequenceOffset::refIntronSubSequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+                                                                   const DNA5SequenceLinear& sequence_ptr,
+                                                                   ContigOffset_t sub_sequence_offset,
+                                                                   ContigSize_t sub_sequence_length,
+                                                                   ContigOffset_t contig_offset) {
 
   StrandSense strand;
   IntronOffsetMap intron_offset_map;
@@ -96,14 +93,13 @@ kgl::SequenceOffset::refIntronSubSequence(std::shared_ptr<const CodingSequence> 
 
 // Convenience routine that returns an array of intron (strand adjusted) from an unmutated (reference) sequence.
 // Returned sequences are in transcription (strand) order with array[0] being the first intron.
-std::vector<std::shared_ptr<kgl::DNA5SequenceCoding>>
-kgl::SequenceOffset::refIntronArraySequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                            const DNA5SequenceLinear& sequence_ptr,
-                                            ContigOffset_t sub_sequence_offset,
-                                            ContigSize_t sub_sequence_length,
-                                            ContigOffset_t contig_offset) {
+std::vector<kgl::DNA5SequenceCoding> kgl::SequenceOffset::refIntronArraySequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+                                                                                  const DNA5SequenceLinear& sequence_ptr,
+                                                                                  ContigOffset_t sub_sequence_offset,
+                                                                                  ContigSize_t sub_sequence_length,
+                                                                                  ContigOffset_t contig_offset) {
 
-  std::vector<std::shared_ptr<kgl::DNA5SequenceCoding>> intron_vector;
+  std::vector<kgl::DNA5SequenceCoding> intron_vector;
   StrandSense strand;
   IntronOffsetMap intron_offset_map;
   if (not intronOffsetAdapter(coding_seq_ptr, strand, intron_offset_map)) {
@@ -117,13 +113,13 @@ kgl::SequenceOffset::refIntronArraySequence(std::shared_ptr<const CodingSequence
   for (auto intron_offset : intron_offset_map) {
 
     ExonOffsetMap offset_map = { intron_offset };
-    std::shared_ptr<DNA5SequenceCoding> exon_sequence = codingSubSequence(sequence_ptr,
-                                                                          offset_map,
-                                                                          coding_seq_ptr->strand(),
-                                                                          sub_sequence_offset,
-                                                                          sub_sequence_length,
-                                                                          contig_offset);
-    intron_vector.emplace_back(exon_sequence);
+    DNA5SequenceCoding exon_sequence = codingSubSequence( sequence_ptr,
+                                                          offset_map,
+                                                          coding_seq_ptr->strand(),
+                                                          sub_sequence_offset,
+                                                          sub_sequence_length,
+                                                          contig_offset);
+    intron_vector.push_back(std::move(exon_sequence));
 
   }
 
@@ -132,13 +128,12 @@ kgl::SequenceOffset::refIntronArraySequence(std::shared_ptr<const CodingSequence
 }
 
 
-std::shared_ptr<kgl::DNA5SequenceCoding>
-kgl::SequenceOffset::mutantCodingSubSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                             const DNA5SequenceLinear& sequence_ptr,
-                                             const VariantMutationOffset& indel_adjust,
-                                             ContigOffset_t sub_sequence_offset,
-                                             ContigSize_t sub_sequence_length,
-                                             ContigOffset_t contig_offset) {
+kgl::DNA5SequenceCoding kgl::SequenceOffset::mutantCodingSubSequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+                                                                      const DNA5SequenceLinear& sequence_ptr,
+                                                                      const VariantMutationOffset& indel_adjust,
+                                                                      ContigOffset_t sub_sequence_offset,
+                                                                      ContigSize_t sub_sequence_length,
+                                                                      ContigOffset_t contig_offset) {
 
   StrandSense strand;
   ExonOffsetMap exon_offset_map;
@@ -161,9 +156,9 @@ kgl::SequenceOffset::mutantCodingSubSequence(std::shared_ptr<const CodingSequenc
 // The offsets use the half interval idiom [start, end).
 // The offsets are initially contig offsets. However these can be modified to account for indel offset modification.
 // The map is generated by an adapter function exonOffsetAdapter() that uses a coding sequence as input.
-bool kgl::SequenceOffset::exonOffsetAdapter(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                                StrandSense& strand,
-                                                ExonOffsetMap& exon_offset_map) {
+bool kgl::SequenceOffset::exonOffsetAdapter( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+                                             StrandSense& strand,
+                                             ExonOffsetMap& exon_offset_map) {
 
   bool return_result = true;
 
@@ -199,9 +194,9 @@ bool kgl::SequenceOffset::exonOffsetAdapter(std::shared_ptr<const CodingSequence
 // The map is generated by an adapter function intronOffsetAdapter() that uses a coding sequence as input.
 // If the coding sequence only defines 1 exon then an empty map is returned.
 // In general the number of intron offset records is the number of defined exons - 1
-bool kgl::SequenceOffset::intronOffsetAdapter(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                            StrandSense& strand,
-                                            IntronOffsetMap& intron_offset_map) {
+bool kgl::SequenceOffset::intronOffsetAdapter( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+                                               StrandSense& strand,
+                                               IntronOffsetMap& intron_offset_map) {
 
   bool return_result = true;
 
@@ -264,7 +259,7 @@ bool kgl::SequenceOffset::intronOffsetAdapter(std::shared_ptr<const CodingSequen
 
 
 // Adjusted for indel mutations.
-bool kgl::SequenceOffset::exonMutantOffset(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+bool kgl::SequenceOffset::exonMutantOffset(const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
                                            const VariantMutationOffset& indel_adjust,
                                            StrandSense& strand,
                                            ExonOffsetMap& exon_offset_map) {
@@ -296,19 +291,18 @@ bool kgl::SequenceOffset::exonMutantOffset(std::shared_ptr<const CodingSequence>
 }
 
 
-std::shared_ptr<kgl::DNA5SequenceCoding>
-kgl::SequenceOffset::codingSubSequence(const DNA5SequenceLinear& base_sequence,
-                                       const ExonOffsetMap& exon_offset_map,
-                                       StrandSense strand,
-                                       ContigOffset_t sub_sequence_offset,  // base count offset; 0 == all
-                                       ContigSize_t sub_sequence_length,   // number of bases; 0 == all
-                                       ContigOffset_t contig_offset) {
+kgl::DNA5SequenceCoding kgl::SequenceOffset::codingSubSequence(const DNA5SequenceLinear& base_sequence,
+                                                               const ExonOffsetMap& exon_offset_map,
+                                                               StrandSense strand,
+                                                               ContigOffset_t sub_sequence_offset,  // base count offset; 0 == all
+                                                               ContigSize_t sub_sequence_length,   // number of bases; 0 == all
+                                                               ContigOffset_t contig_offset) {
 
 
   // If no cds then return null string.
   if (exon_offset_map.empty()) {
 
-    return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>());
+    return DNA5SequenceCoding();
 
   }
 
@@ -320,7 +314,7 @@ kgl::SequenceOffset::codingSubSequence(const DNA5SequenceLinear& base_sequence,
                          base_sequence.length(),
                          contig_offset);
 
-    return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>());
+    return DNA5SequenceCoding();
 
   }
 
@@ -347,7 +341,7 @@ kgl::SequenceOffset::codingSubSequence(const DNA5SequenceLinear& base_sequence,
                          sub_sequence_length,
                          calculated_seq_size);
 
-    return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>());
+    return DNA5SequenceCoding();
 
   }
 
@@ -481,44 +475,39 @@ kgl::SequenceOffset::codingSubSequence(const DNA5SequenceLinear& base_sequence,
 
   }
 
-
-  std::shared_ptr<DNA5SequenceCoding> coding_ptr(std::make_shared<DNA5SequenceCoding>(std::move(coding_sequence), strand));
-
-  return coding_ptr;
-
+  return DNA5SequenceCoding(std::move(coding_sequence), strand);
 
 }
 
 // Converts a DNA5SequenceLinear sequence to a DNA5SequenceCoding sequence
-std::shared_ptr<kgl::DNA5SequenceCoding> kgl::SequenceOffset::codingSequence(std::shared_ptr<const DNA5SequenceLinear> base_sequence,
-                                                                             StrandSense strand) {
+kgl::DNA5SequenceCoding kgl::SequenceOffset::codingSequence(const DNA5SequenceLinear& base_sequence, StrandSense strand) {
 
 
   StringCodingDNA5 coding_sequence;
-  coding_sequence.reserve(base_sequence->length() + 1); // Just to make sure.
+  coding_sequence.reserve(base_sequence.length() + 1); // Just to make sure.
 
 
   switch(strand) {
 
     case StrandSense::FORWARD: {
       auto convert_base = [](DNA5::Alphabet base) { return DNA5::convertToCodingDNA5(base); };
-      std::transform(base_sequence->getAlphabetString().begin(),
-                     base_sequence->getAlphabetString().end(),
+      std::transform(base_sequence.getAlphabetString().begin(),
+                     base_sequence.getAlphabetString().end(),
                      std::back_inserter(coding_sequence), convert_base);
     }
       break;
 
     case StrandSense::REVERSE: {
       auto complement_base = [](DNA5::Alphabet base) { return DNA5::complementNucleotide(base); };
-      std::transform(base_sequence->getAlphabetString().rbegin(),
-                     base_sequence->getAlphabetString().rend(),
+      std::transform(base_sequence.getAlphabetString().rbegin(),
+                     base_sequence.getAlphabetString().rend(),
                      std::back_inserter(coding_sequence), complement_base);
     }
       break;
 
   }
 
-  return std::shared_ptr<DNA5SequenceCoding>(std::make_shared<DNA5SequenceCoding>(std::move(coding_sequence), strand));
+  return DNA5SequenceCoding(std::move(coding_sequence), strand);
 
 }
 
@@ -528,7 +517,7 @@ std::shared_ptr<kgl::DNA5SequenceCoding> kgl::SequenceOffset::codingSequence(std
 // Returns bool false if contig_offset is not within the coding sequence defined by the coding_seq_ptr.
 // If the contig_offset is in the coding sequence then a valid sequence_offset and the sequence length is returned.
 // The offset is adjusted for strand type; the offset arithmetic is reversed for -ve strand sequences.
-bool kgl::SequenceOffset::refOffsetWithinCodingSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+bool kgl::SequenceOffset::refOffsetWithinCodingSequence(const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
                                                         ContigOffset_t contig_offset,
                                                         ContigOffset_t &coding_sequence_offset,
                                                         ContigSize_t &coding_sequence_length) {
@@ -648,7 +637,7 @@ bool kgl::SequenceOffset::offsetWithinCodingSequence(const ExonOffsetMap& exon_o
 // If the coding sequence_offset is in the coding sequence then a valid contig_offset and the sequence length is returned.
 // The contig offset is adjusted for strand type; the offset arithmetic is reversed for -ve strand sequences.
 
-bool kgl::SequenceOffset::refCodingSequenceContigOffset(std::shared_ptr<const CodingSequence> coding_seq_ptr,
+bool kgl::SequenceOffset::refCodingSequenceContigOffset(const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
                                                         ContigOffset_t coding_sequence_offset,
                                                         ContigOffset_t &contig_offset,
                                                         ContigSize_t &coding_sequence_length) {

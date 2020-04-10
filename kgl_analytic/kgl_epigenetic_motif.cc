@@ -28,9 +28,9 @@ void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeDatabase> g
       ContigOffset_t tss_offset = tss_feature->sequence().begin();
 
       // Get the motif DNA sequence.
-      std::shared_ptr<const DNA5SequenceLinear> tss_sequence = contig.second->sequence().subSequence(tss_offset, tss_size);
+      DNA5SequenceLinear tss_sequence = contig.second->sequence().subSequence(tss_offset, tss_size);
       // Strand it.
-      std::shared_ptr<const DNA5SequenceCoding> tss_coding = tss_sequence->codingSequence(tss_feature->sequence().strand());
+      DNA5SequenceCoding tss_coding = tss_sequence.codingSequence(tss_feature->sequence().strand());
 
 #define PREFACE_SIZE 100
 
@@ -46,9 +46,9 @@ void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeDatabase> g
       }
 
       // Get the preface DNA sequence
-      std::shared_ptr<const DNA5SequenceLinear> tss_preface = contig.second->sequence().subSequence(preface_offset, PREFACE_SIZE);
+      DNA5SequenceLinear tss_preface = contig.second->sequence().subSequence(preface_offset, PREFACE_SIZE);
       // Strand it.
-      std::shared_ptr<const DNA5SequenceCoding> tss_preface_coding = tss_preface->codingSequence(tss_feature->sequence().strand());
+      DNA5SequenceCoding tss_preface_coding = tss_preface.codingSequence(tss_feature->sequence().strand());
 
 
       if (tss_feature->hasSuperfeature()) {
@@ -141,8 +141,8 @@ void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeDatabase> g
       motif_file << tss_feature->sequence().end() << delimiter;
       motif_file << static_cast<char>(tss_feature->sequence().strand()) << delimiter;
       motif_file << tss_size << delimiter;
-      motif_file << tss_preface_coding ->getSequenceAsString() << delimiter;
-      motif_file << tss_coding->getSequenceAsString() << delimiter << '\n';
+      motif_file << tss_preface_coding.getSequenceAsString() << delimiter;
+      motif_file << tss_coding.getSequenceAsString() << delimiter << '\n';
 
     }
 

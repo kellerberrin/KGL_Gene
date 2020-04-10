@@ -76,12 +76,12 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
 }
 
 
-bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const GeneFeature> gene_ptr,
-                                                const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const {
+bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const GeneFeature>& gene_ptr,
+                                                const std::shared_ptr<const CodingSequenceArray>& coding_seq_ptr) const {
 
   bool result = true;
 
-  if (coding_seq_ptr->size() == 0) {
+  if (coding_seq_ptr->empty()) {
 
     ExecEnv::log().error("codingSequence(), empty CodingSequenceArray");
 
@@ -96,9 +96,9 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Gene
 
     }
 
-    std::shared_ptr<DNA5SequenceCoding> coding_sequence_ptr = sequence_ptr_->codingSequence(sequence.second);
+    DNA5SequenceCoding coding_sequence = sequence_ptr_->codingSequence(sequence.second);
 
-    if (not coding_table_.checkStartCodon(coding_sequence_ptr)) {
+    if (not coding_table_.checkStartCodon(coding_sequence)) {
 
       std::vector<std::string> description_vec;
       if (not gene_ptr->getAttributes().getDescription(description_vec)) {
@@ -119,11 +119,11 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Gene
                            sequence.second->getGene()->id(),
                            gene_description,
                            sequence.second->getCDSParent()->id(),
-                           coding_table_.firstCodon(coding_sequence_ptr).getSequenceAsString());
+                           coding_table_.firstCodon(coding_sequence).getSequenceAsString());
 //      gene_ptr->recusivelyPrintsubfeatures();
       result = false;
     }
-    if (not coding_table_.checkStopCodon(coding_sequence_ptr)) {
+    if (not coding_table_.checkStopCodon(coding_sequence)) {
 
       std::vector<std::string> description_vec;
 
@@ -142,15 +142,15 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Gene
       std::string gene_description = description_vec.front();
 
       ExecEnv::log().vwarn("No STOP codon: {} Gene: {}: {}, Sequence (mRNA): {} | last codon: {}",
-                           (Codon::codonLength(coding_sequence_ptr)-1),
+                           (Codon::codonLength(coding_sequence)-1),
                            sequence.second->getGene()->id(),
                            gene_description,
                            sequence.second->getCDSParent()->id(),
-                           coding_table_.lastCodon(coding_sequence_ptr).getSequenceAsString());
+                           coding_table_.lastCodon(coding_sequence).getSequenceAsString());
 //      gene_ptr->recusivelyPrintsubfeatures();
       result = false;
     }
-    size_t nonsense_index = coding_table_.checkNonsenseMutation(coding_sequence_ptr);
+    size_t nonsense_index = coding_table_.checkNonsenseMutation(coding_sequence);
     if (nonsense_index > 0) {
 
       std::vector<std::string> description_vec;
@@ -173,7 +173,7 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Gene
                            sequence.second->getGene()->id(),
                            gene_description,
                            sequence.second->getCDSParent()->id(),
-                           Codon(coding_sequence_ptr, nonsense_index).getSequenceAsString());
+                           Codon(coding_sequence, nonsense_index).getSequenceAsString());
 //      gene_ptr->recusivelyPrintsubfeatures();
       result = false;
     }
@@ -186,7 +186,7 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Gene
 
 
 // Verifies a coding sequence using the amino coding table defined for the contig.
-bool kgl::ContigFeatures::verifyDNACodingSequence(std::shared_ptr<const DNA5SequenceCoding> coding_sequence_ptr) const {
+bool kgl::ContigFeatures::verifyDNACodingSequence(const DNA5SequenceCoding& coding_sequence_ptr) const {
 
   bool result = coding_table_.checkStopCodon(coding_sequence_ptr);
   result = result and coding_table_.checkStartCodon(coding_sequence_ptr);
@@ -198,11 +198,11 @@ bool kgl::ContigFeatures::verifyDNACodingSequence(std::shared_ptr<const DNA5Sequ
 
 
 // Verifies a coding sequence using the amino coding table defined for the contig.
-bool kgl::ContigFeatures::verifyProteinSequence(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const {
+bool kgl::ContigFeatures::verifyProteinSequence(const AminoSequence& amino_sequence) const {
 
-  bool result = coding_table_.checkStopCodon(amino_sequence_ptr);
-  result = result and coding_table_.checkStartCodon(amino_sequence_ptr);
-  result = result and coding_table_.checkNonsenseMutation(amino_sequence_ptr) == 0;
+  bool result = coding_table_.checkStopCodon(amino_sequence);
+  result = result and coding_table_.checkStartCodon(amino_sequence);
+  result = result and coding_table_.checkNonsenseMutation(amino_sequence) == 0;
 
   return result;
 
@@ -210,21 +210,21 @@ bool kgl::ContigFeatures::verifyProteinSequence(std::shared_ptr<const AminoSeque
 
 
 // Verifies a coding sequence using the amino coding table defined for the contig.
-kgl::ProteinSequenceAnalysis kgl::ContigFeatures::proteinSequenceAnalysis(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const {
+kgl::ProteinSequenceAnalysis kgl::ContigFeatures::proteinSequenceAnalysis(const AminoSequence& amino_sequence) const {
 
-  if (not coding_table_.checkStartCodon(amino_sequence_ptr)) {
+  if (not coding_table_.checkStartCodon(amino_sequence)) {
 
     return ProteinSequenceAnalysis::NO_START_CODON;
 
   }
 
-  if (coding_table_.checkNonsenseMutation(amino_sequence_ptr) != 0) {
+  if (coding_table_.checkNonsenseMutation(amino_sequence) != 0) {
 
     return ProteinSequenceAnalysis::NONSENSE_MUTATION;
 
   }
 
-  if (not coding_table_.checkStopCodon(amino_sequence_ptr)) {
+  if (not coding_table_.checkStopCodon(amino_sequence)) {
 
     return ProteinSequenceAnalysis::NO_STOP_CODON;
 
@@ -235,21 +235,21 @@ kgl::ProteinSequenceAnalysis kgl::ContigFeatures::proteinSequenceAnalysis(std::s
 }
 
 
-size_t kgl::ContigFeatures::proteinSequenceSize(std::shared_ptr<const AminoSequence> amino_sequence_ptr) const {
+size_t kgl::ContigFeatures::proteinSequenceSize(const AminoSequence& amino_sequence) const {
 
-  switch(proteinSequenceAnalysis(amino_sequence_ptr)) {
+  switch(proteinSequenceAnalysis(amino_sequence)) {
 
     case ProteinSequenceAnalysis::NO_START_CODON:
       return 0;
 
     case ProteinSequenceAnalysis::NONSENSE_MUTATION:
-      return coding_table_.checkNonsenseMutation(amino_sequence_ptr);
+      return coding_table_.checkNonsenseMutation(amino_sequence);
 
     case ProteinSequenceAnalysis::NO_STOP_CODON:
       return 0;
 
     case ProteinSequenceAnalysis::VALID_SEQUENCE:
-      return amino_sequence_ptr->length();
+      return amino_sequence.length();
 
   }
 

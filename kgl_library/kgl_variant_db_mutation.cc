@@ -15,12 +15,12 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
                                          const FeatureIdent_t& sequence_id,
                                          const std::shared_ptr<const GenomeDatabase>& genome_db,
                                          OffsetVariantMap& variant_map,
-                                         std::shared_ptr<AminoSequence>& reference_sequence,
-                                         std::shared_ptr<AminoSequence>& mutant_sequence) const {
+                                         AminoSequence& reference_sequence,
+                                         AminoSequence& mutant_sequence) const {
 
 
-  std::shared_ptr<DNA5SequenceCoding> DNA_reference;
-  std::shared_ptr<DNA5SequenceCoding> DNA_mutant;
+  DNA5SequenceCoding DNA_reference;
+  DNA5SequenceCoding DNA_mutant;
   if (not mutantCodingDNA(contig_id, phase, gene_id, sequence_id, genome_db, variant_map, DNA_reference, DNA_mutant)) {
 
     ExecEnv::log().warn("mutantProtein(), Problem generating stranded mutant DNA");
@@ -38,7 +38,7 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
   }
 
   // Check the DNA5 reference sequence.
-  if (not DNA_reference->verifySequence()) {
+  if (not DNA_reference.verifySequence()) {
 
     ExecEnv::log().error("mutantProteins(), corrupted CodingDNA5 reference sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
 
@@ -48,18 +48,18 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
   reference_sequence = contig_ptr->getAminoSequence(DNA_reference);
 
   // Check the reference amino sequence.
-  if (not reference_sequence->verifySequence()) {
+  if (not reference_sequence.verifySequence()) {
 
     ExecEnv::log().error("mutantProteins(), corrupted amino reference sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
 
   }
 
   // Check for any DNA corruption acquired by mutating the reference sequence
-  if (not DNA_mutant->verifySequence()) {
+  if (not DNA_mutant.verifySequence()) {
 
     ExecEnv::log().error("mutantProteins(), corrupted mutant sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
     // List out the variants.
-    for (auto variant : variant_map) {
+    for (auto const& variant : variant_map) {
 
       ExecEnv::log().info("mutantProteins(), variant map: {}", variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
 
@@ -70,7 +70,7 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
   mutant_sequence = contig_ptr->getAminoSequence(DNA_mutant);
 
   // Check the mutant amino sequence.
-  if (not mutant_sequence->verifySequence()) {
+  if (not mutant_sequence.verifySequence()) {
 
     ExecEnv::log().error("mutantProteins(), corrupted amino mutant sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
 
@@ -87,8 +87,8 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
                                           const FeatureIdent_t& sequence_id,
                                           const std::shared_ptr<const GenomeDatabase>& genome_db,
                                           OffsetVariantMap& variant_map,
-                                          std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
-                                          std::shared_ptr<DNA5SequenceCoding>& mutant_sequence) const {
+                                          DNA5SequenceCoding& reference_sequence,
+                                          DNA5SequenceCoding& mutant_sequence) const {
   // Get the contig.
   std::shared_ptr<const ContigFeatures> contig_ptr;
   if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
@@ -140,18 +140,18 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
   }
 
   // Check the reference sequence for good measure.
-  if (not reference_sequence->verifySequence()) {
+  if (not reference_sequence.verifySequence()) {
 
     ExecEnv::log().error("mutantCodingDNA(), corrupted reference sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
 
   }
 
   // Check for any DNA corruption acquired by mutating the reference sequence
-  if (not mutant_sequence->verifySequence()) {
+  if (not mutant_sequence.verifySequence()) {
 
     ExecEnv::log().error("mutantCodingDNA(), corrupted mutant sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
     // List out the variants.
-    for (auto variant : variant_map) {
+    for (auto const& variant : variant_map) {
 
       ExecEnv::log().info("mutantCodingDNA(), variant map: {}", variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
 
@@ -169,8 +169,8 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
                                        ContigSize_t region_size,
                                        const std::shared_ptr<const GenomeDatabase>& genome_db,
                                        OffsetVariantMap& variant_map,
-                                       std::shared_ptr<DNA5SequenceLinear>& reference_sequence,
-                                       std::shared_ptr<DNA5SequenceLinear>& mutant_sequence) const {
+                                       DNA5SequenceLinear& reference_sequence,
+                                       DNA5SequenceLinear& mutant_sequence) const {
 
   // Get the contig.
   std::shared_ptr<const ContigFeatures> contig_ptr;
@@ -217,7 +217,7 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
   }
 
   // Check the reference sequence for good measure.
-  if (not reference_sequence->verifySequence()) {
+  if (not reference_sequence.verifySequence()) {
 
     ExecEnv::log().error("mutantRegion(), corrupted reference contig: {}, offset: {}, size: {}",
                          contig_id, region_offset, region_size);
@@ -225,11 +225,11 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
   }
 
   // Check for any DNA corruption acquired by mutating the reference sequence
-  if (not mutant_sequence->verifySequence()) {
+  if (not mutant_sequence.verifySequence()) {
 
     ExecEnv::log().error("mutantRegion(), corrupted mutant contig: {}, offset: {}, size: {}", contig_id, region_offset, region_size);
     // List out the variants.
-    for (auto variant : variant_map) {
+    for (auto const& variant : variant_map) {
 
       ExecEnv::log().info("mutantRegion(), variant map: {}", variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
 
@@ -244,9 +244,9 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
 
 bool kgl::GenomeVariant::mutantContig( const ContigId_t& contig_id,
                                        PhaseId_t phase,
-                                       std::shared_ptr<const GenomeDatabase> genome_db,
-                                       std::shared_ptr<const DNA5SequenceContig>& reference_contig,
-                                       std::shared_ptr<const DNA5SequenceContig>& mutant_contig_ptr) const {
+                                       const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                       std::shared_ptr<const DNA5SequenceContig>& reference_contig_ptr,
+                                       DNA5SequenceContig& mutant_contig) const {
 
 
   // Get the contig.
@@ -259,7 +259,7 @@ bool kgl::GenomeVariant::mutantContig( const ContigId_t& contig_id,
   }
 
   // Get the contig DNA sequence
-  reference_contig = contig_ptr->sequence_ptr();
+  reference_contig_ptr = contig_ptr->sequence_ptr();
 
 
   // Generate the mutant sequences.
@@ -274,7 +274,7 @@ bool kgl::GenomeVariant::mutantContig( const ContigId_t& contig_id,
   }
 
     // And mutate it.
-  if (not VariantMutation().mutateDNA(contig_variant_map, contig_ptr, mutant_contig_ptr)) {
+  if (not VariantMutation().mutateDNA(contig_variant_map, contig_ptr, mutant_contig)) {
 
       ExecEnv::log().warn("Problem mutating genome: {},  contig: {}", contig_id);
       return false;
@@ -282,14 +282,14 @@ bool kgl::GenomeVariant::mutantContig( const ContigId_t& contig_id,
   }
 
   // Check the reference sequence for good measure.
-  if (not reference_contig->verifySequence()) {
+  if (not reference_contig_ptr->verifySequence()) {
 
     ExecEnv::log().error("mutantContig(), corrupted reference contig: {}", contig_id);
 
   }
 
   // Check for any DNA corruption acquired by mutating the reference contig
-  if (not mutant_contig_ptr->verifySequence()) {
+  if (not mutant_contig.verifySequence()) {
 
     ExecEnv::log().error("mutantContig(), corrupted mutant contig: {}", contig_id);
 

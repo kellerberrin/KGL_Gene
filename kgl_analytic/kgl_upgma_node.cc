@@ -11,75 +11,6 @@
 namespace kgl = kellerberrin::genome;
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Mutates the contigs and then compares the mutated contigs using the Myer Hirschberg sequence comparison
-// algorthim. This is linear in space - but quadratic in time. Need to find a faster comparison algorithm.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-kgl::DistanceType_t kgl::UPGMAContigDistance::distance(std::shared_ptr<const VirtualDistanceNode>  distance_node) const {
-
-  std::shared_ptr<const UPGMAContigDistance> node_ptr = std::dynamic_pointer_cast<const UPGMAContigDistance>(distance_node);
-
-  if (not node_ptr) {
-
-    ExecEnv::log().error("distance(), Unexpected error, could not up-cast node pointer");
-    return 1.0;
-
-  }
-
-  DistanceType_t total_distance = 0;
-  for (auto contig : mutated_contigs_) {
-
-    auto result = node_ptr->mutated_contigs_.find(contig.first);
-
-    if (result != node_ptr->mutated_contigs_.end()) {
-
-      ExecEnv::log().info("distance(), Comparing Genome: {}, Contig: {} with Genome: {}",
-                          genome_variant_ptr_->genomeId(), contig.first, node_ptr->genome_variant_ptr_->genomeId());
-      CompareDistance_t contig_distance = sequence_distance_->distance(contig.second, result->second);
-      total_distance += static_cast<DistanceType_t>(contig_distance);
-      ExecEnv::log().info("distance(), {} distance: {}", sequence_distance_->distanceType(), contig_distance);
-
-    } else {
-
-      ExecEnv::log().error("distance(), Unexpected error, could not find contig: {}", contig.first);
-
-    }
-
-  }
-
-  return total_distance;
-
-}
-
-
-
-void kgl::UPGMAContigDistance::mutateContigs() {
-
-  std::shared_ptr<const DNA5SequenceContig> reference_contig_ptr;
-  std::shared_ptr<const DNA5SequenceContig> mutant_contig_ptr;
-  for (auto contig : genome_db_ptr_->getMap()) {
-
-    if (not genome_variant_ptr_->mutantContig(contig.first,
-                                              ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
-                                              genome_db_ptr_,
-                                              reference_contig_ptr,
-                                              mutant_contig_ptr)) {
-
-      ExecEnv::log().error("Unexpected error mutating contig; genome: {} , contig: {}", genome_variant_ptr_->genomeId(), contig.first);
-      // Fail gracefully, just insert the reference contig.
-      mutated_contigs_.insert(std::pair<ContigId_t, std::shared_ptr<const DNA5SequenceContig>>(contig.first, contig.second->sequence_ptr()));
-
-    } else {
-
-      mutated_contigs_.insert(std::pair<ContigId_t, std::shared_ptr<const DNA5SequenceContig>>(contig.first, mutant_contig_ptr));
-
-    }
-
-  }
-
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -102,20 +33,20 @@ kgl::DistanceType_t kgl::UPGMAProteinDistance::distance(std::shared_ptr<const Vi
   CompareDistance_t total_distance = 0;
   size_t gene_count = 0;
 
-  for (auto protein : getMap()) {
+  for (auto const& [protein_id, protein_ptr] : getMap()) {
 
-    auto result = node_ptr->getMap().find(protein.first);
+    auto result = node_ptr->getMap().find(protein_id);
 
     if (result != node_ptr->getMap().end()) {
 
-      CompareDistance_t contig_distance = sequence_distance_->distance(protein.second, result->second);
+      CompareDistance_t contig_distance = sequence_distance_->amino_distance(*protein_ptr, *result->second);
       total_distance += contig_distance;
       ++gene_count;
 
     } else {
 
       ExecEnv::log().error("distance(), Unexpected error, could not find Genome: {}, sequence: {}",
-                           node_ptr->genomeId(), protein.first);
+                           node_ptr->genomeId(), protein_id);
 
     }
 
@@ -163,13 +94,13 @@ void kgl::UPGMAProteinDistance::mutateProteins() {
 void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> gene_ptr) {
 
   const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene_ptr);
-  for (auto sequence : coding_seq_ptr->getMap()) {
+  for (auto const& sequence : coding_seq_ptr->getMap()) {
 
     std::shared_ptr<const ContigFeatures> contig_ptr = sequence.second->getGene()->contig();
     std::string gene_id = sequence.second->getGene()->id();
     std::string sequence_id = sequence.second->getCDSParent()->id();
-    std::shared_ptr<AminoSequence> mutant_sequence;
-    std::shared_ptr<AminoSequence> reference_sequence;
+    AminoSequence mutant_sequence;
+    AminoSequence reference_sequence;
     OffsetVariantMap variant_map;
 
     if (genome_variant_ptr_->mutantProteins(contig_ptr->contigId(),
@@ -181,7 +112,7 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
                                             reference_sequence,
                                             mutant_sequence)) {
 
-      mutated_proteins_[gene_id] = mutant_sequence;
+      mutated_proteins_[gene_id] = std::make_shared<AminoSequence>(std::move(mutant_sequence));
 
     }
 
@@ -218,7 +149,7 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
 
   const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene_ptr_);
 
-  if (coding_seq_ptr->size() == 0) {
+  if (coding_seq_ptr->empty()) {
 
     ExecEnv::log().critical("mutateProtein(), Gene contains no coding sequence : genome: {} gene: {}",
                             genome_variant_ptr_->genomeId(), gene_ptr_->id());
@@ -238,8 +169,8 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
   }
 
 
-  std::shared_ptr<AminoSequence> mutant_sequence;
-  std::shared_ptr<AminoSequence> reference_sequence;
+  AminoSequence mutant_sequence;
+  AminoSequence reference_sequence;
   OffsetVariantMap variant_map;
 
   if (genome_variant_ptr_->mutantProteins(contig_ptr->contigId(),
@@ -249,9 +180,7 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
                                           genome_db_ptr_,
                                           variant_map,
                                           reference_sequence,
-                                          mutant_sequence)) {
-
-    mutated_protein_ = mutant_sequence;
+                                          mutated_protein_)) {
 
   }
 
@@ -269,7 +198,7 @@ kgl::DistanceType_t kgl::UPGMAGeneDistance::distance(std::shared_ptr<const Virtu
   }
 
 
-  CompareDistance_t contig_score = sequence_distance_->distance(mutated_protein_, node_ptr->mutated_protein_);
+  CompareDistance_t contig_score = sequence_distance_->amino_distance(mutated_protein_, node_ptr->mutated_protein_);
   DistanceType_t total_distance = static_cast<DistanceType_t>(contig_score);
 
   ExecEnv::log().info("distance(), Genome: {}, Gene: {}, Gene: {}; {} distance: {}, Gene Family: {}",
@@ -330,8 +259,8 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
   }
 
 
-  std::shared_ptr<AminoSequence> mutant_sequence;
-  std::shared_ptr<AminoSequence> reference_sequence;
+  AminoSequence mutant_sequence;
+  AminoSequence reference_sequence;
   OffsetVariantMap variant_map;
 
   if (not genome_variant_ptr_->mutantProteins(contig_ptr->contigId(),
@@ -424,9 +353,9 @@ void  kgl::DNAGeneDistance::getExonSequence() {
 
   std::shared_ptr<const ContigFeatures> contig_ptr = gene_ptr_->contig();
 
-  std::shared_ptr<const DNA5SequenceCoding> dna_coding_sequence = contig_ptr->sequence().codingSequence(getCodingSequence());
+  DNA5SequenceCoding dna_coding_sequence = contig_ptr->sequence().codingSequence(getCodingSequence());
 
-  sequence_ptr_ = DNA5SequenceLinear::downConvertToLinear(dna_coding_sequence);
+  linear_sequence_ = DNA5SequenceLinear::downConvertToLinear(dna_coding_sequence);
 
 
 }
@@ -436,9 +365,9 @@ void  kgl::DNAGeneDistance::getIntronSequence() {
 
   std::shared_ptr<const ContigFeatures> contig_ptr = gene_ptr_->contig();
 
-  std::shared_ptr<const DNA5SequenceCoding> dna_coding_sequence = contig_ptr->sequence().intronSequence(getCodingSequence());
+  DNA5SequenceCoding dna_coding_sequence = contig_ptr->sequence().intronSequence(getCodingSequence());
 
-  sequence_ptr_ = DNA5SequenceLinear::downConvertToLinear(dna_coding_sequence);
+  linear_sequence_ = DNA5SequenceLinear::downConvertToLinear(dna_coding_sequence);
 
 }
 
@@ -456,17 +385,17 @@ kgl::DistanceType_t kgl::DNAGeneDistance::distance(std::shared_ptr<const Virtual
 
 
   ExecEnv::log().info("distance();  {} Comparing | {}({}), {}({}) |; Gene Family: {}",
-                      sequence_distance_->distanceType(), gene_ptr_->id(), sequence_ptr_->length(),
-                      node_ptr->gene_ptr_->id(), node_ptr->sequence_ptr_->length(), protein_family_);
+                      sequence_distance_->distanceType(), gene_ptr_->id(), linear_sequence_.length(),
+                      node_ptr->gene_ptr_->id(), node_ptr->linear_sequence_.length(), protein_family_);
 
 
-  CompareDistance_t contig_score = sequence_distance_->distance(sequence_ptr_, node_ptr->sequence_ptr_);
+  CompareDistance_t contig_score = sequence_distance_->linear_distance(linear_sequence_, node_ptr->linear_sequence_);
 
   DistanceType_t total_distance = static_cast<DistanceType_t>(contig_score);
 
   ExecEnv::log().info("distance();  {} | {}({}), {}({}) |  =  {}; Gene Family: {}",
-                      sequence_distance_->distanceType(), gene_ptr_->id(), sequence_ptr_->length(),
-                      node_ptr->gene_ptr_->id(), node_ptr->sequence_ptr_->length(),
+                      sequence_distance_->distanceType(), gene_ptr_->id(), linear_sequence_.length(),
+                      node_ptr->gene_ptr_->id(), node_ptr->linear_sequence_.length(),
                       total_distance, protein_family_);
 
   return total_distance;
@@ -499,9 +428,9 @@ void  kgl::AminoGeneDistance::getAminoSequence() {
 
   std::shared_ptr<const ContigFeatures> contig_ptr = gene_ptr_->contig();
 
-  std::shared_ptr<const DNA5SequenceCoding> dna_coding_sequence = contig_ptr->sequence().codingSequence(getCodingSequence());
+  DNA5SequenceCoding dna_coding_sequence = contig_ptr->sequence().codingSequence(getCodingSequence());
 
-  sequence_ptr_ = contig_ptr->getAminoSequence(dna_coding_sequence);
+  amino_sequence_ = contig_ptr->getAminoSequence(dna_coding_sequence);
 
 }
 
@@ -519,17 +448,17 @@ kgl::DistanceType_t kgl::AminoGeneDistance::distance(std::shared_ptr<const Virtu
 
 
   ExecEnv::log().info("distance();  {} Comparing | {}({}), {}({}) |; Gene Family: {}",
-                      sequence_distance_->distanceType(), gene_ptr_->id(), sequence_ptr_->length(),
-                      node_ptr->gene_ptr_->id(), node_ptr->sequence_ptr_->length(), protein_family_);
+                      sequence_distance_->distanceType(), gene_ptr_->id(), amino_sequence_.length(),
+                      node_ptr->gene_ptr_->id(), node_ptr->amino_sequence_.length(), protein_family_);
 
 
-  CompareDistance_t contig_score = sequence_distance_->distance(sequence_ptr_, node_ptr->sequence_ptr_);
+  CompareDistance_t contig_score = sequence_distance_->amino_distance(amino_sequence_, node_ptr->amino_sequence_);
 
   DistanceType_t total_distance = static_cast<DistanceType_t>(contig_score);
 
   ExecEnv::log().info("distance();  {} | {}({}), {}({}) |  =  {}; Gene Family: {}",
-                      sequence_distance_->distanceType(), gene_ptr_->id(), sequence_ptr_->length(),
-                      node_ptr->gene_ptr_->id(), node_ptr->sequence_ptr_->length(),
+                      sequence_distance_->distanceType(), gene_ptr_->id(), amino_sequence_.length(),
+                      node_ptr->gene_ptr_->id(), node_ptr->amino_sequence_.length(),
                       total_distance, protein_family_);
 
   return total_distance;

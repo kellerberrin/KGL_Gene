@@ -18,17 +18,17 @@ public:
   ~SequenceComplexity() = delete;
 
   template<typename Alphabet>
-  [[nodiscard]] static size_t kmerCount(std::shared_ptr<const AlphabetSequence<Alphabet>> sequence,
-                          std::shared_ptr<const AlphabetSequence<Alphabet>> kmer);
+  [[nodiscard]] static size_t kmerCount( const AlphabetSequence<Alphabet>& sequence,
+                                         const AlphabetSequence<Alphabet>& kmer);
 
-  [[nodiscard]] static double relativeCpGIslands(std::shared_ptr<const DNA5SequenceLinear> sequence);
+  [[nodiscard]] static double relativeCpGIslands(const DNA5SequenceLinear& sequence);
   // Calculate Entropy
   template<typename Alphabet>
-  [[nodiscard]] static double alphabetEntropy(std::shared_ptr<const AlphabetSequence<Alphabet>> sequence);
+  [[nodiscard]] static double alphabetEntropy(const AlphabetSequence<Alphabet>& sequence);
   // Different for different sequence lengths.
-  [[nodiscard]] static size_t complexityLempelZiv(std::shared_ptr<const DNA5SequenceLinear> sequence);
+  [[nodiscard]] static size_t complexityLempelZiv(const DNA5SequenceLinear& sequence);
   // Calculate Nucleotide content.
-  static void proportionNucleotides(std::shared_ptr<const DNA5SequenceLinear> sequence,
+  static void proportionNucleotides(const DNA5SequenceLinear& sequence,
                                     double& A_prop,
                                     double& C_prop,
                                     double& G_prop,
@@ -37,7 +37,7 @@ public:
 private:
 
   // Calculate GC content.
-  static void countNucleotides(std::shared_ptr<const DNA5SequenceLinear> sequence,
+  static void countNucleotides(const DNA5SequenceLinear& sequence,
                                size_t& A_count,
                                size_t& C_count,
                                size_t& G_count,
@@ -48,9 +48,9 @@ private:
 
 // Calculate Entropy
 template<typename Alphabet>
-double SequenceComplexity::alphabetEntropy(std::shared_ptr<const AlphabetSequence<Alphabet>> sequence) {
+double SequenceComplexity::alphabetEntropy(const AlphabetSequence<Alphabet>& sequence) {
 
-  if (sequence->length() == 0) {
+  if (sequence.length() == 0) {
 
     ExecEnv::log().error("SequenceComplexity::alphabetEntropy; zero sized sequence");
     return 0.0;
@@ -71,21 +71,21 @@ double SequenceComplexity::alphabetEntropy(std::shared_ptr<const AlphabetSequenc
     if (not result.second) {
 
       ExecEnv::log().error("SequenceComplexity::alphabetEntropy; duplicate alphabet item: {}, for sequence: {}",
-                           Alphabet::convertToChar(letter), sequence->getSequenceAsString());
+                           Alphabet::convertToChar(letter), sequence.getSequenceAsString());
 
     }
 
   }
 
   // Count the sequence into the lookup map.
-  for (size_t idx = 0; idx < sequence->length(); ++idx) {
+  for (size_t idx = 0; idx < sequence.length(); ++idx) {
 
-    auto result = lookup_map.find(Alphabet::convertToChar(sequence->at(idx)));
+    auto result = lookup_map.find(Alphabet::convertToChar(sequence.at(idx)));
 
     if (result == lookup_map.end()) {
 
       ExecEnv::log().error("SequenceComplexity::alphabetEntropy; missing alphabet item: {}, for sequence: {}",
-                           Alphabet::convertToChar(sequence->at(idx)), sequence->getSequenceAsString());
+                           Alphabet::convertToChar(sequence.at(idx)), sequence.getSequenceAsString());
 
     } else {
 
@@ -95,7 +95,7 @@ double SequenceComplexity::alphabetEntropy(std::shared_ptr<const AlphabetSequenc
 
   }
 
-  double sequence_size = static_cast<double>(sequence->length());
+  auto sequence_size = static_cast<double>(sequence.length());
 
   // Calculate entropy.
   double entropy = 0.0;
@@ -122,16 +122,15 @@ double SequenceComplexity::alphabetEntropy(std::shared_ptr<const AlphabetSequenc
 
 
 template<typename Alphabet>
-size_t SequenceComplexity::kmerCount(std::shared_ptr<const AlphabetSequence<Alphabet>> sequence,
-                                     std::shared_ptr<const AlphabetSequence<Alphabet>> kmer) {
+size_t SequenceComplexity::kmerCount(const AlphabetSequence<Alphabet>& sequence, const AlphabetSequence<Alphabet>& kmer) {
 
   std::map<std::string, size_t> word_map;
 
-  std::string sequence_string = sequence->getSequenceAsString();
+  std::string sequence_string = sequence.getSequenceAsString();
 
-  std::string kmer_string = kmer->getSequenceAsString();
+  std::string kmer_string = kmer.getSequenceAsString();
 
-  size_t kmer_size = kmer->length();
+  size_t kmer_size = kmer.length();
 
   std::pair<std::string, size_t> insert_kmer(kmer_string, 0);
 
@@ -144,9 +143,9 @@ size_t SequenceComplexity::kmerCount(std::shared_ptr<const AlphabetSequence<Alph
 
   }
 
-  for (size_t i = 0; i < sequence->length(); i++) {
+  for (size_t i = 0; i < sequence.length(); i++) {
 
-    if (i + kmer_size >= sequence->length()) break;
+    if (i + kmer_size >= sequence.length()) break;
 
     std::string word = sequence_string.substr(i, kmer_size);
 

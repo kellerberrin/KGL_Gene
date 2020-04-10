@@ -16,44 +16,6 @@
 namespace kellerberrin::genome {   //  organization level namespace
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Mutates the contigs and then compares the mutated contigs between genomes. Global DNA distance.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-using MutatedContigMap = std::map<ContigId_t, std::shared_ptr<const DNA5SequenceContig>>;
-
-class UPGMAContigDistance : public VirtualDistanceNode {
-
-public:
-
-  UPGMAContigDistance(std::shared_ptr<const GlobalDNASequenceDistance> sequence_distance,
-                      std::shared_ptr<const GenomeVariant> genome_variant_ptr,
-                      std::shared_ptr<const GenomeDatabase> genome_db_ptr) : sequence_distance_(sequence_distance),
-                                                                             genome_variant_ptr_(genome_variant_ptr),
-                                                                             genome_db_ptr_(genome_db_ptr) {
-    mutateContigs();
-
-  }
-  UPGMAContigDistance(const UPGMAContigDistance&) = default;
-  ~UPGMAContigDistance() override = default;
-
-  // UPGMA Classification functions
-  // Function to tag the nodes. Override as necessary.
-  void writeNode(std::ostream& outfile) const override { outfile << genome_variant_ptr_->genomeId(); }
-  // Pure Virtual calculates the distance between nodes.
-  [[nodiscard]] DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const override;
-
-private:
-
-  std::shared_ptr<const GlobalDNASequenceDistance> sequence_distance_;
-  std::shared_ptr<const GenomeVariant> genome_variant_ptr_;
-  std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
-  MutatedContigMap mutated_contigs_;
-
-  void mutateContigs();
-
-};
-
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -67,7 +29,7 @@ class UPGMAProteinDistance : public VirtualDistanceNode {
 
 public:
 
-  UPGMAProteinDistance(std::shared_ptr<const LocalAminoSequenceDistance> sequence_distance,
+  UPGMAProteinDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
                        std::shared_ptr<const GenomeVariant> genome_variant_ptr,
                        std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                        const std::string& protein_family) : sequence_distance_(sequence_distance),
@@ -96,7 +58,7 @@ public:
 
 private:
 
-  std::shared_ptr<const LocalAminoSequenceDistance> sequence_distance_;
+  std::shared_ptr<const AminoSequenceDistance> sequence_distance_;
   std::string protein_family_;
   std::shared_ptr<const GenomeVariant> genome_variant_ptr_;
   std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
@@ -134,7 +96,6 @@ public:
     mutateProtein();
 
   }
-  UPGMAGeneDistance(const UPGMAGeneDistance&) = default;
   ~UPGMAGeneDistance() override = default;
 
   // UPGMA Classification functions
@@ -158,7 +119,7 @@ public:
 protected:
 
   std::shared_ptr<const AminoSequenceDistance> sequence_distance_;
-  std::shared_ptr<const AminoSequence> mutated_protein_;
+  AminoSequence mutated_protein_;
   std::string protein_family_;
   std::shared_ptr<const GenomeVariant> genome_variant_ptr_;
   std::shared_ptr<const GeneFeature> gene_ptr_;
@@ -190,7 +151,6 @@ public:
 
   }
 
-  UPGMAATP4Distance(const UPGMAATP4Distance&) = default;
   ~UPGMAATP4Distance() override = default;
 
   // UPGMA Classification functions
@@ -254,7 +214,7 @@ class DNAGeneDistance : public ReferenceGeneDistance {
 
 public:
 
-  DNAGeneDistance(std::shared_ptr<const LocalDNASequenceDistance> sequence_distance,
+  DNAGeneDistance(std::shared_ptr<const LinearDNASequenceDistance> sequence_distance,
                   std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                   std::shared_ptr<const GeneFeature> gene_ptr,
                   const std::string& protein_family)
@@ -275,8 +235,8 @@ public:
 
 private:
 
-  std::shared_ptr<const LocalDNASequenceDistance> sequence_distance_;
-  std::shared_ptr<const DNA5SequenceLinear> sequence_ptr_;
+  std::shared_ptr<const LinearDNASequenceDistance> sequence_distance_;
+  DNA5SequenceLinear linear_sequence_;
 
   void  getExonSequence();
   void  getIntronSequence();
@@ -288,13 +248,13 @@ class AminoGeneDistance : public ReferenceGeneDistance {
 
 public:
 
-  AminoGeneDistance(std::shared_ptr<const LocalSequenceDistance> sequence_distance,
+  AminoGeneDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
                   std::shared_ptr<const GenomeDatabase> genome_db_ptr,
                   std::shared_ptr<const GeneFeature> gene_ptr,
                   const std::string& protein_family)
   : ReferenceGeneDistance(genome_db_ptr, gene_ptr, protein_family) {
 
-    sequence_distance_ = std::dynamic_pointer_cast<const LocalAminoSequenceDistance>(sequence_distance);
+    sequence_distance_ = std::dynamic_pointer_cast<const AminoSequenceDistance>(sequence_distance);
 
     if (not sequence_distance_) {
 
@@ -307,7 +267,6 @@ public:
 
   }
 
-  explicit AminoGeneDistance(const AminoGeneDistance&) = default;
   ~AminoGeneDistance() override = default;
 
   // Pure Virtual calculates the distance between nodes.
@@ -315,8 +274,8 @@ public:
 
 private:
 
-  std::shared_ptr<const LocalAminoSequenceDistance> sequence_distance_;
-  std::shared_ptr<const AminoSequence> sequence_ptr_;
+  std::shared_ptr<const AminoSequenceDistance> sequence_distance_;
+  AminoSequence amino_sequence_;
 
   void  getAminoSequence();
 

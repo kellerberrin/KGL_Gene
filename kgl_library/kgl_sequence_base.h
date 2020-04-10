@@ -42,13 +42,23 @@ class DNA5SequenceCoding: public AlphabetSequence<CodingDNA5> {
 
 public:
 
-
-  explicit DNA5SequenceCoding(StringCodingDNA5&& sequence, StrandSense strand) noexcept : AlphabetSequence<CodingDNA5>(std::move(sequence)), strand_(strand) {}
-  DNA5SequenceCoding() : strand_(StrandSense::FORWARD) {}
-  DNA5SequenceCoding(DNA5SequenceCoding& copy) = delete;
+  DNA5SequenceCoding(DNA5SequenceCoding&& sequence) noexcept : AlphabetSequence<CodingDNA5>(std::move(sequence)), strand_(sequence.strand_) {}
+  explicit DNA5SequenceCoding(StringCodingDNA5&& sequence_string, StrandSense strand) noexcept : AlphabetSequence<CodingDNA5>(std::move(sequence_string)), strand_(strand) {}
+  DNA5SequenceCoding() : strand_(StrandSense::FORWARD) {} // Empty sequences permitted
+  DNA5SequenceCoding(DNA5SequenceCoding& copy) = delete; // For Performance reasons, no copy constructor.
   ~DNA5SequenceCoding() override = default;
 
+  // For Performance reasons, don't allow naive assignments.
   DNA5SequenceCoding& operator=(DNA5SequenceCoding& copy) = delete;
+  // Only allow move assignments
+  DNA5SequenceCoding& operator=(DNA5SequenceCoding&& moved) noexcept {
+
+    strand_ = moved.strand_;
+    AlphabetSequence<CodingDNA5>::operator=(std::move(moved));
+    return *this;
+
+  }
+
 
   // Returns the sequence strand, FORWARD '+' or REVERSE '-'.
   [[nodiscard]] StrandSense strand() const { return strand_; }
@@ -69,45 +79,53 @@ private:
 // A string of the standard 5 nucleotide DNA/RNA alphabet A, C, G, T/U, N
 using StringDNA5 = AlphabetString<DNA5>;
 
-
 // An UNSTRANDED DNA string.
 class DNA5SequenceLinear: public  AlphabetSequence<DNA5> {
 
 public:
 
 
-  explicit DNA5SequenceLinear(StringDNA5&& sequence) :  AlphabetSequence<DNA5>(std::move(sequence)) {}
-  DNA5SequenceLinear() = default;
-  DNA5SequenceLinear(const DNA5SequenceLinear&) = delete;
+  DNA5SequenceLinear(DNA5SequenceLinear&& sequence) noexcept : AlphabetSequence<DNA5>(std::move(sequence)) {}
+  explicit DNA5SequenceLinear(StringDNA5&& sequence_string) :  AlphabetSequence<DNA5>(std::move(sequence_string)) {}
+  DNA5SequenceLinear() = default; // Empty sequences permitted.
+  DNA5SequenceLinear(const DNA5SequenceLinear&) = delete; // For Performance reasons, no copy constructor.
   ~DNA5SequenceLinear() override = default;
 
-  DNA5SequenceLinear operator=(const DNA5SequenceLinear&) = delete;
+  // For Performance reasons, don't allow naive assignments.
+  DNA5SequenceLinear& operator=(const DNA5SequenceLinear&) = delete;
+  // Only allow move assignments
+  DNA5SequenceLinear& operator=(DNA5SequenceLinear&& moved) noexcept {
+
+    AlphabetSequence<DNA5>::operator=(std::move(moved));
+    return *this;
+
+  }
 
   // Returns a defined subsequence (generally a single/group of codons) of the coding sequence
   // Setting sub_sequence_offset and sub_sequence_length to zero copies the entire sequence defined by the SortedCDS.
-  [[nodiscard]] std::shared_ptr<DNA5SequenceCoding> codingOffsetSubSequence( std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                                                             ContigOffset_t sub_sequence_offset,
-                                                                             ContigSize_t sub_sequence_length,
-                                                                             ContigOffset_t contig_offset) const;
+  [[nodiscard]] DNA5SequenceCoding codingOffsetSubSequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+                                                            ContigOffset_t sub_sequence_offset,
+                                                            ContigSize_t sub_sequence_length,
+                                                            ContigOffset_t contig_offset) const;
 
   // Convenience routine that returns an array of exons (strand adjusted), these will, in general, not be on codon boundaries.
   // Returned sequences are in transcription (strand) order with array[0] being the first exon.
   // The optional second offset argument is onlu used if the linear sequence is not a complete contig/chromosome.
-  [[nodiscard]] std::vector<std::shared_ptr<DNA5SequenceCoding>> exonArraySequence( std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                                                                    ContigOffset_t contig_offset = 0) const;
+  [[nodiscard]] std::vector<DNA5SequenceCoding> exonArraySequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+                                                                   ContigOffset_t contig_offset = 0) const;
 
   // The contig_offset adjusts for the offset in the contig from which the DNASequenceLinear was copied.
   // Setting sub_sequence_offset and sub_sequence_length to zero copies the entire intron sequence defined by the CodingSequence.
-  [[nodiscard]] std::shared_ptr<DNA5SequenceCoding> intronOffsetSubSequence( std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                                                             ContigOffset_t sub_sequence_offset,
-                                                                             ContigSize_t sub_sequence_length,
-                                                                             ContigOffset_t contig_offset) const;
+  [[nodiscard]] DNA5SequenceCoding intronOffsetSubSequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+                                                            ContigOffset_t sub_sequence_offset,
+                                                            ContigSize_t sub_sequence_length,
+                                                            ContigOffset_t contig_offset) const;
 
   // Convenience routine that returns an array of introns (strand adjusted).
   // Returned sequences are in transcription (strand) order with array[0] being the first intron.
   // The optional second offset argument is only used if the linear sequence is not a complete contig/chromosome.
-  [[nodiscard]] std::vector<std::shared_ptr<DNA5SequenceCoding>> intronArraySequence( std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                                                                      ContigOffset_t contig_offset = 0) const;
+  [[nodiscard]] std::vector<DNA5SequenceCoding> intronArraySequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+                                                                     ContigOffset_t contig_offset = 0) const;
 
   // Offset is the relative sequence offset.
   [[nodiscard]] bool modifyBase(ContigOffset_t base_offset, DNA5::Alphabet Nucleotide);
@@ -118,26 +136,26 @@ public:
 
   // Down-converts a coding DNA sequence to a linear DNA5 alphabet (swaps the logical alphabet from CodingDNA5 to DNA5).
   // Important - No strand conversion is performed.
-  [[nodiscard]] static std::shared_ptr<DNA5SequenceLinear> downConvertToLinear(std::shared_ptr<const DNA5SequenceCoding> stranded_sequence);
+  [[nodiscard]] static DNA5SequenceLinear downConvertToLinear(const DNA5SequenceCoding& stranded_sequence);
 
 
   // Down-converts a coding DNA sequence to a linear DNA5 alphabet (swaps the logical alphabet from CodingDNA5 to DNA5).
   // Important - Strand Conversion of a reverse complement is performed for a -ve strand
-  [[nodiscard]] static std::shared_ptr<DNA5SequenceLinear> strandedDownConvert(std::shared_ptr<const DNA5SequenceCoding> stranded_sequence);
+  [[nodiscard]] static DNA5SequenceLinear strandedDownConvert(const DNA5SequenceCoding& stranded_sequence);
 
   // Up-converts a linear UNSTANDED DNA sequence to a STRANDED coding sequence (swaps the logical alphabet from DNA5 to CodingDNA5).
   // A -ve strand returns the reverse complement as expected.
-  [[nodiscard]] std::shared_ptr<DNA5SequenceCoding> codingSequence(StrandSense strand) const;
+  [[nodiscard]] DNA5SequenceCoding codingSequence(StrandSense strand) const;
 
   // Returns an UNSTRANDED subsequence. Returned sequence is valid but zero-sized if offset/size are out-of-bounds.
-  [[nodiscard]] std::shared_ptr<DNA5SequenceLinear> subSequence(ContigOffset_t sub_sequence_offset, ContigSize_t sub_sequence_length) const;
+  [[nodiscard]] DNA5SequenceLinear subSequence(ContigOffset_t sub_sequence_offset, ContigSize_t sub_sequence_length) const;
 
 
 private:
 
   // Down-converts a coding DNA sequence to a linear DNA5 alphabet (swaps the logical alphabet from CodingDNA5 to DNA5).
-  // Important - Always returns the reverse complement of the stranded sequence.
-  [[nodiscard]] static std::shared_ptr<DNA5SequenceLinear> reverseDownConvert(std::shared_ptr<const DNA5SequenceCoding> stranded_sequence);
+  // Important - Always returns the reverse complement of the coding sequence.
+  [[nodiscard]] static DNA5SequenceLinear reverseDownConvert(const DNA5SequenceCoding& stranded_sequence);
 
 
 };
@@ -152,40 +170,46 @@ class DNA5SequenceContig: public DNA5SequenceLinear {
 
 public:
 
-
-  explicit DNA5SequenceContig(StringDNA5&& sequence) : DNA5SequenceLinear(std::move(sequence)) {}
-  explicit DNA5SequenceContig(const StringDNA5& sequence) { alphabet_string_ = sequence; }
-  DNA5SequenceContig(const DNA5SequenceContig&) = delete;
-  DNA5SequenceContig() = delete;
+  explicit DNA5SequenceContig(StringDNA5&& sequence_string) noexcept : DNA5SequenceLinear(std::move(sequence_string)) {}
+  DNA5SequenceContig(const DNA5SequenceContig&) = delete; // For Performance reasons, no copy constructor.
+  DNA5SequenceContig() = default;
   ~DNA5SequenceContig() override = default;
 
+  // For Performance reasons, don't allow naive assignments.
   DNA5SequenceContig& operator=(const DNA5SequenceContig&) = delete;
+  // Only allow move assignments
+  DNA5SequenceContig& operator=(DNA5SequenceContig&& moved) noexcept {
+
+    DNA5SequenceLinear::operator=(std::move(moved));
+    return *this;
+
+  }
 
   // Returns the codon offset of the contig offset within a coding sequence, returns false if not within the coding sequence.
-  [[nodiscard]] bool codonOffset( std::shared_ptr<const CodingSequence> coding_seq_ptr,
+  [[nodiscard]] bool codonOffset( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
                                   ContigOffset_t contig_offset,
                                   ContigOffset_t& codon_offset,
                                   ContigSize_t& base_in_codon) const;
 
 
   // Generally returns coding fragments such as Codons.
-  [[nodiscard]] std::shared_ptr<DNA5SequenceCoding> codingSubSequence( std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                                                       ContigOffset_t sub_sequence_offset,
-                                                                       ContigSize_t sub_sequence_length) const {
+  [[nodiscard]] DNA5SequenceCoding codingSubSequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+                                                      ContigOffset_t sub_sequence_offset,
+                                                      ContigSize_t sub_sequence_length) const {
 
     return codingOffsetSubSequence(coding_seq_ptr, sub_sequence_offset, sub_sequence_length, 0);
 
   }
 
   // The entire sequence defined by the CodingSequence is returned.
-  [[nodiscard]] std::shared_ptr<DNA5SequenceCoding> codingSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr) const {
+  [[nodiscard]] DNA5SequenceCoding codingSequence(const std::shared_ptr<const CodingSequence>& coding_seq_ptr) const {
 
     return codingSubSequence(coding_seq_ptr, 0, 0);
 
   }
 
   // The entire intron sequence defined by the CodingSequence is returned.
-  [[nodiscard]] std::shared_ptr<DNA5SequenceCoding> intronSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr) const {
+  [[nodiscard]] DNA5SequenceCoding intronSequence(const std::shared_ptr<const CodingSequence>& coding_seq_ptr) const {
 
     return intronOffsetSubSequence(coding_seq_ptr, 0, 0, 0);
 

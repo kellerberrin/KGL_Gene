@@ -106,8 +106,8 @@ public:
                                            ContigSize_t region_size,
                                            const std::shared_ptr<const GenomeDatabase>& genome_db,
                                            const std::shared_ptr<const GenomeVariant>& genome_variant,
-                                           std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
-                                           std::shared_ptr<DNA5SequenceCoding>& mutant_sequence);
+                                           DNA5SequenceCoding& reference_sequence,
+                                           DNA5SequenceCoding& mutant_sequence);
 
   [[nodiscard]]  static bool compare3Prime( const ContigId_t& contig_id,
                                             const FeatureIdent_t& gene_id,
@@ -115,25 +115,25 @@ public:
                                             ContigSize_t region_size,
                                             const std::shared_ptr<const GenomeDatabase>& genome_db,
                                             const std::shared_ptr<const GenomeVariant>& genome_variant,
-                                            std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
-                                            std::shared_ptr<DNA5SequenceCoding>& mutant_sequence_vector);
+                                            DNA5SequenceCoding& reference_sequence,
+                                            DNA5SequenceCoding& mutant_sequence_vector);
 
 
   [[nodiscard]] static bool outputRegionCSV( const std::string &file_name,
-                                             std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
-                                             std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric,
+                                             std::shared_ptr<const DNASequenceDistance> dna_distance_metric,
+                                             std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
                                              std::shared_ptr<const GenomeDatabase> genome_db,
                                              std::shared_ptr<const PhasedPopulation> pop_variant_ptr);
 
 
   [[nodiscard]]  static bool outputDNASequenceCSV( const std::string &file_name,
                                                    SequenceAnalysisType ansalysis_type,
-                                                   std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
+                                                   std::shared_ptr<const CodingDNASequenceDistance> dna_distance_metric,
                                                    std::shared_ptr<const GenomeDatabase> genome_db,
                                                    std::shared_ptr<const PhasedPopulation> pop_variant_ptr);
 
   [[nodiscard]]  static bool outputAminoSequenceCSV( const std::string &file_name,
-                                                     std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric,
+                                                     std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
                                                      std::shared_ptr<const GenomeDatabase> genome_db,
                                                      std::shared_ptr<const PhasedPopulation> pop_variant_ptr);
 
@@ -158,8 +158,8 @@ private:
   [[nodiscard]] static std::string outputSequenceHeader(char delimiter, std::shared_ptr<const PhasedPopulation> pop_variant_ptr);
   [[nodiscard]] static std::string outputRegionHeader(char delimiter);
   [[nodiscard]] static std::string outputSequence( char delimiter,
-                                                   std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
-                                                   std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric,
+                                                   std::shared_ptr<const CodingDNASequenceDistance> dna_distance_metric,
+                                                   std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
                                                    std::shared_ptr<const CodingSequence> coding_sequence,
                                                    std::shared_ptr<const GenomeDatabase> genome_db,
                                                    std::shared_ptr<const GenomeVariant> genome_variant);

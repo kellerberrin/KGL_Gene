@@ -9,7 +9,7 @@
 namespace kgl = kellerberrin::genome;
 
 
-void kgl::SequenceComplexity::countNucleotides(std::shared_ptr<const DNA5SequenceLinear> sequence,
+void kgl::SequenceComplexity::countNucleotides(const DNA5SequenceLinear& sequence,
                                                size_t& A_count,
                                                size_t& C_count,
                                                size_t& G_count,
@@ -20,9 +20,9 @@ void kgl::SequenceComplexity::countNucleotides(std::shared_ptr<const DNA5Sequenc
   G_count = 0;
   T_count = 0;
 
-  for(ContigSize_t index = 0; index < sequence->length(); ++index) {
+  for(ContigSize_t index = 0; index < sequence.length(); ++index) {
 
-    switch(sequence->at(index)) {
+    switch(sequence.at(index)) {
 
       case DNA5::Alphabet::A:
         ++A_count;
@@ -44,7 +44,7 @@ void kgl::SequenceComplexity::countNucleotides(std::shared_ptr<const DNA5Sequenc
         break;
 
       default:
-      ExecEnv::log().error("SequenceComplexity::countNucleotides; bad nucleotide in sequence: {}", sequence->getSequenceAsString());
+      ExecEnv::log().error("SequenceComplexity::countNucleotides; bad nucleotide in sequence: {}", sequence.getSequenceAsString());
       break;
 
     }
@@ -54,9 +54,9 @@ void kgl::SequenceComplexity::countNucleotides(std::shared_ptr<const DNA5Sequenc
 }
 
 
-double  kgl::SequenceComplexity::relativeCpGIslands(std::shared_ptr<const DNA5SequenceLinear> sequence) {
+double  kgl::SequenceComplexity::relativeCpGIslands(const DNA5SequenceLinear& sequence) {
 
-  if (sequence->length() == 0) {
+  if (sequence.length() == 0) {
 
     ExecEnv::log().error("SequenceComplexity::relativeCpGIslands; zero sized sequence");
     return 0.0;
@@ -76,11 +76,11 @@ double  kgl::SequenceComplexity::relativeCpGIslands(std::shared_ptr<const DNA5Se
 
   }
 
-  std::shared_ptr<const DNA5SequenceLinear> CpG(std::make_shared<const DNA5SequenceLinear>(StringDNA5("CG")));
+  const DNA5SequenceLinear CpG(StringDNA5("CG"));
 
   size_t CpG_count = kmerCount<DNA5>(sequence, CpG);
 
-  double expected_CpG = static_cast<double>(sequence->length()) / 32.0;
+  double expected_CpG = static_cast<double>(sequence.length()) / 32.0;
 
   return static_cast<double>(CpG_count) / expected_CpG;
 
@@ -88,7 +88,7 @@ double  kgl::SequenceComplexity::relativeCpGIslands(std::shared_ptr<const DNA5Se
 
 
 
-void kgl::SequenceComplexity::proportionNucleotides(std::shared_ptr<const DNA5SequenceLinear> sequence,
+void kgl::SequenceComplexity::proportionNucleotides(const DNA5SequenceLinear& sequence,
                                                     double& A_prop,
                                                     double& C_prop,
                                                     double& G_prop,
@@ -100,7 +100,7 @@ void kgl::SequenceComplexity::proportionNucleotides(std::shared_ptr<const DNA5Se
   G_prop = 0.0;
   T_prop = 0.0;
 
-  if (sequence->length() == 0) {
+  if (sequence.length() == 0) {
 
     ExecEnv::log().error("SequenceComplexity::proportionNucleotides; zero sized sequence");
     return;
@@ -114,28 +114,28 @@ void kgl::SequenceComplexity::proportionNucleotides(std::shared_ptr<const DNA5Se
 
   countNucleotides(sequence, A_count, C_count, G_count,  T_count);
 
-  A_prop = static_cast<double>(A_count) / static_cast<double>(sequence->length());
-  C_prop = static_cast<double>(C_count) / static_cast<double>(sequence->length());
-  G_prop = static_cast<double>(G_count) / static_cast<double>(sequence->length());
-  T_prop = static_cast<double>(T_count) / static_cast<double>(sequence->length());
+  A_prop = static_cast<double>(A_count) / static_cast<double>(sequence.length());
+  C_prop = static_cast<double>(C_count) / static_cast<double>(sequence.length());
+  G_prop = static_cast<double>(G_count) / static_cast<double>(sequence.length());
+  T_prop = static_cast<double>(T_count) / static_cast<double>(sequence.length());
 
 }
 
 
 
-size_t kgl::SequenceComplexity::complexityLempelZiv(std::shared_ptr<const DNA5SequenceLinear> sequence) {
+size_t kgl::SequenceComplexity::complexityLempelZiv(const DNA5SequenceLinear& sequence) {
 
   size_t u = 0;
   size_t v = 1;
   size_t w = 1;
   size_t v_max = 1;
-  size_t length = sequence->length();
+  size_t length = sequence.length();
   size_t complexity = 1;
 
 
   while (true) {
 
-    if (sequence->at(u + v - 1) == sequence->at(w + v - 1)) {
+    if (sequence.at(u + v - 1) == sequence.at(w + v - 1)) {
 
       v += 1;
 

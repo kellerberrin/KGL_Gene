@@ -65,7 +65,7 @@ public:
   [[nodiscard]] std::string mutation(char delimiter, VariantOutputIndex output_index) const override;
 
   [[nodiscard]] bool mutateSequence( SignedOffset_t offset_adjust,
-                                     std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
+                                     DNA5SequenceLinear& dna_sequence,
                                      SignedOffset_t& sequence_size_modify) const override;
 
 
@@ -83,12 +83,12 @@ private:
 
   // Mutate a sequence by adding and subtracting subsequences at the designated offset
   [[nodiscard]] static bool performMutation( ContigOffset_t offset,
-                                             std::shared_ptr<DNA5SequenceLinear> mutated_sequence_ptr,
+                                             DNA5SequenceLinear& mutated_sequence,
                                              const DNA5SequenceLinear& delete_subsequence,
                                              const DNA5SequenceLinear& add_subsequence);
 
   [[nodiscard]] bool preceedingMutation( SignedOffset_t adjusted_offset,
-                                         std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
+                                         DNA5SequenceLinear& dna_sequence,
                                          SignedOffset_t& sequence_size_modify) const;
 
 };

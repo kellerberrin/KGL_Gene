@@ -24,12 +24,12 @@ class Codon  {
 public:
 
 
-  Codon(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr, ContigOffset_t codon_index);
+  Codon(const DNA5SequenceCoding& coding_sequence, ContigOffset_t codon_index);
   ~Codon() = default;
 
-  [[nodiscard]] static ContigSize_t codonLength(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) {
+  [[nodiscard]] static ContigSize_t codonLength(const DNA5SequenceCoding& coding_sequence) {
 
-    return static_cast<ContigSize_t>(sequence_ptr->length() / CODON_SIZE);
+    return static_cast<ContigSize_t>(coding_sequence.length() / CODON_SIZE);
 
   }
 

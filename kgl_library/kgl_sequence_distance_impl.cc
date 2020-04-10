@@ -7,6 +7,7 @@
 
 #include <tuple>                        // for std::make_pair
 #include <iterator>
+#include <string>
 //#include <span>
 
 #include <seqan/align.h>

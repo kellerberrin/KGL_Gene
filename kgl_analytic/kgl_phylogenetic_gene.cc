@@ -17,7 +17,7 @@ namespace kgl = kellerberrin::genome;
 
 bool kgl::GeneAnalysis::translateContig( const GenomeId_t& genome_id, 
                                          const ContigId_t& contig_id,
-                                         std::shared_ptr<const GenomeCollection>& genomes, 
+                                         const std::shared_ptr<const GenomeCollection>& genomes,
                                          const std::string& fasta_file_name) {
   // Get the genome object
   std::shared_ptr<const GenomeDatabase> genome_db_ptr;
@@ -73,13 +73,13 @@ bool kgl::GeneAnalysis::translateContig( const GenomeId_t& genome_id,
 
       }
     
-      std::shared_ptr<DNA5SequenceCoding> coding_dna_ptr;
-      if (contig_ptr->getDNA5SequenceCoding(coding_sequence.second, coding_dna_ptr)) {
+      DNA5SequenceCoding coding_dna;
+      if (contig_ptr->getDNA5SequenceCoding(coding_sequence.second, coding_dna)) {
 
-        std::shared_ptr<AminoSequence> peptide_ptr = coding_sequence.second->contig()->getAminoSequence(coding_dna_ptr);
         std::stringstream ss;
         ss << gene.second->id() << "_" << ++coding_count;
-        std::pair<std::string, std::shared_ptr<AminoSequence>> fasta_entry(ss.str(), peptide_ptr);
+        AminoSequence peptide = coding_sequence.second->contig()->getAminoSequence(coding_dna);
+        std::pair<std::string, std::shared_ptr<AminoSequence>> fasta_entry(ss.str(), std::make_shared<AminoSequence>(std::move(peptide)));
         amino_fasta_vector.push_back(fasta_entry);
 
       } else {
@@ -108,7 +108,7 @@ bool kgl::GeneAnalysis::translateContig( const GenomeId_t& genome_id,
 
 bool kgl::GeneAnalysis::translateGene( const GenomeId_t& genome_id, 
                                        const FeatureIdent_t& gene_id,
-                                       std::shared_ptr<const GenomeCollection>& genomes, 
+                                       const std::shared_ptr<const GenomeCollection>& genomes,
                                        const std::string& fasta_file_name) {
 
   // Get the genome object
@@ -155,13 +155,13 @@ bool kgl::GeneAnalysis::translateGene( const GenomeId_t& genome_id,
       size_t coding_count = 0;
       for (const auto& coding_sequence : coding_sequence_array_ptr->getMap()) {
 
-        std::shared_ptr<DNA5SequenceCoding> coding_dna_ptr;
-        if (contig_ptr->getDNA5SequenceCoding(coding_sequence.second, coding_dna_ptr)) {
+        DNA5SequenceCoding coding_dna;
+        if (contig_ptr->getDNA5SequenceCoding(coding_sequence.second, coding_dna)) {
 
-          std::shared_ptr<AminoSequence> peptide_ptr = coding_sequence.second->contig()->getAminoSequence(coding_dna_ptr);
+          AminoSequence peptide_ptr = coding_sequence.second->contig()->getAminoSequence(coding_dna);
           std::stringstream ss;
           ss << gene_id << "_" << ++coding_count;
-          std::pair<std::string, std::shared_ptr<AminoSequence>> fasta_entry(ss.str(), peptide_ptr);
+          std::pair<std::string, std::shared_ptr<AminoSequence>> fasta_entry(ss.str(), std::make_shared<AminoSequence>(std::move(peptide_ptr)));
           amino_fasta_vector.push_back(fasta_entry);
 
         } else {
@@ -194,8 +194,8 @@ bool kgl::GeneAnalysis::translateGene( const GenomeId_t& genome_id,
 bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
                                    const FeatureIdent_t& gene,
                                    const FeatureIdent_t& sequence,
-                                   std::shared_ptr<const PhasedPopulation> population_ptr,
-                                   std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                   const std::shared_ptr<const PhasedPopulation>& population_ptr,
+                                   const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
                                    const std::string& fasta_filename) {
 
 
@@ -223,7 +223,7 @@ bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
 
   for (auto summary : gene_summary_map) {
 
-    if (contig_ptr->verifyProteinSequence(summary.second.sequence_mutant)) {
+    if (contig_ptr->verifyProteinSequence(*summary.second.sequence_mutant)) {
 
       ExecEnv::log().info("Multiple comparison Genome: {}, protein score: {}, 5Prime score: {}, 3Prime score: {}",
                           summary.first, summary.second.sequence_distance, summary.second.prime5_distance, summary.second.prime3_distance);
@@ -273,27 +273,38 @@ bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
 bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
                                          const FeatureIdent_t& gene,
                                          const FeatureIdent_t& sequence,
-                                         std::shared_ptr<const GenomeVariant> genome_variant_ptr,
-                                         std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                         const std::shared_ptr<const GenomeVariant>& genome_variant_ptr,
+                                         const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
                                          GeneSummaryMap& gene_summary_map) {
 
 
   GeneSummary gene_summary;
-  std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
-  std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric(std::make_shared<const LevenshteinGlobal>());
+  LevenshteinGlobal dna_distance_metric;
+  LevenshteinGlobal amino_distance_metric;
   gene_summary.genome = genome_variant_ptr->genomeId();
+
+  DNA5SequenceCoding prime5_reference;
+  DNA5SequenceCoding prime5_mutant;
+
   if (ApplicationAnalysis::compare5Prime(contig,
                                          gene,
                                          sequence,
                                          PRIME_REGION_SIZE,
                                          genome_db_ptr,
                                          genome_variant_ptr,
-                                         gene_summary.prime5_reference,
-                                         gene_summary.prime5_mutant)) {
+                                         prime5_reference,
+                                         prime5_mutant)) {
 
-    gene_summary.prime5_distance = dna_distance_metric->distance(gene_summary.prime5_reference, gene_summary.prime5_mutant);
+
+
+    gene_summary.prime5_distance = dna_distance_metric.coding_distance(prime5_reference, prime5_mutant);
+
     ExecEnv::log().info("5PRIME Genome: {}, Contig: {}, Gene: {}, Sequence: {} Levenshtein: {}, comparison:\n{}",
                         genome_variant_ptr->genomeId(), contig, gene, sequence, gene_summary.prime5_distance);
+
+    gene_summary.prime5_reference = std::make_shared<DNA5SequenceCoding>(std::move(prime5_reference));
+    gene_summary.prime5_mutant = std::make_shared<DNA5SequenceCoding>(std::move(prime5_mutant));
+
 
   } else {
 
@@ -303,6 +314,8 @@ bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
 
   }
 
+  AminoSequence protein_reference;
+  AminoSequence protein_mutant;
 
   if (genome_variant_ptr->mutantProteins(contig,
                                          ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
@@ -310,8 +323,8 @@ bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
                                          sequence,
                                          genome_db_ptr,
                                          gene_summary.variant_map,
-                                         gene_summary.sequence_ptr,
-                                         gene_summary.sequence_mutant)) {
+                                         protein_reference,
+                                         protein_mutant)) {
 
     std::stringstream ss;
     ss << gene_summary.variant_map;
@@ -319,9 +332,13 @@ bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
     ExecEnv::log().info("Variants used to mutate Genome: {}, Contig: {}, Gene: {} Sequence: {}:\n{}",
                         genome_variant_ptr->genomeId(), contig, gene, sequence, ss.str());
 
-    gene_summary.sequence_distance = amino_distance_metric->distance( gene_summary.sequence_ptr, gene_summary.sequence_mutant);
+    gene_summary.sequence_distance = amino_distance_metric.amino_distance( protein_reference, protein_mutant);
     ExecEnv::log().info("Genome: {}, Contig: {}, Gene: {}, Sequence: {} Levenshtein: {}, comparison:\n{}",
                         genome_variant_ptr->genomeId(), contig, gene, sequence, gene_summary.sequence_distance);
+
+    gene_summary.sequence_ptr = std::make_shared<AminoSequence>(std::move(protein_reference));
+    gene_summary.sequence_mutant = std::make_shared<AminoSequence>(std::move(protein_mutant));
+
 
   } else {
 
@@ -331,18 +348,24 @@ bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
 
   }
 
+  DNA5SequenceCoding prime3_reference;
+  DNA5SequenceCoding prime3_mutant;
+
   if (ApplicationAnalysis::compare3Prime(contig,
                                          gene,
                                          sequence,
                                          PRIME_REGION_SIZE,
                                          genome_db_ptr,
                                          genome_variant_ptr,
-                                         gene_summary.prime3_reference,
-                                         gene_summary.prime3_mutant)) {
+                                         prime3_reference,
+                                         prime3_mutant)) {
 
-    gene_summary.prime3_distance = dna_distance_metric->distance(gene_summary.prime3_reference, gene_summary.prime3_mutant);
+    gene_summary.prime3_distance = dna_distance_metric.coding_distance(prime3_reference, prime3_mutant);
     ExecEnv::log().info("3PRIME Genome: {}, Contig: {}, Gene: {}, Sequence: {} Levenshtein: {}, comparison:\n{}",
                         genome_variant_ptr->genomeId(), contig, gene, sequence, gene_summary.prime3_distance);
+
+    gene_summary.prime3_reference = std::make_shared<DNA5SequenceCoding>(std::move(prime3_reference));
+    gene_summary.prime3_mutant = std::make_shared<DNA5SequenceCoding>(std::move(prime3_mutant));
 
   } else {
 
@@ -370,9 +393,9 @@ bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
 
 bool kgl::GeneAnalysis::mutateAllRegions(const std::string& file_name,
                                          ContigSize_t region_size,
-                                         std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
-                                         std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
-                                         std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
+                                         const std::shared_ptr<const LinearDNASequenceDistance>& dna_distance_metric,
+                                         const std::shared_ptr<const PhasedPopulation>& pop_variant_ptr,
+                                         const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) {
 
   const char CSV_delimiter = ',';
   // open the file.
@@ -434,12 +457,12 @@ std::string kgl::GeneAnalysis::outputRegionHeader(char delimiter) {
 
 
 std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
-                                                  std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
+                                                  const std::shared_ptr<const LinearDNASequenceDistance>& dna_distance_metric,
                                                   const ContigId_t& contig_id,
                                                   const ContigOffset_t offset,
                                                   const ContigSize_t region_size,
-                                                  std::shared_ptr<const GenomeVariant> genome_variant_ptr,
-                                                  std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
+                                                  const std::shared_ptr<const GenomeVariant>& genome_variant_ptr,
+                                                  const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) {
 
   std::stringstream ss;
 
@@ -477,8 +500,8 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
 
   }
 
-  std::shared_ptr<DNA5SequenceLinear> mutant_sequence;
-  std::shared_ptr<DNA5SequenceLinear> reference_sequence;
+  DNA5SequenceLinear mutant_sequence;
+  DNA5SequenceLinear reference_sequence;
   OffsetVariantMap variant_map;
   if (genome_variant_ptr->mutantRegion(contig_id,
                                        ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
@@ -489,8 +512,8 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
                                        reference_sequence,
                                        mutant_sequence)) {
 
+    double distance = static_cast<double>(dna_distance_metric->linear_distance(reference_sequence, mutant_sequence));
 
-    double distance = static_cast<double>(dna_distance_metric->distance(reference_sequence, mutant_sequence));
     ss << genome_variant_ptr->genomeId() << delimiter;
     ss << contig_id << delimiter;
     ss << contig_ptr->sequence().length() << delimiter;
@@ -526,8 +549,8 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const GenomeId_t& genome,
                                            const ContigId_t& contig,
                                            ContigOffset_t offset,
                                            ContigSize_t region_size,
-                                           std::shared_ptr<const PhasedPopulation> population_ptr,
-                                           std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                           const std::shared_ptr<const PhasedPopulation>& population_ptr,
+                                           const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
                                            const std::string& fasta_file) {
 
 
@@ -549,14 +572,14 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const GenomeId_t& genome,
 bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
                                            const ContigOffset_t offset,
                                            const ContigSize_t region_size,
-                                           std::shared_ptr<const GenomeVariant> genome_variant_ptr,
-                                           std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                           const std::shared_ptr<const GenomeVariant>& genome_variant_ptr,
+                                           const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
                                            const std::string& fasta_file) {
 
-  std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
+  std::shared_ptr<const LinearDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
   std::vector<std::pair<std::string, std::shared_ptr<VirtualSequence>>> dna_seq_vector;
-  std::shared_ptr<DNA5SequenceLinear> mutant_sequence;
-  std::shared_ptr<DNA5SequenceLinear> reference_sequence;
+  DNA5SequenceLinear mutant_sequence;
+  DNA5SequenceLinear reference_sequence;
   OffsetVariantMap variant_map;
   if (genome_variant_ptr->mutantRegion(contig,
                                        ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
@@ -573,29 +596,30 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
     ExecEnv::log().info("Variants used to mutate Genome: {}, Contig: {}, Offset: {} Size: {}:\n{}",
                         genome_variant_ptr->genomeId(), contig, offset, region_size, ss.str());
 
+    DNA5SequenceCoding ref_reverse_complement = SequenceOffset::codingSequence(reference_sequence, StrandSense::REVERSE);
+
+    CompareDistance_t score = dna_distance_metric->linear_distance(reference_sequence, mutant_sequence);
+
+    ExecEnv::log().info("Genome: {}, Contig: {}, Offset: {} Size: {} score: {}",
+                        genome_variant_ptr->genomeId(), contig, offset, region_size, score);
+
+    auto reference_sequence_ptr = std::make_shared<DNA5SequenceLinear>(std::move(reference_sequence));
+    auto mutant_sequence_ptr = std::make_shared<DNA5SequenceLinear>(std::move(mutant_sequence));
+    auto ref_reverse_complement_ptr = std::make_shared<DNA5SequenceCoding>(std::move(ref_reverse_complement));
+
     std::stringstream ref_fasta_ss;
     ref_fasta_ss << "reference_" << contig << "_+_" << offset << "_" << region_size;
-    std::pair<std::string, std::shared_ptr<VirtualSequence>> fasta_reference(ref_fasta_ss.str(), reference_sequence);
+    std::pair<std::string, std::shared_ptr<VirtualSequence>> fasta_reference(ref_fasta_ss.str(), reference_sequence_ptr);
     dna_seq_vector.push_back(fasta_reference);
-
-    std::shared_ptr<DNA5SequenceCoding> ref_reverse_complement_ptr = SequenceOffset::codingSequence(reference_sequence, StrandSense::REVERSE);
 
     ref_fasta_ss.str("");
     ref_fasta_ss << "reference_" << contig << "_-_" << offset << "_" << region_size;
     std::pair<std::string, std::shared_ptr<VirtualSequence>> rev_fasta_reference(ref_fasta_ss.str(), ref_reverse_complement_ptr);
     dna_seq_vector.push_back(rev_fasta_reference);
 
-
-    size_t count = 0;
-
-    CompareDistance_t score = dna_distance_metric->distance(reference_sequence, mutant_sequence);
-    ExecEnv::log().info("Genome: {}, Contig: {}, Offset: {} Size: {} score: {}",
-                        genome_variant_ptr->genomeId(), contig, offset, region_size, score);
-
-    count++;
     std::stringstream mutant_fasta_ss;
-    mutant_fasta_ss << "mutant_" << count << "_" << contig << "_" << offset << "_" << region_size;
-    std::pair<std::string, std::shared_ptr<DNA5SequenceLinear>> fasta_mutant(mutant_fasta_ss.str(), mutant_sequence);
+    mutant_fasta_ss << "mutant_" << contig << "_" << offset << "_" << region_size;
+    std::pair<std::string, std::shared_ptr<VirtualSequence>> fasta_mutant(mutant_fasta_ss.str(), mutant_sequence_ptr);
     dna_seq_vector.push_back(fasta_mutant);
 
     if (not ParseGffFasta().writeFastaFile(fasta_file, dna_seq_vector)) {

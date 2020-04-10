@@ -53,10 +53,9 @@ void kgl::ContigFeatures::verifyAuxillaryHierarchy() {
 
 
 // Convenience routine for Amino sequences.
-std::shared_ptr<kgl::AminoSequence>
-kgl::ContigFeatures::getAminoSequence(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const {
+kgl::AminoSequence kgl::ContigFeatures::getAminoSequence(const DNA5SequenceCoding& coding_sequence) const {
 
-  return coding_table_.getAminoSequence(sequence_ptr);
+  return coding_table_.getAminoSequence(coding_sequence);
 
 }
 
@@ -127,11 +126,11 @@ bool kgl::ContigFeatures::getCodingSequence(const FeatureIdent_t& gene_id,
 
 // Given a CDS coding sequence, return the corresponding DNA base sequence (strand adjusted).
 bool kgl::ContigFeatures::getDNA5SequenceCoding(const std::shared_ptr<const CodingSequence>& coding_sequence_ptr,
-                                                std::shared_ptr<DNA5SequenceCoding>& sequence_ptr) const {
+                                                DNA5SequenceCoding& coding_sequence) const {
 
   if (coding_sequence_ptr) {
 
-    sequence_ptr = sequence_ptr_->DNA5SequenceContig::codingSequence(coding_sequence_ptr);
+    coding_sequence = sequence_ptr_->DNA5SequenceContig::codingSequence(coding_sequence_ptr);
     return true;
 
   }

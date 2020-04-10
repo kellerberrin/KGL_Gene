@@ -80,7 +80,6 @@ public:
                                         ContigOffset_t end,
                                         OffsetVariantMap& variant_map) const;
 
-
   // Returns reference and protein mutations.
   [[nodiscard]] bool mutantProteins( const ContigId_t& contig_id,
                                      PhaseId_t phase,
@@ -88,8 +87,8 @@ public:
                                      const FeatureIdent_t& sequence_id,
                                      const std::shared_ptr<const GenomeDatabase>& genome_db,
                                      OffsetVariantMap& variant_map,
-                                     std::shared_ptr<AminoSequence>& reference_sequence,
-                                     std::shared_ptr<AminoSequence>& sequence_vector) const;
+                                     AminoSequence& reference_sequence,
+                                     AminoSequence& sequence_vector) const;
 
   // Returns reference and mutant stranded DNA.
   [[nodiscard]] bool mutantCodingDNA( const ContigId_t& contig_id,
@@ -98,8 +97,8 @@ public:
                                       const FeatureIdent_t& sequence_id,
                                       const std::shared_ptr<const GenomeDatabase>& genome_db,
                                       OffsetVariantMap& variant_map,
-                                      std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
-                                      std::shared_ptr<DNA5SequenceCoding>& mutant_sequence) const;
+                                      DNA5SequenceCoding& reference_sequence,
+                                      DNA5SequenceCoding& mutant_sequence) const;
 
   // Returns reference and mutant unstranded DNA region
   [[nodiscard]] bool mutantRegion( const ContigId_t& contig_id,
@@ -108,15 +107,15 @@ public:
                                    ContigSize_t region_size,
                                    const std::shared_ptr<const GenomeDatabase>& genome_db,
                                    OffsetVariantMap& variant_map,
-                                   std::shared_ptr<DNA5SequenceLinear>& reference_sequence,
-                                   std::shared_ptr<DNA5SequenceLinear>& mutant_sequence) const;
+                                   DNA5SequenceLinear& reference_sequence,
+                                   DNA5SequenceLinear& mutant_sequence) const;
 
-  // Returns reference and mutant unstranded contig.
+  // Returns pointer reference to the contig and mutant unstranded contig.
   [[nodiscard]] bool mutantContig( const ContigId_t& contig_id,
                                    PhaseId_t phase,
-                                   std::shared_ptr<const GenomeDatabase> genome_db,
+                                   const std::shared_ptr<const GenomeDatabase>& genome_db,
                                    std::shared_ptr<const DNA5SequenceContig>& reference_contig_ptr,
-                                   std::shared_ptr<const DNA5SequenceContig>& mutant_contig_ptr) const;
+                                   DNA5SequenceContig& mutant_contig_ptr) const;
 
 
   static constexpr PhaseId_t HAPLOID_GENOME = 1;

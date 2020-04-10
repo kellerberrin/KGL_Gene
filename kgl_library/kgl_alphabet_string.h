@@ -29,11 +29,22 @@ class AlphabetString {
 
 public:
 
-  explicit AlphabetString() = default;
+  AlphabetString() = default;
   AlphabetString(AlphabetString<Alphabet>&& alphabet_string) noexcept : base_string_(std::move(alphabet_string.base_string_)) {}
   AlphabetString(const AlphabetString<Alphabet>& alphabet_string) : base_string_(alphabet_string.base_string_) {}
   explicit AlphabetString(const std::string& alphabet_str) { convertFromCharString(alphabet_str); }
   ~AlphabetString() = default;
+
+  // Assignment operators
+  // For Performance reasons, don't allow naive assignments.
+  AlphabetString& operator=(const AlphabetString& copy) = delete;
+  // Only allow move assignments
+  AlphabetString& operator=(AlphabetString&& moved) noexcept {
+
+    base_string_ = std::move(moved.base_string_);
+    return *this;
+
+  }
 
   // Iterators to access the underlying std::basic_string
   using const_iterator = typename std::basic_string<typename Alphabet::Alphabet>::const_iterator;
@@ -47,7 +58,6 @@ public:
   void push_back(typename Alphabet::Alphabet nucleotide) { base_string_.push_back(nucleotide); }
   void pop_back() { base_string_.pop_back(); }
 
-  AlphabetString& operator=(const AlphabetString& copy) = default;
 
   [[nodiscard]] ContigSize_t length() const { return base_string_.length(); }
   [[nodiscard]] bool empty() const { return base_string_.empty(); }

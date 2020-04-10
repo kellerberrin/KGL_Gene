@@ -31,8 +31,8 @@ public:
 
 protected:
 
-  [[nodiscard]]virtual CompareScore_t compareImpl( std::shared_ptr<const VirtualSequence> sequenceA,
-                                                   std::shared_ptr<const VirtualSequence> sequenceB,
+  [[nodiscard]]virtual CompareScore_t compareImpl( const VirtualSequence& sequenceA,
+                                                   const VirtualSequence& sequenceB,
                                                    std::string& compare_str) const = 0;
 
 };
@@ -88,16 +88,16 @@ public:
   DNASequenceCompare() = default;
   ~DNASequenceCompare() override = default;
 
-  [[nodiscard]] CompareScore_t compare( std::shared_ptr<const DNA5SequenceLinear> sequenceA,
-                                        std::shared_ptr<const DNA5SequenceLinear> sequenceB,
+  [[nodiscard]] CompareScore_t compare( const DNA5SequenceLinear& sequenceA,
+                                        const DNA5SequenceLinear& sequenceB,
                                         std::string& compare_str) const {
 
     return compareImpl(sequenceA, sequenceB, compare_str);
 
   }
 
-  [[nodiscard]] CompareScore_t compare( std::shared_ptr<const DNA5SequenceCoding> sequenceA,
-                                        std::shared_ptr<const DNA5SequenceCoding> sequenceB,
+  [[nodiscard]] CompareScore_t compare( const DNA5SequenceCoding& sequenceA,
+                                        const DNA5SequenceCoding& sequenceB,
                                         std::string& compare_str) const {
 
     return compareImpl(sequenceA, sequenceB, compare_str);
@@ -124,8 +124,8 @@ public:
   ~AminoSequenceCompare() override = default;
 
 
-  [[nodiscard]] CompareDistance_t distance( std::shared_ptr<const AminoSequence> sequenceA,
-                                            std::shared_ptr<const AminoSequence> sequenceB,
+  [[nodiscard]] CompareDistance_t distance( const AminoSequence& sequenceA,
+                                            const AminoSequence& sequenceB,
                                             std::string& compare_str) const {
 
     return compareImpl(sequenceA, sequenceB, compare_str);
@@ -228,12 +228,12 @@ public:
 
 private:
 
-  [[nodiscard]] CompareScore_t compareImpl( std::shared_ptr<const VirtualSequence> sequenceA,
-                                            std::shared_ptr<const VirtualSequence> sequenceB,
+  [[nodiscard]] CompareScore_t compareImpl( const VirtualSequence& sequenceA,
+                                            const VirtualSequence& sequenceB,
                                             std::string& compare_str) const override {
 
-    return SequenceComparison().MyerHirschbergGlobal(sequenceA->getSequenceAsString(),
-                                                       sequenceB->getSequenceAsString(),
+    return SequenceComparison().MyerHirschbergGlobal(sequenceA.getSequenceAsString(),
+                                                       sequenceB.getSequenceAsString(),
                                                        compare_str);
 
   }
@@ -254,12 +254,12 @@ public:
 
 private:
 
-  [[nodiscard]] CompareScore_t compareImpl( std::shared_ptr<const VirtualSequence> sequenceA,
-                                            std::shared_ptr<const VirtualSequence> sequenceB,
+  [[nodiscard]] CompareScore_t compareImpl( const VirtualSequence& sequenceA,
+                                            const VirtualSequence& sequenceB,
                                             std::string& compare_str) const override {
 
-    return SequenceComparison().MyerHirschbergLocal(sequenceA->getSequenceAsString(),
-                                                      sequenceB->getSequenceAsString(),
+    return SequenceComparison().MyerHirschbergLocal(sequenceA.getSequenceAsString(),
+                                                      sequenceB.getSequenceAsString(),
                                                       compare_str);
 
   }
@@ -279,12 +279,12 @@ public:
 
 private:
 
-  [[nodiscard]] CompareScore_t compareImpl( std::shared_ptr<const VirtualSequence> sequenceA,
-                                            std::shared_ptr<const VirtualSequence> sequenceB,
+  [[nodiscard]] CompareScore_t compareImpl( const VirtualSequence& sequenceA,
+                                            const VirtualSequence& sequenceB,
                                             std::string& compare_str) const override {
 
-    return SequenceComparison().DNALocalAffineGap(sequenceA->getSequenceAsString(),
-                                                    sequenceB->getSequenceAsString(),
+    return SequenceComparison().DNALocalAffineGap(sequenceA.getSequenceAsString(),
+                                                    sequenceB.getSequenceAsString(),
                                                     compare_str);
 
   }

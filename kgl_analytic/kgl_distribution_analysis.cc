@@ -188,11 +188,10 @@ bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDa
                                                   bool display_sequence,
                                                   std::ostream& output,
                                                   char delimiter) const {
-  for (auto contig : genome_db->getMap()) {
+  for (auto [contig_id, contig_ptr] : genome_db->getMap()) {
 
     ContigOffset_t contig_from = 0;
-    ContigSize_t contig_size = contig.second->contigSize();
-    ContigId_t contig_id = contig.first;
+    ContigSize_t contig_size = contig_ptr->contigSize();
 
     if (not analysis_contig.empty()) {
 
@@ -249,38 +248,29 @@ bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDa
         output << variant_count << delimiter;
 
 
-        if (contig_to >= contig.second->contigSize()) {
+        if (contig_to >= contig_ptr->contigSize()) {
 
-          ExecEnv::log().info("AggregateVariantDistribution::writeData; processed contig: {}", contig.first);
+          ExecEnv::log().info("AggregateVariantDistribution::writeData; processed contig: {}", contig_id);
 
         }
 
         size_t interval_size = contig_to - contig_from;
 
-        std::shared_ptr<DNA5SequenceLinear> sequence = contig.second->sequence_ptr()->subSequence(contig_from, interval_size);
-        if (sequence->length() == 0) {
+        DNA5SequenceLinear sequence = contig_ptr->sequence_ptr()->subSequence(contig_from, interval_size);
+        if (sequence.length() == 0) {
 
           ExecEnv::log().info("AggregateVariantDistribution::writeData; zero sized sequence, offset: {}, size: {}, contig: {} contig size: {}",
-                              contig_from, interval_size, contig.first, contig.second->contigSize());
+                              contig_from, interval_size, contig_id, contig_ptr->contigSize());
 
         }
 
 
-        if (not sequence) {
 
-          ExecEnv::log().error("AggregateVariantDistribution::writeData; no subsequence returned from contig: {}, offset: {}, size: {}",
-                               contig.first, contig_from, interval_size);
+        if (sequence.length() != interval_size) {
+
+          ExecEnv::log().error("AggregateVariantDistribution::writeData; unexpected sequence size: {} returned from contig: {}, offset: {}, size: {}",
+                                 sequence.length(), contig_id, contig_from, interval_size);
           break;
-
-        } else {
-
-          if (sequence->length() != interval_size) {
-
-            ExecEnv::log().error("AggregateVariantDistribution::writeData; unexpected sequence size: {} returned from contig: {}, offset: {}, size: {}",
-                                 sequence->length(), contig.first, contig_from, interval_size);
-            break;
-
-          }
 
         }
 
@@ -299,7 +289,7 @@ bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDa
 
         if (display_sequence) {
 
-          output << delimiter << sequence->getSequenceAsString() << '\n';
+          output << delimiter << sequence.getSequenceAsString() << '\n';
 
         } else {
 

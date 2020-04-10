@@ -42,50 +42,61 @@ bool kgl::AminoSequence::removeTrailingStop() {
 }
 
 
+// Returns a sub-sequence
+kgl::AminoSequence kgl::AminoSequence::subSequence( ContigOffset_t sub_sequence_offset, ContigSize_t sub_sequence_length) const {
+
+  AminoSequence sub_sequence;
+  if (not getSubsequence(sub_sequence_offset, sub_sequence_length, sub_sequence)) {
+
+    ExecEnv::log().error("AminoSequence::subSequence; Cannot get sub-sequence offset: {} and sub sequence size: {} from sequence length: {}",
+                         sub_sequence_offset, sub_sequence_length, length());
+
+  }
+
+  return sub_sequence;
+
+}
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TranslateToAmino - Convert DNA/RNA base sequences to Amino acid sequences.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-std::shared_ptr<kgl::AminoSequence>
-kgl::TranslateToAmino::getAminoSequence(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const {
+kgl::AminoSequence kgl::TranslateToAmino::getAminoSequence(const DNA5SequenceCoding& coding_sequence) const {
 
   StringAminoAcid protein_string;
   AminoAcid::Alphabet amino_acid;
 
-  protein_string.reserve(Codon::codonLength(sequence_ptr));
+  protein_string.reserve(Codon::codonLength(coding_sequence));
 
-  for (size_t index = 0; index < Codon::codonLength(sequence_ptr); ++index) {
+  for (size_t index = 0; index < Codon::codonLength(coding_sequence); ++index) {
 
-    amino_acid = table_ptr_->getAmino(Codon(sequence_ptr,index));
+    amino_acid = table_ptr_->getAmino(Codon(coding_sequence,index));
     protein_string.push_back(amino_acid);
 
   }
 
-  std::shared_ptr<AminoSequence> amino_sequence(std::make_shared<AminoSequence>(protein_string));
-
-  return amino_sequence;
+  return AminoSequence(std::move(protein_string));
 
 }
 
 
-std::shared_ptr<kgl::AminoSequence>
-kgl::TranslateToAmino::getAminoSequence(std::shared_ptr<const CodingSequence> coding_seq_ptr,
-                                          std::shared_ptr<const DNA5SequenceContig> contig_sequence_ptr) const {
+kgl::AminoSequence kgl::TranslateToAmino::getAminoSequence(const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+                                                           const DNA5SequenceContig& contig_sequence) const {
 
-  std::shared_ptr<DNA5SequenceCoding> coding_sequence = contig_sequence_ptr->codingSequence(coding_seq_ptr);
-  return getAminoSequence(coding_sequence);
+  return getAminoSequence(contig_sequence.codingSequence(coding_seq_ptr));
 
 }
 
 
 
-size_t kgl::TranslateToAmino::checkNonsenseMutation(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr) const {
+size_t kgl::TranslateToAmino::checkNonsenseMutation(const DNA5SequenceCoding& coding_sequence) const {
 
-  for (size_t index = 0; index < Codon::codonLength(sequence_ptr) - 1; ++index) {
+  for (size_t index = 0; index < Codon::codonLength(coding_sequence) - 1; ++index) {
 
-    if (table_ptr_->isStopCodon(Codon(sequence_ptr,index))) return index;
+    if (table_ptr_->isStopCodon(Codon(coding_sequence,index))) return index;
 
   }
 
@@ -94,25 +105,11 @@ size_t kgl::TranslateToAmino::checkNonsenseMutation(std::shared_ptr<const DNA5Se
 }
 
 
-bool kgl::TranslateToAmino::checkStartCodon(std::shared_ptr<const AminoSequence> sequence_ptr) const {
+bool kgl::TranslateToAmino::checkStartCodon(const AminoSequence& amino_sequence) const {
 
-  if (sequence_ptr->length() > 0) {
+  if (amino_sequence.length() > 0) {
 
-    return table_ptr_->isStartAmino(sequence_ptr->at(0));
-
-  } else {
-
-    return false;
-
-  }
-
-}
-
-bool kgl::TranslateToAmino::checkStopCodon(std::shared_ptr<const AminoSequence> sequence_ptr) const {
-
-  if (sequence_ptr->length() > 0) {
-
-    return table_ptr_->isStopAmino(sequence_ptr->at(sequence_ptr->length()-1));
+    return table_ptr_->isStartAmino(amino_sequence.at(0));
 
   } else {
 
@@ -122,12 +119,26 @@ bool kgl::TranslateToAmino::checkStopCodon(std::shared_ptr<const AminoSequence> 
 
 }
 
+bool kgl::TranslateToAmino::checkStopCodon(const AminoSequence& amino_sequence) const {
 
-size_t kgl::TranslateToAmino::checkNonsenseMutation(std::shared_ptr<const AminoSequence> sequence_ptr) const {
+  if (amino_sequence.length() > 0) {
 
-  for (size_t index = 0; index < sequence_ptr->length() - 1; ++index) {
+    return table_ptr_->isStopAmino(amino_sequence.at(amino_sequence.length()-1));
 
-    if (table_ptr_->isStopAmino(sequence_ptr->at(index))) return index;
+  } else {
+
+    return false;
+
+  }
+
+}
+
+
+size_t kgl::TranslateToAmino::checkNonsenseMutation(const AminoSequence& amino_sequence) const {
+
+  for (size_t index = 0; index < amino_sequence.length() - 1; ++index) {
+
+    if (table_ptr_->isStopAmino(amino_sequence.at(index))) return index;
 
   }
 
@@ -150,10 +161,10 @@ kgl::AminoAcid::Alphabet kgl::TranslateToAmino::getAmino(const Codon& codon) con
 
 
 
-kgl::AminoAcid::Alphabet kgl::TranslateToAmino::getAmino(std::shared_ptr<const DNA5SequenceCoding> sequence_ptr,
+kgl::AminoAcid::Alphabet kgl::TranslateToAmino::getAmino(const DNA5SequenceCoding& coding_sequence,
                                                          ContigOffset_t codon_index) const {
 
-  Codon codon(sequence_ptr, codon_index);
+  Codon codon(coding_sequence, codon_index);
 
   if (codon.containsBaseN()) {
 

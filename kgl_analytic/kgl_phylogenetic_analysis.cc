@@ -66,7 +66,7 @@ bool kgl::ApplicationAnalysis::readFastaProteins(const std::string& fasta_file,
     for (auto sequence: fasta_sequence_vec) {
 
       StringAminoAcid fasta_amino_string(*sequence.second);
-      std::shared_ptr<AminoSequence> fasta_amino_seq_ptr(std::make_shared<AminoSequence>(fasta_amino_string));
+      std::shared_ptr<AminoSequence> fasta_amino_seq_ptr(std::make_shared<AminoSequence>(std::move(fasta_amino_string)));
       std::pair<std::string, std::shared_ptr<AminoSequence>> insert_pair(sequence.first, fasta_amino_seq_ptr);
       amino_seq_vector.push_back(insert_pair);
 
@@ -92,8 +92,8 @@ bool kgl::ApplicationAnalysis::compare5Prime(const ContigId_t& contig_id,
                                              ContigSize_t region_size,
                                              const std::shared_ptr<const GenomeDatabase>& genome_db,
                                              const std::shared_ptr<const GenomeVariant>& genome_variant,
-                                             std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
-                                             std::shared_ptr<DNA5SequenceCoding>& mutant_sequence) {
+                                             DNA5SequenceCoding& reference_sequence,
+                                             DNA5SequenceCoding& mutant_sequence) {
 
   // Get the contig.
   std::shared_ptr<const ContigFeatures> contig_ptr;
@@ -120,8 +120,8 @@ bool kgl::ApplicationAnalysis::compare5Prime(const ContigId_t& contig_id,
   ExecEnv::log().info("Analyzing the 5 Prime Region for Sequence {} at offset {}, size {}, 5 prime {}",
                       coding_sequence_ptr->getCDSParent()->id(), offset_5_prime, size_5_prime, coding_sequence_ptr->prime_5());
 
-  std::shared_ptr<DNA5SequenceLinear> linear_mutant_sequence;
-  std::shared_ptr<DNA5SequenceLinear> linear_reference_sequence;
+  DNA5SequenceLinear linear_mutant_sequence;
+  DNA5SequenceLinear linear_reference_sequence;
   OffsetVariantMap variant_map;
 
   if (genome_variant->mutantRegion(contig_id,
@@ -154,8 +154,8 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
                                              ContigSize_t region_size,
                                              const std::shared_ptr<const GenomeDatabase>& genome_db,
                                              const std::shared_ptr<const GenomeVariant>& genome_variant,
-                                             std::shared_ptr<DNA5SequenceCoding>& reference_sequence,
-                                             std::shared_ptr<DNA5SequenceCoding>& mutant_sequence) {
+                                             DNA5SequenceCoding& reference_sequence,
+                                             DNA5SequenceCoding& mutant_sequence) {
 
   // Get the contig.
   std::shared_ptr<const ContigFeatures> contig_ptr;
@@ -183,8 +183,8 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
                       coding_sequence_ptr->getCDSParent()->id(), offset_3_prime, size_3_prime, coding_sequence_ptr->prime_3());
 
 
-  std::shared_ptr<DNA5SequenceLinear> linear_mutant_sequence;
-  std::shared_ptr<DNA5SequenceLinear> linear_reference_sequence;
+  DNA5SequenceLinear linear_mutant_sequence;
+  DNA5SequenceLinear linear_reference_sequence;
   OffsetVariantMap variant_map;
 
   if (genome_variant->mutantRegion(contig_id,
@@ -212,8 +212,8 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
 
 
 bool kgl::ApplicationAnalysis::outputRegionCSV(const std::string &file_name,
-                                                 std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
-                                                 std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric,
+                                                 std::shared_ptr<const DNASequenceDistance> dna_distance_metric,
+                                                 std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
                                                  std::shared_ptr<const GenomeDatabase> genome_db,
                                                  std::shared_ptr<const PhasedPopulation> pop_variant_ptr) {
 
@@ -307,7 +307,7 @@ bool kgl::ApplicationAnalysis::outputRegionCSV(const std::string &file_name,
 
 bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name,
                                                     SequenceAnalysisType analysis_type,
-                                                    std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
+                                                    std::shared_ptr<const CodingDNASequenceDistance> dna_distance_metric,
                                                     std::shared_ptr<const GenomeDatabase> genome_db,
                                                     std::shared_ptr<const PhasedPopulation> pop_variant_ptr) {
 
@@ -342,7 +342,7 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
         out_file << sequence.second->codingNucleotides() << CSV_delimiter;
 
         // Valid ORF
-        std::shared_ptr<DNA5SequenceCoding> coding_dna_sequence;
+        DNA5SequenceCoding coding_dna_sequence;
         if (contig.second->getDNA5SequenceCoding(sequence.second, coding_dna_sequence)) {
 
           out_file << (contig.second->verifyDNACodingSequence(coding_dna_sequence) ? "1" : "0") << CSV_delimiter;
@@ -415,8 +415,8 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
 
         for( auto genome_variant : pop_variant_ptr->getMap()) {
 
-          std::shared_ptr<DNA5SequenceCoding> reference_sequence;
-          std::shared_ptr<DNA5SequenceCoding> mutant_sequence;
+          DNA5SequenceCoding reference_sequence;
+          DNA5SequenceCoding mutant_sequence;
           OffsetVariantMap variant_map;
 
           if (genome_variant.second->mutantCodingDNA( contig.first,
@@ -434,14 +434,14 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
               case SequenceAnalysisType::DNA: {
 
                 CompareDistance_t DNA_distance;
-                DNA_distance = dna_distance_metric->distance(reference_sequence, mutant_sequence);
+                DNA_distance = dna_distance_metric->coding_distance(reference_sequence, mutant_sequence);
                 out_file << DNA_distance << CSV_delimiter;
 
               }
                 break;
 
               case SequenceAnalysisType::SIZE:
-                out_file << mutant_sequence->length() << CSV_delimiter;
+                out_file << mutant_sequence.length() << CSV_delimiter;
                 break;
 
               case SequenceAnalysisType::VARIANT:
@@ -501,7 +501,7 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
 
 
 bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_name,
-                                                      std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric,
+                                                      std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
                                                       std::shared_ptr<const GenomeDatabase> genome_db,
                                                       std::shared_ptr<const PhasedPopulation> pop_variant_ptr) {
 
@@ -535,7 +535,7 @@ bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_na
         out_file << sequence.second->start() << CSV_delimiter;
         out_file << sequence.second->codingNucleotides() << CSV_delimiter;
 
-        std::shared_ptr<DNA5SequenceCoding> coding_dna_sequence;
+        DNA5SequenceCoding coding_dna_sequence;
         if (contig.second->getDNA5SequenceCoding(sequence.second, coding_dna_sequence)) {
 
           out_file << (contig.second->verifyDNACodingSequence(coding_dna_sequence) ? "1" : "0") << CSV_delimiter;
@@ -546,7 +546,7 @@ bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_na
 
         }
 
-        std::shared_ptr<AminoSequence> amino_reference  = contig.second->getAminoSequence(coding_dna_sequence);
+        AminoSequence amino_reference  = contig.second->getAminoSequence(coding_dna_sequence);
         out_file << SequenceComplexity::alphabetEntropy<AminoAcid>(amino_reference) << CSV_delimiter;
         out_file << SequenceComplexity::complexityLempelZiv(DNA5SequenceLinear::downConvertToLinear(coding_dna_sequence)) << CSV_delimiter;
         out_file << SequenceComplexity::relativeCpGIslands(DNA5SequenceLinear::downConvertToLinear(coding_dna_sequence)) << CSV_delimiter;  // GC count.
@@ -612,8 +612,8 @@ bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_na
         for( auto genome_variant : pop_variant_ptr->getMap()) {
 
           OffsetVariantMap variant_map;
-          std::shared_ptr<AminoSequence> amino_reference_seq;
-          std::shared_ptr<AminoSequence> amino_mutant;
+          AminoSequence amino_reference_seq;
+          AminoSequence amino_mutant;
           if (genome_variant.second->mutantProteins(contig.first,
                                                     ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
                                                     gene.second->id(),
@@ -627,7 +627,7 @@ bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_na
 
               case ProteinSequenceAnalysis::VALID_SEQUENCE: {
 
-                CompareDistance_t amino_distance = amino_distance_metric->distance(amino_reference_seq, amino_mutant);
+                CompareDistance_t amino_distance = amino_distance_metric->amino_distance(amino_reference_seq, amino_mutant);
                 out_file << amino_distance << CSV_delimiter;
 
               }
@@ -640,7 +640,7 @@ bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_na
               case ProteinSequenceAnalysis::NONSENSE_MUTATION: {
 
                 size_t valid_seq_size = contig.second->proteinSequenceSize(amino_mutant) + 1;  // +1 to include the stop codon.
-                double proportion = (static_cast<double>(valid_seq_size) * -100.0) / static_cast<double>(amino_reference_seq->length());
+                double proportion = (static_cast<double>(valid_seq_size) * -100.0) / static_cast<double>(amino_reference_seq.length());
                 out_file << proportion << CSV_delimiter;
 
               }
@@ -738,8 +738,8 @@ bool kgl::ApplicationAnalysis::outputAminoMutationCSV(const std::string &file_na
 
     sequence_count++;
     OffsetVariantMap variant_map;
-    std::shared_ptr<AminoSequence> amino_reference_seq;
-    std::shared_ptr<AminoSequence> amino_mutant;
+    AminoSequence amino_reference_seq;
+    AminoSequence amino_mutant;
     if (genome_variant.second->mutantProteins(contig_id,
                                               ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
                                               gene_id,
@@ -750,8 +750,8 @@ bool kgl::ApplicationAnalysis::outputAminoMutationCSV(const std::string &file_na
                                               amino_mutant)) {
 
         EditVector edit_vector;
-        SequenceComparison().editDNAItems(amino_reference_seq->getSequenceAsString(),
-                                          amino_mutant->getSequenceAsString(),
+        SequenceComparison().editDNAItems(amino_reference_seq.getSequenceAsString(),
+                                          amino_mutant.getSequenceAsString(),
                                           edit_vector);
 
       for (auto edit_item : edit_vector) {
@@ -832,8 +832,8 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
 
     sequence_count++;
     OffsetVariantMap variant_map;
-    std::shared_ptr<DNA5SequenceCoding> reference_sequence;
-    std::shared_ptr<DNA5SequenceCoding> mutant_sequence;
+    DNA5SequenceCoding reference_sequence;
+    DNA5SequenceCoding mutant_sequence;
     if (genome_variant.second->mutantCodingDNA( contig_id,
                                                 ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
                                                 gene_id,
@@ -850,8 +850,8 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
       }
 
       EditVector edit_vector;
-      SequenceComparison().editDNAItems(reference_sequence->getSequenceAsString(),
-                                        mutant_sequence->getSequenceAsString(),
+      SequenceComparison().editDNAItems(reference_sequence.getSequenceAsString(),
+                                        mutant_sequence.getSequenceAsString(),
                                         edit_vector);
 
       MutationEditVector mutation_edit_vector;
@@ -1000,8 +1000,8 @@ std::string kgl::ApplicationAnalysis::outputRegionHeader(char delimiter) {
 
 
 std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
-                                                     std::shared_ptr<const GlobalDNASequenceDistance> dna_distance_metric,
-                                                     std::shared_ptr<const GlobalAminoSequenceDistance> amino_distance_metric,
+                                                     std::shared_ptr<const CodingDNASequenceDistance> dna_distance_metric,
+                                                     std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
                                                      std::shared_ptr<const CodingSequence> coding_sequence,
                                                      std::shared_ptr<const GenomeDatabase> genome_db,
                                                      std::shared_ptr<const GenomeVariant> genome_variant) {
@@ -1021,8 +1021,8 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
   bool valid_reference = false;
   OffsetVariantMap variant_map;
 
-  std::shared_ptr<DNA5SequenceCoding> reference_sequence;
-  std::shared_ptr<DNA5SequenceCoding> mutant_sequence;
+  DNA5SequenceCoding reference_sequence;
+  DNA5SequenceCoding mutant_sequence;
   if (genome_variant->mutantCodingDNA( contig_ptr->contigId(),
                                        ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
                                        gene_id,
@@ -1033,13 +1033,13 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
                                        mutant_sequence)) {
 
     CompareDistance_t DNA_distance;
-    DNA_distance = dna_distance_metric->distance(reference_sequence, mutant_sequence);
+    DNA_distance = dna_distance_metric->coding_distance(reference_sequence, mutant_sequence);
     average_DNA_score += static_cast<double>(DNA_distance);
 
   }
 
-  std::shared_ptr<AminoSequence> amino_reference_seq;
-  std::shared_ptr<AminoSequence> amino_mutant;
+  AminoSequence amino_reference_seq;
+  AminoSequence amino_mutant;
   if (genome_variant->mutantProteins(contig_ptr->contigId(),
                                      ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
                                      gene_id,
@@ -1052,7 +1052,7 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
     error_flag = false;
     valid_reference = contig_ptr->verifyProteinSequence(amino_reference_seq);
 
-    CompareDistance_t amino_distance = amino_distance_metric->distance(amino_reference_seq, amino_mutant);
+    CompareDistance_t amino_distance = amino_distance_metric->amino_distance(amino_reference_seq, amino_mutant);
     if (contig_ptr->verifyProteinSequence(amino_mutant)) {
 
       average_score += static_cast<double>(amino_distance);

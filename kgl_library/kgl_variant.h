@@ -130,7 +130,7 @@ public:
   [[nodiscard]] virtual std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const = 0;
   [[nodiscard]] virtual std::string mutation(char delimiter, VariantOutputIndex output_index) const = 0;
   [[nodiscard]] virtual bool mutateSequence(SignedOffset_t offset_adjust,
-                                            std::shared_ptr<DNA5SequenceLinear> dna_sequence_ptr,
+                                            DNA5SequenceLinear& dna_sequence,
                                             SignedOffset_t& sequence_size_modify) const = 0;
 
   [[nodiscard]] virtual bool isSNP() const { return false; }
