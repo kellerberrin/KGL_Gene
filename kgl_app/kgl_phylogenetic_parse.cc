@@ -21,19 +21,10 @@ namespace bt = boost;
 namespace kgl = kellerberrin::genome;
 
 
-// Static private member declarations.
-kgl::Phylogenetic kgl::PhylogeneticExecEnv::args_;
-// Static storage for the runtime options.
-kgl::RuntimeProperties kgl::PhylogeneticExecEnv::runtime_options_;
 
 // Public static member functions.
 const kgl::Phylogenetic& kgl::PhylogeneticExecEnv::getArgs() { return args_; }
 const kgl::RuntimeProperties& kgl::PhylogeneticExecEnv::getRuntimeOptions() { return runtime_options_; }
-
-// Constants for the executable.
-constexpr const char* kgl::PhylogeneticExecEnv::MODULE_NAME;
-constexpr const char* kgl::PhylogeneticExecEnv::VERSION;
-
 
 
 // Parse the command line.

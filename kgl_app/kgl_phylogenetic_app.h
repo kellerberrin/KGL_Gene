@@ -34,18 +34,19 @@ public:
   PhylogeneticExecEnv()=default;
   ~PhylogeneticExecEnv()=default;
 
+  [[nodiscard]] static const Phylogenetic& getArgs();
+  [[nodiscard]] static const RuntimeProperties& getRuntimeOptions();
+
 // The following 4 static members are required for all applications.
-  static constexpr const char* VERSION = "0.1";
-  static constexpr const char* MODULE_NAME = "kgl_phylo";
+  inline static constexpr const char* VERSION = "0.1";
+  inline static constexpr const char* MODULE_NAME = "kgl_phylo";
   static void executeApp(); // Application mainline.
   [[nodiscard]] static bool parseCommandLine(int argc, char const ** argv);  // Parse command line arguments.
 
 private:
 
-  [[nodiscard]] static const Phylogenetic& getArgs();
-  [[nodiscard]] static const RuntimeProperties& getRuntimeOptions();
-  static Phylogenetic args_;
-  static RuntimeProperties runtime_options_;
+  inline static Phylogenetic args_;
+  inline static RuntimeProperties runtime_options_;
 
 
 };

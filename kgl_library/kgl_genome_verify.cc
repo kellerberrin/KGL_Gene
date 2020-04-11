@@ -15,8 +15,6 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
-
 void kgl::ContigFeatures::verifyCDSPhasePeptide() {
 
   // Iterate through all the features looking for Genes.
@@ -44,10 +42,18 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
 
         if (not gene_ptr->verifyCDSPhase(coding_seq_ptr)) {
 
-          ExecEnv::log().warn("Gene : {} Offset: {} Problem verifying CDS structure - gene sub-features print out",
+          ExecEnv::log().vinfo("Gene : {} Offset: {} Problem verifying CDS structure - gene sub-features print out",
                               gene_ptr->id(),
                               gene_ptr->sequence().begin());
-          feature.second->recusivelyPrintsubfeatures();
+
+          if (ExecEnv::log().verbose()) {
+
+            feature.second->recusivelyPrintsubfeatures();
+
+          }
+
+
+          ill_formed_sequences += coding_seq_ptr->size();
 
         }
 
@@ -83,7 +89,7 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Gene
 
   if (coding_seq_ptr->empty()) {
 
-    ExecEnv::log().error("codingSequence(), empty CodingSequenceArray");
+    ExecEnv::log().error("gene: {}; verifyCodingSequences(), empty CodingSequenceArray", gene_ptr->id());
 
   }
 
@@ -91,7 +97,7 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Gene
 
     if (sequence.second->getSortedCDS().empty()) {
 
-      ExecEnv::log().error("codingSequence(), no corresponding CDS features found");
+      ExecEnv::log().error("gene: {}; verifyCodingSequences(), no corresponding CDS features found", gene_ptr->id());
       continue;
 
     }
@@ -100,85 +106,124 @@ bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const Gene
 
     if (not coding_table_.checkStartCodon(coding_sequence)) {
 
-      std::vector<std::string> description_vec;
-      if (not gene_ptr->getAttributes().getDescription(description_vec)) {
-
-        ExecEnv::log().error("Cannot get description vector for Gene: {}", gene_ptr->id());
-        description_vec.clear();
-
-      }
-
-      if (description_vec.empty()) {
-
-        description_vec.emplace_back("No Description");
-
-      }
-      std::string gene_description = description_vec.front();
-
-      ExecEnv::log().vwarn("No START codon Gene: {}: {}, Sequence (mRNA): {} | first codon: {}",
+      ExecEnv::log().vinfo("No START codon Gene: {}, Sequence (mRNA): {} | first codon: {}",
                            sequence.second->getGene()->id(),
-                           gene_description,
                            sequence.second->getCDSParent()->id(),
                            coding_table_.firstCodon(coding_sequence).getSequenceAsString());
-//      gene_ptr->recusivelyPrintsubfeatures();
+
+      if (ExecEnv::log().verbose()) {
+
+        gene_ptr->recusivelyPrintsubfeatures();
+
+      }
+
       result = false;
     }
     if (not coding_table_.checkStopCodon(coding_sequence)) {
 
-      std::vector<std::string> description_vec;
 
-      if (not gene_ptr->getAttributes().getDescription(description_vec)) {
-
-        ExecEnv::log().error("Cannot get description vector for Gene: {}", gene_ptr->id());
-        description_vec.clear();
-
-      }
-
-      if (description_vec.empty()) {
-
-        description_vec.emplace_back("No Description");
-
-      }
-      std::string gene_description = description_vec.front();
-
-      ExecEnv::log().vwarn("No STOP codon: {} Gene: {}: {}, Sequence (mRNA): {} | last codon: {}",
+      ExecEnv::log().vinfo("No STOP codon: {} Gene: {}, Sequence (mRNA): {} | last codon: {}",
                            (Codon::codonLength(coding_sequence)-1),
                            sequence.second->getGene()->id(),
-                           gene_description,
                            sequence.second->getCDSParent()->id(),
                            coding_table_.lastCodon(coding_sequence).getSequenceAsString());
-//      gene_ptr->recusivelyPrintsubfeatures();
+
+      if (ExecEnv::log().verbose()) {
+
+        gene_ptr->recusivelyPrintsubfeatures();
+
+      }
+
       result = false;
     }
     size_t nonsense_index = coding_table_.checkNonsenseMutation(coding_sequence);
     if (nonsense_index > 0) {
 
-      std::vector<std::string> description_vec;
-      if (not gene_ptr->getAttributes().getDescription(description_vec)) {
 
-        ExecEnv::log().error("Cannot get description vector for Gene: {}", gene_ptr->id());
-        description_vec.clear();
-
-      }
-
-      if (description_vec.empty()) {
-
-        description_vec.emplace_back("No Description");
-
-      }
-      std::string gene_description = description_vec.front();
-
-      ExecEnv::log().vwarn("NONSENSE mutation codon:{} Gene: {}: {}, Sequence (mRNA): {} | stop codon: {}",
+      ExecEnv::log().vinfo("NONSENSE mutation codon:{} Gene: {}, Sequence (mRNA): {} | stop codon: {}",
                            nonsense_index,
                            sequence.second->getGene()->id(),
-                           gene_description,
                            sequence.second->getCDSParent()->id(),
                            Codon(coding_sequence, nonsense_index).getSequenceAsString());
-//      gene_ptr->recusivelyPrintsubfeatures();
+      if (ExecEnv::log().verbose()) {
+
+        gene_ptr->recusivelyPrintsubfeatures();
+
+      }
+
       result = false;
+
     }
 
   } // for cds group
+
+  return result;
+
+}
+
+
+bool kgl::Feature::verifyCDSPhase(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const {
+
+  bool result = true;
+  // Check for mod3
+  for(const auto& sorted_cds : coding_seq_ptr->getMap()) {
+
+    result = result and verifyMod3(sorted_cds.second->getSortedCDS());
+    result = result and verifyStrand(sorted_cds.second->getSortedCDS());
+
+  }
+
+  return result;
+
+}
+
+
+bool kgl::Feature::verifyMod3(const SortedCDS& sorted_cds) const {
+
+  bool result = true;
+// Check the combined sequence length is mod 3 = 0
+
+  ContigSize_t coding_sequence_length = 0;
+  for (auto cds : sorted_cds) {
+
+    coding_sequence_length += (cds.second->sequence().end() - cds.second->sequence().begin());
+
+  }
+
+  if ((coding_sequence_length % Codon::CODON_SIZE) != 0) {
+
+    ExecEnv::log().vwarn("Gene: {} offset: {} CDS coding sequence length mod 3 not zero : {}",
+                        id(),
+                        sequence().begin(),
+                        (coding_sequence_length % 3));
+
+    result = false;
+
+  }
+
+  return result;
+
+}
+
+bool kgl::Feature::verifyStrand(const SortedCDS& sorted_cds) const {
+
+  bool result = true;
+
+// Check the strand is consistent and not unknown.
+  for (auto cds : sorted_cds) {
+
+    if (cds.second->sequence().strand() != sequence().strand()) {
+
+      ExecEnv::log().error("CDS: {} offset: {} strand: {}, parent sequence strand: {} mis-match",
+                           cds.second->id(),
+                           cds.second->sequence().begin(),
+                           static_cast<char>(cds.second->sequence().strand()),
+                           static_cast<char>(sequence().strand()));
+      result = false;
+
+    }
+
+  }
 
   return result;
 

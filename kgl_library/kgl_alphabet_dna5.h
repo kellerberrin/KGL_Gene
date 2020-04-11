@@ -22,6 +22,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 // This class defines DNA sequences.
 // The sequences that contain this class have NOT been strand converted.
 // Do not use this alphabet to generate amino sequences.
+// Only implements a truncated subset (5)of the IUPAC nucleotide code
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -107,7 +108,7 @@ public:
       case N_NUCLEOTIDE_OFFSET: return Alphabet::N;
 
       default:
-        ExecEnv::log().error("DNA5::offsetToNucleotide(), Invalid Nucleotide Offset", offset);
+        ExecEnv::log().vwarn("DNA5::offsetToNucleotide(), Invalid/Extended Nucleotide Offset", offset);
         return Alphabet::N;
     }
 

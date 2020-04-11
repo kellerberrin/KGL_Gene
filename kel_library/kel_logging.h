@@ -28,6 +28,7 @@ public:
   void SetLevel(Severity level) noexcept;
   void SetFormat(const std::string& message) noexcept;
   void SetVerbose(bool verbose) noexcept { verbose_ = verbose; }
+  bool verbose() { return verbose_; }
 
   static constexpr const int NO_EXIT_ON_ERROR = -1;  // No exit on error messages
   void SetMaxErrorMessages(int max_messages) { max_error_messages_ = max_messages; }

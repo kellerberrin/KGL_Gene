@@ -39,6 +39,7 @@ public:
   [[nodiscard]] ContigOffset_t begin() const { return begin_offset_; }
   [[nodiscard]] ContigOffset_t end() const { return end_offset_; }
   [[nodiscard]] StrandSense strand() const { return strand_sense_; }
+  [[nodiscard]] ContigSize_t length() const { return end_offset_ - begin_offset_; }
   [[nodiscard]] char strandText() const { return static_cast<char>(strand()); }
   void begin(ContigOffset_t begin) { begin_offset_ = begin; }
   void end(ContigOffset_t end) { end_offset_ = end; }
@@ -105,7 +106,6 @@ private:
 };
 
 // A sorted array of coding sequences. Sorted by CDS parent (generally mRNA) feature ident.
-
 // #define CODING_SEQUENCE_ISMAP 1  // Uncomment this if the requirement is for distinct CDS parent features.
 #ifdef CODING_SEQUENCE_ISMAP
 using CodingSequenceMap = std::map<const FeatureIdent_t, std::shared_ptr<const CodingSequence>>; // For distinct parent features.

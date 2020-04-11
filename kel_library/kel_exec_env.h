@@ -26,23 +26,24 @@ public:
   ~ExecEnv()=delete;
 
 
-  static Logger& log();
-  template<class Environment> static int runApplication(int argc, char const ** argv);
+// Public static member functions.
 
+  template<class Environment> static int runApplication(int argc, char const ** argv);
+  static const std::string& commandLine() { return command_line_; }
+  static Logger& log() { return *log_ptr_; }
+
+  static void ctrlC(int);
   static void getCommandLine(int argc, char const ** argv);
   static void createLogger(const std::string& module,
                            const std::string& log_file,
                            int max_error_message,
                            int max_warning_messages);
-  static const std::string& commandLine() { return command_line_; }
-
 
 private:
 
-  static std::string command_line_;
-  static std::unique_ptr<Logger> log_ptr_;
+  inline static std::string command_line_;
+  inline static std::unique_ptr<Logger> log_ptr_;
 
-  static void ctrlC(int);
 
 };
 
@@ -63,10 +64,10 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
     getCommandLine(argc, argv);
 
     // Create the template execution environment
-    Environment environment;
+    auto environment_ptr = std::make_unique<Environment>();
 
     // Setup the static ExecEnv runtime environment and create the logger.
-    if (not environment.parseCommandLine(argc, argv)) {
+    if (not environment_ptr->parseCommandLine(argc, argv)) {
 
       std::cerr << Environment::MODULE_NAME << " " << Environment::VERSION << "ExecEnv::runApplication - cannot parse command line" << std::endl;
       std::exit(EXIT_FAILURE);
@@ -79,12 +80,15 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
     log().info("Command Line: {}", commandLine());
 
 
-    environment.executeApp(); // Run the application.
+    environment_ptr->executeApp(); // Run the application.
 
     double Clock, System, User;
     Utility::getElapsedTime(Clock, System, User);
     log().info("Elapsed seconds; Clock: {}, System CPU: {}, User CPU: {} (No GPU)", Clock, System, User);
     log().info("############ {} {} End Processing ###########", Environment::MODULE_NAME, Environment::VERSION);
+
+    environment_ptr = nullptr; // shutdown the application
+    log_ptr_ = nullptr; // shutdown the logger.
 
   } catch(std::exception& e) { // Code should not throw any exceptions, so complain and exit.
 
@@ -96,6 +100,10 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
   return EXIT_SUCCESS;
 
 }
+
+
+
+
 
 
 }   // end namespace

@@ -44,7 +44,7 @@ kgl::DNA5::Alphabet kgl::DNA5::convertChar(char chr_base) {
     case N_NUCLEOTIDE: return Alphabet::N;
 
     default:
-      ExecEnv::log().error("DNA5::convertchar(), Invalid nucleotide: {}", chr_base);
+      ExecEnv::log().vinfo("DNA5::convertchar(), Invalid/Extended nucleotide: {} convert to (unknown) 'N'", chr_base);
       return Alphabet::N;
 
   }

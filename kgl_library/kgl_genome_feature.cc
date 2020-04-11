@@ -47,7 +47,9 @@ std::string kgl::Feature::featureText() const {
      << id() 
      << " Type:"
      << featureType() 
-     <<  " Offset:["
+     << " Length:"
+     << sequence().length()
+     << " Offset:["
      << sequence().begin() 
      << ", "
      << sequence().end() 
@@ -59,72 +61,6 @@ std::string kgl::Feature::featureText() const {
 }
 
 
-bool kgl::Feature::verifyCDSPhase(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const {
-
-  bool result = true;
-  // Check for mod3
-  for(const auto& sorted_cds : coding_seq_ptr->getMap()) {
-
-    result = result and verifyMod3(sorted_cds.second->getSortedCDS());
-    result = result and verifyStrand(sorted_cds.second->getSortedCDS());
-
-  }
-
-  return result;
-
-}
-
-
-bool kgl::Feature::verifyMod3(const SortedCDS& sorted_cds) const {
-
-  bool result = true;
-// Check the combined sequence length is mod 3 = 0
-
-  ContigSize_t coding_sequence_length = 0;
-  for (auto cds : sorted_cds) {
-
-    coding_sequence_length += (cds.second->sequence().end() - cds.second->sequence().begin());
-
-  }
-
-  if ((coding_sequence_length % Codon::CODON_SIZE) != 0) {
-
-    ExecEnv::log().warn("Gene: {} offset: {} CDS coding sequence length mod 3 not zero : {}",
-                        id(),
-                        sequence().begin(),
-                        (coding_sequence_length % 3));
-
-    result = false;
-
-  }
-
-  return result;
-
-}
-
-bool kgl::Feature::verifyStrand(const SortedCDS& sorted_cds) const {
-
-  bool result = true;
-
-// Check the strand is consistent and not unknown.
-  for (auto cds : sorted_cds) {
-
-    if (cds.second->sequence().strand() != sequence().strand()) {
-
-      ExecEnv::log().error("CDS: {} offset: {} strand: {}, parent sequence strand: {} mis-match",
-                           cds.second->id(),
-                           cds.second->sequence().begin(),
-                           static_cast<char>(cds.second->sequence().strand()),
-                           static_cast<char>(sequence().strand()));
-      result = false;
-
-    }
-
-  }
-
-  return result;
-
-}
 
 
 std::shared_ptr<const kgl::Feature> kgl::Feature::getGene() const {

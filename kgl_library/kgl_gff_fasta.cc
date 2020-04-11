@@ -13,6 +13,8 @@
 #include "kgl_gff_fasta.h"
 #include "kgl_sequence_base.h"
 
+#include <functional>
+
 
 namespace kgl = kellerberrin::genome;
 namespace bt = boost;
@@ -310,9 +312,13 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord( kgl::GenomeDatabase& geno
     // Create a mRNA feature
     feature_ptr = std::make_shared<kgl::EXONFeature>(feature_id, contig_ptr, sequence);
   }
-  else if (type.find(GeneFeature::GENE_TYPE) != std::string::npos) {
+  else if (Utility::trimEndWhiteSpace(type) == GeneFeature::GENE_TYPE) {
     // Create a GENE feature
     feature_ptr = std::make_shared<kgl::GeneFeature>(feature_id, contig_ptr, sequence);
+  }
+  else if (Utility::trimEndWhiteSpace(type) == PSEUDOGENEFeature::PSEUDOGENE_TYPE) {
+    // Create a GENE feature
+    feature_ptr = std::make_shared<kgl::PSEUDOGENEFeature>(feature_id, contig_ptr, sequence);
   }
   else if (type.find(TSSFeature::TSS_TYPE) != std::string::npos) {
       // Create a GENE feature
@@ -327,8 +333,8 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord( kgl::GenomeDatabase& geno
   feature_ptr->setAttributes(record_attributes);
   // Annotate the contig.
   std::shared_ptr<kgl::ContigFeatures> mutable_contig_ptr = std::const_pointer_cast<kgl::ContigFeatures>(contig_ptr);
-  // Ya gotta love this syntax - NOT.
-  bool result = ((mutable_contig_ptr.get())->*feature_sink)(feature_ptr);
+  // Invoke the sink function pointer.
+  bool result = std::invoke(feature_sink, mutable_contig_ptr, feature_ptr);
 
   if (not result) {
 

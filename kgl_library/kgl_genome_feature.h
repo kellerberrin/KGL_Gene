@@ -50,8 +50,9 @@ public:
   [[nodiscard]] virtual bool isCDS() const { return false; }
   [[nodiscard]] virtual bool isGene() const { return false; }
   [[nodiscard]] virtual bool ismRNA() const { return false; }
-  [[nodiscard]] virtual bool isEXON() const { return false; }
+  [[nodiscard]] virtual bool isPSEUDOGENE() const { return false; }
   [[nodiscard]] virtual bool isTSS() const { return false; }
+  [[nodiscard]] virtual bool isEXON() const { return false; }
 
 
   // Always check for a NULL pointer with super feature.
@@ -141,6 +142,7 @@ private:
 };
 
 
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A mRNAFeature - generally the parent of the coding CDS Features
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -162,6 +164,33 @@ public:
 
   // MRNA Type.
   constexpr static const char* MRNA_TYPE = "MRNA";
+
+private:
+
+
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// A Pseudogene feature may or may not have CDS or EXON subfeatures.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class PSEUDOGENEFeature : public Feature {
+
+public:
+
+  PSEUDOGENEFeature(const FeatureIdent_t &id,
+                    const std::shared_ptr<const ContigFeatures> &contig_ptr,
+                    const FeatureSequence &sequence) : Feature(id, PSEUDOGENE_TYPE, contig_ptr, sequence) {}
+
+  PSEUDOGENEFeature(const PSEUDOGENEFeature &) = default;
+  ~PSEUDOGENEFeature() override = default;
+
+  PSEUDOGENEFeature &operator=(const PSEUDOGENEFeature &) = default;
+
+  [[nodiscard]] bool isPSEUDOGENE() const final { return true; }
+
+  // EXON Type.
+  constexpr static const char* PSEUDOGENE_TYPE = "PSEUDOGENE";
 
 private:
 

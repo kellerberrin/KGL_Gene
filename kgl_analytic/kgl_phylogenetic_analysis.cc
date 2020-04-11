@@ -1119,7 +1119,7 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
     std::vector<std::string> description_vec;
     if (not coding_sequence->getGene()->getAttributes().getDescription(description_vec)) {
 
-      ExecEnv::log().error("Cannot get description vector for Gene: {}", coding_sequence->getGene()->id());
+      ExecEnv::log().error("ApplicationAnalysis::outputSequence(); Cannot get description vector for Gene: {}", coding_sequence->getGene()->id());
 
     }
     for (const auto &description : description_vec) {
