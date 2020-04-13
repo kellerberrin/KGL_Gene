@@ -32,9 +32,25 @@ const kgl::GenomeId_t analysis_genome = "Pf3D7_47";
 
 void kgl::PhylogeneticAnalysis::performAnalysis(const std::string& analysis_type) {
 
-  for (auto const& analysis : Utility::tokenizer(analysis_type, ANALYSIS_SEPARATORS_)) {
+  std::vector<std::string> analysis_ids = Utility::tokenizer(analysis_type, ANALYSIS_SEPARATORS_);
 
-    dispatchAnalysis(analysis);
+  if (analysis_ids.empty()) {
+
+    ExecEnv::log().info("No Analysis functions specified, valid analysis below:");
+
+    for (auto const& analysis: analysis_map_) {
+
+      ExecEnv::log().info("Valid analysis type: '{}'", analysis.first);
+
+    }
+
+  } else {
+
+    for (auto const& analysis : analysis_ids) {
+
+      dispatchAnalysis(analysis);
+
+    }
 
   }
 

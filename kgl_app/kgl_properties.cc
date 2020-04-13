@@ -164,6 +164,8 @@ std::vector<kgl::VCFFileInfo> kgl::RuntimeProperties::getVCFFileVector() const {
 
   }
 
+  ExecEnv::log().info("RuntimeProperties::getVCFFileVector size: {}", property_tree_vector.size());
+
   for (const auto& sub_tree : property_tree_vector) {
 
     key = std::string(VCF_FILE_NAME_) + std::string(DOT_) + std::string(VALUE_);

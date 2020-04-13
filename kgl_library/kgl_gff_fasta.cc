@@ -88,14 +88,29 @@ bool kgl::ParseGffFasta::GffFastaImpl::readFastaFile(const std::string& fasta_fi
 
   for (unsigned i = 0; i < length(ids); ++i) {
 
-    std::string id_line;
-    seqan::move(id_line, ids[i]);
-    ReadFastaSequence fasta_sequence;
-    fasta_sequence.first = id_line.substr(0, id_line.find_first_of(" \t,")); // Only the identifier.
-    std::shared_ptr<AlphabetSequence_t> sequence_string_ptr(std::make_shared<AlphabetSequence_t>());
-    seqan::move(*sequence_string_ptr, seqs[i]);  // convert from seqan
-    fasta_sequence.second = sequence_string_ptr;
-    fasta_sequences.push_back(fasta_sequence);
+    static const std::string fasta_separator(" \t,");
+    std::string line_id;
+    seqan::move(line_id, ids[i]);
+    size_t position = line_id.find_first_of(fasta_separator);
+
+    std::string fasta_id;
+    std::string fasta_description;
+    if (position == std::string::npos) {
+
+      fasta_id = Utility::trimEndWhiteSpace(line_id);
+
+    } else {
+
+      fasta_id = Utility::trimEndWhiteSpace(line_id.substr(0, position));
+      fasta_description = Utility::trimEndWhiteSpace(line_id.substr(position, std::string::npos));
+
+    }
+
+    std::string fasta_sequence;
+    seqan::move(fasta_sequence, seqs[i]);  // convert from seqan
+
+    ReadFastaSequence fasta_sequence_record (std::move(fasta_id), std::move(fasta_description), std::move(fasta_sequence));
+    fasta_sequences.push_back(std::move(fasta_sequence_record));
 
   }
 
@@ -114,19 +129,19 @@ void kgl::ParseGffFasta::GffFastaImpl::readFastaFile(const std::string& fasta_fi
 
   }
 
-  for (auto sequence : fasta_sequences) {
+  for (auto const& sequence : fasta_sequences) {
 
-    const std::string& contig_id = sequence.first;
-    StringDNA5 DNA5sequence(*sequence.second); // convert to alphabet DNA5.
+    StringDNA5 DNA5sequence(sequence.fastaSequence()); // convert to alphabet DNA5.
     std::shared_ptr<DNA5SequenceContig> sequence_ptr(std::make_shared<DNA5SequenceContig>(std::move(DNA5sequence)));
+    const std::string contig_id = sequence.fastaId();
 
-    if (not genome_db_ptr->addContigSequence(contig_id, sequence_ptr)) {
+    if (not genome_db_ptr->addContigSequence(contig_id, sequence.fastaDescription(), sequence_ptr)) {
 
       ExecEnv::log().error("addContigSequence(), Attempted to add duplicate contig; {}", contig_id);
 
     }
 
-    ExecEnv::log().info("Fasta Contig id: {}; Contig sequence length: {} ", contig_id, sequence_ptr->length());
+    ExecEnv::log().info("Fasta Contig id: {}; Sequence length: {}; Description: {}", contig_id, sequence_ptr->length(), sequence.fastaDescription());
 
   }
 
@@ -371,10 +386,21 @@ bool kgl::ParseGffFasta::GffFastaImpl::writeFastaFile(const std::string& fasta_f
   try {
 
 
-    for (auto sequence : fasta_sequences) {
+    for (auto const& sequence : fasta_sequences) {
 
-      seqan::CharString seqan_id = sequence.first;
-      seqan::CharString seqan_seq = sequence.second->getSequenceAsString();
+      std::string fasta_id_line;
+      if (not sequence.fastaDescription().empty()) {
+
+        fasta_id_line = sequence.fastaId() + " " + sequence.fastaDescription();
+
+      } else {
+
+        fasta_id_line = sequence.fastaId();
+
+      }
+
+      seqan::CharString seqan_id = fasta_id_line;
+      seqan::CharString seqan_seq = sequence.fastaSequence()->getSequenceAsString();
       seqan::writeRecord(seq_file_out, seqan_id, seqan_seq, seqan::Fasta());
 
     }

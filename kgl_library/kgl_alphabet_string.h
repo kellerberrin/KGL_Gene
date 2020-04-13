@@ -41,7 +41,7 @@ public:
   // Only allow move assignments
   AlphabetString& operator=(AlphabetString&& moved) noexcept {
 
-    base_string_ = std::move(moved.base_string_);
+    base_string_ = moved.base_string_;
     return *this;
 
   }

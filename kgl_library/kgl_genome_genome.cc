@@ -130,10 +130,12 @@ void kgl::GenomeDatabase::readAuxillary(const std::string& tss_gff_file) {
 
 
 bool kgl::GenomeDatabase::addContigSequence(const kgl::ContigId_t& contig_id,
+                                            const std::string& description,
                                             std::shared_ptr<kgl::DNA5SequenceContig> sequence_ptr) {
 
   using ContigPtr = std::shared_ptr<kgl::ContigFeatures>;
   ContigPtr contig_ptr(std::make_shared<kgl::ContigFeatures>(contig_id, sequence_ptr));
+  contig_ptr->description(description);
 
   auto result = genome_sequence_map_.insert(std::make_pair(contig_id, std::move(contig_ptr)));
 

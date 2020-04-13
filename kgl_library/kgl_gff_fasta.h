@@ -20,15 +20,71 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 // Parses the input gff(3) file and annotates it with a fasta sequence
 // This class is a facade; the file reading details are handled by a 3rd party library (Seqan).
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
 // Passed in a vector to write a fasta sequence.
-// WriteFastaSequence.first is the sequence name.
-// WriteFastaSequence.second is the virtual sequence (DNA or Amino).
-using WriteFastaSequence = std::pair<std::string, std::shared_ptr<VirtualSequence>>;
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class WriteFastaSequence {
+
+public:
+
+  WriteFastaSequence() = delete;
+  WriteFastaSequence(const WriteFastaSequence& copy) = default;
+  WriteFastaSequence( std::string fasta_id,
+                      std::string fasta_description,
+                      std::shared_ptr<const VirtualSequence> fasta_sequence_ptr) : fasta_id_(std::move(fasta_id)),
+                                                                                   fasta_description_(std::move(fasta_description)),
+                                                                                   fasta_sequence_ptr_(std::move(fasta_sequence_ptr)) {}
+  ~WriteFastaSequence() = default;
+
+  [[nodiscard]] const std::string& fastaId() const { return fasta_id_; }
+  [[nodiscard]] const std::string& fastaDescription() const { return fasta_description_; }
+  [[nodiscard]] const std::shared_ptr<const VirtualSequence>& fastaSequence() const { return fasta_sequence_ptr_; }
+
+private:
+
+  std::string fasta_id_;
+  std::string fasta_description_;
+  std::shared_ptr<const VirtualSequence> fasta_sequence_ptr_;
+
+};
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
 // Passed in a vector from fasta sequence read.
-// ReadFastaSequence.first is the sequence name.
-// ReadFastaSequence.second is a std::string of the fasta sequence.
-// Note that AlphabetSequence and AlphabetSequence_t are very different data types.
-using ReadFastaSequence = std::pair<std::string, std::shared_ptr<AlphabetSequence_t>>;
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+class ReadFastaSequence {
+
+public:
+
+  ReadFastaSequence() = delete;
+  ReadFastaSequence(ReadFastaSequence&& copy) = default;
+  ReadFastaSequence( std::string&& fasta_id,
+                     std::string&& fasta_description,
+                     std::string&& fasta_sequence) : fasta_id_(fasta_id),
+                                                     fasta_description_(fasta_description),
+                                                     fasta_sequence_ptr_(std::make_unique<std::string>(fasta_sequence)) {}
+  ~ReadFastaSequence() = default;
+
+  [[nodiscard]] const std::string& fastaId() const { return fasta_id_; }
+  [[nodiscard]] const std::string& fastaDescription() const { return fasta_description_; }
+  [[nodiscard]] const std::string& fastaSequence() const { return *fasta_sequence_ptr_; }
+
+private:
+
+  std::string fasta_id_;
+  std::string fasta_description_;
+  std::unique_ptr<std::string> fasta_sequence_ptr_;
+
+};
+
+
 
 
 class ParseGffFasta {

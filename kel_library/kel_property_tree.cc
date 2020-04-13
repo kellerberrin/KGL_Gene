@@ -57,7 +57,7 @@ private:
   pt::ptree property_tree_;
 
   void printTree(const std::string& parent, const pt::ptree& property_tree) const;
-  bool getProperty(const pt::ptree& property_tree, const std::string& property_name, std::string& property) const;
+  bool getPropertyTree(const pt::ptree& property_tree, const std::string& property_name, std::string& property) const;
 
 };
 
@@ -119,14 +119,14 @@ bool kel::PropertyTree::PropertyImpl::getProperty(const std::string& property_na
     if (property.empty()) {
 
       ExecEnv::log().error("PropertyTree; Well-formed Property Tree but Property: {} not found or NULL", property_name);
-      throw std::runtime_error("Property Tree Value Missing");
+      return false;
 
     }
 
   }
   catch (...) {
 
-    ExecEnv::log().error("PropertyTree; Property: {} not found", property_name);
+    ExecEnv::log().error("Exception: PropertyTree GetProperty; Property: {} not found", property_name);
     ExecEnv::log().error("*********** Property Tree Contents *************");
     treeTraversal();
     ExecEnv::log().error("**********************************************");
@@ -139,7 +139,7 @@ bool kel::PropertyTree::PropertyImpl::getProperty(const std::string& property_na
 }
 
 
-bool kel::PropertyTree::PropertyImpl::getProperty(const pt::ptree& property_tree, const std::string& property_name,  std::string& property) const {
+bool kel::PropertyTree::PropertyImpl::getPropertyTree(const pt::ptree& property_tree, const std::string& property_name,  std::string& property) const {
 
   try {
 
@@ -176,7 +176,7 @@ bool kel::PropertyTree::PropertyImpl::getPropertyVector(const std::string& prope
   }
   catch (...) {
 
-    ExecEnv::log().error("PropertyTree; Property Vector: {} not found", property_name);
+    ExecEnv::log().error("PropertyTree::getPropertyVector; Property Vector: {} not found", property_name);
     ExecEnv::log().error("***********Property Tree Contents*************");
     treeTraversal();
     ExecEnv::log().error("**********************************************");

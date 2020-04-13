@@ -577,7 +577,7 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
                                            const std::string& fasta_file) {
 
   std::shared_ptr<const LinearDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
-  std::vector<std::pair<std::string, std::shared_ptr<VirtualSequence>>> dna_seq_vector;
+  std::vector<WriteFastaSequence> dna_seq_vector;
   DNA5SequenceLinear mutant_sequence;
   DNA5SequenceLinear reference_sequence;
   OffsetVariantMap variant_map;
@@ -609,17 +609,18 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
 
     std::stringstream ref_fasta_ss;
     ref_fasta_ss << "reference_" << contig << "_+_" << offset << "_" << region_size;
-    std::pair<std::string, std::shared_ptr<VirtualSequence>> fasta_reference(ref_fasta_ss.str(), reference_sequence_ptr);
+    WriteFastaSequence fasta_reference(ref_fasta_ss.str(), "", reference_sequence_ptr);
     dna_seq_vector.push_back(fasta_reference);
 
     ref_fasta_ss.str("");
     ref_fasta_ss << "reference_" << contig << "_-_" << offset << "_" << region_size;
-    std::pair<std::string, std::shared_ptr<VirtualSequence>> rev_fasta_reference(ref_fasta_ss.str(), ref_reverse_complement_ptr);
+    WriteFastaSequence rev_fasta_reference(ref_fasta_ss.str(), "", ref_reverse_complement_ptr);
     dna_seq_vector.push_back(rev_fasta_reference);
 
     std::stringstream mutant_fasta_ss;
     mutant_fasta_ss << "mutant_" << contig << "_" << offset << "_" << region_size;
-    std::pair<std::string, std::shared_ptr<VirtualSequence>> fasta_mutant(mutant_fasta_ss.str(), mutant_sequence_ptr);
+
+    WriteFastaSequence fasta_mutant(mutant_fasta_ss.str(), "", mutant_sequence_ptr);
     dna_seq_vector.push_back(fasta_mutant);
 
     if (not ParseGffFasta().writeFastaFile(fasta_file, dna_seq_vector)) {

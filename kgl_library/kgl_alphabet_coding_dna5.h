@@ -56,6 +56,7 @@ public:
     N = N_NUCLEOTIDE
   };
 
+
   // Return a vector of all valid alphabet values.
   [[nodiscard]] static std::vector<Alphabet> enumerateAlphabet();
 

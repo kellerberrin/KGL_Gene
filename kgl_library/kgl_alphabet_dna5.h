@@ -61,6 +61,35 @@ public:
     N = N_NUCLEOTIDE
   };
 
+  // Extended IUPAC nucleotide codes. Not yet used, all converted to 'N' (unknown).
+  inline static constexpr Nucleotide_t R_NUCLEOTIDE = 'R'; // A or G
+  inline static constexpr Nucleotide_t Y_NUCLEOTIDE = 'Y'; // C or T
+  inline static constexpr Nucleotide_t S_NUCLEOTIDE = 'S'; // G or C
+  inline static constexpr Nucleotide_t W_NUCLEOTIDE = 'W'; // A or T
+  inline static constexpr Nucleotide_t K_NUCLEOTIDE = 'K'; // G or T
+  inline static constexpr Nucleotide_t M_NUCLEOTIDE = 'M'; // A or C
+  inline static constexpr Nucleotide_t B_NUCLEOTIDE = 'B'; // C or G or T
+  inline static constexpr Nucleotide_t D_NUCLEOTIDE = 'D'; // A or G or T
+  inline static constexpr Nucleotide_t H_NUCLEOTIDE = 'H'; // A or C or T
+  inline static constexpr Nucleotide_t V_NUCLEOTIDE = 'V'; // A or C or G
+
+  // The Extended Alphabet enum type.
+  enum class ExtendedAlphabet : Nucleotide_t {
+    R = R_NUCLEOTIDE,
+    Y = Y_NUCLEOTIDE,
+    S = S_NUCLEOTIDE,
+    W = W_NUCLEOTIDE,
+    K = K_NUCLEOTIDE,
+    M = M_NUCLEOTIDE,
+    B = B_NUCLEOTIDE,
+    D = D_NUCLEOTIDE,
+    H = H_NUCLEOTIDE,
+    V = V_NUCLEOTIDE
+  };
+
+  // Return a boolean if the character is in the extended alphabet (defined as enum ExtendedAlphabet).
+  [[nodiscard]] static bool isExtended(Nucleotide_t char_letter);
+
   // Return a vector of all valid alphabet values.
   [[nodiscard]] static std::vector<Alphabet> enumerateAlphabet();
 

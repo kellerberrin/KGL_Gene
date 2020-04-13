@@ -15,9 +15,9 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 // Types used to represent genome data.
 
 using Alphabet_t = char;   // Storage type for Amino, DNA5 or ReadCountColumns alphabets
-using Nucleotide_t = Alphabet_t;  // Semantic alias for nucleotides. Python only, do not use in C++.
-using Amino_t = Alphabet_t; // Semantic alias for Amino Acids. Python only, do not use in C++.
-using AlphabetSequence_t = std::basic_string<Alphabet_t>;  // Only used to link to Python code. Do not use in C++.
+using Nucleotide_t = Alphabet_t;  // Semantic alias for nucleotides.
+using Amino_t = Alphabet_t; // Semantic alias for Amino Acids.
+using AlphabetSequence_t = std::basic_string<Alphabet_t>;  // Just a std::string for now.
 using ContigId_t = std::string;
 using GenomeId_t = std::string;
 using PopulationId_t = std::string;

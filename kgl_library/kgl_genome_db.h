@@ -61,7 +61,10 @@ public:
 
   [[nodiscard]] std::string translationTableName() const { return coding_table_.translationTableName(); }
 
+  void description(const std::string& desc) { description_ = desc; }
+
   [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
+  [[nodiscard]] const std::string& description() const { return description_; }
   [[nodiscard]] const DNA5SequenceContig& sequence() const { return *sequence_ptr_; }
   [[nodiscard]] std::shared_ptr<const DNA5SequenceContig> sequence_ptr() const { return sequence_ptr_; }
   [[nodiscard]] ContigSize_t contigSize() const { return sequence_ptr_->length(); }
@@ -95,6 +98,7 @@ public:
 private:
 
   ContigId_t contig_id_;
+  std::string description_;
   std::shared_ptr<const DNA5SequenceContig> sequence_ptr_;  // The contig unstranded DNA sequence.
   GeneExonFeatures gene_exon_features_;  // All the genes and exons defined for this contig.
   AuxContigFeatures aux_contig_features_;
@@ -130,7 +134,7 @@ public:
   [[nodiscard]] const GenomeId_t& genomeId() const { return _genome_id; }
 
   // Return false if contig already exists.
-  [[nodiscard]] bool addContigSequence(const ContigId_t& contig, std::shared_ptr<DNA5SequenceContig> sequence_ptr);
+  [[nodiscard]] bool addContigSequence(const ContigId_t& contig, const std::string& description, std::shared_ptr<DNA5SequenceContig> sequence_ptr);
   // Returns false if key not found.
   [[nodiscard]] bool getContigSequence(const ContigId_t& contig, std::shared_ptr<const ContigFeatures>& contig_ptr) const;
 

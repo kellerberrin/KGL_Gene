@@ -9,6 +9,30 @@
 namespace kgl = kellerberrin::genome;
 
 
+
+[[nodiscard]] bool kgl::DNA5::isExtended(Nucleotide_t char_letter) {
+
+  switch(char_letter) {
+
+    case R_NUCLEOTIDE:
+    case Y_NUCLEOTIDE:
+    case S_NUCLEOTIDE:
+    case W_NUCLEOTIDE:
+    case K_NUCLEOTIDE:
+    case M_NUCLEOTIDE:
+    case B_NUCLEOTIDE:
+    case D_NUCLEOTIDE:
+    case H_NUCLEOTIDE:
+    case V_NUCLEOTIDE:
+      return true;
+
+    default:
+      return false;
+  }
+
+}
+
+
 bool kgl::DNA5::validAlphabet(Alphabet nucleotide) {
 
   auto int_value = static_cast<size_t>(nucleotide);
@@ -30,6 +54,7 @@ bool kgl::DNA5::validAlphabet(Alphabet nucleotide) {
 // Convert char to Alphabet enum type.
 kgl::DNA5::Alphabet kgl::DNA5::convertChar(char chr_base) {
 
+
   switch (std::toupper(chr_base)) {
 
     case A_NUCLEOTIDE:return Alphabet::A;
@@ -43,9 +68,22 @@ kgl::DNA5::Alphabet kgl::DNA5::convertChar(char chr_base) {
 
     case N_NUCLEOTIDE: return Alphabet::N;
 
-    default:
-      ExecEnv::log().vinfo("DNA5::convertchar(), Invalid/Extended nucleotide: {} convert to (unknown) 'N'", chr_base);
+    default: {
+
+      static bool report_extended = false;
+      if (isExtended(chr_base) && not report_extended) {
+
+        ExecEnv::log().warn("DNA5::convertchar(), IUPAC extended nucleotides detected, all converted to the unknown nucleotide 'N'");
+        report_extended = true;
+
+      } else if (not isExtended(chr_base)) {
+
+        ExecEnv::log().error("DNA5::convertchar(), Unknown nucleotide detected: {}, input is probably corrupt or not DNA text", chr_base);
+
+      }
       return Alphabet::N;
+
+    }
 
   }
 
