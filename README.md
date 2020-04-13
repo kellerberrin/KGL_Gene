@@ -8,7 +8,7 @@ This software is under an MIT license, you may use or modify any part of the cod
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OR GUARANTEE OF ANY KIND.
 
-A toolkit that uses SAM/BAM/VCF files to analyze Insert/Deletes (Indels) and Single Nucleotide Polymorphisms (SNP)
+A toolkit that uses Fasta/Gff3/VCF files to analyze Insert/Deletes (Indels) and Single Nucleotide Polymorphisms (SNP)
 variants in genome populations.
 
 The toolkit was developed specifically to analyze mutations in blood cell 
