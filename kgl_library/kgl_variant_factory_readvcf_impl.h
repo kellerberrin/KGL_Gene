@@ -9,18 +9,21 @@
 #include <string>
 #include <thread>
 #include <fstream>
+#include <functional>
+
+#include "kel_lock.h"
 #include "kel_mt_queue.h"
 #include "kel_exec_env.h"
-#include "kel_lock.h"
+
+#include "kgl_variant_file.h"
+
 
 #include <seqan/vcf_io.h>
 
-#include <boost/tokenizer.hpp>
-#include <boost/algorithm/string.hpp>
-
-namespace bt = boost;
 
 namespace kellerberrin::genome {   //  organization::project level namespace
+
+
 
 // The vcf record in seqan format and a counter to indicate which vcf record.
 template<class ConsumerMT>
@@ -50,7 +53,7 @@ public:
 
   void readVCFFile();
 
-  [[nodiscard]] const std::vector<std::string>& getFieldNames() const { return field_names_; }
+  [[nodiscard]] const std::vector<std::string>& getFieldNames() const { return parseheader_.getGenomes(); }
 
   [[nodiscard]] const ContigId_t getContig(int32_t contig_idx) const;
 
@@ -60,7 +63,7 @@ private:
   BoundedMtQueue<ReaderQueueRecord> producer_consumer_queue_; // The Producer/Consumer record queue
   ConsumerObjPtr consumer_obj_ptr_;                          // Object to consumer the VCF records.
   ConsumerFunctionPtr consumer_fn_ptr_;                  // Function to consume the VCF records.
-  std::vector<std::string> field_names_;                // Field (genome) names for the VCF record
+  VCFParseHeader parseheader_;                          // Get genome and contig information.
 
   std::shared_ptr<seqan::VcfHeader> vcf_header_ptr_; // the vcf file header record
   std::shared_ptr<seqan::VcfFileIn> vcfIn_ptr_; // Open input file.
@@ -76,95 +79,14 @@ private:
   static constexpr const long HIGH_TIDE_{10000};          // Maximum BoundedMtQueue size
   static constexpr const long LOW_TIDE_{1000};            // Low water mark to begin queueing VCF records
 
-  static constexpr const char* FIELD_NAME_FRAGMENT_{"#CHROM"};
-  static constexpr const size_t FIELD_NAME_FRAGMENT_LENGTH_{6};
-  static constexpr const size_t SKIP_FIELD_NAMES_{9};  // Skip the fixed fields to the Genome names.
-
   // Read the VCF file and queue the record in a BoundedMtQueue.
   void VCFProducer();
   // Call the template VCF consumer class
   void VCFConsumer();
 
-  void parseFieldNames(const std::string& vcf_file_name);
+  void parseFieldNames(const std::string& vcf_file_name) { parseheader_.parseHeader(vcf_file_name); }
 
 };
-
-
-template <class ConsumerMT>
-void VCFReaderMT<ConsumerMT>::parseFieldNames(const std::string& vcf_file_name) {
-
-  std::ifstream vcf_file;
-
-  // Open input file.
-
-  vcf_file.open(vcf_file_name);
-
-  if (not vcf_file.good()) {
-
-    ExecEnv::log().critical("I/O error; could not open VCF file: {}", vcf_file_name);
-
-  }
-
-  try {
-
-    long counter = 0;
-    bool found_header = false;
-
-
-    while (true) {
-
-      std::string record_str;
-
-      if (std::getline(vcf_file, record_str).eof()) break;
-
-      std::string line_prefix = record_str.substr(0, FIELD_NAME_FRAGMENT_LENGTH_);
-
-      if (line_prefix == FIELD_NAME_FRAGMENT_) {
-
-        found_header = true;
-        size_t field_count = 0;
-        bt::char_separator<char> item_key_sep("\t");
-        bt::tokenizer<bt::char_separator<char>> tokenize_item(record_str, item_key_sep);
-        for(auto iter_item = tokenize_item.begin(); iter_item != tokenize_item.end(); ++iter_item) {
-
-          if (field_count >= SKIP_FIELD_NAMES_) {
-
-            field_names_.push_back(*iter_item);
-
-          }
-
-          ++field_count;
-
-        }
-        break;
-
-      }
-
-      ++counter;
-
-    }
-
-    vcf_file.close();
-
-    if (not found_header) {
-
-      ExecEnv::log().error("VCF Field Names Not Found");
-
-    } else {
-
-      ExecEnv::log().info("{} Genomes in VCF file {}", field_names_.size(), vcf_file_name);
-
-    }
-
-
-  }
-  catch (std::exception const &e) {
-
-    ExecEnv::log().critical("VCF file: {}, unexpected I/O exception: {}", vcf_file_name, e.what());
-
-  }
-
-}
 
 
 
@@ -280,15 +202,19 @@ void VCFReaderMT<ConsumerMT>::VCFConsumer() {
   ReaderQueueRecord queue_record;
   const std::unique_ptr<seqan::VcfRecord> EOF_INDICATOR{nullptr};
 
+  // Loop until EOF.
   while (true) {
 
+    // Dequeue the vcf record.
     producer_consumer_queue_.waitAndPop(queue_record);
 
     ++counter;
 
+    // Terminate on EOF
     if (queue_record.second == EOF_INDICATOR) break;  // Eof encountered, terminate processing.
 
-    (consumer_obj_ptr_->*consumer_fn_ptr_)(queue_record.first, *queue_record.second);
+    // Call the comsumer object with the dequeued record.
+    std::invoke(consumer_fn_ptr_, consumer_obj_ptr_, queue_record.first, *queue_record.second);
 
   }
 

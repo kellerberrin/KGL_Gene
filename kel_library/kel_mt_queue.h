@@ -2,8 +2,8 @@
 // Created by kellerberrin on 6/09/17.
 //
 
-#ifndef KGL_MT_QUEUE_H
-#define KGL_MT_QUEUE_H
+#ifndef KEL_MT_QUEUE_H
+#define KEL_MT_QUEUE_H
 
 #include <queue>
 #include <mutex>

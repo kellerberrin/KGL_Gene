@@ -203,7 +203,7 @@ set(MIXTURE_SOURCE_FILES
         kgl_mixture/kgl_variant_classify.cc
         kgl_mixture/kgl_variant_classify_io.cc
         kgl_mixture/kgl_read_phasing.h
-        kgl_mixture/kgl_read_phasing.cc)
+        kgl_mixture/kgl_read_phasing.cc kgl_library/kgl_variant_file.cc kgl_library/kgl_variant_file.h)
 
 
 # Application level objects
