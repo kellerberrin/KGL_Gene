@@ -63,7 +63,7 @@ bool kgl::ParseVCFMiscImpl::parseVcfHeader(std::shared_ptr<const GenomeDatabase>
 
         } else {
 
-          ExecEnv::log().warn("VCF header. VCF contig: {} size: {} not found in the genome database. ",
+          ExecEnv::log().info("VCF header. VCF contig: {} size: {} not found in the genome database. ",
                               contig_id, contig_size);
 
         }

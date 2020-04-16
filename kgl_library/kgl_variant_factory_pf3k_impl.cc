@@ -13,7 +13,7 @@ namespace kgl = kellerberrin::genome;
 
 
 // This is multithreaded code called from the reader defined above.
-void kgl::Pf3kVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const seqan::VcfRecord& vcf_record) {
+void kgl::Pf3kVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record) {
 
   try {
 
@@ -30,11 +30,11 @@ void kgl::Pf3kVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const seqan::Vc
 }
 
 // This is multithreaded code called from the reader defined above.
-void kgl::Pf3kVCFImpl::TryVCFRecord(size_t vcf_record_count, const seqan::VcfRecord& vcf_record) {
+void kgl::Pf3kVCFImpl::TryVCFRecord(size_t vcf_record_count, const VcfRecord& record) {
 
   ++vcf_variant_count_;
 
-  ParseRecord(vcf_record_count, vcf_record, contigId(vcf_record.rID));
+  ParseRecord(vcf_record_count, record);
 
   if (vcf_variant_count_ % VARIANT_REPORT_INTERVAL_ == 0) {
 
@@ -46,32 +46,30 @@ void kgl::Pf3kVCFImpl::TryVCFRecord(size_t vcf_record_count, const seqan::VcfRec
 
 
 // This is multithreaded code called from the reader defined above.
-void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const seqan::VcfRecord& vcf_record, const ContigId_t& contig_id) {
+void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& record) {
 
-  ParseVCFRecord recordParser(vcf_record, contig_id, genome_db_ptr_); //Each vcf record.
+  ParseVCFRecord recordParser(record, record.contig_id, genome_db_ptr_); //Each vcf record.
 
-  VCFInfoField info_key_value_map(seqan::toCString(vcf_record.info));  // Each vcf record.
+  VCFInfoField info_key_value_map(record.info);  // Each vcf record.
 
-  if (getGenomeNames().size() != seqan::length(vcf_record.genotypeInfos)) {
+  if (getGenomeNames().size() != record.genotypeInfos.size()) {
 
     ExecEnv::log().warn("Genome Name Size: {}, Genotype count: {}",
-                        getGenomeNames().size(), seqan::length(vcf_record.genotypeInfos));
+                        getGenomeNames().size(), record.genotypeInfos.size());
 
   }
 
-  auto begin = seqan::begin(vcf_record.genotypeInfos);
-  auto end = seqan::end(vcf_record.genotypeInfos);
   size_t genotype_count = 0;
 
-  for (auto it = begin; it !=end; ++it)
+  for (auto const& genotype : record.genotypeInfos)
   {
 
-    ParseVCFGenotype genotype_parser(*it);
+    ParseVCFGenotype genotype_parser(genotype);
 
     if (genotype_parser.formatCount() == recordParser.requiredFormatSize()) {
 
-      if (genotype_parser.getFormatChar(recordParser.PLOffset(), *it) != PL_CHECK_ZERO_
-          and genotype_parser.getFormatChar(recordParser.PLOffset(), *it) != PL_CHECK_DOT_) {
+      if (genotype_parser.getFormatChar(recordParser.PLOffset(), genotype) != PL_CHECK_ZERO_
+          and genotype_parser.getFormatChar(recordParser.PLOffset(), genotype) != PL_CHECK_DOT_) {
 
         std::string vqslod_text;
         bool vqslod_found = true;
@@ -96,10 +94,10 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const seqan::VcfReco
 
         std::vector<std::string> gt_vector;
 
-        if (not ParseVCFMiscImpl::tokenize(genotype_parser.getFormatString(recordParser.GTOffset(), *it), GT_FIELD_SEPARATOR_, gt_vector)) {
+        if (not ParseVCFMiscImpl::tokenize(genotype_parser.getFormatString(recordParser.GTOffset(), genotype), GT_FIELD_SEPARATOR_, gt_vector)) {
 
           ExecEnv::log().error("Parsing Pf3k VCF, Problem tokenizing PT format field: {}.",
-                               genotype_parser.getFormatString(recordParser.GTOffset(), *it));
+                               genotype_parser.getFormatString(recordParser.GTOffset(), genotype));
           continue;
 
         }
@@ -107,12 +105,12 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const seqan::VcfReco
         if (gt_vector.size() != 2) {
 
           ExecEnv::log().error("Parsing Pf3k VCF, PT format field: {} is not diploid.",
-                               genotype_parser.getFormatString(recordParser.GTOffset(), *it));
+                               genotype_parser.getFormatString(recordParser.GTOffset(), genotype));
           continue;
 
         }
 
-        std::string GQ_text = genotype_parser.getFormatString(recordParser.GQOffset(), *it);
+        std::string GQ_text = genotype_parser.getFormatString(recordParser.GQOffset(), genotype);
         if (GQ_text.find_first_not_of(DIGITS_) !=  std::string::npos) {
 
           ExecEnv::log().error("Non-numeric GQ_text: {}", GQ_text);
@@ -121,7 +119,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const seqan::VcfReco
         }
         double GQ_value = std::stof(GQ_text);
 
-        std::string DP_text = genotype_parser.getFormatString(recordParser.DPOffset(), *it);
+        std::string DP_text = genotype_parser.getFormatString(recordParser.DPOffset(), genotype);
         if (DP_text.find_first_not_of(DIGITS_) !=  std::string::npos) {
 
           continue;
@@ -135,7 +133,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const seqan::VcfReco
         // Get ad allele depths.
         std::vector<std::string> ad_vector;
 
-        if (not ParseVCFMiscImpl::tokenize(genotype_parser.getFormatString(recordParser.ADOffset(), *it), AD_FIELD_SEPARATOR_, ad_vector)) {
+        if (not ParseVCFMiscImpl::tokenize(genotype_parser.getFormatString(recordParser.ADOffset(), genotype), AD_FIELD_SEPARATOR_, ad_vector)) {
 
           ExecEnv::log().error("Parsing Pf3k VCF, Problem tokenizing AD format field");
           continue;
@@ -153,7 +151,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const seqan::VcfReco
 
         std::vector<size_t> ad_count_vector;
         size_t ad_total_count = 0;
-        for (auto depth_count_text : ad_vector) {
+        for (auto const& depth_count_text : ad_vector) {
 
           if (depth_count_text.find_first_not_of(DIGITS_) !=  std::string::npos) {
 

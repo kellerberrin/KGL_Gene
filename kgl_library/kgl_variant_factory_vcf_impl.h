@@ -46,11 +46,9 @@ public:
 
   virtual void readParseVCFImpl();
 
-  virtual void ProcessVCFRecord(size_t vcf_record_count, const seqan::VcfRecord& vcf_record) = 0;
+  virtual void ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record) = 0;
 
-  [[nodiscard]] const std::vector<std::string>& getGenomeNames() const { return reader_ptr_->getFieldNames(); }
-
-  [[nodiscard]] const ContigId_t contigId(int32_t rId) const { return reader_ptr_->getContig(rId); }
+  [[nodiscard]] const std::vector<std::string>& getGenomeNames() const { return reader_ptr_->getGenomeNames(); }
 
 protected:
 

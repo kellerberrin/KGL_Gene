@@ -101,4 +101,55 @@ bool kgl::VCFParseHeader::parseHeader(const std::string& vcf_file_name) {
 
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+kgl::VcfRecord::VcfRecord(seqan::VcfRecord&& vcf_record, ContigId_t&& contig) : contig_id(contig) {
+
+  offset = vcf_record.beginPos;
+  seqan::move(id, vcf_record.id);
+  seqan::move(ref, vcf_record.ref);
+  seqan::move(alt, vcf_record.alt);
+  qual = vcf_record.qual;
+  seqan::move(filter, vcf_record.filter);
+  seqan::move(info, vcf_record.info);
+  seqan::move(format, vcf_record.format);
+
+  auto begin = seqan::begin(vcf_record.genotypeInfos);
+  auto end = seqan::end(vcf_record.genotypeInfos);
+
+  for (auto it = begin; it !=end; ++it) {
+
+    std::string genotype;
+    seqan::move(genotype, *it);
+    genotypeInfos.push_back(std::move(genotype));
+
+  }
+
+}
+
+/*
+kgl::VcfRecord::VcfRecord(const seqan::VcfRecord& vcf_record, const ContigId_t& contig) : contig_id(contig) {
+
+  offset = vcf_record.beginPos;
+  id = seqan::toCString(vcf_record.id);
+  ref = seqan::toCString(vcf_record.ref);
+  alt = seqan::toCString(vcf_record.alt);
+  qual = vcf_record.qual;
+  filter = seqan::toCString(vcf_record.filter);
+  info = seqan::toCString(vcf_record.info);
+  format = seqan::toCString(vcf_record.format);
+
+  auto begin = seqan::begin(vcf_record.genotypeInfos);
+  auto end = seqan::end(vcf_record.genotypeInfos);
+
+  for (auto it = begin; it !=end; ++it) {
+
+    std::string genotype = seqan::toCString(*it);
+    genotypeInfos.push_back(std::move(genotype));
+
+  }
+
+}
+*/

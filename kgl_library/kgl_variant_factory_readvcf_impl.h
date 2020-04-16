@@ -31,8 +31,8 @@ class VCFReaderMT {
 
 public:
 
-  using ReaderQueueRecord = std::pair<size_t, std::unique_ptr<seqan::VcfRecord>>;
-  using ConsumerFunctionPtr = void (ConsumerMT::*)(size_t vcf_record_count, const seqan::VcfRecord& record_ptr);
+  using ReaderQueueRecord = std::pair<size_t, std::unique_ptr<VcfRecord>>;
+  using ConsumerFunctionPtr = void (ConsumerMT::*)(size_t vcf_record_count, const VcfRecord& record_ptr);
   using ConsumerObjPtr = ConsumerMT*;
 
   explicit VCFReaderMT(const std::string& vcf_file_name,
@@ -49,13 +49,11 @@ public:
   }
   virtual ~VCFReaderMT() = default;
 
-  [[nodiscard]] const seqan::VcfHeader& readHeader() const;
-
   void readVCFFile();
 
-  [[nodiscard]] const std::vector<std::string>& getFieldNames() const { return parseheader_.getGenomes(); }
+  [[nodiscard]] const std::vector<std::string>& getGenomeNames() const { return parseheader_.getGenomes(); }
 
-  [[nodiscard]] const ContigId_t getContig(int32_t contig_idx) const;
+  [[nodiscard]] const seqan::VcfHeader& readHeader() const;
 
 private:
 
@@ -68,6 +66,8 @@ private:
   std::shared_ptr<seqan::VcfHeader> vcf_header_ptr_; // the vcf file header record
   std::shared_ptr<seqan::VcfFileIn> vcfIn_ptr_; // Open input file.
 
+  std::unique_ptr<VcfRecord> EOF_INDICATOR_{nullptr};
+
   mutable std::mutex mutex_;
 
   int consumer_thread_count_{2};                      // Consumer threads (defaults to local CPU cores available or max)
@@ -78,6 +78,8 @@ private:
 
   static constexpr const long HIGH_TIDE_{10000};          // Maximum BoundedMtQueue size
   static constexpr const long LOW_TIDE_{1000};            // Low water mark to begin queueing VCF records
+
+  [[nodiscard]] ContigId_t getContig(int32_t contig_idx) const;
 
   // Read the VCF file and queue the record in a BoundedMtQueue.
   void VCFProducer();
@@ -91,13 +93,13 @@ private:
 
 
 template <class ConsumerMT>
-const ContigId_t VCFReaderMT<ConsumerMT>::getContig(int32_t contig_idx) const {
+ContigId_t VCFReaderMT<ConsumerMT>::getContig(int32_t contig_idx) const {
 
   AutoMutex auto_mutex(mutex_); // lock on construction, unlock on destruction
 
   std::string contig_id = seqan::toCString(contigNames(context(*vcfIn_ptr_))[contig_idx]);
 
-  return static_cast<const ContigId_t>(contig_id);
+  return contig_id;
 
 }
 
@@ -157,8 +159,10 @@ void VCFReaderMT<ConsumerMT>::VCFProducer() {
     size_t counter = 1;
     while (!seqan::atEnd(*vcfIn_ptr_)) {
 
-      std::unique_ptr<seqan::VcfRecord> record_ptr(std::make_unique<seqan::VcfRecord>());
-      seqan::readRecord(*record_ptr, *vcfIn_ptr_);
+      seqan::VcfRecord vcf_record;
+      seqan::readRecord(vcf_record, *vcfIn_ptr_);
+
+      std::unique_ptr<VcfRecord> record_ptr(std::make_unique<VcfRecord>(std::move(vcf_record), getContig(vcf_record.rID)));
 
       ReaderQueueRecord queue_record(counter, std::move(record_ptr));
 
@@ -177,9 +181,7 @@ void VCFReaderMT<ConsumerMT>::VCFProducer() {
     // Enqueue the null eof indicator for each consumer thread.
     for(int i = 0; i < consumer_thread_count_; ++i) {
 
-      std::unique_ptr<seqan::VcfRecord> EOF_INDICATOR{nullptr};  // Enqueued by producer to indicate VCF eof.
-
-      ReaderQueueRecord queue_record(counter, std::move(EOF_INDICATOR));
+      ReaderQueueRecord queue_record(counter, std::move(EOF_INDICATOR_));
 
       producer_consumer_queue_.push(std::move(queue_record));
 
@@ -200,7 +202,6 @@ void VCFReaderMT<ConsumerMT>::VCFConsumer() {
 
   long counter = 0;
   ReaderQueueRecord queue_record;
-  const std::unique_ptr<seqan::VcfRecord> EOF_INDICATOR{nullptr};
 
   // Loop until EOF.
   while (true) {
@@ -211,9 +212,9 @@ void VCFReaderMT<ConsumerMT>::VCFConsumer() {
     ++counter;
 
     // Terminate on EOF
-    if (queue_record.second == EOF_INDICATOR) break;  // Eof encountered, terminate processing.
+    if (queue_record.second == EOF_INDICATOR_) break;  // Eof encountered, terminate processing.
 
-    // Call the comsumer object with the dequeued record.
+    // Call the consumer object with the dequeued record.
     std::invoke(consumer_fn_ptr_, consumer_obj_ptr_, queue_record.first, *queue_record.second);
 
   }

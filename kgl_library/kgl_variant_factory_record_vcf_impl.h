@@ -10,6 +10,7 @@
 #include "kgl_alphabet_dna5.h"
 #include "kgl_alphabet_string.h"
 #include "kgl_genome_db.h"
+#include "kgl_variant_file.h"
 
 #include <seqan/vcf_io.h>
 
@@ -25,7 +26,7 @@ class ParseVCFRecord {
 
 public:
 
-  ParseVCFRecord(const seqan::VcfRecord& vcf_record,
+  ParseVCFRecord(const VcfRecord& vcf_record,
                  const ContigId_t& contig_id,
                  std::shared_ptr<const GenomeDatabase> genome_db_ptr) : vcf_record_(vcf_record) {
 
@@ -55,7 +56,7 @@ private:
 
   bool parse_result_;
 
-  const seqan::VcfRecord& vcf_record_;
+  const VcfRecord& vcf_record_;
   std::vector<std::string> format_fields_;  // GT:AD:DP:GQ:PGT:PID:PL
   size_t GT_offset_;
   size_t GQ_offset_;
@@ -104,8 +105,7 @@ class ParseVCFGenotype {
 
 public:
 
-  ParseVCFGenotype(const seqan::CharString& format_char_string) : format_count_(0),
-                                                                  parse_result_(false) {
+  ParseVCFGenotype(const std::string& format_char_string) : format_count_(0), parse_result_(false) {
 
     parseGenotype(format_char_string);
 
@@ -114,10 +114,10 @@ public:
 
 
   // Get a format field as a string.
-  std::string getFormatString(size_t format_offset, const seqan::CharString &format_char_string) const;
+  std::string getFormatString(size_t format_offset, const std::string& format_char_string) const;
 
   // Get the first char of a format field.
-  char getFormatChar(size_t format_offset, const seqan::CharString &format_char_string) const;
+  char getFormatChar(size_t format_offset, const std::string& format_char_string) const;
 
   size_t formatCount() const { return format_count_; }
 
@@ -131,7 +131,7 @@ private:
   constexpr static const size_t MAX_FORMAT_SIZE_ = 100;
 
   // Parse format fields
-  bool parseGenotype(const seqan::CharString& format_char_string);
+  bool parseGenotype(const std::string& format_char_string);
 
   size_t format_count_;
   FormatArray format_offsets_;

@@ -22,7 +22,7 @@ bool kgl::ParseVCFRecord::parseRecord(const ContigId_t& contig_id, std::shared_p
   bool parse_result = true;
 
   // Get the format fields for Genetype analysis.
-  parseString(seqan::toCString(vcf_record_.format), FORMAT_SEPARATOR_, format_fields_);
+  parseString(vcf_record_.format, FORMAT_SEPARATOR_, format_fields_);
 
   // Get the GT format offset.
   if (not findString(format_fields_, GT_, GT_offset_)) {
@@ -78,7 +78,7 @@ bool kgl::ParseVCFRecord::parseRecord(const ContigId_t& contig_id, std::shared_p
   parseString(seqan::toCString(vcf_record_.alt), ALLELE_SEPARATOR_, alleles_);
 
   // Get the offset.
-  allele_offset_ = static_cast<ContigOffset_t >(vcf_record_.beginPos);
+  allele_offset_ = vcf_record_.offset;
 
   // Get the contig pointer.
   if (not genome_db_ptr->getContigSequence(contig_id, contig_ptr_)) {
@@ -185,7 +185,7 @@ bool kgl::ParseVCFRecord::isSNP() const {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool kgl::ParseVCFGenotype::parseGenotype(const seqan::CharString& format_char_string) {
+bool kgl::ParseVCFGenotype::parseGenotype(const std::string& format_char_string) {
 
   bool parse_result = true;
   size_t record_index = 0;
@@ -193,7 +193,7 @@ bool kgl::ParseVCFGenotype::parseGenotype(const seqan::CharString& format_char_s
   size_t field_size = 0;
 
 
-  for (size_t idx = 0; idx < seqan::length(format_char_string); ++idx)
+  for (size_t idx = 0; idx < format_char_string.size(); ++idx)
   {
 
     if (format_char_string[idx] == FORMAT_SEPARATOR_) {
@@ -233,7 +233,7 @@ bool kgl::ParseVCFGenotype::parseGenotype(const seqan::CharString& format_char_s
 }
 
 
-std::string kgl::ParseVCFGenotype::getFormatString(size_t format_offset, const seqan::CharString &format_char_string) const {
+std::string kgl::ParseVCFGenotype::getFormatString(size_t format_offset, const std::string &format_char_string) const {
 
   if (!parse_result_) {
 
@@ -251,7 +251,7 @@ std::string kgl::ParseVCFGenotype::getFormatString(size_t format_offset, const s
 
   size_t ptr_offset = formatOffsets()[format_offset].first;
   size_t size = formatOffsets()[format_offset].second;
-  const char* char_ptr = &(seqan::toCString(format_char_string)[ptr_offset]);
+  const char* char_ptr = &(format_char_string[ptr_offset]);
 
   std::string format_string(char_ptr, size);
 
@@ -260,7 +260,7 @@ std::string kgl::ParseVCFGenotype::getFormatString(size_t format_offset, const s
 }
 
 
-char kgl::ParseVCFGenotype::getFormatChar(size_t format_offset, const seqan::CharString &format_char_string) const {
+char kgl::ParseVCFGenotype::getFormatChar(size_t format_offset, const std::string &format_char_string) const {
 
   if (!parse_result_) {
 
