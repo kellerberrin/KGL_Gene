@@ -10,7 +10,30 @@
 namespace kgl = kellerberrin::genome;
 
 
+// Process VCF header information.
+void kgl::Pf3kVCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) {
 
+  // Investigate header.
+  ActiveContigMap active_contig_map;
+  if (not ParseVCFMiscImpl::parseVcfHeader(genome_db_ptr_, header_info, active_contig_map, false)) {
+
+    ExecEnv::log().error("Problem parsing header information in VCF file: {}. No variants processed.", vcf_file_name_);
+
+  }
+
+}
+
+void kgl::Pf3kVCFImpl::readParseVCFImpl() {
+
+
+
+  // multi-threaded
+  readVCFFile();
+  // single threaded
+
+
+
+}
 
 // This is multithreaded code called from the reader defined above.
 void kgl::Pf3kVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record) {

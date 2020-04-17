@@ -14,6 +14,7 @@
 #include "kgl_genome_db.h"
 #include "kgl_variant_db.h"
 
+#include "kgl_variant_factory_readvcf_impl.h"
 
 #include <seqan/vcf_io.h>
 
@@ -41,7 +42,7 @@ public:
 
 
   [[nodiscard]] static bool parseVcfHeader( std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                            const seqan::VcfHeader& header,
+                                            const VcfHeaderInfo& header,
                                             ActiveContigMap& active_contig_map,
                                             bool cigar_required);
 

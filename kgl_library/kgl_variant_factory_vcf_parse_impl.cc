@@ -2,7 +2,7 @@
 // Created by kellerberrin on 28/02/18.
 //
 
-
+#include "kel_utility.h"
 #include "kgl_variant_factory_vcf_parse_impl.h"
 
 #include <edlib.h>
@@ -16,22 +16,20 @@ namespace bt = boost;
 
 
 bool kgl::ParseVCFMiscImpl::parseVcfHeader(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                           const seqan::VcfHeader& header,
+                                           const VcfHeaderInfo& header_info,
                                            ActiveContigMap& active_contig_map,
                                            bool cigar_required) {
 
   active_contig_map.clear();
   bool has_cigar = false;
 
-  for (size_t idx = 0; idx != seqan::length(header); ++idx) {
+  for (auto const& [lower_key, value] : header_info) {
 
-    std::string key = seqan::toCString(header[idx].key);
-    std::transform(key.begin(), key.end(), key.begin(), ::toupper);
+    std::string key = Utility::toupper(lower_key);
 
     if (key == HEADER_CONTIG_KEY_) {
 
       std::map<std::string, std::string> item_map;
-      std::string value = seqan::toCString(header[idx].value);
 
       if (not tokenizeVcfHeaderKeyValues(value, item_map)) {
 
@@ -73,7 +71,6 @@ bool kgl::ParseVCFMiscImpl::parseVcfHeader(std::shared_ptr<const GenomeDatabase>
     } else if (key == HEADER_INFO_KEY_) {
 
       std::map<std::string, std::string> item_map;
-      std::string value = seqan::toCString(header[idx].value);
 
       if (not tokenizeVcfHeaderKeyValues(value, item_map)) {
 

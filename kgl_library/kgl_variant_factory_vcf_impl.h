@@ -7,8 +7,11 @@
 
 
 #include "kel_utility.h"
-#include "kgl_variant_factory_vcf.h"
 #include "kgl_variant_factory_readvcf_impl.h"
+#include "kgl_variant_evidence.h"
+#include "kgl_variant_factory_vcf.h"
+#include "kgl_variant_factory_vcf_impl.h"
+#include "kgl_variant_factory_vcf_parse_impl.h"
 
 #include <seqan/vcf_io.h>
 
@@ -22,17 +25,16 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 using ActiveContigMap = std::map<ContigId_t, ContigSize_t>;
 
-class ParseVCFImpl {
+class ParseVCFImpl : public VCFReaderMT {
 
 public:
 
   ParseVCFImpl(std::shared_ptr<UnphasedPopulation> unphased_population_ptr,
                std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-               const std::string& vcf_file_name) : genome_db_ptr_(genome_db_ptr),
+               const std::string& vcf_file_name) : VCFReaderMT(vcf_file_name),
+                                                   genome_db_ptr_(genome_db_ptr),
                                                    vcf_file_name_(vcf_file_name),
                                                    unphased_population_ptr_(unphased_population_ptr){
-
-    reader_ptr_ = std::make_shared<VCFReaderMT<ParseVCFImpl>>(vcf_file_name, this, &ParseVCFImpl::ProcessVCFRecord);
 
     // Pre-initializes the UnphasedPopulation with a list of genomes/contigs.
     // Since some genomes may not have a variant (3D7).
@@ -42,23 +44,13 @@ public:
   }
 
 
-  virtual ~ParseVCFImpl() = default;
+  ~ParseVCFImpl() override = default;
 
-  virtual void readParseVCFImpl();
-
-  virtual void ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record) = 0;
-
-  [[nodiscard]] const std::vector<std::string>& getGenomeNames() const { return reader_ptr_->getGenomeNames(); }
 
 protected:
 
   constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 10000;
 
-  size_t vcf_record_count_;
-  size_t vcf_record_ignored_;
-  size_t vcf_record_error_;
-  size_t vcf_record_rejected_;
-  size_t vcf_variant_count_;
 
   constexpr static const char* HEADER_CONTIG_KEY_ = "CONTIG";
   constexpr static const char* ID_KEY_ = "ID";
@@ -73,13 +65,22 @@ protected:
 
   std::shared_ptr<const GenomeDatabase> genome_db_ptr_; // read access only.
   const std::string vcf_file_name_;
-  std::shared_ptr<VCFReaderMT<ParseVCFImpl>> reader_ptr_;
+
+  [[nodiscard]] bool parseCigarItems( const std::string& genome_name,
+                                      std::shared_ptr<const ContigFeatures> contig_ptr,
+                                      const std::vector<CigarEditItem>& parsed_cigar,
+                                      ContigOffset_t contig_offset,
+                                      const std::string& reference,
+                                      const std::string& alternate,
+                                      std::shared_ptr<const VariantEvidence> evidence_ptr,
+                                      size_t& record_variants);
 
 private:
 
   mutable std::mutex mutex_;  // mutex to lock the UnphasedPopulation structure when inserting variants.
   // This object is write accessed by multiple threads, it MUST BE mutex guarded for any access.
   std::shared_ptr<UnphasedPopulation> unphased_population_ptr_;   // Un-phased variants.
+
 
 };
 

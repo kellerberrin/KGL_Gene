@@ -9,27 +9,30 @@
 
 #include "kel_utility.h"
 #include "kgl_variant_factory_vcf.h"
+#include "kgl_variant_factory_vcf_impl.h"
 #include "kgl_variant_factory_record_vcf_impl.h"
-#include "kgl_variant_factory_vcf_cigar.h"
 
 
 
 namespace kellerberrin::genome {   //  organization level namespace
 
 
-class Pf3kVCFImpl : public ParseCigar {
+class Pf3kVCFImpl : public ParseVCFImpl {
 
 public:
 
   Pf3kVCFImpl(std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
               std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-              const std::string &vcf_file_name) : ParseCigar(vcf_population_ptr, genome_db_ptr, vcf_file_name) {
+              const std::string &vcf_file_name) : ParseVCFImpl(vcf_population_ptr, genome_db_ptr, vcf_file_name) {
 
   }
   ~Pf3kVCFImpl() override = default;
 
   void ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record) override;
 
+  void processVCFHeader(const VcfHeaderInfo& header_info) override;
+
+  void readParseVCFImpl();
 
 private:
 
@@ -57,7 +60,9 @@ private:
   constexpr static const double MIN_VQSLOD_QUALITY_ = 5.0;
   constexpr static const double MIN_GQ_QUALITY_ = 10.0;
 
+// Progress counters.
 
+  size_t vcf_variant_count_{0};
   std::atomic<uint64_t> record_count_{0};
   size_t variant_count_{0};
 

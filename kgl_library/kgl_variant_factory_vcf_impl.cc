@@ -5,45 +5,10 @@
 
 #include "kgl_variant_factory_vcf_impl.h"
 #include "kgl_variant_factory_vcf_parse_impl.h"
-
-#include <boost/tokenizer.hpp>
-#include <boost/algorithm/string.hpp>
+#include "kgl_variant_vcf.h"
 
 
 namespace kgl = kellerberrin::genome;
-namespace bt = boost;
-
-
-void kgl::ParseVCFImpl::readParseVCFImpl() {
-
-
-  // Process records.
-  // Copy the file record by record.
-  vcf_record_count_ = 0;
-  vcf_record_error_ = 0;
-  vcf_record_ignored_ = 0;
-  vcf_record_rejected_ = 0;
-  vcf_variant_count_ = 0;
-
-
-  // Investigate header.
-  ActiveContigMap active_contig_map;
-  if (not ParseVCFMiscImpl::parseVcfHeader(genome_db_ptr_, reader_ptr_->readHeader(), active_contig_map, false)) {
-
-    ExecEnv::log().error("Problem parsing header information in VCF file: {}. No variants processed.", vcf_file_name_);
-
-  }
-
-  // multi-threaded
-  reader_ptr_->readVCFFile();
-  // single threaded
-
-  ExecEnv::log().info("VCF file Records; Read: {}, Rejected: {}, Ignored: {} (no matching contig), Error: {}",
-                      vcf_record_count_, vcf_record_rejected_, vcf_record_ignored_, vcf_record_error_);
-
-
-
-}
 
 
 
@@ -105,6 +70,32 @@ void kgl::ParseVCFImpl::setupPopulationStructure(std::shared_ptr<const GenomeDat
     }
 
   }
+
+}
+
+bool kgl::ParseVCFImpl::parseCigarItems(const std::string& genome_name,
+                                      std::shared_ptr<const ContigFeatures> contig_ptr,
+                                      const std::vector<CigarEditItem>&, // parsed_cigar,  // Cigar not used
+                                      ContigOffset_t contig_offset,
+                                      const std::string& reference_text,
+                                      const std::string& alternate_text,
+                                      std::shared_ptr<const VariantEvidence> evidence_ptr,
+                                      size_t& record_variants)  {
+
+  StringDNA5 reference_str(reference_text);
+  StringDNA5 alternate_str(alternate_text);
+
+  std::shared_ptr<const Variant> variant_ptr(std::make_shared<VCFVariant>(genome_name,
+                                                                          contig_ptr->contigId(),
+                                                                          VariantSequence::UNPHASED,
+                                                                          contig_offset,
+                                                                          evidence_ptr,
+                                                                          std::move(reference_str),
+                                                                          std::move(alternate_str)));
+
+  record_variants = addThreadSafeGenomeVariant(variant_ptr);
+
+  return true;
 
 }
 

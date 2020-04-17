@@ -33,7 +33,7 @@ public:
   Strom() { clear(); }
   ~Strom() = default;
 
-  void parseCommandLine(int argc, const char **argv);
+  bool parseCommandLine(int argc, const char **argv);
   void executeApp();
 
   static constexpr const char* VERSION = "0.1";

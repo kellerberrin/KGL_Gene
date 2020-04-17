@@ -45,7 +45,7 @@ void kpl::Strom::clear() {
 }
 
 
-void kpl::Strom::parseCommandLine(int argc, const char **argv) {
+bool kpl::Strom::parseCommandLine(int argc, const char **argv) {
 
   std::vector<std::string> partition_statefreq;
   std::vector<std::string> partition_rmatrix;
@@ -162,6 +162,7 @@ void kpl::Strom::parseCommandLine(int argc, const char **argv) {
 
   ExecEnv::createLogger(MODULE_NAME, "kpl.log", 1000, 1000);
 
+  return true;
 
 }
 

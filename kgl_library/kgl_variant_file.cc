@@ -8,7 +8,6 @@
 #include <fstream>
 
 #include <boost/tokenizer.hpp>
-#include <boost/algorithm/string.hpp>
 
 namespace bt = boost;
 namespace kgl = kellerberrin::genome;
@@ -46,8 +45,6 @@ bool kgl::VCFParseHeader::parseHeader(const std::string& vcf_file_name) {
 
         std::string contig_string = Utility::trimAllWhiteSpace(record_str);
 
-        ExecEnv::log().info("**VCF Contig Header: {}", record_str);
-
       }
 
       std::string line_prefix = record_str.substr(0, FIELD_NAME_FRAGMENT_LENGTH_);
@@ -69,7 +66,7 @@ bool kgl::VCFParseHeader::parseHeader(const std::string& vcf_file_name) {
 
         }
 
-        break;
+        break; // #CHROM is the last field in the VCF header so stop processing.
 
       }
 
@@ -81,11 +78,11 @@ bool kgl::VCFParseHeader::parseHeader(const std::string& vcf_file_name) {
 
     if (not found_header) {
 
-      ExecEnv::log().error("VCF Field Names Not Found");
+      ExecEnv::log().error("VCF Genome Names Not Found");
 
     } else {
 
-      ExecEnv::log().info("{} Genomes in VCF file {}", vcf_genomes_.size(), vcf_file_name);
+      ExecEnv::log().info("{} Genomes in VCF Header {}, Header lines processed: {}", vcf_genomes_.size(), vcf_file_name, counter);
 
     }
 
@@ -93,7 +90,7 @@ bool kgl::VCFParseHeader::parseHeader(const std::string& vcf_file_name) {
   }
   catch (std::exception const &e) {
 
-    ExecEnv::log().critical("VVCFParseHeader::parseHeader; VCF file: {}, unexpected I/O exception: {}", vcf_file_name, e.what());
+    ExecEnv::log().critical("VCFParseHeader::parseHeader; VCF file: {}, unexpected I/O exception: {}", vcf_file_name, e.what());
 
   }
 
@@ -102,7 +99,6 @@ bool kgl::VCFParseHeader::parseHeader(const std::string& vcf_file_name) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 
 kgl::VcfRecord::VcfRecord(seqan::VcfRecord&& vcf_record, ContigId_t&& contig) : contig_id(contig) {
@@ -129,27 +125,104 @@ kgl::VcfRecord::VcfRecord(seqan::VcfRecord&& vcf_record, ContigId_t&& contig) : 
 
 }
 
-/*
-kgl::VcfRecord::VcfRecord(const seqan::VcfRecord& vcf_record, const ContigId_t& contig) : contig_id(contig) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  offset = vcf_record.beginPos;
-  id = seqan::toCString(vcf_record.id);
-  ref = seqan::toCString(vcf_record.ref);
-  alt = seqan::toCString(vcf_record.alt);
-  qual = vcf_record.qual;
-  filter = seqan::toCString(vcf_record.filter);
-  info = seqan::toCString(vcf_record.info);
-  format = seqan::toCString(vcf_record.format);
+kgl::ContigId_t kgl::SeqanVCFIO::getContig(int32_t contig_idx) const {
 
-  auto begin = seqan::begin(vcf_record.genotypeInfos);
-  auto end = seqan::end(vcf_record.genotypeInfos);
+  std::string contig_id = seqan::toCString(contigNames(context(*vcfIn_ptr_))[contig_idx]);
 
-  for (auto it = begin; it !=end; ++it) {
+  return contig_id;
 
-    std::string genotype = seqan::toCString(*it);
-    genotypeInfos.push_back(std::move(genotype));
+}
+
+
+void kgl::SeqanVCFIO::commenceIO() {
+
+  raw_io_thread_ptr_ = std::make_unique<std::thread>(&SeqanVCFIO::rawVCFIO, this);
+  vcf_record_thread_ptr_ = std::make_unique<std::thread>(&SeqanVCFIO::enqueueVCFRecord, this);
+
+}
+
+
+
+void kgl::SeqanVCFIO::rawVCFIO() {
+
+  try {
+
+    std::unique_ptr<seqan::VcfRecord> vcf_record_ptr;
+    while (true) {
+
+      if (VCFRecordEOF()) {
+
+        raw_io_queue_.push(std::unique_ptr<seqan::VcfRecord>(nullptr));
+        break;
+
+      }
+
+      vcf_record_ptr = std::make_unique<seqan::VcfRecord>();
+      seqan::readRecord(*vcf_record_ptr, *vcfIn_ptr_);
+      raw_io_queue_.push(std::move(vcf_record_ptr));
+
+    }
+
+  }
+  catch (std::exception const &e) {
+
+    ExecEnv::log().critical("VCF file unexpected Seqan I/O exception: {}", e.what());
 
   }
 
 }
-*/
+
+
+
+void kgl::SeqanVCFIO::enqueueVCFRecord() {
+
+  std::unique_ptr<seqan::VcfRecord> vcf_record_ptr;
+  while (true) {
+
+    raw_io_queue_.waitAndPop(vcf_record_ptr);
+
+    if (not vcf_record_ptr) {
+
+      vcf_record_queue_.push(VcfRecord::EOF_RECORD());
+      break;
+
+    }
+
+    vcf_record_queue_.push(std::make_unique<VcfRecord>(std::move(*vcf_record_ptr), getContig(vcf_record_ptr->rID)));
+
+  }
+
+}
+
+
+std::unique_ptr<kgl::VcfRecord> kgl::SeqanVCFIO::readVCFRecord() {
+
+  std::unique_ptr<kgl::VcfRecord> vcf_record;
+  vcf_record_queue_.waitAndPop(vcf_record);
+  return vcf_record;
+
+}
+
+
+bool kgl::SeqanVCFIO::VCFRecordEOF() { return seqan::atEnd(*vcfIn_ptr_); }
+
+kgl::VcfHeaderInfo kgl::SeqanVCFIO::VCFReadHeader() {
+
+  seqan::VcfHeader vcf_header;
+  seqan::readHeader(vcf_header, *vcfIn_ptr_);
+
+  VcfHeaderInfo header_info;
+  for (size_t idx = 0; idx != seqan::length(vcf_header); ++idx) {
+
+    std::string key = seqan::toCString(vcf_header[idx].key);
+    std::string value = seqan::toCString(vcf_header[idx].value);
+    header_info.push_back(std::pair(key,value));
+
+  }
+
+  return header_info;
+
+}
+
