@@ -8,9 +8,37 @@
 #include <fstream>
 
 #include <boost/tokenizer.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+
 
 namespace bt = boost;
+namespace bio = boost::iostreams;
 namespace kgl = kellerberrin::genome;
+
+
+
+/*
+#include <iostream>
+#include <fstream>
+int main()
+{
+  std::ifstream file("file.gz", std::ios_base::in | std::ios_base::binary);
+  try {
+    boost::iostreams::filtering_istream in;
+    in.push(boost::iostreams::gzip_decompressor());
+    in.push(file);
+    for(std::string str; std::getline(in, str); )
+    {
+      std::cout << "Processed line " << str << '\n';
+    }
+  }
+  catch(const boost::iostreams::gzip_error& e) {
+    std::cout << e.what() << '\n';
+  }
+}
+*/
+
 
 
 
@@ -98,131 +126,4 @@ bool kgl::VCFParseHeader::parseHeader(const std::string& vcf_file_name) {
 
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-kgl::VcfRecord::VcfRecord(seqan::VcfRecord&& vcf_record, ContigId_t&& contig) : contig_id(contig) {
-
-  offset = vcf_record.beginPos;
-  seqan::move(id, vcf_record.id);
-  seqan::move(ref, vcf_record.ref);
-  seqan::move(alt, vcf_record.alt);
-  qual = vcf_record.qual;
-  seqan::move(filter, vcf_record.filter);
-  seqan::move(info, vcf_record.info);
-  seqan::move(format, vcf_record.format);
-
-  auto begin = seqan::begin(vcf_record.genotypeInfos);
-  auto end = seqan::end(vcf_record.genotypeInfos);
-
-  for (auto it = begin; it !=end; ++it) {
-
-    std::string genotype;
-    seqan::move(genotype, *it);
-    genotypeInfos.push_back(std::move(genotype));
-
-  }
-
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-kgl::ContigId_t kgl::SeqanVCFIO::getContig(int32_t contig_idx) const {
-
-  std::string contig_id = seqan::toCString(contigNames(context(*vcfIn_ptr_))[contig_idx]);
-
-  return contig_id;
-
-}
-
-
-void kgl::SeqanVCFIO::commenceIO() {
-
-  raw_io_thread_ptr_ = std::make_unique<std::thread>(&SeqanVCFIO::rawVCFIO, this);
-  vcf_record_thread_ptr_ = std::make_unique<std::thread>(&SeqanVCFIO::enqueueVCFRecord, this);
-
-}
-
-
-
-void kgl::SeqanVCFIO::rawVCFIO() {
-
-  try {
-
-    std::unique_ptr<seqan::VcfRecord> vcf_record_ptr;
-    while (true) {
-
-      if (VCFRecordEOF()) {
-
-        raw_io_queue_.push(std::unique_ptr<seqan::VcfRecord>(nullptr));
-        break;
-
-      }
-
-      vcf_record_ptr = std::make_unique<seqan::VcfRecord>();
-      seqan::readRecord(*vcf_record_ptr, *vcfIn_ptr_);
-      raw_io_queue_.push(std::move(vcf_record_ptr));
-
-    }
-
-  }
-  catch (std::exception const &e) {
-
-    ExecEnv::log().critical("VCF file unexpected Seqan I/O exception: {}", e.what());
-
-  }
-
-}
-
-
-
-void kgl::SeqanVCFIO::enqueueVCFRecord() {
-
-  std::unique_ptr<seqan::VcfRecord> vcf_record_ptr;
-  while (true) {
-
-    raw_io_queue_.waitAndPop(vcf_record_ptr);
-
-    if (not vcf_record_ptr) {
-
-      vcf_record_queue_.push(VcfRecord::EOF_RECORD());
-      break;
-
-    }
-
-    vcf_record_queue_.push(std::make_unique<VcfRecord>(std::move(*vcf_record_ptr), getContig(vcf_record_ptr->rID)));
-
-  }
-
-}
-
-
-std::unique_ptr<kgl::VcfRecord> kgl::SeqanVCFIO::readVCFRecord() {
-
-  std::unique_ptr<kgl::VcfRecord> vcf_record;
-  vcf_record_queue_.waitAndPop(vcf_record);
-  return vcf_record;
-
-}
-
-
-bool kgl::SeqanVCFIO::VCFRecordEOF() { return seqan::atEnd(*vcfIn_ptr_); }
-
-kgl::VcfHeaderInfo kgl::SeqanVCFIO::VCFReadHeader() {
-
-  seqan::VcfHeader vcf_header;
-  seqan::readHeader(vcf_header, *vcfIn_ptr_);
-
-  VcfHeaderInfo header_info;
-  for (size_t idx = 0; idx != seqan::length(vcf_header); ++idx) {
-
-    std::string key = seqan::toCString(vcf_header[idx].key);
-    std::string value = seqan::toCString(vcf_header[idx].value);
-    header_info.push_back(std::pair(key,value));
-
-  }
-
-  return header_info;
-
-}
 

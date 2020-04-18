@@ -26,8 +26,11 @@ class VCFReaderMT {
 
 public:
 
-  explicit VCFReaderMT(const std::string& vcf_file_name) : producer_consumer_queue_(HIGH_TIDE_, LOW_TIDE_),
-                                                           vcf_io_ptr_(std::make_unique<SeqanVCFIO>(vcf_file_name)) {}
+  explicit VCFReaderMT(const std::string& vcf_file_name) : producer_consumer_queue_(HIGH_TIDE_, LOW_TIDE_) {
+
+    vcf_io_ptr_ = std::make_unique<FileVCFIO>(vcf_file_name);
+
+  }
 
   virtual ~VCFReaderMT() = default;
 

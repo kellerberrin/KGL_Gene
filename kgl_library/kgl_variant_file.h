@@ -12,8 +12,6 @@
 #include "kel_mt_queue.h"
 #include "kgl_genome_types.h"
 
-#include <seqan/vcf_io.h>
-
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
@@ -60,7 +58,6 @@ public:
 
   // Default constructor.
   VcfRecord() : offset(INVALID_POS), qual(MISSING_QUAL) {}
-  VcfRecord(seqan::VcfRecord&& vcf_record, ContigId_t&& contig_id);
 
   static std::unique_ptr<VcfRecord> EOF_RECORD() { return std::unique_ptr<VcfRecord>(); }
 
@@ -95,7 +92,7 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Actual IO object )(multi-threaded)
+// Virtual IO object (multi-threaded)
 
 
 class BaseVCFIO {
@@ -131,24 +128,15 @@ private:
 };
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Seqan PIMPL facade IO object (multi-threaded)
 
 class SeqanVCFIO : public BaseVCFIO {
 
 public:
 
-  SeqanVCFIO(const SeqanVCFIO&) = delete;
-  explicit SeqanVCFIO(const std::string& vcf_file_name) : BaseVCFIO(vcf_file_name),
-                                                          raw_io_queue_(HIGH_TIDE_, LOW_TIDE_),
-                                                          vcf_record_queue_(HIGH_TIDE_, LOW_TIDE_),
-                                                          vcfIn_ptr_(std::make_unique<seqan::VcfFileIn>(seqan::toCString(vcf_file_name)))
-                                                          {}
-  ~SeqanVCFIO() override {
-
-    raw_io_thread_ptr_->join();
-    vcf_record_thread_ptr_->join();
-
-  }
-
+  explicit SeqanVCFIO(const std::string& vcf_file_name);
+  ~SeqanVCFIO() override;
 
 
   void commenceIO() override; // Begin reading records, spawns threads.
@@ -158,25 +146,67 @@ public:
   [[nodiscard]] VcfHeaderInfo VCFReadHeader() override;
 
 
+private:
+
+  class SeqanVCFIOImpl;       // Forward declaration of seqan vcf read implementation class
+  std::unique_ptr<SeqanVCFIOImpl> seqan_vcf_impl_ptr_;    // Seqan VCF parser PIMPL
+
+};
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Uncompressed IO object (multi-threaded) - uses standard File IO functions to parse an uncompressed VCF file.
+
+class FileVCFIO : public BaseVCFIO {
+
+public:
+
+  explicit FileVCFIO(const std::string& vcf_file_name) : BaseVCFIO(vcf_file_name),
+                                                         raw_io_queue_(HIGH_TIDE_, LOW_TIDE_),
+                                                         vcf_record_queue_(HIGH_TIDE_, LOW_TIDE_) {}
+  ~FileVCFIO() override {
+
+    raw_io_thread_ptr_->join();
+    for (auto& thread : vcf_record_thread_vec_) {
+
+      thread.join();
+
+    }
+
+  }
+
+
+  void commenceIO() override; // Begin reading records, spawns threads.
+
+  [[nodiscard]] std::unique_ptr<VcfRecord> readVCFRecord() override;
+
+  [[nodiscard]] VcfHeaderInfo VCFReadHeader() override;
+
 
 private:
 
-  BoundedMtQueue<std::unique_ptr<seqan::VcfRecord>> raw_io_queue_; // The raw IO queue
+  BoundedMtQueue<std::unique_ptr<std::string>> raw_io_queue_; // The raw IO queue
   BoundedMtQueue<std::unique_ptr<VcfRecord>> vcf_record_queue_; // Parsed VCF record queue
-  std::unique_ptr<seqan::VcfFileIn> vcfIn_ptr_;
-  VCFParseHeader parseheader_;    // Get genome and contig information.
+
   std::unique_ptr<std::thread> raw_io_thread_ptr_;
-  std::unique_ptr<std::thread> vcf_record_thread_ptr_;
+  std::vector<std::thread> vcf_record_thread_vec_;
 
-  static constexpr const long HIGH_TIDE_{100000};          // Maximum BoundedMtQueue size
-  static constexpr const long LOW_TIDE_{10000};            // Low water mark to begin queueing VCF records
+  static constexpr const long HIGH_TIDE_{10000};          // Maximum BoundedMtQueue size
+  static constexpr const long LOW_TIDE_{1000};            // Low water mark to begin queueing VCF records
+  static constexpr const long PARSER_THREADS_{3};         // Threads parsing into vcf_records.
+  static constexpr const char HEADER_CHAR_{'#'};          // If first char start with '*' then a header record.
+  static constexpr const size_t MINIMUM_VCF_FIELDS_{8};   // At least 8 fields, any others are genotype fields (header specified).
+  static constexpr const char* VCF_FIELD_DELIMITER_{"\t"};   // VCF Field separator.
 
-  [[nodiscard]] ContigId_t getContig(int32_t contig_idx) const;
-  bool VCFRecordEOF();
   void rawVCFIO(); // enqueue seqan::vcf records.
   void enqueueVCFRecord(); // enqueue vcf_records.
+  bool parseVCFRecord(const std::unique_ptr<std::string>& line_record_ptr, const std::unique_ptr<VcfRecord>& vcf_record_ptr);
+  bool moveToVcfRecord(std::vector<std::string>& fields, VcfRecord& vcf_record);
 
-  };
+};
+
+
+
 
 
 

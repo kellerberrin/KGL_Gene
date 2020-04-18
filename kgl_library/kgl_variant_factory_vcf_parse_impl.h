@@ -58,6 +58,9 @@ public:
 // tokenize a string
   [[nodiscard]] static bool tokenize(const std::string& parse_text, const std::string& separator_text, std::vector<std::string>& item_vector);
 
+// tokenize a string using move semantics on parse text.
+  [[nodiscard]] static bool tokenize(std::string&& parse_text, const std::string& separator_text, std::vector<std::string>& item_vector);
+
   // Generate a CIGAR from two sequences.
   [[nodiscard]] static std::string generateCigar(const std::string& reference, const std::string& alternate);
 
