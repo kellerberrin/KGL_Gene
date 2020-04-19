@@ -58,7 +58,7 @@ void kgl::VCFReaderMT::readVCFFile() {
 
 }
 
-// Read the SAM file and queue the records.
+// Read the VCF file and queue the records.
 void kgl::VCFReaderMT::VCFProducer() {
 
   try {

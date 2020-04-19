@@ -24,7 +24,7 @@ set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME ON)
 include_directories(${Boost_INCLUDE_DIRS})
-find_package( Boost COMPONENTS system filesystem timer chrono program_options REQUIRED )
+find_package( Boost COMPONENTS system filesystem timer chrono program_options iostreams REQUIRED )
 
 # Debug g++
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fconcepts -ggdb -DBOOST_MATH_DISABLE_FLOAT128")
@@ -165,11 +165,10 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_genome_contig_aux.h
         kgl_library/kgl_phylogenetic_tree.cc
         kgl_library/kgl_phylogenetic_tree.h
-        kgl_library/kgl_variant_file.cc
         kgl_library/kgl_variant_file.h
         kgl_library/kgl_variant_factory_readvcf_impl.cc
         kgl_library/kgl_variant_file_impl.cc
-        kgl_library/kgl_variant_file_seqan_impl.cc)
+        kgl_library/kgl_variant_file_seqan_impl.cc kgl_library/kgl_variant_file_impl.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )

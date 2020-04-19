@@ -15,7 +15,7 @@
 #include "kel_mt_queue.h"
 #include "kel_exec_env.h"
 
-#include "kgl_variant_file.h"
+#include "kgl_variant_file_impl.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

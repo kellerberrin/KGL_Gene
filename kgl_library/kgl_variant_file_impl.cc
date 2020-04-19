@@ -6,27 +6,58 @@
 #include <kel_exec_env.h>
 #include "kel_mt_queue.h"
 #include "kgl_genome_types.h"
-#include "kgl_variant_file.h"
+#include "kgl_variant_file_impl.h"
 #include "kgl_variant_factory_vcf_parse_impl.h"
 
 #include <string>
 #include <vector>
 #include <memory>
 #include <thread>
-#include <fstream>
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace kgl = kellerberrin::genome;
 
 
+namespace kellerberrin::genome {   //  organization::project level namespace
+
+
+} // end namespace
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+kgl::FileVCFIO::~FileVCFIO() {
 
+  if (raw_io_thread_ptr_) raw_io_thread_ptr_->join();
+
+  for (auto& thread : vcf_record_thread_vec_) {
+
+    thread.join();
+
+  }
+
+}
 
 void kgl::FileVCFIO::commenceIO() {
 
-  raw_io_thread_ptr_ = std::make_unique<std::thread>(&FileVCFIO::rawVCFIO, this);
+  std::string file_ext = Utility::toupper(Utility::fileExtension(fileName()));
+
+  if (file_ext == VCF_FILE_EXTENSTION_) {
+
+    parseheader_.parseHeader<TextStreamIO>(fileName());
+    raw_io_thread_ptr_ = std::make_unique<std::thread>(&FileVCFIO::rawVCFIO<TextStreamIO>, this);
+
+  } else if (file_ext == GZ_FILE_EXTENSTION_) {
+
+    parseheader_.parseHeader<GZStreamIO>(fileName());
+    raw_io_thread_ptr_ = std::make_unique<std::thread>(&FileVCFIO::rawVCFIO<GZStreamIO>, this);
+
+  } else {
+
+    ExecEnv::log().error("FileVCFIO; Invalid file name: {}", fileName());
+    ExecEnv::log().critical("FileVCFIO; Unsupported file type: '{}' for variant calling. Must be VCF or GZ ('.vcf' or '.gz')", file_ext);
+
+  }
 
   for(size_t i = 0; i < PARSER_THREADS_; ++i) {
 
@@ -34,69 +65,8 @@ void kgl::FileVCFIO::commenceIO() {
 
   }
 
-
 }
 
-
-
-void kgl::FileVCFIO::rawVCFIO() {
-
-  try {
-
-    std::ifstream vcf_file;
-
-    // Open input file.
-
-    vcf_file.open(fileName());
-
-    if (not vcf_file.good()) {
-
-      ExecEnv::log().critical("I/O error; could not open VCF file: {}", fileName());
-
-    }
-
-    while (true) {
-
-      std::unique_ptr<std::string> line_record_ptr = std::make_unique<std::string>();
-      if (std::getline(vcf_file, *line_record_ptr).eof()) {
-
-        // Enqueue the null eof indicator for each consumer thread.
-        for(size_t i = 0; i < PARSER_THREADS_; ++i) {
-
-          raw_io_queue_.push(std::unique_ptr<std::string>(nullptr));
-
-        }
-        break;
-
-      }
-
-      // Check we have read a string.
-      if (line_record_ptr->empty()) {
-
-        ExecEnv::log().error("Empty VCF record string returned");
-        continue;
-
-      }
-
-      // Skip header records.
-      if ((*line_record_ptr)[0] == HEADER_CHAR_) {
-
-        continue;
-
-      }
-
-      raw_io_queue_.push(std::move(line_record_ptr));
-
-    }
-
-  }
-  catch (std::exception const &e) {
-
-    ExecEnv::log().critical("VCF file unexpected Seqan I/O exception: {}", e.what());
-
-  }
-
-}
 
 
 void kgl::FileVCFIO::enqueueVCFRecord() {
@@ -210,7 +180,7 @@ bool kgl::FileVCFIO::moveToVcfRecord(std::vector<std::string>& fields, VcfRecord
   }
   catch(const std::exception& e) {
 
-    ExecEnv::log().error("Problem parsing record for VCF file: {}, Exception: {} thrown record ignored", e.what(), fileName());
+    ExecEnv::log().error("Problem parsing record for VCF file: {}, Exception: {} thrown; VCF record ignored", e.what(), fileName());
     return false;
 
   }

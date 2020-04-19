@@ -9,7 +9,7 @@
 
 #include "kel_mt_queue.h"
 #include "kgl_genome_types.h"
-#include "kgl_variant_file.h"
+#include "kgl_variant_file_impl.h"
 
 #include <seqan/vcf_io.h>
 
@@ -26,7 +26,8 @@ public:
   explicit SeqanVCFIOImpl(const std::string& vcf_file_name) : raw_io_queue_(HIGH_TIDE_, LOW_TIDE_),
                                                               vcf_record_queue_(HIGH_TIDE_, LOW_TIDE_),
                                                               vcfIn_ptr_(std::make_unique<seqan::VcfFileIn>(seqan::toCString(vcf_file_name)))
-  {}
+  {
+  }
   ~SeqanVCFIOImpl() {
 
     raw_io_thread_ptr_->join();
@@ -208,14 +209,15 @@ kgl::VcfHeaderInfo kgl::SeqanVCFIO::SeqanVCFIOImpl::VCFReadHeader() {
 
 
 kgl::SeqanVCFIO::SeqanVCFIO(const std::string& vcf_file_name) : BaseVCFIO(vcf_file_name),
-                                                                seqan_vcf_impl_ptr_(std::make_unique<kgl::SeqanVCFIO::SeqanVCFIOImpl>(vcf_file_name))  {}
+                                                                seqan_vcf_impl_ptr_(std::make_unique<kgl::SeqanVCFIO::SeqanVCFIOImpl>(vcf_file_name)) {}
 kgl::SeqanVCFIO::~SeqanVCFIO() {}  // DO NOT DELETE or USE DEFAULT. Required because of incomplete pimpl type.
 
 // Functionality passed to the implementation object (defined above).
 
-// Initialize and begin reading records, spawns threads
+// Initialize and begin reading records, gets header info and spawns reader threads
 void kgl::SeqanVCFIO::commenceIO() {
 
+  parseheader_.parseHeader<TextStreamIO>(fileName());
   seqan_vcf_impl_ptr_->commenceIO();
 
 }

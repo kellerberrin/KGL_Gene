@@ -14,8 +14,6 @@
 #include "kgl_genome_db.h"
 #include "kgl_variant_db.h"
 
-#include "kgl_variant_factory_readvcf_impl.h"
-
 #include <seqan/vcf_io.h>
 
 
@@ -25,6 +23,10 @@ namespace kellerberrin::genome {   //  organization level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // VCF parser. Miscellaneous parser functions.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Structure to return VCF header information as a vector of pair<key, value>
+using VcfHeaderInfo = std::vector<std::pair<std::string, std::string>>;
+
 // Returned from the cigar functions.
 enum class CigarEditType : char { UNCHANGED = 'M', INSERT = 'I', DELETE = 'D', CHANGED = 'X'};
 using CigarEditItem = std::pair<size_t, CigarEditType>; // Used to specify edit as vector '1M,1X,3D,3I'.

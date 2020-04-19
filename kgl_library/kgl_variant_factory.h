@@ -35,7 +35,6 @@ public:
 
 private:
 
-  constexpr static const char* VCF_FILE_EXTENSTION_ = ".VCF";
 
 };
 

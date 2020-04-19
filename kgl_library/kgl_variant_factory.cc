@@ -16,23 +16,12 @@ void kgl::VariantFactory::readVCFVariants(std::shared_ptr<const GenomeDatabase> 
                                           std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
                                           const std::string& variant_file_name) const {
 
-  std::string file_ext = Utility::fileExtension(variant_file_name);
-  std::transform(file_ext.begin(), file_ext.end(), file_ext.begin(), ::toupper); // convert to UC for robust comparison
 
-  if (file_ext == VCF_FILE_EXTENSTION_) {
+  ExecEnv::log().info("Processing VCF file: {}", variant_file_name);
 
-    ExecEnv::log().info("Processing VCF file: {}", variant_file_name);
+  if (not VcfFactory().readParseVCFVariants(vcf_population_ptr, genome_db_ptr, variant_file_name)) {
 
-    if (not VcfFactory().readParseVCFVariants(vcf_population_ptr, genome_db_ptr, variant_file_name)) {
-
-      ExecEnv::log().error("Problem parsing VCF file: {}", variant_file_name);
-
-    }
-
-  } else {
-
-    ExecEnv::log().error("Invalid file name: {}", variant_file_name);
-    ExecEnv::log().critical("Unsupported file type: '{}' for variant calling. Must be VCF ('.vcf')", file_ext);
+    ExecEnv::log().error("Problem parsing VCF file: {}", variant_file_name);
 
   }
 

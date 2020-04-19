@@ -5,49 +5,18 @@
 #ifndef KGL_VARIANT_FILE_H
 #define KGL_VARIANT_FILE_H
 
+#include "kgl_genome_types.h"
+#include "kgl_variant_factory_vcf_parse_impl.h"
+
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
 
 #include <string>
 #include <vector>
+#include <fstream>
 
-#include "kel_mt_queue.h"
-#include "kgl_genome_types.h"
-
-
+namespace bio = boost::iostreams;
 namespace kellerberrin::genome {   //  organization::project level namespace
-
-
-// Structure to return VCF header information as a vector of pair<key, value>
-using VcfHeaderInfo = std::vector<std::pair<std::string, std::string>>;
-
-// Parses the VCF header for Contig and Genome infromation.
-
-class VCFParseHeader {
-
-public:
-
-  VCFParseHeader() = default;
-
-  ~VCFParseHeader() = default;
-
-  bool parseHeader(const std::string& file_name);
-
-  [[nodiscard]] const std::vector<std::string>& getGenomes() const { return vcf_genomes_; }
-
-private:
-
-  std::vector<std::string> vcf_genomes_;                // Field (genome) names for each VCF record
-
-  // Parser constants.
-  static constexpr const char* CONTIG_NAME_FRAGMENT_{"##contig"};
-  static constexpr const size_t CONTIG_NAME_FRAGMENT_LENGTH_{8};
-  static constexpr const char* CONTIG_INFO_START_{"=<"};
-  static constexpr const char* CONTIG_INFO_END_{">"};
-  static constexpr const char* FIELD_NAME_FRAGMENT_{"#CHROM"};
-  static constexpr const size_t FIELD_NAME_FRAGMENT_LENGTH_{6};
-  static constexpr const size_t SKIP_FIELD_NAMES_{9};  // Skip the fixed fields to the Genome names.
-
-
-};
 
 // Basic VCF Record LIne.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -91,127 +60,216 @@ private:
 
 };
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Virtual IO object (multi-threaded)
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Plug in raw IO objects to read text and gzipped files.
 
-
-class BaseVCFIO {
+class TextStreamIO {
 
 public:
 
-  BaseVCFIO(const BaseVCFIO&) = delete;
-  explicit BaseVCFIO(std::string vcf_file_name) : vcf_file_name_(vcf_file_name) {
+  TextStreamIO() = default;
+  TextStreamIO(const TextStreamIO &) = delete;
+  ~TextStreamIO() = default;
 
-    parseFieldNames(vcf_file_name_);
+  bool open(const std::string &file_name);
+  bool readLine(std::string &text_line) { return not std::getline(file_, text_line).eof(); }
+
+private:
+
+  std::ifstream file_;
+
+};
+
+
+inline bool TextStreamIO::open(const std::string &file_name) {
+
+  try {
+
+    // Open input file.
+
+    file_.open(file_name);
+    if (not file_.good()) {
+
+      ExecEnv::log().error("TextStreamIO; I/O error; could not open file: {}", file_name);
+      return false;
+
+    }
+  }
+  catch (std::exception const &e) {
+
+    ExecEnv::log().error("TextStreamIO; Opening file: {} unexpected I/O exception: {}", file_name, e.what());
+    return false;
 
   }
-  virtual ~BaseVCFIO() = default;
 
+  return true;
 
-  virtual void commenceIO() = 0;
-
-  [[nodiscard]] virtual std::unique_ptr<VcfRecord> readVCFRecord() = 0;
-
-  [[nodiscard]] virtual VcfHeaderInfo VCFReadHeader() = 0;
-
-  [[nodiscard]] const std::vector<std::string>& getGenomeNames() const { return parseheader_.getGenomes(); }
-
-  [[nodiscard]] const std::string& fileName() const { return vcf_file_name_; }
-
-private:
-
-  std::string vcf_file_name_;
-  VCFParseHeader parseheader_;    // Get genome and contig information.
-
-  void parseFieldNames(const std::string& vcf_file_name) { parseheader_.parseHeader(vcf_file_name); }
-
-};
-
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Seqan PIMPL facade IO object (multi-threaded)
 
-class SeqanVCFIO : public BaseVCFIO {
+class GZStreamIO {
 
 public:
 
-  explicit SeqanVCFIO(const std::string& vcf_file_name);
-  ~SeqanVCFIO() override;
+  GZStreamIO() = default;
+  GZStreamIO(const GZStreamIO &) = delete;
+  ~GZStreamIO() = default;
 
-
-  void commenceIO() override; // Begin reading records, spawns threads.
-
-  [[nodiscard]] std::unique_ptr<VcfRecord> readVCFRecord() override;
-
-  [[nodiscard]] VcfHeaderInfo VCFReadHeader() override;
-
+  bool open(const std::string &file_name);
+  bool readLine(std::string &text_line) { return not std::getline(gz_file_, text_line).eof(); }
 
 private:
 
-  class SeqanVCFIOImpl;       // Forward declaration of seqan vcf read implementation class
-  std::unique_ptr<SeqanVCFIOImpl> seqan_vcf_impl_ptr_;    // Seqan VCF parser PIMPL
+  std::ifstream file_;
+  boost::iostreams::filtering_istream gz_file_;
 
 };
 
+inline bool GZStreamIO::open(const std::string &file_name) {
+
+  try {
+
+    // Open input file.
+
+    file_.open(file_name, std::ios_base::in | std::ios_base::binary);
+
+    if (not file_.good()) {
+
+      ExecEnv::log().error("GZStreamIO; I/O error; could not open file: {}", file_name);
+      return false;
+
+    }
+
+    gz_file_.push(bio::gzip_decompressor());
+    gz_file_.push(file_);
+
+  }
+  catch (std::exception const &e) {
+
+    ExecEnv::log().error("GZStreamIO; Opening file: {} unexpected I/O exception: {}", file_name, e.what());
+    return false;
+
+  }
+
+  return true;
+
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Uncompressed IO object (multi-threaded) - uses standard File IO functions to parse an uncompressed VCF file.
+// Parses the VCF header for Contig and Genome infromation.
 
-class FileVCFIO : public BaseVCFIO {
+class VCFParseHeader {
 
 public:
 
-  explicit FileVCFIO(const std::string& vcf_file_name) : BaseVCFIO(vcf_file_name),
-                                                         raw_io_queue_(HIGH_TIDE_, LOW_TIDE_),
-                                                         vcf_record_queue_(HIGH_TIDE_, LOW_TIDE_) {}
-  ~FileVCFIO() override {
+  VCFParseHeader() = default;
 
-    raw_io_thread_ptr_->join();
-    for (auto& thread : vcf_record_thread_vec_) {
+  ~VCFParseHeader() = default;
 
-      thread.join();
+  template<class IOStream> bool parseHeader(const std::string& file_name);
+
+  [[nodiscard]] const std::vector<std::string>& getGenomes() const { return vcf_genomes_; }
+
+private:
+
+  std::vector<std::string> vcf_genomes_;                // Field (genome) names for each VCF record
+
+  // Parser constants.
+  static constexpr const char* CONTIG_NAME_FRAGMENT_{"##contig"};
+  static constexpr const size_t CONTIG_NAME_FRAGMENT_LENGTH_{8};
+  static constexpr const char* CONTIG_INFO_START_{"=<"};
+  static constexpr const char* CONTIG_INFO_END_{">"};
+  static constexpr const char* FIELD_NAME_FRAGMENT_{"#CHROM"};
+  static constexpr const size_t FIELD_NAME_FRAGMENT_LENGTH_{6};
+  static constexpr const size_t SKIP_FIELD_NAMES_{9};  // Skip the fixed fields to the Genome names.
+
+
+};
+
+template<class IOStream>
+bool VCFParseHeader::parseHeader(const std::string& vcf_file_name) {
+
+  IOStream vcf_file;
+
+  // Open input file.
+  if (not vcf_file.open(vcf_file_name)) {
+
+    ExecEnv::log().critical("I/O error; could not open VCF file: {}", vcf_file_name);
+
+  }
+
+  try {
+
+    long counter = 0;
+    bool found_header = false;
+
+    while (true) {
+
+      std::string record_str;
+      if (not vcf_file.readLine(record_str)) break;
+
+      std::string contig_prefix = record_str.substr(0, CONTIG_NAME_FRAGMENT_LENGTH_);
+      if (contig_prefix == CONTIG_NAME_FRAGMENT_) {
+
+        std::string contig_string = Utility::trimAllWhiteSpace(record_str);
+
+      }
+
+      std::string line_prefix = record_str.substr(0, FIELD_NAME_FRAGMENT_LENGTH_);
+      if (line_prefix == FIELD_NAME_FRAGMENT_) {
+
+        found_header = true;
+        std::vector<std::string> field_vector;
+        if (not ParseVCFMiscImpl::tokenize(record_str, "\t",  field_vector)) {
+
+          ExecEnv::log().error("Unable to parse VCF header line: {}", record_str);
+
+        }
+        size_t field_count = 0;
+        for(auto const& field :field_vector) {
+
+          if (field_count >= SKIP_FIELD_NAMES_) {
+
+            vcf_genomes_.push_back(field);
+
+          }
+
+          ++field_count;
+
+        }
+
+        break; // #CHROM is the last field in the VCF header so stop processing.
+
+      }
+
+      ++counter;
+
+    }
+
+    if (not found_header) {
+
+      ExecEnv::log().error("VCF Genome Names Not Found");
+
+    } else {
+
+      ExecEnv::log().info("{} Genomes in VCF Header {}, Header lines processed: {}", vcf_genomes_.size(), vcf_file_name, counter);
 
     }
 
   }
+  catch (std::exception const &e) {
 
+    ExecEnv::log().critical("VCFParseHeader::parseHeader; VCF file: {}, unexpected I/O exception: {}", vcf_file_name, e.what());
 
-  void commenceIO() override; // Begin reading records, spawns threads.
+  }
 
-  [[nodiscard]] std::unique_ptr<VcfRecord> readVCFRecord() override;
+  return true;
 
-  [[nodiscard]] VcfHeaderInfo VCFReadHeader() override;
-
-
-private:
-
-  BoundedMtQueue<std::unique_ptr<std::string>> raw_io_queue_; // The raw IO queue
-  BoundedMtQueue<std::unique_ptr<VcfRecord>> vcf_record_queue_; // Parsed VCF record queue
-
-  std::unique_ptr<std::thread> raw_io_thread_ptr_;
-  std::vector<std::thread> vcf_record_thread_vec_;
-
-  static constexpr const long HIGH_TIDE_{10000};          // Maximum BoundedMtQueue size
-  static constexpr const long LOW_TIDE_{1000};            // Low water mark to begin queueing VCF records
-  static constexpr const long PARSER_THREADS_{3};         // Threads parsing into vcf_records.
-  static constexpr const char HEADER_CHAR_{'#'};          // If first char start with '*' then a header record.
-  static constexpr const size_t MINIMUM_VCF_FIELDS_{8};   // At least 8 fields, any others are genotype fields (header specified).
-  static constexpr const char* VCF_FIELD_DELIMITER_{"\t"};   // VCF Field separator.
-
-  void rawVCFIO(); // enqueue seqan::vcf records.
-  void enqueueVCFRecord(); // enqueue vcf_records.
-  bool parseVCFRecord(const std::unique_ptr<std::string>& line_record_ptr, const std::unique_ptr<VcfRecord>& vcf_record_ptr);
-  bool moveToVcfRecord(std::vector<std::string>& fields, VcfRecord& vcf_record);
-
-};
-
-
-
-
-
-
+}
 
 } // end namespace
 
 
-#endif //KGL_KGL_VARIANT_FILE_H
+#endif //KGL_VARIANT_FILE_H
