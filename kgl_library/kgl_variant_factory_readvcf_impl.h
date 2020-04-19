@@ -26,12 +26,8 @@ class VCFReaderMT {
 
 public:
 
-  explicit VCFReaderMT(const std::string& vcf_file_name) : producer_consumer_queue_(HIGH_TIDE_, LOW_TIDE_) {
-
-    vcf_io_ptr_ = std::make_unique<FileVCFIO>(vcf_file_name);
-
-  }
-
+  explicit VCFReaderMT(const std::string& vcf_file_name) : producer_consumer_queue_(HIGH_TIDE_, LOW_TIDE_),
+                                                           vcf_io_(vcf_file_name) {}
   virtual ~VCFReaderMT() = default;
 
   // Perform multi-threaded parsing of the VCF file.
@@ -43,7 +39,7 @@ public:
   // Process VCF header information.
   virtual void processVCFHeader(const VcfHeaderInfo& header_info) = 0;
 
-  [[nodiscard]] const std::vector<std::string>& getGenomeNames() const { return vcf_io_ptr_->getGenomeNames(); }
+  [[nodiscard]] const std::vector<std::string>& getGenomeNames() const { return vcf_io_.getGenomeNames(); }
 
 private:
 
@@ -51,7 +47,7 @@ private:
   using ReaderQueueRecord = std::pair<size_t, std::unique_ptr<VcfRecord>>;
 
   BoundedMtQueue<ReaderQueueRecord> producer_consumer_queue_; // The Producer/Consumer record queue
-  std::unique_ptr<BaseVCFIO> vcf_io_ptr_;
+  FileVCFIO vcf_io_;
 
   size_t consumer_thread_count_{2};                      // Consumer threads (defaults to local CPU cores available or max)
   static constexpr const int MAX_CONSUMER_THREADS_{4};     // Max consumer threads. Spawning more threads does not increase performance

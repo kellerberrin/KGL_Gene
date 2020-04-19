@@ -10,19 +10,13 @@ namespace kgl = kellerberrin::genome;
 
 void kgl::VCFReaderMT::readHeader() {
 
-  processVCFHeader(vcf_io_ptr_->VCFReadHeader());
+  processVCFHeader(vcf_io_.VCFReadHeader());
 
 }
 
 
 void kgl::VCFReaderMT::readVCFFile() {
 
-
-  ExecEnv::log().info("Parse Header VCF file: {}", vcf_io_ptr_->fileName());
-
-  readHeader();
-
-  ExecEnv::log().info("Begin processing VCF file: {}", vcf_io_ptr_->fileName());
 
   // Spawn consumer threads.
   consumer_thread_count_ = std::thread::hardware_concurrency() - 1;
@@ -44,7 +38,13 @@ void kgl::VCFReaderMT::readVCFFile() {
 
   // start reading records asynchronously.
 
-  vcf_io_ptr_->commenceIO();
+  vcf_io_.commenceIO();
+
+  ExecEnv::log().info("Parse Header VCF file: {}", vcf_io_.fileName());
+
+  readHeader();
+
+  ExecEnv::log().info("Begin processing VCF file: {}", vcf_io_.fileName());
 
   // Read VCF records and enqueue them.
   VCFProducer();
@@ -66,7 +66,7 @@ void kgl::VCFReaderMT::VCFProducer() {
     size_t counter = 1;
     while (true) {
 
-      std::unique_ptr<VcfRecord> record_ptr = vcf_io_ptr_->readVCFRecord();
+      std::unique_ptr<VcfRecord> record_ptr = vcf_io_.readVCFRecord();
 
       if (not record_ptr) break;
 

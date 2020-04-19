@@ -18,61 +18,53 @@
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Plug one of the superclasses (defined in the implementation file) to read text or gzipped files.
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Virtual IO object (multi-threaded)
-
-
-class BaseVCFIO {
+class BaseStreamIO {
 
 public:
 
-  BaseVCFIO(const BaseVCFIO&) = delete;
-  explicit BaseVCFIO(std::string vcf_file_name) : vcf_file_name_(vcf_file_name) {}
-  virtual ~BaseVCFIO() = default;
+  BaseStreamIO() = default;
+  virtual ~BaseStreamIO() = default;
 
-
-  virtual void commenceIO() = 0;
-
-  [[nodiscard]] virtual std::unique_ptr<VcfRecord> readVCFRecord() = 0;
-
-  [[nodiscard]] virtual VcfHeaderInfo VCFReadHeader() = 0;
-
-  [[nodiscard]] virtual const std::vector<std::string>& getGenomeNames() const = 0;
-
-  [[nodiscard]] const std::string& fileName() const { return vcf_file_name_; }
+  virtual bool open(const std::string &file_name) = 0;
+  virtual bool readLine(std::string &text_line) = 0;
 
 private:
-
-  std::string vcf_file_name_;
 
 };
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Seqan PIMPL facade IO object (multi-threaded)
 
-class SeqanVCFIO : public BaseVCFIO {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Parses the VCF header for Contig and Genome infromation.
+
+class VCFParseHeader {
 
 public:
 
-  explicit SeqanVCFIO(const std::string& vcf_file_name);
-  ~SeqanVCFIO() override;
+  VCFParseHeader() = default;
 
+  ~VCFParseHeader() = default;
 
-  void commenceIO() override; // Begin reading records, spawns threads.
+  bool parseHeader(const std::string& file_name, std::unique_ptr<BaseStreamIO>&& vcf_stream);
 
-  [[nodiscard]] std::unique_ptr<VcfRecord> readVCFRecord() override;
-
-  [[nodiscard]] VcfHeaderInfo VCFReadHeader() override;
-
-  [[nodiscard]] const std::vector<std::string>& getGenomeNames() const override { return parseheader_.getGenomes(); }
+  [[nodiscard]] const std::vector<std::string>& getGenomes() const { return vcf_genomes_; }
 
 private:
 
-  class SeqanVCFIOImpl;       // Forward declaration of seqan vcf read implementation class
-  std::unique_ptr<SeqanVCFIOImpl> seqan_vcf_impl_ptr_;    // Seqan VCF parser PIMPL
-  VCFParseHeader parseheader_;    // Get genome and contig information.
+  std::vector<std::string> vcf_genomes_;                // Field (genome) names for each VCF record
+
+  // Parser constants.
+  static constexpr const char* CONTIG_NAME_FRAGMENT_{"##contig"};
+  static constexpr const size_t CONTIG_NAME_FRAGMENT_LENGTH_{8};
+  static constexpr const char* CONTIG_INFO_START_{"=<"};
+  static constexpr const char* CONTIG_INFO_END_{">"};
+  static constexpr const char* FIELD_NAME_FRAGMENT_{"#CHROM"};
+  static constexpr const size_t FIELD_NAME_FRAGMENT_LENGTH_{6};
+  static constexpr const size_t SKIP_FIELD_NAMES_{9};  // Skip the fixed fields to the Genome names.
+
 
 };
 
@@ -81,25 +73,29 @@ private:
 // IO object (multi-threaded) - uses standard File IO functions to parse VCF file.
 // The code checks the file extension, if '.vcf' then it assumes a text file, if '.gz' then it assumes a gzipped file.
 
-class FileVCFIO : public BaseVCFIO {
+class FileVCFIO  {
 
 public:
 
-  explicit FileVCFIO(const std::string& vcf_file_name) : BaseVCFIO(vcf_file_name),
+  explicit FileVCFIO(const std::string& vcf_file_name) : vcf_file_name_(vcf_file_name),
                                                          raw_io_queue_(HIGH_TIDE_, LOW_TIDE_),
                                                          vcf_record_queue_(HIGH_TIDE_, LOW_TIDE_) {}
-  ~FileVCFIO() override;
+  ~FileVCFIO();
 
 
-  void commenceIO() override; // Begin reading records, spawns threads.
+  void commenceIO(); // Begin reading records, spawns threads.
 
-  [[nodiscard]] std::unique_ptr<VcfRecord> readVCFRecord() override;
+  [[nodiscard]] std::unique_ptr<VcfRecord> readVCFRecord();
 
-  [[nodiscard]] VcfHeaderInfo VCFReadHeader() override;
+  [[nodiscard]] VcfHeaderInfo VCFReadHeader();
 
-  [[nodiscard]] const std::vector<std::string>& getGenomeNames() const override { return parseheader_.getGenomes(); }
+  [[nodiscard]] const std::vector<std::string>& getGenomeNames() const { return parseheader_.getGenomes(); }
+
+  [[nodiscard]] const std::string& fileName() const { return vcf_file_name_; }
 
 private:
+
+  std::string vcf_file_name_;
 
   BoundedMtQueue<std::unique_ptr<std::string>> raw_io_queue_; // The raw IO queue
   BoundedMtQueue<std::unique_ptr<VcfRecord>> vcf_record_queue_; // Parsed VCF record queue
@@ -118,70 +114,12 @@ private:
   constexpr static const char* VCF_FILE_EXTENSTION_ = ".VCF"; // Valid file extensions (case insensitive)
   constexpr static const char* GZ_FILE_EXTENSTION_ = ".GZ"; // gzipped VCF file assumed.
 
-  template<class IOStream> void rawVCFIO(); // read/decompress from disk.
+  void rawVCFIO(std::unique_ptr<BaseStreamIO>&& vcf_stream); // read/decompress from disk.
   void enqueueVCFRecord(); // enqueue vcf_records.
   bool parseVCFRecord(const std::unique_ptr<std::string>& line_record_ptr, const std::unique_ptr<VcfRecord>& vcf_record_ptr);
   bool moveToVcfRecord(std::vector<std::string>& fields, VcfRecord& vcf_record);
 
 };
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Pass in the text or gzip stream as a template argument.
-template<class IOStream> void FileVCFIO::rawVCFIO() {
-
-  try {
-
-    IOStream vcf_stream;
-
-    if (not vcf_stream.open(fileName())) {
-
-      ExecEnv::log().critical("I/O error; could not open VCF file: {}", fileName());
-
-    }
-
-    while (true) {
-
-      std::unique_ptr<std::string> line_record_ptr = std::make_unique<std::string>();
-
-      if (not vcf_stream.readLine(*line_record_ptr)) {
-
-        // Enqueue the null eof indicator for each consumer thread.
-        for (size_t i = 0; i < vcf_record_thread_vec_.size(); ++i) {
-
-          raw_io_queue_.push(std::unique_ptr<std::string>(nullptr));
-
-        }
-        break;
-
-      }
-
-      // Check we have read a non-empty string.
-      if (line_record_ptr->empty()) {
-
-        ExecEnv::log().error("Empty VCF record string returned");
-        continue;
-
-      }
-
-      // Skip header records.
-      if ((*line_record_ptr)[0] == HEADER_CHAR_) {
-
-        continue;
-
-      }
-
-      raw_io_queue_.push(std::move(line_record_ptr));
-
-    }
-
-  }
-  catch (std::exception const &e) {
-
-    ExecEnv::log().critical("VCF file unexpected Seqan I/O exception: {}", e.what());
-
-  }
-
-}
 
 
 } // end namespace
