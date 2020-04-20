@@ -21,6 +21,11 @@ void kgl::Pf3kVCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) {
 
   }
 
+  // Pre-initializes the UnphasedPopulation with a list of genomes/contigs.
+  // Since some genomes may not have a variant (3D7).
+  // The initialization of the reader above generates a list of genomes in the VCF file.
+  setupPopulationStructure(genome_db_ptr_);
+
 }
 
 void kgl::Pf3kVCFImpl::readParseVCFImpl() {

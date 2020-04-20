@@ -28,9 +28,9 @@ public:
   explicit VariantFactory() = default;
   virtual ~VariantFactory() = default;
 
-  void readVCFVariants(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                       std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
-                       const std::string& variant_file_name) const;
+  static std::shared_ptr<UnphasedPopulation> readVCFVariants( std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                                              const std::string& variant_file_name,
+                                                              VCFParserEnum parser_type);
 
 
 private:

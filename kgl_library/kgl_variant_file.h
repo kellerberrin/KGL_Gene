@@ -6,16 +6,9 @@
 #define KGL_VARIANT_FILE_H
 
 #include "kgl_genome_types.h"
-#include "kgl_variant_factory_vcf_parse_impl.h"
-
-#include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
-
 #include <string>
 #include <vector>
-#include <fstream>
 
-namespace bio = boost::iostreams;
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

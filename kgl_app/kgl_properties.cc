@@ -8,6 +8,26 @@
 
 namespace kgl = kellerberrin::genome;
 
+
+kgl::VCFParserEnum kgl::VCFFileInfo::getParserType(const std::string& parser_type) const {
+
+  std::string parser_upper = Utility::toupper(parser_type);
+
+  for (auto const& [parser_type, parser_string] : implementated_parsers_) {
+
+    if (parser_upper == Utility::toupper(parser_string)) {
+
+      return parser_type;
+
+    }
+
+  }
+
+  return VCFParserEnum::NotImplemented;
+
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // High level application specific property retrieval
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -164,8 +184,6 @@ std::vector<kgl::VCFFileInfo> kgl::RuntimeProperties::getVCFFileVector() const {
 
   }
 
-  ExecEnv::log().info("RuntimeProperties::getVCFFileVector size: {}", property_tree_vector.size());
-
   for (const auto& sub_tree : property_tree_vector) {
 
     key = std::string(VCF_FILE_NAME_) + std::string(DOT_) + std::string(VALUE_);
@@ -173,6 +191,15 @@ std::vector<kgl::VCFFileInfo> kgl::RuntimeProperties::getVCFFileVector() const {
     if (not sub_tree.second.getFileProperty( key, workDirectory(), vcf_file_name)) {
 
       ExecEnv::log().error("RuntimeProperties::getVCFFileVector, No VCF file name information");
+      continue;
+
+    }
+
+    key = std::string(VCF_PARSER_TYPE_) + std::string(DOT_) + std::string(VALUE_);
+    std::string vcf_parser_type;
+    if (not sub_tree.second.getProperty( key, vcf_parser_type)) {
+
+      ExecEnv::log().error("RuntimeProperties::getVCFFileVector, No VCF file parser type information");
       continue;
 
     }
@@ -196,7 +223,7 @@ std::vector<kgl::VCFFileInfo> kgl::RuntimeProperties::getVCFFileVector() const {
 
     }
 
-    vcf_files.emplace_back(VCFFileInfo(vcf_file_name, vcf_reference_genome, vcf_ploidy));
+    vcf_files.emplace_back(VCFFileInfo(vcf_file_name, vcf_parser_type, vcf_reference_genome, vcf_ploidy));
 
   }
 

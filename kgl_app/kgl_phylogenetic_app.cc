@@ -40,40 +40,43 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   // For all VCF files, read in the variants.
   for (const auto& vcf_file : vcf_list) {
 
-    // Clear the unphased population object.
-    unphased_population_ptr->clear();
-
     // Get VCF reference genome.
     std::shared_ptr<const GenomeDatabase> reference_genome_ptr = genome_collection->getGenome(vcf_file.referenceGenome());
     // Read variants.
-    VariantFactory().readVCFVariants(reference_genome_ptr, unphased_population_ptr, vcf_file.fileName());
+    std::shared_ptr<UnphasedPopulation> parsed_variants = VariantFactory::readVCFVariants(reference_genome_ptr, vcf_file.fileName(), vcf_file.parserType());
 
     // Basic statistics to output
     // unphased_population_ptr->popStatistics();
 
-    // Filter unphased variants for minimum read statistics.
-    std::shared_ptr<UnphasedPopulation> filtered_unphased_ptr = unphased_population_ptr->filterVariants(AndFilter(DPCountFilter(30), RefAltCountFilter(30)));
+    // Filter and process Gatk variants.
+    if (vcf_file.parserType() == VCFParserEnum::GatkMultiGenome) {
 
-    // Process Filtered Unphased Heterozygous Statistics
-    if (not heterozygous_statistics.heterozygousStatistics(filtered_unphased_ptr)) {
+      // Filter unphased variants for minimum read statistics.
+      std::shared_ptr<UnphasedPopulation> filtered_unphased_ptr = parsed_variants->filterVariants(AndFilter(DPCountFilter(30), RefAltCountFilter(30)));
 
-      ExecEnv::log().error("PhylogeneticExecEnv::executeApp(), Cannot generate heterozygous statistics for VCF file: {}", vcf_file.fileName());
+      // Process Filtered Unphased Heterozygous Statistics
+      if (not heterozygous_statistics.heterozygousStatistics(filtered_unphased_ptr)) {
+
+        ExecEnv::log().error("PhylogeneticExecEnv::executeApp(), Cannot generate heterozygous statistics for VCF file: {}", vcf_file.fileName());
+
+      }
+
+      // If the mixture file is defined and exists then read it and generate a population of clonal genomes.
+      std::string mixture_file;
+      if (runtime_options.getMixtureFile(mixture_file)) {
+
+        // The mixture file (Pf3k only) indicates the Complexity Of Infection (COI) of VCF samples, this function includes only clonal infections.
+        std::shared_ptr<UnphasedPopulation> clonal_unphased = GenomePhasing::filterClonal(mixture_file, filtered_unphased_ptr);
+
+      }
+
+      // Get the VCF ploidy (need not be the organism ploidy).
+      size_t ploidy = vcf_file.ploidy();
+      // Phase the homozygous and heterozygous variants into a haploid population.
+      GenomePhasing::haploidPhasing(ploidy, filtered_unphased_ptr, reference_genome_ptr, population_ptr);
 
     }
 
-    // If the mixture file is defined and exists then read it and generate a population of clonal genomes.
-    std::string mixture_file;
-    if (runtime_options.getMixtureFile(mixture_file)) {
-
-      // The mixture file (Pf3k only) indicates the Complexity Of Infection (COI) of VCF samples, this function includes only clonal infections.
-      std::shared_ptr<UnphasedPopulation> clonal_unphased = GenomePhasing::filterClonal(mixture_file, filtered_unphased_ptr);
-
-    }
-
-    // Get the VCF ploidy (need not be the organism ploidy).
-    size_t ploidy = vcf_file.ploidy();
-    // Phase the homozygous and heterozygous variants into a haploid population.
-    GenomePhasing::haploidPhasing(ploidy, filtered_unphased_ptr, reference_genome_ptr, population_ptr);
 
   }
 

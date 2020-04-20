@@ -4,17 +4,19 @@
 
 
 #include <kel_exec_env.h>
-#include "kel_mt_queue.h"
-#include "kgl_genome_types.h"
 #include "kgl_variant_file_impl.h"
 #include "kgl_variant_factory_vcf_parse_impl.h"
+
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
 
 #include <string>
 #include <vector>
 #include <memory>
 #include <thread>
 
-// Classes need to be defined within namespaces.
+namespace bio = boost::iostreams;
+// Implementation file classes need to be defined within namespaces.
 namespace kellerberrin::genome {
 
 
@@ -141,10 +143,30 @@ bool VCFParseHeader::parseHeader(const std::string& vcf_file_name, std::unique_p
       std::string record_str;
       if (not vcf_stream->readLine(record_str)) break;
 
-      std::string contig_prefix = record_str.substr(0, CONTIG_NAME_FRAGMENT_LENGTH_);
-      if (contig_prefix == CONTIG_NAME_FRAGMENT_) {
+      size_t pos = record_str.find_first_of(KEY_SEPARATOR_);
 
-        std::string contig_string = Utility::trimAllWhiteSpace(record_str);
+      if (pos != std::string::npos) {
+
+        std::string key = record_str.substr(0, pos);
+        std::string value = record_str.substr(pos, std::string::npos);
+
+        pos = value.find_first_of(KEY_SEPARATOR_);
+
+        if (pos != std::string::npos) {
+
+          value = value.erase(pos, pos + std::string(KEY_SEPARATOR_).length());
+
+        }
+
+        pos = key.find_first_of(KEY_PREFIX_);
+
+        if (pos != std::string::npos) {
+
+          key = key.erase(pos, pos + std::string(KEY_PREFIX_).length());
+
+        }
+
+        vcf_header_info_.emplace_back(key, value);
 
       }
 
@@ -231,8 +253,7 @@ void FileVCFIO::commenceIO() {
   } else {
 
     ExecEnv::log().error("FileVCFIO; Invalid file name: {}", fileName());
-    ExecEnv::log().critical(
-    "FileVCFIO; Unsupported file type: '{}' for variant calling. Must be VCF or GZ ('.vcf' or '.gz')", file_ext);
+    ExecEnv::log().critical("FileVCFIO; Unsupported file type: '{}' for variant calling. Must be VCF or GZ ('.vcf' or '.gz')", file_ext);
 
   }
 
@@ -245,14 +266,14 @@ void FileVCFIO::commenceIO() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Pass in the text or gzip stream as a base pointer.
+// Pass in the text or gzip stream as an rvalue to a pointer.
 void FileVCFIO::rawVCFIO(std::unique_ptr<BaseStreamIO> &&vcf_stream) {
 
   try {
 
     if (not vcf_stream->open(fileName())) {
 
-      ExecEnv::log().critical("I/O error; could not open VCF file: {}", fileName());
+      ExecEnv::log().critical("FileVCFIO; I/O error; could not open VCF file: {}", fileName());
 
     }
 
@@ -268,6 +289,8 @@ void FileVCFIO::rawVCFIO(std::unique_ptr<BaseStreamIO> &&vcf_stream) {
           raw_io_queue_.push(std::unique_ptr<std::string>(nullptr));
 
         }
+
+        // Terminate the read line loop.
         break;
 
       }
@@ -275,7 +298,7 @@ void FileVCFIO::rawVCFIO(std::unique_ptr<BaseStreamIO> &&vcf_stream) {
       // Check we have read a non-empty string.
       if (line_record_ptr->empty()) {
 
-        ExecEnv::log().error("Empty VCF record string returned");
+        ExecEnv::log().error("FileVCFIO; Empty VCF record string returned");
         continue;
 
       }
@@ -294,7 +317,7 @@ void FileVCFIO::rawVCFIO(std::unique_ptr<BaseStreamIO> &&vcf_stream) {
   }
   catch (std::exception const &e) {
 
-    ExecEnv::log().critical("VCF file unexpected Seqan I/O exception: {}", e.what());
+    ExecEnv::log().critical("FileVCFIO; VCF file unexpected I/O exception: {}", e.what());
 
   }
 
@@ -321,7 +344,7 @@ void FileVCFIO::enqueueVCFRecord() {
     std::unique_ptr<VcfRecord> vcf_record_ptr(std::make_unique<VcfRecord>());
     if (not parseVCFRecord(line_record_ptr, vcf_record_ptr)) {
 
-      ExecEnv::log().warn("Failed to parse VCF file: {} record line : {}", fileName(), record_line);
+      ExecEnv::log().warn("FileVCFIO; Failed to parse VCF file: {} record line : {}", fileName(), record_line);
 
     } else {
 
@@ -340,21 +363,21 @@ bool FileVCFIO::parseVCFRecord(const std::unique_ptr<std::string> &line_record_p
   std::vector<std::string> field_vector;
   if (not ParseVCFMiscImpl::tokenize(std::move(*line_record_ptr), VCF_FIELD_DELIMITER_, field_vector)) {
 
-    ExecEnv::log().error("VCF file: {}, problem parsing record", fileName());
+    ExecEnv::log().error("FileVCFIO; VCF file: {}, problem parsing record", fileName());
     return false;
 
   }
 
   if (field_vector.size() < MINIMUM_VCF_FIELDS_) {
 
-    ExecEnv::log().error("VCF file: {}, record has less than the mandatory field count", fileName());
+    ExecEnv::log().error("FileVCFIO; VCF file: {}, record has less than the mandatory field count", fileName());
     return false;
 
   }
 
   if (not moveToVcfRecord(field_vector, *vcf_record_ptr)) {
 
-    ExecEnv::log().error("VCF file: {}, cannot parse VCF record field", fileName());
+    ExecEnv::log().error("FileVCFIO; VCF file: {}, cannot parse VCF record field", fileName());
     return false;
 
   }
@@ -373,11 +396,9 @@ std::unique_ptr<VcfRecord> FileVCFIO::readVCFRecord() {
 }
 
 
-VcfHeaderInfo FileVCFIO::VCFReadHeader() {
+const VcfHeaderInfo& FileVCFIO::VCFReadHeader() const {
 
-  VcfHeaderInfo header_info;
-
-  return header_info;
+  return parseheader_.getHeaderInfo();
 
 }
 
@@ -391,7 +412,15 @@ bool FileVCFIO::moveToVcfRecord(std::vector<std::string> &fields, VcfRecord &vcf
     vcf_record.id = std::move(fields[2]);
     vcf_record.ref = std::move(fields[3]);
     vcf_record.alt = std::move(fields[4]);
-    vcf_record.qual = std::stod(fields[5]);
+    if (fields[5] == FIELD_NOT_PRESENT_) {
+
+      vcf_record.qual = 0.0;
+
+    } else {
+
+      vcf_record.qual = std::stod(fields[5]);
+
+    }
     vcf_record.filter = std::move(fields[6]);
     vcf_record.info = std::move(fields[7]);
 
@@ -413,8 +442,8 @@ bool FileVCFIO::moveToVcfRecord(std::vector<std::string> &fields, VcfRecord &vcf
   }
   catch (const std::exception &e) {
 
-    ExecEnv::log().error("Problem parsing record for VCF file: {}, Exception: {} thrown; VCF record ignored", e.what(),
-                         fileName());
+    ExecEnv::log().error("FileVCFIO; Problem parsing record for VCF file: {}, Exception: {} thrown; VCF record ignored", fileName(),  e.what());
+    ExecEnv::log().error("FileVCFIO; VCF record line: {}", fileName(),  e.what());
     return false;
 
   }

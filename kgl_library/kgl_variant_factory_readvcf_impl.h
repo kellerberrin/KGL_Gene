@@ -53,7 +53,7 @@ private:
   static constexpr const int MAX_CONSUMER_THREADS_{4};     // Max consumer threads. Spawning more threads does not increase performance
   static constexpr const int MIN_CONSUMER_THREADS_{1};     // Need at least 1 consumer thread
 
-  static constexpr const size_t report_increment_{10000};
+  static constexpr const size_t report_increment_{100000};
 
   static constexpr const long HIGH_TIDE_{10000};          // Maximum BoundedMtQueue size
   static constexpr const long LOW_TIDE_{1000};            // Low water mark to begin queueing VCF records

@@ -56,18 +56,23 @@ private:
 // Object to vcf file infomation.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+enum class VCFParserEnum{ GatkMultiGenome, GRChNoGenome, NotImplemented};
+using VCFParserTypes = std::vector<std::pair<VCFParserEnum, std::string>>;
+
 class VCFFileInfo {
 
 public:
 
-  VCFFileInfo(const std::string& file_name, const std::string& reference_genome, size_t ploidy) : file_name_(file_name),
-                                                                                                  reference_genome_(reference_genome),
-                                                                                                  ploidy_(ploidy) {}
+  VCFFileInfo(const std::string& file_name, const std::string& parser_type, const std::string& reference_genome, size_t ploidy)
+      : file_name_(file_name),
+        reference_genome_(reference_genome),
+        ploidy_(ploidy) { parser_type_ = getParserType(parser_type); }
   VCFFileInfo(const VCFFileInfo&) = default;
   ~VCFFileInfo() = default;
 
   [[nodiscard]] const std::string& fileName() const { return file_name_; }
   [[nodiscard]] const std::string& referenceGenome() const { return reference_genome_; }
+  [[nodiscard]] VCFParserEnum parserType() const { return parser_type_; }
   [[nodiscard]] size_t ploidy() const { return ploidy_; }
 
   constexpr static const char* AUX_FILE_NAME_ = "fileName.";
@@ -80,7 +85,12 @@ private:
   std::string file_name_;
   std::string reference_genome_;
   size_t ploidy_;
+  VCFParserEnum parser_type_;
+  const VCFParserTypes implementated_parsers_{ std::pair<VCFParserEnum, std::string>(VCFParserEnum::GatkMultiGenome, "GatkMultiGenome"),
+                                               std::pair<VCFParserEnum, std::string>(VCFParserEnum::GRChNoGenome, "GRChNoGenome"),
+                                               std::pair<VCFParserEnum, std::string>(VCFParserEnum::NotImplemented, "NotImplemented")};
 
+  VCFParserEnum getParserType(const std::string& parser_type) const;
 
 };
 
@@ -132,6 +142,7 @@ private:
   constexpr static const char* VCF_LIST_ = "vcfList";
   constexpr static const char* VCF_FILE_ = "vcfFile";
   constexpr static const char* VCF_FILE_NAME_ = "vcfFileName";
+  constexpr static const char* VCF_PARSER_TYPE_ = "vcfParser";
   constexpr static const char* VCF_FILE_GENOME_ =  "vcfGenome";
   constexpr static const char* VCF_FILE_PLOIDY_ =  "vcfPloidy";
   constexpr static const char* GENOME_LIST_ = "genomeList";

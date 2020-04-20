@@ -36,10 +36,6 @@ public:
                                                    vcf_file_name_(vcf_file_name),
                                                    unphased_population_ptr_(unphased_population_ptr){
 
-    // Pre-initializes the UnphasedPopulation with a list of genomes/contigs.
-    // Since some genomes may not have a variant (3D7).
-    // The initialization of the reader above generates a list of genomes in the VCF file.
-    setupPopulationStructure(genome_db_ptr_);
 
   }
 

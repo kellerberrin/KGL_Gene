@@ -15,6 +15,7 @@
 #include "kel_mt_queue.h"
 #include "kgl_genome_types.h"
 #include "kgl_variant_file.h"
+#include "kgl_variant_factory_vcf_parse_impl.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
@@ -38,7 +39,7 @@ private:
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Parses the VCF header for Contig and Genome infromation.
+// Parses the VCF header for Contig and Genome information.
 
 class VCFParseHeader {
 
@@ -52,15 +53,15 @@ public:
 
   [[nodiscard]] const std::vector<std::string>& getGenomes() const { return vcf_genomes_; }
 
+  [[nodiscard]] const VcfHeaderInfo& getHeaderInfo() const { return vcf_header_info_; }
+
 private:
 
   std::vector<std::string> vcf_genomes_;                // Field (genome) names for each VCF record
-
+  VcfHeaderInfo vcf_header_info_;
   // Parser constants.
-  static constexpr const char* CONTIG_NAME_FRAGMENT_{"##contig"};
-  static constexpr const size_t CONTIG_NAME_FRAGMENT_LENGTH_{8};
-  static constexpr const char* CONTIG_INFO_START_{"=<"};
-  static constexpr const char* CONTIG_INFO_END_{">"};
+  static constexpr const char* KEY_SEPARATOR_{"="};
+  static constexpr const char* KEY_PREFIX_{"##"};
   static constexpr const char* FIELD_NAME_FRAGMENT_{"#CHROM"};
   static constexpr const size_t FIELD_NAME_FRAGMENT_LENGTH_{6};
   static constexpr const size_t SKIP_FIELD_NAMES_{9};  // Skip the fixed fields to the Genome names.
@@ -87,7 +88,7 @@ public:
 
   [[nodiscard]] std::unique_ptr<VcfRecord> readVCFRecord();
 
-  [[nodiscard]] VcfHeaderInfo VCFReadHeader();
+  [[nodiscard]] const VcfHeaderInfo& VCFReadHeader() const;
 
   [[nodiscard]] const std::vector<std::string>& getGenomeNames() const { return parseheader_.getGenomes(); }
 
@@ -113,6 +114,7 @@ private:
   static constexpr const char* VCF_FIELD_DELIMITER_{"\t"};   // VCF Field separator.
   constexpr static const char* VCF_FILE_EXTENSTION_ = ".VCF"; // Valid file extensions (case insensitive)
   constexpr static const char* GZ_FILE_EXTENSTION_ = ".GZ"; // gzipped VCF file assumed.
+  const std::string FIELD_NOT_PRESENT_{"."}; // no field value
 
   void rawVCFIO(std::unique_ptr<BaseStreamIO>&& vcf_stream); // read/decompress from disk.
   void enqueueVCFRecord(); // enqueue vcf_records.
