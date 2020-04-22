@@ -15,52 +15,32 @@ namespace kgl = kellerberrin::genome;
 // VcfFactory() is a public facade class that passes the functionality onto the implementation objects.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool kgl::VcfFactory::parseVCFVariants( std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
-                                        std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                        const std::string &vcf_file_name,
-                                        VCFParserEnum parser_type) {
-
-  switch(parser_type) {
-
-    case VCFParserEnum::GatkMultiGenome:
-      return gatkMultiGenomeVCFVariants(vcf_population_ptr, genome_db_ptr, vcf_file_name);
-
-    case VCFParserEnum::GRChNoGenome:
-      return GRChNoGenomeVCFVariants(vcf_population_ptr, genome_db_ptr, vcf_file_name);
-
-    case VCFParserEnum::NotImplemented:
-      ExecEnv::log().error("Variant Parser not specified or not implemented, VCF file: {}", vcf_file_name);
-      break;
-
-  }
-
-  return false;
-
-}
 
 
 
-bool kgl::VcfFactory::gatkMultiGenomeVCFVariants(std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
-                                                 std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                 const std::string &vcf_file_name) {
+std::shared_ptr<kgl::UnphasedPopulation>
+kgl::VcfFactory::gatkMultiGenomeVCFVariants( const std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                             const std::string &vcf_file_name) {
 
+  std::shared_ptr<UnphasedPopulation> vcf_population_ptr(std::make_shared<UnphasedPopulation>(genome_db_ptr->genomeId()));
   Pf3kVCFImpl reader(vcf_population_ptr, genome_db_ptr, vcf_file_name);
 
   reader.readParseVCFImpl();
 
-  return true;
+  return vcf_population_ptr;
 
 }
 
-bool kgl::VcfFactory::GRChNoGenomeVCFVariants(std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
-                                              std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                              const std::string &vcf_file_name) {
+std::shared_ptr<kgl::UnphasedGenome>
+kgl::VcfFactory::GRChNoGenomeVCFVariants( const std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                          const std::string &vcf_file_name) {
 
-  GrchVCFImpl reader(vcf_population_ptr, genome_db_ptr, vcf_file_name);
+  std::shared_ptr<UnphasedGenome> vcf_genome_ptr(std::make_shared<UnphasedGenome>(genome_db_ptr->genomeId()));
+  GrchVCFImpl reader(vcf_genome_ptr, genome_db_ptr, vcf_file_name);
 
   reader.readParseVCFImpl();
 
-  return true;
+  return vcf_genome_ptr;
 
 }
 

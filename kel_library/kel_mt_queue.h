@@ -44,17 +44,18 @@ public:
 
   }
 
-  std::shared_ptr<T> waitAndPop() {
+  T waitAndPop() {
 
     std::unique_lock<std::mutex> lock(mutex_);
 
     data_cond_.wait(lock,[this]{return not data_queue_.empty();});
 
-    std::shared_ptr<T> value_ptr(std::make_shared<T>(std::move(data_queue_.front())));
+    T value = std::move(data_queue_.front());
 
     data_queue_.pop();
 
-    return value_ptr;
+    return value;
+
   }
 
   bool tryPop(T& value) {
@@ -155,6 +156,15 @@ public:
     data_cond_.notify_one();
 
   }
+
+  inline T waitAndPop() {
+
+    T value = std::move(mt_queue_.waitAndPop());
+    data_cond_.notify_one();
+    return std::move(value);
+
+  }
+
 
   inline bool empty() const { return mt_queue_.empty(); }
 

@@ -3,8 +3,9 @@
 //
 
 #include "kgl_variant_factory_vcf_parse_impl.h"
-#include "kgl_variant_factory_vcf_impl.h"
+#include "kgl_variant_factory_readvcf_impl.h"
 #include "kgl_variant_factory_pf3k_impl.h"
+#include "kgl_variant_vcf.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -17,7 +18,7 @@ void kgl::Pf3kVCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) {
   ActiveContigMap active_contig_map;
   if (not ParseVCFMiscImpl::parseVcfHeader(genome_db_ptr_, header_info, active_contig_map, false)) {
 
-    ExecEnv::log().error("Problem parsing header information in VCF file: {}. No variants processed.", vcf_file_name_);
+    ExecEnv::log().error("Problem parsing header information in VCF file. No variants processed.");
 
   }
 
@@ -229,23 +230,20 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
                                                                                           recordParser.quality(),
                                                                                           vcf_record_count));
             // process A allele
-            std::vector<CigarEditItem> parsed_cigar = ParseVCFMiscImpl::generateEditVector(recordParser.reference(), allele);
             size_t record_variants;
 
-            if (not parseCigarItems( genome_name,
+            if (not createAddVariant(genome_name,
                                      recordParser.contigPtr(),
-                                     parsed_cigar,
                                      recordParser.offset(),
                                      recordParser.reference(),
                                      allele,
-                                     evidence_ptr,
-                                  record_variants)) {
+                                     evidence_ptr)) {
 
               ExecEnv::log().error("Parsing Pf3k VCF, Problem parsing A allele CIGAR items");
 
             }
 
-            variant_count_ += parsed_cigar.size();
+            ++variant_count_;
 
           }
 
@@ -275,23 +273,20 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
                                                                                           vcf_record_count));
 
             // process B allele
-            std::vector<CigarEditItem> parsed_cigar = ParseVCFMiscImpl::generateEditVector(recordParser.reference(), allele);
             size_t record_variants;
 
-            if (not parseCigarItems( genome_name,
+            if (not createAddVariant(genome_name,
                                      recordParser.contigPtr(),
-                                     parsed_cigar,
                                      recordParser.offset(),
                                      recordParser.reference(),
                                      allele,
-                                     evidence_ptr,
-                                  record_variants)) {
+                                     evidence_ptr)) {
 
               ExecEnv::log().error("Parsing Pf3k VCF, Problem parsing B allele CIGAR items");
 
             }
 
-            variant_count_ += parsed_cigar.size();
+            ++variant_count_;
 
           }
 
@@ -311,5 +306,88 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
     }
 
   }
+
+}
+
+bool kgl::Pf3kVCFImpl::addThreadSafeGenomeVariant(const std::shared_ptr<const Variant>& variant_ptr) {
+
+  AutoMutex auto_mutex(add_variant_mutex_); // Write Locked
+
+  std::shared_ptr<UnphasedGenome> genome;
+
+  if (not unphased_population_ptr_->getCreateGenome(variant_ptr->genomeId(), genome)) {
+
+    ExecEnv::log().error("ParseVCFImpl::addThreadSafeGenomeVariant; Could not add/create genome: {}", variant_ptr->genomeId());
+    return false;
+
+  }
+
+  if (not genome->addVariant(variant_ptr)) { // thread safe
+
+    ExecEnv::log().error("ParseVCFImpl::addThreadSafeGenomeVariant; Could not add variant to genome: {}", variant_ptr->genomeId());
+    return false;
+
+  }
+
+  return true;
+
+}
+
+
+// Set up the genomes/contigs first rather than on-the-fly.
+// Some genomes may have no variants (e.g. the model/reference genome 3D7)
+// and thus these genomes/contigs would not be created on-the-fly.
+void kgl::Pf3kVCFImpl::setupPopulationStructure(const std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
+
+  AutoMutex auto_mutex(add_variant_mutex_);
+
+  ExecEnv::log().info("setupPopulationStructure; Creating a population of {} genomes and {} contigs",
+                      getGenomeNames().size(), genome_db_ptr->getMap().size());
+
+  for (auto genome_id : getGenomeNames())  {
+
+    std::shared_ptr<UnphasedGenome> genome_ptr = nullptr;
+
+    if (not unphased_population_ptr_->getCreateGenome(genome_id, genome_ptr)) {
+
+      ExecEnv::log().critical("Could not create genome: {} in the unphased population", genome_id);
+
+    }
+
+    for (auto contig : genome_db_ptr->getMap()) {
+
+      std::shared_ptr<UnphasedContig> contig_ptr = nullptr;
+
+      if (not genome_ptr->getCreateContig(contig.first, contig_ptr)) {
+
+        ExecEnv::log().critical("Could not create contig: {} in genome: {} in the unphased population", contig.first, genome_id);
+
+      }
+
+    }
+
+  }
+
+}
+
+bool kgl::Pf3kVCFImpl::createAddVariant(const std::string& genome_name,
+                                         const std::shared_ptr<const ContigFeatures> contig_ptr,
+                                         ContigOffset_t contig_offset,
+                                         const std::string& reference_text,
+                                         const std::string& alternate_text,
+                                         const std::shared_ptr<const VariantEvidence> evidence_ptr)  {
+
+  StringDNA5 reference_str(reference_text);
+  StringDNA5 alternate_str(alternate_text);
+
+  std::shared_ptr<const Variant> variant_ptr(std::make_shared<VCFVariant>(genome_name,
+                                                                          contig_ptr->contigId(),
+                                                                          VariantSequence::UNPHASED,
+                                                                          contig_offset,
+                                                                          evidence_ptr,
+                                                                          std::move(reference_str),
+                                                                          std::move(alternate_str)));
+
+  return addThreadSafeGenomeVariant(variant_ptr);
 
 }

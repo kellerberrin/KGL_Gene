@@ -21,21 +21,17 @@ public:
   VcfFactory() = default;
   ~VcfFactory() = default;
 
-  [[nodiscard]] static bool parseVCFVariants( std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
-                                              std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                              const std::string &vcf_file_name,
-                                              VCFParserEnum parser_type);
+  [[nodiscard]] static std::shared_ptr<UnphasedPopulation>
+  gatkMultiGenomeVCFVariants( const std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                              const std::string &vcf_file_name);
+
+  [[nodiscard]] static std::shared_ptr<UnphasedGenome>
+  GRChNoGenomeVCFVariants( const std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                           const std::string &vcf_file_name);
 
 
 private:
 
-  [[nodiscard]] static bool gatkMultiGenomeVCFVariants( std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
-                                                        std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                        const std::string &vcf_file_name);
-
-  [[nodiscard]] static bool GRChNoGenomeVCFVariants( std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
-                                                     std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                                     const std::string &vcf_file_name);
 
 
 };

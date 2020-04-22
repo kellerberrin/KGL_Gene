@@ -9,20 +9,19 @@
 #include <string>
 #include <vector>
 
+
+
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Basic VCF Record LIne.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class VcfRecord
-{
+class VcfRecord {
 public:
 
   // Default constructor.
   VcfRecord() : offset(INVALID_POS), qual(MISSING_QUAL) {}
-
-  static std::unique_ptr<VcfRecord> EOF_RECORD() { return std::unique_ptr<VcfRecord>(); }
 
   // Numeric id of the reference sequence.
   ContigId_t contig_id;
@@ -55,7 +54,6 @@ private:
 };
 
 
-} // end namespace
-
+} // namespace
 
 #endif //KGL_VARIANT_FILE_H

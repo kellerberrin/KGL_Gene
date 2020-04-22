@@ -15,22 +15,22 @@
 #include "kel_mt_queue.h"
 #include "kel_exec_env.h"
 
-#include "kgl_variant_file_impl.h"
+#include "kgl_variant_file_vcf_impl.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
-
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Dequeues VCF Records and passes them to the final parser logic which generates variant objects.
 
 class VCFReaderMT {
 
 public:
 
-  explicit VCFReaderMT(const std::string& vcf_file_name) : producer_consumer_queue_(HIGH_TIDE_, LOW_TIDE_),
-                                                           vcf_io_(vcf_file_name) {}
+  explicit VCFReaderMT(const std::string& vcf_file_name) : vcf_io_(vcf_file_name) {}
   virtual ~VCFReaderMT() = default;
 
-  // Perform multi-threaded parsing of the VCF file.
+  // Perform multi-threaded parsing of queued VCF records.
   void readVCFFile();
 
   // Process each VCF record.
@@ -43,28 +43,16 @@ public:
 
 private:
 
-  // The bounded queue data type.
-  using ReaderQueueRecord = std::pair<size_t, std::unique_ptr<VcfRecord>>;
-
-  BoundedMtQueue<ReaderQueueRecord> producer_consumer_queue_; // The Producer/Consumer record queue
-  FileVCFIO vcf_io_;
-
+  RecordVCFIO vcf_io_;                                   // VCF record queue.
   size_t consumer_thread_count_{2};                      // Consumer threads (defaults to local CPU cores available or max)
   static constexpr const int MAX_CONSUMER_THREADS_{4};     // Max consumer threads. Spawning more threads does not increase performance
   static constexpr const int MIN_CONSUMER_THREADS_{1};     // Need at least 1 consumer thread
-
-  static constexpr const size_t report_increment_{100000};
-
-  static constexpr const long HIGH_TIDE_{10000};          // Maximum BoundedMtQueue size
-  static constexpr const long LOW_TIDE_{1000};            // Low water mark to begin queueing VCF records
+  static constexpr const size_t report_increment_{10000};
 
 
   void readHeader();
-  // Read the VCF file and queue the record in a BoundedMtQueue.
-  void VCFProducer();
   // Call the template VCF consumer class
   void VCFConsumer();
-
 
 };
 

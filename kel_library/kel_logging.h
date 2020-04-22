@@ -57,6 +57,7 @@ private:
   std::atomic<int> warn_message_count_{0};     // number of warning messages issued.
   std::atomic<bool> verbose_{false};           // enable verbose user output
 
+
 };
 
 
@@ -131,6 +132,7 @@ template<typename... Args> void Logger::error(const char* message, Args... args)
 }
 
 template<typename... Args> void Logger::critical(const char* message, Args... args) noexcept {
+
 
   plog_impl_->critical(message, args...);
   plog_impl_->flush();

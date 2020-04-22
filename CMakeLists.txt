@@ -43,9 +43,9 @@ set(CMAKE_EXE_LINKER_FLAGS_PROFILE "-pg -g -ggdb -O3 -DBOOST_MATH_DISABLE_FLOAT1
 set(CMAKE_ERROR_WARNING_FLAGS "-std=c++17 -Wall -pthread -Wextra -Wpedantic -Wstrict-aliasing -Wno-variadic-macros")
 
 # Actually set the g++ flags.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_DEBUG}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_DEBUG}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_RELEASE}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_RELEASE}")
 
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../..)
@@ -104,10 +104,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_alphabet_amino.cc
         kgl_library/kgl_alphabet_dna5.h
         kgl_library/kgl_alphabet_dna5.cc
-        kgl_library/kgl_variant_factory.h
         kgl_library/kgl_alphabet_coding_dna5.h
         kgl_library/kgl_alphabet_coding_dna5.cc
-        kgl_library/kgl_variant_factory.cc
         kgl_library/kgl_variant_evidence.h
         kgl_library/kgl_variant_evidence.cc
         kgl_library/kgl_statistics_upgma.h
@@ -127,8 +125,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_table_impl.h
         kgl_library/kgl_table_impl.cc
         kgl_library/kgl_table_organism.h
-        kgl_library/kgl_variant_factory_vcf_impl.h
-        kgl_library/kgl_variant_factory_vcf_impl.cc
         kgl_library/kgl_gaf_parser.h
         kgl_library/kgl_gaf_parser.cc
         kgl_library/kgl_sequence_compare.h
@@ -165,10 +161,14 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_genome_contig_aux.h
         kgl_library/kgl_phylogenetic_tree.cc
         kgl_library/kgl_phylogenetic_tree.h
-        kgl_library/kgl_variant_file.h
+        kgl_library/kgl_variant_file_vcf_record.h
         kgl_library/kgl_variant_factory_readvcf_impl.cc
         kgl_library/kgl_variant_file_impl.cc
-        kgl_library/kgl_variant_file_impl.h)
+        kgl_library/kgl_variant_file_impl.h
+        kgl_library/kgl_variant_factory_grch_impl.cc
+        kgl_library/kgl_variant_factory_grch_impl.h
+        kgl_library/kgl_variant_file_vcf_impl.cc
+        kgl_library/kgl_variant_file_vcf_impl.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -205,7 +205,7 @@ set(MIXTURE_SOURCE_FILES
         kgl_mixture/kgl_variant_classify.cc
         kgl_mixture/kgl_variant_classify_io.cc
         kgl_mixture/kgl_read_phasing.h
-        kgl_mixture/kgl_read_phasing.cc kgl_library/kgl_variant_factory_grch_impl.cc kgl_library/kgl_variant_factory_grch_impl.h)
+        kgl_mixture/kgl_read_phasing.cc )
 
 
 # Application level objects

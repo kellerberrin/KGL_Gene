@@ -37,17 +37,13 @@ void kgl::VCFReaderMT::readVCFFile() {
   }
 
   // start reading records asynchronously.
+  vcf_io_.commenceVCFIO(consumer_thread_count_);
 
-  vcf_io_.commenceIO();
-
-  ExecEnv::log().info("Parse Header VCF file: {}", vcf_io_.fileName());
+  ExecEnv::log().info("Parse Header VCF file: {}", vcf_io_.getFileName());
 
   readHeader();
 
-  ExecEnv::log().info("Begin processing VCF file: {}", vcf_io_.fileName());
-
-  // Read VCF records and enqueue them.
-  VCFProducer();
+  ExecEnv::log().info("Begin processing VCF file: {}", vcf_io_.getFileName());
 
   // Join on the consumer threads
   for(auto& thread : consumer_threads) {
@@ -58,69 +54,37 @@ void kgl::VCFReaderMT::readVCFFile() {
 
 }
 
-// Read the VCF file and queue the records.
-void kgl::VCFReaderMT::VCFProducer() {
-
-  try {
-
-    size_t counter = 1;
-    while (true) {
-
-      std::unique_ptr<VcfRecord> record_ptr = vcf_io_.readVCFRecord();
-
-      if (not record_ptr) break;
-
-      ReaderQueueRecord queue_record(counter, std::move(record_ptr));
-
-      producer_consumer_queue_.push(std::move(queue_record));
-
-      if (counter % report_increment_ == 0) {
-
-        ExecEnv::log().info("Producer thread read: {} VCF records", counter);
-
-      }
-
-      ++counter;
-
-    }
-
-    // Enqueue the null eof indicator for each consumer thread.
-    for(size_t i = 0; i < consumer_thread_count_; ++i) {
-
-      ReaderQueueRecord queue_record(counter, VcfRecord::EOF_RECORD());
-
-      producer_consumer_queue_.push(std::move(queue_record));
-
-    }
-
-  }
-  catch (std::exception const &e) {
-
-    ExecEnv::log().critical("VCF file unexpected I/O exception: {}", e.what());
-
-  }
-
-
-}
 
 void kgl::VCFReaderMT::VCFConsumer() {
 
   long counter = 0;
-  ReaderQueueRecord queue_record;
 
   // Loop until EOF.
   while (true) {
 
     // Dequeue the vcf record.
-    producer_consumer_queue_.waitAndPop(queue_record);
+    std::unique_ptr<const VcfRecord> vcf_record_ptr = vcf_io_.readVCFRecord();
 
     ++counter;
 
     // Terminate on EOF
-    if (queue_record.second == VcfRecord::EOF_RECORD()) break;  // Eof encountered, terminate processing.
+    if (not vcf_record_ptr) break;  // Eof encountered, terminate processing.
+
+    if (vcf_record_ptr->contig_id.empty()) {
+
+      ExecEnv::log().error("Empty VCF_record encountered; consumer thread terminates.");
+      break;
+
+    }
+
+    if (counter % report_increment_ == 0) {
+
+      ExecEnv::log().info("Consumer thread read: {} VCF records", counter);
+
+    }
 
     // Call the consumer object with the dequeued record.
-    ProcessVCFRecord(queue_record.first, *queue_record.second);
+    ProcessVCFRecord(counter, *vcf_record_ptr);
 
   }
 

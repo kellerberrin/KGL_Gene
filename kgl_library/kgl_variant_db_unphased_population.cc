@@ -22,7 +22,8 @@ namespace kgl = kellerberrin::genome;
 
 std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::deepCopy() const {
 
-  std::shared_ptr<UnphasedPopulation> population_copy(std::make_shared<UnphasedPopulation>());
+  // Duplicate population ids are not a problem.
+  std::shared_ptr<UnphasedPopulation> population_copy(std::make_shared<UnphasedPopulation>(populationId()));
 
   for (auto const& [genome_id, genome_ptr] : getMap()) {
 
@@ -218,7 +219,7 @@ std::vector<kgl::GenomeId_t> kgl::UnphasedPopulation::genomeList() const {
 
 std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::filterVariants(const kgl::VariantFilter& filter) const {
 
-  std::shared_ptr<kgl::UnphasedPopulation> filtered_population_ptr(std::make_shared<kgl::UnphasedPopulation>());
+  std::shared_ptr<kgl::UnphasedPopulation> filtered_population_ptr(std::make_shared<kgl::UnphasedPopulation>(populationId()));
 
   for (const auto& [genome_id, genome_ptr] : getMap()) {
 

@@ -9,7 +9,7 @@
 
 #include "kel_utility.h"
 #include "kgl_variant_factory_vcf.h"
-#include "kgl_variant_factory_vcf_impl.h"
+#include "kgl_variant_factory_readvcf_impl.h"
 #include "kgl_variant_factory_record_vcf_impl.h"
 
 
@@ -17,15 +17,15 @@
 namespace kellerberrin::genome {   //  organization level namespace
 
 
-class Pf3kVCFImpl : public ParseVCFImpl {
+class Pf3kVCFImpl : public VCFReaderMT {
 
 public:
 
-  Pf3kVCFImpl(std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
-              std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-              const std::string &vcf_file_name) : ParseVCFImpl(vcf_population_ptr, genome_db_ptr, vcf_file_name) {
-
-  }
+  Pf3kVCFImpl(const std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
+              const std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+              const std::string &vcf_file_name) : VCFReaderMT(vcf_file_name),
+                                                  unphased_population_ptr_(vcf_population_ptr),
+                                                  genome_db_ptr_(genome_db_ptr) {}
   ~Pf3kVCFImpl() override = default;
 
   void ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record) override;
@@ -66,6 +66,22 @@ private:
   std::atomic<uint64_t> record_count_{0};
   size_t variant_count_{0};
 
+// Create and add variants to population pointer (thread safe).
+
+  mutable std::mutex add_variant_mutex_;  // mutex to lock the UnphasedPopulation structure when inserting variants.
+  // This object is write accessed by multiple threads, it MUST BE mutex guarded for any access.
+  const std::shared_ptr<UnphasedPopulation> unphased_population_ptr_;   // Un-phased variants.
+  const std::shared_ptr<const GenomeDatabase> genome_db_ptr_; // read access only.
+
+  [[nodiscard]] bool addThreadSafeGenomeVariant(const std::shared_ptr<const Variant>& variant_ptr);
+  void setupPopulationStructure(const std::shared_ptr<const GenomeDatabase> genome_db_ptr);
+
+  [[nodiscard]] bool createAddVariant(const std::string& genome_name,
+                                      const std::shared_ptr<const ContigFeatures> contig_ptr,
+                                      ContigOffset_t contig_offset,
+                                      const std::string& reference,
+                                      const std::string& alternate,
+                                      const std::shared_ptr<const VariantEvidence> evidence_ptr);
 
 };
 

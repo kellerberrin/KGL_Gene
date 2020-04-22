@@ -128,7 +128,8 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
 std::shared_ptr<kgl::UnphasedPopulation> kgl::GenomePhasing::filterClonal(const std::string& phase_file,
                                                                           std::shared_ptr<const UnphasedPopulation> unphased_population_ptr)  {
 
-  std::shared_ptr<UnphasedPopulation> filtered_population(std::make_shared<UnphasedPopulation>());
+  PopulationId_t filtered_name = unphased_population_ptr->populationId() + std::string("_Clonal_Filter");
+  std::shared_ptr<UnphasedPopulation> filtered_population(std::make_shared<UnphasedPopulation>(filtered_name));
 
   GenomeMixtureStatistics mixture_statistics;
 

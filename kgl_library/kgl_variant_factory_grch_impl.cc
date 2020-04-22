@@ -3,7 +3,6 @@
 //
 
 #include "kgl_variant_factory_vcf_parse_impl.h"
-#include "kgl_variant_factory_vcf_impl.h"
 #include "kgl_variant_factory_grch_impl.h"
 
 

@@ -9,8 +9,8 @@
 
 
 #include "kel_utility.h"
-#include "kgl_variant_factory_vcf.h"
-#include "kgl_variant_factory_vcf_impl.h"
+#include "kgl_variant_file_impl.h"
+#include "kgl_variant_factory_readvcf_impl.h"
 #include "kgl_variant_factory_record_vcf_impl.h"
 
 
@@ -18,15 +18,17 @@
 namespace kellerberrin::genome {   //  organization level namespace
 
 
-class GrchVCFImpl : public ParseVCFImpl {
+class GrchVCFImpl : public VCFReaderMT {
 
 public:
 
-  GrchVCFImpl(std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
+  GrchVCFImpl(std::shared_ptr<UnphasedGenome> vcf_genome_ptr,
               std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-              const std::string &vcf_file_name) : ParseVCFImpl(vcf_population_ptr, genome_db_ptr, vcf_file_name) {
+              const std::string &vcf_file_name) : VCFReaderMT(vcf_file_name),
+                                                  vcf_genome_ptr_(std::move(vcf_genome_ptr)),
+                                                  genome_db_ptr_(std::move(genome_db_ptr)){
 
-    for (auto const& [contig_id, contig_ptr] : genome_db_ptr->getMap()) {
+    for (auto const& [contig_id, contig_ptr] : genome_db_ptr_->getMap()) {
 
       contig_count_[contig_id]  = std::pair<ContigSize_t, size_t>(contig_ptr->contigSize(), 0);
 
@@ -47,6 +49,8 @@ private:
 
   constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 10000;
 
+  std::shared_ptr<UnphasedGenome> vcf_genome_ptr_;
+  std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
 
 // Progress counters.
 

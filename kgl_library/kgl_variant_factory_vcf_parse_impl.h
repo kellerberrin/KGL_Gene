@@ -26,6 +26,8 @@ namespace kellerberrin::genome {   //  organization level namespace
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Structure to return VCF header information as a vector of pair<key, value>
 using VcfHeaderInfo = std::vector<std::pair<std::string, std::string>>;
+// A map of contigs.
+using ActiveContigMap = std::map<ContigId_t, ContigSize_t>;
 
 // Returned from the cigar functions.
 enum class CigarEditType : char { UNCHANGED = 'M', INSERT = 'I', DELETE = 'D', CHANGED = 'X'};

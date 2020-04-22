@@ -5,11 +5,11 @@
 #include "kgl_gff_fasta.h"
 #include "kgl_variant_phase.h"
 #include "kgl_phylogenetic_app.h"
-#include "kgl_variant_factory.h"
 #include "kgl_phylogenetic_app_analysis.h"
 #include "kgl_distribution_analysis.h"
 #include "kgl_filter.h"
 #include "kgl_properties.h"
+#include "kgl_variant_factory_vcf.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -30,7 +30,7 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   std::shared_ptr<PhasedPopulation> population_ptr(std::make_shared<PhasedPopulation>("Organism"));
 
   // Create an unphased population object.
-  std::shared_ptr<UnphasedPopulation> unphased_population_ptr(std::make_shared<UnphasedPopulation>());
+  std::shared_ptr<UnphasedPopulation> unphased_population_ptr(std::make_shared<UnphasedPopulation>("ParsedVCF"));
 
   // Write Filtered Unphased Heterozygous Statistics
   HeterozygousStatistics heterozygous_statistics;
@@ -42,15 +42,15 @@ void kgl::PhylogeneticExecEnv::executeApp() {
 
     // Get VCF reference genome.
     std::shared_ptr<const GenomeDatabase> reference_genome_ptr = genome_collection->getGenome(vcf_file.referenceGenome());
-    // Read variants.
-    std::shared_ptr<UnphasedPopulation> parsed_variants = VariantFactory::readVCFVariants(reference_genome_ptr, vcf_file.fileName(), vcf_file.parserType());
-
-    // Basic statistics to output
-    // unphased_population_ptr->popStatistics();
 
     // Filter and process Gatk variants.
     if (vcf_file.parserType() == VCFParserEnum::GatkMultiGenome) {
 
+      // Read variants.
+      std::shared_ptr<UnphasedPopulation> parsed_variants = VcfFactory::gatkMultiGenomeVCFVariants(reference_genome_ptr, vcf_file.fileName());
+
+      // Basic statistics to output
+      // unphased_population_ptr->popStatistics();
       // Filter unphased variants for minimum read statistics.
       std::shared_ptr<UnphasedPopulation> filtered_unphased_ptr = parsed_variants->filterVariants(AndFilter(DPCountFilter(30), RefAltCountFilter(30)));
 
@@ -75,8 +75,12 @@ void kgl::PhylogeneticExecEnv::executeApp() {
       // Phase the homozygous and heterozygous variants into a haploid population.
       GenomePhasing::haploidPhasing(ploidy, filtered_unphased_ptr, reference_genome_ptr, population_ptr);
 
-    }
+    } else if (vcf_file.parserType() == VCFParserEnum::GRChNoGenome) {
 
+      // Read variants.
+      std::shared_ptr<UnphasedGenome> parsed_variants = VcfFactory::GRChNoGenomeVCFVariants( reference_genome_ptr, vcf_file.fileName());
+
+    }
 
   }
 

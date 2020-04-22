@@ -25,7 +25,7 @@ class UnphasedPopulation {
 
 public:
 
-  explicit UnphasedPopulation() = default;
+  explicit UnphasedPopulation(const PopulationId_t& population_id) : population_id_(population_id) {}
   UnphasedPopulation(const UnphasedPopulation&) = delete; // Use deep copy.
   virtual ~UnphasedPopulation() = default;
 
@@ -55,10 +55,13 @@ public:
 
   [[nodiscard]] bool addGenome(std::shared_ptr<UnphasedGenome> genome);
 
+  [[nodiscard]] const PopulationId_t& populationId() const { return population_id_; }
+  void setPopulationId(const PopulationId_t& population_id) { population_id_ = population_id; }
+
 private:
 
   UnphasedGenomeMap genome_map_;
-
+  PopulationId_t population_id_;
 
 };
 
