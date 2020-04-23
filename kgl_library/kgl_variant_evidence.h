@@ -6,10 +6,11 @@
 #define KGL_VARIANT_EVIDENCE_H
 
 
-#include <sstream>
 #include "kgl_genome_types.h"
 
-
+#include <sstream>
+#include <string>
+#include <memory>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This class holds the evidence that resulted in the creation of a variant.
@@ -27,13 +28,17 @@ class VariantEvidence { // Top level object.
 
 public:
 
-  explicit VariantEvidence() = default;
+  explicit VariantEvidence(std::shared_ptr<std::string> info) : info_(std::move(info)) {}
   virtual ~VariantEvidence() = default;
 
   [[nodiscard]] virtual std::string output(char delimiter, VariantOutputIndex output_index) const = 0;
 
+  [[nodiscard]] const std::string& info_field() const { return *info_; }
+
 private:
 
+  // The VCF file info field.
+  std::shared_ptr<std::string> info_;
 
 };
 
@@ -48,27 +53,29 @@ class CountEvidence : public VariantEvidence {
 
 public:
 
-  explicit CountEvidence(size_t ref_count,
+  explicit CountEvidence(std::shared_ptr<std::string> info,
+                         size_t ref_count,
                          size_t alt_count,
                          size_t DP_count,
                          Phred_t GQ_value,
                          Phred_t quality,
-                         size_t vcf_record_count) : ref_count_(ref_count),
+                         size_t vcf_record_count) : VariantEvidence(std::move(info)),
+                                                    ref_count_(ref_count),
                                                     alt_count_(alt_count),
                                                     DP_count_(DP_count),
                                                     GQ_value_(GQ_value),
                                                     quality_(quality),
                                                     vcf_record_count_(vcf_record_count) {}
-  virtual ~CountEvidence() = default;
+  ~CountEvidence() override = default;
 
-  size_t refCount() const { return ref_count_; }
-  size_t altCount() const { return alt_count_; }
-  size_t DPCount() const { return DP_count_; }
-  Phred_t GQValue() const { return GQ_value_; }
-  Phred_t Quality() const { return quality_; }
-  size_t vcfRecordCount() const { return vcf_record_count_; }
+  [[nodiscard]] size_t refCount() const { return ref_count_; }
+  [[nodiscard]] size_t altCount() const { return alt_count_; }
+  [[nodiscard]] size_t DPCount() const { return DP_count_; }
+  [[nodiscard]] Phred_t GQValue() const { return GQ_value_; }
+  [[nodiscard]] Phred_t Quality() const { return quality_; }
+  [[nodiscard]] size_t vcfRecordCount() const { return vcf_record_count_; }
 
-  std::string output(char delimiter, VariantOutputIndex) const override;
+  [[nodiscard]] std::string output(char delimiter, VariantOutputIndex) const override;
 
 private:
 

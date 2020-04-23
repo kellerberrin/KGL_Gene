@@ -14,8 +14,6 @@
 #include "kgl_genome_db.h"
 #include "kgl_variant_db.h"
 
-#include <seqan/vcf_io.h>
-
 
 namespace kellerberrin::genome {   //  organization level namespace
 

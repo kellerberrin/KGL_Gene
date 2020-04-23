@@ -67,7 +67,7 @@ public:
   [[nodiscard]] std::unique_ptr<const VcfRecord> readVCFRecord() { return vcf_record_queue_.waitAndPop(); }
 
   // Read VCF header info.
-  [[nodiscard]] const VcfHeaderInfo& VCFReadHeader() const;
+  [[nodiscard]] const VcfHeaderInfo& VCFReadHeader();
 
   // Stored VCF header info.
   [[nodiscard]] const std::vector<std::string>& getGenomeNames() const { return parseheader_.getGenomes(); }
@@ -87,11 +87,12 @@ private:
   static constexpr const char HEADER_CHAR_{'#'};          // If first char start with '#' then a header record.
   static constexpr const size_t MINIMUM_VCF_FIELDS_{8};   // At least 8 fields, any others are format and genotype fields (header specified).
   static constexpr const char* VCF_FIELD_DELIMITER_{"\t"};   // VCF Field separator.
+  static constexpr const char VCF_FIELD_DELIMITER_CHAR_{'\t'};   // VCF Field separator (char).
   const std::string FIELD_NOT_PRESENT_{"."}; // no field value
 
   void enqueueVCFRecord(); // enqueue vcf_records.
-  bool parseVCFRecord(const std::unique_ptr<std::string>& line_record_ptr, const std::unique_ptr<VcfRecord>& vcf_record_ptr);
-  bool moveToVcfRecord(std::vector<std::string>& fields, VcfRecord& vcf_record);
+  bool parseVCFRecord(std::unique_ptr<const std::string> line_record_ptr, const std::unique_ptr<VcfRecord>& vcf_record_ptr);
+  bool moveToVcfRecord(std::unique_ptr<const std::string> line_record_ptr, std::vector<std::string>& fields, VcfRecord& vcf_record);
 
 };
 

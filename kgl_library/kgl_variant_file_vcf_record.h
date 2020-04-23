@@ -23,6 +23,7 @@ public:
   // Default constructor.
   VcfRecord() : offset(INVALID_POS), qual(MISSING_QUAL) {}
 
+  std::unique_ptr<const std::string> line_record_ptr;
   // Numeric id of the reference sequence.
   ContigId_t contig_id;
   // Position on the reference.

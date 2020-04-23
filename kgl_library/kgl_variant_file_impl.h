@@ -69,6 +69,7 @@ private:
   static constexpr const long HIGH_TIDE_{10000};          // Maximum BoundedMtQueue size
   static constexpr const long LOW_TIDE_{1000};            // Low water mark to begin queueing VCF records
   constexpr static const char* GZ_FILE_EXTENSTION_ = ".GZ"; // gzipped file assumed.
+  static constexpr const size_t report_increment_{10000};
 
   void rawVCFIO(std::unique_ptr<BaseStreamIO>&& vcf_stream); // read/decompress from disk.
 

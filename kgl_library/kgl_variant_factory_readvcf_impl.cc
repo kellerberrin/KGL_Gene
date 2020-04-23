@@ -27,6 +27,12 @@ void kgl::VCFReaderMT::readVCFFile() {
   // Spawn a minimum of 1 consumers.
   consumer_thread_count_ = consumer_thread_count_ < MIN_CONSUMER_THREADS_ ? MIN_CONSUMER_THREADS_ : consumer_thread_count_;
 
+  ExecEnv::log().info("Parse Header VCF file: {}", vcf_io_.getFileName());
+
+  readHeader();
+
+  ExecEnv::log().info("Begin processing VCF file: {}", vcf_io_.getFileName());
+
   ExecEnv::log().info("Spawning: {} Consumer threads to process the VCF file", consumer_thread_count_);
 
   std::vector<std::thread> consumer_threads;
@@ -38,12 +44,6 @@ void kgl::VCFReaderMT::readVCFFile() {
 
   // start reading records asynchronously.
   vcf_io_.commenceVCFIO(consumer_thread_count_);
-
-  ExecEnv::log().info("Parse Header VCF file: {}", vcf_io_.getFileName());
-
-  readHeader();
-
-  ExecEnv::log().info("Begin processing VCF file: {}", vcf_io_.getFileName());
 
   // Join on the consumer threads
   for(auto& thread : consumer_threads) {
@@ -74,12 +74,6 @@ void kgl::VCFReaderMT::VCFConsumer() {
 
       ExecEnv::log().error("Empty VCF_record encountered; consumer thread terminates.");
       break;
-
-    }
-
-    if (counter % report_increment_ == 0) {
-
-      ExecEnv::log().info("Consumer thread read: {} VCF records", counter);
 
     }
 

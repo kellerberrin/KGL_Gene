@@ -34,6 +34,13 @@ void kgl::GrchVCFImpl::readParseVCFImpl() {
 
 void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record) {
 
+  // Parse the info fields into an array and assign to a shared ptr.
+//  std::shared_ptr<VCFInfoField> info_key_value_map_ptr(std::make_shared<VCFInfoField>(vcf_record.info));  // Each vcf record.
+  std::scoped_lock<std::mutex> lock(mutex_);
+
+  auto mutable_info = const_cast<std::string&>(vcf_record.info);
+  std::shared_ptr<std::string> info_ptr = std::make_shared<std::string>(std::move(mutable_info));
+
   contig_count_[vcf_record.contig_id].second++;
 
 }

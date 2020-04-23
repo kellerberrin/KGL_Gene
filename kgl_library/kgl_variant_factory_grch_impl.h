@@ -57,6 +57,7 @@ private:
   size_t vcf_variant_count_{0};
   std::atomic<uint64_t> record_count_{0};
   size_t variant_count_{0};
+  mutable std::mutex mutex_;
 
   std::map<ContigId_t, std::pair<ContigSize_t, size_t>> contig_count_;
 

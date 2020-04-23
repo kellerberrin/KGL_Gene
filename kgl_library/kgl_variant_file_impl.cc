@@ -167,6 +167,8 @@ void FileVCFIO::rawVCFIO(std::unique_ptr<BaseStreamIO> &&vcf_stream) {
 
     }
 
+    size_t counter = 0;
+
     while (true) {
 
       std::unique_ptr<std::string> line_record_ptr = std::make_unique<std::string>();
@@ -190,6 +192,13 @@ void FileVCFIO::rawVCFIO(std::unique_ptr<BaseStreamIO> &&vcf_stream) {
 
         ExecEnv::log().error("FileVCFIO; Empty VCF record returned");
         continue;
+
+      }
+
+      counter++;
+      if (counter % report_increment_ == 0) {
+
+        ExecEnv::log().info("Reader queued: {} VCF line records", counter);
 
       }
 

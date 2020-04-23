@@ -238,3 +238,34 @@ std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::filterVariants
 
 }
 
+
+bool kgl::UnphasedPopulation::addVariant(std::shared_ptr<const Variant>& variant_ptr) {
+
+  std::shared_ptr<UnphasedGenome> genome;
+
+  if (not getCreateGenome(variant_ptr->genomeId(), genome)) {
+
+    ExecEnv::log().error("UnphasedPopulation::addVariant; Could not add/create genome: {}", variant_ptr->genomeId());
+    return false;
+
+  }
+
+  if (not genome->addVariant(variant_ptr)) { // thread safe
+
+    ExecEnv::log().error("UnphasedPopulation::addVariant; Could not add variant to genome: {}", variant_ptr->genomeId());
+    return false;
+
+  }
+
+  return true;
+
+}
+
+bool kgl::UnphasedPopulation::addThreadSafeVariant(std::shared_ptr<const Variant>& variant_ptr) {
+
+  std::scoped_lock<std::mutex> lock(variant_lock_); // Write Locked
+
+  return addVariant(variant_ptr);
+
+}
+

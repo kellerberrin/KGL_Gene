@@ -79,7 +79,12 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
 
   ParseVCFRecord recordParser(record, record.contig_id, genome_db_ptr_); //Each vcf record.
 
+  // Parse the info fields into an array and assign to a shared ptr.
   VCFInfoField info_key_value_map(record.info);  // Each vcf record.
+
+  // For performance reasons the info field is moved here - don't it reference again.
+  auto mutable_info = const_cast<std::string&>(record.info);
+  std::shared_ptr<std::string> info_ptr = std::make_shared<std::string>(std::move(mutable_info));
 
   if (getGenomeNames().size() != record.genotypeInfos.size()) {
 
@@ -89,7 +94,6 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
   }
 
   size_t genotype_count = 0;
-
   for (auto const& genotype : record.genotypeInfos)
   {
 
@@ -223,14 +227,13 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
           if (allele != UPSTREAM_ALLELE_ and not downstream_variant) {
 
             // Evidence object
-            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(ref_count,
+            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(info_ptr,
+                                                                                          ref_count,
                                                                                           alt_count,
                                                                                           DP_value,
                                                                                           GQ_value,
                                                                                           recordParser.quality(),
                                                                                           vcf_record_count));
-            // process A allele
-            size_t record_variants;
 
             if (not createAddVariant(genome_name,
                                      recordParser.contigPtr(),
@@ -265,15 +268,14 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
           if (allele != UPSTREAM_ALLELE_ and not downstream_variant) {
 
             // Evidence object
-            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(ref_count,
+            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(info_ptr,
+                                                                                          ref_count,
                                                                                           alt_count,
                                                                                           DP_value,
                                                                                           GQ_value,
                                                                                           recordParser.quality(),
                                                                                           vcf_record_count));
 
-            // process B allele
-            size_t record_variants;
 
             if (not createAddVariant(genome_name,
                                      recordParser.contigPtr(),
@@ -311,7 +313,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
 
 bool kgl::Pf3kVCFImpl::addThreadSafeGenomeVariant(const std::shared_ptr<const Variant>& variant_ptr) {
 
-  AutoMutex auto_mutex(add_variant_mutex_); // Write Locked
+  std::scoped_lock<std::mutex> auto_mutex(add_variant_mutex_); // Write Locked
 
   std::shared_ptr<UnphasedGenome> genome;
 
@@ -339,7 +341,7 @@ bool kgl::Pf3kVCFImpl::addThreadSafeGenomeVariant(const std::shared_ptr<const Va
 // and thus these genomes/contigs would not be created on-the-fly.
 void kgl::Pf3kVCFImpl::setupPopulationStructure(const std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
 
-  AutoMutex auto_mutex(add_variant_mutex_);
+  std::scoped_lock<std::mutex> lock(add_variant_mutex_);
 
   ExecEnv::log().info("setupPopulationStructure; Creating a population of {} genomes and {} contigs",
                       getGenomeNames().size(), genome_db_ptr->getMap().size());
@@ -388,6 +390,6 @@ bool kgl::Pf3kVCFImpl::createAddVariant(const std::string& genome_name,
                                                                           std::move(reference_str),
                                                                           std::move(alternate_str)));
 
-  return addThreadSafeGenomeVariant(variant_ptr);
+  return unphased_population_ptr_->addThreadSafeVariant(variant_ptr);
 
 }

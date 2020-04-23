@@ -151,7 +151,7 @@ bool kgl::ParseVCFMiscImpl::tokenizeVcfHeaderKeyValues(const std::string& key_va
     bt::tokenizer<bt::char_separator<char>> tokenize_item(*iter, item_key_sep);
     for(auto iter_item = tokenize_item.begin(); iter_item != tokenize_item.end(); ++iter_item) {
 
-      item_vec.push_back(seqan::toCString(*iter_item));
+      item_vec.push_back(*iter_item);
 
     }
 
@@ -269,7 +269,7 @@ bool kgl::ParseVCFMiscImpl::tokenizeVcfInfoKeyValues(const std::string& key_valu
     bt::tokenizer<bt::char_separator<char>> tokenize_item(*iter, item_key_sep);
     for(auto iter_item = tokenize_item.begin(); iter_item != tokenize_item.end(); ++iter_item) {
 
-      item_vec.push_back(seqan::toCString(*iter_item));
+      item_vec.push_back(*iter_item);
 
     }
 

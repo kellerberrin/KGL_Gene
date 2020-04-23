@@ -133,8 +133,6 @@ void RecordVCFIO::commenceVCFIO(size_t reader_threads) {
 
   reader_threads_ = reader_threads;
 
-  parseheader_.parseHeader(fileName(), getSynchStream());
-
   commenceIO(PARSER_THREADS_);
 
   for (size_t i = 0; i < PARSER_THREADS_; ++i) {
@@ -156,7 +154,7 @@ void RecordVCFIO::enqueueVCFRecord() {
 
   while (true) {
 
-    std::unique_ptr<std::string> line_record_ptr = readIORecord();
+    std::unique_ptr<const std::string> line_record_ptr = readIORecord();
 
     if (not line_record_ptr) { // check for EOF condition.
 
@@ -180,7 +178,7 @@ void RecordVCFIO::enqueueVCFRecord() {
     ++record_line;
 
     std::unique_ptr<VcfRecord> vcf_record_ptr(std::make_unique<VcfRecord>());
-    if (not parseVCFRecord(line_record_ptr, vcf_record_ptr)) {
+    if (not parseVCFRecord(std::move(line_record_ptr), vcf_record_ptr)) {
 
       ExecEnv::log().warn("FileVCFIO; Failed to parse VCF file: {} record line : {}", fileName(), record_line);
 
@@ -195,10 +193,11 @@ void RecordVCFIO::enqueueVCFRecord() {
 }
 
 
-bool RecordVCFIO::parseVCFRecord(const std::unique_ptr<std::string> &line_record_ptr,
-                               const std::unique_ptr<VcfRecord> &vcf_record_ptr) {
+bool RecordVCFIO::parseVCFRecord( std::unique_ptr<const std::string> line_record_ptr,
+                                  const std::unique_ptr<VcfRecord> &vcf_record_ptr) {
 
   std::vector<std::string> field_vector;
+
   if (not ParseVCFMiscImpl::tokenize(std::move(*line_record_ptr), VCF_FIELD_DELIMITER_, field_vector)) {
 
     ExecEnv::log().error("FileVCFIO; VCF file: {}, problem parsing record", fileName());
@@ -213,7 +212,7 @@ bool RecordVCFIO::parseVCFRecord(const std::unique_ptr<std::string> &line_record
 
   }
 
-  if (not moveToVcfRecord(field_vector, *vcf_record_ptr)) {
+  if (not moveToVcfRecord(std::move(line_record_ptr),field_vector, *vcf_record_ptr)) {
 
     ExecEnv::log().error("FileVCFIO; VCF file: {}, cannot parse VCF record field", fileName());
     return false;
@@ -225,18 +224,21 @@ bool RecordVCFIO::parseVCFRecord(const std::unique_ptr<std::string> &line_record
 }
 
 
-const VcfHeaderInfo& RecordVCFIO::VCFReadHeader() const {
+const VcfHeaderInfo& RecordVCFIO::VCFReadHeader() {
 
+  parseheader_.parseHeader(fileName(), getSynchStream());
   return parseheader_.getHeaderInfo();
 
 }
 
 
-bool RecordVCFIO::moveToVcfRecord(std::vector<std::string> &fields, VcfRecord &vcf_record) {
+bool RecordVCFIO::moveToVcfRecord(std::unique_ptr<const std::string> line_record_ptr, std::vector<std::string> &fields, VcfRecord &vcf_record) {
 
   try {
 
-    vcf_record.contig_id = std::move(fields[0]);
+    vcf_record.line_record_ptr = std::move(line_record_ptr);
+
+    vcf_record.contig_id = fields[0];
     vcf_record.offset = std::stoull(fields[1]) - 1; // all offsets are zero based.
     vcf_record.id = std::move(fields[2]);
     vcf_record.ref = std::move(fields[3]);
