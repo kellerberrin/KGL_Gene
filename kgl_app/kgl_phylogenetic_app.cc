@@ -36,62 +36,61 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   HeterozygousStatistics heterozygous_statistics;
 
   std::vector<VCFFileInfo> vcf_list = runtime_options.getVCFFileVector();
-
-  for (size_t i = 0; i < 10; ++i) {
     // For all VCF files, read in the variants.
-    for (const auto &vcf_file : vcf_list) {
+  for (const auto &vcf_file : vcf_list) {
 
-      // Get VCF reference genome.
-      std::shared_ptr<const GenomeDatabase> reference_genome_ptr = genome_collection->getGenome(
-      vcf_file.referenceGenome());
+    // Get VCF reference genome.
+    std::shared_ptr<const GenomeDatabase> reference_genome_ptr = genome_collection->getGenome(
+    vcf_file.referenceGenome());
 
-      // Filter and process Gatk variants.
-      if (vcf_file.parserType() == VCFParserEnum::GatkMultiGenome) {
+    // Filter and process Gatk variants.
+    if (vcf_file.parserType() == VCFParserEnum::GatkMultiGenome) {
 
-        // Read variants.
-        std::shared_ptr<UnphasedPopulation> parsed_variants = VcfFactory::gatkMultiGenomeVCFVariants(
-        reference_genome_ptr, vcf_file.fileName());
+      // Read variants.
+      std::shared_ptr<UnphasedPopulation> parsed_variants = VcfFactory::gatkMultiGenomeVCFVariants(
+      reference_genome_ptr, vcf_file.fileName());
 
-        // Basic statistics to output
-        // unphased_population_ptr->popStatistics();
-        // Filter unphased variants for minimum read statistics.
-        std::shared_ptr<UnphasedPopulation> filtered_unphased_ptr = parsed_variants->filterVariants(
-        AndFilter(DPCountFilter(30), RefAltCountFilter(30)));
+      // Basic statistics to output
+      // unphased_population_ptr->popStatistics();
+      // Filter unphased variants for minimum read statistics.
+      std::shared_ptr<UnphasedPopulation> filtered_unphased_ptr = parsed_variants->filterVariants(
+      AndFilter(DPCountFilter(30), RefAltCountFilter(30)));
 
-        // Process Filtered Unphased Heterozygous Statistics
-        if (not heterozygous_statistics.heterozygousStatistics(filtered_unphased_ptr)) {
+      // Process Filtered Unphased Heterozygous Statistics
+      if (not heterozygous_statistics.heterozygousStatistics(filtered_unphased_ptr)) {
 
-          ExecEnv::log().error(
-          "PhylogeneticExecEnv::executeApp(), Cannot generate heterozygous statistics for VCF file: {}",
-          vcf_file.fileName());
-
-        }
-
-        // If the mixture file is defined and exists then read it and generate a population of clonal genomes.
-        std::string mixture_file;
-        if (runtime_options.getMixtureFile(mixture_file)) {
-
-          // The mixture file (Pf3k only) indicates the Complexity Of Infection (COI) of VCF samples, this function includes only clonal infections.
-          std::shared_ptr<UnphasedPopulation> clonal_unphased = GenomePhasing::filterClonal(mixture_file, filtered_unphased_ptr);
-
-        }
-
-        // Get the VCF ploidy (need not be the organism ploidy).
-        size_t ploidy = vcf_file.ploidy();
-        // Phase the homozygous and heterozygous variants into a haploid population.
-        GenomePhasing::haploidPhasing(ploidy, filtered_unphased_ptr, reference_genome_ptr, population_ptr);
-
-      } else if (vcf_file.parserType() == VCFParserEnum::GRChNoGenome) {
-
-        // Read variants.
-        std::shared_ptr<UnphasedGenome> parsed_variants = VcfFactory::GRChNoGenomeVCFVariants(reference_genome_ptr,
-                                                                                              vcf_file.fileName());
+        ExecEnv::log().error(
+        "PhylogeneticExecEnv::executeApp(), Cannot generate heterozygous statistics for VCF file: {}",
+        vcf_file.fileName());
 
       }
+
+      // If the mixture file is defined and exists then read it and generate a population of clonal genomes.
+      std::string mixture_file;
+      if (runtime_options.getMixtureFile(mixture_file)) {
+
+        // The mixture file (Pf3k only) indicates the Complexity Of Infection (COI) of VCF samples, this function includes only clonal infections.
+        std::shared_ptr<UnphasedPopulation> clonal_unphased = GenomePhasing::filterClonal(mixture_file, filtered_unphased_ptr);
+
+      }
+
+      // Get the VCF ploidy (need not be the organism ploidy).
+      size_t ploidy = vcf_file.ploidy();
+      // Phase the homozygous and heterozygous variants into a haploid population.
+      GenomePhasing::haploidPhasing(ploidy, filtered_unphased_ptr, reference_genome_ptr, population_ptr);
+
+      unphased_population_ptr->mergePopulation(filtered_unphased_ptr);
+
+    } else if (vcf_file.parserType() == VCFParserEnum::GRChNoGenome) {
+
+      // Read variants.
+      std::shared_ptr<UnphasedGenome> parsed_variants = VcfFactory::GRChNoGenomeVCFVariants(reference_genome_ptr,
+                                                                                            vcf_file.fileName());
 
     }
 
   }
+
 
   // Write the unphased hetero/homozygous statistics.
   std::string heterozygous_file = Utility::filePath("HeterozygousAnalysis", args.workDirectory) + ".csv";

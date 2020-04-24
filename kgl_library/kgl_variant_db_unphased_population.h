@@ -61,6 +61,9 @@ public:
   [[nodiscard]] const PopulationId_t& populationId() const { return population_id_; }
   void setPopulationId(const PopulationId_t& population_id) { population_id_ = population_id; }
 
+  // Merge genomes and variants into this population.
+  void mergePopulation(std::shared_ptr<const UnphasedPopulation> merge_population);
+
 private:
 
   UnphasedGenomeMap genome_map_;

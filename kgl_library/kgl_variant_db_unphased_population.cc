@@ -257,3 +257,32 @@ bool kgl::UnphasedPopulation::addVariant(std::shared_ptr<const Variant>& variant
 }
 
 
+void kgl::UnphasedPopulation::mergePopulation(std::shared_ptr<const UnphasedPopulation> merge_population) {
+
+  for (auto const& genome : merge_population->getMap()) {
+
+    for (auto const& contig : genome.second->getMap()) {
+
+      for (auto const& [offset, variant_vector] : contig.second->getMap()) {
+
+        for (auto variant_ptr : variant_vector) {
+
+          if (not addVariant(variant_ptr)) {
+
+            ExecEnv::log().error("UnphasedPopulation::mergePopulation(); Cannot merge variant offset: {} from: {} to to: {}",
+                                  offset, merge_population->populationId(), populationId());
+
+          }
+
+        }
+
+      }
+
+    }
+
+  }
+
+}
+
+
+
