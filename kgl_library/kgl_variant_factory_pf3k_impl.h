@@ -75,6 +75,7 @@ private:
 
   [[nodiscard]] bool addThreadSafeGenomeVariant(const std::shared_ptr<const Variant>& variant_ptr);
   void setupPopulationStructure(const std::shared_ptr<const GenomeDatabase> genome_db_ptr);
+  [[nodiscard]] bool addThreadSafeVariant(std::shared_ptr<const Variant>& variant_ptr);
 
   [[nodiscard]] bool createAddVariant(const std::string& genome_name,
                                       const std::shared_ptr<const ContigFeatures> contig_ptr,

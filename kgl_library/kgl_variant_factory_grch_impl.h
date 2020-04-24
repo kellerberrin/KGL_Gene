@@ -28,12 +28,6 @@ public:
                                                   vcf_genome_ptr_(std::move(vcf_genome_ptr)),
                                                   genome_db_ptr_(std::move(genome_db_ptr)){
 
-    for (auto const& [contig_id, contig_ptr] : genome_db_ptr_->getMap()) {
-
-      contig_count_[contig_id]  = std::pair<ContigSize_t, size_t>(contig_ptr->contigSize(), 0);
-
-    }
-
   }
 
   ~GrchVCFImpl() override = default;
@@ -47,7 +41,7 @@ public:
 
 private:
 
-  constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 10000;
+  constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 100000;
 
   std::shared_ptr<UnphasedGenome> vcf_genome_ptr_;
   std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
@@ -57,9 +51,18 @@ private:
   size_t vcf_variant_count_{0};
   std::atomic<uint64_t> record_count_{0};
   size_t variant_count_{0};
-  mutable std::mutex mutex_;
+  mutable std::mutex add_variant_mutex_;
 
   std::map<ContigId_t, std::pair<ContigSize_t, size_t>> contig_count_;
+
+  bool createAddVariant( const GenomeId_t& genome_name,
+                         const ContigId_t& contig_id,
+                         ContigOffset_t contig_offset,
+                         const std::string& reference_text,
+                         const std::string& alternate_text,
+                         const std::shared_ptr<const VariantEvidence> evidence_ptr);
+
+  bool addThreadSafeVariant(std::shared_ptr<const Variant>& variant_ptr);
 
 };
 

@@ -33,9 +33,9 @@ public:
 
   // A simple phasing strategy that removes all conflicting variants.
   static bool haploidPhasing(size_t vcf_ploidy,
-                             std::shared_ptr<const UnphasedPopulation> vcf_population_ptr,
-                             std::shared_ptr<const GenomeDatabase> genome_db,
-                             std::shared_ptr<PhasedPopulation> haploid_population);
+                             const std::shared_ptr<const UnphasedPopulation>& vcf_population_ptr,
+                             const std::shared_ptr<const GenomeDatabase>& genome_db,
+                             const std::shared_ptr<PhasedPopulation>& haploid_population);
 
 private:
 

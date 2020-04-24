@@ -41,7 +41,7 @@ bool kgl::HomologousVariant::addVariant(std::shared_ptr<const Variant>& variant_
     } else {
 
       // Another variant at the same offset.
-      ExecEnv::log().warn("addVariant() fails, for variant:\n{}\nDifferent variant already exists at offset:\n{}",
+      ExecEnv::log().warn("HomologousVariant::addVariant() fails, for variant:\n{}\nDifferent variant already exists at offset:\n{}",
                           variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, true),
                           result->second->output(' ', VariantOutputIndex::START_0_BASED, true));
       return false;

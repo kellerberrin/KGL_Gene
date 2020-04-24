@@ -390,6 +390,15 @@ bool kgl::Pf3kVCFImpl::createAddVariant(const std::string& genome_name,
                                                                           std::move(reference_str),
                                                                           std::move(alternate_str)));
 
-  return unphased_population_ptr_->addThreadSafeVariant(variant_ptr);
+  return addThreadSafeVariant(variant_ptr);
+
+}
+
+
+bool kgl::Pf3kVCFImpl::addThreadSafeVariant(std::shared_ptr<const Variant>& variant_ptr) {
+
+  std::scoped_lock<std::mutex> lock(add_variant_mutex_); // Write Locked
+
+  return unphased_population_ptr_->addVariant(variant_ptr);
 
 }

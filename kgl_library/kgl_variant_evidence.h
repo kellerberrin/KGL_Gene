@@ -31,7 +31,7 @@ public:
   explicit VariantEvidence(std::shared_ptr<std::string> info) : info_(std::move(info)) {}
   virtual ~VariantEvidence() = default;
 
-  [[nodiscard]] virtual std::string output(char delimiter, VariantOutputIndex output_index) const = 0;
+  [[nodiscard]] virtual std::string output(char delimiter, VariantOutputIndex) const { return delimiter  + *info_ + delimiter; }
 
   [[nodiscard]] const std::string& info_field() const { return *info_; }
 

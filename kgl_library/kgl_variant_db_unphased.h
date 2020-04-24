@@ -23,7 +23,7 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 
 
-using UnphasedVariantCount = std::pair<std::shared_ptr<const Variant>, size_t>;
+using UnphasedVariantCount = std::shared_ptr<const Variant>;
 using UnphasedVectorVariantCount = std::vector<UnphasedVariantCount>;
 using UnphasedOffsetMap = std::map<ContigOffset_t, UnphasedVectorVariantCount>;
 class UnphasedContig {

@@ -121,58 +121,54 @@ bool kgl::UnphasedPopulation::genomePhasingStats(const GenomeId_t& genome_id,
 
   }
 
-  for (auto contig : result->second->getMap()) {
+  for (auto const& [contig_id, contig_ptr] : result->second->getMap()) {
 
-    for (auto offset : contig.second->getMap()) {
+    for (auto const& [offset, variant_vector] : contig_ptr->getMap()) {
 
-      if (offset.second.size() == 0) {
+      if (variant_vector.empty()) {
 
         ExecEnv::log().error(
         "UnphasedPopulation::genomePhasingStats(); Zero sized variant vector, genome: {}, contig: {}, offset: {}",
-        genome_id, contig.first, offset.first);
+        genome_id, contig_id, offset);
         return_result = false;
         continue;
 
       }
 
-      if (offset.second.size() == 1) {
+      switch(variant_vector.size()) {
 
-        if (offset.second.front().second == 1) {
+        case 0: {
+          ExecEnv::log().error(
+          "UnphasedPopulation::genomePhasingStats(); Zero sized variant vector, genome: {}, contig: {}, offset: {}",
+          genome_id, contig_id, offset);
+          return_result = false;
+        }
+          break;
 
-          ++singleheterozygous;
+        case 1:  ++singleheterozygous;
+          break;
 
-        } else if (offset.second.front().second == 2) {
+        case 2: {
 
-          ++homozygous;
+          if (variant_vector[0]->equivalent(*variant_vector[1])) {
 
-        } else {
+            ++homozygous;
 
-          ++homozygous;
-          ExecEnv::log().warn("UnphasedPopulation::genomePhasingStats(); {} copies of variant: {}",
-                              offset.second.front().second,
-                              offset.second.front().first->output(' ', VariantOutputIndex::START_0_BASED, false));
+          } else {
+
+            ++heterozygous;
+
+          }
 
         }
+          break;
+
+        default:
+          ExecEnv::log().warn("UnphasedPopulation::genomePhasingStats(); {} variants found at genome: {}, contig: {}, offset: {}",
+                              variant_vector.size(), genome_id, contig_id, offset);
 
 
-      } else if (offset.second.size() == 2) {
-
-        ++heterozygous;
-
-      } else {
-
-        ++heterozygous;
-        ExecEnv::log().warn("UnphasedPopulation::genomePhasingStats(); {} variants found at genome: {}, contig: {}, offset: {}",
-                            offset.second.size(), genome_id, contig.first, offset.first);
-
-        for (auto variant : offset.second) {
-
-          ExecEnv::log().warn("UnphasedPopulation::genomePhasingStats(); count: {}, variant {}",
-                              variant.second, variant.first->output(' ', VariantOutputIndex::START_0_BASED, false));
-
-        }
-
-      }
+      } // switch
 
     } // offset
 
@@ -242,7 +238,6 @@ std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::filterVariants
 bool kgl::UnphasedPopulation::addVariant(std::shared_ptr<const Variant>& variant_ptr) {
 
   std::shared_ptr<UnphasedGenome> genome;
-
   if (not getCreateGenome(variant_ptr->genomeId(), genome)) {
 
     ExecEnv::log().error("UnphasedPopulation::addVariant; Could not add/create genome: {}", variant_ptr->genomeId());
@@ -261,11 +256,4 @@ bool kgl::UnphasedPopulation::addVariant(std::shared_ptr<const Variant>& variant
 
 }
 
-bool kgl::UnphasedPopulation::addThreadSafeVariant(std::shared_ptr<const Variant>& variant_ptr) {
-
-  std::scoped_lock<std::mutex> lock(variant_lock_); // Write Locked
-
-  return addVariant(variant_ptr);
-
-}
 

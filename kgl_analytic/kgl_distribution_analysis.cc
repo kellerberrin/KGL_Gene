@@ -15,32 +15,28 @@ namespace kgl = kellerberrin::genome;
 bool kgl::AggregateVariantDistribution::variantDistribution(std::shared_ptr<const UnphasedPopulation> unphased_population) {
 
 
-  for (auto genome : unphased_population->getMap()) {
+  for (auto const& genome : unphased_population->getMap()) {
 
-    for (auto contig : genome.second->getMap()) {
+    for (auto const& contig : genome.second->getMap()) {
 
-      for (auto offset : contig.second->getMap()) {
+      for (auto const& offset : contig.second->getMap()) {
 
-        for (auto variant : offset.second) {
+        for (auto const& variant_ptr : offset.second) {
 
-          for (size_t count = 0; count < variant.second; ++count) {
-
-            if (not addVariant(variant.first)) {
+            if (not addVariant(variant_ptr)) {
 
               ExecEnv::log().error( "AggregatVariantDistribution; Cannot add variant: {}",
-                                    variant.first->output(' ', VariantOutputIndex::START_0_BASED, false));
+                                    variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false));
 
-            }
+            } // if
 
-          } // Homozygous variants.
+          } // variants.
 
         } // offset vector
 
-      } // offset
+      } // contig
 
-    } // contig
-
-  } // genome
+    } // genome
 
   ExecEnv::log().info("AggregatVariantDistribution; Unphased variants processed: {}", unphased_population->variantCount());
 
@@ -52,13 +48,13 @@ bool kgl::AggregateVariantDistribution::variantDistribution(std::shared_ptr<cons
 bool kgl::AggregateVariantDistribution::variantDistribution(std::shared_ptr<const PhasedPopulation> population_ptr) {
 
 
-  for (auto genome : population_ptr->getMap()) {
+  for (auto const& genome : population_ptr->getMap()) {
 
-    for (auto contig : genome.second->getMap()) {
+    for (auto const& contig : genome.second->getMap()) {
 
-      for (auto homologous : contig.second->getVector()) {
+      for (auto const& homologous : contig.second->getVector()) {
 
-        for (auto variant : homologous->getMap()) {
+        for (auto const& variant : homologous->getMap()) {
 
           if (not addVariant(variant.second)) {
 

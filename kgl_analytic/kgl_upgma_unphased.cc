@@ -57,7 +57,7 @@ kgl::DistanceType_t kgl::UPGMAUnphasedDistance::distance(std::shared_ptr<const V
 
           for (auto cmp_variant : cmp_offset_iter->second) {
 
-            if (variant.first->equivalent(*(cmp_variant.first))) {
+            if (variant->equivalent(*(cmp_variant))) {
 
               ++variants_found;
               break;
@@ -98,7 +98,7 @@ kgl::DistanceType_t kgl::UPGMAUnphasedDistance::distance(std::shared_ptr<const V
 
               for (auto cmp_variant : cmp_offset_iter->second) {
 
-                if (variant.first->equivalent(*(cmp_variant.first))) {
+                if (variant->equivalent(*(cmp_variant))) {
 
                   ++variants_found;
                   break;

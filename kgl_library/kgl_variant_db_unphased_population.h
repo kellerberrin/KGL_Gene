@@ -58,8 +58,6 @@ public:
 
   [[nodiscard]] bool addVariant(std::shared_ptr<const Variant>& variant_ptr);
 
-  [[nodiscard]] bool addThreadSafeVariant(std::shared_ptr<const Variant>& variant_ptr);
-
   [[nodiscard]] const PopulationId_t& populationId() const { return population_id_; }
   void setPopulationId(const PopulationId_t& population_id) { population_id_ = population_id; }
 
@@ -67,7 +65,6 @@ private:
 
   UnphasedGenomeMap genome_map_;
   PopulationId_t population_id_;
-  std::mutex variant_lock_;
 
 };
 

@@ -27,25 +27,25 @@ kgl::VariantClassifier::VariantClassifier(std::shared_ptr<const UnphasedPopulati
   genomes_ = vcf_population_ptr->genomeList();
 
   // for all variants index by contig/offset
-  for (auto genome : vcf_population_ptr->getMap()) {
+  for (auto const& genome : vcf_population_ptr->getMap()) {
 
-    for(auto contig : genome.second->getMap()) {
+    for(auto const& contig : genome.second->getMap()) {
 
-      for(auto offset : contig.second->getMap()) {
+      for(auto const& [offset, variant_vector] : contig.second->getMap()) {
 
-        for(auto variant : offset.second) {
+        for(auto const& variant : variant_vector) {
 
-          ContigOffsetVariants ordered_variant(variant.first);
+          ContigOffsetVariants ordered_variant(variant);
           auto result = variant_map_.find(ordered_variant);
 
           if (result != variant_map_.end()) {
 
-            auto map_result = result->second.insert(GenomeOffsetMap::value_type(variant.first->genomeId(), variant.first));
+            auto map_result = result->second.insert(GenomeOffsetMap::value_type(variant->genomeId(), variant));
 
             if (not map_result.second) {
 
               ExecEnv::log().error("VariantClassifier; Attempt to insert duplicate variant: {}",
-                                   variant.first->output(' ',VariantOutputIndex::START_0_BASED, false));
+                                   variant->output(' ',VariantOutputIndex::START_0_BASED, false));
 
             }
 
@@ -59,16 +59,16 @@ kgl::VariantClassifier::VariantClassifier(std::shared_ptr<const UnphasedPopulati
             if (not insert_result.second) {
 
               ExecEnv::log().error("VariantClassifier; Attempt to insert duplicate variant: {}",
-                                   variant.first->output(' ',VariantOutputIndex::START_0_BASED, false));
+                                   variant->output(' ',VariantOutputIndex::START_0_BASED, false));
 
             } else {
 
-              auto map_result= insert_result.first->second.insert(GenomeOffsetMap::value_type(variant.first->genomeId(), variant.first));
+              auto map_result= insert_result.first->second.insert(GenomeOffsetMap::value_type(variant->genomeId(), variant));
 
               if (not map_result.second) {
 
                 ExecEnv::log().error("VariantClassifier; Attempt to insert duplicate variant: {}",
-                                     variant.first->output(' ',VariantOutputIndex::START_0_BASED, false));
+                                     variant->output(' ',VariantOutputIndex::START_0_BASED, false));
 
               }
 
