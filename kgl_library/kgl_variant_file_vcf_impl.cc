@@ -242,7 +242,17 @@ bool RecordVCFIO::moveToVcfRecord(std::unique_ptr<const std::string> line_record
     vcf_record.offset = std::stoull(fields[1]) - 1; // all offsets are zero based.
     vcf_record.id = std::move(fields[2]);
     vcf_record.ref = std::move(fields[3]);
-    vcf_record.alt = std::move(fields[4]);
+    // A deletion variant can be signalled by a missing alt value.
+    if (fields[4] == FIELD_NOT_PRESENT_) {
+
+      vcf_record.alt = "";
+
+    } else {
+
+      vcf_record.alt = std::move(fields[4]);
+
+    }
+    // The quality field can be omitted.
     if (fields[5] == FIELD_NOT_PRESENT_) {
 
       vcf_record.qual = 0.0;

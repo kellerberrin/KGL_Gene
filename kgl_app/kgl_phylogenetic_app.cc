@@ -83,9 +83,11 @@ void kgl::PhylogeneticExecEnv::executeApp() {
 
     } else if (vcf_file.parserType() == VCFParserEnum::GRChNoGenome) {
 
+      ContigAliasMap contig_alias_map = runtime_options.getContigAlias();
       // Read variants.
       std::shared_ptr<UnphasedGenome> parsed_variants = VcfFactory::GRChNoGenomeVCFVariants(reference_genome_ptr,
-                                                                                            vcf_file.fileName());
+                                                                                            vcf_file.fileName(),
+                                                                                            contig_alias_map);
 
     }
 

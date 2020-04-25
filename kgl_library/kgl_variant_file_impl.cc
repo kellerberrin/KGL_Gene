@@ -135,7 +135,7 @@ std::unique_ptr<BaseStreamIO> FileVCFIO::getSynchStream() {
 
   std::string file_ext = Utility::toupper(Utility::fileExtension(fileName()));
 
-  if (file_ext == GZ_FILE_EXTENSTION_) {
+  if (file_ext == GZ_FILE_EXTENSTION_ or file_ext == BGZ_FILE_EXTENSTION_) {
 
     return std::make_unique<GZStreamIO>();
 

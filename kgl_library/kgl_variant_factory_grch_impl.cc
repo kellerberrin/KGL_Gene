@@ -36,15 +36,18 @@ void kgl::GrchVCFImpl::readParseVCFImpl() {
 void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record) {
 
   // Parse the info fields into an array and assign to a shared ptr.
-//  std::shared_ptr<VCFInfoField> info_key_value_map_ptr(std::make_shared<VCFInfoField>(vcf_record.info));  // Each vcf record.
-  auto mutable_info = const_cast<std::string&>(vcf_record.info);
-  std::shared_ptr<std::string> info_ptr = std::make_shared<std::string>(std::move(mutable_info));
-
+//  auto mutable_info = const_cast<std::string&>(vcf_record.info);
+//  std::shared_ptr<std::string> info_ptr = std::make_shared<std::string>(std::move(mutable_info));
+  std::shared_ptr<std::string> null_str_ptr = std::make_shared<std::string>("");
   // Evidence object
-  std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<VariantEvidence>(info_ptr));
+  std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<VariantEvidence>(null_str_ptr));
 
+  // Convert VCF contig to genome contig.
+  std::string contig = contig_alias_map_.lookupAlias(Utility::toupper(vcf_record.contig_id));
+
+  // Add the variant.
   if (not createAddVariant( vcf_genome_ptr_->genomeId(),
-                            vcf_record.contig_id,
+                            contig,
                             vcf_record.offset,
                             vcf_record.ref,
                             vcf_record.alt,
@@ -56,9 +59,9 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
   ++variant_count_;
 
-  if (record_count_ % VARIANT_REPORT_INTERVAL_ == 0) {
+  if (vcf_record_count % VARIANT_REPORT_INTERVAL_ == 0) {
 
-    ExecEnv::log().info("Processed :{} records, total variants: {}", static_cast<size_t>(record_count_), variant_count_);
+    ExecEnv::log().info("Processed :{} records, total variants: {}", static_cast<size_t>(vcf_record_count), variant_count_);
     ExecEnv::log().info("Contig: {}, offset: {}", vcf_record.contig_id, vcf_record.offset);
 
   }

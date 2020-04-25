@@ -28,6 +28,35 @@ kgl::VCFParserEnum kgl::VCFFileInfo::getParserType(const std::string& parser_typ
 }
 
 
+
+const kgl::ContigId_t& kgl::ContigAliasMap::lookupAlias(const ContigId_t& alias) {
+
+  auto result = alias_map_.find(alias);
+
+  if (result == alias_map_.end()) {
+
+    ExecEnv::log().error("ContigAliasMap::lookupAlias(); Alias: {} Not Found", alias);
+    return alias;
+
+  }
+
+  return result->second;
+
+}
+
+void kgl::ContigAliasMap::setAlias(const ContigId_t& alias, const ContigId_t& contig_id) {
+
+  auto result = alias_map_.insert(std::pair<std::string, std::string>(alias, contig_id));
+
+  if (not result.second) {
+
+    ExecEnv::log().error("ContigAliasMap::setAlias(); Cannot register Alias: {} for Contig: {} (duplicate)", alias, contig_id);
+
+  }
+
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // High level application specific property retrieval
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -228,6 +257,48 @@ std::vector<kgl::VCFFileInfo> kgl::RuntimeProperties::getVCFFileVector() const {
   }
 
   return vcf_files;
+
+}
+
+
+kgl::ContigAliasMap kgl::RuntimeProperties::getContigAlias() const {
+
+
+  ContigAliasMap contig_alias_map;
+
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + ALIAS_LIST_;
+
+  std::vector<SubPropertyTree> property_tree_vector;
+  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
+
+    ExecEnv::log().info("RuntimeProperties::getContigAlias, No Contig Alias Specified");
+    return contig_alias_map;
+
+  }
+
+  for (const auto& sub_tree : property_tree_vector) {
+
+    // Alias is idempotent.
+    contig_alias_map.setAlias(sub_tree.first, sub_tree.first);
+
+    // Get a vector of alias
+    std::vector<std::string> alias_vector;
+    if (not sub_tree.second.getNodeVector(ALIAS_ENTRY_, alias_vector))  {
+
+      ExecEnv::log().warn("RuntimeProperties::getContigAlias, No Alias Specified for Contig: {}", sub_tree.first);
+
+    }
+
+    for (auto const& alias : alias_vector) {
+
+      ExecEnv::log().info("RuntimeProperties::getContigAlias, Alias: {} for Contig Id: {}", alias, sub_tree.first);
+      contig_alias_map.setAlias(alias, sub_tree.first);
+
+    }
+
+  }
+
+  return contig_alias_map;
 
 }
 

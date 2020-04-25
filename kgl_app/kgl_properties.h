@@ -6,10 +6,14 @@
 #ifndef KGL_PROPERTIES_H
 #define KGL_PROPERTIES_H
 
+
 #include "kel_property_tree.h"
+
+#include "kgl_genome_types.h"
 
 #include <memory>
 #include <string>
+#include <map>
 #include <set>
 
 
@@ -95,6 +99,32 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Lookup the fasta/gff contig/chromosome  identifier using a VCF contig identifier.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+using AliasMap = std::map<ContigId_t, ContigId_t>;
+
+class ContigAliasMap {
+
+public:
+
+  ContigAliasMap() = default;
+  ContigAliasMap(const ContigAliasMap&) = default;
+  ~ContigAliasMap() = default;
+
+  [[nodiscard]] const ContigId_t& lookupAlias(const ContigId_t& alias);
+  void setAlias(const ContigId_t& alias, const ContigId_t& contig_id);
+
+private:
+
+  AliasMap alias_map_;
+
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // High level object extracts application specific properties.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -130,6 +160,8 @@ public:
 
   [[nodiscard]] std::vector<VCFFileInfo> getVCFFileVector() const;
 
+  [[nodiscard]] ContigAliasMap getContigAlias() const;
+
 private:
 
   constexpr static const char* DOT_ = ".";
@@ -155,6 +187,8 @@ private:
   constexpr static const char* AUX_FILE_ = "auxFile";
   constexpr static const char* AUX_GENOME_FILE_ = "auxGenomeFile";
   constexpr static const char* TRANSLATION_TABLE_ = "translationTable";
+  constexpr static const char* ALIAS_LIST_ = "contigAlias";
+  constexpr static const char* ALIAS_ENTRY_ = "alias";
   // Defaults
   constexpr static const size_t DEFAULT_PLOIDY_ = 2;
 

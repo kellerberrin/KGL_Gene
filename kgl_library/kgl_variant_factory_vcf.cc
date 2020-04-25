@@ -33,10 +33,11 @@ kgl::VcfFactory::gatkMultiGenomeVCFVariants( const std::shared_ptr<const GenomeD
 
 std::shared_ptr<kgl::UnphasedGenome>
 kgl::VcfFactory::GRChNoGenomeVCFVariants( const std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                                          const std::string &vcf_file_name) {
+                                          const std::string &vcf_file_name,
+                                          const ContigAliasMap& contig_alias_map) {
 
   std::shared_ptr<UnphasedGenome> vcf_genome_ptr(std::make_shared<UnphasedGenome>(genome_db_ptr->genomeId()));
-  GrchVCFImpl reader(vcf_genome_ptr, genome_db_ptr, vcf_file_name);
+  GrchVCFImpl reader(vcf_genome_ptr, genome_db_ptr, vcf_file_name, contig_alias_map);
 
   reader.readParseVCFImpl();
 

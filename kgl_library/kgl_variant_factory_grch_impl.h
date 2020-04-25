@@ -24,11 +24,11 @@ public:
 
   GrchVCFImpl(std::shared_ptr<UnphasedGenome> vcf_genome_ptr,
               std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-              const std::string &vcf_file_name) : VCFReaderMT(vcf_file_name),
-                                                  vcf_genome_ptr_(std::move(vcf_genome_ptr)),
-                                                  genome_db_ptr_(std::move(genome_db_ptr)){
-
-  }
+              const std::string &vcf_file_name,
+              const ContigAliasMap& contig_alias_map) : VCFReaderMT(vcf_file_name),
+                                                        vcf_genome_ptr_(std::move(vcf_genome_ptr)),
+                                                        genome_db_ptr_(std::move(genome_db_ptr)),
+                                                        contig_alias_map_(contig_alias_map) {}
 
   ~GrchVCFImpl() override = default;
 
@@ -45,6 +45,7 @@ private:
 
   std::shared_ptr<UnphasedGenome> vcf_genome_ptr_;
   std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
+  ContigAliasMap contig_alias_map_;
 
 // Progress counters.
 

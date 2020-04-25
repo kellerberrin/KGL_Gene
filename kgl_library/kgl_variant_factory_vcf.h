@@ -27,7 +27,8 @@ public:
 
   [[nodiscard]] static std::shared_ptr<UnphasedGenome>
   GRChNoGenomeVCFVariants( const std::shared_ptr<const GenomeDatabase> genome_db_ptr,
-                           const std::string &vcf_file_name);
+                           const std::string &vcf_file_name,
+                           const ContigAliasMap& contig_alias_map);
 
 
 private:

@@ -39,6 +39,8 @@ public:
 
   bool getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const;
 
+  bool getNodeVector(const std::string& node_name, std::vector<std::string>& node_data_vector) const;
+
   bool getProperty(const std::string& property_name, size_t& property) const;
 
 
@@ -80,9 +82,9 @@ bool kel::PropertyTree::PropertyImpl::readPropertiesFile(const std::string& prop
     }
 
   }
-  catch(...) {
+  catch(std::runtime_error& e) {
 
-    ExecEnv::log().error("PropertyTree; Missing or Malformed property tree in file: {}", properties_file);
+    ExecEnv::log().error("PropertyTree; Missing or Malformed property tree in file: {}, error: {}", properties_file, e.what());
     return false;
 
   }
@@ -124,9 +126,9 @@ bool kel::PropertyTree::PropertyImpl::getProperty(const std::string& property_na
     }
 
   }
-  catch (...) {
+  catch (const std::runtime_error& e) {
 
-    ExecEnv::log().error("Exception: PropertyTree GetProperty; Property: {} not found", property_name);
+    ExecEnv::log().error("Exception: PropertyTree GetProperty; Property: {} not found, error: {}", property_name, e.what());
     ExecEnv::log().error("*********** Property Tree Contents *************");
     treeTraversal();
     ExecEnv::log().error("**********************************************");
@@ -147,9 +149,36 @@ bool kel::PropertyTree::PropertyImpl::getPropertyTree(const pt::ptree& property_
     property = Utility::trimEndWhiteSpace(property);
 
   }
-  catch (...) {
+  catch (const std::runtime_error& e) {
 
-    ExecEnv::log().error("PropertyTree; Property: {} not found", property_name);
+    ExecEnv::log().error("PropertyTree; Property: {} not found, error: {}", property_name, e.what());
+    ExecEnv::log().error("***********Property Tree Contents*************");
+    treeTraversal();
+    ExecEnv::log().error("**********************************************");
+    return false;
+
+  }
+
+  return true;
+
+}
+
+bool kel::PropertyTree::PropertyImpl::getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const {
+
+
+  try {
+
+    for (auto child : property_tree_.get_child(property_name)) {
+
+      // The data function is used to access the data stored in a node.
+      property_vector.push_back(Utility::trimEndWhiteSpace(child.second.data()));
+
+    }
+
+  }
+  catch (const std::runtime_error& e) {
+
+    ExecEnv::log().error("PropertyTree::getPropertyVector; Property Vector: {} not found, error: {}", property_name, e.what());
     ExecEnv::log().error("***********Property Tree Contents*************");
     treeTraversal();
     ExecEnv::log().error("**********************************************");
@@ -162,21 +191,25 @@ bool kel::PropertyTree::PropertyImpl::getPropertyTree(const pt::ptree& property_
 }
 
 
-bool kel::PropertyTree::PropertyImpl::getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const {
+
+bool kel::PropertyTree::PropertyImpl::getNodeVector(const std::string& node_name, std::vector<std::string>& node_vector) const {
 
   try {
 
-    for (auto child : property_tree_.get_child(property_name)) {
+    for (auto const& tree : property_tree_) {
 
-      // The data function is used to access the data stored in a node.
-      property_vector.push_back(Utility::trimEndWhiteSpace(child.second.data()));
+      if (tree.first == node_name) {
+
+        node_vector.push_back(tree.second.get_value<std::string>());
+
+      }
 
     }
 
   }
-  catch (...) {
+  catch (const std::runtime_error& e) {
 
-    ExecEnv::log().error("PropertyTree::getPropertyVector; Property Vector: {} not found", property_name);
+    ExecEnv::log().error("PropertyTree::getPropertyVector; Property Vector: {} not found, error: {}", node_name, e.what());
     ExecEnv::log().error("***********Property Tree Contents*************");
     treeTraversal();
     ExecEnv::log().error("**********************************************");
@@ -228,9 +261,9 @@ bool kel::PropertyTree::PropertyImpl::getProperty(const std::string& property_na
     property= std::stoull(size_string);
 
   }
-  catch (...) {
+  catch (const std::runtime_error& e) {
 
-    ExecEnv::log().error("PropertyTree; Property: {}, Value: {} is not an unsigned integer", property_name, size_string);
+    ExecEnv::log().error("PropertyTree; Property: {}, Value: {} is not an unsigned integer, error: {}", property_name, size_string, e.what());
     return false;
 
   }
@@ -404,6 +437,13 @@ bool kel::PropertyTree::getOptionalFileProperty(const std::string& property_name
 bool kel::PropertyTree::getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const {
 
   return properties_impl_ptr_->getPropertyVector(property_name, property_vector);
+
+}
+
+
+bool kel::PropertyTree::getNodeVector(const std::string& node_name, std::vector<std::string>& node_vector) const {
+
+  return properties_impl_ptr_->getNodeVector(node_name, node_vector);
 
 }
 

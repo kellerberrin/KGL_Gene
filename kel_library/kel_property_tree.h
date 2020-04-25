@@ -46,6 +46,8 @@ public:
 
   [[nodiscard]] bool getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const;
 
+  [[nodiscard]] bool getNodeVector(const std::string& node_name, std::vector<std::string>& node_vector) const;
+
   [[nodiscard]] bool getPropertyTreeVector(const std::string& property_name, std::vector<SubPropertyTree>& property_tree_vector) const;
 
   [[nodiscard]] bool getProperty(const std::string& property_name, size_t& property) const;
