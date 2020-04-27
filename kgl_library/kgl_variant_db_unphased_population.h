@@ -36,7 +36,7 @@ public:
   [[nodiscard]] std::shared_ptr<UnphasedPopulation> deepCopy() const;
 
   // Create the genome variant if it does not exist.
-  [[nodiscard]] bool getCreateGenome(const GenomeId_t& genome_id, std::shared_ptr<UnphasedGenome>& genome);
+  [[nodiscard]] std::optional<std::shared_ptr<UnphasedGenome>> getCreateGenome(const GenomeId_t& genome_id);
 
   [[nodiscard]] size_t variantCount() const;
   void popStatistics() const; // output to logger
@@ -63,6 +63,9 @@ public:
 
   // Merge genomes and variants into this population.
   void mergePopulation(std::shared_ptr<const UnphasedPopulation> merge_population);
+
+  // Validate all variants against a genome database.
+  [[nodiscard]] bool validate(const std::shared_ptr<const GenomeDatabase>& genome_db) const;
 
 private:
 

@@ -53,6 +53,8 @@ private:
 // VCF Record parser object (multi-threaded) - uses multiple threads to parse queued file lines from the IO reader.
 // The line fields are tab delimited and are parsed into a VcfRecord which is then enqueued for further processing.
 
+using QueuedVCFRecord = std::optional<std::pair<size_t, std::unique_ptr<const VcfRecord>>>;
+
 class RecordVCFIO : private FileVCFIO {
 
 public:
@@ -64,7 +66,7 @@ public:
   void commenceVCFIO(size_t reader_threads) ; // Begin reading IO records, spawns threads.
 
   // export parser VCF records further up the parser chain.
-  [[nodiscard]] std::unique_ptr<const VcfRecord> readVCFRecord() { return vcf_record_queue_.waitAndPop(); }
+  [[nodiscard]] QueuedVCFRecord readVCFRecord() { return vcf_record_queue_.waitAndPop(); }
 
   // Read VCF header info.
   [[nodiscard]] const VcfHeaderInfo& VCFReadHeader();
@@ -76,7 +78,7 @@ public:
 
 private:
 
-  BoundedMtQueue<std::unique_ptr<const VcfRecord>> vcf_record_queue_; // Parsed VCF record queue
+  BoundedMtQueue<QueuedVCFRecord> vcf_record_queue_; // Parsed VCF record queue
   std::vector<std::thread> vcf_record_thread_vec_;
   VCFParseHeader parseheader_;    // Get genome and contig information.
   size_t reader_threads_;

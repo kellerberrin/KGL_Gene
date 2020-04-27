@@ -40,29 +40,28 @@ std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::deepCopy() con
 }
 
 
-bool kgl::UnphasedPopulation::getCreateGenome(const GenomeId_t& genome_id,
-                                              std::shared_ptr<UnphasedGenome>& genome) {
+std::optional<std::shared_ptr<kgl::UnphasedGenome>> kgl::UnphasedPopulation::getCreateGenome(const GenomeId_t& genome_id) {
 
   auto result = genome_map_.find(genome_id);
 
   if (result != genome_map_.end()) {
 
-    genome = result->second;
-    return true;
+    return result->second;
 
   } else {
 
-    genome = std::make_shared<UnphasedGenome>(genome_id);
-    std::pair<GenomeId_t, std::shared_ptr<UnphasedGenome>> new_genome(genome_id, genome);
+    std::shared_ptr<UnphasedGenome> genome_ptr = std::make_shared<UnphasedGenome>(genome_id);
+    std::pair<GenomeId_t, std::shared_ptr<UnphasedGenome>> new_genome(genome_id, genome_ptr);
     auto result = genome_map_.insert(new_genome);
 
     if (not result.second) {
 
-      ExecEnv::log().critical("UnphasedPopulation::getCreateGenome(), Serious Error, could not add genome: {} to the population", genome_id);
+      ExecEnv::log().error("UnphasedPopulation::getCreateGenome(), Could not add genome: {} to the population: {}", genome_id, populationId());
+      return std::nullopt;
 
     }
 
-    return true;
+    return genome_ptr;
 
   }
 
@@ -237,15 +236,15 @@ std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::filterVariants
 
 bool kgl::UnphasedPopulation::addVariant(std::shared_ptr<const Variant>& variant_ptr) {
 
-  std::shared_ptr<UnphasedGenome> genome;
-  if (not getCreateGenome(variant_ptr->genomeId(), genome)) {
+  std::optional<std::shared_ptr<UnphasedGenome>> genome_opt = getCreateGenome(variant_ptr->genomeId());
+  if (not genome_opt) {
 
     ExecEnv::log().error("UnphasedPopulation::addVariant; Could not add/create genome: {}", variant_ptr->genomeId());
     return false;
 
   }
 
-  if (not genome->addVariant(variant_ptr)) { // thread safe
+  if (not genome_opt.value()->addVariant(variant_ptr)) { // thread safe
 
     ExecEnv::log().error("UnphasedPopulation::addVariant; Could not add variant to genome: {}", variant_ptr->genomeId());
     return false;
@@ -284,5 +283,23 @@ void kgl::UnphasedPopulation::mergePopulation(std::shared_ptr<const UnphasedPopu
 
 }
 
+
+bool kgl::UnphasedPopulation::validate(const std::shared_ptr<const GenomeDatabase>& genome_db) const {
+
+  bool result = true;
+  for (auto const& [genome_id, genome_ptr] : getMap()) {
+
+    if (not genome_ptr->validate(genome_db)) {
+
+      result = false;
+      ExecEnv::log().warn("UnphasedPopulation::validate(), Population: {} failed to validate Variants in Genome: {}", populationId(), genome_id);
+
+    }
+
+  }
+
+  return result;
+
+}
 
 

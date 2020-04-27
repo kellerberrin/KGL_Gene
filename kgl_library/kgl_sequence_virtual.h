@@ -86,6 +86,8 @@ protected:
   [[nodiscard]] bool insertOffset(ContigOffset_t insert_offset, const AlphabetSequence& inserted_sequence);
   // Returns bool false if offset and/or size are out of bounds.
   [[nodiscard]] bool getSubsequence(ContigOffset_t substring_offset, ContigSize_t substring_size, AlphabetSequence& sub_sequence) const;
+  // Equality of sequence.
+  [[nodiscard]] bool equal(const AlphabetSequence& cmp_seq) { return alphabet_string_ == cmp_seq.alphabet_string_; }
 
 private:
 

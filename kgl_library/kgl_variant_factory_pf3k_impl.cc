@@ -46,7 +46,7 @@ void kgl::Pf3kVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
   try {
 
-    TryVCFRecord(vcf_record_count, vcf_record);
+    ParseRecord(vcf_record_count, vcf_record);
 
   }
   catch(const std::exception& e) {
@@ -58,26 +58,18 @@ void kgl::Pf3kVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
 }
 
-// This is multithreaded code called from the reader defined above.
-void kgl::Pf3kVCFImpl::TryVCFRecord(size_t vcf_record_count, const VcfRecord& record) {
-
-  ++vcf_variant_count_;
-
-  ParseRecord(vcf_record_count, record);
-
-  if (vcf_variant_count_ % VARIANT_REPORT_INTERVAL_ == 0) {
-
-    ExecEnv::log().info("VCF file, processed: {} variants", vcf_variant_count_);
-
-  }
-
-}
-
 
 // This is multithreaded code called from the reader defined above.
 void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& record) {
 
-  ParseVCFRecord recordParser(record, record.contig_id, genome_db_ptr_); //Each vcf record.
+  ParseVCFRecord recordParser(record); //Each vcf record.
+
+  if (not recordParser.parseRecord(record.contig_id, genome_db_ptr_)) {
+
+    ExecEnv::log().warn("Pf3kVCFImpl::ParseRecord, Problem parsing VCF record");
+    return;
+
+  }
 
   // Parse the info fields into an array and assign to a shared ptr.
   VCFInfoField info_key_value_map(record.info);  // Each vcf record.
@@ -228,12 +220,12 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
 
             // Evidence object
             std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(info_ptr,
+                                                                                          vcf_record_count,
                                                                                           ref_count,
                                                                                           alt_count,
                                                                                           DP_value,
                                                                                           GQ_value,
-                                                                                          recordParser.quality(),
-                                                                                          vcf_record_count));
+                                                                                          recordParser.quality()));
 
             if (not createAddVariant(genome_name,
                                      recordParser.contigPtr(),
@@ -269,12 +261,12 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
 
             // Evidence object
             std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(info_ptr,
+                                                                                          vcf_record_count,
                                                                                           ref_count,
                                                                                           alt_count,
                                                                                           DP_value,
                                                                                           GQ_value,
-                                                                                          recordParser.quality(),
-                                                                                          vcf_record_count));
+                                                                                          recordParser.quality()));
 
 
             if (not createAddVariant(genome_name,
@@ -297,15 +289,16 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
       }
 
     }
-    ++record_count_;
+
+    // Next genome name.
     ++genotype_count;
 
-    if (record_count_ % 1000000 == 0) {
+  }
 
-      ExecEnv::log().info("Processed :{} records, total variants: {}", static_cast<size_t>(record_count_), variant_count_);
-      ExecEnv::log().info("Contig: {}, offset: {}", recordParser.contigPtr()->contigId(), recordParser.offset());
+  if (vcf_record_count % VARIANT_REPORT_INTERVAL_ == 0) {
 
-    }
+    ExecEnv::log().info("Processed :{} records, total variants: {}", vcf_record_count, variant_count_);
+    ExecEnv::log().info("Contig: {}, offset: {}", recordParser.contigPtr()->contigId(), recordParser.offset());
 
   }
 
@@ -315,16 +308,15 @@ bool kgl::Pf3kVCFImpl::addThreadSafeGenomeVariant(const std::shared_ptr<const Va
 
   std::scoped_lock<std::mutex> auto_mutex(add_variant_mutex_); // Write Locked
 
-  std::shared_ptr<UnphasedGenome> genome;
-
-  if (not unphased_population_ptr_->getCreateGenome(variant_ptr->genomeId(), genome)) {
+  std::optional<std::shared_ptr<UnphasedGenome>> genome_opt = unphased_population_ptr_->getCreateGenome(variant_ptr->genomeId());
+  if (not genome_opt) {
 
     ExecEnv::log().error("ParseVCFImpl::addThreadSafeGenomeVariant; Could not add/create genome: {}", variant_ptr->genomeId());
     return false;
 
   }
 
-  if (not genome->addVariant(variant_ptr)) { // thread safe
+  if (not genome_opt.value()->addVariant(variant_ptr)) { // thread safe
 
     ExecEnv::log().error("ParseVCFImpl::addThreadSafeGenomeVariant; Could not add variant to genome: {}", variant_ptr->genomeId());
     return false;
@@ -348,20 +340,17 @@ void kgl::Pf3kVCFImpl::setupPopulationStructure(const std::shared_ptr<const Geno
 
   for (auto genome_id : getGenomeNames())  {
 
-    std::shared_ptr<UnphasedGenome> genome_ptr = nullptr;
-
-    if (not unphased_population_ptr_->getCreateGenome(genome_id, genome_ptr)) {
-
+    std::optional<std::shared_ptr<UnphasedGenome>> genome_opt = unphased_population_ptr_->getCreateGenome(genome_id);
+    if (not genome_opt) {
+      // Terminate runtime.
       ExecEnv::log().critical("Could not create genome: {} in the unphased population", genome_id);
 
     }
 
     for (auto contig : genome_db_ptr->getMap()) {
 
-      std::shared_ptr<UnphasedContig> contig_ptr = nullptr;
-
-      if (not genome_ptr->getCreateContig(contig.first, contig_ptr)) {
-
+      if (not genome_opt.value()->getCreateContig(contig.first)) {
+        // Terminate runtime.
         ExecEnv::log().critical("Could not create contig: {} in genome: {} in the unphased population", contig.first, genome_id);
 
       }

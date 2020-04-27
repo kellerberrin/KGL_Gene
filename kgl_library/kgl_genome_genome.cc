@@ -143,19 +143,17 @@ bool kgl::GenomeDatabase::addContigSequence(const kgl::ContigId_t& contig_id,
 
 }
 
-bool kgl::GenomeDatabase::getContigSequence(const kgl::ContigId_t& contig_id,
-                                            std::shared_ptr<const ContigFeatures>& contig_ptr) const {
+std::optional<std::shared_ptr<const kgl::ContigFeatures>> kgl::GenomeDatabase::getContigSequence(const kgl::ContigId_t& contig_id) const {
 
   auto result_iter = genome_sequence_map_.find(contig_id);
 
   if (result_iter != genome_sequence_map_.end()) {
 
-    contig_ptr = result_iter->second;
-    return true;
+    return result_iter->second;
 
   }
 
-  return false;
+  return std::nullopt;
 
 }
 
@@ -207,8 +205,8 @@ bool kgl::GenomeDatabase::contigOffset( const ContigId_t& contig_id,
                                         ContigOffset_t& contig_offset) const {
 
   // Get the contig.
-  std::shared_ptr<const ContigFeatures> contig_ptr;
-  if (not getContigSequence(contig_id, contig_ptr)) {
+  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = getContigSequence(contig_id);
+  if (not contig_opt) {
 
     ExecEnv::log().warn("contigOffset(), Could not find contig: {} in genome database", contig_id);
     return false;
@@ -217,7 +215,7 @@ bool kgl::GenomeDatabase::contigOffset( const ContigId_t& contig_id,
 
   // Get the coding sequence.
   std::shared_ptr<const CodingSequence> coding_sequence_ptr;
-  if (not contig_ptr->getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
+  if (not contig_opt.value()->getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
 
     ExecEnv::log().warn("contigOffset(), Could not find a coding sequence for gene: {}, sequence: {}", gene_id, sequence_id);
     return false;

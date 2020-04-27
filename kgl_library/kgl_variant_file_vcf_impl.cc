@@ -35,8 +35,10 @@ bool VCFParseHeader::parseHeader(const std::string& vcf_file_name, std::unique_p
 
     while (true) {
 
-      std::string record_str;
-      if (not vcf_stream->readLine(record_str)) break;
+      IOLineRecord line_record = vcf_stream->readLine();
+      if (not line_record) break;
+
+      std::string& record_str = *line_record.value().second;
 
       size_t pos = record_str.find_first_of(KEY_SEPARATOR_);
 
@@ -150,41 +152,39 @@ void RecordVCFIO::commenceVCFIO(size_t reader_threads) {
 
 void RecordVCFIO::enqueueVCFRecord() {
 
-  size_t record_line = 0;
-
   while (true) {
 
-    std::unique_ptr<const std::string> line_record_ptr = readIORecord();
+    IOLineRecord line_record = readIORecord();
 
-    if (not line_record_ptr) { // check for EOF condition.
+    if (not line_record) { // check for EOF condition.
 
-      // Only queue as many EOF (null pointer) tokens as the number of reader threads.
+      // Only queue as many EOF (null optional) tokens as the number of reader threads.
       for (size_t i = 0; i < reader_threads_; ++i) {
 
-        vcf_record_queue_.push(std::unique_ptr<const VcfRecord>(nullptr));
+        vcf_record_queue_.push(std::nullopt);
 
       }
       break;
 
     }
 
-    // Skip header records.
-    if ((*line_record_ptr)[0] == HEADER_CHAR_) {
+    // Skip header records by examining the first char for '#'
+    std::string& line_string = *line_record.value().second;
+    if (line_string[0] == HEADER_CHAR_) {
 
       continue;
 
     }
 
-    ++record_line;
-
     std::unique_ptr<VcfRecord> vcf_record_ptr(std::make_unique<VcfRecord>());
-    if (not parseVCFRecord(std::move(line_record_ptr), vcf_record_ptr)) {
+    if (not parseVCFRecord(std::move(line_record.value().second), vcf_record_ptr)) {
 
-      ExecEnv::log().warn("FileVCFIO; Failed to parse VCF file: {} record line : {}", fileName(), record_line);
+      ExecEnv::log().warn("FileVCFIO; Failed to parse VCF file: {} record line : {}", fileName(), line_record.value().first);
 
     } else {
 
-      vcf_record_queue_.push(std::move(vcf_record_ptr));
+      QueuedVCFRecord queue_record(std::pair<size_t, std::unique_ptr<VcfRecord>>(line_record.value().first, std::move(vcf_record_ptr)));
+      vcf_record_queue_.push(std::move(queue_record));
 
     }
 
@@ -198,7 +198,7 @@ bool RecordVCFIO::parseVCFRecord( std::unique_ptr<const std::string> line_record
 
   std::vector<std::string> field_vector;
 
-  if (not ParseVCFMiscImpl::tokenize(std::move(*line_record_ptr), VCF_FIELD_DELIMITER_, field_vector)) {
+  if (not ParseVCFMiscImpl::tokenize(*line_record_ptr, VCF_FIELD_DELIMITER_, field_vector)) {
 
     ExecEnv::log().error("FileVCFIO; VCF file: {}, problem parsing record", fileName());
     return false;

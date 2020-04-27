@@ -78,7 +78,7 @@ kgl::DNA5::Alphabet kgl::DNA5::convertChar(char chr_base) {
 
       } else if (not isExtended(chr_base)) {
 
-        ExecEnv::log().error("DNA5::convertchar(), Unknown nucleotide detected: {}, input is probably corrupt or not DNA text", chr_base);
+        ExecEnv::log().error("DNA5::convertchar(), Unknown nucleotide detected: '{}', ascii value: {}. Input is probably corrupt or not DNA text.", chr_base, static_cast<size_t>(chr_base));
 
       }
       return Alphabet::N;

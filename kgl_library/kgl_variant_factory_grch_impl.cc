@@ -40,28 +40,72 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 //  std::shared_ptr<std::string> info_ptr = std::make_shared<std::string>(std::move(mutable_info));
   std::shared_ptr<std::string> null_str_ptr = std::make_shared<std::string>("");
   // Evidence object
-  std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<VariantEvidence>(null_str_ptr));
+  std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<VariantEvidence>(null_str_ptr, vcf_record_count));
 
   // Convert VCF contig to genome contig.
-  std::string contig = contig_alias_map_.lookupAlias(Utility::toupper(vcf_record.contig_id));
+  std::string contig = contig_alias_map_.lookupAlias(vcf_record.contig_id);
 
-  // Add the variant.
-  if (not createAddVariant( vcf_genome_ptr_->genomeId(),
-                            contig,
-                            vcf_record.offset,
-                            vcf_record.ref,
-                            vcf_record.alt,
-                            evidence_ptr)) {
+  // Check for multiple alt sequences
+  size_t position = vcf_record.alt.find_first_of(MULIPLE_ALT_SEPARATOR_);  // Check for ',' separators
+  // The alt field can be blank (deletion).
+  if (position == std::string::npos or vcf_record.alt.empty()) {
 
-    ExecEnv::log().error("Parsing GRCh VCF, Problem parsing vcf_record");
+    // Add the variant.
+    if (not createAddVariant( vcf_genome_ptr_->genomeId(),
+                              contig,
+                              vcf_record.offset,
+                              vcf_record.ref,
+                              vcf_record.alt,
+                              evidence_ptr)) {
+
+      ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Problem parsing vcf_record.");
+
+    }
+
+    ++variant_count_;
+
+  } else {
+
+    std::vector<std::string> alt_vector;
+    if (not ParseVCFMiscImpl::tokenize(vcf_record.alt, alt_separator_, alt_vector)) {
+
+      ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Unable to parse VCF record alt field: {}", vcf_record.alt);
+
+    } else {
+
+      if (alt_vector.empty()) {
+
+        ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Zero sized alt vector, alt: {}", vcf_record.alt);
+
+      }
+
+      for (auto const& alt : alt_vector) {
+
+        // Add the variant.
+        if (not createAddVariant( vcf_genome_ptr_->genomeId(),
+                                  contig,
+                                  vcf_record.offset,
+                                  vcf_record.ref,
+                                  alt,
+                                  evidence_ptr)) {
+
+          ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Parsing GRCh VCF, Problem parsing vcf_record");
+
+        }
+
+        ++variant_count_;
+
+      }
+
+    }
 
   }
 
-  ++variant_count_;
+
 
   if (vcf_record_count % VARIANT_REPORT_INTERVAL_ == 0) {
 
-    ExecEnv::log().info("Processed :{} records, total variants: {}", static_cast<size_t>(vcf_record_count), variant_count_);
+    ExecEnv::log().info("Processed :{} records, total variants: {}", vcf_record_count, variant_count_);
     ExecEnv::log().info("Contig: {}, offset: {}", vcf_record.contig_id, vcf_record.offset);
 
   }

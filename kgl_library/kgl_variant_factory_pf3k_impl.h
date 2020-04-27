@@ -36,10 +36,8 @@ public:
 
 private:
 
-  constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 10000;
 
   // Processes the record in a try/catch block.
-  void TryVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record);
   void ParseRecord(size_t vcf_record_count, const VcfRecord& record);
 
   constexpr static const char PL_CHECK_ZERO_ = '0';  // Check if the first PL character is zero, discard if true.
@@ -63,8 +61,8 @@ private:
 // Progress counters.
 
   size_t vcf_variant_count_{0};
-  std::atomic<uint64_t> record_count_{0};
   size_t variant_count_{0};
+  constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 10000;
 
 // Create and add variants to population pointer (thread safe).
 

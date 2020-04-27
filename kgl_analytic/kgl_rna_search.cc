@@ -22,8 +22,8 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
                                      const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) {
 
   // Get the contig.
-  std::shared_ptr<const ContigFeatures> contig_ptr;
-  if (not genome_db_ptr->getContigSequence(rna_contig, contig_ptr)) {
+  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db_ptr->getContigSequence(rna_contig);
+  if (not contig_opt) {
 
     ExecEnv::log().warn("getRNARegions(), Could not find contig: {} in genome database", rna_contig);
     return false;
@@ -31,21 +31,23 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
   }
 
   // Check offset and size.
-  if ((rna_offset + rna_region_size) > contig_ptr->sequence().length() or rna_region_size > contig_ptr->sequence().length()) {
+  if ((rna_offset + rna_region_size) > contig_opt.value()->sequence().length() or rna_region_size > contig_opt.value()->sequence().length()) {
 
     ExecEnv::log().warn("getRNARegions(), contig offset: {} and region size: {} too large for contig: {} length: {}",
-                        rna_offset, rna_region_size, contig_ptr->contigId(), contig_ptr->sequence().length());
+                        rna_offset, rna_region_size, contig_opt.value()->contigId(), contig_opt.value()->sequence().length());
     return false;
 
   }
 
   // Get the reference DNA sequence
-  rna_sequence_ = contig_ptr->sequence().subSequence(rna_offset, rna_region_size);
+  rna_sequence_ = contig_opt.value()->sequence().subSequence(rna_offset, rna_region_size);
   DNA5SequenceCoding stranded_rna_sequence = SequenceOffset::codingSequence(rna_sequence_, rna_strand);
   rna_sequence_ = DNA5SequenceLinear::downConvertToLinear(stranded_rna_sequence);
 
   // Get the contig.
-  if (not genome_db_ptr->getContigSequence(rna_target_contig, contig_ptr)) {
+
+  std::optional<std::shared_ptr<const ContigFeatures>> target_contig_opt = genome_db_ptr->getContigSequence(rna_target_contig);
+  if (not target_contig_opt) {
 
     ExecEnv::log().warn("getRNARegions(), Could not find contig: {} in genome database", rna_target_contig);
     return false;
@@ -53,16 +55,16 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
   }
 
   // Check offset and size.
-  if ((rna_target_offset + rna_target_size) > contig_ptr->sequence().length() or rna_target_size > contig_ptr->sequence().length()) {
+  if ((rna_target_offset + rna_target_size) > target_contig_opt.value()->sequence().length() or rna_target_size > target_contig_opt.value()->sequence().length()) {
 
     ExecEnv::log().warn("getRNARegions(), contig offset: {} and region size: {} too large for contig: {} length: {}",
-                        rna_target_offset, rna_target_size, contig_ptr->contigId(), contig_ptr->sequence().length());
+                        rna_target_offset, rna_target_size, target_contig_opt.value()->contigId(), target_contig_opt.value()->sequence().length());
     return false;
 
   }
 
   // Get the RNA target sequence
-  rna_target_ = contig_ptr->sequence().subSequence(rna_target_offset, rna_target_size);
+  rna_target_ = target_contig_opt.value()->sequence().subSequence(rna_target_offset, rna_target_size);
   stranded_rna_sequence = SequenceOffset::codingSequence(rna_target_, rna_target_strand);
   rna_target_ = DNA5SequenceLinear::downConvertToLinear(stranded_rna_sequence);
 

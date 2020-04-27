@@ -79,6 +79,13 @@ void kgl::PhylogeneticExecEnv::executeApp() {
       // Phase the homozygous and heterozygous variants into a haploid population.
       GenomePhasing::haploidPhasing(ploidy, filtered_unphased_ptr, reference_genome_ptr, population_ptr);
 
+
+      if (filtered_unphased_ptr->validate(reference_genome_ptr)) {
+
+        ExecEnv::log().info("Population: {} parsed from file: {} Successfully Validated", filtered_unphased_ptr->populationId(), vcf_file.fileName());
+
+      }
+
       unphased_population_ptr->mergePopulation(filtered_unphased_ptr);
 
     } else if (vcf_file.parserType() == VCFParserEnum::GRChNoGenome) {
@@ -88,6 +95,13 @@ void kgl::PhylogeneticExecEnv::executeApp() {
       std::shared_ptr<UnphasedGenome> parsed_variants = VcfFactory::GRChNoGenomeVCFVariants(reference_genome_ptr,
                                                                                             vcf_file.fileName(),
                                                                                             contig_alias_map);
+
+
+      if (parsed_variants->validate(reference_genome_ptr)) {
+
+        ExecEnv::log().info("Genome: {} parsed from file: {} Successfully Validated", parsed_variants->genomeId(), vcf_file.fileName());
+
+      }
 
     }
 

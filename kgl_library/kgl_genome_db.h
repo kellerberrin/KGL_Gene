@@ -136,7 +136,7 @@ public:
   // Return false if contig already exists.
   [[nodiscard]] bool addContigSequence(const ContigId_t& contig, const std::string& description, std::shared_ptr<DNA5SequenceContig> sequence_ptr);
   // Returns false if key not found.
-  [[nodiscard]] bool getContigSequence(const ContigId_t& contig, std::shared_ptr<const ContigFeatures>& contig_ptr) const;
+  [[nodiscard]] std::optional<std::shared_ptr<const ContigFeatures>> getContigSequence(const ContigId_t& contig) const;
 
   void setTranslationTable(const std::string& table);
 

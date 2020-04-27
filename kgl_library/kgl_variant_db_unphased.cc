@@ -4,6 +4,7 @@
 
 
 #include "kgl_variant_db_unphased.h"
+#include "kgl_variant_vcf.h"
 #include "kel_patterns.h"
 
 
@@ -125,6 +126,51 @@ std::shared_ptr<kgl::UnphasedContig> kgl::UnphasedContig::filterVariants(const k
 }
 
 
+bool kgl::UnphasedContig::validate(const std::shared_ptr<const ContigFeatures>& contig_db_ptr) const {
+
+  bool result = true;
+
+  std::shared_ptr<const DNA5SequenceContig> contig_sequence_ptr = contig_db_ptr->sequence_ptr();
+
+  for (auto const& [offset, variant_vector] : getMap()) {
+
+    if (offset >= contig_sequence_ptr->length()) {
+
+      ExecEnv::log().error("UnphasedContig::validate,  Variant offset: {} exceeds total contig: {} size: {}", offset, contig_db_ptr->contigId(), contig_sequence_ptr->length());
+      result = false;
+      continue;
+
+    }
+
+    for (auto const& variant_ptr : variant_vector) {
+
+      std::shared_ptr<const VCFVariant> vcf_variant_ptr = std::dynamic_pointer_cast<const VCFVariant>(variant_ptr);
+      if (not vcf_variant_ptr) {
+
+        ExecEnv::log().error("UnphasedContig::validate, Unknown variant: {}", variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false));
+        result = false;
+        continue;
+
+      }
+
+      if (not (contig_sequence_ptr->subSequence(offset, vcf_variant_ptr->reference().length()) == vcf_variant_ptr->reference())) {
+
+        ExecEnv::log().error("UnphasedContig::validate, Mismatch, at Contig Offset: {} Sequence is: {}, Variant Reference Sequence is: {}", offset,
+                              contig_sequence_ptr->subSequence(offset, vcf_variant_ptr->reference().length()).getSequenceAsString(),
+                              vcf_variant_ptr->reference().getSequenceAsString());
+        result = false;
+
+      }
+
+    }
+
+  }
+
+  return result;
+
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // An object that holds variants until they can be phased.
@@ -154,15 +200,15 @@ std::shared_ptr<kgl::UnphasedGenome> kgl::UnphasedGenome::deepCopy() const {
 
 bool kgl::UnphasedGenome::addVariant(std::shared_ptr<const Variant> variant) {
 
-  std::shared_ptr<UnphasedContig> contig_ptr;
-  if (not getCreateContig(variant->contigId(), contig_ptr)) {
+  std::optional<std::shared_ptr<UnphasedContig>> contig_opt = getCreateContig(variant->contigId());
+  if (not contig_opt) {
 
     ExecEnv::log().error("UnphasedGenome::addVariant(), Genome: {} could not get or create Contig: {}", genomeId(), variant->contigId());
     return false;
 
   }
 
-  if (not contig_ptr->addVariant(variant)) {
+  if (not contig_opt.value()->addVariant(variant)) {
 
     ExecEnv::log().error("UnphasedGenome::addVariant(), Genome: {} could not add variant to Contig: {}", genomeId(), variant->contigId());
     return false;
@@ -174,28 +220,28 @@ bool kgl::UnphasedGenome::addVariant(std::shared_ptr<const Variant> variant) {
 }
 
 
-bool kgl::UnphasedGenome::getCreateContig(const ContigId_t& contig_id, std::shared_ptr<UnphasedContig>& contig_ptr) {
+std::optional<std::shared_ptr<kgl::UnphasedContig>> kgl::UnphasedGenome::getCreateContig(const ContigId_t& contig_id) {
 
   auto result = contig_map_.find(contig_id);
 
   if (result != contig_map_.end()) {
 
-    contig_ptr = result->second;
-    return true;
+    return result->second;
 
   } else {
 
-    contig_ptr = std::make_shared<UnphasedContig>(contig_id);
+    std::shared_ptr<UnphasedContig> contig_ptr = std::make_shared<UnphasedContig>(contig_id);
     std::pair<ContigId_t, std::shared_ptr<UnphasedContig>> new_contig(contig_id, contig_ptr);
     auto result = contig_map_.insert(new_contig);
 
     if (not result.second) {
 
-      ExecEnv::log().critical("UnphasedGenome::getCreateContig(), Serious Error, could not add contig: {} to the genome", contig_id);
+      ExecEnv::log().error("UnphasedGenome::getCreateContig(), Could not add contig: {} to genome : {}", contig_id, genomeId());
+      return std::nullopt;
 
     }
 
-    return result.second;
+    return contig_ptr;
 
   }
 
@@ -256,4 +302,34 @@ std::shared_ptr<kgl::UnphasedGenome> kgl::UnphasedGenome::filterVariants(const k
   return filtered_genome_ptr;
 
 }
+
+
+bool kgl::UnphasedGenome::validate(const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) const {
+
+  bool result = true;
+  for (auto const& [contig_id, contig_ptr] : getMap()) {
+
+    std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db_ptr->getContigSequence(contig_id);
+
+    if (not contig_opt) {
+
+      ExecEnv::log().error("UnphasedGenome::validate, No matching contig found in GenomeDatabase for Variant Contig: {}", contig_id);
+      continue;
+
+    }
+
+    if (not contig_ptr->validate(contig_opt.value())) {
+
+      result = false;
+      ExecEnv::log().warn("UnphasedGenome::validate(), Genome: {} failed to validate Variants in Contig: {}", genomeId(), contig_id);
+
+    }
+
+  }
+
+  return result;
+
+}
+
+
 

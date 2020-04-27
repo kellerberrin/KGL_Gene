@@ -101,6 +101,8 @@ public:
 
   }
 
+  // Equality operator.
+  [[nodiscard]] bool operator==(const DNA5SequenceLinear& cmp_seq) { return equal(cmp_seq); }
   // Returns a defined subsequence (generally a single/group of codons) of the coding sequence
   // Setting sub_sequence_offset and sub_sequence_length to zero copies the entire sequence defined by the SortedCDS.
   [[nodiscard]] DNA5SequenceCoding codingOffsetSubSequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,

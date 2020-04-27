@@ -72,24 +72,24 @@ bool kgl::ParseVCFRecord::parseRecord(const ContigId_t& contig_id, std::shared_p
   required_size_ = requiredFormatSize();  // Must have this many format fields in a Genotype.
 
   // Get the reference DNA
-  reference_ = seqan::toCString(vcf_record_.ref);
+  reference_ = vcf_record_.ref;
 
   // Get the allelle DNA vector.
-  parseString(seqan::toCString(vcf_record_.alt), ALLELE_SEPARATOR_, alleles_);
+  parseString(vcf_record_.alt, ALLELE_SEPARATOR_, alleles_);
 
   // Get the offset.
   allele_offset_ = vcf_record_.offset;
 
   // Get the contig pointer.
-  if (not genome_db_ptr->getContigSequence(contig_id, contig_ptr_)) {
+  contig_opt_ = genome_db_ptr->getContigSequence(contig_id);
+  if (not contig_opt_) {
 
     ExecEnv::log().error("Contig: {} is not in the Genome Database", contig_id);
-    contig_ptr_ = nullptr;
-    parse_result = false;
+    return false;
 
   }
 
-  const DNA5SequenceLinear contig_ref = contig_ptr_->sequence().subSequence(allele_offset_,reference_.length());
+  const DNA5SequenceLinear contig_ref = contig_opt_.value()->sequence().subSequence(allele_offset_, reference_.length());
 
   if (contig_ref.getSequenceAsString() != reference_) {
 

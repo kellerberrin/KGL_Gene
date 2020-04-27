@@ -92,8 +92,8 @@ bool kgl::ApplicationAnalysis::compare5Prime(const ContigId_t& contig_id,
                                              DNA5SequenceCoding& mutant_sequence) {
 
   // Get the contig.
-  std::shared_ptr<const ContigFeatures> contig_ptr;
-  if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
+  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db->getContigSequence(contig_id);
+  if (not contig_opt) {
 
     ExecEnv::log().warn("compare5Prime(), Could not find contig: {} in genome database", contig_id);
     return false;
@@ -102,7 +102,7 @@ bool kgl::ApplicationAnalysis::compare5Prime(const ContigId_t& contig_id,
 
   // Get the coding sequence.
   std::shared_ptr<const CodingSequence> coding_sequence_ptr;
-  if (not contig_ptr->getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
+  if (not contig_opt.value()->getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
 
     ExecEnv::log().warn("compare5Prime(), Could not find a coding sequence for gene: {}, sequence: {}", gene_id, sequence_id);
     return false;
@@ -154,8 +154,8 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
                                              DNA5SequenceCoding& mutant_sequence) {
 
   // Get the contig.
-  std::shared_ptr<const ContigFeatures> contig_ptr;
-  if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
+  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db->getContigSequence(contig_id);
+  if (not contig_opt) {
 
     ExecEnv::log().warn("compare5Prime(), Could not find contig: {} in genome database", contig_id);
     return false;
@@ -164,7 +164,7 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
 
   // Get the coding sequence.
   std::shared_ptr<const CodingSequence> coding_sequence_ptr;
-  if (not contig_ptr->getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
+  if (not contig_opt.value()->getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
 
     ExecEnv::log().warn("compare5Prime(), Could not find a coding sequence for gene: {}, sequence: {}", gene_id, sequence_id);
     return false;
@@ -802,8 +802,8 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
   }
 
   // Get the contig.
-  std::shared_ptr<const ContigFeatures> contig_ptr;
-  if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
+  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db->getContigSequence(contig_id);
+  if (not contig_opt) {
 
     ExecEnv::log().error("outputMutationCSV(), Could not find contig: {} in genome database", contig_id);
     return false;
@@ -863,10 +863,10 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
         mutation_item.reference_codon = ref_codon->getSequenceAsString();
         mutation_item.mutation_codon = mutant_codon->getSequenceAsString();
 
-        mutation_item.amino_mutation.reference_char = AminoAcid::convertToChar(contig_ptr->getAminoAcid(*ref_codon));
+        mutation_item.amino_mutation.reference_char = AminoAcid::convertToChar(contig_opt.value()->getAminoAcid(*ref_codon));
         mutation_item.amino_mutation.reference_offset = codon_index;
-        mutation_item.amino_mutation.mutant_char = AminoAcid::convertToChar(contig_ptr->getAminoAcid(*mutant_codon));
-        mutation_item.contig_id = contig_ptr->contigId();
+        mutation_item.amino_mutation.mutant_char = AminoAcid::convertToChar(contig_opt.value()->getAminoAcid(*mutant_codon));
+        mutation_item.contig_id = contig_opt.value()->contigId();
         ContigOffset_t contig_offset;
         if (not genome_db->contigOffset(contig_id, gene_id, sequence_id, mutation_item.DNA_mutation.reference_offset, contig_offset)) {
 

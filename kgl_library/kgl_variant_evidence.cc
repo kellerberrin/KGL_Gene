@@ -8,17 +8,27 @@
 namespace kgl = kellerberrin::genome;
 
 
-
-std::string kgl::CountEvidence::output(char delimiter, VariantOutputIndex) const {
+std::string kgl::VariantEvidence::output(char delimiter, VariantOutputIndex) const {
 
   std::stringstream ss;
 
+  ss << delimiter  <<  "Info::" <<  *info_  << delimiter << "VCFRecord:" << vcfRecordCount();
+
+  return ss.str();
+
+}
+
+
+std::string kgl::CountEvidence::output(char delimiter, VariantOutputIndex output_index) const {
+
+  std::stringstream ss;
+
+  ss << VariantEvidence::output(delimiter, output_index) << delimiter;
   ss << delimiter << "RefCount:" << refCount();
   ss << delimiter << "AltCount:" << altCount();
   ss << delimiter << "DPCount:" << DPCount();
   ss << delimiter << "GQValue:" << GQValue();
   ss << delimiter << "Quality:" << Quality();
-  ss << delimiter << "VCFRecord:" << vcfRecordCount();
 
   return ss.str();
 

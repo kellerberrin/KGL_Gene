@@ -263,8 +263,8 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord( kgl::GenomeDatabase& geno
   // Get the contig id.
   kgl::ContigId_t contig_id = toCString(record.ref);
   // Get a pointer to the contig.
-  std::shared_ptr<const kgl::ContigFeatures> contig_ptr;
-  if (not genome_db.getContigSequence(contig_id, contig_ptr)) {
+  std::optional<std::shared_ptr<const kgl::ContigFeatures>> contig_opt = genome_db.getContigSequence(contig_id);
+  if (not contig_opt) {
 
     ExecEnv::log().error("Could not find contig: {}", contig_id);
     return false;
@@ -317,37 +317,37 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord( kgl::GenomeDatabase& geno
   std::shared_ptr<kgl::Feature> feature_ptr;
   if (type.find(CDSFeature::CDS_TYPE) != std::string::npos) {
     // Create a CDS Feature.
-    feature_ptr = std::make_shared<kgl::CDSFeature>(feature_id, phase, contig_ptr, sequence);
+    feature_ptr = std::make_shared<kgl::CDSFeature>(feature_id, phase, contig_opt.value(), sequence);
   }
   else if (type.find(mRNAFeature::MRNA_TYPE) != std::string::npos) {
     // Create a mRNA feature
-    feature_ptr = std::make_shared<kgl::mRNAFeature>(feature_id, contig_ptr, sequence);
+    feature_ptr = std::make_shared<kgl::mRNAFeature>(feature_id, contig_opt.value(), sequence);
   }
   else if (type.find(EXONFeature::EXON_TYPE) != std::string::npos) {
     // Create a mRNA feature
-    feature_ptr = std::make_shared<kgl::EXONFeature>(feature_id, contig_ptr, sequence);
+    feature_ptr = std::make_shared<kgl::EXONFeature>(feature_id, contig_opt.value(), sequence);
   }
   else if (Utility::trimEndWhiteSpace(type) == GeneFeature::GENE_TYPE) {
     // Create a GENE feature
-    feature_ptr = std::make_shared<kgl::GeneFeature>(feature_id, contig_ptr, sequence);
+    feature_ptr = std::make_shared<kgl::GeneFeature>(feature_id, contig_opt.value(), sequence);
   }
   else if (Utility::trimEndWhiteSpace(type) == PSEUDOGENEFeature::PSEUDOGENE_TYPE) {
     // Create a GENE feature
-    feature_ptr = std::make_shared<kgl::PSEUDOGENEFeature>(feature_id, contig_ptr, sequence);
+    feature_ptr = std::make_shared<kgl::PSEUDOGENEFeature>(feature_id, contig_opt.value(), sequence);
   }
   else if (type.find(TSSFeature::TSS_TYPE) != std::string::npos) {
       // Create a GENE feature
-      feature_ptr = std::make_shared<kgl::TSSFeature>(feature_id, contig_ptr, sequence);
+      feature_ptr = std::make_shared<kgl::TSSFeature>(feature_id, contig_opt.value(), sequence);
 
   } else {
     // Create a general feature
-    feature_ptr = std::make_shared<kgl::Feature>(feature_id, type, contig_ptr, sequence);
+    feature_ptr = std::make_shared<kgl::Feature>(feature_id, type, contig_opt.value(), sequence);
 
   }
   // Add in the attributes.
   feature_ptr->setAttributes(record_attributes);
   // Annotate the contig.
-  std::shared_ptr<kgl::ContigFeatures> mutable_contig_ptr = std::const_pointer_cast<kgl::ContigFeatures>(contig_ptr);
+  std::shared_ptr<kgl::ContigFeatures> mutable_contig_ptr = std::const_pointer_cast<kgl::ContigFeatures>(contig_opt.value());
   // Invoke the sink function pointer.
   bool result = std::invoke(feature_sink, mutable_contig_ptr, feature_ptr);
 

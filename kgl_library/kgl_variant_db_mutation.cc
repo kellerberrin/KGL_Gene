@@ -29,8 +29,8 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
   }
 
   // Get the contig.
-  std::shared_ptr<const ContigFeatures> contig_ptr;
-  if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
+  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db->getContigSequence(contig_id);
+  if (not contig_opt) {
 
     ExecEnv::log().warn("mutantProtein(), Could not find contig: {} in genome database", contig_id);
     return false;
@@ -45,7 +45,7 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
   }
 
   // The reference Amino sequence.
-  reference_sequence = contig_ptr->getAminoSequence(DNA_reference);
+  reference_sequence = contig_opt.value()->getAminoSequence(DNA_reference);
 
   // Check the reference amino sequence.
   if (not reference_sequence.verifySequence()) {
@@ -67,7 +67,7 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
 
   }
 
-  mutant_sequence = contig_ptr->getAminoSequence(DNA_mutant);
+  mutant_sequence = contig_opt.value()->getAminoSequence(DNA_mutant);
 
   // Check the mutant amino sequence.
   if (not mutant_sequence.verifySequence()) {
@@ -90,8 +90,8 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
                                           DNA5SequenceCoding& reference_sequence,
                                           DNA5SequenceCoding& mutant_sequence) const {
   // Get the contig.
-  std::shared_ptr<const ContigFeatures> contig_ptr;
-  if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
+  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db->getContigSequence(contig_id);
+  if (not contig_opt) {
 
     ExecEnv::log().warn("mutantCodingDNA(), Could not find contig: {} in genome database", contig_id);
     return false;
@@ -100,7 +100,7 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
 
   // Get the coding sequence.
   std::shared_ptr<const CodingSequence> coding_sequence_ptr;
-  if (not contig_ptr->getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
+  if (not contig_opt.value()->getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
 
     ExecEnv::log().warn("mutantCodingDNA(), Could not find a coding sequence for gene: {}, sequence: {}", gene_id, sequence_id);
     return false;
@@ -108,7 +108,7 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
   }
 
 
-  if (not contig_ptr->getDNA5SequenceCoding(coding_sequence_ptr, reference_sequence))  {
+  if (not contig_opt.value()->getDNA5SequenceCoding(coding_sequence_ptr, reference_sequence))  {
 
     ExecEnv::log().warn("No valid DNA sequence for contig: {}, gene: {}, sequence id: {}", contig_id, gene_id, sequence_id);
     return false;
@@ -131,7 +131,7 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
 
   variant_map = coding_variant_map;
 
-  if (not VariantMutation().mutateDNA(coding_variant_map, contig_ptr, coding_sequence_ptr, mutant_sequence)) {
+  if (not VariantMutation().mutateDNA(coding_variant_map, contig_opt.value(), coding_sequence_ptr, mutant_sequence)) {
 
     ExecEnv::log().warn("Problem mutating DNA sequence for contig: {}, gene: {}, sequence id: {}",
                         contig_id, gene_id, sequence_id);
@@ -173,8 +173,8 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
                                        DNA5SequenceLinear& mutant_sequence) const {
 
   // Get the contig.
-  std::shared_ptr<const ContigFeatures> contig_ptr;
-  if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
+  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db->getContigSequence(contig_id);
+  if (not contig_opt) {
 
     ExecEnv::log().warn("mutantRegion(), Could not find contig: {} in genome database", contig_id);
     return false;
@@ -182,16 +182,16 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
   }
 
   // Check offset and size.
-  if ((region_offset + region_size) > contig_ptr->sequence().length() or region_size > contig_ptr->sequence().length()) {
+  if ((region_offset + region_size) > contig_opt.value()->sequence().length() or region_size > contig_opt.value()->sequence().length()) {
 
     ExecEnv::log().warn("mutantRegion(), contig offset: {} and region size: {} too large for contig: {} length: {}",
-                         region_offset, region_size, contig_ptr->contigId(), contig_ptr->sequence().length());
+                        region_offset, region_size, contig_opt.value()->contigId(), contig_opt.value()->sequence().length());
     return false;
 
   }
 
   // Get the reference DNA sequence
-  reference_sequence = contig_ptr->sequence().subSequence(region_offset, region_size);
+  reference_sequence = contig_opt.value()->sequence().subSequence(region_offset, region_size);
 
   // Generate the mutant sequences.
   // Extract the variants for processing.
@@ -208,7 +208,7 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
   variant_map = region_variant_map;
 
   // And mutate the sequence.
-  if (not VariantMutation().mutateDNA(region_variant_map, contig_ptr, region_offset, region_size, mutant_sequence)) {
+  if (not VariantMutation().mutateDNA(region_variant_map, contig_opt.value(), region_offset, region_size, mutant_sequence)) {
 
     ExecEnv::log().warn("Problem mutating region DNA sequence for contig: {}, offset: {}, size: {}",
                         contig_id, region_offset, region_size);
@@ -250,8 +250,8 @@ bool kgl::GenomeVariant::mutantContig( const ContigId_t& contig_id,
 
 
   // Get the contig.
-  std::shared_ptr<const ContigFeatures> contig_ptr;
-  if (not genome_db->getContigSequence(contig_id, contig_ptr)) {
+  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db->getContigSequence(contig_id);
+  if (not contig_opt) {
 
     ExecEnv::log().warn("mutantProtein(), Could not find contig: {} in genome database", contig_id);
     return false;
@@ -259,14 +259,14 @@ bool kgl::GenomeVariant::mutantContig( const ContigId_t& contig_id,
   }
 
   // Get the contig DNA sequence
-  reference_contig_ptr = contig_ptr->sequence_ptr();
+  reference_contig_ptr = contig_opt.value()->sequence_ptr();
 
 
   // Generate the mutant sequences.
   // Extract the variants for processing.
   OffsetVariantMap contig_variant_map;
 
-  if (not getSortedVariants(contig_id, phase,  0, contig_ptr->contigSize(), contig_variant_map)) {
+  if (not getSortedVariants(contig_id, phase, 0, contig_opt.value()->contigSize(), contig_variant_map)) {
 
     ExecEnv::log().warn("Problem retrieving sorted variants to mutate region DNA sequence contig: {}", contig_id);
     return false;
@@ -274,7 +274,7 @@ bool kgl::GenomeVariant::mutantContig( const ContigId_t& contig_id,
   }
 
     // And mutate it.
-  if (not VariantMutation().mutateDNA(contig_variant_map, contig_ptr, mutant_contig)) {
+  if (not VariantMutation().mutateDNA(contig_variant_map, contig_opt.value(), mutant_contig)) {
 
       ExecEnv::log().warn("Problem mutating genome: {},  contig: {}", contig_id);
       return false;

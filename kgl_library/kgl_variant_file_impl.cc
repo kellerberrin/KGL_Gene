@@ -34,7 +34,21 @@ public:
 
   bool open(const std::string &file_name) override;
 
-  bool readLine(std::string &text_line) override { return not std::getline(file_, text_line).eof(); }
+  IOLineRecord readLine() override {
+
+    std::unique_ptr<std::string> line_text_ptr(std::make_unique<std::string>());
+    if (not std::getline(file_, *line_text_ptr).eof()) {
+
+      ++record_counter_;
+      return IOLineRecord(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(line_text_ptr)));
+
+    } else {
+
+      return std::nullopt;
+
+    }
+
+  }
 
 private:
 
@@ -83,7 +97,21 @@ public:
 
   bool open(const std::string &file_name) override;
 
-  bool readLine(std::string &text_line) override { return not std::getline(gz_file_, text_line).eof(); }
+  inline IOLineRecord readLine() override {
+
+    std::unique_ptr<std::string> line_text_ptr(std::make_unique<std::string>());
+    if (not std::getline(gz_file_, *line_text_ptr).eof()) {
+
+      ++record_counter_;
+      return IOLineRecord(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(line_text_ptr)));
+
+    } else {
+
+      return std::nullopt;
+
+    }
+
+  }
 
 private:
 
@@ -167,18 +195,15 @@ void FileVCFIO::rawVCFIO(std::unique_ptr<BaseStreamIO> &&vcf_stream) {
 
     }
 
-    size_t counter = 0;
-
     while (true) {
 
-      std::unique_ptr<std::string> line_record_ptr = std::make_unique<std::string>();
-
-      if (not vcf_stream->readLine(*line_record_ptr)) {
+      IOLineRecord line_record = vcf_stream->readLine();
+      if (not line_record) {
 
         // Enqueue the null eof indicator for each consumer thread.
         for (size_t i = 0; i < reader_threads_; ++i) {
 
-          raw_io_queue_.push(std::unique_ptr<std::string>(nullptr));
+          raw_io_queue_.push(std::nullopt);
 
         }
 
@@ -188,21 +213,14 @@ void FileVCFIO::rawVCFIO(std::unique_ptr<BaseStreamIO> &&vcf_stream) {
       }
 
       // Check we have a valid line record.
-      if (line_record_ptr->empty()) {
+      if (line_record.value().second->empty()) {
 
         ExecEnv::log().error("FileVCFIO; Empty VCF record returned");
         continue;
 
       }
 
-      counter++;
-      if (counter % report_increment_ == 0) {
-
-        ExecEnv::log().info("Reader queued: {} VCF line records", counter);
-
-      }
-
-      raw_io_queue_.push(std::move(line_record_ptr));
+      raw_io_queue_.push(std::move(line_record));
 
     }
 

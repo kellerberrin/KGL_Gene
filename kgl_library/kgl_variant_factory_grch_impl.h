@@ -41,7 +41,9 @@ public:
 
 private:
 
-  constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 100000;
+  constexpr static const size_t VARIANT_REPORT_INTERVAL_{100000};
+  constexpr static const char MULIPLE_ALT_SEPARATOR_{','};
+  const std::string alt_separator_ = {MULIPLE_ALT_SEPARATOR_};
 
   std::shared_ptr<UnphasedGenome> vcf_genome_ptr_;
   std::shared_ptr<const GenomeDatabase> genome_db_ptr_;
@@ -49,8 +51,6 @@ private:
 
 // Progress counters.
 
-  size_t vcf_variant_count_{0};
-  std::atomic<uint64_t> record_count_{0};
   size_t variant_count_{0};
   mutable std::mutex add_variant_mutex_;
 

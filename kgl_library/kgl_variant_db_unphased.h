@@ -48,6 +48,8 @@ public:
 
   [[nodiscard]] std::shared_ptr<UnphasedContig> filterVariants(const VariantFilter& filter) const;
 
+  // Validate all variants against a genome database.
+  [[nodiscard]] bool validate(const std::shared_ptr<const ContigFeatures>& contig_db_ptr) const;
 
 private:
 
@@ -86,7 +88,10 @@ public:
 
   [[nodiscard]] const UnphasedContigMap& getMap() const { return contig_map_; }
 
-  [[nodiscard]] bool getCreateContig(const ContigId_t& contig_id, std::shared_ptr<UnphasedContig>& contig_ptr);
+  [[nodiscard]] std::optional<std::shared_ptr<UnphasedContig>> getCreateContig(const ContigId_t& contig_id);
+
+  // Validate all variants against a genome database.
+  [[nodiscard]] bool validate(const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) const;
 
 private:
 

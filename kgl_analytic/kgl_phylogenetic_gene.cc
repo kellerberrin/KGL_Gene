@@ -213,8 +213,8 @@ bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
   }
 
   // Get the contig.
-  std::shared_ptr<const ContigFeatures> contig_ptr;
-  if (not genome_db_ptr->getContigSequence(contig, contig_ptr)) {
+  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db_ptr->getContigSequence(contig);
+  if (not contig_opt) {
 
     ExecEnv::log().warn("mutantProtein(), Could not find contig: {} in genome database", contig);
     return false;
@@ -223,7 +223,7 @@ bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
 
   for (auto summary : gene_summary_map) {
 
-    if (contig_ptr->verifyProteinSequence(*summary.second.sequence_mutant)) {
+    if (contig_opt.value()->verifyProteinSequence(*summary.second.sequence_mutant)) {
 
       ExecEnv::log().info("Multiple comparison Genome: {}, protein score: {}, 5Prime score: {}, 3Prime score: {}",
                           summary.first, summary.second.sequence_distance, summary.second.prime5_distance, summary.second.prime3_distance);
@@ -466,17 +466,17 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
 
   std::stringstream ss;
 
-  std::shared_ptr<const ContigFeatures> contig_ptr;
-  if (not genome_db_ptr->getContigSequence(contig_id, contig_ptr)) {
+  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db_ptr->getContigSequence(contig_id);
+  if (not contig_opt) {
 
     ExecEnv::log().error("outputGenomeGene(), Unexpected could not find Contig: {}", contig_id);
     return "<error>";
 
   }
-  if (offset + region_size >= contig_ptr->sequence().length()) {
+  if (offset + region_size >= contig_opt.value()->sequence().length()) {
 
     ExecEnv::log().error("outputGenomeGene(), Offset: {} + Region Size: {} exceed the Contig: {} size: {}",
-                         offset, region_size, contig_id, contig_ptr->sequence().length());
+                         offset, region_size, contig_id, contig_opt.value()->sequence().length());
     return "<error>";
 
   }
@@ -486,7 +486,7 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
 
     ss << genome_variant_ptr->genomeId() << delimiter;
     ss << contig_id << delimiter;
-    ss << contig_ptr->sequence().length() << delimiter;
+    ss << contig_opt.value()->sequence().length() << delimiter;
     ss << offset << delimiter;
     ss << region_size << delimiter;
     ss << 0 << delimiter;
@@ -516,7 +516,7 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
 
     ss << genome_variant_ptr->genomeId() << delimiter;
     ss << contig_id << delimiter;
-    ss << contig_ptr->sequence().length() << delimiter;
+    ss << contig_opt.value()->sequence().length() << delimiter;
     ss << offset << delimiter;
     ss << region_size << delimiter;
     ss << distance << delimiter;

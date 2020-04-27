@@ -45,17 +45,17 @@ bool kgl::ParseVCFMiscImpl::parseVcfHeader(std::shared_ptr<const GenomeDatabase>
         ContigId_t contig_id = id_result->second;
         ContigSize_t contig_size = std::atoll(length_result->second.c_str());
 
-        std::shared_ptr<const ContigFeatures> contig_ptr;
-        if (genome_db_ptr->getContigSequence(contig_id, contig_ptr)) {
+        std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db_ptr->getContigSequence(contig_id);
+        if (contig_opt) {
 
-          if (contig_ptr->sequence().length() == contig_size) {
+          if (contig_opt.value()->sequence().length() == contig_size) {
 
             active_contig_map[contig_id] = contig_size;
 
           } else {
 
             ExecEnv::log().warn("VCF header. VCF contig: {} size: {} not equal to the Genome database contig size: {}",
-                                contig_id, contig_size, contig_ptr->sequence().length());
+                                contig_id, contig_size, contig_opt.value()->sequence().length());
             ExecEnv::log().warn("Check that the VCF fasta file is compatible with the Genome database fasta file.");
           }
 
