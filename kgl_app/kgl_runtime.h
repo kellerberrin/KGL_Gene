@@ -57,20 +57,29 @@ private:
 // Object to vcf file infomation.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+class VCFFileInfo;
+using VCFFileMap = std::map<std::string, VCFFileInfo>;
 enum class VCFParserEnum{ GatkMultiGenome, GRChNoGenome, NotImplemented};
-using VCFParserTypes = std::vector<std::pair<VCFParserEnum, std::string>>;
 
 class VCFFileInfo {
 
 public:
 
-  VCFFileInfo(const std::string& file_name, const std::string& parser_type, const std::string& reference_genome, size_t ploidy)
-  : file_name_(file_name),
+  VCFFileInfo(const std::string& vcf_identifier,
+              const std::string& file_name,
+              const std::string& parser_type,
+              const std::string& reference_genome,
+              size_t ploidy)
+  : vcf_identifier_(vcf_identifier),
+    file_name_(file_name),
     reference_genome_(reference_genome),
     ploidy_(ploidy) { parser_type_ = getParserType(parser_type); }
   VCFFileInfo(const VCFFileInfo&) = default;
   ~VCFFileInfo() = default;
 
+  [[nodiscard]] const std::string& identifier() const { return vcf_identifier_; }
   [[nodiscard]] const std::string& fileName() const { return file_name_; }
   [[nodiscard]] const std::string& referenceGenome() const { return reference_genome_; }
   [[nodiscard]] VCFParserEnum parserType() const { return parser_type_; }
@@ -79,11 +88,12 @@ public:
 
 private:
 
-
+  std::string vcf_identifier_;   // A unique short string to identify this VCF file in other classes
   std::string file_name_;
   std::string reference_genome_;
   size_t ploidy_;
   VCFParserEnum parser_type_;
+  using VCFParserTypes = std::vector<std::pair<VCFParserEnum, std::string>>;
   const VCFParserTypes implementated_parsers_{ std::pair<VCFParserEnum, std::string>(VCFParserEnum::GatkMultiGenome, "GatkMultiGenome"),
                                                std::pair<VCFParserEnum, std::string>(VCFParserEnum::GRChNoGenome, "GRChNoGenome"),
                                                std::pair<VCFParserEnum, std::string>(VCFParserEnum::NotImplemented, "NotImplemented")};
@@ -114,12 +124,6 @@ private:
   AliasMap alias_map_;
 
 };
-
-
-
-
-
-
 
 
 } // namespace

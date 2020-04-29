@@ -31,9 +31,9 @@ kgl::VariantClassifier::VariantClassifier(std::shared_ptr<const UnphasedPopulati
 
     for(auto const& contig : genome.second->getMap()) {
 
-      for(auto const& [offset, variant_vector] : contig.second->getMap()) {
+      for(auto const& offset : contig.second->getMap()) {
 
-        for(auto const& variant : variant_vector) {
+        for(auto const& variant : offset.second) {
 
           ContigOffsetVariants ordered_variant(variant);
           auto result = variant_map_.find(ordered_variant);

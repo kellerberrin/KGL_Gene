@@ -55,7 +55,7 @@ public:
 
   [[nodiscard]] bool getActiveGenomes(std::vector<std::string>& genome_list) const;
 
-  [[nodiscard]] std::vector<VCFFileInfo> getVCFFileVector() const;
+  [[nodiscard]] VCFFileMap getVCFFiles() const;
 
   [[nodiscard]] ContigAliasMap getContigAlias() const;
 
@@ -69,7 +69,7 @@ private:
   constexpr static const char* VALUE_ = "value";
   // Runtime categories.
   constexpr static const char* VCF_LIST_ = "vcfList";
-  constexpr static const char* VCF_FILE_ = "vcfFile";
+  constexpr static const char* VCF_IDENT_ = "vcfIdent";
   constexpr static const char* VCF_FILE_NAME_ = "vcfFileName";
   constexpr static const char* VCF_PARSER_TYPE_ = "vcfParser";
   constexpr static const char* VCF_FILE_GENOME_ =  "vcfGenome";
@@ -85,6 +85,7 @@ private:
   constexpr static const char* AUX_GENOME_FILE_ = "auxGenomeFile";
   constexpr static const char* TRANSLATION_TABLE_ = "translationTable";
   constexpr static const char* ALIAS_LIST_ = "contigAlias";
+  constexpr static const char* ALIAS_IDENT_ = "ident";
   constexpr static const char* ALIAS_ENTRY_ = "alias";
   // Defaults
   constexpr static const size_t DEFAULT_PLOIDY_ = 2;
