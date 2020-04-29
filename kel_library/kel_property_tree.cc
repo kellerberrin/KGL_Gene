@@ -297,7 +297,7 @@ void kel::PropertyTree::PropertyImpl::printTree(const std::string& parent, const
       parent_key = parent + "." + key;
 
     }
-    std::string value = property_tree.get<std::string>(key);
+    std::string value = item.second.data();
     value = Utility::trimEndWhiteSpace(value);
     if (not value.empty()) {
 

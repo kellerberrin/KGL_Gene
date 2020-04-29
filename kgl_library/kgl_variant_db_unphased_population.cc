@@ -284,21 +284,26 @@ void kgl::UnphasedPopulation::mergePopulation(std::shared_ptr<const UnphasedPopu
 }
 
 
-bool kgl::UnphasedPopulation::validate(const std::shared_ptr<const GenomeDatabase>& genome_db) const {
+std::pair<size_t, size_t> kgl::UnphasedPopulation::validate(const std::shared_ptr<const GenomeDatabase>& genome_db) const {
 
-  bool result = true;
+  std::pair<size_t, size_t> population_count{0, 0};
   for (auto const& [genome_id, genome_ptr] : getMap()) {
 
-    if (not genome_ptr->validate(genome_db)) {
+    std::pair<size_t, size_t> genome_count = genome_ptr->validate(genome_db);
 
-      result = false;
-      ExecEnv::log().warn("UnphasedPopulation::validate(), Population: {} failed to validate Variants in Genome: {}", populationId(), genome_id);
+    if (genome_count.first != genome_count.second) {
+
+      ExecEnv::log().warn("UnphasedPopulation::validate(), Population: {} Failed to Validate Genome: {}, Total Variants: {}, Validated: {}",
+                    populationId(), genome_id, genome_count.first, genome_count.second);
 
     }
 
+    population_count.first += genome_count.first;
+    population_count.second += genome_count.second;
+
   }
 
-  return result;
+  return population_count;
 
 }
 

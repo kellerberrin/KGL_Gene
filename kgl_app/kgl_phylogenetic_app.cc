@@ -80,11 +80,8 @@ void kgl::PhylogeneticExecEnv::executeApp() {
       GenomePhasing::haploidPhasing(ploidy, filtered_unphased_ptr, reference_genome_ptr, population_ptr);
 
 
-      if (filtered_unphased_ptr->validate(reference_genome_ptr)) {
-
-        ExecEnv::log().info("Population: {} parsed from file: {} Successfully Validated", filtered_unphased_ptr->populationId(), vcf_file.fileName());
-
-      }
+      std::pair<size_t, size_t> valid_count = filtered_unphased_ptr->validate(reference_genome_ptr);
+      ExecEnv::log().info("Population: {}, Total Variants: {}, Validated Variants: {}", filtered_unphased_ptr->populationId(), valid_count.first, valid_count.second);
 
       unphased_population_ptr->mergePopulation(filtered_unphased_ptr);
 
@@ -96,12 +93,8 @@ void kgl::PhylogeneticExecEnv::executeApp() {
                                                                                             vcf_file.fileName(),
                                                                                             contig_alias_map);
 
-
-      if (parsed_variants->validate(reference_genome_ptr)) {
-
-        ExecEnv::log().info("Genome: {} parsed from file: {} Successfully Validated", parsed_variants->genomeId(), vcf_file.fileName());
-
-      }
+      std::pair<size_t, size_t> valid_count = parsed_variants->validate(reference_genome_ptr);
+      ExecEnv::log().info("Genome: {}, Total Variants: {}, Validated Variants: {}", parsed_variants->genomeId(), valid_count.first, valid_count.second);
 
     }
 

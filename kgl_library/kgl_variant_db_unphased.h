@@ -48,8 +48,9 @@ public:
 
   [[nodiscard]] std::shared_ptr<UnphasedContig> filterVariants(const VariantFilter& filter) const;
 
-  // Validate all variants against a genome database.
-  [[nodiscard]] bool validate(const std::shared_ptr<const ContigFeatures>& contig_db_ptr) const;
+  // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
+  // The second integer is the number variants that pass inspection by comparison to the genome database.
+  [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const ContigFeatures>& contig_db_ptr) const;
 
 private:
 
@@ -90,8 +91,9 @@ public:
 
   [[nodiscard]] std::optional<std::shared_ptr<UnphasedContig>> getCreateContig(const ContigId_t& contig_id);
 
-  // Validate all variants against a genome database.
-  [[nodiscard]] bool validate(const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) const;
+  // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
+  // The second integer is the number variants that pass inspection by comparison to the genome database.
+  [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) const;
 
 private:
 

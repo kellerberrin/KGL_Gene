@@ -126,18 +126,19 @@ std::shared_ptr<kgl::UnphasedContig> kgl::UnphasedContig::filterVariants(const k
 }
 
 
-bool kgl::UnphasedContig::validate(const std::shared_ptr<const ContigFeatures>& contig_db_ptr) const {
+std::pair<size_t, size_t> kgl::UnphasedContig::validate(const std::shared_ptr<const ContigFeatures>& contig_db_ptr) const {
 
-  bool result = true;
+  std::pair<size_t, size_t> contig_count{0, 0};
 
   std::shared_ptr<const DNA5SequenceContig> contig_sequence_ptr = contig_db_ptr->sequence_ptr();
 
   for (auto const& [offset, variant_vector] : getMap()) {
 
+    contig_count.first += variant_vector.size();
+
     if (offset >= contig_sequence_ptr->length()) {
 
       ExecEnv::log().error("UnphasedContig::validate,  Variant offset: {} exceeds total contig: {} size: {}", offset, contig_db_ptr->contigId(), contig_sequence_ptr->length());
-      result = false;
       continue;
 
     }
@@ -148,17 +149,20 @@ bool kgl::UnphasedContig::validate(const std::shared_ptr<const ContigFeatures>& 
       if (not vcf_variant_ptr) {
 
         ExecEnv::log().error("UnphasedContig::validate, Unknown variant: {}", variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false));
-        result = false;
         continue;
 
       }
 
-      if (not (contig_sequence_ptr->subSequence(offset, vcf_variant_ptr->reference().length()) == vcf_variant_ptr->reference())) {
+      if (contig_sequence_ptr->subSequence(vcf_variant_ptr->offset(), vcf_variant_ptr->reference().length()) == vcf_variant_ptr->reference()) {
 
-        ExecEnv::log().error("UnphasedContig::validate, Mismatch, at Contig Offset: {} Sequence is: {}, Variant Reference Sequence is: {}", offset,
-                              contig_sequence_ptr->subSequence(offset, vcf_variant_ptr->reference().length()).getSequenceAsString(),
-                              vcf_variant_ptr->reference().getSequenceAsString());
-        result = false;
+        ++contig_count.second;
+
+      } else {
+
+        ExecEnv::log().error("UnphasedContig::validate, Mismatch, at Contig Offset: {} Sequence is: {}, Variant Reference Sequence is: {}",
+                             vcf_variant_ptr->offset(),
+                             contig_sequence_ptr->subSequence(vcf_variant_ptr->offset(), vcf_variant_ptr->reference().length()).getSequenceAsString(),
+                             vcf_variant_ptr->reference().getSequenceAsString());
 
       }
 
@@ -166,7 +170,7 @@ bool kgl::UnphasedContig::validate(const std::shared_ptr<const ContigFeatures>& 
 
   }
 
-  return result;
+  return contig_count;
 
 }
 
@@ -304,9 +308,11 @@ std::shared_ptr<kgl::UnphasedGenome> kgl::UnphasedGenome::filterVariants(const k
 }
 
 
-bool kgl::UnphasedGenome::validate(const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) const {
+// Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
+// The second integer is the number variants that pass inspection by comparison to the genome database.
+std::pair<size_t, size_t> kgl::UnphasedGenome::validate(const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) const {
 
-  bool result = true;
+  std::pair<size_t, size_t> genome_count{0, 0};
   for (auto const& [contig_id, contig_ptr] : getMap()) {
 
     std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db_ptr->getContigSequence(contig_id);
@@ -318,16 +324,21 @@ bool kgl::UnphasedGenome::validate(const std::shared_ptr<const GenomeDatabase>& 
 
     }
 
-    if (not contig_ptr->validate(contig_opt.value())) {
+    std::pair<size_t, size_t> contig_count = contig_ptr->validate(contig_opt.value());
 
-      result = false;
-      ExecEnv::log().warn("UnphasedGenome::validate(), Genome: {} failed to validate Variants in Contig: {}", genomeId(), contig_id);
+    if (contig_count.first != contig_count.second) {
+
+      ExecEnv::log().warn("UnphasedGenome::validate(), Genome: {} Validation Failed in Contig: {}, Total Variants: {} Validated: {}",
+                     genomeId(), contig_id, contig_count.first, contig_count.second);
 
     }
 
+    genome_count.first += contig_count.first;
+    genome_count.second += contig_count.second;
+
   }
 
-  return result;
+  return genome_count;
 
 }
 

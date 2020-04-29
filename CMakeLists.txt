@@ -168,7 +168,9 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_grch_impl.cc
         kgl_library/kgl_variant_factory_grch_impl.h
         kgl_library/kgl_variant_file_vcf_impl.cc
-        kgl_library/kgl_variant_file_vcf_impl.h)
+        kgl_library/kgl_variant_file_vcf_impl.h
+        kgl_app/kgl_runtime.cc
+        kgl_app/kgl_runtime.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )

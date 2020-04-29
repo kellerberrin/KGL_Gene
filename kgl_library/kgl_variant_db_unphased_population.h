@@ -64,8 +64,9 @@ public:
   // Merge genomes and variants into this population.
   void mergePopulation(std::shared_ptr<const UnphasedPopulation> merge_population);
 
-  // Validate all variants against a genome database.
-  [[nodiscard]] bool validate(const std::shared_ptr<const GenomeDatabase>& genome_db) const;
+  // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
+  // The second integer is the number variants that pass inspection by comparison to the genome database.
+  [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const GenomeDatabase>& genome_db) const;
 
 private:
 
