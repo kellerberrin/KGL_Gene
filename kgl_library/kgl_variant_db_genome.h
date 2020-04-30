@@ -65,7 +65,7 @@ public:
 
   [[nodiscard]] static std::shared_ptr<GenomeVariant> emptyGenomeVariant( const GenomeId_t& genome_id,
                                                                           PhaseId_t ploidy,
-                                                                          const std::shared_ptr<const GenomeDatabase>& genome_db);
+                                                                          const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db);
 
   [[nodiscard]] std::string output(char field_delimiter, VariantOutputIndex output_index, bool detail) const;
   [[nodiscard]] bool outputCSV(const std::string& file_name, VariantOutputIndex output_index, bool detail) const;
@@ -85,7 +85,7 @@ public:
                                      PhaseId_t phase,
                                      const FeatureIdent_t& gene_id,
                                      const FeatureIdent_t& sequence_id,
-                                     const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                     const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db,
                                      OffsetVariantMap& variant_map,
                                      AminoSequence& reference_sequence,
                                      AminoSequence& sequence_vector) const;
@@ -95,7 +95,7 @@ public:
                                       PhaseId_t phase,
                                       const FeatureIdent_t& gene_id,
                                       const FeatureIdent_t& sequence_id,
-                                      const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                      const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db,
                                       OffsetVariantMap& variant_map,
                                       DNA5SequenceCoding& reference_sequence,
                                       DNA5SequenceCoding& mutant_sequence) const;
@@ -105,7 +105,7 @@ public:
                                    PhaseId_t phase,
                                    ContigOffset_t region_offset,
                                    ContigSize_t region_size,
-                                   const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                   const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db,
                                    OffsetVariantMap& variant_map,
                                    DNA5SequenceLinear& reference_sequence,
                                    DNA5SequenceLinear& mutant_sequence) const;
@@ -113,7 +113,7 @@ public:
   // Returns pointer reference to the contig and mutant unstranded contig.
   [[nodiscard]] bool mutantContig( const ContigId_t& contig_id,
                                    PhaseId_t phase,
-                                   const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                   const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db,
                                    std::shared_ptr<const DNA5SequenceContig>& reference_contig_ptr,
                                    DNA5SequenceContig& mutant_contig_ptr) const;
 

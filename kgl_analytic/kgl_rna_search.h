@@ -52,7 +52,7 @@ public:
                                     ContigOffset_t rna_target_offset,
                                     ContigSize_t rna_target_size,
                                     StrandSense rna_target_strand,
-                                    const std::shared_ptr<const GenomeDatabase>& genome_db_ptr);
+                                    const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db_ptr);
 
   [[nodiscard]] bool compareRNARegion( ContigSize_t rna_region_comparison_start,
                                        ContigSize_t rna_region_subsize,

@@ -284,7 +284,7 @@ void kgl::UnphasedPopulation::mergePopulation(std::shared_ptr<const UnphasedPopu
 }
 
 
-std::pair<size_t, size_t> kgl::UnphasedPopulation::validate(const std::shared_ptr<const GenomeDatabase>& genome_db) const {
+std::pair<size_t, size_t> kgl::UnphasedPopulation::validate(const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db) const {
 
   std::pair<size_t, size_t> population_count{0, 0};
   for (auto const& [genome_id, genome_ptr] : getMap()) {

@@ -11,7 +11,7 @@
 namespace kgl = kellerberrin::genome;
 
 
-void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeDatabase> genome_db_ptr, const std::string& file_name, const char delimiter) {
+void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr, const std::string& file_name, const char delimiter) {
 
   std::ofstream motif_file(file_name);
 

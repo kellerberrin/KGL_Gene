@@ -10,8 +10,338 @@ namespace kgl = kellerberrin::genome;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// High level application specific property retrieval
+//  Runtime xml retrieval
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// A map of analysis
+kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
+
+  RuntimePackageMap package_map;
+
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + ANALYSIS_LIST_;
+  std::vector<SubPropertyTree> property_tree_vector;
+  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
+
+    ExecEnv::log().error("RuntimeProperties::getPackageMap, no Analysis Packages Specified (must be a least one)");
+    return package_map; // return empty map.
+
+  }
+
+
+
+  return package_map;
+
+}
+
+
+// A map of analysis
+kgl::RuntimeAnalysisMap kgl::RuntimeProperties::getAnalysisMap() const {
+
+  RuntimeAnalysisMap analysis_map;
+
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + ANALYSIS_LIST_;
+  std::vector<SubPropertyTree> property_tree_vector;
+  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
+
+    ExecEnv::log().info("RuntimeProperties::getAnalysisMap, no Analysis specified (NULL analysis available)");
+    return analysis_map; // return empty map.
+
+  }
+
+  for (const auto& sub_tree : property_tree_vector) {
+
+    key = std::string(ANALYSIS_IDENT_) + std::string(DOT_) + std::string(VALUE_);
+    std::string analysis_ident;
+    if (not sub_tree.second.getFileProperty( key, workDirectory(), analysis_ident)) {
+
+      ExecEnv::log().error("RuntimeProperties::getAnalysisMap, No  Analysis Identifier");
+      continue;
+
+    }
+
+    key = PARAMETER_LIST_;
+    std::vector<SubPropertyTree> parameter_tree_vector;
+    if (not property_tree_.getPropertyTreeVector(key, parameter_tree_vector)) {
+
+      ExecEnv::log().info("RuntimeProperties::getAnalysisMap, no Parameters Specified for Analysis: {}", analysis_ident);
+      return analysis_map; // return empty map.
+
+    }
+
+    RuntimeParameterMap parameter_map;
+    for (const auto& parameter_sub_tree : parameter_tree_vector) {
+
+      key = std::string(PARAMETER_IDENT_) + std::string(DOT_) + std::string(VALUE_);
+      std::string parameter_ident;
+      if (not parameter_sub_tree.second.getProperty( key, parameter_ident)) {
+
+        ExecEnv::log().error("RuntimeProperties::getAnalysisMap, No Parameter Identifier Found for Analysis: {}", analysis_ident);
+        continue;
+
+      }
+
+      key = std::string(PARAMETER_VALUE_) + std::string(DOT_) + std::string(VALUE_);
+      std::string parameter_value;
+      if (not parameter_sub_tree.second.getProperty( key, parameter_value)) {
+
+        ExecEnv::log().error("RuntimeProperties::getAnalysisMap, No Parameter Value Found for Parameter: {}, Analysis: {}", parameter_ident, analysis_ident);
+        continue;
+
+      }
+
+      std::pair<std::string, std::string> new_parameter(parameter_ident, parameter_value);
+      auto result = parameter_map.insert(new_parameter);
+
+      if (not result.second) {
+
+        ExecEnv::log().error("RuntimeProperties::getAnalysisMap, Duplicate found for Parameter: {}, Analysis: {}", parameter_ident, analysis_ident);
+
+      }
+
+    }  // for parameter
+
+    std::pair<std::string, RuntimeAnalysis> new_analysis(analysis_ident, RuntimeAnalysis(analysis_ident, parameter_map));
+
+    auto result = analysis_map.insert(new_analysis);
+
+    if (not result.second) {
+
+      ExecEnv::log().error("RuntimeProperties::getAnalysisMap, Could not add Analysis Ident: {} to map (duplicate)", analysis_ident);
+
+    }
+
+  }
+
+  return analysis_map;
+
+}
+
+// A map of genomes.
+kgl::RuntimeGenomeDatabaseMap kgl::RuntimeProperties::getGenomeDatabaseMap() const {
+
+  RuntimeGenomeDatabaseMap genome_map;
+
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + GENOME_LIST_;
+
+  std::vector<SubPropertyTree> property_tree_vector;
+  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
+
+    ExecEnv::log().info("RuntimeProperties::getGenomeDatabaseMap, no VCF files specified");
+    return genome_map; // return empty map.
+
+  }
+
+  for (const auto& sub_tree : property_tree_vector) {
+
+    key = std::string(GENOME_IDENT_) + std::string(DOT_) + std::string(VALUE_);
+    std::string genome_ident;
+    if (not sub_tree.second.getProperty( key, genome_ident)) {
+
+      ExecEnv::log().error("RuntimeProperties::getGenomeDatabaseMap, No Genome Database Identifier");
+      continue;
+
+    }
+
+    key = std::string(FASTA_FILE_) + std::string(DOT_) + std::string(VALUE_);
+    std::string fasta_file_name;
+    if (not sub_tree.second.getProperty( key, fasta_file_name)) {
+
+      ExecEnv::log().error("RuntimeProperties::getGenomeDatabaseMap, No Fasta file name information");
+      continue;
+
+    }
+
+    key = std::string(GFF_FILE_) + std::string(DOT_) + std::string(VALUE_);
+    std::string gff_file_name;
+    if (not sub_tree.second.getProperty( key, gff_file_name)) {
+
+      ExecEnv::log().error("RuntimeProperties::getGenomeDatabaseMap, No Gff file name information");
+      continue;
+
+    }
+
+    key = std::string(TRANSLATION_TABLE_) + std::string(DOT_) + std::string(VALUE_);
+    std::string translation_table;
+    if (not sub_tree.second.getProperty( key, translation_table)) {
+
+      ExecEnv::log().error("RuntimeProperties::getGenomeDatabaseMap, No DNA/Amino translationb table specified");
+      continue;
+
+    }
+
+    key = std::string(GAF_FILE_) + std::string(DOT_) + std::string(VALUE_);
+    std::string gaf_file_name;
+    if (not sub_tree.second.getOptionalProperty(key, gaf_file_name)) {
+
+      gaf_file_name.clear();
+
+    }
+
+    std::pair<std::string, RuntimeGenomeProperty> new_genome(genome_ident, RuntimeGenomeProperty(genome_ident, fasta_file_name, gff_file_name, translation_table));
+
+    new_genome.second.setGafFileName(gaf_file_name);
+
+    auto result = genome_map.insert(new_genome);
+
+    if (not result.second) {
+
+      ExecEnv::log().error("RuntimeProperties::getGenomeDatabaseMap, Could not add Genome Database ident: {} to map (duplicate)", genome_ident);
+
+    }
+
+  }
+
+  return genome_map;
+
+}
+
+// A map of VCF files.
+kgl::RuntimeVCFFileMap kgl::RuntimeProperties::getVCFFiles() const {
+
+  RuntimeVCFFileMap vcf_map;
+
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + VCF_LIST_;
+
+  std::vector<SubPropertyTree> property_tree_vector;
+  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
+
+    ExecEnv::log().info("RuntimeProperties::getVCFFiles, no VCF files specified");
+    return vcf_map; // return empty map.
+
+  }
+
+  for (const auto& sub_tree : property_tree_vector) {
+
+    key = std::string(VCF_IDENT_) + std::string(DOT_) + std::string(VALUE_);
+    std::string vcf_ident;
+    if (not sub_tree.second.getProperty( key, vcf_ident)) {
+
+      ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF Identifier");
+      continue;
+
+    }
+
+    key = std::string(VCF_FILE_NAME_) + std::string(DOT_) + std::string(VALUE_);
+    std::string vcf_file_name;
+    if (not sub_tree.second.getProperty( key, vcf_file_name)) {
+
+      ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF file name information");
+      continue;
+
+    }
+
+    key = std::string(VCF_PARSER_TYPE_) + std::string(DOT_) + std::string(VALUE_);
+    std::string vcf_parser_type;
+    if (not sub_tree.second.getProperty( key, vcf_parser_type)) {
+
+      ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF file parser type information");
+      continue;
+
+    }
+
+    key = std::string(VCF_FILE_GENOME_) + std::string(DOT_) + std::string(VALUE_);
+    std::string vcf_reference_genome;
+
+    if (not sub_tree.second.getProperty( key, vcf_reference_genome)) {
+
+      ExecEnv::log().error("RuntimeProperties::getVCFFiles, No reference genome information for VCF file: {}", vcf_file_name);
+      continue;
+
+    }
+
+    key = std::string(VCF_FILE_PLOIDY_) + std::string(DOT_) + std::string(VALUE_);
+    size_t vcf_ploidy;
+    if (not sub_tree.second.getProperty( key, vcf_ploidy)) {
+
+      ExecEnv::log().error("RuntimeProperties::getVCFFiles, No ploidy information for VCF file: {}", vcf_file_name);
+      continue;
+
+    }
+
+    std::pair<std::string, RuntimeVCFFileInfo> new_vcf(vcf_ident, RuntimeVCFFileInfo(vcf_ident, vcf_file_name, vcf_parser_type, vcf_reference_genome, vcf_ploidy));
+    auto result = vcf_map.insert(new_vcf);
+
+    if (not result.second) {
+
+      ExecEnv::log().error("RuntimeProperties::getVCFFiles, Could not add VCF file ident: {} to map (duplicate)", vcf_ident);
+
+    }
+
+  }
+
+  return vcf_map;
+
+}
+
+// Parse the list of VCF Alias for Chromosome/Contigs in the Genome Database.
+kgl::ContigAliasMap kgl::RuntimeProperties::getContigAlias() const {
+
+
+  ContigAliasMap contig_alias_map;
+
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + ALIAS_LIST_;
+
+  std::vector<SubPropertyTree> property_tree_vector;
+  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
+
+    ExecEnv::log().info("RuntimeProperties::getContigAlias, No Contig Alias Specified");
+    return contig_alias_map;
+
+  }
+
+  for (const auto& sub_tree : property_tree_vector) {
+
+    std::string contig_ident;
+    if (not sub_tree.second.getProperty(ALIAS_IDENT_, contig_ident)) {
+
+      ExecEnv::log().error("RuntimeProperties::getContigAlias, No Chromosome/Contig Identifier specified for Alias.");
+      continue;
+
+    }
+
+    // Alias is idempotent.
+    contig_alias_map.setAlias(contig_ident, contig_ident);
+
+    // Get a vector of alias
+    std::vector<std::string> alias_vector;
+    if (not sub_tree.second.getNodeVector(ALIAS_ENTRY_, alias_vector))  {
+
+      ExecEnv::log().warn("RuntimeProperties::getContigAlias, No Alias Specified for Contig: {}", sub_tree.first);
+
+    }
+
+    for (auto const& alias : alias_vector) {
+
+      ExecEnv::log().info("RuntimeProperties::getContigAlias, Alias: {} for Contig Id: {}", alias, sub_tree.first);
+      contig_alias_map.setAlias(alias, contig_ident);
+
+    }
+
+  }
+
+  return contig_alias_map;
+
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Legacy Code (To be demolished)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bool kgl::RuntimeProperties::getPropertiesAuxFile(std::string &aux_file) const {
+
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + std::string(AUX_FILE_) + std::string(DOT_) + std::string(VALUE_);
+  if (not property_tree_.getProperty(key, aux_file)) {
+
+    return false;
+
+  }
+
+  aux_file = Utility::filePath(aux_file, work_directory_);
+
+  return Utility::fileExists(aux_file);
+
+}
 
 bool kgl::RuntimeProperties::readProperties(const std::string& properties_file) {
 
@@ -62,8 +392,6 @@ void kgl::RuntimeProperties::getGenomeDBFiles(const std::string& organism,
   }
 
 }
-
-
 
 bool kgl::RuntimeProperties::getMixtureFile(std::string& mixture_file) const {
 
@@ -150,148 +478,5 @@ bool kgl::RuntimeProperties::getGenomeAuxFiles(const std::string& organism, std:
 
 
 
-kgl::VCFFileMap kgl::RuntimeProperties::getVCFFiles() const {
-
-
-  VCFFileMap vcf_map;
-
-  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + VCF_LIST_;
-
-  std::vector<SubPropertyTree> property_tree_vector;
-  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
-
-    ExecEnv::log().info("RuntimeProperties::getVCFFiles, no VCF files specified");
-    return vcf_map; // return empty map.
-
-  }
-
-  for (const auto& sub_tree : property_tree_vector) {
-
-    key = std::string(VCF_IDENT_) + std::string(DOT_) + std::string(VALUE_);
-    std::string vcf_ident;
-    if (not sub_tree.second.getFileProperty( key, workDirectory(), vcf_ident)) {
-
-      ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF Identifier");
-      continue;
-
-    }
-
-    key = std::string(VCF_FILE_NAME_) + std::string(DOT_) + std::string(VALUE_);
-    std::string vcf_file_name;
-    if (not sub_tree.second.getFileProperty( key, workDirectory(), vcf_file_name)) {
-
-      ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF file name information");
-      continue;
-
-    }
-
-    key = std::string(VCF_PARSER_TYPE_) + std::string(DOT_) + std::string(VALUE_);
-    std::string vcf_parser_type;
-    if (not sub_tree.second.getProperty( key, vcf_parser_type)) {
-
-      ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF file parser type information");
-      continue;
-
-    }
-
-    key = std::string(VCF_FILE_GENOME_) + std::string(DOT_) + std::string(VALUE_);
-    std::string vcf_reference_genome;
-
-    if (not sub_tree.second.getProperty( key, vcf_reference_genome)) {
-
-      ExecEnv::log().error("RuntimeProperties::getVCFFiles, No reference genome information for VCF file: {}", vcf_file_name);
-      continue;
-
-    }
-
-    key = std::string(VCF_FILE_PLOIDY_) + std::string(DOT_) + std::string(VALUE_);
-    size_t vcf_ploidy;
-    if (not sub_tree.second.getProperty( key, vcf_ploidy)) {
-
-      ExecEnv::log().error("RuntimeProperties::getVCFFiles, No ploidy information for VCF file: {}", vcf_file_name);
-      continue;
-
-    }
-
-    std::pair<std::string, VCFFileInfo> new_vcf(vcf_ident, VCFFileInfo(vcf_ident, vcf_file_name, vcf_parser_type, vcf_reference_genome, vcf_ploidy));
-    auto result = vcf_map.insert(new_vcf);
-
-    if (not result.second) {
-
-      ExecEnv::log().error("RuntimeProperties::getVCFFiles, Could not add VCF file ident: {} to map (duplicate)", vcf_ident);
-
-    }
-
-  }
-
-  return vcf_map;
-
-}
-
-// Parse the list of VCF Alias for Chromosome/Contigs in the Genome Database.
-kgl::ContigAliasMap kgl::RuntimeProperties::getContigAlias() const {
-
-
-  ContigAliasMap contig_alias_map;
-
-  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + ALIAS_LIST_;
-
-  std::vector<SubPropertyTree> property_tree_vector;
-  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
-
-    ExecEnv::log().info("RuntimeProperties::getContigAlias, No Contig Alias Specified");
-    return contig_alias_map;
-
-  }
-
-  for (const auto& sub_tree : property_tree_vector) {
-
-    std::string contig_ident;
-    if (not sub_tree.second.getProperty(ALIAS_IDENT_, contig_ident)) {
-
-      ExecEnv::log().error("RuntimeProperties::getContigAlias, No Chromosome/Contig Identifier specified for Alias.");
-      continue;
-
-    }
-
-    // Alias is idempotent.
-    contig_alias_map.setAlias(contig_ident, contig_ident);
-
-    // Get a vector of alias
-    std::vector<std::string> alias_vector;
-    if (not sub_tree.second.getNodeVector(ALIAS_ENTRY_, alias_vector))  {
-
-      ExecEnv::log().warn("RuntimeProperties::getContigAlias, No Alias Specified for Contig: {}", sub_tree.first);
-
-    }
-
-    for (auto const& alias : alias_vector) {
-
-      ExecEnv::log().info("RuntimeProperties::getContigAlias, Alias: {} for Contig Id: {}", alias, sub_tree.first);
-      contig_alias_map.setAlias(alias, contig_ident);
-
-    }
-
-  }
-
-  return contig_alias_map;
-
-}
-
-
-bool kgl::RuntimeProperties::getPropertiesAuxFile(std::string &aux_file) const {
-
-  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + std::string(AUX_FILE_) + std::string(DOT_) + std::string(VALUE_);
-  if (not property_tree_.getProperty(key, aux_file)) {
-
-    return false;
-
-  }
-
-  aux_file = Utility::filePath(aux_file, work_directory_);
-
-  return Utility::fileExists(aux_file);
-
-}
 
 

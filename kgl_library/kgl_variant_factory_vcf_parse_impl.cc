@@ -15,7 +15,7 @@ namespace kgl = kellerberrin::genome;
 namespace bt = boost;
 
 
-bool kgl::ParseVCFMiscImpl::parseVcfHeader(std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+bool kgl::ParseVCFMiscImpl::parseVcfHeader(std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
                                            const VcfHeaderInfo& header_info,
                                            ActiveContigMap& active_contig_map,
                                            bool cigar_required) {

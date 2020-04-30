@@ -126,7 +126,7 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool kgl::UPGMAGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> gene_ptr,
-                                        std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                        std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
                                         const std::string& protein_family) {
 
   std::shared_ptr<const OntologyRecord> ontology_record_ptr;
@@ -404,7 +404,7 @@ kgl::DistanceType_t kgl::DNAGeneDistance::distance(std::shared_ptr<const Virtual
 
 
 bool kgl::ReferenceGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> gene_ptr,
-                                            std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                                            std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
                                             const std::string& protein_family) {
 
   std::shared_ptr<const OntologyRecord> ontology_record_ptr;

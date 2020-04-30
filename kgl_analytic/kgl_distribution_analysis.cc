@@ -109,7 +109,7 @@ bool kgl::AggregateVariantDistribution::addVariant(std::shared_ptr<const Variant
 
 
 
-bool kgl::AggregateVariantDistribution::writeDistribution(std::shared_ptr<const GenomeDatabase> genome_db,
+bool kgl::AggregateVariantDistribution::writeDistribution(std::shared_ptr<const RuntimeGenomeDatabase> genome_db,
                                                           size_t interval_size,
                                                           const ContigId_t analysis_contig,
                                                           ContigOffset_t start_offset,
@@ -176,7 +176,7 @@ bool kgl::AggregateVariantDistribution::writeHeader(std::ostream& output, char d
 }
 
 
-bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeDatabase> genome_db,
+bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const RuntimeGenomeDatabase> genome_db,
                                                   size_t interval_size,
                                                   const ContigId_t analysis_contig,
                                                   ContigOffset_t start_offset,

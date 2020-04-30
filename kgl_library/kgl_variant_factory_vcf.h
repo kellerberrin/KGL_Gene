@@ -22,11 +22,11 @@ public:
   ~VcfFactory() = default;
 
   [[nodiscard]] static std::shared_ptr<UnphasedPopulation>
-  gatkMultiGenomeVCFVariants( const std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+  gatkMultiGenomeVCFVariants( const std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
                               const std::string &vcf_file_name);
 
   [[nodiscard]] static std::shared_ptr<UnphasedGenome>
-  GRChNoGenomeVCFVariants( const std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+  GRChNoGenomeVCFVariants( const std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
                            const std::string &vcf_file_name,
                            const ContigAliasMap& contig_alias_map);
 

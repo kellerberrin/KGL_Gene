@@ -50,7 +50,7 @@ void PopulationDistanceTree(DistanceTree& distance_tree,
                             const std::string& newick_file,
                             std::shared_ptr<const DNASequenceDistance> sequence_distance,
                             std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
-                            std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                            std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
                             Args... args) {
 
   std::shared_ptr<PhyloNodeVector> node_vector_ptr(std::make_shared<PhyloNodeVector>());
@@ -77,7 +77,7 @@ void GeneDistanceTree(DistanceTree& distance_tree,
                       const std::string& newick_file,
                       std::shared_ptr<const AminoSequenceDistance> sequence_distance,
                       std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
-                      std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                      std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
                       const std::string& protein_family,
                       Args... args) {
 
@@ -124,7 +124,7 @@ void GenePhyloTree(DistanceTree& distance_tree,
                    const std::string& newick_file,
                    std::shared_ptr<const AminoSequenceDistance> sequence_distance,
                    std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
-                   std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+                   std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
                    const std::string& protein_family,
                    Args... args) {
 
@@ -218,7 +218,7 @@ void VarGeneFamilyTree( DistanceTree& distance_tree,
 
   for (auto genome : genome_collection_ptr->getMap()) {
 
-    std::shared_ptr<const GenomeDatabase> genome_db_ptr = genome.second;
+    std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr = genome.second;
 
     for (auto contig : genome_db_ptr->getMap()) {
 

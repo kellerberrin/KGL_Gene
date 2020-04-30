@@ -43,7 +43,7 @@ public:
   ~ParseVCFMiscImpl() = default;
 
 
-  [[nodiscard]] static bool parseVcfHeader( std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+  [[nodiscard]] static bool parseVcfHeader( std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
                                             const VcfHeaderInfo& header,
                                             ActiveContigMap& active_contig_map,
                                             bool cigar_required);

@@ -35,12 +35,12 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   // Write Filtered Unphased Heterozygous Statistics
   HeterozygousStatistics heterozygous_statistics;
 
-  std::vector<VCFFileInfo> vcf_list = runtime_options.getVCFFileVector();
+  RuntimeVCFFileMap vcf_map = runtime_options.getVCFFiles();
     // For all VCF files, read in the variants.
-  for (const auto &vcf_file : vcf_list) {
+  for (const auto &[vcf_ident, vcf_file] : vcf_map) {
 
     // Get VCF reference genome.
-    std::shared_ptr<const GenomeDatabase> reference_genome_ptr = genome_collection->getGenome(
+    std::shared_ptr<const RuntimeGenomeDatabase> reference_genome_ptr = genome_collection->getGenome(
     vcf_file.referenceGenome());
 
     // Filter and process Gatk variants.

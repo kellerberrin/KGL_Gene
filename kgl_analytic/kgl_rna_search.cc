@@ -19,7 +19,7 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
                                      ContigOffset_t rna_target_offset,
                                      ContigSize_t rna_target_size,
                                      StrandSense rna_target_strand,
-                                     const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) {
+                                     const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db_ptr) {
 
   // Get the contig.
   std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db_ptr->getContigSequence(rna_contig);

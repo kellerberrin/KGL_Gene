@@ -20,7 +20,7 @@ namespace kgl = kellerberrin::genome;
 
 bool kgl::PhasedPopulation::getCreateGenome(const GenomeId_t& genome_id,
                                             PhaseId_t ploidy,
-                                            const std::shared_ptr<const GenomeDatabase>& genome_db,
+                                            const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db,
                                             std::shared_ptr<GenomeVariant>& genome) {
 
   auto result = population_variant_map_.find(genome_id);

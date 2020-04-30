@@ -35,7 +35,7 @@ public:
 
   [[nodiscard]] bool variantDistribution(std::shared_ptr<const PhasedPopulation> population_ptr);
 
-  [[nodiscard]] bool writeDistribution( std::shared_ptr<const GenomeDatabase> genome_db,
+  [[nodiscard]] bool writeDistribution( std::shared_ptr<const RuntimeGenomeDatabase> genome_db,
                                         size_t interval_size,
                                         const ContigId_t analysis_contig,
                                         ContigOffset_t start_offset,
@@ -48,7 +48,7 @@ private:
 
   IntervalContigMap interval_contig_map_;
 
-  [[nodiscard]] bool writeData( std::shared_ptr<const GenomeDatabase> genome_db,
+  [[nodiscard]] bool writeData( std::shared_ptr<const RuntimeGenomeDatabase> genome_db,
                                 size_t interval_size,
                                 const ContigId_t analysis_contig,
                                 ContigOffset_t start_offset,

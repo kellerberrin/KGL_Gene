@@ -34,11 +34,11 @@ public:
 
   using FeatureSinkPtr = bool (kgl::ContigFeatures::*)(std::shared_ptr<kgl::Feature>&);
 
-  void readGffFile(const std::string &gff_file_name, kgl::GenomeDatabase& genome_db, FeatureSinkPtr feature_sink);
+  void readGffFile(const std::string &gff_file_name, kgl::RuntimeGenomeDatabase& genome_db, FeatureSinkPtr feature_sink);
 
   bool writeFastaFile(const std::string& fasta_file_name, const std::vector<WriteFastaSequence>& fasta_sequences);
 
-  void readFastaFile(const std::string& fasta_file_name, std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr);
+  void readFastaFile(const std::string& fasta_file_name, std::shared_ptr<kgl::RuntimeGenomeDatabase>& genome_db_ptr);
 
   bool readFastaFile(const std::string& fasta_file_name, std::vector<ReadFastaSequence>& fasta_sequences);
 
@@ -48,7 +48,7 @@ public:
 private:
 
 
-  bool parseGffRecord(kgl::GenomeDatabase& genome_db_ptr,
+  bool parseGffRecord(kgl::RuntimeGenomeDatabase& genome_db_ptr,
                       seqan::GffRecord& record,
                       long gff_line_counter,
                       FeatureSinkPtr feature_sink);
@@ -120,7 +120,7 @@ bool kgl::ParseGffFasta::GffFastaImpl::readFastaFile(const std::string& fasta_fi
 
 
 void kgl::ParseGffFasta::GffFastaImpl::readFastaFile(const std::string& fasta_file_name,
-                                                     std::shared_ptr<kgl::GenomeDatabase>& genome_db_ptr) {
+                                                     std::shared_ptr<kgl::RuntimeGenomeDatabase>& genome_db_ptr) {
 
   std::vector<ReadFastaSequence> fasta_sequences;
   if (not readFastaFile(fasta_file_name, fasta_sequences)) {
@@ -149,7 +149,7 @@ void kgl::ParseGffFasta::GffFastaImpl::readFastaFile(const std::string& fasta_fi
 
 
 void kgl::ParseGffFasta::GffFastaImpl::readGffFile(const std::string &gff_file_name,
-                                                   kgl::GenomeDatabase& genome_db,
+                                                   kgl::RuntimeGenomeDatabase& genome_db,
                                                    FeatureSinkPtr feature_sink) {
 
   seqan::GffFileIn gff_file_in;
@@ -196,7 +196,7 @@ void kgl::ParseGffFasta::GffFastaImpl::readGffFile(const std::string &gff_file_n
 
 
 
-bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord( kgl::GenomeDatabase& genome_db,
+bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord( kgl::RuntimeGenomeDatabase& genome_db,
                                                        seqan::GffRecord& record,
                                                        long gff_line_counter,
                                                        FeatureSinkPtr feature_sink) {
@@ -429,10 +429,10 @@ kgl::ParseGffFasta::~ParseGffFasta() {}  // DO NOT DELETE or USE DEFAULT. Requir
 
 // Functionality passed to the implmentation.
 
-std::shared_ptr<kgl::GenomeDatabase> kgl::ParseGffFasta::readFastaFile(const std::string& organism,
-                                                                       const std::string& fasta_file_name) {
+std::shared_ptr<kgl::RuntimeGenomeDatabase> kgl::ParseGffFasta::readFastaFile(const std::string& organism,
+                                                                              const std::string& fasta_file_name) {
 
-  std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr(std::make_shared<kgl::GenomeDatabase>(organism));
+  std::shared_ptr<kgl::RuntimeGenomeDatabase> genome_db_ptr(std::make_shared<kgl::RuntimeGenomeDatabase>(organism));
   gff_fasta_impl_ptr_->readFastaFile(fasta_file_name, genome_db_ptr);
   return genome_db_ptr;
 
@@ -447,17 +447,17 @@ bool kgl::ParseGffFasta::writeFastaFile(const std::string& fasta_file_name,
 }
 
 
-std::shared_ptr<kgl::GenomeDatabase> kgl::ParseGffFasta::readFastaGffFile(const std::string& organism,
-                                                                          const std::string& fasta_file_name,
-                                                                          const std::string& gff_file_name ) {
+std::shared_ptr<kgl::RuntimeGenomeDatabase> kgl::ParseGffFasta::readFastaGffFile(const std::string& organism,
+                                                                                 const std::string& fasta_file_name,
+                                                                                 const std::string& gff_file_name ) {
 
-  std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr = readFastaFile(organism, fasta_file_name);
+  std::shared_ptr<kgl::RuntimeGenomeDatabase> genome_db_ptr = readFastaFile(organism, fasta_file_name);
   gff_fasta_impl_ptr_->readGffFile(gff_file_name, *genome_db_ptr, &ContigFeatures::addGeneExonFeature);
   return genome_db_ptr;
 
 }
 
-void kgl::ParseGffFasta::readTssGffFile(const std::string& tss_gff_file_name, GenomeDatabase& genome_db) {
+void kgl::ParseGffFasta::readTssGffFile(const std::string& tss_gff_file_name, RuntimeGenomeDatabase& genome_db) {
 
   gff_fasta_impl_ptr_->readGffFile(tss_gff_file_name, genome_db, &ContigFeatures::addAuxFeature);
 

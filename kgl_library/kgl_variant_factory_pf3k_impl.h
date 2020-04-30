@@ -22,7 +22,7 @@ class Pf3kVCFImpl : public VCFReaderMT {
 public:
 
   Pf3kVCFImpl(const std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
-              const std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+              const std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
               const std::string &vcf_file_name) : VCFReaderMT(vcf_file_name),
                                                   unphased_population_ptr_(vcf_population_ptr),
                                                   genome_db_ptr_(genome_db_ptr) {}
@@ -69,10 +69,10 @@ private:
   mutable std::mutex add_variant_mutex_;  // mutex to lock the UnphasedPopulation structure when inserting variants.
   // This object is write accessed by multiple threads, it MUST BE mutex guarded for any access.
   const std::shared_ptr<UnphasedPopulation> unphased_population_ptr_;   // Un-phased variants.
-  const std::shared_ptr<const GenomeDatabase> genome_db_ptr_; // read access only.
+  const std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr_; // read access only.
 
   [[nodiscard]] bool addThreadSafeGenomeVariant(const std::shared_ptr<const Variant>& variant_ptr);
-  void setupPopulationStructure(const std::shared_ptr<const GenomeDatabase> genome_db_ptr);
+  void setupPopulationStructure(const std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr);
   [[nodiscard]] bool addThreadSafeVariant(std::shared_ptr<const Variant>& variant_ptr);
 
   [[nodiscard]] bool createAddVariant(const std::string& genome_name,

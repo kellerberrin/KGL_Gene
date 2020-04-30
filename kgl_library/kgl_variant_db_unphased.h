@@ -93,7 +93,7 @@ public:
 
   // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
   // The second integer is the number variants that pass inspection by comparison to the genome database.
-  [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) const;
+  [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db_ptr) const;
 
 private:
 

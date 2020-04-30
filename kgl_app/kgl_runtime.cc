@@ -10,7 +10,7 @@
 namespace kgl = kellerberrin::genome;
 
 
-kgl::VCFParserEnum kgl::VCFFileInfo::getParserType(const std::string& parser_type) const {
+kgl::VCFParserEnum kgl::RuntimeVCFFileInfo::getParserType(const std::string& parser_type) const {
 
   std::string parser_upper = Utility::toupper(parser_type);
 

@@ -310,7 +310,7 @@ std::shared_ptr<kgl::UnphasedGenome> kgl::UnphasedGenome::filterVariants(const k
 
 // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
 // The second integer is the number variants that pass inspection by comparison to the genome database.
-std::pair<size_t, size_t> kgl::UnphasedGenome::validate(const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) const {
+std::pair<size_t, size_t> kgl::UnphasedGenome::validate(const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db_ptr) const {
 
   std::pair<size_t, size_t> genome_count{0, 0};
   for (auto const& [contig_id, contig_ptr] : getMap()) {

@@ -19,7 +19,7 @@ namespace kgl = kellerberrin::genome;
 
 
 std::shared_ptr<kgl::UnphasedPopulation>
-kgl::VcfFactory::gatkMultiGenomeVCFVariants( const std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+kgl::VcfFactory::gatkMultiGenomeVCFVariants( const std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
                                              const std::string &vcf_file_name) {
 
   std::shared_ptr<UnphasedPopulation> vcf_population_ptr(std::make_shared<UnphasedPopulation>(genome_db_ptr->genomeId()));
@@ -32,7 +32,7 @@ kgl::VcfFactory::gatkMultiGenomeVCFVariants( const std::shared_ptr<const GenomeD
 }
 
 std::shared_ptr<kgl::UnphasedGenome>
-kgl::VcfFactory::GRChNoGenomeVCFVariants( const std::shared_ptr<const GenomeDatabase> genome_db_ptr,
+kgl::VcfFactory::GRChNoGenomeVCFVariants( const std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
                                           const std::string &vcf_file_name,
                                           const ContigAliasMap& contig_alias_map) {
 

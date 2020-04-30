@@ -331,7 +331,7 @@ bool kgl::Pf3kVCFImpl::addThreadSafeGenomeVariant(const std::shared_ptr<const Va
 // Set up the genomes/contigs first rather than on-the-fly.
 // Some genomes may have no variants (e.g. the model/reference genome 3D7)
 // and thus these genomes/contigs would not be created on-the-fly.
-void kgl::Pf3kVCFImpl::setupPopulationStructure(const std::shared_ptr<const GenomeDatabase> genome_db_ptr) {
+void kgl::Pf3kVCFImpl::setupPopulationStructure(const std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr) {
 
   std::scoped_lock<std::mutex> lock(add_variant_mutex_);
 

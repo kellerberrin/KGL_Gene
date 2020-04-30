@@ -39,6 +39,19 @@ public:
 
   [[nodiscard]] const std::string& workDirectory() const { return work_directory_; }
 
+  [[nodiscard]] RuntimePackageMap getPackageMap() const;
+
+  [[nodiscard]]  RuntimeAnalysisMap getAnalysisMap() const;
+
+  [[nodiscard]]  RuntimeGenomeDatabaseMap getGenomeDatabaseMap() const;
+
+  [[nodiscard]] RuntimeVCFFileMap getVCFFiles() const;
+
+  [[nodiscard]] ContigAliasMap getContigAlias() const;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Legacy Code.
+
   [[nodiscard]] bool getMixtureFile(std::string& mixture_file) const;
 
   [[nodiscard]] bool getPropertiesAuxFile(std::string &aux_file) const;
@@ -55,10 +68,6 @@ public:
 
   [[nodiscard]] bool getActiveGenomes(std::vector<std::string>& genome_list) const;
 
-  [[nodiscard]] VCFFileMap getVCFFiles() const;
-
-  [[nodiscard]] ContigAliasMap getContigAlias() const;
-
 private:
 
   constexpr static const char* DOT_ = ".";
@@ -67,26 +76,43 @@ private:
   constexpr static const char* HELP_ = "help";
   constexpr static const char* ACTIVE_ = "active";
   constexpr static const char* VALUE_ = "value";
-  // Runtime categories.
+  // Analysis Package categories.
+
+
+  // Analysis Runtime categories.
+  constexpr static const char* ANALYSIS_LIST_ = "analysisList";
+  constexpr static const char* ANALYSIS_IDENT_ = "analysisIdent";
+  constexpr static const char* PARAMETER_LIST_ = "analysisIdent";
+  constexpr static const char* PARAMETER_ = "parameter";
+  constexpr static const char* PARAMETER_IDENT_ = "parameterIdent";
+  constexpr static const char* PARAMETER_VALUE_ = "parameterIdent";
+
+  // VCF File Runtime categories.
   constexpr static const char* VCF_LIST_ = "vcfList";
   constexpr static const char* VCF_IDENT_ = "vcfIdent";
   constexpr static const char* VCF_FILE_NAME_ = "vcfFileName";
   constexpr static const char* VCF_PARSER_TYPE_ = "vcfParser";
   constexpr static const char* VCF_FILE_GENOME_ =  "vcfGenome";
   constexpr static const char* VCF_FILE_PLOIDY_ =  "vcfPloidy";
+  // Genome Database categories.
   constexpr static const char* GENOME_LIST_ = "genomeList";
-  constexpr static const char* FILE_LIST_ = "fileList";
-  constexpr static const char* VCF_PLOIDY_ = "vcfPloidy";
+  constexpr static const char* GENOME_DATABASE_ = "genomeDatabase";
+  constexpr static const char* GENOME_IDENT_ = "genomeIdent";
   constexpr static const char* FASTA_FILE_ = "fastaFile";
   constexpr static const char* GFF_FILE_ = "gffFile";
-  constexpr static const char* GAF_FILE_ = "gafFile";
-  constexpr static const char* MIXTURE_FILE_ = "mixtureFile";
-  constexpr static const char* AUX_FILE_ = "auxFile";
-  constexpr static const char* AUX_GENOME_FILE_ = "auxGenomeFile";
+  constexpr static const char* GAF_FILE_ = "gafFile";   // optional
   constexpr static const char* TRANSLATION_TABLE_ = "translationTable";
+  // Contig/Chromosome Alias categories.
   constexpr static const char* ALIAS_LIST_ = "contigAlias";
   constexpr static const char* ALIAS_IDENT_ = "ident";
   constexpr static const char* ALIAS_ENTRY_ = "alias";
+
+  // Legacy
+  constexpr static const char* FILE_LIST_ = "fileList";
+  constexpr static const char* VCF_PLOIDY_ = "vcfPloidy";
+  constexpr static const char* MIXTURE_FILE_ = "mixtureFile";
+  constexpr static const char* AUX_FILE_ = "auxFile";
+  constexpr static const char* AUX_GENOME_FILE_ = "auxGenomeFile";
   // Defaults
   constexpr static const size_t DEFAULT_PLOIDY_ = 2;
 

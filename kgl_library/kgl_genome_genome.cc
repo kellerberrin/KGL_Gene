@@ -18,8 +18,8 @@ namespace kgl = kellerberrin::genome;
 
 
 
-std::shared_ptr<kgl::GenomeDatabase> kgl::GenomeDatabase::createGenomeDatabase(const kgl::RuntimeProperties& runtime_options,
-                                                                               const GenomeId_t& organism) {
+std::shared_ptr<kgl::RuntimeGenomeDatabase> kgl::RuntimeGenomeDatabase::createGenomeDatabase(const kgl::RuntimeProperties& runtime_options,
+                                                                                             const GenomeId_t& organism) {
 
   // Get the genome database runtime parameters.
   std::string fasta_file, gff_file, gaf_file, amino_translation_table;
@@ -28,11 +28,11 @@ std::shared_ptr<kgl::GenomeDatabase> kgl::GenomeDatabase::createGenomeDatabase(c
 
 
   // Create a genome database object.
-  std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr = createGenomeDatabase(organism,
-                                                                            fasta_file,
-                                                                            gff_file,
-                                                                            gaf_file,
-                                                                            amino_translation_table);
+  std::shared_ptr<kgl::RuntimeGenomeDatabase> genome_db_ptr = createGenomeDatabase(organism,
+                                                                                   fasta_file,
+                                                                                   gff_file,
+                                                                                   gaf_file,
+                                                                                   amino_translation_table);
 
   if (not genome_db_ptr) {
 
@@ -53,13 +53,13 @@ std::shared_ptr<kgl::GenomeDatabase> kgl::GenomeDatabase::createGenomeDatabase(c
 }
 
 
-std::shared_ptr<kgl::GenomeDatabase> kgl::GenomeDatabase::createGenomeDatabase(const std::string& organism,
-                                                                               const std::string& fasta_file,
-                                                                               const std::string& gff_file,
-                                                                               const std::string& gaf_file,
-                                                                               const std::string& translation_table) {
+std::shared_ptr<kgl::RuntimeGenomeDatabase> kgl::RuntimeGenomeDatabase::createGenomeDatabase(const std::string& organism,
+                                                                                             const std::string& fasta_file,
+                                                                                             const std::string& gff_file,
+                                                                                             const std::string& gaf_file,
+                                                                                             const std::string& translation_table) {
   // Create a genome database object.
-  std::shared_ptr<kgl::GenomeDatabase> genome_db_ptr = ParseGffFasta().readFastaGffFile(organism,  fasta_file, gff_file);
+  std::shared_ptr<kgl::RuntimeGenomeDatabase> genome_db_ptr = ParseGffFasta().readFastaGffFile(organism, fasta_file, gff_file);
 
   // Optionally set the translation table (defaults to the standard table).
   if (not translation_table.empty()) {
@@ -85,7 +85,7 @@ std::shared_ptr<kgl::GenomeDatabase> kgl::GenomeDatabase::createGenomeDatabase(c
 }
 
 
-bool kgl::GenomeDatabase::readGenomeAuxiliary(const RuntimeProperties& runtime_options) {
+bool kgl::RuntimeGenomeDatabase::readGenomeAuxiliary(const RuntimeProperties& runtime_options) {
 
   std::vector<AuxFileInfo> aux_file_list;
 
@@ -114,7 +114,7 @@ bool kgl::GenomeDatabase::readGenomeAuxiliary(const RuntimeProperties& runtime_o
 
 }
 
-void kgl::GenomeDatabase::readAuxillary(const std::string& tss_gff_file) {
+void kgl::RuntimeGenomeDatabase::readAuxillary(const std::string& tss_gff_file) {
 
   // Optionally read in tss_gff records into the genome database.
   if (not tss_gff_file.empty()) {
@@ -129,9 +129,9 @@ void kgl::GenomeDatabase::readAuxillary(const std::string& tss_gff_file) {
 }
 
 
-bool kgl::GenomeDatabase::addContigSequence(const kgl::ContigId_t& contig_id,
-                                            const std::string& description,
-                                            std::shared_ptr<kgl::DNA5SequenceContig> sequence_ptr) {
+bool kgl::RuntimeGenomeDatabase::addContigSequence(const kgl::ContigId_t& contig_id,
+                                                   const std::string& description,
+                                                   std::shared_ptr<kgl::DNA5SequenceContig> sequence_ptr) {
 
   using ContigPtr = std::shared_ptr<kgl::ContigFeatures>;
   ContigPtr contig_ptr(std::make_shared<kgl::ContigFeatures>(contig_id, sequence_ptr));
@@ -143,7 +143,7 @@ bool kgl::GenomeDatabase::addContigSequence(const kgl::ContigId_t& contig_id,
 
 }
 
-std::optional<std::shared_ptr<const kgl::ContigFeatures>> kgl::GenomeDatabase::getContigSequence(const kgl::ContigId_t& contig_id) const {
+std::optional<std::shared_ptr<const kgl::ContigFeatures>> kgl::RuntimeGenomeDatabase::getContigSequence(const kgl::ContigId_t& contig_id) const {
 
   auto result_iter = genome_sequence_map_.find(contig_id);
 
@@ -158,7 +158,7 @@ std::optional<std::shared_ptr<const kgl::ContigFeatures>> kgl::GenomeDatabase::g
 }
 
 
-void kgl::GenomeDatabase::createVerifyGenomeDatabase() {
+void kgl::RuntimeGenomeDatabase::createVerifyGenomeDatabase() {
 
   for (auto contig_pair : genome_sequence_map_) {
 
@@ -169,7 +169,7 @@ void kgl::GenomeDatabase::createVerifyGenomeDatabase() {
 }
 
 
-void kgl::GenomeDatabase::createVerifyAuxillary() {
+void kgl::RuntimeGenomeDatabase::createVerifyAuxillary() {
 
   for (auto contig_pair : genome_sequence_map_) {
 
@@ -180,7 +180,7 @@ void kgl::GenomeDatabase::createVerifyAuxillary() {
 }
 
 
-void kgl::GenomeDatabase::setTranslationTable(const std::string& table) {
+void kgl::RuntimeGenomeDatabase::setTranslationTable(const std::string& table) {
 
   ExecEnv::log().info("GenomeDatabase::setTranslationTable; All contigs set to Amino translation table: {}", table);
 
@@ -198,11 +198,11 @@ void kgl::GenomeDatabase::setTranslationTable(const std::string& table) {
 
 
 // Given a sequence offset, returns a contig offset.
-bool kgl::GenomeDatabase::contigOffset( const ContigId_t& contig_id,
-                                        const FeatureIdent_t& gene_id,
-                                        const FeatureIdent_t& sequence_id,
-                                        ContigOffset_t sequence_offset,
-                                        ContigOffset_t& contig_offset) const {
+bool kgl::RuntimeGenomeDatabase::contigOffset(const ContigId_t& contig_id,
+                                              const FeatureIdent_t& gene_id,
+                                              const FeatureIdent_t& sequence_id,
+                                              ContigOffset_t sequence_offset,
+                                              ContigOffset_t& contig_offset) const {
 
   // Get the contig.
   std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = getContigSequence(contig_id);
@@ -234,7 +234,7 @@ bool kgl::GenomeDatabase::contigOffset( const ContigId_t& contig_id,
 
 
 
-bool kgl::GenomeCollection::getGenome(const GenomeId_t& genome_id, std::shared_ptr<const GenomeDatabase>& genome_database) const {
+bool kgl::GenomeCollection::getGenome(const GenomeId_t& genome_id, std::shared_ptr<const RuntimeGenomeDatabase>& genome_database) const {
 
   auto result = genome_map_.find(genome_id);
 
@@ -253,18 +253,18 @@ bool kgl::GenomeCollection::getGenome(const GenomeId_t& genome_id, std::shared_p
 }
 
 
-bool kgl::GenomeCollection::addGenome(std::shared_ptr<const GenomeDatabase> genome_database) {
+bool kgl::GenomeCollection::addGenome(std::shared_ptr<const RuntimeGenomeDatabase> genome_database) {
 
-  auto result = genome_map_.insert(std::pair<GenomeId_t, std::shared_ptr<const GenomeDatabase>>(genome_database->genomeId(), genome_database));
+  auto result = genome_map_.insert(std::pair<GenomeId_t, std::shared_ptr<const RuntimeGenomeDatabase>>(genome_database->genomeId(), genome_database));
 
   return result.second;
 
 }
 
 
-std::shared_ptr<const kgl::GenomeDatabase> kgl::GenomeCollection::getGenome(const std::string& GenomeID) const {
+std::shared_ptr<const kgl::RuntimeGenomeDatabase> kgl::GenomeCollection::getGenome(const std::string& GenomeID) const {
 
-  std::shared_ptr<const GenomeDatabase> genome_ptr;
+  std::shared_ptr<const RuntimeGenomeDatabase> genome_ptr;
 
   if (not getGenome(GenomeID, genome_ptr)) {
 
@@ -292,7 +292,7 @@ std::shared_ptr<kgl::GenomeCollection> kgl::GenomeCollection::createGenomeCollec
   for (auto genome : genome_list) {
 
     // Create the genome database.
-    std::shared_ptr<GenomeDatabase> genome_ptr = GenomeDatabase::createGenomeDatabase(runtime_options, genome);
+    std::shared_ptr<RuntimeGenomeDatabase> genome_ptr = RuntimeGenomeDatabase::createGenomeDatabase(runtime_options, genome);
 
     if (not genome_collection->addGenome(genome_ptr)) {
 

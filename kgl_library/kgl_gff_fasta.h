@@ -95,17 +95,17 @@ public:
   ~ParseGffFasta();
 
   // Functionality passed to the implmentation.
-  [[nodiscard]] std::shared_ptr<GenomeDatabase> readFastaFile(const std::string& organism, const std::string& fasta_file_name);
+  [[nodiscard]] std::shared_ptr<RuntimeGenomeDatabase> readFastaFile(const std::string& organism, const std::string& fasta_file_name);
 
   [[nodiscard]] bool writeFastaFile(const std::string& fasta_file_name, const std::vector<WriteFastaSequence>& fasta_sequences);
 
   [[nodiscard]] bool readFastaFile(const std::string& fasta_file_name, std::vector<ReadFastaSequence>& fasta_sequences);
 
-  [[nodiscard]] std::shared_ptr<GenomeDatabase> readFastaGffFile( const std::string& organism,
-                                                                  const std::string& fasta_file_name,
-                                                                  const std::string& gff_file_name);
+  [[nodiscard]] std::shared_ptr<RuntimeGenomeDatabase> readFastaGffFile(const std::string& organism,
+                                                                        const std::string& fasta_file_name,
+                                                                        const std::string& gff_file_name);
 
-  void readTssGffFile(const std::string& tss_gff_file_name, GenomeDatabase& genome_db_ptr);
+  void readTssGffFile(const std::string& tss_gff_file_name, RuntimeGenomeDatabase& genome_db_ptr);
 
 private:
 

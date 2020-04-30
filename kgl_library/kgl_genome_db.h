@@ -117,19 +117,19 @@ private:
 
 using GenomeContigMap = std::map<ContigId_t, std::shared_ptr<ContigFeatures>>;
 
-class GenomeDatabase {
+class RuntimeGenomeDatabase {
 
 public:
 
-  explicit GenomeDatabase(const GenomeId_t& genome_id) : _genome_id(genome_id) {}
-  GenomeDatabase(const GenomeDatabase&) = default;
-  ~GenomeDatabase() = default;
+  explicit RuntimeGenomeDatabase(const GenomeId_t& genome_id) : _genome_id(genome_id) {}
+  RuntimeGenomeDatabase(const RuntimeGenomeDatabase&) = default;
+  ~RuntimeGenomeDatabase() = default;
 
-  GenomeDatabase& operator=(const GenomeDatabase&) = default;
+  RuntimeGenomeDatabase& operator=(const RuntimeGenomeDatabase&) = default;
 
   // High level function creates a genome database.
-  [[nodiscard]] static std::shared_ptr<GenomeDatabase> createGenomeDatabase( const RuntimeProperties& runtime_options,
-                                                                             const GenomeId_t& organism);
+  [[nodiscard]] static std::shared_ptr<RuntimeGenomeDatabase> createGenomeDatabase(const RuntimeProperties& runtime_options,
+                                                                                   const GenomeId_t& organism);
   // Organism identifier
   [[nodiscard]] const GenomeId_t& genomeId() const { return _genome_id; }
 
@@ -166,11 +166,11 @@ private:
   // The gaf file is optional (empty string if omitted)
   // The translation Amino Acid table is optional (empty string if omitted).
   // Note that different translation tables can be specified for individual contigs.
-  [[nodiscard]] static std::shared_ptr<GenomeDatabase> createGenomeDatabase( const GenomeId_t& organism,
-                                                                             const std::string& fasta_file,
-                                                                             const std::string& gff_file,
-                                                                             const std::string& gaf_file,
-                                                                             const std::string& translation_table);
+  [[nodiscard]] static std::shared_ptr<RuntimeGenomeDatabase> createGenomeDatabase(const GenomeId_t& organism,
+                                                                                   const std::string& fasta_file,
+                                                                                   const std::string& gff_file,
+                                                                                   const std::string& gaf_file,
+                                                                                   const std::string& translation_table);
 
   // Reads auxiliary genome information about the database. Promoter sites, motifs, tss etc.
   [[nodiscard]] bool readGenomeAuxiliary(const RuntimeProperties& runtime_options);
@@ -184,7 +184,7 @@ private:
 // GenomeCollection - A map of different organism genomes.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using GenomeMap = std::map<GenomeId_t, std::shared_ptr<const GenomeDatabase>>;
+using GenomeMap = std::map<GenomeId_t, std::shared_ptr<const RuntimeGenomeDatabase>>;
 
 class GenomeCollection {
 
@@ -200,8 +200,8 @@ public:
   [[nodiscard]] static std::shared_ptr<GenomeCollection> createGenomeCollection(const RuntimeProperties& runtime_options);
 
   // Returns false if the genome does not exist.
-  [[nodiscard]] std::shared_ptr<const GenomeDatabase> getGenome(const std::string& GenomeID) const;
-  [[nodiscard]] bool getGenome(const GenomeId_t& genome_id, std::shared_ptr<const GenomeDatabase>& genome_variant) const;
+  [[nodiscard]] std::shared_ptr<const RuntimeGenomeDatabase> getGenome(const std::string& GenomeID) const;
+  [[nodiscard]] bool getGenome(const GenomeId_t& genome_id, std::shared_ptr<const RuntimeGenomeDatabase>& genome_variant) const;
 
   [[nodiscard]] const GenomeMap& getMap() const { return genome_map_; }
 
@@ -211,7 +211,7 @@ private:
   GenomeMap genome_map_;
 
  // Returns false if the genome already exists.
-  [[nodiscard]] bool addGenome(std::shared_ptr<const GenomeDatabase> genome_database);
+  [[nodiscard]] bool addGenome(std::shared_ptr<const RuntimeGenomeDatabase> genome_database);
 
 };
 

@@ -29,7 +29,7 @@ public:
   explicit ParseVCFRecord(const VcfRecord& vcf_record) : vcf_record_(vcf_record) {}
   ~ParseVCFRecord() = default;
 
-  [[nodiscard]] bool parseRecord(const ContigId_t& contig_id, std::shared_ptr<const GenomeDatabase> genome_db_ptr);
+  [[nodiscard]] bool parseRecord(const ContigId_t& contig_id, std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr);
 
   [[nodiscard]] size_t requiredFormatSize() const;
   [[nodiscard]] size_t GTOffset() const { return GT_offset_; }

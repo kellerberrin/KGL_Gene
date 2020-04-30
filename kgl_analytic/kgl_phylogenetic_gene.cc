@@ -20,7 +20,7 @@ bool kgl::GeneAnalysis::translateContig( const GenomeId_t& genome_id,
                                          const std::shared_ptr<const GenomeCollection>& genomes,
                                          const std::string& fasta_file_name) {
   // Get the genome object
-  std::shared_ptr<const GenomeDatabase> genome_db_ptr;
+  std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr;
   if (not genomes->getGenome(genome_id, genome_db_ptr)) {
 
     ExecEnv::log().warn("Could not find Genome: {} in genome collection", genome_id);
@@ -112,7 +112,7 @@ bool kgl::GeneAnalysis::translateGene( const GenomeId_t& genome_id,
                                        const std::string& fasta_file_name) {
 
   // Get the genome object
-  std::shared_ptr<const GenomeDatabase> genome_db_ptr;
+  std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr;
   if (not genomes->getGenome(genome_id, genome_db_ptr)) {
 
     ExecEnv::log().warn("Could not find Genome: {} in genome collection", genome_id);
@@ -195,7 +195,7 @@ bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
                                    const FeatureIdent_t& gene,
                                    const FeatureIdent_t& sequence,
                                    const std::shared_ptr<const PhasedPopulation>& population_ptr,
-                                   const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
+                                   const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db_ptr,
                                    const std::string& fasta_filename) {
 
 
@@ -274,7 +274,7 @@ bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
                                          const FeatureIdent_t& gene,
                                          const FeatureIdent_t& sequence,
                                          const std::shared_ptr<const GenomeVariant>& genome_variant_ptr,
-                                         const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
+                                         const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db_ptr,
                                          GeneSummaryMap& gene_summary_map) {
 
 
@@ -395,7 +395,7 @@ bool kgl::GeneAnalysis::mutateAllRegions(const std::string& file_name,
                                          ContigSize_t region_size,
                                          const std::shared_ptr<const LinearDNASequenceDistance>& dna_distance_metric,
                                          const std::shared_ptr<const PhasedPopulation>& pop_variant_ptr,
-                                         const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) {
+                                         const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db_ptr) {
 
   const char CSV_delimiter = ',';
   // open the file.
@@ -462,7 +462,7 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
                                                   const ContigOffset_t offset,
                                                   const ContigSize_t region_size,
                                                   const std::shared_ptr<const GenomeVariant>& genome_variant_ptr,
-                                                  const std::shared_ptr<const GenomeDatabase>& genome_db_ptr) {
+                                                  const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db_ptr) {
 
   std::stringstream ss;
 
@@ -550,7 +550,7 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const GenomeId_t& genome,
                                            ContigOffset_t offset,
                                            ContigSize_t region_size,
                                            const std::shared_ptr<const PhasedPopulation>& population_ptr,
-                                           const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
+                                           const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db_ptr,
                                            const std::string& fasta_file) {
 
 
@@ -573,7 +573,7 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
                                            const ContigOffset_t offset,
                                            const ContigSize_t region_size,
                                            const std::shared_ptr<const GenomeVariant>& genome_variant_ptr,
-                                           const std::shared_ptr<const GenomeDatabase>& genome_db_ptr,
+                                           const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db_ptr,
                                            const std::string& fasta_file) {
 
   std::shared_ptr<const LinearDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
