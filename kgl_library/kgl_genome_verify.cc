@@ -11,11 +11,11 @@ namespace kgl = kellerberrin::genome;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ContigFeatures members.
+// ContigReference members.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void kgl::ContigFeatures::verifyCDSPhasePeptide() {
+void kgl::ContigReference::verifyCDSPhasePeptide() {
 
   // Iterate through all the features looking for Genes.
   size_t gene_count = 0;
@@ -23,7 +23,7 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
   size_t ill_formed_sequences = 0;
   size_t empty_genes = 0;
 
-  ExecEnv::log().info("ContigFeatures::verifyCDSPhasePeptide; Verifying {} Genes using amino translation table: {}", contigId(), coding_table_.translationTableName());
+  ExecEnv::log().info("ContigReference::verifyCDSPhasePeptide; Verifying {} Genes using amino translation table: {}", contigId(), coding_table_.translationTableName());
 
   for(const auto& feature : gene_exon_features_.offsetFeatureMap()) {
 
@@ -82,8 +82,8 @@ void kgl::ContigFeatures::verifyCDSPhasePeptide() {
 }
 
 
-bool kgl::ContigFeatures::verifyCodingSequences(const std::shared_ptr<const GeneFeature>& gene_ptr,
-                                                const std::shared_ptr<const CodingSequenceArray>& coding_seq_ptr) const {
+bool kgl::ContigReference::verifyCodingSequences(const std::shared_ptr<const GeneFeature>& gene_ptr,
+                                                 const std::shared_ptr<const CodingSequenceArray>& coding_seq_ptr) const {
 
   bool result = true;
 
@@ -231,7 +231,7 @@ bool kgl::Feature::verifyStrand(const SortedCDS& sorted_cds) const {
 
 
 // Verifies a coding sequence using the amino coding table defined for the contig.
-bool kgl::ContigFeatures::verifyDNACodingSequence(const DNA5SequenceCoding& coding_sequence_ptr) const {
+bool kgl::ContigReference::verifyDNACodingSequence(const DNA5SequenceCoding& coding_sequence_ptr) const {
 
   bool result = coding_table_.checkStopCodon(coding_sequence_ptr);
   result = result and coding_table_.checkStartCodon(coding_sequence_ptr);
@@ -243,7 +243,7 @@ bool kgl::ContigFeatures::verifyDNACodingSequence(const DNA5SequenceCoding& codi
 
 
 // Verifies a coding sequence using the amino coding table defined for the contig.
-bool kgl::ContigFeatures::verifyProteinSequence(const AminoSequence& amino_sequence) const {
+bool kgl::ContigReference::verifyProteinSequence(const AminoSequence& amino_sequence) const {
 
   bool result = coding_table_.checkStopCodon(amino_sequence);
   result = result and coding_table_.checkStartCodon(amino_sequence);
@@ -255,7 +255,7 @@ bool kgl::ContigFeatures::verifyProteinSequence(const AminoSequence& amino_seque
 
 
 // Verifies a coding sequence using the amino coding table defined for the contig.
-kgl::ProteinSequenceAnalysis kgl::ContigFeatures::proteinSequenceAnalysis(const AminoSequence& amino_sequence) const {
+kgl::ProteinSequenceAnalysis kgl::ContigReference::proteinSequenceAnalysis(const AminoSequence& amino_sequence) const {
 
   if (not coding_table_.checkStartCodon(amino_sequence)) {
 
@@ -280,7 +280,7 @@ kgl::ProteinSequenceAnalysis kgl::ContigFeatures::proteinSequenceAnalysis(const 
 }
 
 
-size_t kgl::ContigFeatures::proteinSequenceSize(const AminoSequence& amino_sequence) const {
+size_t kgl::ContigReference::proteinSequenceSize(const AminoSequence& amino_sequence) const {
 
   switch(proteinSequenceAnalysis(amino_sequence)) {
 

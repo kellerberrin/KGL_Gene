@@ -43,7 +43,7 @@ public:
 
   [[nodiscard]]  RuntimeAnalysisMap getAnalysisMap() const;
 
-  [[nodiscard]]  RuntimeGenomeDatabaseMap getGenomeDatabaseMap() const;
+  [[nodiscard]]  RuntimeGenomeDatabaseMap getGenomeReferenceMap() const;
 
   [[nodiscard]] RuntimeVCFFileMap getVCFFiles() const;
 
@@ -70,26 +70,32 @@ public:
 
 private:
 
-  constexpr static const char* DOT_ = ".";
   // Node categories.
+  constexpr static const char* DOT_ = ".";
   constexpr static const char* RUNTIME_ROOT_ = "runTime";
   constexpr static const char* HELP_ = "help";
   constexpr static const char* ACTIVE_ = "active";
   constexpr static const char* VALUE_ = "value";
-  // Analysis Package categories.
-
-
+  // Package Runtime categories.
+  constexpr static const char* PACKAGE_LIST_ = "packageList";
+  constexpr static const char* PACKAGE_ = "package";
+  constexpr static const char* PACKAGE_IDENT_ = "packageIdent";
+  constexpr static const char* PACKAGE_ANALYSIS_LIST_ = "analysisList";
+  constexpr static const char* PACKAGE_GENOME_LIST_ = "genomeList";
+  constexpr static const char* PACKAGE_LOAD_LIST_ = "loadList";
+  constexpr static const char* PACKAGE_ITERATION_LIST_ = "iterationList";
   // Analysis Runtime categories.
   constexpr static const char* ANALYSIS_LIST_ = "analysisList";
+  constexpr static const char* ANALYSIS_ = "analysis";
   constexpr static const char* ANALYSIS_IDENT_ = "analysisIdent";
   constexpr static const char* PARAMETER_LIST_ = "analysisIdent";
   constexpr static const char* PARAMETER_ = "parameter";
   constexpr static const char* PARAMETER_IDENT_ = "parameterIdent";
   constexpr static const char* PARAMETER_VALUE_ = "parameterIdent";
-
   // VCF File Runtime categories.
   constexpr static const char* VCF_LIST_ = "vcfList";
   constexpr static const char* VCF_IDENT_ = "vcfIdent";
+  constexpr static const char* VCF_FILE_ = "vcfFile";
   constexpr static const char* VCF_FILE_NAME_ = "vcfFileName";
   constexpr static const char* VCF_PARSER_TYPE_ = "vcfParser";
   constexpr static const char* VCF_FILE_GENOME_ =  "vcfGenome";
@@ -106,7 +112,7 @@ private:
   constexpr static const char* ALIAS_LIST_ = "contigAlias";
   constexpr static const char* ALIAS_IDENT_ = "ident";
   constexpr static const char* ALIAS_ENTRY_ = "alias";
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Legacy
   constexpr static const char* FILE_LIST_ = "fileList";
   constexpr static const char* VCF_PLOIDY_ = "vcfPloidy";

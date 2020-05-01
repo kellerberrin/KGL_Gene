@@ -19,10 +19,10 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
                                      ContigOffset_t rna_target_offset,
                                      ContigSize_t rna_target_size,
                                      StrandSense rna_target_strand,
-                                     const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db_ptr) {
+                                     const std::shared_ptr<const GenomeReference>& genome_db_ptr) {
 
   // Get the contig.
-  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db_ptr->getContigSequence(rna_contig);
+  std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db_ptr->getContigSequence(rna_contig);
   if (not contig_opt) {
 
     ExecEnv::log().warn("getRNARegions(), Could not find contig: {} in genome database", rna_contig);
@@ -46,7 +46,7 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
 
   // Get the contig.
 
-  std::optional<std::shared_ptr<const ContigFeatures>> target_contig_opt = genome_db_ptr->getContigSequence(rna_target_contig);
+  std::optional<std::shared_ptr<const ContigReference>> target_contig_opt = genome_db_ptr->getContigSequence(rna_target_contig);
   if (not target_contig_opt) {
 
     ExecEnv::log().warn("getRNARegions(), Could not find contig: {} in genome database", rna_target_contig);

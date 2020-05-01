@@ -40,7 +40,7 @@ public:
   // Create the genome variant if it does not exist.
   [[nodiscard]] bool getCreateGenome( const GenomeId_t& genome_id,
                                       PhaseId_t ploidy,
-                                      const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db,
+                                      const std::shared_ptr<const GenomeReference>& genome_db,
                                       std::shared_ptr<GenomeVariant>& genome);
 
   // Returns false if the genome does not exist.

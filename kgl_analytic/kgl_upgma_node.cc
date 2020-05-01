@@ -96,7 +96,7 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
   const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene_ptr);
   for (auto const& sequence : coding_seq_ptr->getMap()) {
 
-    std::shared_ptr<const ContigFeatures> contig_ptr = sequence.second->getGene()->contig();
+    std::shared_ptr<const ContigReference> contig_ptr = sequence.second->getGene()->contig();
     std::string gene_id = sequence.second->getGene()->id();
     std::string sequence_id = sequence.second->getCDSParent()->id();
     AminoSequence mutant_sequence;
@@ -126,7 +126,7 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool kgl::UPGMAGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> gene_ptr,
-                                        std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
+                                        std::shared_ptr<const GenomeReference> genome_db_ptr,
                                         const std::string& protein_family) {
 
   std::shared_ptr<const OntologyRecord> ontology_record_ptr;
@@ -157,7 +157,7 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
   }
 
   std::shared_ptr<const CodingSequence> sequence = coding_seq_ptr->getFirst();
-  std::shared_ptr<const ContigFeatures> contig_ptr = sequence->getGene()->contig();
+  std::shared_ptr<const ContigReference> contig_ptr = sequence->getGene()->contig();
   std::string gene_id = sequence->getGene()->id();
   std::string sequence_id = sequence->getCDSParent()->id();
 
@@ -247,7 +247,7 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
   }
 
   std::shared_ptr<const CodingSequence> sequence = coding_seq_ptr->getFirst();
-  std::shared_ptr<const ContigFeatures> contig_ptr = sequence->getGene()->contig();
+  std::shared_ptr<const ContigReference> contig_ptr = sequence->getGene()->contig();
   std::string gene_id = sequence->getGene()->id();
   std::string sequence_id = sequence->getCDSParent()->id();
 
@@ -351,7 +351,7 @@ void kgl::ReferenceGeneDistance::writeNode(std::ostream& outfile) const {
 
 void  kgl::DNAGeneDistance::getExonSequence() {
 
-  std::shared_ptr<const ContigFeatures> contig_ptr = gene_ptr_->contig();
+  std::shared_ptr<const ContigReference> contig_ptr = gene_ptr_->contig();
 
   DNA5SequenceCoding dna_coding_sequence = contig_ptr->sequence().codingSequence(getCodingSequence());
 
@@ -363,7 +363,7 @@ void  kgl::DNAGeneDistance::getExonSequence() {
 
 void  kgl::DNAGeneDistance::getIntronSequence() {
 
-  std::shared_ptr<const ContigFeatures> contig_ptr = gene_ptr_->contig();
+  std::shared_ptr<const ContigReference> contig_ptr = gene_ptr_->contig();
 
   DNA5SequenceCoding dna_coding_sequence = contig_ptr->sequence().intronSequence(getCodingSequence());
 
@@ -404,7 +404,7 @@ kgl::DistanceType_t kgl::DNAGeneDistance::distance(std::shared_ptr<const Virtual
 
 
 bool kgl::ReferenceGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> gene_ptr,
-                                            std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
+                                            std::shared_ptr<const GenomeReference> genome_db_ptr,
                                             const std::string& protein_family) {
 
   std::shared_ptr<const OntologyRecord> ontology_record_ptr;
@@ -426,7 +426,7 @@ bool kgl::ReferenceGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> g
 
 void  kgl::AminoGeneDistance::getAminoSequence() {
 
-  std::shared_ptr<const ContigFeatures> contig_ptr = gene_ptr_->contig();
+  std::shared_ptr<const ContigReference> contig_ptr = gene_ptr_->contig();
 
   DNA5SequenceCoding dna_coding_sequence = contig_ptr->sequence().codingSequence(getCodingSequence());
 

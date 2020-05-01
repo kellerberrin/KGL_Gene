@@ -105,7 +105,7 @@ public:
                                         const FeatureIdent_t& gene,
                                         const FeatureIdent_t& sequence,
                                         const std::shared_ptr<const PhasedPopulation>& population_ptr,
-                                        const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db_ptr,
+                                        const std::shared_ptr<const GenomeReference>& genome_db_ptr,
                                         const std::string& fasta_filename);
 
   [[nodiscard]] static bool mutateGenomeRegion( const GenomeId_t& genome,
@@ -113,14 +113,14 @@ public:
                                                 const ContigOffset_t offset,
                                                 const ContigSize_t region_size,
                                                 const std::shared_ptr<const PhasedPopulation>& population_ptr,
-                                                const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db_ptr,
+                                                const std::shared_ptr<const GenomeReference>& genome_db_ptr,
                                                 const std::string& fasta_file);
 
   [[nodiscard]] static bool mutateAllRegions( const std::string& file_name,
                                               ContigSize_t region_size,
                                               const std::shared_ptr<const LinearDNASequenceDistance>& dna_distance_metric,
                                               const std::shared_ptr<const PhasedPopulation>& population_ptr,
-                                              const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db_ptr);
+                                              const std::shared_ptr<const GenomeReference>& genome_db_ptr);
 
   [[nodiscard]] static std::string outputRegionHeader(char delimiter);
   [[nodiscard]] static std::string outputGenomeRegion( char delimiter,
@@ -129,7 +129,7 @@ public:
                                                        const ContigOffset_t offset,
                                                        const ContigSize_t region_size,
                                                        const std::shared_ptr<const GenomeVariant>& genome_variant_ptr,
-                                                       const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db_ptr);
+                                                       const std::shared_ptr<const GenomeReference>& genome_db_ptr);
 
   [[nodiscard]] static bool translateGene( const GenomeId_t& genome_id,
                                            const FeatureIdent_t& gene_id,
@@ -151,7 +151,7 @@ private:
                                               const FeatureIdent_t& gene,
                                               const FeatureIdent_t& sequence,
                                               const std::shared_ptr<const GenomeVariant>& genome_variant_ptr,
-                                              const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db_ptr,
+                                              const std::shared_ptr<const GenomeReference>& genome_db_ptr,
                                               GeneSummaryMap& gene_summary_map);
 
 
@@ -159,7 +159,7 @@ private:
                                                 const ContigOffset_t offset,
                                                 const ContigSize_t region_size,
                                                 const std::shared_ptr<const GenomeVariant>& genome_variant_ptr,
-                                                const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db_ptr,
+                                                const std::shared_ptr<const GenomeReference>& genome_db_ptr,
                                                 const std::string& fasta_file);
 
 

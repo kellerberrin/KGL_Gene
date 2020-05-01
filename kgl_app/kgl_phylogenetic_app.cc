@@ -23,6 +23,27 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   // XML program run options
   const RuntimeProperties& runtime_options = getRuntimeOptions();
 
+  // Check the alias map.
+  ContigAliasMap contig_alias = runtime_options.getContigAlias();
+
+  // Check the VCF files map
+  RuntimeVCFFileMap vcf_file_map = runtime_options.getVCFFiles();
+  ExecEnv::log().info("VCF Map Size: {}", vcf_file_map.size());
+
+  // Check the Genome map
+  RuntimeGenomeDatabaseMap genome_map = runtime_options.getGenomeReferenceMap();
+  ExecEnv::log().info("Genome Map Size: {}", genome_map.size());
+
+  // Check the Analysis map
+  RuntimeAnalysisMap analysis_map = runtime_options.getAnalysisMap();
+  ExecEnv::log().info("Analysis Map Size: {}", analysis_map.size());
+
+  // Check the Package map
+  RuntimePackageMap package_map = runtime_options.getPackageMap();
+  ExecEnv::log().info("Package Map Size: {}", package_map.size());
+
+  return;
+
   // Create a collection of all active organism genomes.
   std::shared_ptr<kgl::GenomeCollection> genome_collection = GenomeCollection::createGenomeCollection(runtime_options);
 
@@ -40,7 +61,7 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   for (const auto &[vcf_ident, vcf_file] : vcf_map) {
 
     // Get VCF reference genome.
-    std::shared_ptr<const RuntimeGenomeDatabase> reference_genome_ptr = genome_collection->getGenome(
+    std::shared_ptr<const GenomeReference> reference_genome_ptr = genome_collection->getGenome(
     vcf_file.referenceGenome());
 
     // Filter and process Gatk variants.

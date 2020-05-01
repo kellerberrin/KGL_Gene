@@ -12,18 +12,18 @@ namespace kgl = kellerberrin::genome;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ContigFeatures members.
+// ContigReference members.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool kgl::ContigFeatures::addGeneExonFeature(std::shared_ptr<kgl::Feature>& feature_ptr) {
+bool kgl::ContigReference::addGeneExonFeature(std::shared_ptr<kgl::Feature>& feature_ptr) {
 
   return gene_exon_features_.checkAddFeature(feature_ptr);
 
 }
 
 
-bool kgl::ContigFeatures::addAuxFeature(std::shared_ptr<kgl::Feature>& feature_ptr) {
+bool kgl::ContigReference::addAuxFeature(std::shared_ptr<kgl::Feature>& feature_ptr) {
 
   aux_contig_features_.checkAddFeature(feature_ptr);
 
@@ -34,7 +34,7 @@ bool kgl::ContigFeatures::addAuxFeature(std::shared_ptr<kgl::Feature>& feature_p
 
 
 
-void kgl::ContigFeatures::verifyFeatureHierarchy() {
+void kgl::ContigReference::verifyFeatureHierarchy() {
 
   // Setup the Gene feature structure first.
   gene_exon_features_.setupVerifyHierarchy();
@@ -44,7 +44,7 @@ void kgl::ContigFeatures::verifyFeatureHierarchy() {
 }
 
 
-void kgl::ContigFeatures::verifyAuxillaryHierarchy() {
+void kgl::ContigReference::verifyAuxillaryHierarchy() {
 
   // Setup the Aux feature hierarchy using the gene exon hierarchy.
   aux_contig_features_.setupVerifyHierarchy(gene_exon_features_);
@@ -53,7 +53,7 @@ void kgl::ContigFeatures::verifyAuxillaryHierarchy() {
 
 
 // Convenience routine for Amino sequences.
-kgl::AminoSequence kgl::ContigFeatures::getAminoSequence(const DNA5SequenceCoding& coding_sequence) const {
+kgl::AminoSequence kgl::ContigReference::getAminoSequence(const DNA5SequenceCoding& coding_sequence) const {
 
   return coding_table_.getAminoSequence(coding_sequence);
 
@@ -61,9 +61,9 @@ kgl::AminoSequence kgl::ContigFeatures::getAminoSequence(const DNA5SequenceCodin
 
 
 // Given a gene id and an mRNA id (sequence id) return the coding base sequence.
-bool kgl::ContigFeatures::getCodingSequence(const FeatureIdent_t& gene_id,
-                                            const FeatureIdent_t& sequence_id,
-                                            std::shared_ptr<const CodingSequence>& coding_sequence_ptr) const {
+bool kgl::ContigReference::getCodingSequence(const FeatureIdent_t& gene_id,
+                                             const FeatureIdent_t& sequence_id,
+                                             std::shared_ptr<const CodingSequence>& coding_sequence_ptr) const {
 
   std::vector<std::shared_ptr<const Feature>> feature_ptr_vec;
   std::shared_ptr<const GeneFeature> gene_ptr;
@@ -125,8 +125,8 @@ bool kgl::ContigFeatures::getCodingSequence(const FeatureIdent_t& gene_id,
 
 
 // Given a CDS coding sequence, return the corresponding DNA base sequence (strand adjusted).
-bool kgl::ContigFeatures::getDNA5SequenceCoding(const std::shared_ptr<const CodingSequence>& coding_sequence_ptr,
-                                                DNA5SequenceCoding& coding_sequence) const {
+bool kgl::ContigReference::getDNA5SequenceCoding(const std::shared_ptr<const CodingSequence>& coding_sequence_ptr,
+                                                 DNA5SequenceCoding& coding_sequence) const {
 
   if (coding_sequence_ptr) {
 

@@ -16,7 +16,7 @@ namespace kellerberrin::genome {   //  organization level namespace
 // Feature - Annotated contig features
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class ContigFeatures; // Forward decl;
+class ContigReference; // Forward decl;
 using SubFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<const Feature>>;
 using SuperFeaturePtr = std::weak_ptr<const Feature>;
 
@@ -26,7 +26,7 @@ public:
 
   Feature(const FeatureIdent_t& id,
           const FeatureType_t& type,
-          const std::shared_ptr<const ContigFeatures>& contig_ptr,
+          const std::shared_ptr<const ContigReference>& contig_ptr,
           const FeatureSequence& sequence): id_(id), type_(type), contig_ptr_(contig_ptr), sequence_(sequence) {}
   Feature(const Feature&) = default;
   virtual ~Feature() = default;
@@ -63,13 +63,13 @@ public:
   [[nodiscard]] const SubFeatureMap& subFeatures() const { return sub_features_; }
   [[nodiscard]] SubFeatureMap& subFeatures() { return sub_features_; }
 
-  [[nodiscard]] std::shared_ptr<const ContigFeatures> contig() const { return contig_ptr_; }
+  [[nodiscard]] std::shared_ptr<const ContigReference> contig() const { return contig_ptr_; }
 
 private:
 
   FeatureIdent_t id_;
   FeatureType_t type_;
-  std::shared_ptr<const ContigFeatures> contig_ptr_;
+  std::shared_ptr<const ContigReference> contig_ptr_;
   FeatureSequence sequence_;
   SubFeatureMap sub_features_;
   SuperFeaturePtr super_feature_ptr_;
@@ -93,7 +93,7 @@ public:
 
   CDSFeature(const FeatureIdent_t &id,
             const CDSPhaseType_t phase,
-            const std::shared_ptr<const ContigFeatures> &contig_ptr,
+            const std::shared_ptr<const ContigReference> &contig_ptr,
             const FeatureSequence &sequence) : Feature(id, CDS_TYPE, contig_ptr, sequence), phase_(phase) {}
 
   CDSFeature(const CDSFeature &) = default;
@@ -123,7 +123,7 @@ class EXONFeature : public Feature {
 public:
 
   EXONFeature(const FeatureIdent_t &id,
-              const std::shared_ptr<const ContigFeatures> &contig_ptr,
+              const std::shared_ptr<const ContigReference> &contig_ptr,
               const FeatureSequence &sequence) : Feature(id, EXON_TYPE, contig_ptr, sequence) {}
 
   EXONFeature(const EXONFeature &) = default;
@@ -152,7 +152,7 @@ class mRNAFeature : public Feature {
 public:
 
   mRNAFeature(const FeatureIdent_t &id,
-              const std::shared_ptr<const ContigFeatures> &contig_ptr,
+              const std::shared_ptr<const ContigReference> &contig_ptr,
               const FeatureSequence &sequence) : Feature(id, MRNA_TYPE, contig_ptr, sequence) {}
 
   mRNAFeature(const mRNAFeature &) = default;
@@ -179,7 +179,7 @@ class PSEUDOGENEFeature : public Feature {
 public:
 
   PSEUDOGENEFeature(const FeatureIdent_t &id,
-                    const std::shared_ptr<const ContigFeatures> &contig_ptr,
+                    const std::shared_ptr<const ContigReference> &contig_ptr,
                     const FeatureSequence &sequence) : Feature(id, PSEUDOGENE_TYPE, contig_ptr, sequence) {}
 
   PSEUDOGENEFeature(const PSEUDOGENEFeature &) = default;
@@ -206,7 +206,7 @@ class GeneFeature : public Feature {
 public:
 
   GeneFeature(const FeatureIdent_t &id,
-             const std::shared_ptr<const ContigFeatures> &contig_ptr,
+             const std::shared_ptr<const ContigReference> &contig_ptr,
              const FeatureSequence &sequence) : Feature(id, GENE_TYPE, contig_ptr, sequence) {}
 
   GeneFeature(const GeneFeature &) = default;
@@ -250,7 +250,7 @@ class TSSFeature : public Feature {
 public:
 
   TSSFeature(const FeatureIdent_t &id,
-             const std::shared_ptr<const ContigFeatures> &contig_ptr,
+             const std::shared_ptr<const ContigReference> &contig_ptr,
              const FeatureSequence &sequence) : Feature(id, TSS_TYPE, contig_ptr, sequence) {}
 
   TSSFeature(const TSSFeature &) = default;

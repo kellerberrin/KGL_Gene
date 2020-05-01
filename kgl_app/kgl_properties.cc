@@ -10,6 +10,10 @@ namespace kgl = kellerberrin::genome;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Boilerplate code to extract structured analytic and file information from "runtime.xml"
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  Runtime xml retrieval
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -18,7 +22,7 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
   RuntimePackageMap package_map;
 
-  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + ANALYSIS_LIST_;
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + PACKAGE_LIST_;
   std::vector<SubPropertyTree> property_tree_vector;
   if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
 
@@ -27,7 +31,66 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
   }
 
+  // For each package
+  for (auto const& sub_tree : property_tree_vector) {
 
+    // Only process Package records.
+    if (sub_tree.first != PACKAGE_) continue;
+
+    // Get the Package Ident.
+    key = std::string(PACKAGE_IDENT_) + std::string(DOT_) + std::string(VALUE_);
+    std::string package_ident;
+    if (not sub_tree.second.getProperty(key,  package_ident)) {
+
+      ExecEnv::log().error("RuntimeProperties::getPackageMap, No  Package Identifier");
+      continue;
+
+    }
+
+    // Get a Vector of Analysis functions to perform. These must be defined in code.
+    // This means we can perform more than one analysis for each time-expensive data file read.
+    std::vector<std::string> analysis_vector;
+    if (not sub_tree.second.getNodeVector( PACKAGE_ANALYSIS_LIST_, analysis_vector))  {
+
+      ExecEnv::log().warn("RuntimeProperties::getPackageMap, No Analysis specified for Package: {}", package_ident);
+
+    }
+
+    // Get a Vector of Genome Databases to read.
+    std::vector<std::string> genome_vector;
+    if (not sub_tree.second.getNodeVector( PACKAGE_GENOME_LIST_, genome_vector))  {
+
+      ExecEnv::log().warn("RuntimeProperties::getPackageMap, No Organism Genomes specified for Package: {}", package_ident);
+
+    }
+
+    // Get a Vector of items loaded on initialization.
+    std::vector<std::string> load_vector;
+    if (not sub_tree.second.getNodeVector( PACKAGE_LOAD_LIST_, load_vector))  {
+
+      ExecEnv::log().info("RuntimeProperties::getPackageMap, No Initialization items specified for Package: {}", package_ident);
+
+    }
+
+    // Get a Vector of iteration items (VCF files) to load iteratively.
+    std::vector<std::string> iteration_vector;
+    if (not sub_tree.second.getNodeVector( PACKAGE_ITERATION_LIST_, iteration_vector))  {
+
+      ExecEnv::log().info("RuntimeProperties::getPackageMap, No Iteration items (VCF Files) specified for Package: {}", package_ident);
+
+    }
+
+    std::pair<std::string, RuntimePackage> new_package(package_ident, RuntimePackage(package_ident, analysis_vector, genome_vector, load_vector, iteration_vector));
+
+    auto result = package_map.insert(new_package);
+
+    if (not result.second) {
+
+      ExecEnv::log().error("RuntimeProperties::getPackageMap, Could not add Package Ident: {} to map (duplicate)", package_ident);
+
+    }
+
+  }
 
   return package_map;
 
@@ -50,9 +113,12 @@ kgl::RuntimeAnalysisMap kgl::RuntimeProperties::getAnalysisMap() const {
 
   for (const auto& sub_tree : property_tree_vector) {
 
+    // Only process Analysis records.
+    if (sub_tree.first != ANALYSIS_) continue;
+
     key = std::string(ANALYSIS_IDENT_) + std::string(DOT_) + std::string(VALUE_);
     std::string analysis_ident;
-    if (not sub_tree.second.getFileProperty( key, workDirectory(), analysis_ident)) {
+    if (not sub_tree.second.getProperty( key, analysis_ident)) {
 
       ExecEnv::log().error("RuntimeProperties::getAnalysisMap, No  Analysis Identifier");
       continue;
@@ -70,6 +136,9 @@ kgl::RuntimeAnalysisMap kgl::RuntimeProperties::getAnalysisMap() const {
 
     RuntimeParameterMap parameter_map;
     for (const auto& parameter_sub_tree : parameter_tree_vector) {
+
+      // Only process parameter records.
+      if (sub_tree.first != PARAMETER_) continue;
 
       key = std::string(PARAMETER_IDENT_) + std::string(DOT_) + std::string(VALUE_);
       std::string parameter_ident;
@@ -117,7 +186,7 @@ kgl::RuntimeAnalysisMap kgl::RuntimeProperties::getAnalysisMap() const {
 }
 
 // A map of genomes.
-kgl::RuntimeGenomeDatabaseMap kgl::RuntimeProperties::getGenomeDatabaseMap() const {
+kgl::RuntimeGenomeDatabaseMap kgl::RuntimeProperties::getGenomeReferenceMap() const {
 
   RuntimeGenomeDatabaseMap genome_map;
 
@@ -126,36 +195,39 @@ kgl::RuntimeGenomeDatabaseMap kgl::RuntimeProperties::getGenomeDatabaseMap() con
   std::vector<SubPropertyTree> property_tree_vector;
   if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
 
-    ExecEnv::log().info("RuntimeProperties::getGenomeDatabaseMap, no VCF files specified");
+    ExecEnv::log().info("RuntimeProperties::getGenomeReferenceMap, no VCF files specified");
     return genome_map; // return empty map.
 
   }
 
   for (const auto& sub_tree : property_tree_vector) {
 
+    // Only process Genome records.
+    if (sub_tree.first != GENOME_DATABASE_) continue;
+
     key = std::string(GENOME_IDENT_) + std::string(DOT_) + std::string(VALUE_);
     std::string genome_ident;
     if (not sub_tree.second.getProperty( key, genome_ident)) {
 
-      ExecEnv::log().error("RuntimeProperties::getGenomeDatabaseMap, No Genome Database Identifier");
+      ExecEnv::log().error("RuntimeProperties::getGenomeReferenceMap, No Genome Database Identifier");
       continue;
 
     }
 
     key = std::string(FASTA_FILE_) + std::string(DOT_) + std::string(VALUE_);
     std::string fasta_file_name;
-    if (not sub_tree.second.getProperty( key, fasta_file_name)) {
+    if (not sub_tree.second.getFileProperty( key, workDirectory(), fasta_file_name)) {
 
-      ExecEnv::log().error("RuntimeProperties::getGenomeDatabaseMap, No Fasta file name information");
+      ExecEnv::log().error("RuntimeProperties::getGenomeReferenceMap, No Fasta file name information");
       continue;
 
     }
 
     key = std::string(GFF_FILE_) + std::string(DOT_) + std::string(VALUE_);
     std::string gff_file_name;
-    if (not sub_tree.second.getProperty( key, gff_file_name)) {
+    if (not sub_tree.second.getFileProperty( key, workDirectory(), gff_file_name)) {
 
-      ExecEnv::log().error("RuntimeProperties::getGenomeDatabaseMap, No Gff file name information");
+      ExecEnv::log().error("RuntimeProperties::getGenomeReferenceMap, No Gff file name information");
       continue;
 
     }
@@ -164,14 +236,14 @@ kgl::RuntimeGenomeDatabaseMap kgl::RuntimeProperties::getGenomeDatabaseMap() con
     std::string translation_table;
     if (not sub_tree.second.getProperty( key, translation_table)) {
 
-      ExecEnv::log().error("RuntimeProperties::getGenomeDatabaseMap, No DNA/Amino translationb table specified");
+      ExecEnv::log().error("RuntimeProperties::getGenomeReferenceMap, No DNA/Amino translationb table specified");
       continue;
 
     }
 
     key = std::string(GAF_FILE_) + std::string(DOT_) + std::string(VALUE_);
     std::string gaf_file_name;
-    if (not sub_tree.second.getOptionalProperty(key, gaf_file_name)) {
+    if (not sub_tree.second.getOptionalFileProperty(key, workDirectory(), gaf_file_name)) {
 
       gaf_file_name.clear();
 
@@ -185,7 +257,7 @@ kgl::RuntimeGenomeDatabaseMap kgl::RuntimeProperties::getGenomeDatabaseMap() con
 
     if (not result.second) {
 
-      ExecEnv::log().error("RuntimeProperties::getGenomeDatabaseMap, Could not add Genome Database ident: {} to map (duplicate)", genome_ident);
+      ExecEnv::log().error("RuntimeProperties::getGenomeReferenceMap, Could not add Genome Database ident: {} to map (duplicate)", genome_ident);
 
     }
 
@@ -212,6 +284,9 @@ kgl::RuntimeVCFFileMap kgl::RuntimeProperties::getVCFFiles() const {
 
   for (const auto& sub_tree : property_tree_vector) {
 
+    // Only process VCF file records.
+    if (sub_tree.first != VCF_FILE_) continue;
+
     key = std::string(VCF_IDENT_) + std::string(DOT_) + std::string(VALUE_);
     std::string vcf_ident;
     if (not sub_tree.second.getProperty( key, vcf_ident)) {
@@ -223,7 +298,7 @@ kgl::RuntimeVCFFileMap kgl::RuntimeProperties::getVCFFiles() const {
 
     key = std::string(VCF_FILE_NAME_) + std::string(DOT_) + std::string(VALUE_);
     std::string vcf_file_name;
-    if (not sub_tree.second.getProperty( key, vcf_file_name)) {
+    if (not sub_tree.second.getFileProperty( key, workDirectory(), vcf_file_name)) {
 
       ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF file name information");
       continue;

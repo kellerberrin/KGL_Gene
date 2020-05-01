@@ -11,7 +11,7 @@ namespace kgl = kellerberrin::genome;
 
 // Mutate coding sequences
 bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& variant_map,
-                                     const std::shared_ptr<const ContigFeatures>& contig_ptr,
+                                     const std::shared_ptr<const ContigReference>& contig_ptr,
                                      const std::shared_ptr<const CodingSequence>& coding_sequence_ptr,
                                      DNA5SequenceCoding& dna_sequence) {
 
@@ -43,7 +43,7 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& variant_map,
 
 // Mutate DNA region.
 bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& region_variant_map,
-                                     const std::shared_ptr<const ContigFeatures>& contig_ptr,
+                                     const std::shared_ptr<const ContigReference>& contig_ptr,
                                      const ContigOffset_t contig_offset,
                                      const ContigSize_t sequence_size,
                                      DNA5SequenceLinear& dna_sequence) {
@@ -105,7 +105,7 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& region_variant_map,
 
 
 bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& variant_map,
-                                     const std::shared_ptr<const ContigFeatures>& contig_ptr,
+                                     const std::shared_ptr<const ContigReference>& contig_ptr,
                                      DNA5SequenceContig& contig_sequence) {
 
   if (not mutateDNA(variant_map, contig_ptr, 0, contig_ptr->sequence().length(), contig_sequence)) {

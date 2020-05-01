@@ -218,7 +218,7 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_phylogenetic_app_analysis.h
         kgl_app/kgl_phylogenetic_app.h
         kgl_app/kgl_phylogenetic_parse.cc
-        kgl_app/kgl_properties.cc)
+        kgl_app/kgl_properties.cc kgl_app/kgl_package.cc kgl_app/kgl_package.h)
 
 
 

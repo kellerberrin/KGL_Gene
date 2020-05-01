@@ -29,7 +29,7 @@ public:
   explicit ParseVCFRecord(const VcfRecord& vcf_record) : vcf_record_(vcf_record) {}
   ~ParseVCFRecord() = default;
 
-  [[nodiscard]] bool parseRecord(const ContigId_t& contig_id, std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr);
+  [[nodiscard]] bool parseRecord(const ContigId_t& contig_id, std::shared_ptr<const GenomeReference> genome_db_ptr);
 
   [[nodiscard]] size_t requiredFormatSize() const;
   [[nodiscard]] size_t GTOffset() const { return GT_offset_; }
@@ -44,7 +44,7 @@ public:
   [[nodiscard]] const std::vector<std::string>& alleles() const { return alleles_; }
 
   [[nodiscard]] ContigOffset_t offset() const { return allele_offset_; }
-  [[nodiscard]] std::shared_ptr<const ContigFeatures> contigPtr() const { return contig_opt_.value(); }
+  [[nodiscard]] std::shared_ptr<const ContigReference> contigPtr() const { return contig_opt_.value(); }
 
   [[nodiscard]] bool isSNP() const;
 
@@ -63,7 +63,7 @@ private:
   std::string reference_;
   std::vector<std::string> alleles_;
   ContigOffset_t allele_offset_;
-  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt_;
+  std::optional<std::shared_ptr<const ContigReference>> contig_opt_;
   Phred_t quality_;
 
   constexpr static const char* FORMAT_SEPARATOR_ = ":";

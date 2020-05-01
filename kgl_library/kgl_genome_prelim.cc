@@ -162,7 +162,7 @@ void kgl::CodingSequence::prime_3_region(ContigSize_t requested_size, ContigOffs
 }
 
 
-std::shared_ptr<const kgl::ContigFeatures> kgl::CodingSequence::contig() const {
+std::shared_ptr<const kgl::ContigReference> kgl::CodingSequence::contig() const {
 
   return getGene()->contig();
 

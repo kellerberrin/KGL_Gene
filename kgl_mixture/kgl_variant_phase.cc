@@ -22,7 +22,7 @@ namespace kgl = kellerberrin::genome;
 // Just copy into a population object.
 bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
                                         const std::shared_ptr<const UnphasedPopulation>& unphased_population_ptr,
-                                        const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db,
+                                        const std::shared_ptr<const GenomeReference>& genome_db,
                                         const std::shared_ptr<PhasedPopulation>& haploid_population)  {
 
 

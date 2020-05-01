@@ -17,7 +17,7 @@ namespace bt = boost;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool kgl::ParseVCFRecord::parseRecord(const ContigId_t& contig_id, std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr) {
+bool kgl::ParseVCFRecord::parseRecord(const ContigId_t& contig_id, std::shared_ptr<const GenomeReference> genome_db_ptr) {
 
   bool parse_result = true;
 

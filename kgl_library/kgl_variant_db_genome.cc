@@ -99,7 +99,7 @@ std::shared_ptr<kgl::GenomeVariant> kgl::GenomeVariant::filterVariants(const kgl
 std::shared_ptr<kgl::GenomeVariant>
 kgl::GenomeVariant::emptyGenomeVariant(const GenomeId_t& genome_id,
                                        PhaseId_t ploidy,
-                                       const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db) {
+                                       const std::shared_ptr<const GenomeReference>& genome_db) {
 
 
   std::shared_ptr<GenomeVariant> empty_genome_variant(std::make_shared<GenomeVariant>(genome_id, ploidy));

@@ -31,7 +31,7 @@ public:
 
   UPGMAProteinDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
                        std::shared_ptr<const GenomeVariant> genome_variant_ptr,
-                       std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
+                       std::shared_ptr<const GenomeReference> genome_db_ptr,
                        const std::string& protein_family) : sequence_distance_(sequence_distance),
                                                             protein_family_(protein_family),
                                                             genome_variant_ptr_(genome_variant_ptr),
@@ -61,7 +61,7 @@ private:
   std::shared_ptr<const AminoSequenceDistance> sequence_distance_;
   std::string protein_family_;
   std::shared_ptr<const GenomeVariant> genome_variant_ptr_;
-  std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr_;
+  std::shared_ptr<const GenomeReference> genome_db_ptr_;
   MutatedProteinMap mutated_proteins_;
 
   void mutateProteins();
@@ -86,7 +86,7 @@ public:
 
   UPGMAGeneDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
                     std::shared_ptr<const GenomeVariant> genome_variant_ptr,
-                    std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
+                    std::shared_ptr<const GenomeReference> genome_db_ptr,
                     std::shared_ptr<const GeneFeature> gene_ptr,
                     const std::string& protein_family) : sequence_distance_(sequence_distance),
                                                          protein_family_(protein_family),
@@ -105,7 +105,7 @@ public:
   DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const override;
 
   static bool geneFamily(std::shared_ptr<const GeneFeature> gene_ptr,
-                         std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
+                         std::shared_ptr<const GenomeReference> genome_db_ptr,
                          const std::string& protein_family);
 
   constexpr static const char* PROTEIN_FAMILY_WILDCARD = "*";
@@ -123,7 +123,7 @@ protected:
   std::string protein_family_;
   std::shared_ptr<const GenomeVariant> genome_variant_ptr_;
   std::shared_ptr<const GeneFeature> gene_ptr_;
-  std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr_;
+  std::shared_ptr<const GenomeReference> genome_db_ptr_;
 
   void mutateProtein();
 
@@ -141,7 +141,7 @@ public:
 
   UPGMAATP4Distance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
                          std::shared_ptr<const GenomeVariant> genome_variant_ptr,
-                         std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
+                         std::shared_ptr<const GenomeReference> genome_db_ptr,
                          std::shared_ptr<const GeneFeature> gene_ptr,
                          const std::string& protein_family) :  UPGMAGeneDistance(sequence_distance,
                                                                                  genome_variant_ptr,
@@ -172,7 +172,7 @@ class ReferenceGeneDistance : public VirtualDistanceNode {
 
 public:
 
-  ReferenceGeneDistance(std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
+  ReferenceGeneDistance(std::shared_ptr<const GenomeReference> genome_db_ptr,
                         std::shared_ptr<const GeneFeature> gene_ptr,
                         const std::string& protein_family) : genome_db_ptr_(genome_db_ptr),
                                                              gene_ptr_(gene_ptr),
@@ -194,13 +194,13 @@ public:
   constexpr static const char* SYMBOLIC_MAURER_FAMILY = "MC-2TM";
 
   static bool geneFamily(std::shared_ptr<const GeneFeature> gene_ptr,
-                         std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
+                         std::shared_ptr<const GenomeReference> genome_db_ptr,
                          const std::string& protein_family);
 
 
 protected:
 
-  std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr_;
+  std::shared_ptr<const GenomeReference> genome_db_ptr_;
   std::shared_ptr<const GeneFeature> gene_ptr_;
   std::string protein_family_;
 
@@ -215,7 +215,7 @@ class DNAGeneDistance : public ReferenceGeneDistance {
 public:
 
   DNAGeneDistance(std::shared_ptr<const LinearDNASequenceDistance> sequence_distance,
-                  std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
+                  std::shared_ptr<const GenomeReference> genome_db_ptr,
                   std::shared_ptr<const GeneFeature> gene_ptr,
                   const std::string& protein_family)
                   : ReferenceGeneDistance(genome_db_ptr, gene_ptr, protein_family),
@@ -249,7 +249,7 @@ class AminoGeneDistance : public ReferenceGeneDistance {
 public:
 
   AminoGeneDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
-                  std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
+                  std::shared_ptr<const GenomeReference> genome_db_ptr,
                   std::shared_ptr<const GeneFeature> gene_ptr,
                   const std::string& protein_family)
   : ReferenceGeneDistance(genome_db_ptr, gene_ptr, protein_family) {

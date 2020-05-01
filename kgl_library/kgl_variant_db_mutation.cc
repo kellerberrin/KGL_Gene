@@ -13,7 +13,7 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
                                          PhaseId_t phase,
                                          const FeatureIdent_t& gene_id,
                                          const FeatureIdent_t& sequence_id,
-                                         const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db,
+                                         const std::shared_ptr<const GenomeReference>& genome_db,
                                          OffsetVariantMap& variant_map,
                                          AminoSequence& reference_sequence,
                                          AminoSequence& mutant_sequence) const {
@@ -29,7 +29,7 @@ bool kgl::GenomeVariant::mutantProteins( const ContigId_t& contig_id,
   }
 
   // Get the contig.
-  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db->getContigSequence(contig_id);
+  std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db->getContigSequence(contig_id);
   if (not contig_opt) {
 
     ExecEnv::log().warn("mutantProtein(), Could not find contig: {} in genome database", contig_id);
@@ -85,12 +85,12 @@ bool kgl::GenomeVariant::mutantCodingDNA( const ContigId_t& contig_id,
                                           PhaseId_t phase,
                                           const FeatureIdent_t& gene_id,
                                           const FeatureIdent_t& sequence_id,
-                                          const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db,
+                                          const std::shared_ptr<const GenomeReference>& genome_db,
                                           OffsetVariantMap& variant_map,
                                           DNA5SequenceCoding& reference_sequence,
                                           DNA5SequenceCoding& mutant_sequence) const {
   // Get the contig.
-  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db->getContigSequence(contig_id);
+  std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db->getContigSequence(contig_id);
   if (not contig_opt) {
 
     ExecEnv::log().warn("mutantCodingDNA(), Could not find contig: {} in genome database", contig_id);
@@ -167,13 +167,13 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
                                        PhaseId_t phase,
                                        ContigOffset_t region_offset,
                                        ContigSize_t region_size,
-                                       const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db,
+                                       const std::shared_ptr<const GenomeReference>& genome_db,
                                        OffsetVariantMap& variant_map,
                                        DNA5SequenceLinear& reference_sequence,
                                        DNA5SequenceLinear& mutant_sequence) const {
 
   // Get the contig.
-  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db->getContigSequence(contig_id);
+  std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db->getContigSequence(contig_id);
   if (not contig_opt) {
 
     ExecEnv::log().warn("mutantRegion(), Could not find contig: {} in genome database", contig_id);
@@ -244,13 +244,13 @@ bool kgl::GenomeVariant::mutantRegion( const ContigId_t& contig_id,
 
 bool kgl::GenomeVariant::mutantContig( const ContigId_t& contig_id,
                                        PhaseId_t phase,
-                                       const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db,
+                                       const std::shared_ptr<const GenomeReference>& genome_db,
                                        std::shared_ptr<const DNA5SequenceContig>& reference_contig_ptr,
                                        DNA5SequenceContig& mutant_contig) const {
 
 
   // Get the contig.
-  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db->getContigSequence(contig_id);
+  std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db->getContigSequence(contig_id);
   if (not contig_opt) {
 
     ExecEnv::log().warn("mutantProtein(), Could not find contig: {} in genome database", contig_id);

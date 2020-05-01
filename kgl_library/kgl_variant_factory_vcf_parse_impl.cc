@@ -15,7 +15,7 @@ namespace kgl = kellerberrin::genome;
 namespace bt = boost;
 
 
-bool kgl::ParseVCFMiscImpl::parseVcfHeader(std::shared_ptr<const RuntimeGenomeDatabase> genome_db_ptr,
+bool kgl::ParseVCFMiscImpl::parseVcfHeader(std::shared_ptr<const GenomeReference> genome_db_ptr,
                                            const VcfHeaderInfo& header_info,
                                            ActiveContigMap& active_contig_map,
                                            bool cigar_required) {
@@ -45,7 +45,7 @@ bool kgl::ParseVCFMiscImpl::parseVcfHeader(std::shared_ptr<const RuntimeGenomeDa
         ContigId_t contig_id = id_result->second;
         ContigSize_t contig_size = std::atoll(length_result->second.c_str());
 
-        std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db_ptr->getContigSequence(contig_id);
+        std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db_ptr->getContigSequence(contig_id);
         if (contig_opt) {
 
           if (contig_opt.value()->sequence().length() == contig_size) {

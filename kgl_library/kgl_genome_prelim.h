@@ -70,7 +70,7 @@ class CDSFeature; // Forward decl
 class EXONFeature; // Forward decl
 class GeneFeature; // Forward decl.
 class mRNAFeature; // Forward decl.
-class ContigFeatures; // Forward decl.
+class ContigReference; // Forward decl.
 
 using SortedCDS = std::map<ContigOffset_t, std::shared_ptr<const CDSFeature>>;
 class CodingSequence {
@@ -85,7 +85,7 @@ public:
   ~CodingSequence() = default;
 
   [[nodiscard]] const SortedCDS& getSortedCDS() const { return sorted_cds_; }
-  [[nodiscard]] std::shared_ptr<const ContigFeatures> contig() const;
+  [[nodiscard]] std::shared_ptr<const ContigReference> contig() const;
   [[nodiscard]] std::shared_ptr<const GeneFeature> getGene() const { return gene_ptr_; }
   [[nodiscard]] std::shared_ptr<const Feature> getCDSParent() const { return cds_parent_ptr_; }
   [[nodiscard]] StrandSense strand() const;

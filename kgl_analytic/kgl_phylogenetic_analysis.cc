@@ -86,13 +86,13 @@ bool kgl::ApplicationAnalysis::compare5Prime(const ContigId_t& contig_id,
                                              const FeatureIdent_t& gene_id,
                                              const FeatureIdent_t& sequence_id,
                                              ContigSize_t region_size,
-                                             const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db,
+                                             const std::shared_ptr<const GenomeReference>& genome_db,
                                              const std::shared_ptr<const GenomeVariant>& genome_variant,
                                              DNA5SequenceCoding& reference_sequence,
                                              DNA5SequenceCoding& mutant_sequence) {
 
   // Get the contig.
-  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db->getContigSequence(contig_id);
+  std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db->getContigSequence(contig_id);
   if (not contig_opt) {
 
     ExecEnv::log().warn("compare5Prime(), Could not find contig: {} in genome database", contig_id);
@@ -148,13 +148,13 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
                                              const FeatureIdent_t& gene_id,
                                              const FeatureIdent_t& sequence_id,
                                              ContigSize_t region_size,
-                                             const std::shared_ptr<const RuntimeGenomeDatabase>& genome_db,
+                                             const std::shared_ptr<const GenomeReference>& genome_db,
                                              const std::shared_ptr<const GenomeVariant>& genome_variant,
                                              DNA5SequenceCoding& reference_sequence,
                                              DNA5SequenceCoding& mutant_sequence) {
 
   // Get the contig.
-  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db->getContigSequence(contig_id);
+  std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db->getContigSequence(contig_id);
   if (not contig_opt) {
 
     ExecEnv::log().warn("compare5Prime(), Could not find contig: {} in genome database", contig_id);
@@ -210,7 +210,7 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
 bool kgl::ApplicationAnalysis::outputRegionCSV(const std::string &file_name,
                                                  std::shared_ptr<const DNASequenceDistance> dna_distance_metric,
                                                  std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
-                                                 std::shared_ptr<const RuntimeGenomeDatabase> genome_db,
+                                                 std::shared_ptr<const GenomeReference> genome_db,
                                                  std::shared_ptr<const PhasedPopulation> pop_variant_ptr) {
 
   const char CSV_delimiter = ',';
@@ -304,7 +304,7 @@ bool kgl::ApplicationAnalysis::outputRegionCSV(const std::string &file_name,
 bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name,
                                                     SequenceAnalysisType analysis_type,
                                                     std::shared_ptr<const CodingDNASequenceDistance> dna_distance_metric,
-                                                    std::shared_ptr<const RuntimeGenomeDatabase> genome_db,
+                                                    std::shared_ptr<const GenomeReference> genome_db,
                                                     std::shared_ptr<const PhasedPopulation> pop_variant_ptr) {
 
   const char CSV_delimiter = ',';
@@ -498,7 +498,7 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
 
 bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_name,
                                                       std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
-                                                      std::shared_ptr<const RuntimeGenomeDatabase> genome_db,
+                                                      std::shared_ptr<const GenomeReference> genome_db,
                                                       std::shared_ptr<const PhasedPopulation> pop_variant_ptr) {
 
   const char CSV_delimiter = ',';
@@ -714,7 +714,7 @@ bool kgl::ApplicationAnalysis::outputAminoMutationCSV(const std::string &file_na
                                                  const ContigId_t& contig_id,
                                                  const FeatureIdent_t& gene_id,
                                                  const FeatureIdent_t& sequence_id,
-                                                 std::shared_ptr<const RuntimeGenomeDatabase> genome_db,
+                                                 std::shared_ptr<const GenomeReference> genome_db,
                                                  std::shared_ptr<const PhasedPopulation> pop_variant_ptr) {
 
   const char CSV_delimiter = ',';
@@ -779,7 +779,7 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
                                                     const ContigId_t& contig_id,
                                                     const FeatureIdent_t& gene_id,
                                                     const FeatureIdent_t& sequence_id,
-                                                    std::shared_ptr<const RuntimeGenomeDatabase> genome_db,
+                                                    std::shared_ptr<const GenomeReference> genome_db,
                                                     std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
                                                     const GenomeAuxData& aux_Pf3k_data) {
 
@@ -802,7 +802,7 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
   }
 
   // Get the contig.
-  std::optional<std::shared_ptr<const ContigFeatures>> contig_opt = genome_db->getContigSequence(contig_id);
+  std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db->getContigSequence(contig_id);
   if (not contig_opt) {
 
     ExecEnv::log().error("outputMutationCSV(), Could not find contig: {} in genome database", contig_id);
@@ -999,11 +999,11 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
                                                      std::shared_ptr<const CodingDNASequenceDistance> dna_distance_metric,
                                                      std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
                                                      std::shared_ptr<const CodingSequence> coding_sequence,
-                                                     std::shared_ptr<const RuntimeGenomeDatabase> genome_db,
+                                                     std::shared_ptr<const GenomeReference> genome_db,
                                                      std::shared_ptr<const GenomeVariant> genome_variant) {
 
   std::string genome_id = genome_variant->genomeId();
-  std::shared_ptr<const ContigFeatures> contig_ptr = coding_sequence->getGene()->contig();
+  std::shared_ptr<const ContigReference> contig_ptr = coding_sequence->getGene()->contig();
   std::string gene_id = coding_sequence->getGene()->id();
   std::string sequence_id = coding_sequence->getCDSParent()->id();
   ContigOffset_t sequence_offset = coding_sequence->start();
