@@ -10,6 +10,7 @@
 #include "kgl_filter.h"
 #include "kgl_properties.h"
 #include "kgl_variant_factory_vcf.h"
+#include "kgl_package.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -20,27 +21,16 @@ void kgl::PhylogeneticExecEnv::executeApp() {
 
   // Command line arguments
   const Phylogenetic& args = getArgs();
-  // XML program run options
+  // XML program runtime options, this defines the program runtime.
   const RuntimeProperties& runtime_options = getRuntimeOptions();
-
-  // Check the alias map.
-  ContigAliasMap contig_alias = runtime_options.getContigAlias();
-
-  // Check the VCF files map
-  RuntimeVCFFileMap vcf_file_map = runtime_options.getVCFFiles();
-  ExecEnv::log().info("VCF Map Size: {}", vcf_file_map.size());
-
-  // Check the Genome map
-  RuntimeGenomeDatabaseMap genome_map = runtime_options.getGenomeReferenceMap();
-  ExecEnv::log().info("Genome Map Size: {}", genome_map.size());
-
-  // Check the Analysis map
-  RuntimeAnalysisMap analysis_map = runtime_options.getAnalysisMap();
-  ExecEnv::log().info("Analysis Map Size: {}", analysis_map.size());
-
-  // Check the Package map
-  RuntimePackageMap package_map = runtime_options.getPackageMap();
-  ExecEnv::log().info("Package Map Size: {}", package_map.size());
+  // Disassemble the XML runtime into a series of data and analysis operations.
+  ExecutePackage execute_package( runtime_options.getContigAlias(),
+                                  runtime_options.getVCFFiles(),
+                                  runtime_options.getGenomeReferenceMap(),
+                                  runtime_options.getAnalysisMap(),
+                                  runtime_options.getPackageMap());
+  // Individually execute the disassembled XML components.
+  execute_package.executeAll();
 
   return;
 

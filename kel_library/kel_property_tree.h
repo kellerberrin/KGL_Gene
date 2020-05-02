@@ -59,6 +59,8 @@ public:
   // Checks for the existence of a property.
   [[nodiscard]] bool checkProperty(const std::string& property_name) const;
 
+  [[nodiscard]] std::string getValue() const;
+
   void treeTraversal() const;
 
 private:

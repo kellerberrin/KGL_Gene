@@ -109,7 +109,8 @@ private:
   constexpr static const char* GAF_FILE_ = "gafFile";   // optional
   constexpr static const char* TRANSLATION_TABLE_ = "translationTable";
   // Contig/Chromosome Alias categories.
-  constexpr static const char* ALIAS_LIST_ = "contigAlias";
+  constexpr static const char* ALIAS_LIST_ = "aliasList";
+  constexpr static const char* ALIAS_CONTIG_ = "contig";
   constexpr static const char* ALIAS_IDENT_ = "ident";
   constexpr static const char* ALIAS_ENTRY_ = "alias";
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////

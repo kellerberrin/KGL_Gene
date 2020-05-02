@@ -50,6 +50,7 @@ public:
 
   bool getTreeVector(const std::string& property_name, std::vector<ImplSubTree>& tree_vector) const;
 
+  template<class T> T getData() const { return property_tree_.get_value<T>(); }
 
 private:
 
@@ -468,3 +469,5 @@ bool kel::PropertyTree::getPropertyTreeVector(const std::string& property_name, 
   return true;
 
 }
+
+std::string kel::PropertyTree::getValue() const { return properties_impl_ptr_->getData<std::string>(); }

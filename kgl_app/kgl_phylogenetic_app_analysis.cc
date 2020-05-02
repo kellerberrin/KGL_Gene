@@ -297,16 +297,13 @@ void kgl::PhylogeneticAnalysis::performInterval() {
 
 void kgl::PhylogeneticAnalysis::performGene() {
 
-    std::string fasta_file = Utility::filePath(ACTIVE_SEQUENCE, runtime_options_.workDirectory()) + ".fasta";
+  std::string fasta_file = Utility::filePath(ACTIVE_SEQUENCE, runtime_options_.workDirectory()) + ".fasta";
 
-    if (not kgl::GeneAnalysis::translateContig( "NC_045512_2", "NC_045512.2", genome_collection_ptr_, fasta_file)) {
+  if (not kgl::GeneAnalysis::translateContig( "NC_045512_2", "NC_045512.2", genome_collection_ptr_, fasta_file)) {
 
-      ExecEnv::log().error("GeneAnalysis::translateContig(); analysis fails");
+    ExecEnv::log().error("GeneAnalysis::translateContig(); analysis fails");
 
-    }
-
-//    kgl::GeneAnalysis::mutateGene(ACTIVE_CONTIG, ACTIVE_GENE, ACTIVE_SEQUENCE, population_ptr_, genome_collection_ptr_->getGenome(analysis_genome)(),
-//                                  fasta_file);
+  }
 
 }
 

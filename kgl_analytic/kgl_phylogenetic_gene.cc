@@ -20,13 +20,14 @@ bool kgl::GeneAnalysis::translateContig( const GenomeId_t& genome_id,
                                          const std::shared_ptr<const GenomeCollection>& genomes,
                                          const std::string& fasta_file_name) {
   // Get the genome object
-  std::shared_ptr<const GenomeReference> genome_db_ptr;
-  if (not genomes->getGenome(genome_id, genome_db_ptr)) {
+  std::optional<std::shared_ptr<const GenomeReference>> genome_opt = genomes->getOptionalGenome(genome_id);
+  if (not genome_opt) {
 
     ExecEnv::log().warn("Could not find Genome: {} in genome collection", genome_id);
     return false;
     
   }
+  std::shared_ptr<const GenomeReference> genome_db_ptr = genome_opt.value();
 
   // Look through the contigs for the contig.
   bool found = false;
@@ -112,13 +113,14 @@ bool kgl::GeneAnalysis::translateGene( const GenomeId_t& genome_id,
                                        const std::string& fasta_file_name) {
 
   // Get the genome object
-  std::shared_ptr<const GenomeReference> genome_db_ptr;
-  if (not genomes->getGenome(genome_id, genome_db_ptr)) {
+  std::optional<std::shared_ptr<const GenomeReference>> genome_opt = genomes->getOptionalGenome(genome_id);
+  if (not genome_opt) {
 
     ExecEnv::log().warn("Could not find Genome: {} in genome collection", genome_id);
     return false;
     
   }
+  std::shared_ptr<const GenomeReference> genome_db_ptr = genome_opt.value();
 
   // Look through the contigs for the gene.
   bool found = false;

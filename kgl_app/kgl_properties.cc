@@ -49,38 +49,83 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
     // Get a Vector of Analysis functions to perform. These must be defined in code.
     // This means we can perform more than one analysis for each time-expensive data file read.
-    std::vector<std::string> analysis_vector;
-    if (not sub_tree.second.getNodeVector( PACKAGE_ANALYSIS_LIST_, analysis_vector))  {
+    std::vector<SubPropertyTree> analysis_sub_trees;
+    if (not sub_tree.second.getPropertyTreeVector( PACKAGE_ANALYSIS_LIST_, analysis_sub_trees))  {
 
-      ExecEnv::log().warn("RuntimeProperties::getPackageMap, No Analysis specified for Package: {}", package_ident);
+      ExecEnv::log().warn("RuntimeProperties::getPackageMap, No Analysis specified for Package: {} (use 'NULL' analysis)", package_ident);
+
+    }
+    std::vector<std::string> analysis_vector;
+    for (auto const& analysis_sub_tree : analysis_sub_trees) {
+
+      if (analysis_sub_tree.first == VALUE_) {
+
+        analysis_vector.push_back(analysis_sub_tree.second.getValue());
+
+      }
 
     }
 
     // Get a Vector of Genome Databases to read.
-    std::vector<std::string> genome_vector;
-    if (not sub_tree.second.getNodeVector( PACKAGE_GENOME_LIST_, genome_vector))  {
+    // This is done on initialization.
+    std::vector<SubPropertyTree> genome_vector;
+    if (not sub_tree.second.getPropertyTreeVector( PACKAGE_GENOME_LIST_, genome_vector))  {
 
-      ExecEnv::log().warn("RuntimeProperties::getPackageMap, No Organism Genomes specified for Package: {}", package_ident);
+      ExecEnv::log().error("RuntimeProperties::getPackageMap, No Organism Reference Genomes specified for Package: {}", package_ident);
+
+    }
+    std::vector<std::string> genomes;
+    for (auto const& genome_sub_tree : genome_vector) {
+
+      if (genome_sub_tree.first == VALUE_) {
+
+        genomes.push_back(genome_sub_tree.second.getValue());
+
+      }
 
     }
 
     // Get a Vector of items loaded on initialization.
-    std::vector<std::string> load_vector;
-    if (not sub_tree.second.getNodeVector( PACKAGE_LOAD_LIST_, load_vector))  {
+    // These are generally smaller data (VCF) files that can be loaded into memory
+    std::vector<SubPropertyTree> load_vector;
+    if (not sub_tree.second.getPropertyTreeVector( PACKAGE_LOAD_LIST_, load_vector))  {
 
-      ExecEnv::log().info("RuntimeProperties::getPackageMap, No Initialization items specified for Package: {}", package_ident);
+      ExecEnv::log().warn("RuntimeProperties::getPackageMap, No Initialization items specified for Package: {}", package_ident);
+
+    }
+    std::vector<std::string> load_files;
+    for (auto const& load_sub_tree : load_vector) {
+
+      if (load_sub_tree.first == VALUE_) {
+
+        load_files.push_back(load_sub_tree.second.getValue());
+
+      }
 
     }
 
     // Get a Vector of iteration items (VCF files) to load iteratively.
-    std::vector<std::string> iteration_vector;
-    if (not sub_tree.second.getNodeVector( PACKAGE_ITERATION_LIST_, iteration_vector))  {
+    // Each of these larger data (VCF) files are iteratively loaded into memory and then presented to the analysis functions.
+    // The data memory is recovered and the next file is loaded and analysed.
+    std::vector<SubPropertyTree> iteration_vector;
+    if (not sub_tree.second.getPropertyTreeVector(PACKAGE_ITERATION_LIST_, iteration_vector))  {
 
-      ExecEnv::log().info("RuntimeProperties::getPackageMap, No Iteration items (VCF Files) specified for Package: {}", package_ident);
+      ExecEnv::log().warn("RuntimeProperties::getPackageMap, No Iteration items (VCF Files) specified for Package: {}", package_ident);
 
     }
 
-    std::pair<std::string, RuntimePackage> new_package(package_ident, RuntimePackage(package_ident, analysis_vector, genome_vector, load_vector, iteration_vector));
+    std::vector<std::string> iteration_files;
+    for (auto const& iteration_sub_tree : iteration_vector) {
+
+      if (iteration_sub_tree.first == VALUE_) {
+
+        iteration_files.push_back(iteration_sub_tree.second.getValue());
+
+      }
+
+    }
+
+    std::pair<std::string, RuntimePackage> new_package(package_ident, RuntimePackage(package_ident, analysis_vector, genomes, load_files, iteration_files));
 
     auto result = package_map.insert(new_package);
 
@@ -354,7 +399,7 @@ kgl::ContigAliasMap kgl::RuntimeProperties::getContigAlias() const {
 
   ContigAliasMap contig_alias_map;
 
-  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + ALIAS_LIST_;
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + std::string(ALIAS_LIST_);
 
   std::vector<SubPropertyTree> property_tree_vector;
   if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
@@ -387,7 +432,6 @@ kgl::ContigAliasMap kgl::RuntimeProperties::getContigAlias() const {
 
     for (auto const& alias : alias_vector) {
 
-      ExecEnv::log().info("RuntimeProperties::getContigAlias, Alias: {} for Contig Id: {}", alias, sub_tree.first);
       contig_alias_map.setAlias(alias, contig_ident);
 
     }

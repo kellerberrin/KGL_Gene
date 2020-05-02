@@ -234,19 +234,17 @@ bool kgl::GenomeReference::contigOffset(const ContigId_t& contig_id,
 
 
 
-bool kgl::GenomeCollection::getGenome(const GenomeId_t& genome_id, std::shared_ptr<const GenomeReference>& genome_database) const {
+std::optional<std::shared_ptr<const kgl::GenomeReference>> kgl::GenomeCollection::getOptionalGenome(const GenomeId_t& genome_id) const {
 
   auto result = genome_map_.find(genome_id);
 
   if (result != genome_map_.end()) {
 
-    genome_database = result->second;
-    return true;
+    return result->second;
 
   } else {
 
-    genome_database = nullptr;
-    return false;
+    return std::nullopt;
 
   }
 
@@ -264,15 +262,14 @@ bool kgl::GenomeCollection::addGenome(std::shared_ptr<const GenomeReference> gen
 
 std::shared_ptr<const kgl::GenomeReference> kgl::GenomeCollection::getGenome(const std::string& GenomeID) const {
 
-  std::shared_ptr<const GenomeReference> genome_ptr;
+  std::optional<std::shared_ptr<const GenomeReference>> genome_opt = getOptionalGenome(GenomeID);
+  if (not genome_opt) {
 
-  if (not getGenome(GenomeID, genome_ptr)) {
-
-    ExecEnv::log().critical("GenomeCollection::getGenome; genome: {} not found", GenomeID);
+    ExecEnv::log().critical("GenomeCollection::getOptionalGenome; genome: {} not found", GenomeID);
 
   }
 
-  return genome_ptr;
+  return genome_opt.value();
 
 }
 

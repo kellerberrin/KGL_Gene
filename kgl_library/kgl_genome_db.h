@@ -153,6 +153,17 @@ public:
                                    ContigOffset_t sequence_offset,
                                    ContigOffset_t& contig_offset) const;
 
+  // Creates a genome database object.
+  // The fasta and gff files must be specified and present.
+  // The gaf file is optional (empty string if omitted)
+  // The translation Amino Acid table is optional (empty string if omitted).
+  // Note that different translation tables can be specified for individual contigs if required.
+  [[nodiscard]] static std::shared_ptr<GenomeReference> createGenomeDatabase(const GenomeId_t& organism,
+                                                                             const std::string& fasta_file,
+                                                                             const std::string& gff_file,
+                                                                             const std::string& gaf_file,
+                                                                             const std::string& translation_table);
+
 private:
 
   const GenomeId_t _genome_id;
@@ -161,16 +172,6 @@ private:
 
   void createVerifyGenomeDatabase();
   void createVerifyAuxillary();
-  // Creates a genome database object.
-  // The fasta and gff files must be specified and present.
-  // The gaf file is optional (empty string if omitted)
-  // The translation Amino Acid table is optional (empty string if omitted).
-  // Note that different translation tables can be specified for individual contigs.
-  [[nodiscard]] static std::shared_ptr<GenomeReference> createGenomeDatabase(const GenomeId_t& organism,
-                                                                             const std::string& fasta_file,
-                                                                             const std::string& gff_file,
-                                                                             const std::string& gaf_file,
-                                                                             const std::string& translation_table);
 
   // Reads auxiliary genome information about the database. Promoter sites, motifs, tss etc.
   [[nodiscard]] bool readGenomeAuxiliary(const RuntimeProperties& runtime_options);
@@ -201,17 +202,18 @@ public:
 
   // Returns false if the genome does not exist.
   [[nodiscard]] std::shared_ptr<const GenomeReference> getGenome(const std::string& GenomeID) const;
-  [[nodiscard]] bool getGenome(const GenomeId_t& genome_id, std::shared_ptr<const GenomeReference>& genome_variant) const;
+  [[nodiscard]] std::optional<std::shared_ptr<const GenomeReference>> getOptionalGenome(const GenomeId_t& genome_id) const;
 
   [[nodiscard]] const GenomeMap& getMap() const { return genome_map_; }
+
+  // Returns false if the genome already exists.
+  [[nodiscard]] bool addGenome(std::shared_ptr<const GenomeReference> genome_database);
 
 private:
 
   // A map of all active genome databases.
   GenomeMap genome_map_;
 
- // Returns false if the genome already exists.
-  [[nodiscard]] bool addGenome(std::shared_ptr<const GenomeReference> genome_database);
 
 };
 

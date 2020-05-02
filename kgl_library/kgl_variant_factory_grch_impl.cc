@@ -34,10 +34,9 @@ void kgl::GrchVCFImpl::readParseVCFImpl() {
 
 
 void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record) {
-
   // Parse the info fields into an array and assign to a shared ptr.
-//  auto mutable_info = const_cast<std::string&>(vcf_record.info);
-//  std::shared_ptr<std::string> info_ptr = std::make_shared<std::string>(std::move(mutable_info));
+  //  auto mutable_info = const_cast<std::string&>(vcf_record.info);
+  //  std::shared_ptr<std::string> info_ptr = std::make_shared<std::string>(std::move(mutable_info));
   std::shared_ptr<std::string> null_str_ptr = std::make_shared<std::string>("");
   // Evidence object
   std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<VariantEvidence>(null_str_ptr, vcf_record_count));
@@ -101,12 +100,10 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
   }
 
-
-
   if (vcf_record_count % VARIANT_REPORT_INTERVAL_ == 0) {
 
     ExecEnv::log().info("Processed :{} records, total variants: {}", vcf_record_count, variant_count_);
-    ExecEnv::log().info("Contig: {}, offset: {}", vcf_record.contig_id, vcf_record.offset);
+    ExecEnv::log().info("Contig: {}, offset: {}", contig, vcf_record.offset);
 
   }
 

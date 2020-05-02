@@ -198,6 +198,7 @@ public:
   ContigAliasMap(const ContigAliasMap&) = default;
   ~ContigAliasMap() = default;
 
+  [[nodiscard]] const AliasMap& getMap() const { return alias_map_; }
   [[nodiscard]] const ContigId_t& lookupAlias(const ContigId_t& alias);
   void setAlias(const ContigId_t& alias, const ContigId_t& contig_id);
 
