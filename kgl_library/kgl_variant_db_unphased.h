@@ -40,7 +40,11 @@ public:
 
   [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
 
+  // Unconditionally adds a variant to the contig (unique or not).
   [[nodiscard]]  bool addVariant(std::shared_ptr<const Variant> variant);
+
+  // The first bool is normal operation. The second bool is a unique variant was added to the contig.
+  std::pair<bool, bool> addUniqueVariant(std::shared_ptr<const Variant> variant);
 
   [[nodiscard]]  size_t variantCount() const;
 
@@ -82,6 +86,9 @@ public:
   [[nodiscard]] size_t variantCount() const;
 
   [[nodiscard]] bool addVariant(std::shared_ptr<const Variant> variant);
+
+  // The first bool is normal operation. The second bool is if a unique variant was added to the genome.
+  [[nodiscard]] std::pair<bool, bool> addUniqueVariant(std::shared_ptr<const Variant> variant);
 
   [[nodiscard]] const GenomeId_t& genomeId() const { return genome_id_; }
 

@@ -82,7 +82,7 @@ private:
   constexpr static const char* PACKAGE_IDENT_ = "packageIdent";
   constexpr static const char* PACKAGE_ANALYSIS_LIST_ = "analysisList";
   constexpr static const char* PACKAGE_GENOME_LIST_ = "genomeList";
-  constexpr static const char* PACKAGE_LOAD_LIST_ = "loadList";
+  constexpr static const char* PACKAGE_ITERATION_ = "iteration";
   constexpr static const char* PACKAGE_ITERATION_LIST_ = "iterationList";
   // Analysis Runtime categories.
   constexpr static const char* ANALYSIS_LIST_ = "analysisList";

@@ -44,9 +44,11 @@ private:
   void verifyPackages() const; // Check that integrity of all the XML information.
   // Perform all package data and analysis operations.
   [[nodiscard]] std::unique_ptr<GenomeCollection> loadReferenceGenomes(const RuntimePackage& package) const;
-  [[nodiscard]] std::unique_ptr<UnphasedPopulation> loadVCFDataFiles(const RuntimePackage& package, std::shared_ptr<const GenomeCollection> reference_genomes) const;
-  [[nodiscard]] std::unique_ptr<UnphasedPopulation> iterateVCFDataFiles( const RuntimePackage& package, std::shared_ptr<const GenomeCollection> reference_genomes) const;
-
+  [[nodiscard]] std::unique_ptr<UnphasedPopulation> iterateVCFDataFiles( const RuntimePackage& package,
+                                                                         std::shared_ptr<const GenomeCollection> reference_genomes,
+                                                                         const std::vector<std::string>& iterative_files) const;
+  [[nodiscard]] bool performAnalysis(const RuntimePackage& package,
+                                     std::shared_ptr<const GenomeCollection> reference_genomes) const;
 };
 
 

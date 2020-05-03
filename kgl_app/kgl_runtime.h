@@ -34,12 +34,10 @@ public:
   RuntimePackage( const std::string& package_identifier,
                   const std::vector<std::string>& analysis_list,
                   const std::vector<std::string>& genome_database_list,
-                  const std::vector<std::string>& load_file_list,
-                  const std::vector<std::string>& iterative_file_list)
+                  const std::vector<std::vector<std::string>>& iterative_file_list)
                   : package_identifier_(package_identifier),
                   analysis_list_(analysis_list),
                   genome_database_list_(genome_database_list),
-                  load_file_list_(load_file_list),
                   iterative_file_list_(iterative_file_list) {}
   RuntimePackage(const RuntimePackage&) = default;
   ~RuntimePackage() = default;
@@ -48,16 +46,14 @@ public:
   [[nodiscard]] const std::string& packageIdentifier() const { return package_identifier_; }
   [[nodiscard]] const std::vector<std::string>& analysisList() const { return analysis_list_; }
   [[nodiscard]] const std::vector<std::string>& genomeDatabaseList() const { return genome_database_list_; }
-  [[nodiscard]] const std::vector<std::string>& loadFileList() const { return load_file_list_; }
-  [[nodiscard]] const std::vector<std::string>& iterativeFileList() const { return iterative_file_list_; }
+  [[nodiscard]] const std::vector<std::vector<std::string>>& iterativeFileList() const { return iterative_file_list_; }
 
 private:
 
   std::string package_identifier_;
   std::vector<std::string> analysis_list_;
   std::vector<std::string> genome_database_list_;
-  std::vector<std::string> load_file_list_;
-  std::vector<std::string> iterative_file_list_;
+  std::vector<std::vector<std::string>> iterative_file_list_;
 
 };
 

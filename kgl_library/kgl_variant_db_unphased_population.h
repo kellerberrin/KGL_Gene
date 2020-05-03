@@ -58,6 +58,9 @@ public:
 
   [[nodiscard]] bool addVariant(std::shared_ptr<const Variant>& variant_ptr);
 
+  // The first bool is normal operation. The second bool is if a unique variant was added to the population.
+  [[nodiscard]] std::pair<bool, bool> addUniqueVariant(std::shared_ptr<const Variant> variant);
+
   [[nodiscard]] const PopulationId_t& populationId() const { return population_id_; }
   void setPopulationId(const PopulationId_t& population_id) { population_id_ = population_id; }
 
@@ -65,8 +68,15 @@ public:
   void mergePopulation(std::shared_ptr<const UnphasedPopulation> merge_population);
 
   // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
-  // The second integer is the number variants that pass inspection by comparison to the genome database.
+  // The second integer is the number variants that pass inspection by comparison to the reference genome.
   [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const GenomeReference>& genome_db) const;
+
+  // Merging a variant genome into this population. Only unique variants are accepted.
+  // The function returns a pair<size_t, size_t>. The first integer is the number of variants presented.
+  // The second integer is the number of unique variants added to the population. There can be multiple unique variants per contig offset.
+  [[nodiscard]] std::pair<size_t, size_t> mergeUniqueGenome(const std::shared_ptr<const UnphasedGenome> genome);
+  // Merge unique variants into a population.
+  [[nodiscard]] std::pair<size_t, size_t> mergeUniquePopulation(const std::shared_ptr<const UnphasedPopulation> population);
 
 private:
 

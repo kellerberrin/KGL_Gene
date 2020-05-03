@@ -255,7 +255,31 @@ bool kgl::UnphasedPopulation::addVariant(std::shared_ptr<const Variant>& variant
 
 }
 
+// The first bool is normal operation. The second bool is if a unique variant was added to the population.
+std::pair<bool, bool> kgl::UnphasedPopulation::addUniqueVariant(std::shared_ptr<const Variant> variant_ptr) {
 
+  std::optional<std::shared_ptr<UnphasedGenome>> genome_opt = getCreateGenome(variant_ptr->genomeId());
+  if (not genome_opt) {
+
+    ExecEnv::log().error("UnphasedPopulation::addUniqueVariant; Could not add/create genome: {}", variant_ptr->genomeId());
+    return std::pair<bool, bool>(false, false);
+
+  }
+
+  std::pair<bool, bool> result = genome_opt.value()->addUniqueVariant(variant_ptr);
+  if (not result.first) {
+
+    ExecEnv::log().error("UnphasedPopulation::addUniqueVariant; Could not add variant to genome: {}", variant_ptr->genomeId());
+    return std::pair<bool, bool>(false, false);
+
+  }
+
+  return std::pair<bool, bool>(true, result.second);
+
+}
+
+
+// Unconditional Merge.
 void kgl::UnphasedPopulation::mergePopulation(std::shared_ptr<const UnphasedPopulation> merge_population) {
 
   for (auto const& genome : merge_population->getMap()) {
@@ -307,4 +331,55 @@ std::pair<size_t, size_t> kgl::UnphasedPopulation::validate(const std::shared_pt
 
 }
 
+
+std::pair<size_t, size_t> kgl::UnphasedPopulation::mergeUniqueGenome(const std::shared_ptr<const UnphasedGenome> genome) {
+
+  std::pair<size_t, size_t> merge_count{0, 0};
+
+    for (auto const& contig : genome->getMap()) {
+
+      for (auto const& [offset, variant_vector] : contig.second->getMap()) {
+
+        for (auto variant_ptr : variant_vector) {
+
+          ++merge_count.first;
+          std::pair<bool, bool> result = addUniqueVariant(variant_ptr);
+          if (not result.first) {
+
+            ExecEnv::log().error("UnphasedPopulation::mergeUniqueGenome(); Cannot merge variant offset: {} from Genome: {} to Population: {}",
+                                 offset, genome->genomeId(), populationId());
+
+          }
+
+          if (result.second) {
+            ++merge_count.second;
+
+          }
+
+        }
+
+      }
+
+    }
+
+  return merge_count;
+
+}
+
+
+std::pair<size_t, size_t> kgl::UnphasedPopulation::mergeUniquePopulation(const std::shared_ptr<const UnphasedPopulation> merged_population) {
+
+  std::pair<size_t, size_t> merge_count{0, 0};
+
+  for (auto const& genome : merged_population->getMap()) {
+
+    std::pair<size_t, size_t> result = mergeUniqueGenome(genome.second);
+    merge_count.first += result.first;
+    merge_count.second += result.second;
+
+  }
+
+  return merge_count;
+
+}
 
