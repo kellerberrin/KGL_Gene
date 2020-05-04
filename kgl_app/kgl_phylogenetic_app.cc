@@ -28,7 +28,8 @@ void kgl::PhylogeneticExecEnv::executeApp() {
                                   runtime_options.getVCFFiles(),
                                   runtime_options.getGenomeReferenceMap(),
                                   runtime_options.getAnalysisMap(),
-                                  runtime_options.getPackageMap());
+                                  runtime_options.getPackageMap(),
+                                  args.workDirectory);
   // Individually execute the disassembled XML components.
   execute_package.executeAll();
 

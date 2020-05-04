@@ -196,7 +196,7 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_sequence_complexity.cc
         kgl_analytic/kgl_epigenetic_motif.cc
         kgl_analytic/kgl_epigenetic_motif.cc
-        kgl_analytic/kgl_upgma.h)
+        kgl_analytic/kgl_upgma.h kgl_analytic/kgl_null_analysis.cc kgl_analytic/kgl_null_analysis.h)
 
 # Deconvolution and mixture files.
 
@@ -218,7 +218,7 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_phylogenetic_app_analysis.h
         kgl_app/kgl_phylogenetic_app.h
         kgl_app/kgl_phylogenetic_parse.cc
-        kgl_app/kgl_properties.cc kgl_app/kgl_package.cc kgl_app/kgl_package.h)
+        kgl_app/kgl_properties.cc kgl_app/kgl_package.cc kgl_app/kgl_package.h kgl_app/kgl_package_analysis.cc kgl_app/kgl_package_analysis.h)
 
 
 

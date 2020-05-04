@@ -9,24 +9,40 @@
 namespace kgl = kellerberrin::genome;
 
 
-void kgl::ExecutePackage::executeAll() {
+void kgl::ExecutePackage::executeAll() const {
 
   // for all packages.
   for (auto const& [package_ident, package] : package_map_) {
 
+    // Get reference genomes.
     ExecEnv::log().info("ExecutePackage::executeAll, Load Reference Genomes for Package: {}", package_ident);
     std::shared_ptr<GenomeCollection> reference_genome_ptr = loadReferenceGenomes(package);
     ExecEnv::log().info("ExecutePackage::executeAll, Data Files and perform Analysis for Package: {}", package_ident);
 
+    // Setup the analytics
+    if (not package_analysis_.initializeAnalysis(package, reference_genome_ptr)) {
+
+      ExecEnv::log().error("ExecutePackage::executeAll, Problem initializing Analysis for Package: {}", package_ident);
+
+    }
+
+    // Iterate through the VCF files and update analytics.
     for (auto const& iterative_files : package.iterativeFileList()) {
 
       std::shared_ptr<UnphasedPopulation> vcf_iterative_data = iterateVCFDataFiles(package, reference_genome_ptr, iterative_files);
 
-      if (not performAnalysis(package, reference_genome_ptr)) {
+      if (not package_analysis_.iterateAnalysis(reference_genome_ptr, vcf_iterative_data)) {
 
         ExecEnv::log().error("ExecutePackage::executeAll, Problem performing Analysis for Package: {}", package_ident);
 
       }
+
+    }
+
+    // Complete and write the analytics.
+    if (not package_analysis_.finalizeAnalysis(reference_genome_ptr)) {
+
+      ExecEnv::log().error("ExecutePackage::executeAll, Problem finalizing Analysis for Package: {}", package_ident);
 
     }
 
@@ -195,11 +211,3 @@ std::unique_ptr<kgl::UnphasedPopulation> kgl::ExecutePackage::iterateVCFDataFile
 
 }
 
-
-bool kgl::ExecutePackage::performAnalysis(const RuntimePackage& package, std::shared_ptr<const GenomeCollection> reference_genomes) const {
-
-
-
-  return true;
-
-}

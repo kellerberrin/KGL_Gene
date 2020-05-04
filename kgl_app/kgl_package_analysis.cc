@@ -1,0 +1,108 @@
+//
+// Created by kellerberrin on 4/5/20.
+//
+
+#include "kgl_package_analysis.h"
+
+
+namespace kgl = kellerberrin::genome;
+
+
+bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
+                                              std::shared_ptr<const GenomeCollection> reference_genomes) {
+
+
+  active_analysis_.clear();
+  for (auto const& analysis_id : package.analysisList()) {
+
+    bool found = false;
+    for (auto const& registered_analysis : registered_analysis_) {
+
+      if (not registered_analysis) {
+
+        ExecEnv::log().error("Registered Analysis is a NULL pointer");
+        continue;
+
+      }
+
+      if (registered_analysis->ident() == analysis_id) {
+
+        found = true;
+
+        std::unique_ptr<NullAnalysis> active_analysis = registered_analysis->factory();
+
+        auto result = analysis_map_.find(analysis_id);
+
+        // Analysis parameters found.
+        if (result != analysis_map_.end()) {
+
+          if (active_analysis->initializeAnalysis(work_directory_, result->second.parameterMap(), reference_genomes)) {
+
+            active_analysis_.push_back(std::move(active_analysis));
+
+          } else {
+
+            ExecEnv::log().error("Failed to Initialize Analysis: {}, further analysis discarded", analysis_id);
+
+          }
+
+        } else {
+
+          ExecEnv::log().error("Could not find Runtime Parameters for Analysis: {}, further analysis discarded", analysis_id);
+
+        }
+
+        break;
+
+      }
+
+    }
+
+    if (not found) {
+
+      ExecEnv::log().error("Could not find Analysis: {}. Analysis must be registered in PackageAnalysis::PackageAnalysis", analysis_id);
+
+    }
+
+  }
+
+  return true;
+}
+
+
+bool kgl::PackageAnalysis::iterateAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes,
+                                           std::shared_ptr<const UnphasedPopulation> vcf_iterative_data) const {
+
+  for (auto& analysis : active_analysis_) {
+
+    if (not analysis->iterateAnalysis(reference_genomes, vcf_iterative_data)) {
+
+      ExecEnv::log().error("Error Iteratively Updating Analysis: {}", analysis->ident());
+      return false;
+
+    }
+
+  }
+
+  return true;
+
+}
+
+
+bool kgl::PackageAnalysis::finalizeAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes) const {
+
+
+  for (auto& analysis : active_analysis_) {
+
+    if (not analysis->finalizeAnalysis(reference_genomes)) {
+
+      ExecEnv::log().error("Error Iteratively Updating Analysis: {}", analysis->ident());
+      return false;
+
+    }
+
+  }
+
+  return true;
+
+}
