@@ -9,7 +9,7 @@ namespace kgl = kellerberrin::genome;
 
 
 bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
-                                              std::shared_ptr<const GenomeCollection> reference_genomes) {
+                                              std::shared_ptr<const GenomeCollection> reference_genomes) const {
 
 
   active_analysis_.clear();
@@ -38,10 +38,11 @@ bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
 
           if (active_analysis->initializeAnalysis(work_directory_, result->second.parameterMap(), reference_genomes)) {
 
-            active_analysis_.push_back(std::move(active_analysis));
+            active_analysis_.emplace_back(std::move(active_analysis), true);
 
           } else {
 
+            active_analysis_.emplace_back(std::move(active_analysis), false);  // Register but disable.
             ExecEnv::log().error("Failed to Initialize Analysis: {}, further analysis discarded", analysis_id);
 
           }
@@ -73,12 +74,21 @@ bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
 bool kgl::PackageAnalysis::iterateAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes,
                                            std::shared_ptr<const UnphasedPopulation> vcf_iterative_data) const {
 
-  for (auto& analysis : active_analysis_) {
+  for (auto& [analysis, active] : active_analysis_) {
 
-    if (not analysis->iterateAnalysis(reference_genomes, vcf_iterative_data)) {
+    if (active) {
 
-      ExecEnv::log().error("Error Iteratively Updating Analysis: {}", analysis->ident());
-      return false;
+      if (not analysis->iterateAnalysis(reference_genomes, vcf_iterative_data)) {
+
+        ExecEnv::log().error("PackageAnalysis::iterateAnalysis; Error Iteratively Updating Analysis: {}, disabled from further updates.", analysis->ident());
+        active = false;
+        return false;
+
+      }
+
+    } else {
+
+      ExecEnv::log().warn("PackageAnalysis::iterateAnalysis; Analysis: {} registered an error code and was disabled.", analysis->ident());
 
     }
 
@@ -92,12 +102,21 @@ bool kgl::PackageAnalysis::iterateAnalysis(std::shared_ptr<const GenomeCollectio
 bool kgl::PackageAnalysis::finalizeAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes) const {
 
 
-  for (auto& analysis : active_analysis_) {
+  for (auto& [analysis, active] : active_analysis_) {
 
-    if (not analysis->finalizeAnalysis(reference_genomes)) {
+    if (active) {
 
-      ExecEnv::log().error("Error Iteratively Updating Analysis: {}", analysis->ident());
-      return false;
+      if (not analysis->finalizeAnalysis(reference_genomes)) {
+
+        ExecEnv::log().error("Error Finalizing Updating Analysis: {}", analysis->ident());
+        active = false;
+        return false;
+
+      }
+
+    } else {
+
+      ExecEnv::log().warn("PackageAnalysis::finalizeAnalysis; Analysis: {} registered an error code and was disabled.", analysis->ident());
 
     }
 

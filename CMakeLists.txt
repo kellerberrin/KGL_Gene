@@ -196,7 +196,7 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_sequence_complexity.cc
         kgl_analytic/kgl_epigenetic_motif.cc
         kgl_analytic/kgl_epigenetic_motif.cc
-        kgl_analytic/kgl_upgma.h kgl_analytic/kgl_null_analysis.cc kgl_analytic/kgl_null_analysis.h)
+        kgl_analytic/kgl_upgma.h kgl_analytic/kgl_analysis_null.cc kgl_analytic/kgl_analysis_null.h kgl_analytic/kgl_analysis_interval.cc kgl_analytic/kgl_analysis_interval.h)
 
 # Deconvolution and mixture files.
 
@@ -207,7 +207,7 @@ set(MIXTURE_SOURCE_FILES
         kgl_mixture/kgl_variant_classify.cc
         kgl_mixture/kgl_variant_classify_io.cc
         kgl_mixture/kgl_read_phasing.h
-        kgl_mixture/kgl_read_phasing.cc )
+        kgl_mixture/kgl_read_phasing.cc kgl_analytic/kgl_analysis_all.h)
 
 
 # Application level objects

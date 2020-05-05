@@ -184,7 +184,7 @@ kgl::RuntimeAnalysisMap kgl::RuntimeProperties::getAnalysisMap() const {
 
     key = PARAMETER_LIST_;
     std::vector<SubPropertyTree> parameter_tree_vector;
-    if (not property_tree_.getPropertyTreeVector(key, parameter_tree_vector)) {
+    if (not sub_tree.second.getPropertyTreeVector(key, parameter_tree_vector)) {
 
       ExecEnv::log().info("RuntimeProperties::getAnalysisMap, no Parameters Specified for Analysis: {}", analysis_ident);
       return analysis_map; // return empty map.
@@ -195,7 +195,7 @@ kgl::RuntimeAnalysisMap kgl::RuntimeProperties::getAnalysisMap() const {
     for (const auto& parameter_sub_tree : parameter_tree_vector) {
 
       // Only process parameter records.
-      if (sub_tree.first != PARAMETER_) continue;
+      if (parameter_sub_tree.first != PARAMETER_) continue;
 
       key = std::string(PARAMETER_IDENT_) + std::string(DOT_) + std::string(VALUE_);
       std::string parameter_ident;
@@ -215,12 +215,13 @@ kgl::RuntimeAnalysisMap kgl::RuntimeProperties::getAnalysisMap() const {
 
       }
 
-      std::pair<std::string, std::string> new_parameter(parameter_ident, parameter_value);
+      // Parameter ident is always upper case (case insensitive).
+      std::pair<std::string, std::string> new_parameter(Utility::toupper(parameter_ident), parameter_value);
       auto result = parameter_map.insert(new_parameter);
 
       if (not result.second) {
 
-        ExecEnv::log().error("RuntimeProperties::getAnalysisMap, Duplicate found for Parameter: {}, Analysis: {}", parameter_ident, analysis_ident);
+        ExecEnv::log().error("RuntimeProperties::getAnalysisMap, Duplicate found for (case insensitive) Parameter: {}, Analysis: {}", parameter_ident, analysis_ident);
 
       }
 

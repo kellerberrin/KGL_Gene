@@ -10,7 +10,7 @@
 #include "kgl_runtime.h"
 #include "kgl_genome_db.h"
 #include "kgl_variant_db_unphased_population.h"
-#include "kgl_null_analysis.h"
+#include "kgl_analysis_all.h" // Includes all the defined active analysis objects.
 
 
 #include <string>
@@ -37,7 +37,7 @@ public:
 
   // Setup the analytics to process VCF data.
   [[nodiscard]] bool initializeAnalysis(const RuntimePackage& package,
-                                        std::shared_ptr<const GenomeCollection> reference_genomes);
+                                        std::shared_ptr<const GenomeCollection> reference_genomes) const;
 
   // Perform the genetic analysis per iteration.
   [[nodiscard]] bool iterateAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes,
@@ -55,7 +55,7 @@ private:
   // All available analytics
   std::vector<std::unique_ptr<NullAnalysis>> registered_analysis_;
   // Active analytics for this package
-  std::vector<std::unique_ptr<NullAnalysis>> active_analysis_;
+  mutable std::vector<std::pair<std::unique_ptr<NullAnalysis>, bool>> active_analysis_;
 
 
 };

@@ -88,10 +88,10 @@ private:
   constexpr static const char* ANALYSIS_LIST_ = "analysisList";
   constexpr static const char* ANALYSIS_ = "analysis";
   constexpr static const char* ANALYSIS_IDENT_ = "analysisIdent";
-  constexpr static const char* PARAMETER_LIST_ = "analysisIdent";
+  constexpr static const char* PARAMETER_LIST_ = "parameterList";
   constexpr static const char* PARAMETER_ = "parameter";
   constexpr static const char* PARAMETER_IDENT_ = "parameterIdent";
-  constexpr static const char* PARAMETER_VALUE_ = "parameterIdent";
+  constexpr static const char* PARAMETER_VALUE_ = "parameterValue";
   // VCF File Runtime categories.
   constexpr static const char* VCF_LIST_ = "vcfList";
   constexpr static const char* VCF_IDENT_ = "vcfIdent";

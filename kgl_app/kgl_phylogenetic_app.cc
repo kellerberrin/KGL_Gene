@@ -24,13 +24,14 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   // XML program runtime options, this defines the program runtime.
   const RuntimeProperties& runtime_options = getRuntimeOptions();
   // Disassemble the XML runtime into a series of data and analysis operations.
-  ExecutePackage execute_package( runtime_options.getContigAlias(),
-                                  runtime_options.getVCFFiles(),
-                                  runtime_options.getGenomeReferenceMap(),
-                                  runtime_options.getAnalysisMap(),
-                                  runtime_options.getPackageMap(),
-                                  args.workDirectory);
-  // Individually execute the disassembled XML components.
+  const ExecutePackage execute_package( runtime_options.getContigAlias(),
+                                        runtime_options.getVCFFiles(),
+                                        runtime_options.getGenomeReferenceMap(),
+                                        runtime_options.getAnalysisMap(),
+                                        runtime_options.getPackageMap(),
+                                        args.workDirectory);
+  // Individually executes the specified XML components (the package).
+  // Executes the application logic and performs requested analysis.
   execute_package.executeAll();
 
   return;

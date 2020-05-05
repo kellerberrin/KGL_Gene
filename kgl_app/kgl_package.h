@@ -32,6 +32,7 @@ public:
 
   ~ExecutePackage() = default;
 
+  // Executes all the application logic.
   void executeAll() const;
 
 private:
@@ -43,9 +44,9 @@ private:
   const RuntimeAnalysisMap analysis_map_;
   const RuntimePackageMap package_map_;
   // The analysis management object.
-  mutable PackageAnalysis package_analysis_;
+  const PackageAnalysis package_analysis_;
 
-  // Check that integrity of all the XML information.
+  // Check the integrity of all the XML information.
   void verifyPackages() const;
   // Load the reference genomes.
   [[nodiscard]] std::unique_ptr<GenomeCollection> loadReferenceGenomes(const RuntimePackage& package) const;

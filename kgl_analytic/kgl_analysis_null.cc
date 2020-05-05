@@ -2,7 +2,7 @@
 // Created by kellerberrin on 4/5/20.
 //
 
-#include "kgl_null_analysis.h"
+#include "kgl_analysis_null.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -12,10 +12,9 @@ bool kgl::NullAnalysis::initializeAnalysis( const std::string& work_directory,
                                             std::shared_ptr<const GenomeCollection> reference_genomes) {
 
   ExecEnv::log().info("Analysis: {} initialized with work directory: {}", ident(), work_directory);
-  ExecEnv::log().info("Analysis: {} Parameter Count: {}", ident(), named_parameters.size());
   for (auto const& [parameter_ident, parameter_value] : named_parameters) {
 
-    ExecEnv::log().info("initializeAnalysis: {}, initialized with parameter: {}, value: {}", parameter_ident, parameter_value);
+    ExecEnv::log().info("initializeAnalysis: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident, parameter_value);
 
   }
 

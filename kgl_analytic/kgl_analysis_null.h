@@ -45,28 +45,6 @@ private:
 };
 
 
-// Stub class for the interval analysis
-class IntervalAnalysis : public NullAnalysis {
-
-public:
-
-  IntervalAnalysis() = default;
-  ~IntervalAnalysis() = default;
-
-  // Functions redefined in super classes
-  // The ident must match the ident used in the package XML.
-  [[nodiscard]] std::string ident() const override { return "INTERVAL"; }
-  [[nodiscard]] virtual std::unique_ptr<NullAnalysis> factory() const override { return std::make_unique<IntervalAnalysis>(); }
-
-
-private:
-
-};
-
-
-
-
-
 
 
 
