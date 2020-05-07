@@ -91,7 +91,7 @@ public:
   [[nodiscard]] static bool isExtended(Nucleotide_t char_letter);
 
   // Return a vector of all valid alphabet values.
-  [[nodiscard]] static std::vector<Alphabet> enumerateAlphabet();
+  [[nodiscard]] static const std::vector<Alphabet>& enumerateAlphabet();
 
   // Checks for possible memory corruption.
   [[nodiscard]] static bool validAlphabet(Alphabet nucleotide);
@@ -119,7 +119,7 @@ public:
   }
 
   // Convert a base to an array offset.
-  [[nodiscard]] static ContigOffset_t nucleotideToColumn(Alphabet nucleotide);
+  [[nodiscard]] static ContigOffset_t symbolToColumn(Alphabet nucleotide);
 
   // Return nucleotide as a char.
   [[nodiscard]] static char convertToChar(Alphabet nucleotide) { return static_cast<char>(nucleotide); }

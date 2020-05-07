@@ -445,12 +445,14 @@ std::string kgl::GeneAnalysis::outputRegionHeader(char delimiter) {
   ss << "ContigSize" << delimiter;
   ss << "ContigOffset" << delimiter;
   ss << "RegionSize" << delimiter;
-  ss << "Score" << delimiter;
+  ss << "Distance" << delimiter;
   ss << "CpG" << delimiter;
-  ss << "A_prop" << delimiter;
-  ss << "C_prop" << delimiter;
-  ss << "G_prop" << delimiter;
-  ss << "T_prop";
+  std::vector<DNA5::Alphabet> symbols = DNA5::enumerateAlphabet();
+  for (auto symbol : symbols) {
+
+    ss << static_cast<char>(symbol) << delimiter;
+
+  }
 
   return ss.str();
 
@@ -483,25 +485,6 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
 
   }
 
-
-  if (region_size == 0) {
-
-    ss << genome_variant_ptr->genomeId() << delimiter;
-    ss << contig_id << delimiter;
-    ss << contig_opt.value()->sequence().length() << delimiter;
-    ss << offset << delimiter;
-    ss << region_size << delimiter;
-    ss << 0 << delimiter;
-    ss << 0.0 << delimiter;
-    ss << 0.0 << delimiter;
-    ss << 0.0 << delimiter;
-    ss << 0.0 << delimiter;
-    ss << 0.0;
-
-    return ss.str();
-
-  }
-
   DNA5SequenceLinear mutant_sequence;
   DNA5SequenceLinear reference_sequence;
   OffsetVariantMap variant_map;
@@ -523,15 +506,12 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
     ss << region_size << delimiter;
     ss << distance << delimiter;
     ss << SequenceComplexity::relativeCpGIslands(reference_sequence) << delimiter;
-    double A_prop;
-    double C_prop;
-    double G_prop;
-    double T_prop;
-    SequenceComplexity::proportionNucleotides(reference_sequence, A_prop, C_prop, G_prop, T_prop);
-    ss << A_prop << delimiter;
-    ss << C_prop << delimiter;
-    ss << G_prop << delimiter;
-    ss << T_prop;
+    std::vector<std::pair<DNA5::Alphabet, size_t>> symbol_count = reference_sequence.countSymbols();
+    for (auto const& count : symbol_count) {
+
+      ss << count.second << delimiter;
+
+    }
 
   } else {
 

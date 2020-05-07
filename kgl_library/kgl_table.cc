@@ -66,9 +66,9 @@ size_t kgl::AminoTranslationTable::index(const Codon& codon) const {
 
   }
 
-    size_t table_index = (CodingDNA5::nucleotideToColumn(codon[0]) * Tables::CODING_NUCLEOTIDE_1) +
-                       (CodingDNA5::nucleotideToColumn(codon[1]) * Tables::CODING_NUCLEOTIDE_2) +
-                       CodingDNA5::nucleotideToColumn(codon[2]);
+    size_t table_index = (CodingDNA5::symbolToColumn(codon[0]) * Tables::CODING_NUCLEOTIDE_1) +
+                         (CodingDNA5::symbolToColumn(codon[1]) * Tables::CODING_NUCLEOTIDE_2) +
+                         CodingDNA5::symbolToColumn(codon[2]);
 
   if (table_index >= Tables::AMINO_TABLE_SIZE) {
 

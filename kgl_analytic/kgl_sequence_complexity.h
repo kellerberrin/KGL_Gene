@@ -21,34 +21,44 @@ public:
   [[nodiscard]] static size_t kmerCount( const AlphabetSequence<Alphabet>& sequence,
                                          const AlphabetSequence<Alphabet>& kmer);
 
+  [[nodiscard]] static double relativeCpGIslands(const DNA5SequenceCoding& sequence);
   [[nodiscard]] static double relativeCpGIslands(const DNA5SequenceLinear& sequence);
   // Calculate Entropy
   template<typename Alphabet>
-  [[nodiscard]] static double alphabetEntropy(const AlphabetSequence<Alphabet>& sequence);
+  [[nodiscard]] static double alphabetEntropy( const AlphabetSequence<Alphabet>& sequence,
+                                               const std::vector<std::pair<typename Alphabet::Alphabet, size_t>>& symbol_vector);
   // Different for different sequence lengths.
-  [[nodiscard]] static size_t complexityLempelZiv(const DNA5SequenceLinear& sequence);
+  template<typename Alphabet>
+  [[nodiscard]] static size_t complexityLempelZiv(const AlphabetSequence<Alphabet>& sequence);
   // Calculate Nucleotide content.
-  static void proportionNucleotides(const DNA5SequenceLinear& sequence,
-                                    double& A_prop,
-                                    double& C_prop,
-                                    double& G_prop,
-                                    double& T_prop);
 
 private:
 
-  // Calculate GC content.
-  static void countNucleotides(const DNA5SequenceLinear& sequence,
-                               size_t& A_count,
-                               size_t& C_count,
-                               size_t& G_count,
-                               size_t& T_count);
-
 };
+
+inline double SequenceComplexity::relativeCpGIslands(const DNA5SequenceCoding& sequence) {
+
+  size_t count = sequence.AlphabetSequence<CodingDNA5>::countTwoSymbols(CodingDNA5::Alphabet::C, CodingDNA5::Alphabet::G);
+
+  // Combinatorial theory tells us there is an expected CpG every 32 random nucleotides.
+  return (static_cast<double>(count) * 32.0) / static_cast<double>(sequence.length());
+
+}
+
+inline double SequenceComplexity::relativeCpGIslands(const DNA5SequenceLinear& sequence) {
+
+  size_t count = sequence.AlphabetSequence<DNA5>::countTwoSymbols(DNA5::Alphabet::C, DNA5::Alphabet::G);
+
+  // Combinatorial theory tells us there is an expected CpG every 32 random nucleotides.
+  return (static_cast<double>(count) * 32.0) / static_cast<double>(sequence.length());
+
+}
 
 
 // Calculate Entropy
 template<typename Alphabet>
-double SequenceComplexity::alphabetEntropy(const AlphabetSequence<Alphabet>& sequence) {
+double SequenceComplexity::alphabetEntropy( const AlphabetSequence<Alphabet>& sequence,
+                                            const std::vector<std::pair<typename Alphabet::Alphabet, size_t>>& symbol_vector) {
 
   if (sequence.length() == 0) {
 
@@ -57,54 +67,16 @@ double SequenceComplexity::alphabetEntropy(const AlphabetSequence<Alphabet>& seq
 
   }
 
-  auto enumerated_alphabet = Alphabet::enumerateAlphabet();
-
-  std::map<char, size_t> lookup_map;
-
-  // Create a lookup map for efficiency
-  for (auto letter : enumerated_alphabet) {
-
-    std::pair<char, size_t> insert_pair(Alphabet::convertToChar(letter), 0);
-
-    auto result = lookup_map.insert(insert_pair);
-
-    if (not result.second) {
-
-      ExecEnv::log().error("SequenceComplexity::alphabetEntropy; duplicate alphabet item: {}, for sequence: {}",
-                           Alphabet::convertToChar(letter), sequence.getSequenceAsString());
-
-    }
-
-  }
-
-  // Count the sequence into the lookup map.
-  for (size_t idx = 0; idx < sequence.length(); ++idx) {
-
-    auto result = lookup_map.find(Alphabet::convertToChar(sequence.at(idx)));
-
-    if (result == lookup_map.end()) {
-
-      ExecEnv::log().error("SequenceComplexity::alphabetEntropy; missing alphabet item: {}, for sequence: {}",
-                           Alphabet::convertToChar(sequence.at(idx)), sequence.getSequenceAsString());
-
-    } else {
-
-      ++(result->second);
-
-    }
-
-  }
-
   auto sequence_size = static_cast<double>(sequence.length());
 
   // Calculate entropy.
   double entropy = 0.0;
 
-  for (auto letter : lookup_map) {
+  for (auto symbol : symbol_vector) {
 
-    if (letter.second > 0) {
+    if (symbol.second > 0) {
 
-      double ratio = static_cast<double>(letter.second) / sequence_size;
+      double ratio = static_cast<double>(symbol.second) / sequence_size;
 
       entropy += ratio * std::log(ratio);
 
@@ -113,7 +85,7 @@ double SequenceComplexity::alphabetEntropy(const AlphabetSequence<Alphabet>& seq
   }
 
   // Adjust for alphabet size
-  entropy = entropy * (-1.0 / std::log(static_cast<double>(enumerated_alphabet.size())));
+  entropy = entropy * (-1.0 / std::log(static_cast<double>(symbol_vector.size())));
 
   return entropy;
 
@@ -163,8 +135,70 @@ size_t SequenceComplexity::kmerCount(const AlphabetSequence<Alphabet>& sequence,
 
 }
 
+template<typename Alphabet>
+inline size_t SequenceComplexity::complexityLempelZiv(const AlphabetSequence<Alphabet>& sequence) {
+
+  size_t u = 0;
+  size_t v = 1;
+  size_t w = 1;
+  size_t v_max = 1;
+  size_t length = sequence.length();
+  size_t complexity = 1;
 
 
+  while (true) {
+
+    if (sequence.at(u + v - 1) == sequence.at(w + v - 1)) {
+
+      v += 1;
+
+      if (w + v >= length) {
+
+        complexity += 1;
+        break;
+
+      }
+
+    } else {
+
+      if (v > v_max) {
+
+        v_max = v;
+
+      }
+
+      u += 1;
+
+      if (u == w) {
+
+        complexity += 1;
+        w += v_max;
+
+        if (w > length) {
+
+          break;
+
+        } else {
+
+          u = 0;
+          v = 1;
+          v_max = 1;
+
+        }
+
+      } else {
+
+        v = 1;
+
+      }
+
+    }
+
+  }
+
+  return complexity;
+
+}
 
 
 }   // end namespace genome

@@ -131,6 +131,10 @@ public:
 
   }
 
+  // Generally used to count CpG islands. Look for ocurrances of [first, second] in the string.
+  [[nodiscard]] size_t countTwoSymbols(typename Alphabet::Alphabet first_symbol, typename Alphabet::Alphabet second_symbol) const;
+
+  [[nodiscard]] std::vector<std::pair<typename Alphabet::Alphabet, size_t>> countSymbols() const;
 
   typename Alphabet::Alphabet operator[] (ContigOffset_t& offset) const { return base_string_[offset]; }
 
@@ -169,6 +173,49 @@ private:
 
 
 };
+
+
+template<typename Alphabet>
+size_t AlphabetString<Alphabet>::countTwoSymbols(typename Alphabet::Alphabet first_symbol, typename Alphabet::Alphabet second_symbol) const {
+
+  size_t count{0};
+  for (size_t index = 1; index < base_string_.length(); ++index) {
+
+    if (base_string_[(index - 1)] == first_symbol and base_string_[index] == second_symbol) {
+
+      ++count;
+      ++index; // skip to examine next two symbols.
+
+    }
+
+  }
+
+  return count;
+
+}
+
+
+template<typename Alphabet>
+std::vector<std::pair<typename Alphabet::Alphabet, size_t>> AlphabetString<Alphabet>::countSymbols() const {
+
+  const std::vector<typename Alphabet::Alphabet> alphabet = Alphabet::enumerateAlphabet();
+
+  std::vector<std::pair<typename Alphabet::Alphabet, size_t>> symbol_count_vector;
+  for (auto const symbol : alphabet) {
+
+    symbol_count_vector.emplace_back(symbol, 0);
+
+  }
+
+  for (auto const symbol : base_string_) {
+
+    symbol_count_vector[Alphabet::symbolToColumn(symbol)].second++;
+
+  }
+
+  return symbol_count_vector;
+
+}
 
 
 template<typename Alphabet>

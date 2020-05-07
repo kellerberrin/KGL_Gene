@@ -349,18 +349,15 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
 
         }
 
-        out_file << SequenceComplexity::alphabetEntropy<CodingDNA5>(coding_dna_sequence) << CSV_delimiter;
-        out_file << SequenceComplexity::complexityLempelZiv(DNA5SequenceLinear::downConvertToLinear(coding_dna_sequence)) << CSV_delimiter;
-        out_file << SequenceComplexity::relativeCpGIslands(DNA5SequenceLinear::downConvertToLinear(coding_dna_sequence)) << CSV_delimiter;  // GC count.
-        double A_prop;
-        double C_prop;
-        double G_prop;
-        double T_prop;
-        SequenceComplexity::proportionNucleotides(DNA5SequenceLinear::downConvertToLinear(coding_dna_sequence), A_prop, C_prop, G_prop, T_prop);
-        out_file << A_prop << CSV_delimiter;
-        out_file << C_prop << CSV_delimiter;
-        out_file << G_prop << CSV_delimiter;
-        out_file << T_prop << CSV_delimiter;
+        const std::vector<std::pair<CodingDNA5::Alphabet, size_t>> count_vector = coding_dna_sequence.countSymbols();
+        out_file << SequenceComplexity::alphabetEntropy<CodingDNA5>(coding_dna_sequence, count_vector) << CSV_delimiter;
+        out_file << SequenceComplexity::complexityLempelZiv(coding_dna_sequence) << CSV_delimiter;
+        out_file << SequenceComplexity::relativeCpGIslands(coding_dna_sequence) << CSV_delimiter;  // GC count.
+        for (auto const& count : count_vector) {
+
+          out_file << static_cast<double>(count.second) * 100.0 / static_cast<double>(coding_dna_sequence.length()) << CSV_delimiter;
+
+        }
 
         std::shared_ptr<const OntologyRecord> gene_ontology_ptr;
         if (genome_db->geneOntology().getGafFeatureVector(gene.second->id(), gene_ontology_ptr)) {
@@ -459,12 +456,11 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
                 break;
 
               case SequenceAnalysisType::ENTROPY:
-                out_file << SequenceComplexity::alphabetEntropy<CodingDNA5>(mutant_sequence) << CSV_delimiter;
+                out_file << SequenceComplexity::alphabetEntropy<CodingDNA5>(mutant_sequence, mutant_sequence.countSymbols()) << CSV_delimiter;
                 break;
 
               case SequenceAnalysisType::LEMPEL_ZIV:
-                out_file << SequenceComplexity::complexityLempelZiv(
-                DNA5SequenceLinear::downConvertToLinear(mutant_sequence)) << CSV_delimiter;
+                out_file << SequenceComplexity::complexityLempelZiv(mutant_sequence) << CSV_delimiter;
                 break;
 
             }
@@ -543,18 +539,14 @@ bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_na
         }
 
         AminoSequence amino_reference  = contig.second->getAminoSequence(coding_dna_sequence);
-        out_file << SequenceComplexity::alphabetEntropy<AminoAcid>(amino_reference) << CSV_delimiter;
-        out_file << SequenceComplexity::complexityLempelZiv(DNA5SequenceLinear::downConvertToLinear(coding_dna_sequence)) << CSV_delimiter;
-        out_file << SequenceComplexity::relativeCpGIslands(DNA5SequenceLinear::downConvertToLinear(coding_dna_sequence)) << CSV_delimiter;  // GC count.
-        double A_prop;
-        double C_prop;
-        double G_prop;
-        double T_prop;
-        SequenceComplexity::proportionNucleotides(DNA5SequenceLinear::downConvertToLinear(coding_dna_sequence), A_prop, C_prop, G_prop, T_prop);
-        out_file << A_prop << CSV_delimiter;
-        out_file << C_prop << CSV_delimiter;
-        out_file << G_prop << CSV_delimiter;
-        out_file << T_prop << CSV_delimiter;
+        out_file << SequenceComplexity::alphabetEntropy<AminoAcid>(amino_reference, amino_reference.countSymbols()) << CSV_delimiter;
+        out_file << SequenceComplexity::complexityLempelZiv(coding_dna_sequence) << CSV_delimiter;
+        out_file << SequenceComplexity::relativeCpGIslands(coding_dna_sequence) << CSV_delimiter;  // GC count.
+        for (auto const& count : coding_dna_sequence.countSymbols()) {
+
+          out_file << (static_cast<double>(count.second) * 100.0) / static_cast<double>(coding_dna_sequence.length()) << CSV_delimiter;
+
+        }
 
         std::shared_ptr<const OntologyRecord> gene_ontology_ptr;
         if (genome_db->geneOntology().getGafFeatureVector(gene.second->id(), gene_ontology_ptr)) {
@@ -978,6 +970,7 @@ std::string kgl::ApplicationAnalysis::outputRegionHeader(char delimiter) {
   ss << "C_prop" << delimiter;
   ss << "G_prop" << delimiter;
   ss << "T_prop" << delimiter;
+  ss << "N_prop" << delimiter;
   ss << "Error" << delimiter;
   ss << "ValidReference" << delimiter;
   ss << "AllPaths" << delimiter;
@@ -1083,16 +1076,12 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
   ss << contig_ptr->sequence().length() << delimiter;
   ss << sequence_offset << delimiter;
   ss << coding_sequence->codingNucleotides() << delimiter;
-  ss << SequenceComplexity::relativeCpGIslands(DNA5SequenceLinear::downConvertToLinear(reference_sequence)) << delimiter;  // GC count.
-  double A_prop;
-  double C_prop;
-  double G_prop;
-  double T_prop;
-  SequenceComplexity::proportionNucleotides(DNA5SequenceLinear::downConvertToLinear(reference_sequence), A_prop, C_prop, G_prop, T_prop);
-  ss << A_prop << delimiter;
-  ss << C_prop << delimiter;
-  ss << G_prop << delimiter;
-  ss << T_prop << delimiter;
+  ss << SequenceComplexity::relativeCpGIslands(reference_sequence) << delimiter;  // GC count.
+  for (auto const& count : reference_sequence.countSymbols()) {
+
+    ss << (static_cast<double>(count.second) *100.0) / static_cast<double>(reference_sequence.length()) << delimiter;
+
+  }
   ss << error_flag << delimiter;
   ss << valid_reference << delimiter;
   ss << mutant_paths << delimiter;

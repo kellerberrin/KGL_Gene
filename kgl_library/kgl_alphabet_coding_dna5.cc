@@ -29,7 +29,7 @@ bool kgl::CodingDNA5::validAlphabet(Alphabet nucleotide) {
 
 
 // Convert a base to an array offset.
-kgl::ContigOffset_t kgl::CodingDNA5::nucleotideToColumn(Alphabet nucleotide) {
+kgl::ContigOffset_t kgl::CodingDNA5::symbolToColumn(Alphabet nucleotide) {
 
   // Translate the nucleotide to an array column
   switch (nucleotide) {
@@ -47,9 +47,9 @@ kgl::ContigOffset_t kgl::CodingDNA5::nucleotideToColumn(Alphabet nucleotide) {
 }
 
 
-std::vector<kgl::CodingDNA5::Alphabet> kgl::CodingDNA5::enumerateAlphabet() {
+const std::vector<kgl::CodingDNA5::Alphabet>& kgl::CodingDNA5::enumerateAlphabet() {
 
-  std::vector<Alphabet> alphabet_vector = {Alphabet::A, Alphabet::C, Alphabet::G, Alphabet::T, Alphabet::N};
+  static std::vector<Alphabet> alphabet_vector = {Alphabet::A, Alphabet::C, Alphabet::G, Alphabet::T, Alphabet::N};
 
   return alphabet_vector;
 

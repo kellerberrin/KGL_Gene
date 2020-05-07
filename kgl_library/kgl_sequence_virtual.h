@@ -73,6 +73,11 @@ public:
   // Search for all subsequences.
   [[nodiscard]] std::vector<ContigOffset_t> findAll(const AlphabetSequence& sub_sequence) const { return alphabet_string_.findAll(sub_sequence.alphabet_string_); }
 
+  // Count all alphabet symbols in sequence.
+  [[nodiscard]] std::vector<std::pair<typename Alphabet::Alphabet, size_t>> countSymbols() const { return alphabet_string_.countSymbols(); }
+
+  // Return the count of ordered alphabet pairs (generally used for counting CpG islands).
+  [[nodiscard]] size_t countTwoSymbols(typename Alphabet::Alphabet first_symbol, typename Alphabet::Alphabet second_symbol) const { return alphabet_string_.countTwoSymbols(first_symbol, second_symbol); }
 
 protected:
 

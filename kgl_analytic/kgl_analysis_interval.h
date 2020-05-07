@@ -10,11 +10,81 @@
 #include "kgl_variant_db_unphased_population.h"
 #include "kgl_analysis_null.h"
 
+#include <array>
+
 namespace kellerberrin::genome {   //  organization::project level namespace
 
+// Stores statistical data per interval
+
+class IntervalData{
+
+public:
+
+  IntervalData() : array_variant_count_(ARRAY_VARIANT_COUNT_, 0) {}
+  ~IntervalData() = default;
+
+  void addSNPCount(size_t SNP_count) { SNP_count_ += SNP_count; }
+  [[nodiscard]] size_t SNPCount() const { return SNP_count_; }
+
+  void addVariantCount(size_t variant_count) { variant_count_ += variant_count; }
+  [[nodiscard]] size_t variantCount() const { return variant_count_; }
+
+  void addArrayVariantCount(size_t size) {
+
+    if (size < ARRAY_VARIANT_COUNT_) {
+
+      ++array_variant_count_[size - 1];
+
+    } else {
+
+      ++array_variant_count_[ARRAY_VARIANT_COUNT_ - 1];
+
+    }
+
+  }
+  [[nodiscard]] const std::vector<size_t>& arrayVariantCount() const { return array_variant_count_; }
+  void offsetDifference(size_t offset_difference) {
+
+    if (offset_difference > max_offset_difference_) {
+
+      max_offset_difference_ = offset_difference;
+
+    }
+
+    ++active_offset_count_;
+    sum_offset_difference_ += offset_difference;
+
+  }
+  [[nodiscard]] size_t maxOffsetDifference() const { return max_offset_difference_; }
+  [[nodiscard]] double meanOffsetDifference() const {
+
+    if (active_offset_count_ == 0) {
+
+      return 0.0;
+
+    } else {
+
+      return static_cast<double>(sum_offset_difference_) / static_cast<double>(active_offset_count_);
+
+    }
+
+  }
+
+private:
+
+  size_t SNP_count_{0};
+  size_t variant_count_{0};
+  size_t max_offset_difference_{0};
+  size_t active_offset_count_{0};
+  size_t sum_offset_difference_{0};
+
+  constexpr static const size_t ARRAY_VARIANT_COUNT_ = 5;
+  std::vector<size_t> array_variant_count_;
+
+};
 
 
-// Stub class for the interval analysis
+// Analysis class for interval analysis
 class IntervalAnalysis : public NullAnalysis {
 
 public:
@@ -49,7 +119,8 @@ private:
   size_t interval_size_{0};
   std::string output_file_name_;
 
-  using IntervalVector = std::vector<std::pair<size_t, size_t>>;
+  // First count is Variants the second is SNPs.
+  using IntervalVector = std::vector<IntervalData>;
   using IntervalMap = std::map<ContigId_t, IntervalVector>;
   IntervalMap interval_map_;
 

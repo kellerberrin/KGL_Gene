@@ -108,7 +108,7 @@ void kgl::IntervalAnalysis::setupIntervalStructure(std::shared_ptr<const GenomeR
 
     ContigSize_t contig_size = contig_ptr->contigSize();
     size_t vector_size = (contig_size / interval_size_) + 1;
-    auto result = interval_map_.insert(std::pair<ContigId_t, IntervalVector>(contig_id, IntervalVector(vector_size, {0,0})));
+    auto result = interval_map_.insert(std::pair<ContigId_t, IntervalVector>(contig_id, IntervalVector(vector_size)));
     if (not result.second) {
 
       ExecEnv::log().error("IntervalAnalysis::setupIntervalStructure, Genome: {} Duplicate contig: {}", genome->genomeId(), contig_id);
@@ -136,6 +136,7 @@ bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const UnphasedP
       }
 
       IntervalVector& interval_vector = result->second;
+      ContigOffset_t previous_offset = 0;
       for (auto const& [offset, array] : contig_ptr->getMap()) {
 
         size_t count_index = offset /  interval_size_;
@@ -146,18 +147,25 @@ bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const UnphasedP
 
         }
 
-
-        interval_vector[count_index].first += array.size();
+        ContigSize_t offset_difference = offset - previous_offset;
+        interval_vector[count_index].offsetDifference(offset_difference);
+        interval_vector[count_index].addVariantCount(array.size());
+        interval_vector[count_index].addArrayVariantCount(array.size());
         variant_count += array.size();
+        size_t snp_count{0};
+
         for (auto const& variant : array) {
 
           if (variant->isSNP()) {
 
-            ++interval_vector[count_index].second;
+            ++snp_count;
 
           }
 
         } // array
+
+        interval_vector[count_index].addSNPCount(snp_count);
+        previous_offset = offset;
 
       } // offset
 
@@ -210,13 +218,22 @@ bool kgl::IntervalAnalysis::writeHeader(std::ostream& output, char delimiter, bo
   output << "Interval_size" << delimiter;
   output << "Snp_count" << delimiter;
   output << "Variant_count" << delimiter;
+  output << "Variant=1" << delimiter;
+  output << "Variant=2" << delimiter;
+  output << "Variant=3" << delimiter;
+  output << "Variant=4" << delimiter;
+  output << "Variant>=5" << delimiter;
+  output << "MaxNoVariant" << delimiter;
+  output << "AvNoVariant" << delimiter;
+  std::vector<DNA5::Alphabet> symbols = DNA5::enumerateAlphabet();
+  for (auto const symbol : symbols) {
+
+    output << static_cast<char>(symbol) << delimiter;
+
+  }
   output << "LempelZiv" << delimiter;
   output << "ShannonEntropy" << delimiter;
-  output << "CpG" << delimiter;
-  output << "A%" << delimiter;
-  output << "C%" << delimiter;
-  output << "G%" << delimiter;
-  output << "T%";
+  output << "CpG";
 
   if (display_sequence) {
 
@@ -240,90 +257,111 @@ bool kgl::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
 
   for (auto [contig_id, contig_ptr] : genome_db->getMap()) {
 
-    ContigOffset_t contig_from = 0;
-    ContigSize_t contig_size = contig_ptr->contigSize();
-    ContigOffset_t contig_to = interval_size_ + contig_from;
+
     auto contig_iter  = interval_map_.find(contig_id);
-    size_t count_index = 0;
+    if (contig_iter == interval_map_.end()) {
 
-    if (contig_iter != interval_map_.end()) {
-
-      const IntervalVector& interval_vector = contig_iter->second;
-      while (contig_from < contig_size) {
-
-        output << contig_id << delimiter;
-        output << contig_from << delimiter;
-        output << (contig_to - contig_from) << delimiter;
-
-        output << interval_vector[count_index].second << delimiter; // snp
-        output << interval_vector[count_index].first << delimiter; // variant
-
-
-        if (contig_to >= contig_ptr->contigSize()) {
-
-          ExecEnv::log().info("IntervalAnalysis::writeData; processed contig: {}", contig_id);
-
-        }
-
-        size_t interval_size = contig_to - contig_from;
-
-        DNA5SequenceLinear sequence = contig_ptr->sequence_ptr()->subSequence(contig_from, interval_size);
-        if (sequence.length() == 0) {
-
-          ExecEnv::log().info("IntervalAnalysis::writeData; zero sized sequence, offset: {}, size: {}, contig: {} contig size: {}",
-                              contig_from, interval_size, contig_id, contig_ptr->contigSize());
-
-        }
-
-        if (sequence.length() != interval_size) {
-
-          ExecEnv::log().error("IntervalAnalysis::writeData; unexpected sequence size: {} returned from contig: {}, offset: {}, size: {}",
-                               sequence.length(), contig_id, contig_from, interval_size);
-          break;
-
-        }
-
-        output << SequenceComplexity::complexityLempelZiv(sequence) << delimiter;
-        output << SequenceComplexity::alphabetEntropy<DNA5>(sequence) << delimiter;
-        output << SequenceComplexity::relativeCpGIslands(sequence) << delimiter;
-        double A_prop;
-        double C_prop;
-        double G_prop;
-        double T_prop;
-        SequenceComplexity::proportionNucleotides(sequence, A_prop, C_prop, G_prop, T_prop);
-        output << (A_prop * 100.0) << delimiter;
-        output << (C_prop * 100.0) << delimiter;
-        output << (G_prop * 100.0) << delimiter;
-        output << (T_prop * 100.0);
-
-        if (display_sequence) {
-
-          output << delimiter << sequence.getSequenceAsString() << '\n';
-
-        } else {
-
-          output << '\n';
-
-        }
-
-        contig_from = contig_to;
-        if (contig_to + interval_size < contig_size) {
-
-          contig_to += interval_size;
-
-        } else {
-
-          contig_to = contig_size;
-
-        }
-
-        ++count_index;
-
-      }
+      ExecEnv::log().error("IntervalAnalysis::writeData; could not find variant interval vector for contig: {}", contig_id);
+      continue; // next contig.
 
     }
 
-  }
+    const IntervalVector& interval_vector = contig_iter->second;
+
+    if (interval_vector.empty()) {
+
+      ExecEnv::log().warn("IntervalAnalysis::writeData; zero sized interval vector for contig: {}", contig_id);
+      continue; // next contig.
+
+    }
+
+    ExecEnv::log().info("IntervalAnalysis::writeData; processing contig: {}", contig_id);
+    ContigOffset_t contig_offset = 0;
+    ContigSize_t contig_size = contig_ptr->contigSize();
+
+    for (size_t count_index = 0; count_index <  interval_vector.size(); ++count_index) {
+
+      if (contig_offset > contig_size) {
+
+        ExecEnv::log().error("IntervalAnalysis::writeData; calculated offset; {} exceeds contig size: {}", contig_offset, contig_size);
+        break;
+
+      }
+
+      size_t interval_size = 0;
+      if ((contig_offset + interval_size_) <  contig_size) {
+
+        interval_size =  interval_size_;
+
+      } else {
+
+        interval_size = contig_size - contig_offset;
+
+      }
+
+      DNA5SequenceLinear sequence = contig_ptr->sequence_ptr()->subSequence(contig_offset, interval_size);
+      if (sequence.length() == 0) {
+
+        ExecEnv::log().warn("IntervalAnalysis::writeData; zero sized sequence, offset: {}, size: {}, contig: {} contig size: {}",
+                            contig_offset, interval_size, contig_id, contig_ptr->contigSize());
+        break;
+
+      }
+
+      if (sequence.length() != interval_size) {
+
+        ExecEnv::log().error("IntervalAnalysis::writeData; unexpected sequence size: {} returned from contig: {}, offset: {}, size: {}",
+                             sequence.length(), contig_id, contig_offset, interval_size);
+        break;
+
+      }
+
+      output << contig_id << delimiter;
+      output << contig_offset << delimiter;
+      output << contig_offset + interval_size << delimiter;
+
+      output << interval_vector[count_index].SNPCount() << delimiter; // snp
+      output << interval_vector[count_index].variantCount() << delimiter; // variant
+      output << interval_vector[count_index].arrayVariantCount()[0] << delimiter;
+      output << interval_vector[count_index].arrayVariantCount()[1] << delimiter;
+      output << interval_vector[count_index].arrayVariantCount()[2] << delimiter;
+      output << interval_vector[count_index].arrayVariantCount()[3] << delimiter;
+      output << interval_vector[count_index].arrayVariantCount()[4] << delimiter;
+      output << interval_vector[count_index].maxOffsetDifference() << delimiter;
+      output << interval_vector[count_index].meanOffsetDifference() << delimiter;
+
+      // count the symbols in the sequence
+      const std::vector<std::pair<DNA5::Alphabet, size_t>>& symbol_vector = sequence.countSymbols();
+
+      for (auto const& count : symbol_vector) {
+
+        output << (static_cast<double>(count.second) * 100.0) / static_cast<double>(sequence.length()) << delimiter;
+
+      }
+
+      output << -1 << delimiter;
+//      output << SequenceComplexity::complexityLempelZiv(sequence) << delimiter;
+      output << SequenceComplexity::alphabetEntropy<DNA5>(sequence, symbol_vector) << delimiter;
+      output << SequenceComplexity::relativeCpGIslands(sequence);
+      // Output the relative symbol proportions.
+
+      if (display_sequence) {
+
+        output << delimiter << sequence.getSequenceAsString() << '\n';
+
+      } else {
+
+        output << '\n';
+
+      }
+
+      contig_offset += interval_size; // next interval;
+
+    } // offset within contig.
+
+    ExecEnv::log().info("IntervalAnalysis::writeData; processed contig: {}", contig_id);
+
+  } // contig
 
   return output.good();
 

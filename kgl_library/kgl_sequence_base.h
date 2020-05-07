@@ -84,7 +84,6 @@ class DNA5SequenceLinear: public  AlphabetSequence<DNA5> {
 
 public:
 
-
   DNA5SequenceLinear(DNA5SequenceLinear&& sequence) noexcept : AlphabetSequence<DNA5>(std::move(sequence)) {}
   explicit DNA5SequenceLinear(StringDNA5&& sequence_string) :  AlphabetSequence<DNA5>(std::move(sequence_string)) {}
   DNA5SequenceLinear() = default; // Empty sequences permitted.

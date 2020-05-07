@@ -159,7 +159,8 @@ bool kgl::AggregateVariantDistribution::writeHeader(std::ostream& output, char d
   output << "Prop_A" << delimiter;
   output << "Prop_C" << delimiter;
   output << "Prop_G" << delimiter;
-  output << "Prop_T";
+  output << "Prop_T" << delimiter;
+  output << "Prop_N";
 
   if (display_sequence) {
 
@@ -271,17 +272,15 @@ bool kgl::AggregateVariantDistribution::writeData(std::shared_ptr<const GenomeRe
         }
 
         output << SequenceComplexity::complexityLempelZiv(sequence) << delimiter;
-        output << SequenceComplexity::alphabetEntropy<DNA5>(sequence) << delimiter;
+        // count the symbols in the sequence
+        const std::vector<std::pair<DNA5::Alphabet, size_t>>& symbol_vector = sequence.countSymbols();
+        output << SequenceComplexity::alphabetEntropy<DNA5>(sequence, symbol_vector) << delimiter;
         output << SequenceComplexity::relativeCpGIslands(sequence) << delimiter;
-        double A_prop;
-        double C_prop;
-        double G_prop;
-        double T_prop;
-        SequenceComplexity::proportionNucleotides(sequence, A_prop, C_prop, G_prop, T_prop);
-        output << A_prop << delimiter;
-        output << C_prop << delimiter;
-        output << G_prop << delimiter;
-        output << T_prop;
+        for (auto const& count : symbol_vector) {
+
+          output << (static_cast<double>(count.second) * 100.0) / static_cast<double>(sequence.length()) << delimiter;
+
+        }
 
         if (display_sequence) {
 

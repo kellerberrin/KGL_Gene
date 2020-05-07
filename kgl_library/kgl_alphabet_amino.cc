@@ -52,6 +52,48 @@ kgl::AminoAcid::Alphabet kgl::AminoAcid::convertChar(char chr_base) {
 }
 
 
+// Covert alphabet symbol to an offset, used with the function above to create and access vectors of AA symbols.
+kgl::ContigOffset_t kgl::AminoAcid::symbolToColumn(Alphabet amino) {
+
+  // Translate the nucleotide to an array column
+  switch (amino) {
+
+    case Alphabet::F: return PHENYLALANINE_OFFSET;
+    case Alphabet::L: return LEUCINE_OFFSET;
+    case Alphabet::S: return SERINE_OFFSET;
+    case Alphabet::Y: return TYROSINE_OFFSET;
+    case Alphabet::C: return CYSTEINE_OFFSET;
+    case Alphabet::W: return TRYPTOPHAN_OFFSET;
+    case Alphabet::P: return PROLINE_OFFSET;
+    case Alphabet::H: return HISTIDINE_OFFSET;
+    case Alphabet::Q: return GLUTAMINE_OFFSET;
+    case Alphabet::R: return ARGININE_OFFSET;
+    case Alphabet::I: return ISOLEUCINE_OFFSET;
+    case Alphabet::M: return METHIONINE_OFFSET;
+    case Alphabet::T: return THREONINE_OFFSET;
+    case Alphabet::N: return ASPARAGINE_OFFSET;
+    case Alphabet::K: return LYSINE_OFFSET;
+    case Alphabet::V: return VALINE_OFFSET;
+    case Alphabet::A: return ALANINE_OFFSET;
+    case Alphabet::D: return ASPARTIC_OFFSET;
+    case Alphabet::E: return GLUTAMIC_OFFSET;
+    case Alphabet::G: return GLYCINE_OFFSET;
+      // The three stop codons.
+    case Alphabet::_: return STOP_CODON_OFFSET;
+      // The special unknown amino acid generated when the DNA5 codon
+      // contains the unknown base 'N'.
+    case Alphabet::Z: return UNKNOWN_AMINO_OFFSET;
+
+    default:
+      ExecEnv::log().error("AminoAcid::Alphabet(), Invalid amino symbol: {}", static_cast<char>(amino));
+      return UNKNOWN_AMINO_OFFSET;
+
+  }
+
+}
+
+
+
 bool kgl::AminoAcid::validAlphabet(Alphabet amino) {
 
   auto int_value = static_cast<size_t>(amino);
@@ -78,8 +120,8 @@ bool kgl::AminoAcid::validAlphabet(Alphabet amino) {
                  or int_value == static_cast<size_t>(Alphabet::D)
                  or int_value == static_cast<size_t>(Alphabet::E)
                  or int_value == static_cast<size_t>(Alphabet::G)
-                 or int_value == static_cast<size_t>(Alphabet::U)
-                 or int_value == static_cast<size_t>(Alphabet::O)
+//                 or int_value == static_cast<size_t>(Alphabet::U)
+//                 or int_value == static_cast<size_t>(Alphabet::O)
                  or int_value == static_cast<size_t>(Alphabet::_)
                  or int_value == static_cast<size_t>(Alphabet::Z);
 
@@ -88,38 +130,31 @@ bool kgl::AminoAcid::validAlphabet(Alphabet amino) {
 }
 
 
-std::vector<kgl::AminoAcid::Alphabet> kgl::AminoAcid::enumerateAlphabet() {
+const std::vector<kgl::AminoAcid::Alphabet>& kgl::AminoAcid::enumerateAlphabet() {
 
-  std::vector<Alphabet> alphabet_vector;
-
-  alphabet_vector.emplace_back(Alphabet::F);
-  alphabet_vector.emplace_back(Alphabet::L);
-  alphabet_vector.emplace_back(Alphabet::S);
-  alphabet_vector.emplace_back(Alphabet::Y);
-  alphabet_vector.emplace_back(Alphabet::C);
-  alphabet_vector.emplace_back(Alphabet::W);
-  alphabet_vector.emplace_back(Alphabet::P);
-  alphabet_vector.emplace_back(Alphabet::H);
-  alphabet_vector.emplace_back(Alphabet::Q);
-  alphabet_vector.emplace_back(Alphabet::R);
-  alphabet_vector.emplace_back(Alphabet::I);
-  alphabet_vector.emplace_back(Alphabet::M);
-  alphabet_vector.emplace_back(Alphabet::T);
-  alphabet_vector.emplace_back(Alphabet::N);
-  alphabet_vector.emplace_back(Alphabet::K);
-  alphabet_vector.emplace_back(Alphabet::V);
-  alphabet_vector.emplace_back(Alphabet::A);
-  alphabet_vector.emplace_back(Alphabet::D);
-  alphabet_vector.emplace_back(Alphabet::E);
-  alphabet_vector.emplace_back(Alphabet::G);
-  // The special unknown amino acid generated when the DNA5 codon
-  // contains the unknown base 'N'.
-  alphabet_vector.emplace_back(Alphabet::Z);
-  // Generic stop codon.
-  alphabet_vector.emplace_back(Alphabet::_);
+  static std::vector<Alphabet> alphabet_vector = { Alphabet::F,
+                                                   Alphabet::L,
+                                                   Alphabet::S,
+                                                   Alphabet::Y,
+                                                   Alphabet::C,
+                                                   Alphabet::W,
+                                                   Alphabet::P,
+                                                   Alphabet::H,
+                                                   Alphabet::Q,
+                                                   Alphabet::R,
+                                                   Alphabet::I,
+                                                   Alphabet::M,
+                                                   Alphabet::T,
+                                                   Alphabet::N,
+                                                   Alphabet::K,
+                                                   Alphabet::V,
+                                                   Alphabet::A,
+                                                   Alphabet::D,
+                                                   Alphabet::E,
+                                                   Alphabet::G,
+                                                   Alphabet::_, // Generic stop codon.
+                                                   Alphabet::Z };   // Unknown amino acid generated when the DNA5 codon contains the unknown base 'N'.
 
   return alphabet_vector;
-
-
 
 }
