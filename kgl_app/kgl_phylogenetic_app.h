@@ -14,12 +14,12 @@
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
-// Holds the Phylogenetic Commandline Arguments.
+// Holds the Commandline Arguments.
 struct Phylogenetic {
 
-  std::string workDirectory{"./Work"};
+  std::string workDirectory{"./"};
   std::string logFile{"kgl_phylo.log"};
-  std::string analysisType{""};
+  std::string options_file{"runtime_options.xml"};
   int max_error_count{1000};
   int max_warn_count{1000};
   bool verbose{false};

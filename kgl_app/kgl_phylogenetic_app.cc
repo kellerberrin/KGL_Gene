@@ -123,7 +123,7 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   }
 
   // Analyze the data.
-  kgl::PhylogeneticAnalysis(runtime_options, genome_collection, unphased_population_ptr, population_ptr).performAnalysis(args.analysisType);
+  kgl::PhylogeneticAnalysis(runtime_options, genome_collection, unphased_population_ptr, population_ptr).performAnalysis("INTERVAL");
 
 }
 

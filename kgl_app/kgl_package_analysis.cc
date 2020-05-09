@@ -76,6 +76,8 @@ bool kgl::PackageAnalysis::iterateAnalysis(std::shared_ptr<const GenomeCollectio
 
   for (auto& [analysis, active] : active_analysis_) {
 
+    ExecEnv::log().info("PackageAnalysis::iterateAnalysis; Updating Analysis: {}", analysis->ident());
+
     if (active) {
 
       if (not analysis->iterateAnalysis(reference_genomes, vcf_iterative_data)) {

@@ -383,3 +383,33 @@ std::pair<size_t, size_t> kgl::UnphasedPopulation::mergeUniquePopulation(const s
 
 }
 
+std::shared_ptr<kgl::UnphasedGenome> kgl::UnphasedPopulation::compressPopulation() const {
+
+  std::shared_ptr<kgl::UnphasedGenome> compressedGenome(std::make_shared<UnphasedGenome>("Compressed"));
+
+  for (auto const& genome : getMap()) {
+
+    for (auto const& contig : genome.second->getMap()) {
+
+      for (auto const& variant_vector : contig.second->getMap()) {
+
+        for (auto const& variant_ptr : variant_vector.second) {
+
+          if (not compressedGenome->addVariant(variant_ptr)) {
+
+            ExecEnv::log().error("UnphasedPopulation::compressPopulation(); Cannot Add variant: {}",
+            variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false));
+
+          }
+
+        }
+
+      }
+
+    }
+
+  }
+
+  return  compressedGenome;
+
+}

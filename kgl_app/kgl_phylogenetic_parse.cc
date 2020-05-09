@@ -65,10 +65,10 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   addOption(parser, seqan::ArgParseOption(workDirectoryShortFlag_, workDirectoryFlag_, dir_desc, seqan::ArgParseArgument::OUTPUT_DIRECTORY, "DIRECTORY"));
 
   const char* option_desc =
-  R"(Specifies the options file. This file contains all runtime options. The file path is relative to the work directory)";
+  R"(Specifies the options file (default "Runtime_Options.xml"). This file contains all runtime options. The file path is relative to the work directory)";
 
   const char* optionFlag_ = "optionFile";
-  const char* optionShortFlag_ = "e";
+  const char* optionShortFlag_ = "o";
 
   addOption(parser, seqan::ArgParseOption(optionShortFlag_, optionFlag_, option_desc, seqan::ArgParseArgument::INPUT_FILE, "OPTION_FILE"));
 
@@ -81,14 +81,6 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
   addOption(parser, seqan::ArgParseOption(logFileShortFlag_, logFileFlag_, log_desc, seqan::ArgParseArgument::OUTPUT_FILE, "LOG_FILE"));
 
-  const char* newlog_desc =
-  R"(Flush an existing log file (file name argument optional, (default "kgl_snp.log").
-  The log file always resides in the work directory.)";
-
-  const char* newLogFileFlag_ = "newLogFile";
-  const char* newLogFileShortFlag_ = "n";
-
-  addOption(parser, seqan::ArgParseOption(newLogFileShortFlag_, newLogFileFlag_, newlog_desc, seqan::ArgParseArgument::OUTPUT_FILE, "TRUNC_LOG_FILE"));
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -96,23 +88,6 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-  const char* analysis_desc =
-      R"(Define which genome analytic to perform. Defaults to '*' for all analytics.)";
-
-  const char* analysisFlag_ = "analysisType";
-  const char* analysisShortFlag_ = "z";
-
-  addOption(parser, seqan::ArgParseOption(analysisShortFlag_, analysisFlag_, analysis_desc, seqan::ArgParseArgument::STRING, "ANALYSIS_TYPE"));
-
-  const char* outCSV_desc =
-      R"(Input an comma delimiter CSV file for further, analysis specific, processing, (default "/...WorkDirectory.../kgl_aux.csv").
-  This file is always relative to the work directory.)";
-
-  const char* CSVFileFlag_ = "auxCSVFile";
-  const char* CSVFileShortFlag_ = "o";
-
-  addOption(parser, seqan::ArgParseOption(CSVFileShortFlag_, CSVFileFlag_, outCSV_desc, seqan::ArgParseArgument::OUTPUT_FILE, "AUX_CSV_FILE"));
 
   const char* verbose_desc =
       R"(Flag. Enables verbose logged output to screen and log file.)";
@@ -163,28 +138,20 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   }
 
   // Get the log or newlog fields.
-  if (seqan::isSet(parser, newLogFileFlag_)) {
+  if (seqan::isSet(parser, logFileFlag_)) {
 
     std::string log_file_name;
-    seqan::getOptionValue(log_file_name, parser, newLogFileFlag_);
+    seqan::getOptionValue(log_file_name, parser, logFileFlag_);
     // Join the log file and the directory
     fs::path log_file_path = directory_path / fs::path(log_file_name);
     // truncate the log file.
     std::fstream log_file(log_file_path.string(), std::fstream::out | std::fstream::trunc);
     if(!log_file)
     {
-      std::cerr << "Cannot open truncated log file (--newLogFile):" << log_file_path.string() << std::endl;
+      std::cerr << "Cannot open log file (--logFile):" << log_file_path.string() << std::endl;
       std::cerr << MODULE_NAME << " exits" << std::endl;
       std::exit(EXIT_FAILURE);
     }
-    args_.logFile = log_file_path.string();
-
-  } else if (seqan::isSet(parser, logFileFlag_)) {
-
-    std::string log_file_name;
-    seqan::getOptionValue(log_file_name, parser, logFileFlag_);
-    // Join the log file and the directory
-    fs::path log_file_path = directory_path / fs::path(log_file_name);
     args_.logFile = log_file_path.string();
 
   } else { // log file not specified - join default log file to the work directory.
@@ -201,20 +168,18 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
 
     std::string options_file;
     seqan::getOptionValue(options_file, parser, optionFlag_);
-    runtime_options_.setWorkDirectory(args_.workDirectory);
-    if (not runtime_options_.readProperties(options_file)) {
+    args_.options_file = options_file;
+  }
 
-      std::string options_file_path = Utility::filePath(options_file, args_.workDirectory);
-      ExecEnv::log().critical("parseCommandLine; could not read specified runtime properties file: {}", options_file_path);
+  runtime_options_.setWorkDirectory(args_.workDirectory);
+  if (not runtime_options_.readProperties(args_.options_file)) {
 
-    }
+    std::string options_file_path = Utility::filePath(args_.options_file, args_.workDirectory);
+    ExecEnv::log().critical("parseCommandLine; could not read specified runtime properties file: {}", options_file_path);
 
   }
 
 
-  if (seqan::isSet(parser, analysisFlag_)) seqan::getOptionValue(args_.analysisType, parser, analysisFlag_);
-
-  args_.analysisType = Utility::toupper(args_.analysisType);
 
   if (seqan::isSet(parser, verboseFlag_)) seqan::getOptionValue(args_.verbose, parser, verboseFlag_);
 

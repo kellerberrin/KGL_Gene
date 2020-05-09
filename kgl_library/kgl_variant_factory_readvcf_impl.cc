@@ -18,15 +18,6 @@ void kgl::VCFReaderMT::readHeader() {
 void kgl::VCFReaderMT::readVCFFile() {
 
 
-  // Spawn consumer threads.
-  consumer_thread_count_ = std::thread::hardware_concurrency() - 1;
-
-  // Spawn a maximum number of consumers.
-  consumer_thread_count_ = consumer_thread_count_ > MAX_CONSUMER_THREADS_? MAX_CONSUMER_THREADS_ : consumer_thread_count_;
-
-  // Spawn a minimum of 1 consumers.
-  consumer_thread_count_ = consumer_thread_count_ < MIN_CONSUMER_THREADS_ ? MIN_CONSUMER_THREADS_ : consumer_thread_count_;
-
   ExecEnv::log().info("Parse Header VCF file: {}", vcf_io_.getFileName());
 
   readHeader();

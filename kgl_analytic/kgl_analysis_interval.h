@@ -14,76 +14,61 @@
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Stores statistical data per interval
-
 class IntervalData{
 
 public:
 
-  IntervalData() : array_variant_count_(ARRAY_VARIANT_COUNT_, 0) {}
+  IntervalData(ContigId_t contig_id, ContigOffset_t offset, ContigSize_t interval)
+  : contig_id_(std::move(contig_id)),
+    offset_(offset),
+    interval_(interval),
+    array_variant_count_(ARRAY_VARIANT_COUNT_, 0) {}
   ~IntervalData() = default;
 
-  void addSNPCount(size_t SNP_count) { SNP_count_ += SNP_count; }
+  [[nodiscard]] ContigId_t contigId() const { return contig_id_; }
+  [[nodiscard]] ContigOffset_t offset() const { return offset_; }
+  [[nodiscard]] ContigSize_t interval() const { return interval_; }
+  // Total SNPs
+  void addSNPCount(const size_t SNP_count) { SNP_count_ += SNP_count; }
   [[nodiscard]] size_t SNPCount() const { return SNP_count_; }
 
-  void addVariantCount(size_t variant_count) { variant_count_ += variant_count; }
+  // Total variants
+  void addVariantCount(const size_t variant_count) { variant_count_ += variant_count; }
   [[nodiscard]] size_t variantCount() const { return variant_count_; }
+  // Number of discrete offsets with variants.
+  [[nodiscard]] size_t variantOffsetCount() const { return variant_offset_count_; }
 
-  void addArrayVariantCount(size_t size) {
-
-    if (size < ARRAY_VARIANT_COUNT_) {
-
-      ++array_variant_count_[size - 1];
-
-    } else {
-
-      ++array_variant_count_[ARRAY_VARIANT_COUNT_ - 1];
-
-    }
-
-  }
+  // No of variants per offset site.
+  void addArrayVariantCount(size_t size) ;
   [[nodiscard]] const std::vector<size_t>& arrayVariantCount() const { return array_variant_count_; }
-  void offsetDifference(size_t offset_difference) {
 
-    if (offset_difference > max_offset_difference_) {
-
-      max_offset_difference_ = offset_difference;
-
-    }
-
-    ++active_offset_count_;
-    sum_offset_difference_ += offset_difference;
-
-  }
-  [[nodiscard]] size_t maxOffsetDifference() const { return max_offset_difference_; }
-  [[nodiscard]] double meanOffsetDifference() const {
-
-    if (active_offset_count_ == 0) {
-
-      return 0.0;
-
-    } else {
-
-      return static_cast<double>(sum_offset_difference_) / static_cast<double>(active_offset_count_);
-
-    }
-
-  }
+  // Update the offset and variant empty interval.
+  void emptyIntervalOffset(const ContigOffset_t& previous_variant_offset, const ContigOffset_t& variant_offset);
+  // .first is the offset address (end of the empty zone), .second is the zone size.
+  [[nodiscard]] std::pair<ContigOffset_t, ContigSize_t> maxEmptyInterval() const { return max_empty_interval_; }
+  // The mean variant empty interval.
+  [[nodiscard]] double meanEmptyInterval() const;
 
 private:
 
+  const ContigId_t contig_id_;
+  const ContigOffset_t offset_; // offset with the contig.
+  const ContigSize_t interval_; // size of this interval.
+
   size_t SNP_count_{0};
   size_t variant_count_{0};
-  size_t max_offset_difference_{0};
-  size_t active_offset_count_{0};
-  size_t sum_offset_difference_{0};
+  std::pair<ContigOffset_t , SignedOffset_t> max_empty_interval_{0, 0};
+  size_t variant_offset_count_{0};
+  size_t sum_empty_interval_{0};
 
   constexpr static const size_t ARRAY_VARIANT_COUNT_ = 5;
   std::vector<size_t> array_variant_count_;
 
 };
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Analysis class for interval analysis
 class IntervalAnalysis : public NullAnalysis {
 

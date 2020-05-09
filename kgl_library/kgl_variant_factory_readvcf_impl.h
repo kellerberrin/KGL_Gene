@@ -44,10 +44,7 @@ public:
 private:
 
   RecordVCFIO vcf_io_;                                   // VCF record queue.
-  size_t consumer_thread_count_{2};                      // Consumer threads (defaults to local CPU cores available or max)
-  static constexpr const int MAX_CONSUMER_THREADS_{4};     // Max consumer threads. Spawning more threads does not increase performance
-  static constexpr const int MIN_CONSUMER_THREADS_{1};     // Need at least 1 consumer thread
-
+  size_t consumer_thread_count_{8};                      // Consumer threads
 
   void readHeader();
   // Call the template VCF consumer class

@@ -37,6 +37,14 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
   // Parse the info fields into an array and assign to a shared ptr.
   //  auto mutable_info = const_cast<std::string&>(vcf_record.info);
   //  std::shared_ptr<std::string> info_ptr = std::make_shared<std::string>(std::move(mutable_info));
+
+  std::map<std::string, std::string> info_key_value_map;
+  if (not ParseVCFMiscImpl::tokenizeVcfInfoKeyValues(vcf_record.info, info_key_value_map)) {
+
+    ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord; Unable to parse VCF record info field: {}", vcf_record.info);
+
+  }
+
   std::shared_ptr<std::string> null_str_ptr = std::make_shared<std::string>("");
   // Evidence object
   std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<VariantEvidence>(null_str_ptr, vcf_record_count));
@@ -102,7 +110,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
   if (vcf_record_count % VARIANT_REPORT_INTERVAL_ == 0) {
 
-    ExecEnv::log().info("Processed :{} records, total variants: {}", vcf_record_count, variant_count_);
+    ExecEnv::log().info("Processed :{} records, total variants: {}, info map size: {}", vcf_record_count, variant_count_, info_key_value_map.size());
     ExecEnv::log().info("Contig: {}, offset: {}", contig, vcf_record.offset);
 
   }

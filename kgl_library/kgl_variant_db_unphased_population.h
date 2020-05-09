@@ -48,7 +48,7 @@ public:
 
   void clear() { genome_map_.clear(); }
 
-  // Generate phasing statitics.
+  // Generate phasing statistics (only valid with ploidy 2 variants).
   [[nodiscard]] bool genomePhasingStats( const GenomeId_t& genome_id,
                                          size_t& heterozygous,
                                          size_t& homozygous,
@@ -77,6 +77,8 @@ public:
   [[nodiscard]] std::pair<size_t, size_t> mergeUniqueGenome(const std::shared_ptr<const UnphasedGenome> genome);
   // Merge unique variants into a population.
   [[nodiscard]] std::pair<size_t, size_t> mergeUniquePopulation(const std::shared_ptr<const UnphasedPopulation> population);
+  // Compress a population into a single genome. Done when generating aggregate variant statistics for a population.
+  [[nodiscard]] std::shared_ptr<UnphasedGenome> compressPopulation() const;
 
 private:
 

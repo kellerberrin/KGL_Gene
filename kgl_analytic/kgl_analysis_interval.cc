@@ -10,6 +10,65 @@
 
 namespace kgl = kellerberrin::genome;
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// IntervalData members.
+
+void kgl::IntervalData::addArrayVariantCount(size_t size) {
+
+  if (size < ARRAY_VARIANT_COUNT_) {
+
+    ++array_variant_count_[size - 1];
+
+  } else {
+
+    ++array_variant_count_[ARRAY_VARIANT_COUNT_ - 1];
+
+  }
+
+  ++variant_offset_count_;
+
+}
+
+void kgl::IntervalData::emptyIntervalOffset(const ContigOffset_t& previous_variant_offset, const ContigOffset_t& variant_offset) {
+
+  if (variant_offset < offset() or variant_offset >= (offset() + interval())) {
+
+    ExecEnv::log().error("IntervalData::emptyIntervalOffset; Contig: {}, Offset: {} out of Range, Interval Offset: {}, Interval size: {}",
+                         contigId(), variant_offset, offset(), interval());
+
+  }
+
+  ContigSize_t relative_offset = variant_offset - offset();
+  SignedOffset_t empty_interval = variant_offset - previous_variant_offset;
+
+  if (empty_interval < 0) {
+
+    ExecEnv::log().error("IntervalData::emptyIntervalOffset; Contig: {}, Negative Interval : {}, Offset : {}, Previous Offset : {}",
+                        contigId(), empty_interval, variant_offset, previous_variant_offset);
+    return;
+
+  }
+
+  if (empty_interval > max_empty_interval_.second) {
+
+    max_empty_interval_.first = relative_offset;
+    max_empty_interval_.second = empty_interval;
+
+  }
+
+  sum_empty_interval_ += empty_interval;
+
+}
+
+double kgl::IntervalData::meanEmptyInterval() const {
+
+  return static_cast<double>(sum_empty_interval_) / static_cast<double>(variant_offset_count_ + 1);
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// IntervalAnalysis members.
+
 
 // Setup the analytics to process VCF data.
 bool kgl::IntervalAnalysis::initializeAnalysis( const std::string& work_directory,
@@ -108,7 +167,15 @@ void kgl::IntervalAnalysis::setupIntervalStructure(std::shared_ptr<const GenomeR
 
     ContigSize_t contig_size = contig_ptr->contigSize();
     size_t vector_size = (contig_size / interval_size_) + 1;
-    auto result = interval_map_.insert(std::pair<ContigId_t, IntervalVector>(contig_id, IntervalVector(vector_size)));
+    IntervalVector interval_vector;
+    for (size_t index = 0; index < vector_size; ++index) {
+
+      ContigOffset_t offset = index *  interval_size_;
+      ContigSize_t size = (contig_size - offset) >= interval_size_ ? interval_size_ : (contig_size - offset);
+      interval_vector.emplace_back(contig_id, offset, size);
+
+    }
+    auto result = interval_map_.insert(std::pair<ContigId_t, IntervalVector>(contig_id, std::move(interval_vector)));
     if (not result.second) {
 
       ExecEnv::log().error("IntervalAnalysis::setupIntervalStructure, Genome: {} Duplicate contig: {}", genome->genomeId(), contig_id);
@@ -122,39 +189,42 @@ void kgl::IntervalAnalysis::setupIntervalStructure(std::shared_ptr<const GenomeR
 
 bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const UnphasedPopulation> population_ptr) {
 
+// We are profiling variants against a reference genome. Therefore we need to compress the population of variants
+// into a single genome.
+  std::shared_ptr<const UnphasedGenome> compressed_genome = population_ptr->compressPopulation();
+
   size_t variant_count{0};
-  for (auto const& genome : population_ptr->getMap()) {
+  // For contigs in the compressed genome.
+  for (auto const& [contig_id, contig_ptr] : compressed_genome->getMap()) {
 
-    for (auto const& [contig_id, contig_ptr] : genome.second->getMap()) {
+    auto result = interval_map_.find(contig_id);
+    if (result == interval_map_.end()) {
 
-      auto result = interval_map_.find(contig_id);
-      if (result == interval_map_.end()) {
+      ExecEnv::log().error("IntervalAnalysis::variantIntervalCount; Cannot find contig: {} mismatch between Reference Genome and Variant Population", contig_id);
+      return false;
 
-        ExecEnv::log().error("IntervalAnalysis::variantIntervalCount; Cannot find contig: {} mismatch between Reference Genome and Variant Population");
-        return false;
+    }
 
-      }
+    IntervalVector& interval_vector = result->second;
+    // For all intervals.
+    for (auto& interval_data : interval_vector) {
 
-      IntervalVector& interval_vector = result->second;
-      ContigOffset_t previous_offset = 0;
-      for (auto const& [offset, array] : contig_ptr->getMap()) {
+      auto lower_bound = contig_ptr->getMap().lower_bound(interval_data.offset());
+      ContigOffset_t upperbound_offset = interval_data.offset() + interval_data.interval() - 1;
+      auto upper_bound = contig_ptr->getMap().upper_bound(upperbound_offset);
 
-        size_t count_index = offset /  interval_size_;
-        if (count_index >= interval_vector.size()) {
+      // For all variant array within the interval.
+      ContigOffset_t previous_offset = interval_data.offset() - 1;
+      for (auto array_ptr = lower_bound; array_ptr != upper_bound; ++array_ptr) {
 
-          ExecEnv::log().error("IntervalAnalysis::variantIntervalCount; Calculated Offset: {} exceeds count array size: {}", count_index, result->second.size());
-          return false;
-
-        }
-
-        ContigSize_t offset_difference = offset - previous_offset;
-        interval_vector[count_index].offsetDifference(offset_difference);
-        interval_vector[count_index].addVariantCount(array.size());
-        interval_vector[count_index].addArrayVariantCount(array.size());
-        variant_count += array.size();
+        interval_data.emptyIntervalOffset(previous_offset, array_ptr->first); // Variant empty interval calculated from this.
+        interval_data.addVariantCount(array_ptr->second.size());
+        interval_data.addArrayVariantCount(array_ptr->second.size());
+        variant_count += array_ptr->second.size();
         size_t snp_count{0};
 
-        for (auto const& variant : array) {
+        // Count SNP.
+        for (auto const& variant : array_ptr->second) {
 
           if (variant->isSNP()) {
 
@@ -162,16 +232,19 @@ bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const UnphasedP
 
           }
 
-        } // array
+        } // count.
 
-        interval_vector[count_index].addSNPCount(snp_count);
-        previous_offset = offset;
+        interval_data.addSNPCount(snp_count);
+        previous_offset = array_ptr->first;
 
-      } // offset
+      } // variant array.
 
-    } // contig
+      // The empty interval to the end of the data interval.
+      interval_data.emptyIntervalOffset(previous_offset, upperbound_offset);
 
-  } // genome
+    } // interval
+
+  } // contig
 
   ExecEnv::log().info("IntervalAnalysis::variantIntervalCount; Variants processed: {}", variant_count);
 
@@ -216,22 +289,24 @@ bool kgl::IntervalAnalysis::writeHeader(std::ostream& output, char delimiter, bo
   output << "Contig" << delimiter;
   output << "Interval_start" << delimiter;
   output << "Interval_size" << delimiter;
-  output << "Snp_count" << delimiter;
   output << "Variant_count" << delimiter;
-  output << "Variant=1" << delimiter;
-  output << "Variant=2" << delimiter;
-  output << "Variant=3" << delimiter;
-  output << "Variant=4" << delimiter;
-  output << "Variant>=5" << delimiter;
-  output << "MaxNoVariant" << delimiter;
-  output << "AvNoVariant" << delimiter;
+  output << "Snp_count" << delimiter;
+  output << "Variant_offset" << delimiter;
+//  output << "Variant=1" << delimiter;
+//  output << "Variant=2" << delimiter;
+//  output << "Variant=3" << delimiter;
+//  output << "Variant=4" << delimiter;
+//  output << "Variant>=5" << delimiter;
+  output << "MaxEmptyOffset" << delimiter;
+  output << "MaxEmptyInterval" << delimiter;
+  output << "AvEmptyInterval" << delimiter;
   std::vector<DNA5::Alphabet> symbols = DNA5::enumerateAlphabet();
   for (auto const symbol : symbols) {
 
     output << static_cast<char>(symbol) << delimiter;
 
   }
-  output << "LempelZiv" << delimiter;
+//  output << "ZivLempel" << delimiter;
   output << "ShannonEntropy" << delimiter;
   output << "CpG";
 
@@ -316,19 +391,21 @@ bool kgl::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
 
       }
 
-      output << contig_id << delimiter;
-      output << contig_offset << delimiter;
-      output << contig_offset + interval_size << delimiter;
+      output << interval_vector[count_index].contigId() << delimiter;
+      output << interval_vector[count_index].offset() << delimiter;
+      output << interval_vector[count_index].interval() << delimiter;
 
-      output << interval_vector[count_index].SNPCount() << delimiter; // snp
       output << interval_vector[count_index].variantCount() << delimiter; // variant
-      output << interval_vector[count_index].arrayVariantCount()[0] << delimiter;
-      output << interval_vector[count_index].arrayVariantCount()[1] << delimiter;
-      output << interval_vector[count_index].arrayVariantCount()[2] << delimiter;
-      output << interval_vector[count_index].arrayVariantCount()[3] << delimiter;
-      output << interval_vector[count_index].arrayVariantCount()[4] << delimiter;
-      output << interval_vector[count_index].maxOffsetDifference() << delimiter;
-      output << interval_vector[count_index].meanOffsetDifference() << delimiter;
+      output << interval_vector[count_index].SNPCount() << delimiter; // snp
+      output << interval_vector[count_index].variantOffsetCount() << delimiter; // variant offsets.
+//      output << interval_vector[count_index].arrayVariantCount()[0] << delimiter;
+//      output << interval_vector[count_index].arrayVariantCount()[1] << delimiter;
+//      output << interval_vector[count_index].arrayVariantCount()[2] << delimiter;
+//      output << interval_vector[count_index].arrayVariantCount()[3] << delimiter;
+//      output << interval_vector[count_index].arrayVariantCount()[4] << delimiter;
+      output << interval_vector[count_index].maxEmptyInterval().first << delimiter;
+      output << interval_vector[count_index].maxEmptyInterval().second << delimiter;
+      output << interval_vector[count_index].meanEmptyInterval() << delimiter;
 
       // count the symbols in the sequence
       const std::vector<std::pair<DNA5::Alphabet, size_t>>& symbol_vector = sequence.countSymbols();
@@ -339,7 +416,6 @@ bool kgl::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
 
       }
 
-      output << -1 << delimiter;
 //      output << SequenceComplexity::complexityLempelZiv(sequence) << delimiter;
       output << SequenceComplexity::alphabetEntropy<DNA5>(sequence, symbol_vector) << delimiter;
       output << SequenceComplexity::relativeCpGIslands(sequence);
