@@ -17,6 +17,37 @@
 
 namespace kellerberrin::genome {   //  organization level namespace
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// This is an efficient single pass parser.
+// In general std::string_view is work of the devil and a seg fault waiting to happen.
+// But if the underlying string has the same guaranteed lifetime as the associated std::string_view then a seg fault
+// may not be inevitable.
+using InfoParserMap = std::map<std::string_view, std::string_view>;
+class GrchInfoParser {
+
+public:
+
+  // std::move the info string into this object.
+  explicit GrchInfoParser(std::string info) : info_(std::move(info)), info_view_(info_) {}
+  ~GrchInfoParser() = default;
+
+  [[nodiscard]] bool parseInfo();
+  [[nodiscard]] const InfoParserMap& getMap() const { return parsed_token_map_; }
+  [[nodiscard]] const std::string& info() const { return info_; }
+
+private:
+
+  std::string info_;
+  std::string_view info_view_;
+
+  InfoParserMap parsed_token_map_;
+
+  constexpr static const char INFO_FIELD_DELIMITER_{';'};
+  constexpr static const char INFO_VALUE_DELIMITER_{'='};
+
+};
+
+
 
 class GrchVCFImpl : public VCFReaderMT {
 

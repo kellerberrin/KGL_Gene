@@ -10,6 +10,109 @@
 namespace kgl = kellerberrin::genome;
 
 
+// Efficient parser for the info field.
+// Implemented as a simple finite state parser.
+bool kgl::GrchInfoParser::parseInfo() {
+
+  enum class ParserStates { KeyToken, ValueToken} parser_state = ParserStates::KeyToken;
+  size_t info_length = info_view_.length();
+  size_t key_token_count = 0;
+  size_t key_token_offset = 0;
+  size_t value_token_count = 0;
+  size_t value_token_offset = 0;
+  std::string_view key_view;
+  std::string_view value_view;
+  const std::string_view empty_value;
+  for (size_t index = 0; index < info_length; ++index) {
+
+    switch(parser_state) {
+
+      case ParserStates::KeyToken:
+        if (info_view_[index] == INFO_VALUE_DELIMITER_) {
+
+          key_view = info_view_.substr(key_token_offset, key_token_count);
+          parser_state = ParserStates::ValueToken;
+          value_token_offset = index + 1;
+          value_token_count = 0;
+
+        } else if (info_view_[index] == INFO_FIELD_DELIMITER_) {
+
+          key_view = info_view_.substr(key_token_offset, key_token_count);
+          auto result = parsed_token_map_.emplace(key_view, empty_value);
+          if (not result.second) {
+
+            ExecEnv::log().warn("GrchInfoParser::parseInfo, cannot insert <key>, <value> pair, (duplicate)");
+
+          }
+          key_token_offset = index + 1;
+          key_token_count = 0;
+
+        } else {
+
+          ++key_token_count;
+
+        }
+        break;
+
+      case ParserStates::ValueToken:
+        if (info_view_[index] == INFO_FIELD_DELIMITER_) {
+
+          value_view = info_view_.substr(value_token_offset, value_token_count);
+          auto result = parsed_token_map_.emplace(key_view, value_view);
+          if (not result.second) {
+
+            ExecEnv::log().warn("GrchInfoParser::parseInfo, cannot insert <key>, <value> pair, (duplicate)");
+
+          }
+          parser_state = ParserStates::KeyToken;
+          key_token_offset = index + 1;
+          key_token_count = 0;
+
+        } else {
+
+          ++value_token_count;
+
+        }
+        break;
+
+    } // switch
+
+  } // for loop
+
+  // Check that we are in ParserStates::ValueToken
+  // and value_token_offset + value_token_count does not exceed the length of the info field.
+  if (parser_state == ParserStates::ValueToken) {
+
+    if (value_token_offset + value_token_count > info_length) {
+
+      ExecEnv::log().error("GrchInfoParser::parseInfo, Final Value Token Offset: {}, Size: {} exceeds the Info size :{}",
+                            value_token_offset, value_token_count, info_length);
+      return false;
+
+    }
+
+    value_view = info_view_.substr(value_token_offset, value_token_count);
+    auto result = parsed_token_map_.emplace(key_view, value_view);
+    if (not result.second) {
+
+      ExecEnv::log().warn("GrchInfoParser::parseInfo, cannot insert <key>, <value> pair, (duplicate)");
+
+    }
+
+  } else {
+
+    ExecEnv::log().error("GrchInfoParser::parseInfo, parser terminates in unexpected state");
+    return false;
+
+  }
+
+ return true;
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
 void kgl::GrchVCFImpl::processVCFHeader(const VcfHeaderInfo&) {
 
 
@@ -38,10 +141,18 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
   //  auto mutable_info = const_cast<std::string&>(vcf_record.info);
   //  std::shared_ptr<std::string> info_ptr = std::make_shared<std::string>(std::move(mutable_info));
 
-  std::map<std::string, std::string> info_key_value_map;
-  if (not ParseVCFMiscImpl::tokenizeVcfInfoKeyValues(vcf_record.info, info_key_value_map)) {
+//  std::map<std::string, std::string> info_key_value_map;
+//  if (not ParseVCFMiscImpl::tokenizeVcfInfoKeyValues(vcf_record.info, info_key_value_map)) {
 
-    ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord; Unable to parse VCF record info field: {}", vcf_record.info);
+//    ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord; Unable to parse VCF record info field: {}", vcf_record.info);
+
+//  }
+
+  auto mutable_info = const_cast<std::string&>(vcf_record.info);
+  GrchInfoParser info_parser(std::move(mutable_info));
+  if (not info_parser.parseInfo()) {
+
+    ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Problem parsing info field");
 
   }
 
@@ -110,7 +221,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
   if (vcf_record_count % VARIANT_REPORT_INTERVAL_ == 0) {
 
-    ExecEnv::log().info("Processed :{} records, total variants: {}, info map size: {}", vcf_record_count, variant_count_, info_key_value_map.size());
+    ExecEnv::log().info("Processed :{} records, total variants: {}, info keys: {}", vcf_record_count, variant_count_, info_parser.getMap().size());
     ExecEnv::log().info("Contig: {}, offset: {}", contig, vcf_record.offset);
 
   }
