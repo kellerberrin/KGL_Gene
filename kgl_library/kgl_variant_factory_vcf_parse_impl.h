@@ -48,10 +48,6 @@ public:
                                             ActiveContigMap& active_contig_map,
                                             bool cigar_required);
 
-// assumes input "key_1=value_1; ...;key_n=value_n"
-  [[nodiscard]] static bool tokenizeVcfInfoKeyValues( const std::string& key_value_text,
-                                                      std::map<std::string, std::string>& key_value_map);
-
   [[nodiscard]] static bool parseCigar( const std::string& cigar,
                                         size_t& check_reference_size,
                                         size_t& check_alternate_size,
@@ -100,51 +96,46 @@ private:
 
 };
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Info field parser.
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class VCFInfoField {
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// This is an efficient single pass parser.
+// In general std::string_view is work of the devil and a seg fault waiting to happen.
+// But if the underlying string has the same guaranteed lifetime as the associated std::string_view(s) then a seg fault
+// may not be inevitable.
+using InfoParserMap = std::map<std::string_view, std::string_view>;
+class VCFInfoParser {
 
 public:
 
-  VCFInfoField(const std::string& key_value_text) {
+  // std::move the info string into this object for efficiency.
+  explicit VCFInfoParser(std::string info) : info_(std::move(info)), info_view_(info_) {
 
-    if (not ParseVCFMiscImpl::tokenizeVcfInfoKeyValues(key_value_text, info_key_value_map_)) {
+    if (not parseInfo()) {
 
-      ExecEnv::log().error("Unable to parse VCF INFO: {}", key_value_text);
+      ExecEnv::log().error("VCFInfoParser::VCFInfoParser, Problem parsing info field");
 
     }
 
   }
-  virtual ~VCFInfoField() = default;
+  ~VCFInfoParser() = default;
 
-  bool getInfoField(const std::string& key, std::string& value) const {
-
-    auto key_it = info_key_value_map_.find(key);
-
-    if (key_it != info_key_value_map_.end()) {
-
-      value = key_it->second;
-      return true;
-
-    }
-
-    value = "";
-    return false;
-
-  }
-
-  const VcfInfoKeyMap& getMap() const { return info_key_value_map_; }
+  [[nodiscard]] const InfoParserMap& getMap() const { return parsed_token_map_; }
+  [[nodiscard]] const std::string& info() const { return info_; }
+  [[nodiscard]] std::optional<std::string> getInfoField(const std::string& key) const;
 
 private:
 
-  VcfInfoKeyMap info_key_value_map_;
+  std::string info_;
+  std::string_view info_view_;
+  InfoParserMap parsed_token_map_;
+
+  constexpr static const char INFO_FIELD_DELIMITER_{';'};
+  constexpr static const char INFO_VALUE_DELIMITER_{'='};
+
+  [[nodiscard]] bool parseInfo();
 
 };
+
 
 
 }   // end namespace

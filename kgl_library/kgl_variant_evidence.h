@@ -28,19 +28,16 @@ class VariantEvidence { // Top level object.
 
 public:
 
-  explicit VariantEvidence(std::shared_ptr<std::string> info, size_t vcf_record_count) : info_(std::move(info)),
-                                                                                         vcf_record_count_(vcf_record_count) {}
+  explicit VariantEvidence(size_t vcf_record_count) : vcf_record_count_(vcf_record_count) {}
   virtual ~VariantEvidence() = default;
 
   [[nodiscard]] virtual std::string output(char delimiter, VariantOutputIndex output_index) const;
 
-  [[nodiscard]] const std::string& info_field() const { return *info_; }
   [[nodiscard]] size_t vcfRecordCount() const { return vcf_record_count_; }
 
 private:
 
   // The VCF file info field.
-  std::shared_ptr<std::string> info_;
   size_t vcf_record_count_;
 
 };
@@ -56,13 +53,12 @@ class CountEvidence : public VariantEvidence {
 
 public:
 
-  explicit CountEvidence(std::shared_ptr<std::string> info,
-                         size_t vcf_record_count,
+  explicit CountEvidence(size_t vcf_record_count,
                          size_t ref_count,
                          size_t alt_count,
                          size_t DP_count,
                          Phred_t GQ_value,
-                         Phred_t quality) : VariantEvidence(std::move(info), vcf_record_count),
+                         Phred_t quality) : VariantEvidence(vcf_record_count),
                                                     ref_count_(ref_count),
                                                     alt_count_(alt_count),
                                                     DP_count_(DP_count),

@@ -71,12 +71,10 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
 
   }
 
-  // Parse the info fields into an array and assign to a shared ptr.
-  VCFInfoField info_key_value_map(record.info);  // Each vcf record.
-
-  // For performance reasons the info field is moved here - don't it reference again.
+  // Parse the info fields into a map.
+  // For performance reasons the info field is moved here - don't reference again.
   auto mutable_info = const_cast<std::string&>(record.info);
-  std::shared_ptr<std::string> info_ptr = std::make_shared<std::string>(std::move(mutable_info));
+  VCFInfoParser info_key_value_map(std::move(mutable_info));  // Each vcf record.
 
   if (getGenomeNames().size() != record.genotypeInfos.size()) {
 
@@ -96,24 +94,21 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
       if (genotype_parser.getFormatChar(recordParser.PLOffset(), genotype) != PL_CHECK_ZERO_
           and genotype_parser.getFormatChar(recordParser.PLOffset(), genotype) != PL_CHECK_DOT_) {
 
-        std::string vqslod_text;
-        bool vqslod_found = true;
-        if ( not info_key_value_map.getInfoField(VQSLOD_INFO_FIELD_, vqslod_text)) {
-
-          vqslod_found = false;
-
-        }
-
+        std::optional<std::string> vqslod_text = info_key_value_map.getInfoField(VQSLOD_INFO_FIELD_);
         double vqslod = 0.0;
-        if (vqslod_found) {
+        if (vqslod_text) {
 
-          if (vqslod_text.find_first_not_of(FLOAT_DIGITS_) !=  std::string::npos) {
+          try {
 
-            ExecEnv::log().info("Non-numeric vqslod text: {}", vqslod_text);
+            vqslod = std::stof(vqslod_text.value());
+
+          }
+          catch(...) {
+
+            ExecEnv::log().warn("Pf3kVCFImpl::ParseRecord, Non-numeric vqslod text: {}", vqslod_text.value());
             continue;
 
           }
-          vqslod = std::atof(vqslod_text.c_str());
 
         }
 
@@ -197,7 +192,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
                             and GQ_value >= MIN_GQ_QUALITY_
                             and DP_value >= MIN_DEPTH_;
 
-        if (vqslod_found) {
+        if (vqslod_text) {
 
           valid_record = valid_record and vqslod >= MIN_VQSLOD_QUALITY_;
 
@@ -219,8 +214,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
           if (allele != UPSTREAM_ALLELE_ and not downstream_variant) {
 
             // Evidence object
-            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(info_ptr,
-                                                                                          vcf_record_count,
+            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(vcf_record_count,
                                                                                           ref_count,
                                                                                           alt_count,
                                                                                           DP_value,
@@ -260,8 +254,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
           if (allele != UPSTREAM_ALLELE_ and not downstream_variant) {
 
             // Evidence object
-            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(info_ptr,
-                                                                                          vcf_record_count,
+            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(vcf_record_count,
                                                                                           ref_count,
                                                                                           alt_count,
                                                                                           DP_value,

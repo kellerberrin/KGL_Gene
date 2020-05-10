@@ -12,7 +12,7 @@ std::string kgl::VariantEvidence::output(char delimiter, VariantOutputIndex) con
 
   std::stringstream ss;
 
-  ss << delimiter  <<  "Info::" <<  *info_  << delimiter << "VCFRecord:" << vcfRecordCount();
+  ss << delimiter   << "VCFRecord:" << vcfRecordCount();
 
   return ss.str();
 

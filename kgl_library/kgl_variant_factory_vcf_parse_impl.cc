@@ -255,55 +255,6 @@ bool kgl::ParseVCFMiscImpl::parseCigar(const std::string& cigar,
 
 
 // assumes input "key_1=value_1; ...;key_n=value_n"
-bool kgl::ParseVCFMiscImpl::tokenizeVcfInfoKeyValues(const std::string& key_value_text,
-                                                     std::map<std::string, std::string>& key_value_map) {
-
-  key_value_map.clear();
-
-  bt::char_separator<char> item_key_sep(";");
-  bt::tokenizer<bt::char_separator<char>> tokenize(key_value_text, item_key_sep);
-  for(auto iter = tokenize.begin(); iter != tokenize.end(); ++iter) {
-
-    std::vector<std::string> item_vec;
-    bt::char_separator<char> item_key_sep("=");
-    bt::tokenizer<bt::char_separator<char>> tokenize_item(*iter, item_key_sep);
-    for(auto iter_item = tokenize_item.begin(); iter_item != tokenize_item.end(); ++iter_item) {
-
-      item_vec.push_back(*iter_item);
-
-    }
-
-    if (item_vec.size() >= 2) {
-
-      std::string item_key = item_vec[0];
-      std::transform(item_key.begin(), item_key.end(), item_key.begin(), ::toupper);
-      key_value_map[item_key] = item_vec[1];
-
-    } else {
-
-      if (item_vec.size() == 1) {
-
-        std::string item_key = item_vec[0];
-        std::transform(item_key.begin(), item_key.end(), item_key.begin(), ::toupper);
-        key_value_map[item_key] = "";
-
-      } else {
-
-        ExecEnv::log().warn("Problem parsing item: {} in VCF Record line: {}, expected 'key=value;...;key=value' pairs", *iter, key_value_text);
-        return false;
-
-      }
-
-    }
-
-  }
-
-  return true;
-
-}
-
-
-// assumes input "key_1=value_1; ...;key_n=value_n"
 bool kgl::ParseVCFMiscImpl::tokenize(const std::string& parse_text,
                                      const std::string& separator_text,
                                      std::vector<std::string>& item_vector) {
@@ -523,5 +474,140 @@ size_t kgl::ParseVCFMiscImpl::alternateCount(size_t reference_count, const Cigar
   }
 
   return alternate_counter;
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Efficient parser for the info field.
+// Implemented as a simple finite state parser.
+bool kgl::VCFInfoParser::parseInfo() {
+
+  enum class ParserStates { KeyToken, ValueToken} parser_state = ParserStates::KeyToken;
+  size_t info_length = info_view_.length();
+  size_t key_token_count = 0;
+  size_t key_token_offset = 0;
+  size_t value_token_count = 0;
+  size_t value_token_offset = 0;
+  std::string_view key_view;
+  std::string_view value_view;
+  const std::string_view empty_value_view;
+
+  for (size_t index = 0; index < info_length; ++index) {
+
+    switch(parser_state) {
+
+      case ParserStates::KeyToken:
+        if (info_view_[index] == INFO_VALUE_DELIMITER_) {
+
+          key_view = info_view_.substr(key_token_offset, key_token_count);
+          parser_state = ParserStates::ValueToken;
+          value_token_offset = index + 1;
+          value_token_count = 0;
+
+        } else if (info_view_[index] == INFO_FIELD_DELIMITER_) {
+
+          key_view = info_view_.substr(key_token_offset, key_token_count);
+          auto result = parsed_token_map_.emplace(key_view, empty_value_view);
+          if (not result.second) {
+
+            ExecEnv::log().warn("VCFInfoParser::parseInfo, cannot insert <key>, <value> pair, (duplicate)");
+
+          }
+          key_token_offset = index + 1;
+          key_token_count = 0;
+
+        } else {
+
+          ++key_token_count;
+
+        }
+        break;
+
+      case ParserStates::ValueToken:
+        if (info_view_[index] == INFO_FIELD_DELIMITER_) {
+
+          value_view = info_view_.substr(value_token_offset, value_token_count);
+          auto result = parsed_token_map_.emplace(key_view, value_view);
+          if (not result.second) {
+
+            ExecEnv::log().warn("VCFInfoParser::parseInfo, cannot insert <key>, <value> pair, (duplicate)");
+
+          }
+          parser_state = ParserStates::KeyToken;
+          key_token_offset = index + 1;
+          key_token_count = 0;
+
+        } else {
+
+          ++value_token_count;
+
+        }
+        break;
+
+    } // switch
+
+  } // for loop
+
+  // Process final token.
+  if (parser_state == ParserStates::ValueToken) {
+
+    // Check value_token_offset + value_token_count equals the length of the info field.
+    // and all characters have been consumed.
+    if (value_token_offset + value_token_count != info_length) {
+
+      ExecEnv::log().error("VCFInfoParser::parseInfo, Final_Parser_State=ValueToken, Final Value Token Offset: {}, Size: {} not equal the Info size : {}",
+                           value_token_offset, value_token_count, info_length);
+
+      return false;
+
+    }
+
+    value_view = info_view_.substr(value_token_offset, value_token_count);
+    auto result = parsed_token_map_.emplace(key_view, value_view);
+    if (not result.second) {
+
+      ExecEnv::log().warn("VCFInfoParser::parseInfo, cannot insert <key>, <value> pair, (duplicate)");
+
+    }
+
+  } else {
+
+    // Check key_token_offset + key_token_count equals the length of the info field.
+    // and all characters have been consumed.
+    if (key_token_offset + key_token_count != info_length) {
+
+      ExecEnv::log().error("VCFInfoParser::parseInfo, Final_Parser_State=KeyToken, Final Key Token Offset: {}, Size: {} not equal the Info size : {}",
+                           key_token_offset, key_token_count, info_length);
+
+      return false;
+
+    }
+
+    key_view = info_view_.substr(key_token_offset, key_token_count);
+    auto result = parsed_token_map_.emplace(key_view, empty_value_view);
+    if (not result.second) {
+
+      ExecEnv::log().warn("VCFInfoParser::parseInfo, cannot insert <key>, <value> pair, (duplicate)");
+
+    }
+
+  }
+
+  return true;
+
+}
+
+
+std::optional<std::string> kgl::VCFInfoParser::getInfoField(const std::string& key) const {
+
+  auto key_it = parsed_token_map_.find(key);
+  if (key_it != parsed_token_map_.end()) {
+
+    return std::string(key_it->second);
+
+  }
+
+  return std::nullopt;
 
 }
