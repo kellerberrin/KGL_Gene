@@ -169,8 +169,10 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_grch_impl.h
         kgl_library/kgl_variant_file_vcf_impl.cc
         kgl_library/kgl_variant_file_vcf_impl.h
-        kgl_app/kgl_runtime.cc
-        kgl_app/kgl_runtime.h)
+        kgl_library/kgl_variant_factory_grch_info.cc
+        kgl_library/kgl_variant_factory_grch_info.h
+        kgl_library/kgl_gnomad_3_0.cc
+        kgl_library/kgl_gnomad_2_1_1.cc)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -196,7 +198,12 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_sequence_complexity.cc
         kgl_analytic/kgl_epigenetic_motif.cc
         kgl_analytic/kgl_epigenetic_motif.cc
-        kgl_analytic/kgl_upgma.h kgl_analytic/kgl_analysis_null.cc kgl_analytic/kgl_analysis_null.h kgl_analytic/kgl_analysis_interval.cc kgl_analytic/kgl_analysis_interval.h)
+        kgl_analytic/kgl_upgma.h
+        kgl_analytic/kgl_analysis_all.h
+        kgl_analytic/kgl_analysis_null.cc
+        kgl_analytic/kgl_analysis_null.h
+        kgl_analytic/kgl_analysis_interval.cc
+        kgl_analytic/kgl_analysis_interval.h)
 
 # Deconvolution and mixture files.
 
@@ -207,7 +214,7 @@ set(MIXTURE_SOURCE_FILES
         kgl_mixture/kgl_variant_classify.cc
         kgl_mixture/kgl_variant_classify_io.cc
         kgl_mixture/kgl_read_phasing.h
-        kgl_mixture/kgl_read_phasing.cc kgl_analytic/kgl_analysis_all.h)
+        kgl_mixture/kgl_read_phasing.cc  )
 
 
 # Application level objects
@@ -218,7 +225,14 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_phylogenetic_app_analysis.h
         kgl_app/kgl_phylogenetic_app.h
         kgl_app/kgl_phylogenetic_parse.cc
-        kgl_app/kgl_properties.cc kgl_app/kgl_package.cc kgl_app/kgl_package.h kgl_app/kgl_package_analysis.cc kgl_app/kgl_package_analysis.h)
+        kgl_app/kgl_properties.cc
+        kgl_app/kgl_package.cc
+        kgl_app/kgl_package.h
+        kgl_app/kgl_package_analysis.cc
+        kgl_app/kgl_package_analysis.h
+        kgl_app/kgl_runtime.cc
+        kgl_app/kgl_runtime.h
+        )
 
 
 

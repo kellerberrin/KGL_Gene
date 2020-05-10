@@ -53,12 +53,6 @@ void kgl::ExecutePackage::executeAll() const {
 
 void kgl::ExecutePackage::verifyPackages() const {
 
-  ExecEnv::log().info("VCF Map Size: {}", vcf_file_map_.size());
-  ExecEnv::log().info("Genome Map Size: {}", genome_map_.size());
-  ExecEnv::log().info("Analysis Map Size: {}", analysis_map_.size());
-  ExecEnv::log().info("Package Map Size: {}", package_map_.size());
-  ExecEnv::log().info("Alias Size: {}", contig_alias_.getMap().size());
-
   // for all packages.
   for (auto const& [package_ident, package] : package_map_) {
 

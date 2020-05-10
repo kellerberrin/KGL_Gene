@@ -9,6 +9,7 @@
 
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
+#include <fstream>
 
 
 namespace kgl = kellerberrin::genome;
@@ -160,6 +161,12 @@ bool kgl::ParseVCFMiscImpl::tokenizeVcfHeaderKeyValues(const std::string& key_va
       std::string item_key = item_vec[0];
       std::transform(item_key.begin(), item_key.end(), item_key.begin(), ::toupper);
       key_value_map[item_key] = item_vec[1];
+
+    } else if (item_vec.size() == 1) {
+
+      std::string item_key = item_vec[0];
+      std::transform(item_key.begin(), item_key.end(), item_key.begin(), ::toupper);
+      key_value_map[item_key] = "";
 
     } else {
 

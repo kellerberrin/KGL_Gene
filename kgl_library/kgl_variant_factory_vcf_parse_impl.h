@@ -108,7 +108,7 @@ class VCFInfoParser {
 public:
 
   // std::move the info string into this object for efficiency.
-  explicit VCFInfoParser(std::string info) : info_(std::move(info)), info_view_(info_) {
+  explicit VCFInfoParser(std::string&& info) : info_(std::move(info)), info_view_(info_) {
 
     if (not parseInfo()) {
 

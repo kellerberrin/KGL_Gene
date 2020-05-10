@@ -2,7 +2,7 @@
 // Created by kellerberrin on 20/4/20.
 //
 
-#include "kgl_variant_factory_vcf_parse_impl.h"
+#include "kgl_variant_factory_grch_info.h"
 #include "kgl_variant_factory_grch_impl.h"
 #include "kgl_variant_vcf.h"
 
@@ -14,6 +14,7 @@ namespace kgl = kellerberrin::genome;
 //
 
 void kgl::GrchVCFImpl::processVCFHeader(const VcfHeaderInfo&) {
+
 
 
 }
@@ -41,7 +42,8 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
   // Parse the info fields into a map..
   // For performance reasons the info field is moved here - don't reference again.
   auto mutable_info = const_cast<std::string&>(vcf_record.info);
-  VCFInfoParser info_parser(std::move(mutable_info));
+  GnomadInfo_3_0 info_parser(std::move(mutable_info));
+
 
   // Evidence object
   std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<VariantEvidence>(vcf_record_count));
@@ -107,7 +109,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
   if (vcf_record_count % VARIANT_REPORT_INTERVAL_ == 0) {
 
-    ExecEnv::log().info("Processed :{} records, total variants: {}, info keys: {}", vcf_record_count, variant_count_, info_parser.getMap().size());
+    ExecEnv::log().info("Processed :{} records, total variants: {}, info keys: {}", vcf_record_count, variant_count_, info_parser.infoParser().getMap().size());
     ExecEnv::log().info("Contig: {}, offset: {}", contig, vcf_record.offset);
 
   }
