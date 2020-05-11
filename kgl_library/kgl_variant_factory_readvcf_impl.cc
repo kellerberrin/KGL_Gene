@@ -8,9 +8,15 @@
 namespace kgl = kellerberrin::genome;
 
 
-void kgl::VCFReaderMT::readHeader() {
+void kgl::VCFReaderMT::readHeader(const std::string& file_name) {
 
-  processVCFHeader(vcf_io_.VCFReadHeader());
+  if (not parseheader_.parseHeader(file_name)) {
+
+    ExecEnv::log().error("RecordVCFIO::VCFReadHeader, Problem parsing VCF header file: {}", file_name);
+
+  }
+
+  processVCFHeader(parseheader_.getHeaderInfo());
 
 }
 
@@ -20,7 +26,7 @@ void kgl::VCFReaderMT::readVCFFile() {
 
   ExecEnv::log().info("Parse Header VCF file: {}", vcf_io_.getFileName());
 
-  readHeader();
+  readHeader(vcf_io_.getFileName());
 
   ExecEnv::log().info("Begin processing VCF file: {}", vcf_io_.getFileName());
 

@@ -39,14 +39,17 @@ public:
   // Process VCF header information.
   virtual void processVCFHeader(const VcfHeaderInfo& header_info) = 0;
 
-  [[nodiscard]] const std::vector<std::string>& getGenomeNames() const { return vcf_io_.getGenomeNames(); }
+  // Stored VCF header info.
+  [[nodiscard]] const std::vector<std::string>& getGenomeNames() const { return parseheader_.getGenomes(); }
+
 
 private:
 
   RecordVCFIO vcf_io_;                                   // VCF record queue.
   size_t consumer_thread_count_{8};                      // Consumer threads
+  VCFParseHeader parseheader_;    // Get genome and contig information.
 
-  void readHeader();
+  void readHeader(const std::string& file_name);
   // Call the template VCF consumer class
   void VCFConsumer();
 

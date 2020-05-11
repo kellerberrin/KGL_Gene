@@ -1,8 +1,8 @@
 //
 // Created by kellerberrin on 11/5/20.
-//
 
 #include "kgl_variant_factory_vcf_parse_header.h"
+#include "kel_basic_io.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
@@ -15,10 +15,11 @@ namespace bt = boost;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool kgl::VCFParseHeader::parseHeader(const std::string& vcf_file_name, std::unique_ptr<BaseStreamIO>&& vcf_stream) {
+bool kgl::VCFParseHeader::parseHeader(const std::string& vcf_file_name) {
 
-  // Open input file.
-  if (not vcf_stream->open(vcf_file_name)) {
+  // Open input file. Plain text or compressed.
+  std::optional<std::unique_ptr<BaseStreamIO>> vcf_stream_opt = BaseStreamIO::getReaderStream(vcf_file_name);
+  if (not vcf_stream_opt) {
 
     ExecEnv::log().critical("I/O error; could not open VCF file: {}", vcf_file_name);
 
@@ -31,7 +32,7 @@ bool kgl::VCFParseHeader::parseHeader(const std::string& vcf_file_name, std::uni
 
     while (true) {
 
-      IOLineRecord line_record = vcf_stream->readLine();
+      IOLineRecord line_record = vcf_stream_opt.value()->readLine();
       if (not line_record) break;
 
       std::string& record_str = *line_record.value().second;

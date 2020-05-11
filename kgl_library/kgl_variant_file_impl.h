@@ -6,45 +6,22 @@
 #define KGL_VARIANT_FILE_IMPL_H
 
 
+
+#include "kel_exec_env.h"
+#include "kel_mt_queue.h"
+#include "kel_basic_io.h"
+#include "kgl_genome_types.h"
+
 #include <string>
 #include <vector>
 #include <fstream>
 #include <thread>
 
-#include "kel_exec_env.h"
-#include "kel_mt_queue.h"
-#include "kgl_genome_types.h"
-
 namespace kellerberrin::genome {   //  organization::project level namespace
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Plug one of the superclasses (defined in the implementation file) to read text or gzipped files.
-
-// Returns an optional pair of line count and a pointer to the line data.
-// The data is absent on EOF or read error.
-using IOLineRecord = std::optional<std::pair<size_t, std::unique_ptr<std::string>>>;
-
-class BaseStreamIO {
-
-public:
-
-  BaseStreamIO() = default;
-  virtual ~BaseStreamIO() = default;
-
-  virtual bool open(const std::string &file_name) = 0;
-  virtual IOLineRecord readLine() = 0;
-
-protected:
-
-  size_t record_counter_;
-
-};
-
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // IO object (multi-threaded) - enqueues file line reads for further processing
-// The code checks the file extension, if '.vcf' then it assumes a text file, if '.gz' then it assumes a gzipped file.
 
 class FileVCFIO  {
 
@@ -58,9 +35,6 @@ public:
 
   [[nodiscard]] const std::string& fileName() const { return vcf_file_name_; }
 
-  // returns an IO stream.
-  [[nodiscard]] std::unique_ptr<BaseStreamIO> getSynchStream();
-
   // Called by each reader thread
   [[nodiscard]] IOLineRecord readIORecord() { return raw_io_queue_.waitAndPop(); }
 
@@ -69,15 +43,13 @@ private:
 
   std::string vcf_file_name_;
   size_t reader_threads_;
-  BoundedMtQueue<IOLineRecord> raw_io_queue_; // The raw IO queue
+  BoundedMtQueue<IOLineRecord> raw_io_queue_; // The raw tidal IO queue
   std::unique_ptr<std::thread> raw_io_thread_ptr_;
 
   static constexpr const long HIGH_TIDE_{10000};          // Maximum BoundedMtQueue size
   static constexpr const long LOW_TIDE_{1000};            // Low water mark to begin queueing VCF records
-  constexpr static const char* GZ_FILE_EXTENSTION_ = ".GZ"; // gzipped file assumed.
-  constexpr static const char* BGZ_FILE_EXTENSTION_ = ".BGZ"; // gzipped file assumed.
 
-  void rawVCFIO(std::unique_ptr<BaseStreamIO>&& vcf_stream); // read/decompress from disk.
+  void rawVCFIO(); // read/decompress from disk and place on the tidal queue.
 
 };
 

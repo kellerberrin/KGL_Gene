@@ -95,43 +95,6 @@ bool kgl::ParseVCFCigar::parseCigar(const std::string& cigar,
 
 }
 
-
-// assumes input "key_1=value_1; ...;key_n=value_n"
-bool kgl::ParseVCFCigar::tokenize(const std::string& parse_text,
-                                  const std::string& separator_text,
-                                  std::vector<std::string>& item_vector) {
-
-  item_vector.clear();
-  bt::char_separator<char> item_seperator(separator_text.c_str());
-  bt::tokenizer<bt::char_separator<char>> tokenize_item(parse_text, item_seperator);
-  for(auto iter_item = tokenize_item.begin(); iter_item != tokenize_item.end(); ++iter_item) {
-
-    item_vector.push_back(*iter_item);
-
-  }
-
-  return true;
-
-}
-
-// assumes input "key_1=value_1; ...;key_n=value_n"
-bool kgl::ParseVCFCigar::tokenize(std::string&& parse_text,
-                                  const std::string& separator_text,
-                                  std::vector<std::string>& item_vector) {
-
-  item_vector.clear();
-  bt::char_separator<char> item_seperator(separator_text.c_str());
-  bt::tokenizer<bt::char_separator<char>> tokenize_item(parse_text, item_seperator);
-  for(auto iter_item : tokenize_item) {
-
-    item_vector.push_back(std::move(iter_item));
-
-  }
-
-  return true;
-
-}
-
 // Use edlib to generate a cigar string.
 std::string kgl::ParseVCFCigar::generateCigar(const CigarVector& cigar_vector) {
 

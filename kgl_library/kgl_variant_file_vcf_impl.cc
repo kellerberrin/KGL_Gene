@@ -116,17 +116,6 @@ bool RecordVCFIO::parseVCFRecord( std::unique_ptr<const std::string> line_record
 }
 
 
-const VcfHeaderInfo& RecordVCFIO::VCFReadHeader() {
-
-  if (not parseheader_.parseHeader(fileName(), getSynchStream())) {
-
-    ExecEnv::log().error("RecordVCFIO::VCFReadHeader, Problem parsing VCF header file: {}", fileName());
-
-  }
-  return parseheader_.getHeaderInfo();
-
-}
-
 
 bool RecordVCFIO::moveToVcfRecord(std::unique_ptr<const std::string> line_record_ptr, std::vector<std::string> &fields, VcfRecord &vcf_record) {
 

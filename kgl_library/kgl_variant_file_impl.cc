@@ -2,193 +2,42 @@
 // Created by kellerberrin on 18/4/20.
 //
 
-
-#include <kel_exec_env.h>
 #include "kgl_variant_file_impl.h"
-
-#include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
-
-#include <string>
 #include <vector>
 #include <memory>
 #include <thread>
 
-namespace bio = boost::iostreams;
-// Implementation file classes need to be defined within namespaces.
-namespace kellerberrin::genome {
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Text IO.
-class TextStreamIO : public BaseStreamIO {
-
-public:
-
-  TextStreamIO() = default;
-
-  TextStreamIO(const TextStreamIO &) = delete;
-
-  ~TextStreamIO() override = default;
-
-  bool open(const std::string &file_name) override;
-
-  IOLineRecord readLine() override {
-
-    std::unique_ptr<std::string> line_text_ptr(std::make_unique<std::string>());
-    if (not std::getline(file_, *line_text_ptr).eof()) {
-
-      ++record_counter_;
-      return IOLineRecord(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(line_text_ptr)));
-
-    } else {
-
-      return std::nullopt;
-
-    }
-
-  }
-
-private:
-
-  std::ifstream file_;
-
-};
-
-
-bool TextStreamIO::open(const std::string &file_name) {
-
-  try {
-
-    // Open input file.
-
-    file_.open(file_name);
-    if (not file_.good()) {
-
-      ExecEnv::log().error("TextStreamIO; I/O error; could not open file: {}", file_name);
-      return false;
-
-    }
-  }
-  catch (std::exception const &e) {
-
-    ExecEnv::log().error("TextStreamIO; Opening file: {} unexpected I/O exception: {}", file_name, e.what());
-    return false;
-
-  }
-
-  return true;
-
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// gzip IO
-
-class GZStreamIO : public BaseStreamIO {
-
-public:
-
-  GZStreamIO() = default;
-
-  GZStreamIO(const GZStreamIO &) = delete;
-
-  ~GZStreamIO() override = default;
-
-  bool open(const std::string &file_name) override;
-
-  inline IOLineRecord readLine() override {
-
-    std::unique_ptr<std::string> line_text_ptr(std::make_unique<std::string>());
-    if (not std::getline(gz_file_, *line_text_ptr).eof()) {
-
-      ++record_counter_;
-      return IOLineRecord(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(line_text_ptr)));
-
-    } else {
-
-      return std::nullopt;
-
-    }
-
-  }
-
-private:
-
-  std::ifstream file_;
-  boost::iostreams::filtering_istream gz_file_;
-
-};
-
-bool GZStreamIO::open(const std::string &file_name) {
-
-  try {
-
-    // Open input file.
-
-    file_.open(file_name, std::ios_base::in | std::ios_base::binary);
-
-    if (not file_.good()) {
-
-      ExecEnv::log().error("GZStreamIO; I/O error; could not open file: {}", file_name);
-      return false;
-
-    }
-
-    gz_file_.push(bio::gzip_decompressor());
-    gz_file_.push(file_);
-
-  }
-  catch (std::exception const &e) {
-
-    ExecEnv::log().error("GZStreamIO; Opening file: {} unexpected I/O exception: {}", file_name, e.what());
-    return false;
-
-  }
-
-  return true;
-
-}
+namespace kgl = kellerberrin::genome;
+namespace kel = kellerberrin;
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-FileVCFIO::~FileVCFIO() {
+kgl::FileVCFIO::~FileVCFIO() {
 
+  // Shutdown the IO thread.
   if (raw_io_thread_ptr_) raw_io_thread_ptr_->join();
 
 }
 
-std::unique_ptr<BaseStreamIO> FileVCFIO::getSynchStream() {
+void kgl::FileVCFIO::commenceIO(size_t reader_threads) {
 
-  std::string file_ext = Utility::toupper(Utility::fileExtension(fileName()));
-
-  if (file_ext == GZ_FILE_EXTENSTION_ or file_ext == BGZ_FILE_EXTENSTION_) {
-
-    return std::make_unique<GZStreamIO>();
-
-  } else {   // Assume a text file.
-
-
-    return std::make_unique<TextStreamIO>();
-
-  }
-
-}
-
-void FileVCFIO::commenceIO(size_t reader_threads) {
-
-  reader_threads_ = reader_threads; // the number of consumers; used for shutdown.
-  raw_io_thread_ptr_ = std::make_unique<std::thread>(&FileVCFIO::rawVCFIO, this, getSynchStream());
+  // The number of consumer threads reading the raw record queue; used for shutdown.
+  reader_threads_ = reader_threads;
+  // Commence reading with just one IO thread.
+  raw_io_thread_ptr_ = std::make_unique<std::thread>(&FileVCFIO::rawVCFIO, this);
 
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Pass in the text or gzip stream as an rvalue to a pointer.
-void FileVCFIO::rawVCFIO(std::unique_ptr<BaseStreamIO> &&vcf_stream) {
+void kgl::FileVCFIO::rawVCFIO() {
 
   try {
 
-    if (not vcf_stream->open(fileName())) {
+    std::optional<std::unique_ptr<BaseStreamIO>> vcf_stream_opt = BaseStreamIO::getReaderStream(fileName());
+
+    if (not vcf_stream_opt) {
 
       ExecEnv::log().critical("FileVCFIO; I/O error; could not open VCF file: {}", fileName());
 
@@ -196,7 +45,7 @@ void FileVCFIO::rawVCFIO(std::unique_ptr<BaseStreamIO> &&vcf_stream) {
 
     while (true) {
 
-      IOLineRecord line_record = vcf_stream->readLine();
+      IOLineRecord line_record = vcf_stream_opt.value()->readLine();
       if (not line_record) {
 
         // Enqueue the null eof indicator for each consumer thread.
@@ -226,12 +75,9 @@ void FileVCFIO::rawVCFIO(std::unique_ptr<BaseStreamIO> &&vcf_stream) {
   }
   catch (std::exception const &e) {
 
-    ExecEnv::log().critical("FileVCFIO; VCF file unexpected I/O exception: {}", e.what());
+    ExecEnv::log().critical("FileVCFIO; VCF file: {} unexpected I/O exception: {}", fileName(), e.what());
 
   }
 
 }
 
-
-
-} // namespace

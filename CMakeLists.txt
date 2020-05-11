@@ -62,7 +62,9 @@ set(LIBRARY_SOURCE_FILES
         kel_library/kel_property_tree.cc
         kel_library/kel_property_tree.h
         kel_library/kel_distribution.h
-        kel_library/kel_distribution.cc)
+        kel_library/kel_distribution.cc
+        kel_library/kel_basic_io.cc
+        kel_library/kel_basic_io.h)
 
 # Basic Genetic infrastructure library
 set(GENETIC_LIBRARY_SOURCE_FILES
@@ -172,7 +174,9 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_vcf_parse_info.cc
         kgl_library/kgl_variant_factory_vcf_parse_info.h
         kgl_library/kgl_gnomad_3_0.cc
-        kgl_library/kgl_gnomad_2_1_1.cc kgl_library/kgl_variant_factory_vcf_parse_header.cc kgl_library/kgl_variant_factory_vcf_parse_header.h)
+        kgl_library/kgl_gnomad_2_1_1.cc
+        kgl_library/kgl_variant_factory_vcf_parse_header.cc
+        kgl_library/kgl_variant_factory_vcf_parse_header.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )

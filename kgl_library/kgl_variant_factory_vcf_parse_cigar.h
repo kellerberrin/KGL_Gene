@@ -64,12 +64,6 @@ private:
 // Use edlib to generate a cigar string.
   static void generateEditString(const std::string& reference, const std::string& alternate, std::vector<CigarEditType>& edit_vector);
 
-// tokenize a string
-  [[nodiscard]] static bool tokenize(const std::string& parse_text, const std::string& separator_text, std::vector<std::string>& item_vector);
-
-// tokenize a string using move semantics on parse text.
-  [[nodiscard]] static bool tokenize(std::string&& parse_text, const std::string& separator_text, std::vector<std::string>& item_vector);
-
 };
 
 

@@ -37,7 +37,7 @@ public:
 
   ~VCFParseHeader() = default;
 
-  [[nodiscard]] bool parseHeader(const std::string &file_name, std::unique_ptr<BaseStreamIO> &&vcf_stream);
+  [[nodiscard]] bool parseHeader(const std::string &file_name);
 
   [[nodiscard]] const std::vector<std::string> &getGenomes() const { return vcf_genomes_; }
 
