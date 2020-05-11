@@ -17,8 +17,6 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-const kgl::PhaseId_t kgl::VariantSequence::UNPHASED;
-
 
 std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputIndex output_index) const {
 

@@ -31,7 +31,8 @@ public:
                                                          raw_io_queue_(HIGH_TIDE_, LOW_TIDE_) {}
   virtual ~FileVCFIO();
 
-  void commenceIO(size_t reader_threads); // Begin reading records, spawns threads.
+  // Begin reading records, spawns thread(s). Specifies how many reader threads.
+  void commenceIO(size_t reader_threads);
 
   [[nodiscard]] const std::string& fileName() const { return vcf_file_name_; }
 
@@ -49,7 +50,7 @@ private:
   static constexpr const long HIGH_TIDE_{10000};          // Maximum BoundedMtQueue size
   static constexpr const long LOW_TIDE_{1000};            // Low water mark to begin queueing VCF records
 
-  void rawVCFIO(); // read/decompress from disk and place on the tidal queue.
+  void rawVCFIO(); // The read/decompress from disk and place on the tidal queue.
 
 };
 

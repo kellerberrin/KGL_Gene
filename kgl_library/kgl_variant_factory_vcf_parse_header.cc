@@ -112,13 +112,9 @@ bool kgl::VCFParseHeader::parseHeader(const std::string& vcf_file_name) {
 }
 
 
-bool kgl::VCFParseHeader::parseVcfHeader( std::shared_ptr<const GenomeReference> genome_db_ptr,
-                                          const VcfHeaderInfo& header_info,
-                                          ActiveContigMap& active_contig_map,
-                                          bool cigar_required) {
+bool kgl::VCFParseHeader::parseVcfHeader(const VcfHeaderInfo& header_info, VCFContigMap& vcf_contig_map, VCFInfoRecordMap& vcf_info_map) {
 
-  active_contig_map.clear();
-  bool has_cigar = false;
+  vcf_contig_map.clear();
 
   for (auto const& [lower_key, value] : header_info) {
 
@@ -140,28 +136,9 @@ bool kgl::VCFParseHeader::parseVcfHeader( std::shared_ptr<const GenomeReference>
       if (id_result != item_map.end() and length_result != item_map.end()) {
 
         ContigId_t contig_id = id_result->second;
-        ContigSize_t contig_size = std::atoll(length_result->second.c_str());
+        ContigSize_t contig_size = std::stol(length_result->second);
 
-        std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db_ptr->getContigSequence(contig_id);
-        if (contig_opt) {
-
-          if (contig_opt.value()->sequence().length() == contig_size) {
-
-            active_contig_map[contig_id] = contig_size;
-
-          } else {
-
-            ExecEnv::log().warn("VCF header. VCF contig: {} size: {} not equal to the Genome database contig size: {}",
-                                contig_id, contig_size, contig_opt.value()->sequence().length());
-            ExecEnv::log().warn("Check that the VCF fasta file is compatible with the Genome database fasta file.");
-          }
-
-        } else {
-
-          ExecEnv::log().info("VCF header. VCF contig: {} size: {} not found in the genome database. ",
-                              contig_id, contig_size);
-
-        }
+        vcf_contig_map[contig_id] = contig_size;
 
       }
 
@@ -175,53 +152,15 @@ bool kgl::VCFParseHeader::parseVcfHeader( std::shared_ptr<const GenomeReference>
 
       }
 
-      auto id_result = item_map.find(ID_KEY_);
+      VCFInfoRecord info_record;
+      info_record.ID = item_map[ID_KEY_];
+      info_record.description = item_map[DESCRIPTION_KEY_];
+      info_record.number = item_map[NUMBER_KEY_];
+      info_record.type = item_map[TYPE_KEY_];
 
-      if (id_result != item_map.end()) {
-
-        std::string value = id_result->second;
-        std::transform(value.begin(), value.end(), value.begin(), ::toupper);
-        if (value == ID_CIGAR_VALUE_) {
-
-          has_cigar = true;
-
-        }
-
-      }
+      vcf_info_map[info_record.ID] = info_record;
 
     }
-
-  }
-
-  if (active_contig_map.size() == genome_db_ptr->contigCount()) {
-
-    ExecEnv::log().info("Genome database contigs: {} and VCF contigs: {}; all contig sizes match.",
-                        genome_db_ptr->contigCount(), active_contig_map.size());
-
-  } else {
-
-    ExecEnv::log().warn("VCF file contig count: {}. Genome database contig count: {}", active_contig_map.size(), genome_db_ptr->contigCount());
-    ExecEnv::log().warn("No variants will be generated for the missing contigs. The missing contigs are:");
-
-    for (auto contig : genome_db_ptr->getMap()) {
-
-      auto result = active_contig_map.find(contig.first);
-
-      if (result == active_contig_map.end()) {
-
-        ExecEnv::log().warn("Contig: {} present in genome database, missing from VCF file.", contig.first);
-
-      }
-
-    }
-
-  }
-
-  if ((not has_cigar) and cigar_required) {
-
-    ExecEnv::log().error("This VCF file does not define a 'CIGAR' field; this field is required to parse 'freebayes' VCF files.");
-    ExecEnv::log().error("See the VCF format of the variant caller 'freebayes' for more information.");
-    return false;
 
   }
 
@@ -276,4 +215,73 @@ bool kgl::VCFParseHeader::tokenizeVcfHeaderKeyValues(const std::string& key_valu
   return true;
 
 }
+
+bool kgl::VCFParseHeader::checkVCFReferenceContigs( const VCFContigMap& vcf_contig_map,
+                                                    std::shared_ptr<const GenomeReference> reference_genome) {
+
+  bool contigs_found = true;
+  for (auto const& [contig_id, contig_ptr] : reference_genome->getMap()) {
+
+    auto result = vcf_contig_map.find(contig_id);
+    if (result ==  vcf_contig_map.end()) {
+
+      contigs_found = false;
+      break;
+
+    }
+
+    if (result->second != contig_ptr->sequence().length()) {
+
+      ExecEnv::log().warn("VCFParseHeader::checkVCFReferenceContigs, Genome: {}, Contig: {}, mismatch in VCF size: {} and Reference Contig size: {}",
+                          reference_genome->genomeId(), contig_id, result->second, contig_ptr->sequence().length());
+      contigs_found = false;
+
+    }
+
+  }
+
+  return contigs_found;
+
+}
+
+
+bool kgl::VCFParseHeader::VCFContigAliasRemapping(const VCFContigMap& vcf_contig_map,
+                                                  std::shared_ptr<const GenomeReference> reference_genome,
+                                                  VCFContigAliasMap contig_alias_map) {
+
+  // Reverse the VCF contig map.
+  std::map<size_t, std::string> reverse_map;
+  for (auto const& [contig_id, contig_size] : vcf_contig_map) {
+
+    reverse_map[contig_size] = contig_id;
+
+  }
+
+  // Now lookup all the reference genome contigs.
+  for (auto const& [contig_id, contig_ptr] : reference_genome->getMap()) {
+
+    auto result = reverse_map.find(contig_ptr->sequence().length());
+    if (result == reverse_map.end()) {
+
+      contig_alias_map[contig_id] = contig_id;
+
+    } else {
+
+      contig_alias_map[result->second] = contig_id;
+
+    }
+
+  }
+
+  if (contig_alias_map.size() != vcf_contig_map.size()) {
+
+    ExecEnv::log().warn("VCFParseHeader::VCFContigAliasRemapping, Caution - VCF/References Alias size: {} not equal to VCF contig size: {}",
+                        contig_alias_map.size(), vcf_contig_map.size());
+
+  }
+
+  return true;
+
+}
+
 

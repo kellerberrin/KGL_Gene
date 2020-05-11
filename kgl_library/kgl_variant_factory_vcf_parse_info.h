@@ -6,9 +6,12 @@
 #define KGL_VARIANT_FACTORY_GRCH_INFO_H
 
 #include "kel_exec_env.h"
+#include "kgl_variant.h"
+#include "kgl_variant_evidence.h"
 
 #include <string>
 #include <string_view>
+#include <array>
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -57,11 +60,6 @@ private:
 
 
 
-
-
-
-
-
 // Defines the automatically generated INFO field definitions for Gnomad VCF files.
 struct VCFInfoDescription {
 
@@ -73,6 +71,21 @@ struct VCFInfoDescription {
 };
 
 using VCFInfoProcessMap = std::map<std::string, VCFInfoDescription>;
+
+
+class GnomadEvidence : public VariantEvidence {
+
+public:
+
+  GnomadEvidence(size_t vcf_record_count) : VariantEvidence(vcf_record_count) {}
+  ~GnomadEvidence() = default;
+
+private:
+
+  std::array<unsigned long, 20> test_{0};
+
+
+};
 
 // The efficient info parser and all the info field definitions for
 // the GRCh38.r3.0 series of VCF files.

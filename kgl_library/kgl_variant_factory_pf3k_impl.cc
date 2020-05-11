@@ -16,15 +16,32 @@ namespace kgl = kellerberrin::genome;
 void kgl::Pf3kVCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) {
 
   // Investigate header.
-  ActiveContigMap active_contig_map;
-  if (not VCFParseHeader::parseVcfHeader(genome_db_ptr_, header_info, active_contig_map, false)) {
+  VCFContigMap vcf_contig_map;
+  VCFInfoRecordMap vcf_info_map;
+  if (not VCFParseHeader::parseVcfHeader( header_info, vcf_contig_map, vcf_info_map)) {
 
     ExecEnv::log().error("Problem parsing header information in VCF file. No variants processed.");
 
   }
 
+  for (auto const& [key, value] : vcf_info_map) {
+
+    ExecEnv::log().info("GrchVCFImpl::processVCFHeader, VCF Record, ID {}, Description: {}, Type: {}, Number: {}", key, value.description, value.type, value.number);
+
+  }
+
+  if (VCFParseHeader::checkVCFReferenceContigs(vcf_contig_map, genome_db_ptr_)) {
+
+    ExecEnv::log().info("Pf3kVCFImpl::processVCFHeader, VCF File and Reference Genome Contig Sizes All Match");
+
+  } else {
+
+    ExecEnv::log().info("Pf3kVCFImpl::processVCFHeader, VCF File and Reference Genome Contig Size/Name Mis-Match. Attemping to create an Alias Mapping....");
+
+  }
+
   // Pre-initializes the UnphasedPopulation with a list of genomes/contigs.
-  // Since some genomes may not have a variant (3D7).
+  // Since some genomes may not have a variant.
   // The initialization of the reader above generates a list of genomes in the VCF file.
   setupPopulationStructure(genome_db_ptr_);
 

@@ -197,6 +197,7 @@ public:
   [[nodiscard]] const AliasMap& getMap() const { return alias_map_; }
   [[nodiscard]] const ContigId_t& lookupAlias(const ContigId_t& alias);
   void setAlias(const ContigId_t& alias, const ContigId_t& contig_id);
+  void updateAlias(const AliasMap& alias_map) { alias_map_ = alias_map; }
 
 private:
 

@@ -20,6 +20,7 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 
 
+
 class GrchVCFImpl : public VCFReaderMT {
 
 public:
@@ -50,6 +51,7 @@ private:
   std::shared_ptr<UnphasedGenome> vcf_genome_ptr_;
   std::shared_ptr<const GenomeReference> genome_db_ptr_;
   ContigAliasMap contig_alias_map_;
+  VCFInfoRecordMap info_record_map_;
 
 // Progress counters.
 
