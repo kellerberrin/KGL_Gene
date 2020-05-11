@@ -1,13 +1,13 @@
 
-#include "kgl_variant_factory_grch_info.h"
+#include "kgl_variant_factory_vcf_parse_info.h"
 
 namespace kgl = kellerberrin::genome;
 
 // The Info field definitions for the GRCh38.r3.0 series of VCF files (automatically generated).
-const kgl::VCFInfoProcessMap kgl::GnomadInfo_3_0::gnomad_3_0_map =
+const kgl::VCFInfoProcessMap kgl::GnomadInfo_3_0::gnomad_3_0_map_ =
 
 {
-{ "AC", { false, "Alternate allele count for samples", "Integer", "A" } } ,
+{ "AC", { true, "Alternate allele count for samples", "Integer", "A" } } ,
 { "AN", { false, "Total number of alleles in samples", "Integer", "1" } } ,
 { "AF", { false, "Alternate allele frequency in samples", "Float", "A" } } ,
 { "non_par", { false, "", "Flag", "0" } } ,

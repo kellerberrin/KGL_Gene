@@ -2,7 +2,7 @@
 // Created by kellerberrin on 20/4/20.
 //
 
-#include "kgl_variant_factory_grch_info.h"
+#include "kgl_variant_factory_vcf_parse_info.h"
 #include "kgl_variant_factory_grch_impl.h"
 #include "kgl_variant_vcf.h"
 
@@ -72,36 +72,29 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
   } else {
 
-    std::vector<std::string> alt_vector;
-    if (not ParseVCFMiscImpl::tokenize(vcf_record.alt, alt_separator_, alt_vector)) {
+    std::vector<std::string> alt_vector = Utility::tokenizer(vcf_record.alt, alt_separator_);
 
-      ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Unable to parse VCF record alt field: {}", vcf_record.alt);
+    if (alt_vector.empty()) {
 
-    } else {
+      ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Zero sized alt vector, alt: {}", vcf_record.alt);
 
-      if (alt_vector.empty()) {
+    }
 
-        ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Zero sized alt vector, alt: {}", vcf_record.alt);
+    for (auto const& alt : alt_vector) {
 
-      }
+      // Add the variant.
+      if (not createAddVariant( vcf_genome_ptr_->genomeId(),
+                                contig,
+                                vcf_record.offset,
+                                vcf_record.ref,
+                                alt,
+                                evidence_ptr)) {
 
-      for (auto const& alt : alt_vector) {
-
-        // Add the variant.
-        if (not createAddVariant( vcf_genome_ptr_->genomeId(),
-                                  contig,
-                                  vcf_record.offset,
-                                  vcf_record.ref,
-                                  alt,
-                                  evidence_ptr)) {
-
-          ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Parsing GRCh VCF, Problem parsing vcf_record");
-
-        }
-
-        ++variant_count_;
+        ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Parsing GRCh VCF, Problem parsing vcf_record");
 
       }
+
+      ++variant_count_;
 
     }
 
@@ -109,7 +102,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
   if (vcf_record_count % VARIANT_REPORT_INTERVAL_ == 0) {
 
-    ExecEnv::log().info("Processed :{} records, total variants: {}, info keys: {}", vcf_record_count, variant_count_, info_parser.infoParser().getMap().size());
+    ExecEnv::log().info("Processed :{} records, total variants: {}", vcf_record_count, variant_count_);
     ExecEnv::log().info("Contig: {}, offset: {}", contig, vcf_record.offset);
 
   }

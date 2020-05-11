@@ -9,7 +9,7 @@
 #include "kgl_genome_types.h"
 #include "kgl_variant_file_impl.h"
 #include "kgl_variant_file_vcf_record.h"
-#include "kgl_variant_factory_vcf_parse_impl.h"
+#include "kgl_variant_factory_vcf_parse_header.h"
 
 #include <memory>
 #include <string>
@@ -17,37 +17,6 @@
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Parses the VCF header for Contig and Genome information.
-
-class VCFParseHeader {
-
-public:
-
-  VCFParseHeader() = default;
-
-  ~VCFParseHeader() = default;
-
-  bool parseHeader(const std::string& file_name, std::unique_ptr<BaseStreamIO>&& vcf_stream);
-
-  [[nodiscard]] const std::vector<std::string>& getGenomes() const { return vcf_genomes_; }
-
-  [[nodiscard]] const VcfHeaderInfo& getHeaderInfo() const { return vcf_header_info_; }
-
-private:
-
-  std::vector<std::string> vcf_genomes_;                // Field (genome) names for each VCF record
-  VcfHeaderInfo vcf_header_info_;
-  // Parser constants.
-  static constexpr const char* KEY_SEPARATOR_{"="};
-  static constexpr const char* KEY_PREFIX_{"##"};
-  static constexpr const char* FIELD_NAME_FRAGMENT_{"#CHROM"};
-  static constexpr const size_t FIELD_NAME_FRAGMENT_LENGTH_{6};
-  static constexpr const size_t SKIP_FIELD_NAMES_{9};  // Skip the fixed fields to the Genome names.
-
-
-};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // VCF Record parser object (multi-threaded) - uses multiple threads to parse queued file lines from the IO reader.
@@ -89,7 +58,6 @@ private:
   static constexpr const char HEADER_CHAR_{'#'};          // If first char start with '#' then a header record.
   static constexpr const size_t MINIMUM_VCF_FIELDS_{8};   // At least 8 fields, any others are format and genotype fields (header specified).
   static constexpr const char* VCF_FIELD_DELIMITER_{"\t"};   // VCF Field separator.
-  static constexpr const char VCF_FIELD_DELIMITER_CHAR_{'\t'};   // VCF Field separator (char).
   const std::string FIELD_NOT_PRESENT_{"."}; // no field value
 
   void enqueueVCFRecord(); // enqueue vcf_records.

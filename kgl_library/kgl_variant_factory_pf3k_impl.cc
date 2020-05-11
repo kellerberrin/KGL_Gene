@@ -2,7 +2,8 @@
 // Created by kellerberrin on 25/02/18.
 //
 
-#include "kgl_variant_factory_vcf_parse_impl.h"
+#include "kgl_variant_factory_vcf_parse_info.h"
+#include "kgl_variant_factory_vcf_parse_header.h"
 #include "kgl_variant_factory_readvcf_impl.h"
 #include "kgl_variant_factory_pf3k_impl.h"
 #include "kgl_variant_vcf.h"
@@ -16,7 +17,7 @@ void kgl::Pf3kVCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) {
 
   // Investigate header.
   ActiveContigMap active_contig_map;
-  if (not ParseVCFMiscImpl::parseVcfHeader(genome_db_ptr_, header_info, active_contig_map, false)) {
+  if (not VCFParseHeader::parseVcfHeader(genome_db_ptr_, header_info, active_contig_map, false)) {
 
     ExecEnv::log().error("Problem parsing header information in VCF file. No variants processed.");
 
@@ -112,15 +113,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
 
         }
 
-        std::vector<std::string> gt_vector;
-
-        if (not ParseVCFMiscImpl::tokenize(genotype_parser.getFormatString(recordParser.GTOffset(), genotype), GT_FIELD_SEPARATOR_, gt_vector)) {
-
-          ExecEnv::log().error("Parsing Pf3k VCF, Problem tokenizing PT format field: {}.",
-                               genotype_parser.getFormatString(recordParser.GTOffset(), genotype));
-          continue;
-
-        }
+        std::vector<std::string> gt_vector = Utility::tokenizer(genotype_parser.getFormatString(recordParser.GTOffset(), genotype), GT_FIELD_SEPARATOR_);
 
         if (gt_vector.size() != 2) {
 
@@ -151,14 +144,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
         size_t B_allele = std::stoll(gt_vector[1]);
 
         // Get ad allele depths.
-        std::vector<std::string> ad_vector;
-
-        if (not ParseVCFMiscImpl::tokenize(genotype_parser.getFormatString(recordParser.ADOffset(), genotype), AD_FIELD_SEPARATOR_, ad_vector)) {
-
-          ExecEnv::log().error("Parsing Pf3k VCF, Problem tokenizing AD format field");
-          continue;
-
-        }
+        std::vector<std::string> ad_vector = Utility::tokenizer(genotype_parser.getFormatString(recordParser.ADOffset(), genotype), AD_FIELD_SEPARATOR_);
 
         // Allele depths should be the number of alleles + the reference
         if (ad_vector.size() != (recordParser.alleles().size() + 1)) {

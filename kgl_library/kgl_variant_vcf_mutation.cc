@@ -5,7 +5,7 @@
 
 
 #include "kgl_variant_vcf.h"
-#include "kgl_variant_factory_vcf_parse_impl.h"
+#include "kgl_variant_factory_vcf_parse_cigar.h"
 
 #include <algorithm>
 

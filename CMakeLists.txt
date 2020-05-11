@@ -137,8 +137,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_pf3k_impl.h
         kgl_library/kgl_variant_factory_pf3k_impl.cc
         kgl_library/kgl_variant_factory_readvcf_impl.h
-        kgl_library/kgl_variant_factory_vcf_parse_impl.h
-        kgl_library/kgl_variant_factory_vcf_parse_impl.cc
+        kgl_library/kgl_variant_factory_vcf_parse_cigar.h
+        kgl_library/kgl_variant_factory_vcf_parse_cigar.cc
         kgl_library/kgl_variant_factory_record_vcf_impl.h
         kgl_library/kgl_variant_factory_record_vcf_impl.cc
         kgl_library/kgl_genome_aux_csv.h
@@ -169,10 +169,10 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_grch_impl.h
         kgl_library/kgl_variant_file_vcf_impl.cc
         kgl_library/kgl_variant_file_vcf_impl.h
-        kgl_library/kgl_variant_factory_grch_info.cc
-        kgl_library/kgl_variant_factory_grch_info.h
+        kgl_library/kgl_variant_factory_vcf_parse_info.cc
+        kgl_library/kgl_variant_factory_vcf_parse_info.h
         kgl_library/kgl_gnomad_3_0.cc
-        kgl_library/kgl_gnomad_2_1_1.cc)
+        kgl_library/kgl_gnomad_2_1_1.cc kgl_library/kgl_variant_factory_vcf_parse_header.cc kgl_library/kgl_variant_factory_vcf_parse_header.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )

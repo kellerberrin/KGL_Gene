@@ -5,7 +5,7 @@
 
 #include "kgl_variant_vcf.h"
 #include "kgl_sequence_offset.h"
-#include "kgl_variant_factory_vcf_parse_impl.h"
+#include "kgl_variant_factory_vcf_parse_cigar.h"
 
 #include <algorithm>
 
@@ -144,14 +144,14 @@ std::string kgl::VCFVariant::mutation(char delimiter, VariantOutputIndex output_
 
 std::string kgl::VCFVariant::alternateCigar() const {
 
-  return ParseVCFMiscImpl::generateCigar(reference().getSequenceAsString(), alternate().getSequenceAsString());
+  return ParseVCFCigar::generateCigar(reference().getSequenceAsString(), alternate().getSequenceAsString());
 
 }
 
 
 size_t kgl::VCFVariant::alternateSize(size_t reference_size) const {
 
-  CigarVector cigar_vector = ParseVCFMiscImpl::generateEditVector(reference().getSequenceAsString(), alternate().getSequenceAsString());
-  return ParseVCFMiscImpl::alternateCount(reference_size, cigar_vector);
+  CigarVector cigar_vector = ParseVCFCigar::generateEditVector(reference().getSequenceAsString(), alternate().getSequenceAsString());
+  return ParseVCFCigar::alternateCount(reference_size, cigar_vector);
 
 }

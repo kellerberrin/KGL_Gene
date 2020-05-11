@@ -17,107 +17,6 @@
 namespace kellerberrin::genome {
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-bool VCFParseHeader::parseHeader(const std::string& vcf_file_name, std::unique_ptr<BaseStreamIO>&& vcf_stream) {
-
-  // Open input file.
-  if (not vcf_stream->open(vcf_file_name)) {
-
-    ExecEnv::log().critical("I/O error; could not open VCF file: {}", vcf_file_name);
-
-  }
-
-  try {
-
-    long counter = 0;
-    bool found_header = false;
-
-    while (true) {
-
-      IOLineRecord line_record = vcf_stream->readLine();
-      if (not line_record) break;
-
-      std::string& record_str = *line_record.value().second;
-
-      size_t pos = record_str.find_first_of(KEY_SEPARATOR_);
-
-      if (pos != std::string::npos) {
-
-        std::string key = record_str.substr(0, pos);
-        std::string value = record_str.substr(pos, std::string::npos);
-
-        pos = value.find_first_of(KEY_SEPARATOR_);
-
-        if (pos != std::string::npos) {
-
-          value = value.erase(pos, pos + std::string(KEY_SEPARATOR_).length());
-
-        }
-
-        pos = key.find_first_of(KEY_PREFIX_);
-
-        if (pos != std::string::npos) {
-
-          key = key.erase(pos, pos + std::string(KEY_PREFIX_).length());
-
-        }
-
-        vcf_header_info_.emplace_back(key, value);
-
-      }
-
-      std::string line_prefix = record_str.substr(0, FIELD_NAME_FRAGMENT_LENGTH_);
-      if (line_prefix == FIELD_NAME_FRAGMENT_) {
-
-        found_header = true;
-        std::vector<std::string> field_vector;
-        if (not ParseVCFMiscImpl::tokenize(record_str, "\t",  field_vector)) {
-
-          ExecEnv::log().error("Unable to parse VCF header line: {}", record_str);
-
-        }
-        size_t field_count = 0;
-        for(auto const& field :field_vector) {
-
-          if (field_count >= SKIP_FIELD_NAMES_) {
-
-            vcf_genomes_.push_back(field);
-
-          }
-
-          ++field_count;
-
-        }
-
-        break; // #CHROM is the last field in the VCF header so stop processing.
-
-      }
-
-      ++counter;
-
-    }
-
-    if (not found_header) {
-
-      ExecEnv::log().error("VCF Genome Names Not Found");
-
-    } else {
-
-      ExecEnv::log().info("{} Genomes in VCF Header {}, Header lines processed: {}", vcf_genomes_.size(), vcf_file_name, counter);
-
-    }
-
-  }
-  catch (std::exception const &e) {
-
-    ExecEnv::log().critical("VCFParseHeader::parseHeader; VCF file: {}, unexpected I/O exception: {}", vcf_file_name, e.what());
-
-  }
-
-  return true;
-
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -196,14 +95,7 @@ void RecordVCFIO::enqueueVCFRecord() {
 bool RecordVCFIO::parseVCFRecord( std::unique_ptr<const std::string> line_record_ptr,
                                   const std::unique_ptr<VcfRecord> &vcf_record_ptr) {
 
-  std::vector<std::string> field_vector;
-
-  if (not ParseVCFMiscImpl::tokenize(*line_record_ptr, VCF_FIELD_DELIMITER_, field_vector)) {
-
-    ExecEnv::log().error("FileVCFIO; VCF file: {}, problem parsing record", fileName());
-    return false;
-
-  }
+  std::vector<std::string> field_vector = Utility::tokenizer(*line_record_ptr, VCF_FIELD_DELIMITER_);
 
   if (field_vector.size() < MINIMUM_VCF_FIELDS_) {
 
@@ -226,7 +118,11 @@ bool RecordVCFIO::parseVCFRecord( std::unique_ptr<const std::string> line_record
 
 const VcfHeaderInfo& RecordVCFIO::VCFReadHeader() {
 
-  parseheader_.parseHeader(fileName(), getSynchStream());
+  if (not parseheader_.parseHeader(fileName(), getSynchStream())) {
+
+    ExecEnv::log().error("RecordVCFIO::VCFReadHeader, Problem parsing VCF header file: {}", fileName());
+
+  }
   return parseheader_.getHeaderInfo();
 
 }

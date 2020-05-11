@@ -5,7 +5,6 @@
 
 #include <kel_exec_env.h>
 #include "kgl_variant_file_impl.h"
-#include "kgl_variant_factory_vcf_parse_impl.h"
 
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
