@@ -24,19 +24,13 @@ void kgl::Pf3kVCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) {
 
   }
 
-  for (auto const& [key, value] : vcf_info_map) {
-
-    ExecEnv::log().info("GrchVCFImpl::processVCFHeader, VCF Record, ID {}, Description: {}, Type: {}, Number: {}", key, value.description, value.type, value.number);
-
-  }
-
   if (VCFParseHeader::checkVCFReferenceContigs(vcf_contig_map, genome_db_ptr_)) {
 
     ExecEnv::log().info("Pf3kVCFImpl::processVCFHeader, VCF File and Reference Genome Contig Sizes All Match");
 
   } else {
 
-    ExecEnv::log().info("Pf3kVCFImpl::processVCFHeader, VCF File and Reference Genome Contig Size/Name Mis-Match. Attemping to create an Alias Mapping....");
+    ExecEnv::log().info("Pf3kVCFImpl::processVCFHeader, VCF File and Reference Genome Contig Size/Name Mis-Match");
 
   }
 
@@ -217,12 +211,14 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
           if (allele != UPSTREAM_ALLELE_ and not downstream_variant) {
 
             // Evidence object
-            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(vcf_record_count,
+/*            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(vcf_record_count,
                                                                                           ref_count,
                                                                                           alt_count,
                                                                                           DP_value,
                                                                                           GQ_value,
                                                                                           recordParser.quality()));
+*/
+            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<VariantEvidence>(vcf_record_count));
 
             if (not createAddVariant(genome_name,
                                      recordParser.contigPtr(),
@@ -257,13 +253,15 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
           if (allele != UPSTREAM_ALLELE_ and not downstream_variant) {
 
             // Evidence object
-            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(vcf_record_count,
+/*            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(vcf_record_count,
                                                                                           ref_count,
                                                                                           alt_count,
                                                                                           DP_value,
                                                                                           GQ_value,
                                                                                           recordParser.quality()));
 
+*/
+            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<VariantEvidence>(vcf_record_count));
 
             if (not createAddVariant(genome_name,
                                      recordParser.contigPtr(),

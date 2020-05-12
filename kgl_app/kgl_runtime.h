@@ -206,6 +206,32 @@ private:
 };
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Object the hold the VCF INFO evidence specification.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Indexed by the identifier <evidenceIdent> and an ordered list of INFO field IDs.
+using EvidenceMap = std::map<std::string, std::set<std::string>>;
+
+class VariantEvidenceMap {
+
+public:
+
+  VariantEvidenceMap() = default;
+  VariantEvidenceMap(const VariantEvidenceMap&) = default;
+  ~VariantEvidenceMap() = default;
+
+  [[nodiscard]] const EvidenceMap& getMap() const { return evidence_map_; }
+  [[nodiscard]] const std::set<std::string>& lookupAlias(const std::string& evidence_ident);
+  void setEvidence(const std::string& evidence, const std::set<std::string>& info_ids);
+  void updateEvidence(const EvidenceMap& evidence_map) { evidence_map_ = evidence_map; }
+
+private:
+
+  EvidenceMap evidence_map_;
+
+};
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Object to hold genome auxiliary file information.

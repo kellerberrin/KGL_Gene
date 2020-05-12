@@ -72,7 +72,7 @@ struct VCFInfoDescription {
 
 using VCFInfoProcessMap = std::map<std::string, VCFInfoDescription>;
 
-
+template<size_t i>
 class GnomadEvidence : public VariantEvidence {
 
 public:
@@ -82,7 +82,7 @@ public:
 
 private:
 
-  std::array<unsigned long, 20> test_{0};
+  std::array<unsigned long, i> test_{0};
 
 
 };
