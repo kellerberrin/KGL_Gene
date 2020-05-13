@@ -173,8 +173,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_file_vcf_impl.h
         kgl_library/kgl_variant_factory_vcf_parse_info.cc
         kgl_library/kgl_variant_factory_vcf_parse_info.h
-        kgl_library/kgl_gnomad_3_0.cc
-        kgl_library/kgl_gnomad_2_1_1.cc
         kgl_library/kgl_variant_factory_vcf_parse_header.cc
         kgl_library/kgl_variant_factory_vcf_parse_header.h)
 

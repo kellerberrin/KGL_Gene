@@ -80,7 +80,6 @@ void kgl::ExecutePackage::verifyPackages() const {
 
     }
 
-
     //confirm that all iterative load files exist.
     // Note that iterativeFileList() returns a nested vector, std::vector<std::vector<std::string>>
     for (auto const& vcf_file_vector : package.iterativeFileList()) {
@@ -166,13 +165,23 @@ std::unique_ptr<kgl::UnphasedPopulation> kgl::ExecutePackage::iterateVCFDataFile
 
     }
 
+    auto evidence_opt = evidence_map_.lookupEvidence(result->second.evidenceIdent());
+
+    if (not evidence_opt) {
+
+      ExecEnv::log().critical("Package: {}, Evidence Ident {} Not Found for VCF file ident: {}",
+                              package.packageIdentifier(), result->second.evidenceIdent(), loadfile);
+
+    }
+
     if (result->second.parserType() == VCFParserEnum::GRChNoGenome) {
 
 
       // Read variants.
       std::shared_ptr<UnphasedGenome> parsed_variants = VcfFactory::GRChNoGenomeVCFVariants(ref_genome_opt.value(),
                                                                                             result->second.fileName(),
-                                                                                            contig_alias_);
+                                                                                            contig_alias_,
+                                                                                            evidence_opt.value());
 
       std::pair<size_t, size_t> valid_count = parsed_variants->validate(ref_genome_opt.value());
       ExecEnv::log().info("Genome: {}, Total Variants: {}, Validated Variants: {}", parsed_variants->genomeId(), valid_count.first, valid_count.second);
@@ -185,7 +194,9 @@ std::unique_ptr<kgl::UnphasedPopulation> kgl::ExecutePackage::iterateVCFDataFile
 // Pfalciparum VCF files handled here.
 
       // Read variants.
-      std::shared_ptr<UnphasedPopulation> parsed_variants = VcfFactory::gatkMultiGenomeVCFVariants( ref_genome_opt.value(), result->second.fileName());
+      std::shared_ptr<UnphasedPopulation> parsed_variants = VcfFactory::gatkMultiGenomeVCFVariants( ref_genome_opt.value(),
+                                                                                                    result->second.fileName(),
+                                                                                                    evidence_opt.value());
 
       std::pair<size_t, size_t> valid_count = parsed_variants->validate(ref_genome_opt.value());
       ExecEnv::log().info("Population: {}, Total Variants: {}, Validated Variants: {}", parsed_variants->populationId(), valid_count.first, valid_count.second);

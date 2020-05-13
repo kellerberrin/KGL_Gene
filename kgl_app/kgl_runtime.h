@@ -148,19 +148,19 @@ public:
                      const std::string& file_name,
                      const std::string& parser_type,
                      const std::string& reference_genome,
-                     size_t ploidy)
+                     const std::string& evidence_ident)
   : vcf_identifier_(vcf_identifier),
     file_name_(file_name),
     reference_genome_(reference_genome),
-    ploidy_(ploidy) { parser_type_ = getParserType(parser_type); }
+    evidence_ident_(evidence_ident) { parser_type_ = getParserType(parser_type); }
   RuntimeVCFFileInfo(const RuntimeVCFFileInfo&) = default;
   ~RuntimeVCFFileInfo() = default;
 
   [[nodiscard]] const std::string& identifier() const { return vcf_identifier_; }
   [[nodiscard]] const std::string& fileName() const { return file_name_; }
   [[nodiscard]] const std::string& referenceGenome() const { return reference_genome_; }
+  [[nodiscard]] const std::string& evidenceIdent() const { return evidence_ident_; }
   [[nodiscard]] VCFParserEnum parserType() const { return parser_type_; }
-  [[nodiscard]] size_t ploidy() const { return ploidy_; }
 
 
 private:
@@ -168,7 +168,7 @@ private:
   std::string vcf_identifier_;   // A unique short string to identify this VCF file in other classes
   std::string file_name_;
   std::string reference_genome_;
-  size_t ploidy_;
+  std::string evidence_ident_;
   VCFParserEnum parser_type_;
   using VCFParserTypes = std::vector<std::pair<VCFParserEnum, std::string>>;
   const VCFParserTypes implementated_parsers_{ std::pair<VCFParserEnum, std::string>(VCFParserEnum::GatkMultiGenome, "GatkMultiGenome"),
@@ -195,9 +195,8 @@ public:
   ~ContigAliasMap() = default;
 
   [[nodiscard]] const AliasMap& getMap() const { return alias_map_; }
-  [[nodiscard]] const ContigId_t& lookupAlias(const ContigId_t& alias);
+  [[nodiscard]] const ContigId_t& lookupAlias(const ContigId_t& alias) const;
   void setAlias(const ContigId_t& alias, const ContigId_t& contig_id);
-  void updateAlias(const AliasMap& alias_map) { alias_map_ = alias_map; }
 
 private:
 
@@ -210,8 +209,9 @@ private:
 // Object the hold the VCF INFO evidence specification.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Indexed by the identifier <evidenceIdent> and an ordered list of INFO field IDs.
-using EvidenceMap = std::map<std::string, std::set<std::string>>;
+// Indexed by the identifier <evidenceIdent>, an ordered set of INFO field IDs.
+using EvidenceInfoSet = std::set<std::string>;
+using EvidenceMap = std::map<std::string, EvidenceInfoSet>;
 
 class VariantEvidenceMap {
 
@@ -222,9 +222,8 @@ public:
   ~VariantEvidenceMap() = default;
 
   [[nodiscard]] const EvidenceMap& getMap() const { return evidence_map_; }
-  [[nodiscard]] const std::set<std::string>& lookupAlias(const std::string& evidence_ident);
-  void setEvidence(const std::string& evidence, const std::set<std::string>& info_ids);
-  void updateEvidence(const EvidenceMap& evidence_map) { evidence_map_ = evidence_map; }
+  [[nodiscard]] std::optional<const EvidenceInfoSet> lookupEvidence(const std::string& evidence_ident) const;
+  void setEvidence(const std::string& evidence_ident, const std::set<std::string>& info_ids);
 
 private:
 
@@ -235,6 +234,7 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Object to hold genome auxiliary file information.
+// Legacy code.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class AuxFileInfo {

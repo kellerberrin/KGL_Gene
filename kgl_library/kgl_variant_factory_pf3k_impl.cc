@@ -24,6 +24,9 @@ void kgl::Pf3kVCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) {
 
   }
 
+  // Store all the available VCF info fields.
+  evidence_factory_.availableInfoFields(vcf_info_map);
+
   if (VCFParseHeader::checkVCFReferenceContigs(vcf_contig_map, genome_db_ptr_)) {
 
     ExecEnv::log().info("Pf3kVCFImpl::processVCFHeader, VCF File and Reference Genome Contig Sizes All Match");

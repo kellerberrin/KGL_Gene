@@ -23,12 +23,14 @@ public:
 
   [[nodiscard]] static std::shared_ptr<UnphasedPopulation>
   gatkMultiGenomeVCFVariants( const std::shared_ptr<const GenomeReference> genome_db_ptr,
-                              const std::string &vcf_file_name);
+                              const std::string &vcf_file_name,
+                              const EvidenceInfoSet& evidence_set);
 
   [[nodiscard]] static std::shared_ptr<UnphasedGenome>
   GRChNoGenomeVCFVariants( const std::shared_ptr<const GenomeReference> genome_db_ptr,
                            const std::string &vcf_file_name,
-                           const ContigAliasMap& contig_alias_map);
+                           const ContigAliasMap& contig_alias_map,
+                           const EvidenceInfoSet& evidence_set);
 
 
 private:

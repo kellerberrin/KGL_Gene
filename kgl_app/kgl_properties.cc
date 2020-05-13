@@ -5,6 +5,7 @@
 #include "kgl_properties.h"
 #include "kgl_table_impl.h"
 
+#include <set>
 
 namespace kgl = kellerberrin::genome;
 
@@ -382,16 +383,19 @@ kgl::RuntimeVCFFileMap kgl::RuntimeProperties::getVCFFiles() const {
 
     }
 
-    key = std::string(VCF_FILE_PLOIDY_) + std::string(DOT_) + std::string(VALUE_);
-    size_t vcf_ploidy;
-    if (not sub_tree.second.getProperty( key, vcf_ploidy)) {
+    key = std::string(VCF_INFO_EVIDENCE_) + std::string(DOT_) + std::string(VALUE_);;
+    std::string evidence_ident;
+    if (not sub_tree.second.getProperty(key, evidence_ident)) {
 
-      ExecEnv::log().error("RuntimeProperties::getVCFFiles, No ploidy information for VCF file: {}", vcf_file_name);
-      continue;
+      ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF Info evidence specified for VCF file: {}", vcf_file_name);
 
     }
 
-    std::pair<std::string, RuntimeVCFFileInfo> new_vcf(vcf_ident, RuntimeVCFFileInfo(vcf_ident, vcf_file_name, vcf_parser_type, vcf_reference_genome, vcf_ploidy));
+    std::pair<std::string, RuntimeVCFFileInfo> new_vcf(vcf_ident, RuntimeVCFFileInfo( vcf_ident,
+                                                                                       vcf_file_name,
+                                                                                       vcf_parser_type,
+                                                                                       vcf_reference_genome,
+                                                                                       evidence_ident));
     auto result = vcf_map.insert(new_vcf);
 
     if (not result.second) {
@@ -454,6 +458,68 @@ kgl::ContigAliasMap kgl::RuntimeProperties::getContigAlias() const {
   return contig_alias_map;
 
 }
+
+
+kgl::VariantEvidenceMap kgl::RuntimeProperties::getEvidenceMap() const {
+
+  VariantEvidenceMap variant_evidence_map;
+
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + std::string(EVIDENCE_LIST_);
+
+  std::vector<SubPropertyTree> property_tree_vector;
+  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
+
+    ExecEnv::log().info("RuntimeProperties::getEvidenceMap, No Variant Evidence items specified.");
+    return variant_evidence_map;
+
+  }
+
+  for (const auto& sub_tree : property_tree_vector) {
+
+    std::string evidence_ident;
+    key = std::string(EVIDENCE_IDENT_) + std::string(DOT_) + std::string(VALUE_);
+    if (not sub_tree.second.getProperty(key, evidence_ident)) {
+
+      ExecEnv::log().error("RuntimeProperties::getEvidenceMap, No Evidence Identifier specified for evidence list.");
+      continue;
+
+    }
+
+    key = EVIDENCE_INFO_LIST_;
+    std::vector<SubPropertyTree> info_tree_vector;
+    if (not sub_tree.second.getPropertyTreeVector(key, info_tree_vector)) {
+
+      ExecEnv::log().info("RuntimeProperties::getEvidenceMap, no info items specified for evidence ident: {}", evidence_ident);
+
+    }
+
+    std::set<std::string> evidence_list;
+    for (const auto& info_sub_tree : info_tree_vector) {
+
+      // Only process info records.
+      if (info_sub_tree.first != VALUE_) continue;
+
+      std::string info = info_sub_tree.second.getValue();
+
+      auto result = evidence_list.insert(info);
+      if (not result.second) {
+
+        ExecEnv::log().warn("RuntimeProperties::getEvidenceMap, Duplicate Info item: {} specified for evidence ident: {}", info, evidence_ident);
+
+      }
+
+    }  // for info item
+
+    variant_evidence_map.setEvidence(evidence_ident, evidence_list);
+
+  }
+
+  return variant_evidence_map;
+
+}
+
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Legacy Code (To be demolished)

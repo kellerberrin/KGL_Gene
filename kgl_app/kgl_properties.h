@@ -49,6 +49,8 @@ public:
 
   [[nodiscard]] ContigAliasMap getContigAlias() const;
 
+  [[nodiscard]] VariantEvidenceMap getEvidenceMap() const;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Legacy Code.
 
@@ -99,7 +101,11 @@ private:
   constexpr static const char* VCF_FILE_NAME_ = "vcfFileName";
   constexpr static const char* VCF_PARSER_TYPE_ = "vcfParser";
   constexpr static const char* VCF_FILE_GENOME_ =  "vcfGenome";
-  constexpr static const char* VCF_FILE_PLOIDY_ =  "vcfPloidy";
+  constexpr static const char* VCF_INFO_EVIDENCE_ =  "vcfInfo";
+  // VCF Info Evidence categories.
+  constexpr static const char* EVIDENCE_LIST_ = "evidenceList";
+  constexpr static const char* EVIDENCE_IDENT_ = "evidenceIdent";
+  constexpr static const char* EVIDENCE_INFO_LIST_ = "vcfInfoList";
   // Genome Database categories.
   constexpr static const char* GENOME_LIST_ = "genomeList";
   constexpr static const char* GENOME_DATABASE_ = "genomeDatabase";
@@ -110,7 +116,6 @@ private:
   constexpr static const char* TRANSLATION_TABLE_ = "translationTable";
   // Contig/Chromosome Alias categories.
   constexpr static const char* ALIAS_LIST_ = "aliasList";
-  constexpr static const char* ALIAS_CONTIG_ = "contig";
   constexpr static const char* ALIAS_IDENT_ = "ident";
   constexpr static const char* ALIAS_ENTRY_ = "alias";
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////

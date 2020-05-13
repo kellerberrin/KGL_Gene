@@ -24,18 +24,13 @@ void kgl::PhylogeneticExecEnv::executeApp() {
   // XML program runtime options, this defines the program runtime.
   const RuntimeProperties& runtime_options = getRuntimeOptions();
   // Disassemble the XML runtime into a series of data and analysis operations.
-  const ExecutePackage execute_package( runtime_options.getContigAlias(),
-                                        runtime_options.getVCFFiles(),
-                                        runtime_options.getGenomeReferenceMap(),
-                                        runtime_options.getAnalysisMap(),
-                                        runtime_options.getPackageMap(),
-                                        args.workDirectory);
+  const ExecutePackage execute_package(runtime_options, args.workDirectory);
   // Individually executes the specified XML components (the package).
   // Executes the application logic and performs requested analysis.
   execute_package.executeAll();
 
   return;
-
+/*
   // Create a collection of all active organism genomes.
   std::shared_ptr<kgl::GenomeCollection> genome_collection = GenomeCollection::createGenomeCollection(runtime_options);
 
@@ -61,7 +56,7 @@ void kgl::PhylogeneticExecEnv::executeApp() {
 
       // Read variants.
       std::shared_ptr<UnphasedPopulation> parsed_variants = VcfFactory::gatkMultiGenomeVCFVariants(
-      reference_genome_ptr, vcf_file.fileName());
+      reference_genome_ptr, vcf_file.fileName(), runtime_options.getEvidenceMap());
 
       // Basic statistics to output
       // unphased_population_ptr->popStatistics();
@@ -87,8 +82,8 @@ void kgl::PhylogeneticExecEnv::executeApp() {
 
       }
 
-      // Get the VCF ploidy (need not be the organism ploidy).
-      size_t ploidy = vcf_file.ploidy();
+      // Get the VCF ploidy (need not be the organism ploidy). Only applies to Pf3k, removed from VCF specification.
+      size_t ploidy = 2;
       // Phase the homozygous and heterozygous variants into a haploid population.
       GenomePhasing::haploidPhasing(ploidy, filtered_unphased_ptr, reference_genome_ptr, population_ptr);
 
@@ -104,7 +99,8 @@ void kgl::PhylogeneticExecEnv::executeApp() {
       // Read variants.
       std::shared_ptr<UnphasedGenome> parsed_variants = VcfFactory::GRChNoGenomeVCFVariants(reference_genome_ptr,
                                                                                             vcf_file.fileName(),
-                                                                                            contig_alias_map);
+                                                                                            contig_alias_map,
+                                                                                            runtime_options.getEvidenceMap());
 
       std::pair<size_t, size_t> valid_count = parsed_variants->validate(reference_genome_ptr);
       ExecEnv::log().info("Genome: {}, Total Variants: {}, Validated Variants: {}", parsed_variants->genomeId(), valid_count.first, valid_count.second);
@@ -124,6 +120,6 @@ void kgl::PhylogeneticExecEnv::executeApp() {
 
   // Analyze the data.
   kgl::PhylogeneticAnalysis(runtime_options, genome_collection, unphased_population_ptr, population_ptr).performAnalysis("INTERVAL");
-
+*/
 }
 

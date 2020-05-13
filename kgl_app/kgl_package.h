@@ -17,17 +17,14 @@ class ExecutePackage {
 
 public:
 
-  ExecutePackage( ContigAliasMap contig_alias,
-                  RuntimeVCFFileMap vcf_file_map,
-                  RuntimeGenomeDatabaseMap genome_map,
-                  RuntimeAnalysisMap analysis_map,
-                  RuntimePackageMap package_map,
-                  const std::string& work_directory)
-                  : contig_alias_(std::move(contig_alias)),
-                    vcf_file_map_(std::move(vcf_file_map)),
-                    genome_map_(std::move(genome_map)),
-                    analysis_map_(std::move(analysis_map)),
-                    package_map_(std::move(package_map)),
+
+  ExecutePackage( const RuntimeProperties& runtime_options, const std::string& work_directory)
+                  : contig_alias_(runtime_options.getContigAlias()),
+                    vcf_file_map_(runtime_options.getVCFFiles()),
+                    genome_map_(runtime_options.getGenomeReferenceMap()),
+                    analysis_map_(runtime_options.getAnalysisMap()),
+                    package_map_(runtime_options.getPackageMap()),
+                    evidence_map_(runtime_options.getEvidenceMap()),
                     package_analysis_(work_directory, analysis_map_) { verifyPackages(); }
 
   ~ExecutePackage() = default;
@@ -43,6 +40,7 @@ private:
   const RuntimeGenomeDatabaseMap genome_map_;
   const RuntimeAnalysisMap analysis_map_;
   const RuntimePackageMap package_map_;
+  const VariantEvidenceMap evidence_map_;
   // The analysis management object.
   const PackageAnalysis package_analysis_;
 
@@ -54,7 +52,6 @@ private:
   [[nodiscard]] std::unique_ptr<UnphasedPopulation> iterateVCFDataFiles( const RuntimePackage& package,
                                                                          std::shared_ptr<const GenomeCollection> reference_genomes,
                                                                          const std::vector<std::string>& iterative_files) const;
-
 };
 
 

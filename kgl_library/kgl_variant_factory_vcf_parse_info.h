@@ -2,12 +2,13 @@
 // Created by kellerberrin on 10/5/20.
 //
 
-#ifndef KGL_VARIANT_FACTORY_GRCH_INFO_H
-#define KGL_VARIANT_FACTORY_GRCH_INFO_H
+#ifndef KGL_VARIANT_FACTORY_PARSE_INFO_H
+#define KGL_VARIANT_FACTORY_PARSE_INFO_H
 
 #include "kel_exec_env.h"
 #include "kgl_variant.h"
 #include "kgl_variant_evidence.h"
+#include "kgl_variant_factory_vcf_parse_header.h"
 
 #include <string>
 #include <string_view>
@@ -59,78 +60,27 @@ private:
 };
 
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The evidence factory creates a common evidence lookup object for all variants (to optimize memory usage).
+// The evidence factory also creates an evidence object for each variant.
 
-// Defines the automatically generated INFO field definitions for Gnomad VCF files.
-struct VCFInfoDescription {
 
-  bool process;
-  std::string description;
-  std::string type;
-  std::string number;
-
-};
-
-using VCFInfoProcessMap = std::map<std::string, VCFInfoDescription>;
-
-template<size_t i>
-class GnomadEvidence : public VariantEvidence {
+class EvidenceFactory {
 
 public:
 
-  GnomadEvidence(size_t vcf_record_count) : VariantEvidence(vcf_record_count) {}
-  ~GnomadEvidence() = default;
+  explicit EvidenceFactory(const EvidenceInfoSet& evidence_map) : evidence_map_(evidence_map) {}
+  ~EvidenceFactory() = default;
+
+  void availableInfoFields(const VCFInfoRecordMap& vcf_info_map);
+  [[nodiscard]] std::unique_ptr<VariantEvidence> createVariantEvidence(size_t record_count, std::string&& info);
 
 private:
 
-  std::array<unsigned long, i> test_{0};
-
-
-};
-
-// The efficient info parser and all the info field definitions for
-// the GRCh38.r3.0 series of VCF files.
-class GnomadInfo_3_0 {
-
-public:
-
-  explicit GnomadInfo_3_0(std::string&& vcf_info) : info_parser_(std::move(vcf_info)) {
-
-    loadActive();
-
-  }
-  ~GnomadInfo_3_0() = default;
-
-  [[nodiscard]] const VCFInfoParser& infoParser() const { return info_parser_; }
-
-private:
-
-  VCFInfoParser info_parser_;
-  VCFInfoProcessMap active_map_;
-  const static VCFInfoProcessMap gnomad_3_0_map_;
-
-  // load the active INFO fields into the active_map.
-  void loadActive();
-
-};
-
-
-// The efficient info parser and all the info field definitions for
-// the GRCh38.r2.1.1 series of VCF files.
-class GnomadInfo_2_1_1 {
-
-public:
-
-  explicit GnomadInfo_2_1_1(std::string&& vcf_info) : info_parser_(std::move(vcf_info)) {}
-  ~GnomadInfo_2_1_1() = default;
-
-  [[nodiscard]] const VCFInfoParser& infoParser() const { return info_parser_; }
-
-private:
-
-  VCFInfoParser info_parser_;
-  VCFInfoProcessMap active_map_;
-  const static VCFInfoProcessMap gnomad_2_1_1_map;
-
+  // The evidence fields specified in the runtime XML file.
+  const EvidenceInfoSet evidence_map_;
+  // available info fields parsed from the VCF header.
+  VCFInfoRecordMap active_info_map_;
 
 };
 

@@ -9,6 +9,8 @@
 
 namespace kgl = kellerberrin::genome;
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 
 kgl::VCFParserEnum kgl::RuntimeVCFFileInfo::getParserType(const std::string& parser_type) const {
 
@@ -29,8 +31,10 @@ kgl::VCFParserEnum kgl::RuntimeVCFFileInfo::getParserType(const std::string& par
 }
 
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 
-const kgl::ContigId_t& kgl::ContigAliasMap::lookupAlias(const ContigId_t& alias) {
+const kgl::ContigId_t& kgl::ContigAliasMap::lookupAlias(const ContigId_t& alias) const {
 
   auto result = alias_map_.find(alias);
 
@@ -57,3 +61,33 @@ void kgl::ContigAliasMap::setAlias(const ContigId_t& alias, const ContigId_t& co
 
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+std::optional<const kgl::EvidenceInfoSet> kgl::VariantEvidenceMap::lookupEvidence(const std::string& evidence_ident) const {
+
+  auto result = evidence_map_.find(evidence_ident);
+
+  if (result == evidence_map_.end()) {
+
+    ExecEnv::log().error("VariantEvidenceMap::lookupEvidence(); Cannot find evidence ident: {}", evidence_ident);
+    return std::nullopt;
+
+  }
+
+  return result->second;
+
+}
+
+
+void kgl::VariantEvidenceMap::setEvidence(const std::string& evidence_ident, const std::set<std::string>& info_list) {
+
+  auto result = evidence_map_.emplace(evidence_ident, info_list);
+
+  if (not result.second) {
+
+    ExecEnv::log().error("VariantEvidenceMap::setEvidence(); Cannot register evidence ident: {} (duplicate)", evidence_ident);
+
+  }
+
+}

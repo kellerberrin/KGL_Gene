@@ -25,8 +25,8 @@ void kgl::GrchVCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) {
 
   }
 
-  // Store all the info fields.
-  info_record_map_ = vcf_info_map;
+  // Store all the available VCF info fields.
+  evidence_factory_.availableInfoFields(vcf_info_map);
 
   if (VCFParseHeader::checkVCFReferenceContigs(vcf_contig_map, genome_db_ptr_)) {
 
@@ -63,9 +63,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
   // Parse the info fields into a map..
   // For performance reasons the info field is moved here - don't reference again.
   auto mutable_info = const_cast<std::string&>(vcf_record.info);
-  GnomadInfo_3_0 info_parser(std::move(mutable_info));
-
-  std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<VariantEvidence>(vcf_record_count));
+  std::shared_ptr<VariantEvidence> evidence_ptr = evidence_factory_.createVariantEvidence(vcf_record_count, std::move(mutable_info));
 
   // Convert VCF contig to genome contig.
   std::string contig = contig_alias_map_.lookupAlias(vcf_record.contig_id);

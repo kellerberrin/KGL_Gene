@@ -143,19 +143,27 @@ std::optional<std::string> kgl::VCFInfoParser::getInfoField(const std::string& k
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
+// The evidence factory creates a common evidence lookup object for all variants (to optimize memory usage).
+// The evidence factory also creates an evidence object for each variant (data only).
 
-void kgl::GnomadInfo_3_0::loadActive() {
 
-  for (auto const& [field, field_info] : gnomad_3_0_map_) {
+std::unique_ptr<kgl::VariantEvidence> kgl::EvidenceFactory::createVariantEvidence(size_t record_count, std::string&& info) {
 
-    if (field_info.process) {
+  if (not active_info_map_.empty()) {
 
-      auto result = active_map_.emplace(field, field_info);
+    VCFInfoParser info_parser_(std::move(info));
 
-      if (not result.second) {
+    for (auto const& subscribed_info : active_info_map_) {
 
-        ExecEnv::log().error("kgl::GnomadInfo_3_0::loadActive, Could not active INFO field : {}", field);
+      auto vcf_info_item = info_parser_.getInfoField(subscribed_info.first);
+
+      if (vcf_info_item) {
+
+        // Mark the bitfield as missing
+
+      } else {
+
+        // Mark the bitfield as present.
 
       }
 
@@ -163,4 +171,30 @@ void kgl::GnomadInfo_3_0::loadActive() {
 
   }
 
+  return std::make_unique<VariantEvidence>(record_count);
+
 }
+
+
+void kgl::EvidenceFactory::availableInfoFields(const VCFInfoRecordMap& vcf_info_map) {
+
+  for (auto const& subscribed_item : evidence_map_) {
+
+    auto result = vcf_info_map.find(subscribed_item);
+
+    if (result == vcf_info_map.end()) {
+
+      ExecEnv::log().warn("EvidenceFactory::availableInfoFields, Subscribed VCF INFO field: {} is not available from the VCF file", subscribed_item);
+
+    } else {
+
+      active_info_map_[subscribed_item] = result->second;
+
+    }
+
+  }
+
+  ExecEnv::log().info("EvidenceFactory::availableInfoFields, Subscribing to: {} VCF INFO fields", active_info_map_.size());
+
+}
+
