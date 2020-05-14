@@ -146,9 +146,88 @@ std::optional<std::string> kgl::VCFInfoParser::getInfoField(const std::string& k
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // An indexed map of InfoEvidenceIndex. There is only one of these held by all variants with INFO evidence fields.
 
-bool kgl::InfoEvidenceHeader::setupEvidenceHeader(const VCFInfoRecordMap&) {
+bool kgl::InfoEvidenceHeader::setupEvidenceHeader(const VCFInfoRecordMap& vcf_info_map, std::shared_ptr<const InfoEvidenceHeader> self_ptr) {
 
-    return true;
+  // Create a map of indexes.
+  info_index_map_.clear();
+  for (auto const& [ident , info_record] : vcf_info_map) {
+
+    InfoEvidenceType type = convertVCFType(info_record);
+    InfoEvidenceIndex info_index(info_record, type, 0, self_ptr);
+    auto result = info_index_map_.emplace(ident, info_index);
+    if (not result.second) {
+
+      ExecEnv::log().error("InfoEvidenceHeader::setupEvidenceHeader, could not add index for info field: {}", ident);
+
+    }
+
+  }
+
+  return true;
+}
+
+enum class InfoEvidenceType { Float, Integer, String, FloatArray, IntegerArray, StringArray, Boolean, NotImplemented};
+
+kgl::InfoEvidenceType kgl::InfoEvidenceHeader::convertVCFType(const VCFInfoRecord& vcf_info_item) {
+
+  if (vcf_info_item.type == INTEGER_) {
+
+    if (vcf_info_item.number == SCALAR_) {
+
+      return InfoEvidenceType::Integer;
+
+    } else {
+
+      return InfoEvidenceType::IntegerArray;
+
+    }
+
+  } else if (vcf_info_item.type == FLOAT_) {
+
+    if (vcf_info_item.number == SCALAR_) {
+
+      return InfoEvidenceType::Float;
+
+    } else {
+
+      return InfoEvidenceType::FloatArray;
+
+    }
+
+  } else if (vcf_info_item.type == FLAG_) {
+
+    if (vcf_info_item.number == FLAG_SCALAR_) {
+
+      return InfoEvidenceType::Boolean;
+
+    } else {
+
+      ExecEnv::log().warn("InfoEvidenceHeader::convertVCFType, Ident: {}, Description: {} , Info Type: {}, Number: {} not implemented",
+                          vcf_info_item.ID, vcf_info_item.description, vcf_info_item.type, vcf_info_item.number);
+      return InfoEvidenceType::NotImplemented;
+
+    }
+
+  } else if (vcf_info_item.type == CHAR_STRING_ or vcf_info_item.type == STRING_) {
+
+    if (vcf_info_item.number == SCALAR_) {
+
+      return InfoEvidenceType::String;
+
+    } else {
+
+      return InfoEvidenceType::StringArray;
+
+    }
+
+  } else {
+
+    ExecEnv::log().warn("InfoEvidenceHeader::convertVCFType, Ident: {}, Description: {} , Info Type: {}, Number: {} not implemented",
+                         vcf_info_item.ID, vcf_info_item.description, vcf_info_item.type, vcf_info_item.number);
+    return InfoEvidenceType::NotImplemented;
+
+  }
+
 }
 
 
@@ -177,6 +256,7 @@ std::optional<std::unique_ptr<kgl::InfoDataBlock>> kgl::EvidenceFactory::createV
   // Else fill up a data block and return it.
   if (not active_info_map_.empty()) {
 
+    // Parse the info line.
     VCFInfoParser info_parser_(std::move(info));
 
     for (auto const& subscribed_info : active_info_map_) {
@@ -220,7 +300,24 @@ void kgl::EvidenceFactory::availableInfoFields(const VCFInfoRecordMap& vcf_info_
 
   }
 
-  ExecEnv::log().info("Subscribing to: {} VCF INFO fields", active_info_map_.size());
+  ExecEnv::log().info("Defined VCF INFO fields: {}", vcf_info_map.size());
+  for (auto const& [ident, info_record] : vcf_info_map) {
+
+    InfoEvidenceHeader::convertVCFType(info_record);
+
+  }
+
+
+  if (info_evidence_header_->setupEvidenceHeader(active_info_map_, info_evidence_header_)) {
+
+    ExecEnv::log().info("Subscribing to: {} VCF INFO fields", active_info_map_.size());
+
+  } else {
+
+    ExecEnv::log().error("EvidenceFactory::availableInfoFields, Problem Subscribing to: {} VCF INFO fields", active_info_map_.size());
+
+  }
+
 
 }
 

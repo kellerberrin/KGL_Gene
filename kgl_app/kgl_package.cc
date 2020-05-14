@@ -15,9 +15,9 @@ void kgl::ExecutePackage::executeAll() const {
   for (auto const& [package_ident, package] : package_map_) {
 
     // Get reference genomes.
-    ExecEnv::log().info("ExecutePackage::executeAll, Load Reference Genomes for Package: {}", package_ident);
+    ExecEnv::log().info("Load Reference Genomes for Package: {}", package_ident);
     std::shared_ptr<GenomeCollection> reference_genome_ptr = loadReferenceGenomes(package);
-    ExecEnv::log().info("ExecutePackage::executeAll, Data Files and perform Analysis for Package: {}", package_ident);
+    ExecEnv::log().info("Load Data Files and perform Analysis for Package: {}", package_ident);
 
     // Setup the analytics
     if (not package_analysis_.initializeAnalysis(package, reference_genome_ptr)) {
@@ -97,7 +97,7 @@ void kgl::ExecutePackage::verifyPackages() const {
 
     }
 
-    ExecEnv::log().info("ExecutePackage::verifyPackage, Package: {}, All Reference Genomes, data files and analysis types are defined.", package_ident);
+    ExecEnv::log().info("Package: {}, All Reference Genomes, data files and analysis types are defined.", package_ident);
 
   }
 
@@ -143,11 +143,11 @@ std::unique_ptr<kgl::UnphasedPopulation> kgl::ExecutePackage::iterateVCFDataFile
 
   std::unique_ptr<UnphasedPopulation> population_ptr(std::make_unique<UnphasedPopulation>(package.packageIdentifier()));
 
-  ExecEnv::log().info("ExecutePackage::loadVCFDataFiles, Package: {}, Iterative File Vector Size:{}", package.packageIdentifier(), iterative_files.size());
+  ExecEnv::log().info("Package: {}, Iterative File Vector Size:{}", package.packageIdentifier(), iterative_files.size());
 
   for (auto const& loadfile : iterative_files) {
 
-    ExecEnv::log().info("ExecutePackage::loadVCFDataFiles, Package: {}, VCF file ident: {}", package.packageIdentifier(), loadfile);
+    ExecEnv::log().info("Package: {}, VCF file ident: {}", package.packageIdentifier(), loadfile);
 
     auto result = vcf_file_map_.find(loadfile);
     if (result == vcf_file_map_.end()) {
@@ -160,7 +160,7 @@ std::unique_ptr<kgl::UnphasedPopulation> kgl::ExecutePackage::iterateVCFDataFile
 
     if (not ref_genome_opt) {
 
-      ExecEnv::log().critical("Package: {}, Reference Genome {} Not Found for VCF file ident: {}",
+      ExecEnv::log().critical("ExecutePackage::loadVCFDataFiles, Package: {}, Reference Genome {} Not Found for VCF file ident: {}",
                               package.packageIdentifier(), result->second.referenceGenome(), loadfile);
 
     }
@@ -169,7 +169,7 @@ std::unique_ptr<kgl::UnphasedPopulation> kgl::ExecutePackage::iterateVCFDataFile
 
     if (not evidence_opt) {
 
-      ExecEnv::log().critical("Package: {}, Evidence Ident {} Not Found for VCF file ident: {}",
+      ExecEnv::log().critical("ExecutePackage::loadVCFDataFiles, Package: {}, Evidence Ident {} Not Found for VCF file ident: {}",
                               package.packageIdentifier(), result->second.evidenceIdent(), loadfile);
 
     }

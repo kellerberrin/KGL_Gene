@@ -20,7 +20,7 @@ bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
 
       if (not registered_analysis) {
 
-        ExecEnv::log().error("Registered Analysis is a NULL pointer");
+        ExecEnv::log().error("PackageAnalysis::initializeAnalysis, Registered Analysis is a NULL pointer");
         continue;
 
       }
@@ -43,13 +43,13 @@ bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
           } else {
 
             active_analysis_.emplace_back(std::move(active_analysis), false);  // Register but disable.
-            ExecEnv::log().error("Failed to Initialize Analysis: {}, further analysis discarded", analysis_id);
+            ExecEnv::log().error("PackageAnalysis::initializeAnalysis, Failed to Initialize Analysis: {}, further analysis discarded", analysis_id);
 
           }
 
         } else {
 
-          ExecEnv::log().error("Could not find Runtime Parameters for Analysis: {}, further analysis discarded", analysis_id);
+          ExecEnv::log().error("PackageAnalysis::initializeAnalysis, Could not find Runtime Parameters for Analysis: {}, further analysis discarded", analysis_id);
 
         }
 
@@ -61,7 +61,7 @@ bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
 
     if (not found) {
 
-      ExecEnv::log().error("Could not find Analysis: {}. Analysis must be registered in PackageAnalysis::PackageAnalysis", analysis_id);
+      ExecEnv::log().error("PackageAnalysis::initializeAnalysis, Could not find Analysis: {}. Analysis must be registered in PackageAnalysis::PackageAnalysis", analysis_id);
 
     }
 
@@ -76,7 +76,7 @@ bool kgl::PackageAnalysis::iterateAnalysis(std::shared_ptr<const GenomeCollectio
 
   for (auto& [analysis, active] : active_analysis_) {
 
-    ExecEnv::log().info("PackageAnalysis::iterateAnalysis; Updating Analysis: {}", analysis->ident());
+    ExecEnv::log().info("Updating Analysis: {}", analysis->ident());
 
     if (active) {
 
@@ -110,7 +110,7 @@ bool kgl::PackageAnalysis::finalizeAnalysis(std::shared_ptr<const GenomeCollecti
 
       if (not analysis->finalizeAnalysis(reference_genomes)) {
 
-        ExecEnv::log().error("Error Finalizing Updating Analysis: {}", analysis->ident());
+        ExecEnv::log().error("PackageAnalysis::initializeAnalysis, Error Finalizing Updating Analysis: {}", analysis->ident());
         active = false;
         return false;
 

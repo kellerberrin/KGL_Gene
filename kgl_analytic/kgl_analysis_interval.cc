@@ -123,7 +123,7 @@ bool kgl::IntervalAnalysis::getParameters(const std::string& work_directory, con
     ExecEnv::log().error("Analytic: {}; Expected Parameter: {} to be defined. {} is deactivated. Available named Parameters:", ident(), INTERVAL_SIZE_, ident());
     for (auto const& [parameter_ident, parameter_value] : named_parameters) {
 
-      ExecEnv::log().info("initializeAnalysis: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident, parameter_value);
+      ExecEnv::log().info("Analysis: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident, parameter_value);
 
     }
 
@@ -148,7 +148,7 @@ bool kgl::IntervalAnalysis::getParameters(const std::string& work_directory, con
     ExecEnv::log().error("Analytic: {}; Expected Parameter: {} to be defined. {} is deactivated. Available named Parameters:", ident(), OUTPUT_FILE_, ident());
     for (auto const& [parameter_ident, parameter_value] : named_parameters) {
 
-      ExecEnv::log().info("initializeAnalysis: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident, parameter_value);
+      ExecEnv::log().info("Analysis: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident, parameter_value);
 
     }
     return false;
@@ -246,7 +246,7 @@ bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const UnphasedP
 
   } // contig
 
-  ExecEnv::log().info("IntervalAnalysis::variantIntervalCount; Variants processed: {}", variant_count);
+  ExecEnv::log().info("Analysis: {},  Variants processed: {}", ident(), variant_count);
 
   return true;
 

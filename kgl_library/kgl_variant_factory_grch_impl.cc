@@ -21,7 +21,7 @@ void kgl::GrchVCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) {
   VCFInfoRecordMap vcf_info_map;
   if (not VCFParseHeader::parseVcfHeader( header_info, vcf_contig_map, vcf_info_map)) {
 
-    ExecEnv::log().error("Problem parsing header information in VCF file. No variants processed.");
+    ExecEnv::log().error("GrchVCFImpl::processVCFHeader, Problem parsing header information in VCF file. No variants processed.");
 
   }
 
@@ -30,11 +30,11 @@ void kgl::GrchVCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) {
 
   if (VCFParseHeader::checkVCFReferenceContigs(vcf_contig_map, genome_db_ptr_)) {
 
-    ExecEnv::log().info("GrchVCFImpl::processVCFHeader, VCF File and Reference Genome Contig Size and Name All Match");
+    ExecEnv::log().info("VCF File and Reference Genome Contig Size and Name All Match");
 
   } else {
 
-    ExecEnv::log().info("GrchVCFImpl::processVCFHeader, VCF File and Reference Genome Contig Size and Name Mis-Match.");
+    ExecEnv::log().info("VCF File and Reference Genome Contig Size and Name Mis-Match.");
 
   }
 
