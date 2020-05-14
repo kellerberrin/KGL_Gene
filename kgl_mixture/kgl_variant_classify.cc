@@ -128,11 +128,11 @@ kgd::MixtureDataObj kgl::VariantClassifier::convertToMixture(const GenomeId_t& a
       // If yes then increment the allele counter.
       if (find_result != variant_offset.second.end()) {
 
-        std::shared_ptr<const CountEvidence> count_evidence_ptr = std::dynamic_pointer_cast<const CountEvidence>(find_result->second->evidence());
+        std::optional<std::shared_ptr<const FormatData>> count_evidence_opt = find_result->second->evidence().formatData();
 
-        if (count_evidence_ptr) {
+        if (count_evidence_opt) {
 
-          size_t total_count = count_evidence_ptr->refCount() + count_evidence_ptr->altCount();
+          size_t total_count = count_evidence_opt.value()->refCount() + count_evidence_opt.value()->altCount();
 
           // check that minimum ref+alt count requirement is achieved.
           if (total_count >= min_count and total_count <= max_count) {
@@ -190,17 +190,17 @@ kgd::MixtureDataObj kgl::VariantClassifier::convertToMixture(const GenomeId_t& a
 
       if (find_result != variant_offset.second.end()) {
 
-        std::shared_ptr<const CountEvidence> count_evidence_ptr = std::dynamic_pointer_cast<const CountEvidence>(find_result->second->evidence());
+        std::optional<std::shared_ptr<const FormatData>> count_evidence_opt = find_result->second->evidence().formatData();
 
-        if (count_evidence_ptr) {
+        if (count_evidence_opt) {
 
-          size_t total_count = count_evidence_ptr->refCount() + count_evidence_ptr->altCount();
+          size_t total_count = count_evidence_opt.value()->refCount() + count_evidence_opt.value()->altCount();
 
           // check that minimum ref+alt count requirement is achieved.
           if (total_count >= min_count and total_count <= max_count) {
 
-            refCount.push_back(count_evidence_ptr->refCount()); // Record counts
-            altCount.push_back(count_evidence_ptr->altCount());
+            refCount.push_back(count_evidence_opt.value()->refCount()); // Record counts
+            altCount.push_back(count_evidence_opt.value()->altCount());
 
 
           } else {

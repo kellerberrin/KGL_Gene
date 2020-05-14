@@ -142,13 +142,39 @@ std::optional<std::string> kgl::VCFInfoParser::getInfoField(const std::string& k
 
 }
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// An indexed map of InfoEvidenceIndex. There is only one of these held by all variants with INFO evidence fields.
+
+bool kgl::InfoEvidenceHeader::setupEvidenceHeader(const VCFInfoRecordMap&) {
+
+    return true;
+}
+
+
+std::optional<const kgl::InfoEvidenceIndex> kgl::InfoEvidenceHeader::getIndex(const std::string&) const {
+
+  return std::nullopt;
+
+}
+
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The evidence factory creates a common evidence lookup object for all variants (to optimize memory usage).
 // The evidence factory also creates an evidence object for each variant (data only).
 
 
-std::unique_ptr<kgl::VariantEvidence> kgl::EvidenceFactory::createVariantEvidence(size_t record_count, std::string&& info) {
+std::optional<std::unique_ptr<kgl::InfoDataBlock>> kgl::EvidenceFactory::createVariantEvidence(std::string&& info) {
 
+  // If no Info fields have been requested, then just return std::nullopt
+  if (evidence_map_.empty()) {
+
+    return std::nullopt;
+
+  }
+
+  // Else fill up a data block and return it.
   if (not active_info_map_.empty()) {
 
     VCFInfoParser info_parser_(std::move(info));
@@ -171,7 +197,7 @@ std::unique_ptr<kgl::VariantEvidence> kgl::EvidenceFactory::createVariantEvidenc
 
   }
 
-  return std::make_unique<VariantEvidence>(record_count);
+  return std::make_unique<InfoDataBlock>(info_evidence_header_);
 
 }
 
@@ -194,7 +220,7 @@ void kgl::EvidenceFactory::availableInfoFields(const VCFInfoRecordMap& vcf_info_
 
   }
 
-  ExecEnv::log().info("EvidenceFactory::availableInfoFields, Subscribing to: {} VCF INFO fields", active_info_map_.size());
+  ExecEnv::log().info("Subscribing to: {} VCF INFO fields", active_info_map_.size());
 
 }
 

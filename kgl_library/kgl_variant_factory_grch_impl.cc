@@ -61,9 +61,9 @@ void kgl::GrchVCFImpl::readParseVCFImpl() {
 void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record) {
 
   // Parse the info fields into a map..
-  // For performance reasons the info field is moved here - don't reference again.
+  // For performance reasons the info field is std::moved - don't reference again.
   auto mutable_info = const_cast<std::string&>(vcf_record.info);
-  std::shared_ptr<VariantEvidence> evidence_ptr = evidence_factory_.createVariantEvidence(vcf_record_count, std::move(mutable_info));
+  std::optional<std::shared_ptr<InfoDataBlock>> info_evidence_opt = evidence_factory_.createVariantEvidence(std::move(mutable_info));
 
   // Convert VCF contig to genome contig.
   std::string contig = contig_alias_map_.lookupAlias(vcf_record.contig_id);
@@ -73,13 +73,14 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
   // The alt field can be blank (deletion).
   if (position == std::string::npos or vcf_record.alt.empty()) {
 
+    VariantEvidence evidence(vcf_record_count, info_evidence_opt);
     // Add the variant.
     if (not createAddVariant( vcf_genome_ptr_->genomeId(),
                               contig,
                               vcf_record.offset,
                               vcf_record.ref,
                               vcf_record.alt,
-                              evidence_ptr)) {
+                              evidence)) {
 
       ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Problem parsing vcf_record.");
 
@@ -99,13 +100,14 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
     for (auto const& alt : alt_vector) {
 
+      VariantEvidence evidence(vcf_record_count, info_evidence_opt);
       // Add the variant.
       if (not createAddVariant( vcf_genome_ptr_->genomeId(),
                                 contig,
                                 vcf_record.offset,
                                 vcf_record.ref,
                                 alt,
-                                evidence_ptr)) {
+                                evidence)) {
 
         ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Parsing GRCh VCF, Problem parsing vcf_record");
 
@@ -132,7 +134,7 @@ bool kgl::GrchVCFImpl::createAddVariant(const GenomeId_t& genome_name,
                                         ContigOffset_t contig_offset,
                                         const std::string& reference_text,
                                         const std::string& alternate_text,
-                                        const std::shared_ptr<const VariantEvidence> evidence_ptr)  {
+                                        const VariantEvidence& evidence)  {
 
   StringDNA5 reference_str(reference_text);
   StringDNA5 alternate_str(alternate_text);
@@ -141,7 +143,7 @@ bool kgl::GrchVCFImpl::createAddVariant(const GenomeId_t& genome_name,
                                                                           contig_id,
                                                                           VariantSequence::UNPHASED,
                                                                           contig_offset,
-                                                                          evidence_ptr,
+                                                                          evidence,
                                                                           std::move(reference_str),
                                                                           std::move(alternate_str)));
 

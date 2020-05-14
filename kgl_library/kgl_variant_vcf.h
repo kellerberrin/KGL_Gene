@@ -35,10 +35,10 @@ public:
              const ContigId_t& contig_id,
              PhaseId_t phase_id,
              ContigOffset_t contig_offset,
-             std::shared_ptr<const VariantEvidence> evidence_ptr,
+             const VariantEvidence& evidence,
              StringDNA5&& reference,
              StringDNA5&& alternate)
-  : Variant(genome_id, contig_id, phase_id, contig_offset, evidence_ptr),
+  : Variant(genome_id, contig_id, phase_id, contig_offset, evidence),
     reference_(std::move(reference)),
     alternate_(std::move(alternate)) {}
 

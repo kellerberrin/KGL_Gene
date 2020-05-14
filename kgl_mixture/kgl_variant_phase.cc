@@ -204,9 +204,9 @@ bool kgl::GenomePhasing::analyseCountStatistics(const UnphasedVectorVariantCount
   double proportion_alternate = 0.0;
   for (size_t i = 0; i < unphased_vector.size(); ++i) {
 
-    std::shared_ptr<const CountEvidence> read_evidence_ptr = std::dynamic_pointer_cast<const CountEvidence>(unphased_vector[i]->evidence());
+    std::optional<std::shared_ptr<const FormatData>> read_evidence_opt = unphased_vector[i]->evidence().formatData();
 
-    if (not read_evidence_ptr) {
+    if (not read_evidence_opt) {
 
       ExecEnv::log().error("Haploid Phasing; Unexpected evidence ptr type for variant: {}",
                            unphased_vector[i]->output(' ', VariantOutputIndex::START_0_BASED, true));
@@ -215,10 +215,10 @@ bool kgl::GenomePhasing::analyseCountStatistics(const UnphasedVectorVariantCount
     }
 
 //    auto total_counts = read_evidence_ptr->refCount() + read_evidence_ptr->altCount();
-    auto total_counts = read_evidence_ptr->DPCount();
+    auto total_counts = read_evidence_opt.value()->DPCount();
     if (total_counts == 0) continue;
 
-    double proportion_variant = static_cast<double>(read_evidence_ptr->altCount()) / static_cast<double>(total_counts);
+    double proportion_variant = static_cast<double>(read_evidence_opt.value()->altCount()) / static_cast<double>(total_counts);
 
     if (proportion_variant > proportion_alternate) {
 

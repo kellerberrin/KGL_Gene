@@ -7,7 +7,6 @@
 
 #include "kgl_genome_types.h"
 #include "kgl_genome_db.h"
-#include "kgl_variant_file_impl.h"
 
 #include <memory>
 #include <string>

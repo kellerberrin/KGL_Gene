@@ -87,9 +87,9 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
   }
 
   // Parse the info fields into a map.
-  // For performance reasons the info field is moved here - don't reference again.
+  // For performance reasons the info field is std::moved - don't reference again.
   auto mutable_info = const_cast<std::string&>(record.info);
-  VCFInfoParser info_key_value_map(std::move(mutable_info));  // Each vcf record.
+  std::optional<std::shared_ptr<InfoDataBlock>> info_evidence_opt = evidence_factory_.createVariantEvidence(std::move(mutable_info));  // Each vcf record.
 
   if (getGenomeNames().size() != record.genotypeInfos.size()) {
 
@@ -108,24 +108,6 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
 
       if (genotype_parser.getFormatChar(recordParser.PLOffset(), genotype) != PL_CHECK_ZERO_
           and genotype_parser.getFormatChar(recordParser.PLOffset(), genotype) != PL_CHECK_DOT_) {
-
-        std::optional<std::string> vqslod_text = info_key_value_map.getInfoField(VQSLOD_INFO_FIELD_);
-        double vqslod = 0.0;
-        if (vqslod_text) {
-
-          try {
-
-            vqslod = std::stof(vqslod_text.value());
-
-          }
-          catch(...) {
-
-            ExecEnv::log().warn("Pf3kVCFImpl::ParseRecord, Non-numeric vqslod text: {}", vqslod_text.value());
-            continue;
-
-          }
-
-        }
 
         std::vector<std::string> gt_vector = Utility::tokenizer(genotype_parser.getFormatString(recordParser.GTOffset(), genotype), GT_FIELD_SEPARATOR_);
 
@@ -192,12 +174,6 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
                             and GQ_value >= MIN_GQ_QUALITY_
                             and DP_value >= MIN_DEPTH_;
 
-        if (vqslod_text) {
-
-          valid_record = valid_record and vqslod >= MIN_VQSLOD_QUALITY_;
-
-        }
-
         if (valid_record and A_allele > 0) {
 
           size_t allele_index = A_allele - 1;   // 0 is the reference
@@ -213,22 +189,19 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
 
           if (allele != UPSTREAM_ALLELE_ and not downstream_variant) {
 
-            // Evidence object
-/*            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(vcf_record_count,
-                                                                                          ref_count,
-                                                                                          alt_count,
-                                                                                          DP_value,
-                                                                                          GQ_value,
-                                                                                          recordParser.quality()));
-*/
-            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<VariantEvidence>(vcf_record_count));
-
+            // Format Evidence object
+            std::shared_ptr<FormatData> format_data_ptr(std::make_shared<FormatData>(ref_count,
+                                                                                     alt_count,
+                                                                                     DP_value,
+                                                                                     GQ_value,
+                                                                                     recordParser.quality()));
+            VariantEvidence evidence(vcf_record_count, info_evidence_opt, format_data_ptr);
             if (not createAddVariant(genome_name,
                                      recordParser.contigPtr(),
                                      recordParser.offset(),
                                      recordParser.reference(),
                                      allele,
-                                     evidence_ptr)) {
+                                     evidence)) {
 
               ExecEnv::log().error("Parsing Pf3k VCF, Problem parsing A allele CIGAR items");
 
@@ -255,23 +228,19 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
 
           if (allele != UPSTREAM_ALLELE_ and not downstream_variant) {
 
-            // Evidence object
-/*            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<CountEvidence>(vcf_record_count,
-                                                                                          ref_count,
-                                                                                          alt_count,
-                                                                                          DP_value,
-                                                                                          GQ_value,
-                                                                                          recordParser.quality()));
-
-*/
-            std::shared_ptr<VariantEvidence> evidence_ptr(std::make_shared<VariantEvidence>(vcf_record_count));
-
+            // Format Evidence object
+            std::shared_ptr<FormatData> format_data_ptr(std::make_shared<FormatData>(ref_count,
+                                                                                     alt_count,
+                                                                                     DP_value,
+                                                                                     GQ_value,
+                                                                                     recordParser.quality()));
+            VariantEvidence evidence(vcf_record_count, info_evidence_opt, format_data_ptr);
             if (not createAddVariant(genome_name,
                                      recordParser.contigPtr(),
                                      recordParser.offset(),
                                      recordParser.reference(),
                                      allele,
-                                     evidence_ptr)) {
+                                     evidence)) {
 
               ExecEnv::log().error("Parsing Pf3k VCF, Problem parsing B allele CIGAR items");
 
@@ -363,7 +332,7 @@ bool kgl::Pf3kVCFImpl::createAddVariant(const std::string& genome_name,
                                          ContigOffset_t contig_offset,
                                          const std::string& reference_text,
                                          const std::string& alternate_text,
-                                         const std::shared_ptr<const VariantEvidence> evidence_ptr)  {
+                                         const VariantEvidence& evidence)  {
 
   StringDNA5 reference_str(reference_text);
   StringDNA5 alternate_str(alternate_text);
@@ -372,7 +341,7 @@ bool kgl::Pf3kVCFImpl::createAddVariant(const std::string& genome_name,
                                                                           contig_ptr->contigId(),
                                                                           VariantSequence::UNPHASED,
                                                                           contig_offset,
-                                                                          evidence_ptr,
+                                                                          evidence,
                                                                           std::move(reference_str),
                                                                           std::move(alternate_str)));
 

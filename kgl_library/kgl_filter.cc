@@ -15,11 +15,11 @@ namespace kgl = kellerberrin::genome;
 
 bool kgl::RefAltCountFilter::implementFilter(const Variant& variant) const {
 
-  std::shared_ptr<const CountEvidence> count_evidence_ptr = std::dynamic_pointer_cast<const CountEvidence>(variant.evidence());
+  std::optional<std::shared_ptr<const FormatData>> count_evidence_opt = variant.evidence().formatData();
 
-  if (count_evidence_ptr) {
+  if (count_evidence_opt) {
 
-    return (count_evidence_ptr->refCount() + count_evidence_ptr->altCount()) >= minimum_count_;
+    return (count_evidence_opt.value()->refCount() + count_evidence_opt.value()->altCount()) >= minimum_count_;
 
   } else {
 
@@ -47,11 +47,11 @@ std::string kgl::RefAltCountFilter::filterName() const {
 
 bool kgl::DPCountFilter::implementFilter(const Variant& variant) const {
 
-  std::shared_ptr<const CountEvidence> count_evidence_ptr = std::dynamic_pointer_cast<const CountEvidence>(variant.evidence());
+  std::optional<std::shared_ptr<const FormatData>> count_evidence = variant.evidence().formatData();
 
-  if (count_evidence_ptr) {
+  if (count_evidence) {
 
-    return count_evidence_ptr->DPCount() >= minimum_count_;
+    return count_evidence.value()->DPCount() >= minimum_count_;
 
   } else {
 

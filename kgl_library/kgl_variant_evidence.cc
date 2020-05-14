@@ -14,16 +14,21 @@ std::string kgl::VariantEvidence::output(char delimiter, VariantOutputIndex) con
 
   ss << delimiter   << "VCFRecord:" << vcfRecordCount();
 
+  if (formatData()) {
+
+    ss << formatData().value()->output(delimiter);
+
+  }
+
   return ss.str();
 
 }
 
 
-std::string kgl::CountEvidence::output(char delimiter, VariantOutputIndex output_index) const {
+std::string kgl::FormatData::output(char delimiter) const {
 
   std::stringstream ss;
 
-  ss << VariantEvidence::output(delimiter, output_index) << delimiter;
   ss << delimiter << "RefCount:" << refCount();
   ss << delimiter << "AltCount:" << altCount();
   ss << delimiter << "DPCount:" << DPCount();

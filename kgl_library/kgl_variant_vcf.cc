@@ -27,9 +27,9 @@ std::string kgl::VCFVariant::output(char delimiter, VariantOutputIndex output_in
   ss << name() << delimiter << size() << delimiter;
   ss << mutation(delimiter, output_index);
 
-  if (detail and evidence()) {
+  if (detail) {
 
-    ss << evidence()->output(delimiter, output_index);
+    ss << evidence().output(delimiter, output_index);
 
   }
 

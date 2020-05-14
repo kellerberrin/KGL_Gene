@@ -68,7 +68,7 @@ private:
                          ContigOffset_t contig_offset,
                          const std::string& reference_text,
                          const std::string& alternate_text,
-                         const std::shared_ptr<const VariantEvidence> evidence_ptr);
+                         const VariantEvidence& evidence);
 
   bool addThreadSafeVariant(std::shared_ptr<const Variant>& variant_ptr);
 

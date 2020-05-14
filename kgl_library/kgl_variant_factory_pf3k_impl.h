@@ -85,7 +85,7 @@ private:
                                       ContigOffset_t contig_offset,
                                       const std::string& reference,
                                       const std::string& alternate,
-                                      const std::shared_ptr<const VariantEvidence> evidence_ptr);
+                                      const VariantEvidence& evidence);
 
 };
 

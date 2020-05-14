@@ -63,11 +63,11 @@ public:
                   const ContigId_t& contig_id,
                   PhaseId_t phase_id,
                   ContigOffset_t contig_offset,
-                  std::shared_ptr<const VariantEvidence> evidence_ptr) : genome_id_(genome_id),
-                                                                         contig_id_(contig_id),
-                                                                         phase_id_(phase_id),
-                                                                         contig_offset_(contig_offset),
-                                                                         evidence_ptr_(evidence_ptr) {}
+                  const VariantEvidence& evidence) : genome_id_(genome_id),
+                                                     contig_id_(contig_id),
+                                                     phase_id_(phase_id),
+                                                     contig_offset_(contig_offset),
+                                                     evidence_(evidence) {}
   virtual ~VariantSequence() = default;
 
   [[nodiscard]] const GenomeId_t& genomeId() const { return genome_id_; }
@@ -76,7 +76,7 @@ public:
   [[nodiscard]] PhaseId_t phaseId() const { return phase_id_; }
   virtual void updatePhaseId(PhaseId_t phase_id) { protectedPhaseId(phase_id); }
 
-  [[nodiscard]] std::shared_ptr<const VariantEvidence> evidence() const { return evidence_ptr_; }
+  [[nodiscard]] const VariantEvidence& evidence() const { return evidence_; }
 
   [[nodiscard]] std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
 
@@ -92,7 +92,7 @@ private:
   ContigId_t contig_id_;                          // The contig of this variant
   PhaseId_t phase_id_;                            // The phase of this variant (which homologous contig)
   ContigOffset_t contig_offset_;                  // Location on the contig.
-  const std::shared_ptr<const VariantEvidence> evidence_ptr_;  // Addition information about the variant.
+  VariantEvidence evidence_;
 
 };
 
@@ -114,11 +114,11 @@ public:
           const ContigId_t& contig_id,
           PhaseId_t phase_id,
           ContigOffset_t contig_offset,
-          std::shared_ptr<const VariantEvidence> evidence_ptr) : VariantSequence(genome_id,
-                                                                                 contig_id,
-                                                                                 phase_id,
-                                                                                 contig_offset,
-                                                                                 evidence_ptr) {}
+          const VariantEvidence& evidence) : VariantSequence(genome_id,
+                                             contig_id,
+                                             phase_id,
+                                             contig_offset,
+                                             evidence) {}
   ~Variant() override = default;
   [[nodiscard]] bool filterVariant(const VariantFilter& filter) const { return applyFilter(filter); }
 

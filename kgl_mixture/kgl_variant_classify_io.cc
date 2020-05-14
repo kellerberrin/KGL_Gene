@@ -70,16 +70,16 @@ bool kgl::VariantClassifier::writeVariants(char delimiter,
 
       if (find_result != variant_offset.second.end()) {
 
-        std::shared_ptr<const CountEvidence> count_evidence_ptr = std::dynamic_pointer_cast<const CountEvidence>(find_result->second->evidence());
+        std::optional<std::shared_ptr<const FormatData>> count_evidence_opt = find_result->second->evidence().formatData();
 
-        if (count_evidence_ptr) {
+        if (count_evidence_opt) {
 
-          size_t total_count = count_evidence_ptr->refCount() + count_evidence_ptr->altCount();
+          size_t total_count = count_evidence_opt.value()->refCount() + count_evidence_opt.value()->altCount();
 
           if (total_count >= min_count) {
 
-            ref_count_file << count_evidence_ptr->refCount() << delimiter;
-            alt_count_file << count_evidence_ptr->altCount() << delimiter;
+            ref_count_file << count_evidence_opt.value()->refCount() << delimiter;
+            alt_count_file << count_evidence_opt.value()->altCount() << delimiter;
 
           } else {
 
@@ -203,21 +203,20 @@ bool kgl::VariantClassifier::writePlaf(char delimiter,
 
       if (find_result != variant_offset.second.end()) {
 
-        std::shared_ptr<const CountEvidence> count_evidence_ptr = std::dynamic_pointer_cast<const CountEvidence>(
-        find_result->second->evidence());
+        std::optional<std::shared_ptr<const FormatData>> count_evidence_opt = find_result->second->evidence().formatData();
 
-        if (count_evidence_ptr) {
+        if (count_evidence_opt) {
 
-          size_t total_count = count_evidence_ptr->refCount() + count_evidence_ptr->altCount();
+          size_t total_count = count_evidence_opt.value()->refCount() + count_evidence_opt.value()->altCount();
 
           if (total_count >= min_count) {
 
             ++allele_count;
             *(genome_ref_files[genome_offset]) << variant_offset.first.variant()->contigId() << delimiter << variant_offset.first.variant()->offset()
-                                               << delimiter << count_evidence_ptr->refCount() << '\n';
+                                               << delimiter << count_evidence_opt.value()->refCount() << '\n';
 
             *(genome_alt_files[genome_offset]) << variant_offset.first.variant()->contigId() << delimiter << variant_offset.first.variant()->offset()
-                                               << delimiter << count_evidence_ptr->altCount() << '\n';
+                                               << delimiter << count_evidence_opt.value()->altCount() << '\n';
 
 
           } else {
@@ -303,16 +302,16 @@ bool kgl::VariantClassifier::orderVariantCount(OrderedAltCount& ordered_count, s
 
       if (find_result != variant_offset.second.end()) {
 
-        std::shared_ptr<const CountEvidence> count_evidence_ptr = std::dynamic_pointer_cast<const CountEvidence>(find_result->second->evidence());
+        std::optional<std::shared_ptr<const FormatData>> count_evidence_opt = find_result->second->evidence().formatData();
 
-        if (count_evidence_ptr) {
+        if (count_evidence_opt) {
 
-          size_t total_count = count_evidence_ptr->refCount() + count_evidence_ptr->altCount();
+          size_t total_count = count_evidence_opt.value()->refCount() + count_evidence_opt.value()->altCount();
 
           if (total_count >= min_count) {
 
-            ref_count.push_back(count_evidence_ptr->refCount());
-            alt_count.push_back(count_evidence_ptr->altCount());
+            ref_count.push_back(count_evidence_opt.value()->refCount());
+            alt_count.push_back(count_evidence_opt.value()->altCount());
 
           } else {
 

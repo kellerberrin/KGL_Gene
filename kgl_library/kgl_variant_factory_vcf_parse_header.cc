@@ -1,8 +1,8 @@
 //
 // Created by kellerberrin on 11/5/20.
 
-#include "kgl_variant_factory_vcf_parse_header.h"
 #include "kel_basic_io.h"
+#include "kgl_variant_factory_vcf_parse_header.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
