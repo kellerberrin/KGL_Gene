@@ -89,7 +89,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
   // Parse the info fields into a map.
   // For performance reasons the info field is std::moved - don't reference again.
   auto mutable_info = const_cast<std::string&>(record.info);
-  std::optional<std::shared_ptr<InfoDataBlock>> info_evidence_opt = evidence_factory_.createVariantEvidence(std::move(mutable_info));  // Each vcf record.
+  InfoDataPair info_evidence_opt = evidence_factory_.createVariantEvidence(std::move(mutable_info));  // Each vcf record.
 
   if (getGenomeNames().size() != record.genotypeInfos.size()) {
 
@@ -195,7 +195,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
                                                                                      DP_value,
                                                                                      GQ_value,
                                                                                      recordParser.quality()));
-            VariantEvidence evidence(vcf_record_count, info_evidence_opt, format_data_ptr);
+            VariantEvidence evidence(vcf_record_count, info_evidence_opt.first, format_data_ptr);
             if (not createAddVariant(genome_name,
                                      recordParser.contigPtr(),
                                      recordParser.offset(),
@@ -234,7 +234,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
                                                                                      DP_value,
                                                                                      GQ_value,
                                                                                      recordParser.quality()));
-            VariantEvidence evidence(vcf_record_count, info_evidence_opt, format_data_ptr);
+            VariantEvidence evidence(vcf_record_count, info_evidence_opt.first, format_data_ptr);
             if (not createAddVariant(genome_name,
                                      recordParser.contigPtr(),
                                      recordParser.offset(),

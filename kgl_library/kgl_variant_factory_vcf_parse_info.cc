@@ -4,6 +4,7 @@
 
 #include "kgl_variant_factory_vcf_parse_info.h"
 
+#include <string_view>
 
 namespace kgl = kellerberrin::genome;
 
@@ -19,6 +20,7 @@ bool kgl::VCFInfoParser::parseInfo() {
   size_t key_token_offset = 0;
   size_t value_token_count = 0;
   size_t value_token_offset = 0;
+  size_t value_sub_field_count = 0;  // Count the number of sub fields in a value e.g. "9,9,9" = 3.
   std::string_view key_view;
   std::string_view value_view;
   const std::string_view empty_value_view;
@@ -34,11 +36,13 @@ bool kgl::VCFInfoParser::parseInfo() {
           parser_state = ParserStates::ValueToken;
           value_token_offset = index + 1;
           value_token_count = 0;
+          value_sub_field_count = 0;
 
         } else if (info_view_[index] == INFO_FIELD_DELIMITER_) {
 
           key_view = info_view_.substr(key_token_offset, key_token_count);
-          auto result = parsed_token_map_.emplace(key_view, empty_value_view);
+          value_sub_field_count = 0;
+          auto result = parsed_token_map_.emplace(key_view, InfoParserToken(empty_value_view, value_sub_field_count));
           if (not result.second) {
 
             ExecEnv::log().warn("VCFInfoParser::parseInfo, cannot insert <key>, <value> pair, (duplicate)");
@@ -58,7 +62,8 @@ bool kgl::VCFInfoParser::parseInfo() {
         if (info_view_[index] == INFO_FIELD_DELIMITER_) {
 
           value_view = info_view_.substr(value_token_offset, value_token_count);
-          auto result = parsed_token_map_.emplace(key_view, value_view);
+          ++value_sub_field_count;
+          auto result = parsed_token_map_.emplace(key_view, InfoParserToken(value_view, value_sub_field_count));
           if (not result.second) {
 
             ExecEnv::log().warn("VCFInfoParser::parseInfo, cannot insert <key>, <value> pair, (duplicate)");
@@ -70,6 +75,7 @@ bool kgl::VCFInfoParser::parseInfo() {
 
         } else {
 
+          if (info_view_[index] == INFO_VECTOR_DELIMITER_) ++value_sub_field_count;
           ++value_token_count;
 
         }
@@ -94,7 +100,8 @@ bool kgl::VCFInfoParser::parseInfo() {
     }
 
     value_view = info_view_.substr(value_token_offset, value_token_count);
-    auto result = parsed_token_map_.emplace(key_view, value_view);
+    ++value_sub_field_count;
+    auto result = parsed_token_map_.emplace(key_view, InfoParserToken(value_view, value_sub_field_count));
     if (not result.second) {
 
       ExecEnv::log().warn("VCFInfoParser::parseInfo, cannot insert <key>, <value> pair, (duplicate)");
@@ -115,7 +122,8 @@ bool kgl::VCFInfoParser::parseInfo() {
     }
 
     key_view = info_view_.substr(key_token_offset, key_token_count);
-    auto result = parsed_token_map_.emplace(key_view, empty_value_view);
+    value_sub_field_count = 0;
+    auto result = parsed_token_map_.emplace(key_view, InfoParserToken(empty_value_view, value_sub_field_count));
     if (not result.second) {
 
       ExecEnv::log().warn("VCFInfoParser::parseInfo, cannot insert <key>, <value> pair, (duplicate)");
@@ -129,12 +137,12 @@ bool kgl::VCFInfoParser::parseInfo() {
 }
 
 
-std::optional<std::string> kgl::VCFInfoParser::getInfoField(const std::string& key) const {
+std::optional<std::string> kgl::VCFInfoParser::getInfoString(const std::string& key) const {
 
   auto key_it = parsed_token_map_.find(key);
   if (key_it != parsed_token_map_.end()) {
 
-    return std::string(key_it->second);
+    return std::string(key_it->second.first);
 
   }
 
@@ -143,181 +151,158 @@ std::optional<std::string> kgl::VCFInfoParser::getInfoField(const std::string& k
 }
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// An indexed map of InfoEvidenceIndex. There is only one of these held by all variants with INFO evidence fields.
+std::optional<std::vector<std::string>> kgl::VCFInfoParser::getInfoStringArray(const std::string& key) const {
 
-bool kgl::InfoEvidenceHeader::setupEvidenceHeader(const VCFInfoRecordMap& vcf_info_map, std::shared_ptr<const InfoEvidenceHeader> self_ptr) {
+  auto key_it = parsed_token_map_.find(key);
+  if (key_it != parsed_token_map_.end()) {
 
-  // Create a map of indexes.
-  info_index_map_.clear();
-  for (auto const& [ident , info_record] : vcf_info_map) {
-
-    InfoEvidenceType type = convertVCFType(info_record);
-    InfoEvidenceIndex info_index(info_record, type, 0, self_ptr);
-    auto result = info_index_map_.emplace(ident, info_index);
-    if (not result.second) {
-
-      ExecEnv::log().error("InfoEvidenceHeader::setupEvidenceHeader, could not add index for info field: {}", ident);
-
-    }
+    return Utility::tokenizer(std::string(key_it->second.first), INFO_VECTOR_DELIMITER_STR_);
 
   }
-
-  return true;
-}
-
-enum class InfoEvidenceType { Float, Integer, String, FloatArray, IntegerArray, StringArray, Boolean, NotImplemented};
-
-kgl::InfoEvidenceType kgl::InfoEvidenceHeader::convertVCFType(const VCFInfoRecord& vcf_info_item) {
-
-  if (vcf_info_item.type == INTEGER_) {
-
-    if (vcf_info_item.number == SCALAR_) {
-
-      return InfoEvidenceType::Integer;
-
-    } else {
-
-      return InfoEvidenceType::IntegerArray;
-
-    }
-
-  } else if (vcf_info_item.type == FLOAT_) {
-
-    if (vcf_info_item.number == SCALAR_) {
-
-      return InfoEvidenceType::Float;
-
-    } else {
-
-      return InfoEvidenceType::FloatArray;
-
-    }
-
-  } else if (vcf_info_item.type == FLAG_) {
-
-    if (vcf_info_item.number == FLAG_SCALAR_) {
-
-      return InfoEvidenceType::Boolean;
-
-    } else {
-
-      ExecEnv::log().warn("InfoEvidenceHeader::convertVCFType, Ident: {}, Description: {} , Info Type: {}, Number: {} not implemented",
-                          vcf_info_item.ID, vcf_info_item.description, vcf_info_item.type, vcf_info_item.number);
-      return InfoEvidenceType::NotImplemented;
-
-    }
-
-  } else if (vcf_info_item.type == CHAR_STRING_ or vcf_info_item.type == STRING_) {
-
-    if (vcf_info_item.number == SCALAR_) {
-
-      return InfoEvidenceType::String;
-
-    } else {
-
-      return InfoEvidenceType::StringArray;
-
-    }
-
-  } else {
-
-    ExecEnv::log().warn("InfoEvidenceHeader::convertVCFType, Ident: {}, Description: {} , Info Type: {}, Number: {} not implemented",
-                         vcf_info_item.ID, vcf_info_item.description, vcf_info_item.type, vcf_info_item.number);
-    return InfoEvidenceType::NotImplemented;
-
-  }
-
-}
-
-
-std::optional<const kgl::InfoEvidenceIndex> kgl::InfoEvidenceHeader::getIndex(const std::string&) const {
 
   return std::nullopt;
 
 }
 
+std::optional<int64_t> kgl::VCFInfoParser::getInfoInteger(const std::string& key) const {
+
+  auto key_it = parsed_token_map_.find(key);
+  if (key_it != parsed_token_map_.end()) {
+
+    return convertToInteger(key, std::string(key_it->second.first));
+
+  }
+
+  return std::nullopt; // field not found.
+
+}
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// The evidence factory creates a common evidence lookup object for all variants (to optimize memory usage).
-// The evidence factory also creates an evidence object for each variant (data only).
+std::optional<std::vector<std::optional<int64_t>>> kgl::VCFInfoParser::getInfoIntegerArray(const std::string& key) const {
+
+  auto key_it = parsed_token_map_.find(key);
+  if (key_it != parsed_token_map_.end()) {
+
+    std::vector<std::string> value_array = Utility::tokenizer(std::string(key_it->second.first), INFO_VECTOR_DELIMITER_STR_);
+    std::vector<std::optional<int64_t>> integer_vector{value_array.size()};   // Preallocate vector size.
+    for (auto& value : value_array) {
+
+      integer_vector.push_back(convertToInteger(key, value));
+
+    }
+
+    return(std::move(integer_vector));
+
+  }
+
+  return std::nullopt; // field not found.
+
+}
 
 
-std::optional<std::unique_ptr<kgl::InfoDataBlock>> kgl::EvidenceFactory::createVariantEvidence(std::string&& info) {
+std::optional<double> kgl::VCFInfoParser::getInfoFloat(const std::string& key) const {
 
-  // If no Info fields have been requested, then just return std::nullopt
-  if (evidence_map_.empty()) {
+  auto key_it = parsed_token_map_.find(key);
+  if (key_it != parsed_token_map_.end()) {
 
+    return convertToFloat(key, std::string(key_it->second.first));
+
+  }
+
+  return std::nullopt; // field not found.
+
+}
+
+
+std::optional<std::vector<std::optional<double>>> kgl::VCFInfoParser::getInfoFloatArray(const std::string& key) const {
+
+  auto key_it = parsed_token_map_.find(key);
+  if (key_it != parsed_token_map_.end()) {
+
+    std::vector<std::string> value_array = Utility::tokenizer(std::string(key_it->second.first), INFO_VECTOR_DELIMITER_STR_);
+    std::vector<std::optional<double>> float_vector{value_array.size()};   // Preallocate vector size.
+    for (auto& value : value_array) {
+
+      float_vector.push_back(convertToFloat(key, value));
+
+    }
+
+    return(std::move(float_vector));
+
+  }
+
+  return std::nullopt; // field not found.
+
+}
+
+
+std::optional<int64_t> kgl::VCFInfoParser::convertToInteger(const std::string& key, const std::string& value) {
+
+  try {
+
+    return std::stoll(std::string(value));
+
+  }
+  catch(std::out_of_range& e) {
+
+    ExecEnv::log().warn("VCFInfoParser::convertToInteger, Exception:Out of of Range,  Field:{}, Value: {}", key, value);
+    return std::nullopt;
+
+  }
+  catch(std::invalid_argument& e) {
+
+    if (std::string(value) == INFO_VECTOR_MISSING_VALUE_STR_) {
+
+      return std::nullopt;
+
+    }
+
+    ExecEnv::log().error("VCFInfoParser::convertToInteger, Exception:Invalid Argument, Field {}, Value {}",key, value);
+    return std::nullopt;
+
+  }
+  catch(std::exception& e) {
+
+    ExecEnv::log().error("VCFInfoParser::convertToInteger, Exception:Unknown, Field {}, Value {}",key, value);
     return std::nullopt;
 
   }
 
-  // Else fill up a data block and return it.
-  if (not active_info_map_.empty()) {
-
-    // Parse the info line.
-    VCFInfoParser info_parser_(std::move(info));
-
-    for (auto const& subscribed_info : active_info_map_) {
-
-      auto vcf_info_item = info_parser_.getInfoField(subscribed_info.first);
-
-      if (vcf_info_item) {
-
-        // Mark the bitfield as missing
-
-      } else {
-
-        // Mark the bitfield as present.
-
-      }
-
-    }
-
-  }
-
-  return std::make_unique<InfoDataBlock>(info_evidence_header_);
-
 }
 
 
-void kgl::EvidenceFactory::availableInfoFields(const VCFInfoRecordMap& vcf_info_map) {
+std::optional<double> kgl::VCFInfoParser::convertToFloat(const std::string& key, const std::string& value) {
 
-  for (auto const& subscribed_item : evidence_map_) {
+  try {
 
-    auto result = vcf_info_map.find(subscribed_item);
+    return std::stod(std::string(value));
 
-    if (result == vcf_info_map.end()) {
+  }
+  catch(std::out_of_range& e) {
 
-      ExecEnv::log().warn("EvidenceFactory::availableInfoFields, Subscribed VCF INFO field: {} is not available from the VCF file", subscribed_item);
+    ExecEnv::log().warn("VCFInfoParser::convertToFloat, Exception:Out of of Range,  Field:{}, Value: {}", key, value);
+    return std::nullopt;
 
-    } else {
+  }
+  catch(std::invalid_argument& e) {
 
-      active_info_map_[subscribed_item] = result->second;
+    if (std::string(value) == INFO_VECTOR_MISSING_VALUE_STR_) {
+
+      return std::nullopt;
 
     }
 
-  }
-
-  ExecEnv::log().info("Defined VCF INFO fields: {}", vcf_info_map.size());
-  for (auto const& [ident, info_record] : vcf_info_map) {
-
-    InfoEvidenceHeader::convertVCFType(info_record);
+    ExecEnv::log().error("VCFInfoParser::convertToFloat, Exception:Invalid Argument, Field {}, Value {}",key, value);
+    return std::nullopt;
 
   }
+  catch(std::exception& e) {
 
-
-  if (info_evidence_header_->setupEvidenceHeader(active_info_map_, info_evidence_header_)) {
-
-    ExecEnv::log().info("Subscribing to: {} VCF INFO fields", active_info_map_.size());
-
-  } else {
-
-    ExecEnv::log().error("EvidenceFactory::availableInfoFields, Problem Subscribing to: {} VCF INFO fields", active_info_map_.size());
+    ExecEnv::log().error("VCFInfoParser::convertToFloat, Exception:Unknown, Field {}, Value {}",key, value);
+    return std::nullopt;
 
   }
-
 
 }
+
 
