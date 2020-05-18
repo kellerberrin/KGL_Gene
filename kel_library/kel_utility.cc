@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <iostream>
 #include "kel_utility.h"
+#include "kel_exec_env.h"
+
 #include <boost/timer/timer.hpp>
 #define BOOST_FILESYSTEM_NO_DEPRECATED // Recommended by boost filesystem documentation.
 #include <boost/filesystem.hpp>
@@ -175,10 +177,78 @@ std::string kel::Utility::findAndReplaceAll(const std::string& source, const std
 
 std::vector<std::string> kel::Utility::tokenizer(const std::string& str, const std::string& delims)
 {
-  std::vector<std::string> token_vector;
 
+  if (delims.size() == 1) {
+
+    return char_tokenizer(str, delims[0]);
+
+  }
+
+  std::vector<std::string> token_vector;
   boost::tokenizer<boost::char_separator<char>> tokens(str, boost::char_separator<char>(delims.c_str()));
   std::copy(tokens.begin(), tokens.end(), std::back_inserter(token_vector));
 
   return token_vector;
+}
+
+
+std::vector<std::string_view> kel::Utility::view_tokenizer(const std::string_view& str_view, const char delim) {
+
+  std::vector<std::string_view> token_vector;
+  size_t token_index{0};
+  size_t token_count{0};
+
+  for (size_t index = 0; index < str_view.size(); ++index) {
+
+    if (str_view[index] == delim) {
+
+      token_vector.emplace_back(str_view.substr(token_index, token_count));
+      token_index = index + 1;
+      token_count = 0;
+
+    } else {
+
+      ++token_count;
+
+    }
+
+  }
+
+  if (token_index + token_count != str_view.size()) {
+
+    ExecEnv::log().error("Utility::view_tokenizer, final token index: {}, token count: {} does not equal string_view size: {}",
+                         token_index, token_count, str_view.size());
+
+  } else {
+
+    if (token_count == 0) {
+
+      token_vector.emplace_back(std::string_view());
+
+    } else {
+
+      token_vector.emplace_back(str_view.substr(token_index, token_count));
+
+    }
+
+  }
+
+  return token_vector;
+
+}
+
+
+std::vector<std::string> kel::Utility::char_tokenizer(const std::string& str, const char delim) {
+
+  std::vector<std::string_view> view_vector = view_tokenizer(str, delim);
+  std::vector<std::string> str_vector;
+  str_vector.reserve(view_vector.size());
+  for (auto const& view : view_vector) {
+
+    str_vector.emplace_back(std::string(view));
+
+  }
+
+  return str_vector;
+
 }

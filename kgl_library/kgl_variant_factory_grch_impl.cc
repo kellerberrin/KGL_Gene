@@ -63,7 +63,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
   // Parse the info fields into a map..
   // For performance reasons the info field is std::moved - don't reference again.
   auto mutable_info = const_cast<std::string&>(vcf_record.info);
-  InfoDataPair info_evidence_opt = evidence_factory_.createVariantEvidence(std::move(mutable_info));
+  InfoDataEvidence info_evidence_opt = evidence_factory_.createVariantEvidence(std::move(mutable_info));
 
   // Convert VCF contig to genome contig.
   std::string contig = contig_alias_map_.lookupAlias(vcf_record.contig_id);
@@ -73,7 +73,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
   // The alt field can be blank (deletion).
   if (position == std::string::npos or vcf_record.alt.empty()) {
 
-    VariantEvidence evidence(vcf_record_count, info_evidence_opt.first);
+    VariantEvidence evidence(vcf_record_count, info_evidence_opt);
     // Add the variant.
     if (not createAddVariant( vcf_genome_ptr_->genomeId(),
                               contig,
@@ -90,7 +90,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
   } else {
 
-    std::vector<std::string> alt_vector = Utility::tokenizer(vcf_record.alt, alt_separator_);
+    std::vector<std::string> alt_vector = Utility::char_tokenizer(vcf_record.alt, MULIPLE_ALT_SEPARATOR_);
 
     if (alt_vector.empty()) {
 
@@ -100,7 +100,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
     for (auto const& alt : alt_vector) {
 
-      VariantEvidence evidence(vcf_record_count, info_evidence_opt.first);
+      VariantEvidence evidence(vcf_record_count, info_evidence_opt);
       // Add the variant.
       if (not createAddVariant( vcf_genome_ptr_->genomeId(),
                                 contig,

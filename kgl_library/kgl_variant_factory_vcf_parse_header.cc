@@ -68,7 +68,7 @@ bool kgl::VCFParseHeader::parseHeader(const std::string& vcf_file_name) {
       if (line_prefix == FIELD_NAME_FRAGMENT_) {
 
         found_header = true;
-        std::vector<std::string> field_vector = Utility::tokenizer(record_str, "\t");
+        std::vector<std::string> field_vector = Utility::char_tokenizer(record_str, RECORD_FIELD_LIST_SEPARATOR_);
         size_t field_count = 0;
         for(auto const& field :field_vector) {
 
@@ -126,7 +126,7 @@ bool kgl::VCFParseHeader::parseVcfHeader(const VcfHeaderInfo& header_info, VCFCo
 
       if (not tokenizeVcfHeaderKeyValues(value, item_map)) {
 
-        ExecEnv::log().warn("VCF header. Cannot tokenize VCF file header string: {}", value);
+        ExecEnv::log().warn("VCFParseHeader::parseVcfHeader, VCF header. Cannot tokenize VCF file header string: {}", value);
 
       }
 
@@ -148,16 +148,64 @@ bool kgl::VCFParseHeader::parseVcfHeader(const VcfHeaderInfo& header_info, VCFCo
 
       if (not tokenizeVcfHeaderKeyValues(value, item_map)) {
 
-        ExecEnv::log().warn("VCF header. Cannot tokenize VCF file header string: {}", value);
+        ExecEnv::log().warn("VCFParseHeader::parseVcfHeader, VCF header. Cannot tokenize VCF file header string: {}", value);
 
       }
 
       VCFInfoRecord info_record;
-      info_record.ID = item_map[ID_KEY_];
-      info_record.description = item_map[DESCRIPTION_KEY_];
-      info_record.number = item_map[NUMBER_KEY_];
-      info_record.type = item_map[TYPE_KEY_];
+      auto result = item_map.find(ID_KEY_);
+      if (result == item_map.end()) {
 
+        ExecEnv::log().warn("VCFParseHeader::parseVcfHeader, VCF header. Required Info field 'ID' info record ignored");
+        continue;
+
+      }
+      info_record.ID = result->second;
+
+      result = item_map.find(DESCRIPTION_KEY_);
+      if (result == item_map.end()) {
+
+        info_record.description = "";
+
+      } else {
+
+        info_record.description = result->second;
+
+      }
+
+      result = item_map.find(NUMBER_KEY_);
+      if (result == item_map.end()) {
+
+        ExecEnv::log().warn("VCFParseHeader::parseVcfHeader, VCF header. Info field 'ID'={}, Required field 'Number' is missing, info record ignored", info_record.ID);
+        continue;
+
+      }
+      info_record.number = result->second;
+
+      result = item_map.find(TYPE_KEY_);
+      if (result == item_map.end()) {
+
+        ExecEnv::log().warn("VCFParseHeader::parseVcfHeader, VCF header. Info field 'ID'={}, Required field 'Type' is missing, info record ignored", info_record.ID);
+        continue;
+
+      }
+      info_record.type = result->second;
+
+      result = item_map.find(SOURCE_KEY_);
+      if (result != item_map.end()) {
+
+        info_record.source = result->second;
+
+      }
+
+      result = item_map.find(VERSION_KEY_);
+      if (result != item_map.end()) {
+
+        info_record.version = result->second;
+
+      }
+
+      // Add the record.
       vcf_info_map[info_record.ID] = info_record;
 
     }

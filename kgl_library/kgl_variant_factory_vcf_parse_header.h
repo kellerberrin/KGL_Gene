@@ -35,6 +35,8 @@ struct VCFInfoRecord {
   std::string description;
   std::string type;
   std::string number;
+  std::string source;
+  std::string version;
 
 };
 // A VCF INFO record map.
@@ -75,6 +77,7 @@ private:
   static constexpr const char *KEY_SEPARATOR_{"="};
   static constexpr const char *KEY_PREFIX_{"##"};
   static constexpr const char *FIELD_NAME_FRAGMENT_{"#CHROM"};
+  static constexpr const char RECORD_FIELD_LIST_SEPARATOR_{'\t'};
   static constexpr const size_t FIELD_NAME_FRAGMENT_LENGTH_{6};
   static constexpr const size_t SKIP_FIELD_NAMES_{9};  // Skip the fixed fields to the Genome names.
 
@@ -85,6 +88,8 @@ private:
   constexpr static const char* DESCRIPTION_KEY_ = "DESCRIPTION";
   constexpr static const char* TYPE_KEY_ = "TYPE";
   constexpr static const char* NUMBER_KEY_ = "NUMBER";
+  constexpr static const char* SOURCE_KEY_ = "SOURCE";
+  constexpr static const char* VERSION_KEY_ = "VERSION";
 
 
   // assumes input "<key_1=value_1, ...,key_n=value_n>"

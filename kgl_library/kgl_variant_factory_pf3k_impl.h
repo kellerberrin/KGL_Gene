@@ -48,8 +48,10 @@ private:
   constexpr static const char PL_CHECK_DOT_ = '.';  // Check if the first PL character is '.', discard if true.
   constexpr static const char* VQSLOD_INFO_FIELD_ = "VQSLOD";  // In the Info record.
   constexpr static const char* GT_FIELD_SEPARATOR_ = "/";
+  constexpr static const char GT_FIELD_SEPARATOR_CHAR_ = '/';
   constexpr static const char* PL_FIELD_SEPARATOR_ = ",";
   constexpr static const char* AD_FIELD_SEPARATOR_ = ",";
+  constexpr static const char AD_FIELD_SEPARATOR_CHAR_ = ',';
   constexpr static const char* DIGITS_ = "0123456789";
   constexpr static const char* FLOAT_DIGITS_ = "+-.e0123456789";
   constexpr static const char* UPSTREAM_ALLELE_ = "*";

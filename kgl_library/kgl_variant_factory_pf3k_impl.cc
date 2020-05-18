@@ -89,7 +89,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
   // Parse the info fields into a map.
   // For performance reasons the info field is std::moved - don't reference again.
   auto mutable_info = const_cast<std::string&>(record.info);
-  InfoDataPair info_evidence_opt = evidence_factory_.createVariantEvidence(std::move(mutable_info));  // Each vcf record.
+  InfoDataEvidence info_evidence_opt = evidence_factory_.createVariantEvidence(std::move(mutable_info));  // Each vcf record.
 
   if (getGenomeNames().size() != record.genotypeInfos.size()) {
 
@@ -109,7 +109,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
       if (genotype_parser.getFormatChar(recordParser.PLOffset(), genotype) != PL_CHECK_ZERO_
           and genotype_parser.getFormatChar(recordParser.PLOffset(), genotype) != PL_CHECK_DOT_) {
 
-        std::vector<std::string> gt_vector = Utility::tokenizer(genotype_parser.getFormatString(recordParser.GTOffset(), genotype), GT_FIELD_SEPARATOR_);
+        std::vector<std::string> gt_vector = Utility::char_tokenizer(genotype_parser.getFormatString(recordParser.GTOffset(), genotype), GT_FIELD_SEPARATOR_CHAR_);
 
         if (gt_vector.size() != 2) {
 
@@ -140,7 +140,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
         size_t B_allele = std::stoll(gt_vector[1]);
 
         // Get ad allele depths.
-        std::vector<std::string> ad_vector = Utility::tokenizer(genotype_parser.getFormatString(recordParser.ADOffset(), genotype), AD_FIELD_SEPARATOR_);
+        std::vector<std::string> ad_vector = Utility::char_tokenizer(genotype_parser.getFormatString(recordParser.ADOffset(), genotype), AD_FIELD_SEPARATOR_CHAR_);
 
         // Allele depths should be the number of alleles + the reference
         if (ad_vector.size() != (recordParser.alleles().size() + 1)) {
@@ -195,7 +195,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
                                                                                      DP_value,
                                                                                      GQ_value,
                                                                                      recordParser.quality()));
-            VariantEvidence evidence(vcf_record_count, info_evidence_opt.first, format_data_ptr);
+            VariantEvidence evidence(vcf_record_count, info_evidence_opt, format_data_ptr);
             if (not createAddVariant(genome_name,
                                      recordParser.contigPtr(),
                                      recordParser.offset(),
@@ -234,7 +234,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
                                                                                      DP_value,
                                                                                      GQ_value,
                                                                                      recordParser.quality()));
-            VariantEvidence evidence(vcf_record_count, info_evidence_opt.first, format_data_ptr);
+            VariantEvidence evidence(vcf_record_count, info_evidence_opt, format_data_ptr);
             if (not createAddVariant(genome_name,
                                      recordParser.contigPtr(),
                                      recordParser.offset(),

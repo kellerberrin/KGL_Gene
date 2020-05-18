@@ -47,8 +47,8 @@ private:
   BoundedMtQueue<IOLineRecord> raw_io_queue_; // The raw tidal IO queue
   std::unique_ptr<std::thread> raw_io_thread_ptr_;
 
-  static constexpr const long HIGH_TIDE_{10000};          // Maximum BoundedMtQueue size
-  static constexpr const long LOW_TIDE_{1000};            // Low water mark to begin queueing VCF records
+  static constexpr const long HIGH_TIDE_{100000};          // Maximum BoundedMtQueue size
+  static constexpr const long LOW_TIDE_{10000};            // Low water mark to begin queueing VCF records
 
   void rawVCFIO(); // The read/decompress from disk and place on the tidal queue.
 

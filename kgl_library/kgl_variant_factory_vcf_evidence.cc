@@ -12,14 +12,14 @@ namespace kgl = kellerberrin::genome;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // An indexed map of InfoEvidenceIndex. There is only one of these held by all variants with INFO evidence fields.
 
-bool kgl::InfoEvidenceHeader::setupEvidenceHeader(const VCFInfoRecordMap& vcf_info_map, std::shared_ptr<const InfoEvidenceHeader> self_ptr) {
+bool kgl::InfoEvidenceHeader::setupEvidenceHeader(const InfoSubscribedMap& vcf_info_map, std::shared_ptr<const InfoEvidenceHeader> self_ptr) {
 
   // Create a map of indexes.
   info_index_map_.clear();
   for (auto const& [ident , info_record] : vcf_info_map) {
 
-    InfoEvidenceType type = InfoTypeCount::convertVCFType(info_record);
-    InfoEvidenceIndex info_index(info_record, type, 0, self_ptr);
+    InfoEvidenceType type = InfoTypeCount::convertVCFType(info_record.vcf_record);
+    InfoEvidenceIndex info_index(info_record.vcf_record, type, 0, self_ptr);
     auto result = info_index_map_.emplace(ident, info_index);
     if (not result.second) {
 
@@ -95,15 +95,15 @@ void kgl::InfoTypeCount::incrementCount(InfoEvidenceType type) {
       ++boolean_count_;
       break;
 
-    case InfoEvidenceType::FloatAllele:
+    case InfoEvidenceType::FloatAlternateAllele:
       ++float_allele_count_;
       break;
 
-    case InfoEvidenceType::IntegerAllele:
+    case InfoEvidenceType::IntegerAlternateAllele:
       ++integer_allele_count_;
       break;
 
-    case InfoEvidenceType::StringAllele:
+    case InfoEvidenceType::StringAlternateAllele:
       ++string_allele_count_;
       break;
 
@@ -127,9 +127,11 @@ kgl::InfoEvidenceType kgl::InfoTypeCount::convertVCFType(const VCFInfoRecord& vc
 
         return InfoEvidenceType::Integer;
 
-      } else if (vcf_info_item.number == ALLELE_) {
+      } else if (vcf_info_item.number == AlTERNATIVE_ALLELE_
+                 or vcf_info_item.number == ALL_ALLELE_
+                 or vcf_info_item.number == ALL_GENOTYPES_) {
 
-        return InfoEvidenceType::IntegerAllele;
+        return InfoEvidenceType::IntegerAlternateAllele;
 
       } else if (vcf_info_item.number == INDETERMINATE_COUNT_) {
 
@@ -152,9 +154,11 @@ kgl::InfoEvidenceType kgl::InfoTypeCount::convertVCFType(const VCFInfoRecord& vc
 
         return InfoEvidenceType::Float;
 
-      } else if (vcf_info_item.number == ALLELE_) {
+      } else if (vcf_info_item.number == AlTERNATIVE_ALLELE_
+                 or vcf_info_item.number == ALL_ALLELE_
+                 or vcf_info_item.number == ALL_GENOTYPES_) {
 
-        return InfoEvidenceType::FloatAllele;
+        return InfoEvidenceType::FloatAlternateAllele;
 
       } else if (vcf_info_item.number == INDETERMINATE_COUNT_) {
 
@@ -194,9 +198,11 @@ kgl::InfoEvidenceType kgl::InfoTypeCount::convertVCFType(const VCFInfoRecord& vc
 
         return InfoEvidenceType::String;
 
-      } else if (vcf_info_item.number == ALLELE_) {
+      } else if (vcf_info_item.number == AlTERNATIVE_ALLELE_
+                 or vcf_info_item.number == ALL_ALLELE_
+                 or vcf_info_item.number == ALL_GENOTYPES_) {
 
-        return InfoEvidenceType::StringAllele;
+        return InfoEvidenceType::StringAlternateAllele;
 
       } else if (vcf_info_item.number == INDETERMINATE_COUNT_) {
 
@@ -227,9 +233,9 @@ kgl::InfoEvidenceType kgl::InfoTypeCount::convertVCFType(const VCFInfoRecord& vc
   }
   catch(...) {
 
-//    ExecEnv::log().error(
-//    "std::stol Unknown Exception; InfoEvidenceHeader::convertVCFType, Ident: {}, Description: {} , Info Type: {}, Number: {} not implemented",
-//    vcf_info_item.ID, vcf_info_item.description, vcf_info_item.type, vcf_info_item.number);
+    ExecEnv::log().error(
+    "std::stol Unknown Exception; InfoEvidenceHeader::convertVCFType, Ident: {}, Description: {} , Info Type: {}, Number: {} not implemented",
+    vcf_info_item.ID, vcf_info_item.description, vcf_info_item.type, vcf_info_item.number);
     return InfoEvidenceType::NotImplemented;
 
   }
@@ -243,140 +249,86 @@ kgl::InfoEvidenceType kgl::InfoTypeCount::convertVCFType(const VCFInfoRecord& vc
 // The evidence factory also creates an evidence object for each variant (data only).
 
 
-kgl::InfoDataPair kgl::EvidenceFactory::createVariantEvidence(std::string&& info) {
+kgl::InfoDataEvidence kgl::EvidenceFactory::createVariantEvidence(std::string&& info) {
 
   // If no Info fields have been requested, then just return std::nullopt
   if (evidence_map_.empty()) {
 
-    return InfoDataPair(std::nullopt, std::nullopt);
+    return std::nullopt;
 
   }
 
-//  test1(info);
-  test2(info);
+  parseSubscribed(std::move(info));
 
   // Just return a single data block for now
-  return InfoDataPair(std::make_unique<InfoDataBlock>(info_evidence_header_), std::nullopt);
-
-}
-
-void kgl::EvidenceFactory::test1(std::string& info) {
-
-
-  // Parse the info line.
-  VCFInfoParser info_parser_(std::move(info));
-
-  for (auto const& subscribed_info : active_info_map_) {
-
-    auto vcf_info_item = info_parser_.getInfoString(subscribed_info.first);
-
-    if (vcf_info_item) {
-
-      try {
-
-        if (InfoTypeCount::convertVCFType(subscribed_info.second) == InfoEvidenceType::FloatAllele or
-            InfoTypeCount::convertVCFType(subscribed_info.second) == InfoEvidenceType::Float) {
-
-          std::stod(vcf_info_item.value());
-
-        }
-
-        if (InfoTypeCount::convertVCFType(subscribed_info.second) == InfoEvidenceType::IntegerAllele
-            or InfoTypeCount::convertVCFType(subscribed_info.second) == InfoEvidenceType::IntegerAllele) {
-
-          std::stol(vcf_info_item.value());
-
-        }
-
-        if (InfoTypeCount::convertVCFType(subscribed_info.second) == InfoEvidenceType::IntegerArray) {
-
-          std::vector<std::string> int_array_vec = Utility::tokenizer(vcf_info_item.value(), ",");
-
-          for (auto const& int_str : int_array_vec) {
-
-            std::stol(int_str);
-
-          }
-
-        }
-
-        if (InfoTypeCount::convertVCFType(subscribed_info.second) == InfoEvidenceType::FloatArray) {
-
-          std::vector<std::string> float_array_vec = Utility::tokenizer(vcf_info_item.value(), ",");
-
-          for (auto const& float_str : float_array_vec) {
-
-            std::stod(float_str);
-
-          }
-
-        }
-
-      }
-      catch(std::out_of_range& e) {
-
-        ExecEnv::log().error("Conversion Out of of Range Exception:{}, Field ID: {}, Desc: {}, Number: {}, Type: {}, Value: {}",
-                             e.what(), subscribed_info.second.ID, subscribed_info.second.description,
-                             subscribed_info.second.number, subscribed_info.second.type,
-                             vcf_info_item.value());
-
-      }
-      catch(std::invalid_argument& e) {
-
-        ExecEnv::log().error("Conversion Invalid Argument Exception:{}, Field ID: {}, Desc: {}, Number: {}, Type: {}, Value: {}",
-                             e.what(), subscribed_info.second.ID, subscribed_info.second.description,
-                             subscribed_info.second.number, subscribed_info.second.type,
-                             vcf_info_item.value());
-
-      }
-      catch(std::exception& e) {
-
-        ExecEnv::log().error("Conversion Unknown Exception, Field ID: {}, Desc: {}, Number: {}, Type: {}, Value: {}",
-                             e.what(), subscribed_info.second.ID, subscribed_info.second.description,
-                             subscribed_info.second.number, subscribed_info.second.type,
-                             vcf_info_item.value());
-      }
-
-
-    } else {
-
-      // Mark the bitfield as present.
-
-    }
-
-  }
+  return std::make_unique<InfoDataBlock>(info_evidence_header_);
 
 }
 
 
-void kgl::EvidenceFactory::test2(std::string& info) {
 
+void kgl::EvidenceFactory::parseSubscribed(std::string&& info) {
 
-  // Parse the info line.
-  VCFInfoParser info_parser_(std::move(info));
+  // Parse the VCF info line.
+  VCFInfoParser info_parser(std::move(info));
 
+  // Fill all the subscribed Info field values.
   for (auto const& subscribed_info : active_info_map_) {
 
-    switch(InfoTypeCount::convertVCFType(subscribed_info.second)) {
+    switch(subscribed_info.second.data_type) {
 
-      case InfoEvidenceType::FloatAllele:
-      case InfoEvidenceType::Float:
-        info_parser_.getInfoFloat(subscribed_info.first);
-        break;
+      case InfoEvidenceType::Float: {
+        InfoParserFloat float_opt = info_parser.getInfoFloat(subscribed_info.first);
+      }
+      break;
 
-      case InfoEvidenceType::IntegerAllele:
-      case InfoEvidenceType::Integer:
-        break;
+      case InfoEvidenceType::Integer: {
 
-      case InfoEvidenceType::IntegerArray:
-        info_parser_.getInfoIntegerArray(subscribed_info.first);
-        break;
+        InfoParserInteger int_opt = info_parser.getInfoInteger(subscribed_info.first);
 
-      case InfoEvidenceType::FloatArray:
-        info_parser_.getInfoFloatArray(subscribed_info.first);
-        break;
+      }
+      break;
+
+      case InfoEvidenceType::String: {
+
+        InfoParserString string_opt(info_parser.getInfoString(subscribed_info.first));
+
+      }
+      break;
+
+      case InfoEvidenceType::Boolean: {
+
+        bool flag = info_parser.getInfoBoolean(subscribed_info.first);
+
+      }
+      break;
+
+      case InfoEvidenceType::IntegerAlternateAllele:
+      case InfoEvidenceType::IntegerArray: {
+
+        InfoParserIntegerArray int_array_opt(info_parser.getInfoIntegerArray(subscribed_info.first));
+
+      }
+      break;
+
+      case InfoEvidenceType::FloatAlternateAllele:
+      case InfoEvidenceType::FloatArray: {
+
+        InfoParserFloatArray int_float_opt(info_parser.getInfoFloatArray(subscribed_info.first));
+
+      }
+      break;
+
+      case InfoEvidenceType::StringAlternateAllele:
+      case InfoEvidenceType::StringArray: {
+
+        InfoParserStringArray string_array_opt(info_parser.getInfoStringArray(subscribed_info.first));
+
+      }
+      break;
 
       default:
+        ExecEnv::log().error("EvidenceFactory::parseSubscribed, Unexpected INFO data type for field: {}", subscribed_info.first);
         break;
 
     }
@@ -393,7 +345,10 @@ void kgl::EvidenceFactory::availableInfoFields(const VCFInfoRecordMap& vcf_info_
 
   for (auto const& [ident, vcf_info_field] : vcf_info_map) {
 
-    active_info_map_[ident] = vcf_info_field;
+    InfoSubscribed active_info;
+    active_info.vcf_record = vcf_info_field;
+    active_info.data_type = InfoTypeCount::convertVCFType(vcf_info_field);
+    active_info_map_[ident] = active_info;
 
   }
 
@@ -429,9 +384,9 @@ void kgl::EvidenceFactory::availableInfoFields(const VCFInfoRecordMap& vcf_info_
   ExecEnv::log().info("Info type count FloatArray {}", info_count.floatArrayCount());
   ExecEnv::log().info("Info type count IntegerArray {}", info_count.integerArrayCount());
   ExecEnv::log().info("Info type count StringArray {}", info_count.stringArrayCount());
-  ExecEnv::log().info("Info type count FloatAllele {}", info_count.floatAlleleCount());
-  ExecEnv::log().info("Info type count IntegerAllele {}", info_count.integerAlleleCount());
-  ExecEnv::log().info("Info type count StringAllele {}", info_count.stringAlleleCount());
+  ExecEnv::log().info("Info type count FloatAlternateAllele {}", info_count.floatAlleleCount());
+  ExecEnv::log().info("Info type count IntegerAlternateAllele {}", info_count.integerAlleleCount());
+  ExecEnv::log().info("Info type count StringAlternateAllele {}", info_count.stringAlleleCount());
   ExecEnv::log().info("Info type count Boolean {}", info_count.booleanCount());
 
 

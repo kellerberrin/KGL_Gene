@@ -435,9 +435,10 @@ bool kgl::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
 
     } // offset within contig.
 
-    ExecEnv::log().info("IntervalAnalysis::writeData; processed contig: {}", contig_id);
 
   } // contig
+
+  ExecEnv::log().info("Analysis: {} completes",ident());
 
   return output.good();
 

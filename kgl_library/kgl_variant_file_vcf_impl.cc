@@ -95,7 +95,7 @@ void RecordVCFIO::enqueueVCFRecord() {
 bool RecordVCFIO::parseVCFRecord( std::unique_ptr<const std::string> line_record_ptr,
                                   const std::unique_ptr<VcfRecord> &vcf_record_ptr) {
 
-  std::vector<std::string> field_vector = Utility::tokenizer(*line_record_ptr, VCF_FIELD_DELIMITER_);
+  std::vector<std::string> field_vector = Utility::char_tokenizer(*line_record_ptr, VCF_FIELD_DELIMITER_CHAR_);
 
   if (field_vector.size() < MINIMUM_VCF_FIELDS_) {
 

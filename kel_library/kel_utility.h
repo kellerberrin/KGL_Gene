@@ -31,6 +31,8 @@ public:
   [[nodiscard]] static std::string trimEndWhiteSpace(const std::string &s); // Only trim whitespace at either end of the string.
   [[nodiscard]] static std::string findAndReplaceAll(const std::string& source, const std::string& search, const std::string& replace);
   [[nodiscard]] static std::vector<std::string> tokenizer(const std::string& str, const std::string& delims = ",");
+  [[nodiscard]] static std::vector<std::string_view> view_tokenizer(const std::string_view& str_view, const char delim);
+  [[nodiscard]] static std::vector<std::string> char_tokenizer(const std::string& str, const char delim);
 
 
 private:

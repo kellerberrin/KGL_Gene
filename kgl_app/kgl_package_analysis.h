@@ -19,6 +19,11 @@
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
+// NullAnalysis is the base class, of all available (defined) Analytics.
+// Analytic classes are called virtually and provided with data (reference and variant).
+using AnalysisVector = std::vector<std::unique_ptr<NullAnalysis>>;
+// Active flag. Analytics that encounter error states disable themselves via this flag.
+using AnalysisArray = std::vector<std::pair<std::unique_ptr<NullAnalysis>, bool>>; // Adds flag to show if analysis is active.
 
 // Manages runtime analytics within an execution package.
 class PackageAnalysis {
@@ -53,9 +58,9 @@ private:
   // Analysis parameters and details.
   const RuntimeAnalysisMap analysis_map_;
   // All available analytics
-  std::vector<std::unique_ptr<NullAnalysis>> registered_analysis_;
+  AnalysisVector registered_analysis_;
   // Active analytics for this package
-  mutable std::vector<std::pair<std::unique_ptr<NullAnalysis>, bool>> active_analysis_;
+  mutable  AnalysisArray active_analysis_;
 
 
 };
