@@ -156,7 +156,7 @@ bool kgl::VCFParseHeader::parseVcfHeader(const VcfHeaderInfo& header_info, VCFCo
       auto result = item_map.find(ID_KEY_);
       if (result == item_map.end()) {
 
-        ExecEnv::log().warn("VCFParseHeader::parseVcfHeader, VCF header. Required Info field 'ID' info record ignored");
+        ExecEnv::log().warn("VCFParseHeader::parseVcfHeader, VCF header. Required Info field 'ID' missing; info record ignored");
         continue;
 
       }
@@ -173,15 +173,6 @@ bool kgl::VCFParseHeader::parseVcfHeader(const VcfHeaderInfo& header_info, VCFCo
 
       }
 
-      result = item_map.find(NUMBER_KEY_);
-      if (result == item_map.end()) {
-
-        ExecEnv::log().warn("VCFParseHeader::parseVcfHeader, VCF header. Info field 'ID'={}, Required field 'Number' is missing, info record ignored", info_record.ID);
-        continue;
-
-      }
-      info_record.number = result->second;
-
       result = item_map.find(TYPE_KEY_);
       if (result == item_map.end()) {
 
@@ -190,6 +181,15 @@ bool kgl::VCFParseHeader::parseVcfHeader(const VcfHeaderInfo& header_info, VCFCo
 
       }
       info_record.type = result->second;
+
+      result = item_map.find(NUMBER_KEY_);
+      if (result == item_map.end()) {
+
+        ExecEnv::log().warn("VCFParseHeader::parseVcfHeader, VCF header. Info field 'ID'={}, Required field 'Number' is missing, info record ignored", info_record.ID);
+        continue;
+
+      }
+      info_record.number = result->second;
 
       result = item_map.find(SOURCE_KEY_);
       if (result != item_map.end()) {

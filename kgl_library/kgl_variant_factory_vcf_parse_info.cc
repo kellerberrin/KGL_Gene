@@ -333,7 +333,10 @@ kgl::InfoParserStringArray kgl::VCFInfoParser::getInfoStringArray(const std::str
 
     if (key_it->second.second == 1) {
 
-      return std::vector<std::string>{ std::string(key_it->second.first) };
+      std::vector<std::string> unit_vector;
+      unit_vector.reserve(1);
+      unit_vector.emplace_back(key_it->second.first);
+      return unit_vector;
 
     }
 
@@ -438,7 +441,8 @@ kgl::InfoParserIntegerArray kgl::VCFInfoParser::getInfoIntegerArray(const std::s
 
   if (not string_array) return std::nullopt;
 
-  std::vector<std::optional<int64_t>> integer_vector{string_array.value().size()};   // Preallocate vector size.
+  std::vector<std::optional<int64_t>> integer_vector;   // Preallocate vector size.
+  integer_vector.reserve(string_array.value().size());
   for (auto& value : string_array.value()) {
 
     integer_vector.push_back(convertToInteger(key, value));
@@ -467,7 +471,8 @@ kgl::InfoParserFloatArray kgl::VCFInfoParser::getInfoFloatArray(const std::strin
 
   if (not string_array) return std::nullopt;
 
-  std::vector<std::optional<double>> float_vector{string_array.value().size()};   // Preallocate vector size.
+  std::vector<std::optional<double>> float_vector;
+  float_vector.reserve(string_array.value().size());// Preallocate vector size.
   for (auto& value : string_array.value()) {
 
     float_vector.push_back(convertToFloat(key, value));

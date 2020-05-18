@@ -57,19 +57,11 @@ private:
   EvidenceFactory evidence_factory_;
 
 // Progress counters.
-
   size_t variant_count_{0};
   mutable std::mutex add_variant_mutex_;
-
   std::map<ContigId_t, std::pair<ContigSize_t, size_t>> contig_count_;
 
-  bool createAddVariant( const GenomeId_t& genome_name,
-                         const ContigId_t& contig_id,
-                         ContigOffset_t contig_offset,
-                         const std::string& reference_text,
-                         const std::string& alternate_text,
-                         const VariantEvidence& evidence);
-
+// Thread safe function adds the variant to the genome.
   bool addThreadSafeVariant(std::shared_ptr<const Variant>& variant_ptr);
 
 };

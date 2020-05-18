@@ -75,14 +75,14 @@ void RecordVCFIO::enqueueVCFRecord() {
 
     }
 
-    std::unique_ptr<VcfRecord> vcf_record_ptr(std::make_unique<VcfRecord>());
-    if (not parseVCFRecord(std::move(line_record.value().second), vcf_record_ptr)) {
+    std::optional<std::unique_ptr<VcfRecord>> vcf_record_opt = moveToVcfRecord(std::move(*line_record.value().second));
+    if (not vcf_record_opt) {
 
       ExecEnv::log().warn("FileVCFIO; Failed to parse VCF file: {} record line : {}", fileName(), line_record.value().first);
 
     } else {
 
-      QueuedVCFRecord queue_record(std::pair<size_t, std::unique_ptr<VcfRecord>>(line_record.value().first, std::move(vcf_record_ptr)));
+      QueuedVCFRecord queue_record(std::pair<size_t, std::unique_ptr<VcfRecord>>(line_record.value().first, std::move(vcf_record_opt.value())));
       vcf_record_queue_.push(std::move(queue_record));
 
     }
@@ -92,85 +92,72 @@ void RecordVCFIO::enqueueVCFRecord() {
 }
 
 
-bool RecordVCFIO::parseVCFRecord( std::unique_ptr<const std::string> line_record_ptr,
-                                  const std::unique_ptr<VcfRecord> &vcf_record_ptr) {
-
-  std::vector<std::string> field_vector = Utility::char_tokenizer(*line_record_ptr, VCF_FIELD_DELIMITER_CHAR_);
-
-  if (field_vector.size() < MINIMUM_VCF_FIELDS_) {
-
-    ExecEnv::log().error("FileVCFIO; VCF file: {}, record has less than the mandatory field count", fileName());
-    return false;
-
-  }
-
-  if (not moveToVcfRecord(std::move(line_record_ptr),field_vector, *vcf_record_ptr)) {
-
-    ExecEnv::log().error("FileVCFIO; VCF file: {}, cannot parse VCF record field", fileName());
-    return false;
-
-  }
-
-  return true;
-
-}
-
-
-
-bool RecordVCFIO::moveToVcfRecord(std::unique_ptr<const std::string> line_record_ptr, std::vector<std::string> &fields, VcfRecord &vcf_record) {
+std::optional<std::unique_ptr<VcfRecord>> RecordVCFIO::moveToVcfRecord(std::string&& line_record) {
 
   try {
 
-    vcf_record.line_record_ptr = std::move(line_record_ptr);
+    std::unique_ptr<VcfRecord> vcf_record_ptr(std::make_unique<VcfRecord>());
 
-    vcf_record.contig_id = fields[0];
-    vcf_record.offset = std::stoull(fields[1]) - 1; // all offsets are zero based.
-    vcf_record.id = std::move(fields[2]);
-    vcf_record.ref = std::move(fields[3]);
+    std::vector<std::string_view> field_views = Utility::view_tokenizer(line_record, VCF_FIELD_DELIMITER_CHAR_);
+
+    if (field_views.size() < MINIMUM_VCF_FIELDS_) {
+
+      ExecEnv::log().error("FileVCFIO; VCF file: {}, record has less than the mandatory field count", fileName());
+      return std::nullopt;
+
+    }
+
+    vcf_record_ptr->contig_id = field_views[0];
+    vcf_record_ptr->offset = std::stoull(std::string(field_views[1])) - 1; // all offsets are zero based.
+    vcf_record_ptr->id = field_views[2];
+    vcf_record_ptr->ref = field_views[3];
     // A deletion variant can be signalled by a missing alt value.
-    if (fields[4] == FIELD_NOT_PRESENT_) {
+    if (field_views[4] == FIELD_NOT_PRESENT_) {
 
-      vcf_record.alt = "";
+      vcf_record_ptr->alt = "";
 
     } else {
 
-      vcf_record.alt = std::move(fields[4]);
+      vcf_record_ptr->alt = field_views[4];
 
     }
     // The quality field can be omitted.
-    if (fields[5] == FIELD_NOT_PRESENT_) {
+    if (field_views[5] == FIELD_NOT_PRESENT_) {
 
-      vcf_record.qual = 0.0;
+      vcf_record_ptr->qual = 0.0;
 
     } else {
 
-      vcf_record.qual = std::stod(fields[5]);
+      vcf_record_ptr->qual = std::stod(std::string(field_views[5]));
 
     }
-    vcf_record.filter = std::move(fields[6]);
-    vcf_record.info = std::move(fields[7]);
+    vcf_record_ptr->filter = field_views[6];
+    vcf_record_ptr->info = field_views[7];
 
-    if (fields.size() > MINIMUM_VCF_FIELDS_) {
+    if (field_views.size() > MINIMUM_VCF_FIELDS_) {
 
-      vcf_record.format = std::move(fields[8]);
+      vcf_record_ptr->format = field_views[8];
 
-      vcf_record.genotypeInfos.clear();
-      for (size_t idx = (MINIMUM_VCF_FIELDS_ + 1); idx < fields.size(); ++idx) {
+      vcf_record_ptr->genotypeInfos.clear();
+      for (size_t idx = (MINIMUM_VCF_FIELDS_ + 1); idx < field_views.size(); ++idx) {
 
-        vcf_record.genotypeInfos.push_back(std::move(fields[idx]));
+        vcf_record_ptr->genotypeInfos.emplace_back(field_views[idx]);
 
       }
 
     }
 
-    return true;
+    // Should not matter since we are moving the string, but just to be on the safe side this goes last.
+    vcf_record_ptr->line_record_ptr = std::make_unique<std::string>(std::move(line_record));
+
+    return std::move(vcf_record_ptr);
 
   }
   catch (const std::exception &e) {
 
     ExecEnv::log().error("FileVCFIO; Problem parsing record for VCF file: {}, Exception: {} thrown; VCF record ignored", fileName(),  e.what());
     ExecEnv::log().error("FileVCFIO; VCF record line: {}", fileName(),  e.what());
-    return false;
+    return std::nullopt;
 
   }
 

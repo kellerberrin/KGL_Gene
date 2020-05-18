@@ -75,12 +75,17 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
     VariantEvidence evidence(vcf_record_count, info_evidence_opt);
     // Add the variant.
-    if (not createAddVariant( vcf_genome_ptr_->genomeId(),
-                              contig,
-                              vcf_record.offset,
-                              vcf_record.ref,
-                              vcf_record.alt,
-                              evidence)) {
+    StringDNA5 reference_str(vcf_record.ref);
+    StringDNA5 alternate_str(vcf_record.alt);
+
+    std::shared_ptr<const Variant> variant_ptr(std::make_shared<VCFVariant>(vcf_genome_ptr_->genomeId(),
+                                                                            contig,
+                                                                            VariantSequence::UNPHASED,
+                                                                            vcf_record.offset,
+                                                                            evidence,
+                                                                            std::move(reference_str),
+                                                                            std::move(alternate_str)));
+    if (not addThreadSafeVariant(variant_ptr)) {
 
       ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Problem parsing vcf_record.");
 
@@ -102,12 +107,18 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
       VariantEvidence evidence(vcf_record_count, info_evidence_opt);
       // Add the variant.
-      if (not createAddVariant( vcf_genome_ptr_->genomeId(),
-                                contig,
-                                vcf_record.offset,
-                                vcf_record.ref,
-                                alt,
-                                evidence)) {
+      StringDNA5 reference_str(vcf_record.ref);
+      StringDNA5 alternate_str(alt);
+
+      std::shared_ptr<const Variant> variant_ptr(std::make_shared<VCFVariant>(vcf_genome_ptr_->genomeId(),
+                                                                              contig,
+                                                                              VariantSequence::UNPHASED,
+                                                                              vcf_record.offset,
+                                                                              evidence,
+                                                                              std::move(reference_str),
+                                                                              std::move(alternate_str)));
+
+      if (not addThreadSafeVariant(variant_ptr)) {
 
         ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Parsing GRCh VCF, Problem parsing vcf_record");
 
@@ -125,29 +136,6 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
     ExecEnv::log().info("Contig: {}, offset: {}", contig, vcf_record.offset);
 
   }
-
-}
-
-
-bool kgl::GrchVCFImpl::createAddVariant(const GenomeId_t& genome_name,
-                                        const ContigId_t& contig_id,
-                                        ContigOffset_t contig_offset,
-                                        const std::string& reference_text,
-                                        const std::string& alternate_text,
-                                        const VariantEvidence& evidence)  {
-
-  StringDNA5 reference_str(reference_text);
-  StringDNA5 alternate_str(alternate_text);
-
-  std::shared_ptr<const Variant> variant_ptr(std::make_shared<VCFVariant>(genome_name,
-                                                                          contig_id,
-                                                                          VariantSequence::UNPHASED,
-                                                                          contig_offset,
-                                                                          evidence,
-                                                                          std::move(reference_str),
-                                                                          std::move(alternate_str)));
-
-  return addThreadSafeVariant(variant_ptr);
 
 }
 

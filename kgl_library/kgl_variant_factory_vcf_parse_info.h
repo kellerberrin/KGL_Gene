@@ -60,8 +60,6 @@ public:
       ExecEnv::log().error("VCFInfoParser::VCFInfoParser, Token parser had a problem parsing info field");
 
     }
-//    infoArrayParser();
-//    compareParsers();
 
 #else
 
@@ -97,7 +95,6 @@ private:
   constexpr static const char INFO_FIELD_DELIMITER_{';'};
   constexpr static const char INFO_VALUE_DELIMITER_{'='};
   constexpr static const char INFO_VECTOR_DELIMITER_{','};
-  constexpr static const char* INFO_VECTOR_DELIMITER_STR_{","};
   constexpr static const char* INFO_VECTOR_MISSING_VALUE_STR_{"."};
 
   [[nodiscard]] bool infoArrayParser();
