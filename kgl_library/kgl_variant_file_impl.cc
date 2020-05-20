@@ -62,7 +62,7 @@ void kgl::FileVCFIO::rawVCFIO() {
       // Check we have a valid line record.
       if (line_record.value().second->empty()) {
 
-        ExecEnv::log().error("FileVCFIO; Empty VCF record returned");
+        ExecEnv::log().error("FileVCFIO; Empty VCF record on line: {} - ignored", line_record.value().first);
         continue;
 
       }

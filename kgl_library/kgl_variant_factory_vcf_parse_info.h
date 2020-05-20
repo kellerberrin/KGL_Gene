@@ -21,13 +21,27 @@ namespace kellerberrin::genome {   //  organization level namespace
 // then a seg fault may not be inevitable.
 // This is guaranteed by enclosing the parsed std::string_views and source INFO string in the same object below.
 // For CPU efficiency reasons, there are two implementations of this object, see below.
-using InfoParserString = std::optional<std::string>;
-using InfoParserStringArray = std::optional<std::vector<std::string>>;
-using InfoParserInteger = std::optional<int64_t>;
-using InfoParserIntegerArray = std::optional<std::vector<std::optional<int64_t>>>;
-using InfoParserFloat = std::optional<double>;
-using InfoParserFloatArray = std::optional<std::vector<std::optional<double>>>;
 
+//#define USE_64BIT_TYPES 1
+
+#ifdef USE_64BIT_TYPES
+
+using InfoIntegerType = int64_t;
+using InfoFloatType = double;
+
+#else
+
+using InfoIntegerType = int32_t;
+using InfoFloatType = float;
+
+#endif
+
+using InfoParserString = std::string;
+using InfoParserStringArray = std::vector<std::string>;
+using InfoParserInteger = InfoIntegerType;
+using InfoParserIntegerArray = std::vector<InfoIntegerType>;
+using InfoParserFloat = InfoFloatType;
+using InfoParserFloatArray = std::vector<InfoFloatType>;
 
 using InfoParserToken = std::pair<std::string_view, size_t>;
 using InfoParserMap = std::map<std::string_view, InfoParserToken>; // The token parser data structure.
@@ -99,9 +113,22 @@ private:
 
   [[nodiscard]] bool infoArrayParser();
   [[nodiscard]] bool infoTokenParser();
-  [[nodiscard]] static std::optional<int64_t> convertToInteger(const std::string& key, const std::string& value);
-  [[nodiscard]] static std::optional<double> convertToFloat(const std::string& key, const std::string& value);
+  [[nodiscard]] static InfoParserInteger convertToInteger(const std::string& key, const std::string& value);
+  [[nodiscard]] static InfoParserFloat convertToFloat(const std::string& key, const std::string& value);
   bool compareParsers();
+
+  // Largest negative values are interpreted as missing values.
+  constexpr static const InfoParserFloat MISSING_VALUE_FLOAT = std::numeric_limits<InfoParserFloat>::lowest();
+  constexpr static const InfoParserInteger MISSING_VALUE_INTEGER = std::numeric_limits<InfoParserInteger>::lowest();
+  // Empty string is missing.
+  constexpr static const char* MISSING_VALUE_STRING = "";
+  // Missing arrays are just empty arrays.
+  inline const static InfoParserStringArray MISSING_STRING_VECTOR;
+  inline const static InfoParserIntegerArray MISSING_INTEGER_VECTOR;
+  inline const static InfoParserFloatArray MISSING_FLOAT_VECTOR;
+  // If we use std::optional.
+  constexpr static const std::nullopt_t MISSING_VALUE_OPTIONAL = std::nullopt;
+
 
 };
 

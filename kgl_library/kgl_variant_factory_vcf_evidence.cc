@@ -87,6 +87,116 @@ const kgl::InfoEvidenceTypePair kgl::InfoTypeCount::evidenceType(const VCFInfoRe
 
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// InfoDataBlock
+
+kgl::DataInfoTypeCount kgl::InfoDataBlockNaive::dataPayload() {
+
+
+//  static std::mutex func_lock;
+//  std::scoped_lock<std::mutex> raii(func_lock);
+
+
+  size_t float_count = 0;
+  size_t integer_count = 0;
+  size_t char_count = 0;
+  size_t array_count = 0;
+  size_t string_count = 0;
+
+  char_count = bool_data_.size();
+
+  integer_count = integer_data_.size();
+
+  float_count = float_data_.size();
+
+  size_t char_bytes = 0;
+  for (auto const& string_field :  string_data_) {
+
+    ++string_count;
+    char_bytes += string_field.size();
+
+  }
+
+  for (auto const& float_array :  float_array_data_) {
+
+    if (float_array.size() <= 1) {
+
+      ++float_count;
+
+    } else {
+
+      float_count += float_array.size();
+      ++array_count;
+
+    }
+
+  }
+
+  for (auto const&integer_array :  integer_array_data_) {
+
+    if (integer_array.size() <= 1) {
+
+      ++float_count;
+
+    } else {
+
+      integer_count += integer_array.size();
+      ++array_count;
+
+    }
+
+  }
+
+  for (auto const& string_array :  string_array_data_) {
+
+    if (string_array_data_.size() == 1) {
+
+      ++string_count;
+      char_bytes += string_array_data_.front().size();
+
+    } else if (string_array_data_.empty() ) {
+
+      ++string_count;
+
+    } else {
+
+      ++array_count;
+
+      for (auto const& string_item : string_array) {
+
+        ++string_count;
+        char_bytes += string_item.size();
+
+      }
+
+    }
+
+  }
+
+  DataInfoTypeCount info_count;
+
+  info_count.integer_count_ = integer_count;
+  info_count.float_count_ = float_count;
+  info_count.char_count_ = char_count;
+  info_count.array_count_ = array_count;
+  info_count.string_count_ = string_count;
+
+  return info_count;
+
+}
+
+void kgl::InfoDataBlockNaive::clearAll() {
+
+// The stored data.
+  bool_data_.clear();
+  float_data_.clear();
+  integer_data_.clear();
+  string_data_.clear();
+  float_array_data_.clear();
+  integer_array_data_.clear();
+  string_array_data_.clear();
+
+}
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,21 +213,27 @@ kgl::InfoDataEvidence kgl::EvidenceFactory::createVariantEvidence(std::string&& 
 
   }
 
-  std::unique_ptr<InfoDataBlock> temp = parseSubscribed(std::move(info));
+  std::unique_ptr<InfoDataBlockNaive> temp = parseSubscribed(std::move(info));
+//  temp->shrinkToFit();
+  DataInfoTypeCount type_count = temp->dataPayload();
 
 //  return std::move(temp);
-  // Just return a single data block for now
-  return std::make_unique<InfoDataBlock>(info_evidence_header_);
+
+  std::unique_ptr<InfoDataBlock> data_block_ptr(std::make_unique<InfoDataBlock>(info_evidence_header_));
+
+  data_block_ptr->allocateMemory(type_count);
+
+  return std::move(data_block_ptr);
 
 }
 
 
-std::unique_ptr<kgl::InfoDataBlock> kgl::EvidenceFactory::parseSubscribed(std::string&& info) {
+std::unique_ptr<kgl::InfoDataBlockNaive> kgl::EvidenceFactory::parseSubscribed(std::string&& info) {
 
   // Parse the VCF info line.
   VCFInfoParser info_parser(std::move(info));
 
-  std::unique_ptr info_data_ptr(std::make_unique<InfoDataBlock>(info_evidence_header_));
+  std::unique_ptr info_data_ptr(std::make_unique<InfoDataBlockNaive>(info_evidence_header_));
   // Fill all the subscribed Info field values.
   for (auto const& subscribed_info : active_info_map_) {
 

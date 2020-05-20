@@ -309,7 +309,7 @@ kgl::InfoParserString kgl::VCFInfoParser::getInfoString(const std::string& key) 
 
       } else {
 
-        std::vector<std::string> string_vector =Utility::char_tokenizer(std::string(key_it->second.first), INFO_VECTOR_DELIMITER_);
+        std::vector<std::string> string_vector = Utility::char_tokenizer(std::string(key_it->second.first), INFO_VECTOR_DELIMITER_);
         return string_vector.front();
 
       }
@@ -320,7 +320,7 @@ kgl::InfoParserString kgl::VCFInfoParser::getInfoString(const std::string& key) 
 
   }
 
-  return std::nullopt;
+  return MISSING_VALUE_STRING;
 
 }
 
@@ -344,7 +344,7 @@ kgl::InfoParserStringArray kgl::VCFInfoParser::getInfoStringArray(const std::str
 
   }
 
-  return std::nullopt;
+  return MISSING_STRING_VECTOR;
 
 }
 
@@ -428,9 +428,9 @@ kgl::InfoParserInteger kgl::VCFInfoParser::getInfoInteger(const std::string& key
 
   InfoParserString string_value(getInfoString(key));
 
-  if (not string_value) return std::nullopt;
+  if (string_value == MISSING_VALUE_STRING) return MISSING_VALUE_INTEGER;
 
-  return convertToInteger(key, string_value.value());
+  return convertToInteger(key, string_value);
 
 }
 
@@ -439,11 +439,11 @@ kgl::InfoParserIntegerArray kgl::VCFInfoParser::getInfoIntegerArray(const std::s
 
   InfoParserStringArray string_array(getInfoStringArray(key));
 
-  if (not string_array) return std::nullopt;
+  if (string_array.empty()) return MISSING_INTEGER_VECTOR;
 
-  std::vector<std::optional<int64_t>> integer_vector;   // Preallocate vector size.
-  integer_vector.reserve(string_array.value().size());
-  for (auto& value : string_array.value()) {
+  InfoParserIntegerArray integer_vector;   // Preallocate vector size.
+  integer_vector.reserve(string_array.size());
+  for (auto& value : string_array) {
 
     integer_vector.push_back(convertToInteger(key, value));
 
@@ -458,9 +458,9 @@ kgl::InfoParserFloat kgl::VCFInfoParser::getInfoFloat(const std::string& key) co
 
   InfoParserString string_value(getInfoString(key));
 
-  if (not string_value) return std::nullopt;
+  if (string_value == MISSING_VALUE_STRING) return MISSING_VALUE_FLOAT;
 
-  return convertToFloat(key, string_value.value());
+  return convertToFloat(key, string_value);
 
 }
 
@@ -469,11 +469,11 @@ kgl::InfoParserFloatArray kgl::VCFInfoParser::getInfoFloatArray(const std::strin
 
   InfoParserStringArray string_array(getInfoStringArray(key));
 
-  if (not string_array) return std::nullopt;
+  if (string_array.empty()) return MISSING_FLOAT_VECTOR;
 
-  std::vector<std::optional<double>> float_vector;
-  float_vector.reserve(string_array.value().size());// Preallocate vector size.
-  for (auto& value : string_array.value()) {
+  InfoParserFloatArray float_vector;
+  float_vector.reserve(string_array.size());// Preallocate vector size.
+  for (auto& value : string_array) {
 
     float_vector.push_back(convertToFloat(key, value));
 
@@ -484,70 +484,104 @@ kgl::InfoParserFloatArray kgl::VCFInfoParser::getInfoFloatArray(const std::strin
 }
 
 
-std::optional<int64_t> kgl::VCFInfoParser::convertToInteger(const std::string& key, const std::string& value) {
+kgl::InfoParserInteger kgl::VCFInfoParser::convertToInteger(const std::string& key, const std::string& value) {
 
   try {
 
+#ifdef USE_64BIT_TYPES
+
     return std::stoll(std::string(value));
+
+#else
+
+    return std::stol(std::string(value));
+
+#endif
 
   }
   catch(std::out_of_range& e) {
 
     ExecEnv::log().warn("VCFInfoParser::convertToInteger, Exception:Out of of Range,  Field:{}, Value: {}", key, value);
-    return std::nullopt;
+    return MISSING_VALUE_INTEGER;
 
   }
   catch(std::invalid_argument& e) {
 
     if (std::string(value) == INFO_VECTOR_MISSING_VALUE_STR_) {
 
-      return std::nullopt;
+      return MISSING_VALUE_INTEGER;
 
     }
 
     ExecEnv::log().error("VCFInfoParser::convertToInteger, Exception:Invalid Argument, Field {}, Value {}",key, value);
-    return std::nullopt;
+    return MISSING_VALUE_INTEGER;
 
   }
   catch(std::exception& e) {
 
     ExecEnv::log().error("VCFInfoParser::convertToInteger, Exception:Unknown, Field {}, Value {}",key, value);
-    return std::nullopt;
+    return MISSING_VALUE_INTEGER;
 
   }
 
 }
 
 
-std::optional<double> kgl::VCFInfoParser::convertToFloat(const std::string& key, const std::string& value) {
+kgl::InfoParserFloat kgl::VCFInfoParser::convertToFloat(const std::string& key, const std::string& value) {
 
   try {
 
+#ifdef USE_64BIT_TYPES
+
     return std::stod(std::string(value));
+
+#else
+
+    return std::stof(std::string(value));
+
+#endif
 
   }
   catch(std::out_of_range& e) {
 
-    ExecEnv::log().warn("VCFInfoParser::convertToFloat, Exception:Out of of Range,  Field:{}, Value: {}", key, value);
-    return std::nullopt;
+    const std::string underflow_exponent{"E-"};
+    const std::string overflow_exponent{"E"};
+    std::string uc_value = Utility::toupper(value);
+
+    if (uc_value.find(underflow_exponent) != std::string::npos) {
+
+      // Negative exponent exists and therefore an underflow.
+      return std::numeric_limits<InfoParserFloat>::min();
+
+    } else if (uc_value.find(overflow_exponent) != std::string::npos) {
+
+      // Exponent exists so assume an overflow.
+      return std::numeric_limits<InfoParserFloat>::max();
+
+    } else { // Another floating format, rather than test exhaustively, just give up and return a non-value.
+
+      ExecEnv::log().warn("VCFInfoParser::convertToFloat, Exception::Unknown Out of Range Error,  Field:{}, Value: {}", key, value);
+      return MISSING_VALUE_FLOAT;
+
+    }
 
   }
   catch(std::invalid_argument& e) {
 
     if (std::string(value) == INFO_VECTOR_MISSING_VALUE_STR_) {
 
-      return std::nullopt;
+      return MISSING_VALUE_FLOAT;
 
     }
 
     ExecEnv::log().error("VCFInfoParser::convertToFloat, Exception:Invalid Argument, Field {}, Value {}",key, value);
-    return std::nullopt;
+    return MISSING_VALUE_FLOAT;
 
   }
   catch(std::exception& e) {
 
     ExecEnv::log().error("VCFInfoParser::convertToFloat, Exception:Unknown, Field {}, Value {}",key, value);
-    return std::nullopt;
+    return MISSING_VALUE_FLOAT;
 
   }
 

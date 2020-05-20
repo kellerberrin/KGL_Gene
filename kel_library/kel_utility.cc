@@ -175,8 +175,7 @@ std::string kel::Utility::findAndReplaceAll(const std::string& source, const std
 }
 
 
-std::vector<std::string> kel::Utility::tokenizer(const std::string& str, const std::string& delims)
-{
+std::vector<std::string> kel::Utility::tokenizer(const std::string& str, const std::string& delims) {
 
   if (delims.size() == 1) {
 
@@ -189,6 +188,7 @@ std::vector<std::string> kel::Utility::tokenizer(const std::string& str, const s
   std::copy(tokens.begin(), tokens.end(), std::back_inserter(token_vector));
 
   return token_vector;
+
 }
 
 

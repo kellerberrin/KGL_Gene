@@ -221,20 +221,72 @@ private:
 // Generated from the parser data block by specifying the Allele index.
 class EvidenceFactory; // Fwd.
 
+struct DataInfoTypeCount {
+
+  size_t array_count_;
+  size_t float_count_;
+  size_t integer_count_;
+  size_t string_count_;
+  size_t char_count_;
+
+};
+
+struct InfoArrayIndex {
+
+  uint16_t info_variable_index_;  // corresponds to the variable index in the header, sort key for the array block.
+  uint32_t info_element_offset_;
+  uint16_t info_element_count_;
+
+};
+
+
 class InfoDataBlock {
 
 public:
 
-  friend EvidenceFactory;
 
   InfoDataBlock(std::shared_ptr<InfoEvidenceHeader> info_evidence_header) : info_evidence_header_(
   std::move(info_evidence_header)) {}
   InfoDataBlock(const InfoEvidenceHeader &) = delete;
   ~InfoDataBlock() = default;
 
+  void allocateMemory(const DataInfoTypeCount& type_count) {
+
+    char_memory_ = std::make_unique<char[]>(type_count.char_count_);
+    integer_memory_ = std::make_unique<InfoIntegerType[]>(type_count.integer_count_);
+    float_memory_ = std::make_unique<InfoFloatType[]>(type_count.float_count_);
+    array_memory_ = std::make_unique<InfoArrayIndex[]>(type_count.array_count_);
+    string_memory_ = std::make_unique<std::string_view[]>(type_count.string_count_);
+
+  }
+
 private:
 
   std::shared_ptr<InfoEvidenceHeader> info_evidence_header_; // The data header.
+
+  std::unique_ptr<char[]> char_memory_;
+  std::unique_ptr<InfoIntegerType []> integer_memory_;
+  std::unique_ptr<InfoFloatType []> float_memory_;
+  std::unique_ptr<InfoArrayIndex[]> array_memory_;
+  std::unique_ptr<std::string_view[]> string_memory_;
+
+
+};
+
+
+class InfoDataBlockNaive : public InfoDataBlock {
+
+public:
+
+  friend EvidenceFactory;
+
+  InfoDataBlockNaive(std::shared_ptr<InfoEvidenceHeader> info_evidence_header) : InfoDataBlock(std::move(info_evidence_header)) {}
+  InfoDataBlockNaive(const InfoEvidenceHeader &) = delete;
+  ~InfoDataBlockNaive() = default;
+
+  DataInfoTypeCount dataPayload();
+
+private:
 
   // The stored data.
   std::vector<bool> bool_data_;
@@ -245,8 +297,13 @@ private:
   std::vector<InfoParserIntegerArray> integer_array_data_;
   std::vector<InfoParserStringArray> string_array_data_;
 
+  void clearAll();
 
 };
+
+
+
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -280,7 +337,7 @@ private:
   // The info header block
   std::shared_ptr<InfoEvidenceHeader> info_evidence_header_;
 
-  std::unique_ptr<InfoDataBlock> parseSubscribed(std::string&& info);
+  std::unique_ptr<InfoDataBlockNaive> parseSubscribed(std::string&& info);
 
 
 };
