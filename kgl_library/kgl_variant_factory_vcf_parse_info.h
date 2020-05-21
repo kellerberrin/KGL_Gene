@@ -90,6 +90,7 @@ public:
   ~VCFInfoParser() = default;
 
   [[nodiscard]] const std::string& info() const { return info_; }
+  [[nodiscard]] std::optional<InfoParserToken> getToken(const std::string& key);
 
   [[nodiscard]] bool getInfoBoolean(const std::string& key) const;
   [[nodiscard]] InfoParserString getInfoString(const std::string& key) const;
