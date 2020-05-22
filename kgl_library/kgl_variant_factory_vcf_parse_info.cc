@@ -275,7 +275,7 @@ bool kgl::VCFInfoParser::infoArrayParser() {
 
 #ifdef USE_TOKEN_PARSER
 
-[[nodiscard]] std::optional<kgl::InfoParserToken> kgl::VCFInfoParser::getToken(const std::string& key) {
+[[nodiscard]] std::optional<kgl::InfoParserToken> kgl::VCFInfoParser::getToken(const std::string& key) const {
 
   auto key_it = parsed_token_map_.find(key);
   if (key_it != parsed_token_map_.end()) {

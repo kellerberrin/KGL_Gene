@@ -301,12 +301,14 @@ public:
   DataInfoTypeCount() = default;
   ~DataInfoTypeCount() = default;
 
+  size_t unityArrayCount() const { return unity_array_count_; }
   size_t arrayCount() const { return array_count_; }
   size_t floatCount() const { return float_count_; }
   size_t integerCount() const { return integer_count_; }
   size_t stringCount() const { return string_count_; }
   size_t charCount() const { return char_count_; }
 
+  void unityArrayCount(size_t count) { unity_array_count_ = count; }
   void arrayCount(size_t count) { array_count_ = count; }
   void floatCount(size_t count) { float_count_ = count; }
   void integerCount(size_t count) { integer_count_ = count; }
@@ -317,15 +319,56 @@ public:
   // The function is to be used sequentially on all subscribed variables.
   // The final values are used to actually allocate memory in the InfoDataBlock object.
   ItemOffset staticIncrementAndAllocate(InfoEvidenceIntern internal_type);  // Set up the indexes and pre-allocate fixed sized fields (run once).
-  void dynamicIncrementAndAllocate(InfoEvidenceIntern internal_type, size_t data_item_count, size_t data_item_size); // Allocate additional vector space at runtime (each VCF record).
+  // Allocate additional memory space at runtime.
+  [[nodiscard]] bool dynamicIncrementAndAllocate(const InfoSubscribedField& subscribed_field, const InfoParserToken& token);
 
 private:
 
+  size_t unity_array_count_{0};
   size_t array_count_{0};
   size_t float_count_{0};
   size_t integer_count_{0};
   size_t string_count_{0};
   size_t char_count_{0};
+
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class InfoDataBlock {
+
+public:
+
+
+  InfoDataBlock(std::shared_ptr<const InfoEvidenceHeader> info_evidence_header) : info_evidence_header_(
+  std::move(info_evidence_header)) {}
+  InfoDataBlock(const InfoEvidenceHeader &) = delete;
+  ~InfoDataBlock() = default;
+
+  void allocateMemory(const DataInfoTypeCount& type_count) {
+
+    type_count_ = type_count;
+    char_memory_ = std::make_unique<char[]>(type_count_.charCount());
+    integer_memory_ = std::make_unique<InfoIntegerType[]>(type_count_.integerCount());
+    float_memory_ = std::make_unique<InfoFloatType[]>(type_count_.floatCount());
+    array_memory_ = std::make_unique<InfoDataIndex[]>(type_count_.arrayCount());
+    unity_array_memory_ = std::make_unique<InfoDataIndex[]>(type_count_.unityArrayCount());
+    string_memory_ = std::make_unique<std::string_view[]>(type_count_.stringCount());
+
+  }
+
+private:
+
+  std::shared_ptr<const InfoEvidenceHeader> info_evidence_header_; // The data header.
+  DataInfoTypeCount type_count_;
+
+  std::unique_ptr<char[]> char_memory_;
+  std::unique_ptr<InfoIntegerType []> integer_memory_;
+  std::unique_ptr<InfoFloatType []> float_memory_;
+  std::unique_ptr<InfoDataIndex[]> array_memory_;
+  std::unique_ptr<InfoDataIndex[]> unity_array_memory_;
+  std::unique_ptr<std::string_view[]> string_memory_;
+
 
 };
 
@@ -350,7 +393,10 @@ public:
   // Note that this routine takes a shared_ptr to itself obtained from the info data factory. This is passed onto subscribed field objects.
   [[nodiscard]] bool setupEvidenceHeader(const VCFInfoRecord& vcf_info_record, std::shared_ptr<const InfoEvidenceHeader> self_ptr);
   // Static storage and field offsets.
+  // Fixed storage that does not change betweeen info records.
   void setupStaticStorage();
+  // Create storage for a parsed info record and return the allocated storage.
+  std::unique_ptr<InfoDataBlock> setupDynamicStorage(const VCFInfoParser& info_parser, std::shared_ptr<const InfoEvidenceHeader> self_ptr) const;
   const DataInfoTypeCount& staticStorage() const { return static_storage_; }
 
 private:
@@ -360,41 +406,8 @@ private:
 
 };
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class InfoDataBlock {
-
-public:
-
-
-  InfoDataBlock(std::shared_ptr<InfoEvidenceHeader> info_evidence_header) : info_evidence_header_(
-  std::move(info_evidence_header)) {}
-  InfoDataBlock(const InfoEvidenceHeader &) = delete;
-  ~InfoDataBlock() = default;
-
-  void allocateMemory(const DataInfoTypeCount& type_count) {
-
-    char_memory_ = std::make_unique<char[]>(type_count.charCount());
-    integer_memory_ = std::make_unique<InfoIntegerType[]>(type_count.integerCount());
-    float_memory_ = std::make_unique<InfoFloatType[]>(type_count.floatCount());
-    array_memory_ = std::make_unique<InfoDataIndex[]>(type_count.arrayCount());
-    string_memory_ = std::make_unique<std::string_view[]>(type_count.stringCount());
-
-  }
-
-private:
-
-  std::shared_ptr<InfoEvidenceHeader> info_evidence_header_; // The data header.
-
-  std::unique_ptr<char[]> char_memory_;
-  std::unique_ptr<InfoIntegerType []> integer_memory_;
-  std::unique_ptr<InfoFloatType []> float_memory_;
-  std::unique_ptr<InfoDataIndex[]> array_memory_;
-  std::unique_ptr<std::string_view[]> string_memory_;
-
-
-};
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Temporary testing object.
 
 class InfoDataBlockNaive : public InfoDataBlock {
 
@@ -463,7 +476,7 @@ private:
 
   // ******** Temp.
   std::unique_ptr<InfoDataBlockNaive> parseSubscribed(std::string&& info);
-  DataInfoTypeCount parseSubscribed_alt(std::string&& info);
+  std::unique_ptr<InfoDataBlock> parseSubscribed_alt(std::string&& info);
 
   // If the user specifies just specifies "None" (case insensitive) then no Info fields will be subscribed.
   constexpr static const char *NO_FIELD_SUBSCRIBED_ = "NONE";

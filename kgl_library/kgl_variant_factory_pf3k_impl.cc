@@ -66,10 +66,9 @@ void kgl::Pf3kVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
   }
   catch(const std::exception& e) {
 
-    ExecEnv::log().error("ProcessVCFRecord(), Exception: {} thrown record ignored", e.what());
+    ExecEnv::log().error("Pf3kVCFImpl::ProcessVCFRecord, Unexpected Exception: {} thrown record ignored", e.what());
 
   }
-
 
 }
 

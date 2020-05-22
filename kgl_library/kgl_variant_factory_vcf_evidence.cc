@@ -173,42 +173,67 @@ kgl::ItemOffset kgl::DataInfoTypeCount::staticIncrementAndAllocate(InfoEvidenceI
 }
 
 
-void kgl::DataInfoTypeCount::dynamicIncrementAndAllocate(InfoEvidenceIntern internal_type,
-                                                         size_t data_item_count,
-                                                         size_t data_item_size) {
+bool kgl::DataInfoTypeCount::dynamicIncrementAndAllocate(const InfoSubscribedField& subscribed_field, const InfoParserToken& token) {
+
+  InfoEvidenceIntern internal_type = subscribed_field.evidenceType().InternalInfoType();
 
   switch (internal_type) {
 
     // Data is pre-allocated for the fixed fields.
       case InfoEvidenceIntern::intern_char:
+        if (token.second != 0) {
+
+          ExecEnv::log().warn("DataInfoTypeCount::dynamicIncrementAndAllocate, Bad size (expected 1) Token: {} size: {}, field ID:{}, Number:{}, Type:{}"
+          , std::string(token.first), token.second, subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
+          return false;
+        }
+        break;
+
       case InfoEvidenceIntern::intern_integer:
       case InfoEvidenceIntern::intern_float:
-      case InfoEvidenceIntern::intern_unity_integer_array:
-      case InfoEvidenceIntern::intern_unity_float_array:
-        if (data_item_size != 1) {
+        if (token.second != 1) {
 
-          ExecEnv::log().warn("DataInfoTypeCount::dynamicIncrementAndAllocate, Unexpected field size: {} for fixed size field (expected 1)", data_item_size);
+          ExecEnv::log().warn("DataInfoTypeCount::dynamicIncrementAndAllocate, Bad size (expected 1) Token: {} size: {}, field ID:{}, Number:{}, Type:{}"
+          , std::string(token.first), token.second, subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
+          return false;
+        }
+        break;
+
+      case InfoEvidenceIntern::intern_unity_integer_array:
+        if (token.second > 1) {
+
+          ++unity_array_count_;
+          integer_count_ += token.second;
+
+        }
+        break;
+
+      case InfoEvidenceIntern::intern_unity_float_array:
+        if (token.second > 1) {
+
+          ++unity_array_count_;
+          float_count_ += token.second;
 
         }
         break;
 
       case InfoEvidenceIntern::intern_string: {
 
-        char_count_ += data_item_size; // total char size of all strings.
+        char_count_ += token.first.size(); // total char size of all strings.
 
       }
       break;
 
       case InfoEvidenceIntern::intern_integer_array: {
 
-        integer_count_ += data_item_size; // size of the array
+        integer_count_ += token.second; // size of the array
 
       } // Size is fixed and known at Info data subscription time.
       break;
 
       case InfoEvidenceIntern::intern_float_array: {
 
-        float_count_ += data_item_size; // size of the array
+        float_count_ += token.second; // size of the array
 
       }
       break;
@@ -216,8 +241,8 @@ void kgl::DataInfoTypeCount::dynamicIncrementAndAllocate(InfoEvidenceIntern inte
       case InfoEvidenceIntern::intern_unity_string_array:
       case InfoEvidenceIntern::intern_string_array: {
 
-        char_count_ += data_item_size; // total char size of all strings.
-        string_count_ += data_item_count;   // number strings, allocate a vector of std::string_views
+        char_count_ += token.first.size() - (token.second - 1); // total char size of all strings, less the delimiter chars.
+        string_count_ += token.second;   // number strings, allocate a vector of std::string_views
 
       } // Size varies between records.
       break;
@@ -227,6 +252,8 @@ void kgl::DataInfoTypeCount::dynamicIncrementAndAllocate(InfoEvidenceIntern inte
       break;
 
   }
+
+  return true;
 
 }
 
@@ -278,6 +305,37 @@ void kgl::InfoEvidenceHeader::setupStaticStorage() {
 
 }
 
+// Create the storage to be used for the parsed info record.
+std::unique_ptr<kgl::InfoDataBlock> kgl::InfoEvidenceHeader::setupDynamicStorage( const VCFInfoParser& info_parser,
+                                                                                  std::shared_ptr<const InfoEvidenceHeader> self_ptr) const {
+
+// Parse the VCF info line.
+
+  DataInfoTypeCount dynamic_info_storage = staticStorage();
+
+  for (auto const &subscribed_info : getMap()) {
+
+    std::optional<InfoParserToken> token = info_parser.getToken(subscribed_info.first);
+
+    if (token) {
+
+      if (not dynamic_info_storage.dynamicIncrementAndAllocate(subscribed_info.second, token.value())) {
+
+        ExecEnv::log().warn("EvidenceFactory::parseSubscribed, Vector value for assumed Scalar Field");
+
+      }
+
+    }
+
+  }
+
+  std::unique_ptr<InfoDataBlock> data_block_ptr(std::make_unique<InfoDataBlock>(self_ptr));
+
+  data_block_ptr->allocateMemory(dynamic_info_storage);
+
+  return std::move(data_block_ptr);
+
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -408,49 +466,25 @@ kgl::InfoDataEvidence kgl::EvidenceFactory::createVariantEvidence(std::string&& 
 
 //  std::unique_ptr<InfoDataBlockNaive> temp = parseSubscribed(std::move(info));
 
-  DataInfoTypeCount type_count = parseSubscribed_alt(std::move(info));
+//  DataInfoTypeCount type_count = );
 
 //  return std::move(temp);
 
-  std::unique_ptr<InfoDataBlock> data_block_ptr(std::make_unique<InfoDataBlock>(info_evidence_header_));
+//  std::unique_ptr<InfoDataBlock> data_block_ptr(std::make_unique<InfoDataBlock>(info_evidence_header_));
 
-  data_block_ptr->allocateMemory(type_count);
+//  data_block_ptr->allocateMemory(type_count);
 
-  return std::move(data_block_ptr);
+  return parseSubscribed_alt(std::move(info));
 
 }
 
 
-kgl::DataInfoTypeCount kgl::EvidenceFactory::parseSubscribed_alt(std::string&& info) {
+std::unique_ptr<kgl::InfoDataBlock> kgl::EvidenceFactory::parseSubscribed_alt(std::string&& info) {
 
   // Parse the VCF info line.
   VCFInfoParser info_parser(std::move(info));
 
-  DataInfoTypeCount info_storage = info_evidence_header_->staticStorage();
-
-  for (auto const &subscribed_info : info_evidence_header_->getMap()) {
-
-    InfoEvidenceIntern internal_type = subscribed_info.second.evidenceType().InternalInfoType();
-    std::optional<InfoParserToken> token = info_parser.getToken(subscribed_info.first);
-
-    if (token) {
-
-      if (internal_type == InfoEvidenceIntern::intern_string_array or
-          internal_type == InfoEvidenceIntern::intern_unity_integer_array) {
-
-        info_storage.dynamicIncrementAndAllocate(internal_type, token.value().second, token.value().first.length());
-
-      } else {
-
-        info_storage.dynamicIncrementAndAllocate(internal_type, 1, token.value().first.length());
-
-      }
-
-    }
-
-  }
-
-  return info_storage;
+  return info_evidence_header_->setupDynamicStorage(info_parser, info_evidence_header_);
 
 }
 
