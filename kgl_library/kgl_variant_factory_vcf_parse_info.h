@@ -97,12 +97,13 @@ public:
   [[nodiscard]] InfoParserString getInfoString(const std::string& key) const;
   [[nodiscard]] InfoParserStringArray getInfoStringArray(const std::string& key) const;
   [[nodiscard]] InfoParserInteger getInfoInteger(const std::string& key) const;
-  [[nodiscard]] InfoParserIntegerArray getInfoIntegerArray(const std::string& key) const;
   [[nodiscard]] InfoParserFloat getInfoFloat(const std::string& key) const;
-  [[nodiscard]] InfoParserFloatArray getInfoFloatArray(const std::string& key) const;
 
   [[nodiscard]] static InfoParserInteger convertToInteger(const std::string& value);
   [[nodiscard]] static InfoParserFloat convertToFloat(const std::string& value);
+  [[nodiscard]] static InfoParserFloatArray getInfoFloatArray(const std::string& value);
+  [[nodiscard]] static InfoParserIntegerArray getInfoIntegerArray(const std::string& value);
+  [[nodiscard]] static std::vector<std::string_view> getInfoStringArray(std::string_view str_view);
 
 private:
 
@@ -113,8 +114,8 @@ private:
 
   constexpr static const char INFO_FIELD_DELIMITER_{';'};
   constexpr static const char INFO_VALUE_DELIMITER_{'='};
-  constexpr static const char INFO_VECTOR_DELIMITER_{','};
   constexpr static const char* INFO_VECTOR_MISSING_VALUE_STR_{"."};
+  constexpr static const char INFO_VECTOR_DELIMITER_{','};
 
   [[nodiscard]] bool infoArrayParser();
   [[nodiscard]] bool infoTokenParser();

@@ -86,13 +86,13 @@ public:
   void setupStaticStorage();
   // Create storage for a parsed info record and return the allocated storage.
   std::unique_ptr<InfoDataBlock> setupDynamicStorage(const VCFInfoParser& info_parser, std::shared_ptr<const InfoEvidenceHeader> self_ptr) const;
-  const DataInfoTypeCount& staticStorage() const { return static_storage_; }
+  const InfoDataUsageCount& staticStorage() const { return static_storage_; }
   std::unique_ptr<InfoDataBlock> setupAndLoad( const VCFInfoParser& info_parser, std::shared_ptr<const InfoEvidenceHeader> self_ptr) const;
 
 private:
 
   InfoSubscribedMap info_subscribed_map_;
-  DataInfoTypeCount static_storage_;
+  InfoDataUsageCount static_storage_;
 
 
 };

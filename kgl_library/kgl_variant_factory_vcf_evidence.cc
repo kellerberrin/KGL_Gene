@@ -67,7 +67,7 @@ std::unique_ptr<kgl::InfoDataBlock> kgl::InfoEvidenceHeader::setupDynamicStorage
 
 // Parse the VCF info line.
 
-  DataInfoTypeCount dynamic_info_storage = staticStorage();
+  InfoDataUsageCount dynamic_info_storage = staticStorage();
 
   for (auto const &subscribed_info : getMap()) {
 
@@ -100,29 +100,37 @@ std::unique_ptr<kgl::InfoDataBlock> kgl::InfoEvidenceHeader::setupAndLoad( const
 
   std::unique_ptr<kgl::InfoDataBlock> data_block_ptr = setupDynamicStorage(info_parser, self_ptr);
 
-  DataInfoTypeCount dynamic_accounting = staticStorage();  // start with the static storage already counted
-  DataInfoTypeCount static_accounting; // make sure this matches the object in staticStorage()
-  std::vector<ItemOffset> index_accounting;  // make sure this matches the permanent indexes in the InfoSubscribedField objects.
+  InfoDataUsageCount dynamic_accounting = staticStorage();  // Start with the static storage (indexes) already counted
+  InfoDataUsageCount static_accounting; // Make sure this matches the object in staticStorage()
   for (auto& [ident, subscribed_item] : info_subscribed_map_) {
 
     std::optional<InfoParserToken> token = info_parser.getToken(ident);
 
-    if (not data_block_ptr->indexAndVerify(subscribed_item, token, dynamic_accounting, static_accounting, index_accounting)) {
+    if (not data_block_ptr->indexAndVerify(subscribed_item, token, dynamic_accounting, static_accounting)) {
 
       std::string token_value = token ? std::string(token.value().first) : "MISSING_VALUE";
-      ExecEnv::log().error("Problem loading data for field: {}, value: {}", token_value);
+      ExecEnv::log().error("InfoEvidenceHeader::setupAndLoad, Problem loading data for field: {}, value: {}", token_value);
 
     }
 
   }
 
-  // Finally, the usage accounting object should equal the original memory allocated.
+  // Final checks for memory usage.
+  // This checks that the raw data allocated exactly matches the data utilized by all the Info fields.
+  if (not (dynamic_accounting == data_block_ptr->getRawMemoryUsage())) {
 
-//  if (dynamic_accounting != data_block_ptr->getTypeCount()) {
-//
-//
-//  }
+    ExecEnv::log().error("InfoEvidenceHeader::setupAndLoad, The Dynamic Accounting Object Not Equal to the Total Allocated Data size");
 
+  }
+
+  // This checks that the data allocated for field indexing exactly matches the indexes used by all Info fields.
+  if (not (static_accounting == staticStorage())) {
+
+    ExecEnv::log().error("InfoEvidenceHeader::setupAndLoad, The Static Accounting Object Not Equal to the Static Data size");
+
+  }
+
+  // Data block containing all subscribed Info fields.
   return std::move(data_block_ptr);
 
 }
@@ -130,7 +138,7 @@ std::unique_ptr<kgl::InfoDataBlock> kgl::InfoEvidenceHeader::setupAndLoad( const
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // InfoDataBlock
 
-kgl::DataInfoTypeCount kgl::InfoDataBlockNaive::dataPayload() {
+kgl::InfoDataUsageCount kgl::InfoDataBlockNaive::dataPayload() {
 
 
 //  static std::mutex func_lock;
@@ -213,7 +221,7 @@ kgl::DataInfoTypeCount kgl::InfoDataBlockNaive::dataPayload() {
 
   }
 
-  DataInfoTypeCount info_count;
+  InfoDataUsageCount info_count;
 
   info_count.integerCount(integer_count);
   info_count.floatCount(float_count);
@@ -255,7 +263,7 @@ kgl::InfoDataEvidence kgl::EvidenceFactory::createVariantEvidence(std::string&& 
 
 //  std::unique_ptr<InfoDataBlockNaive> temp = parseSubscribed(std::move(info));
 
-//  DataInfoTypeCount type_count = );
+//  InfoDataUsageCount type_count = );
 
 //  return std::move(temp);
 

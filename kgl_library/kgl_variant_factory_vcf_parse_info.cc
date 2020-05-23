@@ -449,9 +449,9 @@ kgl::InfoParserInteger kgl::VCFInfoParser::getInfoInteger(const std::string& key
 }
 
 
-kgl::InfoParserIntegerArray kgl::VCFInfoParser::getInfoIntegerArray(const std::string& key) const {
+kgl::InfoParserIntegerArray kgl::VCFInfoParser::getInfoIntegerArray(const std::string& value) {
 
-  InfoParserStringArray string_array(getInfoStringArray(key));
+  InfoParserStringArray string_array = Utility::char_tokenizer(value, INFO_VECTOR_DELIMITER_);
 
   if (string_array.empty()) return MISSING_INTEGER_VECTOR;
 
@@ -463,7 +463,7 @@ kgl::InfoParserIntegerArray kgl::VCFInfoParser::getInfoIntegerArray(const std::s
 
   }
 
-  return(std::move(integer_vector));
+  return integer_vector;
 
 }
 
@@ -479,9 +479,9 @@ kgl::InfoParserFloat kgl::VCFInfoParser::getInfoFloat(const std::string& key) co
 }
 
 
-kgl::InfoParserFloatArray kgl::VCFInfoParser::getInfoFloatArray(const std::string& key) const {
+kgl::InfoParserFloatArray kgl::VCFInfoParser::getInfoFloatArray(const std::string& value) {
 
-  InfoParserStringArray string_array(getInfoStringArray(key));
+  InfoParserStringArray string_array = Utility::char_tokenizer(value, INFO_VECTOR_DELIMITER_);
 
   if (string_array.empty()) return MISSING_FLOAT_VECTOR;
 
@@ -493,9 +493,18 @@ kgl::InfoParserFloatArray kgl::VCFInfoParser::getInfoFloatArray(const std::strin
 
   }
 
-  return(std::move(float_vector));
+  return float_vector;
 
 }
+
+
+std::vector<std::string_view> kgl::VCFInfoParser::getInfoStringArray(std::string_view str_view) {
+
+  return Utility::view_tokenizer(str_view, INFO_VECTOR_DELIMITER_);
+
+}
+
+
 
 
 kgl::InfoParserInteger kgl::VCFInfoParser::convertToInteger(const std::string& value) {
