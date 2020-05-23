@@ -6,256 +6,9 @@
 #include "kgl_variant_factory_vcf_parse_header.h"
 #include "kgl_variant_factory_vcf_parse_info.h"
 
+
 namespace kgl = kellerberrin::genome;
 
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Helper class for INFO types.
-
-
-// Returns true if a number > 1. Used in the type definition lambdas.
-bool kgl::InfoTypeLookup::isVectorType(const std::string& type) {
-
-  try {
-
-    return std::stol(type) > 1;
-
-  }
-  catch(...) {
-
-    return false;
-
-  }
-
-}
-
-
-kgl::InfoEvidenceType kgl::InfoTypeLookup::evidenceType(const VCFInfoRecord &vcf_info_item) {
-
-  for (auto const& evidence_type : type_definitions_) {
-
-    if (evidence_type.second(vcf_info_item.type, vcf_info_item.number)) {
-
-      return evidence_type.first;
-
-    }
-
-  }
-
-  ExecEnv::log().warn("InfoTypeLookup::evidenceType, Info ID: {} Unable to find data type combination for Number: {}, Type: {}",
-                      vcf_info_item.ID, vcf_info_item.number, vcf_info_item.type);
-
-  return {InfoEvidenceSubscriber::NotImplemented, InfoEvidenceExtern::NotImplemented, InfoEvidenceIntern::NotImplemented };
-
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-
-bool kgl::InfoEvidenceType::fixedDataType() const {
-
-  switch (InternalInfoType()) {
-
-    case InfoEvidenceIntern::intern_char: // Size is fixed (boolean variables) and known at Info data subscription time.
-    case InfoEvidenceIntern::intern_integer: // Size is fixed and known at Info data subscription time.
-    case InfoEvidenceIntern::intern_float: // Size is fixed and known at Info data subscription time.
-    case InfoEvidenceIntern::intern_integer_array: // Size is fixed and known at Info data subscription time.
-    case InfoEvidenceIntern::intern_float_array: // Size is fixed and known at Info data subscription time.
-    case InfoEvidenceIntern::NotImplemented:  // Trivially fixed.
-      return true;
-
-    case InfoEvidenceIntern::intern_string: // Size varies between records.
-    case InfoEvidenceIntern::intern_string_array:  // Size varies between records.
-    case InfoEvidenceIntern::intern_unity_integer_array:   // Size varies between records.
-    case InfoEvidenceIntern::intern_unity_float_array:   // Size varies between records.
-    case InfoEvidenceIntern::intern_unity_string_array:    // Size varies between records.
-      return false;
-
-    default:
-      return false;
-  }
-
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// data_item_count is the number of data items, for a float array of size 3 this is 1 for 1 array. For a string array of size 3 it is 3.
-// data_item_size is the number of underlying data items. For float array of size 3 this is 3.
-// For a string array this will be the total number of characters in all strings. For a string array of size 3 data_item_count=3, but data_item_size is size of
-// all three strings added together. The total characters required for all 3 strings.
-kgl::ItemOffset kgl::DataInfoTypeCount::staticIncrementAndAllocate(InfoEvidenceIntern internal_type) {
-
-  ItemOffset item_offset;
-  switch (internal_type) {
-
-    case InfoEvidenceIntern::intern_char:  {
-
-      item_offset.offset = char_count_;
-      item_offset.is_array = false;
-      ++char_count_;
-
-    }// Size is fixed (boolean variables) and known at Info data subscription time.
-    return item_offset;
-
-    case InfoEvidenceIntern::intern_unity_integer_array:
-    case InfoEvidenceIntern::intern_integer: {
-
-      item_offset.offset = integer_count_;
-      item_offset.is_array = false;
-      ++integer_count_;
-
-    }// Size is fixed and known at Info data subscription time.
-    return item_offset;
-
-    case InfoEvidenceIntern::intern_unity_float_array:
-    case InfoEvidenceIntern::intern_float: {
-
-      item_offset.offset = float_count_;
-      item_offset.is_array = false;
-      ++float_count_;  // should be 1
-
-    }// Size is fixed and known at Info data subscription time.
-    return item_offset;
-
-    case InfoEvidenceIntern::intern_string: {
-
-      item_offset.offset = string_count_;
-      item_offset.is_array = false;
-      ++string_count_;   // allocate a std::string_view
-
-    } // Size varies between records.
-    return item_offset;
-
-    case InfoEvidenceIntern::intern_integer_array: {
-
-      item_offset.offset = array_count_;
-      item_offset.is_array = true;
-      ++array_count_;
-
-    } // Size is fixed and known at Info data subscription time.
-    return item_offset;
-
-    case InfoEvidenceIntern::intern_float_array: {
-
-      item_offset.offset = array_count_;
-      item_offset.is_array = true;
-      ++array_count_;
-
-    }
-    return item_offset;
-
-
-    case InfoEvidenceIntern::intern_string_array: {
-
-      item_offset.offset = array_count_;
-      item_offset.is_array = true;
-      ++array_count_;
-
-    } // Size varies between records.
-    return item_offset;
-
-    case InfoEvidenceIntern::intern_unity_string_array: {
-
-      item_offset.offset = array_count_;
-      item_offset.is_array = true;
-      ++array_count_;
-
-    }   // Size varies between records.
-    return item_offset;
-
-    case InfoEvidenceIntern::NotImplemented:  // Trivially fixed.
-    default:
-      return item_offset;
-
-  }
-
-}
-
-
-bool kgl::DataInfoTypeCount::dynamicIncrementAndAllocate(const InfoSubscribedField& subscribed_field, const InfoParserToken& token) {
-
-  InfoEvidenceIntern internal_type = subscribed_field.evidenceType().InternalInfoType();
-
-  switch (internal_type) {
-
-    // Data is pre-allocated for the fixed fields.
-      case InfoEvidenceIntern::intern_char:
-        if (token.second != 0) {
-
-          ExecEnv::log().warn("DataInfoTypeCount::dynamicIncrementAndAllocate, Bad size (expected 1) Token: {} size: {}, field ID:{}, Number:{}, Type:{}"
-          , std::string(token.first), token.second, subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
-          return false;
-        }
-        break;
-
-      case InfoEvidenceIntern::intern_integer:
-      case InfoEvidenceIntern::intern_float:
-        if (token.second != 1) {
-
-          ExecEnv::log().warn("DataInfoTypeCount::dynamicIncrementAndAllocate, Bad size (expected 1) Token: {} size: {}, field ID:{}, Number:{}, Type:{}"
-          , std::string(token.first), token.second, subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
-          return false;
-        }
-        break;
-
-      case InfoEvidenceIntern::intern_unity_integer_array:
-        if (token.second > 1) {
-
-          ++unity_array_count_;
-          integer_count_ += token.second;
-
-        }
-        break;
-
-      case InfoEvidenceIntern::intern_unity_float_array:
-        if (token.second > 1) {
-
-          ++unity_array_count_;
-          float_count_ += token.second;
-
-        }
-        break;
-
-      case InfoEvidenceIntern::intern_string: {
-
-        char_count_ += token.first.size(); // total char size of all strings.
-
-      }
-      break;
-
-      case InfoEvidenceIntern::intern_integer_array: {
-
-        integer_count_ += token.second; // size of the array
-
-      } // Size is fixed and known at Info data subscription time.
-      break;
-
-      case InfoEvidenceIntern::intern_float_array: {
-
-        float_count_ += token.second; // size of the array
-
-      }
-      break;
-
-      case InfoEvidenceIntern::intern_unity_string_array:
-      case InfoEvidenceIntern::intern_string_array: {
-
-        char_count_ += token.first.size() - (token.second - 1); // total char size of all strings, less the delimiter chars.
-        string_count_ += token.second;   // number strings, allocate a vector of std::string_views
-
-      } // Size varies between records.
-      break;
-
-     case InfoEvidenceIntern::NotImplemented:  // Trivially fixed.
-     default:
-      break;
-
-  }
-
-  return true;
-
-}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -296,10 +49,13 @@ std::optional<const kgl::InfoSubscribedField> kgl::InfoEvidenceHeader::getSubscr
 
 void kgl::InfoEvidenceHeader::setupStaticStorage() {
 
+  size_t field_index = 0;
   for (auto& subscribed_item : info_subscribed_map_) {
 
     InfoEvidenceIntern internal_type = subscribed_item.second.evidenceType().InternalInfoType();
     subscribed_item.second.dataOffset(static_storage_.staticIncrementAndAllocate(internal_type));
+    subscribed_item.second.fieldIndex(field_index);
+    ++field_index;
 
   }
 
@@ -317,6 +73,7 @@ std::unique_ptr<kgl::InfoDataBlock> kgl::InfoEvidenceHeader::setupDynamicStorage
 
     std::optional<InfoParserToken> token = info_parser.getToken(subscribed_info.first);
 
+    // No additional storage required if token not available.
     if (token) {
 
       if (not dynamic_info_storage.dynamicIncrementAndAllocate(subscribed_info.second, token.value())) {
@@ -337,6 +94,38 @@ std::unique_ptr<kgl::InfoDataBlock> kgl::InfoEvidenceHeader::setupDynamicStorage
 
 }
 
+
+std::unique_ptr<kgl::InfoDataBlock> kgl::InfoEvidenceHeader::setupAndLoad( const VCFInfoParser& info_parser,
+                                                                           std::shared_ptr<const InfoEvidenceHeader> self_ptr) const {
+
+  std::unique_ptr<kgl::InfoDataBlock> data_block_ptr = setupDynamicStorage(info_parser, self_ptr);
+
+  DataInfoTypeCount dynamic_accounting = staticStorage();  // start with the static storage already counted
+  DataInfoTypeCount static_accounting; // make sure this matches the object in staticStorage()
+  std::vector<ItemOffset> index_accounting;  // make sure this matches the permanent indexes in the InfoSubscribedField objects.
+  for (auto& [ident, subscribed_item] : info_subscribed_map_) {
+
+    std::optional<InfoParserToken> token = info_parser.getToken(ident);
+
+    if (not data_block_ptr->indexAndVerify(subscribed_item, token, dynamic_accounting, static_accounting, index_accounting)) {
+
+      std::string token_value = token ? std::string(token.value().first) : "MISSING_VALUE";
+      ExecEnv::log().error("Problem loading data for field: {}, value: {}", token_value);
+
+    }
+
+  }
+
+  // Finally, the usage accounting object should equal the original memory allocated.
+
+//  if (dynamic_accounting != data_block_ptr->getTypeCount()) {
+//
+//
+//  }
+
+  return std::move(data_block_ptr);
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // InfoDataBlock
@@ -484,7 +273,7 @@ std::unique_ptr<kgl::InfoDataBlock> kgl::EvidenceFactory::parseSubscribed_alt(st
   // Parse the VCF info line.
   VCFInfoParser info_parser(std::move(info));
 
-  return info_evidence_header_->setupDynamicStorage(info_parser, info_evidence_header_);
+  return info_evidence_header_->setupAndLoad(info_parser, info_evidence_header_);
 
 }
 

@@ -444,7 +444,7 @@ kgl::InfoParserInteger kgl::VCFInfoParser::getInfoInteger(const std::string& key
 
   if (string_value == MISSING_VALUE_STRING) return MISSING_VALUE_INTEGER;
 
-  return convertToInteger(key, string_value);
+  return convertToInteger(string_value);
 
 }
 
@@ -459,7 +459,7 @@ kgl::InfoParserIntegerArray kgl::VCFInfoParser::getInfoIntegerArray(const std::s
   integer_vector.reserve(string_array.size());
   for (auto& value : string_array) {
 
-    integer_vector.push_back(convertToInteger(key, value));
+    integer_vector.push_back(convertToInteger(value));
 
   }
 
@@ -474,7 +474,7 @@ kgl::InfoParserFloat kgl::VCFInfoParser::getInfoFloat(const std::string& key) co
 
   if (string_value == MISSING_VALUE_STRING) return MISSING_VALUE_FLOAT;
 
-  return convertToFloat(key, string_value);
+  return convertToFloat(string_value);
 
 }
 
@@ -489,7 +489,7 @@ kgl::InfoParserFloatArray kgl::VCFInfoParser::getInfoFloatArray(const std::strin
   float_vector.reserve(string_array.size());// Preallocate vector size.
   for (auto& value : string_array) {
 
-    float_vector.push_back(convertToFloat(key, value));
+    float_vector.push_back(convertToFloat(value));
 
   }
 
@@ -498,7 +498,7 @@ kgl::InfoParserFloatArray kgl::VCFInfoParser::getInfoFloatArray(const std::strin
 }
 
 
-kgl::InfoParserInteger kgl::VCFInfoParser::convertToInteger(const std::string& key, const std::string& value) {
+kgl::InfoParserInteger kgl::VCFInfoParser::convertToInteger(const std::string& value) {
 
   try {
 
@@ -515,7 +515,7 @@ kgl::InfoParserInteger kgl::VCFInfoParser::convertToInteger(const std::string& k
   }
   catch(std::out_of_range& e) {
 
-    ExecEnv::log().warn("VCFInfoParser::convertToInteger, Exception:Out of of Range,  Field:{}, Value: {}", key, value);
+    ExecEnv::log().warn("VCFInfoParser::convertToInteger, Exception:Out of of Range,  Value: {}", value);
     return MISSING_VALUE_INTEGER;
 
   }
@@ -527,13 +527,13 @@ kgl::InfoParserInteger kgl::VCFInfoParser::convertToInteger(const std::string& k
 
     }
 
-    ExecEnv::log().error("VCFInfoParser::convertToInteger, Exception:Invalid Argument, Field {}, Value {}",key, value);
+    ExecEnv::log().error("VCFInfoParser::convertToInteger, Exception:Invalid Argument, Value {}", value);
     return MISSING_VALUE_INTEGER;
 
   }
   catch(std::exception& e) {
 
-    ExecEnv::log().error("VCFInfoParser::convertToInteger, Exception:Unknown, Field {}, Value {}",key, value);
+    ExecEnv::log().error("VCFInfoParser::convertToInteger, Exception:Unknown, Value {}", value);
     return MISSING_VALUE_INTEGER;
 
   }
@@ -541,7 +541,7 @@ kgl::InfoParserInteger kgl::VCFInfoParser::convertToInteger(const std::string& k
 }
 
 
-kgl::InfoParserFloat kgl::VCFInfoParser::convertToFloat(const std::string& key, const std::string& value) {
+kgl::InfoParserFloat kgl::VCFInfoParser::convertToFloat(const std::string& value) {
 
   try {
 
@@ -574,7 +574,7 @@ kgl::InfoParserFloat kgl::VCFInfoParser::convertToFloat(const std::string& key, 
 
     } else { // Another floating format, rather than test exhaustively, just give up and return a non-value.
 
-      ExecEnv::log().warn("VCFInfoParser::convertToFloat, Exception::Unknown Out of Range Error,  Field:{}, Value: {}", key, value);
+      ExecEnv::log().warn("VCFInfoParser::convertToFloat, Exception::Unknown Out of Range Error,  Value: {}", value);
       return MISSING_VALUE_FLOAT;
 
     }
@@ -588,13 +588,13 @@ kgl::InfoParserFloat kgl::VCFInfoParser::convertToFloat(const std::string& key, 
 
     }
 
-    ExecEnv::log().error("VCFInfoParser::convertToFloat, Exception:Invalid Argument, Field {}, Value {}",key, value);
+    ExecEnv::log().error("VCFInfoParser::convertToFloat, Exception:Invalid Argument, Value {}", value);
     return MISSING_VALUE_FLOAT;
 
   }
   catch(std::exception& e) {
 
-    ExecEnv::log().error("VCFInfoParser::convertToFloat, Exception:Unknown, Field {}, Value {}",key, value);
+    ExecEnv::log().error("VCFInfoParser::convertToFloat, Exception:Unknown, Value {}", value);
     return MISSING_VALUE_FLOAT;
 
   }

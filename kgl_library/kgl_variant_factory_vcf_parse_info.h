@@ -36,6 +36,7 @@ using InfoFloatType = float;
 
 #endif
 
+using InfoParserBoolean = char;
 using InfoParserString = std::string;
 using InfoParserStringArray = std::vector<std::string>;
 using InfoParserInteger = InfoIntegerType;
@@ -100,6 +101,9 @@ public:
   [[nodiscard]] InfoParserFloat getInfoFloat(const std::string& key) const;
   [[nodiscard]] InfoParserFloatArray getInfoFloatArray(const std::string& key) const;
 
+  [[nodiscard]] static InfoParserInteger convertToInteger(const std::string& value);
+  [[nodiscard]] static InfoParserFloat convertToFloat(const std::string& value);
+
 private:
 
   const std::string info_; // The unparsed 'raw' VCF info record.
@@ -114,8 +118,7 @@ private:
 
   [[nodiscard]] bool infoArrayParser();
   [[nodiscard]] bool infoTokenParser();
-  [[nodiscard]] static InfoParserInteger convertToInteger(const std::string& key, const std::string& value);
-  [[nodiscard]] static InfoParserFloat convertToFloat(const std::string& key, const std::string& value);
+
   bool compareParsers();
 
   // Largest negative values are interpreted as missing values.
