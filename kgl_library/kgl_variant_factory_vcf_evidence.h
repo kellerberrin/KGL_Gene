@@ -13,6 +13,7 @@
 
 #include <string>
 #include <array>
+#include <variant>
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -21,7 +22,7 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-
+using InfoDataVariant = std::variant<bool, std::vector<uint64_t>, std::vector<double>, std::vector<std::string>>;
 class ManageInfoData;
 class InfoEvidenceHeader; // forward.
 // Holds the indexing data to access the InfoDataBlock object and return VCF Info Data.
@@ -38,9 +39,23 @@ public:
   InfoSubscribedField(const InfoSubscribedField &) = default;
   ~InfoSubscribedField() = default;
 
-  [[nodiscard]] const VCFInfoRecord &infoRecord() const { return vcfInfoRecord_; }
+  // Returns the original VCF header record for the VCF Info field.
+  [[nodiscard]] const VCFInfoRecord &infoVCF() const { return vcfInfoRecord_; }
+  // Returns one of the following,
+  // InfoEvidenceExtern::Boolean,
+  // InfoEvidenceExtern::IntegerArray,
+  // InfoEvidenceExtern::FloatArray,
+  // InfoEvidenceExtern::StringArray,
   [[nodiscard]]  InfoEvidenceExtern dataType() const { return evidenceType().ExternalInfoType(); }
-
+  // The array size that will be returned. Zero if missing data.
+  [[nodiscard]]  size_t dataSize(InfoDataBlock& info_data_block) const;
+  // Returns false if an incompatible type was passed in to the function.
+  // For example, if a std::vector<std::string> was passed in when dataType() returned InfoEvidenceExtern::Boolean.
+  // Array is zero sized there was no data item available; dataSize() = 0.
+  std::shared_ptr<const InfoEvidenceHeader> getDataHeader() const { return info_evidence_header_; }
+  // The header object that can access all subscribed Info data items.
+  // Get data directly from an InfoDataBlock
+  [[nodiscard]]  bool getData(InfoDataVariant& data, const InfoDataBlock& info_data_block) const;
 
 private:
 
@@ -143,6 +158,8 @@ public:
   [[nodiscard]] const VCFInfoRecordMap& availableInfoFields() const { return all_available_map_; }
   // For each input VCFRecord info text field (std::moved for efficiency), create a parsed data object.
   [[nodiscard]] InfoDataEvidence createVariantEvidence(std::string&& info);
+  // All subscribed Info fields.
+  std::shared_ptr<const InfoEvidenceHeader> getInfoHeader() { return info_evidence_header_; }
 
 
 private:

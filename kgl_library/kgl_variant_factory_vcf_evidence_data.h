@@ -34,9 +34,6 @@ enum class InfoEvidenceSubscriber {
 // Defines how the data is represented externally.
 enum class InfoEvidenceExtern {
   Boolean,
-  Integer,
-  Float,
-  String,
   IntegerArray,
   FloatArray,
   StringArray,
@@ -151,7 +148,7 @@ inline const std::vector<InfoTypeLookup::InfoTypeLookupTable> InfoTypeLookup::ty
 [](const std::string& type, const std::string& number) { return type == FLAG_ and number == ALL_GENOTYPES_; }      },
 
 // String types.
-{        {InfoEvidenceSubscriber::GeneralScalar,   InfoEvidenceExtern::String, InfoEvidenceIntern::intern_string},
+{        {InfoEvidenceSubscriber::GeneralScalar,   InfoEvidenceExtern::StringArray, InfoEvidenceIntern::intern_string},
 [](const std::string& type, const std::string& number) { return type == STRING_ and number == SCALAR_; }       },
 
 {        {InfoEvidenceSubscriber::AlternateAllele, InfoEvidenceExtern::StringArray, InfoEvidenceIntern::intern_unity_string_array},
@@ -170,7 +167,7 @@ inline const std::vector<InfoTypeLookup::InfoTypeLookupTable> InfoTypeLookup::ty
 [](const std::string& type, const std::string& number) { return type == STRING_ and isVectorType(number); }      },
 
 // Float types.
-{       {InfoEvidenceSubscriber::GeneralScalar,   InfoEvidenceExtern::Float, InfoEvidenceIntern::intern_float},
+{       {InfoEvidenceSubscriber::GeneralScalar,   InfoEvidenceExtern::FloatArray, InfoEvidenceIntern::intern_float},
 [](const std::string& type, const std::string& number) { return type == FLOAT_ and number == SCALAR_; }     },
 
 {       {InfoEvidenceSubscriber::AlternateAllele, InfoEvidenceExtern::FloatArray, InfoEvidenceIntern::intern_unity_float_array},
@@ -189,7 +186,7 @@ inline const std::vector<InfoTypeLookup::InfoTypeLookupTable> InfoTypeLookup::ty
 [](const std::string& type, const std::string& number) { return type == FLOAT_ and isVectorType(number); }      },
 
 // Integer types.
-{      {InfoEvidenceSubscriber::GeneralScalar,   InfoEvidenceExtern::Integer, InfoEvidenceIntern::intern_integer},
+{      {InfoEvidenceSubscriber::GeneralScalar,   InfoEvidenceExtern::IntegerArray, InfoEvidenceIntern::intern_integer},
 [](const std::string& type, const std::string& number) { return type == INTEGER_ and number == SCALAR_; }      },
 
 {      {InfoEvidenceSubscriber::AlternateAllele, InfoEvidenceExtern::IntegerArray, InfoEvidenceIntern::intern_unity_integer_array},

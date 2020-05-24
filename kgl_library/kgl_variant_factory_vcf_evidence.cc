@@ -85,8 +85,8 @@ std::unique_ptr<kgl::InfoDataBlock> kgl::ManageInfoData::setupDynamicStorage( co
       if (not dynamic_info_storage.dynamicIncrementAndAllocate(internal_type, token.value())) {
 
         ExecEnv::log().warn("InfoDataUsageCount::dynamicIncrementAndAllocate, Bad size (expected 1) Token: {} size: {}, field ID:{}, Number:{}, Type:{}"
-        , std::string(token.value().first), token.value().second, subscribed_info.infoRecord().ID,
-                            subscribed_info.infoRecord().number, subscribed_info.infoRecord().type);
+        , std::string(token.value().first), token.value().second, subscribed_info.infoVCF().ID,
+                            subscribed_info.infoVCF().number, subscribed_info.infoVCF().type);
 
       }
 
@@ -127,7 +127,9 @@ std::unique_ptr<kgl::InfoDataBlock> kgl::ManageInfoData::setupAndLoad( const VCF
       size_t token_size = parser_token ? parser_token.value().second : 0;
       ExecEnv::log().error("ManageInfoData::setupAndLoad, Problem loading data for VCF Info field value: {}, size:{}", token_value, token_size);
       ExecEnv::log().error("ManageInfoData::setupAndLoad, VCF Info field ID: {}, Number: {}, Type: {}, Description: {}",
-                           subscribed_item.infoRecord().ID, subscribed_item.infoRecord().number, subscribed_item.infoRecord().type, subscribed_item.infoRecord().description);
+                           subscribed_item.infoVCF().ID, subscribed_item.infoVCF().number,
+                           subscribed_item.infoVCF().type,
+                           subscribed_item.infoVCF().description);
       ExecEnv::log().critical("ManageInfoData::setupAndLoad, Variant VCF Info field memory block set up encountered a serious error and cannot continue ...");
 
     }
