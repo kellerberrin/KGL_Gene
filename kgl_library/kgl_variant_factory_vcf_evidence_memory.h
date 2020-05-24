@@ -17,9 +17,6 @@ namespace kellerberrin::genome {   //  organization level namespace
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This object manages the storage of individual Info fields from the raw data allocated below.
 
-struct ItemOffset;
-class InfoSubscribedField;
-
 struct InfoDataUsageCount {
 
 public:
@@ -55,11 +52,11 @@ public:
   // The final values are used to actually allocate memory in the InfoDataBlock object.
 
   // Set up the indexes and pre-allocate fixed sized fields (run once for all fields)
-  [[nodiscard]] ItemOffset staticIncrementAndAllocate(InfoEvidenceIntern internal_type);
+  [[nodiscard]] size_t staticIncrementAndAllocate(InfoEvidenceIntern internal_type);
 
   // Allocate additional memory space at runtime run for every Info field parsed.
   // Sets up all the array indexes and verifies the size of the total allocated memory.
-  [[nodiscard]] bool dynamicIncrementAndAllocate(const InfoSubscribedField &subscribed_field, const InfoParserToken &token);
+  [[nodiscard]] bool dynamicIncrementAndAllocate(InfoEvidenceIntern internal_type, const InfoParserToken &token);
 
 private:
 
@@ -79,7 +76,14 @@ struct InfoArrayIndex {
 public:
 
   InfoArrayIndex() = default;
+  InfoArrayIndex(size_t variable_index, size_t element_offset, size_t element_count) {
 
+    infoVariableIndex(variable_index);
+    infoOffset(element_offset);
+    infoSize(element_count);
+
+  }
+  InfoArrayIndex(const InfoArrayIndex&) = default;
   ~InfoArrayIndex() = default;
 
   [[nodiscard]] size_t infoVariableIndex() const { return static_cast<size_t>(info_variable_index_); }
@@ -124,7 +128,6 @@ private:
 
 // Forward declarations.
 class InfoEvidenceHeader;
-
 class InfoDataBlock {
 
 public:
@@ -134,13 +137,17 @@ public:
   InfoDataBlock(const InfoDataBlock &) = delete;
   ~InfoDataBlock() = default;
 
-  [[nodiscard]] bool indexAndVerify(const InfoSubscribedField &subscribed_field,
+  [[nodiscard]] bool indexAndVerify(size_t field_address,     // The field index
+                                    size_t field_id,           // the field identifier
+                                    InfoEvidenceIntern internal_type,
                                     const std::optional<InfoParserToken> &token,
                                     InfoDataUsageCount &dynamic_accounting,
                                     InfoDataUsageCount &static_accounting);
 
+  std::optional<InfoArrayIndex> findUnityArrayIndex(size_t field_index);
+
   void allocateMemory(const InfoDataUsageCount &type_count);
-  const InfoDataUsageCount &getRawMemoryUsage() const { return type_count_; }
+  [[nodiscard]] const InfoDataUsageCount &getRawMemoryUsage() const { return type_count_; }
 
   // Constants for missing values.
   // This is a bit dubious because these are potentially (though unlikely) valid field values.
@@ -151,7 +158,8 @@ public:
 
 private:
 
-  std::shared_ptr<const InfoEvidenceHeader> info_evidence_header_; // The data header.
+
+  std::shared_ptr<const InfoEvidenceHeader> info_evidence_header_; // The data header and indexing structure.
   InfoDataUsageCount type_count_;  // Size count object.
 
   // Raw memory to efficiently store the info data.
@@ -165,90 +173,78 @@ private:
 
   // Implementation functions of indexAndVerify for each internal data type.
   // These exist to breakup blocks of unsightly code into small manageable chunks.
-  bool internChar(const InfoSubscribedField &subscribed_field,
+  bool internChar(size_t field_address,
                   const std::optional<InfoParserToken> &token,
                   InfoDataUsageCount &static_accounting);
 
-  bool internInteger(const InfoSubscribedField &subscribed_field,
-                     const std::optional<InfoParserToken> &token,
+  bool internInteger(size_t field_address,
+                      const std::optional<InfoParserToken> &token,
                      InfoDataUsageCount &static_accounting);
 
-  bool internFloat(const InfoSubscribedField &subscribed_field,
+  bool internFloat(size_t field_address,
                    const std::optional<InfoParserToken> &token,
                    InfoDataUsageCount &static_accounting);
 
-  bool internString(const InfoSubscribedField &subscribed_field,
+  bool internString(size_t field_address,
                     const std::optional<InfoParserToken> &token,
                     InfoDataUsageCount &dynamic_accounting,
                     InfoDataUsageCount &static_accounting);
 
-  bool internIntegerArray(const InfoSubscribedField &subscribed_field,
+  bool internIntegerArray(size_t field_address,
+                          size_t field_id,
                           const std::optional<InfoParserToken> &token,
                           InfoDataUsageCount &dynamic_accounting,
                           InfoDataUsageCount &static_accounting);
 
-  bool internFloatArray(const InfoSubscribedField &subscribed_field,
+  bool internFloatArray(size_t field_address,
+                        size_t field_id,
                         const std::optional<InfoParserToken> &token,
                         InfoDataUsageCount &dynamic_accounting,
                         InfoDataUsageCount &static_accounting);
 
-  bool internStringArray(const InfoSubscribedField &subscribed_field,
+  bool internStringArray(size_t field_address,
+                         size_t field_id,
                          const std::optional<InfoParserToken> &token,
                          InfoDataUsageCount &dynamic_accounting,
                          InfoDataUsageCount &static_accounting);
 
-  bool internUnityInteger(const InfoSubscribedField &subscribed_field,
+  bool internUnityInteger(size_t field_offset,
+                          size_t field_index,
                           const std::optional<InfoParserToken> &token,
                           InfoDataUsageCount &dynamic_accounting,
                           InfoDataUsageCount &static_accounting);
 
-  bool internUnityFloat(const InfoSubscribedField &subscribed_field,
+  bool internUnityFloat(size_t field_offset,
+                        size_t field_index,
                         const std::optional<InfoParserToken> &token,
                         InfoDataUsageCount &dynamic_accounting,
                         InfoDataUsageCount &static_accounting);
 
+  // Implementation functions that retrieve data for each internal data type.
+
+  std::optional<bool> getBoolean(size_t field_address);
+
+  std::optional<InfoIntegerType> internInteger(size_t field_address);
+
+  std::optional<InfoFloatType> internFloat(size_t field_address);
+
+  std::optional<std::string_view> internString(size_t field_address);
+
+  InfoArrayIndex internIntegerArray(size_t field_address, size_t field_id);
+
+  InfoArrayIndex internFloatArray(size_t field_address, size_t field_id);
+
+  InfoArrayIndex internStringArray(size_t field_address, size_t field_id);
+
+  InfoArrayIndex internUnityInteger(size_t field_offset, size_t field_index);
+
+  InfoArrayIndex internUnityFloat(size_t field_offset, size_t field_index);
 
 };
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Temporary testing object.
-
-class EvidenceFactory;
-class InfoDataBlockNaive : public InfoDataBlock {
-
-public:
-
-  friend EvidenceFactory;
-
-  InfoDataBlockNaive(std::shared_ptr<InfoEvidenceHeader> info_evidence_header) : InfoDataBlock(
-  std::move(info_evidence_header)) {}
-
-  InfoDataBlockNaive(const InfoEvidenceHeader &) = delete;
-
-  ~InfoDataBlockNaive() = default;
-
-  InfoDataUsageCount dataPayload();
-
-private:
-
-  // The stored data.
-  std::vector<bool> bool_data_;
-  std::vector<InfoParserFloat> float_data_;
-  std::vector<InfoParserInteger> integer_data_;
-  std::vector<InfoParserString> string_data_;
-  std::vector<InfoParserFloatArray> float_array_data_;
-  std::vector<InfoParserIntegerArray> integer_array_data_;
-  std::vector<InfoParserStringArray> string_array_data_;
-
-  void clearAll();
-
-};
 
 
 } //namespace.
-
-
-
 
 
 #endif //KGL_KGL_VARIANT_FACTORY_VCF_EVIDENCE_MEMORY_H

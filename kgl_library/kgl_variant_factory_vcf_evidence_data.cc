@@ -50,33 +50,4 @@ kgl::InfoEvidenceType kgl::InfoTypeLookup::evidenceType(const VCFInfoRecord &vcf
 
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-
-bool kgl::InfoEvidenceType::fixedDataType() const {
-
-  switch (InternalInfoType()) {
-
-    case InfoEvidenceIntern::intern_char: // Size is fixed (boolean variables) and known at Info data subscription time.
-    case InfoEvidenceIntern::intern_integer: // Size is fixed and known at Info data subscription time.
-    case InfoEvidenceIntern::intern_float: // Size is fixed and known at Info data subscription time.
-    case InfoEvidenceIntern::intern_integer_array: // Size is fixed and known at Info data subscription time.
-    case InfoEvidenceIntern::intern_float_array: // Size is fixed and known at Info data subscription time.
-    case InfoEvidenceIntern::NotImplemented:  // Trivially fixed.
-      return true;
-
-    case InfoEvidenceIntern::intern_string: // Size varies between records.
-    case InfoEvidenceIntern::intern_string_array:  // Size varies between records.
-    case InfoEvidenceIntern::intern_unity_integer_array:   // Size varies between records.
-    case InfoEvidenceIntern::intern_unity_float_array:   // Size varies between records.
-    case InfoEvidenceIntern::intern_unity_string_array:    // Size varies between records.
-      return false;
-
-    default:
-      return false;
-  }
-
-}
-
-
 

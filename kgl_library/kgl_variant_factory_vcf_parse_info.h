@@ -47,9 +47,6 @@ using InfoParserFloatArray = std::vector<InfoFloatType>;
 using InfoParserToken = std::pair<std::string_view, size_t>;
 using InfoParserMap = std::map<std::string_view, InfoParserToken>; // The token parser data structure.
 
-using InfoParserArrayToken = std::vector<std::string_view>;
-using InfoParserArrayMap = std::map<std::string_view, InfoParserArrayToken>;   // The array parser data structure.
-
 /// This object is CPU time sensitive so two implementations (parsers) have been devised and tested for CPU efficiency.
 /// Normally these would have their interfaces defined in a base class but we wish to avoid the overhead of
 /// abstract function calls. So we switch between these parser implementation using a compile time definition.
@@ -58,8 +55,6 @@ using InfoParserArrayMap = std::map<std::string_view, InfoParserArrayToken>;   /
 /// vector fields are unitary. This is based on testing of the Homo Sapien data. However the alternative implementation,
 /// although slightly slower is completely general.
 
-// Comment for the 'array' parser implementation, for the the slightly faster 'token' parser.
-#define USE_TOKEN_PARSER 1
 
 class VCFInfoParser {
 
@@ -68,24 +63,11 @@ public:
   // std::move the info string into this object for efficiency.
   explicit VCFInfoParser(std::string&& info) : info_(std::move(info)), info_view_(info_) {
 
-#ifdef USE_TOKEN_PARSER
-
     if (not infoTokenParser()) {
 
       ExecEnv::log().error("VCFInfoParser::VCFInfoParser, Token parser had a problem parsing info field");
 
     }
-
-#else
-
-    if (not infoArrayParser()) {
-
-      ExecEnv::log().error("VCFInfoParser::VCFInfoParser, Array parser had a problem parsing info field");
-
-    }
-
-#endif
-
 
   }
   ~VCFInfoParser() = default;
@@ -110,17 +92,14 @@ private:
   const std::string info_; // The unparsed 'raw' VCF info record.
   const std::string_view info_view_;  // This a view of the info_ string above
   InfoParserMap parsed_token_map_;
-  InfoParserArrayMap parsed_array_map_;
 
   constexpr static const char INFO_FIELD_DELIMITER_{';'};
   constexpr static const char INFO_VALUE_DELIMITER_{'='};
   constexpr static const char* INFO_VECTOR_MISSING_VALUE_STR_{"."};
   constexpr static const char INFO_VECTOR_DELIMITER_{','};
 
-  [[nodiscard]] bool infoArrayParser();
   [[nodiscard]] bool infoTokenParser();
 
-  bool compareParsers();
 
   // Largest negative values are interpreted as missing values.
   constexpr static const InfoParserFloat MISSING_VALUE_FLOAT = std::numeric_limits<InfoParserFloat>::lowest();

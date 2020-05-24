@@ -47,38 +47,46 @@ std::optional<const kgl::InfoSubscribedField> kgl::InfoEvidenceHeader::getSubscr
 }
 
 
-void kgl::InfoEvidenceHeader::setupStaticStorage() {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Creates the static data and header indexes, and dynamically creates the InfoDataBlock object per VCF record.
+
+
+void kgl::ManageInfoData::setupStaticStorage(InfoEvidenceHeader& evidence_header) {
 
   size_t field_index = 0;
-  for (auto& subscribed_item : info_subscribed_map_) {
+  for (auto& subscribed_item : evidence_header.info_subscribed_map_) {
 
     InfoEvidenceIntern internal_type = subscribed_item.second.evidenceType().InternalInfoType();
-    subscribed_item.second.dataOffset(static_storage_.staticIncrementAndAllocate(internal_type));
-    subscribed_item.second.fieldIndex(field_index);
+    subscribed_item.second.fieldAddress(static_storage_.staticIncrementAndAllocate(internal_type));
+    subscribed_item.second.fieldIndexId(field_index);
     ++field_index;
 
   }
 
 }
 
+
 // Create the storage to be used for the parsed info record.
-std::unique_ptr<kgl::InfoDataBlock> kgl::InfoEvidenceHeader::setupDynamicStorage( const VCFInfoParser& info_parser,
-                                                                                  std::shared_ptr<const InfoEvidenceHeader> self_ptr) const {
+std::unique_ptr<kgl::InfoDataBlock> kgl::ManageInfoData::setupDynamicStorage( const VCFInfoParser& info_parser,
+                                                                              std::shared_ptr<const InfoEvidenceHeader> header_ptr) const {
 
 // Parse the VCF info line.
 
   InfoDataUsageCount dynamic_info_storage = staticStorage();
 
-  for (auto const &subscribed_info : getMap()) {
+  for (auto const &[ident, subscribed_info] : header_ptr->getMap()) {
 
-    std::optional<InfoParserToken> token = info_parser.getToken(subscribed_info.first);
+    std::optional<InfoParserToken> token = info_parser.getToken(ident);
 
     // No additional storage required if token not available.
     if (token) {
 
-      if (not dynamic_info_storage.dynamicIncrementAndAllocate(subscribed_info.second, token.value())) {
+      InfoEvidenceIntern internal_type = subscribed_info.evidenceType().InternalInfoType();
+      if (not dynamic_info_storage.dynamicIncrementAndAllocate(internal_type, token.value())) {
 
-        ExecEnv::log().warn("EvidenceFactory::parseSubscribed, Vector value for assumed Scalar Field");
+        ExecEnv::log().warn("InfoDataUsageCount::dynamicIncrementAndAllocate, Bad size (expected 1) Token: {} size: {}, field ID:{}, Number:{}, Type:{}"
+        , std::string(token.value().first), token.value().second, subscribed_info.infoRecord().ID,
+                            subscribed_info.infoRecord().number, subscribed_info.infoRecord().type);
 
       }
 
@@ -86,7 +94,7 @@ std::unique_ptr<kgl::InfoDataBlock> kgl::InfoEvidenceHeader::setupDynamicStorage
 
   }
 
-  std::unique_ptr<InfoDataBlock> data_block_ptr(std::make_unique<InfoDataBlock>(self_ptr));
+  std::unique_ptr<InfoDataBlock> data_block_ptr(std::make_unique<InfoDataBlock>(header_ptr));
 
   data_block_ptr->allocateMemory(dynamic_info_storage);
 
@@ -95,21 +103,32 @@ std::unique_ptr<kgl::InfoDataBlock> kgl::InfoEvidenceHeader::setupDynamicStorage
 }
 
 
-std::unique_ptr<kgl::InfoDataBlock> kgl::InfoEvidenceHeader::setupAndLoad( const VCFInfoParser& info_parser,
-                                                                           std::shared_ptr<const InfoEvidenceHeader> self_ptr) const {
+
+std::unique_ptr<kgl::InfoDataBlock> kgl::ManageInfoData::setupAndLoad( const VCFInfoParser& info_parser,
+                                                                       std::shared_ptr<const InfoEvidenceHeader> self_ptr) const {
 
   std::unique_ptr<kgl::InfoDataBlock> data_block_ptr = setupDynamicStorage(info_parser, self_ptr);
 
   InfoDataUsageCount dynamic_accounting = staticStorage();  // Start with the static storage (indexes) already counted
   InfoDataUsageCount static_accounting; // Make sure this matches the object in staticStorage()
-  for (auto& [ident, subscribed_item] : info_subscribed_map_) {
+  for (auto& [ident, subscribed_item] : self_ptr->getMap()) {
 
-    std::optional<InfoParserToken> token = info_parser.getToken(ident);
+    const std::optional<InfoParserToken>& parser_token = info_parser.getToken(ident);
 
-    if (not data_block_ptr->indexAndVerify(subscribed_item, token, dynamic_accounting, static_accounting)) {
+    if (not data_block_ptr->indexAndVerify(subscribed_item.fieldAddress(),
+                                           subscribed_item.fieldIndexId(),
+                                           subscribed_item.evidenceType().InternalInfoType(),
+                                           parser_token,
+                                           dynamic_accounting,
+                                           static_accounting)) {
 
-      std::string token_value = token ? std::string(token.value().first) : "MISSING_VALUE";
-      ExecEnv::log().error("InfoEvidenceHeader::setupAndLoad, Problem loading data for field: {}, value: {}", token_value);
+      // Any error from this function is a memory block error, so report the error and terminate.
+      std::string token_value = parser_token ? std::string(parser_token.value().first) : "MISSING_VALUE";
+      size_t token_size = parser_token ? parser_token.value().second : 0;
+      ExecEnv::log().error("ManageInfoData::setupAndLoad, Problem loading data for VCF Info field value: {}, size:{}", token_value, token_size);
+      ExecEnv::log().error("ManageInfoData::setupAndLoad, VCF Info field ID: {}, Number: {}, Type: {}, Description: {}",
+                           subscribed_item.infoRecord().ID, subscribed_item.infoRecord().number, subscribed_item.infoRecord().type, subscribed_item.infoRecord().description);
+      ExecEnv::log().critical("ManageInfoData::setupAndLoad, Variant VCF Info field memory block set up encountered a serious error and cannot continue ...");
 
     }
 
@@ -119,14 +138,16 @@ std::unique_ptr<kgl::InfoDataBlock> kgl::InfoEvidenceHeader::setupAndLoad( const
   // This checks that the raw data allocated exactly matches the data utilized by all the Info fields.
   if (not (dynamic_accounting == data_block_ptr->getRawMemoryUsage())) {
 
-    ExecEnv::log().error("InfoEvidenceHeader::setupAndLoad, The Dynamic Accounting Object Not Equal to the Total Allocated Data size");
+    ExecEnv::log().error("ManageInfoData::setupAndLoad, The Dynamic Accounting Object Not Equal to the Total Allocated Data size");
+    ExecEnv::log().critical("ManageInfoData::setupAndLoad, Variant VCF Info field memory block set up encountered a serious error and cannot continue ...");
 
   }
 
   // This checks that the data allocated for field indexing exactly matches the indexes used by all Info fields.
   if (not (static_accounting == staticStorage())) {
 
-    ExecEnv::log().error("InfoEvidenceHeader::setupAndLoad, The Static Accounting Object Not Equal to the Static Data size");
+    ExecEnv::log().error("ManageInfoData::setupAndLoad, The Static Accounting Object Not Equal to the Static Data size");
+    ExecEnv::log().critical("ManageInfoData::setupAndLoad, Variant VCF Info field memory block set up encountered a serious error and cannot continue ...");
 
   }
 
@@ -135,116 +156,7 @@ std::unique_ptr<kgl::InfoDataBlock> kgl::InfoEvidenceHeader::setupAndLoad( const
 
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// InfoDataBlock
 
-kgl::InfoDataUsageCount kgl::InfoDataBlockNaive::dataPayload() {
-
-
-//  static std::mutex func_lock;
-//  std::scoped_lock<std::mutex> raii(func_lock);
-
-
-  size_t float_count = 0;
-  size_t integer_count = 0;
-  size_t char_count = 0;
-  size_t array_count = 0;
-  size_t string_count = 0;
-
-  char_count = bool_data_.size();
-
-  integer_count = integer_data_.size();
-
-  float_count = float_data_.size();
-
-  size_t char_bytes = 0;
-  for (auto const& string_field :  string_data_) {
-
-    ++string_count;
-    char_bytes += string_field.size();
-
-  }
-
-  for (auto const& float_array :  float_array_data_) {
-
-    if (float_array.size() <= 1) {
-
-      ++float_count;
-
-    } else {
-
-      float_count += float_array.size();
-      ++array_count;
-
-    }
-
-  }
-
-  for (auto const&integer_array :  integer_array_data_) {
-
-    if (integer_array.size() <= 1) {
-
-      ++float_count;
-
-    } else {
-
-      integer_count += integer_array.size();
-      ++array_count;
-
-    }
-
-  }
-
-  for (auto const& string_array :  string_array_data_) {
-
-    if (string_array_data_.size() == 1) {
-
-      ++string_count;
-      char_bytes += string_array_data_.front().size();
-
-    } else if (string_array_data_.empty() ) {
-
-      ++string_count;
-
-    } else {
-
-      ++array_count;
-
-      for (auto const& string_item : string_array) {
-
-        ++string_count;
-        char_bytes += string_item.size();
-
-      }
-
-    }
-
-  }
-
-  InfoDataUsageCount info_count;
-
-  info_count.integerCount(integer_count);
-  info_count.floatCount(float_count);
-  info_count.charCount(char_count);
-  info_count.arrayCount(array_count);
-  info_count.stringCount(string_count);
-
-  return info_count;
-
-}
-
-void kgl::InfoDataBlockNaive::clearAll() {
-
-// The stored data.
-  bool_data_.clear();
-  float_data_.clear();
-  integer_data_.clear();
-  string_data_.clear();
-  float_array_data_.clear();
-  integer_array_data_.clear();
-  string_array_data_.clear();
-
-}
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -261,97 +173,10 @@ kgl::InfoDataEvidence kgl::EvidenceFactory::createVariantEvidence(std::string&& 
 
   }
 
-//  std::unique_ptr<InfoDataBlockNaive> temp = parseSubscribed(std::move(info));
-
-//  InfoDataUsageCount type_count = );
-
-//  return std::move(temp);
-
-//  std::unique_ptr<InfoDataBlock> data_block_ptr(std::make_unique<InfoDataBlock>(info_evidence_header_));
-
-//  data_block_ptr->allocateMemory(type_count);
-
-  return parseSubscribed_alt(std::move(info));
-
-}
-
-
-std::unique_ptr<kgl::InfoDataBlock> kgl::EvidenceFactory::parseSubscribed_alt(std::string&& info) {
-
   // Parse the VCF info line.
   VCFInfoParser info_parser(std::move(info));
 
-  return info_evidence_header_->setupAndLoad(info_parser, info_evidence_header_);
-
-}
-
-std::unique_ptr<kgl::InfoDataBlockNaive> kgl::EvidenceFactory::parseSubscribed(std::string&& info) {
-
-  // Parse the VCF info line.
-  VCFInfoParser info_parser(std::move(info));
-
-  std::unique_ptr info_data_ptr(std::make_unique<InfoDataBlockNaive>(info_evidence_header_));
-  // Fill all the subscribed Info field values.
-  for (auto const& subscribed_info : info_evidence_header_->getMap()) {
-
-    switch(subscribed_info.second.evidenceType().ExternalInfoType()) {
-
-      case InfoEvidenceExtern::Float: {
-        info_data_ptr->float_data_.emplace_back(info_parser.getInfoFloat(subscribed_info.first));
-      }
-      break;
-
-      case InfoEvidenceExtern::Integer: {
-
-        info_data_ptr->integer_data_.emplace_back(info_parser.getInfoInteger(subscribed_info.first));
-
-      }
-      break;
-
-      case InfoEvidenceExtern::String: {
-
-        info_data_ptr->string_data_.emplace_back(info_parser.getInfoString(subscribed_info.first));
-
-      }
-      break;
-
-      case InfoEvidenceExtern::Boolean: {
-
-        info_data_ptr->bool_data_.emplace_back(info_parser.getInfoBoolean(subscribed_info.first));
-
-      }
-      break;
-
-      case InfoEvidenceExtern::IntegerArray: {
-
-        info_data_ptr->integer_array_data_.emplace_back(info_parser.getInfoIntegerArray(subscribed_info.first));
-
-      }
-      break;
-
-      case InfoEvidenceExtern::FloatArray: {
-
-        info_data_ptr->float_array_data_.emplace_back(info_parser.getInfoFloatArray(subscribed_info.first));
-
-      }
-      break;
-
-      case InfoEvidenceExtern::StringArray: {
-
-        info_data_ptr->string_array_data_.emplace_back(info_parser.getInfoStringArray(subscribed_info.first));
-
-      }
-      break;
-
-      default:
-        ExecEnv::log().error("EvidenceFactory::parseSubscribed, Unexpected INFO data type for field: {}", subscribed_info.first);
-        break;
-
-    }
-
-  }
-
-  return info_data_ptr;
+  return manage_info_data_.setupAndLoad(info_parser, info_evidence_header_);
 
 }
 
@@ -408,9 +233,11 @@ void kgl::EvidenceFactory::availableInfoFields(const VCFInfoRecordMap& vcf_info_
   }
 
   // Setup the static storage allocation and field offsets.
-  info_evidence_header_->setupStaticStorage();
+  manage_info_data_.setupStaticStorage(*info_evidence_header_);
   // Print out.
   std::string all_available = info_evidence_header_->getMap().size() == all_available_map_.size() ? "(all available)" : "";
   ExecEnv::log().info("Subscribed to {} {} VCF Info fields", info_evidence_header_->getMap().size(), all_available);
 
 }
+
+

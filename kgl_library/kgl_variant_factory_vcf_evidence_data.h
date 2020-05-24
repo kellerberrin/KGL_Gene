@@ -81,7 +81,6 @@ public:
 
   // The size of the data type does not change for different Info records
   // e.g. A scalar float (true) which is fixed, unlike a string (false) which will always vary between records.
-  bool fixedDataType() const;
 
 
 private:

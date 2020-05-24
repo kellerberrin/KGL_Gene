@@ -22,41 +22,39 @@ namespace kellerberrin::genome {   //  organization level namespace
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 
+class ManageInfoData;
 class InfoEvidenceHeader; // forward.
-// Holds the indexing data to access the InfoDataBlock object.
-struct ItemOffset {
-
-  size_t offset{0};
-  bool is_array{false};
-
-};
+// Holds the indexing data to access the InfoDataBlock object and return VCF Info Data.
 class InfoSubscribedField {
 
 public:
+
+  friend ManageInfoData;
 
   InfoSubscribedField(VCFInfoRecord vcfInfoRecord, std::shared_ptr<const InfoEvidenceHeader> info_evidence_header)
   : vcfInfoRecord_(std::move(vcfInfoRecord)),
     type_(InfoTypeLookup::evidenceType(vcfInfoRecord_)),
     info_evidence_header_(std::move(info_evidence_header)) {}
-
-//  InfoSubscribedField(const InfoSubscribedField &) = default;
+  InfoSubscribedField(const InfoSubscribedField &) = default;
   ~InfoSubscribedField() = default;
 
   [[nodiscard]] const VCFInfoRecord &infoRecord() const { return vcfInfoRecord_; }
-  [[nodiscard]] InfoEvidenceType evidenceType() const { return type_; }
-  [[nodiscard]] ItemOffset dataOffset() const { return data_offset_; }
-  [[nodiscard]] size_t fieldIndex() const { return field_index_; }
+  [[nodiscard]]  InfoEvidenceExtern dataType() const { return evidenceType().ExternalInfoType(); }
 
-  void dataOffset(const ItemOffset& item_offset) { data_offset_ = item_offset; }
-  void fieldIndex(size_t index) { field_index_ = index; }
 
 private:
+
+  void fieldAddress(size_t field_address) { field_address_ = field_address; }
+  void fieldIndexId(size_t field_index) { field_index_ = field_index; }
+  [[nodiscard]] size_t fieldAddress() const { return field_address_; }
+  [[nodiscard]] size_t fieldIndexId() const { return field_index_; }
+  [[nodiscard]] InfoEvidenceType evidenceType() const { return type_; }
 
   const VCFInfoRecord vcfInfoRecord_;  // The original VCF Header Record.
   const InfoEvidenceType type_;  // THe inferred subscriber type, external type and internal type.
   std::shared_ptr<const InfoEvidenceHeader> info_evidence_header_; // Ensure the index knows which header it belongs to.
-  ItemOffset data_offset_;  // Permanent index into the InfoDataBlock object.
-  size_t field_index_{0};
+  size_t field_address_{0};  // Permanent index into the InfoDataBlock object.
+  size_t field_index_{0};  // Unique id integer.
 
 };
 
@@ -64,38 +62,63 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // An indexed map of InfoSubscribedFields. There is only one of these held by all variants with INFO evidence fields.
 
-
 using InfoSubscribedMap = std::map<std::string, InfoSubscribedField>;
+class EvidenceFactory;
 class InfoEvidenceHeader {
 
 public:
 
-  explicit InfoEvidenceHeader() {}
+  friend ManageInfoData;
+  friend EvidenceFactory;
 
+  explicit InfoEvidenceHeader() {}
   InfoEvidenceHeader(const InfoEvidenceHeader &) = delete;
 
   ~InfoEvidenceHeader() = default;
 
-  std::optional<const InfoSubscribedField> getSubscribedField(const std::string &field_id) const;
+  [[nodiscard]] std::optional<const InfoSubscribedField> getSubscribedField(const std::string &field_id) const;
   [[nodiscard]] const InfoSubscribedMap &getMap() const { return info_subscribed_map_; }
 
-  // Note that this routine takes a shared_ptr to itself obtained from the info data factory. This is passed onto subscribed field objects.
-  [[nodiscard]] bool setupEvidenceHeader(const VCFInfoRecord& vcf_info_record, std::shared_ptr<const InfoEvidenceHeader> self_ptr);
-  // Static storage and field offsets. Indexes the fields.
-  // Fixed storage that does not change betweeen info records.
-  void setupStaticStorage();
-  // Create storage for a parsed info record and return the allocated storage.
-  std::unique_ptr<InfoDataBlock> setupDynamicStorage(const VCFInfoParser& info_parser, std::shared_ptr<const InfoEvidenceHeader> self_ptr) const;
-  const InfoDataUsageCount& staticStorage() const { return static_storage_; }
-  std::unique_ptr<InfoDataBlock> setupAndLoad( const VCFInfoParser& info_parser, std::shared_ptr<const InfoEvidenceHeader> self_ptr) const;
 
 private:
 
   InfoSubscribedMap info_subscribed_map_;
-  InfoDataUsageCount static_storage_;
+
+  // Note that this routine takes a shared_ptr to itself obtained from the info data factory. This is passed onto subscribed field objects.
+  [[nodiscard]] bool setupEvidenceHeader(const VCFInfoRecord& vcf_info_record, std::shared_ptr<const InfoEvidenceHeader> self_ptr);
 
 
 };
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Creates the static data and header indexes, and dynamically creates the InfoDataBlock object per VCF record.
+// If we ever decide to change the way Info data is parsed and managed then we can swap out this object for another in the factory below.
+
+class ManageInfoData {
+
+public:
+
+  ManageInfoData() = default;
+  ~ManageInfoData() = default;
+
+  // Call this immediately after the evidence header has been created.
+  void setupStaticStorage(InfoEvidenceHeader& evidence_header);
+  // After the evidence header has been created, set variable ids, and addresses.
+  [[nodiscard]] std::unique_ptr<InfoDataBlock> setupAndLoad( const VCFInfoParser& info_parser, std::shared_ptr<const InfoEvidenceHeader> self_ptr) const;
+
+private:
+
+  [[nodiscard]] const InfoDataUsageCount& staticStorage() const { return static_storage_; }
+  [[nodiscard]] std::unique_ptr<InfoDataBlock> setupDynamicStorage(const VCFInfoParser& info_parser, std::shared_ptr<const InfoEvidenceHeader> self_ptr) const;
+
+  InfoDataUsageCount static_storage_;
+
+  // Static storage and field offsets. Indexes the fields.
+  // Fixed storage that does not change betweeen info records.
+
+};
+
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -130,10 +153,8 @@ private:
   VCFInfoRecordMap all_available_map_;
   // The Info header block, contains all the subscribed field information.
   std::shared_ptr<InfoEvidenceHeader> info_evidence_header_;
-
-  // ******** Temp.
-  std::unique_ptr<InfoDataBlockNaive> parseSubscribed(std::string&& info);
-  std::unique_ptr<InfoDataBlock> parseSubscribed_alt(std::string&& info);
+  // Manage the definition and creation of Info Data objects.
+  ManageInfoData manage_info_data_;
 
   // If the user specifies just specifies "None" (case insensitive) then no Info fields will be subscribed.
   constexpr static const char *NO_FIELD_SUBSCRIBED_ = "NONE";

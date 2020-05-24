@@ -16,15 +16,14 @@ namespace kgl = kellerberrin::genome;
 // data_item_size is the number of underlying data items. For float array of size 3 this is 3.
 // For a string array this will be the total number of characters in all strings. For a string array of size 3 data_item_count=3, but data_item_size is size of
 // all three strings added together. The total characters required for all 3 strings.
-kgl::ItemOffset kgl::InfoDataUsageCount::staticIncrementAndAllocate(InfoEvidenceIntern internal_type) {
+size_t kgl::InfoDataUsageCount::staticIncrementAndAllocate(InfoEvidenceIntern internal_type) {
 
-  ItemOffset item_offset;
+  size_t item_offset{0};
   switch (internal_type) {
 
     case InfoEvidenceIntern::intern_char:  {
 
-      item_offset.offset = char_count_;
-      item_offset.is_array = false;
+      item_offset = char_count_;
       ++char_count_;
 
     }// Size is fixed (boolean variables) and known at Info data subscription time.
@@ -33,8 +32,7 @@ kgl::ItemOffset kgl::InfoDataUsageCount::staticIncrementAndAllocate(InfoEvidence
     case InfoEvidenceIntern::intern_unity_integer_array:
     case InfoEvidenceIntern::intern_integer: {
 
-      item_offset.offset = integer_count_;
-      item_offset.is_array = false;
+      item_offset = integer_count_;
       ++integer_count_;
 
     }// Size is fixed and known at Info data subscription time.
@@ -43,8 +41,7 @@ kgl::ItemOffset kgl::InfoDataUsageCount::staticIncrementAndAllocate(InfoEvidence
     case InfoEvidenceIntern::intern_unity_float_array:
     case InfoEvidenceIntern::intern_float: {
 
-      item_offset.offset = float_count_;
-      item_offset.is_array = false;
+      item_offset = float_count_;
       ++float_count_;  // should be 1
 
     }// Size is fixed and known at Info data subscription time.
@@ -52,8 +49,7 @@ kgl::ItemOffset kgl::InfoDataUsageCount::staticIncrementAndAllocate(InfoEvidence
 
     case InfoEvidenceIntern::intern_string: {
 
-      item_offset.offset = string_count_;
-      item_offset.is_array = false;
+      item_offset = string_count_;
       ++string_count_;   // allocate a std::string_view
 
     } // Size varies between records.
@@ -61,8 +57,7 @@ kgl::ItemOffset kgl::InfoDataUsageCount::staticIncrementAndAllocate(InfoEvidence
 
     case InfoEvidenceIntern::intern_integer_array: {
 
-      item_offset.offset = array_count_;
-      item_offset.is_array = true;
+      item_offset = array_count_;
       ++array_count_;
 
     } // Size is fixed and known at Info data subscription time.
@@ -70,8 +65,7 @@ kgl::ItemOffset kgl::InfoDataUsageCount::staticIncrementAndAllocate(InfoEvidence
 
     case InfoEvidenceIntern::intern_float_array: {
 
-      item_offset.offset = array_count_;
-      item_offset.is_array = true;
+      item_offset = array_count_;
       ++array_count_;
 
     }
@@ -80,8 +74,7 @@ kgl::ItemOffset kgl::InfoDataUsageCount::staticIncrementAndAllocate(InfoEvidence
 
     case InfoEvidenceIntern::intern_string_array: {
 
-      item_offset.offset = array_count_;
-      item_offset.is_array = true;
+      item_offset = array_count_;
       ++array_count_;
 
     } // Size varies between records.
@@ -89,8 +82,7 @@ kgl::ItemOffset kgl::InfoDataUsageCount::staticIncrementAndAllocate(InfoEvidence
 
     case InfoEvidenceIntern::intern_unity_string_array: {
 
-      item_offset.offset = array_count_;
-      item_offset.is_array = true;
+      item_offset = array_count_;
       ++array_count_;
 
     }   // Size varies between records.
@@ -105,9 +97,9 @@ kgl::ItemOffset kgl::InfoDataUsageCount::staticIncrementAndAllocate(InfoEvidence
 }
 
 
-bool kgl::InfoDataUsageCount::dynamicIncrementAndAllocate(const InfoSubscribedField& subscribed_field, const InfoParserToken& token) {
+bool kgl::InfoDataUsageCount::dynamicIncrementAndAllocate(InfoEvidenceIntern internal_type, const InfoParserToken& token) {
 
-  InfoEvidenceIntern internal_type = subscribed_field.evidenceType().InternalInfoType();
+//   = subscribed_field.evidenceType().InternalInfoType();
 
   switch (internal_type) {
 
@@ -115,8 +107,7 @@ bool kgl::InfoDataUsageCount::dynamicIncrementAndAllocate(const InfoSubscribedFi
     case InfoEvidenceIntern::intern_char:
       if (token.second != 0) {
 
-        ExecEnv::log().warn("InfoDataUsageCount::dynamicIncrementAndAllocate, Bad size (expected 1) Token: {} size: {}, field ID:{}, Number:{}, Type:{}"
-        , std::string(token.first), token.second, subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
+        ExecEnv::log().warn("InfoDataUsageCount::dynamicIncrementAndAllocate, Bad size (expected 1) Token: {} size: {}", std::string(token.first), token.second);
         return false;
       }
       break;
@@ -125,8 +116,7 @@ bool kgl::InfoDataUsageCount::dynamicIncrementAndAllocate(const InfoSubscribedFi
     case InfoEvidenceIntern::intern_float:
       if (token.second != 1) {
 
-        ExecEnv::log().warn("InfoDataUsageCount::dynamicIncrementAndAllocate, Bad size (expected 1) Token: {} size: {}, field ID:{}, Number:{}, Type:{}"
-        , std::string(token.first), token.second, subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
+        ExecEnv::log().warn("InfoDataUsageCount::dynamicIncrementAndAllocate, Bad size (expected 1) Token: {} size: {}", std::string(token.first), token.second);
         return false;
       }
       break;
@@ -207,6 +197,7 @@ bool kgl::InfoDataUsageCount::operator==(const InfoDataUsageCount& cmp) const {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
 // Actually allocates the raw memory for each Info field.
 void kgl::InfoDataBlock::allocateMemory(const InfoDataUsageCount &type_count) {
 
@@ -221,49 +212,66 @@ void kgl::InfoDataBlock::allocateMemory(const InfoDataUsageCount &type_count) {
 }
 
 
+// A simple slow sequential search for now. Could be upgraded to a binary search.
+std::optional<kgl::InfoArrayIndex> kgl::InfoDataBlock::findUnityArrayIndex(size_t field_index) {
 
-bool kgl::InfoDataBlock::indexAndVerify(const InfoSubscribedField& subscribed_field,     // The field index
+  for (size_t index = 0; index < type_count_.unityArrayCount(); ++index) {
+
+    if (field_index == unity_array_memory_[index].infoVariableIndex()) {
+
+      return unity_array_memory_[index];
+
+    }
+
+  }
+
+  return std::nullopt;
+
+}
+
+// Actually stores the Info data in the raw memory and does index and usage checking.
+bool kgl::InfoDataBlock::indexAndVerify( size_t field_address,     // The field index
+                                         size_t field_id,           // the field identifier
+                                         InfoEvidenceIntern internal_type,  // The internal data type.
                                          const std::optional<InfoParserToken>& token, // The parsed token to be placed in memory
                                          InfoDataUsageCount& dynamic_accounting,  // accounting objects to check index, data and memory integrity
                                          InfoDataUsageCount& static_accounting) {
 
-  InfoEvidenceIntern internal_type = subscribed_field.evidenceType().InternalInfoType();
 
   switch (internal_type) {
 
     // Data is pre-allocated for the fixed fields.
     case InfoEvidenceIntern::intern_char:
-      return internChar(subscribed_field, token, static_accounting);
+      return internChar(field_address, token, static_accounting);
 
     case InfoEvidenceIntern::intern_integer:
-      return internInteger(subscribed_field, token, static_accounting);
+      return internInteger(field_address, token, static_accounting);
 
     case InfoEvidenceIntern::intern_float:
-      return internFloat(subscribed_field, token, static_accounting);
+      return internFloat(field_address, token, static_accounting);
 
     case InfoEvidenceIntern::intern_unity_integer_array:
-      return internUnityInteger(subscribed_field, token, dynamic_accounting, static_accounting);
+      return internUnityInteger(field_address, field_id, token, dynamic_accounting, static_accounting);
 
     case InfoEvidenceIntern::intern_unity_float_array:
-      return internUnityFloat(subscribed_field, token, dynamic_accounting, static_accounting);
+      return internUnityFloat(field_address, field_id, token, dynamic_accounting, static_accounting);
 
     case InfoEvidenceIntern::intern_string:
-      return internString(subscribed_field, token, dynamic_accounting, static_accounting);
+      return internString(field_address, token, dynamic_accounting, static_accounting);
 
     case InfoEvidenceIntern::intern_integer_array:
-      return internIntegerArray(subscribed_field, token, dynamic_accounting, static_accounting);
+      return internIntegerArray(field_address, field_id, token, dynamic_accounting, static_accounting);
 
     case InfoEvidenceIntern::intern_float_array:
-      return internFloatArray(subscribed_field, token, dynamic_accounting, static_accounting);
+      return internFloatArray(field_address, field_id, token, dynamic_accounting, static_accounting);
 
     case InfoEvidenceIntern::intern_unity_string_array:
     case InfoEvidenceIntern::intern_string_array:
-      return internStringArray(subscribed_field, token, dynamic_accounting, static_accounting);
+      return internStringArray(field_address, field_id, token, dynamic_accounting, static_accounting);
 
     case InfoEvidenceIntern::NotImplemented:  // unknown internal type.
     default:
-      ExecEnv::log().warn( "InfoDataBlock::indexAndVerify, Internal data type unknown for field ID:{}, Number:{}, Type:{}",
-                           subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
+      ExecEnv::log().error( "InfoDataBlock::indexAndVerify, Internal data type unknown");
       return false;
 
   }
@@ -272,38 +280,34 @@ bool kgl::InfoDataBlock::indexAndVerify(const InfoSubscribedField& subscribed_fi
 
 
 // These are just function blocks that break up the unsightly mass of code in function InfoDataBlock::indexAndVerify.
-bool kgl::InfoDataBlock::internChar(const InfoSubscribedField& subscribed_field,     // The field index
+bool kgl::InfoDataBlock::internChar(size_t field_address,
                                      const std::optional<InfoParserToken>& token, // The parsed token to be placed in memory
                                      InfoDataUsageCount& static_accounting) {
 
   // check field index
-  if (subscribed_field.dataOffset().offset != static_accounting.charCount()) {
+  if (field_address != static_accounting.charCount()) {
 
-    ExecEnv::log().critical(
-    "InfoDataBlock::indexAndVerify, Field offset: {} differs from calculated offset: {}, field ID:{}, Number:{}, Type:{}",
-    subscribed_field.dataOffset().offset, static_accounting.charCount(), subscribed_field.infoRecord().ID,
-    subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
+    ExecEnv::log().error("InfoDataBlock::indexAndVerify, Field offset: {} differs from calculated offset: {}", field_address, static_accounting.charCount());
+    return false;
 
   }
   // Increment accounting.
   static_accounting.charCountAdd(1);
   // Add the data.
-  char_memory_[subscribed_field.dataOffset().offset] = token ? true : false;
+  char_memory_[field_address] = token ? true : false;
 
   return true;
 
 }
 
-bool kgl::InfoDataBlock::internInteger(const InfoSubscribedField& subscribed_field,
+bool kgl::InfoDataBlock::internInteger(size_t field_address,
                                        const std::optional<InfoParserToken>& token,
                                        InfoDataUsageCount& static_accounting) {
 
-  if (subscribed_field.dataOffset().offset != static_accounting.integerCount()) {
+  if (field_address != static_accounting.integerCount()) {
 
-    ExecEnv::log().critical(
-    "InfoDataBlock::indexAndVerify, Field offset: {} differs from calculated offset: {}, field ID:{}, Number:{}, Type:{}",
-    subscribed_field.dataOffset().offset, static_accounting.integerCount(), subscribed_field.infoRecord().ID,
-    subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
+    ExecEnv::log().error("InfoDataBlock::indexAndVerify, Field offset: {} differs from calculated offset: {}", field_address, static_accounting.integerCount());
+    return false;
 
   }
 
@@ -314,16 +318,16 @@ bool kgl::InfoDataBlock::internInteger(const InfoSubscribedField& subscribed_fie
 
     if (token.value().second != 1) {
 
-      ExecEnv::log().critical("InfoDataBlock::indexAndVerify, Scalar Field has vector size: {}, field ID:{}, Number:{}, Type:{}",
-      token.value().second, subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
+      ExecEnv::log().error("InfoDataBlock::indexAndVerify, Scalar Field has vector size: {}", token.value().second);
+      return false;
 
     }
 
-    integer_memory_[subscribed_field.dataOffset().offset] = VCFInfoParser::convertToInteger(std::string(token.value().first));
+    integer_memory_[field_address] = VCFInfoParser::convertToInteger(std::string(token.value().first));
 
   } else {
 
-    integer_memory_[subscribed_field.dataOffset().offset] = MISSING_VALUE_INTEGER;
+    integer_memory_[field_address] = MISSING_VALUE_INTEGER;
 
   }
 
@@ -331,16 +335,14 @@ bool kgl::InfoDataBlock::internInteger(const InfoSubscribedField& subscribed_fie
 
 }
 
-bool kgl::InfoDataBlock::internFloat(const InfoSubscribedField& subscribed_field,
+bool kgl::InfoDataBlock::internFloat(size_t field_address,
                                      const std::optional<InfoParserToken>& token,
                                      InfoDataUsageCount& static_accounting) {
 
-  if (subscribed_field.dataOffset().offset != static_accounting.floatCount()) {
+  if (field_address != static_accounting.floatCount()) {
 
-    ExecEnv::log().critical(
-    "InfoDataBlock::indexAndVerify, Field offset: {} differs from calculated offset: {}, field ID:{}, Number:{}, Type:{}",
-    subscribed_field.dataOffset().offset, static_accounting.floatCount(), subscribed_field.infoRecord().ID,
-    subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
+    ExecEnv::log().error("InfoDataBlock::indexAndVerify, Field offset: {} differs from calculated offset: {}", field_address, static_accounting.floatCount());
+    return false;
 
   }
   // Increment the accounting.
@@ -350,19 +352,16 @@ bool kgl::InfoDataBlock::internFloat(const InfoSubscribedField& subscribed_field
 
     if (token.value().second != 1) {
 
-      ExecEnv::log().critical(
-      "InfoDataBlock::indexAndVerify, Scalar Field has vector size: {}, field ID:{}, Number:{}, Type:{}",
-      token.value().second, subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number,
-      subscribed_field.infoRecord().type);
+      ExecEnv::log().error("InfoDataBlock::indexAndVerify, Scalar Field has vector size: {}", token.value().second);
+      return false;
 
     }
 
-    float_memory_[subscribed_field.dataOffset().offset] = VCFInfoParser::convertToFloat(
-    std::string(token.value().first));
+    float_memory_[field_address] = VCFInfoParser::convertToFloat(std::string(token.value().first));
 
   } else {
 
-    float_memory_[subscribed_field.dataOffset().offset] = MISSING_VALUE_FLOAT;
+    float_memory_[field_address] = MISSING_VALUE_FLOAT;
 
   }
 
@@ -370,17 +369,15 @@ bool kgl::InfoDataBlock::internFloat(const InfoSubscribedField& subscribed_field
 
 }
 
-bool kgl::InfoDataBlock::internString(const InfoSubscribedField& subscribed_field,
+bool kgl::InfoDataBlock::internString(size_t field_address,
                                       const std::optional<InfoParserToken>& token,
                                       InfoDataUsageCount& dynamic_accounting,
                                       InfoDataUsageCount& static_accounting) {
 
-  if (subscribed_field.dataOffset().offset != static_accounting.stringCount()) {
+  if (field_address != static_accounting.stringCount()) {
 
-    ExecEnv::log().critical(
-    "InfoDataBlock::indexAndVerify, Field offset: {} differs from calculated offset: {}, field ID:{}, Number:{}, Type:{}",
-    subscribed_field.dataOffset().offset, static_accounting.stringCount(), subscribed_field.infoRecord().ID,
-    subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
+    ExecEnv::log().error("InfoDataBlock::indexAndVerify, Field offset: {} differs from calculated offset: {}", field_address, static_accounting.stringCount());
+    return false;
 
   }
   // Update the static accounting
@@ -390,20 +387,19 @@ bool kgl::InfoDataBlock::internString(const InfoSubscribedField& subscribed_fiel
 
     if (token.value().second != 1) {
 
-      ExecEnv::log().warn("InfoDataBlock::indexAndVerify, Scalar Field has vector size: {}, field ID:{}, Number:{}, Type:{}, Value: {}",
-      token.value().second, subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number, subscribed_field.infoRecord().type, std::string(token.value().first));
+      // A scalar string can have embedded array delimiter "," characters which confuses the parser.
+      ExecEnv::log().warn("InfoDataBlock::indexAndVerify, String field has parsed size: {} (expected 1) contains ',' special characters", token.value().second);
 
     }
 
     char* string_start = &char_memory_[dynamic_accounting.charCount()];
     size_t string_size = token.value().first.size();
-    string_memory_[subscribed_field.dataOffset().offset] = std::string_view(string_start, string_size);
+    string_memory_[field_address] = std::string_view(string_start, string_size);
     if (dynamic_accounting.charCount() + string_size > type_count_.charCount()) {
 
-      ExecEnv::log().critical(
-      "InfoDataBlock::indexAndVerify, String size+offset :{} has exceeded char vector size: {}, field ID:{}, Number:{}, Type:{}",
-      dynamic_accounting.charCount() + string_size, type_count_.charCount(), subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number,
-      subscribed_field.infoRecord().type);
+      ExecEnv::log().error( "InfoDataBlock::indexAndVerify, String size+offset :{} has exceeded char vector size: {}",
+                            dynamic_accounting.charCount() + string_size, type_count_.charCount());
+      return false;
 
     }
     std::memcpy(string_start, token.value().first.data(), string_size);
@@ -412,7 +408,7 @@ bool kgl::InfoDataBlock::internString(const InfoSubscribedField& subscribed_fiel
 
   } else {
 // Empty string.
-    string_memory_[subscribed_field.dataOffset().offset] = std::string_view();
+    string_memory_[field_address] = std::string_view();
 
   }
 
@@ -421,16 +417,16 @@ bool kgl::InfoDataBlock::internString(const InfoSubscribedField& subscribed_fiel
 }
 
 
-bool kgl::InfoDataBlock::internIntegerArray(const InfoSubscribedField& subscribed_field,
+bool kgl::InfoDataBlock::internIntegerArray(size_t field_address,
+                                            size_t field_id,
                                             const std::optional<InfoParserToken>& token,
                                             InfoDataUsageCount& dynamic_accounting,
                                             InfoDataUsageCount& static_accounting) {
 
-  if (subscribed_field.dataOffset().offset != static_accounting.arrayCount()) {
+  if (field_address != static_accounting.arrayCount()) {
 
-    ExecEnv::log().critical("InfoDataBlock::indexAndVerify, Field offset: {} differs from calculated offset: {}, field ID:{}, Number:{}, Type:{}",
-                            subscribed_field.dataOffset().offset, static_accounting.arrayCount(), subscribed_field.infoRecord().ID,
-                            subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
+    ExecEnv::log().error("InfoDataBlock::indexAndVerify, Field offset: {} differs from calculated offset: {}", field_address, static_accounting.arrayCount());
+    return false;
 
   }
   // Update the static accounting
@@ -439,23 +435,20 @@ bool kgl::InfoDataBlock::internIntegerArray(const InfoSubscribedField& subscribe
   if (token) {
 
     size_t array_size = token.value().second;
-    array_memory_[subscribed_field.dataOffset().offset].infoOffset(dynamic_accounting.integerCount());
-    array_memory_[subscribed_field.dataOffset().offset].infoSize(array_size);
-    array_memory_[subscribed_field.dataOffset().offset].infoVariableIndex(subscribed_field.fieldIndex());
+    array_memory_[field_address] = InfoArrayIndex(field_id, dynamic_accounting.integerCount(), array_size);
 
     if (dynamic_accounting.integerCount() + array_size > type_count_.integerCount()) {
 
-      ExecEnv::log().critical("InfoDataBlock::indexAndVerify, Integer Array size+offset :{} has exceeded Integer vector size: {}, field ID:{}, Number:{}, Type:{}",
-                              dynamic_accounting.integerCount() + array_size, type_count_.integerCount(), subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number,
-                              subscribed_field.infoRecord().type);
-
+      ExecEnv::log().error( "InfoDataBlock::indexAndVerify, Integer Array offset+size :{} has exceeded Integer vector size: {}",
+                            dynamic_accounting.integerCount() + array_size, type_count_.integerCount());
+      return false;
     }
     // Get a vector of integers
     InfoParserIntegerArray integer_array =  VCFInfoParser::getInfoIntegerArray(std::string(token.value().first));
     if (integer_array.size() != array_size) {
 
-      ExecEnv::log().critical("InfoDataBlock::indexAndVerify, Integer Array size : {} differs from token size: {}, field ID:{}, Number:{}, Type:{}",
-                              integer_array.size(), array_size, subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
+      ExecEnv::log().error("InfoDataBlock::indexAndVerify, Integer Array size : {} differs from token size: {}", integer_array.size(), array_size);
+      return false;
 
     }
 
@@ -473,9 +466,7 @@ bool kgl::InfoDataBlock::internIntegerArray(const InfoSubscribedField& subscribe
 
   } else {
 // Empty vector
-    array_memory_[subscribed_field.dataOffset().offset].infoOffset(0);
-    array_memory_[subscribed_field.dataOffset().offset].infoSize(0);
-    array_memory_[subscribed_field.dataOffset().offset].infoVariableIndex(subscribed_field.fieldIndex());
+    array_memory_[field_address] = InfoArrayIndex(field_id, 0, 0);
 
   }
 
@@ -484,17 +475,17 @@ bool kgl::InfoDataBlock::internIntegerArray(const InfoSubscribedField& subscribe
 }
 
 
-bool kgl::InfoDataBlock::internFloatArray(const InfoSubscribedField& subscribed_field,
+bool kgl::InfoDataBlock::internFloatArray(size_t field_address,
+                                          size_t field_id,
                                           const std::optional<InfoParserToken>& token,
                                           InfoDataUsageCount& dynamic_accounting,
                                           InfoDataUsageCount& static_accounting) {
 
-  if (subscribed_field.dataOffset().offset != static_accounting.arrayCount()) {
+  if (field_address != static_accounting.arrayCount()) {
 
-    ExecEnv::log().critical("InfoDataBlock::indexAndVerify, Field offset: {} differs from calculated offset: {}, field ID:{}, Number:{}, Type:{}",
-                            subscribed_field.dataOffset().offset, static_accounting.arrayCount(), subscribed_field.infoRecord().ID,
-                            subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
-
+    ExecEnv::log().error("InfoDataBlock::indexAndVerify, Field offset: {} differs from calculated offset: {}",
+                         field_address, static_accounting.arrayCount());
+    return false;
   }
   // Update the static accounting
   static_accounting.arrayCountAdd(1);
@@ -502,23 +493,21 @@ bool kgl::InfoDataBlock::internFloatArray(const InfoSubscribedField& subscribed_
   if (token) {
 
     size_t array_size = token.value().second;
-    array_memory_[subscribed_field.dataOffset().offset].infoOffset(dynamic_accounting.floatCount());
-    array_memory_[subscribed_field.dataOffset().offset].infoSize(array_size);
-    array_memory_[subscribed_field.dataOffset().offset].infoVariableIndex(subscribed_field.fieldIndex());
+    array_memory_[field_address] = InfoArrayIndex(field_id, dynamic_accounting.floatCount(), array_size);
 
     if (dynamic_accounting.floatCount() + array_size > type_count_.floatCount()) {
 
-      ExecEnv::log().critical("InfoDataBlock::indexAndVerify, Float Array size+offset :{} has exceeded Float vector size: {}, field ID:{}, Number:{}, Type:{}",
-                              dynamic_accounting.floatCount() + array_size, type_count_.floatCount(), subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number,
-                              subscribed_field.infoRecord().type);
+      ExecEnv::log().error("InfoDataBlock::indexAndVerify, Float Array size+offset :{} has exceeded Float vector size: {}",
+                              dynamic_accounting.floatCount() + array_size, type_count_.floatCount());
+      return false;
 
     }
     // Get a vector of integers
     InfoParserFloatArray float_array =  VCFInfoParser::getInfoFloatArray(std::string(token.value().first));
     if (float_array.size() != array_size) {
 
-      ExecEnv::log().critical("InfoDataBlock::indexAndVerify, Float Array size : {} differs from token size: {}, field ID:{}, Number:{}, Type:{}",
-                              float_array.size(), array_size, subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
+      ExecEnv::log().error("InfoDataBlock::indexAndVerify, Float Array size : {} differs from token size: {}", float_array.size(), array_size);
+      return false;
 
     }
 
@@ -536,9 +525,7 @@ bool kgl::InfoDataBlock::internFloatArray(const InfoSubscribedField& subscribed_
 
   } else {
 // Empty vector
-    array_memory_[subscribed_field.dataOffset().offset].infoOffset(0);
-    array_memory_[subscribed_field.dataOffset().offset].infoSize(0);
-    array_memory_[subscribed_field.dataOffset().offset].infoVariableIndex(subscribed_field.fieldIndex());
+    array_memory_[field_address] = InfoArrayIndex(field_id, 0, 0);
 
   }
 
@@ -547,16 +534,16 @@ bool kgl::InfoDataBlock::internFloatArray(const InfoSubscribedField& subscribed_
 }
 
 
-bool kgl::InfoDataBlock::internStringArray(const InfoSubscribedField& subscribed_field,
+bool kgl::InfoDataBlock::internStringArray(size_t field_address,
+                                           size_t field_id,
                                            const std::optional<InfoParserToken>& token,
                                            InfoDataUsageCount& dynamic_accounting,
                                            InfoDataUsageCount& static_accounting) {
 
-  if (subscribed_field.dataOffset().offset != static_accounting.arrayCount()) {
+  if (field_address != static_accounting.arrayCount()) {
 
-    ExecEnv::log().critical("InfoDataBlock::indexAndVerify, Field offset: {} differs from calculated offset: {}, field ID:{}, Number:{}, Type:{}",
-                            subscribed_field.dataOffset().offset, static_accounting.arrayCount(), subscribed_field.infoRecord().ID,
-                            subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
+    ExecEnv::log().error("InfoDataBlock::indexAndVerify, Field offset: {} differs from calculated offset: {}", field_address, static_accounting.arrayCount());
+    return false;
 
   }
   // Update the static accounting
@@ -565,23 +552,21 @@ bool kgl::InfoDataBlock::internStringArray(const InfoSubscribedField& subscribed
   if (token) {
 
     size_t array_size = token.value().second;
-    array_memory_[subscribed_field.dataOffset().offset].infoOffset(dynamic_accounting.stringCount());
-    array_memory_[subscribed_field.dataOffset().offset].infoSize(array_size);
-    array_memory_[subscribed_field.dataOffset().offset].infoVariableIndex(subscribed_field.fieldIndex());
+    array_memory_[field_address] = InfoArrayIndex(field_id, dynamic_accounting.stringCount(), array_size);
 
     if (dynamic_accounting.stringCount() + array_size > type_count_.stringCount()) {
 
-      ExecEnv::log().critical("InfoDataBlock::indexAndVerify, String Array size+offset :{} has exceeded String vector size: {}, field ID:{}, Number:{}, Type:{}",
-                              dynamic_accounting.stringCount() + array_size, type_count_.stringCount(), subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number,
-                              subscribed_field.infoRecord().type);
+      ExecEnv::log().error("InfoDataBlock::indexAndVerify, String Array size+offset :{} has exceeded String vector size: {}",
+                              dynamic_accounting.stringCount() + array_size, type_count_.stringCount());
+      return false;
 
     }
     // Get a vector of string_views.
     std::vector<std::string_view> string_view_array = VCFInfoParser::getInfoStringArray(token.value().first);
     if (string_view_array.size() != array_size) {
 
-      ExecEnv::log().critical("InfoDataBlock::indexAndVerify, String Array size : {} differs from token size: {}, field ID:{}, Number:{}, Type:{}",
-                              string_view_array.size(), array_size, subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
+      ExecEnv::log().error("InfoDataBlock::indexAndVerify, String Array size : {} differs from token size: {}", string_view_array.size(), array_size);
+      return false;
 
     }
 
@@ -596,9 +581,9 @@ bool kgl::InfoDataBlock::internStringArray(const InfoSubscribedField& subscribed
 
       if (dynamic_accounting.charCount() > type_count_.charCount()) {
 
-        ExecEnv::log().critical(
-        "InfoDataBlock::indexAndVerify, String size+offset :{} has exceeded char vector size: {}, field ID:{}, Number:{}, Type:{}",
-        dynamic_accounting.charCount(), type_count_.charCount(), subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number,subscribed_field.infoRecord().type);
+        ExecEnv::log().error( "InfoDataBlock::indexAndVerify, String size+offset :{} has exceeded char vector size: {}",
+                              dynamic_accounting.charCount(), type_count_.charCount());
+        return false;
 
       }
 
@@ -612,9 +597,7 @@ bool kgl::InfoDataBlock::internStringArray(const InfoSubscribedField& subscribed
 
   } else {
 // Empty vector
-    array_memory_[subscribed_field.dataOffset().offset].infoOffset(0);
-    array_memory_[subscribed_field.dataOffset().offset].infoSize(0);
-    array_memory_[subscribed_field.dataOffset().offset].infoVariableIndex(subscribed_field.fieldIndex());
+    array_memory_[field_address] = InfoArrayIndex(field_id, 0, 0);
 
   }
 
@@ -622,17 +605,16 @@ bool kgl::InfoDataBlock::internStringArray(const InfoSubscribedField& subscribed
 
 }
 
-bool kgl::InfoDataBlock::internUnityInteger(const InfoSubscribedField& subscribed_field,
+bool kgl::InfoDataBlock::internUnityInteger(size_t field_address,
+                                            size_t field_id,
                                             const std::optional<InfoParserToken>& token,
                                             InfoDataUsageCount& dynamic_accounting,
                                             InfoDataUsageCount& static_accounting) {
 
-  if (subscribed_field.dataOffset().offset != static_accounting.integerCount()) {
+  if (field_address != static_accounting.integerCount()) {
 
-    ExecEnv::log().critical(
-    "InfoDataBlock::indexAndVerify, Field offset: {} differs from calculated offset: {}, field ID:{}, Number:{}, Type:{}",
-    subscribed_field.dataOffset().offset, static_accounting.integerCount(), subscribed_field.infoRecord().ID,
-    subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
+    ExecEnv::log().error("InfoDataBlock::indexAndVerify, Field offset: {} differs from calculated offset: {}", field_address, static_accounting.integerCount());
+    return false;
 
   }
 
@@ -645,7 +627,7 @@ bool kgl::InfoDataBlock::internUnityInteger(const InfoSubscribedField& subscribe
 // We have a vector, which can (infrequently) occur with this internal datatype.
 
       // Put a missing value in the static storage allocated.
-      integer_memory_[subscribed_field.dataOffset().offset] = MISSING_VALUE_INTEGER;
+      integer_memory_[field_address] = MISSING_VALUE_INTEGER;
 
       if (dynamic_accounting.unityArrayCount() > type_count_.unityArrayCount()) {
 
@@ -656,9 +638,7 @@ bool kgl::InfoDataBlock::internUnityInteger(const InfoSubscribedField& subscribe
       // Insert the array details into the unity array object.
       // Note the field index is not used.
       size_t array_size = token.value().second;
-      unity_array_memory_[dynamic_accounting.unityArrayCount()].infoOffset(dynamic_accounting.floatCount());
-      unity_array_memory_[dynamic_accounting.unityArrayCount()].infoSize(array_size);
-      unity_array_memory_[dynamic_accounting.unityArrayCount()].infoVariableIndex(subscribed_field.fieldIndex());
+      unity_array_memory_[dynamic_accounting.unityArrayCount()] = InfoArrayIndex(field_id, dynamic_accounting.floatCount(), array_size);
 
       // Update the unity array count.
       dynamic_accounting.unityArrayCountAdd(1);
@@ -666,17 +646,17 @@ bool kgl::InfoDataBlock::internUnityInteger(const InfoSubscribedField& subscribe
       // Copy in the integer data.
       if (dynamic_accounting.integerCount() + array_size > type_count_.integerCount()) {
 
-        ExecEnv::log().critical("InfoDataBlock::indexAndVerify, Integer Array size+offset :{} has exceeded Integer vector size: {}, field ID:{}, Number:{}, Type:{}",
-                                dynamic_accounting.integerCount() + array_size, type_count_.integerCount(), subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number,
-                                subscribed_field.infoRecord().type);
+        ExecEnv::log().error("InfoDataBlock::indexAndVerify, Integer Array size+offset :{} has exceeded Integer vector size: {}",
+                             dynamic_accounting.integerCount() + array_size, type_count_.integerCount());
+        return false;
 
       }
       // Get a vector of integers
       InfoParserIntegerArray integer_array =  VCFInfoParser::getInfoIntegerArray(std::string(token.value().first));
       if (integer_array.size() != array_size) {
 
-        ExecEnv::log().critical("InfoDataBlock::indexAndVerify, Integer Array size : {} differs from token size: {}, field ID:{}, Number:{}, Type:{}",
-                                integer_array.size(), array_size, subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
+        ExecEnv::log().error("InfoDataBlock::indexAndVerify, Integer Array size : {} differs from token size: {}", integer_array.size(), array_size);
+        return false;
 
       }
 
@@ -694,13 +674,14 @@ bool kgl::InfoDataBlock::internUnityInteger(const InfoSubscribedField& subscribe
 
     } else {
 
-      integer_memory_[subscribed_field.dataOffset().offset] = VCFInfoParser::convertToInteger(std::string(token.value().first));
+      // A scalar integer
+      integer_memory_[field_address] = VCFInfoParser::convertToInteger(std::string(token.value().first));
 
     }
 
   } else {
-
-    integer_memory_[subscribed_field.dataOffset().offset] = MISSING_VALUE_INTEGER;
+    // Actual missing value.
+    integer_memory_[field_address] = MISSING_VALUE_INTEGER;
 
   }
 
@@ -708,17 +689,16 @@ bool kgl::InfoDataBlock::internUnityInteger(const InfoSubscribedField& subscribe
 
 }
 
-bool kgl::InfoDataBlock::internUnityFloat(const InfoSubscribedField& subscribed_field,
+bool kgl::InfoDataBlock::internUnityFloat(size_t field_address,
+                                          size_t field_id,
                                           const std::optional<InfoParserToken>& token,
                                           InfoDataUsageCount& dynamic_accounting,
                                           InfoDataUsageCount& static_accounting) {
 
-  if (subscribed_field.dataOffset().offset != static_accounting.floatCount()) {
+  if (field_address != static_accounting.floatCount()) {
 
-    ExecEnv::log().critical(
-    "InfoDataBlock::indexAndVerify, Field offset: {} differs from calculated offset: {}, field ID:{}, Number:{}, Type:{}",
-    subscribed_field.dataOffset().offset, static_accounting.floatCount(), subscribed_field.infoRecord().ID,
-    subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
+    ExecEnv::log().critical("InfoDataBlock::indexAndVerify, Field offset: {} differs from calculated offset: {}",
+                            field_address, static_accounting.floatCount());
 
   }
   // Increment the accounting.
@@ -729,7 +709,7 @@ bool kgl::InfoDataBlock::internUnityFloat(const InfoSubscribedField& subscribed_
     if (token.value().second > 1) {
 
       // Put a missing value in the static storage allocated.
-      float_memory_[subscribed_field.dataOffset().offset] = MISSING_VALUE_FLOAT;
+      float_memory_[field_address] = MISSING_VALUE_FLOAT;
 
       if (dynamic_accounting.unityArrayCount() > type_count_.unityArrayCount()) {
 
@@ -740,9 +720,7 @@ bool kgl::InfoDataBlock::internUnityFloat(const InfoSubscribedField& subscribed_
       // Insert the array details into the unity array object.
       // Note the field index is not used.
       size_t array_size = token.value().second;
-      unity_array_memory_[dynamic_accounting.unityArrayCount()].infoOffset(dynamic_accounting.floatCount());
-      unity_array_memory_[dynamic_accounting.unityArrayCount()].infoSize(array_size);
-      unity_array_memory_[dynamic_accounting.unityArrayCount()].infoVariableIndex(subscribed_field.fieldIndex());
+      unity_array_memory_[dynamic_accounting.unityArrayCount()] = InfoArrayIndex(field_id, dynamic_accounting.floatCount(), array_size);
 
       // Update the unity array count.
       dynamic_accounting.unityArrayCountAdd(1);
@@ -750,17 +728,16 @@ bool kgl::InfoDataBlock::internUnityFloat(const InfoSubscribedField& subscribed_
       // Copy in the float data.
       if (dynamic_accounting.floatCount() + array_size > type_count_.floatCount()) {
 
-        ExecEnv::log().critical("InfoDataBlock::indexAndVerify, Float Array size+offset :{} has exceeded Float vector size: {}, field ID:{}, Number:{}, Type:{}",
-                                dynamic_accounting.floatCount() + array_size, type_count_.floatCount(), subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number,
-                                subscribed_field.infoRecord().type);
+        ExecEnv::log().critical("InfoDataBlock::indexAndVerify, Float Array size+offset :{} has exceeded Float vector size: {}",
+                                dynamic_accounting.floatCount() + array_size, type_count_.floatCount());
 
       }
       // Get a vector of floats
       InfoParserFloatArray float_array =  VCFInfoParser::getInfoFloatArray(std::string(token.value().first));
       if (float_array.size() != array_size) {
 
-        ExecEnv::log().critical("InfoDataBlock::indexAndVerify, Float Array size : {} differs from token size: {}, field ID:{}, Number:{}, Type:{}",
-                                float_array.size(), array_size, subscribed_field.infoRecord().ID, subscribed_field.infoRecord().number, subscribed_field.infoRecord().type);
+        ExecEnv::log().critical("InfoDataBlock::indexAndVerify, Float Array size : {} differs from token size: {}",
+                                float_array.size(), array_size);
 
       }
 
@@ -778,13 +755,13 @@ bool kgl::InfoDataBlock::internUnityFloat(const InfoSubscribedField& subscribed_
 
     } else {
 
-      float_memory_[subscribed_field.dataOffset().offset] = VCFInfoParser::convertToFloat(std::string(token.value().first));
+      float_memory_[field_address] = VCFInfoParser::convertToFloat(std::string(token.value().first));
 
     }
 
   } else {
 
-    float_memory_[subscribed_field.dataOffset().offset] = MISSING_VALUE_FLOAT;
+    float_memory_[field_address] = MISSING_VALUE_FLOAT;
 
   }
 
