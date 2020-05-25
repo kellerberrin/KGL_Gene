@@ -70,15 +70,15 @@ public:
 
   VariantEvidence( size_t vcf_record_count,
                    std::optional<std::shared_ptr<InfoDataBlock>> info_data_block,
-                   std::shared_ptr<FormatData> format_data)
+                   std::optional<std::shared_ptr<FormatData>> format_data,
+                   uint32_t alternate_variant_index = 0,
+                   uint32_t alternate_variant_count = 1)
                    : vcf_record_count_(vcf_record_count),
                      info_data_block_(std::move(info_data_block)),
-                     format_data_(std::move(format_data)) {}
+                     format_data_(std::move(format_data)),
+                     alternate_variant_index_(alternate_variant_index),
+                     alternate_variant_count_(alternate_variant_count) {}
 
-  VariantEvidence( size_t vcf_record_count,
-                   std::optional<std::shared_ptr<InfoDataBlock>> info_data_block)
-                   : vcf_record_count_(vcf_record_count),
-                     info_data_block_(std::move(info_data_block)) { format_data_ = std::nullopt; }
   VariantEvidence(const VariantEvidence&) = default;
   ~VariantEvidence() = default;
 
@@ -90,11 +90,19 @@ public:
 
   [[nodiscard]] std::optional<std::shared_ptr<const FormatData>> formatData() const { return format_data_; }
 
+  [[nodiscard]] uint32_t altVariantIndex() const { return alternate_variant_index_; }
+
+  [[nodiscard]] uint32_t altVariantCount() const { return alternate_variant_count_; }
+
 private:
 
-  size_t vcf_record_count_; // The VCF line count, the line record that generated this variant.
+  size_t vcf_record_count_; // The VCF line count, the original file line record that generated this variant.
   std::optional<std::shared_ptr<InfoDataBlock>> info_data_block_;   // INFO data items, may be missing.
   std::optional<std::shared_ptr<FormatData>> format_data_;  // Format data items, may be missing.
+  // Zero based index. Which of the alternate variants (from left to right in the comma delimited alt field) is this variant.
+  // These variables can be used to access Info field vectors that are designated Type='A' for alternate allele.
+  uint32_t alternate_variant_index_; // The default index 0 / count 1 implies 1 alternate variant (the usual case).
+  uint32_t alternate_variant_count_; // How many comma delimited alternate variants were specified in the VCF record.
 
 };
 

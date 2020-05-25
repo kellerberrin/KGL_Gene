@@ -64,6 +64,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
   // For performance reasons the info field is std::moved - don't reference again.
   auto mutable_info = const_cast<std::string&>(vcf_record.info);
   InfoDataEvidence info_evidence_opt = evidence_factory_.createVariantEvidence(std::move(mutable_info));
+  evidence_factory_.debugReadAll(info_evidence_opt);  // ***** Remove debug statement
 
   // Convert VCF contig to genome contig.
   std::string contig = contig_alias_map_.lookupAlias(vcf_record.contig_id);
@@ -73,7 +74,13 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
   // The alt field can be blank (deletion).
   if (position == std::string::npos or vcf_record.alt.empty()) {
 
-    VariantEvidence evidence(vcf_record_count, info_evidence_opt);
+    // We have no format data and only 1 variant specified.
+    // These variables declared to make this obvious.
+    std::optional<std::shared_ptr<FormatData>> null_format_data = std::nullopt;
+    uint32_t variant_count = 1;
+    uint32_t variant_index = 0;
+
+    VariantEvidence evidence(vcf_record_count, info_evidence_opt, null_format_data, variant_index, variant_count);
     // Add the variant.
     StringDNA5 reference_str(vcf_record.ref);
     StringDNA5 alternate_str(vcf_record.alt);
@@ -103,9 +110,14 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
     }
 
+    uint32_t variant_count = alt_vector.size();
+    uint32_t variant_index = 0;
     for (auto const& alt : alt_vector) {
 
-      VariantEvidence evidence(vcf_record_count, info_evidence_opt);
+      // We have no format data and multiple alternate alleles.
+      std::optional<std::shared_ptr<FormatData>> null_format_data = std::nullopt;
+      // Setup the evidence object.
+      VariantEvidence evidence(vcf_record_count, info_evidence_opt, null_format_data, variant_index, variant_count);
       // Add the variant.
       StringDNA5 reference_str(vcf_record.ref);
       StringDNA5 alternate_str(alt);

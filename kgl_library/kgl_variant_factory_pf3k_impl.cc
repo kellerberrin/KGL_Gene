@@ -89,6 +89,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
   // For performance reasons the info field is std::moved - don't reference again.
   auto mutable_info = const_cast<std::string&>(record.info);
   InfoDataEvidence info_evidence_opt = evidence_factory_.createVariantEvidence(std::move(mutable_info));  // Each vcf record.
+  evidence_factory_.debugReadAll(info_evidence_opt);  // ***** Remove debug statement
 
   if (getGenomeNames().size() != record.genotypeInfos.size()) {
 
@@ -175,7 +176,8 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
 
         if (valid_record and A_allele > 0) {
 
-          size_t allele_index = A_allele - 1;   // 0 is the reference
+          uint32_t allele_count = recordParser.alleles().size();
+          uint32_t allele_index = A_allele - 1;   // 0 is the reference
 
           const std::string allele = recordParser.alleles()[allele_index];
 
@@ -194,7 +196,9 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
                                                                                      DP_value,
                                                                                      GQ_value,
                                                                                      recordParser.quality()));
-            VariantEvidence evidence(vcf_record_count, info_evidence_opt, format_data_ptr);
+            // Setup the evidence object
+            VariantEvidence evidence(vcf_record_count, info_evidence_opt, format_data_ptr, allele_index, allele_count);
+
             if (not createAddVariant(genome_name,
                                      recordParser.contigPtr(),
                                      recordParser.offset(),
@@ -214,8 +218,8 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
 
         if (valid_record and B_allele > 0) {
 
-          size_t allele_index = B_allele - 1;   // 0 is the reference
-
+          uint32_t allele_index = B_allele - 1;   // 0 is the reference
+          uint32_t allele_count = recordParser.alleles().size();
           const std::string allele = recordParser.alleles()[allele_index];
 
           size_t ref_count = ad_count_vector[0];
@@ -233,7 +237,9 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
                                                                                      DP_value,
                                                                                      GQ_value,
                                                                                      recordParser.quality()));
-            VariantEvidence evidence(vcf_record_count, info_evidence_opt, format_data_ptr);
+            // Setup the evidence object.
+            VariantEvidence evidence(vcf_record_count, info_evidence_opt, format_data_ptr, allele_index, allele_count);
+
             if (not createAddVariant(genome_name,
                                      recordParser.contigPtr(),
                                      recordParser.offset(),

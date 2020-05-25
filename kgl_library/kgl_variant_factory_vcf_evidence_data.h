@@ -32,12 +32,12 @@ enum class InfoEvidenceSubscriber {
 };
 
 // Defines how the data is represented externally.
-enum class InfoEvidenceExtern {
-  Boolean,
-  IntegerArray,
-  FloatArray,
-  StringArray,
-  NotImplemented  // Unknown (number, type) tuple.
+enum class InfoEvidenceExtern : size_t {
+  Boolean = 0,
+  IntegerArray = 1,
+  FloatArray = 2,
+  StringArray = 3,
+  NotImplemented = 4  // Unknown (number, type) tuple.
 };
 
 // Defines how the data is represented internally.

@@ -9,7 +9,7 @@
 #include "kel_exec_env.h"
 #include "kgl_variant_factory_vcf_parse_header.h"
 #include "kgl_variant_factory_vcf_parse_info.h"
-#include "kgl_variant_factory_vcf_evidence_memory.h"
+#include "kgl_variant_factory_vcf_evidence_data_mem.h"
 
 #include <string>
 #include <array>
@@ -22,7 +22,7 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-using InfoDataVariant = std::variant<bool, std::vector<uint64_t>, std::vector<double>, std::vector<std::string>>;
+using InfoDataVariant = std::variant<bool, std::vector<int64_t>, std::vector<double>, std::vector<std::string>, std::monostate>;
 class ManageInfoData;
 class InfoEvidenceHeader; // forward.
 // Holds the indexing data to access the InfoDataBlock object and return VCF Info Data.
@@ -41,21 +41,23 @@ public:
 
   // Returns the original VCF header record for the VCF Info field.
   [[nodiscard]] const VCFInfoRecord &infoVCF() const { return vcfInfoRecord_; }
-  // Returns one of the following,
+  // Returns one of the following
+  // The enums are integer valued and can be used as an index for the std::variant return type of InfoDataVariant.
   // InfoEvidenceExtern::Boolean,
   // InfoEvidenceExtern::IntegerArray,
   // InfoEvidenceExtern::FloatArray,
   // InfoEvidenceExtern::StringArray,
-  [[nodiscard]]  InfoEvidenceExtern dataType() const { return evidenceType().ExternalInfoType(); }
+  [[nodiscard]] InfoEvidenceExtern dataType() const { return evidenceType().ExternalInfoType(); }
+  // Index into the variant type.
+  [[nodiscard]] size_t dataIndex() const { return static_cast<size_t>(dataType()); }
   // The array size that will be returned. Zero if missing data.
-  [[nodiscard]]  size_t dataSize(InfoDataBlock& info_data_block) const;
-  // Returns false if an incompatible type was passed in to the function.
-  // For example, if a std::vector<std::string> was passed in when dataType() returned InfoEvidenceExtern::Boolean.
-  // Array is zero sized there was no data item available; dataSize() = 0.
-  std::shared_ptr<const InfoEvidenceHeader> getDataHeader() const { return info_evidence_header_; }
+  [[nodiscard]]  size_t dataSize(const InfoDataBlock& info_data_block) const {
+    return info_data_block.getDataSize(fieldAddress(), fieldIndexId(), evidenceType().InternalInfoType()); }
+  // Returns a std::variant containing the data which then can be indexed by the data type enum above.
+  // Array is zero sized when there was no data item available.
+  [[nodiscard]]  InfoDataVariant getData(const InfoDataBlock&) const;
   // The header object that can access all subscribed Info data items.
-  // Get data directly from an InfoDataBlock
-  [[nodiscard]]  bool getData(InfoDataVariant& data, const InfoDataBlock& info_data_block) const;
+  std::shared_ptr<const InfoEvidenceHeader> getDataHeader() const { return info_evidence_header_; }
 
 private:
 
@@ -94,6 +96,21 @@ public:
   [[nodiscard]] std::optional<const InfoSubscribedField> getSubscribedField(const std::string &field_id) const;
   [[nodiscard]] const InfoSubscribedMap &getMap() const { return info_subscribed_map_; }
 
+  void debugReturnAll(const InfoDataBlock& info_data_block) {
+
+
+    for (auto const& info_item : info_subscribed_map_) {
+
+      InfoDataVariant item_data = info_item.second.getData(info_data_block);
+      if (item_data.index() != info_item.second.dataIndex()) {
+
+        ExecEnv::log().error("InfoEvidenceHeader::debugReturnAll, std::variant index: {} not equal to return index: {}", item_data.index(), info_item.second.dataIndex());
+
+      }
+
+    }
+
+  }
 
 private:
 
@@ -161,6 +178,15 @@ public:
   // All subscribed Info fields.
   std::shared_ptr<const InfoEvidenceHeader> getInfoHeader() { return info_evidence_header_; }
 
+  void debugReadAll(const InfoDataEvidence& info_evidence) {
+
+    if (info_evidence) {
+
+      info_evidence_header_->debugReturnAll(*info_evidence.value());
+
+    }
+
+  }
 
 private:
 

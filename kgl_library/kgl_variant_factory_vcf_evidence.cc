@@ -6,9 +6,70 @@
 #include "kgl_variant_factory_vcf_parse_header.h"
 #include "kgl_variant_factory_vcf_parse_info.h"
 
+#include <variant>
 
 namespace kgl = kellerberrin::genome;
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+
+//  Returns the field size, A size of zero is a missing field.
+kgl::InfoDataVariant kgl::InfoSubscribedField::getData(const InfoDataBlock& info_data_block) const {
+
+  switch (evidenceType().InternalInfoType()) {
+
+    // Data is pre-allocated for the fixed fields.
+    case InfoEvidenceIntern::intern_char:
+      return info_data_block.getBoolean(fieldAddress());
+
+    case InfoEvidenceIntern::intern_integer: {
+
+      std::vector<int64_t> int_array;
+      int_array.emplace_back(static_cast<int64_t>(info_data_block.getInteger(fieldAddress())));
+      return int_array;
+
+    }
+
+    case InfoEvidenceIntern::intern_float: {
+
+      std::vector<double> float_array;
+      float_array.emplace_back(static_cast<double>(info_data_block.getFloat(fieldAddress())));
+      return float_array;
+
+    }
+
+    case InfoEvidenceIntern::intern_unity_integer_array:
+      return info_data_block.getUnityIntegerArray(fieldAddress(), fieldIndexId());
+
+    case InfoEvidenceIntern::intern_unity_float_array:
+      return info_data_block.getUnityFloatArray(fieldAddress(), fieldIndexId());
+
+    case InfoEvidenceIntern::intern_string: {
+
+      std::vector<std::string> string_array;
+      string_array.emplace_back(info_data_block.getString(fieldAddress()));
+      return string_array;
+
+    }
+
+    case InfoEvidenceIntern::intern_integer_array:
+      return info_data_block.getIntegerArray(fieldAddress(), fieldIndexId());
+
+    case InfoEvidenceIntern::intern_float_array:
+      return info_data_block.getFloatArray(fieldAddress(), fieldIndexId());
+
+    case InfoEvidenceIntern::intern_unity_string_array:
+    case InfoEvidenceIntern::intern_string_array:
+      return info_data_block.getStringArray(fieldAddress(), fieldIndexId());
+
+    case InfoEvidenceIntern::NotImplemented:  // unknown internal type.
+    default:
+      ExecEnv::log().error( "InfoDataBlock::getDataSize, Internal data type unknown, cannot get size");
+      return std::monostate();
+  }
+
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -41,6 +102,7 @@ std::optional<const kgl::InfoSubscribedField> kgl::InfoEvidenceHeader::getSubscr
     return std::nullopt;
 
   }
+
 
   return result->second;
 
@@ -178,7 +240,114 @@ kgl::InfoDataEvidence kgl::EvidenceFactory::createVariantEvidence(std::string&& 
   // Parse the VCF info line.
   VCFInfoParser info_parser(std::move(info));
 
-  return manage_info_data_.setupAndLoad(info_parser, info_evidence_header_);
+  // Debug code
+  std::unique_ptr<InfoDataBlock> info_data_ptr = manage_info_data_.setupAndLoad(info_parser, info_evidence_header_);
+
+  for (auto const& [ident, field_item] : info_evidence_header_->getMap()) {
+
+    size_t data_size = field_item.dataSize(*info_data_ptr);
+
+    auto token = info_parser.getToken(ident);
+
+    if (token) {
+
+      if (field_item.dataType() != InfoEvidenceExtern::Boolean and token.value().second != data_size) {
+
+        ExecEnv::log().error("EvidenceFactory::createVariantEvidence, Parser Count not equal InfoDataBlock Field: {}, Number: {}, Type: {}, Info Size: {}, Parser Size: {} Value: {}",
+                             field_item.infoVCF().ID, field_item.infoVCF().number, field_item.infoVCF().type, data_size, token.value().second, std::string(token.value().first));
+
+
+        switch (field_item.dataType()) {
+
+          case InfoEvidenceExtern::Boolean:
+              if (not std::get<bool>(field_item.getData(*info_data_ptr))) {
+
+                ExecEnv::log().error("EvidenceFactory::createVariantEvidence, Boolean should be true: {}, Number: {}, Type: {}, Info Size: {}, Parser Size: {} Value: {}",
+                                     field_item.infoVCF().ID, field_item.infoVCF().number, field_item.infoVCF().type, data_size, token.value().second, std::string(token.value().first));
+              }
+            break;
+
+          case InfoEvidenceExtern::IntegerArray: {
+
+           std::vector<int64_t> int_vector = std::get<std::vector<int64_t>>(field_item.getData(*info_data_ptr));
+           InfoParserIntegerArray integer_array = VCFInfoParser::getInfoIntegerArray(std::string(token.value().first));
+
+            for (size_t index = 0; index < integer_array.size(); ++index) {
+
+              if (int_vector[index] != integer_array[index]) {
+
+                ExecEnv::log().error("EvidenceFactory::createVariantEvidence, Info Integer: {} not equal Token integer: {}, Id: {}, Number: {}, Type: {}, Info Size: {}, Parser Size: {} Value: {}",
+                                     int_vector[index], integer_array[index], field_item.infoVCF().ID, field_item.infoVCF().number, field_item.infoVCF().type, data_size, token.value().second, std::string(token.value().first));
+
+
+              }
+
+            }
+
+          }
+            break;
+
+          case InfoEvidenceExtern::StringArray: {
+
+            std::vector<std::string> string_vector = std::get<std::vector<std::string>>(field_item.getData(*info_data_ptr));
+            std::vector<std::string_view> string_view_vector = VCFInfoParser::getInfoStringArray(token.value().first);
+
+            for (size_t index = 0; index < string_vector.size(); ++index) {
+
+              if (string_vector[index] != std::string(string_view_vector[index])) {
+
+                ExecEnv::log().error("EvidenceFactory::createVariantEvidence, Info String: {} not equal Token string: {}, Id: {}, Number: {}, Type: {}, Info Size: {}, Parser Size: {} Value: {}",
+                                     string_vector[index], std::string(string_view_vector[index]), field_item.infoVCF().ID, field_item.infoVCF().number, field_item.infoVCF().type, data_size, token.value().second, std::string(token.value().first));
+
+
+              }
+
+            }
+
+          }
+            break;
+
+          case InfoEvidenceExtern::FloatArray: {
+
+            std::vector<double> float_vector = std::get<std::vector<double>>(field_item.getData(*info_data_ptr));
+            InfoParserFloatArray float_array =  VCFInfoParser::getInfoFloatArray(std::string(token.value().first));
+            for (size_t index = 0; index < float_array.size(); ++index) {
+
+              if (float_vector[index] != float_array[index]) {
+
+                ExecEnv::log().error("EvidenceFactory::createVariantEvidence, Info Integer: {} not equal Token integer: {}, Id: {}, Number: {}, Type: {}, Info Size: {}, Parser Size: {} Value: {}",
+                                     float_vector[index], float_array[index], field_item.infoVCF().ID, field_item.infoVCF().number, field_item.infoVCF().type, data_size, token.value().second, std::string(token.value().first));
+
+
+              }
+
+            }
+
+
+          }
+            break;
+
+          case InfoEvidenceExtern::NotImplemented:
+            ExecEnv::log().error("EvidenceFactory::createVariantEvidence, Type not Implemented for, Field: {}, Number: {}, Type: {}, Info Size: {}",
+                                 field_item.infoVCF().ID, field_item.infoVCF().number, field_item.infoVCF().type, data_size);
+            break;
+
+        }
+
+      }
+
+    } else if (data_size != 0) {
+
+      if (field_item.dataType() != InfoEvidenceExtern::Boolean or std::get<bool>(field_item.getData(*info_data_ptr)))
+
+      ExecEnv::log().error("EvidenceFactory::createVariantEvidence, Present in InfoData but absent from Parser, Field: {}, Number: {}, Type: {}, Info Size: {}",
+                           field_item.infoVCF().ID, field_item.infoVCF().number, field_item.infoVCF().type, data_size);
+
+    }
+
+  }
+
+  return std::move(info_data_ptr);
 
 }
 
