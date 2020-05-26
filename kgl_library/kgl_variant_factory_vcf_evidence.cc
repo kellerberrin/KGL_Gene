@@ -253,9 +253,12 @@ kgl::InfoDataEvidence kgl::EvidenceFactory::createVariantEvidence(std::string&& 
 
       if (field_item.dataType() != InfoEvidenceExtern::Boolean and token.value().second != data_size) {
 
-        ExecEnv::log().error("EvidenceFactory::createVariantEvidence, Parser Count not equal InfoDataBlock Field: {}, Number: {}, Type: {}, Info Size: {}, Parser Size: {} Value: {}",
-                             field_item.infoVCF().ID, field_item.infoVCF().number, field_item.infoVCF().type, data_size, token.value().second, std::string(token.value().first));
+        if (field_item.dataType() != InfoEvidenceExtern::FloatArray and std::string(token.value().first) != ".") {
 
+          ExecEnv::log().error("EvidenceFactory::createVariantEvidence, Parser Count not equal InfoDataBlock Field: {}, Number: {}, Type: {}, Info Size: {}, Parser Size: {} Value: {}",
+                               field_item.infoVCF().ID, field_item.infoVCF().number, field_item.infoVCF().type, data_size, token.value().second, std::string(token.value().first));
+
+        }
 
         switch (field_item.dataType()) {
 

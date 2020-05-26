@@ -33,13 +33,6 @@ public:
   [[nodiscard]] size_t stringCount() const { return string_count_; }
   [[nodiscard]] size_t charCount() const { return char_count_; }
 
-  void unityArrayCount(size_t count) { unity_array_count_ = count; }
-  void arrayCount(size_t count) { array_count_ = count; }
-  void floatCount(size_t count) { float_count_ = count; }
-  void integerCount(size_t count) { integer_count_ = count; }
-  void stringCount(size_t count) { string_count_ = count; }
-  void charCount(size_t count) { char_count_ = count; }
-
   void unityArrayCountAdd(size_t count) { unity_array_count_ += count; }
   void arrayCountAdd(size_t count) { array_count_ += count; }
   void floatCountAdd(size_t count) { float_count_ += count; }
@@ -70,7 +63,13 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Internal array index structure (only uses 64 bits for size efficiency).
+// Internal array index structure (can use 64 bits for size efficiency).
+
+// An array block, 1 for each data array. VCF data arrays are generally small, so this can be a memory overhead.
+// Small is 64 bits total, large is 2 x 64 = 128 bits, generally large is fine (unless space is tight and a lot of arrays).
+//#define INFO_DATA_SMALL_ARRAY_SIZE 1  // Uncomment for 64 bits per array, else 128 bits.
+
+
 struct InfoArrayIndex {
 
 public:
@@ -97,10 +96,17 @@ public:
 
 private:
 
+#ifdef INFO_DATA_SMALL_ARRAY_SIZE
   // Minimize storage size (64 bits).
   using VariableIndexImpl = uint16_t;
   using InfoOffsetImpl = uint32_t;
   using InfoCountImpl = uint16_t;
+#else
+  using VariableIndexImpl = uint32_t;
+  using InfoOffsetImpl = uint64_t;
+  using InfoCountImpl = uint32_t;
+#endif
+
 
   VariableIndexImpl info_variable_index_{0};  // corresponds to the variable index in the header.
   InfoOffsetImpl info_element_offset_{0};
