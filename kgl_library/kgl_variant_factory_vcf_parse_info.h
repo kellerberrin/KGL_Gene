@@ -87,6 +87,8 @@ public:
   [[nodiscard]] static InfoParserIntegerArray getInfoIntegerArray(const std::string& value);
   [[nodiscard]] static std::vector<std::string_view> getInfoStringArray(std::string_view str_view);
 
+  constexpr static const char INFO_VECTOR_DELIMITER_{','};
+
 private:
 
   const std::string info_; // The unparsed 'raw' VCF info record.
@@ -96,7 +98,6 @@ private:
   constexpr static const char INFO_FIELD_DELIMITER_{';'};
   constexpr static const char INFO_VALUE_DELIMITER_{'='};
   constexpr static const char* INFO_VECTOR_MISSING_VALUE_STR_{"."};
-  constexpr static const char INFO_VECTOR_DELIMITER_{','};
 
   [[nodiscard]] bool infoTokenParser();
 

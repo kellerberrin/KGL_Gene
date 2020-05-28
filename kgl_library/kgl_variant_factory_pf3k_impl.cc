@@ -89,7 +89,6 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
   // For performance reasons the info field is std::moved - don't reference again.
   auto mutable_info = const_cast<std::string&>(record.info);
   InfoDataEvidence info_evidence_opt = evidence_factory_.createVariantEvidence(std::move(mutable_info));  // Each vcf record.
-  evidence_factory_.debugReadAll(info_evidence_opt);  // ***** Remove debug statement
 
   if (getGenomeNames().size() != record.genotypeInfos.size()) {
 

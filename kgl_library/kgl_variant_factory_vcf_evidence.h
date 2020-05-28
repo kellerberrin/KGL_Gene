@@ -25,17 +25,22 @@ namespace kellerberrin::genome {   //  organization level namespace
 using InfoDataVariant = std::variant<bool, std::vector<int64_t>, std::vector<double>, std::vector<std::string>, std::monostate>;
 class ManageInfoData;
 class InfoEvidenceHeader; // forward.
+
 // Holds the indexing data to access the InfoDataBlock object and return VCF Info Data.
 class InfoSubscribedField {
 
 public:
 
-  friend ManageInfoData;
+//  friend ManageInfoData;
 
-  InfoSubscribedField(VCFInfoRecord vcfInfoRecord, std::shared_ptr<const InfoEvidenceHeader> info_evidence_header)
+  InfoSubscribedField(VCFInfoRecord vcfInfoRecord,
+                      std::shared_ptr<const InfoEvidenceHeader> info_evidence_header,
+                      ManageInfoData& manage_info_data)
   : vcfInfoRecord_(std::move(vcfInfoRecord)),
     type_(InfoTypeLookup::evidenceType(vcfInfoRecord_)),
-    info_evidence_header_(std::move(info_evidence_header)) {}
+    info_evidence_header_(std::move(info_evidence_header)),
+    m_data_handle_(requestResourceHandle(manage_info_data)) {}
+
   InfoSubscribedField(const InfoSubscribedField &) = default;
   ~InfoSubscribedField() = default;
 
@@ -59,19 +64,26 @@ public:
   // The header object that can access all subscribed Info data items.
   std::shared_ptr<const InfoEvidenceHeader> getDataHeader() const { return info_evidence_header_; }
 
-private:
-
+  // Need to limit visibility to these members.
   void fieldAddress(size_t field_address) { field_address_ = field_address; }
   void fieldIndexId(size_t field_index) { field_index_ = field_index; }
+  [[nodiscard]] InfoEvidenceType evidenceType() const { return type_; }
   [[nodiscard]] size_t fieldAddress() const { return field_address_; }
   [[nodiscard]] size_t fieldIndexId() const { return field_index_; }
-  [[nodiscard]] InfoEvidenceType evidenceType() const { return type_; }
+
+  const std::optional<InfoResourceHandle>& getDataHandle() const { return m_data_handle_; }
+
+private:
+
 
   const VCFInfoRecord vcfInfoRecord_;  // The original VCF Header Record.
   const InfoEvidenceType type_;  // THe inferred subscriber type, external type and internal type.
   std::shared_ptr<const InfoEvidenceHeader> info_evidence_header_; // Ensure the index knows which header it belongs to.
   size_t field_address_{0};  // Permanent index into the InfoDataBlock object.
   size_t field_index_{0};  // Unique id integer.
+  const std::optional<InfoResourceHandle> m_data_handle_;
+
+  std::optional<InfoResourceHandle> requestResourceHandle(ManageInfoData& manage_info_data);
 
 };
 
@@ -85,7 +97,7 @@ class InfoEvidenceHeader {
 
 public:
 
-  friend ManageInfoData;
+//  friend ManageInfoData;
   friend EvidenceFactory;
 
   explicit InfoEvidenceHeader() {}
@@ -94,30 +106,17 @@ public:
   ~InfoEvidenceHeader() = default;
 
   [[nodiscard]] std::optional<const InfoSubscribedField> getSubscribedField(const std::string &field_id) const;
-  [[nodiscard]] const InfoSubscribedMap &getMap() const { return info_subscribed_map_; }
-
-  void debugReturnAll(const InfoDataBlock& info_data_block) {
-
-
-    for (auto const& info_item : info_subscribed_map_) {
-
-      InfoDataVariant item_data = info_item.second.getData(info_data_block);
-      if (item_data.index() != info_item.second.dataIndex()) {
-
-        ExecEnv::log().error("InfoEvidenceHeader::debugReturnAll, std::variant index: {} not equal to return index: {}", item_data.index(), info_item.second.dataIndex());
-
-      }
-
-    }
-
-  }
+  [[nodiscard]] InfoSubscribedMap &getMap()  { return info_subscribed_map_; }
+  [[nodiscard]] const InfoSubscribedMap &getConstMap() const { return info_subscribed_map_; }
 
 private:
 
   InfoSubscribedMap info_subscribed_map_;
 
   // Note that this routine takes a shared_ptr to itself obtained from the info data factory. This is passed onto subscribed field objects.
-  [[nodiscard]] bool setupEvidenceHeader(const VCFInfoRecord& vcf_info_record, std::shared_ptr<const InfoEvidenceHeader> self_ptr);
+  [[nodiscard]] bool setupEvidenceHeader( const VCFInfoRecord& vcf_info_record,
+                                          std::shared_ptr<const InfoEvidenceHeader> self_ptr,
+                                          ManageInfoData& manage_info_data);
 
 
 };
@@ -130,23 +129,33 @@ class ManageInfoData {
 
 public:
 
-  ManageInfoData() = default;
+  ManageInfoData() {}
   ~ManageInfoData() = default;
 
   // Call this immediately after the evidence header has been created.
   void setupStaticStorage(InfoEvidenceHeader& evidence_header);
   // After the evidence header has been created, set variable ids, and addresses.
-  [[nodiscard]] std::unique_ptr<InfoDataBlock> setupAndLoad( const VCFInfoParser& info_parser, std::shared_ptr<const InfoEvidenceHeader> self_ptr) const;
+  [[nodiscard]] std::unique_ptr<InfoDataBlock> setupAndLoad( const VCFInfoParser& info_parser,
+                                                             std::shared_ptr<const InfoEvidenceHeader> evidence_ptr) const;
+
+
+  [[nodiscard]] InfoMemoryResource& resourceAllocator() { return resource_allocator_; }
+
 
 private:
 
   [[nodiscard]] const InfoDataUsageCount& staticStorage() const { return static_storage_; }
-  [[nodiscard]] std::unique_ptr<InfoDataBlock> setupDynamicStorage(const VCFInfoParser& info_parser, std::shared_ptr<const InfoEvidenceHeader> self_ptr) const;
+  [[nodiscard]] std::unique_ptr<InfoDataBlock> setupDynamicStorage( const VCFInfoParser& info_parser,
+                                                                    std::shared_ptr<const InfoEvidenceHeader> evidence_ptr) const;
 
   InfoDataUsageCount static_storage_;
 
-  // Static storage and field offsets. Indexes the fields.
-  // Fixed storage that does not change betweeen info records.
+  // Initialized on creation of the EvidenceHeader.
+  InfoMemoryResource resource_allocator_;
+
+  // Copy the resource allocator and resolve all dynamic resource requests by examining the parsed data.
+  // Return the dynamically resolved resource object.
+  [[nodiscard]] InfoMemoryResource resolveResources(const VCFInfoParser& info_parser, const InfoEvidenceHeader& evidence_header) const;
 
 };
 
@@ -176,17 +185,8 @@ public:
   // For each input VCFRecord info text field (std::moved for efficiency), create a parsed data object.
   [[nodiscard]] InfoDataEvidence createVariantEvidence(std::string&& info);
   // All subscribed Info fields.
-  std::shared_ptr<const InfoEvidenceHeader> getInfoHeader() { return info_evidence_header_; }
+  std::shared_ptr<const InfoEvidenceHeader> getInfoHeader() const { return info_evidence_header_; }
 
-  void debugReadAll(const InfoDataEvidence& info_evidence) {
-
-    if (info_evidence) {
-
-      info_evidence_header_->debugReturnAll(*info_evidence.value());
-
-    }
-
-  }
 
 private:
 
@@ -201,6 +201,9 @@ private:
 
   // If the user specifies just specifies "None" (case insensitive) then no Info fields will be subscribed.
   constexpr static const char *NO_FIELD_SUBSCRIBED_ = "NONE";
+
+  // Remove after testing.
+  void debugData(const VCFInfoParser& info_parser, std::unique_ptr<InfoDataBlock>& info_data_ptr) const;
 
 };
 

@@ -64,7 +64,6 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
   // For performance reasons the info field is std::moved - don't reference again.
   auto mutable_info = const_cast<std::string&>(vcf_record.info);
   InfoDataEvidence info_evidence_opt = evidence_factory_.createVariantEvidence(std::move(mutable_info));
-  evidence_factory_.debugReadAll(info_evidence_opt);  // ***** Remove debug statement
 
   // Convert VCF contig to genome contig.
   std::string contig = contig_alias_map_.lookupAlias(vcf_record.contig_id);

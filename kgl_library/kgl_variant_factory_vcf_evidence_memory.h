@@ -13,7 +13,6 @@
 namespace kellerberrin::genome {   //  organization level namespace
 
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This object manages the storage of individual Info fields from the raw data allocated below.
 
@@ -111,6 +110,203 @@ private:
   VariableIndexImpl info_variable_index_{0};  // corresponds to the variable index in the header.
   InfoOffsetImpl info_element_offset_{0};
   InfoCountImpl info_element_count_{0};
+
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Resource allocation objects.
+// The ResourceHandle object is granted to a resource requester.
+// The handle is granted by the resource allocators below.
+enum class DataDynamicType { FixedData, DynamicData};  // Dynamic can change data size at runtime
+enum class DataResourceType { Boolean, Integer, Float, String };
+class InfoResourceHandle {
+
+public:
+
+  InfoResourceHandle(size_t unique_handle_id,
+                     size_t initial_data_offset,
+                     size_t initial_data_size,
+                     DataDynamicType dynamic_type,
+                     DataResourceType resource_type) : unique_handle_id_(unique_handle_id),
+                                                      initial_data_offset_(initial_data_offset),
+                                                      initial_data_size_(initial_data_size),
+                                                      dynamic_type_(dynamic_type),
+                                                      resource_type_(resource_type) {}
+
+  ~InfoResourceHandle() = default;
+
+  [[nodiscard]] size_t handleId() const { return unique_handle_id_; }
+  [[nodiscard]] size_t initialDataOffset() const { return initial_data_offset_; }
+  [[nodiscard]] size_t initialDataSize() const { return initial_data_size_; }
+  [[nodiscard]] DataDynamicType dynamicType() const { return dynamic_type_; }
+  [[nodiscard]] DataResourceType resourceType() const { return resource_type_; }
+
+
+private:
+
+  size_t unique_handle_id_;
+  size_t initial_data_offset_;
+  size_t initial_data_size_;
+  DataDynamicType dynamic_type_;
+  DataResourceType resource_type_;
+
+
+};
+
+// The named resource objects.
+// The fixed (known at definition time) resource object.
+class FixedResourceInstance {
+
+public:
+
+  FixedResourceInstance(std::string resource_name, size_t resource_value) : resource_name_(std::move(resource_name)), resource_value_(resource_value) {}
+  ~FixedResourceInstance() = default;
+
+  [[nodiscard]] const std::string& resourceName() const { return resource_name_; }
+  [[nodiscard]] size_t resourceValue() const { return resource_value_; }
+  // returns the current value and increments the resource.
+  size_t allocateResource(size_t requested) { size_t current = resource_value_; resource_value_+= requested; return current; }
+
+private:
+
+  std::string resource_name_;
+  size_t resource_value_;
+
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The dynamic resource object, this is only known at runtime.
+class DynamicResourceInstance {
+
+public:
+
+  DynamicResourceInstance(std::string resource_name,  std::vector<InfoArrayIndex> dynamic_allocation)
+  : resource_name_(std::move(resource_name)), dynamic_allocation_(std::move(dynamic_allocation)) {}
+  ~DynamicResourceInstance() = default;
+
+  [[nodiscard]] const std::string& resourceName() const { return resource_name_; }
+  [[nodiscard]] std::vector<InfoArrayIndex>& dynamicAllocation() { return dynamic_allocation_; }
+  void queueResource(const InfoArrayIndex& requested) {  dynamic_allocation_.push_back(requested); }
+
+private:
+
+  std::string resource_name_;
+  std::vector<InfoArrayIndex> dynamic_allocation_;
+
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Simple resource allocator
+// Allocates requested memory blocks, both fixed and dynamic.
+class InfoResourceAllocator {
+
+public:
+
+  InfoResourceAllocator( DataResourceType resource_type,
+                         std::shared_ptr<FixedResourceInstance> unique_handle_ptr,
+                         std::shared_ptr<FixedResourceInstance> fixed_resource_ptr,
+                         std::shared_ptr<DynamicResourceInstance> dynamic_resource_ptr)
+                        : resource_type_(resource_type),
+                          unique_handle_ptr_(std::move(unique_handle_ptr)),
+                          fixed_resource_ptr_(std::move(fixed_resource_ptr)),
+                          dynamic_resource_ptr_(std::move(dynamic_resource_ptr)) {}
+  ~InfoResourceAllocator() = default;
+
+  [[nodiscard]] std::optional<const InfoResourceHandle> resourceRequest(DataResourceType resource_type, DataDynamicType dynamic_type, size_t data_size);
+
+  [[nodiscard]] size_t allocateResource(size_t size) { return  fixed_resource_ptr_->allocateResource(size); }
+
+private:
+
+  const DataResourceType resource_type_;
+  std::shared_ptr<FixedResourceInstance> unique_handle_ptr_;
+  std::shared_ptr<FixedResourceInstance> fixed_resource_ptr_;
+  std::shared_ptr<DynamicResourceInstance> dynamic_resource_ptr_;
+
+  size_t uniqueHandleId() { return unique_handle_ptr_->allocateResource(1);  }
+
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The String resource allocator.
+class InfoStringAllocator {
+
+public:
+
+  InfoStringAllocator( std::shared_ptr<FixedResourceInstance> unique_handle_ptr,
+                       std::shared_ptr<FixedResourceInstance> view_resource_ptr,
+                       std::shared_ptr<FixedResourceInstance> char_resource_ptr,
+                       std::shared_ptr<DynamicResourceInstance> dynamic_resource_ptr)
+    : unique_handle_ptr_(std::move(unique_handle_ptr)),
+      view_resource_ptr_(std::move(view_resource_ptr)),
+      char_resource_ptr_(std::move(char_resource_ptr)),
+      dynamic_resource_ptr_(std::move(dynamic_resource_ptr))  {}
+  ~InfoStringAllocator() = default;
+
+  [[nodiscard]] std::optional<const InfoResourceHandle> resourceRequest(DataResourceType resource_type, DataDynamicType dynamic_type, size_t data_size);
+
+  void allocateStringChars(size_t size, const InfoParserToken& token);
+  [[nodiscard]] size_t allocateViews(size_t size) { return view_resource_ptr_->allocateResource(size); }
+
+private:
+
+  const DataResourceType resource_type_{ DataResourceType::String };
+  std::shared_ptr<FixedResourceInstance> unique_handle_ptr_;
+  std::shared_ptr<FixedResourceInstance> view_resource_ptr_;
+  std::shared_ptr<FixedResourceInstance> char_resource_ptr_;
+  std::shared_ptr<DynamicResourceInstance> dynamic_resource_ptr_;
+
+  size_t uniqueHandleId() { return unique_handle_ptr_->allocateResource(1); }
+
+};
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// This object manges the memory for the Info Data Block.
+
+class InfoMemoryResource {
+
+public:
+
+  InfoMemoryResource();
+  InfoMemoryResource(const InfoMemoryResource& copy);
+  InfoMemoryResource& operator=(const InfoMemoryResource& copy);
+  ~InfoMemoryResource() = default;
+
+// The initial resource request from a subscribed data item (this is only done once).
+  std::optional<const InfoResourceHandle> resourceRequest( DataResourceType resource_type, DataDynamicType dynamic_type, size_t data_size);
+
+  bool resolveAllocation(const InfoResourceHandle& item_resource_handle, const InfoParserToken& token);
+
+  size_t charSize() const { return char_memory_->resourceValue(); }
+  size_t integerSize() const { return integer_memory_->resourceValue(); }
+  size_t floatSize() const { return float_memory_->resourceValue(); }
+  size_t viewSize() const { return view_memory_->resourceValue(); }
+  size_t arraySize() const { return array_memory_->dynamicAllocation().size(); }
+
+private:
+
+  // Used to generate a unique identifier for resource requesters.
+  std::shared_ptr<FixedResourceInstance> unique_ident_;    // The unique identifier resource.
+
+  // These objects keep track of allocated memory.
+  std::shared_ptr<FixedResourceInstance> char_memory_;    // The number of characters allocated in the Info block
+  std::shared_ptr<FixedResourceInstance> integer_memory_;    // The size of the integer array in the Info block
+  std::shared_ptr<FixedResourceInstance> float_memory_;    // The size of the floating point array in the Info block
+  std::shared_ptr<FixedResourceInstance> view_memory_;    // The size of the std::string_view array in the Info block
+  std::shared_ptr<DynamicResourceInstance> array_memory_;    // The size of the array lookup in the Info block
+
+  // These objects keep track of allocated data types and translate to a memory footprint.
+  std::unique_ptr<InfoResourceAllocator> bool_allocator_;
+  std::unique_ptr<InfoResourceAllocator> integer_allocator_;
+  std::unique_ptr<InfoResourceAllocator> float_allocator_;
+  std::unique_ptr<InfoStringAllocator> string_allocator_;
+
+  bool resolveDynamic(const InfoResourceHandle& item_resource_handle, const InfoParserToken& token);
+
 
 };
 
