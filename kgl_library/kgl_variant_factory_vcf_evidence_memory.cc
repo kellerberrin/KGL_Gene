@@ -97,7 +97,7 @@ size_t kgl::InfoDataUsageCount::staticIncrementAndAllocate(InfoEvidenceIntern in
 }
 
 
-bool kgl::InfoDataUsageCount::dynamicIncrementAndAllocate(InfoEvidenceIntern internal_type, const InfoParserToken& token) {
+bool kgl::InfoDataUsageCount::dynamicIncrementAndAllocate(size_t data_size, InfoEvidenceIntern internal_type, const InfoParserToken& token) {
 
 //   = subscribed_field.evidenceType().InternalInfoType();
 
@@ -163,7 +163,11 @@ bool kgl::InfoDataUsageCount::dynamicIncrementAndAllocate(InfoEvidenceIntern int
     case InfoEvidenceIntern::intern_unity_string_array:
     case InfoEvidenceIntern::intern_string_array: {
 
-      char_count_ += token.first.size() - (token.second - 1); // total char size of all strings, less the delimiter chars.
+      if (data_size > 1) {
+        char_count_ += token.first.size() - (token.second - 1); // total char size of all strings, less the delimiter chars.
+      } else {
+        char_count_ += token.first.size();
+      }
       string_count_ += token.second;   // number strings, allocate a vector of std::string_views
 
     } // Size varies between records.
@@ -383,16 +387,18 @@ bool kgl::InfoMemoryResource::resolveAllocation(const InfoResourceHandle& item_r
 
     }
 
-  } else {
+  } else {  // Dynamic or FixedDynamic.
 
+    // Only allocate dynamic data if space not available (this is a major space saving).
+    if (item_resource_handle.initialDataSize() != token.second) {
+      // Dynamic data.
+      if (not resolveDynamic(item_resource_handle, token)) {
 
-    if (not resolveDynamic(item_resource_handle, token)) {
+        return false;
 
-      return false;
+      }
 
     }
-
-    // Find dynamic resource and allocate at runtime. No need to allocate if data storage pre-allocated.
 
   }
 
@@ -407,51 +413,20 @@ bool kgl::InfoMemoryResource::resolveDynamic(const InfoResourceHandle& item_reso
   // As these variables can be arrays but are most often just a scalar.
   if (not (item_resource_handle.initialDataSize() != 0 and item_resource_handle.initialDataSize() == token.second)) {
 
-    // Find the dynamic block. Just a simple linear search for now.
-    bool found = false;
-    for (auto& array_item : array_memory_->dynamicAllocation()) {
+    // If the resource is FixedDynamic and the space pre-allocated for it mis-matches the data runtime size
+    // then we treat it as a dynamic datatype and request a dynamic resource.
+    if (item_resource_handle.dynamicType() == DataDynamicType::FixedDynamic) {
 
-      // Found the resource.
-      if (array_item.infoVariableIndex() == item_resource_handle.handleId()) {
+      requestDynamic(item_resource_handle.handleId());
 
-        found = true;
-        switch (item_resource_handle.resourceType()) {
+    }
 
-          case DataResourceType::Boolean:
-          // Boolean arrays are not defined. Complain and exit
-            ExecEnv::log().error("InfoMemoryResource::resolveDynamic, Unexpected Boolean Array, resource ident: {}, token size: {}, token value: {}",
-                                 item_resource_handle.handleId(), token.second, std::string(token.first));
-            return false;
+    // Finds the dynamic resource and updates it.
+    if (not findUpdateDynamic(item_resource_handle, token)) {
 
-          case DataResourceType::Integer:
-            array_item.infoOffset(integer_allocator_->allocateResource(token.second));
-            array_item.infoSize(token.second);
-            break;
-
-          case DataResourceType::Float:
-            array_item.infoOffset(float_allocator_->allocateResource(token.second));
-            array_item.infoSize(token.second);
-            break;
-
-          case DataResourceType::String:
-            array_item.infoOffset(string_allocator_->allocateViews(token.second));
-            array_item.infoSize(token.second);
-            break;
-
-        } // switch
-
-      } // if found
-
-    } // for
-
-    if (not found) {
-      // If we fall through the loop then the dynamic item was not found.
-      ExecEnv::log().error(
-      "InfoMemoryResource::resolveDynamic, Unable to locate Dynamic resource ident: {}, token size: {}, token value: {}",
-      item_resource_handle.handleId(), token.second, std::string(token.first));
       return false;
 
-    } // if not found
+    }
 
   } // if not pre-allocated.
 
@@ -461,6 +436,59 @@ bool kgl::InfoMemoryResource::resolveDynamic(const InfoResourceHandle& item_reso
     string_allocator_->allocateStringChars(item_resource_handle.initialDataSize(), token);
 
   }
+
+  return true;
+
+}
+
+
+bool kgl::InfoMemoryResource::findUpdateDynamic(const InfoResourceHandle& item_resource_handle, const InfoParserToken& token) {
+
+  // Find the dynamic block. Just a simple linear search for now.
+  bool found = false;
+
+  for (auto& array_item : array_memory_->dynamicAllocation()) {
+
+    // Found the resource.
+    if (array_item.infoVariableIndex() == item_resource_handle.handleId()) {
+
+      found = true;
+      switch (item_resource_handle.resourceType()) {
+
+        case DataResourceType::Boolean:
+          // Boolean arrays are not defined. Complain and exit
+          ExecEnv::log().error("InfoMemoryResource::resolveDynamic, Unexpected Boolean Array, resource ident: {}, token size: {}, token value: {}",
+                               item_resource_handle.handleId(), token.second, std::string(token.first));
+          return false;
+
+        case DataResourceType::Integer:
+          array_item.infoOffset(integer_allocator_->allocateResource(token.second));
+          array_item.infoSize(token.second);
+          break;
+
+        case DataResourceType::Float:
+          array_item.infoOffset(float_allocator_->allocateResource(token.second));
+          array_item.infoSize(token.second);
+          break;
+
+        case DataResourceType::String:
+          array_item.infoOffset(string_allocator_->allocateViews(token.second));
+          array_item.infoSize(token.second);
+          break;
+
+      } // switch
+
+    } // if found
+
+  } // for
+
+  if (not found) {
+    // If we fall through the loop then the dynamic item was not found.
+    ExecEnv::log().error( "InfoMemoryResource::resolveDynamic, Unable to locate Dynamic resource ident: {}, token size: {}, token value: {}",
+                          item_resource_handle.handleId(), token.second, std::string(token.first));
+    return false;
+
+  } // if not found
 
   return true;
 

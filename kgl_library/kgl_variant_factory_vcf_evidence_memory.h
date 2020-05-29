@@ -48,7 +48,7 @@ public:
 
   // Allocate additional memory space at runtime run for every Info field parsed.
   // Sets up all the array indexes and verifies the size of the total allocated memory.
-  [[nodiscard]] bool dynamicIncrementAndAllocate(InfoEvidenceIntern internal_type, const InfoParserToken &token);
+  [[nodiscard]] bool dynamicIncrementAndAllocate(size_t data_size, InfoEvidenceIntern internal_type, const InfoParserToken &token);
 
 private:
 
@@ -120,8 +120,15 @@ private:
 // Resource allocation objects.
 // The ResourceHandle object is granted to a resource requester.
 // The handle is granted by the resource allocators below.
-enum class DataDynamicType { FixedData, DynamicData};  // Dynamic can change data size at runtime
+
+// FixedDynamic is pre-allocated and can change data size at runtime
+enum class DataDynamicType { FixedData, FixedDynamic, DynamicData};
+// Data class
 enum class DataResourceType { Boolean, Integer, Float, String };
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The info handle is held is held permanently by the InfoSubscribedField after subscribing to the Info data.
+// The handle is constant and uses indirect indexes to access each instance of an Info Data Block.
 class InfoResourceHandle {
 
 public:
@@ -219,6 +226,8 @@ public:
 
   [[nodiscard]] size_t allocateResource(size_t size) { return  fixed_resource_ptr_->allocateResource(size); }
 
+
+
 private:
 
   const DataResourceType resource_type_;
@@ -277,15 +286,17 @@ public:
   ~InfoMemoryResource() = default;
 
 // The initial resource request from a subscribed data item (this is only done once).
-  std::optional<const InfoResourceHandle> resourceRequest( DataResourceType resource_type, DataDynamicType dynamic_type, size_t data_size);
-
+  [[nodiscard]] std::optional<const InfoResourceHandle> resourceRequest( DataResourceType resource_type, DataDynamicType dynamic_type, size_t data_size);
+// FixedDynamic fields can request a dynamic data block if runtime data size mis-matches pre-allocated data size.
+  void requestDynamic(size_t requestor_id) { array_memory_->queueResource(InfoArrayIndex(requestor_id, 0, 0)); }
+// Resolves static data sizes with runtime data sizes.
   bool resolveAllocation(const InfoResourceHandle& item_resource_handle, const InfoParserToken& token);
-
-  size_t charSize() const { return char_memory_->resourceValue(); }
-  size_t integerSize() const { return integer_memory_->resourceValue(); }
-  size_t floatSize() const { return float_memory_->resourceValue(); }
-  size_t viewSize() const { return view_memory_->resourceValue(); }
-  size_t arraySize() const { return array_memory_->dynamicAllocation().size(); }
+// Raw memory audit functions.
+  [[nodiscard]] size_t charSize() const { return char_memory_->resourceValue(); }
+  [[nodiscard]] size_t integerSize() const { return integer_memory_->resourceValue(); }
+  [[nodiscard]] size_t floatSize() const { return float_memory_->resourceValue(); }
+  [[nodiscard]] size_t viewSize() const { return view_memory_->resourceValue(); }
+  [[nodiscard]] size_t arraySize() const { return array_memory_->dynamicAllocation().size(); }
 
 private:
 
@@ -293,6 +304,7 @@ private:
   std::shared_ptr<FixedResourceInstance> unique_ident_;    // The unique identifier resource.
 
   // These objects keep track of allocated memory.
+  // The data allocation map is contained in these objects.
   std::shared_ptr<FixedResourceInstance> char_memory_;    // The number of characters allocated in the Info block
   std::shared_ptr<FixedResourceInstance> integer_memory_;    // The size of the integer array in the Info block
   std::shared_ptr<FixedResourceInstance> float_memory_;    // The size of the floating point array in the Info block
@@ -300,12 +312,15 @@ private:
   std::shared_ptr<DynamicResourceInstance> array_memory_;    // The size of the array lookup in the Info block
 
   // These objects keep track of allocated data types and translate to a memory footprint.
+  // These objects have a virtual view of allocation. The actual resource allocation is held in the ResourceInstance
+  // objects held above.
   std::unique_ptr<InfoResourceAllocator> bool_allocator_;
   std::unique_ptr<InfoResourceAllocator> integer_allocator_;
   std::unique_ptr<InfoResourceAllocator> float_allocator_;
   std::unique_ptr<InfoStringAllocator> string_allocator_;
 
   bool resolveDynamic(const InfoResourceHandle& item_resource_handle, const InfoParserToken& token);
+  bool findUpdateDynamic(const InfoResourceHandle& item_resource_handle, const InfoParserToken& token);
 
 
 };

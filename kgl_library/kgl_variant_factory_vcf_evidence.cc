@@ -89,10 +89,10 @@ std::optional<kgl::InfoResourceHandle> kgl::InfoSubscribedField::requestResource
       return resource_allocator.resourceRequest(DataResourceType::Float, DataDynamicType::FixedData, 1);
 
     case InfoEvidenceIntern::intern_unity_integer_array:
-      return resource_allocator.resourceRequest(DataResourceType::Integer, DataDynamicType::DynamicData, 1);
+      return resource_allocator.resourceRequest(DataResourceType::Integer, DataDynamicType::FixedDynamic, 1);
 
     case InfoEvidenceIntern::intern_unity_float_array:
-      return resource_allocator.resourceRequest(DataResourceType::Float, DataDynamicType::DynamicData, 1);
+      return resource_allocator.resourceRequest(DataResourceType::Float, DataDynamicType::FixedDynamic, 1);
 
     case InfoEvidenceIntern::intern_string:
       return resource_allocator.resourceRequest(DataResourceType::String, DataDynamicType::FixedData, 1);
@@ -191,7 +191,7 @@ std::unique_ptr<kgl::InfoDataBlock> kgl::ManageInfoData::setupDynamicStorage( co
     if (token) {
 
       InfoEvidenceIntern internal_type = subscribed_info.evidenceType().InternalInfoType();
-      if (not dynamic_info_storage.dynamicIncrementAndAllocate(internal_type, token.value())) {
+      if (not dynamic_info_storage.dynamicIncrementAndAllocate(subscribed_info.getDataHandle()->initialDataSize(), internal_type, token.value())) {
 
         ExecEnv::log().warn("InfoDataUsageCount::dynamicIncrementAndAllocate, Bad size (expected 1) Token: {} size: {}, field ID:{}, Number:{}, Type:{}"
         , std::string(token.value().first), token.value().second, subscribed_info.infoVCF().ID,
@@ -220,10 +220,14 @@ std::unique_ptr<kgl::InfoDataBlock> kgl::ManageInfoData::setupAndLoad( const VCF
 
   std::unique_ptr<kgl::InfoDataBlock> data_block_ptr = setupDynamicStorage(info_parser, evidence_ptr);
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//************************************************************************************
+
   if (resolved_resource.charSize() != data_block_ptr->getRawMemoryUsage().charCount()) {
 
-    ExecEnv::log().warn(  "ManageInfoData::setupAndLoad, Mis-match chars allocated, resource: {}, data block: {}"
-                        , resolved_resource.charSize(), data_block_ptr->getRawMemoryUsage().charCount());
+    ExecEnv::log().warn(  "ManageInfoData::setupAndLoad, Mis-match chars allocated, resource: {}, data block: {}, diff: {}, strings: {}"
+                        , resolved_resource.charSize(), data_block_ptr->getRawMemoryUsage().charCount(),
+                          (resolved_resource.charSize() - data_block_ptr->getRawMemoryUsage().charCount()), resolved_resource.viewSize());
 
   }
 
@@ -245,8 +249,16 @@ std::unique_ptr<kgl::InfoDataBlock> kgl::ManageInfoData::setupAndLoad( const VCF
     , resolved_resource.viewSize(), data_block_ptr->getRawMemoryUsage().stringCount());
 
   }
+  size_t data_array_count = data_block_ptr->getRawMemoryUsage().arrayCount() + data_block_ptr->getRawMemoryUsage().unityArrayCount();
+  if (resolved_resource.arraySize() != data_array_count) {
 
+    ExecEnv::log().warn(  "ManageInfoData::setupAndLoad, Mis-match arrays allocated, resource: {}, data block: {}, bytes: {}"
+    , resolved_resource.arraySize(), data_array_count, ((resolved_resource.arraySize() - data_array_count) * sizeof(InfoArrayIndex)));
 
+  }
+
+//*****************************************************
+//////////////////////////////////////////////////////////////////////////////////////////
 
 
   InfoDataUsageCount dynamic_accounting = staticStorage();  // Start with the static storage (indexes) already counted
