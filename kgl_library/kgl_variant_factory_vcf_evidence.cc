@@ -5,6 +5,7 @@
 #include "kgl_variant_factory_vcf_evidence.h"
 #include "kgl_variant_factory_vcf_parse_header.h"
 #include "kgl_variant_factory_vcf_parse_info.h"
+#include "kgl_variant_factory_vcf_evidence_data_blk.h"
 
 #include <variant>
 
@@ -218,42 +219,45 @@ std::unique_ptr<kgl::InfoDataBlock> kgl::ManageInfoData::setupAndLoad( const VCF
 
   InfoMemoryResource resolved_resource = resolveResources(info_parser, *evidence_ptr);
 
+  std::unique_ptr<DataMemoryBlock> data_mem_ptr(std::make_unique<DataMemoryBlock>(evidence_ptr, resolved_resource, info_parser));
+
   std::unique_ptr<kgl::InfoDataBlock> data_block_ptr = setupDynamicStorage(info_parser, evidence_ptr);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //************************************************************************************
 
-  if (resolved_resource.charSize() != data_block_ptr->getRawMemoryUsage().charCount()) {
+  if (data_mem_ptr->getUsageCount().charCount()  != data_block_ptr->getRawMemoryUsage().charCount()) {
 
+    int64_t diff = data_mem_ptr->getUsageCount().charCount() - data_block_ptr->getRawMemoryUsage().charCount();
     ExecEnv::log().warn(  "ManageInfoData::setupAndLoad, Mis-match chars allocated, resource: {}, data block: {}, diff: {}, strings: {}"
-                        , resolved_resource.charSize(), data_block_ptr->getRawMemoryUsage().charCount(),
-                          (resolved_resource.charSize() - data_block_ptr->getRawMemoryUsage().charCount()), resolved_resource.viewSize());
+                        , data_mem_ptr->getUsageCount().charCount(), data_block_ptr->getRawMemoryUsage().charCount(),
+                         diff, resolved_resource.viewSize());
 
   }
 
-  if (resolved_resource.integerSize() != data_block_ptr->getRawMemoryUsage().integerCount()) {
+  if (data_mem_ptr->getUsageCount().integerCount() != data_block_ptr->getRawMemoryUsage().integerCount()) {
 
     ExecEnv::log().warn(  "ManageInfoData::setupAndLoad, Mis-match integers allocated, resource: {}, data block: {}"
-    , resolved_resource.integerSize(), data_block_ptr->getRawMemoryUsage().integerCount());
+    , data_mem_ptr->getUsageCount().integerCount(), data_block_ptr->getRawMemoryUsage().integerCount());
 
   }
-  if (resolved_resource.floatSize() != data_block_ptr->getRawMemoryUsage().floatCount()) {
+  if (data_mem_ptr->getUsageCount().floatCount() != data_block_ptr->getRawMemoryUsage().floatCount()) {
 
     ExecEnv::log().warn(  "ManageInfoData::setupAndLoad, Mis-match floata allocated, resource: {}, data block: {}"
-    , resolved_resource.floatSize(), data_block_ptr->getRawMemoryUsage().floatCount());
+    , data_mem_ptr->getUsageCount().floatCount(), data_block_ptr->getRawMemoryUsage().floatCount());
 
   }
-  if (resolved_resource.viewSize() != data_block_ptr->getRawMemoryUsage().stringCount()) {
+  if (data_mem_ptr->getUsageCount().stringCount() != data_block_ptr->getRawMemoryUsage().stringCount()) {
 
     ExecEnv::log().warn(  "ManageInfoData::setupAndLoad, Mis-match views (strings) allocated, resource: {}, data block: {}"
-    , resolved_resource.viewSize(), data_block_ptr->getRawMemoryUsage().stringCount());
+    , data_mem_ptr->getUsageCount().stringCount(), data_block_ptr->getRawMemoryUsage().stringCount());
 
   }
   size_t data_array_count = data_block_ptr->getRawMemoryUsage().arrayCount() + data_block_ptr->getRawMemoryUsage().unityArrayCount();
-  if (resolved_resource.arraySize() != data_array_count) {
+  if (data_mem_ptr->getUsageCount().arrayCount() != data_array_count) {
 
     ExecEnv::log().warn(  "ManageInfoData::setupAndLoad, Mis-match arrays allocated, resource: {}, data block: {}, bytes: {}"
-    , resolved_resource.arraySize(), data_array_count, ((resolved_resource.arraySize() - data_array_count) * sizeof(InfoArrayIndex)));
+    , data_mem_ptr->getUsageCount().arrayCount(), data_array_count, ((data_mem_ptr->getUsageCount().arrayCount() - data_array_count) * sizeof(InfoArrayIndex)));
 
   }
 

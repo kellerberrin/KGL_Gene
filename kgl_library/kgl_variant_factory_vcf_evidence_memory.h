@@ -61,6 +61,41 @@ private:
 
 };
 
+
+
+
+class MemDataUsage {
+
+public:
+
+  MemDataUsage() = default;
+  ~MemDataUsage() = default;
+
+  [[nodiscard]] uint32_t arrayCount() const { return array_count_; }
+  [[nodiscard]] uint32_t floatCount() const { return float_count_; }
+  [[nodiscard]] uint32_t integerCount() const { return integer_count_; }
+  [[nodiscard]] uint32_t stringCount() const { return string_count_; }
+  [[nodiscard]] uint32_t charCount() const { return char_count_; }
+
+  void arrayCount(uint32_t count) { array_count_ = count; }
+  void floatCount(uint32_t count) { float_count_ = count; }
+  void integerCount(uint32_t count) { integer_count_ = count; }
+  void stringCount(uint32_t count) { string_count_ = count; }
+  void charCount(uint32_t count) { char_count_ = count; }
+
+private:
+
+  uint32_t array_count_{0};
+  uint32_t float_count_{0};
+  uint32_t integer_count_{0};
+  uint32_t string_count_{0};
+  uint32_t char_count_{0};
+
+};
+
+
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Internal array index structure (can use 64 bits for size efficiency).
 
@@ -169,7 +204,8 @@ class FixedResourceInstance {
 
 public:
 
-  FixedResourceInstance(std::string resource_name, size_t resource_value) : resource_name_(std::move(resource_name)), resource_value_(resource_value) {}
+  FixedResourceInstance(std::string resource_name) : resource_name_(std::move(resource_name)), resource_value_(0) {}
+  FixedResourceInstance(const FixedResourceInstance&) = default;
   ~FixedResourceInstance() = default;
 
   [[nodiscard]] const std::string& resourceName() const { return resource_name_; }
@@ -190,18 +226,41 @@ class DynamicResourceInstance {
 
 public:
 
-  DynamicResourceInstance(std::string resource_name,  std::vector<InfoArrayIndex> dynamic_allocation)
-  : resource_name_(std::move(resource_name)), dynamic_allocation_(std::move(dynamic_allocation)) {}
+  DynamicResourceInstance(std::string resource_name) : resource_name_(std::move(resource_name))  {}
+  DynamicResourceInstance(const DynamicResourceInstance&) = default;
   ~DynamicResourceInstance() = default;
 
   [[nodiscard]] const std::string& resourceName() const { return resource_name_; }
-  [[nodiscard]] std::vector<InfoArrayIndex>& dynamicAllocation() { return dynamic_allocation_; }
-  void queueResource(const InfoArrayIndex& requested) {  dynamic_allocation_.push_back(requested); }
+  [[nodiscard]] std::map<size_t, InfoArrayIndex>& dynamicAllocation() { return dynamic_allocation_; }
+  bool queueResource(InfoArrayIndex requested);
 
 private:
 
   std::string resource_name_;
-  std::vector<InfoArrayIndex> dynamic_allocation_;
+  std::map<size_t, InfoArrayIndex> dynamic_allocation_;
+
+};
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The string resource object, this is only known at runtime.
+class StringResourceInstance {
+
+public:
+
+  StringResourceInstance(std::string resource_name) : resource_name_(std::move(resource_name)) {}
+  StringResourceInstance(const StringResourceInstance&) = default;
+  ~StringResourceInstance() = default;
+
+  [[nodiscard]] const std::string& resourceName() const { return resource_name_; }
+  [[nodiscard]] std::vector<std::string_view>& stringAllocation() { return string_allocation_; }
+  void queueResource(std::string_view string) {  string_allocation_.emplace_back(string); }
+  size_t allocateViews(size_t views);  // Allocates string and returns the (previous) offset.
+
+private:
+
+  std::string resource_name_;
+  std::vector<std::string_view> string_allocation_;
 
 };
 
@@ -246,7 +305,7 @@ class InfoStringAllocator {
 public:
 
   InfoStringAllocator( std::shared_ptr<FixedResourceInstance> unique_handle_ptr,
-                       std::shared_ptr<FixedResourceInstance> view_resource_ptr,
+                       std::shared_ptr<StringResourceInstance> view_resource_ptr,
                        std::shared_ptr<FixedResourceInstance> char_resource_ptr,
                        std::shared_ptr<DynamicResourceInstance> dynamic_resource_ptr)
     : unique_handle_ptr_(std::move(unique_handle_ptr)),
@@ -258,13 +317,13 @@ public:
   [[nodiscard]] std::optional<const InfoResourceHandle> resourceRequest(DataResourceType resource_type, DataDynamicType dynamic_type, size_t data_size);
 
   void allocateStringChars(size_t size, const InfoParserToken& token);
-  [[nodiscard]] size_t allocateViews(size_t size) { return view_resource_ptr_->allocateResource(size); }
+  [[nodiscard]] size_t allocateViews(size_t size) { return view_resource_ptr_->allocateViews(size); }
 
 private:
 
   const DataResourceType resource_type_{ DataResourceType::String };
   std::shared_ptr<FixedResourceInstance> unique_handle_ptr_;
-  std::shared_ptr<FixedResourceInstance> view_resource_ptr_;
+  std::shared_ptr<StringResourceInstance> view_resource_ptr_;
   std::shared_ptr<FixedResourceInstance> char_resource_ptr_;
   std::shared_ptr<DynamicResourceInstance> dynamic_resource_ptr_;
 
@@ -282,21 +341,24 @@ public:
 
   InfoMemoryResource();
   InfoMemoryResource(const InfoMemoryResource& copy);
-  InfoMemoryResource& operator=(const InfoMemoryResource& copy);
   ~InfoMemoryResource() = default;
+
+  InfoMemoryResource& operator=(const InfoMemoryResource& copy) = delete;
 
 // The initial resource request from a subscribed data item (this is only done once).
   [[nodiscard]] std::optional<const InfoResourceHandle> resourceRequest( DataResourceType resource_type, DataDynamicType dynamic_type, size_t data_size);
 // FixedDynamic fields can request a dynamic data block if runtime data size mis-matches pre-allocated data size.
-  void requestDynamic(size_t requestor_id) { array_memory_->queueResource(InfoArrayIndex(requestor_id, 0, 0)); }
+  void requestDynamic(InfoArrayIndex array_index) { array_memory_->queueResource(array_index); }
 // Resolves static data sizes with runtime data sizes.
   bool resolveAllocation(const InfoResourceHandle& item_resource_handle, const InfoParserToken& token);
 // Raw memory audit functions.
+  [[nodiscard]] size_t boolSize() const { return bool_memory_->resourceValue(); }
   [[nodiscard]] size_t charSize() const { return char_memory_->resourceValue(); }
   [[nodiscard]] size_t integerSize() const { return integer_memory_->resourceValue(); }
   [[nodiscard]] size_t floatSize() const { return float_memory_->resourceValue(); }
-  [[nodiscard]] size_t viewSize() const { return view_memory_->resourceValue(); }
+  [[nodiscard]] size_t viewSize() const { return view_memory_->stringAllocation().size(); }
   [[nodiscard]] size_t arraySize() const { return array_memory_->dynamicAllocation().size(); }
+  [[nodiscard]] DynamicResourceInstance& arrayResource() const { return *array_memory_; }
 
 private:
 
@@ -305,15 +367,16 @@ private:
 
   // These objects keep track of allocated memory.
   // The data allocation map is contained in these objects.
+  std::shared_ptr<FixedResourceInstance> bool_memory_;    // The number of characters allocated in the Info block
   std::shared_ptr<FixedResourceInstance> char_memory_;    // The number of characters allocated in the Info block
   std::shared_ptr<FixedResourceInstance> integer_memory_;    // The size of the integer array in the Info block
   std::shared_ptr<FixedResourceInstance> float_memory_;    // The size of the floating point array in the Info block
-  std::shared_ptr<FixedResourceInstance> view_memory_;    // The size of the std::string_view array in the Info block
+  std::shared_ptr<StringResourceInstance> view_memory_;    // The size of the std::string_view array in the Info block
   std::shared_ptr<DynamicResourceInstance> array_memory_;    // The size of the array lookup in the Info block
 
   // These objects keep track of allocated data types and translate to a memory footprint.
-  // These objects have a virtual view of allocation. The actual resource allocation is held in the ResourceInstance
-  // objects held above.
+  // These objects have a virtual view of allocation.
+  // The actual resource allocation is held in the ResourceInstance objects held above.
   std::unique_ptr<InfoResourceAllocator> bool_allocator_;
   std::unique_ptr<InfoResourceAllocator> integer_allocator_;
   std::unique_ptr<InfoResourceAllocator> float_allocator_;

@@ -198,7 +198,33 @@ bool kgl::InfoDataUsageCount::operator==(const InfoDataUsageCount& cmp) const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Resource allocation object.
+// Resource allocation objects.
+
+
+size_t kgl::StringResourceInstance::allocateViews(size_t views) {
+
+  size_t offset = string_allocation_.size();
+
+  for (size_t index = 0; index < views; ++index) {
+
+    string_allocation_.emplace_back(std::string_view());
+
+  }
+
+  return offset;
+
+}
+
+
+bool kgl::DynamicResourceInstance::queueResource(InfoArrayIndex requested) {
+
+  auto result = dynamic_allocation_.try_emplace(requested.infoVariableIndex(), requested);
+
+  return result.second;
+
+}
+
+
 
 
 std::optional<const kgl::InfoResourceHandle> kgl::InfoResourceAllocator::resourceRequest(DataResourceType resource_type, DataDynamicType dynamic_type, size_t data_size) {
@@ -245,7 +271,7 @@ std::optional<const kgl::InfoResourceHandle> kgl::InfoStringAllocator::resourceR
 
   // Note that the character resource is allocated at runtime when the size of the string is known.
   // The resource object. We allocate string view resources (generally 0 or 1).
-  InfoResourceHandle resource_handle(unique_id, view_resource_ptr_->allocateResource(data_size), data_size, dynamic_type, resource_type);
+  InfoResourceHandle resource_handle(unique_id, view_resource_ptr_->allocateViews(data_size), data_size, dynamic_type, resource_type);
 
   // A dynamic array requested, queue until runtime size information available.
   if (dynamic_type == DataDynamicType::DynamicData) {
@@ -309,15 +335,16 @@ std::optional<const kgl::InfoResourceHandle> kgl::InfoMemoryResource::resourceRe
 
 kgl::InfoMemoryResource::InfoMemoryResource() {
 
-  unique_ident_ = std::make_shared<FixedResourceInstance>("Unique resource identifier", 0);
+  unique_ident_ = std::make_shared<FixedResourceInstance>("Unique resource identifier");
 
-  char_memory_  = std::make_shared<FixedResourceInstance>("Allocated char size", 0);
-  integer_memory_ = std::make_shared<FixedResourceInstance>("Allocated integer size", 0);
-  float_memory_ = std::make_shared<FixedResourceInstance>("Allocated float size", 0);
-  view_memory_ = std::make_shared<FixedResourceInstance>("Allocated string_view size", 0);
-  array_memory_ = std::make_shared<DynamicResourceInstance>("Allocated dynamic_array size", std::vector<InfoArrayIndex>());
+  bool_memory_  = std::make_shared<FixedResourceInstance>("Allocated bool char size");
+  char_memory_  = std::make_shared<FixedResourceInstance>("Allocated string char size");
+  integer_memory_ = std::make_shared<FixedResourceInstance>("Allocated integer size");
+  float_memory_ = std::make_shared<FixedResourceInstance>("Allocated float size");
+  view_memory_ = std::make_shared<StringResourceInstance>("Allocated string_view size");
+  array_memory_ = std::make_shared<DynamicResourceInstance>("Allocated dynamic_array size");
 
-  bool_allocator_= std::make_unique<InfoResourceAllocator>(DataResourceType::Boolean, unique_ident_, char_memory_, array_memory_);
+  bool_allocator_= std::make_unique<InfoResourceAllocator>(DataResourceType::Boolean, unique_ident_, bool_memory_, array_memory_);
   integer_allocator_= std::make_unique<InfoResourceAllocator>(DataResourceType::Integer, unique_ident_, integer_memory_, array_memory_);
   float_allocator_= std::make_unique<InfoResourceAllocator>(DataResourceType::Float, unique_ident_, float_memory_, array_memory_);
   string_allocator_= std::make_unique<InfoStringAllocator>(unique_ident_, view_memory_, char_memory_, array_memory_);
@@ -328,33 +355,20 @@ kgl::InfoMemoryResource::InfoMemoryResource(const InfoMemoryResource& copy) {
 
   unique_ident_ = std::make_shared<FixedResourceInstance>(*copy.unique_ident_);
 
+  bool_memory_  = std::make_shared<FixedResourceInstance>(*copy.bool_memory_);
   char_memory_  = std::make_shared<FixedResourceInstance>(*copy.char_memory_);
   integer_memory_ = std::make_shared<FixedResourceInstance>(*copy.integer_memory_);
   float_memory_ = std::make_shared<FixedResourceInstance>(*copy.float_memory_);
-  view_memory_ = std::make_shared<FixedResourceInstance>(*copy.view_memory_);
+  view_memory_ = std::make_shared<StringResourceInstance>(*copy.view_memory_);
   array_memory_ = std::make_shared<DynamicResourceInstance>(*copy.array_memory_);
 
-  bool_allocator_= std::make_unique<InfoResourceAllocator>(DataResourceType::Boolean, unique_ident_, char_memory_, array_memory_);
+  bool_allocator_= std::make_unique<InfoResourceAllocator>(DataResourceType::Boolean, unique_ident_, bool_memory_, array_memory_);
   integer_allocator_= std::make_unique<InfoResourceAllocator>(DataResourceType::Integer, unique_ident_, integer_memory_, array_memory_);
   float_allocator_= std::make_unique<InfoResourceAllocator>(DataResourceType::Float, unique_ident_, float_memory_, array_memory_);
   string_allocator_= std::make_unique<InfoStringAllocator>(unique_ident_, view_memory_, char_memory_, array_memory_);
 
 }
 
-
-kgl::InfoMemoryResource& kgl::InfoMemoryResource::operator=(const InfoMemoryResource& copy) {
-
-  unique_ident_ = std::make_shared<FixedResourceInstance>(*copy.unique_ident_);
-
-  char_memory_  = std::make_shared<FixedResourceInstance>(*copy.char_memory_);
-  integer_memory_ = std::make_shared<FixedResourceInstance>(*copy.integer_memory_);
-  float_memory_ = std::make_shared<FixedResourceInstance>(*copy.float_memory_);
-  view_memory_ = std::make_shared<FixedResourceInstance>(*copy.view_memory_);
-  array_memory_ = std::make_shared<DynamicResourceInstance>(*copy.array_memory_);
-
-  return *this;
-
-}
 
 
 bool kgl::InfoMemoryResource::resolveAllocation(const InfoResourceHandle& item_resource_handle, const InfoParserToken& token) {
@@ -389,7 +403,7 @@ bool kgl::InfoMemoryResource::resolveAllocation(const InfoResourceHandle& item_r
 
   } else {  // Dynamic or FixedDynamic.
 
-    // Only allocate dynamic data if space not available (this is a major space saving).
+    // Only allocate dynamic data if pre-allocated space not available (this is a major space saving).
     if (item_resource_handle.initialDataSize() != token.second) {
       // Dynamic data.
       if (not resolveDynamic(item_resource_handle, token)) {
@@ -417,11 +431,11 @@ bool kgl::InfoMemoryResource::resolveDynamic(const InfoResourceHandle& item_reso
     // then we treat it as a dynamic datatype and request a dynamic resource.
     if (item_resource_handle.dynamicType() == DataDynamicType::FixedDynamic) {
 
-      requestDynamic(item_resource_handle.handleId());
+      requestDynamic(InfoArrayIndex(item_resource_handle.handleId(), 0, token.second));
 
     }
 
-    // Finds the dynamic resource and updates it.
+    // Finds the dynamic resource and allocates data space for it.
     if (not findUpdateDynamic(item_resource_handle, token)) {
 
       return false;
@@ -444,51 +458,45 @@ bool kgl::InfoMemoryResource::resolveDynamic(const InfoResourceHandle& item_reso
 
 bool kgl::InfoMemoryResource::findUpdateDynamic(const InfoResourceHandle& item_resource_handle, const InfoParserToken& token) {
 
-  // Find the dynamic block. Just a simple linear search for now.
-  bool found = false;
 
-  for (auto& array_item : array_memory_->dynamicAllocation()) {
+  // Find the dynamic block.
 
-    // Found the resource.
-    if (array_item.infoVariableIndex() == item_resource_handle.handleId()) {
+  auto array_item_ptr = array_memory_->dynamicAllocation().find(item_resource_handle.handleId());
 
-      found = true;
-      switch (item_resource_handle.resourceType()) {
-
-        case DataResourceType::Boolean:
-          // Boolean arrays are not defined. Complain and exit
-          ExecEnv::log().error("InfoMemoryResource::resolveDynamic, Unexpected Boolean Array, resource ident: {}, token size: {}, token value: {}",
-                               item_resource_handle.handleId(), token.second, std::string(token.first));
-          return false;
-
-        case DataResourceType::Integer:
-          array_item.infoOffset(integer_allocator_->allocateResource(token.second));
-          array_item.infoSize(token.second);
-          break;
-
-        case DataResourceType::Float:
-          array_item.infoOffset(float_allocator_->allocateResource(token.second));
-          array_item.infoSize(token.second);
-          break;
-
-        case DataResourceType::String:
-          array_item.infoOffset(string_allocator_->allocateViews(token.second));
-          array_item.infoSize(token.second);
-          break;
-
-      } // switch
-
-    } // if found
-
-  } // for
-
-  if (not found) {
-    // If we fall through the loop then the dynamic item was not found.
-    ExecEnv::log().error( "InfoMemoryResource::resolveDynamic, Unable to locate Dynamic resource ident: {}, token size: {}, token value: {}",
+  if (array_item_ptr == array_memory_->dynamicAllocation().end()) {
+    // If the dynamic item was not found.
+    ExecEnv::log().error( "InfoMemoryResource::resolveDynamic, Unable to locate Dynamic resource identifier: {}, token size: {}, token value: {}",
                           item_resource_handle.handleId(), token.second, std::string(token.first));
     return false;
 
   } // if not found
+
+
+  switch (item_resource_handle.resourceType()) {
+
+    case DataResourceType::Boolean:
+      // Allow for the possibility of boolean vectors.
+      array_item_ptr->second.infoOffset(bool_allocator_->allocateResource(token.second));
+      array_item_ptr->second.infoSize(token.second);
+      break;
+
+    case DataResourceType::Integer:
+      array_item_ptr->second.infoOffset(integer_allocator_->allocateResource(token.second));
+      array_item_ptr->second.infoSize(token.second);
+      break;
+
+    case DataResourceType::Float:
+      array_item_ptr->second.infoOffset(float_allocator_->allocateResource(token.second));
+      array_item_ptr->second.infoSize(token.second);
+      break;
+
+    case DataResourceType::String:
+      array_item_ptr->second.infoOffset(string_allocator_->allocateViews(token.second));
+      array_item_ptr->second.infoSize(token.second);
+      break;
+
+  } // switch
+
 
   return true;
 
