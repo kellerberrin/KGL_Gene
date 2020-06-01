@@ -27,7 +27,11 @@ kgl::InfoDataVariant kgl::InfoSubscribedField::getData(const InfoDataBlock& info
     case InfoEvidenceIntern::intern_integer: {
 
       std::vector<int64_t> int_array;
-      int_array.emplace_back(static_cast<int64_t>(info_data_block.getInteger(fieldAddress())));
+      if (info_data_block.getInteger(fieldAddress()) != InfoDataBlock::MISSING_VALUE_INTEGER_) {
+
+        int_array.emplace_back(static_cast<int64_t>(info_data_block.getInteger(fieldAddress())));
+
+      }
       return int_array;
 
     }
@@ -35,7 +39,12 @@ kgl::InfoDataVariant kgl::InfoSubscribedField::getData(const InfoDataBlock& info
     case InfoEvidenceIntern::intern_float: {
 
       std::vector<double> float_array;
-      float_array.emplace_back(static_cast<double>(info_data_block.getFloat(fieldAddress())));
+
+      if (info_data_block.getFloat(fieldAddress()) != InfoDataBlock::MISSING_VALUE_FLOAT_) {
+
+        float_array.emplace_back(static_cast<double>(info_data_block.getFloat(fieldAddress())));
+
+      }
       return float_array;
 
     }
@@ -72,8 +81,33 @@ kgl::InfoDataVariant kgl::InfoSubscribedField::getData(const InfoDataBlock& info
 
 }
 
+//  Returns the data, A size of zero is a missing field.
+kgl::InfoDataVariant kgl::InfoSubscribedField::getNewData(const DataMemoryBlock& memory_block) const {
 
-std::optional<kgl::InfoResourceHandle> kgl::InfoSubscribedField::requestResourceHandle(ManageInfoData& manage_info_data) {
+  switch(getDataHandle().resourceType()) {
+
+    case DataResourceType::Boolean:
+      return memory_block.getBoolean(getDataHandle());
+
+    case DataResourceType::Integer:
+      return memory_block.getInteger(getDataHandle());
+
+    case DataResourceType::Float:
+      return memory_block.getFloat(getDataHandle());
+
+    case DataResourceType::String:
+      return memory_block.getString(getDataHandle());
+
+    default:
+      ExecEnv::log().error( "InfoSubscribedField::getNewData, Internal data type unknown");
+      return std::monostate();
+
+  }
+
+}
+
+
+kgl::InfoResourceHandle kgl::InfoSubscribedField::requestResourceHandle(ManageInfoData& manage_info_data) {
 
   InfoMemoryResource& resource_allocator = manage_info_data.resourceAllocator();
 
@@ -110,8 +144,8 @@ std::optional<kgl::InfoResourceHandle> kgl::InfoSubscribedField::requestResource
 
     case InfoEvidenceIntern::NotImplemented:  // unknown internal type.
     default:
-      ExecEnv::log().error( "InfoSubscribedField::requestResourceHandle, Internal data type unknown, cannot obtain data handle");
-      return std::nullopt;
+      ExecEnv::log().critical( "InfoSubscribedField::requestResourceHandle, Internal data type unknown, cannot obtain data handle");
+      break;
   }
 
 }
@@ -192,7 +226,7 @@ std::unique_ptr<kgl::InfoDataBlock> kgl::ManageInfoData::setupDynamicStorage( co
     if (token) {
 
       InfoEvidenceIntern internal_type = subscribed_info.evidenceType().InternalInfoType();
-      if (not dynamic_info_storage.dynamicIncrementAndAllocate(subscribed_info.getDataHandle()->initialDataSize(), internal_type, token.value())) {
+      if (not dynamic_info_storage.dynamicIncrementAndAllocate(subscribed_info.getDataHandle().initialDataSize(), internal_type, token.value())) {
 
         ExecEnv::log().warn("InfoDataUsageCount::dynamicIncrementAndAllocate, Bad size (expected 1) Token: {} size: {}, field ID:{}, Number:{}, Type:{}"
         , std::string(token.value().first), token.value().second, subscribed_info.infoVCF().ID,
@@ -212,57 +246,21 @@ std::unique_ptr<kgl::InfoDataBlock> kgl::ManageInfoData::setupDynamicStorage( co
 
 }
 
+std::unique_ptr<const kgl::DataMemoryBlock> kgl::ManageInfoData::createMemoryBlock( const VCFInfoParser& info_parser,
+                                                                                    std::shared_ptr<const InfoEvidenceHeader> evidence_ptr) const {
 
+  InfoMemoryResource resolved_resource = resolveResources(info_parser, *evidence_ptr);
+
+  return std::make_unique<const DataMemoryBlock>(evidence_ptr, resolved_resource, info_parser);
+
+}
 
 std::unique_ptr<kgl::InfoDataBlock> kgl::ManageInfoData::setupAndLoad( const VCFInfoParser& info_parser,
                                                                        std::shared_ptr<const InfoEvidenceHeader> evidence_ptr) const {
 
-  InfoMemoryResource resolved_resource = resolveResources(info_parser, *evidence_ptr);
 
-  std::unique_ptr<DataMemoryBlock> data_mem_ptr(std::make_unique<DataMemoryBlock>(evidence_ptr, resolved_resource, info_parser));
 
   std::unique_ptr<kgl::InfoDataBlock> data_block_ptr = setupDynamicStorage(info_parser, evidence_ptr);
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//************************************************************************************
-
-  if (data_mem_ptr->getUsageCount().charCount()  != data_block_ptr->getRawMemoryUsage().charCount()) {
-
-    int64_t diff = data_mem_ptr->getUsageCount().charCount() - data_block_ptr->getRawMemoryUsage().charCount();
-    ExecEnv::log().warn(  "ManageInfoData::setupAndLoad, Mis-match chars allocated, resource: {}, data block: {}, diff: {}, strings: {}"
-                        , data_mem_ptr->getUsageCount().charCount(), data_block_ptr->getRawMemoryUsage().charCount(),
-                         diff, resolved_resource.viewSize());
-
-  }
-
-  if (data_mem_ptr->getUsageCount().integerCount() != data_block_ptr->getRawMemoryUsage().integerCount()) {
-
-    ExecEnv::log().warn(  "ManageInfoData::setupAndLoad, Mis-match integers allocated, resource: {}, data block: {}"
-    , data_mem_ptr->getUsageCount().integerCount(), data_block_ptr->getRawMemoryUsage().integerCount());
-
-  }
-  if (data_mem_ptr->getUsageCount().floatCount() != data_block_ptr->getRawMemoryUsage().floatCount()) {
-
-    ExecEnv::log().warn(  "ManageInfoData::setupAndLoad, Mis-match floata allocated, resource: {}, data block: {}"
-    , data_mem_ptr->getUsageCount().floatCount(), data_block_ptr->getRawMemoryUsage().floatCount());
-
-  }
-  if (data_mem_ptr->getUsageCount().stringCount() != data_block_ptr->getRawMemoryUsage().stringCount()) {
-
-    ExecEnv::log().warn(  "ManageInfoData::setupAndLoad, Mis-match views (strings) allocated, resource: {}, data block: {}"
-    , data_mem_ptr->getUsageCount().stringCount(), data_block_ptr->getRawMemoryUsage().stringCount());
-
-  }
-  size_t data_array_count = data_block_ptr->getRawMemoryUsage().arrayCount() + data_block_ptr->getRawMemoryUsage().unityArrayCount();
-  if (data_mem_ptr->getUsageCount().arrayCount() != data_array_count) {
-
-    ExecEnv::log().warn(  "ManageInfoData::setupAndLoad, Mis-match arrays allocated, resource: {}, data block: {}, bytes: {}"
-    , data_mem_ptr->getUsageCount().arrayCount(), data_array_count, ((data_mem_ptr->getUsageCount().arrayCount() - data_array_count) * sizeof(InfoArrayIndex)));
-
-  }
-
-//*****************************************************
-//////////////////////////////////////////////////////////////////////////////////////////
 
 
   InfoDataUsageCount dynamic_accounting = staticStorage();  // Start with the static storage (indexes) already counted
@@ -328,21 +326,12 @@ kgl::InfoMemoryResource kgl::ManageInfoData::resolveResources( const VCFInfoPars
     // No additional storage required if token not available.
     if (token) {
 
-      if (subscribed_info.getDataHandle()) {
-
         // Resolve the runtime memory allocation by examining the data.
-        if (not resolved_resources.resolveAllocation(subscribed_info.getDataHandle().value(), token.value())) {
+      if (not resolved_resources.resolveAllocation(subscribed_info.getDataHandle(), token.value())) {
 
-          ExecEnv::log().warn("ManageInfoData::resolveResources, Bad size (expected 1) Token: {} size: {}, field ID:{}, Number:{}, Type:{}"
-          , std::string(token.value().first), token.value().second, subscribed_info.infoVCF().ID,
-                              subscribed_info.infoVCF().number, subscribed_info.infoVCF().type);
-
-        }
-
-      } else {
-
-        ExecEnv::log().warn("ManageInfoData::resolveResources, Invalid resource handle for field ID:{}, Number:{}, Type:{}"
-        , subscribed_info.infoVCF().ID, subscribed_info.infoVCF().number, subscribed_info.infoVCF().type);
+        ExecEnv::log().warn("ManageInfoData::resolveResources, Bad size (expected 1) Token: {} size: {}, field ID:{}, Number:{}, Type:{}"
+        , std::string(token.value().first), token.value().second, subscribed_info.infoVCF().ID,
+                            subscribed_info.infoVCF().number, subscribed_info.infoVCF().type);
 
       }
 
@@ -375,10 +364,12 @@ kgl::InfoDataEvidence kgl::EvidenceFactory::createVariantEvidence(std::string&& 
 
   std::unique_ptr<InfoDataBlock> info_data_ptr = manage_info_data_.setupAndLoad(info_parser, info_evidence_header_);
 
-  // Debug code
-  debugData(info_parser, info_data_ptr);
+  std::unique_ptr<const DataMemoryBlock> mem_blk_ptr = manage_info_data_.createMemoryBlock(info_parser, info_evidence_header_);
 
-  return std::move(info_data_ptr);
+  // Debug code
+  debugData(info_parser, info_data_ptr, mem_blk_ptr);
+
+  return std::move(mem_blk_ptr);
 
 }
 
@@ -446,7 +437,9 @@ void kgl::EvidenceFactory::availableInfoFields(const VCFInfoRecordMap& vcf_info_
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Debug stuff. To be removed.
 
-void kgl::EvidenceFactory::debugData(const VCFInfoParser& info_parser, std::unique_ptr<InfoDataBlock>& info_data_ptr) const {
+void kgl::EvidenceFactory::debugData( const VCFInfoParser& info_parser,
+                                      std::unique_ptr<InfoDataBlock>& info_data_ptr,
+                                      std::unique_ptr<const DataMemoryBlock>& mem_blk_ptr) const {
 
   for (auto const& [ident, info_item] : getInfoHeader()->getConstMap()) {
 
@@ -562,6 +555,129 @@ void kgl::EvidenceFactory::debugData(const VCFInfoParser& info_parser, std::uniq
 
         ExecEnv::log().error("EvidenceFactory::createVariantEvidence, Present in InfoData but absent from Parser, Field: {}, Number: {}, Type: {}, Info Size: {}",
                              field_item.infoVCF().ID, field_item.infoVCF().number, field_item.infoVCF().type, data_size);
+
+    }
+
+  }
+
+
+  for (auto const& [ident, info_item] : getInfoHeader()->getConstMap()) {
+
+
+    InfoDataVariant item_data = info_item.getData(*info_data_ptr);
+    InfoDataVariant new_item_data = info_item.getNewData(*mem_blk_ptr);
+    if (item_data != new_item_data) {
+
+      // check the variant index.
+
+      if (item_data.index() != new_item_data.index()) {
+
+        ExecEnv::log().error("InfoEvidenceHeader::debugReturnAll, Info Field: {}, handle: {}  info data index: {} not equal to mem blk index: {}"
+        , ident, info_item.getDataHandle().handleId(), item_data.index(), new_item_data.index());
+
+      } else { // check values.
+
+        switch(info_item.dataType()) {
+
+          case InfoEvidenceExtern::Boolean:
+            if (std::get<bool>(item_data) != std::get<bool>(new_item_data)) {
+
+              ExecEnv::log().error("InfoEvidenceHeader::debugReturnAll, Boolean difference Old: {} New: {}"
+              , std::get<bool>(item_data) ? "True" : "False", std::get<bool>(new_item_data) ? "True" : "False");
+
+            }
+            break;
+
+          case InfoEvidenceExtern::FloatArray:
+            if (std::get<std::vector<double>>(item_data).size() != std::get<std::vector<double>>(new_item_data).size()) {
+
+              ExecEnv::log().error("InfoEvidenceHeader::debugReturnAll, Ident: {}, Float Difference Vector Size, Old: {} New: {}"
+              , ident, std::get<std::vector<double>>(item_data).size(), std::get<std::vector<double>>(new_item_data).size());
+
+              if (std::get<std::vector<double>>(item_data).size() == 1) {
+
+                ExecEnv::log().error("InfoEvidenceHeader::debugReturnAll, Ident: {}, Float Value[0], Old: {} "
+                , ident, std::get<std::vector<double>>(item_data)[0]);
+
+              }
+
+
+            } else {
+
+              size_t index = 0;
+              for (auto float_val : std::get<std::vector<double>>(item_data)) {
+
+                if (float_val != std::get<std::vector<double>>(new_item_data)[index]) {
+
+                  ExecEnv::log().error("InfoEvidenceHeader::debugReturnAll, Float Vector element mismatch index: {}, Old: {} New: {}"
+                  , index, float_val, std::get<std::vector<double>>(new_item_data)[index]);
+
+                }
+
+                ++index;
+
+              }
+
+            }
+            break;
+
+          case InfoEvidenceExtern::IntegerArray:
+            if (std::get<std::vector<int64_t>>(item_data).size() != std::get<std::vector<int64_t>>(new_item_data).size()) {
+
+              ExecEnv::log().error("InfoEvidenceHeader::debugReturnAll, Integer Difference Vector Size, Old: {} New: {}"
+              , std::get<std::vector<int64_t>>(item_data).size(), std::get<std::vector<int64_t>>(new_item_data).size());
+
+            } else {
+
+              size_t index = 0;
+              for (auto integer_val : std::get<std::vector<int64_t>>(item_data)) {
+
+                if (integer_val != std::get<std::vector<int64_t>>(new_item_data)[index]) {
+
+                  ExecEnv::log().error("InfoEvidenceHeader::debugReturnAll, Integer Vector element mismatch index: {}, Old: {} New: {}"
+                  , index, integer_val, std::get<std::vector<int64_t>>(new_item_data)[index]);
+
+                }
+
+                ++index;
+
+              }
+
+            }
+            break;
+
+          case InfoEvidenceExtern::StringArray:
+            if (std::get<std::vector<std::string>>(item_data).size() != std::get<std::vector<std::string>>(new_item_data).size()) {
+
+              ExecEnv::log().error("InfoEvidenceHeader::debugReturnAll, String Difference Vector Size, Old: {} New: {}"
+              , std::get<std::vector<std::string>>(item_data).size(), std::get<std::vector<std::string>>(new_item_data).size());
+
+            } else {
+
+              size_t index = 0;
+              for (auto string_val : std::get<std::vector<std::string>>(item_data)) {
+
+                if (string_val != std::get<std::vector<std::string>>(new_item_data)[index]) {
+
+                  ExecEnv::log().error("InfoEvidenceHeader::debugReturnAll, String Vector element mismatch index: {}, Old: {} New: {}"
+                  , index, string_val, std::get<std::vector<std::string>>(new_item_data)[index]);
+
+                }
+
+                ++index;
+
+              }
+
+            }
+            break;
+
+          case InfoEvidenceExtern::NotImplemented:
+            ExecEnv::log().error("InfoEvidenceHeader::debugReturnAll, Data type is 'Not Implemented'");
+            break;
+
+        }
+
+      }
 
     }
 

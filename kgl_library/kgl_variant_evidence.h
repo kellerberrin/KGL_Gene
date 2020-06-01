@@ -69,7 +69,7 @@ class VariantEvidence { // Top level object.
 public:
 
   VariantEvidence( size_t vcf_record_count,
-                   std::optional<std::shared_ptr<InfoDataBlock>> info_data_block,
+                   InfoDataEvidence info_data_block,
                    std::optional<std::shared_ptr<FormatData>> format_data,
                    uint32_t alternate_variant_index = 0,
                    uint32_t alternate_variant_count = 1)
@@ -86,7 +86,7 @@ public:
 
   [[nodiscard]] size_t vcfRecordCount() const { return vcf_record_count_; }
 
-  [[nodiscard]] std::optional<std::shared_ptr<const InfoDataBlock>> infoData() const { return info_data_block_; }
+  [[nodiscard]] InfoDataEvidence infoData() const { return info_data_block_; }
 
   [[nodiscard]] std::optional<std::shared_ptr<const FormatData>> formatData() const { return format_data_; }
 
@@ -97,7 +97,7 @@ public:
 private:
 
   size_t vcf_record_count_; // The VCF line count, the original file line record that generated this variant.
-  std::optional<std::shared_ptr<InfoDataBlock>> info_data_block_;   // INFO data items, may be missing.
+  InfoDataEvidence info_data_block_;   // INFO data items, may be missing.
   std::optional<std::shared_ptr<FormatData>> format_data_;  // Format data items, may be missing.
   // Zero based index. Which of the alternate variants (from left to right in the comma delimited alt field) is this variant.
   // These variables can be used to access Info field vectors that are designated Type='A' for alternate allele.

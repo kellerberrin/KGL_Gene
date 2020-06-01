@@ -281,7 +281,7 @@ public:
                           dynamic_resource_ptr_(std::move(dynamic_resource_ptr)) {}
   ~InfoResourceAllocator() = default;
 
-  [[nodiscard]] std::optional<const InfoResourceHandle> resourceRequest(DataResourceType resource_type, DataDynamicType dynamic_type, size_t data_size);
+  [[nodiscard]] const InfoResourceHandle resourceRequest(DataResourceType resource_type, DataDynamicType dynamic_type, size_t data_size);
 
   [[nodiscard]] size_t allocateResource(size_t size) { return  fixed_resource_ptr_->allocateResource(size); }
 
@@ -314,7 +314,7 @@ public:
       dynamic_resource_ptr_(std::move(dynamic_resource_ptr))  {}
   ~InfoStringAllocator() = default;
 
-  [[nodiscard]] std::optional<const InfoResourceHandle> resourceRequest(DataResourceType resource_type, DataDynamicType dynamic_type, size_t data_size);
+  [[nodiscard]] const InfoResourceHandle resourceRequest(DataResourceType resource_type, DataDynamicType dynamic_type, size_t data_size);
 
   void allocateStringChars(size_t size, const InfoParserToken& token);
   [[nodiscard]] size_t allocateViews(size_t size) { return view_resource_ptr_->allocateViews(size); }
@@ -346,7 +346,7 @@ public:
   InfoMemoryResource& operator=(const InfoMemoryResource& copy) = delete;
 
 // The initial resource request from a subscribed data item (this is only done once).
-  [[nodiscard]] std::optional<const InfoResourceHandle> resourceRequest( DataResourceType resource_type, DataDynamicType dynamic_type, size_t data_size);
+  [[nodiscard]] const InfoResourceHandle resourceRequest( DataResourceType resource_type, DataDynamicType dynamic_type, size_t data_size);
 // FixedDynamic fields can request a dynamic data block if runtime data size mis-matches pre-allocated data size.
   void requestDynamic(InfoArrayIndex array_index) { array_memory_->queueResource(array_index); }
 // Resolves static data sizes with runtime data sizes.

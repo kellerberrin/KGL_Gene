@@ -46,18 +46,18 @@ public:
   constexpr static const InfoParserInteger MISSING_VALUE_INTEGER_ = std::numeric_limits<InfoParserInteger>::lowest();
 
   // Implementation functions that retrieve data for each internal data type.
-  bool getBoolean(InfoResourceHandle& handle) const;
-  std::vector<int64_t> getInteger(InfoResourceHandle& handle) const;
-  std::vector<double> getFloat(InfoResourceHandle& handle) const;
-  std::vector<std::string> getString(InfoResourceHandle& handle) const;
+  bool getBoolean(const InfoResourceHandle& handle) const;
+  std::vector<int64_t> getInteger(const InfoResourceHandle& handle) const;
+  std::vector<double> getFloat(const InfoResourceHandle& handle) const;
+  std::vector<std::string> getString(const InfoResourceHandle& handle) const;
 
-  [[nodiscard]] const MemDataUsage& getUsageCount() const { return type_count_; }
+  [[nodiscard]] const MemDataUsage& getUsageCount() const { return mem_count_; }
 
 private:
 
 
   std::shared_ptr<const InfoEvidenceHeader> info_evidence_header_; // The data header and indexing structure.
-  MemDataUsage type_count_;  // Size count object.
+  MemDataUsage mem_count_;  // Size count object.
 
   // Raw memory to efficiently store the info data.
   std::unique_ptr<char[]> char_memory_;
@@ -67,7 +67,7 @@ private:
   std::unique_ptr<std::string_view[]> string_memory_;
 
   // Lookup the array index.
-  [[nodiscard]] const InfoArrayIndex& findIdentifier(size_t identifier) const;
+  [[nodiscard]] std::optional<const InfoArrayIndex> findArrayIndex(size_t identifier) const;
 
   // Data write functions. Write the content of a parser token into the data block.
   void storeBoolean(const InfoMemoryResource& memory_resource, const InfoResourceHandle& handle, std::optional<const InfoParserToken> token);

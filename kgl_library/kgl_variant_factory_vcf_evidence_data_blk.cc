@@ -16,17 +16,17 @@ kgl::DataMemoryBlock::DataMemoryBlock( std::shared_ptr<const InfoEvidenceHeader>
                                        : info_evidence_header_(std::move(info_evidence_header)) {
 
   // booleans and strings are both implemented as type char
-  type_count_.charCount(memory_resource.boolSize() + memory_resource.charSize());
-  type_count_.floatCount(memory_resource.floatSize());
-  type_count_.stringCount(memory_resource.viewSize());
-  type_count_.integerCount(memory_resource.integerSize());
-  type_count_.arrayCount(memory_resource.arraySize());
+  mem_count_.charCount(memory_resource.boolSize() + memory_resource.charSize());
+  mem_count_.floatCount(memory_resource.floatSize());
+  mem_count_.stringCount(memory_resource.viewSize());
+  mem_count_.integerCount(memory_resource.integerSize());
+  mem_count_.arrayCount(memory_resource.arraySize());
   // Perform actual memory allocation.
-  char_memory_ = std::make_unique<char[]>(type_count_.charCount());
-  integer_memory_ = std::make_unique<InfoIntegerType[]>(type_count_.integerCount());
-  float_memory_ = std::make_unique<InfoFloatType[]>(type_count_.floatCount()) ;
-  array_memory_ = std::make_unique<InfoArrayIndex[]>(type_count_.arrayCount());
-  string_memory_ = std::make_unique<std::string_view[]>(type_count_.stringCount());
+  char_memory_ = std::make_unique<char[]>(mem_count_.charCount());
+  integer_memory_ = std::make_unique<InfoIntegerType[]>(mem_count_.integerCount());
+  float_memory_ = std::make_unique<InfoFloatType[]>(mem_count_.floatCount()) ;
+  array_memory_ = std::make_unique<InfoArrayIndex[]>(mem_count_.arrayCount());
+  string_memory_ = std::make_unique<std::string_view[]>(mem_count_.stringCount());
   // Copy the array blocks.
   // The dynamicAllocation() map ensures that copied array memory blocks will be sorted in ascending identifier order.
   // We can use a binary search for fast access.
@@ -47,22 +47,22 @@ kgl::DataMemoryBlock::DataMemoryBlock( std::shared_ptr<const InfoEvidenceHeader>
     // Lookup the matching data token.
     std::optional<const InfoParserToken> token = info_parser.getToken(data_identifier);
 
-    switch(data_item.getDataHandle()->resourceType()) {
+    switch(data_item.getDataHandle().resourceType()) {
 
       case DataResourceType::Boolean:
-        storeBoolean(memory_resource, data_item.getDataHandle().value(), token);
+        storeBoolean(memory_resource, data_item.getDataHandle(), token);
         break;
 
       case DataResourceType::Integer:
-        storeInteger(data_item.getDataHandle().value(), token);
+        storeInteger(data_item.getDataHandle(), token);
         break;
 
       case DataResourceType::Float:
-        storeFloat(data_item.getDataHandle().value(), token);
+        storeFloat(data_item.getDataHandle(), token);
         break;
 
       case DataResourceType::String:
-        storeString(data_item.getDataHandle().value(), token, string_usage);
+        storeString(data_item.getDataHandle(), token, string_usage);
         break;
 
     }
@@ -72,20 +72,27 @@ kgl::DataMemoryBlock::DataMemoryBlock( std::shared_ptr<const InfoEvidenceHeader>
 }
 
 // Binary lookup on the array index.
-const kgl::InfoArrayIndex& kgl::DataMemoryBlock::findIdentifier(size_t identifier) const {
+std::optional<const kgl::InfoArrayIndex> kgl::DataMemoryBlock::findArrayIndex(size_t identifier) const {
 
   const auto comp = [](const InfoArrayIndex& a, const InfoArrayIndex& b) -> bool { return a.infoVariableIndex() < b.infoVariableIndex(); };
 
-  auto result_pair = std::equal_range(&array_memory_[0],&array_memory_[type_count_.arrayCount()], InfoArrayIndex(identifier, 0, 0), comp);
+  auto result = std::lower_bound(&array_memory_[0], &array_memory_[mem_count_.arrayCount()], InfoArrayIndex(identifier, 0, 0), comp);
 
-  if (result_pair.first->infoVariableIndex() == identifier) {
+  if (result == &array_memory_[mem_count_.arrayCount()]) {
 
-    return *result_pair.first;
+    return std::nullopt;
 
   } else {
 
-    ExecEnv::log().error("DataMemoryBlock::findIdentifier, Identifier lookup failed");
-    return *result_pair.first;
+    if (result->infoVariableIndex() == identifier) {
+
+      return *result;
+
+    } else {
+
+      return std::nullopt;
+
+    }
 
   }
 
@@ -121,10 +128,10 @@ void kgl::DataMemoryBlock::storeString(const InfoResourceHandle& handle, std::op
 
   if (handle.dynamicType() == DataDynamicType::FixedData) {
 
-    if (handle.initialDataOffset() >= type_count_.stringCount()) {
+    if (handle.initialDataOffset() >= mem_count_.stringCount()) {
 
-      ExecEnv::log().error( "DataMemoryBlock::storeString, Data Offset: {} exceeds maximum calculated string view offset: {}",
-                            handle.initialDataOffset(), type_count_.stringCount());
+      ExecEnv::log().error("DataMemoryBlock::storeString, Data Offset: {} exceeds maximum calculated string view offset: {}",
+                           handle.initialDataOffset(), mem_count_.stringCount());
       return;
 
     }
@@ -133,10 +140,10 @@ void kgl::DataMemoryBlock::storeString(const InfoResourceHandle& handle, std::op
     size_t string_size = token ? token.value().first.size() : 0;
     size_t string_offset = string_usage.allocateResource(string_size); // increments to the next string.
 
-    if (string_usage.resourceValue() > type_count_.charCount()) {
+    if (string_usage.resourceValue() > mem_count_.charCount()) {
 
-      ExecEnv::log().error( "DataMemoryBlock::storeString, Data Offset: {} exceeds maximum calculated string view offset: {}",
-                            string_usage.resourceValue(), type_count_.charCount());
+      ExecEnv::log().error("DataMemoryBlock::storeString, Data Offset: {} exceeds maximum calculated string view offset: {}",
+                           string_usage.resourceValue(), mem_count_.charCount());
       return;
 
     }
@@ -154,14 +161,23 @@ void kgl::DataMemoryBlock::storeString(const InfoResourceHandle& handle, std::op
 
   } else if (handle.dynamicType() == DataDynamicType::DynamicData) {
 
-    const InfoArrayIndex& array_index = findIdentifier(handle.handleId());
+    std::optional<const InfoArrayIndex> array_index_opt = findArrayIndex(handle.handleId());
+
+    if (not array_index_opt) {
+
+      ExecEnv::log().error("DataMemoryBlock::storeString, Array index for data item handle: {} not found", handle.handleId());
+      return;
+
+    }
+
+    const InfoArrayIndex array_index = array_index_opt.value();
 
     // Ensure we have space in the string view vector for all the strings.
-    if (array_index.infoOffset() + array_index.infoSize() > type_count_.stringCount()) {
+    if (array_index.infoOffset() + array_index.infoSize() > mem_count_.stringCount()) {
 
       ExecEnv::log().error(
       "DataMemoryBlock::storeString, Identifier: {} Array Offset: {} + Size: {} ({})exceeds maximum calculated string view offset: {}",
-      handle.handleId(), array_index.infoOffset(), array_index.infoSize(), (array_index.infoOffset() + array_index.infoSize()), type_count_.stringCount());
+      handle.handleId(), array_index.infoOffset(), array_index.infoSize(), (array_index.infoOffset() + array_index.infoSize()), mem_count_.stringCount());
       return;
 
     }
@@ -196,11 +212,11 @@ void kgl::DataMemoryBlock::storeString(const InfoResourceHandle& handle, std::op
 
         size_t string_offset = string_usage.allocateResource(str_view.size()); // increments to the next string.
 
-        if (string_usage.resourceValue() > type_count_.charCount()) {
+        if (string_usage.resourceValue() > mem_count_.charCount()) {
 
           ExecEnv::log().error(
           "DataMemoryBlock::storeString, Data Offset: {} exceeds maximum calculated string view offset: {}",
-          string_usage.resourceValue(), type_count_.charCount());
+          string_usage.resourceValue(), mem_count_.charCount());
           return;
 
         }
@@ -239,10 +255,10 @@ void kgl::DataMemoryBlock::storeInteger(const InfoResourceHandle& handle, std::o
 
   if (handle.dynamicType() == DataDynamicType::FixedData and handle.initialDataSize() == 1) {
 
-    if (handle.initialDataOffset() >= type_count_.integerCount()) {
+    if (handle.initialDataOffset() >= mem_count_.integerCount()) {
 
-      ExecEnv::log().error( "DataMemoryBlock::storeInteger, Data Offset: {} exceeds maximum calculated integer offset: {}",
-                            handle.initialDataOffset(), type_count_.integerCount());
+      ExecEnv::log().error("DataMemoryBlock::storeInteger, Data Offset: {} exceeds maximum calculated integer offset: {}",
+                           handle.initialDataOffset(), mem_count_.integerCount());
       return;
 
     }
@@ -267,10 +283,10 @@ void kgl::DataMemoryBlock::storeInteger(const InfoResourceHandle& handle, std::o
 
   } if (handle.dynamicType() == DataDynamicType::FixedDynamic) {
 
-    if (handle.initialDataOffset() >= type_count_.integerCount()) {
+    if (handle.initialDataOffset() >= mem_count_.integerCount()) {
 
-      ExecEnv::log().error( "DataMemoryBlock::storeInteger, Data Offset: {} exceeds maximum calculated integer offset: {}",
-                            handle.initialDataOffset(), type_count_.integerCount());
+      ExecEnv::log().error("DataMemoryBlock::storeInteger, Data Offset: {} exceeds maximum calculated integer offset: {}",
+                           handle.initialDataOffset(), mem_count_.integerCount());
       return;
 
     }
@@ -279,12 +295,21 @@ void kgl::DataMemoryBlock::storeInteger(const InfoResourceHandle& handle, std::o
 
       if (token.value().second > 1) {  // Implemented as an array.
 
-        const InfoArrayIndex& array_index = findIdentifier(handle.handleId());
+        std::optional<const InfoArrayIndex> array_index_opt = findArrayIndex(handle.handleId());
 
-        if (array_index.infoOffset() + array_index.infoSize() > type_count_.integerCount()) {
+        if (not array_index_opt) {
+
+          ExecEnv::log().error("DataMemoryBlock::storeString, Array index for data item handle: {} not found", handle.handleId());
+          return;
+
+        }
+
+        const InfoArrayIndex array_index = array_index_opt.value();
+
+        if (array_index.infoOffset() + array_index.infoSize() > mem_count_.integerCount()) {
 
           ExecEnv::log().error("DataMemoryBlock::storeInteger, Array Offset: {} + Array Size: {} exceeds Integer Array Size: {}",
-                               array_index.infoOffset(), array_index.infoSize(), type_count_.integerCount());
+                               array_index.infoOffset(), array_index.infoSize(), mem_count_.integerCount());
           return;
 
         }
@@ -326,13 +351,22 @@ void kgl::DataMemoryBlock::storeInteger(const InfoResourceHandle& handle, std::o
 
   } if (handle.dynamicType() == DataDynamicType::DynamicData) {
 
-    const InfoArrayIndex &array_index = findIdentifier(handle.handleId());
+    std::optional<const InfoArrayIndex> array_index_opt = findArrayIndex(handle.handleId());
 
-    if (array_index.infoOffset() + array_index.infoSize() > type_count_.integerCount()) {
+    if (not array_index_opt) {
+
+      ExecEnv::log().error("DataMemoryBlock::storeString, Array index for data item handle: {} not found", handle.handleId());
+      return;
+
+    }
+
+    const InfoArrayIndex array_index = array_index_opt.value();
+
+    if (array_index.infoOffset() + array_index.infoSize() > mem_count_.integerCount()) {
 
       ExecEnv::log().error(
       "DataMemoryBlock::storeInteger, Array Offset: {} + Array Size: {} exceeds Integer Array Size: {}",
-      array_index.infoOffset(), array_index.infoSize(), type_count_.integerCount());
+      array_index.infoOffset(), array_index.infoSize(), mem_count_.integerCount());
       return;
 
     }
@@ -377,10 +411,10 @@ void kgl::DataMemoryBlock::storeFloat(const InfoResourceHandle& handle, std::opt
 
   if (handle.dynamicType() == DataDynamicType::FixedData and handle.initialDataSize() == 1) {
 
-    if (handle.initialDataOffset() >= type_count_.floatCount()) {
+    if (handle.initialDataOffset() >= mem_count_.floatCount()) {
 
-      ExecEnv::log().error( "DataMemoryBlock::storeFloat, Data Offset: {} exceeds maximum calculated integer offset: {}",
-                            handle.initialDataOffset(), type_count_.floatCount());
+      ExecEnv::log().error("DataMemoryBlock::storeFloat, Data Offset: {} exceeds maximum calculated integer offset: {}",
+                           handle.initialDataOffset(), mem_count_.floatCount());
       return;
 
     }
@@ -405,10 +439,10 @@ void kgl::DataMemoryBlock::storeFloat(const InfoResourceHandle& handle, std::opt
 
   } if (handle.dynamicType() == DataDynamicType::FixedDynamic) {
 
-    if (handle.initialDataOffset() >= type_count_.floatCount()) {
+    if (handle.initialDataOffset() >= mem_count_.floatCount()) {
 
-      ExecEnv::log().error( "DataMemoryBlock::storeFloat, Data Offset: {} exceeds maximum calculated float offset: {}",
-                            handle.initialDataOffset(), type_count_.floatCount());
+      ExecEnv::log().error("DataMemoryBlock::storeFloat, Data Offset: {} exceeds maximum calculated float offset: {}",
+                           handle.initialDataOffset(), mem_count_.floatCount());
       return;
 
     }
@@ -417,12 +451,21 @@ void kgl::DataMemoryBlock::storeFloat(const InfoResourceHandle& handle, std::opt
 
       if (token.value().second > 1) {  // Implemented as an array.
 
-        const InfoArrayIndex& array_index = findIdentifier(handle.handleId());
+        std::optional<const InfoArrayIndex> array_index_opt = findArrayIndex(handle.handleId());
 
-        if (array_index.infoOffset() + array_index.infoSize() > type_count_.floatCount()) {
+        if (not array_index_opt) {
+
+          ExecEnv::log().error("DataMemoryBlock::storeString, Array index for data item handle: {} not found", handle.handleId());
+          return;
+
+        }
+
+        const InfoArrayIndex array_index = array_index_opt.value();
+
+        if (array_index.infoOffset() + array_index.infoSize() > mem_count_.floatCount()) {
 
           ExecEnv::log().error("DataMemoryBlock::storeFloat, Array Offset: {} + Array Size: {} exceeds Float Array Size: {}",
-                               array_index.infoOffset(), array_index.infoSize(), type_count_.floatCount());
+                               array_index.infoOffset(), array_index.infoSize(), mem_count_.floatCount());
           return;
 
         }
@@ -464,13 +507,22 @@ void kgl::DataMemoryBlock::storeFloat(const InfoResourceHandle& handle, std::opt
 
   } if (handle.dynamicType() == DataDynamicType::DynamicData) {
 
-    const InfoArrayIndex &array_index = findIdentifier(handle.handleId());
+    std::optional<const InfoArrayIndex> array_index_opt = findArrayIndex(handle.handleId());
 
-    if (array_index.infoOffset() + array_index.infoSize() > type_count_.floatCount()) {
+    if (not array_index_opt) {
+
+      ExecEnv::log().error("DataMemoryBlock::storeString, Array index for data item handle: {} not found", handle.handleId());
+      return;
+
+    }
+
+    const InfoArrayIndex array_index = array_index_opt.value();
+
+    if (array_index.infoOffset() + array_index.infoSize() > mem_count_.floatCount()) {
 
       ExecEnv::log().error(
       "DataMemoryBlock::storeFloat, Array Offset: {} + Array Size: {} exceeds Float Array Size: {}",
-      array_index.infoOffset(), array_index.infoSize(), type_count_.floatCount());
+      array_index.infoOffset(), array_index.infoSize(), mem_count_.floatCount());
       return;
 
     }

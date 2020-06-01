@@ -227,13 +227,12 @@ bool kgl::DynamicResourceInstance::queueResource(InfoArrayIndex requested) {
 
 
 
-std::optional<const kgl::InfoResourceHandle> kgl::InfoResourceAllocator::resourceRequest(DataResourceType resource_type, DataDynamicType dynamic_type, size_t data_size) {
+const kgl::InfoResourceHandle kgl::InfoResourceAllocator::resourceRequest(DataResourceType resource_type, DataDynamicType dynamic_type, size_t data_size) {
 
   // Refuse allocation if a type mis-match.
   if (resource_type != resource_type_) {
 
     ExecEnv::log().error("InfoResourceAllocator::resourceRequest, mis-matched resource allocation requested, no data allocated");
-    return std::nullopt;
 
   }
 
@@ -256,13 +255,12 @@ std::optional<const kgl::InfoResourceHandle> kgl::InfoResourceAllocator::resourc
 }
 
 
-std::optional<const kgl::InfoResourceHandle> kgl::InfoStringAllocator::resourceRequest(DataResourceType resource_type, DataDynamicType dynamic_type, size_t data_size) {
+const kgl::InfoResourceHandle kgl::InfoStringAllocator::resourceRequest(DataResourceType resource_type, DataDynamicType dynamic_type, size_t data_size) {
 
   // Refuse allocation if a type mis-match.
   if (resource_type_ != DataResourceType::String) {
 
     ExecEnv::log().error("InfoStringAllocator::resourceRequest, mis-matched resource allocation requested, no data allocated");
-    return std::nullopt;
 
   }
 
@@ -306,9 +304,9 @@ void kgl::InfoStringAllocator::allocateStringChars(size_t size, const InfoParser
 
 
 // The initial resource request.
-std::optional<const kgl::InfoResourceHandle> kgl::InfoMemoryResource::resourceRequest( DataResourceType resource_type,
-                                                                                       DataDynamicType dynamic_type,
-                                                                                       size_t data_size) {
+const kgl::InfoResourceHandle kgl::InfoMemoryResource::resourceRequest( DataResourceType resource_type,
+                                                                        DataDynamicType dynamic_type,
+                                                                        size_t data_size) {
 
   switch (resource_type) {
 
@@ -321,12 +319,11 @@ std::optional<const kgl::InfoResourceHandle> kgl::InfoMemoryResource::resourceRe
     case DataResourceType::Float:
       return float_allocator_->resourceRequest(resource_type, dynamic_type, data_size);
 
+    default:
     case DataResourceType::String:
       return string_allocator_->resourceRequest(resource_type, dynamic_type, data_size);
 
   }
-
-  return std::nullopt;
 
 }
 

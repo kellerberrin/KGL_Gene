@@ -10,6 +10,8 @@
 #include "kgl_variant_factory_vcf_parse_header.h"
 #include "kgl_variant_factory_vcf_parse_info.h"
 #include "kgl_variant_factory_vcf_evidence_data_mem.h"
+#include "kgl_variant_factory_vcf_evidence_data_blk.h"
+
 
 #include <string>
 #include <array>
@@ -60,8 +62,10 @@ public:
     return info_data_block.getDataSize(fieldAddress(), fieldIndexId(), evidenceType().InternalInfoType()); }
   // Returns a std::variant containing the data which then can be indexed by the data type enum above.
   // Array is zero sized when there was no data item available.
-  [[nodiscard]]  InfoDataVariant getData(const InfoDataBlock&) const;
+  [[nodiscard]]  InfoDataVariant getData(const InfoDataBlock& data_block) const;
   // The header object that can access all subscribed Info data items.
+  [[nodiscard]]  InfoDataVariant getNewData(const DataMemoryBlock& memory_block) const;
+
   std::shared_ptr<const InfoEvidenceHeader> getDataHeader() const { return info_evidence_header_; }
 
   // Need to limit visibility to these members.
@@ -71,7 +75,7 @@ public:
   [[nodiscard]] size_t fieldAddress() const { return field_address_; }
   [[nodiscard]] size_t fieldIndexId() const { return field_index_; }
 
-  const std::optional<InfoResourceHandle>& getDataHandle() const { return m_data_handle_; }
+  const InfoResourceHandle& getDataHandle() const { return m_data_handle_; }
 
 private:
 
@@ -81,9 +85,9 @@ private:
   std::shared_ptr<const InfoEvidenceHeader> info_evidence_header_; // Ensure the index knows which header it belongs to.
   size_t field_address_{0};  // Permanent index into the InfoDataBlock object.
   size_t field_index_{0};  // Unique id integer.
-  const std::optional<InfoResourceHandle> m_data_handle_;
+  InfoResourceHandle m_data_handle_;
 
-  std::optional<InfoResourceHandle> requestResourceHandle(ManageInfoData& manage_info_data);
+  InfoResourceHandle requestResourceHandle(ManageInfoData& manage_info_data);
 
 };
 
@@ -138,6 +142,8 @@ public:
   [[nodiscard]] std::unique_ptr<InfoDataBlock> setupAndLoad( const VCFInfoParser& info_parser,
                                                              std::shared_ptr<const InfoEvidenceHeader> evidence_ptr) const;
 
+  [[nodiscard]] std::unique_ptr<const DataMemoryBlock> createMemoryBlock( const VCFInfoParser& info_parser,
+                                                                          std::shared_ptr<const InfoEvidenceHeader> evidence_ptr) const;
 
   [[nodiscard]] InfoMemoryResource& resourceAllocator() { return resource_allocator_; }
 
@@ -168,7 +174,7 @@ private:
 
 // createVariantEvidence() either returns a single data block, InfoDataBlock for a single alternate allele or
 // a MultipleAlleleDataBlock data block for a multiple alternative allele VCF record.
-using InfoDataEvidence = std::optional<std::shared_ptr<InfoDataBlock>>;
+using InfoDataEvidence = std::optional<std::shared_ptr<const DataMemoryBlock>>;
 class EvidenceFactory {
 
 public:
@@ -203,7 +209,9 @@ private:
   constexpr static const char *NO_FIELD_SUBSCRIBED_ = "NONE";
 
   // Remove after testing.
-  void debugData(const VCFInfoParser& info_parser, std::unique_ptr<InfoDataBlock>& info_data_ptr) const;
+  void debugData( const VCFInfoParser& info_parser,
+                  std::unique_ptr<InfoDataBlock>& info_data_ptr,
+                  std::unique_ptr<const DataMemoryBlock>& mem_blk_ptr) const;
 
 };
 
