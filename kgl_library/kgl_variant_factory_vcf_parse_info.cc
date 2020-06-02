@@ -342,15 +342,28 @@ kgl::InfoParserInteger kgl::VCFInfoParser::convertToInteger(const std::string& v
 
 kgl::InfoParserFloat kgl::VCFInfoParser::convertToFloat(const std::string& value) {
 
+  // Treat text 'NaN's as missing values.
+  if (value.size() == 3) {
+
+    const std::string uc_nan{"NAN"};
+    if (Utility::toupper(value) == uc_nan) {
+
+      return MISSING_VALUE_FLOAT;
+
+    }
+
+  }
+
   try {
 
 #ifdef USE_64BIT_TYPES
 
-    return std::stod(std::string(value));
+    return std::stod(value);
 
 #else
 
-    return std::stof(std::string(value));
+
+    return std::stof(value);
 
 #endif
 

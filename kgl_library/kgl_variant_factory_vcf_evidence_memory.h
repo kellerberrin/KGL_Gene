@@ -16,54 +16,6 @@ namespace kellerberrin::genome {   //  organization level namespace
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This object manages the storage of individual Info fields from the raw data allocated below.
 
-struct InfoDataUsageCount {
-
-public:
-
-  InfoDataUsageCount() = default;
-  ~InfoDataUsageCount() = default;
-
-  bool operator==(const InfoDataUsageCount& cmp) const;
-
-  [[nodiscard]] size_t unityArrayCount() const { return unity_array_count_; }
-  [[nodiscard]] size_t arrayCount() const { return array_count_; }
-  [[nodiscard]] size_t floatCount() const { return float_count_; }
-  [[nodiscard]] size_t integerCount() const { return integer_count_; }
-  [[nodiscard]] size_t stringCount() const { return string_count_; }
-  [[nodiscard]] size_t charCount() const { return char_count_; }
-
-  void unityArrayCountAdd(size_t count) { unity_array_count_ += count; }
-  void arrayCountAdd(size_t count) { array_count_ += count; }
-  void floatCountAdd(size_t count) { float_count_ += count; }
-  void integerCountAdd(size_t count) { integer_count_ += count; }
-  void stringCountAdd(size_t count) { string_count_ += count; }
-  void charCountAdd(size_t count) { char_count_ += count; }
-
-  // Notionally allocates data on the 5 data arrays and returns a data block
-  // The function is to be used sequentially on all subscribed variables.
-  // The final values are used to actually allocate memory in the InfoDataBlock object.
-
-  // Set up the indexes and pre-allocate fixed sized fields (run once for all fields)
-  [[nodiscard]] size_t staticIncrementAndAllocate(InfoEvidenceIntern internal_type);
-
-  // Allocate additional memory space at runtime run for every Info field parsed.
-  // Sets up all the array indexes and verifies the size of the total allocated memory.
-  [[nodiscard]] bool dynamicIncrementAndAllocate(size_t data_size, InfoEvidenceIntern internal_type, const InfoParserToken &token);
-
-private:
-
-  size_t unity_array_count_{0};
-  size_t array_count_{0};
-  size_t float_count_{0};
-  size_t integer_count_{0};
-  size_t string_count_{0};
-  size_t char_count_{0};
-
-};
-
-
-
-
 class MemDataUsage {
 
 public:

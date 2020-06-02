@@ -181,9 +181,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_vcf_evidence_data.h
         kgl_library/kgl_variant_factory_vcf_evidence_memory.cc
         kgl_library/kgl_variant_factory_vcf_evidence_memory.h
-        kgl_library/kgl_variant_factory_vcf_evidence_data_mem.cc
-        kgl_library/kgl_variant_factory_vcf_evidence_data_mem.h
-        kgl_library/kgl_variant_factory_vcf_evidence_data_read.cc
         kgl_library/kgl_variant_factory_vcf_evidence_data_blk.cc
         kgl_library/kgl_variant_factory_vcf_evidence_data_blk.h kgl_library/kgl_variant_factory_vcf_evidence_data_blk_read.cc)
 

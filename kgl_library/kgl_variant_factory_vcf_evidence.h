@@ -9,7 +9,6 @@
 #include "kel_exec_env.h"
 #include "kgl_variant_factory_vcf_parse_header.h"
 #include "kgl_variant_factory_vcf_parse_info.h"
-#include "kgl_variant_factory_vcf_evidence_data_mem.h"
 #include "kgl_variant_factory_vcf_evidence_data_blk.h"
 
 
@@ -58,22 +57,13 @@ public:
   // Index into the variant type.
   [[nodiscard]] size_t dataIndex() const { return static_cast<size_t>(dataType()); }
   // The array size that will be returned. Zero if missing data.
-  [[nodiscard]]  size_t dataSize(const InfoDataBlock& info_data_block) const {
-    return info_data_block.getDataSize(fieldAddress(), fieldIndexId(), evidenceType().InternalInfoType()); }
   // Returns a std::variant containing the data which then can be indexed by the data type enum above.
-  // Array is zero sized when there was no data item available.
-  [[nodiscard]]  InfoDataVariant getData(const InfoDataBlock& data_block) const;
-  // The header object that can access all subscribed Info data items.
   [[nodiscard]]  InfoDataVariant getNewData(const DataMemoryBlock& memory_block) const;
 
   std::shared_ptr<const InfoEvidenceHeader> getDataHeader() const { return info_evidence_header_; }
 
   // Need to limit visibility to these members.
-  void fieldAddress(size_t field_address) { field_address_ = field_address; }
-  void fieldIndexId(size_t field_index) { field_index_ = field_index; }
-  [[nodiscard]] InfoEvidenceType evidenceType() const { return type_; }
-  [[nodiscard]] size_t fieldAddress() const { return field_address_; }
-  [[nodiscard]] size_t fieldIndexId() const { return field_index_; }
+   [[nodiscard]] InfoEvidenceType evidenceType() const { return type_; }
 
   const InfoResourceHandle& getDataHandle() const { return m_data_handle_; }
 
@@ -83,9 +73,7 @@ private:
   const VCFInfoRecord vcfInfoRecord_;  // The original VCF Header Record.
   const InfoEvidenceType type_;  // THe inferred subscriber type, external type and internal type.
   std::shared_ptr<const InfoEvidenceHeader> info_evidence_header_; // Ensure the index knows which header it belongs to.
-  size_t field_address_{0};  // Permanent index into the InfoDataBlock object.
-  size_t field_index_{0};  // Unique id integer.
-  InfoResourceHandle m_data_handle_;
+   InfoResourceHandle m_data_handle_;
 
   InfoResourceHandle requestResourceHandle(ManageInfoData& manage_info_data);
 
@@ -136,11 +124,6 @@ public:
   ManageInfoData() {}
   ~ManageInfoData() = default;
 
-  // Call this immediately after the evidence header has been created.
-  void setupStaticStorage(InfoEvidenceHeader& evidence_header);
-  // After the evidence header has been created, set variable ids, and addresses.
-  [[nodiscard]] std::unique_ptr<InfoDataBlock> setupAndLoad( const VCFInfoParser& info_parser,
-                                                             std::shared_ptr<const InfoEvidenceHeader> evidence_ptr) const;
 
   [[nodiscard]] std::unique_ptr<const DataMemoryBlock> createMemoryBlock( const VCFInfoParser& info_parser,
                                                                           std::shared_ptr<const InfoEvidenceHeader> evidence_ptr) const;
@@ -150,12 +133,6 @@ public:
 
 private:
 
-  [[nodiscard]] const InfoDataUsageCount& staticStorage() const { return static_storage_; }
-  [[nodiscard]] std::unique_ptr<InfoDataBlock> setupDynamicStorage( const VCFInfoParser& info_parser,
-                                                                    std::shared_ptr<const InfoEvidenceHeader> evidence_ptr) const;
-
-  InfoDataUsageCount static_storage_;
-
   // Initialized on creation of the EvidenceHeader.
   InfoMemoryResource resource_allocator_;
 
@@ -164,7 +141,6 @@ private:
   [[nodiscard]] InfoMemoryResource resolveResources(const VCFInfoParser& info_parser, const InfoEvidenceHeader& evidence_header) const;
 
 };
-
 
 
 
@@ -207,11 +183,6 @@ private:
 
   // If the user specifies just specifies "None" (case insensitive) then no Info fields will be subscribed.
   constexpr static const char *NO_FIELD_SUBSCRIBED_ = "NONE";
-
-  // Remove after testing.
-  void debugData( const VCFInfoParser& info_parser,
-                  std::unique_ptr<InfoDataBlock>& info_data_ptr,
-                  std::unique_ptr<const DataMemoryBlock>& mem_blk_ptr) const;
 
 };
 
