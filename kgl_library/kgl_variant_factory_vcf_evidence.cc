@@ -144,8 +144,9 @@ kgl::InfoResourceHandle kgl::InfoSubscribedField::requestResourceHandle(ManageIn
 
     case InfoEvidenceIntern::NotImplemented:  // unknown internal type.
     default:
-      ExecEnv::log().critical( "InfoSubscribedField::requestResourceHandle, Internal data type unknown, cannot obtain data handle");
-      break;
+      ExecEnv::log().error( "InfoSubscribedField::requestResourceHandle, Internal data type unknown, cannot obtain data handle");
+      // Just return a boolean descriptor.
+      return resource_allocator.resourceRequest(DataResourceType::Boolean, DataDynamicType::FixedData, 1);
   }
 
 }
@@ -458,7 +459,7 @@ void kgl::EvidenceFactory::debugData( const VCFInfoParser& info_parser,
     size_t data_size = field_item.dataSize(*info_data_ptr);
 
     auto token = info_parser.getToken(ident);
-
+////////////////////////////////////////////////
     if (token) {
 
       if (field_item.dataType() != InfoEvidenceExtern::Boolean and token.value().second != data_size) {
@@ -485,15 +486,28 @@ void kgl::EvidenceFactory::debugData( const VCFInfoParser& info_parser,
             std::vector<int64_t> int_vector = std::get<std::vector<int64_t>>(field_item.getData(*info_data_ptr));
             InfoParserIntegerArray integer_array = VCFInfoParser::getInfoIntegerArray(std::string(token.value().first));
 
-            for (size_t index = 0; index < integer_array.size(); ++index) {
+            if (int_vector.size() == integer_array.size()) {
 
-              if (int_vector[index] != integer_array[index]) {
+              for (size_t index = 0; index < integer_array.size(); ++index) {
 
-                ExecEnv::log().error("EvidenceFactory::createVariantEvidence, Info Integer: {} not equal Token integer: {}, Id: {}, Number: {}, Type: {}, Info Size: {}, Parser Size: {} Value: {}",
-                                     int_vector[index], integer_array[index], field_item.infoVCF().ID, field_item.infoVCF().number, field_item.infoVCF().type, data_size, token.value().second, std::string(token.value().first));
+                if (int_vector[index] != integer_array[index]) {
 
+                  ExecEnv::log().error(
+                  "EvidenceFactory::createVariantEvidence, Info Integer: {} not equal Token integer: {}, Id: {}, Number: {}, Type: {}, Info Size: {}, Parser Size: {} Value: {}",
+                  int_vector[index], integer_array[index], field_item.infoVCF().ID, field_item.infoVCF().number,
+                  field_item.infoVCF().type, data_size, token.value().second, std::string(token.value().first));
+
+
+                }
 
               }
+
+            } else if (not( int_vector.empty() and std::string(token.value().first) == ".")) {
+
+              ExecEnv::log().error(
+              "EvidenceFactory::createVariantEvidence, Info Integer Size: {} not equal Token Integer Size: {}, Id: {}, Number: {}, Type: {}, Info Size: {}, Parser Size: {} Value: {}",
+              int_vector.size(), integer_array.size(), field_item.infoVCF().ID, field_item.infoVCF().number,
+              field_item.infoVCF().type, data_size, token.value().second, std::string(token.value().first));
 
             }
 
@@ -505,15 +519,30 @@ void kgl::EvidenceFactory::debugData( const VCFInfoParser& info_parser,
             std::vector<std::string> string_vector = std::get<std::vector<std::string>>(field_item.getData(*info_data_ptr));
             std::vector<std::string_view> string_view_vector = VCFInfoParser::getInfoStringArray(token.value().first);
 
-            for (size_t index = 0; index < string_vector.size(); ++index) {
+            if (string_vector.size() == string_view_vector.size()) {
 
-              if (string_vector[index] != std::string(string_view_vector[index])) {
+              for (size_t index = 0; index < string_vector.size(); ++index) {
 
-                ExecEnv::log().error("EvidenceFactory::createVariantEvidence, Info String: {} not equal Token string: {}, Id: {}, Number: {}, Type: {}, Info Size: {}, Parser Size: {} Value: {}",
-                                     string_vector[index], std::string(string_view_vector[index]), field_item.infoVCF().ID, field_item.infoVCF().number, field_item.infoVCF().type, data_size, token.value().second, std::string(token.value().first));
+                if (string_vector[index] != std::string(string_view_vector[index])) {
 
+                  ExecEnv::log().error(
+                  "EvidenceFactory::createVariantEvidence, Info String: {} not equal Token string: {}, Id: {}, Number: {}, Type: {}, Info Size: {}, Parser Size: {} Value: {}",
+                  string_vector[index], std::string(string_view_vector[index]), field_item.infoVCF().ID,
+                  field_item.infoVCF().number, field_item.infoVCF().type, data_size, token.value().second,
+                  std::string(token.value().first));
+
+
+                }
 
               }
+
+            } else  {
+
+              ExecEnv::log().error(
+              "EvidenceFactory::createVariantEvidence, Info String Size: {} not equal Token String Size: {}, Id: {}, Number: {}, Type: {}, Info Size: {}, Parser Size: {} Value: {}",
+              string_vector.size(), string_view_vector.size(), field_item.infoVCF().ID,
+              field_item.infoVCF().number, field_item.infoVCF().type, data_size, token.value().second,
+              std::string(token.value().first));
 
             }
 
@@ -524,18 +553,32 @@ void kgl::EvidenceFactory::debugData( const VCFInfoParser& info_parser,
 
             std::vector<double> float_vector = std::get<std::vector<double>>(field_item.getData(*info_data_ptr));
             InfoParserFloatArray float_array =  VCFInfoParser::getInfoFloatArray(std::string(token.value().first));
-            for (size_t index = 0; index < float_array.size(); ++index) {
 
-              if (float_vector[index] != float_array[index]) {
+            if (float_vector.size() == float_array.size()) {
 
-                ExecEnv::log().error("EvidenceFactory::createVariantEvidence, Info Integer: {} not equal Token integer: {}, Id: {}, Number: {}, Type: {}, Info Size: {}, Parser Size: {} Value: {}",
-                                     float_vector[index], float_array[index], field_item.infoVCF().ID, field_item.infoVCF().number, field_item.infoVCF().type, data_size, token.value().second, std::string(token.value().first));
+              for (size_t index = 0; index < float_array.size(); ++index) {
 
+                if (float_vector[index] != float_array[index]) {
+
+                  ExecEnv::log().error(
+                  "EvidenceFactory::createVariantEvidence, Info Float: {} not equal Token Float: {}, Id: {}, Number: {}, Type: {}, Info Size: {}, Parser Size: {} Value: {}",
+                  float_vector[index], float_array[index], field_item.infoVCF().ID, field_item.infoVCF().number,
+                  field_item.infoVCF().type, data_size, token.value().second, std::string(token.value().first));
+
+
+                }
 
               }
 
-            }
+            } else if (not(float_vector.empty() and std::string(token.value().first) == ".")) {
 
+              ExecEnv::log().error(
+              "EvidenceFactory::createVariantEvidence, Info Float Size: {} not equal Token Float Size: {}, Id: {}, Number: {}, Type: {}, Info Size: {}, Parser Size: {} Value: {}",
+              float_vector.size(), float_array.size(), field_item.infoVCF().ID, field_item.infoVCF().number,
+              field_item.infoVCF().type, data_size, token.value().second, std::string(token.value().first));
+
+
+            }
 
           }
             break;
@@ -557,7 +600,7 @@ void kgl::EvidenceFactory::debugData( const VCFInfoParser& info_parser,
                              field_item.infoVCF().ID, field_item.infoVCF().number, field_item.infoVCF().type, data_size);
 
     }
-
+////////////////////////////////////////////////////////
   }
 
 
@@ -609,8 +652,18 @@ void kgl::EvidenceFactory::debugData( const VCFInfoParser& info_parser,
 
                 if (float_val != std::get<std::vector<double>>(new_item_data)[index]) {
 
-                  ExecEnv::log().error("InfoEvidenceHeader::debugReturnAll, Float Vector element mismatch index: {}, Old: {} New: {}"
-                  , index, float_val, std::get<std::vector<double>>(new_item_data)[index]);
+                  auto token = info_parser.getToken(ident);
+                  if (token) {
+
+                    ExecEnv::log().error("InfoEvidenceHeader::debugReturnAll, Float Vector element mismatch ident: {}, index: {}, Old: {} New: {}, Token: {}"
+                    , ident, index, float_val, std::get<std::vector<double>>(new_item_data)[index], std::string(token.value().first));
+
+                  } else {
+
+                    ExecEnv::log().error("InfoEvidenceHeader::debugReturnAll, Float Vector element mismatch ident: {}, index: {}, Old: {} New: {}, NoToken"
+                    , ident, index, float_val, std::get<std::vector<double>>(new_item_data)[index]);
+
+                  }
 
                 }
 
