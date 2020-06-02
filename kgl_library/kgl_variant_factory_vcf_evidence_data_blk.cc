@@ -277,7 +277,7 @@ void kgl::DataMemoryBlock::storeInteger(const InfoResourceHandle& handle, std::o
 
     } else { // Token is not valid.
 
-      integer_memory_[handle.initialDataOffset()] = MISSING_VALUE_INTEGER_;
+      integer_memory_[handle.initialDataOffset()] = VCFInfoParser::MISSING_VALUE_INTEGER_;
 
     }
 
@@ -327,7 +327,7 @@ void kgl::DataMemoryBlock::storeInteger(const InfoResourceHandle& handle, std::o
         }
 
         // Invalidate scalar
-        integer_memory_[handle.initialDataOffset()] = MISSING_VALUE_INTEGER_;
+        integer_memory_[handle.initialDataOffset()] = VCFInfoParser::MISSING_VALUE_INTEGER_;
         // Populate array
         size_t index = array_index.infoOffset();
         for (auto const& str_view : string_vector) {
@@ -345,7 +345,7 @@ void kgl::DataMemoryBlock::storeInteger(const InfoResourceHandle& handle, std::o
 
     } else { // Token not valid.
 
-      integer_memory_[handle.initialDataOffset()] = MISSING_VALUE_INTEGER_;
+      integer_memory_[handle.initialDataOffset()] = VCFInfoParser::MISSING_VALUE_INTEGER_;
 
     }
 
@@ -397,7 +397,7 @@ void kgl::DataMemoryBlock::storeInteger(const InfoResourceHandle& handle, std::o
 
       for (size_t index = 0; index < array_index.infoSize(); ++index) {
 
-        integer_memory_[array_index.infoOffset() + index] = MISSING_VALUE_INTEGER_;
+        integer_memory_[array_index.infoOffset() + index] = VCFInfoParser::MISSING_VALUE_INTEGER_;
 
       } // for loop
 
@@ -433,7 +433,7 @@ void kgl::DataMemoryBlock::storeFloat(const InfoResourceHandle& handle, std::opt
 
     } else { // Token is not valid.
 
-      float_memory_[handle.initialDataOffset()] = MISSING_VALUE_FLOAT_;
+      float_memory_[handle.initialDataOffset()] = VCFInfoParser::MISSING_VALUE_FLOAT_;
 
     }
 
@@ -483,7 +483,7 @@ void kgl::DataMemoryBlock::storeFloat(const InfoResourceHandle& handle, std::opt
         }
 
         // Invalidate scalar.
-        float_memory_[handle.initialDataOffset()] = MISSING_VALUE_FLOAT_;
+        float_memory_[handle.initialDataOffset()] = VCFInfoParser::MISSING_VALUE_FLOAT_;
         // Populate array
         size_t index = array_index.infoOffset();
         for (auto const& str_view : string_vector) {
@@ -501,7 +501,7 @@ void kgl::DataMemoryBlock::storeFloat(const InfoResourceHandle& handle, std::opt
 
     } else { // Token not valid.
 
-      float_memory_[handle.initialDataOffset()] = MISSING_VALUE_FLOAT_;
+      float_memory_[handle.initialDataOffset()] = VCFInfoParser::MISSING_VALUE_FLOAT_;
 
     }
 
@@ -553,7 +553,7 @@ void kgl::DataMemoryBlock::storeFloat(const InfoResourceHandle& handle, std::opt
 
       for (size_t index = 0; index < array_index.infoSize(); ++index) {
 
-        float_memory_[array_index.infoOffset() + index] = MISSING_VALUE_FLOAT_;
+        float_memory_[array_index.infoOffset() + index] = VCFInfoParser::MISSING_VALUE_FLOAT_;
 
       } // for loop
 

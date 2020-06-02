@@ -36,24 +36,9 @@ using InfoFloatType = float;
 
 #endif
 
-using InfoParserBoolean = char;
-using InfoParserString = std::string;
-using InfoParserStringArray = std::vector<std::string>;
-using InfoParserInteger = InfoIntegerType;
-using InfoParserIntegerArray = std::vector<InfoIntegerType>;
-using InfoParserFloat = InfoFloatType;
-using InfoParserFloatArray = std::vector<InfoFloatType>;
 
-using InfoParserToken = std::pair<std::string_view, size_t>;
+using InfoParserToken = std::pair<std::string_view, size_t>;      // Tokens are a string_view and a field number (number of ',')
 using InfoParserMap = std::map<std::string_view, InfoParserToken>; // The token parser data structure.
-
-/// This object is CPU time sensitive so two implementations (parsers) have been devised and tested for CPU efficiency.
-/// Normally these would have their interfaces defined in a base class but we wish to avoid the overhead of
-/// abstract function calls. So we switch between these parser implementation using a compile time definition.
-/// This will allow for time benchmarking and for further refinement of the parser object.
-/// The 'token' parser appears to be most time efficient because it makes an optimization based the fact the most
-/// vector fields are unitary. This is based on testing of the Homo Sapien data. However the alternative implementation,
-/// although slightly slower is completely general.
 
 
 class VCFInfoParser {
@@ -72,28 +57,22 @@ public:
   }
   ~VCFInfoParser() = default;
 
-  [[nodiscard]] const std::string& info() const { return info_; }
   [[nodiscard]] std::optional<InfoParserToken> getToken(const std::string& key) const;
 
-  [[nodiscard]] bool getInfoBoolean(const std::string& key) const;
-  [[nodiscard]] InfoParserString getInfoString(const std::string& key) const;
-  [[nodiscard]] InfoParserStringArray getInfoStringArray(const std::string& key) const;
-  [[nodiscard]] InfoParserInteger getInfoInteger(const std::string& key) const;
-  [[nodiscard]] InfoParserFloat getInfoFloat(const std::string& key) const;
-
-  [[nodiscard]] static InfoParserInteger convertToInteger(const std::string& value);
-  [[nodiscard]] static InfoParserFloat convertToFloat(const std::string& value);
-  [[nodiscard]] static InfoParserFloatArray getInfoFloatArray(const std::string& value);
-  [[nodiscard]] static InfoParserIntegerArray getInfoIntegerArray(const std::string& value);
-  [[nodiscard]] static std::vector<std::string_view> getInfoStringArray(std::string_view str_view);
+  [[nodiscard]] static InfoIntegerType convertToInteger(const std::string& value);
+  [[nodiscard]] static InfoFloatType convertToFloat(const std::string& value);
 
   constexpr static const char INFO_VECTOR_DELIMITER_{','};
+
+  // Largest negative values are interpreted as missing values.
+  constexpr static const InfoFloatType MISSING_VALUE_FLOAT_ = std::numeric_limits<InfoFloatType>::lowest();
+  constexpr static const InfoIntegerType MISSING_VALUE_INTEGER_ = std::numeric_limits<InfoIntegerType>::lowest();
 
 private:
 
   const std::string info_; // The unparsed 'raw' VCF info record.
-  const std::string_view info_view_;  // This a view of the info_ string above
-  InfoParserMap parsed_token_map_;
+  const std::string_view info_view_;  // This a string_view of the info_ string above
+  InfoParserMap parsed_token_map_;  // The parsed token map.
 
   constexpr static const char INFO_FIELD_DELIMITER_{';'};
   constexpr static const char INFO_VALUE_DELIMITER_{'='};
@@ -101,27 +80,10 @@ private:
 
   [[nodiscard]] bool infoTokenParser();
 
-
-  // Largest negative values are interpreted as missing values.
-  constexpr static const InfoParserFloat MISSING_VALUE_FLOAT = std::numeric_limits<InfoParserFloat>::lowest();
-  constexpr static const InfoParserInteger MISSING_VALUE_INTEGER = std::numeric_limits<InfoParserInteger>::lowest();
-  // Empty string is missing.
-  constexpr static const char* MISSING_VALUE_STRING = "";
-  // Missing arrays are just empty arrays.
-  inline const static InfoParserStringArray MISSING_STRING_VECTOR;
-  inline const static InfoParserIntegerArray MISSING_INTEGER_VECTOR;
-  inline const static InfoParserFloatArray MISSING_FLOAT_VECTOR;
-  // If we use std::optional.
-  constexpr static const std::nullopt_t MISSING_VALUE_OPTIONAL = std::nullopt;
-
-
 };
 
 
-
 } // namespace
-
-
 
 
 #endif //KGL_KGL_VARIANT_FACTORY_GRCH_INFO_H

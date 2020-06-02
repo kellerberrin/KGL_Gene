@@ -16,7 +16,7 @@ namespace kgl = kellerberrin::genome;
 
 
 //  Returns the data, A size of zero is a missing field.
-kgl::InfoDataVariant kgl::InfoSubscribedField::getNewData(const DataMemoryBlock& memory_block) const {
+kgl::InfoDataVariant kgl::InfoSubscribedField::getData(const DataMemoryBlock& memory_block) const {
 
   switch(getDataHandle().resourceType()) {
 
@@ -33,7 +33,7 @@ kgl::InfoDataVariant kgl::InfoSubscribedField::getNewData(const DataMemoryBlock&
       return memory_block.getString(getDataHandle());
 
     default:
-      ExecEnv::log().error( "InfoSubscribedField::getNewData, Internal data type unknown");
+      ExecEnv::log().error( "InfoSubscribedField::getData, Internal data type unknown");
       return std::monostate();
 
   }

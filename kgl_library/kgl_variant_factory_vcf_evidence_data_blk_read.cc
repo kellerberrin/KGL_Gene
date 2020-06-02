@@ -39,7 +39,7 @@ std::vector<int64_t> kgl::DataMemoryBlock::getInteger(const InfoResourceHandle& 
 
     InfoIntegerType scalar_integer = integer_memory_[handle.initialDataOffset()];
 
-    if (scalar_integer != MISSING_VALUE_INTEGER_) {
+    if (scalar_integer != VCFInfoParser::MISSING_VALUE_INTEGER_) {
 
       integer_vec.push_back(scalar_integer);
 
@@ -58,7 +58,7 @@ std::vector<int64_t> kgl::DataMemoryBlock::getInteger(const InfoResourceHandle& 
     InfoIntegerType scalar_integer = integer_memory_[handle.initialDataOffset()];
 
     // If a missing value then we assume it is stored as an array, however it could just be missing.
-    if (scalar_integer == MISSING_VALUE_INTEGER_) {
+    if (scalar_integer == VCFInfoParser::MISSING_VALUE_INTEGER_) {
 
       std::optional<const InfoArrayIndex> array_index_opt = findArrayIndex(handle.handleId());
 
@@ -138,7 +138,7 @@ std::vector<double> kgl::DataMemoryBlock::getFloat(const InfoResourceHandle& han
 
     InfoFloatType scalar_float = float_memory_[handle.initialDataOffset()];
 
-    if (scalar_float != MISSING_VALUE_FLOAT_) {
+    if (scalar_float != VCFInfoParser::MISSING_VALUE_FLOAT_) {
 
       float_vec.push_back(scalar_float);
 
@@ -157,7 +157,7 @@ std::vector<double> kgl::DataMemoryBlock::getFloat(const InfoResourceHandle& han
     InfoFloatType scalar_float = float_memory_[handle.initialDataOffset()];
 
     // If a missing value then we assume it is stored as an array, however it could just be missing.
-    if (scalar_float == MISSING_VALUE_FLOAT_) {
+    if (scalar_float == VCFInfoParser::MISSING_VALUE_FLOAT_) {
 
       std::optional<const InfoArrayIndex> array_index_opt = findArrayIndex(handle.handleId());
 

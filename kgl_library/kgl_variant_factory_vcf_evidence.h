@@ -58,14 +58,13 @@ public:
   [[nodiscard]] size_t dataIndex() const { return static_cast<size_t>(dataType()); }
   // The array size that will be returned. Zero if missing data.
   // Returns a std::variant containing the data which then can be indexed by the data type enum above.
-  [[nodiscard]]  InfoDataVariant getNewData(const DataMemoryBlock& memory_block) const;
+  [[nodiscard]]  InfoDataVariant getData(const DataMemoryBlock& memory_block) const;
 
-  std::shared_ptr<const InfoEvidenceHeader> getDataHeader() const { return info_evidence_header_; }
+  [[nodiscard]] std::shared_ptr<const InfoEvidenceHeader> getDataHeader() const { return info_evidence_header_; }
 
-  // Need to limit visibility to these members.
-   [[nodiscard]] InfoEvidenceType evidenceType() const { return type_; }
+  [[nodiscard]] InfoEvidenceType evidenceType() const { return type_; }
 
-  const InfoResourceHandle& getDataHandle() const { return m_data_handle_; }
+  [[nodiscard]] const InfoResourceHandle& getDataHandle() const { return m_data_handle_; }
 
 private:
 
@@ -73,7 +72,7 @@ private:
   const VCFInfoRecord vcfInfoRecord_;  // The original VCF Header Record.
   const InfoEvidenceType type_;  // THe inferred subscriber type, external type and internal type.
   std::shared_ptr<const InfoEvidenceHeader> info_evidence_header_; // Ensure the index knows which header it belongs to.
-   InfoResourceHandle m_data_handle_;
+  InfoResourceHandle m_data_handle_;
 
   InfoResourceHandle requestResourceHandle(ManageInfoData& manage_info_data);
 

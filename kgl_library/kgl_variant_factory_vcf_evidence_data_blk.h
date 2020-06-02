@@ -40,16 +40,12 @@ public:
   DataMemoryBlock(const DataMemoryBlock &) = delete;
   ~DataMemoryBlock() = default;
 
-  // Constants for missing values.
-  // This is a bit dubious because these are potentially (though unlikely) valid field values.
-  constexpr static const InfoParserFloat MISSING_VALUE_FLOAT_ = std::numeric_limits<InfoParserFloat>::lowest();
-  constexpr static const InfoParserInteger MISSING_VALUE_INTEGER_ = std::numeric_limits<InfoParserInteger>::lowest();
 
   // Implementation functions that retrieve data for each internal data type.
-  bool getBoolean(const InfoResourceHandle& handle) const;
-  std::vector<int64_t> getInteger(const InfoResourceHandle& handle) const;
-  std::vector<double> getFloat(const InfoResourceHandle& handle) const;
-  std::vector<std::string> getString(const InfoResourceHandle& handle) const;
+  [[nodiscard]] bool getBoolean(const InfoResourceHandle& handle) const;
+  [[nodiscard]] std::vector<int64_t> getInteger(const InfoResourceHandle& handle) const;
+  [[nodiscard]] std::vector<double> getFloat(const InfoResourceHandle& handle) const;
+  [[nodiscard]] std::vector<std::string> getString(const InfoResourceHandle& handle) const;
 
   [[nodiscard]] const MemDataUsage& getUsageCount() const { return mem_count_; }
 
@@ -82,4 +78,4 @@ private:
 } // name space
 
 
-#endif //KGL_KGL_VARIANT_FACTORY_VCF_EVIDENCE_DATA_BLK_H
+#endif //KGL_VARIANT_FACTORY_VCF_EVIDENCE_DATA_BLK_H
