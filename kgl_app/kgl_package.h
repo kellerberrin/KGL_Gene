@@ -48,10 +48,12 @@ private:
   void verifyPackages() const;
   // Load the reference genomes.
   [[nodiscard]] std::unique_ptr<GenomeCollection> loadReferenceGenomes(const RuntimePackage& package) const;
-  // Load the VCF data per iteration
-  [[nodiscard]] std::unique_ptr<UnphasedPopulation> iterateVCFDataFiles( const RuntimePackage& package,
-                                                                         std::shared_ptr<const GenomeCollection> reference_genomes,
-                                                                         const std::vector<std::string>& iterative_files) const;
+
+  // Load a specified VCF file and return a population.
+  [[nodiscard]] std::unique_ptr<UnphasedPopulation> readVCFDataFile( const RuntimePackage& package,
+                                                                     std::shared_ptr<const GenomeCollection> reference_genomes,
+                                                                     const std::string& vcf_file) const;
+
 };
 
 

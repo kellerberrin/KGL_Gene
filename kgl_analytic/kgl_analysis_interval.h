@@ -89,8 +89,8 @@ public:
                                          std::shared_ptr<const GenomeCollection> reference_genomes) override;
 
   // Perform the genetic analysis per iteration.
-  [[nodiscard]] bool iterateAnalysis( std::shared_ptr<const GenomeCollection> reference_genomes,
-                                      std::shared_ptr<const UnphasedPopulation> vcf_iterative_dat) override;
+  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes,
+                                      std::shared_ptr<const UnphasedPopulation> vcf_iterative_data) override;
 
   // All VCF data has been presented, finalize analysis and write results.
   [[nodiscard]] bool finalizeAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes) override;

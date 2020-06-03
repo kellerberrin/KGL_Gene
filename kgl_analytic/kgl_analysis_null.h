@@ -33,9 +33,12 @@ public:
                                                  const RuntimeParameterMap& named_parameters,
                                                  std::shared_ptr<const GenomeCollection> reference_genomes);
 
+  // Perform the genetic analysis per VCF file (need not be redefined)
+  [[nodiscard]] virtual bool fileReadAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes,
+                                              std::shared_ptr<const UnphasedPopulation> vcf_iterative_dat);
+
   // Perform the genetic analysis per iteration (need not be redefined)
-  [[nodiscard]] virtual bool iterateAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes,
-                                             std::shared_ptr<const UnphasedPopulation> vcf_iterative_dat);
+  [[nodiscard]] virtual bool iterationAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes);
 
   // All VCF data has been presented, finalize analysis and write results (need not be redefined)
   [[nodiscard]] virtual bool finalizeAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes);

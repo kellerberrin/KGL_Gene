@@ -111,7 +111,9 @@ private:
 // FixedDynamic is pre-allocated and can change data size at runtime
 enum class DataDynamicType { FixedData, FixedDynamic, DynamicData};
 // Data class
-enum class DataResourceType { Boolean, Integer, Float, String };
+//enum class DataResourceType { Boolean, Integer, Float, String };
+
+using DataResourceType = InfoEvidenceExtern;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The info handle is held is held permanently by the InfoSubscribedField after subscribing to the Info data.

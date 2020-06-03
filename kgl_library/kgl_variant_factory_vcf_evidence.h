@@ -50,13 +50,13 @@ public:
   // Returns one of the following
   // The enums are integer valued and can be used as an index for the std::variant return type of InfoDataVariant.
   // InfoEvidenceExtern::Boolean,
-  // InfoEvidenceExtern::IntegerArray,
-  // InfoEvidenceExtern::FloatArray,
-  // InfoEvidenceExtern::StringArray,
+  // InfoEvidenceExtern::Integer,
+  // InfoEvidenceExtern::Float,
+  // InfoEvidenceExtern::String,
   [[nodiscard]] InfoEvidenceExtern dataType() const { return evidenceType().ExternalInfoType(); }
   // Index into the variant type.
   [[nodiscard]] size_t dataIndex() const { return static_cast<size_t>(dataType()); }
-  // The array size that will be returned. Zero if missing data.
+  // The array size that will be returned is zero if missing data. Boolean false means flag not found.
   // Returns a std::variant containing the data which then can be indexed by the data type enum above.
   [[nodiscard]]  InfoDataVariant getData(const DataMemoryBlock& memory_block) const;
 

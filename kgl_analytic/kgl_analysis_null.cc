@@ -14,13 +14,13 @@ bool kgl::NullAnalysis::initializeAnalysis( const std::string& work_directory,
   ExecEnv::log().info("Analysis: {} initialized with work directory: {}", ident(), work_directory);
   for (auto const& [parameter_ident, parameter_value] : named_parameters) {
 
-    ExecEnv::log().info("initializeAnalysis: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident, parameter_value);
+    ExecEnv::log().info("Initialize Analysis: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident, parameter_value);
 
   }
 
   for (auto const& genome : reference_genomes->getMap()) {
 
-    ExecEnv::log().info("initializeAnalysis; Analysis: {} called with Reference Genome: {}", ident(), genome.first);
+    ExecEnv::log().info("Initialize Analysis {} called with Reference Genome: {}", ident(), genome.first);
 
   }
 
@@ -29,16 +29,30 @@ bool kgl::NullAnalysis::initializeAnalysis( const std::string& work_directory,
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::NullAnalysis::iterateAnalysis( std::shared_ptr<const GenomeCollection>  reference_genomes, std::shared_ptr<const UnphasedPopulation> population) {
+bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const GenomeCollection>  reference_genomes, std::shared_ptr<const UnphasedPopulation> population) {
 
 
   for (auto const& genome : reference_genomes->getMap()) {
 
-    ExecEnv::log().info("iterateAnalysis; Analysis: {} called with Reference Genome: {}", ident(), genome.first);
+    ExecEnv::log().info("File Read Analysis: {} called with Reference Genome: {}", ident(), genome.first);
 
   }
 
-  ExecEnv::log().info("iterateAnalysis; Analysis: {} called with Variant Population: {}, Variant Count: {}", ident(), population->populationId(), population->variantCount());
+  ExecEnv::log().info("File Read Analysis: {} called with Variant Population: {}, Variant Count: {}", ident(), population->populationId(), population->variantCount());
+
+  return true;
+
+}
+
+// Perform the genetic analysis per iteration.
+bool kgl::NullAnalysis::iterationAnalysis(std::shared_ptr<const GenomeCollection>  reference_genomes) {
+
+
+  for (auto const& genome : reference_genomes->getMap()) {
+
+    ExecEnv::log().info("Iteration Analysis: {} called with Reference Genome: {}", ident(), genome.first);
+
+  }
 
   return true;
 
@@ -49,7 +63,7 @@ bool kgl::NullAnalysis::finalizeAnalysis(std::shared_ptr<const GenomeCollection>
 
   for (auto const& genome : reference_genomes->getMap()) {
 
-    ExecEnv::log().info("finalizeAnalysis; Analysis: {} called with Reference Genome: {}", ident(), genome.first);
+    ExecEnv::log().info("Finalize Analysis: {} called with Reference Genome: {}", ident(), genome.first);
 
   }
 

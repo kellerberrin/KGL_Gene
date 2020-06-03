@@ -46,7 +46,7 @@ kgl::InfoEvidenceType kgl::InfoTypeLookup::evidenceType(const VCFInfoRecord &vcf
   ExecEnv::log().warn("InfoTypeLookup::evidenceType, Info ID: {} Unable to find data type combination for Number: {}, Type: {}",
                       vcf_info_item.ID, vcf_info_item.number, vcf_info_item.type);
 
-  return {InfoEvidenceSubscriber::NotImplemented, InfoEvidenceExtern::NotImplemented, InfoEvidenceIntern::NotImplemented };
+  return {InfoEvidenceSubscriber::NotImplemented, InfoEvidenceExtern::Boolean, InfoEvidenceIntern::NotImplemented };
 
 }
 

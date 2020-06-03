@@ -71,18 +71,18 @@ bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
 }
 
 
-bool kgl::PackageAnalysis::iterateAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes,
-                                           std::shared_ptr<const UnphasedPopulation> vcf_iterative_data) const {
+bool kgl::PackageAnalysis::fileReadAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes,
+                                            std::shared_ptr<const UnphasedPopulation> vcf_iterative_data) const {
 
   for (auto& [analysis, active] : active_analysis_) {
 
-    ExecEnv::log().info("Updating Analysis: {}", analysis->ident());
+    ExecEnv::log().info("File Read, Updating Analysis: {}", analysis->ident());
 
     if (active) {
 
-      if (not analysis->iterateAnalysis(reference_genomes, vcf_iterative_data)) {
+      if (not analysis->fileReadAnalysis(reference_genomes, vcf_iterative_data)) {
 
-        ExecEnv::log().error("PackageAnalysis::iterateAnalysis; Error Iteratively Updating Analysis: {}, disabled from further updates.", analysis->ident());
+        ExecEnv::log().error("PackageAnalysis::fileReadAnalysis; Error Iteratively Updating Analysis: {}, disabled from further updates.", analysis->ident());
         active = false;
         return false;
 
@@ -90,7 +90,36 @@ bool kgl::PackageAnalysis::iterateAnalysis(std::shared_ptr<const GenomeCollectio
 
     } else {
 
-      ExecEnv::log().warn("PackageAnalysis::iterateAnalysis; Analysis: {} registered an error code and was disabled.", analysis->ident());
+      ExecEnv::log().warn("PackageAnalysis::fileReadAnalysis; Analysis: {} registered an error code and was disabled.", analysis->ident());
+
+    }
+
+  }
+
+  return true;
+
+}
+
+
+bool kgl::PackageAnalysis::iterationAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes) const {
+
+  for (auto& [analysis, active] : active_analysis_) {
+
+    ExecEnv::log().info("Updating Analysis: {}", analysis->ident());
+
+    if (active) {
+
+      if (not analysis->iterationAnalysis(reference_genomes)) {
+
+        ExecEnv::log().error("PackageAnalysis::iterationAnalysis; Error Iteratively Updating Analysis: {}, disabled from further updates.", analysis->ident());
+        active = false;
+        return false;
+
+      }
+
+    } else {
+
+      ExecEnv::log().warn("PackageAnalysis::iterationAnalysis; Analysis: {} registered an error code and was disabled.", analysis->ident());
 
     }
 

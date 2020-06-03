@@ -98,7 +98,7 @@ bool kgl::IntervalAnalysis::initializeAnalysis( const std::string& work_director
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::IntervalAnalysis::iterateAnalysis( std::shared_ptr<const GenomeCollection>, std::shared_ptr<const UnphasedPopulation> population) {
+bool kgl::IntervalAnalysis::fileReadAnalysis(std::shared_ptr<const GenomeCollection>, std::shared_ptr<const UnphasedPopulation> population) {
 
   return variantIntervalCount(population);
 

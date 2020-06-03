@@ -34,10 +34,9 @@ enum class InfoEvidenceSubscriber {
 // Defines how the data is represented externally.
 enum class InfoEvidenceExtern : size_t {
   Boolean = 0,
-  IntegerArray = 1,
-  FloatArray = 2,
-  StringArray = 3,
-  NotImplemented = 4  // Unknown (number, type) tuple.
+  Integer = 1,
+  Float = 2,
+  String = 3,
 };
 
 // Defines how the data is represented internally.
@@ -148,60 +147,60 @@ inline const std::vector<InfoTypeLookup::InfoTypeLookupTable> InfoTypeLookup::ty
 [](const std::string& type, const std::string& number) { return type == FLAG_ and number == ALL_GENOTYPES_; }      },
 
 // String types.
-{        {InfoEvidenceSubscriber::GeneralScalar,   InfoEvidenceExtern::StringArray, InfoEvidenceIntern::intern_string},
+{        {InfoEvidenceSubscriber::GeneralScalar,   InfoEvidenceExtern::String, InfoEvidenceIntern::intern_string},
 [](const std::string& type, const std::string& number) { return type == STRING_ and number == SCALAR_; }       },
 
-{        {InfoEvidenceSubscriber::AlternateAllele, InfoEvidenceExtern::StringArray, InfoEvidenceIntern::intern_unity_string_array},
+{        {InfoEvidenceSubscriber::AlternateAllele, InfoEvidenceExtern::String, InfoEvidenceIntern::intern_unity_string_array},
 [](const std::string& type, const std::string& number) { return type == STRING_ and number == AlTERNATIVE_ALLELE_; }     },
 
-{        {InfoEvidenceSubscriber::AllAllele,       InfoEvidenceExtern::StringArray, InfoEvidenceIntern::intern_unity_string_array},
+{        {InfoEvidenceSubscriber::AllAllele,       InfoEvidenceExtern::String, InfoEvidenceIntern::intern_unity_string_array},
 [](const std::string& type, const std::string& number) { return type == STRING_ and number == ALL_ALLELE_; }      },
 
-{       {InfoEvidenceSubscriber::Genotype,        InfoEvidenceExtern::StringArray, InfoEvidenceIntern::intern_unity_string_array},
+{       {InfoEvidenceSubscriber::Genotype,        InfoEvidenceExtern::String,  InfoEvidenceIntern::intern_unity_string_array},
 [](const std::string& type, const std::string& number) { return type == STRING_ and number == ALL_GENOTYPES_; }     },
 
-{       {InfoEvidenceSubscriber::GeneralArray,    InfoEvidenceExtern::StringArray, InfoEvidenceIntern::intern_unity_string_array},
+{       {InfoEvidenceSubscriber::GeneralArray,    InfoEvidenceExtern::String,  InfoEvidenceIntern::intern_unity_string_array},
 [](const std::string& type, const std::string& number) { return type == STRING_ and number == INDETERMINATE_COUNT_; }      },
 
-{       {InfoEvidenceSubscriber::GeneralArray,    InfoEvidenceExtern::StringArray, InfoEvidenceIntern::intern_string_array},
+{       {InfoEvidenceSubscriber::GeneralArray,    InfoEvidenceExtern::String,  InfoEvidenceIntern::intern_string_array},
 [](const std::string& type, const std::string& number) { return type == STRING_ and isVectorType(number); }      },
 
 // Float types.
-{       {InfoEvidenceSubscriber::GeneralScalar,   InfoEvidenceExtern::FloatArray, InfoEvidenceIntern::intern_float},
+{       {InfoEvidenceSubscriber::GeneralScalar,   InfoEvidenceExtern::Float, InfoEvidenceIntern::intern_float},
 [](const std::string& type, const std::string& number) { return type == FLOAT_ and number == SCALAR_; }     },
 
-{       {InfoEvidenceSubscriber::AlternateAllele, InfoEvidenceExtern::FloatArray, InfoEvidenceIntern::intern_unity_float_array},
+{       {InfoEvidenceSubscriber::AlternateAllele, InfoEvidenceExtern::Float, InfoEvidenceIntern::intern_unity_float_array},
 [](const std::string& type, const std::string& number) { return type == FLOAT_ and number == AlTERNATIVE_ALLELE_; }    },
 
-{       {InfoEvidenceSubscriber::AllAllele,       InfoEvidenceExtern::FloatArray, InfoEvidenceIntern::intern_unity_float_array},
+{       {InfoEvidenceSubscriber::AllAllele,       InfoEvidenceExtern::Float, InfoEvidenceIntern::intern_unity_float_array},
 [](const std::string& type, const std::string& number) { return type == FLOAT_ and number == ALL_ALLELE_; }     },
 
-{       {InfoEvidenceSubscriber::Genotype,        InfoEvidenceExtern::FloatArray, InfoEvidenceIntern::intern_unity_float_array},
+{       {InfoEvidenceSubscriber::Genotype,        InfoEvidenceExtern::Float, InfoEvidenceIntern::intern_unity_float_array},
 [](const std::string& type, const std::string& number) { return type == FLOAT_ and number == ALL_GENOTYPES_; }     },
 
-{       {InfoEvidenceSubscriber::GeneralArray,    InfoEvidenceExtern::FloatArray, InfoEvidenceIntern::intern_unity_float_array},
+{       {InfoEvidenceSubscriber::GeneralArray,    InfoEvidenceExtern::Float, InfoEvidenceIntern::intern_unity_float_array},
 [](const std::string& type, const std::string& number) { return type == FLOAT_ and number == INDETERMINATE_COUNT_; }      },
 
-{       {InfoEvidenceSubscriber::GeneralArray,    InfoEvidenceExtern::FloatArray, InfoEvidenceIntern::intern_float_array},
+{       {InfoEvidenceSubscriber::GeneralArray,    InfoEvidenceExtern::Float, InfoEvidenceIntern::intern_float_array},
 [](const std::string& type, const std::string& number) { return type == FLOAT_ and isVectorType(number); }      },
 
 // Integer types.
-{      {InfoEvidenceSubscriber::GeneralScalar,   InfoEvidenceExtern::IntegerArray, InfoEvidenceIntern::intern_integer},
+{      {InfoEvidenceSubscriber::GeneralScalar,   InfoEvidenceExtern::Integer, InfoEvidenceIntern::intern_integer},
 [](const std::string& type, const std::string& number) { return type == INTEGER_ and number == SCALAR_; }      },
 
-{      {InfoEvidenceSubscriber::AlternateAllele, InfoEvidenceExtern::IntegerArray, InfoEvidenceIntern::intern_unity_integer_array},
+{      {InfoEvidenceSubscriber::AlternateAllele, InfoEvidenceExtern::Integer, InfoEvidenceIntern::intern_unity_integer_array},
 [](const std::string& type, const std::string& number) { return type == INTEGER_ and number == AlTERNATIVE_ALLELE_; }    },
 
-{      {InfoEvidenceSubscriber::AllAllele,       InfoEvidenceExtern::IntegerArray, InfoEvidenceIntern::intern_unity_integer_array},
+{      {InfoEvidenceSubscriber::AllAllele,       InfoEvidenceExtern::Integer, InfoEvidenceIntern::intern_unity_integer_array},
 [](const std::string& type, const std::string& number) { return type == INTEGER_ and number == ALL_ALLELE_; }     },
 
-{      {InfoEvidenceSubscriber::Genotype,        InfoEvidenceExtern::IntegerArray, InfoEvidenceIntern::intern_unity_integer_array},
+{      {InfoEvidenceSubscriber::Genotype,        InfoEvidenceExtern::Integer, InfoEvidenceIntern::intern_unity_integer_array},
 [](const std::string& type, const std::string& number) { return type == INTEGER_ and number == ALL_GENOTYPES_; }     },
 
-{      {InfoEvidenceSubscriber::GeneralArray,    InfoEvidenceExtern::IntegerArray, InfoEvidenceIntern::intern_unity_integer_array},
+{      {InfoEvidenceSubscriber::GeneralArray,    InfoEvidenceExtern::Integer, InfoEvidenceIntern::intern_unity_integer_array},
 [](const std::string& type, const std::string& number) { return type == INTEGER_ and number == INDETERMINATE_COUNT_; }     },
 
-{      {InfoEvidenceSubscriber::GeneralArray,    InfoEvidenceExtern::IntegerArray, InfoEvidenceIntern::intern_integer_array},
+{      {InfoEvidenceSubscriber::GeneralArray,    InfoEvidenceExtern::Integer, InfoEvidenceIntern::intern_integer_array},
 [](const std::string& type, const std::string& number) { return type == INTEGER_ and isVectorType(number); }      },
 
 };
