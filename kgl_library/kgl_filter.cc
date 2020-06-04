@@ -9,6 +9,81 @@
 namespace kgl = kellerberrin::genome;
 
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter the info data block.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bool kgl::InfoFilter::implementFilter(const Variant& variant) const {
+
+  InfoDataEvidence info_evidence_opt = variant.evidence().infoData();
+
+  if (info_evidence_opt) {
+
+    InfoDataVariant info_data = info_field_.getData(*info_evidence_opt.value());
+
+    return filter_lambda_(info_data);
+
+  } else {
+
+    return missing_default_;
+
+  }
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter an integer field in the info data block.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bool kgl::InfoGEQIntegerFilter::implementFilter(const Variant& variant) const {
+
+  InfoDataEvidence info_evidence_opt = variant.evidence().infoData();
+
+  if (info_evidence_opt) {
+
+    InfoDataVariant info_data = info_field_.getData(*info_evidence_opt.value());
+
+    return filter_lambda_(info_data);
+
+  } else {
+
+    return missing_default_;
+
+  }
+
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter an integer field in the info data block.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bool kgl::InfoGEQFloatFilter::implementFilter(const Variant& variant) const {
+
+  InfoDataEvidence info_evidence_opt = variant.evidence().infoData();
+
+  if (info_evidence_opt) {
+
+    InfoDataVariant info_data = info_field_.getData(*info_evidence_opt.value());
+
+    return filter_lambda_(info_data);
+
+  } else {
+
+    return missing_default_;
+
+  }
+
+}
+
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Filter variants to a base count.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

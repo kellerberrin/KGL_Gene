@@ -80,6 +80,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
     uint32_t variant_index = 0;
 
     VariantEvidence evidence(vcf_record_count, info_evidence_opt, null_format_data, variant_index, variant_count);
+    VariantEvidence evidence1(evidence);
     // Add the variant.
     StringDNA5 reference_str(vcf_record.ref);
     StringDNA5 alternate_str(vcf_record.alt);
@@ -117,6 +118,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
       std::optional<std::shared_ptr<FormatData>> null_format_data = std::nullopt;
       // Setup the evidence object.
       VariantEvidence evidence(vcf_record_count, info_evidence_opt, null_format_data, variant_index, variant_count);
+      VariantEvidence evidence1(evidence);
       // Add the variant.
       StringDNA5 reference_str(vcf_record.ref);
       StringDNA5 alternate_str(alt);

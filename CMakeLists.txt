@@ -213,7 +213,7 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_analysis_null.cc
         kgl_analytic/kgl_analysis_null.h
         kgl_analytic/kgl_analysis_interval.cc
-        kgl_analytic/kgl_analysis_interval.h)
+        kgl_analytic/kgl_analysis_interval.h kgl_analytic/kgl_analysis_info_filter.cc kgl_analytic/kgl_analysis_info_filter.h)
 
 # Deconvolution and mixture files.
 

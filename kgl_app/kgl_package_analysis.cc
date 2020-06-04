@@ -71,8 +71,7 @@ bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
 }
 
 
-bool kgl::PackageAnalysis::fileReadAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes,
-                                            std::shared_ptr<const UnphasedPopulation> vcf_iterative_data) const {
+bool kgl::PackageAnalysis::fileReadAnalysis(std::shared_ptr<const UnphasedPopulation> vcf_iterative_data) const {
 
   for (auto& [analysis, active] : active_analysis_) {
 
@@ -80,7 +79,7 @@ bool kgl::PackageAnalysis::fileReadAnalysis(std::shared_ptr<const GenomeCollecti
 
     if (active) {
 
-      if (not analysis->fileReadAnalysis(reference_genomes, vcf_iterative_data)) {
+      if (not analysis->fileReadAnalysis(vcf_iterative_data)) {
 
         ExecEnv::log().error("PackageAnalysis::fileReadAnalysis; Error Iteratively Updating Analysis: {}, disabled from further updates.", analysis->ident());
         active = false;
@@ -101,7 +100,7 @@ bool kgl::PackageAnalysis::fileReadAnalysis(std::shared_ptr<const GenomeCollecti
 }
 
 
-bool kgl::PackageAnalysis::iterationAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes) const {
+bool kgl::PackageAnalysis::iterationAnalysis() const {
 
   for (auto& [analysis, active] : active_analysis_) {
 
@@ -109,7 +108,7 @@ bool kgl::PackageAnalysis::iterationAnalysis(std::shared_ptr<const GenomeCollect
 
     if (active) {
 
-      if (not analysis->iterationAnalysis(reference_genomes)) {
+      if (not analysis->iterationAnalysis()) {
 
         ExecEnv::log().error("PackageAnalysis::iterationAnalysis; Error Iteratively Updating Analysis: {}, disabled from further updates.", analysis->ident());
         active = false;
@@ -130,14 +129,14 @@ bool kgl::PackageAnalysis::iterationAnalysis(std::shared_ptr<const GenomeCollect
 }
 
 
-bool kgl::PackageAnalysis::finalizeAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes) const {
+bool kgl::PackageAnalysis::finalizeAnalysis() const {
 
 
   for (auto& [analysis, active] : active_analysis_) {
 
     if (active) {
 
-      if (not analysis->finalizeAnalysis(reference_genomes)) {
+      if (not analysis->finalizeAnalysis()) {
 
         ExecEnv::log().error("PackageAnalysis::initializeAnalysis, Error Finalizing Updating Analysis: {}", analysis->ident());
         active = false;

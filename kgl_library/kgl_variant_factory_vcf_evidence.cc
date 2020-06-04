@@ -18,6 +18,33 @@ namespace kgl = kellerberrin::genome;
 //  Returns the data, A size of zero is a missing field.
 kgl::InfoDataVariant kgl::InfoSubscribedField::getData(const DataMemoryBlock& memory_block) const {
 
+  // Check that this is the correct index for the data block.
+  if (info_evidence_header_ != memory_block.evidenceHeader()) {
+
+    ExecEnv::log().error( "InfoSubscribedField::getData, Incorrect Subscribed Field Index used Access Info Data Block");
+
+    switch(getDataHandle().resourceType()) {
+
+      case DataResourceType::Boolean:
+        return false;
+
+      case DataResourceType::Integer:
+        return std::vector<int64_t>();
+
+      case DataResourceType::Float:
+        return std::vector<double>();
+
+      case DataResourceType::String:
+        return std::vector<std::string>();
+
+      default:
+        ExecEnv::log().error( "InfoSubscribedField::getData, Internal data type unknown");
+        return std::monostate();
+
+    }
+
+  }
+
   switch(getDataHandle().resourceType()) {
 
     case DataResourceType::Boolean:

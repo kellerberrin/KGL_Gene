@@ -89,11 +89,10 @@ public:
                                          std::shared_ptr<const GenomeCollection> reference_genomes) override;
 
   // Perform the genetic analysis per iteration.
-  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes,
-                                      std::shared_ptr<const UnphasedPopulation> vcf_iterative_data) override;
+  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const UnphasedPopulation> vcf_iterative_data) override;
 
   // All VCF data has been presented, finalize analysis and write results.
-  [[nodiscard]] bool finalizeAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes) override;
+  [[nodiscard]] bool finalizeAnalysis() override;
 
 
 private:
@@ -108,6 +107,7 @@ private:
   using IntervalVector = std::vector<IntervalData>;
   using IntervalMap = std::map<ContigId_t, IntervalVector>;
   IntervalMap interval_map_;
+  std::shared_ptr<const GenomeReference> genome_;
 
   constexpr static const char OUTPUT_DELIMITER_ = ',';
 

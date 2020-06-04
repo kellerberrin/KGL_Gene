@@ -70,18 +70,30 @@ double kgl::IntervalData::meanEmptyInterval() const {
 // IntervalAnalysis members.
 
 
-// Setup the analytics to process VCF data.
+// Setup the analytics to process VCF data. Returning false disables the analysis.
 bool kgl::IntervalAnalysis::initializeAnalysis( const std::string& work_directory,
                                                 const RuntimeParameterMap& named_parameters,
                                                 std::shared_ptr<const GenomeCollection> reference_genomes) {
 
-  if (reference_genomes->getMap().size() > 1 or reference_genomes->getMap().empty()) {
+  if (reference_genomes->getMap().size() != 1) {
 
-    ExecEnv::log().error("Analytic: {} called with {} genomes.  Only 1 genome can be analysed at a time.",
+    ExecEnv::log().error("Analytic: {} called with {} genomes.  Only 1 genome can be analysed at a time. Disabled.",
                     ident(), reference_genomes->getMap().size());
     return false;
 
   }
+
+  // The first genome is the only genome.
+  genome_ = reference_genomes->getMap().begin()->second;
+
+  if (not genome_) {
+
+    ExecEnv::log().error("Analytic: {} called with NULL genome pointer. Disabled.", ident());
+    return false;
+
+  }
+
+  ExecEnv::log().info("Initialize Analysis Id: {} called with genome : {}", ident(), genome_->genomeId());
 
   if (not getParameters(work_directory, named_parameters)) {
 
@@ -89,28 +101,24 @@ bool kgl::IntervalAnalysis::initializeAnalysis( const std::string& work_director
 
   }
 
-  // The first genome is the only genome.
-  std::shared_ptr<const GenomeReference> genome = reference_genomes->getMap().begin()->second;
-  setupIntervalStructure(genome);
+  // Must be called after parameters are setup.
+  setupIntervalStructure(genome_);
 
   return true;
 
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::IntervalAnalysis::fileReadAnalysis(std::shared_ptr<const GenomeCollection>, std::shared_ptr<const UnphasedPopulation> population) {
+bool kgl::IntervalAnalysis::fileReadAnalysis(std::shared_ptr<const UnphasedPopulation> population) {
 
   return variantIntervalCount(population);
 
 }
 
 // All VCF data has been presented, finalize analysis and write results.
-bool kgl::IntervalAnalysis::finalizeAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes) {
+bool kgl::IntervalAnalysis::finalizeAnalysis() {
 
-  // The first genome is the only genome.
-  std::shared_ptr<const GenomeReference> genome = reference_genomes->getMap().begin()->second;
-
-  return writeResults(genome, false, OUTPUT_DELIMITER_);
+  return writeResults(genome_, false, OUTPUT_DELIMITER_);
 
 }
 

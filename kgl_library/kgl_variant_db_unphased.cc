@@ -141,22 +141,19 @@ std::shared_ptr<kgl::UnphasedContig> kgl::UnphasedContig::filterVariants(const k
   // Complements the bool returned by filterVariant(filter) because the delete pattern expects bool true for deletion.
   auto predicate = [&](const UnphasedVectorVariantCount::const_iterator& it) { return not (*it)->filterVariant(filter); };
 
-  for (auto offset_vector : getMap()) {
+  for (auto const& [offset, variant_vector] : getMap()) {
 
-    UnphasedVectorVariantCount copy_offset_vector = offset_vector.second;
+    UnphasedVectorVariantCount copy_offset_vector = variant_vector;
 
     predicateIterableDelete(copy_offset_vector,  predicate);
 
     if (not copy_offset_vector.empty()) {
 
-      std::pair<ContigOffset_t, UnphasedVectorVariantCount> new_offset;
-      new_offset.first = copy_offset_vector.front()->offset();
-      new_offset.second = copy_offset_vector;
-      auto result = filtered_contig_ptr->contig_offset_map_.insert(new_offset);
+      auto result = filtered_contig_ptr->contig_offset_map_.try_emplace(offset, copy_offset_vector);
 
       if (not result.second) {
 
-        ExecEnv::log().error("UnphasedContig::filterVariants; Unable to add duplicate offset: {}, contig: {}", new_offset.first, contigId());
+        ExecEnv::log().error("UnphasedContig::filterVariants; Unable to add duplicate offset: {}, contig: {}", offset, contigId());
 
       }
 
@@ -365,8 +362,6 @@ std::shared_ptr<kgl::UnphasedGenome> kgl::UnphasedGenome::filterVariants(const k
       ExecEnv::log().critical("UnphasedGenome::filterVariants(), Genome: {}, Unable to inserted filtered Contig: {}", genomeId(), filtered_contig->contigId());
 
     }
-
-    ExecEnv::log().vinfo("Contig: {} has: {} filtered variants", contig_variant.first, filtered_contig->variantCount());
 
   }
 

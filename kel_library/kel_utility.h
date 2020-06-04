@@ -33,7 +33,7 @@ public:
   [[nodiscard]] static std::vector<std::string> tokenizer(const std::string& str, const std::string& delims = ",");
   [[nodiscard]] static std::vector<std::string_view> view_tokenizer(const std::string_view& str_view, const char delim);
   [[nodiscard]] static std::vector<std::string> char_tokenizer(const std::string& str, const char delim);
-
+  void static process_mem_usage(double& vm_usage, double& resident_set);
 
 private:
 

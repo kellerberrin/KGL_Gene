@@ -16,7 +16,6 @@
 #include <string>
 
 
-
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 // NullAnalysis is the base class, of all available (defined) Analytics.
@@ -36,6 +35,7 @@ public:
     // All available analytics registered here.
     registered_analysis_.push_back(std::make_unique<NullAnalysis>());
     registered_analysis_.push_back(std::make_unique<IntervalAnalysis>());
+    registered_analysis_.push_back(std::make_unique<InfoFilterAnalysis>());
 
   }
   ~PackageAnalysis() = default;
@@ -45,14 +45,13 @@ public:
                                         std::shared_ptr<const GenomeCollection> reference_genomes) const;
 
   // Perform the genetic analysis per iteration.
-  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes,
-                                      std::shared_ptr<const UnphasedPopulation> vcf_iterative_dat) const;
+  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const UnphasedPopulation> vcf_iterative_dat) const;
 
   // Perform the genetic analysis per iteration.
-  [[nodiscard]] bool iterationAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes) const;
+  [[nodiscard]] bool iterationAnalysis() const;
 
   // All VCF data has been presented, finalize analysis and write results.
-  [[nodiscard]] bool finalizeAnalysis(std::shared_ptr<const GenomeCollection> reference_genomes) const;
+  [[nodiscard]] bool finalizeAnalysis() const;
 
 private:
 

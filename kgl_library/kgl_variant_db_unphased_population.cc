@@ -221,11 +221,9 @@ std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::filterVariants
     std::shared_ptr<kgl::UnphasedGenome> filtered_genome_ptr = genome_ptr->filterVariants(filter);
     if (not filtered_population_ptr->addGenome(filtered_genome_ptr)) {
 
-      ExecEnv::log().critical("UnphasedPopulation::filterVariants(), could not add filtered genome: {} to the population", genome_ptr->genomeId());
+      ExecEnv::log().critical("UnphasedPopulation::filterVariants(), could not add filtered genome: {} to the population", genome_id);
 
     }
-
-    ExecEnv::log().vinfo("Genome: {} has: {} filtered variants", genome_id, filtered_genome_ptr->variantCount());
 
   }
 
@@ -413,3 +411,59 @@ std::shared_ptr<kgl::UnphasedGenome> kgl::UnphasedPopulation::compressPopulation
   return  compressedGenome;
 
 }
+
+
+std::optional<std::shared_ptr<const kgl::InfoEvidenceHeader>> kgl::UnphasedPopulation::getVCFInfoEvidenceHeader() const {
+
+  for (auto const& genome : getMap()) {
+
+    for (auto const& contig : genome.second->getMap()) {
+
+      for (auto const& variant_vector : contig.second->getMap()) {
+
+        for (auto const& variant_ptr : variant_vector.second) {
+
+          if (variant_ptr->evidence().infoData()) {
+
+            return variant_ptr->evidence().infoData().value()->evidenceHeader();
+
+          }
+
+        }
+
+      }
+
+    }
+
+  }
+
+  return std::nullopt;
+
+}
+
+
+std::optional<std::weak_ptr<const kgl::Variant>> kgl::UnphasedPopulation::getVariant() const {
+
+  for (auto const& genome : getMap()) {
+
+    for (auto const& contig : genome.second->getMap()) {
+
+      for (auto const& variant_vector : contig.second->getMap()) {
+
+        for (auto const& variant_ptr : variant_vector.second) {
+
+            return variant_ptr;
+
+        }
+
+      }
+
+    }
+
+  }
+
+  return std::nullopt;
+
+}
+
+

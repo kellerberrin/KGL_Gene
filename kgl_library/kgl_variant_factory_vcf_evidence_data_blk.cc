@@ -15,6 +15,8 @@ kgl::DataMemoryBlock::DataMemoryBlock( std::shared_ptr<const InfoEvidenceHeader>
                                        const VCFInfoParser& info_parser)
                                        : info_evidence_header_(std::move(info_evidence_header)) {
 
+  ++object_count;
+
   // booleans and strings are both implemented as type char
   mem_count_.charCount(memory_resource.boolSize() + memory_resource.charSize());
   mem_count_.floatCount(memory_resource.floatSize());
