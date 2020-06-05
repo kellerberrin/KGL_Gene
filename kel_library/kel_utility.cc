@@ -259,19 +259,19 @@ std::vector<std::string> kel::Utility::char_tokenizer(const std::string& str, co
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// process_mem_usage(double &, double &) - takes two doubles by reference,
-// attempts to read the system-dependent data for a process' virtual memory
+// pair.first is process vm_usage, pair.second is resident memory set.
+// Attempts to read the system-dependent data for a process' virtual memory
 // size and resident set size, and return the results in KB.
 //
 // On failure, returns 0.0, 0.0
-void kel::Utility::process_mem_usage(double& vm_usage, double& resident_set)
+std::pair<double, double> kel::Utility::process_mem_usage()
 {
+
   using std::ios_base;
   using std::ifstream;
   using std::string;
-
-  vm_usage     = 0.0;
-  resident_set = 0.0;
+  double vm_usage{0.0};
+  double resident_set{0.0};
 
   // 'file' stat seems to give the most reliable results
   //
@@ -296,8 +296,15 @@ void kel::Utility::process_mem_usage(double& vm_usage, double& resident_set)
 
   stat_stream.close();
 
+  // Calc to KBytes.
   long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
   vm_usage     = vsize / 1024.0;
   resident_set = rss * page_size_kb;
+
+  // Convert to GBytes.
+  vm_usage = vm_usage / (1024.0 * 1024.0);
+  resident_set = resident_set / (1024.0 * 1024.0);
+
+  return std::pair<double, double>(vm_usage, resident_set);
 
 }

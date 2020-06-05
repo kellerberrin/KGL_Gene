@@ -38,25 +38,7 @@ public:
                    const InfoMemoryResource& initial_memory_resource,
                    const VCFInfoParser& info_parser);
   DataMemoryBlock(const DataMemoryBlock &) = delete;
-  ~DataMemoryBlock() {
-
-//    ExecEnv::log().info("DataMemoryBlock::~DataMemoryBlock called");
-    // Explicity delete the array memory.
-    char* char_ptr = char_memory_.release();
-    delete[] char_ptr;
-    InfoIntegerType* int_ptr = integer_memory_.release();
-    delete[] int_ptr;
-    InfoFloatType* float_ptr = float_memory_.release();
-    delete[] float_ptr;
-    InfoArrayIndex* array_ptr = array_memory_.release();
-    delete[] array_ptr;
-    std::string_view* view_ptr = string_memory_.release();
-    delete[] view_ptr;
-
-    --object_count;
-
-  }
-
+  ~DataMemoryBlock() = default;
 
   // Implementation functions that retrieve data for each internal data type.
   [[nodiscard]] bool getBoolean(const InfoResourceHandle& handle) const;
@@ -68,7 +50,6 @@ public:
 
   [[nodiscard]] const std::shared_ptr<const InfoEvidenceHeader>& evidenceHeader() const { return info_evidence_header_; }
 
-  inline static std::atomic<size_t> object_count{0};
 
 private:
 

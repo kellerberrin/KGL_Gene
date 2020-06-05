@@ -26,11 +26,12 @@ public:
   InfoFilter(const InfoFilter&) = default;
   ~InfoFilter() override = default;
 
-  [[nodiscard]] std::string filterName() const final { return "The Info Data Filter"; }
+  [[nodiscard]] std::string filterName() const override { return "The Info Data Filter"; }
 
   [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InfoFilter>(*this); }
+
 
 private:
 
@@ -128,6 +129,57 @@ private:
       if (p_float_vector->size() == 1) {
 
         return (p_float_vector->front() >= this->comparison_value_);
+
+      } else {
+
+        return missing_default_;
+
+      }
+
+    } else {
+
+      return missing_default_;
+
+    }
+
+  };
+
+  [[nodiscard]] bool implementFilter(const Variant& variant) const;
+
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Integer Info Filter. Returns true if a scalar integer and greater or equal to the comparison value.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class InfoSubStringFilter : public VariantFilter {
+
+public:
+
+  InfoSubStringFilter(const InfoSubscribedField& info_field, std::string sub_string, bool missing_default = false)  // How the filter responds if the data is missing.
+  : info_field_(info_field), sub_string_(std::move(sub_string)), missing_default_(missing_default) {}
+  InfoSubStringFilter(const InfoSubStringFilter&) = default;
+  ~InfoSubStringFilter() override = default;
+
+  [[nodiscard]] std::string filterName() const final { return "Info Sub String Filter"; }
+
+  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
+
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InfoSubStringFilter>(*this); }
+
+private:
+
+  const InfoSubscribedField info_field_;
+  const std::string sub_string_;
+  bool missing_default_;
+  InfoFilterLambda filter_lambda_ = [this] (const InfoDataVariant& data_variant) -> bool {
+
+    auto p_string_vector = std::get_if<std::vector<std::string>>(&data_variant);
+    if (p_string_vector != nullptr) {
+
+      if (p_string_vector->size() == 1) {
+
+        return (p_string_vector->front().find(sub_string_) != std::string::npos);
 
       } else {
 

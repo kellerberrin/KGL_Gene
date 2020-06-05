@@ -39,30 +39,7 @@ void kgl::ExecutePackage::executeAll() const {
 
         }
 
-        // Investigate cyclic reference.
-        std::optional<std::weak_ptr<const Variant>> weak_variant = vcf_read_data->getVariant();
-        std::shared_ptr<const Variant> variant_ptr = weak_variant->lock();
-        InfoDataEvidence evidence = variant_ptr->evidence().infoData();
-        if (evidence) {
-
-          std::weak_ptr<const DataMemoryBlock> weak_info = evidence.value();
-          size_t alt_variant_count = variant_ptr->evidence().altVariantCount();
-          variant_ptr = nullptr;
-          evidence = std::nullopt;
-          size_t count = DataMemoryBlock::object_count;
-          double vm_memory, resident_set;
-          Utility::process_mem_usage(vm_memory, resident_set);
-          ExecEnv::log().info( "VM memory (kb): {}, Resident set: {}", vm_memory, resident_set);
-          ExecEnv::log().info( "Before Clearing VCF population: {}, Variant Use Count: {}, Info Block Use Count: {}, variant count: {}, Info Count: {}",
-                               vcf_read_data->populationId(), weak_variant->use_count(), weak_info.use_count(), alt_variant_count, count);
-          vcf_read_data->clear();
-          count = DataMemoryBlock::object_count;
-          ExecEnv::log().info( "After Clearing VCF population: {}, Variant Use Count: {}, Info Block Use Count: {}, Info count: {}",
-                               vcf_read_data->populationId(), weak_variant->use_count(), weak_info.use_count(), count);
-          Utility::process_mem_usage(vm_memory, resident_set);
-          ExecEnv::log().info( "VM memory (kb): {}, Resident set: {}", vm_memory, resident_set);
-
-        }
+        vcf_read_data->clear();
 
       }
 

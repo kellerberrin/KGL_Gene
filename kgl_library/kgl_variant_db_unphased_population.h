@@ -85,8 +85,8 @@ public:
   std::optional<std::shared_ptr<const InfoEvidenceHeader>> getVCFInfoEvidenceHeader() const;
   // return a variant to check for cyclic shared_ptr references.
   std::optional<std::weak_ptr<const Variant>> getVariant() const;
-
-
+  // Processes all variants in the population with analysis class A.
+  template<class A> A processAll(A analysisObject) const;
 
 
 private:
@@ -97,10 +97,42 @@ private:
 };
 
 
+// General purpose analysis template.
+template<class A>
+A UnphasedPopulation::processAll(A analysisObject) const {
+
+  for (auto const& genome : getMap()) {
+
+    for (auto const& contig : genome.second->getMap()) {
+
+      for (auto const& variant_vector : contig.second->getMap()) {
+
+        for (auto const& variant_ptr : variant_vector.second) {
+
+          analysisObject.processVariant(variant_ptr);
+
+        }
+
+      }
+
+    }
+
+  }
+
+  return analysisObject;
+
+}
+
+
 }   // end namespace
 
 [[nodiscard]] std::ostream& operator<<(std::ostream& ostream, std::shared_ptr<const kellerberrin::genome::UnphasedPopulation> unphased_ptr);
 [[nodiscard]] std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::UnphasedPopulation& unphased);
+
+
+
+
+
 
 
 #endif //KGL_VARIANT_DB_UNPHASED_POPULATION_H
