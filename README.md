@@ -30,7 +30,7 @@ cmake -version >= 3.8
 
 Hardware requirements:
 
-A multi-core (minimum 4 cores) 64 bit Intel/AMD PC or laptop with at least 16GB memory (>= 32GB best)
+A multi-core (minimum 4 cores/8 threads) 64 bit Intel/AMD PC or laptop with at least 128GB memory (>= 256GB best)
 and 100GB free disk space.
 
 The fast install procedure.
