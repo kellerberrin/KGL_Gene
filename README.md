@@ -24,7 +24,7 @@ Software requirements:
 
 Target operating system is Linux (the software is being developed using VS Code/Clion under Mint 19).
 
-Compiler must support C++ 17 standards, g++ -v >= 7.0 (the software is developed using g++ version 7.5)
+Compiler must support C++ 17 standards (a switch to C++ 20 soon), g++ -v >= 7.0 (the software is currently developed using g++ version 7.5)
 
 cmake -version >= 3.8
 
