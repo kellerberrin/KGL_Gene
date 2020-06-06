@@ -37,12 +37,16 @@ public:
 
   [[nodiscard]] virtual bool applyFilter(const VCFVariant& variant) const = 0;
 
-  [[nodiscard]] virtual std::string filterName() const = 0;
-
   [[nodiscard]] virtual std::shared_ptr<VariantFilter> clone() const = 0;
+
+  [[nodiscard]] std::string filterName() const { return filter_name_; }
+
+  void filterName(std::string filter_name) { filter_name_ = std::move(filter_name); }
+
 
 private:
 
+  std::string filter_name_;
 
 };
 

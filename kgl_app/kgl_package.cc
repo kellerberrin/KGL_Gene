@@ -152,7 +152,7 @@ std::unique_ptr<kgl::UnphasedPopulation> kgl::ExecutePackage::readVCFDataFile( c
                                                                                std::shared_ptr<const GenomeCollection> reference_genomes,
                                                                                const std::string& vcf_file) const {
 
-  std::unique_ptr<UnphasedPopulation> population_ptr(std::make_unique<UnphasedPopulation>(package.packageIdentifier()));
+  std::unique_ptr<UnphasedPopulation> population_ptr(std::make_unique<UnphasedPopulation>(vcf_file));
 
 
   ExecEnv::log().info("Package: {}, VCF file ident: {}", package.packageIdentifier(), vcf_file);

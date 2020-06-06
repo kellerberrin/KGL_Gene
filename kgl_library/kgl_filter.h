@@ -22,11 +22,15 @@ class InfoFilter : public VariantFilter {
 public:
 
   InfoFilter(const InfoSubscribedField& info_field, InfoFilterLambda filter_lambda, bool missing_default = false)  // How the filter responds if the data is missing.
-   : info_field_(info_field), filter_lambda_(std::move(filter_lambda)), missing_default_(missing_default) {}
+   : info_field_(info_field), filter_lambda_(std::move(filter_lambda)), missing_default_(missing_default) {
+
+    std::stringstream ss;
+    ss << "VCF Info Field: " << info_field_.infoVCF().ID;
+    filterName(ss.str());
+
+  }
   InfoFilter(const InfoFilter&) = default;
   ~InfoFilter() override = default;
-
-  [[nodiscard]] std::string filterName() const override { return "The Info Data Filter"; }
 
   [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
 
@@ -54,11 +58,15 @@ class InfoGEQIntegerFilter : public VariantFilter {
 public:
 
   InfoGEQIntegerFilter(const InfoSubscribedField& info_field, int64_t comparison_value, bool missing_default = false)  // How the filter responds if the data is missing.
-  : info_field_(info_field), comparison_value_(comparison_value), missing_default_(missing_default) {}
+  : info_field_(info_field), comparison_value_(comparison_value), missing_default_(missing_default) {
+
+    std::stringstream ss;
+    ss << "VCF Info Field: " << info_field_.infoVCF().ID << " >= " << comparison_value_;
+    filterName(ss.str());
+
+  }
   InfoGEQIntegerFilter(const InfoGEQIntegerFilter&) = default;
   ~InfoGEQIntegerFilter() override = default;
-
-  [[nodiscard]] std::string filterName() const final { return "Info Data Greater or Equal Integer Filter"; }
 
   [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
 
@@ -106,11 +114,16 @@ class InfoGEQFloatFilter : public VariantFilter {
 public:
 
   InfoGEQFloatFilter(const InfoSubscribedField& info_field, double comparison_value, bool missing_default = false)  // How the filter responds if the data is missing.
-  : info_field_(info_field), comparison_value_(comparison_value), missing_default_(missing_default) {}
+  : info_field_(info_field), comparison_value_(comparison_value), missing_default_(missing_default) {
+
+    std::stringstream ss;
+    ss << "VCF Info Field: " << info_field_.infoVCF().ID << " >= " << comparison_value_;
+    filterName(ss.str());
+
+  }
   InfoGEQFloatFilter(const InfoGEQFloatFilter&) = default;
   ~InfoGEQFloatFilter() override = default;
 
-  [[nodiscard]] std::string filterName() const final { return "Info Data Greater or Equal Float Filter"; }
 
   [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
 
@@ -157,11 +170,15 @@ class InfoSubStringFilter : public VariantFilter {
 public:
 
   InfoSubStringFilter(const InfoSubscribedField& info_field, std::string sub_string, bool missing_default = false)  // How the filter responds if the data is missing.
-  : info_field_(info_field), sub_string_(std::move(sub_string)), missing_default_(missing_default) {}
+  : info_field_(info_field), sub_string_(std::move(sub_string)), missing_default_(missing_default) {
+
+    std::stringstream ss;
+    ss << "VCF Info Field: " << info_field_.infoVCF().ID << " contains sub string \"" << sub_string_ <<"\"";
+    filterName(ss.str());
+
+  }
   InfoSubStringFilter(const InfoSubStringFilter&) = default;
   ~InfoSubStringFilter() override = default;
-
-  [[nodiscard]] std::string filterName() const final { return "Info Sub String Filter"; }
 
   [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
 
@@ -208,11 +225,15 @@ class RefAltCountFilter : public VariantFilter {
 
 public:
 
-  explicit RefAltCountFilter(size_t minimum_count) : minimum_count_(minimum_count) {}
+  explicit RefAltCountFilter(size_t minimum_count) : minimum_count_(minimum_count) {
+
+    std::stringstream ss;
+    ss << "Variants with minimum Ref+Alt base count:" << minimum_count_;
+    filterName(ss.str());
+
+  }
   RefAltCountFilter(const RefAltCountFilter&) = default;
   ~RefAltCountFilter() override = default;
-
-  [[nodiscard]] std::string filterName() const final;
 
   [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
 
@@ -237,11 +258,15 @@ class DPCountFilter : public VariantFilter {
 
 public:
 
-  explicit DPCountFilter(size_t minimum_count) : minimum_count_(minimum_count) {}
+  explicit DPCountFilter(size_t minimum_count) : minimum_count_(minimum_count) {
+
+    std::stringstream ss;
+    ss << "Variants with minimum DP base count:" << minimum_count_;
+    filterName(ss.str());
+
+  }
   DPCountFilter(const DPCountFilter&) = default;
   ~DPCountFilter() override = default;
-
-  [[nodiscard]] std::string filterName() const final;
 
   [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
 
@@ -265,11 +290,13 @@ class SNPFilter : public VariantFilter {
 
 public:
 
-  explicit SNPFilter() = default;
+  explicit SNPFilter() {
+
+    filterName("SNP and MNP Variants");
+
+  }
   SNPFilter(const SNPFilter&) = default;
   ~SNPFilter() override = default;
-
-  [[nodiscard]] std::string filterName() const final { return "SNP and MNP Variants)"; }
 
   [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return variant.isSNP(); }
 
@@ -290,11 +317,13 @@ class ContigFilter : public VariantFilter {
 
 public:
 
-  explicit ContigFilter(const ContigId_t& contig_ident) : contig_ident_(contig_ident) {}
+  explicit ContigFilter(const ContigId_t& contig_ident) : contig_ident_(contig_ident) {
+
+    filterName(std::string("Variants in Contig: ") + contig_ident_);
+
+  }
   ContigFilter(const ContigFilter&) = default;
   ~ContigFilter() override = default;
-
-  [[nodiscard]] std::string filterName() const final;
 
   [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
 
@@ -318,11 +347,15 @@ class RegionFilter : public VariantFilter {
 
 public:
 
-  explicit RegionFilter(ContigOffset_t start, ContigOffset_t end) : start_(start), end_(end) {}
+  explicit RegionFilter(ContigOffset_t start, ContigOffset_t end) : start_(start), end_(end) {
+
+    std::stringstream ss;
+    ss << "Variant in the half-interval [" << start_ << ", " << end_ << ")";
+    filterName(ss.str());
+
+  }
   RegionFilter(const RegionFilter&) = default;
   ~RegionFilter() override = default;
-
-  [[nodiscard]] std::string filterName() const final;
 
   [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return variant.offset() >= start_ and variant.offset() < end_; }
 
@@ -337,6 +370,31 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Null Filter - performs no filtering. If combined with the NotFilter below, would filter every variant.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class NullFilter : public VariantFilter {
+
+public:
+
+  explicit NullFilter() {
+
+    filterName("Null Filter");
+
+  }
+  NullFilter(const NullFilter&) = default;
+  ~NullFilter() override = default;
+
+  [[nodiscard]] bool applyFilter(const VCFVariant&) const override { return true; }
+
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<NullFilter>(*this); }
+
+private:
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Negation Filter
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -344,13 +402,15 @@ class NotFilter : public VariantFilter {
 
 public:
 
-  explicit NotFilter(const VariantFilter& filter) : filter_ptr_(filter.clone()) {}
+  explicit NotFilter(const VariantFilter& filter) : filter_ptr_(filter.clone()) {
+
+    filterName(std::string("NOT(") + filter_ptr_->filterName() + std::string(")"));
+
+  }
   NotFilter(const NotFilter&) = default;
   ~NotFilter() override = default;
 
   [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return not filter_ptr_->applyFilter(variant); }
-
-  [[nodiscard]] std::string filterName() const final { return "NOT(" + filter_ptr_->filterName() + ")"; }
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<NotFilter>(*this); }
 
@@ -369,13 +429,15 @@ class AndFilter : public VariantFilter {
 
 public:
 
-  explicit AndFilter(const VariantFilter& filter1, const VariantFilter& filter2) : filter1_ptr_(filter1.clone()), filter2_ptr_(filter2.clone()) {}
+  explicit AndFilter(const VariantFilter& filter1, const VariantFilter& filter2) : filter1_ptr_(filter1.clone()), filter2_ptr_(filter2.clone()) {
+
+    filterName("AND(" + filter1_ptr_->filterName() + ", " + filter2_ptr_->filterName() + ")");
+
+  }
   AndFilter(const AndFilter&) = default;
   ~AndFilter() override = default;
 
   [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return filter1_ptr_->applyFilter(variant) and filter2_ptr_->applyFilter(variant); }
-
-  [[nodiscard]] std::string filterName() const final { return "AND(" + filter1_ptr_->filterName() + ", " + filter2_ptr_->filterName() + ")"; }
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<AndFilter>(*this); }
 
@@ -395,13 +457,15 @@ class OrFilter : public VariantFilter {
 
 public:
 
-  explicit OrFilter(const VariantFilter& filter1, const VariantFilter& filter2) : filter1_ptr_(filter1.clone()), filter2_ptr_(filter2.clone()) {}
+  explicit OrFilter(const VariantFilter& filter1, const VariantFilter& filter2) : filter1_ptr_(filter1.clone()), filter2_ptr_(filter2.clone()) {
+
+    filterName("OR(" + filter1_ptr_->filterName() + ", " + filter2_ptr_->filterName() + ")");
+
+  }
   OrFilter(const OrFilter&) = default;
   ~OrFilter() override = default;
 
   [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return filter1_ptr_->applyFilter(variant) or filter2_ptr_->applyFilter(variant); }
-
-  [[nodiscard]] std::string filterName() const final { return "OR(" + filter1_ptr_->filterName() + ", " + filter2_ptr_->filterName() + ")"; }
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<OrFilter>(*this); }
 

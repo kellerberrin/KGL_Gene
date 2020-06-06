@@ -86,7 +86,7 @@ public:
   // return a variant to check for cyclic shared_ptr references.
   std::optional<std::weak_ptr<const Variant>> getVariant() const;
   // Processes all variants in the population with analysis class A.
-  template<class A> A processAll(A analysisObject) const;
+  template<class A> void processAll(A& analysisObject) const;
 
 
 private:
@@ -99,7 +99,7 @@ private:
 
 // General purpose analysis template.
 template<class A>
-A UnphasedPopulation::processAll(A analysisObject) const {
+void UnphasedPopulation::processAll(A& analysisObject) const {
 
   for (auto const& genome : getMap()) {
 
@@ -118,8 +118,6 @@ A UnphasedPopulation::processAll(A analysisObject) const {
     }
 
   }
-
-  return analysisObject;
 
 }
 

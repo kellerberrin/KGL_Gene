@@ -132,14 +132,6 @@ bool kgl::RefAltCountFilter::implementFilter(const Variant& variant) const {
 }
 
 
-std::string kgl::RefAltCountFilter::filterName() const {
-
-  std::stringstream ss;
-  ss << "Variants with minimum Ref+Alt base count:" << minimum_count_;
-  return ss.str();
-
-}
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Filter variants to a base count.
@@ -164,15 +156,6 @@ bool kgl::DPCountFilter::implementFilter(const Variant& variant) const {
 }
 
 
-std::string kgl::DPCountFilter::filterName() const {
-
-  std::stringstream ss;
-  ss << "Variants with minimum DP base count:" << minimum_count_;
-  return ss.str();
-
-}
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Filter variants to a particular contig.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -183,20 +166,6 @@ bool kgl::ContigFilter::implementFilter(const Variant& variant) const {
 
 }
 
-std::string kgl::ContigFilter::filterName() const {
 
-  return "Variants in Contig: " + contig_ident_;
-
-}
-
-
-
-std::string kgl::RegionFilter::filterName() const {
-
-  std::stringstream ss;
-  ss << "Variant in the half-interval [" << start_ << ", " << end_ << ")";
-  return ss.str();
-
-}
 
 

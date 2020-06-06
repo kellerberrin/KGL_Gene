@@ -10,7 +10,7 @@
 namespace kgl = kellerberrin::genome;
 
 
-std::vector<std::string> kgl::InfoEvidenceAnalysis::varianttoStrings(const InfoDataVariant&& info_data) {
+std::vector<std::string> kgl::InfoEvidenceAnalysis::varianttoStrings(const InfoDataVariant& info_data) {
 
   auto p_string_vector = std::get_if<std::vector<std::string>>(&info_data);
   if (p_string_vector != nullptr) {
@@ -27,7 +27,7 @@ std::vector<std::string> kgl::InfoEvidenceAnalysis::varianttoStrings(const InfoD
 }
 
 
-std::vector<double> kgl::InfoEvidenceAnalysis::varianttoFloats(const InfoDataVariant&& info_data) {
+std::vector<double> kgl::InfoEvidenceAnalysis::varianttoFloats(const InfoDataVariant& info_data) {
 
   auto p_float_vector = std::get_if<std::vector<double>>(&info_data);
   if (p_float_vector != nullptr) {
@@ -45,7 +45,7 @@ std::vector<double> kgl::InfoEvidenceAnalysis::varianttoFloats(const InfoDataVar
 
 
 
-std::vector<int64_t> kgl::InfoEvidenceAnalysis::varianttoIntegers(const InfoDataVariant&& info_data) {
+std::vector<int64_t> kgl::InfoEvidenceAnalysis::varianttoIntegers(const InfoDataVariant& info_data) {
 
   auto p_integer_vector = std::get_if<std::vector<int64_t>>(&info_data);
   if (p_integer_vector != nullptr) {
@@ -62,7 +62,7 @@ std::vector<int64_t> kgl::InfoEvidenceAnalysis::varianttoIntegers(const InfoData
 }
 
 
-bool kgl::InfoEvidenceAnalysis::variantToBool(const InfoDataVariant&& info_data) {
+bool kgl::InfoEvidenceAnalysis::variantToBool(const InfoDataVariant& info_data) {
 
   auto p_bool = std::get_if<bool>(&info_data);
   if (p_bool != nullptr) {
@@ -79,9 +79,9 @@ bool kgl::InfoEvidenceAnalysis::variantToBool(const InfoDataVariant&& info_data)
 }
 
 
-// Converts a bin in the string in the format "1|0|0|0|1|0|0|0|1|0" into a vector of floats.
-// If an error then returns an empty vector.
-std::vector<double> kgl::InfoEvidenceAnalysis::stringBinToVector(const std::vector<std::string>& bin_data, size_t expected_bin_size) {
+// Converts a bin in string format "1|0|0|0|1|0|0|0|1|0" into a vector of floats.
+// If an error then returns a zero vector of expected size.
+std::vector<double> kgl::InfoEvidenceAnalysis::stringBinToFloat(const std::vector<std::string>& bin_data, size_t expected_bin_size) {
 
   if (bin_data.size() >= 1) {
 
@@ -89,9 +89,9 @@ std::vector<double> kgl::InfoEvidenceAnalysis::stringBinToVector(const std::vect
 
     if (bin_strings.size() != expected_bin_size) {
 
-      ExecEnv::log().warn("InfoEvidenceAnalysis::stringBinToVector, Expected Bin Size: {}, Actual Bin Size: {}, Bin String",
+      ExecEnv::log().warn("InfoEvidenceAnalysis::stringBinToFloat, Expected Bin Size: {}, Actual Bin Size: {}, Bin String",
                            expected_bin_size, bin_strings.size(), bin_data.front());
-      return std::vector<double>();
+      return std::vector<double>(expected_bin_size, 0.0);
 
     }
 
@@ -106,9 +106,9 @@ std::vector<double> kgl::InfoEvidenceAnalysis::stringBinToVector(const std::vect
       }
       catch (...) {
 
-        ExecEnv::log().error( "InfoEvidenceAnalysis::stringBinToVector, problem converting bin: {} to double, bin string: {}",
+        ExecEnv::log().error( "InfoEvidenceAnalysis::stringBinToFloat, problem converting bin: {} to double, bin string: {}",
                               bin, bin_data.front());
-        return std::vector<double>();
+        return std::vector<double>(expected_bin_size, 0.0);
 
       }
 
@@ -118,8 +118,45 @@ std::vector<double> kgl::InfoEvidenceAnalysis::stringBinToVector(const std::vect
 
   } else {
 
-    return std::vector<double>();
+    return std::vector<double>(expected_bin_size, 0.0);
 
   }
 
 }
+
+
+std::optional<const kgl::InfoSubscribedField> kgl::InfoEvidenceAnalysis::getSubscribedField( const std::shared_ptr<const Variant>& variant_ptr,
+                                                                                             const std::string& field_ident) {
+
+  if (variant_ptr->evidence().infoData()) {
+
+    return variant_ptr->evidence().infoData().value()->evidenceHeader()->getSubscribedField(field_ident);
+
+  }
+
+  return std::nullopt;
+
+}
+
+
+std::optional<kgl::InfoDataVariant> kgl::InfoEvidenceAnalysis::getInfoData( const std::shared_ptr<const Variant>& variant_ptr,
+                                                                            const std::string& field_ident) {
+
+  std::optional<const kgl::InfoSubscribedField> field = getSubscribedField(variant_ptr, field_ident);
+
+  if (field) {
+
+    const DataMemoryBlock &data_block = *variant_ptr->evidence().infoData().value();
+
+    InfoDataVariant variant_data = field->getData(data_block);
+
+    return variant_data;
+
+  }
+
+  return std::nullopt;
+
+}
+
+
+
