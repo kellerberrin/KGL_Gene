@@ -7,217 +7,11 @@
 #include <fstream>
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///
+
+
 namespace kgl = kellerberrin::genome;
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///
-
-
-double kgl::InfoAgeAnalysis::processField(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name) {
-
-
-  std::optional<kgl::InfoDataVariant> field_opt = InfoEvidenceAnalysis::getInfoData(variant_ptr, field_name);
-
-  if (field_opt) {
-
-    std::vector<int64_t> field_vec = InfoEvidenceAnalysis::varianttoIntegers(field_opt.value());
-
-    if (field_vec.size() != 1) {
-
-      ExecEnv::log().warn("InfoAgeAnalysis::processVariant, Field: {} expected vector size 1, get vector size: {}",
-                          field_name, field_vec.size());
-
-    } else {
-
-      return static_cast<double>(field_vec.front());
-
-    }
-
-  } else {
-
-    ExecEnv::log().warn("InfoAgeAnalysis::processVariant, Field: {} not available", field_name);
-
-  }
-
-  return 0.0;
-
-}
-
-
-
-std::vector<double> kgl::InfoAgeAnalysis::processBin(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name) {
-
-
-  std::optional<kgl::InfoDataVariant> bin_info_opt = InfoEvidenceAnalysis::getInfoData(variant_ptr, field_name);
-
-  if (bin_info_opt) {
-
-    std::vector<std::string> age_string = InfoEvidenceAnalysis::varianttoStrings(bin_info_opt.value());
-
-    std::vector<double> age_vector = InfoEvidenceAnalysis::stringBinToFloat(age_string, AGE_BIN_SIZE_);
-
-    return age_vector;
-
-  } else {
-
-    ExecEnv::log().warn("InfoAgeAnalysis::processVariant, data for age bin field: {}, not available", field_name);
-
-  }
-
-  return std::vector<double>(AGE_BIN_SIZE_, 0.0);
-
-}
-
-
-void kgl::InfoAgeAnalysis::processVariant(const std::shared_ptr<const Variant>& variant_ptr) {
-
-  ++variant_count_;
-
-  het_under_30_ += processField(variant_ptr, HETERO_UNDER30_FIELD_);
-  het_80_over_ += processField(variant_ptr, HETERO_80OVER_FIELD_);
-  hom_under_30_ += processField(variant_ptr, HOMO_UNDER30_FIELD_);
-  hom_80_over_ += processField(variant_ptr, HOMO_80OVER_FIELD_);
-
-  size_t index = 0;
-  for (auto& age : processBin(variant_ptr, HETERO_AGE_FIELD_)) {
-
-    het_age_vector_[index] += age;
-
-    ++index;
-
-  }
-
-  index = 0;
-  for (auto& age : processBin(variant_ptr, HOMO_AGE_FIELD_)) {
-
-    hom_age_vector_[index] += age;
-
-    ++index;
-
-  }
-
-}
-
-
-void kgl::InfoAgeAnalysis::addAgeAnalysis(const InfoAgeAnalysis& age_analysis) {
-
-  size_t index = 0;
-  for (auto age : age_analysis.hom_age_vector_) {
-
-    hom_age_vector_[index] += age;
-    ++index;
-
-  }
-
-  hom_under_30_ += age_analysis.hom_under_30_;
-  hom_80_over_ += age_analysis.hom_80_over_;
-
-  index = 0;
-  for (auto age : age_analysis.het_age_vector_) {
-
-    het_age_vector_[index] += age;
-    ++index;
-
-  }
-
-  het_under_30_ += age_analysis.het_under_30_;
-  het_80_over_ += age_analysis.het_80_over_;
-
-  variant_count_ += age_analysis.variant_count_;
-
-}
-
-
-
-double kgl::InfoAgeAnalysis::sumHomozygous() const {
-
-  double sum = hom_under_30_;
-  for (auto age : hom_age_vector_) {
-
-    sum += age;
-
-  }
-
-  sum += hom_80_over_;
-
-  return sum;
-
-}
-
-double kgl::InfoAgeAnalysis::sumHeterozygous() const {
-
-  double sum = het_under_30_;
-  for (auto age : het_age_vector_) {
-
-    sum += age;
-
-  }
-
-  sum += het_80_over_;
-
-  return sum;
-
-}
-
-// Utility function writes results to a stream.
-std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::InfoAgeAnalysis& age_analysis) {
-
-  ostream << kgl::InfoAgeAnalysis::header() << '\n';
-  ostream << "hom, " << age_analysis.ageHomozygousUnder30() << ", ";
-  for (auto const age : age_analysis.ageHomozygousVector()) {
-
-    ostream << age << ", ";
-
-  }
-  ostream << age_analysis.ageHomozygous80Over() << '\n';
-
-  double sum_hom = age_analysis.sumHomozygous() * 0.01;
-  ostream << "hom%, " << (age_analysis.ageHomozygousUnder30() / sum_hom) << ", ";
-  for (auto const age : age_analysis.ageHomozygousVector()) {
-
-    ostream << (age /sum_hom) << ", ";
-
-  }
-  ostream << (age_analysis.ageHomozygous80Over() /sum_hom) << '\n';
-
-
-  ostream << "het, " << age_analysis.ageHeterozygousUnder30() << ", ";
-  for (auto const age : age_analysis.ageHeterozygousVector()) {
-
-    ostream << age << ", ";
-
-  }
-  ostream << age_analysis.ageHeterozygous80Over() << '\n';
-
-  double sum_het = age_analysis.sumHeterozygous() * 0.01;
-
-  ostream << "het%, " << (age_analysis.ageHeterozygousUnder30() / sum_het) << ", ";
-  for (auto const age : age_analysis.ageHeterozygousVector()) {
-
-    ostream << (age / sum_het) << ", ";
-
-  }
-  ostream << (age_analysis.ageHeterozygous80Over() / sum_het) << '\n';
-
-  ostream << "het/hom, " << (age_analysis.ageHeterozygousUnder30() / age_analysis.ageHomozygousUnder30()) << ", ";
-  size_t index = 0;
-  for (auto const age : age_analysis.ageHeterozygousVector()) {
-
-    ostream << (age / age_analysis.ageHomozygousVector()[index]) << ", ";
-
-    ++index;
-
-  }
-  ostream << (age_analysis.ageHeterozygous80Over() / age_analysis.ageHomozygous80Over()) << '\n';
-
-  return ostream;
-
-}
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///
 
 
 // Setup the analytics to process VCF data.
@@ -274,92 +68,44 @@ bool kgl::InfoFilterAnalysis::fileReadAnalysis(std::shared_ptr<const UnphasedPop
 
     }
 
-    std::string filter_field_ident("AF");
+    std::ofstream outfile(output_file_name_,  std::ofstream::out | std::ofstream::app);
 
-    std::optional<const InfoSubscribedField> filter_field = info_header_opt.value()->getSubscribedField(filter_field_ident);
+    if (not outfile.good()) {
 
-    if (filter_field) {
-
-      InfoAgeAnalysis age_analysis_all;
-      InfoAgeAnalysis age_analysis_0_1_percent;
-      InfoAgeAnalysis age_analysis_1_percent;
-      InfoAgeAnalysis age_analysis_2_percent;
-      InfoAgeAnalysis age_analysis_5_percent;
-      InfoAgeAnalysis age_analysis_10_percent;
-
-      vcf_population->processAll(age_analysis_all);
-      InfoGEQFloatFilter info_0_1_filter(filter_field.value(), 0.001, false);
-      std::shared_ptr<const UnphasedPopulation> filtered_population = vcf_population->filterVariants(info_0_1_filter);
-      ExecEnv::log().info( "{}, Original VCF Population size: {}, Filtered Population size: {}",
-                           info_0_1_filter.filterName(), vcf_population->variantCount(), filtered_population->variantCount());
-      filtered_population->processAll(age_analysis_0_1_percent);
-
-      InfoGEQFloatFilter info_1_filter(filter_field.value(), 0.01, false);
-      filtered_population = filtered_population->filterVariants(info_1_filter);
-      ExecEnv::log().info( "{}, Original VCF Population size: {}, Filtered Population size: {}",
-                           info_1_filter.filterName(), vcf_population->variantCount(), filtered_population->variantCount());
-      filtered_population->processAll(age_analysis_1_percent);
-
-      InfoGEQFloatFilter info_2_filter(filter_field.value(), 0.02, false);
-      filtered_population = filtered_population->filterVariants(info_2_filter);
-      ExecEnv::log().info( "{}, Original VCF Population size: {}, Filtered Population size: {}",
-                           info_2_filter.filterName(), vcf_population->variantCount(), filtered_population->variantCount());
-      filtered_population->processAll(age_analysis_2_percent);
-
-      InfoGEQFloatFilter info_5_filter(filter_field.value(), 0.05, false);
-      filtered_population = filtered_population->filterVariants(info_5_filter);
-      ExecEnv::log().info( "{}, Original VCF Population size: {}, Filtered Population size: {}",
-                           info_5_filter.filterName(), vcf_population->variantCount(), filtered_population->variantCount());
-      filtered_population->processAll(age_analysis_5_percent);
-
-      InfoGEQFloatFilter info_10_filter(filter_field.value(), 0.10, false);
-      filtered_population = filtered_population->filterVariants(info_10_filter);
-      ExecEnv::log().info( "{}, Original VCF Population size: {}, Filtered Population size: {}",
-                           info_10_filter.filterName(), vcf_population->variantCount(), filtered_population->variantCount());
-      filtered_population->processAll(age_analysis_10_percent);
-
-      ExecEnv::log().info("Write age statistics for vcf (population) file: {}", vcf_population->populationId());
-
-      std::ofstream outfile(output_file_name_,  std::ofstream::out | std::ofstream::app);
-
-      if (not outfile.good()) {
-
-        ExecEnv::log().error("InfoFilterAnalysis::finalizeAnalysis; could not open results file: {}", output_file_name_);
-        return false;
-
-      }
-
-      outfile << "Age analysis for vcf file (population), " << vcf_population->populationId() << '\n';
-      outfile << "All Variants, " << age_analysis_all.variantCount() << '\n';
-      outfile << age_analysis_all;
-      outfile << "Filtered AF >= 0.1%, " << age_analysis_0_1_percent.variantCount() << '\n';
-      outfile << age_analysis_0_1_percent;
-      outfile << "Filtered AF >= 1%, " << age_analysis_1_percent.variantCount() << '\n';
-      outfile << age_analysis_1_percent;
-      outfile << "Filtered AF >= 2%, " << age_analysis_2_percent.variantCount() << '\n';
-      outfile << age_analysis_2_percent;
-      outfile << "Filtered AF >= 5%, " << age_analysis_5_percent.variantCount() << '\n';
-      outfile << age_analysis_5_percent;
-      outfile << "Filtered AF >= 10%, " << age_analysis_10_percent.variantCount() << '\n';
-      outfile << age_analysis_10_percent << '\n' << '\n' << '\n';
-
-      outfile.flush();
-
-      age_analysis_all_.addAgeAnalysis(age_analysis_all);
-      age_analysis_0_1_percent_.addAgeAnalysis(age_analysis_0_1_percent);
-      age_analysis_1_percent_.addAgeAnalysis(age_analysis_1_percent);
-      age_analysis_2_percent_.addAgeAnalysis(age_analysis_2_percent);
-      age_analysis_5_percent_.addAgeAnalysis(age_analysis_5_percent);
-      age_analysis_10_percent_.addAgeAnalysis(age_analysis_10_percent);
-
-
-    } else {
-
-      ExecEnv::log().warn("InfoFilterAnalysis::fileReadAnalysis, filter Info Field: {} not found. Disabled.", filter_field_ident);
+      ExecEnv::log().error("InfoFilterAnalysis::finalizeAnalysis; could not open results file: {}", output_file_name_);
       return false;
 
     }
 
+/*
+AF_afr, Type: Float, Number: A, Description: Alternate allele frequency in samples of African-American ancestry
+AF_amr, Type: Float, Number: A, Description: Alternate allele frequency in samples of Latino ancestry
+AF_asj, Type: Float, Number: A, Description: Alternate allele frequency in samples of Ashkenazi Jewish ancestry
+AF_eas, Type: Float, Number: A, Description: Alternate allele frequency in samples of East Asian ancestry
+AF_female, Type: Float, Number: A, Description: Alternate allele frequency in female samples
+AF_fin, Type: Float, Number: A, Description: Alternate allele frequency in samples of Finnish ancestry
+AF_male, Type: Float, Number: A, Description: Alternate allele frequency in male samples
+AF_nfe, Type: Float, Number: A, Description: Alternate allele frequency in samples of non-Finnish European ancestry
+AF_nfe_est, Type: Float, Number: A, Description: Alternate allele frequency in samples of Estonian ancestry
+AF_nfe_nwe, Type: Float, Number: A, Description: Alternate allele frequency in samples of North-Western European ancestry
+AF_nfe_onf, Type: Float, Number: A, Description: Alternate allele frequency in samples of non-Finnish but otherwise indeterminate European ancestry
+AF_nfe_seu, Type: Float, Number: A, Description: Alternate allele frequency in samples of Southern European ancestry
+AF_oth, Type: Float, Number: A, Description: Alternate allele frequency in samples of uncertain ancestry
+*/
+
+    analyzeField("AF_afr", vcf_population, outfile);
+    analyzeField("AF_amr", vcf_population, outfile);
+    analyzeField("AF_asj", vcf_population, outfile);
+    analyzeField("AF_eas", vcf_population, outfile);
+    analyzeField("AF_female", vcf_population, outfile);
+    analyzeField("AF_fin", vcf_population, outfile);
+    analyzeField("AF_male", vcf_population, outfile);
+    analyzeField("AF_nfe", vcf_population, outfile);
+    analyzeField("AF_nfe_est", vcf_population, outfile);
+    analyzeField("AF_nfe_nwe", vcf_population, outfile);
+    analyzeField("AF_nfe_onf", vcf_population, outfile);
+    analyzeField("AF_nfe_seu", vcf_population, outfile);
+    analyzeField("AF_oth", vcf_population, outfile);
 
   } else {
 
@@ -397,21 +143,15 @@ bool kgl::InfoFilterAnalysis::finalizeAnalysis() {
 
   }
 
-  outfile << "Age analysis for ALL vcf files (populations)" << '\n';
-  outfile << "All Variants, " << age_analysis_all_.variantCount() << '\n';
-  outfile << age_analysis_all_;
-  outfile << "Filtered AF >= 0.1%, " << age_analysis_0_1_percent_.variantCount() << '\n';
-  outfile << age_analysis_0_1_percent_;
-  outfile << "Filtered AF >= 1%, " << age_analysis_1_percent_.variantCount() << '\n';
-  outfile << age_analysis_1_percent_;
-  outfile << "Filtered AF >= 2%, " << age_analysis_2_percent_.variantCount() << '\n';
-  outfile << age_analysis_2_percent_;
-  outfile << "Filtered AF >= 5%, " << age_analysis_5_percent_.variantCount() << '\n';
-  outfile << age_analysis_5_percent_;
-  outfile << "Filtered AF >= 10%, " << age_analysis_10_percent_.variantCount() << '\n';
-  outfile << age_analysis_10_percent_;
+  InfoAgeAnalysis all_age_analysis("All Populations");
 
-  outfile.flush();
+  for (auto const& age_analysis : age_analysis_vector_) {
+
+    all_age_analysis.addAgeAnalysis(age_analysis);
+
+  }
+
+  outfile << all_age_analysis << '\n';
 
   return true;
 
@@ -439,3 +179,60 @@ bool kgl::InfoFilterAnalysis::getParameters(const std::string& work_directory, c
   return true;
 
 }
+
+
+void kgl::InfoFilterAnalysis::analyzeField( const std::string& info_field_ident,
+                                            std::shared_ptr<const UnphasedPopulation> vcf_population,
+                                            std::ostream& result_file) {
+
+  std::optional<std::shared_ptr<const InfoEvidenceHeader>> info_header_opt = vcf_population->getVCFInfoEvidenceHeader();
+
+  if (info_header_opt) {
+
+    std::optional<const InfoSubscribedField> filter_field = info_header_opt.value()->getSubscribedField(info_field_ident);
+
+    if (filter_field) {
+
+      const InfoSubscribedField& info_field = filter_field.value();
+
+      analyzeFilteredPopulation(NotFilter(InfoGEQFloatFilter(info_field, 0.001)), vcf_population, result_file);
+      analyzeFilteredPopulation(InfoGEQFloatFilter(info_field, 0.001), vcf_population, result_file);
+      analyzeFilteredPopulation(InfoGEQFloatFilter(info_field, 0.01), vcf_population, result_file);
+      analyzeFilteredPopulation(InfoGEQFloatFilter(info_field, 0.02), vcf_population, result_file);
+      analyzeFilteredPopulation(InfoGEQFloatFilter(info_field, 0.05), vcf_population, result_file);
+      analyzeFilteredPopulation(InfoGEQFloatFilter(info_field, 0.10), vcf_population, result_file);
+      analyzeFilteredPopulation(InfoGEQFloatFilter(info_field, 0.20), vcf_population, result_file);
+      analyzeFilteredPopulation(InfoGEQFloatFilter(info_field, 0.50), vcf_population, result_file);
+      analyzeFilteredPopulation(InfoGEQFloatFilter(info_field, 0.90), vcf_population, result_file);
+
+    } else {
+
+      ExecEnv::log().warn("InfoFilterAnalysis::fileReadAnalysis, filter Info Field: {} not found. Disabled.", info_field_ident);
+
+    }
+
+  }
+
+}
+
+
+
+void kgl::InfoFilterAnalysis::analyzeFilteredPopulation( const VariantFilter& filter,
+                                                         std::shared_ptr<const UnphasedPopulation> vcf_population,
+                                                         std::ostream& result_file) {
+
+  // Tag with filter and population
+  std::string title = "Filter: " + filter.filterName() + ", Population: " + vcf_population->populationId();
+  ExecEnv::log().info("Analysis Package: {}, executing age analysis: {}", ident(), title);
+  InfoAgeAnalysis age_analysis(title);
+  // Filter the variant population
+  std::shared_ptr<const UnphasedPopulation> filtered_population = vcf_population->filterVariants(filter);
+  // Gather the age profile.
+  filtered_population->processAll(age_analysis);
+  // Write results
+  result_file << age_analysis;
+  // Save for the grand totals.
+  age_analysis_vector_.push_back(age_analysis);
+
+}
+
