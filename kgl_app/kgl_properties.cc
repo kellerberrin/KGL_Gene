@@ -18,6 +18,42 @@ namespace kgl = kellerberrin::genome;
 //  Runtime xml retrieval
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// A vector of active packages.
+
+
+
+// Parse the list of VCF Alias for Chromosome/Contigs in the Genome Database.
+kgl::ActivePackageVector kgl::RuntimeProperties::getActivePackages() const {
+
+
+  ActivePackageVector active_packages;
+
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + std::string(EXECUTE_LIST_) + std::string(DOT_) + std::string(ACTIVE_);
+
+  std::vector<SubPropertyTree> property_tree_vector;
+  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
+
+    ExecEnv::log().info("RuntimeProperties::getActivePackages, No Active Packages Specified");
+    return active_packages;
+
+  }
+
+  for (const auto& sub_tree : property_tree_vector) {
+
+    if (sub_tree.first == VALUE_) {
+
+      std::string active_package = sub_tree.second.getValue();
+      active_packages.emplace_back(active_package);
+
+    }
+
+  }
+
+  return active_packages;
+
+}
+
+
 // A map of analysis
 kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 

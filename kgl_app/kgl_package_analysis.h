@@ -33,6 +33,7 @@ public:
   : work_directory_(std::move(work_directory)), analysis_map_(analysis_map) {
 
     // All available analytics registered here.
+    // todo: Move these to an analysis factory object.
     registered_analysis_.push_back(std::make_unique<NullAnalysis>());
     registered_analysis_.push_back(std::make_unique<IntervalAnalysis>());
     registered_analysis_.push_back(std::make_unique<InfoFilterAnalysis>());
@@ -44,10 +45,10 @@ public:
   [[nodiscard]] bool initializeAnalysis(const RuntimePackage& package,
                                         std::shared_ptr<const GenomeCollection> reference_genomes) const;
 
-  // Perform the genetic analysis per iteration.
+  // Perform the genetic analysis per VCF file read.
   [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const UnphasedPopulation> vcf_iterative_dat) const;
 
-  // Perform the genetic analysis per iteration.
+  // Perform the genetic analysis per iteration (multiple VCF files grouped together).
   [[nodiscard]] bool iterationAnalysis() const;
 
   // All VCF data has been presented, finalize analysis and write results.

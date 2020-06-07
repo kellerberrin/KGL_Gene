@@ -39,6 +39,8 @@ public:
 
   [[nodiscard]] const std::string& workDirectory() const { return work_directory_; }
 
+  [[nodiscard]] ActivePackageVector getActivePackages() const;
+
   [[nodiscard]] RuntimePackageMap getPackageMap() const;
 
   [[nodiscard]]  RuntimeAnalysisMap getAnalysisMap() const;
@@ -78,6 +80,8 @@ private:
   constexpr static const char* HELP_ = "help";
   constexpr static const char* ACTIVE_ = "active";
   constexpr static const char* VALUE_ = "value";
+  // Active Package Runtime categories.
+  constexpr static const char* EXECUTE_LIST_ = "executeList";
   // Package Runtime categories.
   constexpr static const char* PACKAGE_LIST_ = "packageList";
   constexpr static const char* PACKAGE_ = "package";

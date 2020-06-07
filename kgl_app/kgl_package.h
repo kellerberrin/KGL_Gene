@@ -19,7 +19,8 @@ public:
 
 
   ExecutePackage( const RuntimeProperties& runtime_options, const std::string& work_directory)
-                  : contig_alias_(runtime_options.getContigAlias()),
+                  : active_packages_(runtime_options.getActivePackages()),
+                    contig_alias_(runtime_options.getContigAlias()),
                     vcf_file_map_(runtime_options.getVCFFiles()),
                     genome_map_(runtime_options.getGenomeReferenceMap()),
                     analysis_map_(runtime_options.getAnalysisMap()),
@@ -30,11 +31,12 @@ public:
   ~ExecutePackage() = default;
 
   // Executes all the application logic.
-  void executeAll() const;
+  void executeActive() const;
 
 private:
 
   // The Runtime information loaded from the XML file.
+  const ActivePackageVector active_packages_;
   const ContigAliasMap contig_alias_;
   const RuntimeVCFFileMap vcf_file_map_;
   const RuntimeGenomeDatabaseMap genome_map_;

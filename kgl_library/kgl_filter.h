@@ -13,7 +13,8 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// General Info Filter.
+// General Info Filter. This function can filter
+// on arbitrary criteria specified in the supplied filter lambda.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using InfoFilterLambda = std::function<bool(const InfoDataVariant&)>;
@@ -162,7 +163,7 @@ private:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Integer Info Filter. Returns true if a scalar integer and greater or equal to the comparison value.
+// String Info Filter. Returns true if a string Info field contains a specified substring (including itself).
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class InfoSubStringFilter : public VariantFilter {
@@ -215,6 +216,54 @@ private:
   [[nodiscard]] bool implementFilter(const Variant& variant) const;
 
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Boolean Filter. Returns true if a boolean info field is true. Can be used with the Negation filter below.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class InfoBooleanFilter : public VariantFilter {
+
+public:
+
+  InfoBooleanFilter(const InfoSubscribedField& info_field, bool missing_default = false)  // How the filter responds if the data is missing.
+  : info_field_(info_field), missing_default_(missing_default) {
+
+    std::stringstream ss;
+    ss << "VCF Boolean Info Field: " << info_field_.infoVCF().ID;
+    filterName(ss.str());
+
+  }
+  InfoBooleanFilter(const InfoBooleanFilter&) = default;
+  ~InfoBooleanFilter() override = default;
+
+  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
+
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InfoBooleanFilter>(*this); }
+
+private:
+
+  const InfoSubscribedField info_field_;
+  bool missing_default_;
+  InfoFilterLambda filter_lambda_ = [this] (const InfoDataVariant& data_variant) -> bool {
+
+    auto p_bool = std::get_if<bool>(&data_variant);
+    if (p_bool != nullptr) {
+
+        return *p_bool;
+
+    } else {
+
+        return missing_default_;
+
+    }
+
+  };
+
+  [[nodiscard]] bool implementFilter(const Variant& variant) const;
+
+};
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -370,24 +419,24 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Null Filter - performs no filtering. If combined with the NotFilter below, would filter every variant.
+// True Filter - performs no filtering. If combined with the NotFilter below, would filter every variant.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class NullFilter : public VariantFilter {
+class TrueFilter : public VariantFilter {
 
 public:
 
-  explicit NullFilter() {
+  explicit TrueFilter() {
 
-    filterName("Null Filter");
+    filterName("TrueFilter");
 
   }
-  NullFilter(const NullFilter&) = default;
-  ~NullFilter() override = default;
+  TrueFilter(const TrueFilter&) = default;
+  ~TrueFilter() override = default;
 
   [[nodiscard]] bool applyFilter(const VCFVariant&) const override { return true; }
 
-  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<NullFilter>(*this); }
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<TrueFilter>(*this); }
 
 private:
 
@@ -395,7 +444,7 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Negation Filter
+// Negation Filter, the logical negation of a supplied filter.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class NotFilter : public VariantFilter {
@@ -422,7 +471,7 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// And Filter
+// And Filter, logical and of two supplied filters.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class AndFilter : public VariantFilter {
@@ -450,7 +499,7 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Or Filter
+// Or Filter, logical or of two supplied filters.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class OrFilter : public VariantFilter {

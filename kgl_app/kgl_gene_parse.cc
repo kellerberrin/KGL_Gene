@@ -2,13 +2,15 @@
 // Created by kellerberrin on 4/05/18.
 //
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Currently uses the Seqan library to parse arguments. Switch to boost when convenient.
+// Seqan dependencies should be limited to sequence analysis only.
 
 #include <iostream>
 #include <cctype>
 #include <seqan/arg_parse.h>
-#include "kgl_phylogenetic_app.h"
-#include "kgl_phylogenetic_app_analysis.h"
+#include "kgl_gene_app.h"
+#include "kgl_legacy_Pf_analysis.h"
 #define BOOST_FILESYSTEM_NO_DEPRECATED // Recommended by boost filesystem documentation.
 #include <boost/filesystem.hpp>
 #include <boost/tokenizer.hpp>
@@ -23,12 +25,12 @@ namespace kgl = kellerberrin::genome;
 
 
 // Public static member functions.
-const kgl::Phylogenetic& kgl::PhylogeneticExecEnv::getArgs() { return args_; }
-const kgl::RuntimeProperties& kgl::PhylogeneticExecEnv::getRuntimeOptions() { return runtime_options_; }
+const kgl::CmdLineArgs& kgl::GeneExecEnv::getArgs() { return args_; }
+const kgl::RuntimeProperties& kgl::GeneExecEnv::getRuntimeOptions() { return runtime_options_; }
 
 
 // Parse the command line.
-bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
+bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
 {
 
   // Setup ArgumentParser.
@@ -42,7 +44,7 @@ bool kgl::PhylogeneticExecEnv::parseCommandLine(int argc, char const ** argv)
   addUsageLine(parser, "--workDirectory <work.directory>  --newLogFile <new_log_file> --optionFile <optionFile>");
 
   const char* program_desc =
-      R"("kgl_phylogenetic" is a fast C++ program to find genetic differences (SNPs/Indels) in a population of organisms.
+      R"("kgl_genetic" is a fast C++ program to find genetic differences (SNPs/Indels) in a population of organisms.
   The entire genome of many organisms can be compared and analysed simultaneously (with sufficient memory).
   The options xml file specifies a list of VCF files and associated organism attributes to be processed.
   This program also takes the genome FASTA file and the corresponding genetic feature model in GFF3 (only) format

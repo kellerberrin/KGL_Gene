@@ -9,10 +9,24 @@
 namespace kgl = kellerberrin::genome;
 
 
-void kgl::ExecutePackage::executeAll() const {
+void kgl::ExecutePackage::executeActive() const {
 
-  // for all packages.
-  for (auto const& [package_ident, package] : package_map_) {
+  // for all active packages.
+  for (auto const& active_package : active_packages_) {
+
+    // Get package definition
+    auto result = package_map_.find(active_package.packageIdentifier());
+
+    if (result == package_map_.end()) {
+
+      ExecEnv::log().error( "ExecutePackage::executeActive, Active package :{} could not find matching package definition",
+                            active_package.packageIdentifier());
+
+      continue; // execute next active package.
+
+    }
+
+    auto [package_ident, package] = *result;
 
     // Get reference genomes.
     ExecEnv::log().info("Load Reference Genomes for Package: {}", package_ident);
@@ -22,7 +36,7 @@ void kgl::ExecutePackage::executeAll() const {
     // Setup the analytics
     if (not package_analysis_.initializeAnalysis(package, reference_genome_ptr)) {
 
-      ExecEnv::log().error("ExecutePackage::executeAll, Problem initializing Analysis for Package: {}", package_ident);
+      ExecEnv::log().error("ExecutePackage::executeActive, Problem initializing Analysis for Package: {}", package_ident);
 
     }
 
@@ -35,7 +49,7 @@ void kgl::ExecutePackage::executeAll() const {
 
         if (not package_analysis_.fileReadAnalysis(vcf_read_data)) {
 
-          ExecEnv::log().error("ExecutePackage::executeAll, Problem performing Read File Analysis for Package: {}", package_ident);
+          ExecEnv::log().error("ExecutePackage::executeActive, Problem performing Read File Analysis for Package: {}", package_ident);
 
         }
 
@@ -45,7 +59,7 @@ void kgl::ExecutePackage::executeAll() const {
 
       if (not package_analysis_.iterationAnalysis()) {
 
-        ExecEnv::log().error("ExecutePackage::executeAll, Problem performing Analysis for Package: {}", package_ident);
+        ExecEnv::log().error("ExecutePackage::executeActive, Problem performing Analysis for Package: {}", package_ident);
 
       }
 
@@ -54,7 +68,7 @@ void kgl::ExecutePackage::executeAll() const {
     // Complete and write the analytics.
     if (not package_analysis_.finalizeAnalysis()) {
 
-      ExecEnv::log().error("ExecutePackage::executeAll, Problem finalizing Analysis for Package: {}", package_ident);
+      ExecEnv::log().error("ExecutePackage::executeActive, Problem finalizing Analysis for Package: {}", package_ident);
 
     }
 
@@ -64,6 +78,13 @@ void kgl::ExecutePackage::executeAll() const {
 
 
 void kgl::ExecutePackage::verifyPackages() const {
+
+  // List the active packages.
+  for (auto const& active : active_packages_) {
+
+    ExecEnv::log().info("Sequentially Executing Active Package: {}", active.packageIdentifier());
+
+  }
 
   // for all packages.
   for (auto const& [package_ident, package] : package_map_) {

@@ -15,7 +15,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 
 
 // Holds the Commandline Arguments.
-struct Phylogenetic {
+struct CmdLineArgs {
 
   std::string workDirectory{"./"};
   std::string logFile{"kgl_phylo.log"};
@@ -26,26 +26,26 @@ struct Phylogenetic {
 
 };
 
-// The Phylogenetic Runtime environment.
-class PhylogeneticExecEnv {
+// The Runtime environment.
+class GeneExecEnv {
 
 public:
 
-  PhylogeneticExecEnv()=default;
-  ~PhylogeneticExecEnv()=default;
+  GeneExecEnv()=default;
+  ~GeneExecEnv()=default;
 
-  [[nodiscard]] static const Phylogenetic& getArgs();
+  [[nodiscard]] static const CmdLineArgs& getArgs();
   [[nodiscard]] static const RuntimeProperties& getRuntimeOptions();
 
 // The following 4 static members are required for all applications.
-  inline static constexpr const char* VERSION = "0.1";
-  inline static constexpr const char* MODULE_NAME = "kgl_phylo";
+  inline static constexpr const char* VERSION = "0.8";
+  inline static constexpr const char* MODULE_NAME = "kglGene";
   static void executeApp(); // Application mainline.
   [[nodiscard]] static bool parseCommandLine(int argc, char const ** argv);  // Parse command line arguments.
 
 private:
 
-  inline static Phylogenetic args_;
+  inline static CmdLineArgs args_;
   inline static RuntimeProperties runtime_options_;
 
 

@@ -109,7 +109,7 @@ public:
     U = SELENOCYSTEINE,
     O = PYRROLYSINE,
     // Represents all stop codons, including the two above.
-    _ = STOP_CODON,   // Note '*' is an illegal symbol
+    _ = STOP_CODON,   // Note '*' is an illegal symbol in an enum.
     // The special unknown amino acid generated when the CodingDNA5 codon
     // contains the unknown base 'N'.
     Z = UNKNOWN_AMINO};
@@ -125,12 +125,12 @@ public:
   [[nodiscard]] static bool validAlphabet(Alphabet amino);
 
   // Convert an amino into an array offset.
-  // Should ba in the same ascending order as the vector returned by enumerateAlphabet();
+  // Should be in the same ascending order as the vector returned by enumerateAlphabet();
   // Only the 20 'natural' AAs and the unknown AA are indexed.
   [[nodiscard]] static ContigOffset_t symbolToColumn(Alphabet amino);
 
   // The Alphabet convertChar(char) function must be defined -see kgl_alphabet_string.h
-  [[nodiscard]] static Alphabet convertChar(char chr_base);
+  [[nodiscard]] static Alphabet convertChar(char chr_aa);
 
   // Return amino acid as a char.
   [[nodiscard]] static char convertToChar(Alphabet amino) { return static_cast<char>(amino); }

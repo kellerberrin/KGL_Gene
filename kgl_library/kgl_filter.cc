@@ -107,6 +107,28 @@ bool kgl::InfoSubStringFilter::implementFilter(const Variant& variant) const {
 }
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter using a boolean Info field.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bool kgl::InfoBooleanFilter::implementFilter(const Variant& variant) const {
+
+  InfoDataEvidence info_evidence_opt = variant.evidence().infoData();
+
+  if (info_evidence_opt) {
+
+    InfoDataVariant info_data = info_field_.getData(*info_evidence_opt.value());
+
+    return filter_lambda_(info_data);
+
+  } else {
+
+    return missing_default_;
+
+  }
+
+}
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

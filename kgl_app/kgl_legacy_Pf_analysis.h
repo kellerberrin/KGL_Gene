@@ -8,12 +8,14 @@
 
 #include "kgl_genome_db.h"
 #include "kgl_variant_db.h"
-#include "kgl_phylogenetic_app.h"
+#include "kgl_gene_app.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Legacy P. falciparum code. All functionality to be shifted to packages.
+// Leave for the moment to ensure the code still compiles.
 // The top level analysis object.
 // Dispatches analytics.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
