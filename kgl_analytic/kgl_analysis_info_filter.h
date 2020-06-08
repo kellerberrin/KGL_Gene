@@ -50,18 +50,21 @@ public:
 
 private:
 
-  std::vector<InfoAgeAnalysis> age_analysis_vector_;
+  std::vector<InfoAgeAnalysis> age_analysis_vector_;   // Store for final totals
   std::string output_file_name_;
 
   constexpr static const char* OUTPUT_FILE_ = "OUTPUTFILE";
+
+  std::optional<std::shared_ptr<const UnphasedPopulation>> qualityFilter( std::shared_ptr<const UnphasedPopulation> vcf_population);
+
+  void analyzeField( const std::string& info_field_ident,
+                     std::shared_ptr<const UnphasedPopulation> vcf_population,
+                     std::ostream& result_file);
 
   void analyzeFilteredPopulation( const VariantFilter& filter,
                                   std::shared_ptr<const UnphasedPopulation> vcf_population,
                                   std::ostream& result_file);
 
-  void analyzeField( const std::string& info_field_ident,
-                     std::shared_ptr<const UnphasedPopulation> vcf_population,
-                     std::ostream& result_file);
 };
 
 
