@@ -25,7 +25,7 @@ public:
 
   void addAgeAnalysis(const InfoAgeAnalysis& age_analysis);
 
-  void processVariant(const std::shared_ptr<const Variant>& variant_ptr);
+  bool processVariant(const std::shared_ptr<const Variant>& variant_ptr);
 
   [[nodiscard]] double ageHomozygousUnder30() const { return hom_under_30_; }
   [[nodiscard]] double ageHomozygous80Over() const { return hom_80_over_; }

@@ -53,11 +53,14 @@ private:
   std::vector<InfoAgeAnalysis> age_analysis_vector_;   // Store for final totals
   std::string output_file_name_;
 
+  std::vector<std::shared_ptr<const UnphasedPopulation>> previous_populations_;
+
   constexpr static const char* OUTPUT_FILE_ = "OUTPUTFILE";
 
   std::optional<std::shared_ptr<const UnphasedPopulation>> qualityFilter( std::shared_ptr<const UnphasedPopulation> vcf_population);
 
   void analyzeField( const std::string& info_field_ident,
+                     const std::vector<double>& field_values,
                      std::shared_ptr<const UnphasedPopulation> vcf_population,
                      std::ostream& result_file);
 
@@ -65,7 +68,10 @@ private:
                                   std::shared_ptr<const UnphasedPopulation> vcf_population,
                                   std::ostream& result_file);
 
-};
+  bool performAnalysis(std::shared_ptr<const UnphasedPopulation> filtered_population);
+
+
+  };
 
 
 

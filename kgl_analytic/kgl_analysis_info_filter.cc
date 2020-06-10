@@ -54,103 +54,45 @@ bool kgl::InfoFilterAnalysis::fileReadAnalysis(std::shared_ptr<const UnphasedPop
                       ident(), vcf_population->populationId(), vcf_population->variantCount());
 
 
-  std::optional<std::shared_ptr<const InfoEvidenceHeader>> info_header_opt = vcf_population->getVCFInfoEvidenceHeader();
+  // save the population.
+  previous_populations_.push_back(vcf_population);
 
-  if (info_header_opt) {
+  bool result = performAnalysis(vcf_population);
 
-    ExecEnv::log().info("Analysis Id: {}, VCF File vcf_population: {}, Obtained header for: {} Info Fields (listed below)",
-                        ident(), info_header_opt.value()->getConstMap().size(), vcf_population->populationId());
-
-    // List the available fields ease of use.
-    for (auto const& [ident, field_item] : info_header_opt.value()->getConstMap()) {
-
-      ExecEnv::log().info( "Field Id: {}, Type: {}, Number: {}, Description: {}",
-                           ident, field_item.infoVCF().type, field_item.infoVCF().number, field_item.infoVCF().description);
-
-    }
-
-    // Pre-filter variants for quality, uses the VQSLOD and rf_tp_probability fields.
-    std::optional<std::shared_ptr<const kgl::UnphasedPopulation>> vcf_population_opt = qualityFilter(vcf_population);
-
-    if (not vcf_population_opt) {
-
-      ExecEnv::log().error( "InfoFilterAnalysis::fileReadAnalysis; problem with variant quality filter for population: {}",
-                            vcf_population->populationId());
-      return false;
-
-    }
-
-    vcf_population = vcf_population_opt.value();
-
-    ExecEnv::log().info( "Population: {} size after filtering: {}", vcf_population->populationId(), vcf_population->variantCount());
-
-    std::ofstream outfile(output_file_name_,  std::ofstream::out | std::ofstream::app);
-
-    if (not outfile.good()) {
-
-      ExecEnv::log().error("InfoFilterAnalysis::fileReadAnalysis; could not open results file: {}", output_file_name_);
-      return false;
-
-    }
-
-/*
-AF_afr, Type: Float, Number: A, Description: Alternate allele frequency in samples of African-American ancestry
-AF_amr, Type: Float, Number: A, Description: Alternate allele frequency in samples of Latino ancestry
-AF_asj, Type: Float, Number: A, Description: Alternate allele frequency in samples of Ashkenazi Jewish ancestry
-AF_eas, Type: Float, Number: A, Description: Alternate allele frequency in samples of East Asian ancestry
-AF_female, Type: Float, Number: A, Description: Alternate allele frequency in female samples
-AF_fin, Type: Float, Number: A, Description: Alternate allele frequency in samples of Finnish ancestry
-AF_male, Type: Float, Number: A, Description: Alternate allele frequency in male samples
-AF_nfe, Type: Float, Number: A, Description: Alternate allele frequency in samples of non-Finnish European ancestry
-AF_nfe_est, Type: Float, Number: A, Description: Alternate allele frequency in samples of Estonian ancestry
-AF_nfe_nwe, Type: Float, Number: A, Description: Alternate allele frequency in samples of North-Western European ancestry
-AF_nfe_onf, Type: Float, Number: A, Description: Alternate allele frequency in samples of non-Finnish but otherwise indeterminate European ancestry
-AF_nfe_seu, Type: Float, Number: A, Description: Alternate allele frequency in samples of Southern European ancestry
-AF_oth, Type: Float, Number: A, Description: Alternate allele frequency in samples of uncertain ancestry
-*/
-
-    InfoAgeAnalysis age_sub_total(" Total for Population: " + vcf_population->populationId());
-    vcf_population->processAll(age_sub_total);
-    outfile << age_sub_total;
-    // Store for final total.
-    age_analysis_vector_.push_back(age_sub_total);
-
-    // Filter on AF fields.
-    analyzeField("InbreedingCoeff", vcf_population, outfile);
-    analyzeField("AF", vcf_population, outfile);
-    analyzeField("AF_male", vcf_population, outfile);
-    analyzeField("AF_female", vcf_population, outfile);
-    analyzeField("AF_afr", vcf_population, outfile);
-    analyzeField("AF_amr", vcf_population, outfile);
-    analyzeField("AF_asj", vcf_population, outfile);
-    analyzeField("AF_eas", vcf_population, outfile);
-    analyzeField("AF_fin", vcf_population, outfile);
-    analyzeField("AF_nfe", vcf_population, outfile);
-    analyzeField("AF_nfe_est", vcf_population, outfile);
-    analyzeField("AF_nfe_nwe", vcf_population, outfile);
-    analyzeField("AF_nfe_onf", vcf_population, outfile);
-    analyzeField("AF_nfe_seu", vcf_population, outfile);
-    analyzeField("AF_oth", vcf_population, outfile);
-
-  } else {
-
-    ExecEnv::log().warn("InfoFilterAnalysis::fileReadAnalysis could not get Info Field Header from VCF vcf_population: {}. Disabled.",
-                        vcf_population->populationId());
-    return false;
-
-
-  }
-
-  return true;
-
+  ExecEnv::log().info("After analysis, vector held population: {} size: {}",
+                       previous_populations_.back()->populationId(), previous_populations_.back()->variantCount());
+  return result;
 }
+
+
 
 // Perform the genetic analysis per iteration.
 bool kgl::InfoFilterAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Default Iteration Analysis called for Analysis Id: {}", ident());
 
-  return true;
+  if (previous_populations_.size() != 2) {
+
+    ExecEnv::log().warn("InfoFilterAnalysis::iterationAnalysis, expected 2 VCF populations per iteration for Ident: {}", ident());
+    previous_populations_.clear();
+    return true; // not really an error condition.
+
+  }
+
+  // Assume the first element is a population of genome variants
+  // Assume the second vector element is a population of exome only variants
+  // Complement the whole genome variants with the exome variants to get only non-coding variants outside exome (Gene) areas.
+
+  ExecEnv::log().info(" Before set complement, the population: {} size:{}",
+                        previous_populations_.front()->populationId(), previous_populations_.front()->variantCount());
+  std::shared_ptr<const UnphasedPopulation> non_coding_population = previous_populations_.front()->setComplement(previous_populations_.back());
+  ExecEnv::log().info(" After set complement, the population: {} size:{}",
+                      non_coding_population->populationId(), non_coding_population->variantCount());
+
+  // Clean up the memory.
+  previous_populations_.clear();
+
+  return performAnalysis(non_coding_population);
 
 }
 
@@ -181,6 +123,8 @@ bool kgl::InfoFilterAnalysis::finalizeAnalysis() {
   return true;
 
 }
+
+
 
 bool kgl::InfoFilterAnalysis::getParameters(const std::string& work_directory, const RuntimeParameterMap& named_parameters) {
 
@@ -273,7 +217,105 @@ kgl::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const UnphasedPopulation
 }
 
 
+bool kgl::InfoFilterAnalysis::performAnalysis( std::shared_ptr<const kgl::UnphasedPopulation> vcf_population) {
+
+  std::optional<std::shared_ptr<const InfoEvidenceHeader>> info_header_opt = vcf_population->getVCFInfoEvidenceHeader();
+
+  if (not info_header_opt) {
+
+    ExecEnv::log().warn("InfoFilterAnalysis::fileReadAnalysis could not get Info Field Header from VCF vcf_population: {}. Disabled.",
+    vcf_population->populationId());
+    return false;
+
+  }
+
+  ExecEnv::log().info("Analysis Id: {}, VCF File vcf_population: {}, Obtained header for: {} Info Fields (listed below)",
+  ident(), info_header_opt.value()->getConstMap().size(), vcf_population->populationId());
+
+  // List the available fields ease of use.
+  for (auto const&[ident, field_item] : info_header_opt.value()->getConstMap()) {
+
+    ExecEnv::log().info("Field Id: {}, Type: {}, Number: {}, Description: {}",
+                        ident, field_item.infoVCF().type, field_item.infoVCF().number,
+                        field_item.infoVCF().description);
+
+  }
+
+  std::ofstream outfile(output_file_name_,  std::ofstream::out | std::ofstream::app);
+
+  if (not outfile.good()) {
+
+    ExecEnv::log().error("InfoFilterAnalysis::fileReadAnalysis; could not open results file: {}", output_file_name_);
+    return false;
+
+  }
+
+/*
+AF_afr, Type: Float, Number: A, Description: Alternate allele frequency in samples of African-American ancestry
+AF_amr, Type: Float, Number: A, Description: Alternate allele frequency in samples of Latino ancestry
+AF_asj, Type: Float, Number: A, Description: Alternate allele frequency in samples of Ashkenazi Jewish ancestry
+AF_eas, Type: Float, Number: A, Description: Alternate allele frequency in samples of East Asian ancestry
+AF_female, Type: Float, Number: A, Description: Alternate allele frequency in female samples
+AF_fin, Type: Float, Number: A, Description: Alternate allele frequency in samples of Finnish ancestry
+AF_male, Type: Float, Number: A, Description: Alternate allele frequency in male samples
+AF_nfe, Type: Float, Number: A, Description: Alternate allele frequency in samples of non-Finnish European ancestry
+AF_nfe_est, Type: Float, Number: A, Description: Alternate allele frequency in samples of Estonian ancestry
+AF_nfe_nwe, Type: Float, Number: A, Description: Alternate allele frequency in samples of North-Western European ancestry
+AF_nfe_onf, Type: Float, Number: A, Description: Alternate allele frequency in samples of non-Finnish but otherwise indeterminate European ancestry
+AF_nfe_seu, Type: Float, Number: A, Description: Alternate allele frequency in samples of Southern European ancestry
+AF_oth, Type: Float, Number: A, Description: Alternate allele frequency in samples of uncertain ancestry
+*/
+
+  // Pre-filter variants for quality, uses the VQSLOD and rf_tp_probability fields.
+  std::optional<std::shared_ptr<const kgl::UnphasedPopulation>> vcf_population_opt = qualityFilter(vcf_population);
+
+  if (not vcf_population_opt) {
+
+    ExecEnv::log().error( "InfoFilterAnalysis::fileReadAnalysis; problem with variant quality filter for population: {}",
+                          vcf_population->populationId());
+    return false;
+
+  }
+
+  vcf_population = vcf_population_opt.value();
+
+  ExecEnv::log().info( "Population: {} size after filtering: {}", vcf_population->populationId(), vcf_population->variantCount());
+
+
+  //perform the analysis.
+  InfoAgeAnalysis age_sub_total(" Total for Population: " + vcf_population->populationId());
+  vcf_population->processAll(age_sub_total, &InfoAgeAnalysis::processVariant);
+  outfile << age_sub_total;
+  // Store for final total.
+  age_analysis_vector_.push_back(age_sub_total);
+
+  const std::vector<double> AF_values{0.001, 0.01, 0.02, 0.05, 0.10, 0.20, 0.50, 0.90};
+  const std::vector<double> inbreeding_values{ -0.9, -0.5, -0.2, -0.1, 0.0, 0.1, 0.20, 0.50, 0.90};
+
+  // Filter on AF fields.
+  analyzeField("InbreedingCoeff", inbreeding_values, vcf_population, outfile);
+  analyzeField("AF", AF_values, vcf_population, outfile);
+  analyzeField("AF_male", AF_values, vcf_population, outfile);
+  analyzeField("AF_female", AF_values, vcf_population, outfile);
+  analyzeField("AF_afr", AF_values, vcf_population, outfile);
+  analyzeField("AF_amr", AF_values, vcf_population, outfile);
+  analyzeField("AF_asj", AF_values, vcf_population, outfile);
+  analyzeField("AF_eas", AF_values, vcf_population, outfile);
+  analyzeField("AF_fin", AF_values, vcf_population, outfile);
+  analyzeField("AF_nfe", AF_values, vcf_population, outfile);
+  analyzeField("AF_nfe_est", AF_values, vcf_population, outfile);
+  analyzeField("AF_nfe_nwe", AF_values, vcf_population, outfile);
+  analyzeField("AF_nfe_onf", AF_values, vcf_population, outfile);
+  analyzeField("AF_nfe_seu", AF_values, vcf_population, outfile);
+  analyzeField("AF_oth", AF_values, vcf_population, outfile);
+
+  return true;
+
+}
+
+
 void kgl::InfoFilterAnalysis::analyzeField( const std::string& info_field_ident,
+                                            const std::vector<double>& field_values,
                                             std::shared_ptr<const UnphasedPopulation> vcf_population,
                                             std::ostream& result_file) {
 
@@ -287,15 +329,13 @@ void kgl::InfoFilterAnalysis::analyzeField( const std::string& info_field_ident,
 
       const InfoSubscribedField& info_field = filter_field.value();
 
-      analyzeFilteredPopulation(NotFilter(InfoGEQFloatFilter(info_field, 0.001)), vcf_population, result_file);
-      analyzeFilteredPopulation(InfoGEQFloatFilter(info_field, 0.001), vcf_population, result_file);
-      analyzeFilteredPopulation(InfoGEQFloatFilter(info_field, 0.01), vcf_population, result_file);
-      analyzeFilteredPopulation(InfoGEQFloatFilter(info_field, 0.02), vcf_population, result_file);
-      analyzeFilteredPopulation(InfoGEQFloatFilter(info_field, 0.05), vcf_population, result_file);
-      analyzeFilteredPopulation(InfoGEQFloatFilter(info_field, 0.10), vcf_population, result_file);
-      analyzeFilteredPopulation(InfoGEQFloatFilter(info_field, 0.20), vcf_population, result_file);
-      analyzeFilteredPopulation(InfoGEQFloatFilter(info_field, 0.50), vcf_population, result_file);
-      analyzeFilteredPopulation(InfoGEQFloatFilter(info_field, 0.90), vcf_population, result_file);
+      analyzeFilteredPopulation(NotFilter(InfoGEQFloatFilter(info_field, field_values.front())), vcf_population, result_file);
+
+      for (auto value : field_values) {
+
+        analyzeFilteredPopulation(InfoGEQFloatFilter(info_field, value), vcf_population, result_file);
+
+      }
 
     } else {
 
@@ -320,7 +360,7 @@ void kgl::InfoFilterAnalysis::analyzeFilteredPopulation( const VariantFilter& fi
   // Filter the variant population
   std::shared_ptr<const UnphasedPopulation> filtered_population = vcf_population->filterVariants(filter);
   // Gather the age profile.
-  filtered_population->processAll(age_analysis);
+  filtered_population->processAll(age_analysis, &InfoAgeAnalysis::processVariant);
   // Write results
   result_file << age_analysis;
 

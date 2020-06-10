@@ -53,8 +53,6 @@ void kgl::ExecutePackage::executeActive() const {
 
         }
 
-        vcf_read_data->clear();
-
       }
 
       if (not package_analysis_.iterationAnalysis()) {

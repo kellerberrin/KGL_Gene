@@ -43,12 +43,15 @@ public:
   // Unconditionally adds a variant to the contig (unique or not).
   [[nodiscard]]  bool addVariant(std::shared_ptr<const Variant> variant);
 
-  // The first bool is normal operation. The second bool is a unique variant was added to the contig.
-  std::pair<bool, bool> addUniqueVariant(std::shared_ptr<const Variant> variant);
+  // Test if an equivalent variant already exists in the contig.
+  [[nodiscard]] bool variantExists(std::shared_ptr<const Variant> variant);
+  // Only adds the variant if it does not already exist.
+  [[nodiscard]] bool addUniqueVariant(std::shared_ptr<const Variant> variant);
 
   [[nodiscard]]  size_t variantCount() const;
 
   [[nodiscard]] const UnphasedOffsetMap& getMap() const { return contig_offset_map_; }
+
 
   [[nodiscard]] std::shared_ptr<UnphasedContig> filterVariants(const VariantFilter& filter) const;
 
@@ -85,10 +88,13 @@ public:
 
   [[nodiscard]] size_t variantCount() const;
 
+  // Test if an equivalent variant already exists in the genome.
+  [[nodiscard]] bool variantExists(std::shared_ptr<const Variant> variant) const;
+
   [[nodiscard]] bool addVariant(std::shared_ptr<const Variant> variant);
 
   // The first bool is normal operation. The second bool is if a unique variant was added to the genome.
-  [[nodiscard]] std::pair<bool, bool> addUniqueVariant(std::shared_ptr<const Variant> variant);
+  [[nodiscard]] bool addUniqueVariant(std::shared_ptr<const Variant> variant);
 
   [[nodiscard]] const GenomeId_t& genomeId() const { return genome_id_; }
 

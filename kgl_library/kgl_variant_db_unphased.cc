@@ -73,46 +73,57 @@ bool kgl::UnphasedContig::addVariant(std::shared_ptr<const Variant> variant) {
 
 }
 
-// The first bool is normal operation. The second bool is if a unique variant was added to the contig.
-std::pair<bool, bool> kgl::UnphasedContig::addUniqueVariant(std::shared_ptr<const Variant> variant) {
+
+// Test if an equivalent variant already exists in the contig.
+[[nodiscard]] bool kgl::UnphasedContig::variantExists(std::shared_ptr<const Variant> variant) {
 
   auto result = contig_offset_map_.find(variant->offset());
 
   if (result != contig_offset_map_.end()) {
     // Variant offset exists.
 
-    for (auto const existingvariant : result->second) {
+    for (auto const& existingvariant : result->second) {
 
       if (existingvariant->equivalent(*variant)) {
 
-        // Operation normal but variant not unique.
-        return std::pair<bool, bool>(true, false);
+        // found the variant.
+        return true;
 
       }
     }
     // If we fall through the loop then no equivalent variant was found.
-    // So add the variant and return.
-    UnphasedVariantCount new_variant(variant);
-    result->second.push_back(new_variant);
+    return false;
 
   } else {
-    // add the new offset.
-    std::pair<ContigOffset_t, UnphasedVectorVariantCount> new_offset;
-    new_offset.first = variant->offset();
-    UnphasedVariantCount new_variant(variant);
-    new_offset.second.push_back(new_variant);
-    auto result = contig_offset_map_.insert(new_offset);
 
-    if (not result.second) {
-
-      ExecEnv::log().error("UnphasedContig::addVariant(); Could not add variant offset: {} to the genome", variant->offset());
-      return std::pair<bool, bool>(false, false);;
-
-    }
+    // No variants found at the offset.
+    return false;
 
   }
 
-  return std::pair<bool, bool>(true, true);
+}
+
+// The first bool is normal operation. The second bool is if a unique variant was added to the contig.
+bool kgl::UnphasedContig::addUniqueVariant(std::shared_ptr<const Variant> variant) {
+
+  if (variantExists(variant)) {
+// don't add.
+
+    // Operation normal but variant not unique.
+    return true;
+
+  }
+
+  if (addVariant(variant)) {
+
+    return true;
+
+  } else {
+
+    // problem adding variant.
+    return false;
+
+  }
 
 }
 
@@ -263,26 +274,41 @@ bool kgl::UnphasedGenome::addVariant(std::shared_ptr<const Variant> variant) {
 
 }
 
+// Test if an equivalent variant already exists in the genome.
+bool kgl::UnphasedGenome::variantExists(std::shared_ptr<const Variant> variant) const {
+
+  auto result = getMap().find (variant->contigId());
+  if (result == getMap().end()) {
+
+    return false;
+
+  }
+
+  return result->second->variantExists(variant);
+
+}
+
+
 // The first bool is normal operation. The second bool is if a unique variant was added to the genome.
-std::pair<bool, bool> kgl::UnphasedGenome::addUniqueVariant(std::shared_ptr<const Variant> variant) {
+bool kgl::UnphasedGenome::addUniqueVariant(std::shared_ptr<const Variant> variant) {
 
   std::optional<std::shared_ptr<UnphasedContig>> contig_opt = getCreateContig(variant->contigId());
   if (not contig_opt) {
 
     ExecEnv::log().error("UnphasedGenome::addVariant(), Genome: {} could not get or create Contig: {}", genomeId(), variant->contigId());
-    return std::pair<bool, bool>(false, false);
+    return false;
 
   }
 
-  std::pair<bool, bool> result = contig_opt.value()->addUniqueVariant(variant);
-  if (not result.first) {
+  bool result = contig_opt.value()->addUniqueVariant(variant);
+  if (not result) {
 
     ExecEnv::log().error("UnphasedGenome::addVariant(), Genome: {} could not add variant to Contig: {}", genomeId(), variant->contigId());
-    return std::pair<bool, bool>(false, false);
+    return false;
 
   }
 
-  return std::pair<bool, bool>(true, result.second);
+  return true;
 
 }
 

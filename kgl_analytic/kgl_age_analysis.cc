@@ -69,7 +69,7 @@ std::vector<double> kgl::InfoAgeAnalysis::processBin(const std::shared_ptr<const
 }
 
 
-void kgl::InfoAgeAnalysis::processVariant(const std::shared_ptr<const Variant>& variant_ptr) {
+bool kgl::InfoAgeAnalysis::processVariant(const std::shared_ptr<const Variant>& variant_ptr) {
 
   ++variant_count_;
 
@@ -95,6 +95,8 @@ void kgl::InfoAgeAnalysis::processVariant(const std::shared_ptr<const Variant>& 
     ++index;
 
   }
+
+  return true;
 
 }
 
@@ -176,13 +178,13 @@ std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::Info
   ostream << age_analysis.ageHomozygous80Over() << '\n';
 
   double sum_hom = age_analysis.sumHomozygous() * 0.01;
-  ostream << "hom%, " << (age_analysis.ageHomozygousUnder30() / sum_hom) << ", ";
+  ostream << "hom%, " << (sum_hom > 0 ? (age_analysis.ageHomozygousUnder30() / sum_hom) : 0.0) << ", ";
   for (auto const age : age_analysis.ageHomozygousVector()) {
 
-    ostream << (age /sum_hom) << ", ";
+    ostream << (sum_hom > 0 ? (age /sum_hom) : 0.0) << ", ";
 
   }
-  ostream << (age_analysis.ageHomozygous80Over() /sum_hom) << '\n';
+  ostream << (sum_hom > 0 ? (age_analysis.ageHomozygous80Over() /sum_hom) : 0.0) << '\n';
 
 
   ostream << "het, " << age_analysis.ageHeterozygousUnder30() << ", ";
