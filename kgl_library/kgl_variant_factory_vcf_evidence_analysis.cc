@@ -125,12 +125,12 @@ std::vector<double> kgl::InfoEvidenceAnalysis::stringBinToFloat(const std::vecto
 }
 
 
-std::optional<const kgl::InfoSubscribedField> kgl::InfoEvidenceAnalysis::getSubscribedField( const std::shared_ptr<const Variant>& variant_ptr,
+std::optional<const kgl::InfoSubscribedField> kgl::InfoEvidenceAnalysis::getSubscribedField( const Variant& variant,
                                                                                              const std::string& field_ident) {
 
-  if (variant_ptr->evidence().infoData()) {
+  if (variant.evidence().infoData()) {
 
-    return variant_ptr->evidence().infoData().value()->evidenceHeader()->getSubscribedField(field_ident);
+    return variant.evidence().infoData().value()->evidenceHeader()->getSubscribedField(field_ident);
 
   }
 
@@ -139,14 +139,14 @@ std::optional<const kgl::InfoSubscribedField> kgl::InfoEvidenceAnalysis::getSubs
 }
 
 
-std::optional<kgl::InfoDataVariant> kgl::InfoEvidenceAnalysis::getInfoData( const std::shared_ptr<const Variant>& variant_ptr,
+std::optional<kgl::InfoDataVariant> kgl::InfoEvidenceAnalysis::getInfoData( const Variant& variant,
                                                                             const std::string& field_ident) {
 
-  std::optional<const kgl::InfoSubscribedField> field = getSubscribedField(variant_ptr, field_ident);
+  std::optional<const kgl::InfoSubscribedField> field = getSubscribedField(variant, field_ident);
 
   if (field) {
 
-    const DataMemoryBlock &data_block = *variant_ptr->evidence().infoData().value();
+    const DataMemoryBlock &data_block = *variant.evidence().infoData().value();
 
     InfoDataVariant variant_data = field->getData(data_block);
 

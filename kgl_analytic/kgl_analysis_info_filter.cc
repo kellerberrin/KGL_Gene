@@ -50,7 +50,10 @@ bool kgl::InfoFilterAnalysis::initializeAnalysis( const std::string& work_direct
 // Perform the genetic analysis per iteration.
 bool kgl::InfoFilterAnalysis::fileReadAnalysis(std::shared_ptr<const UnphasedPopulation> vcf_population) {
 
-  ExecEnv::log().info("Default VCF File Read for Analysis Id: {} called with Variant Population: {}, Variant Count: {}",
+  // Only want unique variants
+  vcf_population =  vcf_population->uniqueVariantPopulation();
+
+  ExecEnv::log().info("VCF File Read for Analysis Id: {} called with Unique Variant Population: {}, Variant Count: {}",
                       ident(), vcf_population->populationId(), vcf_population->variantCount());
 
 
@@ -62,6 +65,7 @@ bool kgl::InfoFilterAnalysis::fileReadAnalysis(std::shared_ptr<const UnphasedPop
   ExecEnv::log().info("After analysis, vector held population: {} size: {}",
                        previous_populations_.back()->populationId(), previous_populations_.back()->variantCount());
   return result;
+
 }
 
 
@@ -69,7 +73,7 @@ bool kgl::InfoFilterAnalysis::fileReadAnalysis(std::shared_ptr<const UnphasedPop
 // Perform the genetic analysis per iteration.
 bool kgl::InfoFilterAnalysis::iterationAnalysis() {
 
-  ExecEnv::log().info("Default Iteration Analysis called for Analysis Id: {}", ident());
+  ExecEnv::log().info("Iteration Analysis called for Analysis Id: {}", ident());
 
   if (previous_populations_.size() != 2) {
 
@@ -99,7 +103,7 @@ bool kgl::InfoFilterAnalysis::iterationAnalysis() {
 // All VCF data has been presented, finalize analysis and write results.
 bool kgl::InfoFilterAnalysis::finalizeAnalysis() {
 
-  ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
+  ExecEnv::log().info("Finalize Analysis called for Analysis Id: {}", ident());
 
   std::ofstream outfile(output_file_name_,  std::ofstream::out | std::ofstream::app);
 
@@ -181,7 +185,7 @@ kgl::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const UnphasedPopulation
 
   }
 
-  InfoTextGEQFloatFilter vqslod_filter(VQSLOD_FIELD, VQSLOD_LEVEL);
+  InfoGEQFloatFilter vqslod_filter(VQSLOD_FIELD, VQSLOD_LEVEL);
 
   std::shared_ptr<const UnphasedPopulation> filtered_population = vcf_population->filterVariants(vqslod_filter);
 
@@ -201,7 +205,7 @@ kgl::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const UnphasedPopulation
 
   }
 
-  InfoTextGEQFloatFilter random_forest_filter(RANDOM_FOREST_FIELD, RANDOM_FOREST_LEVEL);
+  InfoGEQFloatFilter random_forest_filter(RANDOM_FOREST_FIELD, RANDOM_FOREST_LEVEL);
 
   filtered_population = filtered_population->filterVariants(vqslod_filter);
 
@@ -319,11 +323,11 @@ void kgl::InfoFilterAnalysis::analyzeField( const std::string& info_field_ident,
                                             std::shared_ptr<const UnphasedPopulation> vcf_population,
                                             std::ostream& result_file) {
 
-  analyzeFilteredPopulation(NotFilter(InfoTextGEQFloatFilter(info_field_ident, field_values.front())), vcf_population, result_file);
+  analyzeFilteredPopulation(NotFilter(InfoGEQFloatFilter(info_field_ident, field_values.front())), vcf_population, result_file);
 
   for (auto value : field_values) {
 
-    analyzeFilteredPopulation(InfoTextGEQFloatFilter(info_field_ident, value), vcf_population, result_file);
+    analyzeFilteredPopulation(InfoGEQFloatFilter(info_field_ident, value), vcf_population, result_file);
 
   }
 

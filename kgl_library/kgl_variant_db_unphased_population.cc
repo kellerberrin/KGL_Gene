@@ -51,10 +51,9 @@ std::optional<std::shared_ptr<kgl::UnphasedGenome>> kgl::UnphasedPopulation::get
   } else {
 
     std::shared_ptr<UnphasedGenome> genome_ptr = std::make_shared<UnphasedGenome>(genome_id);
-    std::pair<GenomeId_t, std::shared_ptr<UnphasedGenome>> new_genome(genome_id, genome_ptr);
-    auto result = genome_map_.insert(new_genome);
+    auto insert_result = genome_map_.try_emplace(genome_id, genome_ptr);
 
-    if (not result.second) {
+    if (not insert_result.second) {
 
       ExecEnv::log().error("UnphasedPopulation::getCreateGenome(), Could not add genome: {} to the population: {}", genome_id, populationId());
       return std::nullopt;
@@ -68,10 +67,10 @@ std::optional<std::shared_ptr<kgl::UnphasedGenome>> kgl::UnphasedPopulation::get
 }
 
 
-bool kgl::UnphasedPopulation::addGenome(std::shared_ptr<UnphasedGenome> genome_ptr) {
+bool kgl::UnphasedPopulation::addGenome(const std::shared_ptr<UnphasedGenome>& genome_ptr) {
 
   std::pair<GenomeId_t, std::shared_ptr<UnphasedGenome>> add_genome(genome_ptr->genomeId(), genome_ptr);
-  auto result = genome_map_.insert(add_genome);
+  auto result = genome_map_.emplace(add_genome);
 
   if (not result.second) {
 
@@ -234,7 +233,7 @@ std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::filterVariants
 
 
 // Test if an equivalent variant already exists in the genome.
-bool kgl::UnphasedPopulation::variantExists(std::shared_ptr<const Variant> variant) const {
+bool kgl::UnphasedPopulation::variantExists(const std::shared_ptr<const Variant>& variant) const {
 
   auto result = getMap().find (variant->contigId());
   if (result == getMap().end()) {
@@ -248,7 +247,7 @@ bool kgl::UnphasedPopulation::variantExists(std::shared_ptr<const Variant> varia
 }
 
 
-bool kgl::UnphasedPopulation::addVariant(std::shared_ptr<const Variant> variant_ptr) {
+bool kgl::UnphasedPopulation::addVariant(const std::shared_ptr<const Variant>& variant_ptr) {
 
   std::optional<std::shared_ptr<UnphasedGenome>> genome_opt = getCreateGenome(variant_ptr->genomeId());
   if (not genome_opt) {
@@ -270,7 +269,7 @@ bool kgl::UnphasedPopulation::addVariant(std::shared_ptr<const Variant> variant_
 }
 
 // Only adds the variant if it does not already exist.
-bool kgl::UnphasedPopulation::addUniqueVariant(std::shared_ptr<const Variant> variant_ptr) {
+bool kgl::UnphasedPopulation::addUniqueVariant(const std::shared_ptr<const Variant>& variant_ptr) {
 
   std::optional<std::shared_ptr<UnphasedGenome>> genome_opt = getCreateGenome(variant_ptr->genomeId());
   if (not genome_opt) {
@@ -294,7 +293,7 @@ bool kgl::UnphasedPopulation::addUniqueVariant(std::shared_ptr<const Variant> va
 
 
 // Unconditional Merge.
-void kgl::UnphasedPopulation::mergePopulation(std::shared_ptr<const UnphasedPopulation> merge_population) {
+size_t kgl::UnphasedPopulation::mergePopulation(const std::shared_ptr<const UnphasedPopulation>& merge_population) {
 
   if (merge_population->processAll(*this, &UnphasedPopulation::addVariant)) {
 
@@ -302,6 +301,8 @@ void kgl::UnphasedPopulation::mergePopulation(std::shared_ptr<const UnphasedPopu
                           merge_population->populationId(), populationId());
 
   }
+
+  return variantCount();
 
 }
 
@@ -330,22 +331,19 @@ std::pair<size_t, size_t> kgl::UnphasedPopulation::validate(const std::shared_pt
 }
 
 
-std::pair<size_t, size_t> kgl::UnphasedPopulation::mergeUniqueGenome(const std::shared_ptr<const UnphasedGenome> genome) {
+size_t kgl::UnphasedPopulation::mergeGenome(const std::shared_ptr<const UnphasedGenome>& genome) {
 
-  std::pair<size_t, size_t> merge_count{0, 0};
+  for (auto const& [genome_id, contig_ptr] : genome->getMap()) {
 
-  for (auto const& contig : genome->getMap()) {
-
-    for (auto const& [offset, variant_vector] : contig.second->getMap()) {
+    for (auto const& [offset, variant_vector] : contig_ptr->getMap()) {
 
       for (auto const& variant_ptr : variant_vector) {
 
-        ++merge_count.first;
-        bool result = addUniqueVariant(variant_ptr);
+        bool result = addVariant(variant_ptr);
         if (not result) {
 
           ExecEnv::log().error("UnphasedPopulation::mergeUniqueGenome(); Cannot merge variant offset: {} from Genome: {} to Population: {}",
-                               offset, genome->genomeId(), populationId());
+                               offset, genome_id, populationId());
 
         }
 
@@ -355,28 +353,10 @@ std::pair<size_t, size_t> kgl::UnphasedPopulation::mergeUniqueGenome(const std::
 
   }
 
-  merge_count.second = variantCount();
-
-  return merge_count;
+  return variantCount();
 
 }
 
-
-std::pair<size_t, size_t> kgl::UnphasedPopulation::mergeUniquePopulation(const std::shared_ptr<const UnphasedPopulation> merged_population) {
-
-  std::pair<size_t, size_t> merge_count{0, 0};
-
-  for (auto const& genome : merged_population->getMap()) {
-
-    std::pair<size_t, size_t> result = mergeUniqueGenome(genome.second);
-    merge_count.first += result.first;
-    merge_count.second += result.second;
-
-  }
-
-  return merge_count;
-
-}
 
 std::shared_ptr<kgl::UnphasedGenome> kgl::UnphasedPopulation::compressPopulation() const {
 
@@ -439,8 +419,23 @@ std::optional<std::shared_ptr<const kgl::InfoEvidenceHeader>> kgl::UnphasedPopul
 }
 
 
+std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::uniqueVariantPopulation() const {
 
-std::shared_ptr<const kgl::UnphasedPopulation> kgl::UnphasedPopulation::setUnion(std::shared_ptr<const UnphasedPopulation> pop_b) const {
+  // Create a unique variant (no duplicate) version of this population.
+  std::shared_ptr<UnphasedPopulation>unique_ptr(std::make_shared<UnphasedPopulation>(populationId()));
+
+  if (not processAll(*unique_ptr, &UnphasedPopulation::addUniqueVariant)) {
+
+    ExecEnv::log().error("UnphasedPopulation::setUnion, problem adding unique variants from population: {}", populationId());
+
+  }
+
+  return unique_ptr;
+
+}
+
+
+std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::setUnion(const std::shared_ptr<const UnphasedPopulation>& pop_b) const {
 
   // Create a no duplicate variants version of this population.
   std::shared_ptr<UnphasedPopulation>union_ptr(std::make_shared<UnphasedPopulation>("Union(" + populationId() + ", " + pop_b->populationId() + ")"));
@@ -464,17 +459,21 @@ std::shared_ptr<const kgl::UnphasedPopulation> kgl::UnphasedPopulation::setUnion
 }
 
 
-std::shared_ptr<const kgl::UnphasedPopulation> kgl::UnphasedPopulation::setIntersection(std::shared_ptr<const UnphasedPopulation> pop_b) const {
+std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::setIntersection(const std::shared_ptr<const UnphasedPopulation>& pop_b) const {
 
   std::shared_ptr<UnphasedPopulation>intersect_ptr(std::make_shared<UnphasedPopulation>("Intersection(" + populationId() + ", " + pop_b->populationId() + ")"));
 
   // Temp Local class to perform the operation.
   struct Intersection {
 
-    std::shared_ptr<UnphasedPopulation> intersect_ptr_;
-    std::shared_ptr<const UnphasedPopulation> population_b_ptr_;
+    Intersection(std::shared_ptr<UnphasedPopulation>& intersect_ptr,
+                 const std::shared_ptr<const UnphasedPopulation>& pop_b)
+                 : intersect_ptr_(intersect_ptr), population_b_ptr_(pop_b) {}
 
-    bool addIntersection(std::shared_ptr<const Variant> variant_ptr) {
+    std::shared_ptr<UnphasedPopulation>& intersect_ptr_;
+    const std::shared_ptr<const UnphasedPopulation>& population_b_ptr_;
+
+    bool addIntersection(const std::shared_ptr<const Variant>& variant_ptr) {
 
       if (population_b_ptr_->variantExists(variant_ptr)) {
 
@@ -488,9 +487,7 @@ std::shared_ptr<const kgl::UnphasedPopulation> kgl::UnphasedPopulation::setInter
 
   };
 
-  Intersection intersect;
-  intersect.intersect_ptr_ = intersect_ptr;
-  intersect.population_b_ptr_ = pop_b;
+  Intersection intersect(intersect_ptr, pop_b);
 
   // Add all unique variants common to 'A' and 'B' populations.
   if (not processAll(intersect, &Intersection::addIntersection)) {
@@ -504,17 +501,21 @@ std::shared_ptr<const kgl::UnphasedPopulation> kgl::UnphasedPopulation::setInter
 }
 
 
-std::shared_ptr<const kgl::UnphasedPopulation> kgl::UnphasedPopulation::setComplement(std::shared_ptr<const UnphasedPopulation> pop_b) const {
+std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::setComplement(const std::shared_ptr<const UnphasedPopulation>& pop_b) const {
 
   std::shared_ptr<UnphasedPopulation>complement_ptr(std::make_shared<UnphasedPopulation>(populationId() + " complement(" + pop_b->populationId() + ")"));
 
   // Temp Local class to perform the operation.
   struct Complement {
 
-    std::shared_ptr<UnphasedPopulation> complement_ptr_;
-    std::shared_ptr<const UnphasedPopulation> population_b_ptr_;
+    Complement(std::shared_ptr<UnphasedPopulation>& complement_ptr,
+               const std::shared_ptr<const UnphasedPopulation>& pop_b)
+    : complement_ptr_(complement_ptr), population_b_ptr_(pop_b) {}
 
-    bool addComplement(std::shared_ptr<const Variant> variant_ptr) {
+    std::shared_ptr<UnphasedPopulation>& complement_ptr_;
+    const std::shared_ptr<const UnphasedPopulation>& population_b_ptr_;
+
+    bool addComplement(const std::shared_ptr<const Variant>& variant_ptr) {
 
       if (not population_b_ptr_->variantExists(variant_ptr)) {
 
@@ -528,9 +529,7 @@ std::shared_ptr<const kgl::UnphasedPopulation> kgl::UnphasedPopulation::setCompl
 
   };
 
-  Complement complement;
-  complement.complement_ptr_ = complement_ptr;
-  complement.population_b_ptr_ = pop_b;
+  Complement complement(complement_ptr, pop_b);
 
   // Add all unique variants in 'A' but not in 'B' populations.
   if (not processAll(complement, &Complement::addComplement)) {

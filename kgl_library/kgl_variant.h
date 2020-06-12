@@ -26,7 +26,7 @@
 namespace kellerberrin::genome {   //  organization level namespace
 
 
-class VCFVariant;   // Forward decl.
+class Variant;   // Forward decl.
 
 class VariantFilter {
 
@@ -35,7 +35,7 @@ public:
   VariantFilter() = default;
   virtual ~VariantFilter() = default;
 
-  [[nodiscard]] virtual bool applyFilter(const VCFVariant& variant) const = 0;
+  [[nodiscard]] virtual bool applyFilter(const Variant& variant) const = 0;
 
   [[nodiscard]] virtual std::shared_ptr<VariantFilter> clone() const = 0;
 

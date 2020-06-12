@@ -5,27 +5,18 @@
 #include <sstream>
 #include <memory>
 #include "kgl_filter.h"
+#include "kgl_variant_factory_vcf_evidence_analysis.h"
 
 namespace kgl = kellerberrin::genome;
 
 
-bool kgl::InfoFilter::applyFilter(const InfoFilterLambda& filter_lambda, const VCFVariant& variant) const {
+bool kgl::InfoFilterImpl::applyFilter(const InfoFilterLambda& filter_lambda, const Variant& variant) const {
 
-  std::optional<std::shared_ptr<const DataMemoryBlock>> info_data_opt = variant.evidence().infoData();
+  auto field_data = InfoEvidenceAnalysis::getInfoData(variant, field_name_);
 
-  if (not info_data_opt) {
+  if (field_data) {
 
-    return missing_default_;
-
-  }
-
-  auto result = info_data_opt.value()->evidenceHeader()->getSubscribedField(field_name_);
-
-  if (result) {
-
-    InfoDataVariant info_data = result.value().getData(*(variant.evidence().infoData().value()));
-
-    return filter_lambda(info_data);
+    return filter_lambda(field_data.value());
 
   } else {
 

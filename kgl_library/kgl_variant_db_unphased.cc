@@ -13,8 +13,8 @@ namespace kgl = kellerberrin::genome;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// An object that holds variants until they can be phased.
-// This object hold variants for a contig.
+// An object that holds unphased variants.
+// This object hold variants for a contig/chromosome.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -41,28 +41,24 @@ std::shared_ptr<kgl::UnphasedContig> kgl::UnphasedContig::deepCopy() const {
 
 }
 
+// Unconditionally adds a variant to the contig. Note variants are unordered at a particular offset.
+bool kgl::UnphasedContig::addVariant(const std::shared_ptr<const Variant>& variant_ptr) {
 
-bool kgl::UnphasedContig::addVariant(std::shared_ptr<const Variant> variant) {
-
-  auto result = contig_offset_map_.find(variant->offset());
+  auto result = contig_offset_map_.find(variant_ptr->offset());
 
   if (result != contig_offset_map_.end()) {
   // Variant offset exists.
 
-      UnphasedVariantCount new_variant(variant);
-      result->second.push_back(new_variant);
+    result->second.push_back(variant_ptr);
 
   } else {
     // add the new offset.
-    std::pair<ContigOffset_t, UnphasedVectorVariantCount> new_offset;
-    new_offset.first = variant->offset();
-    UnphasedVariantCount new_variant(variant);
-    new_offset.second.push_back(new_variant);
-    auto result = contig_offset_map_.insert(new_offset);
+    UnphasedVectorVariantCount offset_vector{variant_ptr};
+    auto insert_result = contig_offset_map_.try_emplace(variant_ptr->offset(), offset_vector);
 
-    if (not result.second) {
+    if (not insert_result.second) {
 
-      ExecEnv::log().error("UnphasedContig::addVariant(); Could not add variant offset: {} to the genome", variant->offset());
+      ExecEnv::log().error("UnphasedContig::addVariant(); Could not add variant offset: {} to the genome", variant_ptr->offset());
       return false;
 
     }
@@ -75,7 +71,7 @@ bool kgl::UnphasedContig::addVariant(std::shared_ptr<const Variant> variant) {
 
 
 // Test if an equivalent variant already exists in the contig.
-[[nodiscard]] bool kgl::UnphasedContig::variantExists(std::shared_ptr<const Variant> variant) {
+bool kgl::UnphasedContig::variantExists(const std::shared_ptr<const Variant>& variant) {
 
   auto result = contig_offset_map_.find(variant->offset());
 
@@ -103,8 +99,8 @@ bool kgl::UnphasedContig::addVariant(std::shared_ptr<const Variant> variant) {
 
 }
 
-// The first bool is normal operation. The second bool is if a unique variant was added to the contig.
-bool kgl::UnphasedContig::addUniqueVariant(std::shared_ptr<const Variant> variant) {
+// Adds a unique variant to the contig. No addition if not unique.
+bool kgl::UnphasedContig::addUniqueVariant(const std::shared_ptr<const Variant>& variant) {
 
   if (variantExists(variant)) {
 // don't add.
@@ -114,20 +110,12 @@ bool kgl::UnphasedContig::addUniqueVariant(std::shared_ptr<const Variant> varian
 
   }
 
-  if (addVariant(variant)) {
-
-    return true;
-
-  } else {
-
-    // problem adding variant.
-    return false;
-
-  }
+  return addVariant(variant);
 
 }
 
 
+// Counts the variants in a contug.
 size_t kgl::UnphasedContig::variantCount() const {
 
 
@@ -144,27 +132,22 @@ size_t kgl::UnphasedContig::variantCount() const {
 }
 
 
-
+// Creates a copy of the contig that only contains variants passing the filter condition.
 std::shared_ptr<kgl::UnphasedContig> kgl::UnphasedContig::filterVariants(const kgl::VariantFilter& filter) const {
 
   std::shared_ptr<kgl::UnphasedContig> filtered_contig_ptr(std::make_shared<kgl::UnphasedContig>(contigId()));
 
-  // Complements the bool returned by filterVariant(filter) because the delete pattern expects bool true for deletion.
-  auto predicate = [&](const UnphasedVectorVariantCount::const_iterator& it) { return not (*it)->filterVariant(filter); };
-
   for (auto const& [offset, variant_vector] : getMap()) {
 
-    UnphasedVectorVariantCount copy_offset_vector = variant_vector;
+    for(auto const& variant_ptr : variant_vector) {
 
-    predicateIterableDelete(copy_offset_vector,  predicate);
+      if (filter.applyFilter(*variant_ptr)) {
 
-    if (not copy_offset_vector.empty()) {
+        if (not filtered_contig_ptr->addVariant(variant_ptr)) {
 
-      auto result = filtered_contig_ptr->contig_offset_map_.try_emplace(offset, copy_offset_vector);
+          ExecEnv::log().error("UnphasedContig::filterVariants; Problem adding variant at offset: {}, to contig: {}", offset, contigId());
 
-      if (not result.second) {
-
-        ExecEnv::log().error("UnphasedContig::filterVariants; Unable to add duplicate offset: {}, contig: {}", offset, contigId());
+        }
 
       }
 
@@ -253,7 +236,7 @@ std::shared_ptr<kgl::UnphasedGenome> kgl::UnphasedGenome::deepCopy() const {
 }
 
 
-bool kgl::UnphasedGenome::addVariant(std::shared_ptr<const Variant> variant) {
+bool kgl::UnphasedGenome::addVariant(const std::shared_ptr<const Variant>& variant) {
 
   std::optional<std::shared_ptr<UnphasedContig>> contig_opt = getCreateContig(variant->contigId());
   if (not contig_opt) {
@@ -275,7 +258,7 @@ bool kgl::UnphasedGenome::addVariant(std::shared_ptr<const Variant> variant) {
 }
 
 // Test if an equivalent variant already exists in the genome.
-bool kgl::UnphasedGenome::variantExists(std::shared_ptr<const Variant> variant) const {
+bool kgl::UnphasedGenome::variantExists(const std::shared_ptr<const Variant>& variant) const {
 
   auto result = getMap().find (variant->contigId());
   if (result == getMap().end()) {
@@ -290,7 +273,7 @@ bool kgl::UnphasedGenome::variantExists(std::shared_ptr<const Variant> variant) 
 
 
 // The first bool is normal operation. The second bool is if a unique variant was added to the genome.
-bool kgl::UnphasedGenome::addUniqueVariant(std::shared_ptr<const Variant> variant) {
+bool kgl::UnphasedGenome::addUniqueVariant(const std::shared_ptr<const Variant>& variant) {
 
   std::optional<std::shared_ptr<UnphasedContig>> contig_opt = getCreateContig(variant->contigId());
   if (not contig_opt) {
@@ -325,10 +308,9 @@ std::optional<std::shared_ptr<kgl::UnphasedContig>> kgl::UnphasedGenome::getCrea
   } else {
 
     std::shared_ptr<UnphasedContig> contig_ptr = std::make_shared<UnphasedContig>(contig_id);
-    std::pair<ContigId_t, std::shared_ptr<UnphasedContig>> new_contig(contig_id, contig_ptr);
-    auto result = contig_map_.insert(new_contig);
+    auto insert_result = contig_map_.try_emplace(contig_id, contig_ptr);
 
-    if (not result.second) {
+    if (not insert_result.second) {
 
       ExecEnv::log().error("UnphasedGenome::getCreateContig(), Could not add contig: {} to genome : {}", contig_id, genomeId());
       return std::nullopt;
@@ -342,10 +324,10 @@ std::optional<std::shared_ptr<kgl::UnphasedContig>> kgl::UnphasedGenome::getCrea
 }
 
 
-bool kgl::UnphasedGenome::addContig(std::shared_ptr<UnphasedContig> contig_ptr) {
+bool kgl::UnphasedGenome::addContig(const std::shared_ptr<UnphasedContig>& contig_ptr) {
 
   std::pair<ContigId_t, std::shared_ptr<UnphasedContig>> add_contig(contig_ptr->contigId(), contig_ptr);
-  auto result = contig_map_.insert(add_contig);
+  auto result = contig_map_.emplace(add_contig);
 
   if (not result.second) {
 

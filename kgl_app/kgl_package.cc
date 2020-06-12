@@ -213,9 +213,9 @@ std::unique_ptr<kgl::UnphasedPopulation> kgl::ExecutePackage::readVCFDataFile( c
     std::pair<size_t, size_t> valid_count = parsed_variants->validate(ref_genome_opt.value());
     ExecEnv::log().info("Genome: {}, Total Variants: {}, Validated Variants: {}", parsed_variants->genomeId(), valid_count.first, valid_count.second);
 
-    std::pair<size_t, size_t> merge_stats = population_ptr->mergeUniqueGenome(parsed_variants);
-    ExecEnv::log().info("Population: {} merges Genome: {}, Variants Presented: {}, Unique Variants Accepted: {}",
-                        population_ptr->populationId(), parsed_variants->genomeId(), merge_stats.first, merge_stats.second);
+    size_t merge_stats = population_ptr->mergeGenome(parsed_variants);
+    ExecEnv::log().info("Population: {} merges Genome: {}, Population Size: {}",
+                        population_ptr->populationId(), parsed_variants->genomeId(), merge_stats);
 
   } else if (result->second.parserType() == VCFParserEnum::GatkMultiGenome) {
 // Pfalciparum VCF files handled here.
@@ -228,8 +228,8 @@ std::unique_ptr<kgl::UnphasedPopulation> kgl::ExecutePackage::readVCFDataFile( c
     std::pair<size_t, size_t> valid_count = parsed_variants->validate(ref_genome_opt.value());
     ExecEnv::log().info("Population: {}, Total Variants: {}, Validated Variants: {}", parsed_variants->populationId(), valid_count.first, valid_count.second);
 
-    population_ptr->mergePopulation(parsed_variants);
-    ExecEnv::log().info("Population: {} merges {} Variants, total Variants: {}", population_ptr->populationId(), parsed_variants->variantCount(), population_ptr->variantCount());
+    size_t merged_size = population_ptr->mergePopulation(parsed_variants);
+    ExecEnv::log().info("Population: {} merges {} Variants, total Variants: {}", population_ptr->populationId(), parsed_variants->variantCount(), merged_size);
 
   } else {
 

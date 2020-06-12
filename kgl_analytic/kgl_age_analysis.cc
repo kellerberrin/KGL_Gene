@@ -16,7 +16,7 @@ namespace kgl = kellerberrin::genome;
 double kgl::InfoAgeAnalysis::processField(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name) {
 
 
-  std::optional<kgl::InfoDataVariant> field_opt = InfoEvidenceAnalysis::getInfoData(variant_ptr, field_name);
+  std::optional<kgl::InfoDataVariant> field_opt = InfoEvidenceAnalysis::getInfoData(*variant_ptr, field_name);
 
   if (field_opt) {
 
@@ -48,7 +48,7 @@ double kgl::InfoAgeAnalysis::processField(const std::shared_ptr<const Variant>& 
 std::vector<double> kgl::InfoAgeAnalysis::processBin(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name) {
 
 
-  std::optional<kgl::InfoDataVariant> bin_info_opt = InfoEvidenceAnalysis::getInfoData(variant_ptr, field_name);
+  std::optional<kgl::InfoDataVariant> bin_info_opt = InfoEvidenceAnalysis::getInfoData(*variant_ptr, field_name);
 
   if (bin_info_opt) {
 

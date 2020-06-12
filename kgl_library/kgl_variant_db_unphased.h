@@ -23,8 +23,7 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 
 
-using UnphasedVariantCount = std::shared_ptr<const Variant>;
-using UnphasedVectorVariantCount = std::vector<UnphasedVariantCount>;
+using UnphasedVectorVariantCount = std::vector<std::shared_ptr<const Variant>>;
 using UnphasedOffsetMap = std::map<ContigOffset_t, UnphasedVectorVariantCount>;
 class UnphasedContig {
 
@@ -41,12 +40,12 @@ public:
   [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
 
   // Unconditionally adds a variant to the contig (unique or not).
-  [[nodiscard]]  bool addVariant(std::shared_ptr<const Variant> variant);
+  [[nodiscard]]  bool addVariant(const std::shared_ptr<const Variant>& variant_ptr);
 
   // Test if an equivalent variant already exists in the contig.
-  [[nodiscard]] bool variantExists(std::shared_ptr<const Variant> variant);
+  [[nodiscard]] bool variantExists(const std::shared_ptr<const Variant>& variant);
   // Only adds the variant if it does not already exist.
-  [[nodiscard]] bool addUniqueVariant(std::shared_ptr<const Variant> variant);
+  [[nodiscard]] bool addUniqueVariant(const std::shared_ptr<const Variant>& variant);
 
   [[nodiscard]]  size_t variantCount() const;
 
@@ -89,12 +88,12 @@ public:
   [[nodiscard]] size_t variantCount() const;
 
   // Test if an equivalent variant already exists in the genome.
-  [[nodiscard]] bool variantExists(std::shared_ptr<const Variant> variant) const;
+  [[nodiscard]] bool variantExists(const std::shared_ptr<const Variant>& variant) const;
 
-  [[nodiscard]] bool addVariant(std::shared_ptr<const Variant> variant);
+  [[nodiscard]] bool addVariant(const std::shared_ptr<const Variant>& variant);
 
   // The first bool is normal operation. The second bool is if a unique variant was added to the genome.
-  [[nodiscard]] bool addUniqueVariant(std::shared_ptr<const Variant> variant);
+  [[nodiscard]] bool addUniqueVariant(const std::shared_ptr<const Variant>& variant);
 
   [[nodiscard]] const GenomeId_t& genomeId() const { return genome_id_; }
 
@@ -113,7 +112,7 @@ private:
   UnphasedContigMap contig_map_;
   GenomeId_t genome_id_;
 
-  [[nodiscard]] bool addContig(std::shared_ptr<UnphasedContig> contig_ptr);
+  [[nodiscard]] bool addContig(const std::shared_ptr<UnphasedContig>& contig_ptr);
 
 };
 

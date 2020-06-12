@@ -21,10 +21,10 @@ public:
   ~InfoEvidenceAnalysis() = default;
 
   // The variant Info data (if it exists).
-  static std::optional<const InfoSubscribedField> getSubscribedField( const std::shared_ptr<const Variant>& variant_ptr,
+  static std::optional<const InfoSubscribedField> getSubscribedField( const Variant& variant_ptr,
                                                                       const std::string& field_ident);
 
-  static std::optional<InfoDataVariant> getInfoData( const std::shared_ptr<const Variant>& variant_ptr,
+  static std::optional<InfoDataVariant> getInfoData( const Variant& variant_ptr,
                                                      const std::string& field_ident);
 
   // Transform the returned data variant
