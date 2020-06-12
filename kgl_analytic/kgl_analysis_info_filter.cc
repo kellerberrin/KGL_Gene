@@ -181,7 +181,7 @@ kgl::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const UnphasedPopulation
 
   }
 
-  InfoGEQFloatFilter vqslod_filter(vqslod_field.value(), VQSLOD_LEVEL);
+  InfoTextGEQFloatFilter vqslod_filter(VQSLOD_FIELD, VQSLOD_LEVEL);
 
   std::shared_ptr<const UnphasedPopulation> filtered_population = vcf_population->filterVariants(vqslod_filter);
 
@@ -201,7 +201,7 @@ kgl::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const UnphasedPopulation
 
   }
 
-  InfoGEQFloatFilter random_forest_filter(random_forest_field.value(), RANDOM_FOREST_LEVEL);
+  InfoTextGEQFloatFilter random_forest_filter(RANDOM_FOREST_FIELD, RANDOM_FOREST_LEVEL);
 
   filtered_population = filtered_population->filterVariants(vqslod_filter);
 
@@ -319,29 +319,11 @@ void kgl::InfoFilterAnalysis::analyzeField( const std::string& info_field_ident,
                                             std::shared_ptr<const UnphasedPopulation> vcf_population,
                                             std::ostream& result_file) {
 
-  std::optional<std::shared_ptr<const InfoEvidenceHeader>> info_header_opt = vcf_population->getVCFInfoEvidenceHeader();
+  analyzeFilteredPopulation(NotFilter(InfoTextGEQFloatFilter(info_field_ident, field_values.front())), vcf_population, result_file);
 
-  if (info_header_opt) {
+  for (auto value : field_values) {
 
-    std::optional<const InfoSubscribedField> filter_field = info_header_opt.value()->getSubscribedField(info_field_ident);
-
-    if (filter_field) {
-
-      const InfoSubscribedField& info_field = filter_field.value();
-
-      analyzeFilteredPopulation(NotFilter(InfoGEQFloatFilter(info_field, field_values.front())), vcf_population, result_file);
-
-      for (auto value : field_values) {
-
-        analyzeFilteredPopulation(InfoGEQFloatFilter(info_field, value), vcf_population, result_file);
-
-      }
-
-    } else {
-
-      ExecEnv::log().warn("InfoFilterAnalysis::fileReadAnalysis, filter Info Field: {} not found. Disabled.", info_field_ident);
-
-    }
+    analyzeFilteredPopulation(InfoTextGEQFloatFilter(info_field_ident, value), vcf_population, result_file);
 
   }
 

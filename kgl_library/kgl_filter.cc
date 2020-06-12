@@ -9,118 +9,23 @@
 namespace kgl = kellerberrin::genome;
 
 
+bool kgl::InfoFilter::applyFilter(const InfoFilterLambda& filter_lambda, const VCFVariant& variant) const {
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// General Filter the info data block.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  std::optional<std::shared_ptr<const DataMemoryBlock>> info_data_opt = variant.evidence().infoData();
 
-
-bool kgl::InfoFilter::implementFilter(const Variant& variant) const {
-
-  InfoDataEvidence info_evidence_opt = variant.evidence().infoData();
-
-  if (info_evidence_opt) {
-
-    InfoDataVariant info_data = info_field_.getData(*info_evidence_opt.value());
-
-    return filter_lambda_(info_data);
-
-  } else {
+  if (not info_data_opt) {
 
     return missing_default_;
 
   }
 
-}
+  auto result = info_data_opt.value()->evidenceHeader()->getSubscribedField(field_name_);
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Filter an integer field in the info data block.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  if (result) {
 
+    InfoDataVariant info_data = result.value().getData(*(variant.evidence().infoData().value()));
 
-bool kgl::InfoGEQIntegerFilter::implementFilter(const Variant& variant) const {
-
-  InfoDataEvidence info_evidence_opt = variant.evidence().infoData();
-
-  if (info_evidence_opt) {
-
-    InfoDataVariant info_data = info_field_.getData(*info_evidence_opt.value());
-
-    return filter_lambda_(info_data);
-
-  } else {
-
-    return missing_default_;
-
-  }
-
-}
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Filter a float field in the info data block.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-bool kgl::InfoGEQFloatFilter::implementFilter(const Variant& variant) const {
-
-  InfoDataEvidence info_evidence_opt = variant.evidence().infoData();
-
-  if (info_evidence_opt) {
-
-    InfoDataVariant info_data = info_field_.getData(*info_evidence_opt.value());
-
-    return filter_lambda_(info_data);
-
-  } else {
-
-    return missing_default_;
-
-  }
-
-}
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Filter a std::string by searching for a sub_string in the info data block.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-bool kgl::InfoSubStringFilter::implementFilter(const Variant& variant) const {
-
-  InfoDataEvidence info_evidence_opt = variant.evidence().infoData();
-
-  if (info_evidence_opt) {
-
-    InfoDataVariant info_data = info_field_.getData(*info_evidence_opt.value());
-
-    return filter_lambda_(info_data);
-
-  } else {
-
-    return missing_default_;
-
-  }
-
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Filter using a boolean Info field.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-bool kgl::InfoBooleanFilter::implementFilter(const Variant& variant) const {
-
-  InfoDataEvidence info_evidence_opt = variant.evidence().infoData();
-
-  if (info_evidence_opt) {
-
-    InfoDataVariant info_data = info_field_.getData(*info_evidence_opt.value());
-
-    return filter_lambda_(info_data);
+    return filter_lambda(info_data);
 
   } else {
 

@@ -13,72 +13,95 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// General Info Filter. This function can filter
-// on arbitrary criteria specified in the supplied filter lambda.
+// These objects filter on Info field criteria specified in the supplied filter lambda.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using InfoFilterLambda = std::function<bool(const InfoDataVariant&)>;
-class InfoFilter : public VariantFilter {
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Helper class looks up the text Info field.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class InfoFilter  {
 
 public:
 
-  InfoFilter(const InfoSubscribedField& info_field, InfoFilterLambda filter_lambda, bool missing_default = false)  // How the filter responds if the data is missing.
-   : info_field_(info_field), filter_lambda_(std::move(filter_lambda)), missing_default_(missing_default) {
-
-    std::stringstream ss;
-    ss << "VCF Info Field: " << info_field_.infoVCF().ID;
-    filterName(ss.str());
-
-  }
+  explicit InfoFilter(std::string field_name, bool missing_default = false) : field_name_(std::move(field_name)),
+                                                                              missing_default_(missing_default) {}
   InfoFilter(const InfoFilter&) = default;
-  ~InfoFilter() override = default;
+  ~InfoFilter() = default;
 
-  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
+  [[nodiscard]] bool applyFilter(const InfoFilterLambda& filter_lambda, const VCFVariant& variant) const;
 
-  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InfoFilter>(*this); }
+  [[nodiscard]] bool missingDefault() const { return missing_default_; }
 
+  [[nodiscard]] std::string fieldName() const { return field_name_; }
 
 private:
 
-  InfoSubscribedField info_field_;
-  InfoFilterLambda filter_lambda_;
-  bool missing_default_;
-
-  [[nodiscard]] bool implementFilter(const Variant& variant) const;
+  const std::string field_name_;
+  const bool missing_default_;
 
 
 };
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// General Info filter class.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Integer Info Filter. Returns true if a scalar integer and greater or equal to the comparison value.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class InfoGEQIntegerFilter : public VariantFilter {
+class InfoTextFilter : public VariantFilter {
 
 public:
 
-  InfoGEQIntegerFilter(const InfoSubscribedField& info_field, int64_t comparison_value, bool missing_default = false)  // How the filter responds if the data is missing.
-  : info_field_(info_field), comparison_value_(comparison_value), missing_default_(missing_default) {
+  InfoTextFilter(const std::string& field_name, InfoFilterLambda filter_lambda, bool missing_default = false)
+  : info_filter_(field_name, missing_default), filter_lambda_(std::move(filter_lambda)) {
 
-    std::stringstream ss;
-    ss << "VCF Info Field: " << info_field_.infoVCF().ID << " >= " << comparison_value_;
-    filterName(ss.str());
+    filterName(field_name);
 
   }
-  InfoGEQIntegerFilter(const InfoGEQIntegerFilter&) = default;
-  ~InfoGEQIntegerFilter() override = default;
+  InfoTextFilter(const InfoTextFilter&) = default;
+  ~InfoTextFilter() override = default;
 
-  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
+  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return info_filter_.applyFilter(filter_lambda_, variant); }
 
-  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InfoGEQIntegerFilter>(*this); }
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InfoTextFilter>(*this); }
+
 
 private:
 
-  InfoSubscribedField info_field_;
-  int64_t comparison_value_;
-  bool missing_default_;
-  InfoFilterLambda filter_lambda_ = [this] (const InfoDataVariant& data_variant) -> bool {
+  const InfoFilter info_filter_;
+  const InfoFilterLambda filter_lambda_;
+
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Integer Info Filter. Returns true if a scalar integer and greater or equal to the comparison value.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class InfoTextGEQIntegerFilter : public VariantFilter {
+
+public:
+
+  InfoTextGEQIntegerFilter(const std::string& field_name, int64_t comparison_value, bool missing_default = false)  // How the filter responds if the data is missing.
+  : info_filter_(field_name, missing_default), comparison_value_(comparison_value) {
+
+    std::stringstream ss;
+    ss << "VCF Info Field: " << field_name << " >= " << comparison_value;
+    filterName(ss.str());
+
+  }
+  InfoTextGEQIntegerFilter(const InfoTextGEQIntegerFilter&) = default;
+  ~InfoTextGEQIntegerFilter() override = default;
+
+  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return info_filter_.applyFilter(filter_lambda_, variant); }
+
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InfoTextGEQIntegerFilter>(*this); }
+
+private:
+
+  const InfoFilter info_filter_;
+  const int64_t comparison_value_;
+  const InfoFilterLambda filter_lambda_ = [this] (const InfoDataVariant& data_variant) -> bool {
 
     auto p_integer_vector = std::get_if<std::vector<int64_t>>(&data_variant);
     if (p_integer_vector != nullptr) {
@@ -89,19 +112,17 @@ private:
 
       } else {
 
-        return missing_default_;
+        return info_filter_.missingDefault();
 
       }
 
     } else {
 
-      return missing_default_;
+      return info_filter_.missingDefault();
 
     }
 
   };
-
-  [[nodiscard]] bool implementFilter(const Variant& variant) const;
 
 };
 
@@ -110,32 +131,31 @@ private:
 // Float Info Filter. Returns true if a scalar float and greater or equal to the comparison value.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class InfoGEQFloatFilter : public VariantFilter {
+class InfoTextGEQFloatFilter : public VariantFilter {
 
 public:
 
-  InfoGEQFloatFilter(const InfoSubscribedField& info_field, double comparison_value, bool missing_default = false)  // How the filter responds if the data is missing.
-  : info_field_(info_field), comparison_value_(comparison_value), missing_default_(missing_default) {
+  InfoTextGEQFloatFilter(const std::string& field_name, double comparison_value, bool missing_default = false)  // How the filter responds if the data is missing.
+  : info_filter_(field_name, missing_default), comparison_value_(comparison_value) {
 
     std::stringstream ss;
-    ss << "VCF Info Field: " << info_field_.infoVCF().ID << " >= " << comparison_value_;
+    ss << "VCF Info Field: " << field_name << " >= " << comparison_value;
     filterName(ss.str());
 
   }
-  InfoGEQFloatFilter(const InfoGEQFloatFilter&) = default;
-  ~InfoGEQFloatFilter() override = default;
+  InfoTextGEQFloatFilter(const InfoTextGEQFloatFilter&) = default;
+  ~InfoTextGEQFloatFilter() override = default;
 
 
-  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
+  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return info_filter_.applyFilter(filter_lambda_, variant); }
 
-  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InfoGEQFloatFilter>(*this); }
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InfoTextGEQFloatFilter>(*this); }
 
 private:
 
-  InfoSubscribedField info_field_;
-  double comparison_value_;
-  bool missing_default_;
-  InfoFilterLambda filter_lambda_ = [this] (const InfoDataVariant& data_variant) -> bool {
+  const InfoFilter info_filter_;
+  const double comparison_value_;
+  const InfoFilterLambda filter_lambda_ = [this] (const InfoDataVariant& data_variant) -> bool {
 
     auto p_float_vector = std::get_if<std::vector<double>>(&data_variant);
     if (p_float_vector != nullptr) {
@@ -146,19 +166,17 @@ private:
 
       } else {
 
-        return missing_default_;
+        return info_filter_.missingDefault();
 
       }
 
     } else {
 
-      return missing_default_;
+      return info_filter_.missingDefault();
 
     }
 
   };
-
-  [[nodiscard]] bool implementFilter(const Variant& variant) const;
 
 };
 
@@ -166,31 +184,30 @@ private:
 // String Info Filter. Returns true if a string Info field contains a specified substring (including itself).
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class InfoSubStringFilter : public VariantFilter {
+class InfoTextSubStringFilter : public VariantFilter {
 
 public:
 
-  InfoSubStringFilter(const InfoSubscribedField& info_field, std::string sub_string, bool missing_default = false)  // How the filter responds if the data is missing.
-  : info_field_(info_field), sub_string_(std::move(sub_string)), missing_default_(missing_default) {
+  InfoTextSubStringFilter(const std::string& field_name, std::string sub_string, bool missing_default = false)  // How the filter responds if the data is missing.
+  : info_filter_(field_name, missing_default), sub_string_(std::move(sub_string)) {
 
     std::stringstream ss;
-    ss << "VCF Info Field: " << info_field_.infoVCF().ID << " contains sub string \"" << sub_string_ <<"\"";
+    ss << "VCF Info Field: " << field_name << " contains sub string \"" << sub_string <<"\"";
     filterName(ss.str());
 
   }
-  InfoSubStringFilter(const InfoSubStringFilter&) = default;
-  ~InfoSubStringFilter() override = default;
+  InfoTextSubStringFilter(const InfoTextSubStringFilter&) = default;
+  ~InfoTextSubStringFilter() override = default;
 
-  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
+  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return info_filter_.applyFilter(filter_lambda_, variant); }
 
-  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InfoSubStringFilter>(*this); }
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InfoTextSubStringFilter>(*this); }
 
 private:
 
-  const InfoSubscribedField info_field_;
+  const InfoFilter info_filter_;
   const std::string sub_string_;
-  bool missing_default_;
-  InfoFilterLambda filter_lambda_ = [this] (const InfoDataVariant& data_variant) -> bool {
+  const InfoFilterLambda filter_lambda_ = [this] (const InfoDataVariant& data_variant) -> bool {
 
     auto p_string_vector = std::get_if<std::vector<std::string>>(&data_variant);
     if (p_string_vector != nullptr) {
@@ -201,19 +218,17 @@ private:
 
       } else {
 
-        return missing_default_;
+        return info_filter_.missingDefault();
 
       }
 
     } else {
 
-      return missing_default_;
+      return info_filter_.missingDefault();
 
     }
 
   };
-
-  [[nodiscard]] bool implementFilter(const Variant& variant) const;
 
 };
 
@@ -222,48 +237,44 @@ private:
 // Boolean Filter. Returns true if a boolean info field is true. Can be used with the Negation filter below.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class InfoBooleanFilter : public VariantFilter {
+class InfoTextBooleanFilter : public VariantFilter {
 
 public:
 
-  InfoBooleanFilter(const InfoSubscribedField& info_field, bool missing_default = false)  // How the filter responds if the data is missing.
-  : info_field_(info_field), missing_default_(missing_default) {
+  explicit InfoTextBooleanFilter(const std::string& field_name, bool missing_default = false)  // How the filter responds if the data is missing.
+  : info_filter_(field_name, missing_default) {
 
     std::stringstream ss;
-    ss << "VCF Boolean Info Field: " << info_field_.infoVCF().ID;
+    ss << "VCF Boolean Info Field: " << field_name;
     filterName(ss.str());
 
   }
-  InfoBooleanFilter(const InfoBooleanFilter&) = default;
-  ~InfoBooleanFilter() override = default;
+  InfoTextBooleanFilter(const InfoTextBooleanFilter&) = default;
+  ~InfoTextBooleanFilter() override = default;
 
-  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return implementFilter(variant); }
+  [[nodiscard]] bool applyFilter(const VCFVariant& variant) const override { return info_filter_.applyFilter(filter_lambda_, variant); }
 
-  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InfoBooleanFilter>(*this); }
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InfoTextBooleanFilter>(*this); }
 
 private:
 
-  const InfoSubscribedField info_field_;
-  bool missing_default_;
-  InfoFilterLambda filter_lambda_ = [this] (const InfoDataVariant& data_variant) -> bool {
+  const InfoFilter info_filter_;
+  const InfoFilterLambda filter_lambda_ = [this] (const InfoDataVariant& data_variant) -> bool {
 
     auto p_bool = std::get_if<bool>(&data_variant);
     if (p_bool != nullptr) {
 
-        return *p_bool;
+      return *p_bool;
 
     } else {
 
-        return missing_default_;
+      return info_filter_.missingDefault();
 
     }
 
   };
 
-  [[nodiscard]] bool implementFilter(const Variant& variant) const;
-
 };
-
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
