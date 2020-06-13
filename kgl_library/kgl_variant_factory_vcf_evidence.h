@@ -20,6 +20,46 @@
 namespace kellerberrin::genome {   //  organization level namespace
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Extract VEP subfields.
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class VEPSubFieldHeader {
+
+public:
+
+  explicit VEPSubFieldHeader(const std::string& field_description) {
+
+    if (parseHeader(field_description)) {
+
+      ExecEnv::log().info("Info Field: vep; successfully parsed: {} sub field headers", sub_fields_headers_.size());
+
+    } else {
+
+      sub_fields_headers_.clear();
+      index_map_.clear();
+
+    }
+
+  }
+  ~VEPSubFieldHeader() = default;
+
+  constexpr static const char* VEP_FIELD_ID = "vep";
+  constexpr static const char VEP_DELIMITER_CHAR = '|';
+
+  [[nodiscard]] const std::vector<std::string>& subFieldHeaders() const { return sub_fields_headers_; }
+  [[nodiscard]] std::optional<size_t> getSubFieldIndex(const std::string& sub_field) const;
+
+private:
+
+  std::vector<std::string> sub_fields_headers_;
+  std::map<std::string, size_t> index_map_;
+
+  constexpr static const char* HEADER_SEARCH_STR_ = "Format: ";
+
+  bool parseHeader(const std::string& description);
+
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -40,7 +80,28 @@ public:
   : vcfInfoRecord_(std::move(vcfInfoRecord)),
     type_(InfoTypeLookup::evidenceType(vcfInfoRecord_)),
     info_evidence_header_(std::move(info_evidence_header)),
-    m_data_handle_(requestResourceHandle(manage_info_data)) {}
+    m_data_handle_(requestResourceHandle(manage_info_data)) {
+
+  if (vcfInfoRecord_.ID == VEPSubFieldHeader::VEP_FIELD_ID) {
+
+    std::shared_ptr<VEPSubFieldHeader> sub_field_ptr(std::make_shared<VEPSubFieldHeader>(vcfInfoRecord_.description));
+    if (not sub_field_ptr->subFieldHeaders().empty()) {
+
+      vep_sub_fields_ = sub_field_ptr;
+
+    } else {
+
+      vep_sub_fields_ = std::nullopt;
+
+    }
+
+  } else {
+
+    vep_sub_fields_ = std::nullopt;
+
+  }
+
+}
 
   InfoSubscribedField(const InfoSubscribedField &) = default;
   ~InfoSubscribedField() = default;
@@ -66,6 +127,8 @@ public:
 
   [[nodiscard]] const InfoResourceHandle& getDataHandle() const { return m_data_handle_; }
 
+  [[nodiscard]] std::optional<std::shared_ptr<const VEPSubFieldHeader>> vepSubFieldHeader() const { return vep_sub_fields_; }
+
 private:
 
 
@@ -73,6 +136,7 @@ private:
   const InfoEvidenceType type_;  // THe inferred subscriber type, external type and internal type.
   std::shared_ptr<const InfoEvidenceHeader> info_evidence_header_; // Ensure the index knows which header it belongs to.
   InfoResourceHandle m_data_handle_;
+  std::optional<std::shared_ptr<const VEPSubFieldHeader>> vep_sub_fields_;
 
   InfoResourceHandle requestResourceHandle(ManageInfoData& manage_info_data);
 
@@ -88,7 +152,6 @@ class InfoEvidenceHeader {
 
 public:
 
-//  friend ManageInfoData;
   friend EvidenceFactory;
 
   explicit InfoEvidenceHeader() {}

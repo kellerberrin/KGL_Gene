@@ -160,3 +160,4 @@ std::optional<kgl::InfoDataVariant> kgl::InfoEvidenceAnalysis::getInfoData( cons
 
 
 
+

@@ -19,16 +19,16 @@ bool kgl::InfoFilterAnalysis::initializeAnalysis( const std::string& work_direct
                                                   const RuntimeParameterMap& named_parameters,
                                                   std::shared_ptr<const GenomeCollection> reference_genomes) {
 
-  ExecEnv::log().info("Default Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
+  ExecEnv::log().info("Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
   for (auto const& [parameter_ident, parameter_value] : named_parameters) {
 
-    ExecEnv::log().info("Default Initialize Analysis Id: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident, parameter_value);
+    ExecEnv::log().info("Initialize Analysis Id: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident, parameter_value);
 
   }
 
   for (auto const& genome : reference_genomes->getMap()) {
 
-    ExecEnv::log().info("Default Initialize for Analysis Id: {} called with Reference Genome: {}", ident(), genome.first);
+    ExecEnv::log().info("Initialize for Analysis Id: {} called with Reference Genome: {}", ident(), genome.first);
 
   }
 

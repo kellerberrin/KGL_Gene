@@ -11,6 +11,63 @@
 
 namespace kgl = kellerberrin::genome;
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Extract VEP subfields.
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bool kgl::VEPSubFieldHeader::parseHeader(const std::string& description) {
+
+  size_t header_offset = description.find_first_of (HEADER_SEARCH_STR_);
+
+  if (header_offset == std::string::npos) {
+
+    ExecEnv::log().error("VEPSubFieldHeader::parseHeader, could not parse vep header string: {}", description);
+    return false;
+
+  }
+
+  std::string unparsed_header = description.substr(header_offset);
+
+  sub_fields_headers_ = Utility::char_tokenizer(unparsed_header, VEP_DELIMITER_CHAR);
+
+  size_t index = 0;
+  for (auto const& sub_field : sub_fields_headers_) {
+
+    auto result = index_map_.try_emplace(sub_field, index);
+
+    if (not result.second) {
+
+      ExecEnv::log().error("VEPSubFieldHeader::parseHeader, duplicate sub field header text: {}", sub_field);
+      return false;
+
+    }
+
+    ++index;
+
+  }
+
+  return true;
+
+}
+
+
+std::optional<size_t> kgl::VEPSubFieldHeader::getSubFieldIndex(const std::string& sub_field) const {
+
+  auto result = index_map_.find(sub_field);
+
+  if (result == index_map_.end()) {
+
+    return std::nullopt;
+
+  }
+
+  return result->second;
+
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 
