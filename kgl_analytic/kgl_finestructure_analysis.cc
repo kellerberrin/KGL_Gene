@@ -229,7 +229,7 @@ bool kgl::FineStructureAnalysis::generatePhaseFile(const std::string& Filename,
 
           } else {
 
-            auto vcf_ptr = std::dynamic_pointer_cast<const VCFVariant>(result->second);
+            auto vcf_ptr = result->second;
 
             if (not vcf_ptr) {
 

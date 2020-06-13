@@ -154,9 +154,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_db_unphased.cc
         kgl_library/kgl_variant_db_unphased_population.h
         kgl_library/kgl_variant_db_unphased_population.cc
-        kgl_library/kgl_variant_vcf.h
-        kgl_library/kgl_variant_vcf.cc
-        kgl_library/kgl_variant_vcf_mutation.cc
         kgl_library/kgl_genome_contig_feature.h
         kgl_library/kgl_genome_contig_feature.cc
         kgl_library/kgl_genome_contig_aux.cc

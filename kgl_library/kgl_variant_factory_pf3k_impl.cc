@@ -6,7 +6,7 @@
 #include "kgl_variant_factory_vcf_parse_header.h"
 #include "kgl_variant_factory_readvcf_impl.h"
 #include "kgl_variant_factory_pf3k_impl.h"
-#include "kgl_variant_vcf.h"
+#include "kgl_variant.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -341,13 +341,13 @@ bool kgl::Pf3kVCFImpl::createAddVariant(const std::string& genome_name,
   StringDNA5 reference_str(reference_text);
   StringDNA5 alternate_str(alternate_text);
 
-  std::shared_ptr<const Variant> variant_ptr(std::make_shared<VCFVariant>(genome_name,
-                                                                          contig_ptr->contigId(),
-                                                                          VariantSequence::UNPHASED,
-                                                                          contig_offset,
-                                                                          evidence,
-                                                                          std::move(reference_str),
-                                                                          std::move(alternate_str)));
+  std::shared_ptr<const Variant> variant_ptr(std::make_shared<Variant>( genome_name,
+                                                                        contig_ptr->contigId(),
+                                                                        VariantSequence::UNPHASED,
+                                                                        contig_offset,
+                                                                        evidence,
+                                                                        std::move(reference_str),
+                                                                        std::move(alternate_str)));
 
   return addThreadSafeVariant(variant_ptr);
 

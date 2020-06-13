@@ -160,7 +160,7 @@ void kgl::HomologousVariant::checkUpstreamDeletion(OffsetVariantMap& variant_map
 
     if (iter == variant_map.begin()) continue;
 
-    int delete_size = std::prev(iter)->second->referenceSize() - std::prev(iter)->second->size();
+    int delete_size = std::prev(iter)->second->referenceSize() - std::prev(iter)->second->alternateSize();
 
     int offset_gap = iter->second->offset() - std::prev(iter)->second->offset();
 

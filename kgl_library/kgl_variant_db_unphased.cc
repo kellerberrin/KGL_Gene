@@ -4,7 +4,7 @@
 
 
 #include "kgl_variant_db_unphased.h"
-#include "kgl_variant_vcf.h"
+#include "kgl_variant.h"
 #include "kel_patterns.h"
 
 
@@ -179,24 +179,23 @@ std::pair<size_t, size_t> kgl::UnphasedContig::validate(const std::shared_ptr<co
 
     for (auto const& variant_ptr : variant_vector) {
 
-      std::shared_ptr<const VCFVariant> vcf_variant_ptr = std::dynamic_pointer_cast<const VCFVariant>(variant_ptr);
-      if (not vcf_variant_ptr) {
+      if (not variant_ptr) {
 
         ExecEnv::log().error("UnphasedContig::validate, Unknown variant: {}", variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false));
         continue;
 
       }
 
-      if (contig_sequence_ptr->subSequence(vcf_variant_ptr->offset(), vcf_variant_ptr->reference().length()) == vcf_variant_ptr->reference()) {
+      if (contig_sequence_ptr->subSequence(variant_ptr->offset(), variant_ptr->reference().length()) == variant_ptr->reference()) {
 
         ++contig_count.second;
 
       } else {
 
         ExecEnv::log().error("UnphasedContig::validate, Mismatch, at Contig Offset: {} Sequence is: {}, Variant Reference Sequence is: {}",
-                             vcf_variant_ptr->offset(),
-                             contig_sequence_ptr->subSequence(vcf_variant_ptr->offset(), vcf_variant_ptr->reference().length()).getSequenceAsString(),
-                             vcf_variant_ptr->reference().getSequenceAsString());
+                             variant_ptr->offset(),
+                             contig_sequence_ptr->subSequence(variant_ptr->offset(), variant_ptr->reference().length()).getSequenceAsString(),
+                             variant_ptr->reference().getSequenceAsString());
 
       }
 

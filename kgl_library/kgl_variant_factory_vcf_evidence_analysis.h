@@ -12,7 +12,31 @@
 namespace kellerberrin::genome {   //  organization level namespace
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Object to hold parsed "vep" sub fields.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class VEPSubFieldEvidence {
+
+public:
+
+  VEPSubFieldEvidence(std::shared_ptr<const VEPSubFieldHeader> vep_header_ptr, std::vector<std::string> field_vector)
+  : vep_header_ptr_(std::move(vep_header_ptr)), field_vector_(std::move(field_vector)) {}
+  ~VEPSubFieldEvidence() = default;
+
+
+private:
+
+  std::shared_ptr<const VEPSubFieldHeader> vep_header_ptr_;
+  const std::vector<std::string> field_vector_;
+
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Utility Functions for extracting Info Data.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 class InfoEvidenceAnalysis {
 
 public:
@@ -21,7 +45,7 @@ public:
   ~InfoEvidenceAnalysis() = default;
 
   // The variant Info data (if it exists).
-  static std::optional<const InfoSubscribedField> getSubscribedField( const Variant& variant_ptr,
+  static std::optional<const InfoSubscribedField> getSubscribedField( const Variant& variant,
                                                                       const std::string& field_ident);
 
   static std::optional<InfoDataVariant> getInfoData( const Variant& variant_ptr,
@@ -36,6 +60,7 @@ public:
   // Converts a bin in string format "1|0|0|0|1|0|0|0|1|0" into a vector of floats.
   static std::vector<double> stringBinToFloat(const std::vector<std::string>& bin_data, size_t expected_bin_size);
 
+  static std::optional<std::unique_ptr<const VEPSubFieldEvidence>> getVepSubFields(const Variant& variant);
 
 public:
 
