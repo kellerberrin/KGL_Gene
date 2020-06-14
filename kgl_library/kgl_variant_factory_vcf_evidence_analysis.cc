@@ -4,7 +4,6 @@
 
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 
-#include <variant>
 #include <vector>
 
 namespace kgl = kellerberrin::genome;
@@ -158,14 +157,139 @@ std::optional<kgl::InfoDataVariant> kgl::InfoEvidenceAnalysis::getInfoData( cons
 
 }
 
-
+// Creates a vep subfield object, if defined by the variant.
 std::optional<std::unique_ptr<const kgl::VEPSubFieldEvidence>>
 kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
 
+  std::optional<const kgl::InfoSubscribedField> vep_field_opt = getSubscribedField( variant, VEPSubFieldHeader::VEP_FIELD_ID);
 
-  return std::nullopt;
+  if (not vep_field_opt) {
+
+    return std::nullopt;
+
+  }
+
+  std::optional<std::shared_ptr<const VEPSubFieldHeader>> vep_header_opt = vep_field_opt.value().vepSubFieldHeader();
+
+  if (not vep_header_opt) {
+
+    ExecEnv::log().error("InfoEvidenceAnalysis::getVepSubFields, found 'vep' field but no matching 'vep' header defined");
+    return std::nullopt;
+
+  }
+
+  std::shared_ptr<const VEPSubFieldHeader> vep_header_ptr = vep_header_opt.value();
+
+  if (vep_header_ptr->subFieldHeaders().empty()) {
+
+    ExecEnv::log().error("InfoEvidenceAnalysis::getVepSubFields, found empty 'vep' header");
+    return std::nullopt;
+
+  }
+
+  std::optional<kgl::InfoDataVariant> vep_opt = getInfoData(variant, VEPSubFieldHeader::VEP_FIELD_ID);
+
+  if (not vep_opt) {
+
+    return std::nullopt;
+
+  }
+
+  std::vector<std::string> vep_field_vector = varianttoStrings(vep_opt.value());
+
+  // Only add the vep fields that correspond to the variant alternate.
+  // There may be multiple alternates in the vep vector.
+  std::vector<std::string> variant_vep_vector;
+  variant_vep_vector.reserve(vep_field_vector.size());
+  std::vector<std::vector<std::string_view>> vep_sub_fields_vector;
+  vep_sub_fields_vector.reserve(vep_field_vector.size());
+  for (auto& vep_field : vep_field_vector) {
+
+    std::vector<std::string_view> vep_sub_fields = Utility::view_tokenizer(vep_field, VEPSubFieldHeader::VEP_DELIMITER_CHAR);
+    if (vep_header_ptr->subFieldHeaders().size() != vep_sub_fields.size()) {
+
+      ExecEnv::log().error( "InfoEvidenceAnalysis::getVepSubFields, mismatch, 'vep' header sub field count: {}, parsed :{} sub fields"
+                           , vep_header_ptr->subFieldHeaders().size(), vep_sub_fields.size());
+      return std::nullopt;
+
+    }
+
+    if (std::string(vep_sub_fields[0]) == variant.alternate().getSequenceAsString()) {
+
+      variant_vep_vector.emplace_back(std::move(vep_field));
+      vep_sub_fields_vector.emplace_back(std::move(vep_sub_fields));
+
+    }
+
+  }
+
+  // No point in returning an empty vep object.
+  if (variant_vep_vector.empty()) {
+
+    return std::nullopt;
+
+  }
+
+  // Return the object.
+  return std::make_unique<const kgl::VEPSubFieldEvidence>(vep_header_ptr, std::move(variant_vep_vector), std::move(vep_sub_fields_vector));
 
 }
+
+
+// A temporary function to explore the vep field values.
+// Returns all the distinct field values of a vep sub field from a population.
+void kgl::InfoEvidenceAnalysis::vepSubFieldValues( std::string vep_sub_field,
+                                                   const std::shared_ptr<const UnphasedPopulation>& population) {
+
+
+  struct SubFieldValues{
+
+    std::set<std::string> field_value_set_;
+    std::string vep_sub_field_;
+
+    bool getSubFieldValues(const std::shared_ptr<const Variant>& variant_ptr) {
+
+      std::optional<std::unique_ptr<const kgl::VEPSubFieldEvidence>> vep_fields_opt = getVepSubFields(*variant_ptr);
+
+      if (vep_fields_opt) {
+
+        std::optional<size_t> vep_index_opt = vep_fields_opt.value()->vepHeader()->getSubFieldIndex(vep_sub_field_);
+
+        if (not vep_index_opt) {
+
+          ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues, sub field: {} not found", vep_sub_field_);
+          return false;
+
+        }
+
+        for (auto const& sub_fields : vep_fields_opt.value()->vepSubFields()) {
+
+          field_value_set_.emplace(std::string(sub_fields[vep_index_opt.value()]));
+
+        }
+
+      }
+
+      return true;
+
+    }
+
+  };
+
+  SubFieldValues sub_field_values;
+  sub_field_values.vep_sub_field_ = vep_sub_field;
+
+  population->processAll(sub_field_values, &SubFieldValues::getSubFieldValues);
+
+  for (auto const& field_value : sub_field_values.field_value_set_) {
+
+    ExecEnv::log().info("vep field: {} has value: {}", vep_sub_field, field_value);
+
+  }
+
+}
+
+
 
 
 

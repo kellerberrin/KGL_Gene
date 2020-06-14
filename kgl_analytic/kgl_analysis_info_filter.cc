@@ -56,6 +56,8 @@ bool kgl::InfoFilterAnalysis::fileReadAnalysis(std::shared_ptr<const UnphasedPop
   ExecEnv::log().info("VCF File Read for Analysis Id: {} called with Unique Variant Population: {}, Variant Count: {}",
                       ident(), vcf_population->populationId(), vcf_population->variantCount());
 
+  // Investigate vep field values.
+  InfoEvidenceAnalysis::vepSubFieldValues("Consequence", vcf_population);
 
   // save the population.
   previous_populations_.push_back(vcf_population);

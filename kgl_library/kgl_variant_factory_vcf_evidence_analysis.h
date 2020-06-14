@@ -6,7 +6,7 @@
 #define KGL_VARIANT_FACTORY_VCF_EVIDENCE_ANALYSIS_H
 
 #include "kgl_variant_factory_vcf_evidence.h"
-#include "kgl_variant.h"
+#include "kgl_variant_db_unphased_population.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -21,15 +21,25 @@ class VEPSubFieldEvidence {
 
 public:
 
-  VEPSubFieldEvidence(std::shared_ptr<const VEPSubFieldHeader> vep_header_ptr, std::vector<std::string> field_vector)
-  : vep_header_ptr_(std::move(vep_header_ptr)), field_vector_(std::move(field_vector)) {}
+  VEPSubFieldEvidence( std::shared_ptr<const VEPSubFieldHeader> vep_header_ptr,
+                       std::vector<std::string>&& field_vector,
+                       std::vector<std::vector<std::string_view>>&& vep_sub_fields_vector)
+  : vep_header_ptr_(std::move(vep_header_ptr)),
+    field_vector_(std::move(field_vector)),
+    vep_sub_fields_vector_(std::move(vep_sub_fields_vector)) {}
   ~VEPSubFieldEvidence() = default;
 
+
+  [[nodiscard]] std::shared_ptr<const VEPSubFieldHeader> vepHeader() const { return vep_header_ptr_; }
+  [[nodiscard]] const std::vector<std::string>&  vepFields() const { return field_vector_; }
+  [[nodiscard]] const std::vector<std::vector<std::string_view>>& vepSubFields() const { return vep_sub_fields_vector_; }
 
 private:
 
   std::shared_ptr<const VEPSubFieldHeader> vep_header_ptr_;
   const std::vector<std::string> field_vector_;
+  std::vector<std::vector<std::string_view>> vep_sub_fields_vector_;
+
 
 };
 
@@ -61,6 +71,9 @@ public:
   static std::vector<double> stringBinToFloat(const std::vector<std::string>& bin_data, size_t expected_bin_size);
 
   static std::optional<std::unique_ptr<const VEPSubFieldEvidence>> getVepSubFields(const Variant& variant);
+
+  static void vepSubFieldValues( std::string vep_sub_field, const std::shared_ptr<const UnphasedPopulation>& population);
+
 
 public:
 
