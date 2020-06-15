@@ -73,6 +73,44 @@ private:
 
 };
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter on a Vep subfield found in the Gnomad Homo Sapien data. Will return return missing_default for all other data.
+//
+// Note that a variant may have several vep fields representing the different genomic structures the variant occupies.
+// The filter is an 'or' against these fields.
+// If any one (of several) of the specified vep fields meets the filter specification then the filter returns 'true'.
+// Conversely, vep fields are often undefined (empty string "") if the field is not relevant to the genomic structures the variant occupies.
+// An undefined (empty string "") vep field will return 'false'.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class VepSubStringFilter : public VariantFilter {
+
+public:
+
+  VepSubStringFilter(const std::string& vep_field_name, std::string sub_string, bool missing_default = false)  // How the filter responds if the data is missing.
+  : vep_field_name_(vep_field_name), missing_default_(missing_default), sub_string_(std::move(sub_string)) {
+
+    std::stringstream ss;
+    ss << "Vep Info SubField: " << vep_field_name << " contains sub string \"" << sub_string <<"\"";
+    filterName(ss.str());
+
+  }
+  VepSubStringFilter(const VepSubStringFilter&) = default;
+  ~VepSubStringFilter() override = default;
+
+  [[nodiscard]] bool applyFilter(const Variant& variant) const override;
+
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<VepSubStringFilter>(*this); }
+
+private:
+
+  const std::string vep_field_name_;
+  const bool missing_default_;
+  const std::string sub_string_;
+
+};
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Integer Info Filter. Returns true if a scalar integer and greater or equal to the comparison value.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

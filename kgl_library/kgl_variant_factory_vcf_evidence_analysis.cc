@@ -187,15 +187,9 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
 
   }
 
-  std::optional<kgl::InfoDataVariant> vep_opt = getInfoData(variant, VEPSubFieldHeader::VEP_FIELD_ID);
+  const DataMemoryBlock &data_block = *variant.evidence().infoData().value();
 
-  if (not vep_opt) {
-
-    return std::nullopt;
-
-  }
-
-  std::vector<std::string> vep_field_vector = varianttoStrings(vep_opt.value());
+  std::vector<std::string> vep_field_vector = varianttoStrings(vep_field_opt.value().getData(data_block));
 
   // Only add the vep fields that correspond to the variant alternate.
   // There may be multiple alternates in the vep vector.
@@ -244,7 +238,7 @@ void kgl::InfoEvidenceAnalysis::vepSubFieldValues( std::string vep_sub_field,
 
   struct SubFieldValues{
 
-    std::set<std::string> field_value_set_;
+    std::map<std::string, size_t> field_value_map_;
     std::string vep_sub_field_;
 
     bool getSubFieldValues(const std::shared_ptr<const Variant>& variant_ptr) {
@@ -264,7 +258,23 @@ void kgl::InfoEvidenceAnalysis::vepSubFieldValues( std::string vep_sub_field,
 
         for (auto const& sub_fields : vep_fields_opt.value()->vepSubFields()) {
 
-          field_value_set_.emplace(std::string(sub_fields[vep_index_opt.value()]));
+          std::string field_value(sub_fields[vep_index_opt.value()]);
+          auto result = field_value_map_.find(field_value);
+
+          if (result != field_value_map_.end()) {
+
+            ++result->second;
+
+          } else {
+
+            auto insert_result = field_value_map_.try_emplace(field_value, 1);
+            if (not insert_result.second) {
+
+              ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues, could not insert sub_field value: {}", field_value);
+
+            }
+
+          }
 
         }
 
@@ -281,9 +291,9 @@ void kgl::InfoEvidenceAnalysis::vepSubFieldValues( std::string vep_sub_field,
 
   population->processAll(sub_field_values, &SubFieldValues::getSubFieldValues);
 
-  for (auto const& field_value : sub_field_values.field_value_set_) {
+  for (auto const& field_value : sub_field_values.field_value_map_) {
 
-    ExecEnv::log().info("vep field: {} has value: {}", vep_sub_field, field_value);
+    ExecEnv::log().info("vep field: {} has value: {} count: {}", vep_sub_field, field_value.first, field_value.second);
 
   }
 

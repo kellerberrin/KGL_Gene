@@ -58,6 +58,12 @@ bool kgl::InfoFilterAnalysis::fileReadAnalysis(std::shared_ptr<const UnphasedPop
 
   // Investigate vep field values.
   InfoEvidenceAnalysis::vepSubFieldValues("Consequence", vcf_population);
+  // Investigate vep field values.
+  InfoEvidenceAnalysis::vepSubFieldValues("IMPACT", vcf_population);
+  // Investigate vep field values.
+  InfoEvidenceAnalysis::vepSubFieldValues("Feature_type", vcf_population);
+  // Investigate vep field values.
+  InfoEvidenceAnalysis::vepSubFieldValues("BIOTYPE", vcf_population);
 
   // save the population.
   previous_populations_.push_back(vcf_population);
@@ -297,6 +303,15 @@ AF_oth, Type: Float, Number: A, Description: Alternate allele frequency in sampl
 
   const std::vector<double> AF_values{0.001, 0.01, 0.02, 0.05, 0.10, 0.20, 0.50, 0.90};
   const std::vector<double> inbreeding_values{ -0.9, -0.5, -0.2, -0.1, 0.0, 0.1, 0.20, 0.50, 0.90};
+
+  // Filter on the VEP Impact field.
+  const std::string vep_sub_field("IMPACT");
+  const std::string vep_high_impact("HIGH");
+  const std::string vep_moderate_impact("MODERATE");
+  analyzeFilteredPopulation( OrFilter(VepSubStringFilter(vep_sub_field, vep_high_impact),
+                                     VepSubStringFilter(vep_sub_field, vep_moderate_impact)),
+                             vcf_population,
+                             outfile);
 
   // Filter on AF fields.
   analyzeField("InbreedingCoeff", inbreeding_values, vcf_population, outfile);

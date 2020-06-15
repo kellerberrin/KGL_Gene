@@ -54,6 +54,9 @@ private:
   double het_under_30_{0};
   double het_80_over_{0};
 
+  double all_allele_{0};
+  double all_alternate_allele_{0};
+
   size_t variant_count_{0};
 
   // Heterozygous bin field

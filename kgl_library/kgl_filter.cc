@@ -9,6 +9,9 @@
 
 namespace kgl = kellerberrin::genome;
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Info Filter implementation.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool kgl::InfoFilterImpl::applyFilter(const InfoFilterLambda& filter_lambda, const Variant& variant) const {
 
@@ -23,6 +26,45 @@ bool kgl::InfoFilterImpl::applyFilter(const InfoFilterLambda& filter_lambda, con
     return missing_default_;
 
   }
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Vep Filter implementation.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool kgl::VepSubStringFilter::applyFilter(const Variant& variant) const {
+
+  std::optional<std::unique_ptr<const VEPSubFieldEvidence>> vep_fields_opt = InfoEvidenceAnalysis::getVepSubFields(variant);
+
+  if (vep_fields_opt) {
+
+    std::optional<size_t> vep_index_opt = vep_fields_opt.value()->vepHeader()->getSubFieldIndex(vep_field_name_);
+
+    if (not vep_index_opt) {
+
+      return missing_default_;
+
+    }
+
+    for (auto const& sub_fields : vep_fields_opt.value()->vepSubFields()) {
+
+      std::string field_value(sub_fields[vep_index_opt.value()]);
+
+      if (field_value.find(sub_string_) != std::string::npos) {
+
+        return true;
+
+      }
+
+    }
+
+    return false;  // substring not found.
+
+  }
+
+  return missing_default_;
 
 }
 

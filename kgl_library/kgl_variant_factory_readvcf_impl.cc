@@ -73,7 +73,7 @@ void kgl::VCFReaderMT::VCFConsumer() {
 
     // Call the consumer object with the dequeued record.
     ProcessVCFRecord(vcf_record.value().first, *vcf_record.value().second);
-    final_count = vcf_record.value().first;
+    ++final_count;
 
   }
 
