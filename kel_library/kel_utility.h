@@ -34,6 +34,7 @@ public:
   [[nodiscard]] static std::vector<std::string_view> view_tokenizer(const std::string_view& str_view, const char delim);
   [[nodiscard]] static std::vector<std::string> char_tokenizer(const std::string& str, const char delim);
   [[nodiscard]] static std::pair<double, double> process_mem_usage();
+  [[nodiscard]] static std::pair<double, double> stddev(const std::vector<double> &vec); // mean = first,  stdev = second
 
 private:
 

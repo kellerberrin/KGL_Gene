@@ -79,7 +79,10 @@ bool kgl::PackageAnalysis::fileReadAnalysis(std::shared_ptr<const UnphasedPopula
 
     if (active) {
 
-      if (not analysis->fileReadAnalysis(vcf_iterative_data)) {
+      // Create a copy of the population so that each analysis cannot side-effect subsequent analysis.
+      std::shared_ptr<const UnphasedPopulation> copy_vcf_iterative_data = vcf_iterative_data->deepCopy();
+
+      if (not analysis->fileReadAnalysis(copy_vcf_iterative_data)) {
 
         ExecEnv::log().error("PackageAnalysis::fileReadAnalysis; Error Iteratively Updating Analysis: {}, disabled from further updates.", analysis->ident());
         active = false;

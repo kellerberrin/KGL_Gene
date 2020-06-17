@@ -62,6 +62,7 @@ public:
 
   [[nodiscard]] bool addGenome(const std::shared_ptr<UnphasedGenome>& genome);
 
+  // Unconditionally add a variant to the population.
   [[nodiscard]] bool addVariant(const std::shared_ptr<const Variant>& variant_ptr);
 
   // The first bool is normal operation. The second bool is if a unique variant was added to the population.

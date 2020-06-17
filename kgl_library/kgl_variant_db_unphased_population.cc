@@ -25,15 +25,8 @@ std::shared_ptr<kgl::UnphasedPopulation> kgl::UnphasedPopulation::deepCopy() con
   // Duplicate population ids are not a problem.
   std::shared_ptr<UnphasedPopulation> population_copy(std::make_shared<UnphasedPopulation>(populationId()));
 
-  for (auto const& [genome_id, genome_ptr] : getMap()) {
-
-    if (not population_copy->addGenome(genome_ptr->deepCopy())) {
-
-      ExecEnv::log().critical("UnphasedPopulation::deepCopy(), probable duplicate, could not add genome: {} to the population", genome_id);
-
-    }
-
-  }
+  // Create a complete deep copy of this population.
+  processAll(*population_copy, &UnphasedPopulation::addVariant);
 
   return population_copy;
 
@@ -295,7 +288,7 @@ bool kgl::UnphasedPopulation::addUniqueVariant(const std::shared_ptr<const Varia
 // Unconditional Merge.
 size_t kgl::UnphasedPopulation::mergePopulation(const std::shared_ptr<const UnphasedPopulation>& merge_population) {
 
-  if (merge_population->processAll(*this, &UnphasedPopulation::addVariant)) {
+  if (not merge_population->processAll(*this, &UnphasedPopulation::addVariant)) {
 
     ExecEnv::log().error("UnphasedPopulation::mergePopulation(); Cannot merge population: {} with population: {}",
                           merge_population->populationId(), populationId());

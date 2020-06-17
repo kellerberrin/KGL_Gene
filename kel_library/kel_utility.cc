@@ -3,12 +3,6 @@
 //
 
 
-#include <algorithm>
-#include <iostream>
-#include <unistd.h>
-#include <ios>
-#include <fstream>
-#include <string>
 #include "kel_utility.h"
 #include "kel_exec_env.h"
 
@@ -16,6 +10,12 @@
 #define BOOST_FILESYSTEM_NO_DEPRECATED // Recommended by boost filesystem documentation.
 #include <boost/filesystem.hpp>
 #include <boost/tokenizer.hpp>
+
+#include <algorithm>
+#include <unistd.h>
+#include <ios>
+#include <string>
+#include <numeric>
 
 
 // Define namespace alias
@@ -307,4 +307,37 @@ std::pair<double, double> kel::Utility::process_mem_usage()
 
   return std::pair<double, double>(vm_usage, resident_set);
 
+}
+
+// pair first is the mean, second is the sample standard deviation
+std::pair<double, double> kel::Utility::stddev(const std::vector<double> &vec)
+{
+  if (vec.empty()) {
+
+    return {0.0, 0.0};
+
+  }
+
+  size_t sz = vec.size();
+  if (sz == 1) {
+
+    return {vec.front(), 0.0};
+
+  }
+
+  double size = static_cast<double>(sz);
+
+  // Calculate the mean
+   double mean = std::accumulate(vec.begin(), vec.end(), 0.0) / size;
+
+  // Now calculate the variance
+  auto variance_func = [&mean](double accumulator, const double& val)
+  {
+    return accumulator + ((val - mean) * (val - mean));
+  };
+
+  // Sample variance
+  double variance = std::accumulate(vec.begin(), vec.end(), 0.0, variance_func) / (size - 1.0);
+
+  return {mean, std::sqrt(variance) };
 }
