@@ -34,9 +34,9 @@ public:
 
     // All available analytics registered here.
     // todo: Move these to an analysis factory object.
-    registered_analysis_.push_back(std::make_unique<NullAnalysis>());
-    registered_analysis_.push_back(std::make_unique<IntervalAnalysis>());
-    registered_analysis_.push_back(std::make_unique<InfoFilterAnalysis>());
+//    registered_analysis_.push_back(std::make_unique<NullAnalysis>());
+//    registered_analysis_.push_back(std::make_unique<IntervalAnalysis>());
+//    registered_analysis_.push_back(std::make_unique<InfoFilterAnalysis>());
 
   }
   ~PackageAnalysis() = default;

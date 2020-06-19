@@ -20,21 +20,28 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
 # add boost library directories
 set(BOOST_INCLUDEDIR /usr/local/include)
 set(BOOST_LIBRARYDIR /usr/local/lib/boost)
-set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
 include_directories(${Boost_INCLUDE_DIRS})
 find_package( Boost COMPONENTS system filesystem timer chrono program_options iostreams REQUIRED )
 
+# zlib for compressed VCF files.
+find_package(ZLIB)
+if (ZLIB_FOUND)
+    include_directories(${ZLIB_INCLUDE_DIRS})
+endif()
+
 # Debug g++
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fconcepts -ggdb -DBOOST_MATH_DISABLE_FLOAT128")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fPIC -fconcepts -ggdb -DBOOST_MATH_DISABLE_FLOAT128")
 set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-ggdb -DBOOST_MATH_DISABLE_FLOAT128")
+
 # Release g++
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fconcepts -O3 -s -DNDEBUG -DBOOST_MATH_DISABLE_FLOAT128")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fPIC -fconcepts -O3 -s -DNDEBUG -DBOOST_MATH_DISABLE_FLOAT128")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE " -O3 -s -DNDEBUG -DBOOST_MATH_DISABLE_FLOAT128")
 
 # Profile g++
-set(CMAKE_CXX_FLAGS_PROFILE "-fconcepts -pg -g -ggdb -O3 -DBOOST_MATH_DISABLE_FLOAT128 -Xlinker -Map=output.map ")
+set(CMAKE_CXX_FLAGS_PROFILE "-fPIC -fconcepts -pg -g -ggdb -O3 -DBOOST_MATH_DISABLE_FLOAT128 -Xlinker -Map=output.map ")
 set(CMAKE_EXE_LINKER_FLAGS_PROFILE "-pg -g -ggdb -O3 -DBOOST_MATH_DISABLE_FLOAT128 -Xlinker -Map=output.map ")
 
 # All possible warnings
@@ -44,7 +51,7 @@ set(CMAKE_ERROR_WARNING_FLAGS "-std=c++17 -Wall -pthread -Wextra -Wpedantic -Wst
 
 # Actually set the g++ flags.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_RELEASE}")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_RELEASE}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_RELEASE}")
 
 
@@ -180,7 +187,9 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_vcf_evidence_memory.h
         kgl_library/kgl_variant_factory_vcf_evidence_data_blk.cc
         kgl_library/kgl_variant_factory_vcf_evidence_data_blk.h
-        kgl_library/kgl_variant_factory_vcf_evidence_data_blk_read.cc)
+        kgl_library/kgl_variant_factory_vcf_evidence_data_blk_read.cc
+        kgl_library/kgl_variant_factory_vcf_evidence_analysis.cc
+        kgl_library/kgl_variant_factory_vcf_evidence_analysis.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -215,7 +224,9 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_analysis_info_filter.cc
         kgl_analytic/kgl_analysis_info_filter.h
         kgl_analytic/kgl_age_analysis.cc
-        kgl_analytic/kgl_age_analysis.h)
+        kgl_analytic/kgl_age_analysis.h
+        kgl_analytic/kgl_legacy_Pf_analysis.cc
+        kgl_analytic/kgl_legacy_Pf_analysis.h)
 
 # Deconvolution and mixture files.
 
@@ -226,17 +237,17 @@ set(MIXTURE_SOURCE_FILES
         kgl_mixture/kgl_variant_classify.cc
         kgl_mixture/kgl_variant_classify_io.cc
         kgl_mixture/kgl_read_phasing.h
-        kgl_mixture/kgl_read_phasing.cc kgl_library/kgl_variant_factory_vcf_evidence_analysis.cc kgl_library/kgl_variant_factory_vcf_evidence_analysis.h)
+        kgl_mixture/kgl_read_phasing.cc
+        )
 
 
 # Application level objects
 set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_main.cc
         kgl_app/kgl_gene_app.cc
-        kgl_app/kgl_legacy_Pf_analysis.cc
-        kgl_app/kgl_legacy_Pf_analysis.h
         kgl_app/kgl_gene_app.h
         kgl_app/kgl_gene_parse.cc
+        kgl_app/kgl_properties.h
         kgl_app/kgl_properties.cc
         kgl_app/kgl_package.cc
         kgl_app/kgl_package.h
@@ -252,10 +263,6 @@ set(APPLICATION_SOURCE_FILES
 
 ############kgd_deconvolv########################################################
 
-find_package(ZLIB)
-if (ZLIB_FOUND)
-    include_directories(${ZLIB_INCLUDE_DIRS})
-endif()
 
 
 include_directories(kgd_deconvolv/kgd_deconvolv_app
@@ -361,15 +368,21 @@ set(DECONVOLV_APPLICATION_SOURCE_FILES
 
 add_library(kel_library_lib STATIC ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES})
 
-add_library(kgl_genome_lib STATIC ${GENETIC_LIBRARY_SOURCE_FILES} ${ANALYTIC_SOURCE_FILES} ${MIXTURE_SOURCE_FILES})
+add_library(kgl_genome_lib STATIC ${GENETIC_LIBRARY_SOURCE_FILES} ${MIXTURE_SOURCE_FILES})
 
-target_link_libraries(kgl_genome_lib  kel_library_lib ${Boost_LIBRARIES})
+target_link_libraries(kgl_genome_lib kel_library_lib ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
+
+add_library(kgl_analysis_lib MODULE ${ANALYTIC_SOURCE_FILES})
+
+target_link_libraries(kgl_analysis_lib PRIVATE kgl_genome_lib kel_library_lib ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
 
 add_library(kgd_contrib_lib STATIC ${DECONVOLV_LIB_CONTRIB_FILES})
 
+target_link_libraries(kgd_contrib_lib PRIVATE ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
+
 add_library(kgd_deconvolv_lib STATIC ${DECONVOLV_LIB_SOURCE_FILES})
 
-target_link_libraries(kgd_deconvolv_lib kgd_contrib_lib kel_library_lib ${ZLIB_LIBRARIES})
+target_link_libraries(kgd_deconvolv_lib kgd_contrib_lib kel_library_lib ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
 
 #generate kgd_deconvolv executable
 add_executable (kgd_deconvolv ${DECONVOLV_APPLICATION_SOURCE_FILES})
@@ -377,9 +390,9 @@ add_executable (kgd_deconvolv ${DECONVOLV_APPLICATION_SOURCE_FILES})
 target_link_libraries(kgd_deconvolv kgd_deconvolv_lib kgl_genome_lib kel_library_lib)
 
 #generate kgl_genome executable
-add_executable (kgl_genome ${APPLICATION_SOURCE_FILES} kgl_app/kgl_properties.h)
+add_executable (kgl_genome ${APPLICATION_SOURCE_FILES} )
 
-target_link_libraries(kgl_genome kgl_genome_lib kgd_deconvolv_lib kel_library_lib)
+target_link_libraries(kgl_genome  kgl_genome_lib kgd_deconvolv_lib kel_library_lib)
 
 ############################################################################################################
 # Generate the kpl executable.

@@ -15,7 +15,9 @@ namespace kgl = kellerberrin::genome;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Extract VEP subfields.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+// The VEP field is an Gnomad specific field that has (generally 68) numerous sub-fields.
+// For convenience these can be accessed by name.
+// Non-Gnomad Info data will simply return a std::nullopt.
 
 bool kgl::VEPSubFieldHeader::parseHeader(const std::string& description) {
 
@@ -69,36 +71,16 @@ std::optional<size_t> kgl::VEPSubFieldHeader::getSubFieldIndex(const std::string
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  Returns the data as a variant of vectors and a boolean, an empty vector is a missing field.
 //
-
-
-//  Returns the data, A size of zero is a missing field.
 kgl::InfoDataVariant kgl::InfoSubscribedField::getData(const DataMemoryBlock& memory_block) const {
 
   // Check that this is the correct index for the data block.
+  // Should never happen (but best to check).
   if (info_evidence_header_ != memory_block.evidenceHeader()) {
 
     ExecEnv::log().error( "InfoSubscribedField::getData, Incorrect Subscribed Field Index used Access Info Data Block");
-
-    switch(getDataHandle().resourceType()) {
-
-      case DataResourceType::Boolean:
-        return false;
-
-      case DataResourceType::Integer:
-        return std::vector<int64_t>();
-
-      case DataResourceType::Float:
-        return std::vector<double>();
-
-      case DataResourceType::String:
-        return std::vector<std::string>();
-
-      default:
-        ExecEnv::log().error( "InfoSubscribedField::getData, Internal data type unknown");
-        return std::monostate();
-
-    }
+    return std::monostate(); // Inaccessible variant data, will trigger upstream errors.
 
   }
 
@@ -118,13 +100,13 @@ kgl::InfoDataVariant kgl::InfoSubscribedField::getData(const DataMemoryBlock& me
 
     default:
       ExecEnv::log().error( "InfoSubscribedField::getData, Internal data type unknown");
-      return std::monostate();
+      return std::monostate(); // Inaccessible variant data, will trigger upstream errors.
 
   }
 
 }
 
-
+// Manage internally (compressed) stored data types and map onto external (std::variant) data types.
 kgl::InfoResourceHandle kgl::InfoSubscribedField::requestResourceHandle(ManageInfoData& manage_info_data) {
 
   InfoMemoryResource& resource_allocator = manage_info_data.resourceAllocator();
@@ -172,7 +154,9 @@ kgl::InfoResourceHandle kgl::InfoSubscribedField::requestResourceHandle(ManageIn
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// An indexed map of InfoSubscribedField. There is only one of these held by all variants with INFO evidence fields.
+// An indexed map of InfoSubscribedFields. There is only one of these held by all variants with INFO evidence fields
+// parsed from a particular VCF file. However, this fact is opaque to the library user, as all access is through
+// the getSubscribedField() function below where fields are requested by name.
 
 bool kgl::InfoEvidenceHeader::setupEvidenceHeader( const VCFInfoRecord& vcf_info_record,
                                                    std::shared_ptr<const InfoEvidenceHeader> self_ptr,
@@ -192,18 +176,16 @@ bool kgl::InfoEvidenceHeader::setupEvidenceHeader( const VCFInfoRecord& vcf_info
 
 }
 
-
+// All field access is through this function.
 std::optional<const kgl::InfoSubscribedField> kgl::InfoEvidenceHeader::getSubscribedField(const std::string& field_id) const {
 
   auto result = info_subscribed_map_.find(field_id);
 
   if (result == info_subscribed_map_.end()) {
 
-    ExecEnv::log().warn("InfoEvidenceHeader::getSubscribedField, Info field ID : {} is not a subscribed field", field_id);
     return std::nullopt;
 
   }
-
 
   return result->second;
 
@@ -212,9 +194,6 @@ std::optional<const kgl::InfoSubscribedField> kgl::InfoEvidenceHeader::getSubscr
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Creates the static data and header indexes, and dynamically creates the InfoDataBlock object per VCF record.
-
-
-
 
 std::unique_ptr<const kgl::DataMemoryBlock> kgl::ManageInfoData::createMemoryBlock( const VCFInfoParser& info_parser,
                                                                                     std::shared_ptr<const InfoEvidenceHeader> evidence_ptr) const {
@@ -233,8 +212,10 @@ kgl::InfoMemoryResource kgl::ManageInfoData::resolveResources( const VCFInfoPars
   // Copy the static resource allocator.
   InfoMemoryResource resolved_resources = resource_allocator_;
 
+  // For all subscribed Info fields.
   for (auto const &[ident, subscribed_info] : evidence_header.getConstMap()) {
 
+    // The pre-parsed info field. This is used to determine storage requirements.
     std::optional<InfoParserToken> token = info_parser.getToken(ident);
 
     // No additional storage required if token not available.
@@ -263,7 +244,7 @@ kgl::InfoMemoryResource kgl::ManageInfoData::resolveResources( const VCFInfoPars
 // The evidence factory creates a common evidence lookup object for all variants (to optimize memory usage).
 // The evidence factory also creates an evidence object for each variant (data only).
 
-
+// Create an indexed data object from the VCF info field, std::moved in as a string.
 kgl::InfoDataEvidence kgl::EvidenceFactory::createVariantEvidence(std::string&& info) {
 
   // If no Info fields have been subscribed, then just return std::nullopt
@@ -276,19 +257,20 @@ kgl::InfoDataEvidence kgl::EvidenceFactory::createVariantEvidence(std::string&& 
   // Parse the VCF info line.
   VCFInfoParser info_parser(std::move(info));
 
+  // Use the parsed data to create a compact memory block with a copy of the Info data.
   std::unique_ptr<const DataMemoryBlock> mem_blk_ptr = manage_info_data_.createMemoryBlock(info_parser, info_evidence_header_);
 
   return std::move(mem_blk_ptr);
 
 }
 
-
+// Subscribe to info fields.
 void kgl::EvidenceFactory::availableInfoFields(const VCFInfoRecordMap& vcf_info_map) {
 
 
   all_available_map_ = vcf_info_map;
 
-// If no info fields are specified then all available fields are subscribed.
+  // If no info fields are specified then all available fields are subscribed.
   if (evidence_map_.empty()) {
 
     ExecEnv::log().info("No specific Info fields specified, subscribing to all available fields");
@@ -303,10 +285,12 @@ void kgl::EvidenceFactory::availableInfoFields(const VCFInfoRecordMap& vcf_info_
 
     }
 
-  } else { // subscribe to the specified fields.
+  } else { // Subscribe to a list of explicitly specified fields.
 
     for (auto const &ident : evidence_map_) {
 
+      // If the subscribed field is "None", then no fields are subscribed.
+      // Note from above, if there are no fields are explicitly subscribed, then they are all subscribed.
       if (Utility::toupper(ident) == NO_FIELD_SUBSCRIBED_) {
 
         continue;  // skip
@@ -334,7 +318,7 @@ void kgl::EvidenceFactory::availableInfoFields(const VCFInfoRecordMap& vcf_info_
 
   }
 
-  // Print out.
+  // Print out subscribed fields.
   std::string all_available = info_evidence_header_->getMap().size() == all_available_map_.size() ? "(all available)" : "";
   ExecEnv::log().info("Subscribed to {} {} VCF Info fields", info_evidence_header_->getMap().size(), all_available);
 

@@ -34,6 +34,14 @@ public:
   void addSNPCount(const size_t SNP_count) { SNP_count_ += SNP_count; }
   [[nodiscard]] size_t SNPCount() const { return SNP_count_; }
 
+  // Total transitions
+  void addTransitionCount(const size_t transition_count) { transition_count_ += transition_count; }
+  [[nodiscard]] size_t transitionCount() const { return transition_count_; }
+
+  // Variants with vep high and moderate consequences (only Gnomad data)
+  void addConsequenceCount(const size_t consequence_count) { consequence_count_ += consequence_count; }
+  [[nodiscard]] size_t consequenceCount() const { return consequence_count_; }
+
   // Total variants
   void addVariantCount(const size_t variant_count) { variant_count_ += variant_count; }
   [[nodiscard]] size_t variantCount() const { return variant_count_; }
@@ -58,7 +66,9 @@ private:
   const ContigSize_t interval_; // size of this interval.
 
   size_t SNP_count_{0};
+  size_t transition_count_{0};  // The interval Transition count SNPs.
   size_t variant_count_{0};
+  size_t consequence_count_{0};
   std::pair<ContigOffset_t , SignedOffset_t> max_empty_interval_{0, 0};
   size_t variant_offset_count_{0};
   size_t sum_empty_interval_{0};

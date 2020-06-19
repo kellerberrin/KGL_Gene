@@ -21,7 +21,6 @@ public:
   Utility()=delete;
   ~Utility()=delete;
 
-  static void getElapsedTime(double &Clock, double &System, double &User);
   [[nodiscard]] static std::string filePath(const std::string& file_name, const std::string& path); // utility for "path/file"
   [[nodiscard]] static bool fileExists(const std::string& file_path); // Check that a file exists at the file path
   [[nodiscard]] static std::string fileExtension(const std::string& file_name);

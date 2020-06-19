@@ -33,6 +33,7 @@ public:
   static Logger& log() { return *log_ptr_; }
 
   static void ctrlC(int);
+  static void getElapsedTime(double &Clock, double &System, double &User);
   static void getCommandLine(int argc, char const ** argv);
   static void createLogger(const std::string& module,
                            const std::string& log_file,
@@ -83,7 +84,7 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
     environment_ptr->executeApp(); // Run the application.
 
     double Clock, System, User;
-    Utility::getElapsedTime(Clock, System, User);
+    getElapsedTime(Clock, System, User);
     log().info("Elapsed seconds; Clock: {}, System CPU: {}, User CPU: {} (No GPU)", Clock, System, User);
     log().info("############ {} {} End Processing ###########", Environment::MODULE_NAME, Environment::VERSION);
 

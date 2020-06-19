@@ -4,6 +4,7 @@
 
 #include "kgl_analysis_interval.h"
 #include "kgl_sequence_complexity.h"
+#include "kgl_filter.h"
 
 #include <fstream>
 
@@ -202,6 +203,18 @@ bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const UnphasedP
   std::shared_ptr<const UnphasedGenome> compressed_genome = population_ptr->compressPopulation();
 
   size_t variant_count{0};
+
+
+  // Filter on the VEP Impact field (Gnomad data only).
+  // Filter on high and moderate consequence variants.
+  const std::string vep_sub_field("IMPACT");
+  const std::string vep_high_impact("HIGH");
+  const std::string vep_moderate_impact("MODERATE");
+
+  auto high_impact_filter =  VepSubStringFilter(vep_sub_field, vep_high_impact);
+  auto moderate_impact_filter = VepSubStringFilter(vep_sub_field, vep_moderate_impact);
+  auto vep_impact_filter = OrFilter(high_impact_filter, moderate_impact_filter);
+
   // For contigs in the compressed genome.
   for (auto const& [contig_id, contig_ptr] : compressed_genome->getMap()) {
 
@@ -230,19 +243,35 @@ bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const UnphasedP
         interval_data.addArrayVariantCount(array_ptr->second.size());
         variant_count += array_ptr->second.size();
         size_t snp_count{0};
+        size_t transition_count{0};
+        size_t impact_count{0};
 
         // Count SNP.
         for (auto const& variant : array_ptr->second) {
+
+          if (variant->filterVariant(vep_impact_filter)) {
+
+            ++impact_count;
+
+          }
 
           if (variant->isSNP()) {
 
             ++snp_count;
 
+            if (DNA5::isTransition(variant->alternate().at(0), variant->reference().at(0))) {
+
+              ++transition_count;
+
+            }
+
           }
 
         } // count.
 
+        interval_data.addTransitionCount(transition_count);
         interval_data.addSNPCount(snp_count);
+        interval_data.addConsequenceCount(impact_count);
         previous_offset = array_ptr->first;
 
       } // variant array.
@@ -298,7 +327,9 @@ bool kgl::IntervalAnalysis::writeHeader(std::ostream& output, char delimiter, bo
   output << "Interval_start" << delimiter;
   output << "Interval_size" << delimiter;
   output << "Variant_count" << delimiter;
+  output << "Variant_impact" << delimiter;
   output << "Snp_count" << delimiter;
+  output << "Ti/Tv_ratio" << delimiter;
   output << "Variant_offset" << delimiter;
 //  output << "Variant=1" << delimiter;
 //  output << "Variant=2" << delimiter;
@@ -404,7 +435,12 @@ bool kgl::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
       output << interval_vector[count_index].interval() << delimiter;
 
       output << interval_vector[count_index].variantCount() << delimiter; // variant
+      output << interval_vector[count_index].consequenceCount() << delimiter; // variant impact "HIGH" or "MODERATE" (Gnomad only)
       output << interval_vector[count_index].SNPCount() << delimiter; // snp
+      auto ti_tv_num = static_cast<double>(interval_vector[count_index].transitionCount());
+      double ti_tv_denom = static_cast<double>(interval_vector[count_index].SNPCount()) - ti_tv_num;
+      output << (ti_tv_denom > 0 ? (ti_tv_num / ti_tv_denom) : 0.0) << delimiter; // Ti/Tv ratio.
+
       output << interval_vector[count_index].variantOffsetCount() << delimiter; // variant offsets.
 //      output << interval_vector[count_index].arrayVariantCount()[0] << delimiter;
 //      output << interval_vector[count_index].arrayVariantCount()[1] << delimiter;
