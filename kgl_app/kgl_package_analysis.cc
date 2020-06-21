@@ -29,20 +29,20 @@ bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
 
         found = true;
 
-        std::unique_ptr<NullAnalysis> active_analysis = registered_analysis->factory();
+        std::unique_ptr<NullAnalysis> analysis_ptr = registered_analysis->factory();
 
         auto result = analysis_map_.find(analysis_id);
 
         // Analysis parameters found.
         if (result != analysis_map_.end()) {
 
-          if (active_analysis->initializeAnalysis(work_directory_, result->second.parameterMap(), reference_genomes)) {
+          if (analysis_ptr->initializeAnalysis(work_directory_, result->second.parameterMap(), reference_genomes)) {
 
-            active_analysis_.emplace_back(std::move(active_analysis), true);
+            active_analysis_.emplace_back(std::move(analysis_ptr), true);
 
           } else {
 
-            active_analysis_.emplace_back(std::move(active_analysis), false);  // Register but disable.
+            active_analysis_.emplace_back(std::move(analysis_ptr), false);  // Register but disable.
             ExecEnv::log().error("PackageAnalysis::initializeAnalysis, Failed to Initialize Analysis: {}, further analysis discarded", analysis_id);
 
           }

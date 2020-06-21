@@ -5,7 +5,8 @@
 #include "kel_property_tree.h"
 #include "kel_utility.h"
 
-
+// To stop boost complaining about global placeholders on boost/bind.
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS 1
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/property_tree/json_parser.hpp>

@@ -195,7 +195,10 @@ void kgl::ParseGffFasta::GffFastaImpl::readGffFile(const std::string &gff_file_n
 }
 
 
-
+// Valgrind indicates memory leaks ocurring in this function.
+// This could be due to the use of the FeatureSinkPtr function pointer to process
+// the genomic features.
+// todo: This memory leak needs further investigation.
 bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord( kgl::GenomeReference& genome_db,
                                                        seqan::GffRecord& record,
                                                        long gff_line_counter,
@@ -349,6 +352,8 @@ bool kgl::ParseGffFasta::GffFastaImpl::parseGffRecord( kgl::GenomeReference& gen
   // Annotate the contig.
   std::shared_ptr<kgl::ContigReference> mutable_contig_ptr = std::const_pointer_cast<kgl::ContigReference>(contig_opt.value());
   // Invoke the sink function pointer.
+  // Valgrind shows memory leaks occuring here. When this function pointer is called.
+  // Investigate and maybe re-think this design.
   bool result = std::invoke(feature_sink, mutable_contig_ptr, feature_ptr);
 
   if (not result) {

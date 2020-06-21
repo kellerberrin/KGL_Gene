@@ -18,9 +18,6 @@
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
-// NullAnalysis is the base class, of all available (defined) Analytics.
-// Analytic classes are called virtually and provided with data (reference and variant).
-using AnalysisVector = std::vector<std::unique_ptr<NullAnalysis>>;
 // Active flag. Analytics that encounter error states disable themselves via this flag.
 using AnalysisArray = std::vector<std::pair<std::unique_ptr<NullAnalysis>, bool>>; // Adds flag to show if analysis is active.
 
@@ -32,11 +29,9 @@ public:
   explicit PackageAnalysis(std::string work_directory, const RuntimeAnalysisMap& analysis_map)
   : work_directory_(std::move(work_directory)), analysis_map_(analysis_map) {
 
-    // All available analytics registered here.
-    // todo: Move these to an analysis factory object.
-//    registered_analysis_.push_back(std::make_unique<NullAnalysis>());
-//    registered_analysis_.push_back(std::make_unique<IntervalAnalysis>());
-//    registered_analysis_.push_back(std::make_unique<InfoFilterAnalysis>());
+    registered_analysis_.push_back(std::make_unique<NullAnalysis>());
+    registered_analysis_.push_back(std::make_unique<IntervalAnalysis>());
+    registered_analysis_.push_back(std::make_unique<InfoFilterAnalysis>());
 
   }
   ~PackageAnalysis() = default;
@@ -65,6 +60,8 @@ private:
   // Active analytics for this package
   mutable  AnalysisArray active_analysis_;
 
+  constexpr static const char* ANALYSIS_LIBRARY_NAME_ = "libkgl_analysis.so";
+  constexpr static const char* ANALYSIS_FACTORY_NAME_ = "kgl_packageAnalysisFactory";
 
 };
 

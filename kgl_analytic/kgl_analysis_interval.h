@@ -85,7 +85,7 @@ class IntervalAnalysis : public NullAnalysis {
 public:
 
   IntervalAnalysis() = default;
-  ~IntervalAnalysis() = default;
+  ~IntervalAnalysis() override = default;
 
   // The ident must match the ident used in the package XML.
   [[nodiscard]] std::string ident() const override { return "INTERVAL"; }
@@ -100,6 +100,9 @@ public:
 
   // Perform the genetic analysis per iteration.
   [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const UnphasedPopulation> vcf_iterative_data) override;
+
+  // Perform the genetic analysis per iteration
+  [[nodiscard]] bool iterationAnalysis() override { return true; }
 
   // All VCF data has been presented, finalize analysis and write results.
   [[nodiscard]] bool finalizeAnalysis() override;

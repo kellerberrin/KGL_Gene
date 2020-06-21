@@ -11,6 +11,14 @@
 #include "kgl_analysis_interval.h" // basic sequence and variant statistics.
 #include "kgl_analysis_info_filter.h" // basic sequence and variant statistics.
 
+namespace kgl = kellerberrin::genome;
 
+extern "C" {
+
+
+kgl::FactoryAnalysisVector kgl_packageAnalysisFactory();
+
+
+}
 
 #endif //KGL_KGL_ANALYSIS_ALL_H

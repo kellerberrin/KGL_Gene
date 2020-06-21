@@ -20,9 +20,9 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
 # add boost library directories
 set(BOOST_INCLUDEDIR /usr/local/include)
 set(BOOST_LIBRARYDIR /usr/local/lib/boost)
-set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF)
+set(Boost_USE_STATIC_RUNTIME ON)
 include_directories(${Boost_INCLUDE_DIRS})
 find_package( Boost COMPONENTS system filesystem timer chrono program_options iostreams REQUIRED )
 
@@ -192,7 +192,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_vcf_evidence_analysis.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES
@@ -370,29 +370,30 @@ add_library(kel_library_lib STATIC ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES}
 
 add_library(kgl_genome_lib STATIC ${GENETIC_LIBRARY_SOURCE_FILES} ${MIXTURE_SOURCE_FILES})
 
-target_link_libraries(kgl_genome_lib kel_library_lib ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
+target_link_libraries(kgl_genome_lib kel_library_lib )
 
-add_library(kgl_analysis_lib MODULE ${ANALYTIC_SOURCE_FILES})
+add_library(kgl_analysis STATIC ${ANALYTIC_SOURCE_FILES})
 
-target_link_libraries(kgl_analysis_lib PRIVATE kgl_genome_lib kel_library_lib ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
+target_link_libraries(kgl_analysis kgl_genome_lib kel_library_lib )
 
 add_library(kgd_contrib_lib STATIC ${DECONVOLV_LIB_CONTRIB_FILES})
 
-target_link_libraries(kgd_contrib_lib PRIVATE ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
+target_link_libraries(kgd_contrib_lib ${ZLIB_LIBRARIES})
 
 add_library(kgd_deconvolv_lib STATIC ${DECONVOLV_LIB_SOURCE_FILES})
 
-target_link_libraries(kgd_deconvolv_lib kgd_contrib_lib kel_library_lib ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
+target_link_libraries(kgd_deconvolv_lib kgd_contrib_lib kel_library_lib )
 
 #generate kgd_deconvolv executable
 add_executable (kgd_deconvolv ${DECONVOLV_APPLICATION_SOURCE_FILES})
 
-target_link_libraries(kgd_deconvolv kgd_deconvolv_lib kgl_genome_lib kel_library_lib)
+target_link_libraries(kgd_deconvolv kgd_deconvolv_lib kgl_genome_lib kel_library_lib ${Boost_LIBRARIES})
 
 #generate kgl_genome executable
 add_executable (kgl_genome ${APPLICATION_SOURCE_FILES} )
 
-target_link_libraries(kgl_genome  kgl_genome_lib kgd_deconvolv_lib kel_library_lib)
+# Specify the static libraries.
+target_link_libraries(kgl_genome kgl_analysis kgl_genome_lib kgd_deconvolv_lib kel_library_lib ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
 
 ############################################################################################################
 # Generate the kpl executable.

@@ -6,6 +6,7 @@
 
 namespace kgl = kellerberrin::genome;
 
+
 // Setup the analytics to process VCF data.
 bool kgl::NullAnalysis::initializeAnalysis( const std::string& work_directory,
                                             const RuntimeParameterMap& named_parameters,
@@ -54,3 +55,4 @@ bool kgl::NullAnalysis::finalizeAnalysis() {
   return true;
 
 }
+

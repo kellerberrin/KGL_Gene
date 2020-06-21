@@ -28,7 +28,7 @@ public:
     filtered_vcf_population_ = std::make_shared<UnphasedPopulation>("All Chromosomes");
 
   }
-  ~InfoFilterAnalysis() = default;
+  ~InfoFilterAnalysis() override = default;
 
   // Functions redefined in super classes
   // The ident must match the ident used in the package XML.
