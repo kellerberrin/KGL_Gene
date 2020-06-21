@@ -19,7 +19,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 
 
 // Test the Info data filters.
-class InfoFilterAnalysis : public NullAnalysis {
+class InfoFilterAnalysis : public VirtualAnalysis {
 
 public:
 
@@ -33,7 +33,7 @@ public:
   // Functions redefined in super classes
   // The ident must match the ident used in the package XML.
   [[nodiscard]] std::string ident() const override { return "INFO_FILTER"; }
-  [[nodiscard]] std::unique_ptr<NullAnalysis> factory() const override { return std::make_unique<InfoFilterAnalysis>(); }
+  [[nodiscard]] std::unique_ptr<VirtualAnalysis> factory() const override { return std::make_unique<InfoFilterAnalysis>(); }
 
   // Setup the analytics to process VCF data.
   // This function must be redefined.

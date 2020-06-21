@@ -29,7 +29,7 @@ bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
 
         found = true;
 
-        std::unique_ptr<NullAnalysis> analysis_ptr = registered_analysis->factory();
+        std::unique_ptr<VirtualAnalysis> analysis_ptr = registered_analysis->factory();
 
         auto result = analysis_map_.find(analysis_id);
 

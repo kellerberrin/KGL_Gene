@@ -13,13 +13,13 @@
 #include "kgl_analysis_all.h" // Includes all the defined active analysis objects.
 
 
-#include <string>
-
-
 namespace kellerberrin::genome {   //  organization::project level namespace
 
+
+
+using AnalysisVector = std::vector<std::unique_ptr<VirtualAnalysis>>;
 // Active flag. Analytics that encounter error states disable themselves via this flag.
-using AnalysisArray = std::vector<std::pair<std::unique_ptr<NullAnalysis>, bool>>; // Adds flag to show if analysis is active.
+using AnalysisArray = std::vector<std::pair<std::unique_ptr<VirtualAnalysis>, bool>>; // Adds flag to show if analysis is active.
 
 // Manages runtime analytics within an execution package.
 class PackageAnalysis {
@@ -60,8 +60,6 @@ private:
   // Active analytics for this package
   mutable  AnalysisArray active_analysis_;
 
-  constexpr static const char* ANALYSIS_LIBRARY_NAME_ = "libkgl_analysis.so";
-  constexpr static const char* ANALYSIS_FACTORY_NAME_ = "kgl_packageAnalysisFactory";
 
 };
 

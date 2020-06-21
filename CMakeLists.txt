@@ -226,7 +226,7 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_age_analysis.cc
         kgl_analytic/kgl_age_analysis.h
         kgl_analytic/kgl_legacy_Pf_analysis.cc
-        kgl_analytic/kgl_legacy_Pf_analysis.h)
+        kgl_analytic/kgl_legacy_Pf_analysis.h kgl_library/kgl_analysis_virtual.h)
 
 # Deconvolution and mixture files.
 

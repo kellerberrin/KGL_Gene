@@ -80,7 +80,7 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Analysis class for interval analysis
-class IntervalAnalysis : public NullAnalysis {
+class IntervalAnalysis : public VirtualAnalysis {
 
 public:
 
@@ -89,7 +89,7 @@ public:
 
   // The ident must match the ident used in the package XML.
   [[nodiscard]] std::string ident() const override { return "INTERVAL"; }
-  [[nodiscard]] std::unique_ptr<NullAnalysis> factory() const override { return std::make_unique<IntervalAnalysis>(); }
+  [[nodiscard]] std::unique_ptr<VirtualAnalysis> factory() const override { return std::make_unique<IntervalAnalysis>(); }
 
 
   // Setup the analytics to process VCF data.
