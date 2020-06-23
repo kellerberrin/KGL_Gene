@@ -62,9 +62,9 @@ public:
                                                      const std::string& field_ident);
 
   // Transform the returned data variant
-  static std::vector<std::string> varianttoStrings(const InfoDataVariant& info_data);
-  static std::vector<double> varianttoFloats(const InfoDataVariant& info_data);
-  static std::vector<int64_t> varianttoIntegers(const InfoDataVariant& info_data);
+  static const std::vector<std::string>& varianttoStrings(const InfoDataVariant& info_data);
+  static const std::vector<double>& varianttoFloats(const InfoDataVariant& info_data);
+  static const std::vector<int64_t>& varianttoIntegers(const InfoDataVariant& info_data);
   static bool variantToBool(const InfoDataVariant& info_data);
 
   // Converts a bin in string format "1|0|0|0|1|0|0|0|1|0" into a vector of floats.

@@ -16,10 +16,9 @@
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
-
-using AnalysisVector = std::vector<std::unique_ptr<VirtualAnalysis>>;
-// Active flag. Analytics that encounter error states disable themselves via this flag.
-using AnalysisArray = std::vector<std::pair<std::unique_ptr<VirtualAnalysis>, bool>>; // Adds flag to show if analysis is active.
+// Adds flag to show if analysis is active.
+// Analytics that encounter error states disable themselves via this flag.
+using VirtualAnalysisArray = std::vector<std::pair<std::unique_ptr<VirtualAnalysis>, bool>>;
 
 // Manages runtime analytics within an execution package.
 class PackageAnalysis {
@@ -29,9 +28,8 @@ public:
   explicit PackageAnalysis(std::string work_directory, const RuntimeAnalysisMap& analysis_map)
   : work_directory_(std::move(work_directory)), analysis_map_(analysis_map) {
 
-    registered_analysis_.push_back(std::make_unique<NullAnalysis>());
-    registered_analysis_.push_back(std::make_unique<IntervalAnalysis>());
-    registered_analysis_.push_back(std::make_unique<InfoFilterAnalysis>());
+    // Defined in "kgl_analysis_all.h"
+    registered_analysis_ = getAnalysisVector();
 
   }
   ~PackageAnalysis() = default;
@@ -56,9 +54,9 @@ private:
   // Analysis parameters and details.
   const RuntimeAnalysisMap analysis_map_;
   // All available analytics
-  AnalysisVector registered_analysis_;
+  VirtualAnalysisVector registered_analysis_;
   // Active analytics for this package
-  mutable  AnalysisArray active_analysis_;
+  mutable VirtualAnalysisArray active_analysis_;
 
 
 };

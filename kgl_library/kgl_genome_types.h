@@ -55,7 +55,6 @@ enum class VariantOutputIndex { START_1_BASED, START_0_BASED};   // Used for out
 std::string offsetOutput(ContigOffset_t offset, VariantOutputIndex output_base);
 
 
-
 }   // end namespace
 
 #endif // KGL_GENOME_TYPES_H

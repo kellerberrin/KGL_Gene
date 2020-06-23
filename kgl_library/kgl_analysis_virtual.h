@@ -14,10 +14,7 @@
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
-// Interface for the analysis class
-class VirtualAnalysis;
-// Analytic classes are called virtually and provided with data (reference and variant).
-
+// Virtual interface for the analysis class
 class VirtualAnalysis {
 
 public:

@@ -4,12 +4,65 @@
 
 #include "kgl_analysis_interval.h"
 #include "kgl_sequence_complexity.h"
+#include "kgl_variant_factory_vcf_evidence_analysis.h"
 #include "kgl_filter.h"
 
 #include <fstream>
 
 
 namespace kgl = kellerberrin::genome;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Stores primarily Gnomad statistical data per interval. This object returns zeroes for Info fields not available.
+
+void kgl::InfoIntervalData::processVariant(const std::shared_ptr<const Variant>& variant_ptr) {
+
+  if (variant_ptr->filterVariant(vep_impact_filter_)) {
+
+    ++consequence_count_;
+
+  }
+
+  std::optional<InfoDataVariant> freq_opt = InfoEvidenceAnalysis::getInfoData(*variant_ptr, VARIANT_FREQUENCY_FIELD_);
+
+  if (not freq_opt) {
+
+    return;
+
+  }
+
+  const std::vector<double>& float_vector = InfoEvidenceAnalysis::varianttoFloats(freq_opt.value());
+
+  if (float_vector.size() != 1) {
+
+    return;
+
+  }
+
+  freq_percentile_.addElement(float_vector.front(), variant_ptr);
+
+}
+
+
+double kgl::InfoIntervalData::variantFrequencyPercentile(double percentile) const {
+
+
+  std::optional<std::pair<double, std::shared_ptr<const Variant>>> freq_opt = freq_percentile_.percentile(percentile);
+
+  if (not freq_opt) {
+
+    return 0.0;
+
+  }
+
+  return freq_opt.value().first;
+
+}
+
+
+
+
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // IntervalData members.
@@ -102,24 +155,46 @@ bool kgl::IntervalAnalysis::initializeAnalysis( const std::string& work_director
 
   }
 
-  // Must be called after parameters are setup.
-  setupIntervalStructure(genome_);
+// Clear the data file and write the header.
+  std::ofstream outfile;
+  outfile.open(output_file_name_, std::ofstream::out | std::ofstream::trunc);
 
-  return true;
+  bool result = writeHeader(outfile, OUTPUT_DELIMITER_, false);
+
+  outfile.close();
+
+  return result;
 
 }
 
 // Perform the genetic analysis per iteration.
 bool kgl::IntervalAnalysis::fileReadAnalysis(std::shared_ptr<const UnphasedPopulation> population) {
 
-  return variantIntervalCount(population);
+  // Setup the interval structure
+  setupIntervalStructure(genome_);
+
+  // Perform the analysis.
+  bool result = variantIntervalCount(population);
+
+  // Append the results.
+  std::ofstream outfile;
+  outfile.open(output_file_name_, std::ofstream::out |  std::ofstream::app);
+
+  result = result and writeResults(genome_, false, OUTPUT_DELIMITER_);
+
+  outfile.close();
+
+  // Clear the interval map.
+  interval_map_.clear();
+
+  return result;
 
 }
 
-// All VCF data has been presented, finalize analysis and write results.
+// All VCF data has been presented, finalize analysis
 bool kgl::IntervalAnalysis::finalizeAnalysis() {
 
-  return writeResults(genome_, false, OUTPUT_DELIMITER_);
+  return true;
 
 }
 
@@ -198,22 +273,14 @@ void kgl::IntervalAnalysis::setupIntervalStructure(std::shared_ptr<const GenomeR
 
 bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const UnphasedPopulation> population_ptr) {
 
-// We are profiling variants against a reference genome. Therefore we need to compress the population of variants
-// into a single genome.
-  std::shared_ptr<const UnphasedGenome> compressed_genome = population_ptr->compressPopulation();
+  // Not interested in multiple identical variants.
+  std::shared_ptr<const UnphasedPopulation> unique_population_ptr = population_ptr->uniqueVariantPopulation();
+  // We are profiling variants against a reference genome. Therefore we need to compress the population of variants
+  // into a single genome.
+  std::shared_ptr<const UnphasedGenome> compressed_genome = unique_population_ptr->compressPopulation();
 
   size_t variant_count{0};
 
-
-  // Filter on the VEP Impact field (Gnomad data only).
-  // Filter on high and moderate consequence variants.
-  const std::string vep_sub_field("IMPACT");
-  const std::string vep_high_impact("HIGH");
-  const std::string vep_moderate_impact("MODERATE");
-
-  auto high_impact_filter =  VepSubStringFilter(vep_sub_field, vep_high_impact);
-  auto moderate_impact_filter = VepSubStringFilter(vep_sub_field, vep_moderate_impact);
-  auto vep_impact_filter = OrFilter(high_impact_filter, moderate_impact_filter);
 
   // For contigs in the compressed genome.
   for (auto const& [contig_id, contig_ptr] : compressed_genome->getMap()) {
@@ -244,16 +311,11 @@ bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const UnphasedP
         variant_count += array_ptr->second.size();
         size_t snp_count{0};
         size_t transition_count{0};
-        size_t impact_count{0};
 
         // Count SNP.
         for (auto const& variant : array_ptr->second) {
 
-          if (variant->filterVariant(vep_impact_filter)) {
-
-            ++impact_count;
-
-          }
+          interval_data.intervalInfoData().processVariant(variant);
 
           if (variant->isSNP()) {
 
@@ -271,7 +333,6 @@ bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const UnphasedP
 
         interval_data.addTransitionCount(transition_count);
         interval_data.addSNPCount(snp_count);
-        interval_data.addConsequenceCount(impact_count);
         previous_offset = array_ptr->first;
 
       } // variant array.
@@ -327,15 +388,14 @@ bool kgl::IntervalAnalysis::writeHeader(std::ostream& output, char delimiter, bo
   output << "Interval_start" << delimiter;
   output << "Interval_size" << delimiter;
   output << "Variant_count" << delimiter;
-  output << "Variant_impact" << delimiter;
   output << "Snp_count" << delimiter;
   output << "Ti/Tv_ratio" << delimiter;
   output << "Variant_offset" << delimiter;
-//  output << "Variant=1" << delimiter;
-//  output << "Variant=2" << delimiter;
-//  output << "Variant=3" << delimiter;
-//  output << "Variant=4" << delimiter;
-//  output << "Variant>=5" << delimiter;
+  output << "Variant=1" << delimiter;
+  output << "Variant=2" << delimiter;
+  output << "Variant=3" << delimiter;
+  output << "Variant=4" << delimiter;
+  output << "Variant>=5" << delimiter;
   output << "MaxEmptyOffset" << delimiter;
   output << "MaxEmptyInterval" << delimiter;
   output << "AvEmptyInterval" << delimiter;
@@ -347,7 +407,12 @@ bool kgl::IntervalAnalysis::writeHeader(std::ostream& output, char delimiter, bo
   }
 //  output << "ZivLempel" << delimiter;
   output << "ShannonEntropy" << delimiter;
-  output << "CpG";
+  output << "CpG" << delimiter;
+  output << "G_Variant_impact" << delimiter;
+  output << "G_Highest_Freq" << delimiter;
+  output << "G_95_Percentile" << delimiter;
+  output << "G_Median_Freq";
+
 
   if (display_sequence) {
 
@@ -385,6 +450,21 @@ bool kgl::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
     if (interval_vector.empty()) {
 
       ExecEnv::log().warn("IntervalAnalysis::writeData; zero sized interval vector for contig: {}", contig_id);
+      continue; // next contig.
+
+    }
+
+    // Calculate the number of variants processed, if zero then skip this contig.
+    size_t variant_count = 0;
+    for (auto const& interval : interval_vector) {
+
+      variant_count += interval.variantCount();
+
+    }
+
+    if (variant_count == 0) {
+
+      ExecEnv::log().info("Contig: {} processed zero variants, skipping to next contig", contig_id);
       continue; // next contig.
 
     }
@@ -435,18 +515,17 @@ bool kgl::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
       output << interval_vector[count_index].interval() << delimiter;
 
       output << interval_vector[count_index].variantCount() << delimiter; // variant
-      output << interval_vector[count_index].consequenceCount() << delimiter; // variant impact "HIGH" or "MODERATE" (Gnomad only)
       output << interval_vector[count_index].SNPCount() << delimiter; // snp
       auto ti_tv_num = static_cast<double>(interval_vector[count_index].transitionCount());
       double ti_tv_denom = static_cast<double>(interval_vector[count_index].SNPCount()) - ti_tv_num;
       output << (ti_tv_denom > 0 ? (ti_tv_num / ti_tv_denom) : 0.0) << delimiter; // Ti/Tv ratio.
 
       output << interval_vector[count_index].variantOffsetCount() << delimiter; // variant offsets.
-//      output << interval_vector[count_index].arrayVariantCount()[0] << delimiter;
-//      output << interval_vector[count_index].arrayVariantCount()[1] << delimiter;
-//      output << interval_vector[count_index].arrayVariantCount()[2] << delimiter;
-//      output << interval_vector[count_index].arrayVariantCount()[3] << delimiter;
-//      output << interval_vector[count_index].arrayVariantCount()[4] << delimiter;
+      output << interval_vector[count_index].arrayVariantCount()[0] << delimiter;
+      output << interval_vector[count_index].arrayVariantCount()[1] << delimiter;
+      output << interval_vector[count_index].arrayVariantCount()[2] << delimiter;
+      output << interval_vector[count_index].arrayVariantCount()[3] << delimiter;
+      output << interval_vector[count_index].arrayVariantCount()[4] << delimiter;
       output << interval_vector[count_index].maxEmptyInterval().first << delimiter;
       output << interval_vector[count_index].maxEmptyInterval().second << delimiter;
       output << interval_vector[count_index].meanEmptyInterval() << delimiter;
@@ -462,7 +541,11 @@ bool kgl::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
 
 //      output << SequenceComplexity::complexityLempelZiv(sequence) << delimiter;
       output << SequenceComplexity::alphabetEntropy<DNA5>(sequence, symbol_vector) << delimiter;
-      output << SequenceComplexity::relativeCpGIslands(sequence);
+      output << SequenceComplexity::relativeCpGIslands(sequence) << delimiter;
+      output << interval_vector[count_index].getInfoData().consequenceCount() << delimiter;
+      output << interval_vector[count_index].getInfoData().variantFrequencyPercentile(1.0) << delimiter;
+      output << interval_vector[count_index].getInfoData().variantFrequencyPercentile(0.95) << delimiter;
+      output << interval_vector[count_index].getInfoData().variantFrequencyPercentile(0.5);
       // Output the relative symbol proportions.
 
       if (display_sequence) {

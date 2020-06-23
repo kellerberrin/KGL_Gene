@@ -8,14 +8,50 @@
 #include "kgl_runtime.h"
 #include "kgl_genome_db.h"
 #include "kgl_variant_db_unphased_population.h"
-#include "kgl_analysis_null.h"
+#include "kgl_analysis_virtual.h"
+#include "kgl_filter.h"
+#include "kel_percentile.h"
 
 #include <array>
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Stores statistical data per interval
+// Stores primarily Gnomad statistical data per interval. This object returns zeroes for Info fields not available.
+
+class InfoIntervalData {
+
+public:
+
+  InfoIntervalData() : vep_impact_filter_(VepSubStringFilter(VEP_IMPACT_FIELD_, VEP_HIGH_IMPACT_),
+                                          VepSubStringFilter(VEP_IMPACT_FIELD_, VEP_MODERATE_FIELD_)) {}
+  ~InfoIntervalData() = default;
+
+  void processVariant(const std::shared_ptr<const Variant>& variant_ptr);
+
+  [[nodiscard]] size_t consequenceCount() const { return consequence_count_; }
+
+  [[nodiscard]] double variantFrequencyPercentile(double percentile) const;
+
+private:
+
+  OrFilter vep_impact_filter_;
+  size_t consequence_count_{0};
+  Percentile<double, std::shared_ptr<const Variant>> freq_percentile_;
+
+  constexpr static const char* VEP_IMPACT_FIELD_ = "IMPACT";
+  constexpr static const char* VEP_HIGH_IMPACT_ = "HIGH";
+  constexpr static const char* VEP_MODERATE_FIELD_ = "MODERATE";
+
+  constexpr static const char* VARIANT_FREQUENCY_FIELD_ = "AF";
+
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Stores general statistical data per interval
 class IntervalData{
 
 public:
@@ -39,8 +75,7 @@ public:
   [[nodiscard]] size_t transitionCount() const { return transition_count_; }
 
   // Variants with vep high and moderate consequences (only Gnomad data)
-  void addConsequenceCount(const size_t consequence_count) { consequence_count_ += consequence_count; }
-  [[nodiscard]] size_t consequenceCount() const { return consequence_count_; }
+   [[nodiscard]] size_t consequenceCount() const { return info_interval_data_.consequenceCount(); }
 
   // Total variants
   void addVariantCount(const size_t variant_count) { variant_count_ += variant_count; }
@@ -59,6 +94,9 @@ public:
   // The mean variant empty interval.
   [[nodiscard]] double meanEmptyInterval() const;
 
+  [[nodiscard]] InfoIntervalData& intervalInfoData() { return info_interval_data_; }
+  [[nodiscard]] const InfoIntervalData& getInfoData() const { return info_interval_data_; }
+
 private:
 
   const ContigId_t contig_id_;
@@ -68,10 +106,10 @@ private:
   size_t SNP_count_{0};
   size_t transition_count_{0};  // The interval Transition count SNPs.
   size_t variant_count_{0};
-  size_t consequence_count_{0};
   std::pair<ContigOffset_t , SignedOffset_t> max_empty_interval_{0, 0};
   size_t variant_offset_count_{0};
   size_t sum_empty_interval_{0};
+  InfoIntervalData info_interval_data_;
 
   constexpr static const size_t ARRAY_VARIANT_COUNT_ = 5;
   std::vector<size_t> array_variant_count_;

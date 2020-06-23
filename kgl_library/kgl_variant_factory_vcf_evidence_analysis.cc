@@ -9,8 +9,9 @@
 namespace kgl = kellerberrin::genome;
 
 
-std::vector<std::string> kgl::InfoEvidenceAnalysis::varianttoStrings(const InfoDataVariant& info_data) {
+const std::vector<std::string>& kgl::InfoEvidenceAnalysis::varianttoStrings(const InfoDataVariant& info_data) {
 
+  static const std::vector<std::string> empty_vector;
   auto p_string_vector = std::get_if<std::vector<std::string>>(&info_data);
   if (p_string_vector != nullptr) {
 
@@ -19,15 +20,16 @@ std::vector<std::string> kgl::InfoEvidenceAnalysis::varianttoStrings(const InfoD
   } else {
 
     ExecEnv::log().error("InfoEvidenceAnalysis::varianttoStrings, Info data variant does not contain a string vector.");
-    return std::vector<std::string>();
+    return empty_vector;
 
   }
 
 }
 
 
-std::vector<double> kgl::InfoEvidenceAnalysis::varianttoFloats(const InfoDataVariant& info_data) {
+const std::vector<double>& kgl::InfoEvidenceAnalysis::varianttoFloats(const InfoDataVariant& info_data) {
 
+  static const std::vector<double> empty_vector;
   auto p_float_vector = std::get_if<std::vector<double>>(&info_data);
   if (p_float_vector != nullptr) {
 
@@ -36,7 +38,7 @@ std::vector<double> kgl::InfoEvidenceAnalysis::varianttoFloats(const InfoDataVar
   } else {
 
     ExecEnv::log().error("InfoEvidenceAnalysis::varianttoFloats, Info data variant does not contain a float vector.");
-    return std::vector<double>();
+    return empty_vector;
 
   }
 
@@ -44,8 +46,9 @@ std::vector<double> kgl::InfoEvidenceAnalysis::varianttoFloats(const InfoDataVar
 
 
 
-std::vector<int64_t> kgl::InfoEvidenceAnalysis::varianttoIntegers(const InfoDataVariant& info_data) {
+const std::vector<int64_t>& kgl::InfoEvidenceAnalysis::varianttoIntegers(const InfoDataVariant& info_data) {
 
+  static const std::vector<int64_t> empty_vector;
   auto p_integer_vector = std::get_if<std::vector<int64_t>>(&info_data);
   if (p_integer_vector != nullptr) {
 
@@ -54,7 +57,7 @@ std::vector<int64_t> kgl::InfoEvidenceAnalysis::varianttoIntegers(const InfoData
   } else {
 
     ExecEnv::log().error("InfoEvidenceAnalysis::varianttoIntegers, Info data variant does not contain a integer vector.");
-    return std::vector<int64_t>();
+    return empty_vector;
 
   }
 

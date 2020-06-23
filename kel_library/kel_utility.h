@@ -5,7 +5,6 @@
 #ifndef KGL_UTILITY_H
 #define KGL_UTILITY_H
 
-
 #include <string>
 #include <vector>
 
@@ -34,6 +33,7 @@ public:
   [[nodiscard]] static std::vector<std::string> char_tokenizer(const std::string& str, const char delim);
   [[nodiscard]] static std::pair<double, double> process_mem_usage();
   [[nodiscard]] static std::pair<double, double> stddev(const std::vector<double> &vec); // mean = first,  stdev = second
+  static void getElapsedTime(double &Clock, double &System, double &User);
 
 private:
 
