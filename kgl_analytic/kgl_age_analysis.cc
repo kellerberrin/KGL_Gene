@@ -26,6 +26,7 @@ double kgl::InfoAgeAnalysis::processField(const std::shared_ptr<const Variant>& 
 
       ExecEnv::log().warn("InfoAgeAnalysis::processVariant, Field: {} expected vector size 1, get vector size: {}",
                           field_name, field_vec.size());
+      return 0.0;
 
     } else {
 
@@ -33,11 +34,9 @@ double kgl::InfoAgeAnalysis::processField(const std::shared_ptr<const Variant>& 
 
     }
 
-  } else {
-
-    ExecEnv::log().warn("InfoAgeAnalysis::processVariant, Field: {} not available", field_name);
-
   }
+
+//  ExecEnv::log().warn("InfoAgeAnalysis::processVariant, Field: {} not available", field_name);
 
   return 0.0;
 
@@ -58,11 +57,9 @@ std::vector<double> kgl::InfoAgeAnalysis::processBin(const std::shared_ptr<const
 
     return age_vector;
 
-  } else {
-
-    ExecEnv::log().warn("InfoAgeAnalysis::processVariant, data for age bin field: {}, not available", field_name);
-
   }
+
+//  ExecEnv::log().warn("InfoAgeAnalysis::processVariant, data for age bin field: {}, not available", field_name);
 
   return std::vector<double>(AGE_BIN_SIZE_, 0.0);
 

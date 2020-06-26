@@ -35,7 +35,7 @@ public:
   [[nodiscard]] double ageHeterozygous80Over() const { return het_80_over_; }
   [[nodiscard]] double sumHomozygous() const;
   [[nodiscard]] double sumHeterozygous() const;
-  [[nodiscard]] double heteroHomoRatioAll() const { return sumHeterozygous() / sumHomozygous(); }
+  [[nodiscard]] double heteroHomoRatioAll() const { return sumHomozygous() > 0 ? sumHeterozygous() / sumHomozygous() : 0.0; }
   [[nodiscard]] double averageHomozygousAge() const { return hom_average_age_count_ > 0 ? sum_hom_average_age_ / hom_average_age_count_ : 0.0; }
   [[nodiscard]] double averageHeterozygousAge() const { return het_average_age_count_ > 0 ? sum_het_average_age_ / het_average_age_count_ : 0.0; }
   [[nodiscard]] double averageCombinedAge() const {

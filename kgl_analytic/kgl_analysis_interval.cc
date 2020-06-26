@@ -41,6 +41,16 @@ void kgl::InfoIntervalData::processVariant(const std::shared_ptr<const Variant>&
 
   freq_percentile_.addElement(float_vector.front(), variant_ptr);
 
+  InfoAgeAnalysis age_analysis("AgeInterval");
+  age_analysis.processVariant(variant_ptr);
+
+  age_percentile_.addElement(age_analysis.averageCombinedAge(), variant_ptr);
+
+  het_hom_percentile_.addElement(age_analysis.heteroHomoRatioAll(), variant_ptr);
+
+  age_analysis_.addAgeAnalysis(age_analysis);
+
+
 }
 
 
@@ -60,8 +70,45 @@ double kgl::InfoIntervalData::variantFrequencyPercentile(double percentile) cons
 }
 
 
+size_t kgl::InfoIntervalData::variantsCountGEQPercent(double percent) const {
+
+  std::shared_ptr<const Variant> dummy_variant;
+  size_t variant_count = freq_percentile_.findGEQCount(percent, dummy_variant);
+
+  return variant_count;
+
+}
 
 
+double kgl::InfoIntervalData::variantAgePercentile(double percentile) const {
+
+  std::optional<std::pair<double, std::shared_ptr<const Variant>>> age_opt = age_percentile_.percentile(percentile);
+
+  if (not age_opt) {
+
+    return 0.0;
+
+  }
+
+  return age_opt.value().first;
+
+}
+
+
+
+double kgl::InfoIntervalData::variantHetHomPercentile(double percentile) const {
+
+  std::optional<std::pair<double, std::shared_ptr<const Variant>>> het_hom_opt = het_hom_percentile_.percentile(percentile);
+
+  if (not het_hom_opt) {
+
+    return 0.0;
+
+  }
+
+  return het_hom_opt.value().first;
+
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -411,7 +458,18 @@ bool kgl::IntervalAnalysis::writeHeader(std::ostream& output, char delimiter, bo
   output << "G_Variant_impact" << delimiter;
   output << "G_Highest_Freq" << delimiter;
   output << "G_95_Percentile" << delimiter;
-  output << "G_Median_Freq";
+  output << "G_Median_Freq" << delimiter;
+  output << "G_Variants >= 1%" << delimiter;
+  output << "G_10_P_Age" << delimiter;
+  output << "G_25_P_Age" << delimiter;
+  output << "G_Median_Age" << delimiter;
+  output << "G_75_P_Age" << delimiter;
+  output << "G_90_P_Age" << delimiter;
+  output << "G_Median_HetHome_Ratio" << delimiter;
+  output << "G_90_P_HetHome_Ratio" << delimiter;
+  output << "G_Avg_Age" << delimiter;
+  output << "G_Avg_Het_Hom";
+
 
 
   if (display_sequence) {
@@ -545,7 +603,18 @@ bool kgl::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
       output << interval_vector[count_index].getInfoData().consequenceCount() << delimiter;
       output << interval_vector[count_index].getInfoData().variantFrequencyPercentile(1.0) << delimiter;
       output << interval_vector[count_index].getInfoData().variantFrequencyPercentile(0.95) << delimiter;
-      output << interval_vector[count_index].getInfoData().variantFrequencyPercentile(0.5);
+      output << interval_vector[count_index].getInfoData().variantFrequencyPercentile(0.5) << delimiter;
+      output << interval_vector[count_index].getInfoData().variantsCountGEQPercent(0.01) << delimiter;
+      output << interval_vector[count_index].getInfoData().variantAgePercentile(0.10) << delimiter;
+      output << interval_vector[count_index].getInfoData().variantAgePercentile(0.25) << delimiter;
+      output << interval_vector[count_index].getInfoData().variantAgePercentile(0.50) << delimiter;
+      output << interval_vector[count_index].getInfoData().variantAgePercentile(0.75) << delimiter;
+      output << interval_vector[count_index].getInfoData().variantAgePercentile(0.90) << delimiter;
+      output << interval_vector[count_index].getInfoData().variantHetHomPercentile(0.5) << delimiter;
+      output << interval_vector[count_index].getInfoData().variantHetHomPercentile(0.9) << delimiter;
+      output << interval_vector[count_index].getInfoData().ageAnalysis().averageCombinedAge() << delimiter;
+      output << interval_vector[count_index].getInfoData().ageAnalysis().heteroHomoRatioAll();
+
       // Output the relative symbol proportions.
 
       if (display_sequence) {

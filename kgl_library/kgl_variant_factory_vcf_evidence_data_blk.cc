@@ -77,9 +77,13 @@ std::optional<const kgl::InfoArrayIndex> kgl::DataMemoryBlock::findArrayIndex(si
 
   const auto comp = [](const InfoArrayIndex& a, const InfoArrayIndex& b) -> bool { return a.infoVariableIndex() < b.infoVariableIndex(); };
 
-  auto result = std::lower_bound(&array_memory_[0], &array_memory_[mem_count_.arrayCount()], InfoArrayIndex(identifier, 0, 0), comp);
+  auto begin_iter = array_memory_.get();
 
-  if (result == &array_memory_[mem_count_.arrayCount()]) {
+  auto end_iter = begin_iter + mem_count_.arrayCount();
+
+  auto result = std::lower_bound(begin_iter, end_iter, InfoArrayIndex(identifier, 0, 0), comp);
+
+  if (result == end_iter) {
 
     return std::nullopt;
 

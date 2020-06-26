@@ -9,6 +9,7 @@
 #include "kgl_genome_db.h"
 #include "kgl_variant_db_unphased_population.h"
 #include "kgl_analysis_virtual.h"
+#include "kgl_age_analysis.h"
 #include "kgl_filter.h"
 #include "kel_percentile.h"
 
@@ -25,7 +26,8 @@ class InfoIntervalData {
 public:
 
   InfoIntervalData() : vep_impact_filter_(VepSubStringFilter(VEP_IMPACT_FIELD_, VEP_HIGH_IMPACT_),
-                                          VepSubStringFilter(VEP_IMPACT_FIELD_, VEP_MODERATE_FIELD_)) {}
+                                          VepSubStringFilter(VEP_IMPACT_FIELD_, VEP_MODERATE_FIELD_)),
+                                          age_analysis_("AgeInterval") {}
   ~InfoIntervalData() = default;
 
   void processVariant(const std::shared_ptr<const Variant>& variant_ptr);
@@ -34,11 +36,22 @@ public:
 
   [[nodiscard]] double variantFrequencyPercentile(double percentile) const;
 
+  [[nodiscard]] size_t variantsCountGEQPercent(double percent) const;
+
+  [[nodiscard]] double variantAgePercentile(double percentile) const;
+
+  [[nodiscard]] double variantHetHomPercentile(double percentile) const;
+
+  [[nodiscard]] const InfoAgeAnalysis& ageAnalysis() const { return age_analysis_; };
+
 private:
 
   OrFilter vep_impact_filter_;
   size_t consequence_count_{0};
   Percentile<double, std::shared_ptr<const Variant>> freq_percentile_;
+  Percentile<double, std::shared_ptr<const Variant>> age_percentile_;
+  Percentile<double, std::shared_ptr<const Variant>> het_hom_percentile_;
+  InfoAgeAnalysis age_analysis_;
 
   constexpr static const char* VEP_IMPACT_FIELD_ = "IMPACT";
   constexpr static const char* VEP_HIGH_IMPACT_ = "HIGH";
