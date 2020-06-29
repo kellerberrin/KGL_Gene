@@ -43,17 +43,14 @@ void kgl::GrchVCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) {
 
 void kgl::GrchVCFImpl::readParseVCFImpl() {
 
-
-
+  index_variants_.commenceIndexing(); // start indexing
   // multi-threaded
   readVCFFile();
   // single threaded
+  ExecEnv::log().info("Finished parsing, waiting for population indexing to complete");
+  index_variants_.haltProcessingAndJoin(); // stop indexing.
+  ExecEnv::log().info("Completed population indexing");
 
-  for (auto const& [contig_id, count] : contig_count_) {
-
-    ExecEnv::log().info("GrchVCFImpl; Contig id: {}, length: {}, variant count :{}", contig_id, count.first, count.second);
-
-  }
 
 }
 
@@ -85,19 +82,14 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
     StringDNA5 reference_str(vcf_record.ref);
     StringDNA5 alternate_str(vcf_record.alt);
 
-    std::shared_ptr<const Variant> variant_ptr(std::make_shared<Variant>( vcf_genome_ptr_->genomeId(),
+    std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( genome_db_ptr_->genomeId(),
                                                                           contig,
                                                                           VariantSequence::UNPHASED,
                                                                           vcf_record.offset,
                                                                           evidence,
                                                                           std::move(reference_str),
                                                                           std::move(alternate_str)));
-    if (not addThreadSafeVariant(variant_ptr)) {
-
-      ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Problem parsing vcf_record.");
-
-    }
-
+    index_variants_.enqueueVariant(std::move(variant_ptr));
     ++variant_count_;
 
   } else {
@@ -123,20 +115,14 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
       StringDNA5 reference_str(vcf_record.ref);
       StringDNA5 alternate_str(alt);
 
-      std::shared_ptr<const Variant> variant_ptr(std::make_shared<Variant>( vcf_genome_ptr_->genomeId(),
+      std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( genome_db_ptr_->genomeId(),
                                                                             contig,
                                                                             VariantSequence::UNPHASED,
                                                                             vcf_record.offset,
                                                                             evidence,
                                                                             std::move(reference_str),
                                                                             std::move(alternate_str)));
-
-      if (not addThreadSafeVariant(variant_ptr)) {
-
-        ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Parsing GRCh VCF, Problem parsing vcf_record");
-
-      }
-
+      index_variants_.enqueueVariant(std::move(variant_ptr));
       ++variant_count_;
 
     }
@@ -152,11 +138,3 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
 }
 
-
-bool kgl::GrchVCFImpl::addThreadSafeVariant(std::shared_ptr<const Variant>& variant_ptr) {
-
-  std::scoped_lock<std::mutex> lock(add_variant_mutex_); // Write Locked
-
-  return vcf_genome_ptr_->addVariant(variant_ptr);
-
-}

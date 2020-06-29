@@ -38,10 +38,9 @@ public:
   [[nodiscard]] PhasedPopulation& operator=(const PhasedPopulation&) = delete; // Use deep copy.
 
   // Create the genome variant if it does not exist.
-  [[nodiscard]] bool getCreateGenome( const GenomeId_t& genome_id,
-                                      PhaseId_t ploidy,
-                                      const std::shared_ptr<const GenomeReference>& genome_db,
-                                      std::shared_ptr<GenomeVariant>& genome);
+  [[nodiscard]] std::optional<std::shared_ptr<GenomeVariant>> getCreateGenome( const GenomeId_t& genome_id,
+                                                                               PhaseId_t ploidy,
+                                                                               const std::shared_ptr<const GenomeReference>& genome_db);
 
   // Returns false if the genome does not exist.
   [[nodiscard]] bool getGenomeVariant(const GenomeId_t& genome_id, std::shared_ptr<const GenomeVariant>& genome_variant) const;

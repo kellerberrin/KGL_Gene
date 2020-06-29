@@ -189,7 +189,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_vcf_evidence_data_blk.h
         kgl_library/kgl_variant_factory_vcf_evidence_data_blk_read.cc
         kgl_library/kgl_variant_factory_vcf_evidence_analysis.cc
-        kgl_library/kgl_variant_factory_vcf_evidence_analysis.h)
+        kgl_library/kgl_variant_factory_vcf_evidence_analysis.h kgl_library/kgl_variant_factory_1000_impl.cc kgl_library/kgl_variant_factory_1000_impl.h kgl_library/kgl_variant_factory_population.cc kgl_library/kgl_variant_factory_population.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kel_library/kel_percentile.h)

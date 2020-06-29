@@ -40,11 +40,10 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
   for (auto const& [genome_id, genome_ptr] : unphased_population_ptr->getMap()) {
 
     // Create the GenomeVariant object.
-    std::shared_ptr<GenomeVariant> genome_variant;
-    if (not haploid_population->getCreateGenome(genome_id,
-                                                GenomeVariant::HAPLOID_GENOME,
-                                                genome_db,
-                                                genome_variant)) {
+    std::optional<std::shared_ptr<GenomeVariant>> genome_variant_opt = haploid_population->getCreateGenome(genome_id,
+                                                                                                           GenomeVariant::HAPLOID_GENOME,
+                                                                                                           genome_db);
+    if (not genome_variant_opt) {
 
       ExecEnv::log().error("GenomePhasing::Haploid Phasing(); Unable to get/create genome: {} to haploid population", genome_id);
       return false;
@@ -63,7 +62,7 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
           std::shared_ptr<Variant> mutable_variant = std::const_pointer_cast<Variant>(variant_vector.front());
           mutable_variant->updatePhaseId(ContigVariant::HAPLOID_HOMOLOGOUS_INDEX);   // Assign to the first (and only) homologous contig.
 
-          if (not genome_variant->addVariant(mutable_variant)) {
+          if (not genome_variant_opt.value()->addVariant(mutable_variant)) {
 
             ExecEnv::log().error("GenomePhasing::Haploid Phasing(); Haploid Genome: {}, Contig: {}, offset: {} Unable to add Homozygous variant",
                                   genome_id, contig_id, offset);
@@ -82,7 +81,7 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
             std::shared_ptr<Variant> mutable_variant = std::const_pointer_cast<Variant>(variant_vector[variant_index]);
             mutable_variant->updatePhaseId(ContigVariant::HAPLOID_HOMOLOGOUS_INDEX);   // Assign to the first (and only) homologous contig.
 
-            if (not genome_variant->addVariant(mutable_variant)) {
+            if (not genome_variant_opt.value()->addVariant(mutable_variant)) {
 
               ExecEnv::log().error("GenomePhasing::Haploid Phasing(); Haploid Genome: {}, Contig: {}, offset: {} Unable to add Heterozygous variant",
                                    genome_id, contig_id, offset);

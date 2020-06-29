@@ -46,13 +46,13 @@ void kgl::Pf3kVCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) {
 
 void kgl::Pf3kVCFImpl::readParseVCFImpl() {
 
-
-
+  index_variants_.commenceIndexing(); // start indexing
   // multi-threaded
   readVCFFile();
   // single threaded
-
-
+  ExecEnv::log().info("Finished parsing, waiting for population indexing to complete");
+  index_variants_.haltProcessingAndJoin(); // stop indexing.
+  ExecEnv::log().info("Completed population indexing");
 
 }
 
@@ -274,29 +274,6 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
 
 }
 
-bool kgl::Pf3kVCFImpl::addThreadSafeGenomeVariant(const std::shared_ptr<const Variant>& variant_ptr) {
-
-  std::scoped_lock<std::mutex> auto_mutex(add_variant_mutex_); // Write Locked
-
-  std::optional<std::shared_ptr<UnphasedGenome>> genome_opt = unphased_population_ptr_->getCreateGenome(variant_ptr->genomeId());
-  if (not genome_opt) {
-
-    ExecEnv::log().error("ParseVCFImpl::addThreadSafeGenomeVariant; Could not add/create genome: {}", variant_ptr->genomeId());
-    return false;
-
-  }
-
-  if (not genome_opt.value()->addVariant(variant_ptr)) { // thread safe
-
-    ExecEnv::log().error("ParseVCFImpl::addThreadSafeGenomeVariant; Could not add variant to genome: {}", variant_ptr->genomeId());
-    return false;
-
-  }
-
-  return true;
-
-}
-
 
 // Set up the genomes/contigs first rather than on-the-fly.
 // Some genomes may have no variants (e.g. the model/reference genome 3D7)
@@ -341,7 +318,7 @@ bool kgl::Pf3kVCFImpl::createAddVariant(const std::string& genome_name,
   StringDNA5 reference_str(reference_text);
   StringDNA5 alternate_str(alternate_text);
 
-  std::shared_ptr<const Variant> variant_ptr(std::make_shared<Variant>( genome_name,
+  std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( genome_name,
                                                                         contig_ptr->contigId(),
                                                                         VariantSequence::UNPHASED,
                                                                         contig_offset,
@@ -349,15 +326,8 @@ bool kgl::Pf3kVCFImpl::createAddVariant(const std::string& genome_name,
                                                                         std::move(reference_str),
                                                                         std::move(alternate_str)));
 
-  return addThreadSafeVariant(variant_ptr);
+  index_variants_.enqueueVariant(std::move(variant_ptr));
 
-}
-
-
-bool kgl::Pf3kVCFImpl::addThreadSafeVariant(std::shared_ptr<const Variant>& variant_ptr) {
-
-  std::scoped_lock<std::mutex> lock(add_variant_mutex_); // Write Locked
-
-  return unphased_population_ptr_->addVariant(variant_ptr);
+  return true;
 
 }

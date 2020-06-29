@@ -161,7 +161,7 @@ private:
 
 class RuntimeVCFFileInfo;
 using RuntimeVCFFileMap = std::map<std::string, RuntimeVCFFileInfo>;
-enum class VCFParserEnum{ GatkMultiGenome, GRChNoGenome, NotImplemented};
+enum class VCFParserEnum{ GatkMultiGenome, GRChNoGenome, MultiGenomePhased, NotImplemented};
 
 class RuntimeVCFFileInfo {
 
@@ -196,6 +196,7 @@ private:
   using VCFParserTypes = std::vector<std::pair<VCFParserEnum, std::string>>;
   const VCFParserTypes implementated_parsers_{ std::pair<VCFParserEnum, std::string>(VCFParserEnum::GatkMultiGenome, "GatkMultiGenome"),
                                                std::pair<VCFParserEnum, std::string>(VCFParserEnum::GRChNoGenome, "GRChNoGenome"),
+                                               std::pair<VCFParserEnum, std::string>(VCFParserEnum::MultiGenomePhased, "MultiGenomePhased"),
                                                std::pair<VCFParserEnum, std::string>(VCFParserEnum::NotImplemented, "NotImplemented")};
 
   VCFParserEnum getParserType(const std::string& parser_type) const;

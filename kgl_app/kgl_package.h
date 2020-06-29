@@ -8,10 +8,13 @@
 #include "kel_exec_env.h"
 #include "kgl_runtime.h"
 #include "kgl_genome_db.h"
+#include "kgl_variant_db_population.h"
 #include "kgl_variant_db_unphased_population.h"
 #include "kgl_package_analysis.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace
+
+using PopulationPair = std::pair<std::unique_ptr<UnphasedPopulation>, std::unique_ptr<PhasedPopulation>>;
 
 class ExecutePackage {
 
@@ -52,7 +55,7 @@ private:
   [[nodiscard]] std::unique_ptr<GenomeCollection> loadReferenceGenomes(const RuntimePackage& package) const;
 
   // Load a specified VCF file and return a population.
-  [[nodiscard]] std::unique_ptr<UnphasedPopulation> readVCFDataFile( const RuntimePackage& package,
+  [[nodiscard]] std::shared_ptr<UnphasedPopulation> readVCFDataFile( const RuntimePackage& package,
                                                                      std::shared_ptr<const GenomeCollection> reference_genomes,
                                                                      const std::string& vcf_file) const;
 

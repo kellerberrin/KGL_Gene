@@ -18,42 +18,41 @@ namespace kgl = kellerberrin::genome;
 
 
 
-bool kgl::PhasedPopulation::getCreateGenome(const GenomeId_t& genome_id,
-                                            PhaseId_t ploidy,
-                                            const std::shared_ptr<const GenomeReference>& genome_db,
-                                            std::shared_ptr<GenomeVariant>& genome) {
+std::optional<std::shared_ptr<kgl::GenomeVariant>>
+kgl::PhasedPopulation::getCreateGenome( const GenomeId_t& genome_id,
+                                        PhaseId_t ploidy,
+                                        const std::shared_ptr<const GenomeReference>& genome_db) {
 
   auto result = population_variant_map_.find(genome_id);
 
   if (result != population_variant_map_.end()) {
 
-    genome = std::const_pointer_cast<GenomeVariant>(result->second);
+    std::shared_ptr<GenomeVariant> genome = std::const_pointer_cast<GenomeVariant>(result->second);
 
     if (genome->ploidy() != ploidy) {
 
       ExecEnv::log().error("PhasedPopulation::getCreateGenome(), Genome: {} Ploidy: {} does not equal Requested Ploidy: {}",
                            genome_id, genome->ploidy(), ploidy);
-      return false;
+      return std::nullopt;
 
     }
 
-    return true;
+    return genome;
 
   } else {
 
-    genome = GenomeVariant::emptyGenomeVariant(genome_id, ploidy, genome_db);
+    std::shared_ptr<GenomeVariant> genome = GenomeVariant::emptyGenomeVariant(genome_id, ploidy, genome_db);
 
-    std::pair<GenomeId_t, std::shared_ptr<const GenomeVariant>> insert_genome(genome->genomeId(), genome);
+    auto insert_result = population_variant_map_.try_emplace(genome_id, genome);
 
-    auto result = population_variant_map_.insert(insert_genome);
+    if (not insert_result.second) {
 
-    if (not result.second) {
-
-      ExecEnv::log().critical("PhasedPopulation::getCreateGenome(), Serious Error, could not add genome: {} to the population", genome_id);
+      ExecEnv::log().error("PhasedPopulation::getCreateGenome(), Serious Error, could not add genome: {} to the population", genome_id);
+      return std::nullopt;
 
     }
 
-    return result.second;
+    return genome;
 
   }
 

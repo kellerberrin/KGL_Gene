@@ -78,7 +78,9 @@ public:
 
   [[nodiscard]] std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
 
-  inline static constexpr PhaseId_t UNPHASED = 255;
+  constexpr static const PhaseId_t UNPHASED = 255;
+  constexpr static const PhaseId_t DIPLOID_PHASE_A = 0;
+  constexpr static const PhaseId_t DIPLOID_PHASE_B = 1;
 
 protected:
 

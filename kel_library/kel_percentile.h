@@ -69,7 +69,7 @@ private:
 
   // Return the vector element corresponding to a percentile.
   [[nodiscard]] size_t index(double percentile) const;
-  // Sort the vector if it has ben updated.
+  // Sort the vector if it has been updated.
   void conditionalSort() const;
   // Given a value, find the array index.
   [[nodiscard]] std::optional<size_t> findArrayIndex(Sortable find_value, Payload dummy_payload) const;

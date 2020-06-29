@@ -16,9 +16,6 @@ namespace kgl = kellerberrin::genome;
 // GenomeVariant - A map of contig variants
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Ploidy constants.
-const kgl::PhaseId_t kgl::GenomeVariant::HAPLOID_GENOME;
-const kgl::PhaseId_t kgl::GenomeVariant::DIPLOID_GENOME;
 
 
 bool kgl::GenomeVariant::addContigVariant(std::shared_ptr<kgl::ContigVariant>& contig_variant) {

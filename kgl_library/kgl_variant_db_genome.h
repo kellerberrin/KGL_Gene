@@ -117,9 +117,9 @@ public:
                                    std::shared_ptr<const DNA5SequenceContig>& reference_contig_ptr,
                                    DNA5SequenceContig& mutant_contig_ptr) const;
 
-
-  static constexpr PhaseId_t HAPLOID_GENOME = 1;
-  static constexpr PhaseId_t DIPLOID_GENOME = 2;
+// Ploidy constants.
+  constexpr static const PhaseId_t HAPLOID_GENOME = 1;
+  constexpr static const PhaseId_t DIPLOID_GENOME = 2;
 
 private:
 

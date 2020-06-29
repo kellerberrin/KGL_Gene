@@ -14,6 +14,7 @@
 #include "kgl_variant_factory_readvcf_impl.h"
 #include "kgl_variant_factory_record_vcf_impl.h"
 #include "kgl_variant_factory_vcf_parse_info.h"
+#include "kgl_variant_factory_population.h"
 
 
 
@@ -26,15 +27,16 @@ class GrchVCFImpl : public VCFReaderMT {
 
 public:
 
-  GrchVCFImpl(std::shared_ptr<UnphasedGenome> vcf_genome_ptr,
+  GrchVCFImpl(std::shared_ptr<UnphasedPopulation> population_ptr,
               std::shared_ptr<const GenomeReference> genome_db_ptr,
               const std::string &vcf_file_name,
               const ContigAliasMap& contig_alias_map,
               const EvidenceInfoSet& evidence_map) : VCFReaderMT(vcf_file_name),
-                                                        vcf_genome_ptr_(std::move(vcf_genome_ptr)),
+                                                        vcf_population_ptr_(population_ptr),
                                                         genome_db_ptr_(std::move(genome_db_ptr)),
                                                         contig_alias_map_(contig_alias_map),
-                                                        evidence_factory_(evidence_map) {}
+                                                        evidence_factory_(evidence_map),
+                                                        index_variants_(population_ptr) {}
 
   ~GrchVCFImpl() override = default;
 
@@ -51,18 +53,16 @@ private:
   constexpr static const char MULIPLE_ALT_SEPARATOR_{','};
   const std::string alt_separator_ = {MULIPLE_ALT_SEPARATOR_};
 
-  std::shared_ptr<UnphasedGenome> vcf_genome_ptr_;
+  std::shared_ptr<UnphasedPopulation> vcf_population_ptr_;
   std::shared_ptr<const GenomeReference> genome_db_ptr_;
   ContigAliasMap contig_alias_map_;
   EvidenceFactory evidence_factory_;
+  IndexVariants index_variants_;
 
 // Progress counters.
   size_t variant_count_{0};
-  mutable std::mutex add_variant_mutex_;
   std::map<ContigId_t, std::pair<ContigSize_t, size_t>> contig_count_;
 
-// Thread safe function adds the variant to the genome.
-  bool addThreadSafeVariant(std::shared_ptr<const Variant>& variant_ptr);
 
 };
 

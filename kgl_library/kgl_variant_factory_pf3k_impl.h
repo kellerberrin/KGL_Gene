@@ -12,6 +12,7 @@
 #include "kgl_variant_factory_readvcf_impl.h"
 #include "kgl_variant_factory_record_vcf_impl.h"
 #include "kgl_variant_factory_vcf_parse_info.h"
+#include "kgl_variant_factory_population.h"
 
 
 
@@ -27,8 +28,9 @@ public:
               const std::string &vcf_file_name,
               const EvidenceInfoSet& evidence_map) : VCFReaderMT(vcf_file_name),
                                                         evidence_factory_(evidence_map),
-                                                        unphased_population_ptr_(vcf_population_ptr),
-                                                        genome_db_ptr_(genome_db_ptr) {}
+//                                                        unphased_population_ptr_(vcf_population_ptr),
+                                                        genome_db_ptr_(genome_db_ptr),
+                                                        index_variants_(vcf_population_ptr) {}
   ~Pf3kVCFImpl() override = default;
 
   void ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record) override;
@@ -66,21 +68,18 @@ private:
 
 // Progress counters.
 
-  size_t vcf_variant_count_{0};
   size_t variant_count_{0};
   constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 10000;
 
-// Create and add variants to population pointer (thread safe).
-
-  mutable std::mutex add_variant_mutex_;  // mutex to lock the UnphasedPopulation structure when inserting variants.
+  // mutex to lock the UnphasedPopulation structure.
+  mutable std::mutex add_variant_mutex_;
   // This object is write accessed by multiple threads, it MUST BE mutex guarded for any access.
   const std::shared_ptr<UnphasedPopulation> unphased_population_ptr_;   // Un-phased variants.
   const std::shared_ptr<const GenomeReference> genome_db_ptr_; // read access only.
+  IndexVariants index_variants_;   // Single threaded variant indexer.
 
 
-  [[nodiscard]] bool addThreadSafeGenomeVariant(const std::shared_ptr<const Variant>& variant_ptr);
   void setupPopulationStructure(const std::shared_ptr<const GenomeReference> genome_db_ptr);
-  [[nodiscard]] bool addThreadSafeVariant(std::shared_ptr<const Variant>& variant_ptr);
 
   [[nodiscard]] bool createAddVariant(const std::string& genome_name,
                                       const std::shared_ptr<const ContigReference> contig_ptr,
