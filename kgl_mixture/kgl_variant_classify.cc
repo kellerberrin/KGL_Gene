@@ -40,7 +40,7 @@ kgl::VariantClassifier::VariantClassifier(std::shared_ptr<const UnphasedPopulati
 
           if (result != variant_map_.end()) {
 
-            auto map_result = result->second.insert(GenomeOffsetMap::value_type(variant->genomeId(), variant));
+            auto map_result = result->second.try_emplace(genome.first, variant);
 
             if (not map_result.second) {
 
@@ -63,7 +63,7 @@ kgl::VariantClassifier::VariantClassifier(std::shared_ptr<const UnphasedPopulati
 
             } else {
 
-              auto map_result= insert_result.first->second.insert(GenomeOffsetMap::value_type(variant->genomeId(), variant));
+              auto map_result= insert_result.first->second.try_emplace(genome.first, variant);
 
               if (not map_result.second) {
 

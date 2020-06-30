@@ -45,7 +45,8 @@ bool kgl::VCFInfoParser::infoTokenParser() {
           auto result = parsed_token_map_.try_emplace(key_view, InfoParserToken(empty_value_view, value_sub_field_count));
           if (not result.second) {
 
-            ExecEnv::log().warn("VCFInfoParser::infoTokenParser, cannot insert <key>, <value> pair, (duplicate)");
+            ExecEnv::log().warn("VCFInfoParser::infoTokenParser, 1. cannot insert <key> : '{}', <value> pair, (duplicate)", std::string(key_view));
+            ExecEnv::log().warn("VCFInfoParser::infoTokenParser, 1. Info : {} ", std::string(info_view_));
 
           }
           key_token_offset = index + 1;
@@ -66,7 +67,8 @@ bool kgl::VCFInfoParser::infoTokenParser() {
           auto result = parsed_token_map_.try_emplace(key_view, InfoParserToken(value_view, value_sub_field_count));
           if (not result.second) {
 
-            ExecEnv::log().warn("VCFInfoParser::infoTokenParser, cannot insert <key>, <value> pair, (duplicate)");
+            ExecEnv::log().warn("VCFInfoParser::infoTokenParser, 2. cannot insert <key>: '{}', <value> pair, (duplicate)", std::string(key_view));
+            ExecEnv::log().warn("VCFInfoParser::infoTokenParser, 2. Info : {} ", std::string(info_view_));
 
           }
           parser_state = ParserStates::KeyToken;
@@ -104,7 +106,8 @@ bool kgl::VCFInfoParser::infoTokenParser() {
     auto result = parsed_token_map_.try_emplace(key_view, InfoParserToken(value_view, value_sub_field_count));
     if (not result.second) {
 
-      ExecEnv::log().warn("VCFInfoParser::infoTokenParser, cannot insert <key>, <value> pair, (duplicate)");
+      ExecEnv::log().warn("VCFInfoParser::infoTokenParser, 3. cannot insert <key> : '{}', <value> pair, (duplicate)", std::string(value_view));
+      ExecEnv::log().warn("VCFInfoParser::infoTokenParser, 3. Info : {} ", std::string(info_view_));
 
     }
 
@@ -126,7 +129,8 @@ bool kgl::VCFInfoParser::infoTokenParser() {
     auto result = parsed_token_map_.try_emplace(key_view, InfoParserToken(empty_value_view, value_sub_field_count));
     if (not result.second) {
 
-      ExecEnv::log().warn("VCFInfoParser::infoTokenParser, cannot insert <key>, <value> pair, (duplicate)");
+      ExecEnv::log().warn("VCFInfoParser::infoTokenParser, 4. cannot insert <key> : '{}', <value> pair, (duplicate)", std::string(key_view));
+      ExecEnv::log().warn("VCFInfoParser::infoTokenParser, 4. Info : {} ", std::string(info_view_));
 
     }
 

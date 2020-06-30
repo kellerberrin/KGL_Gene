@@ -29,8 +29,7 @@ public:
                     const EvidenceInfoSet& evidence_map) : VCFReaderMT(vcf_file_name),
                                                            evidence_factory_(evidence_map),
                                                            contig_alias_map_(contig_alias_map),
-                                                           index_variants_(vcf_population_ptr),
-                                                           population_ptr_(vcf_population_ptr),
+                                                           unphased_population_ptr_(vcf_population_ptr),
                                                            genome_db_ptr_(genome_db_ptr) {}
   ~Genome1000VCFImpl() override = default;
 
@@ -44,7 +43,6 @@ private:
 
   EvidenceFactory evidence_factory_;
   ContigAliasMap contig_alias_map_;
-  IndexVariants index_variants_;   // Single threaded variant indexer.
 
   // Processes the record in a try/catch block.
   void ParseRecord(size_t vcf_record_count, const VcfRecord& record);
@@ -61,12 +59,24 @@ private:
   constexpr static const char MULIPLE_ALT_SEPARATOR_{','};
   constexpr static const char ABSTRACT_ALT_BRACKET_{'<'};
 
-  // This object is write accessed by multiple threads, it MUST BE mutex guarded for any access.
-  const std::shared_ptr<UnphasedPopulation> population_ptr_;   // Phased variants.
+  const std::shared_ptr<UnphasedPopulation> unphased_population_ptr_;   // Un-phased variants.
   const std::shared_ptr<const GenomeReference> genome_db_ptr_; // read access only.
 
+  // mutex to lock the UnphasedPopulation structure.
+  mutable std::mutex add_variant_mutex_;
+
+  bool addThreadSafeVariant(std::unique_ptr<const Variant>&&, const std::vector<GenomeId_t>& genome_vector) const;
 // Calculates alternate indexes for the two phases (.first = A, .second = B).
   std::pair<size_t, size_t> alternateIndex(const std::string& genotype, const std::vector<std::string>& alt_vector) const;
+// Adds variants to a vector of genomes.
+  void addVariants( const std::map<size_t, std::vector<GenomeId_t>>& phase_map,
+                    const ContigId_t& contig,
+                    PhaseId_t phase,
+                    ContigOffset_t offset,
+                    const InfoDataEvidence& info_evidence_opt,
+                    const std::string& reference,
+                    const std::vector<std::string>& alt_vector,
+                    size_t vcf_record_count);
 
 };
 

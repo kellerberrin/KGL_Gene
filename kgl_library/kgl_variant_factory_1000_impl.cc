@@ -38,17 +38,11 @@ void kgl::Genome1000VCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) 
 
 void kgl::Genome1000VCFImpl::readParseVCFImpl() {
 
-
-  index_variants_.commenceIndexing(); // start indexing
   readVCFFile();  // parsing.
-  ExecEnv::log().info("Finished parsing, waiting for population indexing to complete");
-  index_variants_.haltProcessingAndJoin(); // stop indexing.
-  ExecEnv::log().info("Completed population indexing");
-
 
 }
 
-// This is multithreaded code called from the reader defined above.
+// This is multi-threaded code called from the reader defined above.
 void kgl::Genome1000VCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record) {
 
   try {
@@ -67,8 +61,6 @@ void kgl::Genome1000VCFImpl::ProcessVCFRecord(size_t vcf_record_count, const Vcf
 
 // This is multithreaded code called from the reader defined above.
 void kgl::Genome1000VCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& record) {
-
-  if (variant_count_ > 100000000) return; // Return before full memory.
 
   // Parse the info fields into a map.
   // For performance reasons the info field is std::moved - don't reference again.
@@ -95,10 +87,10 @@ void kgl::Genome1000VCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecor
 
   // For all genotypes.
   size_t genotype_count = 0;
-  size_t phase_A_count = 0;
-  size_t phase_B_count = 0;
+  std::map<size_t, std::vector<GenomeId_t>> phase_A_map, phase_B_map;
   for (auto const& genotype : record.genotypeInfos)
   {
+
 
     auto indices = alternateIndex(genotype, alt_vector);
 
@@ -108,26 +100,7 @@ void kgl::Genome1000VCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecor
 
       if (alternate_A.find(ABSTRACT_ALT_BRACKET_) == std::string::npos) {
 
-         // We have no format data and multiple alternate alleles.
-         std::optional<std::shared_ptr<FormatData>> null_format_data = std::nullopt;
-         // Setup the evidence object.
-         VariantEvidence evidence(vcf_record_count, info_evidence_opt, null_format_data, indices.first, alt_vector.size());
-         // Add the variant.
-         StringDNA5 reference_str(record.ref);
-         StringDNA5 alternate_str(alternate_A);
-
-         std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( getGenomeNames()[genotype_count],
-                                                                              contig,
-                                                                              VariantSequence::DIPLOID_PHASE_A,
-                                                                              record.offset,
-                                                                              evidence,
-                                                                              std::move(reference_str),
-                                                                              std::move(alternate_str)));
-
-        // Add Variant.
-         index_variants_.enqueueVariant(std::move(variant_ptr));
-         ++phase_A_count;
-         ++variant_count_;
+        phase_A_map[indices.first-1].push_back(getGenomeNames()[genotype_count]);
 
        } else {
 
@@ -143,25 +116,7 @@ void kgl::Genome1000VCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecor
 
       if (alternate_B.find(ABSTRACT_ALT_BRACKET_) == std::string::npos) {
 
-        std::optional<std::shared_ptr<FormatData>> null_format_data = std::nullopt;
-        // Setup the evidence object.
-        VariantEvidence evidence(vcf_record_count, info_evidence_opt, null_format_data, indices.second, alt_vector.size());
-        // Add the variant.
-        StringDNA5 reference_str(record.ref);
-        StringDNA5 alternate_str(alternate_B);
-
-        std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( getGenomeNames()[genotype_count],
-                                                                              contig,
-                                                                              VariantSequence::DIPLOID_PHASE_B,
-                                                                              record.offset,
-                                                                              evidence,
-                                                                              std::move(reference_str),
-                                                                              std::move(alternate_str)));
-
-        // Add Variant.
-        index_variants_.enqueueVariant(std::move(variant_ptr));
-        ++variant_count_;
-        ++phase_B_count;
+        phase_B_map[indices.first-1].push_back(getGenomeNames()[genotype_count]);
 
       } else {
 
@@ -175,6 +130,9 @@ void kgl::Genome1000VCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecor
     ++genotype_count;
 
   }
+
+  addVariants( phase_A_map, contig, VariantSequence::DIPLOID_PHASE_F, record.offset, info_evidence_opt, record.ref, alt_vector, vcf_record_count);
+  addVariants( phase_B_map, contig, VariantSequence::DIPLOID_PHASE_M, record.offset, info_evidence_opt, record.ref, alt_vector, vcf_record_count);
 
   if (vcf_record_count % VARIANT_REPORT_INTERVAL_ == 0) {
 
@@ -251,4 +209,56 @@ std::pair<size_t, size_t> kgl::Genome1000VCFImpl::alternateIndex(const std::stri
 
 }
 
+void kgl::Genome1000VCFImpl::addVariants( const std::map<size_t, std::vector<GenomeId_t>>& phase_map,
+                                          const ContigId_t& contig,
+                                          PhaseId_t phase,
+                                          ContigOffset_t offset,
+                                          const InfoDataEvidence& info_evidence_opt,
+                                          const std::string& reference,
+                                          const std::vector<std::string>& alt_vector,
+                                          size_t vcf_record_count) {
+
+  for (const auto& [alt_allele, genome_vector] : phase_map) {
+
+    std::optional<std::shared_ptr<FormatData>> null_format_data = std::nullopt;
+// Setup the evidence object.
+    VariantEvidence evidence(vcf_record_count, info_evidence_opt, null_format_data, alt_allele, alt_vector.size());
+    // Add the variant.
+//    StringDNA5 reference_str(reference);
+//    StringDNA5 alternate_str(alt_vector[alt_allele]);
+    StringDNA5 reference_str("A");
+    StringDNA5 alternate_str("T");
+
+    std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( contig,
+                                                                          phase,
+                                                                          offset,
+                                                                          evidence,
+                                                                          std::move(reference_str),
+                                                                          std::move(alternate_str)));
+
+
+    if (not addThreadSafeVariant(std::move(variant_ptr), genome_vector)) {
+
+      ExecEnv::log().error("Genome1000VCFImpl::addVariants, problem adding: {} variants", genome_vector.size());
+
+    } else {
+
+      variant_count_ += genome_vector.size();
+
+    }
+
+  }
+
+}
+
+
+bool kgl::Genome1000VCFImpl::addThreadSafeVariant( std::unique_ptr<const Variant>&& variant_ptr,
+                                                   const std::vector<GenomeId_t>& genome_vector) const {
+
+  // This is multi-threaded code. So lock before access.
+  std::scoped_lock lock(add_variant_mutex_);
+
+  return unphased_population_ptr_->addVariant(std::move(variant_ptr), genome_vector);
+
+}
 

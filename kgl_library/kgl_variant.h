@@ -60,16 +60,13 @@ class VariantSequence {
 
 public:
 
-  VariantSequence(GenomeId_t genome_id,
-                  ContigId_t contig_id,
+  VariantSequence(ContigId_t contig_id,
                   PhaseId_t phase_id,
-                  ContigOffset_t contig_offset) : genome_id_(std::move(genome_id)),
-                                                  contig_id_(std::move(contig_id)),
+                  ContigOffset_t contig_offset) : contig_id_(std::move(contig_id)),
                                                   phase_id_(phase_id),
                                                   contig_offset_(contig_offset) {}
   virtual ~VariantSequence() = default;
 
-  [[nodiscard]] const GenomeId_t& genomeId() const { return genome_id_; }
   [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
   [[nodiscard]] ContigOffset_t offset() const { return contig_offset_; }
   [[nodiscard]] PhaseId_t phaseId() const { return phase_id_; }
@@ -79,8 +76,8 @@ public:
   [[nodiscard]] std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
 
   constexpr static const PhaseId_t UNPHASED = 255;
-  constexpr static const PhaseId_t DIPLOID_PHASE_A = 0;
-  constexpr static const PhaseId_t DIPLOID_PHASE_B = 1;
+  constexpr static const PhaseId_t DIPLOID_PHASE_F = 0;  // By convention the female derived contig is first.
+  constexpr static const PhaseId_t DIPLOID_PHASE_M = 1;
 
 protected:
 
@@ -88,7 +85,6 @@ protected:
 
 private:
 
-  const GenomeId_t genome_id_;                          // The source of this variant
   const ContigId_t contig_id_;                          // The contig of this variant
   PhaseId_t phase_id_;                                  // The phase of this variant (which homologous contig)
   const ContigOffset_t contig_offset_;                  // Location on the contig.
@@ -110,14 +106,13 @@ class Variant : public VariantSequence {
 
 public:
 
-  Variant(const GenomeId_t& genome_id,
-             const ContigId_t& contig_id,
+  Variant(   const ContigId_t& contig_id,
              PhaseId_t phase_id,
              ContigOffset_t contig_offset,
              const VariantEvidence& evidence,
              StringDNA5&& reference,
              StringDNA5&& alternate)
-  : VariantSequence(genome_id, contig_id, phase_id, contig_offset),
+  : VariantSequence(contig_id, phase_id, contig_offset),
     evidence_(evidence),
     reference_(std::move(reference)),
     alternate_(std::move(alternate)) {}

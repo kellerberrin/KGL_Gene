@@ -43,14 +43,9 @@ void kgl::GrchVCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) {
 
 void kgl::GrchVCFImpl::readParseVCFImpl() {
 
-  index_variants_.commenceIndexing(); // start indexing
-  // multi-threaded
+   // multi-threaded
   readVCFFile();
   // single threaded
-  ExecEnv::log().info("Finished parsing, waiting for population indexing to complete");
-  index_variants_.haltProcessingAndJoin(); // stop indexing.
-  ExecEnv::log().info("Completed population indexing");
-
 
 }
 
@@ -82,15 +77,22 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
     StringDNA5 reference_str(vcf_record.ref);
     StringDNA5 alternate_str(vcf_record.alt);
 
-    std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( genome_db_ptr_->genomeId(),
-                                                                          contig,
+    std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( contig,
                                                                           VariantSequence::UNPHASED,
                                                                           vcf_record.offset,
                                                                           evidence,
                                                                           std::move(reference_str),
                                                                           std::move(alternate_str)));
-    index_variants_.enqueueVariant(std::move(variant_ptr));
-    ++variant_count_;
+
+    if (not addThreadSafeVariant(std::move(variant_ptr), genome_db_ptr_->genomeId())) {
+
+      ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Unable to add variant to population");
+
+    } else {
+
+      ++variant_count_;
+
+    }
 
   } else {
 
@@ -115,15 +117,22 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
       StringDNA5 reference_str(vcf_record.ref);
       StringDNA5 alternate_str(alt);
 
-      std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( genome_db_ptr_->genomeId(),
-                                                                            contig,
+      std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( contig,
                                                                             VariantSequence::UNPHASED,
                                                                             vcf_record.offset,
                                                                             evidence,
                                                                             std::move(reference_str),
                                                                             std::move(alternate_str)));
-      index_variants_.enqueueVariant(std::move(variant_ptr));
-      ++variant_count_;
+
+      if (not addThreadSafeVariant(std::move(variant_ptr), genome_db_ptr_->genomeId())) {
+
+        ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Unable to add variant to population");
+
+      } else {
+
+        ++variant_count_;
+
+      }
 
     }
 
@@ -138,3 +147,15 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
 }
 
+
+bool kgl::GrchVCFImpl::addThreadSafeVariant(std::unique_ptr<const Variant>&& variant_ptr, GenomeId_t genome) const {
+
+  // This is multi-threaded code. So lock before access.
+  std::scoped_lock lock(add_variant_mutex_);
+
+  std::vector<GenomeId_t> genome_vector;
+  genome_vector.emplace_back(std::move(genome));
+
+  return unphased_population_ptr_->addVariant(std::move(variant_ptr), genome_vector);
+
+}

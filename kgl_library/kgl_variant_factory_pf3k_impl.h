@@ -29,8 +29,7 @@ public:
               const EvidenceInfoSet& evidence_map) : VCFReaderMT(vcf_file_name),
                                                         evidence_factory_(evidence_map),
 //                                                        unphased_population_ptr_(vcf_population_ptr),
-                                                        genome_db_ptr_(genome_db_ptr),
-                                                        index_variants_(vcf_population_ptr) {}
+                                                        genome_db_ptr_(genome_db_ptr) {}
   ~Pf3kVCFImpl() override = default;
 
   void ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record) override;
@@ -76,8 +75,6 @@ private:
   // This object is write accessed by multiple threads, it MUST BE mutex guarded for any access.
   const std::shared_ptr<UnphasedPopulation> unphased_population_ptr_;   // Un-phased variants.
   const std::shared_ptr<const GenomeReference> genome_db_ptr_; // read access only.
-  IndexVariants index_variants_;   // Single threaded variant indexer.
-
 
   void setupPopulationStructure(const std::shared_ptr<const GenomeReference> genome_db_ptr);
 
@@ -87,6 +84,8 @@ private:
                                       const std::string& reference,
                                       const std::string& alternate,
                                       const VariantEvidence& evidence);
+
+  bool addThreadSafeVariant(std::unique_ptr<const Variant>&&, GenomeId_t genome) const;
 
 };
 

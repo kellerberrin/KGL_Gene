@@ -32,11 +32,10 @@ public:
               const std::string &vcf_file_name,
               const ContigAliasMap& contig_alias_map,
               const EvidenceInfoSet& evidence_map) : VCFReaderMT(vcf_file_name),
-                                                        vcf_population_ptr_(population_ptr),
+                                                        unphased_population_ptr_(std::move(population_ptr)),
                                                         genome_db_ptr_(std::move(genome_db_ptr)),
                                                         contig_alias_map_(contig_alias_map),
-                                                        evidence_factory_(evidence_map),
-                                                        index_variants_(population_ptr) {}
+                                                        evidence_factory_(evidence_map) {}
 
   ~GrchVCFImpl() override = default;
 
@@ -51,18 +50,18 @@ private:
 
   constexpr static const size_t VARIANT_REPORT_INTERVAL_{100000};
   constexpr static const char MULIPLE_ALT_SEPARATOR_{','};
-  const std::string alt_separator_ = {MULIPLE_ALT_SEPARATOR_};
 
-  std::shared_ptr<UnphasedPopulation> vcf_population_ptr_;
+  const std::shared_ptr<UnphasedPopulation> unphased_population_ptr_;   // Un-phased variants.
   std::shared_ptr<const GenomeReference> genome_db_ptr_;
   ContigAliasMap contig_alias_map_;
   EvidenceFactory evidence_factory_;
-  IndexVariants index_variants_;
 
 // Progress counters.
   size_t variant_count_{0};
-  std::map<ContigId_t, std::pair<ContigSize_t, size_t>> contig_count_;
+  // mutex to lock the UnphasedPopulation structure.
+  mutable std::mutex add_variant_mutex_;
 
+  bool addThreadSafeVariant(std::unique_ptr<const Variant>&&, GenomeId_t genome) const;
 
 };
 

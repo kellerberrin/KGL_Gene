@@ -49,11 +49,11 @@ void kgl::IndexVariants::indexVariants() {
     }
 
     // Index the variant.
-    if (not population_ptr_->addVariant(std::move(variant_opt.value()))) {
+ //   if (not population_ptr_->addVariant(std::move(variant_opt.value()))) {
 
-      ExecEnv::log().error("IndexVariants::indexVariants, problem adding variant to population.");
+//      ExecEnv::log().error("IndexVariants::indexVariants, problem adding variant to population.");
 
-    }
+//    }
 
   } // end while
 

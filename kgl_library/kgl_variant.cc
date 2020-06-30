@@ -23,8 +23,7 @@ std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputInde
 
   std:: stringstream ss;
 // Contig.
-  ss << genomeId() << delimiter
-     << contigId() << delimiter;
+  ss << contigId() << delimiter;
   if (phaseId() == UNPHASED) {
 
     ss << "Unphased" << delimiter;
@@ -81,8 +80,7 @@ std::string kgl::Variant::output(char delimiter, VariantOutputIndex output_index
 
 bool kgl::Variant::equivalent(const Variant& cmp_var) const {
 
-  return genomeId() == cmp_var.genomeId()
-         and contigId() == cmp_var.contigId()
+  return contigId() == cmp_var.contigId()
          and phaseId() == cmp_var.phaseId()
          and offset() == cmp_var.offset()
          and variantType() == cmp_var.variantType()
@@ -96,11 +94,7 @@ bool kgl::Variant::equivalent(const Variant& cmp_var) const {
 bool kgl::Variant::lessThan(const Variant& cmp_var) const {
 
 
-  if (genomeId() < cmp_var.genomeId()) {
-
-    return true;
-
-  } else if (contigId() < cmp_var.contigId()) {
+  if (contigId() < cmp_var.contigId()) {
 
     return true;
 

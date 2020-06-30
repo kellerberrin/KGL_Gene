@@ -41,11 +41,6 @@ public:
 
   [[nodiscard]] size_t variantCount() const;
 
-  // Test if an equivalent variant already exists in the population.
-  [[nodiscard]] bool variantExists(const std::shared_ptr<const Variant>& variant) const;
-
-  void popStatistics() const; // output to logger
-
   [[nodiscard]] std::vector<GenomeId_t> genomeList() const;
 
   [[nodiscard]] std::shared_ptr<UnphasedPopulation> filterVariants(const VariantFilter& filter) const;
@@ -63,10 +58,12 @@ public:
   [[nodiscard]] bool addGenome(const std::shared_ptr<UnphasedGenome>& genome);
 
   // Unconditionally add a variant to the population.
-  [[nodiscard]] bool addVariant(const std::shared_ptr<const Variant>& variant_ptr);
+  [[nodiscard]] bool addVariant( const std::shared_ptr<const Variant>& variant_ptr,
+                                 const std::vector<GenomeId_t>& genome_vector);
 
   // The first bool is normal operation. The second bool is if a unique variant was added to the population.
-  [[nodiscard]] bool addUniqueVariant(const std::shared_ptr<const Variant>& variant);
+  [[nodiscard]] bool addUniqueVariant( const std::shared_ptr<const Variant>& variant,
+                                       const std::vector<GenomeId_t>& genome_vector);
 
   [[nodiscard]] const PopulationId_t& populationId() const { return population_id_; }
   void setPopulationId(const PopulationId_t& population_id) { population_id_ = population_id; }
@@ -75,8 +72,6 @@ public:
   // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
   // The second integer is the number variants that pass inspection by comparison to the reference genome.
   [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const GenomeReference>& genome_db) const;
-  // Unconditionally merge (retains duplicates) a variant genome into this population. Returns the new size of the population.
-  [[nodiscard]] size_t mergeGenome(const std::shared_ptr<const UnphasedGenome>& genome);
   // Compress a population into a single genome. Done when generating aggregate variant statistics for a population.
   [[nodiscard]] std::shared_ptr<UnphasedGenome> compressPopulation() const;
   // Get the Info header, get the field header object from the first variant in the population.
@@ -87,18 +82,6 @@ public:
   template<class Obj, typename Func> bool processAll(Obj& object, Func objFunc) const;
   // Create a population of unique variants. All duplicate variants are removed.
   [[nodiscard]] std::shared_ptr<UnphasedPopulation> uniqueVariantPopulation() const;
-  // Population set operations.
-  // Important - set operations return populations containing unique variants only.
-  // Duplicate variants are removed.
-  // Returns a union of this population and the population supplied as an argument.
-  // There are no duplicate variants in the union.
-  [[nodiscard]] std::shared_ptr<UnphasedPopulation> setUnion(const std::shared_ptr<const UnphasedPopulation>& union_population) const;
-  // Returns a population containing only the variants present in this population and the argument population.
-  // The are no duplicate variants in the intersection.
-  [[nodiscard]] std::shared_ptr<UnphasedPopulation> setIntersection(const std::shared_ptr<const UnphasedPopulation>& intersection_population) const;
-  // Returns a population containing variants present is this population that are not in the argument population.
-  // The are no duplicate variants in the complement.
-  [[nodiscard]] std::shared_ptr<UnphasedPopulation> setComplement(const std::shared_ptr<const UnphasedPopulation>& complement_population) const;
 
 
 private:

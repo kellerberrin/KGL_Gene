@@ -46,13 +46,9 @@ void kgl::Pf3kVCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) {
 
 void kgl::Pf3kVCFImpl::readParseVCFImpl() {
 
-  index_variants_.commenceIndexing(); // start indexing
   // multi-threaded
   readVCFFile();
   // single threaded
-  ExecEnv::log().info("Finished parsing, waiting for population indexing to complete");
-  index_variants_.haltProcessingAndJoin(); // stop indexing.
-  ExecEnv::log().info("Completed population indexing");
 
 }
 
@@ -318,16 +314,26 @@ bool kgl::Pf3kVCFImpl::createAddVariant(const std::string& genome_name,
   StringDNA5 reference_str(reference_text);
   StringDNA5 alternate_str(alternate_text);
 
-  std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( genome_name,
-                                                                        contig_ptr->contigId(),
+  std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( contig_ptr->contigId(),
                                                                         VariantSequence::UNPHASED,
                                                                         contig_offset,
                                                                         evidence,
                                                                         std::move(reference_str),
                                                                         std::move(alternate_str)));
 
-  index_variants_.enqueueVariant(std::move(variant_ptr));
+  return addThreadSafeVariant(std::move(variant_ptr), genome_name);
 
-  return true;
+}
+
+
+bool kgl::Pf3kVCFImpl::addThreadSafeVariant(std::unique_ptr<const Variant>&& variant_ptr, GenomeId_t genome) const {
+
+  // This is multi-threaded code. So lock before access.
+  std::scoped_lock lock(add_variant_mutex_);
+
+  std::vector<GenomeId_t> genome_vector;
+  genome_vector.emplace_back(std::move(genome));
+
+  return unphased_population_ptr_->addVariant(std::move(variant_ptr), genome_vector);
 
 }

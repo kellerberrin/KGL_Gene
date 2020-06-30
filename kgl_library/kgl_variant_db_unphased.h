@@ -85,10 +85,13 @@ public:
 
   [[nodiscard]] std::shared_ptr<UnphasedGenome> deepCopy() const; // Use this to copy the object.
 
-  [[nodiscard]] size_t variantCount() const;
+  // unconditionally merge (retains duplicates) genomes and variants into this genome.
+  [[nodiscard]] size_t mergeGenome(const std::shared_ptr<const UnphasedGenome>& merge_genome);
 
-  // Test if an equivalent variant already exists in the genome.
-  [[nodiscard]] bool variantExists(const std::shared_ptr<const Variant>& variant) const;
+  // A copy of this genome that only contains unique variants (all duplicates removed).
+  [[nodiscard]] std::shared_ptr<UnphasedGenome> uniqueGenome() const;
+
+  [[nodiscard]] size_t variantCount() const;
 
   [[nodiscard]] bool addVariant(const std::shared_ptr<const Variant>& variant);
 
@@ -102,7 +105,8 @@ public:
   [[nodiscard]] const UnphasedContigMap& getMap() const { return contig_map_; }
 
   [[nodiscard]] std::optional<std::shared_ptr<UnphasedContig>> getCreateContig(const ContigId_t& contig_id);
-
+  // Processes all variants in the population with class Obj and Func = &Obj::objFunc(const shared_ptr<const Variant>&)
+  template<class Obj, typename Func> bool processAll(Obj& object, Func objFunc) const;
   // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
   // The second integer is the number variants that pass inspection by comparison to the genome database.
   [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const GenomeReference>& genome_db_ptr) const;
@@ -115,6 +119,36 @@ private:
   [[nodiscard]] bool addContig(const std::shared_ptr<UnphasedContig>& contig_ptr);
 
 };
+
+
+// General purpose genome processing template.
+// Processes all variants in the genome with class Obj and Func = &(bool Obj::objFunc(const std::shared_ptr<const Variant>))
+template<class Obj, typename Func>
+bool UnphasedGenome::processAll(Obj& object, Func objFunc)  const {
+
+    for (auto const& contig : getMap()) {
+
+      for (auto const& variant_vector : contig.second->getMap()) {
+
+        for (auto const& variant_ptr : variant_vector.second) {
+
+          if (not (object.*objFunc)(variant_ptr)) {
+
+            ExecEnv::log().error("UnphasedPopulation::processAll<Obj, Func>; Problem executing general purpose template function.");
+            return false;
+
+          }
+
+        }
+
+      }
+
+    }
+
+  return true;
+
+}
+
 
 
 

@@ -235,6 +235,36 @@ std::shared_ptr<kgl::UnphasedGenome> kgl::UnphasedGenome::deepCopy() const {
 }
 
 
+// unconditionally merge (retains duplicates) genomes and variants into this genome.
+size_t kgl::UnphasedGenome::mergeGenome(const std::shared_ptr<const UnphasedGenome>& merge_genome) {
+
+  if (not merge_genome->processAll(*this, &UnphasedGenome::addVariant)) {
+
+    ExecEnv::log().error("UnphasedGenome::mergeGenome, problem merging genome: {} into genome: {}",
+                         merge_genome->genomeId(), genomeId());
+
+  }
+
+  return variantCount();
+
+}
+
+
+std::shared_ptr<kgl::UnphasedGenome> kgl::UnphasedGenome::uniqueGenome() const {
+
+  std::shared_ptr<UnphasedGenome> unique_genome(std::make_shared<UnphasedGenome>(genomeId()));
+
+  if (not processAll(*unique_genome, &UnphasedGenome::addUniqueVariant)) {
+
+    ExecEnv::log().error("UnphasedGenome::mergeGenome, problem creating unique variant genome from genome: {}", genomeId());
+
+  }
+
+  return unique_genome;
+
+}
+
+
 bool kgl::UnphasedGenome::addVariant(const std::shared_ptr<const Variant>& variant) {
 
   std::optional<std::shared_ptr<UnphasedContig>> contig_opt = getCreateContig(variant->contigId());
@@ -253,20 +283,6 @@ bool kgl::UnphasedGenome::addVariant(const std::shared_ptr<const Variant>& varia
   }
 
   return true;
-
-}
-
-// Test if an equivalent variant already exists in the genome.
-bool kgl::UnphasedGenome::variantExists(const std::shared_ptr<const Variant>& variant) const {
-
-  auto result = getMap().find (variant->contigId());
-  if (result == getMap().end()) {
-
-    return false;
-
-  }
-
-  return result->second->variantExists(variant);
 
 }
 
