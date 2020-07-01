@@ -40,7 +40,7 @@ public:
 private:
 
   // Returns false if no heterozygous variant selected, else the selected variant return as an index to the vector.
-  static bool analyseCountStatistics(const UnphasedVectorVariantCount& unphased_vector, size_t& phase_index);
+  static bool analyseCountStatistics(const UnphasedContigOffset& unphased_vector, size_t& phase_index);
 
   // The proportion required for a heterozygous variant to be accepted as the haploid variant.
   constexpr static const double HETEROZYGOUS_PROPORTION_ = 0.9;

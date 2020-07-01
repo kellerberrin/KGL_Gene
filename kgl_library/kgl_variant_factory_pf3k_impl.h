@@ -28,7 +28,7 @@ public:
               const std::string &vcf_file_name,
               const EvidenceInfoSet& evidence_map) : VCFReaderMT(vcf_file_name),
                                                         evidence_factory_(evidence_map),
-//                                                        unphased_population_ptr_(vcf_population_ptr),
+                                                        unphased_population_ptr_(vcf_population_ptr),
                                                         genome_db_ptr_(genome_db_ptr) {}
   ~Pf3kVCFImpl() override = default;
 

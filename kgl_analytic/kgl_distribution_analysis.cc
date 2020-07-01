@@ -21,7 +21,7 @@ bool kgl::AggregateVariantDistribution::variantDistribution(std::shared_ptr<cons
 
       for (auto const& offset : contig.second->getMap()) {
 
-        for (auto const& variant_ptr : offset.second) {
+        for (auto const& variant_ptr : offset.second->getVariantArray()) {
 
             if (not addVariant(variant_ptr)) {
 

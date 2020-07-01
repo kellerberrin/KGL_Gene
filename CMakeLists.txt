@@ -157,8 +157,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_db_genome.cc
         kgl_library/kgl_variant_db_population.cc
         kgl_library/kgl_variant_db_contig.cc
-        kgl_library/kgl_variant_db_unphased.h
-        kgl_library/kgl_variant_db_unphased.cc
+        kgl_library/kgl_variant_db_unphased_genome.h
         kgl_library/kgl_variant_db_unphased_population.h
         kgl_library/kgl_variant_db_unphased_population.cc
         kgl_library/kgl_genome_contig_feature.h
@@ -194,7 +193,9 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_1000_impl.h
         kgl_library/kgl_variant_factory_population.cc
         kgl_library/kgl_variant_factory_population.h
-        kgl_library/kgl_analysis_virtual.h)
+        kgl_library/kgl_analysis_virtual.h
+        kgl_library/kgl_variant_db_offset.h
+        kgl_library/kgl_variant_db_unphased_contig.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kel_library/kel_percentile.h)

@@ -42,20 +42,20 @@ kgl::DistanceType_t kgl::UPGMAUnphasedDistance::distance(std::shared_ptr<const V
     auto cmp_offset_iter = cmp_contig_iter->second->getMap().begin();
 
     // Scroll through offsets
-    for(auto offset : contig.second->getMap()) {
+    for(const auto& offset : contig.second->getMap()) {
 
       // If at end of cmp offsets then add the offset size.
       if (cmp_offset_iter == cmp_contig_iter->second->getMap().end()) {
 
-        distance += offset.second.size();
+        distance += offset.second->getVariantArray().size();
 
       } else if (offset.first == cmp_offset_iter->first) {
       // If the offsets are equal then calculate how many variants match
 
         size_t variants_found = 0;
-        for (auto variant : offset.second) {
+        for (auto variant : offset.second->getVariantArray()) {
 
-          for (auto cmp_variant : cmp_offset_iter->second) {
+          for (auto cmp_variant : cmp_offset_iter->second->getVariantArray()) {
 
             if (variant->equivalent(*(cmp_variant))) {
 
@@ -68,7 +68,8 @@ kgl::DistanceType_t kgl::UPGMAUnphasedDistance::distance(std::shared_ptr<const V
 
         }
 
-        size_t max_size = offset.second.size() >= cmp_offset_iter->second.size() ? offset.second.size() : cmp_offset_iter->second.size();
+        size_t max_size = offset.second->getVariantArray().size() >= cmp_offset_iter->second->getVariantArray().size()
+           ? offset.second->getVariantArray().size() : cmp_offset_iter->second->getVariantArray().size();
         distance += (max_size - variants_found);
         // increment to next cmp offset.
         ++cmp_offset_iter;
@@ -78,7 +79,7 @@ kgl::DistanceType_t kgl::UPGMAUnphasedDistance::distance(std::shared_ptr<const V
       // Until the cmp_offset is equal to or greater than the offset.
         while (offset.first > cmp_offset_iter->first) {
 
-          distance += cmp_offset_iter->second.size();
+          distance += cmp_offset_iter->second->getVariantArray().size();
 
           // increment to next cmp offset.
           ++cmp_offset_iter;
@@ -94,9 +95,9 @@ kgl::DistanceType_t kgl::UPGMAUnphasedDistance::distance(std::shared_ptr<const V
 
             // If the offsets are equal then calculate how many variants match
             size_t variants_found = 0;
-            for (auto variant : offset.second) {
+            for (auto variant : offset.second->getVariantArray()) {
 
-              for (auto cmp_variant : cmp_offset_iter->second) {
+              for (auto cmp_variant : cmp_offset_iter->second->getVariantArray()) {
 
                 if (variant->equivalent(*(cmp_variant))) {
 
@@ -109,7 +110,8 @@ kgl::DistanceType_t kgl::UPGMAUnphasedDistance::distance(std::shared_ptr<const V
 
             }
 
-            size_t max_size = offset.second.size() >= cmp_offset_iter->second.size() ? offset.second.size() : cmp_offset_iter->second.size();
+            size_t max_size = offset.second->getVariantArray().size() >= cmp_offset_iter->second->getVariantArray().size()
+              ? offset.second->getVariantArray().size() : cmp_offset_iter->second->getVariantArray().size();
             distance += (max_size - variants_found);
             // increment to next cmp offset.
             ++cmp_offset_iter;
@@ -126,7 +128,7 @@ kgl::DistanceType_t kgl::UPGMAUnphasedDistance::distance(std::shared_ptr<const V
 
       } else if (offset.first < cmp_offset_iter->first) {
       // If the offset is less than the cmp offset, then add all variants.
-        distance += offset.second.size();
+        distance += offset.second->getVariantArray().size();
 
       }
 
@@ -135,7 +137,7 @@ kgl::DistanceType_t kgl::UPGMAUnphasedDistance::distance(std::shared_ptr<const V
     // If any cmp offsets remain then add these to the distance
     while (cmp_offset_iter != cmp_contig_iter->second->getMap().end()) {
 
-      distance += cmp_offset_iter->second.size();
+      distance += cmp_offset_iter->second->getVariantArray().size();
       ++cmp_offset_iter;
 
     }

@@ -17,7 +17,7 @@
 #include "kgl_variant_db_contig.h"
 #include "kgl_variant_db_genome.h"
 #include "kgl_variant_db_population.h"
-#include "kgl_variant_db_unphased.h"
+#include "kgl_variant_db_unphased_genome.h"
 #include "kgl_variant_db_unphased_population.h"
 
 

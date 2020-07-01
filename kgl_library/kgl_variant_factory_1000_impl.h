@@ -49,6 +49,7 @@ private:
 
   // Progress counters.
   mutable size_t abstract_variant_count_{0};
+  size_t actual_variant_count_{0};
   size_t variant_count_{0};
 
   constexpr static const size_t VARIANT_REPORT_INTERVAL_{10000};

@@ -57,9 +57,9 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
       for (auto const& [offset, variant_vector] : contig_ptr->getMap()) {
 
         // if we find a homozygous variant then add it to the unphased.
-        if (variant_vector.size() == 2 and variant_vector[0]->equivalent(*variant_vector[1])) {
+        if (variant_vector->getVariantArray().size() == 2 and variant_vector->getVariantArray()[0]->equivalent(*variant_vector->getVariantArray()[1])) {
 
-          std::shared_ptr<Variant> mutable_variant = std::const_pointer_cast<Variant>(variant_vector.front());
+          std::shared_ptr<Variant> mutable_variant = std::const_pointer_cast<Variant>(variant_vector->getVariantArray().front());
           mutable_variant->updatePhaseId(ContigVariant::HAPLOID_HOMOLOGOUS_INDEX);   // Assign to the first (and only) homologous contig.
 
           if (not genome_variant_opt.value()->addVariant(mutable_variant)) {
@@ -71,14 +71,14 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
 
           ++homozygous_count;
 
-        } else if (variant_vector.size() == 2 or variant_vector.size() == 1) {  // the variant is heterozygous, we analyze the count statistics.
+        } else if (variant_vector->getVariantArray().size() == 2 or variant_vector->getVariantArray().size() == 1) {  // the variant is heterozygous, we analyze the count statistics.
 
           ++heterozygous_count;
 
           size_t variant_index;
-          if (analyseCountStatistics(variant_vector, variant_index)) {
+          if (analyseCountStatistics(*variant_vector, variant_index)) {
 
-            std::shared_ptr<Variant> mutable_variant = std::const_pointer_cast<Variant>(variant_vector[variant_index]);
+            std::shared_ptr<Variant> mutable_variant = std::const_pointer_cast<Variant>(variant_vector->getVariantArray()[variant_index]);
             mutable_variant->updatePhaseId(ContigVariant::HAPLOID_HOMOLOGOUS_INDEX);   // Assign to the first (and only) homologous contig.
 
             if (not genome_variant_opt.value()->addVariant(mutable_variant)) {
@@ -95,8 +95,8 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
         } else {
 
           ExecEnv::log().error("GenomePhasing::Haploid Phasing(); Haploid Genome: {}, Contig: {}, offset: {}, {} variants (> 2) at unique offset.",
-                               genome_id, contig_id, offset, variant_vector.size());
-          for (auto const& variant_ptr : variant_vector) {
+                               genome_id, contig_id, offset, variant_vector->getVariantArray().size());
+          for (auto const& variant_ptr : variant_vector->getVariantArray()) {
 
             ExecEnv::log().error("GenomePhasing::Haploid Phasing(); Variant: {}", variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false));
 
@@ -197,23 +197,22 @@ std::shared_ptr<kgl::UnphasedPopulation> kgl::GenomePhasing::filterClonal(const 
 }
 
 
-bool kgl::GenomePhasing::analyseCountStatistics(const UnphasedVectorVariantCount& unphased_vector, size_t& phase_index) {
+bool kgl::GenomePhasing::analyseCountStatistics(const UnphasedContigOffset& unphased_vector, size_t& phase_index) {
 
   phase_index = 0;
   double proportion_alternate = 0.0;
-  for (size_t i = 0; i < unphased_vector.size(); ++i) {
+  for (size_t i = 0; i < unphased_vector.getVariantArray().size(); ++i) {
 
-    std::optional<std::shared_ptr<const FormatData>> read_evidence_opt = unphased_vector[i]->evidence().formatData();
+    std::optional<std::shared_ptr<const FormatData>> read_evidence_opt = unphased_vector.getVariantArray()[i]->evidence().formatData();
 
     if (not read_evidence_opt) {
 
       ExecEnv::log().error("Haploid Phasing; Unexpected evidence ptr type for variant: {}",
-                           unphased_vector[i]->output(' ', VariantOutputIndex::START_0_BASED, true));
+                           unphased_vector.getVariantArray()[i]->output(' ', VariantOutputIndex::START_0_BASED, true));
       return false;
 
     }
 
-//    auto total_counts = read_evidence_ptr->refCount() + read_evidence_ptr->altCount();
     auto total_counts = read_evidence_opt.value()->DPCount();
     if (total_counts == 0) continue;
 

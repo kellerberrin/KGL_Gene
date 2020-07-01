@@ -9,7 +9,7 @@
 
 
 #include "kel_utility.h"
-#include "kgl_variant_db_unphased.h"
+#include "kgl_variant_db_unphased_genome.h"
 #include "kgl_variant_file_impl.h"
 #include "kgl_variant_factory_readvcf_impl.h"
 #include "kgl_variant_factory_record_vcf_impl.h"

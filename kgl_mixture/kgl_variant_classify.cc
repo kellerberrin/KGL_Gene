@@ -33,7 +33,7 @@ kgl::VariantClassifier::VariantClassifier(std::shared_ptr<const UnphasedPopulati
 
       for(auto const& offset : contig.second->getMap()) {
 
-        for(auto const& variant : offset.second) {
+        for(auto const& variant : offset.second->getVariantArray()) {
 
           ContigOffsetVariants ordered_variant(variant);
           auto result = variant_map_.find(ordered_variant);

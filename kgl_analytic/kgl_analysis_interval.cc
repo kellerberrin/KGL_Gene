@@ -353,14 +353,14 @@ bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const UnphasedP
       for (auto array_ptr = lower_bound; array_ptr != upper_bound; ++array_ptr) {
 
         interval_data.emptyIntervalOffset(previous_offset, array_ptr->first); // Variant empty interval calculated from this.
-        interval_data.addVariantCount(array_ptr->second.size());
-        interval_data.addArrayVariantCount(array_ptr->second.size());
-        variant_count += array_ptr->second.size();
+        interval_data.addVariantCount(array_ptr->second->getVariantArray().size());
+        interval_data.addArrayVariantCount(array_ptr->second->getVariantArray().size());
+        variant_count += array_ptr->second->getVariantArray().size();
         size_t snp_count{0};
         size_t transition_count{0};
 
         // Count SNP.
-        for (auto const& variant : array_ptr->second) {
+        for (auto const& variant : array_ptr->second->getVariantArray()) {
 
           interval_data.intervalInfoData().processVariant(variant);
 

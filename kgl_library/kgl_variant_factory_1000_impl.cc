@@ -91,38 +91,17 @@ void kgl::Genome1000VCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecor
   for (auto const& genotype : record.genotypeInfos)
   {
 
-
     auto indices = alternateIndex(genotype, alt_vector);
 
     if (indices.first != REFERENCE_VARIANT_INDEX_) {
 
-      const std::string& alternate_A = alt_vector[indices.first-1];
-
-      if (alternate_A.find(ABSTRACT_ALT_BRACKET_) == std::string::npos) {
-
-        phase_A_map[indices.first-1].push_back(getGenomeNames()[genotype_count]);
-
-       } else {
-
-         ++abstract_variant_count_;
-
-       }
+      phase_A_map[indices.first-1].push_back(getGenomeNames()[genotype_count]);
 
     }
 
     if (indices.second != REFERENCE_VARIANT_INDEX_) {
 
-      const std::string& alternate_B = alt_vector[indices.second-1];
-
-      if (alternate_B.find(ABSTRACT_ALT_BRACKET_) == std::string::npos) {
-
-        phase_B_map[indices.first-1].push_back(getGenomeNames()[genotype_count]);
-
-      } else {
-
-        ++abstract_variant_count_;
-
-      }
+      phase_B_map[indices.second-1].push_back(getGenomeNames()[genotype_count]);
 
     }
 
@@ -131,13 +110,13 @@ void kgl::Genome1000VCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecor
 
   }
 
-  addVariants( phase_A_map, contig, VariantSequence::DIPLOID_PHASE_F, record.offset, info_evidence_opt, record.ref, alt_vector, vcf_record_count);
-  addVariants( phase_B_map, contig, VariantSequence::DIPLOID_PHASE_M, record.offset, info_evidence_opt, record.ref, alt_vector, vcf_record_count);
+  addVariants(phase_A_map, contig, VariantSequence::DIPLOID_PHASE_A, record.offset, info_evidence_opt, record.ref, alt_vector, vcf_record_count);
+  addVariants(phase_B_map, contig, VariantSequence::DIPLOID_PHASE_B, record.offset, info_evidence_opt, record.ref, alt_vector, vcf_record_count);
 
   if (vcf_record_count % VARIANT_REPORT_INTERVAL_ == 0) {
 
-    ExecEnv::log().info("Processed :{} records, Variants processed: {}", vcf_record_count, variant_count_);
-    ExecEnv::log().info("Offset: {}, Abstract variants (not processed): {}", record.offset, abstract_variant_count_);
+    ExecEnv::log().info("Processed :{} records, Virtual variants processed: {}", vcf_record_count, variant_count_);
+    ExecEnv::log().info("Offset: {}, Actual variants: {}", record.offset, actual_variant_count_);
 
   }
 
@@ -224,10 +203,8 @@ void kgl::Genome1000VCFImpl::addVariants( const std::map<size_t, std::vector<Gen
 // Setup the evidence object.
     VariantEvidence evidence(vcf_record_count, info_evidence_opt, null_format_data, alt_allele, alt_vector.size());
     // Add the variant.
-//    StringDNA5 reference_str(reference);
-//    StringDNA5 alternate_str(alt_vector[alt_allele]);
-    StringDNA5 reference_str("A");
-    StringDNA5 alternate_str("T");
+    StringDNA5 reference_str(reference);
+    StringDNA5 alternate_str(alt_vector[alt_allele]);
 
     std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( contig,
                                                                           phase,
@@ -237,13 +214,14 @@ void kgl::Genome1000VCFImpl::addVariants( const std::map<size_t, std::vector<Gen
                                                                           std::move(alternate_str)));
 
 
-    if (not addThreadSafeVariant(std::move(variant_ptr), genome_vector)) {
+    if (addThreadSafeVariant(std::move(variant_ptr), genome_vector)) {
 
-      ExecEnv::log().error("Genome1000VCFImpl::addVariants, problem adding: {} variants", genome_vector.size());
+      ++actual_variant_count_;
+      variant_count_ += genome_vector.size();
 
     } else {
 
-      variant_count_ += genome_vector.size();
+      ExecEnv::log().error("Genome1000VCFImpl::addVariants, problem adding: {} variants", genome_vector.size());
 
     }
 

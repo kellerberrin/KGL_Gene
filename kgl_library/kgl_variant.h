@@ -76,8 +76,8 @@ public:
   [[nodiscard]] std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
 
   constexpr static const PhaseId_t UNPHASED = 255;
-  constexpr static const PhaseId_t DIPLOID_PHASE_F = 0;  // By convention the female derived contig is first.
-  constexpr static const PhaseId_t DIPLOID_PHASE_M = 1;
+  constexpr static const PhaseId_t DIPLOID_PHASE_A = 0;  // By convention the female derived contig is first.
+  constexpr static const PhaseId_t DIPLOID_PHASE_B = 1;
 
 protected:
 
@@ -155,8 +155,8 @@ public:
 private:
 
   const VariantEvidence evidence_;                      // VCF File based information payload about this variant
-  const DNA5SequenceLinear reference_;                  // reference sequence (allele)
-  const DNA5SequenceLinear alternate_;                  // alternate sequence (allele)
+  const DNA5SequenceLinear reference_;                  // reference sequence (ref allele)
+  const DNA5SequenceLinear alternate_;                  // alternate sequence (alt allele)
 
   // Generate a CIGAR by comparing the reference to the alternate.
   [[nodiscard]] std::string alternateCigar() const;
