@@ -88,7 +88,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant.cc
         kgl_library/kgl_filter.h
         kgl_library/kgl_filter.cc
-        kgl_library/kgl_variant_set.cc
         kgl_library/kgl_table.h
         kgl_library/kgl_table.cc
         kgl_library/kgl_table_ncbi.h
@@ -106,7 +105,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_genome_contig.cc
         kgl_library/kgl_genome_verify.cc
         kgl_library/kgl_genome_genome.cc
-        kgl_library/kgl_variant_io.cc
         kgl_library/kgl_sequence_codon.h
         kgl_library/kgl_sequence_codon.cc
         kgl_library/kgl_alphabet_string.h
@@ -124,13 +122,11 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_vcf.cc
         kgl_library/kgl_variant_mutation.h
         kgl_library/kgl_variant_db_mutation.cc
-        kgl_library/kgl_variant_db_contig.h
-        kgl_library/kgl_variant_db_genome.h
         kgl_library/kgl_sequence_offset.h
         kgl_library/kgl_sequence_offset.cc
         kgl_library/kgl_variant_mutation_offset.h
         kgl_library/kgl_variant_mutation_offset.cc
-        kgl_library/kgl_variant_db_population.h
+        kgl_library/kgl_variant_db_phased.h
         kgl_library/kgl_table_impl.h
         kgl_library/kgl_table_impl.cc
         kgl_library/kgl_table_organism.h
@@ -152,14 +148,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_record_vcf_impl.cc
         kgl_library/kgl_genome_aux_csv.h
         kgl_library/kgl_genome_aux_csv_impl.cc
-        kgl_library/kgl_variant_db_homologous.h
-        kgl_library/kgl_variant_db_homologous.cc
-        kgl_library/kgl_variant_db_genome.cc
-        kgl_library/kgl_variant_db_population.cc
-        kgl_library/kgl_variant_db_contig.cc
-        kgl_library/kgl_variant_db_unphased_genome.h
-        kgl_library/kgl_variant_db_unphased_population.h
-        kgl_library/kgl_variant_db_unphased_population.cc
+        kgl_library/kgl_variant_db_genome.h
+        kgl_library/kgl_variant_db_population.h
         kgl_library/kgl_genome_contig_feature.h
         kgl_library/kgl_genome_contig_feature.cc
         kgl_library/kgl_genome_contig_aux.cc
@@ -195,7 +185,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_population.h
         kgl_library/kgl_analysis_virtual.h
         kgl_library/kgl_variant_db_offset.h
-        kgl_library/kgl_variant_db_unphased_contig.h)
+        kgl_library/kgl_variant_db_contig.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kel_library/kel_percentile.h)
@@ -215,8 +205,6 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_distribution_analysis.cc
         kgl_analytic/kgl_upgma_unphased.h
         kgl_analytic/kgl_upgma_unphased.cc
-        kgl_analytic/kgl_finestructure_analysis.h
-        kgl_analytic/kgl_finestructure_analysis.cc
         kgl_analytic/kgl_sequence_complexity.h
         kgl_analytic/kgl_sequence_complexity.cc
         kgl_analytic/kgl_epigenetic_motif.cc

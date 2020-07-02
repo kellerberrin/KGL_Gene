@@ -234,7 +234,7 @@ bool kgl::Genome1000VCFImpl::addThreadSafeVariant( std::unique_ptr<const Variant
                                                    const std::vector<GenomeId_t>& genome_vector) const {
 
   // This is multi-threaded code. So lock before access.
-  std::scoped_lock lock(add_variant_mutex_);
+//  std::scoped_lock lock(add_variant_mutex_);
 
   return unphased_population_ptr_->addVariant(std::move(variant_ptr), genome_vector);
 

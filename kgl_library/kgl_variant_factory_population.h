@@ -8,7 +8,7 @@
 
 #include "kel_mt_queue.h"
 #include "kgl_variant.h"
-#include "kgl_variant_db_unphased_population.h"
+#include "kgl_variant_db_population.h"
 
 #include <memory>
 #include <string>

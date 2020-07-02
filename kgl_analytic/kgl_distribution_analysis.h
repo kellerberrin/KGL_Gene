@@ -8,7 +8,7 @@
 
 
 #include <kgl_variant_db.h>
-#include "kgl_variant_db_unphased_population.h"
+#include "kgl_variant_db_population.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

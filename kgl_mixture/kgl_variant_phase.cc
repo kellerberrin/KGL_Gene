@@ -22,7 +22,6 @@ namespace kgl = kellerberrin::genome;
 // Just copy into a population object.
 bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
                                         const std::shared_ptr<const UnphasedPopulation>& unphased_population_ptr,
-                                        const std::shared_ptr<const GenomeReference>& genome_db,
                                         const std::shared_ptr<PhasedPopulation>& haploid_population)  {
 
 
@@ -40,9 +39,7 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
   for (auto const& [genome_id, genome_ptr] : unphased_population_ptr->getMap()) {
 
     // Create the GenomeVariant object.
-    std::optional<std::shared_ptr<GenomeVariant>> genome_variant_opt = haploid_population->getCreateGenome(genome_id,
-                                                                                                           GenomeVariant::HAPLOID_GENOME,
-                                                                                                           genome_db);
+    std::optional<std::shared_ptr<GenomeVariant>> genome_variant_opt = haploid_population->getCreateGenome(genome_id);
     if (not genome_variant_opt) {
 
       ExecEnv::log().error("GenomePhasing::Haploid Phasing(); Unable to get/create genome: {} to haploid population", genome_id);

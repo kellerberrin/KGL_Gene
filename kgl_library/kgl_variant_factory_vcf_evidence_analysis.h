@@ -6,7 +6,7 @@
 #define KGL_VARIANT_FACTORY_VCF_EVIDENCE_ANALYSIS_H
 
 #include "kgl_variant_factory_vcf_evidence.h"
-#include "kgl_variant_db_unphased_population.h"
+#include "kgl_variant_db_population.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace

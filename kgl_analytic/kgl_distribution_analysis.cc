@@ -52,14 +52,14 @@ bool kgl::AggregateVariantDistribution::variantDistribution(std::shared_ptr<cons
 
     for (auto const& contig : genome.second->getMap()) {
 
-      for (auto const& homologous : contig.second->getVector()) {
+      for (auto const& variant_vector : contig.second->getMap()) {
 
-        for (auto const& variant : homologous->getMap()) {
+        for (auto const& variant : variant_vector.second->getVariantArray()) {
 
-          if (not addVariant(variant.second)) {
+          if (not addVariant(variant)) {
 
             ExecEnv::log().error( "AggregatVariantDistribution; Cannot add variant: {}",
-                                 variant.second->output(' ', VariantOutputIndex::START_0_BASED, false));
+                                 variant->output(' ', VariantOutputIndex::START_0_BASED, false));
 
           }
 

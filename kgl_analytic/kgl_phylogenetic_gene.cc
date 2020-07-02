@@ -6,6 +6,7 @@
 #include "kgl_phylogenetic_gene.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_complexity.h"
+#include "kgl_variant_db_phased.h"
 
 #include <memory>
 #include <sstream>
@@ -328,11 +329,7 @@ bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
                                          protein_reference,
                                          protein_mutant)) {
 
-    std::stringstream ss;
-    ss << gene_summary.variant_map;
 
-    ExecEnv::log().info("Variants used to mutate Genome: {}, Contig: {}, Gene: {} Sequence: {}:\n{}",
-                        genome_variant_ptr->genomeId(), contig, gene, sequence, ss.str());
 
     gene_summary.sequence_distance = amino_distance_metric.amino_distance( protein_reference, protein_mutant);
     ExecEnv::log().info("Genome: {}, Contig: {}, Gene: {}, Sequence: {} Levenshtein: {}, comparison:\n{}",
@@ -536,10 +533,10 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const GenomeId_t& genome,
                                            const std::string& fasta_file) {
 
 
-  std::shared_ptr<const GenomeVariant> genome_variant_ptr;
-  if (population_ptr->getGenomeVariant(genome, genome_variant_ptr)) {
+  std::optional<std::shared_ptr<GenomeVariant>> genome_opt = population_ptr->getGenome(genome);
+  if (genome_opt) {
 
-    return mutateGenomeRegion(contig, offset, region_size, genome_variant_ptr, genome_db_ptr, fasta_file);
+    return mutateGenomeRegion(contig, offset, region_size, genome_opt.value(), genome_db_ptr, fasta_file);
 
   } else {
 
@@ -572,11 +569,6 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
                                        reference_sequence,
                                        mutant_sequence)) {
 
-    std::stringstream ss;
-    ss << variant_map;
-
-    ExecEnv::log().info("Variants used to mutate Genome: {}, Contig: {}, Offset: {} Size: {}:\n{}",
-                        genome_variant_ptr->genomeId(), contig, offset, region_size, ss.str());
 
     DNA5SequenceCoding ref_reverse_complement = SequenceOffset::codingSequence(reference_sequence, StrandSense::REVERSE);
 

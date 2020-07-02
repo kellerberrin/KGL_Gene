@@ -109,6 +109,46 @@ private:
 
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Hold phased diploid variants (1000 Genome project).
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class DiploidOffset : public UnphasedContigOffset {
+
+public:
+
+  DiploidOffset() = default;
+  DiploidOffset(const DiploidOffset &) = delete;
+  ~DiploidOffset() override = default;
+
+  [[nodiscard]] OffsetVariantArray getVariantArray() const override {
+
+    OffsetVariantArray variant_vector;
+
+    for (const auto& variant : variant_list_) {
+
+      variant_vector.emplace_back(variant);
+
+    }
+
+    return variant_vector;
+
+  }
+
+  void addVariant(std::shared_ptr<const Variant> variant_ptr) override { variant_list_.emplace_front(variant_ptr); }
+
+private:
+
+  std::forward_list<std::shared_ptr<const Variant>> variant_list_;
+
+};
+
+
+
+
 
 
 

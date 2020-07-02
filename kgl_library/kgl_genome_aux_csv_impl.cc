@@ -409,8 +409,7 @@ std::vector<kgl::CountryPair> kgl::GenomeAuxData::getCountries(const std::string
   // Get a list of countries.
   std::vector<std::string> countries = aux_data.countryList();
 
-  // Only preferred genomes.
-  std::shared_ptr<const kgl::PhasedPopulation> preferred_pop_ptr = population_ptr->filterGenomes("Preferred", aux_data.getPreferredSamples());
+  std::shared_ptr<const kgl::PhasedPopulation> preferred_pop_ptr = population_ptr;
 
   std::vector<CountryPair> pair_vector;
   // Create a vector of all countries
@@ -436,7 +435,8 @@ std::vector<kgl::CountryPair> kgl::GenomeAuxData::getCountries(const std::string
 
     }
 
-    std::shared_ptr<const kgl::PhasedPopulation> country_pop_ptr = preferred_pop_ptr->filterRenameGenomes(country, source_pairs);
+//    std::shared_ptr<const kgl::PhasedPopulation> country_pop_ptr = preferred_pop_ptr->filterRenameGenomes(country, source_pairs);
+    std::shared_ptr<const kgl::PhasedPopulation> country_pop_ptr = preferred_pop_ptr;
 
     // Ignore empty populations
     if (not country_pop_ptr->getMap().empty()) {

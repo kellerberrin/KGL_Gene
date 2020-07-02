@@ -19,7 +19,6 @@
 #include "kgl_variant_classify.h"
 #include "kgl_variant_phase.h"
 #include "kgl_distribution_analysis.h"
-#include "kgl_finestructure_analysis.h"
 #include "kgl_upgma_unphased.h"
 #include "kgl_epigenetic_motif.h"
 
@@ -641,11 +640,11 @@ for (auto country : country_pairs) {
 
   std::string file_name = "FS/" + country.first;
   std::string fine_structure_file = Utility::filePath(file_name, runtime_options_.workDirectory());
-  if (not FineStructureAnalysis::generateFiles(fine_structure_file, country.second, BASES_PER_CENTIMORGAN)) {
-
-    ExecEnv::log().error("PhylogeneticAnalysis::performFineStructure(); FineStructureAnalysis::generateFiles() fails");
-
-  }
+//  if (not FineStructureAnalysis::generateFiles(fine_structure_file, country.second, BASES_PER_CENTIMORGAN)) {
+//
+//    ExecEnv::log().error("PhylogeneticAnalysis::performFineStructure(); FineStructureAnalysis::generateFiles() fails");
+//
+//  }
 
 }
 
