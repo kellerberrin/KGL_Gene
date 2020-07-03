@@ -150,8 +150,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
 bool kgl::GrchVCFImpl::addThreadSafeVariant(std::unique_ptr<const Variant>&& variant_ptr, GenomeId_t genome) const {
 
-  // This is multi-threaded code. So lock before access.
-  std::scoped_lock lock(add_variant_mutex_);
+  // The population structure can be updated concurrently (embedded mutexes).
 
   std::vector<GenomeId_t> genome_vector;
   genome_vector.emplace_back(std::move(genome));

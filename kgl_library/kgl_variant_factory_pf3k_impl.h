@@ -12,7 +12,6 @@
 #include "kgl_variant_factory_readvcf_impl.h"
 #include "kgl_variant_factory_record_vcf_impl.h"
 #include "kgl_variant_factory_vcf_parse_info.h"
-#include "kgl_variant_factory_population.h"
 
 
 
@@ -70,8 +69,6 @@ private:
   size_t variant_count_{0};
   constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 10000;
 
-  // mutex to lock the UnphasedPopulation structure.
-  mutable std::mutex add_variant_mutex_;
   // This object is write accessed by multiple threads, it MUST BE mutex guarded for any access.
   const std::shared_ptr<UnphasedPopulation> unphased_population_ptr_;   // Un-phased variants.
   const std::shared_ptr<const GenomeReference> genome_db_ptr_; // read access only.

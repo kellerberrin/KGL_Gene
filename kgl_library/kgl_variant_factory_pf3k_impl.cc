@@ -276,8 +276,6 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
 // and thus these genomes/contigs would not be created on-the-fly.
 void kgl::Pf3kVCFImpl::setupPopulationStructure(const std::shared_ptr<const GenomeReference> genome_db_ptr) {
 
-  std::scoped_lock<std::mutex> lock(add_variant_mutex_);
-
   ExecEnv::log().info("setupPopulationStructure; Creating a population of {} genomes and {} contigs",
                       getGenomeNames().size(), genome_db_ptr->getMap().size());
 
@@ -327,9 +325,6 @@ bool kgl::Pf3kVCFImpl::createAddVariant(const std::string& genome_name,
 
 
 bool kgl::Pf3kVCFImpl::addThreadSafeVariant(std::unique_ptr<const Variant>&& variant_ptr, GenomeId_t genome) const {
-
-  // This is multi-threaded code. So lock before access.
-  std::scoped_lock lock(add_variant_mutex_);
 
   std::vector<GenomeId_t> genome_vector;
   genome_vector.emplace_back(std::move(genome));

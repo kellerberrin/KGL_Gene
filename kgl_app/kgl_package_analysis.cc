@@ -71,7 +71,7 @@ bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
 }
 
 
-bool kgl::PackageAnalysis::fileReadAnalysis(std::shared_ptr<const UnphasedPopulation> vcf_iterative_data) const {
+bool kgl::PackageAnalysis::fileReadAnalysis(std::shared_ptr<const PopulationBase> vcf_iterative_data) const {
 
   for (auto& [analysis, active] : active_analysis_) {
 
@@ -94,6 +94,8 @@ bool kgl::PackageAnalysis::fileReadAnalysis(std::shared_ptr<const UnphasedPopula
     }
 
   }
+
+  ExecEnv::log().error("PackageAnalysis::fileReadAnalysis; Completed all file analysis");
 
   return true;
 

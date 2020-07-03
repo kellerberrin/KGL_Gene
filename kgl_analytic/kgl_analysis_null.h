@@ -32,7 +32,7 @@ public:
 
 
   // Perform the genetic analysis per VCF file
-  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const UnphasedPopulation> vcf_iterative_dat) override;
+  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const PopulationBase> vcf_iterative_dat) override;
 
   // Perform the genetic analysis per iteration
   [[nodiscard]] bool iterationAnalysis() override;

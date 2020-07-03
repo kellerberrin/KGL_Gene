@@ -12,7 +12,6 @@
 #include "kgl_variant_factory_readvcf_impl.h"
 #include "kgl_variant_factory_record_vcf_impl.h"
 #include "kgl_variant_factory_vcf_parse_info.h"
-#include "kgl_variant_factory_population.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -22,14 +21,14 @@ class Genome1000VCFImpl : public VCFReaderMT {
 
 public:
 
-  Genome1000VCFImpl(const std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
+  Genome1000VCFImpl(const std::shared_ptr<DiploidPopulation> vcf_population_ptr,
                     const std::shared_ptr<const GenomeReference> genome_db_ptr,
                     const std::string &vcf_file_name,
                     const ContigAliasMap& contig_alias_map,
                     const EvidenceInfoSet& evidence_map) : VCFReaderMT(vcf_file_name),
                                                            evidence_factory_(evidence_map),
                                                            contig_alias_map_(contig_alias_map),
-                                                           unphased_population_ptr_(vcf_population_ptr),
+                                                           diploid_population_ptr_(vcf_population_ptr),
                                                            genome_db_ptr_(genome_db_ptr) {}
   ~Genome1000VCFImpl() override = default;
 
@@ -60,10 +59,10 @@ private:
   constexpr static const char MULIPLE_ALT_SEPARATOR_{','};
   constexpr static const char ABSTRACT_ALT_BRACKET_{'<'};
 
-  const std::shared_ptr<UnphasedPopulation> unphased_population_ptr_;   // Un-phased variants.
+  const std::shared_ptr<DiploidPopulation> diploid_population_ptr_;   // Diploid phased variants.
   const std::shared_ptr<const GenomeReference> genome_db_ptr_; // read access only.
 
-  // mutex to lock the UnphasedPopulation structure.
+  // mutex to lock the structure for multiple thread access by parsers.
   mutable std::mutex add_variant_mutex_;
 
   bool addThreadSafeVariant(std::unique_ptr<const Variant>&&, const std::vector<GenomeId_t>& genome_vector) const;

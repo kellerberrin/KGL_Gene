@@ -27,11 +27,11 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 using OffsetVariantMap = std::map<ContigOffset_t, std::shared_ptr<const Variant>>;
 
-class ContigVariant : public ContigOffsetVariant<DiploidOffset> {
+class ContigVariant : public ContigOffsetVariant<UnphasedContigListOffset> {
 
 public:
 
-  explicit ContigVariant(const ContigId_t &contig_id) : ContigOffsetVariant<DiploidOffset>(contig_id) {}
+  explicit ContigVariant(const ContigId_t &contig_id) : ContigOffsetVariant<UnphasedContigListOffset>(contig_id) {}
   ContigVariant(const ContigVariant &) = delete; // Use deep copy.
   ~ContigVariant() override = default;
 
@@ -115,14 +115,20 @@ public:
 };
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// The phased variant database Population class
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+// General phased population.
 using PhasedPopulation = PopulationVariant<GenomeVariant>;
+
+// Haploid.
+using HaploidContig = ContigOffsetVariant<HaploidOffset>;
+using HaploidGenome = ContigOffsetVariant<HaploidContig>;
+using HaploidPopulation = PopulationVariant<HaploidGenome>;
+
+// Diploid.
+using DiploidContig = ContigOffsetVariant<DiploidOffset>;
+using DiploidGenome = GenomeVariantArray<DiploidContig>;
+using DiploidPopulation = PopulationVariant<DiploidGenome>;
 
 
 }   // end namespace

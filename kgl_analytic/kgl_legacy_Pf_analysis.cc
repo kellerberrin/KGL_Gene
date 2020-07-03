@@ -18,7 +18,6 @@
 #include "kgl_legacy_Pf_analysis.h"
 #include "kgl_variant_classify.h"
 #include "kgl_variant_phase.h"
-#include "kgl_distribution_analysis.h"
 #include "kgl_upgma_unphased.h"
 #include "kgl_epigenetic_motif.h"
 
@@ -320,79 +319,6 @@ for (auto country : country_pairs) {
 // Analysis code "INTERVAL"
 void kgl::PhylogeneticAnalysis::performInterval() {
 
-
-//#define INTERVAL_SIZE 100
-#define ANALYSIS_CONTIG "Pf3D7_04_v3"
-//#define ANALYSIS_START 540000
-//#define ANALYSIS_END 604000
-#define INTERVAL_SIZE 1000
-#define ANALYSIS_CONTIG "Pf3D7_04_v3"
-#define ANALYSIS_START 0
-#define ANALYSIS_END 1200490
-
-AggregateVariantDistribution variant_distribution;
-//  variant_distribution.variantDistribution(population_ptr_);
-if (not variant_distribution.variantDistribution(unphased_population_ptr_)) {
-
-  ExecEnv::log().info("PhylogeneticAnalysis::performInterval(); Problem generating variantDistribution()");
-
-}
-
-for (auto const& [contig_id, contig_ptr] : genome_collection_ptr_->getGenome(analysis_genome)->getMap()) {
-
-  std::string file_name = "IntervalAnalysis_all_" +  contig_id;
-  std::string interval_file = Utility::filePath(file_name, runtime_options_.workDirectory()) + ".csv";
-  ExecEnv::log().info("PerformInterval, Processing File: {}", interval_file);
-  ContigSize_t analysis_end = contig_ptr->sequence().length();
-  if (not variant_distribution.writeDistribution( genome_collection_ptr_->getGenome(analysis_genome),
-                                                  INTERVAL_SIZE,
-                                                  contig_id,
-                                                  ANALYSIS_START,
-                                                  analysis_end,
-                                                  false,
-                                                  interval_file, ',')) {
-
-    ExecEnv::log().info("PhylogeneticAnalysis::performInterval(); Problem writing variantDistribution() to file: {}", interval_file);
-
-  }
-
-}
-
-
-// Split into country populations.
-std::string aux_file_path;
-if (not runtime_options_.getPropertiesAuxFile(aux_file_path)) {
-
-  ExecEnv::log().critical("Aux Genome information file not found");
-
-}
-
-std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr_);
-
-for (auto country : country_pairs) {
-
-  AggregateVariantDistribution variant_distribution;
-  if (not variant_distribution.variantDistribution(country.second)) {
-
-    ExecEnv::log().info("PhylogeneticAnalysis::performInterval(); Problem generating variantDistribution()");
-
-  }
-  std::string file_name = "IntervalAnalysis_" + country.first;
-  std::string interval_file = Utility::filePath(file_name, runtime_options_.workDirectory()) + ".csv";
-  if (not variant_distribution.writeDistribution( genome_collection_ptr_->getGenome(analysis_genome),
-                                                  INTERVAL_SIZE,
-                                                  ANALYSIS_CONTIG,
-                                                  0,
-                                                  0,
-                                                  true,
-                                                  interval_file,
-                                                  ',')) {
-
-    ExecEnv::log().info("PhylogeneticAnalysis::performInterval(); Problem writing variantDistribution() to file: {}", interval_file);
-
-  }
-
-}
 
 
 }

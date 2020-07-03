@@ -48,15 +48,17 @@ bool kgl::InfoFilterAnalysis::initializeAnalysis( const std::string& work_direct
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::InfoFilterAnalysis::fileReadAnalysis(std::shared_ptr<const UnphasedPopulation> vcf_population) {
+bool kgl::InfoFilterAnalysis::fileReadAnalysis(std::shared_ptr<const PopulationBase> population_base) {
 
-  // Only want unique variants
-  vcf_population =  vcf_population->uniqueVariantPopulation();
+  // Superclass the population
+  std::shared_ptr<const UnphasedPopulation> vcf_population = std::dynamic_pointer_cast<const UnphasedPopulation>(population_base);
 
-  ExecEnv::log().info("VCF File Read for Analysis Id: {} called with Unique Variant Population: {}, Variant Count: {}",
-                      ident(), vcf_population->populationId(), vcf_population->variantCount());
+  if (not vcf_population) {
 
-  // listAvailableInfoFields(vcf_population);
+    ExecEnv::log().info("Analysis: {}, expected an Unphased Population", ident());
+    return false;
+
+  }
 
   // Pre-filter variants for quality, using the VQSLOD and rf_tp_probability fields.
   vcf_population = qualityFilter(vcf_population);

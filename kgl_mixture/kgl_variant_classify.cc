@@ -23,13 +23,13 @@ namespace kgd = kellerberrin::deconvolv;
 // Classify the ref/alt counts by variant (row) and then genome (column)
 kgl::VariantClassifier::VariantClassifier(std::shared_ptr<const UnphasedPopulation> vcf_population_ptr) {
 
-  // Get a list of all genomes.
-  genomes_ = vcf_population_ptr->genomeList();
-
   // for all variants index by contig/offset
-  for (auto const& genome : vcf_population_ptr->getMap()) {
+  for (auto const& [genome, genome_ptr] : vcf_population_ptr->getMap()) {
 
-    for(auto const& contig : genome.second->getMap()) {
+    // Get a list of all genomes.
+    genomes_.push_back(genome);
+
+    for(auto const& contig : genome_ptr->getMap()) {
 
       for(auto const& offset : contig.second->getMap()) {
 
@@ -40,7 +40,7 @@ kgl::VariantClassifier::VariantClassifier(std::shared_ptr<const UnphasedPopulati
 
           if (result != variant_map_.end()) {
 
-            auto map_result = result->second.try_emplace(genome.first, variant);
+            auto map_result = result->second.try_emplace(genome, variant);
 
             if (not map_result.second) {
 
@@ -63,7 +63,7 @@ kgl::VariantClassifier::VariantClassifier(std::shared_ptr<const UnphasedPopulati
 
             } else {
 
-              auto map_result= insert_result.first->second.try_emplace(genome.first, variant);
+              auto map_result= insert_result.first->second.try_emplace(genome, variant);
 
               if (not map_result.second) {
 

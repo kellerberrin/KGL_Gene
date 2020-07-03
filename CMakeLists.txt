@@ -181,7 +181,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_factory_vcf_evidence_analysis.h
         kgl_library/kgl_variant_factory_1000_impl.cc
         kgl_library/kgl_variant_factory_1000_impl.h
-        kgl_library/kgl_variant_factory_population.cc
         kgl_library/kgl_variant_factory_population.h
         kgl_library/kgl_analysis_virtual.h
         kgl_library/kgl_variant_db_offset.h
@@ -201,8 +200,6 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_rna_search.cc
         kgl_analytic/kgl_rna_search.h
         kgl_analytic/kgl_ploidy_analysis.h
-        kgl_analytic/kgl_distribution_analysis.h
-        kgl_analytic/kgl_distribution_analysis.cc
         kgl_analytic/kgl_upgma_unphased.h
         kgl_analytic/kgl_upgma_unphased.cc
         kgl_analytic/kgl_sequence_complexity.h
@@ -220,7 +217,7 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_age_analysis.cc
         kgl_analytic/kgl_age_analysis.h
         kgl_analytic/kgl_legacy_Pf_analysis.cc
-        kgl_analytic/kgl_legacy_Pf_analysis.h)
+        kgl_analytic/kgl_legacy_Pf_analysis.h kgl_analytic/kgl_analysis_mutation.cc kgl_analytic/kgl_analysis_mutation.h)
 
 # Deconvolution and mixture files.
 

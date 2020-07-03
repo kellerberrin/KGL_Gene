@@ -55,9 +55,9 @@ private:
   [[nodiscard]] std::unique_ptr<GenomeCollection> loadReferenceGenomes(const RuntimePackage& package) const;
 
   // Load a specified VCF file and return a population.
-  [[nodiscard]] std::shared_ptr<UnphasedPopulation> readVCFDataFile( const RuntimePackage& package,
-                                                                     std::shared_ptr<const GenomeCollection> reference_genomes,
-                                                                     const std::string& vcf_file) const;
+  [[nodiscard]] std::shared_ptr<PopulationBase> readVCFDataFile( const RuntimePackage& package,
+                                                                 std::shared_ptr<const GenomeCollection> reference_genomes,
+                                                                 const std::string& vcf_file) const;
 
 };
 

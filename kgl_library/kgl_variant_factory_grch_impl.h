@@ -14,8 +14,7 @@
 #include "kgl_variant_factory_readvcf_impl.h"
 #include "kgl_variant_factory_record_vcf_impl.h"
 #include "kgl_variant_factory_vcf_parse_info.h"
-#include "kgl_variant_factory_population.h"
-
+#include "kgl_variant_db_population.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -58,8 +57,6 @@ private:
 
 // Progress counters.
   size_t variant_count_{0};
-  // mutex to lock the UnphasedPopulation structure.
-  mutable std::mutex add_variant_mutex_;
 
   bool addThreadSafeVariant(std::unique_ptr<const Variant>&&, GenomeId_t genome) const;
 

@@ -23,15 +23,15 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 using OffsetVariantArray = std::vector<std::shared_ptr<const Variant>>;
 
-class UnphasedContigOffset {
+class VirtualContigOffset {
 
 public:
 
-  UnphasedContigOffset() = default;
-  virtual ~UnphasedContigOffset() = default;
+  VirtualContigOffset() = default;
+  virtual ~VirtualContigOffset() = default;
 
-  UnphasedContigOffset(const UnphasedContigOffset &) = delete;
-  UnphasedContigOffset& operator=(const UnphasedContigOffset &) = delete;
+  VirtualContigOffset(const VirtualContigOffset &) = delete;
+  VirtualContigOffset& operator=(const VirtualContigOffset &) = delete;
 
   [[nodiscard]] virtual OffsetVariantArray getVariantArray() const = 0;
 
@@ -51,7 +51,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class UnphasedContigVectorOffset : public UnphasedContigOffset {
+class UnphasedContigVectorOffset : public VirtualContigOffset {
 
 public:
 
@@ -59,7 +59,12 @@ public:
   UnphasedContigVectorOffset(const UnphasedContigVectorOffset &) = delete;
   ~UnphasedContigVectorOffset() override = default;
 
-  [[nodiscard]] OffsetVariantArray getVariantArray() const override { return variant_vector_; }
+  [[nodiscard]] OffsetVariantArray getVariantArray() const override {
+
+    OffsetVariantArray variant_vector = variant_vector_;
+    return variant_vector;
+
+  }
 
   void addVariant(std::shared_ptr<const Variant> variant_ptr) override { variant_vector_.emplace_back(variant_ptr); }
 
@@ -77,7 +82,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class UnphasedContigListOffset : public UnphasedContigOffset {
+class UnphasedContigListOffset : public VirtualContigOffset {
 
 public:
 
@@ -111,12 +116,84 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
+// Hold phased haploid variants (Pf3k).
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// There can be more than 1 variant per offset
+// The VCF definition is that Indels are always specified with the reference
+// as the nucleotide before the addition/deletion.
+// Hence we can have an SNP and Indel occupy the same offset.
+// However we issue a warning if more than 2 variants at an offset.
+
+class HaploidOffset : public VirtualContigOffset {
+
+public:
+
+  HaploidOffset() {  variant_vector_.reserve(1); }
+  HaploidOffset(const HaploidOffset &) = delete;
+  ~HaploidOffset() override = default;
+
+  [[nodiscard]] OffsetVariantArray getVariantArray() const override {
+
+    OffsetVariantArray variant_vector = variant_vector_;
+
+    if (variant_vector.empty()) {
+
+      ExecEnv::log().error("DiploidOffset::getVariantArray, no variants found at location.");
+
+    }
+
+    return variant_vector;
+
+  }
+
+  void addVariant(std::shared_ptr<const Variant> variant_ptr) override {
+
+    if (variant_ptr->phaseId() != Variant::HAPLOID_PHASED) {
+
+      ExecEnv::log().error("HaploidOffset::addVariant, variant has incorrect phase: {}",
+                           variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false));
+    }
+
+    variant_vector_.emplace_back(variant_ptr);
+
+    if (variant_vector_.size() > 2) {
+
+      ExecEnv::log().warn("HaploidOffset::addVariant, unexpected variant vector size: {}", variant_vector_.size());
+
+      for (const auto& variant : variant_vector_) {
+
+        ExecEnv::log().warn("HaploidOffset::addVariant, unexpected size variant: {}",
+                             variant->output(' ', VariantOutputIndex::START_0_BASED, false));
+
+
+      }
+
+    }
+
+  }
+
+private:
+
+  OffsetVariantArray variant_vector_;
+
+};
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 // Hold phased diploid variants (1000 Genome project).
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// There can be more than 1 variant per offset
+// The VCF definition is that Indels are always specified with the reference
+// as the nucleotide before the addition/deletion.
+// Hence we can have an SNP and Indel occupy the same offset.
+// However we issue a warning if more than 2 variants at an offset.
 
-class DiploidOffset : public UnphasedContigOffset {
+class DiploidOffset : public VirtualContigOffset {
 
 public:
 
@@ -128,9 +205,27 @@ public:
 
     OffsetVariantArray variant_vector;
 
-    for (const auto& variant : variant_list_) {
+    if (variant_A1_) {
 
-      variant_vector.emplace_back(variant);
+      variant_vector.emplace_back(variant_A1_);
+
+    }
+
+    if (variant_A2_) {
+
+      variant_vector.emplace_back(variant_A2_);
+
+    }
+
+    if (variant_B1_) {
+
+      variant_vector.emplace_back(variant_B1_);
+
+    }
+
+    if (variant_B2_) {
+
+      variant_vector.emplace_back(variant_B2_);
 
     }
 
@@ -138,11 +233,113 @@ public:
 
   }
 
-  void addVariant(std::shared_ptr<const Variant> variant_ptr) override { variant_list_.emplace_front(variant_ptr); }
+  void addVariant(std::shared_ptr<const Variant> variant_ptr) override {
+
+    if (variant_ptr->phaseId() == VariantSequence::DIPLOID_PHASE_A) {
+
+      if (not variant_A1_) {
+
+        variant_A1_ = variant_ptr;
+        return;
+
+      }
+
+      if (not variant_A2_) {
+
+        variant_A2_ = variant_ptr;
+
+        if (variant_A1_->equivalent(*variant_A2_)) {
+
+          ExecEnv::log().warn("DiploidOffset::addVariant, two identical A variants");
+          ExecEnv::log().warn("DiploidOffset::addVariant,  variant 1: {}, vcf record: {}",
+                              variant_A1_->output(' ', VariantOutputIndex::START_0_BASED, false),
+                              variant_A1_->evidence().vcfRecordCount());
+          ExecEnv::log().warn("DiploidOffset::addVariant, variant 2: {}, vcf record: {}",
+                              variant_A2_->output(' ', VariantOutputIndex::START_0_BASED, false),
+                              variant_A1_->evidence().vcfRecordCount());
+
+        }
+
+        return;
+
+      }
+
+      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected A variant vector size: 3");
+      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected size variant: {}",
+                          variant_A1_->output(' ', VariantOutputIndex::START_0_BASED, false));
+      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected size variant: {}",
+                          variant_A2_->output(' ', VariantOutputIndex::START_0_BASED, false));
+      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected size variant: {}",
+                          variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false));
+
+    }
+
+    if (variant_ptr->phaseId() == VariantSequence::DIPLOID_PHASE_B) {
+
+      if (not variant_B1_) {
+
+        variant_B1_ = variant_ptr;
+        return;
+
+      }
+
+      if (not variant_B2_) {
+
+        variant_B2_ = variant_ptr;
+
+        if (variant_B1_->equivalent(*variant_B2_)) {
+
+          ExecEnv::log().warn("DiploidOffset::addVariant, two identical B variants");
+          ExecEnv::log().warn("DiploidOffset::addVariant, variant 1: {}, VCF record: {}",
+                              variant_B1_->output(' ', VariantOutputIndex::START_0_BASED, false),
+                              variant_A1_->evidence().vcfRecordCount());
+          ExecEnv::log().warn("DiploidOffset::addVariant, variant 2: {}, VCF record: {}",
+                              variant_B2_->output(' ', VariantOutputIndex::START_0_BASED, false),
+                              variant_A1_->evidence().vcfRecordCount());
+
+        }
+
+        return;
+
+      }
+
+      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected B variant vector size: 3");
+      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected size variant: {}",
+                          variant_B1_->output(' ', VariantOutputIndex::START_0_BASED, false));
+      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected size variant: {}",
+                          variant_B2_->output(' ', VariantOutputIndex::START_0_BASED, false));
+      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected size variant: {}",
+                          variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false));
+
+    }
+
+    if (variant_ptr->phaseId() != VariantSequence::DIPLOID_PHASE_A
+        and variant_ptr->phaseId() != VariantSequence::DIPLOID_PHASE_B) {
+
+      ExecEnv::log().error("DiploidOffset::addVariant, variant is not diploid phased: {}",
+                           variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false));
+
+    } else {
+
+      ExecEnv::log().warn("DiploidOffset::addVariant, variant not processed: {}",
+                          variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false));
+
+    }
+
+  }
 
 private:
 
-  std::forward_list<std::shared_ptr<const Variant>> variant_list_;
+  // There can be more than 1 variant per offset
+  // The VCF definition is that Indels are always specified with the reference
+  // as the nucleotide before the addition/deletion.
+  // Hence we can have an SNP and Indel occupy the same offset.
+  // However we issue a warning if more than 2 variants at an offset.
+
+  std::shared_ptr<const Variant> variant_A1_;
+  std::shared_ptr<const Variant> variant_A2_;
+  std::shared_ptr<const Variant> variant_B1_;
+  std::shared_ptr<const Variant> variant_B2_;
 
 };
 

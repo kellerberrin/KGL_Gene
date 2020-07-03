@@ -15,6 +15,31 @@
 namespace kellerberrin::genome {   //  organization::project
 
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// A do nothing base class to attach generic pointers.
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class PopulationBase {
+
+public:
+
+  PopulationBase(const PopulationBase &) = delete; // Use deep copy.
+  virtual ~PopulationBase() = default;
+
+  PopulationBase &operator=(const PopulationBase &) = delete; // Use deep copy.
+
+protected:
+
+  // Only created as a super class.
+  explicit PopulationBase() = default;
+
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // An internal parser variant object that holds variants until they can be phased.
@@ -31,13 +56,13 @@ class PopulationVariant;
 using UnphasedPopulation = PopulationVariant<UnphasedGenome>;
 
 template<class VariantGenome>
-class PopulationVariant {
+class PopulationVariant : public PopulationBase {
 
 public:
 
   explicit PopulationVariant(const PopulationId_t& population_id) : population_id_(population_id) {}
   PopulationVariant(const PopulationVariant&) = delete; // Use deep copy.
-  virtual ~PopulationVariant() = default;
+  ~PopulationVariant() override = default;
 
   PopulationVariant& operator=(const PopulationVariant&) = delete; // Use deep copy.
 
@@ -52,29 +77,19 @@ public:
 
   [[nodiscard]] size_t variantCount() const;
 
-  [[nodiscard]] std::vector<GenomeId_t> genomeList() const;
-
   [[nodiscard]] std::shared_ptr<PopulationVariant> filterVariants(const VariantFilter& filter) const;
 
   [[nodiscard]] const VariantGenomeMap<VariantGenome>& getMap() const { return genome_map_; }
 
   void clear() { genome_map_.clear(); }
 
-  // Generate phasing statistics (only valid with ploidy 2 variants).
-  [[nodiscard]] bool genomePhasingStats( const GenomeId_t& genome_id,
-                                         size_t& heterozygous,
-                                         size_t& homozygous,
-                                         size_t& singleheterozygous) const;
-
   [[nodiscard]] bool addGenome(const std::shared_ptr<VariantGenome>& genome);
 
   // Unconditionally add a variant to the population.
+  // This function is thread safe for concurrent updates.
+  // The population structure cannot be 'read' while it is being updated.
   [[nodiscard]] bool addVariant( const std::shared_ptr<const Variant>& variant_ptr,
                                  const std::vector<GenomeId_t>& genome_vector);
-
-  // The first bool is normal operation. The second bool is if a unique variant was added to the population.
-  [[nodiscard]] bool addUniqueVariant( const std::shared_ptr<const Variant>& variant,
-                                       const std::vector<GenomeId_t>& genome_vector);
 
   [[nodiscard]] const PopulationId_t& populationId() const { return population_id_; }
   void setPopulationId(const PopulationId_t& population_id) { population_id_ = population_id; }
@@ -239,99 +254,6 @@ size_t PopulationVariant<VariantGenome>::variantCount() const {
 
 
 template<class VariantGenome>
-bool PopulationVariant<VariantGenome>::genomePhasingStats( const GenomeId_t& genome_id,
-                                                           size_t& heterozygous,
-                                                           size_t& homozygous,
-                                                           size_t& singleheterozygous) const {
-
-  bool return_result = true;
-
-  heterozygous = 0;
-  homozygous = 0;
-  singleheterozygous = 0;
-
-  auto result = genome_map_.find(genome_id);
-
-  if (result == genome_map_.end()) {
-
-    ExecEnv::log().error("UnphasedPopulation::genomePhasingStats(); Could not find genome: {}", genome_id);
-    return false;
-
-  }
-
-  for (auto const& [contig_id, contig_ptr] : result->second->getMap()) {
-
-    for (auto const& [offset, variant_vector] : contig_ptr->getMap()) {
-
-      if (variant_vector->getVariantArray().empty()) {
-
-        ExecEnv::log().error(
-        "UnphasedPopulation::genomePhasingStats(); Zero sized variant vector, genome: {}, contig: {}, offset: {}",
-        genome_id, contig_id, offset);
-        return_result = false;
-        continue;
-
-      }
-
-      switch(variant_vector->getVariantArray().size()) {
-
-        case 0: {
-          ExecEnv::log().error(
-          "UnphasedPopulation::genomePhasingStats(); Zero sized variant vector, genome: {}, contig: {}, offset: {}",
-          genome_id, contig_id, offset);
-          return_result = false;
-        }
-          break;
-
-        case 1:  ++singleheterozygous;
-          break;
-
-        case 2: {
-
-          if (variant_vector->getVariantArray()[0]->equivalent(*variant_vector->getVariantArray()[1])) {
-
-            ++homozygous;
-
-          } else {
-
-            ++heterozygous;
-
-          }
-
-        }
-          break;
-
-        default:
-          ExecEnv::log().warn("UnphasedPopulation::genomePhasingStats(); {} variants found at genome: {}, contig: {}, offset: {}",
-                              variant_vector->getVariantArray().size(), genome_id, contig_id, offset);
-
-
-      } // switch
-
-    } // offset
-
-  } // contig
-
-  return return_result;
-
-}
-
-template<class VariantGenome>
-std::vector<GenomeId_t> PopulationVariant<VariantGenome>::genomeList() const {
-
-  std::vector<GenomeId_t> genome_list;
-
-  for (auto genome : getMap()) {
-
-    genome_list.push_back(genome.first);
-
-  }
-
-  return genome_list;
-
-}
-
-template<class VariantGenome>
 std::shared_ptr<PopulationVariant<VariantGenome>> PopulationVariant<VariantGenome>::filterVariants(const VariantFilter& filter) const {
 
   std::shared_ptr<PopulationVariant> filtered_population_ptr(std::make_shared<PopulationVariant>(populationId()));
@@ -473,29 +395,6 @@ std::optional<std::shared_ptr<const InfoEvidenceHeader>> PopulationVariant<Varia
   return std::nullopt;
 
 }
-
-template<class VariantGenome>
-std::shared_ptr<PopulationVariant<VariantGenome>> PopulationVariant<VariantGenome>::uniqueVariantPopulation() const {
-
-  // Create a unique variant (no duplicate) version of this population.
-  std::shared_ptr<PopulationVariant> unique_pop_ptr(std::make_shared<PopulationVariant>(populationId()));
-
-  for (auto const& [genome_id, genome_ptr] : getMap()) {
-
-    auto unique_genome = genome_ptr->uniqueGenome();
-
-    if (not unique_pop_ptr->addGenome(unique_genome)) {
-
-      ExecEnv::log().error("UnphasedPopulation::uniqueVariantPopulation, problem adding unique genome: {}", genome_id) ;
-
-    }
-
-  }
-
-  return unique_pop_ptr;
-
-}
-
 
 
 }   // end namespace

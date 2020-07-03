@@ -46,15 +46,9 @@ public:
   // unconditionally merge (retains duplicates) genomes and variants into this genome.
   [[nodiscard]] size_t mergeGenome(const std::shared_ptr<const GenomeVariantArray>& merge_genome);
 
-  // A copy of this genome that only contains unique variants (all duplicates removed).
-  [[nodiscard]] std::shared_ptr<GenomeVariantArray> uniqueGenome() const;
-
   [[nodiscard]] size_t variantCount() const;
 
   [[nodiscard]] bool addVariant(const std::shared_ptr<const Variant>& variant);
-
-  // The first bool is normal operation. The second bool is if a unique variant was added to the genome.
-  [[nodiscard]] bool addUniqueVariant(const std::shared_ptr<const Variant>& variant);
 
   [[nodiscard]] const GenomeId_t& genomeId() const { return genome_id_; }
 
@@ -63,7 +57,7 @@ public:
   [[nodiscard]] const ContigVariantMap<VariantContig>& getMap() const { return contig_map_; }
 
   [[nodiscard]] std::optional<std::shared_ptr<VariantContig>> getCreateContig(const ContigId_t& contig_id);
-  // Processes all variants in the population with class Obj and Func = &Obj::objFunc(const shared_ptr<const Variant>&)
+  // Processes all variants in the genome with class Obj and Func = &Obj::objFunc(const shared_ptr<const Variant>&)
   template<class Obj, typename Func> bool processAll(Obj& object, Func objFunc) const;
   // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
   // The second integer is the number variants that pass inspection by comparison to the genome database.
@@ -88,22 +82,14 @@ template<class VariantContig>
 template<class Obj, typename Func>
 bool GenomeVariantArray<VariantContig>::processAll(Obj& object, Func objFunc)  const {
 
-    for (auto const& contig : getMap()) {
+    for (auto const& [contig, contig_ptr] : getMap()) {
 
-      for (auto const& variant_vector : contig.second->getMap()) {
+       if (not contig_ptr->processAll(object, objFunc)) {
 
-        for (auto const& variant_ptr : variant_vector.second->getVariantArray()) {
-
-          if (not (object.*objFunc)(variant_ptr)) {
-
-            ExecEnv::log().error("UnphasedPopulation::processAll<Obj, Func>; Problem executing general purpose template function.");
-            return false;
-
-          }
+          ExecEnv::log().error("GenomeVariantArray::processAll<Obj, Func>; Problem executing general purpose function for contig: {}", contig);
+          return false;
 
         }
-
-      }
 
     }
 
@@ -150,22 +136,6 @@ size_t GenomeVariantArray<VariantContig>::mergeGenome(const std::shared_ptr<cons
 
 
 template<class VariantContig>
-std::shared_ptr<GenomeVariantArray<VariantContig>> GenomeVariantArray<VariantContig>::uniqueGenome() const {
-
-  std::shared_ptr<GenomeVariantArray> unique_genome(std::make_shared<GenomeVariantArray>(genomeId()));
-
-  if (not processAll(*unique_genome, &GenomeVariantArray::addUniqueVariant)) {
-
-    ExecEnv::log().error("GenomeVariantArray::mergeGenome, problem creating unique variant genome from genome: {}", genomeId());
-
-  }
-
-  return unique_genome;
-
-}
-
-
-template<class VariantContig>
 bool GenomeVariantArray<VariantContig>::addVariant(const std::shared_ptr<const Variant>& variant) {
 
   auto contig_opt = getCreateContig(variant->contigId());
@@ -187,30 +157,6 @@ bool GenomeVariantArray<VariantContig>::addVariant(const std::shared_ptr<const V
 
 }
 
-
-// The first bool is normal operation. The second bool is if a unique variant was added to the genome.
-template<class VariantContig>
-bool GenomeVariantArray<VariantContig>::addUniqueVariant(const std::shared_ptr<const Variant>& variant) {
-
-  auto contig_opt = getCreateContig(variant->contigId());
-  if (not contig_opt) {
-
-    ExecEnv::log().error("GenomeVariantArray::addVariant(), Genome: {} could not get or create Contig: {}", genomeId(), variant->contigId());
-    return false;
-
-  }
-
-  bool result = contig_opt.value()->addUniqueVariant(variant);
-  if (not result) {
-
-    ExecEnv::log().error("GenomeVariantArray::addVariant(), Genome: {} could not add variant to Contig: {}", genomeId(), variant->contigId());
-    return false;
-
-  }
-
-  return true;
-
-}
 
 
 template<class VariantContig>

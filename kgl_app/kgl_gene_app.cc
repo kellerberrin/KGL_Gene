@@ -6,7 +6,6 @@
 #include "kgl_variant_phase.h"
 #include "kgl_gene_app.h"
 #include "kgl_legacy_Pf_analysis.h"
-#include "kgl_distribution_analysis.h"
 #include "kgl_filter.h"
 #include "kgl_properties.h"
 #include "kgl_variant_factory_vcf.h"

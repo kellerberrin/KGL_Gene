@@ -45,7 +45,7 @@ void kgl::ExecutePackage::executeActive() const {
 
       for (auto const& vcf_file : iterative_files) {
 
-        std::shared_ptr<UnphasedPopulation> vcf_read_data = readVCFDataFile(package, reference_genome_ptr, vcf_file);
+        std::shared_ptr<PopulationBase> vcf_read_data = readVCFDataFile(package, reference_genome_ptr, vcf_file);
 
         if (not package_analysis_.fileReadAnalysis(vcf_read_data)) {
 
@@ -167,12 +167,11 @@ std::unique_ptr<kgl::GenomeCollection> kgl::ExecutePackage::loadReferenceGenomes
 }
 
 
-std::shared_ptr<kgl::UnphasedPopulation>
+std::shared_ptr<kgl::PopulationBase>
 kgl::ExecutePackage::readVCFDataFile( const RuntimePackage& package,
                                       std::shared_ptr<const GenomeCollection> reference_genomes,
                                       const std::string& vcf_file) const {
 
-  std::shared_ptr<UnphasedPopulation> population_ptr(std::make_shared<UnphasedPopulation>(vcf_file));
 
   ExecEnv::log().info("Package: {}, VCF file ident: {}", package.packageIdentifier(), vcf_file);
 
@@ -213,7 +212,7 @@ kgl::ExecutePackage::readVCFDataFile( const RuntimePackage& package,
     parsed_variants->setPopulationId(vcf_file);
     std::pair<size_t, size_t> valid_count = parsed_variants->validate(ref_genome_opt.value());
     ExecEnv::log().info("Genome: {}, Total Variants: {}, Validated Variants: {}", parsed_variants->populationId(), valid_count.first, valid_count.second);
-    population_ptr = parsed_variants;
+    return parsed_variants;
 
   } else if (result->second.parserType() == VCFParserEnum::GatkMultiGenome) {
 // Pfalciparum VCF files handled here.
@@ -226,11 +225,11 @@ kgl::ExecutePackage::readVCFDataFile( const RuntimePackage& package,
     parsed_variants->setPopulationId(vcf_file);
     std::pair<size_t, size_t> valid_count = parsed_variants->validate(ref_genome_opt.value());
     ExecEnv::log().info("Population: {}, Total Variants: {}, Validated Variants: {}", parsed_variants->populationId(), valid_count.first, valid_count.second);
-    population_ptr = parsed_variants;
+    return parsed_variants;
 
   } else if (result->second.parserType() == VCFParserEnum::MultiGenomePhased) {
 
-    std::shared_ptr<UnphasedPopulation> parsed_variants = VcfFactory::MultiGenomePhasedVCF( ref_genome_opt.value(),
+    std::shared_ptr<DiploidPopulation> parsed_variants = VcfFactory::MultiGenomePhasedVCF( ref_genome_opt.value(),
                                                                                             result->second.fileName(),
                                                                                             contig_alias_,
                                                                                             evidence_opt.value());
@@ -238,7 +237,7 @@ kgl::ExecutePackage::readVCFDataFile( const RuntimePackage& package,
     parsed_variants->setPopulationId(vcf_file);
     std::pair<size_t, size_t> valid_count = parsed_variants->validate(ref_genome_opt.value());
     ExecEnv::log().info("Population: {}, Total Variants: {}, Validated Variants: {}", parsed_variants->populationId(), valid_count.first, valid_count.second);
-    population_ptr = parsed_variants;
+    return parsed_variants;
 
   } else {
 
@@ -247,7 +246,8 @@ kgl::ExecutePackage::readVCFDataFile( const RuntimePackage& package,
 
   }
 
-  return population_ptr;
+  // Return an empty population.
+  return std::make_shared<UnphasedPopulation>(vcf_file);
 
 }
 

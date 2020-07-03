@@ -34,7 +34,7 @@ public:
 
 
   // Perform the genetic analysis per VCF file
-  [[nodiscard]] virtual bool fileReadAnalysis(std::shared_ptr<const UnphasedPopulation> vcf_iterative_dat) = 0;
+  [[nodiscard]] virtual bool fileReadAnalysis(std::shared_ptr<const PopulationBase> vcf_iterative_dat) = 0;
 
   // Perform the genetic analysis per iteration
   [[nodiscard]] virtual bool iterationAnalysis() = 0;

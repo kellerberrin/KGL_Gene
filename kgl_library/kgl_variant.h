@@ -70,7 +70,7 @@ public:
   [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
   [[nodiscard]] ContigOffset_t offset() const { return contig_offset_; }
   [[nodiscard]] PhaseId_t phaseId() const { return phase_id_; }
-  virtual void updatePhaseId(PhaseId_t phase_id) { protectedPhaseId(phase_id); }
+  void updatePhaseId(PhaseId_t phase_id) { phase_id_ = phase_id; }
 
 
   [[nodiscard]] std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
@@ -78,10 +78,7 @@ public:
   constexpr static const PhaseId_t UNPHASED = 255;
   constexpr static const PhaseId_t DIPLOID_PHASE_A = 0;  // By convention the female derived contig is first.
   constexpr static const PhaseId_t DIPLOID_PHASE_B = 1;
-
-protected:
-
-  void protectedPhaseId(PhaseId_t phase_id) { phase_id_ = phase_id; }
+  constexpr static const PhaseId_t HAPLOID_PHASED = 2;
 
 private:
 

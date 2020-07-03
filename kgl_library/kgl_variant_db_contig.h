@@ -25,7 +25,7 @@ template<class VariantArray> class ContigOffsetVariant;
 
 using UnphasedContig = ContigOffsetVariant<UnphasedContigListOffset>;
 
-using UnphasedOffsetMap = std::map<ContigOffset_t, std::unique_ptr<UnphasedContigOffset>>;
+using UnphasedOffsetMap = std::map<ContigOffset_t, std::unique_ptr<VirtualContigOffset>>;
 
 template<class VariantArray>
 class ContigOffsetVariant {
@@ -45,18 +45,14 @@ public:
   // Unconditionally adds a variant to the contig (unique or not).
   [[nodiscard]]  bool addVariant(const std::shared_ptr<const Variant> &variant_ptr);
 
-  // Test if an equivalent variant already exists in the contig.
-  [[nodiscard]] bool variantExists(const std::shared_ptr<const Variant> &variant);
-
-  // Only adds the variant if it does not already exist.
-  [[nodiscard]] bool addUniqueVariant(const std::shared_ptr<const Variant> &variant);
-
   [[nodiscard]]  size_t variantCount() const;
 
   [[nodiscard]] const UnphasedOffsetMap &getMap() const { return contig_offset_map_; }
 
   [[nodiscard]] std::shared_ptr<ContigOffsetVariant> filterVariants(const VariantFilter &filter) const;
 
+  // Processes all variants in the contig with class Obj and Func = &Obj::objFunc(const shared_ptr<const Variant>&)
+  template<class Obj, typename Func> bool processAll(Obj& object, Func objFunc) const;
   // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
   // The second integer is the number variants that pass inspection by comparison to the genome database.
   [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const ContigReference> &contig_db_ptr) const;
@@ -71,6 +67,32 @@ private:
 
 
 };
+
+
+// General purpose genome processing template.
+// Processes all variants in the contig with class Obj and Func = &(bool Obj::objFunc(const std::shared_ptr<const Variant>))
+template<class VariantContig>
+template<class Obj, typename Func>
+bool ContigOffsetVariant<VariantContig>::processAll(Obj& object, Func objFunc)  const {
+
+  for (auto const& [offset, offset_ptr] : getMap()) {
+
+    for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
+
+      if (not (object.*objFunc)(variant_ptr)) {
+
+        ExecEnv::log().error("ContigOffsetVariant::processAll<Obj, Func>; Problem executing general purpose template function at offset: {}", offset);
+        return false;
+
+      }
+
+    }
+
+  }
+
+  return true;
+
+}
 
 
 // Unconditionally adds a variant to the contig.
@@ -89,7 +111,7 @@ bool ContigOffsetVariant<VariantArray>::addVariant(const std::shared_ptr<const V
 
   } else {
     // add the new offset.
-    std::unique_ptr<UnphasedContigOffset> offset_array_ptr(std::make_unique<VariantArray>());
+    std::unique_ptr<VirtualContigOffset> offset_array_ptr(std::make_unique<VariantArray>());
     offset_array_ptr->addVariant(variant_ptr);
     auto insert_result = contig_offset_map_.try_emplace(variant_ptr->offset(), std::move(offset_array_ptr));
 
@@ -133,52 +155,6 @@ std::shared_ptr<ContigOffsetVariant<VariantArray>> ContigOffsetVariant<VariantAr
 
 }
 
-
-// Test if an equivalent variant already exists in the contig.
-template<class VariantArray>
-bool ContigOffsetVariant<VariantArray>::variantExists(const std::shared_ptr<const Variant> &variant) {
-
-  auto result = contig_offset_map_.find(variant->offset());
-
-  if (result != contig_offset_map_.end()) {
-    // Variant offset exists.
-
-    for (auto const &existingvariant : result->second->getVariantArray()) {
-
-      if (existingvariant->equivalent(*variant)) {
-
-        // found the variant.
-        return true;
-
-      }
-    }
-    // If we fall through the loop then no equivalent variant was found.
-    return false;
-
-  } else {
-
-    // No variants found at the offset.
-    return false;
-
-  }
-
-}
-
-// Adds a unique variant to the contig. No addition if not unique.
-template<class VariantArray>
-bool ContigOffsetVariant<VariantArray>::addUniqueVariant(const std::shared_ptr<const Variant> &variant) {
-
-  if (variantExists(variant)) {
-// don't add.
-
-    // Operation normal but variant not unique.
-    return true;
-
-  }
-
-  return addVariant(variant);
-
-}
 
 
 // Counts the variants in a contug.

@@ -187,14 +187,14 @@ std::shared_ptr<kgl::UnphasedPopulation> kgl::GenomePhasing::filterClonal(const 
   }
 
   ExecEnv::log().info("GenomePhasing::filterClonal; Total Genomes: {}, Clonal Genomes: {}",
-                      unphased_population_ptr->genomeList().size(), filtered_population->genomeList().size());
+                      unphased_population_ptr->getMap().size(), filtered_population->getMap().size());
 
   return filtered_population;
 
 }
 
 
-bool kgl::GenomePhasing::analyseCountStatistics(const UnphasedContigOffset& unphased_vector, size_t& phase_index) {
+bool kgl::GenomePhasing::analyseCountStatistics(const VirtualContigOffset& unphased_vector, size_t& phase_index) {
 
   phase_index = 0;
   double proportion_alternate = 0.0;
