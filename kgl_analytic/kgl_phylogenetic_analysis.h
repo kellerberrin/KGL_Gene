@@ -105,7 +105,7 @@ public:
                                            const FeatureIdent_t& sequence_id,
                                            ContigSize_t region_size,
                                            const std::shared_ptr<const GenomeReference>& genome_db,
-                                           const std::shared_ptr<const GenomeVariant>& genome_variant,
+                                           const std::shared_ptr<const PhasedGenome>& genome_variant,
                                            DNA5SequenceCoding& reference_sequence,
                                            DNA5SequenceCoding& mutant_sequence);
 
@@ -114,7 +114,7 @@ public:
                                             const FeatureIdent_t& sequence_id,
                                             ContigSize_t region_size,
                                             const std::shared_ptr<const GenomeReference>& genome_db,
-                                            const std::shared_ptr<const GenomeVariant>& genome_variant,
+                                            const std::shared_ptr<const PhasedGenome>& genome_variant,
                                             DNA5SequenceCoding& reference_sequence,
                                             DNA5SequenceCoding& mutant_sequence_vector);
 
@@ -162,7 +162,7 @@ private:
                                                    std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
                                                    std::shared_ptr<const CodingSequence> coding_sequence,
                                                    std::shared_ptr<const GenomeReference> genome_db,
-                                                   std::shared_ptr<const GenomeVariant> genome_variant);
+                                                   std::shared_ptr<const PhasedGenome> genome_variant);
 
 
 };

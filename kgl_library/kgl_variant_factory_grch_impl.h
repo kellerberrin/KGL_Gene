@@ -15,6 +15,7 @@
 #include "kgl_variant_factory_record_vcf_impl.h"
 #include "kgl_variant_factory_vcf_parse_info.h"
 #include "kgl_variant_db_population.h"
+#include "kgl_variant_db_phased.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace

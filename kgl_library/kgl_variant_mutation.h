@@ -14,7 +14,6 @@
 #include <vector>
 #include <sstream>
 #include "kgl_variant.h"
-#include "kgl_variant_db.h"
 #include "kgl_variant_mutation_offset.h"
 
 
@@ -24,6 +23,9 @@ namespace kellerberrin::genome {   //  organization level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Variant Mutation Functionality - Implements mutation functionality
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+using OffsetVariantMap = std::map<ContigOffset_t, std::shared_ptr<const Variant>>;
 
 
 class VariantMutation {

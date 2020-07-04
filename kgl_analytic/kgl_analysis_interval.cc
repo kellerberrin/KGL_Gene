@@ -333,7 +333,7 @@ bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const UnphasedP
 
    // We are profiling variants against a reference genome. Therefore we need to compress the population of variants
   // into a single genome.
-  std::shared_ptr<const UnphasedGenome> compressed_genome = population_ptr->compressPopulation();
+  std::shared_ptr<const GenomeVariant> compressed_genome = population_ptr->compressPopulation();
 
   size_t variant_count{0};
 

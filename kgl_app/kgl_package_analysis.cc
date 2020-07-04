@@ -95,7 +95,7 @@ bool kgl::PackageAnalysis::fileReadAnalysis(std::shared_ptr<const PopulationBase
 
   }
 
-  ExecEnv::log().error("PackageAnalysis::fileReadAnalysis; Completed all file analysis");
+  ExecEnv::log().info("PackageAnalysis::fileReadAnalysis; Completed all file analysis");
 
   return true;
 

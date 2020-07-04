@@ -22,7 +22,7 @@ namespace kgl = kellerberrin::genome;
 // Just copy into a population object.
 bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
                                         const std::shared_ptr<const UnphasedPopulation>& unphased_population_ptr,
-                                        const std::shared_ptr<PhasedPopulation>& haploid_population)  {
+                                        const std::shared_ptr<HaploidPopulation>& haploid_population)  {
 
 
   // Assumes a VCF ploidy of 2 and produces a haploid phased population.
@@ -39,7 +39,7 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
   for (auto const& [genome_id, genome_ptr] : unphased_population_ptr->getMap()) {
 
     // Create the GenomeVariant object.
-    std::optional<std::shared_ptr<GenomeVariant>> genome_variant_opt = haploid_population->getCreateGenome(genome_id);
+    std::optional<std::shared_ptr<HaploidGenome>> genome_variant_opt = haploid_population->getCreateGenome(genome_id);
     if (not genome_variant_opt) {
 
       ExecEnv::log().error("GenomePhasing::Haploid Phasing(); Unable to get/create genome: {} to haploid population", genome_id);
@@ -57,7 +57,7 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
         if (variant_vector->getVariantArray().size() == 2 and variant_vector->getVariantArray()[0]->equivalent(*variant_vector->getVariantArray()[1])) {
 
           std::shared_ptr<Variant> mutable_variant = std::const_pointer_cast<Variant>(variant_vector->getVariantArray().front());
-          mutable_variant->updatePhaseId(ContigVariant::HAPLOID_HOMOLOGOUS_INDEX);   // Assign to the first (and only) homologous contig.
+          mutable_variant->updatePhaseId(VariantSequence::HAPLOID_PHASED);   // Assign to the first (and only) homologous contig.
 
           if (not genome_variant_opt.value()->addVariant(mutable_variant)) {
 
@@ -76,7 +76,7 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
           if (analyseCountStatistics(*variant_vector, variant_index)) {
 
             std::shared_ptr<Variant> mutable_variant = std::const_pointer_cast<Variant>(variant_vector->getVariantArray()[variant_index]);
-            mutable_variant->updatePhaseId(ContigVariant::HAPLOID_HOMOLOGOUS_INDEX);   // Assign to the first (and only) homologous contig.
+            mutable_variant->updatePhaseId(VariantSequence::HAPLOID_PHASED);   // Assign to the first (and only) homologous contig.
 
             if (not genome_variant_opt.value()->addVariant(mutable_variant)) {
 

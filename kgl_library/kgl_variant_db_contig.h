@@ -9,6 +9,7 @@
 #include "kel_utility.h"
 #include "kgl_variant.h"
 #include "kgl_variant_db_offset.h"
+#include "kgl_variant_mutation.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -21,9 +22,6 @@ namespace kellerberrin::genome {   //  organization level namespace
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<class VariantArray> class ContigOffsetVariant;
-
-using UnphasedContig = ContigOffsetVariant<UnphasedContigListOffset>;
 
 using UnphasedOffsetMap = std::map<ContigOffset_t, std::unique_ptr<VirtualContigOffset>>;
 
@@ -57,6 +55,13 @@ public:
   // The second integer is the number variants that pass inspection by comparison to the genome database.
   [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const ContigReference> &contig_db_ptr) const;
 
+  [[nodiscard]] bool getSortedVariants( PhaseId_t phase,
+                                        ContigOffset_t start,
+                                        ContigOffset_t end,
+                                        OffsetVariantMap& variant_map) const;
+
+  constexpr static const PhaseId_t HAPLOID_HOMOLOGOUS_INDEX = VariantSequence::HAPLOID_PHASED;
+
 private:
 
   ContigId_t contig_id_;
@@ -65,15 +70,16 @@ private:
   // mutex to lock the structure for multiple thread access by parsers.
   mutable std::mutex add_variant_mutex_;
 
+  void checkUpstreamDeletion(OffsetVariantMap& variant_map) const;
 
 };
 
 
 // General purpose genome processing template.
 // Processes all variants in the contig with class Obj and Func = &(bool Obj::objFunc(const std::shared_ptr<const Variant>))
-template<class VariantContig>
+template<class VariantArray>
 template<class Obj, typename Func>
-bool ContigOffsetVariant<VariantContig>::processAll(Obj& object, Func objFunc)  const {
+bool ContigOffsetVariant<VariantArray>::processAll(Obj& object, Func objFunc)  const {
 
   for (auto const& [offset, offset_ptr] : getMap()) {
 
@@ -134,7 +140,7 @@ bool ContigOffsetVariant<VariantArray>::addVariant(const std::shared_ptr<const V
 template<class VariantArray>
 std::shared_ptr<ContigOffsetVariant<VariantArray>> ContigOffsetVariant<VariantArray>::deepCopy() const {
 
-  std::shared_ptr<UnphasedContig> contig_copy(std::make_shared<UnphasedContig>(contigId()));
+  std::shared_ptr<ContigOffsetVariant<VariantArray>> contig_copy(std::make_shared<ContigOffsetVariant<VariantArray>>(contigId()));
 
   for (auto const&[offset, variant_array] : getMap()) {
 
@@ -179,7 +185,7 @@ size_t ContigOffsetVariant<VariantArray>::variantCount() const {
 template<class VariantArray>
 std::shared_ptr<ContigOffsetVariant<VariantArray>> ContigOffsetVariant<VariantArray>::filterVariants(const VariantFilter &filter) const {
 
-  std::shared_ptr<UnphasedContig> filtered_contig_ptr(std::make_shared<UnphasedContig>(contigId()));
+  std::shared_ptr<ContigOffsetVariant<VariantArray>> filtered_contig_ptr(std::make_shared<ContigOffsetVariant<VariantArray>>(contigId()));
 
   for (auto const&[offset, variant_vector] : getMap()) {
 
@@ -256,6 +262,98 @@ std::pair<size_t, size_t> ContigOffsetVariant<VariantArray>::validate(const std:
   return contig_count;
 
 }
+
+template<class VariantArray>
+bool ContigOffsetVariant<VariantArray>::getSortedVariants( PhaseId_t phase,
+                                                           ContigOffset_t start,
+                                                           ContigOffset_t end,
+                                                           OffsetVariantMap& variant_map) const {
+
+
+  auto lower_bound = contig_offset_map_.lower_bound(start);
+  auto upper_bound = contig_offset_map_.upper_bound(end-1); //  [start, end)
+
+  // If there is a prior variant that overlaps the start address, then push this onto the variant map.
+
+  if (lower_bound != contig_offset_map_.end() and lower_bound != contig_offset_map_.begin()) {
+
+    auto previous_offset_ptr = std::prev(lower_bound);
+
+    OffsetVariantArray previous_offset_variants = previous_offset_ptr->second->getVariantArray();
+
+    for (const auto& variant : previous_offset_variants) {
+
+      if (variant->phaseId() == phase) {
+
+        if (variant->offset() + variant->referenceSize() > start) {
+
+          variant_map.emplace(variant->offset(), variant);
+
+        }
+
+      }
+
+    }
+
+  }
+
+
+
+  for (auto it = lower_bound; it != upper_bound; ++it) {
+
+
+    OffsetVariantArray previous_offset_variants = it->second->getVariantArray();
+
+    for (const auto& variant : previous_offset_variants) {
+
+      if (variant->phaseId() == phase) {
+
+        variant_map.emplace(it->first, variant);
+
+      }
+
+    }
+
+  }
+
+  checkUpstreamDeletion(variant_map);
+
+  return true;
+
+}
+
+template<class VariantArray>
+void ContigOffsetVariant<VariantArray>::checkUpstreamDeletion(OffsetVariantMap& variant_map) const {
+
+  for (auto iter = variant_map.begin(); iter != variant_map.end(); ++iter) {
+
+    if (iter == variant_map.begin()) continue;
+
+    int delete_size = std::prev(iter)->second->referenceSize() - std::prev(iter)->second->alternateSize();
+
+    int offset_gap = iter->second->offset() - std::prev(iter)->second->offset();
+
+    if (delete_size >= offset_gap) {
+
+      ExecEnv::log().vinfo("checkUpstreamDeletion(), Upstream deletion detected: {}",
+                           std::prev(iter)->second->output(' ', VariantOutputIndex::START_0_BASED, true));
+
+      ExecEnv::log().vinfo("checkUpstreamDeletion(), Downstream variant removed from mutation: {}",
+                           iter->second->output(' ', VariantOutputIndex::START_0_BASED, true));
+
+      iter = variant_map.erase(iter);
+
+      iter = std::prev(iter); // reset back to the previous iterator.
+
+    }
+
+  }
+
+}
+
+
+
+
 
 
 } // namespace

@@ -7,6 +7,7 @@
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_complexity.h"
 #include "kgl_variant_db_phased.h"
+#include "kgl_variant_db_mutation.h"
 
 #include <memory>
 #include <sstream>
@@ -205,7 +206,7 @@ bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
 
   GeneSummaryMap gene_summary_map;
 
-  for (auto genome : population_ptr->getMap()) {
+  for (auto const& genome : population_ptr->getMap()) {
 
     if (not mutateGenomeGene(contig, gene, sequence, genome.second, genome_db_ptr, gene_summary_map)) {
 
@@ -276,7 +277,7 @@ bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
 bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
                                          const FeatureIdent_t& gene,
                                          const FeatureIdent_t& sequence,
-                                         const std::shared_ptr<const GenomeVariant>& genome_variant_ptr,
+                                         const std::shared_ptr<const PhasedGenome>& genome_variant_ptr,
                                          const std::shared_ptr<const GenomeReference>& genome_db_ptr,
                                          GeneSummaryMap& gene_summary_map) {
 
@@ -320,14 +321,13 @@ bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
   AminoSequence protein_reference;
   AminoSequence protein_mutant;
 
-  if (genome_variant_ptr->mutantProteins(contig,
-                                         ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
-                                         gene,
-                                         sequence,
-                                         genome_db_ptr,
-                                         gene_summary.variant_map,
-                                         protein_reference,
-                                         protein_mutant)) {
+  if (GenomeMutation::mutantProteins( contig,
+                                      gene,
+                                      sequence,
+                                      genome_db_ptr,
+                                      gene_summary.variant_map,
+                                      protein_reference,
+                                      protein_mutant)) {
 
 
 
@@ -408,7 +408,7 @@ bool kgl::GeneAnalysis::mutateAllRegions(const std::string& file_name,
 
   out_file << outputRegionHeader(CSV_delimiter) << '\n';
 
-  for( auto genome_variant : pop_variant_ptr->getMap()) {
+  for(auto const& genome_variant : pop_variant_ptr->getMap()) {
 
     ExecEnv::log().info("outputSequenceCSV(), Processing genome: {}", genome_variant.first);
     ContigSize_t sequence_count = 0;
@@ -456,13 +456,12 @@ std::string kgl::GeneAnalysis::outputRegionHeader(char delimiter) {
 }
 
 
-
 std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
                                                   const std::shared_ptr<const LinearDNASequenceDistance>& dna_distance_metric,
                                                   const ContigId_t& contig_id,
                                                   const ContigOffset_t offset,
                                                   const ContigSize_t region_size,
-                                                  const std::shared_ptr<const GenomeVariant>& genome_variant_ptr,
+                                                  const std::shared_ptr<const PhasedGenome>& genome_variant_ptr,
                                                   const std::shared_ptr<const GenomeReference>& genome_db_ptr) {
 
   std::stringstream ss;
@@ -485,14 +484,26 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
   DNA5SequenceLinear mutant_sequence;
   DNA5SequenceLinear reference_sequence;
   OffsetVariantMap variant_map;
-  if (genome_variant_ptr->mutantRegion(contig_id,
-                                       ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
-                                       offset,
-                                       region_size,
-                                       genome_db_ptr,
-                                       variant_map,
-                                       reference_sequence,
-                                       mutant_sequence)) {
+
+  if (not genome_variant_ptr->getSortedVariants( contig_opt.value()->contigId(),
+                                                  ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                                  offset,
+                                                  offset+region_size,
+                                                  variant_map)) {
+
+    ExecEnv::log().warn("GeneAnalysis::outputGenomeRegion, Problem retrieving variants, genome: {}, contig: {}",
+                        genome_variant_ptr->genomeId(), contig_opt.value()->contigId());
+    return "<error>";
+
+  }
+
+  if (GenomeMutation::mutantRegion( contig_id,
+                                    offset,
+                                    region_size,
+                                    genome_db_ptr,
+                                    variant_map,
+                                    reference_sequence,
+                                    mutant_sequence)) {
 
     double distance = static_cast<double>(dna_distance_metric->linear_distance(reference_sequence, mutant_sequence));
 
@@ -533,7 +544,7 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const GenomeId_t& genome,
                                            const std::string& fasta_file) {
 
 
-  std::optional<std::shared_ptr<GenomeVariant>> genome_opt = population_ptr->getGenome(genome);
+  auto genome_opt = population_ptr->getGenome(genome);
   if (genome_opt) {
 
     return mutateGenomeRegion(contig, offset, region_size, genome_opt.value(), genome_db_ptr, fasta_file);
@@ -547,11 +558,10 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const GenomeId_t& genome,
 
 }
 
-
 bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
                                            const ContigOffset_t offset,
                                            const ContigSize_t region_size,
-                                           const std::shared_ptr<const GenomeVariant>& genome_variant_ptr,
+                                           const std::shared_ptr<const PhasedGenome>& genome_variant_ptr,
                                            const std::shared_ptr<const GenomeReference>& genome_db_ptr,
                                            const std::string& fasta_file) {
 
@@ -560,14 +570,27 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
   DNA5SequenceLinear mutant_sequence;
   DNA5SequenceLinear reference_sequence;
   OffsetVariantMap variant_map;
-  if (genome_variant_ptr->mutantRegion(contig,
-                                       ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
-                                       offset,
-                                       region_size,
-                                       genome_db_ptr,
-                                       variant_map,
-                                       reference_sequence,
-                                       mutant_sequence)) {
+
+  if (not genome_variant_ptr->getSortedVariants( contig,
+                                                 ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                                 offset,
+                                                 offset+region_size,
+                                                 variant_map)) {
+
+    ExecEnv::log().warn("GeneAnalysis::mutateGenomeRegion Problem retrieving variants, genome: {}, contig: {}",
+                        genome_variant_ptr->genomeId(), contig);
+    return false;
+
+  }
+
+
+  if (GenomeMutation::mutantRegion( contig,
+                                    offset,
+                                    region_size,
+                                    genome_db_ptr,
+                                    variant_map,
+                                    reference_sequence,
+                                    mutant_sequence)) {
 
 
     DNA5SequenceCoding ref_reverse_complement = SequenceOffset::codingSequence(reference_sequence, StrandSense::REVERSE);

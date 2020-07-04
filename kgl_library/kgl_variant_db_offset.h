@@ -246,17 +246,10 @@ public:
 
       if (not variant_A2_) {
 
-        variant_A2_ = variant_ptr;
+        // Ignore identical variants.
+        if (not variant_A1_->equivalent(*variant_ptr)) {
 
-        if (variant_A1_->equivalent(*variant_A2_)) {
-
-          ExecEnv::log().warn("DiploidOffset::addVariant, two identical A variants");
-          ExecEnv::log().warn("DiploidOffset::addVariant,  variant 1: {}, vcf record: {}",
-                              variant_A1_->output(' ', VariantOutputIndex::START_0_BASED, false),
-                              variant_A1_->evidence().vcfRecordCount());
-          ExecEnv::log().warn("DiploidOffset::addVariant, variant 2: {}, vcf record: {}",
-                              variant_A2_->output(' ', VariantOutputIndex::START_0_BASED, false),
-                              variant_A1_->evidence().vcfRecordCount());
+          variant_A2_ = variant_ptr;
 
         }
 
@@ -265,12 +258,15 @@ public:
       }
 
       ExecEnv::log().warn("DiploidOffset::addVariant, unexpected A variant vector size: 3");
-      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected size variant: {}",
-                          variant_A1_->output(' ', VariantOutputIndex::START_0_BASED, false));
-      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected size variant: {}",
-                          variant_A2_->output(' ', VariantOutputIndex::START_0_BASED, false));
-      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected size variant: {}",
-                          variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false));
+      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected size variant: {}, VCF record: {}",
+                          variant_A1_->output(' ', VariantOutputIndex::START_0_BASED, false),
+                          variant_ptr->evidence().vcfRecordCount());
+      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected size variant: {}, VCF record: {}",
+                          variant_A2_->output(' ', VariantOutputIndex::START_0_BASED, false),
+                          variant_ptr->evidence().vcfRecordCount());
+      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected size variant: {}, VCF record: {}",
+                          variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false),
+                          variant_ptr->evidence().vcfRecordCount());
 
     }
 
@@ -285,17 +281,10 @@ public:
 
       if (not variant_B2_) {
 
-        variant_B2_ = variant_ptr;
+        // Ignore identical variants.
+        if (not variant_B1_->equivalent(*variant_ptr)) {
 
-        if (variant_B1_->equivalent(*variant_B2_)) {
-
-          ExecEnv::log().warn("DiploidOffset::addVariant, two identical B variants");
-          ExecEnv::log().warn("DiploidOffset::addVariant, variant 1: {}, VCF record: {}",
-                              variant_B1_->output(' ', VariantOutputIndex::START_0_BASED, false),
-                              variant_A1_->evidence().vcfRecordCount());
-          ExecEnv::log().warn("DiploidOffset::addVariant, variant 2: {}, VCF record: {}",
-                              variant_B2_->output(' ', VariantOutputIndex::START_0_BASED, false),
-                              variant_A1_->evidence().vcfRecordCount());
+          variant_B2_ = variant_ptr;
 
         }
 
@@ -304,25 +293,30 @@ public:
       }
 
       ExecEnv::log().warn("DiploidOffset::addVariant, unexpected B variant vector size: 3");
-      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected size variant: {}",
-                          variant_B1_->output(' ', VariantOutputIndex::START_0_BASED, false));
-      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected size variant: {}",
-                          variant_B2_->output(' ', VariantOutputIndex::START_0_BASED, false));
-      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected size variant: {}",
-                          variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false));
+      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected size variant: {}, VCF record: {}",
+                          variant_B1_->output(' ', VariantOutputIndex::START_0_BASED, false),
+                          variant_ptr->evidence().vcfRecordCount());
+      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected size variant: {}, VCF record: {}",
+                          variant_B2_->output(' ', VariantOutputIndex::START_0_BASED, false),
+                          variant_ptr->evidence().vcfRecordCount());
+      ExecEnv::log().warn("DiploidOffset::addVariant, unexpected size variant: {}, VCF record: {}",
+                          variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false),
+                          variant_ptr->evidence().vcfRecordCount());
 
     }
 
     if (variant_ptr->phaseId() != VariantSequence::DIPLOID_PHASE_A
         and variant_ptr->phaseId() != VariantSequence::DIPLOID_PHASE_B) {
 
-      ExecEnv::log().error("DiploidOffset::addVariant, variant is not diploid phased: {}",
-                           variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false));
+      ExecEnv::log().error("DiploidOffset::addVariant, variant is not diploid phased: {} VCF record: {}",
+                           variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false),
+                           variant_ptr->evidence().vcfRecordCount());
 
     } else {
 
-      ExecEnv::log().warn("DiploidOffset::addVariant, variant not processed: {}",
-                          variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false));
+      ExecEnv::log().warn("DiploidOffset::addVariant, variant not processed: {}, VCF record: {}",
+                          variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false),
+                          variant_ptr->evidence().vcfRecordCount());
 
     }
 

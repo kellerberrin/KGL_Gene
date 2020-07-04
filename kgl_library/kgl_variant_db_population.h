@@ -51,11 +51,6 @@ template<class VariantGenome>
 using VariantGenomeMap = std::map<ContigId_t, std::shared_ptr<VariantGenome>>;
 
 template<class VariantGenome>
-class PopulationVariant;
-
-using UnphasedPopulation = PopulationVariant<UnphasedGenome>;
-
-template<class VariantGenome>
 class PopulationVariant : public PopulationBase {
 
 public:

@@ -2,8 +2,8 @@
 // Created by kellerberrin on 23/04/18.
 //
 
-#ifndef KGL_VARIANT_DB_UNPHASED_H
-#define KGL_VARIANT_DB_UNPHASED_H
+#ifndef KGL_VARIANT_DB_GENOME_H
+#define KGL_VARIANT_DB_GENOME_H
 
 
 
@@ -22,13 +22,15 @@ namespace kellerberrin::genome {   //  organization level namespace
 // This object hold variants for each genome.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Ploidy constants.
+constexpr static const PhaseId_t HAPLOID_GENOME = 1;
+constexpr static const PhaseId_t DIPLOID_GENOME = 2;
+constexpr static const PhaseId_t UNPHASED_GENOME = 255;
+
+
 template<class VariantContig>
 using ContigVariantMap = std::map<ContigId_t, std::shared_ptr<VariantContig>>;
-
-template<class VariantContig>
-class GenomeVariantArray;
-
-using UnphasedGenome = GenomeVariantArray<UnphasedContig>;
 
 template<class VariantContig>
 class GenomeVariantArray {
@@ -62,6 +64,13 @@ public:
   // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
   // The second integer is the number variants that pass inspection by comparison to the genome database.
   [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const GenomeReference>& genome_db_ptr) const;
+
+  [[nodiscard]] bool getSortedVariants( ContigId_t contig_id,
+                                        PhaseId_t phase,
+                                        ContigOffset_t start,
+                                        ContigOffset_t end,
+                                        OffsetVariantMap &variant_map) const;
+
 
 private:
 
@@ -279,6 +288,34 @@ std::pair<size_t, size_t> GenomeVariantArray<VariantContig>::validate(const std:
   return genome_count;
 
 }
+
+
+template<class VariantContig>
+bool GenomeVariantArray<VariantContig>::getSortedVariants( ContigId_t contig_id,
+                                                           PhaseId_t phase,
+                                                           ContigOffset_t start,
+                                                           ContigOffset_t end,
+                                                           OffsetVariantMap &variant_map) const {
+
+
+  auto result = contig_map_.find(contig_id);
+
+  if (result == contig_map_.end()) {
+
+      ExecEnv::log().error("Contig Id: {} not found in Genome Variant: {}", contig_id, genomeId());
+      return false;
+
+  }
+
+  std::shared_ptr<VariantContig> contig_ptr = result->second;
+
+  return contig_ptr->getSortedVariants(phase, start, end, variant_map);
+
+}
+
+
+
+
 
 
 }   // end namespace

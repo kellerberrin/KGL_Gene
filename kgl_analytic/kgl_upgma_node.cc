@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <kgl_sequence_compare_impl.h>
 #include "kgl_upgma_node.h"
+#include "kgl_variant_db_mutation.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -103,14 +104,25 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
     AminoSequence reference_sequence;
     OffsetVariantMap variant_map;
 
-    if (genome_variant_ptr_->mutantProteins(contig_ptr->contigId(),
-                                            ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
-                                            gene_id,
-                                            sequence_id,
-                                            genome_db_ptr_,
-                                            variant_map,
-                                            reference_sequence,
-                                            mutant_sequence)) {
+    if (not genome_variant_ptr_->getSortedVariants( contig_ptr->contigId(),
+                                                    ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                                    sequence.second->start(),
+                                                    sequence.second->end(),
+                                                    variant_map)) {
+
+      ExecEnv::log().warn("UPGMAProteinDistance::getProtein, Problem retrieving variants, genome: {}, gene: {}, sequence: {}",
+                          genome_variant_ptr_->genomeId(), gene_id, sequence_id);
+      return;
+
+    }
+
+    if (GenomeMutation::mutantProteins( contig_ptr->contigId(),
+                                        gene_id,
+                                        sequence_id,
+                                        genome_db_ptr_,
+                                        variant_map,
+                                        reference_sequence,
+                                        mutant_sequence)) {
 
       mutated_proteins_[gene_id] = std::make_shared<AminoSequence>(std::move(mutant_sequence));
 
@@ -173,8 +185,19 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
   AminoSequence reference_sequence;
   OffsetVariantMap variant_map;
 
-  if (genome_variant_ptr_->mutantProteins(contig_ptr->contigId(),
-                                          ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+  if (not genome_variant_ptr_->getSortedVariants( contig_ptr->contigId(),
+                                                  ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                                  sequence->start(),
+                                                  sequence->end(),
+                                                  variant_map)) {
+
+    ExecEnv::log().warn("UPGMAProteinDistance::getProtein, Problem retrieving variants, genome: {}, gene: {}, sequence: {}",
+                        genome_variant_ptr_->genomeId(), gene_id, sequence_id);
+    return;
+
+  }
+
+  if (GenomeMutation::mutantProteins(contig_ptr->contigId(),
                                           gene_id,
                                           sequence_id,
                                           genome_db_ptr_,
@@ -263,14 +286,25 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
   AminoSequence reference_sequence;
   OffsetVariantMap variant_map;
 
-  if (not genome_variant_ptr_->mutantProteins(contig_ptr->contigId(),
-                                              ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
-                                              gene_id,
-                                              sequence_id,
-                                              genome_db_ptr_,
-                                              variant_map,
-                                              reference_sequence,
-                                              mutant_sequence)) {
+  if (not genome_variant_ptr_->getSortedVariants( contig_ptr->contigId(),
+                                                  ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                                  sequence->start(),
+                                                  sequence->end(),
+                                                  variant_map)) {
+
+    ExecEnv::log().warn("UPGMAProteinDistance::getProtein, Problem retrieving variants, genome: {}, gene: {}, sequence: {}",
+                        genome_variant_ptr_->genomeId(), gene_id, sequence_id);
+    return;
+
+  }
+
+  if (not GenomeMutation::mutantProteins(contig_ptr->contigId(),
+                                         gene_id,
+                                         sequence_id,
+                                         genome_db_ptr_,
+                                         variant_map,
+                                         reference_sequence,
+                                         mutant_sequence)) {
 
     ExecEnv::log().critical("write_node(), Cannot mutate sequence for : genome: {} gene: {}",
                             genome_variant_ptr_->genomeId(), gene_ptr_->id());
