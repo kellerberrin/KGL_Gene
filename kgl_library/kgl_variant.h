@@ -126,6 +126,8 @@ public:
 
   [[nodiscard]] bool equivalent(const Variant& cmp_var) const;
 
+  [[nodiscard]] bool homozygous(const Variant& cmp_var) const;
+
   [[nodiscard]] bool lessThan(const Variant& cmp_var) const;
 
   [[nodiscard]] const DNA5SequenceLinear& reference() const { return reference_; }

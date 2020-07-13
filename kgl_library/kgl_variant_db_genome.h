@@ -58,7 +58,11 @@ public:
 
   [[nodiscard]] const ContigVariantMap<VariantContig>& getMap() const { return contig_map_; }
 
+  // Creates the contig if it does not exist.
   [[nodiscard]] std::optional<std::shared_ptr<VariantContig>> getCreateContig(const ContigId_t& contig_id);
+
+  // Returns nullopt if the contig does not exist.
+  [[nodiscard]] std::optional<std::shared_ptr<VariantContig>> getContig(const ContigId_t& contig_id);
   // Processes all variants in the genome with class Obj and Func = &Obj::objFunc(const shared_ptr<const Variant>&)
   template<class Obj, typename Func> bool processAll(Obj& object, Func objFunc) const;
   // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
@@ -197,6 +201,29 @@ std::optional<std::shared_ptr<VariantContig>> GenomeVariantArray<VariantContig>:
   }
 
 }
+
+
+template<class VariantContig>
+std::optional<std::shared_ptr<VariantContig>> GenomeVariantArray<VariantContig>::getContig(const ContigId_t& contig_id) {
+
+  // Lock this function to concurrent access.
+  std::scoped_lock lock(add_variant_mutex_);
+
+  auto result = contig_map_.find(contig_id);
+
+  if (result != contig_map_.end()) {
+
+    return result->second;
+
+  } else {
+
+    return std::nullopt;
+
+  }
+
+}
+
+
 
 template<class VariantContig>
 bool GenomeVariantArray<VariantContig>::addContig(const std::shared_ptr<VariantContig>& contig_ptr) {

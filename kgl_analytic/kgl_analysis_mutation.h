@@ -43,6 +43,15 @@ public:
 
 private:
 
+  constexpr static const char* REFERENCE_GENOME_ = "GRCh38";
+  constexpr static const char* OUTPUT_FILE_ = "OUTPUTFILE";
+  constexpr static const char DELIMITER_ = ',';
+
+  std::shared_ptr<const GenomeReference> genome_GRCh38_;
+  std::string output_file_name_;
+
+  bool getParameters(const std::string& work_directory, const RuntimeParameterMap& named_parameters);
+
 };
 
 

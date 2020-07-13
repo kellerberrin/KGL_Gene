@@ -317,7 +317,7 @@ void kgl::IntervalAnalysis::setupIntervalStructure(std::shared_ptr<const GenomeR
       interval_vector.emplace_back(contig_id, offset, size);
 
     }
-    auto result = interval_map_.insert(std::pair<ContigId_t, IntervalVector>(contig_id, std::move(interval_vector)));
+    auto result = interval_map_.try_emplace(contig_id, std::move(interval_vector));
     if (not result.second) {
 
       ExecEnv::log().error("IntervalAnalysis::setupIntervalStructure, Genome: {} Duplicate contig: {}", genome->genomeId(), contig_id);

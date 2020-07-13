@@ -32,10 +32,17 @@ public:
 
   PopulationBase &operator=(const PopulationBase &) = delete; // Use deep copy.
 
+  [[nodiscard]] const PopulationId_t& populationId() const { return population_id_; }
+  void setPopulationId(const PopulationId_t& population_id) { population_id_ = population_id; }
+
 protected:
 
   // Only created as a super class.
-  explicit PopulationBase() = default;
+  explicit PopulationBase(const PopulationId_t& population_id) : population_id_(population_id) {}
+
+private:
+
+  PopulationId_t population_id_;
 
 };
 
@@ -55,7 +62,7 @@ class PopulationVariant : public PopulationBase {
 
 public:
 
-  explicit PopulationVariant(const PopulationId_t& population_id) : population_id_(population_id) {}
+  explicit PopulationVariant(const PopulationId_t& population_id) : PopulationBase(population_id) {}
   PopulationVariant(const PopulationVariant&) = delete; // Use deep copy.
   ~PopulationVariant() override = default;
 
@@ -86,8 +93,6 @@ public:
   [[nodiscard]] bool addVariant( const std::shared_ptr<const Variant>& variant_ptr,
                                  const std::vector<GenomeId_t>& genome_vector);
 
-  [[nodiscard]] const PopulationId_t& populationId() const { return population_id_; }
-  void setPopulationId(const PopulationId_t& population_id) { population_id_ = population_id; }
   // unconditionally merge (retains duplicates) genomes and variants into this population.
   [[nodiscard]] size_t mergePopulation(const std::shared_ptr<const PopulationVariant>& merge_population);
   // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
@@ -108,7 +113,6 @@ public:
 private:
 
   VariantGenomeMap<VariantGenome> genome_map_;
-  PopulationId_t population_id_;
   // mutex to lock the structure for multiple thread access by parsers.
   mutable std::mutex add_variant_mutex_;
 
@@ -237,7 +241,7 @@ size_t PopulationVariant<VariantGenome>::variantCount() const {
 
   size_t variant_count = 0;
 
-  for (auto genome : genome_map_) {
+  for (auto const& genome : genome_map_) {
 
     variant_count += genome.second->variantCount();
 
@@ -253,7 +257,7 @@ std::shared_ptr<PopulationVariant<VariantGenome>> PopulationVariant<VariantGenom
 
   std::shared_ptr<PopulationVariant> filtered_population_ptr(std::make_shared<PopulationVariant>(populationId()));
 
-  for (const auto& [genome_id, genome_ptr] : getMap()) {
+  for (auto const& [genome_id, genome_ptr] : getMap()) {
 
     std::shared_ptr<VariantGenome> filtered_genome_ptr = genome_ptr->filterVariants(filter);
     if (not filtered_population_ptr->addGenome(filtered_genome_ptr)) {

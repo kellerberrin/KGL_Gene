@@ -90,6 +90,18 @@ bool kgl::Variant::equivalent(const Variant& cmp_var) const {
 }
 
 
+bool kgl::Variant::homozygous(const Variant& cmp_var) const {
+
+  return contigId() == cmp_var.contigId()
+         and phaseId() != cmp_var.phaseId()
+         and offset() == cmp_var.offset()
+         and variantType() == cmp_var.variantType()
+         and reference().getSequenceAsString() == cmp_var.reference().getSequenceAsString()
+         and alternate().getSequenceAsString() == cmp_var.alternate().getSequenceAsString();
+
+}
+
+
 // Order variant types.
 bool kgl::Variant::lessThan(const Variant& cmp_var) const {
 

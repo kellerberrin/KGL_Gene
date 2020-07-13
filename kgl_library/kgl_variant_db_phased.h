@@ -48,4 +48,4 @@ using DiploidPopulation = PopulationVariant<DiploidGenome>;
 
 
 
-#endif //KGL_VARIANT_DB_POPULATION_H
+#endif //KGL_VARIANT_DB_PHASED_H
