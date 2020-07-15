@@ -55,6 +55,8 @@ public:
   // The second integer is the number variants that pass inspection by comparison to the genome database.
   [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const ContigReference> &contig_db_ptr) const;
 
+  [[nodiscard]] std::optional<std::shared_ptr<const Variant>> findVariant(const Variant& variant);
+
   [[nodiscard]] bool getSortedVariants( PhaseId_t phase,
                                         ContigOffset_t start,
                                         ContigOffset_t end,
@@ -210,6 +212,40 @@ std::shared_ptr<ContigOffsetVariant<VariantArray>> ContigOffsetVariant<VariantAr
 
 }
 
+
+template<class VariantArray>
+[[nodiscard]] std::optional<std::shared_ptr<const Variant>> ContigOffsetVariant<VariantArray>::findVariant(const Variant& variant) {
+
+  auto result = contig_offset_map_.find(variant.offset());
+
+  if (result != contig_offset_map_.end()) {
+
+    OffsetVariantArray variant_array = result->second->getVariantArray();
+
+    for (auto const& variant_ptr : variant_array) {
+
+      if (variant.homozygous(*variant_ptr)) {
+
+        return variant_ptr;
+
+      }
+
+    }
+
+    return std::nullopt;
+
+
+  } else {
+
+    return std::nullopt;
+
+  }
+
+}
+
+
+
+
 template<class VariantArray>
 std::pair<size_t, size_t> ContigOffsetVariant<VariantArray>::validate(const std::shared_ptr<const ContigReference> &contig_db_ptr) const {
 
@@ -239,8 +275,7 @@ std::pair<size_t, size_t> ContigOffsetVariant<VariantArray>::validate(const std:
 
       }
 
-      if (contig_sequence_ptr->subSequence(variant_ptr->offset(), variant_ptr->reference().length()) ==
-          variant_ptr->reference()) {
+      if (contig_sequence_ptr->subSequence(variant_ptr->offset(), variant_ptr->reference().length()) == variant_ptr->reference()) {
 
         ++contig_count.second;
 
