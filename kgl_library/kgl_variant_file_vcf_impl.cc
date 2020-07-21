@@ -150,7 +150,7 @@ std::optional<std::unique_ptr<VcfRecord>> RecordVCFIO::moveToVcfRecord(std::stri
     // Should not matter since we are moving the string, but just to be on the safe side this goes last.
     vcf_record_ptr->line_record_ptr = std::make_unique<std::string>(std::move(line_record));
 
-    return std::move(vcf_record_ptr);
+    return vcf_record_ptr;
 
   }
   catch (const std::exception &e) {

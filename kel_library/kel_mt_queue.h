@@ -161,7 +161,7 @@ public:
 
     T value = std::move(mt_queue_.waitAndPop());
     data_cond_.notify_one();
-    return std::move(value);
+    return value;
 
   }
 

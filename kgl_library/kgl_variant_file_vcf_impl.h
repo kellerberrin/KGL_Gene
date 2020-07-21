@@ -47,7 +47,7 @@ private:
 
   static constexpr const long HIGH_TIDE_{100000};          // Maximum BoundedMtQueue size
   static constexpr const long LOW_TIDE_{10000};            // Low water mark to begin queueing VCF records
-  static constexpr const long PARSER_THREADS_{4};         // Threads parsing into vcf_records.
+  static constexpr const long PARSER_THREADS_{5};         // Threads parsing into vcf_records.
   static constexpr const char HEADER_CHAR_{'#'};          // If first char start with '#' then a header record (skip).
   static constexpr const size_t MINIMUM_VCF_FIELDS_{8};   // At least 8 fields, any others are format and genotype fields (header specified).
   static constexpr const char VCF_FIELD_DELIMITER_CHAR_{'\t'};   // VCF Field separator (char).

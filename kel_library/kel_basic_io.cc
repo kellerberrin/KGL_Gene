@@ -163,7 +163,7 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
 
     } else {
 
-      return std::move(gz_stream);
+      return gz_stream;
 
     }
 
@@ -176,7 +176,7 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
 
     } else {
 
-      return std::move(text_stream);
+      return text_stream;
 
     }
 

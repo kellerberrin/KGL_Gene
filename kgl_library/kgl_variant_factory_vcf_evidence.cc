@@ -260,7 +260,7 @@ kgl::InfoDataEvidence kgl::EvidenceFactory::createVariantEvidence(std::string&& 
   // Use the parsed data to create a compact memory block with a copy of the Info data.
   std::unique_ptr<const DataMemoryBlock> mem_blk_ptr = manage_info_data_.createMemoryBlock(info_parser, info_evidence_header_);
 
-  return std::move(mem_blk_ptr);
+  return mem_blk_ptr;
 
 }
 
