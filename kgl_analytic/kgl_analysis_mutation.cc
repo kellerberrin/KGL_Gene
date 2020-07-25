@@ -58,11 +58,15 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 // Perform the genetic analysis per iteration.
 bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const PopulationBase> population_base) {
 
+  ExecEnv::log().info("Analysis: {}, begin processing VCF file", ident(), population_base->populationId());
+
   // Superclass the population
   std::shared_ptr<const DiploidPopulation> diploid_population = std::dynamic_pointer_cast<const DiploidPopulation>(population_base);
   std::shared_ptr<const UnphasedPopulation> unphased_population = std::dynamic_pointer_cast<const UnphasedPopulation>(population_base);
 
   if (diploid_population) {
+
+    ExecEnv::log().info("Analysis: {}, Generate Hetreozygous/Homozygous ratio statistics, ident()", population_base->populationId());
 
     if (not hetHomRatio(diploid_population)) {
 

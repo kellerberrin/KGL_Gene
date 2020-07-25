@@ -73,7 +73,7 @@ private:
                     const ContigId_t& contig,
                     PhaseId_t phase,
                     ContigOffset_t offset,
-                    const InfoDataEvidence& info_evidence_opt,
+                    const InfoDataEvidence info_evidence_opt,
                     const std::string& reference,
                     const std::vector<std::string>& alt_vector,
                     size_t vcf_record_count);

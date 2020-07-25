@@ -7,6 +7,7 @@
 
 
 #include "kgl_variant_db_genome.h"
+#include "kel_thread_pool.h"
 
 #include <map>
 #include <mutex>
@@ -325,19 +326,32 @@ size_t PopulationVariant<VariantGenome>::mergePopulation(const std::shared_ptr<c
 
 }
 
-
+// Ensures that all variants are correctly specified.
 template<class VariantGenome>
 std::pair<size_t, size_t> PopulationVariant<VariantGenome>::validate(const std::shared_ptr<const GenomeReference>& genome_db) const {
 
-  std::pair<size_t, size_t> population_count{0, 0};
+  ThreadPool thread_pool;
+  std::vector<std::future<std::pair<size_t, size_t>>> future_vector;
+
+  // Queue a thread for each genome.
   for (auto const& [genome_id, genome_ptr] : getMap()) {
 
-    std::pair<size_t, size_t> genome_count = genome_ptr->validate(genome_db);
+    // function, object_ptr, arg1
+    std::future<std::pair<size_t, size_t>> future = thread_pool.enqueue_task(&VariantGenome::validate, genome_ptr, genome_db);
+    future_vector.push_back(std::move(future));
+
+  }
+
+  // Check the results of the validation.
+  std::pair<size_t, size_t> population_count{0, 0};
+  for (auto& future : future_vector) {
+
+    std::pair<size_t, size_t> genome_count = future.get();
 
     if (genome_count.first != genome_count.second) {
 
-      ExecEnv::log().warn("UnphasedPopulation::validate(), Population: {} Failed to Validate Genome: {}, Total Variants: {}, Validated: {}",
-                          populationId(), genome_id, genome_count.first, genome_count.second);
+      ExecEnv::log().warn("UnphasedPopulation::validate(), Population: {} Failed to Validate, Total Variants: {}, Validated: {}",
+                          populationId(), genome_count.first, genome_count.second);
 
     }
 

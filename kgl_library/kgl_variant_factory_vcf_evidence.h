@@ -72,8 +72,6 @@ class InfoSubscribedField {
 
 public:
 
-//  friend ManageInfoData;
-
   InfoSubscribedField(VCFInfoRecord vcfInfoRecord,
                       std::shared_ptr<const InfoEvidenceHeader> info_evidence_header,
                       ManageInfoData& manage_info_data)

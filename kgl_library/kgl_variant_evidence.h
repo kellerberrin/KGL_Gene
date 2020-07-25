@@ -80,21 +80,7 @@ public:
                      alternate_variant_count_(alternate_variant_count) {}
 
   VariantEvidence(const VariantEvidence&) = default;
-  ~VariantEvidence() {
-
-     if (format_data_) {
-
-       format_data_ = std::nullopt;
-
-     }
-
-     if (info_data_block_) {
-
-       info_data_block_ = std::nullopt;
-
-     }
-
-  }
+  ~VariantEvidence() = default;
 
   [[nodiscard]] std::string output(char delimiter, VariantOutputIndex output_index) const;
 
