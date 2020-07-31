@@ -55,7 +55,7 @@ public:
   // The second integer is the number variants that pass inspection by comparison to the genome database.
   [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const ContigReference> &contig_db_ptr) const;
 
-  [[nodiscard]] std::optional<std::shared_ptr<const Variant>> findVariant(const Variant& variant);
+  [[nodiscard]] std::optional<std::shared_ptr<const Variant>> findVariant(const Variant& variant) const;
 
   [[nodiscard]] bool getSortedVariants( PhaseId_t phase,
                                         ContigOffset_t start,
@@ -214,7 +214,7 @@ std::shared_ptr<ContigOffsetVariant<VariantArray>> ContigOffsetVariant<VariantAr
 
 
 template<class VariantArray>
-[[nodiscard]] std::optional<std::shared_ptr<const Variant>> ContigOffsetVariant<VariantArray>::findVariant(const Variant& variant) {
+[[nodiscard]] std::optional<std::shared_ptr<const Variant>> ContigOffsetVariant<VariantArray>::findVariant(const Variant& variant) const {
 
   auto result = contig_offset_map_.find(variant.offset());
 

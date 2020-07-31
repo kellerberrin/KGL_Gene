@@ -61,17 +61,22 @@ bool kgl::InfoFilterAnalysis::fileReadAnalysis(std::shared_ptr<const PopulationB
   }
 
   // Pre-filter variants for quality, using the VQSLOD and rf_tp_probability fields.
-  vcf_population = qualityFilter(vcf_population);
+  filtered_vcf_population_ = qualityFilter(vcf_population);
 
-  // Save the filtered variants for final analysis
-  size_t merged_size = filtered_vcf_population_->mergePopulation(vcf_population);
+  std::ofstream outfile(output_file_name_,  std::ofstream::out | std::ofstream::app);
 
-  ExecEnv::log().info("Merged filtered population: {}, merged size: {}", vcf_population->populationId(), merged_size);
+  if (not outfile.good()) {
+
+    ExecEnv::log().error("InfoFilterAnalysis::finalizeAnalysis; could not open results file: {}", output_file_name_);
+    return false;
+
+  }
+
 
   // Perform the chromosome analysis.
-//  bool result = performAnalysis(vcf_population);
+  bool result = performAnalysis(vcf_population);
 
-  return true;
+  return result;
 
 }
 
@@ -91,18 +96,7 @@ bool kgl::InfoFilterAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Finalize Analysis called for Analysis Id: {}", ident());
 
-  std::ofstream outfile(output_file_name_,  std::ofstream::out | std::ofstream::app);
-
-  if (not outfile.good()) {
-
-    ExecEnv::log().error("InfoFilterAnalysis::finalizeAnalysis; could not open results file: {}", output_file_name_);
-    return false;
-
-  }
-
-  bool result = performAnalysis(filtered_vcf_population_);
-
-  return result;
+  return true;
 
 }
 
@@ -134,7 +128,7 @@ bool kgl::InfoFilterAnalysis::getParameters(const std::string& work_directory, c
 
 }
 
-std::shared_ptr<const kgl::UnphasedPopulation>
+std::shared_ptr<kgl::UnphasedPopulation>
 kgl::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const UnphasedPopulation> vcf_population) {
 
 
@@ -146,7 +140,7 @@ kgl::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const UnphasedPopulation
   const double VQSLOD_LEVEL{1.2168};
   auto vqslod_filter = InfoGEQFloatFilter(VQSLOD_FIELD, VQSLOD_LEVEL);
 
-  std::shared_ptr<const UnphasedPopulation> filtered_population = vcf_population->filterVariants(vqslod_filter);
+  std::shared_ptr<UnphasedPopulation> filtered_population = vcf_population->filterVariants(vqslod_filter);
 
   size_t filtered_VQSLOD = filtered_population->variantCount();
   double percent_filtered =  (static_cast<double>(filtered_VQSLOD) / static_cast<double>(unfiltered)) * 100.0;
@@ -155,10 +149,11 @@ kgl::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const UnphasedPopulation
                        filtered_population->populationId(), filtered_VQSLOD, percent_filtered, VQSLOD_LEVEL);
 
   const std::string RANDOM_FOREST_FIELD{"rf_tp_probability"};
-  const double RANDOM_FOREST_LEVEL{0.95};
+  const double RANDOM_FOREST_LEVEL{0.90};
+
   auto random_forest_filter = InfoGEQFloatFilter(RANDOM_FOREST_FIELD, RANDOM_FOREST_LEVEL);
 
-  filtered_population = filtered_population->filterVariants(vqslod_filter);
+  filtered_population = filtered_population->filterVariants(random_forest_filter);
 
   size_t filtered_random_forest = filtered_population->variantCount();
   percent_filtered =  (static_cast<double>(filtered_random_forest) / static_cast<double>(unfiltered)) * 100.0;

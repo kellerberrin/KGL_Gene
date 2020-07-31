@@ -326,6 +326,7 @@ size_t PopulationVariant<VariantGenome>::mergePopulation(const std::shared_ptr<c
 
 }
 
+
 // Ensures that all variants are correctly specified.
 template<class VariantGenome>
 std::pair<size_t, size_t> PopulationVariant<VariantGenome>::validate(const std::shared_ptr<const GenomeReference>& genome_db) const {
@@ -337,7 +338,9 @@ std::pair<size_t, size_t> PopulationVariant<VariantGenome>::validate(const std::
   for (auto const& [genome_id, genome_ptr] : getMap()) {
 
     // function, object_ptr, arg1
-    std::future<std::pair<size_t, size_t>> future = thread_pool.enqueue_task(&VariantGenome::validate, genome_ptr, genome_db);
+    std::future<std::pair<size_t, size_t>> future = thread_pool.enqueueTask(&VariantGenome::validate,
+                                                                            genome_ptr,
+                                                                            genome_db);
     future_vector.push_back(std::move(future));
 
   }

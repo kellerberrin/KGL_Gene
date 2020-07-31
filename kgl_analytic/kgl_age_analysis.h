@@ -36,10 +36,10 @@ public:
   [[nodiscard]] double sumHomozygous() const;
   [[nodiscard]] double sumHeterozygous() const;
   [[nodiscard]] double heteroHomoRatioAll() const { return sumHomozygous() > 0 ? sumHeterozygous() / sumHomozygous() : 0.0; }
-  [[nodiscard]] double averageHomozygousAge() const { return hom_average_age_count_ > 0 ? sum_hom_average_age_ / hom_average_age_count_ : 0.0; }
-  [[nodiscard]] double averageHeterozygousAge() const { return het_average_age_count_ > 0 ? sum_het_average_age_ / het_average_age_count_ : 0.0; }
+  [[nodiscard]] double averageHomozygousAge() const { return sumHomozygous() > 0 ? (ageWeightedSumHomozygous() / sumHomozygous()) : 0.0; }
+  [[nodiscard]] double averageHeterozygousAge() const { return sumHeterozygous() > 0 ? (ageWeightedSumHeterozygous() / sumHeterozygous()) : 0.0; }
   [[nodiscard]] double averageCombinedAge() const {
-    return (het_average_age_count_ + hom_average_age_count_) > 0 ? (sum_hom_average_age_ + sum_het_average_age_) / (het_average_age_count_ + hom_average_age_count_) : 0.0; }
+    return (sumHeterozygous() + sumHomozygous()) > 0 ? (ageWeightedSumHomozygous() + ageWeightedSumHeterozygous()) / (sumHeterozygous() + sumHomozygous()) : 0.0; }
 
   [[nodiscard]] std::string title() const { return analysis_title_; }
 
@@ -64,11 +64,6 @@ private:
 
   size_t variant_count_{0};
 
-  double sum_hom_average_age_{0.0};
-  double hom_average_age_count_{0.0};
-  double sum_het_average_age_{0.0};
-  double het_average_age_count_{0.0};
-
   // Heterozygous bin field
   constexpr static const char* HETERO_AGE_FIELD_{"age_hist_het_bin_freq"};
   constexpr static const char* HETERO_UNDER30_FIELD_{"age_hist_het_n_smaller"};
@@ -91,6 +86,9 @@ private:
 
   double processField(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name);
   std::vector<double> processBin(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name);
+
+  [[nodiscard]] double ageWeightedSumHomozygous() const;
+  [[nodiscard]] double ageWeightedSumHeterozygous() const;
 
 };
 

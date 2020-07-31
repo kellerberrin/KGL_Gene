@@ -71,37 +71,23 @@ bool kgl::InfoAgeAnalysis::processVariant(const std::shared_ptr<const Variant>& 
   ++variant_count_;
 
   het_under_30_ += processField(variant_ptr, HETERO_UNDER30_FIELD_);
-  sum_het_average_age_ += het_under_30_ * AVERAGE_AGE_UNDER_30_;
-  het_average_age_count_ += het_under_30_;
   het_80_over_ += processField(variant_ptr, HETERO_80OVER_FIELD_);
-  sum_het_average_age_ += het_80_over_ * AVERAGE_AGE_OVER_80_;
-  het_average_age_count_ += het_80_over_;
   hom_under_30_ += processField(variant_ptr, HOMO_UNDER30_FIELD_);
-  sum_hom_average_age_ += hom_under_30_ * AVERAGE_AGE_UNDER_30_;
-  hom_average_age_count_ += hom_under_30_;
   hom_80_over_ += processField(variant_ptr, HOMO_80OVER_FIELD_);
-  sum_hom_average_age_ += hom_80_over_ * AVERAGE_AGE_OVER_80_;
-  hom_average_age_count_ += hom_80_over_;
 
-  size_t index = 0;
-  for (auto& age : processBin(variant_ptr, HETERO_AGE_FIELD_)) {
+  auto var_het_vector = processBin(variant_ptr, HETERO_AGE_FIELD_);
+  std::transform (het_age_vector_.begin(),
+             het_age_vector_.end(),
+                   var_het_vector.begin(),
+                   het_age_vector_.begin(),
+                   std::plus<double>());
 
-    het_age_vector_[index] += age;
-    sum_het_average_age_ += age * age_weight_vector_[index];
-    het_average_age_count_ += age;
-    ++index;
-
-  }
-
-  index = 0;
-  for (auto& age : processBin(variant_ptr, HOMO_AGE_FIELD_)) {
-
-    hom_age_vector_[index] += age;
-    sum_hom_average_age_ += age * age_weight_vector_[index];
-    hom_average_age_count_ += age;
-    ++index;
-
-  }
+  auto var_hom_vector = processBin(variant_ptr, HOMO_AGE_FIELD_);
+  std::transform (hom_age_vector_.begin(),
+                   hom_age_vector_.end(),
+                   var_hom_vector.begin(),
+                   hom_age_vector_.begin(),
+                   std::plus<double>());
 
   all_allele_ += processField(variant_ptr, TOTAL_ALLELE_COUNT_);
   all_alternate_allele_ += processField(variant_ptr, ALTERNATE_ALLELE_COUNT_);
@@ -137,12 +123,6 @@ void kgl::InfoAgeAnalysis::addAgeAnalysis(const InfoAgeAnalysis& age_analysis) {
 
   variant_count_ += age_analysis.variant_count_;
 
-  sum_hom_average_age_ += age_analysis.sum_hom_average_age_;
-  hom_average_age_count_ += age_analysis.hom_average_age_count_;
-  sum_het_average_age_ += age_analysis.sum_het_average_age_;
-  het_average_age_count_ += age_analysis.het_average_age_count_;
-
-
 }
 
 
@@ -173,6 +153,41 @@ double kgl::InfoAgeAnalysis::sumHeterozygous() const {
   }
 
   sum += het_80_over_;
+
+  return sum;
+
+}
+
+
+double kgl::InfoAgeAnalysis::ageWeightedSumHomozygous() const {
+
+  double sum = hom_under_30_ * AVERAGE_AGE_UNDER_30_;
+  size_t index = 0;
+  for (auto age : hom_age_vector_) {
+
+    sum += age * age_weight_vector_[index];
+    ++index;
+
+  }
+
+  sum += hom_80_over_ * AVERAGE_AGE_OVER_80_;
+
+  return sum;
+
+}
+
+double kgl::InfoAgeAnalysis::ageWeightedSumHeterozygous() const {
+
+  double sum = het_under_30_ * AVERAGE_AGE_UNDER_30_;
+  size_t index = 0;
+  for (auto age : het_age_vector_) {
+
+    sum += age * age_weight_vector_[index];
+    ++index;
+
+  }
+
+  sum += het_80_over_ * AVERAGE_AGE_OVER_80_;
 
   return sum;
 

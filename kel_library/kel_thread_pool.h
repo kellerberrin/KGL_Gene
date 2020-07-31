@@ -29,26 +29,16 @@ namespace kellerberrin {  //  organization level namespace
 class ThreadPool
 {
 
+  using Proc = std::function<void(void)>;
+
 public:
 
   explicit ThreadPool(size_t threads = std::thread::hardware_concurrency() - 1) { startThreads(threads); }
-  ~ThreadPool() noexcept
-  {
+  ~ThreadPool() noexcept { joinThreads(); }
 
-    work_queue_.push(nullptr);
-
-    for(auto& thread : threads_) {
-
-      thread.join();
-
-    }
-
-  }
-
-  using Proc = std::function<void(void)>;
-
+  // Assumes the function has a void return type, does not return a future.
   template<typename F, typename... Args>
-  void enqueue_work(F&& f, Args&&... args) noexcept(std::is_nothrow_invocable<decltype(&MtQueue<Proc>::push)>::value)
+  void enqueueWork(F&& f, Args&&... args) noexcept(std::is_nothrow_invocable<decltype(&MtQueue<Proc>::push)>::value)
   {
 
     auto fb = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
@@ -56,8 +46,9 @@ public:
 
   }
 
+  // Returns a std::future holding the function return value.
   template<typename F, typename... Args>
-  auto enqueue_task(F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type>
+  auto enqueueTask(F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type>
   {
 
     using return_type = typename std::result_of<F(Args...)>::type;
@@ -98,7 +89,20 @@ private:
       }));
   }
 
+  void joinThreads() {
+
+    work_queue_.push(nullptr);
+
+    for(auto& thread : threads_) {
+
+      thread.join();
+
+    }
+
+  }
+
 };
+
 
 } // namespace
 

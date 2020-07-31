@@ -60,7 +60,8 @@ public:
 
   // Creates the contig if it does not exist.
   [[nodiscard]] std::optional<std::shared_ptr<VariantContig>> getCreateContig(const ContigId_t& contig_id);
-
+  // Const version, Returns nullopt if the contig does not exist.
+  [[nodiscard]] std::optional<std::shared_ptr<const VariantContig>> getContig(const ContigId_t& contig_id) const;
   // Returns nullopt if the contig does not exist.
   [[nodiscard]] std::optional<std::shared_ptr<VariantContig>> getContig(const ContigId_t& contig_id);
   // Processes all variants in the genome with class Obj and Func = &Obj::objFunc(const shared_ptr<const Variant>&)
@@ -223,6 +224,22 @@ std::optional<std::shared_ptr<VariantContig>> GenomeVariantArray<VariantContig>:
 
 }
 
+template<class VariantContig>
+std::optional<std::shared_ptr<const VariantContig>> GenomeVariantArray<VariantContig>::getContig(const ContigId_t& contig_id) const {
+
+  auto result = contig_map_.find(contig_id);
+
+  if (result != contig_map_.end()) {
+
+    return result->second;
+
+  } else {
+
+    return std::nullopt;
+
+  }
+
+}
 
 
 template<class VariantContig>

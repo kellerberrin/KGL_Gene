@@ -60,8 +60,9 @@ private:
 
   bool getParameters(const std::string& work_directory, const RuntimeParameterMap& named_parameters);
   bool hetHomRatio(std::shared_ptr<const DiploidPopulation> population);
+  using ret_tuple = std::tuple<GenomeId_t, bool, size_t, size_t>;
+  ret_tuple processContig(ContigId_t contig_id, std::shared_ptr<const DiploidGenome> genome_ptr);
   void joinPopulations();
-
 };
 
 
@@ -73,25 +74,14 @@ public:
   JoinSingleGenome(std::shared_ptr<const DiploidPopulation> joined_population,
                    std::shared_ptr<const UnphasedPopulation> joining_population) :
                    joined_population_(joined_population),
-                   joining_population_(joining_population) {
-
-    // Ensure that we only have a single genome in the joining population.
-    if (joining_population_->getMap().size() != 1) {
-
-      ExecEnv::log().error("JoinSingleGenome::JoinSingleGenome, Expected joining population : {} to have 1 genome, actually contains : {} genomes",
-                           joining_population_->populationId(), joining_population_->getMap().size());
-
-    }
-
-  }
+                   joining_population_(joining_population) {}
   ~JoinSingleGenome() = default;
 
   bool joinPopulations();
 
-  bool lookupJoinedPop(std::shared_ptr<const Variant> variant_ptr);
-
-  size_t variantsProcessed() const { return variants_processed_; }
-  size_t joinedVariantsFound() const { return joined_variants_found_; }
+  // Called by the threadpool per genome.
+  std::tuple<std::string, size_t, size_t>
+  processGenome(std::shared_ptr<const DiploidGenome> diploid_genome, std::shared_ptr<const GenomeVariant> unphased_genome_ptr);
 
 private:
 
@@ -100,9 +90,6 @@ private:
   // The population that is matched against the joined population.
   // This is currently assumed to be a single genome population (Gnomad, ExAC, Clinvar, dbSNP).
   std::shared_ptr<const UnphasedPopulation> joining_population_;
-
-  size_t variants_processed_{0};
-  size_t joined_variants_found_{0};
 
 };
 

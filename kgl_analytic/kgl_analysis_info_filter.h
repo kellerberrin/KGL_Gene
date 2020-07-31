@@ -61,7 +61,7 @@ private:
 
   constexpr static const char* OUTPUT_FILE_ = "OUTPUTFILE";
 
-  std::shared_ptr<const UnphasedPopulation> qualityFilter( std::shared_ptr<const UnphasedPopulation> vcf_population);
+  std::shared_ptr<UnphasedPopulation> qualityFilter( std::shared_ptr<const UnphasedPopulation> vcf_population);
 
   void analyzeField( const std::string& info_field_ident,
                      const std::vector<double>& field_values,
@@ -81,6 +81,11 @@ private:
 
 
 }; // InfoFilterAnalysis
+
+
+
+
+
 
 
 
