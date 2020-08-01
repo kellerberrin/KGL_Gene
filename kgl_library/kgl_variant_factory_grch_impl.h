@@ -10,7 +10,7 @@
 
 #include "kel_utility.h"
 #include "kgl_variant_db_genome.h"
-#include "kgl_variant_file_impl.h"
+#include "kgl_data_file_impl.h"
 #include "kgl_variant_factory_readvcf_impl.h"
 #include "kgl_variant_factory_record_vcf_impl.h"
 #include "kgl_variant_factory_vcf_parse_info.h"

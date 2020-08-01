@@ -57,17 +57,17 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const PopulationBase> population_base) {
+bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> data_object_ptr) {
 
-  ExecEnv::log().info("Analysis: {}, begin processing VCF file", ident(), population_base->populationId());
+  ExecEnv::log().info("Analysis: {}, begin processing data file", ident(), data_object_ptr->Id());
 
   // Superclass the population
-  std::shared_ptr<const DiploidPopulation> diploid_population = std::dynamic_pointer_cast<const DiploidPopulation>(population_base);
-  std::shared_ptr<const UnphasedPopulation> unphased_population = std::dynamic_pointer_cast<const UnphasedPopulation>(population_base);
+  std::shared_ptr<const DiploidPopulation> diploid_population = std::dynamic_pointer_cast<const DiploidPopulation>(data_object_ptr);
+  std::shared_ptr<const UnphasedPopulation> unphased_population = std::dynamic_pointer_cast<const UnphasedPopulation>(data_object_ptr);
 
   if (diploid_population) {
 
-    ExecEnv::log().info("Analysis: {}, Generate Hetreozygous/Homozygous ratio statistics, ident()", population_base->populationId());
+    ExecEnv::log().info("Analysis: {}, Generate Hetreozygous/Homozygous ratio statistics for file: {}", ident(), data_object_ptr->Id());
 
     if (not hetHomRatio(diploid_population)) {
 
@@ -76,21 +76,18 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const PopulationBas
 
     }
 
-//    filtered_population_ = diploid_population->filterVariants(RegionFilter(start_region_, end_region_));
     filtered_population_ = diploid_population;
-
 
   }
 
   if (unphased_population) {
 
-//    filtered_joining_population_ = unphased_population->filterVariants(RegionFilter(start_region_, end_region_));
     filtered_joining_population_ = unphased_population;
 
   }
 
 
-  ExecEnv::log().info("Analysis: {}, completed VCF file", ident(), population_base->populationId());
+  ExecEnv::log().info("Analysis: {}, completed data file: {}", ident(), data_object_ptr->Id());
 
   return true;
 

@@ -151,7 +151,7 @@ public:
                                          std::shared_ptr<const GenomeCollection> reference_genomes) override;
 
   // Perform the genetic analysis per iteration.
-  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const PopulationBase> vcf_iterative_data) override;
+  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataObjectBase> data_base_ptr) override;
 
   // Perform the genetic analysis per iteration
   [[nodiscard]] bool iterationAnalysis() override { return true; }

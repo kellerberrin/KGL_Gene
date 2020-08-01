@@ -3,7 +3,10 @@
 //
 
 #include "kgl_package.h"
+#include "kgl_ped_parser.h"
 #include "kgl_variant_factory_vcf.h"
+#include "kgl_variant_db_phased.h"
+#include "kgl_variant_db_population.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -43,11 +46,11 @@ void kgl::ExecutePackage::executeActive() const {
     // Iterate through the VCF files and update analytics.
     for (auto const& iterative_files : package.iterativeFileList()) {
 
-      for (auto const& vcf_file : iterative_files) {
+      for (auto const& data_file : iterative_files) {
 
-        std::shared_ptr<PopulationBase> vcf_read_data = readVCFDataFile(package, reference_genome_ptr, vcf_file);
+        std::shared_ptr<DataObjectBase> read_data_object = readDataFiles(package, reference_genome_ptr, data_file);
 
-        if (not package_analysis_.fileReadAnalysis(vcf_read_data)) {
+        if (not package_analysis_.fileReadAnalysis(read_data_object)) {
 
           ExecEnv::log().error("ExecutePackage::executeActive, Problem performing Read File Analysis for Package: {}", package_ident);
 
@@ -117,8 +120,8 @@ void kgl::ExecutePackage::verifyPackages() const {
 
       for (auto const& vcf_file_ident : vcf_file_vector) {
 
-        auto result = vcf_file_map_.find(vcf_file_ident);
-        if (result == vcf_file_map_.end()) {
+        auto result = data_file_map_.find(vcf_file_ident);
+        if (result == data_file_map_.end()) {
 
           ExecEnv::log().critical("ExecutePackage::verifyPackage, Package: {}, Iterative load file: {}, not defined", package_ident, vcf_file_ident);
 
@@ -167,88 +170,196 @@ std::unique_ptr<kgl::GenomeCollection> kgl::ExecutePackage::loadReferenceGenomes
 }
 
 
-std::shared_ptr<kgl::PopulationBase>
-kgl::ExecutePackage::readVCFDataFile( const RuntimePackage& package,
-                                      std::shared_ptr<const GenomeCollection> reference_genomes,
-                                      const std::string& vcf_file) const {
+std::shared_ptr<kgl::DataObjectBase>
+kgl::ExecutePackage::readDataFiles(const RuntimePackage& package,
+                                   std::shared_ptr<const GenomeCollection> reference_genomes,
+                                   const std::string& data_file) const {
 
 
-  ExecEnv::log().info("Package: {}, VCF file ident: {}", package.packageIdentifier(), vcf_file);
+  ExecEnv::log().info("Package: {}, Data file ident: {}", package.packageIdentifier(), data_file);
 
-  auto result = vcf_file_map_.find(vcf_file);
-  if (result == vcf_file_map_.end()) {
+  auto result = data_file_map_.find(data_file);
+  if (result == data_file_map_.end()) {
 
-    ExecEnv::log().critical("ExecutePackage::loadVCFDataFiles, Package: {}, VCF file ident: {}, not defined", package.packageIdentifier(), vcf_file);
-
-  }
-
-  std::optional<std::shared_ptr<const GenomeReference>> ref_genome_opt = reference_genomes->getOptionalGenome(result->second.referenceGenome());
-
-  if (not ref_genome_opt) {
-
-    ExecEnv::log().critical("ExecutePackage::loadVCFDataFiles, Package: {}, Reference Genome {} Not Found for VCF file ident: {}",
-                            package.packageIdentifier(), result->second.referenceGenome(), vcf_file);
+    ExecEnv::log().critical("ExecutePackage::readDataFiles, Package: {}, data file ident: {}, not defined", package.packageIdentifier(), data_file);
 
   }
 
-  auto evidence_opt = evidence_map_.lookupEvidence(result->second.evidenceIdent());
+  auto [file_ident, file_info_ptr] = *result;
 
-  if (not evidence_opt) {
+  switch(file_info_ptr->parserType()) {
 
-    ExecEnv::log().critical("ExecutePackage::loadVCFDataFiles, Package: {}, Evidence Ident {} Not Found for VCF file ident: {}",
-                            package.packageIdentifier(), result->second.evidenceIdent(), vcf_file);
+    case DataFileParserEnum::GatkMultiGenome:
+      return readGatkMultiGenome(reference_genomes, file_info_ptr);
 
-  }
+    case DataFileParserEnum::GRChNoGenome:
+      return readGRChNoGenomeVCF(reference_genomes, file_info_ptr);
 
-  if (result->second.parserType() == VCFParserEnum::GRChNoGenome) {
+    case DataFileParserEnum::MultiGenomePhased:
+      return readMultiGenomePhased(reference_genomes, file_info_ptr);
 
+    case DataFileParserEnum::PedAncestry:
+      return readPEDAncestry(file_info_ptr);
 
-    // Read variants.
-    std::shared_ptr<UnphasedPopulation> parsed_variants = VcfFactory::GRChNoGenomeVCFVariants(ref_genome_opt.value(),
-                                                                                              result->second.fileName(),
-                                                                                              contig_alias_,
-                                                                                              evidence_opt.value());
-
-    parsed_variants->setPopulationId(vcf_file);
-    std::pair<size_t, size_t> valid_count = parsed_variants->validate(ref_genome_opt.value());
-    ExecEnv::log().info("Genome: {}, Total Variants: {}, Validated Variants: {}", parsed_variants->populationId(), valid_count.first, valid_count.second);
-    return parsed_variants;
-
-  } else if (result->second.parserType() == VCFParserEnum::GatkMultiGenome) {
-// Pfalciparum VCF files handled here.
-
-    // Read variants.
-    std::shared_ptr<UnphasedPopulation> parsed_variants = VcfFactory::gatkMultiGenomeVCFVariants( ref_genome_opt.value(),
-                                                                                                  result->second.fileName(),
-                                                                                                  evidence_opt.value());
-
-    parsed_variants->setPopulationId(vcf_file);
-    std::pair<size_t, size_t> valid_count = parsed_variants->validate(ref_genome_opt.value());
-    ExecEnv::log().info("Population: {}, Total Variants: {}, Validated Variants: {}", parsed_variants->populationId(), valid_count.first, valid_count.second);
-    return parsed_variants;
-
-  } else if (result->second.parserType() == VCFParserEnum::MultiGenomePhased) {
-
-    std::shared_ptr<DiploidPopulation> parsed_variants = VcfFactory::MultiGenomePhasedVCF( ref_genome_opt.value(),
-                                                                                            result->second.fileName(),
-                                                                                            contig_alias_,
-                                                                                            evidence_opt.value());
-
-    parsed_variants->setPopulationId(vcf_file);
-    std::pair<size_t, size_t> valid_count = parsed_variants->validate(ref_genome_opt.value());
-    ExecEnv::log().info("Population: {}, Total Variants: {}, Validated Variants: {}", parsed_variants->populationId(), valid_count.first, valid_count.second);
-    return parsed_variants;
-
-  } else {
-
-    ExecEnv::log().error("ExecutePackage::loadVCFDataFiles, Package: {}, VCF file ident: {}, parser not implemented (Gatk, GRCh, 1000Genome available)",
-                          package.packageIdentifier(), vcf_file);
+    case DataFileParserEnum::NotImplemented:
+      ExecEnv::log().critical("ExecutePackage::readDataFiles, Package: {}, data file ident: {}, parser not defined", package.packageIdentifier(), data_file);
 
   }
 
-  // Return an empty population.
-  return std::make_shared<UnphasedPopulation>(vcf_file);
+  return readPEDAncestry(file_info_ptr); // Never reached.
 
 }
 
 
+std::shared_ptr<kgl::DataObjectBase>
+kgl::ExecutePackage::readGRChNoGenomeVCF(std::shared_ptr<const GenomeCollection> reference_genomes,
+                                         std::shared_ptr<BaseFileInfo> file_info) const {
+
+  auto vcf_file_info = std::dynamic_pointer_cast<RuntimeVCFFileInfo>(file_info);
+
+  if (not vcf_file_info) {
+
+    ExecEnv::log().critical("ExecutePackage::readGRChNoGenomeVCF, Expected VCF file for file ident: {}", file_info->identifier());
+
+  }
+
+  std::optional<std::shared_ptr<const GenomeReference>> ref_genome_opt = reference_genomes->getOptionalGenome(vcf_file_info->referenceGenome());
+
+  if (not ref_genome_opt) {
+
+    ExecEnv::log().critical("ExecutePackage::readGRChNoGenomeVCF, Reference Genome {} Not Found for VCF file ident: {}",
+                            vcf_file_info->referenceGenome(), vcf_file_info->identifier());
+
+  }
+
+  auto evidence_opt = evidence_map_.lookupEvidence(vcf_file_info->evidenceIdent());
+
+  if (not evidence_opt) {
+
+    ExecEnv::log().critical("ExecutePackage::readGRChNoGenomeVCF, Evidence Ident {} Not Found for VCF file ident: {}",
+                             vcf_file_info->evidenceIdent(), vcf_file_info->identifier());
+
+  }
+
+  // Read variants.
+  std::shared_ptr<UnphasedPopulation> parsed_variants = VcfFactory::GRChNoGenomeVCFVariants(ref_genome_opt.value(),
+                                                                                            vcf_file_info->fileName(),
+                                                                                            contig_alias_,
+                                                                                            evidence_opt.value());
+
+  parsed_variants->setPopulationId(vcf_file_info->identifier());
+  std::pair<size_t, size_t> valid_count = parsed_variants->validate(ref_genome_opt.value());
+  ExecEnv::log().info("Genome: {}, Total Variants: {}, Validated Variants: {}", parsed_variants->populationId(), valid_count.first, valid_count.second);
+
+  return parsed_variants;
+
+}
+
+
+std::shared_ptr<kgl::DataObjectBase>
+kgl::ExecutePackage::readGatkMultiGenome(std::shared_ptr<const GenomeCollection> reference_genomes,
+                                         std::shared_ptr<BaseFileInfo> file_info) const {
+
+  auto vcf_file_info = std::dynamic_pointer_cast<RuntimeVCFFileInfo>(file_info);
+
+  if (not vcf_file_info) {
+
+    ExecEnv::log().critical("ExecutePackage::readGatkMultiGenome, Expected VCF file for file ident: {}", file_info->identifier());
+
+  }
+
+  std::optional<std::shared_ptr<const GenomeReference>> ref_genome_opt = reference_genomes->getOptionalGenome(vcf_file_info->referenceGenome());
+
+  if (not ref_genome_opt) {
+
+    ExecEnv::log().critical("ExecutePackage::readGatkMultiGenome, Reference Genome {} Not Found for VCF file ident: {}",
+                            vcf_file_info->referenceGenome(), vcf_file_info->identifier());
+
+  }
+
+  auto evidence_opt = evidence_map_.lookupEvidence(vcf_file_info->evidenceIdent());
+
+  if (not evidence_opt) {
+
+    ExecEnv::log().critical("ExecutePackage::readGatkMultiGenome, Evidence Ident {} Not Found for VCF file ident: {}",
+                            vcf_file_info->evidenceIdent(), vcf_file_info->identifier());
+
+  }
+
+  // Read variants.
+   std::shared_ptr<UnphasedPopulation> parsed_variants = VcfFactory::gatkMultiGenomeVCFVariants( ref_genome_opt.value(),
+                                                                                                vcf_file_info->fileName(),
+                                                                                                evidence_opt.value());
+
+  parsed_variants->setPopulationId(vcf_file_info->identifier());
+  std::pair<size_t, size_t> valid_count = parsed_variants->validate(ref_genome_opt.value());
+  ExecEnv::log().info("Population: {}, Total Variants: {}, Validated Variants: {}", parsed_variants->populationId(), valid_count.first, valid_count.second);
+
+  return parsed_variants;
+
+}
+
+std::shared_ptr<kgl::DataObjectBase>
+kgl::ExecutePackage::readMultiGenomePhased(std::shared_ptr<const GenomeCollection> reference_genomes,
+                                           std::shared_ptr<BaseFileInfo> file_info) const {
+
+  auto vcf_file_info = std::dynamic_pointer_cast<RuntimeVCFFileInfo>(file_info);
+
+  if (not vcf_file_info) {
+
+    ExecEnv::log().critical("ExecutePackage::readMultiGenomePhased, Expected VCF file for file ident: {}", file_info->identifier());
+
+  }
+
+  std::optional<std::shared_ptr<const GenomeReference>> ref_genome_opt = reference_genomes->getOptionalGenome(vcf_file_info->referenceGenome());
+
+  if (not ref_genome_opt) {
+
+    ExecEnv::log().critical("ExecutePackage::readMultiGenomePhased, Reference Genome {} Not Found for VCF file ident: {}",
+                            vcf_file_info->referenceGenome(), vcf_file_info->identifier());
+
+  }
+
+  auto evidence_opt = evidence_map_.lookupEvidence(vcf_file_info->evidenceIdent());
+
+  if (not evidence_opt) {
+
+    ExecEnv::log().critical("ExecutePackage::readMultiGenomePhased, Evidence Ident {} Not Found for VCF file ident: {}",
+                            vcf_file_info->evidenceIdent(), vcf_file_info->identifier());
+
+  }
+
+  // Read variants.
+  std::shared_ptr<DiploidPopulation> parsed_variants = VcfFactory::MultiGenomePhasedVCF( ref_genome_opt.value(),
+                                                                                         vcf_file_info->fileName(),
+                                                                                         contig_alias_,
+                                                                                         evidence_opt.value());
+
+  parsed_variants->setPopulationId(vcf_file_info->identifier());
+  std::pair<size_t, size_t> valid_count = parsed_variants->validate(ref_genome_opt.value());
+  ExecEnv::log().info("Population: {}, Total Variants: {}, Validated Variants: {}", parsed_variants->populationId(), valid_count.first, valid_count.second);
+
+  return parsed_variants;
+
+}
+
+
+std::shared_ptr<kgl::DataObjectBase> kgl::ExecutePackage::readPEDAncestry(std::shared_ptr<BaseFileInfo> file_info) const {
+
+  auto ped_file_info = std::dynamic_pointer_cast<PedAncestryInfo>(file_info);
+
+  if (not ped_file_info) {
+
+    ExecEnv::log().critical("ExecutePackage::readDataFiles, Expected PED (ancestry .ped) file for file ident: {}", file_info->identifier());
+
+  }
+
+  std::shared_ptr<GenomePEDData> ped_data(std::make_shared<GenomePEDData>(ped_file_info->identifier()));
+
+  ParsePedFile ped_parser(ped_data, ped_file_info->fileName());
+
+  ped_parser.readParsePEDImpl();
+
+  return ped_data;
+
+}

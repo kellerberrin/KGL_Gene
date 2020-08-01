@@ -7,7 +7,7 @@
 
 
 #include "kgl_genome_types.h"
-#include "kgl_variant_file_impl.h"
+#include "kgl_data_file_impl.h"
 #include "kgl_variant_file_vcf_record.h"
 #include "kgl_variant_factory_vcf_parse_header.h"
 
@@ -24,11 +24,11 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 
 using QueuedVCFRecord = std::optional<std::pair<size_t, std::unique_ptr<const VcfRecord>>>;
 
-class RecordVCFIO : private FileVCFIO {
+class RecordVCFIO : private FileDataIO {
 
 public:
 
-  explicit RecordVCFIO(const std::string& vcf_file_name) : FileVCFIO(vcf_file_name),
+  explicit RecordVCFIO(const std::string& vcf_file_name) : FileDataIO(vcf_file_name),
                                                            vcf_record_queue_(HIGH_TIDE_, LOW_TIDE_) {}
   ~RecordVCFIO() override;
 

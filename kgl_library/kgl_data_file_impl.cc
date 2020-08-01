@@ -2,7 +2,7 @@
 // Created by kellerberrin on 18/4/20.
 //
 
-#include "kgl_variant_file_impl.h"
+#include "kgl_data_file_impl.h"
 #include <vector>
 #include <memory>
 #include <thread>
@@ -12,39 +12,39 @@ namespace kgl = kellerberrin::genome;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-kgl::FileVCFIO::~FileVCFIO() {
+kgl::FileDataIO::~FileDataIO() {
 
   // Shutdown the IO thread.
   if (raw_io_thread_ptr_) raw_io_thread_ptr_->join();
 
 }
 
-void kgl::FileVCFIO::commenceIO(size_t reader_threads) {
+void kgl::FileDataIO::commenceIO(size_t reader_threads) {
 
   // The number of consumer threads reading the raw record queue; used for shutdown.
   reader_threads_ = reader_threads;
   // Commence reading with just one IO thread.
-  raw_io_thread_ptr_ = std::make_unique<std::thread>(&FileVCFIO::rawVCFIO, this);
+  raw_io_thread_ptr_ = std::make_unique<std::thread>(&FileDataIO::rawDataIO, this);
 
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Pass in the text or gzip stream as an rvalue to a pointer.
-void kgl::FileVCFIO::rawVCFIO() {
+void kgl::FileDataIO::rawDataIO() {
 
   try {
 
-    std::optional<std::unique_ptr<BaseStreamIO>> vcf_stream_opt = BaseStreamIO::getReaderStream(fileName());
+    std::optional<std::unique_ptr<BaseStreamIO>> file_stream_opt = BaseStreamIO::getReaderStream(fileName());
 
-    if (not vcf_stream_opt) {
+    if (not file_stream_opt) {
 
-      ExecEnv::log().critical("FileVCFIO; I/O error; could not open VCF file: {}", fileName());
+      ExecEnv::log().critical("FileDataIO::rawDataIO; I/O error; could not open VCF file: {}", fileName());
 
     }
 
     while (true) {
 
-      IOLineRecord line_record = vcf_stream_opt.value()->readLine();
+      IOLineRecord line_record = file_stream_opt.value()->readLine();
       if (not line_record) {
 
         // Enqueue the null eof indicator for each consumer thread.
@@ -62,7 +62,7 @@ void kgl::FileVCFIO::rawVCFIO() {
       // Check we have a valid line record.
       if (line_record.value().second->empty()) {
 
-        ExecEnv::log().error("FileVCFIO; Empty VCF record on line: {} - ignored", line_record.value().first);
+        ExecEnv::log().error("FileDataIO::rawDataIO; Empty VCF record on line: {} - ignored", line_record.value().first);
         continue;
 
       }
@@ -74,7 +74,7 @@ void kgl::FileVCFIO::rawVCFIO() {
   }
   catch (std::exception const &e) {
 
-    ExecEnv::log().critical("FileVCFIO; VCF file: {} unexpected I/O exception: {}", fileName(), e.what());
+    ExecEnv::log().critical("FileDataIO::rawDataIO; VCF file: {} unexpected I/O exception: {}", fileName(), e.what());
 
   }
 

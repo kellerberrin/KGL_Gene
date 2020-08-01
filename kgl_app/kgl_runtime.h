@@ -154,52 +154,101 @@ private:
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Base Object to hold data file information.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+enum class DataFileParserEnum{ GatkMultiGenome, GRChNoGenome, MultiGenomePhased, PedAncestry, NotImplemented};
+
+class BaseFileInfo;
+using RuntimeDataFileMap = std::map<std::string, std::shared_ptr<BaseFileInfo>>;
+
+
+class BaseFileInfo {
+
+public:
+
+  BaseFileInfo(const std::string& identifier,
+               const std::string& file_name,
+               const std::string& parser_type)
+      : file_identifier_(identifier),
+        file_name_(file_name) { parser_type_ = getParserType(parser_type); }
+  BaseFileInfo(const BaseFileInfo&) = default;
+  virtual ~BaseFileInfo() = default;
+
+  [[nodiscard]] const std::string& identifier() const { return file_identifier_; }
+  [[nodiscard]] const std::string& fileName() const { return file_name_; }
+  [[nodiscard]] DataFileParserEnum parserType() const { return parser_type_; }
+
+
+private:
+
+  std::string file_identifier_;   // A unique short string to identify this VCF file in other classes
+  std::string file_name_;
+  DataFileParserEnum parser_type_;
+  using VCFParserTypes = std::vector<std::pair<DataFileParserEnum, std::string>>;
+  const VCFParserTypes implementated_parsers_{ std::pair<DataFileParserEnum, std::string>(DataFileParserEnum::GatkMultiGenome, "GatkMultiGenome"),
+                                               std::pair<DataFileParserEnum, std::string>(DataFileParserEnum::GRChNoGenome, "GRChNoGenome"),
+                                               std::pair<DataFileParserEnum, std::string>(DataFileParserEnum::MultiGenomePhased, "MultiGenomePhased"),
+                                               std::pair<DataFileParserEnum, std::string>(DataFileParserEnum::PedAncestry, "PedAncestry"),
+                                               std::pair<DataFileParserEnum, std::string>(DataFileParserEnum::NotImplemented, "NotImplemented")};
+
+  DataFileParserEnum getParserType(const std::string& parser_type) const;
+
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Object to hold .ped ancestry file information.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class PedAncestryInfo : public BaseFileInfo {
+
+public:
+
+  PedAncestryInfo(const std::string& identifier,
+                  const std::string& file_name,
+                  const std::string& parser_type) : BaseFileInfo(identifier, file_name, parser_type) {}
+  PedAncestryInfo(const PedAncestryInfo&) = default;
+  ~PedAncestryInfo() override = default;
+
+
+private:
+
+
+};
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Object to hold vcf file information.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
-class RuntimeVCFFileInfo;
-using RuntimeVCFFileMap = std::map<std::string, RuntimeVCFFileInfo>;
-enum class VCFParserEnum{ GatkMultiGenome, GRChNoGenome, MultiGenomePhased, NotImplemented};
 
-class RuntimeVCFFileInfo {
+class RuntimeVCFFileInfo : public BaseFileInfo {
 
 public:
 
-  RuntimeVCFFileInfo(const std::string& vcf_identifier,
+  RuntimeVCFFileInfo(const std::string& identifier,
                      const std::string& file_name,
                      const std::string& parser_type,
                      const std::string& reference_genome,
                      const std::string& evidence_ident)
-  : vcf_identifier_(vcf_identifier),
-    file_name_(file_name),
+  : BaseFileInfo(identifier, file_name, parser_type),
     reference_genome_(reference_genome),
-    evidence_ident_(evidence_ident) { parser_type_ = getParserType(parser_type); }
+    evidence_ident_(evidence_ident) {}
   RuntimeVCFFileInfo(const RuntimeVCFFileInfo&) = default;
-  ~RuntimeVCFFileInfo() = default;
+  ~RuntimeVCFFileInfo() override = default;
 
-  [[nodiscard]] const std::string& identifier() const { return vcf_identifier_; }
-  [[nodiscard]] const std::string& fileName() const { return file_name_; }
   [[nodiscard]] const std::string& referenceGenome() const { return reference_genome_; }
   [[nodiscard]] const std::string& evidenceIdent() const { return evidence_ident_; }
-  [[nodiscard]] VCFParserEnum parserType() const { return parser_type_; }
 
 
 private:
 
-  std::string vcf_identifier_;   // A unique short string to identify this VCF file in other classes
-  std::string file_name_;
   std::string reference_genome_;
   std::string evidence_ident_;
-  VCFParserEnum parser_type_;
-  using VCFParserTypes = std::vector<std::pair<VCFParserEnum, std::string>>;
-  const VCFParserTypes implementated_parsers_{ std::pair<VCFParserEnum, std::string>(VCFParserEnum::GatkMultiGenome, "GatkMultiGenome"),
-                                               std::pair<VCFParserEnum, std::string>(VCFParserEnum::GRChNoGenome, "GRChNoGenome"),
-                                               std::pair<VCFParserEnum, std::string>(VCFParserEnum::MultiGenomePhased, "MultiGenomePhased"),
-                                               std::pair<VCFParserEnum, std::string>(VCFParserEnum::NotImplemented, "NotImplemented")};
-
-  VCFParserEnum getParserType(const std::string& parser_type) const;
 
 };
 

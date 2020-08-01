@@ -7,45 +7,19 @@
 
 
 #include "kgl_variant_db_genome.h"
+#include "kgl_data_base.h"
 #include "kel_thread_pool.h"
+
 
 #include <map>
 #include <mutex>
 #include <functional>
 
+
 namespace kellerberrin::genome {   //  organization::project
 
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// A do nothing base class to attach generic pointers.
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class PopulationBase {
-
-public:
-
-  PopulationBase(const PopulationBase &) = delete; // Use deep copy.
-  virtual ~PopulationBase() = default;
-
-  PopulationBase &operator=(const PopulationBase &) = delete; // Use deep copy.
-
-  [[nodiscard]] const PopulationId_t& populationId() const { return population_id_; }
-  void setPopulationId(const PopulationId_t& population_id) { population_id_ = population_id; }
-
-protected:
-
-  // Only created as a super class.
-  explicit PopulationBase(const PopulationId_t& population_id) : population_id_(population_id) {}
-
-private:
-
-  PopulationId_t population_id_;
-
-};
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,7 +32,7 @@ private:
 template<class VariantGenome>
 using VariantGenomeMap = std::map<ContigId_t, std::shared_ptr<VariantGenome>>;
 
-template<class VariantGenome>
+template<class VariantGenome, class PopulationBase>
 class PopulationVariant : public PopulationBase {
 
 public:
@@ -69,6 +43,9 @@ public:
 
   PopulationVariant& operator=(const PopulationVariant&) = delete; // Use deep copy.
 
+  [[nodiscard]] const PopulationId_t& populationId() const { return PopulationBase::Id(); }
+
+  void setPopulationId(const PopulationId_t& population_id) { PopulationBase::setId(population_id); }
   // Use this to copy the object.
   [[nodiscard]] std::shared_ptr<PopulationVariant> deepCopy() const;
 
@@ -121,9 +98,9 @@ private:
 
 // General purpose population processing template.
 // Processes all variants in the population with class Obj and Func = &(bool Obj::objFunc(const std::shared_ptr<const Variant>))
-template<class VariantGenome>
+template<class VariantGenome, class PopulationBase>
 template<class Obj, typename Func>
-bool PopulationVariant<VariantGenome>::processAll(Obj& object, Func objFunc)  const {
+bool PopulationVariant<VariantGenome, PopulationBase>::processAll(Obj& object, Func objFunc)  const {
 
   for (auto const& [genome, genome_ptr] : getMap()) {
 
@@ -142,11 +119,11 @@ bool PopulationVariant<VariantGenome>::processAll(Obj& object, Func objFunc)  co
 
 
 // This function should always be used to copy a variant database.
-template<class VariantGenome>
-std::shared_ptr<PopulationVariant<VariantGenome>> PopulationVariant<VariantGenome>::deepCopy() const {
+template<class VariantGenome, class PopulationBase>
+std::shared_ptr<PopulationVariant<VariantGenome, PopulationBase>> PopulationVariant<VariantGenome, PopulationBase>::deepCopy() const {
 
   // Duplicate population ids are not a problem.
-  std::shared_ptr<PopulationVariant> population_copy(std::make_shared<PopulationVariant>(populationId()));
+  std::shared_ptr<PopulationVariant> population_copy(std::make_shared<PopulationVariant>(PopulationBase::populationId()));
 
   // Create an array of genomes
   for (const auto& [genome, genome_ptr] : getMap()) {
@@ -168,8 +145,8 @@ std::shared_ptr<PopulationVariant<VariantGenome>> PopulationVariant<VariantGenom
 
 // This function is used by VCF parsers to create a variant database.
 // The function has been made thread safe for multiple parser thread access.
-template<class VariantGenome>
-std::optional<std::shared_ptr<VariantGenome>> PopulationVariant<VariantGenome>::getCreateGenome(const GenomeId_t& genome_id) {
+template<class VariantGenome, class PopulationBase>
+std::optional<std::shared_ptr<VariantGenome>> PopulationVariant<VariantGenome, PopulationBase>::getCreateGenome(const GenomeId_t& genome_id) {
 
   // Lock this function to concurrent access.
   std::scoped_lock lock(add_variant_mutex_);
@@ -199,8 +176,8 @@ std::optional<std::shared_ptr<VariantGenome>> PopulationVariant<VariantGenome>::
 }
 
 
-template<class VariantGenome>
-std::optional<std::shared_ptr<VariantGenome>> PopulationVariant<VariantGenome>::getGenome(const GenomeId_t& genome_id) const {
+template<class VariantGenome, class PopulationBase>
+std::optional<std::shared_ptr<VariantGenome>> PopulationVariant<VariantGenome, PopulationBase>::getGenome(const GenomeId_t& genome_id) const {
 
 
   auto result = genome_map_.find(genome_id);
@@ -218,8 +195,8 @@ std::optional<std::shared_ptr<VariantGenome>> PopulationVariant<VariantGenome>::
 }
 
 
-template<class VariantGenome>
-bool PopulationVariant<VariantGenome>::addGenome(const std::shared_ptr<VariantGenome>& genome_ptr) {
+template<class VariantGenome, class PopulationBase>
+bool PopulationVariant<VariantGenome, PopulationBase>::addGenome(const std::shared_ptr<VariantGenome>& genome_ptr) {
 
   // Lock this function to concurrent access.
   std::scoped_lock lock(add_variant_mutex_);
@@ -237,8 +214,8 @@ bool PopulationVariant<VariantGenome>::addGenome(const std::shared_ptr<VariantGe
 }
 
 
-template<class VariantGenome>
-size_t PopulationVariant<VariantGenome>::variantCount() const {
+template<class VariantGenome, class PopulationBase>
+size_t PopulationVariant<VariantGenome, PopulationBase>::variantCount() const {
 
   size_t variant_count = 0;
 
@@ -253,8 +230,8 @@ size_t PopulationVariant<VariantGenome>::variantCount() const {
 }
 
 
-template<class VariantGenome>
-std::shared_ptr<PopulationVariant<VariantGenome>> PopulationVariant<VariantGenome>::filterVariants(const VariantFilter& filter) const {
+template<class VariantGenome, class PopulationBase>
+std::shared_ptr<PopulationVariant<VariantGenome, PopulationBase>> PopulationVariant<VariantGenome, PopulationBase>::filterVariants(const VariantFilter& filter) const {
 
   std::shared_ptr<PopulationVariant> filtered_population_ptr(std::make_shared<PopulationVariant>(populationId()));
 
@@ -273,9 +250,9 @@ std::shared_ptr<PopulationVariant<VariantGenome>> PopulationVariant<VariantGenom
 
 }
 
-template<class VariantGenome>
-bool PopulationVariant<VariantGenome>::addVariant( const std::shared_ptr<const Variant>& variant_ptr,
-                                                   const std::vector<GenomeId_t>& genome_vector) {
+template<class VariantGenome, class PopulationBase>
+bool PopulationVariant<VariantGenome, PopulationBase>::addVariant( const std::shared_ptr<const Variant>& variant_ptr,
+                                                                   const std::vector<GenomeId_t>& genome_vector) {
 
   bool result = true;
   for (auto& genome : genome_vector) {
@@ -305,8 +282,8 @@ bool PopulationVariant<VariantGenome>::addVariant( const std::shared_ptr<const V
 
 
 // Unconditional Merge.
-template<class VariantGenome>
-size_t PopulationVariant<VariantGenome>::mergePopulation(const std::shared_ptr<const PopulationVariant>& merge_population) {
+template<class VariantGenome, class PopulationBase>
+size_t PopulationVariant<VariantGenome, PopulationBase>::mergePopulation(const std::shared_ptr<const PopulationVariant>& merge_population) {
 
   size_t variant_count = 0;
   for (const auto& [genome, genome_ptr] : merge_population->getMap()) {
@@ -328,8 +305,8 @@ size_t PopulationVariant<VariantGenome>::mergePopulation(const std::shared_ptr<c
 
 
 // Ensures that all variants are correctly specified.
-template<class VariantGenome>
-std::pair<size_t, size_t> PopulationVariant<VariantGenome>::validate(const std::shared_ptr<const GenomeReference>& genome_db) const {
+template<class VariantGenome, class PopulationBase>
+std::pair<size_t, size_t> PopulationVariant<VariantGenome, PopulationBase>::validate(const std::shared_ptr<const GenomeReference>& genome_db) const {
 
   ThreadPool thread_pool;
   std::vector<std::future<std::pair<size_t, size_t>>> future_vector;
@@ -368,8 +345,8 @@ std::pair<size_t, size_t> PopulationVariant<VariantGenome>::validate(const std::
 }
 
 
-template<class VariantGenome>
-std::shared_ptr<VariantGenome> PopulationVariant<VariantGenome>::compressPopulation() const {
+template<class VariantGenome, class PopulationBase>
+std::shared_ptr<VariantGenome> PopulationVariant<VariantGenome, PopulationBase>::compressPopulation() const {
 
   std::shared_ptr<VariantGenome> compressedGenome(std::make_shared<VariantGenome>("Compressed"));
 
@@ -383,8 +360,8 @@ std::shared_ptr<VariantGenome> PopulationVariant<VariantGenome>::compressPopulat
 }
 
 
-template<class VariantGenome>
-std::optional<std::shared_ptr<const InfoEvidenceHeader>> PopulationVariant<VariantGenome>::getVCFInfoEvidenceHeader() const {
+template<class VariantGenome, class PopulationBase>
+std::optional<std::shared_ptr<const InfoEvidenceHeader>> PopulationVariant<VariantGenome, PopulationBase>::getVCFInfoEvidenceHeader() const {
 
   for (auto const& genome : getMap()) {
 

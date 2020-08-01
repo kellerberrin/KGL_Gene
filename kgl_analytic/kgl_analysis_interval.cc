@@ -215,11 +215,11 @@ bool kgl::IntervalAnalysis::initializeAnalysis( const std::string& work_director
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::IntervalAnalysis::fileReadAnalysis(std::shared_ptr<const PopulationBase> population_base) {
+bool kgl::IntervalAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> data_base_ptr) {
 
 
   // Superclass the population
-  std::shared_ptr<const UnphasedPopulation> population = std::dynamic_pointer_cast<const UnphasedPopulation>(population_base);
+  std::shared_ptr<const UnphasedPopulation> population = std::dynamic_pointer_cast<const UnphasedPopulation>(data_base_ptr);
 
   if (not population) {
 

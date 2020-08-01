@@ -363,86 +363,130 @@ kgl::RuntimeGenomeDatabaseMap kgl::RuntimeProperties::getGenomeReferenceMap() co
 }
 
 // A map of VCF files.
-kgl::RuntimeVCFFileMap kgl::RuntimeProperties::getVCFFiles() const {
+kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
 
-  RuntimeVCFFileMap vcf_map;
+  RuntimeDataFileMap data_file_map;
 
-  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + VCF_LIST_;
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + DATA_FILE_LIST_;
 
   std::vector<SubPropertyTree> property_tree_vector;
   if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
 
-    ExecEnv::log().info("RuntimeProperties::getVCFFiles, no VCF files specified");
-    return vcf_map; // return empty map.
+    ExecEnv::log().info("RuntimeProperties::getDataFiles, no Data files specified");
+    return data_file_map; // return empty map.
 
   }
 
   for (const auto& sub_tree : property_tree_vector) {
 
-    // Only process VCF file records.
-    if (sub_tree.first != VCF_FILE_) continue;
+    // Process VCF file record.
+    if (sub_tree.first == VCF_DATA_FILE_TYPE_) {
 
-    key = std::string(VCF_IDENT_) + std::string(DOT_) + std::string(VALUE_);
-    std::string vcf_ident;
-    if (not sub_tree.second.getProperty( key, vcf_ident)) {
+      key = std::string(DATA_FILE_IDENT_) + std::string(DOT_) + std::string(VALUE_);
+      std::string vcf_ident;
+      if (not sub_tree.second.getProperty( key, vcf_ident)) {
 
-      ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF Identifier");
-      continue;
+        ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF Identifier");
+        continue;
+
+      }
+
+      key = std::string(DATA_FILE_NAME_) + std::string(DOT_) + std::string(VALUE_);
+      std::string vcf_file_name;
+      if (not sub_tree.second.getFileProperty( key, workDirectory(), vcf_file_name)) {
+
+        ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF file name information");
+        continue;
+
+      }
+
+      key = std::string(DATA_PARSER_TYPE_) + std::string(DOT_) + std::string(VALUE_);
+      std::string vcf_parser_type;
+      if (not sub_tree.second.getProperty( key, vcf_parser_type)) {
+
+        ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF file parser type information");
+        continue;
+
+      }
+
+      key = std::string(VCF_FILE_GENOME_) + std::string(DOT_) + std::string(VALUE_);
+      std::string vcf_reference_genome;
+
+      if (not sub_tree.second.getProperty( key, vcf_reference_genome)) {
+
+        ExecEnv::log().error("RuntimeProperties::getVCFFiles, No reference genome information for VCF file: {}", vcf_file_name);
+        continue;
+
+      }
+
+      key = std::string(VCF_INFO_EVIDENCE_) + std::string(DOT_) + std::string(VALUE_);;
+      std::string evidence_ident;
+      if (not sub_tree.second.getProperty(key, evidence_ident)) {
+
+        ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF Info evidence specified for VCF file: {}", vcf_file_name);
+
+      }
+
+      std::shared_ptr<BaseFileInfo> file_info_ptr = std::make_shared<RuntimeVCFFileInfo>( vcf_ident,
+                                                                                          vcf_file_name,
+                                                                                          vcf_parser_type,
+                                                                                          vcf_reference_genome,
+                                                                                          evidence_ident);
+
+      auto result = data_file_map.try_emplace(vcf_ident, file_info_ptr);
+
+      if (not result.second) {
+
+        ExecEnv::log().error("RuntimeProperties::getVCFFiles, Could not add VCF file ident: {} to map (duplicate)", vcf_ident);
+
+      }
+
+    } else if (sub_tree.first == PED_DATA_FILE_TYPE_) { // Process PED file record
+
+      key = std::string(DATA_FILE_IDENT_) + std::string(DOT_) + std::string(VALUE_);
+      std::string ped_ident;
+      if (not sub_tree.second.getProperty(key, ped_ident)) {
+
+        ExecEnv::log().error("RuntimeProperties::getPEDFiles, No File Identifier");
+        continue;
+
+      }
+
+      key = std::string(DATA_FILE_NAME_) + std::string(DOT_) + std::string(VALUE_);
+      std::string ped_file_name;
+      if (not sub_tree.second.getFileProperty(key, workDirectory(), ped_file_name)) {
+
+        ExecEnv::log().error("RuntimeProperties::getPEDFiles, No Ped file name information");
+        continue;
+
+      }
+
+      key = std::string(DATA_PARSER_TYPE_) + std::string(DOT_) + std::string(VALUE_);
+      std::string ped_parser_type;
+      if (not sub_tree.second.getProperty(key, ped_parser_type)) {
+
+        ExecEnv::log().error("RuntimeProperties::getPEDFiles, No Ped file parser type information");
+        continue;
+
+      }
+
+      std::shared_ptr<BaseFileInfo> file_info_ptr = std::make_shared<PedAncestryInfo>( ped_ident,
+                                                                                       ped_file_name,
+                                                                                       ped_parser_type);
+
+      auto result = data_file_map.try_emplace(ped_ident, file_info_ptr);
+
+      if (not result.second) {
+
+        ExecEnv::log().error("RuntimeProperties::getPEDFiles, Could not add PED file ident: {} to map (duplicate)", ped_ident);
+
+      }
 
     }
 
-    key = std::string(VCF_FILE_NAME_) + std::string(DOT_) + std::string(VALUE_);
-    std::string vcf_file_name;
-    if (not sub_tree.second.getFileProperty( key, workDirectory(), vcf_file_name)) {
+  } // for
 
-      ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF file name information");
-      continue;
-
-    }
-
-    key = std::string(VCF_PARSER_TYPE_) + std::string(DOT_) + std::string(VALUE_);
-    std::string vcf_parser_type;
-    if (not sub_tree.second.getProperty( key, vcf_parser_type)) {
-
-      ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF file parser type information");
-      continue;
-
-    }
-
-    key = std::string(VCF_FILE_GENOME_) + std::string(DOT_) + std::string(VALUE_);
-    std::string vcf_reference_genome;
-
-    if (not sub_tree.second.getProperty( key, vcf_reference_genome)) {
-
-      ExecEnv::log().error("RuntimeProperties::getVCFFiles, No reference genome information for VCF file: {}", vcf_file_name);
-      continue;
-
-    }
-
-    key = std::string(VCF_INFO_EVIDENCE_) + std::string(DOT_) + std::string(VALUE_);;
-    std::string evidence_ident;
-    if (not sub_tree.second.getProperty(key, evidence_ident)) {
-
-      ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF Info evidence specified for VCF file: {}", vcf_file_name);
-
-    }
-
-    std::pair<std::string, RuntimeVCFFileInfo> new_vcf(vcf_ident, RuntimeVCFFileInfo( vcf_ident,
-                                                                                       vcf_file_name,
-                                                                                       vcf_parser_type,
-                                                                                       vcf_reference_genome,
-                                                                                       evidence_ident));
-    auto result = vcf_map.insert(new_vcf);
-
-    if (not result.second) {
-
-      ExecEnv::log().error("RuntimeProperties::getVCFFiles, Could not add VCF file ident: {} to map (duplicate)", vcf_ident);
-
-    }
-
-  }
-
-  return vcf_map;
+  return data_file_map;
 
 }
 

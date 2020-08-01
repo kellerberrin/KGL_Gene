@@ -47,7 +47,7 @@ public:
 
   [[nodiscard]]  RuntimeGenomeDatabaseMap getGenomeReferenceMap() const;
 
-  [[nodiscard]] RuntimeVCFFileMap getVCFFiles() const;
+  [[nodiscard]] RuntimeDataFileMap getDataFiles() const;
 
   [[nodiscard]] ContigAliasMap getContigAlias() const;
 
@@ -98,12 +98,15 @@ private:
   constexpr static const char* PARAMETER_ = "parameter";
   constexpr static const char* PARAMETER_IDENT_ = "parameterIdent";
   constexpr static const char* PARAMETER_VALUE_ = "parameterValue";
-  // VCF File Runtime categories.
-  constexpr static const char* VCF_LIST_ = "vcfList";
-  constexpr static const char* VCF_IDENT_ = "vcfIdent";
-  constexpr static const char* VCF_FILE_ = "vcfFile";
-  constexpr static const char* VCF_FILE_NAME_ = "vcfFileName";
-  constexpr static const char* VCF_PARSER_TYPE_ = "vcfParser";
+  // Data File Runtime categories.
+  constexpr static const char* DATA_FILE_LIST_ = "dataFileList";
+  constexpr static const char* DATA_FILE_IDENT_ = "dataFileIdent";
+  constexpr static const char* DATA_FILE_NAME_ = "dataFileName";
+  constexpr static const char* DATA_PARSER_TYPE_ = "dataFileParser";
+  // .ped ancestry data file specific fields.
+  constexpr static const char* PED_DATA_FILE_TYPE_ = "pedFile";
+  // VCF data file specific fields.
+  constexpr static const char* VCF_DATA_FILE_TYPE_ = "vcfFile";
   constexpr static const char* VCF_FILE_GENOME_ =  "vcfGenome";
   constexpr static const char* VCF_INFO_EVIDENCE_ =  "vcfInfo";
   // VCF Info Evidence categories.

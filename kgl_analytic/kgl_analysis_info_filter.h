@@ -42,7 +42,7 @@ public:
                                          std::shared_ptr<const GenomeCollection> reference_genomes) override;
 
   // Perform the genetic analysis per VCF file (need not be redefined)
-  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const PopulationBase> vcf_population) override;
+  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataObjectBase> vcf_population) override;
 
   // Perform the genetic analysis per iteration (need not be redefined)
   [[nodiscard]] bool iterationAnalysis() override;
