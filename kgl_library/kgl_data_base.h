@@ -30,7 +30,7 @@ public:
   [[nodiscard]] const std::string& Id() const { return data_identifier_; }
   void setId(const std::string& data_id) { data_identifier_ = data_id; }
 
-  virtual DataTypeEnum dataType() = 0;
+  virtual DataTypeEnum dataType() const = 0;
 
 
 private:

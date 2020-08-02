@@ -8,6 +8,7 @@
 
 #include "kgl_analysis_virtual.h"
 #include "kgl_variant_db_phased.h"
+#include "kgl_ped_parser.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -52,6 +53,7 @@ private:
   std::string output_file_name_;
   std::shared_ptr<const DiploidPopulation> filtered_population_;
   std::shared_ptr<const UnphasedPopulation> filtered_joining_population_;
+  std::shared_ptr<const GenomePEDData> ped_data_;
 
   // Reduce the size of the population to fit into memory.
   ContigOffset_t start_region_ = 0;

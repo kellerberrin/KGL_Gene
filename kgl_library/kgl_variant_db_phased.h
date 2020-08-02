@@ -34,7 +34,7 @@ public:
 
   virtual ~UnphasedBase() override = default;
 
-  DataTypeEnum dataType() override { return DataTypeEnum::UnphasedPopulation; }
+  DataTypeEnum dataType() const override { return DataTypeEnum::UnphasedPopulation; }
 
 protected:
 
@@ -61,7 +61,7 @@ public:
 
   virtual ~HaploidBase() override = default;
 
-  DataTypeEnum dataType() override { return DataTypeEnum::HaploidPopulation; }
+  DataTypeEnum dataType() const override { return DataTypeEnum::HaploidPopulation; }
 
 protected:
 
@@ -94,7 +94,7 @@ public:
 
   virtual ~DiploidBase() override = default;
 
-  DataTypeEnum dataType() override { return DataTypeEnum::DiploidPopulation; }
+  DataTypeEnum dataType() const override { return DataTypeEnum::DiploidPopulation; }
 
 protected:
 

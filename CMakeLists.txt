@@ -120,8 +120,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_statistics_upgma.h
         kgl_library/kgl_statistics_upgma.cc
         kgl_library/kgl_variant_mutation.cc
-        kgl_library/kgl_variant_factory_vcf.h
-        kgl_library/kgl_variant_factory_vcf.cc
         kgl_library/kgl_variant_mutation.h
         kgl_library/kgl_variant_db_mutation.cc
         kgl_library/kgl_sequence_offset.h
@@ -187,7 +185,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_analysis_virtual.h
         kgl_library/kgl_variant_db_offset.h
         kgl_library/kgl_variant_db_contig.h
-        kgl_library/kgl_variant_db_mutation.h kgl_library/kgl_ped_parser.h)
+        kgl_library/kgl_variant_db_mutation.h
+        kgl_library/kgl_ped_parser.h kgl_library/kgl_ped_parser.cpp)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )

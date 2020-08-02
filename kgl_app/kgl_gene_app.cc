@@ -2,13 +2,8 @@
 // Created by kellerberrin on 10/11/17.
 //
 
-#include "kgl_gff_fasta.h"
-#include "kgl_variant_phase.h"
 #include "kgl_gene_app.h"
-#include "kgl_legacy_Pf_analysis.h"
-#include "kgl_filter.h"
 #include "kgl_properties.h"
-#include "kgl_variant_factory_vcf.h"
 #include "kgl_package.h"
 
 

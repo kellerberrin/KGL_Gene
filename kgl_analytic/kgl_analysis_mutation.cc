@@ -56,36 +56,72 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
 }
 
-// Perform the genetic analysis per iteration.
+// This function superclasses the data objects and stores them for further use.
 bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> data_object_ptr) {
 
   ExecEnv::log().info("Analysis: {}, begin processing data file", ident(), data_object_ptr->Id());
 
-  // Superclass the population
-  std::shared_ptr<const DiploidPopulation> diploid_population = std::dynamic_pointer_cast<const DiploidPopulation>(data_object_ptr);
-  std::shared_ptr<const UnphasedPopulation> unphased_population = std::dynamic_pointer_cast<const UnphasedPopulation>(data_object_ptr);
 
-  if (diploid_population) {
+  if (data_object_ptr->dataType() == DataTypeEnum::DiploidPopulation) {
 
-    ExecEnv::log().info("Analysis: {}, Generate Hetreozygous/Homozygous ratio statistics for file: {}", ident(), data_object_ptr->Id());
+    std::shared_ptr<const DiploidPopulation> diploid_population = std::dynamic_pointer_cast<const DiploidPopulation>(data_object_ptr);
 
-    if (not hetHomRatio(diploid_population)) {
+    if (diploid_population) {
 
-      ExecEnv::log().error("Analysis: {},  problem creating Het/Hom ratio", ident());
+      ExecEnv::log().info("Analysis: {}, Generate Hetreozygous/Homozygous ratio statistics for file: {}", ident(), data_object_ptr->Id());
+
+      if (not hetHomRatio(diploid_population)) {
+
+        ExecEnv::log().error("Analysis: {},  problem creating Het/Hom ratio", ident());
+        return false;
+
+      }
+
+      filtered_population_ = diploid_population;
+
+    } else {
+
+      ExecEnv::log().error("MutationAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not a Diploid Population", ident(), data_object_ptr->Id());
       return false;
 
     }
 
-    filtered_population_ = diploid_population;
+  }
+
+  if (data_object_ptr->dataType() == DataTypeEnum::UnphasedPopulation) {
+
+    std::shared_ptr<const UnphasedPopulation> unphased_population = std::dynamic_pointer_cast<const UnphasedPopulation>(data_object_ptr);
+
+    if (unphased_population) {
+
+      filtered_joining_population_ = unphased_population;
+
+    } else {
+
+      ExecEnv::log().error("MutationAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not an Unphased Population", ident(), data_object_ptr->Id());
+      return false;
+
+    }
 
   }
 
-  if (unphased_population) {
+  if (data_object_ptr->dataType() == DataTypeEnum::PedAncestor) {
 
-    filtered_joining_population_ = unphased_population;
+    std::shared_ptr<const GenomePEDData> ped_data = std::dynamic_pointer_cast<const GenomePEDData>(data_object_ptr);
+
+    if (ped_data) {
+
+      ped_data_ = ped_data;
+      ExecEnv::log().info("Analysis: {}, ped file: {} contains: {} PED records", ident(), ped_data->Id(), ped_data->getMap().size());
+
+    } else {
+
+      ExecEnv::log().error("MutationAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not a PED Ancestor Object", ident(), data_object_ptr->Id());
+      return false;
+
+    }
 
   }
-
 
   ExecEnv::log().info("Analysis: {}, completed data file: {}", ident(), data_object_ptr->Id());
 

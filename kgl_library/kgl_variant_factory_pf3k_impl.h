@@ -8,7 +8,7 @@
 
 
 #include "kel_utility.h"
-#include "kgl_variant_factory_vcf.h"
+#include "kgl_variant_db_phased.h"
 #include "kgl_variant_factory_readvcf_impl.h"
 #include "kgl_variant_factory_record_vcf_impl.h"
 #include "kgl_variant_factory_vcf_parse_info.h"
@@ -25,6 +25,7 @@ public:
   Pf3kVCFImpl(const std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
               const std::shared_ptr<const GenomeReference> genome_db_ptr,
               const std::string &vcf_file_name,
+              const ContigAliasMap&,    // Chromosome aliasing is not used on Gatk (P.Falciparum) VCF files.
               const EvidenceInfoSet& evidence_map) : VCFReaderMT(vcf_file_name),
                                                         evidence_factory_(evidence_map),
                                                         unphased_population_ptr_(vcf_population_ptr),
