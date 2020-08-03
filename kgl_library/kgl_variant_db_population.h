@@ -87,7 +87,6 @@ public:
   // Create a population of unique variants. All duplicate variants are removed.
   [[nodiscard]] std::shared_ptr<PopulationVariant> uniqueVariantPopulation() const;
 
-
 private:
 
   VariantGenomeMap<VariantGenome> genome_map_;

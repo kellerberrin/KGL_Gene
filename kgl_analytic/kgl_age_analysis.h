@@ -11,6 +11,39 @@
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// A matrix of heterozygous vs homozygous variant counts
+
+class HetHomAgeMatrix {
+
+public:
+
+  HetHomAgeMatrix() {
+
+    std::vector<double> row_vector(AGE_MATRIX_SIZE_, 0.0);
+
+    for (size_t index = 0; index < AGE_MATRIX_SIZE_; ++index) {
+
+      het_hom_age_matrix_.push_back(row_vector);
+
+    }
+
+  }
+  ~HetHomAgeMatrix() = default;
+
+  void updateMatrix(size_t het_age_index, size_t hom_age_index, double value) { het_hom_age_matrix_[het_age_index][hom_age_index] += value; }
+  [[nodiscard]] const std::vector<std::vector<double>>& getMatrix() const { return het_hom_age_matrix_; }
+
+private:
+
+  constexpr static const size_t AGE_MATRIX_SIZE_{12};
+
+  std::vector<std::vector<double>> het_hom_age_matrix_;
+
+};
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Object to harvest age bin statistics (if they exist)
 
 class InfoAgeAnalysis {
@@ -27,12 +60,8 @@ public:
 
   bool processVariant(const std::shared_ptr<const Variant>& variant_ptr);
 
-  [[nodiscard]] double ageHomozygousUnder30() const { return hom_under_30_; }
-  [[nodiscard]] double ageHomozygous80Over() const { return hom_80_over_; }
   [[nodiscard]] const std::vector<double>& ageHomozygousVector() const { return hom_age_vector_; }
   [[nodiscard]] const std::vector<double>& ageHeterozygousVector() const { return het_age_vector_; }
-  [[nodiscard]] double ageHeterozygousUnder30() const { return het_under_30_; }
-  [[nodiscard]] double ageHeterozygous80Over() const { return het_80_over_; }
   [[nodiscard]] double sumHomozygous() const;
   [[nodiscard]] double sumHeterozygous() const;
   [[nodiscard]] double heteroHomoRatioAll() const { return sumHomozygous() > 0 ? sumHeterozygous() / sumHomozygous() : 0.0; }
@@ -47,22 +76,21 @@ public:
 
   [[nodiscard]] size_t variantCount() const { return variant_count_; }
 
+  [[nodiscard]] const HetHomAgeMatrix& hetHomMatrix() const { return het_hom_matrix_; }
+
 private:
 
   std::string analysis_title_;
 
   std::vector<double> hom_age_vector_;
-  double hom_under_30_{0.0};
-  double hom_80_over_{0.0};
-
   std::vector<double> het_age_vector_;
-  double het_under_30_{0.0};
-  double het_80_over_{0.0};
 
   double all_allele_{0.0};
   double all_alternate_allele_{0.0};
 
   size_t variant_count_{0};
+
+  HetHomAgeMatrix het_hom_matrix_;
 
   // Heterozygous bin field
   constexpr static const char* HETERO_AGE_FIELD_{"age_hist_het_bin_freq"};
@@ -77,12 +105,12 @@ private:
   constexpr static const char* TOTAL_ALLELE_COUNT_{"AN"};  // Total number of samples including reference alleles.
   constexpr static const char* ALTERNATE_ALLELE_COUNT_{"AC"}; // Total number of samples with alternate alleles.
   // Bin field size.
-  constexpr static const size_t AGE_BIN_SIZE_{10};
+  constexpr static const size_t FIELD_AGE_BIN_SIZE_{10};
+  constexpr static const size_t AGE_BIN_SIZE_{12};
+
   // Age weighting vector is the mid-point between the age bins.
   // Which appears to be a reasonable assumption.
-  const std::vector<double> age_weight_vector_{ 32.5, 37.5, 42.5, 47.5, 52.5, 57.5, 62.5, 67.5, 72.5, 77.5};
-  constexpr static const double AVERAGE_AGE_UNDER_30_{15.0}; // These are guesses and should be removed
-  constexpr static const double AVERAGE_AGE_OVER_80_{85.0};  // for final published analysis
+  const std::vector<double> age_weight_vector_{ 15.0, 32.5, 37.5, 42.5, 47.5, 52.5, 57.5, 62.5, 67.5, 72.5, 77.5, 85.0};
 
   double processField(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name);
   std::vector<double> processBin(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name);

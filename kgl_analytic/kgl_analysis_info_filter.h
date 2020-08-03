@@ -18,6 +18,7 @@
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
+
 // Test the Info data filters.
 class InfoFilterAnalysis : public VirtualAnalysis {
 

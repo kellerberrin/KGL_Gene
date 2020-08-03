@@ -186,7 +186,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_variant_db_offset.h
         kgl_library/kgl_variant_db_contig.h
         kgl_library/kgl_variant_db_mutation.h
-        kgl_library/kgl_ped_parser.h kgl_library/kgl_ped_parser.cpp)
+        kgl_library/kgl_ped_parser.h
+        kgl_library/kgl_ped_parser.cpp)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )

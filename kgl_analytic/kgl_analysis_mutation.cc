@@ -134,13 +134,14 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Iteration Analysis called for Analysis Id: {}", ident());
 
-  if (filtered_population_ and filtered_joining_population_) {
+  if (filtered_population_ and filtered_joining_population_ and ped_data_) {
 
     ExecEnv::log().info("Filtered Population : {} Count: {} and Joined Population: {} Count: {} both active",
                         filtered_population_->variantCount(), filtered_population_->populationId(),
                         filtered_joining_population_->populationId(), filtered_joining_population_->variantCount());
 
     joinPopulations();
+    checkPED();
 
   } else {
 
@@ -303,7 +304,7 @@ kgl::MutationAnalysis::processContig(ContigId_t contig_id, std::shared_ptr<const
 void kgl::MutationAnalysis::joinPopulations() {
 
 
-  JoinSingleGenome join_pop(filtered_population_, filtered_joining_population_);
+  JoinSingleGenome join_pop(filtered_population_, filtered_joining_population_, ped_data_);
 
   join_pop.joinPopulations();
 
@@ -344,7 +345,22 @@ bool kgl::JoinSingleGenome::joinPopulations() {
 
     double percent = (static_cast<double>(joined_variants) / static_cast<double>(total_variants)) * 100.0;
 
-    ExecEnv::log().info("Genome: {}, Total Variants: {}, Joined Variants: {} ({}%)", genome_id, total_variants, joined_variants, percent);
+    std::string population_desc;
+    auto result = ped_data_->getMap().find(genome_id);
+
+    if (result == ped_data_->getMap().end()) {
+
+      ExecEnv::log().warn("MutationAnalysis::checkPED, Genome sample: {} does not have a PED record", genome_id);
+      population_desc = "";
+
+    } else {
+
+      population_desc = result->second.population();
+
+    }
+
+    ExecEnv::log().info("Population: {}, Genome: {}, Total Variants: {}, Joined Variants: {} ({}%)",
+                        population_desc, genome_id, total_variants, joined_variants, percent);
 
   }
 
@@ -399,4 +415,27 @@ kgl::JoinSingleGenome::processGenome(std::shared_ptr<const DiploidGenome> diploi
 
 }
 
+// Check that all samples (genomes) have a corresponding PED record.
+void kgl::MutationAnalysis::checkPED() {
+
+  size_t PED_record_count = 0;
+  for (auto const& [genome_id, genome_ptr] : filtered_population_->getMap()) {
+
+    auto result = ped_data_->getMap().find(genome_id);
+
+    if (result == ped_data_->getMap().end()) {
+
+      ExecEnv::log().warn("MutationAnalysis::checkPED, Genome sample: {} does not have a PED record", genome_id);
+
+    } else {
+
+      ++PED_record_count;
+
+    }
+
+  }
+
+  ExecEnv::log().info("Genome samples with PED records: {}", PED_record_count);
+
+}
 

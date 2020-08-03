@@ -48,10 +48,10 @@ bool kgl::InfoFilterAnalysis::initializeAnalysis( const std::string& work_direct
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::InfoFilterAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> population_base) {
+bool kgl::InfoFilterAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> data_ptr) {
 
   // Superclass the population
-  std::shared_ptr<const UnphasedPopulation> vcf_population = std::dynamic_pointer_cast<const UnphasedPopulation>(population_base);
+  std::shared_ptr<const UnphasedPopulation> vcf_population = std::dynamic_pointer_cast<const UnphasedPopulation>(data_ptr);
 
   if (not vcf_population) {
 

@@ -38,7 +38,7 @@ void kgl::FileDataIO::rawDataIO() {
 
     if (not file_stream_opt) {
 
-      ExecEnv::log().critical("FileDataIO::rawDataIO; I/O error; could not open VCF file: {}", fileName());
+      ExecEnv::log().critical("FileDataIO::rawDataIO; I/O error; could not open Data file: {}", fileName());
 
     }
 
@@ -62,7 +62,7 @@ void kgl::FileDataIO::rawDataIO() {
       // Check we have a valid line record.
       if (line_record.value().second->empty()) {
 
-        ExecEnv::log().error("FileDataIO::rawDataIO; Empty VCF record on line: {} - ignored", line_record.value().first);
+        ExecEnv::log().error("FileDataIO::rawDataIO; Empty Data record on line: {} - ignored", line_record.value().first);
         continue;
 
       }
@@ -74,7 +74,7 @@ void kgl::FileDataIO::rawDataIO() {
   }
   catch (std::exception const &e) {
 
-    ExecEnv::log().critical("FileDataIO::rawDataIO; VCF file: {} unexpected I/O exception: {}", fileName(), e.what());
+    ExecEnv::log().critical("FileDataIO::rawDataIO; Data file: {} unexpected I/O exception: {}", fileName(), e.what());
 
   }
 

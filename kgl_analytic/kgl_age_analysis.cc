@@ -5,6 +5,7 @@
 #include "kgl_age_analysis.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 
+#include <numeric>
 
 namespace kgl = kellerberrin::genome;
 
@@ -53,7 +54,7 @@ std::vector<double> kgl::InfoAgeAnalysis::processBin(const std::shared_ptr<const
 
     std::vector<std::string> age_string = InfoEvidenceAnalysis::varianttoStrings(bin_info_opt.value());
 
-    std::vector<double> age_vector = InfoEvidenceAnalysis::stringBinToFloat(age_string, AGE_BIN_SIZE_);
+    std::vector<double> age_vector = InfoEvidenceAnalysis::stringBinToFloat(age_string, FIELD_AGE_BIN_SIZE_);
 
     return age_vector;
 
@@ -61,7 +62,7 @@ std::vector<double> kgl::InfoAgeAnalysis::processBin(const std::shared_ptr<const
 
 //  ExecEnv::log().warn("InfoAgeAnalysis::processVariant, data for age bin field: {}, not available", field_name);
 
-  return std::vector<double>(AGE_BIN_SIZE_, 0.0);
+  return std::vector<double>(FIELD_AGE_BIN_SIZE_, 0.0);
 
 }
 
@@ -70,27 +71,72 @@ bool kgl::InfoAgeAnalysis::processVariant(const std::shared_ptr<const Variant>& 
 
   ++variant_count_;
 
-  het_under_30_ += processField(variant_ptr, HETERO_UNDER30_FIELD_);
-  het_80_over_ += processField(variant_ptr, HETERO_80OVER_FIELD_);
-  hom_under_30_ += processField(variant_ptr, HOMO_UNDER30_FIELD_);
-  hom_80_over_ += processField(variant_ptr, HOMO_80OVER_FIELD_);
-
+  double het_under_30 = processField(variant_ptr, HETERO_UNDER30_FIELD_);
+  double het_80_over = processField(variant_ptr, HETERO_80OVER_FIELD_);
   auto var_het_vector = processBin(variant_ptr, HETERO_AGE_FIELD_);
+
+  std::vector<double> het_age_vector;
+  het_age_vector.push_back(het_under_30);
+  for (auto age : var_het_vector) {
+
+    het_age_vector.push_back(age);
+
+  }
+  het_age_vector.push_back(het_80_over );
+
+  double hom_under_30 = processField(variant_ptr, HOMO_UNDER30_FIELD_);
+  double hom_80_over = processField(variant_ptr, HOMO_80OVER_FIELD_);
+  auto var_hom_vector = processBin(variant_ptr, HOMO_AGE_FIELD_);
+
+  std::vector<double> hom_age_vector;
+  hom_age_vector.push_back(hom_under_30);
+  for (auto age : var_hom_vector) {
+
+    hom_age_vector.push_back(age);
+
+  }
+  hom_age_vector.push_back(hom_80_over);
+
   std::transform (het_age_vector_.begin(),
              het_age_vector_.end(),
-                   var_het_vector.begin(),
+                   het_age_vector.begin(),
                    het_age_vector_.begin(),
                    std::plus<double>());
 
-  auto var_hom_vector = processBin(variant_ptr, HOMO_AGE_FIELD_);
   std::transform (hom_age_vector_.begin(),
                    hom_age_vector_.end(),
-                   var_hom_vector.begin(),
+                   hom_age_vector.begin(),
                    hom_age_vector_.begin(),
                    std::plus<double>());
 
   all_allele_ += processField(variant_ptr, TOTAL_ALLELE_COUNT_);
   all_alternate_allele_ += processField(variant_ptr, ALTERNATE_ALLELE_COUNT_);
+
+// normalize the vector.
+  auto het_sum = std::accumulate(het_age_vector.begin(), het_age_vector.end(), decltype(het_age_vector)::value_type(0));
+  for (size_t index = 0; index < het_age_vector.size(); ++index) {
+
+    het_age_vector[index] /= het_sum;
+
+  }
+
+  auto hom_sum = std::accumulate(hom_age_vector.begin(), hom_age_vector.end(), decltype(hom_age_vector)::value_type(0));
+  for (size_t index = 0; index < hom_age_vector.size(); ++index) {
+
+    hom_age_vector[index] /= hom_sum;
+
+  }
+
+  // Update the het/hom matrix
+  for (size_t het_index = 0; het_index < het_age_vector.size(); ++het_index) {
+
+    for (size_t hom_index = 0; hom_index < hom_age_vector.size(); ++hom_index) {
+
+      het_hom_matrix_.updateMatrix(het_index, hom_index, het_age_vector[het_index] * hom_age_vector[hom_index]);
+
+    }
+
+  }
 
   return true;
 
@@ -107,9 +153,6 @@ void kgl::InfoAgeAnalysis::addAgeAnalysis(const InfoAgeAnalysis& age_analysis) {
 
   }
 
-  hom_under_30_ += age_analysis.hom_under_30_;
-  hom_80_over_ += age_analysis.hom_80_over_;
-
   index = 0;
   for (auto age : age_analysis.het_age_vector_) {
 
@@ -118,26 +161,19 @@ void kgl::InfoAgeAnalysis::addAgeAnalysis(const InfoAgeAnalysis& age_analysis) {
 
   }
 
-  het_under_30_ += age_analysis.het_under_30_;
-  het_80_over_ += age_analysis.het_80_over_;
-
   variant_count_ += age_analysis.variant_count_;
 
 }
 
 
-
-
 double kgl::InfoAgeAnalysis::sumHomozygous() const {
 
-  double sum = hom_under_30_;
+  double sum = 0;
   for (auto age : hom_age_vector_) {
 
     sum += age;
 
   }
-
-  sum += hom_80_over_;
 
   return sum;
 
@@ -145,14 +181,12 @@ double kgl::InfoAgeAnalysis::sumHomozygous() const {
 
 double kgl::InfoAgeAnalysis::sumHeterozygous() const {
 
-  double sum = het_under_30_;
+  double sum = 0;
   for (auto age : het_age_vector_) {
 
     sum += age;
 
   }
-
-  sum += het_80_over_;
 
   return sum;
 
@@ -161,8 +195,8 @@ double kgl::InfoAgeAnalysis::sumHeterozygous() const {
 
 double kgl::InfoAgeAnalysis::ageWeightedSumHomozygous() const {
 
-  double sum = hom_under_30_ * AVERAGE_AGE_UNDER_30_;
   size_t index = 0;
+  double sum = 0.0;
   for (auto age : hom_age_vector_) {
 
     sum += age * age_weight_vector_[index];
@@ -170,15 +204,13 @@ double kgl::InfoAgeAnalysis::ageWeightedSumHomozygous() const {
 
   }
 
-  sum += hom_80_over_ * AVERAGE_AGE_OVER_80_;
-
   return sum;
 
 }
 
 double kgl::InfoAgeAnalysis::ageWeightedSumHeterozygous() const {
 
-  double sum = het_under_30_ * AVERAGE_AGE_UNDER_30_;
+  double sum = 0;
   size_t index = 0;
   for (auto age : het_age_vector_) {
 
@@ -186,8 +218,6 @@ double kgl::InfoAgeAnalysis::ageWeightedSumHeterozygous() const {
     ++index;
 
   }
-
-  sum += het_80_over_ * AVERAGE_AGE_OVER_80_;
 
   return sum;
 
@@ -203,51 +233,39 @@ std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::Info
   ostream << "hom Av Age: " <<  age_analysis.averageHomozygousAge() << ", het Av Age: " << age_analysis.averageHeterozygousAge() << '\n';
 
   ostream << kgl::InfoAgeAnalysis::header() << '\n';
-  ostream << "hom, " << age_analysis.ageHomozygousUnder30() << ", ";
+  ostream << "hom, ";
   for (auto const age : age_analysis.ageHomozygousVector()) {
 
     ostream << age << ", ";
 
   }
-  ostream << age_analysis.ageHomozygous80Over() << '\n';
 
   double sum_hom = age_analysis.sumHomozygous() * 0.01;
-  ostream << "hom%, " << (sum_hom > 0 ? (age_analysis.ageHomozygousUnder30() / sum_hom) : 0.0) << ", ";
+  ostream << "hom%,";
   for (auto const age : age_analysis.ageHomozygousVector()) {
 
     ostream << (sum_hom > 0 ? (age /sum_hom) : 0.0) << ", ";
 
   }
-  ostream << (sum_hom > 0 ? (age_analysis.ageHomozygous80Over() /sum_hom) : 0.0) << '\n';
 
 
-  ostream << "het, " << age_analysis.ageHeterozygousUnder30() << ", ";
+  ostream << "het, ";
   for (auto const age : age_analysis.ageHeterozygousVector()) {
 
     ostream << age << ", ";
 
   }
-  ostream << age_analysis.ageHeterozygous80Over() << '\n';
 
   double sum_het = age_analysis.sumHeterozygous() * 0.01;
 
-  ostream << "het%, " << (sum_het > 0 ? (age_analysis.ageHeterozygousUnder30() / sum_het) : 0.0)  << ", ";
+  ostream << "het%, ";
   for (auto const age : age_analysis.ageHeterozygousVector()) {
 
     ostream << (sum_het > 0 ? (age / sum_het) : 0.0) << ", ";
 
   }
-  ostream << (sum_het > 0 ? (age_analysis.ageHeterozygous80Over() / sum_het) : 0.0) << '\n';
 
-  if (age_analysis.ageHomozygousUnder30() > 0) {
-
-    ostream << "het/hom, " << (age_analysis.ageHeterozygousUnder30() / age_analysis.ageHomozygousUnder30()) << ", ";
-
-  } else {
-
-    ostream << "het/hom, " << 0.0 << ", ";
-
-  }
+  ostream << "het/hom, ";
   size_t index = 0;
   for (auto const age : age_analysis.ageHomozygousVector()) {
 
@@ -264,16 +282,24 @@ std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::Info
     ++index;
 
   }
-  if (age_analysis.ageHomozygous80Over() > 0) {
+  ostream << '\n' << '\n';
 
-    ostream << (age_analysis.ageHeterozygous80Over() / age_analysis.ageHomozygous80Over()) << '\n' << '\n';
+  ostream << kgl::InfoAgeAnalysis::header() << '\n';
 
-  } else {
+  // Update the het/hom matrix
+  for (size_t het_index = 0; het_index < age_analysis.hetHomMatrix().getMatrix().size(); ++het_index) {
 
-    ostream << 0.0 << '\n' << '\n';
+    for (size_t hom_index = 0; hom_index < age_analysis.hetHomMatrix().getMatrix().size(); ++hom_index) {
+
+      ostream << (age_analysis.hetHomMatrix().getMatrix()[het_index][hom_index] / age_analysis.variantCount()) * 100.0 << ',';
+
+    }
+
+    ostream << '\n';
 
   }
 
+  ostream << '\n' << '\n';
 
   return ostream;
 

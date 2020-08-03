@@ -32,20 +32,18 @@ bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> population_base) {
+bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> data_ptr) {
 
   ExecEnv::log().info("Default VCF File Read for Analysis Id: {} called with Variant Population", ident());
 
-  // Superclass the population
-  std::shared_ptr<const DiploidPopulation> diploid_population = std::dynamic_pointer_cast<const DiploidPopulation>(population_base);
-  std::shared_ptr<const UnphasedPopulation> unphased_population = std::dynamic_pointer_cast<const UnphasedPopulation>(population_base);
 
   // List all the Info fields to remind us what's available.
   std::shared_ptr<const InfoEvidenceHeader> evidence_header_ptr;
 
-  if (diploid_population) {
+  if (data_ptr->dataType() == DataTypeEnum::DiploidPopulation) {
 
-   std::optional<std::shared_ptr<const InfoEvidenceHeader>> info_header_opt = diploid_population->getVCFInfoEvidenceHeader();
+    std::shared_ptr<const DiploidPopulation> diploid_population = std::dynamic_pointer_cast<const DiploidPopulation>(data_ptr);
+    std::optional<std::shared_ptr<const InfoEvidenceHeader>> info_header_opt = diploid_population->getVCFInfoEvidenceHeader();
 
     if (not info_header_opt) {
 
@@ -59,9 +57,11 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> p
 
   }
 
-  if (unphased_population) {
+  if (data_ptr->dataType() == DataTypeEnum::UnphasedPopulation) {
 
     // List all the Info fields to remind us what's available.
+    // Superclass the population
+    std::shared_ptr<const UnphasedPopulation> unphased_population = std::dynamic_pointer_cast<const UnphasedPopulation>(data_ptr);
     std::optional<std::shared_ptr<const InfoEvidenceHeader>> info_header_opt = unphased_population->getVCFInfoEvidenceHeader();
 
     if (not info_header_opt) {
@@ -76,15 +76,33 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> p
 
   }
 
+  if (data_ptr->dataType() == DataTypeEnum::HaploidPopulation) {
+
+    // List all the Info fields to remind us what's available.
+    // Superclass the population
+    std::shared_ptr<const UnphasedPopulation> unphased_population = std::dynamic_pointer_cast<const UnphasedPopulation>(data_ptr);
+    std::optional<std::shared_ptr<const InfoEvidenceHeader>> info_header_opt = unphased_population->getVCFInfoEvidenceHeader();
+
+    if (not info_header_opt) {
+
+      ExecEnv::log().warn("InfoFilterAnalysis::fileReadAnalysis could not get Info Field Header from VCF haploid population: {}",
+                          unphased_population->populationId());
+      return false;
+
+    }
+
+    evidence_header_ptr = info_header_opt.value();
+
+  }
+
   if (not evidence_header_ptr) {
 
-    ExecEnv::log().error("Analysis: {},  expected a Diploid or Unphased Population", ident());
-    return false;
+    return true;
 
   }
 
   ExecEnv::log().info("Analysis Id: {}, VCF File vcf_population: {}, Obtained header for: {} Info Fields (listed below)",
-                      ident(), evidence_header_ptr->getConstMap().size(), population_base->Id());
+                      ident(), evidence_header_ptr->getConstMap().size(), data_ptr->Id());
 
   // List the available INFO fields
   for (auto const&[ident, field_item] : evidence_header_ptr->getConstMap()) {

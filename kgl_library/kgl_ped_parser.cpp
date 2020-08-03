@@ -12,11 +12,71 @@ void kgl::ParsePedFile::readParsePEDImpl() {
 
   ExecEnv::log().info("Start Parsing PED file: {}", fileName());
 
+  commenceIO(PARSER_THREADS_);
+
+  while (true) {
+
+    IOLineRecord line_record = readIORecord();
+
+    if (not line_record) { // check for EOF condition.
+
+      break;
+
+    }
+
+    auto line_number = line_record.value().first;
+    // skip number
+    if (line_number == 1) {
+
+      continue;
+
+    }
 
 
+    if (not moveToPEDRecord(std::move(*line_record.value().second))) {
 
+      ExecEnv::log().warn("ParsePedFile::readParsePEDImpl, Failed to parse PED file: {} record line : {}", fileName(), line_record.value().first);
 
+    }
 
-
+  }
 
 }
+
+
+bool kgl::ParsePedFile::moveToPEDRecord(std::string&& line_record) {
+
+  std::vector<std::string> field_strings = Utility::char_tokenizer(line_record, PED_FIELD_DELIMITER_CHAR_);
+
+  if (field_strings.size() != PEDRecord::PEDFieldCount()) {
+
+    ExecEnv::log().error("ParsePedFile::moveToPEDRecord; PED file: {}, record: {} field count: {} not equal mandatory count: {}",
+                         fileName(), line_record, field_strings.size(), PEDRecord::PEDFieldCount());
+    return false;
+
+  }
+
+  PEDRecord ped_record(field_strings[0],   // family_id
+                       field_strings[1],  //individual_id
+                       field_strings[2],  // paternal_id
+                       field_strings[3],  // maternal_id
+                       field_strings[4],  // sex
+                       field_strings[5],  // pheno_type
+                       field_strings[6],  // population
+                       field_strings[7],  // relationship
+                       field_strings[8],  // siblings
+                       field_strings[9],  // second_order
+                       field_strings[10], // third_order
+                       field_strings[11]); // comments
+
+  if (not ped_data_->addPEDRecord(ped_record)) {
+
+    ExecEnv::log().error("ParsePedFile::moveToPEDRecord; PED file: {}, record: {} cannot add PED record to map", fileName(), line_record);
+    return false;
+
+  }
+
+  return true;
+
+}
+

@@ -61,6 +61,8 @@ public:
   [[nodiscard]] const std::string& thirdOrder() const { return third_order_; }
   [[nodiscard]] const std::string& comments() const { return comments_; }
 
+  [[nodiscard]] static size_t PEDFieldCount() { return PED_FIELD_COUNT_; }
+
 private:
 
   std::string family_id_;
@@ -76,10 +78,12 @@ private:
   std::string third_order_;
   std::string comments_;
 
+  static constexpr const size_t PED_FIELD_COUNT_{12};         // Threads parsing PED records
+
 };
 
 
-using PEDRecordMap = std::map<std::string, PEDRecord>;
+using PEDRecordMap = std::map<std::string, const PEDRecord>;
 
 class GenomePEDData : public DataObjectBase {
 
@@ -120,7 +124,7 @@ private:
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class ParsePedFile : public FileDataIO {
+class ParsePedFile : private FileDataIO {
 
 public:
 
@@ -133,6 +137,10 @@ public:
 private:
 
   std::shared_ptr<GenomePEDData> ped_data_;
+  static constexpr const long PARSER_THREADS_{1};         // Threads parsing PED records
+  static constexpr const char PED_FIELD_DELIMITER_CHAR_{'\t'};   // PED Field separator (char).
+
+  bool moveToPEDRecord(std::string&& line_record);
 
 };
 

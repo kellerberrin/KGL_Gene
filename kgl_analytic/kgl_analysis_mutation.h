@@ -65,6 +65,8 @@ private:
   using ret_tuple = std::tuple<GenomeId_t, bool, size_t, size_t>;
   ret_tuple processContig(ContigId_t contig_id, std::shared_ptr<const DiploidGenome> genome_ptr);
   void joinPopulations();
+  void checkPED();
+
 };
 
 
@@ -74,9 +76,11 @@ class JoinSingleGenome {
 public:
 
   JoinSingleGenome(std::shared_ptr<const DiploidPopulation> joined_population,
-                   std::shared_ptr<const UnphasedPopulation> joining_population) :
+                   std::shared_ptr<const UnphasedPopulation> joining_population,
+                   std::shared_ptr<const GenomePEDData> ped_data) :
                    joined_population_(joined_population),
-                   joining_population_(joining_population) {}
+                   joining_population_(joining_population),
+                   ped_data_(ped_data) {}
   ~JoinSingleGenome() = default;
 
   bool joinPopulations();
@@ -92,6 +96,8 @@ private:
   // The population that is matched against the joined population.
   // This is currently assumed to be a single genome population (Gnomad, ExAC, Clinvar, dbSNP).
   std::shared_ptr<const UnphasedPopulation> joining_population_;
+  // The pedigree data (ethnic background)
+  std::shared_ptr<const GenomePEDData> ped_data_;
 
 };
 

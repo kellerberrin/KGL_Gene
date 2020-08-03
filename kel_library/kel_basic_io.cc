@@ -59,6 +59,7 @@ bool TextStreamIO::open(const std::string &file_name) {
 
   try {
 
+    record_counter_ = 0;
     // Open input file.
 
     file_.open(file_name);
@@ -122,6 +123,7 @@ bool GZStreamIO::open(const std::string &file_name) {
 
   try {
 
+    record_counter_ = 0;
     // Open input file.
 
     file_.open(file_name, std::ios_base::in | std::ios_base::binary);
