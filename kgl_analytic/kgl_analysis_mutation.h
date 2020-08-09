@@ -62,15 +62,19 @@ private:
 
   bool getParameters(const std::string& work_directory, const RuntimeParameterMap& named_parameters);
   bool hetHomRatio(std::shared_ptr<const DiploidPopulation> population);
-  using ret_tuple = std::tuple<GenomeId_t, bool, size_t, size_t>;
+  using ret_tuple = std::tuple<GenomeId_t, bool, size_t, size_t, double, double>;
   ret_tuple processContig(ContigId_t contig_id, std::shared_ptr<const DiploidGenome> genome_ptr);
   void joinPopulations();
+  double alleleFrequency(GenomeId_t genome_id, std::shared_ptr<const Variant> variant);
+  double processField(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name);
   void checkPED();
 
 };
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Joins a single genome population (Gnomad, Clinvar) to another population.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 class JoinSingleGenome {
 
 public:
@@ -99,10 +103,33 @@ private:
   // The pedigree data (ethnic background)
   std::shared_ptr<const GenomePEDData> ped_data_;
 
+
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class LocalGenomeJoin {
+
+public :
+
+  explicit LocalGenomeJoin(std::shared_ptr<const GenomeVariant> unphased_genome_ptr) : unphased_genome_ptr_(std::move(unphased_genome_ptr)) {}
+
+  [[nodiscard]] size_t variantsProcessed() const { return variants_processed_; }
+  [[nodiscard]] size_t joinedVariantsFound() const { return joined_variants_found_; }
+
+  // Joins a single genome population (Gnomad, Clinvar) to another (generally phased Diploid) population.
+  bool lookupJoinedPop(std::shared_ptr<const Variant> variant_ptr);
+
+private:
+
+  size_t variants_processed_{0};
+  size_t joined_variants_found_{0};
+  std::shared_ptr<const GenomeVariant> unphased_genome_ptr_;
 
 
+};
 
 
 

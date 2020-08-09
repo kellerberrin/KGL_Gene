@@ -28,6 +28,9 @@ public:
             std::string sex,
             std::string pheno_type,
             std::string population,
+            std::string population_description,
+            std::string super_population,
+            std::string super_description,
             std::string relationship,
             std::string siblings,
             std::string second_order,
@@ -39,6 +42,9 @@ public:
                                     sex_(std::move(sex)),
                                     pheno_type_(std::move(pheno_type)),
                                     population_(std::move(population)),
+                                    population_description_(std::move(population_description)),
+                                    super_population_(std::move(super_population)),
+                                    super_description_(std::move(super_description)),
                                     relationship_(std::move(relationship)),
                                     siblings_(std::move(siblings)),
                                     second_order_(std::move(second_order)),
@@ -55,6 +61,9 @@ public:
   [[nodiscard]] const std::string& sex() const { return sex_; }
   [[nodiscard]] const std::string& phenoType() const { return pheno_type_; }
   [[nodiscard]] const std::string& population() const { return population_; }
+  [[nodiscard]] const std::string& populationDescription() const { return population_description_; }
+  [[nodiscard]] const std::string& superPopulation() const { return super_population_; }
+  [[nodiscard]] const std::string& superDescription() const { return super_description_; }
   [[nodiscard]] const std::string& relationship() const { return relationship_; }
   [[nodiscard]] const std::string& siblings() const { return siblings_; }
   [[nodiscard]] const std::string& secondOrder() const { return second_order_; }
@@ -72,13 +81,16 @@ private:
   std::string sex_;
   std::string pheno_type_;
   std::string population_;
+  std::string population_description_;
+  std::string super_population_;
+  std::string super_description_;
   std::string relationship_;
   std::string siblings_;
   std::string second_order_;
   std::string third_order_;
   std::string comments_;
 
-  static constexpr const size_t PED_FIELD_COUNT_{12};         // Threads parsing PED records
+  static constexpr const size_t PED_FIELD_COUNT_{15};         // Threads parsing PED records
 
 };
 

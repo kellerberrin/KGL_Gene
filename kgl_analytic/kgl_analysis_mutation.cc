@@ -5,6 +5,8 @@
 #include "kel_thread_pool.h"
 #include "kgl_analysis_mutation.h"
 #include "kgl_filter.h"
+#include "kgl_variant_factory_vcf_evidence_analysis.h"
+
 
 #include <fstream>
 
@@ -192,7 +194,7 @@ bool kgl::MutationAnalysis::hetHomRatio(std::shared_ptr<const DiploidPopulation>
 
     ThreadPool thread_pool;
     std::vector<std::future<ret_tuple>> future_vector;
-    std::map<GenomeId_t, std::pair<size_t, size_t>> genome_variant_count;
+    std::map<GenomeId_t, std::tuple<size_t, size_t, double, double>> genome_variant_count;
     for (auto const& [genome, genome_ptr] : population->getMap()) {
 
       std::future<ret_tuple> future = thread_pool.enqueueTask(&MutationAnalysis::processContig, this, genome_contig_id, genome_ptr);
@@ -202,11 +204,13 @@ bool kgl::MutationAnalysis::hetHomRatio(std::shared_ptr<const DiploidPopulation>
 
     for (auto& future : future_vector) {
 
-      auto [genome, contig_flag, hetero_count, homo_count] = future.get();
+      auto [genome, contig_flag, hetero_count, homo_count, expected_hetero, expected_homo] = future.get();
+
+      ExecEnv::log().info("MutationAnalysis::hetHomRatio, Processed Genome: {}", genome);
 
       if (contig_flag) {
 
-        genome_variant_count[genome] = std::pair<size_t, size_t>(hetero_count, homo_count);
+        genome_variant_count[genome] = std::tuple<size_t, size_t, double, double>(hetero_count, homo_count, expected_hetero, expected_homo);
 
       }
 
@@ -234,7 +238,36 @@ bool kgl::MutationAnalysis::hetHomRatio(std::shared_ptr<const DiploidPopulation>
 
       for (auto const& [genome_id, het_hom_count]  : genome_variant_count) {
 
-        outfile << het_hom_count.first << DELIMITER_;
+        auto [hom_count, het_count, expected_het, expected_hom] = het_hom_count;
+
+        outfile << hom_count << DELIMITER_;
+
+      }
+
+      outfile << '\n';
+
+      outfile << "ExpectHet" << DELIMITER_;
+      outfile << genome_variant_count.size() << DELIMITER_;
+
+      for (auto const& [genome_id, het_hom_count] : genome_variant_count) {
+
+        auto [hom_count, het_count, expected_het, expected_hom] = het_hom_count;
+
+        outfile << expected_het << DELIMITER_;
+
+      }
+
+
+      outfile << '\n';
+
+      outfile << "ExpectHom" << DELIMITER_;
+      outfile << genome_variant_count.size() << DELIMITER_;
+
+      for (auto const& [genome_id, het_hom_count] : genome_variant_count) {
+
+        auto [hom_count, het_count, expected_het, expected_hom] = het_hom_count;
+
+        outfile << expected_hom << DELIMITER_;
 
       }
 
@@ -245,7 +278,9 @@ bool kgl::MutationAnalysis::hetHomRatio(std::shared_ptr<const DiploidPopulation>
 
       for (auto const& [genome_id, het_hom_count] : genome_variant_count) {
 
-        outfile << het_hom_count.second << DELIMITER_;
+        auto [hom_count, het_count, expected_het, expected_hom] = het_hom_count;
+
+        outfile << het_count << DELIMITER_;
 
       }
 
@@ -262,7 +297,7 @@ bool kgl::MutationAnalysis::hetHomRatio(std::shared_ptr<const DiploidPopulation>
 }
 
 
-std::tuple<kgl::GenomeId_t, bool, size_t, size_t>
+std::tuple<kgl::GenomeId_t, bool, size_t, size_t, double, double>
 kgl::MutationAnalysis::processContig(ContigId_t contig_id, std::shared_ptr<const DiploidGenome> genome_ptr) {
 
   auto contig_opt = genome_ptr->getContig(contig_id);
@@ -271,20 +306,37 @@ kgl::MutationAnalysis::processContig(ContigId_t contig_id, std::shared_ptr<const
 
     auto contig_ptr = contig_opt.value()->filterVariants(SNPFilter());
 
+    double expected_homozygous{0};
+    double expected_heterozygous{0};
     size_t heterozygous_count{0};
     size_t homozygous_count{0};
     for (auto const&[offset, offset_ptr] : contig_ptr->getMap()) {
 
       OffsetVariantArray variants = offset_ptr->getVariantArray();
-      if (variants.size() == 1) {
 
-        ++heterozygous_count;
+      if (variants.size() == 2 or  variants.size() == 1) {
 
-      } else if (variants.size() == 2) {
+        // Get the allele frequency.
+        double allele_frequency = alleleFrequency(genome_ptr->genomeId(), variants[0]);
 
-        if (variants[0]->homozygous(*variants[1])) {
+        if (allele_frequency > 0.0) {
 
-          ++homozygous_count;
+          expected_heterozygous += 2.0 * allele_frequency * (1.0 - allele_frequency);
+          expected_homozygous += allele_frequency * allele_frequency;
+
+          if (variants.size() == 1) {
+
+            ++heterozygous_count;
+
+          } else if (variants.size() == 2) {
+
+            if (variants[0]->homozygous(*variants[1])) {
+
+              ++homozygous_count;
+
+            }
+
+          }
 
         }
 
@@ -292,13 +344,68 @@ kgl::MutationAnalysis::processContig(ContigId_t contig_id, std::shared_ptr<const
 
     }
 
-    return { genome_ptr->genomeId(), true, heterozygous_count, homozygous_count};
+    return { genome_ptr->genomeId(), true, heterozygous_count, homozygous_count, expected_heterozygous, expected_homozygous};
 
   }
 
-  return { genome_ptr->genomeId(), false, 0, 0}; // contig not present.
+  return { genome_ptr->genomeId(), false, 0, 0, 0.0, 0.0}; // contig not present.
 
 }
+
+
+double kgl::MutationAnalysis::alleleFrequency(GenomeId_t genome_id, std::shared_ptr<const Variant> variant_ptr) {
+
+  auto result = ped_data_->getMap().find(genome_id);
+
+  if (result == ped_data_->getMap().end()) {
+
+    ExecEnv::log().error("MutationAnalysis::checkPED, Genome sample: {} does not have a PED record", genome_id);
+    return -1.0;
+
+  } else {
+
+    // The Info AF field for this the Genome super population.
+    std::string super_population_AF_field = result->second.superPopulation() + "_AF";
+    // Lookup the AF frequency.
+    double AF_frequency = processField(variant_ptr, super_population_AF_field);
+
+    return AF_frequency;
+
+  }
+
+}
+
+
+double kgl::MutationAnalysis::processField(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name) {
+
+
+  std::optional<kgl::InfoDataVariant> field_opt = InfoEvidenceAnalysis::getInfoData(*variant_ptr, field_name);
+
+  if (field_opt) {
+
+    std::vector<int64_t> field_vec = InfoEvidenceAnalysis::varianttoIntegers(field_opt.value());
+
+    if (field_vec.size() != 1) {
+
+      ExecEnv::log().error("MutationAnalysis::processField, Field: {} expected vector size 1, get vector size: {}",
+                          field_name, field_vec.size());
+      return -1.0;
+
+    } else {
+
+      return static_cast<double>(field_vec.front());
+
+    }
+
+  } else {
+
+    ExecEnv::log().error("MutationAnalysis::processField, Field: {} not found for Variant: {}",
+                         field_name, variant_ptr->output(',',VariantOutputIndex::START_0_BASED, false));
+    return -1.0;
+  }
+
+}
+
 
 // Join Diploid and a single genome population such as Gnomad or Clinvar.
 void kgl::MutationAnalysis::joinPopulations() {
@@ -372,46 +479,11 @@ bool kgl::JoinSingleGenome::joinPopulations() {
 std::tuple<std::string, size_t, size_t>
 kgl::JoinSingleGenome::processGenome(std::shared_ptr<const DiploidGenome> diploid_genome, std::shared_ptr<const GenomeVariant> unphased_genome_ptr) {
 
-  class LocalGenomeJoin {
-
-  public :
-
-    explicit LocalGenomeJoin(std::shared_ptr<const GenomeVariant> unphased_genome_ptr) : unphased_genome_ptr_(std::move(unphased_genome_ptr)) {}
-
-    size_t variants_processed_{0};
-    size_t joined_variants_found_{0};
-    std::shared_ptr<const GenomeVariant> unphased_genome_ptr_;
-
-    // Joins a single genome population (Gnomad, Clinvar) to another (generally phased Diploid) population.
-    bool lookupJoinedPop(std::shared_ptr<const Variant> variant_ptr) {
-
-      ++variants_processed_;
-
-      auto contig_opt = unphased_genome_ptr_->getContig(variant_ptr->contigId());
-
-      if (contig_opt) {
-
-        auto variant_opt = contig_opt.value()->findVariant(*variant_ptr);
-
-        if (variant_opt) {
-
-          ++joined_variants_found_;
-
-        }
-
-      }
-
-      return true;
-
-    }
-
-  };
-
   LocalGenomeJoin genome_join(unphased_genome_ptr);
 
   diploid_genome->processAll(genome_join, &LocalGenomeJoin::lookupJoinedPop);
 
-  return {diploid_genome->genomeId(), genome_join.variants_processed_, genome_join.joined_variants_found_};
+  return {diploid_genome->genomeId(), genome_join.variantsProcessed(), genome_join.joinedVariantsFound()};
 
 }
 
@@ -438,4 +510,29 @@ void kgl::MutationAnalysis::checkPED() {
   ExecEnv::log().info("Genome samples with PED records: {}", PED_record_count);
 
 }
+
+
+// Joins a single genome population (Gnomad, Clinvar) to another (generally phased Diploid) population.
+bool kgl::LocalGenomeJoin::lookupJoinedPop(std::shared_ptr<const Variant> variant_ptr) {
+
+  ++variants_processed_;
+
+  auto contig_opt = unphased_genome_ptr_->getContig(variant_ptr->contigId());
+
+  if (contig_opt) {
+
+    auto variant_opt = contig_opt.value()->findVariant(*variant_ptr);
+
+    if (variant_opt) {
+
+      ++joined_variants_found_;
+
+    }
+
+  }
+
+  return true;
+
+}
+
 

@@ -33,6 +33,23 @@ public:
   void updateMatrix(size_t het_age_index, size_t hom_age_index, double value) { het_hom_age_matrix_[het_age_index][hom_age_index] += value; }
   [[nodiscard]] const std::vector<std::vector<double>>& getMatrix() const { return het_hom_age_matrix_; }
 
+  [[nodiscard]] double sum() const {
+
+    double matrix_sum{0.0};
+    for (auto const& vector : het_hom_age_matrix_) {
+
+      for (auto const& element : vector) {
+
+        matrix_sum += element;
+
+      }
+
+    }
+
+    return matrix_sum;
+
+  }
+
 private:
 
   constexpr static const size_t AGE_MATRIX_SIZE_{12};

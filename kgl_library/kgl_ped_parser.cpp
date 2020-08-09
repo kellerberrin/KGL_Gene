@@ -63,11 +63,14 @@ bool kgl::ParsePedFile::moveToPEDRecord(std::string&& line_record) {
                        field_strings[4],  // sex
                        field_strings[5],  // pheno_type
                        field_strings[6],  // population
-                       field_strings[7],  // relationship
-                       field_strings[8],  // siblings
-                       field_strings[9],  // second_order
-                       field_strings[10], // third_order
-                       field_strings[11]); // comments
+                       field_strings[7],  // population description
+                       field_strings[8],  // super_population
+                       field_strings[9],  // super_description
+                       field_strings[10],  // relationship
+                       field_strings[11],  // siblings
+                       field_strings[12],  // second_order
+                       field_strings[13], // third_order
+                       field_strings[14]); // comments
 
   if (not ped_data_->addPEDRecord(ped_record)) {
 

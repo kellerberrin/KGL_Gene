@@ -37,8 +37,6 @@ double kgl::InfoAgeAnalysis::processField(const std::shared_ptr<const Variant>& 
 
   }
 
-//  ExecEnv::log().warn("InfoAgeAnalysis::processVariant, Field: {} not available", field_name);
-
   return 0.0;
 
 }
@@ -84,6 +82,13 @@ bool kgl::InfoAgeAnalysis::processVariant(const std::shared_ptr<const Variant>& 
   }
   het_age_vector.push_back(het_80_over );
 
+  if (het_age_vector.size() != AGE_BIN_SIZE_) {
+
+    ExecEnv::log().error("InfoAgeAnalysis::processVariant, het_age_vector size: {}, expected size: {}", het_age_vector.size(), AGE_BIN_SIZE_);
+    return false;
+
+  }
+
   double hom_under_30 = processField(variant_ptr, HOMO_UNDER30_FIELD_);
   double hom_80_over = processField(variant_ptr, HOMO_80OVER_FIELD_);
   auto var_hom_vector = processBin(variant_ptr, HOMO_AGE_FIELD_);
@@ -96,6 +101,13 @@ bool kgl::InfoAgeAnalysis::processVariant(const std::shared_ptr<const Variant>& 
 
   }
   hom_age_vector.push_back(hom_80_over);
+
+  if (hom_age_vector.size() != AGE_BIN_SIZE_) {
+
+    ExecEnv::log().error("InfoAgeAnalysis::processVariant, hom_age_vector size: {}, expected size: {}", hom_age_vector.size(), AGE_BIN_SIZE_);
+    return false;
+
+  }
 
   std::transform (het_age_vector_.begin(),
              het_age_vector_.end(),
@@ -113,28 +125,79 @@ bool kgl::InfoAgeAnalysis::processVariant(const std::shared_ptr<const Variant>& 
   all_alternate_allele_ += processField(variant_ptr, ALTERNATE_ALLELE_COUNT_);
 
 // normalize the vector.
-  auto het_sum = std::accumulate(het_age_vector.begin(), het_age_vector.end(), decltype(het_age_vector)::value_type(0));
-  for (size_t index = 0; index < het_age_vector.size(); ++index) {
+  auto het_sum = std::accumulate(het_age_vector.begin(), het_age_vector.end(), decltype(het_age_vector)::value_type(0.0));
+  for (size_t index = 0; index < AGE_BIN_SIZE_; ++index) {
 
-    het_age_vector[index] /= het_sum;
+    if (het_sum > 0) {
+
+      het_age_vector[index] = het_age_vector[index] / het_sum;
+
+    } else {
+
+      het_age_vector[index] = 0.0;
+
+    }
 
   }
 
-  auto hom_sum = std::accumulate(hom_age_vector.begin(), hom_age_vector.end(), decltype(hom_age_vector)::value_type(0));
-  for (size_t index = 0; index < hom_age_vector.size(); ++index) {
+  double check_sum = 0.0;
+  for (auto const& age: het_age_vector) {
 
-    hom_age_vector[index] /= hom_sum;
+    check_sum += age;
+
+  }
+
+  if (check_sum != 0.0 and (check_sum < 0.999999 or check_sum > 1.000001)) {
+
+    ExecEnv::log().error("InfoAgeAnalysis::processVariant, Normalized sum(het_age_vector) out of bounds: {}, expected 1.0", check_sum);
+
+  }
+
+  auto hom_sum = std::accumulate(hom_age_vector.begin(), hom_age_vector.end(), decltype(hom_age_vector)::value_type(0.0));
+  for (size_t index = 0; index < AGE_BIN_SIZE_; ++index) {
+
+    if (hom_sum > 0) {
+
+      hom_age_vector[index] = hom_age_vector[index] / hom_sum;
+
+    } else {
+
+      hom_age_vector[index] = 0.0;
+
+    }
+
+  }
+
+  check_sum = 0.0;
+  for (auto const& age: hom_age_vector) {
+
+    check_sum += age;
+
+  }
+
+  if (check_sum != 0.0 and (check_sum < 0.999999 or check_sum > 1.000001)) {
+
+    ExecEnv::log().error("InfoAgeAnalysis::processVariant, Normalized sum(hom_age_vector) out of bounds: {}, expected 1.0", check_sum);
 
   }
 
   // Update the het/hom matrix
-  for (size_t het_index = 0; het_index < het_age_vector.size(); ++het_index) {
+  check_sum = 0.0;
+  for (size_t het_index = 0; het_index < AGE_BIN_SIZE_; ++het_index) {
 
-    for (size_t hom_index = 0; hom_index < hom_age_vector.size(); ++hom_index) {
+    for (size_t hom_index = 0; hom_index < AGE_BIN_SIZE_; ++hom_index) {
 
-      het_hom_matrix_.updateMatrix(het_index, hom_index, het_age_vector[het_index] * hom_age_vector[hom_index]);
+      double cross_product = het_age_vector[het_index] * hom_age_vector[hom_index];
+      het_hom_matrix_.updateMatrix(het_index, hom_index, cross_product);
+      check_sum += cross_product;
 
     }
+
+  }
+
+  if (check_sum != 0.0 and (check_sum < 0.999999 or check_sum > 1.000001)) {
+
+    ExecEnv::log().error("InfoAgeAnalysis::processVariant, Normalized sum(het_hom_matrix) out of bounds: {}, expected 1.0", check_sum);
 
   }
 
@@ -240,6 +303,8 @@ std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::Info
 
   }
 
+  ostream << '\n';
+
   double sum_hom = age_analysis.sumHomozygous() * 0.01;
   ostream << "hom%,";
   for (auto const age : age_analysis.ageHomozygousVector()) {
@@ -248,6 +313,7 @@ std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::Info
 
   }
 
+  ostream << '\n';
 
   ostream << "het, ";
   for (auto const age : age_analysis.ageHeterozygousVector()) {
@@ -256,14 +322,18 @@ std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::Info
 
   }
 
-  double sum_het = age_analysis.sumHeterozygous() * 0.01;
+  ostream << '\n';
+
 
   ostream << "het%, ";
+  double sum_het = age_analysis.sumHeterozygous() * 0.01;
   for (auto const age : age_analysis.ageHeterozygousVector()) {
 
     ostream << (sum_het > 0 ? (age / sum_het) : 0.0) << ", ";
 
   }
+
+  ostream << '\n';
 
   ostream << "het/hom, ";
   size_t index = 0;
@@ -282,16 +352,25 @@ std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::Info
     ++index;
 
   }
-  ostream << '\n' << '\n';
 
+  ostream << '\n' << '\n';
   ostream << kgl::InfoAgeAnalysis::header() << '\n';
 
+  double matrix_sum = age_analysis.hetHomMatrix().sum();
   // Update the het/hom matrix
   for (size_t het_index = 0; het_index < age_analysis.hetHomMatrix().getMatrix().size(); ++het_index) {
 
     for (size_t hom_index = 0; hom_index < age_analysis.hetHomMatrix().getMatrix().size(); ++hom_index) {
 
-      ostream << (age_analysis.hetHomMatrix().getMatrix()[het_index][hom_index] / age_analysis.variantCount()) * 100.0 << ',';
+      if (matrix_sum > 0) {
+
+        ostream << (age_analysis.hetHomMatrix().getMatrix()[het_index][hom_index] / matrix_sum) * 100.0 << ',';
+
+      } else {
+
+        ostream << age_analysis.hetHomMatrix().getMatrix()[het_index][hom_index] << ',';
+
+      }
 
     }
 
@@ -299,7 +378,7 @@ std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::Info
 
   }
 
-  ostream << '\n' << '\n';
+  ostream << '\n' << std::endl;
 
   return ostream;
 
