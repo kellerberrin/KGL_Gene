@@ -81,105 +81,105 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_genome_types.h
         kel_library/kel_lock.h
         kgl_library/kgl_gff_fasta.h
-        kgl_library/kgl_gff_fasta.cc
+        kgl_library/kgl_gff_fasta.cpp
         kgl_library/kgl_genome_db.h
         kel_library/kel_patterns.h
         kgl_library/kgl_genome_feature.h
-        kgl_library/kgl_genome_feature.cc
+        kgl_library/kgl_genome_feature.cpp
         kgl_library/kgl_variant.h
-        kgl_library/kgl_variant.cc
+        kgl_library/kgl_variant.cpp
         kgl_library/kgl_filter.h
-        kgl_library/kgl_filter.cc
+        kgl_library/kgl_filter.cpp
         kgl_library/kgl_table.h
-        kgl_library/kgl_table.cc
+        kgl_library/kgl_table.cpp
         kgl_library/kgl_table_ncbi.h
         kgl_library/kgl_sequence_base.h
-        kgl_library/kgl_sequence_base.cc
+        kgl_library/kgl_sequence_base.cpp
         kgl_library/kgl_sequence_amino.h
-        kgl_library/kgl_sequence_amino.cc
+        kgl_library/kgl_sequence_amino.cpp
         kgl_library/kgl_alphabet_amino.h
         kgl_library/kgl_variant_db.h
         kgl_library/kgl_genome_prelim.h
-        kgl_library/kgl_genome_prelim.cc
+        kgl_library/kgl_genome_prelim.cpp
         kgl_library/kgl_attributes.h
-        kgl_library/kgl_attributes.cc
+        kgl_library/kgl_attributes.cpp
         kgl_library/kgl_sequence_virtual.h
         kgl_library/kgl_genome_contig.cc
-        kgl_library/kgl_genome_verify.cc
-        kgl_library/kgl_genome_genome.cc
+        kgl_library/kgl_genome_verify.cpp
+        kgl_library/kgl_genome_genome.cpp
         kgl_library/kgl_sequence_codon.h
-        kgl_library/kgl_sequence_codon.cc
+        kgl_library/kgl_sequence_codon.cpp
         kgl_library/kgl_alphabet_string.h
-        kgl_library/kgl_alphabet_amino.cc
+        kgl_library/kgl_alphabet_amino.cpp
         kgl_library/kgl_alphabet_dna5.h
-        kgl_library/kgl_alphabet_dna5.cc
+        kgl_library/kgl_alphabet_dna5.cpp
         kgl_library/kgl_alphabet_coding_dna5.h
-        kgl_library/kgl_alphabet_coding_dna5.cc
+        kgl_library/kgl_alphabet_coding_dna5.cpp
         kgl_library/kgl_variant_evidence.h
-        kgl_library/kgl_variant_evidence.cc
+        kgl_library/kgl_variant_evidence.cpp
         kgl_library/kgl_statistics_upgma.h
-        kgl_library/kgl_statistics_upgma.cc
-        kgl_library/kgl_variant_mutation.cc
+        kgl_library/kgl_statistics_upgma.cpp
+        kgl_library/kgl_variant_mutation.cpp
         kgl_library/kgl_variant_mutation.h
-        kgl_library/kgl_variant_db_mutation.cc
+        kgl_library/kgl_variant_db_mutation.cpp
         kgl_library/kgl_sequence_offset.h
-        kgl_library/kgl_sequence_offset.cc
+        kgl_library/kgl_sequence_offset.cpp
         kgl_library/kgl_variant_mutation_offset.h
-        kgl_library/kgl_variant_mutation_offset.cc
+        kgl_library/kgl_variant_mutation_offset.cpp
         kgl_library/kgl_variant_db_phased.h
         kgl_library/kgl_table_impl.h
-        kgl_library/kgl_table_impl.cc
+        kgl_library/kgl_table_impl.cpp
         kgl_library/kgl_table_organism.h
         kgl_library/kgl_gaf_parser.h
-        kgl_library/kgl_gaf_parser.cc
+        kgl_library/kgl_gaf_parser.cpp
         kgl_library/kgl_sequence_compare.h
         kgl_library/kgl_sequence_compare_impl.h
-        kgl_library/kgl_sequence_compare_impl.cc
+        kgl_library/kgl_sequence_compare_impl.cpp
         kgl_library/kgl_sequence_distance.h
-        kgl_library/kgl_genome_types.cc
+        kgl_library/kgl_genome_types.cpp
         kgl_library/kgl_sequence_distance_impl.h
-        kgl_library/kgl_sequence_distance_impl.cc
+        kgl_library/kgl_sequence_distance_impl.cpp
         kgl_library/kgl_variant_factory_pf3k_impl.h
-        kgl_library/kgl_variant_factory_pf3k_impl.cc
+        kgl_library/kgl_variant_factory_pf3k_impl.cpp
         kgl_library/kgl_variant_factory_readvcf_impl.h
         kgl_library/kgl_variant_factory_vcf_parse_cigar.h
-        kgl_library/kgl_variant_factory_vcf_parse_cigar.cc
+        kgl_library/kgl_variant_factory_vcf_parse_cigar.cpp
         kgl_library/kgl_variant_factory_record_vcf_impl.h
-        kgl_library/kgl_variant_factory_record_vcf_impl.cc
+        kgl_library/kgl_variant_factory_record_vcf_impl.cpp
         kgl_library/kgl_genome_aux_csv.h
-        kgl_library/kgl_genome_aux_csv_impl.cc
+        kgl_library/kgl_genome_aux_csv_impl.cpp
         kgl_library/kgl_variant_db_genome.h
         kgl_library/kgl_variant_db_population.h
         kgl_library/kgl_genome_contig_feature.h
-        kgl_library/kgl_genome_contig_feature.cc
+        kgl_library/kgl_genome_contig_feature.cpp
         kgl_library/kgl_genome_contig_aux.cc
         kgl_library/kgl_genome_contig_aux.h
-        kgl_library/kgl_phylogenetic_tree.cc
+        kgl_library/kgl_phylogenetic_tree.cpp
         kgl_library/kgl_phylogenetic_tree.h
         kgl_library/kgl_variant_file_vcf_record.h
-        kgl_library/kgl_variant_factory_readvcf_impl.cc
-        kgl_library/kgl_data_file_impl.cc
+        kgl_library/kgl_variant_factory_readvcf_impl.cpp
+        kgl_library/kgl_data_file_impl.cpp
         kgl_library/kgl_data_file_impl.h
-        kgl_library/kgl_variant_factory_grch_impl.cc
+        kgl_library/kgl_variant_factory_grch_impl.cpp
         kgl_library/kgl_variant_factory_grch_impl.h
-        kgl_library/kgl_variant_file_vcf_impl.cc
+        kgl_library/kgl_variant_file_vcf_impl.cpp
         kgl_library/kgl_variant_file_vcf_impl.h
-        kgl_library/kgl_variant_factory_vcf_parse_info.cc
+        kgl_library/kgl_variant_factory_vcf_parse_info.cpp
         kgl_library/kgl_variant_factory_vcf_parse_info.h
-        kgl_library/kgl_variant_factory_vcf_parse_header.cc
+        kgl_library/kgl_variant_factory_vcf_parse_header.cpp
         kgl_library/kgl_variant_factory_vcf_parse_header.h
-        kgl_library/kgl_variant_factory_vcf_evidence.cc
+        kgl_library/kgl_variant_factory_vcf_evidence.cpp
         kgl_library/kgl_variant_factory_vcf_evidence.h
-        kgl_library/kgl_variant_factory_vcf_evidence_data.cc
+        kgl_library/kgl_variant_factory_vcf_evidence_data.cpp
         kgl_library/kgl_variant_factory_vcf_evidence_data.h
-        kgl_library/kgl_variant_factory_vcf_evidence_memory.cc
+        kgl_library/kgl_variant_factory_vcf_evidence_memory.cpp
         kgl_library/kgl_variant_factory_vcf_evidence_memory.h
-        kgl_library/kgl_variant_factory_vcf_evidence_data_blk.cc
+        kgl_library/kgl_variant_factory_vcf_evidence_data_blk.cpp
         kgl_library/kgl_variant_factory_vcf_evidence_data_blk.h
-        kgl_library/kgl_variant_factory_vcf_evidence_data_blk_read.cc
-        kgl_library/kgl_variant_factory_vcf_evidence_analysis.cc
+        kgl_library/kgl_variant_factory_vcf_evidence_data_blk_read.cpp
+        kgl_library/kgl_variant_factory_vcf_evidence_analysis.cpp
         kgl_library/kgl_variant_factory_vcf_evidence_analysis.h
-        kgl_library/kgl_variant_factory_1000_impl.cc
+        kgl_library/kgl_variant_factory_1000_impl.cpp
         kgl_library/kgl_variant_factory_1000_impl.h
         kgl_library/kgl_variant_factory_population.h
         kgl_library/kgl_analysis_virtual.h
