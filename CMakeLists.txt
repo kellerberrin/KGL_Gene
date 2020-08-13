@@ -228,12 +228,12 @@ set(ANALYTIC_SOURCE_FILES
 
 set(MIXTURE_SOURCE_FILES
         kgl_mixture/kgl_variant_phase.h
-        kgl_mixture/kgl_variant_phase.cc
+        kgl_mixture/kgl_variant_phase.cpp
         kgl_mixture/kgl_variant_classify.h
-        kgl_mixture/kgl_variant_classify.cc
-        kgl_mixture/kgl_variant_classify_io.cc
+        kgl_mixture/kgl_variant_classify.cpp
+        kgl_mixture/kgl_variant_classify_io.cpp
         kgl_mixture/kgl_read_phasing.h
-        kgl_mixture/kgl_read_phasing.cc
+        kgl_mixture/kgl_read_phasing.cpp
         )
 
 
@@ -291,74 +291,74 @@ set(DECONVOLV_LIB_CONTRIB_FILES
         kel_library/kel_distribution.h)
 
 set(DECONVOLV_LIB_SOURCE_FILES
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_vcf_reader_debug.cc
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_deploid_io_export.cc
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_write_mcmc_related.cc
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_deploid_io.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_vcf_reader_debug.cpp
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_deploid_io_export.cpp
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_write_mcmc_related.cpp
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_deploid_io.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_deploid_io.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_exceptions.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_global.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdconfig.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdconfig.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdconfig.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_panel.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_panel.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_panel.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_txt_reader.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_txt_reader.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_txt_reader.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_update_haplotype.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_update_haplotype.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_update_haplotype.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_utility.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_utility.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_utility.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_variant_index.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_variant_index.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_variant_index.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_vcf_reader.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_vcf_reader.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_vcf_reader.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_update_single_haplotype.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_update_single_haplotype.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_update_single_haplotype.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_update_pair_haplotype.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_update_pair_haplotype.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_update_pair_haplotype.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_hprior.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_hprior.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_hprior.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdpath.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdpath.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdpath.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_combinatorial.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_combinatorial.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_combinatorial.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_sample.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdrecombprobs.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdrecombprobs.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdrecombprobs.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_types.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_allelefreq.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_allelefreq.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_allelefreq.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_alleleread.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_alleleread.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_alleleread.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_ibd.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_ibd.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_ibd.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_base.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_base.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_base.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_hap.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_hap.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_hap.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_virtual.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_virtual.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_virtual.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_titre.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_titre.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_titre.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_data.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_data.cc
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_parameter.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_data.cpp
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_parameter.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_parameter.h
         kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_function.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_function.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_function.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_output.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_output.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_output.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_input.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_input.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_input.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_app.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_app.cc
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_app.cpp
         kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.cc)
+        kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.cpp)
 
 # Application level objects
 set(DECONVOLV_APPLICATION_SOURCE_FILES
-        kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_main.cc
-        kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_parse.cc)
+        kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_main.cpp
+        kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_parse.cpp)
 
 #generate libraries.
 
@@ -408,60 +408,60 @@ set(KPL_LIBRARY_SOURCE_FILES
         kpl_phylogenetic/kpl_genetictype.h
         kpl_phylogenetic/kpl_partition.h
         kpl_phylogenetic/kpl_geneticdata.h
-        kpl_phylogenetic/kpl_geneticcode.cc
-        kpl_phylogenetic/kpl_geneticdata.cc
-        kpl_phylogenetic/kpl_genetictype.cc
-        kpl_phylogenetic/kpl_node.cc
-        kpl_phylogenetic/kpl_partition.cc
-        kpl_phylogenetic/kpl_splittree.cc
-        kpl_phylogenetic/kpl_strom.cc
-        kpl_phylogenetic/kpl_tree.cc
-        kpl_phylogenetic/kpl_treemanip.cc
-        kpl_phylogenetic/kpl_treesummary.cc
-        kpl_phylogenetic/kpl_xstrom.cc
-        kpl_phylogenetic/kpl_likelihood.cc
+        kpl_phylogenetic/kpl_geneticcode.cpp
+        kpl_phylogenetic/kpl_geneticdata.cpp
+        kpl_phylogenetic/kpl_genetictype.cpp
+        kpl_phylogenetic/kpl_node.cpp
+        kpl_phylogenetic/kpl_partition.cpp
+        kpl_phylogenetic/kpl_splittree.cpp
+        kpl_phylogenetic/kpl_strom.cpp
+        kpl_phylogenetic/kpl_tree.cpp
+        kpl_phylogenetic/kpl_treemanip.cpp
+        kpl_phylogenetic/kpl_treesummary.cpp
+        kpl_phylogenetic/kpl_xstrom.cpp
+        kpl_phylogenetic/kpl_likelihood.cpp
         kpl_phylogenetic/kpl_likelihood.h
-        kpl_phylogenetic/kpl_model.cc
+        kpl_phylogenetic/kpl_model.cpp
         kpl_phylogenetic/kpl_model.h
-        kpl_phylogenetic/kpl_qmatrix.cc
+        kpl_phylogenetic/kpl_qmatrix.cpp
         kpl_phylogenetic/kpl_qmatrix.h
-        kpl_phylogenetic/kpl_qmatrixnucleotide.cc
+        kpl_phylogenetic/kpl_qmatrixnucleotide.cpp
         kpl_phylogenetic/kpl_qmatrixnucleotide.h
-        kpl_phylogenetic/kpl_qmatrixcodon.cc
+        kpl_phylogenetic/kpl_qmatrixcodon.cpp
         kpl_phylogenetic/kpl_qmatrixcodon.h
-        kpl_phylogenetic/kpl_asrv.cc
+        kpl_phylogenetic/kpl_asrv.cpp
         kpl_phylogenetic/kpl_asrv.h
-        kpl_phylogenetic/kpl_random.cc
+        kpl_phylogenetic/kpl_random.cpp
         kpl_phylogenetic/kpl_random.h
-        kpl_phylogenetic/kpl_mcmc_updater.cc
+        kpl_phylogenetic/kpl_mcmc_updater.cpp
         kpl_phylogenetic/kpl_mcmc_updater.h
-        kpl_phylogenetic/kpl_mcmc_gamma.cc
+        kpl_phylogenetic/kpl_mcmc_gamma.cpp
         kpl_phylogenetic/kpl_mcmc_gamma.h
-        kpl_phylogenetic/kpl_mcmc_chain.cc
+        kpl_phylogenetic/kpl_mcmc_chain.cpp
         kpl_phylogenetic/kpl_mcmc_chain.h
-        kpl_phylogenetic/kpl_mcmc_output.cc
+        kpl_phylogenetic/kpl_mcmc_output.cpp
         kpl_phylogenetic/kpl_mcmc_output.h
-        kpl_phylogenetic/kpl_mcmc_dirichlet.cc
+        kpl_phylogenetic/kpl_mcmc_dirichlet.cpp
         kpl_phylogenetic/kpl_mcmc_dirichlet.h
-        kpl_phylogenetic/kpl_mcmc_statefrequpdater.cc
+        kpl_phylogenetic/kpl_mcmc_statefrequpdater.cpp
         kpl_phylogenetic/kpl_mcmc_statefrequpdater.h
-        kpl_phylogenetic/kpl_mcmc_exchangeupdater.cc
+        kpl_phylogenetic/kpl_mcmc_exchangeupdater.cpp
         kpl_phylogenetic/kpl_mcmc_exchangeupdater.h
-        kpl_phylogenetic/kpl_mcmc_subsetupdater.cc
+        kpl_phylogenetic/kpl_mcmc_subsetupdater.cpp
         kpl_phylogenetic/kpl_mcmc_subsetupdater.h
-        kpl_phylogenetic/kpl_mcmc_pinvarupdater.cc
+        kpl_phylogenetic/kpl_mcmc_pinvarupdater.cpp
         kpl_phylogenetic/kpl_mcmc_pinvarupdater.h
-        kpl_phylogenetic/kpl_mcmc_omegaupdater.cc
+        kpl_phylogenetic/kpl_mcmc_omegaupdater.cpp
         kpl_phylogenetic/kpl_mcmc_omegaupdater.h
-        kpl_phylogenetic/kpl_mcmc_treeupdater.cc
+        kpl_phylogenetic/kpl_mcmc_treeupdater.cpp
         kpl_phylogenetic/kpl_mcmc_treeupdater.h
-        kpl_phylogenetic/kpl_mcmc_treelength.cc
+        kpl_phylogenetic/kpl_mcmc_treelength.cpp
         kpl_phylogenetic/kpl_mcmc_treelength.h
-        kpl_phylogenetic/kpl_mcmc_polytomyupdater.cc
+        kpl_phylogenetic/kpl_mcmc_polytomyupdater.cpp
         kpl_phylogenetic/kpl_mcmc_polytomyupdater.h
-        kpl_phylogenetic/kpl_mcmc_polytomyprior.cc
+        kpl_phylogenetic/kpl_mcmc_polytomyprior.cpp
         kpl_phylogenetic/kpl_mcmc_polytomyprior.h
-        kpl_phylogenetic/kpl_tree_io.cc
+        kpl_phylogenetic/kpl_tree_io.cpp
         kpl_phylogenetic/kpl_tree_io.h)
 
 add_library(kpl_library_lib STATIC ${KPL_LIBRARY_SOURCE_FILES})
