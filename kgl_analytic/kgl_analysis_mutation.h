@@ -48,26 +48,68 @@ private:
   constexpr static const char* REFERENCE_GENOME_ = "GRCh38";
   constexpr static const char* OUTPUT_FILE_ = "OUTPUTFILE";
   constexpr static const char DELIMITER_ = ',';
-
-  std::shared_ptr<const GenomeReference> genome_GRCh38_;
   std::string output_file_name_;
-  std::shared_ptr<const DiploidPopulation> filtered_population_;
-  std::shared_ptr<const UnphasedPopulation> filtered_joining_population_;
+
+  constexpr static const double MAX_MAF_ = 0.05; // Set the variant frequency
+  constexpr static const ContigOffset_t VARIANT_SPACING_ = 10000;  // Set the variant spacing.
+
+  // The population variant data.
+  std::shared_ptr<const GenomeReference> genome_GRCh38_;
+  std::shared_ptr<const DiploidPopulation> diploid_population_;
+  std::shared_ptr<const UnphasedPopulation> unphased_population_;
   std::shared_ptr<const GenomePEDData> ped_data_;
 
-  // Reduce the size of the population to fit into memory.
-  ContigOffset_t start_region_ = 0;
-  ContigOffset_t end_region_ = 100000000;
+
+  // The Info field identifiers for allele frequency for the 1000 Genome.
+  constexpr static const char* GENOME_1000_FREQ_SUFFIX_ = "_AF";
+  // The Info field identifiers for allele frequency for db SNP.
+  constexpr static const char* SNP_DB_FREQ_ = "FREQ";
+
+  // The Info field identifiers for allele frequency for Gnomad 2.1 and 3.0
+  // First is the super populations defined in the 1000 Genomes.
+  // Second is the population lookup in the Gnomad Info data.
+  constexpr static const std::pair<const char*, const char*> SUPER_POP_AFR_GNOMAD_ {"AFR", "AF_afr"} ;  // African
+  constexpr static const std::pair<const char*, const char*> SUPER_POP_AMR_GNOMAD_ {"AMR", "AF_amr"};  // American
+  constexpr static const std::pair<const char*, const char*> SUPER_POP_EAS_GNOMAD_ {"EAS", "AF_eas"};  // East Asian
+  constexpr static const std::pair<const char*, const char*> SUPER_POP_EUR_GNOMAD_ { "EUR", "AF_nfe"};  // European
+  constexpr static const std::pair<const char*, const char*> SUPER_POP_SAS_GNOMAD_ { "SAS", "AF"};  // South Asian
 
 
-  bool getParameters(const std::string& work_directory, const RuntimeParameterMap& named_parameters);
-  bool hetHomRatio(std::shared_ptr<const DiploidPopulation> population);
-  using ret_tuple = std::tuple<GenomeId_t, bool, size_t, size_t, double, double>;
-  ret_tuple processContig(ContigId_t contig_id, std::shared_ptr<const DiploidGenome> genome_ptr);
-  void joinPopulations();
-  double alleleFrequency(GenomeId_t genome_id, std::shared_ptr<const Variant> variant);
-  double processField(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name);
-  void checkPED();
+  [[nodiscard]] bool getParameters(const std::string& work_directory, const RuntimeParameterMap& named_parameters);
+  [[nodiscard]] bool hetHomRatio(std::shared_ptr<const DiploidPopulation> population);
+  using future_ret_tuple = std::tuple<GenomeId_t, bool, size_t, size_t, double, double>;
+  [[nodiscard]] future_ret_tuple processContig(ContigId_t contig_id, std::shared_ptr<const DiploidGenome> genome_ptr);
+  [[nodiscard]] std::tuple<bool, double> alleleFrequency_1000Genome(GenomeId_t genome_id, std::shared_ptr<const Variant> variant);
+  [[nodiscard]] std::tuple<bool, double> alleleFrequency_SNPdb(GenomeId_t genome_id, std::shared_ptr<const Variant> variant);
+  [[nodiscard]] std::tuple<bool, double> alleleFrequency_Gnomad(GenomeId_t genome_id, std::shared_ptr<const Variant> variant_ptr);
+  [[nodiscard]] std::tuple<bool, double> processFloatField(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name);
+  [[nodiscard]] std::tuple<bool, double> processStringField(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name);
+  [[nodiscard]] std::optional<std::shared_ptr<const Variant>> lookupUnphasedVariant(std::shared_ptr<const Variant> variant_ptr);
+
+// Process Inbreeding coefficient and relatedness using pre-generated allele locus lists.
+  bool hetHomRatioLocus(const std::shared_ptr<const DiploidPopulation>& population) const;
+// Called by the threadpool for each genome/sample.
+  using locus_ret_tuple = std::tuple<GenomeId_t, size_t, size_t, double, double>;
+  locus_ret_tuple processLocusContig(const ContigId_t& contig_id,
+                                     const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                     const std::string& super_population,
+                                     const std::shared_ptr<const ContigVariant>& locus_list) const;
+
+// Write the analysis results to a CSV file.
+  bool writeResults( const ContigId_t& contig_id,
+                     const std::map<GenomeId_t, std::tuple<size_t, size_t, double, double>>& genome_results_map) const;
+
+// Get a list of potential allele locus with a specified spacing to minimise linkage dis-equilibrium
+// and at a specified frequency for the super population. Used as a template for calculating
+// the inbreeding coefficient and sample relatedness
+  [[nodiscard]] std::shared_ptr<const ContigVariant> getLocusList(const ContigId_t& contig_id,
+                                                                  ContigOffset_t spacing,
+                                                                  const std::string& super_pop,
+                                                                  double min_frequency) const;
+
+// Data check functions (optional).
+  void checkPED() const;
+  void joinPopulations() const;
 
 };
 

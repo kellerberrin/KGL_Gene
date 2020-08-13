@@ -61,16 +61,16 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../..)
 # Basic infrastructure library
 set(LIBRARY_SOURCE_FILES
         kel_library/kel_logging.h
-        kel_library/kel_logging.cc
+        kel_library/kel_logging.cpp
         kel_library/kel_utility.h
-        kel_library/kel_utility.cc
+        kel_library/kel_utility.cpp
         kel_library/kel_exec_env.h
-        kel_library/kel_exec_env.cc
-        kel_library/kel_property_tree.cc
+        kel_library/kel_exec_env.cpp
+        kel_library/kel_property_tree.cpp
         kel_library/kel_property_tree.h
         kel_library/kel_distribution.h
-        kel_library/kel_distribution.cc
-        kel_library/kel_basic_io.cc
+        kel_library/kel_distribution.cpp
+        kel_library/kel_basic_io.cpp
         kel_library/kel_basic_io.h
         kel_library/kel_percentile.h
         kel_library/kel_thread_pool.h)
@@ -195,33 +195,33 @@ set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_phylogenetic_analysis.h
-        kgl_analytic/kgl_phylogenetic_analysis.cc
+        kgl_analytic/kgl_phylogenetic_analysis.cpp
         kgl_analytic/kgl_phylogenetic_gene.h
-        kgl_analytic/kgl_phylogenetic_gene.cc
+        kgl_analytic/kgl_phylogenetic_gene.cpp
         kgl_analytic/kgl_upgma_node.h
-        kgl_analytic/kgl_upgma_node.cc
-        kgl_analytic/kgl_rna_search.cc
+        kgl_analytic/kgl_upgma_node.cpp
+        kgl_analytic/kgl_rna_search.cpp
         kgl_analytic/kgl_rna_search.h
         kgl_analytic/kgl_ploidy_analysis.h
         kgl_analytic/kgl_upgma_unphased.h
-        kgl_analytic/kgl_upgma_unphased.cc
+        kgl_analytic/kgl_upgma_unphased.cpp
         kgl_analytic/kgl_sequence_complexity.h
-        kgl_analytic/kgl_sequence_complexity.cc
-        kgl_analytic/kgl_epigenetic_motif.cc
-        kgl_analytic/kgl_epigenetic_motif.cc
+        kgl_analytic/kgl_sequence_complexity.cpp
+        kgl_analytic/kgl_epigenetic_motif.cpp
+        kgl_analytic/kgl_epigenetic_motif.cpp
         kgl_analytic/kgl_upgma.h
         kgl_analytic/kgl_analysis_all.h
-        kgl_analytic/kgl_analysis_null.cc
+        kgl_analytic/kgl_analysis_null.cpp
         kgl_analytic/kgl_analysis_null.h
-        kgl_analytic/kgl_analysis_interval.cc
+        kgl_analytic/kgl_analysis_interval.cpp
         kgl_analytic/kgl_analysis_interval.h
-        kgl_analytic/kgl_analysis_info_filter.cc
+        kgl_analytic/kgl_analysis_info_filter.cpp
         kgl_analytic/kgl_analysis_info_filter.h
-        kgl_analytic/kgl_age_analysis.cc
+        kgl_analytic/kgl_age_analysis.cpp
         kgl_analytic/kgl_age_analysis.h
-        kgl_analytic/kgl_legacy_Pf_analysis.cc
+        kgl_analytic/kgl_legacy_Pf_analysis.cpp
         kgl_analytic/kgl_legacy_Pf_analysis.h
-        kgl_analytic/kgl_analysis_mutation.cc
+        kgl_analytic/kgl_analysis_mutation.cpp
         kgl_analytic/kgl_analysis_mutation.h)
 
 # Deconvolution and mixture files.
@@ -240,16 +240,16 @@ set(MIXTURE_SOURCE_FILES
 # Application level objects
 set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_main.cc
-        kgl_app/kgl_gene_app.cc
+        kgl_app/kgl_gene_app.cpp
         kgl_app/kgl_gene_app.h
-        kgl_app/kgl_gene_parse.cc
+        kgl_app/kgl_gene_parse.cpp
         kgl_app/kgl_properties.h
-        kgl_app/kgl_properties.cc
-        kgl_app/kgl_package.cc
+        kgl_app/kgl_properties.cpp
+        kgl_app/kgl_package.cpp
         kgl_app/kgl_package.h
-        kgl_app/kgl_package_analysis.cc
+        kgl_app/kgl_package_analysis.cpp
         kgl_app/kgl_package_analysis.h
-        kgl_app/kgl_runtime.cc
+        kgl_app/kgl_runtime.cpp
         kgl_app/kgl_runtime.h
         kgl_library/kgl_data_base.h)
 

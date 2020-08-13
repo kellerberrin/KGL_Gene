@@ -57,6 +57,8 @@ public:
 
   [[nodiscard]] std::optional<std::shared_ptr<const Variant>> findVariant(const Variant& variant) const;
 
+  [[nodiscard]] std::optional<OffsetVariantArray> findOffsetArray(ContigOffset_t offset) const;
+
   [[nodiscard]] bool getSortedVariants( PhaseId_t phase,
                                         ContigOffset_t start,
                                         ContigOffset_t end,
@@ -214,7 +216,27 @@ std::shared_ptr<ContigOffsetVariant<VariantArray>> ContigOffsetVariant<VariantAr
 
 
 template<class VariantArray>
-[[nodiscard]] std::optional<std::shared_ptr<const Variant>> ContigOffsetVariant<VariantArray>::findVariant(const Variant& variant) const {
+std::optional<OffsetVariantArray> ContigOffsetVariant<VariantArray>::findOffsetArray(ContigOffset_t offset) const {
+
+  auto result = contig_offset_map_.find(offset);
+
+  if (result != contig_offset_map_.end()) {
+
+    OffsetVariantArray variant_array = result->second->getVariantArray();
+
+    return variant_array;
+
+  } else {
+
+    return std::nullopt;
+
+  }
+
+}
+
+
+template<class VariantArray>
+std::optional<std::shared_ptr<const Variant>> ContigOffsetVariant<VariantArray>::findVariant(const Variant& variant) const {
 
   auto result = contig_offset_map_.find(variant.offset());
 
