@@ -246,7 +246,7 @@ std::optional<std::shared_ptr<const Variant>> ContigOffsetVariant<VariantArray>:
 
     for (auto const& variant_ptr : variant_array) {
 
-      if (variant.homozygous(*variant_ptr)) {
+      if (variant.analogous(*variant_ptr)) {
 
         return variant_ptr;
 

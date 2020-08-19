@@ -50,8 +50,8 @@ private:
   constexpr static const char DELIMITER_ = ',';
   std::string output_file_name_;
 
-  constexpr static const double MAX_MAF_ = 0.05; // Set the variant frequency
-  constexpr static const ContigOffset_t VARIANT_SPACING_ = 10000;  // Set the variant spacing.
+  [[nodiscard]] bool getParameters(const std::string& work_directory, const RuntimeParameterMap& named_parameters);
+
 
   // The population variant data.
   std::shared_ptr<const GenomeReference> genome_GRCh38_;
@@ -59,7 +59,16 @@ private:
   std::shared_ptr<const UnphasedPopulation> unphased_population_;
   std::shared_ptr<const GenomePEDData> ped_data_;
 
+  constexpr static const double MIN_MAF = 0.01; // Set the minimum MAF
+  constexpr static const double MAX_MAF = 0.50; // Set the maximum MAF
 
+  // Synthetic inbreeding values.
+  constexpr static const double MIN_INBREEDING_COEFICIENT = -0.5; // Set the minimum inbreeding coefficient
+  constexpr static const double MAX_INBREEDING_COEFICIENT = 0.5; // Set the maximum inbreeding coefficient
+  constexpr static const double STEP_INBREEDING_COEFICIENT = 0.01; // Set the inbreeding step
+
+
+  constexpr static const ContigOffset_t VARIANT_SPACING_ = 1000;  // Set the variant spacing.
   // The Info field identifiers for allele frequency for the 1000 Genome.
   constexpr static const char* GENOME_1000_FREQ_SUFFIX_ = "_AF";
   // The Info field identifiers for allele frequency for db SNP.
@@ -73,31 +82,51 @@ private:
   constexpr static const std::pair<const char*, const char*> SUPER_POP_EAS_GNOMAD_ {"EAS", "AF_eas"};  // East Asian
   constexpr static const std::pair<const char*, const char*> SUPER_POP_EUR_GNOMAD_ { "EUR", "AF_nfe"};  // European
   constexpr static const std::pair<const char*, const char*> SUPER_POP_SAS_GNOMAD_ { "SAS", "AF"};  // South Asian
+  // Use a super population code to lookup a corresponding AF field.
+  std::string lookupSuperPopulationField(const std::string& super_population) const;
 
-
-  [[nodiscard]] bool getParameters(const std::string& work_directory, const RuntimeParameterMap& named_parameters);
-  [[nodiscard]] bool hetHomRatio(std::shared_ptr<const DiploidPopulation> population);
+  [[nodiscard]] bool syntheticInbreeding() const; // Construct a synthetic population and analyze it.
+  [[nodiscard]] bool hetHomRatio(std::shared_ptr<const DiploidPopulation> population) const;
   using future_ret_tuple = std::tuple<GenomeId_t, bool, size_t, size_t, double, double>;
-  [[nodiscard]] future_ret_tuple processContig(ContigId_t contig_id, std::shared_ptr<const DiploidGenome> genome_ptr);
-  [[nodiscard]] std::tuple<bool, double> alleleFrequency_1000Genome(GenomeId_t genome_id, std::shared_ptr<const Variant> variant);
-  [[nodiscard]] std::tuple<bool, double> alleleFrequency_SNPdb(GenomeId_t genome_id, std::shared_ptr<const Variant> variant);
-  [[nodiscard]] std::tuple<bool, double> alleleFrequency_Gnomad(GenomeId_t genome_id, std::shared_ptr<const Variant> variant_ptr);
-  [[nodiscard]] std::tuple<bool, double> processFloatField(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name);
-  [[nodiscard]] std::tuple<bool, double> processStringField(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name);
-  [[nodiscard]] std::optional<std::shared_ptr<const Variant>> lookupUnphasedVariant(std::shared_ptr<const Variant> variant_ptr);
+  [[nodiscard]] future_ret_tuple processContig(ContigId_t contig_id, std::shared_ptr<const DiploidGenome> genome_ptr) const;
+  [[nodiscard]] std::tuple<bool, double> alleleFrequency_1000Genome(GenomeId_t genome_id, std::shared_ptr<const Variant> variant) const;
+  [[nodiscard]] std::tuple<bool, double> alleleFrequency_SNPdb(GenomeId_t genome_id, std::shared_ptr<const Variant> variant) const;
+  [[nodiscard]] std::tuple<bool, double> alleleFrequency_Gnomad(GenomeId_t genome_id, std::shared_ptr<const Variant> variant_ptr) const;
+  [[nodiscard]] std::tuple<bool, double> processFloatField(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name) const;
+  [[nodiscard]] std::tuple<bool, double> processStringField(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name) const;
+  [[nodiscard]] std::optional<std::shared_ptr<const Variant>> lookupUnphasedVariant(std::shared_ptr<const Variant> variant_ptr) const;
 
 // Process Inbreeding coefficient and relatedness using pre-generated allele locus lists.
   bool hetHomRatioLocus(const std::shared_ptr<const DiploidPopulation>& population) const;
 // Called by the threadpool for each genome/sample.
-  using locus_ret_tuple = std::tuple<GenomeId_t, size_t, size_t, double, double>;
-  locus_ret_tuple processLocusContig(const ContigId_t& contig_id,
-                                     const std::shared_ptr<const DiploidContig>& contig_ptr,
-                                     const std::string& super_population,
-                                     const std::shared_ptr<const ContigVariant>& locus_list) const;
+
+  struct LocusResults {
+
+    GenomeId_t genome;
+    size_t hetero_count{0};
+    size_t homo_count{0};
+    size_t total_allele_count{0};
+    double inbred_allele_sum{0.0};
+
+  };
+
+  LocusResults processLocusContig(const ContigId_t& contig_id,
+                                  const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                  const std::string& super_population_field,
+                                  const std::shared_ptr<const ContigVariant>& locus_list) const;
+
+  LocusResults multiLocus1(const ContigId_t& contig_id,
+                           const std::shared_ptr<const DiploidContig>& contig_ptr,
+                           const std::string& super_population_field,
+                           const std::shared_ptr<const ContigVariant>& locus_list) const;
 
 // Write the analysis results to a CSV file.
   bool writeResults( const ContigId_t& contig_id,
-                     const std::map<GenomeId_t, std::tuple<size_t, size_t, double, double>>& genome_results_map) const;
+                     const std::map<GenomeId_t, LocusResults>& locus_results) const;
+
+  bool syntheticResults( const ContigId_t& contig_id,
+                         const std::map<GenomeId_t, LocusResults>& genome_results_map) const;
+
 
 // Get a list of potential allele locus with a specified spacing to minimise linkage dis-equilibrium
 // and at a specified frequency for the super population. Used as a template for calculating
@@ -105,7 +134,16 @@ private:
   [[nodiscard]] std::shared_ptr<const ContigVariant> getLocusList(const ContigId_t& contig_id,
                                                                   ContigOffset_t spacing,
                                                                   const std::string& super_pop,
-                                                                  double min_frequency) const;
+                                                                  double min_frequency,
+                                                                  double max_frequency) const;
+
+// Create a synthetic population with known inbreeding characteristics
+// Used to test and calibrate the developed inbreeding algorithms.
+  std::shared_ptr<const DiploidPopulation> generateSyntheticPopulation( double lower_inbreeding,
+                                                                        double upper_inbreeding,
+                                                                        double step_inbreeding,
+                                                                        const std::string& super_population,
+                                                                        const std::shared_ptr<const ContigVariant>& locus_list) const;
 
 // Data check functions (optional).
   void checkPED() const;

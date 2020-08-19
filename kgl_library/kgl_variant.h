@@ -116,6 +116,10 @@ public:
 
   ~Variant() override = default;
 
+  // Create a copy of the variant on heap.
+  // Important - all the original variant evidence is also attached to the new variant object.
+  [[nodiscard]] std::unique_ptr<Variant> clone() const;
+
   [[nodiscard]] size_t alternateSize() const { return alternate_.length(); }
 
   [[nodiscard]] size_t referenceSize() const { return reference_.length(); }
@@ -124,9 +128,11 @@ public:
 
   [[nodiscard]] bool isSNP() const { return reference().length() == 1 and alternate().length() == 1; }
 
-  [[nodiscard]] bool equivalent(const Variant& cmp_var) const;
+  [[nodiscard]] bool equivalent(const Variant& cmp_var) const; // Same phase
 
-  [[nodiscard]] bool homozygous(const Variant& cmp_var) const;
+  [[nodiscard]] bool homozygous(const Variant& cmp_var) const; // Different phase
+
+  [[nodiscard]] bool analogous(const Variant& cmp_var) const; // No phase test
 
   [[nodiscard]] bool lessThan(const Variant& cmp_var) const;
 

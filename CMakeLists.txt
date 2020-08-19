@@ -222,7 +222,7 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_legacy_Pf_analysis.cpp
         kgl_analytic/kgl_legacy_Pf_analysis.h
         kgl_analytic/kgl_analysis_mutation.cpp
-        kgl_analytic/kgl_analysis_mutation.h)
+        kgl_analytic/kgl_analysis_mutation.h kgl_analytic/kgl_analysis_mutation_locus.cpp kgl_analytic/kgl_analysis_mutation_homhet.cpp kgl_analytic/kgl_analysis_mutation_synthetic.cpp)
 
 # Deconvolution and mixture files.
 

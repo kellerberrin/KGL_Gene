@@ -47,6 +47,25 @@ std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputInde
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+[[nodiscard]] std::unique_ptr<kgl::Variant> kgl::Variant::clone() const {
+
+  StringDNA5 reference_str(reference().getAlphabetString());
+  StringDNA5 alternate_str(alternate().getAlphabetString());
+
+  std::unique_ptr<Variant> variant_ptr(std::make_unique<Variant>( contigId(),
+                                                                        phaseId(),
+                                                                        offset(),
+                                                                        evidence(),
+                                                                        std::move(reference_str),
+                                                                        std::move(alternate_str)));
+
+  return variant_ptr;
+
+}
+
+
+
+
 std::string kgl::Variant::name() const {
 
   switch(variantType()) {
@@ -77,7 +96,7 @@ std::string kgl::Variant::output(char delimiter, VariantOutputIndex output_index
 }
 
 
-
+// Equal Phase
 bool kgl::Variant::equivalent(const Variant& cmp_var) const {
 
   return contigId() == cmp_var.contigId()
@@ -89,7 +108,7 @@ bool kgl::Variant::equivalent(const Variant& cmp_var) const {
 
 }
 
-
+// Opposite Phase
 bool kgl::Variant::homozygous(const Variant& cmp_var) const {
 
   return contigId() == cmp_var.contigId()
@@ -100,6 +119,19 @@ bool kgl::Variant::homozygous(const Variant& cmp_var) const {
          and alternate().getSequenceAsString() == cmp_var.alternate().getSequenceAsString();
 
 }
+
+// No Phase
+bool kgl::Variant::analogous(const Variant& cmp_var) const {
+
+  return contigId() == cmp_var.contigId()
+         and offset() == cmp_var.offset()
+         and variantType() == cmp_var.variantType()
+         and reference().getSequenceAsString() == cmp_var.reference().getSequenceAsString()
+         and alternate().getSequenceAsString() == cmp_var.alternate().getSequenceAsString();
+
+}
+
+
 
 
 // Order variant types.
