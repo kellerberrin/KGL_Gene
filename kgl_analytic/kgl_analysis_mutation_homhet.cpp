@@ -5,7 +5,7 @@
 
 
 #include "kel_thread_pool.h"
-#include "kgl_analysis_mutation.h"
+#include "kgl_analysis_mutation_inbreed.h"
 #include "kgl_filter.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 
@@ -16,7 +16,7 @@ namespace kgl = kellerberrin::genome;
 
 
 // Calculate the HetHom Ratio
-bool kgl::MutationAnalysis::hetHomRatio(std::shared_ptr<const DiploidPopulation> population) const {
+bool kgl::InbreedingAnalysis::hetHomRatio(std::shared_ptr<const DiploidPopulation> population) const {
 
   for (auto const& [genome_contig_id, genome_contig_ptr] : genome_GRCh38_->getMap()) {
 
@@ -29,7 +29,7 @@ bool kgl::MutationAnalysis::hetHomRatio(std::shared_ptr<const DiploidPopulation>
 
       if (contig_opt) {
 
-        std::future<future_ret_tuple> future = thread_pool.enqueueTask(&MutationAnalysis::processContig, this, genome_contig_id, genome_ptr);
+        std::future<future_ret_tuple> future = thread_pool.enqueueTask(&InbreedingAnalysis::processContig, this, genome_contig_id, genome_ptr);
         future_vector.push_back(std::move(future));
 
       }
@@ -67,7 +67,7 @@ bool kgl::MutationAnalysis::hetHomRatio(std::shared_ptr<const DiploidPopulation>
 
         if (result == ped_data_->getMap().end()) {
 
-          ExecEnv::log().error("MutationAnalysis::hetHomRatio, Genome sample: {} does not have a PED record", genome_id);
+          ExecEnv::log().error("InbreedingAnalysis::hetHomRatio, Genome sample: {} does not have a PED record", genome_id);
 
         }
 
@@ -100,8 +100,8 @@ bool kgl::MutationAnalysis::hetHomRatio(std::shared_ptr<const DiploidPopulation>
 }
 
 
-kgl::MutationAnalysis::future_ret_tuple
-kgl::MutationAnalysis::processContig(ContigId_t contig_id, std::shared_ptr<const DiploidGenome> genome_ptr) const {
+kgl::InbreedingAnalysis::future_ret_tuple
+kgl::InbreedingAnalysis::processContig(ContigId_t contig_id, std::shared_ptr<const DiploidGenome> genome_ptr) const {
 
   auto contig_opt = genome_ptr->getContig(contig_id);
 
@@ -169,7 +169,7 @@ kgl::MutationAnalysis::processContig(ContigId_t contig_id, std::shared_ptr<const
 
     }
 
-    ExecEnv::log().info("MutationAnalysis::hetHomRatio, Processed Genome: {}, Contig: {}, All Variants: {}, Filtered Variants: {}, multiple snp: {}",
+    ExecEnv::log().info("InbreedingAnalysis::hetHomRatio, Processed Genome: {}, Contig: {}, All Variants: {}, Filtered Variants: {}, multiple snp: {}",
                         genome_ptr->genomeId(), contig_id, contig_opt.value()->variantCount(), contig_ptr->variantCount(), multiple_snp_count);
 
     return { genome_ptr->genomeId(), true, heterozygous_count, homozygous_count, expected_heterozygous, expected_homozygous};
@@ -182,7 +182,7 @@ kgl::MutationAnalysis::processContig(ContigId_t contig_id, std::shared_ptr<const
 
 
 
-std::tuple<bool, double> kgl::MutationAnalysis::alleleFrequency_Gnomad(GenomeId_t genome_id,
+std::tuple<bool, double> kgl::InbreedingAnalysis::alleleFrequency_Gnomad(GenomeId_t genome_id,
                                                                        std::shared_ptr<const Variant> variant_ptr) const {
 
   // Lookup the corresponding variant in the Gnomad database
@@ -198,7 +198,7 @@ std::tuple<bool, double> kgl::MutationAnalysis::alleleFrequency_Gnomad(GenomeId_
 
   if (result == ped_data_->getMap().end()) {
 
-    ExecEnv::log().error("MutationAnalysis::alleleFrequency_Gnomad, Genome sample: {} does not have a PED record", genome_id);
+    ExecEnv::log().error("InbreedingAnalysis::alleleFrequency_Gnomad, Genome sample: {} does not have a PED record", genome_id);
     return {false, 0.0};
 
   } else {
@@ -213,7 +213,7 @@ std::tuple<bool, double> kgl::MutationAnalysis::alleleFrequency_Gnomad(GenomeId_
 
 
 
-std::tuple<bool, double> kgl::MutationAnalysis::alleleFrequency_SNPdb(GenomeId_t,
+std::tuple<bool, double> kgl::InbreedingAnalysis::alleleFrequency_SNPdb(GenomeId_t,
                                                                       std::shared_ptr<const Variant> variant_ptr) const {
 
   // Lookup the AF frequency.
@@ -232,14 +232,14 @@ std::tuple<bool, double> kgl::MutationAnalysis::alleleFrequency_SNPdb(GenomeId_t
 }
 
 
-std::tuple<bool, double>  kgl::MutationAnalysis::alleleFrequency_1000Genome(GenomeId_t genome_id,
+std::tuple<bool, double>  kgl::InbreedingAnalysis::alleleFrequency_1000Genome(GenomeId_t genome_id,
                                                                             std::shared_ptr<const Variant> variant_ptr) const {
 
   auto result = ped_data_->getMap().find(genome_id);
 
   if (result == ped_data_->getMap().end()) {
 
-    ExecEnv::log().error("MutationAnalysis::checkPED, Genome sample: {} does not have a PED record", genome_id);
+    ExecEnv::log().error("InbreedingAnalysis::checkPED, Genome sample: {} does not have a PED record", genome_id);
     return {false, 0.0};
 
   } else {
@@ -256,7 +256,7 @@ std::tuple<bool, double>  kgl::MutationAnalysis::alleleFrequency_1000Genome(Geno
 
 
 std::optional<std::shared_ptr<const kgl::Variant>>
-kgl::MutationAnalysis::lookupUnphasedVariant(std::shared_ptr<const Variant> variant_ptr) const {
+kgl::InbreedingAnalysis::lookupUnphasedVariant(std::shared_ptr<const Variant> variant_ptr) const {
 
   if (unphased_population_->getMap().size() == 1) {
 
@@ -279,12 +279,11 @@ kgl::MutationAnalysis::lookupUnphasedVariant(std::shared_ptr<const Variant> vari
 
   } else {
 
-    ExecEnv::log().error("utationAnalysis::lookupUnphasedVariant, Joining Population has {} Genomes, Expected 1",
+    ExecEnv::log().error("InbreedingAnalysis::lookupUnphasedVariant, Joining Population has {} Genomes, Expected 1",
                          unphased_population_->getMap().size());
     return std::nullopt;
 
   }
 
 }
-
 
