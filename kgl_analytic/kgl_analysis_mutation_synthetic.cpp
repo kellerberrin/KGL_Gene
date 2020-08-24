@@ -3,9 +3,8 @@
 //
 
 
-#include "kel_thread_pool.h"
 #include "kel_distribution.h"
-#include "kgl_analysis_mutation_inbreed.h"
+#include "kgl_analysis_mutation_inbreed_aux.h"
 
 #include <sstream>
 #include <iomanip>
@@ -13,12 +12,15 @@
 
 namespace kgl = kellerberrin::genome;
 
+
+
+
 std::shared_ptr<const kgl::DiploidPopulation>
-kgl::InbreedingAnalysis::generateSyntheticPopulation( double lower_inbreeding,
+kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
                                                       double upper_inbreeding,
                                                       double step_inbreeding,
                                                       const std::string& super_population,
-                                                      const std::shared_ptr<const ContigVariant>& locus_list) const {
+                                                      const ContigVariant& locus_list) {
 
   std::shared_ptr<DiploidPopulation> synthetic_pop_ptr(std::make_shared<DiploidPopulation>("SyntheticInbreedingPopulation"));
 
@@ -29,7 +31,7 @@ kgl::InbreedingAnalysis::generateSyntheticPopulation( double lower_inbreeding,
   // The random boolean used to draw the variant phase (Male or Female).
   RandomBoolean random_boolean;
   // The super population AF field
-  const std::string AF_field = lookupSuperPopulationField(super_population);
+  const std::string AF_field = InbreedSampling::lookupSuperPopulationField(super_population);
 
   size_t counter = 0;
   std::vector<std::pair<GenomeId_t , double>> inbreeding_vector;
@@ -45,20 +47,20 @@ kgl::InbreedingAnalysis::generateSyntheticPopulation( double lower_inbreeding,
 
   // Iterate through the locus_list and create each genome with het/hom ratio
   // stochastically defined by the assigned inbreeding coefficient
-  for (auto const& [offset, offset_ptr] : locus_list->getMap()) {
+  for (auto const& [offset, offset_ptr] : locus_list.getMap()) {
 
     // For each locus get the super-population frequency of each allele
     std::vector<std::pair<std::shared_ptr<const Variant>, double>> variant_freq_vector;
     for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
 
-      auto [result, AF_value] = processFloatField(variant_ptr, AF_field);
+      auto [result, AF_value] = InbreedSampling::processFloatField(*variant_ptr, AF_field);
       if (result) {
 
         variant_freq_vector.emplace_back(variant_ptr, AF_value);
 
       } else {
 
-        ExecEnv::log().error( "InbreedingAnalysis::generateSyntheticPopulation, Problem reading AF_field: {} for variant: {}"
+        ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Problem reading AF_field: {} for variant: {}"
                              , AF_field, variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
 
       }
@@ -89,7 +91,7 @@ kgl::InbreedingAnalysis::generateSyntheticPopulation( double lower_inbreeding,
             // Add to the population.
             if (not synthetic_pop_ptr->addVariant( female_variant_ptr, genome_vector)) {
 
-              ExecEnv::log().error( "InbreedingAnalysis::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
+              ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
                                   , genome_id, female_variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
 
             } // add female hom variant
@@ -99,7 +101,7 @@ kgl::InbreedingAnalysis::generateSyntheticPopulation( double lower_inbreeding,
             // Add to the population.
             if (not synthetic_pop_ptr->addVariant( male_variant_ptr, genome_vector)) {
 
-              ExecEnv::log().error( "InbreedingAnalysis::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
+              ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
                                   , genome_id, male_variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
 
             } // add male hom variant
@@ -115,7 +117,7 @@ kgl::InbreedingAnalysis::generateSyntheticPopulation( double lower_inbreeding,
             std::vector<GenomeId_t> genome_vector {genome_id};
             if (not synthetic_pop_ptr->addVariant( variant_copy_ptr, genome_vector)) {
 
-              ExecEnv::log().error( "InbreedingAnalysis::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
+              ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
                                   , genome_id, variant_copy_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
 
             } // add het variant
@@ -143,7 +145,9 @@ kgl::InbreedingAnalysis::generateSyntheticPopulation( double lower_inbreeding,
 }
 
 // Generate an inbreeding encoded synthetic genome
-kgl::GenomeId_t kgl::InbreedingAnalysis::generateSyntheticGenomeId(double inbreeding, const std::string& super_population, size_t counter) const {
+kgl::GenomeId_t kgl::InbreedSampling::generateSyntheticGenomeId( double inbreeding,
+                                                                 const std::string& super_population,
+                                                                 size_t counter) {
 
   // Generate inbreeding vector and create genome ids.
   std::stringstream genome_id_stream;
@@ -165,7 +169,7 @@ kgl::GenomeId_t kgl::InbreedingAnalysis::generateSyntheticGenomeId(double inbree
 }
 
 // Recreate the inbreeding coefficient from the synthetic genome id.
-std::pair<bool, double> kgl::InbreedingAnalysis::generateInbreeding(const GenomeId_t& genome_id) const {
+std::pair<bool, double> kgl::InbreedSampling::generateInbreeding(const GenomeId_t& genome_id) {
 
   // Decode the inbreeding coefficient.
   bool valid_value = false;

@@ -4,6 +4,7 @@
 
 #include "kel_thread_pool.h"
 #include "kgl_analysis_mutation_inbreed.h"
+#include "kgl_analysis_mutation_inbreed_aux.h"
 #include "kgl_filter.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 
@@ -28,7 +29,7 @@ kgl::InbreedingAnalysis::LocusResults
 kgl::InbreedingAnalysis::multiLocus1( const GenomeId_t& genome_id,
                                     const std::shared_ptr<const DiploidContig>& contig_ptr,
                                     const std::string& super_population_field,
-                                    const std::shared_ptr<const ContigVariant>& locus_list) const {
+                                    const std::shared_ptr<const ContigVariant>& locus_list) {
 
   // Only want SNP variants.
   auto snp_contig_ptr = contig_ptr->filterVariants(SNPFilter());
@@ -58,7 +59,7 @@ kgl::InbreedingAnalysis::multiLocus1( const GenomeId_t& genome_id,
         if (diploid_offset[0]->analogous(*locus_variant)) {
           // Found the matching locus allele.
           // Get the allele super population frequency
-          auto [result, AF_value] = processFloatField(locus_variant, super_population_field);
+          auto [result, AF_value] = InbreedSampling::processFloatField(*locus_variant, super_population_field);
           if (result and AF_value > 0.0 and AF_value < 1.0) {
 
             found_flag = true;
@@ -140,7 +141,7 @@ kgl::InbreedingAnalysis::LocusResults
 kgl::InbreedingAnalysis::processRitlandLocus(const GenomeId_t &genome_id,
                                            const std::shared_ptr<const DiploidContig>& contig_ptr,
                                            const std::string& super_population_field,
-                                           const std::shared_ptr<const ContigVariant>& locus_list) const {
+                                           const std::shared_ptr<const ContigVariant>& locus_list) {
 
   // Only want SNP variants.
   auto snp_contig_ptr = contig_ptr->filterVariants(SNPFilter());
@@ -164,7 +165,6 @@ kgl::InbreedingAnalysis::processRitlandLocus(const GenomeId_t &genome_id,
       if (diploid_offset.size() == 1) {
         // The sample is alt allele heterozygous
         ++locus_results.hetero_count;
-//        locus_results.inbred_allele_sum -= 1.0;
 
       } else if (diploid_offset.size() == 2) {
 
@@ -178,11 +178,10 @@ kgl::InbreedingAnalysis::processRitlandLocus(const GenomeId_t &genome_id,
             if (diploid_offset[0]->analogous(*locus_variant)) {
               // Found the matching locus allele.
               // Get the allele super population frequency
-              auto [result, AF_value] = processFloatField(locus_variant, super_population_field);
+              auto [result, AF_value] = InbreedSampling::processFloatField(*locus_variant, super_population_field);
               if (result and AF_value > 0.0 and AF_value < 1.0) {
 
                 locus_results.inbred_allele_sum += (1.0 / AF_value);
-//                locus_results.inbred_allele_sum += (1.0 / (1.0 - AF_value));
                 locus_results.inbred_allele_sum -= 1.0;
 
               } // valid AF

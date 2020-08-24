@@ -1,205 +1,83 @@
 //
-// Created by kellerberrin on 23/8/20.
+// Created by kellerberrin on 13/8/20.
 //
 
-#include <kgl_variant_factory_vcf_evidence_analysis.h>
-#include "kgl_variant.h"
-#include "kgl_analysis_mutation_inbreed.h"
 
+#include "kel_thread_pool.h"
+#include "kgl_analysis_mutation_inbreed.h"
+#include "kgl_analysis_mutation_inbreed_aux.h"
+
+
+#include <fstream>
 
 namespace kgl = kellerberrin::genome;
 
 
-std::tuple<bool, double> kgl::InbreedingAnalysis::processFloatField( const std::shared_ptr<const Variant>& variant_ptr
-                                                                   , const std::string& field_name) const {
+// Calculate the HetHom Ratio
+bool kgl::InbreedingAnalysis::populationInbreeding(const GenomeReference& genome_GRCh38,
+                                                   const UnphasedPopulation& unphased_population,
+                                                   const DiploidPopulation& diploid_population,
+                                                   const GenomePEDData& ped_data,
+                                                   const std::string& output_file_name) {
 
+  for (auto const& [genome_contig_id, genome_contig_ptr] : genome_GRCh38.getMap()) {
 
-  std::optional<kgl::InfoDataVariant> field_opt = InfoEvidenceAnalysis::getInfoData(*variant_ptr, field_name);
+    // Generate the super population allele locus lists
+    LocusMap locus_map = InbreedSampling::getPopulationLocus(unphased_population, genome_contig_id);
 
-  if (field_opt) {
+    // Use a thread pool to calculate inbreeding and relatedness.
+    ThreadPool thread_pool;
+    std::vector<std::future<LocusResults>> future_vector;
+    for (auto const&[genome_id, genome_ptr] : diploid_population.getMap()) {
 
-    std::vector<double> field_vec = InfoEvidenceAnalysis::varianttoFloats(field_opt.value());
+      auto contig_opt = genome_ptr->getContig(genome_contig_id);
 
-    if (field_vec.size() == 1) {
+      if (contig_opt) {
 
-      return {true, field_vec.front() };
+        auto result = ped_data.getMap().find(genome_id);
+        if (result == ped_data.getMap().end()) {
 
-    } else if (field_vec.size() == 0) {
+          ExecEnv::log().error("InbreedingAnalysis::hetHomRatioLocu, Genome sample: {} does not have a PED record", genome_id);
+          continue;
 
-      // Missing value
-      return {false, 0.0};
+        }
+        auto const& [sample_id, ped_record] = *result;
+        auto locus_result = locus_map.find(ped_record.superPopulation());
+        if (locus_result == locus_map.end()) {
 
-    } else {
+          ExecEnv::log().error("InbreedingAnalysis::hetHomRatioLocu, Locus set not found for super population: {}", ped_record.superPopulation());
+          continue;
 
-      std::string vector_str;
-      for (auto const& str : field_vec) {
+        }
+        auto const& [super_pop_id, locus_list] = *locus_result;
 
-        vector_str += str;
-        vector_str += ";";
-
-      }
-
-      ExecEnv::log().error("InbreedingAnalysis::processField, Field: {} expected vector size 1, get vector size: {}, vector: {}",
-                           field_name, field_vec.size(), vector_str);
-      return {false, 0.0};
-
-    }
-
-  } else {
-
-    ExecEnv::log().error("InbreedingAnalysis::processField, Field: {} not found for Variant: {}",
-                         field_name, variant_ptr->output(',',VariantOutputIndex::START_0_BASED, false));
-
-    return {false, 0.0};
-
-  }
-
-}
-
-
-
-std::tuple<bool, double> kgl::InbreedingAnalysis::processStringField( const std::shared_ptr<const Variant>& variant_ptr,
-                                                                      const std::string& field_name) const {
-
-
-  std::optional<kgl::InfoDataVariant> field_opt = InfoEvidenceAnalysis::getInfoData(*variant_ptr, field_name);
-
-  if (field_opt) {
-
-    std::vector<std::string> field_vec = InfoEvidenceAnalysis::varianttoStrings(field_opt.value());
-
-    if (field_vec.size() != 1) {
-
-      ExecEnv::log().error("InbreedingAnalysis::processStringField, Field: {} expected vector size 1, get vector size: {}",
-                           field_name, field_vec.size());
-      return {false, 0.0};
-
-    } else {
-
-      try {
-
-        double frequency = std::stod(field_vec.front());
-        return {true, frequency };
-
-      }
-      catch(std::exception& e) {
-
-        ExecEnv::log().error("InbreedingAnalysis::processStringField, Field: {} problem converting: {} to double, exception: {}",
-                             field_name, field_vec.front(), e.what());
-        return {false, 0.0};
+        std::future<LocusResults> future = thread_pool.enqueueTask(&InbreedingAnalysis::processRitlandLocus,
+                                                                   genome_id,
+                                                                   contig_opt.value(),
+                                                                   InbreedSampling::lookupSuperPopulationField(super_pop_id),
+                                                                   locus_list);
+        future_vector.push_back(std::move(future));
 
       }
 
     }
 
-  } else {
+    // Retrieve the thread results into a map.
+    ResultsMap genome_results_map;
+    for (auto &future : future_vector) {
 
-    ExecEnv::log().error("InbreedingAnalysis::processField, Field: {} not found for Variant: {}",
-                         field_name, variant_ptr->output(',',VariantOutputIndex::START_0_BASED, false));
-    return {false, 0.0};
-  }
+      auto locus_results = future.get();
+      ExecEnv::log().info("Processed Diploid genome: {} for inbreeding and relatedness", locus_results.genome);
+      genome_results_map[locus_results.genome] = locus_results;
 
-}
-
-
-
-std::string kgl::InbreedingAnalysis::lookupSuperPopulationField(const std::string& super_population) const {
-
-  if (super_population == SUPER_POP_AFR_GNOMAD_.first) {
-
-    return SUPER_POP_AFR_GNOMAD_.second;
-
-  } else if (super_population == SUPER_POP_AMR_GNOMAD_.first) {
-
-    return SUPER_POP_AMR_GNOMAD_.second;
-
-  } else if (super_population == SUPER_POP_EAS_GNOMAD_.first) {
-
-    return SUPER_POP_EAS_GNOMAD_.second;
-
-  } else if (super_population == SUPER_POP_EUR_GNOMAD_.first) {
-
-    return SUPER_POP_EUR_GNOMAD_.second;
-
-  } else if (super_population == SUPER_POP_SAS_GNOMAD_.first) {
-
-    return SUPER_POP_SAS_GNOMAD_.second;
-
-  } else  {
-
-    ExecEnv::log().error("MutationAnalysis::lookupSuperPopulationField; Unknown Super Population: {}", super_population);
-    return SUPER_POP_SAS_GNOMAD_.second;
-
-  }
-
-}
-
-
-
-
-
-// Join Diploid and a single genome population such as Gnomad or Clinvar.
-void kgl::InbreedingAnalysis::joinPopulations() const {
-
-
-  JoinSingleGenome join_pop(diploid_population_, unphased_population_, ped_data_);
-
-  join_pop.joinPopulations();
-
-  ExecEnv::log().info("Joined: {} Genomes in Population: {}", diploid_population_->getMap().size(), diploid_population_->populationId());
-
-}
-
-
-
-bool kgl::JoinSingleGenome::joinPopulations() {
-
-  // The unphased population only has 1 genome. We find the variant by offset.
-  if (joining_population_->getMap().size() != 1) {
-
-    ExecEnv::log().error("JoinSingleGenome::lookupJoinedPop, unphased population : {} expected 1 genome, actually contains: {}",
-                         joining_population_->populationId(), joining_population_->getMap().size());
-
-    return false;
-
-  }
-
-  auto [joining_genome_id, joining_genome_ptr] = *(joining_population_->getMap().begin());
-
-  ThreadPool thread_pool;
-  std::vector<std::future<std::tuple<std::string, size_t, size_t>>> future_vector;
-
-  // Queue a thread for each genome.
-  for (auto const& [joined_genome, joined_genome_ptr] : joined_population_->getMap()) {
-
-    // function, object_ptr, arg1, ..., argn
-    std::future<std::tuple<std::string, size_t, size_t>> future = thread_pool.enqueueTask(&JoinSingleGenome::processGenome, this, joined_genome_ptr, joining_genome_ptr);
-    future_vector.push_back(std::move(future));
-
-  }
-
-  for (auto& future : future_vector) {
-
-    auto [genome_id, total_variants, joined_variants] = future.get();
-
-    double percent = (static_cast<double>(joined_variants) / static_cast<double>(total_variants)) * 100.0;
-
-    std::string population_desc;
-    auto result = ped_data_->getMap().find(genome_id);
-
-    if (result == ped_data_->getMap().end()) {
-
-      ExecEnv::log().warn("InbreedingAnalysis::checkPED, Genome sample: {} does not have a PED record", genome_id);
-      population_desc = "";
-
-    } else {
-
-      population_desc = result->second.population();
 
     }
 
-    ExecEnv::log().info("Population: {}, Genome: {}, Total Variants: {}, Joined Variants: {} ({}%)",
-                        population_desc, genome_id, total_variants, joined_variants, percent);
+    if (not genome_results_map.empty()) {
+
+      writeResults(genome_contig_id, genome_results_map, ped_data, output_file_name);
+
+    }
 
   }
 
@@ -208,60 +86,165 @@ bool kgl::JoinSingleGenome::joinPopulations() {
 }
 
 
-std::tuple<std::string, size_t, size_t>
-kgl::JoinSingleGenome::processGenome(std::shared_ptr<const DiploidGenome> diploid_genome, std::shared_ptr<const GenomeVariant> unphased_genome_ptr) {
 
-  LocalGenomeJoin genome_join(unphased_genome_ptr);
+bool kgl::InbreedingAnalysis::writeResults( const ContigId_t& contig_id,
+                                            const ResultsMap& genome_results_map,
+                                            const GenomePEDData& ped_data,
+                                            const std::string& output_file_name) {
 
-  diploid_genome->processAll(genome_join, &LocalGenomeJoin::lookupJoinedPop);
+  // Append the results.
+  std::ofstream outfile;
+  std::string file_ext = output_file_name + FILE_EXT_;
+  outfile.open(file_ext, std::ofstream::out |  std::ofstream::trunc);
 
-  return {diploid_genome->genomeId(), genome_join.variantsProcessed(), genome_join.joinedVariantsFound()};
+  outfile << contig_id << DELIMITER_ << "Population" << DELIMITER_
+          << "Description" << DELIMITER_ << "SuperPopulation" << DELIMITER_ << "Description" << DELIMITER_
+          << "HetCount" << DELIMITER_ << "HomCount" << DELIMITER_ << "Het/Hom"<< DELIMITER_
+          << "TotalLoci" << DELIMITER_ << "Ritland\n";
+
+  for (auto const& [genome_id, locus_results] : genome_results_map) {
+
+    auto result = ped_data.getMap().find(genome_id);
+
+    if (result == ped_data.getMap().end()) {
+
+      ExecEnv::log().error("InbreedingAnalysis::hetHomRatio, Genome sample: {} does not have a PED record", genome_id);
+      continue;
+
+    }
+
+    auto const& [sample_id, ped_record] = *result;
+
+    double het_hom_ratio = (locus_results.homo_count > 0 ? static_cast<double>(locus_results.hetero_count)/static_cast<double>(locus_results.homo_count) : 0.0);
+
+    outfile << genome_id << DELIMITER_;
+    outfile << ped_record.population() << DELIMITER_;
+    outfile << ped_record.populationDescription() << DELIMITER_;
+    outfile << ped_record.superPopulation() << DELIMITER_;
+    outfile << ped_record.superDescription() << DELIMITER_;
+    outfile << locus_results.hetero_count << DELIMITER_;
+    outfile << locus_results.homo_count << DELIMITER_;
+    outfile << het_hom_ratio << DELIMITER_;
+    outfile << locus_results.total_allele_count << DELIMITER_;
+    outfile << locus_results.inbred_allele_sum << DELIMITER_;
+    outfile << '\n';
+
+  }
+
+  outfile.flush();
+
+  return true;
 
 }
 
-// Check that all samples (genomes) have a corresponding PED record.
-void kgl::InbreedingAnalysis::checkPED() const {
 
-  size_t PED_record_count = 0;
-  for (auto const& [genome_id, genome_ptr] : diploid_population_->getMap()) {
+// Calculate the HetHom Ratio
+bool kgl::InbreedingAnalysis::syntheticInbreeding(  const GenomeReference& genome_GRCh38,
+                                                    const UnphasedPopulation& unphased_population,
+                                                    const std::string& output_file_name) {
 
-    auto result = ped_data_->getMap().find(genome_id);
+  for (auto const& [genome_contig_id, genome_contig_ptr] : genome_GRCh38.getMap()) {
 
-    if (result == ped_data_->getMap().end()) {
+    // Generate the super population allele locus lists
+    LocusMap locus_map = InbreedSampling::getPopulationLocus(unphased_population, genome_contig_id);
 
-      ExecEnv::log().warn("InbreedingAnalysis::checkPED, Genome sample: {} does not have a PED record", genome_id);
+    // Use a thread pool to calculate inbreeding and relatedness.
+    for (auto const&[super_pop_id, locus_list] : locus_map) {
+
+      std::shared_ptr<const DiploidPopulation> population = InbreedSampling::generateSyntheticPopulation( MIN_INBREEDING_COEFICIENT,
+                                                                                                          MAX_INBREEDING_COEFICIENT,
+                                                                                                          STEP_INBREEDING_COEFICIENT,
+                                                                                                          super_pop_id,
+                                                                                                          *locus_list);
+
+      ThreadPool thread_pool;
+      std::vector<std::future<LocusResults>> future_vector;
+      for (auto const&[genome_id, genome_ptr] : population->getMap()) {
+
+        auto contig_opt = genome_ptr->getContig(genome_contig_id);
+
+        if (contig_opt) {
+
+
+          std::future<LocusResults> future = thread_pool.enqueueTask(&InbreedingAnalysis::processRitlandLocus,
+                                                                     genome_id,
+                                                                     contig_opt.value(),
+                                                                     InbreedSampling::lookupSuperPopulationField(super_pop_id),
+                                                                     locus_list);
+          future_vector.push_back(std::move(future));
+
+        }
+
+      }
+
+      // Retrieve the thread results into a map.
+      ResultsMap genome_results_map;
+      for (auto &future : future_vector) {
+
+        auto locus_results = future.get();
+        ExecEnv::log().info("Processed Diploid genome: {} for inbreeding and relatedness", locus_results.genome);
+        genome_results_map[locus_results.genome] = locus_results;
+
+
+      }
+
+      if (not genome_results_map.empty()) {
+
+        syntheticResults(genome_contig_id, genome_results_map, output_file_name);
+
+      }
+
+    } // for locus
+
+  } // for contig.
+
+  return true;
+
+}
+
+
+
+bool kgl::InbreedingAnalysis::syntheticResults( const ContigId_t& contig_id,
+                                                const std::map<GenomeId_t, LocusResults>& genome_results_map,
+                                                const std::string& output_file_name) {
+
+  // Append the results.
+  std::ofstream outfile;
+  std::string file_ext = output_file_name + FILE_EXT_;
+  outfile.open(file_ext, std::ofstream::out |  std::ofstream::trunc);
+
+  outfile << contig_id << DELIMITER_ << "SuperPop" << DELIMITER_ << "Inbreeding"
+          << DELIMITER_ << "HetCount" << DELIMITER_ << "HomCount"
+          << DELIMITER_ << "Het/Hom"<< DELIMITER_ << "TotalLoci" << DELIMITER_ << "Ritland\n";
+
+  for (auto const& [genome_id, locus_results] : genome_results_map) {
+
+
+    auto const [valid_value, inbreeding] = InbreedSampling::generateInbreeding(genome_id);
+    double het_hom_ratio = (locus_results.homo_count > 0 ? static_cast<double>(locus_results.hetero_count)/static_cast<double>(locus_results.homo_count) : 0.0);
+
+    outfile << genome_id << DELIMITER_;
+    outfile << genome_id.substr(0, genome_id.find_first_of("_")) << DELIMITER_;
+
+    if (valid_value) {
+
+      outfile << inbreeding << DELIMITER_;
 
     } else {
 
-      ++PED_record_count;
+      outfile << "Invalid" << DELIMITER_;
 
     }
+    outfile << locus_results.hetero_count << DELIMITER_;
+    outfile << locus_results.homo_count << DELIMITER_;
+    outfile << het_hom_ratio << DELIMITER_;
+    outfile << locus_results.total_allele_count << DELIMITER_;
+    outfile << locus_results.inbred_allele_sum << DELIMITER_;
+    outfile << '\n';
 
   }
 
-  ExecEnv::log().info("Genome samples with PED records: {}", PED_record_count);
-
-}
-
-
-// Joins a single genome population (Gnomad, Clinvar) to another (generally phased Diploid) population.
-bool kgl::LocalGenomeJoin::lookupJoinedPop(std::shared_ptr<const Variant> variant_ptr) {
-
-  ++variants_processed_;
-
-  auto contig_opt = unphased_genome_ptr_->getContig(variant_ptr->contigId());
-
-  if (contig_opt) {
-
-    auto variant_opt = contig_opt.value()->findVariant(*variant_ptr);
-
-    if (variant_opt) {
-
-      ++joined_variants_found_;
-
-    }
-
-  }
+  outfile.flush();
 
   return true;
 

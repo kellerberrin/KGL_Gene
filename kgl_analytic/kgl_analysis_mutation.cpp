@@ -126,42 +126,49 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Iteration Analysis called for Analysis Id: {}", ident());
 
-  InbreedingAnalysis inbreeding_analysis( genome_GRCh38_,
-                                          diploid_population_,
-                                          unphased_population_,
-                                          ped_data_,
-                                          output_file_name_);
-
   if (diploid_population_ and unphased_population_ and ped_data_) {
 
     ExecEnv::log().info("Filtered Population : {}  and Joined Population: {}  both active",
                         diploid_population_->populationId(), unphased_population_->populationId());
 
-    if (not inbreeding_analysis.hetHomRatioLocus()) {
+    std::string population_file = output_file_name_ + "_pop";
+    if (not InbreedingAnalysis::populationInbreeding(*genome_GRCh38_,
+                                                     *unphased_population_,
+                                                     *diploid_population_,
+                                                     *ped_data_,
+                                                     population_file)) {
 
-      ExecEnv::log().error("Analysis: {},  problem creating Het/Hom ratio", ident());
+      ExecEnv::log().error("MutationAnalysis::iterationAnalysis, Analysis: {},  problem with population inbreeding analysis", ident());
+      return false;
+
+    }
+
+    std::string synthetic_file = output_file_name_ + "_syn";
+    if (not InbreedingAnalysis::syntheticInbreeding(*genome_GRCh38_,
+                                                    *unphased_population_,
+                                                    synthetic_file)) {
+
+      ExecEnv::log().error("MutationAnalysis::iterationAnalysis, Analysis: {},  problem with synthetic inbreeding analysis", ident());
       return false;
 
     }
 
   } else if (unphased_population_){
 
-    if (not inbreeding_analysis.syntheticInbreeding()) {
+    if (not InbreedingAnalysis::syntheticInbreeding(*genome_GRCh38_,
+                                                    *unphased_population_,
+                                                    output_file_name_)) {
 
-      ExecEnv::log().error("Analysis: {},  problem with synthetic inbreeding analysis", ident());
+      ExecEnv::log().error("MutationAnalysis::iterationAnalysis, Analysis: {},  problem with synthetic inbreeding analysis", ident());
       return false;
 
     }
 
   } else {
 
-    ExecEnv::log().info("Failed to create Filtered Population and Joined Populations Id: {}", ident());
+    ExecEnv::log().error("MutationAnalysis::iterationAnalysis, Failed to create Filtered Population and Joined Populations Id: {}", ident());
 
   }
-
-  // Optional check functions.
-  //    joinPopulations();
-  //    checkPED();
 
   return true;
 
