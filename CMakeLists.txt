@@ -228,7 +228,7 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_analysis_mutation_inbreed_calc.cpp
         kgl_analytic/kgl_analysis_mutation_inbreed.h
         kgl_analytic/kgl_analysis_mutation_inbreed_aux.cpp
-        kgl_analytic/kgl_analysis_mutation_inbreed_aux.h)
+        kgl_analytic/kgl_analysis_mutation_inbreed_aux.h kgl_analytic/kgl_analysis_mutation_inbreed_calc.h)
 
 # Deconvolution and mixture files.
 

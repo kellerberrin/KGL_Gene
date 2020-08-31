@@ -131,22 +131,18 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
     ExecEnv::log().info("Filtered Population : {}  and Joined Population: {}  both active",
                         diploid_population_->populationId(), unphased_population_->populationId());
 
-    std::string population_file = output_file_name_ + "_pop";
-    if (not InbreedingAnalysis::populationInbreeding(*genome_GRCh38_,
-                                                     *unphased_population_,
+    if (not InbreedingAnalysis::populationInbreeding(unphased_population_,
                                                      *diploid_population_,
                                                      *ped_data_,
-                                                     population_file)) {
+                                                     output_file_name_)) {
 
       ExecEnv::log().error("MutationAnalysis::iterationAnalysis, Analysis: {},  problem with population inbreeding analysis", ident());
       return false;
 
     }
 
-    std::string synthetic_file = output_file_name_ + "_syn";
-    if (not InbreedingAnalysis::syntheticInbreeding(*genome_GRCh38_,
-                                                    *unphased_population_,
-                                                    synthetic_file)) {
+    if (not InbreedingAnalysis::syntheticInbreeding(unphased_population_,
+                                                    output_file_name_)) {
 
       ExecEnv::log().error("MutationAnalysis::iterationAnalysis, Analysis: {},  problem with synthetic inbreeding analysis", ident());
       return false;
@@ -155,8 +151,7 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 
   } else if (unphased_population_){
 
-    if (not InbreedingAnalysis::syntheticInbreeding(*genome_GRCh38_,
-                                                    *unphased_population_,
+    if (not InbreedingAnalysis::syntheticInbreeding(unphased_population_,
                                                     output_file_name_)) {
 
       ExecEnv::log().error("MutationAnalysis::iterationAnalysis, Analysis: {},  problem with synthetic inbreeding analysis", ident());

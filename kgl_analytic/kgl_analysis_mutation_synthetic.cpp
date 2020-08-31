@@ -28,6 +28,7 @@ kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
   RandomEntropySource entropy_mt;
   // The real unit distribution [1,0] used to draw variants from the locus.
   UniformUnitDistribution unit_distribution;
+
   // The random boolean used to draw the variant phase (Male or Female).
   RandomBoolean random_boolean;
   // The super population AF field
@@ -70,14 +71,16 @@ kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
     // For all inbred genomes.
     for (auto const& [genome_id, inbreeding_coefficient] : inbreeding_vector) {
 
+
       // Draw a unit rand.
       double random_variant_select = unit_distribution.random(entropy_mt.generator());
       // The offset variant is stochastically selected (or ignored)
       // and then based on the assigned inbreeding coefficient the variant stochastically selected as is heterozygous or homozygous.
-      double sum_frequency = 0.0;
+      double sum_frequency = 0;
       for (auto const& [variant_ptr, frequency] : variant_freq_vector) {
 
         sum_frequency += frequency;
+
         if (random_variant_select <= sum_frequency) {
         // Variant has been selected. Draw another unit random to determine if hom or het.
           double random_hom_het = unit_distribution.random(entropy_mt.generator());
@@ -124,7 +127,7 @@ kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
 
           } // if hom or het
 
-          break; // only select 1 variant.
+          break; // Only select one variant per offset.
 
         } // a variant was selected.
 
