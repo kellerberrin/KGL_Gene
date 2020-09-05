@@ -45,6 +45,21 @@ private:
 
   using ResultsMap = std::map<GenomeId_t, LocusResults>;
 
+  bool static syntheticInbreedingSample( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+                                         const std::string& output_file_name,
+                                         const std::string& sample_name,
+                                         double min,
+                                         double max,
+                                         ContigOffset_t  spacing);
+
+  static bool populationInbreedingSample( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+                                          const DiploidPopulation& diploid_population,
+                                          const GenomePEDData& ped_data,
+                                          const std::string& output_file_name,
+                                          const std::string& sample_name,
+                                          double min,
+                                          double max,
+                                          ContigOffset_t  spacing);
 
   // Use a threadpool to calculate the inbreeding coefficients.
   static bool processResults( const ContigLocusMap& contig_locus_map,

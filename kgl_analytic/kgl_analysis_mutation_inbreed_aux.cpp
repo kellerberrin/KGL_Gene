@@ -48,9 +48,6 @@ std::pair<bool, double> kgl::InbreedSampling::processFloatField( const Variant& 
 
   } else {
 
-    ExecEnv::log().error("InbreedingAnalysis::processField, Field: {} not found for Variant: {}",
-                         field_name, variant.output(',',VariantOutputIndex::START_0_BASED, false));
-
     return {false, 0.0};
 
   }
@@ -201,7 +198,7 @@ kgl::LocusMap kgl::InbreedSampling::getPopulationLocus(std::shared_ptr<const Unp
 
 
 
-// Get a list of hom/het SNPs with a spcified spacing to minimise linkage dis-equilibrium
+// Get a list of hom/het SNPs with a specified spacing to minimise linkage dis-equilibrium
 // and at a specified frequency for the super population. Used as a template for calculating
 // the inbreeding coefficient and sample relatedness
 kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::shared_ptr<const UnphasedPopulation> unphased_ptr,

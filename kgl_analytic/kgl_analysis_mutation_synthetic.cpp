@@ -17,10 +17,10 @@ namespace kgl = kellerberrin::genome;
 
 std::shared_ptr<const kgl::DiploidPopulation>
 kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
-                                                      double upper_inbreeding,
-                                                      double step_inbreeding,
-                                                      const std::string& super_population,
-                                                      const ContigVariant& locus_list) {
+                                                   double upper_inbreeding,
+                                                   double step_inbreeding,
+                                                   const std::string& super_population,
+                                                   const ContigVariant& locus_list) {
 
   std::shared_ptr<DiploidPopulation> synthetic_pop_ptr(std::make_shared<DiploidPopulation>("SyntheticInbreedingPopulation"));
 
@@ -51,18 +51,20 @@ kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
   for (auto const& [offset, offset_ptr] : locus_list.getMap()) {
 
     // For each locus get the super-population frequency of each allele
-    std::vector<std::pair<std::shared_ptr<const Variant>, double>> variant_freq_vector;
-    for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
+    std::pair<std::shared_ptr<const Variant>, double> variant_freq;
+    auto variant_vec = offset_ptr->getVariantArray();
+    if (not variant_vec.empty()) {
 
-      auto [result, AF_value] = InbreedSampling::processFloatField(*variant_ptr, AF_field);
+      auto [result, AF_value] = InbreedSampling::processFloatField(*variant_vec[0], AF_field);
       if (result) {
 
-        variant_freq_vector.emplace_back(variant_ptr, AF_value);
+        variant_freq = {variant_vec[0], AF_value};
 
       } else {
 
         ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Problem reading AF_field: {} for variant: {}"
-                             , AF_field, variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+                             , AF_field, variant_vec[0]->output(',', VariantOutputIndex::START_0_BASED, false));
+        continue;
 
       }
 
@@ -71,67 +73,60 @@ kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
     // For all inbred genomes.
     for (auto const& [genome_id, inbreeding_coefficient] : inbreeding_vector) {
 
+      auto const& [variant_ptr, frequency] = variant_freq;
 
-      // Draw a unit rand.
-      double random_variant_select = unit_distribution.random(entropy_mt.generator());
       // The offset variant is stochastically selected (or ignored)
       // and then based on the assigned inbreeding coefficient the variant stochastically selected as is heterozygous or homozygous.
-      double sum_frequency = 0;
-      for (auto const& [variant_ptr, frequency] : variant_freq_vector) {
-
-        sum_frequency += frequency;
-
-        if (random_variant_select <= sum_frequency) {
+        // Draw a unit rand.
+      double random_variant_select = unit_distribution.random(entropy_mt.generator());
+        // Randomly select the variant based on it's population frequency.
+      if (random_variant_select <= frequency) {
         // Variant has been selected. Draw another unit random to determine if hom or het.
-          double random_hom_het = unit_distribution.random(entropy_mt.generator());
-          double hom_probability = (inbreeding_coefficient * frequency) + ((1.0 - inbreeding_coefficient) * (frequency * frequency));
-          if (random_hom_het <= hom_probability) {
+        double random_hom_het = unit_distribution.random(entropy_mt.generator());
+        double hom_probability = (inbreeding_coefficient * frequency) + ((1.0 - inbreeding_coefficient) * (frequency * frequency));
+        if (random_hom_het <= hom_probability) {
           // Homozygous
-            std::vector<GenomeId_t> genome_vector {genome_id};
+          std::vector<GenomeId_t> genome_vector {genome_id};
 
-            std::shared_ptr<Variant> female_variant_ptr = variant_ptr->clone();
-            female_variant_ptr->updatePhaseId(VariantSequence::DIPLOID_PHASE_A);
+          std::shared_ptr<Variant> female_variant_ptr = variant_ptr->clone();
+          female_variant_ptr->updatePhaseId(VariantSequence::DIPLOID_PHASE_A);
             // Add to the population.
-            if (not synthetic_pop_ptr->addVariant( female_variant_ptr, genome_vector)) {
+          if (not synthetic_pop_ptr->addVariant( female_variant_ptr, genome_vector)) {
 
-              ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
-                                  , genome_id, female_variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+            ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
+                                , genome_id, female_variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
 
-            } // add female hom variant
+          } // add female hom variant
 
-            std::shared_ptr<Variant> male_variant_ptr = variant_ptr->clone();
-            male_variant_ptr->updatePhaseId(VariantSequence::DIPLOID_PHASE_B);
+          std::shared_ptr<Variant> male_variant_ptr = variant_ptr->clone();
+          male_variant_ptr->updatePhaseId(VariantSequence::DIPLOID_PHASE_B);
             // Add to the population.
-            if (not synthetic_pop_ptr->addVariant( male_variant_ptr, genome_vector)) {
+          if (not synthetic_pop_ptr->addVariant( male_variant_ptr, genome_vector)) {
 
-              ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
-                                  , genome_id, male_variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+            ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
+                                , genome_id, male_variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
 
-            } // add male hom variant
+          } // add male hom variant
 
-          } else {
+        } else {
           // Heterozygous
           // Randomly select the variant phase and add to the genome.
-            std::shared_ptr<Variant> variant_copy_ptr = variant_ptr->clone();
+          std::shared_ptr<Variant> variant_copy_ptr = variant_ptr->clone();
           // Draw a random boolean to determine the variant phase.
-            PhaseId_t random_phase = random_boolean.random(entropy_mt.generator()) ? VariantSequence::DIPLOID_PHASE_A : VariantSequence::DIPLOID_PHASE_B;
-            variant_copy_ptr->updatePhaseId(random_phase);
+          PhaseId_t random_phase = random_boolean.random(entropy_mt.generator()) ? VariantSequence::DIPLOID_PHASE_A : VariantSequence::DIPLOID_PHASE_B;
+          variant_copy_ptr->updatePhaseId(random_phase);
           // Add to the population.
-            std::vector<GenomeId_t> genome_vector {genome_id};
-            if (not synthetic_pop_ptr->addVariant( variant_copy_ptr, genome_vector)) {
+          std::vector<GenomeId_t> genome_vector {genome_id};
+          if (not synthetic_pop_ptr->addVariant( variant_copy_ptr, genome_vector)) {
 
-              ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
-                                  , genome_id, variant_copy_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+            ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
+                                , genome_id, variant_copy_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
 
-            } // add het variant
+          } // add het variant
 
-          } // if hom or het
+        } // if hom or het
 
-          break; // Only select one variant per offset.
-
-        } // a variant was selected.
-
-      } // for all offset variants
+      } // a variant was selected.
 
     } // for all genomes.
 

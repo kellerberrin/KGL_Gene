@@ -19,86 +19,86 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const Unphase
                                                    const GenomePEDData& ped_data,
                                                    const std::string& output_file_name) {
 
-  // Open the output file.
-  std::ofstream outfile5;
-  std::string file_name_ext = output_file_name + "pop_All" + FILE_EXT_;
-  outfile5.open(file_name_ext, std::ofstream::out |  std::ofstream::trunc);
 
-  outfile5 << diploid_population.populationId() << DELIMITER_ << "Min_AF:" << DELIMITER_ << 0.0
-           << DELIMITER_ << "Max_AF:" << 1.00 << DELIMITER_ << "Spacing:" << 1000 << '\n';
+  populationInbreedingSample( unphased_ptr,
+                              diploid_population,
+                              ped_data,
+                              output_file_name,
+                              "pop_all",
+                              0.0,
+                              1.0,
+                              100);
 
-  ContigLocusMap contig_locus_map = InbreedSampling::getPopulationLocusMap(unphased_ptr,
-                                                                           0.0,   // min af
-                                                                           1.0,   // max af
-                                                                           1000);  // spacing
+  populationInbreedingSample( unphased_ptr,
+                              diploid_population,
+                              ped_data,
+                              output_file_name,
+                              "pop_01",
+                              0.0,
+                              0.01,
+                              100);
 
-  processResults(contig_locus_map, diploid_population, ped_data, outfile5);
+  populationInbreedingSample( unphased_ptr,
+                              diploid_population,
+                              ped_data,
+                              output_file_name,
+                              "pop_05",
+                              0.01,
+                              0.05,
+                              100);
 
-  // Open the output file.
-  std::ofstream outfile1;
-  file_name_ext = output_file_name + "pop_01" + FILE_EXT_;
-  outfile1.open(file_name_ext, std::ofstream::out |  std::ofstream::trunc);
+  populationInbreedingSample( unphased_ptr,
+                              diploid_population,
+                              ped_data,
+                              output_file_name,
+                              "pop_20",
+                              0.05,
+                              0.2,
+                              100);
 
-  outfile1 << diploid_population.populationId() << DELIMITER_ << "Min_AF:" << DELIMITER_ << 0.0
-           << DELIMITER_ << "Max_AF:" << 0.01 << DELIMITER_ << "Spacing:" << 1000 << '\n';
-
-  contig_locus_map = InbreedSampling::getPopulationLocusMap(unphased_ptr,
-                                                            0.0,   // min af
-                                                            0.01,   // max af
-                                                            1000);  // spacing
-
-  processResults(contig_locus_map, diploid_population, ped_data, outfile1);
-
-  // Open the output file.
-  std::ofstream outfile2;
-  file_name_ext = output_file_name + "pop_05" + FILE_EXT_;
-  outfile2.open(file_name_ext, std::ofstream::out |  std::ofstream::trunc);
-
-  outfile2 << diploid_population.populationId() << DELIMITER_ << "Min_AF:" << DELIMITER_ << 0.01
-           << DELIMITER_ << "Max_AF:" << 0.05 << DELIMITER_ << "Spacing:" << 1000 << '\n';
-
-  contig_locus_map = InbreedSampling::getPopulationLocusMap(unphased_ptr,
-                                                            0.01,   // min af
-                                                            0.05,   // max af
-                                                            1000);  // spacing
-
-  processResults(contig_locus_map, diploid_population, ped_data, outfile2);
-
-  // Open the output file.
-  std::ofstream outfile3;
-  file_name_ext = output_file_name + "pop_20" + FILE_EXT_;
-  outfile3.open(file_name_ext, std::ofstream::out |  std::ofstream::trunc);
-
-  outfile3 << diploid_population.populationId() << DELIMITER_ << "Min_AF:" << DELIMITER_ << 0.05
-           << DELIMITER_ << "Max_AF:" << 0.20 << DELIMITER_ << "Spacing:" << 1000 << '\n';
-
-  contig_locus_map = InbreedSampling::getPopulationLocusMap(unphased_ptr,
-                                                            0.05,   // min af
-                                                            0.2,   // max af
-                                                            1000);  // spacing
-
-  processResults(contig_locus_map, diploid_population, ped_data, outfile3);
-
-  // Open the output file.
-  std::ofstream outfile4;
-  file_name_ext = output_file_name + "pop_100" + FILE_EXT_;
-  outfile4.open(file_name_ext, std::ofstream::out |  std::ofstream::trunc);
-
-  outfile4 << diploid_population.populationId() << DELIMITER_ << "Min_AF:" << DELIMITER_ << 0.20
-           << DELIMITER_ << "Max_AF:" << 1.00 << DELIMITER_ << "Spacing:" << 1000 << '\n';
-
-  contig_locus_map = InbreedSampling::getPopulationLocusMap(unphased_ptr,
-                                                            0.2,   // min af
-                                                            1.0,   // max af
-                                                            1000);  // spacing
-
-  processResults(contig_locus_map, diploid_population, ped_data, outfile4);
-
+  populationInbreedingSample( unphased_ptr,
+                              diploid_population,
+                              ped_data,
+                              output_file_name,
+                              "pop_100",
+                              0.2,
+                              1.0,
+                              100);
 
 
   return true;
 
 }
+
+
+bool kgl::InbreedingAnalysis::populationInbreedingSample( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+                                                          const DiploidPopulation& diploid_population,
+                                                          const GenomePEDData& ped_data,
+                                                          const std::string& output_file_name,
+                                                          const std::string& sample_name,
+                                                          double min,
+                                                          double max,
+                                                          ContigOffset_t  spacing) {
+
+  // Open the output file.
+  std::ofstream outfile;
+  std::string file_name_ext = output_file_name + sample_name + FILE_EXT_;
+  outfile.open(file_name_ext, std::ofstream::out |  std::ofstream::trunc);
+
+  outfile << diploid_population.populationId() << DELIMITER_ << "Min_AF:" << DELIMITER_ << min
+           << DELIMITER_ << "Max_AF:" << max << DELIMITER_ << "Spacing:" << spacing << '\n';
+
+  ContigLocusMap contig_locus_map = InbreedSampling::getPopulationLocusMap(unphased_ptr,
+                                                                           min,   // min af
+                                                                           max,   // max af
+                                                                           spacing);  // spacing
+
+  processResults(contig_locus_map, diploid_population, ped_data, outfile);
+
+  return true;
+
+}
+
 
 
 bool kgl::InbreedingAnalysis::processResults( const ContigLocusMap& contig_locus_map,
@@ -134,7 +134,7 @@ bool kgl::InbreedingAnalysis::processResults( const ContigLocusMap& contig_locus
         }
         auto const& [super_pop_id, locus_list] = *locus_result;
 
-        std::future<LocusResults> future = thread_pool.enqueueTask(&InbreedingCalculation::processRitlandLocus,
+        std::future<LocusResults> future = thread_pool.enqueueTask(&InbreedingCalculation::processHallME,
                                                                    genome_id,
                                                                    contig_opt.value(),
                                                                    InbreedSampling::lookupSuperPopulationField(super_pop_id),
@@ -220,85 +220,72 @@ bool kgl::InbreedingAnalysis::writeResults( const ContigId_t& contig_id,
 bool kgl::InbreedingAnalysis::syntheticInbreeding(  std::shared_ptr<const UnphasedPopulation> unphased_ptr,
                                                     const std::string& output_file_name) {
 
-  // Open the output file.
-  std::ofstream outfile5;
-  std::string file_name_ext = output_file_name + "syn_All" + FILE_EXT_;
-  outfile5.open(file_name_ext, std::ofstream::out |  std::ofstream::trunc);
+  syntheticInbreedingSample( unphased_ptr,
+                             output_file_name,
+                             "syn_all",
+                             0.0,
+                             1.0,
+                             10);
 
-  outfile5 << "Synthetic" << DELIMITER_ << "Min_AF:" << DELIMITER_ << 0.00
-           << DELIMITER_ << "Max_AF:" << 1.00 << DELIMITER_ << "Spacing:" << 1000 << '\n';
+  syntheticInbreedingSample( unphased_ptr,
+                             output_file_name,
+                             "syn_01",
+                             0.0,
+                             0.01,
+                             10);
 
-  ContigLocusMap contig_locus_map = InbreedSampling::getPopulationLocusMap(unphased_ptr,
-                                                                           0.0,   // min af
-                                                                           1.0,   // max af
-                                                                           1000);  // spacing
+  syntheticInbreedingSample( unphased_ptr,
+                             output_file_name,
+                             "syn_05",
+                             0.01,
+                             0.05,
+                             10);
 
-  processSynResults(contig_locus_map, outfile5);
+  syntheticInbreedingSample( unphased_ptr,
+                             output_file_name,
+                             "syn_20",
+                             0.05,
+                             0.2,
+                             10);
 
-  // Open the output file.
-  std::ofstream outfile1;
-  file_name_ext = output_file_name + "syn_01" + FILE_EXT_;
-  outfile1.open(file_name_ext, std::ofstream::out |  std::ofstream::trunc);
-
-  outfile1 << "Synthetic" << DELIMITER_ << "Min_AF:" << DELIMITER_ << 0.0
-          << DELIMITER_ << "Max_AF:" << 0.01 << DELIMITER_ << "Spacing:" << 1000 << '\n';
-
-  contig_locus_map = InbreedSampling::getPopulationLocusMap(unphased_ptr,
-                                                            0.0,   // min af
-                                                            0.01,   // max af
-                                                            1000);  // spacing
-
-  processSynResults(contig_locus_map, outfile1);
-
-  // Open the output file.
-  std::ofstream outfile2;
-  file_name_ext = output_file_name + "syn_05" + FILE_EXT_;
-  outfile2.open(file_name_ext, std::ofstream::out |  std::ofstream::trunc);
-
-  outfile2 << "Synthetic" << DELIMITER_ << "Min_AF:" << DELIMITER_ << 0.01
-          << DELIMITER_ << "Max_AF:" << 0.05 << DELIMITER_ << "Spacing:" << 1000 << '\n';
-
-  contig_locus_map = InbreedSampling::getPopulationLocusMap(unphased_ptr,
-                                                            0.01,   // min af
-                                                            0.05,   // max af
-                                                            1000);  // spacing
-
-  processSynResults(contig_locus_map, outfile2);
-
-  // Open the output file.
-  std::ofstream outfile3;
-  file_name_ext = output_file_name + "syn_20" + FILE_EXT_;
-  outfile3.open(file_name_ext, std::ofstream::out |  std::ofstream::trunc);
-
-  outfile3 << "Synthetic" << DELIMITER_ << "Min_AF:" << DELIMITER_ << 0.05
-           << DELIMITER_ << "Max_AF:" << 0.20 << DELIMITER_ << "Spacing:" << 1000 << '\n';
-
-  contig_locus_map = InbreedSampling::getPopulationLocusMap(unphased_ptr,
-                                                            0.05,   // min af
-                                                            0.2,   // max af
-                                                            1000);  // spacing
-
-  processSynResults(contig_locus_map, outfile3);
-
-  // Open the output file.
-  std::ofstream outfile4;
-  file_name_ext = output_file_name + "syn_100" + FILE_EXT_;
-  outfile4.open(file_name_ext, std::ofstream::out |  std::ofstream::trunc);
-
-  outfile4 << "Synthetic" << DELIMITER_ << "Min_AF:" << DELIMITER_ << 0.20
-           << DELIMITER_ << "Max_AF:" << 1.00 << DELIMITER_ << "Spacing:" << 1000 << '\n';
-
-  contig_locus_map = InbreedSampling::getPopulationLocusMap(unphased_ptr,
-                                                            0.2,   // min af
-                                                            1.0,   // max af
-                                                            1000);  // spacing
-
-  processSynResults(contig_locus_map, outfile4);
-
+  syntheticInbreedingSample( unphased_ptr,
+                             output_file_name,
+                             "syn_100",
+                             0.2,
+                             1.0,
+                             10);
 
   return true;
 
 }
+
+
+bool kgl::InbreedingAnalysis::syntheticInbreedingSample( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+                                                          const std::string& output_file_name,
+                                                          const std::string& sample_name,
+                                                          double min,
+                                                          double max,
+                                                          ContigOffset_t  spacing) {
+
+  // Open the output file.
+  std::ofstream outfile;
+  std::string file_name_ext = output_file_name + sample_name + FILE_EXT_;
+  outfile.open(file_name_ext, std::ofstream::out |  std::ofstream::trunc);
+
+  outfile << "Synthetic" << DELIMITER_ << "Min_AF:" << DELIMITER_ << min
+          << DELIMITER_ << "Max_AF:" << max << DELIMITER_ << "Spacing:" << spacing << '\n';
+
+  ContigLocusMap contig_locus_map = InbreedSampling::getPopulationLocusMap(unphased_ptr,
+                                                                           min,   // min af
+                                                                           max,   // max af
+                                                                           spacing);  // spacing
+
+  processSynResults(contig_locus_map, outfile);
+
+  return true;
+
+}
+
 
 
 bool kgl::InbreedingAnalysis::processSynResults( const ContigLocusMap& contig_locus_map,
@@ -325,7 +312,7 @@ bool kgl::InbreedingAnalysis::processSynResults( const ContigLocusMap& contig_lo
         if (contig_opt) {
 
 
-          std::future<LocusResults> future = thread_pool.enqueueTask(&InbreedingCalculation::processRitlandLocus,
+          std::future<LocusResults> future = thread_pool.enqueueTask(&InbreedingCalculation::processHallME,
                                                                      genome_id,
                                                                      contig_opt.value(),
                                                                      InbreedSampling::lookupSuperPopulationField(super_pop_id),

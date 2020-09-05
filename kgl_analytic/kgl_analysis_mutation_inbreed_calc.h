@@ -43,10 +43,21 @@ public:
                                                               const std::string& super_population_field,
                                                               const std::shared_ptr<const ContigVariant>& locus_list);
 
-  [[nodiscard]] static LocusResults multiLocus1( const ContigId_t& contig_id,
-                                                 const std::shared_ptr<const DiploidContig>& contig_ptr,
-                                                 const std::string& super_population_field,
-                                                 const std::shared_ptr<const ContigVariant>& locus_list);
+  [[nodiscard]] static LocusResults processRitlandMME( const ContigId_t& contig_id,
+                                                       const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                                       const std::string& super_population_field,
+                                                       const std::shared_ptr<const ContigVariant>& locus_list);
+
+  [[nodiscard]] static LocusResults processHallME( const GenomeId_t& genome_id,
+                                                  const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                                  const std::string& super_population_field,
+                                                  const std::shared_ptr<const ContigVariant>& locus_list);
+    // The initial guess for the Hall expectation maximization algorithm.
+  constexpr static const double INITIAL_INBREED_ = 0.99;
+  constexpr static const double FINAL_ACCURACY_ = 1E-06;
+  constexpr static const size_t MINIMUM_ITERATIONS_ = 10;
+  constexpr static const size_t MAXIMUM_ITERATIONS_ = 1000;
+
 
 private:
 
