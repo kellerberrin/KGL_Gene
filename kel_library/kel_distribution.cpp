@@ -102,6 +102,36 @@ double kel::BetaDistribution::pdf(double x, double a, double b) {
 
 }
 
+
+double kel::BetaDistribution::mean(double a, double b) {
+
+  assert(a > 0);
+  assert(b > 0);
+
+  return a / (a + b);
+
+}
+
+
+double kel::BetaDistribution::var(double a, double b) {
+
+  assert(a > 0);
+  assert(b > 0);
+
+  return (a * b) / ((a + b) * (a + b) * (a + b + 1.0));
+
+}
+
+
+double kel::BetaDistribution::mode(double a, double b) {
+
+  assert(a > 1);
+  assert(b > 1);
+
+  return (a - 1.0) / (a + b - 2.0);
+
+}
+
 double kel::BetaBinomialDistribution::pdf(size_t n, size_t k, double alpha, double beta) {
 
   assert(k <= n);
@@ -179,9 +209,8 @@ double kel::BetaBinomialDistribution::logPdf(double n, double k, double alpha, d
 
 double kel::BinomialDistribution::pdf(size_t n, size_t k, double prob_success) {
 
-  assert(k <= n);
-  assert(prob_success >= 0);
-  assert(prob_success <= 1.0);
+  assert(k <= n and k >= 0);
+  assert(prob_success >= 0 and prob_success <= 1.0);
 
   double coeff = bm::binomial_coefficient<double>(n, k);
 
@@ -192,3 +221,23 @@ double kel::BinomialDistribution::pdf(size_t n, size_t k, double prob_success) {
   return coeff * p * q;
 
 }
+
+
+double kel::BinomialDistribution::cdf(size_t n, double k, double prob_success) {
+
+  assert(k <= n and k >= 0);
+  assert(prob_success >= 0 and prob_success <= 1.0);
+
+  size_t integer_k = std::floor(k);
+  double sum_pdf = 0.0;
+
+  for (size_t index = 0; index <= integer_k; ++index) {
+
+    sum_pdf += cdf(n, index, prob_success);
+
+  }
+
+  return sum_pdf;
+
+}
+

@@ -190,7 +190,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_ped_parser.cpp)
 
 # 3rd party library for fast Leveshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kel_library/kel_optimize.cpp kel_library/kel_optimize.h)
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES
@@ -228,7 +228,8 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_analysis_mutation_inbreed_calc.cpp
         kgl_analytic/kgl_analysis_mutation_inbreed.h
         kgl_analytic/kgl_analysis_mutation_inbreed_aux.cpp
-        kgl_analytic/kgl_analysis_mutation_inbreed_aux.h kgl_analytic/kgl_analysis_mutation_inbreed_calc.h)
+        kgl_analytic/kgl_analysis_mutation_inbreed_aux.h
+        kgl_analytic/kgl_analysis_mutation_inbreed_calc.h)
 
 # Deconvolution and mixture files.
 
@@ -395,7 +396,7 @@ target_link_libraries(kgd_deconvolv kgd_deconvolv_lib kgl_genome_lib kel_library
 add_executable (kgl_genome ${APPLICATION_SOURCE_FILES} )
 
 # Specify the static libraries.
-target_link_libraries(kgl_genome kgl_analysis kgl_genome_lib kgd_deconvolv_lib kel_library_lib ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
+target_link_libraries(kgl_genome kgl_analysis kgl_genome_lib kgd_deconvolv_lib kel_library_lib ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} nlopt)
 
 ############################################################################################################
 # Generate the kpl executable.

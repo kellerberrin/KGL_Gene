@@ -272,6 +272,11 @@ public:
 
   [[nodiscard]] static double pdf(double x, double a, double b);
 
+  [[nodiscard]] static double mean(double a, double b);
+
+  [[nodiscard]] static double var(double a, double b);
+
+  [[nodiscard]] static double mode(double a, double b);
 
 private:
 
@@ -316,7 +321,7 @@ public:
 
   BinomialDistribution(size_t trials, double prob_success) :  binomial_integer_(trials, prob_success) {}
   BinomialDistribution(const BinomialDistribution &) = delete;
-  virtual ~BinomialDistribution() = default;
+  ~BinomialDistribution() = default;
 
   BinomialDistribution &operator=(BinomialDistribution &) = delete;
 
@@ -324,11 +329,44 @@ public:
 
   [[nodiscard]] static double pdf(size_t n, size_t k, double prob_success);
 
+  [[nodiscard]] static double cdf(size_t n, double k, double prob_success);
+
+  [[nodiscard]] static double mean(size_t n, double prob_success) { return static_cast<double>(n) * prob_success; }
+
 private:
 
   mutable std::binomial_distribution<> binomial_integer_;
 
 };
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Bernoulli Distribution
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class BernoulliDistribution {
+
+public:
+
+  BernoulliDistribution(double prob_success) :  bernoulli_integer_(prob_success) {}
+  BernoulliDistribution(const BinomialDistribution &) = delete;
+  ~BernoulliDistribution() = default;
+
+  BinomialDistribution &operator=(BinomialDistribution &) = delete;
+
+  [[nodiscard]] bool random(EntropyGenerator &source) const { return bernoulli_integer_(source); }
+
+  [[nodiscard]] static double mean(double prob_success) { return prob_success; }
+
+private:
+
+  mutable std::bernoulli_distribution bernoulli_integer_;
+
+};
+
+
 
 
 }   // end namespace

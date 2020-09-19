@@ -46,19 +46,54 @@ kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
 
   }
 
+  // For all inbred genomes.
+  for (auto const& [genome_id, inbreeding_coefficient] : inbreeding_vector) {
+
+    size_t homozygous_count = 0;
+    size_t heterozygous_count = 0;
+    double expected_homozygous = 0.0;
+    double expected_variant = 0.0;
+
   // Iterate through the locus_list and create each genome with het/hom ratio
   // stochastically defined by the assigned inbreeding coefficient
-  for (auto const& [offset, offset_ptr] : locus_list.getMap()) {
+    for (auto const& [offset, offset_ptr] : locus_list.getMap()) {
 
-    // For each locus get the super-population frequency of each allele
-    std::pair<std::shared_ptr<const Variant>, double> variant_freq;
-    auto variant_vec = offset_ptr->getVariantArray();
-    if (not variant_vec.empty()) {
+      // For each locus select a variant based on the allele frequency.
+      std::pair<std::shared_ptr<const Variant>, double> variant_freq{nullptr, 0.0};
+      auto variant_vec = offset_ptr->getVariantArray();
+      if (variant_vec.empty()) {
 
-      auto [result, AF_value] = InbreedSampling::processFloatField(*variant_vec[0], AF_field);
+        continue;
+
+      } else if (variant_vec.size() == 1) {
+
+        variant_freq.first = variant_vec.front();
+
+      } else {
+
+        UniformIntegerDistribution variant_index(0, variant_vec.size()-1);
+        size_t drawn_index = variant_index.random(entropy_mt.generator());
+        variant_freq.first = variant_vec[drawn_index];
+
+      }
+      bool variant_selected = false;
+      double random_variant_selection = unit_distribution.random(entropy_mt.generator());
+      auto [result, AF_value] = InbreedSampling::processFloatField(*variant_freq.first, AF_field);
       if (result) {
 
-        variant_freq = {variant_vec[0], AF_value};
+        expected_variant += AF_value;
+        if (AF_value >= random_variant_selection) {
+
+          variant_selected = true;
+          variant_freq.second = AF_value;
+          if (AF_value == 0.0) {
+
+            ExecEnv::log().warn( "InbreedSampling::generateSyntheticPopulation, Zero AF_field: {}, random: {}, variant: {}"
+                , AF_field, random_variant_selection, variant_vec[0]->output(',', VariantOutputIndex::START_0_BASED, false));
+
+          }
+
+        }
 
       } else {
 
@@ -68,75 +103,68 @@ kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
 
       }
 
-    } // for variants at the offset.
-
-    // For all inbred genomes.
-    for (auto const& [genome_id, inbreeding_coefficient] : inbreeding_vector) {
-
       auto const& [variant_ptr, frequency] = variant_freq;
+      if (not (variant_ptr and variant_selected)) {
 
-      // The offset variant is stochastically selected (or ignored)
-      // and then based on the assigned inbreeding coefficient the variant stochastically selected as is heterozygous or homozygous.
-        // Draw a unit rand.
-      double random_variant_select = unit_distribution.random(entropy_mt.generator());
-        // Randomly select the variant based on it's population frequency.
-      if (random_variant_select <= frequency) {
-        // Variant has been selected. Draw another unit random to determine if hom or het.
-        double random_hom_het = unit_distribution.random(entropy_mt.generator());
-        double hom_probability = (inbreeding_coefficient * frequency) + ((1.0 - inbreeding_coefficient) * (frequency * frequency));
-        if (random_hom_het <= hom_probability) {
-          // Homozygous
-          std::vector<GenomeId_t> genome_vector {genome_id};
+        continue;
 
-          std::shared_ptr<Variant> female_variant_ptr = variant_ptr->clone();
-          female_variant_ptr->updatePhaseId(VariantSequence::DIPLOID_PHASE_A);
-            // Add to the population.
-          if (not synthetic_pop_ptr->addVariant( female_variant_ptr, genome_vector)) {
+      }
 
-            ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
-                                , genome_id, female_variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+      double random_hom_het = unit_distribution.random(entropy_mt.generator());
+      double hom_probability = (inbreeding_coefficient * frequency) + ((1.0 - inbreeding_coefficient) * (frequency * frequency));
+      expected_homozygous += hom_probability >= 0.0 ? hom_probability : 0.0;
+      if (random_hom_het <= hom_probability) {
+        // Homozygous
+        std::vector<GenomeId_t> genome_vector {genome_id};
 
-          } // add female hom variant
-
-          std::shared_ptr<Variant> male_variant_ptr = variant_ptr->clone();
-          male_variant_ptr->updatePhaseId(VariantSequence::DIPLOID_PHASE_B);
-            // Add to the population.
-          if (not synthetic_pop_ptr->addVariant( male_variant_ptr, genome_vector)) {
-
-            ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
-                                , genome_id, male_variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
-
-          } // add male hom variant
-
-        } else {
-          // Heterozygous
-          // Randomly select the variant phase and add to the genome.
-          std::shared_ptr<Variant> variant_copy_ptr = variant_ptr->clone();
-          // Draw a random boolean to determine the variant phase.
-          PhaseId_t random_phase = random_boolean.random(entropy_mt.generator()) ? VariantSequence::DIPLOID_PHASE_A : VariantSequence::DIPLOID_PHASE_B;
-          variant_copy_ptr->updatePhaseId(random_phase);
+        std::shared_ptr<Variant> female_variant_ptr = variant_ptr->clone();
+        female_variant_ptr->updatePhaseId(VariantSequence::DIPLOID_PHASE_A);
           // Add to the population.
-          std::vector<GenomeId_t> genome_vector {genome_id};
-          if (not synthetic_pop_ptr->addVariant( variant_copy_ptr, genome_vector)) {
+        if (not synthetic_pop_ptr->addVariant( female_variant_ptr, genome_vector)) {
 
-            ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
-                                , genome_id, variant_copy_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+          ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
+                              , genome_id, female_variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
 
-          } // add het variant
+        } // add female hom variant
 
-        } // if hom or het
+        std::shared_ptr<Variant> male_variant_ptr = variant_ptr->clone();
+        male_variant_ptr->updatePhaseId(VariantSequence::DIPLOID_PHASE_B);
+          // Add to the population.
+        if (not synthetic_pop_ptr->addVariant( male_variant_ptr, genome_vector)) {
 
-      } // a variant was selected.
+          ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
+                              , genome_id, male_variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
 
-    } // for all genomes.
+        } // add male hom variant
+        ++homozygous_count;
 
-  } // for all locus offsets
 
-  for (auto const& [genome_id, genome_ptr] : synthetic_pop_ptr->getMap()) {
+      } else {
+        // Heterozygous
+        // Randomly select the variant phase and add to the genome.
+        std::shared_ptr<Variant> variant_copy_ptr = variant_ptr->clone();
+        // Draw a random boolean to determine the variant phase.
+        PhaseId_t random_phase = random_boolean.random(entropy_mt.generator()) ? VariantSequence::DIPLOID_PHASE_A : VariantSequence::DIPLOID_PHASE_B;
+        variant_copy_ptr->updatePhaseId(random_phase);
+        // Add to the population.
+        std::vector<GenomeId_t> genome_vector {genome_id};
+        if (not synthetic_pop_ptr->addVariant( variant_copy_ptr, genome_vector)) {
 
-    ExecEnv::log().info("Synthetic Inbred Genome: {}, variant count: {}", genome_id, genome_ptr->variantCount());
+          ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
+                              , genome_id, variant_copy_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
 
-  }
+        } // add het variant
+
+        ++heterozygous_count;
+
+      } // if hom or het
+
+    } // locii
+
+    ExecEnv::log().info("Synthetic Inbred Genome: {}, Inbreeding: {}, Total: {}, Expected Total: {}, Homozygous: {}, ExpectedHom: {}, Heterozygous: {}",
+                        genome_id, inbreeding_coefficient, (homozygous_count + heterozygous_count), expected_variant, homozygous_count, expected_homozygous, heterozygous_count);
+
+  } // for all genomes.
 
   return synthetic_pop_ptr;
 

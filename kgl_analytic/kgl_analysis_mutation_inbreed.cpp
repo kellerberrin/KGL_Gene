@@ -134,7 +134,7 @@ bool kgl::InbreedingAnalysis::processResults( const ContigLocusMap& contig_locus
         }
         auto const& [super_pop_id, locus_list] = *locus_result;
 
-        std::future<LocusResults> future = thread_pool.enqueueTask(&InbreedingCalculation::processHallME,
+        std::future<LocusResults> future = thread_pool.enqueueTask(&InbreedingCalculation::processExp,
                                                                    genome_id,
                                                                    contig_opt.value(),
                                                                    InbreedSampling::lookupSuperPopulationField(super_pop_id),
@@ -178,7 +178,7 @@ bool kgl::InbreedingAnalysis::writeResults( const ContigId_t& contig_id,
   outfile << contig_id << DELIMITER_ << "Population" << DELIMITER_
           << "Description" << DELIMITER_ << "SuperPopulation" << DELIMITER_ << "Description" << DELIMITER_
           << "HetCount" << DELIMITER_ << "HomCount" << DELIMITER_ << "Het/Hom"<< DELIMITER_
-          << "TotalLoci" << DELIMITER_ << "Ritland\n";
+          << "TotalLoci" << DELIMITER_ << "CalcInbreed\n";
 
   for (auto const& [genome_id, locus_results] : genome_results_map) {
 
@@ -223,14 +223,14 @@ bool kgl::InbreedingAnalysis::syntheticInbreeding(  std::shared_ptr<const Unphas
   syntheticInbreedingSample( unphased_ptr,
                              output_file_name,
                              "syn_all",
-                             0.0,
+                             0.01,
                              1.0,
-                             10);
-
+                             100);
+/*
   syntheticInbreedingSample( unphased_ptr,
                              output_file_name,
                              "syn_01",
-                             0.0,
+                             0.001,
                              0.01,
                              10);
 
@@ -254,7 +254,7 @@ bool kgl::InbreedingAnalysis::syntheticInbreeding(  std::shared_ptr<const Unphas
                              0.2,
                              1.0,
                              10);
-
+*/
   return true;
 
 }
@@ -312,7 +312,7 @@ bool kgl::InbreedingAnalysis::processSynResults( const ContigLocusMap& contig_lo
         if (contig_opt) {
 
 
-          std::future<LocusResults> future = thread_pool.enqueueTask(&InbreedingCalculation::processHallME,
+          std::future<LocusResults> future = thread_pool.enqueueTask(&InbreedingCalculation::processExp,
                                                                      genome_id,
                                                                      contig_opt.value(),
                                                                      InbreedSampling::lookupSuperPopulationField(super_pop_id),
@@ -356,7 +356,7 @@ bool kgl::InbreedingAnalysis::writeSynResults(const ContigId_t& contig_id,
 
   outfile << contig_id << DELIMITER_ << "SuperPop" << DELIMITER_ << "Inbreeding"
           << DELIMITER_ << "HetCount" << DELIMITER_ << "HomCount"
-          << DELIMITER_ << "Het/Hom"<< DELIMITER_ << "TotalLoci" << DELIMITER_ << "Ritland\n";
+          << DELIMITER_ << "Het/Hom"<< DELIMITER_ << "TotalLoci" << DELIMITER_ << "CalcInbreed\n";
 
   for (auto const& [genome_id, locus_results] : genome_results_map) {
 

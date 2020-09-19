@@ -243,6 +243,8 @@ kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::s
 
           } // for variant array
 
+          previous_offset = offset;
+
         } // if spacing
 
       } // for offset
