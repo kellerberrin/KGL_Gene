@@ -73,7 +73,9 @@ set(LIBRARY_SOURCE_FILES
         kel_library/kel_basic_io.cpp
         kel_library/kel_basic_io.h
         kel_library/kel_percentile.h
-        kel_library/kel_thread_pool.h)
+        kel_library/kel_thread_pool.h
+        kel_library/kel_optimize.cpp
+        kel_library/kel_optimize.h)
 
 # Basic Genetic infrastructure library
 set(GENETIC_LIBRARY_SOURCE_FILES
@@ -190,7 +192,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_library/kgl_ped_parser.cpp)
 
 # 3rd party library for fast Leveshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kel_library/kel_optimize.cpp kel_library/kel_optimize.h)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES

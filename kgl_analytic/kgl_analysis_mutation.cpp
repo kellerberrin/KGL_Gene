@@ -8,6 +8,7 @@
 #include "kgl_filter.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 #include "kgl_analysis_mutation_inbreed.h"
+#include "kel_optimize.h"
 
 #include <fstream>
 
@@ -50,6 +51,8 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
     return false;
 
   }
+
+  Optimize::opt_test();
 
   return true;
 

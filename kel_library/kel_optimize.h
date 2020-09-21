@@ -13,9 +13,8 @@ namespace kellerberrin {   //  organization level namespace
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// The optimize object is a PIMPL facade in front of the nlopt optimization library
+// The optimize object is a facade in front of the nlopt optimization library
 // If this object is used then the executable must link to "libnlopt".
-// This is currently a static library for portability and speed.
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -80,12 +79,12 @@ enum class OptimizationAlgorithm {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 enum class OptimizationResult {
-  FAILURE = -1,         /* generic failure code */
+  FAILURE = -1,         // generic failure code
   INVALID_ARGS = -2,
   OUT_OF_MEMORY = -3,
   ROUNDOFF_LIMITED = -4,
   FORCED_STOP = -5,
-  SUCCESS = 1,          /* generic success code */
+  SUCCESS = 1,          // generic success code
   STOPVAL_REACHED = 2,
   FTOL_REACHED = 3,
   XTOL_REACHED = 4,
@@ -104,6 +103,24 @@ enum class OptimizationType {
   MINIMIZE = 2
 };
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Stopping criteria (can be more than 1 criteria)
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+enum class OptimizeStoppingType {
+  FUNCTION_VALUE = 1,     // Stop when a particular function value is reached.
+  RELATIVE_FUNCTION_THRESHOLD = 2,    // Stop when the relative objective function update is below a threshold.
+  ABSOLUTE_FUNCTION_THRESHOLD = 3,    // Stop when the absolute objective function update is below a threshold.
+  RELATIVE_PARAMETER_THRESHOLD = 4,  // Stop when the relative weighted (normed) parameter vector update is below a threshold.
+  RELATIVE_PARAMETER_WEIGHTS = 5,  // Set the relative parameter norm weights.
+  ABSOLUTE_PARAMETER_THRESHOLD = 6,  // Stop when the parameter vector update is below a threshold.
+  MAXIMUM_EVALUATIONS = 7, // Stop when the maximum number of evaluations have been reached.
+  MAXIMUM_TIME = 8    // Stop when the specified time in seconds has elapsed.
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -119,12 +136,16 @@ class Optimize {
 public:
 
 
-  Optimize(OptimizationAlgorithm opt_alg, size_t dimension, OptimizationType opt_type, ObjectiveFunction objective)
+  Optimize( OptimizationAlgorithm opt_alg,
+            size_t dimension,
+            OptimizationType opt_type,
+            ObjectiveFunction objective)
     : opt_alg_(opt_alg), dimension_(dimension), opt_type_(opt_type),  objective_(std::move(objective)) {}
   ~Optimize() = default;
 
-  // Perform the optimization.
-  std::pair<OptimizationResult, double> optimize(const std::vector<double>& initial_point, std::vector<double>& final_point);
+  // Perform the optimization. The initial parameter vector is updated to the function x parameter stopping value.
+  // The returned tuple is [result_code, optimal_function_value, iterations]
+  std::tuple<OptimizationResult, double, size_t> optimize(std::vector<double>& x_parameter_vector);
   // Convert the return value to a string
   static std::string returnDescription(OptimizationResult result);
   // Define the hypercube which contains the solution. Must be the same dimension as the objective function.
@@ -134,6 +155,11 @@ public:
   void addEqualityNonLinearConstraint(NonLinearConstraintFunction constraint_function, const std::vector<double>& data, double tolerance);
   // Inequality Constraints
   void addInequalityNonLinearConstraint(NonLinearConstraintFunction constraint_function, const std::vector<double>& data, double tolerance);
+  // Stopping Criteria. The stopping criteria vector either has 1 element.
+  // Or for x parameter stopping criteria (only), the same dimensionality of the objective function parameters.
+  void stoppingCriteria(OptimizeStoppingType stopping_type, const std::vector<double>& stopping_value);
+
+  static void opt_test();
 
 private:
 
@@ -150,6 +176,11 @@ private:
   };
   std::vector<NonLinearConstraint> equality_constraints_;
   std::vector<NonLinearConstraint> inequality_constraints_;
+  struct OptimalStopping {
+    OptimizeStoppingType stopping_type;
+    const std::vector<double> stopping_value;
+  };
+  std::vector<OptimalStopping> stopping_vector_;
 
   // The returned integral type is cast to an nlopt:: optimization algorithm enum.
   static size_t convertAlgorithm(OptimizationAlgorithm algorithm);

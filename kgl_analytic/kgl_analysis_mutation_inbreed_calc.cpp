@@ -25,31 +25,6 @@ namespace kgl = kellerberrin::genome;
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-double myvfunc2(const std::vector<double> &x, std::vector<double> &grad, void *my_func_data)
-{
-  if (!grad.empty()) {
-    grad[0] = 0.0;
-    grad[1] = 0.5 / sqrt(x[1]);
-  }
-  return sqrt(x[1]);
-}
-
-
-double myvconstraint(const std::vector<double> &x, std::vector<double> &grad, void *data)
-{
-  typedef struct {
-    double a, b;
-  } my_constraint_data;
-
-  my_constraint_data *d = reinterpret_cast<my_constraint_data*>(data);
-  double a = d->a, b = d->b;
-  if (!grad.empty()) {
-    grad[0] = 3 * a * (a*x[0] + b) * (a*x[0] + b);
-    grad[1] = -1.0;
-  }
-  return ((a*x[0] + b) * (a*x[0] + b) * (a*x[0] + b) - x[1]);
-}
-
 
 kgl::LocusResults
 kgl::InbreedingCalculation::processExp( const GenomeId_t& genome_id,
@@ -193,20 +168,9 @@ kgl::InbreedingCalculation::processExp( const GenomeId_t& genome_id,
 //
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-  const std::vector<double> initial{1.234, 5.678};
-  Optimize opt(OptimizationAlgorithm::LD_MMA, initial.size(), OptimizationType::MINIMIZE, myvfunc2);
-  std::vector<double> lower_bound{std::numeric_limits<double>::lowest(), 0};
-  opt.boundingHypercube({}, lower_bound);
-  opt.addInequalityNonLinearConstraint(myvconstraint, {2, 0}, 1e-8);
-  opt.addInequalityNonLinearConstraint(myvconstraint, {-1, 1}, 1e-8);
-  std::vector<double> final;
-  auto [result_code, optimal_value] = opt.optimize(initial, final);
-  ExecEnv::log().info("Optimize:: Found minimum at f({},{}) = {}, optimizer result: {}", final[0], final[1], optimal_value, Optimize::returnDescription(result_code));
-  const std::vector<double> initial2{5.678, 1.234};
-  auto [result_code2, optimal_value2] = opt.optimize(initial2, final);
-  ExecEnv::log().info("Optimize:: Found minimum at f({},{}) = {}, optimizer result: {}", final[0], final[1], optimal_value2, Optimize::returnDescription(result_code2));
+  Optimize::opt_test();
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
 
   ExecEnv::log().info( "Genome: {}, Frequency vector size: {}, mean prob: {}, bin mean: {} var: {}, poisson bin mean: {}, var: {}",
                        locus_results.genome, frequency_vector.size(), p, binomial_mean, binomial_var, poisson_binomial_mean, poisson_binomial_var);

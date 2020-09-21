@@ -5,11 +5,62 @@
 #include "kel_optimize.h"
 #include "kel_exec_env.h"
 
-// Must be linked against libnlopt
+// Must be linked against "libnlopt"
 #include <nlopt.hpp>
 
 namespace kel = kellerberrin;
 
+typedef struct {
+  double a, b;
+} my_constraint_data;
+
+double myvconstraint(const std::vector<double> &x, std::vector<double> &grad, void *data)
+{
+  my_constraint_data *d = reinterpret_cast<my_constraint_data*>(data);
+  double a = d->a, b = d->b;
+  if (!grad.empty()) {
+    grad[0] = 3 * a * (a*x[0] + b) * (a*x[0] + b);
+    grad[1] = -1.0;
+  }
+  return ((a*x[0] + b) * (a*x[0] + b) * (a*x[0] + b) - x[1]);
+}
+
+double myvfunc(const std::vector<double> &x, std::vector<double> &grad, void *my_func_data)
+{
+  if (!grad.empty()) {
+    grad[0] = 0.0;
+    grad[1] = 0.5 / sqrt(x[1]);
+  }
+  return sqrt(x[1]);
+}
+
+
+void kel::Optimize::opt_test() {
+
+  //////////////////////////////////////////////////////////////////////////////////////////////
+  // Experimental optimization.
+  //
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////
+
+  std::vector<double> x_values{1.234, 5.678};
+  Optimize opt(OptimizationAlgorithm::LD_MMA, x_values.size(), OptimizationType::MINIMIZE, myvfunc);
+  std::vector<double> lower_bound{std::numeric_limits<double>::lowest(), 0};
+  opt.boundingHypercube({}, lower_bound);
+  opt.addInequalityNonLinearConstraint(myvconstraint, {2, 0}, 1e-8);
+  opt.addInequalityNonLinearConstraint(myvconstraint, {-1, 1}, 1e-8);
+  opt.stoppingCriteria(OptimizeStoppingType::RELATIVE_PARAMETER_THRESHOLD, {1e-04});
+  auto [result_code, optimal_value, iterations] = opt.optimize(x_values);
+  ExecEnv::log().info("Optimize::*****************************************************************************************************");
+  ExecEnv::log().info("Optimize:: Found minimum at f({},{}) = {}, optimizer result: {}, iterations: {}"
+      , x_values[0], x_values[1], optimal_value, Optimize::returnDescription(result_code), iterations);
+  std::vector<double> x_values2{5.678, 1.234};
+  auto [result_code2, optimal_value2, iterations2] = opt.optimize(x_values2);
+  ExecEnv::log().info("Optimize:: Found minimum at f({},{}) = {}, optimizer result: {}, iterations: {}"
+      , x_values2[0], x_values2[1], optimal_value2, Optimize::returnDescription(result_code2), iterations);
+  ExecEnv::log().info("Optimize::*****************************************************************************************************");
+
+}
 
 
 void kel::Optimize::addEqualityNonLinearConstraint(NonLinearConstraintFunction constraint_function, const std::vector<double>& data, double tolerance) {
@@ -34,8 +85,141 @@ void kel::Optimize::addInequalityNonLinearConstraint(NonLinearConstraintFunction
 }
 
 
-std::pair<kel::OptimizationResult, double> kel::Optimize::optimize(const std::vector<double>& inital_point,
-                                                                   std::vector<double>& final_point) {
+void kel::Optimize::stoppingCriteria(OptimizeStoppingType stopping_type, const std::vector<double>& stopping_value) {
+
+
+  switch(stopping_type) {
+
+    case OptimizeStoppingType::FUNCTION_VALUE:     // Stop when a particular function value is reached.
+    {
+      if (stopping_value.size() != 1) {
+
+        ExecEnv::log().error("Optimize::stoppingCriteria; 'FUNCTION_VALUE' stopping criteria requires vector size 1, actual size: {}", stopping_value.size());
+        return;
+
+      }
+
+      stopping_vector_.push_back({stopping_type, stopping_value});
+      return;
+
+    } // end case.
+
+    case OptimizeStoppingType::RELATIVE_FUNCTION_THRESHOLD:   // Stop when the relative objective function update is below a threshold.
+    {
+      if (stopping_value.size() != 1) {
+
+        ExecEnv::log().error("Optimize::stoppingCriteria; 'RELATIVE_FUNCTION_THRESHOLD' stopping criteria requires vector size 1, actual size: {}", stopping_value.size());
+        return;
+
+      }
+
+      stopping_vector_.push_back({stopping_type, stopping_value});
+      return;
+
+    } // end case.
+
+    case OptimizeStoppingType::ABSOLUTE_FUNCTION_THRESHOLD:    // Stop when the absolute objective function update is below a threshold.
+    {
+      if (stopping_value.size() != 1) {
+
+        ExecEnv::log().error("Optimize::stoppingCriteria; 'ABSOLUTE_FUNCTION_THRESHOLD' stopping criteria requires vector size 1, actual size: {}", stopping_value.size());
+        return;
+
+      }
+
+      stopping_vector_.push_back({stopping_type, stopping_value});
+      return;
+
+    } // end case.
+
+    case OptimizeStoppingType::RELATIVE_PARAMETER_THRESHOLD:  // Stop when the relative weighted (normed) parameter vector update is below a threshold.
+    {
+      if (stopping_value.size() != 1) {
+
+        ExecEnv::log().error("Optimize::stoppingCriteria; 'WEIGHTED_RELATIVE_PARAMETER_THRESHOLD' stopping criteria requires vector size 1, actual size: {}",
+                             dimension_, stopping_value.size());
+        return;
+
+      }
+
+      stopping_vector_.push_back({stopping_type, stopping_value});
+      return;
+
+    } // end case.
+
+    case OptimizeStoppingType::RELATIVE_PARAMETER_WEIGHTS:  // Stop when the relative weighted (normed) parameter vector update is below a threshold.
+    {
+      if (stopping_value.size() != 1 or stopping_value.size() != dimension_) {
+
+        ExecEnv::log().error("Optimize::stoppingCriteria; 'WEIGHTED_RELATIVE_PARAMETER_THRESHOLD' stopping criteria requires vector size 1 OR objective function dimension: {}, actual size: {}",
+                             dimension_, stopping_value.size());
+        return;
+
+      }
+
+      stopping_vector_.push_back({stopping_type, stopping_value});
+      return;
+
+    } // end case.
+
+    case OptimizeStoppingType::ABSOLUTE_PARAMETER_THRESHOLD:  // Stop when the absolute weighted (normed) parameter vector update is below a threshold.
+    {
+      if (stopping_value.size() != 1 or stopping_value.size() != dimension_) {
+
+        ExecEnv::log().error("Optimize::stoppingCriteria; 'WEIGHTED_ABSOLUTE_PARAMETER_THRESHOLD' stopping criteria requires vector size 1 OR objective function dimension: {}, actual size: {}",
+                             dimension_, stopping_value.size());
+        return;
+
+      }
+
+      stopping_vector_.push_back({stopping_type, stopping_value});
+      return;
+
+    } // end case.
+
+    case OptimizeStoppingType::MAXIMUM_EVALUATIONS: // Stop when the maximum number of evaluations have been reached.
+    {
+      if (stopping_value.size() != 1) {
+
+        ExecEnv::log().error("Optimize::stoppingCriteria; 'MAXIMUM_EVALUATIONS' stopping criteria requires vector size 1, actual size: {}", stopping_value.size());
+        return;
+
+      }
+
+      stopping_vector_.push_back({stopping_type, stopping_value});
+      return;
+
+    } // end case.
+
+    case OptimizeStoppingType::MAXIMUM_TIME:    // Stop when the specified time in seconds has elapsed.
+    {
+      if (stopping_value.size() != 1) {
+
+        ExecEnv::log().error("Optimize::stoppingCriteria; 'MAXIMUM_TIME' stopping criteria requires vector size 1, actual size: {}", stopping_value.size());
+        return;
+
+      }
+
+      stopping_vector_.push_back({stopping_type, stopping_value});
+      return;
+
+    } // end case.
+
+  }
+
+}
+
+
+std::tuple<kel::OptimizationResult, double, size_t> kel::Optimize::optimize(std::vector<double>& parameter_x_vector) {
+
+
+  if (parameter_x_vector.size() != dimension_) {
+
+    ExecEnv::log().error("Optimize::optimize; Objective Function Dimension: {}, Initial point Dimension: {}",
+                         dimension_, parameter_x_vector.size());
+    return { OptimizationResult::FAILURE, 0.0, 0 };
+
+  }
 
   auto opt_alg = static_cast<nlopt::algorithm>(convertAlgorithm(opt_alg_));
   nlopt::opt opt(opt_alg, dimension_);
@@ -64,36 +248,103 @@ std::pair<kel::OptimizationResult, double> kel::Optimize::optimize(const std::ve
 
   }
 
+
   // Setup any equality constraints
-  for (auto constraint: equality_constraints_) {
+  for (auto& constraint: equality_constraints_) {
 
     nlopt::vfunc constraint_func = *constraint.constraint_function.target<nlopt::vfunc>();
-    opt.add_equality_constraint(constraint_func, &constraint.data.front(), constraint.tolerance);
+    auto void_ptr_data = reinterpret_cast<void*>(&constraint.data[0]);
+    opt.add_equality_constraint(constraint_func, void_ptr_data, constraint.tolerance);
 
   }
 
   // Setup any inequality constraints
-  for (auto constraint: inequality_constraints_) {
+  for (auto& constraint: inequality_constraints_) {
 
     nlopt::vfunc constraint_func = *constraint.constraint_function.target<nlopt::vfunc>();
-    opt.add_inequality_constraint(constraint_func, &constraint.data.front(), constraint.tolerance);
+    auto void_ptr_data = reinterpret_cast<void*>(&constraint.data[0]);
+    opt.add_inequality_constraint(constraint_func, void_ptr_data, constraint.tolerance);
 
   }
 
-  opt.set_xtol_rel(1e-4);
-  final_point = inital_point;
+  for (auto& [stopping_type, stopping_value] : stopping_vector_) {
+
+    if (stopping_value.size() != 1 and stopping_value.size() != dimension_) {
+
+      ExecEnv::log().error("Optimize::optimize; Invalid stopping value size: {}", stopping_value.size());
+      continue;
+
+    }
+
+    switch(stopping_type) {
+
+      case OptimizeStoppingType::FUNCTION_VALUE:     // Stop when a particular function value is reached.
+        opt.set_stopval(stopping_value.front());
+        break;
+
+      case OptimizeStoppingType::RELATIVE_FUNCTION_THRESHOLD:   // Stop when the relative objective function update is below a threshold.
+        opt.set_ftol_rel(stopping_value.front());
+        break;
+
+      case OptimizeStoppingType::ABSOLUTE_FUNCTION_THRESHOLD:    // Stop when the absolute objective function update is below a threshold.
+        opt.set_ftol_abs(stopping_value.front());
+        break;
+
+      case OptimizeStoppingType::RELATIVE_PARAMETER_THRESHOLD:  // Stop when the relative weighted (normed) parameter vector update is below a threshold.
+        opt.set_xtol_rel(stopping_value.front());
+        break;
+
+      case OptimizeStoppingType::RELATIVE_PARAMETER_WEIGHTS:  // Set the relative parameter weights.
+        if (stopping_value.size() == 1) {
+
+          opt.set_x_weights(stopping_value.front());
+
+        } else {
+
+          opt.set_x_weights(stopping_value);
+
+        }
+        break;
+
+      case OptimizeStoppingType::ABSOLUTE_PARAMETER_THRESHOLD:  // Stop when the absolute weighted (normed) parameter vector update is below a threshold.
+        if (stopping_value.size() == 1) {
+
+          opt.set_xtol_abs(stopping_value.front());
+
+        } else {
+
+          opt.set_xtol_abs(stopping_value);
+
+        }
+        break;
+
+      case OptimizeStoppingType::MAXIMUM_EVALUATIONS: // Stop when the maximum number of evaluations have been reached.
+        opt.set_maxeval(static_cast<int>(stopping_value.front()));
+        break;
+
+      case OptimizeStoppingType::MAXIMUM_TIME:    // Stop when the specified time in seconds has elapsed.
+        opt.set_maxtime(stopping_value.front());
+        break;
+
+    }
+
+  }
+
+  size_t iterations = 0;
 
   try{
 
-    double minf;
-    nlopt::result result = opt.optimize(final_point, minf);
-    return {static_cast<OptimizationResult>(result), minf};
+    double optimal_function_value;
+    nlopt::result result = opt.optimize(parameter_x_vector, optimal_function_value);
+    iterations = opt.get_numevals();
+    return {static_cast<OptimizationResult>(result), optimal_function_value, iterations};
 
   }
   catch(std::exception &e) {
 
     ExecEnv::log().error("Optimize:: nlopt failed: {}", e.what());
-    return {OptimizationResult::FAILURE, 0.0};
+    iterations = opt.get_numevals();
+    return {OptimizationResult::FAILURE, 0.0, iterations};
 
   }
 
@@ -183,3 +434,4 @@ std::string kel::Optimize::returnDescription(OptimizationResult result) {
   return "UNKNOWN - INVALID RETURNCODE";
 
 }
+

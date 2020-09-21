@@ -48,7 +48,6 @@ private:
 };
 
 
-
 /// The runApplication() function sets up the static environment object.
 /// and provides logging and commandline arguments to the
 /// application object. The function is a template so that
@@ -79,7 +78,6 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
     log().info("############ {} {} Start Processing ###########", Environment::MODULE_NAME, Environment::VERSION);
     log().info("Command Line: {}", commandLine());
 
-
     environment_ptr->executeApp(); // Run the application.
 
     double Clock, System, User;
@@ -90,7 +88,7 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
     environment_ptr = nullptr; // shutdown the application
     log_ptr_ = nullptr; // shutdown the logger.
 
-  } catch(std::exception& e) { // Code should not throw any exceptions, so complain and exit.
+  } catch(std::exception& e) { // Code should not throw any unhandled exceptions, so complain and exit.
 
     std::cerr << Environment::MODULE_NAME << " " << Environment::VERSION << "ExecEnv::runApplication - Unexpected/Uncaught Exception: " << e.what() << std::endl;
     std::exit(EXIT_FAILURE);
