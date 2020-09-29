@@ -8,6 +8,9 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <memory>
+
+#include "kel_exec_env.h"
 
 namespace kellerberrin {   //  organization level namespace
 
@@ -54,7 +57,7 @@ enum class OptimizationAlgorithm {
   LN_COBYLA,
   LN_NEWUOA,
   LN_NEWUOA_BOUND,
-  LN_NELDERMEAD,
+  LN_NELDERMEAD,                    // Nelder-Mead simplex algorithm (LN - local, no-derivative)
   LN_SBPLX,
   LN_AUGLAG,
   LD_AUGLAG,
@@ -128,8 +131,25 @@ enum class OptimizeStoppingType {
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using ObjectiveFunction =  std::function<double(const std::vector<double> &x, std::vector<double> &grad, void* f_data)>;
-using NonLinearConstraintFunction = ObjectiveFunction;
+
+// The derivative and data optimization and non-linear constraint function.
+template <class OptData> using OptDerivDataObjectiveFn = std::function<double(std::vector<double> &x, std::vector<double> &grad, OptData& data)>;
+template <class OptData> using OptDerivDataConstraintFn = OptDerivDataObjectiveFn<OptData>;
+
+// The no derivative, with data optimization and non-linear constraint function.
+template <class OptData> using OptDataObjectiveFn = std::function<double(std::vector<double> &x, OptData& data)>;
+template <class OptData> using OptDataConstraintFn = OptDataObjectiveFn<OptData>;
+
+// The derivative, no data optimization and non-linear constraint function.
+using OptDerivObjectiveFn = std::function<double(std::vector<double> &x, std::vector<double> &grad)>;
+using OptDerivConstraintFn = OptDerivObjectiveFn;
+
+// The no derivative, no data optimization and non-linear constraint function.
+using OptObjectiveFn = std::function<double(std::vector<double> &x)>;
+using OptConstraintFn = OptObjectiveFn;
+
+// Returned optimization results, the returned tuple is [result_code, optimal_function_value, iterations]
+using OptResultTuple = std::tuple<OptimizationResult, double, size_t>;
 
 class Optimize {
 
@@ -138,39 +158,99 @@ public:
 
   Optimize( OptimizationAlgorithm opt_alg,
             size_t dimension,
-            OptimizationType opt_type,
-            ObjectiveFunction objective)
-    : opt_alg_(opt_alg), dimension_(dimension), opt_type_(opt_type),  objective_(std::move(objective)) {}
+            OptimizationType opt_type)
+    : opt_alg_(opt_alg), dimension_(dimension), opt_type_(opt_type) {}
   ~Optimize() = default;
 
-  // Perform the optimization. The initial parameter vector is updated to the function x parameter stopping value.
+  // Perform the optimizations. The initial parameter vector is updated to the function x parameter stopping value.
   // The returned tuple is [result_code, optimal_function_value, iterations]
-  std::tuple<OptimizationResult, double, size_t> optimize(std::vector<double>& x_parameter_vector);
+
+  // Template function for an optimization function with derivative info and data.
+  template<class OptData>
+  OptResultTuple optimize( std::vector<double>& x_parameter_vector,
+                           OptData &data_ptr,
+                           OptDerivDataObjectiveFn<OptData> objective) {
+
+    auto void_data_ptr = static_cast<void*>(&data_ptr);
+    return run_optimize(optDerivDataLambda<OptData>(objective), x_parameter_vector, void_data_ptr);
+
+  }
+
+  // Template function for an optimization function with ddata.
+  template<class OptData>
+  OptResultTuple optimize( std::vector<double>& x_parameter_vector,
+                           OptData& data_ptr,
+                           OptDataObjectiveFn<OptData> objective) {
+
+    auto void_ptr = static_cast<void*>(&data_ptr);
+    return run_optimize(optDataLambda<OptData>(objective), x_parameter_vector, void_ptr);
+
+  }
+  // Function for objective with derivative and no data
+  OptResultTuple optimize(std::vector<double>& x_parameter_vector, OptDerivObjectiveFn objective);
+  // Function for objective with no derivative, no data.
+  OptResultTuple optimize( std::vector<double>& x_parameter_vector, OptObjectiveFn objective);
   // Convert the return value to a string
   static std::string returnDescription(OptimizationResult result);
   // Define the hypercube which contains the solution. Must be the same dimension as the objective function.
   // Empty vector is ignored
   void boundingHypercube(const std::vector<double>& upper_bound = {}, const std::vector<double>& lower_bound = {});
-  // Equality Constraints
-  void addEqualityNonLinearConstraint(NonLinearConstraintFunction constraint_function, const std::vector<double>& data, double tolerance);
-  // Inequality Constraints
-  void addInequalityNonLinearConstraint(NonLinearConstraintFunction constraint_function, const std::vector<double>& data, double tolerance);
   // Stopping Criteria. The stopping criteria vector either has 1 element.
   // Or for x parameter stopping criteria (only), the same dimensionality of the objective function parameters.
   void stoppingCriteria(OptimizeStoppingType stopping_type, const std::vector<double>& stopping_value);
 
-  static void opt_test();
+  // The non-linear equality functions.
+  void addEqualityNonLinearConstraint(OptDerivDataConstraintFn<std::vector<double>> constraint_function,
+                                      const std::vector<double>& data,
+                                      double tolerance) {
+
+    addEqualityNonLinearConstraint(optDerivDataLambda<std::vector<double>>(constraint_function), data, tolerance);
+
+  }
+
+  void addEqualityNonLinearConstraint(OptDataConstraintFn<std::vector<double>> constraint_function,
+                                      const std::vector<double>& data,
+                                      double tolerance) {
+
+    addEqualityNonLinearConstraint(optDataLambda<std::vector<double>>(constraint_function), data, tolerance);
+
+  }
+
+  void addEqualityNonLinearConstraint(OptDerivConstraintFn constraint_function, double tolerance);
+  void addEqualityNonLinearConstraint(OptConstraintFn constraint_function, double tolerance);
+
+  // The non-linear inequality functions.
+  void addIneualityNonLinearConstraint(OptDerivDataConstraintFn<std::vector<double>> constraint_function,
+                                       const std::vector<double>& data,
+                                       double tolerance) {
+
+    addInequalityNonLinearConstraint(optDerivDataLambda<std::vector<double>>(constraint_function), data, tolerance);
+
+  }
+
+  void addInequalityNonLinearConstraint(OptDataConstraintFn<std::vector<double>> constraint_function,
+                                        const std::vector<double>& data,
+                                        double tolerance) {
+
+    addInequalityNonLinearConstraint(optDataLambda<std::vector<double>>(constraint_function), data, tolerance);
+
+  }
+
+  void addInequalityNonLinearConstraint(OptDerivConstraintFn constraint_function, double tolerance);
+  void addInequalityNonLinearConstraint(OptConstraintFn constraint_function, double tolerance);
 
 private:
 
+  using ObjectiveConstraintFunction =  std::function<double(std::vector<double> &x, std::vector<double> &grad, void* f_data)>;
+
+  // Optimization parameters.
   OptimizationAlgorithm opt_alg_;
   size_t dimension_;
   OptimizationType opt_type_;
-  ObjectiveFunction objective_;
   std::vector<double> upper_bound_;
   std::vector<double> lower_bound_;
   struct NonLinearConstraint {
-    NonLinearConstraintFunction constraint_function;
+    ObjectiveConstraintFunction constraint_function;
     std::vector<double> data;
     double tolerance;
   };
@@ -182,10 +262,73 @@ private:
   };
   std::vector<OptimalStopping> stopping_vector_;
 
+  // Private equality Constraints
+  void addEqualityNonLinearConstraint(ObjectiveConstraintFunction constraint_function, const std::vector<double>& data, double tolerance);
+  // Private inequality Constraints
+  void addInequalityNonLinearConstraint(ObjectiveConstraintFunction constraint_function, const std::vector<double>& data, double tolerance);
+  // Private entry to the underlying optimizer code.
+  OptResultTuple run_optimize(ObjectiveConstraintFunction objective, std::vector<double>& parameter_x_vector, void* data);
   // The returned integral type is cast to an nlopt:: optimization algorithm enum.
   static size_t convertAlgorithm(OptimizationAlgorithm algorithm);
+  // Convert a optimization and constraint functions into a nlopt:: function/constraint type.
+  template<class OptData>
+  ObjectiveConstraintFunction optDerivDataLambda(OptDerivDataObjectiveFn<OptData> data_objective) {
+
+    auto lambda_obj = [data_objective](std::vector<double>& x, std::vector<double>& grad, void* void_data_ptr)->double {
+
+      return data_objective(x, grad, *(static_cast<OptData*>(void_data_ptr)));
+
+    };
+
+    return lambda_obj;
+
+  }
+
+  template<class OptData>
+  ObjectiveConstraintFunction optDataLambda(OptDataObjectiveFn<OptData> data_objective) {
+
+    auto lambda_obj = [data_objective](std::vector<double>& x, std::vector<double>& grad, void* void_data_ptr)->double {
+
+      return data_objective(x, *(static_cast<OptData*>(void_data_ptr)));
+
+    };
+
+    return lambda_obj;
+
+  }
+
+  ObjectiveConstraintFunction optDerivLambda(OptDerivObjectiveFn objective) {
+
+    auto lambda_obj = [objective](std::vector<double>& x, std::vector<double>& grad, void* void_data_ptr)->double {
+
+      return objective(x, grad);
+
+    };
+
+    return lambda_obj;
+
+  }
+
+  ObjectiveConstraintFunction optLambda(OptObjectiveFn objective) {
+
+    auto lambda_obj = [objective](std::vector<double>& x, std::vector<double>& grad, void* void_data_ptr)->double {
+
+      return objective(x);
+
+    };
+
+    return lambda_obj;
+
+  }
+
+  // Temp test function (to be removed).
+  static void opt_test();
+
 
 };
+
+
+
 
 
 } // namespace

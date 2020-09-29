@@ -6,11 +6,11 @@
 #include "kgl_filter.h"
 #include "kgl_analysis_mutation_inbreed_calc.h"
 #include "kel_distribution.h"
-#include "kel_optimize.h"
 
 #include <fstream>
 
 namespace kgl = kellerberrin::genome;
+namespace kel = kellerberrin;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -18,6 +18,47 @@ namespace kgl = kellerberrin::genome;
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+double kgl::InbreedingCalculation::logLikelihood(std::vector<double>& x, std::vector<double> &grad, void* log_likelihood_ptr) {
+
+  if (not grad.empty()) {
+
+    ExecEnv::log().error("InbreedingCalculation::logLikelihood; expected non-differential optimization algorithm");
+    throw std::invalid_argument("InbreedingCalculation::logLikelihood; Non-empty differential vector");
+  }
+
+  if (not log_likelihood_ptr) {
+
+    ExecEnv::log().error("InbreedingCalculation::logLikelihood; expected valid log-likelihood data");
+    throw std::invalid_argument("InbreedingCalculation::logLikelihood; log-likelihood data is a nullptr");
+
+  }
+
+  if (x.size() != 1) {
+
+    ExecEnv::log().error("InbreedingCalculation::logLikelihood; expected scalar value for inbreeding coefficient");
+    throw std::invalid_argument("InbreedingCalculation::logLikelihood; inbreeding coefficient is not scalar");
+
+  }
+
+  // Very, very nasty - must re-write this!
+  auto frequency_vector_ptr = static_cast<std::vector<std::pair<bool, double>>*>(log_likelihood_ptr);
+
+  return 0.0;
+
+}
+
+kel::Optimize kgl::InbreedingCalculation::createLogLikelihoodOptimizer() {
+
+  const size_t parameter_dimension = 1;
+  Optimize optimizer(OptimizationAlgorithm::LN_NELDERMEAD, parameter_dimension, OptimizationType::MAXIMIZE);
+  std::vector<double> lower_bound{-1.0};
+  std::vector<double> upper_bound{1.0};
+  optimizer.boundingHypercube(upper_bound, lower_bound);
+
+  return optimizer;
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -48,8 +89,7 @@ kgl::InbreedingCalculation::processExp( const GenomeId_t& genome_id,
   locus_results.total_allele_count = 0;
   size_t locii_count = 0;
   size_t maf_locii_count = 0;
-  std::vector<double> frequency_vector;
-  std::vector<double> maf_vector;
+  std::vector<std::pair<bool, double>> frequency_vector;
 
   for (auto const& [offset, offset_ptr] : locus_list->getMap()) {
 
@@ -72,35 +112,36 @@ kgl::InbreedingCalculation::processExp( const GenomeId_t& genome_id,
           ++maf_locii_count;
           ++locus_results.total_allele_count;
 
+          auto[result, AF_value] = InbreedSampling::processFloatField(*locus_variant, super_population_field);
+          if (result and AF_value > 0.0 and AF_value < 1.0) {
+
+
+          } else if (not result) {
+
+            // Problem obtaining allele frequency.
+            ExecEnv::log().warn("InbreedingAnalysis::processExp; Genome: {}, Unable to obtain Locus allele frequency: {} for SNP: {}",
+                                genome_id, super_population_field, locus_variant->output(',', VariantOutputIndex::START_0_BASED, false));
+
+          } else {
+
+            // Allele frequency either 1.0 or 0.0
+            ExecEnv::log().warn("InbreedingAnalysis::processExp; Genome: {}, Unexpected Locus allele frequency: {} for SNP: {}",
+                                genome_id, super_population_field, locus_variant->output(',', VariantOutputIndex::START_0_BASED, false), AF_value);
+
+          }
+
           if (diploid_offset.size() == 1) {
             // The sample is alt allele heterozygous
             ++locus_results.hetero_count;
+            frequency_vector.emplace_back(false, AF_value);
 
           } else if (diploid_offset.size() == 2) {
 
             if (diploid_offset[0]->homozygous(*diploid_offset[1])) {
 
+              ++locus_results.homo_count;
+              frequency_vector.emplace_back(true, AF_value);
 
-              auto[result, AF_value] = InbreedSampling::processFloatField(*locus_variant, super_population_field);
-              if (result and AF_value > 0.0 and AF_value < 1.0) {
-
-                ++locus_results.homo_count;
-                frequency_vector.push_back(AF_value);
-                maf_vector.push_back(AF_value);
-
-              } else if (not result) {
-
-                // Problem obtaining allele frequency.
-                ExecEnv::log().warn("InbreedingAnalysis::processHallME; Genome: {}, Unable to obtain Locus allele frequency: {} for SNP: {}",
-                                    genome_id, super_population_field, locus_variant->output(',', VariantOutputIndex::START_0_BASED, false));
-
-              } else {
-
-                // Allele frequency either 1.0 or 0.0
-                ExecEnv::log().warn("InbreedingAnalysis::processHallME; Genome: {}, Unexpected Locus allele frequency: {} for SNP: {}",
-                                    genome_id, super_population_field, locus_variant->output(',', VariantOutputIndex::START_0_BASED, false), AF_value);
-
-              }
 
             } else {
               // The sample has different alt alleles. Possible but unlikely.
@@ -140,7 +181,7 @@ kgl::InbreedingCalculation::processExp( const GenomeId_t& genome_id,
 
         ++locii_count;
         double reference_allele_freq = 1.0 - sum_allele_frequency;
-        frequency_vector.push_back(reference_allele_freq);
+        frequency_vector.emplace_back(false, reference_allele_freq);
 
       }
 
@@ -150,7 +191,7 @@ kgl::InbreedingCalculation::processExp( const GenomeId_t& genome_id,
 
   double sum = 0.0;
   double sq_sum = 0.0;
-  for (auto frequency : frequency_vector) {
+  for (auto [homozygous, frequency] : frequency_vector) {
 
     sum += frequency;
     sq_sum += (frequency * frequency);
@@ -168,7 +209,7 @@ kgl::InbreedingCalculation::processExp( const GenomeId_t& genome_id,
 //
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-  Optimize::opt_test();
+//  Optimize::opt_test();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -177,49 +218,17 @@ kgl::InbreedingCalculation::processExp( const GenomeId_t& genome_id,
 
   double updated_coefficient = 0.0;
   double inbreed_coefficient;
-  double previous_coefficient;
-  double denominator_sum;
   size_t retries = 0;
+  Optimize likelihood_optimizer = createLogLikelihoodOptimizer();
 
   do {
 
     // Random start on the unit interval.
-    denominator_sum = 0.0;
-    previous_coefficient = updated_coefficient;
     updated_coefficient = unit_distribution.random(entropy_mt.generator());
-
     size_t iteration_count = 0;
-    // Perform the EM algorithm
-    do {
-
-      inbreed_coefficient = updated_coefficient;
-      double expectation_sum = 0.0;
-
-      for (auto frequency : frequency_vector) {
-
-        double denominator = (inbreed_coefficient + ((1.0-inbreed_coefficient) * frequency));
-        if (denominator != 0) {
-
-          expectation_sum += inbreed_coefficient / denominator;
-          denominator_sum += 1.0 / denominator;
-
-        }
-
-      }
-
-      ++iteration_count;
-      updated_coefficient = expectation_sum / static_cast<double>(locii_count);
-      denominator_sum = denominator_sum / static_cast<double>(locii_count);
-
-    } while(iteration_count < MINIMUM_ITERATIONS_
-            or (iteration_count < MAXIMUM_ITERATIONS_
-                and std::fabs(updated_coefficient - inbreed_coefficient) > FINAL_ACCURACY_));
-
     ++retries;
 
-  } while (retries < MIN_RETRIES_
-           or (retries < MAX_RETRIES_
-               and std::fabs(updated_coefficient - previous_coefficient) > FINAL_ACCURACY_)); // while retries.
+  } while (retries < MIN_RETRIES_ and retries < MAX_RETRIES_);
 
   if (retries >= MAX_RETRIES_) {
 
@@ -231,9 +240,9 @@ kgl::InbreedingCalculation::processExp( const GenomeId_t& genome_id,
 
   locus_results.inbred_allele_sum = updated_coefficient;
 
-  ExecEnv::log().info("Genome: {}, Super: {}, Het: {}, Hom: {}, Allele Count: {}, IBD Inbreeding: {}, Denominator Sum: {}, retries: {}",
+  ExecEnv::log().info("Genome: {}, Super: {}, Het: {}, Hom: {}, Allele Count: {}, IBD Inbreeding: {}, retries: {}",
                       locus_results.genome, super_population_field, locus_results.hetero_count,
-                      locus_results.homo_count, locus_results.total_allele_count, locus_results.inbred_allele_sum, denominator_sum, retries);
+                      locus_results.homo_count, locus_results.total_allele_count, locus_results.inbred_allele_sum, retries);
 
 
   return locus_results;

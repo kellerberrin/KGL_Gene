@@ -8,7 +8,7 @@
 
 #include "kgl_variant_db_phased.h"
 #include "kgl_ped_parser.h"
-
+#include "kel_optimize.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -67,6 +67,8 @@ public:
                                                 const std::shared_ptr<const ContigVariant>& locus_list);
 
 
+  [[nodiscard]] static Optimize createLogLikelihoodOptimizer();
+  [[nodiscard]] static double logLikelihood(std::vector<double> &x, std::vector<double> &grad, void* f_data);
 
 
 private:

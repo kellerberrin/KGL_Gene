@@ -52,8 +52,6 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
   }
 
-  Optimize::opt_test();
-
   return true;
 
 }
