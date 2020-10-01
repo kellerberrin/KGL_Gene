@@ -19,32 +19,13 @@ namespace kel = kellerberrin;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-double kgl::InbreedingCalculation::logLikelihood(std::vector<double>& x, std::vector<double> &grad, void* log_likelihood_ptr) {
+double kgl::InbreedingCalculation::logLikelihood(std::vector<double>& x, std::vector<std::pair<bool, double>>& data) {
 
-  if (not grad.empty()) {
 
-    ExecEnv::log().error("InbreedingCalculation::logLikelihood; expected non-differential optimization algorithm");
-    throw std::invalid_argument("InbreedingCalculation::logLikelihood; Non-empty differential vector");
-  }
+  ExecEnv::log().info("InbreedingCalculation::logLikelihood; data vector size: {}, parameter size: {} parameter value: {}",
+                      data.size(), x.size(), x[0]);
 
-  if (not log_likelihood_ptr) {
-
-    ExecEnv::log().error("InbreedingCalculation::logLikelihood; expected valid log-likelihood data");
-    throw std::invalid_argument("InbreedingCalculation::logLikelihood; log-likelihood data is a nullptr");
-
-  }
-
-  if (x.size() != 1) {
-
-    ExecEnv::log().error("InbreedingCalculation::logLikelihood; expected scalar value for inbreeding coefficient");
-    throw std::invalid_argument("InbreedingCalculation::logLikelihood; inbreeding coefficient is not scalar");
-
-  }
-
-  // Very, very nasty - must re-write this!
-  auto frequency_vector_ptr = static_cast<std::vector<std::pair<bool, double>>*>(log_likelihood_ptr);
-
-  return 0.0;
+  return x[0];
 
 }
 
@@ -55,6 +36,8 @@ kel::Optimize kgl::InbreedingCalculation::createLogLikelihoodOptimizer() {
   std::vector<double> lower_bound{-1.0};
   std::vector<double> upper_bound{1.0};
   optimizer.boundingHypercube(upper_bound, lower_bound);
+  optimizer.stoppingCriteria(OptimizeStoppingType::ABSOLUTE_FUNCTION_THRESHOLD, {1e-04});
+  optimizer.stoppingCriteria(OptimizeStoppingType::MAXIMUM_EVALUATIONS, { 50 });
 
   return optimizer;
 
@@ -209,7 +192,7 @@ kgl::InbreedingCalculation::processExp( const GenomeId_t& genome_id,
 //
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-//  Optimize::opt_test();
+  Optimize::opt_test();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -224,11 +207,14 @@ kgl::InbreedingCalculation::processExp( const GenomeId_t& genome_id,
   do {
 
     // Random start on the unit interval.
-    updated_coefficient = unit_distribution.random(entropy_mt.generator());
+    std::vector<double> coefficient;
+    coefficient.push_back(unit_distribution.random(entropy_mt.generator()));
+
     size_t iteration_count = 0;
     ++retries;
+   likelihood_optimizer.optimize<std::vector<std::pair<bool, double>>>(coefficient, frequency_vector, &logLikelihood);
 
-  } while (retries < MIN_RETRIES_ and retries < MAX_RETRIES_);
+  } while (retries < MIN_RETRIES_);
 
   if (retries >= MAX_RETRIES_) {
 

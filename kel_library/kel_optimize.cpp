@@ -45,7 +45,8 @@ void kel::Optimize::opt_test() {
   opt.addInequalityNonLinearConstraint(myvconstraint, {2, 0}, 1e-8);
   opt.addInequalityNonLinearConstraint(myvconstraint, {-1, 1}, 1e-8);
   opt.stoppingCriteria(OptimizeStoppingType::RELATIVE_PARAMETER_THRESHOLD, {1e-04});
-  auto [result_code, optimal_value, iterations] = opt.optimize(x_values, myvfunc);
+  OptDerivObjectiveFn obj = myvfunc;
+  auto [result_code, optimal_value, iterations] = opt.optimize(x_values, obj);
   ExecEnv::log().info("Optimize::*****************************************************************************************************");
   ExecEnv::log().info("Optimize:: Found minimum at f({},{}) = {}, optimizer result: {}, iterations: {}"
       , x_values[0], x_values[1], optimal_value, Optimize::returnDescription(result_code), iterations);
@@ -58,9 +59,9 @@ void kel::Optimize::opt_test() {
 }
 
 
-void kel::Optimize::addEqualityNonLinearConstraint(Optimize::ObjectiveConstraintFunction constraint_function,
-                                                   const std::vector<double>& data,
-                                                   double tolerance) {
+void kel::Optimize::addEqualityConstraint( Optimize::ObjectiveConstraintFunction constraint_function,
+                                           const std::vector<double>& data,
+                                           double tolerance) {
 
   NonLinearConstraint constraint;
   constraint.constraint_function = constraint_function;
@@ -71,9 +72,9 @@ void kel::Optimize::addEqualityNonLinearConstraint(Optimize::ObjectiveConstraint
 }
 
 
-void kel::Optimize::addInequalityNonLinearConstraint(Optimize::ObjectiveConstraintFunction constraint_function,
-                                                     const std::vector<double>& data,
-                                                     double tolerance) {
+void kel::Optimize::addInequalityConstraint( Optimize::ObjectiveConstraintFunction constraint_function,
+                                             const std::vector<double>& data,
+                                             double tolerance) {
 
   NonLinearConstraint constraint;
   constraint.constraint_function = constraint_function;
@@ -209,31 +210,82 @@ void kel::Optimize::stoppingCriteria(OptimizeStoppingType stopping_type, const s
 }
 
 
+kel::Optimize::ObjectiveConstraintFunction kel::Optimize::optDerivLambda(OptDerivObjectiveFn objective) {
+
+  auto lambda_obj = [objective](std::vector<double>& x, std::vector<double>& grad, void* void_data_ptr)->double {
+
+    if (grad.empty()) {
+
+      ExecEnv::log().error("Optimize::optDerivLambda; expected differential optimization algorithm");
+      throw std::invalid_argument("Optimize::optDerivLambda; Unexpected empty differential vector");
+    }
+
+    if (void_data_ptr != nullptr) {
+
+      ExecEnv::log().error("Optimize::optDerivLambda; unexpected data");
+      throw std::invalid_argument("Optimize::optDerivLambda; data pointer should be a nullptr");
+
+    }
+
+    return objective(x, grad);
+
+  };
+
+  return lambda_obj;
+
+}
+
+kel::Optimize::ObjectiveConstraintFunction kel::Optimize::optLambda(OptObjectiveFn objective) {
+
+  auto lambda_obj = [objective](std::vector<double>& x, std::vector<double>& grad, void* void_data_ptr)->double {
+
+    if (not grad.empty()) {
+
+      ExecEnv::log().error("Optimize::optLambda; expected non-differential optimization algorithm");
+      throw std::invalid_argument("Optimize::optLambda; Non-empty differential vector");
+    }
+
+    if (void_data_ptr != nullptr) {
+
+      ExecEnv::log().error("Optimize::optLambda; unexpected data");
+      throw std::invalid_argument("Optimize::optLambda; data pointer should be a nullptr");
+
+    }
+
+    return objective(x);
+
+  };
+
+  return lambda_obj;
+
+}
+
+
 void kel::Optimize::addEqualityNonLinearConstraint(OptDerivConstraintFn constraint_function, double tolerance) {
 
   std::vector<double> empty;
-  addEqualityNonLinearConstraint(optDerivLambda(constraint_function), empty, tolerance);
+  addEqualityConstraint(optDerivLambda(constraint_function), empty, tolerance);
 
 }
 
 void kel::Optimize::addEqualityNonLinearConstraint(OptConstraintFn constraint_function, double tolerance) {
 
   std::vector<double> empty;
-  addEqualityNonLinearConstraint(optLambda(constraint_function), empty, tolerance);
+  addEqualityConstraint(optLambda(constraint_function), empty, tolerance);
 
 }
 
 void kel::Optimize::addInequalityNonLinearConstraint(OptDerivConstraintFn constraint_function, double tolerance) {
 
   std::vector<double> empty;
-  addInequalityNonLinearConstraint(optDerivLambda(constraint_function), empty, tolerance);
+  addInequalityConstraint(optDerivLambda(constraint_function), empty, tolerance);
 
 }
 
 void kel::Optimize::addInequalityNonLinearConstraint(OptConstraintFn constraint_function, double tolerance) {
 
   std::vector<double> empty;
-  addInequalityNonLinearConstraint(optLambda(constraint_function), empty, tolerance);
+  addInequalityConstraint(optLambda(constraint_function), empty, tolerance);
 
 }
 
@@ -242,7 +294,11 @@ void kel::Optimize::addInequalityNonLinearConstraint(OptConstraintFn constraint_
 kel::OptResultTuple kel::Optimize::optimize(std::vector<double>& x_parameter_vector,
                                             OptDerivObjectiveFn objective) {
 
-  return run_optimize(optDerivLambda(objective), x_parameter_vector, nullptr);
+
+  objective_ = optDerivLambda(objective);
+  OptimizeCallback callback_data {this, nullptr};
+  auto callback_ptr = static_cast<void*>(&callback_data);
+  return run_optimize(x_parameter_vector, callback_ptr);
 
 }
 
@@ -251,15 +307,18 @@ kel::OptResultTuple kel::Optimize::optimize(std::vector<double>& x_parameter_vec
 kel::OptResultTuple kel::Optimize::optimize( std::vector<double>& x_parameter_vector,
                                              OptObjectiveFn objective) {
 
-  return run_optimize(optLambda(objective), x_parameter_vector, nullptr);
+  objective_ = optLambda(objective);
+  OptimizeCallback callback_data {this, nullptr};
+  auto callback_ptr = static_cast<void*>(&callback_data);
+  return run_optimize(x_parameter_vector, callback_ptr);
 
 }
 
 
-kel::OptResultTuple kel::Optimize::run_optimize( ObjectiveConstraintFunction objective,
-                                                 std::vector<double>& parameter_x_vector,
-                                                 void* data) {
+kel::OptResultTuple kel::Optimize::run_optimize( std::vector<double>& parameter_x_vector, void* data) {
 
+
+  ExecEnv::log().info("****Optimize::run optimize 1.");
 
   if (parameter_x_vector.size() != dimension_) {
 
@@ -284,8 +343,9 @@ kel::OptResultTuple kel::Optimize::run_optimize( ObjectiveConstraintFunction obj
 
   }
 
+
   // Setup the objective function
-  nlopt::vfunc nlopt_objective = *objective.target<nlopt::vfunc>();
+  auto nlopt_objective = &Optimize::objectiveCallback;
   if (opt_type_ == OptimizationType::MINIMIZE) {
 
     opt.set_min_objective(nlopt_objective, data);
@@ -296,12 +356,11 @@ kel::OptResultTuple kel::Optimize::run_optimize( ObjectiveConstraintFunction obj
 
   }
 
-
+  nlopt::vfunc constraint_func = &Optimize::constraintCallback;
   // Setup any equality constraints
   for (auto& constraint: equality_constraints_) {
 
-    nlopt::vfunc constraint_func = *constraint.constraint_function.target<nlopt::vfunc>();
-    auto void_ptr_data = static_cast<void*>(&constraint.data[0]);
+    auto void_ptr_data = static_cast<void*>(&constraint);
     opt.add_equality_constraint(constraint_func, void_ptr_data, constraint.tolerance);
 
   }
@@ -309,8 +368,7 @@ kel::OptResultTuple kel::Optimize::run_optimize( ObjectiveConstraintFunction obj
   // Setup any inequality constraints
   for (auto& constraint: inequality_constraints_) {
 
-    nlopt::vfunc constraint_func = *constraint.constraint_function.target<nlopt::vfunc>();
-    auto void_ptr_data = static_cast<void*>(&constraint.data[0]);
+    auto void_ptr_data = static_cast<void*>(&constraint);
     opt.add_inequality_constraint(constraint_func, void_ptr_data, constraint.tolerance);
 
   }
@@ -380,9 +438,11 @@ kel::OptResultTuple kel::Optimize::run_optimize( ObjectiveConstraintFunction obj
 
   size_t iterations = 0;
 
+
   try{
 
     double optimal_function_value;
+    ExecEnv::log().info("****Optimize::opt.optimize()");
     nlopt::result result = opt.optimize(parameter_x_vector, optimal_function_value);
     iterations = opt.get_numevals();
     return {static_cast<OptimizationResult>(result), optimal_function_value, iterations};

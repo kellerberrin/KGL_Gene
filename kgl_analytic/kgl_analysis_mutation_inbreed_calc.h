@@ -68,7 +68,7 @@ public:
 
 
   [[nodiscard]] static Optimize createLogLikelihoodOptimizer();
-  [[nodiscard]] static double logLikelihood(std::vector<double> &x, std::vector<double> &grad, void* f_data);
+  [[nodiscard]] static double logLikelihood(std::vector<double>& x, std::vector<std::pair<bool, double>>& data);
 
 
 private:
