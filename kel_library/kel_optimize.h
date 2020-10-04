@@ -216,6 +216,8 @@ public:
   OptResultTuple optimize( std::vector<double>& x_parameter_vector, OptObjectiveFn objective);
   // Convert the return value to a string
   static std::string returnDescription(OptimizationResult result);
+  // Convert the return value to a boolean.
+  static bool returnSuccess(OptimizationResult result) { return static_cast<size_t>(result) > 0; }
   // Define the hypercube which contains the solution. Must be the same dimension as the objective function.
   // Empty vector is ignored
   void boundingHypercube(const std::vector<double>& upper_bound = {}, const std::vector<double>& lower_bound = {});

@@ -27,7 +27,7 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const Unphase
                               "pop_all",
                               0.0,
                               1.0,
-                              100);
+                              10000);
 
   populationInbreedingSample( unphased_ptr,
                               diploid_population,
@@ -36,7 +36,7 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const Unphase
                               "pop_01",
                               0.0,
                               0.01,
-                              100);
+                              10000);
 
   populationInbreedingSample( unphased_ptr,
                               diploid_population,
@@ -45,7 +45,7 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const Unphase
                               "pop_05",
                               0.01,
                               0.05,
-                              100);
+                              10000);
 
   populationInbreedingSample( unphased_ptr,
                               diploid_population,
@@ -54,7 +54,7 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const Unphase
                               "pop_20",
                               0.05,
                               0.2,
-                              100);
+                              10000);
 
   populationInbreedingSample( unphased_ptr,
                               diploid_population,
@@ -63,7 +63,7 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const Unphase
                               "pop_100",
                               0.2,
                               1.0,
-                              100);
+                              10000);
 
 
   return true;
@@ -134,7 +134,7 @@ bool kgl::InbreedingAnalysis::processResults( const ContigLocusMap& contig_locus
         }
         auto const& [super_pop_id, locus_list] = *locus_result;
 
-        std::future<LocusResults> future = thread_pool.enqueueTask(&InbreedingCalculation::processExp,
+        std::future<LocusResults> future = thread_pool.enqueueTask(&InbreedingCalculation::processLogLikelihood,
                                                                    genome_id,
                                                                    contig_opt.value(),
                                                                    InbreedSampling::lookupSuperPopulationField(super_pop_id),
@@ -225,36 +225,36 @@ bool kgl::InbreedingAnalysis::syntheticInbreeding(  std::shared_ptr<const Unphas
                              "syn_all",
                              0.01,
                              1.0,
-                             100);
-/*
+                             10000);
+
   syntheticInbreedingSample( unphased_ptr,
                              output_file_name,
                              "syn_01",
                              0.001,
                              0.01,
-                             10);
+                             10000);
 
   syntheticInbreedingSample( unphased_ptr,
                              output_file_name,
                              "syn_05",
                              0.01,
                              0.05,
-                             10);
+                             10000);
 
   syntheticInbreedingSample( unphased_ptr,
                              output_file_name,
                              "syn_20",
                              0.05,
                              0.2,
-                             10);
+                             10000);
 
   syntheticInbreedingSample( unphased_ptr,
                              output_file_name,
                              "syn_100",
                              0.2,
                              1.0,
-                             10);
-*/
+                             10000);
+
   return true;
 
 }
@@ -312,7 +312,7 @@ bool kgl::InbreedingAnalysis::processSynResults( const ContigLocusMap& contig_lo
         if (contig_opt) {
 
 
-          std::future<LocusResults> future = thread_pool.enqueueTask(&InbreedingCalculation::processExp,
+          std::future<LocusResults> future = thread_pool.enqueueTask(&InbreedingCalculation::processLogLikelihood,
                                                                      genome_id,
                                                                      contig_opt.value(),
                                                                      InbreedSampling::lookupSuperPopulationField(super_pop_id),

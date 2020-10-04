@@ -33,7 +33,7 @@ double myvfunc(const std::vector<double> &x, std::vector<double> &grad)
 void kel::Optimize::opt_test() {
 
   //////////////////////////////////////////////////////////////////////////////////////////////
-  // Experimental optimization.
+  // Experimental Test optimization (to be removed).
   //
   //
   //////////////////////////////////////////////////////////////////////////////////////////////
@@ -318,8 +318,6 @@ kel::OptResultTuple kel::Optimize::optimize( std::vector<double>& x_parameter_ve
 kel::OptResultTuple kel::Optimize::run_optimize( std::vector<double>& parameter_x_vector, void* data) {
 
 
-  ExecEnv::log().info("****Optimize::run optimize 1.");
-
   if (parameter_x_vector.size() != dimension_) {
 
     ExecEnv::log().error("Optimize::optimize; Objective Function Dimension: {}, Initial point Dimension: {}",
@@ -438,11 +436,9 @@ kel::OptResultTuple kel::Optimize::run_optimize( std::vector<double>& parameter_
 
   size_t iterations = 0;
 
-
   try{
 
     double optimal_function_value;
-    ExecEnv::log().info("****Optimize::opt.optimize()");
     nlopt::result result = opt.optimize(parameter_x_vector, optimal_function_value);
     iterations = opt.get_numevals();
     return {static_cast<OptimizationResult>(result), optimal_function_value, iterations};

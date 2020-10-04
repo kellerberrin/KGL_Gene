@@ -61,10 +61,10 @@ public:
   constexpr static const size_t MIN_RETRIES_ = 2;
 
   // The experimental algorithm.
-  [[nodiscard]] static LocusResults processExp( const GenomeId_t& genome_id,
-                                                const std::shared_ptr<const DiploidContig>& contig_ptr,
-                                                const std::string& super_population_field,
-                                                const std::shared_ptr<const ContigVariant>& locus_list);
+  [[nodiscard]] static LocusResults processLogLikelihood(const GenomeId_t& genome_id,
+                                                         const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                                         const std::string& super_population_field,
+                                                         const std::shared_ptr<const ContigVariant>& locus_list);
 
 
   [[nodiscard]] static Optimize createLogLikelihoodOptimizer();
