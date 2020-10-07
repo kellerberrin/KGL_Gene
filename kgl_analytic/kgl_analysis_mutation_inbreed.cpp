@@ -27,43 +27,43 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const Unphase
                               "pop_all",
                               0.0,
                               1.0,
-                              10000);
+                              10);
 
   populationInbreedingSample( unphased_ptr,
                               diploid_population,
                               ped_data,
                               output_file_name,
-                              "pop_01",
-                              0.0,
+                              "pop_100_01",
                               0.01,
-                              10000);
+                              1.0,
+                              10);
 
   populationInbreedingSample( unphased_ptr,
                               diploid_population,
                               ped_data,
                               output_file_name,
-                              "pop_05",
+                              "pop_05_01",
                               0.01,
                               0.05,
-                              10000);
+                              10);
 
   populationInbreedingSample( unphased_ptr,
                               diploid_population,
                               ped_data,
                               output_file_name,
-                              "pop_20",
+                              "pop_20_05",
                               0.05,
                               0.2,
-                              10000);
+                              10);
 
   populationInbreedingSample( unphased_ptr,
                               diploid_population,
                               ped_data,
                               output_file_name,
-                              "pop_100",
+                              "pop_100_20",
                               0.2,
                               1.0,
-                              10000);
+                              10);
 
 
   return true;
@@ -220,41 +220,42 @@ bool kgl::InbreedingAnalysis::writeResults( const ContigId_t& contig_id,
 bool kgl::InbreedingAnalysis::syntheticInbreeding(  std::shared_ptr<const UnphasedPopulation> unphased_ptr,
                                                     const std::string& output_file_name) {
 
+/*
   syntheticInbreedingSample( unphased_ptr,
                              output_file_name,
                              "syn_all",
+                             0.0,
+                             1.0,
+                             10);
+
+  syntheticInbreedingSample( unphased_ptr,
+                             output_file_name,
+                             "syn_100_01",
                              0.01,
                              1.0,
-                             10000);
+                             10);
 
   syntheticInbreedingSample( unphased_ptr,
                              output_file_name,
-                             "syn_01",
-                             0.001,
-                             0.01,
-                             10000);
-
-  syntheticInbreedingSample( unphased_ptr,
-                             output_file_name,
-                             "syn_05",
+                             "syn_05_01",
                              0.01,
                              0.05,
-                             10000);
+                             10);
 
   syntheticInbreedingSample( unphased_ptr,
                              output_file_name,
-                             "syn_20",
+                             "syn_20_05",
                              0.05,
                              0.2,
-                             10000);
+                             10);
 
   syntheticInbreedingSample( unphased_ptr,
                              output_file_name,
-                             "syn_100",
+                             "syn_100_20",
                              0.2,
                              1.0,
-                             10000);
-
+                             10);
+*/
   return true;
 
 }

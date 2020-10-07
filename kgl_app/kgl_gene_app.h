@@ -34,8 +34,8 @@ public:
   GeneExecEnv()=default;
   ~GeneExecEnv()=default;
 
-  [[nodiscard]] static const CmdLineArgs& getArgs();
-  [[nodiscard]] static const RuntimeProperties& getRuntimeOptions();
+  [[nodiscard]] inline static const CmdLineArgs& getArgs() { return args_; }
+  [[nodiscard]] inline static const RuntimeProperties& getRuntimeOptions() { return runtime_options_; }
 
 // The following 4 static members are required for all applications.
   inline static constexpr const char* VERSION = "0.8";

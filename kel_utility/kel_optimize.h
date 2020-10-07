@@ -215,9 +215,9 @@ public:
   // Function for objective with no derivative, no data.
   OptResultTuple optimize( std::vector<double>& x_parameter_vector, OptObjectiveFn objective);
   // Convert the return value to a string
-  static std::string returnDescription(OptimizationResult result);
+  [[nodiscard]] static std::string returnDescription(OptimizationResult result);
   // Convert the return value to a boolean.
-  static bool returnSuccess(OptimizationResult result) { return static_cast<size_t>(result) > 0; }
+  [[nodiscard]] static bool returnSuccess(OptimizationResult result) { return static_cast<size_t>(result) > 0; }
   // Define the hypercube which contains the solution. Must be the same dimension as the objective function.
   // Empty vector is ignored
   void boundingHypercube(const std::vector<double>& upper_bound = {}, const std::vector<double>& lower_bound = {});
@@ -291,12 +291,12 @@ private:
   // Private inequality Constraints
   void addInequalityConstraint(ObjectiveConstraintFunction constraint_function, const std::vector<double>& data, double tolerance);
   // Private entry to the underlying optimizer code.
-  OptResultTuple run_optimize(std::vector<double>& parameter_x_vector, void* data);
+  [[nodiscard]] OptResultTuple run_optimize(std::vector<double>& parameter_x_vector, void* data);
   // The returned integral type is cast to an nlopt:: optimization algorithm enum.
-  static size_t convertAlgorithm(OptimizationAlgorithm algorithm);
+  [[nodiscard]] static size_t convertAlgorithm(OptimizationAlgorithm algorithm);
   // Convert a optimization and constraint functions into a nlopt:: function/constraint type.
   // Can throw from the callback lambdas as these are called from within the optimization algorithm.
-  static double objectiveCallback(const std::vector<double>& x, std::vector<double>& grad, void* void_callback_ptr) {
+  [[nodiscard]] static double objectiveCallback(const std::vector<double>& x, std::vector<double>& grad, void* void_callback_ptr) {
 
     auto callback_data = static_cast<OptimizeCallback*>(void_callback_ptr);
     auto y = const_cast<std::vector<double>&>(x);
@@ -305,7 +305,7 @@ private:
 
   }
 
-  static double constraintCallback(const std::vector<double>& x, std::vector<double>& grad, void* void_callback_ptr) {
+  [[nodiscard]] static double constraintCallback(const std::vector<double>& x, std::vector<double>& grad, void* void_callback_ptr) {
 
     auto callback_data = static_cast<NonLinearConstraint*>(void_callback_ptr);
     auto type_erased_data = static_cast<void*>(&callback_data->data);
@@ -316,7 +316,7 @@ private:
   }
 
   template<class OptData>
-  ObjectiveConstraintFunction optDerivDataLambda(OptDerivDataObjectiveFn<OptData> data_objective) {
+  [[nodiscard]] ObjectiveConstraintFunction optDerivDataLambda(OptDerivDataObjectiveFn<OptData> data_objective) {
 
     auto lambda_obj = [data_objective](std::vector<double>& x, std::vector<double>& grad, void* void_data_ptr)->double {
 
@@ -342,7 +342,7 @@ private:
   }
 
   template<class OptData>
-  ObjectiveConstraintFunction optDataLambda(OptDataObjectiveFn<OptData> data_objective) {
+  [[nodiscard]] ObjectiveConstraintFunction optDataLambda(OptDataObjectiveFn<OptData> data_objective) {
 
     auto lambda_obj = [data_objective](std::vector<double>& x, std::vector<double>& grad, void* void_data_ptr)->double {
 
@@ -367,10 +367,8 @@ private:
 
   }
 
-  ObjectiveConstraintFunction optDerivLambda(OptDerivObjectiveFn objective);
-  ObjectiveConstraintFunction optLambda(OptObjectiveFn objective);
-
-
+  [[nodiscard]] ObjectiveConstraintFunction optDerivLambda(OptDerivObjectiveFn objective);
+  [[nodiscard]] ObjectiveConstraintFunction optLambda(OptObjectiveFn objective);
 
 };
 

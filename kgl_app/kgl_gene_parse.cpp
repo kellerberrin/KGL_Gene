@@ -25,9 +25,6 @@ namespace kgl = kellerberrin::genome;
 
 
 // Public static member functions.
-const kgl::CmdLineArgs& kgl::GeneExecEnv::getArgs() { return args_; }
-const kgl::RuntimeProperties& kgl::GeneExecEnv::getRuntimeOptions() { return runtime_options_; }
-
 
 // Parse the command line.
 bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
