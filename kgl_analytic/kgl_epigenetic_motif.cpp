@@ -3,6 +3,7 @@
 //
 
 #include "kgl_epigenetic_motif.h"
+#include "kel_utility.h"
 
 #include <fstream>
 #include <sstream>

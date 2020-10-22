@@ -4,6 +4,7 @@
 
 #include "kgl_properties.h"
 #include "kgl_table_impl.h"
+#include "kel_utility.h"
 
 #include <set>
 

@@ -3,6 +3,7 @@
 //
 
 #include "kgl_ped_parser.h"
+#include "kel_utility.h"
 
 namespace kgl = kellerberrin::genome;
 

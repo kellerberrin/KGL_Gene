@@ -3,6 +3,7 @@
 //
 
 #include "kgl_variant_factory_vcf_parse_info.h"
+#include "kel_utility.h"
 
 #include <string_view>
 

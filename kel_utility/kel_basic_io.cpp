@@ -4,6 +4,7 @@
 
 #include <kel_exec_env.h>
 #include "kel_basic_io.h"
+#include "kel_utility.h"
 
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>

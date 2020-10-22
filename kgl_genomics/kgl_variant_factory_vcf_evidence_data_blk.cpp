@@ -4,6 +4,7 @@
 
 #include "kgl_variant_factory_vcf_evidence_data_blk.h"
 #include "kgl_variant_factory_vcf_evidence.h"
+#include "kel_utility.h"
 
 #include <algorithm>
 

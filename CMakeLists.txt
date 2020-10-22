@@ -76,17 +76,18 @@ set(LIBRARY_SOURCE_FILES
         kel_utility/kel_percentile.h
         kel_utility/kel_thread_pool.h
         kel_utility/kel_optimize.cpp
-        kel_utility/kel_optimize.h)
+        kel_utility/kel_optimize.h
+        kel_utility/kel_patterns.h
+        kel_utility/kel_lock.h
+        kel_utility/kel_mt_queue.h
+        )
 
 # Basic Genetic infrastructure library
 set(GENETIC_LIBRARY_SOURCE_FILES
-        kel_utility/kel_mt_queue.h
         kgl_genomics/kgl_genome_types.h
-        kel_utility/kel_lock.h
         kgl_genomics/kgl_gff_fasta.h
         kgl_genomics/kgl_gff_fasta.cpp
         kgl_genomics/kgl_genome_db.h
-        kel_utility/kel_patterns.h
         kgl_genomics/kgl_genome_feature.h
         kgl_genomics/kgl_genome_feature.cpp
         kgl_genomics/kgl_variant.h
@@ -193,7 +194,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_ped_parser.cpp)
 
 # 3rd party library for fast Leveshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kel_utility/kel_exec_env_app.h)
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES
