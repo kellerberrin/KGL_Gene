@@ -12,13 +12,12 @@
 
 namespace kellerberrin {   //  organization level namespace
 
-
 class Logger {
 
 public:
 
   Logger(const std::string& module, const std::string& log_file);
-  ~Logger() = default;
+  ~Logger();
   Logger(const Logger&) = delete;
   Logger(Logger&&) = delete;
   Logger& operator=(const Logger&) = delete;
@@ -140,6 +139,8 @@ template<typename... Args> void Logger::critical(const char* message, Args... ar
   std::exit(EXIT_FAILURE);
 
 }
+
+
 
 } // end namespace.
 

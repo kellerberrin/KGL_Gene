@@ -19,6 +19,7 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const Unphase
                                                    const GenomePEDData& ped_data,
                                                    const std::string& output_file_name) {
 
+  const ContigOffset_t sampling_distance = 10000;
 
   populationInbreedingSample( unphased_ptr,
                               diploid_population,
@@ -27,7 +28,7 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const Unphase
                               "pop_all",
                               0.0,
                               1.0,
-                              10);
+                              sampling_distance);
 
   populationInbreedingSample( unphased_ptr,
                               diploid_population,
@@ -36,7 +37,7 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const Unphase
                               "pop_100_01",
                               0.01,
                               1.0,
-                              10);
+                              sampling_distance);
 
   populationInbreedingSample( unphased_ptr,
                               diploid_population,
@@ -45,7 +46,7 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const Unphase
                               "pop_05_01",
                               0.01,
                               0.05,
-                              10);
+                              sampling_distance);
 
   populationInbreedingSample( unphased_ptr,
                               diploid_population,
@@ -54,7 +55,7 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const Unphase
                               "pop_20_05",
                               0.05,
                               0.2,
-                              10);
+                              sampling_distance);
 
   populationInbreedingSample( unphased_ptr,
                               diploid_population,
@@ -63,7 +64,7 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const Unphase
                               "pop_100_20",
                               0.2,
                               1.0,
-                              10);
+                              sampling_distance);
 
 
   return true;
@@ -134,7 +135,7 @@ bool kgl::InbreedingAnalysis::processResults( const ContigLocusMap& contig_locus
         }
         auto const& [super_pop_id, locus_list] = *locus_result;
 
-        std::future<LocusResults> future = thread_pool.enqueueTask(&InbreedingCalculation::processLogLikelihood,
+        std::future<LocusResults> future = thread_pool.enqueueTask(&InbreedingCalculation::processHallME,
                                                                    genome_id,
                                                                    contig_opt.value(),
                                                                    InbreedSampling::lookupSuperPopulationField(super_pop_id),
@@ -177,7 +178,7 @@ bool kgl::InbreedingAnalysis::writeResults( const ContigId_t& contig_id,
 
   outfile << contig_id << DELIMITER_ << "Population" << DELIMITER_
           << "Description" << DELIMITER_ << "SuperPopulation" << DELIMITER_ << "Description" << DELIMITER_
-          << "HetCount" << DELIMITER_ << "HomCount" << DELIMITER_ << "Het/Hom"<< DELIMITER_
+          << "MajorHet" << DELIMITER_ << "MinorHet" << DELIMITER_ << "HomCount" << DELIMITER_ << "Het/Hom"<< DELIMITER_
           << "TotalLoci" << DELIMITER_ << "CalcInbreed\n";
 
   for (auto const& [genome_id, locus_results] : genome_results_map) {
@@ -193,14 +194,25 @@ bool kgl::InbreedingAnalysis::writeResults( const ContigId_t& contig_id,
 
     auto const& [sample_id, ped_record] = *result;
 
-    double het_hom_ratio = (locus_results.homo_count > 0 ? static_cast<double>(locus_results.hetero_count)/static_cast<double>(locus_results.homo_count) : 0.0);
+    double het_hom_ratio;
+    if (locus_results.homo_count > 0) {
+
+      size_t total_het = locus_results.major_hetero_count + locus_results.minor_hetero_count;
+      het_hom_ratio = static_cast<double>(total_het) / static_cast<double>(locus_results.homo_count);
+
+    } else {
+
+      het_hom_ratio = 0.0;
+
+    }
 
     outfile << genome_id << DELIMITER_;
     outfile << ped_record.population() << DELIMITER_;
     outfile << ped_record.populationDescription() << DELIMITER_;
     outfile << ped_record.superPopulation() << DELIMITER_;
     outfile << ped_record.superDescription() << DELIMITER_;
-    outfile << locus_results.hetero_count << DELIMITER_;
+    outfile << locus_results.major_hetero_count << DELIMITER_;
+    outfile << locus_results.minor_hetero_count << DELIMITER_;
     outfile << locus_results.homo_count << DELIMITER_;
     outfile << het_hom_ratio << DELIMITER_;
     outfile << locus_results.total_allele_count << DELIMITER_;
@@ -220,42 +232,43 @@ bool kgl::InbreedingAnalysis::writeResults( const ContigId_t& contig_id,
 bool kgl::InbreedingAnalysis::syntheticInbreeding(  std::shared_ptr<const UnphasedPopulation> unphased_ptr,
                                                     const std::string& output_file_name) {
 
-/*
+  const ContigOffset_t sampling_distance = 10000;
+
   syntheticInbreedingSample( unphased_ptr,
                              output_file_name,
                              "syn_all",
                              0.0,
                              1.0,
-                             10);
+                             sampling_distance);
 
   syntheticInbreedingSample( unphased_ptr,
                              output_file_name,
                              "syn_100_01",
                              0.01,
                              1.0,
-                             10);
+                             sampling_distance);
 
   syntheticInbreedingSample( unphased_ptr,
                              output_file_name,
                              "syn_05_01",
                              0.01,
                              0.05,
-                             10);
+                             sampling_distance);
 
   syntheticInbreedingSample( unphased_ptr,
                              output_file_name,
                              "syn_20_05",
                              0.05,
                              0.2,
-                             10);
+                             sampling_distance);
 
   syntheticInbreedingSample( unphased_ptr,
                              output_file_name,
                              "syn_100_20",
                              0.2,
                              1.0,
-                             10);
-*/
+                             sampling_distance);
+
   return true;
 
 }
@@ -356,14 +369,25 @@ bool kgl::InbreedingAnalysis::writeSynResults(const ContigId_t& contig_id,
 
 
   outfile << contig_id << DELIMITER_ << "SuperPop" << DELIMITER_ << "Inbreeding"
-          << DELIMITER_ << "HetCount" << DELIMITER_ << "HomCount"
+          << DELIMITER_ << "MajorHet" << DELIMITER_ << "MinorHet" << DELIMITER_  << "HomCount"
           << DELIMITER_ << "Het/Hom"<< DELIMITER_ << "TotalLoci" << DELIMITER_ << "CalcInbreed\n";
 
   for (auto const& [genome_id, locus_results] : genome_results_map) {
 
 
     auto const [valid_value, inbreeding] = InbreedSampling::generateInbreeding(genome_id);
-    double het_hom_ratio = (locus_results.homo_count > 0 ? static_cast<double>(locus_results.hetero_count)/static_cast<double>(locus_results.homo_count) : 0.0);
+
+    double het_hom_ratio;
+    if (locus_results.homo_count > 0) {
+
+      size_t total_het = locus_results.major_hetero_count + locus_results.minor_hetero_count;
+      het_hom_ratio = static_cast<double>(total_het) / static_cast<double>(locus_results.homo_count);
+
+    } else {
+
+      het_hom_ratio = 0.0;
+
+    }
 
     outfile << genome_id << DELIMITER_;
     outfile << genome_id.substr(0, genome_id.find_first_of("_")) << DELIMITER_;
@@ -377,7 +401,8 @@ bool kgl::InbreedingAnalysis::writeSynResults(const ContigId_t& contig_id,
       outfile << "Invalid" << DELIMITER_;
 
     }
-    outfile << locus_results.hetero_count << DELIMITER_;
+    outfile << locus_results.major_hetero_count << DELIMITER_;
+    outfile << locus_results.minor_hetero_count << DELIMITER_;
     outfile << locus_results.homo_count << DELIMITER_;
     outfile << het_hom_ratio << DELIMITER_;
     outfile << locus_results.total_allele_count << DELIMITER_;

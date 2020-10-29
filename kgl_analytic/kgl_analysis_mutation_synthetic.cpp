@@ -161,7 +161,8 @@ kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
           double alt_allele_select = unit_distribution.random(entropy_mt.generator());
           for (auto const& [minor_allele, frequency] : minor_allele_vec) {
 
-            sum_alt_allele_prob += frequency;
+            double het_conditional_probability = 2.0 * (1.0 - inbreeding_coefficient) * frequency;
+            sum_alt_allele_prob += het_conditional_probability;
             if (alt_allele_select <= sum_alt_allele_prob) {
 
               std::shared_ptr<Variant> cloned_allele_ptr = minor_allele->clone();

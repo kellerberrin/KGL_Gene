@@ -32,7 +32,6 @@ public:
 
   static const std::string& commandLine() { return command_line_; }
   static Logger& log() { return *log_ptr_; }
-  static ImplLogger& impllog() { return *impl_log_ptr_; }
 
   static void ctrlC(int);
   static void getCommandLine(int argc, char const ** argv);
@@ -45,7 +44,6 @@ private:
 
   static std::string command_line_;
   static std::unique_ptr<Logger> log_ptr_;
-  static std::unique_ptr<ImplLogger> impl_log_ptr_;
 
 
 };
