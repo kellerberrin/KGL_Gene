@@ -39,6 +39,12 @@ struct AlleleFreqInfo {
 
 };
 
+// Algorithm type to pass to the threadpool.
+using InbreedingAlgorithm = std::function<LocusResults(const GenomeId_t& genome_id,
+                                                       const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                                       const std::string& super_population_field,
+                                                       const std::shared_ptr<const ContigVariant>& locus_list)>;
+
 class InbreedingCalculation  {
 
 public:
@@ -82,10 +88,11 @@ public:
 
   [[nodiscard]] static Optimize createLogLikelihoodOptimizer();
 
-  [[nodiscard]] static std::vector<AlleleFreqInfo> generateGnomadFreq(const GenomeId_t& genome_id,
-                                                                      const std::shared_ptr<const DiploidContig>& contig_ptr,
-                                                                      const std::string& super_population_field,
-                                                                      const std::shared_ptr<const ContigVariant>& locus_list);
+  [[nodiscard]] static std::pair<std::vector<AlleleFreqInfo>, LocusResults>
+    generateGnomadFreq(const GenomeId_t& genome_id,
+                       const std::shared_ptr<const DiploidContig>& contig_ptr,
+                       const std::string& super_population_field,
+                       const std::shared_ptr<const ContigVariant>& locus_list);
 
   [[nodiscard]] static double logLikelihood(std::vector<double>& x, std::vector<AlleleFreqInfo>& data);
 

@@ -20,16 +20,16 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
                                                const RuntimeParameterMap& named_parameters,
                                                std::shared_ptr<const GenomeCollection> reference_genomes) {
 
-  ExecEnv::log().info("Default Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
+  ExecEnv::log().info("Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
   for (auto const& [parameter_ident, parameter_value] : named_parameters) {
 
-    ExecEnv::log().info("Default Initialize Analysis Id: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident, parameter_value);
+    ExecEnv::log().info("Initialize Analysis Id: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident, parameter_value);
 
   }
 
   for (auto const& genome : reference_genomes->getMap()) {
 
-    ExecEnv::log().info("Default Initialize for Analysis Id: {} called with Reference Genome: {}", ident(), genome.first);
+    ExecEnv::log().info("Initialize for Analysis Id: {} called with Reference Genome: {}", ident(), genome.first);
 
   }
 
@@ -127,42 +127,16 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Iteration Analysis called for Analysis Id: {}", ident());
 
-  if (diploid_population_ and unphased_population_ and ped_data_) {
+  InbreedingAlgorithm algorithm = &InbreedingCalculation::processHallME;
 
-    ExecEnv::log().info("Filtered Population : {}  and Joined Population: {}  both active",
-                        diploid_population_->populationId(), unphased_population_->populationId());
+  if (not InbreedingAnalysis::Inbreeding( algorithm ,
+                                          unphased_population_,
+                                          diploid_population_,
+                                          ped_data_,
+                                          output_file_name_)) {
 
-    if (not InbreedingAnalysis::populationInbreeding(unphased_population_,
-                                                     *diploid_population_,
-                                                     *ped_data_,
-                                                     output_file_name_)) {
-
-      ExecEnv::log().error("MutationAnalysis::iterationAnalysis, Analysis: {},  problem with population inbreeding analysis", ident());
-      return false;
-
-    }
-
-    if (not InbreedingAnalysis::syntheticInbreeding(unphased_population_,
-                                                    output_file_name_)) {
-
-      ExecEnv::log().error("MutationAnalysis::iterationAnalysis, Analysis: {},  problem with synthetic inbreeding analysis", ident());
-      return false;
-
-    }
-
-  } else if (unphased_population_){
-
-    if (not InbreedingAnalysis::syntheticInbreeding(unphased_population_,
-                                                    output_file_name_)) {
-
-      ExecEnv::log().error("MutationAnalysis::iterationAnalysis, Analysis: {},  problem with synthetic inbreeding analysis", ident());
-      return false;
-
-    }
-
-  } else {
-
-    ExecEnv::log().error("MutationAnalysis::iterationAnalysis, Failed to create Filtered Population and Joined Populations Id: {}", ident());
+    ExecEnv::log().error("MutationAnalysis::iterationAnalysis, Analysis: {},  problem with population inbreeding analysis", ident());
+    return false;
 
   }
 
@@ -173,7 +147,7 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 // All VCF data has been presented, finalize analysis and write results.
 bool kgl::MutationAnalysis::finalizeAnalysis() {
 
-  ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
+  ExecEnv::log().info("Finalize called for Analysis Id: {}", ident());
 
   return true;
 

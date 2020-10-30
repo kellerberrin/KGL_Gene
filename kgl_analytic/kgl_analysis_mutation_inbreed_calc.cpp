@@ -80,13 +80,15 @@ kel::Optimize kgl::InbreedingCalculation::createLogLikelihoodOptimizer() {
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-std::vector<kgl::AlleleFreqInfo>
-kgl::InbreedingCalculation::generateGnomadFreq(const GenomeId_t& genome_id,
+std::pair<std::vector<kgl::AlleleFreqInfo>, kgl::LocusResults>
+    kgl::InbreedingCalculation::generateGnomadFreq(const GenomeId_t& genome_id,
                                                const std::shared_ptr<const DiploidContig>& contig_ptr,
                                                const std::string& super_population_field,
                                                const std::shared_ptr<const ContigVariant>& locus_list) {
 
   std::vector<AlleleFreqInfo> frequency_vector;
+  LocusResults locus_results;
+  locus_results.genome = genome_id;
 
   // Only want SNP variants.
   auto snp_contig_ptr = contig_ptr->filterVariants(SNPFilter());
@@ -208,38 +210,7 @@ kgl::InbreedingCalculation::generateGnomadFreq(const GenomeId_t& genome_id,
 
   } // for all locii
 
-  return frequency_vector;
-
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// The loglikelihood inbreeding algorithm.
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-kgl::LocusResults
-kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
-                                                 const std::shared_ptr<const DiploidContig>& contig_ptr,
-                                                 const std::string& super_population_field,
-                                                 const std::shared_ptr<const ContigVariant>& locus_list) {
-
-  // Only want SNP variants.
-  auto snp_contig_ptr = contig_ptr->filterVariants(SNPFilter());
-
-  // Entropy source is the Mersenne twister.
-  RandomEntropySource entropy_mt;
-  // The real unit distribution [1,0] used to as a start point for the loglik algorithm.
-  UniformUnitDistribution unit_distribution;
-
-  LocusResults locus_results;
-  locus_results.genome = genome_id;
-
-  auto frequency_vector = generateGnomadFreq(genome_id, contig_ptr, super_population_field, locus_list);
-
+  // Generate some frequency statistics.
   double sum = 0.0;
   double sq_sum = 0.0;
   for (auto [homozygous, allele1_prob, allele2_prob] : frequency_vector) {
@@ -275,14 +246,42 @@ kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
   ExecEnv::log().info( "Genome: {}, Frequency vector size: {}, mean prob: {}, bin mean: {} var: {}, poisson bin mean: {}, var: {}",
                        locus_results.genome, frequency_vector.size(), p, binomial_mean, binomial_var, poisson_binomial_mean, poisson_binomial_var);
 
+  return { frequency_vector, locus_results};
+
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// The loglikelihood inbreeding algorithm.
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+kgl::LocusResults
+kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
+                                                 const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                                 const std::string& super_population_field,
+                                                 const std::shared_ptr<const ContigVariant>& locus_list) {
+
+  // Only want SNP variants.
+  auto snp_contig_ptr = contig_ptr->filterVariants(SNPFilter());
+
+  // Entropy source is the Mersenne twister.
+  RandomEntropySource entropy_mt;
+  // The real unit distribution [1,0] used to as a start point for the loglik algorithm.
+  UniformUnitDistribution unit_distribution;
+  // Get the locus frequencies.
+  auto [frequency_vector, locus_results] = generateGnomadFreq(genome_id, contig_ptr, super_population_field, locus_list);
 
   double updated_coefficient = 0.0;
   double inbreed_coefficient;
   size_t retries = 0;
   Optimize likelihood_optimizer = createLogLikelihoodOptimizer();
 
+  // The calculation loop using the non-linear optimizer.
   do {
-
 
     // Random start on the unit interval.
     std::vector<double> coefficient;
@@ -346,49 +345,8 @@ kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
   RandomEntropySource entropy_mt;
   // The real unit distribution [1,0] used to as a start point for the EM algorithm.
   UniformUnitDistribution unit_distribution;
-
-  LocusResults locus_results;
-  locus_results.genome = genome_id;
-
-  auto frequency_vector = generateGnomadFreq(genome_id, contig_ptr, super_population_field, locus_list);
-
-  double sum = 0.0;
-  double sq_sum = 0.0;
-  for (auto [homozygous, allele1_prob, allele2_prob] : frequency_vector) {
-
-    ++locus_results.total_allele_count;
-
-    switch(homozygous) {
-
-      case MinorAlleleType::HOMOZYGOUS:
-        ++locus_results.homo_count;
-        break;
-
-      case MinorAlleleType::HETEROZYGOUS:
-        ++locus_results.major_hetero_count;
-        break;
-
-      case MinorAlleleType::MINOR_HETEROZYGOUS:
-        ++locus_results.minor_hetero_count;
-        break;
-
-    }
-
-    sum += allele1_prob;
-    sq_sum += (allele1_prob * allele1_prob);
-
-  }
-
-
-  double p = sum/static_cast<double>(frequency_vector.size());
-  double binomial_mean = static_cast<double>(frequency_vector.size()) * p;
-  double binomial_var = binomial_mean * (1.0 - p);
-  double poisson_binomial_mean = sum;
-  double poisson_binomial_var = sum - sq_sum;
-
-
-  ExecEnv::log().info( "Genome: {}, Frequency vector size: {}, mean prob: {}, bin mean: {} var: {}, poisson bin mean: {}, var: {}",
-                       locus_results.genome, frequency_vector.size(), p, binomial_mean, binomial_var, poisson_binomial_mean, poisson_binomial_var);
+  // Get the locus frequencies.
+  auto [frequency_vector, locus_results] = generateGnomadFreq(genome_id, contig_ptr, super_population_field, locus_list);
 
   double updated_coefficient = 0.0;
   double inbreed_coefficient;
