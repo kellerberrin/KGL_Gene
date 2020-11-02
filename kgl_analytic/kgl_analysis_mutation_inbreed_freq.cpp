@@ -188,8 +188,7 @@ kgl::InbreedingCalculation::generateDiploidFreq( const GenomeId_t& genome_id,
   } // For all offset locii.
 
   // Generate some frequency statistics.
-  double sum{0.0};
-  double sq_sum{0.0};
+  std::vector<double> freq_difference;
   for (auto const& allele_freq : frequency_vector) {
 
     ++locus_results.total_allele_count;
@@ -210,21 +209,32 @@ kgl::InbreedingCalculation::generateDiploidFreq( const GenomeId_t& genome_id,
 
     }
 
-    double freq = allele_freq.minorAllele().frequency();
-    sum += freq;
-    sq_sum += (freq * freq);
+    bool found{false};
+    for (auto const& ref_allele : allele_freq.alleleFrequencies()) {
+
+      if (ref_allele.allele()->analogous(*allele_freq.minorAllele().allele())) {
+
+        found = true;
+        double difference = ref_allele.frequency() - allele_freq.minorAllele().frequency();
+        freq_difference.push_back(difference);
+        break;
+
+      }
+
+    } // End compare frequencies.
+
+    // Should be a matching allele, complain if not.
+    if (not found) {
+
+      ExecEnv::log().error("InbreedingCalculation::generateDiploidFreq; Genome: {}, No matching reference SNP for Diploid SNP: {}",
+                           genome_id, allele_freq.minorAllele().allele()->output(',', VariantOutputIndex::START_0_BASED, false));
+
+    }
 
   }
 
-  // Compare the first two moments assuming Binomial and Poisson Binomial distributions.
-  double p = sum / static_cast<double>(frequency_vector.size());
-  double binomial_mean = static_cast<double>(frequency_vector.size()) * p;
-  double binomial_var = binomial_mean * (1.0 - p);
-  double poisson_binomial_mean = sum;
-  double poisson_binomial_var = sum - sq_sum;
-
-  ExecEnv::log().info( "Genome: {}, Frequency vector size: {}, mean prob: {}, bin mean: {} var: {}, poisson bin mean: {}, var: {}",
-                       locus_results.genome, frequency_vector.size(), p, binomial_mean, binomial_var, poisson_binomial_mean, poisson_binomial_var);
+  auto [mean, stddev] = Utility::stddev(freq_difference);
+  ExecEnv::log().info( "Genome: {}, (Reference - Diploid) Allele frequency difference, Mean: {}, Stddev: {}", mean, stddev);
 
   return { frequency_vector, locus_results};
 

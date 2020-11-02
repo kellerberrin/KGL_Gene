@@ -97,7 +97,7 @@ kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
   // The real unit distribution [1,0] used to as a start point for the loglik algorithm.
   UniformUnitDistribution unit_distribution;
   // Get the locus frequencies.
-  auto [frequency_vector, locus_results] = generateGnomadFreq(genome_id, contig_ptr, super_population_field, locus_list);
+  auto [frequency_vector, locus_results] = generateDiploidFreq(genome_id, contig_ptr, super_population_field, locus_list);
 
   double updated_coefficient = 0.0;
   double inbreed_coefficient;
@@ -170,7 +170,7 @@ kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
   // The real unit distribution [1,0] used to as a start point for the EM algorithm.
   UniformUnitDistribution unit_distribution;
   // Get the locus frequencies.
-  auto [frequency_vector, locus_results] = generateGnomadFreq(genome_id, contig_ptr, super_population_field, locus_list);
+  auto [frequency_vector, locus_results] = generateDiploidFreq(genome_id, contig_ptr, super_population_field, locus_list);
 
   double updated_coefficient = 0.0;
   double inbreed_coefficient;
@@ -260,7 +260,7 @@ kgl::InbreedingCalculation::processRitlandMME( const GenomeId_t& genome_id,
                                                const std::shared_ptr<const ContigVariant>& locus_list) {
 
   // Get the locus frequencies.
-  auto [frequency_vector, locus_results] = generateGnomadFreq(genome_id, contig_ptr, super_population_field, locus_list);
+  auto [frequency_vector, locus_results] = generateDiploidFreq(genome_id, contig_ptr, super_population_field, locus_list);
   double expected_heterozygous{0.0};
   double expected_homozygous{0.0};
   const bool calc_hetero{true};
@@ -317,7 +317,7 @@ kgl::InbreedingCalculation::processRitlandLocus(const GenomeId_t &genome_id,
                                            const std::shared_ptr<const ContigVariant>& locus_list) {
 
   // Get the locus frequencies.
-  auto [frequency_vector, locus_results] = generateGnomadFreq(genome_id, contig_ptr, super_population_field, locus_list);
+  auto [frequency_vector, locus_results] = generateDiploidFreq(genome_id, contig_ptr, super_population_field, locus_list);
 
   for (auto const& allele_freq : frequency_vector) {
 

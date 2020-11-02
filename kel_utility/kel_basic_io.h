@@ -33,7 +33,7 @@ public:
 
   // Returns an IO stream that is either a normal stream or a compressed stream based on the file name extension.
   // If '.gz' or '.bgz' then it assumes a gzipped file and decompresses as it reads.
-  // Note the stream is returned open and ready for processing, std::nullopt is returned is there is a problem.
+  // Note the stream is returned open and ready for processing, std::nullopt is returned if there is a problem.
   [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getReaderStream(const std::string& file_name);
 
 protected:
