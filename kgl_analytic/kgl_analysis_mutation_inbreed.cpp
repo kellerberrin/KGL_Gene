@@ -150,6 +150,13 @@ bool kgl::InbreedingAnalysis::populationInbreedingSample( InbreedingAlgorithm al
   std::string file_name_ext = output_file_name + sample_name + FILE_EXT_;
   outfile.open(file_name_ext, std::ofstream::out |  std::ofstream::trunc);
 
+  if (not outfile.good()) {
+
+    ExecEnv::log().error("InbreedingAnalysis::syntheticInbreedingSample; could not open output file: {}", file_name_ext);
+    return false;
+
+  }
+
   outfile << diploid_population.populationId() << DELIMITER_ << "Min_AF:" << DELIMITER_ << allele_frequency_min
           << DELIMITER_ << "Max_AF:" << allele_frequency_max << DELIMITER_ << "Spacing:" << spacing << '\n';
 
@@ -203,7 +210,7 @@ bool kgl::InbreedingAnalysis::processResults( InbreedingAlgorithm algorithm,
         std::future<LocusResults> future = thread_pool.enqueueTask(algorithm,
                                                                    genome_id,
                                                                    contig_opt.value(),
-                                                                   InbreedSampling::lookupSuperPopulationField(super_pop_id),
+                                                                   super_pop_id,
                                                                    locus_list);
         future_vector.push_back(std::move(future));
 
@@ -358,6 +365,13 @@ bool kgl::InbreedingAnalysis::syntheticInbreedingSample( InbreedingAlgorithm alg
   std::string file_name_ext = output_file_name + sample_name + FILE_EXT_;
   outfile.open(file_name_ext, std::ofstream::out |  std::ofstream::trunc);
 
+  if (not outfile.good()) {
+
+    ExecEnv::log().error("InbreedingAnalysis::syntheticInbreedingSample; could not open output file: {}", file_name_ext);
+    return false;
+
+  }
+
   outfile << "Synthetic" << DELIMITER_ << "Min_AF:" << DELIMITER_ << allele_frequency_min
           << DELIMITER_ << "Max_AF:" << allele_frequency_max << DELIMITER_ << "Spacing:" << spacing << '\n';
 
@@ -402,7 +416,7 @@ bool kgl::InbreedingAnalysis::processSynResults( InbreedingAlgorithm algorithm,
           std::future<LocusResults> future = thread_pool.enqueueTask(algorithm,
                                                                      genome_id,
                                                                      contig_opt.value(),
-                                                                     InbreedSampling::lookupSuperPopulationField(super_pop_id),
+                                                                     super_pop_id,
                                                                      locus_list);
           future_vector.push_back(std::move(future));
 

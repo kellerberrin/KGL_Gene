@@ -127,16 +127,20 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Iteration Analysis called for Analysis Id: {}", ident());
 
-  InbreedingAlgorithm algorithm = &InbreedingCalculation::processHallME;
+  for (auto& [algo_name, inbreeding_algo] : InbreedingCalculation::algoMap()) {
 
-  if (not InbreedingAnalysis::Inbreeding( algorithm ,
-                                          unphased_population_,
-                                          diploid_population_,
-                                          ped_data_,
-                                          output_file_name_)) {
+    std::string file_name =  output_file_name_ + "_" + algo_name + "_";
 
-    ExecEnv::log().error("MutationAnalysis::iterationAnalysis, Analysis: {},  problem with population inbreeding analysis", ident());
-    return false;
+    if (not InbreedingAnalysis::Inbreeding( inbreeding_algo ,
+                                            unphased_population_,
+                                            diploid_population_,
+                                            ped_data_,
+                                            file_name)) {
+
+      ExecEnv::log().error("MutationAnalysis::iterationAnalysis, Analysis: {},  problem with population inbreeding analysis", ident());
+      return false;
+
+    }
 
   }
 
