@@ -57,6 +57,9 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
   auto mutable_info = const_cast<std::string&>(vcf_record.info);
   InfoDataEvidence info_evidence_opt = evidence_factory_.createVariantEvidence(std::move(mutable_info));
 
+  // Look at the filter field for "Pass"
+  bool passed_filter = Utility::toupper(vcf_record.filter) == PASSED_FILTERS_;
+
   // Convert VCF contig to genome contig.
   std::string contig = contig_alias_map_.lookupAlias(vcf_record.contig_id);
 
@@ -80,6 +83,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
     std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( contig,
                                                                           VariantSequence::UNPHASED,
                                                                           vcf_record.offset,
+                                                                          passed_filter,
                                                                           evidence,
                                                                           std::move(reference_str),
                                                                           std::move(alternate_str)));
@@ -120,6 +124,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
       std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( contig,
                                                                             VariantSequence::UNPHASED,
                                                                             vcf_record.offset,
+                                                                            passed_filter,
                                                                             evidence,
                                                                             std::move(reference_str),
                                                                             std::move(alternate_str)));

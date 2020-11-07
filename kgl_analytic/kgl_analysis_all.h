@@ -9,6 +9,7 @@
 
 #include "kgl_analysis_virtual.h" // The pure virtual interface definition and base class
 #include "kgl_analysis_null.h" // The "do nothing" class and a template for additional analysis objects.
+#include "kgl_analysis_verify.h" // Does "correctness" verification on any specified data files (duplicate variants etc).
 #include "kgl_analysis_interval.h" // Basic sequence and variant statistics.
 #include "kgl_analysis_info_filter.h" // Age related variant statistics, only applicable to Gnomad variant data.
 #include "kgl_analysis_mutation.h" // Analysis of Diploid phased population read from the 1000 genomes project.
@@ -32,6 +33,7 @@ inline VirtualAnalysisVector getAnalysisVector() {
   VirtualAnalysisVector analysis_vector;
 
   analysis_vector.push_back(std::make_unique<NullAnalysis>());
+  analysis_vector.push_back(std::make_unique<VerifyAnalysis>());
   analysis_vector.push_back(std::make_unique<IntervalAnalysis>());
   analysis_vector.push_back(std::make_unique<InfoFilterAnalysis>());
   analysis_vector.push_back(std::make_unique<MutationAnalysis>());

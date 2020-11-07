@@ -86,6 +86,9 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
   auto mutable_info = const_cast<std::string&>(record.info);
   InfoDataEvidence info_evidence_opt = evidence_factory_.createVariantEvidence(std::move(mutable_info));  // Each vcf record.
 
+  // Look at the filter field for "Pass"
+  bool passed_filter = Utility::toupper(record.filter) == PASSED_FILTERS_;
+
   if (getGenomeNames().size() != record.genotypeInfos.size()) {
 
     ExecEnv::log().warn("Genome Name Size: {}, Genotype count: {}",
@@ -197,6 +200,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
             if (not createAddVariant(genome_name,
                                      recordParser.contigPtr(),
                                      recordParser.offset(),
+                                     passed_filter,
                                      recordParser.reference(),
                                      allele,
                                      evidence)) {
@@ -238,6 +242,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
             if (not createAddVariant(genome_name,
                                      recordParser.contigPtr(),
                                      recordParser.offset(),
+                                     passed_filter,
                                      recordParser.reference(),
                                      allele,
                                      evidence)) {
@@ -305,6 +310,7 @@ void kgl::Pf3kVCFImpl::setupPopulationStructure(const std::shared_ptr<const Geno
 bool kgl::Pf3kVCFImpl::createAddVariant(const std::string& genome_name,
                                          const std::shared_ptr<const ContigReference> contig_ptr,
                                          ContigOffset_t contig_offset,
+                                         bool passed_filter,
                                          const std::string& reference_text,
                                          const std::string& alternate_text,
                                          const VariantEvidence& evidence)  {
@@ -315,6 +321,7 @@ bool kgl::Pf3kVCFImpl::createAddVariant(const std::string& genome_name,
   std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( contig_ptr->contigId(),
                                                                         VariantSequence::UNPHASED,
                                                                         contig_offset,
+                                                                        passed_filter,
                                                                         evidence,
                                                                         std::move(reference_str),
                                                                         std::move(alternate_str)));

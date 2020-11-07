@@ -67,6 +67,9 @@ void kgl::Genome1000VCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecor
   auto mutable_info = const_cast<std::string&>(record.info);
   InfoDataEvidence info_evidence_opt = evidence_factory_.createVariantEvidence(std::move(mutable_info));  // Each vcf record.
 
+  // Look at the filter field for "Pass"
+  bool passed_filter = Utility::toupper(record.filter) == PASSED_FILTERS_;
+
   // Convert VCF contig to genome contig.
   std::string contig = contig_alias_map_.lookupAlias(record.contig_id);
 
@@ -77,7 +80,7 @@ void kgl::Genome1000VCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecor
 
   }
 
-  std::vector<std::string> alt_vector = Utility::char_tokenizer(record.alt, MULIPLE_ALT_SEPARATOR_);
+  std::vector<std::string> alt_vector = Utility::char_tokenizer(record.alt, MULTIPLE_ALT_SEPARATOR_);
 
   if (alt_vector.empty()) {
 
@@ -110,8 +113,8 @@ void kgl::Genome1000VCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecor
 
   }
 
-  addVariants(phase_A_map, contig, VariantSequence::DIPLOID_PHASE_A, record.offset, info_evidence_opt, record.ref, alt_vector, vcf_record_count);
-  addVariants(phase_B_map, contig, VariantSequence::DIPLOID_PHASE_B, record.offset, info_evidence_opt, record.ref, alt_vector, vcf_record_count);
+  addVariants(phase_A_map, contig, VariantSequence::DIPLOID_PHASE_A, record.offset, passed_filter, info_evidence_opt, record.ref, alt_vector, vcf_record_count);
+  addVariants(phase_B_map, contig, VariantSequence::DIPLOID_PHASE_B, record.offset, passed_filter, info_evidence_opt, record.ref, alt_vector, vcf_record_count);
 
   if (vcf_record_count % VARIANT_REPORT_INTERVAL_ == 0) {
 
@@ -192,6 +195,7 @@ void kgl::Genome1000VCFImpl::addVariants( const std::map<size_t, std::vector<Gen
                                           const ContigId_t& contig,
                                           PhaseId_t phase,
                                           ContigOffset_t offset,
+                                          bool passedFilters,
                                           const InfoDataEvidence info_evidence_opt,
                                           const std::string& reference,
                                           const std::vector<std::string>& alt_vector,
@@ -209,6 +213,7 @@ void kgl::Genome1000VCFImpl::addVariants( const std::map<size_t, std::vector<Gen
     std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( contig,
                                                                           phase,
                                                                           offset,
+                                                                          passedFilters,
                                                                           evidence,
                                                                           std::move(reference_str),
                                                                           std::move(alternate_str)));

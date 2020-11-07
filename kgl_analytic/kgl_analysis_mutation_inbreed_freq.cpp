@@ -28,6 +28,92 @@ double kgl::AlleleFreqInfo::majorAlleleFrequency() const {
 
 }
 
+// The probability of heterozygous alleles. This includes MINOR_HETEROZYGOUS (rare, two heterozygous minor alleles).
+double kgl::AlleleFreqInfo::probAllHeterozygous() const {
+
+  double sum_hetero_freq{0.0};
+  size_t minor_allele_count = allele_frequencies_.size();
+
+  for (size_t idx1 = 0; idx1 < minor_allele_count; ++idx1) {
+
+    for (size_t idx2 = (idx1 + 1); idx2 < minor_allele_count; ++idx2) {
+
+        sum_hetero_freq += 2.0 * allele_frequencies_[idx1].frequency() * allele_frequencies_[idx2].frequency();
+
+    }
+
+  }
+
+  sum_hetero_freq += probHeterozygous();
+
+  return sum_hetero_freq;
+
+}
+
+// The probability of major heterozygous alleles. This is the case where only a single minor allele is recorded (common).
+double kgl::AlleleFreqInfo::probHeterozygous() const {
+
+  double sum_hetero_freq{0.0};
+  double major_allele_freq = majorAlleleFrequency();
+  for (auto const& minor_allele  : allele_frequencies_) {
+
+    sum_hetero_freq += 2.0 * minor_allele.frequency() * major_allele_freq;
+
+  }
+
+  return sum_hetero_freq;
+
+}
+
+
+// The probability of minor homozygous alleles
+double kgl::AlleleFreqInfo::probMinorHomozygous() const {
+
+  double sum_homozygous_freq{0.0};
+  for (auto const& minor_allele  : allele_frequencies_) {
+
+    sum_homozygous_freq += minor_allele.frequency() * minor_allele.frequency();
+
+  }
+
+  return sum_homozygous_freq;
+
+}
+
+
+// The probability of minor and major homozygous alleles
+double kgl::AlleleFreqInfo::probAllHomozygous() const {
+
+  double sum_homozygous_freq{0.0};
+  double sum_allele_freq{0.0};
+  for (auto const& minor_allele  : allele_frequencies_) {
+
+    double frequency = minor_allele.frequency();
+    sum_allele_freq += frequency;
+    sum_homozygous_freq += frequency * frequency;
+
+  }
+
+  // Probability of a homozygous major allele
+  sum_homozygous_freq += (1.0 - sum_allele_freq) * (1.0 - sum_allele_freq);
+
+  return sum_homozygous_freq;
+
+}
+
+
+double kgl::AlleleFreqInfo::sumFrequencies() const {
+
+  double sum_freq{0.0};
+  for (auto const& minor_allele  : allele_frequencies_) {
+
+    sum_freq += minor_allele.frequency();
+
+  }
+
+  return sum_freq;
+
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -48,7 +134,7 @@ kgl::InbreedingCalculation::generateDiploidFreq( const GenomeId_t& genome_id,
   locus_results.genome = genome_id;
 
   // Convert to the super population field codes used in Gnomad.
-  const std::string Gnomad_super_pop = InbreedSampling::lookupSuperPopulationField(super_population_field);
+  const std::string gnomad_super_pop = InbreedSampling::lookupSuperPopulationField(super_population_field);
   // The diploid super population field code.
   const std::string diploid_super_pop = super_population_field + "_AF";
 
@@ -71,12 +157,12 @@ kgl::InbreedingCalculation::generateDiploidFreq( const GenomeId_t& genome_id,
       // Loop through the variants in the locus..
       for (auto const &locus_variant : locus_variant_array) {
 
-        auto[result, AF_value] = InbreedSampling::processFloatField(*locus_variant, Gnomad_super_pop);
+        auto[result, AF_value] = InbreedSampling::processFloatField(*locus_variant, gnomad_super_pop);
         if (not result) {
 
           // Problem obtaining allele frequency.
-          ExecEnv::log().warn("InbreedingCalculation::generateDiploidFreq; Genome: {}, Unable to obtain Locus allele frequency: {} for SNP: {}",
-                              genome_id, super_population_field, locus_variant->output(',', VariantOutputIndex::START_0_BASED, false));
+          ExecEnv::log().warn("InbreedingCalculation::generateDiploidFreq; Genome: {}, Unable to obtain Gnomad allele frequency: {} for SNP: {}",
+                              genome_id, gnomad_super_pop, locus_variant->output(',', VariantOutputIndex::START_0_BASED, false));
 
         } else  {
 
@@ -101,8 +187,8 @@ kgl::InbreedingCalculation::generateDiploidFreq( const GenomeId_t& genome_id,
             if (not result) {
 
               // Problem obtaining allele frequency.
-              ExecEnv::log().warn("InbreedingCalculation::generateDiploidFreq; Genome: {}, Unable to obtain Locus allele frequency: {} for SNP: {}",
-                                  genome_id, super_population_field, diploid_offset.front()->output(',', VariantOutputIndex::START_0_BASED, false));
+              ExecEnv::log().warn("InbreedingCalculation::generateDiploidFreq; Genome: {}, Unable to obtain Heterozygous Diploid allele frequency: {} for SNP: {}",
+                                  genome_id, diploid_super_pop, diploid_offset.front()->output(',', VariantOutputIndex::START_0_BASED, false));
 
             } else  {
 
@@ -128,8 +214,8 @@ kgl::InbreedingCalculation::generateDiploidFreq( const GenomeId_t& genome_id,
               if (not result) {
 
                 // Problem obtaining allele frequency.
-                ExecEnv::log().warn("InbreedingCalculation::generateDiploidFreq; Genome: {}, Unable to obtain Locus allele frequency: {} for SNP: {}",
-                                    genome_id, super_population_field, diploid_offset.front()->output(',', VariantOutputIndex::START_0_BASED, false));
+                ExecEnv::log().warn("InbreedingCalculation::generateDiploidFreq; Genome: {}, Unable to obtain Homozygous Diploid allele frequency: {} for SNP: {}",
+                                    genome_id, diploid_super_pop, diploid_offset.front()->output(',', VariantOutputIndex::START_0_BASED, false));
 
               } else  {
 
@@ -151,8 +237,8 @@ kgl::InbreedingCalculation::generateDiploidFreq( const GenomeId_t& genome_id,
               if (not result) {
 
                 // Problem obtaining allele frequency.
-                ExecEnv::log().warn("InbreedingCalculation::generateDiploidFreq; Genome: {}, Unable to obtain Locus allele frequency: {} for SNP: {}",
-                                    genome_id, super_population_field, diploid_offset.front()->output(',', VariantOutputIndex::START_0_BASED, false));
+                ExecEnv::log().warn("InbreedingCalculation::generateDiploidFreq; Genome: {}, Unable to obtain 1st Alt Diploid allele frequency: {} for SNP: {}",
+                                    genome_id, diploid_super_pop, diploid_offset.front()->output(',', VariantOutputIndex::START_0_BASED, false));
 
                 break;
               }
@@ -162,8 +248,8 @@ kgl::InbreedingCalculation::generateDiploidFreq( const GenomeId_t& genome_id,
               if (not second_result) {
 
                 // Problem obtaining allele frequency.
-                ExecEnv::log().warn("InbreedingCalculation::generateDiploidFreq; Genome: {}, Unable to obtain Locus allele frequency: {} for SNP: {}",
-                                    genome_id, super_population_field, diploid_offset.back()->output(',', VariantOutputIndex::START_0_BASED, false));
+                ExecEnv::log().warn("InbreedingCalculation::generateDiploidFreq; Genome: {}, Unable to 2nd Alt Diploid Locus allele frequency: {} for SNP: {}",
+                                    genome_id, diploid_super_pop, diploid_offset.back()->output(',', VariantOutputIndex::START_0_BASED, false));
 
                 break;
               }
@@ -236,7 +322,7 @@ kgl::InbreedingCalculation::generateDiploidFreq( const GenomeId_t& genome_id,
   auto [mean, stddev] = Utility::stddev(freq_difference);
   ExecEnv::log().info( "Genome: {}, (Reference - Diploid) Allele frequency difference, Mean: {}, Stddev: {}", mean, stddev);
 
-  return { frequency_vector, locus_results};
+  return { frequency_vector, locus_results };
 
 }
 
@@ -260,8 +346,8 @@ kgl::InbreedingCalculation::generateGnomadFreq(const GenomeId_t& genome_id,
   // Convert to the super population field codes used in Gnomad.
   const std::string gnomad_super_pop = InbreedSampling::lookupSuperPopulationField(super_population_field);
 
-  // Diploid contig, only want SNP variants.
-  auto snp_contig_ptr = contig_ptr->filterVariants(SNPFilter());
+  // Diploid contig, only want SNP variants that have passed VCF filters.
+  auto snp_contig_ptr = contig_ptr->filterVariants(AndFilter(SNPFilter(), PassFilter()));
 
   for (auto const& [offset, offset_ptr] : locus_list->getMap()) {
 
@@ -371,9 +457,9 @@ kgl::InbreedingCalculation::generateGnomadFreq(const GenomeId_t& genome_id,
   // Generate some frequency statistics.
   double sum{0.0};
   double sq_sum{0.0};
-  for (auto const& allele_freq : frequency_vector) {
 
-    ++locus_results.total_allele_count;
+  locus_results.total_allele_count = frequency_vector.size();
+  for (auto const& allele_freq : frequency_vector) {
 
     switch(allele_freq.alleleType()) {
 

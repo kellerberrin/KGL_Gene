@@ -56,6 +56,7 @@ private:
   constexpr static const char* DIGITS_ = "0123456789";
   constexpr static const char* FLOAT_DIGITS_ = "+-.e0123456789";
   constexpr static const char* UPSTREAM_ALLELE_ = "*";
+  constexpr static const char* PASSED_FILTERS_{"PASS"};
 
 
 // Quality constants.
@@ -79,6 +80,7 @@ private:
   [[nodiscard]] bool createAddVariant(const std::string& genome_name,
                                       const std::shared_ptr<const ContigReference> contig_ptr,
                                       ContigOffset_t contig_offset,
+                                      bool passed_filter,
                                       const std::string& reference,
                                       const std::string& alternate,
                                       const VariantEvidence& evidence);

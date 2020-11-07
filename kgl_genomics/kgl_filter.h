@@ -381,6 +381,31 @@ private:
 // Filter variants to SNPs (single and compound)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+class PassFilter : public VariantFilter {
+
+public:
+
+  explicit PassFilter() {
+
+    filterName("Variant marked 'Pass' for filters in VCF");
+
+  }
+  PassFilter(const PassFilter&) = default;
+  ~PassFilter() override = default;
+
+  [[nodiscard]] bool applyFilter(const Variant& variant) const override { return variant.passFilters(); }
+
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<PassFilter>(*this); }
+
+private:
+
+
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter variants to SNPs (single and compound)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 class SNPFilter : public VariantFilter {
 
 public:

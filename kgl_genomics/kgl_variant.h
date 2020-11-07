@@ -62,14 +62,17 @@ public:
 
   VariantSequence(ContigId_t contig_id,
                   PhaseId_t phase_id,
-                  ContigOffset_t contig_offset) : contig_id_(std::move(contig_id)),
-                                                  phase_id_(phase_id),
-                                                  contig_offset_(contig_offset) {}
+                  ContigOffset_t contig_offset,
+                  bool passedFilters) : contig_id_(std::move(contig_id)),
+                                        phase_id_(phase_id),
+                                        contig_offset_(contig_offset),
+                                        pass_(passedFilters) {}
   virtual ~VariantSequence() = default;
 
   [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
   [[nodiscard]] ContigOffset_t offset() const { return contig_offset_; }
   [[nodiscard]] PhaseId_t phaseId() const { return phase_id_; }
+  [[nodiscard]] bool passFilters() const { return pass_; }
   void updatePhaseId(PhaseId_t phase_id) { phase_id_ = phase_id; }
 
 
@@ -85,6 +88,7 @@ private:
   const ContigId_t contig_id_;                          // The contig of this variant
   PhaseId_t phase_id_;                                  // The phase of this variant (which homologous contig)
   const ContigOffset_t contig_offset_;                  // Location on the contig.
+  bool pass_;                                           // True if the VCF record was annotated with "PASS" filters.
 
 };
 
@@ -106,10 +110,11 @@ public:
   Variant(   const ContigId_t& contig_id,
              PhaseId_t phase_id,
              ContigOffset_t contig_offset,
+             bool passedFilters,
              const VariantEvidence& evidence,
              StringDNA5&& reference,
              StringDNA5&& alternate)
-  : VariantSequence(contig_id, phase_id, contig_offset),
+  : VariantSequence(contig_id, phase_id, contig_offset, passedFilters),
     evidence_(evidence),
     reference_(std::move(reference)),
     alternate_(std::move(alternate)) {}

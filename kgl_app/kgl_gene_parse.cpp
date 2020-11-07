@@ -7,13 +7,9 @@
 // Seqan dependencies should be limited to sequence analysis only.
 
 #include <iostream>
-#include <cctype>
 #include <seqan/arg_parse.h>
 #include "kgl_gene_app.h"
-#include "kgl_legacy_Pf_analysis.h"
-#define BOOST_FILESYSTEM_NO_DEPRECATED // Recommended by boost filesystem documentation.
 #include <boost/filesystem.hpp>
-#include <boost/tokenizer.hpp>
 #include "kel_utility.h"
 
 
@@ -41,7 +37,7 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
   addUsageLine(parser, "--workDirectory <work.directory>  --newLogFile <new_log_file> --optionFile <optionFile>");
 
   const char* program_desc =
-      R"("kgl_genetic" is a fast C++ program to find genetic differences (SNPs/Indels) in a population of organisms.
+      R"("kgl_Gene" analyzes genetic differences (SNPs/Indels) in a population of organisms.
   The entire genome of many organisms can be compared and analysed simultaneously (with sufficient memory).
   The options xml file specifies a list of VCF files and associated organism attributes to be processed.
   This program also takes the genome FASTA file and the corresponding genetic feature model in GFF3 (only) format

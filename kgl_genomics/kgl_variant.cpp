@@ -55,6 +55,7 @@ std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputInde
   std::unique_ptr<Variant> variant_ptr(std::make_unique<Variant>( contigId(),
                                                                         phaseId(),
                                                                         offset(),
+                                                                        passFilters(),
                                                                         evidence(),
                                                                         std::move(reference_str),
                                                                         std::move(alternate_str)));

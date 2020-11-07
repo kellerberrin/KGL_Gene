@@ -50,6 +50,7 @@ private:
 
   constexpr static const size_t VARIANT_REPORT_INTERVAL_{100000};
   constexpr static const char MULIPLE_ALT_SEPARATOR_{','};
+  constexpr static const char* PASSED_FILTERS_{"PASS"};
 
   const std::shared_ptr<UnphasedPopulation> unphased_population_ptr_;   // Un-phased variants.
   std::shared_ptr<const GenomeReference> genome_db_ptr_;

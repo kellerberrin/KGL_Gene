@@ -68,7 +68,18 @@ public:
   [[nodiscard]] const AlleleFreqRecord& minorAllele() const { return minor_allele_; }
   [[nodiscard]] const AlleleFreqRecord& secondAllele() const { return second_allele_; }
   [[nodiscard]] const std::vector<AlleleFreqRecord>& alleleFrequencies() const { return allele_frequencies_; }
+  // Complement of the sum of all minor alleles.
   [[nodiscard]] double majorAlleleFrequency() const;
+  // The probability of heterozygous alleles, this includes MINOR_HETEROZYGOUS (rare).
+  [[nodiscard]] double probAllHeterozygous() const;
+  // The probability of major heterozygous alleles, this is a single minor allele.
+  [[nodiscard]] double probHeterozygous() const;
+  // The probability of minor allele homozygous alleles
+  [[nodiscard]] double probMinorHomozygous() const;
+  // The probability of all (minor + major) allele homozygous alleles
+  [[nodiscard]] double probAllHomozygous() const;
+  // Sum of the allele frequencies.
+  [[nodiscard]] double sumFrequencies() const;
 
 private:
 
@@ -107,10 +118,15 @@ public:
                                                          const std::string& super_population_field,
                                                          const std::shared_ptr<const ContigVariant>& locus_list);
   
-  [[nodiscard]] static LocusResults processRitlandMME( const ContigId_t& contig_id,
-                                                       const std::shared_ptr<const DiploidContig>& contig_ptr,
-                                                       const std::string& super_population_field,
-                                                       const std::shared_ptr<const ContigVariant>& locus_list);
+  [[nodiscard]] static LocusResults processSimple(const ContigId_t& contig_id,
+                                                  const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                                  const std::string& super_population_field,
+                                                  const std::shared_ptr<const ContigVariant>& locus_list);
+
+  [[nodiscard]] static LocusResults processPlink( const ContigId_t& contig_id,
+                                                  const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                                  const std::string& super_population_field,
+                                                  const std::shared_ptr<const ContigVariant>& locus_list);
 
   [[nodiscard]] static LocusResults processHallME( const GenomeId_t& genome_id,
                                                   const std::shared_ptr<const DiploidContig>& contig_ptr,
@@ -125,7 +141,8 @@ public:
 
   // Algorithm key used in the the algorithm selection map.
   inline static const std::string RITLAND_LOCUS{"RitlandLocus"};
-  inline static const std::string RITLAND_MME{"RitlandMME"};
+  inline static const std::string SIMPLE{"Simple"};
+  inline static const std::string PLINK{"Plink"};
   inline static const std::string HALL_ME{"HallME"};
   inline static const std::string LOGLIKELIHOOD{"Loglikelihood"};
 
@@ -134,10 +151,11 @@ public:
 private:
 
   inline static const std::map<std::string, InbreedingAlgorithm> inbreeding_algo_map_ = {
-      {RITLAND_LOCUS, processRitlandLocus},
-      {RITLAND_MME, processRitlandMME},
-      {HALL_ME, processHallME},
-      {LOGLIKELIHOOD, processLogLikelihood}
+//      {RITLAND_LOCUS, processRitlandLocus},
+      {SIMPLE, processSimple},
+//      {PLINK, processSimple},
+//      {HALL_ME, processHallME},
+//      {LOGLIKELIHOOD, processLogLikelihood}
   };
 
   // The initial guess for the Hall expectation maximization algorithm.

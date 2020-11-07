@@ -97,7 +97,7 @@ kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
   // The real unit distribution [1,0] used to as a start point for the loglik algorithm.
   UniformUnitDistribution unit_distribution;
   // Get the locus frequencies.
-  auto [frequency_vector, locus_results] = generateDiploidFreq(genome_id, contig_ptr, super_population_field, locus_list);
+  auto [frequency_vector, locus_results] = generateGnomadFreq(genome_id, contig_ptr, super_population_field, locus_list);
 
   double updated_coefficient = 0.0;
   double inbreed_coefficient;
@@ -170,7 +170,7 @@ kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
   // The real unit distribution [1,0] used to as a start point for the EM algorithm.
   UniformUnitDistribution unit_distribution;
   // Get the locus frequencies.
-  auto [frequency_vector, locus_results] = generateDiploidFreq(genome_id, contig_ptr, super_population_field, locus_list);
+  auto [frequency_vector, locus_results] = generateGnomadFreq(genome_id, contig_ptr, super_population_field, locus_list);
 
   double updated_coefficient = 0.0;
   double inbreed_coefficient;
@@ -249,55 +249,106 @@ kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// This is the experimental Ritland multi-locus calculation developed in my document.
+// This is multi locus inbreeding calculation based on the inbreeding definition (F = 1 - (Observed_Hetero/Expected_Hetero).
+// Using the identity Expected_Hetero = 1 - Expected_Homo, this can be calculated using Expected_Homo or Expected_Hetero.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 kgl::LocusResults
-kgl::InbreedingCalculation::processRitlandMME( const GenomeId_t& genome_id,
-                                               const std::shared_ptr<const DiploidContig>& contig_ptr,
-                                               const std::string& super_population_field,
-                                               const std::shared_ptr<const ContigVariant>& locus_list) {
+kgl::InbreedingCalculation::processSimple(const GenomeId_t& genome_id,
+                                          const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                          const std::string& super_population_field,
+                                          const std::shared_ptr<const ContigVariant>& locus_list) {
 
   // Get the locus frequencies.
-  auto [frequency_vector, locus_results] = generateDiploidFreq(genome_id, contig_ptr, super_population_field, locus_list);
+  auto [frequency_vector, locus_results] = generateGnomadFreq(genome_id, contig_ptr, super_population_field, locus_list);
+  std::mutex log_mutex;
+  const double epsilon{1.0e-06};
   double expected_heterozygous{0.0};
   double expected_homozygous{0.0};
-  const bool calc_hetero{true};
+  double homozygous_inbreeding{0};
+  double heterozygous_inbreeding{0.0};
+  double prop_expected_hetero{0.0};
+  double prop_expected_homo{0.0};
+  double prop_observed_hetero{0.0};
+  double prop_observed_homo{0.0};
+  const bool calc_hetero{false}; // Which calculation to use.
 
-  // Ignore the rare case of two dis-similar minor alleles at the same locus.
   for (auto const& allele_freq : frequency_vector) {
 
-    expected_heterozygous += 2.0 * allele_freq.minorAllele().frequency() * allele_freq.majorAlleleFrequency();
-    expected_homozygous += (allele_freq.minorAllele().frequency() * allele_freq.minorAllele().frequency());
+    double prob_all_homo = allele_freq.probAllHomozygous();
+    double prob_hetero = allele_freq.probAllHeterozygous();
+
+    // Check that the homozygous and heterozygous probabilities are valid and complain if not.
+    if (std::fabs(prob_hetero + prob_all_homo - 1.0) > epsilon) {
+      std::scoped_lock lock(log_mutex);
+
+      std::stringstream ss;
+      for (auto const& allele : allele_freq.alleleFrequencies()) {
+
+        ss << allele.frequency() << ", ";
+
+      }
+      ExecEnv::log().warn("InbreedingCalculation::processSimple; Genome Id: {}, Super Pop: {}, Prob Hom: {} + Prob Het: {} not = 1.0 ({}), Allele freqs: {}",
+                          genome_id, super_population_field, prob_all_homo, prob_hetero, (prob_all_homo + prob_hetero), ss.str());
+
+      for (auto const& allele : allele_freq.alleleFrequencies()) {
+
+        ExecEnv::log().warn("InbreedingCalculation::processSimple; Genome Id: {}, Super Pop: {}, frequency: {}, SNP: {}",
+                            genome_id, super_population_field, allele.frequency(), allele.allele()->output(',', VariantOutputIndex::START_0_BASED, false));
+
+      }
+
+    } else {
+
+      // The expected heterozygous and homozygous alleles are just the summed probabilities.
+      expected_heterozygous += prob_hetero;
+      expected_homozygous += prob_all_homo;
+
+    }
+
 
   }
 
 
   if (locus_results.total_allele_count > 0) {
 
-    if (calc_hetero) {
+    auto observed_heterozygous = static_cast<double>(locus_results.major_hetero_count + locus_results.minor_hetero_count);
+    auto allele_count = static_cast<double>(locus_results.total_allele_count);
+    auto observed_homozygous = static_cast<double>(locus_results.homo_count);
 
-      double observed_hetero = static_cast<double>(locus_results.major_hetero_count + locus_results.minor_hetero_count);
-      locus_results.inbred_allele_sum = 1.0 - (observed_hetero / expected_heterozygous);
+    prop_expected_hetero = expected_heterozygous / (expected_heterozygous + expected_homozygous);
+    prop_expected_homo = expected_homozygous / (expected_heterozygous + expected_homozygous);
 
-    } else {
+    prop_observed_hetero = observed_heterozygous / allele_count;
+    prop_observed_homo = observed_homozygous / allele_count;
 
-      double observed_homo = static_cast<double>(locus_results.homo_count) / static_cast<double>(locus_results.total_allele_count);
-      double expected_average = expected_homozygous / static_cast<double>(locus_results.total_allele_count);
-      locus_results.inbred_allele_sum = (observed_homo - expected_average) / (1.0 - expected_average);
+      // Heterozygous inbreeding
+    double observed_heterozygous_average = observed_heterozygous / allele_count;
+    double expected_heterozygous_average = expected_heterozygous / allele_count;
+    heterozygous_inbreeding = 1.0 - (observed_heterozygous_average / expected_heterozygous_average);
 
-    }
-
-  } else {
-
-    locus_results.inbred_allele_sum = 0.0;
+      // Homozygous inbreeding
+    double observed_homozygous_average = observed_homozygous / allele_count;
+    double expected_homozygous_average = expected_homozygous / allele_count;
+    homozygous_inbreeding = (observed_homozygous_average - expected_homozygous_average) / (1.0 - expected_homozygous_average);
 
   }
 
-  ExecEnv::log().info("Genome: {}, Super: {}, Het: {}, Hom: {}, Allele Count: {}, Inbreeding: {}",
-                      locus_results.genome, super_population_field, locus_results.major_hetero_count,
-                      locus_results.homo_count, locus_results.total_allele_count, locus_results.inbred_allele_sum);
+  if (calc_hetero) {
+
+    locus_results.inbred_allele_sum = heterozygous_inbreeding;
+
+  } else {
+
+    locus_results.inbred_allele_sum = homozygous_inbreeding;
+
+  }
+
+
+  ExecEnv::log().info("Genome: {}, Exp Het: {}, Exp Hom: {}, Exp Het + Hom: {}, Obs Het: {}, Obs Hom: {}, Obs Het + Hom: {}, Het F: {}, Hom F: {}",
+                      locus_results.genome, prop_expected_hetero, prop_expected_homo, (expected_heterozygous + expected_homozygous),
+                      prop_observed_hetero, prop_observed_homo, locus_results.total_allele_count, heterozygous_inbreeding, homozygous_inbreeding);
 
   return locus_results;
 
@@ -317,7 +368,7 @@ kgl::InbreedingCalculation::processRitlandLocus(const GenomeId_t &genome_id,
                                            const std::shared_ptr<const ContigVariant>& locus_list) {
 
   // Get the locus frequencies.
-  auto [frequency_vector, locus_results] = generateDiploidFreq(genome_id, contig_ptr, super_population_field, locus_list);
+  auto [frequency_vector, locus_results] = generateGnomadFreq(genome_id, contig_ptr, super_population_field, locus_list);
 
   for (auto const& allele_freq : frequency_vector) {
 

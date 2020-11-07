@@ -56,8 +56,9 @@ private:
   constexpr static const size_t REFERENCE_VARIANT_INDEX_{0};
   constexpr static const char* REFERENCE_VARIANT_INDICATOR_{"."};
   constexpr static const char PHASE_MARKER_ {'|'};
-  constexpr static const char MULIPLE_ALT_SEPARATOR_{','};
+  constexpr static const char MULTIPLE_ALT_SEPARATOR_{','};
   constexpr static const char ABSTRACT_ALT_BRACKET_{'<'};
+  constexpr static const char* PASSED_FILTERS_{"PASS"};
 
   const std::shared_ptr<DiploidPopulation> diploid_population_ptr_;   // Diploid phased variants.
   const std::shared_ptr<const GenomeReference> genome_db_ptr_; // read access only.
@@ -73,6 +74,7 @@ private:
                     const ContigId_t& contig,
                     PhaseId_t phase,
                     ContigOffset_t offset,
+                    bool passedFilters,
                     const InfoDataEvidence info_evidence_opt,
                     const std::string& reference,
                     const std::vector<std::string>& alt_vector,
