@@ -18,18 +18,24 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 struct LocusResults {
 
   GenomeId_t genome;
-  size_t major_hetero_count{0};
-  size_t minor_hetero_count{0};
-  size_t homo_count{0};
-  size_t total_allele_count{0};
+  size_t major_hetero_count{0};   // 1 minor allele only.
+  double major_hetero_freq{0.0};
+  size_t minor_hetero_count{0};   // 2 different minor alleles.
+  double minor_hetero_freq{0.0};
+  size_t minor_homo_count{0};     // 2 identical minor alleles.
+  double minor_homo_freq{0.0};
+  size_t major_homo_count{0};     // 2 identical major alleles (generally not recorded).
+  double major_homo_freq{0.0};
+  size_t total_allele_count{0};  // All alleles.
   double inbred_allele_sum{0.0};
 
 };
 
-// HOMOZYGOUS - Two identical minor alleles.
-// HETEROZYGOUS - One minor allele and the major allele (unrecorded).
+// MINOR_HOMOZYGOUS - Two identical minor alleles.
+// MAJOR_HETEROZYGOUS - One minor allele and the major allele (unrecorded).
 // MINOR_HETEROZYGOUS - Two different heterozygous minor alleles (both recorded).
-enum class MinorAlleleType { HOMOZYGOUS, HETEROZYGOUS, MINOR_HETEROZYGOUS };
+// MAJOR_HOMOZYGOUS - Two homozygous major alleles (both unrecorded).
+enum class MinorAlleleType { MINOR_HOMOZYGOUS, MAJOR_HETEROZYGOUS, MINOR_HETEROZYGOUS, MAJOR_HOMOZYGOUS };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Data structures to hold allele frequency information at an offset.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,50 +56,64 @@ private:
 
 };
 
+class AlleleFreqVector {
+
+public:
+
+  explicit AlleleFreqVector(std::vector<AlleleFreqRecord> allele_frequencies) : allele_frequencies_(std::move(allele_frequencies)) {}
+  ~AlleleFreqVector() = default;
+
+  [[nodiscard]] const std::vector<AlleleFreqRecord>& alleleFrequencies() const { return allele_frequencies_; }
+  // Complement of the sum of all minor alleles.
+  [[nodiscard]] double majorAlleleFrequency() const;
+  // The probability of major homozygous alleles (unrecorded)
+  [[nodiscard]] double majorHomozygous() const;
+  // The probability of major heterozygous alleles, this is a single minor allele and major allele (unrecorded)
+  [[nodiscard]] double majorHeterozygous() const;
+  // The probability of minor allele homozygous alleles
+  [[nodiscard]] double minorHomozygous() const;
+  // The probability of minor and minor allele heterozygous alleles
+  [[nodiscard]] double minorHeterozygous() const;
+  // Sum of the allele frequencies.
+  [[nodiscard]] double sumFrequencies() const;
+  // True if duplicate alleles found
+  [[nodiscard]] bool checkDuplicates() const;
+
+private:
+
+  // All minor allele frequencies at minor allele offset (from Gnomad)
+  std::vector<AlleleFreqRecord> allele_frequencies_;
+
+};
+
+
 
 class AlleleFreqInfo {
 public:
 
   AlleleFreqInfo(MinorAlleleType allele_type,
-                 const AlleleFreqRecord& minor_allele,
-                 const AlleleFreqRecord& second_allele,
-                 std::vector<AlleleFreqRecord>&& allele_frequencies) :
+                 double first_allele_freq,
+                 double second_allele_freq,
+                 const AlleleFreqVector& allele_frequencies) :
       allele_type_(allele_type),
-      minor_allele_(minor_allele),
-      second_allele_(second_allele),
+      first_allele_freq_(first_allele_freq),
+      second_allele_freq_(second_allele_freq),
       allele_frequencies_(allele_frequencies) {}
   ~AlleleFreqInfo() = default;
 
   [[nodiscard]] MinorAlleleType alleleType() const { return allele_type_; }
-  [[nodiscard]] const AlleleFreqRecord& minorAllele() const { return minor_allele_; }
-  [[nodiscard]] const AlleleFreqRecord& secondAllele() const { return second_allele_; }
-  [[nodiscard]] const std::vector<AlleleFreqRecord>& alleleFrequencies() const { return allele_frequencies_; }
-  // Complement of the sum of all minor alleles.
-  [[nodiscard]] double majorAlleleFrequency() const;
-  // The probability of heterozygous alleles, this includes MINOR_HETEROZYGOUS (rare).
-  [[nodiscard]] double probAllHeterozygous() const;
-  // The probability of major heterozygous alleles, this is a single minor allele.
-  [[nodiscard]] double probHeterozygous() const;
-  // The probability of minor allele homozygous alleles
-  [[nodiscard]] double probMinorHomozygous() const;
-  // The probability of all (minor + major) allele homozygous alleles
-  [[nodiscard]] double probAllHomozygous() const;
-  // Sum of the allele frequencies.
-  [[nodiscard]] double sumFrequencies() const;
+  [[nodiscard]] double firstAlleleFrequency() const { return first_allele_freq_; }
+  [[nodiscard]] double secondAlleleFrequency() const { return second_allele_freq_; }
+  [[nodiscard]] const AlleleFreqVector& alleleFrequencies() const { return allele_frequencies_; }
 
 private:
 
   const MinorAlleleType allele_type_;
-  // From the diploid genome.
-  const AlleleFreqRecord minor_allele_;
-  // From the diploid genome.
-  // If homozygous then minor allele, else major allele freq (same variant_ptr as minor), else different minor allele (rare).
-  // Warning, do not compare with minor allele to determine if homozygous, as the major allele is represented by the
-  // minor allele variant pointer. (Note to self, do we need a major allele reference = alternate allele variant type?)
-  const AlleleFreqRecord second_allele_;
+  double first_allele_freq_{0.0};
+  double second_allele_freq_{0.0};
   // From the reference variant genome (generally Gnomad)
   // All minor allele frequencies at minor allele offset (from Gnomad)
-  std::vector<AlleleFreqRecord> allele_frequencies_;
+  AlleleFreqVector allele_frequencies_;
 
 };
 
@@ -123,11 +143,6 @@ public:
                                                   const std::string& super_population_field,
                                                   const std::shared_ptr<const ContigVariant>& locus_list);
 
-  [[nodiscard]] static LocusResults processPlink( const ContigId_t& contig_id,
-                                                  const std::shared_ptr<const DiploidContig>& contig_ptr,
-                                                  const std::string& super_population_field,
-                                                  const std::shared_ptr<const ContigVariant>& locus_list);
-
   [[nodiscard]] static LocusResults processHallME( const GenomeId_t& genome_id,
                                                   const std::shared_ptr<const DiploidContig>& contig_ptr,
                                                   const std::string& super_population_field,
@@ -142,7 +157,6 @@ public:
   // Algorithm key used in the the algorithm selection map.
   inline static const std::string RITLAND_LOCUS{"RitlandLocus"};
   inline static const std::string SIMPLE{"Simple"};
-  inline static const std::string PLINK{"Plink"};
   inline static const std::string HALL_ME{"HallME"};
   inline static const std::string LOGLIKELIHOOD{"Loglikelihood"};
 
@@ -151,11 +165,10 @@ public:
 private:
 
   inline static const std::map<std::string, InbreedingAlgorithm> inbreeding_algo_map_ = {
-//      {RITLAND_LOCUS, processRitlandLocus},
+      {RITLAND_LOCUS, processRitlandLocus},
       {SIMPLE, processSimple},
-//      {PLINK, processSimple},
-//      {HALL_ME, processHallME},
-//      {LOGLIKELIHOOD, processLogLikelihood}
+      {HALL_ME, processHallME},
+      {LOGLIKELIHOOD, processLogLikelihood}
   };
 
   // The initial guess for the Hall expectation maximization algorithm.
@@ -168,16 +181,10 @@ private:
   [[nodiscard]] static Optimize createLogLikelihoodOptimizer();
 
   [[nodiscard]] static std::pair<std::vector<AlleleFreqInfo>, LocusResults>
-  generateGnomadFreq(const GenomeId_t& genome_id,
-                     const std::shared_ptr<const DiploidContig>& contig_ptr,
-                     const std::string& super_population_field,
-                     const std::shared_ptr<const ContigVariant>& locus_list);
-
-  [[nodiscard]] static std::pair<std::vector<AlleleFreqInfo>, LocusResults>
-  generateDiploidFreq(const GenomeId_t& genome_id,
-                     const std::shared_ptr<const DiploidContig>& contig_ptr,
-                     const std::string& super_population_field,
-                     const std::shared_ptr<const ContigVariant>& locus_list);
+  generateFrequencies(const GenomeId_t& genome_id,
+                      const std::shared_ptr<const DiploidContig>& contig_ptr,
+                      const std::string& super_population_field,
+                      const std::shared_ptr<const ContigVariant>& locus_list);
 
   [[nodiscard]] static double logLikelihood(std::vector<double>& x, std::vector<AlleleFreqInfo>& data);
 

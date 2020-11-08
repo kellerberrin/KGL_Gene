@@ -125,7 +125,7 @@ kgl::ContigLocusMap kgl::InbreedSampling::getPopulationLocusMap(  std::shared_pt
                                                                   ContigOffset_t locii_spacing) {
 
   ContigLocusMap contig_locus_map;
-  // We assume that the unphased Gnomad population has only 1 genome.
+  // We assume that the unphased population has only 1 genome.
   if (population_ptr->getMap().size() == 1) {
 
     // Retrieve the genome ptr.

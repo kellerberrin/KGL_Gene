@@ -35,6 +35,7 @@ kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
   // The super population AF field
   const std::string AF_field = InbreedSampling::lookupSuperPopulationField(super_population);
 
+  // Generate a list of synthetic inbred genomes.
   size_t counter = 0;
   std::vector<std::pair<GenomeId_t , double>> inbreeding_vector;
   double inbreeding = lower_inbreeding;

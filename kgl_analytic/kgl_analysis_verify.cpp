@@ -56,10 +56,10 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase>
       ExecEnv::log().info("Verifying 'Pass' Diploid Population: {} for duplicate variants", diploid_passed->populationId());
       VerifyDuplicates verify_duplicates;
       diploid_passed->processAll(verify_duplicates, &VerifyDuplicates::verifyVariant);
+      ExecEnv::log().info("Completed Verifying Diploid 'Pass' population for duplicate variants, duplicates: {}",
+                          verify_duplicates.duplicateCount());
 
     }
-
-    ExecEnv::log().info("Completed Verifying Diploid 'Pass' population for duplicate variants");
 
   }
 
@@ -80,10 +80,10 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase>
       ExecEnv::log().info("Verifying Unphased 'Pass' Population: {} for duplicate variants", unphased_passed->populationId());
       VerifyDuplicates verify_duplicates;
       unphased_passed->processAll(verify_duplicates, &VerifyDuplicates::verifyVariant);
+      ExecEnv::log().info("Completed Verifying Unphased 'Pass' population for duplicate variants, duplicates: {}",
+                          verify_duplicates.duplicateCount());
 
     }
-
-    ExecEnv::log().info("Completed Verifying Unphased 'Pass' population for duplicate variants");
 
   }
 
@@ -104,10 +104,11 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase>
       ExecEnv::log().info("Verifying Haploid 'Pass' Population: {} for duplicate variants", haploid_passed->populationId());
       VerifyDuplicates verify_duplicates;
       haploid_passed->processAll(verify_duplicates, &VerifyDuplicates::verifyVariant);
+      ExecEnv::log().info("Completed Verifying Haploid 'Pass' population for duplicate variants, duplicates: {}",
+                          verify_duplicates.duplicateCount());
 
     }
 
-    ExecEnv::log().info("Completed Verifying Haploid 'Pass' population for duplicate variants");
 
   }
 
@@ -180,6 +181,8 @@ bool kgl::VerifyDuplicates::verifyDuplicates() {
                             offset_variants_[idx1]->output(',', VariantOutputIndex::START_0_BASED, true));
         ExecEnv::log().info("VerifyDuplicates::verifyDuplicates; duplicate variant : {}",
                             offset_variants_[idx2]->output(',', VariantOutputIndex::START_0_BASED, true));
+
+        ++duplicate_count_;
 
       }
 

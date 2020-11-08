@@ -65,11 +65,14 @@ public:
 
 
   bool verifyVariant(const std::shared_ptr<const Variant> variant_ptr);
+  size_t duplicateCount() const { return duplicate_count_; }
 
 private:
 
   std::shared_ptr<const Variant> previous_variant_ptr_;
   std::vector<std::shared_ptr<const Variant>> offset_variants_;
+  size_t duplicate_count_{0};
+
   bool verifyDuplicates();
 
 };

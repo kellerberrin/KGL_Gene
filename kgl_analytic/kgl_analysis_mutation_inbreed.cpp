@@ -6,6 +6,7 @@
 #include "kel_thread_pool.h"
 #include "kgl_analysis_mutation_inbreed.h"
 #include "kgl_analysis_mutation_inbreed_aux.h"
+#include "kgl_filter.h"
 
 
 #include <fstream>
@@ -78,6 +79,9 @@ bool kgl::InbreedingAnalysis::populationInbreeding(InbreedingAlgorithm algorithm
                                                    const std::string& output_file_name) {
 
   const ContigOffset_t sampling_distance = 10000;
+
+  // Filter out any variants that did not pass VCF filters (otherwise we get duplicate variants).
+  unphased_ptr = unphased_ptr->filterVariants(PassFilter());
 
   populationInbreedingSample( algorithm,
                               unphased_ptr,
@@ -250,8 +254,9 @@ bool kgl::InbreedingAnalysis::writeResults( const ContigId_t& contig_id,
 
   outfile << contig_id << DELIMITER_ << "Population" << DELIMITER_
           << "Description" << DELIMITER_ << "SuperPopulation" << DELIMITER_ << "Description" << DELIMITER_
-          << "MajorHet" << DELIMITER_ << "MinorHet" << DELIMITER_ << "HomCount" << DELIMITER_ << "Het/Hom"<< DELIMITER_
-          << "TotalLoci" << DELIMITER_ << "CalcInbreed\n";
+          << "MajorHet" << DELIMITER_ << "MajorHetFreq" << DELIMITER_ << "MinorHet" << DELIMITER_ << "MinorHetFreq"
+          << DELIMITER_ << "MajorHom" << DELIMITER_ << "MajorHomFreq" << DELIMITER_ << "MinorHom" << DELIMITER_
+          << "MinorHomFreq" << DELIMITER_ << "Het/Hom"<< DELIMITER_ << "TotalLoci" << DELIMITER_ << "CalcInbreed\n";
 
   for (auto const& [genome_id, locus_results] : genome_results_map) {
 
@@ -267,10 +272,10 @@ bool kgl::InbreedingAnalysis::writeResults( const ContigId_t& contig_id,
     auto const& [sample_id, ped_record] = *result;
 
     double het_hom_ratio;
-    if (locus_results.homo_count > 0) {
+    if (locus_results.minor_homo_count > 0) {
 
       size_t total_het = locus_results.major_hetero_count + locus_results.minor_hetero_count;
-      het_hom_ratio = static_cast<double>(total_het) / static_cast<double>(locus_results.homo_count);
+      het_hom_ratio = static_cast<double>(total_het) / static_cast<double>(locus_results.minor_homo_count);
 
     } else {
 
@@ -284,8 +289,13 @@ bool kgl::InbreedingAnalysis::writeResults( const ContigId_t& contig_id,
     outfile << ped_record.superPopulation() << DELIMITER_;
     outfile << ped_record.superDescription() << DELIMITER_;
     outfile << locus_results.major_hetero_count << DELIMITER_;
+    outfile << locus_results.major_hetero_freq << DELIMITER_;
     outfile << locus_results.minor_hetero_count << DELIMITER_;
-    outfile << locus_results.homo_count << DELIMITER_;
+    outfile << locus_results.minor_hetero_freq << DELIMITER_;
+    outfile << locus_results.major_homo_count << DELIMITER_;
+    outfile << locus_results.major_homo_freq << DELIMITER_;
+    outfile << locus_results.minor_homo_count << DELIMITER_;
+    outfile << locus_results.minor_homo_freq << DELIMITER_;
     outfile << het_hom_ratio << DELIMITER_;
     outfile << locus_results.total_allele_count << DELIMITER_;
     outfile << locus_results.inbred_allele_sum << DELIMITER_;
@@ -306,6 +316,9 @@ bool kgl::InbreedingAnalysis::syntheticInbreeding(  InbreedingAlgorithm algorith
                                                     const std::string& output_file_name) {
 
   const ContigOffset_t sampling_distance = 10000;
+
+  // Filter out any variants that did not pass VCF filters (otherwise we get duplicate variants).
+  unphased_ptr = unphased_ptr->filterVariants(PassFilter());
 
   syntheticInbreedingSample( algorithm,
                              unphased_ptr,
@@ -455,9 +468,10 @@ bool kgl::InbreedingAnalysis::writeSynResults(const ContigId_t& contig_id,
                                               std::ostream& outfile) {
 
 
-  outfile << contig_id << DELIMITER_ << "SuperPop" << DELIMITER_ << "Inbreeding"
-          << DELIMITER_ << "MajorHet" << DELIMITER_ << "MinorHet" << DELIMITER_  << "HomCount"
-          << DELIMITER_ << "Het/Hom"<< DELIMITER_ << "TotalLoci" << DELIMITER_ << "CalcInbreed\n";
+  outfile << contig_id << DELIMITER_ << "SuperPop" << DELIMITER_ << "Inbreeding" << DELIMITER_
+          << "MajorHet" << DELIMITER_ << "MajorHetFreq" << DELIMITER_ << "MinorHet" << DELIMITER_ << "MinorHetFreq"
+          << DELIMITER_ << "MajorHom" << DELIMITER_ << "MajorHomFreq" << DELIMITER_ << "MinorHom" << DELIMITER_
+          << "MinorHomFreq" << DELIMITER_ << "Het/Hom"<< DELIMITER_ << "TotalLoci" << DELIMITER_ << "CalcInbreed\n";
 
   for (auto const& [genome_id, locus_results] : genome_results_map) {
 
@@ -465,10 +479,10 @@ bool kgl::InbreedingAnalysis::writeSynResults(const ContigId_t& contig_id,
     auto const [valid_value, inbreeding] = InbreedSampling::generateInbreeding(genome_id);
 
     double het_hom_ratio;
-    if (locus_results.homo_count > 0) {
+    if (locus_results.minor_homo_count > 0) {
 
       size_t total_het = locus_results.major_hetero_count + locus_results.minor_hetero_count;
-      het_hom_ratio = static_cast<double>(total_het) / static_cast<double>(locus_results.homo_count);
+      het_hom_ratio = static_cast<double>(total_het) / static_cast<double>(locus_results.minor_homo_count);
 
     } else {
 
@@ -489,8 +503,13 @@ bool kgl::InbreedingAnalysis::writeSynResults(const ContigId_t& contig_id,
 
     }
     outfile << locus_results.major_hetero_count << DELIMITER_;
+    outfile << locus_results.major_hetero_freq << DELIMITER_;
     outfile << locus_results.minor_hetero_count << DELIMITER_;
-    outfile << locus_results.homo_count << DELIMITER_;
+    outfile << locus_results.minor_hetero_freq << DELIMITER_;
+    outfile << locus_results.major_homo_count << DELIMITER_;
+    outfile << locus_results.major_homo_freq << DELIMITER_;
+    outfile << locus_results.minor_homo_count << DELIMITER_;
+    outfile << locus_results.minor_homo_freq << DELIMITER_;
     outfile << het_hom_ratio << DELIMITER_;
     outfile << locus_results.total_allele_count << DELIMITER_;
     outfile << locus_results.inbred_allele_sum << DELIMITER_;
