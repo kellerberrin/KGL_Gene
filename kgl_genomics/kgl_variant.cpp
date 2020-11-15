@@ -65,6 +65,24 @@ std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputInde
 }
 
 
+[[nodiscard]] std::unique_ptr<kgl::Variant> kgl::Variant::cloneNullVariant() const {
+
+  StringDNA5 reference1_str(reference().getAlphabetString());
+  StringDNA5 reference2_str(reference().getAlphabetString());
+  VariantEvidence null_evidence; // no evidence is passed through.
+
+  std::unique_ptr<Variant> variant_ptr(std::make_unique<Variant>( contigId(),
+                                                                  phaseId(),
+                                                                  offset(),
+                                                                  passFilters(),
+                                                                  null_evidence,
+                                                                  std::move(reference1_str),
+                                                                  std::move(reference2_str)));
+
+  return variant_ptr;
+
+}
+
 
 
 std::string kgl::Variant::name() const {

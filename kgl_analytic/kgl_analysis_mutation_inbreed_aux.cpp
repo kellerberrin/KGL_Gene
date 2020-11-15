@@ -6,6 +6,7 @@
 #include "kgl_variant.h"
 #include "kgl_filter.h"
 #include "kgl_analysis_mutation_inbreed_aux.h"
+#include "kgl_analysis_mutation_inbreed_calc.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -27,7 +28,7 @@ std::pair<bool, double> kgl::InbreedSampling::processFloatField( const Variant& 
 
     } else if (field_vec.size() == 0) {
 
-      // Missing value
+      // Missing value, this is OK, means the field exists but not defined for this variant.
       return {false, 0.0};
 
     } else {
@@ -40,14 +41,16 @@ std::pair<bool, double> kgl::InbreedSampling::processFloatField( const Variant& 
 
       }
 
-      ExecEnv::log().error("InbreedingAnalysis::processField, Field: {} expected vector size 1, get vector size: {}, vector: {}",
-                           field_name, field_vec.size(), vector_str);
+      ExecEnv::log().warn("InbreedingAnalysis::processFloatField, Field: {} expected vector size 1, get vector size: {}, vector: {}, Variant: {}",
+                           field_name, field_vec.size(), vector_str, variant.output(',', VariantOutputIndex::START_0_BASED, false));
       return {false, 0.0};
 
     }
 
   } else {
 
+    ExecEnv::log().warn("InbreedingAnalysis::processFloatField, Field: {} Not found for variant: {}",
+                         field_name, variant.output(',', VariantOutputIndex::START_0_BASED, false));
     return {false, 0.0};
 
   }
@@ -208,6 +211,9 @@ kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::s
                                                                           double min_frequency,
                                                                           double max_frequency) {
 
+  size_t locii{0};
+  size_t variant_duplicates{0};
+  static std::mutex log_mutex;  // Multi-thread logging.
   // Annotate the variant list with the super population frequency identifier
   std::shared_ptr<ContigVariant> locus_list(std::make_shared<ContigVariant>(super_pop_pair.second));
 
@@ -219,30 +225,46 @@ kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::s
 
     if (contig_opt) {
 
-      // Filter for SNP.
-      auto snp_contig_ptr = contig_opt.value()->filterVariants(SNPFilter());
-      // Filter for maximum and minimum AF frequency
-      snp_contig_ptr = snp_contig_ptr->filterVariants(AndFilter(InfoGEQFloatFilter(super_pop_pair.second, min_frequency),
-                                                                NotFilter(InfoGEQFloatFilter(super_pop_pair.second, max_frequency))));
+      // Filter for SNP and 'PASS' variants.
+      auto snp_contig_ptr = contig_opt.value()->filterVariants(AndFilter(SNPFilter(), PassFilter()));
 
       ContigOffset_t previous_offset{0};
       for (auto const& [offset, offset_ptr] : snp_contig_ptr->getMap()) {
 
         if (offset >= previous_offset + spacing) {
 
-          OffsetVariantArray variant_array = offset_ptr->getVariantArray();
+          OffsetVariantArray locus_variant_array = offset_ptr->getVariantArray();
 
-          for (auto const& variant_ptr : variant_array) {
+          AlleleFreqVector allele_freq_vector(locus_variant_array, super_pop_pair.second);
 
-            if (not locus_list->addVariant(variant_ptr)) {
+
+          if (not allele_freq_vector.checkValidAlleleVector()) {
+
+            continue; // Next locus.
+
+          }
+          // Check for allele frequencies.
+          double sum_frequencies = allele_freq_vector.minorAlleleFrequencies();
+          size_t minor_allele_count = allele_freq_vector.alleleFrequencies().size();
+          if (minor_allele_count == 0 or sum_frequencies == 0.0
+              or sum_frequencies < min_frequency or sum_frequencies > max_frequency) {
+
+            continue;
+
+          }
+
+          for (auto const& allele : allele_freq_vector.alleleFrequencies()) {
+
+            if (not locus_list->addVariant(allele.allele())) {
 
               ExecEnv::log().error("InbreedingAnalysis::getLocusList, Could not add variant: {}",
-                                   variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+                                   allele.allele()->output(',', VariantOutputIndex::START_0_BASED, false));
 
             }
 
           } // for variant array
 
+          ++locii;
           previous_offset = offset;
 
         } // if spacing
@@ -260,7 +282,8 @@ kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::s
 
   if (locus_list->variantCount() > 0) {
 
-    ExecEnv::log().info("Locus List for super population: {} contains: {} SNPs", locus_list->contigId(), locus_list->variantCount());
+    ExecEnv::log().info("Locus List for super population: {} contains: Locii: {}, SNPs: {}, rejected duplicates: {}",
+                        locus_list->contigId(), locii, locus_list->variantCount(), variant_duplicates);
 
   }
 

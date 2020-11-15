@@ -57,7 +57,6 @@ public:
                                  const std::string& super_population,
                                  const ContigVariant& locus_list);
 
-  constexpr static const double SELECTION_PERCENT_ = 0.20; // Select 20 percent of the locus variants.
 
   // Recover a synthetic inbreeding coefficient from the synthetic genome id.
   [[nodiscard]] static std::pair<bool, double> generateInbreeding(const GenomeId_t& genome_id);

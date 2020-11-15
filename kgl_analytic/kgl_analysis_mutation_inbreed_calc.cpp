@@ -29,28 +29,22 @@ double kgl::InbreedingCalculation::logLikelihood(std::vector<double>& x, std::ve
 
     switch(allele_freq.alleleType()) {
 
-      case MinorAlleleType::MAJOR_HOMOZYGOUS:
-      case MinorAlleleType::MINOR_HOMOZYGOUS: {
-        double freq_sqd = allele_freq.firstAlleleFrequency() * allele_freq.firstAlleleFrequency();
-        double prob = (f * allele_freq.firstAlleleFrequency()) + ((1.0 - f) * freq_sqd);
+      case AlleleClassType::MAJOR_HOMOZYGOUS:
+      case AlleleClassType::MINOR_HOMOZYGOUS: {
+        double freq_sqd = allele_freq.firstAllele().frequency() * allele_freq.firstAllele().frequency();
+        double prob = (f * allele_freq.firstAllele().frequency()) + ((1.0 - f) * freq_sqd);
         prob = std::clamp<double>(prob, small_prob, 1.0);
         log_prob_sum += std::log(prob);
       }
         break;
 
-      case MinorAlleleType::MAJOR_HETEROZYGOUS: {
+      case AlleleClassType::MINOR_HETEROZYGOUS:
+      case AlleleClassType::MAJOR_HETEROZYGOUS: {
 
-        double prob = 2 * (1.0 - f) * allele_freq.firstAlleleFrequency() * allele_freq.secondAlleleFrequency();
+        double prob = 2 * (1.0 - f) * allele_freq.firstAllele().frequency() * allele_freq.secondAllele().frequency();
         prob = std::clamp<double>(prob, small_prob, 1.0);
         log_prob_sum += std::log(prob);
 
-      }
-        break;
-
-      case MinorAlleleType::MINOR_HETEROZYGOUS: {
-        double prob = 2 * (1.0 - f) * allele_freq.firstAlleleFrequency() * allele_freq.secondAlleleFrequency();
-        prob = std::clamp<double>(prob, small_prob, 1.0);
-        log_prob_sum += std::log(prob);
       }
         break;
 
@@ -141,7 +135,7 @@ kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
 
   locus_results.inbred_allele_sum = updated_coefficient;
 
-  ExecEnv::log().info("Genome: {}, Super: {}, Het: {}, Hom: {}, Allele Count: {}, IBD Inbreeding: {}, retries: {}",
+  ExecEnv::log().info("LogLikelihood: Genome: {}, Super: {}, Het: {}, Hom: {}, Allele Count: {}, IBD Inbreeding: {}, retries: {}",
                       locus_results.genome, super_population_field, locus_results.major_hetero_count,
                       locus_results.minor_homo_count, locus_results.total_allele_count, locus_results.inbred_allele_sum, retries);
 
@@ -195,10 +189,10 @@ kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
 
         switch(allele_freq.alleleType()) {
 
-          case MinorAlleleType::MAJOR_HOMOZYGOUS:
-          case MinorAlleleType::MINOR_HOMOZYGOUS: {
+          case AlleleClassType::MAJOR_HOMOZYGOUS:
+          case AlleleClassType::MINOR_HOMOZYGOUS: {
 
-            double denominator = (inbreed_coefficient + ((1.0-inbreed_coefficient) * allele_freq.firstAlleleFrequency()));
+            double denominator = (inbreed_coefficient + ((1.0-inbreed_coefficient) * allele_freq.firstAllele().frequency()));
             if (denominator != 0) {
 
               expectation_sum += inbreed_coefficient / denominator;
@@ -208,8 +202,8 @@ kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
           }
             break;
 
-          case MinorAlleleType::MAJOR_HETEROZYGOUS:
-          case MinorAlleleType::MINOR_HETEROZYGOUS:
+          case AlleleClassType::MAJOR_HETEROZYGOUS:
+          case AlleleClassType::MINOR_HETEROZYGOUS:
             break;
 
         }
@@ -239,7 +233,7 @@ kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
 
   locus_results.inbred_allele_sum = updated_coefficient;
 
-  ExecEnv::log().info("Genome: {}, Super: {}, Het: {}, Hom: {}, Allele Count: {}, IBD Inbreeding: {}, retries: {}",
+  ExecEnv::log().info("HallMe: Genome: {}, Super: {}, Het: {}, Hom: {}, Allele Count: {}, IBD Inbreeding: {}, retries: {}",
                       locus_results.genome, super_population_field, locus_results.major_hetero_count,
                       locus_results.minor_homo_count, locus_results.total_allele_count, locus_results.inbred_allele_sum, retries);
 
@@ -252,7 +246,7 @@ kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // This is multi locus inbreeding calculation based on the inbreeding definition (F = 1 - (Observed_Hetero/Expected_Hetero).
-// Using the identity Expected_Hetero = 1 - Expected_Homo, this can be calculated using Expected_Homo or Expected_Hetero.
+// Using the identity Expected_Hetero = TotalAlleles - Expected_Homo, this can be calculated using Expected_Homo or Expected_Hetero.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -281,7 +275,7 @@ kgl::InbreedingCalculation::processSimple(const GenomeId_t& genome_id,
       // Homozygous inbreeding
     homozygous_inbreeding = (observed_homozygous - expected_homozygous) / (static_cast<double>(locus_results.total_allele_count) - expected_homozygous);
 
-    ExecEnv::log().info("Genome: {}, Exp Het: {}, Exp Hom: {}, Exp Het + Hom: {}, Obs Het: {}, Obs Hom: {}, Obs Het + Hom: {}, Het F: {}, Hom F: {}",
+    ExecEnv::log().info("Simple: Genome: {}, Exp Het: {}, Exp Hom: {}, Exp Het + Hom: {}, Obs Het: {}, Obs Hom: {}, Obs Het + Hom: {}, Het F: {}, Hom F: {}",
                         locus_results.genome, expected_heterozygous, expected_homozygous, (expected_heterozygous + expected_homozygous),
                         observed_heterozygous, observed_homozygous, locus_results.total_allele_count,
                         heterozygous_inbreeding, homozygous_inbreeding);
@@ -316,25 +310,73 @@ kgl::InbreedingCalculation::processRitlandLocus(const GenomeId_t &genome_id,
                                            const std::shared_ptr<const ContigVariant>& locus_list) {
 
   // Get the locus frequencies.
+  static std::mutex log_mutex;
+  constexpr const static double minimum_frequency{0.01};
+  constexpr const static double maximum_frequency{0.99};
+
+  size_t sum_allele{0};
+  double locus_allele_sum{0.0};
   auto [frequency_vector, locus_results] = generateFrequencies(genome_id, contig_ptr, super_population_field, locus_list);
+  double vector_size = frequency_vector.size();
 
   for (auto const& allele_freq : frequency_vector) {
 
     switch(allele_freq.alleleType()) {
 
-      case MinorAlleleType::MAJOR_HOMOZYGOUS:
-      case MinorAlleleType::MINOR_HOMOZYGOUS: {
+      case AlleleClassType::MAJOR_HOMOZYGOUS:
+      case AlleleClassType::MINOR_HOMOZYGOUS: {
 
-        locus_results.inbred_allele_sum += (1.0 / allele_freq.firstAlleleFrequency());
-        locus_results.inbred_allele_sum -= 1.0;
+        if (allele_freq.firstAllele().frequency() > 0) {
+
+          double ratio = (1.0 / allele_freq.firstAllele().frequency());
+          if (ratio > vector_size * 0.1) {
+            std::scoped_lock log_lock(log_mutex);
+
+            std::string hom_type = allele_freq.alleleType() == AlleleClassType::MAJOR_HOMOZYGOUS ? "MAJOR_HOMOZYGOUS" : "MINOR_HOMOZYGOUS";
+            ExecEnv::log().warn("InbreedingCalculation::processRitlandLocus; Genome: {}, Ratio: {}, {} variant freq 1: {}, freq 2: {}",
+                                genome_id, ratio, hom_type, allele_freq.firstAllele().frequency(), allele_freq.secondAllele().frequency());
+            ExecEnv::log().warn("InbreedingCalculation::processRitlandLocus; {} variant 1: {}",
+                                allele_freq.firstAllele().allele()->output(',', VariantOutputIndex::START_0_BASED, false));
+            ExecEnv::log().warn("InbreedingCalculation::processRitlandLocus; {} variant 2: {}",
+                                allele_freq.secondAllele().allele()->output(',', VariantOutputIndex::START_0_BASED, false));
+            for (auto const& allele : allele_freq.alleleFrequencies().alleleFrequencies()) {
+
+              ExecEnv::log().warn("InbreedingCalculation::processRitlandLocus; freq: {}, field: {}, variant: {}",
+                                  allele.frequency(), allele.freqField(), allele.allele()->output(',', VariantOutputIndex::START_0_BASED, false));
+            }
+
+          }
+          locus_allele_sum += ratio;
+          locus_allele_sum -= 1.0;
+          ++sum_allele;
+
+        } else if (allele_freq.firstAllele().frequency() == 0) {
+          std::scoped_lock log_lock(log_mutex);
+
+          std::string hom_type = allele_freq.alleleType() == AlleleClassType::MAJOR_HOMOZYGOUS ? "MAJOR_HOMOZYGOUS" : "MINOR_HOMOZYGOUS";
+          ExecEnv::log().warn("InbreedingCalculation::processRitlandLocus; Genome:{}, {} variant freq 1: {}, freq 2: {}",
+                              genome_id, hom_type, allele_freq.firstAllele().frequency(), allele_freq.secondAllele().frequency());
+          ExecEnv::log().warn("InbreedingCalculation::processRitlandLocus; {} variant 1: {}",
+                              allele_freq.firstAllele().allele()->output(',', VariantOutputIndex::START_0_BASED, false));
+          ExecEnv::log().warn("InbreedingCalculation::processRitlandLocus; {} variant 2: {}",
+                              allele_freq.secondAllele().allele()->output(',', VariantOutputIndex::START_0_BASED, false));
+          for (auto const& allele : allele_freq.alleleFrequencies().alleleFrequencies()) {
+
+            ExecEnv::log().warn("InbreedingCalculation::processRitlandLocus; freq: {}, field: {}, variant: {}",
+                                allele.frequency(), allele.freqField(), allele.allele()->output(',', VariantOutputIndex::START_0_BASED, false));
+
+          }
+
+        }
 
       }
         break;
 
-      case MinorAlleleType::MAJOR_HETEROZYGOUS:
-      case MinorAlleleType::MINOR_HETEROZYGOUS: {
+      case AlleleClassType::MAJOR_HETEROZYGOUS:
+      case AlleleClassType::MINOR_HETEROZYGOUS: {
 
-        locus_results.inbred_allele_sum -= 1.0;
+        locus_allele_sum -= 1.0;
+        ++sum_allele;
 
       }
         break;
@@ -343,11 +385,10 @@ kgl::InbreedingCalculation::processRitlandLocus(const GenomeId_t &genome_id,
 
   }
 
-  double sum_alternate_allele = frequency_vector.size();
 
-  locus_results.inbred_allele_sum = (sum_alternate_allele > 0 ? locus_results.inbred_allele_sum / static_cast<double>(sum_alternate_allele) : 0.0);
+  locus_results.inbred_allele_sum = (sum_allele > 0 ? locus_allele_sum / static_cast<double>(sum_allele) : 0.0);
 
-  ExecEnv::log().info("Genome: {}, Super: {}, Het: {}, Hom: {}, Allele Count: {}, Inbreeding: {}",
+  ExecEnv::log().info("RitlandLocus: Genome: {}, Super: {}, Het: {}, Hom: {}, Allele Count: {}, Inbreeding: {}",
                       locus_results.genome, super_population_field, locus_results.major_hetero_count,
                       locus_results.minor_homo_count, locus_results.total_allele_count, locus_results.inbred_allele_sum);
 

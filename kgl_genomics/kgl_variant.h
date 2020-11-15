@@ -162,6 +162,12 @@ public:
 
   [[nodiscard]] bool filterVariant(const VariantFilter& filter) const { return filter.applyFilter(*this); }
 
+  // Set the alternate to the reference; invalidates the evidence structure.
+  // Used to specify major alleles (no genome change).
+  [[nodiscard]] std::unique_ptr<Variant> cloneNullVariant() const;
+  // Checks if the reference and alternate are equivalent.
+  [[nodiscard]] bool isNullVariant() const { return reference_ == alternate_; }
+
 private:
 
   const VariantEvidence evidence_;                      // VCF File based information payload about this variant

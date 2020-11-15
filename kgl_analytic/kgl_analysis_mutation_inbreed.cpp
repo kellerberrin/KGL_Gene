@@ -82,7 +82,7 @@ bool kgl::InbreedingAnalysis::populationInbreeding(InbreedingAlgorithm algorithm
 
   // Filter out any variants that did not pass VCF filters (otherwise we get duplicate variants).
   unphased_ptr = unphased_ptr->filterVariants(PassFilter());
-
+/*
   populationInbreedingSample( algorithm,
                               unphased_ptr,
                               diploid_population,
@@ -133,7 +133,7 @@ bool kgl::InbreedingAnalysis::populationInbreeding(InbreedingAlgorithm algorithm
                               1.0,
                               sampling_distance);
 
-
+*/
   return true;
 
 }

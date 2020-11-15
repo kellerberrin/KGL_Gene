@@ -5,6 +5,7 @@
 
 #include "kel_distribution.h"
 #include "kgl_analysis_mutation_inbreed_aux.h"
+#include "kgl_analysis_mutation_inbreed_calc.h"
 
 #include <sstream>
 #include <iomanip>
@@ -22,21 +23,24 @@ kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
                                                    double step_inbreeding,
                                                    const std::string& super_population,
                                                    const ContigVariant& locus_list) {
+  static std::mutex log_mutex; // logging mutex.
 
   std::shared_ptr<DiploidPopulation> synthetic_pop_ptr(std::make_shared<DiploidPopulation>("SyntheticInbreedingPopulation"));
 
   // Entropy source is the Mersenne twister.
   RandomEntropySource entropy_mt;
+
   // The real unit distribution [1,0] used to draw variants from the locus.
   UniformUnitDistribution unit_distribution;
 
   // The random boolean used to draw the variant phase (Male or Female).
   RandomBoolean random_boolean;
+
   // The super population AF field
   const std::string AF_field = InbreedSampling::lookupSuperPopulationField(super_population);
 
   // Generate a list of synthetic inbred genomes.
-  size_t counter = 0;
+  size_t counter{0};
   std::vector<std::pair<GenomeId_t , double>> inbreeding_vector;
   double inbreeding = lower_inbreeding;
   while(inbreeding <= (upper_inbreeding + 0.000001)) {
@@ -51,140 +55,137 @@ kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
   // For all inbred genomes.
   for (auto const& [genome_id, inbreeding_coefficient] : inbreeding_vector) {
 
-    size_t homozygous_count = 0;
-    size_t heterozygous_count = 0;
+    size_t homozygous_count{0};
+    size_t heterozygous_count{0};
+    std::vector<GenomeId_t> genome_vector {genome_id};
 
   // Iterate through the locus_list and create each genome with het/hom ratio
   // stochastically defined by the assigned inbreeding coefficient
     for (auto const& [offset, offset_ptr] : locus_list.getMap()) {
 
       auto variant_vec = offset_ptr->getVariantArray();
-      // Draw a unit rand.
-      double random_variant_selection = unit_distribution.random(entropy_mt.generator());
-      double probability_sum = 0;
-      std::pair<std::shared_ptr<const Variant>, double> variant_freq{nullptr, 0.0};
-      std::vector<std::pair<std::shared_ptr<const Variant>, double>> minor_allele_vec;
-      bool minor_allele_selected = false;
-      for (auto const& variant : variant_vec) {
 
-        auto [result, AF_value] = InbreedSampling::processFloatField(*variant, AF_field);
-        if (result) {
+      // Generate the minor allele frequencies.
+      AlleleFreqVector freq_vector(variant_vec, AF_field);
 
-          probability_sum += AF_value;
-          if (random_variant_selection <= probability_sum and not minor_allele_selected) {
+      // Draw a unit rand and select an allele class.
+      double class_selection = unit_distribution.random(entropy_mt.generator());
 
-            variant_freq.first = variant;
-            variant_freq.second = AF_value;
-            minor_allele_selected = true;
+      switch(freq_vector.selectAlleleClass(class_selection, inbreeding_coefficient)) {
+
+        case AlleleClassType::MINOR_HOMOZYGOUS: {
+          ++homozygous_count;
+          // Draw an allele and clone two copies.
+          double allele_selection = unit_distribution.random(entropy_mt.generator());
+          std::optional<AlleleFreqRecord> selected_allele = freq_vector.selectMinorAllele(allele_selection);
+          if (selected_allele) {
+
+            std::shared_ptr<Variant> cloned_variant1 = selected_allele->allele()->clone();
+            cloned_variant1->updatePhaseId(VariantSequence::DIPLOID_PHASE_A);
+            std::shared_ptr<Variant> cloned_variant2 = selected_allele->allele()->clone();
+            cloned_variant2->updatePhaseId(VariantSequence::DIPLOID_PHASE_B);
+            if (not synthetic_pop_ptr->addVariant( cloned_variant1, genome_vector)) {
+
+              ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
+                  , genome_id, cloned_variant1->output(',', VariantOutputIndex::START_0_BASED, false));
+
+            } // add female hom variant
+            if (not synthetic_pop_ptr->addVariant( cloned_variant2, genome_vector)) {
+
+              ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
+                  , genome_id, cloned_variant2->output(',', VariantOutputIndex::START_0_BASED, false));
+
+            } // add male hom variant
 
           } else {
 
-            minor_allele_vec.emplace_back(variant, AF_value);
+            ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} MINOR_HOMOZYGOUS, could not select minor variant", genome_id);
 
           }
 
         }
+          break;
 
-      }
+        case AlleleClassType::MAJOR_HETEROZYGOUS: {
+          ++heterozygous_count;
+          // Draw an allele and randomly decide phase.
+          double allele_selection = unit_distribution.random(entropy_mt.generator());
+          std::optional<AlleleFreqRecord> selected_allele = freq_vector.selectMinorAllele(allele_selection);
+          if (selected_allele) {
 
-// If we don't have a variant selected then continue
-      if (not minor_allele_selected) {
+            std::shared_ptr<Variant> cloned_variant = selected_allele->allele()->clone();
+            if (random_boolean.random(entropy_mt.generator())) {
 
-        continue;
+              cloned_variant->updatePhaseId(VariantSequence::DIPLOID_PHASE_A);
 
-      }
+            } else {
 
-      // Given the selection of the minor allele, calc the conditional probability of a homozygous allele
-      double hom_conditional_probability = inbreeding_coefficient + ((1.0 - inbreeding_coefficient) * variant_freq.second);
-      hom_conditional_probability = std::clamp<double>(hom_conditional_probability, 0.0, 1.0); // limit to [0, 1]
-      // Draw for the selection.
-      double random_hom_het = unit_distribution.random(entropy_mt.generator());
-      if (random_hom_het <= hom_conditional_probability) {
-        // Homozygous
-        ++homozygous_count;
+              cloned_variant->updatePhaseId(VariantSequence::DIPLOID_PHASE_B);
 
-        std::vector<GenomeId_t> genome_vector {genome_id};
-        std::shared_ptr<Variant> female_variant_ptr = variant_freq.first->clone();
-        female_variant_ptr->updatePhaseId(VariantSequence::DIPLOID_PHASE_A);
-        // Add to the population.
-        if (not synthetic_pop_ptr->addVariant( female_variant_ptr, genome_vector)) {
+            }
+            if (not synthetic_pop_ptr->addVariant( cloned_variant, genome_vector)) {
 
-          ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
-              , genome_id, female_variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+              ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
+                  , genome_id, cloned_variant->output(',', VariantOutputIndex::START_0_BASED, false));
 
-        } // add female hom variant
+            }
 
-        std::shared_ptr<Variant> male_variant_ptr = variant_freq.first->clone();
-        male_variant_ptr->updatePhaseId(VariantSequence::DIPLOID_PHASE_B);
-        // Add to the population.
-        if (not synthetic_pop_ptr->addVariant( male_variant_ptr, genome_vector)) {
+          } else {
 
-          ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
-              , genome_id, male_variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+            ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} MAJOR_HETEROZYGOUS, could not select minor variant", genome_id);
 
-        } // add male hom variant
-
-
-      } else {
-        // Heterozygous
-        ++heterozygous_count;
-        // Randomly select the variant phase and add to the genome.
-        std::shared_ptr<Variant> variant_copy_ptr = variant_freq.first->clone();
-        // Draw a random boolean to determine the variant phase.
-        PhaseId_t allele_phase;
-        PhaseId_t alt_allele_phase;
-        if (random_boolean.random(entropy_mt.generator())) {
-
-          allele_phase = VariantSequence::DIPLOID_PHASE_A;
-          alt_allele_phase = VariantSequence::DIPLOID_PHASE_B;
-
-        } else {
-
-          alt_allele_phase = VariantSequence::DIPLOID_PHASE_A;
-          allele_phase = VariantSequence::DIPLOID_PHASE_B;
+          }
 
         }
+          break;
 
-        variant_copy_ptr->updatePhaseId(allele_phase);
-        // Add to the population.
-        std::vector<GenomeId_t> genome_vector {genome_id};
-        if (not synthetic_pop_ptr->addVariant( variant_copy_ptr, genome_vector)) {
+        case AlleleClassType::MINOR_HETEROZYGOUS: {
+          ++heterozygous_count;
+          // Draw an allele and clone two copies.
+          double allele_selection1 = unit_distribution.random(entropy_mt.generator());
+          double allele_selection2 = unit_distribution.random(entropy_mt.generator());
+          std::optional<std::pair<AlleleFreqRecord, AlleleFreqRecord>> selected_alleles = freq_vector.selectPairMinorAllele(allele_selection1, allele_selection2);
+          if (selected_alleles) {
 
-          ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
-              , genome_id, variant_copy_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+            std::shared_ptr<Variant> cloned_variant1 = selected_alleles->first.allele()->clone();
+            cloned_variant1->updatePhaseId(VariantSequence::DIPLOID_PHASE_A);
+            std::shared_ptr<Variant> cloned_variant2 = selected_alleles->second.allele()->clone();
+            cloned_variant2->updatePhaseId(VariantSequence::DIPLOID_PHASE_B);
+            if (not synthetic_pop_ptr->addVariant( cloned_variant1, genome_vector)) {
 
-        } // add het variant
+              ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
+                  , genome_id, cloned_variant1->output(',', VariantOutputIndex::START_0_BASED, false));
 
-        // Check if the other allele is one of the minor alleles (if they exist).
-        if (not minor_allele_vec.empty() and hom_conditional_probability < 1.0) {
+            } // add female hom variant
+            if (not synthetic_pop_ptr->addVariant( cloned_variant2, genome_vector)) {
 
-          double sum_alt_allele_prob = 0.0;
-          double alt_allele_select = unit_distribution.random(entropy_mt.generator());
-          for (auto const& [minor_allele, frequency] : minor_allele_vec) {
+              ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
+                  , genome_id, cloned_variant2->output(',', VariantOutputIndex::START_0_BASED, false));
 
-            double het_conditional_probability = 2.0 * (1.0 - inbreeding_coefficient) * frequency;
-            sum_alt_allele_prob += het_conditional_probability;
-            if (alt_allele_select <= sum_alt_allele_prob) {
+            } // add male hom variant
 
-              std::shared_ptr<Variant> cloned_allele_ptr = minor_allele->clone();
-              cloned_allele_ptr->updatePhaseId(alt_allele_phase);
-              // Add to the population.
-              if (not synthetic_pop_ptr->addVariant( cloned_allele_ptr, genome_vector)) {
+          } else {
+            std::scoped_lock log_lock(log_mutex);
 
-                ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
-                    , genome_id, cloned_allele_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+            ExecEnv::log().warn( "InbreedSampling::generateSyntheticPopulation, Genome: {} MINOR_HETEROZYGOUS, could not select minor variants", genome_id);
+            for (auto const& allele : freq_vector.alleleFrequencies()) {
 
-              } // add minor allele variant
-
-              break;
+              ExecEnv::log().warn("InbreedSampling::generateSyntheticPopulation; freq: {}, field: {}, variant: {}",
+                                  allele.frequency(), allele.freqField(), allele.allele()->output(',', VariantOutputIndex::START_0_BASED, false));
 
             }
 
           }
 
         }
+          break;
 
-      } // if hom or het
+        case AlleleClassType::MAJOR_HOMOZYGOUS:
+          ++homozygous_count;
+          // No Action.
+          break;
+
+      } // end switch
 
     } // locii
 

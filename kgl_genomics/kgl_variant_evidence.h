@@ -79,6 +79,12 @@ public:
                      alternate_variant_index_(alternate_variant_index),
                      alternate_variant_count_(alternate_variant_count) {}
 
+  VariantEvidence() : vcf_record_count_(0),
+                      info_data_block_(std::nullopt),
+                      format_data_(std::nullopt),
+                      alternate_variant_index_(0),
+                      alternate_variant_count_(0) {}
+
   VariantEvidence(const VariantEvidence&) = default;
   ~VariantEvidence() = default;
 
@@ -95,6 +101,7 @@ public:
   [[nodiscard]] uint32_t altVariantCount() const { return alternate_variant_count_; }
 
 private:
+
 
   size_t vcf_record_count_; // The VCF line count, the original file line record that generated this variant.
   InfoDataEvidence info_data_block_;   // INFO data items, may be missing.
