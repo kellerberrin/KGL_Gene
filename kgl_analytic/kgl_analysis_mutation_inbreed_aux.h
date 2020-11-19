@@ -58,6 +58,7 @@ public:
                                  const ContigVariant& locus_list);
 
 
+
   // Recover a synthetic inbreeding coefficient from the synthetic genome id.
   [[nodiscard]] static std::pair<bool, double> generateInbreeding(const GenomeId_t& genome_id);
 

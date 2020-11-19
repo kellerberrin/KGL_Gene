@@ -70,14 +70,16 @@ kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
 
       // Draw a unit rand and select an allele class.
       double class_selection = unit_distribution.random(entropy_mt.generator());
-
-      switch(freq_vector.selectAlleleClass(class_selection, inbreeding_coefficient)) {
+      // Generate the allele class frequencies.
+      AlleleClassFrequencies class_freqs = freq_vector.alleleClassFrequencies(inbreeding_coefficient);
+      // Create the synthetic allele mix at the offset.
+      switch(freq_vector.selectAlleleClass(class_selection, class_freqs)) {
 
         case AlleleClassType::MINOR_HOMOZYGOUS: {
           ++homozygous_count;
-          // Draw an allele and clone two copies.
+          // Randomly draw an allele and clone two copies.
           double allele_selection = unit_distribution.random(entropy_mt.generator());
-          std::optional<AlleleFreqRecord> selected_allele = freq_vector.selectMinorAllele(allele_selection);
+          std::optional<AlleleFreqRecord> selected_allele = freq_vector.selectMinorHomozygous(allele_selection, class_freqs);
           if (selected_allele) {
 
             std::shared_ptr<Variant> cloned_variant1 = selected_allele->allele()->clone();
@@ -110,7 +112,7 @@ kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
           ++heterozygous_count;
           // Draw an allele and randomly decide phase.
           double allele_selection = unit_distribution.random(entropy_mt.generator());
-          std::optional<AlleleFreqRecord> selected_allele = freq_vector.selectMinorAllele(allele_selection);
+          std::optional<AlleleFreqRecord> selected_allele = freq_vector.selectMajorHeterozygous(allele_selection, class_freqs);
           if (selected_allele) {
 
             std::shared_ptr<Variant> cloned_variant = selected_allele->allele()->clone();
@@ -142,9 +144,8 @@ kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
         case AlleleClassType::MINOR_HETEROZYGOUS: {
           ++heterozygous_count;
           // Draw an allele and clone two copies.
-          double allele_selection1 = unit_distribution.random(entropy_mt.generator());
-          double allele_selection2 = unit_distribution.random(entropy_mt.generator());
-          std::optional<std::pair<AlleleFreqRecord, AlleleFreqRecord>> selected_alleles = freq_vector.selectPairMinorAllele(allele_selection1, allele_selection2);
+          double allele_selection = unit_distribution.random(entropy_mt.generator());
+          std::optional<std::pair<AlleleFreqRecord, AlleleFreqRecord>> selected_alleles = freq_vector.selectMinorHeterozygous(allele_selection, class_freqs);
           if (selected_alleles) {
 
             std::shared_ptr<Variant> cloned_variant1 = selected_alleles->first.allele()->clone();
@@ -197,6 +198,9 @@ kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
   return synthetic_pop_ptr;
 
 }
+
+
+
 
 // Generate an inbreeding encoded synthetic genome
 kgl::GenomeId_t kgl::InbreedSampling::generateSyntheticGenomeId( double inbreeding,

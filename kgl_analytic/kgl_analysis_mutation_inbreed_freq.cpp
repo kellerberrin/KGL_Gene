@@ -85,12 +85,12 @@ bool kgl::AlleleFreqVector::checkValidAlleleVector() {
 
     }
     ExecEnv::log().warn("AlleleFreqVector::checkValidAlleleVector; Sum minor allele freqs: {} > 1.0 ({})",
-                        ss.str(), minorAlleleFrequencies());
+                        ss.str(), allele_sum);
 
     for (auto const& allele : alleleFrequencies()) {
 
-      ExecEnv::log().warn("AlleleFreqVector::checkValidAlleleVector; Genome Id: {}, Super Pop: {}, frequency: {}, SNP: {}",
-                          allele.frequency(), allele.allele()->output(',', VariantOutputIndex::START_0_BASED, false));
+      ExecEnv::log().warn("AlleleFreqVector::checkValidAlleleVector; Freq field: {}, Frequency: {}, SNP: {}",
+                           allele.freqField(), allele.frequency(), allele.allele()->output(',', VariantOutputIndex::START_0_BASED, false));
 
     }
 
@@ -134,7 +134,7 @@ double kgl::AlleleFreqVector::sumAlleleFrequencies() const {
 
   }
 
-  return std::clamp(sum_allele_freq, 0.0, 1.0);
+  return sum_allele_freq;
 
 }
 
@@ -151,86 +151,74 @@ double kgl::AlleleFreqVector::majorAlleleFrequency() const {
 }
 
 
-double kgl::AlleleFreqVector::majorHomozygous(double inbreeding) const {
 
-  double major_freq = majorAlleleFrequency();
-  double prob_hom = (major_freq * inbreeding) + (1.0-inbreeding) * major_freq * major_freq;
-  return std::clamp(prob_hom, 0.0, 1.0);
+kgl::AlleleClassFrequencies  kgl::AlleleFreqVector::unadjustedAlleleClassFrequencies(double inbreeding) const {
 
-}
+  static std::mutex log_mutex;
+  std::vector<double> minor_allele_frequencies;
 
+  double sum_minor_freq{0.0};
+  for (auto const& minor_allele  : allele_frequencies_) {
 
-// The probability of two minor heterozygous alleles (rare).
-double kgl::AlleleFreqVector::minorHeterozygous(double inbreeding) const {
+    sum_minor_freq += minor_allele.frequency();
 
-  double sum_hetero_freq{0.0};
-  size_t minor_allele_count = allele_frequencies_.size();
+  }
 
-  for (size_t idx1 = 0; idx1 < minor_allele_count; ++idx1) {
+  // Can be data problems with allele frequencies summing > 1.0
+  double major_frequency = std::max(0.0, (1.0 - sum_minor_freq));
+  for (auto const& minor_allele  : allele_frequencies_) {
 
-    for (size_t idx2 = (idx1 + 1); idx2 < minor_allele_count; ++idx2) {
+    if (sum_minor_freq > 1.0) {
 
-        sum_hetero_freq += 2.0 * allele_frequencies_[idx1].frequency() * allele_frequencies_[idx2].frequency();
+      minor_allele_frequencies.push_back((minor_allele.frequency() / sum_minor_freq));
+
+    } else {
+
+      minor_allele_frequencies.push_back(minor_allele.frequency());
 
     }
 
   }
 
-  sum_hetero_freq = sum_hetero_freq * (1.0 - inbreeding);
-  return std::clamp(sum_hetero_freq, 0.0, 1.0);
+  double minor_homozygous{0.0};
+  for (auto const& minor_frequency  : minor_allele_frequencies) {
 
-}
-
-// The probability of major heterozygous alleles. This is the case where only a single minor allele is recorded (common).
-double kgl::AlleleFreqVector::majorHeterozygous(double inbreeding) const {
-
-  double sum_hetero_freq{0.0};
-  double major_allele_freq = majorAlleleFrequency();
-  for (auto const& minor_allele  : allele_frequencies_) {
-
-    sum_hetero_freq += 2.0 * minor_allele.frequency() * major_allele_freq;
+    minor_homozygous += (inbreeding * minor_frequency) + ((1.0 - inbreeding) * minor_frequency * minor_frequency);
 
   }
 
-  sum_hetero_freq = sum_hetero_freq * (1.0 - inbreeding);
-  return std::clamp(sum_hetero_freq, 0.0, 1.0);
 
-}
+  double minor_heterozygous{0.0};
+  size_t minor_allele_count = minor_allele_frequencies.size();
 
+  for (size_t idx1 = 0; idx1 < minor_allele_count; ++idx1) {
 
-// The probability of minor homozygous alleles
-double kgl::AlleleFreqVector::minorHomozygous(double inbreeding) const {
+    for (size_t idx2 = (idx1+1); idx2 < minor_allele_count; ++idx2) {
 
-  double sum_homozygous_freq{0.0};
-  for (auto const& minor_allele  : allele_frequencies_) {
+      minor_heterozygous += (1.0 - inbreeding) * 2.0 * minor_allele_frequencies[idx1] * minor_allele_frequencies[idx2];
 
-    double minor_freq = minor_allele.frequency();
-    sum_homozygous_freq += (minor_freq * inbreeding) + (1.0 - inbreeding) * minor_freq * minor_freq;
+    }
 
   }
 
-  return std::clamp(sum_homozygous_freq, 0.0, 1.0);
+  double major_homozygous = (inbreeding * major_frequency) + ((1.0 - inbreeding) * major_frequency * major_frequency);
 
-}
+  double major_heterozygous{0.0};
+  for (auto const& minor_frequency  : minor_allele_frequencies) {
+
+    major_heterozygous += (1.0 - inbreeding) * 2.0 * major_frequency * minor_frequency;
+
+  }
 
 
-kgl::AlleleClassFrequencies  kgl::AlleleFreqVector::alleleClassFrequencies(double inbreeding) const {
-
-  static std::mutex log_mutex;
-
-  double major_hom = majorHomozygous(inbreeding);
-  double major_het = majorHeterozygous(inbreeding);
-  double minor_hom = minorHomozygous(inbreeding);
-  double minor_het = minorHeterozygous(inbreeding);
-
-  double sum_freq_classes = major_hom + major_het + minor_hom + minor_het;
+  double sum_freq_classes = major_homozygous + major_heterozygous + minor_homozygous + minor_heterozygous;
   double raw_freq_sum = std::fabs(sum_freq_classes - 1.0);
 
-  if (raw_freq_sum > epsilon_sum_ and inbreeding >= 0.0) {
+  if (raw_freq_sum > epsilon_class_) {
     std::scoped_lock log_lock(log_mutex);
 
     ExecEnv::log().error("AlleleFreqVector::alleleClassFrequencies; Invalid Major Hom: {}, Major Het: {}, Minor Hom: {}, Minor Het: {}, Sum: {}, Inbreeding: {}, Allele Count: {}",
-                         major_hom, major_het, minor_hom, minor_het, sum_freq_classes, inbreeding, allele_frequencies_.size());
+                         major_homozygous, major_heterozygous, minor_homozygous, minor_heterozygous, sum_freq_classes, inbreeding, allele_frequencies_.size());
 
     for (auto const& allele : allele_frequencies_) {
 
@@ -239,44 +227,41 @@ kgl::AlleleClassFrequencies  kgl::AlleleFreqVector::alleleClassFrequencies(doubl
 
     }
 
-  } else if (raw_freq_sum <= epsilon_sum_) {
-
-    major_hom = major_hom / sum_freq_classes;
-    major_het = major_het / sum_freq_classes;
-    minor_hom = minor_hom / sum_freq_classes;
-    minor_het = minor_het / sum_freq_classes;
-
-  } else if (inbreeding < 0.0 and sum_freq_classes > 0) {
-
-    major_hom = major_hom / sum_freq_classes;
-    major_het = major_het / sum_freq_classes;
-    minor_hom = minor_hom / sum_freq_classes;
-    minor_het = minor_het / sum_freq_classes;
-
   }
 
-  return AlleleClassFrequencies(major_hom, major_het, minor_hom, minor_het);
+  return AlleleClassFrequencies(major_homozygous, major_heterozygous, minor_homozygous, minor_heterozygous, inbreeding);
+
+}
+
+
+kgl::AlleleClassFrequencies  kgl::AlleleFreqVector::alleleClassFrequencies(double inbreeding) const {
+
+
+  AlleleClassFrequencies  class_freqs = unadjustedAlleleClassFrequencies(inbreeding);
+
+  class_freqs.normalize();
+
+  return class_freqs;
 
 }
 
 
 // Randomly select an allele class outcome based on a unit [0, 1] random number.
-kgl::AlleleClassType kgl::AlleleFreqVector::selectAlleleClass(double unit_rand, double inbreeding) const {
+kgl::AlleleClassType kgl::AlleleFreqVector::selectAlleleClass(double unit_rand, const AlleleClassFrequencies& class_freqs) const {
 
-  AlleleClassFrequencies class_freqs = alleleClassFrequencies(inbreeding);
-  double sum_freqs = class_freqs.minorHeterozygous();
-
-  if (unit_rand <= sum_freqs) {
-
-    return AlleleClassType::MINOR_HETEROZYGOUS;
-
-  }
-
-  sum_freqs += class_freqs.minorHomozygous();
+  double sum_freqs = class_freqs.minorHomozygous();
 
   if (unit_rand <= sum_freqs) {
 
     return AlleleClassType::MINOR_HOMOZYGOUS;
+
+  }
+
+  sum_freqs += class_freqs.minorHeterozygous();
+
+  if (unit_rand <= sum_freqs) {
+
+    return AlleleClassType::MINOR_HETEROZYGOUS;
 
   }
 
@@ -288,25 +273,36 @@ kgl::AlleleClassType kgl::AlleleFreqVector::selectAlleleClass(double unit_rand, 
 
   }
 
-  return AlleleClassType::MAJOR_HETEROZYGOUS;
+  sum_freqs += class_freqs.majorHeterozygous();
+
+  if (unit_rand <= sum_freqs) {
+
+    return AlleleClassType::MAJOR_HETEROZYGOUS;
+
+  }
+
+  ExecEnv::log().warn("AlleleFreqVector::selectAlleleClass; Class select error, Inbreeding, MajorHom: {}, MajorHet: {}, MinorHom: {}, MinorHet {}",
+                      class_freqs.inbreeding(), class_freqs.majorHomozygous(), class_freqs.majorHeterozygous(),
+                      class_freqs.minorHomozygous(), class_freqs.minorHeterozygous());
+
+  return AlleleClassType::MAJOR_HOMOZYGOUS;
 
 }
 
 
-std::optional<kgl::AlleleFreqRecord> kgl::AlleleFreqVector::selectMinorAllele(double unit_rand) const {
+std::optional<kgl::AlleleFreqRecord> kgl::AlleleFreqVector::selectMinorHomozygous(double unit_rand,
+                                                                                  const AlleleClassFrequencies& class_freqs) const {
 
   if (allele_frequencies_.empty()) {
 
-    ExecEnv::log().error("AlleleFreqVector::selectMinorAllele; attempted to select non-existent minor allele");
+    ExecEnv::log().error("AlleleFreqVector::selectMinorHomozygous; attempted to select non-existent minor allele");
     return std::nullopt;
 
   }
 
-  double freq_sum =  sumAlleleFrequencies();
+  if (class_freqs.minorHomozygous() == 0.0) {
 
-  if (freq_sum == 0.0) {
-
-    ExecEnv::log().warn("AlleleFreqVector::selectMinorAllele; allele frequencies sum to 0");
+    ExecEnv::log().warn("AlleleFreqVector::selectMinorHomozygous; minor homozygous frequency is 0");
     return std::nullopt;
 
   }
@@ -317,9 +313,13 @@ std::optional<kgl::AlleleFreqRecord> kgl::AlleleFreqVector::selectMinorAllele(do
 
   }
 
+  double allele_freq_sum{0.0};
   for (auto const& allele : allele_frequencies_) {
 
-    if (unit_rand <= (allele.frequency() / freq_sum)) {
+    double allele_freq = allele.frequency();
+    double hom_prob = (allele_freq * class_freqs.inbreeding()) + (1.0 - class_freqs.inbreeding()) * allele_freq * allele_freq;
+    allele_freq_sum += hom_prob / class_freqs.minorHomozygous();
+    if (unit_rand <= allele_freq_sum) {
 
       return allele;
 
@@ -327,109 +327,117 @@ std::optional<kgl::AlleleFreqRecord> kgl::AlleleFreqVector::selectMinorAllele(do
 
   }
 
-  return allele_frequencies_.front();
+  ExecEnv::log().warn("AlleleFreqVector::selectMinorHomozygous; did not select allele");
+  return std::nullopt;
 
 }
 
 
-std::optional<std::pair<kgl::AlleleFreqRecord, kgl::AlleleFreqRecord>>
-kgl::AlleleFreqVector::selectPairMinorAllele(double unit_rand1, double unit_rand2) const {
+// Randomly select a major heterozygous allele based on a unit [0,1] random number, std::nullopt if error (no minor allele).
+std::optional<kgl::AlleleFreqRecord> kgl::AlleleFreqVector::selectMajorHeterozygous(double unit_rand,
+                                                                                    const AlleleClassFrequencies& class_freqs) const {
 
-  if (allele_frequencies_.size() < 2) {
+  if (allele_frequencies_.empty()) {
 
-    ExecEnv::log().error("AlleleFreqVector::selectPairMinorAllele; attempted to select non-existent minor allele pair");
+    ExecEnv::log().error("AlleleFreqVector::selectMajorHeterozygous; attempted to select non-existent minor allele");
     return std::nullopt;
 
   }
 
-  double freq_sum =  sumAlleleFrequencies();
+  if (class_freqs.majorHeterozygous() == 0.0) {
 
-  if (freq_sum == 0.0) {
+    ExecEnv::log().warn("AlleleFreqVector::selectMajorHeterozygous; minor homozygous frequency is 0");
+    return std::nullopt;
 
-    ExecEnv::log().warn("AlleleFreqVector::selectMinorAllele; allele frequencies sum to 0");
+  }
+
+  if (allele_frequencies_.size() == 1) {
+
+    return allele_frequencies_.front();
+
+  }
+
+  double allele_freq_sum{0.0};
+  double major_freq = majorAlleleFrequency();
+  for (auto const& allele : allele_frequencies_) {
+
+    double allele_freq = allele.frequency();
+    double het_prob = (1.0 - class_freqs.inbreeding()) * 2.0 * major_freq * allele_freq;
+    allele_freq_sum += het_prob / class_freqs.majorHeterozygous();
+    if (unit_rand <= allele_freq_sum) {
+
+      return allele;
+
+    }
+
+  }
+
+  static std::mutex log_mutex;
+  std::scoped_lock log_lock(log_mutex);
+
+  ExecEnv::log().warn("AlleleFreqVector::selectMajorHeterozygous; did not select allele, rand: {}, sum: {}, major het freq: {}");
+  for (auto const& allele : allele_frequencies_) {
+
+    ExecEnv::log().warn("AlleleFreqVector::selectMajorHeterozygous; allele frequency {}, allele: {}",
+                        allele.frequency(), allele.allele()->output(',', VariantOutputIndex::START_0_BASED, false));
+
+  }
+  return std::nullopt;
+
+}
+
+
+// Randomly select a pair of distinct minor alleles based on two random numbers, std::nullopt if error (not two minor alleles).
+std::optional<std::pair<kgl::AlleleFreqRecord, kgl::AlleleFreqRecord>>
+kgl::AlleleFreqVector::selectMinorHeterozygous(double unit_rand, const AlleleClassFrequencies& class_freqs) const {
+
+  if (allele_frequencies_.size() < 2) {
+
+    ExecEnv::log().error("AlleleFreqVector::selectMinorHeterozygous; attempted to select non-existent minor alleles");
+    return std::nullopt;
+
+  }
+
+  if (class_freqs.minorHeterozygous() == 0.0) {
+
+    ExecEnv::log().warn("AlleleFreqVector::selectMinorHeterozygous; minor homozygous frequency is 0");
     return std::nullopt;
 
   }
 
   if (allele_frequencies_.size() == 2) {
 
-    std::pair<kgl::AlleleFreqRecord, kgl::AlleleFreqRecord> allele_pair{ allele_frequencies_.front(), allele_frequencies_.back() };
-    return allele_pair;
+    std::pair<kgl::AlleleFreqRecord, kgl::AlleleFreqRecord> pair_alleles{ allele_frequencies_.front(), allele_frequencies_.back() };
+    return pair_alleles;
 
   }
 
-  size_t select_index_1{0};
-  size_t select_index_2{0};
-  double freq_sum_2{0.0};
-  std::vector<AlleleFreqRecord> allele_frequencies2;
+  double allele_freq_sum{0.0};
+  size_t allele_count = allele_frequencies_.size();
+  for (size_t idx1 = 0; idx1 < allele_count; ++idx1) {
 
-  size_t index{0};
-  bool found_index{false};
-  for (auto const& allele : allele_frequencies_) {
+    double allele1_freq = allele_frequencies_[idx1].frequency();
 
-    if (unit_rand1 <= (allele.frequency() / freq_sum) and not found_index) {
+    for (size_t idx2 = (idx1 + 1); idx2 < allele_count; ++idx2) {
 
-      select_index_1 = index;
-      found_index = true;
+      double allele2_freq = allele_frequencies_[idx2].frequency();
+      double het_prob = (1.0 - class_freqs.inbreeding()) * 2.0 * allele1_freq * allele2_freq;
+      allele_freq_sum += het_prob / class_freqs.minorHeterozygous();
+      if (unit_rand <= allele_freq_sum) {
 
-    } else {
+        std::pair<kgl::AlleleFreqRecord, kgl::AlleleFreqRecord> pair_alleles{ allele_frequencies_[idx1], allele_frequencies_[idx2] };
+        return pair_alleles;
 
-      ++index;
-      freq_sum_2 += allele.frequency();
-      allele_frequencies2.push_back(allele);
+      }
 
     }
 
   }
 
-  if (freq_sum_2 == 0.0) {
-
-    ExecEnv::log().warn("AlleleFreqVector::selectMinorAllele; 2nd allele frequencies sum to 0");
-    return std::nullopt;
-
-  }
-
-  index = 0;
-  for (auto const& allele : allele_frequencies2) {
-
-    if (unit_rand2 <= (allele.frequency() / freq_sum_2)) {
-
-      select_index_2 = index;
-      break;
-
-    }
-
-  }
-
-  std::pair<kgl::AlleleFreqRecord, kgl::AlleleFreqRecord> allele_pair{ allele_frequencies_[select_index_1], allele_frequencies2[select_index_2] };
-  return allele_pair;
+  ExecEnv::log().warn("AlleleFreqVector::selectMinorHeterozygous; did not select alleles");
+  return std::nullopt;
 
 }
-
-
-double kgl::AlleleFreqInfo::alleleTypeFrequency(double inbreeding) const {
-
-  switch(alleleType()) {
-
-    case AlleleClassType::MAJOR_HOMOZYGOUS:
-      return allele_frequencies_.majorHomozygous(inbreeding);
-
-    case AlleleClassType::MAJOR_HETEROZYGOUS:
-      return allele_frequencies_.majorHeterozygous(inbreeding);
-
-    case AlleleClassType::MINOR_HETEROZYGOUS:
-      return allele_frequencies_.minorHeterozygous(inbreeding);
-
-    case AlleleClassType::MINOR_HOMOZYGOUS:
-      return allele_frequencies_.minorHomozygous(inbreeding);
-
-  }
-
-  return 0.0;
-
-}
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

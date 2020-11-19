@@ -43,8 +43,9 @@ class AlleleClassFrequencies {
 
 public:
 
-  AlleleClassFrequencies(double major_hom, double major_het, double minor_hom, double minor_het) :
-      major_homozygous_(major_hom), major_heterozygous_(major_het), minor_homozygous_(minor_hom), minor_heterozygous_(minor_het) {}
+  AlleleClassFrequencies(double major_hom, double major_het, double minor_hom, double minor_het, double inbreeding) :
+      major_homozygous_(major_hom), major_heterozygous_(major_het), minor_homozygous_(minor_hom),
+      minor_heterozygous_(minor_het), inbreeding_(inbreeding) {}
   ~AlleleClassFrequencies() = default;
 
   [[nodiscard]] bool validFrequencies() const { return std::fabs(sumFrequencies() - 1.0) < epsilon_; }
@@ -53,6 +54,26 @@ public:
   [[nodiscard]] double majorHeterozygous() const { return major_heterozygous_; }
   [[nodiscard]] double minorHomozygous() const { return minor_homozygous_; }
   [[nodiscard]] double minorHeterozygous() const { return minor_heterozygous_; }
+  [[nodiscard]] double inbreeding() const { return inbreeding_; }
+  void nonNegative() {
+
+    major_homozygous_ = std::max(0.0, major_homozygous_);
+    major_heterozygous_ = std::max(0.0, major_heterozygous_);
+    minor_homozygous_ = std::max(0.0, minor_homozygous_);
+    minor_heterozygous_ = std::max(0.0, minor_heterozygous_);
+
+  }
+  void normalize() {
+
+    nonNegative();
+    double sum_freqs = sumFrequencies();
+    major_homozygous_ = major_homozygous_ / sum_freqs;
+    major_heterozygous_ = major_heterozygous_ / sum_freqs;
+    minor_homozygous_ = minor_homozygous_ / sum_freqs;
+    minor_heterozygous_ = minor_heterozygous_ / sum_freqs;
+
+  }
+
 
 private:
 
@@ -60,6 +81,7 @@ private:
   double major_heterozygous_{0.0};
   double minor_homozygous_{0.0};
   double minor_heterozygous_{0.0};
+  double inbreeding_{0.0};
 
   // Tolerance for the sum of allele classes
   constexpr static const double epsilon_{1.0e-04};
@@ -111,29 +133,26 @@ public:
 
   // Return the allele vector.
   [[nodiscard]] const std::vector<AlleleFreqRecord>& alleleFrequencies() const { return allele_frequencies_; }
-  // Sum of all minor alleles.
+  // Sum of all minor alleles clamped to [0,1]
   [[nodiscard]] double minorAlleleFrequencies() const;
   // Complement of the sum of all minor alleles.
   [[nodiscard]] double majorAlleleFrequency() const;
   // Checks that we have a valid vector of minor alleles.
   // Updates allele frequencies under limited circumstances.
   [[nodiscard]] bool checkValidAlleleVector();
+  // Return the unadjusted allele class frequencies (may be -ve).
+  [[nodiscard]] AlleleClassFrequencies unadjustedAlleleClassFrequencies(double inbreeding) const;
   // Return the allele class frequencies.
   [[nodiscard]] AlleleClassFrequencies alleleClassFrequencies(double inbreeding) const;
   // Randomly select an allele class outcome based on a unit [0, 1] random number.
-  [[nodiscard]] AlleleClassType selectAlleleClass(double unit_rand, double inbreeding) const;
-  // Randomly select a minor allele based on a unit [0,1] random number, std::nullopt if error (no minor allele).
-  [[nodiscard]] std::optional<AlleleFreqRecord> selectMinorAllele(double unit_rand) const;
+  [[nodiscard]] AlleleClassType selectAlleleClass(double unit_rand, const AlleleClassFrequencies& class_freqs) const;
+  // Randomly select a minor homozygous allele based on a unit [0,1] random number, std::nullopt if error (no minor allele).
+  [[nodiscard]] std::optional<AlleleFreqRecord> selectMinorHomozygous(double unit_rand, const AlleleClassFrequencies& class_freqs) const;
+  // Randomly select a minor heterozygous allele based on a unit [0,1] random number, std::nullopt if error (no minor allele).
+  [[nodiscard]] std::optional<AlleleFreqRecord> selectMajorHeterozygous(double unit_rand, const AlleleClassFrequencies& class_freqs) const;
   // Randomly select a pair of distinct minor alleles based on two random numbers, std::nullopt if error (not two minor alleles).
-  [[nodiscard]] std::optional<std::pair<AlleleFreqRecord, AlleleFreqRecord>> selectPairMinorAllele(double unit_rand1, double unit_rand2) const;
-  // The probability of major homozygous alleles (unrecorded)
-  [[nodiscard]] double majorHomozygous(double inbreeding) const;
-  // The probability of major heterozygous alleles, this is a single minor allele and major allele (unrecorded)
-  [[nodiscard]] double majorHeterozygous(double inbreeding) const;
-  // The probability of minor allele homozygous alleles
-  [[nodiscard]] double minorHomozygous(double inbreeding) const;
-  // The probability of minor and minor allele heterozygous alleles
-  [[nodiscard]] double minorHeterozygous(double inbreeding) const;
+  [[nodiscard]] std::optional<std::pair<AlleleFreqRecord, AlleleFreqRecord>>
+  selectMinorHeterozygous(double unit_rand, const AlleleClassFrequencies& class_freqs) const;
 
 private:
 
@@ -172,7 +191,6 @@ public:
 
   [[nodiscard]] AlleleClassType alleleType() const { return allele_type_; }
   // The probability of the allele type specified above.
-  [[nodiscard]] double alleleTypeFrequency(double inbreeding) const;
   [[nodiscard]] const AlleleFreqRecord& firstAllele() const { return first_allele_freq_; }
   [[nodiscard]] const AlleleFreqRecord& secondAllele() const { return second_allele_freq_; }
   [[nodiscard]] const AlleleFreqVector& alleleFrequencies() const { return allele_frequencies_; }
@@ -246,9 +264,9 @@ private:
 
   inline static const std::map<std::string, InbreedingAlgorithm> inbreeding_algo_map_ = {
       {RITLAND_LOCUS, processRitlandLocus},
-//      {SIMPLE, processSimple},
-//      {HALL_ME, processHallME},
-//      {LOGLIKELIHOOD, processLogLikelihood}
+      {SIMPLE, processSimple},
+      {HALL_ME, processHallME},
+      {LOGLIKELIHOOD, processLogLikelihood}
   };
 
   // The initial guess for the Hall expectation maximization algorithm.

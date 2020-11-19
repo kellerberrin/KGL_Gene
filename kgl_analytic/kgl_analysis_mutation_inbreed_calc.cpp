@@ -310,14 +310,11 @@ kgl::InbreedingCalculation::processRitlandLocus(const GenomeId_t &genome_id,
                                            const std::shared_ptr<const ContigVariant>& locus_list) {
 
   // Get the locus frequencies.
-  static std::mutex log_mutex;
-  constexpr const static double minimum_frequency{0.01};
-  constexpr const static double maximum_frequency{0.99};
+  constexpr const static double minimum_frequency{0.001};
 
   size_t sum_allele{0};
   double locus_allele_sum{0.0};
   auto [frequency_vector, locus_results] = generateFrequencies(genome_id, contig_ptr, super_population_field, locus_list);
-  double vector_size = frequency_vector.size();
 
   for (auto const& allele_freq : frequency_vector) {
 
@@ -326,46 +323,12 @@ kgl::InbreedingCalculation::processRitlandLocus(const GenomeId_t &genome_id,
       case AlleleClassType::MAJOR_HOMOZYGOUS:
       case AlleleClassType::MINOR_HOMOZYGOUS: {
 
-        if (allele_freq.firstAllele().frequency() > 0) {
+        if (allele_freq.firstAllele().frequency() > minimum_frequency) {
 
           double ratio = (1.0 / allele_freq.firstAllele().frequency());
-          if (ratio > vector_size * 0.1) {
-            std::scoped_lock log_lock(log_mutex);
-
-            std::string hom_type = allele_freq.alleleType() == AlleleClassType::MAJOR_HOMOZYGOUS ? "MAJOR_HOMOZYGOUS" : "MINOR_HOMOZYGOUS";
-            ExecEnv::log().warn("InbreedingCalculation::processRitlandLocus; Genome: {}, Ratio: {}, {} variant freq 1: {}, freq 2: {}",
-                                genome_id, ratio, hom_type, allele_freq.firstAllele().frequency(), allele_freq.secondAllele().frequency());
-            ExecEnv::log().warn("InbreedingCalculation::processRitlandLocus; {} variant 1: {}",
-                                allele_freq.firstAllele().allele()->output(',', VariantOutputIndex::START_0_BASED, false));
-            ExecEnv::log().warn("InbreedingCalculation::processRitlandLocus; {} variant 2: {}",
-                                allele_freq.secondAllele().allele()->output(',', VariantOutputIndex::START_0_BASED, false));
-            for (auto const& allele : allele_freq.alleleFrequencies().alleleFrequencies()) {
-
-              ExecEnv::log().warn("InbreedingCalculation::processRitlandLocus; freq: {}, field: {}, variant: {}",
-                                  allele.frequency(), allele.freqField(), allele.allele()->output(',', VariantOutputIndex::START_0_BASED, false));
-            }
-
-          }
           locus_allele_sum += ratio;
           locus_allele_sum -= 1.0;
           ++sum_allele;
-
-        } else if (allele_freq.firstAllele().frequency() == 0) {
-          std::scoped_lock log_lock(log_mutex);
-
-          std::string hom_type = allele_freq.alleleType() == AlleleClassType::MAJOR_HOMOZYGOUS ? "MAJOR_HOMOZYGOUS" : "MINOR_HOMOZYGOUS";
-          ExecEnv::log().warn("InbreedingCalculation::processRitlandLocus; Genome:{}, {} variant freq 1: {}, freq 2: {}",
-                              genome_id, hom_type, allele_freq.firstAllele().frequency(), allele_freq.secondAllele().frequency());
-          ExecEnv::log().warn("InbreedingCalculation::processRitlandLocus; {} variant 1: {}",
-                              allele_freq.firstAllele().allele()->output(',', VariantOutputIndex::START_0_BASED, false));
-          ExecEnv::log().warn("InbreedingCalculation::processRitlandLocus; {} variant 2: {}",
-                              allele_freq.secondAllele().allele()->output(',', VariantOutputIndex::START_0_BASED, false));
-          for (auto const& allele : allele_freq.alleleFrequencies().alleleFrequencies()) {
-
-            ExecEnv::log().warn("InbreedingCalculation::processRitlandLocus; freq: {}, field: {}, variant: {}",
-                                allele.frequency(), allele.freqField(), allele.allele()->output(',', VariantOutputIndex::START_0_BASED, false));
-
-          }
 
         }
 
