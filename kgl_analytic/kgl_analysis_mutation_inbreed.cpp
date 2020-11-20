@@ -5,7 +5,7 @@
 
 #include "kel_thread_pool.h"
 #include "kgl_analysis_mutation_inbreed.h"
-#include "kgl_analysis_mutation_inbreed_aux.h"
+#include "kgl_analysis_mutation_inbreed_locus.h"
 #include "kgl_filter.h"
 
 

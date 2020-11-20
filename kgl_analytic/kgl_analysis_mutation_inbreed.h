@@ -9,7 +9,7 @@
 #include "kgl_variant_db_phased.h"
 #include "kgl_ped_parser.h"
 #include "kgl_analysis_mutation_inbreed_calc.h"
-#include "kgl_analysis_mutation_inbreed_aux.h"
+#include "kgl_analysis_mutation_inbreed_locus.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

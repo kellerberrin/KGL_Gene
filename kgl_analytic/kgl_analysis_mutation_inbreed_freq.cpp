@@ -2,7 +2,7 @@
 // Created by kellerberrin on 2/11/20.
 //
 
-#include "kgl_analysis_mutation_inbreed_aux.h"
+#include "kgl_analysis_mutation_inbreed_locus.h"
 #include "kgl_filter.h"
 #include "kgl_analysis_mutation_inbreed_calc.h"
 #include "kel_distribution.h"
@@ -19,11 +19,12 @@ namespace kel = kellerberrin;
 kgl::AlleleFreqVector::AlleleFreqVector(const std::vector<std::shared_ptr<const Variant>>& variant_vector,
                                         const std::string& frequency_field) {
 
+  static VariantDatabaseRead database_read(VariantDatabaseSource::GNOMAD3_1);
   // Loop through the variants in the locus..
   for (auto const &variant : variant_vector) {
 
-    auto[result, AF_value] = InbreedSampling::processFloatField(*variant, frequency_field);
-    if (not result) {
+    auto opt_value = database_read.processFloatField(*variant, frequency_field);
+    if (not opt_value) {
 
       // Problem obtaining allele frequency, this allele may not be defined for the specified super population.
       continue;
@@ -45,9 +46,9 @@ kgl::AlleleFreqVector::AlleleFreqVector(const std::vector<std::shared_ptr<const 
 
       if (not found_duplicate) {
 
-        AF_value = std::clamp(AF_value, 0.0, 1.0); // Just in case.
+        double variant_freq = std::clamp(opt_value.value(), 0.0, 1.0); // Just in case.
         // Store the variant and super population frequency
-        allele_frequencies_.emplace_back(variant, AF_value, frequency_field);
+        allele_frequencies_.emplace_back(variant, variant_freq);
 
       }
 
@@ -89,8 +90,8 @@ bool kgl::AlleleFreqVector::checkValidAlleleVector() {
 
     for (auto const& allele : alleleFrequencies()) {
 
-      ExecEnv::log().warn("AlleleFreqVector::checkValidAlleleVector; Freq field: {}, Frequency: {}, SNP: {}",
-                           allele.freqField(), allele.frequency(), allele.allele()->output(',', VariantOutputIndex::START_0_BASED, false));
+      ExecEnv::log().warn("AlleleFreqVector::checkValidAlleleVector; Frequency: {}, SNP: {}",
+                           allele.frequency(), allele.allele()->output(',', VariantOutputIndex::START_0_BASED, false));
 
     }
 
@@ -462,8 +463,6 @@ kgl::InbreedingCalculation::generateFrequencies(const GenomeId_t& genome_id,
   LocusResults locus_results;
   locus_results.genome = genome_id;
 
-  // Convert to the super population field codes used in Gnomad.
-  const std::string gnomad_super_pop = InbreedSampling::lookupSuperPopulationField(super_population_field);
   // Diploid contig, only want SNP variants.
   auto snp_contig_ptr = contig_ptr->filterVariants(SNPFilter());
 
@@ -473,7 +472,7 @@ kgl::InbreedingCalculation::generateFrequencies(const GenomeId_t& genome_id,
     // Get the allele frequencies.
    auto locus_variant_array = offset_ptr->getVariantArray();
 
-    AlleleFreqVector allele_freq_vector(locus_variant_array, gnomad_super_pop);
+    AlleleFreqVector allele_freq_vector(locus_variant_array, super_population_field);
     if (not allele_freq_vector.checkValidAlleleVector()) {
 
       continue; // Next locus.
@@ -498,7 +497,7 @@ kgl::InbreedingCalculation::generateFrequencies(const GenomeId_t& genome_id,
             // Calculate the major allele frequency as the complement of the sum of minor alleles.
             double major_allele_frequency = allele_freq_vector.majorAlleleFrequency();
             std::shared_ptr<const Variant> null_variant = allele_freq.allele()->cloneNullVariant();
-            AlleleFreqRecord major_allele(null_variant, major_allele_frequency, gnomad_super_pop);
+            AlleleFreqRecord major_allele(null_variant, major_allele_frequency);
             // Add to the frequency vector.
             frequency_vector.emplace_back(AlleleClassType::MAJOR_HETEROZYGOUS, allele_freq, major_allele, allele_freq_vector);
             break;
@@ -565,7 +564,7 @@ kgl::InbreedingCalculation::generateFrequencies(const GenomeId_t& genome_id,
         if (major_allele_frequency > minimum_major_frequency) {
 
           std::shared_ptr<const Variant> null_variant = allele_freq_vector.alleleFrequencies().front().allele()->cloneNullVariant();
-          AlleleFreqRecord major_allele(null_variant, major_allele_frequency, gnomad_super_pop);
+          AlleleFreqRecord major_allele(null_variant, major_allele_frequency);
           frequency_vector.emplace_back(AlleleClassType::MAJOR_HOMOZYGOUS, major_allele, major_allele, allele_freq_vector);
 
         }

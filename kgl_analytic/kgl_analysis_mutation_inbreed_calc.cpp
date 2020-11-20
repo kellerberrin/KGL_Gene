@@ -2,7 +2,7 @@
 // Created by kellerberrin on 21/8/20.
 //
 
-#include "kgl_analysis_mutation_inbreed_aux.h"
+#include "kgl_analysis_mutation_inbreed_locus.h"
 #include "kgl_filter.h"
 #include "kgl_analysis_mutation_inbreed_calc.h"
 #include "kel_distribution.h"
@@ -309,7 +309,7 @@ kgl::InbreedingCalculation::processRitlandLocus(const GenomeId_t &genome_id,
                                            const std::string& super_population_field,
                                            const std::shared_ptr<const ContigVariant>& locus_list) {
 
-  // Get the locus frequencies.
+  // Ignore rare homozygous combinations, as these 'blow up' the ratio below.
   constexpr const static double minimum_frequency{0.001};
 
   size_t sum_allele{0};
@@ -324,7 +324,7 @@ kgl::InbreedingCalculation::processRitlandLocus(const GenomeId_t &genome_id,
       case AlleleClassType::MINOR_HOMOZYGOUS: {
 
         if (allele_freq.firstAllele().frequency() > minimum_frequency) {
-
+          // This ratio becomes unstable for low frequency homozygous alleles.
           double ratio = (1.0 / allele_freq.firstAllele().frequency());
           locus_allele_sum += ratio;
           locus_allele_sum -= 1.0;

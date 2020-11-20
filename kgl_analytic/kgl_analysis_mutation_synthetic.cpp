@@ -4,7 +4,7 @@
 
 
 #include "kel_distribution.h"
-#include "kgl_analysis_mutation_inbreed_aux.h"
+#include "kgl_analysis_mutation_inbreed_locus.h"
 #include "kgl_analysis_mutation_inbreed_calc.h"
 
 #include <sstream>
@@ -36,8 +36,6 @@ kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
   // The random boolean used to draw the variant phase (Male or Female).
   RandomBoolean random_boolean;
 
-  // The super population AF field
-  const std::string AF_field = InbreedSampling::lookupSuperPopulationField(super_population);
 
   // Generate a list of synthetic inbred genomes.
   size_t counter{0};
@@ -66,7 +64,7 @@ kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
       auto variant_vec = offset_ptr->getVariantArray();
 
       // Generate the minor allele frequencies.
-      AlleleFreqVector freq_vector(variant_vec, AF_field);
+      AlleleFreqVector freq_vector(variant_vec, super_population);
 
       // Draw a unit rand and select an allele class.
       double class_selection = unit_distribution.random(entropy_mt.generator());
@@ -171,8 +169,8 @@ kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
             ExecEnv::log().warn( "InbreedSampling::generateSyntheticPopulation, Genome: {} MINOR_HETEROZYGOUS, could not select minor variants", genome_id);
             for (auto const& allele : freq_vector.alleleFrequencies()) {
 
-              ExecEnv::log().warn("InbreedSampling::generateSyntheticPopulation; freq: {}, field: {}, variant: {}",
-                                  allele.frequency(), allele.freqField(), allele.allele()->output(',', VariantOutputIndex::START_0_BASED, false));
+              ExecEnv::log().warn("InbreedSampling::generateSyntheticPopulation; freq: {}, variant: {}",
+                                  allele.frequency(), allele.allele()->output(',', VariantOutputIndex::START_0_BASED, false));
 
             }
 

@@ -5,121 +5,12 @@
 #include <kgl_variant_factory_vcf_evidence_analysis.h>
 #include "kgl_variant.h"
 #include "kgl_filter.h"
-#include "kgl_analysis_mutation_inbreed_aux.h"
+#include "kgl_analysis_mutation_inbreed_locus.h"
 #include "kgl_analysis_mutation_inbreed_calc.h"
 
 
 namespace kgl = kellerberrin::genome;
 
-
-std::pair<bool, double> kgl::InbreedSampling::processFloatField( const Variant& variant,
-                                                                 const std::string& field_name) {
-
-
-  std::optional<kgl::InfoDataVariant> field_opt = InfoEvidenceAnalysis::getInfoData(variant, field_name);
-
-  if (field_opt) {
-
-    std::vector<double> field_vec = InfoEvidenceAnalysis::varianttoFloats(field_opt.value());
-
-    if (field_vec.size() == 1) {
-
-      return {true, field_vec.front() };
-
-    } else if (field_vec.size() == 0) {
-
-      // Missing value, this is OK, means the field exists but not defined for this variant.
-      return {false, 0.0};
-
-    } else {
-
-      std::string vector_str;
-      for (auto const& str : field_vec) {
-
-        vector_str += str;
-        vector_str += ";";
-
-      }
-
-      ExecEnv::log().warn("InbreedingAnalysis::processFloatField, Field: {} expected vector size 1, get vector size: {}, vector: {}, Variant: {}",
-                           field_name, field_vec.size(), vector_str, variant.output(',', VariantOutputIndex::START_0_BASED, false));
-      return {false, 0.0};
-
-    }
-
-  } else {
-
-    ExecEnv::log().warn("InbreedingAnalysis::processFloatField, Field: {} Not found for variant: {}",
-                         field_name, variant.output(',', VariantOutputIndex::START_0_BASED, false));
-    return {false, 0.0};
-
-  }
-
-}
-
-
-std::string kgl::InbreedSampling::lookupSuperPopulationField(const std::string& super_population) {
-
-  if (super_population == SUPER_POP_AFR_GNOMAD_.first) {
-
-    return SUPER_POP_AFR_GNOMAD_.second;
-
-  } else if (super_population == SUPER_POP_AMR_GNOMAD_.first) {
-
-    return SUPER_POP_AMR_GNOMAD_.second;
-
-  } else if (super_population == SUPER_POP_EAS_GNOMAD_.first) {
-
-    return SUPER_POP_EAS_GNOMAD_.second;
-
-  } else if (super_population == SUPER_POP_EUR_GNOMAD_.first) {
-
-    return SUPER_POP_EUR_GNOMAD_.second;
-
-  } else if (super_population == SUPER_POP_SAS_GNOMAD_.first) {
-
-    return SUPER_POP_SAS_GNOMAD_.second;
-
-  } else  {
-
-    ExecEnv::log().error("MutationAnalysis::lookupSuperPopulationField; Unknown Super Population: {}", super_population);
-    return SUPER_POP_SAS_GNOMAD_.second;
-
-  }
-
-}
-
-
-std::string kgl::InbreedSampling::inverseSuperPopulationField(const std::string& super_population) {
-
-  if (super_population == SUPER_POP_AFR_GNOMAD_.second) {
-
-    return SUPER_POP_AFR_GNOMAD_.first + std::string("_AF");
-
-  } else if (super_population == SUPER_POP_AMR_GNOMAD_.second) {
-
-    return SUPER_POP_AMR_GNOMAD_.first + std::string("_AF");
-
-  } else if (super_population == SUPER_POP_EAS_GNOMAD_.second) {
-
-    return SUPER_POP_EAS_GNOMAD_.first + std::string("_AF");
-
-  } else if (super_population == SUPER_POP_EUR_GNOMAD_.second) {
-
-    return SUPER_POP_EUR_GNOMAD_.first + std::string("_AF");
-
-  } else if (super_population == SUPER_POP_SAS_GNOMAD_.second) {
-
-    return SUPER_POP_SAS_GNOMAD_.first + std::string("_AF");
-
-  } else  {
-
-    ExecEnv::log().error("MutationAnalysis::lookupSuperPopulationField; Unknown Super Population: {}", super_population);
-    return SUPER_POP_SAS_GNOMAD_.first + std::string("_AF");
-
-  }
-
-}
 
 
 kgl::ContigLocusMap kgl::InbreedSampling::getPopulationLocusMap(  std::shared_ptr<const UnphasedPopulation> population_ptr,
@@ -169,10 +60,10 @@ kgl::LocusMap kgl::InbreedSampling::getPopulationLocus(std::shared_ptr<const Unp
                                                        ContigOffset_t locii_spacing) {
 
 
-  ThreadPool threadpool(super_pop_vec.size());
+  ThreadPool threadpool(VariantDatabaseRead::superPopulations().size());
   std::vector<std::future<LocusReturnPair>> futures_vec;
 
-  for (auto const& super_pop : super_pop_vec) {
+  for (auto const& super_pop : VariantDatabaseRead::superPopulations()) {
 
     auto return_future = threadpool.enqueueTask(&InbreedSampling::getLocusList,
                                                 unphased_ptr,
@@ -207,7 +98,7 @@ kgl::LocusMap kgl::InbreedSampling::getPopulationLocus(std::shared_ptr<const Unp
 kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
                                                                           const ContigId_t& contig_id,
                                                                           ContigOffset_t spacing,
-                                                                          const SuperPopPair& super_pop_pair,
+                                                                          const std::string& super_population,
                                                                           double min_frequency,
                                                                           double max_frequency) {
 
@@ -215,7 +106,7 @@ kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::s
   size_t variant_duplicates{0};
   static std::mutex log_mutex;  // Multi-thread logging.
   // Annotate the variant list with the super population frequency identifier
-  std::shared_ptr<ContigVariant> locus_list(std::make_shared<ContigVariant>(super_pop_pair.second));
+  std::shared_ptr<ContigVariant> locus_list(std::make_shared<ContigVariant>(super_population));
 
   if (unphased_ptr->getMap().size() == 1) {
 
@@ -235,7 +126,7 @@ kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::s
 
           OffsetVariantArray locus_variant_array = offset_ptr->getVariantArray();
 
-          AlleleFreqVector allele_freq_vector(locus_variant_array, super_pop_pair.second);
+          AlleleFreqVector allele_freq_vector(locus_variant_array, super_population);
 
 
           if (not allele_freq_vector.checkValidAlleleVector()) {
@@ -287,7 +178,7 @@ kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::s
 
   }
 
-  return {super_pop_pair.first, locus_list};
+  return {super_population, locus_list};
 
 }
 
