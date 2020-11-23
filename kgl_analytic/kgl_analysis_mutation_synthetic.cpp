@@ -4,7 +4,7 @@
 
 
 #include "kel_distribution.h"
-#include "kgl_analysis_mutation_inbreed_locus.h"
+#include "kgl_analysis_mutation_synthetic.h"
 #include "kgl_analysis_mutation_inbreed_calc.h"
 
 #include <sstream>
@@ -18,7 +18,7 @@ namespace kgl = kellerberrin::genome;
 
 
 std::shared_ptr<const kgl::DiploidPopulation>
-kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
+kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
                                                    double upper_inbreeding,
                                                    double step_inbreeding,
                                                    const std::string& super_population,
@@ -201,7 +201,7 @@ kgl::InbreedSampling::generateSyntheticPopulation( double lower_inbreeding,
 
 
 // Generate an inbreeding encoded synthetic genome
-kgl::GenomeId_t kgl::InbreedSampling::generateSyntheticGenomeId( double inbreeding,
+kgl::GenomeId_t kgl::InbreedSynthetic::generateSyntheticGenomeId( double inbreeding,
                                                                  const std::string& super_population,
                                                                  size_t counter) {
 
@@ -225,7 +225,7 @@ kgl::GenomeId_t kgl::InbreedSampling::generateSyntheticGenomeId( double inbreedi
 }
 
 // Recreate the inbreeding coefficient from the synthetic genome id.
-std::pair<bool, double> kgl::InbreedSampling::generateInbreeding(const GenomeId_t& genome_id) {
+std::pair<bool, double> kgl::InbreedSynthetic::generateInbreeding(const GenomeId_t& genome_id) {
 
   // Decode the inbreeding coefficient.
   bool valid_value = false;

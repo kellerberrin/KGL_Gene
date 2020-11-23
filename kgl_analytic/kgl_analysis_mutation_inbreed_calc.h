@@ -65,9 +65,9 @@ public:
 private:
 
   inline static const std::map<std::string, InbreedingAlgorithm> inbreeding_algo_map_ = {
-      {RITLAND_LOCUS, processRitlandLocus},
+//      {RITLAND_LOCUS, processRitlandLocus},
       {SIMPLE, processSimple},
-      {HALL_ME, processHallME},
+//      {HALL_ME, processHallME},
       {LOGLIKELIHOOD, processLogLikelihood}
   };
 

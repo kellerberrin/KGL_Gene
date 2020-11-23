@@ -43,6 +43,10 @@ public:
   // Unconditionally adds a variant to the contig (unique or not).
   [[nodiscard]]  bool addVariant(const std::shared_ptr<const Variant> &variant_ptr);
 
+  // Only adds the variant if it does not exist at the offset (only unique).
+  // Phasing information is removed, this function cannot be specified with a haploid or diploid population.
+  [[nodiscard]]  bool addUniqueUnphasedVariant(const std::shared_ptr<const Variant> &variant_ptr);
+
   [[nodiscard]]  size_t variantCount() const;
 
   [[nodiscard]] const UnphasedOffsetMap &getMap() const { return contig_offset_map_; }
@@ -138,6 +142,60 @@ bool ContigOffsetVariant<VariantArray>::addVariant(const std::shared_ptr<const V
   return true;
 
 }
+
+
+// Unconditionally adds a variant to the contig.
+template<class VariantArray>
+bool ContigOffsetVariant<VariantArray>::addUniqueUnphasedVariant(const std::shared_ptr<const Variant> &variant_ptr) {
+
+  // Lock this function to concurrent access.
+  std::scoped_lock lock(add_variant_mutex_);
+
+  auto result = contig_offset_map_.find(variant_ptr->offset());
+
+  if (result != contig_offset_map_.end()) {
+    // Variant offset exists.
+    OffsetVariantArray offset_variant_array = result->second->getVariantArray();
+    // Check for uniqueness
+    for (auto const& offset_variant : offset_variant_array) {
+
+      if (offset_variant->analogous(*variant_ptr)) {
+
+        return true;
+
+      }
+
+    }
+
+    // Variant is unique, so clone, de-phase, and add.
+    std::shared_ptr<Variant> unphased_variant = variant_ptr->clone();
+    unphased_variant->updatePhaseId(VariantSequence::UNPHASED);
+    result->second->addVariant(unphased_variant);
+
+  } else {
+    // add the new offset.
+    std::unique_ptr<VirtualContigOffset> offset_array_ptr(std::make_unique<VariantArray>());
+    std::shared_ptr<Variant> unphased_variant = variant_ptr->clone();
+    unphased_variant->updatePhaseId(VariantSequence::UNPHASED);
+    offset_array_ptr->addVariant(unphased_variant);
+    auto insert_result = contig_offset_map_.try_emplace(variant_ptr->offset(), std::move(offset_array_ptr));
+
+    if (not insert_result.second) {
+
+      ExecEnv::log().error("UnphasedContig::addUniqueUnphasedVariant(); Could not add variant offset: {} to the genome",
+                           variant_ptr->offset());
+      return false;
+
+    }
+
+  }
+
+  return true;
+
+}
+
+
+
 
 
 // Use this to copy the object.

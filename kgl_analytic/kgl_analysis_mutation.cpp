@@ -68,7 +68,7 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBas
 
     if (diploid_population) {
 
-      ExecEnv::log().info("Analysis: {}, Generate Hetreozygous/Homozygous ratio statistics for file: {}", ident(), data_object_ptr->Id());
+      ExecEnv::log().info("Analysis: {}, Generate inbreeding statistics for file: {}", ident(), data_object_ptr->Id());
 
       diploid_population_ = diploid_population;
 
@@ -127,24 +127,11 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Iteration Analysis called for Analysis Id: {}", ident());
 
-  for (auto& [algo_name, inbreeding_algo] : InbreedingCalculation::algoMap()) {
-
-    std::string file_name =  output_file_name_ + "_" + algo_name + "_";
-
-    if (not InbreedingAnalysis::Inbreeding( inbreeding_algo ,
-                                            unphased_population_,
-                                            diploid_population_,
-                                            ped_data_,
-                                            file_name)) {
-
-      ExecEnv::log().error("MutationAnalysis::iterationAnalysis, Analysis: {},  problem with population inbreeding analysis", ident());
-      return false;
-
-    }
-
-  }
-
-  return true;
+  return InbreedingAnalysis::InbreedingAll(genome_GRCh38_,
+                                           unphased_population_,
+                                           diploid_population_,
+                                           ped_data_,
+                                           output_file_name_);
 
 }
 

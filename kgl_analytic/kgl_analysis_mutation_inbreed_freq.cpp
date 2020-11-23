@@ -19,7 +19,7 @@ namespace kel = kellerberrin;
 kgl::AlleleFreqVector::AlleleFreqVector(const std::vector<std::shared_ptr<const Variant>>& variant_vector,
                                         const std::string& frequency_field) {
 
-  static VariantDatabaseRead database_read(VariantDatabaseSource::GNOMAD3_1);
+  static VariantDatabaseRead database_read(VariantDatabaseSource::GNOMAD2_1);
   // Loop through the variants in the locus..
   for (auto const &variant : variant_vector) {
 

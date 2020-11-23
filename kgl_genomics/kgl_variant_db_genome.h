@@ -52,6 +52,9 @@ public:
 
   [[nodiscard]] bool addVariant(const std::shared_ptr<const Variant>& variant);
 
+  // Not for use on Diploid/Haploid genomes.
+  [[nodiscard]] bool addUniqueUnphasedVariant(const std::shared_ptr<const Variant>& variant);
+
   [[nodiscard]] const GenomeId_t& genomeId() const { return genome_id_; }
 
   [[nodiscard]] std::shared_ptr<GenomeVariantArray<VariantContig>> filterVariants(const VariantFilter& filter) const;
@@ -171,6 +174,27 @@ bool GenomeVariantArray<VariantContig>::addVariant(const std::shared_ptr<const V
 
 }
 
+template<class VariantContig>
+bool GenomeVariantArray<VariantContig>::addUniqueUnphasedVariant(const std::shared_ptr<const Variant>& variant) {
+
+  auto contig_opt = getCreateContig(variant->contigId());
+  if (not contig_opt) {
+
+    ExecEnv::log().error("GenomeVariantArray::addUniqueUnphasedVariant(), Genome: {} could not get or create Contig: {}", genomeId(), variant->contigId());
+    return false;
+
+  }
+
+  if (not contig_opt.value()->addUniqueUnphasedVariant(variant)) {
+
+    ExecEnv::log().error("GenomeVariantArray::addUniqueUnphasedVariant(), Genome: {} could not add variant to Contig: {}", genomeId(), variant->contigId());
+    return false;
+
+  }
+
+  return true;
+
+}
 
 
 template<class VariantContig>

@@ -16,7 +16,9 @@ namespace kgl = kellerberrin::genome;
 kgl::ContigLocusMap kgl::InbreedSampling::getPopulationLocusMap(  std::shared_ptr<const UnphasedPopulation> population_ptr,
                                                                   double min_af,
                                                                   double max_af,
-                                                                  ContigOffset_t locii_spacing) {
+                                                                  ContigOffset_t locii_spacing,
+                                                                  ContigOffset_t upper_offset,
+                                                                  ContigOffset_t lower_offset) {
 
   ContigLocusMap contig_locus_map;
   // We assume that the unphased population has only 1 genome.
@@ -31,7 +33,9 @@ kgl::ContigLocusMap kgl::InbreedSampling::getPopulationLocusMap(  std::shared_pt
                                                         contig_id,
                                                         min_af,
                                                         max_af,
-                                                        locii_spacing);
+                                                        locii_spacing,
+                                                        upper_offset,
+                                                        lower_offset);
 
 
       ExecEnv::log().info( "Generated locus maps for contig: {}", contig_id);
@@ -57,7 +61,9 @@ kgl::LocusMap kgl::InbreedSampling::getPopulationLocus(std::shared_ptr<const Unp
                                                        const ContigId_t& contig_id,
                                                        double min_af,
                                                        double max_af,
-                                                       ContigOffset_t locii_spacing) {
+                                                       ContigOffset_t locii_spacing,
+                                                       ContigOffset_t upper_offset,
+                                                       ContigOffset_t lower_offset) {
 
 
   ThreadPool threadpool(VariantDatabaseRead::superPopulations().size());
@@ -68,10 +74,12 @@ kgl::LocusMap kgl::InbreedSampling::getPopulationLocus(std::shared_ptr<const Unp
     auto return_future = threadpool.enqueueTask(&InbreedSampling::getLocusList,
                                                 unphased_ptr,
                                                 contig_id,
-                                                locii_spacing,
                                                 super_pop,
                                                 min_af,
-                                                max_af);
+                                                max_af,
+                                                locii_spacing,
+                                                upper_offset,
+                                                lower_offset);
 
     futures_vec.push_back(std::move(return_future));
 
@@ -92,15 +100,17 @@ kgl::LocusMap kgl::InbreedSampling::getPopulationLocus(std::shared_ptr<const Unp
 
 
 
-// Get a list of hom/het SNPs with a specified spacing to minimise linkage dis-equilibrium
+// Get a list of hom/het SNPs with a specified locii_spacing to minimise linkage dis-equilibrium
 // and at a specified frequency for the super population. Used as a template for calculating
 // the inbreeding coefficient and sample relatedness
 kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
                                                                           const ContigId_t& contig_id,
-                                                                          ContigOffset_t spacing,
                                                                           const std::string& super_population,
-                                                                          double min_frequency,
-                                                                          double max_frequency) {
+                                                                          double min_af,
+                                                                          double max_af,
+                                                                          ContigOffset_t locii_spacing,
+                                                                          ContigOffset_t upper_offset,
+                                                                          ContigOffset_t lower_offset) {
 
   size_t locii{0};
   size_t variant_duplicates{0};
@@ -119,10 +129,15 @@ kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::s
       // Filter for SNP and 'PASS' variants.
       auto snp_contig_ptr = contig_opt.value()->filterVariants(AndFilter(SNPFilter(), PassFilter()));
 
-      ContigOffset_t previous_offset{0};
+      ContigOffset_t previous_offset = lower_offset;
       for (auto const& [offset, offset_ptr] : snp_contig_ptr->getMap()) {
 
-        if (offset >= previous_offset + spacing) {
+        if (offset > upper_offset) {
+
+          // No more locii.
+          break;
+
+        } else if (offset >= previous_offset + locii_spacing) {
 
           OffsetVariantArray locus_variant_array = offset_ptr->getVariantArray();
 
@@ -138,7 +153,7 @@ kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::s
           double sum_frequencies = allele_freq_vector.minorAlleleFrequencies();
           size_t minor_allele_count = allele_freq_vector.alleleFrequencies().size();
           if (minor_allele_count == 0 or sum_frequencies == 0.0
-              or sum_frequencies < min_frequency or sum_frequencies > max_frequency) {
+              or sum_frequencies < min_af or sum_frequencies > max_af) {
 
             continue;
 
@@ -158,7 +173,7 @@ kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::s
           ++locii;
           previous_offset = offset;
 
-        } // if spacing
+        } // if locii_spacing
 
       } // for offset
 

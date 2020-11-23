@@ -27,42 +27,17 @@ public:
   InbreedSampling() = delete;
   ~InbreedSampling() = delete;
 
-  // Generate a list of locii to sample a population for the inbreeding coefficient.
-  [[nodiscard]] static LocusMap getPopulationLocus(std::shared_ptr<const UnphasedPopulation> unphased_ptr,
-                                                   const ContigId_t& contig_id,
-                                                   double min_af,
-                                                   double max_af,
-                                                   ContigOffset_t locii_spacing);
 
   // Uses the defined contigs in the unphased population to create a contig map of population locuii.
   [[nodiscard]] static ContigLocusMap getPopulationLocusMap(  std::shared_ptr<const UnphasedPopulation> population_ptr,
                                                               double min_af,
                                                               double max_af,
-                                                              ContigOffset_t locii_spacing);
+                                                              ContigOffset_t locii_spacing,
+                                                              ContigOffset_t upper_offset = DEFAULT_UPPER_OFFSET,
+                                                              ContigOffset_t lower_offset = DEFAULT_LOWER_OFFSET);
 
-
-  // Create a synthetic population with known inbreeding characteristics
-  // Used to test and calibrate the developed inbreeding algorithms.
-  [[nodiscard]] static std::shared_ptr<const DiploidPopulation>
-    generateSyntheticPopulation( double lower_inbreeding,
-                                 double upper_inbreeding,
-                                 double step_inbreeding,
-                                 const std::string& super_population,
-                                 const ContigVariant& locus_list);
-
-
-
-  // Recover a synthetic inbreeding coefficient from the synthetic genome id.
-  [[nodiscard]] static std::pair<bool, double> generateInbreeding(const GenomeId_t& genome_id);
-
-  // Generate an inbreeding encoded synthetic genome
-  [[nodiscard]] static GenomeId_t generateSyntheticGenomeId( double inbreeding,
-                                                             const std::string& super_population,
-                                                             size_t counter);
-
-
-  // Synthetic genome constant
-  constexpr static const double SYNTHETIC_GENOME = 1000000; // Used to create the synthetic genome id.
+  constexpr static const ContigOffset_t DEFAULT_UPPER_OFFSET = 1000000000; // Larger than all contigs
+  constexpr static const ContigOffset_t DEFAULT_LOWER_OFFSET = 0;
 
 private:
 
@@ -73,12 +48,21 @@ private:
   using LocusReturnPair = std::pair<std::string, std::shared_ptr<const ContigVariant>>;
   [[nodiscard]] static LocusReturnPair getLocusList( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
                                                      const ContigId_t& contig_id,
-                                                     ContigOffset_t spacing,
                                                      const std::string& super_population,
-                                                     double min_frequency,
-                                                     double max_frequency);
+                                                     double min_af,
+                                                     double max_af,
+                                                     ContigOffset_t locii_spacing,
+                                                     ContigOffset_t upper_offset,
+                                                     ContigOffset_t lower_offset);
 
-
+  // Generate a list of locii to sample a population for the inbreeding coefficient.
+  [[nodiscard]] static LocusMap getPopulationLocus(std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+                                                   const ContigId_t& contig_id,
+                                                   double min_af,
+                                                   double max_af,
+                                                   ContigOffset_t locii_spacing,
+                                                   ContigOffset_t upper_offset,
+                                                   ContigOffset_t lower_offset);
 
 };
 
