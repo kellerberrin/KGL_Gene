@@ -8,6 +8,7 @@
 #include "kgl_variant_db_phased.h"
 #include "kgl_ped_parser.h"
 #include "kel_optimize.h"
+#include "kgl_analysis_mutation_inbreed_freqdb.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
@@ -120,8 +121,6 @@ public:
 
   [[nodiscard]] double frequency() const { return frequency_; }
 
-  void frequency(double freq) { frequency_ = freq; }
-
 private:
 
   std::shared_ptr<const Variant> allele_;
@@ -137,7 +136,9 @@ class AlleleFreqVector {
 
 public:
 
-  AlleleFreqVector(const std::vector <std::shared_ptr<const Variant>> &variant_vector, const std::string &frequency_field);
+  AlleleFreqVector(const std::vector <std::shared_ptr<const Variant>> &variant_vector,
+                   const std::string &frequency_field,
+                   VariantDatabaseSource variant_source = VariantDatabaseSource::GNOMAD2_1);
 
   ~AlleleFreqVector() = default;
 
@@ -151,7 +152,7 @@ public:
   [[nodiscard]] double majorAlleleFrequency() const;
 
   // Checks that we have a valid vector of minor alleles.
-  // Updates allele frequencies under limited circumstances.
+  // The minor alleles must sum to 1.0 or less and the allele vector must be non-empty.
   [[nodiscard]] bool checkValidAlleleVector();
 
   // Return the unadjusted allele class frequencies (may be -ve).
@@ -177,10 +178,8 @@ private:
 
   // All minor allele frequencies at minor allele offset (from Gnomad)
   std::vector <AlleleFreqRecord> allele_frequencies_;
-  // Tolerance for the sum of allele classes
-  constexpr static const double epsilon_class_{1.0e-10};
-  // Tolerance for the sum of allele frequencies
-  constexpr static const double epsilon_sum_{1.0e-03};
+  // Tolerance for the sum of alleles
+  constexpr static const double epsilon_class_{1.0e-5};
 
   // True if duplicate alleles found
   [[nodiscard]] bool checkDuplicates() const;

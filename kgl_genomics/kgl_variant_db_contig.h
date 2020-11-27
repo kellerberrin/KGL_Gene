@@ -293,6 +293,7 @@ std::optional<OffsetVariantArray> ContigOffsetVariant<VariantArray>::findOffsetA
 }
 
 
+
 template<class VariantArray>
 std::optional<std::shared_ptr<const Variant>> ContigOffsetVariant<VariantArray>::findVariant(const Variant& variant) const {
 

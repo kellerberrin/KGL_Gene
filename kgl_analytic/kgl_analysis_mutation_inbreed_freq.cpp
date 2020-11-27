@@ -17,9 +17,10 @@ namespace kel = kellerberrin;
 
 
 kgl::AlleleFreqVector::AlleleFreqVector(const std::vector<std::shared_ptr<const Variant>>& variant_vector,
-                                        const std::string& frequency_field) {
+                                        const std::string& frequency_field,
+                                        VariantDatabaseSource variant_source) {
 
-  static VariantDatabaseRead database_read(VariantDatabaseSource::GNOMAD2_1);
+  VariantDatabaseRead database_read(variant_source);
   // Loop through the variants in the locus..
   for (auto const &variant : variant_vector) {
 
@@ -61,45 +62,17 @@ kgl::AlleleFreqVector::AlleleFreqVector(const std::vector<std::shared_ptr<const 
 
 bool kgl::AlleleFreqVector::checkValidAlleleVector() {
 
-  static std::mutex log_mutex;
   double allele_sum = sumAlleleFrequencies();
   double check_allele_sum = allele_sum - 1.0;
-  if (check_allele_sum > epsilon_class_ and check_allele_sum < epsilon_sum_) {
-  // If the sum is not too far from 1.0 we adjust the allele frequencies.
-  // This handles minor inaccuracies in the allele frequencies in the data files.
-
-    for (auto& allele : allele_frequencies_) {
-
-      double adjusted_frequency = allele.frequency() / allele_sum;
-      allele.frequency(adjusted_frequency);
-
-    }
-
-  } else if (check_allele_sum > epsilon_sum_) {
-  // The allele frequency error is too big to ignore (arguably).
-    std::scoped_lock lock(log_mutex); // Synchronous thread logging.
-
-    std::stringstream ss;
-    for (auto const& allele : alleleFrequencies()) {
-
-      ss << allele.frequency() << ", ";
-
-    }
-    ExecEnv::log().warn("AlleleFreqVector::checkValidAlleleVector; Sum minor allele freqs: {} > 1.0 ({})",
-                        ss.str(), allele_sum);
-
-    for (auto const& allele : alleleFrequencies()) {
-
-      ExecEnv::log().warn("AlleleFreqVector::checkValidAlleleVector; Frequency: {}, SNP: {}",
-                           allele.frequency(), allele.allele()->output(',', VariantOutputIndex::START_0_BASED, false));
-
-    }
+  // If greater than 1, then reject.
+  if (check_allele_sum > epsilon_class_) {
 
     return false;
 
   }
 
-  return true;
+  // Minor allele array must be non-empty
+  return not allele_frequencies_.empty();
 
 }
 

@@ -123,8 +123,8 @@ bool kgl::InbreedingAnalysis::populationInbreeding(InbreedingAlgorithm algorithm
                                                    const GenomePEDData& ped_data,
                                                    const std::string& output_file_name) {
 
-  static const ContigOffset_t sampling_distance = 1000;
-  static const ContigOffset_t window_size = 10000000;
+  static const ContigOffset_t sampling_distance = 300;
+  static const size_t locii_count = 10000;
 
   // Filter out any variants that did not pass VCF filters (otherwise we get duplicate variants).
   unphased_ptr = unphased_ptr->filterVariants(PassFilter());
@@ -161,15 +161,31 @@ bool kgl::InbreedingAnalysis::populationInbreeding(InbreedingAlgorithm algorithm
 
   ContigOffset_t contig_size = contig_opt.value()->contigSize();
   ContigOffset_t lower_window = 0;
-  ContigOffset_t upper_window = lower_window + window_size;
 
-  while (lower_window < contig_size) {
+  LociiVectorArguments locii_args(contig_ptr);
+  locii_args.lociiType(LociiType::LOCII_FROM_COUNT);
+  locii_args.lociiCount(locii_count);
+  locii_args.lowerOffset(lower_window);
+  locii_args.lociiSpacing(sampling_distance);
+  locii_args.superPopulation("SAS");
+  locii_args.minAlleleFrequency(0.2);
+  locii_args.maxAlleleFrequency(1.0);
+  locii_args.variantSource(VariantDatabaseSource::GNOMAD2_1);
+
+  std::vector<ContigOffset_t> locii_vector = RetrieveLociiVector::getLociiVector(locii_args);
+
+  ContigOffset_t upper_window = locii_vector.back();
+
+  while (lower_window < (contig_size - 1000) and locii_vector.size() >= 1000) {
+
 
     std::stringstream ss;
 
     ss << "_" << lower_window << "_" << upper_window << "_";
     std::string window_file = output_file_name + ss.str();
 
+
+/*
     populationInbreedingSample(algorithm,
                                unphased_ptr,
                                diploid_population,
@@ -193,7 +209,7 @@ bool kgl::InbreedingAnalysis::populationInbreeding(InbreedingAlgorithm algorithm
                                sampling_distance,
                                upper_window,
                                lower_window);
-/*
+
     populationInbreedingSample(algorithm,
                                unphased_ptr,
                                diploid_population,
@@ -230,8 +246,15 @@ bool kgl::InbreedingAnalysis::populationInbreeding(InbreedingAlgorithm algorithm
                                upper_window,
                                lower_window);
 
+//    size_t lower_index = locii_vector.size() / 3;
+
+//    lower_window = locii_vector[lower_index];
+
     lower_window = upper_window;
-    upper_window += window_size;
+    locii_args.lowerOffset(lower_window);
+    locii_vector = RetrieveLociiVector::getLociiVector(locii_args);
+
+    upper_window = locii_vector.back();
 
   }
 

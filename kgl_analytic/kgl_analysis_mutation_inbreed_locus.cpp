@@ -6,11 +6,250 @@
 #include "kgl_variant.h"
 #include "kgl_filter.h"
 #include "kgl_analysis_mutation_inbreed_locus.h"
-#include "kgl_analysis_mutation_inbreed_calc.h"
 
 
 namespace kgl = kellerberrin::genome;
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+
+std::vector<kgl::ContigOffset_t>  kgl::RetrieveLociiVector::getLociiVector(const LociiVectorArguments& arguments) {
+
+  switch(arguments.lociiType()) {
+
+    case LociiType::LOCII_FROM_COUNT:
+      return getLociiCount(arguments.unphasedContigPtr(),
+                           arguments.lowerOffset(),
+                           arguments.lociiCount(),
+                           arguments.lociiSpacing(),
+                           arguments.superPopulation(),
+                           arguments.minAlleleFrequency(),
+                           arguments.maxAlleleFrequency(),
+                           arguments.variantSource());
+
+      case LociiType::LOCII_FROM_TO:
+      return getLociiFromTo(arguments.unphasedContigPtr(),
+                            arguments.lowerOffset(),
+                            arguments.upperOffset(),
+                            arguments.lociiSpacing(),
+                            arguments.superPopulation(),
+                            arguments.minAlleleFrequency(),
+                            arguments.maxAlleleFrequency(),
+                            arguments.variantSource());
+
+  }
+
+  return std::vector<kgl::ContigOffset_t>();
+
+}
+
+
+
+std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesFromTo( std::shared_ptr<const ContigVariant> unphased_contig_ptr,
+                                                                             ContigOffset_t lower_offset,
+                                                                             ContigOffset_t upper_offset,
+                                                                             size_t locii_spacing,
+                                                                             const std::string& super_population,
+                                                                             double allele_frequency_min,
+                                                                             double allele_frequency_max,
+                                                                             VariantDatabaseSource variant_source) {
+
+  std::vector<AlleleFreqVector> locii_vector;
+  auto current_offset = unphased_contig_ptr->getMap().lower_bound(lower_offset);
+  ContigOffset_t previous_offset{0};
+
+  while (current_offset != unphased_contig_ptr->getMap().end()) {
+
+    auto const&[offset, offset_ptr] = *current_offset;
+
+    if (offset > upper_offset) {
+
+      // No more locii.
+      break;
+
+    } else if ((offset >= previous_offset + locii_spacing) or previous_offset == 0) {
+
+      OffsetVariantArray locus_variant_array = offset_ptr->getVariantArray();
+
+      AlleleFreqVector allele_freq_vector(locus_variant_array, super_population, variant_source);
+
+      if (not allele_freq_vector.checkValidAlleleVector()) {
+
+        ++current_offset;  // next offset
+        continue; // Next locus.
+
+      }
+      // Check for allele frequencies.
+      double sum_frequencies = allele_freq_vector.minorAlleleFrequencies();
+      size_t minor_allele_count = allele_freq_vector.alleleFrequencies().size();
+      if (minor_allele_count == 0 or sum_frequencies == 0.0
+          or sum_frequencies < allele_frequency_min or sum_frequencies > allele_frequency_max) {
+
+        ++current_offset;  // next offset
+        continue;
+
+      }
+
+      previous_offset = offset;
+      locii_vector.push_back(allele_freq_vector);  // save offset for further use.
+
+    } // if locii_spacing
+
+    ++current_offset;  // next offset
+
+  } // while
+
+  return locii_vector;
+
+}
+
+
+
+std::vector<kgl::ContigOffset_t> kgl::RetrieveLociiVector::getLociiFromTo(std::shared_ptr<const ContigVariant> unphased_contig_ptr,
+                                                                          ContigOffset_t lower_offset,
+                                                                          ContigOffset_t upper_offset,
+                                                                          size_t locii_spacing,
+                                                                          const std::string& super_population,
+                                                                          double allele_frequency_min,
+                                                                          double allele_frequency_max,
+                                                                          VariantDatabaseSource variant_source) {
+
+  std::vector<kgl::ContigOffset_t> locii_vector;
+
+  std::vector<AlleleFreqVector> freq_vector = getAllelesFromTo( unphased_contig_ptr,
+                                                                lower_offset,
+                                                                upper_offset,
+                                                                locii_spacing,
+                                                                super_population,
+                                                                allele_frequency_min,
+                                                                allele_frequency_max,
+                                                                variant_source);
+
+  for (auto const& alleles : freq_vector) {
+
+    if (not alleles.alleleFrequencies().empty()) {
+
+      locii_vector.push_back(alleles.alleleFrequencies().front().allele()->offset());
+
+    } else {
+
+      ExecEnv::log().error("RetrieveLociiVector::getLociiFromTo; empty allele vector");
+
+    }
+
+  }
+
+  return locii_vector;
+
+}
+
+
+
+
+std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesCount( std::shared_ptr<const ContigVariant> unphased_contig_ptr,
+                                                                              ContigOffset_t lower_offset,
+                                                                              size_t locii_count,
+                                                                              size_t locii_spacing,
+                                                                              const std::string& super_population,
+                                                                              double allele_frequency_min,
+                                                                              double allele_frequency_max,
+                                                                              VariantDatabaseSource variant_source) {
+
+  std::vector<AlleleFreqVector> locii_vector;
+  auto current_offset = unphased_contig_ptr->getMap().lower_bound(lower_offset);
+  ContigOffset_t previous_offset{0};
+
+  while (current_offset != unphased_contig_ptr->getMap().end()) {
+
+    auto const&[offset, offset_ptr] = *current_offset;
+
+    if (locii_vector.size() >= locii_count) {
+
+      // No more locii.
+      break;
+
+    } else if ((offset >= previous_offset + locii_spacing) or previous_offset == 0) {
+
+      OffsetVariantArray locus_variant_array = offset_ptr->getVariantArray();
+
+      AlleleFreqVector allele_freq_vector(locus_variant_array, super_population, variant_source);
+
+      if (not allele_freq_vector.checkValidAlleleVector()) {
+
+        ++current_offset;  // next offset
+        continue; // Next locus.
+
+      }
+      // Check for allele frequencies.
+      double sum_frequencies = allele_freq_vector.minorAlleleFrequencies();
+      size_t minor_allele_count = allele_freq_vector.alleleFrequencies().size();
+      if (minor_allele_count == 0 or sum_frequencies == 0.0
+          or sum_frequencies < allele_frequency_min or sum_frequencies > allele_frequency_max) {
+
+        ++current_offset;  // next offset
+        continue;
+
+      }
+
+      previous_offset = offset;
+      locii_vector.push_back(allele_freq_vector);  // save offset for further use.
+
+    } // if locii_spacing
+
+    ++current_offset;  // next offset
+
+  } // while
+
+  return locii_vector;
+
+}
+
+
+std::vector<kgl::ContigOffset_t> kgl::RetrieveLociiVector::getLociiCount( std::shared_ptr<const ContigVariant> unphased_contig_ptr,
+                                                                          ContigOffset_t lower_offset,
+                                                                          size_t locii_count,
+                                                                          size_t locii_spacing,
+                                                                          const std::string& super_population,
+                                                                          double allele_frequency_min,
+                                                                          double allele_frequency_max,
+                                                                          VariantDatabaseSource variant_source) {
+
+  std::vector<kgl::ContigOffset_t> locii_vector;
+
+  std::vector<AlleleFreqVector> freq_vector = getAllelesCount( unphased_contig_ptr,
+                                                               lower_offset,
+                                                               locii_count,
+                                                               locii_spacing,
+                                                               super_population,
+                                                               allele_frequency_min,
+                                                               allele_frequency_max,
+                                                               variant_source);
+
+  for (auto const& alleles : freq_vector) {
+
+    if (not alleles.alleleFrequencies().empty()) {
+
+      locii_vector.push_back(alleles.alleleFrequencies().front().allele()->offset());
+
+    } else {
+
+      ExecEnv::log().error("RetrieveLociiVector::getLociiCount; empty allele vector");
+
+    }
+
+  }
+
+  return locii_vector;
+
+}
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 
 
 kgl::ContigLocusMap kgl::InbreedSampling::getPopulationLocusMap(  std::shared_ptr<const UnphasedPopulation> population_ptr,
@@ -112,11 +351,9 @@ kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::s
                                                                           ContigOffset_t upper_offset,
                                                                           ContigOffset_t lower_offset) {
 
-  size_t locii{0};
-  size_t variant_duplicates{0};
-  static std::mutex log_mutex;  // Multi-thread logging.
   // Annotate the variant list with the super population frequency identifier
   std::shared_ptr<ContigVariant> locus_list(std::make_shared<ContigVariant>(super_population));
+  size_t locii{0};
 
   if (unphased_ptr->getMap().size() == 1) {
 
@@ -126,56 +363,48 @@ kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::s
 
     if (contig_opt) {
 
+
       // Filter for SNP and 'PASS' variants.
       auto snp_contig_ptr = contig_opt.value()->filterVariants(AndFilter(SNPFilter(), PassFilter()));
 
-      ContigOffset_t previous_offset = lower_offset;
-      for (auto const& [offset, offset_ptr] : snp_contig_ptr->getMap()) {
+      // Retrieve the locii that meet the conditions.
+      LociiVectorArguments locii_args(snp_contig_ptr);
+      locii_args.lociiType(LociiType::LOCII_FROM_TO);
+      locii_args.lowerOffset(lower_offset);
+      locii_args.upperOffset(upper_offset);
+      locii_args.lociiSpacing(locii_spacing);
+      locii_args.superPopulation(super_population);
+      locii_args.minAlleleFrequency(min_af);
+      locii_args.maxAlleleFrequency(max_af);
 
-        if (offset > upper_offset) {
+      std::vector<ContigOffset_t> locii_vector = RetrieveLociiVector::getLociiVector(locii_args);
 
-          // No more locii.
-          break;
+      locii += locii_vector.size();
 
-        } else if (offset >= previous_offset + locii_spacing) {
+      for (auto locus : locii_vector) {
 
-          OffsetVariantArray locus_variant_array = offset_ptr->getVariantArray();
+        auto variant_array_opt = snp_contig_ptr->findOffsetArray(locus);
+        if (variant_array_opt) {
 
-          AlleleFreqVector allele_freq_vector(locus_variant_array, super_population);
+          for (auto const& variant : variant_array_opt.value()) {
 
-
-          if (not allele_freq_vector.checkValidAlleleVector()) {
-
-            continue; // Next locus.
-
-          }
-          // Check for allele frequencies.
-          double sum_frequencies = allele_freq_vector.minorAlleleFrequencies();
-          size_t minor_allele_count = allele_freq_vector.alleleFrequencies().size();
-          if (minor_allele_count == 0 or sum_frequencies == 0.0
-              or sum_frequencies < min_af or sum_frequencies > max_af) {
-
-            continue;
-
-          }
-
-          for (auto const& allele : allele_freq_vector.alleleFrequencies()) {
-
-            if (not locus_list->addVariant(allele.allele())) {
+            if (not locus_list->addVariant(variant)) {
 
               ExecEnv::log().error("InbreedingAnalysis::getLocusList, Could not add variant: {}",
-                                   allele.allele()->output(',', VariantOutputIndex::START_0_BASED, false));
+                                   variant->output(',', VariantOutputIndex::START_0_BASED, false));
 
             }
 
-          } // for variant array
+          }
 
-          ++locii;
-          previous_offset = offset;
+        } else {
 
-        } // if locii_spacing
+          ExecEnv::log().error("InbreedingAnalysis::getLocusList, Could not add Contig: {}, No variant found at offset: {}",
+                               snp_contig_ptr->contigId(), locus);
 
-      } // for offset
+        }
+
+      }
 
     } // if contig_opt
 
@@ -186,12 +415,8 @@ kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::s
 
   }
 
-  if (locus_list->variantCount() > 0) {
-
-    ExecEnv::log().info("Locus List for super population: {} contains: Locii: {}, SNPs: {}, rejected duplicates: {}",
-                        locus_list->contigId(), locii, locus_list->variantCount(), variant_duplicates);
-
-  }
+  ExecEnv::log().info("Locus List for super population: {} contains: Locii: {}, SNPs: {}",
+                      locus_list->contigId(), locii, locus_list->variantCount());
 
   return {super_population, locus_list};
 

@@ -99,10 +99,14 @@ std::string kgl::VariantDatabaseRead::lookupGnomad_2_1_Field(const std::string& 
 
     return SUPER_POP_SAS_GNOMAD_2_1.second;
 
+  } else if (super_population == SUPER_POP_ALL_GNOMAD_2_1.first) {
+
+    return SUPER_POP_ALL_GNOMAD_2_1.second;
+
   } else  {
 
     ExecEnv::log().error("MutationAnalysis::lookupGnomad_2_1_Field; Unknown Super Population: {}", super_population);
-    return SUPER_POP_SAS_GNOMAD_2_1.second;
+    return SUPER_POP_ALL_GNOMAD_2_1.second;
 
   }
 
@@ -130,10 +134,14 @@ std::string kgl::VariantDatabaseRead::lookupGnomad_3_1_Field(const std::string& 
 
     return SUPER_POP_SAS_GNOMAD_3_1.second;
 
+  } else if (super_population == SUPER_POP_ALL_GNOMAD_3_1.first) {
+
+    return SUPER_POP_ALL_GNOMAD_3_1.second;
+
   } else  {
 
     ExecEnv::log().error("MutationAnalysis::lookupGnomad_3_1_Field; Unknown Super Population: {}", super_population);
-    return SUPER_POP_SAS_GNOMAD_3_1.second;
+    return SUPER_POP_ALL_GNOMAD_3_1.second;
 
   }
 
@@ -161,6 +169,10 @@ std::string kgl::VariantDatabaseRead::lookup_1000_Field(const std::string& super
   } else if (super_population == SUPER_POP_SAS_1000.first) {
 
     return SUPER_POP_SAS_1000.second;
+
+  } else if (super_population == SUPER_POP_ALL_1000.first) {
+
+    return SUPER_POP_ALL_1000.second;
 
   } else  {
 
