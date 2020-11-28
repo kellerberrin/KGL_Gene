@@ -13,6 +13,23 @@
 namespace kgl = kellerberrin::genome;
 namespace kel = kellerberrin;
 
+
+std::optional<kgl::InbreedingAlgorithm> kgl::InbreedingCalculation::namedAlgorithm(const std::string& algorithm_name) {
+
+  auto inbreeding_algo = inbreeding_algo_map_.find(algorithm_name);
+
+  if (inbreeding_algo != inbreeding_algo_map_.end()) {
+
+    auto [algo_name, algo_function] = *inbreeding_algo;
+    return algo_function;
+
+  }
+
+  return std::nullopt;
+
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // These functions calculate the inbreeding coefficient for an individual by looking at multiple locii.
@@ -82,7 +99,8 @@ kgl::LocusResults
 kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
                                                  const std::shared_ptr<const DiploidContig>& contig_ptr,
                                                  const std::string& super_population_field,
-                                                 const std::shared_ptr<const ContigVariant>& locus_list) {
+                                                 const std::shared_ptr<const ContigVariant>& locus_list,
+                                                 const InbreedingParameters& parameters) {
 
   // Only want SNP variants.
   auto snp_contig_ptr = contig_ptr->filterVariants(SNPFilter());
@@ -92,7 +110,11 @@ kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
   // The real unit distribution [1,0] used to as a start point for the loglik algorithm.
   UniformUnitDistribution unit_distribution;
   // Get the locus frequencies.
-  auto [frequency_vector, locus_results] = generateFrequencies(genome_id, contig_ptr, super_population_field, locus_list);
+  auto [frequency_vector, locus_results] = generateFrequencies(genome_id,
+                                                               contig_ptr,
+                                                               super_population_field,
+                                                               locus_list,
+                                                               parameters.lociiArguments().variantSource());
 
   double updated_coefficient = 0.0;
   double inbreed_coefficient;
@@ -123,7 +145,7 @@ kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
 
     updated_coefficient = coefficient.front();
 
-  } while (retries < MIN_RETRIES_ or (retries <= MAX_RETRIES_ and std::fabs(updated_coefficient - inbreed_coefficient) >= 1e-04));
+  } while (retries < MIN_RETRIES_ or (retries <= MAX_RETRIES_ and std::fabs(updated_coefficient - inbreed_coefficient) >= FINAL_ACCURACY_));
 
   if (retries >= MAX_RETRIES_) {
 
@@ -155,7 +177,8 @@ kgl::LocusResults
 kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
                                            const std::shared_ptr<const DiploidContig>& contig_ptr,
                                            const std::string& super_population_field,
-                                           const std::shared_ptr<const ContigVariant>& locus_list) {
+                                           const std::shared_ptr<const ContigVariant>& locus_list,
+                                           const InbreedingParameters& parameters) {
 
   // Only want SNP variants.
   auto snp_contig_ptr = contig_ptr->filterVariants(SNPFilter());
@@ -165,7 +188,11 @@ kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
   // The real unit distribution [1,0] used to as a start point for the EM algorithm.
   UniformUnitDistribution unit_distribution;
   // Get the locus frequencies.
-  auto [frequency_vector, locus_results] = generateFrequencies(genome_id, contig_ptr, super_population_field, locus_list);
+  auto [frequency_vector, locus_results] = generateFrequencies(genome_id,
+                                                               contig_ptr,
+                                                               super_population_field,
+                                                               locus_list,
+                                                               parameters.lociiArguments().variantSource());
 
   double updated_coefficient = 0.0;
   double inbreed_coefficient;
@@ -254,10 +281,15 @@ kgl::LocusResults
 kgl::InbreedingCalculation::processSimple(const GenomeId_t& genome_id,
                                           const std::shared_ptr<const DiploidContig>& contig_ptr,
                                           const std::string& super_population_field,
-                                          const std::shared_ptr<const ContigVariant>& locus_list) {
+                                          const std::shared_ptr<const ContigVariant>& locus_list,
+                                          const InbreedingParameters& parameters) {
 
   // Get the locus frequencies.
-  auto [frequency_vector, locus_results] = generateFrequencies(genome_id, contig_ptr, super_population_field, locus_list);
+  auto [frequency_vector, locus_results] = generateFrequencies( genome_id,
+                                                                contig_ptr,
+                                                                super_population_field,
+                                                                locus_list,
+                                                                parameters.lociiArguments().variantSource());
   const bool calc_hetero{false}; // Which calculation to use.
   double heterozygous_inbreeding{0.0};
   double homozygous_inbreeding{0.0};
@@ -307,14 +339,19 @@ kgl::LocusResults
 kgl::InbreedingCalculation::processRitlandLocus(const GenomeId_t &genome_id,
                                            const std::shared_ptr<const DiploidContig>& contig_ptr,
                                            const std::string& super_population_field,
-                                           const std::shared_ptr<const ContigVariant>& locus_list) {
+                                           const std::shared_ptr<const ContigVariant>& locus_list,
+                                           const InbreedingParameters& parameters) {
 
   // Ignore rare homozygous combinations, as these 'blow up' the ratio below.
   constexpr const static double minimum_frequency{0.001};
 
   size_t sum_allele{0};
   double locus_allele_sum{0.0};
-  auto [frequency_vector, locus_results] = generateFrequencies(genome_id, contig_ptr, super_population_field, locus_list);
+  auto [frequency_vector, locus_results] = generateFrequencies( genome_id,
+                                                                contig_ptr,
+                                                                super_population_field,
+                                                                locus_list,
+                                                                parameters.lociiArguments().variantSource());
 
   for (auto const& allele_freq : frequency_vector) {
 

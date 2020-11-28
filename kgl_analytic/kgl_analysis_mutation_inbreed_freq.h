@@ -12,6 +12,7 @@
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Data structures to hold summary actual and implied allele frequency information at an offset.
 // Called by the threadpool for each genome/sample.
@@ -138,7 +139,7 @@ public:
 
   AlleleFreqVector(const std::vector <std::shared_ptr<const Variant>> &variant_vector,
                    const std::string &frequency_field,
-                   VariantDatabaseSource variant_source = VariantDatabaseSource::GNOMAD2_1);
+                   VariantDatabaseSource variant_source);
 
   ~AlleleFreqVector() = default;
 

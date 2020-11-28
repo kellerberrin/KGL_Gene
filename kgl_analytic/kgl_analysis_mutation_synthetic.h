@@ -7,6 +7,8 @@
 
 #include "kgl_variant_db_phased.h"
 #include "kgl_analysis_mutation_inbreed_freqdb.h"
+#include "kgl_analysis_mutation_inbreed_locus.h"
+
 
 #include <memory>
 #include <map>
@@ -30,7 +32,8 @@ public:
                                double upper_inbreeding,
                                double step_inbreeding,
                                const std::string& super_population,
-                               const ContigVariant& locus_list);
+                               const ContigVariant& locus_list,
+                               const LociiVectorArguments& arguments);
 
 
   // Recover a synthetic inbreeding coefficient from the synthetic genome id.

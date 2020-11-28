@@ -22,7 +22,8 @@ kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
                                                    double upper_inbreeding,
                                                    double step_inbreeding,
                                                    const std::string& super_population,
-                                                   const ContigVariant& locus_list) {
+                                                   const ContigVariant& locus_list,
+                                                   const LociiVectorArguments& arguments) {
   static std::mutex log_mutex; // logging mutex.
 
   std::shared_ptr<DiploidPopulation> synthetic_pop_ptr(std::make_shared<DiploidPopulation>("SyntheticInbreedingPopulation"));
@@ -64,7 +65,7 @@ kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
       auto variant_vec = offset_ptr->getVariantArray();
 
       // Generate the minor allele frequencies.
-      AlleleFreqVector freq_vector(variant_vec, super_population);
+      AlleleFreqVector freq_vector(variant_vec, super_population, arguments.variantSource());
 
       // Draw a unit rand and select an allele class.
       double class_selection = unit_distribution.random(entropy_mt.generator());

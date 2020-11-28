@@ -22,47 +22,71 @@ bool kgl::InbreedingAnalysis::InbreedingAll( std::shared_ptr<const GenomeReferen
                                              std::shared_ptr<const GenomePEDData> ped_data_ptr,
                                              const std::string& output_file_name) {
 
+  static const std::string gnomad_3_1_fragment = "r3.1";
+  // Setup the runtime parameters.
+  InbreedingParameters parameters;
+  parameters.outputFile(output_file_name);
+  parameters.inbreedingAlgorthim(InbreedingCalculation::LOGLIKELIHOOD);
+  std::string file_name =  output_file_name + "_" + parameters.inbreedingAlgorthim() + "_";
+  parameters.outputFile(file_name);
+
   // Only the diploid population presented.
   // Create a synthetic unphased population using the diploid population.
   if (diploid_ptr and ped_data_ptr and not unphased_ptr) {
 
-    ExecEnv::log().info("InbreedingAnalysis::Inbreeding; Creating unique unphased population");
+    ExecEnv::log().info("InbreedingAnalysis::Inbreeding; Creating unique unphased population using 1000 Genomes.");
     std::shared_ptr<GenomeVariant> unphased_genome_ptr = diploid_ptr->uniqueUnphasedGenome<GenomeVariant>();
     std::shared_ptr<UnphasedPopulation> unphased_unique_ptr = std::make_shared<UnphasedPopulation>("UniqueUnphasedPopulation");
     unphased_unique_ptr->addGenome(unphased_genome_ptr);
-    ExecEnv::log().info("InbreedingAnalysis::Inbreeding; Created unique unphased population, variant count: {}", unphased_unique_ptr->variantCount());
+    ExecEnv::log().info("InbreedingAnalysis::Inbreeding; Created unique unphased population, variant count: {}.", unphased_unique_ptr->variantCount());
     unphased_ptr = unphased_unique_ptr;
+    parameters.lociiArguments().variantSource(VariantDatabaseSource::GENOMES_1000);
 
-  }
+  } else if (unphased_ptr) {
 
-  for (auto& [algo_name, inbreeding_algo] : InbreedingCalculation::algoMap()) {
+    // Check if Gnomad 3.1 else Gnomad 2.1
+    size_t find_pos = unphased_ptr->populationId().find(gnomad_3_1_fragment);
+    if (find_pos != std::string::npos) {
 
-    std::string file_name =  output_file_name + "_" + algo_name + "_";
+      parameters.lociiArguments().variantSource(VariantDatabaseSource::GNOMAD3_1);
 
-    if (not InbreedingAnalysis::Inbreeding( inbreeding_algo ,
-                                            genome_ptr,
-                                            unphased_ptr,
-                                            diploid_ptr,
-                                            ped_data_ptr,
-                                            file_name)) {
+    } else {
 
-      ExecEnv::log().error("MutationAnalysis::iterationAnalysis, problem with population inbreeding analysis, algorithm: {}", algo_name);
-      return false;
+      parameters.lociiArguments().variantSource(VariantDatabaseSource::GNOMAD2_1);
 
     }
 
+  } else {
+
+    ExecEnv::log().error("MutationAnalysis::iterationAnalysis, missing required data files");
+    return false;
+
   }
+
+  parameters.lociiArguments().variantSource(VariantDatabaseSource::GNOMAD2_1);
+
+  if (not InbreedingAnalysis::Inbreeding( genome_ptr,
+                                          unphased_ptr,
+                                          diploid_ptr,
+                                          ped_data_ptr,
+                                          parameters)) {
+
+    ExecEnv::log().error("MutationAnalysis::iterationAnalysis, problem with population inbreeding analysis, algorithm: {}",
+                         parameters.inbreedingAlgorthim());
+    return false;
+
+  }
+
 
   return true;
 
 }
 
-bool kgl::InbreedingAnalysis::Inbreeding( InbreedingAlgorithm algorithm,
-                                          std::shared_ptr<const GenomeReference> genome_ptr,
+bool kgl::InbreedingAnalysis::Inbreeding( std::shared_ptr<const GenomeReference> genome_ptr,
                                           std::shared_ptr<const UnphasedPopulation> unphased_ptr,
                                           std::shared_ptr<const DiploidPopulation> diploid_ptr,
                                           std::shared_ptr<const GenomePEDData> ped_data_ptr,
-                                          const std::string& output_file_name) {
+                                          InbreedingParameters& parameters) {
 
 
   if (diploid_ptr and unphased_ptr and ped_data_ptr) {
@@ -70,32 +94,20 @@ bool kgl::InbreedingAnalysis::Inbreeding( InbreedingAlgorithm algorithm,
     ExecEnv::log().info("Filtered Population : {}  and Joined Population: {}  both active",
                         diploid_ptr->populationId(), unphased_ptr->populationId());
 
-    if (not InbreedingAnalysis::populationInbreeding(algorithm,
-                                                     genome_ptr,
+    if (not InbreedingAnalysis::populationInbreeding(genome_ptr,
                                                      unphased_ptr,
                                                      *diploid_ptr,
                                                      *ped_data_ptr,
-                                                     output_file_name)) {
+                                                     parameters)) {
 
       ExecEnv::log().error("InbreedingAnalysis::Inbreeding; problem with population inbreeding analysis");
       return false;
 
     }
-/*
-    if (not InbreedingAnalysis::syntheticInbreeding(algorithm,
-                                                    unphased_ptr,
-                                                    output_file_name)) {
 
-      ExecEnv::log().error("InbreedingAnalysis::Inbreeding; problem with synthetic inbreeding analysis");
-      return false;
-
-    }
-*/
   } else if (unphased_ptr) {
 
-    if (not InbreedingAnalysis::syntheticInbreeding(algorithm,
-                                                    unphased_ptr,
-                                                    output_file_name)) {
+    if (not InbreedingAnalysis::syntheticInbreeding(unphased_ptr, parameters)) {
 
       ExecEnv::log().error("InbreedingAnalysis::Inbreeding;problem with synthetic inbreeding analysis");
       return false;
@@ -116,12 +128,11 @@ bool kgl::InbreedingAnalysis::Inbreeding( InbreedingAlgorithm algorithm,
 
 
 // Calculate the Population Inbreeding Coefficient
-bool kgl::InbreedingAnalysis::populationInbreeding(InbreedingAlgorithm algorithm,
-                                                   std::shared_ptr<const GenomeReference> genome_ptr,
+bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const GenomeReference> genome_ptr,
                                                    std::shared_ptr<const UnphasedPopulation> unphased_ptr,
                                                    const DiploidPopulation& diploid_population,
                                                    const GenomePEDData& ped_data,
-                                                   const std::string& output_file_name) {
+                                                   InbreedingParameters& parameters) {
 
   static const ContigOffset_t sampling_distance = 300;
   static const size_t locii_count = 10000;
@@ -162,99 +173,37 @@ bool kgl::InbreedingAnalysis::populationInbreeding(InbreedingAlgorithm algorithm
   ContigOffset_t contig_size = contig_opt.value()->contigSize();
   ContigOffset_t lower_window = 0;
 
-  LociiVectorArguments locii_args(contig_ptr);
-  locii_args.lociiType(LociiType::LOCII_FROM_COUNT);
-  locii_args.lociiCount(locii_count);
-  locii_args.lowerOffset(lower_window);
-  locii_args.lociiSpacing(sampling_distance);
-  locii_args.superPopulation("SAS");
-  locii_args.minAlleleFrequency(0.2);
-  locii_args.maxAlleleFrequency(1.0);
-  locii_args.variantSource(VariantDatabaseSource::GNOMAD2_1);
+  parameters.lociiArguments().lociiCount(locii_count);
+  parameters.lociiArguments().lowerOffset(lower_window);
+  parameters.lociiArguments().lociiSpacing(sampling_distance);
+  parameters.lociiArguments().superPopulation(VariantDatabaseRead::SUPER_POP_ALL_);
+  parameters.lociiArguments().minAlleleFrequency(0.2);
+  parameters.lociiArguments().maxAlleleFrequency(1.0);
 
-  std::vector<ContigOffset_t> locii_vector = RetrieveLociiVector::getLociiVector(locii_args);
-
+  std::vector<ContigOffset_t> locii_vector = RetrieveLociiVector::getLociiCount(contig_ptr, parameters.lociiArguments());
   ContigOffset_t upper_window = locii_vector.back();
+  parameters.lociiArguments().upperOffset(upper_window);
 
   while (lower_window < (contig_size - 1000) and locii_vector.size() >= 1000) {
-
 
     std::stringstream ss;
 
     ss << "_" << lower_window << "_" << upper_window << "_";
-    std::string window_file = output_file_name + ss.str();
+    std::string window_file = parameters.outputFile() + ss.str();
 
 
-/*
-    populationInbreedingSample(algorithm,
-                               unphased_ptr,
+    populationInbreedingSample(unphased_ptr,
                                diploid_population,
                                ped_data,
                                window_file,
-                               "pop_all",
-                               0.0,
-                               1.0,
-                               sampling_distance,
-                               upper_window,
-                               lower_window);
-
-    populationInbreedingSample(algorithm,
-                               unphased_ptr,
-                               diploid_population,
-                               ped_data,
-                               window_file,
-                               "pop_100_01",
-                               0.01,
-                               1.0,
-                               sampling_distance,
-                               upper_window,
-                               lower_window);
-
-    populationInbreedingSample(algorithm,
-                               unphased_ptr,
-                               diploid_population,
-                               ped_data,
-                               window_file,
-                               "pop_05_01",
-                               0.01,
-                               0.05,
-                               sampling_distance,
-                               upper_window,
-                               lower_window);
-
-    populationInbreedingSample(algorithm,
-                               unphased_ptr,
-                               diploid_population,
-                               ped_data,
-                               window_file,
-                               "pop_20_05",
-                               0.05,
-                               0.2,
-                               sampling_distance,
-                               upper_window,
-                               lower_window);
-*/
-    populationInbreedingSample(algorithm,
-                               unphased_ptr,
-                               diploid_population,
-                               ped_data,
-                               window_file,
-                               "pop_100_20",
-                               0.2,
-                               1.0,
-                               sampling_distance,
-                               upper_window,
-                               lower_window);
-
-//    size_t lower_index = locii_vector.size() / 3;
-
-//    lower_window = locii_vector[lower_index];
+                               parameters);
 
     lower_window = upper_window;
-    locii_args.lowerOffset(lower_window);
-    locii_vector = RetrieveLociiVector::getLociiVector(locii_args);
-
+    parameters.lociiArguments().lowerOffset(lower_window);
+    parameters.lociiArguments().superPopulation(VariantDatabaseRead::SUPER_POP_ALL_);
+    locii_vector = RetrieveLociiVector::getLociiCount(contig_ptr, parameters.lociiArguments());
     upper_window = locii_vector.back();
+    parameters.lociiArguments().upperOffset(upper_window);
 
   }
 
@@ -263,21 +212,15 @@ bool kgl::InbreedingAnalysis::populationInbreeding(InbreedingAlgorithm algorithm
 }
 
 
-bool kgl::InbreedingAnalysis::populationInbreedingSample( InbreedingAlgorithm algorithm,
-                                                          std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+bool kgl::InbreedingAnalysis::populationInbreedingSample( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
                                                           const DiploidPopulation& diploid_population,
                                                           const GenomePEDData& ped_data,
                                                           const std::string& output_file_name,
-                                                          const std::string& sample_name,
-                                                          double allele_frequency_min,
-                                                          double allele_frequency_max,
-                                                          ContigOffset_t locii_spacing,
-                                                          ContigOffset_t upper_offset,
-                                                          ContigOffset_t lower_offset) {
+                                                          InbreedingParameters& parameters) {
 
   // Open the output file.
   std::ofstream outfile;
-  std::string file_name_ext = output_file_name + sample_name + FILE_EXT_;
+  std::string file_name_ext = output_file_name + FILE_EXT_;
   outfile.open(file_name_ext, std::ofstream::out |  std::ofstream::trunc);
 
   if (not outfile.good()) {
@@ -287,18 +230,16 @@ bool kgl::InbreedingAnalysis::populationInbreedingSample( InbreedingAlgorithm al
 
   }
 
-  outfile << diploid_population.populationId() << DELIMITER_ << "Min_AF:" << DELIMITER_ << allele_frequency_min
-          << DELIMITER_ << "Max_AF:" << allele_frequency_max << DELIMITER_ << "Spacing:" << locii_spacing
-          << DELIMITER_ << "LowerOffset:" << lower_offset << DELIMITER_ << "UpperOffset:" << upper_offset << '\n';
+  outfile << diploid_population.populationId() << DELIMITER_
+          << "Min_AF:" << DELIMITER_ << parameters.lociiArguments().minAlleleFrequency()
+          << DELIMITER_ << "Max_AF:" << parameters.lociiArguments().maxAlleleFrequency()
+          << DELIMITER_ << "Spacing:" << parameters.lociiArguments().lociiSpacing()
+          << DELIMITER_ << "LowerOffset:" << parameters.lociiArguments().lowerOffset()
+          << DELIMITER_ << "UpperOffset:" << parameters.lociiArguments().upperOffset() << '\n';
 
-  ContigLocusMap contig_locus_map = InbreedSampling::getPopulationLocusMap(unphased_ptr,
-                                                                           allele_frequency_min,   // min af
-                                                                           allele_frequency_max,   // max af
-                                                                           locii_spacing,
-                                                                           upper_offset,
-                                                                           lower_offset);  // locii_spacing
+  ContigLocusMap contig_locus_map = InbreedSampling::getPopulationLocusMap(unphased_ptr, parameters.lociiArguments());
 
-  processResults(algorithm, contig_locus_map, diploid_population, ped_data, outfile);
+  processResults(contig_locus_map, diploid_population, ped_data, outfile, parameters);
 
   return true;
 
@@ -306,11 +247,21 @@ bool kgl::InbreedingAnalysis::populationInbreedingSample( InbreedingAlgorithm al
 
 
 
-bool kgl::InbreedingAnalysis::processResults( InbreedingAlgorithm algorithm,
-                                              const ContigLocusMap& contig_locus_map,
+bool kgl::InbreedingAnalysis::processResults( const ContigLocusMap& contig_locus_map,
                                               const DiploidPopulation& diploid_population,
                                               const GenomePEDData& ped_data,
-                                              std::ostream& outfile) {
+                                              std::ostream& outfile,
+                                              const InbreedingParameters& parameters) {
+
+  // Retrieve the algorithm function object.
+  auto algorithm_opt = InbreedingCalculation::namedAlgorithm(parameters.inbreedingAlgorthim());
+
+  if (not algorithm_opt) {
+
+    ExecEnv::log().error("InbreedingAnalysis::populationInbreeding, Inbreeding algorithm not found: {}", parameters.inbreedingAlgorthim());
+    return false;
+
+  }
 
   for (auto const& [genome_contig_id, locus_map] : contig_locus_map) {
 
@@ -340,11 +291,12 @@ bool kgl::InbreedingAnalysis::processResults( InbreedingAlgorithm algorithm,
         }
         auto const& [super_pop_id, locus_list] = *locus_result;
 
-        std::future<LocusResults> future = thread_pool.enqueueTask(algorithm,
+        std::future<LocusResults> future = thread_pool.enqueueTask(algorithm_opt.value(),
                                                                    genome_id,
                                                                    contig_opt.value(),
                                                                    super_pop_id,
-                                                                   locus_list);
+                                                                   locus_list,
+                                                                   parameters);
         future_vector.push_back(std::move(future));
 
       }
@@ -381,11 +333,22 @@ bool kgl::InbreedingAnalysis::writeResults( const ContigId_t& contig_id,
                                             std::ostream& outfile) {
 
 
-  outfile << contig_id << DELIMITER_ << "Population" << DELIMITER_
-          << "Description" << DELIMITER_ << "SuperPopulation" << DELIMITER_ << "Description" << DELIMITER_
-          << "MajorHet" << DELIMITER_ << "MajorHetFreq" << DELIMITER_ << "MinorHet" << DELIMITER_ << "MinorHetFreq"
-          << DELIMITER_ << "MajorHom" << DELIMITER_ << "MajorHomFreq" << DELIMITER_ << "MinorHom" << DELIMITER_
-          << "MinorHomFreq" << DELIMITER_ << "Het/Hom"<< DELIMITER_ << "TotalLoci" << DELIMITER_ << "CalcInbreed\n";
+  outfile << contig_id
+          << DELIMITER_ << "Population"
+          << DELIMITER_ << "Description"
+          << DELIMITER_ << "SuperPopulation"
+          << DELIMITER_ << "Description"
+          << DELIMITER_ << "MajorHet"
+          << DELIMITER_ << "MajorHetFreq"
+          << DELIMITER_ << "MinorHet"
+          << DELIMITER_ << "MinorHetFreq"
+          << DELIMITER_ << "MajorHom"
+          << DELIMITER_ << "MajorHomFreq"
+          << DELIMITER_ << "MinorHom"
+          << DELIMITER_ << "MinorHomFreq"
+          << DELIMITER_ << "Het/Hom"
+          << DELIMITER_ << "TotalLoci"
+          << DELIMITER_ << "CalcInbreed" << '\n';
 
   for (auto const& [genome_id, locus_results] : genome_results_map) {
 
@@ -440,71 +403,33 @@ bool kgl::InbreedingAnalysis::writeResults( const ContigId_t& contig_id,
 
 
 // Calculate the Synthetic Population Inbreeding Coefficient
-bool kgl::InbreedingAnalysis::syntheticInbreeding(  InbreedingAlgorithm algorithm,
-                                                    std::shared_ptr<const UnphasedPopulation> unphased_ptr,
-                                                    const std::string& output_file_name) {
+bool kgl::InbreedingAnalysis::syntheticInbreeding(  std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+                                                    InbreedingParameters& parameters) {
 
-  const ContigOffset_t sampling_distance = 10000;
+
+  static const ContigOffset_t sampling_distance = 300;
 
   // Filter out any variants that did not pass VCF filters (otherwise we get duplicate variants).
   unphased_ptr = unphased_ptr->filterVariants(PassFilter());
 
-  syntheticInbreedingSample( algorithm,
-                             unphased_ptr,
-                             output_file_name,
-                             "syn_all",
-                             0.0,
-                             1.0,
-                             sampling_distance);
+  parameters.lociiArguments().lociiSpacing(sampling_distance);
+  parameters.lociiArguments().minAlleleFrequency(0.2);
+  parameters.lociiArguments().maxAlleleFrequency(1.0);
 
-  syntheticInbreedingSample( algorithm,
-                             unphased_ptr,
-                             output_file_name,
-                             "syn_100_01",
-                             0.01,
-                             1.0,
-                             sampling_distance);
+  syntheticInbreedingSample( unphased_ptr, parameters);
 
-  syntheticInbreedingSample( algorithm,
-                             unphased_ptr,
-                             output_file_name,
-                             "syn_05_01",
-                             0.01,
-                             0.05,
-                             sampling_distance);
-
-  syntheticInbreedingSample( algorithm,
-                             unphased_ptr,
-                             output_file_name,
-                             "syn_20_05",
-                             0.05,
-                             0.2,
-                             sampling_distance);
-
-  syntheticInbreedingSample( algorithm,
-                             unphased_ptr,
-                             output_file_name,
-                             "syn_100_20",
-                             0.2,
-                             1.0,
-                             sampling_distance);
 
   return true;
 
 }
 
 
-bool kgl::InbreedingAnalysis::syntheticInbreedingSample( InbreedingAlgorithm algorithm,
-                                                         std::shared_ptr<const UnphasedPopulation> unphased_ptr,
-                                                         const std::string& output_file_name,
-                                                         const std::string& sample_name,
-                                                         double allele_frequency_min,
-                                                         double allele_frequency_max,
-                                                         ContigOffset_t  spacing) {
+bool kgl::InbreedingAnalysis::syntheticInbreedingSample( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+                                                         InbreedingParameters& parameters) {
 
   // Open the output file.
   std::ofstream outfile;
-  std::string file_name_ext = output_file_name + sample_name + FILE_EXT_;
+  std::string file_name_ext = parameters.outputFile() + FILE_EXT_;
   outfile.open(file_name_ext, std::ofstream::out |  std::ofstream::trunc);
 
   if (not outfile.good()) {
@@ -514,15 +439,14 @@ bool kgl::InbreedingAnalysis::syntheticInbreedingSample( InbreedingAlgorithm alg
 
   }
 
-  outfile << "Synthetic" << DELIMITER_ << "Min_AF:" << DELIMITER_ << allele_frequency_min
-          << DELIMITER_ << "Max_AF:" << allele_frequency_max << DELIMITER_ << "Spacing:" << spacing << '\n';
+  outfile << "Synthetic" << DELIMITER_
+           << "Min_AF:" << DELIMITER_ << parameters.lociiArguments().minAlleleFrequency()
+           << DELIMITER_ << "Max_AF:" << parameters.lociiArguments().maxAlleleFrequency()
+           << DELIMITER_ << "Spacing:" << parameters.lociiArguments().lociiSpacing() << '\n';
 
-  ContigLocusMap contig_locus_map = InbreedSampling::getPopulationLocusMap(unphased_ptr,
-                                                                           allele_frequency_min,   // min af
-                                                                           allele_frequency_max,   // max af
-                                                                           spacing);  // spacing
+  ContigLocusMap contig_locus_map = InbreedSampling::getPopulationLocusMap(unphased_ptr, parameters.lociiArguments());  // spacing
 
-  processSynResults(algorithm, contig_locus_map, outfile);
+  processSynResults(contig_locus_map, outfile, parameters);
 
   return true;
 
@@ -530,9 +454,19 @@ bool kgl::InbreedingAnalysis::syntheticInbreedingSample( InbreedingAlgorithm alg
 
 
 
-bool kgl::InbreedingAnalysis::processSynResults( InbreedingAlgorithm algorithm,
-                                                 const ContigLocusMap& contig_locus_map,
-                                                 std::ostream& outfile) {
+bool kgl::InbreedingAnalysis::processSynResults( const ContigLocusMap& contig_locus_map,
+                                                 std::ostream& outfile,
+                                                 InbreedingParameters& parameters) {
+
+  // Retrieve the algorithm function object.
+  auto algorithm_opt = InbreedingCalculation::namedAlgorithm(parameters.inbreedingAlgorthim());
+
+  if (not algorithm_opt) {
+
+    ExecEnv::log().error("InbreedingAnalysis::populationInbreeding, Inbreeding algorithm not found: {}", parameters.inbreedingAlgorthim());
+    return false;
+
+  }
 
   // For each contig.
   for (auto const& [genome_contig_id, locus_map] : contig_locus_map) {
@@ -544,7 +478,8 @@ bool kgl::InbreedingAnalysis::processSynResults( InbreedingAlgorithm algorithm,
                                                                                                           MAX_INBREEDING_COEFICIENT,
                                                                                                           STEP_INBREEDING_COEFICIENT,
                                                                                                           super_pop_id,
-                                                                                                          *locus_list);
+                                                                                                          *locus_list,
+                                                                                                          parameters.lociiArguments());
 
       ThreadPool thread_pool;
       std::vector<std::future<LocusResults>> future_vector;
@@ -555,11 +490,12 @@ bool kgl::InbreedingAnalysis::processSynResults( InbreedingAlgorithm algorithm,
         if (contig_opt) {
 
 
-          std::future<LocusResults> future = thread_pool.enqueueTask(algorithm,
+          std::future<LocusResults> future = thread_pool.enqueueTask(algorithm_opt.value(),
                                                                      genome_id,
                                                                      contig_opt.value(),
                                                                      super_pop_id,
-                                                                     locus_list);
+                                                                     locus_list,
+                                                                     parameters);
           future_vector.push_back(std::move(future));
 
         }
@@ -596,14 +532,22 @@ bool kgl::InbreedingAnalysis::writeSynResults(const ContigId_t& contig_id,
                                               const std::map<GenomeId_t, LocusResults>& genome_results_map,
                                               std::ostream& outfile) {
 
-
-  outfile << contig_id << DELIMITER_ << "SuperPop" << DELIMITER_ << "Inbreeding" << DELIMITER_
-          << "MajorHet" << DELIMITER_ << "MajorHetFreq" << DELIMITER_ << "MinorHet" << DELIMITER_ << "MinorHetFreq"
-          << DELIMITER_ << "MajorHom" << DELIMITER_ << "MajorHomFreq" << DELIMITER_ << "MinorHom" << DELIMITER_
-          << "MinorHomFreq" << DELIMITER_ << "Het/Hom"<< DELIMITER_ << "TotalLoci" << DELIMITER_ << "CalcInbreed\n";
+  outfile << contig_id << DELIMITER_
+          << "SuperPop" << DELIMITER_
+          << "Inbreeding" << DELIMITER_
+          << "MajorHet" << DELIMITER_
+          << "MajorHetFreq" << DELIMITER_
+          << "MinorHet" << DELIMITER_
+          << "MinorHetFreq" << DELIMITER_
+          << "MajorHom" << DELIMITER_
+          << "MajorHomFreq" << DELIMITER_
+          << "MinorHom" << DELIMITER_
+          << "MinorHomFreq" << DELIMITER_
+          << "Het/Hom"<< DELIMITER_
+          << "TotalLoci" << DELIMITER_
+          << "CalcInbreed" << '\n';
 
   for (auto const& [genome_id, locus_results] : genome_results_map) {
-
 
     auto const [valid_value, inbreeding] = InbreedSynthetic::generateInbreeding(genome_id);
 

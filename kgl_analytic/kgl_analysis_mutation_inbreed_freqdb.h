@@ -36,17 +36,18 @@ public:
   // List the super populations supported.
   [[nodiscard]] static const std::vector<std::string>& superPopulations() { return super_populations_; }
 
-private:
-
-  VariantDatabaseSource source_;
-
   // Valid super population codes.
   constexpr static const char* SUPER_POP_AFR_ {"AFR"} ;  // African
   constexpr static const char* SUPER_POP_AMR_ {"AMR"};  // American
   constexpr static const char* SUPER_POP_EAS_ {"EAS"};  // East Asian
   constexpr static const char* SUPER_POP_EUR_{"EUR"};  // European
   constexpr static const char* SUPER_POP_SAS_{"SAS"};  // South Asian
-  constexpr static const char* SUPER_POP_ALL_{"ALL"};  // South Asian
+  constexpr static const char* SUPER_POP_ALL_{"ALL"};  // All populations.
+
+private:
+
+  VariantDatabaseSource source_;
+
 
   inline static std::vector<std::string> super_populations_ = { SUPER_POP_AFR_,
                                                                 SUPER_POP_AMR_,

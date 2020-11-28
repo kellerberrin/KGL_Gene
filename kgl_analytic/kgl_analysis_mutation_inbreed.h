@@ -9,11 +9,17 @@
 #include "kgl_variant_db_phased.h"
 #include "kgl_ped_parser.h"
 #include "kgl_analysis_mutation_inbreed_calc.h"
-#include "kgl_analysis_mutation_inbreed_locus.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Performs the inbreeding analysis.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class InbreedingAnalysis  {
 
@@ -43,57 +49,43 @@ private:
   using ResultsMap = std::map<GenomeId_t, LocusResults>;
 
   // Analyze both population and synthetic data for a specified algorithm.
-  [[nodiscard]] static bool Inbreeding( InbreedingAlgorithm algorithm,
-                                        std::shared_ptr<const GenomeReference> genome_ptr,
+  [[nodiscard]] static bool Inbreeding( std::shared_ptr<const GenomeReference> genome_ptr,
                                         std::shared_ptr<const UnphasedPopulation> unphased_ptr,
                                         std::shared_ptr<const DiploidPopulation> diploid_population,
                                         std::shared_ptr<const GenomePEDData> ped_data,
-                                        const std::string& output_file_name);
+                                        InbreedingParameters& paramaters);
 
   // Construct a synthetic population and analyze it.
   // The synthetic population is constructed from the unphased population.
-  [[nodiscard]] static bool syntheticInbreeding( InbreedingAlgorithm algorithm,
-                                                 std::shared_ptr<const UnphasedPopulation> unphased_ptr,
-                                                 const std::string& output_file_name);
+  [[nodiscard]] static bool syntheticInbreeding( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+                                                 InbreedingParameters& paramaters);
 
   // Analyze a presented diploid population for inbreeding.
-  [[nodiscard]] static bool populationInbreeding(InbreedingAlgorithm algorithm,
-                                                 std::shared_ptr<const GenomeReference> genome_ptr,
+  [[nodiscard]] static bool populationInbreeding(std::shared_ptr<const GenomeReference> genome_ptr,
                                                  std::shared_ptr<const UnphasedPopulation> unphased_ptr,
                                                  const DiploidPopulation& diploid_population,
                                                  const GenomePEDData& ped_data,
-                                                 const std::string& output_file_name);
+                                                 InbreedingParameters& paramaters);
 
-  bool static syntheticInbreedingSample( InbreedingAlgorithm algorithm,
-                                         std::shared_ptr<const UnphasedPopulation> unphased_ptr,
-                                         const std::string& output_file_name,
-                                         const std::string& sample_name,
-                                         double allele_frequency_min,
-                                         double allele_frequency_max,
-                                         ContigOffset_t  spacing);
+  bool static syntheticInbreedingSample( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+                                         InbreedingParameters& parameters);
 
-  static bool populationInbreedingSample( InbreedingAlgorithm algorithm,
-                                          std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+  static bool populationInbreedingSample( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
                                           const DiploidPopulation& diploid_population,
                                           const GenomePEDData& ped_data,
                                           const std::string& output_file_name,
-                                          const std::string& sample_name,
-                                          double allele_frequency_min,
-                                          double allele_frequency_max,
-                                          ContigOffset_t locii_spacing,
-                                          ContigOffset_t upper_offset,
-                                          ContigOffset_t lower_offset);
+                                          InbreedingParameters& parameters);
 
   // Use a threadpool to calculate the inbreeding coefficients.
-  static bool processResults( InbreedingAlgorithm algorithm,
-                              const ContigLocusMap& contig_locus_map,
+  static bool processResults( const ContigLocusMap& contig_locus_map,
                               const DiploidPopulation& diploid_population,
                               const GenomePEDData& ped_data,
-                              std::ostream& outfile);
+                              std::ostream& outfile,
+                              const InbreedingParameters& parameters);
 
-  static bool processSynResults( InbreedingAlgorithm algorithm,
-                                 const ContigLocusMap& contig_locus_map,
-                                 std::ostream& outfile);
+  static bool processSynResults( const ContigLocusMap& contig_locus_map,
+                                 std::ostream& outfile,
+                                 InbreedingParameters& parameters);
 
   // Write the analysis results to a CSV file.
   static bool writeResults( const ContigId_t& contig_id,

@@ -430,7 +430,8 @@ std::pair<std::vector<kgl::AlleleFreqInfo>, kgl::LocusResults>
 kgl::InbreedingCalculation::generateFrequencies(const GenomeId_t& genome_id,
                                                 const std::shared_ptr<const DiploidContig>& contig_ptr,
                                                 const std::string& super_population_field,
-                                                const std::shared_ptr<const ContigVariant>& locus_list) {
+                                                const std::shared_ptr<const ContigVariant>& locus_list,
+                                                VariantDatabaseSource variant_source) {
 
   std::vector<AlleleFreqInfo> frequency_vector;
   LocusResults locus_results;
@@ -445,7 +446,7 @@ kgl::InbreedingCalculation::generateFrequencies(const GenomeId_t& genome_id,
     // Get the allele frequencies.
    auto locus_variant_array = offset_ptr->getVariantArray();
 
-    AlleleFreqVector allele_freq_vector(locus_variant_array, super_population_field);
+    AlleleFreqVector allele_freq_vector(locus_variant_array, super_population_field, variant_source);
     if (not allele_freq_vector.checkValidAlleleVector()) {
 
       continue; // Next locus.
