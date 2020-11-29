@@ -127,11 +127,47 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Iteration Analysis called for Analysis Id: {}", ident());
 
-  return InbreedingAnalysis::InbreedingAll(genome_GRCh38_,
-                                           unphased_population_,
-                                           diploid_population_,
-                                           ped_data_,
-                                           output_file_name_);
+  InbreedingParameters parameters;
+  parameters.lociiArguments().minAlleleFrequency(0.2);
+  parameters.lociiArguments().maxAlleleFrequency(1.0);
+
+  parameters.inbreedingAlgorthim(InbreedingCalculation::LOGLIKELIHOOD);
+
+  InbreedingAnalysis::InbreedingAll( genome_GRCh38_,
+                                     unphased_population_,
+                                     diploid_population_,
+                                     ped_data_,
+                                     output_file_name_,
+                                     parameters);
+
+  parameters.inbreedingAlgorthim(InbreedingCalculation::HALL_ME);
+
+  InbreedingAnalysis::InbreedingAll( genome_GRCh38_,
+                                     unphased_population_,
+                                     diploid_population_,
+                                     ped_data_,
+                                     output_file_name_,
+                                     parameters);
+
+  parameters.inbreedingAlgorthim(InbreedingCalculation::RITLAND_LOCUS);
+
+  InbreedingAnalysis::InbreedingAll( genome_GRCh38_,
+                                     unphased_population_,
+                                     diploid_population_,
+                                     ped_data_,
+                                     output_file_name_,
+                                     parameters);
+
+  parameters.inbreedingAlgorthim(InbreedingCalculation::SIMPLE);
+
+  InbreedingAnalysis::InbreedingAll( genome_GRCh38_,
+                                     unphased_population_,
+                                     diploid_population_,
+                                     ped_data_,
+                                     output_file_name_,
+                                     parameters);
+
+  return true;
 
 }
 

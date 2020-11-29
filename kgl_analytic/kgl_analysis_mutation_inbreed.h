@@ -29,11 +29,12 @@ public:
   ~InbreedingAnalysis() = delete;
 
   // Analyze population and synthetic data for all defined inbreeding algorithms.
-  [[nodiscard]] static bool InbreedingAll( std::shared_ptr<const GenomeReference> genome_ptr,
-                                           std::shared_ptr<const UnphasedPopulation> unphased_ptr,
-                                           std::shared_ptr<const DiploidPopulation> diploid_population,
-                                           std::shared_ptr<const GenomePEDData> ped_data,
-                                           const std::string& output_file_name);
+  static bool InbreedingAll( std::shared_ptr<const GenomeReference> genome_ptr,
+                             std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+                             std::shared_ptr<const DiploidPopulation> diploid_population,
+                             std::shared_ptr<const GenomePEDData> ped_data,
+                             const std::string& output_file_name,
+                             InbreedingParameters& paramaters);
 
 private:
 
@@ -74,7 +75,7 @@ private:
                                           const DiploidPopulation& diploid_population,
                                           const GenomePEDData& ped_data,
                                           const std::string& output_file_name,
-                                          InbreedingParameters& parameters);
+                                          const InbreedingParameters& parameters);
 
   // Use a threadpool to calculate the inbreeding coefficients.
   static bool processResults( const ContigLocusMap& contig_locus_map,

@@ -18,6 +18,7 @@ namespace kgl = kellerberrin::genome;
 
 
 std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesFromTo( std::shared_ptr<const ContigVariant> unphased_contig_ptr,
+                                                                               const std::string& super_population,
                                                                                const LociiVectorArguments& arguments) {
 
   std::vector<AlleleFreqVector> locii_vector;
@@ -37,7 +38,7 @@ std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesFromTo( s
 
       OffsetVariantArray locus_variant_array = offset_ptr->getVariantArray();
 
-      AlleleFreqVector allele_freq_vector(locus_variant_array, arguments.superPopulation(), arguments.variantSource());
+      AlleleFreqVector allele_freq_vector(locus_variant_array, super_population, arguments.variantSource());
 
       if (not allele_freq_vector.checkValidAlleleVector()) {
 
@@ -72,11 +73,12 @@ std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesFromTo( s
 
 
 std::vector<kgl::ContigOffset_t> kgl::RetrieveLociiVector::getLociiFromTo(std::shared_ptr<const ContigVariant> unphased_contig_ptr,
+                                                                          const std::string& super_population,
                                                                           const LociiVectorArguments& arguments) {
 
   std::vector<kgl::ContigOffset_t> locii_vector;
 
-  std::vector<AlleleFreqVector> freq_vector = getAllelesFromTo( unphased_contig_ptr, arguments);
+  std::vector<AlleleFreqVector> freq_vector = getAllelesFromTo( unphased_contig_ptr, super_population, arguments);
 
   for (auto const& alleles : freq_vector) {
 
@@ -100,6 +102,7 @@ std::vector<kgl::ContigOffset_t> kgl::RetrieveLociiVector::getLociiFromTo(std::s
 
 
 std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesCount( std::shared_ptr<const ContigVariant> unphased_contig_ptr,
+                                                                              const std::string& super_population,
                                                                               const LociiVectorArguments& arguments) {
 
   std::vector<AlleleFreqVector> locii_vector;
@@ -119,7 +122,7 @@ std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesCount( st
 
       OffsetVariantArray locus_variant_array = offset_ptr->getVariantArray();
 
-      AlleleFreqVector allele_freq_vector(locus_variant_array, arguments.superPopulation(), arguments.variantSource());
+      AlleleFreqVector allele_freq_vector(locus_variant_array, super_population, arguments.variantSource());
 
       if (not allele_freq_vector.checkValidAlleleVector()) {
 
@@ -153,11 +156,12 @@ std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesCount( st
 
 
 std::vector<kgl::ContigOffset_t> kgl::RetrieveLociiVector::getLociiCount( std::shared_ptr<const ContigVariant> unphased_contig_ptr,
+                                                                          const std::string& super_population,
                                                                           const LociiVectorArguments& arguments) {
 
   std::vector<kgl::ContigOffset_t> locii_vector;
 
-  std::vector<AlleleFreqVector> freq_vector = getAllelesCount( unphased_contig_ptr, arguments);
+  std::vector<AlleleFreqVector> freq_vector = getAllelesCount( unphased_contig_ptr, super_population, arguments);
 
   for (auto const& alleles : freq_vector) {
 
@@ -185,7 +189,7 @@ std::vector<kgl::ContigOffset_t> kgl::RetrieveLociiVector::getLociiCount( std::s
 
 
 kgl::ContigLocusMap kgl::InbreedSampling::getPopulationLocusMap(  std::shared_ptr<const UnphasedPopulation> population_ptr,
-                                                                  LociiVectorArguments& locii_args) {
+                                                                  const LociiVectorArguments& locii_args) {
 
   ContigLocusMap contig_locus_map;
   // We assume that the unphased population has only 1 genome.
@@ -219,7 +223,7 @@ kgl::ContigLocusMap kgl::InbreedSampling::getPopulationLocusMap(  std::shared_pt
 
 kgl::LocusMap kgl::InbreedSampling::getPopulationLocus(std::shared_ptr<const UnphasedPopulation> unphased_ptr,
                                                        const ContigId_t& contig_id,
-                                                       LociiVectorArguments& locii_args) {
+                                                       const LociiVectorArguments& locii_args) {
 
 
   ThreadPool threadpool(VariantDatabaseRead::superPopulations().size());
@@ -258,7 +262,7 @@ kgl::LocusMap kgl::InbreedSampling::getPopulationLocus(std::shared_ptr<const Unp
 kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
                                                                           const ContigId_t& contig_id,
                                                                           const std::string& super_population,
-                                                                          LociiVectorArguments& locii_args) {
+                                                                          const LociiVectorArguments& locii_args) {
 
   // Annotate the variant list with the super population frequency identifier
   std::shared_ptr<ContigVariant> locus_list(std::make_shared<ContigVariant>(super_population));
@@ -277,9 +281,7 @@ kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::s
       auto snp_contig_ptr = contig_opt.value()->filterVariants(AndFilter(SNPFilter(), PassFilter()));
 
       // Retrieve the locii that meet the conditions.
-      locii_args.superPopulation(super_population);
-
-      std::vector<ContigOffset_t> locii_vector = RetrieveLociiVector::getLociiFromTo(snp_contig_ptr, locii_args);
+      std::vector<ContigOffset_t> locii_vector = RetrieveLociiVector::getLociiFromTo(snp_contig_ptr, super_population, locii_args);
 
       locii += locii_vector.size();
 

@@ -20,13 +20,13 @@ bool kgl::InbreedingAnalysis::InbreedingAll( std::shared_ptr<const GenomeReferen
                                              std::shared_ptr<const UnphasedPopulation> unphased_ptr,
                                              std::shared_ptr<const DiploidPopulation> diploid_ptr,
                                              std::shared_ptr<const GenomePEDData> ped_data_ptr,
-                                             const std::string& output_file_name) {
+                                             const std::string& output_file_name,
+                                             InbreedingParameters& parameters) {
 
   static const std::string gnomad_3_1_fragment = "r3.1";
   // Setup the runtime parameters.
-  InbreedingParameters parameters;
+
   parameters.outputFile(output_file_name);
-  parameters.inbreedingAlgorthim(InbreedingCalculation::LOGLIKELIHOOD);
   std::string file_name =  output_file_name + "_" + parameters.inbreedingAlgorthim() + "_";
   parameters.outputFile(file_name);
 
@@ -62,8 +62,6 @@ bool kgl::InbreedingAnalysis::InbreedingAll( std::shared_ptr<const GenomeReferen
     return false;
 
   }
-
-  parameters.lociiArguments().variantSource(VariantDatabaseSource::GNOMAD2_1);
 
   if (not InbreedingAnalysis::Inbreeding( genome_ptr,
                                           unphased_ptr,
@@ -176,11 +174,10 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const GenomeR
   parameters.lociiArguments().lociiCount(locii_count);
   parameters.lociiArguments().lowerOffset(lower_window);
   parameters.lociiArguments().lociiSpacing(sampling_distance);
-  parameters.lociiArguments().superPopulation(VariantDatabaseRead::SUPER_POP_ALL_);
-  parameters.lociiArguments().minAlleleFrequency(0.2);
-  parameters.lociiArguments().maxAlleleFrequency(1.0);
 
-  std::vector<ContigOffset_t> locii_vector = RetrieveLociiVector::getLociiCount(contig_ptr, parameters.lociiArguments());
+  std::vector<ContigOffset_t> locii_vector = RetrieveLociiVector::getLociiCount(contig_ptr,
+                                                                                VariantDatabaseRead::SUPER_POP_ALL_,
+                                                                                parameters.lociiArguments());
   ContigOffset_t upper_window = locii_vector.back();
   parameters.lociiArguments().upperOffset(upper_window);
 
@@ -200,8 +197,9 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const GenomeR
 
     lower_window = upper_window;
     parameters.lociiArguments().lowerOffset(lower_window);
-    parameters.lociiArguments().superPopulation(VariantDatabaseRead::SUPER_POP_ALL_);
-    locii_vector = RetrieveLociiVector::getLociiCount(contig_ptr, parameters.lociiArguments());
+    locii_vector = RetrieveLociiVector::getLociiCount(contig_ptr,
+                                                      VariantDatabaseRead::SUPER_POP_ALL_,
+                                                      parameters.lociiArguments());
     upper_window = locii_vector.back();
     parameters.lociiArguments().upperOffset(upper_window);
 
@@ -216,7 +214,7 @@ bool kgl::InbreedingAnalysis::populationInbreedingSample( std::shared_ptr<const 
                                                           const DiploidPopulation& diploid_population,
                                                           const GenomePEDData& ped_data,
                                                           const std::string& output_file_name,
-                                                          InbreedingParameters& parameters) {
+                                                          const InbreedingParameters& parameters) {
 
   // Open the output file.
   std::ofstream outfile;
@@ -230,8 +228,8 @@ bool kgl::InbreedingAnalysis::populationInbreedingSample( std::shared_ptr<const 
 
   }
 
-  outfile << diploid_population.populationId() << DELIMITER_
-          << "Min_AF:" << DELIMITER_ << parameters.lociiArguments().minAlleleFrequency()
+  outfile << diploid_population.populationId()
+          << DELIMITER_ << "Min_AF:" << parameters.lociiArguments().minAlleleFrequency()
           << DELIMITER_ << "Max_AF:" << parameters.lociiArguments().maxAlleleFrequency()
           << DELIMITER_ << "Spacing:" << parameters.lociiArguments().lociiSpacing()
           << DELIMITER_ << "LowerOffset:" << parameters.lociiArguments().lowerOffset()
@@ -407,14 +405,11 @@ bool kgl::InbreedingAnalysis::syntheticInbreeding(  std::shared_ptr<const Unphas
                                                     InbreedingParameters& parameters) {
 
 
-  static const ContigOffset_t sampling_distance = 300;
-
+  static const ContigOffset_t sampling_distance = 10000;
   // Filter out any variants that did not pass VCF filters (otherwise we get duplicate variants).
   unphased_ptr = unphased_ptr->filterVariants(PassFilter());
 
   parameters.lociiArguments().lociiSpacing(sampling_distance);
-  parameters.lociiArguments().minAlleleFrequency(0.2);
-  parameters.lociiArguments().maxAlleleFrequency(1.0);
 
   syntheticInbreedingSample( unphased_ptr, parameters);
 
@@ -439,10 +434,10 @@ bool kgl::InbreedingAnalysis::syntheticInbreedingSample( std::shared_ptr<const U
 
   }
 
-  outfile << "Synthetic" << DELIMITER_
-           << "Min_AF:" << DELIMITER_ << parameters.lociiArguments().minAlleleFrequency()
-           << DELIMITER_ << "Max_AF:" << parameters.lociiArguments().maxAlleleFrequency()
-           << DELIMITER_ << "Spacing:" << parameters.lociiArguments().lociiSpacing() << '\n';
+  outfile << "Synthetic"
+          << DELIMITER_ << "Min_AF:" << parameters.lociiArguments().minAlleleFrequency()
+          << DELIMITER_ << "Max_AF:" << parameters.lociiArguments().maxAlleleFrequency()
+          << DELIMITER_ << "Spacing:" << parameters.lociiArguments().lociiSpacing() << '\n';
 
   ContigLocusMap contig_locus_map = InbreedSampling::getPopulationLocusMap(unphased_ptr, parameters.lociiArguments());  // spacing
 

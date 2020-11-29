@@ -9,6 +9,8 @@
 #include "kgl_analysis_mutation_inbreed_freq.h"
 #include "kgl_analysis_mutation_inbreed_locus.h"
 
+#include <list>
+
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
@@ -63,6 +65,37 @@ using InbreedingAlgorithm = std::function<LocusResults(const GenomeId_t& genome_
                                                        const std::string& super_population_field,
                                                        const std::shared_ptr<const ContigVariant>& locus_list,
                                                        const InbreedingParameters& parameters)>;
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Simple class the check retries
+//
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+class RetryCalcResult {
+
+public:
+
+  RetryCalcResult(double tolerance, size_t min_retry, size_t max_retry) : tolerance_(tolerance), min_retry_(min_retry), max_retry_(max_retry) {}
+  ~RetryCalcResult() = default;
+
+  // Returns true if retries >= min_try and tolerance OK or if max_retry is exceeded.
+  bool checkRetry(double retry);
+  size_t retries() const { return retry_count_; }
+
+private:
+
+  const double tolerance_;
+  const size_t min_retry_;
+  const size_t max_retry_;
+  size_t retry_count_{0};
+  std::list<double> current_retries_;
+
+  bool checkTolerance() const;
+
+};
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Static class to hold the inbreeding algorithms.
@@ -122,10 +155,12 @@ private:
 
   // The initial guess for the Hall expectation maximization algorithm.
   constexpr static const double FINAL_ACCURACY_ = 1E-04;
+  constexpr static const double INIT_UPPER_ = 0.5;
+  constexpr static const double INIT_LOWER_ = -0.5;
   constexpr static const size_t MINIMUM_ITERATIONS_ = 50;
   constexpr static const size_t MAXIMUM_ITERATIONS_ = 1000;
   constexpr static const size_t MAX_RETRIES_ = 50;
-  constexpr static const size_t MIN_RETRIES_ = 2;
+  constexpr static const size_t MIN_RETRIES_ = 5;
 
   [[nodiscard]] static Optimize createLogLikelihoodOptimizer();
 

@@ -14,6 +14,60 @@ namespace kgl = kellerberrin::genome;
 namespace kel = kellerberrin;
 
 
+bool kgl::RetryCalcResult::checkRetry(double retry) {
+
+  ++retry_count_;
+  if (retry_count_ > max_retry_) {
+
+    return true;
+
+  }
+
+  current_retries_.push_back(retry);
+
+  if (current_retries_.size() > min_retry_) {
+
+    current_retries_.pop_front();
+    return checkTolerance();
+
+  } else if (current_retries_.size() == min_retry_) {
+
+    return checkTolerance();
+
+  }
+
+  return false;
+
+}
+
+
+bool kgl::RetryCalcResult::checkTolerance() const {
+
+  auto current_entry = current_retries_.begin();
+  while (current_entry != current_retries_.end()) {
+
+    auto next_entry = ++current_entry;
+    if (next_entry == current_retries_.end()) {
+
+      break;
+
+    }
+
+    if (std::fabs(*current_entry - *next_entry) > tolerance_) {
+
+      return false;
+
+    }
+
+    current_entry = next_entry;
+
+  }
+
+  return true;
+
+}
+
+
 std::optional<kgl::InbreedingAlgorithm> kgl::InbreedingCalculation::namedAlgorithm(const std::string& algorithm_name) {
 
   auto inbreeding_algo = inbreeding_algo_map_.find(algorithm_name);
@@ -107,8 +161,8 @@ kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
 
   // Entropy source is the Mersenne twister.
   RandomEntropySource entropy_mt;
-  // The real unit distribution [1,0] used to as a start point for the loglik algorithm.
-  UniformUnitDistribution unit_distribution;
+  // The real  distribution [upper, lower] used to as a start point for the loglike algorithm.
+  UniformRealDistribution initialize_distribution(INIT_UPPER_, INIT_LOWER_);
   // Get the locus frequencies.
   auto [frequency_vector, locus_results] = generateFrequencies(genome_id,
                                                                contig_ptr,
@@ -116,21 +170,17 @@ kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
                                                                locus_list,
                                                                parameters.lociiArguments().variantSource());
 
-  double updated_coefficient = 0.0;
-  double inbreed_coefficient;
-  size_t retries = 0;
+  double updated_coefficient{0.0};
   Optimize likelihood_optimizer = createLogLikelihoodOptimizer();
+  RetryCalcResult retry_results(FINAL_ACCURACY_, MIN_RETRIES_, MAX_RETRIES_);
 
   // The calculation loop using the non-linear optimizer.
   do {
 
     // Random start on the unit interval.
     std::vector<double> coefficient;
-    double initial_f = unit_distribution.random(entropy_mt.generator());
+    double initial_f = initialize_distribution.random(entropy_mt.generator());
     coefficient.push_back(initial_f);
-
-    inbreed_coefficient = updated_coefficient;
-    ++retries;
 
     auto [result_code, value, iterations] = likelihood_optimizer.optimize<std::vector<AlleleFreqInfo>>( coefficient,
                                                                                                         frequency_vector,
@@ -138,19 +188,19 @@ kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
 
     if (not Optimize::returnSuccess(result_code)) {
 
-      ExecEnv::log().error("InbreedingAnalysis::processLogLikelihood; Genome: {}, loglikelihood: {}, Max at inbreed: {}, initial inbreed: {}, previous inbreed: {}, optimizer result: {}, iterations: {}",
-                          locus_results.genome, value, coefficient.front(), initial_f, inbreed_coefficient, Optimize::returnDescription(result_code), iterations);
+      ExecEnv::log().error("InbreedingAnalysis::processLogLikelihood; Genome: {}, loglikelihood: {}, Max at inbreed: {}, initial inbreed: {}, calc inbreed: {}, optimizer result: {}, iterations: {}",
+                          locus_results.genome, value, coefficient.front(), initial_f, coefficient.front(), Optimize::returnDescription(result_code), iterations);
 
     }
 
     updated_coefficient = coefficient.front();
 
-  } while (retries < MIN_RETRIES_ or (retries <= MAX_RETRIES_ and std::fabs(updated_coefficient - inbreed_coefficient) >= FINAL_ACCURACY_));
+  } while (not retry_results.checkRetry(updated_coefficient));
 
-  if (retries >= MAX_RETRIES_) {
+  if (retry_results.retries() >= MAX_RETRIES_) {
 
     ExecEnv::log().warn( "InbreedingCalculation::processLogLikelihood, Genome: {}, retries: {}, final value: {} Loglikelihood Inbreeding algorithm did not converge",
-                         locus_results.genome, retries, updated_coefficient);
+                         locus_results.genome, retry_results.retries(), updated_coefficient);
     updated_coefficient = 0.0;
 
   }
@@ -159,8 +209,8 @@ kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
 
   ExecEnv::log().info("LogLikelihood: Genome: {}, Super: {}, Het: {}, Hom: {}, Allele Count: {}, IBD Inbreeding: {}, retries: {}",
                       locus_results.genome, super_population_field, locus_results.major_hetero_count,
-                      locus_results.minor_homo_count, locus_results.total_allele_count, locus_results.inbred_allele_sum, retries);
-
+                      locus_results.minor_homo_count, locus_results.total_allele_count,
+                      locus_results.inbred_allele_sum, retry_results.retries());
 
   return locus_results;
 
@@ -185,8 +235,8 @@ kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
 
   // Entropy source is the Mersenne twister.
   RandomEntropySource entropy_mt;
-  // The real unit distribution [1,0] used to as a start point for the EM algorithm.
-  UniformUnitDistribution unit_distribution;
+  // The real unit distribution [upper, 0] used to as a start point for the EM algorithm.
+  UniformRealDistribution initialize_distribution(INIT_UPPER_, 0);
   // Get the locus frequencies.
   auto [frequency_vector, locus_results] = generateFrequencies(genome_id,
                                                                contig_ptr,
@@ -194,18 +244,16 @@ kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
                                                                locus_list,
                                                                parameters.lociiArguments().variantSource());
 
-  double updated_coefficient = 0.0;
+  double updated_coefficient{0.0};
   double inbreed_coefficient;
-  double previous_coefficient;
-  size_t retries = 0;
+  RetryCalcResult retry_results(FINAL_ACCURACY_, MIN_RETRIES_, MAX_RETRIES_);
 
   do {
 
     // Random start on the unit interval.
-    previous_coefficient = updated_coefficient;
-    updated_coefficient = unit_distribution.random(entropy_mt.generator());
+    updated_coefficient = initialize_distribution.random(entropy_mt.generator());
+    RetryCalcResult converge_retry(FINAL_ACCURACY_, MINIMUM_ITERATIONS_, MAXIMUM_ITERATIONS_);
 
-    size_t iteration_count = 0;
     // Perform the EM algorithm
     do {
 
@@ -237,23 +285,16 @@ kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
 
       }
 
-      ++iteration_count;
       updated_coefficient = expectation_sum / static_cast<double>(frequency_vector.size());
 
-    } while(iteration_count < MINIMUM_ITERATIONS_
-            or (iteration_count < MAXIMUM_ITERATIONS_
-            and std::fabs(updated_coefficient - inbreed_coefficient) > FINAL_ACCURACY_));
+    } while(not converge_retry.checkRetry(updated_coefficient));
 
-    ++retries;
+  } while (not retry_results.checkRetry(updated_coefficient)); // while retries.
 
-  } while (retries < MIN_RETRIES_
-           or (retries < MAX_RETRIES_
-           and std::fabs(updated_coefficient - previous_coefficient) > FINAL_ACCURACY_)); // while retries.
-
-  if (retries >= MAX_RETRIES_) {
+  if (retry_results.retries() >= MAX_RETRIES_) {
 
     ExecEnv::log().warn( "InbreedingCalculation::processHallME, Genome: {}, retries: {} Hall EM Inbreeding algorithm did not converge",
-                         locus_results.genome, retries);
+                         locus_results.genome, retry_results.retries());
     updated_coefficient = 0.0;
 
   }
@@ -262,7 +303,7 @@ kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
 
   ExecEnv::log().info("HallMe: Genome: {}, Super: {}, Het: {}, Hom: {}, Allele Count: {}, IBD Inbreeding: {}, retries: {}",
                       locus_results.genome, super_population_field, locus_results.major_hetero_count,
-                      locus_results.minor_homo_count, locus_results.total_allele_count, locus_results.inbred_allele_sum, retries);
+                      locus_results.minor_homo_count, locus_results.total_allele_count, locus_results.inbred_allele_sum, retry_results.retries());
 
   return locus_results;
 

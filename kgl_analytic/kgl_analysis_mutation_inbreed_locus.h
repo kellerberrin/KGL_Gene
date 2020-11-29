@@ -32,7 +32,6 @@ public:
   [[nodiscard]] ContigOffset_t upperOffset() const { return upper_offset_; }
   [[nodiscard]] size_t lociiSpacing() const { return spacing_; };
   [[nodiscard]] size_t lociiCount () const { return locii_count; }
-  [[nodiscard]] const std::string& superPopulation() const { return super_population_; }
   [[nodiscard]] double minAlleleFrequency() const { return allele_frequency_min_; }
   [[nodiscard]] double maxAlleleFrequency() const { return allele_frequency_max_; }
   [[nodiscard]] VariantDatabaseSource variantSource() const { return variant_source_; }
@@ -41,7 +40,6 @@ public:
   void upperOffset(ContigOffset_t upper) { upper_offset_ = upper; }
   void lociiSpacing(size_t spacing) { spacing_ = spacing; };
   void lociiCount (size_t count) { locii_count = count; }
-  void superPopulation(const std::string& super_population){ super_population_ = super_population; }
   void minAlleleFrequency(double min_AF) { allele_frequency_min_ = std::clamp(min_AF, 0.0, 1.0); }
   void maxAlleleFrequency(double max_AF) { allele_frequency_max_ = std::clamp(max_AF, 0.0, 1.0); }
   void variantSource(VariantDatabaseSource variant_source) { variant_source_ = variant_source; }
@@ -77,18 +75,22 @@ public:
   ~RetrieveLociiVector() = delete;
 
   static std::vector<ContigOffset_t> getLociiFromTo(std::shared_ptr<const ContigVariant> unphased_contig_ptr,
+                                                    const std::string& super_population,
                                                     const LociiVectorArguments& arguments);
 
   static std::vector<ContigOffset_t> getLociiCount(std::shared_ptr<const ContigVariant> unphased_contig_ptr,
+                                                   const std::string& super_population,
                                                    const LociiVectorArguments& arguments);
 
 private:
 
 
   static std::vector<AlleleFreqVector> getAllelesFromTo( std::shared_ptr<const ContigVariant> unphased_contig_ptr,
+                                                         const std::string& super_population,
                                                          const LociiVectorArguments& arguments);
 
   static std::vector<AlleleFreqVector> getAllelesCount( std::shared_ptr<const ContigVariant> unphased_contig_ptr,
+                                                        const std::string& super_population,
                                                         const LociiVectorArguments& arguments);
 
 };
@@ -116,7 +118,7 @@ public:
 
   // Uses the defined contigs in the unphased population to create a contig map of population locii.
   [[nodiscard]] static ContigLocusMap getPopulationLocusMap(  std::shared_ptr<const UnphasedPopulation> population_ptr,
-                                                              LociiVectorArguments& locii_args);
+                                                              const LociiVectorArguments& locii_args);
 
 private:
 
@@ -128,12 +130,12 @@ private:
   [[nodiscard]] static LocusReturnPair getLocusList( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
                                                      const ContigId_t& contig_id,
                                                      const std::string& super_population,
-                                                     LociiVectorArguments& locii_args);
+                                                     const LociiVectorArguments& locii_args);
 
   // Generate a list of locii to sample a population for the inbreeding coefficient.
   [[nodiscard]] static LocusMap getPopulationLocus(std::shared_ptr<const UnphasedPopulation> unphased_ptr,
                                                    const ContigId_t& contig_id,
-                                                   LociiVectorArguments& locii_args);
+                                                   const LociiVectorArguments& locii_args);
 
 };
 
