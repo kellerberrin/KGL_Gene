@@ -5,57 +5,57 @@
 #ifndef KGL_KGL_ANALYSIS_MUTATION_SYNTHETIC_H
 #define KGL_KGL_ANALYSIS_MUTATION_SYNTHETIC_H
 
+
+
 #include "kgl_variant_db_phased.h"
-#include "kgl_analysis_mutation_inbreed_freqdb.h"
-#include "kgl_analysis_mutation_inbreed_locus.h"
+#include "kgl_ped_parser.h"
+#include "kgl_analysis_mutation_inbreed_calc.h"
 
-
-#include <memory>
-#include <map>
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
-// Just a namespace.
-class InbreedSynthetic  {
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Performs the inbreeding analysis.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class SyntheticAnalysis  {
 
 public:
 
-  InbreedSynthetic() = delete;
-  ~InbreedSynthetic() = delete;
+  SyntheticAnalysis() = delete;
+  ~SyntheticAnalysis() = delete;
 
-
-  // Create a synthetic population with known inbreeding characteristics
-  // Used to test and calibrate the developed inbreeding algorithms.
-  [[nodiscard]] static std::shared_ptr<const DiploidPopulation>
-  generateSyntheticPopulation( double lower_inbreeding,
-                               double upper_inbreeding,
-                               double step_inbreeding,
-                               const std::string& super_population,
-                               const ContigVariant& locus_list,
-                               const LociiVectorArguments& arguments);
-
-
-  // Recover a synthetic inbreeding coefficient from the synthetic genome id.
-  [[nodiscard]] static std::pair<bool, double> generateInbreeding(const GenomeId_t& genome_id);
-
-
-  // Synthetic genome constant
-  constexpr static const double SYNTHETIC_GENOME = 1000000; // Used to create the synthetic genome id.
+  // Construct a synthetic population and analyze it.
+  // The synthetic population is constructed from the unphased population.
+  [[nodiscard]] static bool syntheticInbreeding( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+                                                 InbreedingParameters& paramaters);
 
 private:
 
-  // Generate an inbreeding encoded synthetic genome
-  [[nodiscard]] static GenomeId_t generateSyntheticGenomeId( double inbreeding,
-                                                             const std::string& super_population,
-                                                             size_t counter);
+  // Synthetic inbreeding values.
+  constexpr static const double MIN_INBREEDING_COEFICIENT = -0.5; // Set the minimum inbreeding coefficient
+  constexpr static const double MAX_INBREEDING_COEFICIENT = 0.5; // Set the maximum inbreeding coefficient
+  constexpr static const double STEP_INBREEDING_COEFICIENT = 0.01; // Set the inbreeding step
+
+
+
+  bool static syntheticInbreedingSample( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+                                         InbreedingParameters& parameters);
+
+  [[nodiscard]] static ResultsMap processSynResults( const ContigLocusMap& contig_locus_map,
+                                                     InbreedingParameters& parameters);
 
 };
 
 
 
-
 } // namespace
+
 
 
 

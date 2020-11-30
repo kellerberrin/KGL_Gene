@@ -133,39 +133,16 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 
   parameters.inbreedingAlgorthim(InbreedingCalculation::LOGLIKELIHOOD);
 
-  InbreedingAnalysis::InbreedingAll( genome_GRCh38_,
-                                     unphased_population_,
-                                     diploid_population_,
-                                     ped_data_,
-                                     output_file_name_,
-                                     parameters);
-
-  parameters.inbreedingAlgorthim(InbreedingCalculation::HALL_ME);
+  InbreedingOutputResults results(diploid_population_->populationId());
 
   InbreedingAnalysis::InbreedingAll( genome_GRCh38_,
                                      unphased_population_,
                                      diploid_population_,
                                      ped_data_,
-                                     output_file_name_,
-                                     parameters);
+                                     parameters,
+                                     results);
 
-  parameters.inbreedingAlgorthim(InbreedingCalculation::RITLAND_LOCUS);
-
-  InbreedingAnalysis::InbreedingAll( genome_GRCh38_,
-                                     unphased_population_,
-                                     diploid_population_,
-                                     ped_data_,
-                                     output_file_name_,
-                                     parameters);
-
-  parameters.inbreedingAlgorthim(InbreedingCalculation::SIMPLE);
-
-  InbreedingAnalysis::InbreedingAll( genome_GRCh38_,
-                                     unphased_population_,
-                                     diploid_population_,
-                                     ped_data_,
-                                     output_file_name_,
-                                     parameters);
+  inbreeding_results_.emplace(results.identifier(), results);
 
   return true;
 
@@ -175,6 +152,7 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 bool kgl::MutationAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Finalize called for Analysis Id: {}", ident());
+
 
   return true;
 

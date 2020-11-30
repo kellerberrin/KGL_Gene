@@ -9,6 +9,7 @@
 #include "kgl_analysis_virtual.h"
 #include "kgl_variant_db_phased.h"
 #include "kgl_ped_parser.h"
+#include "kgl_analysis_mutation_inbreed_output.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -56,7 +57,8 @@ private:
   std::shared_ptr<const DiploidPopulation> diploid_population_;
   std::shared_ptr<const UnphasedPopulation> unphased_population_;
   std::shared_ptr<const GenomePEDData> ped_data_;
-
+  // Analysis results generated to be output to file on finalize.
+  std::map<std::string, InbreedingOutputResults> inbreeding_results_;
 
 };
 
