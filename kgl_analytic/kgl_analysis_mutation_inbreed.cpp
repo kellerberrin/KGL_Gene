@@ -92,7 +92,7 @@ bool kgl::InbreedingAnalysis::Inbreeding( std::shared_ptr<const GenomeReference>
     ExecEnv::log().info("Filtered Population : {}  and Joined Population: {}  both active",
                         diploid_ptr->populationId(), unphased_ptr->populationId());
 
-    if (not InbreedingAnalysis::populationInbreeding(genome_ptr,
+    if (not InbreedingAnalysis::singleInbreeding(genome_ptr,
                                                      unphased_ptr,
                                                      *diploid_ptr,
                                                      *ped_data_ptr,
@@ -185,9 +185,6 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const GenomeR
 
   while (lower_window < (contig_size - 1000) and locii_vector.size() >= 1000) {
 
-    std::stringstream ss;
-
-    ss << std::setw(9) << std::setfill('0') << lower_window << "_" << std::setw(9) << std::setfill('0')  << upper_window;
 
     ResultsMap results_map = populationInbreedingSample( unphased_ptr,
                                                          diploid_population,
@@ -209,6 +206,71 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const GenomeR
   return true;
 
 }
+
+
+// Calculate the Population Inbreeding Coefficient
+bool kgl::InbreedingAnalysis::singleInbreeding( std::shared_ptr<const GenomeReference> genome_ptr,
+                                                std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+                                                const DiploidPopulation& diploid_population,
+                                                const GenomePEDData& ped_data,
+                                                InbreedingParameters& parameters,
+                                                InbreedingOutputResults& results) {
+
+  static const ContigOffset_t sampling_distance = 10000;
+  static const size_t locii_count = 10000;
+
+  // Filter out any variants that did not pass VCF filters (otherwise we get duplicate variants).
+  unphased_ptr = unphased_ptr->filterVariants(PassFilter());
+
+  // check that unphased population onlu has 1 genome
+  if (unphased_ptr->getMap().size() != 1) {
+
+    ExecEnv::log().error("InbreedingAnalysis::populationInbreeding; Unphased Population: {} has unexpected Genome count: {}",
+                         unphased_ptr->populationId(), unphased_ptr->getMap().size());
+    return false;
+
+  }
+
+  // check that unphased only has 1 contig
+  auto [genone_id, contig_map] = *unphased_ptr->getMap().begin();
+  if (contig_map->getMap().size() != 1) {
+
+    ExecEnv::log().error("InbreedingAnalysis::populationInbreeding; Unphased Population: {} Genome: {} has more than 1 contig: {}",
+                         unphased_ptr->populationId(), genone_id, contig_map->getMap().size());
+    return false;
+
+  }
+
+  // Get the size of the contig.
+  auto [contig_id, contig_ptr] = *contig_map->getMap().begin();
+  auto contig_opt = genome_ptr->getContigSequence(contig_id);
+
+  if (not contig_opt) {
+
+    ExecEnv::log().error("InbreedingAnalysis::populationInbreeding; Unphased Population: {} Genome: {} not found in the reference genome",
+                         unphased_ptr->populationId(), genone_id);
+    return false;
+  }
+
+  parameters.lociiArguments().lociiCount(locii_count);
+  parameters.lociiArguments().lowerOffset(0);
+  parameters.lociiArguments().upperOffset(1000000000);
+  parameters.lociiArguments().lociiSpacing(sampling_distance);
+
+  ResultsMap results_map = populationInbreedingSample( unphased_ptr,
+                                                       diploid_population,
+                                                       ped_data,
+                                                       parameters);
+
+  results.insertResults({parameters, results_map});
+
+  return true;
+
+}
+
+
+
+
 
 
 kgl::ResultsMap kgl::InbreedingAnalysis::populationInbreedingSample( std::shared_ptr<const UnphasedPopulation> unphased_ptr,

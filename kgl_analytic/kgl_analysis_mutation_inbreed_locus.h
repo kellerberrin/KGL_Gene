@@ -50,7 +50,6 @@ private:
   ContigOffset_t upper_offset_{1000000000};
   size_t spacing_{1000};
   size_t locii_count{1000};
-  std::string super_population_{VariantDatabaseRead::SUPER_POP_ALL_};
   double allele_frequency_min_{0.0};
   double allele_frequency_max_{1.0};
   VariantDatabaseSource variant_source_{VariantDatabaseSource::GNOMAD2_1};

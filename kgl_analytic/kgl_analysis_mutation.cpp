@@ -142,7 +142,9 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
                                      parameters,
                                      results);
 
-  inbreeding_results_.emplace(results.identifier(), results);
+  InbreedingOutput::writeColumnResults(results , *ped_data_, output_file_name_);
+
+//  inbreeding_results_.emplace(results.identifier(), results);
 
   return true;
 
@@ -153,6 +155,12 @@ bool kgl::MutationAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Finalize called for Analysis Id: {}", ident());
 
+  for (auto const& [identifier, result] :  inbreeding_results_) {
+
+    ExecEnv::log().info("Analysis Id: {}; Writing results for identifier: {}", ident(), identifier);
+    InbreedingOutput::writeColumnResults(result , *ped_data_, output_file_name_);
+
+  }
 
   return true;
 

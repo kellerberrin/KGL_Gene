@@ -9,9 +9,62 @@
 
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 
 
 namespace kgl = kellerberrin::genome;
+
+
+
+
+bool kgl::InbreedingOutputResults::verifyResults() const {
+
+  if (results_vector_.empty()) {
+
+    return true; // trivally correct.
+
+  }
+
+  // Create a model set of genomes and ensure all the columns have the same structure.
+  std::set<GenomeId_t> genome_set;
+  auto [ident, first_column] = *results_vector_.begin();
+
+  for (auto const& [genome, data] : first_column) {
+
+    genome_set.insert(genome);
+
+  }
+
+  // Check each of the columns for consistency
+  for (auto const& [parameters, genome_map] : results_vector_) {
+
+    if (genome_set.size() != genome_map.size()) {
+
+      ExecEnv::log().warn("InbreedingAnalysis::verifyColumnMap, genome column sizes: {} not equal first column size: {}",
+                          genome_map.size(), genome_set.size());
+      return false;
+
+    }
+
+    for (auto const& [col_genome, col_data] : genome_map) {
+
+      // If genome_map genome not found then issue a warning and fail.
+      auto result = genome_set.find(col_genome);
+      if (result == genome_set.end()) {
+
+        ExecEnv::log().warn("InbreedingAnalysis::verifyColumnMap, genome ident: {} not found in first column", col_genome);
+        return false;
+
+      }
+
+    }
+
+  }
+
+  return true;
+
+}
+
 
 
 bool kgl::InbreedingOutput::writeSynResults( const ResultsMap& genome_results_map,
@@ -99,89 +152,67 @@ bool kgl::InbreedingOutput::writeSynResults( const ResultsMap& genome_results_ma
 }
 
 
-bool kgl::InbreedingOutput::verifyColumnMap(const ColumnMap& column_map) {
+bool kgl::InbreedingOutput::writeColumnResults( const InbreedingOutputResults& column_results,
+                                                const GenomePEDData& ped_data,
+                                                const std::string& file_path) {
 
-  if (column_map.empty()) {
+  if (column_results.resultsVector().empty()) {
 
-    return true; // trivally correct.
-
-  }
-
-  // Create a model set of genomes and ensure all the columns have the same structure.
-  std::set<GenomeId_t> genome_set;
-  auto [ident, first_column] = *column_map.begin();
-
-  for (auto const& [genome, data] : first_column) {
-
-    genome_set.insert(genome);
+    ExecEnv::log().error("InbreedingAnalysis::writeColumnResults; results vector empty for identifier: {}", column_results.identifier());
+    return false;
 
   }
-
-  // Check each of the columns for consistency
-  for (auto const& [col_ident, column] : column_map) {
-
-    if (genome_set.size() != column.size()) {
-
-      ExecEnv::log().warn("InbreedingAnalysis::verifyColumnMap, column ident: {}, size: {} not equal first column size: {}",
-                          col_ident, column.size(), genome_set.size());
-      return false;
-
-    }
-
-    for (auto const& [col_genome, col_data] : column) {
-
-      // If column genome not found then issue a warning and fail.
-      auto result = genome_set.find(col_genome);
-      if (result == genome_set.end()) {
-
-        ExecEnv::log().warn("InbreedingAnalysis::verifyColumnMap, column ident: {}, genome: {} not found", col_ident, col_genome);
-        return false;
-
-      }
-
-    }
-
-  }
-
-  return true;
-
-}
-
-
-bool kgl::InbreedingOutput::writeColumnResults( const ColumnMap& column_results,
-                                                  const GenomePEDData& ped_data,
-                                                  const std::string& output_file_name,
-                                                  InbreedingParameters& parameters) {
 
   // Check that the column data is valid.
-  if (not verifyColumnMap(column_results)) {
+  if (not column_results.verifyResults()) {
 
-    ExecEnv::log().error("InbreedingAnalysis::writeColumnResults; Column data corrupt could not write output file: {}", output_file_name);
+    ExecEnv::log().error("InbreedingAnalysis::writeColumnResults; Column data corrupt in result identifier: {}", column_results.identifier());
     return false;
 
   }
 
   // Open the output file.
   std::ofstream outfile;
-  std::string file_name_ext = output_file_name + FILE_EXT_;
+  std::string file_name_ext = file_path + column_results.identifier() + FILE_EXT_;
   outfile.open(file_name_ext, std::ofstream::out |  std::ofstream::trunc);
 
   if (not outfile.good()) {
 
     ExecEnv::log().error("InbreedingAnalysis::writeColumnResults; could not open output file: {}", file_name_ext);
+    return false;
 
   }
 
-  outfile << DELIMITER_ << "Min_AF:" << parameters.lociiArguments().minAlleleFrequency()
+  // Sort the column results using map
+  std::map<std::string, ResultsMap> column_map;
+  for (auto const& [parameters, results] : column_results.resultsVector()) {
+
+    std::stringstream ss;
+
+    ss << std::setw(9) << std::setfill('0')
+       << parameters.lociiArguments().lowerOffset()
+       << "_" << std::setw(9) << std::setfill('0')
+       << parameters.lociiArguments().upperOffset();
+
+    column_map[ss.str()] = results;
+
+  }
+
+  auto [parameters, results] = column_results.resultsVector().front();
+
+  outfile << column_results.identifier()
+          << DELIMITER_ << "Algorithm:" << parameters.inbreedingAlgorthim()
+          << DELIMITER_ << "Min_AF:" << parameters.lociiArguments().minAlleleFrequency()
           << DELIMITER_ << "Max_AF:" << parameters.lociiArguments().maxAlleleFrequency()
           << DELIMITER_ << "Spacing:" << parameters.lociiArguments().lociiSpacing() << '\n';
 
-  outfile << DELIMITER_ << "Population"
+  outfile << "Sample"
+          << DELIMITER_ << "Population"
           << DELIMITER_ << "Description"
           << DELIMITER_ << "SuperPopulation"
           << DELIMITER_ << "Description";
 
-  for (auto const& [column_id, genome_results] : column_results) {
+  for (auto const& [column_id, genome_results] : column_map) {
 
 
     outfile << DELIMITER_ << column_id;
@@ -191,7 +222,7 @@ bool kgl::InbreedingOutput::writeColumnResults( const ColumnMap& column_results,
   outfile << '\n';
 
   std::set<GenomeId_t> genome_set;
-  auto [ident, first_column] = *column_results.begin();
+  auto [ident, first_column] = *column_map.begin();
 
   for (auto const& [genome, data] : first_column) {
 
@@ -218,7 +249,7 @@ bool kgl::InbreedingOutput::writeColumnResults( const ColumnMap& column_results,
     outfile << ped_record.superPopulation() << DELIMITER_;
     outfile << ped_record.superDescription() << DELIMITER_;
 
-    for (auto const& [column_id, genome_results] : column_results) {
+    for (auto const& [column_id, genome_results] : column_map) {
 
       auto find_result = genome_results.find(genome_id);
       if (find_result == genome_results.end()) {

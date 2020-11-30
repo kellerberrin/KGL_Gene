@@ -32,6 +32,7 @@ public:
 
   [[nodiscard]] const std::string& identifier() const { return results_identifier_; }
   [[nodiscard]] const std::vector<ResultMapPair>& resultsVector() const { return results_vector_; }
+  [[nodiscard]] bool verifyResults () const;
 
   void insertResults(const ResultMapPair& results) { results_vector_.push_back(results); }
   void identifier(const std::string& result_ident) {  results_identifier_ = result_ident; }
@@ -40,6 +41,8 @@ private:
 
   std::string results_identifier_;
   std::vector<ResultMapPair> results_vector_;
+
+  // Check that each column has the same genome structure.
 
 };
 
@@ -69,10 +72,9 @@ public:
                             InbreedingParameters& parameters);
 
   // Write the analysis results to a CSV file.
-  static bool writeColumnResults( const ColumnMap& column_results,
+  static bool writeColumnResults( const InbreedingOutputResults& column_results,
                                   const GenomePEDData& ped_data,
-                                  const std::string& output_file_name,
-                                  InbreedingParameters& parameters);
+                                  const std::string& file_path);
 
   static bool writeSynResults( const ResultsMap& genome_results_map,
                                InbreedingParameters& parameters);
@@ -84,8 +86,6 @@ private:
   constexpr static const char DELIMITER_ = ',';
   constexpr static const char* FILE_EXT_ = ".csv";
 
-  // Check that each column has the same genome structure.
-  [[nodiscard]] static bool verifyColumnMap(const ColumnMap& column_map);
 
 };
 
