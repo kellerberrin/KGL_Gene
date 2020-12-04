@@ -30,40 +30,15 @@ public:
   InbreedingAnalysis() = delete;
   ~InbreedingAnalysis() = delete;
 
-  // Analyze population and synthetic data for all defined inbreeding algorithms.
-  static bool InbreedingAll( std::shared_ptr<const GenomeReference> genome_ptr,
-                             std::shared_ptr<const UnphasedPopulation> unphased_ptr,
-                             std::shared_ptr<const DiploidPopulation> diploid_population,
-                             std::shared_ptr<const GenomePEDData> ped_data,
-                             InbreedingParameters& paramaters,
-                             InbreedingOutputResults& results);
+
+  // Analyze a presented diploid population for inbreeding.
+  static bool populationInbreeding( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+                                    const DiploidPopulation& diploid_population,
+                                    const GenomePEDData& ped_data,
+                                    const InbreedingParameters& paramaters,
+                                    InbreedingOutputResults& results);
 
 private:
-
-  // Analyze both population and synthetic data for a specified algorithm.
-  [[nodiscard]] static bool Inbreeding( std::shared_ptr<const GenomeReference> genome_ptr,
-                                        std::shared_ptr<const UnphasedPopulation> unphased_ptr,
-                                        std::shared_ptr<const DiploidPopulation> diploid_population,
-                                        std::shared_ptr<const GenomePEDData> ped_data,
-                                        InbreedingParameters& paramaters,
-                                        InbreedingOutputResults& results);
-
-
-  // Analyze a presented diploid population for inbreeding.
-  [[nodiscard]] static bool populationInbreeding(std::shared_ptr<const GenomeReference> genome_ptr,
-                                                 std::shared_ptr<const UnphasedPopulation> unphased_ptr,
-                                                 const DiploidPopulation& diploid_population,
-                                                 const GenomePEDData& ped_data,
-                                                 InbreedingParameters& paramaters,
-                                                 InbreedingOutputResults& results);
-
-  // Analyze a presented diploid population for inbreeding.
-  [[nodiscard]] static bool singleInbreeding(std::shared_ptr<const GenomeReference> genome_ptr,
-                                                 std::shared_ptr<const UnphasedPopulation> unphased_ptr,
-                                                 const DiploidPopulation& diploid_population,
-                                                 const GenomePEDData& ped_data,
-                                                 InbreedingParameters& paramaters,
-                                                 InbreedingOutputResults& results);
 
   [[nodiscard]] static ResultsMap populationInbreedingSample( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
                                                               const DiploidPopulation& diploid_population,
@@ -75,8 +50,6 @@ private:
                                                   const DiploidPopulation& diploid_population,
                                                   const GenomePEDData& ped_data,
                                                   const InbreedingParameters& parameters);
-
-
 
 };
 

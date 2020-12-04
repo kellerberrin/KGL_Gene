@@ -76,8 +76,8 @@ public:
                                   const GenomePEDData& ped_data,
                                   const std::string& file_path);
 
-  static bool writeSynResults( const ResultsMap& genome_results_map,
-                               InbreedingParameters& parameters);
+  static bool writeSynResults( const InbreedingOutputResults& column_results,
+                               const std::string& file_path);
 
 
 

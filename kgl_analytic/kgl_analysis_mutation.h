@@ -34,7 +34,6 @@ public:
                                         const RuntimeParameterMap &named_parameters,
                                         std::shared_ptr<const GenomeCollection> reference_genomes) override;
 
-
   // Perform the genetic analysis per VCF file
   [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataObjectBase> data_object_ptr) override;
 
@@ -59,6 +58,14 @@ private:
   std::shared_ptr<const GenomePEDData> ped_data_;
   // Analysis results generated to be output to file on finalize.
   std::map<std::string, InbreedingOutputResults> inbreeding_results_;
+
+  const static bool analyze_diploid_ = false;
+  bool processDiploid();
+  bool processSynthetic();
+  void createUnphased();
+  // Required because different allele frequency sources have
+  // different allele frequency codes for super populations.
+  VariantDatabaseSource alleleFrequencySource();
 
 };
 

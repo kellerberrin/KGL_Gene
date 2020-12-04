@@ -10,6 +10,7 @@
 #include "kgl_variant_db_phased.h"
 #include "kgl_ped_parser.h"
 #include "kgl_analysis_mutation_inbreed_calc.h"
+#include "kgl_analysis_mutation_inbreed_output.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -32,8 +33,9 @@ public:
 
   // Construct a synthetic population and analyze it.
   // The synthetic population is constructed from the unphased population.
-  [[nodiscard]] static bool syntheticInbreeding( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
-                                                 InbreedingParameters& paramaters);
+  static bool syntheticInbreeding( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+                                   const InbreedingParameters& paramaters,
+                                   InbreedingOutputResults& results);
 
 private:
 
@@ -42,13 +44,8 @@ private:
   constexpr static const double MAX_INBREEDING_COEFICIENT = 0.5; // Set the maximum inbreeding coefficient
   constexpr static const double STEP_INBREEDING_COEFICIENT = 0.01; // Set the inbreeding step
 
-
-
-  bool static syntheticInbreedingSample( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
-                                         InbreedingParameters& parameters);
-
-  [[nodiscard]] static ResultsMap processSynResults( const ContigLocusMap& contig_locus_map,
-                                                     InbreedingParameters& parameters);
+  [[nodiscard]] static ResultsMap processSynResults( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+                                                     const InbreedingParameters& parameters);
 
 };
 

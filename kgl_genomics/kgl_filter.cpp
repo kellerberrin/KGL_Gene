@@ -44,7 +44,7 @@ bool kgl::VepSubStringFilter::applyFilter(const Variant& variant) const {
 
     if (not vep_index_opt) {
 
-      return missing_default_;
+      return false;
 
     }
 
@@ -60,11 +60,9 @@ bool kgl::VepSubStringFilter::applyFilter(const Variant& variant) const {
 
     }
 
-    return false;  // substring not found.
-
   }
 
-  return missing_default_;
+  return false;
 
 }
 

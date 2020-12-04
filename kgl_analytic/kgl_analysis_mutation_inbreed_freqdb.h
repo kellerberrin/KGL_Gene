@@ -33,6 +33,7 @@ public:
   // Get a scalar floating Info field.
   [[nodiscard]] std::optional<double> processFloatField( const Variant& variant, const std::string& super_population) const;
 
+
   // List the super populations supported.
   [[nodiscard]] static const std::vector<std::string>& superPopulations() { return super_populations_; }
 

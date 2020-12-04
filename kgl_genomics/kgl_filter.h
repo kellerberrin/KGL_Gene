@@ -86,8 +86,8 @@ class VepSubStringFilter : public VariantFilter {
 
 public:
 
-  VepSubStringFilter(std::string vep_field_name, std::string sub_string, bool missing_default = false)  // How the filter responds if the data is missing.
-  : vep_field_name_(std::move(vep_field_name)),  sub_string_(std::move(sub_string)), missing_default_(missing_default) {
+  VepSubStringFilter(std::string vep_field_name, std::string sub_string)  // How the filter responds if the data is missing.
+  : vep_field_name_(std::move(vep_field_name)),  sub_string_(std::move(sub_string)) {
 
     std::stringstream ss;
     ss << "Vep Info SubField: " << vep_field_name_ << " contains sub string \"" << sub_string_ <<"\"";
@@ -105,7 +105,6 @@ private:
 
   const std::string vep_field_name_;
   const std::string sub_string_;
-  const bool missing_default_;
 
 };
 

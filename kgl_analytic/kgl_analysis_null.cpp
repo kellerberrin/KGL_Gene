@@ -2,6 +2,7 @@
 // Created by kellerberrin on 4/5/20.
 //
 
+#include <kgl_variant_factory_vcf_evidence_analysis.h>
 #include "kgl_analysis_null.h"
 #include "kgl_variant_db_phased.h"
 
@@ -71,6 +72,15 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> d
       return false;
 
     }
+
+
+    // Investigate vep field values.
+    InfoEvidenceAnalysis::vepSubFieldValues("Consequence", unphased_population);
+    InfoEvidenceAnalysis::vepSubFieldValues("IMPACT", unphased_population);
+    InfoEvidenceAnalysis::vepSubFieldValues("Feature_type", unphased_population);
+    InfoEvidenceAnalysis::vepSubFieldValues("BIOTYPE", unphased_population);
+    InfoEvidenceAnalysis::vepSubFieldValues("EXON", unphased_population);
+    InfoEvidenceAnalysis::vepSubFieldValues("INTRON", unphased_population);
 
     evidence_header_ptr = info_header_opt.value();
 
