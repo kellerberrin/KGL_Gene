@@ -45,7 +45,7 @@ bool kgl::SyntheticAnalysis::syntheticInbreeding(  std::shared_ptr<const Unphase
 
   InbreedingParameters local_params = parameters;
   std::vector<ContigOffset_t> locii_vector = RetrieveLociiVector::getLociiCount(contig_ptr,
-                                                                                VariantDatabaseRead::SUPER_POP_ALL_,
+                                                                                FrequencyDatabaseRead::SUPER_POP_ALL_,
                                                                                 local_params.lociiArguments());
   local_params.lociiArguments().upperOffset(locii_vector.back());
 
@@ -57,7 +57,7 @@ bool kgl::SyntheticAnalysis::syntheticInbreeding(  std::shared_ptr<const Unphase
 
     local_params.lociiArguments().lowerOffset(local_params.lociiArguments().upperOffset());
     locii_vector = RetrieveLociiVector::getLociiCount(contig_ptr,
-                                                      VariantDatabaseRead::SUPER_POP_ALL_,
+                                                      FrequencyDatabaseRead::SUPER_POP_ALL_,
                                                       local_params.lociiArguments());
     local_params.lociiArguments().upperOffset(locii_vector.back());
 

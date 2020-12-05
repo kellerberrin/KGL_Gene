@@ -8,8 +8,8 @@
 
 namespace kgl = kellerberrin::genome;
 
-std::optional<double> kgl::VariantDatabaseRead::processFloatField( const Variant& variant,
-                                                                   const std::string& frequency_field) const {
+std::optional<double> kgl::FrequencyDatabaseRead::processFloatField(const Variant& variant,
+                                                                    const std::string& frequency_field) const {
 
   // Use a super population code to lookup a corresponding AF field.
   std::string database_field = lookupVariantSuperPopField(frequency_field);
@@ -56,17 +56,17 @@ std::optional<double> kgl::VariantDatabaseRead::processFloatField( const Variant
 }
 
 
-std::string kgl::VariantDatabaseRead::lookupVariantSuperPopField(const std::string& super_population) const {
+std::string kgl::FrequencyDatabaseRead::lookupVariantSuperPopField(const std::string& super_population) const {
 
   switch(source_) {
 
-    case VariantDatabaseSource::GNOMAD2_1:
+    case FrequencyDatabaseSource::GNOMAD2_1:
       return lookupGnomad_2_1_Field(super_population);
 
-    case VariantDatabaseSource::GNOMAD3_1:
+    case FrequencyDatabaseSource::GNOMAD3_1:
       return lookupGnomad_3_1_Field(super_population);
 
-    case VariantDatabaseSource::GENOMES_1000:
+    case FrequencyDatabaseSource::GENOMES_1000:
       return lookup_1000_Field(super_population);
 
   }
@@ -77,7 +77,7 @@ std::string kgl::VariantDatabaseRead::lookupVariantSuperPopField(const std::stri
 }
 
 
-std::string kgl::VariantDatabaseRead::lookupGnomad_2_1_Field(const std::string& super_population) {
+std::string kgl::FrequencyDatabaseRead::lookupGnomad_2_1_Field(const std::string& super_population) {
 
   if (super_population == SUPER_POP_AFR_GNOMAD_2_1.first) {
 
@@ -112,7 +112,7 @@ std::string kgl::VariantDatabaseRead::lookupGnomad_2_1_Field(const std::string& 
 
 }
 
-std::string kgl::VariantDatabaseRead::lookupGnomad_3_1_Field(const std::string& super_population) {
+std::string kgl::FrequencyDatabaseRead::lookupGnomad_3_1_Field(const std::string& super_population) {
 
   if (super_population == SUPER_POP_AFR_GNOMAD_3_1.first) {
 
@@ -148,7 +148,7 @@ std::string kgl::VariantDatabaseRead::lookupGnomad_3_1_Field(const std::string& 
 }
 
 
-std::string kgl::VariantDatabaseRead::lookup_1000_Field(const std::string& super_population) {
+std::string kgl::FrequencyDatabaseRead::lookup_1000_Field(const std::string& super_population) {
 
   if (super_population == SUPER_POP_AFR_1000.first) {
 

@@ -38,7 +38,7 @@ std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesFromTo( s
 
       OffsetVariantArray locus_variant_array = offset_ptr->getVariantArray();
 
-      AlleleFreqVector allele_freq_vector(locus_variant_array, super_population, arguments.variantSource());
+      AlleleFreqVector allele_freq_vector(locus_variant_array, super_population, arguments.frequencySource());
 
       if (not allele_freq_vector.checkValidAlleleVector()) {
 
@@ -122,7 +122,7 @@ std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesCount( st
 
       OffsetVariantArray locus_variant_array = offset_ptr->getVariantArray();
 
-      AlleleFreqVector allele_freq_vector(locus_variant_array, super_population, arguments.variantSource());
+      AlleleFreqVector allele_freq_vector(locus_variant_array, super_population, arguments.frequencySource());
 
       if (not allele_freq_vector.checkValidAlleleVector()) {
 
@@ -226,10 +226,10 @@ kgl::LocusMap kgl::InbreedSampling::getPopulationLocus(std::shared_ptr<const Unp
                                                        const LociiVectorArguments& locii_args) {
 
 
-  ThreadPool threadpool(VariantDatabaseRead::superPopulations().size());
+  ThreadPool threadpool(FrequencyDatabaseRead::superPopulations().size());
   std::vector<std::future<LocusReturnPair>> futures_vec;
 
-  for (auto const& super_pop : VariantDatabaseRead::superPopulations()) {
+  for (auto const& super_pop : FrequencyDatabaseRead::superPopulations()) {
 
     auto return_future = threadpool.enqueueTask(&InbreedSampling::getLocusList,
                                                 unphased_ptr,

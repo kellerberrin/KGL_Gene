@@ -142,7 +142,7 @@ public:
 
   AlleleFreqVector(const std::vector <std::shared_ptr<const Variant>> &variant_vector,
                    const std::string &frequency_field,
-                   VariantDatabaseSource variant_source);
+                   FrequencyDatabaseSource variant_source);
 
   ~AlleleFreqVector() = default;
 

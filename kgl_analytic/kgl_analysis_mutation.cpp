@@ -174,7 +174,7 @@ void kgl::MutationAnalysis::createUnphased() {
 
 }
 
-kgl::VariantDatabaseSource kgl::MutationAnalysis::alleleFrequencySource() {
+kgl::FrequencyDatabaseSource kgl::MutationAnalysis::alleleFrequencySource() {
 
   static const std::string gnomad_3_1_fragment = "r3.1";
   static const std::string gnomad_2_1_fragment = "r2.1";
@@ -183,21 +183,21 @@ kgl::VariantDatabaseSource kgl::MutationAnalysis::alleleFrequencySource() {
   size_t find_pos = unphased_population_->populationId().find(genome_1000_fragment);
   if (find_pos != std::string::npos) {
 
-    return VariantDatabaseSource::GENOMES_1000;
+    return FrequencyDatabaseSource::GENOMES_1000;
 
   }
 
   find_pos = unphased_population_->populationId().find(gnomad_2_1_fragment);
   if (find_pos != std::string::npos) {
 
-    return VariantDatabaseSource::GNOMAD2_1;
+    return FrequencyDatabaseSource::GNOMAD2_1;
 
   }
 
   find_pos = unphased_population_->populationId().find(gnomad_3_1_fragment);
   if (find_pos != std::string::npos) {
 
-    return VariantDatabaseSource::GNOMAD3_1;
+    return FrequencyDatabaseSource::GNOMAD3_1;
 
   }
 
@@ -205,7 +205,7 @@ kgl::VariantDatabaseSource kgl::MutationAnalysis::alleleFrequencySource() {
   ExecEnv::log().error("MutationAnalysis::alleleFrequencySource; Population allele frequency signature not for unphased population: {}",
                        unphased_population_->populationId());
 
-  return VariantDatabaseSource::GNOMAD2_1;
+  return FrequencyDatabaseSource::GNOMAD2_1;
 
 }
 
@@ -215,17 +215,17 @@ bool kgl::MutationAnalysis::processDiploid() {
 
   // Setup the analysis parameters.
   size_t locii_count = 3000;
-  static const ContigOffset_t sampling_distance = 0;
-  static const ContigOffset_t lower_window = 115000000;
-  static const ContigOffset_t upper_window = 175000000;
+  static const ContigOffset_t sampling_distance = 100;
+  static const ContigOffset_t lower_window = 0;
+  static const ContigOffset_t upper_window = 1000000000;
   static const double upper_allele_frequency = 1.0;
   static const double lower_allele_frequency = 0.2;
 
   InbreedingParameters parameters;
   parameters.lociiArguments().minAlleleFrequency(lower_allele_frequency);
   parameters.lociiArguments().maxAlleleFrequency(upper_allele_frequency);
-  parameters.inbreedingAlgorthim(InbreedingCalculation::SIMPLE);
-  parameters.lociiArguments().variantSource(alleleFrequencySource());
+  parameters.inbreedingAlgorthim(InbreedingCalculation::LOGLIKELIHOOD);
+  parameters.lociiArguments().frequencySource(alleleFrequencySource());
   parameters.lociiArguments().lowerOffset(lower_window);
   parameters.lociiArguments().upperOffset(upper_window);
   parameters.lociiArguments().lociiCount(locii_count);
@@ -260,7 +260,7 @@ bool kgl::MutationAnalysis::processSynthetic() {
   parameters.lociiArguments().minAlleleFrequency(lower_allele_frequency);
   parameters.lociiArguments().maxAlleleFrequency(upper_allele_frequency);
   parameters.inbreedingAlgorthim(InbreedingCalculation::LOGLIKELIHOOD);
-  parameters.lociiArguments().variantSource(alleleFrequencySource());
+  parameters.lociiArguments().frequencySource(alleleFrequencySource());
   parameters.lociiArguments().lowerOffset(lower_window);
   parameters.lociiArguments().upperOffset(upper_window);
   parameters.lociiArguments().lociiCount(locii_count);

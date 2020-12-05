@@ -27,7 +27,6 @@ class InbreedingParameters {
 public:
 
   InbreedingParameters() = default;
-
   ~InbreedingParameters() = default;
 
   [[nodiscard]] const LociiVectorArguments &lociiArguments() const { return locii_selection_; }
@@ -37,15 +36,12 @@ public:
 
   [[nodiscard]] const std::string &inbreedingAlgorthim() const { return inbreeding_algorithm_; }
 
-  void lociiArguments(const LociiVectorArguments &locii_args) { locii_selection_ = locii_args; }
-
   void inbreedingAlgorthim(const std::string &algo_name) { inbreeding_algorithm_ = algo_name; }
 
 private:
 
   LociiVectorArguments locii_selection_;
   std::string inbreeding_algorithm_{"Loglikelihood"};
-  VariantDatabaseSource variant_source_{VariantDatabaseSource::GNOMAD2_1};
 
 };
 
@@ -164,7 +160,7 @@ private:
                       const std::shared_ptr<const DiploidContig>& contig_ptr,
                       const std::string& super_population_field,
                       const std::shared_ptr<const ContigVariant>& locus_list,
-                      VariantDatabaseSource variantSource);
+                      FrequencyDatabaseSource variantSource);
 
   [[nodiscard]] static double logLikelihood(std::vector<double>& x, std::vector<AlleleFreqInfo>& data);
 

@@ -34,7 +34,7 @@ public:
   [[nodiscard]] size_t lociiCount () const { return locii_count; }
   [[nodiscard]] double minAlleleFrequency() const { return allele_frequency_min_; }
   [[nodiscard]] double maxAlleleFrequency() const { return allele_frequency_max_; }
-  [[nodiscard]] VariantDatabaseSource variantSource() const { return variant_source_; }
+  [[nodiscard]] FrequencyDatabaseSource frequencySource() const { return frequency_source_; }
 
   void lowerOffset(ContigOffset_t lower) { lower_offset_ = lower; }
   void upperOffset(ContigOffset_t upper) { upper_offset_ = upper; }
@@ -42,7 +42,7 @@ public:
   void lociiCount (size_t count) { locii_count = count; }
   void minAlleleFrequency(double min_AF) { allele_frequency_min_ = std::clamp(min_AF, 0.0, 1.0); }
   void maxAlleleFrequency(double max_AF) { allele_frequency_max_ = std::clamp(max_AF, 0.0, 1.0); }
-  void variantSource(VariantDatabaseSource variant_source) { variant_source_ = variant_source; }
+  void frequencySource(FrequencyDatabaseSource frequency_source) { frequency_source_ = frequency_source; }
 
 private:
 
@@ -52,7 +52,7 @@ private:
   size_t locii_count{1000};
   double allele_frequency_min_{0.0};
   double allele_frequency_max_{1.0};
-  VariantDatabaseSource variant_source_{VariantDatabaseSource::GNOMAD2_1};
+  FrequencyDatabaseSource frequency_source_{FrequencyDatabaseSource::GNOMAD2_1};
 
 };
 

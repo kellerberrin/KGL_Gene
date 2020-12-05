@@ -168,7 +168,7 @@ kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
                                                                contig_ptr,
                                                                super_population_field,
                                                                locus_list,
-                                                               parameters.lociiArguments().variantSource());
+                                                               parameters.lociiArguments().frequencySource());
 
   double updated_coefficient{0.0};
   Optimize likelihood_optimizer = createLogLikelihoodOptimizer();
@@ -242,7 +242,7 @@ kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
                                                                contig_ptr,
                                                                super_population_field,
                                                                locus_list,
-                                                               parameters.lociiArguments().variantSource());
+                                                               parameters.lociiArguments().frequencySource());
 
   double updated_coefficient{0.0};
   double inbreed_coefficient;
@@ -330,7 +330,7 @@ kgl::InbreedingCalculation::processSimple(const GenomeId_t& genome_id,
                                                                 contig_ptr,
                                                                 super_population_field,
                                                                 locus_list,
-                                                                parameters.lociiArguments().variantSource());
+                                                                parameters.lociiArguments().frequencySource());
   const bool calc_hetero{false}; // Which calculation to use.
   double heterozygous_inbreeding{0.0};
   double homozygous_inbreeding{0.0};
@@ -392,7 +392,7 @@ kgl::InbreedingCalculation::processRitlandLocus(const GenomeId_t &genome_id,
                                                                 contig_ptr,
                                                                 super_population_field,
                                                                 locus_list,
-                                                                parameters.lociiArguments().variantSource());
+                                                                parameters.lociiArguments().frequencySource());
 
   for (auto const& allele_freq : frequency_vector) {
 

@@ -59,13 +59,13 @@ private:
   // Analysis results generated to be output to file on finalize.
   std::map<std::string, InbreedingOutputResults> inbreeding_results_;
 
-  const static bool analyze_diploid_ = false;
+  const static bool analyze_diploid_ = true;
   bool processDiploid();
   bool processSynthetic();
   void createUnphased();
   // Required because different allele frequency sources have
   // different allele frequency codes for super populations.
-  VariantDatabaseSource alleleFrequencySource();
+  FrequencyDatabaseSource alleleFrequencySource();
 
 };
 

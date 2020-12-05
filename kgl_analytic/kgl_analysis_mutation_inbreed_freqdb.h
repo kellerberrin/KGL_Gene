@@ -21,14 +21,14 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-enum class VariantDatabaseSource { GNOMAD2_1, GNOMAD3_1, GENOMES_1000 };
+enum class FrequencyDatabaseSource { GNOMAD2_1, GNOMAD3_1, GENOMES_1000 };
 
-class VariantDatabaseRead {
+class FrequencyDatabaseRead {
 
 public:
 
-  explicit VariantDatabaseRead(VariantDatabaseSource source) : source_(source) {}
-  ~VariantDatabaseRead() = default;
+  explicit FrequencyDatabaseRead(FrequencyDatabaseSource source) : source_(source) {}
+  ~FrequencyDatabaseRead() = default;
 
   // Get a scalar floating Info field.
   [[nodiscard]] std::optional<double> processFloatField( const Variant& variant, const std::string& super_population) const;
@@ -47,7 +47,7 @@ public:
 
 private:
 
-  VariantDatabaseSource source_;
+  FrequencyDatabaseSource source_;
 
 
   inline static std::vector<std::string> super_populations_ = { SUPER_POP_AFR_,
@@ -57,7 +57,7 @@ private:
                                                                 SUPER_POP_SAS_,
                                                                 SUPER_POP_ALL_ };
 
-  // Lookup a variant super population frequency code. The field code varies with the (VariantDatabaseSource) database source.
+  // Lookup a variant super population frequency code. The field code varies with the (FrequencyDatabaseSource) database source.
   [[nodiscard]] std::string lookupVariantSuperPopField(const std::string& super_population) const;
 
   // Use a super population code to lookup a corresponding AF field.

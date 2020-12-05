@@ -18,9 +18,9 @@ namespace kel = kellerberrin;
 
 kgl::AlleleFreqVector::AlleleFreqVector(const std::vector<std::shared_ptr<const Variant>>& variant_vector,
                                         const std::string& frequency_field,
-                                        VariantDatabaseSource variant_source) {
+                                        FrequencyDatabaseSource variant_source) {
 
-  VariantDatabaseRead database_read(variant_source);
+  FrequencyDatabaseRead database_read(variant_source);
   // Loop through the variants in the locus..
   for (auto const &variant : variant_vector) {
 
@@ -431,7 +431,7 @@ kgl::InbreedingCalculation::generateFrequencies(const GenomeId_t& genome_id,
                                                 const std::shared_ptr<const DiploidContig>& contig_ptr,
                                                 const std::string& super_population_field,
                                                 const std::shared_ptr<const ContigVariant>& locus_list,
-                                                VariantDatabaseSource variant_source) {
+                                                FrequencyDatabaseSource variant_source) {
 
   std::vector<AlleleFreqInfo> frequency_vector;
   LocusResults locus_results;
