@@ -244,7 +244,11 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_analysis_mutation_inbreed_output.cpp
         kgl_analytic/kgl_analysis_mutation_inbreed_output.h
         kgl_analytic/kgl_analysis_mutation_syngen.cpp
-        kgl_analytic/kgl_analysis_mutation_syngen.h kgl_analytic/kgl_analysis_mutation_recomb_compare.cpp kgl_analytic/kgl_analysis_mutation_recomb_compare.h)
+        kgl_analytic/kgl_analysis_mutation_syngen.h
+        kgl_analytic/kgl_analysis_mutation_recomb_compare.cpp
+        kgl_analytic/kgl_analysis_mutation_recomb_compare.h
+        kgl_analytic/kgl_analysis_mutation_inbreed_execute.cpp
+        kgl_analytic/kgl_analysis_mutation_inbreed_execute.h)
 
 # Deconvolution and mixture files.
 
