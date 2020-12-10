@@ -46,6 +46,8 @@ public:
 
   constexpr static const char* VEP_FIELD_ID = "vep";
   constexpr static const char VEP_DELIMITER_CHAR = '|';
+  constexpr static const char* VEP_DELETION_CODE = "-";
+  constexpr static const char* ALLELE_FIELD = "Allele";
 
   [[nodiscard]] const std::vector<std::string>& subFieldHeaders() const { return sub_fields_headers_; }
   [[nodiscard]] std::optional<size_t> getSubFieldIndex(const std::string& sub_field) const;

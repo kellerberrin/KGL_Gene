@@ -4,7 +4,6 @@
 
 #include <kgl_variant_factory_vcf_evidence_analysis.h>
 #include "kgl_variant.h"
-#include "kgl_filter.h"
 #include "kgl_analysis_mutation_inbreed_locus.h"
 
 
@@ -276,9 +275,7 @@ kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::s
 
     if (contig_opt) {
 
-
-      // Filter for SNP and 'PASS' variants.
-      auto snp_contig_ptr = contig_opt.value()->filterVariants(AndFilter(SNPFilter(), PassFilter()));
+      auto snp_contig_ptr = contig_opt.value();
 
       // Retrieve the locii that meet the conditions.
       std::vector<ContigOffset_t> locii_vector = RetrieveLociiVector::getLociiFromTo(snp_contig_ptr, super_population, locii_args);

@@ -23,7 +23,7 @@ namespace kgl = kellerberrin::genome;
 
 bool kgl::VEPSubFieldHeader::parseHeader(const std::string& description) {
 
-  size_t header_offset = description.find_first_of (HEADER_SEARCH_STR_);
+  size_t header_offset = description.find(HEADER_SEARCH_STR_);
 
   if (header_offset == std::string::npos) {
 
@@ -32,11 +32,13 @@ bool kgl::VEPSubFieldHeader::parseHeader(const std::string& description) {
 
   }
 
+  header_offset += std::string(HEADER_SEARCH_STR_).size();
+
   std::string unparsed_header = description.substr(header_offset);
 
   sub_fields_headers_ = Utility::char_tokenizer(unparsed_header, VEP_DELIMITER_CHAR);
 
-  size_t index = 0;
+  size_t index{0};
   for (auto const& sub_field : sub_fields_headers_) {
 
     auto result = index_map_.try_emplace(sub_field, index);

@@ -7,11 +7,8 @@
 #include "kgl_analysis_mutation_inbreed.h"
 #include "kgl_analysis_mutation_inbreed_locus.h"
 #include "kgl_analysis_mutation_inbreed_output.h"
-#include "kgl_analysis_mutation_synthetic.h"
-#include "kgl_filter.h"
 
 #include <iostream>
-#include <iomanip>
 
 
 namespace kgl = kellerberrin::genome;
@@ -27,8 +24,6 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const Unphase
                                                    InbreedingOutputResults& results) {
 
 
-  // Filter out any variants that did not pass VCF filters (otherwise we get duplicate variants).
-  unphased_ptr = unphased_ptr->filterVariants(PassFilter());
 
   // check that unphased population onlu has 1 genome
   if (unphased_ptr->getMap().size() != 1) {

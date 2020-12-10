@@ -46,7 +46,7 @@ public:
 private:
 
   RecordVCFIO vcf_io_;                                   // VCF record queue.
-  size_t consumer_thread_count_{20};                      // Consumer threads
+  size_t consumer_thread_count_{15};                      // Consumer threads
   VCFParseHeader parseheader_;    // Get genome and contig information.
 
   void readHeader(const std::string& file_name);

@@ -160,10 +160,23 @@ std::optional<kgl::InfoDataVariant> kgl::InfoEvidenceAnalysis::getInfoData( cons
 
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// vep sub-fields
+
+const std::vector<std::string_view> kgl::VEPSubFieldEvidence::vepSubFields(const std::string& vep_field) {
+
+  return Utility::view_tokenizer(vep_field, VEPSubFieldHeader::VEP_DELIMITER_CHAR);
+
+}
+
+
+
 // Creates a vep subfield object, if defined by the variant.
 std::optional<std::unique_ptr<const kgl::VEPSubFieldEvidence>>
 kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
 
+  // Check that the vep field exists for this variant.
   std::optional<const kgl::InfoSubscribedField> vep_field_opt = getSubscribedField( variant, VEPSubFieldHeader::VEP_FIELD_ID);
 
   if (not vep_field_opt) {
@@ -172,6 +185,7 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
 
   }
 
+  // Get the vep header object.
   std::optional<std::shared_ptr<const VEPSubFieldHeader>> vep_header_opt = vep_field_opt.value().vepSubFieldHeader();
 
   if (not vep_header_opt) {
@@ -190,45 +204,35 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
 
   }
 
+  // Access the data block and retrieve the vep field vector.
   const DataMemoryBlock &data_block = *variant.evidence().infoData().value();
 
   std::vector<std::string> vep_field_vector = varianttoStrings(vep_field_opt.value().getData(data_block));
 
-  // Only add the vep fields that correspond to the variant alternate.
-  // There may be multiple alternates in the vep vector.
-  std::vector<std::string> variant_vep_vector;
-  variant_vep_vector.reserve(vep_field_vector.size());
-  std::vector<std::vector<std::string_view>> vep_sub_fields_vector;
-  vep_sub_fields_vector.reserve(vep_field_vector.size());
-  for (auto& vep_field : vep_field_vector) {
+  // If the vector is empty then return nullopt.
+  if (vep_field_vector.empty()) {
 
-    std::vector<std::string_view> vep_sub_fields = Utility::view_tokenizer(vep_field, VEPSubFieldHeader::VEP_DELIMITER_CHAR);
-    if (vep_header_ptr->subFieldHeaders().size() != vep_sub_fields.size()) {
-
-      ExecEnv::log().error( "InfoEvidenceAnalysis::getVepSubFields, mismatch, 'vep' header sub field count: {}, parsed :{} sub fields"
-                           , vep_header_ptr->subFieldHeaders().size(), vep_sub_fields.size());
-      return std::nullopt;
-
-    }
-
-    if (std::string(vep_sub_fields[0]) == variant.alternate().getSequenceAsString()) {
-
-      variant_vep_vector.emplace_back(std::move(vep_field));
-      vep_sub_fields_vector.emplace_back(std::move(vep_sub_fields));
-
-    }
-
-  }
-
-  // No point in returning an empty vep object.
-  if (variant_vep_vector.empty()) {
-
+    ExecEnv::log().warn( "InfoEvidenceAnalysis::getVepSubFields, mismatch, Variant: {} has 'vep' header but no vep data",
+                          variant.output(',', VariantOutputIndex::START_0_BASED, true));
     return std::nullopt;
 
   }
 
-  // Return the object.
-  return std::make_unique<const kgl::VEPSubFieldEvidence>(vep_header_ptr, std::move(variant_vep_vector), std::move(vep_sub_fields_vector));
+  for (auto const& vep_field : vep_field_vector) {
+
+    const std::vector<std::string_view>& sub_fields = VEPSubFieldEvidence::vepSubFields(vep_field);
+
+    if (sub_fields.size() !=  vep_header_ptr->subFieldHeaders().size()) {
+
+      ExecEnv::log().error("VepSubStringFilter::applyFilter; VEP sub-field count: {} not equal to VEP header size: {}",
+                           sub_fields.size(),  vep_header_ptr->subFieldHeaders().size());
+      return std::nullopt;
+
+    }
+
+  }
+
+  return std::make_unique<const kgl::VEPSubFieldEvidence>(vep_header_ptr, std::move(vep_field_vector));
 
 }
 
@@ -237,7 +241,6 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
 // Returns all the distinct field values of a vep sub field from a population.
 void kgl::InfoEvidenceAnalysis::vepSubFieldValues( std::string vep_sub_field,
                                                    const std::shared_ptr<const UnphasedPopulation>& population) {
-
 
   struct SubFieldValues{
 
@@ -250,7 +253,9 @@ void kgl::InfoEvidenceAnalysis::vepSubFieldValues( std::string vep_sub_field,
 
       if (vep_fields_opt) {
 
-        std::optional<size_t> vep_index_opt = vep_fields_opt.value()->vepHeader()->getSubFieldIndex(vep_sub_field_);
+        auto const &vep_fields = *vep_fields_opt.value();
+        auto const &vep_header = *vep_fields.vepHeader();
+        std::optional<size_t> vep_index_opt = vep_header.getSubFieldIndex(vep_sub_field_);
 
         if (not vep_index_opt) {
 
@@ -259,9 +264,21 @@ void kgl::InfoEvidenceAnalysis::vepSubFieldValues( std::string vep_sub_field,
 
         }
 
-        for (auto const& sub_fields : vep_fields_opt.value()->vepSubFields()) {
+        size_t vep_index = vep_index_opt.value();
 
-          std::string field_value(sub_fields[vep_index_opt.value()]);
+        for (auto const&  vep_field : vep_fields.vepFields()) {
+
+          const std::vector<std::string_view> sub_field_vector = VEPSubFieldEvidence::vepSubFields(vep_field);
+
+            // Check that the header and the field vector are the same size.
+          if (sub_field_vector.size() != vep_header.subFieldHeaders().size()) {
+
+            ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues; Vep Header size: {} not equal vep sub field size: {}",
+                                 vep_header.subFieldHeaders().size(), sub_field_vector.size());
+            return false;
+          }
+
+          std::string field_value(sub_field_vector[vep_index]);
           auto result = field_value_map_.find(field_value);
 
           if (result != field_value_map_.end()) {
@@ -279,15 +296,15 @@ void kgl::InfoEvidenceAnalysis::vepSubFieldValues( std::string vep_sub_field,
 
           }
 
-        }
+        } // sub fields
 
-      }
+      } // for all sub fields
 
       return true;
 
-    }
+    } // member function.
 
-  };
+  }; // struct.
 
   SubFieldValues sub_field_values;
   sub_field_values.vep_sub_field_ = vep_sub_field;
@@ -301,14 +318,5 @@ void kgl::InfoEvidenceAnalysis::vepSubFieldValues( std::string vep_sub_field,
   }
 
 }
-
-
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Object to hold parsed "vep" sub fields.
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 

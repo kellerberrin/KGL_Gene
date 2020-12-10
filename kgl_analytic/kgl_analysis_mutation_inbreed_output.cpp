@@ -236,7 +236,11 @@ bool kgl::InbreedingOutput::writeColumnResults( const InbreedingOutputResults& c
           << DELIMITER_ << "Population"
           << DELIMITER_ << "Description"
           << DELIMITER_ << "SuperPopulation"
-          << DELIMITER_ << "Description";
+          << DELIMITER_ << "Description"
+          << DELIMITER_ << "Relationship"
+          << DELIMITER_ << "Sex"
+          << DELIMITER_ << "Mother"
+          << DELIMITER_ << "Father";
 
   for (auto const& [column_id, genome_results] : column_map) {
 
@@ -274,6 +278,11 @@ bool kgl::InbreedingOutput::writeColumnResults( const InbreedingOutputResults& c
     outfile << ped_record.populationDescription() << DELIMITER_;
     outfile << ped_record.superPopulation() << DELIMITER_;
     outfile << ped_record.superDescription() << DELIMITER_;
+    outfile << ped_record.relationship() << DELIMITER_;
+    outfile << ped_record.sex() << DELIMITER_;
+    outfile << ped_record.maternalId() << DELIMITER_;
+    outfile << ped_record.paternalId() << DELIMITER_;
+
 
     for (auto const& [column_id, genome_results] : column_map) {
 

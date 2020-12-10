@@ -74,11 +74,10 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Filter on a Vep subfield found in the Gnomad Homo Sapien data. Will return return missing_default for all other data.
+// Filter on a Vep subfield found in the Gnomad Homo Sapien data. Will silently return false for all other data.
 //
-// Note that a variant may have several vep fields representing the different genomic structures the variant occupies.
-// The filter is an 'or' against these fields.
-// If any one (of several) of the specified vep fields meets the filter specification then the filter returns 'true'.
+// If the vep field contains the specified sub-string then the filter returns 'true'.
+// If the the empty string "" is specified then the corresponding vep field must be empty to return true.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

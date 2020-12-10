@@ -23,24 +23,19 @@ class VEPSubFieldEvidence {
 public:
 
   VEPSubFieldEvidence( std::shared_ptr<const VEPSubFieldHeader> vep_header_ptr,
-                       std::vector<std::string>&& field_vector,
-                       std::vector<std::vector<std::string_view>>&& vep_sub_fields_vector)
-  : vep_header_ptr_(std::move(vep_header_ptr)),
-    field_vector_(std::move(field_vector)),
-    vep_sub_fields_vector_(std::move(vep_sub_fields_vector)) {}
+                       std::vector<std::string>&& vep_fields_vector) : vep_header_ptr_(std::move(vep_header_ptr)),
+                                                                       vep_fields_vector_(std::move(vep_fields_vector)) {}
   ~VEPSubFieldEvidence() = default;
 
-
   [[nodiscard]] std::shared_ptr<const VEPSubFieldHeader> vepHeader() const { return vep_header_ptr_; }
-  [[nodiscard]] const std::vector<std::string>&  vepFields() const { return field_vector_; }
-  [[nodiscard]] const std::vector<std::vector<std::string_view>>& vepSubFields() const { return vep_sub_fields_vector_; }
+  [[nodiscard]] const std::vector<std::string>& vepFields() const { return vep_fields_vector_; }
+  // Adapter converts a vep field to sub_fields.
+  [[nodiscard]] static const std::vector<std::string_view> vepSubFields(const std::string& vep_field);
 
 private:
 
   std::shared_ptr<const VEPSubFieldHeader> vep_header_ptr_;
-  const std::vector<std::string> field_vector_;
-  std::vector<std::vector<std::string_view>> vep_sub_fields_vector_;
-
+  const std::vector<std::string> vep_fields_vector_;
 
 };
 

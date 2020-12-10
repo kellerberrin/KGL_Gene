@@ -56,6 +56,13 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> d
 
     evidence_header_ptr = info_header_opt.value();
 
+    for (auto const& [genome_id, genome_ptr] : diploid_population->getMap()) {
+
+      ExecEnv::log().info("NullAnalysis::fileReadAnalysis; Diploid Population: ,{}, Genome: ,{}, Contigs: ,{}",
+                          diploid_population->populationId(), genome_id, genome_ptr->getMap().size());
+
+    }
+
   }
 
   if (data_ptr->dataType() == DataTypeEnum::UnphasedPopulation) {

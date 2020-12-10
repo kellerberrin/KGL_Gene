@@ -5,6 +5,7 @@
 #include "kgl_analysis_mutation_inbreed_execute.h"
 #include "kgl_analysis_mutation_inbreed.h"
 #include "kgl_analysis_mutation_synthetic.h"
+#include "kgl_filter.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -30,7 +31,7 @@ bool kgl::ExecuteInbreedingAnalysis::executeAnalysis(std::shared_ptr<const Genom
     // Check that we have what we need.
     if (not (diploid_population_ and unphased_population_ and ped_data_)) {
 
-      ExecEnv::log().error("MutationAnalysis::iterationAnalysis; Insufficient data, cannot process diploid inbreeding");
+      ExecEnv::log().error("ExecuteInbreedingAnalysis::processDiploid; Insufficient data, cannot process diploid inbreeding");
       return false;
 
     }
@@ -57,11 +58,11 @@ void kgl::ExecuteInbreedingAnalysis::createUnphased() {
 
   if (diploid_population_ and not unphased_population_) {
 
-    ExecEnv::log().info("MutationAnalysis::createUnphased; Creating unique unphased population using 1000 Genomes.");
+    ExecEnv::log().info("ExecuteInbreedingAnalysis::processDiploid; Creating unique unphased population using 1000 Genomes.");
     std::shared_ptr<GenomeVariant> unphased_genome_ptr = diploid_population_->uniqueUnphasedGenome<GenomeVariant>();
     std::shared_ptr<UnphasedPopulation> unphased_unique_ptr = std::make_shared<UnphasedPopulation>(diploid_population_->populationId());
     unphased_unique_ptr->addGenome(unphased_genome_ptr);
-    ExecEnv::log().info("MutationAnalysis::createUnphased; Created unique unphased population, variant count: {}.", unphased_unique_ptr->variantCount());
+    ExecEnv::log().info("ExecuteInbreedingAnalysis::processDiploid; Created unique unphased population, variant count: {}.", unphased_unique_ptr->variantCount());
     unphased_population_ = unphased_unique_ptr;
 
   }
@@ -96,7 +97,7 @@ kgl::FrequencyDatabaseSource kgl::ExecuteInbreedingAnalysis::alleleFrequencySour
   }
 
   // Id signature not found, complain and return GNOMAD2_1.
-  ExecEnv::log().error("MutationAnalysis::alleleFrequencySource; Population allele frequency signature not for unphased population: {}",
+  ExecEnv::log().error("ExecuteInbreedingAnalysis::processDiploid; Population allele frequency signature not found for unphased population: {}",
                        unphased_population_->populationId());
 
   return FrequencyDatabaseSource::GNOMAD2_1;
@@ -108,12 +109,15 @@ bool kgl::ExecuteInbreedingAnalysis::processDiploid() {
 
 
   // Setup the analysis parameters.
-  size_t locii_count = 3000;
-  static const ContigOffset_t sampling_distance = 100;
+  size_t locii_count = 1000;
+  static const ContigOffset_t sampling_distance = 0;
   static const ContigOffset_t lower_window = 0;
   static const ContigOffset_t upper_window = 1000000000;
   static const double upper_allele_frequency = 1.0;
   static const double lower_allele_frequency = 0.2;
+
+  // Filter out any variants that did not pass VCF filters (otherwise we get duplicate variants).
+  unphased_population_ = unphased_population_->filterVariants(AndFilter(SNPFilter(), PassFilter()));
 
   InbreedingParameters parameters;
   parameters.lociiArguments().minAlleleFrequency(lower_allele_frequency);
@@ -176,7 +180,7 @@ bool kgl::ExecuteInbreedingAnalysis::writeResults(const std::string& output_file
 
   for (auto const& [identifier, result] :  inbreeding_results_) {
 
-    ExecEnv::log().info("Writing results for identifier: {}", identifier);
+    ExecEnv::log().info("ExecuteInbreedingAnalysis::processDiploid: Writing results for identifier: {}", identifier);
 
     if (analyze_diploid_) {
 
