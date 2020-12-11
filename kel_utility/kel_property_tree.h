@@ -67,6 +67,7 @@ private:
 
   std::unique_ptr<PropertyImpl> properties_impl_ptr_;    // boost:: properties PIMPL
 
+
 };
 
 

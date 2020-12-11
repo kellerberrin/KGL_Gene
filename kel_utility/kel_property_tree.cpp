@@ -10,10 +10,14 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/spirit/include/lex_lexertl.hpp>
 
+#include <sstream>
+#include <stack>
 
 namespace kel = kellerberrin;
 namespace pt = boost::property_tree;
+namespace lex = boost::spirit::lex;
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -26,6 +30,7 @@ using ImplSubTree = std::pair<std::string, kel::PropertyTree::PropertyImpl>;
 class kel::PropertyTree::PropertyImpl {
 
 public:
+
 
   PropertyImpl() = default;
   PropertyImpl(const pt::ptree& property_tree) : property_tree_(property_tree) {}
@@ -55,31 +60,95 @@ public:
 
 private:
 
-  constexpr static const char* JSON_FILE_EXT_ = "JSON";
+  constexpr static const char* JSON_FILE_EXT_{"JSON"};
+  constexpr static const char* INCLUDE_TOKEN_{"#include"};
+  constexpr static const char* LINE_IGNORE_{"//"};
+  constexpr static const char INCLUDE_FILE_QUOTE_{'\"'};
 
   // boost property tree object
   pt::ptree property_tree_;
 
   void printTree(const std::string& parent, const pt::ptree& property_tree) const;
   bool getPropertyTree(const pt::ptree& property_tree, const std::string& property_name, std::string& property) const;
+  // This function throws file exceptions.
+  std::stringstream preProcessPropertiesFile(const std::string& properties_file);
+  void readRecursive(std::stringstream& ss, const std::string& properties_file);
 
 };
 
+// This function throws file exceptions.
+std::stringstream kel::PropertyTree::PropertyImpl::preProcessPropertiesFile(const std::string& properties_file) {
+
+  std::stringstream ss;
+
+  readRecursive(ss, properties_file);
+
+  return ss;
+
+}
+
+
+void kel::PropertyTree::PropertyImpl::readRecursive(std::stringstream& ss, const std::string& properties_file) {
+
+  static const size_t include_token_size = std::string(INCLUDE_TOKEN_).size();
+  static const size_t ignore_size = std::string(LINE_IGNORE_).size();
+
+  std::ifstream xml_file(properties_file);
+
+  if (not xml_file.good()) {
+
+    ExecEnv::log().error("PropertyImpl::preProcessPropertiesFile; Unable to open XML file: {}", properties_file);
+    throw std::runtime_error(properties_file);
+
+  }
+
+  std::string line;
+  while(std::getline(xml_file, line))
+  {
+    // If the first two characters are "//" then the line is ignored.
+    std::string ignore_text = line.substr(0, ignore_size);
+    if (ignore_text == LINE_IGNORE_) {
+
+      ExecEnv::log().info("PropertyImpl::preProcessPropertiesFile; found ignore in line  {}", line);
+      continue;
+
+    }
+
+    // Recursively include XML files.
+    if (line.find(INCLUDE_TOKEN_) != std::string::npos) {
+
+      std::string file_spec = Utility::trimAllWhiteSpace(line.substr(include_token_size));
+      // The include XML file spec must be in quotes, e.g #include "subdir/include.xml".
+      file_spec = Utility::trimAllChar(file_spec, INCLUDE_FILE_QUOTE_);
+      ExecEnv::log().info("PropertyImpl::preProcessPropertiesFile; XML directory: {}, File Spec: {}",
+                          Utility::filePath(properties_file), file_spec);
+      readRecursive(ss, Utility::filePath(file_spec, Utility::filePath(properties_file)));
+
+    } else {
+
+      ss << line << '\n';
+
+    }
+
+  }
+
+}
 
 
 bool kel::PropertyTree::PropertyImpl::readPropertiesFile(const std::string& properties_file) {
 
-  std::string uc_file_extenstion = Utility::toupper(Utility::fileExtension(properties_file));
+  std::string uc_file_extension = Utility::toupper(Utility::fileExtension(properties_file));
 
   try {
 
-    if (uc_file_extenstion == JSON_FILE_EXT_) {
+    if (uc_file_extension == JSON_FILE_EXT_) {
 
       pt::read_json(properties_file, property_tree_);
 
     } else {
 
-      pt::read_xml(properties_file, property_tree_);
+      auto ss = preProcessPropertiesFile(properties_file);
+      pt::read_xml(ss, property_tree_);
 
     }
 

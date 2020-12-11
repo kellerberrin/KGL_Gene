@@ -23,6 +23,15 @@ namespace bt = boost::timer;
 namespace kel = kellerberrin;
 
 
+// Given a file name as "path/file", returns "path"
+std::string kel::Utility::filePath(const std::string& file_name) {
+
+  fs::path file_path = fs::path(file_name);
+  fs::path directory = file_path.parent_path();
+  return directory.string();
+
+}
+
 
 // Returns the filename with the path directory appended to it "path/file".
 std::string kel::Utility::filePath(const std::string& file_name, const std::string& path) {
@@ -86,6 +95,18 @@ std::string kel::Utility::trimAllWhiteSpace(const std::string &s) {
   return clean_string;
 
 }
+
+// Returns a string with all nc char removed.
+std::string kel::Utility::trimAllChar(const std::string &s, const char nc) {
+
+  std::string mod_string;
+  auto lambda_not_char = [nc](unsigned char c){ return c != nc; };
+  std::copy_if(s.begin(), s.end(), back_inserter(mod_string), lambda_not_char);
+
+  return mod_string;
+
+}
+
 
 // Only trim whitespace at either end of the string.
 std::string kel::Utility::trimEndWhiteSpace(const std::string &s) {

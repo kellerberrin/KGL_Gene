@@ -53,12 +53,6 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase>
       ExecEnv::log().info("Diploid Population: {}, total variants: {}, variants 'Pass' VCF filters: {}",
                           diploid_passed->populationId(), count_all, count_passed);
 
-      ExecEnv::log().info("Verifying 'Pass' Diploid Population: {} for duplicate variants", diploid_passed->populationId());
-      VerifyDuplicates verify_duplicates;
-      diploid_passed->processAll(verify_duplicates, &VerifyDuplicates::verifyVariant);
-      ExecEnv::log().info("Completed Verifying Diploid 'Pass' population for duplicate variants, duplicates: {}",
-                          verify_duplicates.duplicateCount());
-
     }
 
   }
