@@ -127,10 +127,10 @@ public:
                                                          const InbreedingParameters& parameters);
 
   // Algorithm key used in the the algorithm selection map.
-  inline static const std::string RITLAND_LOCUS{"RitlandLocus"};
-  inline static const std::string SIMPLE{"Simple"};
-  inline static const std::string HALL_ME{"HallME"};
-  inline static const std::string LOGLIKELIHOOD{"Loglikelihood"};
+  inline static const std::string RITLAND_LOCUS_F{"RitlandLocus"};
+  inline static const std::string SIMPLE_F{"Simple"};
+  inline static const std::string HALL_ME_IBD{"HallME"};
+  inline static const std::string LOGLIKELIHOOD_F{"Loglikelihood"};
 
   static const std::map<std::string, InbreedingAlgorithm>& algoMap() { return inbreeding_algo_map_; }
   static std::optional<InbreedingAlgorithm> namedAlgorithm(const std::string& algorithm_name);
@@ -138,10 +138,10 @@ public:
 private:
 
   inline static const std::map<std::string, InbreedingAlgorithm> inbreeding_algo_map_ = {
-      {RITLAND_LOCUS, processRitlandLocus},
-      {SIMPLE, processSimple},
-      {HALL_ME, processHallME},
-      {LOGLIKELIHOOD, processLogLikelihood}
+      {RITLAND_LOCUS_F, processRitlandLocus},
+      {SIMPLE_F,        processSimple},
+      {HALL_ME_IBD,     processHallME},
+      {LOGLIKELIHOOD_F, processLogLikelihood}
   };
 
   // The initial guess for the Hall expectation maximization algorithm.

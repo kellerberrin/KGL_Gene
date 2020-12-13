@@ -194,7 +194,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_ped_parser.cpp)
 
 # 3rd party library for fast Leveshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kel_utility/kel_exec_env_app.h)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kel_utility/kel_exec_env_app.h kel_utility/kel_bzip.cpp kel_utility/kel_bzip.h)
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES

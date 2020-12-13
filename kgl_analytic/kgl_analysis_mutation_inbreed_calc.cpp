@@ -93,9 +93,10 @@ std::optional<kgl::InbreedingAlgorithm> kgl::InbreedingCalculation::namedAlgorit
 
 double kgl::InbreedingCalculation::logLikelihood(std::vector<double>& x, std::vector<AlleleFreqInfo>& data) {
 
-  double log_prob_sum = 0.0;
+  double log_prob_sum{0.0};
   double f = x[0];
-  const double small_prob = 1e-10;
+  static const double small_prob{1e-10};
+
   for (auto const& allele_freq : data) {
 
     switch(allele_freq.alleleType()) {

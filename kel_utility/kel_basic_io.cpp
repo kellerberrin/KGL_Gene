@@ -5,6 +5,7 @@
 #include <kel_exec_env.h>
 #include "kel_basic_io.h"
 #include "kel_utility.h"
+#include "kel_bzip.h"
 
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
@@ -158,6 +159,9 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
 
   // Open a compressed gzipped file based on the file extension.
   if (file_ext == GZ_FILE_EXTENSTION_ or file_ext == BGZ_FILE_EXTENSTION_) {
+
+    GZBlockDecompression bgz_decompress(file_name);
+    bgz_decompress.verifyGZBlockFile();
 
     std::unique_ptr<BaseStreamIO> gz_stream(std::make_unique<GZStreamIO>());
     if (not gz_stream->open(file_name)) {
