@@ -5,9 +5,13 @@
 #ifndef KEL_BZIP_H
 #define KEL_BZIP_H
 
-#include "zlib.h"
+#include "kel_mt_queue.h"
+#include "kel_basic_io.h"
+
 
 #include <string>
+#include <memory>
+#include <future>
 
 
 namespace kellerberrin {   //  organization::project level namespace
@@ -52,6 +56,38 @@ struct GZTrailerBlock {
 
 };
 
+// Returned from the data decompression threads wrapped in a std::future.
+// An empty Uncompressed block is used as an eof marker.
+struct UncompressedBlock {
+
+  UncompressedBlock() =default;
+  ~UncompressedBlock() =default;
+  UncompressedBlock(UncompressedBlock&& copy) noexcept {
+
+    block_id = copy.block_id;
+    uncompressed_data = std::move(copy.uncompressed_data);
+    uncompressed_size = copy.uncompressed_size;
+
+  }
+
+  size_t block_id{0};
+  std::unique_ptr<char[]> uncompressed_data;
+  size_t uncompressed_size{0};
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// The Decompression object.
+// Reads and verifies the compressed .bgz file
+// Decompresses the data blocks using a thread pool.
+// Enqueues the decompressed (using zlib) data in a thread safe queue.
+// Presents a stream-like readLine() interface to the data consumer.
+// Data ReadLine() records are guaranteed to be read sequentially and will block
+// until the next logical sequential line record is available.
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class GZBlockDecompression {
 
@@ -68,11 +104,20 @@ public:
 private:
 
   const std::string file_name_;
+  // Blocks are queued here to be decompressed.
+  // Queue high tide and low tide markers are guessed as reasonable values.
+  constexpr static const size_t QUEUE_LOW_TIDE_{100};
+  constexpr static const size_t QUEUE_HIGH_TIDE_{500};
+  BoundedMtQueue<std::future<UncompressedBlock>> decompress_queue_{QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_};
+  // Queues parsed line records.
+  constexpr static const size_t LINE_LOW_TIDE_{10000};
+  constexpr static const size_t LINE_HIGH_TIDE_{50000};
+  BoundedMtQueue<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_};
 
-  // These constants used to verify the structure of the bgz file.
+  // These constants are used to verify the structure of the .bgz file.
   constexpr static const uint8_t BLOCK_ID1_{31};
   constexpr static const uint8_t BLOCK_ID2_{139};
-  constexpr static const uint8_t COMPRESSION_{Z_DEFLATED};
+  constexpr static const uint8_t COMPRESSION_{8};  // 8 = Z_DEFLATED in zlib.h
   constexpr static const uint8_t FLAGS_{4};
   constexpr static const uint8_t EXTRA_LENGTH_{6};
   constexpr static const uint8_t SUBFIELD_ID1_{66};
@@ -87,6 +132,14 @@ private:
   constexpr static const size_t TRAILER_SIZE_{sizeof(GZTrailerBlock)};
   constexpr static const size_t MAX_UNCOMPRESSED_SIZE_{65536};
   constexpr static const size_t BLOCK_SIZE_ADJUST_{HEADER_SIZE_ + TRAILER_SIZE_ - 1};
+  constexpr static const size_t INFLATE_WINDOW_FLAG_ = 15 + 32;
+
+  // Thread pool worker function, calls the zlib inflate function.
+  [[nodiscard]] static UncompressedBlock decompressBlock( size_t block_count,
+                                                          std::byte* compressed_data,
+                                                          size_t compressed_data_size);
+  // Manage the line queue
+  void queueLines();
 
 };
 

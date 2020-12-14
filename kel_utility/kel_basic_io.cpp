@@ -161,7 +161,7 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
   if (file_ext == GZ_FILE_EXTENSTION_ or file_ext == BGZ_FILE_EXTENSTION_) {
 
     GZBlockDecompression bgz_decompress(file_name);
-    bgz_decompress.verifyGZBlockFile();
+    bgz_decompress.decompressGZBlockFile(5);
 
     std::unique_ptr<BaseStreamIO> gz_stream(std::make_unique<GZStreamIO>());
     if (not gz_stream->open(file_name)) {
