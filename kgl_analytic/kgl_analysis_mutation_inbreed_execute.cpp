@@ -69,40 +69,6 @@ void kgl::ExecuteInbreedingAnalysis::createUnphased() {
 
 }
 
-kgl::FrequencyDatabaseSource kgl::ExecuteInbreedingAnalysis::alleleFrequencySource() {
-
-  static const std::string gnomad_3_1_fragment = "r3.1";
-  static const std::string gnomad_2_1_fragment = "r2.1";
-  static const std::string genome_1000_fragment = "1000";
-
-  size_t find_pos = unphased_population_->populationId().find(genome_1000_fragment);
-  if (find_pos != std::string::npos) {
-
-    return FrequencyDatabaseSource::GENOMES_1000;
-
-  }
-
-  find_pos = unphased_population_->populationId().find(gnomad_2_1_fragment);
-  if (find_pos != std::string::npos) {
-
-    return FrequencyDatabaseSource::GNOMAD2_1;
-
-  }
-
-  find_pos = unphased_population_->populationId().find(gnomad_3_1_fragment);
-  if (find_pos != std::string::npos) {
-
-    return FrequencyDatabaseSource::GNOMAD3_1;
-
-  }
-
-  // Id signature not found, complain and return GNOMAD2_1.
-  ExecEnv::log().error("ExecuteInbreedingAnalysis::processDiploid; Population allele frequency signature not found for unphased population: {}",
-                       unphased_population_->populationId());
-
-  return FrequencyDatabaseSource::GNOMAD2_1;
-
-}
 
 // Perform the genetic analysis per iteration.
 bool kgl::ExecuteInbreedingAnalysis::processDiploid() {
@@ -123,7 +89,7 @@ bool kgl::ExecuteInbreedingAnalysis::processDiploid() {
   parameters.lociiArguments().minAlleleFrequency(lower_allele_frequency);
   parameters.lociiArguments().maxAlleleFrequency(upper_allele_frequency);
   parameters.inbreedingAlgorthim(InbreedingCalculation::RITLAND_LOCUS_F);
-  parameters.lociiArguments().frequencySource(alleleFrequencySource());
+  parameters.lociiArguments().frequencySource(FrequencyDatabaseRead::alleleFrequencySource(unphased_population_));
   parameters.lociiArguments().lowerOffset(lower_window);
   parameters.lociiArguments().upperOffset(upper_window);
   parameters.lociiArguments().lociiCount(locii_count);
@@ -158,7 +124,7 @@ bool kgl::ExecuteInbreedingAnalysis::processSynthetic() {
   parameters.lociiArguments().minAlleleFrequency(lower_allele_frequency);
   parameters.lociiArguments().maxAlleleFrequency(upper_allele_frequency);
   parameters.inbreedingAlgorthim(InbreedingCalculation::LOGLIKELIHOOD_F);
-  parameters.lociiArguments().frequencySource(alleleFrequencySource());
+  parameters.lociiArguments().frequencySource(FrequencyDatabaseRead::alleleFrequencySource(unphased_population_));
   parameters.lociiArguments().lowerOffset(lower_window);
   parameters.lociiArguments().upperOffset(upper_window);
   parameters.lociiArguments().lociiCount(locii_count);

@@ -8,6 +8,45 @@
 
 namespace kgl = kellerberrin::genome;
 
+/// todo: this frequency source is based on VCF file names, consider stamping VCF files with unique identifers.
+// Required because different allele frequency sources have
+// different allele frequency codes for super populations.
+kgl::FrequencyDatabaseSource kgl::FrequencyDatabaseRead::alleleFrequencySource(const std::shared_ptr<const UnphasedPopulation>& unphased_population) {
+
+  static const std::string gnomad_3_1_fragment = "v3.1";
+  static const std::string gnomad_2_1_fragment = "r2.1.1";
+  static const std::string genome_1000_fragment = "1000";
+
+  size_t find_pos = unphased_population->populationId().find(genome_1000_fragment);
+  if (find_pos != std::string::npos) {
+
+    return FrequencyDatabaseSource::GENOMES_1000;
+
+  }
+
+  find_pos = unphased_population->populationId().find(gnomad_2_1_fragment);
+  if (find_pos != std::string::npos) {
+
+    return FrequencyDatabaseSource::GNOMAD2_1;
+
+  }
+
+  find_pos = unphased_population->populationId().find(gnomad_3_1_fragment);
+  if (find_pos != std::string::npos) {
+
+    return FrequencyDatabaseSource::GNOMAD3_1;
+
+  }
+
+  // Id signature not found, complain and return GNOMAD2_1.
+  ExecEnv::log().error("ExecuteInbreedingAnalysis::processDiploid; Population allele frequency signature not found for unphased population: {}",
+                       unphased_population->populationId());
+
+  return FrequencyDatabaseSource::GNOMAD2_1;
+
+}
+
+
 std::optional<double> kgl::FrequencyDatabaseRead::processFloatField(const Variant& variant,
                                                                     const std::string& frequency_field) const {
 

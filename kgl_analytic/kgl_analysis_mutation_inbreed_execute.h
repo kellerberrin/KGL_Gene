@@ -57,10 +57,6 @@ private:
 
   void createUnphased();
 
-  // Required because different allele frequency sources have
-  // different allele frequency codes for super populations.
-  FrequencyDatabaseSource alleleFrequencySource();
-
 
 };
 

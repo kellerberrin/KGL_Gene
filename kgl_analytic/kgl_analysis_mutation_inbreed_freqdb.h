@@ -33,6 +33,8 @@ public:
   // Get a scalar floating Info field.
   [[nodiscard]] std::optional<double> processFloatField( const Variant& variant, const std::string& super_population) const;
 
+  // Return a frequency source based on the unphased population type.
+  static FrequencyDatabaseSource alleleFrequencySource(const std::shared_ptr<const UnphasedPopulation>& unphased_population);
 
   // List the super populations supported.
   [[nodiscard]] static const std::vector<std::string>& superPopulations() { return super_populations_; }

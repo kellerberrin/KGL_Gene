@@ -65,14 +65,14 @@ struct UncompressedBlock {
   UncompressedBlock(UncompressedBlock&& copy) noexcept {
 
     block_id = copy.block_id;
-    uncompressed_data = std::move(copy.uncompressed_data);
-    uncompressed_size = copy.uncompressed_size;
+    parsed_records = std::move(copy.parsed_records);
+    eof_flag = copy.eof_flag;
 
   }
 
   size_t block_id{0};
-  std::unique_ptr<char[]> uncompressed_data;
-  size_t uncompressed_size{0};
+  std::vector<std::unique_ptr<std::string>> parsed_records;
+  bool eof_flag{false};
 
 };
 
@@ -85,34 +85,55 @@ struct UncompressedBlock {
 // Enqueues the decompressed (using zlib) data in a thread safe queue.
 // Presents a stream-like readLine() interface to the data consumer.
 // Data ReadLine() records are guaranteed to be read sequentially and will block
-// until the next logical sequential line record is available.
+// until the next logical sequential line record is available (except on eof).
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class GZBlockDecompression {
+class GZBlockDecompression : public BaseStreamIO {
 
 public:
 
-  explicit GZBlockDecompression(std::string file_name) : file_name_(std::move(file_name)) {}
-  ~GZBlockDecompression() = default;
+  explicit GZBlockDecompression(size_t thread_count = DEFAULT_THREADS) : thread_count_(thread_count) {}
+  ~GZBlockDecompression() override { close(); }
+
+  // Does not block on eof.
+  IOLineRecord readLine() override;
+
+  bool open(const std::string &file_name) override;
+
+  bool close();
+
+  bool isError() const { return decompression_error_; }
 
   // Checks the internal data structures of a VCF bgz file.
-  bool verifyGZBlockFile();
-  // Decompresses a VCF bgz file using multiple threads and enqueues the decompressed data blocks.
-  bool decompressGZBlockFile(size_t thread_count);
+  bool verifyGZBlockFile(const std::string &file_name);
+
+  // Seems about right.
+  constexpr static const size_t DEFAULT_THREADS{15};
 
 private:
 
-  const std::string file_name_;
+  std::string file_name_;
+  std::ifstream bgz_file_;
+  size_t thread_count_;
+  std::future<bool> reader_return_;
+
   // Blocks are queued here to be decompressed.
   // Queue high tide and low tide markers are guessed as reasonable values.
-  constexpr static const size_t QUEUE_LOW_TIDE_{100};
-  constexpr static const size_t QUEUE_HIGH_TIDE_{500};
+  constexpr static const size_t QUEUE_LOW_TIDE_{1000};
+  constexpr static const size_t QUEUE_HIGH_TIDE_{10000};
   BoundedMtQueue<std::future<UncompressedBlock>> decompress_queue_{QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_};
   // Queues parsed line records.
   constexpr static const size_t LINE_LOW_TIDE_{10000};
-  constexpr static const size_t LINE_HIGH_TIDE_{50000};
+  constexpr static const size_t LINE_HIGH_TIDE_{100000};
   BoundedMtQueue<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_};
+
+  // Flag set for shutdown.
+  bool shutdown_{false};
+  // Flag set if problems decompressing a gzip block.
+  bool decompression_error_{false};
+  // Flag set if EOF marker received on the line queue.
+  bool line_eof_{false};
 
   // These constants are used to verify the structure of the .bgz file.
   constexpr static const uint8_t BLOCK_ID1_{31};
@@ -133,13 +154,18 @@ private:
   constexpr static const size_t MAX_UNCOMPRESSED_SIZE_{65536};
   constexpr static const size_t BLOCK_SIZE_ADJUST_{HEADER_SIZE_ + TRAILER_SIZE_ - 1};
   constexpr static const size_t INFLATE_WINDOW_FLAG_ = 15 + 32;
+  constexpr static const char EOL_MARKER_ = '\n';
 
+  // Decompresses a VCF bgz file using multiple threads and enqueues the decompressed data blocks.
+  bool decompressGZBlockFile();
   // Thread pool worker function, calls the zlib inflate function.
-  [[nodiscard]] static UncompressedBlock decompressBlock( size_t block_count,
-                                                          std::byte* compressed_data,
-                                                          size_t compressed_data_size);
-  // Manage the line queue
-  void queueLines();
+  [[nodiscard]] UncompressedBlock decompressBlock( size_t block_count,
+                                                   std::shared_ptr<std::vector<std::byte>> compressed_data,
+                                                   size_t compressed_data_size,
+                                                   bool eof_flag);
+  // Assemble records last + first and queue as complete records.
+  void assembleRecords();
+
 
 };
 

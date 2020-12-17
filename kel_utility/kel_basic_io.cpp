@@ -13,7 +13,6 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <thread>
 
 namespace bio = boost::iostreams;
 // Implementation file classes need to be defined within namespaces.
@@ -158,12 +157,23 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
   std::string file_ext = Utility::toupper(Utility::fileExtension(file_name));
 
   // Open a compressed gzipped file based on the file extension.
-  if (file_ext == GZ_FILE_EXTENSTION_ or file_ext == BGZ_FILE_EXTENSTION_) {
+  if (file_ext == GZ_FILE_EXTENSTION_)  {
 
-    GZBlockDecompression bgz_decompress(file_name);
-    bgz_decompress.decompressGZBlockFile(5);
 
     std::unique_ptr<BaseStreamIO> gz_stream(std::make_unique<GZStreamIO>());
+    if (not gz_stream->open(file_name)) {
+
+      return std::nullopt;
+
+    } else {
+
+      return gz_stream;
+
+    }
+
+  } else if (file_ext == BGZ_FILE_EXTENSTION_) {
+
+    std::unique_ptr<BaseStreamIO> gz_stream(std::make_unique<GZBlockDecompression>());
     if (not gz_stream->open(file_name)) {
 
       return std::nullopt;
@@ -190,5 +200,7 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
   }
 
 }
+
+
 
 } // namespace
