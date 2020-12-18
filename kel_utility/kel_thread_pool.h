@@ -22,7 +22,7 @@ namespace kellerberrin {  //  organization level namespace
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
-// A general thread pool class.
+// A general purpose thread pool class.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -58,6 +58,8 @@ public:
     return future;
 
   }
+
+  const std::vector<std::thread>& threads() const { return threads_; }
 
 private:
 

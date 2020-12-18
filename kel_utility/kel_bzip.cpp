@@ -9,16 +9,14 @@
 #include "kel_bzip.h"
 #include "kel_exec_env.h"
 #include "kel_utility.h"
-#include "kel_thread_pool.h"
 
 namespace kel = kellerberrin;
 
 
-bool kel::GZBlockDecompression::close() {
+bool kel::BGZReader::close() {
 
   shutdown_ = true;
-  ExecEnv::log().info("GZBlockDecompression waiting for async decompressGZBlockFile() to terminate");
-  // If not empty then empty the queues to flush through the eof marker and shutdown the worker threads.
+  // Empty the queues to flush through the eof markers and shutdown the worker threads.
   if (not line_queue_.empty()) while(readLine());
   // The std::future may not be active, so eat any exceptions thrown by querying it.
   try {
@@ -34,14 +32,12 @@ bool kel::GZBlockDecompression::close() {
   line_eof_ = false;
   decompression_error_ = false;
 
-  ExecEnv::log().info("GZBlockDecompression terminates.");
-
   return true;
 
 }
 
 
-bool kel::GZBlockDecompression::open(const std::string &file_name) {
+bool kel::BGZReader::open(const std::string &file_name) {
 
   try {
 
@@ -52,7 +48,7 @@ bool kel::GZBlockDecompression::open(const std::string &file_name) {
     bgz_file_.open(file_name_, std::ios::binary | std::ios::ate);
     if (not bgz_file_.good()) {
 
-      ExecEnv::log().error("GZBlockDecompression::open; I/O error; could not open file: {}", file_name);
+      ExecEnv::log().error("BGZReader::open; I/O error; could not open file: {}", file_name);
       decompression_error_ = true;
       return false;
 
@@ -60,124 +56,135 @@ bool kel::GZBlockDecompression::open(const std::string &file_name) {
   }
   catch (std::exception const &e) {
 
-    ExecEnv::log().error("GZBlockDecompression::open; File: {} unexpected I/O exception: {}", file_name, e.what());
+    ExecEnv::log().error("BGZReader::open; File: {} unexpected I/O exception: {}", file_name, e.what());
     decompression_error_ = true;
     return false;
 
   }
 
-  // File is open so start processing.
+  // Reset the flags
+  shutdown_ = false;
+  line_eof_ = false;
   decompression_error_ = false;
-  ExecEnv::log().info("GZBlockDecompression::open; async");
-  reader_return_ = std::async(std::launch::async, &GZBlockDecompression::decompressGZBlockFile, this);
-  ExecEnv::log().info("GZBlockDecompression::open; async succeeds");
+  // File is open so start processing.
+  reader_return_ = reader_thread_.enqueueTask(&BGZReader::decompressGZBlockFile, this);
 
   return true;
 
 }
 
 
-kel::IOLineRecord kel::GZBlockDecompression::readLine() {
+kel::IOLineRecord kel::BGZReader::readLine() {
 
 // Dont block if eof reached.
   if (line_eof_ and line_queue_.empty()) return std::nullopt;
-
+// Return next available sequential line record.
   return line_queue_.waitAndPop();
 
 }
 
 
-bool kel::GZBlockDecompression::verifyGZBlockFile(const std::string &file_name) {
+bool kel::BGZReader::verify(const std::string &file_name, bool silent) {
 
-  if (not open(file_name)) {
+  std::ifstream bgz_file(file_name, std::ios::binary | std::ios::ate);
 
+  if (not bgz_file.good()) {
+
+    ExecEnv::log().warn("BGZReader::verify; Problem opening file: {}", file_name);
     return false;
 
   }
 
   // Read file size.
-  const size_t bgz_file_size = bgz_file_.tellg();
-  ExecEnv::log().info("Verifing bgz file: {}:, Size: {}", file_name_, bgz_file_size);
+  const size_t bgz_file_size = bgz_file.tellg();
+  ExecEnv::log().info("Verifing bgz file: {}:, Size: {}", file_name, bgz_file_size);
   // Reset the file stream pointer to the file begining.
-  bgz_file_.seekg(0);
+  bgz_file.seekg(0);
 
   size_t file_offset{0};
   size_t block_count{0};
   size_t total_compressed_size{0};
   size_t total_uncompressed_size{0};
-  while (file_offset < (bgz_file_size - EOF_MARKER_SIZE_) and not bgz_file_.eof()) {
+  while (file_offset < (bgz_file_size - EOF_MARKER_SIZE_) and not bgz_file.eof()) {
 
     ++block_count;
     // Read header.
     GZHeaderblock header_block;
-    bgz_file_.read(reinterpret_cast<char*>(&header_block), HEADER_SIZE_);
+    bgz_file.read(reinterpret_cast<char*>(&header_block), HEADER_SIZE_);
     file_offset += HEADER_SIZE_;
     // Check the header values.
     if (header_block.block_id_1 != BLOCK_ID1_) {
 
-      ExecEnv::log().error("GZBlockDecompression::verifyGZBlockFile; Block count: {}, bad header block id 1: {}, expected: {}",
-                           block_count, header_block.block_id_1, BLOCK_ID1_);
+      if (not silent) ExecEnv::log().error( "BGZReader::verify; Block count: {}, bad header block id 1: {}, expected: {}",
+                                            block_count, header_block.block_id_1, BLOCK_ID1_);
       return false;
 
     }
 
     if (header_block.block_id_2 != BLOCK_ID2_) {
 
-      ExecEnv::log().error("GZBlockDecompression::verifyGZBlockFile; Block count: {}, bad header block id 2: {}, expected: {}",
-                           block_count, header_block.block_id_2, BLOCK_ID2_);
+      if (not silent) ExecEnv::log().error("BGZReader::verify; Block count: {}, bad header block id 2: {}, expected: {}",
+                                           block_count, header_block.block_id_2, BLOCK_ID2_);
       return false;
 
     }
 
     if (header_block.subfield_id_1 != SUBFIELD_ID1_) {
 
-      ExecEnv::log().error("GZBlockDecompression::verifyGZBlockFile; Block count: {}, bad sub-field header block id 1: {}, expected: {}",
-                           block_count, header_block.subfield_id_1, SUBFIELD_ID1_);
+      if (not silent) ExecEnv::log().error( "BGZReader::verify; Block count: {}, bad sub-field header block id 1: {}, expected: {}",
+                                            block_count, header_block.subfield_id_1, SUBFIELD_ID1_);
       return false;
 
     }
 
     if (header_block.subfield_id_2 != SUBFIELD_ID2_) {
 
-      ExecEnv::log().error("GZBlockDecompression::verifyGZBlockFile; Block count: {}, bad sub-field header block id 1: {}, expected: {}",
-                           block_count, header_block.subfield_id_2, SUBFIELD_ID2_);
+      if (not silent) ExecEnv::log().error( "BGZReader::verify; Block count: {}, bad sub-field header block id 1: {}, expected: {}",
+                                            block_count, header_block.subfield_id_2, SUBFIELD_ID2_);
       return false;
 
     }
 
     if (header_block.length_extra_blocks != EXTRA_LENGTH_) {
 
-      ExecEnv::log().error("GZBlockDecompression::verifyGZBlockFile; Block count: {}, extra block size: {}, expected: {}",
-                           block_count, header_block.length_extra_blocks, EXTRA_LENGTH_);
+      if (not silent) ExecEnv::log().error( "BGZReader::verify; Block count: {}, extra block size: {}, expected: {}",
+                                            block_count, header_block.length_extra_blocks, EXTRA_LENGTH_);
       return false;
 
     }
 
     // skip the compressed data
     size_t compressed_data_size = header_block.block_size - BLOCK_SIZE_ADJUST_;
-    bgz_file_.seekg(compressed_data_size , std::ios_base::cur);
+    if (compressed_data_size > MAX_UNCOMPRESSED_SIZE_) {
+
+      if (not silent) ExecEnv::log().error( "BGZReader::verify; Block count: {}, Compressed block size: {} exceeds max Ccompressed size: {}",
+                                            block_count, compressed_data_size, MAX_UNCOMPRESSED_SIZE_);
+      return false;
+
+    }
+    bgz_file.seekg(compressed_data_size , std::ios_base::cur);
     file_offset += compressed_data_size;
     total_compressed_size += compressed_data_size;
 
     // Read the trailer block
     GZTrailerBlock trailer_block;
-    bgz_file_.read(reinterpret_cast<char*>(&trailer_block), TRAILER_SIZE_);
+    bgz_file.read(reinterpret_cast<char*>(&trailer_block), TRAILER_SIZE_);
     file_offset += TRAILER_SIZE_;
     total_uncompressed_size += trailer_block.uncompressed_size;
 
     if (trailer_block.uncompressed_size > MAX_UNCOMPRESSED_SIZE_) {
 
-      ExecEnv::log().error("GZBlockDecompression::verifyGZBlockFile; Block count: {}, Uncompressed block size: {} exceeds max uncompressed size: {}",
-                           block_count, trailer_block.uncompressed_size, MAX_UNCOMPRESSED_SIZE_);
+      if (not silent) ExecEnv::log().error( "BGZReader::verify; Block count: {}, Uncompressed block size: {} exceeds max uncompressed size: {}",
+                                            block_count, trailer_block.uncompressed_size, MAX_UNCOMPRESSED_SIZE_);
       return false;
 
     }
 
-    size_t file_position = static_cast<size_t>(bgz_file_.tellg());
+    size_t file_position = static_cast<size_t>(bgz_file.tellg());
     if (file_position != file_offset) {
 
-      ExecEnv::log().error("GZBlockDecompression::verifyGZBlockFile; Block count: {}, file tellg: {}, calc file_offset: {}",
-                           block_count, bgz_file_.tellg(), file_offset);
+      if (not silent) ExecEnv::log().error( "BGZReader::verify; Block count: {}, file tellg: {}, calc file_offset: {}",
+                                            block_count, bgz_file.tellg(), file_offset);
       return false;
 
     }
@@ -186,50 +193,48 @@ bool kel::GZBlockDecompression::verifyGZBlockFile(const std::string &file_name) 
 
 
   // Check EOF string.
-  size_t remaining_chars = bgz_file_size - bgz_file_.tellg();
+  size_t remaining_chars = bgz_file_size - bgz_file.tellg();
   if (remaining_chars != EOF_MARKER_SIZE_) {
 
-    ExecEnv::log().error("GZBlockDecompression::verifyGZBlockFile; Blocks: Verified {}, EOF Remaining bytes: {}, expected EOF remaining bytes: {}",
-                        block_count, remaining_chars, EOF_MARKER_SIZE_);
+    if (not silent) ExecEnv::log().error( "BGZReader::verify; Blocks: Verified {}, EOF Remaining bytes: {}, expected EOF remaining bytes: {}",
+                                          block_count, remaining_chars, EOF_MARKER_SIZE_);
     return false;
   }
 
   uint8_t eof_marker[EOF_MARKER_SIZE_];
-  bgz_file_.read(reinterpret_cast<char*>(&eof_marker), EOF_MARKER_SIZE_);
+  bgz_file.read(reinterpret_cast<char*>(&eof_marker), EOF_MARKER_SIZE_);
 
   for (size_t index = 0; index < EOF_MARKER_SIZE_; ++index) {
 
     if (EOF_MARKER_[index] != eof_marker[index]) {
 
-      ExecEnv::log().error("GZBlockDecompression::verifyGZBlockFile; EOF marker index: {}, EOF marker byte: {}, expected byte: {}",
-                           index, eof_marker[index], EOF_MARKER_[index]);
+      if (not silent) ExecEnv::log().error( "BGZReader::verify; EOF marker index: {}, EOF marker byte: {}, expected byte: {}",
+                                            index, eof_marker[index], EOF_MARKER_[index]);
       return false;
 
     }
 
   }
 
-  ExecEnv::log().info("Successfully verified: {}, Blocks: {}, Uncompressed size: {}, Compressed size: {}",
-                      file_name_,  block_count, total_uncompressed_size, total_compressed_size);
+  ExecEnv::log().info("Verified: {}, Blocks: {}, Data Uncompressed: {}, Compressed: {}",
+                      file_name,  block_count, total_uncompressed_size, total_compressed_size);
 
   return true;
 
 }
 
 
-bool kel::GZBlockDecompression::decompressGZBlockFile() {
-
-  ExecEnv::log().info("GZB Processing: {}", file_name_);
+bool kel::BGZReader::decompressGZBlockFile() {
 
   ThreadPool thread_pool(thread_count_);
   ThreadPool line_thread(1);
 
   // Unpacks the decompressed data and queues line records.
-  line_thread.enqueueWork(&GZBlockDecompression::assembleRecords, this);
+  line_thread.enqueueWork(&BGZReader::assembleRecords, this);
 
   if (not bgz_file_.good()) {
 
-    ExecEnv::log().error("GZBlockDecompression::decompressGZBlockFile; failed to open bgz file: {}", file_name_);
+    ExecEnv::log().error("BGZReader::decompressGZBlockFile; failed to open bgz file: {}", file_name_);
     decompression_error_ = true;
 
   }
@@ -254,7 +259,7 @@ bool kel::GZBlockDecompression::decompressGZBlockFile() {
     bgz_file_.read(reinterpret_cast<char *>(&(read_vector_ptr->at(0))), HEADER_SIZE_);
     if (not bgz_file_.good()) {
 
-      ExecEnv::log().error("GZBlockDecompression::decompressGZBlockFile; Block {}, header file read error", block_count);
+      ExecEnv::log().error("BGZReader::decompressGZBlockFile; Block {}, header file read error", block_count);
       decompression_error_ = true;
       break;
 
@@ -271,7 +276,7 @@ bool kel::GZBlockDecompression::decompressGZBlockFile() {
     bgz_file_.read(read_ptr, read_data_size);
     if (not bgz_file_.good()) {
 
-      ExecEnv::log().error("GZBlockDecompression::decompressGZBlockFile; Block {}, data file read error", block_count);
+      ExecEnv::log().error("BGZReader::decompressGZBlockFile; Block {}, data file read error", block_count);
       decompression_error_ = true;
       break;
 
@@ -282,7 +287,7 @@ bool kel::GZBlockDecompression::decompressGZBlockFile() {
 
 
     // Decompress the data.
-    std::future<UncompressedBlock> future = thread_pool.enqueueTask(&GZBlockDecompression::decompressBlock,
+    std::future<UncompressedBlock> future = thread_pool.enqueueTask(&BGZReader::decompressBlock,
                                                                     this,
                                                                     block_count,
                                                                     read_vector_ptr,
@@ -303,9 +308,8 @@ bool kel::GZBlockDecompression::decompressGZBlockFile() {
   // If terminated just return.
   if (shutdown_ or decompression_error_) {
 
-    ExecEnv::log().info("GZBlockDecompression closed with: {} bytes remaining to be processed", remaining_chars);
     // Queue an empty block to signal an EOF or error condition.
-    std::future<UncompressedBlock> future = thread_pool.enqueueTask( &GZBlockDecompression::decompressBlock, this, 0, nullptr, 0, true);
+    std::future<UncompressedBlock> future = thread_pool.enqueueTask(&BGZReader::decompressBlock, this, 0, nullptr, 0, true);
     // Queue for processing.
     decompress_queue_.push(std::move(future));
 
@@ -316,7 +320,7 @@ bool kel::GZBlockDecompression::decompressGZBlockFile() {
   // Not terminated so verify the EOF block.
   if (remaining_chars != EOF_MARKER_SIZE_) {
 
-    ExecEnv::log().error("GZBlockDecompression::decompressGZBlockFile; Blocks: Verified {}, EOF Remaining bytes: {}, expected EOF remaining bytes: {}",
+    ExecEnv::log().error("BGZReader::decompressGZBlockFile; Blocks: Verified {}, EOF Remaining bytes: {}, expected EOF remaining bytes: {}",
                          block_count, remaining_chars, EOF_MARKER_SIZE_);
   } else {
 
@@ -327,7 +331,7 @@ bool kel::GZBlockDecompression::decompressGZBlockFile() {
 
       if (EOF_MARKER_[index] != eof_marker[index]) {
 
-        ExecEnv::log().error("GZBlockDecompression::decompressGZBlockFile; EOF marker index: {}, EOF marker byte: {}, expected byte: {}",
+        ExecEnv::log().error("BGZReader::decompressGZBlockFile; EOF marker index: {}, EOF marker byte: {}, expected byte: {}",
                              index, eof_marker[index], EOF_MARKER_[index]);
       }
 
@@ -336,11 +340,9 @@ bool kel::GZBlockDecompression::decompressGZBlockFile() {
   }
 
   // Queue an empty block to signal an EOF or error condition.
-  std::future<UncompressedBlock> future = thread_pool.enqueueTask( &GZBlockDecompression::decompressBlock, this, 0, nullptr, 0, true);
+  std::future<UncompressedBlock> future = thread_pool.enqueueTask(&BGZReader::decompressBlock, this, 0, nullptr, 0, true);
   // Queue for processing.
   decompress_queue_.push(std::move(future));
-
-  ExecEnv::log().info("GZB Processed: {}, Blocks: {}, Compressed size: {}", file_name_,  block_count, total_compressed_size);
 
   return true;
 
@@ -348,10 +350,10 @@ bool kel::GZBlockDecompression::decompressGZBlockFile() {
 
 
 
-kel::UncompressedBlock kel::GZBlockDecompression::decompressBlock( size_t block_count,
-                                                                   std::shared_ptr<std::vector<std::byte>> compressed_data,
-                                                                   size_t compressed_data_size,
-                                                                   bool eof_flag) {
+kel::UncompressedBlock kel::BGZReader::decompressBlock(size_t block_count,
+                                                       std::shared_ptr<std::vector<std::byte>> compressed_data,
+                                                       size_t compressed_data_size,
+                                                       bool eof_flag) {
 
   UncompressedBlock uncompressed_block;
   z_stream_s zlib_params;
@@ -377,7 +379,7 @@ kel::UncompressedBlock kel::GZBlockDecompression::decompressBlock( size_t block_
     if (return_code < Z_OK) {
 
       std::string zlib_msg = zlib_params.msg != nullptr ? zlib_params.msg : "no msg";
-      ExecEnv::log().error("GZBlockDecompression::decompressBlock; ::inflateInit2() fail, return code: {}, msg: {}, Uncompressed: {}, Consumed: {}",
+      ExecEnv::log().error("BGZReader::decompressBlock; ::inflateInit2() fail, return code: {}, msg: {}, Uncompressed: {}, Consumed: {}",
                            return_code, zlib_msg, MAX_UNCOMPRESSED_SIZE_ - zlib_params.avail_out, zlib_params.total_in);
       decompression_error_ = true;
 
@@ -387,7 +389,7 @@ kel::UncompressedBlock kel::GZBlockDecompression::decompressBlock( size_t block_
     if (return_code != Z_STREAM_END) {
 
       std::string zlib_msg = zlib_params.msg != nullptr ? zlib_params.msg : "no msg";
-      ExecEnv::log().error("GZBlockDecompression::decompressBlock; ::inflate() fail, return code: {}, msg: {}, Uncompressed: {}, Consumed: {}",
+      ExecEnv::log().error("BGZReader::decompressBlock; ::inflate() fail, return code: {}, msg: {}, Uncompressed: {}, Consumed: {}",
                            return_code, zlib_msg, MAX_UNCOMPRESSED_SIZE_ - zlib_params.avail_out, zlib_params.total_in);
       decompression_error_ = true;
 
@@ -397,7 +399,7 @@ kel::UncompressedBlock kel::GZBlockDecompression::decompressBlock( size_t block_
     if (return_code < Z_OK) {
 
       std::string zlib_msg = zlib_params.msg != nullptr ? zlib_params.msg : "no msg";
-      ExecEnv::log().error("GZBlockDecompression::decompressBlock; ::inflateEnd() fail, return code: {}, msg: {}, Uncompressed: {}, Consumed: {}",
+      ExecEnv::log().error("BGZReader::decompressBlock; ::inflateEnd() fail, return code: {}, msg: {}, Uncompressed: {}, Consumed: {}",
                            return_code, zlib_msg, MAX_UNCOMPRESSED_SIZE_ - zlib_params.avail_out, zlib_params.total_in);
       decompression_error_ = true;
 
@@ -438,7 +440,7 @@ kel::UncompressedBlock kel::GZBlockDecompression::decompressBlock( size_t block_
 }
 
 
-void kel::GZBlockDecompression::assembleRecords() {
+void kel::BGZReader::assembleRecords() {
 
   record_counter_ = 0;
   size_t block_count{0};
@@ -460,7 +462,7 @@ void kel::GZBlockDecompression::assembleRecords() {
 
     if (block.block_id != block_count) {
 
-      ExecEnv::log().warn("GZBlockDecompression::assembleRecords; Block mismatch, Queued block: {}, Counted block: {}", block.block_id, block_count);
+      ExecEnv::log().warn("BGZReader::assembleRecords; Block mismatch, Queued block: {}, Counted block: {}", block.block_id, block_count);
 
     }
 
@@ -511,7 +513,6 @@ void kel::GZBlockDecompression::assembleRecords() {
 
       ++record_counter_;
       line_queue_.push(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(previous_line_record)));
-      ExecEnv::log().warn("GZBlockDecompression::assembleRecords; unexpected final line record found");
 
     }
 
@@ -519,8 +520,6 @@ void kel::GZBlockDecompression::assembleRecords() {
 
   // Push the eof marker.
   line_queue_.push(std::nullopt);
-
-  ExecEnv::log().info("Queue Line thread received EOF notification. Processed Blocks: {}, Lines: {}", block_count, record_counter_);
 
 }
 

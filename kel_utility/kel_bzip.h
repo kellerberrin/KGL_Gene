@@ -8,10 +8,11 @@
 #include "kel_mt_queue.h"
 #include "kel_basic_io.h"
 
+#include "kel_thread_pool.h"
+
 
 #include <string>
 #include <memory>
-#include <future>
 
 
 namespace kellerberrin {   //  organization::project level namespace
@@ -27,8 +28,9 @@ namespace kellerberrin {   //  organization::project level namespace
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// This struct maps to the gzip header and we need to be careful about any structure byte padding.
-// However the layout of the structure and GCC struct padding rules seem to preclude any padding.
+// This struct maps to the byte structure of the gzip header and we need to be careful about any structure byte padding.
+// The layout of the structure and GCC struct padding rules seem to preclude any padding and so this appears to be OK.
+// But this could be a source of grief with another compiler with different byte padding rules to GCC.
 
 struct GZHeaderblock {
 
@@ -57,7 +59,7 @@ struct GZTrailerBlock {
 };
 
 // Returned from the data decompression threads wrapped in a std::future.
-// An empty Uncompressed block is used as an eof marker.
+// If the eof flag is set, processing terminates.
 struct UncompressedBlock {
 
   UncompressedBlock() =default;
@@ -79,8 +81,8 @@ struct UncompressedBlock {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// The Decompression object.
-// Reads and verifies the compressed .bgz file
+// The Block gzip (.bgz) decompression object.
+// Reads and verifies compressed .bgz files.
 // Decompresses the data blocks using a thread pool.
 // Enqueues the decompressed (using zlib) data in a thread safe queue.
 // Presents a stream-like readLine() interface to the data consumer.
@@ -89,24 +91,24 @@ struct UncompressedBlock {
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class GZBlockDecompression : public BaseStreamIO {
+class BGZReader : public BaseStreamIO {
 
 public:
 
-  explicit GZBlockDecompression(size_t thread_count = DEFAULT_THREADS) : thread_count_(thread_count) {}
-  ~GZBlockDecompression() override { close(); }
+  explicit BGZReader(size_t thread_count = DEFAULT_THREADS) : thread_count_(thread_count), reader_thread_(1) {}
+  ~BGZReader() override { close(); }
 
-  // Does not block on eof.
+  // Guaranteed sequential line reader. Does not block on eof.
   IOLineRecord readLine() override;
 
   bool open(const std::string &file_name) override;
 
   bool close();
 
-  bool isError() const { return decompression_error_; }
+  bool good() const { return not decompression_error_; }
 
   // Checks the internal data structures of a VCF bgz file.
-  bool verifyGZBlockFile(const std::string &file_name);
+  static bool verify(const std::string &file_name, bool silent = true);
 
   // Seems about right.
   constexpr static const size_t DEFAULT_THREADS{15};
@@ -116,17 +118,23 @@ private:
   std::string file_name_;
   std::ifstream bgz_file_;
   size_t thread_count_;
+  ThreadPool reader_thread_;
   std::future<bool> reader_return_;
 
   // Blocks are queued here to be decompressed.
   // Queue high tide and low tide markers are guessed as reasonable values.
   constexpr static const size_t QUEUE_LOW_TIDE_{1000};
   constexpr static const size_t QUEUE_HIGH_TIDE_{10000};
-  BoundedMtQueue<std::future<UncompressedBlock>> decompress_queue_{QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_};
+  constexpr static const char* QUEUE_NAME_{"BGZReader Decompress Block Queue"};
+  constexpr static const size_t QUEUE_SAMPLE_FREQ_{1000};
+  BoundedMtQueue<std::future<UncompressedBlock>> decompress_queue_{QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, QUEUE_NAME_, QUEUE_SAMPLE_FREQ_};
+
   // Queues parsed line records.
   constexpr static const size_t LINE_LOW_TIDE_{10000};
   constexpr static const size_t LINE_HIGH_TIDE_{100000};
-  BoundedMtQueue<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_};
+  constexpr static const char* LINE_QUEUE_NAME_{"BGZReader Line Record Queue"};
+  constexpr static const size_t LINE_SAMPLE_FREQ_{10000};
+  BoundedMtQueue<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_, LINE_QUEUE_NAME_, LINE_SAMPLE_FREQ_};
 
   // Flag set for shutdown.
   bool shutdown_{false};

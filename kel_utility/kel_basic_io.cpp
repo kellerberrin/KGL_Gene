@@ -159,8 +159,18 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
   // Open a compressed gzipped file based on the file extension.
   if (file_ext == GZ_FILE_EXTENSTION_)  {
 
+    std::unique_ptr<BaseStreamIO> gz_stream;
+    if (BGZReader::verify(file_name)) {
 
-    std::unique_ptr<BaseStreamIO> gz_stream(std::make_unique<GZStreamIO>());
+      ExecEnv::log().info("File structure verified as bgz compliant, parser uses bgz reader.");
+      gz_stream = std::make_unique<BGZReader>();
+
+    } else {
+
+      ExecEnv::log().info("File structure is not bgz compliant, parser uses general purpose gz reader.");
+      gz_stream = std::make_unique<GZStreamIO>();
+
+    }
     if (not gz_stream->open(file_name)) {
 
       return std::nullopt;
@@ -173,7 +183,7 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
 
   } else if (file_ext == BGZ_FILE_EXTENSTION_) {
 
-    std::unique_ptr<BaseStreamIO> gz_stream(std::make_unique<GZBlockDecompression>());
+    std::unique_ptr<BaseStreamIO> gz_stream(std::make_unique<BGZReader>());
     if (not gz_stream->open(file_name)) {
 
       return std::nullopt;
