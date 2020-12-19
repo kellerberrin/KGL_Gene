@@ -36,9 +36,9 @@ void kgl::Genome1000VCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) 
 
 }
 
-void kgl::Genome1000VCFImpl::readParseVCFImpl() {
+void kgl::Genome1000VCFImpl::readParseVCFImpl(const std::string &vcf_file_name) {
 
-  readVCFFile(vcf_file_name_);  // parsing.
+  readVCFFile(vcf_file_name);  // parsing.
 
 }
 

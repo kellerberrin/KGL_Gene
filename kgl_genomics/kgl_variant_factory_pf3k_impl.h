@@ -24,10 +24,8 @@ public:
 
   Pf3kVCFImpl(const std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
               const std::shared_ptr<const GenomeReference> genome_db_ptr,
-              const std::string &vcf_file_name,
               const ContigAliasMap&,    // Chromosome aliasing is not used on Gatk (P.Falciparum) VCF files.
-              const EvidenceInfoSet& evidence_map) : vcf_file_name_(vcf_file_name),
-                                                     evidence_factory_(evidence_map),
+              const EvidenceInfoSet& evidence_map) : evidence_factory_(evidence_map),
                                                      unphased_population_ptr_(vcf_population_ptr),
                                                      genome_db_ptr_(genome_db_ptr) {}
   ~Pf3kVCFImpl() override = default;
@@ -36,11 +34,10 @@ public:
 
   void processVCFHeader(const VcfHeaderInfo& header_info) override;
 
-  void readParseVCFImpl();
+  void readParseVCFImpl(const std::string &vcf_file_name);
 
 private:
 
-  std::string vcf_file_name_;
   EvidenceFactory evidence_factory_;
 
   // Processes the record in a try/catch block.

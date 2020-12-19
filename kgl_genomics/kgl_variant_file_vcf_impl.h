@@ -11,7 +11,7 @@
 #include "kgl_variant_file_vcf_record.h"
 #include "kgl_variant_factory_vcf_parse_header.h"
 
-#include "kel_thread_pool.h"
+#include "kel_bound_queue.h"
 
 #include <memory>
 #include <string>
@@ -58,7 +58,7 @@ private:
   static constexpr const size_t VCF_HIGH_TIDE_{100000};     // Maximum BoundedMtQueue size
   static constexpr const size_t VCF_LOW_TIDE_{10000};       // Low water mark to begin queueing VCF records
   static constexpr const char* VCF_NAME_{"VCF Record Queue"};    // The queue name
-  static constexpr const size_t VCF_SAMPLE_RATE_{10}; // Queue sample rate.
+  static constexpr const size_t VCF_SAMPLE_RATE_{1}; // Queue sample rate.
   // Parsed VCF record queue
   BoundedMtQueue<QueuedVCFRecord> vcf_record_queue_{VCF_HIGH_TIDE_, VCF_LOW_TIDE_, VCF_NAME_, VCF_SAMPLE_RATE_};
 

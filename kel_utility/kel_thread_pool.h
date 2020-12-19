@@ -49,25 +49,6 @@ public:
 
   }
 
-  // Convenience routine. Enqueues the void work functions for all threads. Expects an empty work queue.
-  template<typename F, typename... Args>
-  void enqueueWorkAll(F&& f, Args&&... args) noexcept(std::is_nothrow_invocable<decltype(&MtQueue<Proc>::push)>::value)
-  {
-
-    if (not work_queue_.empty()) {
-
-      ExecEnv::log().warn("ThreadPool::enqueueWorkAll; expected empty work queue, work queue size: {}", work_queue_.size());
-
-    }
-
-    for (size_t index = 0; index < threads_.size(); ++index) {
-
-      auto fb = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
-      work_queue_.push([=]() { fb(); });
-
-    }
-
-  }
 
   // Returns a std::future holding the function return value.
   template<typename F, typename... Args>

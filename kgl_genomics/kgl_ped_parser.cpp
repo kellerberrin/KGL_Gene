@@ -11,7 +11,7 @@ namespace kgl = kellerberrin::genome;
 void kgl::ParsePedFile::readParsePEDImpl(const std::string& file_name) {
 
 
-  ExecEnv::log().info("Start Parsing PED file: {}", fileName());
+  ExecEnv::log().info("Start Parsing PED file: {}", file_name);
 
   commenceIO(file_name);
 

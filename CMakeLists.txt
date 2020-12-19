@@ -82,7 +82,7 @@ set(LIBRARY_SOURCE_FILES
         kel_utility/kel_mt_queue.h
         kel_utility/kel_exec_env_app.h
         kel_utility/kel_bzip.cpp
-        kel_utility/kel_bzip.h)
+        kel_utility/kel_bzip.h kel_utility/kel_bound_queue.h)
 
 # Basic Genetic infrastructure library
 set(GENETIC_LIBRARY_SOURCE_FILES

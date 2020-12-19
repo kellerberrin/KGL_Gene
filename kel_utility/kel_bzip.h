@@ -5,10 +5,8 @@
 #ifndef KEL_BZIP_H
 #define KEL_BZIP_H
 
-#include "kel_mt_queue.h"
+#include "kel_bound_queue.h"
 #include "kel_basic_io.h"
-
-#include "kel_thread_pool.h"
 
 
 #include <string>
@@ -111,7 +109,7 @@ public:
   static bool verify(const std::string &file_name, bool silent = true);
 
   // Seems about right.
-  constexpr static const size_t DEFAULT_THREADS{15};
+  constexpr static const size_t DEFAULT_THREADS{5};
 
 private:
 
@@ -126,14 +124,14 @@ private:
   constexpr static const size_t QUEUE_LOW_TIDE_{1000};
   constexpr static const size_t QUEUE_HIGH_TIDE_{10000};
   constexpr static const char* QUEUE_NAME_{"BGZReader Decompress Block Queue"};
-  constexpr static const size_t QUEUE_SAMPLE_FREQ_{10};
+  constexpr static const size_t QUEUE_SAMPLE_FREQ_{1};
   BoundedMtQueue<std::future<UncompressedBlock>> decompress_queue_{QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, QUEUE_NAME_, QUEUE_SAMPLE_FREQ_};
 
   // Queues parsed line records.
   constexpr static const size_t LINE_LOW_TIDE_{10000};
   constexpr static const size_t LINE_HIGH_TIDE_{100000};
   constexpr static const char* LINE_QUEUE_NAME_{"BGZReader Line Record Queue"};
-  constexpr static const size_t LINE_SAMPLE_FREQ_{10};
+  constexpr static const size_t LINE_SAMPLE_FREQ_{1};
   BoundedMtQueue<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_, LINE_QUEUE_NAME_, LINE_SAMPLE_FREQ_};
 
   // Flag set for shutdown.

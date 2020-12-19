@@ -76,7 +76,7 @@ std::shared_ptr<DataObjectBase> ExecutePackage::readVCF( std::shared_ptr<const G
 
   if (not vcf_file_info) {
 
-    ExecEnv::log().critical("ExecutePackage::readGRChNoGenomeVCF, Expected VCF file for file ident: {}", file_info->identifier());
+    ExecEnv::log().critical("ExecutePackage::readVCF; Expected VCF file for file ident: {}", file_info->identifier());
 
   }
 
@@ -84,7 +84,7 @@ std::shared_ptr<DataObjectBase> ExecutePackage::readVCF( std::shared_ptr<const G
 
   if (not ref_genome_opt) {
 
-    ExecEnv::log().critical("ExecutePackage::readGRChNoGenomeVCF, Reference Genome {} Not Found for VCF file ident: {}",
+    ExecEnv::log().critical("ExecutePackage::readVCF; Reference Genome {} Not Found for VCF file ident: {}",
                             vcf_file_info->referenceGenome(), vcf_file_info->identifier());
 
   }
@@ -93,7 +93,7 @@ std::shared_ptr<DataObjectBase> ExecutePackage::readVCF( std::shared_ptr<const G
 
   if (not evidence_opt) {
 
-    ExecEnv::log().critical("ExecutePackage::readGRChNoGenomeVCF, Evidence Ident {} Not Found for VCF file ident: {}",
+    ExecEnv::log().critical("ExecutePackage::readVCF; Evidence Ident {} Not Found for VCF file ident: {}",
                             vcf_file_info->evidenceIdent(), vcf_file_info->identifier());
 
   }
@@ -101,8 +101,8 @@ std::shared_ptr<DataObjectBase> ExecutePackage::readVCF( std::shared_ptr<const G
   // Read variants.
   std::shared_ptr<VCFPopulation> vcf_population_ptr(std::make_shared<VCFPopulation>(vcf_file_info->identifier()));
 
-  VCFParser reader(vcf_population_ptr, ref_genome_opt.value(), vcf_file_info->fileName(), contig_alias_, evidence_opt.value());
-  reader.readParseVCFImpl();
+  VCFParser reader(vcf_population_ptr, ref_genome_opt.value(), contig_alias_, evidence_opt.value());
+  reader.readParseVCFImpl(vcf_file_info->fileName());
 
   auto [total_variants, validated_variants] = vcf_population_ptr->validate(ref_genome_opt.value());
 

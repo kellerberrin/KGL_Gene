@@ -23,10 +23,8 @@ public:
 
   Genome1000VCFImpl(const std::shared_ptr<DiploidPopulation> vcf_population_ptr,
                     const std::shared_ptr<const GenomeReference> genome_db_ptr,
-                    const std::string &vcf_file_name,
                     const ContigAliasMap& contig_alias_map,
-                    const EvidenceInfoSet& evidence_map) : vcf_file_name_(vcf_file_name),
-                                                           evidence_factory_(evidence_map),
+                    const EvidenceInfoSet& evidence_map) : evidence_factory_(evidence_map),
                                                            contig_alias_map_(contig_alias_map),
                                                            diploid_population_ptr_(vcf_population_ptr),
                                                            genome_db_ptr_(genome_db_ptr) {}
@@ -36,11 +34,10 @@ public:
 
   void processVCFHeader(const VcfHeaderInfo& header_info) override;
 
-  void readParseVCFImpl();
+  void readParseVCFImpl(const std::string &vcf_file_name);
 
 private:
 
-  std::string vcf_file_name_;
   EvidenceFactory evidence_factory_;
   ContigAliasMap contig_alias_map_;
 
