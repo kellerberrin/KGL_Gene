@@ -77,7 +77,7 @@ bool kel::BGZReader::open(const std::string &file_name) {
 kel::IOLineRecord kel::BGZReader::readLine() {
 
 // Dont block if eof reached.
-  if (line_eof_ and line_queue_.empty()) return std::nullopt;
+  if (line_eof_ and line_queue_.empty()) return QUEUED_EOF_MARKER;
 // Return next available sequential line record.
   return line_queue_.waitAndPop();
 
@@ -519,7 +519,7 @@ void kel::BGZReader::assembleRecords() {
   }
 
   // Push the eof marker.
-  line_queue_.push(std::nullopt);
+  line_queue_.push(QUEUED_EOF_MARKER);
 
 }
 

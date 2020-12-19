@@ -310,7 +310,7 @@ size_t PopulationVariant<VariantGenome, PopulationBase>::mergePopulation(const s
 template<class VariantGenome, class PopulationBase>
 std::pair<size_t, size_t> PopulationVariant<VariantGenome, PopulationBase>::validate(const std::shared_ptr<const GenomeReference>& genome_db) const {
 
-  ThreadPool thread_pool;
+  ThreadPool thread_pool(ThreadPool::hardwareThreads());
   std::vector<std::future<std::pair<size_t, size_t>>> future_vector;
 
   // Queue a thread for each genome.

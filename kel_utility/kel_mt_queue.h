@@ -21,6 +21,7 @@ namespace kellerberrin {   //  organization level namespace
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
 template<typename T> class MtQueue {
 
 public:
@@ -241,7 +242,7 @@ private:
   const std::string queue_name_;
   const size_t sample_frequency_;
 
-  std::atomic<size_t> queue_count_{0};
+  size_t queue_count_{0};
   size_t cumulative_queue_size_{0};
   size_t queue_samples_{0};
 

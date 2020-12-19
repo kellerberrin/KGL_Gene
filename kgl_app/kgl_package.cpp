@@ -226,9 +226,9 @@ std::shared_ptr<kgl::DataObjectBase> kgl::ExecutePackage::readPEDAncestry(std::s
 
   std::shared_ptr<GenomePEDData> ped_data(std::make_shared<GenomePEDData>(ped_file_info->identifier()));
 
-  ParsePedFile ped_parser(ped_data, ped_file_info->fileName());
+  ParsePedFile ped_parser(ped_data);
 
-  ped_parser.readParsePEDImpl();
+  ped_parser.readParsePEDImpl(ped_file_info->fileName());
 
   return ped_data;
 

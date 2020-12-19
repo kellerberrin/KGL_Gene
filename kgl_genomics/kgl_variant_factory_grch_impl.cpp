@@ -44,7 +44,7 @@ void kgl::GrchVCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) {
 void kgl::GrchVCFImpl::readParseVCFImpl() {
 
    // multi-threaded
-  readVCFFile();
+  readVCFFile(vcf_file_name_);
   // single threaded
 
 }

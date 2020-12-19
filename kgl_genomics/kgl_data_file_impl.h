@@ -22,42 +22,56 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 // IO object (multi-threaded) - enqueues file line reads for further processing
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class FileDataIO  {
 
 public:
 
-  explicit FileDataIO(std::string read_file_name, size_t high_tide = HIGH_TIDE_, size_t low_tide = LOW_TIDE_)
-    : read_file_name_(std::move(read_file_name)), raw_io_queue_(high_tide, low_tide), io_threads_(IO_THREAD_COUNT) {}
-  virtual ~FileDataIO() = default;
+  FileDataIO() = default;
+  ~FileDataIO() noexcept;
 
   // Begin reading records, spawns thread(s).
-  // Specifies how many consumer threads. This is required to enqueue eof tokens.
-  bool commenceIO(size_t consumer_threads);
+  bool commenceIO(std::string read_file_name);
 
   [[nodiscard]] const std::string& fileName() const { return read_file_name_; }
 
   // Called by each reader thread
   [[nodiscard]] IOLineRecord readIORecord() { return raw_io_queue_.waitAndPop(); }
 
-  constexpr static const size_t IO_THREAD_COUNT = 1;
+  // Push an eof marker onto the queue
+  void enqueueEOF() { raw_io_queue_.push(QUEUED_EOF_MARKER); }
 
 private:
 
-  std::string read_file_name_;
-  size_t consumer_threads_{0};
-  BoundedMtQueue<IOLineRecord> raw_io_queue_; // The raw tidal IO queue
-  ThreadPool io_threads_;
+  std::string read_file_name_{"IO Stream Inactive"};
+
+  // The raw tidal IO queue parameters
+  static constexpr const size_t IO_HIGH_TIDE_{100000};          // Maximum BoundedMtQueue size
+  static constexpr const size_t IO_LOW_TIDE_{10000};            // Low water mark to begin queueing data records
+  static constexpr const char* IO_QUEUE_NAME_{"IO Queue"};      // The queue name
+  static constexpr const size_t IO_SAMPLE_RATE_{10};            // The queue stats sampling rate.
+  BoundedMtQueue<IOLineRecord> raw_io_queue_{ IO_HIGH_TIDE_, IO_LOW_TIDE_, IO_QUEUE_NAME_, IO_SAMPLE_RATE_};
+
+  // VCF queue worker threads
+  // Unless there is a good reason, the number of worker threads should be 1.
+  constexpr static const size_t IO_THREAD_COUNT_{1};
+  // The detached main thread.
+  ThreadPool detached_launch_{1};
+  // Synchronize shutdown
+  std::future<void> launch_token_;
+
+  ThreadPool io_threads_{IO_THREAD_COUNT_};
+
+  // The data input stream.
   std::optional<std::unique_ptr<BaseStreamIO>> file_stream_opt_;
-  bool eof_flag_{false};
-  std::mutex eof_mutex_;
 
-  static constexpr const long HIGH_TIDE_{100000};          // Maximum BoundedMtQueue size
-  static constexpr const long LOW_TIDE_{10000};            // Low water mark to begin queueing data records
 
-  void rawDataIO(); // The read/decompress from disk and place on the tidal queue.
-  void enqueueEOF(); // Shutdown the consumer threads.
+  void launchThreads();
+  void rawDataIO(); // Read/decompress from disk and place on the tidal queue.
 
 };
 

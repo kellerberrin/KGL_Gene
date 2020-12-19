@@ -47,7 +47,7 @@ void kgl::Pf3kVCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) {
 void kgl::Pf3kVCFImpl::readParseVCFImpl() {
 
   // multi-threaded
-  readVCFFile();
+  readVCFFile(vcf_file_name_);
   // single threaded
 
 }

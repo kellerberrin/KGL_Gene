@@ -43,7 +43,7 @@ public:
 
     } else {
 
-      return std::nullopt;
+      return QUEUED_EOF_MARKER;
 
     }
 
@@ -107,7 +107,7 @@ public:
 
     } else {
 
-      return std::nullopt;
+      return QUEUED_EOF_MARKER;
 
     }
 
@@ -160,7 +160,7 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
   if (file_ext == GZ_FILE_EXTENSTION_)  {
 
     std::unique_ptr<BaseStreamIO> gz_stream;
-    if (BGZReader::verify(file_name)) {
+    if (BGZReader::verify(file_name)) { // Check if block gzipped.
 
       ExecEnv::log().info("File structure verified as bgz compliant, parser uses bgz reader.");
       gz_stream = std::make_unique<BGZReader>();
@@ -173,7 +173,7 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
     }
     if (not gz_stream->open(file_name)) {
 
-      return std::nullopt;
+      return QUEUED_EOF_MARKER;
 
     } else {
 
@@ -181,12 +181,12 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
 
     }
 
-  } else if (file_ext == BGZ_FILE_EXTENSTION_) {
+  } else if (file_ext == BGZ_FILE_EXTENSTION_) { // .bgz extension is just assumed to be block gzipped.
 
     std::unique_ptr<BaseStreamIO> gz_stream(std::make_unique<BGZReader>());
     if (not gz_stream->open(file_name)) {
 
-      return std::nullopt;
+      return QUEUED_EOF_MARKER;
 
     } else {
 
@@ -199,7 +199,7 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
     std::unique_ptr<BaseStreamIO> text_stream(std::make_unique<TextStreamIO>());
     if (not text_stream->open(file_name)) {
 
-      return std::nullopt;
+      return QUEUED_EOF_MARKER;
 
     } else {
 

@@ -21,31 +21,32 @@ void kgl::VCFReaderMT::readHeader(const std::string& file_name) {
 }
 
 
-void kgl::VCFReaderMT::readVCFFile() {
+void kgl::VCFReaderMT::readVCFFile(const std::string& vcf_file_name) {
 
 
-  ExecEnv::log().info("Parse Header VCF file: {}", vcf_io_.getFileName());
+  ExecEnv::log().info("Parse Header VCF file: {}", vcf_file_name);
 
-  readHeader(vcf_io_.getFileName());
+  readHeader(vcf_file_name);
 
-  ExecEnv::log().info("Begin processing VCF file: {}", vcf_io_.getFileName());
+  ExecEnv::log().info("Begin processing VCF file: {}", vcf_file_name);
 
-  ExecEnv::log().info("Spawning: {} Consumer threads to process the VCF file", consumer_thread_count_);
+  ExecEnv::log().info("Spawning: {} Consumer threads to process the VCF file", parser_threads_.threadCount());
 
-  std::vector<std::thread> consumer_threads;
-  for(size_t i = 0; i < consumer_thread_count_; ++i) {
+  // Queue the worker thread tasks.
+  std::vector<std::future<void>> thread_futures;
+  for (size_t index = 0; index < parser_threads_.threadCount(); ++index) {
 
-    consumer_threads.emplace_back(&VCFReaderMT::VCFConsumer, this);
+    thread_futures.push_back(parser_threads_.enqueueTask(&VCFReaderMT::VCFConsumer, this));
 
   }
 
   // start reading records asynchronously.
-  vcf_io_.commenceVCFIO(consumer_thread_count_);
+  vcf_io_.commenceVCFIO(vcf_file_name);
 
-  // Join on the consumer threads
-  for(auto& thread : consumer_threads) {
+  // Wait until processing is complete.
+  for (auto const& future : thread_futures) {
 
-    thread.join();
+    future.wait();
 
   }
 
@@ -60,9 +61,13 @@ void kgl::VCFReaderMT::VCFConsumer() {
 
     // Dequeue the vcf record.
     QueuedVCFRecord vcf_record = vcf_io_.readVCFRecord();
-
     // Terminate on EOF
-    if (not vcf_record) break;  // Eof encountered, terminate processing.
+    if (not vcf_record) {
+
+      vcf_io_.enqueueEOF();
+      break;  // Eof encountered, terminate processing.
+
+    }
 
     if (vcf_record.value().second->contig_id.empty()) {
 
@@ -78,6 +83,7 @@ void kgl::VCFReaderMT::VCFConsumer() {
   }
 
   ExecEnv::log().info("Final; Consumer thread processed: {} VCF records", final_count);
+
 
 }
 

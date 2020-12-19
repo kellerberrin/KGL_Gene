@@ -25,7 +25,7 @@ public:
                     const std::shared_ptr<const GenomeReference> genome_db_ptr,
                     const std::string &vcf_file_name,
                     const ContigAliasMap& contig_alias_map,
-                    const EvidenceInfoSet& evidence_map) : VCFReaderMT(vcf_file_name),
+                    const EvidenceInfoSet& evidence_map) : vcf_file_name_(vcf_file_name),
                                                            evidence_factory_(evidence_map),
                                                            contig_alias_map_(contig_alias_map),
                                                            diploid_population_ptr_(vcf_population_ptr),
@@ -40,6 +40,7 @@ public:
 
 private:
 
+  std::string vcf_file_name_;
   EvidenceFactory evidence_factory_;
   ContigAliasMap contig_alias_map_;
 

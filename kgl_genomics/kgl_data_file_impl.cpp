@@ -12,46 +12,75 @@ namespace kgl = kellerberrin::genome;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+kgl::FileDataIO::~FileDataIO() noexcept {
 
-bool kgl::FileDataIO::commenceIO(size_t reader_threads) {
+  // Wait for completion, suppress any exceptions.
+  try {
 
-  // The number of consumer threads reading the raw record queue; used for shutdown to enqueue eof markers.
-  consumer_threads_ = reader_threads;
+    launch_token_.wait();
 
+  } catch(...) {}
+
+}
+
+
+bool kgl::FileDataIO::commenceIO(std::string read_file_name) {
+
+  read_file_name_ = std::move(read_file_name);
   file_stream_opt_ = BaseStreamIO::getReaderStream(fileName());
 
   if (not file_stream_opt_) {
 
-    ExecEnv::log().critical("FileDataIO::rawDataIO; I/O error; could not open Data file: {}", fileName());
+    ExecEnv::log().error("FileDataIO::rawDataIO; I/O error; could not open Data file: {}", fileName());
     enqueueEOF();
     return false;
 
   }
 
-  for (size_t thread = 0; thread < io_threads_.threads().size(); ++thread) {
-
-    io_threads_.enqueueWork(&FileDataIO::rawDataIO, this);
-
-  }
+  // Activate the worker threads.
+  launch_token_ = detached_launch_.enqueueTask(&FileDataIO::launchThreads, this);
 
   return true;
 
 }
 
+
+
+void kgl::FileDataIO::launchThreads() {
+
+  ThreadPool vcf_record_threads{IO_THREAD_COUNT_};
+  std::vector<std::future<void>> thread_futures;
+  for (size_t index = 0; index < vcf_record_threads.threadCount(); ++index) {
+
+    thread_futures.push_back(vcf_record_threads.enqueueTask(&FileDataIO::rawDataIO, this));
+
+  }
+
+  // Wait until processing is complete.
+  for (auto const& future : thread_futures) {
+
+    future.wait();
+
+  }
+
+  // Enqueue an eof marker further up the pipeline.
+  enqueueEOF();
+
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Pass in the text or gzip stream as an rvalue to a pointer.
+// Pass in the line records and just queue them.
 void kgl::FileDataIO::rawDataIO() {
 
   try {
 
-    while (not eof_flag_) {
+    while (true) {
 
-      // Race condition; readLine() should not block on eof.
+      // ReadLine() should not block on eof.
       IOLineRecord line_record = file_stream_opt_.value()->readLine();
       if (not line_record) {
 
-        // Enqueue the null eof indicator for each consumer thread.
-        enqueueEOF();
         // Terminate the read line loop.
         break;
 
@@ -78,17 +107,3 @@ void kgl::FileDataIO::rawDataIO() {
 
 }
 
-void kgl::FileDataIO::enqueueEOF() {
-
-  std::lock_guard lock(eof_mutex_);
-
-  if (eof_flag_) return;
-
-  eof_flag_ = true;
-  for (size_t i = 0; i < consumer_threads_; ++i) {
-
-    raw_io_queue_.push(std::nullopt);
-
-  }
-
-}

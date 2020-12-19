@@ -140,17 +140,20 @@ class ParsePedFile : private FileDataIO {
 
 public:
 
-  explicit ParsePedFile(std::shared_ptr<GenomePEDData> ped_data,
-                        std::string file_name) : FileDataIO(std::move(file_name)), ped_data_(ped_data) {}
-  ~ParsePedFile() override = default;
+  explicit ParsePedFile(std::shared_ptr<GenomePEDData> ped_data) : ped_data_(ped_data) {}
+  ~ParsePedFile() = default;
 
-  void readParsePEDImpl();
+  void readParsePEDImpl(const std::string& file_name);
 
 private:
 
   std::shared_ptr<GenomePEDData> ped_data_;
+  FileDataIO file_data_;
+
+
   static constexpr const long PARSER_THREADS_{1};         // Threads parsing PED records
   static constexpr const char PED_FIELD_DELIMITER_CHAR_{'\t'};   // PED Field separator (char).
+
 
   bool moveToPEDRecord(std::string&& line_record);
 

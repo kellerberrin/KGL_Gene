@@ -31,11 +31,11 @@ public:
               std::shared_ptr<const GenomeReference> genome_db_ptr,
               const std::string &vcf_file_name,
               const ContigAliasMap& contig_alias_map,
-              const EvidenceInfoSet& evidence_map) : VCFReaderMT(vcf_file_name),
-                                                        unphased_population_ptr_(std::move(population_ptr)),
-                                                        genome_db_ptr_(std::move(genome_db_ptr)),
-                                                        contig_alias_map_(contig_alias_map),
-                                                        evidence_factory_(evidence_map) {}
+              const EvidenceInfoSet& evidence_map) : vcf_file_name_(vcf_file_name),
+                                                     unphased_population_ptr_(std::move(population_ptr)),
+                                                     genome_db_ptr_(std::move(genome_db_ptr)),
+                                                     contig_alias_map_(contig_alias_map),
+                                                     evidence_factory_(evidence_map) {}
 
   ~GrchVCFImpl() override = default;
 
@@ -52,6 +52,7 @@ private:
   constexpr static const char MULIPLE_ALT_SEPARATOR_{','};
   constexpr static const char* PASSED_FILTERS_{"PASS"};
 
+  std::string vcf_file_name_;
   const std::shared_ptr<UnphasedPopulation> unphased_population_ptr_;   // Un-phased variants.
   std::shared_ptr<const GenomeReference> genome_db_ptr_;
   ContigAliasMap contig_alias_map_;

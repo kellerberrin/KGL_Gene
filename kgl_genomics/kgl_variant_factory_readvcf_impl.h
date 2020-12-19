@@ -11,9 +11,9 @@
 #include <fstream>
 #include <functional>
 
-#include "kel_lock.h"
-#include "kel_mt_queue.h"
 #include "kel_exec_env.h"
+#include "kel_mt_queue.h"
+#include "kel_thread_pool.h"
 
 #include "kgl_variant_file_vcf_impl.h"
 
@@ -27,11 +27,11 @@ class VCFReaderMT {
 
 public:
 
-  explicit VCFReaderMT(const std::string& vcf_file_name) : vcf_io_(vcf_file_name) {}
+  VCFReaderMT() = default;
   virtual ~VCFReaderMT() = default;
 
   // Perform multi-threaded parsing of queued VCF records.
-  void readVCFFile();
+  void readVCFFile(const std::string& vcf_file_name);
 
   // Process each VCF record.
   virtual void ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record) = 0;
@@ -45,9 +45,15 @@ public:
 
 private:
 
-  RecordVCFIO vcf_io_;                                   // VCF record queue.
-  size_t consumer_thread_count_{15};                      // Consumer threads
-  VCFParseHeader parseheader_;    // Get genome and contig information.
+  // VCF record queue.
+  RecordVCFIO vcf_io_;
+
+  // Threads to process the VCF record queue.
+  constexpr static const size_t PARSER_THREAD_COUNT_{15};
+  ThreadPool parser_threads_{PARSER_THREAD_COUNT_};
+
+  // Get genome and contig information.
+  VCFParseHeader parseheader_;
 
   void readHeader(const std::string& file_name);
   // Call the template VCF consumer class

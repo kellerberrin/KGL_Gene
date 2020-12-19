@@ -12,7 +12,6 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <thread>
 
 // Implementation file classes need to be defined within namespaces.
 namespace kellerberrin::genome {
@@ -21,49 +20,71 @@ namespace kellerberrin::genome {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-RecordVCFIO::~RecordVCFIO() {
+RecordVCFIO::~RecordVCFIO() noexcept {
 
-  for (auto &thread : vcf_record_thread_vec_) {
+  // Ensure all worker threads are shutdown, suppress exceptions.
+  try {
 
-    thread.join();
+    launch_token_.wait();
 
-  }
+  } catch(...) {}
 
 }
 
-void RecordVCFIO::commenceVCFIO(size_t reader_threads) {
+bool RecordVCFIO::commenceVCFIO(const std::string& vcf_file_name) {
 
-  reader_threads_ = reader_threads;
+  if (not file_data_.commenceIO(vcf_file_name)) {
 
-  commenceIO(PARSER_THREADS_);
-
-  for (size_t i = 0; i < PARSER_THREADS_; ++i) {
-
-    vcf_record_thread_vec_.emplace_back(&RecordVCFIO::enqueueVCFRecord, this);
+    // Enqueue an eof marker further up the pipeline.
+    enqueueEOF();
+    return false;
 
   }
 
+  launch_token_ = detached_launch_.enqueueTask(&RecordVCFIO::launchThreads, this);
 
+  return true;
 
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Pass in the text or gzip stream as an rvalue to a pointer.
+// Launch the VCF record parser worker threads and await completion.
+
+void RecordVCFIO::launchThreads() {
+
+  ThreadPool vcf_record_threads{PARSER_THREADS_};
+  std::vector<std::future<void>> thread_futures;
+  for (size_t index = 0; index < vcf_record_threads.threadCount(); ++index) {
+
+    thread_futures.push_back(vcf_record_threads.enqueueTask(&RecordVCFIO::enqueueVCFRecord, this));
+
+  }
+
+  // Wait until processing is complete.
+  for (auto const& future : thread_futures) {
+
+    future.wait();
+
+  }
+
+  // Enqueue an eof marker further up the pipeline.
+  enqueueEOF();
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Parse the line record into a VCF record and enqueue the record.
 
 void RecordVCFIO::enqueueVCFRecord() {
 
   while (true) {
 
-    IOLineRecord line_record = readIORecord();
-
+    IOLineRecord line_record = file_data_.readIORecord();
     if (not line_record) { // check for EOF condition.
 
-      // Only queue as many EOF (null optional) tokens as the number of reader threads.
-      for (size_t i = 0; i < reader_threads_; ++i) {
-
-        vcf_record_queue_.push(std::nullopt);
-
-      }
+      // push the eof marker back on the queue.
+      file_data_.enqueueEOF();
       break;
 
     }
@@ -79,7 +100,7 @@ void RecordVCFIO::enqueueVCFRecord() {
     std::optional<std::unique_ptr<VcfRecord>> vcf_record_opt = moveToVcfRecord(std::move(*line_record.value().second));
     if (not vcf_record_opt) {
 
-      ExecEnv::log().warn("FileVCFIO; Failed to parse VCF file: {} record line : {}", fileName(), line_record.value().first);
+      ExecEnv::log().warn("FileVCFIO; Failed to parse VCF file: {} record line : {}", file_data_.fileName(), line_record.value().first);
 
     } else {
 
@@ -103,7 +124,7 @@ std::optional<std::unique_ptr<VcfRecord>> RecordVCFIO::moveToVcfRecord(std::stri
 
     if (field_views.size() < MINIMUM_VCF_FIELDS_) {
 
-      ExecEnv::log().error("FileVCFIO; VCF file: {}, record has less than the mandatory field count", fileName());
+      ExecEnv::log().error("FileVCFIO; VCF file: {}, record has less than the mandatory field count", file_data_.fileName());
       return std::nullopt;
 
     }
@@ -156,8 +177,8 @@ std::optional<std::unique_ptr<VcfRecord>> RecordVCFIO::moveToVcfRecord(std::stri
   }
   catch (const std::exception &e) {
 
-    ExecEnv::log().error("FileVCFIO; Problem parsing record for VCF file: {}, Exception: {} thrown; VCF record ignored", fileName(),  e.what());
-    ExecEnv::log().error("FileVCFIO; VCF record line: {}", fileName(),  e.what());
+    ExecEnv::log().error("FileVCFIO; Problem parsing record for VCF file: {}, Exception: {} thrown; VCF record ignored", file_data_.fileName(),  e.what());
+    ExecEnv::log().error("FileVCFIO; VCF record line: {}", file_data_.fileName(),  e.what());
     return std::nullopt;
 
   }

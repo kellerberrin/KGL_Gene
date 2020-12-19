@@ -95,7 +95,7 @@ class BGZReader : public BaseStreamIO {
 
 public:
 
-  explicit BGZReader(size_t thread_count = DEFAULT_THREADS) : thread_count_(thread_count), reader_thread_(1) {}
+  explicit BGZReader(size_t thread_count = DEFAULT_THREADS) : thread_count_(thread_count) {}
   ~BGZReader() override { close(); }
 
   // Guaranteed sequential line reader. Does not block on eof.
@@ -118,7 +118,7 @@ private:
   std::string file_name_;
   std::ifstream bgz_file_;
   size_t thread_count_;
-  ThreadPool reader_thread_;
+  ThreadPool reader_thread_{1};
   std::future<bool> reader_return_;
 
   // Blocks are queued here to be decompressed.
@@ -126,14 +126,14 @@ private:
   constexpr static const size_t QUEUE_LOW_TIDE_{1000};
   constexpr static const size_t QUEUE_HIGH_TIDE_{10000};
   constexpr static const char* QUEUE_NAME_{"BGZReader Decompress Block Queue"};
-  constexpr static const size_t QUEUE_SAMPLE_FREQ_{1000};
+  constexpr static const size_t QUEUE_SAMPLE_FREQ_{10};
   BoundedMtQueue<std::future<UncompressedBlock>> decompress_queue_{QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, QUEUE_NAME_, QUEUE_SAMPLE_FREQ_};
 
   // Queues parsed line records.
   constexpr static const size_t LINE_LOW_TIDE_{10000};
   constexpr static const size_t LINE_HIGH_TIDE_{100000};
   constexpr static const char* LINE_QUEUE_NAME_{"BGZReader Line Record Queue"};
-  constexpr static const size_t LINE_SAMPLE_FREQ_{10000};
+  constexpr static const size_t LINE_SAMPLE_FREQ_{10};
   BoundedMtQueue<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_, LINE_QUEUE_NAME_, LINE_SAMPLE_FREQ_};
 
   // Flag set for shutdown.

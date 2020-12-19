@@ -8,7 +8,6 @@
 #include <string>
 #include <vector>
 #include <fstream>
-#include <thread>
 
 #include "kel_exec_env.h"
 
@@ -20,6 +19,9 @@ namespace kellerberrin {   //  organization::project level namespace
 // Returns an optional pair of line count and a pointer to the line data.
 // The data is absent on EOF or read error.
 using IOLineRecord = std::optional<std::pair<size_t, std::unique_ptr<std::string>>>;
+// The eof marker.
+constexpr static const std::nullopt_t QUEUED_EOF_MARKER = std::nullopt;
+
 
 class BaseStreamIO {
 
