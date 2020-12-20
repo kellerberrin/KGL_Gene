@@ -49,10 +49,10 @@ private:
   std::string read_file_name_{"IO Stream Inactive"};
 
   // The raw tidal IO queue parameters
-  static constexpr const size_t IO_HIGH_TIDE_{100000};          // Maximum BoundedMtQueue size
-  static constexpr const size_t IO_LOW_TIDE_{10000};            // Low water mark to begin queueing data records
+  static constexpr const size_t IO_HIGH_TIDE_{2000};          // Maximum BoundedMtQueue size
+  static constexpr const size_t IO_LOW_TIDE_{1000};            // Low water mark to begin queueing data records
   static constexpr const char* IO_QUEUE_NAME_{"IO Queue"};      // The queue name
-  static constexpr const size_t IO_SAMPLE_RATE_{1};            // The queue stats sampling rate.
+  static constexpr const size_t IO_SAMPLE_RATE_{500};            // The queue stats sampling rate.
   BoundedMtQueue<IOLineRecord> raw_io_queue_{ IO_HIGH_TIDE_, IO_LOW_TIDE_, IO_QUEUE_NAME_, IO_SAMPLE_RATE_};
 
   // VCF queue worker threads

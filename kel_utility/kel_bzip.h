@@ -122,16 +122,16 @@ private:
   // Blocks are queued here to be decompressed.
   // Queue high tide and low tide markers are guessed as reasonable values.
   constexpr static const size_t QUEUE_LOW_TIDE_{1000};
-  constexpr static const size_t QUEUE_HIGH_TIDE_{10000};
+  constexpr static const size_t QUEUE_HIGH_TIDE_{2000};
   constexpr static const char* QUEUE_NAME_{"BGZReader Decompress Block Queue"};
-  constexpr static const size_t QUEUE_SAMPLE_FREQ_{1};
+  constexpr static const size_t QUEUE_SAMPLE_FREQ_{500};
   BoundedMtQueue<std::future<UncompressedBlock>> decompress_queue_{QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, QUEUE_NAME_, QUEUE_SAMPLE_FREQ_};
 
   // Queues parsed line records.
-  constexpr static const size_t LINE_LOW_TIDE_{10000};
-  constexpr static const size_t LINE_HIGH_TIDE_{100000};
+  constexpr static const size_t LINE_LOW_TIDE_{1000};
+  constexpr static const size_t LINE_HIGH_TIDE_{2000};
   constexpr static const char* LINE_QUEUE_NAME_{"BGZReader Line Record Queue"};
-  constexpr static const size_t LINE_SAMPLE_FREQ_{1};
+  constexpr static const size_t LINE_SAMPLE_FREQ_{500};
   BoundedMtQueue<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_, LINE_QUEUE_NAME_, LINE_SAMPLE_FREQ_};
 
   // Flag set for shutdown.
@@ -142,6 +142,7 @@ private:
   bool line_eof_{false};
 
   // These constants are used to verify the structure of the .bgz file.
+  // Don't change these constants
   constexpr static const uint8_t BLOCK_ID1_{31};
   constexpr static const uint8_t BLOCK_ID2_{139};
   constexpr static const uint8_t COMPRESSION_{8};  // 8 = Z_DEFLATED in zlib.h

@@ -27,7 +27,7 @@ class VCFReaderMT {
 
 public:
 
-  VCFReaderMT() = default;
+  VCFReaderMT(size_t thread_count = DEFAULT_PARSER_THREADS) : parser_threads_(thread_count) {}
   virtual ~VCFReaderMT() = default;
 
   // Perform multi-threaded parsing of queued VCF records.
@@ -42,6 +42,7 @@ public:
   // Stored VCF header info.
   [[nodiscard]] const std::vector<std::string>& getGenomeNames() const { return parseheader_.getGenomes(); }
 
+  constexpr static const size_t DEFAULT_PARSER_THREADS{30};
 
 private:
 
@@ -49,8 +50,7 @@ private:
   RecordVCFIO vcf_io_;
 
   // Threads to process the VCF record queue.
-  constexpr static const size_t PARSER_THREAD_COUNT_{15};
-  ThreadPool parser_threads_{PARSER_THREAD_COUNT_};
+  ThreadPool parser_threads_;
 
   // Get genome and contig information.
   VCFParseHeader parseheader_;

@@ -35,6 +35,7 @@ public:
                                                                       low_tide_(low_tide),
                                                                       queue_name_(std::move(queue_name)),
                                                                       sample_frequency_(sample_frequency),
+                                                                      empty_size_(high_tide_/EMPTY_PROPORTION_),
                                                                       queue_state_(QueueState::Normal) { launchStats(); }
   ~BoundedMtQueue() { stopStats(); if (queue_samples_ > MIN_SAMPLES_) displayQueueStats(); }
   BoundedMtQueue(const BoundedMtQueue&) = delete;
@@ -92,10 +93,46 @@ public:
 
   [[nodiscard]] size_t lowTide() const { return low_tide_; }
 
+  [[nodiscard]] size_t emptySize() const { return empty_size_; }
+
   [[nodiscard]] size_t sampleFrequency() const { return sample_frequency_; }
 
   [[nodiscard]] size_t cumulativeQueueSize() const { return cumulative_queue_size_; }
   [[nodiscard]] size_t queueSamples() const { return queue_samples_; }
+
+  [[nodiscard]] double averageHighTide() const {
+
+    if (queue_samples_ > 0) {
+
+      return static_cast<double>(high_tide_count_) / static_cast<double>(queue_samples_);
+
+    }
+
+    return 0.0;
+
+  }
+  [[nodiscard]] double averageLowTide() const {
+
+    if (queue_samples_ > 0) {
+
+      return static_cast<double>(low_tide_count_) / static_cast<double>(queue_samples_);
+
+    }
+
+    return 0.0;
+
+  }
+  [[nodiscard]] double averageEmpty() const {
+
+    if (queue_samples_ > 0) {
+
+      return static_cast<double>(empty_count_) / static_cast<double>(queue_samples_);
+
+    }
+
+    return 0.0;
+
+  }
   [[nodiscard]] double averageSize() const {
 
     if (queue_samples_ > 0) {
@@ -114,8 +151,10 @@ public:
 
   void displayQueueStats() const {
 
-    ExecEnv::log().info("Monitor Queue: {}, High Tide: {}, Low Tide: {}, Samples: {}, Average Util: {}% ({})",
-                        queueName(), highTide(), lowTide(), queueSamples(), avUtilization(), averageSize());
+    ExecEnv::log().info("Monitor Queue: {}, Samples: {}; High Tide: {} ({}%), Low Tide: {} ({}%), Empty:<={} ({}%), Average Util: {}% ({})",
+                        queueName(), queueSamples(), highTide(), (averageHighTide() * 100.0),
+                        lowTide(), (averageLowTide() * 100.0),  emptySize(), (averageEmpty() * 100.0),
+                        avUtilization(), averageSize());
 
   }
 
@@ -123,7 +162,7 @@ public:
 
     if (sample_frequency_ > 0) {
 
-      ExecEnv::log().info("Sampling queue: {} size every: {} seconds", queue_name_, sample_frequency_);
+      ExecEnv::log().info("Sampling queue: {} every: {} milliseconds", queue_name_, sample_frequency_);
       queue_stats_.enqueueWork(&BoundedMtQueue::SampleQueue, this);
 
     }
@@ -147,6 +186,8 @@ private:
   const size_t low_tide_;
   const std::string queue_name_;
   const size_t sample_frequency_;
+  constexpr static const size_t EMPTY_PROPORTION_ = 10; // Queue at 10% is considered empty.
+  const size_t empty_size_;
 
   MtQueue<T> mt_queue_;
   enum class QueueState { Normal, HighTide } queue_state_;
@@ -157,6 +198,9 @@ private:
   std::mutex stats_mutex_;
   std::condition_variable stats_cond_;
   std::atomic<bool> terminate_{false};
+  std::atomic<size_t> low_tide_count_{0};
+  std::atomic<size_t> high_tide_count_{0};
+  std::atomic<size_t> empty_count_{0};
   std::atomic<size_t> cumulative_queue_size_{0};
   // Somewhat arbitrary.
   constexpr static const size_t MIN_SAMPLES_ {100};
@@ -168,10 +212,14 @@ private:
     while(!terminate_) {
 
       std::unique_lock<std::mutex> lock(stats_mutex_);
-      stats_cond_.wait_for( lock, std::chrono::seconds(sample_frequency_));
+      stats_cond_.wait_for( lock, std::chrono::milliseconds(sample_frequency_));
 
-      cumulative_queue_size_ += mt_queue_.size();
       ++queue_samples_;
+      size_t sample_size = mt_queue_.size();
+      cumulative_queue_size_ += sample_size;
+      if (sample_size <= low_tide_) ++low_tide_count_;
+      if (sample_size <= empty_size_) ++empty_count_;
+      if (queue_state_ == QueueState::HighTide) ++high_tide_count_;
 
     }
 

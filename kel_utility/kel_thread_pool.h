@@ -73,6 +73,13 @@ private:
   void startThreads(size_t threads)
   {
 
+    if (threads < 1) {
+
+      ExecEnv::log().warn("ThreadPool::startThreads; attempted to initialize with zero (0) threads, initialized with 1 thread.");
+      threads = 1;
+
+    }
+
     for(size_t i = 0; i < threads; ++i)
 
       threads_.emplace_back(std::thread([this]() {
