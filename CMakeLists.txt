@@ -131,8 +131,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_sequence/kgl_alphabet_coding_dna5.cpp
         kgl_genomics/kgl_evidence/kgl_variant_evidence.h
         kgl_genomics/kgl_evidence/kgl_variant_evidence.cpp
-        kgl_genomics/kgl_statistics_upgma.h
-        kgl_genomics/kgl_statistics_upgma.cpp
+        kgl_genomics/kgl_sequence/kgl_statistics_upgma.h
+        kgl_genomics/kgl_sequence/kgl_statistics_upgma.cpp
         kgl_genomics/kgl_database/kgl_variant_mutation.cpp
         kgl_genomics/kgl_database/kgl_variant_mutation.h
         kgl_genomics/kgl_sequence/kgl_variant_db_mutation.cpp
@@ -168,8 +168,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_genome_contig_feature.cpp
         kgl_genomics/kgl_database/kgl_genome_contig_aux.cc
         kgl_genomics/kgl_database/kgl_genome_contig_aux.h
-        kgl_genomics/kgl_phylogenetic_tree.cpp
-        kgl_genomics/kgl_phylogenetic_tree.h
+        kgl_genomics/kgl_sequence/kgl_phylogenetic_tree.cpp
+        kgl_genomics/kgl_sequence/kgl_phylogenetic_tree.h
         kgl_genomics/kgl_parser/kgl_variant_file_vcf_record.h
         kgl_genomics/kgl_parser/kgl_variant_factory_readvcf_impl.cpp
         kgl_genomics/kgl_parser/kgl_data_file_impl.cpp
