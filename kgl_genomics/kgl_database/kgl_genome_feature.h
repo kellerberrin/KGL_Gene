@@ -5,7 +5,7 @@
 #ifndef KGL_GENOME_FEATURE_H
 #define KGL_GENOME_FEATURE_H
 
-#include "kgl_database/kgl_attributes.h"
+#include "kgl_attributes.h"
 #include "kgl_genome_prelim.h"
 
 

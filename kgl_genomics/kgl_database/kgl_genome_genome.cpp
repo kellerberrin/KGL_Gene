@@ -7,7 +7,7 @@
 #include "kel_patterns.h"
 #include "kgl_gaf_parser.h"
 #include "kgl_gff_fasta.h"
-#include "kgl_sequence/kgl_sequence_offset.h"
+#include "kgl_sequence_offset.h"
 
 namespace kgl = kellerberrin::genome;
 

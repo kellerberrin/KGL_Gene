@@ -12,7 +12,7 @@
 #include <map>
 #include <kgl_properties.h>
 #include "kgl_genome_types.h"
-#include "kgl_sequence/kgl_sequence_amino.h"
+#include "kgl_sequence_amino.h"
 #include "kgl_genome_feature.h"
 #include "kgl_genome_contig_feature.h"
 #include "kgl_genome_contig_aux.h"

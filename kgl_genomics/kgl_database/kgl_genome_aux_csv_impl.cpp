@@ -4,9 +4,8 @@
 
 
 #include <fstream>
-#include "kgl_database/kgl_genome_aux_csv.h"
+#include "kgl_genome_aux_csv.h"
 #include "kel_exec_env.h"
-#include "kgl_variant_factory_vcf_parse_cigar.h"
 
 
 #include <boost/tokenizer.hpp>

@@ -14,7 +14,7 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
                     kgl_genomics/kgl_parser
                     kgl_genomics/kgl_evidence
                     kgl_genomics/kgl_sequence
-                    kgl_genomics/kdl_database
+                    kgl_genomics/kgl_database
                     kgl_mixture                  # Deconvolution and mixture library
                     kgl_analytic                  # Genetic analysis library (top level)
                     kgl_analytic/kgl_inbreed
