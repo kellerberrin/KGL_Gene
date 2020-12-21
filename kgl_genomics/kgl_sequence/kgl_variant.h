@@ -10,9 +10,9 @@
 #include <vector>
 #include <sstream>
 #include "kgl_genome_types.h"
-#include "kgl_alphabet_amino.h"
-#include "kgl_genome_db.h"
-#include "kgl_sequence_base.h"
+#include "kgl_sequence/kgl_alphabet_amino.h"
+#include "kgl_database/kgl_genome_db.h"
+#include "kgl_sequence/kgl_sequence_base.h"
 #include "kgl_variant_evidence.h"
 
 

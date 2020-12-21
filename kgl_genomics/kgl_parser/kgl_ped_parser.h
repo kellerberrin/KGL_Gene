@@ -6,7 +6,7 @@
 #define KGL_PED_PARSER_H
 
 
-#include "kgl_data_base.h"
+#include "kgl_database/kgl_data_base.h"
 #include "kgl_data_file_impl.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace

@@ -4,7 +4,7 @@
 
 
 #include <iomanip>
-#include <kgl_sequence_compare_impl.h>
+#include <kgl_sequence/kgl_sequence_compare_impl.h>
 #include "kgl_upgma_node.h"
 #include "kgl_variant_db_mutation.h"
 

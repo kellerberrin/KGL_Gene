@@ -9,7 +9,7 @@
 #include <string>
 #include <memory>
 #include "kgl_alphabet_string.h"
-#include "kgl_genome_feature.h"
+#include "kgl_database/kgl_genome_feature.h"
 #include "kgl_sequence_virtual.h"
 
 

@@ -9,8 +9,8 @@
 
 #include <kel_utility.h>
 #include <kgl_read_phasing.h>
-#include "kgl_sequence_distance.h"
-#include "kgl_genome_aux_csv.h"
+#include "kgl_sequence/kgl_sequence_distance.h"
+#include "kgl_database/kgl_genome_aux_csv.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_phylogenetic_gene.h"
 #include "kgl_upgma.h"

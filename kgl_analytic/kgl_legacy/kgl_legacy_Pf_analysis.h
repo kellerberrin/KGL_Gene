@@ -6,7 +6,7 @@
 #define KGL_PHYLOGENETIC_APP_ANALYSIS_H
 
 
-#include "kgl_genome_db.h"
+#include "kgl_database/kgl_genome_db.h"
 #include "kgl_variant_db.h"
 #include "kgl_gene_app.h"
 

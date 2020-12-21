@@ -9,7 +9,7 @@
 #include "kel_utility.h"
 #include "kgl_variant.h"
 #include "kgl_variant_db_offset.h"
-#include "kgl_variant_mutation.h"
+#include "kgl_database/kgl_variant_mutation.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace

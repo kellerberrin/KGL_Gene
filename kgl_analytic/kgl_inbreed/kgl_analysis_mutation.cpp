@@ -4,7 +4,7 @@
 
 #include "kel_distribution.h"
 #include "kgl_analysis_mutation.h"
-#include "kgl_filter.h"
+#include "kgl_database/kgl_filter.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 #include "kel_optimize.h"
 

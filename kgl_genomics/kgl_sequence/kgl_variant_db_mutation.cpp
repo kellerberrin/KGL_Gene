@@ -4,7 +4,7 @@
 
 #include <memory>
 #include "kgl_variant_db.h"
-#include "kgl_variant_mutation.h"
+#include "kgl_database/kgl_variant_mutation.h"
 #include "kgl_variant_db_mutation.h"
 
 

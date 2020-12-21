@@ -5,9 +5,9 @@
 #include <ostream>
 #include "kgl_variant.h"
 #include "kel_patterns.h"
-#include "kgl_filter.h"
+#include "kgl_database/kgl_filter.h"
 #include "kgl_variant_db.h"
-#include "kgl_sequence_offset.h"
+#include "kgl_sequence/kgl_sequence_offset.h"
 #include "kgl_variant_factory_vcf_parse_cigar.h"
 
 

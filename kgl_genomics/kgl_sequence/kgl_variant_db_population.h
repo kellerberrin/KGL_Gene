@@ -7,7 +7,7 @@
 
 
 #include "kgl_variant_db_genome.h"
-#include "kgl_data_base.h"
+#include "kgl_database/kgl_data_base.h"
 #include "kel_thread_pool.h"
 
 

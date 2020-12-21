@@ -3,8 +3,8 @@
 //
 
 #include <set>
-#include "kgl_sequence_amino.h"
-#include "kgl_genome_db.h"
+#include "kgl_sequence/kgl_sequence_amino.h"
+#include "kgl_database/kgl_genome_db.h"
 
 
 namespace kgl = kellerberrin::genome;

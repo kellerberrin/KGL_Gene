@@ -11,7 +11,7 @@
 #include <memory>
 #include <vector>
 #include <sstream>
-#include "kgl_attributes.h"
+#include "kgl_database/kgl_attributes.h"
 #include "kgl_variant.h"
 #include "kgl_variant_db_genome.h"
 #include "kgl_variant_db_population.h"

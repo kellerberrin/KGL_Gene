@@ -11,7 +11,7 @@
 #include <vector>
 #include <map>
 #include "kgl_genome_types.h"
-#include "kgl_sequence_amino.h"
+#include "kgl_sequence/kgl_sequence_amino.h"
 #include "kgl_genome_feature.h"
 
 

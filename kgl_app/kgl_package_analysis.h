@@ -8,7 +8,7 @@
 
 #include "kel_exec_env.h"
 #include "kgl_runtime.h"
-#include "kgl_genome_db.h"
+#include "kgl_database/kgl_genome_db.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_analysis_all.h" // Includes all the defined active analysis objects.
 

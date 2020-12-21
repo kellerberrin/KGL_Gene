@@ -2,7 +2,7 @@
 // Created by kellerberrin on 21/02/18.
 //
 
-#include <kgl_sequence_offset.h>
+#include <kgl_sequence/kgl_sequence_offset.h>
 #include "kgl_rna_search.h"
 
 

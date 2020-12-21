@@ -3,7 +3,7 @@
 //
 
 #include "kel_exec_env.h"
-#include "kgl_genome_feature.h"
+#include "kgl_database/kgl_genome_feature.h"
 
 namespace kgl = kellerberrin::genome;
 
