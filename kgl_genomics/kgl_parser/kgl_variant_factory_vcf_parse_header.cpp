@@ -7,7 +7,6 @@
 
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
-#include <fstream>
 
 
 namespace kgl = kellerberrin::genome;

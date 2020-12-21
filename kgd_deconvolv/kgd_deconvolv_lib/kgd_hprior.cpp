@@ -5,8 +5,6 @@
 
 #include <set>
 #include <vector>
-#include <iostream>
-#include <algorithm>
 #include <cassert>
 #include "kgd_deconvolv_app.h"
 #include "kgd_combinatorial.h"

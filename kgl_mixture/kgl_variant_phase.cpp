@@ -5,7 +5,6 @@
 #include "kgl_variant_phase.h"
 #include "kgl_read_phasing.h"
 #include "kgl_variant_evidence.h"
-#include <fstream>
 
 
 namespace kgl = kellerberrin::genome;

@@ -8,11 +8,12 @@
 
 #include "kgl_genome_types.h"
 #include "kel_exec_env.h"
+#include "kel_exec_env_app.h"
+
 
 #include "kgd_ctl_data.h"
 
-namespace kellerberrin {    // organization level namespace
-namespace deconvolv {          // project level namespace
+namespace kellerberrin::deconvolv {          // project level namespace
 
 
 // Holds the kgd_deconvolv Arguments.
@@ -79,7 +80,6 @@ private:
 
 
 }   // organization level namespace
-}   // project level namespace
 
 
 

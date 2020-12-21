@@ -5,11 +5,9 @@
 
 #include <random>
 #include <cstdio>
-#include <limits>       // std::numeric_limits< double >::min()
 #include <cmath>       // ceil
 #include "kgd_deconvolv_app.h"
 #include "kgd_global.h"     // dout
-#include "kgd_update_haplotype.h"
 #include "kgd_update_single_haplotype.h"  // chromPainting
 #include "kgd_update_pair_haplotype.h"
 #include "kgd_mcmc_hap.h"

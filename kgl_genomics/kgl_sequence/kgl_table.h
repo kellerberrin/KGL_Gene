@@ -7,7 +7,7 @@
 
 
 #include "kgl_table_impl.h"
-#include "kgl_sequence/kgl_sequence_codon.h"
+#include "kgl_sequence_codon.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace

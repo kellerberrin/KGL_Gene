@@ -15,8 +15,7 @@
 #include "kgd_mcmc_sample.h"
 
 
-namespace kellerberrin {    // organization level namespace
-namespace deconvolv {          // project level namespace
+namespace kellerberrin::deconvolv {          // project level namespace
 
 
 
@@ -72,7 +71,6 @@ private:
 
 
 }   // organization level namespace
-}   // project level namespace
 
 
 

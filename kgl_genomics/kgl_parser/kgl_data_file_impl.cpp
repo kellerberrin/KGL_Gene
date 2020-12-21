@@ -5,7 +5,6 @@
 #include "kgl_data_file_impl.h"
 #include <vector>
 #include <memory>
-#include <thread>
 
 namespace kgl = kellerberrin::genome;
 

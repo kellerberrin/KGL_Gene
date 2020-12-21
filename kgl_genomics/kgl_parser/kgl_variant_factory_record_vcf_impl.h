@@ -7,9 +7,9 @@
 
 
 #include "kel_utility.h"
-#include "kgl_sequence/kgl_alphabet_dna5.h"
-#include "kgl_sequence/kgl_alphabet_string.h"
-#include "kgl_database/kgl_genome_db.h"
+#include "kgl_alphabet_dna5.h"
+#include "kgl_alphabet_string.h"
+#include "kgl_genome_db.h"
 #include "kgl_variant_file_vcf_record.h"
 
 #include <seqan/vcf_io.h>

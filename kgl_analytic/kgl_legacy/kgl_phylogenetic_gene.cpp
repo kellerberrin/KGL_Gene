@@ -2,7 +2,7 @@
 // Created by kellerberrin on 16/01/18.
 //
 
-#include "kgl_sequence/kgl_sequence_offset.h"
+#include "kgl_sequence_offset.h"
 #include "kgl_phylogenetic_gene.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_complexity.h"

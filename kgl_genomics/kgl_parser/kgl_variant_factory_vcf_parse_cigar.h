@@ -11,7 +11,7 @@
 
 #include "kel_utility.h"
 #include "kgl_genome_types.h"
-#include "kgl_database/kgl_genome_db.h"
+#include "kgl_genome_db.h"
 #include "kgl_variant_db.h"
 
 

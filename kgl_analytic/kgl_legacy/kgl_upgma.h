@@ -10,7 +10,7 @@
 
 
 #include "kgl_upgma_node.h"
-#include "kgl_sequence/kgl_sequence_offset.h"
+#include "kgl_sequence_offset.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

@@ -7,7 +7,7 @@
 
 // Includes all of the analytic header files for convenience.
 
-#include "kgl_sequence/kgl_analysis_virtual.h" // The pure virtual interface definition and base class
+#include "kgl_analysis_virtual.h" // The pure virtual interface definition and base class
 #include "kgl_analysis_null.h" // The "do nothing" class and a template for additional analysis objects.
 #include "kgl_analysis_verify.h" // Does "correctness" verification on any specified data files (duplicate variants etc).
 #include "kgl_analysis_interval.h" // Basic sequence and variant statistics.

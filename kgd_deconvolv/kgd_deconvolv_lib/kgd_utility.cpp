@@ -23,14 +23,12 @@
  *
  */
 
-#include "logbeta.h"
 #include <iterator>     // std::distance
 #include <algorithm> // find
 #include "kgd_utility.h"
 #include "kgd_deconvolv_app.h"
 #include "kel_distribution.h"
 #include "loggammasum.h" // which includes log_gamma.h
-#include "gamma.h"
 
 #include <boost/math/special_functions/gamma.hpp>
 

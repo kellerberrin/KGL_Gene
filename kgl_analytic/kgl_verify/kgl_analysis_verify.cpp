@@ -4,8 +4,7 @@
 
 #include "kgl_analysis_verify.h"
 #include "kgl_variant_db_phased.h"
-#include "kgl_variant_db_offset.h"
-#include "kgl_database/kgl_filter.h"
+#include "kgl_filter.h"
 
 
 namespace kgl = kellerberrin::genome;

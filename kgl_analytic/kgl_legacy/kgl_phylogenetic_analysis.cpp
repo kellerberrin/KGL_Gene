@@ -2,12 +2,12 @@
 // Created by kellerberrin on 17/11/17.
 //
 
-#include "kgl_sequence/kgl_sequence_distance.h"
-#include "kgl_sequence/kgl_sequence_compare.h"
-#include "kgl_database/kgl_genome_aux_csv.h"
+#include "kgl_sequence_distance.h"
+#include "kgl_sequence_compare.h"
+#include "kgl_genome_aux_csv.h"
 #include "kgl_upgma_node.h"
 #include "kgl_phylogenetic_analysis.h"
-#include "kgl_sequence/kgl_sequence_offset.h"
+#include "kgl_sequence_offset.h"
 #include "kgl_phylogenetic_gene.h"
 #include "kgl_sequence_complexity.h"
 #include "kgl_variant_db_mutation.h"

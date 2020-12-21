@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "kel_exec_env.h"
+#include "kel_exec_env_app.h"
 #include "kpl_strom.h"
 
 /// The mainline.

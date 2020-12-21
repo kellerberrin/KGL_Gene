@@ -5,7 +5,7 @@
 #ifndef KGL_SEQUENCE_COMPLEXITY_H
 #define KGL_SEQUENCE_COMPLEXITY_H
 
-#include "kgl_sequence/kgl_sequence_base.h"
+#include "kgl_sequence_base.h"
 
 namespace kellerberrin::genome {   //  organization level namespace
 

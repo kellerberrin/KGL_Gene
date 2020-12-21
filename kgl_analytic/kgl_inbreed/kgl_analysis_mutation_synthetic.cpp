@@ -6,7 +6,7 @@
 #include "kgl_analysis_mutation_synthetic.h"
 #include "kgl_analysis_mutation_syngen.h"
 #include "kgl_analysis_mutation_inbreed_output.h"
-#include "kgl_database/kgl_filter.h"
+#include "kgl_filter.h"
 
 
 namespace kgl = kellerberrin::genome;

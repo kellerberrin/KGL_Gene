@@ -9,8 +9,7 @@
 #include "kgd_update_haplotype.h"
 
 
-namespace kellerberrin {    // organization level namespace
-namespace deconvolv {          // project level namespace
+namespace kellerberrin::deconvolv {          // project level namespace
 
 
 class UpdateSingleHap : public UpdateHap {
@@ -96,7 +95,6 @@ private:
 
 
 }   // organization level namespace
-}   // project level namespace
 
 
 

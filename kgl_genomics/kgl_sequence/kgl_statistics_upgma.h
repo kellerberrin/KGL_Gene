@@ -6,10 +6,10 @@
 #define KGL_STATISTICS_UPGMA_H
 
 #include "kgl_phylogenetic_tree.h"
-#include "kgl_database/kgl_genome_db.h"
+#include "kgl_genome_db.h"
 #include "kgl_variant_db_phased.h"
 #include "kel_utility.h"
-#include "kgl_sequence/kgl_sequence_distance.h"
+#include "kgl_sequence_distance.h"
 #include "kgl_variant_db.h"
 
 

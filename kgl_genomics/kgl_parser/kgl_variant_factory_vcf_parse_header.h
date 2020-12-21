@@ -6,7 +6,7 @@
 #define KGL_VARIANT_FACTORY_VCF_PARSE_HEADER_H
 
 #include "kgl_genome_types.h"
-#include "kgl_database/kgl_genome_db.h"
+#include "kgl_genome_db.h"
 
 #include <memory>
 #include <string>

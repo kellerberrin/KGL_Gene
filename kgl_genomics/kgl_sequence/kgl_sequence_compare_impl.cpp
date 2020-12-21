@@ -6,16 +6,12 @@
 
 #include <iostream>
 #include <seqan/align.h>
-#include <seqan/graph_msa.h>
 #include <edlib.h>
 
 
 #include "kgl_sequence_compare_impl.h"
 #include "kel_exec_env.h"
 #include "kgl_genome_types.h"
-#include "kgl_database/kgl_genome_db.h"
-#include "kgl_sequence_base.h"
-#include "kgl_sequence_codon.h"
 
 
 namespace kgl = kellerberrin::genome;

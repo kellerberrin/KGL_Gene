@@ -90,7 +90,8 @@ set(LIBRARY_SOURCE_FILES
         kel_utility/kel_mt_queue.h
         kel_utility/kel_exec_env_app.h
         kel_utility/kel_bzip.cpp
-        kel_utility/kel_bzip.h kel_utility/kel_bound_queue.h)
+        kel_utility/kel_bzip.h
+        kel_utility/kel_bound_queue.h)
 
 # Basic Genetic infrastructure library
 set(GENETIC_LIBRARY_SOURCE_FILES
@@ -196,7 +197,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_variant_factory_1000_impl.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_1000_impl.h
         kgl_genomics/kgl_parser/kgl_variant_factory_population.h
-        kgl_genomics/kgl_sequence/kgl_analysis_virtual.h
         kgl_genomics/kgl_sequence/kgl_variant_db_offset.h
         kgl_genomics/kgl_sequence/kgl_variant_db_contig.h
         kgl_genomics/kgl_sequence/kgl_variant_db_mutation.h
@@ -224,7 +224,6 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_legacy/kgl_upgma_unphased.h
         kgl_analytic/kgl_legacy/kgl_upgma_unphased.cpp
         kgl_analytic/kgl_legacy/kgl_sequence_complexity.h
-        kgl_analytic/kgl_legacy/kgl_sequence_complexity.cpp
         kgl_analytic/kgl_legacy/kgl_epigenetic_motif.cpp
         kgl_analytic/kgl_legacy/kgl_epigenetic_motif.cpp
         kgl_analytic/kgl_legacy/kgl_upgma.h
@@ -262,7 +261,8 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_recomb/kgl_analysis_mutation_recomb_compare.cpp
         kgl_analytic/kgl_recomb/kgl_analysis_mutation_recomb_compare.h
         kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_execute.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_execute.h)
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_execute.h
+        kgl_analytic/kgl_analysis_virtual.h)
 
 # Deconvolution and mixture files.
 

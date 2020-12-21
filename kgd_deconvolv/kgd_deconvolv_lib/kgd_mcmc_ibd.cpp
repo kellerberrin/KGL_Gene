@@ -5,7 +5,6 @@
 
 #include <random>
 #include <cstdio>
-#include <limits>       // std::numeric_limits< double >::min()
 #include <cmath>       // ceil
 #include "kgd_deconvolv_app.h"
 #include "kgd_global.h"     // dout

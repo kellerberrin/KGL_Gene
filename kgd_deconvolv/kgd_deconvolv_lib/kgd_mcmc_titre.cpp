@@ -2,7 +2,6 @@
 // Created by kellerberrin on 27/06/18.
 //
 
-#include <ctime>
 #include <cstdio>
 #include <sstream>
 #include "kgd_utility.h"

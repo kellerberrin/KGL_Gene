@@ -6,7 +6,7 @@
 #define KGL_NULL_ANALYSIS_H
 
 
-#include "kgl_sequence/kgl_analysis_virtual.h"
+#include "kgl_analysis_virtual.h"
 
 
 

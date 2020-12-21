@@ -6,7 +6,7 @@
 #define KGL_ANALYSIS_MUTATION_H
 
 
-#include "kgl_sequence/kgl_analysis_virtual.h"
+#include "kgl_analysis_virtual.h"
 #include "kgl_variant_db_phased.h"
 #include "kgl_ped_parser.h"
 #include "kgl_analysis_mutation_inbreed_execute.h"

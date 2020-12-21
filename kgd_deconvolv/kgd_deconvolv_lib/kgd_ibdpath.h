@@ -17,8 +17,7 @@
 #include "kgd_prob_cache.h"
 
 
-namespace kellerberrin {    // organization level namespace
-namespace deconvolv {          // project level namespace
+namespace kellerberrin::deconvolv {          // project level namespace
 
 
 
@@ -121,7 +120,6 @@ private:
 
 
 }   // organization level namespace
-}   // project level namespace
 
 
 
