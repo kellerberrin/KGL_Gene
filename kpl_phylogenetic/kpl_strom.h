@@ -42,9 +42,17 @@ public:
 private:
 
   void clear();
-  bool processAssignmentString(std::shared_ptr<Model> model_ptr, const std::string & which, const std::string & definition);
-  void handleAssignmentStrings(std::shared_ptr<Model> model_ptr, const boost::program_options::variables_map & vm, std::string label, const std::vector<std::string> & definitions, std::string default_definition);
-  bool splitAssignmentString(const std::string & definition, std::vector<std::string> & vector_of_subset_names, std::vector<double>  & vector_of_values);
+  bool processAssignmentString(std::shared_ptr<Model> model_ptr,
+                               const std::string & which,
+                               const std::string & definition);
+  void handleAssignmentStrings(std::shared_ptr<Model> model_ptr,
+                               const boost::program_options::variables_map & vm,
+                               std::string label,
+                               const std::vector<std::string> & definitions,
+                               std::string default_definition);
+  bool splitAssignmentString(const std::string & definition,
+                             std::vector<std::string> & vector_of_subset_names,
+                             std::vector<double>  & vector_of_values);
   void sample(unsigned iter, Chain & chain);
 
   void readData();

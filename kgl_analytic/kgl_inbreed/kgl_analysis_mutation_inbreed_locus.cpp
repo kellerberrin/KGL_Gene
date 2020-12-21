@@ -2,7 +2,7 @@
 // Created by kellerberrin on 23/8/20.
 //
 
-#include <kgl_variant_factory_vcf_evidence_analysis.h>
+#include "kgl_variant_factory_vcf_evidence_analysis.h"
 #include "kgl_variant.h"
 #include "kgl_analysis_mutation_inbreed_locus.h"
 

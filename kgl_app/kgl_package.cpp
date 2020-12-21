@@ -3,11 +3,7 @@
 //
 
 #include "kgl_package.h"
-#include "kgl_ped_parser.h"
-#include "kgl_variant_factory_pf3k_impl.h"
-#include "kgl_variant_factory_grch_impl.h"
-#include "kgl_variant_factory_1000_impl.h"
-
+#include "kgl_variant_factory_parsers.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -188,48 +184,8 @@ kgl::ExecutePackage::readDataFiles(const RuntimePackage& package,
 
   auto [file_ident, file_info_ptr] = *result;
 
-  switch(file_info_ptr->parserType()) {
-
-    case DataFileParserEnum::GatkMultiGenome:
-      return readVCF<Pf3kVCFImpl, UnphasedPopulation>(reference_genomes, file_info_ptr);
-
-    case DataFileParserEnum::GRChNoGenome:
-      return readVCF<GrchVCFImpl, UnphasedPopulation>(reference_genomes, file_info_ptr);
-
-    case DataFileParserEnum::MultiGenomePhased:
-      return readVCF<Genome1000VCFImpl, DiploidPopulation>(reference_genomes, file_info_ptr);
-
-    case DataFileParserEnum::PedAncestry:
-      return readPEDAncestry(file_info_ptr);
-
-    case DataFileParserEnum::NotImplemented:
-      ExecEnv::log().critical("ExecutePackage::readDataFiles, Package: {}, data file ident: {}, parser not defined",
-                               package.packageIdentifier(), data_file);
-
-  }
-
-  return readPEDAncestry(file_info_ptr); // Never reached.
+  // Selects the appropriate parser and returns a base class data object.
+  return ParserSelection::parseData(reference_genomes, file_info_ptr, evidence_map_, contig_alias_);
 
 }
 
-
-// Read and parse the specified ancestry file.
-std::shared_ptr<kgl::DataObjectBase> kgl::ExecutePackage::readPEDAncestry(std::shared_ptr<BaseFileInfo> file_info) const {
-
-  auto ped_file_info = std::dynamic_pointer_cast<PedAncestryInfo>(file_info);
-
-  if (not ped_file_info) {
-
-    ExecEnv::log().critical("ExecutePackage::readDataFiles, Expected PED (ancestry .ped) file for file ident: {}", file_info->identifier());
-
-  }
-
-  std::shared_ptr<GenomePEDData> ped_data(std::make_shared<GenomePEDData>(ped_file_info->identifier()));
-
-  ParsePedFile ped_parser(ped_data);
-
-  ped_parser.readParsePEDImpl(ped_file_info->fileName());
-
-  return ped_data;
-
-}

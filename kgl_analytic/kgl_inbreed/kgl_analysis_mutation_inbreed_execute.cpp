@@ -80,7 +80,7 @@ bool kgl::ExecuteInbreedingAnalysis::processDiploid() {
   static const ContigOffset_t lower_window = 0;
   static const ContigOffset_t upper_window = 1000000000;
   static const double upper_allele_frequency = 1.0;
-  static const double lower_allele_frequency = 0.01;
+  static const double lower_allele_frequency = 0.20;
 
   // Filter out any variants that did not pass VCF filters (otherwise we get duplicate variants).
   unphased_population_ = unphased_population_->filterVariants(AndFilter(SNPFilter(), PassFilter()));
@@ -88,7 +88,7 @@ bool kgl::ExecuteInbreedingAnalysis::processDiploid() {
   InbreedingParameters parameters;
   parameters.lociiArguments().minAlleleFrequency(lower_allele_frequency);
   parameters.lociiArguments().maxAlleleFrequency(upper_allele_frequency);
-  parameters.inbreedingAlgorthim(InbreedingCalculation::HALL_ME_IBD);
+  parameters.inbreedingAlgorthim(InbreedingCalculation::LOGLIKELIHOOD_F);
   parameters.lociiArguments().frequencySource(FrequencyDatabaseRead::alleleFrequencySource(unphased_population_));
   parameters.lociiArguments().lowerOffset(lower_window);
   parameters.lociiArguments().upperOffset(upper_window);

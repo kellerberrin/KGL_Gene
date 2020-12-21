@@ -2,13 +2,10 @@
 // Created by kellerberrin on 3/7/20.
 //
 
-#include "kel_thread_pool.h"
 #include "kel_distribution.h"
 #include "kgl_analysis_mutation.h"
 #include "kgl_filter.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
-#include "kgl_analysis_mutation_inbreed.h"
-#include "kgl_analysis_mutation_synthetic.h"
 #include "kel_optimize.h"
 
 #include <fstream>

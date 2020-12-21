@@ -57,60 +57,9 @@ private:
                                                               std::shared_ptr<const GenomeCollection> reference_genomes,
                                                               const std::string& data_file) const;
 
-  // Called to read VCF files
-  template<class VCFParser, class VCFPopulation>
-  [[nodiscard]] std::shared_ptr<DataObjectBase> readVCF(std::shared_ptr<const GenomeCollection> reference_genomes,
-                                                        std::shared_ptr<BaseFileInfo> file_info) const;
 
-  // Called when the PedAncestry parser is specified to read in an ancestry (.ped) file
-  [[nodiscard]] std::shared_ptr<DataObjectBase> readPEDAncestry(std::shared_ptr<BaseFileInfo> file_info) const;
 
 };
-
-
-template<class VCFParser, class VCFPopulation>
-std::shared_ptr<DataObjectBase> ExecutePackage::readVCF( std::shared_ptr<const GenomeCollection> reference_genomes,
-                                                         std::shared_ptr<BaseFileInfo> file_info) const {
-
-  auto vcf_file_info = std::dynamic_pointer_cast<RuntimeVCFFileInfo>(file_info);
-
-  if (not vcf_file_info) {
-
-    ExecEnv::log().critical("ExecutePackage::readVCF; Expected VCF file for file ident: {}", file_info->identifier());
-
-  }
-
-  std::optional<std::shared_ptr<const GenomeReference>> ref_genome_opt = reference_genomes->getOptionalGenome(vcf_file_info->referenceGenome());
-
-  if (not ref_genome_opt) {
-
-    ExecEnv::log().critical("ExecutePackage::readVCF; Reference Genome {} Not Found for VCF file ident: {}",
-                            vcf_file_info->referenceGenome(), vcf_file_info->identifier());
-
-  }
-
-  auto evidence_opt = evidence_map_.lookupEvidence(vcf_file_info->evidenceIdent());
-
-  if (not evidence_opt) {
-
-    ExecEnv::log().critical("ExecutePackage::readVCF; Evidence Ident {} Not Found for VCF file ident: {}",
-                            vcf_file_info->evidenceIdent(), vcf_file_info->identifier());
-
-  }
-
-  // Read variants.
-  std::shared_ptr<VCFPopulation> vcf_population_ptr(std::make_shared<VCFPopulation>(vcf_file_info->identifier()));
-
-  VCFParser reader(vcf_population_ptr, ref_genome_opt.value(), contig_alias_, evidence_opt.value());
-  reader.readParseVCFImpl(vcf_file_info->fileName());
-
-  auto [total_variants, validated_variants] = vcf_population_ptr->validate(ref_genome_opt.value());
-
-  ExecEnv::log().info("Genome: {}, Total Variants: {}, Validated Variants: {}", vcf_population_ptr->populationId(), total_variants, validated_variants);
-
-  return vcf_population_ptr;
-
-}
 
 
 

@@ -189,7 +189,7 @@ kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
 
     if (not Optimize::returnSuccess(result_code)) {
 
-      ExecEnv::log().error("InbreedingAnalysis::processLogLikelihood; Genome: {}, loglikelihood: {}, Max at inbreed: {}, initial inbreed: {}, calc inbreed: {}, optimizer result: {}, iterations: {}",
+      ExecEnv::log().error("InbreedingAnalysis::processLogLikelihood; Genome: {}, loglikelihood: {}, Max at kgl_inbreed: {}, initial kgl_inbreed: {}, calc kgl_inbreed: {}, optimizer result: {}, iterations: {}",
                           locus_results.genome, value, coefficient.front(), initial_f, coefficient.front(), Optimize::returnDescription(result_code), iterations);
 
     }

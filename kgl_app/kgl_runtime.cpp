@@ -9,27 +9,6 @@
 
 namespace kgl = kellerberrin::genome;
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-
-kgl::DataFileParserEnum kgl::BaseFileInfo::getParserType(const std::string& parser_type) const {
-
-  std::string parser_upper = Utility::toupper(parser_type);
-
-  for (auto const& [parser_type, parser_string] : implementated_parsers_) {
-
-    if (parser_upper == Utility::toupper(parser_string)) {
-
-      return parser_type;
-
-    }
-
-  }
-
-  return DataFileParserEnum::NotImplemented;
-
-}
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //

@@ -157,7 +157,6 @@ private:
 // Base Object to hold data file information.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum class DataFileParserEnum{ GatkMultiGenome, GRChNoGenome, MultiGenomePhased, PedAncestry, NotImplemented};
 
 class BaseFileInfo;
 using RuntimeDataFileMap = std::map<std::string, std::shared_ptr<BaseFileInfo>>;
@@ -171,28 +170,20 @@ public:
                const std::string& file_name,
                const std::string& parser_type)
       : file_identifier_(identifier),
-        file_name_(file_name) { parser_type_ = getParserType(parser_type); }
+        file_name_(file_name),
+        parser_ident_(parser_type) { }
   BaseFileInfo(const BaseFileInfo&) = default;
   virtual ~BaseFileInfo() = default;
 
   [[nodiscard]] const std::string& identifier() const { return file_identifier_; }
   [[nodiscard]] const std::string& fileName() const { return file_name_; }
-  [[nodiscard]] DataFileParserEnum parserType() const { return parser_type_; }
-
+  [[nodiscard]] const std::string& parserIdent() const { return parser_ident_; }
 
 private:
 
   std::string file_identifier_;   // A unique short string to identify this VCF file in other classes
   std::string file_name_;
-  DataFileParserEnum parser_type_;
-  using VCFParserTypes = std::vector<std::pair<DataFileParserEnum, std::string>>;
-  const VCFParserTypes implementated_parsers_{ std::pair<DataFileParserEnum, std::string>(DataFileParserEnum::GatkMultiGenome, "GatkMultiGenome"),
-                                               std::pair<DataFileParserEnum, std::string>(DataFileParserEnum::GRChNoGenome, "GRChNoGenome"),
-                                               std::pair<DataFileParserEnum, std::string>(DataFileParserEnum::MultiGenomePhased, "MultiGenomePhased"),
-                                               std::pair<DataFileParserEnum, std::string>(DataFileParserEnum::PedAncestry, "PedAncestry"),
-                                               std::pair<DataFileParserEnum, std::string>(DataFileParserEnum::NotImplemented, "NotImplemented")};
-
-  DataFileParserEnum getParserType(const std::string& parser_type) const;
+  std::string parser_ident_;
 
 };
 

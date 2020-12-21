@@ -11,8 +11,13 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
                      /usr/local/include/libhmsbeagle-1  # the beagle mcmc library used by kpl
                     kel_utility                 # Basic Infrastructure library
                     kgl_genomics                  # Basic Genetic library
+                    kgl_genomics/kgl_parser
                     kgl_mixture                  # Deconvolution and mixture library
-                    kgl_analytic                  # Genetic analysis library
+                    kgl_analytic                  # Genetic analysis library (top level)
+                    kgl_analytic/kgl_inbreed
+                    kgl_analytic/kgl_verify
+                    kgl_analytic/kgl_info
+                    kgl_analytic/kgl_legacy
                     kgl_app)
 
 
@@ -145,13 +150,13 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_genome_types.cpp
         kgl_genomics/kgl_sequence_distance_impl.h
         kgl_genomics/kgl_sequence_distance_impl.cpp
-        kgl_genomics/kgl_variant_factory_pf3k_impl.h
-        kgl_genomics/kgl_variant_factory_pf3k_impl.cpp
-        kgl_genomics/kgl_variant_factory_readvcf_impl.h
+        kgl_genomics/kgl_parser/kgl_variant_factory_pf3k_impl.h
+        kgl_genomics/kgl_parser/kgl_variant_factory_pf3k_impl.cpp
+        kgl_genomics/kgl_parser/kgl_variant_factory_readvcf_impl.h
         kgl_genomics/kgl_variant_factory_vcf_parse_cigar.h
         kgl_genomics/kgl_variant_factory_vcf_parse_cigar.cpp
-        kgl_genomics/kgl_variant_factory_record_vcf_impl.h
-        kgl_genomics/kgl_variant_factory_record_vcf_impl.cpp
+        kgl_genomics/kgl_parser/kgl_variant_factory_record_vcf_impl.h
+        kgl_genomics/kgl_parser/kgl_variant_factory_record_vcf_impl.cpp
         kgl_genomics/kgl_genome_aux_csv.h
         kgl_genomics/kgl_genome_aux_csv_impl.cpp
         kgl_genomics/kgl_variant_db_genome.h
@@ -162,18 +167,18 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_genome_contig_aux.h
         kgl_genomics/kgl_phylogenetic_tree.cpp
         kgl_genomics/kgl_phylogenetic_tree.h
-        kgl_genomics/kgl_variant_file_vcf_record.h
-        kgl_genomics/kgl_variant_factory_readvcf_impl.cpp
-        kgl_genomics/kgl_data_file_impl.cpp
-        kgl_genomics/kgl_data_file_impl.h
-        kgl_genomics/kgl_variant_factory_grch_impl.cpp
-        kgl_genomics/kgl_variant_factory_grch_impl.h
-        kgl_genomics/kgl_variant_file_vcf_impl.cpp
-        kgl_genomics/kgl_variant_file_vcf_impl.h
-        kgl_genomics/kgl_variant_factory_vcf_parse_info.cpp
-        kgl_genomics/kgl_variant_factory_vcf_parse_info.h
-        kgl_genomics/kgl_variant_factory_vcf_parse_header.cpp
-        kgl_genomics/kgl_variant_factory_vcf_parse_header.h
+        kgl_genomics/kgl_parser/kgl_variant_file_vcf_record.h
+        kgl_genomics/kgl_parser/kgl_variant_factory_readvcf_impl.cpp
+        kgl_genomics/kgl_parser/kgl_data_file_impl.cpp
+        kgl_genomics/kgl_parser/kgl_data_file_impl.h
+        kgl_genomics/kgl_parser/kgl_variant_factory_grch_impl.cpp
+        kgl_genomics/kgl_parser/kgl_variant_factory_grch_impl.h
+        kgl_genomics/kgl_parser/kgl_variant_file_vcf_impl.cpp
+        kgl_genomics/kgl_parser/kgl_variant_file_vcf_impl.h
+        kgl_genomics/kgl_parser/kgl_variant_factory_vcf_parse_info.cpp
+        kgl_genomics/kgl_parser/kgl_variant_factory_vcf_parse_info.h
+        kgl_genomics/kgl_parser/kgl_variant_factory_vcf_parse_header.cpp
+        kgl_genomics/kgl_parser/kgl_variant_factory_vcf_parse_header.h
         kgl_genomics/kgl_variant_factory_vcf_evidence.cpp
         kgl_genomics/kgl_variant_factory_vcf_evidence.h
         kgl_genomics/kgl_variant_factory_vcf_evidence_data.cpp
@@ -185,72 +190,76 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_variant_factory_vcf_evidence_data_blk_read.cpp
         kgl_genomics/kgl_variant_factory_vcf_evidence_analysis.cpp
         kgl_genomics/kgl_variant_factory_vcf_evidence_analysis.h
-        kgl_genomics/kgl_variant_factory_1000_impl.cpp
-        kgl_genomics/kgl_variant_factory_1000_impl.h
-        kgl_genomics/kgl_variant_factory_population.h
+        kgl_genomics/kgl_parser/kgl_variant_factory_1000_impl.cpp
+        kgl_genomics/kgl_parser/kgl_variant_factory_1000_impl.h
+        kgl_genomics/kgl_parser/kgl_variant_factory_population.h
         kgl_genomics/kgl_analysis_virtual.h
         kgl_genomics/kgl_variant_db_offset.h
         kgl_genomics/kgl_variant_db_contig.h
         kgl_genomics/kgl_variant_db_mutation.h
         kgl_genomics/kgl_ped_parser.h
-        kgl_genomics/kgl_ped_parser.cpp)
+        kgl_genomics/kgl_ped_parser.cpp
+        kgl_genomics/kgl_parser/kgl_variant_factory_parsers.h
+        kgl_genomics/kgl_parser/kgl_variant_factory_gnomad_impl.cpp
+        kgl_genomics/kgl_parser/kgl_variant_factory_gnomad_impl.h
+        kgl_genomics/kgl_parser/kgl_variant_factory_parsers.cpp)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES
-        kgl_analytic/kgl_phylogenetic_analysis.h
-        kgl_analytic/kgl_phylogenetic_analysis.cpp
-        kgl_analytic/kgl_phylogenetic_gene.h
-        kgl_analytic/kgl_phylogenetic_gene.cpp
-        kgl_analytic/kgl_upgma_node.h
-        kgl_analytic/kgl_upgma_node.cpp
-        kgl_analytic/kgl_rna_search.cpp
-        kgl_analytic/kgl_rna_search.h
-        kgl_analytic/kgl_ploidy_analysis.h
-        kgl_analytic/kgl_upgma_unphased.h
-        kgl_analytic/kgl_upgma_unphased.cpp
-        kgl_analytic/kgl_sequence_complexity.h
-        kgl_analytic/kgl_sequence_complexity.cpp
-        kgl_analytic/kgl_epigenetic_motif.cpp
-        kgl_analytic/kgl_epigenetic_motif.cpp
-        kgl_analytic/kgl_upgma.h
+        kgl_analytic/kgl_legacy/kgl_phylogenetic_analysis.h
+        kgl_analytic/kgl_legacy/kgl_phylogenetic_analysis.cpp
+        kgl_analytic/kgl_legacy/kgl_phylogenetic_gene.h
+        kgl_analytic/kgl_legacy/kgl_phylogenetic_gene.cpp
+        kgl_analytic/kgl_legacy/kgl_upgma_node.h
+        kgl_analytic/kgl_legacy/kgl_upgma_node.cpp
+        kgl_analytic/kgl_legacy/kgl_rna_search.cpp
+        kgl_analytic/kgl_legacy/kgl_rna_search.h
+        kgl_analytic/kgl_legacy/kgl_ploidy_analysis.h
+        kgl_analytic/kgl_legacy/kgl_upgma_unphased.h
+        kgl_analytic/kgl_legacy/kgl_upgma_unphased.cpp
+        kgl_analytic/kgl_legacy/kgl_sequence_complexity.h
+        kgl_analytic/kgl_legacy/kgl_sequence_complexity.cpp
+        kgl_analytic/kgl_legacy/kgl_epigenetic_motif.cpp
+        kgl_analytic/kgl_legacy/kgl_epigenetic_motif.cpp
+        kgl_analytic/kgl_legacy/kgl_upgma.h
         kgl_analytic/kgl_analysis_all.h
-        kgl_analytic/kgl_analysis_null.cpp
-        kgl_analytic/kgl_analysis_null.h
-        kgl_analytic/kgl_analysis_interval.cpp
-        kgl_analytic/kgl_analysis_interval.h
-        kgl_analytic/kgl_analysis_info_filter.cpp
-        kgl_analytic/kgl_analysis_info_filter.h
-        kgl_analytic/kgl_age_analysis.cpp
-        kgl_analytic/kgl_age_analysis.h
-        kgl_analytic/kgl_legacy_Pf_analysis.cpp
-        kgl_analytic/kgl_legacy_Pf_analysis.h
-        kgl_analytic/kgl_analysis_mutation.cpp
-        kgl_analytic/kgl_analysis_mutation.h
-        kgl_analytic/kgl_analysis_mutation_inbreed.cpp
-        kgl_analytic/kgl_analysis_mutation_synthetic.cpp
-        kgl_analytic/kgl_analysis_mutation_inbreed_calc.cpp
-        kgl_analytic/kgl_analysis_mutation_inbreed.h
-        kgl_analytic/kgl_analysis_mutation_inbreed_locus.cpp
-        kgl_analytic/kgl_analysis_mutation_inbreed_locus.h
-        kgl_analytic/kgl_analysis_mutation_inbreed_calc.h
-        kgl_analytic/kgl_analysis_mutation_inbreed_freq.cpp
-        kgl_analytic/kgl_analysis_verify.cpp
-        kgl_analytic/kgl_analysis_verify.h
-        kgl_analytic/kgl_analysis_mutation_inbreed_freq.h
-        kgl_analytic/kgl_analysis_mutation_inbreed_freqdb.cpp
-        kgl_analytic/kgl_analysis_mutation_inbreed_freqdb.h
-        kgl_analytic/kgl_analysis_mutation_synthetic.h
-        kgl_analytic/kgl_analysis_mutation_inbreed_output.cpp
-        kgl_analytic/kgl_analysis_mutation_inbreed_output.h
-        kgl_analytic/kgl_analysis_mutation_syngen.cpp
-        kgl_analytic/kgl_analysis_mutation_syngen.h
-        kgl_analytic/kgl_analysis_mutation_recomb_compare.cpp
-        kgl_analytic/kgl_analysis_mutation_recomb_compare.h
-        kgl_analytic/kgl_analysis_mutation_inbreed_execute.cpp
-        kgl_analytic/kgl_analysis_mutation_inbreed_execute.h)
+        kgl_analytic/kgl_verify/kgl_analysis_null.cpp
+        kgl_analytic/kgl_verify/kgl_analysis_null.h
+        kgl_analytic/kgl_info/kgl_analysis_interval.cpp
+        kgl_analytic/kgl_info/kgl_analysis_interval.h
+        kgl_analytic/kgl_info/kgl_analysis_info_filter.cpp
+        kgl_analytic/kgl_info/kgl_analysis_info_filter.h
+        kgl_analytic/kgl_info/kgl_age_analysis.cpp
+        kgl_analytic/kgl_info/kgl_age_analysis.h
+        kgl_analytic/kgl_legacy/kgl_legacy_Pf_analysis.cpp
+        kgl_analytic/kgl_legacy/kgl_legacy_Pf_analysis.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_synthetic.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_calc.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_locus.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_locus.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_calc.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_freq.cpp
+        kgl_analytic/kgl_verify/kgl_analysis_verify.cpp
+        kgl_analytic/kgl_verify/kgl_analysis_verify.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_freq.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_freqdb.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_freqdb.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_synthetic.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_output.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_output.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_syngen.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_syngen.h
+        kgl_analytic/kgl_recomb/kgl_analysis_mutation_recomb_compare.cpp
+        kgl_analytic/kgl_recomb/kgl_analysis_mutation_recomb_compare.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_execute.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_execute.h)
 
 # Deconvolution and mixture files.
 
