@@ -80,7 +80,7 @@ std::shared_ptr<kgl::DataObjectBase> kgl::ParserSelection::parseData( std::share
       return readVCF<Genome1000VCFImpl, DiploidPopulation>(reference_genomes, file_info_ptr, evidence_map, contig_alias);
 
     case DataFileParserEnum::MultiGenomeGnomad:
-      return readVCF<GenomeGnomadVCFImpl, DiploidPopulation>(reference_genomes, file_info_ptr, evidence_map, contig_alias);
+      return readVCF<GenomeGnomadVCFImpl, UnphasedPopulation>(reference_genomes, file_info_ptr, evidence_map, contig_alias);
 
     case DataFileParserEnum::PedAncestry:
       return ParserSelection::readPEDAncestry(file_info_ptr);

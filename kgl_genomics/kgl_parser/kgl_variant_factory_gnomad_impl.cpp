@@ -17,7 +17,7 @@ void kgl::GenomeGnomadVCFImpl::processVCFHeader(const VcfHeaderInfo& header_info
   VCFInfoRecordMap vcf_info_map;
   if (not VCFParseHeader::parseVcfHeader( header_info, vcf_contig_map, vcf_info_map)) {
 
-    ExecEnv::log().error("Pf3kVCFImpl::processVCFHeader, Problem parsing header information in VCF file. No variants processed.");
+    ExecEnv::log().error("GenomeGnomadVCFImpl::processVCFHeader; Problem parsing header information in VCF file. No variants processed.");
 
   }
 
@@ -52,7 +52,7 @@ void kgl::GenomeGnomadVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const V
   }
   catch(const std::exception& e) {
 
-    ExecEnv::log().error("Genome1000VCFImpl::ProcessVCFRecord, Unexpected Exception: {} thrown record ignored", e.what());
+    ExecEnv::log().error("GenomeGnomadVCFImpl::processVCFHeader, Unexpected Exception: {} thrown record ignored", e.what());
 
   }
 
@@ -84,7 +84,7 @@ void kgl::GenomeGnomadVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRec
 
   if (alt_vector.empty()) {
 
-    ExecEnv::log().error("Genome1000VCFImpl::ProcessVCFRecord, Zero sized alt vector, alt: {}", record.alt);
+    ExecEnv::log().error("GenomeGnomadVCFImpl::processVCFHeader; Zero sized alt vector, alt: {}", record.alt);
 
   }
 
@@ -113,8 +113,8 @@ void kgl::GenomeGnomadVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRec
 
   }
 
-  addVariants(phase_A_map, contig, VariantSequence::DIPLOID_PHASE_A, record.offset, passed_filter, info_evidence_opt, record.ref, alt_vector, vcf_record_count);
-  addVariants(phase_B_map, contig, VariantSequence::DIPLOID_PHASE_B, record.offset, passed_filter, info_evidence_opt, record.ref, alt_vector, vcf_record_count);
+  addVariants(phase_A_map, contig, VariantSequence::UNPHASED, record.offset, passed_filter, info_evidence_opt, record.ref, alt_vector, vcf_record_count);
+  addVariants(phase_B_map, contig, VariantSequence::UNPHASED, record.offset, passed_filter, info_evidence_opt, record.ref, alt_vector, vcf_record_count);
 
   if (vcf_record_count % VARIANT_REPORT_INTERVAL_ == 0) {
 
@@ -128,11 +128,20 @@ void kgl::GenomeGnomadVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRec
 
 std::pair<size_t, size_t> kgl::GenomeGnomadVCFImpl::alternateIndex(const std::string& genotype, const std::vector<std::string>& alt_vector) const {
 
-  std::vector<std::string> phase_vector = Utility::char_tokenizer(genotype, PHASE_MARKER_);
+  if (genotype.size() < MINIMUM_GENOTYPE_SIZE_) {
+
+    ExecEnv::log().warn("GenomeGnomadVCFImpl::alternateIndex; Genotype: {} Size: {} < {} characters", genotype, genotype.size(), MINIMUM_GENOTYPE_SIZE_);
+    return {REFERENCE_VARIANT_INDEX_, REFERENCE_VARIANT_INDEX_};
+
+  }
+
+  std::string_view unphased_view(genotype.c_str(), MINIMUM_GENOTYPE_SIZE_);
+
+  std::vector<std::string_view> phase_vector = Utility::view_tokenizer(unphased_view, PHASE_MARKER_);
 
   if (phase_vector.size() != 2) {
 
-    ExecEnv::log().warn("Genome1000VCFImpl::alternateIndex, Unexpected Phase Vector Size: {} Genotype Info {}", phase_vector.size(), genotype);
+    ExecEnv::log().warn("GenomeGnomadVCFImpl::alternateIndex; Unexpected Phase Vector Size: {} Genotype Info {}", phase_vector.size(), genotype);
     return {REFERENCE_VARIANT_INDEX_, REFERENCE_VARIANT_INDEX_};
 
   }
@@ -142,46 +151,30 @@ std::pair<size_t, size_t> kgl::GenomeGnomadVCFImpl::alternateIndex(const std::st
 
   try {
 
-    if (phase_vector[0].find(ABSTRACT_ALT_BRACKET_) == std::string::npos) {
+    if (phase_vector[0] != REFERENCE_VARIANT_INDICATOR_) {
 
-      if (phase_vector[0] != REFERENCE_VARIANT_INDICATOR_) {
-
-        phase_A_alt = std::stoul(phase_vector[0]);
-
-      }
-
-    } else {
-
-      ++abstract_variant_count_;
+      phase_A_alt = std::stoul(std::string(phase_vector[0]));
 
     }
 
-    if (phase_vector[1].find(ABSTRACT_ALT_BRACKET_) == std::string::npos) {
+    if (phase_vector[1] != REFERENCE_VARIANT_INDICATOR_) {
 
-      if (phase_vector[1] != REFERENCE_VARIANT_INDICATOR_) {
-
-        phase_B_alt = std::stoul(phase_vector[1]);
-
-      }
-
-    } else {
-
-      ++abstract_variant_count_;
+      phase_B_alt = std::stoul(std::string(phase_vector[1]));
 
     }
 
   }
   catch(...) {
 
-    ExecEnv::log().warn("Genome1000VCFImpl::ParseRecord, Problem converting phase indexes to unsigned longs, phase A: {}, phase B: {} genotype: {}",
-                        phase_vector[0], phase_vector[1], genotype);
+    ExecEnv::log().warn("GenomeGnomadVCFImpl::alternateIndex; Problem converting phase indexes to unsigned longs, phase A: {}, phase B: {} genotype: {}",
+                        std::string(phase_vector[0]), std::string(phase_vector[1]), genotype);
     return {REFERENCE_VARIANT_INDEX_, REFERENCE_VARIANT_INDEX_};
 
   }
 
   if (phase_A_alt > alt_vector.size() or phase_B_alt > alt_vector.size()) {
 
-    ExecEnv::log().warn("Genome1000VCFImpl::alternateIndex, phase A index: {}, phase B index: {}, exceed alternate vector size: {}, genotype: {}",
+    ExecEnv::log().warn("GenomeGnomadVCFImpl::alternateIndex; phase A index: {}, phase B index: {}, exceed alternate vector size: {}, genotype: {}",
                         phase_A_alt, phase_B_alt, phase_vector.size(), genotype);
     return {REFERENCE_VARIANT_INDEX_, REFERENCE_VARIANT_INDEX_};
 
@@ -226,7 +219,7 @@ void kgl::GenomeGnomadVCFImpl::addVariants( const std::map<size_t, std::vector<G
 
     } else {
 
-      ExecEnv::log().error("Genome1000VCFImpl::addVariants, problem adding: {} variants", genome_vector.size());
+      ExecEnv::log().error("GenomeGnomadVCFImpl::addVariants; problem adding: {} variants", genome_vector.size());
 
     }
 
@@ -239,7 +232,7 @@ bool kgl::GenomeGnomadVCFImpl::addThreadSafeVariant( std::unique_ptr<const Varia
                                                    const std::vector<GenomeId_t>& genome_vector) const {
 
   // The population structure can be updated concurrently (embedded mutexes).
-  return diploid_population_ptr_->addVariant(std::move(variant_ptr), genome_vector);
+  return population_ptr_->addVariant(std::move(variant_ptr), genome_vector);
 
 }
 

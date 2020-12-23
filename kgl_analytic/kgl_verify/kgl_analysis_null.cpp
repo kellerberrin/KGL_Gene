@@ -90,13 +90,16 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> d
 
 
     // Investigate vep field values.
+    // Vep fields on the Gnomad Genomes 3.1 files are non-standard and need to be parsed in a unique way.
+    // Subject to confirmation by the Gnomad group.
+/*
     InfoEvidenceAnalysis::vepSubFieldValues("Consequence", unphased_population);
     InfoEvidenceAnalysis::vepSubFieldValues("IMPACT", unphased_population);
     InfoEvidenceAnalysis::vepSubFieldValues("Feature_type", unphased_population);
     InfoEvidenceAnalysis::vepSubFieldValues("BIOTYPE", unphased_population);
     InfoEvidenceAnalysis::vepSubFieldValues("EXON", unphased_population);
     InfoEvidenceAnalysis::vepSubFieldValues("INTRON", unphased_population);
-
+*/
     evidence_header_ptr = info_header_opt.value();
 
   }

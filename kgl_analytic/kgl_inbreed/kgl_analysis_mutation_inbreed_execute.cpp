@@ -88,7 +88,7 @@ bool kgl::ExecuteInbreedingAnalysis::processDiploid() {
   InbreedingParameters parameters;
   parameters.lociiArguments().minAlleleFrequency(lower_allele_frequency);
   parameters.lociiArguments().maxAlleleFrequency(upper_allele_frequency);
-  parameters.inbreedingAlgorthim(InbreedingCalculation::SIMPLE_F);
+  parameters.inbreedingAlgorthim(InbreedingCalculation::RITLAND_LOCUS_F);
   parameters.lociiArguments().frequencySource(FrequencyDatabaseRead::alleleFrequencySource(unphased_population_));
   parameters.lociiArguments().lowerOffset(lower_window);
   parameters.lociiArguments().upperOffset(upper_window);

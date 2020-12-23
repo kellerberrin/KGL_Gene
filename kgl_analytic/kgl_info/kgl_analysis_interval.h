@@ -167,6 +167,7 @@ private:
 
   size_t interval_size_{0};
   std::string output_file_name_;
+  std::string work_directory_;
 
   // First count is Variants the second is SNPs.
   using IntervalVector = std::vector<IntervalData>;
@@ -176,12 +177,15 @@ private:
 
   constexpr static const char OUTPUT_DELIMITER_ = ',';
 
-  [[nodiscard]] bool getParameters(const std::string& work_directory, const RuntimeParameterMap& named_parameters);
+  [[nodiscard]] bool getParameters(const RuntimeParameterMap& named_parameters);
   void setupIntervalStructure(std::shared_ptr<const GenomeReference> genome);
   [[nodiscard]] bool variantIntervalCount(std::shared_ptr<const UnphasedPopulation> population_ptr);
   [[nodiscard]] bool writeData( std::shared_ptr<const GenomeReference> genome_db, bool display_sequence, std::ostream& output, char delimiter) const;
   [[nodiscard]] bool writeHeader(std::ostream& output, char delimiter, bool display_sequence) const;
-  [[nodiscard]] bool writeResults( std::shared_ptr<const GenomeReference> genome_db, bool display_sequence, char delimiter) const;
+  [[nodiscard]] bool writeResults( std::shared_ptr<const GenomeReference> genome_db,
+                                   const std::string& output_file,
+                                   bool display_sequence,
+                                   char delimiter) const;
 
 };
 

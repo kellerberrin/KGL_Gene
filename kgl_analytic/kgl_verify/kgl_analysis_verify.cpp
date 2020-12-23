@@ -64,17 +64,17 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase>
     if (unphased_population) {
 
       // Only check variants that have passed all VCF filters.
-      std::shared_ptr<const UnphasedPopulation> unphased_passed = unphased_population->filterVariants(PassFilter());
+      std::shared_ptr<const UnphasedPopulation> unphased_passed = unphased_population->mtFilterVariants(PassFilter());
       size_t count_passed = unphased_passed->variantCount();
       size_t count_all = unphased_population->variantCount();
       ExecEnv::log().info("Unphased Population: {}, total variants: {}, variants 'Pass' VCF filters: {}",
                           unphased_passed->populationId(), count_all, count_passed);
 
-      ExecEnv::log().info("Verifying Unphased 'Pass' Population: {} for duplicate variants", unphased_passed->populationId());
-      VerifyDuplicates verify_duplicates;
-      unphased_passed->processAll(verify_duplicates, &VerifyDuplicates::verifyVariant);
-      ExecEnv::log().info("Completed Verifying Unphased 'Pass' population for duplicate variants, duplicates: {}",
-                          verify_duplicates.duplicateCount());
+//      ExecEnv::log().info("Verifying Unphased 'Pass' Population: {} for duplicate variants", unphased_passed->populationId());
+//      VerifyDuplicates verify_duplicates;
+//      unphased_passed->processAll(verify_duplicates, &VerifyDuplicates::verifyVariant);
+//      ExecEnv::log().info("Completed Verifying Unphased 'Pass' population for duplicate variants, duplicates: {}",
+//                          verify_duplicates.duplicateCount());
 
     }
 

@@ -109,7 +109,7 @@ public:
   static bool verify(const std::string &file_name, bool silent = true);
 
   // Seems about right.
-  constexpr static const size_t DEFAULT_THREADS{5};
+  constexpr static const size_t DEFAULT_THREADS{8};
 
 private:
 
@@ -121,15 +121,15 @@ private:
 
   // Blocks are queued here to be decompressed.
   // Queue high tide and low tide markers are guessed as reasonable values.
-  constexpr static const size_t QUEUE_LOW_TIDE_{1000};
-  constexpr static const size_t QUEUE_HIGH_TIDE_{2000};
+  constexpr static const size_t QUEUE_LOW_TIDE_{2000};
+  constexpr static const size_t QUEUE_HIGH_TIDE_{4000};
   constexpr static const char* QUEUE_NAME_{"BGZReader Decompress Block Queue"};
   constexpr static const size_t QUEUE_SAMPLE_FREQ_{500};
   BoundedMtQueue<std::future<UncompressedBlock>> decompress_queue_{QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, QUEUE_NAME_, QUEUE_SAMPLE_FREQ_};
 
   // Queues parsed line records.
-  constexpr static const size_t LINE_LOW_TIDE_{1000};
-  constexpr static const size_t LINE_HIGH_TIDE_{2000};
+  constexpr static const size_t LINE_LOW_TIDE_{10000};
+  constexpr static const size_t LINE_HIGH_TIDE_{20000};
   constexpr static const char* LINE_QUEUE_NAME_{"BGZReader Line Record Queue"};
   constexpr static const size_t LINE_SAMPLE_FREQ_{500};
   BoundedMtQueue<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_, LINE_QUEUE_NAME_, LINE_SAMPLE_FREQ_};

@@ -176,6 +176,8 @@ bool kgl::IntervalAnalysis::initializeAnalysis( const std::string& work_director
                                                 const RuntimeParameterMap& named_parameters,
                                                 std::shared_ptr<const GenomeCollection> reference_genomes) {
 
+  work_directory_ = work_directory;
+
   if (reference_genomes->getMap().size() != 1) {
 
     ExecEnv::log().error("Analytic: {} called with {} genomes.  Only 1 genome can be analysed at a time. Disabled.",
@@ -196,21 +198,14 @@ bool kgl::IntervalAnalysis::initializeAnalysis( const std::string& work_director
 
   ExecEnv::log().info("Initialize Analysis Id: {} called with genome : {}", ident(), genome_->genomeId());
 
-  if (not getParameters(work_directory, named_parameters)) {
+  if (not getParameters(named_parameters)) {
 
     return false;
 
   }
 
-// Clear the data file and write the header.
-  std::ofstream outfile;
-  outfile.open(output_file_name_, std::ofstream::out | std::ofstream::trunc);
 
-  bool result = writeHeader(outfile, OUTPUT_DELIMITER_, false);
-
-  outfile.close();
-
-  return result;
+  return true;
 
 }
 
@@ -232,20 +227,18 @@ bool kgl::IntervalAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBas
   setupIntervalStructure(genome_);
 
   // Perform the analysis.
-  bool result = variantIntervalCount(population);
+  bool analysis_result = variantIntervalCount(population);
 
-  // Append the results.
-  std::ofstream outfile;
-  outfile.open(output_file_name_, std::ofstream::out |  std::ofstream::app);
+  // Population specific output name.
+  std::string interval_file = Utility::filePath((population->Id() + "_" + output_file_name_), work_directory_);
 
-  result = result and writeResults(genome_, false, OUTPUT_DELIMITER_);
-
-  outfile.close();
+  // Write the results.
+  bool file_result = writeResults(genome_, interval_file, false, OUTPUT_DELIMITER_);
 
   // Clear the interval map.
   interval_map_.clear();
 
-  return result;
+  return analysis_result and file_result;
 
 }
 
@@ -256,7 +249,7 @@ bool kgl::IntervalAnalysis::finalizeAnalysis() {
 
 }
 
-bool kgl::IntervalAnalysis::getParameters(const std::string& work_directory, const RuntimeParameterMap& named_parameters) {
+bool kgl::IntervalAnalysis::getParameters(const RuntimeParameterMap& named_parameters) {
 
   // Get the analysis interval
   auto result = named_parameters.find(INTERVAL_SIZE_);
@@ -286,16 +279,21 @@ bool kgl::IntervalAnalysis::getParameters(const std::string& work_directory, con
   }
   // Get the output filename
   result = named_parameters.find(OUTPUT_FILE_);
+
   if (result == named_parameters.end()) {
+
     ExecEnv::log().error("Analytic: {}; Expected Parameter: {} to be defined. {} is deactivated. Available named Parameters:", ident(), OUTPUT_FILE_, ident());
     for (auto const& [parameter_ident, parameter_value] : named_parameters) {
 
       ExecEnv::log().info("Analysis: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident, parameter_value);
 
     }
+
     return false;
+
   }
-  output_file_name_ = Utility::filePath(result->second, work_directory);
+
+  output_file_name_ = result->second;
 
   ExecEnv::log().info("Analysis: {}, initialized with interval size: {}, output file: {}", ident(), interval_size_, output_file_name_);
 
@@ -408,10 +406,11 @@ bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const UnphasedP
 
 
 bool kgl::IntervalAnalysis::writeResults( std::shared_ptr<const GenomeReference> genome_db,
+                                          const std::string& output_file,
                                           bool display_sequence,
                                           char delimiter) const {
 
-  std::ofstream outfile(output_file_name_);
+  std::ofstream outfile(output_file);
 
   if (not outfile.good()) {
 

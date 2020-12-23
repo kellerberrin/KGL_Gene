@@ -20,12 +20,12 @@ class GenomeGnomadVCFImpl : public VCFReaderMT {
 
 public:
 
-  GenomeGnomadVCFImpl(const std::shared_ptr<DiploidPopulation> vcf_population_ptr,
+  GenomeGnomadVCFImpl(const std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
                       const std::shared_ptr<const GenomeReference> genome_db_ptr,
                       const ContigAliasMap &contig_alias_map,
                       const EvidenceInfoSet &evidence_map) : evidence_factory_(evidence_map),
                                                              contig_alias_map_(contig_alias_map),
-                                                             diploid_population_ptr_(vcf_population_ptr),
+                                                             population_ptr_(vcf_population_ptr),
                                                              genome_db_ptr_(genome_db_ptr) {}
 
   ~GenomeGnomadVCFImpl() override = default;
@@ -53,12 +53,13 @@ private:
 
   constexpr static const size_t REFERENCE_VARIANT_INDEX_{0};
   constexpr static const char *REFERENCE_VARIANT_INDICATOR_{"."};
-  constexpr static const char PHASE_MARKER_{'|'};
+  constexpr static const char PHASE_MARKER_{'/'};
+  constexpr static const size_t MINIMUM_GENOTYPE_SIZE_{3};
   constexpr static const char MULTIPLE_ALT_SEPARATOR_{','};
   constexpr static const char ABSTRACT_ALT_BRACKET_{'<'};
   constexpr static const char *PASSED_FILTERS_{"PASS"};
 
-  const std::shared_ptr<DiploidPopulation> diploid_population_ptr_;   // Diploid phased variants.
+  const std::shared_ptr<UnphasedPopulation> population_ptr_;   // Diploid phased variants.
   const std::shared_ptr<const GenomeReference> genome_db_ptr_; // read access only.
 
   // mutex to lock the structure for multiple thread access by parsers.

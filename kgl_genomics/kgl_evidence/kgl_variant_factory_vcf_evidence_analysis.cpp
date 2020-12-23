@@ -176,6 +176,7 @@ const std::vector<std::string_view> kgl::VEPSubFieldEvidence::vepSubFields(const
 std::optional<std::unique_ptr<const kgl::VEPSubFieldEvidence>>
 kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
 
+  static size_t correct_parse{0};
   // Check that the vep field exists for this variant.
   std::optional<const kgl::InfoSubscribedField> vep_field_opt = getSubscribedField( variant, VEPSubFieldHeader::VEP_FIELD_ID);
 
@@ -212,7 +213,7 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
   // If the vector is empty then return nullopt.
   if (vep_field_vector.empty()) {
 
-    ExecEnv::log().warn( "InfoEvidenceAnalysis::getVepSubFields, mismatch, Variant: {} has 'vep' header but no vep data",
+    ExecEnv::log().warn( "InfoEvidenceAnalysis::getVepSubFields; mismatch, Variant: {} has 'vep' header but no vep data",
                           variant.output(',', VariantOutputIndex::START_0_BASED, true));
     return std::nullopt;
 
@@ -224,14 +225,21 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
 
     if (sub_fields.size() !=  vep_header_ptr->subFieldHeaders().size()) {
 
-      ExecEnv::log().error("VepSubStringFilter::applyFilter; VEP sub-field count: {} not equal to VEP header size: {}",
-                           sub_fields.size(),  vep_header_ptr->subFieldHeaders().size());
+      ExecEnv::log().error("InfoEvidenceAnalysis::getVepSubFields; VEP sub-field count: {} not equal to VEP header size: {}, vep field: {}, variants correctly parsed: {}",
+                           sub_fields.size(),  vep_header_ptr->subFieldHeaders().size(), vep_field, correct_parse);
+
+      for (auto const& sub_field : sub_fields) {
+
+        ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues; sub field: {}", std::string(sub_field));
+
+      }
       return std::nullopt;
 
     }
 
   }
 
+  ++correct_parse;
   return std::make_unique<const kgl::VEPSubFieldEvidence>(vep_header_ptr, std::move(vep_field_vector));
 
 }
@@ -273,8 +281,13 @@ void kgl::InfoEvidenceAnalysis::vepSubFieldValues( std::string vep_sub_field,
             // Check that the header and the field vector are the same size.
           if (sub_field_vector.size() != vep_header.subFieldHeaders().size()) {
 
-            ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues; Vep Header size: {} not equal vep sub field size: {}",
-                                 vep_header.subFieldHeaders().size(), sub_field_vector.size());
+            ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues; Vep Header size: {} not equal vep sub field size: {}, vep field: {}",
+                                 vep_header.subFieldHeaders().size(), sub_field_vector.size(), vep_field);
+            for (auto const& sub_field : sub_field_vector) {
+
+              ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues; sub field: {}", std::string(sub_field));
+
+            }
             return false;
           }
 

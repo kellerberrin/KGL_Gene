@@ -59,6 +59,9 @@ public:
 
   [[nodiscard]] std::shared_ptr<PopulationVariant> filterVariants(const VariantFilter& filter) const;
 
+  // Same functionality as above but multi-threaded.
+  [[nodiscard]] std::shared_ptr<PopulationVariant> mtFilterVariants(const VariantFilter& filter) const;
+
   [[nodiscard]] const VariantGenomeMap<VariantGenome>& getMap() const { return genome_map_; }
 
   void clear() { genome_map_.clear(); }
@@ -251,6 +254,52 @@ std::shared_ptr<PopulationVariant<VariantGenome, PopulationBase>> PopulationVari
   return filtered_population_ptr;
 
 }
+
+
+
+// Multi-tasking filtering for large populations.
+template<class VariantGenome, class PopulationBase>
+std::shared_ptr<PopulationVariant<VariantGenome, PopulationBase>> PopulationVariant<VariantGenome, PopulationBase>::mtFilterVariants(const VariantFilter& filter) const {
+
+  ThreadPool thread_pool(ThreadPool::hardwareThreads());
+  std::vector<std::future<std::shared_ptr<VariantGenome>>> future_vector;
+  std::shared_ptr<const VariantFilter> filter_ptr = filter.clone();
+  struct FilterClass {
+
+    static std::shared_ptr<VariantGenome> filterGenome(std::shared_ptr<VariantGenome> genome_ptr,
+                                                       std::shared_ptr<const VariantFilter> filter_ptr) { return genome_ptr->filterVariants(*filter_ptr); };
+
+
+  } ;
+
+  // Queue a thread for each genome.
+  for (auto const& [genome_id, genome_ptr] : getMap()) {
+
+    // function, object_ptr, arg1
+
+    std::future<std::shared_ptr<VariantGenome>> future = thread_pool.enqueueTask(&FilterClass::filterGenome, genome_ptr, filter_ptr);
+    future_vector.push_back(std::move(future));
+
+  }
+
+  std::shared_ptr<PopulationVariant> filtered_population_ptr(std::make_shared<PopulationVariant>(populationId()));
+
+  for (auto& future : future_vector) {
+
+    std::shared_ptr<VariantGenome> filtered_genome_ptr = future.get();
+    if (not filtered_population_ptr->addGenome(filtered_genome_ptr)) {
+
+      ExecEnv::log().error("PopulationVariant::filterVariants; could not add filtered genome to the population");
+
+    }
+
+  }
+
+  return filtered_population_ptr;
+
+}
+
+
 
 template<class VariantGenome, class PopulationBase>
 bool PopulationVariant<VariantGenome, PopulationBase>::addVariant( const std::shared_ptr<const Variant>& variant_ptr,
