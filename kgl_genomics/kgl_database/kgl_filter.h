@@ -511,6 +511,30 @@ private:
 
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// False Filter - unconditionally filters all variants. Useful for deleting large populations.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class FalseFilter : public VariantFilter {
+
+public:
+
+  explicit FalseFilter() {
+
+    filterName("FalseFilter");
+
+  }
+  FalseFilter(const FalseFilter&) = default;
+  ~FalseFilter() override = default;
+
+  [[nodiscard]] bool applyFilter(const Variant&) const override { return false; }
+
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<FalseFilter>(*this); }
+
+private:
+
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Negation Filter, the logical negation of a supplied filter.

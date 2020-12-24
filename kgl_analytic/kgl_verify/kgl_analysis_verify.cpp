@@ -59,16 +59,19 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase>
   if (data_ptr->dataType() == DataTypeEnum::UnphasedPopulation) {
 
     // List all the Info fields to remind us what's available.
+
+    // Cast away const-ness to perform inSituFilter()
+    auto non_const_data_ptr = std::const_pointer_cast<DataObjectBase>(data_ptr);
     // Superclass the population
-    std::shared_ptr<const UnphasedPopulation> unphased_population = std::dynamic_pointer_cast<const UnphasedPopulation>(data_ptr);
+    std::shared_ptr<UnphasedPopulation> unphased_population = std::dynamic_pointer_cast<UnphasedPopulation>(non_const_data_ptr);
     if (unphased_population) {
 
-      // Only check variants that have passed all VCF filters.
-      std::shared_ptr<const UnphasedPopulation> unphased_passed = unphased_population->mtFilterVariants(PassFilter());
-      size_t count_passed = unphased_passed->variantCount();
       size_t count_all = unphased_population->variantCount();
-      ExecEnv::log().info("Unphased Population: {}, total variants: {}, variants 'Pass' VCF filters: {}",
-                          unphased_passed->populationId(), count_all, count_passed);
+      // Only check variants that have passed all VCF filters.
+      unphased_population->inSituFilter(SNPFilter());
+      size_t count_passed = unphased_population->variantCount();
+      ExecEnv::log().info("Unphased Population: {}, total variants: {}, SNP variants: {}",
+                          unphased_population->populationId(), count_all, count_passed);
 
 //      ExecEnv::log().info("Verifying Unphased 'Pass' Population: {} for duplicate variants", unphased_passed->populationId());
 //      VerifyDuplicates verify_duplicates;
@@ -76,7 +79,11 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase>
 //      ExecEnv::log().info("Completed Verifying Unphased 'Pass' population for duplicate variants, duplicates: {}",
 //                          verify_duplicates.duplicateCount());
 
+      // Delete the population by applying the FalseFilter to the population.
+      unphased_population->inSituFilter(FalseFilter());
+
     }
+
 
   }
 

@@ -59,6 +59,9 @@ public:
 
   [[nodiscard]] std::shared_ptr<GenomeVariantArray<VariantContig>> filterVariants(const VariantFilter& filter) const;
 
+  // Filter this genome in Situ. (efficient for large databases).
+  [[nodiscard]] bool inSituFilter(const VariantFilter &filter);
+
   [[nodiscard]] const ContigVariantMap<VariantContig>& getMap() const { return contig_map_; }
 
   // Creates the contig if it does not exist.
@@ -318,6 +321,38 @@ std::shared_ptr<GenomeVariantArray<VariantContig>> GenomeVariantArray<VariantCon
   }
 
   return filtered_genome_ptr;
+
+}
+
+
+
+template<class VariantContig>
+bool GenomeVariantArray<VariantContig>::inSituFilter(const VariantFilter& filter) {
+
+  bool result{true};
+  // Filter the contigs.
+  for (auto& [contig_id, contig_ptr] : contig_map_) {
+
+    if (not contig_ptr->inSituFilter(filter)) {
+
+      ExecEnv::log().error("GenomeVariantArray::inSituFilter, Genome: {}, Unable to filter Contig: {}", genomeId(), contig_id);
+      result = false;
+
+    }
+
+  }
+  // Delete the empty contigs.
+  for (auto it = contig_map_.begin(); it != contig_map_.end(); ++it) {
+
+    if (it->second->getMap().empty()) {
+
+       it = contig_map_.erase(it);
+
+    }
+
+  }
+
+  return result;
 
 }
 

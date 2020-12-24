@@ -62,6 +62,9 @@ public:
   // Same functionality as above but multi-threaded.
   [[nodiscard]] std::shared_ptr<PopulationVariant> mtFilterVariants(const VariantFilter& filter) const;
 
+  // Filters this population, multi-threaded and more efficient for large databases.
+  bool inSituFilter(const VariantFilter& filter);
+
   [[nodiscard]] const VariantGenomeMap<VariantGenome>& getMap() const { return genome_map_; }
 
   void clear() { genome_map_.clear(); }
@@ -259,15 +262,22 @@ std::shared_ptr<PopulationVariant<VariantGenome, PopulationBase>> PopulationVari
 
 // Multi-tasking filtering for large populations.
 template<class VariantGenome, class PopulationBase>
-std::shared_ptr<PopulationVariant<VariantGenome, PopulationBase>> PopulationVariant<VariantGenome, PopulationBase>::mtFilterVariants(const VariantFilter& filter) const {
+std::shared_ptr<PopulationVariant<VariantGenome, PopulationBase>>
+PopulationVariant<VariantGenome, PopulationBase>::mtFilterVariants(const VariantFilter& filter) const {
 
-  ThreadPool thread_pool(ThreadPool::hardwareThreads());
+  // Calc how many threads required.
+  size_t thread_count = std::min(getMap().size(), ThreadPool::hardwareThreads());
+  ThreadPool thread_pool(thread_count);
+  // A vector for futures.
   std::vector<std::future<std::shared_ptr<VariantGenome>>> future_vector;
+  // Required by the thread pool.
+  /// todo: This could be re-coded as a lambda, investigate threadpool type deduction for lambda functions.
   std::shared_ptr<const VariantFilter> filter_ptr = filter.clone();
   struct FilterClass {
 
-    static std::shared_ptr<VariantGenome> filterGenome(std::shared_ptr<VariantGenome> genome_ptr,
-                                                       std::shared_ptr<const VariantFilter> filter_ptr) { return genome_ptr->filterVariants(*filter_ptr); };
+    static std::shared_ptr<VariantGenome>
+        filterGenome(std::shared_ptr<VariantGenome> genome_ptr,
+                     std::shared_ptr<const VariantFilter>& filter_ptr) { return genome_ptr->filterVariants(*filter_ptr); };
 
 
   } ;
@@ -275,15 +285,15 @@ std::shared_ptr<PopulationVariant<VariantGenome, PopulationBase>> PopulationVari
   // Queue a thread for each genome.
   for (auto const& [genome_id, genome_ptr] : getMap()) {
 
-    // function, object_ptr, arg1
-
     std::future<std::shared_ptr<VariantGenome>> future = thread_pool.enqueueTask(&FilterClass::filterGenome, genome_ptr, filter_ptr);
     future_vector.push_back(std::move(future));
 
   }
 
+  // Create the new population.
   std::shared_ptr<PopulationVariant> filtered_population_ptr(std::make_shared<PopulationVariant>(populationId()));
 
+  // Add in the filtered genomes.
   for (auto& future : future_vector) {
 
     std::shared_ptr<VariantGenome> filtered_genome_ptr = future.get();
@@ -298,6 +308,70 @@ std::shared_ptr<PopulationVariant<VariantGenome, PopulationBase>> PopulationVari
   return filtered_population_ptr;
 
 }
+
+// Multi-tasking filtering for large populations.
+template<class VariantGenome, class PopulationBase>
+bool PopulationVariant<VariantGenome, PopulationBase>::inSituFilter(const VariantFilter& filter) {
+
+  bool result{true};
+  // Calc how many threads required.
+  size_t thread_count = std::min(getMap().size(), ThreadPool::hardwareThreads());
+  ExecEnv::log().info("Filtering population: {}, with filter: {}, threads active: {}", populationId(), filter.filterName(), thread_count);
+  ThreadPool thread_pool(thread_count);
+  // A vector for futures.
+  std::vector<std::future<std::pair<bool, GenomeId_t>>> future_vector;
+  // Required by the thread pool.
+  /// todo: This could be re-coded as a lambda, investigate threadpool type deduction for lambda functions.
+  std::shared_ptr<const VariantFilter> filter_ptr = filter.clone();
+  struct FilterClass {
+
+    static std::pair<bool, GenomeId_t>
+    inSituFilterGenome(std::shared_ptr<VariantGenome> genome_ptr,
+                       std::shared_ptr<const VariantFilter>& filter_ptr) { return { genome_ptr->inSituFilter(*filter_ptr), genome_ptr->genomeId() }; };
+
+  } ;
+
+  // Queue a thread for each genome.
+  for (auto& [genome_id, genome_ptr] : getMap()) {
+
+    ExecEnv::log().error("Genome {}, with filter: {}, thread starts", genome_id, filter.filterName());
+    std::future<std::pair<bool, GenomeId_t>> future = thread_pool.enqueueTask(&FilterClass::inSituFilterGenome, genome_ptr, filter_ptr);
+    future_vector.push_back(std::move(future));
+
+  }
+
+  // Wait for the threads to finish.
+  for (auto& future : future_vector) {
+
+    auto [result, genome_id] = future.get();
+    if (not result) {
+
+      ExecEnv::log().error("PopulationVariant::inSituFilter; problem filtering genome: {}", genome_id);
+      result = false;
+
+    } else {
+
+      ExecEnv::log().error("Genome {}, with filter: {}, thread completes", genome_id, filter.filterName());
+
+    }
+
+  }
+
+  // Delete empty genomes.
+  for (auto it = genome_map_.begin(); it != genome_map_.end(); ++it) {
+
+    if (it->second->getMap().empty()) {
+
+      it = genome_map_.erase(it);
+
+    }
+
+  }
+
+  return result;
+
+}
+
 
 
 

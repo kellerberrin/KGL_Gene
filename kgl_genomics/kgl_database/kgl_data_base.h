@@ -17,6 +17,9 @@ namespace kellerberrin::genome {   //  organization::project
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+// enum class DataTypeEnum
+
+
 enum class DataTypeEnum { DiploidPopulation, HaploidPopulation, UnphasedPopulation, PedAncestor, NotImplemented};
 
 

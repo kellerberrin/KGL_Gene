@@ -37,6 +37,8 @@ public:
 
   virtual void addVariant(std::shared_ptr<const Variant> variant_ptr) = 0;
 
+  virtual void clearVariant() = 0;
+
 private:
 
 
@@ -67,6 +69,8 @@ public:
   }
 
   void addVariant(std::shared_ptr<const Variant> variant_ptr) override { variant_vector_.emplace_back(variant_ptr); }
+
+  void clearVariant() override { variant_vector_.clear(); }
 
 private:
 
@@ -105,6 +109,8 @@ public:
   }
 
   void addVariant(std::shared_ptr<const Variant> variant_ptr) override { variant_list_.emplace_front(variant_ptr); }
+
+  void clearVariant() override { variant_list_.clear(); }
 
 private:
 
@@ -173,6 +179,8 @@ public:
     }
 
   }
+
+  void clearVariant() override { variant_vector_.clear(); }
 
 private:
 
@@ -319,6 +327,15 @@ public:
                           variant_ptr->evidence().vcfRecordCount());
 
     }
+
+  }
+
+  void clearVariant() override {
+
+    variant_A1_ = nullptr;
+    variant_A2_ = nullptr;
+    variant_B1_ = nullptr;
+    variant_B2_ = nullptr;
 
   }
 

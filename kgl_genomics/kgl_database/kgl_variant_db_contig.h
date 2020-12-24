@@ -51,7 +51,11 @@ public:
 
   [[nodiscard]] const UnphasedOffsetMap &getMap() const { return contig_offset_map_; }
 
+  // Create a filtered contig.
   [[nodiscard]] std::shared_ptr<ContigOffsetVariant> filterVariants(const VariantFilter &filter) const;
+
+  // Filter this contig (efficient for large databases).
+  [[nodiscard]] bool inSituFilter(const VariantFilter &filter);
 
   // Processes all variants in the contig with class Obj and Func = &Obj::objFunc(const shared_ptr<const Variant>&)
   template<class Obj, typename Func> bool processAll(Obj& object, Func objFunc) const;
@@ -121,12 +125,17 @@ bool ContigOffsetVariant<VariantArray>::addVariant(const std::shared_ptr<const V
   if (result != contig_offset_map_.end()) {
     // Variant offset exists.
 
-    result->second->addVariant(variant_ptr);
+    auto& [contig_offset, offset_ptr] = *result;
+
+    offset_ptr->addVariant(variant_ptr);
 
   } else {
+
     // add the new offset.
     std::unique_ptr<VirtualContigOffset> offset_array_ptr(std::make_unique<VariantArray>());
+
     offset_array_ptr->addVariant(variant_ptr);
+
     auto insert_result = contig_offset_map_.try_emplace(variant_ptr->offset(), std::move(offset_array_ptr));
 
     if (not insert_result.second) {
@@ -269,6 +278,54 @@ std::shared_ptr<ContigOffsetVariant<VariantArray>> ContigOffsetVariant<VariantAr
   }
 
   return filtered_contig_ptr;
+
+}
+
+
+
+// Filters variants inSitu
+template<class VariantArray>
+bool ContigOffsetVariant<VariantArray>::inSituFilter(const VariantFilter &filter) {
+
+  bool result{true};
+
+  for (auto& [offset, variant_vector] : contig_offset_map_) {
+
+    std::vector<std::shared_ptr<const Variant>> filtered_variants;
+    for (auto const &variant_ptr : variant_vector->getVariantArray()) {
+
+      if (filter.applyFilter(*variant_ptr)) {
+
+        filtered_variants.push_back(variant_ptr);
+
+      }
+
+    }
+
+    // Remove all variants at this offset.
+    variant_vector->clearVariant();
+
+    // Add back the filtered variants.
+    for (auto const &variant_ptr : filtered_variants) {
+
+      variant_vector->addVariant(variant_ptr);
+
+    }
+
+  } // for all offsets
+
+  // Finally, remove all empty offsets.
+  for (auto it = contig_offset_map_.begin(); it != contig_offset_map_.end(); ++it) {
+
+    if (it->second->getVariantArray().empty()) {
+
+      it = contig_offset_map_.erase(it);
+
+    }
+
+  }
+
+  return result;
 
 }
 
