@@ -205,7 +205,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_variant_factory_parsers.h
         kgl_genomics/kgl_parser/kgl_variant_factory_gnomad_impl.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_gnomad_impl.h
-        kgl_genomics/kgl_parser/kgl_variant_factory_parsers.cpp)
+        kgl_genomics/kgl_parser/kgl_variant_factory_parsers.cpp kgl_genomics/kgl_database/kgl_variant_db_contig.cpp kgl_genomics/kgl_database/kgl_variant_db_genome.cpp kgl_genomics/kgl_database/kgl_variant_db_population.cpp)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )

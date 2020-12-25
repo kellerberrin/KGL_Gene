@@ -193,7 +193,7 @@ std::shared_ptr<kgl::UnphasedPopulation> kgl::GenomePhasing::filterClonal(const 
 }
 
 
-bool kgl::GenomePhasing::analyseCountStatistics(const VirtualContigOffset& unphased_vector, size_t& phase_index) {
+bool kgl::GenomePhasing::analyseCountStatistics(const VariantArray& unphased_vector, size_t& phase_index) {
 
   phase_index = 0;
   double proportion_alternate = 0.0;

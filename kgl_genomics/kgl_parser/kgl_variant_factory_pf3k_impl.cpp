@@ -286,7 +286,7 @@ void kgl::Pf3kVCFImpl::setupPopulationStructure(const std::shared_ptr<const Geno
 
   for (auto genome_id : getGenomeNames())  {
 
-    std::optional<std::shared_ptr<GenomeVariant>> genome_opt = unphased_population_ptr_->getCreateGenome(genome_id);
+    std::optional<std::shared_ptr<GenomeVariantArray>> genome_opt = unphased_population_ptr_->getCreateGenome(genome_id);
     if (not genome_opt) {
       // Terminate runtime.
       ExecEnv::log().critical("Could not create genome: {} in the unphased population", genome_id);

@@ -43,9 +43,10 @@ protected:
 };
 
 // General unphased population.
-using ContigVariant = ContigOffsetVariant<UnphasedContigListOffset>;
-using GenomeVariant = GenomeVariantArray<ContigVariant>;
-using UnphasedPopulation = PopulationVariant<GenomeVariant, UnphasedBase>;
+using ContigVariant = ContigOffsetVariant;
+using DiploidContig = ContigOffsetVariant;
+using GenomeVariant = ContigOffsetVariant;
+using UnphasedPopulation = PopulationVariant<UnphasedBase>;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -71,14 +72,13 @@ protected:
 
 
 // Haploid.
-using HaploidContig = ContigOffsetVariant<HaploidOffset>;
-using HaploidGenome = GenomeVariantArray<HaploidContig>;
-using HaploidPopulation = PopulationVariant<HaploidGenome, HaploidBase>;
+using HaploidPopulation = PopulationVariant<HaploidBase>;
 
 // Used by mutation analytics.
 // todo: Add templates to the mutation analytics classes
 using PhasedPopulation = HaploidPopulation;
-using PhasedGenome = HaploidGenome;
+using PhasedGenome = GenomeVariantArray;
+using HaploidGenome = GenomeVariantArray;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -104,9 +104,7 @@ protected:
 
 
 // Diploid.
-using DiploidContig = ContigOffsetVariant<DiploidOffset>;
-using DiploidGenome = GenomeVariantArray<DiploidContig>;
-using DiploidPopulation = PopulationVariant<DiploidGenome, DiploidBase>;
+using DiploidPopulation = PopulationVariant<DiploidBase>;
 
 
 }   // end namespace

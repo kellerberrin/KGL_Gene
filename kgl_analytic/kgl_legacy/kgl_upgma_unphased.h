@@ -20,7 +20,7 @@ class UPGMAUnphasedDistance : public VirtualDistanceNode {
 
 public:
 
-  UPGMAUnphasedDistance(std::shared_ptr<const GenomeVariant> genome_variant_ptr) : genome_variant_ptr_(genome_variant_ptr) {}
+  UPGMAUnphasedDistance(std::shared_ptr<const GenomeVariantArray> genome_variant_ptr) : genome_variant_ptr_(genome_variant_ptr) {}
   UPGMAUnphasedDistance(const UPGMAUnphasedDistance&) = default;
   ~UPGMAUnphasedDistance() override = default;
 
@@ -34,7 +34,7 @@ private:
 
 
 
-  std::shared_ptr<const GenomeVariant> genome_variant_ptr_;
+  std::shared_ptr<const GenomeVariantArray> genome_variant_ptr_;
 
 };
 

@@ -66,12 +66,9 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase>
     std::shared_ptr<UnphasedPopulation> unphased_population = std::dynamic_pointer_cast<UnphasedPopulation>(non_const_data_ptr);
     if (unphased_population) {
 
-      size_t count_all = unphased_population->variantCount();
-      // Only check variants that have passed all VCF filters.
-      unphased_population->inSituFilter(SNPFilter());
-      size_t count_passed = unphased_population->variantCount();
+      auto filter_count = unphased_population->inSituFilter(SNPFilter());
       ExecEnv::log().info("Unphased Population: {}, total variants: {}, SNP variants: {}",
-                          unphased_population->populationId(), count_all, count_passed);
+                          unphased_population->populationId(), filter_count.first, filter_count.second);
 
 //      ExecEnv::log().info("Verifying Unphased 'Pass' Population: {} for duplicate variants", unphased_passed->populationId());
 //      VerifyDuplicates verify_duplicates;

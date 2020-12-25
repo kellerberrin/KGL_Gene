@@ -59,7 +59,7 @@ void kgl::ExecuteInbreedingAnalysis::createUnphased() {
   if (diploid_population_ and not unphased_population_) {
 
     ExecEnv::log().info("ExecuteInbreedingAnalysis::processDiploid; Creating unique unphased population using 1000 Genomes.");
-    std::shared_ptr<GenomeVariant> unphased_genome_ptr = diploid_population_->uniqueUnphasedGenome<GenomeVariant>();
+    std::shared_ptr<GenomeVariantArray> unphased_genome_ptr = diploid_population_->uniqueUnphasedGenome();
     std::shared_ptr<UnphasedPopulation> unphased_unique_ptr = std::make_shared<UnphasedPopulation>(diploid_population_->populationId());
     unphased_unique_ptr->addGenome(unphased_genome_ptr);
     ExecEnv::log().info("ExecuteInbreedingAnalysis::processDiploid; Created unique unphased population, variant count: {}.", unphased_unique_ptr->variantCount());
