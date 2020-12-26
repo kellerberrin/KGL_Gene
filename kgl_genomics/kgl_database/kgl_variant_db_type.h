@@ -44,12 +44,12 @@ enum class ParserTypeEnum { DiploidPhased,
                             PedGenome1000};
 
 // The conceptual structure of the genetic information.
-enum class DataStructureEnum { DiploidPhased,   // Phased Diploid Genome1000 only (PopulationVariant)
-                               DiploidUnphased,  // Unphased Diploid GnomadGenome3_1 (PopulationVariant)
-                               UnphasedMonoGenome, // Genomic data that contains allele information (PopulationVariant)
+enum class DataStructureEnum { DiploidPhased,   // Phased Diploid Genome1000 only (PopulationDB)
+                               DiploidUnphased,  // Unphased Diploid GnomadGenome3_1 (PopulationDB)
+                               UnphasedMonoGenome, // Genomic data that contains allele information (PopulationDB)
                                PedGenome1000};  // Additional data to complement the Genome1000 data. (GenomePEDData)
 
-// The actual C++ implementation of the data type. Used for casting from the DataObjectBase class.
+// The actual C++ implementation of the data type. Used for casting from the DataDB class.
 enum class DataImplEnum { PopulationVariant,  GenomePEDData };
 
 
@@ -72,17 +72,17 @@ struct DataCharacteristic {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Information about data files (populations) returned from the data parsers.
+// Base class, information about data files (populations) returned from the data parsers.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class DataObjectBase {
+class DataDB {
 
 public:
 
-  DataObjectBase(std::string data_identifier, DataSourceEnum data_source) : data_identifier_(std::move(data_identifier)),
-                                                                            data_source_(data_source) {}
-  virtual ~DataObjectBase() = default;
+  DataDB(std::string data_identifier, DataSourceEnum data_source) : data_identifier_(std::move(data_identifier)),
+                                                                    data_source_(data_source) {}
+  virtual ~DataDB() = default;
 
   [[nodiscard]] const std::string& fileId() const { return data_identifier_; }
   [[nodiscard]] DataSourceEnum dataSource() const { return data_source_; }
@@ -95,7 +95,7 @@ public:
     }
 
     // Should never happen.
-    ExecEnv::log().critical("DataObjectBase::dataCharacteristic; critical error unknown population type, program terminates.");
+    ExecEnv::log().critical("DataDB::dataCharacteristic; critical error unknown population type, program terminates.");
     return data_characteristics_[0];
 
   }
@@ -129,7 +129,7 @@ private:
 
 // Data type characteristics vector.
 // Additional data file types must be added here.
-inline const std::vector<DataCharacteristic>  DataObjectBase::data_characteristics_ = {
+inline const std::vector<DataCharacteristic>  DataDB::data_characteristics_ = {
 
     { "Genome1000", DataSourceEnum::Genome1000, ParserTypeEnum::DiploidPhased, DataStructureEnum::DiploidPhased, DataImplEnum::PopulationVariant},
     { "GnomadGenome3_1", DataSourceEnum::GnomadGenome3_1, ParserTypeEnum::DiploidGnomad, DataStructureEnum::DiploidUnphased, DataImplEnum::PopulationVariant },

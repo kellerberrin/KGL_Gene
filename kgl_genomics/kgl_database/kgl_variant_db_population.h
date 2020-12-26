@@ -2,8 +2,8 @@
 // Created by kellerberrin on 13/08/18.
 //
 
-#ifndef KGL_VARIANT_DB_UNPHASED_POPULATION_H
-#define KGL_VARIANT_DB_UNPHASED_POPULATION_H
+#ifndef KGL_VARIANT_DB_POPULATION_H
+#define KGL_VARIANT_DB_POPULATION_H
 
 
 #include "kgl_variant_db_genome.h"
@@ -20,45 +20,47 @@
 namespace kellerberrin::genome {   //  organization::project
 
 
-
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// An internal parser variant object that holds variants until they can be phased.
-// This object hold variants for a population.
+// The population level contains genomes, which in turn contain contigs (chromosomes),
+// which turn contains offsets, which in turn contain an array of variants.
+// The DataDB contains further information; phased or unphased, diploid or haploid etc, etc.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using VariantGenomeMap = std::map<ContigId_t, std::shared_ptr<GenomeVariantArray>>;
+using GenomeDBMap = std::map<GenomeId_t, std::shared_ptr<GenomeDB>>;
 
-class PopulationVariant : public DataObjectBase {
+class PopulationDB : public DataDB {
 
 public:
 
-  explicit PopulationVariant(const PopulationId_t& population_id, DataSourceEnum data_source) : DataObjectBase(population_id, data_source) {}
-  PopulationVariant(const PopulationVariant&) = delete; // Use deep copy.
-  ~PopulationVariant() override = default;
+  explicit PopulationDB(const PopulationId_t& population_id, DataSourceEnum data_source) : DataDB(population_id, data_source) {}
+  PopulationDB(const PopulationDB&) = delete; // Use deep copy.
+  ~PopulationDB() override { clear(); }  // Experimental, may be quicker than relying on smart pointer reference counting.
 
   // Alias fileId().
-  const std::string& populationId() const { return DataObjectBase::fileId(); }
+  const std::string& populationId() const { return DataDB::fileId(); }
 
-  PopulationVariant& operator=(const PopulationVariant&) = delete; // Use deep copy.
+  PopulationDB& operator=(const PopulationDB&) = delete; // Use deep copy.
 
   // Use this to copy the object. Just the trivial 'TrueFilter'.
-  [[nodiscard]] std::shared_ptr<PopulationVariant> deepCopy() const { return filterVariants(TrueFilter()); }
+  [[nodiscard]] std::shared_ptr<PopulationDB> deepCopy() const { return filterVariants(TrueFilter()); }
+
+  // Use this to empty the object. Just the trivial 'FalseFilter'.
+  std::pair<size_t, size_t> clear() { return inSituFilter(FalseFilter()); }
 
   // Create the genome variant if it does not exist.
-  [[nodiscard]] std::optional<std::shared_ptr<GenomeVariantArray>> getCreateGenome(const GenomeId_t& genome_id);
+  [[nodiscard]] std::optional<std::shared_ptr<GenomeDB>> getCreateGenome(const GenomeId_t& genome_id);
 
   // Retrieve a genome
-  [[nodiscard]] std::optional<std::shared_ptr<GenomeVariantArray>> getGenome(const GenomeId_t& genome_id) const;
+  [[nodiscard]] std::optional<std::shared_ptr<GenomeDB>> getGenome(const GenomeId_t& genome_id) const;
 
+  // Total variants held in this population, not unique variants.
   [[nodiscard]] size_t variantCount() const;
 
-  // Creates a copy of the filtered population database.
+  // Creates a filtered copy of the population database.
   // We can multi-thread because smart pointer reference counting (only) is thread safe.
-  [[nodiscard]] std::shared_ptr<PopulationVariant> filterVariants(const VariantFilter& filter) const;
+  [[nodiscard]] std::shared_ptr<PopulationDB> filterVariants(const VariantFilter& filter) const;
 
   // Filters the actual (this) population database, multi-threaded and more efficient for large databases.
   // We can multi-thread because smart pointer reference counting (only) is thread safe.
@@ -66,11 +68,11 @@ public:
   // The second integer is the number variants that remain after filtering.
   std::pair<size_t, size_t> inSituFilter(const VariantFilter& filter);
 
-  [[nodiscard]] const VariantGenomeMap& getMap() const { return genome_map_; }
+  // Return the underlying genome map.
+  [[nodiscard]] const GenomeDBMap& getMap() const { return genome_map_; }
 
-  void clear() { genome_map_.clear(); }
-
-  bool addGenome(const std::shared_ptr<GenomeVariantArray>& genome);
+  // Unconditionally adds a genome to the population, returns false if the genome already exists.
+  bool addGenome(const std::shared_ptr<GenomeDB>& genome);
 
   // Unconditionally add a variant to the population.
   // This function is thread safe for concurrent updates.
@@ -79,27 +81,27 @@ public:
                                  const std::vector<GenomeId_t>& genome_vector);
 
   // unconditionally merge (retains duplicates) genomes and variants into this population.
-  [[nodiscard]] size_t mergePopulation(const std::shared_ptr<const PopulationVariant>& merge_population);
+  [[nodiscard]] size_t mergePopulation(const std::shared_ptr<const PopulationDB>& merge_population);
   // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
   // The second integer is the number variants that pass inspection by comparison to the reference genome.
   [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const GenomeReference>& genome_db) const;
   // Compress a population into a single genome. Done when generating aggregate variant statistics for a population.
-  [[nodiscard]] std::shared_ptr<GenomeVariantArray> compressPopulation() const;
+  [[nodiscard]] std::shared_ptr<GenomeDB> compressPopulation() const;
   // Compress a population into a single genome of unique (only) variants. Removes any variant phasing information.
   // Used to convert a Diploid/Haploid population to an unphased single genome. Source populations are unchanged.
-  [[nodiscard]] std::shared_ptr<GenomeVariantArray> uniqueUnphasedGenome() const;
+  [[nodiscard]] std::shared_ptr<GenomeDB> uniqueUnphasedGenome() const;
   // Get the Info header, get the field header object from the first variant in the population.
   // Careful, this implicitly assumes that all variants in the population have the same DataMemoryBlock this only true
   // Of populations generated by a single VCF file.
   [[nodiscard]] std::optional<std::shared_ptr<const InfoEvidenceHeader>> getVCFInfoEvidenceHeader() const;
-  // Processes all variants in the population with class Obj and Func = &Obj::objFunc(const shared_ptr<const Variant>&)
+  // Utility function, processes all variants in the population with class Obj and Func = &Obj::objFunc(const shared_ptr<const Variant>&)
   template<class Obj, typename Func> bool processAll(Obj& object, Func objFunc) const;
   // Create a population of unique variants. All duplicate variants are removed.
-  [[nodiscard]] std::shared_ptr<PopulationVariant> uniqueVariantPopulation() const;
+  [[nodiscard]] std::shared_ptr<PopulationDB> uniqueVariantPopulation() const;
 
 private:
 
-  VariantGenomeMap genome_map_;
+  GenomeDBMap genome_map_;
   // mutex to lock the structure for multiple thread access by parsers.
   mutable std::mutex add_variant_mutex_;
 
@@ -108,7 +110,7 @@ private:
 // General purpose population processing template.
 // Processes all variants in the population with class Obj and Func = &(bool Obj::objFunc(const std::shared_ptr<const Variant>))
 template<class Obj, typename Func>
-bool PopulationVariant::processAll(Obj& object, Func objFunc)  const {
+bool PopulationDB::processAll(Obj& object, Func objFunc)  const {
 
   for (auto const& [genome, genome_ptr] : getMap()) {
 
@@ -131,4 +133,4 @@ bool PopulationVariant::processAll(Obj& object, Func objFunc)  const {
 
 
 
-#endif //KGL_VARIANT_DB_UNPHASED_POPULATION_H
+#endif //KGL_VARIANT_DB_POPULATION_H

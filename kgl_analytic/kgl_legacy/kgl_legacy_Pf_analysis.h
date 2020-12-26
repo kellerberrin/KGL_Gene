@@ -30,11 +30,11 @@ using AnalysisMap = std::map<std::string, AnalysisFuncPtr>;
 
   PhylogeneticAnalysis(const RuntimeProperties& runtime_options,
                        std::shared_ptr<const GenomeCollection> genome_collection_ptr,
-                       std::shared_ptr<const PopulationVariant> unphased_population_ptr,
-                       std::shared_ptr<const PopulationVariant> population_ptr) :  runtime_options_(runtime_options),
-                                                                                  genome_collection_ptr_(genome_collection_ptr),
-                                                                                  unphased_population_ptr_(unphased_population_ptr),
-                                                                                  population_ptr_(population_ptr) {
+                       std::shared_ptr<const PopulationDB> unphased_population_ptr,
+                       std::shared_ptr<const PopulationDB> population_ptr) : runtime_options_(runtime_options),
+                                                                             genome_collection_ptr_(genome_collection_ptr),
+                                                                             unphased_population_ptr_(unphased_population_ptr),
+                                                                             population_ptr_(population_ptr) {
 
     analysis_map_[ANALYZE_INTERVAL_] = &PhylogeneticAnalysis::performInterval;
     analysis_map_[ANALYZE_SEQUENCES_] = &PhylogeneticAnalysis::performSequence;
@@ -67,9 +67,9 @@ private:
   // Analysis data and options.
   const RuntimeProperties& runtime_options_;
   std::shared_ptr<const GenomeCollection> genome_collection_ptr_;
-  std::shared_ptr<const PopulationVariant> unphased_population_ptr_;
-  std::shared_ptr<const PopulationVariant> population_ptr_;
-  std::shared_ptr<const PopulationVariant> reference_genome_ptr_;
+  std::shared_ptr<const PopulationDB> unphased_population_ptr_;
+  std::shared_ptr<const PopulationDB> population_ptr_;
+  std::shared_ptr<const PopulationDB> reference_genome_ptr_;
 
   // Analytic types.
   static constexpr const char* ANALYZE_INTERVAL_ = "INTERVAL";

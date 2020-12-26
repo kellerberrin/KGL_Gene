@@ -150,7 +150,7 @@ public:
                                          std::shared_ptr<const GenomeCollection> reference_genomes) override;
 
   // Perform the genetic analysis per iteration.
-  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataObjectBase> data_base_ptr) override;
+  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataDB> data_base_ptr) override;
 
   // Perform the genetic analysis per iteration
   [[nodiscard]] bool iterationAnalysis() override { return true; }
@@ -178,7 +178,7 @@ private:
 
   [[nodiscard]] bool getParameters(const RuntimeParameterMap& named_parameters);
   void setupIntervalStructure(std::shared_ptr<const GenomeReference> genome);
-  [[nodiscard]] bool variantIntervalCount(std::shared_ptr<const PopulationVariant> population_ptr);
+  [[nodiscard]] bool variantIntervalCount(std::shared_ptr<const PopulationDB> population_ptr);
   [[nodiscard]] bool writeData( std::shared_ptr<const GenomeReference> genome_db, bool display_sequence, std::ostream& output, char delimiter) const;
   [[nodiscard]] bool writeHeader(std::ostream& output, char delimiter, bool display_sequence) const;
   [[nodiscard]] bool writeResults( std::shared_ptr<const GenomeReference> genome_db,

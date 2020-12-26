@@ -14,8 +14,8 @@ namespace kgl = kellerberrin::genome;
 
 // Perform the genetic analysis per iteration.
 bool kgl::ExecuteInbreedingAnalysis::executeAnalysis(std::shared_ptr<const GenomeReference> genome_GRCh38,
-                                                     std::shared_ptr<const PopulationVariant> diploid_population,
-                                                     std::shared_ptr<const PopulationVariant> unphased_population,
+                                                     std::shared_ptr<const PopulationDB> diploid_population,
+                                                     std::shared_ptr<const PopulationDB> unphased_population,
                                                      std::shared_ptr<const GenomePEDData> ped_data) {
 
   genome_GRCh38_ = std::move(genome_GRCh38);
@@ -59,9 +59,9 @@ void kgl::ExecuteInbreedingAnalysis::createUnphased() {
   if (diploid_population_ and not unphased_population_) {
 
     ExecEnv::log().info("ExecuteInbreedingAnalysis::processDiploid; Creating unique unphased population using 1000 Genomes.");
-    std::shared_ptr<GenomeVariantArray> unphased_genome_ptr = diploid_population_->uniqueUnphasedGenome();
-    std::shared_ptr<PopulationVariant> unphased_unique_ptr = std::make_shared<PopulationVariant>(diploid_population_->populationId(),
-                                                                                                 diploid_population_->dataSource());
+    std::shared_ptr<GenomeDB> unphased_genome_ptr = diploid_population_->uniqueUnphasedGenome();
+    std::shared_ptr<PopulationDB> unphased_unique_ptr = std::make_shared<PopulationDB>(diploid_population_->populationId(),
+                                                                                       diploid_population_->dataSource());
     unphased_unique_ptr->addGenome(unphased_genome_ptr);
     ExecEnv::log().info("ExecuteInbreedingAnalysis::processDiploid; Created unique unphased population, variant count: {}.", unphased_unique_ptr->variantCount());
     unphased_population_ = unphased_unique_ptr;
@@ -89,7 +89,7 @@ bool kgl::ExecuteInbreedingAnalysis::processDiploid() {
   InbreedingParameters parameters;
   parameters.lociiArguments().minAlleleFrequency(lower_allele_frequency);
   parameters.lociiArguments().maxAlleleFrequency(upper_allele_frequency);
-  parameters.inbreedingAlgorthim(InbreedingCalculation::RITLAND_LOCUS_F);
+  parameters.inbreedingAlgorthim(InbreedingCalculation::LOGLIKELIHOOD_F);
   parameters.lociiArguments().frequencySource(FrequencyDatabaseRead::alleleFrequencySource(unphased_population_));
   parameters.lociiArguments().lowerOffset(lower_window);
   parameters.lociiArguments().upperOffset(upper_window);
@@ -114,17 +114,17 @@ bool kgl::ExecuteInbreedingAnalysis::processDiploid() {
 bool kgl::ExecuteInbreedingAnalysis::processSynthetic() {
 
   // Setup the analysis parameters.
-  size_t locii_count = 3000;
-  static const ContigOffset_t sampling_distance = 0;
-  static const ContigOffset_t lower_window = 115000000;
-  static const ContigOffset_t upper_window = 175000000;
+  size_t locii_count = 10000;
+  static const ContigOffset_t sampling_distance = 10000;
+  static const ContigOffset_t lower_window = 0;
+  static const ContigOffset_t upper_window = 1000000000;
   static const double upper_allele_frequency = 1.0;
   static const double lower_allele_frequency = 0.2;
 
   InbreedingParameters parameters;
   parameters.lociiArguments().minAlleleFrequency(lower_allele_frequency);
   parameters.lociiArguments().maxAlleleFrequency(upper_allele_frequency);
-  parameters.inbreedingAlgorthim(InbreedingCalculation::LOGLIKELIHOOD_F);
+  parameters.inbreedingAlgorthim(InbreedingCalculation::RITLAND_LOCUS_F);
   parameters.lociiArguments().frequencySource(FrequencyDatabaseRead::alleleFrequencySource(unphased_population_));
   parameters.lociiArguments().lowerOffset(lower_window);
   parameters.lociiArguments().upperOffset(upper_window);

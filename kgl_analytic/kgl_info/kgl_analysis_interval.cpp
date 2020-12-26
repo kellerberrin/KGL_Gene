@@ -210,11 +210,11 @@ bool kgl::IntervalAnalysis::initializeAnalysis( const std::string& work_director
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::IntervalAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> data_base_ptr) {
+bool kgl::IntervalAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_base_ptr) {
 
 
   // Superclass the population
-  std::shared_ptr<const PopulationVariant> population = std::dynamic_pointer_cast<const PopulationVariant>(data_base_ptr);
+  std::shared_ptr<const PopulationDB> population = std::dynamic_pointer_cast<const PopulationDB>(data_base_ptr);
 
   if (not population) {
 
@@ -327,11 +327,11 @@ void kgl::IntervalAnalysis::setupIntervalStructure(std::shared_ptr<const GenomeR
 }
 
 
-bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const PopulationVariant> population_ptr) {
+bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const PopulationDB> population_ptr) {
 
    // We are profiling variants against a reference genome. Therefore we need to compress the population of variants
   // into a single genome.
-  std::shared_ptr<const GenomeVariantArray> compressed_genome = population_ptr->compressPopulation();
+  std::shared_ptr<const GenomeDB> compressed_genome = population_ptr->compressPopulation();
 
   size_t variant_count{0};
 

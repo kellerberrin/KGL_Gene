@@ -26,7 +26,7 @@ class GrchVCFImpl : public VCFReaderMT {
 
 public:
 
-  GrchVCFImpl(std::shared_ptr<PopulationVariant> population_ptr,
+  GrchVCFImpl(std::shared_ptr<PopulationDB> population_ptr,
               std::shared_ptr<const GenomeReference> genome_db_ptr,
               const ContigAliasMap& contig_alias_map,
               const EvidenceInfoSet& evidence_map) : unphased_population_ptr_(std::move(population_ptr)),
@@ -49,7 +49,7 @@ private:
   constexpr static const char MULIPLE_ALT_SEPARATOR_{','};
   constexpr static const char* PASSED_FILTERS_{"PASS"};
 
-  const std::shared_ptr<PopulationVariant> unphased_population_ptr_;   // Un-phased variants.
+  const std::shared_ptr<PopulationDB> unphased_population_ptr_;   // Un-phased variants.
   std::shared_ptr<const GenomeReference> genome_db_ptr_;
   ContigAliasMap contig_alias_map_;
   EvidenceFactory evidence_factory_;

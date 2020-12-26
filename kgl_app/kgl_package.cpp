@@ -44,7 +44,7 @@ void kgl::ExecutePackage::executeActive() const {
 
       for (auto const& data_file : iterative_files) {
 
-        std::shared_ptr<DataObjectBase> read_data_object = readDataFiles(package, reference_genome_ptr, data_file);
+        std::shared_ptr<DataDB> read_data_object = readDataFiles(package, reference_genome_ptr, data_file);
 
         if (not package_analysis_.fileReadAnalysis(read_data_object)) {
 
@@ -166,7 +166,7 @@ std::unique_ptr<kgl::GenomeCollection> kgl::ExecutePackage::loadReferenceGenomes
 }
 
 
-std::shared_ptr<kgl::DataObjectBase>
+std::shared_ptr<kgl::DataDB>
 kgl::ExecutePackage::readDataFiles(const RuntimePackage& package,
                                    std::shared_ptr<const GenomeCollection> reference_genomes,
                                    const std::string& data_file) const {

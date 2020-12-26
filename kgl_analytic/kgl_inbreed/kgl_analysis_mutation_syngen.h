@@ -34,12 +34,12 @@ public:
 
   // Create a synthetic population with known inbreeding characteristics
   // Used to test and calibrate the developed inbreeding algorithms.
-  [[nodiscard]] static std::shared_ptr<const PopulationVariant>
+  [[nodiscard]] static std::shared_ptr<const PopulationDB>
   generateSyntheticPopulation( double lower_inbreeding,
                                double upper_inbreeding,
                                double step_inbreeding,
                                const std::string& super_population,
-                               const ContigOffsetVariant& locus_list,
+                               const ContigDB& locus_list,
                                const LociiVectorArguments& arguments);
 
 

@@ -61,7 +61,7 @@ class VariantClassifier {
 
 public:
 
-  explicit VariantClassifier(std::shared_ptr<const PopulationVariant> vcf_population_ptr);
+  explicit VariantClassifier(std::shared_ptr<const PopulationDB> vcf_population_ptr);
   ~VariantClassifier() = default;
 
   const VariantMap& getMap() const { return variant_map_; }

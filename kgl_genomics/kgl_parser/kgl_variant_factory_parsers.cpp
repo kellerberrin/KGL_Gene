@@ -20,7 +20,7 @@ namespace kgl = kellerberrin::genome;
 //
 
 // Read and parse the specified ancestry file.
-std::shared_ptr<kgl::DataObjectBase> kgl::ParserSelection::readPEDAncestry(std::shared_ptr<BaseFileInfo> file_info, DataSourceEnum data_source) {
+std::shared_ptr<kgl::DataDB> kgl::ParserSelection::readPEDAncestry(std::shared_ptr<BaseFileInfo> file_info, DataSourceEnum data_source) {
 
   auto ped_file_info = std::dynamic_pointer_cast<PedAncestryInfo>(file_info);
 
@@ -44,12 +44,12 @@ std::shared_ptr<kgl::DataObjectBase> kgl::ParserSelection::readPEDAncestry(std::
 //
 
 
-std::shared_ptr<kgl::DataObjectBase> kgl::ParserSelection::parseData( std::shared_ptr<const GenomeCollection> reference_genomes,
-                                                                      std::shared_ptr<BaseFileInfo> file_info_ptr,
-                                                                      const VariantEvidenceMap& evidence_map,
-                                                                      const ContigAliasMap& contig_alias) {
+std::shared_ptr<kgl::DataDB> kgl::ParserSelection::parseData(std::shared_ptr<const GenomeCollection> reference_genomes,
+                                                             std::shared_ptr<BaseFileInfo> file_info_ptr,
+                                                             const VariantEvidenceMap& evidence_map,
+                                                             const ContigAliasMap& contig_alias) {
 
-  auto file_characteristic = DataObjectBase::findCharacteristic(file_info_ptr->fileType());
+  auto file_characteristic = DataDB::findCharacteristic(file_info_ptr->fileType());
 
   if (not file_characteristic) {
 

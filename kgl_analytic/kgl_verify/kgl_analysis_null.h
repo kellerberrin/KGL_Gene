@@ -32,7 +32,7 @@ public:
 
 
   // Perform the genetic analysis per VCF file
-  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataObjectBase> data_object_ptr) override;
+  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataDB> data_object_ptr) override;
 
   // Perform the genetic analysis per iteration
   [[nodiscard]] bool iterationAnalysis() override;

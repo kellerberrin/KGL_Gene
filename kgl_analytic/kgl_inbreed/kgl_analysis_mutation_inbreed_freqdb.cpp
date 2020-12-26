@@ -11,7 +11,7 @@ namespace kgl = kellerberrin::genome;
 /// todo: this frequency source is based on VCF file names, consider stamping VCF files with unique identifers.
 // Required because different allele frequency sources have
 // different allele frequency codes for super populations.
-kgl::FrequencyDatabaseSource kgl::FrequencyDatabaseRead::alleleFrequencySource(const std::shared_ptr<const PopulationVariant>& unphased_population) {
+kgl::FrequencyDatabaseSource kgl::FrequencyDatabaseRead::alleleFrequencySource(const std::shared_ptr<const PopulationDB>& unphased_population) {
 
   static const std::string gnomad_3_1_fragment = "v3.1";
   static const std::string gnomad_2_1_fragment = "r2.1.1";

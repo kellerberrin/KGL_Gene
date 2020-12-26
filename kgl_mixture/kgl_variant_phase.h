@@ -28,18 +28,18 @@ public:
   explicit GenomePhasing() = default;
   ~GenomePhasing() = default;
 
-  static std::shared_ptr<PopulationVariant> filterClonal( const std::string& phase_file,
-                                                          std::shared_ptr<const PopulationVariant> unphased_population_ptr);
+  static std::shared_ptr<PopulationDB> filterClonal(const std::string& phase_file,
+                                                    std::shared_ptr<const PopulationDB> unphased_population_ptr);
 
   // A simple phasing strategy that removes all conflicting variants.
   static bool haploidPhasing(size_t vcf_ploidy,
-                             const std::shared_ptr<const PopulationVariant>& vcf_population_ptr,
-                             const std::shared_ptr<PopulationVariant>& haploid_population);
+                             const std::shared_ptr<const PopulationDB>& vcf_population_ptr,
+                             const std::shared_ptr<PopulationDB>& haploid_population);
 
 private:
 
   // Returns false if no heterozygous variant selected, else the selected variant return as an index to the vector.
-  static bool analyseCountStatistics(const VariantArray& unphased_vector, size_t& phase_index);
+  static bool analyseCountStatistics(const OffsetDB& unphased_vector, size_t& phase_index);
 
   // The proportion required for a heterozygous variant to be accepted as the haploid variant.
   constexpr static const double HETEROZYGOUS_PROPORTION_ = 0.9;

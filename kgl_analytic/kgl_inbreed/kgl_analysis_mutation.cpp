@@ -55,7 +55,7 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 }
 
 // This function superclasses the data objects and stores them for further use.
-bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> data_object_ptr) {
+bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_object_ptr) {
 
   ExecEnv::log().info("Analysis: {}, begin processing data file", ident(), data_object_ptr->fileId());
 
@@ -64,7 +64,7 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBas
   if (file_characteristic.data_structure == DataStructureEnum::DiploidPhased
       or file_characteristic.data_structure == DataStructureEnum::DiploidUnphased) {
 
-    diploid_population_ = std::dynamic_pointer_cast<const PopulationVariant>(data_object_ptr);
+    diploid_population_ = std::dynamic_pointer_cast<const PopulationDB>(data_object_ptr);
 
     if (diploid_population_) {
 
@@ -79,9 +79,9 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBas
 
   }
 
-  if (file_characteristic.data_structure == DataStructureEnum::DiploidUnphased) {
+  if (file_characteristic.data_structure == DataStructureEnum::UnphasedMonoGenome) {
 
-    unphased_population_  = std::dynamic_pointer_cast<const PopulationVariant>(data_object_ptr);
+    unphased_population_  = std::dynamic_pointer_cast<const PopulationDB>(data_object_ptr);
 
     if (not unphased_population_) {
 

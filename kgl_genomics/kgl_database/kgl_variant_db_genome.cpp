@@ -8,33 +8,12 @@ namespace kgl = kellerberrin::genome;
 
 
 
-
-// Use this to copy the object.
-std::shared_ptr<kgl::GenomeVariantArray> kgl::GenomeVariantArray::deepCopy() const {
-
-  std::shared_ptr<GenomeVariantArray> genome_copy(std::make_shared<GenomeVariantArray>(genomeId()));
-
-  for (auto const& [contig_id, contig_ptr] :  getMap()) {
-
-    if (not genome_copy->addContig(contig_ptr->deepCopy())) {
-
-      ExecEnv::log().critical("GenomeVariantArray::deepCopy(), Genome: {}, Unable to deepcopy Contig: {}", genomeId(), contig_id);
-
-    }
-
-  }
-
-  return genome_copy;
-
-}
-
-
 // unconditionally merge (retains duplicates) genomes and variants into this genome.
-size_t kgl::GenomeVariantArray::mergeGenome(const std::shared_ptr<const GenomeVariantArray>& merge_genome) {
+size_t kgl::GenomeDB::mergeGenome(const std::shared_ptr<const GenomeDB>& merge_genome) {
 
-  if (not merge_genome->processAll(*this, &GenomeVariantArray::addVariant)) {
+  if (not merge_genome->processAll(*this, &GenomeDB::addVariant)) {
 
-    ExecEnv::log().error("GenomeVariantArray::mergeGenome, problem merging genome: {} into genome: {}",
+    ExecEnv::log().error("GenomeDB::mergeGenome, problem merging genome: {} into genome: {}",
                          merge_genome->genomeId(), genomeId());
 
   }
@@ -44,19 +23,19 @@ size_t kgl::GenomeVariantArray::mergeGenome(const std::shared_ptr<const GenomeVa
 }
 
 
-bool kgl::GenomeVariantArray::addVariant(const std::shared_ptr<const Variant>& variant) {
+bool kgl::GenomeDB::addVariant(const std::shared_ptr<const Variant>& variant) {
 
   auto contig_opt = getCreateContig(variant->contigId());
   if (not contig_opt) {
 
-    ExecEnv::log().error("GenomeVariantArray::addVariant(), Genome: {} could not get or create Contig: {}", genomeId(), variant->contigId());
+    ExecEnv::log().error("GenomeDB::addVariant(), Genome: {} could not get or create Contig: {}", genomeId(), variant->contigId());
     return false;
 
   }
 
   if (not contig_opt.value()->addVariant(variant)) {
 
-    ExecEnv::log().error("GenomeVariantArray::addVariant(), Genome: {} could not add variant to Contig: {}", genomeId(), variant->contigId());
+    ExecEnv::log().error("GenomeDB::addVariant(), Genome: {} could not add variant to Contig: {}", genomeId(), variant->contigId());
     return false;
 
   }
@@ -65,19 +44,19 @@ bool kgl::GenomeVariantArray::addVariant(const std::shared_ptr<const Variant>& v
 
 }
 
-bool kgl::GenomeVariantArray::addUniqueUnphasedVariant(const std::shared_ptr<const Variant>& variant) {
+bool kgl::GenomeDB::addUniqueUnphasedVariant(const std::shared_ptr<const Variant>& variant) {
 
   auto contig_opt = getCreateContig(variant->contigId());
   if (not contig_opt) {
 
-    ExecEnv::log().error("GenomeVariantArray::addUniqueUnphasedVariant(), Genome: {} could not get or create Contig: {}", genomeId(), variant->contigId());
+    ExecEnv::log().error("GenomeDB::addUniqueUnphasedVariant(), Genome: {} could not get or create Contig: {}", genomeId(), variant->contigId());
     return false;
 
   }
 
   if (not contig_opt.value()->addUniqueUnphasedVariant(variant)) {
 
-    ExecEnv::log().error("GenomeVariantArray::addUniqueUnphasedVariant(), Genome: {} could not add variant to Contig: {}", genomeId(), variant->contigId());
+    ExecEnv::log().error("GenomeDB::addUniqueUnphasedVariant(), Genome: {} could not add variant to Contig: {}", genomeId(), variant->contigId());
     return false;
 
   }
@@ -87,7 +66,7 @@ bool kgl::GenomeVariantArray::addUniqueUnphasedVariant(const std::shared_ptr<con
 }
 
 
-std::optional<std::shared_ptr<kgl::ContigOffsetVariant>> kgl::GenomeVariantArray::getCreateContig(const ContigId_t& contig_id) {
+std::optional<std::shared_ptr<kgl::ContigDB>> kgl::GenomeDB::getCreateContig(const ContigId_t& contig_id) {
 
   // Lock this function to concurrent access.
   std::scoped_lock lock(add_variant_mutex_);
@@ -100,12 +79,12 @@ std::optional<std::shared_ptr<kgl::ContigOffsetVariant>> kgl::GenomeVariantArray
 
   } else {
 
-    auto contig_ptr = std::make_shared<ContigOffsetVariant>(contig_id);
+    auto contig_ptr = std::make_shared<ContigDB>(contig_id);
     auto insert_result = contig_map_.try_emplace(contig_id, contig_ptr);
 
     if (not insert_result.second) {
 
-      ExecEnv::log().error("GenomeVariantArray::getCreateContig(), Could not add contig: {} to genome : {}", contig_id, genomeId());
+      ExecEnv::log().error("GenomeDB::getCreateContig(), Could not add contig: {} to genome : {}", contig_id, genomeId());
       return std::nullopt;
 
     }
@@ -117,7 +96,7 @@ std::optional<std::shared_ptr<kgl::ContigOffsetVariant>> kgl::GenomeVariantArray
 }
 
 
-std::optional<std::shared_ptr<kgl::ContigOffsetVariant>> kgl::GenomeVariantArray::getContig(const ContigId_t& contig_id) {
+std::optional<std::shared_ptr<kgl::ContigDB>> kgl::GenomeDB::getContig(const ContigId_t& contig_id) {
 
   // Lock this function to concurrent access.
   std::scoped_lock lock(add_variant_mutex_);
@@ -136,7 +115,7 @@ std::optional<std::shared_ptr<kgl::ContigOffsetVariant>> kgl::GenomeVariantArray
 
 }
 
-std::optional<std::shared_ptr<const kgl::ContigOffsetVariant>> kgl::GenomeVariantArray::getContig(const ContigId_t& contig_id) const {
+std::optional<std::shared_ptr<const kgl::ContigDB>> kgl::GenomeDB::getContig(const ContigId_t& contig_id) const {
 
   auto result = contig_map_.find(contig_id);
 
@@ -153,7 +132,7 @@ std::optional<std::shared_ptr<const kgl::ContigOffsetVariant>> kgl::GenomeVarian
 }
 
 
-bool kgl::GenomeVariantArray::addContig(const std::shared_ptr<ContigOffsetVariant>& contig_ptr) {
+bool kgl::GenomeDB::addContig(const std::shared_ptr<ContigDB>& contig_ptr) {
 
   // Lock this function to concurrent access.
   std::scoped_lock lock(add_variant_mutex_);
@@ -162,7 +141,7 @@ bool kgl::GenomeVariantArray::addContig(const std::shared_ptr<ContigOffsetVarian
 
   if (not result.second) {
 
-    ExecEnv::log().error("GenomeVariantArray::addContig(); could not add contig: {} (duplicate) to the genome", contig_ptr->contigId());
+    ExecEnv::log().error("GenomeDB::addContig(); could not add contig: {} (duplicate) to the genome", contig_ptr->contigId());
 
   }
 
@@ -171,7 +150,7 @@ bool kgl::GenomeVariantArray::addContig(const std::shared_ptr<ContigOffsetVarian
 }
 
 
-size_t kgl::GenomeVariantArray::variantCount() const {
+size_t kgl::GenomeDB::variantCount() const {
 
   size_t variant_count = 0;
 
@@ -186,16 +165,16 @@ size_t kgl::GenomeVariantArray::variantCount() const {
 }
 
 
-std::shared_ptr<kgl::GenomeVariantArray> kgl::GenomeVariantArray::filterVariants(const VariantFilter& filter) const {
+std::shared_ptr<kgl::GenomeDB> kgl::GenomeDB::filterVariants(const VariantFilter& filter) const {
 
-  std::shared_ptr<GenomeVariantArray> filtered_genome_ptr(std::make_shared<GenomeVariantArray>(genomeId()));
+  std::shared_ptr<GenomeDB> filtered_genome_ptr(std::make_shared<GenomeDB>(genomeId()));
 
   for (const auto& [contig_id, contig_ptr] : getMap()) {
 
     auto filtered_contig = contig_ptr->filterVariants(filter);
     if (not filtered_genome_ptr->addContig(filtered_contig)) {
 
-      ExecEnv::log().error("GenomeVariantArray::filterVariants(), Genome: {}, Unable to inserted filtered Contig: {}", genomeId(), contig_id);
+      ExecEnv::log().error("GenomeDB::filterVariants(), Genome: {}, Unable to inserted filtered Contig: {}", genomeId(), contig_id);
 
     }
 
@@ -207,7 +186,7 @@ std::shared_ptr<kgl::GenomeVariantArray> kgl::GenomeVariantArray::filterVariants
 
 
 // Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
-std::pair<size_t, size_t> kgl::GenomeVariantArray::inSituFilter(const VariantFilter& filter) {
+std::pair<size_t, size_t> kgl::GenomeDB::inSituFilter(const VariantFilter& filter) {
 
   // Filter the contigs.
   std::pair<size_t, size_t> genome_count{0, 0};
@@ -236,7 +215,7 @@ std::pair<size_t, size_t> kgl::GenomeVariantArray::inSituFilter(const VariantFil
 
 // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
 // The second integer is the number variants that pass inspection by comparison to the genome database.
-std::pair<size_t, size_t> kgl::GenomeVariantArray::validate(const std::shared_ptr<const GenomeReference>& genome_db_ptr) const {
+std::pair<size_t, size_t> kgl::GenomeDB::validate(const std::shared_ptr<const GenomeReference>& genome_db_ptr) const {
 
   std::pair<size_t, size_t> genome_count{0, 0};
   for (auto const& [contig_id, contig_ptr] : getMap()) {
@@ -245,7 +224,7 @@ std::pair<size_t, size_t> kgl::GenomeVariantArray::validate(const std::shared_pt
 
     if (not contig_opt) {
 
-      ExecEnv::log().error("GenomeVariantArray::validate, No matching contig found in GenomeDatabase for Variant Contig: {}", contig_id);
+      ExecEnv::log().error("GenomeDB::validate, No matching contig found in GenomeDatabase for Variant Contig: {}", contig_id);
       continue;
 
     }
@@ -254,7 +233,7 @@ std::pair<size_t, size_t> kgl::GenomeVariantArray::validate(const std::shared_pt
 
     if (contig_count.first != contig_count.second) {
 
-      ExecEnv::log().warn("GenomeVariantArray::validate(), Genome: {} Validation Failed in Contig: {}, Total Variants: {} Validated: {}",
+      ExecEnv::log().warn("GenomeDB::validate(), Genome: {} Validation Failed in Contig: {}, Total Variants: {} Validated: {}",
                           genomeId(), contig_id, contig_count.first, contig_count.second);
 
     }
@@ -269,23 +248,23 @@ std::pair<size_t, size_t> kgl::GenomeVariantArray::validate(const std::shared_pt
 }
 
 
-bool kgl::GenomeVariantArray::getSortedVariants( ContigId_t contig_id,
-                                                 PhaseId_t phase,
-                                                 ContigOffset_t start,
-                                                 ContigOffset_t end,
-                                                 OffsetVariantMap &variant_map) const {
+bool kgl::GenomeDB::getSortedVariants(ContigId_t contig_id,
+                                      PhaseId_t phase,
+                                      ContigOffset_t start,
+                                      ContigOffset_t end,
+                                      OffsetVariantMap &variant_map) const {
 
 
   auto result = contig_map_.find(contig_id);
 
   if (result == contig_map_.end()) {
 
-    ExecEnv::log().error("Contig Id: {} not found in Genome Variant: {}", contig_id, genomeId());
+    ExecEnv::log().error("GenomeDB::getSortedVariants; Contig Id: {} not found in Genome Variant: {}", contig_id, genomeId());
     return false;
 
   }
 
-  std::shared_ptr<ContigOffsetVariant> contig_ptr = result->second;
+  std::shared_ptr<ContigDB> contig_ptr = result->second;
 
   return contig_ptr->getSortedVariants(phase, start, end, variant_map);
 

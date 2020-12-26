@@ -32,7 +32,7 @@ bool kgl::VerifyAnalysis::initializeAnalysis( const std::string& work_directory,
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> data_ptr) {
+bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr) {
 
   ExecEnv::log().info("VCF File Read for Analysis Id: {} called with Variant Population", ident());
 
@@ -41,7 +41,7 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase>
   // Check if we have a population.
   if (file_characteristic.data_implementation == DataImplEnum::PopulationVariant) {
 
-    std::shared_ptr<const PopulationVariant> population = std::dynamic_pointer_cast<const PopulationVariant>(data_ptr);
+    std::shared_ptr<const PopulationDB> population = std::dynamic_pointer_cast<const PopulationDB>(data_ptr);
 
     // If we have a mono genome file or phased diploid then we do not expect to see duplicate variants.
     // Note that a phased diploid population will have variants distinguished by phasing.
@@ -57,7 +57,7 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase>
     }
 
     // Apply some filters inSitu, note this modifies the population structure so we need to cast away const-ness
-    auto non_const_population = std::const_pointer_cast<PopulationVariant>(population);
+    auto non_const_population = std::const_pointer_cast<PopulationDB>(population);
 
     auto pass_results = non_const_population->inSituFilter(PassFilter());
     ExecEnv::log().info("Population: {}, total variants: {}, 'Pass' variants: {}",

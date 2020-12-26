@@ -52,9 +52,9 @@ private:
   [[nodiscard]] std::unique_ptr<GenomeCollection> loadReferenceGenomes(const RuntimePackage& package) const;
 
   // Load a specified Data file and return a population or ancestry.
-  [[nodiscard]] std::shared_ptr<DataObjectBase> readDataFiles(const RuntimePackage& package,
-                                                              std::shared_ptr<const GenomeCollection> reference_genomes,
-                                                              const std::string& data_file) const;
+  [[nodiscard]] std::shared_ptr<DataDB> readDataFiles(const RuntimePackage& package,
+                                                      std::shared_ptr<const GenomeCollection> reference_genomes,
+                                                      const std::string& data_file) const;
 
 
 

@@ -88,7 +88,7 @@ bool kgl::ApplicationAnalysis::compare5Prime(const ContigId_t& contig_id,
                                              const FeatureIdent_t& sequence_id,
                                              ContigSize_t region_size,
                                              const std::shared_ptr<const GenomeReference>& genome_db,
-                                             const std::shared_ptr<const GenomeVariantArray>& genome_variant,
+                                             const std::shared_ptr<const GenomeDB>& genome_variant,
                                              DNA5SequenceCoding& reference_sequence,
                                              DNA5SequenceCoding& mutant_sequence) {
 
@@ -161,7 +161,7 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
                                              const FeatureIdent_t& sequence_id,
                                              ContigSize_t region_size,
                                              const std::shared_ptr<const GenomeReference>& genome_db,
-                                             const std::shared_ptr<const GenomeVariantArray>& genome_variant,
+                                             const std::shared_ptr<const GenomeDB>& genome_variant,
                                              DNA5SequenceCoding& reference_sequence,
                                              DNA5SequenceCoding& mutant_sequence) {
 
@@ -234,7 +234,7 @@ bool kgl::ApplicationAnalysis::outputRegionCSV(const std::string &file_name,
                                                  std::shared_ptr<const DNASequenceDistance> dna_distance_metric,
                                                  std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
                                                  std::shared_ptr<const GenomeReference> genome_db,
-                                                 std::shared_ptr<const PopulationVariant> pop_variant_ptr) {
+                                                 std::shared_ptr<const PopulationDB> pop_variant_ptr) {
 
   const char CSV_delimiter = ',';
   // open the file.
@@ -328,7 +328,7 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
                                                     SequenceAnalysisType analysis_type,
                                                     std::shared_ptr<const CodingDNASequenceDistance> dna_distance_metric,
                                                     std::shared_ptr<const GenomeReference> genome_db,
-                                                    std::shared_ptr<const PopulationVariant> pop_variant_ptr) {
+                                                    std::shared_ptr<const PopulationDB> pop_variant_ptr) {
 
   const char CSV_delimiter = ',';
   // open the file.
@@ -530,7 +530,7 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
 bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_name,
                                                       std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
                                                       std::shared_ptr<const GenomeReference> genome_db,
-                                                      std::shared_ptr<const PopulationVariant> pop_variant_ptr) {
+                                                      std::shared_ptr<const PopulationDB> pop_variant_ptr) {
 
   const char CSV_delimiter = ',';
   // open the file.
@@ -715,7 +715,7 @@ bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_na
 
 
 std::string kgl::ApplicationAnalysis::outputSequenceHeader(char delimiter,
-                                                           std::shared_ptr<const PopulationVariant> pop_variant_ptr) {
+                                                           std::shared_ptr<const PopulationDB> pop_variant_ptr) {
 
   std::stringstream ss;
 
@@ -754,7 +754,7 @@ bool kgl::ApplicationAnalysis::outputAminoMutationCSV(const std::string &file_na
                                                  const FeatureIdent_t& gene_id,
                                                  const FeatureIdent_t& sequence_id,
                                                  std::shared_ptr<const GenomeReference> genome_db,
-                                                 std::shared_ptr<const PopulationVariant> pop_variant_ptr) {
+                                                 std::shared_ptr<const PopulationDB> pop_variant_ptr) {
 
   const char CSV_delimiter = ',';
   // open the file.
@@ -848,7 +848,7 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
                                                     const FeatureIdent_t& gene_id,
                                                     const FeatureIdent_t& sequence_id,
                                                     std::shared_ptr<const GenomeReference> genome_db,
-                                                    std::shared_ptr<const PopulationVariant> pop_variant_ptr,
+                                                    std::shared_ptr<const PopulationDB> pop_variant_ptr,
                                                     const GenomeAuxData& aux_Pf3k_data) {
 
   const char CSV_delimiter = ',';
@@ -1089,7 +1089,7 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
                                                      std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
                                                      std::shared_ptr<const CodingSequence> coding_sequence,
                                                      std::shared_ptr<const GenomeReference> genome_db,
-                                                     std::shared_ptr<const GenomeVariantArray> genome_variant) {
+                                                     std::shared_ptr<const GenomeDB> genome_variant) {
 
   std::string genome_id = genome_variant->genomeId();
   std::shared_ptr<const ContigReference> contig_ptr = coding_sequence->getGene()->contig();

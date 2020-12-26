@@ -30,7 +30,7 @@ class UPGMAProteinDistance : public VirtualDistanceNode {
 public:
 
   UPGMAProteinDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
-                       std::shared_ptr<const GenomeVariantArray> genome_variant_ptr,
+                       std::shared_ptr<const GenomeDB> genome_variant_ptr,
                        std::shared_ptr<const GenomeReference> genome_db_ptr,
                        const std::string& protein_family) : sequence_distance_(sequence_distance),
                                                             protein_family_(protein_family),
@@ -60,7 +60,7 @@ private:
 
   std::shared_ptr<const AminoSequenceDistance> sequence_distance_;
   std::string protein_family_;
-  std::shared_ptr<const GenomeVariantArray> genome_variant_ptr_;
+  std::shared_ptr<const GenomeDB> genome_variant_ptr_;
   std::shared_ptr<const GenomeReference> genome_db_ptr_;
   MutatedProteinMap mutated_proteins_;
 
@@ -85,7 +85,7 @@ class UPGMAGeneDistance : public VirtualDistanceNode {
 public:
 
   UPGMAGeneDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
-                    std::shared_ptr<const GenomeVariantArray> genome_variant_ptr,
+                    std::shared_ptr<const GenomeDB> genome_variant_ptr,
                     std::shared_ptr<const GenomeReference> genome_db_ptr,
                     std::shared_ptr<const GeneFeature> gene_ptr,
                     const std::string& protein_family) : sequence_distance_(sequence_distance),
@@ -121,7 +121,7 @@ protected:
   std::shared_ptr<const AminoSequenceDistance> sequence_distance_;
   AminoSequence mutated_protein_;
   std::string protein_family_;
-  std::shared_ptr<const GenomeVariantArray> genome_variant_ptr_;
+  std::shared_ptr<const GenomeDB> genome_variant_ptr_;
   std::shared_ptr<const GeneFeature> gene_ptr_;
   std::shared_ptr<const GenomeReference> genome_db_ptr_;
 
@@ -140,7 +140,7 @@ class UPGMAATP4Distance : public UPGMAGeneDistance {
 public:
 
   UPGMAATP4Distance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
-                         std::shared_ptr<const GenomeVariantArray> genome_variant_ptr,
+                         std::shared_ptr<const GenomeDB> genome_variant_ptr,
                          std::shared_ptr<const GenomeReference> genome_db_ptr,
                          std::shared_ptr<const GeneFeature> gene_ptr,
                          const std::string& protein_family) :  UPGMAGeneDistance(sequence_distance,

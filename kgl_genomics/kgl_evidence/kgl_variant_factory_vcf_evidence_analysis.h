@@ -67,7 +67,7 @@ public:
 
   static std::optional<std::unique_ptr<const VEPSubFieldEvidence>> getVepSubFields(const Variant& variant);
 
-  static void vepSubFieldValues( std::string vep_sub_field, const std::shared_ptr<const PopulationVariant>& population);
+  static void vepSubFieldValues( std::string vep_sub_field, const std::shared_ptr<const PopulationDB>& population);
 
 
 public:

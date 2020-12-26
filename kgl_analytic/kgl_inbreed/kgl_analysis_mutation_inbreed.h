@@ -30,22 +30,22 @@ public:
 
 
   // Analyze a presented diploid population for inbreeding.
-  static bool populationInbreeding( std::shared_ptr<const PopulationVariant> unphased_ptr,
-                                    const PopulationVariant& diploid_population,
+  static bool populationInbreeding( std::shared_ptr<const PopulationDB> unphased_ptr,
+                                    const PopulationDB& diploid_population,
                                     const GenomePEDData& ped_data,
                                     const InbreedingParameters& paramaters,
                                     InbreedingOutputResults& results);
 
 private:
 
-  [[nodiscard]] static ResultsMap populationInbreedingSample( std::shared_ptr<const PopulationVariant> unphased_ptr,
-                                                              const PopulationVariant& diploid_population,
+  [[nodiscard]] static ResultsMap populationInbreedingSample( std::shared_ptr<const PopulationDB> unphased_ptr,
+                                                              const PopulationDB& diploid_population,
                                                               const GenomePEDData& ped_data,
                                                               const InbreedingParameters& parameters);
 
   // Use a threadpool to calculate the inbreeding coefficients.
   [[nodiscard]] static ResultsMap processResults( const ContigLocusMap& contig_locus_map,
-                                                  const PopulationVariant& diploid_population,
+                                                  const PopulationDB& diploid_population,
                                                   const GenomePEDData& ped_data,
                                                   const InbreedingParameters& parameters);
 

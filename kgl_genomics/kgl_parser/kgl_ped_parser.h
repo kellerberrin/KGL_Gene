@@ -97,11 +97,11 @@ private:
 
 using PEDRecordMap = std::map<std::string, const PEDRecord>;
 
-class GenomePEDData : public DataObjectBase {
+class GenomePEDData : public DataDB {
 
 public:
 
-  explicit GenomePEDData(std::string ped_ident, DataSourceEnum data_source) : DataObjectBase(std::move(ped_ident), data_source) {}
+  explicit GenomePEDData(std::string ped_ident, DataSourceEnum data_source) : DataDB(std::move(ped_ident), data_source) {}
   ~GenomePEDData() override = default;
 
   bool addPEDRecord(const PEDRecord& record) {

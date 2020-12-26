@@ -23,7 +23,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 template<typename T, typename... Args>
 void UnphasedDistanceTree(DistanceTree& distance_tree,
                           const std::string& newick_file,
-                          std::shared_ptr<const PopulationVariant> pop_unphased_ptr,
+                          std::shared_ptr<const PopulationDB> pop_unphased_ptr,
                           Args... args) {
 
   std::shared_ptr<PhyloNodeVector> node_vector_ptr(std::make_shared<PhyloNodeVector>());
@@ -49,7 +49,7 @@ template<typename T, typename... Args>
 void PopulationDistanceTree(DistanceTree& distance_tree,
                             const std::string& newick_file,
                             std::shared_ptr<const DNASequenceDistance> sequence_distance,
-                            std::shared_ptr<const PopulationVariant> pop_variant_ptr,
+                            std::shared_ptr<const PopulationDB> pop_variant_ptr,
                             std::shared_ptr<const GenomeReference> genome_db_ptr,
                             Args... args) {
 
@@ -76,7 +76,7 @@ template<typename T, typename... Args>
 void GeneDistanceTree(DistanceTree& distance_tree,
                       const std::string& newick_file,
                       std::shared_ptr<const AminoSequenceDistance> sequence_distance,
-                      std::shared_ptr<const PopulationVariant> pop_variant_ptr,
+                      std::shared_ptr<const PopulationDB> pop_variant_ptr,
                       std::shared_ptr<const GenomeReference> genome_db_ptr,
                       const std::string& protein_family,
                       Args... args) {
@@ -123,7 +123,7 @@ template<typename T, typename... Args>
 void GenePhyloTree(DistanceTree& distance_tree,
                    const std::string& newick_file,
                    std::shared_ptr<const AminoSequenceDistance> sequence_distance,
-                   std::shared_ptr<const PopulationVariant> pop_variant_ptr,
+                   std::shared_ptr<const PopulationDB> pop_variant_ptr,
                    std::shared_ptr<const GenomeReference> genome_db_ptr,
                    const std::string& protein_family,
                    Args... args) {

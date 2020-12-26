@@ -21,7 +21,7 @@ namespace kgd = kellerberrin::deconvolv;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Classify the ref/alt counts by variant (row) and then genome (column)
-kgl::VariantClassifier::VariantClassifier(std::shared_ptr<const PopulationVariant> vcf_population_ptr) {
+kgl::VariantClassifier::VariantClassifier(std::shared_ptr<const PopulationDB> vcf_population_ptr) {
 
   // for all variants index by contig/offset
   for (auto const& [genome, genome_ptr] : vcf_population_ptr->getMap()) {

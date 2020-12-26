@@ -34,7 +34,7 @@ public:
                                         std::shared_ptr<const GenomeCollection> reference_genomes) override;
 
   // Perform the genetic analysis per VCF file
-  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataObjectBase> data_object_ptr) override;
+  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataDB> data_object_ptr) override;
 
   // Perform the genetic analysis per iteration
   [[nodiscard]] bool iterationAnalysis() override;
@@ -53,8 +53,8 @@ private:
 
   // The population variant data.
   std::shared_ptr<const GenomeReference> genome_GRCh38_;
-  std::shared_ptr<const PopulationVariant> diploid_population_;
-  std::shared_ptr<const PopulationVariant> unphased_population_;
+  std::shared_ptr<const PopulationDB> diploid_population_;
+  std::shared_ptr<const PopulationDB> unphased_population_;
   std::shared_ptr<const GenomePEDData> ped_data_;
 
   ExecuteInbreedingAnalysis inbreed_analysis_;

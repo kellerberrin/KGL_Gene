@@ -32,7 +32,7 @@ bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> data_ptr) {
+bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr) {
 
   ExecEnv::log().info("Default VCF File Read for Analysis Id: {} called with Variant Population", ident());
 
@@ -41,7 +41,7 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> d
   // If the file is a population then list genomes and all available info fields.
   if (file_characteristic.data_implementation == DataImplEnum::PopulationVariant) {
 
-    std::shared_ptr<const PopulationVariant> population = std::dynamic_pointer_cast<const PopulationVariant>(data_ptr);
+    std::shared_ptr<const PopulationDB> population = std::dynamic_pointer_cast<const PopulationDB>(data_ptr);
 
     size_t genome_count{0};
     for (auto const& [genome_id, genome_ptr] : population->getMap()) {

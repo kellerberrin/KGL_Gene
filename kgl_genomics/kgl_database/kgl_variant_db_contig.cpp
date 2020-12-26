@@ -10,7 +10,7 @@ namespace kgl = kellerberrin::genome;
 
 // Unconditionally adds a variant to the contig.
 
-bool kgl::ContigOffsetVariant::addVariant(const std::shared_ptr<const Variant> &variant_ptr) {
+bool kgl::ContigDB::addVariant(const std::shared_ptr<const Variant> &variant_ptr) {
 
   // Lock this function to concurrent access.
   std::scoped_lock lock(add_variant_mutex_);
@@ -27,7 +27,7 @@ bool kgl::ContigOffsetVariant::addVariant(const std::shared_ptr<const Variant> &
   } else {
 
     // add the new offset.
-    std::unique_ptr<VariantArray> offset_array_ptr(std::make_unique<VariantArray>());
+    std::unique_ptr<OffsetDB> offset_array_ptr(std::make_unique<OffsetDB>());
 
     offset_array_ptr->addVariant(variant_ptr);
 
@@ -35,7 +35,7 @@ bool kgl::ContigOffsetVariant::addVariant(const std::shared_ptr<const Variant> &
 
     if (not insert_result.second) {
 
-      ExecEnv::log().error("UnphasedContig::addVariant(); Could not add variant offset: {} to the genome",
+      ExecEnv::log().error("ContigDB::addVariant(); Could not add variant offset: {} to the genome",
                            variant_ptr->offset());
       return false;
 
@@ -49,7 +49,7 @@ bool kgl::ContigOffsetVariant::addVariant(const std::shared_ptr<const Variant> &
 
 
 // Unconditionally adds a variant to the contig.
-bool kgl::ContigOffsetVariant::addUniqueUnphasedVariant(const std::shared_ptr<const Variant> &variant_ptr) {
+bool kgl::ContigDB::addUniqueUnphasedVariant(const std::shared_ptr<const Variant> &variant_ptr) {
 
   // Lock this function to concurrent access.
   std::scoped_lock lock(add_variant_mutex_);
@@ -58,7 +58,7 @@ bool kgl::ContigOffsetVariant::addUniqueUnphasedVariant(const std::shared_ptr<co
 
   if (result != contig_offset_map_.end()) {
     // Variant offset exists.
-    OffsetVariantArray offset_variant_array = result->second->getVariantArray();
+    OffsetDBArray offset_variant_array = result->second->getVariantArray();
     // Check for uniqueness
     for (auto const& offset_variant : offset_variant_array) {
 
@@ -77,7 +77,7 @@ bool kgl::ContigOffsetVariant::addUniqueUnphasedVariant(const std::shared_ptr<co
 
   } else {
     // add the new offset.
-    std::unique_ptr<VariantArray> offset_array_ptr(std::make_unique<VariantArray>());
+    std::unique_ptr<OffsetDB> offset_array_ptr(std::make_unique<OffsetDB>());
     std::shared_ptr<Variant> unphased_variant = variant_ptr->clone();
     unphased_variant->updatePhaseId(VariantSequence::UNPHASED);
     offset_array_ptr->addVariant(unphased_variant);
@@ -85,7 +85,7 @@ bool kgl::ContigOffsetVariant::addUniqueUnphasedVariant(const std::shared_ptr<co
 
     if (not insert_result.second) {
 
-      ExecEnv::log().error("UnphasedContig::addUniqueUnphasedVariant(); Could not add variant offset: {} to the genome",
+      ExecEnv::log().error("ContigDB::addUniqueUnphasedVariant(); Could not add variant offset: {} to the genome",
                            variant_ptr->offset());
       return false;
 
@@ -99,36 +99,8 @@ bool kgl::ContigOffsetVariant::addUniqueUnphasedVariant(const std::shared_ptr<co
 
 
 
-
-
-// Use this to copy the object.
-std::shared_ptr<kgl::ContigOffsetVariant> kgl::ContigOffsetVariant::deepCopy() const {
-
-  std::shared_ptr<ContigOffsetVariant> contig_copy(std::make_shared<ContigOffsetVariant>(contigId()));
-
-  for (auto const&[offset, variant_array] : getMap()) {
-
-    for (auto const &variant_count : variant_array->getVariantArray()) {
-
-      if (not contig_copy->addVariant(variant_count)) {
-
-        ExecEnv::log().error("UnphasedContig::deepCopy; Cannot add Variant to Contig Copy : {}, at Offset: {}",
-                             contig_copy->contigId(), offset);
-
-      }
-
-    }
-
-  }
-
-  return contig_copy;
-
-}
-
-
-
 // Counts the variants in a contug.
-size_t kgl::ContigOffsetVariant::variantCount() const {
+size_t kgl::ContigDB::variantCount() const {
 
 
   size_t variant_count = 0;
@@ -145,9 +117,9 @@ size_t kgl::ContigOffsetVariant::variantCount() const {
 
 
 // Creates a copy of the contig that only contains variants passing the filter condition.
-std::shared_ptr<kgl::ContigOffsetVariant> kgl::ContigOffsetVariant::filterVariants(const VariantFilter &filter) const {
+std::shared_ptr<kgl::ContigDB> kgl::ContigDB::filterVariants(const VariantFilter &filter) const {
 
-  std::shared_ptr<ContigOffsetVariant> filtered_contig_ptr(std::make_shared<ContigOffsetVariant>(contigId()));
+  std::shared_ptr<ContigDB> filtered_contig_ptr(std::make_shared<ContigDB>(contigId()));
 
   for (auto const&[offset, variant_vector] : getMap()) {
 
@@ -157,7 +129,7 @@ std::shared_ptr<kgl::ContigOffsetVariant> kgl::ContigOffsetVariant::filterVarian
 
         if (not filtered_contig_ptr->addVariant(variant_ptr)) {
 
-          ExecEnv::log().error("UnphasedContig::filterVariants; Problem adding variant at offset: {}, to contig: {}",
+          ExecEnv::log().error("ContigDB::filterVariants; Problem adding variant at offset: {}, to contig: {}",
                                offset, contigId());
 
         }
@@ -176,13 +148,13 @@ std::shared_ptr<kgl::ContigOffsetVariant> kgl::ContigOffsetVariant::filterVarian
 
 // Filters variants inSitu
 // Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
-std::pair<size_t, size_t> kgl::ContigOffsetVariant::inSituFilter(const VariantFilter &filter) {
+std::pair<size_t, size_t> kgl::ContigDB::inSituFilter(const VariantFilter &filter) {
 
   std::pair<size_t, size_t> contig_count{0, 0};
   for (auto& [offset, variant_vector] : contig_offset_map_) {
 
     std::vector<std::shared_ptr<const Variant>> filtered_variants;
-    auto variant_array = variant_vector->getVariantArray();
+    OffsetDBArray variant_array = variant_vector->getVariantArray();
     contig_count.first += variant_array.size();
 
     for (auto const &variant_ptr : variant_array) {
@@ -224,13 +196,13 @@ std::pair<size_t, size_t> kgl::ContigOffsetVariant::inSituFilter(const VariantFi
 }
 
 
-std::optional<kgl::OffsetVariantArray> kgl::ContigOffsetVariant::findOffsetArray(ContigOffset_t offset) const {
+std::optional<kgl::OffsetDBArray> kgl::ContigDB::findOffsetArray(ContigOffset_t offset) const {
 
   auto result = contig_offset_map_.find(offset);
 
   if (result != contig_offset_map_.end()) {
 
-    OffsetVariantArray variant_array = result->second->getVariantArray();
+    OffsetDBArray variant_array = result->second->getVariantArray();
 
     return variant_array;
 
@@ -244,13 +216,13 @@ std::optional<kgl::OffsetVariantArray> kgl::ContigOffsetVariant::findOffsetArray
 
 
 
-std::optional<std::shared_ptr<const kgl::Variant>> kgl::ContigOffsetVariant::findVariant(const Variant& variant) const {
+std::optional<std::shared_ptr<const kgl::Variant>> kgl::ContigDB::findVariant(const Variant& variant) const {
 
   auto result = contig_offset_map_.find(variant.offset());
 
   if (result != contig_offset_map_.end()) {
 
-    OffsetVariantArray variant_array = result->second->getVariantArray();
+    OffsetDBArray variant_array = result->second->getVariantArray();
 
     for (auto const& variant_ptr : variant_array) {
 
@@ -276,7 +248,7 @@ std::optional<std::shared_ptr<const kgl::Variant>> kgl::ContigOffsetVariant::fin
 
 
 
-std::pair<size_t, size_t> kgl::ContigOffsetVariant::validate(const std::shared_ptr<const ContigReference> &contig_db_ptr) const {
+std::pair<size_t, size_t> kgl::ContigDB::validate(const std::shared_ptr<const ContigReference> &contig_db_ptr) const {
 
   std::pair<size_t, size_t> contig_count{0, 0};
 
@@ -288,7 +260,7 @@ std::pair<size_t, size_t> kgl::ContigOffsetVariant::validate(const std::shared_p
 
     if (offset >= contig_sequence_ptr->length()) {
 
-      ExecEnv::log().error("UnphasedContig::validate,  Variant offset: {} exceeds total contig: {} size: {}", offset,
+      ExecEnv::log().error("ContigDB::validate,  Variant offset: {} exceeds total contig: {} size: {}", offset,
                            contig_db_ptr->contigId(), contig_sequence_ptr->length());
       continue;
 
@@ -298,7 +270,7 @@ std::pair<size_t, size_t> kgl::ContigOffsetVariant::validate(const std::shared_p
 
       if (not variant_ptr) {
 
-        ExecEnv::log().error("UnphasedContig::validate, Unknown variant: {}",
+        ExecEnv::log().error("ContigDB::validate, Unknown variant: {}",
                              variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false));
         continue;
 
@@ -310,12 +282,10 @@ std::pair<size_t, size_t> kgl::ContigOffsetVariant::validate(const std::shared_p
 
       } else {
 
-        ExecEnv::log().error(
-            "UnphasedContig::validate, Mismatch, at Contig Offset: {} Sequence is: {}, Variant Reference Sequence is: {}",
-            variant_ptr->offset(),
-            contig_sequence_ptr->subSequence(variant_ptr->offset(),
-                                             variant_ptr->reference().length()).getSequenceAsString(),
-            variant_ptr->reference().getSequenceAsString());
+        ExecEnv::log().error(" ContigDB::validate, Mismatch, at Contig Offset: {} Sequence is: {}, Variant Reference Sequence is: {}",
+                               variant_ptr->offset(),
+                               contig_sequence_ptr->subSequence(variant_ptr->offset(),variant_ptr->reference().length()).getSequenceAsString(),
+                               variant_ptr->reference().getSequenceAsString());
 
       }
 
@@ -327,10 +297,10 @@ std::pair<size_t, size_t> kgl::ContigOffsetVariant::validate(const std::shared_p
 
 }
 
-bool kgl::ContigOffsetVariant::getSortedVariants( PhaseId_t phase,
-                                                  ContigOffset_t start,
-                                                  ContigOffset_t end,
-                                                  OffsetVariantMap& variant_map) const {
+bool kgl::ContigDB::getSortedVariants(PhaseId_t phase,
+                                      ContigOffset_t start,
+                                      ContigOffset_t end,
+                                      OffsetVariantMap& variant_map) const {
 
 
   auto lower_bound = contig_offset_map_.lower_bound(start);
@@ -342,7 +312,7 @@ bool kgl::ContigOffsetVariant::getSortedVariants( PhaseId_t phase,
 
     auto previous_offset_ptr = std::prev(lower_bound);
 
-    OffsetVariantArray previous_offset_variants = previous_offset_ptr->second->getVariantArray();
+    OffsetDBArray previous_offset_variants = previous_offset_ptr->second->getVariantArray();
 
     for (const auto& variant : previous_offset_variants) {
 
@@ -365,7 +335,7 @@ bool kgl::ContigOffsetVariant::getSortedVariants( PhaseId_t phase,
   for (auto it = lower_bound; it != upper_bound; ++it) {
 
 
-    OffsetVariantArray previous_offset_variants = it->second->getVariantArray();
+    OffsetDBArray previous_offset_variants = it->second->getVariantArray();
 
     for (const auto& variant : previous_offset_variants) {
 
@@ -385,7 +355,7 @@ bool kgl::ContigOffsetVariant::getSortedVariants( PhaseId_t phase,
 
 }
 
-void kgl::ContigOffsetVariant::checkUpstreamDeletion(OffsetVariantMap& variant_map) const {
+void kgl::ContigDB::checkUpstreamDeletion(OffsetVariantMap& variant_map) const {
 
   for (auto iter = variant_map.begin(); iter != variant_map.end(); ++iter) {
 
@@ -397,11 +367,11 @@ void kgl::ContigOffsetVariant::checkUpstreamDeletion(OffsetVariantMap& variant_m
 
     if (delete_size >= offset_gap) {
 
-      ExecEnv::log().vinfo("checkUpstreamDeletion(), Upstream deletion detected: {}",
-                           std::prev(iter)->second->output(' ', VariantOutputIndex::START_0_BASED, true));
+//      ExecEnv::log().info("ContigDB::checkUpstreamDeletion(), Upstream deletion detected: {}",
+//                           std::prev(iter)->second->output(' ', VariantOutputIndex::START_0_BASED, true));
 
-      ExecEnv::log().vinfo("checkUpstreamDeletion(), Downstream variant removed from mutation: {}",
-                           iter->second->output(' ', VariantOutputIndex::START_0_BASED, true));
+//      ExecEnv::log().info("ContigDB::checkUpstreamDeletion(), Downstream variant removed from mutation: {}",
+//                           iter->second->output(' ', VariantOutputIndex::START_0_BASED, true));
 
       iter = variant_map.erase(iter);
 

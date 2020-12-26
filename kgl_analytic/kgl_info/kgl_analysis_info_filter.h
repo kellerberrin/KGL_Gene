@@ -39,7 +39,7 @@ public:
                                          std::shared_ptr<const GenomeCollection> reference_genomes) override;
 
   // Perform the genetic analysis per VCF file (need not be redefined)
-  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataObjectBase> vcf_population) override;
+  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataDB> vcf_population) override;
 
   // Perform the genetic analysis per iteration (need not be redefined)
   [[nodiscard]] bool iterationAnalysis() override;
@@ -51,30 +51,30 @@ public:
 
 private:
 
-  std::shared_ptr<PopulationVariant> filtered_vcf_population_;
+  std::shared_ptr<PopulationDB> filtered_vcf_population_;
   std::vector<InfoAgeAnalysis> age_analysis_vector_;   // Store for final totals
   AgeSortedMap age_sorted_map_; // final totals.
   std::string output_file_name_;
 
   constexpr static const char* OUTPUT_FILE_ = "OUTPUTFILE";
 
-  std::shared_ptr<PopulationVariant> qualityFilter( std::shared_ptr<const PopulationVariant> vcf_population);
+  std::shared_ptr<PopulationDB> qualityFilter(std::shared_ptr<const PopulationDB> vcf_population);
 
   void analyzeField( const std::string& info_field_ident,
                      const std::vector<double>& field_values,
-                     std::shared_ptr<const PopulationVariant> vcf_population,
+                     std::shared_ptr<const PopulationDB> vcf_population,
                      std::ostream& result_file);
 
   void analyzeFilteredPopulation( const VariantFilter& filter,
-                                  std::shared_ptr<const PopulationVariant> vcf_population,
+                                  std::shared_ptr<const PopulationDB> vcf_population,
                                   std::ostream& result_file);
 
   // Analysis by average age.
-  void filterByAge( std::shared_ptr<const PopulationVariant> vcf_population,std::ostream& result_file);
+  void filterByAge(std::shared_ptr<const PopulationDB> vcf_population, std::ostream& result_file);
 
-  bool performAnalysis(std::shared_ptr<const PopulationVariant> filtered_population);
+  bool performAnalysis(std::shared_ptr<const PopulationDB> filtered_population);
 
-  void listAvailableInfoFields(std::shared_ptr<const PopulationVariant> vcf_population);
+  void listAvailableInfoFields(std::shared_ptr<const PopulationDB> vcf_population);
 
 
 }; // InfoFilterAnalysis

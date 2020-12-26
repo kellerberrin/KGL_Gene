@@ -28,24 +28,24 @@ public:
   ~ParserSelection() = default;
 
 
-  [[nodiscard]] static std::shared_ptr<DataObjectBase> parseData( std::shared_ptr<const GenomeCollection> reference_genomes,
-                                                                  std::shared_ptr<BaseFileInfo> file_info,
-                                                                  const VariantEvidenceMap& evidence_map,
-                                                                  const ContigAliasMap& contig_alias);
+  [[nodiscard]] static std::shared_ptr<DataDB> parseData(std::shared_ptr<const GenomeCollection> reference_genomes,
+                                                         std::shared_ptr<BaseFileInfo> file_info,
+                                                         const VariantEvidenceMap& evidence_map,
+                                                         const ContigAliasMap& contig_alias);
 
 private:
 
 
   // Called when the PedAncestry parser is specified to read in an ancestry (.ped) file
-  [[nodiscard]] static std::shared_ptr<DataObjectBase> readPEDAncestry(std::shared_ptr<BaseFileInfo> file_info,
-                                                                       DataSourceEnum data_source);
+  [[nodiscard]] static std::shared_ptr<DataDB> readPEDAncestry(std::shared_ptr<BaseFileInfo> file_info,
+                                                               DataSourceEnum data_source);
 
   template<class VCFParser>
-  [[nodiscard]] static std::shared_ptr<DataObjectBase> readVCF( std::shared_ptr<const GenomeCollection> reference_genomes,
-                                                                std::shared_ptr<BaseFileInfo> file_info,
-                                                                const VariantEvidenceMap& evidence_map,
-                                                                const ContigAliasMap& contig_alias,
-                                                                DataSourceEnum data_source) {
+  [[nodiscard]] static std::shared_ptr<DataDB> readVCF(std::shared_ptr<const GenomeCollection> reference_genomes,
+                                                       std::shared_ptr<BaseFileInfo> file_info,
+                                                       const VariantEvidenceMap& evidence_map,
+                                                       const ContigAliasMap& contig_alias,
+                                                       DataSourceEnum data_source) {
 
     auto vcf_file_info = std::dynamic_pointer_cast<RuntimeVCFFileInfo>(file_info);
 
@@ -74,7 +74,7 @@ private:
     }
 
     // Read variants.
-    std::shared_ptr<PopulationVariant> vcf_population_ptr(std::make_shared<PopulationVariant>(vcf_file_info->identifier(), data_source));
+    std::shared_ptr<PopulationDB> vcf_population_ptr(std::make_shared<PopulationDB>(vcf_file_info->identifier(), data_source));
 
     VCFParser reader(vcf_population_ptr, ref_genome_opt.value(), contig_alias, evidence_opt.value());
     reader.readParseVCFImpl(vcf_file_info->fileName());

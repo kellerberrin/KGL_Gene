@@ -33,7 +33,7 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 
 
-class PloidyAnalysis : public PopulationVariant {
+class PloidyAnalysis : public PopulationDB {
 
 
 public:

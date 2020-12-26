@@ -15,17 +15,17 @@ namespace kgl = kellerberrin::genome;
 
 
 
-std::shared_ptr<const kgl::PopulationVariant>
+std::shared_ptr<const kgl::PopulationDB>
 kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
                                                     double upper_inbreeding,
                                                     double step_inbreeding,
                                                     const std::string& super_population,
-                                                    const ContigOffsetVariant& locus_list,
+                                                    const ContigDB& locus_list,
                                                     const LociiVectorArguments& arguments) {
   static std::mutex log_mutex; // logging mutex.
 
   // Make a synthetic phased diploid population.
-  std::shared_ptr<PopulationVariant> synthetic_pop_ptr(std::make_shared<PopulationVariant>("SyntheticInbreedingPopulation", DataSourceEnum::Genome1000));
+  std::shared_ptr<PopulationDB> synthetic_pop_ptr(std::make_shared<PopulationDB>("SyntheticInbreedingPopulation", DataSourceEnum::Genome1000));
 
   // Entropy source is the Mersenne twister.
   RandomEntropySource entropy_mt;
@@ -61,7 +61,7 @@ kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
     // stochastically defined by the assigned inbreeding coefficient
     for (auto const& [offset, offset_ptr] : locus_list.getMap()) {
 
-      auto variant_vec = offset_ptr->getVariantArray();
+      OffsetDBArray variant_vec = offset_ptr->getVariantArray();
 
       // Generate the minor allele frequencies.
       AlleleFreqVector freq_vector(variant_vec, super_population, arguments.frequencySource());

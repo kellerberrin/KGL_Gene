@@ -8,6 +8,7 @@
 
 #include "kel_utility.h"
 #include "kgl_variant.h"
+#include "kgl_filter.h"
 #include "kgl_variant_db_offset.h"
 #include "kgl_variant_mutation.h"
 
@@ -17,25 +18,25 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// An internal parser variant object that holds variants until they can be phased.
 // This object holds variants for each contig.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-using UnphasedOffsetMap = std::map<ContigOffset_t, std::unique_ptr<VariantArray>>;
+using OffsetDBMap = std::map<ContigOffset_t, std::unique_ptr<OffsetDB>>;
 
-class ContigOffsetVariant {
+class ContigDB {
 
 public:
 
-  explicit ContigOffsetVariant(ContigId_t contig_id) : contig_id_(std::move(contig_id)) {}
-  virtual ~ContigOffsetVariant() = default;
+  explicit ContigDB(ContigId_t contig_id) : contig_id_(std::move(contig_id)) {}
+  virtual ~ContigDB() = default;
 
-  ContigOffsetVariant(const ContigOffsetVariant &) = delete;
-  [[nodiscard]] ContigOffsetVariant &operator=(const ContigOffsetVariant &) = delete; // Use deep copy.
+  ContigDB(const ContigDB &) = delete;
+  [[nodiscard]] ContigDB &operator=(const ContigDB &) = delete; // Use deep copy.
 
-  [[nodiscard]] std::shared_ptr<ContigOffsetVariant> deepCopy() const; // Use this to copy the object.
+  // Use this to copy the object.
+  [[nodiscard]] std::shared_ptr<ContigDB> deepCopy() const { return filterVariants(TrueFilter()); }
 
   [[nodiscard]] const ContigId_t &contigId() const { return contig_id_; }
 
@@ -48,10 +49,10 @@ public:
 
   [[nodiscard]]  size_t variantCount() const;
 
-  [[nodiscard]] const UnphasedOffsetMap &getMap() const { return contig_offset_map_; }
+  [[nodiscard]] const OffsetDBMap &getMap() const { return contig_offset_map_; }
 
   // Create a filtered contig.
-  [[nodiscard]] std::shared_ptr<ContigOffsetVariant> filterVariants(const VariantFilter &filter) const;
+  [[nodiscard]] std::shared_ptr<ContigDB> filterVariants(const VariantFilter &filter) const;
 
   // Filter this contig (efficient for large databases).
   // Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
@@ -65,7 +66,7 @@ public:
 
   [[nodiscard]] std::optional<std::shared_ptr<const Variant>> findVariant(const Variant& variant) const;
 
-  [[nodiscard]] std::optional<OffsetVariantArray> findOffsetArray(ContigOffset_t offset) const;
+  [[nodiscard]] std::optional<OffsetDBArray> findOffsetArray(ContigOffset_t offset) const;
 
   [[nodiscard]] bool getSortedVariants( PhaseId_t phase,
                                         ContigOffset_t start,
@@ -75,7 +76,7 @@ public:
 private:
 
   ContigId_t contig_id_;
-  UnphasedOffsetMap contig_offset_map_;
+  OffsetDBMap contig_offset_map_;
 
   // mutex to lock the structure for multiple thread access by parsers.
   mutable std::mutex add_variant_mutex_;
@@ -88,7 +89,7 @@ private:
 // General purpose genome processing template.
 // Processes all variants in the contig with class Obj and Func = &(bool Obj::objFunc(const std::shared_ptr<const Variant>))
 template<class Obj, typename Func>
-bool ContigOffsetVariant::processAll(Obj& object, Func objFunc)  const {
+bool ContigDB::processAll(Obj& object, Func objFunc)  const {
 
   for (auto const& [offset, offset_ptr] : getMap()) {
 
@@ -96,7 +97,7 @@ bool ContigOffsetVariant::processAll(Obj& object, Func objFunc)  const {
 
       if (not (object.*objFunc)(variant_ptr)) {
 
-        ExecEnv::log().error("ContigOffsetVariant::processAll<Obj, Func>; Problem executing general purpose template function at offset: {}", offset);
+        ExecEnv::log().error("ContigDB::processAll<Obj, Func>; Problem executing general purpose template function at offset: {}", offset);
         return false;
 
       }

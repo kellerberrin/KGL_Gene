@@ -197,7 +197,7 @@ bool kgl::GeneAnalysis::translateGene( const GenomeId_t& genome_id,
 bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
                                    const FeatureIdent_t& gene,
                                    const FeatureIdent_t& sequence,
-                                   const std::shared_ptr<const PopulationVariant>& population_ptr,
+                                   const std::shared_ptr<const PopulationDB>& population_ptr,
                                    const std::shared_ptr<const GenomeReference>& genome_db_ptr,
                                    const std::string& fasta_filename) {
 
@@ -276,7 +276,7 @@ bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
 bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
                                          const FeatureIdent_t& gene,
                                          const FeatureIdent_t& sequence,
-                                         const std::shared_ptr<const GenomeVariantArray>& genome_variant_ptr,
+                                         const std::shared_ptr<const GenomeDB>& genome_variant_ptr,
                                          const std::shared_ptr<const GenomeReference>& genome_db_ptr,
                                          GeneSummaryMap& gene_summary_map) {
 
@@ -392,7 +392,7 @@ bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
 bool kgl::GeneAnalysis::mutateAllRegions(const std::string& file_name,
                                          ContigSize_t region_size,
                                          const std::shared_ptr<const LinearDNASequenceDistance>& dna_distance_metric,
-                                         const std::shared_ptr<const PopulationVariant>& pop_variant_ptr,
+                                         const std::shared_ptr<const PopulationDB>& pop_variant_ptr,
                                          const std::shared_ptr<const GenomeReference>& genome_db_ptr) {
 
   const char CSV_delimiter = ',';
@@ -460,7 +460,7 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
                                                   const ContigId_t& contig_id,
                                                   const ContigOffset_t offset,
                                                   const ContigSize_t region_size,
-                                                  const std::shared_ptr<const GenomeVariantArray>& genome_variant_ptr,
+                                                  const std::shared_ptr<const GenomeDB>& genome_variant_ptr,
                                                   const std::shared_ptr<const GenomeReference>& genome_db_ptr) {
 
   std::stringstream ss;
@@ -538,7 +538,7 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const GenomeId_t& genome,
                                            const ContigId_t& contig,
                                            ContigOffset_t offset,
                                            ContigSize_t region_size,
-                                           const std::shared_ptr<const PopulationVariant>& population_ptr,
+                                           const std::shared_ptr<const PopulationDB>& population_ptr,
                                            const std::shared_ptr<const GenomeReference>& genome_db_ptr,
                                            const std::string& fasta_file) {
 
@@ -560,7 +560,7 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const GenomeId_t& genome,
 bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
                                            const ContigOffset_t offset,
                                            const ContigSize_t region_size,
-                                           const std::shared_ptr<const GenomeVariantArray>& genome_variant_ptr,
+                                           const std::shared_ptr<const GenomeDB>& genome_variant_ptr,
                                            const std::shared_ptr<const GenomeReference>& genome_db_ptr,
                                            const std::string& fasta_file) {
 

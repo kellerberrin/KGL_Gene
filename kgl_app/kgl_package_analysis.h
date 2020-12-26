@@ -39,7 +39,7 @@ public:
                                         std::shared_ptr<const GenomeCollection> reference_genomes) const;
 
   // Perform the genetic analysis per VCF file read.
-  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataObjectBase> vcf_iterative_dat) const;
+  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataDB> vcf_iterative_dat) const;
 
   // Perform the genetic analysis per iteration (multiple VCF files grouped together).
   [[nodiscard]] bool iterationAnalysis() const;

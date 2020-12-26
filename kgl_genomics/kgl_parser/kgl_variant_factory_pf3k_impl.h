@@ -22,7 +22,7 @@ class Pf3kVCFImpl : public VCFReaderMT {
 
 public:
 
-  Pf3kVCFImpl(const std::shared_ptr<PopulationVariant> vcf_population_ptr,
+  Pf3kVCFImpl(const std::shared_ptr<PopulationDB> vcf_population_ptr,
               const std::shared_ptr<const GenomeReference> genome_db_ptr,
               const ContigAliasMap&,    // Chromosome aliasing is not used on Gatk (P.Falciparum) VCF files.
               const EvidenceInfoSet& evidence_map) : evidence_factory_(evidence_map),
@@ -70,7 +70,7 @@ private:
   constexpr static const size_t VARIANT_REPORT_INTERVAL_ = 10000;
 
   // This object is write accessed by multiple threads, it MUST BE mutex guarded for any access.
-  const std::shared_ptr<PopulationVariant> unphased_population_ptr_;   // Un-phased variants.
+  const std::shared_ptr<PopulationDB> unphased_population_ptr_;   // Un-phased variants.
   const std::shared_ptr<const GenomeReference> genome_db_ptr_; // read access only.
 
   void setupPopulationStructure(const std::shared_ptr<const GenomeReference> genome_db_ptr);
