@@ -6,7 +6,7 @@
 #define KGL_PED_PARSER_H
 
 
-#include "kgl_data_base.h"
+#include "kgl_variant_db_type.h"
 #include "kgl_data_file_impl.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -101,7 +101,7 @@ class GenomePEDData : public DataObjectBase {
 
 public:
 
-  explicit GenomePEDData(std::string ped_ident) : DataObjectBase(std::move(ped_ident)) {}
+  explicit GenomePEDData(std::string ped_ident, DataSourceEnum data_source) : DataObjectBase(std::move(ped_ident), data_source) {}
   ~GenomePEDData() override = default;
 
   bool addPEDRecord(const PEDRecord& record) {
@@ -120,8 +120,6 @@ public:
   }
 
   [[nodiscard]] const PEDRecordMap& getMap() const { return PED_record_map_; }
-
-  [[nodiscard]] DataTypeEnum dataType() const override { return DataTypeEnum::PedAncestor; }
 
 private:
 

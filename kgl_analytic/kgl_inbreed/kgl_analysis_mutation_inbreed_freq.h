@@ -5,7 +5,6 @@
 #ifndef KGL_ANALYSIS_MUTATION_INBREED_FREQ_H
 #define KGL_ANALYSIS_MUTATION_INBREED_FREQ_H
 
-#include "kgl_variant_db_phased.h"
 #include "kgl_ped_parser.h"
 #include "kel_optimize.h"
 #include "kgl_analysis_mutation_inbreed_freqdb.h"

@@ -7,7 +7,6 @@
 
 
 
-#include "kgl_variant_db_phased.h"
 #include "kgl_ped_parser.h"
 #include "kgl_analysis_mutation_inbreed_calc.h"
 #include "kgl_analysis_mutation_inbreed_output.h"
@@ -33,7 +32,7 @@ public:
 
   // Construct a synthetic population and analyze it.
   // The synthetic population is constructed from the unphased population.
-  static bool syntheticInbreeding( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+  static bool syntheticInbreeding( std::shared_ptr<const PopulationVariant> unphased_ptr,
                                    const InbreedingParameters& paramaters,
                                    InbreedingOutputResults& results);
 
@@ -44,7 +43,7 @@ private:
   constexpr static const double MAX_INBREEDING_COEFICIENT = 0.5; // Set the maximum inbreeding coefficient
   constexpr static const double STEP_INBREEDING_COEFICIENT = 0.01; // Set the inbreeding step
 
-  [[nodiscard]] static ResultsMap processSynResults( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+  [[nodiscard]] static ResultsMap processSynResults( std::shared_ptr<const PopulationVariant> unphased_ptr,
                                                      const InbreedingParameters& parameters);
 
 };

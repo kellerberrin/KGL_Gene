@@ -428,9 +428,9 @@ kgl::AlleleFreqVector::selectMinorHeterozygous(double unit_rand, const AlleleCla
 
 std::pair<std::vector<kgl::AlleleFreqInfo>, kgl::LocusResults>
 kgl::InbreedingCalculation::generateFrequencies(const GenomeId_t& genome_id,
-                                                const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                                const std::shared_ptr<const ContigOffsetVariant>& contig_ptr,
                                                 const std::string& super_population_field,
-                                                const std::shared_ptr<const ContigVariant>& locus_list,
+                                                const std::shared_ptr<const ContigOffsetVariant>& locus_list,
                                                 FrequencyDatabaseSource variant_source) {
 
   std::vector<AlleleFreqInfo> frequency_vector;

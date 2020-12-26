@@ -7,7 +7,6 @@
 
 #include "kgl_variant_factory_vcf_evidence.h"
 #include "kgl_variant_db_population.h"
-#include "kgl_variant_db_phased.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -68,7 +67,7 @@ public:
 
   static std::optional<std::unique_ptr<const VEPSubFieldEvidence>> getVepSubFields(const Variant& variant);
 
-  static void vepSubFieldValues( std::string vep_sub_field, const std::shared_ptr<const UnphasedPopulation>& population);
+  static void vepSubFieldValues( std::string vep_sub_field, const std::shared_ptr<const PopulationVariant>& population);
 
 
 public:

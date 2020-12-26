@@ -50,12 +50,21 @@ bool kgl::InfoFilterAnalysis::initializeAnalysis( const std::string& work_direct
 // Perform the genetic analysis per iteration.
 bool kgl::InfoFilterAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> data_ptr) {
 
+  // Analysis currently only defined for Gnomad 2.1
+  auto file_characteristic = data_ptr->dataCharacteristic();
+  if (file_characteristic.data_source != DataSourceEnum::Gnomad2_1) {
+
+    ExecEnv::log().warn("Analysis: {}, expected a Gnomad 2.1 Population for file: {}", ident(), data_ptr->fileId());
+    return true;
+
+  }
+
   // Superclass the population
-  std::shared_ptr<const UnphasedPopulation> vcf_population = std::dynamic_pointer_cast<const UnphasedPopulation>(data_ptr);
+  std::shared_ptr<const PopulationVariant> vcf_population = std::dynamic_pointer_cast<const PopulationVariant>(data_ptr);
 
   if (not vcf_population) {
 
-    ExecEnv::log().info("Analysis: {}, expected an Unphased Population", ident());
+    ExecEnv::log().info("Analysis: {}, expected a Population for file: {}", ident(), data_ptr->fileId());
     return false;
 
   }
@@ -128,25 +137,25 @@ bool kgl::InfoFilterAnalysis::getParameters(const std::string& work_directory, c
 
 }
 
-std::shared_ptr<kgl::UnphasedPopulation>
-kgl::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const UnphasedPopulation> vcf_population) {
+std::shared_ptr<kgl::PopulationVariant>
+kgl::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const PopulationVariant> vcf_population) {
 
 
   size_t unfiltered = vcf_population->variantCount();
-  ExecEnv::log().info( "Population: {} size: {} before filtering", vcf_population->populationId(), unfiltered);
+  ExecEnv::log().info("Population: {} size: {} before filtering", vcf_population->populationId(), unfiltered);
 
   const std::string VQSLOD_FIELD{"VQSLOD"};
   // const double VQSLOD_LEVEL{1.775};
   const double VQSLOD_LEVEL{1.2168};
   auto vqslod_filter = InfoGEQFloatFilter(VQSLOD_FIELD, VQSLOD_LEVEL);
 
-  std::shared_ptr<UnphasedPopulation> filtered_population = vcf_population->filterVariants(vqslod_filter);
+  std::shared_ptr<PopulationVariant> filtered_population = vcf_population->filterVariants(vqslod_filter);
 
   size_t filtered_VQSLOD = filtered_population->variantCount();
   double percent_filtered =  (static_cast<double>(filtered_VQSLOD) / static_cast<double>(unfiltered)) * 100.0;
 
-  ExecEnv::log().info( "Population: {} size: {} ({}%) after VQSLOD filter level: {}",
-                       filtered_population->populationId(), filtered_VQSLOD, percent_filtered, VQSLOD_LEVEL);
+  ExecEnv::log().info("Population: {} size: {} ({}%) after VQSLOD filter level: {}",
+                      filtered_population->populationId(), filtered_VQSLOD, percent_filtered, VQSLOD_LEVEL);
 
   const std::string RANDOM_FOREST_FIELD{"rf_tp_probability"};
   const double RANDOM_FOREST_LEVEL{0.90};
@@ -158,15 +167,15 @@ kgl::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const UnphasedPopulation
   size_t filtered_random_forest = filtered_population->variantCount();
   percent_filtered =  (static_cast<double>(filtered_random_forest) / static_cast<double>(unfiltered)) * 100.0;
 
-  ExecEnv::log().info( "Population: {} size: {} ({}%) after VQSLOD and Random Forest filter level: {}",
-                       filtered_population->populationId(), filtered_population->variantCount(), percent_filtered, RANDOM_FOREST_LEVEL);
+  ExecEnv::log().info("Population: {} size: {} ({}%) after VQSLOD and Random Forest filter level: {}",
+                      filtered_population->populationId(), filtered_population->variantCount(), percent_filtered, RANDOM_FOREST_LEVEL);
 
   return filtered_population;
 
 }
 
 
-bool kgl::InfoFilterAnalysis::performAnalysis( std::shared_ptr<const kgl::UnphasedPopulation> vcf_population) {
+bool kgl::InfoFilterAnalysis::performAnalysis( std::shared_ptr<const kgl::PopulationVariant> vcf_population) {
 
 
   std::ofstream outfile(output_file_name_,  std::ofstream::out | std::ofstream::app);
@@ -179,7 +188,7 @@ bool kgl::InfoFilterAnalysis::performAnalysis( std::shared_ptr<const kgl::Unphas
   }
 
 
-  ExecEnv::log().info( "Population: {} size after filtering: {}", vcf_population->populationId(), vcf_population->variantCount());
+  ExecEnv::log().info("Population: {} size after filtering: {}", vcf_population->populationId(), vcf_population->variantCount());
 
   //perform the analysis.
   InfoAgeAnalysis age_sub_total(" Total for Population: " + vcf_population->populationId());
@@ -233,7 +242,7 @@ bool kgl::InfoFilterAnalysis::performAnalysis( std::shared_ptr<const kgl::Unphas
 }
 
 
-void kgl::InfoFilterAnalysis::listAvailableInfoFields(std::shared_ptr<const UnphasedPopulation> vcf_population) {
+void kgl::InfoFilterAnalysis::listAvailableInfoFields(std::shared_ptr<const PopulationVariant> vcf_population) {
 
   // Investigate vep field values.
   InfoEvidenceAnalysis::vepSubFieldValues("Consequence", vcf_population);
@@ -268,7 +277,7 @@ void kgl::InfoFilterAnalysis::listAvailableInfoFields(std::shared_ptr<const Unph
 }
 
 
-void kgl::InfoFilterAnalysis::filterByAge( std::shared_ptr<const UnphasedPopulation> vcf_population,
+void kgl::InfoFilterAnalysis::filterByAge( std::shared_ptr<const PopulationVariant> vcf_population,
                                            std::ostream& result_file) {
 
   ExecEnv::log().info("Perform Homo/Hetero analysis with average variant ages filtered to 10 deciles.");
@@ -286,7 +295,7 @@ void kgl::InfoFilterAnalysis::filterByAge( std::shared_ptr<const UnphasedPopulat
 
 void kgl::InfoFilterAnalysis::analyzeField( const std::string& info_field_ident,
                                             const std::vector<double>& field_values,
-                                            std::shared_ptr<const UnphasedPopulation> vcf_population,
+                                            std::shared_ptr<const PopulationVariant> vcf_population,
                                             std::ostream& result_file) {
 
   analyzeFilteredPopulation(NotFilter(InfoGEQFloatFilter(info_field_ident, field_values.front())), vcf_population, result_file);
@@ -302,7 +311,7 @@ void kgl::InfoFilterAnalysis::analyzeField( const std::string& info_field_ident,
 
 
 void kgl::InfoFilterAnalysis::analyzeFilteredPopulation( const VariantFilter& filter,
-                                                         std::shared_ptr<const UnphasedPopulation> vcf_population,
+                                                         std::shared_ptr<const PopulationVariant> vcf_population,
                                                          std::ostream& result_file) {
 
   // Tag with filter and population
@@ -310,7 +319,7 @@ void kgl::InfoFilterAnalysis::analyzeFilteredPopulation( const VariantFilter& fi
   ExecEnv::log().info("Analysis Package: {}, executing age analysis: {}", ident(), title);
   InfoAgeAnalysis age_analysis(title);
   // Filter the variant population
-  std::shared_ptr<const UnphasedPopulation> filtered_population = vcf_population->filterVariants(filter);
+  std::shared_ptr<const PopulationVariant> filtered_population = vcf_population->filterVariants(filter);
   // Gather the age profile.
   filtered_population->processAll(age_analysis, &InfoAgeAnalysis::processVariant);
   // Write results

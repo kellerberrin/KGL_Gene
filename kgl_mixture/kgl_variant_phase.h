@@ -28,13 +28,13 @@ public:
   explicit GenomePhasing() = default;
   ~GenomePhasing() = default;
 
-  static std::shared_ptr<UnphasedPopulation> filterClonal(const std::string& phase_file,
-                                                          std::shared_ptr<const UnphasedPopulation> unphased_population_ptr);
+  static std::shared_ptr<PopulationVariant> filterClonal( const std::string& phase_file,
+                                                          std::shared_ptr<const PopulationVariant> unphased_population_ptr);
 
   // A simple phasing strategy that removes all conflicting variants.
   static bool haploidPhasing(size_t vcf_ploidy,
-                             const std::shared_ptr<const UnphasedPopulation>& vcf_population_ptr,
-                             const std::shared_ptr<HaploidPopulation>& haploid_population);
+                             const std::shared_ptr<const PopulationVariant>& vcf_population_ptr,
+                             const std::shared_ptr<PopulationVariant>& haploid_population);
 
 private:
 

@@ -394,7 +394,7 @@ std::vector<kgl::GenomeId_t> kgl::GenomeAuxData::getPreferredSamples() const {
 
 // Convenience static function splits the phased populations into different countries (preferred genomes only).
 std::vector<kgl::CountryPair> kgl::GenomeAuxData::getCountries(const std::string& aux_file,
-                                                               std::shared_ptr<const kgl::HaploidPopulation> population_ptr) {
+                                                               std::shared_ptr<const kgl::PopulationVariant> population_ptr) {
 
   // Read the AUX data.
   kgl::GenomeAuxData aux_data;
@@ -408,7 +408,7 @@ std::vector<kgl::CountryPair> kgl::GenomeAuxData::getCountries(const std::string
   // Get a list of countries.
   std::vector<std::string> countries = aux_data.countryList();
 
-  std::shared_ptr<const kgl::HaploidPopulation> preferred_pop_ptr = population_ptr;
+  std::shared_ptr<const kgl::PopulationVariant> preferred_pop_ptr = population_ptr;
 
   std::vector<CountryPair> pair_vector;
   // Create a vector of all countries
@@ -434,8 +434,7 @@ std::vector<kgl::CountryPair> kgl::GenomeAuxData::getCountries(const std::string
 
     }
 
-//    std::shared_ptr<const kgl::PhasedPopulation> country_pop_ptr = preferred_pop_ptr->filterRenameGenomes(country, source_pairs);
-    std::shared_ptr<const kgl::HaploidPopulation> country_pop_ptr = preferred_pop_ptr;
+    std::shared_ptr<const kgl::PopulationVariant> country_pop_ptr = preferred_pop_ptr;
 
     // Ignore empty populations
     if (not country_pop_ptr->getMap().empty()) {

@@ -21,7 +21,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 // Comments have '#' as the first character.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using CountryPair = std::pair<GenomeId_t, std::shared_ptr<const HaploidPopulation>>;
+using CountryPair = std::pair<GenomeId_t, std::shared_ptr<const PopulationVariant>>;
 using AuxAttributeVector = std::vector<std::string>;
 using AuxSampleMap = std::map<std::string, AuxAttributeVector>;
 
@@ -34,7 +34,7 @@ public:
   ~GenomeAuxData() = default;
 
 // Convenience function splits the phased populations into different countries (preferred genomes only).
-  [[nodiscard]] static std::vector<CountryPair> getCountries(const std::string& aux_file, std::shared_ptr<const HaploidPopulation> population_ptr);
+  [[nodiscard]] static std::vector<CountryPair> getCountries(const std::string& aux_file, std::shared_ptr<const PopulationVariant> population_ptr);
 
   [[nodiscard]] bool readParseAuxData(const std::string& aux_file_name);
 

@@ -214,11 +214,11 @@ bool kgl::IntervalAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBas
 
 
   // Superclass the population
-  std::shared_ptr<const UnphasedPopulation> population = std::dynamic_pointer_cast<const UnphasedPopulation>(data_base_ptr);
+  std::shared_ptr<const PopulationVariant> population = std::dynamic_pointer_cast<const PopulationVariant>(data_base_ptr);
 
   if (not population) {
 
-    ExecEnv::log().error("Analysis: {}, expected an Unphased Population", ident());
+    ExecEnv::log().error("Analysis: {}, expected a Population in file: {}", ident(), data_base_ptr->fileId());
     return false;
 
   }
@@ -230,7 +230,7 @@ bool kgl::IntervalAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBas
   bool analysis_result = variantIntervalCount(population);
 
   // Population specific output name.
-  std::string interval_file = Utility::filePath((population->Id() + "_" + output_file_name_), work_directory_);
+  std::string interval_file = Utility::filePath((population->populationId() + "_" + output_file_name_), work_directory_);
 
   // Write the results.
   bool file_result = writeResults(genome_, interval_file, false, OUTPUT_DELIMITER_);
@@ -327,7 +327,7 @@ void kgl::IntervalAnalysis::setupIntervalStructure(std::shared_ptr<const GenomeR
 }
 
 
-bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const UnphasedPopulation> population_ptr) {
+bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const PopulationVariant> population_ptr) {
 
    // We are profiling variants against a reference genome. Therefore we need to compress the population of variants
   // into a single genome.

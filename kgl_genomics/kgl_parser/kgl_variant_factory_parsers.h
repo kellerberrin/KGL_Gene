@@ -19,7 +19,6 @@ namespace kellerberrin::genome {   //  organization level namespace
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum class DataFileParserEnum{ GatkMultiGenome, GRChNoGenome, MultiGenomePhased, MultiGenomeGnomad, PedAncestry, NotImplemented};
 
 class ParserSelection {
 
@@ -37,23 +36,16 @@ public:
 private:
 
 
-  using VCFParserTypes = std::vector<std::pair<DataFileParserEnum, std::string>>;
-  inline const static VCFParserTypes implementated_parsers_{ std::pair<DataFileParserEnum, std::string>(DataFileParserEnum::GatkMultiGenome, "GatkMultiGenome"),
-                                                             std::pair<DataFileParserEnum, std::string>(DataFileParserEnum::GRChNoGenome, "GRChNoGenome"),
-                                                             std::pair<DataFileParserEnum, std::string>(DataFileParserEnum::MultiGenomePhased, "MultiGenomePhased"),
-                                                             std::pair<DataFileParserEnum, std::string>(DataFileParserEnum::MultiGenomeGnomad, "MultiGenomeGnomad"),
-                                                             std::pair<DataFileParserEnum, std::string>(DataFileParserEnum::PedAncestry, "PedAncestry"),
-                                                             std::pair<DataFileParserEnum, std::string>(DataFileParserEnum::NotImplemented, "NotImplemented")};
-
-  [[nodiscard]] static DataFileParserEnum getParserType(const std::string& parser_type);
   // Called when the PedAncestry parser is specified to read in an ancestry (.ped) file
-  [[nodiscard]] static std::shared_ptr<DataObjectBase> readPEDAncestry(std::shared_ptr<BaseFileInfo> file_info);
+  [[nodiscard]] static std::shared_ptr<DataObjectBase> readPEDAncestry(std::shared_ptr<BaseFileInfo> file_info,
+                                                                       DataSourceEnum data_source);
 
-  template<class VCFParser, class VCFPopulation>
+  template<class VCFParser>
   [[nodiscard]] static std::shared_ptr<DataObjectBase> readVCF( std::shared_ptr<const GenomeCollection> reference_genomes,
                                                                 std::shared_ptr<BaseFileInfo> file_info,
                                                                 const VariantEvidenceMap& evidence_map,
-                                                                const ContigAliasMap& contig_alias) {
+                                                                const ContigAliasMap& contig_alias,
+                                                                DataSourceEnum data_source) {
 
     auto vcf_file_info = std::dynamic_pointer_cast<RuntimeVCFFileInfo>(file_info);
 
@@ -82,7 +74,7 @@ private:
     }
 
     // Read variants.
-    std::shared_ptr<VCFPopulation> vcf_population_ptr(std::make_shared<VCFPopulation>(vcf_file_info->identifier()));
+    std::shared_ptr<PopulationVariant> vcf_population_ptr(std::make_shared<PopulationVariant>(vcf_file_info->identifier(), data_source));
 
     VCFParser reader(vcf_population_ptr, ref_genome_opt.value(), contig_alias, evidence_opt.value());
     reader.readParseVCFImpl(vcf_file_info->fileName());

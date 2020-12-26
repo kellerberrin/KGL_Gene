@@ -141,7 +141,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_sequence/kgl_sequence_offset.cpp
         kgl_genomics/kgl_database/kgl_variant_mutation_offset.h
         kgl_genomics/kgl_database/kgl_variant_mutation_offset.cpp
-        kgl_genomics/kgl_database/kgl_variant_db_phased.h
         kgl_genomics/kgl_sequence/kgl_table_impl.h
         kgl_genomics/kgl_sequence/kgl_table_impl.cpp
         kgl_genomics/kgl_sequence/kgl_table_organism.h
@@ -291,7 +290,7 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_package_analysis.h
         kgl_app/kgl_runtime.cpp
         kgl_app/kgl_runtime.h
-        kgl_genomics/kgl_database/kgl_data_base.h)
+        kgl_genomics/kgl_database/kgl_variant_db_type.h)
 
 
 

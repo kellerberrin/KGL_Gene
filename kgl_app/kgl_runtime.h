@@ -168,22 +168,22 @@ public:
 
   BaseFileInfo(const std::string& identifier,
                const std::string& file_name,
-               const std::string& parser_type)
+               const std::string& file_type)
       : file_identifier_(identifier),
         file_name_(file_name),
-        parser_ident_(parser_type) { }
+        file_type_(file_type) { }
   BaseFileInfo(const BaseFileInfo&) = default;
   virtual ~BaseFileInfo() = default;
 
   [[nodiscard]] const std::string& identifier() const { return file_identifier_; }
   [[nodiscard]] const std::string& fileName() const { return file_name_; }
-  [[nodiscard]] const std::string& parserIdent() const { return parser_ident_; }
+  [[nodiscard]] const std::string& fileType() const { return file_type_; }
 
 private:
 
   std::string file_identifier_;   // A unique short string to identify this VCF file in other classes
   std::string file_name_;
-  std::string parser_ident_;
+  std::string file_type_;
 
 };
 
@@ -198,7 +198,7 @@ public:
 
   PedAncestryInfo(const std::string& identifier,
                   const std::string& file_name,
-                  const std::string& parser_type) : BaseFileInfo(identifier, file_name, parser_type) {}
+                  const std::string& file_type) : BaseFileInfo(identifier, file_name, file_type) {}
   PedAncestryInfo(const PedAncestryInfo&) = default;
   ~PedAncestryInfo() override = default;
 
@@ -223,10 +223,10 @@ public:
 
   RuntimeVCFFileInfo(const std::string& identifier,
                      const std::string& file_name,
-                     const std::string& parser_type,
+                     const std::string& file_type,
                      const std::string& reference_genome,
                      const std::string& evidence_ident)
-  : BaseFileInfo(identifier, file_name, parser_type),
+  : BaseFileInfo(identifier, file_name, file_type),
     reference_genome_(reference_genome),
     evidence_ident_(evidence_ident) {}
   RuntimeVCFFileInfo(const RuntimeVCFFileInfo&) = default;

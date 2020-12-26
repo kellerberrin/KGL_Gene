@@ -12,7 +12,6 @@
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
-using PopulationPair = std::pair<std::unique_ptr<UnphasedPopulation>, std::unique_ptr<PhasedPopulation>>;
 
 class ExecutePackage {
 

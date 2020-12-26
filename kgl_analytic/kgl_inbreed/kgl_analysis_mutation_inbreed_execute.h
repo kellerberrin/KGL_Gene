@@ -6,7 +6,6 @@
 #define KGL_ANALYSIS_MUTATION_INBREED_EXECUTE_H
 
 
-#include "kgl_variant_db_phased.h"
 #include "kgl_ped_parser.h"
 #include "kgl_analysis_mutation_inbreed_calc.h"
 #include "kgl_analysis_mutation_inbreed_output.h"
@@ -33,8 +32,8 @@ public:
   ~ExecuteInbreedingAnalysis() = default;
 
   bool executeAnalysis(std::shared_ptr<const GenomeReference> genome_GRCh38,
-                       std::shared_ptr<const DiploidPopulation> diploid_population,
-                       std::shared_ptr<const UnphasedPopulation> unphased_population,
+                       std::shared_ptr<const PopulationVariant> diploid_population,
+                       std::shared_ptr<const PopulationVariant> unphased_population,
                        std::shared_ptr<const GenomePEDData> ped_data);
 
   bool writeResults(const std::string &output_file);
@@ -43,8 +42,8 @@ private:
 
   // The population variant data.
   std::shared_ptr<const GenomeReference> genome_GRCh38_;
-  std::shared_ptr<const DiploidPopulation> diploid_population_;
-  std::shared_ptr<const UnphasedPopulation> unphased_population_;
+  std::shared_ptr<const PopulationVariant> diploid_population_;
+  std::shared_ptr<const PopulationVariant> unphased_population_;
   std::shared_ptr<const GenomePEDData> ped_data_;
   // Analysis results generated to be output to file on finalize.
   InbreedingResultMap inbreeding_results_;

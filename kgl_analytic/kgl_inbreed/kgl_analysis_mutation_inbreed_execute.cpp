@@ -14,8 +14,8 @@ namespace kgl = kellerberrin::genome;
 
 // Perform the genetic analysis per iteration.
 bool kgl::ExecuteInbreedingAnalysis::executeAnalysis(std::shared_ptr<const GenomeReference> genome_GRCh38,
-                                                     std::shared_ptr<const DiploidPopulation> diploid_population,
-                                                     std::shared_ptr<const UnphasedPopulation> unphased_population,
+                                                     std::shared_ptr<const PopulationVariant> diploid_population,
+                                                     std::shared_ptr<const PopulationVariant> unphased_population,
                                                      std::shared_ptr<const GenomePEDData> ped_data) {
 
   genome_GRCh38_ = std::move(genome_GRCh38);
@@ -60,7 +60,8 @@ void kgl::ExecuteInbreedingAnalysis::createUnphased() {
 
     ExecEnv::log().info("ExecuteInbreedingAnalysis::processDiploid; Creating unique unphased population using 1000 Genomes.");
     std::shared_ptr<GenomeVariantArray> unphased_genome_ptr = diploid_population_->uniqueUnphasedGenome();
-    std::shared_ptr<UnphasedPopulation> unphased_unique_ptr = std::make_shared<UnphasedPopulation>(diploid_population_->populationId());
+    std::shared_ptr<PopulationVariant> unphased_unique_ptr = std::make_shared<PopulationVariant>(diploid_population_->populationId(),
+                                                                                                 diploid_population_->dataSource());
     unphased_unique_ptr->addGenome(unphased_genome_ptr);
     ExecEnv::log().info("ExecuteInbreedingAnalysis::processDiploid; Created unique unphased population, variant count: {}.", unphased_unique_ptr->variantCount());
     unphased_population_ = unphased_unique_ptr;

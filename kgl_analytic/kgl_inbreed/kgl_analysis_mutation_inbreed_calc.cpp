@@ -152,9 +152,9 @@ kel::Optimize kgl::InbreedingCalculation::createLogLikelihoodOptimizer() {
 
 kgl::LocusResults
 kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
-                                                 const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                                 const std::shared_ptr<const ContigOffsetVariant>& contig_ptr,
                                                  const std::string& super_population_field,
-                                                 const std::shared_ptr<const ContigVariant>& locus_list,
+                                                 const std::shared_ptr<const ContigOffsetVariant>& locus_list,
                                                  const InbreedingParameters& parameters) {
 
   // Only want SNP variants.
@@ -226,9 +226,9 @@ kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
 
 kgl::LocusResults
 kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
-                                           const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                           const std::shared_ptr<const ContigOffsetVariant>& contig_ptr,
                                            const std::string& super_population_field,
-                                           const std::shared_ptr<const ContigVariant>& locus_list,
+                                           const std::shared_ptr<const ContigOffsetVariant>& locus_list,
                                            const InbreedingParameters& parameters) {
 
   // Only want SNP variants.
@@ -321,9 +321,9 @@ kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
 
 kgl::LocusResults
 kgl::InbreedingCalculation::processSimple(const GenomeId_t& genome_id,
-                                          const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                          const std::shared_ptr<const ContigOffsetVariant>& contig_ptr,
                                           const std::string& super_population_field,
-                                          const std::shared_ptr<const ContigVariant>& locus_list,
+                                          const std::shared_ptr<const ContigOffsetVariant>& locus_list,
                                           const InbreedingParameters& parameters) {
 
   // Get the locus frequencies.
@@ -379,9 +379,9 @@ kgl::InbreedingCalculation::processSimple(const GenomeId_t& genome_id,
 
 kgl::LocusResults
 kgl::InbreedingCalculation::processRitlandLocus(const GenomeId_t &genome_id,
-                                           const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                           const std::shared_ptr<const ContigOffsetVariant>& contig_ptr,
                                            const std::string& super_population_field,
-                                           const std::shared_ptr<const ContigVariant>& locus_list,
+                                           const std::shared_ptr<const ContigOffsetVariant>& locus_list,
                                            const InbreedingParameters& parameters) {
 
   // Ignore rare homozygous combinations, as these 'blow up' the ratio below.

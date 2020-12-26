@@ -6,7 +6,6 @@
 #define KGL_ANALYSIS_MUTATION_SYNGEN_H
 
 
-#include "kgl_variant_db_phased.h"
 #include "kgl_analysis_mutation_inbreed_freqdb.h"
 #include "kgl_analysis_mutation_inbreed_locus.h"
 
@@ -35,12 +34,12 @@ public:
 
   // Create a synthetic population with known inbreeding characteristics
   // Used to test and calibrate the developed inbreeding algorithms.
-  [[nodiscard]] static std::shared_ptr<const DiploidPopulation>
+  [[nodiscard]] static std::shared_ptr<const PopulationVariant>
   generateSyntheticPopulation( double lower_inbreeding,
                                double upper_inbreeding,
                                double step_inbreeding,
                                const std::string& super_population,
-                               const ContigVariant& locus_list,
+                               const ContigOffsetVariant& locus_list,
                                const LociiVectorArguments& arguments);
 
 

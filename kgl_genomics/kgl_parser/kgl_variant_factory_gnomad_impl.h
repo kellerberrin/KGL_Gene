@@ -7,7 +7,7 @@
 
 
 #include "kel_utility.h"
-#include "kgl_variant_db_phased.h"
+#include "kgl_variant_db_population.h"
 #include "kgl_variant_factory_readvcf_impl.h"
 #include "kgl_variant_factory_record_vcf_impl.h"
 #include "kgl_variant_factory_vcf_parse_info.h"
@@ -20,7 +20,7 @@ class GenomeGnomadVCFImpl : public VCFReaderMT {
 
 public:
 
-  GenomeGnomadVCFImpl(const std::shared_ptr<UnphasedPopulation> vcf_population_ptr,
+  GenomeGnomadVCFImpl(const std::shared_ptr<PopulationVariant> vcf_population_ptr,
                       const std::shared_ptr<const GenomeReference> genome_db_ptr,
                       const ContigAliasMap &contig_alias_map,
                       const EvidenceInfoSet &evidence_map) : evidence_factory_(evidence_map),
@@ -59,7 +59,7 @@ private:
   constexpr static const char ABSTRACT_ALT_BRACKET_{'<'};
   constexpr static const char *PASSED_FILTERS_{"PASS"};
 
-  const std::shared_ptr<UnphasedPopulation> population_ptr_;   // Diploid phased variants.
+  const std::shared_ptr<PopulationVariant> population_ptr_;   // Diploid phased variants.
   const std::shared_ptr<const GenomeReference> genome_db_ptr_; // read access only.
 
   // mutex to lock the structure for multiple thread access by parsers.

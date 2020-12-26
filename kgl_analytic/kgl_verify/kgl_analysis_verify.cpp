@@ -3,7 +3,6 @@
 //
 
 #include "kgl_analysis_verify.h"
-#include "kgl_variant_db_phased.h"
 #include "kgl_filter.h"
 
 
@@ -37,78 +36,43 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase>
 
   ExecEnv::log().info("VCF File Read for Analysis Id: {} called with Variant Population", ident());
 
-  // List all the Info fields to remind us what's available.
-  std::shared_ptr<const InfoEvidenceHeader> evidence_header_ptr;
+  auto file_characteristic = data_ptr->dataCharacteristic();
 
-  if (data_ptr->dataType() == DataTypeEnum::DiploidPopulation) {
+  // Check if we have a population.
+  if (file_characteristic.data_implementation == DataImplEnum::PopulationVariant) {
 
-    std::shared_ptr<const DiploidPopulation> diploid_population = std::dynamic_pointer_cast<const DiploidPopulation>(data_ptr);
-    if (diploid_population) {
+    std::shared_ptr<const PopulationVariant> population = std::dynamic_pointer_cast<const PopulationVariant>(data_ptr);
 
-      // Only check variants that have passed all VCF filters.
-      std::shared_ptr<const DiploidPopulation> diploid_passed = diploid_population->filterVariants(PassFilter());
-      size_t count_passed = diploid_passed->variantCount();
-      size_t count_all = diploid_population->variantCount();
-      ExecEnv::log().info("Diploid Population: {}, total variants: {}, variants 'Pass' VCF filters: {}",
-                          diploid_passed->populationId(), count_all, count_passed);
+    // If we have a mono genome file or phased diploid then we do not expect to see duplicate variants.
+    // Note that a phased diploid population will have variants distinguished by phasing.
+    if (file_characteristic.data_structure == DataStructureEnum::UnphasedMonoGenome
+        or file_characteristic.data_structure == DataStructureEnum::DiploidPhased) {
 
-    }
-
-  }
-
-  if (data_ptr->dataType() == DataTypeEnum::UnphasedPopulation) {
-
-    // List all the Info fields to remind us what's available.
-
-    // Cast away const-ness to perform inSituFilter()
-    auto non_const_data_ptr = std::const_pointer_cast<DataObjectBase>(data_ptr);
-    // Superclass the population
-    std::shared_ptr<UnphasedPopulation> unphased_population = std::dynamic_pointer_cast<UnphasedPopulation>(non_const_data_ptr);
-    if (unphased_population) {
-
-      auto filter_count = unphased_population->inSituFilter(SNPFilter());
-      ExecEnv::log().info("Unphased Population: {}, total variants: {}, SNP variants: {}",
-                          unphased_population->populationId(), filter_count.first, filter_count.second);
-
-//      ExecEnv::log().info("Verifying Unphased 'Pass' Population: {} for duplicate variants", unphased_passed->populationId());
-//      VerifyDuplicates verify_duplicates;
-//      unphased_passed->processAll(verify_duplicates, &VerifyDuplicates::verifyVariant);
-//      ExecEnv::log().info("Completed Verifying Unphased 'Pass' population for duplicate variants, duplicates: {}",
-//                          verify_duplicates.duplicateCount());
-
-      // Delete the population by applying the FalseFilter to the population.
-      unphased_population->inSituFilter(FalseFilter());
-
-    }
-
-
-  }
-
-  if (data_ptr->dataType() == DataTypeEnum::HaploidPopulation) {
-
-    // List all the Info fields to remind us what's available.
-    // Superclass the population
-    std::shared_ptr<const UnphasedPopulation> haploid_population = std::dynamic_pointer_cast<const UnphasedPopulation>(data_ptr);
-    if (haploid_population) {
-
-      // Only check variants that have passed all VCF filters.
-      std::shared_ptr<const UnphasedPopulation> haploid_passed = haploid_population->filterVariants(PassFilter());
-      size_t count_passed = haploid_passed->variantCount();
-      size_t count_all = haploid_population->variantCount();
-      ExecEnv::log().info("Haploid Population: {}, total variants: {}, variants 'Pass' VCF filters: {}",
-                          haploid_passed->populationId(), count_all, count_passed);
-
-      ExecEnv::log().info("Verifying Haploid 'Pass' Population: {} for duplicate variants", haploid_passed->populationId());
+      ExecEnv::log().info("Verifying Population: {} for duplicate variants", population->populationId());
       VerifyDuplicates verify_duplicates;
-      haploid_passed->processAll(verify_duplicates, &VerifyDuplicates::verifyVariant);
-      ExecEnv::log().info("Completed Verifying Haploid 'Pass' population for duplicate variants, duplicates: {}",
+      population->processAll(verify_duplicates, &VerifyDuplicates::verifyVariant);
+      ExecEnv::log().info("Completed Verifying population for duplicate variants, duplicates: {}",
                           verify_duplicates.duplicateCount());
 
     }
 
+    // Apply some filters inSitu, note this modifies the population structure so we need to cast away const-ness
+    auto non_const_population = std::const_pointer_cast<PopulationVariant>(population);
+
+    auto pass_results = non_const_population->inSituFilter(PassFilter());
+    ExecEnv::log().info("Population: {}, total variants: {}, 'Pass' variants: {}",
+                        non_const_population->populationId(), pass_results.first, pass_results.second);
+
+    auto snp_filter_count = non_const_population->inSituFilter(SNPFilter());
+    ExecEnv::log().info("Population: {}, total variants: {}, SNP variants: {}",
+                        non_const_population->populationId(), snp_filter_count.first, snp_filter_count.second);
+
+    // Delete the population by applying the FalseFilter to the population, this appears to be faster than unwinding smart pointers.
+    auto false_filter_count = non_const_population->inSituFilter(FalseFilter());
+    ExecEnv::log().info("Population: {}, total variants: {}, False variants: {}",
+                        non_const_population->populationId(), false_filter_count.first, false_filter_count.second);
 
   }
-
 
   return true;
 

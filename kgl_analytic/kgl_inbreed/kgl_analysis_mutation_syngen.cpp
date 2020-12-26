@@ -15,16 +15,17 @@ namespace kgl = kellerberrin::genome;
 
 
 
-std::shared_ptr<const kgl::DiploidPopulation>
+std::shared_ptr<const kgl::PopulationVariant>
 kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
                                                     double upper_inbreeding,
                                                     double step_inbreeding,
                                                     const std::string& super_population,
-                                                    const ContigVariant& locus_list,
+                                                    const ContigOffsetVariant& locus_list,
                                                     const LociiVectorArguments& arguments) {
   static std::mutex log_mutex; // logging mutex.
 
-  std::shared_ptr<DiploidPopulation> synthetic_pop_ptr(std::make_shared<DiploidPopulation>("SyntheticInbreedingPopulation"));
+  // Make a synthetic phased diploid population.
+  std::shared_ptr<PopulationVariant> synthetic_pop_ptr(std::make_shared<PopulationVariant>("SyntheticInbreedingPopulation", DataSourceEnum::Genome1000));
 
   // Entropy source is the Mersenne twister.
   RandomEntropySource entropy_mt;

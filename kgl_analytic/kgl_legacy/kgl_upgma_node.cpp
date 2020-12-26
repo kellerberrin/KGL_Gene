@@ -105,7 +105,7 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
     OffsetVariantMap variant_map;
 
     if (not genome_variant_ptr_->getSortedVariants( contig_ptr->contigId(),
-                                                    ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                                    VariantSequence::HAPLOID_PHASED,
                                                     sequence.second->start(),
                                                     sequence.second->end(),
                                                     variant_map)) {
@@ -186,7 +186,7 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
   OffsetVariantMap variant_map;
 
   if (not genome_variant_ptr_->getSortedVariants( contig_ptr->contigId(),
-                                                  ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                                  VariantSequence::HAPLOID_PHASED,
                                                   sequence->start(),
                                                   sequence->end(),
                                                   variant_map)) {
@@ -287,7 +287,7 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
   OffsetVariantMap variant_map;
 
   if (not genome_variant_ptr_->getSortedVariants( contig_ptr->contigId(),
-                                                  ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                                  VariantSequence::HAPLOID_PHASED,
                                                   sequence->start(),
                                                   sequence->end(),
                                                   variant_map)) {

@@ -4,7 +4,6 @@
 
 #include <kgl_variant_factory_vcf_evidence_analysis.h>
 #include "kgl_analysis_null.h"
-#include "kgl_variant_db_phased.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -37,107 +36,61 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> d
 
   ExecEnv::log().info("Default VCF File Read for Analysis Id: {} called with Variant Population", ident());
 
+  auto file_characteristic = data_ptr->dataCharacteristic();
 
-  // List all the Info fields to remind us what's available.
-  std::shared_ptr<const InfoEvidenceHeader> evidence_header_ptr;
+  // If the file is a population then list genomes and all available info fields.
+  if (file_characteristic.data_implementation == DataImplEnum::PopulationVariant) {
 
-  if (data_ptr->dataType() == DataTypeEnum::DiploidPopulation) {
-
-    std::shared_ptr<const DiploidPopulation> diploid_population = std::dynamic_pointer_cast<const DiploidPopulation>(data_ptr);
-    std::optional<std::shared_ptr<const InfoEvidenceHeader>> info_header_opt = diploid_population->getVCFInfoEvidenceHeader();
-
-    if (not info_header_opt) {
-
-      ExecEnv::log().warn("InfoFilterAnalysis::fileReadAnalysis could not get Info Field Header from VCF diploid population: {}",
-                          diploid_population->populationId());
-      return false;
-
-    }
-
-    evidence_header_ptr = info_header_opt.value();
+    std::shared_ptr<const PopulationVariant> population = std::dynamic_pointer_cast<const PopulationVariant>(data_ptr);
 
     size_t genome_count{0};
-    for (auto const& [genome_id, genome_ptr] : diploid_population->getMap()) {
+    for (auto const& [genome_id, genome_ptr] : population->getMap()) {
 
       ExecEnv::log().info("NullAnalysis::fileReadAnalysis; Diploid Population: ,{}, Genome: ,{}, Contigs: ,{}",
-                          diploid_population->populationId(), genome_id, genome_ptr->getMap().size());
+                          population->populationId(), genome_id, genome_ptr->getMap().size());
 
       ++genome_count;
 
     }
 
     ExecEnv::log().info("NullAnalysis::fileReadAnalysis; Diploid Population: ,{}, Total Genomes: {}",
-                        diploid_population->populationId(), genome_count);
+                        population->populationId(), genome_count);
 
-  }
-
-
-
-  if (data_ptr->dataType() == DataTypeEnum::UnphasedPopulation) {
-
-    // List all the Info fields to remind us what's available.
-    // Superclass the population
-    std::shared_ptr<const UnphasedPopulation> unphased_population = std::dynamic_pointer_cast<const UnphasedPopulation>(data_ptr);
-    std::optional<std::shared_ptr<const InfoEvidenceHeader>> info_header_opt = unphased_population->getVCFInfoEvidenceHeader();
-
+    // Iterate any available info fields
+    std::optional<std::shared_ptr<const InfoEvidenceHeader>> info_header_opt = population->getVCFInfoEvidenceHeader();
     if (not info_header_opt) {
 
-      ExecEnv::log().warn("InfoFilterAnalysis::fileReadAnalysis could not get Info Field Header from VCF unphased population: {}",
-                          unphased_population->populationId());
+      ExecEnv::log().warn("InfoFilterAnalysis::fileReadAnalysis could not get Info Field Header from VCF population: {}",
+                          population->populationId());
       return false;
 
     }
 
+    std::shared_ptr<const InfoEvidenceHeader> evidence_header_ptr = info_header_opt.value();
+
+    ExecEnv::log().info("Analysis Id: {}, VCF File vcf_population: {}, Obtained header for: {} Info Fields (listed below)",
+                        ident(), evidence_header_ptr->getConstMap().size(), population->populationId());
+
+    // List the available INFO fields
+    for (auto const&[ident, field_item] : evidence_header_ptr->getConstMap()) {
+
+      ExecEnv::log().info("Field Id: {}, Type: {}, Number: {}, Description: {}",
+                          ident, field_item.infoVCF().type, field_item.infoVCF().number,
+                          field_item.infoVCF().description);
+
+    }
 
     // Investigate vep field values.
-    // Vep fields on the Gnomad Genomes 3.1 files are non-standard and need to be parsed in a unique way.
+    // Comment out, Vep fields on the Gnomad Genomes 3.1 files are non-standard and need to be parsed in a unique way.
     // Subject to confirmation by the Gnomad group.
-/*
-    InfoEvidenceAnalysis::vepSubFieldValues("Consequence", unphased_population);
-    InfoEvidenceAnalysis::vepSubFieldValues("IMPACT", unphased_population);
-    InfoEvidenceAnalysis::vepSubFieldValues("Feature_type", unphased_population);
-    InfoEvidenceAnalysis::vepSubFieldValues("BIOTYPE", unphased_population);
-    InfoEvidenceAnalysis::vepSubFieldValues("EXON", unphased_population);
-    InfoEvidenceAnalysis::vepSubFieldValues("INTRON", unphased_population);
-*/
-    evidence_header_ptr = info_header_opt.value();
-
-  }
-
-  if (data_ptr->dataType() == DataTypeEnum::HaploidPopulation) {
-
-    // List all the Info fields to remind us what's available.
-    // Superclass the population
-    std::shared_ptr<const UnphasedPopulation> unphased_population = std::dynamic_pointer_cast<const UnphasedPopulation>(data_ptr);
-    std::optional<std::shared_ptr<const InfoEvidenceHeader>> info_header_opt = unphased_population->getVCFInfoEvidenceHeader();
-
-    if (not info_header_opt) {
-
-      ExecEnv::log().warn("InfoFilterAnalysis::fileReadAnalysis could not get Info Field Header from VCF haploid population: {}",
-                          unphased_population->populationId());
-      return false;
-
-    }
-
-    evidence_header_ptr = info_header_opt.value();
-
-  }
-
-  if (not evidence_header_ptr) {
-
-    return true;
-
-  }
-
-  ExecEnv::log().info("Analysis Id: {}, VCF File vcf_population: {}, Obtained header for: {} Info Fields (listed below)",
-                      ident(), evidence_header_ptr->getConstMap().size(), data_ptr->Id());
-
-  // List the available INFO fields
-  for (auto const&[ident, field_item] : evidence_header_ptr->getConstMap()) {
-
-    ExecEnv::log().info("Field Id: {}, Type: {}, Number: {}, Description: {}",
-                        ident, field_item.infoVCF().type, field_item.infoVCF().number,
-                        field_item.infoVCF().description);
+    /*
+        InfoEvidenceAnalysis::vepSubFieldValues("Consequence", unphased_population);
+        InfoEvidenceAnalysis::vepSubFieldValues("IMPACT", unphased_population);
+        InfoEvidenceAnalysis::vepSubFieldValues("Feature_type", unphased_population);
+        InfoEvidenceAnalysis::vepSubFieldValues("BIOTYPE", unphased_population);
+        InfoEvidenceAnalysis::vepSubFieldValues("EXON", unphased_population);
+        InfoEvidenceAnalysis::vepSubFieldValues("INTRON", unphased_population);
+    */
 
   }
 

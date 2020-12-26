@@ -57,64 +57,60 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 // This function superclasses the data objects and stores them for further use.
 bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataObjectBase> data_object_ptr) {
 
-  ExecEnv::log().info("Analysis: {}, begin processing data file", ident(), data_object_ptr->Id());
+  ExecEnv::log().info("Analysis: {}, begin processing data file", ident(), data_object_ptr->fileId());
 
+  auto file_characteristic = data_object_ptr->dataCharacteristic();
 
-  if (data_object_ptr->dataType() == DataTypeEnum::DiploidPopulation) {
+  if (file_characteristic.data_structure == DataStructureEnum::DiploidPhased
+      or file_characteristic.data_structure == DataStructureEnum::DiploidUnphased) {
 
-    std::shared_ptr<const DiploidPopulation> diploid_population = std::dynamic_pointer_cast<const DiploidPopulation>(data_object_ptr);
+    diploid_population_ = std::dynamic_pointer_cast<const PopulationVariant>(data_object_ptr);
 
-    if (diploid_population) {
+    if (diploid_population_) {
 
-      ExecEnv::log().info("Analysis: {}, Generate inbreeding statistics for file: {}", ident(), data_object_ptr->Id());
-
-      diploid_population_ = diploid_population;
+      ExecEnv::log().info("Analysis: {}, Generate inbreeding statistics for file: {}", ident(), diploid_population_->populationId());
 
     } else {
 
-      ExecEnv::log().error("MutationAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not a Diploid Population", ident(), data_object_ptr->Id());
+      ExecEnv::log().error("MutationAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not a Diploid Population", ident(), data_object_ptr->fileId());
       return false;
 
     }
 
   }
 
-  if (data_object_ptr->dataType() == DataTypeEnum::UnphasedPopulation) {
+  if (file_characteristic.data_structure == DataStructureEnum::DiploidUnphased) {
 
-    std::shared_ptr<const UnphasedPopulation> unphased_population = std::dynamic_pointer_cast<const UnphasedPopulation>(data_object_ptr);
+    unphased_population_  = std::dynamic_pointer_cast<const PopulationVariant>(data_object_ptr);
 
-    if (unphased_population) {
+    if (not unphased_population_) {
 
-      unphased_population_ = unphased_population;
-
-    } else {
-
-      ExecEnv::log().error("MutationAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not an Unphased Population", ident(), data_object_ptr->Id());
+      ExecEnv::log().error("MutationAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not an Unphased Population", ident(), data_object_ptr->fileId());
       return false;
 
     }
 
   }
 
-  if (data_object_ptr->dataType() == DataTypeEnum::PedAncestor) {
+  if (file_characteristic.data_structure == DataStructureEnum::PedGenome1000) {
 
     std::shared_ptr<const GenomePEDData> ped_data = std::dynamic_pointer_cast<const GenomePEDData>(data_object_ptr);
 
     if (ped_data) {
 
       ped_data_ = ped_data;
-      ExecEnv::log().info("Analysis: {}, ped file: {} contains: {} PED records", ident(), ped_data->Id(), ped_data->getMap().size());
+      ExecEnv::log().info("Analysis: {}, ped file: {} contains: {} PED records", ident(), ped_data->fileId(), ped_data->getMap().size());
 
     } else {
 
-      ExecEnv::log().error("MutationAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not a PED Ancestor Object", ident(), data_object_ptr->Id());
+      ExecEnv::log().error("MutationAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not a PED Ancestor Object", ident(), data_object_ptr->fileId());
       return false;
 
     }
 
   }
 
-  ExecEnv::log().info("Analysis: {}, completed data file: {}", ident(), data_object_ptr->Id());
+  ExecEnv::log().info("Analysis: {}, completed data file: {}", ident(), data_object_ptr->fileId());
 
   return true;
 

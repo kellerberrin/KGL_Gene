@@ -28,22 +28,22 @@ class VariantArray {
 public:
 
   VariantArray() = default;
-  virtual ~VariantArray() = default;
+  ~VariantArray() = default;
 
   VariantArray(const VariantArray &) = delete;
   VariantArray& operator=(const VariantArray &) = delete;
 
 
-  [[nodiscard]] virtual OffsetVariantArray getVariantArray() const {
+  [[nodiscard]] OffsetVariantArray getVariantArray() const {
 
     OffsetVariantArray variant_vector = variant_vector_;
     return variant_vector;
 
   }
 
-  virtual void addVariant(std::shared_ptr<const Variant> variant_ptr) { variant_vector_.emplace_back(variant_ptr); }
+  void addVariant(std::shared_ptr<const Variant> variant_ptr) { variant_vector_.emplace_back(variant_ptr); }
 
-  virtual void clearVariant() { variant_vector_.clear(); }
+  void clearVariant() { variant_vector_.clear(); }
 
 
 private:

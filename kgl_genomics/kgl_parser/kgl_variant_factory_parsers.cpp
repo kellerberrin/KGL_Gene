@@ -15,32 +15,12 @@
 namespace kgl = kellerberrin::genome;
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-
-kgl::DataFileParserEnum kgl::ParserSelection::getParserType(const std::string& parser_type) {
-
-  std::string parser_upper = Utility::toupper(parser_type);
-
-  for (auto const& [parser_type, parser_string] : implementated_parsers_) {
-
-    if (parser_upper == Utility::toupper(parser_string)) {
-
-      return parser_type;
-
-    }
-
-  }
-
-  return DataFileParserEnum::NotImplemented;
-
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 
 // Read and parse the specified ancestry file.
-std::shared_ptr<kgl::DataObjectBase> kgl::ParserSelection::readPEDAncestry(std::shared_ptr<BaseFileInfo> file_info) {
+std::shared_ptr<kgl::DataObjectBase> kgl::ParserSelection::readPEDAncestry(std::shared_ptr<BaseFileInfo> file_info, DataSourceEnum data_source) {
 
   auto ped_file_info = std::dynamic_pointer_cast<PedAncestryInfo>(file_info);
 
@@ -50,7 +30,7 @@ std::shared_ptr<kgl::DataObjectBase> kgl::ParserSelection::readPEDAncestry(std::
 
   }
 
-  std::shared_ptr<GenomePEDData> ped_data(std::make_shared<GenomePEDData>(ped_file_info->identifier()));
+  std::shared_ptr<GenomePEDData> ped_data(std::make_shared<GenomePEDData>(ped_file_info->identifier(), data_source));
 
   ParsePedFile ped_parser(ped_data);
 
@@ -63,34 +43,45 @@ std::shared_ptr<kgl::DataObjectBase> kgl::ParserSelection::readPEDAncestry(std::
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 
+
 std::shared_ptr<kgl::DataObjectBase> kgl::ParserSelection::parseData( std::shared_ptr<const GenomeCollection> reference_genomes,
                                                                       std::shared_ptr<BaseFileInfo> file_info_ptr,
                                                                       const VariantEvidenceMap& evidence_map,
                                                                       const ContigAliasMap& contig_alias) {
 
-  switch(ParserSelection::getParserType(file_info_ptr->parserIdent())) {
+  auto file_characteristic = DataObjectBase::findCharacteristic(file_info_ptr->fileType());
 
-    case DataFileParserEnum::GatkMultiGenome:
-      return readVCF<Pf3kVCFImpl, UnphasedPopulation>(reference_genomes, file_info_ptr, evidence_map, contig_alias);
+  if (not file_characteristic) {
 
-    case DataFileParserEnum::GRChNoGenome:
-      return readVCF<GrchVCFImpl, UnphasedPopulation>(reference_genomes, file_info_ptr, evidence_map, contig_alias);
-
-    case DataFileParserEnum::MultiGenomePhased:
-      return readVCF<Genome1000VCFImpl, DiploidPopulation>(reference_genomes, file_info_ptr, evidence_map, contig_alias);
-
-    case DataFileParserEnum::MultiGenomeGnomad:
-      return readVCF<GenomeGnomadVCFImpl, UnphasedPopulation>(reference_genomes, file_info_ptr, evidence_map, contig_alias);
-
-    case DataFileParserEnum::PedAncestry:
-      return ParserSelection::readPEDAncestry(file_info_ptr);
-
-    case DataFileParserEnum::NotImplemented:
-      ExecEnv::log().critical("ParserSelection::parseData; Package: {}, data file ident: {}, parser: {} not defined",
-                              file_info_ptr->fileName(), file_info_ptr->parserIdent());
+    // The file type is not defined in code.
+    ExecEnv::log().critical("ParserSelection::parseData; Data file ident: {}, file type: {} not defined, cannot proceed.",
+                            file_info_ptr->fileName(), file_info_ptr->fileType());
 
   }
 
-  return ParserSelection::readPEDAncestry(file_info_ptr); // Never reached.
+  auto parser_type = file_characteristic.value().parser_type;
+  auto data_source = file_characteristic.value().data_source;
+
+  switch(parser_type) {
+
+    case ParserTypeEnum::DiploidFalciparum:
+      return readVCF<Pf3kVCFImpl>(reference_genomes, file_info_ptr, evidence_map, contig_alias, data_source);
+
+    case ParserTypeEnum::MonoGenomeUnphased:
+      return readVCF<GrchVCFImpl>(reference_genomes, file_info_ptr, evidence_map, contig_alias, data_source);
+
+    case ParserTypeEnum::DiploidPhased:
+      return readVCF<Genome1000VCFImpl>(reference_genomes, file_info_ptr, evidence_map, contig_alias, data_source);
+
+    case ParserTypeEnum::DiploidGnomad:
+      return readVCF<GenomeGnomadVCFImpl>(reference_genomes, file_info_ptr, evidence_map, contig_alias, data_source);
+
+    case ParserTypeEnum::PedGenome1000:
+      return ParserSelection::readPEDAncestry(file_info_ptr, data_source);
+
+  }
+
+  // Never reached.
+  return ParserSelection::readPEDAncestry(file_info_ptr, data_source);
 
 }

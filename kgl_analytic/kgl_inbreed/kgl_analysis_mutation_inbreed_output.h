@@ -6,7 +6,6 @@
 #define KGL_ANALYSIS_MUTATION_INBREED_OUTPUT_H
 
 
-#include "kgl_variant_db_phased.h"
 #include "kgl_ped_parser.h"
 #include "kgl_analysis_mutation_inbreed_calc.h"
 

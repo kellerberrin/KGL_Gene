@@ -7,7 +7,6 @@
 
 
 #include "kgl_analysis_virtual.h"
-#include "kgl_variant_db_phased.h"
 #include "kgl_ped_parser.h"
 #include "kgl_analysis_mutation_inbreed_execute.h"
 
@@ -54,8 +53,8 @@ private:
 
   // The population variant data.
   std::shared_ptr<const GenomeReference> genome_GRCh38_;
-  std::shared_ptr<const DiploidPopulation> diploid_population_;
-  std::shared_ptr<const UnphasedPopulation> unphased_population_;
+  std::shared_ptr<const PopulationVariant> diploid_population_;
+  std::shared_ptr<const PopulationVariant> unphased_population_;
   std::shared_ptr<const GenomePEDData> ped_data_;
 
   ExecuteInbreedingAnalysis inbreed_analysis_;

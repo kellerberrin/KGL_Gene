@@ -88,7 +88,7 @@ bool kgl::ApplicationAnalysis::compare5Prime(const ContigId_t& contig_id,
                                              const FeatureIdent_t& sequence_id,
                                              ContigSize_t region_size,
                                              const std::shared_ptr<const GenomeReference>& genome_db,
-                                             const std::shared_ptr<const PhasedGenome>& genome_variant,
+                                             const std::shared_ptr<const GenomeVariantArray>& genome_variant,
                                              DNA5SequenceCoding& reference_sequence,
                                              DNA5SequenceCoding& mutant_sequence) {
 
@@ -122,7 +122,7 @@ bool kgl::ApplicationAnalysis::compare5Prime(const ContigId_t& contig_id,
   OffsetVariantMap variant_map;
 
   if (not genome_variant->getSortedVariants( contig_id,
-                                             ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                             VariantSequence::HAPLOID_PHASED,
                                              offset_5_prime,
                                              offset_5_prime + size_5_prime,
                                              variant_map)) {
@@ -161,7 +161,7 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
                                              const FeatureIdent_t& sequence_id,
                                              ContigSize_t region_size,
                                              const std::shared_ptr<const GenomeReference>& genome_db,
-                                             const std::shared_ptr<const PhasedGenome>& genome_variant,
+                                             const std::shared_ptr<const GenomeVariantArray>& genome_variant,
                                              DNA5SequenceCoding& reference_sequence,
                                              DNA5SequenceCoding& mutant_sequence) {
 
@@ -196,7 +196,7 @@ bool kgl::ApplicationAnalysis::compare3Prime(const ContigId_t& contig_id,
   OffsetVariantMap variant_map;
 
   if (not genome_variant->getSortedVariants( contig_id,
-                                             ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                             VariantSequence::HAPLOID_PHASED,
                                              offset_3_prime,
                                              offset_3_prime + size_3_prime,
                                              variant_map)) {
@@ -234,7 +234,7 @@ bool kgl::ApplicationAnalysis::outputRegionCSV(const std::string &file_name,
                                                  std::shared_ptr<const DNASequenceDistance> dna_distance_metric,
                                                  std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
                                                  std::shared_ptr<const GenomeReference> genome_db,
-                                                 std::shared_ptr<const PhasedPopulation> pop_variant_ptr) {
+                                                 std::shared_ptr<const PopulationVariant> pop_variant_ptr) {
 
   const char CSV_delimiter = ',';
   // open the file.
@@ -328,7 +328,7 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
                                                     SequenceAnalysisType analysis_type,
                                                     std::shared_ptr<const CodingDNASequenceDistance> dna_distance_metric,
                                                     std::shared_ptr<const GenomeReference> genome_db,
-                                                    std::shared_ptr<const PhasedPopulation> pop_variant_ptr) {
+                                                    std::shared_ptr<const PopulationVariant> pop_variant_ptr) {
 
   const char CSV_delimiter = ',';
   // open the file.
@@ -436,7 +436,7 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
           OffsetVariantMap variant_map;
 
           if (not genome_ptr->getSortedVariants( contig,
-                                                 ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                                 VariantSequence::HAPLOID_PHASED,
                                                  sequence_ptr->start(),
                                                  sequence_ptr->end(),
                                                  variant_map)) {
@@ -530,7 +530,7 @@ bool kgl::ApplicationAnalysis::outputDNASequenceCSV(const std::string &file_name
 bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_name,
                                                       std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
                                                       std::shared_ptr<const GenomeReference> genome_db,
-                                                      std::shared_ptr<const PhasedPopulation> pop_variant_ptr) {
+                                                      std::shared_ptr<const PopulationVariant> pop_variant_ptr) {
 
   const char CSV_delimiter = ',';
   // open the file.
@@ -637,7 +637,7 @@ bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_na
           OffsetVariantMap variant_map;
 
           if (not genome_ptr->getSortedVariants( contig.first,
-                                                 ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                                 VariantSequence::HAPLOID_PHASED,
                                                  sequence.second->start(),
                                                  sequence.second->end(),
                                                  variant_map)) {
@@ -715,7 +715,7 @@ bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_na
 
 
 std::string kgl::ApplicationAnalysis::outputSequenceHeader(char delimiter,
-                                                           std::shared_ptr<const PhasedPopulation> pop_variant_ptr) {
+                                                           std::shared_ptr<const PopulationVariant> pop_variant_ptr) {
 
   std::stringstream ss;
 
@@ -754,7 +754,7 @@ bool kgl::ApplicationAnalysis::outputAminoMutationCSV(const std::string &file_na
                                                  const FeatureIdent_t& gene_id,
                                                  const FeatureIdent_t& sequence_id,
                                                  std::shared_ptr<const GenomeReference> genome_db,
-                                                 std::shared_ptr<const PhasedPopulation> pop_variant_ptr) {
+                                                 std::shared_ptr<const PopulationVariant> pop_variant_ptr) {
 
   const char CSV_delimiter = ',';
   // open the file.
@@ -793,7 +793,7 @@ bool kgl::ApplicationAnalysis::outputAminoMutationCSV(const std::string &file_na
     }
 
     if (not genome_ptr->getSortedVariants( contig_id,
-                                           ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                           VariantSequence::HAPLOID_PHASED,
                                            coding_sequence_ptr->start(),
                                            coding_sequence_ptr->end(),
                                            variant_map)) {
@@ -848,7 +848,7 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
                                                     const FeatureIdent_t& gene_id,
                                                     const FeatureIdent_t& sequence_id,
                                                     std::shared_ptr<const GenomeReference> genome_db,
-                                                    std::shared_ptr<const PhasedPopulation> pop_variant_ptr,
+                                                    std::shared_ptr<const PopulationVariant> pop_variant_ptr,
                                                     const GenomeAuxData& aux_Pf3k_data) {
 
   const char CSV_delimiter = ',';
@@ -907,7 +907,7 @@ bool kgl::ApplicationAnalysis::outputDNAMutationCSV(const std::string &file_name
     }
 
     if (not genome_ptr->getSortedVariants( contig_id,
-                                           ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                           VariantSequence::HAPLOID_PHASED,
                                            coding_sequence_ptr->start(),
                                            coding_sequence_ptr->end(),
                                            variant_map)) {
@@ -1089,7 +1089,7 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
                                                      std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
                                                      std::shared_ptr<const CodingSequence> coding_sequence,
                                                      std::shared_ptr<const GenomeReference> genome_db,
-                                                     std::shared_ptr<const PhasedGenome> genome_variant) {
+                                                     std::shared_ptr<const GenomeVariantArray> genome_variant) {
 
   std::string genome_id = genome_variant->genomeId();
   std::shared_ptr<const ContigReference> contig_ptr = coding_sequence->getGene()->contig();
@@ -1108,7 +1108,7 @@ std::string kgl::ApplicationAnalysis::outputSequence(char delimiter,
   OffsetVariantMap variant_map;
 
   if (not genome_variant->getSortedVariants( contig,
-                                             ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                             VariantSequence::HAPLOID_PHASED,
                                              coding_sequence->start(),
                                              coding_sequence->end(),
                                              variant_map)) {

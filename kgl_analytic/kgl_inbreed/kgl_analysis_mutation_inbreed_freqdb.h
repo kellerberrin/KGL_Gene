@@ -6,6 +6,7 @@
 #define KGL_ANALYSIS_MUTATION_INBREED_FREQDB_H
 
 #include "kgl_variant.h"
+#include "kgl_variant_db_population.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
@@ -34,7 +35,7 @@ public:
   [[nodiscard]] std::optional<double> processFloatField( const Variant& variant, const std::string& super_population) const;
 
   // Return a frequency source based on the unphased population type.
-  static FrequencyDatabaseSource alleleFrequencySource(const std::shared_ptr<const UnphasedPopulation>& unphased_population);
+  static FrequencyDatabaseSource alleleFrequencySource(const std::shared_ptr<const PopulationVariant>& unphased_population);
 
   // List the super populations supported.
   [[nodiscard]] static const std::vector<std::string>& superPopulations() { return super_populations_; }

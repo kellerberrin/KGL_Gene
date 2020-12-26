@@ -16,7 +16,7 @@ namespace kgl = kellerberrin::genome;
 
 
 
-std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesFromTo( std::shared_ptr<const ContigVariant> unphased_contig_ptr,
+std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesFromTo( std::shared_ptr<const ContigOffsetVariant> unphased_contig_ptr,
                                                                                const std::string& super_population,
                                                                                const LociiVectorArguments& arguments) {
 
@@ -71,7 +71,7 @@ std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesFromTo( s
 
 
 
-std::vector<kgl::ContigOffset_t> kgl::RetrieveLociiVector::getLociiFromTo(std::shared_ptr<const ContigVariant> unphased_contig_ptr,
+std::vector<kgl::ContigOffset_t> kgl::RetrieveLociiVector::getLociiFromTo(std::shared_ptr<const ContigOffsetVariant> unphased_contig_ptr,
                                                                           const std::string& super_population,
                                                                           const LociiVectorArguments& arguments) {
 
@@ -100,7 +100,7 @@ std::vector<kgl::ContigOffset_t> kgl::RetrieveLociiVector::getLociiFromTo(std::s
 
 
 
-std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesCount( std::shared_ptr<const ContigVariant> unphased_contig_ptr,
+std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesCount( std::shared_ptr<const ContigOffsetVariant> unphased_contig_ptr,
                                                                               const std::string& super_population,
                                                                               const LociiVectorArguments& arguments) {
 
@@ -154,7 +154,7 @@ std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesCount( st
 }
 
 
-std::vector<kgl::ContigOffset_t> kgl::RetrieveLociiVector::getLociiCount( std::shared_ptr<const ContigVariant> unphased_contig_ptr,
+std::vector<kgl::ContigOffset_t> kgl::RetrieveLociiVector::getLociiCount( std::shared_ptr<const ContigOffsetVariant> unphased_contig_ptr,
                                                                           const std::string& super_population,
                                                                           const LociiVectorArguments& arguments) {
 
@@ -187,7 +187,7 @@ std::vector<kgl::ContigOffset_t> kgl::RetrieveLociiVector::getLociiCount( std::s
 //
 
 
-kgl::ContigLocusMap kgl::InbreedSampling::getPopulationLocusMap(  std::shared_ptr<const UnphasedPopulation> population_ptr,
+kgl::ContigLocusMap kgl::InbreedSampling::getPopulationLocusMap(  std::shared_ptr<const PopulationVariant> population_ptr,
                                                                   const LociiVectorArguments& locii_args) {
 
   ContigLocusMap contig_locus_map;
@@ -220,7 +220,7 @@ kgl::ContigLocusMap kgl::InbreedSampling::getPopulationLocusMap(  std::shared_pt
 }
 
 
-kgl::LocusMap kgl::InbreedSampling::getPopulationLocus(std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+kgl::LocusMap kgl::InbreedSampling::getPopulationLocus(std::shared_ptr<const PopulationVariant> unphased_ptr,
                                                        const ContigId_t& contig_id,
                                                        const LociiVectorArguments& locii_args) {
 
@@ -258,13 +258,13 @@ kgl::LocusMap kgl::InbreedSampling::getPopulationLocus(std::shared_ptr<const Unp
 // Get a list of hom/het SNPs with a specified locii_spacing to minimise linkage dis-equilibrium
 // and at a specified frequency for the super population. Used as a template for calculating
 // the inbreeding coefficient and sample relatedness
-kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::shared_ptr<const PopulationVariant> unphased_ptr,
                                                                           const ContigId_t& contig_id,
                                                                           const std::string& super_population,
                                                                           const LociiVectorArguments& locii_args) {
 
   // Annotate the variant list with the super population frequency identifier
-  std::shared_ptr<ContigVariant> locus_list(std::make_shared<ContigVariant>(super_population));
+  std::shared_ptr<ContigOffsetVariant> locus_list(std::make_shared<ContigOffsetVariant>(super_population));
   size_t locii{0};
 
   if (unphased_ptr->getMap().size() == 1) {

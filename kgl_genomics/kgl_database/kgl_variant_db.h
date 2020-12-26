@@ -15,7 +15,6 @@
 #include "kgl_variant.h"
 #include "kgl_variant_db_genome.h"
 #include "kgl_variant_db_population.h"
-#include "kgl_variant_db_phased.h"
 
 
 #endif //KGL_VARIANT_DB_H

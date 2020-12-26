@@ -24,11 +24,7 @@ class InfoFilterAnalysis : public VirtualAnalysis {
 
 public:
 
-  InfoFilterAnalysis() {
-
-    filtered_vcf_population_ = std::make_shared<UnphasedPopulation>("All Chromosomes");
-
-  }
+  InfoFilterAnalysis() = default;
   ~InfoFilterAnalysis() override = default;
 
   // Functions redefined in super classes
@@ -55,30 +51,30 @@ public:
 
 private:
 
-  std::shared_ptr<UnphasedPopulation> filtered_vcf_population_;
+  std::shared_ptr<PopulationVariant> filtered_vcf_population_;
   std::vector<InfoAgeAnalysis> age_analysis_vector_;   // Store for final totals
   AgeSortedMap age_sorted_map_; // final totals.
   std::string output_file_name_;
 
   constexpr static const char* OUTPUT_FILE_ = "OUTPUTFILE";
 
-  std::shared_ptr<UnphasedPopulation> qualityFilter( std::shared_ptr<const UnphasedPopulation> vcf_population);
+  std::shared_ptr<PopulationVariant> qualityFilter( std::shared_ptr<const PopulationVariant> vcf_population);
 
   void analyzeField( const std::string& info_field_ident,
                      const std::vector<double>& field_values,
-                     std::shared_ptr<const UnphasedPopulation> vcf_population,
+                     std::shared_ptr<const PopulationVariant> vcf_population,
                      std::ostream& result_file);
 
   void analyzeFilteredPopulation( const VariantFilter& filter,
-                                  std::shared_ptr<const UnphasedPopulation> vcf_population,
+                                  std::shared_ptr<const PopulationVariant> vcf_population,
                                   std::ostream& result_file);
 
   // Analysis by average age.
-  void filterByAge( std::shared_ptr<const UnphasedPopulation> vcf_population,std::ostream& result_file);
+  void filterByAge( std::shared_ptr<const PopulationVariant> vcf_population,std::ostream& result_file);
 
-  bool performAnalysis(std::shared_ptr<const UnphasedPopulation> filtered_population);
+  bool performAnalysis(std::shared_ptr<const PopulationVariant> filtered_population);
 
-  void listAvailableInfoFields(std::shared_ptr<const UnphasedPopulation> vcf_population);
+  void listAvailableInfoFields(std::shared_ptr<const PopulationVariant> vcf_population);
 
 
 }; // InfoFilterAnalysis

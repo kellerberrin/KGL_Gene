@@ -13,7 +13,7 @@ namespace kgl = kellerberrin::genome;
 
 
 // Calculate the Synthetic Population Inbreeding Coefficient
-bool kgl::SyntheticAnalysis::syntheticInbreeding(  std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+bool kgl::SyntheticAnalysis::syntheticInbreeding(  std::shared_ptr<const PopulationVariant> unphased_ptr,
                                                    const InbreedingParameters& parameters,
                                                    InbreedingOutputResults& results) {
 
@@ -68,7 +68,7 @@ bool kgl::SyntheticAnalysis::syntheticInbreeding(  std::shared_ptr<const Unphase
 }
 
 
-kgl::ResultsMap kgl::SyntheticAnalysis::processSynResults( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
+kgl::ResultsMap kgl::SyntheticAnalysis::processSynResults( std::shared_ptr<const PopulationVariant> unphased_ptr,
                                                            const InbreedingParameters& parameters) {
 
   ResultsMap results_map;
@@ -90,7 +90,7 @@ kgl::ResultsMap kgl::SyntheticAnalysis::processSynResults( std::shared_ptr<const
     // Use a thread pool to calculate inbreeding and relatedness.
     for (auto const&[super_pop_id, locus_list] : locus_map) {
 
-      std::shared_ptr<const DiploidPopulation> population = InbreedSynthetic::generateSyntheticPopulation( MIN_INBREEDING_COEFICIENT,
+      std::shared_ptr<const PopulationVariant> population = InbreedSynthetic::generateSyntheticPopulation( MIN_INBREEDING_COEFICIENT,
                                                                                                            MAX_INBREEDING_COEFICIENT,
                                                                                                            STEP_INBREEDING_COEFICIENT,
                                                                                                            super_pop_id,

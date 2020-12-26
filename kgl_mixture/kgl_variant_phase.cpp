@@ -20,8 +20,8 @@ namespace kgl = kellerberrin::genome;
 
 // Just copy into a population object.
 bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
-                                        const std::shared_ptr<const UnphasedPopulation>& unphased_population_ptr,
-                                        const std::shared_ptr<HaploidPopulation>& haploid_population)  {
+                                        const std::shared_ptr<const PopulationVariant>& unphased_population_ptr,
+                                        const std::shared_ptr<PopulationVariant>& haploid_population)  {
 
 
   // Assumes a VCF ploidy of 2 and produces a haploid phased population.
@@ -38,7 +38,7 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
   for (auto const& [genome_id, genome_ptr] : unphased_population_ptr->getMap()) {
 
     // Create the GenomeVariant object.
-    std::optional<std::shared_ptr<HaploidGenome>> genome_variant_opt = haploid_population->getCreateGenome(genome_id);
+    std::optional<std::shared_ptr<GenomeVariantArray>> genome_variant_opt = haploid_population->getCreateGenome(genome_id);
     if (not genome_variant_opt) {
 
       ExecEnv::log().error("GenomePhasing::Haploid Phasing(); Unable to get/create genome: {} to haploid population", genome_id);
@@ -141,11 +141,11 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-std::shared_ptr<kgl::UnphasedPopulation> kgl::GenomePhasing::filterClonal(const std::string& phase_file,
-                                                                          std::shared_ptr<const UnphasedPopulation> unphased_population_ptr)  {
+std::shared_ptr<kgl::PopulationVariant> kgl::GenomePhasing::filterClonal(const std::string& phase_file,
+                                                                          std::shared_ptr<const PopulationVariant> unphased_population_ptr)  {
 
   PopulationId_t filtered_name = unphased_population_ptr->populationId() + std::string("_Clonal_Filter");
-  std::shared_ptr<UnphasedPopulation> filtered_population(std::make_shared<UnphasedPopulation>(filtered_name));
+  std::shared_ptr<PopulationVariant> filtered_population(std::make_shared<PopulationVariant>(filtered_name, unphased_population_ptr->dataSource()));
 
   GenomeMixtureStatistics mixture_statistics;
 

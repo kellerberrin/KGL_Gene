@@ -8,7 +8,6 @@
 #include "kgl_runtime.h"
 #include "kgl_genome_db.h"
 #include "kgl_variant_db_population.h"
-#include "kgl_variant_db_phased.h"
 #include "kgl_analysis_virtual.h"
 #include "kgl_age_analysis.h"
 #include "kgl_filter.h"
@@ -179,7 +178,7 @@ private:
 
   [[nodiscard]] bool getParameters(const RuntimeParameterMap& named_parameters);
   void setupIntervalStructure(std::shared_ptr<const GenomeReference> genome);
-  [[nodiscard]] bool variantIntervalCount(std::shared_ptr<const UnphasedPopulation> population_ptr);
+  [[nodiscard]] bool variantIntervalCount(std::shared_ptr<const PopulationVariant> population_ptr);
   [[nodiscard]] bool writeData( std::shared_ptr<const GenomeReference> genome_db, bool display_sequence, std::ostream& output, char delimiter) const;
   [[nodiscard]] bool writeHeader(std::ostream& output, char delimiter, bool display_sequence) const;
   [[nodiscard]] bool writeResults( std::shared_ptr<const GenomeReference> genome_db,

@@ -6,7 +6,6 @@
 #include "kgl_phylogenetic_gene.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_complexity.h"
-#include "kgl_variant_db_phased.h"
 #include "kgl_variant_db_mutation.h"
 
 #include <memory>
@@ -198,7 +197,7 @@ bool kgl::GeneAnalysis::translateGene( const GenomeId_t& genome_id,
 bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
                                    const FeatureIdent_t& gene,
                                    const FeatureIdent_t& sequence,
-                                   const std::shared_ptr<const PhasedPopulation>& population_ptr,
+                                   const std::shared_ptr<const PopulationVariant>& population_ptr,
                                    const std::shared_ptr<const GenomeReference>& genome_db_ptr,
                                    const std::string& fasta_filename) {
 
@@ -277,7 +276,7 @@ bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
 bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
                                          const FeatureIdent_t& gene,
                                          const FeatureIdent_t& sequence,
-                                         const std::shared_ptr<const PhasedGenome>& genome_variant_ptr,
+                                         const std::shared_ptr<const GenomeVariantArray>& genome_variant_ptr,
                                          const std::shared_ptr<const GenomeReference>& genome_db_ptr,
                                          GeneSummaryMap& gene_summary_map) {
 
@@ -393,7 +392,7 @@ bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
 bool kgl::GeneAnalysis::mutateAllRegions(const std::string& file_name,
                                          ContigSize_t region_size,
                                          const std::shared_ptr<const LinearDNASequenceDistance>& dna_distance_metric,
-                                         const std::shared_ptr<const PhasedPopulation>& pop_variant_ptr,
+                                         const std::shared_ptr<const PopulationVariant>& pop_variant_ptr,
                                          const std::shared_ptr<const GenomeReference>& genome_db_ptr) {
 
   const char CSV_delimiter = ',';
@@ -461,7 +460,7 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
                                                   const ContigId_t& contig_id,
                                                   const ContigOffset_t offset,
                                                   const ContigSize_t region_size,
-                                                  const std::shared_ptr<const PhasedGenome>& genome_variant_ptr,
+                                                  const std::shared_ptr<const GenomeVariantArray>& genome_variant_ptr,
                                                   const std::shared_ptr<const GenomeReference>& genome_db_ptr) {
 
   std::stringstream ss;
@@ -486,10 +485,10 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
   OffsetVariantMap variant_map;
 
   if (not genome_variant_ptr->getSortedVariants( contig_opt.value()->contigId(),
-                                                  ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
-                                                  offset,
-                                                  offset+region_size,
-                                                  variant_map)) {
+                                                 VariantSequence::HAPLOID_PHASED,
+                                                 offset,
+                                                 offset+region_size,
+                                                 variant_map)) {
 
     ExecEnv::log().warn("GeneAnalysis::outputGenomeRegion, Problem retrieving variants, genome: {}, contig: {}",
                         genome_variant_ptr->genomeId(), contig_opt.value()->contigId());
@@ -539,7 +538,7 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const GenomeId_t& genome,
                                            const ContigId_t& contig,
                                            ContigOffset_t offset,
                                            ContigSize_t region_size,
-                                           const std::shared_ptr<const PhasedPopulation>& population_ptr,
+                                           const std::shared_ptr<const PopulationVariant>& population_ptr,
                                            const std::shared_ptr<const GenomeReference>& genome_db_ptr,
                                            const std::string& fasta_file) {
 
@@ -561,7 +560,7 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const GenomeId_t& genome,
 bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
                                            const ContigOffset_t offset,
                                            const ContigSize_t region_size,
-                                           const std::shared_ptr<const PhasedGenome>& genome_variant_ptr,
+                                           const std::shared_ptr<const GenomeVariantArray>& genome_variant_ptr,
                                            const std::shared_ptr<const GenomeReference>& genome_db_ptr,
                                            const std::string& fasta_file) {
 
@@ -572,7 +571,7 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
   OffsetVariantMap variant_map;
 
   if (not genome_variant_ptr->getSortedVariants( contig,
-                                                 ContigVariant::HAPLOID_HOMOLOGOUS_INDEX,
+                                                 VariantSequence::HAPLOID_PHASED,
                                                  offset,
                                                  offset+region_size,
                                                  variant_map)) {

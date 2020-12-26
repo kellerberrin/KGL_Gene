@@ -248,7 +248,7 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
 // A temporary function to explore the vep field values.
 // Returns all the distinct field values of a vep sub field from a population.
 void kgl::InfoEvidenceAnalysis::vepSubFieldValues( std::string vep_sub_field,
-                                                   const std::shared_ptr<const UnphasedPopulation>& population) {
+                                                   const std::shared_ptr<const PopulationVariant>& population) {
 
   struct SubFieldValues{
 

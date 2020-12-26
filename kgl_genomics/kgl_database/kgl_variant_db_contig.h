@@ -72,8 +72,6 @@ public:
                                         ContigOffset_t end,
                                         OffsetVariantMap& variant_map) const;
 
-  constexpr static const PhaseId_t HAPLOID_HOMOLOGOUS_INDEX = VariantSequence::HAPLOID_PHASED;
-
 private:
 
   ContigId_t contig_id_;

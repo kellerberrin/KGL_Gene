@@ -17,8 +17,8 @@ namespace kgl = kellerberrin::genome;
 
 
 // Calculate the Population Inbreeding Coefficient
-bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const UnphasedPopulation> unphased_ptr,
-                                                   const DiploidPopulation& diploid_population,
+bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const PopulationVariant> unphased_ptr,
+                                                   const PopulationVariant& diploid_population,
                                                    const GenomePEDData& ped_data,
                                                    const InbreedingParameters& parameters,
                                                    InbreedingOutputResults& results) {
@@ -76,8 +76,8 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const Unphase
 
 
 
-kgl::ResultsMap kgl::InbreedingAnalysis::populationInbreedingSample( std::shared_ptr<const UnphasedPopulation> unphased_ptr,
-                                                                     const DiploidPopulation& diploid_population,
+kgl::ResultsMap kgl::InbreedingAnalysis::populationInbreedingSample( std::shared_ptr<const PopulationVariant> unphased_ptr,
+                                                                     const PopulationVariant& diploid_population,
                                                                      const GenomePEDData& ped_data,
                                                                      const InbreedingParameters& parameters) {
 
@@ -92,7 +92,7 @@ kgl::ResultsMap kgl::InbreedingAnalysis::populationInbreedingSample( std::shared
 
 
 kgl::ResultsMap kgl::InbreedingAnalysis::processResults( const ContigLocusMap& contig_locus_map,
-                                                         const DiploidPopulation& diploid_population,
+                                                         const PopulationVariant& diploid_population,
                                                          const GenomePEDData& ped_data,
                                                          const InbreedingParameters& parameters) {
 

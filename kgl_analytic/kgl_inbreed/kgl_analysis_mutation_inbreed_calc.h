@@ -52,9 +52,9 @@ private:
 
 // Algorithm type to pass to the threadpool.
 using InbreedingAlgorithm = std::function<LocusResults(const GenomeId_t& genome_id,
-                                                       const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                                       const std::shared_ptr<const ContigOffsetVariant>& contig_ptr,
                                                        const std::string& super_population_field,
-                                                       const std::shared_ptr<const ContigVariant>& locus_list,
+                                                       const std::shared_ptr<const ContigOffsetVariant>& locus_list,
                                                        const InbreedingParameters& parameters)>;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -102,28 +102,28 @@ public:
 
   // The inbreeding Algorithms
   [[nodiscard]] static LocusResults processRitlandLocus( const ContigId_t& genome_id,
-                                                         const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                                         const std::shared_ptr<const ContigOffsetVariant>& contig_ptr,
                                                          const std::string& super_population_field,
-                                                         const std::shared_ptr<const ContigVariant>& locus_list,
+                                                         const std::shared_ptr<const ContigOffsetVariant>& locus_list,
                                                          const InbreedingParameters& parameters);
   
   [[nodiscard]] static LocusResults processSimple(const ContigId_t& contig_id,
-                                                  const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                                  const std::shared_ptr<const ContigOffsetVariant>& contig_ptr,
                                                   const std::string& super_population_field,
-                                                  const std::shared_ptr<const ContigVariant>& locus_list,
+                                                  const std::shared_ptr<const ContigOffsetVariant>& locus_list,
                                                   const InbreedingParameters& parameters);
 
   [[nodiscard]] static LocusResults processHallME( const GenomeId_t& genome_id,
-                                                  const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                                  const std::shared_ptr<const ContigOffsetVariant>& contig_ptr,
                                                   const std::string& super_population_field,
-                                                  const std::shared_ptr<const ContigVariant>& locus_list,
+                                                  const std::shared_ptr<const ContigOffsetVariant>& locus_list,
                                                   const InbreedingParameters& parameters);
 
   // The loglikelihood algorithm.
   [[nodiscard]] static LocusResults processLogLikelihood(const GenomeId_t& genome_id,
-                                                         const std::shared_ptr<const DiploidContig>& contig_ptr,
+                                                         const std::shared_ptr<const ContigOffsetVariant>& contig_ptr,
                                                          const std::string& super_population_field,
-                                                         const std::shared_ptr<const ContigVariant>& locus_list,
+                                                         const std::shared_ptr<const ContigOffsetVariant>& locus_list,
                                                          const InbreedingParameters& parameters);
 
   // Algorithm key used in the the algorithm selection map.
@@ -157,9 +157,9 @@ private:
 
   [[nodiscard]] static std::pair<std::vector<AlleleFreqInfo>, LocusResults>
   generateFrequencies(const GenomeId_t& genome_id,
-                      const std::shared_ptr<const DiploidContig>& contig_ptr,
+                      const std::shared_ptr<const ContigOffsetVariant>& contig_ptr,
                       const std::string& super_population_field,
-                      const std::shared_ptr<const ContigVariant>& locus_list,
+                      const std::shared_ptr<const ContigOffsetVariant>& locus_list,
                       FrequencyDatabaseSource variantSource);
 
   [[nodiscard]] static double logLikelihood(std::vector<double>& x, std::vector<AlleleFreqInfo>& data);
