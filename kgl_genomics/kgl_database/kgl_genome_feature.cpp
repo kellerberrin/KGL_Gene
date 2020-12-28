@@ -5,7 +5,7 @@
 #include "kel_exec_env.h"
 #include "kel_patterns.h"
 #include "kgl_genome_feature.h"
-#include "kgl_genome_db.h"
+#include "kgl_genome_collection.h"
 
 #include <sstream>
 

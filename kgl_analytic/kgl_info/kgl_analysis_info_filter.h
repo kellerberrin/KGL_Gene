@@ -7,13 +7,13 @@
 
 
 #include "kgl_runtime.h"
-#include "kgl_genome_db.h"
+#include "kgl_genome_collection.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 
 #include "kgl_analysis_null.h"
 #include "kgl_filter.h"
-#include "kgl_age_analysis.h"
+#include "kgl_analysis_age.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 

@@ -6,10 +6,10 @@
 #define KGL_ANALYSIS_INTERVAL_H
 
 #include "kgl_runtime.h"
-#include "kgl_genome_db.h"
+#include "kgl_genome_collection.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_analysis_virtual.h"
-#include "kgl_age_analysis.h"
+#include "kgl_analysis_age.h"
 #include "kgl_filter.h"
 #include "kel_percentile.h"
 

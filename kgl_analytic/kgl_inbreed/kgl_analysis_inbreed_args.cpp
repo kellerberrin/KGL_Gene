@@ -2,9 +2,9 @@
 // Created by kellerberrin on 7/12/20.
 //
 
-#include "kgl_analysis_mutation_inbreed_execute.h"
-#include "kgl_analysis_mutation_inbreed.h"
-#include "kgl_analysis_mutation_synthetic.h"
+#include "kgl_analysis_inbreed_args.h"
+#include "kgl_analysis_inbreed_execute.h"
+#include "kgl_analysis_inbreed_synthetic.h"
 #include "kgl_filter.h"
 
 
@@ -43,7 +43,7 @@ bool kgl::ExecuteInbreedingAnalysis::executeAnalysis(std::shared_ptr<const Genom
     // Check that we have what we need.
     if (not unphased_population_) {
 
-      ExecEnv::log().error("MutationAnalysis::iterationAnalysis; Insufficient data, cannot process synthetic diploid inbreeding");
+      ExecEnv::log().error("InbreedAnalysis::iterationAnalysis; Insufficient data, cannot process synthetic diploid inbreeding");
       return false;
 
     }
@@ -80,8 +80,8 @@ bool kgl::ExecuteInbreedingAnalysis::processDiploid() {
   static const ContigOffset_t sampling_distance = 10000;
   static const ContigOffset_t lower_window = 0;
   static const ContigOffset_t upper_window = 1000000000;
-  static const double upper_allele_frequency = 1.0;
-  static const double lower_allele_frequency = 0.20;
+  static const double upper_allele_frequency = 0.2;
+  static const double lower_allele_frequency = 0.01;
 
   // Filter out any variants that did not pass VCF filters (otherwise we get duplicate variants).
   unphased_population_ = unphased_population_->filterVariants(AndFilter(SNPFilter(), PassFilter()));
@@ -90,7 +90,7 @@ bool kgl::ExecuteInbreedingAnalysis::processDiploid() {
   parameters.lociiArguments().minAlleleFrequency(lower_allele_frequency);
   parameters.lociiArguments().maxAlleleFrequency(upper_allele_frequency);
   parameters.inbreedingAlgorthim(InbreedingCalculation::LOGLIKELIHOOD_F);
-  parameters.lociiArguments().frequencySource(FrequencyDatabaseRead::alleleFrequencySource(unphased_population_));
+  parameters.lociiArguments().frequencySource(unphased_population_->dataSource());
   parameters.lociiArguments().lowerOffset(lower_window);
   parameters.lociiArguments().upperOffset(upper_window);
   parameters.lociiArguments().lociiCount(locii_count);
@@ -114,7 +114,7 @@ bool kgl::ExecuteInbreedingAnalysis::processDiploid() {
 bool kgl::ExecuteInbreedingAnalysis::processSynthetic() {
 
   // Setup the analysis parameters.
-  size_t locii_count = 10000;
+  size_t locii_count = 1000000000;
   static const ContigOffset_t sampling_distance = 10000;
   static const ContigOffset_t lower_window = 0;
   static const ContigOffset_t upper_window = 1000000000;
@@ -124,8 +124,8 @@ bool kgl::ExecuteInbreedingAnalysis::processSynthetic() {
   InbreedingParameters parameters;
   parameters.lociiArguments().minAlleleFrequency(lower_allele_frequency);
   parameters.lociiArguments().maxAlleleFrequency(upper_allele_frequency);
-  parameters.inbreedingAlgorthim(InbreedingCalculation::RITLAND_LOCUS_F);
-  parameters.lociiArguments().frequencySource(FrequencyDatabaseRead::alleleFrequencySource(unphased_population_));
+  parameters.inbreedingAlgorthim(InbreedingCalculation::LOGLIKELIHOOD_F);
+  parameters.lociiArguments().frequencySource(unphased_population_->dataSource());
   parameters.lociiArguments().lowerOffset(lower_window);
   parameters.lociiArguments().upperOffset(upper_window);
   parameters.lociiArguments().lociiCount(locii_count);

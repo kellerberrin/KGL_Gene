@@ -7,7 +7,7 @@
 
 #include "kgl_ped_parser.h"
 #include "kel_optimize.h"
-#include "kgl_analysis_mutation_inbreed_freqdb.h"
+#include "kgl_variant_db_freq.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
@@ -139,9 +139,9 @@ class AlleleFreqVector {
 
 public:
 
-  AlleleFreqVector(const std::vector <std::shared_ptr<const Variant>> &variant_vector,
-                   const std::string &frequency_field,
-                   FrequencyDatabaseSource variant_source);
+  AlleleFreqVector( const std::vector<std::shared_ptr<const Variant>>& variant_vector,
+                    const std::string& frequency_field,
+                    DataSourceEnum data_source);
 
   ~AlleleFreqVector() = default;
 

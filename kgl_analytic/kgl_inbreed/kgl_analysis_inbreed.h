@@ -8,25 +8,25 @@
 
 #include "kgl_analysis_virtual.h"
 #include "kgl_ped_parser.h"
-#include "kgl_analysis_mutation_inbreed_execute.h"
+#include "kgl_analysis_inbreed_args.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
-class MutationAnalysis : public VirtualAnalysis {
+class InbreedAnalysis : public VirtualAnalysis {
 
 public:
 
-  MutationAnalysis() = default;
+  InbreedAnalysis() = default;
 
-  ~MutationAnalysis() override = default;
+  ~InbreedAnalysis() override = default;
 
   // Functions redefined in super classes
   // The ident must match the ident used in the package XML.
   [[nodiscard]] std::string ident() const override { return ANALYSIS_IDENT_; }
 
-  [[nodiscard]] std::unique_ptr<VirtualAnalysis> factory() const override { return std::make_unique<MutationAnalysis>(); }
+  [[nodiscard]] std::unique_ptr<VirtualAnalysis> factory() const override { return std::make_unique<InbreedAnalysis>(); }
 
   // Setup the analytics to process VCF data.
   [[nodiscard]] bool initializeAnalysis(const std::string &work_directory,
@@ -46,7 +46,7 @@ private:
 
   constexpr static const char* REFERENCE_GENOME_ = "GRCh38";
   constexpr static const char* OUTPUT_FILE_ = "OUTPUTFILE";
-  constexpr static const char* ANALYSIS_IDENT_ = "MUTATION";
+  constexpr static const char* ANALYSIS_IDENT_ = "INBREED";
 
   [[nodiscard]] bool getParameters(const std::string& work_directory, const RuntimeParameterMap& named_parameters);
   std::string output_file_name_;

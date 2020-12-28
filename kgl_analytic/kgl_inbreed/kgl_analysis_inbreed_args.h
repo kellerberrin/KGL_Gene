@@ -7,8 +7,8 @@
 
 
 #include "kgl_ped_parser.h"
-#include "kgl_analysis_mutation_inbreed_calc.h"
-#include "kgl_analysis_mutation_inbreed_output.h"
+#include "kgl_analysis_inbreed_calc.h"
+#include "kgl_analysis_inbreed_output.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -48,7 +48,7 @@ private:
   // Analysis results generated to be output to file on finalize.
   InbreedingResultMap inbreeding_results_;
 
-  const static bool analyze_diploid_ = false;
+  const static bool analyze_diploid_ = true;
 
   bool processDiploid();
 

@@ -7,8 +7,8 @@
 
 
 #include "kgl_sequence_distance.h"
-#include "kgl_genome_db.h"
-#include "kgl_variant_db.h"
+#include "kgl_genome_collection.h"
+#include "kgl_variant_db_population.h"
 #include "kgl_statistics_upgma.h"
 #include "kgl_sequence_distance.h"
 

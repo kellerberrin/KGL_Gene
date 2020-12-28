@@ -9,7 +9,7 @@
 #include <memory>
 #include <string>
 #include <map>
-#include "kgl_genome_db.h"
+#include "kgl_genome_collection.h"
 #include "kgl_sequence_virtual.h"
 #include "kel_logging.h"
 

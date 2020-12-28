@@ -7,7 +7,7 @@
 
 
 #include "kgl_ped_parser.h"
-#include "kgl_analysis_mutation_inbreed_calc.h"
+#include "kgl_analysis_inbreed_calc.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

@@ -8,7 +8,7 @@
 
 
 #include "kgl_runtime.h"
-#include "kgl_genome_db.h"
+#include "kgl_genome_collection.h"
 #include "kgl_variant_db_population.h"
 
 

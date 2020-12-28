@@ -34,12 +34,14 @@ class PopulationDB : public DataDB {
 
 public:
 
-  explicit PopulationDB(const PopulationId_t& population_id, DataSourceEnum data_source) : DataDB(population_id, data_source) {}
+  explicit PopulationDB(const PopulationId_t& population_id, DataSourceEnum data_source) : DataDB(data_source),
+                                                                                           population_id_(population_id) {}
   PopulationDB(const PopulationDB&) = delete; // Use deep copy.
   ~PopulationDB() override { clear(); }  // Experimental, may be quicker than relying on smart pointer reference counting.
 
-  // Alias fileId().
-  const std::string& populationId() const { return DataDB::fileId(); }
+  // Preferred to fieldId().
+  [[nodiscard]] const std::string& populationId() const { return population_id_; }
+  [[nodiscard]] const std::string& fileId() const override { return populationId(); }
 
   PopulationDB& operator=(const PopulationDB&) = delete; // Use deep copy.
 
@@ -102,6 +104,7 @@ public:
 private:
 
   GenomeDBMap genome_map_;
+  PopulationId_t population_id_;
   // mutex to lock the structure for multiple thread access by parsers.
   mutable std::mutex add_variant_mutex_;
 

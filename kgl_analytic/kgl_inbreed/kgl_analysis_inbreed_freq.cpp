@@ -2,9 +2,9 @@
 // Created by kellerberrin on 2/11/20.
 //
 
-#include "kgl_analysis_mutation_inbreed_locus.h"
+#include "kgl_analysis_inbreed_locus.h"
 #include "kgl_filter.h"
-#include "kgl_analysis_mutation_inbreed_calc.h"
+#include "kgl_analysis_inbreed_calc.h"
 #include "kel_distribution.h"
 
 #include <fstream>
@@ -15,16 +15,14 @@ namespace kel = kellerberrin;
 
 
 
-
 kgl::AlleleFreqVector::AlleleFreqVector(const std::vector<std::shared_ptr<const Variant>>& variant_vector,
                                         const std::string& frequency_field,
-                                        FrequencyDatabaseSource variant_source) {
+                                        DataSourceEnum data_source) {
 
-  FrequencyDatabaseRead database_read(variant_source);
   // Loop through the variants in the locus..
   for (auto const &variant : variant_vector) {
 
-    auto opt_value = database_read.processFloatField(*variant, frequency_field);
+    auto opt_value = FrequencyDatabaseRead::processSuperPopField(*variant, data_source, frequency_field);
     if (not opt_value) {
 
       // Problem obtaining allele frequency, this allele may not be defined for the specified super population.
@@ -58,6 +56,7 @@ kgl::AlleleFreqVector::AlleleFreqVector(const std::vector<std::shared_ptr<const 
   } // for
 
 }
+
 
 
 bool kgl::AlleleFreqVector::checkValidAlleleVector() {
@@ -431,7 +430,7 @@ kgl::InbreedingCalculation::generateFrequencies(const GenomeId_t& genome_id,
                                                 const std::shared_ptr<const ContigDB>& contig_ptr,
                                                 const std::string& super_population_field,
                                                 const std::shared_ptr<const ContigDB>& locus_list,
-                                                FrequencyDatabaseSource variant_source) {
+                                                DataSourceEnum variant_source) {
 
   std::vector<AlleleFreqInfo> frequency_vector;
   LocusResults locus_results;

@@ -6,7 +6,7 @@
 #define KGL_EPIGENETIC_MOTIF_H
 
 
-#include "kgl_genome_db.h"
+#include "kgl_genome_collection.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace

@@ -2,9 +2,9 @@
 // Created by kellerberrin on 21/8/20.
 //
 
-#include "kgl_analysis_mutation_inbreed_locus.h"
+#include "kgl_analysis_inbreed_locus.h"
 #include "kgl_filter.h"
-#include "kgl_analysis_mutation_inbreed_calc.h"
+#include "kgl_analysis_inbreed_calc.h"
 #include "kel_distribution.h"
 
 #include <fstream>

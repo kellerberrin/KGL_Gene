@@ -98,7 +98,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_genome_types.h
         kgl_genomics/kgl_database/kgl_gff_fasta.h
         kgl_genomics/kgl_database/kgl_gff_fasta.cpp
-        kgl_genomics/kgl_database/kgl_genome_db.h
+        kgl_genomics/kgl_database/kgl_genome_collection.h
         kgl_genomics/kgl_database/kgl_genome_feature.h
         kgl_genomics/kgl_database/kgl_genome_feature.cpp
         kgl_genomics/kgl_database/kgl_variant.h
@@ -111,9 +111,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_sequence/kgl_sequence_base.h
         kgl_genomics/kgl_sequence/kgl_sequence_base.cpp
         kgl_genomics/kgl_sequence/kgl_sequence_amino.h
-        kgl_genomics/kgl_database/kgl_sequence_amino.cpp
+        kgl_genomics/kgl_sequence/kgl_sequence_amino.cpp
         kgl_genomics/kgl_sequence/kgl_alphabet_amino.h
-        kgl_genomics/kgl_database/kgl_variant_db.h
         kgl_genomics/kgl_database/kgl_genome_prelim.h
         kgl_genomics/kgl_database/kgl_genome_prelim.cpp
         kgl_genomics/kgl_database/kgl_attributes.h
@@ -204,7 +203,13 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_variant_factory_parsers.h
         kgl_genomics/kgl_parser/kgl_variant_factory_gnomad_impl.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_gnomad_impl.h
-        kgl_genomics/kgl_parser/kgl_variant_factory_parsers.cpp kgl_genomics/kgl_database/kgl_variant_db_contig.cpp kgl_genomics/kgl_database/kgl_variant_db_genome.cpp kgl_genomics/kgl_database/kgl_variant_db_population.cpp)
+        kgl_genomics/kgl_parser/kgl_variant_factory_parsers.cpp
+        kgl_genomics/kgl_database/kgl_variant_db_contig.cpp
+        kgl_genomics/kgl_database/kgl_variant_db_genome.cpp
+        kgl_genomics/kgl_database/kgl_variant_db_population.cpp
+        kgl_genomics/kgl_database/kgl_variant_db_type.h
+        kgl_genomics/kgl_database/kgl_genome_contig.h
+        kgl_genomics/kgl_database/kgl_genome_collection.cpp)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -233,34 +238,34 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_info/kgl_analysis_interval.h
         kgl_analytic/kgl_info/kgl_analysis_info_filter.cpp
         kgl_analytic/kgl_info/kgl_analysis_info_filter.h
-        kgl_analytic/kgl_info/kgl_age_analysis.cpp
-        kgl_analytic/kgl_info/kgl_age_analysis.h
+        kgl_analytic/kgl_info/kgl_analysis_age.cpp
+        kgl_analytic/kgl_info/kgl_analysis_age.h
         kgl_analytic/kgl_legacy/kgl_legacy_Pf_analysis.cpp
         kgl_analytic/kgl_legacy/kgl_legacy_Pf_analysis.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_synthetic.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_calc.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_locus.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_locus.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_calc.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_freq.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_execute.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_synthetic.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_calc.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_execute.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_locus.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_locus.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_calc.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_freq.cpp
         kgl_analytic/kgl_verify/kgl_analysis_verify.cpp
         kgl_analytic/kgl_verify/kgl_analysis_verify.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_freq.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_freqdb.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_freqdb.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_synthetic.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_output.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_output.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_syngen.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_syngen.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_freq.h
+        kgl_genomics/kgl_database/kgl_variant_db_freq.cpp
+        kgl_genomics/kgl_database/kgl_variant_db_freq.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_synthetic.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_output.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_output.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_syngen.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_syngen.h
         kgl_analytic/kgl_recomb/kgl_analysis_mutation_recomb_compare.cpp
         kgl_analytic/kgl_recomb/kgl_analysis_mutation_recomb_compare.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_execute.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_mutation_inbreed_execute.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_args.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_args.h
         kgl_analytic/kgl_analysis_virtual.h)
 
 # Deconvolution and mixture files.
@@ -273,7 +278,7 @@ set(MIXTURE_SOURCE_FILES
         kgl_mixture/kgl_variant_classify_io.cpp
         kgl_mixture/kgl_read_phasing.h
         kgl_mixture/kgl_read_phasing.cpp
-        )
+        kgl_genomics/kgl_database/kgl_genome_genome.h)
 
 
 # Application level objects
@@ -290,7 +295,7 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_package_analysis.h
         kgl_app/kgl_runtime.cpp
         kgl_app/kgl_runtime.h
-        kgl_genomics/kgl_database/kgl_variant_db_type.h)
+        )
 
 
 

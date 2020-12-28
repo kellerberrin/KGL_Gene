@@ -6,8 +6,8 @@
 #define KGL_ANALYSIS_MUTATION_INBREED_CALC_H
 
 
-#include "kgl_analysis_mutation_inbreed_freq.h"
-#include "kgl_analysis_mutation_inbreed_locus.h"
+#include "kgl_analysis_inbreed_freq.h"
+#include "kgl_analysis_inbreed_locus.h"
 
 #include <list>
 
@@ -160,7 +160,7 @@ private:
                       const std::shared_ptr<const ContigDB>& contig_ptr,
                       const std::string& super_population_field,
                       const std::shared_ptr<const ContigDB>& locus_list,
-                      FrequencyDatabaseSource variantSource);
+                      DataSourceEnum variantSource);
 
   [[nodiscard]] static double logLikelihood(std::vector<double>& x, std::vector<AlleleFreqInfo>& data);
 

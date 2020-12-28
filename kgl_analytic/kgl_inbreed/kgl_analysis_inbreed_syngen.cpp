@@ -2,7 +2,7 @@
 // Created by kellerberrin on 30/11/20.
 //
 
-#include "kgl_analysis_mutation_syngen.h"
+#include "kgl_analysis_inbreed_syngen.h"
 
 #include "kel_distribution.h"
 
@@ -25,7 +25,8 @@ kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
   static std::mutex log_mutex; // logging mutex.
 
   // Make a synthetic phased diploid population.
-  std::shared_ptr<PopulationDB> synthetic_pop_ptr(std::make_shared<PopulationDB>("SyntheticInbreedingPopulation", DataSourceEnum::Genome1000));
+  std::shared_ptr<PopulationDB> synthetic_pop_ptr(std::make_shared<PopulationDB>("SyntheticInbreedingPopulation",
+                                                                                 arguments.frequencySource()));
 
   // Entropy source is the Mersenne twister.
   RandomEntropySource entropy_mt;

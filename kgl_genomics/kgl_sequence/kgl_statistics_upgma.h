@@ -6,10 +6,10 @@
 #define KGL_STATISTICS_UPGMA_H
 
 #include "kgl_phylogenetic_tree.h"
-#include "kgl_genome_db.h"
+#include "kgl_genome_collection.h"
 #include "kel_utility.h"
 #include "kgl_sequence_distance.h"
-#include "kgl_variant_db.h"
+#include "kgl_variant_db_population.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace

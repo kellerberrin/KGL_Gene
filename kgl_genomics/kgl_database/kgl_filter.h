@@ -6,7 +6,7 @@
 #define KGL_FILTER_H
 
 #include "kgl_variant.h"
-#include "kgl_genome_db.h"
+#include "kgl_genome_collection.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 

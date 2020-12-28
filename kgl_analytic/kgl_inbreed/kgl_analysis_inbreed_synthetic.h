@@ -2,14 +2,14 @@
 // Created by kellerberrin on 22/11/20.
 //
 
-#ifndef KGL_KGL_ANALYSIS_MUTATION_SYNTHETIC_H
-#define KGL_KGL_ANALYSIS_MUTATION_SYNTHETIC_H
+#ifndef KGL_KGL_ANALYSIS_INBREED_SYNTHETIC_H
+#define KGL_KGL_ANALYSIS_INBREED_SYNTHETIC_H
 
 
 
 #include "kgl_ped_parser.h"
-#include "kgl_analysis_mutation_inbreed_calc.h"
-#include "kgl_analysis_mutation_inbreed_output.h"
+#include "kgl_analysis_inbreed_calc.h"
+#include "kgl_analysis_inbreed_output.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -55,4 +55,4 @@ private:
 
 
 
-#endif //KGL_KGL_ANALYSIS_MUTATION_SYNTHETIC_H
+#endif //KGL_KGL_ANALYSIS_INBREED_SYNTHETIC_H

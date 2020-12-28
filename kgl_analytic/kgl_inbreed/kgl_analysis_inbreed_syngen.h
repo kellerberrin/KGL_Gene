@@ -6,8 +6,8 @@
 #define KGL_ANALYSIS_MUTATION_SYNGEN_H
 
 
-#include "kgl_analysis_mutation_inbreed_freqdb.h"
-#include "kgl_analysis_mutation_inbreed_locus.h"
+#include "kgl_variant_db_freq.h"
+#include "kgl_analysis_inbreed_locus.h"
 
 
 #include <memory>

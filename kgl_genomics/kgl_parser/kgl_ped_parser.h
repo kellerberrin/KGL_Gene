@@ -101,8 +101,11 @@ class GenomePEDData : public DataDB {
 
 public:
 
-  explicit GenomePEDData(std::string ped_ident, DataSourceEnum data_source) : DataDB(std::move(ped_ident), data_source) {}
+  explicit GenomePEDData(std::string ped_ident, DataSourceEnum data_source) : DataDB(data_source),
+                                                                              ped_ident_(std::move(ped_ident)) {}
   ~GenomePEDData() override = default;
+
+  [[nodiscard]] const std::string& fileId() const override { return ped_ident_; }
 
   bool addPEDRecord(const PEDRecord& record) {
 
@@ -121,9 +124,14 @@ public:
 
   [[nodiscard]] const PEDRecordMap& getMap() const { return PED_record_map_; }
 
+
+protected:
+
+
 private:
 
   PEDRecordMap PED_record_map_;
+  std::string ped_ident_;
 
 };
 

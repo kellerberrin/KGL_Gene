@@ -2,7 +2,7 @@
 // Created by kellerberrin on 7/6/20.
 //
 
-#include "kgl_age_analysis.h"
+#include "kgl_analysis_age.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 
 #include <numeric>

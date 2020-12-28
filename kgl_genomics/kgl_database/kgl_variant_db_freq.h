@@ -2,8 +2,8 @@
 // Created by kellerberrin on 20/11/20.
 //
 
-#ifndef KGL_ANALYSIS_MUTATION_INBREED_FREQDB_H
-#define KGL_ANALYSIS_MUTATION_INBREED_FREQDB_H
+#ifndef KGL_VARIANT_DB_FREQ_H
+#define KGL_VARIANT_DB_FREQ_H
 
 #include "kgl_variant.h"
 #include "kgl_variant_db_population.h"
@@ -12,6 +12,8 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Convenience object.
 //
 // Different variant databases such as Gnomad 2.1, Gnomad 3.1 and 1000 Genomes use slightly different field codes
 // to access variant data such as super population variant frequencies. This object hides these differences.
@@ -22,23 +24,22 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-enum class FrequencyDatabaseSource { GNOMAD2_1, GNOMAD3_1, GENOMES_1000 };
-
 class FrequencyDatabaseRead {
 
 public:
 
-  explicit FrequencyDatabaseRead(FrequencyDatabaseSource source) : source_(source) {}
-  ~FrequencyDatabaseRead() = default;
+  FrequencyDatabaseRead() = delete;
+  ~FrequencyDatabaseRead() = delete;
 
-  // Get a scalar floating Info field.
-  [[nodiscard]] std::optional<double> processFloatField( const Variant& variant, const std::string& super_population) const;
-
-  // Return a frequency source based on the unphased population type.
-  static FrequencyDatabaseSource alleleFrequencySource(const std::shared_ptr<const PopulationDB>& unphased_population);
-
+  // Read super population frequencies
+  [[nodiscard]] static std::optional<double> processSuperPopField(const Variant& variant,
+                                                                  DataSourceEnum data_source,
+                                                                  const std::string& super_population);
   // List the super populations supported.
   [[nodiscard]] static const std::vector<std::string>& superPopulations() { return super_populations_; }
+
+  // Read any frequency with supplied INFO field code.
+  [[nodiscard]] static std::optional<double> processFloatField(const Variant& variant, const std::string& database_field);
 
   // Valid super population codes.
   constexpr static const char* SUPER_POP_AFR_{"AFR"} ;  // African
@@ -50,9 +51,6 @@ public:
 
 private:
 
-  FrequencyDatabaseSource source_;
-
-
   inline static std::vector<std::string> super_populations_ = { SUPER_POP_AFR_,
                                                                 SUPER_POP_AMR_,
                                                                 SUPER_POP_EAS_,
@@ -63,17 +61,32 @@ private:
   // Lookup a variant super population frequency code. The field code varies with the (FrequencyDatabaseSource) database source.
   [[nodiscard]] std::string lookupVariantSuperPopField(const std::string& super_population) const;
 
+  // Lookup a variant super population frequency code. The field code varies with the (FrequencyDatabaseSource) database source.
+  [[nodiscard]] static std::optional<std::string> lookupVariantSuperPopField( DataSourceEnum data_source,
+                                                                              const std::string& super_population);
+
   // Use a super population code to lookup a corresponding AF field.
   [[nodiscard]] static std::string lookupGnomad_2_1_Field(const std::string& super_population);
 
   using SuperPopPair = std::pair<const char*, const char*>;
-  // The Info field identifiers for allele frequency for Gnomad 2.1 and 3.0
+  // The Info field identifiers for allele frequency for Gnomad 2.1.
   constexpr static const SuperPopPair SUPER_POP_AFR_GNOMAD_2_1 {SUPER_POP_AFR_, "AF_afr"} ;  // African
   constexpr static const SuperPopPair SUPER_POP_AMR_GNOMAD_2_1 {SUPER_POP_AMR_, "AF_amr"};  // American
   constexpr static const SuperPopPair SUPER_POP_EAS_GNOMAD_2_1 {SUPER_POP_EAS_, "AF_eas"};  // East Asian
   constexpr static const SuperPopPair SUPER_POP_EUR_GNOMAD_2_1 {SUPER_POP_EUR_, "AF_nfe"};  // European
   constexpr static const SuperPopPair SUPER_POP_SAS_GNOMAD_2_1 {SUPER_POP_SAS_, "AF"};  // South Asian
   constexpr static const SuperPopPair SUPER_POP_ALL_GNOMAD_2_1 {SUPER_POP_ALL_, "AF"};  // All Super Populations
+
+  // Use a super population code to lookup a corresponding AF field.
+  [[nodiscard]] static std::string lookupGnomad_ex_2_1_Field(const std::string& super_population);
+
+  // The Info field identifiers for allele frequency for Gnomes 2.1 exomes.
+  constexpr static const SuperPopPair SUPER_POP_AFR_GNOMAD_EX_2_1 {SUPER_POP_AFR_, "AF_afr"} ;  // African
+  constexpr static const SuperPopPair SUPER_POP_AMR_GNOMAD_EX_2_1 {SUPER_POP_AMR_, "AF_amr"};  // American
+  constexpr static const SuperPopPair SUPER_POP_EAS_GNOMAD_EX_2_1 {SUPER_POP_EAS_, "AF_eas"};  // East Asian
+  constexpr static const SuperPopPair SUPER_POP_EUR_GNOMAD_EX_2_1 {SUPER_POP_EUR_, "AF_nfe"};  // European
+  constexpr static const SuperPopPair SUPER_POP_SAS_GNOMAD_EX_2_1 {SUPER_POP_SAS_, "AF_sas"};  // South Asian
+  constexpr static const SuperPopPair SUPER_POP_ALL_GNOMAD_EX_2_1 {SUPER_POP_ALL_, "AF"};  // All Super Populations
 
   // Use a super population code to lookup a corresponding AF field.
   [[nodiscard]] static std::string lookupGnomad_3_1_Field(const std::string& super_population);
@@ -114,4 +127,4 @@ private:
 
 } // namespace
 
-#endif //KGL_ANALYSIS_MUTATION_INBREED_FREQDB_H
+#endif //KGL_VARIANT_DB_FREQ_H

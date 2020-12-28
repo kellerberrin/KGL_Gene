@@ -72,7 +72,7 @@ struct DataCharacteristic {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Base class, information about data files (populations) returned from the data parsers.
+// Virtual file DB Base class, information about data files (populations) returned from the data parsers.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -80,33 +80,44 @@ class DataDB {
 
 public:
 
-  DataDB(std::string data_identifier, DataSourceEnum data_source) : data_identifier_(std::move(data_identifier)),
-                                                                    data_source_(data_source) {}
+  DataDB(DataSourceEnum data_source) : data_source_(data_source) {}
   virtual ~DataDB() = default;
 
-  [[nodiscard]] const std::string& fileId() const { return data_identifier_; }
+  [[nodiscard]] virtual const std::string& fileId() const = 0;
   [[nodiscard]] DataSourceEnum dataSource() const { return data_source_; }
   [[nodiscard]] DataCharacteristic dataCharacteristic() const {
 
-    for (auto const& type : data_characteristics_) {
+    auto type = findCharacteristic(data_source_);
 
-      if (data_source_ == type.data_source) return type;
+    if (not type) {
+
+      // Should never happen.
+      ExecEnv::log().critical("DataDB::dataCharacteristic; critical error unknown population type, program terminates.");
 
     }
 
-    // Should never happen.
-    ExecEnv::log().critical("DataDB::dataCharacteristic; critical error unknown population type, program terminates.");
-    return data_characteristics_[0];
+    return type.value();
 
   }
 
-  void setPopulationId(const std::string& data_id) { data_identifier_ = data_id; }
 
-  static std::optional<DataCharacteristic> findCharacteristic(const std::string& file_type) {
+  [[nodiscard]] static std::optional<DataCharacteristic> findCharacteristic(const std::string& source_text)  {
 
     for (auto const& type : data_characteristics_) {
 
-      if (file_type == type.source_text) return type;
+      if (source_text == type.source_text) return type;
+
+    }
+
+    return std::nullopt;
+
+  }
+
+  [[nodiscard]] static std::optional<DataCharacteristic> findCharacteristic(DataSourceEnum data_source) {
+
+    for (auto const& type : data_characteristics_) {
+
+      if (data_source == type.data_source) return type;
 
     }
 
@@ -118,7 +129,6 @@ public:
 private:
 
 // The data file name.
-  std::string data_identifier_;
   DataSourceEnum data_source_;
 
 // DataCharacteristic vector.

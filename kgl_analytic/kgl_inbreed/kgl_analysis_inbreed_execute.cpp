@@ -4,16 +4,14 @@
 
 
 #include "kel_thread_pool.h"
-#include "kgl_analysis_mutation_inbreed.h"
-#include "kgl_analysis_mutation_inbreed_locus.h"
-#include "kgl_analysis_mutation_inbreed_output.h"
+#include "kgl_analysis_inbreed_execute.h"
+#include "kgl_analysis_inbreed_locus.h"
+#include "kgl_analysis_inbreed_output.h"
 
 #include <iostream>
 
 
 namespace kgl = kellerberrin::genome;
-
-
 
 
 // Calculate the Population Inbreeding Coefficient

@@ -3,7 +3,7 @@
 //
 
 #include "kel_distribution.h"
-#include "kgl_analysis_mutation.h"
+#include "kgl_analysis_inbreed.h"
 #include "kgl_filter.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 #include "kel_optimize.h"
@@ -14,9 +14,9 @@ namespace kgl = kellerberrin::genome;
 
 
 // Setup the analytics to process VCF data.
-bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory,
-                                               const RuntimeParameterMap& named_parameters,
-                                               std::shared_ptr<const GenomeCollection> reference_genomes) {
+bool kgl::InbreedAnalysis::initializeAnalysis(const std::string& work_directory,
+                                              const RuntimeParameterMap& named_parameters,
+                                              std::shared_ptr<const GenomeCollection> reference_genomes) {
 
   ExecEnv::log().info("Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
   for (auto const& [parameter_ident, parameter_value] : named_parameters) {
@@ -39,7 +39,7 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
   } else {
 
-    ExecEnv::log().error("MutationAnalysis::initializeAnalysis, Could not find Genome: {} Analysis: {} disabled.", REFERENCE_GENOME_, ident());
+    ExecEnv::log().error("InbreedAnalysis::initializeAnalysis, Could not find Genome: {} Analysis: {} disabled.", REFERENCE_GENOME_, ident());
     return false;
 
   }
@@ -55,7 +55,7 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 }
 
 // This function superclasses the data objects and stores them for further use.
-bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_object_ptr) {
+bool kgl::InbreedAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_object_ptr) {
 
   ExecEnv::log().info("Analysis: {}, begin processing data file", ident(), data_object_ptr->fileId());
 
@@ -72,7 +72,7 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 
     } else {
 
-      ExecEnv::log().error("MutationAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not a Diploid Population", ident(), data_object_ptr->fileId());
+      ExecEnv::log().error("InbreedAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not a Diploid Population", ident(), data_object_ptr->fileId());
       return false;
 
     }
@@ -85,7 +85,7 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 
     if (not unphased_population_) {
 
-      ExecEnv::log().error("MutationAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not an Unphased Population", ident(), data_object_ptr->fileId());
+      ExecEnv::log().error("InbreedAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not an Unphased Population", ident(), data_object_ptr->fileId());
       return false;
 
     }
@@ -103,7 +103,7 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 
     } else {
 
-      ExecEnv::log().error("MutationAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not a PED Ancestor Object", ident(), data_object_ptr->fileId());
+      ExecEnv::log().error("InbreedAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not a PED Ancestor Object", ident(), data_object_ptr->fileId());
       return false;
 
     }
@@ -117,7 +117,7 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::MutationAnalysis::iterationAnalysis() {
+bool kgl::InbreedAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Iteration Analysis called for Analysis Id: {}", ident());
 
@@ -128,7 +128,7 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 
 
 // All VCF data has been presented, finalize analysis and write results.
-bool kgl::MutationAnalysis::finalizeAnalysis() {
+bool kgl::InbreedAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Finalize called for Analysis Id: {}", ident());
 
@@ -137,7 +137,7 @@ bool kgl::MutationAnalysis::finalizeAnalysis() {
 }
 
 
-bool kgl::MutationAnalysis::getParameters(const std::string& work_directory, const RuntimeParameterMap& named_parameters) {
+bool kgl::InbreedAnalysis::getParameters(const std::string& work_directory, const RuntimeParameterMap& named_parameters) {
 
   // Get the output filename
   auto result = named_parameters.find(OUTPUT_FILE_);
