@@ -29,9 +29,8 @@ public:
 
   // Setup the analytics to process VCF data.
   [[nodiscard]] virtual bool initializeAnalysis( const std::string& work_directory,
-                                                 const RuntimeParameterMap& named_parameters,
+                                                 const ActiveParameterList& named_parameters,
                                                  std::shared_ptr<const GenomeCollection> reference_genomes) = 0;
-
 
   // Perform the genetic analysis per VCF file
   [[nodiscard]] virtual bool fileReadAnalysis(std::shared_ptr<const DataDB> data_object_ptr) = 0;

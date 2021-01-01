@@ -15,38 +15,20 @@ namespace kgl = kellerberrin::genome;
 
 // Setup the analytics to process VCF data.
 bool kgl::InbreedAnalysis::initializeAnalysis(const std::string& work_directory,
-                                              const RuntimeParameterMap& named_parameters,
-                                              std::shared_ptr<const GenomeCollection> reference_genomes) {
+                                              const ActiveParameterList& named_parameters,
+                                              std::shared_ptr<const GenomeCollection>) {
 
   ExecEnv::log().info("Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
-  for (auto const& [parameter_ident, parameter_value] : named_parameters) {
+  for (auto const& [parameter_ident, parameter_value] : named_parameters.getMap()) {
 
-    ExecEnv::log().info("Initialize Analysis Id: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident, parameter_value);
-
-  }
-
-  for (auto const& genome : reference_genomes->getMap()) {
-
-    ExecEnv::log().info("Initialize for Analysis Id: {} called with Reference Genome: {}", ident(), genome.first);
+    ExecEnv::log().info("Initialize Analysis Id: {}, initialized with parameter: {}", ident(), parameter_ident);
 
   }
 
-  std::optional<std::shared_ptr<const GenomeReference>> ref_genome_opt = reference_genomes->getOptionalGenome(REFERENCE_GENOME_);
+  work_directory_ = work_directory;
+  for (auto const& parameter : InbreedArguments::extractParameters(named_parameters)) {
 
-  if (ref_genome_opt) {
-
-    genome_GRCh38_ = ref_genome_opt.value();
-
-  } else {
-
-    ExecEnv::log().error("InbreedAnalysis::initializeAnalysis, Could not find Genome: {} Analysis: {} disabled.", REFERENCE_GENOME_, ident());
-    return false;
-
-  }
-
-  if (not getParameters(work_directory, named_parameters)) {
-
-    return false;
+    parameter_output_vector_.emplace_back(InbreedParamOutput(parameter));
 
   }
 
@@ -90,6 +72,9 @@ bool kgl::InbreedAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_o
 
     }
 
+    // Only want SNP variants and variants that passed all VCF filters.
+    unphased_population_ = unphased_population_->filterVariants(AndFilter(SNPFilter(), PassFilter()));
+
   }
 
   if (file_characteristic.data_structure == DataStructureEnum::PedGenome1000) {
@@ -121,7 +106,22 @@ bool kgl::InbreedAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Iteration Analysis called for Analysis Id: {}", ident());
 
-  return inbreed_analysis_.executeAnalysis(genome_GRCh38_, diploid_population_, unphased_population_, ped_data_);
+  // If necessary, create an unphased population from the diploid population.
+  if (diploid_population_ and not unphased_population_) {
+
+    unphased_population_ = createUnphased();
+
+  }
+
+  for (auto& param_output : parameter_output_vector_) {
+
+    // Set the allele frequency source for this population.
+    param_output.getParameters().lociiArguments().frequencySource(unphased_population_->dataSource());
+    ExecuteInbreedingAnalysis::executeAnalysis(diploid_population_, unphased_population_, ped_data_, param_output);
+
+  }
+
+  return true;
 
 }
 
@@ -132,31 +132,44 @@ bool kgl::InbreedAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Finalize called for Analysis Id: {}", ident());
 
-  return inbreed_analysis_.writeResults(output_file_name_);
+  return writeResults();
 
 }
 
 
-bool kgl::InbreedAnalysis::getParameters(const std::string& work_directory, const RuntimeParameterMap& named_parameters) {
+std::shared_ptr<const kgl::PopulationDB> kgl::InbreedAnalysis::createUnphased() {
 
-  // Get the output filename
-  auto result = named_parameters.find(OUTPUT_FILE_);
-  if (result == named_parameters.end()) {
-    ExecEnv::log().error("Analytic: {}; Expected Parameter: {} to be defined. {} is deactivated. Available named Parameters:", ident(), OUTPUT_FILE_, ident());
-    for (auto const& [parameter_ident, parameter_value] : named_parameters) {
+  ExecEnv::log().info("InbreedAnalysis::processDiploid; Creating unique unphased population using Diploid Population.");
+  std::shared_ptr<GenomeDB> unphased_genome_ptr = diploid_population_->uniqueUnphasedGenome();
+  std::shared_ptr<PopulationDB> unphased_unique_ptr = std::make_shared<PopulationDB>(diploid_population_->populationId(),
+                                                                                     diploid_population_->dataSource());
+  unphased_unique_ptr->addGenome(unphased_genome_ptr);
+  ExecEnv::log().info("InbreedAnalysis::processDiploid; Created unique unphased population, variant count: {}.", unphased_unique_ptr->variantCount());
 
-      ExecEnv::log().info("Analysis: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident, parameter_value);
+  return unphased_unique_ptr;
+
+}
+
+
+bool kgl::InbreedAnalysis::writeResults() {
+
+
+  for (auto& param_output : parameter_output_vector_) {
+
+    if (ped_data_ and not param_output.getParameters().analyzeSynthetic()) {
+
+      InbreedingOutput::writePedResults(param_output, *ped_data_, work_directory_);
+
+    } else {
+
+      InbreedingOutput::writeNoPedResults( param_output, work_directory_);
 
     }
-    return false;
-  }
-  output_file_name_ = Utility::filePath(result->second, work_directory);
 
-  ExecEnv::log().info("Analysis: {}, initialized with output file: {}", ident(), output_file_name_);
+  }
 
   return true;
 
 }
-
 
 

@@ -173,7 +173,7 @@ double kgl::IntervalData::meanEmptyInterval() const {
 
 // Setup the analytics to process VCF data. Returning false disables the analysis.
 bool kgl::IntervalAnalysis::initializeAnalysis( const std::string& work_directory,
-                                                const RuntimeParameterMap& named_parameters,
+                                                const ActiveParameterList& named_parameters,
                                                 std::shared_ptr<const GenomeCollection> reference_genomes) {
 
   work_directory_ = work_directory;
@@ -249,53 +249,54 @@ bool kgl::IntervalAnalysis::finalizeAnalysis() {
 
 }
 
-bool kgl::IntervalAnalysis::getParameters(const RuntimeParameterMap& named_parameters) {
 
-  // Get the analysis interval
-  auto result = named_parameters.find(INTERVAL_SIZE_);
-  if (result == named_parameters.end()) {
+bool kgl::IntervalAnalysis::getParameters(const ActiveParameterList& named_parameters) {
 
-    ExecEnv::log().error("Analytic: {}; Expected Parameter: {} to be defined. {} is deactivated. Available named Parameters:", ident(), INTERVAL_SIZE_, ident());
-    for (auto const& [parameter_ident, parameter_value] : named_parameters) {
 
-      ExecEnv::log().info("Analysis: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident, parameter_value);
+  for (auto const& named_block : named_parameters.getMap()) {
 
-    }
+    auto [block_name, block_vector] = named_block.second;
 
-    return false;
+    if (block_vector.size() != 1) {
 
-  }
-
-  try {
-
-    interval_size_ = std::stoll(result->second);
-
-  }
-  catch(...) {
-
-    ExecEnv::log().error("Analytic: {}; Expected Parameter: {} Value: {} is invalid, expected unsigned integer. {} is deactivated.", ident(), INTERVAL_SIZE_, result->second, ident());
-    return false;
-
-  }
-  // Get the output filename
-  result = named_parameters.find(OUTPUT_FILE_);
-
-  if (result == named_parameters.end()) {
-
-    ExecEnv::log().error("Analytic: {}; Expected Parameter: {} to be defined. {} is deactivated. Available named Parameters:", ident(), OUTPUT_FILE_, ident());
-    for (auto const& [parameter_ident, parameter_value] : named_parameters) {
-
-      ExecEnv::log().info("Analysis: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident, parameter_value);
+      ExecEnv::log().error("IntervalAnalysis::getParameters; parameter block: {} vector size: {}, expected size = 1",
+                           block_name, block_vector.size());
+      return false;
 
     }
 
-    return false;
+    ExecEnv::log().info("Analysis: {} parsing parameter block: {}", ident(), block_name);
+
+    for (auto const& xml_vector : block_vector) {
+
+
+      auto output_opt = xml_vector.getString(OUTPUT_FILE_);
+      if (output_opt) {
+
+        output_file_name_ = output_opt.value().front() + std::string(OUTPUT_FILE_EXT_);
+
+      } else {
+
+        ExecEnv::log().error("IntervalAnalysis::getParameters; bad value for parameter: {}", OUTPUT_FILE_);
+        return false;
+
+      }
+
+      auto interval_opt = xml_vector.getSize(INTERVAL_SIZE_);
+      if (interval_opt) {
+
+        interval_size_ = interval_opt.value().front();
+
+      } else {
+
+        ExecEnv::log().error("IntervalAnalysis::getParameters; bad value for parameter: {}", INTERVAL_SIZE_);
+        return false;
+
+      }
+
+    }
 
   }
-
-  output_file_name_ = result->second;
-
-  ExecEnv::log().info("Analysis: {}, initialized with interval size: {}, output file: {}", ident(), interval_size_, output_file_name_);
 
   return true;
 

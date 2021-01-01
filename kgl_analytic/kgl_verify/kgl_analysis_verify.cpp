@@ -11,13 +11,13 @@ namespace kgl = kellerberrin::genome;
 
 // Setup the analytics to process VCF data.
 bool kgl::VerifyAnalysis::initializeAnalysis( const std::string& work_directory,
-                                              const RuntimeParameterMap& named_parameters,
+                                              const ActiveParameterList& named_parameters,
                                               std::shared_ptr<const GenomeCollection> reference_genomes) {
 
   ExecEnv::log().info("Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
-  for (auto const& [parameter_ident, parameter_value] : named_parameters) {
+  for (auto const& [parameter_ident, parameter_map] : named_parameters.getMap()) {
 
-    ExecEnv::log().info("Initialize Analysis Id: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident, parameter_value);
+    ExecEnv::log().info("Initialize Analysis Id: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident);
 
   }
 

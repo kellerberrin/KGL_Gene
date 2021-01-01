@@ -56,7 +56,9 @@ public:
 
   bool getTreeVector(const std::string& property_name, std::vector<ImplSubTree>& tree_vector) const;
 
-  template<class T> T getData() const { return property_tree_.get_value<T>(); }
+  bool getTreeVector(std::vector<std::pair<std::string, PropertyImpl>>& tree_vector) const;
+
+    template<class T> T getData() const { return property_tree_.get_value<T>(); }
 
 private:
 
@@ -294,6 +296,32 @@ bool kel::PropertyTree::PropertyImpl::getNodeVector(const std::string& node_name
   return true;
 
 }
+
+bool kel::PropertyTree::PropertyImpl::getTreeVector(std::vector<std::pair<std::string, PropertyImpl>>& tree_vector) const {
+
+  tree_vector.clear();
+
+  try {
+
+    for (auto const& sub_tree : property_tree_) {
+
+      tree_vector.emplace_back(ImplSubTree(sub_tree.first, PropertyImpl(sub_tree.second)));
+
+    }
+
+  }
+  catch (...) {
+
+    // No sub-tree is not an error.
+    return true;
+
+  }
+
+  return true;
+
+}
+
+
 
 
 bool kel::PropertyTree::PropertyImpl::getTreeVector(const std::string& property_name, std::vector<std::pair<std::string, PropertyImpl>>& tree_vector) const {
@@ -542,5 +570,29 @@ bool kel::PropertyTree::getPropertyTreeVector(const std::string& property_name, 
   return true;
 
 }
+
+
+bool kel::PropertyTree::getPropertySubTreeVector(std::vector<SubPropertyTree>& property_tree_vector) const {
+
+  property_tree_vector.clear();
+
+  std::vector<ImplSubTree> tree_vector;
+  if (not properties_impl_ptr_->getTreeVector(tree_vector)) {
+
+    return false;
+
+  }
+
+  for (auto impl_tree : tree_vector) {
+
+    property_tree_vector.emplace_back(SubPropertyTree(impl_tree.first, PropertyTree(impl_tree.second)));
+
+  }
+
+  return true;
+
+}
+
+
 
 std::string kel::PropertyTree::getValue() const { return properties_impl_ptr_->getData<std::string>(); }

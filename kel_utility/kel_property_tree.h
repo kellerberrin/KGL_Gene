@@ -50,6 +50,8 @@ public:
 
   [[nodiscard]] bool getPropertyTreeVector(const std::string& property_name, std::vector<SubPropertyTree>& property_tree_vector) const;
 
+  [[nodiscard]] bool getPropertySubTreeVector(std::vector<SubPropertyTree>& property_tree_vector) const;
+
   [[nodiscard]] bool getProperty(const std::string& property_name, size_t& property) const;
 
   [[nodiscard]] bool getFileProperty(const std::string& property_name, const std::string& work_directory, std::string& file_path) const;

@@ -44,7 +44,7 @@ void kgl::ExecutePackage::executeActive() const {
 
       for (auto const& data_file : iterative_files) {
 
-        std::shared_ptr<DataDB> read_data_object = readDataFiles(package, reference_genome_ptr, data_file);
+        std::shared_ptr<DataDB> read_data_object = readDataFile(package, reference_genome_ptr, data_file);
 
         if (not package_analysis_.fileReadAnalysis(read_data_object)) {
 
@@ -93,6 +93,22 @@ void kgl::ExecutePackage::verifyPackages() const {
       if (result == analysis_map_.end()) {
 
         ExecEnv::log().critical("ExecutePackage::verifyPackage, Package: {}, Analysis: {}, not defined", package_ident, analysis_ident);
+
+      }
+
+      // If the analysis exists, check that any active named parameter blocks also exist.
+      auto const& [analysis_id, analysis_obj] = *result;
+
+      for (auto const& param_name : analysis_obj.parameterMap()) {
+
+        auto param_result = defined_parameters_.getMap().find(param_name);
+
+        if (param_result ==  defined_parameters_.getMap().end()) {
+
+          ExecEnv::log().critical("ExecutePackage::verifyPackage, Package: {}, Analysis: {}, Named Parameter Block: {} not defined",
+                                  package_ident, analysis_ident, param_name);
+
+        }
 
       }
 
@@ -167,9 +183,9 @@ std::unique_ptr<kgl::GenomeCollection> kgl::ExecutePackage::loadReferenceGenomes
 
 
 std::shared_ptr<kgl::DataDB>
-kgl::ExecutePackage::readDataFiles(const RuntimePackage& package,
-                                   std::shared_ptr<const GenomeCollection> reference_genomes,
-                                   const std::string& data_file) const {
+kgl::ExecutePackage::readDataFile(const RuntimePackage& package,
+                                  std::shared_ptr<const GenomeCollection> reference_genomes,
+                                  const std::string& data_file) const {
 
 
   ExecEnv::log().info("Package: {}, Data file ident: {}", package.packageIdentifier(), data_file);
@@ -177,7 +193,7 @@ kgl::ExecutePackage::readDataFiles(const RuntimePackage& package,
   auto result = data_file_map_.find(data_file);
   if (result == data_file_map_.end()) {
 
-    ExecEnv::log().critical("ExecutePackage::readDataFiles, Package: {}, data file ident: {}, not defined",
+    ExecEnv::log().critical("ExecutePackage::readDataFile, Package: {}, data file ident: {}, not defined",
                              package.packageIdentifier(), data_file);
 
   }

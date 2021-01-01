@@ -53,6 +53,8 @@ public:
 
   [[nodiscard]] VariantEvidenceMap getEvidenceMap() const;
 
+  [[nodiscard]] ActiveParameterList getParameterMap() const;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Legacy Code.
 
@@ -94,10 +96,15 @@ private:
   constexpr static const char* ANALYSIS_LIST_ = "analysisList";
   constexpr static const char* ANALYSIS_ = "analysis";
   constexpr static const char* ANALYSIS_IDENT_ = "analysisIdent";
+  // Parameter Runtime categories.
   constexpr static const char* PARAMETER_LIST_ = "parameterList";
+  constexpr static const char* PARAMETER_BLOCK_ = "parameterBlock";
+  constexpr static const char* PARAMETER_NAME_ = "parameterName";
+  constexpr static const char* PARAMETER_VECTOR_ = "parameterVector";
   constexpr static const char* PARAMETER_ = "parameter";
   constexpr static const char* PARAMETER_IDENT_ = "parameterIdent";
   constexpr static const char* PARAMETER_VALUE_ = "parameterValue";
+  constexpr static const char* PARAMETER_RUNTIME_ = "parameterRuntime";
   // Data File Runtime categories.
   constexpr static const char* DATA_FILE_LIST_ = "dataFileList";
   constexpr static const char* DATA_FILE_IDENT_ = "dataFileIdent";

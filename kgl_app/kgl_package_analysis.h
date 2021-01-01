@@ -25,26 +25,30 @@ class PackageAnalysis {
 
 public:
 
-  explicit PackageAnalysis(std::string work_directory, const RuntimeAnalysisMap& analysis_map)
-  : work_directory_(std::move(work_directory)), analysis_map_(analysis_map) {
-
+  explicit PackageAnalysis(std::string work_directory,
+                           const RuntimeAnalysisMap& analysis_map,
+                           const ActiveParameterList& defined_parameters) : work_directory_(std::move(work_directory)),
+                                                                            analysis_map_(analysis_map),
+                                                                            defined_parameters_(defined_parameters)
+                                                                            {
     // Defined in "kgl_analysis_all.h"
     registered_analysis_ = getAnalysisVector();
 
   }
+
   ~PackageAnalysis() = default;
 
-  // Setup the analytics to process VCF data.
+  // Setup the analytics to process data.
   [[nodiscard]] bool initializeAnalysis(const RuntimePackage& package,
                                         std::shared_ptr<const GenomeCollection> reference_genomes) const;
 
   // Perform the genetic analysis per VCF file read.
-  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataDB> vcf_iterative_dat) const;
+  [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataDB> file_data) const;
 
-  // Perform the genetic analysis per iteration (multiple VCF files grouped together).
+  // Perform the genetic analysis per iteration (multiple files grouped together).
   [[nodiscard]] bool iterationAnalysis() const;
 
-  // All VCF data has been presented, finalize analysis and write results.
+  // All data has been presented, finalize analysis and write results.
   [[nodiscard]] bool finalizeAnalysis() const;
 
 private:
@@ -53,6 +57,8 @@ private:
   const std::string work_directory_;
   // Analysis parameters and details.
   const RuntimeAnalysisMap analysis_map_;
+  // The paramter master list.
+  const ActiveParameterList& defined_parameters_;
   // All available analytics
   VirtualAnalysisVector registered_analysis_;
   // Active analytics for this package

@@ -88,7 +88,7 @@ private:
 
 class RuntimeAnalysis;
 using RuntimeAnalysisMap = std::map<std::string, RuntimeAnalysis>;
-using RuntimeParameterMap = std::map<std::string, std::string>;
+using RuntimeParameterMap = std::vector<std::string>;
 
 class RuntimeAnalysis {
 
@@ -101,7 +101,7 @@ public:
   ~RuntimeAnalysis() = default;
 
   [[nodiscard]] const RuntimeParameterMap& parameterMap() const { return parameter_map_; }
-
+  [[nodiscard]] const std::string& analysis() const { return analysis_identifier_; }
 
 private:
 
@@ -294,6 +294,89 @@ private:
   EvidenceMap evidence_map_;
 
 };
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// The parameter objects, supplies named vectors of vectors of named parameters to analysis objects.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// A ParameterMap is named multimap of parameter values.
+// Parameter names need not be unique.
+
+class ParameterMap {
+
+public:
+
+  ParameterMap() = default;
+  ~ParameterMap() = default;
+
+  void insert(const std::string& ident, const std::string& value) { parameter_map_.emplace(ident, value); }
+  [[nodiscard]] std::vector<std::string> retrieve(const std::string& ident) const;
+
+  // Returns std::nullopt if parameter is wrong size e.g. if parameter not found (0) and size specified = 1.
+  // ANY_SIZE will always return a std::vector (possibly empty).
+  [[nodiscard]] std::optional<std::vector<double>> getFloat(const std::string& ident, size_t vec_size = 1) const;
+  [[nodiscard]] std::optional<std::vector<std::string>> getString(const std::string& ident, size_t vec_size = 1) const;
+  [[nodiscard]] std::optional<std::vector<int64_t>> getInteger(const std::string& ident, size_t vec_size = 1) const;
+  [[nodiscard]] std::optional<std::vector<size_t>> getSize(const std::string& ident, size_t vec_size = 1) const;
+
+  [[nodiscard]] std::optional<std::vector<double>> getFloat(const std::pair<std::string, size_t> &field) const { return getFloat(field.first, field.second); }
+  [[nodiscard]] std::optional<std::vector<std::string>> getString(const std::pair<std::string, size_t> &field) const { return getString(field.first, field.second); }
+  [[nodiscard]] std::optional<std::vector<int64_t>> getInteger(const std::pair<std::string, size_t> &field) const { return getInteger(field.first, field.second); }
+  [[nodiscard]] std::optional<std::vector<size_t>> getSize(const std::pair<std::string, size_t> &field) const { return getSize(field.first, field.second); }
+  [[nodiscard]] std::optional<bool> getBool(const std::string& ident) const;
+
+  constexpr static const size_t ANY_SIZE{1000000000};
+
+private:
+
+  std::multimap<std::string, std::string> parameter_map_;
+
+};
+
+// A ParameterVector is a vector of parameter maps.
+// Typically a vector size of more than one will execute the underlying analysis
+// multiple times with different paramter combinations.
+using ParameterVector = std::vector<ParameterMap>;
+
+// A NamedParameterVector is augmented with a unique name.
+using NamedParameterVector = std::pair<std::string, ParameterVector>;
+
+// An ActiveParameterList is unique named map of parameter vectors.
+// Typically an analysis specifies one or more active NamedParameterVectors.
+// Which are supplied to the analysis code as a ActiveParameterList.
+// If an analysis specifies an active NamedParameterVector that does not exist
+// the application terminates with an error message.
+// The analysis may specify zero or more active NamedParameterVectors by name.
+// The names of inactive NamedParameterVectors are conveniently parked next to the active
+// NamedParameterVectors for ease of editing when deciding which parameter combination
+// to run with the analysis. Note that a NamedParameterVector is usually used to
+// execute the analysis multiple times.
+// The ActiveParameter object is typically interpreted by the package implementation code.
+
+using ParameterListMap = std::map<const std::string, const NamedParameterVector>;
+
+class ActiveParameterList {
+
+public:
+
+  ActiveParameterList() = default;
+  ~ActiveParameterList() = default;
+
+  [[nodiscard]] const ParameterListMap& getMap() const { return active_parameter_vectors_; }
+
+  bool addNamedParameterVector(const NamedParameterVector& named_vector);
+  // Create a sub list of named parameters based on the active parameter identifiers specified by an analysis.
+  [[nodiscard]] ActiveParameterList createParameterList(const std::vector<std::string>& active_idents) const;
+
+private:
+
+  ParameterListMap active_parameter_vectors_;
+
+};
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

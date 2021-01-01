@@ -35,7 +35,7 @@ public:
   // Setup the analytics to process VCF data.
   // This function must be redefined.
   [[nodiscard]] bool initializeAnalysis( const std::string& work_directory,
-                                         const RuntimeParameterMap& named_parameters,
+                                         const ActiveParameterList& named_parameters,
                                          std::shared_ptr<const GenomeCollection> reference_genomes) override;
 
   // Perform the genetic analysis per VCF file (need not be redefined)
@@ -47,7 +47,7 @@ public:
   // All VCF data has been presented, finalize analysis and write results (need not be redefined)
   [[nodiscard]] bool finalizeAnalysis() override;
 
-  [[nodiscard]] bool getParameters(const std::string& work_directory, const RuntimeParameterMap& named_parameters);
+  [[nodiscard]] bool getParameters(const std::string& work_directory, const ActiveParameterList& named_parameters);
 
 private:
 
@@ -56,7 +56,8 @@ private:
   AgeSortedMap age_sorted_map_; // final totals.
   std::string output_file_name_;
 
-  constexpr static const char* OUTPUT_FILE_ = "OUTPUTFILE";
+  constexpr static const char* OUTPUT_FILE_ = "OutputFile";
+  constexpr static const char* OUTPUT_FILE_EXT_ = ".csv";
 
   std::shared_ptr<PopulationDB> qualityFilter(std::shared_ptr<const PopulationDB> vcf_population);
 

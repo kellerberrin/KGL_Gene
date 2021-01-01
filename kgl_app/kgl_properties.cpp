@@ -220,7 +220,7 @@ kgl::RuntimeAnalysisMap kgl::RuntimeProperties::getAnalysisMap() const {
 
     }
 
-    key = PARAMETER_LIST_;
+    key = std::string(PARAMETER_RUNTIME_) +  std::string(DOT_) + std::string(ACTIVE_);
     std::vector<SubPropertyTree> parameter_tree_vector;
     if (not sub_tree.second.getPropertyTreeVector(key, parameter_tree_vector)) {
 
@@ -233,33 +233,17 @@ kgl::RuntimeAnalysisMap kgl::RuntimeProperties::getAnalysisMap() const {
     for (const auto& parameter_sub_tree : parameter_tree_vector) {
 
       // Only process parameter records.
-      if (parameter_sub_tree.first != PARAMETER_) continue;
+      if (parameter_sub_tree.first != VALUE_) continue;
 
-      key = std::string(PARAMETER_IDENT_) + std::string(DOT_) + std::string(VALUE_);
-      std::string parameter_ident;
-      if (not parameter_sub_tree.second.getProperty( key, parameter_ident)) {
+      std::string parameter_ident = parameter_sub_tree.second.getValue();
+      if (parameter_ident.empty()) {
 
         ExecEnv::log().error("RuntimeProperties::getAnalysisMap, No Parameter Identifier Found for Analysis: {}", analysis_ident);
         continue;
 
-      }
+      } else {
 
-      key = std::string(PARAMETER_VALUE_) + std::string(DOT_) + std::string(VALUE_);
-      std::string parameter_value;
-      if (not parameter_sub_tree.second.getProperty( key, parameter_value)) {
-
-        ExecEnv::log().error("RuntimeProperties::getAnalysisMap, No Parameter Value Found for Parameter: {}, Analysis: {}", parameter_ident, analysis_ident);
-        continue;
-
-      }
-
-      // Parameter ident is always upper case (case insensitive).
-      std::pair<std::string, std::string> new_parameter(Utility::toupper(parameter_ident), parameter_value);
-      auto result = parameter_map.insert(new_parameter);
-
-      if (not result.second) {
-
-        ExecEnv::log().error("RuntimeProperties::getAnalysisMap, Duplicate found for (case insensitive) Parameter: {}, Analysis: {}", parameter_ident, analysis_ident);
+        parameter_map.push_back(parameter_ident);
 
       }
 
@@ -601,6 +585,115 @@ kgl::VariantEvidenceMap kgl::RuntimeProperties::getEvidenceMap() const {
 
 
 
+kgl::ActiveParameterList kgl::RuntimeProperties::getParameterMap() const {
+
+  ActiveParameterList defined_named_parameters;
+
+  ContigAliasMap contig_alias_map;
+
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + std::string(PARAMETER_LIST_);
+
+  std::vector<SubPropertyTree> property_tree_vector;
+  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
+
+    ExecEnv::log().warn("RuntimeProperties::getParameterMap; No Parameter Blocks specified");
+
+  } else {
+
+    for (auto const& subtree : property_tree_vector) {
+
+      auto const& [sub_tree_tag, sub_tree] = subtree;
+
+      // Ignore any comments.
+      if (sub_tree_tag == PARAMETER_BLOCK_) {
+
+        NamedParameterVector named_parameter_vector;
+        // Get the block name.
+        std::string block_name;
+        if (not sub_tree.getProperty(PARAMETER_NAME_, block_name)) {
+
+          ExecEnv::log().error("RuntimeProperties::getParameterMap; No block <parameterName> specified, block skipped");
+          continue;
+
+        }
+
+        // Store the block name.
+        named_parameter_vector.first = Utility::trimEndWhiteSpace(block_name);
+
+        std::vector<SubPropertyTree> property_block_vector;
+        if (not sub_tree.getPropertySubTreeVector(property_block_vector)) {
+
+          ExecEnv::log().warn("RuntimeProperties::getParameterMap; No Parameter Vectors specified");
+
+        }
+
+        ParameterVector parameter_vector;
+        for (auto const &block_tree : property_block_vector) {
+
+          auto& [block_tree_tag, block_sub_tree] = block_tree;
+          if (block_tree_tag == PARAMETER_VECTOR_) {
+
+            std::vector<SubPropertyTree> property_vector;
+            if (not block_sub_tree.getPropertySubTreeVector(property_vector)) {
+
+              continue;
+
+            }
+
+            // Create a parameter map for each parameter vector.
+            ParameterMap parameter_map;
+            // Unpack the parameter vector.
+            for (auto const& vector_item : property_vector) {
+
+              auto const& [item_tag, item_tree] = vector_item;
+
+              // Ignore help and info tags.
+              if (item_tag == PARAMETER_) {
+
+                std::string parameter_ident;
+                if (not item_tree.getProperty(PARAMETER_IDENT_, parameter_ident)) {
+
+                  ExecEnv::log().error("RuntimeProperties::getParameterMap; No block <parameterIdent> specified, parameter skipped");
+                  continue;
+
+                }
+                std::string parameter_value;
+                if (not item_tree.getProperty(PARAMETER_VALUE_, parameter_value)) {
+
+                  ExecEnv::log().error("RuntimeProperties::getParameterMap; No block <parameterValue> specified, parameter skipped");
+                  continue;
+
+                }
+
+                parameter_ident = Utility::trimEndWhiteSpace(parameter_ident);
+                parameter_value = Utility::trimEndWhiteSpace(parameter_value);
+                parameter_map.insert(parameter_ident, parameter_value);
+
+              } // if Parameter
+
+            } // for all vector tags.
+
+            parameter_vector.push_back(parameter_map);
+
+          } // if vector
+
+        } // for all block tags
+
+        named_parameter_vector.second = parameter_vector;
+        defined_named_parameters.addNamedParameterVector(named_parameter_vector);
+
+      } // if block.
+
+    } // for all blocks.
+
+  } // if any blocks.
+
+  return defined_named_parameters;
+
+}
+
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Legacy Code (To be demolished)
@@ -621,6 +714,7 @@ bool kgl::RuntimeProperties::getPropertiesAuxFile(std::string &aux_file) const {
   return Utility::fileExists(aux_file);
 
 }
+
 
 bool kgl::RuntimeProperties::readProperties(const std::string& properties_file) {
 

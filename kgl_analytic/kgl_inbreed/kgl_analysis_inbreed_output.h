@@ -2,46 +2,107 @@
 // Created by kellerberrin on 30/11/20.
 //
 
-#ifndef KGL_ANALYSIS_MUTATION_INBREED_OUTPUT_H
-#define KGL_ANALYSIS_MUTATION_INBREED_OUTPUT_H
+#ifndef KGL_ANALYSIS_INBREED_OUTPUT_H
+#define KGL_ANALYSIS_INBREED_OUTPUT_H
 
 
 #include "kgl_ped_parser.h"
-#include "kgl_analysis_inbreed_calc.h"
+#include "kgl_analysis_inbreed_args.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Data structures to hold threadpool calculation results.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+struct LocusResults {
+
+  GenomeId_t genome;
+  size_t major_hetero_count{0};   // 1 minor allele only.
+  double major_hetero_freq{0.0};
+  size_t minor_hetero_count{0};   // 2 different minor alleles.
+  double minor_hetero_freq{0.0};
+  size_t minor_homo_count{0};     // 2 identical minor alleles.
+  double minor_homo_freq{0.0};
+  size_t major_homo_count{0};     // 2 identical major alleles (generally not recorded).
+  double major_homo_freq{0.0};
+  size_t total_allele_count{0};  // All alleles.
+  double inbred_allele_sum{0.0}; // inbreeding coefficient
+
+};
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Utility Object to hold inbreeding analysis results as they are generated.
+// Indexes the above results by analyzed genome (output rows).
 //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+using ResultsMap = std::map<GenomeId_t, LocusResults>;
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// A named column of results, rows are indexed by GenomeId_t in the ResultsMap.
+// Typically this will be the results for a contig or part of a contig.
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// The inbreeding analysis results and the parameter object used to generate them.
-using ResultMapPair = std::pair<InbreedingParameters, ResultsMap>;
-
-class InbreedingOutputResults {
+class InbreedingResultColumn {
 
 public:
 
-  explicit InbreedingOutputResults(const std::string& result_ident) : results_identifier_(result_ident) {}
-  ~InbreedingOutputResults() = default;
+  explicit InbreedingResultColumn(std::string column_ident, ResultsMap results) : column_identifier_(std::move(column_ident)),
+                                                                                  results_(std::move(results)) {}
+  ~InbreedingResultColumn() = default;
 
-  [[nodiscard]] const std::string& identifier() const { return results_identifier_; }
-  [[nodiscard]] const std::vector<ResultMapPair>& resultsVector() const { return results_vector_; }
-  [[nodiscard]] bool verifyResults () const;
+  [[nodiscard]] const std::string& columnIdent() const { return column_identifier_; }
+  [[nodiscard]] const ResultsMap& results() const { return results_; }
 
-  void insertResults(const ResultMapPair& results) { results_vector_.push_back(results); }
-  void identifier(const std::string& result_ident) {  results_identifier_ = result_ident; }
+  // Helper function generates a column ident based on a contig id and the region analyzed.
+  static std::string generateIdent(const ContigId_t& contig_id, ContigOffset_t lower, ContigOffset_t upper);
 
 private:
 
-  std::string results_identifier_;
-  std::vector<ResultMapPair> results_vector_;
+  std::string column_identifier_;
+  ResultsMap results_;
 
+};
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// The final layer of results. Each object corresponds to an InbreedingParameters record defined in the XML parameter file.
+// The object contains multiple output result columns.
+// Each object produces a separate .csv output file with the named columns defined above.
+// Note that the output file is defined in the InbreedingParameters record.
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class InbreedParamOutput {
+
+public:
+
+  explicit InbreedParamOutput(const InbreedingParameters& parameters) : parameters_(parameters) {}
+  ~InbreedParamOutput() = default;
+
+  void addColumn(const InbreedingResultColumn& column) { column_results_.push_back(column); }
+  [[nodiscard]] const std::vector<InbreedingResultColumn>& getColumns() const { return column_results_; }
+  [[nodiscard]] const InbreedingParameters& getParameters() const { return parameters_; }
+  // Non-const version
+  [[nodiscard]] InbreedingParameters& getParameters() { return parameters_; }
   // Check that each column has the same genome structure.
+  [[nodiscard]] bool verifyResults () const;
+
+private:
+
+  InbreedingParameters parameters_;
+  std::vector<InbreedingResultColumn> column_results_;
 
 };
 
@@ -64,20 +125,13 @@ public:
   ~InbreedingOutput() = delete;
 
 
-  // Write the analysis results to a CSV file.
-  static bool writeResults( const ResultsMap& genome_results_map,
-                            const GenomePEDData& ped_data,
-                            const std::string& output_file_name,
-                            InbreedingParameters& parameters);
 
   // Write the analysis results to a CSV file.
-  static bool writeColumnResults( const InbreedingOutputResults& column_results,
-                                  const GenomePEDData& ped_data,
-                                  const std::string& file_path);
-
-  static bool writeSynResults( const InbreedingOutputResults& column_results,
+  static bool writePedResults( const InbreedParamOutput& output_results,
+                               const GenomePEDData& ped_data,
                                const std::string& file_path);
 
+  static bool writeNoPedResults(const InbreedParamOutput& output_results, const std::string& file_path);
 
 
 private:

@@ -32,7 +32,7 @@ public:
 
   // Setup the analytics to process VCF data.
   [[nodiscard]] bool initializeAnalysis( const std::string& work_directory,
-                                         const RuntimeParameterMap& named_parameters,
+                                         const ActiveParameterList& named_parameters,
                                          std::shared_ptr<const GenomeCollection> reference_genomes) override;
 
 

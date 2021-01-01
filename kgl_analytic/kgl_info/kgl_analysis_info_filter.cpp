@@ -16,13 +16,13 @@ namespace kgl = kellerberrin::genome;
 
 // Setup the analytics to process VCF data.
 bool kgl::InfoFilterAnalysis::initializeAnalysis( const std::string& work_directory,
-                                                  const RuntimeParameterMap& named_parameters,
+                                                  const ActiveParameterList& named_parameters,
                                                   std::shared_ptr<const GenomeCollection> reference_genomes) {
 
   ExecEnv::log().info("Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
-  for (auto const& [parameter_ident, parameter_value] : named_parameters) {
+  for (auto const& [parameter_ident, parameter_map] : named_parameters.getMap()) {
 
-    ExecEnv::log().info("Initialize Analysis Id: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident, parameter_value);
+    ExecEnv::log().info("Initialize Analysis Id: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident);
 
   }
 
@@ -110,28 +110,43 @@ bool kgl::InfoFilterAnalysis::finalizeAnalysis() {
 }
 
 
+bool kgl::InfoFilterAnalysis::getParameters( const std::string& work_directory,
+                                             const ActiveParameterList& named_parameters) {
 
-bool kgl::InfoFilterAnalysis::getParameters(const std::string& work_directory, const RuntimeParameterMap& named_parameters) {
 
-  // Get the output filename
-  auto result = named_parameters.find(OUTPUT_FILE_);
+  for (auto const& named_block : named_parameters.getMap()) {
 
-  if (result == named_parameters.end()) {
+    auto [block_name, block_vector] = named_block.second;
 
-    ExecEnv::log().error("Analytic: {}; Expected Parameter: {} to be defined. {} is deactivated. Available named Parameters:", ident(), OUTPUT_FILE_, ident());
-    for (auto const& [parameter_ident, parameter_value] : named_parameters) {
+    if (block_vector.size() != 1) {
 
-      ExecEnv::log().info("Analysis: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident, parameter_value);
+      ExecEnv::log().error("InfoFilterAnalysis::getParameters; parameter block: {} vector size: {}, expected size = 1",
+                           block_name, block_vector.size());
+      return false;
 
     }
 
-    return false;
+    ExecEnv::log().info("Analysis: {} parsing parameter block: {}", ident(), block_name);
+
+    for (auto const& xml_vector : block_vector) {
+
+      auto output_opt = xml_vector.getString(OUTPUT_FILE_);
+      if (output_opt) {
+
+        output_file_name_ = output_opt.value().front() + std::string(OUTPUT_FILE_EXT_);
+        output_file_name_ = Utility::filePath(output_file_name_, work_directory);
+
+
+      } else {
+
+        ExecEnv::log().error("InfoFilterAnalysis::getParameters; bad value for parameter: {}", OUTPUT_FILE_);
+        return false;
+
+      }
+
+    }
 
   }
-
-  output_file_name_ = Utility::filePath(result->second, work_directory);
-
-  ExecEnv::log().info("Analysis: {}, initialized with output file: {}", ident(), output_file_name_);
 
   return true;
 

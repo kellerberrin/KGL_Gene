@@ -8,6 +8,7 @@
 
 #include "kgl_analysis_inbreed_freq.h"
 #include "kgl_analysis_inbreed_locus.h"
+#include "kgl_analysis_inbreed_output.h"
 
 #include <list>
 
@@ -21,29 +22,6 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-class InbreedingParameters {
-
-public:
-
-  InbreedingParameters() = default;
-  ~InbreedingParameters() = default;
-
-  [[nodiscard]] const LociiVectorArguments &lociiArguments() const { return locii_selection_; }
-
-  // Non const version.
-  [[nodiscard]] LociiVectorArguments &lociiArguments() { return locii_selection_; }
-
-  [[nodiscard]] const std::string &inbreedingAlgorthim() const { return inbreeding_algorithm_; }
-
-  void inbreedingAlgorthim(const std::string &algo_name) { inbreeding_algorithm_ = algo_name; }
-
-private:
-
-  LociiVectorArguments locii_selection_;
-  std::string inbreeding_algorithm_{"Loglikelihood"};
-
-};
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

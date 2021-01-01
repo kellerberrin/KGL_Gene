@@ -32,9 +32,7 @@ public:
 
   // Construct a synthetic population and analyze it.
   // The synthetic population is constructed from the unphased population.
-  static bool syntheticInbreeding( std::shared_ptr<const PopulationDB> unphased_ptr,
-                                   const InbreedingParameters& paramaters,
-                                   InbreedingOutputResults& results);
+  static bool syntheticInbreeding(std::shared_ptr<const PopulationDB> unphased_ptr, InbreedParamOutput& param_output);
 
 private:
 

@@ -2,8 +2,8 @@
 // Created by kellerberrin on 20/11/20.
 //
 
-#ifndef KGL_ANALYSIS_MUTATION_INBREED_FREQ_H
-#define KGL_ANALYSIS_MUTATION_INBREED_FREQ_H
+#ifndef KGL_ANALYSIS_INBREED_FREQ_H
+#define KGL_ANALYSIS_INBREED_FREQ_H
 
 #include "kgl_ped_parser.h"
 #include "kel_optimize.h"
@@ -12,28 +12,6 @@
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Data structures to hold summary actual and implied allele frequency information at an offset.
-// Called by the threadpool for each genome/sample.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct LocusResults {
-
-  GenomeId_t genome;
-  size_t major_hetero_count{0};   // 1 minor allele only.
-  double major_hetero_freq{0.0};
-  size_t minor_hetero_count{0};   // 2 different minor alleles.
-  double minor_hetero_freq{0.0};
-  size_t minor_homo_count{0};     // 2 identical minor alleles.
-  double minor_homo_freq{0.0};
-  size_t major_homo_count{0};     // 2 identical major alleles (generally not recorded).
-  double major_homo_freq{0.0};
-  size_t total_allele_count{0};  // All alleles.
-  double inbred_allele_sum{0.0}; // inbreeding coefficient
-
-};
-
-
-using ResultsMap = std::map<GenomeId_t, LocusResults>;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

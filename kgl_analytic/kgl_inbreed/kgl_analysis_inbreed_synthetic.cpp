@@ -13,13 +13,9 @@ namespace kgl = kellerberrin::genome;
 
 
 // Calculate the Synthetic Population Inbreeding Coefficient
-bool kgl::SyntheticAnalysis::syntheticInbreeding(  std::shared_ptr<const PopulationDB> unphased_ptr,
-                                                   const InbreedingParameters& parameters,
-                                                   InbreedingOutputResults& results) {
+bool kgl::SyntheticAnalysis::syntheticInbreeding(std::shared_ptr<const PopulationDB> unphased_ptr,
+                                                 InbreedParamOutput& param_output) {
 
-
-  // Filter out any variants that did not pass VCF filters (otherwise we get duplicate variants).
-  unphased_ptr = unphased_ptr->filterVariants(PassFilter());
 
   // check that unphased population onlu has 1 genome
   if (unphased_ptr->getMap().size() != 1) {
@@ -43,17 +39,23 @@ bool kgl::SyntheticAnalysis::syntheticInbreeding(  std::shared_ptr<const Populat
   // Get the size of the contig.
   auto [contig_id, contig_ptr] = *contig_map->getMap().begin();
 
-  InbreedingParameters local_params = parameters;
+  InbreedingParameters local_params = param_output.getParameters();
   std::vector<ContigOffset_t> locii_vector = RetrieveLociiVector::getLociiCount(contig_ptr,
                                                                                 FrequencyDatabaseRead::SUPER_POP_ALL_,
                                                                                 local_params.lociiArguments());
   local_params.lociiArguments().upperOffset(locii_vector.back());
 
-  while (local_params.lociiArguments().upperOffset() < parameters.lociiArguments().upperOffset() and locii_vector.size() >= 100) {
+  while ( local_params.lociiArguments().upperOffset() < param_output.getParameters().lociiArguments().upperOffset()
+          and locii_vector.size() >= 100) {
 
-    ResultsMap results_map = processSynResults( unphased_ptr, parameters);
+    ResultsMap results_map = processSynResults( unphased_ptr, param_output.getParameters());
 
-    results.insertResults({local_params, results_map});
+    // Generate a string to identify these results.
+    std::string result_ident = InbreedingResultColumn::generateIdent( contig_id,
+                                                                      local_params.lociiArguments().lowerOffset(),
+                                                                      local_params.lociiArguments().upperOffset());
+    // Store the synthetic computation results.
+    param_output.addColumn(InbreedingResultColumn(result_ident, results_map));
 
     local_params.lociiArguments().lowerOffset(local_params.lociiArguments().upperOffset());
     locii_vector = RetrieveLociiVector::getLociiCount(contig_ptr,

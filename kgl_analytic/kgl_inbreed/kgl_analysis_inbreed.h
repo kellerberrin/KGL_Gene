@@ -9,6 +9,8 @@
 #include "kgl_analysis_virtual.h"
 #include "kgl_ped_parser.h"
 #include "kgl_analysis_inbreed_args.h"
+#include "kgl_analysis_inbreed_output.h"
+#include "kgl_analysis_inbreed_execute.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -30,8 +32,8 @@ public:
 
   // Setup the analytics to process VCF data.
   [[nodiscard]] bool initializeAnalysis(const std::string &work_directory,
-                                        const RuntimeParameterMap &named_parameters,
-                                        std::shared_ptr<const GenomeCollection> reference_genomes) override;
+                                        const ActiveParameterList& named_parameters,
+                                        std::shared_ptr<const GenomeCollection>) override;
 
   // Perform the genetic analysis per VCF file
   [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataDB> data_object_ptr) override;
@@ -44,20 +46,20 @@ public:
 
 private:
 
-  constexpr static const char* REFERENCE_GENOME_ = "GRCh38";
-  constexpr static const char* OUTPUT_FILE_ = "OUTPUTFILE";
   constexpr static const char* ANALYSIS_IDENT_ = "INBREED";
 
-  [[nodiscard]] bool getParameters(const std::string& work_directory, const RuntimeParameterMap& named_parameters);
-  std::string output_file_name_;
-
+  // The analysis will be executed for each parameter block.
+  std::vector<InbreedParamOutput> parameter_output_vector_;
+  std::string work_directory_;
   // The population variant data.
-  std::shared_ptr<const GenomeReference> genome_GRCh38_;
   std::shared_ptr<const PopulationDB> diploid_population_;
   std::shared_ptr<const PopulationDB> unphased_population_;
   std::shared_ptr<const GenomePEDData> ped_data_;
 
-  ExecuteInbreedingAnalysis inbreed_analysis_;
+  // If necessary, create an unphased population from the diploid population.
+  std::shared_ptr<const PopulationDB> createUnphased();
+  // Write to output files.
+  bool writeResults();
 
 };
 

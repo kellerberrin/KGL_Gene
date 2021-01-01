@@ -36,7 +36,13 @@ bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
         // Analysis parameters found.
         if (result != analysis_map_.end()) {
 
-          if (analysis_ptr->initializeAnalysis(work_directory_, result->second.parameterMap(), reference_genomes)) {
+          // Get the named parameter blocks for this analysis.
+          auto defined_parameters = defined_parameters_.createParameterList(result->second.parameterMap());
+
+          // Initialize.
+          if (analysis_ptr->initializeAnalysis(work_directory_,
+                                               defined_parameters,
+                                               reference_genomes)) {
 
             active_analysis_.emplace_back(std::move(analysis_ptr), true);
 
@@ -71,7 +77,7 @@ bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
 }
 
 
-bool kgl::PackageAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> vcf_iterative_data) const {
+bool kgl::PackageAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> file_data) const {
 
   for (auto& [analysis, active] : active_analysis_) {
 
@@ -79,7 +85,7 @@ bool kgl::PackageAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> vcf_it
 
     if (active) {
 
-      if (not analysis->fileReadAnalysis(vcf_iterative_data)) {
+      if (not analysis->fileReadAnalysis(file_data)) {
 
         ExecEnv::log().error("PackageAnalysis::fileReadAnalysis; Error Iteratively Updating Analysis: {}, disabled from further updates.", analysis->ident());
         active = false;

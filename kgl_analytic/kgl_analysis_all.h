@@ -25,7 +25,8 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Analytic classes are called virtually and provided with data (reference and variant).
+// Analytic classes are called virtually and provided with data and runtime parameters specified in the XML
+// definition files.
 using VirtualAnalysisVector = std::vector<std::unique_ptr<VirtualAnalysis>>;
 
 inline VirtualAnalysisVector getAnalysisVector() {

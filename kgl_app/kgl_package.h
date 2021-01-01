@@ -26,7 +26,8 @@ public:
                     analysis_map_(runtime_options.getAnalysisMap()),
                     package_map_(runtime_options.getPackageMap()),
                     evidence_map_(runtime_options.getEvidenceMap()),
-                    package_analysis_(work_directory, analysis_map_) { verifyPackages(); }
+                    defined_parameters_(runtime_options.getParameterMap()),
+                    package_analysis_(work_directory, analysis_map_, defined_parameters_) { verifyPackages(); }
 
   ~ExecutePackage() = default;
 
@@ -35,7 +36,7 @@ public:
 
 private:
 
-  // The Runtime information loaded from the XML file.
+  // The Runtime information loaded from the XML config files.
   const ActivePackageVector active_packages_;
   const ContigAliasMap contig_alias_;
   const RuntimeDataFileMap data_file_map_;
@@ -43,6 +44,7 @@ private:
   const RuntimeAnalysisMap analysis_map_;
   const RuntimePackageMap package_map_;
   const VariantEvidenceMap evidence_map_;
+  const ActiveParameterList defined_parameters_;
   // The analysis management object.
   const PackageAnalysis package_analysis_;
 
@@ -51,10 +53,10 @@ private:
   // Load the reference genomes.
   [[nodiscard]] std::unique_ptr<GenomeCollection> loadReferenceGenomes(const RuntimePackage& package) const;
 
-  // Load a specified Data file and return a population or ancestry.
-  [[nodiscard]] std::shared_ptr<DataDB> readDataFiles(const RuntimePackage& package,
-                                                      std::shared_ptr<const GenomeCollection> reference_genomes,
-                                                      const std::string& data_file) const;
+  // Load a specified data file and return a base pointer (DataDB) to the file.
+  [[nodiscard]] std::shared_ptr<DataDB> readDataFile(const RuntimePackage& package,
+                                                     std::shared_ptr<const GenomeCollection> reference_genomes,
+                                                     const std::string& data_file) const;
 
 
 

@@ -1,167 +1,153 @@
 //
-// Created by kellerberrin on 7/12/20.
+// Created by kellerberrin on 30/12/20.
 //
 
 #include "kgl_analysis_inbreed_args.h"
-#include "kgl_analysis_inbreed_execute.h"
-#include "kgl_analysis_inbreed_synthetic.h"
-#include "kgl_filter.h"
+#include "kel_utility.h"
 
 
 namespace kgl = kellerberrin::genome;
 
+// This function extracts the values from the parsed XML file and constructs the analysis arguments.
+std::vector<kgl::InbreedingParameters> kgl::InbreedArguments::extractParameters(const ActiveParameterList& named_parameters) {
 
 
-// Perform the genetic analysis per iteration.
-bool kgl::ExecuteInbreedingAnalysis::executeAnalysis(std::shared_ptr<const GenomeReference> genome_GRCh38,
-                                                     std::shared_ptr<const PopulationDB> diploid_population,
-                                                     std::shared_ptr<const PopulationDB> unphased_population,
-                                                     std::shared_ptr<const GenomePEDData> ped_data) {
+  std::vector<kgl::InbreedingParameters> param_vector;
 
-  genome_GRCh38_ = std::move(genome_GRCh38);
-  diploid_population_ = std::move(diploid_population);
-  unphased_population_ = std::move(unphased_population);
-  ped_data_ = std::move(ped_data);
+  for (auto const& named_block : named_parameters.getMap()) {
 
-  // If necessary, create an unphased population from the diploid population.
-  createUnphased();
+    auto [block_name, block_vector] = named_block.second;
 
-  if (analyze_diploid_) {
+    for (auto const& xml_vector : block_vector) {
 
-    // Check that we have what we need.
-    if (not (diploid_population_ and unphased_population_ and ped_data_)) {
+      InbreedingParameters parameters;
+      parameters.paramIdent(block_name);
 
-      ExecEnv::log().error("ExecuteInbreedingAnalysis::processDiploid; Insufficient data, cannot process diploid inbreeding");
-      return false;
+      auto analysis_opt = xml_vector.getBool(ANALYSISTYPE_);
+      if (analysis_opt) {
 
-    }
+        bool synthetic_flag = analysis_opt.value();
+        parameters.analyzeSynthetic(synthetic_flag);
 
-    return processDiploid();
+      } else {
 
-  } else {
+        ExecEnv::log().error("InbreedArguments::extractParameters; bad value for synthetic flag: {}", ANALYSISTYPE_);
+        continue;
 
-    // Check that we have what we need.
-    if (not unphased_population_) {
+      }
 
-      ExecEnv::log().error("InbreedAnalysis::iterationAnalysis; Insufficient data, cannot process synthetic diploid inbreeding");
-      return false;
+      auto output_opt = xml_vector.getString(OUTPUTFILE_);
+      if (output_opt) {
 
-    }
+        std::string output_file = output_opt.value().front();
+        parameters.outputFile(output_file);
 
-    return processSynthetic();
+      } else {
 
-  }
+        ExecEnv::log().error("InbreedArguments::extractParameters; bad value for synthetic flag: {}", OUTPUTFILE_.first);
+        continue;
 
-}
+      }
 
-void kgl::ExecuteInbreedingAnalysis::createUnphased() {
+      auto algo_opt = xml_vector.getString(ALGORITHM_);
+      if (algo_opt) {
 
-  if (diploid_population_ and not unphased_population_) {
+        std::string algorithm = algo_opt.value().front();
+        parameters.inbreedingAlgorthim(algorithm);
 
-    ExecEnv::log().info("ExecuteInbreedingAnalysis::processDiploid; Creating unique unphased population using 1000 Genomes.");
-    std::shared_ptr<GenomeDB> unphased_genome_ptr = diploid_population_->uniqueUnphasedGenome();
-    std::shared_ptr<PopulationDB> unphased_unique_ptr = std::make_shared<PopulationDB>(diploid_population_->populationId(),
-                                                                                       diploid_population_->dataSource());
-    unphased_unique_ptr->addGenome(unphased_genome_ptr);
-    ExecEnv::log().info("ExecuteInbreedingAnalysis::processDiploid; Created unique unphased population, variant count: {}.", unphased_unique_ptr->variantCount());
-    unphased_population_ = unphased_unique_ptr;
+      } else {
 
-  }
+        ExecEnv::log().error("InbreedArguments::extractParameters; bad value for inbreeding algorithm: {}", ALGORITHM_.first);
+        continue;
 
-}
+      }
 
+      auto min_freq_opt = xml_vector.getFloat(MINALLELEFREQ_);
+      if (min_freq_opt) {
 
-// Perform the genetic analysis per iteration.
-bool kgl::ExecuteInbreedingAnalysis::processDiploid() {
+        double min_freq = min_freq_opt.value().front();
+        parameters.lociiArguments().minAlleleFrequency(min_freq);
 
+      } else {
 
-  // Setup the analysis parameters.
-  size_t locii_count = 1000000000;
-  static const ContigOffset_t sampling_distance = 10000;
-  static const ContigOffset_t lower_window = 0;
-  static const ContigOffset_t upper_window = 1000000000;
-  static const double upper_allele_frequency = 0.2;
-  static const double lower_allele_frequency = 0.01;
+        ExecEnv::log().error("InbreedArguments::extractParameters; bad value for minimum allele frequency: {}", MINALLELEFREQ_.first);
+        continue;
 
-  // Filter out any variants that did not pass VCF filters (otherwise we get duplicate variants).
-  unphased_population_ = unphased_population_->filterVariants(AndFilter(SNPFilter(), PassFilter()));
+      }
 
-  InbreedingParameters parameters;
-  parameters.lociiArguments().minAlleleFrequency(lower_allele_frequency);
-  parameters.lociiArguments().maxAlleleFrequency(upper_allele_frequency);
-  parameters.inbreedingAlgorthim(InbreedingCalculation::LOGLIKELIHOOD_F);
-  parameters.lociiArguments().frequencySource(unphased_population_->dataSource());
-  parameters.lociiArguments().lowerOffset(lower_window);
-  parameters.lociiArguments().upperOffset(upper_window);
-  parameters.lociiArguments().lociiCount(locii_count);
-  parameters.lociiArguments().lociiSpacing(sampling_distance);
+      auto max_freq_opt = xml_vector.getFloat(MAXALLELEFREQ_);
+      if (max_freq_opt) {
 
-  InbreedingOutputResults results(diploid_population_->populationId());
+        double max_freq = max_freq_opt.value().front();
+        parameters.lociiArguments().maxAlleleFrequency(max_freq);
 
-  InbreedingAnalysis::populationInbreeding( unphased_population_,
-                                            *diploid_population_,
-                                            *ped_data_,
-                                            parameters,
-                                            results);
+      } else {
 
-  inbreeding_results_.emplace(results.identifier(), results);
+        ExecEnv::log().error("InbreedArguments::extractParameters; bad value for minimum allele frequency: {}", MAXALLELEFREQ_.first);
+        continue;
 
-  return true;
+      }
 
-}
+      auto low_window_opt = xml_vector.getSize(LOWERWINDOW_);
+      if (low_window_opt) {
 
-// Perform an inbreeding analysis of a synthetic population.
-bool kgl::ExecuteInbreedingAnalysis::processSynthetic() {
+        size_t lower_window = low_window_opt.value().front();
+        parameters.lociiArguments().lowerOffset(lower_window);
 
-  // Setup the analysis parameters.
-  size_t locii_count = 1000000000;
-  static const ContigOffset_t sampling_distance = 10000;
-  static const ContigOffset_t lower_window = 0;
-  static const ContigOffset_t upper_window = 1000000000;
-  static const double upper_allele_frequency = 1.0;
-  static const double lower_allele_frequency = 0.2;
+      } else {
 
-  InbreedingParameters parameters;
-  parameters.lociiArguments().minAlleleFrequency(lower_allele_frequency);
-  parameters.lociiArguments().maxAlleleFrequency(upper_allele_frequency);
-  parameters.inbreedingAlgorthim(InbreedingCalculation::LOGLIKELIHOOD_F);
-  parameters.lociiArguments().frequencySource(unphased_population_->dataSource());
-  parameters.lociiArguments().lowerOffset(lower_window);
-  parameters.lociiArguments().upperOffset(upper_window);
-  parameters.lociiArguments().lociiCount(locii_count);
-  parameters.lociiArguments().lociiSpacing(sampling_distance);
+        ExecEnv::log().error("InbreedArguments::extractParameters; bad value for lower window offset: {}", LOWERWINDOW_.first);
+        continue;
 
-  InbreedingOutputResults results(unphased_population_->populationId());
+      }
 
-  SyntheticAnalysis::syntheticInbreeding(unphased_population_, parameters, results);
+      auto high_window_opt = xml_vector.getSize(UPPERWINDOW_);
+      if (high_window_opt) {
 
-  inbreeding_results_.emplace(results.identifier(), results);
+        size_t upper_window = high_window_opt.value().front();
+        parameters.lociiArguments().upperOffset(upper_window);
 
-  return true;
+      } else {
 
-}
+        ExecEnv::log().error("InbreedArguments::extractParameters; bad value for upper window offset: {}", UPPERWINDOW_.first);
+        continue;
 
+      }
 
-bool kgl::ExecuteInbreedingAnalysis::writeResults(const std::string& output_file) {
+      auto locii_opt = xml_vector.getSize(LOCIICOUNT_);
+      if (locii_opt) {
 
+        size_t locii_count = locii_opt.value().front();
+        parameters.lociiArguments().lociiCount(locii_count);
 
-  for (auto const& [identifier, result] :  inbreeding_results_) {
+      } else {
 
-    ExecEnv::log().info("ExecuteInbreedingAnalysis::processDiploid: Writing results for identifier: {}", identifier);
+        ExecEnv::log().error("InbreedArguments::extractParameters; bad value for locii count: {}", LOCIICOUNT_.first);
+        continue;
 
-    if (analyze_diploid_) {
+      }
 
-      InbreedingOutput::writeColumnResults(result, *ped_data_, output_file);
+      auto sampling_opt = xml_vector.getSize(SAMPLINGDISTANCE_);
+      if (sampling_opt) {
 
-    } else {
+        size_t sampling_distance = sampling_opt.value().front();
+        parameters.lociiArguments().lociiSpacing(sampling_distance);
 
-      InbreedingOutput::writeSynResults(result, output_file);
+      } else {
+
+        ExecEnv::log().error("InbreedArguments::extractParameters; bad value for locii count: {}", SAMPLINGDISTANCE_.first);
+        continue;
+
+      }
+
+      param_vector.push_back(parameters);
 
     }
 
+    ExecEnv::log().info("Inbreeding Analysis, parsed named argument vector: {}, size: {}", block_name, param_vector.size());
+
   }
 
-  return true;
+  return param_vector;
 
 }
-

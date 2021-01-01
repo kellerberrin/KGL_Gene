@@ -146,7 +146,7 @@ public:
   // Setup the analytics to process VCF data.
   // This function must be redefined.
   [[nodiscard]] bool initializeAnalysis( const std::string& work_directory,
-                                         const RuntimeParameterMap& named_parameters,
+                                         const ActiveParameterList& named_parameters,
                                          std::shared_ptr<const GenomeCollection> reference_genomes) override;
 
   // Perform the genetic analysis per iteration.
@@ -161,8 +161,8 @@ public:
 
 private:
 
-  constexpr static const char* INTERVAL_SIZE_ = "INTERVALSIZE";
-  constexpr static const char* OUTPUT_FILE_ = "OUTPUTFILE";
+  constexpr static const char* INTERVAL_SIZE_ = "IntervalSize";
+  constexpr static const char* OUTPUT_FILE_ = "OutputFile";
 
   size_t interval_size_{0};
   std::string output_file_name_;
@@ -175,8 +175,9 @@ private:
   std::shared_ptr<const GenomeReference> genome_;
 
   constexpr static const char OUTPUT_DELIMITER_ = ',';
+  constexpr static const char* OUTPUT_FILE_EXT_ = ".csv";
 
-  [[nodiscard]] bool getParameters(const RuntimeParameterMap& named_parameters);
+  [[nodiscard]] bool getParameters(const ActiveParameterList& named_parameters);
   void setupIntervalStructure(std::shared_ptr<const GenomeReference> genome);
   [[nodiscard]] bool variantIntervalCount(std::shared_ptr<const PopulationDB> population_ptr);
   [[nodiscard]] bool writeData( std::shared_ptr<const GenomeReference> genome_db, bool display_sequence, std::ostream& output, char delimiter) const;

@@ -244,10 +244,10 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_legacy/kgl_legacy_Pf_analysis.h
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed.cpp
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_execute.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_diploid.cpp
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_synthetic.cpp
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_calc.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_execute.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_diploid.h
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_locus.cpp
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_locus.h
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_calc.h
@@ -264,9 +264,9 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_syngen.h
         kgl_analytic/kgl_recomb/kgl_analysis_mutation_recomb_compare.cpp
         kgl_analytic/kgl_recomb/kgl_analysis_mutation_recomb_compare.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_args.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_args.h
-        kgl_analytic/kgl_analysis_virtual.h)
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_execute.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_execute.h
+        kgl_analytic/kgl_analysis_virtual.h kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_args.cpp kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_args.h)
 
 # Deconvolution and mixture files.
 
