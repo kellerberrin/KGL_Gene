@@ -168,6 +168,10 @@ std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::filterVariants(const Varia
 // Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
 std::pair<size_t, size_t> kgl::PopulationDB::inSituFilter(const VariantFilter& filter) {
 
+  // This routine modifies the populationDB data structure, so only permit one thread at a time.
+  // Note the routine is internally multi-threaded.
+  std::scoped_lock lock(insitufilter_mutex_);
+
   // Calc how many threads required.
   size_t thread_count = std::min(getMap().size(), ThreadPool::hardwareThreads());
   ThreadPool thread_pool(thread_count);
@@ -203,11 +207,16 @@ std::pair<size_t, size_t> kgl::PopulationDB::inSituFilter(const VariantFilter& f
   }
 
   // Delete empty genomes.
-  for (auto it = genome_map_.begin(); it != genome_map_.end(); ++it) {
+  auto it = genome_map_.begin();
+  while (it != genome_map_.end()) {
 
     if (it->second->getMap().empty()) {
 
       it = genome_map_.erase(it);
+
+    } else {
+
+      ++it;
 
     }
 

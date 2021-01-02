@@ -156,7 +156,11 @@ bool kgl::InbreedAnalysis::writeResults() {
 
   for (auto& param_output : parameter_output_vector_) {
 
-    if (ped_data_ and not param_output.getParameters().analyzeSynthetic()) {
+    if (param_output.getParameters().analyzeSynthetic()) {
+
+      InbreedingOutput::writeSynthetic( param_output, work_directory_);
+
+    } else if (ped_data_) {
 
       InbreedingOutput::writePedResults(param_output, *ped_data_, work_directory_);
 

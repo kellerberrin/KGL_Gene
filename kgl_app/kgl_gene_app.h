@@ -38,7 +38,7 @@ public:
   [[nodiscard]] inline static const RuntimeProperties& getRuntimeOptions() { return runtime_options_; }
 
 // The following 4 static members are required for all applications.
-  inline static constexpr const char* VERSION = "0.8";
+  inline static constexpr const char* VERSION = "0.9";
   inline static constexpr const char* MODULE_NAME = "kglGene";
   static void executeApp(); // Application mainline.
   [[nodiscard]] static bool parseCommandLine(int argc, char const ** argv);  // Parse command line arguments.

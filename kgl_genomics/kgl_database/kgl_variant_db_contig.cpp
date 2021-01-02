@@ -153,8 +153,8 @@ std::pair<size_t, size_t> kgl::ContigDB::inSituFilter(const VariantFilter &filte
   std::pair<size_t, size_t> contig_count{0, 0};
   for (auto& [offset, variant_vector] : contig_offset_map_) {
 
-    std::vector<std::shared_ptr<const Variant>> filtered_variants;
-    OffsetDBArray variant_array = variant_vector->getVariantArray();
+    OffsetDBArray filtered_variants;
+    const OffsetDBArray& variant_array = variant_vector->getVariantArray();
     contig_count.first += variant_array.size();
 
     for (auto const &variant_ptr : variant_array) {
@@ -166,26 +166,26 @@ std::pair<size_t, size_t> kgl::ContigDB::inSituFilter(const VariantFilter &filte
 
       }
 
-    }
-
-    // Remove all variants at this offset.
-    variant_vector->clearVariant();
-
-    // Add back the filtered variants.
-    for (auto const &variant_ptr : filtered_variants) {
-
-      variant_vector->addVariant(variant_ptr);
+      filtered_variants.push_back(variant_ptr);
 
     }
+
+    // Replace with filtered variants at this offset.
+    variant_vector->replaceVector(std::move(filtered_variants));
 
   } // for all offsets
 
   // Finally, remove all empty offsets.
-  for (auto it = contig_offset_map_.begin(); it != contig_offset_map_.end(); ++it) {
+  auto it = contig_offset_map_.begin();
+  while(it != contig_offset_map_.end()) {
 
     if (it->second->getVariantArray().empty()) {
 
       it = contig_offset_map_.erase(it);
+
+    } else {
+
+      ++it;
 
     }
 

@@ -132,6 +132,7 @@ public:
                                const std::string& file_path);
 
   static bool writeNoPedResults(const InbreedParamOutput& output_results, const std::string& file_path);
+  static bool writeSynthetic(const InbreedParamOutput& output_results, const std::string& file_path);
 
 
 private:

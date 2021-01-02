@@ -52,7 +52,10 @@ bool kgl::InfoFilterAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> dat
 
   // Analysis currently only defined for Gnomad 2.1
   auto file_characteristic = data_ptr->dataCharacteristic();
-  if (file_characteristic.data_source != DataSourceEnum::Gnomad2_1) {
+  if ( file_characteristic.data_source != DataSourceEnum::Gnomad2_1
+      and file_characteristic.data_source != DataSourceEnum::Gnomad3_1
+      and file_characteristic.data_source != DataSourceEnum::GnomadExomes2_1
+      and file_characteristic.data_source != DataSourceEnum::GnomadExomes3_1) {
 
     ExecEnv::log().warn("Analysis: {}, expected a Gnomad 2.1 Population for file: {}", ident(), data_ptr->fileId());
     return true;

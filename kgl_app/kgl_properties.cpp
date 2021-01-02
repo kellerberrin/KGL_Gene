@@ -41,7 +41,7 @@ kgl::ActivePackageVector kgl::RuntimeProperties::getActivePackages() const {
 
   for (const auto& sub_tree : property_tree_vector) {
 
-    if (sub_tree.first == VALUE_) {
+    if (sub_tree.first == PACKAGE_) {
 
       std::string active_package = sub_tree.second.getValue();
       active_packages.emplace_back(active_package);
@@ -233,19 +233,21 @@ kgl::RuntimeAnalysisMap kgl::RuntimeProperties::getAnalysisMap() const {
     for (const auto& parameter_sub_tree : parameter_tree_vector) {
 
       // Only process parameter records.
-      if (parameter_sub_tree.first != VALUE_) continue;
+      if (parameter_sub_tree.first == PARAMETER_BLOCK_) {
 
-      std::string parameter_ident = parameter_sub_tree.second.getValue();
-      if (parameter_ident.empty()) {
+        std::string parameter_ident = parameter_sub_tree.second.getValue();
+        if (parameter_ident.empty()) {
 
-        ExecEnv::log().error("RuntimeProperties::getAnalysisMap, No Parameter Identifier Found for Analysis: {}", analysis_ident);
-        continue;
+          ExecEnv::log().error("RuntimeProperties::getAnalysisMap, No Parameter Identifier Found for Analysis: {}", analysis_ident);
+          continue;
 
-      } else {
+        } else {
 
-        parameter_map.push_back(parameter_ident);
+          parameter_map.push_back(parameter_ident);
 
-      }
+        }
+
+      } // if parameter block.
 
     }  // for parameter
 

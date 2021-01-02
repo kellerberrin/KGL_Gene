@@ -24,7 +24,7 @@ namespace kellerberrin::genome {   //  organization::project
 //
 // The population level contains genomes, which in turn contain contigs (chromosomes),
 // which turn contains offsets, which in turn contain an array of variants.
-// The DataDB contains further information; phased or unphased, diploid or haploid etc, etc.
+// The DataDB contains further file information; phased or unphased, diploid or haploid etc, etc.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -107,6 +107,8 @@ private:
   PopulationId_t population_id_;
   // mutex to lock the structure for multiple thread access by parsers.
   mutable std::mutex add_variant_mutex_;
+  // mutex to lock the structure when performing an inSituFilter.
+  mutable std::mutex insitufilter_mutex_;
 
 };
 

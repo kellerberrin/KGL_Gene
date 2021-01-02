@@ -74,7 +74,7 @@ private:
   bool getPropertyTree(const pt::ptree& property_tree, const std::string& property_name, std::string& property) const;
   // These functions are recursive and throw file exceptions which are caught in getPropertyTree().
   std::stringstream preProcessPropertiesFile(const std::string& properties_file);
-  void readRecursive(std::stringstream& ss, const std::string& properties_file);
+  void readRecursive(std::stringstream& ss, const std::string& properties_file, size_t& file_count);
 
 };
 
@@ -82,8 +82,11 @@ private:
 std::stringstream kel::PropertyTree::PropertyImpl::preProcessPropertiesFile(const std::string& properties_file) {
 
   std::stringstream ss;
+  size_t file_count{0};
 
-  readRecursive(ss, properties_file);
+  readRecursive(ss, properties_file, file_count);
+
+  ExecEnv::log().info("Runtime definition XML files parsed: {}", file_count);
 
   return ss;
 
@@ -93,11 +96,12 @@ std::stringstream kel::PropertyTree::PropertyImpl::preProcessPropertiesFile(cons
 // This allows the runtime XML file to be broken up and simplified.
 // Redundant include statements can be disabled by prefixing with '//' in the first two characters of the line.
 // For example '//#include "subdir/include.xml' is a disabled include statement.
-void kel::PropertyTree::PropertyImpl::readRecursive(std::stringstream& ss, const std::string& properties_file) {
+void kel::PropertyTree::PropertyImpl::readRecursive(std::stringstream& ss, const std::string& properties_file, size_t& file_count) {
 
   static const size_t include_token_size = std::string(INCLUDE_TOKEN_).size();
   static const size_t ignore_size = std::string(LINE_IGNORE_).size();
 
+  ++file_count;
   std::ifstream xml_file(properties_file);
 
   if (not xml_file.good()) {
@@ -114,7 +118,6 @@ void kel::PropertyTree::PropertyImpl::readRecursive(std::stringstream& ss, const
     std::string ignore_text = line.substr(0, ignore_size);
     if (ignore_text == LINE_IGNORE_) {
 
-      ExecEnv::log().info("Preprocess runtime XML File: {}; found ignore '//' in line  {}", properties_file, line);
       continue;
 
     }
@@ -126,8 +129,7 @@ void kel::PropertyTree::PropertyImpl::readRecursive(std::stringstream& ss, const
       std::string file_spec = Utility::trimAllWhiteSpace(line.substr(include_token_size));
       file_spec = Utility::trimAllChar(file_spec, INCLUDE_FILE_QUOTE_);
       file_spec = Utility::filePath(file_spec, Utility::filePath(properties_file));
-      ExecEnv::log().info("Runtime XML include file: {}", file_spec);
-      readRecursive(ss, file_spec);
+      readRecursive(ss, file_spec, file_count);
 
     } else {
 

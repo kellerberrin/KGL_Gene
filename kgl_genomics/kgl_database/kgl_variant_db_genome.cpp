@@ -198,11 +198,16 @@ std::pair<size_t, size_t> kgl::GenomeDB::inSituFilter(const VariantFilter& filte
 
   }
   // Delete the empty contigs.
-  for (auto it = contig_map_.begin(); it != contig_map_.end(); ++it) {
+  auto it = contig_map_.begin();
+  while (it != contig_map_.end()) {
 
     if (it->second->getMap().empty()) {
 
       it = contig_map_.erase(it);
+
+    } else {
+
+      ++it;
 
     }
 

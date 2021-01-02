@@ -27,7 +27,7 @@ class OffsetDB {
 
 public:
 
-  OffsetDB() = default;
+  OffsetDB() { variant_vector_.reserve(INITIAL_VECTOR_SIZE_); };
   ~OffsetDB() = default;
 
   OffsetDB(const OffsetDB &) = delete;
@@ -36,13 +36,14 @@ public:
   [[nodiscard]] const OffsetDBArray& getVariantArray() const { return variant_vector_; }
 
   void addVariant(std::shared_ptr<const Variant> variant_ptr) { variant_vector_.emplace_back(std::move(variant_ptr)); }
-
   void clearVariant() { variant_vector_.clear(); }
+  void replaceVector(OffsetDBArray&& replace_vector) { variant_vector_ = replace_vector;  }
 
 
 private:
 
   OffsetDBArray variant_vector_;
+  constexpr static const size_t INITIAL_VECTOR_SIZE_ = 2;
 
 };
 
