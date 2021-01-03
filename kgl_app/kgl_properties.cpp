@@ -76,7 +76,7 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
     if (sub_tree.first != PACKAGE_) continue;
 
     // Get the Package Ident.
-    key = std::string(PACKAGE_IDENT_) + std::string(DOT_) + std::string(VALUE_);
+    key = std::string(PACKAGE_IDENT_);
     std::string package_ident;
     if (not sub_tree.second.getProperty(key,  package_ident)) {
 
@@ -99,8 +99,8 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
       if (analysis_sub_tree.first == ANALYSIS_) {
 
-        std::string analysis_ident;
-        if (not analysis_sub_tree.second.getProperty(VALUE_, analysis_ident)) {
+        std::string analysis_ident = analysis_sub_tree.second.getValue();
+        if (analysis_ident.empty()) {
 
           ExecEnv::log().critical("RuntimeProperties::getPackageMap, Package: {}, No Analysis identifier specified", package_ident);
 
@@ -127,8 +127,8 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
       if (genome_sub_tree.first == GENOME_DATABASE_) {
 
-        std::string genome_database;
-        if (not genome_sub_tree.second.getProperty(VALUE_, genome_database)) {
+        std::string genome_database = genome_sub_tree.second.getValue();
+        if (genome_database.empty()) {
 
           ExecEnv::log().critical("RuntimeProperties::getPackageMap, Package: {}, No Genome Database identifier specified", package_ident);
 
@@ -211,7 +211,7 @@ kgl::RuntimeAnalysisMap kgl::RuntimeProperties::getAnalysisMap() const {
     // Only process Analysis records.
     if (sub_tree.first != ANALYSIS_) continue;
 
-    key = std::string(ANALYSIS_IDENT_) + std::string(DOT_) + std::string(VALUE_);
+    key = std::string(ANALYSIS_IDENT_);
     std::string analysis_ident;
     if (not sub_tree.second.getProperty( key, analysis_ident)) {
 
@@ -287,7 +287,7 @@ kgl::RuntimeGenomeDatabaseMap kgl::RuntimeProperties::getGenomeReferenceMap() co
     // Only process Genome records.
     if (sub_tree.first != GENOME_DATABASE_) continue;
 
-    key = std::string(GENOME_IDENT_) + std::string(DOT_) + std::string(VALUE_);
+    key = std::string(GENOME_IDENT_);
     std::string genome_ident;
     if (not sub_tree.second.getProperty( key, genome_ident)) {
 
@@ -296,7 +296,7 @@ kgl::RuntimeGenomeDatabaseMap kgl::RuntimeProperties::getGenomeReferenceMap() co
 
     }
 
-    key = std::string(FASTA_FILE_) + std::string(DOT_) + std::string(VALUE_);
+    key = std::string(FASTA_FILE_);
     std::string fasta_file_name;
     if (not sub_tree.second.getFileProperty( key, workDirectory(), fasta_file_name)) {
 
@@ -305,7 +305,7 @@ kgl::RuntimeGenomeDatabaseMap kgl::RuntimeProperties::getGenomeReferenceMap() co
 
     }
 
-    key = std::string(GFF_FILE_) + std::string(DOT_) + std::string(VALUE_);
+    key = std::string(GFF_FILE_);
     std::string gff_file_name;
     if (not sub_tree.second.getFileProperty( key, workDirectory(), gff_file_name)) {
 
@@ -314,7 +314,7 @@ kgl::RuntimeGenomeDatabaseMap kgl::RuntimeProperties::getGenomeReferenceMap() co
 
     }
 
-    key = std::string(TRANSLATION_TABLE_) + std::string(DOT_) + std::string(VALUE_);
+    key = std::string(TRANSLATION_TABLE_);
     std::string translation_table;
     if (not sub_tree.second.getProperty( key, translation_table)) {
 
@@ -323,7 +323,7 @@ kgl::RuntimeGenomeDatabaseMap kgl::RuntimeProperties::getGenomeReferenceMap() co
 
     }
 
-    key = std::string(GAF_FILE_) + std::string(DOT_) + std::string(VALUE_);
+    key = std::string(GAF_FILE_);
     std::string gaf_file_name;
     if (not sub_tree.second.getOptionalFileProperty(key, workDirectory(), gaf_file_name)) {
 

@@ -20,6 +20,7 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
                     kgl_analytic/kgl_inbreed
                     kgl_analytic/kgl_verify
                     kgl_analytic/kgl_info
+                    kgl_analytic/kgl_Pf
                     kgl_analytic/kgl_legacy
                     kgl_app)
 
@@ -266,7 +267,11 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_recomb/kgl_analysis_mutation_recomb_compare.h
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_execute.cpp
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_execute.h
-        kgl_analytic/kgl_analysis_virtual.h kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_args.cpp kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_args.h)
+        kgl_analytic/kgl_analysis_virtual.h
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_args.cpp
+        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_args.h
+        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP.cpp
+        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP.h)
 
 # Deconvolution and mixture files.
 

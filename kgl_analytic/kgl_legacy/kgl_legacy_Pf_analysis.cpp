@@ -17,7 +17,6 @@
 #include "kgl_rna_search.h"
 #include "kgl_legacy_Pf_analysis.h"
 #include "kgl_variant_classify.h"
-#include "kgl_variant_phase.h"
 #include "kgl_upgma_unphased.h"
 #include "kgl_epigenetic_motif.h"
 
