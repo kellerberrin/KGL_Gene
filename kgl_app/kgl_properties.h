@@ -120,6 +120,7 @@ private:
   constexpr static const char* EVIDENCE_LIST_ = "evidenceList";
   constexpr static const char* EVIDENCE_IDENT_ = "evidenceIdent";
   constexpr static const char* EVIDENCE_INFO_LIST_ = "vcfInfoList";
+  constexpr static const char* EVIDENCE_INFO_ITEM_ = "vcfInfoItem";
   // Genome Database categories.
   constexpr static const char* GENOME_LIST_ = "genomeList";
   constexpr static const char* GENOME_DATABASE_ = "genomeDatabase";

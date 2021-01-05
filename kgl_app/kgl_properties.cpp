@@ -159,7 +159,7 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
       std::vector<std::string> iteration_files;
       if (iteration_sub_tree.first == PACKAGE_ITERATION_) {
 
-        if (not iteration_sub_tree.second.getNodeVector(VALUE_, iteration_files))  {
+        if (not iteration_sub_tree.second.getNodeVector(DATA_FILE_IDENT_, iteration_files))  {
 
           ExecEnv::log().critical("RuntimeProperties::getPackageMap, No Iteration items (VCF Files) specified for Package: {}", package_ident);
 
@@ -369,7 +369,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
     // Process VCF file record.
     if (sub_tree.first == VCF_DATA_FILE_TYPE_) {
 
-      key = std::string(DATA_FILE_IDENT_) + std::string(DOT_) + std::string(VALUE_);
+      key = std::string(DATA_FILE_IDENT_);
       std::string vcf_ident;
       if (not sub_tree.second.getProperty( key, vcf_ident)) {
 
@@ -378,7 +378,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
 
       }
 
-      key = std::string(DATA_FILE_NAME_) + std::string(DOT_) + std::string(VALUE_);
+      key = std::string(DATA_FILE_NAME_);
       std::string vcf_file_name;
       if (not sub_tree.second.getFileProperty( key, workDirectory(), vcf_file_name)) {
 
@@ -387,7 +387,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
 
       }
 
-      key = std::string(DATA_PARSER_TYPE_) + std::string(DOT_) + std::string(VALUE_);
+      key = std::string(DATA_PARSER_TYPE_);
       std::string vcf_parser_type;
       if (not sub_tree.second.getProperty( key, vcf_parser_type)) {
 
@@ -396,7 +396,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
 
       }
 
-      key = std::string(VCF_FILE_GENOME_) + std::string(DOT_) + std::string(VALUE_);
+      key = std::string(VCF_FILE_GENOME_);
       std::string vcf_reference_genome;
 
       if (not sub_tree.second.getProperty( key, vcf_reference_genome)) {
@@ -406,7 +406,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
 
       }
 
-      key = std::string(VCF_INFO_EVIDENCE_) + std::string(DOT_) + std::string(VALUE_);;
+      key = std::string(VCF_INFO_EVIDENCE_);;
       std::string evidence_ident;
       if (not sub_tree.second.getProperty(key, evidence_ident)) {
 
@@ -430,7 +430,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
 
     } else if (sub_tree.first == PED_DATA_FILE_TYPE_) { // Process PED file record
 
-      key = std::string(DATA_FILE_IDENT_) + std::string(DOT_) + std::string(VALUE_);
+      key = std::string(DATA_FILE_IDENT_);
       std::string ped_ident;
       if (not sub_tree.second.getProperty(key, ped_ident)) {
 
@@ -439,7 +439,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
 
       }
 
-      key = std::string(DATA_FILE_NAME_) + std::string(DOT_) + std::string(VALUE_);
+      key = std::string(DATA_FILE_NAME_);
       std::string ped_file_name;
       if (not sub_tree.second.getFileProperty(key, workDirectory(), ped_file_name)) {
 
@@ -448,7 +448,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
 
       }
 
-      key = std::string(DATA_PARSER_TYPE_) + std::string(DOT_) + std::string(VALUE_);
+      key = std::string(DATA_PARSER_TYPE_);
       std::string ped_parser_type;
       if (not sub_tree.second.getProperty(key, ped_parser_type)) {
 
@@ -544,7 +544,7 @@ kgl::VariantEvidenceMap kgl::RuntimeProperties::getEvidenceMap() const {
   for (const auto& sub_tree : property_tree_vector) {
 
     std::string evidence_ident;
-    key = std::string(EVIDENCE_IDENT_) + std::string(DOT_) + std::string(VALUE_);
+    key = std::string(EVIDENCE_IDENT_);
     if (not sub_tree.second.getProperty(key, evidence_ident)) {
 
       ExecEnv::log().error("RuntimeProperties::getEvidenceMap, No Evidence Identifier specified for evidence list.");
@@ -564,7 +564,7 @@ kgl::VariantEvidenceMap kgl::RuntimeProperties::getEvidenceMap() const {
     for (const auto& info_sub_tree : info_tree_vector) {
 
       // Only process info records.
-      if (info_sub_tree.first != VALUE_) continue;
+      if (info_sub_tree.first != EVIDENCE_INFO_ITEM_) continue;
 
       std::string info = info_sub_tree.second.getValue();
 

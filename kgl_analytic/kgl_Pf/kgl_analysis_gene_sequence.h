@@ -94,12 +94,12 @@ public:
 using GeneSummaryMap = std::map<GenomeId_t, GeneSummary>;
 
 
-class GeneAnalysis {
+class GenomicSequence {
 
 public:
 
-  GeneAnalysis() = delete;
-  virtual ~GeneAnalysis() = delete;
+  GenomicSequence() = delete;
+  virtual ~GenomicSequence() = delete;
 
   [[nodiscard]] static bool mutateGene( const ContigId_t& contig,
                                         const FeatureIdent_t& gene,

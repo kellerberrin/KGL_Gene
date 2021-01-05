@@ -219,19 +219,19 @@ set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
 set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_legacy/kgl_phylogenetic_analysis.h
         kgl_analytic/kgl_legacy/kgl_phylogenetic_analysis.cpp
-        kgl_analytic/kgl_legacy/kgl_phylogenetic_gene.h
-        kgl_analytic/kgl_legacy/kgl_phylogenetic_gene.cpp
-        kgl_analytic/kgl_legacy/kgl_upgma_node.h
-        kgl_analytic/kgl_legacy/kgl_upgma_node.cpp
+        kgl_analytic/kgl_Pf/kgl_analysis_gene_sequence.h
+        kgl_analytic/kgl_Pf/kgl_analysis_gene_sequence.cpp
+        kgl_analytic/kgl_Pf/kgl_upgma_node.h
+        kgl_analytic/kgl_Pf/kgl_upgma_node.cpp
         kgl_analytic/kgl_legacy/kgl_rna_search.cpp
         kgl_analytic/kgl_legacy/kgl_rna_search.h
         kgl_analytic/kgl_legacy/kgl_ploidy_analysis.h
-        kgl_analytic/kgl_legacy/kgl_upgma_unphased.h
-        kgl_analytic/kgl_legacy/kgl_upgma_unphased.cpp
+        kgl_analytic/kgl_Pf/kgl_upgma_unphased.h
+        kgl_analytic/kgl_Pf/kgl_upgma_unphased.cpp
         kgl_analytic/kgl_legacy/kgl_sequence_complexity.h
         kgl_analytic/kgl_legacy/kgl_epigenetic_motif.cpp
         kgl_analytic/kgl_legacy/kgl_epigenetic_motif.cpp
-        kgl_analytic/kgl_legacy/kgl_upgma.h
+        kgl_analytic/kgl_Pf/kgl_upgma.h
         kgl_analytic/kgl_analysis_all.h
         kgl_analytic/kgl_verify/kgl_analysis_null.cpp
         kgl_analytic/kgl_verify/kgl_analysis_null.h
@@ -271,7 +271,7 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_args.cpp
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_args.h
         kgl_analytic/kgl_Pf/kgl_analysis_PfEMP.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP.h)
+        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP.h kgl_analytic/kgl_Pf/kgl_analysis_gene.cpp kgl_analytic/kgl_Pf/kgl_analysis_gene.h)
 
 # Deconvolution and mixture files.
 

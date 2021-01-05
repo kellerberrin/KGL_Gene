@@ -3,7 +3,7 @@
 //
 
 #include "kgl_sequence_offset.h"
-#include "kgl_phylogenetic_gene.h"
+#include "kgl_analysis_gene_sequence.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_complexity.h"
 #include "kgl_variant_db_mutation.h"
@@ -16,10 +16,10 @@ namespace kgl = kellerberrin::genome;
 
 
 
-bool kgl::GeneAnalysis::translateContig( const GenomeId_t& genome_id, 
-                                         const ContigId_t& contig_id,
-                                         const std::shared_ptr<const GenomeCollection>& genomes,
-                                         const std::string& fasta_file_name) {
+bool kgl::GenomicSequence::translateContig(const GenomeId_t& genome_id,
+                                           const ContigId_t& contig_id,
+                                           const std::shared_ptr<const GenomeCollection>& genomes,
+                                           const std::string& fasta_file_name) {
   // Get the genome object
   std::optional<std::shared_ptr<const GenomeReference>> genome_opt = genomes->getOptionalGenome(genome_id);
   if (not genome_opt) {
@@ -108,10 +108,10 @@ bool kgl::GeneAnalysis::translateContig( const GenomeId_t& genome_id,
 }
 
 
-bool kgl::GeneAnalysis::translateGene( const GenomeId_t& genome_id, 
-                                       const FeatureIdent_t& gene_id,
-                                       const std::shared_ptr<const GenomeCollection>& genomes,
-                                       const std::string& fasta_file_name) {
+bool kgl::GenomicSequence::translateGene(const GenomeId_t& genome_id,
+                                         const FeatureIdent_t& gene_id,
+                                         const std::shared_ptr<const GenomeCollection>& genomes,
+                                         const std::string& fasta_file_name) {
 
   // Get the genome object
   std::optional<std::shared_ptr<const GenomeReference>> genome_opt = genomes->getOptionalGenome(genome_id);
@@ -194,12 +194,12 @@ bool kgl::GeneAnalysis::translateGene( const GenomeId_t& genome_id,
 
 
 
-bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
-                                   const FeatureIdent_t& gene,
-                                   const FeatureIdent_t& sequence,
-                                   const std::shared_ptr<const PopulationDB>& population_ptr,
-                                   const std::shared_ptr<const GenomeReference>& genome_db_ptr,
-                                   const std::string& fasta_filename) {
+bool kgl::GenomicSequence::mutateGene(const ContigId_t& contig,
+                                      const FeatureIdent_t& gene,
+                                      const FeatureIdent_t& sequence,
+                                      const std::shared_ptr<const PopulationDB>& population_ptr,
+                                      const std::shared_ptr<const GenomeReference>& genome_db_ptr,
+                                      const std::string& fasta_filename) {
 
 
 
@@ -273,12 +273,12 @@ bool kgl::GeneAnalysis::mutateGene(const ContigId_t& contig,
 
 
 
-bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
-                                         const FeatureIdent_t& gene,
-                                         const FeatureIdent_t& sequence,
-                                         const std::shared_ptr<const GenomeDB>& genome_variant_ptr,
-                                         const std::shared_ptr<const GenomeReference>& genome_db_ptr,
-                                         GeneSummaryMap& gene_summary_map) {
+bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
+                                            const FeatureIdent_t& gene,
+                                            const FeatureIdent_t& sequence,
+                                            const std::shared_ptr<const GenomeDB>& genome_variant_ptr,
+                                            const std::shared_ptr<const GenomeReference>& genome_db_ptr,
+                                            GeneSummaryMap& gene_summary_map) {
 
 
   GeneSummary gene_summary;
@@ -389,11 +389,11 @@ bool kgl::GeneAnalysis::mutateGenomeGene(const ContigId_t& contig,
 }
 
 
-bool kgl::GeneAnalysis::mutateAllRegions(const std::string& file_name,
-                                         ContigSize_t region_size,
-                                         const std::shared_ptr<const LinearDNASequenceDistance>& dna_distance_metric,
-                                         const std::shared_ptr<const PopulationDB>& pop_variant_ptr,
-                                         const std::shared_ptr<const GenomeReference>& genome_db_ptr) {
+bool kgl::GenomicSequence::mutateAllRegions(const std::string& file_name,
+                                            ContigSize_t region_size,
+                                            const std::shared_ptr<const LinearDNASequenceDistance>& dna_distance_metric,
+                                            const std::shared_ptr<const PopulationDB>& pop_variant_ptr,
+                                            const std::shared_ptr<const GenomeReference>& genome_db_ptr) {
 
   const char CSV_delimiter = ',';
   // open the file.
@@ -432,7 +432,7 @@ bool kgl::GeneAnalysis::mutateAllRegions(const std::string& file_name,
 }
 
 
-std::string kgl::GeneAnalysis::outputRegionHeader(char delimiter) {
+std::string kgl::GenomicSequence::outputRegionHeader(char delimiter) {
 
   std::stringstream ss;
 
@@ -455,13 +455,13 @@ std::string kgl::GeneAnalysis::outputRegionHeader(char delimiter) {
 }
 
 
-std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
-                                                  const std::shared_ptr<const LinearDNASequenceDistance>& dna_distance_metric,
-                                                  const ContigId_t& contig_id,
-                                                  const ContigOffset_t offset,
-                                                  const ContigSize_t region_size,
-                                                  const std::shared_ptr<const GenomeDB>& genome_variant_ptr,
-                                                  const std::shared_ptr<const GenomeReference>& genome_db_ptr) {
+std::string kgl::GenomicSequence::outputGenomeRegion(char delimiter,
+                                                     const std::shared_ptr<const LinearDNASequenceDistance>& dna_distance_metric,
+                                                     const ContigId_t& contig_id,
+                                                     const ContigOffset_t offset,
+                                                     const ContigSize_t region_size,
+                                                     const std::shared_ptr<const GenomeDB>& genome_variant_ptr,
+                                                     const std::shared_ptr<const GenomeReference>& genome_db_ptr) {
 
   std::stringstream ss;
 
@@ -490,7 +490,7 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
                                                  offset+region_size,
                                                  variant_map)) {
 
-    ExecEnv::log().warn("GeneAnalysis::outputGenomeRegion, Problem retrieving variants, genome: {}, contig: {}",
+    ExecEnv::log().warn("GenomicSequence::outputGenomeRegion, Problem retrieving variants, genome: {}, contig: {}",
                         genome_variant_ptr->genomeId(), contig_opt.value()->contigId());
     return "<error>";
 
@@ -534,13 +534,13 @@ std::string kgl::GeneAnalysis::outputGenomeRegion(char delimiter,
 
 
 
-bool kgl::GeneAnalysis::mutateGenomeRegion(const GenomeId_t& genome,
-                                           const ContigId_t& contig,
-                                           ContigOffset_t offset,
-                                           ContigSize_t region_size,
-                                           const std::shared_ptr<const PopulationDB>& population_ptr,
-                                           const std::shared_ptr<const GenomeReference>& genome_db_ptr,
-                                           const std::string& fasta_file) {
+bool kgl::GenomicSequence::mutateGenomeRegion(const GenomeId_t& genome,
+                                              const ContigId_t& contig,
+                                              ContigOffset_t offset,
+                                              ContigSize_t region_size,
+                                              const std::shared_ptr<const PopulationDB>& population_ptr,
+                                              const std::shared_ptr<const GenomeReference>& genome_db_ptr,
+                                              const std::string& fasta_file) {
 
 
   auto genome_opt = population_ptr->getGenome(genome);
@@ -557,12 +557,12 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const GenomeId_t& genome,
 
 }
 
-bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
-                                           const ContigOffset_t offset,
-                                           const ContigSize_t region_size,
-                                           const std::shared_ptr<const GenomeDB>& genome_variant_ptr,
-                                           const std::shared_ptr<const GenomeReference>& genome_db_ptr,
-                                           const std::string& fasta_file) {
+bool kgl::GenomicSequence::mutateGenomeRegion(const ContigId_t& contig,
+                                              const ContigOffset_t offset,
+                                              const ContigSize_t region_size,
+                                              const std::shared_ptr<const GenomeDB>& genome_variant_ptr,
+                                              const std::shared_ptr<const GenomeReference>& genome_db_ptr,
+                                              const std::string& fasta_file) {
 
   std::shared_ptr<const LinearDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
   std::vector<WriteFastaSequence> dna_seq_vector;
@@ -576,7 +576,7 @@ bool kgl::GeneAnalysis::mutateGenomeRegion(const ContigId_t& contig,
                                                  offset+region_size,
                                                  variant_map)) {
 
-    ExecEnv::log().warn("GeneAnalysis::mutateGenomeRegion Problem retrieving variants, genome: {}, contig: {}",
+    ExecEnv::log().warn("GenomicSequence::mutateGenomeRegion Problem retrieving variants, genome: {}, contig: {}",
                         genome_variant_ptr->genomeId(), contig);
     return false;
 

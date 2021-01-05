@@ -1,9 +1,9 @@
 //
-// Created by kellerberrin on 3/1/21.
+// Created by kellerberrin on 5/1/21.
 //
 
-#ifndef KGL_ANALYSIS_PFEMP_H
-#define KGL_ANALYSIS_PFEMP_H
+#ifndef KGL_ANALYSIS_GENE_H
+#define KGL_ANALYSIS_GENE_H
 
 
 #include "kgl_analysis_virtual.h"
@@ -13,17 +13,17 @@
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
-class PfEMPAnalysis : public VirtualAnalysis {
+class GeneAnalysis : public VirtualAnalysis {
 
 public:
 
-  PfEMPAnalysis() = default;
-  ~PfEMPAnalysis() override = default;
+  GeneAnalysis() = default;
+  ~GeneAnalysis() override = default;
 
   // Functions redefined in super classes
   // The ident must match the ident used in the package XML.
-  [[nodiscard]] std::string ident() const override { return "PfEMP"; }
-  [[nodiscard]] std::unique_ptr<VirtualAnalysis> factory() const override { return std::make_unique<PfEMPAnalysis>(); }
+  [[nodiscard]] std::string ident() const override { return "GENE"; }
+  [[nodiscard]] std::unique_ptr<VirtualAnalysis> factory() const override { return std::make_unique<GeneAnalysis>(); }
 
   // Setup the analytics to process VCF data.
   [[nodiscard]] bool initializeAnalysis( const std::string& work_directory,
@@ -42,17 +42,14 @@ public:
 
 private:
 
-  std::shared_ptr<const GenomeCollection> reference_genomes_;
 
-  void performPFEMP1UPGMA();
-  bool getParameters(const ActiveParameterList& named_parameters, const std::string& work_directory);
+  const GenomeId_t analysis_genome = "Pf3D7_47";
+  std::string work_directory_;
+  std::shared_ptr<const GenomeCollection> genome_collection_ptr_;
+  std::shared_ptr<const PopulationDB> unphased_population_ptr_;
+  std::shared_ptr<const PopulationDB> population_ptr_;
 
-  // Available Parameters
-  constexpr static const char* NEWICK_FILE_ = "NewickFile";
-  constexpr static const char* INTRON_FILE_ = "IntronFile";
-
-  std::string newick_file_name_;
-  std::string intron_file_name_;
+  void performRegion();
 
 };
 
@@ -60,10 +57,4 @@ private:
 } // namespace
 
 
-
-
-
-
-
-
-#endif //KGL_KGL_ANALYSIS_PFEMP_H
+#endif //KGL_ANALYSIS_GENE_H

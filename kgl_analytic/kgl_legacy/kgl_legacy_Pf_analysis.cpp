@@ -12,12 +12,10 @@
 #include "kgl_sequence_distance.h"
 #include "kgl_genome_aux_csv.h"
 #include "kgl_phylogenetic_analysis.h"
-#include "kgl_phylogenetic_gene.h"
-#include "kgl_upgma.h"
+#include "kgl_analysis_gene_sequence.h"
 #include "kgl_rna_search.h"
 #include "kgl_legacy_Pf_analysis.h"
 #include "kgl_variant_classify.h"
-#include "kgl_upgma_unphased.h"
 #include "kgl_epigenetic_motif.h"
 
 #include "kgd_deconvolv_app.h"
@@ -315,134 +313,17 @@ for (auto country : country_pairs) {
 
 }
 
-// Analysis code "INTERVAL"
-void kgl::PhylogeneticAnalysis::performInterval() {
-
-
-
-}
 
 
 void kgl::PhylogeneticAnalysis::performGene() {
 
 std::string fasta_file = Utility::filePath(ACTIVE_SEQUENCE, runtime_options_.workDirectory()) + ".fasta";
 
-if (not kgl::GeneAnalysis::translateContig( "NC_045512_2", "NC_045512.2", genome_collection_ptr_, fasta_file)) {
+if (not kgl::GenomicSequence::translateContig("NC_045512_2", "NC_045512.2", genome_collection_ptr_, fasta_file)) {
 
-  ExecEnv::log().error("GeneAnalysis::translateContig(); analysis fails");
-
-}
+  ExecEnv::log().error("GenomicSequence::translateContig(); analysis fails");
 
 }
-
-
-void kgl::PhylogeneticAnalysis::performRegion() {
-
-std::string region_fasta_file = "malawi_fb_SRR609075";
-region_fasta_file += "_561666";
-region_fasta_file = Utility::filePath(region_fasta_file, runtime_options_.workDirectory()) + ".fasta";
-if (not kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075",
-                                      "Pf3D7_04_v3",
-                                      561666,
-                                      11753,
-                                      population_ptr_,
-                                      genome_collection_ptr_->getGenome(analysis_genome),
-                                      region_fasta_file)) {
-
-  ExecEnv::log().error("PhylogeneticAnalysis::performRegion(); analysis fails");
-
-}
-
-region_fasta_file = "malawi_fb_SRR609075";
-region_fasta_file += "_462000";
-region_fasta_file = Utility::filePath(region_fasta_file, runtime_options_.workDirectory()) + ".fasta";
-if (not kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075",
-                                      "Pf3D7_01_v3",
-                                      462000,
-                                      2000,
-                                      population_ptr_,
-                                      genome_collection_ptr_->getGenome(analysis_genome),
-                                      region_fasta_file)) {
-
-  ExecEnv::log().error("PhylogeneticAnalysis::performRegion(); analysis fails");
-
-}
-
-region_fasta_file = "malawi_fb_SRR609075";
-region_fasta_file += "_0";
-region_fasta_file = Utility::filePath(region_fasta_file, runtime_options_.workDirectory()) + ".fasta";
-if (not kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075",
-                                      "Pf3D7_04_v3",
-                                      0,
-                                      1200490,
-                                      population_ptr_,
-                                      genome_collection_ptr_->getGenome(analysis_genome),
-                                      region_fasta_file)) {
-
-  ExecEnv::log().error("PhylogeneticAnalysis::performRegion(); analysis fails");
-
-}
-
-region_fasta_file = "malawi_fb_SRR609075";
-region_fasta_file += "_944950";
-region_fasta_file = Utility::filePath(region_fasta_file, runtime_options_.workDirectory()) + ".fasta";
-if (not kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075",
-                                      "Pf3D7_04_v3",
-                                      944950,
-                                      135,
-                                      population_ptr_,
-                                      genome_collection_ptr_->getGenome(analysis_genome),
-                                      region_fasta_file)) {
-
-  ExecEnv::log().error("PhylogeneticAnalysis::performRegion(); analysis fails");
-
-}
-
-region_fasta_file = "malawi_fb_SRR609075";
-region_fasta_file += "_941875";
-region_fasta_file = Utility::filePath(region_fasta_file, runtime_options_.workDirectory()) + ".fasta";
-if (not kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075",
-                                      "Pf3D7_04_v3",
-                                      941875,
-                                      4293,
-                                      population_ptr_,
-                                      genome_collection_ptr_->getGenome(analysis_genome),
-                                      region_fasta_file)) {
-
-  ExecEnv::log().error("PhylogeneticAnalysis::performRegion(); analysis fails");
-
-}
-
-region_fasta_file = "malawi_fb_SRR609075";
-region_fasta_file += "_569342";
-region_fasta_file = Utility::filePath(region_fasta_file, runtime_options_.workDirectory()) + ".fasta";
-if (not kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075",
-                                      "Pf3D7_04_v3",
-                                      569342,
-                                      7467,
-                                      population_ptr_,
-                                      genome_collection_ptr_->getGenome(analysis_genome),
-                                      region_fasta_file)) {
-
-  ExecEnv::log().error("PhylogeneticAnalysis::performRegion(); analysis fails");
-
-}
-
-region_fasta_file = "malawi_fb_SRR609075";
-region_fasta_file += "_584668";
-region_fasta_file = Utility::filePath(region_fasta_file, runtime_options_.workDirectory()) + ".fasta";
-if (not kgl::GeneAnalysis::mutateGenomeRegion("malawi_fb_SRR609075",
-                                      "Pf3D7_04_v3",
-                                      584668,
-                                      7280,
-                                      population_ptr_,
-                                      genome_collection_ptr_->getGenome(analysis_genome),
-                                      region_fasta_file)) {
-
-  ExecEnv::log().error("PhylogeneticAnalysis::performRegion(); analysis fails");
-
-}
-
 
 }
 
@@ -509,69 +390,6 @@ if (not ApplicationAnalysis::outputAminoMutationCSV(amino_mutation_file,
 
 }
 
-
-}
-
-
-void kgl::PhylogeneticAnalysis::performUPGMA() {
-
-performPFEMP1UPGMA();
-
-}
-
-
-
-void kgl::PhylogeneticAnalysis::performPFEMP1UPGMA() {
-
-
-std::string newick_file = Utility::filePath("newick_VAR", runtime_options_.workDirectory()) + ".txt";
-std::string intron_file = Utility::filePath("intron_VAR", runtime_options_.workDirectory()) + ".csv";
-
-std::shared_ptr<const LevenshteinLocal> levenshtein_distance_ptr(std::make_shared<const LevenshteinLocal>());
-std::shared_ptr<const Blosum80Local> blosum80_distance_ptr(std::make_shared<const Blosum80Local>());
-
-UPGMAMatrix upgma_matrix;
-
-VarGeneFamilyTree<kgl::AminoGeneDistance>(upgma_matrix,
-                                           newick_file,
-                                           intron_file,
-                                           levenshtein_distance_ptr,
-                                           genome_collection_ptr_,
-                                           "PFEMP1");
-
-}
-
-
-
-
-
-
-void kgl::PhylogeneticAnalysis::performFineStructure() {
-
-
-#define BASES_PER_CENTIMORGAN 15000.0
-
-// Split into country populations.
-std::string aux_file_path;
-if (not runtime_options_.getPropertiesAuxFile(aux_file_path)) {
-
-  ExecEnv::log().critical("PhylogeneticAnalysis::performFineStructure(); Aux Genome information file not found");
-
-}
-
-std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr_);
-
-for (auto country : country_pairs) {
-
-  std::string file_name = "FS/" + country.first;
-  std::string fine_structure_file = Utility::filePath(file_name, runtime_options_.workDirectory());
-//  if (not FineStructureAnalysis::generateFiles(fine_structure_file, country.second, BASES_PER_CENTIMORGAN)) {
-//
-//    ExecEnv::log().error("PhylogeneticAnalysis::performFineStructure(); FineStructureAnalysis::generateFiles() fails");
-//
-//  }
-
-}
 
 }
 

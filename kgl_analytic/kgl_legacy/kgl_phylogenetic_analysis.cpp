@@ -8,7 +8,7 @@
 #include "kgl_upgma_node.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_offset.h"
-#include "kgl_phylogenetic_gene.h"
+#include "kgl_analysis_gene_sequence.h"
 #include "kgl_sequence_complexity.h"
 #include "kgl_variant_db_mutation.h"
 
@@ -246,7 +246,7 @@ bool kgl::ApplicationAnalysis::outputRegionCSV(const std::string &file_name,
 
   }
 
-  out_file << GeneAnalysis::outputRegionHeader(CSV_delimiter) << CSV_delimiter;
+  out_file << GenomicSequence::outputRegionHeader(CSV_delimiter) << CSV_delimiter;
   out_file << outputRegionHeader(CSV_delimiter) << '\n';
 
   for(auto const& genome_variant : pop_variant_ptr->getMap()) {
@@ -291,13 +291,13 @@ bool kgl::ApplicationAnalysis::outputRegionCSV(const std::string &file_name,
 
           }
 
-          out_file << GeneAnalysis::outputGenomeRegion(CSV_delimiter,
-                                                       dna_distance_metric,
-                                                       contig.first,
-                                                       front_porch_offset,
-                                                       front_porch_size,
-                                                       genome_variant.second,
-                                                       genome_db);
+          out_file << GenomicSequence::outputGenomeRegion(CSV_delimiter,
+                                                          dna_distance_metric,
+                                                          contig.first,
+                                                          front_porch_offset,
+                                                          front_porch_size,
+                                                          genome_variant.second,
+                                                          genome_db);
           out_file << CSV_delimiter;
           out_file << outputSequence(CSV_delimiter,
                                      dna_distance_metric,
@@ -642,7 +642,7 @@ bool kgl::ApplicationAnalysis::outputAminoSequenceCSV(const std::string &file_na
                                                  sequence.second->end(),
                                                  variant_map)) {
 
-            ExecEnv::log().warn("GeneAnalysis::mutateGenomeRegion Problem retrieving variants, genome: {}, contig: {}", genome, contig.first);
+            ExecEnv::log().warn("GenomicSequence::mutateGenomeRegion Problem retrieving variants, genome: {}, contig: {}", genome, contig.first);
             return false;
 
           }

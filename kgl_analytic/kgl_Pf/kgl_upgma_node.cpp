@@ -417,20 +417,28 @@ kgl::DistanceType_t kgl::DNAGeneDistance::distance(std::shared_ptr<const Virtual
 
   }
 
+  bool verbose = false;
+  if (verbose) {
 
-  ExecEnv::log().info("distance();  {} Comparing | {}({}), {}({}) |; Gene Family: {}",
-                      sequence_distance_->distanceType(), gene_ptr_->id(), linear_sequence_.length(),
-                      node_ptr->gene_ptr_->id(), node_ptr->linear_sequence_.length(), protein_family_);
+    ExecEnv::log().info("distance();  {} Comparing | {}({}), {}({}) |; Gene Family: {}",
+                        sequence_distance_->distanceType(), gene_ptr_->id(), linear_sequence_.length(),
+                        node_ptr->gene_ptr_->id(), node_ptr->linear_sequence_.length(), protein_family_);
+  }
 
 
   CompareDistance_t contig_score = sequence_distance_->linear_distance(linear_sequence_, node_ptr->linear_sequence_);
 
   DistanceType_t total_distance = static_cast<DistanceType_t>(contig_score);
 
-  ExecEnv::log().info("distance();  {} | {}({}), {}({}) |  =  {}; Gene Family: {}",
-                      sequence_distance_->distanceType(), gene_ptr_->id(), linear_sequence_.length(),
-                      node_ptr->gene_ptr_->id(), node_ptr->linear_sequence_.length(),
-                      total_distance, protein_family_);
+  if (verbose) {
+
+    ExecEnv::log().info("distance();  {} | {}({}), {}({}) |  =  {}; Gene Family: {}",
+                        sequence_distance_->distanceType(), gene_ptr_->id(), linear_sequence_.length(),
+                        node_ptr->gene_ptr_->id(), node_ptr->linear_sequence_.length(),
+                        total_distance, protein_family_);
+    
+  }
+
 
   return total_distance;
 
@@ -480,20 +488,30 @@ kgl::DistanceType_t kgl::AminoGeneDistance::distance(std::shared_ptr<const Virtu
 
   }
 
+  bool verbose = false;
+  if (verbose) {
 
-  ExecEnv::log().info("distance();  {} Comparing | {}({}), {}({}) |; Gene Family: {}",
-                      sequence_distance_->distanceType(), gene_ptr_->id(), amino_sequence_.length(),
-                      node_ptr->gene_ptr_->id(), node_ptr->amino_sequence_.length(), protein_family_);
+    ExecEnv::log().info("distance();  {} Comparing | {}({}), {}({}) |; Gene Family: {}",
+                        sequence_distance_->distanceType(), gene_ptr_->id(), amino_sequence_.length(),
+                        node_ptr->gene_ptr_->id(), node_ptr->amino_sequence_.length(), protein_family_);
+
+  }
+
 
 
   CompareDistance_t contig_score = sequence_distance_->amino_distance(amino_sequence_, node_ptr->amino_sequence_);
 
   DistanceType_t total_distance = static_cast<DistanceType_t>(contig_score);
 
-  ExecEnv::log().info("distance();  {} | {}({}), {}({}) |  =  {}; Gene Family: {}",
-                      sequence_distance_->distanceType(), gene_ptr_->id(), amino_sequence_.length(),
-                      node_ptr->gene_ptr_->id(), node_ptr->amino_sequence_.length(),
-                      total_distance, protein_family_);
+  if (verbose) {
+
+    ExecEnv::log().info("distance();  {} | {}({}), {}({}) |  =  {}; Gene Family: {}",
+                          sequence_distance_->distanceType(), gene_ptr_->id(), amino_sequence_.length(),
+                          node_ptr->gene_ptr_->id(), node_ptr->amino_sequence_.length(),
+                          total_distance, protein_family_);
+
+  }
+
 
   return total_distance;
 

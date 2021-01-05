@@ -27,9 +27,14 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 
   }
 
-  reference_genomes_ = reference_genomes;
-  work_directory_ = work_directory;
+  if (not getParameters(named_parameters, work_directory)) {
 
+    ExecEnv::log().info("PfEMPAnalysis::initializeAnalysis; Analysis Id: {} problem parsing parameters", ident());
+    return false;
+
+  }
+
+  reference_genomes_ = reference_genomes;
   performPFEMP1UPGMA();
 
   return true;
@@ -68,8 +73,6 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
 void kgl::PfEMPAnalysis::performPFEMP1UPGMA() {
 
 
-  std::string newick_file = Utility::filePath("newick_VAR", work_directory_) + ".txt";
-  std::string intron_file = Utility::filePath("intron_VAR", work_directory_) + ".csv";
 
   std::shared_ptr<const LevenshteinLocal> levenshtein_distance_ptr(std::make_shared<const LevenshteinLocal>());
   std::shared_ptr<const Blosum80Local> blosum80_distance_ptr(std::make_shared<const Blosum80Local>());
@@ -77,8 +80,8 @@ void kgl::PfEMPAnalysis::performPFEMP1UPGMA() {
   UPGMAMatrix upgma_matrix;
 
   VarGeneFamilyTree<AminoGeneDistance>( upgma_matrix,
-                                        newick_file,
-                                        intron_file,
+                                        newick_file_name_,
+                                        intron_file_name_,
                                         levenshtein_distance_ptr,
                                         reference_genomes_,
                                         "PFEMP1");
@@ -86,4 +89,58 @@ void kgl::PfEMPAnalysis::performPFEMP1UPGMA() {
 }
 
 
+
+bool kgl::PfEMPAnalysis::getParameters(const ActiveParameterList& named_parameters, const std::string& work_directory) {
+
+
+  for (auto const& named_block : named_parameters.getMap()) {
+
+    auto [block_name, block_vector] = named_block.second;
+
+    if (block_vector.size() != 1) {
+
+      ExecEnv::log().error("PfEMPAnalysis::getParameters; parameter block: {} vector size: {}, expected size = 1",
+                           block_name, block_vector.size());
+      return false;
+
+    }
+
+    ExecEnv::log().info("Analysis: {} parsing parameter block: {}", ident(), block_name);
+
+    for (auto const& xml_vector : block_vector) {
+
+
+      auto newick_opt = xml_vector.getString(NEWICK_FILE_);
+      if (newick_opt) {
+
+        newick_file_name_ = newick_opt.value().front();
+        newick_file_name_ = Utility::filePath(newick_file_name_, work_directory);
+
+      } else {
+
+        ExecEnv::log().error("PfEMPAnalysis::getParameters; bad value for parameter: {}", NEWICK_FILE_);
+        return false;
+
+      }
+
+      auto intron_opt = xml_vector.getString(INTRON_FILE_);
+      if (intron_opt) {
+
+        intron_file_name_ = intron_opt.value().front();
+        intron_file_name_ = Utility::filePath(intron_file_name_, work_directory);
+
+      } else {
+
+        ExecEnv::log().error("PfEMPAnalysis::getParameters; bad value for parameter: {}", INTRON_FILE_);
+        return false;
+
+      }
+
+    }
+
+  }
+
+  return true;
+
+}
 
