@@ -40,6 +40,10 @@ private:
   [[nodiscard]] static std::shared_ptr<DataDB> readPEDAncestry(std::shared_ptr<BaseFileInfo> file_info,
                                                                DataSourceEnum data_source);
 
+  // Read Pf3k Complexity of Infection infromation.
+  [[nodiscard]] static std::shared_ptr<DataDB> readPf3kCOI( std::shared_ptr<BaseFileInfo> file_info,
+                                                            DataSourceEnum data_source);
+
   template<class VCFParser>
   [[nodiscard]] static std::shared_ptr<DataDB> readVCF(std::shared_ptr<const GenomeCollection> reference_genomes,
                                                        std::shared_ptr<BaseFileInfo> file_info,

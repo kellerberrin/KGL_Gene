@@ -109,7 +109,7 @@ public:
   static bool verify(const std::string &file_name, bool silent = true);
 
   // Seems about right.
-  constexpr static const size_t DEFAULT_THREADS{8};
+  constexpr static const size_t DEFAULT_THREADS{15};
 
 private:
 

@@ -110,8 +110,8 @@ private:
   constexpr static const char* DATA_FILE_IDENT_ = "dataFileIdent";
   constexpr static const char* DATA_FILE_NAME_ = "dataFileName";
   constexpr static const char* DATA_PARSER_TYPE_ = "dataFileType";
-  // .ped ancestry data file specific fields.
-  constexpr static const char* PED_DATA_FILE_TYPE_ = "pedFile";
+  // general purpose data file without type specific fields.
+  constexpr static const char* GENERAL_DATA_FILE_TYPE_ = "generalFile";
   // VCF data file specific fields.
   constexpr static const char* VCF_DATA_FILE_TYPE_ = "vcfFile";
   constexpr static const char* VCF_FILE_GENOME_ =  "vcfGenome";

@@ -42,7 +42,7 @@ public:
   // Stored VCF header info.
   [[nodiscard]] const std::vector<std::string>& getGenomeNames() const { return parseheader_.getGenomes(); }
 
-  constexpr static const size_t DEFAULT_PARSER_THREADS{30};
+  constexpr static const size_t DEFAULT_PARSER_THREADS{50};
 
 private:
 

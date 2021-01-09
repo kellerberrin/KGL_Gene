@@ -82,12 +82,12 @@ public:
 
 enum class SequenceAnalysisType { DNA, VARIANT, SNP, SIZE, ENTROPY, LEMPEL_ZIV};
 
-class ApplicationAnalysis {
+class GenomicMutation {
 
 public:
 
-  ApplicationAnalysis() = default;
-  virtual ~ApplicationAnalysis() = default;
+  GenomicMutation() = default;
+  virtual ~GenomicMutation() = default;
 
   // Sequences are presented as a pair of a sequence name and an amino sequences.
   [[nodiscard]]  static bool writeMutantProteins( const std::string& fastaFile,

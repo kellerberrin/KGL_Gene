@@ -160,8 +160,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_variant_factory_vcf_parse_cigar.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_record_vcf_impl.h
         kgl_genomics/kgl_parser/kgl_variant_factory_record_vcf_impl.cpp
-        kgl_genomics/kgl_database/kgl_genome_aux_csv.h
-        kgl_genomics/kgl_database/kgl_genome_aux_csv_impl.cpp
+        kgl_genomics/kgl_parser/kgl_genome_aux_csv.h
+        kgl_genomics/kgl_parser/kgl_genome_aux_csv_impl.cpp
         kgl_genomics/kgl_database/kgl_variant_db_genome.h
         kgl_genomics/kgl_database/kgl_variant_db_population.h
         kgl_genomics/kgl_database/kgl_genome_contig_feature.h
@@ -210,15 +210,15 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_variant_db_population.cpp
         kgl_genomics/kgl_database/kgl_variant_db_type.h
         kgl_genomics/kgl_database/kgl_genome_contig.h
-        kgl_genomics/kgl_database/kgl_genome_collection.cpp)
+        kgl_genomics/kgl_database/kgl_genome_collection.cpp kgl_genomics/kgl_database/kgl_variant_db_type.cpp kgl_genomics/kgl_parser/kgl_Pf3k_COI.cpp kgl_genomics/kgl_parser/kgl_Pf3k_COI.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES
-        kgl_analytic/kgl_legacy/kgl_phylogenetic_analysis.h
-        kgl_analytic/kgl_legacy/kgl_phylogenetic_analysis.cpp
+        kgl_analytic/kgl_Pf/kgl_phylogenetic_analysis.h
+        kgl_analytic/kgl_Pf/kgl_phylogenetic_analysis.cpp
         kgl_analytic/kgl_Pf/kgl_analysis_gene_sequence.h
         kgl_analytic/kgl_Pf/kgl_analysis_gene_sequence.cpp
         kgl_analytic/kgl_Pf/kgl_upgma_node.h
@@ -271,7 +271,7 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_args.cpp
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_args.h
         kgl_analytic/kgl_Pf/kgl_analysis_PfEMP.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP.h kgl_analytic/kgl_Pf/kgl_analysis_gene.cpp kgl_analytic/kgl_Pf/kgl_analysis_gene.h)
+        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP.h kgl_analytic/kgl_Pf/kgl_analysis_mutation.cpp kgl_analytic/kgl_Pf/kgl_analysis_mutation.h kgl_analytic/kgl_Pf/kgl_phase_Pf.cpp kgl_analytic/kgl_Pf/kgl_phase_Pf.h)
 
 # Deconvolution and mixture files.
 
@@ -283,7 +283,7 @@ set(MIXTURE_SOURCE_FILES
         kgl_mixture/kgl_variant_classify_io.cpp
         kgl_mixture/kgl_read_phasing.h
         kgl_mixture/kgl_read_phasing.cpp
-        kgl_genomics/kgl_database/kgl_genome_genome.h)
+        kgl_genomics/kgl_database/kgl_genome_genome.h kgl_genomics/kgl_parser/kgl_square_parser.cpp kgl_genomics/kgl_parser/kgl_square_parser.h)
 
 
 # Application level objects
@@ -557,7 +557,7 @@ if(BUILD_KGL_KGD_DOC)
         #        add_custom_target( doc_doxygen
         #                    COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
         #                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        #                    COMMENT "Generating API documentation with Doxygen"
+        #                    COMMENT_ "Generating API documentation with Doxygen"
         #                    VERBATIM )
 
     endif(DOXYGEN_FOUND)

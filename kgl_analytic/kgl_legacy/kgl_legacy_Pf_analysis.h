@@ -36,7 +36,6 @@ using AnalysisMap = std::map<std::string, AnalysisFuncPtr>;
                                                                              population_ptr_(population_ptr) {
 
     analysis_map_[ANALYZE_SEQUENCES_] = &PhylogeneticAnalysis::performSequence;
-    analysis_map_[ANALYZE_REGION_] = &PhylogeneticAnalysis::performRegion;
     analysis_map_[ANALYZE_GENE_] = &PhylogeneticAnalysis::performGene;
     analysis_map_[ANALYZE_RNA_] = &PhylogeneticAnalysis::performRNA;
     analysis_map_[ANALYZE_SNP_] = &PhylogeneticAnalysis::performSNP;
@@ -80,7 +79,6 @@ private:
   void performMotif();  // MOTIF
   void performSequence(); // SEQUENCE
   void performGene(); // GENE
-  void performRegion(); // REGION
   void performMix(); // MIX
   void performSNP(); // SNP
   void performRNA(); // RNA

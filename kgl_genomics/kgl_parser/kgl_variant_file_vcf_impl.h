@@ -63,7 +63,7 @@ private:
   BoundedMtQueue<QueuedVCFRecord> vcf_record_queue_{VCF_HIGH_TIDE_, VCF_LOW_TIDE_, VCF_NAME_, VCF_SAMPLE_RATE_};
 
   // VCF queue worker threads
-  static constexpr const long PARSER_THREADS_{7};         // Threads parsing into vcf_records.
+  static constexpr const long PARSER_THREADS_{15};         // Threads parsing into vcf_records.
   // The detached main thread.
   ThreadPool detached_launch_{1};
   // Synchronize shutdown

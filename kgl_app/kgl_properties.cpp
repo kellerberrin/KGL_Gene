@@ -428,7 +428,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
 
       }
 
-    } else if (sub_tree.first == PED_DATA_FILE_TYPE_) { // Process PED file record
+    } else if (sub_tree.first == GENERAL_DATA_FILE_TYPE_) { // Process General file record.
 
       key = std::string(DATA_FILE_IDENT_);
       std::string ped_ident;
@@ -457,9 +457,9 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
 
       }
 
-      std::shared_ptr<BaseFileInfo> file_info_ptr = std::make_shared<PedAncestryInfo>( ped_ident,
-                                                                                       ped_file_name,
-                                                                                       ped_parser_type);
+      std::shared_ptr<BaseFileInfo> file_info_ptr = std::make_shared<BaseFileInfo>( ped_ident,
+                                                                                    ped_file_name,
+                                                                                    ped_parser_type);
 
       auto result = data_file_map.try_emplace(ped_ident, file_info_ptr);
 

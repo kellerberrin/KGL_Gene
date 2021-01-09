@@ -56,7 +56,7 @@ private:
   BoundedMtQueue<IOLineRecord> raw_io_queue_{ IO_HIGH_TIDE_, IO_LOW_TIDE_, IO_QUEUE_NAME_, IO_SAMPLE_RATE_};
 
   // VCF queue worker threads
-  // Unless there is a good reason, the number of worker threads should be 1.
+  // Unless there is a (very) good reason, the number of worker threads should be 1.
   constexpr static const size_t IO_THREAD_COUNT_{1};
   // The detached main thread.
   ThreadPool detached_launch_{1};

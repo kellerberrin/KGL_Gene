@@ -14,7 +14,7 @@
 #include "kgl_analysis_info_filter.h" // Age related variant statistics, only applicable to Gnomad variant data.
 #include "kgl_analysis_inbreed.h" // Analysis of Diploid phased population read from the 1000 genomes project.
 #include "kgl_analysis_PfEMP.h"   // Analyze the P. Falciparum protein family for different Pf Genomes.
-#include "kgl_analysis_gene.h"   // Analyze mutations in genes and genomic regions.
+#include "kgl_analysis_mutation.h"   // Analyze mutations in genes and genomic regions.
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -41,7 +41,7 @@ inline VirtualAnalysisVector getAnalysisVector() {
   analysis_vector.push_back(std::make_unique<InfoFilterAnalysis>());
   analysis_vector.push_back(std::make_unique<InbreedAnalysis>());
   analysis_vector.push_back(std::make_unique<PfEMPAnalysis>());
-  analysis_vector.push_back(std::make_unique<GeneAnalysis>());
+  analysis_vector.push_back(std::make_unique<MutationAnalysis>());
 
   return analysis_vector;
 

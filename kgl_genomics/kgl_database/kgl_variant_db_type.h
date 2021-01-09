@@ -34,6 +34,7 @@ enum class DataSourceEnum { Genome1000,
                             PedGnome1000,
                             Clinvar,
                             dbSNP,
+                            Pf3kCOI,
                             NotImplemented};   // Error condition if the data source is not found.
 
 // Parsers available for genetic sources.
@@ -41,16 +42,18 @@ enum class ParserTypeEnum { DiploidPhased,
                             DiploidFalciparum,
                             DiploidGnomad,
                             MonoGenomeUnphased,
-                            PedGenome1000};
+                            PedGenome1000,
+                            Pf3kCOIParser};
 
 // The conceptual structure of the genetic information.
 enum class DataStructureEnum { DiploidPhased,   // Phased Diploid Genome1000 only (PopulationDB)
                                DiploidUnphased,  // Unphased Diploid GnomadGenome3_1 (PopulationDB)
                                UnphasedMonoGenome, // Genomic data that contains allele information (PopulationDB)
-                               PedGenome1000};  // Additional data to complement the Genome1000 data. (GenomePEDData)
+                               PedGenome1000, // Additional data to complement the Genome1000 data. (GenomePEDData)
+                               Pf3kCOI};  // Complexity of Infection data for Pf3k P. Falciparum database.
 
 // The actual C++ implementation of the data type. Used for casting from the DataDB class.
-enum class DataImplEnum { PopulationVariant,  GenomePEDData };
+enum class DataImplEnum { PopulationVariant,  GenomePEDData,  COIPf3kData};
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,45 +88,10 @@ public:
 
   [[nodiscard]] virtual const std::string& fileId() const = 0;
   [[nodiscard]] DataSourceEnum dataSource() const { return data_source_; }
-  [[nodiscard]] DataCharacteristic dataCharacteristic() const {
+  [[nodiscard]] DataCharacteristic dataCharacteristic() const;
 
-    auto type = findCharacteristic(data_source_);
-
-    if (not type) {
-
-      // Should never happen.
-      ExecEnv::log().critical("DataDB::dataCharacteristic; critical error unknown population type, program terminates.");
-
-    }
-
-    return type.value();
-
-  }
-
-
-  [[nodiscard]] static std::optional<DataCharacteristic> findCharacteristic(const std::string& source_text)  {
-
-    for (auto const& type : data_characteristics_) {
-
-      if (source_text == type.source_text) return type;
-
-    }
-
-    return std::nullopt;
-
-  }
-
-  [[nodiscard]] static std::optional<DataCharacteristic> findCharacteristic(DataSourceEnum data_source) {
-
-    for (auto const& type : data_characteristics_) {
-
-      if (data_source == type.data_source) return type;
-
-    }
-
-    return std::nullopt;
-
-  }
+  [[nodiscard]] static std::optional<DataCharacteristic> findCharacteristic(const std::string& source_text);
+  [[nodiscard]] static std::optional<DataCharacteristic> findCharacteristic(DataSourceEnum data_source);
 
 
 private:
@@ -152,6 +120,7 @@ inline const std::vector<DataCharacteristic>  DataDB::data_characteristics_ = {
     { "Clinvar", DataSourceEnum::Clinvar, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant },
     { "dbSNP", DataSourceEnum::dbSNP, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant },
     { "PedGnome1000", DataSourceEnum::PedGnome1000, ParserTypeEnum::PedGenome1000, DataStructureEnum::PedGenome1000, DataImplEnum::GenomePEDData },
+    { "Pf3kCOI", DataSourceEnum::Pf3kCOI, ParserTypeEnum::Pf3kCOIParser, DataStructureEnum::Pf3kCOI, DataImplEnum::COIPf3kData },
 
 };
 

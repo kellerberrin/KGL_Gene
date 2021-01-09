@@ -22,8 +22,8 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using CountryPair = std::pair<GenomeId_t, std::shared_ptr<const PopulationDB>>;
-using AuxAttributeVector = std::vector<std::string>;
-using AuxSampleMap = std::map<std::string, AuxAttributeVector>;
+using GenomeAuxHeader = std::vector<std::string>;
+using AuxSampleMap = std::map<std::string, GenomeAuxHeader>;
 
 
 class GenomeAuxData {
@@ -60,15 +60,15 @@ public:
 
 private:
 
-  AuxAttributeVector aux_data_header_;  // Always assumed to be the first line (uppercase, query case conversion automatic).
+  GenomeAuxHeader aux_data_header_;  // Always assumed to be the first line (uppercase, query case conversion automatic).
   AuxSampleMap aux_sample_information_;
 
   [[nodiscard]] bool parseHeader(const std::string& record_str);
   [[nodiscard]] bool parseDataline(const std::string& record_str);
-  [[nodiscard]] bool tokenize(const std::string& parse_text, AuxAttributeVector& attribute_vector);
+  [[nodiscard]] bool tokenize(const std::string& parse_text, GenomeAuxHeader& attribute_vector);
   [[nodiscard]] bool fieldOffset(const std::string& field_name, size_t& field_offset) const;
-  [[nodiscard]] std::string attributeValue(AuxAttributeVector& attribute_vector, const std::string& attribute_name) const;
-  [[nodiscard]] bool getGenomeAttributes(const std::string& genome_name, AuxAttributeVector& attribute_vector) const;
+  [[nodiscard]] std::string attributeValue(GenomeAuxHeader& attribute_vector, const std::string& attribute_name) const;
+  [[nodiscard]] bool getGenomeAttributes(const std::string& genome_name, GenomeAuxHeader& attribute_vector) const;
 
   constexpr static const char COMMENT = '#';
   constexpr static const char* FIELD_SAMPLE = "IsFieldSample";

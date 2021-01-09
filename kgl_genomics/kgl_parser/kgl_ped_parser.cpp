@@ -8,35 +8,40 @@
 namespace kgl = kellerberrin::genome;
 
 
+
+bool kgl::GenomePEDData::addPEDRecord(const PEDRecord& record) {
+
+  auto [iter, result] = PED_record_map_.try_emplace(record.individualId(), record);
+
+  if (not result) {
+
+    ExecEnv::log().error("GenomePEDData::addPEDRecord, could add PED for sample: {} (duplicate)", record.individualId());
+    return false;
+
+  }
+
+  return true;
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
 void kgl::ParsePedFile::readParsePEDImpl(const std::string& file_name) {
 
+  std::shared_ptr<SquareTextRows> parsed_text = text_parser_.parseFlatFile(file_name, PED_FIELD_DELIMITER_CHAR_);
 
-  ExecEnv::log().info("Start Parsing PED file: {}", file_name);
+  bool skip_header = true;
+  for (auto const& record_fields : parsed_text->getRowVector()) {
 
-  commenceIO(file_name);
+    if (skip_header) {
 
-  while (true) {
+      skip_header = false;
 
-    IOLineRecord line_record = readIORecord();
+    } else {
 
-    if (not line_record) { // check for EOF condition.
-
-      break;
-
-    }
-
-    auto line_number = line_record.value().first;
-    // skip number
-    if (line_number == 1) {
-
-      continue;
-
-    }
-
-
-    if (not moveToPEDRecord(std::move(*line_record.value().second))) {
-
-      ExecEnv::log().warn("ParsePedFile::readParsePEDImpl, Failed to parse PED file: {} record line : {}", fileName(), line_record.value().first);
+      moveToPEDRecord(record_fields);
 
     }
 
@@ -45,14 +50,14 @@ void kgl::ParsePedFile::readParsePEDImpl(const std::string& file_name) {
 }
 
 
-bool kgl::ParsePedFile::moveToPEDRecord(std::string&& line_record) {
 
-  std::vector<std::string> field_strings = Utility::char_tokenizer(line_record, PED_FIELD_DELIMITER_CHAR_);
+bool kgl::ParsePedFile::moveToPEDRecord(const std::vector<std::string>& field_strings) {
+
 
   if (field_strings.size() != PEDRecord::PEDFieldCount()) {
 
-    ExecEnv::log().error("ParsePedFile::moveToPEDRecord; PED file: {}, record: {} field count: {} not equal mandatory count: {}",
-                         fileName(), line_record, field_strings.size(), PEDRecord::PEDFieldCount());
+    ExecEnv::log().error("ParsePedFile::moveToPEDRecord; field count: {} not equal mandatory count: {}",
+                         field_strings.size(), PEDRecord::PEDFieldCount());
     return false;
 
   }
@@ -75,7 +80,7 @@ bool kgl::ParsePedFile::moveToPEDRecord(std::string&& line_record) {
 
   if (not ped_data_->addPEDRecord(ped_record)) {
 
-    ExecEnv::log().error("ParsePedFile::moveToPEDRecord; PED file: {}, record: {} cannot add PED record to map", fileName(), line_record);
+    ExecEnv::log().error("ParsePedFile::moveToPEDRecord; record cannot add PED record to map");
     return false;
 
   }

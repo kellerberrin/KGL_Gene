@@ -7,23 +7,24 @@
 
 
 #include "kgl_analysis_virtual.h"
+#include "kgl_Pf3k_COI.h"
 
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
-class GeneAnalysis : public VirtualAnalysis {
+class MutationAnalysis : public VirtualAnalysis {
 
 public:
 
-  GeneAnalysis() = default;
-  ~GeneAnalysis() override = default;
+  MutationAnalysis() = default;
+  ~MutationAnalysis() override = default;
 
   // Functions redefined in super classes
   // The ident must match the ident used in the package XML.
-  [[nodiscard]] std::string ident() const override { return "GENE"; }
-  [[nodiscard]] std::unique_ptr<VirtualAnalysis> factory() const override { return std::make_unique<GeneAnalysis>(); }
+  [[nodiscard]] std::string ident() const override { return "MUTATION"; }
+  [[nodiscard]] std::unique_ptr<VirtualAnalysis> factory() const override { return std::make_unique<MutationAnalysis>(); }
 
   // Setup the analytics to process VCF data.
   [[nodiscard]] bool initializeAnalysis( const std::string& work_directory,
@@ -46,8 +47,8 @@ private:
   const GenomeId_t analysis_genome = "Pf3D7_47";
   std::string work_directory_;
   std::shared_ptr<const GenomeCollection> genome_collection_ptr_;
-  std::shared_ptr<const PopulationDB> unphased_population_ptr_;
   std::shared_ptr<const PopulationDB> population_ptr_;
+  std::shared_ptr<const Pf3kCOIDB> pf3k_coi_ptr_;
 
   void performRegion();
 

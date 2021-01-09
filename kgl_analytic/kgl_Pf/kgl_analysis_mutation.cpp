@@ -2,7 +2,7 @@
 // Created by kellerberrin on 5/1/21.
 //
 
-#include "kgl_analysis_gene.h"
+#include "kgl_analysis_mutation.h"
 #include "kgl_analysis_gene_sequence.h"
 
 
@@ -10,9 +10,9 @@ namespace kgl = kellerberrin::genome;
 
 
 // Setup the analytics to process VCF data.
-bool kgl::GeneAnalysis::initializeAnalysis(const std::string& work_directory,
-                                              const ActiveParameterList& named_parameters,
-                                              std::shared_ptr<const GenomeCollection> reference_genomes) {
+bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory,
+                                               const ActiveParameterList& named_parameters,
+                                               std::shared_ptr<const GenomeCollection> reference_genomes) {
 
   ExecEnv::log().info("Default Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
   for (auto const& [parameter_ident, parameter_map] : named_parameters.getMap()) {
@@ -32,11 +32,27 @@ bool kgl::GeneAnalysis::initializeAnalysis(const std::string& work_directory,
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::GeneAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr) {
+bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr) {
 
-  ExecEnv::log().info("Default VCF File Read for Analysis Id: {} called with Variant Population", ident());
+  ExecEnv::log().info("File Read for Analysis Id: {} called with file: {}", ident(), data_ptr->fileId());
 
   auto file_characteristic = data_ptr->dataCharacteristic();
+
+  if (file_characteristic.data_source == DataSourceEnum::Pf3kCOI) {
+
+    pf3k_coi_ptr_ = std::dynamic_pointer_cast<const Pf3kCOIDB>(data_ptr);
+
+    if (pf3k_coi_ptr_) {
+
+      ExecEnv::log().info("Processed Pf3k complexity of infection file: {}", pf3k_coi_ptr_->fileId());
+
+    } else {
+
+      ExecEnv::log().critical("MutationAnalysis::fileReadAnalysis; Unable to cast to the Pf3K complexity of infection file, severe error.");
+
+    }
+
+  }
 
 
   return true;
@@ -44,7 +60,7 @@ bool kgl::GeneAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::GeneAnalysis::iterationAnalysis() {
+bool kgl::MutationAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Default Iteration Analysis called for Analysis Id: {}", ident());
 
@@ -53,7 +69,7 @@ bool kgl::GeneAnalysis::iterationAnalysis() {
 }
 
 // All VCF data has been presented, finalize analysis and write results.
-bool kgl::GeneAnalysis::finalizeAnalysis() {
+bool kgl::MutationAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
@@ -63,7 +79,7 @@ bool kgl::GeneAnalysis::finalizeAnalysis() {
 
 
 
-void kgl::GeneAnalysis::performRegion() {
+void kgl::MutationAnalysis::performRegion() {
 
   std::string region_fasta_file = "malawi_fb_SRR609075";
   region_fasta_file += "_561666";

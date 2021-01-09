@@ -34,7 +34,7 @@ bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
 // Perform the genetic analysis per iteration.
 bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr) {
 
-  ExecEnv::log().info("Default VCF File Read for Analysis Id: {} called with Variant Population", ident());
+  ExecEnv::log().info("File Read for Analysis Id: {} called with file: {}", ident(), data_ptr->fileId());
 
   auto file_characteristic = data_ptr->dataCharacteristic();
 

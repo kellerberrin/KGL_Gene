@@ -7,7 +7,7 @@
 
 
 #include "kgl_variant_db_type.h"
-#include "kgl_data_file_impl.h"
+#include "kgl_square_parser.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
@@ -106,27 +106,9 @@ public:
   ~GenomePEDData() override = default;
 
   [[nodiscard]] const std::string& fileId() const override { return ped_ident_; }
-
-  bool addPEDRecord(const PEDRecord& record) {
-
-    auto [iter, result] = PED_record_map_.try_emplace(record.individualId(), record);
-
-    if (not result) {
-
-      ExecEnv::log().error("GenomePEDData::addPEDRecord, could add PED for sample: {} (duplicate)", record.individualId());
-      return false;
-
-    }
-
-    return true;
-
-  }
-
   [[nodiscard]] const PEDRecordMap& getMap() const { return PED_record_map_; }
 
-
-protected:
-
+  bool addPEDRecord(const PEDRecord& record);
 
 private:
 
@@ -142,7 +124,7 @@ private:
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class ParsePedFile : private FileDataIO {
+class ParsePedFile  {
 
 public:
 
@@ -154,14 +136,12 @@ public:
 private:
 
   std::shared_ptr<GenomePEDData> ped_data_;
-  FileDataIO file_data_;
+  SquareTextParser text_parser_;
 
-
-  static constexpr const long PARSER_THREADS_{1};         // Threads parsing PED records
   static constexpr const char PED_FIELD_DELIMITER_CHAR_{'\t'};   // PED Field separator (char).
 
 
-  bool moveToPEDRecord(std::string&& line_record);
+  bool moveToPEDRecord(const std::vector<std::string>& record_fields);
 
 };
 

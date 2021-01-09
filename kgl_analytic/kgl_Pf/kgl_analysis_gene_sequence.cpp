@@ -96,7 +96,7 @@ bool kgl::GenomicSequence::translateContig(const GenomeId_t& genome_id,
   }
 
   // Sequences are presented as a pair of a sequence name and an amino sequences.
-  if (not ApplicationAnalysis::writeMutantProteins(fasta_file_name, amino_fasta_vector)) {
+  if (not GenomicMutation::writeMutantProteins(fasta_file_name, amino_fasta_vector)) {
 
     ExecEnv::log().warn("Problem writing peptide fasta for Contig: {} in file: {}", contig_id, fasta_file_name);
     return false;
@@ -181,7 +181,7 @@ bool kgl::GenomicSequence::translateGene(const GenomeId_t& genome_id,
   }
 
   // Sequences are presented as a pair of a sequence name and an amino sequences.
-  if (not ApplicationAnalysis::writeMutantProteins(fasta_file_name, amino_fasta_vector)) {
+  if (not GenomicMutation::writeMutantProteins(fasta_file_name, amino_fasta_vector)) {
 
     ExecEnv::log().warn("Problem writing peptide fasta for Gene: {} in file: {}", gene_id, fasta_file_name);
     return false;
@@ -260,7 +260,7 @@ bool kgl::GenomicSequence::mutateGene(const ContigId_t& contig,
   }
 
   // Sequences are presented as a pair of a sequence name and an amino sequences.
-  if (not ApplicationAnalysis::writeMutantProteins(fasta_filename, amino_fasta_vector)) {
+  if (not GenomicMutation::writeMutantProteins(fasta_filename, amino_fasta_vector)) {
 
     ExecEnv::log().warn("mutantProtein(), Problem writing protein fasta file: {}", fasta_filename);
 
@@ -289,14 +289,14 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
   DNA5SequenceCoding prime5_reference;
   DNA5SequenceCoding prime5_mutant;
 
-  if (ApplicationAnalysis::compare5Prime(contig,
-                                         gene,
-                                         sequence,
-                                         PRIME_REGION_SIZE,
-                                         genome_db_ptr,
-                                         genome_variant_ptr,
-                                         prime5_reference,
-                                         prime5_mutant)) {
+  if (GenomicMutation::compare5Prime(contig,
+                                     gene,
+                                     sequence,
+                                     PRIME_REGION_SIZE,
+                                     genome_db_ptr,
+                                     genome_variant_ptr,
+                                     prime5_reference,
+                                     prime5_mutant)) {
 
 
 
@@ -349,14 +349,14 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
   DNA5SequenceCoding prime3_reference;
   DNA5SequenceCoding prime3_mutant;
 
-  if (ApplicationAnalysis::compare3Prime(contig,
-                                         gene,
-                                         sequence,
-                                         PRIME_REGION_SIZE,
-                                         genome_db_ptr,
-                                         genome_variant_ptr,
-                                         prime3_reference,
-                                         prime3_mutant)) {
+  if (GenomicMutation::compare3Prime(contig,
+                                     gene,
+                                     sequence,
+                                     PRIME_REGION_SIZE,
+                                     genome_db_ptr,
+                                     genome_variant_ptr,
+                                     prime3_reference,
+                                     prime3_mutant)) {
 
     gene_summary.prime3_distance = dna_distance_metric.coding_distance(prime3_reference, prime3_mutant);
     ExecEnv::log().info("3PRIME Genome: {}, Contig: {}, Gene: {}, Sequence: {} Levenshtein: {}, comparison:\n{}",

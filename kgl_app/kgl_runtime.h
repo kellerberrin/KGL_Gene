@@ -166,12 +166,12 @@ class BaseFileInfo {
 
 public:
 
-  BaseFileInfo(const std::string& identifier,
-               const std::string& file_name,
-               const std::string& file_type)
-      : file_identifier_(identifier),
-        file_name_(file_name),
-        file_type_(file_type) { }
+  BaseFileInfo(std::string identifier,
+               std::string file_name,
+               std::string file_type)
+      : file_identifier_(std::move(identifier)),
+        file_name_(std::move(file_name)),
+        file_type_(std::move(file_type)) {}
   BaseFileInfo(const BaseFileInfo&) = default;
   virtual ~BaseFileInfo() = default;
 
@@ -181,30 +181,9 @@ public:
 
 private:
 
-  std::string file_identifier_;   // A unique short string to identify this VCF file in other classes
-  std::string file_name_;
-  std::string file_type_;
-
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Object to hold .ped ancestry file information.
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class PedAncestryInfo : public BaseFileInfo {
-
-public:
-
-  PedAncestryInfo(const std::string& identifier,
-                  const std::string& file_name,
-                  const std::string& file_type) : BaseFileInfo(identifier, file_name, file_type) {}
-  PedAncestryInfo(const PedAncestryInfo&) = default;
-  ~PedAncestryInfo() override = default;
-
-
-private:
-
+  const std::string file_identifier_;   // A unique short string to identify this VCF file in other classes
+  const std::string file_name_;
+  const std::string file_type_;
 
 };
 

@@ -93,7 +93,7 @@ bool kgl::GenomeAuxData::readParseAuxData(const std::string& aux_file_name) {
 
 bool kgl::GenomeAuxData::parseHeader(const std::string& record_str) {
 
-  AuxAttributeVector lc_aux_data_header;
+  GenomeAuxHeader lc_aux_data_header;
 
   if (not tokenize( record_str, lc_aux_data_header)) {
 
@@ -116,7 +116,7 @@ bool kgl::GenomeAuxData::parseHeader(const std::string& record_str) {
 
 bool kgl::GenomeAuxData::parseDataline(const std::string& record_str) {
 
-  AuxAttributeVector attributes;
+  GenomeAuxHeader attributes;
 
   if (not tokenize( record_str, attributes)) {
 
@@ -131,7 +131,7 @@ bool kgl::GenomeAuxData::parseDataline(const std::string& record_str) {
     return false;
   }
 
-  auto result = aux_sample_information_.insert(std::pair<std::string, AuxAttributeVector>(attributes[0], attributes));
+  auto result = aux_sample_information_.insert(std::pair<std::string, GenomeAuxHeader>(attributes[0], attributes));
 
   if (not result.second) {
 
@@ -146,7 +146,7 @@ bool kgl::GenomeAuxData::parseDataline(const std::string& record_str) {
 
 
 bool kgl::GenomeAuxData::tokenize(const std::string& parse_text,
-                                  AuxAttributeVector& attribute_vector) {
+                                  GenomeAuxHeader& attribute_vector) {
 
   attribute_vector.clear();
   typedef boost::tokenizer<boost::escaped_list_separator<char>> tokenizer;
@@ -184,7 +184,7 @@ bool kgl::GenomeAuxData::fieldOffset(const std::string& field_name, size_t& fiel
 
 }
 
-std::string kgl::GenomeAuxData::attributeValue(AuxAttributeVector& attribute_vector, const std::string& attribute_name) const {
+std::string kgl::GenomeAuxData::attributeValue(GenomeAuxHeader& attribute_vector, const std::string& attribute_name) const {
 
   size_t field_offset;
 
@@ -210,7 +210,7 @@ std::string kgl::GenomeAuxData::attributeValue(AuxAttributeVector& attribute_vec
 
 
 
-bool kgl::GenomeAuxData::getGenomeAttributes(const GenomeId_t& genome_name, AuxAttributeVector& attribute_vector) const {
+bool kgl::GenomeAuxData::getGenomeAttributes(const GenomeId_t& genome_name, GenomeAuxHeader& attribute_vector) const {
 
   auto result = aux_sample_information_.find(genome_name);
 
@@ -229,7 +229,7 @@ bool kgl::GenomeAuxData::getGenomeAttributes(const GenomeId_t& genome_name, AuxA
 
 std::string kgl::GenomeAuxData::locationDate(const GenomeId_t& genome_name) const {
 
-  AuxAttributeVector attribute_vector;
+  GenomeAuxHeader attribute_vector;
   if (not getGenomeAttributes(genome_name, attribute_vector)) {
 
     ExecEnv::log().error("Could not find genome: {} in auxiliary data", genome_name);
@@ -249,7 +249,7 @@ bool kgl::GenomeAuxData::locationDate(const GenomeId_t& genome_name,
                                       std::string& location,
                                       std::string& year) const {
 
-  AuxAttributeVector attribute_vector;
+  GenomeAuxHeader attribute_vector;
   if (not getGenomeAttributes(genome_name, attribute_vector)) {
 
     return false;
@@ -268,7 +268,7 @@ bool kgl::GenomeAuxData::locationDate(const GenomeId_t& genome_name,
 
 kgl::GenomeId_t kgl::GenomeAuxData::source(const GenomeId_t& genome_name) const {
 
-  AuxAttributeVector attribute_vector;
+  GenomeAuxHeader attribute_vector;
   if (not getGenomeAttributes(genome_name, attribute_vector)) {
 
     ExecEnv::log().error("Could not find genome: {} in auxiliary data", genome_name);
@@ -284,7 +284,7 @@ kgl::GenomeId_t kgl::GenomeAuxData::source(const GenomeId_t& genome_name) const 
 
 bool kgl::GenomeAuxData::isFieldSample(const GenomeId_t& genome_name) const {
 
-  AuxAttributeVector attribute_vector;
+  GenomeAuxHeader attribute_vector;
   if (not getGenomeAttributes(genome_name, attribute_vector)) {
 
     ExecEnv::log().error("Could not find genome: {} in auxiliary data", genome_name);
@@ -299,7 +299,7 @@ bool kgl::GenomeAuxData::isFieldSample(const GenomeId_t& genome_name) const {
 
 bool kgl::GenomeAuxData::isPreferredSample(const GenomeId_t& genome_name) const {
 
-  AuxAttributeVector attribute_vector;
+  GenomeAuxHeader attribute_vector;
   if (not getGenomeAttributes(genome_name, attribute_vector)) {
 
     ExecEnv::log().error("Could not find genome: {} in auxiliary data", genome_name);

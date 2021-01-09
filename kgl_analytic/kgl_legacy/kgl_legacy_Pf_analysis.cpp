@@ -196,120 +196,120 @@ PromoterMotif::displayTFFMotif(genome_collection_ptr_->getGenome(analysis_genome
 void kgl::PhylogeneticAnalysis::performSequence() {
 
 
-std::shared_ptr<const DNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
+  std::shared_ptr<const DNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
 
-std::string coding_file = Utility::filePath("All_DNA_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
-if (not kgl::ApplicationAnalysis::outputDNASequenceCSV( coding_file,
-                                                        SequenceAnalysisType::DNA,
-                                                        dna_distance_metric,
-                                               genome_collection_ptr_->getGenome(analysis_genome),
-                                               population_ptr_)) {
-
-  ExecEnv::log().error("PhylogeneticAnalysis::performSequence(), outputDNASequenceCSV fails");
-
-}
-
-coding_file = Utility::filePath("All_Variant_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
-if (not kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::VARIANT, dna_distance_metric,
-                                               genome_collection_ptr_->getGenome(analysis_genome),
-                                               population_ptr_)) {
-
-  ExecEnv::log().error("PhylogeneticAnalysis::performSequence(), outputDNASequenceCSV fails");
-
-}
-
-coding_file = Utility::filePath("All_SNP_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
-if (not kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::SNP, dna_distance_metric,
-                                               genome_collection_ptr_->getGenome(analysis_genome),
-                                               population_ptr_)) {
-
-  ExecEnv::log().error("PhylogeneticAnalysis::performSequence(), outputDNASequenceCSV fails");
-
-}
-
-coding_file = Utility::filePath("All_SIZE_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
-if (not kgl::ApplicationAnalysis::outputDNASequenceCSV(coding_file, SequenceAnalysisType::SIZE, dna_distance_metric,
-                                               genome_collection_ptr_->getGenome(analysis_genome),
-                                               population_ptr_)) {
-
-  ExecEnv::log().error("PhylogeneticAnalysis::performSequence(), outputDNASequenceCSV fails");
-
-}
-
-std::shared_ptr<const AminoSequenceDistance> amino_distance_metric(std::make_shared<const LevenshteinGlobal>());
-
-coding_file = Utility::filePath("All_Amino_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
-if (not kgl::ApplicationAnalysis::outputAminoSequenceCSV(coding_file, amino_distance_metric,
-                                                 genome_collection_ptr_->getGenome(analysis_genome),
-                                                 population_ptr_)) {
-
-  ExecEnv::log().error("PhylogeneticAnalysis::performSequence(), outputDNASequenceCSV fails");
-
-}
-
-// Split into country populations.
-std::string aux_file_path;
-if (not runtime_options_.getPropertiesAuxFile(aux_file_path)) {
-
-  ExecEnv::log().critical("Aux Genome information file not found");
-
-}
-
-std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr_);
-
-for (auto country : country_pairs) {
-
-  coding_file = Utility::filePath(country.first + "Variant_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
-  if (not kgl::ApplicationAnalysis::outputDNASequenceCSV( coding_file,
-                                                  SequenceAnalysisType::VARIANT, dna_distance_metric,
-                                                  genome_collection_ptr_->getGenome(analysis_genome),
-                                                  country.second)) {
+  std::string coding_file = Utility::filePath("All_DNA_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
+  if (not kgl::GenomicMutation::outputDNASequenceCSV(coding_file,
+                                                     SequenceAnalysisType::DNA,
+                                                     dna_distance_metric,
+                                                     genome_collection_ptr_->getGenome(analysis_genome),
+                                                     population_ptr_)) {
 
     ExecEnv::log().error("PhylogeneticAnalysis::performSequence(), outputDNASequenceCSV fails");
 
   }
 
-  coding_file = Utility::filePath(country.first + "SNP_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
-  if (not kgl::ApplicationAnalysis::outputDNASequenceCSV( coding_file,
-                                                  SequenceAnalysisType::SNP, dna_distance_metric,
-                                                  genome_collection_ptr_->getGenome(analysis_genome),
-                                                  country.second)) {
+  coding_file = Utility::filePath("All_Variant_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
+  if (not kgl::GenomicMutation::outputDNASequenceCSV(coding_file, SequenceAnalysisType::VARIANT, dna_distance_metric,
+                                                     genome_collection_ptr_->getGenome(analysis_genome),
+                                                     population_ptr_)) {
 
     ExecEnv::log().error("PhylogeneticAnalysis::performSequence(), outputDNASequenceCSV fails");
 
   }
 
-  coding_file = Utility::filePath(country.first + "SIZE_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
-  if (not kgl::ApplicationAnalysis::outputDNASequenceCSV( coding_file,
-                                                  SequenceAnalysisType::SIZE, dna_distance_metric,
-                                                  genome_collection_ptr_->getGenome(analysis_genome),
-                                                  country.second)) {
+  coding_file = Utility::filePath("All_SNP_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
+  if (not kgl::GenomicMutation::outputDNASequenceCSV(coding_file, SequenceAnalysisType::SNP, dna_distance_metric,
+                                                     genome_collection_ptr_->getGenome(analysis_genome),
+                                                     population_ptr_)) {
 
     ExecEnv::log().error("PhylogeneticAnalysis::performSequence(), outputDNASequenceCSV fails");
 
   }
 
-  coding_file = Utility::filePath(country.first + "DNA_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
-  if (kgl::ApplicationAnalysis::outputDNASequenceCSV( coding_file,
-                                                  SequenceAnalysisType::DNA, dna_distance_metric,
-                                                  genome_collection_ptr_->getGenome(analysis_genome),
-                                                  country.second)) {
+  coding_file = Utility::filePath("All_SIZE_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
+  if (not kgl::GenomicMutation::outputDNASequenceCSV(coding_file, SequenceAnalysisType::SIZE, dna_distance_metric,
+                                                     genome_collection_ptr_->getGenome(analysis_genome),
+                                                     population_ptr_)) {
 
     ExecEnv::log().error("PhylogeneticAnalysis::performSequence(), outputDNASequenceCSV fails");
 
   }
 
-  coding_file = Utility::filePath(country.first + "Amino_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
-  if (not kgl::ApplicationAnalysis::outputAminoSequenceCSV( coding_file,
-                                                    amino_distance_metric,
-                                                    genome_collection_ptr_->getGenome(analysis_genome),
-                                                    country.second)) {
+  std::shared_ptr<const AminoSequenceDistance> amino_distance_metric(std::make_shared<const LevenshteinGlobal>());
+
+  coding_file = Utility::filePath("All_Amino_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
+  if (not kgl::GenomicMutation::outputAminoSequenceCSV(coding_file, amino_distance_metric,
+                                                       genome_collection_ptr_->getGenome(analysis_genome),
+                                                       population_ptr_)) {
 
     ExecEnv::log().error("PhylogeneticAnalysis::performSequence(), outputDNASequenceCSV fails");
 
   }
 
-}
+  // Split into country populations.
+  std::string aux_file_path;
+  if (not runtime_options_.getPropertiesAuxFile(aux_file_path)) {
+
+    ExecEnv::log().critical("Aux Genome information file not found");
+
+  }
+
+  std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr_);
+
+  for (auto country : country_pairs) {
+
+    coding_file = Utility::filePath(country.first + "Variant_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
+    if (not kgl::GenomicMutation::outputDNASequenceCSV(coding_file,
+                                                       SequenceAnalysisType::VARIANT, dna_distance_metric,
+                                                       genome_collection_ptr_->getGenome(analysis_genome),
+                                                       country.second)) {
+
+      ExecEnv::log().error("PhylogeneticAnalysis::performSequence(), outputDNASequenceCSV fails");
+
+    }
+
+    coding_file = Utility::filePath(country.first + "SNP_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
+    if (not kgl::GenomicMutation::outputDNASequenceCSV(coding_file,
+                                                       SequenceAnalysisType::SNP, dna_distance_metric,
+                                                       genome_collection_ptr_->getGenome(analysis_genome),
+                                                       country.second)) {
+
+      ExecEnv::log().error("PhylogeneticAnalysis::performSequence(), outputDNASequenceCSV fails");
+
+    }
+
+    coding_file = Utility::filePath(country.first + "SIZE_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
+    if (not kgl::GenomicMutation::outputDNASequenceCSV(coding_file,
+                                                       SequenceAnalysisType::SIZE, dna_distance_metric,
+                                                       genome_collection_ptr_->getGenome(analysis_genome),
+                                                       country.second)) {
+
+      ExecEnv::log().error("PhylogeneticAnalysis::performSequence(), outputDNASequenceCSV fails");
+
+    }
+
+    coding_file = Utility::filePath(country.first + "DNA_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
+    if (kgl::GenomicMutation::outputDNASequenceCSV(coding_file,
+                                                   SequenceAnalysisType::DNA, dna_distance_metric,
+                                                   genome_collection_ptr_->getGenome(analysis_genome),
+                                                   country.second)) {
+
+      ExecEnv::log().error("PhylogeneticAnalysis::performSequence(), outputDNASequenceCSV fails");
+
+    }
+
+    coding_file = Utility::filePath(country.first + "Amino_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
+    if (not kgl::GenomicMutation::outputAminoSequenceCSV(coding_file,
+                                                         amino_distance_metric,
+                                                         genome_collection_ptr_->getGenome(analysis_genome),
+                                                         country.second)) {
+
+      ExecEnv::log().error("PhylogeneticAnalysis::performSequence(), outputDNASequenceCSV fails");
+
+    }
+
+  }
 
 }
 
@@ -367,24 +367,24 @@ if (not aux_data.readParseAuxData(aux_file_path)) {
 
 
 std::string DNA_mutation_file = Utility::filePath("DNAMutations.csv", runtime_options_.workDirectory());
-if (not ApplicationAnalysis::outputDNAMutationCSV(DNA_mutation_file,
-                                          PFATP4_CONTIG,
-                                          PFATP4_GENE,
-                                          PFATP4_SEQUENCE,
-                                          genome_collection_ptr_->getGenome(analysis_genome),
-                                          population_ptr_,
-                                          aux_data)) {
+if (not GenomicMutation::outputDNAMutationCSV(DNA_mutation_file,
+                                              PFATP4_CONTIG,
+                                              PFATP4_GENE,
+                                              PFATP4_SEQUENCE,
+                                              genome_collection_ptr_->getGenome(analysis_genome),
+                                              population_ptr_,
+                                              aux_data)) {
 
   ExecEnv::log().error("PhylogeneticAnalysis::performSNP(), outputDNAMutationCSV fails");
 
 }
 std::string amino_mutation_file = Utility::filePath("AminoMutations.csv", runtime_options_.workDirectory());
-if (not ApplicationAnalysis::outputAminoMutationCSV(amino_mutation_file,
-                                            PFATP4_CONTIG,
-                                            PFATP4_GENE,
-                                            PFATP4_SEQUENCE,
-                                            genome_collection_ptr_->getGenome(analysis_genome),
-                                            population_ptr_)) {
+if (not GenomicMutation::outputAminoMutationCSV(amino_mutation_file,
+                                                PFATP4_CONTIG,
+                                                PFATP4_GENE,
+                                                PFATP4_SEQUENCE,
+                                                genome_collection_ptr_->getGenome(analysis_genome),
+                                                population_ptr_)) {
 
   ExecEnv::log().error("PhylogeneticAnalysis::performSNP(), outputDNAMutationCSV fails");
 
