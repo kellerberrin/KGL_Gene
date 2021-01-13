@@ -32,9 +32,16 @@ std::optional<std::shared_ptr<const kgl::GenomeReference>> kgl::GenomeCollection
 
 bool kgl::GenomeCollection::addGenome(std::shared_ptr<const GenomeReference> genome_database) {
 
-  auto result = genome_map_.insert(std::pair<GenomeId_t, std::shared_ptr<const GenomeReference>>(genome_database->genomeId(), genome_database));
+  if (not genome_database) {
 
-  return result.second;
+    ExecEnv::log().error("GenomeCollection::addGenome; attempt to add genome with nullptr");
+    return false;
+
+  }
+
+  auto [it, result] = genome_map_.try_emplace(genome_database->genomeId(), genome_database);
+
+  return result;
 
 }
 
@@ -52,33 +59,4 @@ std::shared_ptr<const kgl::GenomeReference> kgl::GenomeCollection::getGenome(con
 
 }
 
-
-
-std::shared_ptr<kgl::GenomeCollection> kgl::GenomeCollection::createGenomeCollection(const RuntimeProperties& runtime_options) {
-
-  std::vector<std::string> genome_list;
-  if (not runtime_options.getActiveGenomes(genome_list)) {
-
-    ExecEnv::log().error("GenomeCollection::createGenomeCollection; Problem retrieving runtime genome list");
-
-  }
-
-  std::shared_ptr<kgl::GenomeCollection> genome_collection(std::make_shared<kgl::GenomeCollection>());
-
-  for (auto genome : genome_list) {
-
-    // Create the genome database.
-    std::shared_ptr<GenomeReference> genome_ptr = GenomeReference::createGenomeDatabase(runtime_options, genome);
-
-    if (not genome_collection->addGenome(genome_ptr)) {
-
-      ExecEnv::log().error("GenomeCollection::createGenomeCollection; Unable to add Genome Database: {} (probable duplicate)", genome_ptr->genomeId());
-
-    }
-
-  }
-
-  return genome_collection;
-
-}
 

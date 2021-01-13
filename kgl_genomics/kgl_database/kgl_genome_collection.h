@@ -34,9 +34,6 @@ public:
 
   GenomeCollection& operator=(const GenomeCollection&) = default;
 
-  // High level function creates a collection of genomes.
-  [[nodiscard]] static std::shared_ptr<GenomeCollection> createGenomeCollection(const RuntimeProperties& runtime_options);
-
   // Returns false if the genome does not exist.
   [[nodiscard]] std::shared_ptr<const GenomeReference> getGenome(const std::string& GenomeID) const;
   [[nodiscard]] std::optional<std::shared_ptr<const GenomeReference>> getOptionalGenome(const GenomeId_t& genome_id) const;

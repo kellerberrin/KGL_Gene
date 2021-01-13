@@ -34,10 +34,26 @@ public:
   ~Pf3kCOIDB() override = default;
 
   [[nodiscard]] const std::string& fileId() const override { return file_ident_; }
+  [[nodiscard]] const SquareTextIndexed& indexedFile() const { return indexed_file_; }
+  bool parseFlatFile(const SquareTextRows& square_text) { return indexed_file_.parseTextRows(square_text); }
+
+  // Field offsets.
+  constexpr static const size_t FIELD_COUNT = 10;
+  constexpr static const size_t SAMPLE_FIELD = 0;
+  constexpr static const size_t P1_FIELD = 1;
+  constexpr static const size_t P2_FIELD = 2;
+  constexpr static const size_t P3_FIELD = 3;
+  constexpr static const size_t P4_FIELD = 4;
+  constexpr static const size_t P5_FIELD = 5;
+  constexpr static const size_t COI_FIELD = 6;
+  constexpr static const size_t SITE_FIELD = 7;
+  constexpr static const size_t COUNTRY_FIELD = 8;
+  constexpr static const size_t CONTINENT_FIELD = 9;
 
 private:
 
   const std::string file_ident_;
+  SquareTextIndexed indexed_file_;
 
 };
 
@@ -58,6 +74,8 @@ public:
   bool parseCOIPf3k(const std::string& file_name);
 
 public:
+
+
 
   std::shared_ptr<Pf3kCOIDB> pf3k_coi_ptr_;
   SquareTextParser flat_file_parser_;

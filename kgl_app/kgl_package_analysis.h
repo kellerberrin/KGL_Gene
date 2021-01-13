@@ -57,7 +57,7 @@ private:
   const std::string work_directory_;
   // Analysis parameters and details.
   const RuntimeAnalysisMap analysis_map_;
-  // The paramter master list.
+  // The parameter master list.
   const ActiveParameterList& defined_parameters_;
   // All available analytics
   VirtualAnalysisVector registered_analysis_;

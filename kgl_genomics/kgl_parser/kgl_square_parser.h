@@ -52,6 +52,11 @@ public:
   [[nodiscard]] SquareRowVector& getRowVector() { return square_rows_; }
   [[nodiscard]] bool checkRowSize(size_t size) const;   // Check that all rows have a constant size.
 
+  [[nodiscard]] static std::optional<double> getFloat(const std::string& float_str);
+  [[nodiscard]] static std::optional<std::string> getString(const std::string& str);
+  [[nodiscard]] static std::optional<int64_t> getInteger(const std::string& int_str);
+  [[nodiscard]] static std::optional<size_t> getSize(const std::string& size_str);
+
 private:
 
   SquareRowVector square_rows_;
@@ -74,8 +79,10 @@ class SquareTextIndexed {
 
 public:
 
-  SquareTextIndexed(const SquareTextRows& square_text);
+  SquareTextIndexed() = default;
   ~SquareTextIndexed() = default;
+
+  bool parseTextRows(const SquareTextRows& square_text);
 
   [[nodiscard]] const SquareFileHeader& getHeaderMap() const { return square_file_header_; }
   [[nodiscard]] const SquareIndexedRows& getRowMap() const { return square_indexed_rows_; }
@@ -114,7 +121,6 @@ private:
 
   FileDataIO file_io_;
   constexpr static const char COMMENT_{'#'}; // If first character then line ignored.
-
 
 };
 

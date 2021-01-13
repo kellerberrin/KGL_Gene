@@ -44,13 +44,26 @@ public:
 private:
 
 
-  const GenomeId_t analysis_genome = "Pf3D7_47";
-  std::string work_directory_;
   std::shared_ptr<const GenomeCollection> genome_collection_ptr_;
   std::shared_ptr<const PopulationDB> population_ptr_;
   std::shared_ptr<const Pf3kCOIDB> pf3k_coi_ptr_;
 
   void performRegion();
+
+  constexpr static const char* GENOME_IDENT_ = "AnalysisGenome";
+
+  constexpr static const char* OUTPUT_FILE_ = "OutputFile";
+  constexpr static const char OUTPUT_DELIMITER_ = ',';
+  constexpr static const char* OUTPUT_FILE_EXT_ = ".csv";
+
+  std::string work_directory_;
+  std::string output_file_name_;
+
+  bool getParameters(const ActiveParameterList& named_parameters,
+                     const std::shared_ptr<const GenomeCollection>& genome_collection_ptr,
+                     const std::string& work_directory);
+  bool writeOutput();
+  void writeHeader(std::ostream& out_file);
 
 };
 

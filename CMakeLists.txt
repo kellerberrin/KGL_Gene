@@ -96,7 +96,7 @@ set(LIBRARY_SOURCE_FILES
 
 # Basic Genetic infrastructure library
 set(GENETIC_LIBRARY_SOURCE_FILES
-        kgl_genomics/kgl_genome_types.h
+        kgl_genomics/kgl_database/kgl_genome_types.h
         kgl_genomics/kgl_database/kgl_gff_fasta.h
         kgl_genomics/kgl_database/kgl_gff_fasta.cpp
         kgl_genomics/kgl_database/kgl_genome_collection.h

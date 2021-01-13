@@ -24,10 +24,11 @@ class Feature {
 
 public:
 
-  Feature(const FeatureIdent_t& id,
-          const FeatureType_t& type,
-          const std::shared_ptr<const ContigReference>& contig_ptr,
-          const FeatureSequence& sequence): id_(id), type_(type), contig_ptr_(contig_ptr), sequence_(sequence) {}
+  Feature(const FeatureIdent_t id,
+          const FeatureType_t type,
+          const std::shared_ptr<const ContigReference> contig_ptr,
+          const FeatureSequence& sequence): id_(std::move(id)),
+                                            type_(std::move(type)), contig_ptr_(std::move(contig_ptr)), sequence_(sequence) {}
   Feature(const Feature&) = default;
   virtual ~Feature() = default;
 
@@ -101,8 +102,7 @@ public:
 
   CDSFeature &operator=(const CDSFeature &) = default;
 
-  [[nodiscard]] CDSPhaseType_t phase() const { return phase_; }
-  void phase(CDSPhaseType_t _phase) { phase_ = _phase; }
+  [[nodiscard]] CDSPhaseType_t CDSphase() const { return phase_; }
 
   [[nodiscard]] virtual bool isCDS() const final { return true; }
   // CDS Type.

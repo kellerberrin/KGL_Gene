@@ -121,6 +121,10 @@ bool kgl::InbreedAnalysis::iterationAnalysis() {
 
   }
 
+  // Clear the data structures.
+  diploid_population_ = nullptr;
+  unphased_population_ = nullptr;
+  
   return true;
 
 }

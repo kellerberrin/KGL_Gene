@@ -143,17 +143,18 @@ public:
                                              const std::shared_ptr<const GenomeCollection>& genomes,
                                              const std::string& fasta_file_name);
 
-private:
-
-
-  constexpr static const ContigSize_t PRIME_REGION_SIZE = 1000;   // Default size of the 5 prime and 3 prime regions.
-
   [[nodiscard]] static bool mutateGenomeGene( const ContigId_t& contig,
                                               const FeatureIdent_t& gene,
                                               const FeatureIdent_t& sequence,
                                               const std::shared_ptr<const GenomeDB>& genome_variant_ptr,
                                               const std::shared_ptr<const GenomeReference>& genome_db_ptr,
                                               GeneSummaryMap& gene_summary_map);
+
+private:
+
+
+  constexpr static const ContigSize_t PRIME_REGION_SIZE = 1000;   // Default size of the 5 prime and 3 prime regions.
+
 
 
   [[nodiscard]] static bool mutateGenomeRegion( const ContigId_t& contig,

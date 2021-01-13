@@ -21,13 +21,14 @@ namespace kgl = kellerberrin::genome;
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-kgl::SquareTextIndexed::SquareTextIndexed(const SquareTextRows& square_text) {
 
-// The first row is assumed to be the header.
+bool kgl::SquareTextIndexed::parseTextRows(const SquareTextRows& square_text) {
+
+  // The first row is assumed to be the header.
   if (square_text.getRowVector().empty()) {
 
-    ExecEnv::log().warn("SquareTextIndexed::SquareTextIndexed; square text argument is empty");
-    return;
+    ExecEnv::log().warn("SquareTextIndexed::parseTextRows; square text argument is empty");
+    return false;
 
   }
 
@@ -35,15 +36,15 @@ kgl::SquareTextIndexed::SquareTextIndexed(const SquareTextRows& square_text) {
   size_t header_size = square_text.getRowVector().front().size();
   if (header_size == 0) {
 
-    ExecEnv::log().error("SquareTextIndexed::SquareTextIndexed; header size is zero");
-    return;
+    ExecEnv::log().error("SquareTextIndexed::parseTextRows; header size is zero");
+    return false;
 
   }
 
   if (not square_text.checkRowSize(header_size)) {
 
-    ExecEnv::log().error("SquareTextIndexed::SquareTextIndexed; data row sizes different from header size: {}", header_size);
-    return;
+    ExecEnv::log().error("SquareTextIndexed::parseTextRows; data row sizes different from header size: {}", header_size);
+    return false;
 
   }
 
@@ -55,9 +56,9 @@ kgl::SquareTextIndexed::SquareTextIndexed(const SquareTextRows& square_text) {
 
     if (not result) {
 
-      ExecEnv::log().error("SquareTextIndexed::SquareTextIndexed; header field: {} is a duplicate", result);
+      ExecEnv::log().error("SquareTextIndexed::parseTextRows; header field: {} is a duplicate", result);
       square_file_header_.clear();
-      return;
+      return false;
 
     }
 
@@ -77,10 +78,10 @@ kgl::SquareTextIndexed::SquareTextIndexed(const SquareTextRows& square_text) {
 
       if (not result) {
 
-        ExecEnv::log().error("SquareTextIndexed::SquareTextIndexed; data row: {} has index duplicate", data_row.front());
+        ExecEnv::log().error("SquareTextIndexed::parseTextRows; data row: {} has index duplicate", data_row.front());
         square_file_header_.clear();
         square_indexed_rows_.clear();
-        return;
+        return false;
 
       }
 
@@ -88,7 +89,10 @@ kgl::SquareTextIndexed::SquareTextIndexed(const SquareTextRows& square_text) {
 
   }
 
+  return true;
+
 }
+
 
 
 // Returns the field offset
@@ -201,4 +205,67 @@ std::shared_ptr<kgl::SquareTextRows> kgl::SquareTextParser::parseFlatFile(const 
 
 
 
+std::optional<double> kgl::SquareTextRows::getFloat(const std::string& float_str) {
+
+
+  double float_value{0.0};
+  try {
+
+    float_value = std::stod(float_str);
+
+  } catch(...) {
+
+    ExecEnv::log().error("SquareTextRows::getFloat; string: {}, has invalid double value", float_str);
+    return std::nullopt;
+
+  }
+
+  return float_value;
+
+}
+
+
+std::optional<std::string> kgl::SquareTextRows::getString(const std::string& str) {
+
+  return str;
+
+}
+
+
+std::optional<int64_t> kgl::SquareTextRows::getInteger(const std::string& int_str) {
+
+  int64_t integer_value{0};
+  try {
+
+    integer_value = std::stoll(int_str);
+
+  } catch(...) {
+
+    ExecEnv::log().error("SquareTextRows::getInteger; integer string: {}, is an invalid signed integer value", int_str);
+    return std::nullopt;
+
+  }
+
+  return integer_value;
+
+}
+
+
+std::optional<size_t> kgl::SquareTextRows::getSize(const std::string& size_str) {
+
+  size_t size_value{0};
+  try {
+
+    size_value = std::stoull(size_str);
+
+  } catch(...) {
+
+    ExecEnv::log().error("SquareTextRows::getSize; size string: {}, is an invalid unsigned integer value", size_str);
+    return std::nullopt;
+
+  }
+
+  return size_value;
+
+}
 

@@ -307,7 +307,7 @@ public:
   [[nodiscard]] std::optional<std::vector<size_t>> getSize(const std::pair<std::string, size_t> &field) const { return getSize(field.first, field.second); }
   [[nodiscard]] std::optional<bool> getBool(const std::string& ident) const;
 
-  constexpr static const size_t ANY_SIZE{1000000000};
+  constexpr static const size_t ANY_SIZE{99999999999};
 
 private:
 
