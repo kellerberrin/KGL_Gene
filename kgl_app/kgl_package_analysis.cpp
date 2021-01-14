@@ -31,16 +31,16 @@ bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
 
         std::unique_ptr<VirtualAnalysis> analysis_ptr = registered_analysis->factory();
 
-        auto result = analysis_map_.find(analysis_id);
+        auto result = runtime_contig_.analysisMap().find(analysis_id);
 
         // Analysis parameters found.
-        if (result != analysis_map_.end()) {
+        if (result != runtime_contig_.analysisMap().end()) {
 
           // Get the named parameter blocks for this analysis.
-          auto defined_parameters = defined_parameters_.createParameterList(result->second.parameterMap());
+          auto defined_parameters = runtime_contig_.activeParameterList().createParameterList(result->second.parameterMap());
 
           // Initialize.
-          if (analysis_ptr->initializeAnalysis(work_directory_,
+          if (analysis_ptr->initializeAnalysis(runtime_contig_.workDirectory(),
                                                defined_parameters,
                                                reference_genomes)) {
 

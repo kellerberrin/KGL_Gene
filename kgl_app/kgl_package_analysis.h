@@ -7,7 +7,7 @@
 
 
 #include "kel_exec_env.h"
-#include "kgl_runtime.h"
+#include "kgl_runtime_config.h"
 #include "kgl_genome_collection.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_analysis_all.h" // Includes all the defined active analysis objects.
@@ -25,12 +25,7 @@ class PackageAnalysis {
 
 public:
 
-  explicit PackageAnalysis(std::string work_directory,
-                           const RuntimeAnalysisMap& analysis_map,
-                           const ActiveParameterList& defined_parameters) : work_directory_(std::move(work_directory)),
-                                                                            analysis_map_(analysis_map),
-                                                                            defined_parameters_(defined_parameters)
-                                                                            {
+  explicit PackageAnalysis(const RuntimeConfiguration& runtime_contig) : runtime_contig_(runtime_contig) {
     // Defined in "kgl_analysis_all.h"
     registered_analysis_ = getAnalysisVector();
 
@@ -53,12 +48,7 @@ public:
 
 private:
 
-  // Output directory for analysis files.
-  const std::string work_directory_;
-  // Analysis parameters and details.
-  const RuntimeAnalysisMap analysis_map_;
-  // The parameter master list.
-  const ActiveParameterList& defined_parameters_;
+  const RuntimeConfiguration runtime_contig_;
   // All available analytics
   VirtualAnalysisVector registered_analysis_;
   // Active analytics for this package

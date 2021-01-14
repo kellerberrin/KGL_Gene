@@ -200,11 +200,11 @@ bool kgl::MutationAnalysis::writeOutput() {
                  << gene_ptr->sequence().length() << OUTPUT_DELIMITER_
                  << gene_ptr->sequence().strandText() << OUTPUT_DELIMITER_
                  << sequence_array->size() << OUTPUT_DELIMITER_;
-/*
+
         auto const& attribute_map = gene_ptr->getAttributes().getMap();
 
         out_file << attribute_map.size();
-
+/*
         for (auto const& [attrib_key, attrib_value] : attribute_map) {
 
           out_file << OUTPUT_DELIMITER_ << attrib_key << ':' << attrib_value;

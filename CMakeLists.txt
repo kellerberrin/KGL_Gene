@@ -300,7 +300,7 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_package_analysis.h
         kgl_app/kgl_runtime.cpp
         kgl_app/kgl_runtime.h
-        )
+        kgl_app/kgl_runtime_config.cpp kgl_app/kgl_runtime_config.h)
 
 
 
