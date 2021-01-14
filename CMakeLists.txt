@@ -116,8 +116,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_sequence/kgl_alphabet_amino.h
         kgl_genomics/kgl_database/kgl_genome_prelim.h
         kgl_genomics/kgl_database/kgl_genome_prelim.cpp
-        kgl_genomics/kgl_database/kgl_attributes.h
-        kgl_genomics/kgl_database/kgl_attributes.cpp
+        kgl_genomics/kgl_database/kgl_genome_attributes.h
+        kgl_genomics/kgl_database/kgl_genome_attributes.cpp
         kgl_genomics/kgl_sequence/kgl_sequence_virtual.h
         kgl_genomics/kgl_database/kgl_genome_contig.cc
         kgl_genomics/kgl_database/kgl_genome_verify.cpp

@@ -2,8 +2,11 @@
 // Created by kellerberrin on 9/11/17.
 //
 
+#include "kgl_genome_attributes.h"
+#include "kel_utility.h"
+#include "kel_exec_env.h"
+
 #include <algorithm>
-#include "kgl_attributes.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -20,7 +23,7 @@ bool kgl::Attributes::getAttributes(const std::string &key, std::vector<std::str
   values.clear();
   for (auto iter = iter_pair.first; iter != iter_pair.second; ++iter) {
 
-    values.emplace_back(iter->second);
+    values.push_back(iter->second);
 
   }
 
@@ -33,9 +36,7 @@ bool kgl::Attributes::getAttributes(const std::string &key, std::vector<std::str
 void kgl::Attributes::insertAttribute(const std::string& key, const std::string& value) {
 
   // Convert the key to upper case to avoid the vagaries of non-standard case in keys.
-  std::string upper_case_key = key;
-  std::transform(upper_case_key.begin(), upper_case_key.end(), upper_case_key.begin(), ::toupper);
-  attributes_.insert(std::make_pair(upper_case_key, value));
+  attributes_.emplace(Utility::toupper(Utility::trimEndWhiteSpace(key)), value);
 
 }
 

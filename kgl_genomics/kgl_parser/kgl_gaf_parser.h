@@ -69,8 +69,8 @@ public:
 
 private:
 
-  FeatureIdent_t gene_id_;        // required (1) key
-  std::string symbolic_ref_;	    // required (1) (gene family).
+  FeatureIdent_t gene_id_;        // required (1) primary key
+  std::string symbolic_ref_;	    // required (1) secondary key, gene family
   std::string alt_symbolic_ref_;  // required (1) (alt gene family)
   std::string description_;	      // optional (1)
   GafGoMap go_records_;    // vector of GO: ontology records for the gene.
@@ -106,7 +106,7 @@ public:
   ///
   /// \return const GafRecordMap&
   ///
-  const GafRecordMap& getMap() const { return gaf_record_map_; }
+  [[nodiscard]] const GafRecordMap& getMap() const { return gaf_record_map_; }
 
 
   /// Returns the gaf annotations of a gene.
@@ -128,6 +128,35 @@ private:
   GafRecordMap gaf_record_map_;
 
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// The Gaf data structure with records sorted by the Symbolic Reference field.
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class ResortGaf {
+
+public:
+
+  ResortGaf() = default;
+  ~ResortGaf() = default;
+
+  void sortBySymbolic(const GafRecordMap& gaf_map);
+  void sortByGeneId(const GafRecordMap& gaf_map);
+
+  [[nodiscard]] const GafRecordMap& getMap() const { return gaf_record_map_; }
+
+private:
+
+  GafRecordMap gaf_record_map_;
+
+};
+
+
+
+
 
 
 }   // end namespace

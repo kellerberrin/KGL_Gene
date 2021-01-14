@@ -140,20 +140,67 @@ bool kgl::MutationAnalysis::writeOutput() {
 
   for (auto const& [genome_id, genome_ptr] : genome_collection_ptr_->getMap()) {
 
+    const GafRecordMap& ont_map = genome_ptr->geneOntology().getMap();
+    ResortGaf symbolic_gaf; // re-sort by the symbolic reference.
+    symbolic_gaf.sortBySymbolic(ont_map);
+    ResortGaf gene_id_gaf; // re-sort by the gene id field.
+    gene_id_gaf.sortByGeneId(ont_map);
+
     for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
 
       for (auto const& [offset, gene_ptr] : contig_ptr->getGeneMap()) {
 
         std::shared_ptr<const CodingSequenceArray> sequence_array = GeneFeature::getCodingSequences(gene_ptr);
 
+        std::vector<std::string> name_vec;
+        gene_ptr->getAttributes().getName(name_vec);
+        std::string name;
+        std::string gaf_id;
+        if (not name_vec.empty()) {
+
+          name = name_vec.front();
+          auto result = symbolic_gaf.getMap().find(name);
+          if (result != symbolic_gaf.getMap().end()) {
+
+            gaf_id = result->second->gene_id();
+
+          }
+
+        }
+
+        // If gaf_id is empty then try a lookup with the gene id.
+        if (gaf_id.empty()) {
+
+          auto result = gene_id_gaf.getMap().find(gene_ptr->id());
+          if (result != gene_id_gaf.getMap().end()) {
+
+            gaf_id = result->second->gene_id();
+
+          }
+
+        }
+
+        std::vector<std::string> description_vec;
+        gene_ptr->getAttributes().getDescription(description_vec);
+        std::string description = description_vec.empty() ? "" : description_vec.front();
+
+        std::vector<std::string> gene_biotype_vec;
+        gene_ptr->getAttributes().getGeneBioType(gene_biotype_vec);
+        std::string biotype = gene_biotype_vec.empty() ? "" : gene_biotype_vec.front();
+
         out_file << genome_id << OUTPUT_DELIMITER_ << contig_id << OUTPUT_DELIMITER_
-                 << gene_ptr->id() << OUTPUT_DELIMITER_ << offset << OUTPUT_DELIMITER_
+                 << gene_ptr->id() << OUTPUT_DELIMITER_
+                 << name << OUTPUT_DELIMITER_
+                 << description << OUTPUT_DELIMITER_
+                 << biotype << OUTPUT_DELIMITER_
+                 << (ContigReference::verifyGene(gene_ptr) ? "Valid" : "Invalid") << OUTPUT_DELIMITER_
+                 << gaf_id << OUTPUT_DELIMITER_
                  << gene_ptr->sequence().begin() << OUTPUT_DELIMITER_
                  << gene_ptr->sequence().end() << OUTPUT_DELIMITER_
                  << gene_ptr->sequence().length() << OUTPUT_DELIMITER_
                  << gene_ptr->sequence().strandText() << OUTPUT_DELIMITER_
                  << sequence_array->size() << OUTPUT_DELIMITER_;
-
+/*
         auto const& attribute_map = gene_ptr->getAttributes().getMap();
 
         out_file << attribute_map.size();
@@ -163,7 +210,7 @@ bool kgl::MutationAnalysis::writeOutput() {
           out_file << OUTPUT_DELIMITER_ << attrib_key << ':' << attrib_value;
 
         }
-
+*/
         out_file << '\n';
 
       } // Gene.
@@ -180,11 +227,12 @@ bool kgl::MutationAnalysis::writeOutput() {
 void kgl::MutationAnalysis::writeHeader(std::ostream& out_file) {
 
   out_file << "Genome" << OUTPUT_DELIMITER_ << "Contig" << OUTPUT_DELIMITER_
-           << "Gene" << OUTPUT_DELIMITER_ << "Offset" << OUTPUT_DELIMITER_
+           << "Gene" << OUTPUT_DELIMITER_ << "Name" << OUTPUT_DELIMITER_
+           << "Description" << OUTPUT_DELIMITER_ << "BioType" << OUTPUT_DELIMITER_
+           << "ValidProtein" << OUTPUT_DELIMITER_ << "GafId" <<  OUTPUT_DELIMITER_
            << "Begin" << OUTPUT_DELIMITER_ << "End" << OUTPUT_DELIMITER_
            << "Length" << OUTPUT_DELIMITER_ << "Strand" << OUTPUT_DELIMITER_
-           << "Exons" << OUTPUT_DELIMITER_ << "Attributes" << OUTPUT_DELIMITER_
-           << "AttKey:AttVal" << '\n';
+           << "Exons" << OUTPUT_DELIMITER_ << "Attributes" << OUTPUT_DELIMITER_ << '\n';
 
 }
 

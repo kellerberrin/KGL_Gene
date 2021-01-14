@@ -82,6 +82,32 @@ void kgl::ContigReference::verifyCDSPhasePeptide() {
 }
 
 
+bool kgl::ContigReference::verifyGene(const std::shared_ptr<const GeneFeature>& gene_ptr) {
+
+  const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene_ptr);
+  if (coding_seq_ptr->empty()) { // No CDS coding sequence available.
+
+    return false;
+
+  }
+
+  if (not gene_ptr->verifyCDSPhase(coding_seq_ptr)) {
+
+    return false;
+
+  }
+
+  if (not gene_ptr->contig()->verifyCodingSequences(gene_ptr, coding_seq_ptr)) {
+
+    return false;
+
+  }
+
+  return true;
+
+}
+
+
 bool kgl::ContigReference::verifyCodingSequences(const std::shared_ptr<const GeneFeature>& gene_ptr,
                                                  const std::shared_ptr<const CodingSequenceArray>& coding_seq_ptr) const {
 
@@ -178,7 +204,7 @@ bool kgl::Feature::verifyCDSPhase(std::shared_ptr<const CodingSequenceArray> cod
 }
 
 
-bool kgl::Feature::verifyMod3(const SortedCDS& sorted_cds) const {
+bool kgl::Feature::verifyMod3(const SortedCDS& sorted_cds) {
 
   bool result = true;
 // Check the combined sequence length is mod 3 = 0
@@ -191,11 +217,6 @@ bool kgl::Feature::verifyMod3(const SortedCDS& sorted_cds) const {
   }
 
   if ((coding_sequence_length % Codon::CODON_SIZE) != 0) {
-
-    ExecEnv::log().vwarn("Gene: {} offset: {} CDS coding sequence length mod 3 not zero : {}",
-                        id(),
-                        sequence().begin(),
-                        (coding_sequence_length % 3));
 
     result = false;
 

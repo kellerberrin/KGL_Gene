@@ -69,6 +69,7 @@ public:
   [[nodiscard]] ContigSize_t contigSize() const { return sequence_ptr_->length(); }
 
 
+  [[nodiscard]] static bool verifyGene(const std::shared_ptr<const GeneFeature>& gene_ptr);
   [[nodiscard]] bool verifyDNACodingSequence(const DNA5SequenceCoding& coding_dna) const;
   [[nodiscard]] bool verifyProteinSequence(const AminoSequence& amino_sequence) const;
   [[nodiscard]] ProteinSequenceAnalysis proteinSequenceAnalysis(const AminoSequence& amino_sequence) const;

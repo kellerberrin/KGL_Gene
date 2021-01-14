@@ -177,3 +177,45 @@ bool kgl::GeneOntology::getGafFeatureVector(const FeatureIdent_t& gene_id,
   return true;
 
 }
+
+
+// The Gaf data structure with records sorted by the Symbolic Reference field.
+void kgl::ResortGaf::sortBySymbolic(const GafRecordMap& gaf_map) {
+
+  gaf_record_map_.clear();
+
+  for (auto const& [gaf_id, gaf_record_ptr] : gaf_map) {
+
+    auto [it, result] = gaf_record_map_.try_emplace(gaf_record_ptr->symbolicReference(), gaf_record_ptr);
+
+    if (not result) {
+
+      ExecEnv::log().warn( "ResortGaf::sortBySymbolic; Cannot insert (duplicate) Gaf record: {}, Symbolic Ref: {}",
+                           gaf_id, gaf_record_ptr->symbolicReference());
+
+    }
+
+  }
+
+}
+
+
+// The Gaf data structure with records sorted by the Gene id field.
+void kgl::ResortGaf::sortByGeneId(const GafRecordMap& gaf_map) {
+
+  gaf_record_map_.clear();
+
+  for (auto const& [gaf_id, gaf_record_ptr] : gaf_map) {
+
+    auto [it, result] = gaf_record_map_.try_emplace(gaf_record_ptr->gene_id(), gaf_record_ptr);
+
+    if (not result) {
+
+      ExecEnv::log().warn( "ResortGaf::sortByGeneId; Cannot insert (duplicate) Gaf record: {}, Gene Id: {}",
+                            gaf_id, gaf_record_ptr->gene_id());
+
+    }
+
+  }
+
+}

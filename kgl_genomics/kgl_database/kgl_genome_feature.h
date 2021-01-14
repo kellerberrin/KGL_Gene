@@ -5,7 +5,7 @@
 #ifndef KGL_GENOME_FEATURE_H
 #define KGL_GENOME_FEATURE_H
 
-#include "kgl_attributes.h"
+#include "kgl_genome_attributes.h"
 #include "kgl_genome_prelim.h"
 
 
@@ -76,7 +76,7 @@ private:
   SuperFeaturePtr super_feature_ptr_;
   Attributes attributes_;
 
-  [[nodiscard]] bool verifyMod3(const SortedCDS& sorted_cds) const;
+  [[nodiscard]] static bool verifyMod3(const SortedCDS& sorted_cds);
 };
 
 
