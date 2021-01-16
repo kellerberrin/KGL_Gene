@@ -768,40 +768,6 @@ void kgl::RuntimeProperties::getGenomeDBFiles(const std::string& organism,
 
 }
 
-bool kgl::RuntimeProperties::getMixtureFile(std::string& mixture_file) const {
-
-  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + std::string(MIXTURE_FILE_) + std::string(DOT_) + std::string(VALUE_);
-  if (not property_tree_.getProperty(key, mixture_file)) {
-
-    return false;
-
-  }
-
-  mixture_file = Utility::filePath(mixture_file, work_directory_);
-
-  return Utility::fileExists(mixture_file);
-
-}
-
-
-bool kgl::RuntimeProperties::getActiveGenomes(std::vector<std::string>& genome_list) const {
-
-  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + std::string(GENOME_LIST_) + std::string(DOT_) + std::string(ACTIVE_);
-  if (not property_tree_.getPropertyVector(key, genome_list)) {
-
-    return false;
-
-  }
-
-  for (auto genome : genome_list) {
-
-    ExecEnv::log().info("Loading Genome: {}", genome);
-
-  }
-
-  return true;
-
-}
 
 
 bool kgl::RuntimeProperties::getGenomeAuxFiles(const std::string& organism, std::vector<AuxFileInfo>& auxfiles) const {

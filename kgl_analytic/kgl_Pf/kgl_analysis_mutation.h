@@ -8,11 +8,14 @@
 
 #include "kgl_analysis_virtual.h"
 #include "kgl_Pf3k_COI.h"
+#include "kgl_analysis_mutation_gene.h"
 
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class MutationAnalysis : public VirtualAnalysis {
 
@@ -48,6 +51,8 @@ private:
   std::shared_ptr<const PopulationDB> population_ptr_;
   std::shared_ptr<const Pf3kCOIDB> pf3k_coi_ptr_;
 
+  std::vector<GenomeMutation> genome_mutation_vec_;
+
   void performRegion();
 
   constexpr static const char* GENOME_IDENT_ = "AnalysisGenome";
@@ -64,6 +69,7 @@ private:
                      const std::string& work_directory);
   bool writeOutput();
   void writeHeader(std::ostream& out_file);
+  std::shared_ptr<const PopulationDB> createUnphased(const std::shared_ptr<const PopulationDB>& population);
 
 };
 

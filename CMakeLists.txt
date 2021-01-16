@@ -210,7 +210,13 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_variant_db_population.cpp
         kgl_genomics/kgl_database/kgl_variant_db_type.h
         kgl_genomics/kgl_database/kgl_genome_contig.h
-        kgl_genomics/kgl_database/kgl_genome_collection.cpp kgl_genomics/kgl_database/kgl_variant_db_type.cpp kgl_genomics/kgl_parser/kgl_Pf3k_COI.cpp kgl_genomics/kgl_parser/kgl_Pf3k_COI.h)
+        kgl_genomics/kgl_database/kgl_genome_collection.cpp
+        kgl_genomics/kgl_database/kgl_variant_db_type.cpp
+        kgl_genomics/kgl_parser/kgl_Pf3k_COI.cpp
+        kgl_genomics/kgl_parser/kgl_Pf3k_COI.h
+        kgl_genomics/kgl_database/kgl_genome_genome.h
+        kgl_genomics/kgl_parser/kgl_square_parser.cpp
+        kgl_genomics/kgl_parser/kgl_square_parser.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -271,7 +277,11 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_args.cpp
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_args.h
         kgl_analytic/kgl_Pf/kgl_analysis_PfEMP.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP.h kgl_analytic/kgl_Pf/kgl_analysis_mutation.cpp kgl_analytic/kgl_Pf/kgl_analysis_mutation.h kgl_analytic/kgl_Pf/kgl_phase_Pf.cpp kgl_analytic/kgl_Pf/kgl_phase_Pf.h)
+        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP.h
+        kgl_analytic/kgl_Pf/kgl_analysis_mutation.cpp
+        kgl_analytic/kgl_Pf/kgl_analysis_mutation.h
+        kgl_analytic/kgl_Pf/kgl_phase_Pf.cpp
+        kgl_analytic/kgl_Pf/kgl_phase_Pf.h kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene.cpp kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene.h)
 
 # Deconvolution and mixture files.
 
@@ -282,8 +292,7 @@ set(MIXTURE_SOURCE_FILES
         kgl_mixture/kgl_variant_classify.cpp
         kgl_mixture/kgl_variant_classify_io.cpp
         kgl_mixture/kgl_read_phasing.h
-        kgl_mixture/kgl_read_phasing.cpp
-        kgl_genomics/kgl_database/kgl_genome_genome.h kgl_genomics/kgl_parser/kgl_square_parser.cpp kgl_genomics/kgl_parser/kgl_square_parser.h)
+        kgl_mixture/kgl_read_phasing.cpp)
 
 
 # Application level objects
@@ -300,7 +309,8 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_package_analysis.h
         kgl_app/kgl_runtime.cpp
         kgl_app/kgl_runtime.h
-        kgl_app/kgl_runtime_config.cpp kgl_app/kgl_runtime_config.h)
+        kgl_app/kgl_runtime_config.cpp
+        kgl_app/kgl_runtime_config.h)
 
 
 

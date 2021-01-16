@@ -316,7 +316,7 @@ bool kgl::ContigDB::getSortedVariants(PhaseId_t phase,
 
     for (const auto& variant : previous_offset_variants) {
 
-      if (variant->phaseId() == phase) {
+      if (variant->phaseId() == phase or phase == VariantSequence::UNPHASED) {
 
         if (variant->offset() + variant->referenceSize() > start) {
 
@@ -339,7 +339,7 @@ bool kgl::ContigDB::getSortedVariants(PhaseId_t phase,
 
     for (const auto& variant : previous_offset_variants) {
 
-      if (variant->phaseId() == phase) {
+      if (variant->phaseId() == phase or phase == VariantSequence::UNPHASED) {
 
         variant_map.emplace(it->first, variant);
 
@@ -383,5 +383,34 @@ void kgl::ContigDB::checkUpstreamDeletion(OffsetVariantMap& variant_map) const {
 
 }
 
+
+std::shared_ptr<kgl::ContigDB> kgl::ContigDB::subset(ContigOffset_t start, ContigOffset_t end) const {
+
+  std::shared_ptr<ContigDB> subset_contig(std::make_shared<ContigDB>(contigId()));
+
+  auto lower_bound = contig_offset_map_.lower_bound(start);
+  auto upper_bound = contig_offset_map_.upper_bound(end-1); //  [start, end)
+
+  for (auto it = lower_bound; it != upper_bound; ++it) {
+
+    auto const& [offset, offset_ptr] = *it;
+
+    auto variant_array = offset_ptr->getVariantArray();
+
+    for (auto const& variant_ptr : variant_array) {
+
+      if (not subset_contig->addVariant(variant_ptr)) {
+
+        ExecEnv::log().error("ContigDB::subset; problem inserting variant into subset [{}, {}) of contig: {}", start, end, contigId());
+
+      }
+
+    }
+
+  }
+
+  return subset_contig;
+
+}
 
 

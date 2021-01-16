@@ -68,10 +68,13 @@ public:
 
   [[nodiscard]] std::optional<OffsetDBArray> findOffsetArray(ContigOffset_t offset) const;
 
-  [[nodiscard]] bool getSortedVariants( PhaseId_t phase,
-                                        ContigOffset_t start,
-                                        ContigOffset_t end,
-                                        OffsetVariantMap& variant_map) const;
+  bool getSortedVariants( PhaseId_t phase,
+                          ContigOffset_t start,
+                          ContigOffset_t end,
+                          OffsetVariantMap& variant_map) const;
+
+  // Retrieves a contig subset in the offset range [begin, end)
+  [[nodiscard]] std::shared_ptr<ContigDB> subset(ContigOffset_t start, ContigOffset_t end) const;
 
 private:
 

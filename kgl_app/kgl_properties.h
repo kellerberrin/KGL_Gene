@@ -58,8 +58,6 @@ public:
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Legacy Code.
 
-  [[nodiscard]] bool getMixtureFile(std::string& mixture_file) const;
-
   [[nodiscard]] bool getPropertiesAuxFile(std::string &aux_file) const;
 
 
@@ -71,8 +69,6 @@ public:
 
   [[nodiscard]] bool getGenomeAuxFiles(const std::string& organism, std::vector<AuxFileInfo>& auxfiles) const;
 
-
-  [[nodiscard]] bool getActiveGenomes(std::vector<std::string>& genome_list) const;
 
 private:
 
@@ -140,8 +136,6 @@ private:
   constexpr static const char* MIXTURE_FILE_ = "mixtureFile";
   constexpr static const char* AUX_FILE_ = "auxFile";
   constexpr static const char* AUX_GENOME_FILE_ = "auxGenomeFile";
-  // Defaults
-  constexpr static const size_t DEFAULT_PLOIDY_ = 2;
 
   std::string work_directory_;  // The work directory, all files are specified 'work_directory/file_name'
   PropertyTree property_tree_;   // All the option XML files.
