@@ -104,8 +104,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_genome_feature.cpp
         kgl_genomics/kgl_database/kgl_variant.h
         kgl_genomics/kgl_database/kgl_variant.cpp
-        kgl_genomics/kgl_database/kgl_filter.h
-        kgl_genomics/kgl_database/kgl_filter.cpp
+        kgl_genomics/kgl_database/kgl_variant_filter.h
+        kgl_genomics/kgl_database/kgl_variant_filter.cpp
         kgl_genomics/kgl_sequence/kgl_table.h
         kgl_genomics/kgl_sequence/kgl_table.cpp
         kgl_genomics/kgl_sequence/kgl_table_ncbi.h

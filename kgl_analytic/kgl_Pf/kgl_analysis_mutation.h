@@ -8,6 +8,7 @@
 
 #include "kgl_analysis_virtual.h"
 #include "kgl_Pf3k_COI.h"
+#include "kgl_ped_parser.h"
 #include "kgl_analysis_mutation_gene.h"
 
 
@@ -47,15 +48,15 @@ public:
 private:
 
 
-  std::shared_ptr<const GenomeCollection> genome_collection_ptr_;
+  std::shared_ptr<const GenomeReference> ref_genome_ptr_;
   std::shared_ptr<const PopulationDB> population_ptr_;
   std::shared_ptr<const Pf3kCOIDB> pf3k_coi_ptr_;
+  std::shared_ptr<const GenomePEDData> ped_data_;
 
-  std::vector<GenomeMutation> genome_mutation_vec_;
+  // Results of the analysis.
+  GenomeMutation gene_mutation_;
 
   void performRegion();
-
-  constexpr static const char* GENOME_IDENT_ = "AnalysisGenome";
 
   constexpr static const char* OUTPUT_FILE_ = "OutputFile";
   constexpr static const char OUTPUT_DELIMITER_ = ',';
@@ -64,11 +65,7 @@ private:
   std::string work_directory_;
   std::string output_file_name_;
 
-  bool getParameters(const ActiveParameterList& named_parameters,
-                     const std::shared_ptr<const GenomeCollection>& genome_collection_ptr,
-                     const std::string& work_directory);
-  bool writeOutput();
-  void writeHeader(std::ostream& out_file);
+  bool getParameters(const ActiveParameterList& named_parameters, const std::string& work_directory);
   std::shared_ptr<const PopulationDB> createUnphased(const std::shared_ptr<const PopulationDB>& population);
 
 };

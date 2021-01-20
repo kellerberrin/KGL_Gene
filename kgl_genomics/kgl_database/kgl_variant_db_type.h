@@ -22,6 +22,12 @@ namespace kellerberrin::genome {   //  organization::project
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+// The organism that a data file refers.
+enum class DataOrganism { HomoSapien,
+                          PlasmodiumFalciparum,
+                          PlasmodiumVivax,
+                          NoOrganism};   // Data file is not organism specific
+
 // Particular genetic data sources.
 enum class DataSourceEnum { Genome1000,
                             GnomadGenome3_1,
@@ -70,6 +76,7 @@ struct DataCharacteristic {
   const ParserTypeEnum parser_type;
   const DataStructureEnum data_structure;
   const DataImplEnum data_implementation;
+  const DataOrganism data_organism;
 
 };
 
@@ -109,18 +116,18 @@ private:
 // Additional data file types must be added here.
 inline const std::vector<DataCharacteristic>  DataDB::data_characteristics_ = {
 
-    { "Genome1000", DataSourceEnum::Genome1000, ParserTypeEnum::DiploidPhased, DataStructureEnum::DiploidPhased, DataImplEnum::PopulationVariant},
-    { "GnomadGenome3_1", DataSourceEnum::GnomadGenome3_1, ParserTypeEnum::DiploidGnomad, DataStructureEnum::DiploidUnphased, DataImplEnum::PopulationVariant },
-    { "Falciparum", DataSourceEnum::Falciparum, ParserTypeEnum::DiploidFalciparum, DataStructureEnum::DiploidUnphased, DataImplEnum::PopulationVariant },
-    { "GnomadExomes3_1", DataSourceEnum::GnomadExomes3_1, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant },
-    { "GnomadExomes2_1", DataSourceEnum::GnomadExomes2_1, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant },
-    { "Gnomad3_1", DataSourceEnum::Gnomad3_1, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant },
-    { "Gnomad3_0", DataSourceEnum::Gnomad3_0, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant },
-    { "Gnomad2_1", DataSourceEnum::Gnomad2_1, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant },
-    { "Clinvar", DataSourceEnum::Clinvar, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant },
-    { "dbSNP", DataSourceEnum::dbSNP, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant },
-    { "PedGnome1000", DataSourceEnum::PedGnome1000, ParserTypeEnum::PedGenome1000, DataStructureEnum::PedGenome1000, DataImplEnum::GenomePEDData },
-    { "Pf3kCOI", DataSourceEnum::Pf3kCOI, ParserTypeEnum::Pf3kCOIParser, DataStructureEnum::Pf3kCOI, DataImplEnum::COIPf3kData },
+    { "Genome1000", DataSourceEnum::Genome1000, ParserTypeEnum::DiploidPhased, DataStructureEnum::DiploidPhased, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien},
+    { "GnomadGenome3_1", DataSourceEnum::GnomadGenome3_1, ParserTypeEnum::DiploidGnomad, DataStructureEnum::DiploidUnphased, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
+    { "Falciparum", DataSourceEnum::Falciparum, ParserTypeEnum::DiploidFalciparum, DataStructureEnum::DiploidUnphased, DataImplEnum::PopulationVariant, DataOrganism::PlasmodiumFalciparum },
+    { "GnomadExomes3_1", DataSourceEnum::GnomadExomes3_1, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
+    { "GnomadExomes2_1", DataSourceEnum::GnomadExomes2_1, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
+    { "Gnomad3_1", DataSourceEnum::Gnomad3_1, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
+    { "Gnomad3_0", DataSourceEnum::Gnomad3_0, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
+    { "Gnomad2_1", DataSourceEnum::Gnomad2_1, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
+    { "Clinvar", DataSourceEnum::Clinvar, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
+    { "dbSNP", DataSourceEnum::dbSNP, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
+    { "PedGnome1000", DataSourceEnum::PedGnome1000, ParserTypeEnum::PedGenome1000, DataStructureEnum::PedGenome1000, DataImplEnum::GenomePEDData, DataOrganism::HomoSapien },
+    { "Pf3kCOI", DataSourceEnum::Pf3kCOI, ParserTypeEnum::Pf3kCOIParser, DataStructureEnum::Pf3kCOI, DataImplEnum::COIPf3kData, DataOrganism::PlasmodiumFalciparum },
 
 };
 

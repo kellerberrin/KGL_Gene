@@ -109,7 +109,7 @@ public:
                                                             ContigSize_t sub_sequence_length,
                                                             ContigOffset_t contig_offset) const;
 
-  // Convenience routine that returns an array of exons (strand adjusted), these will, in general, not be on codon boundaries.
+  // Convenience routine that returns an array of sequences (strand adjusted), these will, in general, not be on codon boundaries.
   // Returned sequences are in transcription (strand) order with array[0] being the first exon.
   // The optional second offset argument is onlu used if the linear sequence is not a complete contig/chromosome.
   [[nodiscard]] std::vector<DNA5SequenceCoding> exonArraySequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,

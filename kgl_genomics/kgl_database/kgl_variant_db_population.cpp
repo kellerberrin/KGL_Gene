@@ -119,6 +119,16 @@ size_t kgl::PopulationDB::variantCount() const {
 // We can do this because smart pointer reference counting (only) is thread safe.
 std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::filterVariants(const VariantFilter& filter) const {
 
+  // Create the new population.
+  std::shared_ptr<PopulationDB> filtered_population_ptr(std::make_shared<PopulationDB>(populationId(), dataSource()));
+
+  // Edge Condition, if no genomes then simply exit.
+  if (getMap().empty()) {
+
+    return filtered_population_ptr;
+
+  }
+
   // Calc how many threads required.
   size_t thread_count = std::min(getMap().size(), ThreadPool::hardwareThreads());
   ThreadPool thread_pool(thread_count);
@@ -144,8 +154,6 @@ std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::filterVariants(const Varia
 
   }
 
-  // Create the new population.
-  std::shared_ptr<PopulationDB> filtered_population_ptr(std::make_shared<PopulationDB>(populationId(), dataSource()));
 
   // Add in the filtered genomes.
   for (auto& future : future_vector) {
@@ -171,6 +179,13 @@ std::pair<size_t, size_t> kgl::PopulationDB::inSituFilter(const VariantFilter& f
   // This routine modifies the populationDB data structure, so only permit one thread at a time.
   // Note the routine is internally multi-threaded.
   std::scoped_lock lock(insitufilter_mutex_);
+
+  // Edge Condition, if no genomes then simply exit.
+  if (getMap().empty()) {
+
+    return {0, 0};
+
+  }
 
   // Calc how many threads required.
   size_t thread_count = std::min(getMap().size(), ThreadPool::hardwareThreads());

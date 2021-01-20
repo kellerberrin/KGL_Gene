@@ -4,7 +4,7 @@
 
 #include "kel_distribution.h"
 #include "kgl_analysis_inbreed.h"
-#include "kgl_filter.h"
+#include "kgl_variant_filter.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 #include "kel_optimize.h"
 
@@ -88,7 +88,7 @@ bool kgl::InbreedAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_o
 
     } else {
 
-      ExecEnv::log().error("InbreedAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not a PED Ancestor Object", ident(), data_object_ptr->fileId());
+      ExecEnv::log().critical("InbreedAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not a PED Ancestor Object", ident(), data_object_ptr->fileId());
       return false;
 
     }

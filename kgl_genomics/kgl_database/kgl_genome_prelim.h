@@ -85,6 +85,7 @@ public:
   ~CodingSequence() = default;
 
   [[nodiscard]] const SortedCDS& getSortedCDS() const { return sorted_cds_; }
+  [[nodiscard]] size_t exons() const { return getSortedCDS().size(); }
   [[nodiscard]] std::shared_ptr<const ContigReference> contig() const;
   [[nodiscard]] std::shared_ptr<const GeneFeature> getGene() const { return gene_ptr_; }
   [[nodiscard]] std::shared_ptr<const Feature> getCDSParent() const { return cds_parent_ptr_; }

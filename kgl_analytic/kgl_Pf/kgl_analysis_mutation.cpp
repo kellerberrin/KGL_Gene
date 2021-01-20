@@ -21,27 +21,29 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
   }
 
-  if (not getParameters(named_parameters, reference_genomes, work_directory)) {
+  if (reference_genomes->getMap().size() != 1) {
+
+    ExecEnv::log().critical("Analysis Id: {}, expected single (1) reference genome, actual count: {}", reference_genomes->getMap().size());
+
+  }
+
+  auto [genome_id, genome_ptr] = *(reference_genomes->getMap().begin());
+  ref_genome_ptr_ = genome_ptr;
+
+  if (not getParameters(named_parameters, work_directory)) {
 
     ExecEnv::log().critical("Analysis Id: {}, problem parsing parameters, program ends.", ident());
 
   }
 
   // Sanity Check.
-  if (not genome_collection_ptr_) {
+  if (not ref_genome_ptr_) {
 
     ExecEnv::log().critical("Analysis Id: {}, no genomes defined, program ends.", ident());
 
   }
 
-  // Analyze the active genomes.
-  for (auto const& [genome_id, genome_ptr] : genome_collection_ptr_->getMap()) {
-
-    GenomeMutation genome_mutation;
-    genome_mutation.genomeAnalysis(genome_ptr);
-    genome_mutation_vec_.push_back(genome_mutation);
-
-  }
+  gene_mutation_.genomeAnalysis(ref_genome_ptr_);
 
   return true;
 
@@ -51,7 +53,6 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
 
 bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_parameters,
-                                          const std::shared_ptr<const GenomeCollection>& genome_collection_ptr,
                                           const std::string& work_directory) {
 
   work_directory_ = work_directory;
@@ -87,45 +88,6 @@ bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_param
 
       }
 
-      std::shared_ptr<GenomeCollection> genome_collection(std::make_shared<GenomeCollection>());
-      genome_collection_ptr_ = genome_collection;
-
-      // Get the vector of active genomes.
-      auto genome_vector_opt = xml_vector.getString(GENOME_IDENT_, ParameterMap::ANY_SIZE);
-      if (genome_vector_opt) {
-
-        std::vector<GenomeId_t> genomes = genome_vector_opt.value();
-        for (auto const& genome_id : genomes) {
-
-          auto genome_opt = genome_collection_ptr->getOptionalGenome(genome_id);
-          if (genome_opt) {
-
-            ExecEnv::log().info("Analysis: {} add active genome: {}", ident(), genome_opt.value()->genomeId());
-            if (not genome_collection->addGenome(genome_opt.value())) {
-
-              ExecEnv::log().error("Analysis: {} active genome: {} cannot be added to active genome collection", ident(), genome_id);
-              return false;
-
-            }
-
-          } else {
-
-            ExecEnv::log().error("Analysis: {} active genome: {} not found in supplied genome collection", ident(), genome_id);
-            return false;
-
-          }
-
-        } // for genomes.
-
-        genome_collection_ptr_ = genome_collection;
-
-      } else {
-
-        ExecEnv::log().error("IMutationAnalysis::getParameters; bad value for parameter: {}", GENOME_IDENT_);
-        return false;
-
-      }
-
     }
 
   }
@@ -134,84 +96,6 @@ bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_param
 
 }
 
-
-
-// Perform the genetic analysis per iteration.
-bool kgl::MutationAnalysis::writeOutput() {
-
-  std::ofstream out_file(output_file_name_);
-
-  if (not out_file.good()) {
-
-    ExecEnv::log().error("MutationAnalysis::writeOutput; could not open file: {} for output", output_file_name_);
-    return false;
-
-  } else {
-
-    ExecEnv::log().info("Analysis: {} writing to file: {} for output", ident(), output_file_name_);
-
-  }
-
-  writeHeader(out_file);
-
-  for (auto const& genome_mutation : genome_mutation_vec_) {
-
-    for (auto const& gene : genome_mutation.geneVector()) {
-
-
-      out_file << gene.genome << OUTPUT_DELIMITER_
-               << gene.contig << OUTPUT_DELIMITER_
-               << gene.gene_id << OUTPUT_DELIMITER_
-               << gene.gene_name << OUTPUT_DELIMITER_
-               << gene.description << OUTPUT_DELIMITER_
-               << gene.biotype << OUTPUT_DELIMITER_
-               << (gene.valid_protein ? "Valid" : "Invalid") << OUTPUT_DELIMITER_
-               << gene.gaf_id << OUTPUT_DELIMITER_
-               << gene.gene_begin << OUTPUT_DELIMITER_
-               << gene.gene_end << OUTPUT_DELIMITER_
-               << gene.gene_size << OUTPUT_DELIMITER_
-               << gene.strand << OUTPUT_DELIMITER_
-               << gene.exons << OUTPUT_DELIMITER_
-               << gene.attribute_size << OUTPUT_DELIMITER_
-               << gene.variant_count << OUTPUT_DELIMITER_
-               << gene.genome_count << OUTPUT_DELIMITER_
-               << gene.genome_variant << OUTPUT_DELIMITER_
-               << (static_cast<double>(gene.variant_count) / static_cast<double>(gene.gene_size)) << OUTPUT_DELIMITER_
-               << gene.heterozygous << OUTPUT_DELIMITER_
-               << gene.homozygous << OUTPUT_DELIMITER_;
-
-      double ratio{0.0};
-      if (gene.homozygous > 0) {
-
-       ratio = static_cast<double>(gene.heterozygous) / static_cast<double>(gene.homozygous);
-
-      }
-      out_file << ratio << '\n';
-
-    } // Gene
-
-  } // Genome
-
-  return true;
-
-}
-
-
-void kgl::MutationAnalysis::writeHeader(std::ostream& out_file) {
-
-  out_file << "Genome" << OUTPUT_DELIMITER_ << "Contig" << OUTPUT_DELIMITER_
-           << "Gene" << OUTPUT_DELIMITER_ << "Name" << OUTPUT_DELIMITER_
-           << "Description" << OUTPUT_DELIMITER_ << "BioType" << OUTPUT_DELIMITER_
-           << "ValidProtein" << OUTPUT_DELIMITER_ << "GafId" <<  OUTPUT_DELIMITER_
-           << "Begin" << OUTPUT_DELIMITER_ << "End" << OUTPUT_DELIMITER_
-           << "Length" << OUTPUT_DELIMITER_ << "Strand" << OUTPUT_DELIMITER_
-           << "Exons" << OUTPUT_DELIMITER_ << "Attributes" << OUTPUT_DELIMITER_
-           << "VariantCount" << OUTPUT_DELIMITER_ << "GenomeCount" << OUTPUT_DELIMITER_
-           << "GenomeVariant" << OUTPUT_DELIMITER_ << "VariantDensity" <<  OUTPUT_DELIMITER_
-           << "Heterozygous" << OUTPUT_DELIMITER_ << "Homozygous" << OUTPUT_DELIMITER_
-           << "Het/Hom" << '\n';
-
-}
 
 
 // Perform the genetic analysis per iteration.
@@ -237,24 +121,35 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 
   }
 
-  if (file_characteristic.data_implementation == DataImplEnum::PopulationVariant) {
+  if (file_characteristic.data_structure == DataStructureEnum::PedGenome1000) {
 
-    auto population_ptr = std::dynamic_pointer_cast<const PopulationDB>(data_ptr);
+    std::shared_ptr<const GenomePEDData> ped_data = std::dynamic_pointer_cast<const GenomePEDData>(data_ptr);
 
-    if (not population_ptr) {
+    if (ped_data) {
 
-      ExecEnv::log().critical("MutationAnalysis::fileReadAnalysis; Unable to cast data file to population, severe error.");
+      ped_data_ = ped_data;
+      ExecEnv::log().info("Analysis: {}, ped file: {} contains: {} PED records", ident(), ped_data->fileId(), ped_data->getMap().size());
 
-    }
+    } else {
 
-    for (auto& genome : genome_mutation_vec_) {
-
-      genome.variantAnalysis(population_ptr);
+      ExecEnv::log().critical("InbreedAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not a PED Ancestor Object", ident(), data_ptr->fileId());
+      return false;
 
     }
 
   }
 
+  if (file_characteristic.data_implementation == DataImplEnum::PopulationVariant) {
+
+    population_ptr_ = std::dynamic_pointer_cast<const PopulationDB>(data_ptr);
+
+    if (not population_ptr_) {
+
+      ExecEnv::log().critical("MutationAnalysis::fileReadAnalysis; Unable to cast data file to population, severe error.");
+
+    }
+
+  }
 
   return true;
 
@@ -279,6 +174,29 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Default Iteration Analysis called for Analysis Id: {}", ident());
 
+
+  if (population_ptr_) {
+
+    auto file_characteristic = population_ptr_->dataCharacteristic();
+
+    if (file_characteristic.data_source == DataSourceEnum::Genome1000 and ped_data_) {
+
+      gene_mutation_.variantAnalysis100(population_ptr_, ped_data_);
+
+    } else {
+
+      gene_mutation_.variantAnalysis(population_ptr_);
+
+    }
+
+  } else {
+
+    ExecEnv::log().error("MutationAnalysis::iterationAnalysis; No deta files defined for analysis");
+
+  }
+
+  population_ptr_ = nullptr;
+
   return true;
 
 }
@@ -288,13 +206,13 @@ bool kgl::MutationAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
-  writeOutput();
+  gene_mutation_.writeOutput100(output_file_name_, OUTPUT_DELIMITER_);
 
   return true;
 
 }
 
-
+/*
 
 void kgl::MutationAnalysis::performRegion() {
 
@@ -304,12 +222,12 @@ void kgl::MutationAnalysis::performRegion() {
   region_fasta_file += "_561666";
   region_fasta_file = Utility::filePath(region_fasta_file, work_directory_) + ".fasta";
   if (not GenomicSequence::mutateGenomeRegion("malawi_fb_SRR609075",
-                                                   "Pf3D7_04_v3",
-                                                   561666,
-                                                   11753,
-                                                   population_ptr_,
-                                                   genome_collection_ptr_->getGenome(analysis_genome),
-                                                   region_fasta_file)) {
+                                              "Pf3D7_04_v3",
+                                              561666,
+                                              11753,
+                                              population_ptr_,
+                                              ref_genome_ptr_->getGenome(analysis_genome),
+                                              region_fasta_file)) {
 
     ExecEnv::log().error("PhylogeneticAnalysis::performRegion(); analysis fails");
 
@@ -319,12 +237,12 @@ void kgl::MutationAnalysis::performRegion() {
   region_fasta_file += "_462000";
   region_fasta_file = Utility::filePath(region_fasta_file, work_directory_) + ".fasta";
   if (not GenomicSequence::mutateGenomeRegion("malawi_fb_SRR609075",
-                                                   "Pf3D7_01_v3",
-                                                   462000,
-                                                   2000,
-                                                   population_ptr_,
-                                                   genome_collection_ptr_->getGenome(analysis_genome),
-                                                   region_fasta_file)) {
+                                              "Pf3D7_01_v3",
+                                              462000,
+                                              2000,
+                                              population_ptr_,
+                                              ref_genome_ptr_->getGenome(analysis_genome),
+                                              region_fasta_file)) {
 
     ExecEnv::log().error("PhylogeneticAnalysis::performRegion(); analysis fails");
 
@@ -334,12 +252,12 @@ void kgl::MutationAnalysis::performRegion() {
   region_fasta_file += "_0";
   region_fasta_file = Utility::filePath(region_fasta_file, work_directory_) + ".fasta";
   if (not GenomicSequence::mutateGenomeRegion("malawi_fb_SRR609075",
-                                                   "Pf3D7_04_v3",
-                                                   0,
-                                                   1200490,
-                                                   population_ptr_,
-                                                   genome_collection_ptr_->getGenome(analysis_genome),
-                                                   region_fasta_file)) {
+                                              "Pf3D7_04_v3",
+                                              0,
+                                              1200490,
+                                              population_ptr_,
+                                              ref_genome_ptr_->getGenome(analysis_genome),
+                                              region_fasta_file)) {
 
     ExecEnv::log().error("PhylogeneticAnalysis::performRegion(); analysis fails");
 
@@ -349,12 +267,12 @@ void kgl::MutationAnalysis::performRegion() {
   region_fasta_file += "_944950";
   region_fasta_file = Utility::filePath(region_fasta_file, work_directory_) + ".fasta";
   if (not GenomicSequence::mutateGenomeRegion("malawi_fb_SRR609075",
-                                                   "Pf3D7_04_v3",
-                                                   944950,
-                                                   135,
-                                                   population_ptr_,
-                                                   genome_collection_ptr_->getGenome(analysis_genome),
-                                                   region_fasta_file)) {
+                                              "Pf3D7_04_v3",
+                                              944950,
+                                              135,
+                                              population_ptr_,
+                                              ref_genome_ptr_->getGenome(analysis_genome),
+                                              region_fasta_file)) {
 
     ExecEnv::log().error("PhylogeneticAnalysis::performRegion(); analysis fails");
 
@@ -364,12 +282,12 @@ void kgl::MutationAnalysis::performRegion() {
   region_fasta_file += "_941875";
   region_fasta_file = Utility::filePath(region_fasta_file, work_directory_) + ".fasta";
   if (not GenomicSequence::mutateGenomeRegion("malawi_fb_SRR609075",
-                                                   "Pf3D7_04_v3",
-                                                   941875,
-                                                   4293,
-                                                   population_ptr_,
-                                                   genome_collection_ptr_->getGenome(analysis_genome),
-                                                   region_fasta_file)) {
+                                              "Pf3D7_04_v3",
+                                              941875,
+                                              4293,
+                                              population_ptr_,
+                                              ref_genome_ptr_->getGenome(analysis_genome),
+                                              region_fasta_file)) {
 
     ExecEnv::log().error("PhylogeneticAnalysis::performRegion(); analysis fails");
 
@@ -379,12 +297,12 @@ void kgl::MutationAnalysis::performRegion() {
   region_fasta_file += "_569342";
   region_fasta_file = Utility::filePath(region_fasta_file, work_directory_) + ".fasta";
   if (not GenomicSequence::mutateGenomeRegion("malawi_fb_SRR609075",
-                                                   "Pf3D7_04_v3",
-                                                   569342,
-                                                   7467,
-                                                   population_ptr_,
-                                                   genome_collection_ptr_->getGenome(analysis_genome),
-                                                   region_fasta_file)) {
+                                              "Pf3D7_04_v3",
+                                              569342,
+                                              7467,
+                                              population_ptr_,
+                                              ref_genome_ptr_->getGenome(analysis_genome),
+                                              region_fasta_file)) {
 
     ExecEnv::log().error("PhylogeneticAnalysis::performRegion(); analysis fails");
 
@@ -394,12 +312,12 @@ void kgl::MutationAnalysis::performRegion() {
   region_fasta_file += "_584668";
   region_fasta_file = Utility::filePath(region_fasta_file, work_directory_) + ".fasta";
   if (not GenomicSequence::mutateGenomeRegion("malawi_fb_SRR609075",
-                                                   "Pf3D7_04_v3",
-                                                   584668,
-                                                   7280,
-                                                   population_ptr_,
-                                                   genome_collection_ptr_->getGenome(analysis_genome),
-                                                   region_fasta_file)) {
+                                              "Pf3D7_04_v3",
+                                              584668,
+                                              7280,
+                                              population_ptr_,
+                                              ref_genome_ptr_->getGenome(analysis_genome),
+                                              region_fasta_file)) {
 
     ExecEnv::log().error("PhylogeneticAnalysis::performRegion(); analysis fails");
 
@@ -408,3 +326,4 @@ void kgl::MutationAnalysis::performRegion() {
 
 }
 
+*/

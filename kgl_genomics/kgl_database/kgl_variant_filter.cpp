@@ -4,7 +4,7 @@
 
 #include <sstream>
 #include <memory>
-#include "kgl_filter.h"
+#include "kgl_variant_filter.h"
 #include "kel_utility.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 

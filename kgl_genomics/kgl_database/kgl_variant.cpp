@@ -86,13 +86,42 @@ std::string kgl::Variant::name() const {
 
   switch(variantType()) {
 
-    case VariantType::VCF_VARIANT: return "VCF";
+    case VariantType::INDEL: return "INDEL";
+
+    case VariantType::TRANSVERSION: return "TRANSVERSION";
+
+    case VariantType::TRANSITION: return "TRANSITION";
 
   }
 
   return "NOT_IMPLEMENTED";  // Not reached, to keep the compiler happy.
 
 }
+
+
+kgl::VariantType kgl::Variant::variantType() const {
+
+  if (not isSNP()) {
+
+    return VariantType::INDEL;
+
+  } else {
+
+    if (DNA5::isTransition(reference().at(0), alternate().at(0))) {
+
+      return VariantType::TRANSITION;
+
+    } else {
+
+     return VariantType::TRANSVERSION;
+
+    }
+
+  }
+
+}
+
+
 
 std::string kgl::Variant::output(char delimiter, VariantOutputIndex output_index, bool detail) const
 {
@@ -178,16 +207,7 @@ bool kgl::Variant::lessThan(const Variant& cmp_var) const {
 
     return false;
 
-  } else if (variantType() < cmp_var.variantType()) {
-
-    return true;
-
-  } else if (variantType() > cmp_var.variantType()) {
-
-    return false;
-
   }
-
 
   if (reference().getSequenceAsString() < cmp_var.reference().getSequenceAsString()) {
 

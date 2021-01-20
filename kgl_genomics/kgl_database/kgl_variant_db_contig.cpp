@@ -162,16 +162,22 @@ std::pair<size_t, size_t> kgl::ContigDB::inSituFilter(const VariantFilter &filte
       if (filter.applyFilter(*variant_ptr)) {
 
         filtered_variants.push_back(variant_ptr);
-        ++contig_count.second;
 
       }
-
-      filtered_variants.push_back(variant_ptr);
 
     }
 
     // Replace with filtered variants at this offset.
-    variant_vector->replaceVector(std::move(filtered_variants));
+    contig_count.second += filtered_variants.size();
+    if (not filtered_variants.empty()) {
+
+      variant_vector->replaceVector(std::move(filtered_variants));
+
+    } else {
+
+      variant_vector->clearVariants();
+
+    }
 
   } // for all offsets
 

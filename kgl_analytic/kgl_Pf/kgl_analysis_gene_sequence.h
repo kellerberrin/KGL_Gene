@@ -12,7 +12,7 @@
 #include "kgl_sequence_distance.h"
 #include "kel_patterns.h"
 #include "kgl_variant_db_population.h"
-#include "kgl_filter.h"
+#include "kgl_variant_filter.h"
 #include "kgl_gff_fasta.h"
 
 

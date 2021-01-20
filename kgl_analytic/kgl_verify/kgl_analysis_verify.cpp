@@ -3,7 +3,7 @@
 //
 
 #include "kgl_analysis_verify.h"
-#include "kgl_filter.h"
+#include "kgl_variant_filter.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -63,14 +63,23 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
     ExecEnv::log().info("Population: {}, total variants: {}, 'Pass' variants: {}",
                         non_const_population->populationId(), pass_results.first, pass_results.second);
 
+    ExecEnv::log().info("Population: {}, check total variants: {}",
+                        non_const_population->populationId(), non_const_population->variantCount());
+
     auto snp_filter_count = non_const_population->inSituFilter(SNPFilter());
     ExecEnv::log().info("Population: {}, total variants: {}, SNP variants: {}",
                         non_const_population->populationId(), snp_filter_count.first, snp_filter_count.second);
+
+    ExecEnv::log().info("Population: {}, check total variants: {}",
+                        non_const_population->populationId(), non_const_population->variantCount());
 
     // Delete the population by applying the FalseFilter to the population, this appears to be faster than unwinding smart pointers.
     auto false_filter_count = non_const_population->inSituFilter(FalseFilter());
     ExecEnv::log().info("Population: {}, total variants: {}, False variants: {}",
                         non_const_population->populationId(), false_filter_count.first, false_filter_count.second);
+
+    ExecEnv::log().info("Population: {}, check total variants: {}",
+                        non_const_population->populationId(), non_const_population->variantCount());
 
   }
 

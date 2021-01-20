@@ -101,7 +101,7 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Defined Variant Types.
-enum class VariantType { VCF_VARIANT };
+enum class VariantType { INDEL, TRANSITION, TRANSVERSION };
 
 class Variant : public VariantSequence {
 
@@ -129,7 +129,7 @@ public:
 
   [[nodiscard]] size_t referenceSize() const { return reference_.length(); }
 
-  [[nodiscard]] VariantType variantType() const { return VariantType::VCF_VARIANT; }
+  [[nodiscard]] VariantType variantType() const;
 
   [[nodiscard]] bool isSNP() const { return reference().length() == 1 and alternate().length() == 1; }
 

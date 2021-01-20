@@ -10,7 +10,7 @@
 #include <fstream>
 #include "kel_patterns.h"
 #include "kgl_variant_db_population.h"
-#include "kgl_filter.h"
+#include "kgl_variant_filter.h"
 #include "kgl_gff_fasta.h"
 #include "kgl_genome_aux_csv.h"
 #include "kgl_sequence_compare_impl.h"

@@ -9,7 +9,7 @@
 
 #include "kel_utility.h"
 #include "kgl_variant.h"
-#include "kgl_filter.h"
+#include "kgl_variant_filter.h"
 #include "kgl_variant_db_offset.h"
 #include "kgl_variant_db_contig.h"
 

@@ -5,7 +5,7 @@
 #include "kgl_analysis_inbreed_execute.h"
 #include "kgl_analysis_inbreed_diploid.h"
 #include "kgl_analysis_inbreed_synthetic.h"
-#include "kgl_filter.h"
+#include "kgl_variant_filter.h"
 
 
 namespace kgl = kellerberrin::genome;

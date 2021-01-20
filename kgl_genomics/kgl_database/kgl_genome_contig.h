@@ -100,7 +100,7 @@ private:
   ContigId_t contig_id_;
   std::string description_;
   std::shared_ptr<const DNA5SequenceContig> sequence_ptr_;  // The contig unstranded DNA sequence.
-  GeneExonFeatures gene_exon_features_;  // All the genes and exons defined for this contig.
+  GeneExonFeatures gene_exon_features_;  // All the genes and sequences defined for this contig.
   AuxContigFeatures aux_contig_features_;
   TranslateToAmino coding_table_;  // Amino Acid translation table, unique for contig (e.g. mitochondria)
 
