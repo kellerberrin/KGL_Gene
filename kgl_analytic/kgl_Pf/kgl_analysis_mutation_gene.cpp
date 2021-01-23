@@ -83,9 +83,10 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
       gene_mutation.sequences = sequence_array->size();
       if (not sequence_array->getMap().empty()) {
 
-        const std::shared_ptr<const CodingSequence> coding_sequence = sequence_array->getFirst();
-        gene_mutation.nucleotides = coding_sequence->codingNucleotides();
-        gene_mutation.exons = coding_sequence->exons();
+        auto [seq_name, seq_ptr] = *(sequence_array->getMap().begin());
+        gene_mutation.seq_name = seq_name;
+        gene_mutation.nucleotides = seq_ptr->codingNucleotides();
+        gene_mutation.exons = seq_ptr->exons();
 
       }
       auto const& attribute_map = gene_ptr->getAttributes().getMap();
@@ -107,6 +108,7 @@ bool kgl::GenomeMutation::variantAnalysis100(const std::shared_ptr<const Populat
 
   for (auto& gene_mutation : gene_vector_) {
 
+    std::map<std::string, size_t> variant_distribution;
     for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()){
 
       auto contig_opt = genome_ptr->getContig(gene_mutation.contig);
@@ -124,6 +126,40 @@ bool kgl::GenomeMutation::variantAnalysis100(const std::shared_ptr<const Populat
 
           gene_mutation.variant_count += variant_map.size();
 
+          for (auto const& [offset, variant_ptr] : variant_map) {
+
+            if (variant_ptr->phaseId() == VariantSequence::DIPLOID_PHASE_A) {
+
+              ++gene_mutation.female_phase;
+
+            } else {
+
+              ++gene_mutation.male_phase;
+
+            }
+
+            auto find_result = variant_distribution.find(variant_ptr->identifier());
+            if (find_result == variant_distribution.end()) {
+
+              auto [it, insert_result] = variant_distribution.try_emplace(variant_ptr->identifier(), 1);
+              if (not insert_result) {
+
+                ExecEnv::log().error( "GenomeMutation::variantAnalysis; cannot insert (duplicate) variant with identifier: {}",
+                                      variant_ptr->identifier());
+
+              }
+
+            } else {
+
+              auto& [variant_ident, count] = *find_result;
+              ++count;
+
+            }
+
+          }
+
+          gene_mutation.unique_variants = variant_distribution.size();
+
           auto result = ped_data->getMap().find(genome_id);
 
           if (result == ped_data->getMap().end()) {
@@ -134,6 +170,20 @@ bool kgl::GenomeMutation::variantAnalysis100(const std::shared_ptr<const Populat
           }
 
           auto const& [sample_id, ped_record] = *result;
+
+          if (not variant_map.empty()) {
+
+            if (ped_record.sexType() == PedSexType::MALE) {
+
+              ++gene_mutation.male_variant;
+
+            } else {
+
+              ++gene_mutation.female_variant;
+
+            }
+
+          }
 
           std::string super_pop = ped_record.superPopulation();
 
@@ -182,8 +232,6 @@ bool kgl::GenomeMutation::variantAnalysis100(const std::shared_ptr<const Populat
             }
 
           }
-
-
 
           ++gene_mutation.genome_count;
           if (not variant_map.empty()) {
@@ -241,6 +289,7 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
 
   for (auto& gene_mutation : gene_vector_) {
 
+    std::map<std::string, size_t> variant_distribution;
     for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()){
 
       auto contig_opt = genome_ptr->getContig(gene_mutation.contig);
@@ -257,6 +306,40 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
                                          variant_map);
 
           gene_mutation.variant_count += variant_map.size();
+
+          for (auto const& [offset, variant_ptr] : variant_map) {
+
+            if (variant_ptr->phaseId() == VariantSequence::DIPLOID_PHASE_A) {
+
+              ++gene_mutation.female_phase;
+
+            } else {
+
+              ++gene_mutation.male_phase;
+
+            }
+
+            auto find_result = variant_distribution.find(variant_ptr->identifier());
+            if (find_result == variant_distribution.end()) {
+
+              auto [it, insert_result] = variant_distribution.try_emplace(variant_ptr->identifier(), 1);
+              if (not insert_result) {
+
+                ExecEnv::log().error( "GenomeMutation::variantAnalysis; cannot insert (duplicate) variant with identifier: {}",
+                                      variant_ptr->identifier());
+
+              }
+
+            } else {
+
+              auto& [variant_ident, count] = *find_result;
+              ++count;
+
+            }
+
+          }
+
+          gene_mutation.unique_variants = variant_distribution.size();
 
           auto subset_ptr = contig_ptr->subset(gene_mutation.gene_begin, gene_mutation.gene_end);
           for (auto const& [offset, offset_ptr] : subset_ptr->getMap()) {
@@ -337,6 +420,7 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
 bool kgl::GenomeMutation::writeOutput100(const std::string& output_file_name, char output_delimiter) const {
 
   const double homozygous_bias{0.1};
+  const double sex_bias{0.1};
 
   std::ofstream out_file(output_file_name);
 
@@ -368,13 +452,17 @@ bool kgl::GenomeMutation::writeOutput100(const std::string& output_file_name, ch
              << gene.gene_span << output_delimiter
              << gene.strand << output_delimiter
              << gene.sequences << output_delimiter
+             << gene.seq_name << output_delimiter
              << gene.nucleotides << output_delimiter
              << gene.exons << output_delimiter
              << gene.attribute_size << output_delimiter
+             << gene.unique_variants << output_delimiter
              << gene.variant_count << output_delimiter
+             << (static_cast<double>(gene.female_phase) / static_cast<double>(gene.male_phase + sex_bias)) << output_delimiter
              << gene.genome_count << output_delimiter
              << gene.genome_variant << output_delimiter
              << (static_cast<double>(gene.variant_count) / static_cast<double>(gene.gene_span)) << output_delimiter
+             << (static_cast<double>(gene.female_variant) / static_cast<double>(gene.male_variant + sex_bias)) << output_delimiter
              << (static_cast<double>(gene.EAS_variant_count) / static_cast<double>(gene.gene_span)) << output_delimiter
              << (static_cast<double>(gene.EUR_variant_count) / static_cast<double>(gene.gene_span)) << output_delimiter
              << (static_cast<double>(gene.SAS_variant_count) / static_cast<double>(gene.gene_span)) << output_delimiter
@@ -403,10 +491,16 @@ void kgl::GenomeMutation::writeHeader100(std::ostream& out_file, char output_del
            << "ValidProtein" << output_delimiter << "GafId" <<  output_delimiter
            << "Begin" << output_delimiter << "End" << output_delimiter
            << "Span" << output_delimiter << "Strand" << output_delimiter
-           << "Sequences" << output_delimiter << "Nucleotides" << output_delimiter
+           << "Sequences" << output_delimiter << "SeqName" << output_delimiter
+           << "Nucleotides" << output_delimiter
            << "Exons" << output_delimiter << "Attributes" << output_delimiter
-           << "VariantCount" << output_delimiter << "GenomeCount" << output_delimiter
-           << "GenomeVariant" << output_delimiter << "VariantDensity" <<  output_delimiter
+           << "UniqueVariants" << output_delimiter
+           << "VariantCount" << output_delimiter
+           << "F/MPhase" << output_delimiter
+           << "GenomeCount" << output_delimiter
+           << "GenomeVariant" << output_delimiter
+           << "VariantDensity" <<  output_delimiter
+           << "F/MVariant" << output_delimiter
            << "EASDensity" << output_delimiter << "EURDensity" << output_delimiter
            << "SASDensity" << output_delimiter << "AMRDensity" << output_delimiter
            << "AFRDensity" << output_delimiter
@@ -421,6 +515,7 @@ void kgl::GenomeMutation::writeHeader100(std::ostream& out_file, char output_del
 bool kgl::GenomeMutation::writeOutput(const std::string& output_file_name, char output_delimiter) const {
 
   const double homozygous_bias{0.1};
+  const double sex_bias{0.1};
 
   std::ofstream out_file(output_file_name);
 
@@ -452,11 +547,14 @@ bool kgl::GenomeMutation::writeOutput(const std::string& output_file_name, char 
              << gene.gene_span << output_delimiter
              << gene.strand << output_delimiter
              << gene.sequences << output_delimiter
+             << gene.seq_name << output_delimiter
              << gene.nucleotides << output_delimiter
              << gene.exons << output_delimiter
              << gene.attribute_size << output_delimiter
+             << gene.unique_variants << output_delimiter
              << gene.variant_count << output_delimiter
              << gene.genome_count << output_delimiter
+             << (static_cast<double>(gene.female_variant) / static_cast<double>(gene.male_variant + sex_bias)) << output_delimiter
              << gene.genome_variant << output_delimiter
              << (static_cast<double>(gene.variant_count) / static_cast<double>(gene.gene_span)) << output_delimiter
              << gene.heterozygous << output_delimiter
@@ -482,9 +580,12 @@ void kgl::GenomeMutation::writeHeader(std::ostream& out_file, char output_delimi
            << "ValidProtein" << output_delimiter << "GafId" <<  output_delimiter
            << "Begin" << output_delimiter << "End" << output_delimiter
            << "Span" << output_delimiter << "Strand" << output_delimiter
-           << "Sequences" << output_delimiter << "Nucleotides" << output_delimiter
+           << "Sequences" << output_delimiter << "SeqName" << output_delimiter
+           << "Nucleotides" << output_delimiter
            << "Exons" << output_delimiter <<  "Attributes" << output_delimiter
-           << "VariantCount" << output_delimiter << "GenomeCount" << output_delimiter
+           << "UniqueVariants" << output_delimiter
+           << "VariantCount" << output_delimiter
+           << "F/MPhase" << output_delimiter << "GenomeCount" << output_delimiter
            << "GenomeVariant" << output_delimiter << "VariantDensity" <<  output_delimiter
            << "Heterozygous" << output_delimiter << "Homozygous" << output_delimiter
            << "Het/Hom" << output_delimiter << "Indel%" << output_delimiter

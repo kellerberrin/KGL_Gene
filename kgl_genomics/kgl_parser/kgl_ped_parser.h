@@ -17,6 +17,9 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+enum class PedSexType { MALE, FEMALE };
+
 class PEDRecord {
 
 public:
@@ -59,6 +62,7 @@ public:
   [[nodiscard]] const std::string& paternalId() const { return paternal_id_; }
   [[nodiscard]] const std::string& maternalId() const { return maternal_id_; }
   [[nodiscard]] const std::string& sex() const { return sex_; }
+  [[nodiscard]] PedSexType sexType() const { return (sex_ == MALE_ ? PedSexType::MALE : PedSexType::FEMALE); }
   [[nodiscard]] const std::string& phenoType() const { return pheno_type_; }
   [[nodiscard]] const std::string& population() const { return population_; }
   [[nodiscard]] const std::string& populationDescription() const { return population_description_; }
@@ -91,6 +95,10 @@ private:
   std::string comments_;
 
   static constexpr const size_t PED_FIELD_COUNT_{15};         // Threads parsing PED records
+
+  constexpr static const char* MALE_ = "1";
+  constexpr static const char* FEMALE_ = "2";
+
 
 };
 

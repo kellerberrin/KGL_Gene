@@ -86,7 +86,8 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
                                                                           passed_filter,
                                                                           evidence,
                                                                           std::move(reference_str),
-                                                                          std::move(alternate_str)));
+                                                                          std::move(alternate_str),
+                                                                          vcf_record.id));
 
     if (not addThreadSafeVariant(std::move(variant_ptr), genome_db_ptr_->genomeId())) {
 
@@ -127,7 +128,8 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
                                                                             passed_filter,
                                                                             evidence,
                                                                             std::move(reference_str),
-                                                                            std::move(alternate_str)));
+                                                                            std::move(alternate_str),
+                                                                            vcf_record.id));
 
       if (not addThreadSafeVariant(std::move(variant_ptr), genome_db_ptr_->genomeId())) {
 

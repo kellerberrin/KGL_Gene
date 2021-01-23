@@ -131,7 +131,19 @@ std::optional<std::unique_ptr<VcfRecord>> RecordVCFIO::moveToVcfRecord(std::stri
 
     vcf_record_ptr->contig_id = field_views[0];
     vcf_record_ptr->offset = std::stoull(std::string(field_views[1])) - 1; // all offsets are zero based.
-    vcf_record_ptr->id = field_views[2];
+
+    // The identifier field. Set field not present "." to the empty string.
+    if (field_views[2] == FIELD_NOT_PRESENT_) {
+
+      vcf_record_ptr->id = "";
+
+    } else {
+
+      vcf_record_ptr->id = field_views[2];
+      vcf_record_ptr->id = Utility::trimEndWhiteSpace(vcf_record_ptr->id);
+
+    }
+
     vcf_record_ptr->ref = field_views[3];
     // A deletion variant can be signalled by a missing alt value.
     if (field_views[4] == FIELD_NOT_PRESENT_) {
@@ -178,7 +190,6 @@ std::optional<std::unique_ptr<VcfRecord>> RecordVCFIO::moveToVcfRecord(std::stri
   catch (const std::exception &e) {
 
     ExecEnv::log().error("FileVCFIO; Problem parsing record for VCF file: {}, Exception: {} thrown; VCF record ignored", file_data_.fileName(),  e.what());
-    ExecEnv::log().error("FileVCFIO; VCF record line: {}", file_data_.fileName(),  e.what());
     return std::nullopt;
 
   }

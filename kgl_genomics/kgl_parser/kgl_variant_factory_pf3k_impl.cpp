@@ -81,6 +81,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
 
   }
 
+
   // Parse the info fields into a map.
   // For performance reasons the info field is std::moved - don't reference again.
   auto mutable_info = const_cast<std::string&>(record.info);
@@ -201,6 +202,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
                                      recordParser.contigPtr(),
                                      recordParser.offset(),
                                      passed_filter,
+                                     record.id,
                                      recordParser.reference(),
                                      allele,
                                      evidence)) {
@@ -243,6 +245,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
                                      recordParser.contigPtr(),
                                      recordParser.offset(),
                                      passed_filter,
+                                     record.id,
                                      recordParser.reference(),
                                      allele,
                                      evidence)) {
@@ -311,6 +314,7 @@ bool kgl::Pf3kVCFImpl::createAddVariant(const std::string& genome_name,
                                          const std::shared_ptr<const ContigReference> contig_ptr,
                                          ContigOffset_t contig_offset,
                                          bool passed_filter,
+                                         const std::string& identifier,
                                          const std::string& reference_text,
                                          const std::string& alternate_text,
                                          const VariantEvidence& evidence)  {
@@ -324,7 +328,8 @@ bool kgl::Pf3kVCFImpl::createAddVariant(const std::string& genome_name,
                                                                         passed_filter,
                                                                         evidence,
                                                                         std::move(reference_str),
-                                                                        std::move(alternate_str)));
+                                                                        std::move(alternate_str),
+                                                                        identifier));
 
   return addThreadSafeVariant(std::move(variant_ptr), genome_name);
 

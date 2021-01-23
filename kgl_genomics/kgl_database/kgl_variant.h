@@ -113,11 +113,13 @@ public:
              bool passedFilters,
              const VariantEvidence& evidence,
              StringDNA5&& reference,
-             StringDNA5&& alternate)
+             StringDNA5&& alternate,
+             std::string identifier)
   : VariantSequence(contig_id, phase_id, contig_offset, passedFilters),
     evidence_(evidence),
     reference_(std::move(reference)),
-    alternate_(std::move(alternate)) {}
+    alternate_(std::move(alternate)),
+    identifier_(std::move(identifier)) {}
 
   ~Variant() override = default;
 
@@ -128,6 +130,8 @@ public:
   [[nodiscard]] size_t alternateSize() const { return alternate_.length(); }
 
   [[nodiscard]] size_t referenceSize() const { return reference_.length(); }
+
+  [[nodiscard]] const std::string& identifier() const { return identifier_; }
 
   [[nodiscard]] VariantType variantType() const;
 
@@ -173,6 +177,7 @@ private:
   const VariantEvidence evidence_;                      // VCF File based information payload about this variant
   const DNA5SequenceLinear reference_;                  // reference sequence (ref allele)
   const DNA5SequenceLinear alternate_;                  // alternate sequence (alt allele)
+  const std::string identifier_;                      // The VCF supplied variant identifier.
 
   // Generate a CIGAR by comparing the reference to the alternate.
   [[nodiscard]] std::string alternateCigar() const;

@@ -57,6 +57,7 @@ private:
   constexpr static const char MULTIPLE_ALT_SEPARATOR_{','};
   constexpr static const char ABSTRACT_ALT_BRACKET_{'<'};
   constexpr static const char* PASSED_FILTERS_{"PASS"};
+  constexpr static const char* NULL_IDENTIFIER_{"."};
 
   const std::shared_ptr<PopulationDB> diploid_population_ptr_;   // Diploid phased variants.
   const std::shared_ptr<const GenomeReference> genome_db_ptr_; // read access only.
@@ -66,7 +67,9 @@ private:
 
   bool addThreadSafeVariant(std::unique_ptr<const Variant>&&, const std::vector<GenomeId_t>& genome_vector) const;
 // Calculates alternate indexes for the two phases (.first = A, .second = B).
-  std::pair<size_t, size_t> alternateIndex(const std::string& genotype, const std::vector<std::string>& alt_vector) const;
+  std::pair<size_t, size_t> alternateIndex(const std::string& contig,
+                                           const std::string& genotype,
+                                           const std::vector<std::string>& alt_vector) const;
 // Adds variants to a vector of genomes.
   void addVariants( const std::map<size_t, std::vector<GenomeId_t>>& phase_map,
                     const ContigId_t& contig,
@@ -75,6 +78,7 @@ private:
                     bool passedFilters,
                     const InfoDataEvidence info_evidence_opt,
                     const std::string& reference,
+                    const std::string& identifier,
                     const std::vector<std::string>& alt_vector,
                     size_t vcf_record_count);
 

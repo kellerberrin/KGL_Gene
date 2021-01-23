@@ -79,6 +79,7 @@ private:
                                       const std::shared_ptr<const ContigReference> contig_ptr,
                                       ContigOffset_t contig_offset,
                                       bool passed_filter,
+                                      const std::string& identifier,
                                       const std::string& reference,
                                       const std::string& alternate,
                                       const VariantEvidence& evidence);

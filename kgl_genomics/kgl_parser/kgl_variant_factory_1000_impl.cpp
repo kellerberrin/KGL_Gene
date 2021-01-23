@@ -94,7 +94,7 @@ void kgl::Genome1000VCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecor
   for (auto const& genotype : record.genotypeInfos)
   {
 
-    auto indices = alternateIndex(genotype, alt_vector);
+    auto indices = alternateIndex(contig, genotype, alt_vector);
 
     if (indices.first != REFERENCE_VARIANT_INDEX_) {
 
@@ -113,8 +113,27 @@ void kgl::Genome1000VCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecor
 
   }
 
-  addVariants(phase_A_map, contig, VariantSequence::DIPLOID_PHASE_A, record.offset, passed_filter, info_evidence_opt, record.ref, alt_vector, vcf_record_count);
-  addVariants(phase_B_map, contig, VariantSequence::DIPLOID_PHASE_B, record.offset, passed_filter, info_evidence_opt, record.ref, alt_vector, vcf_record_count);
+  addVariants(phase_A_map,
+              contig,
+              VariantSequence::DIPLOID_PHASE_A,
+              record.offset,
+              passed_filter,
+              info_evidence_opt,
+              record.ref,
+              record.id,
+              alt_vector,
+              vcf_record_count);
+
+  addVariants(phase_B_map,
+              contig,
+              VariantSequence::DIPLOID_PHASE_B,
+              record.offset,
+              passed_filter,
+              info_evidence_opt,
+              record.ref,
+              record.id,
+              alt_vector,
+              vcf_record_count);
 
   if (vcf_record_count % VARIANT_REPORT_INTERVAL_ == 0) {
 
@@ -126,21 +145,61 @@ void kgl::Genome1000VCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecor
 }
 
 
-std::pair<size_t, size_t> kgl::Genome1000VCFImpl::alternateIndex(const std::string& genotype, const std::vector<std::string>& alt_vector) const {
+std::pair<size_t, size_t> kgl::Genome1000VCFImpl::alternateIndex( const std::string& contig,
+                                                                  const std::string& genotype,
+                                                                  const std::vector<std::string>& alt_vector) const {
 
   std::vector<std::string> phase_vector = Utility::char_tokenizer(genotype, PHASE_MARKER_);
 
-  if (phase_vector.size() != 2) {
-
-    ExecEnv::log().warn("Genome1000VCFImpl::alternateIndex, Unexpected Phase Vector Size: {} Genotype Info {}", phase_vector.size(), genotype);
-    return {REFERENCE_VARIANT_INDEX_, REFERENCE_VARIANT_INDEX_};
-
-  }
 
   size_t phase_A_alt{REFERENCE_VARIANT_INDEX_};
   size_t phase_B_alt{REFERENCE_VARIANT_INDEX_};
 
   try {
+
+    if (phase_vector.size() != 2) {
+
+      if (phase_vector.size() != 1) {
+
+        ExecEnv::log().warn("Genome1000VCFImpl::alternateIndex, No Phase Vector information");
+        return {REFERENCE_VARIANT_INDEX_, REFERENCE_VARIANT_INDEX_};
+
+      }
+
+      // If the phase vector size is 1 then we assume that we are processing the X/Y chromosomes of a male.
+      if (phase_vector[0] != REFERENCE_VARIANT_INDICATOR_) {
+
+        switch(contig_alias_map_.chromosomeType(contig)) {
+
+          case ChromosomeType::CHROM_X:
+            phase_A_alt = std::stoul(phase_vector[0]);
+            phase_B_alt = REFERENCE_VARIANT_INDEX_;
+            break;
+
+          case ChromosomeType::CHROM_Y:
+            phase_A_alt = REFERENCE_VARIANT_INDEX_;
+            phase_B_alt = std::stoul(phase_vector[0]);
+            break;
+
+          default:
+            ExecEnv::log().warn("Genome1000VCFImpl::alternateIndex, Expected Autosomal Chromosome: {} to have 2 phases", contig);
+            break;
+
+        }
+
+      }
+
+      if (phase_A_alt > alt_vector.size() or phase_B_alt > alt_vector.size()) {
+
+        ExecEnv::log().warn("Genome1000VCFImpl::alternateIndex, phase A index: {}, phase B index: {}, exceed alternate vector size: {}, genotype: {}",
+                            phase_A_alt, phase_B_alt, phase_vector.size(), genotype);
+        return {REFERENCE_VARIANT_INDEX_, REFERENCE_VARIANT_INDEX_};
+
+      }
+
+      return {phase_A_alt, phase_B_alt};
+
+    }
 
     if (phase_vector[0].find(ABSTRACT_ALT_BRACKET_) == std::string::npos) {
 
@@ -173,8 +232,7 @@ std::pair<size_t, size_t> kgl::Genome1000VCFImpl::alternateIndex(const std::stri
   }
   catch(...) {
 
-    ExecEnv::log().warn("Genome1000VCFImpl::ParseRecord, Problem converting phase indexes to unsigned longs, phase A: {}, phase B: {} genotype: {}",
-                          phase_vector[0], phase_vector[1], genotype);
+    ExecEnv::log().warn("Genome1000VCFImpl::ParseRecord, Problem converting phase indexes to unsigned longs, phase text: {}", genotype);
     return {REFERENCE_VARIANT_INDEX_, REFERENCE_VARIANT_INDEX_};
 
   }
@@ -198,6 +256,7 @@ void kgl::Genome1000VCFImpl::addVariants( const std::map<size_t, std::vector<Gen
                                           bool passedFilters,
                                           const InfoDataEvidence info_evidence_opt,
                                           const std::string& reference,
+                                          const std::string& identifier,
                                           const std::vector<std::string>& alt_vector,
                                           size_t vcf_record_count) {
 
@@ -216,7 +275,8 @@ void kgl::Genome1000VCFImpl::addVariants( const std::map<size_t, std::vector<Gen
                                                                           passedFilters,
                                                                           evidence,
                                                                           std::move(reference_str),
-                                                                          std::move(alternate_str)));
+                                                                          std::move(alternate_str),
+                                                                          identifier));
 
 
     if (addThreadSafeVariant(std::move(variant_ptr), genome_vector)) {

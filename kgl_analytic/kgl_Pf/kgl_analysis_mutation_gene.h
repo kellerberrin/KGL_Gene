@@ -32,14 +32,20 @@ struct GeneMutation {
   ContigSize_t nucleotides{0};
   std::string strand;
   size_t sequences{0};
+  std::string seq_name;
   size_t attribute_size{0};
+  size_t unique_variants{0};
   size_t variant_count{0};
+  size_t male_phase{0};
+  size_t female_phase{0};
   size_t EAS_variant_count{0};
   size_t EUR_variant_count{0};
   size_t AFR_variant_count{0};
   size_t AMR_variant_count{0};
   size_t SAS_variant_count{0};
   size_t genome_count{0};   // Total number of genomes.
+  size_t male_variant{0};    // Males that have variants for this gene.
+  size_t female_variant{0};  // Females that have variants for thgis gene.
   size_t genome_variant{0};  // Number of genomes that contain variants for this gene.
   size_t homozygous{0};
   size_t heterozygous{0};

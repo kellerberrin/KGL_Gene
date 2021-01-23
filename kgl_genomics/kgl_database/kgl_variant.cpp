@@ -48,14 +48,16 @@ std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputInde
 
   StringDNA5 reference_str(reference().getAlphabetString());
   StringDNA5 alternate_str(alternate().getAlphabetString());
+  std::string variant_ident = identifier();
 
   std::unique_ptr<Variant> variant_ptr(std::make_unique<Variant>( contigId(),
-                                                                        phaseId(),
-                                                                        offset(),
-                                                                        passFilters(),
-                                                                        evidence(),
-                                                                        std::move(reference_str),
-                                                                        std::move(alternate_str)));
+                                                                  phaseId(),
+                                                                  offset(),
+                                                                  passFilters(),
+                                                                  evidence(),
+                                                                  std::move(reference_str),
+                                                                  std::move(alternate_str),
+                                                                  std::move(variant_ident)));
 
   return variant_ptr;
 
@@ -74,7 +76,8 @@ std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputInde
                                                                   passFilters(),
                                                                   null_evidence,
                                                                   std::move(reference1_str),
-                                                                  std::move(reference2_str)));
+                                                                  std::move(reference2_str),
+                                                                  identifier()));
 
   return variant_ptr;
 
@@ -127,7 +130,7 @@ std::string kgl::Variant::output(char delimiter, VariantOutputIndex output_index
 {
   std::stringstream ss;
   ss << genomeOutput(delimiter, output_index);
-  ss << name() << delimiter << alternateSize() << delimiter;
+  ss << identifier() << delimiter << name() << delimiter << alternateSize() << delimiter;
   ss << mutation(delimiter, output_index);
 
   if (detail) {
@@ -140,7 +143,7 @@ std::string kgl::Variant::output(char delimiter, VariantOutputIndex output_index
 
 }
 
-
+// Identifier is not used in these equivalence relationships.
 // Equal Phase
 bool kgl::Variant::equivalent(const Variant& cmp_var) const {
 
