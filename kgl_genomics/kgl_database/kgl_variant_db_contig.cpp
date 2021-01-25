@@ -228,9 +228,9 @@ std::optional<std::shared_ptr<const kgl::Variant>> kgl::ContigDB::findVariant(co
 
   if (result != contig_offset_map_.end()) {
 
-    OffsetDBArray variant_array = result->second->getVariantArray();
+    auto& [offset, offset_ptr] = *result;
 
-    for (auto const& variant_ptr : variant_array) {
+    for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
 
       if (variant.analogous(*variant_ptr)) {
 
@@ -248,6 +248,45 @@ std::optional<std::shared_ptr<const kgl::Variant>> kgl::ContigDB::findVariant(co
     return std::nullopt;
 
   }
+
+}
+
+
+std::shared_ptr<kgl::ContigDB> kgl::ContigDB::findContig(const std::shared_ptr<ContigDB>& template_contig) const {
+
+  std::shared_ptr<ContigDB> found_contig_ptr(std::make_shared<ContigDB>(template_contig->contigId()));
+
+  struct FindContig {
+
+    FindContig(std::shared_ptr<ContigDB> find_contig, const ContigDB* this_contig) : found_contig_(std::move(find_contig)), this_contig_(this_contig) {}
+
+    std::shared_ptr<ContigDB> found_contig_;
+    const ContigDB* this_contig_;
+
+    bool findAndAdd(const std::shared_ptr<const Variant>& variant_ptr) {
+
+      auto variant_opt = this_contig_->findVariant(*variant_ptr);
+
+      if (variant_opt) {
+
+        if (not found_contig_->addVariant(variant_opt.value())) {
+
+          ExecEnv::log().error("ContigDB::findContig; could not add found variant");
+
+        }
+
+      }
+
+      return true;
+
+    }
+
+  };
+
+  FindContig find(found_contig_ptr, this);
+  template_contig->processAll(find, &FindContig::findAndAdd);
+
+  return find.found_contig_;
 
 }
 

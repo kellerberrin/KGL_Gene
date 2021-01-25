@@ -50,6 +50,7 @@ private:
 
   std::shared_ptr<const GenomeReference> ref_genome_ptr_;
   std::shared_ptr<const PopulationDB> population_ptr_;
+  std::shared_ptr<const PopulationDB> unphased_population_ptr_;
   std::shared_ptr<const Pf3kCOIDB> pf3k_coi_ptr_;
   std::shared_ptr<const GenomePEDData> ped_data_;
 

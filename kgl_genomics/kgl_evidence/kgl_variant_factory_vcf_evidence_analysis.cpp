@@ -250,81 +250,12 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
 void kgl::InfoEvidenceAnalysis::vepSubFieldValues( std::string vep_sub_field,
                                                    const std::shared_ptr<const PopulationDB>& population) {
 
-  struct SubFieldValues{
 
-    std::map<std::string, size_t> field_value_map_;
-    std::string vep_sub_field_;
+  VepSubFieldValues sub_field_values(vep_sub_field);
 
-    bool getSubFieldValues(const std::shared_ptr<const Variant>& variant_ptr) {
+  population->processAll(sub_field_values, &VepSubFieldValues::getSubFieldValues);
 
-      std::optional<std::unique_ptr<const kgl::VEPSubFieldEvidence>> vep_fields_opt = getVepSubFields(*variant_ptr);
-
-      if (vep_fields_opt) {
-
-        auto const &vep_fields = *vep_fields_opt.value();
-        auto const &vep_header = *vep_fields.vepHeader();
-        std::optional<size_t> vep_index_opt = vep_header.getSubFieldIndex(vep_sub_field_);
-
-        if (not vep_index_opt) {
-
-          ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues, sub field: {} not found", vep_sub_field_);
-          return false;
-
-        }
-
-        size_t vep_index = vep_index_opt.value();
-
-        for (auto const&  vep_field : vep_fields.vepFields()) {
-
-          const std::vector<std::string_view> sub_field_vector = VEPSubFieldEvidence::vepSubFields(vep_field);
-
-            // Check that the header and the field vector are the same size.
-          if (sub_field_vector.size() != vep_header.subFieldHeaders().size()) {
-
-            ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues; Vep Header size: {} not equal vep sub field size: {}, vep field: {}",
-                                 vep_header.subFieldHeaders().size(), sub_field_vector.size(), vep_field);
-            for (auto const& sub_field : sub_field_vector) {
-
-              ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues; sub field: {}", std::string(sub_field));
-
-            }
-            return false;
-          }
-
-          std::string field_value(sub_field_vector[vep_index]);
-          auto result = field_value_map_.find(field_value);
-
-          if (result != field_value_map_.end()) {
-
-            ++result->second;
-
-          } else {
-
-            auto insert_result = field_value_map_.try_emplace(field_value, 1);
-            if (not insert_result.second) {
-
-              ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues, could not insert sub_field value: {}", field_value);
-
-            }
-
-          }
-
-        } // sub fields
-
-      } // for all sub fields
-
-      return true;
-
-    } // member function.
-
-  }; // struct.
-
-  SubFieldValues sub_field_values;
-  sub_field_values.vep_sub_field_ = vep_sub_field;
-
-  population->processAll(sub_field_values, &SubFieldValues::getSubFieldValues);
-
-  for (auto const& field_value : sub_field_values.field_value_map_) {
+  for (auto const& field_value : sub_field_values.getMap()) {
 
     ExecEnv::log().info("vep field: {} has value: {} count: {}", vep_sub_field, field_value.first, field_value.second);
 
@@ -333,3 +264,90 @@ void kgl::InfoEvidenceAnalysis::vepSubFieldValues( std::string vep_sub_field,
 }
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool kgl::VepSubFieldValues::getSubFieldValues(const std::shared_ptr<const Variant>& variant_ptr) {
+
+  std::optional<std::unique_ptr<const VEPSubFieldEvidence>> vep_fields_opt = InfoEvidenceAnalysis::getVepSubFields(*variant_ptr);
+
+  if (vep_fields_opt) {
+
+    auto const &vep_fields = *vep_fields_opt.value();
+    auto const &vep_header = *vep_fields.vepHeader();
+    std::optional<size_t> vep_index_opt = vep_header.getSubFieldIndex(vep_sub_field_);
+
+    if (not vep_index_opt) {
+
+      ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues, sub field: {} not found", vep_sub_field_);
+      return false;
+
+    }
+
+    size_t vep_index = vep_index_opt.value();
+
+    for (auto const&  vep_field : vep_fields.vepFields()) {
+
+      const std::vector<std::string_view> sub_field_vector = VEPSubFieldEvidence::vepSubFields(vep_field);
+
+      // Check that the header and the field vector are the same size.
+      if (sub_field_vector.size() != vep_header.subFieldHeaders().size()) {
+
+        ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues; Vep Header size: {} not equal vep sub field size: {}, vep field: {}",
+                             vep_header.subFieldHeaders().size(), sub_field_vector.size(), vep_field);
+        for (auto const& sub_field : sub_field_vector) {
+
+          ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues; sub field: {}", std::string(sub_field));
+
+        }
+        return false;
+      }
+
+      std::string field_value(sub_field_vector[vep_index]);
+      auto result = field_value_map_.find(field_value);
+
+      if (result != field_value_map_.end()) {
+
+        ++result->second;
+
+      } else {
+
+        auto insert_result = field_value_map_.try_emplace(field_value, 1);
+        if (not insert_result.second) {
+
+          ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues, could not insert sub_field value: {}", field_value);
+
+        }
+
+      }
+
+    } // sub fields
+
+  } // for all sub fields
+
+  return true;
+
+} // member function.
+
+
+// For a population
+bool kgl::VepSubFieldValues::getPopulationValues(const std::shared_ptr<const PopulationDB>& population_ptr) {
+
+  return population_ptr->processAll(*this, &VepSubFieldValues::getSubFieldValues);
+
+}
+
+// For a genome
+bool kgl::VepSubFieldValues::getGenomeValues(const std::shared_ptr<const GenomeDB>& genome_ptr) {
+
+  return genome_ptr->processAll(*this, &VepSubFieldValues::getSubFieldValues);
+
+}
+
+// For a contig.
+bool kgl::VepSubFieldValues::getContigValues(const std::shared_ptr<const ContigDB>& contig_ptr) {
+
+  return contig_ptr->processAll(*this, &VepSubFieldValues::getSubFieldValues);
+
+}

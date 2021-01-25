@@ -201,9 +201,11 @@ private:
   std::atomic<size_t> low_tide_count_{0};
   std::atomic<size_t> high_tide_count_{0};
   std::atomic<size_t> empty_count_{0};
+  std::atomic<size_t> previous_empty_count_{0};
   std::atomic<size_t> cumulative_queue_size_{0};
   // Somewhat arbitrary.
   constexpr static const size_t MIN_SAMPLES_ {100};
+  constexpr static const size_t WARN_EMPTY_COUNT_ {10};
   std::atomic<size_t> queue_samples_{0};
 
 
@@ -217,9 +219,32 @@ private:
       ++queue_samples_;
       size_t sample_size = mt_queue_.size();
       cumulative_queue_size_ += sample_size;
-      if (sample_size <= low_tide_) ++low_tide_count_;
-      if (sample_size <= empty_size_) ++empty_count_;
-      if (queue_state_ == QueueState::HighTide) ++high_tide_count_;
+      if (sample_size <= low_tide_) {
+
+        ++low_tide_count_;
+
+      }
+      if (sample_size <= empty_size_) {
+
+        ++empty_count_;
+        ++previous_empty_count_;
+        if (previous_empty_count_ >= WARN_EMPTY_COUNT_) {
+
+          ExecEnv::log().warn("Monitor Queue: {}, Has been empty for samples: {}", queueName(), queueSamples());
+
+        }
+
+      } else {
+
+        previous_empty_count_ = 0;
+
+      }
+
+      if (queue_state_ == QueueState::HighTide) {
+
+        ++high_tide_count_;
+
+      }
 
     }
 

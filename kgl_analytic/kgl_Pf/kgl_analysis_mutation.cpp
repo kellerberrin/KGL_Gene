@@ -141,11 +141,25 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 
   if (file_characteristic.data_implementation == DataImplEnum::PopulationVariant) {
 
-    population_ptr_ = std::dynamic_pointer_cast<const PopulationDB>(data_ptr);
+    if (file_characteristic.data_source == DataSourceEnum::Genome1000) {
 
-    if (not population_ptr_) {
+      population_ptr_ = std::dynamic_pointer_cast<const PopulationDB>(data_ptr);
 
-      ExecEnv::log().critical("MutationAnalysis::fileReadAnalysis; Unable to cast data file to population, severe error.");
+      if (not population_ptr_) {
+
+        ExecEnv::log().critical("MutationAnalysis::fileReadAnalysis; Unable to cast Genome1000 data file to population, severe error.");
+
+      }
+
+    } else if (file_characteristic.data_source == DataSourceEnum::Gnomad2_1) {
+
+      unphased_population_ptr_ = std::dynamic_pointer_cast<const PopulationDB>(data_ptr);
+
+      if (not unphased_population_ptr_) {
+
+        ExecEnv::log().critical("MutationAnalysis::fileReadAnalysis; Unable to cast Gnomad 2.1 data file to population, severe error.");
+
+      }
 
     }
 
@@ -175,17 +189,13 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
   ExecEnv::log().info("Default Iteration Analysis called for Analysis Id: {}", ident());
 
 
-  if (population_ptr_) {
+  if (population_ptr_ and unphased_population_ptr_) {
 
     auto file_characteristic = population_ptr_->dataCharacteristic();
 
-    if (file_characteristic.data_source == DataSourceEnum::Genome1000 and ped_data_) {
+    if (file_characteristic.data_source == DataSourceEnum::Genome1000) {
 
-      gene_mutation_.variantAnalysis100(population_ptr_, ped_data_);
-
-    } else {
-
-      gene_mutation_.variantAnalysis(population_ptr_);
+      gene_mutation_.variantAnalysis(population_ptr_, unphased_population_ptr_, ped_data_);
 
     }
 
@@ -206,7 +216,7 @@ bool kgl::MutationAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
-  gene_mutation_.writeOutput100(output_file_name_, OUTPUT_DELIMITER_);
+  gene_mutation_.writeOutput(output_file_name_, OUTPUT_DELIMITER_);
 
   return true;
 

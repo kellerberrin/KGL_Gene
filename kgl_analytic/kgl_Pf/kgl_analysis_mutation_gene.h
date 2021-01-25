@@ -35,9 +35,12 @@ struct GeneMutation {
   std::string seq_name;
   size_t attribute_size{0};
   size_t unique_variants{0};
+  size_t span_variant_count{0};
   size_t variant_count{0};
-  size_t male_phase{0};
-  size_t female_phase{0};
+  size_t male_phase{0};  // Variants from the male phased (B) chromosome.
+  size_t female_phase{0};  // Variants from the female phased (A) chromosome.
+  size_t het_lof{0};          // Loss of gene function in one chromosome;
+  size_t hom_lof{0};          // Loss of gene function in both chromosomes
   size_t EAS_variant_count{0};
   size_t EUR_variant_count{0};
   size_t AFR_variant_count{0};
@@ -45,13 +48,14 @@ struct GeneMutation {
   size_t SAS_variant_count{0};
   size_t genome_count{0};   // Total number of genomes.
   size_t male_variant{0};    // Males that have variants for this gene.
-  size_t female_variant{0};  // Females that have variants for thgis gene.
+  size_t female_variant{0};  // Females that have variants for this gene.
   size_t genome_variant{0};  // Number of genomes that contain variants for this gene.
   size_t homozygous{0};
   size_t heterozygous{0};
   double indel{0.0};
   double transition{0.0};
   double transversion{0.0};
+  std::shared_ptr<GeneFeature> gene_ptr;
 
 };
 
@@ -65,25 +69,45 @@ public:
 
   // This analysis is performed first
   bool genomeAnalysis( const std::shared_ptr<const GenomeReference>& genome_reference);
-  // Then this analysis for Homosapien.
-  bool variantAnalysis100(const std::shared_ptr<const PopulationDB>& population_ptr,
-                          const std::shared_ptr<const GenomePEDData>& ped_data);
-
-  // Then this analysis for P. Falciparum.
-  bool variantAnalysis(const std::shared_ptr<const PopulationDB>& population_ptr);
-
-  [[nodiscard]] const std::vector<GeneMutation>& geneVector() const { return gene_vector_; }
-  [[nodiscard]] std::vector<GeneMutation>& geneVector() { return gene_vector_; }
-
+  // Then this analysis.
+  bool variantAnalysis(const std::shared_ptr<const PopulationDB>& population_ptr,
+                       const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
+                       const std::shared_ptr<const GenomePEDData>& ped_data);
+  // Output to file.
   bool writeOutput(const std::string& out_file, char output_delimiter) const;
-  bool writeOutput100(const std::string& out_file, char output_delimiter) const;
 
 private:
 
   std::vector<GeneMutation> gene_vector_;
 
+  constexpr static const char* LOF_VEP_FIELD = "LoF";
+  constexpr static const char* LOF_HC_FIELD_VALUE = "HC";
+
   void writeHeader(std::ostream& out_file, char output_delimiter) const;
-  void writeHeader100(std::ostream& out_file, char output_delimiter) const;
+
+  bool pedAnalysis( GeneMutation& gene_mutation,
+                    const GenomeId_t& genome_id,
+                    size_t variant_count,
+                    const std::shared_ptr<const GenomePEDData>& ped_data);
+
+  std::shared_ptr<const ContigDB> getGeneContig( const std::shared_ptr<const ContigDB>& contig_ptr,
+                                                 const GeneMutation& gene_mutation);
+
+  std::shared_ptr<const ContigDB> getGeneSpan(const std::shared_ptr<const ContigDB>& contig_ptr,
+                                              const GeneMutation& gene_mutation);
+
+  std::shared_ptr<const ContigDB> getGeneExon(const std::shared_ptr<const ContigDB>& contig_ptr,
+                                              const GeneMutation& gene_mutation);
+
+  GeneMutation geneSpanAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
+                                 const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
+                                 const std::shared_ptr<const GenomePEDData>& ped_data,
+                                 GeneMutation gene_mutation);
+
+  std::pair<size_t, size_t> geneSpanVep( const std::shared_ptr<const ContigDB>& span_contig,
+                                         const std::shared_ptr<const PopulationDB>& unphased_population_ptr);
+
+  size_t VepCount( const std::shared_ptr<const ContigDB>& vep_contig);
 
 };
 

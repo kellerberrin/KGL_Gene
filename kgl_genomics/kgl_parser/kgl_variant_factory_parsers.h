@@ -40,7 +40,7 @@ private:
   [[nodiscard]] static std::shared_ptr<DataDB> readPEDAncestry(std::shared_ptr<BaseFileInfo> file_info,
                                                                DataSourceEnum data_source);
 
-  // Read Pf3k Complexity of Infection infromation.
+  // Read Pf3k Complexity of Infection information.
   [[nodiscard]] static std::shared_ptr<DataDB> readPf3kCOI( std::shared_ptr<BaseFileInfo> file_info,
                                                             DataSourceEnum data_source);
 
@@ -68,6 +68,8 @@ private:
 
     }
 
+    std::shared_ptr<const GenomeReference> ref_genome = ref_genome_opt.value();
+
     auto evidence_opt = evidence_map.lookupEvidence(vcf_file_info->evidenceIdent());
 
     if (not evidence_opt) {
@@ -83,9 +85,10 @@ private:
     VCFParser reader(vcf_population_ptr, ref_genome_opt.value(), contig_alias, evidence_opt.value());
     reader.readParseVCFImpl(vcf_file_info->fileName());
 
-    auto [total_variants, validated_variants] = vcf_population_ptr->validate(ref_genome_opt.value());
+    auto [total_variants, validated_variants] = vcf_population_ptr->validate(ref_genome);
 
-    ExecEnv::log().info("Genome: {}, Total Variants: {}, Validated Variants: {}", vcf_population_ptr->populationId(), total_variants, validated_variants);
+    ExecEnv::log().info("File: {}, Total Variants: {}, Validated Variants: {} ({})",
+                        vcf_population_ptr->populationId(), total_variants, validated_variants, ref_genome->genomeId());
 
     return vcf_population_ptr;
 
