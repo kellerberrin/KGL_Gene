@@ -230,18 +230,48 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
         std::shared_ptr<const ContigDB> span_variant_ptr = getGeneSpan(contig_ptr, gene_mutation);
 
-        // .first is the count of phase A lof, .second is the count of phase B lof.
-        std::pair<size_t, size_t> lof_het_hom = geneSpanVep( span_variant_ptr, unphased_population_ptr);
+        // Get phased VEP info.
+        VepInfo lof_het_hom = geneSpanVep( span_variant_ptr, unphased_population_ptr);
 
-        if (lof_het_hom.first > 0 and lof_het_hom.second > 0) {
+        if (lof_het_hom.female_lof > 0) {
+
+          ++gene_mutation.female_lof;
+
+        }
+
+        if (lof_het_hom.male_lof > 0) {
+
+          ++gene_mutation.male_lof;
+
+        }
+
+        // Loss of Function in both chromosomes, Mendelian genetics.
+        if (lof_het_hom.female_lof > 0 and lof_het_hom.male_lof > 0) {
 
           ++gene_mutation.hom_lof;
 
-        } else if ((lof_het_hom.first + lof_het_hom.second) > 0) {
+        }
 
-          ++gene_mutation.het_lof;
+        if (lof_het_hom.female_high_effect > 0) {
+
+          ++gene_mutation.female_high_effect;
 
         }
+
+        if (lof_het_hom.male_high_effect > 0) {
+
+          ++gene_mutation.male_high_effect;
+
+        }
+
+        // High Impact in both chromosomes, Mendelian genetics.
+        if (lof_het_hom.male_high_effect > 0 and lof_het_hom.female_high_effect > 0) {
+
+          ++gene_mutation.hom_high_effect;
+
+        }
+
+
 
         size_t span_variant_count = span_variant_ptr->variantCount();
 
@@ -429,13 +459,15 @@ bool kgl::GenomeMutation::pedAnalysis( GeneMutation& gene_mutation,
 }
 
 
-std::pair<size_t, size_t> kgl::GenomeMutation::geneSpanVep( const std::shared_ptr<const ContigDB>& span_contig,
-                                                            const std::shared_ptr<const PopulationDB>& unphased_population_ptr) {
+kgl::VepInfo kgl::GenomeMutation::geneSpanVep( const std::shared_ptr<const ContigDB>& span_contig,
+                                               const std::shared_ptr<const PopulationDB>& unphased_population_ptr) {
+
+  VepInfo vep_info;
 
   if (unphased_population_ptr->getMap().size() != 1) {
 
     ExecEnv::log().error("GenomeMutation::geneSpanVep; expected unphased population to have 1 genome, size if: {}", unphased_population_ptr->getMap().size());
-    return {0, 0};
+    return vep_info;
 
   }
 
@@ -445,7 +477,7 @@ std::pair<size_t, size_t> kgl::GenomeMutation::geneSpanVep( const std::shared_pt
 
   if (not contig_opt) {
 
-    return {0, 0};
+    return vep_info;
 
   }
 
@@ -458,17 +490,62 @@ std::pair<size_t, size_t> kgl::GenomeMutation::geneSpanVep( const std::shared_pt
   auto phase_B_variants = span_contig->filterVariants(PhaseFilter(VariantSequence::DIPLOID_PHASE_B));
   auto found_unphased_B = unphased_contig->findContig(phase_B_variants);
 
-  return { VepCount(found_unphased_A), VepCount(found_unphased_B) };
+  vep_info.female_lof = VepCount(found_unphased_A, LOF_VEP_FIELD, LOF_HC_VALUE);
+  vep_info.male_lof = VepCount(found_unphased_B, LOF_VEP_FIELD, LOF_HC_VALUE);
+
+  VepSubFieldValues vep_field(IMPACT_VEP_FIELD);
+
+  vep_field.getContigValues(phase_A_variants);
+
+  if (vep_field.getMap().size() > 0) ExecEnv::log().info("GenomeMutation::geneSpanVep; IMPACT entries: {}", vep_field.getMap().size());
+
+  auto result = vep_field.getMap().find(IMPACT_HIGH_VALUE);
+  if (result != vep_field.getMap().end()) {
+
+    auto [field_ident, count] = *result;
+    vep_info.female_high_effect = count;
+
+  }
+
+  result = vep_field.getMap().find(IMPACT_MODERATE_VALUE);
+  if (result != vep_field.getMap().end()) {
+
+    auto [field_ident, count] = *result;
+    vep_info.female_moderate_effect = count;
+
+  }
+
+  vep_field.getContigValues(phase_B_variants);
+
+  result = vep_field.getMap().find(IMPACT_HIGH_VALUE);
+  if (result != vep_field.getMap().end()) {
+
+    auto [field_ident, count] = *result;
+    vep_info.male_high_effect = count;
+
+  }
+
+  result = vep_field.getMap().find(IMPACT_MODERATE_VALUE);
+  if (result != vep_field.getMap().end()) {
+
+    auto [field_ident, count] = *result;
+    vep_info.male_moderate_effect = count;
+
+  }
+
+  return vep_info;
 
 }
 
 
-size_t kgl::GenomeMutation::VepCount( const std::shared_ptr<const ContigDB>& vep_contig) {
+size_t kgl::GenomeMutation::VepCount( const std::shared_ptr<const ContigDB>& vep_contig,
+                                      const std::string& vep_field_ident,
+                                      const std::string& vep_field_value) {
 
-  VepSubFieldValues vep_field(LOF_VEP_FIELD);
+  VepSubFieldValues vep_field(vep_field_ident);
   vep_field.getContigValues(vep_contig);
 
-  auto result = vep_field.getMap().find(LOF_HC_FIELD_VALUE);
+  auto result = vep_field.getMap().find(vep_field_value);
   if (result != vep_field.getMap().end()) {
 
     auto [field_value, count] = *result;
@@ -479,6 +556,7 @@ size_t kgl::GenomeMutation::VepCount( const std::shared_ptr<const ContigDB>& vep
   return 0;
 
 }
+
 
 
 // Perform the genetic analysis per iteration.
@@ -524,8 +602,12 @@ bool kgl::GenomeMutation::writeOutput(const std::string& output_file_name, char 
              << gene.unique_variants << output_delimiter
              << gene.variant_count << output_delimiter
              << gene.span_variant_count << output_delimiter
-             << gene.het_lof << output_delimiter
+             << gene.female_lof << output_delimiter
+             << gene.male_lof << output_delimiter
              << gene.hom_lof << output_delimiter
+             << gene.female_high_effect << output_delimiter
+             << gene.male_high_effect << output_delimiter
+             << gene.hom_high_effect << output_delimiter
              << (static_cast<double>(gene.female_phase) / static_cast<double>(gene.male_phase + sex_bias)) << output_delimiter
              << (static_cast<double>(gene.female_variant) / static_cast<double>(gene.male_variant + sex_bias)) << output_delimiter
              << gene.genome_count << output_delimiter
@@ -589,8 +671,12 @@ void kgl::GenomeMutation::writeHeader(std::ostream& out_file, char output_delimi
            << "UniqueVariants" << output_delimiter
            << "VariantCount" << output_delimiter
            << "SpanVariantCount" << output_delimiter
-           << "HetLoF" << output_delimiter
+           << "FemaleLoF" << output_delimiter
+           << "MaleLoF" << output_delimiter
            << "HomLoF" << output_delimiter
+           << "FemaleHigh" << output_delimiter
+           << "MaleHigh" << output_delimiter
+           << "HomHigh" << output_delimiter
            << "F/MPhase" << output_delimiter
            << "F/MVariant" << output_delimiter
            << "GenomeCount" << output_delimiter

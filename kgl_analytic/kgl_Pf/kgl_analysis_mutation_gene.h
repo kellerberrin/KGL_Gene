@@ -39,8 +39,12 @@ struct GeneMutation {
   size_t variant_count{0};
   size_t male_phase{0};  // Variants from the male phased (B) chromosome.
   size_t female_phase{0};  // Variants from the female phased (A) chromosome.
-  size_t het_lof{0};          // Loss of gene function in one chromosome;
-  size_t hom_lof{0};          // Loss of gene function in both chromosomes
+  size_t male_lof{0};          // Loss of gene function in the (B) chromosome.
+  size_t female_lof{0};        // Los of function in the female (A) chromosome.
+  size_t hom_lof{0};          // Loss of gene function in both chromosomes.
+  size_t male_high_effect{0};          // High Variant Impact in the (B) chromosome.
+  size_t female_high_effect{0};        // High Variant Impact in the (A) chromosome.
+  size_t hom_high_effect{0};          // High Impact in both in both chromosomes.
   size_t EAS_variant_count{0};
   size_t EUR_variant_count{0};
   size_t AFR_variant_count{0};
@@ -59,6 +63,24 @@ struct GeneMutation {
 
 };
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+struct VepInfo {
+
+  size_t male_lof{0};          // Loss of gene function in the (B) chromosome.
+  size_t female_lof{0};        // Los of function in the female (A) chromosome.
+  size_t male_high_effect{0};
+  size_t female_high_effect{0};
+  size_t male_moderate_effect{0};
+  size_t female_moderate_effect{0};
+
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class GenomeMutation {
 
@@ -81,7 +103,11 @@ private:
   std::vector<GeneMutation> gene_vector_;
 
   constexpr static const char* LOF_VEP_FIELD = "LoF";
-  constexpr static const char* LOF_HC_FIELD_VALUE = "HC";
+  constexpr static const char* LOF_HC_VALUE = "HC";
+  constexpr static const char* IMPACT_VEP_FIELD = "IMPACT";
+  constexpr static const char* IMPACT_MODERATE_VALUE = "MODERATE";
+  constexpr static const char* IMPACT_HIGH_VALUE = "HIGH";
+
 
   void writeHeader(std::ostream& out_file, char output_delimiter) const;
 
@@ -104,10 +130,12 @@ private:
                                  const std::shared_ptr<const GenomePEDData>& ped_data,
                                  GeneMutation gene_mutation);
 
-  std::pair<size_t, size_t> geneSpanVep( const std::shared_ptr<const ContigDB>& span_contig,
-                                         const std::shared_ptr<const PopulationDB>& unphased_population_ptr);
+  VepInfo geneSpanVep( const std::shared_ptr<const ContigDB>& span_contig,
+                       const std::shared_ptr<const PopulationDB>& unphased_population_ptr);
 
-  size_t VepCount( const std::shared_ptr<const ContigDB>& vep_contig);
+  size_t VepCount( const std::shared_ptr<const ContigDB>& vep_contig,
+                   const std::string& vep_field_ident,
+                   const std::string& vep_field_value);
 
 };
 

@@ -334,6 +334,7 @@ bool kgl::VepSubFieldValues::getSubFieldValues(const std::shared_ptr<const Varia
 // For a population
 bool kgl::VepSubFieldValues::getPopulationValues(const std::shared_ptr<const PopulationDB>& population_ptr) {
 
+  field_value_map_.clear();
   return population_ptr->processAll(*this, &VepSubFieldValues::getSubFieldValues);
 
 }
@@ -341,6 +342,7 @@ bool kgl::VepSubFieldValues::getPopulationValues(const std::shared_ptr<const Pop
 // For a genome
 bool kgl::VepSubFieldValues::getGenomeValues(const std::shared_ptr<const GenomeDB>& genome_ptr) {
 
+  field_value_map_.clear();
   return genome_ptr->processAll(*this, &VepSubFieldValues::getSubFieldValues);
 
 }
@@ -348,6 +350,7 @@ bool kgl::VepSubFieldValues::getGenomeValues(const std::shared_ptr<const GenomeD
 // For a contig.
 bool kgl::VepSubFieldValues::getContigValues(const std::shared_ptr<const ContigDB>& contig_ptr) {
 
+  field_value_map_.clear();
   return contig_ptr->processAll(*this, &VepSubFieldValues::getSubFieldValues);
 
 }

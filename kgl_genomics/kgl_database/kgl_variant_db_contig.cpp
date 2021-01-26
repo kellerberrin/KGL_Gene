@@ -256,41 +256,42 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::findContig(const std::shared_ptr<C
 
   std::shared_ptr<ContigDB> found_contig_ptr(std::make_shared<ContigDB>(template_contig->contigId()));
 
-  struct FindContig {
+  for (auto const& [offset, offset_ptr] : template_contig->getMap()) {
 
-    FindContig(std::shared_ptr<ContigDB> find_contig, const ContigDB* this_contig) : found_contig_(std::move(find_contig)), this_contig_(this_contig) {}
+    auto result = contig_offset_map_.find(offset);
 
-    std::shared_ptr<ContigDB> found_contig_;
-    const ContigDB* this_contig_;
+    if (result != contig_offset_map_.end()) {
 
-    bool findAndAdd(const std::shared_ptr<const Variant>& variant_ptr) {
+      auto const& [this_offset, this_offset_ptr] = *result;
 
-      auto variant_opt = this_contig_->findVariant(*variant_ptr);
+      for (auto const& this_variant_ptr : this_offset_ptr->getVariantArray()) {
 
-      if (variant_opt) {
+        for (auto const& variant_ptr : offset_ptr->getVariantArray())  {
 
-        if (not found_contig_->addVariant(variant_opt.value())) {
+          if (variant_ptr->analogous(*this_variant_ptr)) {
 
-          ExecEnv::log().error("ContigDB::findContig; could not add found variant");
+            if (not found_contig_ptr->addVariant(this_variant_ptr)) {
 
-        }
+              ExecEnv::log().error( "ContigDB::findContig; cannot add variant: {}",
+                                    this_variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
 
-      }
+            }
 
-      return true;
+            break;
 
-    }
+          } // variants match.
 
-  };
+        } // template offset
 
-  FindContig find(found_contig_ptr, this);
-  template_contig->processAll(find, &FindContig::findAndAdd);
+      } // this offset
 
-  return find.found_contig_;
+    } // if this offset
+
+  } // for all temp[late offset
+
+  return found_contig_ptr;
 
 }
-
-
 
 
 std::pair<size_t, size_t> kgl::ContigDB::validate(const std::shared_ptr<const ContigReference> &contig_db_ptr) const {

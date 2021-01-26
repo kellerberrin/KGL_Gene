@@ -34,34 +34,44 @@ public:
 
   void push(T new_value) {
 
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     data_queue_.push(std::move(new_value));
 
     data_cond_.notify_one();
+
+    ++size_;
+    ++activity_;
+
   }
 
   void waitAndPop(T& value) {
 
     std::unique_lock<std::mutex> lock(mutex_);
 
-    data_cond_.wait(lock,[this]{return not data_queue_.empty();});
+    data_cond_.wait(lock,[this]{return not size_ != 0;});
 
     value = std::move(data_queue_.front());
 
     data_queue_.pop();
 
+    --size_;
+    ++activity_;
+
   }
 
-  T waitAndPop() {
+  [[nodiscard]] T waitAndPop() {
 
     std::unique_lock<std::mutex> lock(mutex_);
 
-    data_cond_.wait(lock,[this]{return not data_queue_.empty();});
+    data_cond_.wait(lock,[this]{return size_ != 0;});
 
     T value = std::move(data_queue_.front());
 
     data_queue_.pop();
+
+    --size_;
+    ++activity_;
 
     return value;
 
@@ -69,7 +79,7 @@ public:
 
   bool tryPop(T& value) {
 
-    std::lock_guard<std::mutex> lock(mutex_) ;
+    std::scoped_lock lock(mutex_) ;
 
     if (data_queue_.empty()) return false;
 
@@ -77,12 +87,15 @@ public:
 
     data_queue_.pop();
 
+    --size_;
+    ++activity_;
+
     return true;
   }
 
-  std::shared_ptr<T> tryPop() {
+  [[nodiscard]] std::shared_ptr<T> tryPop() {
 
-    std::lock_guard<std::mutex> lock(mutex_) ;
+    std::scoped_lock lock(mutex_) ;
 
     if (data_queue_.empty()) return std::shared_ptr<T>();
 
@@ -90,28 +103,26 @@ public:
 
     data_queue_.pop();
 
+    --size_;
+    ++activity_;
+
     return value_ptr;
+
   }
 
-  bool empty() const {
+  [[nodiscard]] bool empty() const { return size_ == 0; }
 
-    std::lock_guard<std::mutex> lock(mutex_) ;
+  [[nodiscard]] size_t size() const { return size_; }
 
-    return data_queue_.empty();
-  }
-
-  size_t size() const {
-
-    std::lock_guard<std::mutex> lock(mutex_) ;
-
-    return data_queue_.size();
-  }
+  [[nodiscard]] size_t activity() const { return activity_; }
 
 private:
 
-  mutable std::mutex mutex_;
+  std::mutex mutex_;
   std::queue<T> data_queue_;
   std::condition_variable data_cond_;
+  std::atomic<size_t> size_{0};
+  std::atomic<size_t> activity_{0};
 
 };
 

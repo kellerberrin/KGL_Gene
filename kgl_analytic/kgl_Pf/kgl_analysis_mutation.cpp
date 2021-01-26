@@ -205,7 +205,9 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 
   }
 
+  // Explicitly clean up the populations to recover memory.
   population_ptr_ = nullptr;
+  unphased_population_ptr_ = nullptr;
 
   return true;
 
