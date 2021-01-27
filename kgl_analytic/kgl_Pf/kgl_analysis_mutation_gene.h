@@ -42,17 +42,19 @@ struct GeneMutation {
   size_t male_lof{0};          // Loss of gene function in the (B) chromosome.
   size_t female_lof{0};        // Los of function in the female (A) chromosome.
   size_t hom_lof{0};          // Loss of gene function in both chromosomes.
+  size_t clinvar_count{0};
+  std::string clinvar_desc;
   size_t male_high_effect{0};          // High Variant Impact in the (B) chromosome.
   size_t female_high_effect{0};        // High Variant Impact in the (A) chromosome.
   size_t hom_high_effect{0};          // High Impact in both in both chromosomes.
-  size_t EAS_variant_count{0};
-  size_t EUR_variant_count{0};
-  size_t AFR_variant_count{0};
-  size_t AMR_variant_count{0};
-  size_t SAS_variant_count{0};
+  size_t EAS{0};
+  size_t EUR{0};
+  size_t AFR{0};
+  size_t AMR{0};
+  size_t SAS{0};
   size_t genome_count{0};   // Total number of genomes.
-  size_t male_variant{0};    // Males that have variants for this gene.
-  size_t female_variant{0};  // Females that have variants for this gene.
+  size_t male_value{0};    // Males that have values for this gene.
+  size_t female_value{0};  // Females that have values for this gene.
   size_t genome_variant{0};  // Number of genomes that contain variants for this gene.
   size_t homozygous{0};
   size_t heterozygous{0};
@@ -78,6 +80,22 @@ struct VepInfo {
 
 };
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+struct ClinvarInfo {
+
+  std::string rsid;          // The variant rs identifier from dbSNP
+  std::string clnsig;        // Textual clinical significance.
+  std::string clndn;         // Clinical description.
+  std::string clnisdb;       // Database information about the condition
+  std::shared_ptr<const Variant> variant_ptr;
+
+};
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -94,6 +112,7 @@ public:
   // Then this analysis.
   bool variantAnalysis(const std::shared_ptr<const PopulationDB>& population_ptr,
                        const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
+                       const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                        const std::shared_ptr<const GenomePEDData>& ped_data);
   // Output to file.
   bool writeOutput(const std::string& out_file, char output_delimiter) const;
@@ -102,18 +121,27 @@ private:
 
   std::vector<GeneMutation> gene_vector_;
 
+  // Vep fields.
   constexpr static const char* LOF_VEP_FIELD = "LoF";
   constexpr static const char* LOF_HC_VALUE = "HC";
   constexpr static const char* IMPACT_VEP_FIELD = "IMPACT";
   constexpr static const char* IMPACT_MODERATE_VALUE = "MODERATE";
   constexpr static const char* IMPACT_HIGH_VALUE = "HIGH";
 
+  // Clinvar fields.
+  constexpr static const char* CLINVAR_RS_FIELD = "RS";
+  constexpr static const char* CLINVAR_CLNDN_FIELD = "CLNDN";
+  constexpr static const char* CLINVAR_CLNSIG_FIELD = "CLNSIG";
+  constexpr static const char* CLINVAR_CLNDISDB_FIELD = "CLNDISDB";
+  constexpr static const char* CLINVAR_PATH_SIGNIF = "PATH";
+  constexpr static const char* CLINVAR_RISK_SIGNIF = "RISK";
+
 
   void writeHeader(std::ostream& out_file, char output_delimiter) const;
 
   bool pedAnalysis( GeneMutation& gene_mutation,
                     const GenomeId_t& genome_id,
-                    size_t variant_count,
+                    size_t data_count,
                     const std::shared_ptr<const GenomePEDData>& ped_data);
 
   std::shared_ptr<const ContigDB> getGeneContig( const std::shared_ptr<const ContigDB>& contig_ptr,
@@ -127,6 +155,7 @@ private:
 
   GeneMutation geneSpanAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
                                  const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
+                                 const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                  const std::shared_ptr<const GenomePEDData>& ped_data,
                                  GeneMutation gene_mutation);
 
@@ -136,6 +165,16 @@ private:
   size_t VepCount( const std::shared_ptr<const ContigDB>& vep_contig,
                    const std::string& vep_field_ident,
                    const std::string& vep_field_value);
+
+  std::shared_ptr<const ContigDB> getClinvar( const std::shared_ptr<const ContigDB>& span_contig,
+                                              const std::shared_ptr<const PopulationDB>& unphased_population_ptr);
+
+  static std::vector<ClinvarInfo> clinvarInfo(const std::shared_ptr<const ContigDB>& clinvar_contig_ptr);
+
+  static std::vector<ClinvarInfo> filterPathClinvar(const std::vector<ClinvarInfo>& clinvar_vector);
+
+  static std::string clinvarConcatDesc(const std::vector<ClinvarInfo>& clinvar_vector);
+
 
 };
 

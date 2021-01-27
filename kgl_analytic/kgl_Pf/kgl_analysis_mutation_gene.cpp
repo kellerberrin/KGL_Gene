@@ -104,76 +104,12 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
 }
 
 
-std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneContig( const std::shared_ptr<const ContigDB>& contig_ptr,
-                                                                         const GeneMutation& gene_mutation) {
-
-  std::shared_ptr<ContigDB> gene_contig(std::make_shared<ContigDB>(gene_mutation.seq_name));
-  OffsetVariantMap variant_map;
-
-  contig_ptr->getSortedVariants( VariantSequence::UNPHASED,
-                                 gene_mutation.gene_begin,
-                                 gene_mutation.gene_end,
-                                 variant_map);
-
-  for (auto const& [offset, variant_ptr] : variant_map) {
-
-    if (not gene_contig->addVariant(variant_ptr)) {
-
-      ExecEnv::log().error("GenomeMutation::getGeneContig; contig: {} cannot add variant: {}",
-                           gene_contig->contigId(), variant_ptr->output(',',VariantOutputIndex::START_0_BASED, false));
-
-    }
-
-  }
-
-
-  return gene_contig;
-
-}
-
-std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneSpan(const std::shared_ptr<const ContigDB>& contig_ptr,
-                                                                      const GeneMutation& gene_mutation) {
-
-  return contig_ptr->subset(gene_mutation.gene_begin, gene_mutation.gene_end);
-
-}
-
-
-std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneExon(const std::shared_ptr<const ContigDB>& contig_ptr,
-                                                                      const GeneMutation& gene_mutation) {
-
-  std::shared_ptr<ContigDB> gene_contig(std::make_shared<ContigDB>(gene_mutation.seq_name));
-
-  const std::shared_ptr<const CodingSequenceArray> sequence_array = GeneFeature::getCodingSequences(gene_mutation.gene_ptr);
-
-  if (not sequence_array->getMap().empty()) {
-
-    auto [seq_name, seq_ptr] = *(sequence_array->getMap().begin());
-
-    SortedCDS sorted_cds = seq_ptr->getSortedCDS();
-    for (auto const& [offset, cds_ptr] : sorted_cds) {
-
-      // Get the exon dimensions
-      size_t begin = cds_ptr->sequence().begin();
-      size_t end = cds_ptr->sequence().end();
-
-      // Get the variants in the exon.
-      auto contig_sub_set_ptr = contig_ptr->subset(begin, end);
-      // Add exon variants to the gene_contig object.
-      contig_sub_set_ptr->processAll(*gene_contig, &ContigDB::addVariant);
-
-    }
-
-  }
-
-  return gene_contig;
-
-}
-
 
 bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const PopulationDB>& population_ptr,
                                           const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
+                                          const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                           const std::shared_ptr<const GenomePEDData>& ped_data) {
+
 
 
   ThreadPool thread_pool(ThreadPool::hardwareThreads());
@@ -187,6 +123,7 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
                                                                 this,
                                                                 population_ptr,
                                                                 unphased_population_ptr,
+                                                                clinvar_population_ptr,
                                                                 ped_data,
                                                                 gene_mutation);
     future_vector.push_back(std::move(future));
@@ -209,6 +146,7 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
 
 kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
                                                          const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
+                                                         const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                                          const std::shared_ptr<const GenomePEDData>& ped_data,
                                                          GeneMutation gene_mutation) {
 
@@ -230,6 +168,12 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
         std::shared_ptr<const ContigDB> span_variant_ptr = getGeneSpan(contig_ptr, gene_mutation);
 
+        auto clinvar_vector = filterPathClinvar(clinvarInfo(getClinvar( span_variant_ptr, clinvar_population_ptr)));
+
+        gene_mutation.clinvar_count = clinvar_vector.size();
+
+        gene_mutation.clinvar_desc = clinvarConcatDesc(clinvar_vector);
+
         // Get phased VEP info.
         VepInfo lof_het_hom = geneSpanVep( span_variant_ptr, unphased_population_ptr);
 
@@ -246,11 +190,14 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
         }
 
         // Loss of Function in both chromosomes, Mendelian genetics.
+        size_t hom_lof{0};
         if (lof_het_hom.female_lof > 0 and lof_het_hom.male_lof > 0) {
 
-          ++gene_mutation.hom_lof;
+          hom_lof = 1;
 
         }
+
+        gene_mutation.hom_lof += hom_lof;
 
         if (lof_het_hom.female_high_effect > 0) {
 
@@ -287,7 +234,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
         if (ped_data) {
 
-          pedAnalysis( gene_mutation, genome_id, variant_count, ped_data);
+          pedAnalysis( gene_mutation, genome_id, hom_lof, ped_data);
 
         }
 
@@ -393,307 +340,4 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
 }
 
-
-
-bool kgl::GenomeMutation::pedAnalysis( GeneMutation& gene_mutation,
-                                       const GenomeId_t& genome_id,
-                                       size_t variant_count,
-                                       const std::shared_ptr<const GenomePEDData>& ped_data) {
-
-
-  auto result = ped_data->getMap().find(genome_id);
-
-  if (result == ped_data->getMap().end()) {
-
-    ExecEnv::log().error("GenomeMutation::variantAnalysis; Genome sample: {} does not have a PED record", genome_id);
-    return false;
-
-  }
-
-  auto const& [sample_id, ped_record] = *result;
-
-  if (variant_count > 0) {
-
-    if (ped_record.sexType() == PedSexType::MALE) {
-
-      ++gene_mutation.male_variant;
-
-    } else {
-
-      ++gene_mutation.female_variant;
-
-    }
-
-  }
-
-  std::string super_pop = ped_record.superPopulation();
-
-  if (super_pop == "EAS") {
-
-    gene_mutation.EAS_variant_count += variant_count;
-
-  } else if (super_pop == "EUR") {
-
-    gene_mutation.EUR_variant_count += variant_count;
-
-  } else if (super_pop == "SAS") {
-
-    gene_mutation.SAS_variant_count += variant_count;
-
-  } else if (super_pop == "AFR") {
-
-    gene_mutation.AFR_variant_count += variant_count;
-
-  } else if (super_pop == "AMR") {
-
-    gene_mutation.AMR_variant_count += variant_count;
-
-  } else {
-
-    ExecEnv::log().error("GenomeMutation::variantAnalysis; Unknown super population: {}", super_pop);
-
-  }
-
-  return true;
-
-}
-
-
-kgl::VepInfo kgl::GenomeMutation::geneSpanVep( const std::shared_ptr<const ContigDB>& span_contig,
-                                               const std::shared_ptr<const PopulationDB>& unphased_population_ptr) {
-
-  VepInfo vep_info;
-
-  if (unphased_population_ptr->getMap().size() != 1) {
-
-    ExecEnv::log().error("GenomeMutation::geneSpanVep; expected unphased population to have 1 genome, size if: {}", unphased_population_ptr->getMap().size());
-    return vep_info;
-
-  }
-
-  auto [genomne_id, genome_ptr] = *(unphased_population_ptr->getMap().begin());
-
-  auto contig_opt = genome_ptr->getContig(span_contig->contigId());
-
-  if (not contig_opt) {
-
-    return vep_info;
-
-  }
-
-  auto unphased_contig = contig_opt.value();
-
-  auto phase_A_variants = span_contig->filterVariants(PhaseFilter(VariantSequence::DIPLOID_PHASE_A));
-  auto found_unphased_A = unphased_contig->findContig(phase_A_variants);
-
-
-  auto phase_B_variants = span_contig->filterVariants(PhaseFilter(VariantSequence::DIPLOID_PHASE_B));
-  auto found_unphased_B = unphased_contig->findContig(phase_B_variants);
-
-  vep_info.female_lof = VepCount(found_unphased_A, LOF_VEP_FIELD, LOF_HC_VALUE);
-  vep_info.male_lof = VepCount(found_unphased_B, LOF_VEP_FIELD, LOF_HC_VALUE);
-
-  VepSubFieldValues vep_field(IMPACT_VEP_FIELD);
-
-  vep_field.getContigValues(phase_A_variants);
-
-  if (vep_field.getMap().size() > 0) ExecEnv::log().info("GenomeMutation::geneSpanVep; IMPACT entries: {}", vep_field.getMap().size());
-
-  auto result = vep_field.getMap().find(IMPACT_HIGH_VALUE);
-  if (result != vep_field.getMap().end()) {
-
-    auto [field_ident, count] = *result;
-    vep_info.female_high_effect = count;
-
-  }
-
-  result = vep_field.getMap().find(IMPACT_MODERATE_VALUE);
-  if (result != vep_field.getMap().end()) {
-
-    auto [field_ident, count] = *result;
-    vep_info.female_moderate_effect = count;
-
-  }
-
-  vep_field.getContigValues(phase_B_variants);
-
-  result = vep_field.getMap().find(IMPACT_HIGH_VALUE);
-  if (result != vep_field.getMap().end()) {
-
-    auto [field_ident, count] = *result;
-    vep_info.male_high_effect = count;
-
-  }
-
-  result = vep_field.getMap().find(IMPACT_MODERATE_VALUE);
-  if (result != vep_field.getMap().end()) {
-
-    auto [field_ident, count] = *result;
-    vep_info.male_moderate_effect = count;
-
-  }
-
-  return vep_info;
-
-}
-
-
-size_t kgl::GenomeMutation::VepCount( const std::shared_ptr<const ContigDB>& vep_contig,
-                                      const std::string& vep_field_ident,
-                                      const std::string& vep_field_value) {
-
-  VepSubFieldValues vep_field(vep_field_ident);
-  vep_field.getContigValues(vep_contig);
-
-  auto result = vep_field.getMap().find(vep_field_value);
-  if (result != vep_field.getMap().end()) {
-
-    auto [field_value, count] = *result;
-    return count;
-
-  }
-
-  return 0;
-
-}
-
-
-
-// Perform the genetic analysis per iteration.
-bool kgl::GenomeMutation::writeOutput(const std::string& output_file_name, char output_delimiter) const {
-
-  const double homozygous_bias{0.1};
-  const double sex_bias{0.1};
-
-  std::ofstream out_file(output_file_name);
-
-  if (not out_file.good()) {
-
-    ExecEnv::log().error("GenomeMutation::writeOutput; could not open file: {} for output", output_file_name);
-    return false;
-
-  } else {
-
-    ExecEnv::log().info("GenomeMutation writing output to file: {}", output_file_name);
-
-  }
-
-  writeHeader(out_file, output_delimiter);
-
-  for (auto const& gene : gene_vector_) {
-    
-    out_file << gene.genome << output_delimiter
-             << gene.contig << output_delimiter
-             << gene.gene_id << output_delimiter
-             << gene.gene_name << output_delimiter
-             << gene.description << output_delimiter
-             << gene.biotype << output_delimiter
-             << (gene.valid_protein ? "Valid" : "Invalid") << output_delimiter
-             << gene.gaf_id << output_delimiter
-             << gene.gene_begin << output_delimiter
-             << gene.gene_end << output_delimiter
-             << gene.gene_span << output_delimiter
-             << gene.strand << output_delimiter
-             << gene.sequences << output_delimiter
-             << gene.seq_name << output_delimiter
-             << gene.nucleotides << output_delimiter
-             << gene.exons << output_delimiter
-             << gene.attribute_size << output_delimiter
-             << gene.unique_variants << output_delimiter
-             << gene.variant_count << output_delimiter
-             << gene.span_variant_count << output_delimiter
-             << gene.female_lof << output_delimiter
-             << gene.male_lof << output_delimiter
-             << gene.hom_lof << output_delimiter
-             << gene.female_high_effect << output_delimiter
-             << gene.male_high_effect << output_delimiter
-             << gene.hom_high_effect << output_delimiter
-             << (static_cast<double>(gene.female_phase) / static_cast<double>(gene.male_phase + sex_bias)) << output_delimiter
-             << (static_cast<double>(gene.female_variant) / static_cast<double>(gene.male_variant + sex_bias)) << output_delimiter
-             << gene.genome_count << output_delimiter
-             << gene.genome_variant << output_delimiter
-             << (static_cast<double>(gene.span_variant_count) / static_cast<double>(gene.gene_span)) << output_delimiter;
-
-    if (gene.nucleotides > 0) {
-
-      out_file << (static_cast<double>(gene.variant_count) / static_cast<double>(gene.nucleotides)) << output_delimiter
-               << (static_cast<double>(gene.EAS_variant_count) / static_cast<double>(gene.nucleotides)) << output_delimiter
-               << (static_cast<double>(gene.EUR_variant_count) / static_cast<double>(gene.nucleotides)) << output_delimiter
-               << (static_cast<double>(gene.SAS_variant_count) / static_cast<double>(gene.nucleotides)) << output_delimiter
-               << (static_cast<double>(gene.AMR_variant_count) / static_cast<double>(gene.nucleotides)) << output_delimiter
-               << (static_cast<double>(gene.AFR_variant_count) / static_cast<double>(gene.nucleotides)) << output_delimiter;
-
-    } else {
-
-      out_file << 0 << output_delimiter
-               << 0 << output_delimiter
-               << 0 << output_delimiter
-               << 0 << output_delimiter
-               << 0 << output_delimiter
-               << 0 << output_delimiter;
-
-    }
-
-    out_file << gene.heterozygous << output_delimiter
-             << gene.homozygous << output_delimiter;
-    double ratio = static_cast<double>(gene.heterozygous) / (static_cast<double>(gene.homozygous) + homozygous_bias);
-    out_file << ratio << output_delimiter
-             << (gene.indel * 100) << output_delimiter
-             << (gene.transition * 100) << output_delimiter
-             << (gene.transversion * 100) << '\n';
-
-  } // Gene
-
-  return true;
-
-}
-
-
-void kgl::GenomeMutation::writeHeader(std::ostream& out_file, char output_delimiter) const {
-
-  out_file << "Genome" << output_delimiter
-           << "Contig" << output_delimiter
-           << "Gene" << output_delimiter
-           << "Name" << output_delimiter
-           << "Description" << output_delimiter
-           << "BioType" << output_delimiter
-           << "ValidProtein" << output_delimiter
-           << "GafId" <<  output_delimiter
-           << "Begin" << output_delimiter
-           << "End" << output_delimiter
-           << "Span" << output_delimiter
-           << "Strand" << output_delimiter
-           << "Sequences" << output_delimiter
-           << "SeqName" << output_delimiter
-           << "Nucleotides" << output_delimiter
-           << "Exons" << output_delimiter
-           << "Attributes" << output_delimiter
-           << "UniqueVariants" << output_delimiter
-           << "VariantCount" << output_delimiter
-           << "SpanVariantCount" << output_delimiter
-           << "FemaleLoF" << output_delimiter
-           << "MaleLoF" << output_delimiter
-           << "HomLoF" << output_delimiter
-           << "FemaleHigh" << output_delimiter
-           << "MaleHigh" << output_delimiter
-           << "HomHigh" << output_delimiter
-           << "F/MPhase" << output_delimiter
-           << "F/MVariant" << output_delimiter
-           << "GenomeCount" << output_delimiter
-           << "GenomeVariant" << output_delimiter
-           << "SpanDensity" << output_delimiter
-           << "VariantDensity" << output_delimiter
-           << "EASDensity" << output_delimiter
-           << "EURDensity" << output_delimiter
-           << "SASDensity" << output_delimiter
-           << "AMRDensity" << output_delimiter
-           << "AFRDensity" << output_delimiter
-           << "Heterozygous" << output_delimiter
-           << "Homozygous" << output_delimiter
-           << "Het/Hom" << output_delimiter
-           << "Indel%" << output_delimiter
-           << "Transition%" << output_delimiter
-           << "Transversion%" << '\n';
-
-}
 

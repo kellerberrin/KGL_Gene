@@ -252,7 +252,7 @@ std::optional<std::shared_ptr<const kgl::Variant>> kgl::ContigDB::findVariant(co
 }
 
 
-std::shared_ptr<kgl::ContigDB> kgl::ContigDB::findContig(const std::shared_ptr<ContigDB>& template_contig) const {
+std::shared_ptr<kgl::ContigDB> kgl::ContigDB::findContig(const std::shared_ptr<const ContigDB>& template_contig) const {
 
   std::shared_ptr<ContigDB> found_contig_ptr(std::make_shared<ContigDB>(template_contig->contigId()));
 

@@ -281,7 +281,11 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_Pf/kgl_analysis_mutation.cpp
         kgl_analytic/kgl_Pf/kgl_analysis_mutation.h
         kgl_analytic/kgl_Pf/kgl_phase_Pf.cpp
-        kgl_analytic/kgl_Pf/kgl_phase_Pf.h kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene.cpp kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene.h)
+        kgl_analytic/kgl_Pf/kgl_phase_Pf.h
+        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene.cpp
+        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene.h
+        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_impl.cpp
+        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_output.cpp)
 
 # Deconvolution and mixture files.
 

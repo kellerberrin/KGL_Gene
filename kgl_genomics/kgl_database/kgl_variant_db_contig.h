@@ -68,7 +68,7 @@ public:
   [[nodiscard]] std::optional<std::shared_ptr<const Variant>> findVariant(const Variant& variant) const;
 
   // Returns a contig containing all variants in this contig that match the template contig.
-  [[nodiscard]] std::shared_ptr<ContigDB> findContig(const std::shared_ptr<ContigDB>& template_contig) const;
+  [[nodiscard]] std::shared_ptr<ContigDB> findContig(const std::shared_ptr<const ContigDB>& template_contig) const;
 
   [[nodiscard]] std::optional<OffsetDBArray> findOffsetArray(ContigOffset_t offset) const;
 

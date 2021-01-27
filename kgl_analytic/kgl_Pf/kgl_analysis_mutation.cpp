@@ -105,22 +105,6 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 
   auto file_characteristic = data_ptr->dataCharacteristic();
 
-  if (file_characteristic.data_source == DataSourceEnum::Pf3kCOI) {
-
-    pf3k_coi_ptr_ = std::dynamic_pointer_cast<const Pf3kCOIDB>(data_ptr);
-
-    if (pf3k_coi_ptr_) {
-
-      ExecEnv::log().info("Processed Pf3k complexity of infection file: {}", pf3k_coi_ptr_->fileId());
-
-    } else {
-
-      ExecEnv::log().critical("MutationAnalysis::fileReadAnalysis; Unable to cast to the Pf3K complexity of infection file, severe error.");
-
-    }
-
-  }
-
   if (file_characteristic.data_structure == DataStructureEnum::PedGenome1000) {
 
     std::shared_ptr<const GenomePEDData> ped_data = std::dynamic_pointer_cast<const GenomePEDData>(data_ptr);
@@ -161,6 +145,16 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 
       }
 
+    } else if (file_characteristic.data_source == DataSourceEnum::Clinvar) {
+
+      clinvar_population_ptr_ = std::dynamic_pointer_cast<const PopulationDB>(data_ptr);
+
+      if (not clinvar_population_ptr_) {
+
+        ExecEnv::log().critical("MutationAnalysis::fileReadAnalysis; Unable to cast Clinvar data file to population, severe error.");
+
+      }
+
     }
 
   }
@@ -189,23 +183,17 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
   ExecEnv::log().info("Default Iteration Analysis called for Analysis Id: {}", ident());
 
 
-  if (population_ptr_ and unphased_population_ptr_) {
+  if (population_ptr_ and unphased_population_ptr_ and clinvar_population_ptr_ and ped_data_) {
 
-    auto file_characteristic = population_ptr_->dataCharacteristic();
-
-    if (file_characteristic.data_source == DataSourceEnum::Genome1000) {
-
-      gene_mutation_.variantAnalysis(population_ptr_, unphased_population_ptr_, ped_data_);
-
-    }
+    gene_mutation_.variantAnalysis(population_ptr_, unphased_population_ptr_, clinvar_population_ptr_, ped_data_);
 
   } else {
 
-    ExecEnv::log().error("MutationAnalysis::iterationAnalysis; No deta files defined for analysis");
+    ExecEnv::log().error("MutationAnalysis::iterationAnalysis; Necessary deta files not defined for analysis");
 
   }
 
-  // Explicitly clean up the populations to recover memory.
+  // Explicitly clean up the contig populations to recover memory.
   population_ptr_ = nullptr;
   unphased_population_ptr_ = nullptr;
 
