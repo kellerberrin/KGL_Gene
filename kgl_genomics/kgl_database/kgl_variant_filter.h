@@ -8,6 +8,8 @@
 #include "kgl_variant.h"
 #include "kgl_genome_collection.h"
 
+#include "kel_utility.h"
+
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
@@ -25,21 +27,17 @@ class InfoFilterImpl  {
 
 public:
 
-  explicit InfoFilterImpl(std::string field_name, bool missing_default = false) : field_name_(std::move(field_name)),
-                                                                                  missing_default_(missing_default) {}
+  explicit InfoFilterImpl(std::string field_name) : field_name_(std::move(field_name)) {}
   InfoFilterImpl(const InfoFilterImpl&) = default;
   ~InfoFilterImpl() = default;
 
   [[nodiscard]] bool applyFilter(const InfoFilterLambda& filter_lambda, const Variant& variant) const;
-
-  [[nodiscard]] bool missingDefault() const { return missing_default_; }
 
   [[nodiscard]] std::string fieldName() const { return field_name_; }
 
 private:
 
   const std::string field_name_;
-  const bool missing_default_;
 
 
 };
@@ -52,8 +50,8 @@ class InfoFilter : public VariantFilter {
 
 public:
 
-  InfoFilter(const std::string& field_name, InfoFilterLambda filter_lambda, bool missing_default = false)
-  : info_filter_(field_name, missing_default), filter_lambda_(std::move(filter_lambda)) {
+  InfoFilter(const std::string& field_name, InfoFilterLambda filter_lambda)
+  : info_filter_(field_name), filter_lambda_(std::move(filter_lambda)) {
 
     filterName(field_name);
 
@@ -74,7 +72,7 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Filter on a Vep subfield found in the Gnomad Homo Sapien data. Will silently return false for all other data.
+// Filter on a Vep subfield found in the Gnomad Homosapien data. Will silently return false for all other data.
 //
 // If the vep field contains the specified sub-string then the filter returns 'true'.
 // If the the empty string "" is specified then the corresponding vep field must be empty to return true.
@@ -115,8 +113,8 @@ class InfoGEQIntegerFilter : public VariantFilter {
 
 public:
 
-  InfoGEQIntegerFilter(const std::string& field_name, int64_t comparison_value, bool missing_default = false)  // How the filter responds if the data is missing.
-  : info_filter_(field_name, missing_default), comparison_value_(comparison_value) {
+  InfoGEQIntegerFilter(const std::string& field_name, int64_t comparison_value)  // How the filter responds if the data is missing.
+  : info_filter_(field_name), comparison_value_(comparison_value) {
 
     std::stringstream ss;
     ss << "VCF Info Field: " << field_name << " >= " << comparison_value;
@@ -145,13 +143,13 @@ private:
 
       } else {
 
-        return info_filter_.missingDefault();
+        return false;
 
       }
 
     } else {
 
-      return info_filter_.missingDefault();
+      return false;
 
     }
 
@@ -168,8 +166,8 @@ class InfoGEQFloatFilter : public VariantFilter {
 
 public:
 
-  InfoGEQFloatFilter(const std::string& field_name, double comparison_value, bool missing_default = false)  // How the filter responds if the data is missing.
-  : info_filter_(field_name, missing_default), comparison_value_(comparison_value) {
+  InfoGEQFloatFilter(const std::string& field_name, double comparison_value)  // How the filter responds if the data is missing.
+  : info_filter_(field_name), comparison_value_(comparison_value) {
 
     std::stringstream ss;
     ss << "VCF Info Field: " << field_name << " >= " << comparison_value;
@@ -199,13 +197,13 @@ private:
 
       } else {
 
-        return info_filter_.missingDefault();
+        return false;
 
       }
 
     } else {
 
-      return info_filter_.missingDefault();
+      return false;
 
     }
 
@@ -221,12 +219,17 @@ class InfoSubStringFilter : public VariantFilter {
 
 public:
 
-  InfoSubStringFilter(const std::string& field_name, std::string sub_string, bool missing_default = false)  // How the filter responds if the data is missing.
-  : info_filter_(field_name, missing_default), sub_string_(std::move(sub_string)) {
+  InfoSubStringFilter(const std::string& field_name, std::string sub_string, bool case_sensitive = false)  // How the filter responds if the data is missing.
+  : info_filter_(field_name), sub_string_(std::move(sub_string)), case_sensitive_(case_sensitive) {
 
     std::stringstream ss;
     ss << "VCF Info Field: " << field_name << " contains sub string \"" << sub_string <<"\"";
     filterName(ss.str());
+    if (not case_sensitive_) {
+
+      sub_string_ = Utility::toupper(sub_string_);
+
+    }
 
   }
   InfoSubStringFilter(const InfoSubStringFilter&) = default;
@@ -239,25 +242,47 @@ public:
 private:
 
   const InfoFilterImpl info_filter_;
-  const std::string sub_string_;
+  std::string sub_string_;
+  const bool case_sensitive_;
   const InfoFilterLambda filter_lambda_ = [this] (const InfoDataVariant& data_variant) -> bool {
 
     auto p_string_vector = std::get_if<std::vector<std::string>>(&data_variant);
     if (p_string_vector != nullptr) {
 
-      if (p_string_vector->size() == 1) {
+      if (not p_string_vector->empty()) {
 
-        return (p_string_vector->front().find(sub_string_) != std::string::npos);
+        for (auto const& value : *p_string_vector) {
+
+          bool result;
+          if (case_sensitive_) {
+
+            result = value.find(sub_string_) != std::string::npos;
+
+          } else {
+
+            result = Utility::toupper(value).find(sub_string_) != std::string::npos;
+
+          }
+
+          if (result) {
+
+            return true;
+
+          }
+
+        }
+
+        return false;
 
       } else {
 
-        return info_filter_.missingDefault();
+        return false;
 
       }
 
     } else {
 
-      return info_filter_.missingDefault();
+      return false;
 
     }
 
@@ -274,8 +299,8 @@ class InfoBooleanFilter : public VariantFilter {
 
 public:
 
-  explicit InfoBooleanFilter(const std::string& field_name, bool missing_default = false)  // How the filter responds if the data is missing.
-  : info_filter_(field_name, missing_default) {
+  explicit InfoBooleanFilter(const std::string& field_name)  // How the filter responds if the data is missing.
+  : info_filter_(field_name) {
 
     std::stringstream ss;
     ss << "VCF Boolean Info Field: " << field_name;
@@ -301,7 +326,7 @@ private:
 
     } else {
 
-      return info_filter_.missingDefault();
+      return false;
 
     }
 

@@ -2,9 +2,12 @@
 // Created by kellerberrin on 15/1/21.
 //
 
-#include <kgl_variant_factory_vcf_evidence_analysis.h>
+#include "kgl_variant_factory_vcf_evidence_analysis.h"
 #include "kgl_analysis_mutation_gene.h"
+#include "kgl_analysis_mutation_clinvar.h"
 #include "kgl_variant_mutation.h"
+
+
 
 #include <fstream>
 
@@ -150,7 +153,9 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
                                                          const std::shared_ptr<const GenomePEDData>& ped_data,
                                                          GeneMutation gene_mutation) {
 
+
   std::map<std::string, size_t> variant_distribution;
+  std::shared_ptr<const ContigDB> clinvar_contig;
   for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()){
 
     auto contig_opt = genome_ptr->getContig(gene_mutation.contig);
@@ -160,6 +165,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
       if (not contig_ptr->getMap().empty()) {
 
+
         ++gene_mutation.genome_count;
 
         std::shared_ptr<const ContigDB> exome_variant_ptr = getGeneExon(contig_ptr, gene_mutation);
@@ -168,11 +174,63 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
         std::shared_ptr<const ContigDB> span_variant_ptr = getGeneSpan(contig_ptr, gene_mutation);
 
-        auto clinvar_vector = filterPathClinvar(clinvarInfo(getClinvar( span_variant_ptr, clinvar_population_ptr)));
+        if (not clinvar_contig) {
 
-        gene_mutation.clinvar_count = clinvar_vector.size();
+          clinvar_contig = AnalyzeClinvar::getClinvarContig(gene_mutation.contig, clinvar_population_ptr);
+          clinvar_contig = AnalyzeClinvar::FilterPathogenic(clinvar_contig);
 
-        gene_mutation.clinvar_desc = clinvarConcatDesc(clinvar_vector);
+        } else {
+
+          if (clinvar_contig->contigId() != gene_mutation.contig) {
+
+            clinvar_contig = AnalyzeClinvar::getClinvarContig(gene_mutation.contig, clinvar_population_ptr);
+            clinvar_contig = AnalyzeClinvar::FilterPathogenic(clinvar_contig);
+
+          }
+
+        }
+
+        auto male_span_variant = span_variant_ptr->filterVariants(PhaseFilter(VariantSequence::DIPLOID_PHASE_B));
+        auto male_clinvar_vector = AnalyzeClinvar::clinvarInfo(AnalyzeClinvar::findClinvar(male_span_variant, clinvar_contig));
+
+        size_t male_clinvar{0};
+        if (not male_clinvar_vector.empty()) {
+
+          male_clinvar = 1;
+          auto vector_desc = AnalyzeClinvar::clinvarVectorDesc(male_clinvar_vector);
+          for (auto const& desc : vector_desc) {
+
+            gene_mutation.clinvar_desc.insert(desc);
+
+          }
+
+        }
+
+        gene_mutation.male_clinvar += male_clinvar;
+
+        auto female_span_variant = span_variant_ptr->filterVariants(PhaseFilter(VariantSequence::DIPLOID_PHASE_A));
+        auto female_clinvar_vector = AnalyzeClinvar::clinvarInfo(AnalyzeClinvar::findClinvar(female_span_variant, clinvar_contig));
+
+        size_t female_clinvar{0};
+        if (not female_clinvar_vector.empty()) {
+
+          female_clinvar = 1;
+          auto vector_desc = AnalyzeClinvar::clinvarVectorDesc(female_clinvar_vector);
+          for (auto const& desc : vector_desc) {
+
+            gene_mutation.clinvar_desc.insert(desc);
+
+          }
+
+        }
+
+        gene_mutation.female_clinvar += female_clinvar;
+
+        if (male_clinvar > 0 and female_clinvar) {
+
+          ++gene_mutation.hom_clinvar;
+
+        }
 
         // Get phased VEP info.
         VepInfo lof_het_hom = geneSpanVep( span_variant_ptr, unphased_population_ptr);
@@ -234,7 +292,10 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
         if (ped_data) {
 
-          pedAnalysis( gene_mutation, genome_id, hom_lof, ped_data);
+//          pedAnalysis( gene_mutation, genome_id, hom_lof, ped_data);
+          size_t clinvar{0};
+          if (male_clinvar+female_clinvar > 0) ++clinvar;
+          pedAnalysis(gene_mutation, genome_id, clinvar, ped_data);
 
         }
 

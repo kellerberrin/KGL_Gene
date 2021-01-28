@@ -42,8 +42,10 @@ struct GeneMutation {
   size_t male_lof{0};          // Loss of gene function in the (B) chromosome.
   size_t female_lof{0};        // Los of function in the female (A) chromosome.
   size_t hom_lof{0};          // Loss of gene function in both chromosomes.
-  size_t clinvar_count{0};
-  std::string clinvar_desc;
+  size_t male_clinvar{0};
+  size_t female_clinvar{0};
+  size_t hom_clinvar{0};
+  std::set<std::string> clinvar_desc;
   size_t male_high_effect{0};          // High Variant Impact in the (B) chromosome.
   size_t female_high_effect{0};        // High Variant Impact in the (A) chromosome.
   size_t hom_high_effect{0};          // High Impact in both in both chromosomes.
@@ -81,19 +83,6 @@ struct VepInfo {
 };
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-struct ClinvarInfo {
-
-  std::string rsid;          // The variant rs identifier from dbSNP
-  std::string clnsig;        // Textual clinical significance.
-  std::string clndn;         // Clinical description.
-  std::string clnisdb;       // Database information about the condition
-  std::shared_ptr<const Variant> variant_ptr;
-
-};
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -128,13 +117,7 @@ private:
   constexpr static const char* IMPACT_MODERATE_VALUE = "MODERATE";
   constexpr static const char* IMPACT_HIGH_VALUE = "HIGH";
 
-  // Clinvar fields.
-  constexpr static const char* CLINVAR_RS_FIELD = "RS";
-  constexpr static const char* CLINVAR_CLNDN_FIELD = "CLNDN";
-  constexpr static const char* CLINVAR_CLNSIG_FIELD = "CLNSIG";
-  constexpr static const char* CLINVAR_CLNDISDB_FIELD = "CLNDISDB";
-  constexpr static const char* CLINVAR_PATH_SIGNIF = "PATH";
-  constexpr static const char* CLINVAR_RISK_SIGNIF = "RISK";
+  constexpr static const char* CLINVAR_DESC_CONCAT = "&";
 
 
   void writeHeader(std::ostream& out_file, char output_delimiter) const;
@@ -166,17 +149,9 @@ private:
                    const std::string& vep_field_ident,
                    const std::string& vep_field_value);
 
-  std::shared_ptr<const ContigDB> getClinvar( const std::shared_ptr<const ContigDB>& span_contig,
-                                              const std::shared_ptr<const PopulationDB>& unphased_population_ptr);
-
-  static std::vector<ClinvarInfo> clinvarInfo(const std::shared_ptr<const ContigDB>& clinvar_contig_ptr);
-
-  static std::vector<ClinvarInfo> filterPathClinvar(const std::vector<ClinvarInfo>& clinvar_vector);
-
-  static std::string clinvarConcatDesc(const std::vector<ClinvarInfo>& clinvar_vector);
-
 
 };
+
 
 
 

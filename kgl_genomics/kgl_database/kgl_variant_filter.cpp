@@ -17,15 +17,15 @@ namespace kel = kellerberrin;
 
 bool kgl::InfoFilterImpl::applyFilter(const InfoFilterLambda& filter_lambda, const Variant& variant) const {
 
-  auto field_data = InfoEvidenceAnalysis::getInfoData(variant, field_name_);
+  auto field_data_opt = InfoEvidenceAnalysis::getInfoData(variant, field_name_);
 
-  if (field_data) {
+  if (field_data_opt) {
 
-    return filter_lambda(field_data.value());
+    return filter_lambda(field_data_opt.value());
 
   } else {
 
-    return missing_default_;
+    return false;
 
   }
 

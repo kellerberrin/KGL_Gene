@@ -51,18 +51,36 @@ bool kgl::GenomeMutation::writeOutput(const std::string& output_file_name, char 
              << gene.gene_span << output_delimiter
              << gene.strand << output_delimiter
              << gene.sequences << output_delimiter
-             << gene.seq_name << output_delimiter
-             << gene.nucleotides << output_delimiter
-             << gene.exons << output_delimiter
-             << gene.attribute_size << output_delimiter
-             << gene.unique_variants << output_delimiter
-             << gene.variant_count << output_delimiter
-             << gene.span_variant_count << output_delimiter
-             << gene.female_lof << output_delimiter
-             << gene.male_lof << output_delimiter
-             << gene.hom_lof << output_delimiter
-             << gene.clinvar_count << output_delimiter
-             << gene.clinvar_desc << output_delimiter
+        << gene.seq_name << output_delimiter
+        << gene.nucleotides << output_delimiter
+        << gene.exons << output_delimiter
+        << gene.attribute_size << output_delimiter
+        << gene.unique_variants << output_delimiter
+        << gene.variant_count << output_delimiter
+        << gene.span_variant_count << output_delimiter
+        << gene.female_lof << output_delimiter
+        << gene.male_lof << output_delimiter
+        << gene.hom_lof << output_delimiter
+        << gene.male_clinvar << output_delimiter
+        << gene.female_clinvar << output_delimiter
+        << gene.hom_clinvar << output_delimiter;
+
+    std::string concat_desc{"\""};
+    for (auto const& desc : gene.clinvar_desc) {
+
+      if (desc != *gene.clinvar_desc.begin()) {
+
+        concat_desc += CLINVAR_DESC_CONCAT;
+
+      }
+
+      concat_desc += desc;
+
+    }
+
+    concat_desc += "\"";
+
+    out_file << concat_desc << output_delimiter
              << gene.female_high_effect << output_delimiter
              << gene.male_high_effect << output_delimiter
              << gene.hom_high_effect << output_delimiter
@@ -129,7 +147,9 @@ void kgl::GenomeMutation::writeHeader(std::ostream& out_file, char output_delimi
            << "FemaleLoF" << output_delimiter
            << "MaleLoF" << output_delimiter
            << "HomLoF" << output_delimiter
-           << "Clinvar" << output_delimiter
+           << "MaleClinvar" << output_delimiter
+           << "FemaleClinvar" << output_delimiter
+           << "HomClinvar" << output_delimiter
            << "ClinvarDesc" << output_delimiter
            << "FemaleHigh" << output_delimiter
            << "MaleHigh" << output_delimiter

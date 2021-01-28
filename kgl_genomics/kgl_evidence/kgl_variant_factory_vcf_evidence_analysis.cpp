@@ -144,13 +144,13 @@ std::optional<const kgl::InfoSubscribedField> kgl::InfoEvidenceAnalysis::getSubs
 std::optional<kgl::InfoDataVariant> kgl::InfoEvidenceAnalysis::getInfoData( const Variant& variant,
                                                                             const std::string& field_ident) {
 
-  std::optional<const kgl::InfoSubscribedField> field = getSubscribedField(variant, field_ident);
+  std::optional<const kgl::InfoSubscribedField> field_opt = getSubscribedField(variant, field_ident);
 
-  if (field) {
+  if (field_opt) {
 
     const DataMemoryBlock &data_block = *variant.evidence().infoData().value();
 
-    InfoDataVariant variant_data = field->getData(data_block);
+    InfoDataVariant variant_data = field_opt->getData(data_block);
 
     return variant_data;
 
