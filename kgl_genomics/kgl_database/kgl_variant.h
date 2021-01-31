@@ -79,7 +79,7 @@ public:
   [[nodiscard]] std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
 
   constexpr static const PhaseId_t UNPHASED = 255;
-  constexpr static const PhaseId_t DIPLOID_PHASE_A = 0;  // By convention the female derived contig is first.
+  constexpr static const PhaseId_t DIPLOID_PHASE_A = 0;  // By convention the female_ derived contig is first.
   constexpr static const PhaseId_t DIPLOID_PHASE_B = 1;
   constexpr static const PhaseId_t HAPLOID_PHASED = 2;
 

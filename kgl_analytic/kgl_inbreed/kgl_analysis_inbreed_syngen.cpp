@@ -90,13 +90,13 @@ kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
               ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
                   , genome_id, cloned_variant1->output(',', VariantOutputIndex::START_0_BASED, false));
 
-            } // add female hom variant
+            } // add female_ hom variant
             if (not synthetic_pop_ptr->addVariant( cloned_variant2, genome_vector)) {
 
               ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
                   , genome_id, cloned_variant2->output(',', VariantOutputIndex::START_0_BASED, false));
 
-            } // add male hom variant
+            } // add male_ hom variant
 
           } else {
 
@@ -156,13 +156,13 @@ kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
               ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
                   , genome_id, cloned_variant1->output(',', VariantOutputIndex::START_0_BASED, false));
 
-            } // add female hom variant
+            } // add female_ hom variant
             if (not synthetic_pop_ptr->addVariant( cloned_variant2, genome_vector)) {
 
               ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
                   , genome_id, cloned_variant2->output(',', VariantOutputIndex::START_0_BASED, false));
 
-            } // add male hom variant
+            } // add male_ hom variant
 
           } else {
             std::scoped_lock log_lock(log_mutex);

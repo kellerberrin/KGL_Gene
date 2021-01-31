@@ -166,7 +166,7 @@ std::pair<size_t, size_t> kgl::Genome1000VCFImpl::alternateIndex( const std::str
 
       }
 
-      // If the phase vector size is 1 then we assume that we are processing the X/Y chromosomes of a male.
+      // If the phase vector size is 1 then we assume that we are processing the X/Y chromosomes of a male_.
       if (phase_vector[0] != REFERENCE_VARIANT_INDICATOR_) {
 
         switch(contig_alias_map_.chromosomeType(contig)) {

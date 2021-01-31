@@ -264,9 +264,10 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::findContig(const std::shared_ptr<c
 
       auto const& [this_offset, this_offset_ptr] = *result;
 
-      for (auto const& this_variant_ptr : this_offset_ptr->getVariantArray()) {
 
-        for (auto const& variant_ptr : offset_ptr->getVariantArray())  {
+      for (auto const& variant_ptr : offset_ptr->getVariantArray())  {
+
+        for (auto const& this_variant_ptr : this_offset_ptr->getVariantArray()) {
 
           if (variant_ptr->analogous(*this_variant_ptr)) {
 

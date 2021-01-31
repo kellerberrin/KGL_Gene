@@ -47,7 +47,6 @@ public:
 
 private:
 
-
   std::shared_ptr<const GenomeReference> ref_genome_ptr_;
   std::shared_ptr<const PopulationDB> population_ptr_;
   std::shared_ptr<const PopulationDB> unphased_population_ptr_;
@@ -56,15 +55,11 @@ private:
 
   // Results of the analysis.
   GenomeMutation gene_mutation_;
-
-  void performRegion();
+  std::string output_file_name_;
 
   constexpr static const char* OUTPUT_FILE_ = "OutputFile";
   constexpr static const char OUTPUT_DELIMITER_ = ',';
   constexpr static const char* OUTPUT_FILE_EXT_ = ".csv";
-
-  std::string work_directory_;
-  std::string output_file_name_;
 
   bool getParameters(const ActiveParameterList& named_parameters, const std::string& work_directory);
   std::shared_ptr<const PopulationDB> createUnphased(const std::shared_ptr<const PopulationDB>& population);

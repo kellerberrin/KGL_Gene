@@ -40,16 +40,3 @@ void kgl::Attributes::insertAttribute(const std::string& key, const std::string&
 
 }
 
-
-void kgl::Attributes::getAllAttributes(std::vector<std::pair<std::string, std::string>>& all_key_value_pairs) const {
-
-  all_key_value_pairs.clear();
-
-  for (auto key_value_pair : attributes_) {
-
-    all_key_value_pairs.emplace_back(key_value_pair);
-
-  }
-
-}
-

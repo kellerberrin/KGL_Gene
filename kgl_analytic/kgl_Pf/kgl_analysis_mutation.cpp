@@ -55,8 +55,6 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_parameters,
                                           const std::string& work_directory) {
 
-  work_directory_ = work_directory;
-
   for (auto const& named_block : named_parameters.getMap()) {
 
     auto [block_name, block_vector] = named_block.second;
@@ -98,6 +96,7 @@ bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_param
 
 
 
+
 // Perform the genetic analysis per iteration.
 bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr) {
 
@@ -113,6 +112,8 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 
       ped_data_ = ped_data;
       ExecEnv::log().info("Analysis: {}, ped file: {} contains: {} PED records", ident(), ped_data->fileId(), ped_data->getMap().size());
+      // Update the template populations.
+      gene_mutation_.updatePopulations(ped_data_);
 
     } else {
 
@@ -206,7 +207,7 @@ bool kgl::MutationAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
-  gene_mutation_.writeOutput(output_file_name_, OUTPUT_DELIMITER_);
+  gene_mutation_.writeOutput(ped_data_, output_file_name_, OUTPUT_DELIMITER_);
 
   return true;
 

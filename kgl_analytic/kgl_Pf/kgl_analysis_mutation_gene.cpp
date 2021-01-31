@@ -16,6 +16,9 @@ namespace kgl = kellerberrin::genome;
 
 
 
+
+
+
 // Perform the genetic analysis per iteration.
 bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeReference>& genome_ptr)
 {
@@ -25,6 +28,8 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
   symbolic_gaf.sortBySymbolic(ont_map);
   ResortGaf gene_id_gaf; // re-sort by the gene id field.
   gene_id_gaf.sortByGeneId(ont_map);
+
+  gene_vector_.clear();
 
   for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
 
@@ -68,35 +73,57 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
       gene_ptr->getAttributes().getGeneBioType(gene_biotype_vec);
       std::string biotype = gene_biotype_vec.empty() ? "" : gene_biotype_vec.front();
 
+      GeneCharacteristic gene_characteristic;
 
-      GeneMutation gene_mutation;
-
-      gene_mutation.gene_ptr = gene_ptr;
-      gene_mutation.genome = genome_ptr->genomeId();
-      gene_mutation.contig  = contig_id;
-      gene_mutation.gene_id = gene_ptr->id();
-      gene_mutation.gene_name = name;
-      gene_mutation.description = description;
-      gene_mutation.biotype = biotype;
-      gene_mutation.valid_protein = ContigReference::verifyGene(gene_ptr);
-      gene_mutation.gaf_id = gaf_id;
-      gene_mutation.gene_begin = gene_ptr->sequence().begin();
-      gene_mutation.gene_end = gene_ptr->sequence().end();
-      gene_mutation.gene_span = gene_ptr->sequence().length();
-      gene_mutation.strand = gene_ptr->sequence().strandText();
-      gene_mutation.sequences = sequence_array->size();
+      gene_characteristic.genome = genome_ptr->genomeId();
+      gene_characteristic.contig  = contig_id;
+      gene_characteristic.gene_id = gene_ptr->id();
+      gene_characteristic.gene_name = name;
+      gene_characteristic.description = description;
+      gene_characteristic.biotype = biotype;
+      gene_characteristic.valid_protein = ContigReference::verifyGene(gene_ptr);
+      gene_characteristic.gaf_id = gaf_id;
+      gene_characteristic.gene_begin = gene_ptr->sequence().begin();
+      gene_characteristic.gene_end = gene_ptr->sequence().end();
+      gene_characteristic.gene_span = gene_ptr->sequence().length();
+      gene_characteristic.strand = gene_ptr->sequence().strandText();
+      gene_characteristic.sequences = sequence_array->size();
       if (not sequence_array->getMap().empty()) {
 
         auto [seq_name, seq_ptr] = *(sequence_array->getMap().begin());
-        gene_mutation.seq_name = seq_name;
-        gene_mutation.nucleotides = seq_ptr->codingNucleotides();
-        gene_mutation.exons = seq_ptr->exons();
+        gene_characteristic.seq_name = seq_name;
+        gene_characteristic.nucleotides = seq_ptr->codingNucleotides();
+        gene_characteristic.exons = seq_ptr->exons();
 
       }
       auto const& attribute_map = gene_ptr->getAttributes().getMap();
-      gene_mutation.attribute_size = attribute_map.size();
+      gene_characteristic.attribute_size = attribute_map.size();
 
-      gene_vector_.push_back(gene_mutation);
+      std::string concat_attributes{"\""};
+      for (auto const& [key, attrib] : attribute_map) {
+
+        if ( key != attribute_map.begin()->first
+            or attrib != attribute_map.begin()->second) {
+
+          concat_attributes += CONCAT_TOKEN;
+
+        }
+
+        concat_attributes += key;
+        concat_attributes += ":";
+        concat_attributes += attrib;
+
+      }
+
+      concat_attributes += "\"";
+
+      gene_characteristic.attributes = concat_attributes;
+
+
+      GeneMutation mutation;
+      mutation.gene_characteristic = gene_characteristic;
+      gene_vector_.push_back(mutation);
+
 
     } // Gene.
 
@@ -105,7 +132,6 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
   return true;
 
 }
-
 
 
 bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const PopulationDB>& population_ptr,
@@ -158,7 +184,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
   std::shared_ptr<const ContigDB> clinvar_contig;
   for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()){
 
-    auto contig_opt = genome_ptr->getContig(gene_mutation.contig);
+    auto contig_opt = genome_ptr->getContig(gene_mutation.gene_characteristic.contig);
     if (contig_opt) {
 
       std::shared_ptr<const ContigDB> contig_ptr = contig_opt.value();
@@ -168,69 +194,26 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
         ++gene_mutation.genome_count;
 
-        std::shared_ptr<const ContigDB> exome_variant_ptr = getGeneExon(contig_ptr, gene_mutation);
 
-        size_t variant_count = exome_variant_ptr->variantCount();
-
-        std::shared_ptr<const ContigDB> span_variant_ptr = getGeneSpan(contig_ptr, gene_mutation);
+        std::shared_ptr<const ContigDB> span_variant_ptr = getGeneSpan(contig_ptr, gene_mutation.gene_characteristic);
 
         if (not clinvar_contig) {
 
-          clinvar_contig = AnalyzeClinvar::getClinvarContig(gene_mutation.contig, clinvar_population_ptr);
+          clinvar_contig = AnalyzeClinvar::getClinvarContig(gene_mutation.gene_characteristic.contig, clinvar_population_ptr);
           clinvar_contig = AnalyzeClinvar::FilterPathogenic(clinvar_contig);
 
         } else {
 
-          if (clinvar_contig->contigId() != gene_mutation.contig) {
+          if (clinvar_contig->contigId() != gene_mutation.gene_characteristic.contig) {
 
-            clinvar_contig = AnalyzeClinvar::getClinvarContig(gene_mutation.contig, clinvar_population_ptr);
+            clinvar_contig = AnalyzeClinvar::getClinvarContig(gene_mutation.gene_characteristic.contig, clinvar_population_ptr);
             clinvar_contig = AnalyzeClinvar::FilterPathogenic(clinvar_contig);
 
           }
 
         }
 
-        auto male_span_variant = span_variant_ptr->filterVariants(PhaseFilter(VariantSequence::DIPLOID_PHASE_B));
-        auto male_clinvar_vector = AnalyzeClinvar::clinvarInfo(AnalyzeClinvar::findClinvar(male_span_variant, clinvar_contig));
-
-        size_t male_clinvar{0};
-        if (not male_clinvar_vector.empty()) {
-
-          male_clinvar = 1;
-          auto vector_desc = AnalyzeClinvar::clinvarVectorDesc(male_clinvar_vector);
-          for (auto const& desc : vector_desc) {
-
-            gene_mutation.clinvar_desc.insert(desc);
-
-          }
-
-        }
-
-        gene_mutation.male_clinvar += male_clinvar;
-
-        auto female_span_variant = span_variant_ptr->filterVariants(PhaseFilter(VariantSequence::DIPLOID_PHASE_A));
-        auto female_clinvar_vector = AnalyzeClinvar::clinvarInfo(AnalyzeClinvar::findClinvar(female_span_variant, clinvar_contig));
-
-        size_t female_clinvar{0};
-        if (not female_clinvar_vector.empty()) {
-
-          female_clinvar = 1;
-          auto vector_desc = AnalyzeClinvar::clinvarVectorDesc(female_clinvar_vector);
-          for (auto const& desc : vector_desc) {
-
-            gene_mutation.clinvar_desc.insert(desc);
-
-          }
-
-        }
-
-        gene_mutation.female_clinvar += female_clinvar;
-
-        if (male_clinvar > 0 and female_clinvar) {
-
-          ++gene_mutation.hom_clinvar;
-
-        }
+        processClinvar(genome_id, span_variant_ptr, clinvar_contig, ped_data, gene_mutation.clinvar);
 
         // Get phased VEP info.
         VepInfo lof_het_hom = geneSpanVep( span_variant_ptr, unphased_population_ptr);
@@ -280,28 +263,19 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
         size_t span_variant_count = span_variant_ptr->variantCount();
 
-        if (variant_count > 0) {
+        if (span_variant_count > 0) {
 
           ++gene_mutation.genome_variant;
 
         }
 
-        gene_mutation.variant_count += variant_count;
+        gene_mutation.variant_count += span_variant_count;
 
         gene_mutation.span_variant_count += span_variant_count;
 
-        if (ped_data) {
-
-//          pedAnalysis( gene_mutation, genome_id, hom_lof, ped_data);
-          size_t clinvar{0};
-          if (male_clinvar+female_clinvar > 0) ++clinvar;
-          pedAnalysis(gene_mutation, genome_id, clinvar, ped_data);
-
-        }
-
         double indel{0.0}, transition{0.0}, transversion{0.0};
 
-        for (auto const& [offset, offset_ptr] : exome_variant_ptr->getMap()) {
+        for (auto const& [offset, offset_ptr] : span_variant_ptr->getMap()) {
 
           OffsetDBArray variant_array = offset_ptr->getVariantArray();
 
@@ -372,7 +346,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
         gene_mutation.unique_variants = variant_distribution.size();
 
-        for (auto const& [offset, offset_ptr] : exome_variant_ptr->getMap()) {
+        for (auto const& [offset, offset_ptr] : span_variant_ptr->getMap()) {
 
           if (offset_ptr->getVariantArray().size() == 1) {
 
@@ -398,6 +372,59 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
   } // for genome
 
   return gene_mutation;
+
+}
+
+
+void kgl::GenomeMutation::processClinvar( const GenomeId_t& genome_id,
+                                          const std::shared_ptr<const ContigDB>& subject_variants,
+                                          const std::shared_ptr<const ContigDB>& clinvar_contig,
+                                          const std::shared_ptr<const GenomePEDData>& ped_data,
+                                          GeneClinvar& results) {
+
+
+  auto subject_clinvar = AnalyzeClinvar::findClinvar(subject_variants, clinvar_contig);
+  auto info_vector = AnalyzeClinvar::clinvarInfo(subject_clinvar);
+  size_t clinvar_variants = subject_clinvar->variantCount();
+  if (clinvar_variants > 0) {
+
+    ++results.phase.phase_either_;
+
+  }
+
+  for (auto const& record : info_vector) {
+
+    // Save any unique descriptions.
+    results.clinvar_desc.insert(record.clndn);
+
+  }
+
+  auto male_variants = subject_variants->filterVariants(PhaseFilter(VariantSequence::DIPLOID_PHASE_B));
+  auto male_clinvar = AnalyzeClinvar::findClinvar(male_variants, clinvar_contig);
+  size_t male_phase_variants = male_clinvar->variantCount();
+  if (male_phase_variants > 0) {
+
+    ++results.phase.phase_male_;
+
+  }
+
+  auto female_variants = subject_variants->filterVariants(PhaseFilter(VariantSequence::DIPLOID_PHASE_A));
+  auto female_clinvar = AnalyzeClinvar::findClinvar(female_variants, clinvar_contig);
+  size_t female_phase_variants = female_clinvar->variantCount();
+  if (female_phase_variants > 0) {
+
+    ++results.phase.phase_female_;
+
+  }
+
+  if (male_phase_variants > 0 and female_phase_variants > 0) {
+
+    ++results.phase.phase_hom_;
+
+  }
+
+  size_t count = clinvar_variants > 0 ? 1 : 0;
+  results.results.pedAnalysis(genome_id, count, ped_data);
 
 }
 

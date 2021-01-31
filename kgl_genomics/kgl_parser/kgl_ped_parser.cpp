@@ -5,6 +5,8 @@
 #include "kgl_ped_parser.h"
 #include "kel_utility.h"
 
+#include <set>
+
 namespace kgl = kellerberrin::genome;
 
 
@@ -21,6 +23,22 @@ bool kgl::GenomePEDData::addPEDRecord(const PEDRecord& record) {
   }
 
   return true;
+
+}
+
+
+
+// Create a list of populations.
+void kgl::GenomePEDData::refreshPopulationLists() {
+
+  population_list_.clear();
+  super_population_list_.clear();
+  for (auto const& [genome_id, ped_record] : PED_record_map_) {
+
+    population_list_[ped_record.population()] = ped_record.populationDescription();
+    super_population_list_[ped_record.superPopulation()] = ped_record.superDescription();
+
+  }
 
 }
 
@@ -47,6 +65,9 @@ void kgl::ParsePedFile::readParsePEDImpl(const std::string& file_name) {
 
   }
 
+  // Can be re-refreshed at any time.
+  ped_data_->refreshPopulationLists();
+
 }
 
 
@@ -70,7 +91,7 @@ bool kgl::ParsePedFile::moveToPEDRecord(const std::vector<std::string>& field_st
                        field_strings[5],  // pheno_type
                        field_strings[6],  // population
                        field_strings[7],  // population description
-                       field_strings[8],  // super_population
+                       field_strings[8],  // super_population_
                        field_strings[9],  // super_description
                        field_strings[10],  // relationship
                        field_strings[11],  // siblings

@@ -14,136 +14,15 @@ namespace kgl = kellerberrin::genome;
 
 
 
-std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneContig( const std::shared_ptr<const ContigDB>& contig_ptr,
-                                                                         const GeneMutation& gene_mutation) {
-
-  std::shared_ptr<ContigDB> gene_contig(std::make_shared<ContigDB>(gene_mutation.seq_name));
-  OffsetVariantMap variant_map;
-
-  contig_ptr->getSortedVariants( VariantSequence::UNPHASED,
-                                 gene_mutation.gene_begin,
-                                 gene_mutation.gene_end,
-                                 variant_map);
-
-  for (auto const& [offset, variant_ptr] : variant_map) {
-
-    if (not gene_contig->addVariant(variant_ptr)) {
-
-      ExecEnv::log().error("GenomeMutation::getGeneContig; contig: {} cannot add variant: {}",
-                           gene_contig->contigId(), variant_ptr->output(',',VariantOutputIndex::START_0_BASED, false));
-
-    }
-
-  }
-
-
-  return gene_contig;
-
-}
 
 std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneSpan(const std::shared_ptr<const ContigDB>& contig_ptr,
-                                                                      const GeneMutation& gene_mutation) {
+                                                                      const GeneCharacteristic& gene_char) {
 
-  return contig_ptr->subset(gene_mutation.gene_begin, gene_mutation.gene_end);
-
-}
-
-
-std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneExon(const std::shared_ptr<const ContigDB>& contig_ptr,
-                                                                      const GeneMutation& gene_mutation) {
-
-  std::shared_ptr<ContigDB> gene_contig(std::make_shared<ContigDB>(gene_mutation.seq_name));
-
-  const std::shared_ptr<const CodingSequenceArray> sequence_array = GeneFeature::getCodingSequences(gene_mutation.gene_ptr);
-
-  if (not sequence_array->getMap().empty()) {
-
-    auto [seq_name, seq_ptr] = *(sequence_array->getMap().begin());
-
-    SortedCDS sorted_cds = seq_ptr->getSortedCDS();
-    for (auto const& [offset, cds_ptr] : sorted_cds) {
-
-      // Get the exon dimensions
-      size_t begin = cds_ptr->sequence().begin();
-      size_t end = cds_ptr->sequence().end();
-
-      // Get the variants in the exon.
-      auto contig_sub_set_ptr = contig_ptr->subset(begin, end);
-      // Add exon variants to the gene_contig object.
-      contig_sub_set_ptr->processAll(*gene_contig, &ContigDB::addVariant);
-
-    }
-
-  }
-
-  return gene_contig;
+  return contig_ptr->subset(gene_char.gene_begin, gene_char.gene_end);
 
 }
 
 
-
-bool kgl::GenomeMutation::pedAnalysis( GeneMutation& gene_mutation,
-                                       const GenomeId_t& genome_id,
-                                       size_t data_count,
-                                       const std::shared_ptr<const GenomePEDData>& ped_data) {
-
-
-  auto result = ped_data->getMap().find(genome_id);
-
-  if (result == ped_data->getMap().end()) {
-
-    ExecEnv::log().error("GenomeMutation::variantAnalysis; Genome sample: {} does not have a PED record", genome_id);
-    return false;
-
-  }
-
-  auto const& [sample_id, ped_record] = *result;
-
-  if (data_count > 0) {
-
-    if (ped_record.sexType() == PedSexType::MALE) {
-
-      ++gene_mutation.male_value;
-
-    } else {
-
-      ++gene_mutation.female_value;
-
-    }
-
-  }
-
-  std::string super_pop = ped_record.superPopulation();
-
-  if (super_pop == "EAS") {
-
-    gene_mutation.EAS += data_count;
-
-  } else if (super_pop == "EUR") {
-
-    gene_mutation.EUR += data_count;
-
-  } else if (super_pop == "SAS") {
-
-    gene_mutation.SAS += data_count;
-
-  } else if (super_pop == "AFR") {
-
-    gene_mutation.AFR += data_count;
-
-  } else if (super_pop == "AMR") {
-
-    gene_mutation.AMR += data_count;
-
-  } else {
-
-    ExecEnv::log().error("GenomeMutation::variantAnalysis; Unknown super population: {}", super_pop);
-
-  }
-
-  return true;
-
-}
 
 
 kgl::VepInfo kgl::GenomeMutation::geneSpanVep( const std::shared_ptr<const ContigDB>& span_contig,
@@ -244,3 +123,16 @@ size_t kgl::GenomeMutation::VepCount( const std::shared_ptr<const ContigDB>& vep
 
 }
 
+
+
+void kgl::GenomeMutation::updatePopulations(const std::shared_ptr<const GenomePEDData>& ped_data) {
+
+  // Generate the template populations.
+  // Insert the templates into the gene records.
+  for (auto& gene_record : gene_vector_) {
+
+    gene_record.clinvar.results.updatePopulations(ped_data);
+
+  }
+
+}

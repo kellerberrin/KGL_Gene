@@ -104,6 +104,7 @@ private:
 
 
 using PEDRecordMap = std::map<std::string, const PEDRecord>;
+using PedPopulationMap = std::map<std::string, std::string>; // Population (key) and description (value).
 
 class GenomePEDData : public DataDB {
 
@@ -118,10 +119,18 @@ public:
 
   bool addPEDRecord(const PEDRecord& record);
 
+  // Re-create the population lists any time after construction.
+  void refreshPopulationLists();
+
+  [[nodiscard]] const PedPopulationMap& populationList() const { return population_list_; }
+  [[nodiscard]] const PedPopulationMap& superPopulationList() const { return super_population_list_; }
+
 private:
 
   PEDRecordMap PED_record_map_;
   std::string ped_ident_;
+  PedPopulationMap population_list_;
+  PedPopulationMap super_population_list_;
 
 };
 

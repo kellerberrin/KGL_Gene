@@ -32,7 +32,6 @@ public:
   // General access routines.
   bool getAttributes(const std::string &key, std::vector<std::string> &value_vec) const; // false if no key.
   void insertAttribute(const std::string& key, const std::string& value); // Always succeeds; keys are uppercase.
-  void getAllAttributes(std::vector<std::pair<std::string, std::string>>& all_key_value_pairs) const;
 
   // Attribute keys.
   constexpr static const char* ID_KEY = "ID";
