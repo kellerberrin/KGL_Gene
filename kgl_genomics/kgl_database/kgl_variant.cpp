@@ -21,7 +21,7 @@ std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputInde
   std:: stringstream ss;
 // Contig.
   ss << contigId() << delimiter;
-  if (phaseId() == UNPHASED) {
+  if (phaseId() == VariantPhase::UNPHASED) {
 
     ss << "Unphased" << delimiter;
 
@@ -32,6 +32,24 @@ std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputInde
   }
   ss << offsetOutput(offset(), output_index) << delimiter;
 
+  return ss.str();
+
+}
+
+
+std::string kgl::VariantSequence::locationHash() const {
+
+  std::stringstream ss;
+  ss << contigId() << ":" << offset();
+  return ss.str();
+
+}
+
+
+std::string kgl::VariantSequence::locationPhaseHash() const {
+
+  std::stringstream ss;
+  ss << contigId() << ":" << offset() << ":" << static_cast<uint8_t>(phaseId());
   return ss.str();
 
 }
@@ -51,13 +69,13 @@ std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputInde
   std::string variant_ident = identifier();
 
   std::unique_ptr<Variant> variant_ptr(std::make_unique<Variant>( contigId(),
-                                                                  phaseId(),
                                                                   offset(),
-                                                                  passFilters(),
-                                                                  evidence(),
+                                                                  phaseId(),
+                                                                  std::move(variant_ident),
                                                                   std::move(reference_str),
                                                                   std::move(alternate_str),
-                                                                  std::move(variant_ident)));
+                                                                  evidence(),
+                                                                  passFilters()));
 
   return variant_ptr;
 
@@ -71,13 +89,13 @@ std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputInde
   VariantEvidence null_evidence; // no evidence is passed through.
 
   std::unique_ptr<Variant> variant_ptr(std::make_unique<Variant>( contigId(),
-                                                                  phaseId(),
                                                                   offset(),
-                                                                  passFilters(),
-                                                                  null_evidence,
+                                                                  phaseId(),
+                                                                  identifier(),
                                                                   std::move(reference1_str),
                                                                   std::move(reference2_str),
-                                                                  identifier()));
+                                                                  null_evidence,
+                                                                  passFilters()));
 
   return variant_ptr;
 
@@ -85,7 +103,7 @@ std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputInde
 
 
 
-std::string kgl::Variant::name() const {
+std::string kgl::Variant::typeText() const {
 
   switch(variantType()) {
 
@@ -130,7 +148,7 @@ std::string kgl::Variant::output(char delimiter, VariantOutputIndex output_index
 {
   std::stringstream ss;
   ss << genomeOutput(delimiter, output_index);
-  ss << identifier() << delimiter << name() << delimiter << alternateSize() << delimiter;
+  ss << identifier() << delimiter << typeText() << delimiter << alternateSize() << delimiter;
   ss << mutation(delimiter, output_index);
 
   if (detail) {
@@ -257,5 +275,12 @@ size_t kgl::Variant::alternateSize(size_t reference_size) const {
 
   CigarVector cigar_vector = ParseVCFCigar::generateEditVector(reference().getSequenceAsString(), alternate().getSequenceAsString());
   return ParseVCFCigar::alternateCount(reference_size, cigar_vector);
+
+}
+
+// Unique upto phase.
+std::string kgl::Variant::variantHash() const {
+
+  return locationHash() + ":" + reference().getSequenceAsString() + ":" + alternate().getSequenceAsString();
 
 }

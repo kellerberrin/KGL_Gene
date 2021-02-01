@@ -72,7 +72,7 @@ public:
 
   [[nodiscard]] std::optional<OffsetDBArray> findOffsetArray(ContigOffset_t offset) const;
 
-  bool getSortedVariants( PhaseId_t phase,
+  bool getSortedVariants( VariantPhase phase,
                           ContigOffset_t start,
                           ContigOffset_t end,
                           OffsetVariantMap& variant_map) const;

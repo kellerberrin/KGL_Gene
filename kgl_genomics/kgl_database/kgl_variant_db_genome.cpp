@@ -172,9 +172,13 @@ std::shared_ptr<kgl::GenomeDB> kgl::GenomeDB::filterVariants(const VariantFilter
   for (const auto& [contig_id, contig_ptr] : getMap()) {
 
     auto filtered_contig = contig_ptr->filterVariants(filter);
-    if (not filtered_genome_ptr->addContig(filtered_contig)) {
+    if (not filtered_contig->getMap().empty()) {
 
-      ExecEnv::log().error("GenomeDB::filterVariants(), Genome: {}, Unable to inserted filtered Contig: {}", genomeId(), contig_id);
+      if (not filtered_genome_ptr->addContig(filtered_contig)) {
+
+        ExecEnv::log().error("GenomeDB::filterVariants(), Genome: {}, Unable to inserted filtered Contig: {}", genomeId(), contig_id);
+
+      }
 
     }
 
@@ -254,7 +258,7 @@ std::pair<size_t, size_t> kgl::GenomeDB::validate(const std::shared_ptr<const Ge
 
 
 bool kgl::GenomeDB::getSortedVariants(ContigId_t contig_id,
-                                      PhaseId_t phase,
+                                      VariantPhase phase,
                                       ContigOffset_t start,
                                       ContigOffset_t end,
                                       OffsetVariantMap &variant_map) const {

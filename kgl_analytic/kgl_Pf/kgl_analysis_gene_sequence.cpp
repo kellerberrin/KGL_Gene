@@ -485,7 +485,7 @@ std::string kgl::GenomicSequence::outputGenomeRegion(char delimiter,
   OffsetVariantMap variant_map;
 
   if (not genome_variant_ptr->getSortedVariants( contig_opt.value()->contigId(),
-                                                 VariantSequence::HAPLOID_PHASED,
+                                                 VariantPhase::HAPLOID_PHASED,
                                                  offset,
                                                  offset+region_size,
                                                  variant_map)) {
@@ -571,7 +571,7 @@ bool kgl::GenomicSequence::mutateGenomeRegion(const ContigId_t& contig,
   OffsetVariantMap variant_map;
 
   if (not genome_variant_ptr->getSortedVariants( contig,
-                                                 VariantSequence::HAPLOID_PHASED,
+                                                 VariantPhase::HAPLOID_PHASED,
                                                  offset,
                                                  offset+region_size,
                                                  variant_map)) {

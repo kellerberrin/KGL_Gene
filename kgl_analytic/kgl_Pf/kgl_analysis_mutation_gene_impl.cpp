@@ -49,11 +49,11 @@ kgl::VepInfo kgl::GenomeMutation::geneSpanVep( const std::shared_ptr<const Conti
 
   auto unphased_contig = contig_opt.value();
 
-  auto phase_A_variants = span_contig->filterVariants(PhaseFilter(VariantSequence::DIPLOID_PHASE_A));
+  auto phase_A_variants = span_contig->filterVariants(PhaseFilter(VariantPhase::DIPLOID_PHASE_A));
   auto found_unphased_A = unphased_contig->findContig(phase_A_variants);
 
 
-  auto phase_B_variants = span_contig->filterVariants(PhaseFilter(VariantSequence::DIPLOID_PHASE_B));
+  auto phase_B_variants = span_contig->filterVariants(PhaseFilter(VariantPhase::DIPLOID_PHASE_B));
   auto found_unphased_B = unphased_contig->findContig(phase_B_variants);
 
   vep_info.female_lof = VepCount(found_unphased_A, LOF_VEP_FIELD, LOF_HC_VALUE);

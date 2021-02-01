@@ -282,7 +282,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
           for (auto const& variant_ptr : variant_array) {
 
 
-            if (variant_ptr->phaseId() == VariantSequence::DIPLOID_PHASE_A) {
+            if (variant_ptr->phaseId() == VariantPhase::DIPLOID_PHASE_A) {
 
               ++gene_mutation.female_phase;
 
@@ -399,7 +399,7 @@ void kgl::GenomeMutation::processClinvar( const GenomeId_t& genome_id,
 
   }
 
-  auto male_variants = subject_variants->filterVariants(PhaseFilter(VariantSequence::DIPLOID_PHASE_B));
+  auto male_variants = subject_variants->filterVariants(PhaseFilter(VariantPhase::DIPLOID_PHASE_B));
   auto male_clinvar = AnalyzeClinvar::findClinvar(male_variants, clinvar_contig);
   size_t male_phase_variants = male_clinvar->variantCount();
   if (male_phase_variants > 0) {
@@ -408,7 +408,7 @@ void kgl::GenomeMutation::processClinvar( const GenomeId_t& genome_id,
 
   }
 
-  auto female_variants = subject_variants->filterVariants(PhaseFilter(VariantSequence::DIPLOID_PHASE_A));
+  auto female_variants = subject_variants->filterVariants(PhaseFilter(VariantPhase::DIPLOID_PHASE_A));
   auto female_clinvar = AnalyzeClinvar::findClinvar(female_variants, clinvar_contig);
   size_t female_phase_variants = female_clinvar->variantCount();
   if (female_phase_variants > 0) {

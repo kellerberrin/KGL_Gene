@@ -323,13 +323,13 @@ bool kgl::Pf3kVCFImpl::createAddVariant(const std::string& genome_name,
   StringDNA5 alternate_str(alternate_text);
 
   std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( contig_ptr->contigId(),
-                                                                        VariantSequence::UNPHASED,
                                                                         contig_offset,
-                                                                        passed_filter,
-                                                                        evidence,
+                                                                        VariantPhase::UNPHASED,
+                                                                        identifier,
                                                                         std::move(reference_str),
                                                                         std::move(alternate_str),
-                                                                        identifier));
+                                                                        evidence,
+                                                                        passed_filter));
 
   return addThreadSafeVariant(std::move(variant_ptr), genome_name);
 

@@ -73,7 +73,7 @@ private:
   // Adds variants to a vector of genomes.
   void addVariants(const std::map<size_t, std::vector<GenomeId_t>> &phase_map,
                    const ContigId_t &contig,
-                   PhaseId_t phase,
+                   VariantPhase phase,
                    ContigOffset_t offset,
                    bool passedFilters,
                    const InfoDataEvidence info_evidence_opt,

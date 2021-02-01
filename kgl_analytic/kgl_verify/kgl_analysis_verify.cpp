@@ -53,11 +53,46 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
       population->processAll(verify_duplicates, &VerifyDuplicates::verifyVariant);
       ExecEnv::log().info("Completed Verifying population for duplicate variants, duplicates: {}",
                           verify_duplicates.duplicateCount());
+      VerifyHashDuplicates hash_duplicates;
+      population->processAll(hash_duplicates, &VerifyHashDuplicates::verifyVariant);
+      ExecEnv::log().info("Completed Hash Verifying population for duplicate variants, duplicates: {}",
+                          hash_duplicates.duplicateCount());
+
+      for (auto const& [hash, count] : verify_duplicates.hashMap()) {
+
+        auto result = hash_duplicates.hashMap().find(hash);
+        if (result != hash_duplicates.hashMap().end()) {
+
+          auto const& [hash1, count1] = *result;
+          if (count != count1) {
+
+            ExecEnv::log().info("VerifyAnalysis::fileReadAnalysis; non hash : {}, count: {} hash count: {}", hash, count, count1);
+
+          }
+
+        } else {
+
+          ExecEnv::log().info("VerifyAnalysis::fileReadAnalysis; non hash: {} count: {}", hash, count);
+
+        }
+
+      }
 
     }
 
     // Apply some filters inSitu, note this modifies the population structure so we need to cast away const-ness
     auto non_const_population = std::const_pointer_cast<PopulationDB>(population);
+
+//    auto unique_variants = non_const_population->filterVariants(UniqueUnphasedFilter());
+    auto unique_variants = non_const_population->filterVariants(UniqueUnphasedFilter());
+    ExecEnv::log().info("Population: {}, 'Unique' variants: {}",
+                        non_const_population->populationId(), unique_variants->variantCount());
+
+    VerifyHashFilter verify_filter;
+    unique_variants->processAll(verify_filter, &VerifyHashFilter::storeVariant);
+    non_const_population->processAll(verify_filter, &VerifyHashFilter::checkVariant);
+    ExecEnv::log().info("Population: {}, variants checked: {}, errors: {}",
+                        non_const_population->populationId(), verify_filter.checked(), verify_filter.errors());
 
     auto pass_results = non_const_population->inSituFilter(PassFilter());
     ExecEnv::log().info("Population: {}, total variants: {}, 'Pass' variants: {}",
@@ -153,10 +188,109 @@ bool kgl::VerifyDuplicates::verifyDuplicates() {
                             offset_variants_[idx2]->output(',', VariantOutputIndex::START_0_BASED, true));
 
         ++duplicate_count_;
+        auto result = hash_map_.find(offset_variants_[idx1]->variantHash());
+        if (result != hash_map_.end()) {
+
+          auto& [hash, count] = *result;
+          ++count;
+
+
+        } else {
+
+          auto [iter, insert_result] = hash_map_.try_emplace(offset_variants_[idx1]->variantHash(), 2);
+          if (not insert_result) {
+
+            ExecEnv::log().error("VerifyDuplicates::verifyDuplicates; unable to insert into hash map");
+
+          }
+
+        }
 
       }
 
     }
+
+  }
+
+  return true;
+
+}
+
+
+bool kgl::VerifyHashDuplicates::verifyVariant(const std::shared_ptr<const Variant> variant_ptr) {
+
+
+  auto result = hash_map_.find(variant_ptr->variantHash());
+  if (result != hash_map_.end()) {
+
+    auto& [hash, count] = *result;
+    ++count;
+    ++duplicate_count_;
+
+  } else {
+
+    auto [iter, insert_result] = hash_map_.try_emplace(variant_ptr->variantHash(), 1);
+    if (not insert_result) {
+
+      ExecEnv::log().error("VerifyHashDuplicates::verifyVariant, cannot insert hashed variant");
+
+    }
+
+  }
+
+  return true;
+
+}
+
+
+bool kgl::VerifyHashFilter::storeVariant(const std::shared_ptr<const Variant> variant_ptr) {
+
+  auto hash = variant_ptr->variantHash();
+  auto result = filtered_map_.find(hash);
+  if (result != filtered_map_.end()) {
+
+    ExecEnv::log().error("VerifyHashFilter::storeVariant; unexpected duplicate encountered hash: {}", hash);
+
+  } else {
+
+
+    auto const& [iter, insert_result] = filtered_map_.try_emplace(hash, variant_ptr);
+    if (not insert_result) {
+
+      ExecEnv::log().error("VerifyHashFilter::storeVariant; cannot insert hash: {}", hash);
+
+    }
+
+  }
+
+  return true;
+
+}
+
+
+bool kgl::VerifyHashFilter::checkVariant(const std::shared_ptr<const Variant> variant_ptr) {
+
+  auto hash = variant_ptr->variantHash();
+  auto result = filtered_map_.find(hash);
+  if (result != filtered_map_.end()) {
+
+    auto const& [hash, check_variant] = *result;
+
+    if (not variant_ptr->analogous(*check_variant)) {
+
+      ExecEnv::log().error("VerifyHashFilter::checkVariant; unexpected duplicate encountered hash: {}", hash);
+      ++errors_;
+
+    } else {
+
+      ++checked_;
+
+    }
+
+  } else {
+
+    ExecEnv::log().error("VerifyHashFilter::checkVariant; cannot find hash: {}", hash);
+    ++errors_;
 
   }
 

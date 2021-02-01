@@ -56,7 +56,7 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
         if (variant_vector->getVariantArray().size() == 2 and variant_vector->getVariantArray()[0]->equivalent(*variant_vector->getVariantArray()[1])) {
 
           std::shared_ptr<Variant> mutable_variant = std::const_pointer_cast<Variant>(variant_vector->getVariantArray().front());
-          mutable_variant->updatePhaseId(VariantSequence::HAPLOID_PHASED);   // Assign to the first (and only) homologous contig.
+          mutable_variant->updatePhaseId(VariantPhase::HAPLOID_PHASED);   // Assign to the first (and only) homologous contig.
 
           if (not genome_variant_opt.value()->addVariant(mutable_variant)) {
 
@@ -75,7 +75,7 @@ bool kgl::GenomePhasing::haploidPhasing(size_t vcf_ploidy,
           if (analyseCountStatistics(*variant_vector, variant_index)) {
 
             std::shared_ptr<Variant> mutable_variant = std::const_pointer_cast<Variant>(variant_vector->getVariantArray()[variant_index]);
-            mutable_variant->updatePhaseId(VariantSequence::HAPLOID_PHASED);   // Assign to the first (and only) homologous contig.
+            mutable_variant->updatePhaseId(VariantPhase::HAPLOID_PHASED);   // Assign to the first (and only) homologous contig.
 
             if (not genome_variant_opt.value()->addVariant(mutable_variant)) {
 

@@ -122,7 +122,7 @@ bool kgl::GenomicMutation::compare5Prime(const ContigId_t& contig_id,
   OffsetVariantMap variant_map;
 
   if (not genome_variant->getSortedVariants( contig_id,
-                                             VariantSequence::HAPLOID_PHASED,
+                                             VariantPhase::HAPLOID_PHASED,
                                              offset_5_prime,
                                              offset_5_prime + size_5_prime,
                                              variant_map)) {
@@ -196,7 +196,7 @@ bool kgl::GenomicMutation::compare3Prime(const ContigId_t& contig_id,
   OffsetVariantMap variant_map;
 
   if (not genome_variant->getSortedVariants( contig_id,
-                                             VariantSequence::HAPLOID_PHASED,
+                                             VariantPhase::HAPLOID_PHASED,
                                              offset_3_prime,
                                              offset_3_prime + size_3_prime,
                                              variant_map)) {
@@ -436,7 +436,7 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
           OffsetVariantMap variant_map;
 
           if (not genome_ptr->getSortedVariants( contig,
-                                                 VariantSequence::HAPLOID_PHASED,
+                                                 VariantPhase::HAPLOID_PHASED,
                                                  sequence_ptr->start(),
                                                  sequence_ptr->end(),
                                                  variant_map)) {
@@ -637,7 +637,7 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
           OffsetVariantMap variant_map;
 
           if (not genome_ptr->getSortedVariants( contig.first,
-                                                 VariantSequence::HAPLOID_PHASED,
+                                                 VariantPhase::HAPLOID_PHASED,
                                                  sequence.second->start(),
                                                  sequence.second->end(),
                                                  variant_map)) {
@@ -793,7 +793,7 @@ bool kgl::GenomicMutation::outputAminoMutationCSV(const std::string &file_name,
     }
 
     if (not genome_ptr->getSortedVariants( contig_id,
-                                           VariantSequence::HAPLOID_PHASED,
+                                           VariantPhase::HAPLOID_PHASED,
                                            coding_sequence_ptr->start(),
                                            coding_sequence_ptr->end(),
                                            variant_map)) {
@@ -907,7 +907,7 @@ bool kgl::GenomicMutation::outputDNAMutationCSV(const std::string &file_name,
     }
 
     if (not genome_ptr->getSortedVariants( contig_id,
-                                           VariantSequence::HAPLOID_PHASED,
+                                           VariantPhase::HAPLOID_PHASED,
                                            coding_sequence_ptr->start(),
                                            coding_sequence_ptr->end(),
                                            variant_map)) {
@@ -1108,7 +1108,7 @@ std::string kgl::GenomicMutation::outputSequence(char delimiter,
   OffsetVariantMap variant_map;
 
   if (not genome_variant->getSortedVariants( contig,
-                                             VariantSequence::HAPLOID_PHASED,
+                                             VariantPhase::HAPLOID_PHASED,
                                              coding_sequence->start(),
                                              coding_sequence->end(),
                                              variant_map)) {

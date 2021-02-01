@@ -115,7 +115,7 @@ void kgl::Genome1000VCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecor
 
   addVariants(phase_A_map,
               contig,
-              VariantSequence::DIPLOID_PHASE_A,
+              VariantPhase::DIPLOID_PHASE_A,
               record.offset,
               passed_filter,
               info_evidence_opt,
@@ -126,7 +126,7 @@ void kgl::Genome1000VCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecor
 
   addVariants(phase_B_map,
               contig,
-              VariantSequence::DIPLOID_PHASE_B,
+              VariantPhase::DIPLOID_PHASE_B,
               record.offset,
               passed_filter,
               info_evidence_opt,
@@ -251,10 +251,10 @@ std::pair<size_t, size_t> kgl::Genome1000VCFImpl::alternateIndex( const std::str
 
 void kgl::Genome1000VCFImpl::addVariants( const std::map<size_t, std::vector<GenomeId_t>>& phase_map,
                                           const ContigId_t& contig,
-                                          PhaseId_t phase,
+                                          VariantPhase phase,
                                           ContigOffset_t offset,
                                           bool passedFilters,
-                                          const InfoDataEvidence info_evidence_opt,
+                                          InfoDataEvidence info_evidence_opt,
                                           const std::string& reference,
                                           const std::string& identifier,
                                           const std::vector<std::string>& alt_vector,
@@ -264,19 +264,20 @@ void kgl::Genome1000VCFImpl::addVariants( const std::map<size_t, std::vector<Gen
 
     std::optional<std::shared_ptr<FormatData>> null_format_data = std::nullopt;
 // Setup the evidence object.
+
     VariantEvidence evidence(vcf_record_count, info_evidence_opt, null_format_data, alt_allele, alt_vector.size());
     // Add the variant.
     StringDNA5 reference_str(reference);
     StringDNA5 alternate_str(alt_vector[alt_allele]);
 
     std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( contig,
-                                                                          phase,
                                                                           offset,
-                                                                          passedFilters,
-                                                                          evidence,
+                                                                          phase,
+                                                                          identifier,
                                                                           std::move(reference_str),
                                                                           std::move(alternate_str),
-                                                                          identifier));
+                                                                          evidence,
+                                                                          passedFilters));
 
 
     if (addThreadSafeVariant(std::move(variant_ptr), genome_vector)) {

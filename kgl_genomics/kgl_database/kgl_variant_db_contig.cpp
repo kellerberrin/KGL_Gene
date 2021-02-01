@@ -72,14 +72,14 @@ bool kgl::ContigDB::addUniqueUnphasedVariant(const std::shared_ptr<const Variant
 
     // Variant is unique, so clone, de-phase, and add.
     std::shared_ptr<Variant> unphased_variant = variant_ptr->clone();
-    unphased_variant->updatePhaseId(VariantSequence::UNPHASED);
+    unphased_variant->updatePhaseId(VariantPhase::UNPHASED);
     result->second->addVariant(unphased_variant);
 
   } else {
     // add the new offset.
     std::unique_ptr<OffsetDB> offset_array_ptr(std::make_unique<OffsetDB>());
     std::shared_ptr<Variant> unphased_variant = variant_ptr->clone();
-    unphased_variant->updatePhaseId(VariantSequence::UNPHASED);
+    unphased_variant->updatePhaseId(VariantPhase::UNPHASED);
     offset_array_ptr->addVariant(unphased_variant);
     auto insert_result = contig_offset_map_.try_emplace(variant_ptr->offset(), std::move(offset_array_ptr));
 
@@ -251,7 +251,8 @@ std::optional<std::shared_ptr<const kgl::Variant>> kgl::ContigDB::findVariant(co
 
 }
 
-
+// This search algorithm has n^2 complexity.
+// The variants in the template contig must be unique regardless of phase.
 std::shared_ptr<kgl::ContigDB> kgl::ContigDB::findContig(const std::shared_ptr<const ContigDB>& template_contig) const {
 
   std::shared_ptr<ContigDB> found_contig_ptr(std::make_shared<ContigDB>(template_contig->contigId()));
@@ -263,7 +264,6 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::findContig(const std::shared_ptr<c
     if (result != contig_offset_map_.end()) {
 
       auto const& [this_offset, this_offset_ptr] = *result;
-
 
       for (auto const& variant_ptr : offset_ptr->getVariantArray())  {
 
@@ -282,13 +282,13 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::findContig(const std::shared_ptr<c
 
           } // variants match.
 
-        } // template offset
+        } // this offset
 
-      } // this offset
+      } // template offset
 
     } // if this offset
 
-  } // for all temp[late offset
+  } // for all template offset
 
   return found_contig_ptr;
 
@@ -344,7 +344,7 @@ std::pair<size_t, size_t> kgl::ContigDB::validate(const std::shared_ptr<const Co
 
 }
 
-bool kgl::ContigDB::getSortedVariants(PhaseId_t phase,
+bool kgl::ContigDB::getSortedVariants(VariantPhase phase,
                                       ContigOffset_t start,
                                       ContigOffset_t end,
                                       OffsetVariantMap& variant_map) const {
@@ -363,7 +363,7 @@ bool kgl::ContigDB::getSortedVariants(PhaseId_t phase,
 
     for (const auto& variant : previous_offset_variants) {
 
-      if (variant->phaseId() == phase or phase == VariantSequence::UNPHASED) {
+      if (variant->phaseId() == phase or phase == VariantPhase::UNPHASED) {
 
         if (variant->offset() + variant->referenceSize() > start) {
 
@@ -386,7 +386,7 @@ bool kgl::ContigDB::getSortedVariants(PhaseId_t phase,
 
     for (const auto& variant : previous_offset_variants) {
 
-      if (variant->phaseId() == phase or phase == VariantSequence::UNPHASED) {
+      if (variant->phaseId() == phase or phase == VariantPhase::UNPHASED) {
 
         variant_map.emplace(it->first, variant);
 

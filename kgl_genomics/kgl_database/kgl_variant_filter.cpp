@@ -94,6 +94,63 @@ bool kgl::VepSubStringFilter::applyFilter(const Variant& variant) const {
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter unique variants disregarding phase.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool kgl::UniqueUnphasedFilter::applyFilter(const Variant& variant) const {
+
+  auto variant_hash = variant.locationHash();
+  auto const& result = hashed_variants_.find(variant_hash);
+  if (result != hashed_variants_.end()) {
+
+    return false;
+
+  } else {
+
+    auto const& [iter, insert_result] = hashed_variants_.emplace(std::move(variant_hash));
+    if (not insert_result) {
+
+      ExecEnv::log().error("UniqueUnphasedFilter::applyFilter; variant hash: {} cannot be inserted", variant.locationHash());
+      return false;
+
+    }
+
+    return true;
+
+  }
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Filter only unique variants including phase.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool kgl::UniquePhasedFilter::applyFilter(const Variant& variant) const {
+
+  auto variant_hash = variant.locationPhaseHash();
+  auto const& result = hashed_variants_.find(variant_hash);
+  if (result != hashed_variants_.end()) {
+
+    return false;
+
+  } else {
+
+    auto const& [iter, insert_result] = hashed_variants_.emplace(std::move(variant_hash));
+    if (not insert_result) {
+
+      ExecEnv::log().error("UniquePhasedFilter::applyFilter; variant hash: {} cannot be inserted", variant.locationPhaseHash());
+      return false;
+
+    }
+
+    return true;
+
+  }
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Filter variants to a base count.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -93,6 +93,7 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
       InfoEvidenceAnalysis::vepSubFieldValues("LoF", population);
       InfoEvidenceAnalysis::vepSubFieldValues("LoF_filter", population);
       InfoEvidenceAnalysis::vepSubFieldValues("LoF_flags", population);
+      InfoEvidenceAnalysis::vepSubFieldValues("CLIN_SIG", population);
 //      InfoEvidenceAnalysis::vepSubFieldValues("LoF_info", population);
     }
 

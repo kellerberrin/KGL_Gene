@@ -81,13 +81,13 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
     StringDNA5 alternate_str(vcf_record.alt);
 
     std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( contig,
-                                                                          VariantSequence::UNPHASED,
                                                                           vcf_record.offset,
-                                                                          passed_filter,
-                                                                          evidence,
+                                                                          VariantPhase::UNPHASED,
+                                                                          vcf_record.id,
                                                                           std::move(reference_str),
                                                                           std::move(alternate_str),
-                                                                          vcf_record.id));
+                                                                          evidence,
+                                                                          passed_filter));
 
     if (not addThreadSafeVariant(std::move(variant_ptr), genome_db_ptr_->genomeId())) {
 
@@ -123,13 +123,13 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
       StringDNA5 alternate_str(alt);
 
       std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( contig,
-                                                                            VariantSequence::UNPHASED,
                                                                             vcf_record.offset,
-                                                                            passed_filter,
-                                                                            evidence,
+                                                                            VariantPhase::UNPHASED,
+                                                                            vcf_record.id,
                                                                             std::move(reference_str),
                                                                             std::move(alternate_str),
-                                                                            vcf_record.id));
+                                                                            evidence,
+                                                                            passed_filter));
 
       if (not addThreadSafeVariant(std::move(variant_ptr), genome_db_ptr_->genomeId())) {
 

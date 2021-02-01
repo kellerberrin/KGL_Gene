@@ -82,9 +82,9 @@ kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
           if (selected_allele) {
 
             std::shared_ptr<Variant> cloned_variant1 = selected_allele->allele()->clone();
-            cloned_variant1->updatePhaseId(VariantSequence::DIPLOID_PHASE_A);
+            cloned_variant1->updatePhaseId(VariantPhase::DIPLOID_PHASE_A);
             std::shared_ptr<Variant> cloned_variant2 = selected_allele->allele()->clone();
-            cloned_variant2->updatePhaseId(VariantSequence::DIPLOID_PHASE_B);
+            cloned_variant2->updatePhaseId(VariantPhase::DIPLOID_PHASE_B);
             if (not synthetic_pop_ptr->addVariant( cloned_variant1, genome_vector)) {
 
               ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
@@ -117,11 +117,11 @@ kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
             std::shared_ptr<Variant> cloned_variant = selected_allele->allele()->clone();
             if (random_boolean.random(entropy_mt.generator())) {
 
-              cloned_variant->updatePhaseId(VariantSequence::DIPLOID_PHASE_A);
+              cloned_variant->updatePhaseId(VariantPhase::DIPLOID_PHASE_A);
 
             } else {
 
-              cloned_variant->updatePhaseId(VariantSequence::DIPLOID_PHASE_B);
+              cloned_variant->updatePhaseId(VariantPhase::DIPLOID_PHASE_B);
 
             }
             if (not synthetic_pop_ptr->addVariant( cloned_variant, genome_vector)) {
@@ -148,9 +148,9 @@ kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
           if (selected_alleles) {
 
             std::shared_ptr<Variant> cloned_variant1 = selected_alleles->first.allele()->clone();
-            cloned_variant1->updatePhaseId(VariantSequence::DIPLOID_PHASE_A);
+            cloned_variant1->updatePhaseId(VariantPhase::DIPLOID_PHASE_A);
             std::shared_ptr<Variant> cloned_variant2 = selected_alleles->second.allele()->clone();
-            cloned_variant2->updatePhaseId(VariantSequence::DIPLOID_PHASE_B);
+            cloned_variant2->updatePhaseId(VariantPhase::DIPLOID_PHASE_B);
             if (not synthetic_pop_ptr->addVariant( cloned_variant1, genome_vector)) {
 
               ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"

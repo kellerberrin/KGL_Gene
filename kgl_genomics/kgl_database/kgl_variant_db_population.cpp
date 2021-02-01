@@ -136,7 +136,6 @@ std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::filterVariants(const Varia
   std::vector<std::future<std::shared_ptr<GenomeDB>>> future_vector;
   // Required by the thread pool.
   /// todo: This could be re-coded as a lambda, investigate threadpool type deduction for lambda functions.
-  std::shared_ptr<const VariantFilter> filter_ptr = filter.clone();
   struct FilterClass {
 
     static std::shared_ptr<GenomeDB>
@@ -149,6 +148,7 @@ std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::filterVariants(const Varia
   // Queue a thread for each genome.
   for (auto const& [genome_id, genome_ptr] : getMap()) {
 
+    std::shared_ptr<const VariantFilter> filter_ptr = filter.clone();
     std::future<std::shared_ptr<GenomeDB>> future = thread_pool.enqueueTask(&FilterClass::filterGenome, genome_ptr, filter_ptr);
     future_vector.push_back(std::move(future));
 
@@ -159,9 +159,13 @@ std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::filterVariants(const Varia
   for (auto& future : future_vector) {
 
     std::shared_ptr<GenomeDB> filtered_genome_ptr = future.get();
-    if (not filtered_population_ptr->addGenome(filtered_genome_ptr)) {
+    if (not filtered_genome_ptr->getMap().empty()) {
 
-      ExecEnv::log().error("PopulationDB::filterVariants; could not add filtered genome to the population");
+      if (not filtered_population_ptr->addGenome(filtered_genome_ptr)) {
+
+        ExecEnv::log().error("PopulationDB::filterVariants; could not add filtered genome to the population");
+
+      }
 
     }
 

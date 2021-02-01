@@ -22,7 +22,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
 namespace kellerberrin::genome {   //  organization level namespace
 
 
@@ -55,40 +54,46 @@ private:
 //  Genome information of the variant.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum class VariantSequenceType { CDS_CODING, INTRON, NON_CODING };
+// Variant Chromosome phase
+enum class VariantPhase : std::uint8_t { HAPLOID_PHASED = 0,
+                                         DIPLOID_PHASE_A = 1, // By convention, the female derived contig is first.
+                                         DIPLOID_PHASE_B = 2,
+                                         UNPHASED = 255 };
+
 class VariantSequence {
 
 public:
 
   VariantSequence(ContigId_t contig_id,
-                  PhaseId_t phase_id,
                   ContigOffset_t contig_offset,
-                  bool passedFilters) : contig_id_(std::move(contig_id)),
-                                        phase_id_(phase_id),
-                                        contig_offset_(contig_offset),
-                                        pass_(passedFilters) {}
+                  VariantPhase phase_id,
+                  std::string&& identifier) : contig_id_(std::move(contig_id)),
+                                              contig_offset_(contig_offset),
+                                              phase_id_(phase_id),
+                                              identifier_(identifier) {}
   virtual ~VariantSequence() = default;
 
   [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
   [[nodiscard]] ContigOffset_t offset() const { return contig_offset_; }
-  [[nodiscard]] PhaseId_t phaseId() const { return phase_id_; }
-  [[nodiscard]] bool passFilters() const { return pass_; }
-  void updatePhaseId(PhaseId_t phase_id) { phase_id_ = phase_id; }
+  [[nodiscard]] VariantPhase phaseId() const { return phase_id_; }
+  [[nodiscard]] const std::string& identifier() const { return identifier_; }
 
+  // Hash string value of the contig and offset concatenated:
+  [[nodiscard]] std::string locationHash() const;
+  // Hash string value of the contig, offset and phase concatenated:
+  [[nodiscard]] std::string locationPhaseHash() const;
+
+  void updatePhaseId(VariantPhase phase_id) { phase_id_ = phase_id; }
 
   [[nodiscard]] std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
 
-  constexpr static const PhaseId_t UNPHASED = 255;
-  constexpr static const PhaseId_t DIPLOID_PHASE_A = 0;  // By convention the female_ derived contig is first.
-  constexpr static const PhaseId_t DIPLOID_PHASE_B = 1;
-  constexpr static const PhaseId_t HAPLOID_PHASED = 2;
 
 private:
 
   const ContigId_t contig_id_;                          // The contig of this variant
-  PhaseId_t phase_id_;                                  // The phase of this variant (which homologous contig)
   const ContigOffset_t contig_offset_;                  // Location on the contig.
-  bool pass_;                                           // True if the VCF record was annotated with "PASS" filters.
+  VariantPhase phase_id_;                               // The phase of this variant (which homologous contig)
+  const std::string identifier_;                      // The VCF supplied variant identifier.
 
 };
 
@@ -108,18 +113,18 @@ class Variant : public VariantSequence {
 public:
 
   Variant(   const ContigId_t& contig_id,
-             PhaseId_t phase_id,
              ContigOffset_t contig_offset,
-             bool passedFilters,
-             const VariantEvidence& evidence,
+             VariantPhase phase_id,
+             std::string identifier,
              StringDNA5&& reference,
              StringDNA5&& alternate,
-             std::string identifier)
-  : VariantSequence(contig_id, phase_id, contig_offset, passedFilters),
-    evidence_(evidence),
+             const VariantEvidence& evidence,
+             bool passed_filters)
+  : VariantSequence(contig_id, contig_offset, phase_id, std::move(identifier)),
     reference_(std::move(reference)),
     alternate_(std::move(alternate)),
-    identifier_(std::move(identifier)) {}
+    evidence_(evidence),
+    pass_(passed_filters) {}
 
   ~Variant() override = default;
 
@@ -131,9 +136,9 @@ public:
 
   [[nodiscard]] size_t referenceSize() const { return reference_.length(); }
 
-  [[nodiscard]] const std::string& identifier() const { return identifier_; }
-
   [[nodiscard]] VariantType variantType() const;
+
+  [[nodiscard]] bool passFilters() const { return pass_; }
 
   [[nodiscard]] bool isSNP() const { return reference().length() == 1 and alternate().length() == 1; }
 
@@ -162,7 +167,7 @@ public:
   [[nodiscard]] bool operator<(const Variant& cmp_var) const { return lessThan(cmp_var); };
   [[nodiscard]] bool operator==(const Variant& cmp_var) const { return equivalent(cmp_var); };
 
-  [[nodiscard]] std::string name() const;
+  [[nodiscard]] std::string typeText() const;
 
   [[nodiscard]] bool filterVariant(const VariantFilter& filter) const { return filter.applyFilter(*this); }
 
@@ -172,12 +177,15 @@ public:
   // Checks if the reference and alternate are equivalent.
   [[nodiscard]] bool isNullVariant() const { return reference_ == alternate_; }
 
+  // Unique upto phase (not phase specific).
+  [[nodiscard]] std::string variantHash() const;
+
 private:
 
-  const VariantEvidence evidence_;                      // VCF File based information payload about this variant
   const DNA5SequenceLinear reference_;                  // reference sequence (ref allele)
   const DNA5SequenceLinear alternate_;                  // alternate sequence (alt allele)
-  const std::string identifier_;                      // The VCF supplied variant identifier.
+  const VariantEvidence evidence_;                      // VCF File based information payload about this variant
+  const bool pass_;                                           // True if the VCF record was annotated with "PASS" filters.
 
   // Generate a CIGAR by comparing the reference to the alternate.
   [[nodiscard]] std::string alternateCigar() const;

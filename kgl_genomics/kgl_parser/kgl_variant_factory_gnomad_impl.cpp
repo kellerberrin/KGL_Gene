@@ -115,7 +115,7 @@ void kgl::GenomeGnomadVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRec
 
   addVariants(phase_A_map,
               contig,
-              VariantSequence::UNPHASED,
+              VariantPhase::UNPHASED,
               record.offset,
               passed_filter,
               info_evidence_opt,
@@ -125,7 +125,7 @@ void kgl::GenomeGnomadVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRec
               vcf_record_count);
   addVariants(phase_B_map,
               contig,
-              VariantSequence::UNPHASED,
+              VariantPhase::UNPHASED,
               record.offset,
               passed_filter,
               info_evidence_opt,
@@ -204,7 +204,7 @@ std::pair<size_t, size_t> kgl::GenomeGnomadVCFImpl::alternateIndex(const std::st
 
 void kgl::GenomeGnomadVCFImpl::addVariants( const std::map<size_t, std::vector<GenomeId_t>>& phase_map,
                                           const ContigId_t& contig,
-                                          PhaseId_t phase,
+                                          VariantPhase phase,
                                           ContigOffset_t offset,
                                           bool passedFilters,
                                           const InfoDataEvidence info_evidence_opt,
@@ -223,13 +223,13 @@ void kgl::GenomeGnomadVCFImpl::addVariants( const std::map<size_t, std::vector<G
     StringDNA5 alternate_str(alt_vector[alt_allele]);
 
     std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( contig,
-                                                                          phase,
                                                                           offset,
-                                                                          passedFilters,
-                                                                          evidence,
+                                                                          phase,
+                                                                          identifier,
                                                                           std::move(reference_str),
                                                                           std::move(alternate_str),
-                                                                          identifier));
+                                                                          evidence,
+                                                                          passedFilters));
 
 
     if (addThreadSafeVariant(std::move(variant_ptr), genome_vector)) {

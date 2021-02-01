@@ -72,7 +72,7 @@ public:
   [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const GenomeReference>& genome_db_ptr) const;
 
   [[nodiscard]] bool getSortedVariants( ContigId_t contig_id,
-                                        PhaseId_t phase,
+                                        VariantPhase phase,
                                         ContigOffset_t start,
                                         ContigOffset_t end,
                                         OffsetVariantMap &variant_map) const;

@@ -10,6 +10,9 @@
 
 #include "kel_utility.h"
 
+#include <unordered_set>
+
+
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
@@ -401,6 +404,57 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Unique variants disregarding phase.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class UniqueUnphasedFilter: public VariantFilter {
+
+public:
+
+  UniqueUnphasedFilter() { filterName("UniqueUnphasedFilter"); }
+  UniqueUnphasedFilter(const UniqueUnphasedFilter&) = delete;
+  ~UniqueUnphasedFilter() override = default;
+
+  UniqueUnphasedFilter& operator=(const UniqueUnphasedFilter&) = delete;
+
+  [[nodiscard]] bool applyFilter(const Variant& variant) const override;
+
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<UniqueUnphasedFilter>(); }
+
+private:
+
+  mutable std::unordered_set<std::string> hashed_variants_;
+
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Unique variants including phase.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class UniquePhasedFilter: public VariantFilter {
+
+public:
+
+  UniquePhasedFilter() { filterName("UniquePhasedFilter"); }
+  UniquePhasedFilter(const UniquePhasedFilter&) = delete;
+  ~UniquePhasedFilter() override = default;
+
+  UniquePhasedFilter& operator=(const UniquePhasedFilter&) = delete;
+
+  [[nodiscard]] bool applyFilter(const Variant& variant) const override;
+
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<UniquePhasedFilter>(); }
+
+private:
+
+  mutable std::unordered_set<std::string> hashed_variants_;
+
+};
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Filter variants on phasing.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -408,7 +462,7 @@ class PhaseFilter : public VariantFilter {
 
 public:
 
-  explicit PhaseFilter(PhaseId_t phase) : phase_(phase) {
+  explicit PhaseFilter(VariantPhase phase) : phase_(phase) {
 
     filterName("PhaseFilter");
 
@@ -422,7 +476,7 @@ public:
 
 private:
 
-  const PhaseId_t phase_;
+  const VariantPhase phase_;
 
 };
 
