@@ -180,6 +180,9 @@ public:
   // Unique upto phase (not phase specific).
   [[nodiscard]] std::string variantHash() const;
 
+  // Phase specific hash
+  [[nodiscard]] std::string variantPhaseHash() const;
+
 private:
 
   const DNA5SequenceLinear reference_;                  // reference sequence (ref allele)

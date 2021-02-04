@@ -9,6 +9,7 @@
 #include "kgl_variant.h"
 
 #include <vector>
+#include <list>
 #include <forward_list>
 #include <memory>
 
@@ -27,7 +28,7 @@ class OffsetDB {
 
 public:
 
-  OffsetDB() { variant_vector_.reserve(INITIAL_VECTOR_SIZE_); };
+  OffsetDB() { variant_vector_.reserve(INITIAL_VECTOR_SIZE_); }
   ~OffsetDB() = default;
 
   OffsetDB(const OffsetDB &) = delete;
@@ -38,7 +39,7 @@ public:
   void addVariant(std::shared_ptr<const Variant> variant_ptr) { variant_vector_.emplace_back(std::move(variant_ptr)); }
   void clearVariants() { variant_vector_.clear(); }
   void replaceVector(OffsetDBArray&& replace_vector) { variant_vector_ = replace_vector;  }
-
+  std::pair<size_t, size_t> inSituFilter(const VariantFilter &filter);
 
 private:
 

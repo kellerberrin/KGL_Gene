@@ -99,7 +99,7 @@ bool kgl::VepSubStringFilter::applyFilter(const Variant& variant) const {
 
 bool kgl::UniqueUnphasedFilter::applyFilter(const Variant& variant) const {
 
-  auto variant_hash = variant.locationHash();
+  auto variant_hash = variant.variantHash();
   auto const& result = hashed_variants_.find(variant_hash);
   if (result != hashed_variants_.end()) {
 
@@ -110,7 +110,7 @@ bool kgl::UniqueUnphasedFilter::applyFilter(const Variant& variant) const {
     auto const& [iter, insert_result] = hashed_variants_.emplace(std::move(variant_hash));
     if (not insert_result) {
 
-      ExecEnv::log().error("UniqueUnphasedFilter::applyFilter; variant hash: {} cannot be inserted", variant.locationHash());
+      ExecEnv::log().error("UniqueUnphasedFilter::applyFilter; variant hash: {} cannot be inserted", variant.variantHash());
       return false;
 
     }
@@ -127,7 +127,7 @@ bool kgl::UniqueUnphasedFilter::applyFilter(const Variant& variant) const {
 
 bool kgl::UniquePhasedFilter::applyFilter(const Variant& variant) const {
 
-  auto variant_hash = variant.locationPhaseHash();
+  auto variant_hash = variant.variantPhaseHash();
   auto const& result = hashed_variants_.find(variant_hash);
   if (result != hashed_variants_.end()) {
 
@@ -138,7 +138,7 @@ bool kgl::UniquePhasedFilter::applyFilter(const Variant& variant) const {
     auto const& [iter, insert_result] = hashed_variants_.emplace(std::move(variant_hash));
     if (not insert_result) {
 
-      ExecEnv::log().error("UniquePhasedFilter::applyFilter; variant hash: {} cannot be inserted", variant.locationPhaseHash());
+      ExecEnv::log().error("UniquePhasedFilter::applyFilter; variant hash: {} cannot be inserted", variant.variantPhaseHash());
       return false;
 
     }

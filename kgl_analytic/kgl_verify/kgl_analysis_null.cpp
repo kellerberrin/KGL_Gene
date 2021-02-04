@@ -42,12 +42,19 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
   if (file_characteristic.data_implementation == DataImplEnum::PopulationVariant) {
 
     std::shared_ptr<const PopulationDB> population = std::dynamic_pointer_cast<const PopulationDB>(data_ptr);
-
+/*
     size_t genome_count{0};
     for (auto const& [genome_id, genome_ptr] : population->getMap()) {
 
-      ExecEnv::log().info("NullAnalysis::fileReadAnalysis; Diploid Population: ,{}, Genome: ,{}, Contigs: ,{}",
+      ExecEnv::log().info("NullAnalysis::fileReadAnalysis; Diploid Population: {}, GenomeID: {}, Contigs: {}",
                           population->populationId(), genome_id, genome_ptr->getMap().size());
+
+      for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
+
+        ExecEnv::log().info("NullAnalysis::fileReadAnalysis; ContigID: {}, Contig Offsets: {}, Contig Variants: {}",
+                            contig_id, contig_ptr->getMap().size(), contig_ptr->variantCount());
+
+      }
 
       ++genome_count;
 
@@ -56,6 +63,7 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
     ExecEnv::log().info("NullAnalysis::fileReadAnalysis; Diploid Population: ,{}, Total Genomes: {}",
                         population->populationId(), genome_count);
 
+*/
     // Iterate any available info fields
     std::optional<std::shared_ptr<const InfoEvidenceHeader>> info_header_opt = population->getVCFInfoEvidenceHeader();
     if (not info_header_opt) {
@@ -83,7 +91,7 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
     if (file_characteristic.data_source == DataSourceEnum::Gnomad2_1) {
 
       // Investigate vep field values.
-
+/*
       InfoEvidenceAnalysis::vepSubFieldValues("Consequence", population);
       InfoEvidenceAnalysis::vepSubFieldValues("IMPACT", population);
       InfoEvidenceAnalysis::vepSubFieldValues("Feature_type", population);
@@ -95,6 +103,8 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
       InfoEvidenceAnalysis::vepSubFieldValues("LoF_flags", population);
       InfoEvidenceAnalysis::vepSubFieldValues("CLIN_SIG", population);
 //      InfoEvidenceAnalysis::vepSubFieldValues("LoF_info", population);
+*/
+
     }
 
   }

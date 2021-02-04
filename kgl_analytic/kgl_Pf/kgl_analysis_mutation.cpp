@@ -136,6 +136,11 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 
       }
 
+      ExecEnv::log().info("Begin uniqueness filter for population: {} variant count: {}", population_ptr_->populationId(), population_ptr_->variantCount());
+      auto filtered_Population = population_ptr_->filterVariants(NotFilter(UniquePhasedFilter()));
+      ExecEnv::log().info("Filtered Population: {} variant count: {}", filtered_Population->populationId(), filtered_Population->variantCount());
+
+
     } else if (file_characteristic.data_source == DataSourceEnum::Gnomad2_1) {
 
       unphased_population_ptr_ = std::dynamic_pointer_cast<const PopulationDB>(data_ptr);
@@ -145,6 +150,7 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
         ExecEnv::log().critical("MutationAnalysis::fileReadAnalysis; Unable to cast Gnomad 2.1 data file to population, severe error.");
 
       }
+
 
     } else if (file_characteristic.data_source == DataSourceEnum::Clinvar) {
 

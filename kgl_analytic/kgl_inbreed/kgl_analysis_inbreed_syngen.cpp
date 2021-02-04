@@ -62,7 +62,7 @@ kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
     // stochastically defined by the assigned inbreeding coefficient
     for (auto const& [offset, offset_ptr] : locus_list.getMap()) {
 
-      OffsetDBArray variant_vec = offset_ptr->getVariantArray();
+      const OffsetDBArray variant_vec = offset_ptr->getVariantArray();
 
       // Generate the minor allele frequencies.
       AlleleFreqVector freq_vector(variant_vec, super_population, arguments.frequencySource());

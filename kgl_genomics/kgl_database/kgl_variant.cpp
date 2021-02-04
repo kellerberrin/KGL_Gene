@@ -284,3 +284,10 @@ std::string kgl::Variant::variantHash() const {
   return locationHash() + ":" + reference().getSequenceAsString() + ":" + alternate().getSequenceAsString();
 
 }
+
+// Unique upto phase.
+std::string kgl::Variant::variantPhaseHash() const {
+
+  return locationPhaseHash() + ":" + reference().getSequenceAsString() + ":" + alternate().getSequenceAsString();
+
+}

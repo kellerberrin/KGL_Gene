@@ -277,7 +277,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
         for (auto const& [offset, offset_ptr] : span_variant_ptr->getMap()) {
 
-          OffsetDBArray variant_array = offset_ptr->getVariantArray();
+          const OffsetDBArray& variant_array = offset_ptr->getVariantArray();
 
           for (auto const& variant_ptr : variant_array) {
 
@@ -354,7 +354,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
           } else if (offset_ptr->getVariantArray().size() == 2) {
 
-            auto offset_array = offset_ptr->getVariantArray();
+            auto const& offset_array = offset_ptr->getVariantArray();
             if (offset_array.front()->homozygous(*offset_array.back())) {
 
               ++gene_mutation.homozygous;

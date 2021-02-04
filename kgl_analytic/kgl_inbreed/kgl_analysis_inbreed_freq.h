@@ -117,7 +117,7 @@ class AlleleFreqVector {
 
 public:
 
-  AlleleFreqVector( const std::vector<std::shared_ptr<const Variant>>& variant_vector,
+  AlleleFreqVector( const OffsetDBArray& variant_vector,
                     const std::string& frequency_field,
                     DataSourceEnum data_source);
 

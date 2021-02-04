@@ -77,6 +77,12 @@ bool kgl::PopulationDB::addGenome(const std::shared_ptr<GenomeDB>& genome_ptr) {
 
 size_t kgl::PopulationDB::variantCount() const {
 
+  // Check edge condition.
+  if (getMap().empty()) {
+
+    return 0;
+
+  }
   // Calc how many threads required.
   size_t thread_count = std::min(getMap().size(), ThreadPool::hardwareThreads());
   ThreadPool thread_pool(thread_count);
@@ -198,7 +204,6 @@ std::pair<size_t, size_t> kgl::PopulationDB::inSituFilter(const VariantFilter& f
   std::vector<std::future<std::pair<size_t, size_t>>> future_vector;
   // Required by the thread pool.
   /// todo: This could be re-coded as a lambda, investigate threadpool type deduction for lambda functions.
-  std::shared_ptr<const VariantFilter> filter_ptr = filter.clone();
   struct FilterClass {
 
     static std::pair<size_t, size_t>
@@ -210,6 +215,7 @@ std::pair<size_t, size_t> kgl::PopulationDB::inSituFilter(const VariantFilter& f
   // Queue a thread for each genome.
   for (auto& [genome_id, genome_ptr] : getMap()) {
 
+    std::shared_ptr<const VariantFilter> filter_ptr = filter.clone();
     std::future<std::pair<size_t, size_t>> future = thread_pool.enqueueTask(&FilterClass::inSituFilterGenome, genome_ptr, filter_ptr);
     future_vector.push_back(std::move(future));
 

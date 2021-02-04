@@ -15,7 +15,7 @@ namespace kel = kellerberrin;
 
 
 
-kgl::AlleleFreqVector::AlleleFreqVector(const std::vector<std::shared_ptr<const Variant>>& variant_vector,
+kgl::AlleleFreqVector::AlleleFreqVector(const OffsetDBArray& variant_vector,
                                         const std::string& frequency_field,
                                         DataSourceEnum data_source) {
 
@@ -443,7 +443,7 @@ kgl::InbreedingCalculation::generateFrequencies(const GenomeId_t& genome_id,
   for (auto const& [offset, offset_ptr] : locus_list->getMap()) {
 
     // Get the allele frequencies.
-    OffsetDBArray locus_variant_array = offset_ptr->getVariantArray();
+    const OffsetDBArray& locus_variant_array = offset_ptr->getVariantArray();
 
     AlleleFreqVector allele_freq_vector(locus_variant_array, super_population_field, variant_source);
     if (not allele_freq_vector.checkValidAlleleVector()) {
@@ -477,7 +477,7 @@ kgl::InbreedingCalculation::generateFrequencies(const GenomeId_t& genome_id,
 
           } else if (diploid_offset.size() == 2) {
 
-            if (diploid_offset[0]->homozygous(*diploid_offset[1])) {
+            if (diploid_offset.front()->homozygous(*diploid_offset.back())) {
 
               frequency_vector.emplace_back(AlleleClassType::MINOR_HOMOZYGOUS, allele_freq, allele_freq, allele_freq_vector);
               break;
@@ -503,7 +503,7 @@ kgl::InbreedingCalculation::generateFrequencies(const GenomeId_t& genome_id,
 
               if (not found_second_minor) {
                 ExecEnv::log().warn("InbreedingCalculation::generateFrequencies; Genome: {}, Not Found Second Minor SNP: {}",
-                                    genome_id, diploid_offset[0]->output(',',VariantOutputIndex::START_0_BASED, false));
+                                    genome_id, diploid_offset.front()->output(',',VariantOutputIndex::START_0_BASED, false));
 
               } else {
 

@@ -58,7 +58,7 @@ bool kgl::ContigDB::addUniqueUnphasedVariant(const std::shared_ptr<const Variant
 
   if (result != contig_offset_map_.end()) {
     // Variant offset exists.
-    OffsetDBArray offset_variant_array = result->second->getVariantArray();
+    const OffsetDBArray& offset_variant_array = result->second->getVariantArray();
     // Check for uniqueness
     for (auto const& offset_variant : offset_variant_array) {
 
@@ -151,33 +151,11 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::filterVariants(const VariantFilter
 std::pair<size_t, size_t> kgl::ContigDB::inSituFilter(const VariantFilter &filter) {
 
   std::pair<size_t, size_t> contig_count{0, 0};
-  for (auto& [offset, variant_vector] : contig_offset_map_) {
+  for (auto& [offset, offset_ptr] : contig_offset_map_) {
 
-    OffsetDBArray filtered_variants;
-    const OffsetDBArray& variant_array = variant_vector->getVariantArray();
-    contig_count.first += variant_array.size();
-
-    for (auto const &variant_ptr : variant_array) {
-
-      if (filter.applyFilter(*variant_ptr)) {
-
-        filtered_variants.push_back(variant_ptr);
-
-      }
-
-    }
-
-    // Replace with filtered variants at this offset.
-    contig_count.second += filtered_variants.size();
-    if (not filtered_variants.empty()) {
-
-      variant_vector->replaceVector(std::move(filtered_variants));
-
-    } else {
-
-      variant_vector->clearVariants();
-
-    }
+    auto const offset_count = offset_ptr->inSituFilter(filter);
+    contig_count.first += offset_count.first;
+    contig_count.second += offset_count.second;
 
   } // for all offsets
 
@@ -359,7 +337,7 @@ bool kgl::ContigDB::getSortedVariants(VariantPhase phase,
 
     auto previous_offset_ptr = std::prev(lower_bound);
 
-    OffsetDBArray previous_offset_variants = previous_offset_ptr->second->getVariantArray();
+    const OffsetDBArray& previous_offset_variants = previous_offset_ptr->second->getVariantArray();
 
     for (const auto& variant : previous_offset_variants) {
 
@@ -382,7 +360,7 @@ bool kgl::ContigDB::getSortedVariants(VariantPhase phase,
   for (auto it = lower_bound; it != upper_bound; ++it) {
 
 
-    OffsetDBArray previous_offset_variants = it->second->getVariantArray();
+    const OffsetDBArray& previous_offset_variants = it->second->getVariantArray();
 
     for (const auto& variant : previous_offset_variants) {
 
@@ -442,7 +420,7 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::subset(ContigOffset_t start, Conti
 
     auto const& [offset, offset_ptr] = *it;
 
-    auto variant_array = offset_ptr->getVariantArray();
+    auto const& variant_array = offset_ptr->getVariantArray();
 
     for (auto const& variant_ptr : variant_array) {
 
