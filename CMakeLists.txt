@@ -216,7 +216,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_Pf3k_COI.h
         kgl_genomics/kgl_database/kgl_genome_genome.h
         kgl_genomics/kgl_parser/kgl_square_parser.cpp
-        kgl_genomics/kgl_parser/kgl_square_parser.h kgl_genomics/kgl_database/kgl_variant_db_offset.cpp)
+        kgl_genomics/kgl_parser/kgl_square_parser.h
+        kgl_genomics/kgl_database/kgl_variant_db_offset.cpp kgl_genomics/kgl_database/kgl_variant_filter_virtual.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -285,7 +286,15 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene.cpp
         kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene.h
         kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_impl.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_output.cpp kgl_analytic/kgl_Pf/kgl_analysis_mutation_clinvar.cpp kgl_analytic/kgl_Pf/kgl_analysis_mutation_clinvar.h kgl_analytic/kgl_Pf/kgl_analysis_mutation_vep.cpp kgl_analytic/kgl_Pf/kgl_analysis_mutation_vep.h kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_ethnic.cpp kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_ethnic.h kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_clinvar.cpp kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_clinvar.h)
+        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_output.cpp
+        kgl_analytic/kgl_Pf/kgl_analysis_mutation_clinvar.cpp
+        kgl_analytic/kgl_Pf/kgl_analysis_mutation_clinvar.h
+        kgl_analytic/kgl_Pf/kgl_analysis_mutation_vep.cpp
+        kgl_analytic/kgl_Pf/kgl_analysis_mutation_vep.h
+        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_ethnic.cpp
+        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_ethnic.h
+        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_clinvar.cpp
+        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_clinvar.h)
 
 # Deconvolution and mixture files.
 

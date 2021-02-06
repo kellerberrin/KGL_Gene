@@ -14,40 +14,10 @@
 #include "kgl_genome_collection.h"
 #include "kgl_sequence_base.h"
 #include "kgl_variant_evidence.h"
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// The abstract VariantFilter class uses the visitor pattern.
-// Concrete variant filters are defined in kgl_filter.h
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#include "kgl_variant_filter_virtual.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
-
-
-class Variant;   // Forward decl.
-
-class VariantFilter {
-
-public:
-
-  VariantFilter() = default;
-  virtual ~VariantFilter() = default;
-
-  [[nodiscard]] virtual bool applyFilter(const Variant& variant) const = 0;
-
-  [[nodiscard]] virtual std::shared_ptr<VariantFilter> clone() const = 0;
-
-  [[nodiscard]] std::string filterName() const { return filter_name_; }
-
-  void filterName(std::string filter_name) { filter_name_ = std::move(filter_name); }
-
-
-private:
-
-  std::string filter_name_;
-
-};
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -60,43 +30,6 @@ enum class VariantPhase : std::uint8_t { HAPLOID_PHASED = 0,
                                          DIPLOID_PHASE_B = 2,
                                          UNPHASED = 255 };
 
-class VariantSequence {
-
-public:
-
-  VariantSequence(ContigId_t contig_id,
-                  ContigOffset_t contig_offset,
-                  VariantPhase phase_id,
-                  std::string&& identifier) : contig_id_(std::move(contig_id)),
-                                              contig_offset_(contig_offset),
-                                              phase_id_(phase_id),
-                                              identifier_(identifier) {}
-  virtual ~VariantSequence() = default;
-
-  [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
-  [[nodiscard]] ContigOffset_t offset() const { return contig_offset_; }
-  [[nodiscard]] VariantPhase phaseId() const { return phase_id_; }
-  [[nodiscard]] const std::string& identifier() const { return identifier_; }
-
-  // Hash string value of the contig and offset concatenated:
-  [[nodiscard]] std::string locationHash() const;
-  // Hash string value of the contig, offset and phase concatenated:
-  [[nodiscard]] std::string locationPhaseHash() const;
-
-  void updatePhaseId(VariantPhase phase_id) { phase_id_ = phase_id; }
-
-  [[nodiscard]] std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
-
-
-private:
-
-  const ContigId_t contig_id_;                          // The contig of this variant
-  const ContigOffset_t contig_offset_;                  // Location on the contig.
-  VariantPhase phase_id_;                               // The phase of this variant (which homologous contig)
-  const std::string identifier_;                      // The VCF supplied variant identifier.
-
-};
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -108,25 +41,28 @@ private:
 // Defined Variant Types.
 enum class VariantType { INDEL, TRANSITION, TRANSVERSION };
 
-class Variant : public VariantSequence {
+class Variant {
 
 public:
 
-  Variant(   const ContigId_t& contig_id,
+  Variant(   ContigId_t contig_id,
              ContigOffset_t contig_offset,
              VariantPhase phase_id,
              std::string identifier,
              StringDNA5&& reference,
              StringDNA5&& alternate,
              const VariantEvidence& evidence,
-             bool passed_filters)
-  : VariantSequence(contig_id, contig_offset, phase_id, std::move(identifier)),
+             bool passed_filters) :
     reference_(std::move(reference)),
     alternate_(std::move(alternate)),
     evidence_(evidence),
-    pass_(passed_filters) {}
+    pass_(passed_filters),
+    contig_id_(std::move(contig_id)),
+    contig_physical_offset_(contig_offset),
+    phase_id_(phase_id),
+    identifier_(std::move(identifier)) {}
 
-  ~Variant() override = default;
+  ~Variant() = default;
 
   // Create a copy of the variant on heap.
   // Important - all the original variant evidence is also attached to the new variant object.
@@ -171,11 +107,27 @@ public:
 
   [[nodiscard]] bool filterVariant(const VariantFilter& filter) const { return filter.applyFilter(*this); }
 
+  // Location specific parameters.
+  [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
+  [[nodiscard]] ContigOffset_t offset() const { return contig_physical_offset_; }
+  [[nodiscard]] VariantPhase phaseId() const { return phase_id_; }
+  [[nodiscard]] const std::string& identifier() const { return identifier_; }
+
+  void updatePhaseId(VariantPhase phase_id) { phase_id_ = phase_id; }
+
+
+
   // Set the alternate to the reference; invalidates the evidence structure.
   // Used to specify major alleles (no genome change).
   [[nodiscard]] std::unique_ptr<Variant> cloneNullVariant() const;
   // Checks if the reference and alternate are equivalent.
   [[nodiscard]] bool isNullVariant() const { return reference_ == alternate_; }
+
+  // Unique up to phase
+  [[nodiscard]] std::string alleleHash() const;
+
+  // Phase specific hash
+  [[nodiscard]] std::string allelePhaseHash() const;
 
   // Unique upto phase (not phase specific).
   [[nodiscard]] std::string variantHash() const;
@@ -189,6 +141,10 @@ private:
   const DNA5SequenceLinear alternate_;                  // alternate sequence (alt allele)
   const VariantEvidence evidence_;                      // VCF File based information payload about this variant
   const bool pass_;                                           // True if the VCF record was annotated with "PASS" filters.
+  const ContigId_t contig_id_;                          // The contig of this variant
+  const ContigOffset_t contig_physical_offset_;         // Physical Location on the contig.
+  VariantPhase phase_id_;                               // The phase of this variant (which homologous contig)
+  const std::string identifier_;                        // The VCF supplied variant identifier.
 
   // Generate a CIGAR by comparing the reference to the alternate.
   [[nodiscard]] std::string alternateCigar() const;
@@ -204,6 +160,9 @@ private:
   [[nodiscard]] bool preceedingMutation( SignedOffset_t adjusted_offset,
                                          DNA5SequenceLinear& dna_sequence,
                                          SignedOffset_t& sequence_size_modify) const;
+
+  [[nodiscard]] std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
+
 
 };
 

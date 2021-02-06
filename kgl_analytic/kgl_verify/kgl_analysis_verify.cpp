@@ -49,15 +49,26 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
     if (file_characteristic.data_source == DataSourceEnum::Genome1000
         or file_characteristic.data_source == DataSourceEnum::GnomadGenome3_1) {
 
-      auto snp_results = non_const_population->inSituFilter(SNPFilter());
-      ExecEnv::log().info("Population: {}, total variants: {}, 'SNP' variants: {}",
-                          non_const_population->populationId(), snp_results.first, snp_results.second);
-      auto unique_results = non_const_population->inSituFilter(UniqueUnphasedFilter());
-      ExecEnv::log().info("Population: {}, total variants: {}, 'Unique' variants: {}",
-                          non_const_population->populationId(), unique_results.first, unique_results.second);
+      auto pass_results = non_const_population->inSituFilter(AndFilter(PassFilter(), SNPFilter()));
+      ExecEnv::log().info("Population: {}, pre filter count: {}, 'Pass and SNP' variants: {}",
+                          non_const_population->populationId(), pass_results.first, pass_results.second);
+
+      auto diploid_results = non_const_population->inSituFilter(DiploidFilter());
+      ExecEnv::log().info("Population: {}, pre filter count: {}, 'Diploid' variants: {}",
+                          non_const_population->populationId(), diploid_results.first, diploid_results.second);
+
+//      auto snp_results = non_const_population->inSituFilter(SNPFilter());
+//      ExecEnv::log().info("Population: {}, total variants: {}, 'SNP' variants: {}",
+//                          non_const_population->populationId(), snp_results.first, snp_results.second);
+//      auto unique_results = non_const_population->inSituFilter(UniqueUnphasedFilter());
+//      ExecEnv::log().info("Population: {}, total variants: {}, 'Unique' variants: {}",
+//                          non_const_population->populationId(), unique_results.first, unique_results.second);
 
       ExecEnv::log().info("Check Structure of Population: {}", non_const_population->populationId());
 
+      size_t incorrect_phasing{0};
+      size_t unexpected_count{0};
+      bool print_variants{false};
       for (auto const& [genome_id, genome_ptr] : non_const_population->getMap()) {
 
         for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
@@ -69,9 +80,14 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
             size_t offset_size = offsetVariants.size();
             if (offset_size > 2) {
 
-              for (auto const& variant_ptr : offsetVariants) {
+              unexpected_count += offset_size;
+              if (print_variants) {
 
-                ExecEnv::log().info("Unexpected Count: {}, Genome: {}, {}", offset_size, genome_id, variant_ptr->output(',', VariantOutputIndex::START_0_BASED, true));
+                for (auto const& variant_ptr : offsetVariants) {
+
+                  ExecEnv::log().info("Unexpected Count: {}, Genome: {}, {}", offset_size, genome_id, variant_ptr->output(',', VariantOutputIndex::START_0_BASED, true));
+
+                }
 
               }
 
@@ -79,9 +95,14 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
 
               if (offsetVariants.front()->phaseId() == offsetVariants.back()->phaseId() and offsetVariants.front()->phaseId() != VariantPhase::UNPHASED) {
 
-                for (auto const& variant_ptr : offsetVariants) {
+                incorrect_phasing += offset_size;
+                if (print_variants) {
 
-                  ExecEnv::log().info("Incorrect Phasing Genome: {}, {}", genome_id, variant_ptr->output(',', VariantOutputIndex::START_0_BASED, true));
+                  for (auto const& variant_ptr : offsetVariants) {
+
+                    ExecEnv::log().info("Incorrect Phasing Genome: {}, {}", genome_id, variant_ptr->output(',', VariantOutputIndex::START_0_BASED, true));
+
+                  }
 
                 }
 
@@ -95,6 +116,10 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
 
       }
 
+      ExecEnv::log().info("Population: {} verify check found incorrect phased variants: {}, unexpected variant count (should be 2): {}",
+                          non_const_population->populationId(), incorrect_phasing, unexpected_count);
+
+
     } else {
 
       auto unique_variants = non_const_population->filterVariants(UniqueUnphasedFilter());
@@ -104,9 +129,8 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
 
     }
 
-    auto pass_results = non_const_population->inSituFilter(PassFilter());
-    ExecEnv::log().info("Population: {}, total variants: {}, 'Pass' variants: {}",
-                        non_const_population->populationId(), pass_results.first, pass_results.second);
+
+
 
     ExecEnv::log().info("Population: {}, check total variants: {}",
                         non_const_population->populationId(), non_const_population->variantCount());

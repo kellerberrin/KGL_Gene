@@ -126,22 +126,29 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 
   if (file_characteristic.data_implementation == DataImplEnum::PopulationVariant) {
 
-    if (file_characteristic.data_source == DataSourceEnum::Genome1000) {
+    if (file_characteristic.data_source == DataSourceEnum::Genome1000
+        or file_characteristic.data_source == DataSourceEnum::GnomadGenome3_1) {
 
-      population_ptr_ = std::dynamic_pointer_cast<const PopulationDB>(data_ptr);
+      auto const_population = std::dynamic_pointer_cast<const PopulationDB>(data_ptr);
 
-      if (not population_ptr_) {
+      if (not const_population) {
 
         ExecEnv::log().critical("MutationAnalysis::fileReadAnalysis; Unable to cast Genome1000 data file to population, severe error.");
 
       }
 
-      ExecEnv::log().info("Begin uniqueness filter for population: {} variant count: {}", population_ptr_->populationId(), population_ptr_->variantCount());
-      auto filtered_Population = population_ptr_->filterVariants(NotFilter(UniquePhasedFilter()));
-      ExecEnv::log().info("Filtered Population: {} variant count: {}", filtered_Population->populationId(), filtered_Population->variantCount());
+      auto population = std::const_pointer_cast<PopulationDB>(const_population);
 
+      ExecEnv::log().info("Begin uniqueness filter for population: {} variant count: {}", population->populationId(), population->variantCount());
+      auto pass_results = population->inSituFilter(AndFilter(PassFilter(), SNPFilter()));
+      auto diploid_results = population->inSituFilter(DiploidFilter());
+      ExecEnv::log().info("Filtered Population: {} 'SNP and Pass' count: {}, 'Diploid' count: {}",
+                          population->populationId(), pass_results.second, diploid_results.second);
 
-    } else if (file_characteristic.data_source == DataSourceEnum::Gnomad2_1) {
+      population_ptr_ = population;
+
+    } else if ( file_characteristic.data_source == DataSourceEnum::Gnomad2_1
+               or file_characteristic.data_source == DataSourceEnum::Gnomad3_1) {
 
       unphased_population_ptr_ = std::dynamic_pointer_cast<const PopulationDB>(data_ptr);
 

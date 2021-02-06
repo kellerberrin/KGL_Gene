@@ -48,6 +48,51 @@ bool kgl::ContigDB::addVariant(const std::shared_ptr<const Variant> &variant_ptr
 }
 
 
+// Unconditionally adds an offset
+bool kgl::ContigDB::addOffset(ContigOffset_t offset, std::unique_ptr<OffsetDB> offset_db) {
+
+  // check variant offsets.
+  for (auto const& variant_ptr : offset_db->getVariantArray()) {
+
+    if (offset != variant_ptr->offset()) {
+
+      ExecEnv::log().error( "ContigDB::addOffset; mismatch offset: {}, variant: {}",
+                            offset, variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+      return false;
+
+    }
+
+  }
+
+  // Lock this function to concurrent access.
+  std::scoped_lock lock(add_variant_mutex_);
+
+  auto result = contig_offset_map_.find(offset);
+
+  if (result != contig_offset_map_.end()) {
+    // Variant offset exists.
+
+    auto& [contig_offset, offset_ptr] = *result;
+
+    offset_ptr = std::move(offset_db);
+
+  } else {
+
+    auto insert_result = contig_offset_map_.try_emplace(offset, std::move(offset_db));
+
+    if (not insert_result.second) {
+
+      ExecEnv::log().error("ContigDB::addOffset; Could not add variant offset: {} to the genome", offset);
+      return false;
+
+    }
+
+  }
+
+  return true;
+
+}
+
 // Unconditionally adds a variant to the contig.
 bool kgl::ContigDB::addUniqueUnphasedVariant(const std::shared_ptr<const Variant> &variant_ptr) {
 
@@ -121,20 +166,14 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::filterVariants(const VariantFilter
 
   std::shared_ptr<ContigDB> filtered_contig_ptr(std::make_shared<ContigDB>(contigId()));
 
-  for (auto const&[offset, variant_vector] : getMap()) {
+  for (auto const&[offset, offset_ptr] : getMap()) {
 
-    for (auto const &variant_ptr : variant_vector->getVariantArray()) {
+    std::unique_ptr<OffsetDB> filtered_offset(std::make_unique<OffsetDB>(offset_ptr->getVariantArray()));
+    filtered_offset->inSituFilter(filter);
+    if (not filtered_contig_ptr->addOffset(offset, std::move(filtered_offset))) {
 
-      if (filter.applyFilter(*variant_ptr)) {
-
-        if (not filtered_contig_ptr->addVariant(variant_ptr)) {
-
-          ExecEnv::log().error("ContigDB::filterVariants; Problem adding variant at offset: {}, to contig: {}",
-                               offset, contigId());
-
-        }
-
-      }
+      ExecEnv::log().error("ContigDB::filterVariants; Problem adding variant at offset: {}, to contig: {}",
+                           offset, contigId());
 
     }
 

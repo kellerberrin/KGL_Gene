@@ -43,6 +43,7 @@ public:
   // Unconditionally adds a variant to the contig (unique or not).
   [[nodiscard]]  bool addVariant(const std::shared_ptr<const Variant> &variant_ptr);
 
+
   // Only adds the variant if it does not exist at the offset (only unique).
   // Phasing information is removed, this function cannot be specified with a haploid or diploid population.
   [[nodiscard]]  bool addUniqueUnphasedVariant(const std::shared_ptr<const Variant> &variant_ptr);
@@ -89,6 +90,9 @@ private:
   mutable std::mutex add_variant_mutex_;
 
   void checkUpstreamDeletion(OffsetVariantMap& variant_map) const;
+
+  // Unconditionally adds an offset
+  [[nodiscard]]  bool addOffset(ContigOffset_t offset, std::unique_ptr<OffsetDB> offset_db);
 
 };
 

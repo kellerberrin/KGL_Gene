@@ -66,6 +66,7 @@ public:
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InfoFilter>(*this); }
 
+  [[nodiscard]] FilterType filterType() const override { return FilterType::InfoFilter; }
 
 private:
 
@@ -101,6 +102,8 @@ public:
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<VepSubStringFilter>(*this); }
 
+  [[nodiscard]] FilterType filterType() const override { return FilterType::VepSubStringFilter; }
+
 private:
 
   const std::string vep_field_name_;
@@ -130,6 +133,9 @@ public:
   [[nodiscard]] bool applyFilter(const Variant& variant) const override { return info_filter_.applyFilter(filter_lambda_, variant); }
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InfoGEQIntegerFilter>(*this); }
+
+  [[nodiscard]] FilterType filterType() const override { return FilterType::InfoGEQIntegerFilter; }
+
 
 private:
 
@@ -184,6 +190,8 @@ public:
   [[nodiscard]] bool applyFilter(const Variant& variant) const override { return info_filter_.applyFilter(filter_lambda_, variant); }
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InfoGEQFloatFilter>(*this); }
+
+  [[nodiscard]] FilterType filterType() const override { return FilterType::InfoGEQFloatFilter; }
 
 private:
 
@@ -241,6 +249,8 @@ public:
   [[nodiscard]] bool applyFilter(const Variant& variant) const override { return info_filter_.applyFilter(filter_lambda_, variant); }
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InfoSubStringFilter>(*this); }
+
+  [[nodiscard]] FilterType filterType() const override { return FilterType::InfoSubStringFilter; }
 
 private:
 
@@ -317,6 +327,8 @@ public:
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<InfoBooleanFilter>(*this); }
 
+  [[nodiscard]] FilterType filterType() const override { return FilterType::InfoBooleanFilter; }
+
 private:
 
   const InfoFilterImpl info_filter_;
@@ -360,6 +372,9 @@ public:
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<RefAltCountFilter>(*this); }
 
+  [[nodiscard]] FilterType filterType() const override { return FilterType::RefAltCountFilter; }
+
+
 private:
 
   size_t minimum_count_;
@@ -393,6 +408,8 @@ public:
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<DPCountFilter>(*this); }
 
+  [[nodiscard]] FilterType filterType() const override { return FilterType::DPCountFilter; }
+
 private:
 
   size_t minimum_count_;
@@ -421,6 +438,9 @@ public:
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<UniqueUnphasedFilter>(*this); }
 
+  [[nodiscard]] FilterType filterType() const override { return FilterType::UniqueUnphasedFilter; }
+
+
 private:
 
   mutable std::unordered_set<std::string> hashed_variants_;
@@ -445,9 +465,43 @@ public:
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<UniquePhasedFilter>(*this); }
 
+  [[nodiscard]] FilterType filterType() const override { return FilterType::UniquePhasedFilter; }
+
+
 private:
 
   mutable std::unordered_set<std::string> hashed_variants_;
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ensure max 2 variants per offset.
+// Note that VCF indels are actually offset by -1 because they always contain
+// a reference to the base that preceeds the indel for verification.
+// This code does NOT attempt to adjust for this offset and will only give
+// guaranteed correct results if the DB has been pre-filtered to only contain SNPs.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class DiploidFilter: public VariantFilter {
+
+public:
+
+  DiploidFilter() { filterName("DiploidFilter"); }
+  DiploidFilter(const DiploidFilter&) = default;
+  ~DiploidFilter() override = default;
+
+  DiploidFilter& operator=(const DiploidFilter&) = default;
+
+  // Dummy implementation. Implemented at offset level
+  [[nodiscard]] bool applyFilter(const Variant&) const override { return true; }
+
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<DiploidFilter>(); }
+
+  [[nodiscard]] FilterType filterType() const override { return FilterType::DiploidFilter; }
+
+
+private:
 
 };
 
@@ -474,6 +528,9 @@ public:
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<PhaseFilter>(*this); }
 
+  [[nodiscard]] FilterType filterType() const override { return FilterType::PhaseFilter; }
+
+
 private:
 
   const VariantPhase phase_;
@@ -497,6 +554,9 @@ public:
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<PassFilter>(*this); }
 
+  [[nodiscard]] FilterType filterType() const override { return FilterType::PassFilter; }
+
+
 private:
 
 
@@ -510,17 +570,16 @@ class SNPFilter : public VariantFilter {
 
 public:
 
-  explicit SNPFilter() {
-
-    filterName("SNP and MNP Variants");
-
-  }
+  explicit SNPFilter() { filterName("SNP and MNP Variants"); }
   SNPFilter(const SNPFilter&) = default;
   ~SNPFilter() override = default;
 
   [[nodiscard]] bool applyFilter(const Variant& variant) const override { return variant.isSNP(); }
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<SNPFilter>(*this); }
+
+  [[nodiscard]] FilterType filterType() const override { return FilterType::SNPFilter; }
+
 
 private:
 
@@ -548,6 +607,9 @@ public:
   [[nodiscard]] bool applyFilter(const Variant& variant) const override { return implementFilter(variant); }
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<ContigFilter>(*this); }
+
+  [[nodiscard]] FilterType filterType() const override { return FilterType::ContigFilter; }
+
 
 private:
 
@@ -582,6 +644,9 @@ public:
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<RegionFilter>(*this); }
 
+  [[nodiscard]] FilterType filterType() const override { return FilterType::RegionFilter; }
+
+
 private:
 
   ContigOffset_t start_;
@@ -610,6 +675,9 @@ public:
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<TrueFilter>(*this); }
 
+  [[nodiscard]] FilterType filterType() const override { return FilterType::TrueFilter; }
+
+
 private:
 
 };
@@ -633,6 +701,9 @@ public:
   [[nodiscard]] bool applyFilter(const Variant&) const override { return false; }
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<FalseFilter>(*this); }
+
+  [[nodiscard]] FilterType filterType() const override { return FilterType::FalseFilter; }
+
 
 private:
 
@@ -658,6 +729,9 @@ public:
   [[nodiscard]] bool applyFilter(const Variant& variant) const override { return not filter_ptr_->applyFilter(variant); }
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<NotFilter>(*this); }
+
+  [[nodiscard]] FilterType filterType() const override { return FilterType::NotFilter; }
+
 
 private:
 
@@ -687,6 +761,9 @@ public:
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<AndFilter>(*this); }
 
+  [[nodiscard]] FilterType filterType() const override { return FilterType::AndFilter; }
+
+
 private:
 
   std::shared_ptr<VariantFilter> filter1_ptr_;
@@ -714,6 +791,8 @@ public:
   [[nodiscard]] bool applyFilter(const Variant& variant) const override { return filter1_ptr_->applyFilter(variant) or filter2_ptr_->applyFilter(variant); }
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<OrFilter>(*this); }
+
+  [[nodiscard]] FilterType filterType() const override { return FilterType::OrFilter; }
 
 private:
 

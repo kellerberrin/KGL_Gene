@@ -16,47 +16,6 @@ namespace kgl = kellerberrin::genome;
 
 
 
-std::string kgl::VariantSequence::genomeOutput(char delimiter, VariantOutputIndex output_index) const {
-
-  std:: stringstream ss;
-// Contig.
-  ss << contigId() << delimiter;
-  if (phaseId() == VariantPhase::UNPHASED) {
-
-    ss << "Unphased" << delimiter;
-
-  } else {
-
-    ss << "Phase:" << static_cast<size_t>(phaseId()) << delimiter;
-
-  }
-  ss << offsetOutput(offset(), output_index) << delimiter;
-
-  return ss.str();
-
-}
-
-
-std::string kgl::VariantSequence::locationHash() const {
-
-  std::stringstream ss;
-  ss << contigId() << ":" << offset();
-  return ss.str();
-
-}
-
-
-std::string kgl::VariantSequence::locationPhaseHash() const {
-
-  std::stringstream ss;
-  ss << contigId() << ":" << offset() << ":" << static_cast<uint8_t>(phaseId());
-  return ss.str();
-
-}
-
-
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  Variant class.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -139,6 +98,27 @@ kgl::VariantType kgl::Variant::variantType() const {
     }
 
   }
+
+}
+
+
+std::string kgl::Variant::genomeOutput(char delimiter, VariantOutputIndex output_index) const {
+
+  std:: stringstream ss;
+  // Contig.
+  ss << contigId() << delimiter;
+  if (phaseId() == VariantPhase::UNPHASED) {
+
+    ss << "Unphased" << delimiter;
+
+  } else {
+
+    ss << "Phase:" << static_cast<size_t>(phaseId()) << delimiter;
+
+  }
+  ss << offsetOutput(offset(), output_index) << delimiter;
+
+  return ss.str();
 
 }
 
@@ -278,16 +258,33 @@ size_t kgl::Variant::alternateSize(size_t reference_size) const {
 
 }
 
-// Unique upto phase.
-std::string kgl::Variant::variantHash() const {
 
-  return locationHash() + ":" + reference().getSequenceAsString() + ":" + alternate().getSequenceAsString();
+
+// Unique up to phase
+std::string kgl::Variant::alleleHash() const {
+
+  return reference().getSequenceAsString() + ":" + alternate().getSequenceAsString();
 
 }
 
+// Phase specific hash
+std::string kgl::Variant::allelePhaseHash() const {
+
+  return std::to_string(static_cast<uint8_t>(phaseId())) + ":" + reference().getSequenceAsString() + ":" + alternate().getSequenceAsString();
+
+}
+
+
 // Unique upto phase.
+std::string kgl::Variant::variantHash() const {
+
+  return contigId() + ":"  + std::to_string(offset()) + ":" + alleleHash();
+
+}
+
+// Phase specific hash
 std::string kgl::Variant::variantPhaseHash() const {
 
-  return locationPhaseHash() + ":" + reference().getSequenceAsString() + ":" + alternate().getSequenceAsString();
+  return contigId() + ":"  + std::to_string(offset()) + ":" + allelePhaseHash();
 
 }
