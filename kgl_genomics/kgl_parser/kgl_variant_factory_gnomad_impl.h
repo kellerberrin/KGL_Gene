@@ -45,7 +45,6 @@ private:
   void ParseRecord(size_t vcf_record_count, const VcfRecord &record);
 
   // Progress counters.
-  mutable size_t abstract_variant_count_{0};
   size_t actual_variant_count_{0};
   size_t variant_count_{0};
 

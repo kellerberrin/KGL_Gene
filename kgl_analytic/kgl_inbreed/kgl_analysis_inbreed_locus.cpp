@@ -37,7 +37,7 @@ std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesFromTo( s
 
       const OffsetDBArray& locus_variant_array = offset_ptr->getVariantArray();
 
-      AlleleFreqVector allele_freq_vector(locus_variant_array, super_population, arguments.frequencySource());
+      AlleleFreqVector allele_freq_vector(locus_variant_array, super_population);
 
       if (not allele_freq_vector.checkValidAlleleVector()) {
 
@@ -121,7 +121,7 @@ std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesCount( st
 
       const OffsetDBArray& locus_variant_array = offset_ptr->getVariantArray();
 
-      AlleleFreqVector allele_freq_vector(locus_variant_array, super_population, arguments.frequencySource());
+      AlleleFreqVector allele_freq_vector(locus_variant_array, super_population);
 
       if (not allele_freq_vector.checkValidAlleleVector()) {
 

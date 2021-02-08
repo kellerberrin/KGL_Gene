@@ -33,7 +33,6 @@ public:
 
   // Read super population frequencies
   [[nodiscard]] static std::optional<double> processSuperPopField(const Variant& variant,
-                                                                  DataSourceEnum data_source,
                                                                   const std::string& super_population);
   // List the super populations supported.
   [[nodiscard]] static const std::vector<std::string>& superPopulations() { return super_populations_; }
@@ -121,6 +120,8 @@ private:
   constexpr static const SuperPopPair SUPER_POP_EUR_1000 {SUPER_POP_EUR_, "EUR_AF"};  // European
   constexpr static const SuperPopPair SUPER_POP_SAS_1000 {SUPER_POP_SAS_, "SAS_AF"};  // South Asian
   constexpr static const SuperPopPair SUPER_POP_ALL_1000 {SUPER_POP_ALL_, "AF"};  // All Super Populations
+
+
 
 };
 

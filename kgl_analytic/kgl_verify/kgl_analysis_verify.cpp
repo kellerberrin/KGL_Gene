@@ -49,26 +49,24 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
     if (file_characteristic.data_source == DataSourceEnum::Genome1000
         or file_characteristic.data_source == DataSourceEnum::GnomadGenome3_1) {
 
-      auto pass_results = non_const_population->inSituFilter(AndFilter(PassFilter(), SNPFilter()));
+      auto pass_results = non_const_population->inSituFilter(PassFilter());
       ExecEnv::log().info("Population: {}, pre filter count: {}, 'Pass and SNP' variants: {}",
                           non_const_population->populationId(), pass_results.first, pass_results.second);
+
+//      auto snp_results = non_const_population->inSituFilter(SNPFilter());
+//      ExecEnv::log().info("Population: {}, total variants: {}, 'SNP' variants: {}",
+//                          non_const_population->populationId(), snp_results.first, snp_results.second);
 
       auto diploid_results = non_const_population->inSituFilter(DiploidFilter());
       ExecEnv::log().info("Population: {}, pre filter count: {}, 'Diploid' variants: {}",
                           non_const_population->populationId(), diploid_results.first, diploid_results.second);
 
-//      auto snp_results = non_const_population->inSituFilter(SNPFilter());
-//      ExecEnv::log().info("Population: {}, total variants: {}, 'SNP' variants: {}",
-//                          non_const_population->populationId(), snp_results.first, snp_results.second);
-//      auto unique_results = non_const_population->inSituFilter(UniqueUnphasedFilter());
-//      ExecEnv::log().info("Population: {}, total variants: {}, 'Unique' variants: {}",
-//                          non_const_population->populationId(), unique_results.first, unique_results.second);
-
       ExecEnv::log().info("Check Structure of Population: {}", non_const_population->populationId());
 
       size_t incorrect_phasing{0};
       size_t unexpected_count{0};
-      bool print_variants{false};
+      bool print_variants{true};
+      std::map<ContigOffset_t, size_t> allele_offset_map;
       for (auto const& [genome_id, genome_ptr] : non_const_population->getMap()) {
 
         for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
@@ -76,6 +74,28 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
           for (auto const& [offset, offset_ptr] : contig_ptr->getMap()) {
 
             auto const& offsetVariants = offset_ptr->getVariantArray();
+
+            for (auto const& variant : offsetVariants) {
+
+              auto result = allele_offset_map.find(variant->alleleOffset());
+              if (result != allele_offset_map.end()) {
+
+                auto& [allele_offset, count] = *result;
+                ++count;
+
+              } else {
+
+                auto insert_result = allele_offset_map.try_emplace(variant->alleleOffset(), 1);
+                const auto& [iter, bool_result] = insert_result;
+                if (not bool_result) {
+
+                  ExecEnv::log().error("Could not insert into allele count map");
+
+                }
+
+              }
+
+            }
 
             size_t offset_size = offsetVariants.size();
             if (offset_size > 2) {
@@ -119,6 +139,11 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
       ExecEnv::log().info("Population: {} verify check found incorrect phased variants: {}, unexpected variant count (should be 2): {}",
                           non_const_population->populationId(), incorrect_phasing, unexpected_count);
 
+      for (auto const& [allele_offset, count] : allele_offset_map) {
+
+        ExecEnv::log().info("Population: {} allele offset: {}, count: {}", non_const_population->populationId(), allele_offset, count);
+
+      }
 
     } else {
 
@@ -128,7 +153,6 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
 
 
     }
-
 
 
 

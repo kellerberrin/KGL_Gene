@@ -15,6 +15,7 @@
 #include "kgl_sequence_base.h"
 #include "kgl_variant_evidence.h"
 #include "kgl_variant_filter_virtual.h"
+#include "kgl_variant_factory_vcf_parse_cigar.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -46,21 +47,20 @@ class Variant {
 public:
 
   Variant(   ContigId_t contig_id,
-             ContigOffset_t contig_offset,
+             ContigOffset_t contig_reference_offset,
              VariantPhase phase_id,
              std::string identifier,
              StringDNA5&& reference,
              StringDNA5&& alternate,
-             const VariantEvidence& evidence,
-             bool passed_filters) :
-    reference_(std::move(reference)),
-    alternate_(std::move(alternate)),
-    evidence_(evidence),
-    pass_(passed_filters),
-    contig_id_(std::move(contig_id)),
-    contig_physical_offset_(contig_offset),
-    phase_id_(phase_id),
-    identifier_(std::move(identifier)) {}
+             const VariantEvidence& evidence) :
+      reference_(std::move(reference)),
+      alternate_(std::move(alternate)),
+      evidence_(evidence),
+      contig_id_(std::move(contig_id)),
+      contig_reference_offset_(contig_reference_offset),
+      contig_allele_offset_(reference_.commonPrefix(alternate_)),
+      phase_id_(phase_id),
+      identifier_(std::move(identifier)) {}
 
   ~Variant() = default;
 
@@ -73,8 +73,6 @@ public:
   [[nodiscard]] size_t referenceSize() const { return reference_.length(); }
 
   [[nodiscard]] VariantType variantType() const;
-
-  [[nodiscard]] bool passFilters() const { return pass_; }
 
   [[nodiscard]] bool isSNP() const { return reference().length() == 1 and alternate().length() == 1; }
 
@@ -109,7 +107,9 @@ public:
 
   // Location specific parameters.
   [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
-  [[nodiscard]] ContigOffset_t offset() const { return contig_physical_offset_; }
+  [[nodiscard]] ContigOffset_t offset() const { return contig_reference_offset_ + contig_allele_offset_; }
+  [[nodiscard]] ContigOffset_t referenceOffset() const { return contig_reference_offset_; }
+  [[nodiscard]] AlleleOffset_t alleleOffset() const { return contig_allele_offset_; }
   [[nodiscard]] VariantPhase phaseId() const { return phase_id_; }
   [[nodiscard]] const std::string& identifier() const { return identifier_; }
 
@@ -140,9 +140,9 @@ private:
   const DNA5SequenceLinear reference_;                  // reference sequence (ref allele)
   const DNA5SequenceLinear alternate_;                  // alternate sequence (alt allele)
   const VariantEvidence evidence_;                      // VCF File based information payload about this variant
-  const bool pass_;                                           // True if the VCF record was annotated with "PASS" filters.
   const ContigId_t contig_id_;                          // The contig of this variant
-  const ContigOffset_t contig_physical_offset_;         // Physical Location on the contig.
+  const ContigOffset_t contig_reference_offset_;        // Physical Location of the the start of the reference sequence the contig.
+  const AlleleOffset_t contig_allele_offset_;           // Offset to where the allele actually occurs. Always 0 for an SNP, always > 0 for an indel.
   VariantPhase phase_id_;                               // The phase of this variant (which homologous contig)
   const std::string identifier_;                        // The VCF supplied variant identifier.
 

@@ -28,9 +28,9 @@ enum class FilterType   { InfoFilter,
                           InfoBooleanFilter,
                           RefAltCountFilter,
                           DPCountFilter,
-                          UniqueUnphasedFilter,
-                          UniquePhasedFilter,
-                          DiploidFilter, // ensure max two variants per offset.
+                          UniqueUnphasedFilter,  // Uniqueness excludes phase info
+                          UniquePhasedFilter,   // Uniqueness includes phase info
+                          DiploidFilter, // Ensure max two variants per offset.
                           PhaseFilter,
                           PassFilter,
                           SNPFilter,

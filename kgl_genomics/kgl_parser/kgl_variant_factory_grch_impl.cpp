@@ -74,7 +74,13 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
     uint32_t variant_count = 1;
     uint32_t variant_index = 0;
 
-    VariantEvidence evidence(vcf_record_count, info_evidence_opt, null_format_data, variant_index, variant_count);
+    VariantEvidence evidence(vcf_record_count,
+                             unphased_population_ptr_->dataSource(),
+                             passed_filter,
+                             info_evidence_opt,
+                             null_format_data,
+                             variant_index,
+                             variant_count);
     VariantEvidence evidence1(evidence);
     // Add the variant.
     StringDNA5 reference_str(vcf_record.ref);
@@ -86,8 +92,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
                                                                           vcf_record.id,
                                                                           std::move(reference_str),
                                                                           std::move(alternate_str),
-                                                                          evidence,
-                                                                          passed_filter));
+                                                                          evidence));
 
     if (not addThreadSafeVariant(std::move(variant_ptr), genome_db_ptr_->genomeId())) {
 
@@ -116,7 +121,13 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
       // We have no format data and multiple alternate alleles.
       std::optional<std::shared_ptr<FormatData>> null_format_data = std::nullopt;
       // Setup the evidence object.
-      VariantEvidence evidence(vcf_record_count, info_evidence_opt, null_format_data, variant_index, variant_count);
+      VariantEvidence evidence(vcf_record_count,
+                               unphased_population_ptr_->dataSource(),
+                               passed_filter,
+                               info_evidence_opt,
+                               null_format_data,
+                               variant_index,
+                               variant_count);
       VariantEvidence evidence1(evidence);
       // Add the variant.
       StringDNA5 reference_str(vcf_record.ref);
@@ -128,8 +139,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
                                                                             vcf_record.id,
                                                                             std::move(reference_str),
                                                                             std::move(alternate_str),
-                                                                            evidence,
-                                                                            passed_filter));
+                                                                            evidence));
 
       if (not addThreadSafeVariant(std::move(variant_ptr), genome_db_ptr_->genomeId())) {
 

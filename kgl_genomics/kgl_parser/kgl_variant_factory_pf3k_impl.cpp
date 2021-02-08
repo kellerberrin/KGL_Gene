@@ -196,12 +196,17 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
                                                                                      GQ_value,
                                                                                      recordParser.quality()));
             // Setup the evidence object
-            VariantEvidence evidence(vcf_record_count, info_evidence_opt, format_data_ptr, allele_index, allele_count);
+            VariantEvidence evidence(vcf_record_count,
+                                     unphased_population_ptr_->dataSource(),
+                                     passed_filter,
+                                     info_evidence_opt,
+                                     format_data_ptr,
+                                     allele_index,
+                                     allele_count);
 
             if (not createAddVariant(genome_name,
                                      recordParser.contigPtr(),
                                      recordParser.offset(),
-                                     passed_filter,
                                      record.id,
                                      recordParser.reference(),
                                      allele,
@@ -239,12 +244,17 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
                                                                                      GQ_value,
                                                                                      recordParser.quality()));
             // Setup the evidence object.
-            VariantEvidence evidence(vcf_record_count, info_evidence_opt, format_data_ptr, allele_index, allele_count);
+            VariantEvidence evidence(vcf_record_count,
+                                     unphased_population_ptr_->dataSource(),
+                                     passed_filter,
+                                     info_evidence_opt,
+                                     format_data_ptr,
+                                     allele_index,
+                                     allele_count);
 
             if (not createAddVariant(genome_name,
                                      recordParser.contigPtr(),
                                      recordParser.offset(),
-                                     passed_filter,
                                      record.id,
                                      recordParser.reference(),
                                      allele,
@@ -313,7 +323,6 @@ void kgl::Pf3kVCFImpl::setupPopulationStructure(const std::shared_ptr<const Geno
 bool kgl::Pf3kVCFImpl::createAddVariant(const std::string& genome_name,
                                          const std::shared_ptr<const ContigReference> contig_ptr,
                                          ContigOffset_t contig_offset,
-                                         bool passed_filter,
                                          const std::string& identifier,
                                          const std::string& reference_text,
                                          const std::string& alternate_text,
@@ -328,8 +337,7 @@ bool kgl::Pf3kVCFImpl::createAddVariant(const std::string& genome_name,
                                                                         identifier,
                                                                         std::move(reference_str),
                                                                         std::move(alternate_str),
-                                                                        evidence,
-                                                                        passed_filter));
+                                                                        evidence));
 
   return addThreadSafeVariant(std::move(variant_ptr), genome_name);
 

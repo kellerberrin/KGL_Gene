@@ -112,8 +112,7 @@ kgl::ResultsMap kgl::SyntheticAnalysis::processSynResults( std::shared_ptr<const
                                                                      genome_id,
                                                                      contig_opt.value(),
                                                                      super_pop_id,
-                                                                     locus_list,
-                                                                     parameters);
+                                                                     locus_list );
           future_vector.push_back(std::move(future));
 
         }

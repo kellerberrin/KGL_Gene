@@ -65,7 +65,7 @@ kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
       const OffsetDBArray variant_vec = offset_ptr->getVariantArray();
 
       // Generate the minor allele frequencies.
-      AlleleFreqVector freq_vector(variant_vec, super_population, arguments.frequencySource());
+      AlleleFreqVector freq_vector(variant_vec, super_population);
 
       // Draw a unit rand and select an allele class.
       double class_selection = unit_distribution.random(entropy_mt.generator());

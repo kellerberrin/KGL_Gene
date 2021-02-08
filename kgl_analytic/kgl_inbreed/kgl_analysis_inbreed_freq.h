@@ -118,8 +118,7 @@ class AlleleFreqVector {
 public:
 
   AlleleFreqVector( const OffsetDBArray& variant_vector,
-                    const std::string& frequency_field,
-                    DataSourceEnum data_source);
+                    const std::string& frequency_field);
 
   ~AlleleFreqVector() = default;
 

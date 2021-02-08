@@ -5,7 +5,6 @@
 #include <ostream>
 #include "kgl_variant.h"
 #include "kel_patterns.h"
-#include "kgl_variant_factory_vcf_parse_cigar.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -33,8 +32,7 @@ namespace kgl = kellerberrin::genome;
                                                                   std::move(variant_ident),
                                                                   std::move(reference_str),
                                                                   std::move(alternate_str),
-                                                                  evidence(),
-                                                                  passFilters()));
+                                                                  evidence()));
 
   return variant_ptr;
 
@@ -53,8 +51,7 @@ namespace kgl = kellerberrin::genome;
                                                                   identifier(),
                                                                   std::move(reference1_str),
                                                                   std::move(reference2_str),
-                                                                  null_evidence,
-                                                                  passFilters()));
+                                                                  null_evidence));
 
   return variant_ptr;
 
@@ -116,12 +113,12 @@ std::string kgl::Variant::genomeOutput(char delimiter, VariantOutputIndex output
     ss << "Phase:" << static_cast<size_t>(phaseId()) << delimiter;
 
   }
-  ss << offsetOutput(offset(), output_index) << delimiter;
+  ss << offsetOutput(offset(), output_index)
+     << "(+" << alleleOffset() << ")" << delimiter ;
 
   return ss.str();
 
 }
-
 
 
 std::string kgl::Variant::output(char delimiter, VariantOutputIndex output_index, bool detail) const

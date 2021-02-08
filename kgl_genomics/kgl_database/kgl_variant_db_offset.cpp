@@ -4,6 +4,7 @@
 
 
 #include "kgl_variant_db_offset.h"
+#include "kgl_variant_db_freq.h"
 #include <unordered_set>
 
 
@@ -148,10 +149,6 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituUnique(const VariantFilter &filte
 
 
 // Ensure max 2 variants per offset.
-// Note that VCF indels are actually offset by -1 because they always contain
-// a reference to the base that preceeds the indel for verification.
-// This code does NOT attempt to adjust for this offset and will only give
-// guaranteed correct results if the DB has been pre-filtered to only contain SNPs.
 std::pair<size_t, size_t> kgl::OffsetDB::inSituDiploid() {
 
   constexpr const static size_t DIPLOID_COUNT{2};
@@ -162,11 +159,106 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituDiploid() {
 
   }
 
+
   std::pair<size_t, size_t> offset_count{0, 0};
   offset_count.first = variant_vector_.size();
 
-  variant_vector_.resize(DIPLOID_COUNT);
+  struct DiploidRecord {
 
+    std::vector<std::shared_ptr<const Variant>> variant_vector;
+    double frequency{0.0};
+
+  };
+  std::unordered_map<std::string, DiploidRecord> hash_map;
+  // Construct the hash map.
+  for (auto const& variant_ptr : variant_vector_) {
+
+    std::string allele_hash = variant_ptr->alleleHash();
+    auto result = hash_map.find(allele_hash);
+    if (result != hash_map.end()) {
+
+      auto& [hash, record] = *result;
+      record.variant_vector.push_back(variant_ptr);
+
+    } else {
+
+      DiploidRecord diploid_record;
+      diploid_record.variant_vector.push_back(variant_ptr);
+      auto frequency_opt = FrequencyDatabaseRead::processSuperPopField(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_ALL_);
+      if (frequency_opt) {
+
+        diploid_record.frequency = frequency_opt.value();
+
+      } else {
+
+        ExecEnv::log().error("OffsetDB::inSituDiploid; unable to retrieve AF frequency for variant: {}",
+                             variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+
+      }
+
+      auto const [insert_iter, insert_result] = hash_map.try_emplace(allele_hash, diploid_record);
+      if (not insert_result) {
+
+        ExecEnv::log().error("OffsetDB::inSituDiploid; could not insert variant hash: {}", allele_hash);
+
+      }
+
+    }
+
+  }
+
+  if (hash_map.empty()) {
+
+    ExecEnv::log().error("OffsetDB::inSituDiploid; unexpected empty hash map");
+    offset_count.second = 0;
+    return offset_count;
+
+  }
+
+  // Create a map ordered by variant frequency
+  std::map<double, DiploidRecord> freq_map;
+
+  for (auto const& [hash, record] : hash_map) {
+
+    freq_map[record.frequency] = record;
+
+  }
+
+  // The most likely highest frequency alleles are last
+  auto& [freq, record] = *freq_map.rbegin();
+  auto& filtered_variants = record.variant_vector;
+  if (filtered_variants.size() > DIPLOID_COUNT) {
+
+    ExecEnv::log().error("OffsetDB::inSituDiploid; Unexpected filtered variant size: {}", record.variant_vector.size());
+    for (auto const& variant_ptr : filtered_variants) {
+
+      ExecEnv::log().warn("OffsetDB::inSituDiploid; Unexpected size variant: {}",
+                          variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+
+    }
+
+    filtered_variants.resize(DIPLOID_COUNT);
+
+  }
+
+  // Check phase.
+  if (filtered_variants.size() == DIPLOID_COUNT) {
+
+    if (filtered_variants.front()->phaseId() == filtered_variants.back()->phaseId()
+        and filtered_variants.front()->phaseId() != VariantPhase::UNPHASED) {
+
+      ExecEnv::log().error("OffsetDB::inSituDiploid; Invalid Diploid phase, {}, {}",
+                           filtered_variants.front()->output(',', VariantOutputIndex::START_0_BASED, false),
+                           filtered_variants.back()->output(',', VariantOutputIndex::START_0_BASED, false));
+
+      std::const_pointer_cast<Variant>(filtered_variants.front())->updatePhaseId(VariantPhase::DIPLOID_PHASE_A);
+      std::const_pointer_cast<Variant>(filtered_variants.front())->updatePhaseId(VariantPhase::DIPLOID_PHASE_B);
+
+    }
+
+  }
+
+  variant_vector_ = std::move(filtered_variants);
   offset_count.second = variant_vector_.size();
 
   return offset_count;

@@ -32,8 +32,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 using InbreedingAlgorithm = std::function<LocusResults(const GenomeId_t& genome_id,
                                                        const std::shared_ptr<const ContigDB>& contig_ptr,
                                                        const std::string& super_population_field,
-                                                       const std::shared_ptr<const ContigDB>& locus_list,
-                                                       const InbreedingParameters& parameters)>;
+                                                       const std::shared_ptr<const ContigDB>& locus_list )>;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -82,27 +81,23 @@ public:
   [[nodiscard]] static LocusResults processRitlandLocus( const ContigId_t& genome_id,
                                                          const std::shared_ptr<const ContigDB>& contig_ptr,
                                                          const std::string& super_population_field,
-                                                         const std::shared_ptr<const ContigDB>& locus_list,
-                                                         const InbreedingParameters& parameters);
+                                                         const std::shared_ptr<const ContigDB>& locus_list );
   
   [[nodiscard]] static LocusResults processSimple(const ContigId_t& contig_id,
                                                   const std::shared_ptr<const ContigDB>& contig_ptr,
                                                   const std::string& super_population_field,
-                                                  const std::shared_ptr<const ContigDB>& locus_list,
-                                                  const InbreedingParameters& parameters);
+                                                  const std::shared_ptr<const ContigDB>& locus_list );
 
   [[nodiscard]] static LocusResults processHallME( const GenomeId_t& genome_id,
                                                   const std::shared_ptr<const ContigDB>& contig_ptr,
                                                   const std::string& super_population_field,
-                                                  const std::shared_ptr<const ContigDB>& locus_list,
-                                                  const InbreedingParameters& parameters);
+                                                  const std::shared_ptr<const ContigDB>& locus_list );
 
   // The loglikelihood algorithm.
   [[nodiscard]] static LocusResults processLogLikelihood(const GenomeId_t& genome_id,
                                                          const std::shared_ptr<const ContigDB>& contig_ptr,
                                                          const std::string& super_population_field,
-                                                         const std::shared_ptr<const ContigDB>& locus_list,
-                                                         const InbreedingParameters& parameters);
+                                                         const std::shared_ptr<const ContigDB>& locus_list );
 
   // Algorithm key used in the the algorithm selection map.
   inline static const std::string RITLAND_LOCUS_F{"RitlandLocus"};
@@ -137,8 +132,7 @@ private:
   generateFrequencies(const GenomeId_t& genome_id,
                       const std::shared_ptr<const ContigDB>& contig_ptr,
                       const std::string& super_population_field,
-                      const std::shared_ptr<const ContigDB>& locus_list,
-                      DataSourceEnum variantSource);
+                      const std::shared_ptr<const ContigDB>& locus_list);
 
   [[nodiscard]] static double logLikelihood(std::vector<double>& x, std::vector<AlleleFreqInfo>& data);
 

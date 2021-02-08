@@ -154,8 +154,7 @@ kgl::LocusResults
 kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
                                                  const std::shared_ptr<const ContigDB>& contig_ptr,
                                                  const std::string& super_population_field,
-                                                 const std::shared_ptr<const ContigDB>& locus_list,
-                                                 const InbreedingParameters& parameters) {
+                                                 const std::shared_ptr<const ContigDB>& locus_list ) {
 
   // Only want SNP variants.
   auto snp_contig_ptr = contig_ptr->filterVariants(SNPFilter());
@@ -168,8 +167,7 @@ kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
   auto [frequency_vector, locus_results] = generateFrequencies(genome_id,
                                                                contig_ptr,
                                                                super_population_field,
-                                                               locus_list,
-                                                               parameters.lociiArguments().frequencySource());
+                                                               locus_list );
 
   double updated_coefficient{0.0};
   Optimize likelihood_optimizer = createLogLikelihoodOptimizer();
@@ -228,8 +226,7 @@ kgl::LocusResults
 kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
                                            const std::shared_ptr<const ContigDB>& contig_ptr,
                                            const std::string& super_population_field,
-                                           const std::shared_ptr<const ContigDB>& locus_list,
-                                           const InbreedingParameters& parameters) {
+                                           const std::shared_ptr<const ContigDB>& locus_list ) {
 
   // Only want SNP variants.
   auto snp_contig_ptr = contig_ptr->filterVariants(SNPFilter());
@@ -242,8 +239,7 @@ kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
   auto [frequency_vector, locus_results] = generateFrequencies(genome_id,
                                                                contig_ptr,
                                                                super_population_field,
-                                                               locus_list,
-                                                               parameters.lociiArguments().frequencySource());
+                                                               locus_list );
 
   double updated_coefficient{0.0};
   double inbreed_coefficient;
@@ -323,15 +319,13 @@ kgl::LocusResults
 kgl::InbreedingCalculation::processSimple(const GenomeId_t& genome_id,
                                           const std::shared_ptr<const ContigDB>& contig_ptr,
                                           const std::string& super_population_field,
-                                          const std::shared_ptr<const ContigDB>& locus_list,
-                                          const InbreedingParameters& parameters) {
+                                          const std::shared_ptr<const ContigDB>& locus_list) {
 
   // Get the locus frequencies.
   auto [frequency_vector, locus_results] = generateFrequencies( genome_id,
                                                                 contig_ptr,
                                                                 super_population_field,
-                                                                locus_list,
-                                                                parameters.lociiArguments().frequencySource());
+                                                                locus_list);
   const bool calc_hetero{false}; // Which calculation to use.
   double heterozygous_inbreeding{0.0};
   double homozygous_inbreeding{0.0};
@@ -381,8 +375,7 @@ kgl::LocusResults
 kgl::InbreedingCalculation::processRitlandLocus(const GenomeId_t &genome_id,
                                            const std::shared_ptr<const ContigDB>& contig_ptr,
                                            const std::string& super_population_field,
-                                           const std::shared_ptr<const ContigDB>& locus_list,
-                                           const InbreedingParameters& parameters) {
+                                           const std::shared_ptr<const ContigDB>& locus_list ) {
 
   // Ignore rare homozygous combinations, as these 'blow up' the ratio below.
   constexpr const static double minimum_frequency{0.001};
@@ -392,8 +385,7 @@ kgl::InbreedingCalculation::processRitlandLocus(const GenomeId_t &genome_id,
   auto [frequency_vector, locus_results] = generateFrequencies( genome_id,
                                                                 contig_ptr,
                                                                 super_population_field,
-                                                                locus_list,
-                                                                parameters.lociiArguments().frequencySource());
+                                                                locus_list);
 
   for (auto const& allele_freq : frequency_vector) {
 

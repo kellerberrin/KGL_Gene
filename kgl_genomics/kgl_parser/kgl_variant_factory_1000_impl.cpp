@@ -253,7 +253,7 @@ void kgl::Genome1000VCFImpl::addVariants( const std::map<size_t, std::vector<Gen
                                           const ContigId_t& contig,
                                           VariantPhase phase,
                                           ContigOffset_t offset,
-                                          bool passedFilters,
+                                          bool passed_filters,
                                           InfoDataEvidence info_evidence_opt,
                                           const std::string& reference,
                                           const std::string& identifier,
@@ -265,7 +265,13 @@ void kgl::Genome1000VCFImpl::addVariants( const std::map<size_t, std::vector<Gen
     std::optional<std::shared_ptr<FormatData>> null_format_data = std::nullopt;
 // Setup the evidence object.
 
-    VariantEvidence evidence(vcf_record_count, info_evidence_opt, null_format_data, alt_allele, alt_vector.size());
+    VariantEvidence evidence(vcf_record_count,
+                             diploid_population_ptr_->dataSource(),
+                             passed_filters,
+                             info_evidence_opt,
+                             null_format_data,
+                             alt_allele,
+                             alt_vector.size());
     // Add the variant.
     StringDNA5 reference_str(reference);
     StringDNA5 alternate_str(alt_vector[alt_allele]);
@@ -276,8 +282,7 @@ void kgl::Genome1000VCFImpl::addVariants( const std::map<size_t, std::vector<Gen
                                                                           identifier,
                                                                           std::move(reference_str),
                                                                           std::move(alternate_str),
-                                                                          evidence,
-                                                                          passedFilters));
+                                                                          evidence));
 
 
     if (addThreadSafeVariant(std::move(variant_ptr), genome_vector)) {

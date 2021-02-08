@@ -10,12 +10,10 @@ namespace kgl = kellerberrin::genome;
 
 
 
-std::optional<double> kgl::FrequencyDatabaseRead::processSuperPopField(const Variant& variant,
-                                                                       DataSourceEnum data_source,
-                                                                       const std::string& super_population) {
+std::optional<double> kgl::FrequencyDatabaseRead::processSuperPopField(const Variant& variant, const std::string& super_population) {
 
   // Use a super population code to lookup a corresponding AF field.
-  std::optional<std::string> database_field_opt = lookupVariantSuperPopField(data_source, super_population);
+  std::optional<std::string> database_field_opt = lookupVariantSuperPopField(variant.evidence().dataSource(), super_population);
 
   if (not database_field_opt) {
 
@@ -58,7 +56,7 @@ std::optional<double> kgl::FrequencyDatabaseRead::processFloatField(const Varian
 
       }
 
-      ExecEnv::log().warn("FrequencyDatabaseRead::processSuperPopField, Field: {} expected vector size 1, get vector size: {}, vector: {}, Variant: {}",
+      ExecEnv::log().warn("FrequencyDatabaseRead::processFloatField; Field: {} expected vector size 1, get vector size: {}, vector: {}, Variant: {}",
                           database_field, field_vec.size(), vector_str, variant.output(',', VariantOutputIndex::START_0_BASED, false));
       return std::nullopt;
 
@@ -66,7 +64,7 @@ std::optional<double> kgl::FrequencyDatabaseRead::processFloatField(const Varian
 
   } else {
 
-    ExecEnv::log().warn("FrequencyDatabaseRead::processSuperPopField, Field: {} Not found for variant: {}",
+    ExecEnv::log().warn("FrequencyDatabaseRead::processFloatField; Field: {} Not found for variant: {}",
                         database_field, variant.output(',', VariantOutputIndex::START_0_BASED, false));
     return std::nullopt;
 
@@ -91,6 +89,9 @@ std::optional<std::string> kgl::FrequencyDatabaseRead::lookupVariantSuperPopFiel
 
     case DataSourceEnum::Gnomad3_1:
       return lookupGnomad_3_1_Field(super_population);
+
+    case DataSourceEnum::GnomadGenome3_1:
+      return lookupGnomadGenome_3_1_Field(super_population);
 
     case DataSourceEnum::Genome1000:
       return lookup_1000_Field(super_population);

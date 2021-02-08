@@ -477,10 +477,8 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Ensure max 2 variants per offset.
-// Note that VCF indels are actually offset by -1 because they always contain
+// Note that VCF indels are actually offset by +1 because they always contain
 // a reference to the base that preceeds the indel for verification.
-// This code does NOT attempt to adjust for this offset and will only give
-// guaranteed correct results if the DB has been pre-filtered to only contain SNPs.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class DiploidFilter: public VariantFilter {
@@ -504,8 +502,6 @@ public:
 private:
 
 };
-
-
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -550,7 +546,7 @@ public:
   PassFilter(const PassFilter&) = default;
   ~PassFilter() override = default;
 
-  [[nodiscard]] bool applyFilter(const Variant& variant) const override { return variant.passFilters(); }
+  [[nodiscard]] bool applyFilter(const Variant& variant) const override { return variant.evidence().passFilter(); }
 
   [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<PassFilter>(*this); }
 

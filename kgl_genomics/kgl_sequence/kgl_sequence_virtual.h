@@ -79,6 +79,9 @@ public:
   // Return the count of ordered alphabet pairs (generally used for counting CpG islands).
   [[nodiscard]] size_t countTwoSymbols(typename Alphabet::Alphabet first_symbol, typename Alphabet::Alphabet second_symbol) const { return alphabet_string_.countTwoSymbols(first_symbol, second_symbol); }
 
+  // find the longest common prefix.
+  [[nodiscard]] size_t commonPrefix(const AlphabetSequence& cmp_sequence) const;
+
 protected:
 
   AlphabetString<Alphabet> alphabet_string_;
@@ -204,6 +207,33 @@ bool AlphabetSequence<Alphabet>::getSubsequence(ContigOffset_t substring_offset,
   return true;
 
 }
+
+
+template<typename Alphabet>
+size_t AlphabetSequence<Alphabet>::commonPrefix(const AlphabetSequence& cmp_sequence) const {
+
+  const size_t common_size = std::min(alphabet_string_.length(), cmp_sequence.alphabet_string_.length());
+
+  size_t common_prefix{0};
+  for (size_t index = 0; index < common_size; ++index) {
+
+    if (alphabet_string_[index] != cmp_sequence.alphabet_string_[index]) {
+
+      return common_prefix;
+
+    }
+
+    ++common_prefix;
+
+  }
+
+  return common_prefix;
+
+
+}
+
+
+
 
 }   // end namespace
 

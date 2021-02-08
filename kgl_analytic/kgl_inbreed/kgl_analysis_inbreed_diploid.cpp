@@ -143,8 +143,7 @@ kgl::ResultsMap kgl::InbreedingAnalysis::processResults( const ContigLocusMap& c
                                                                    genome_id,
                                                                    contig_opt.value(),
                                                                    super_pop_id,
-                                                                   locus_list,
-                                                                   parameters);
+                                                                   locus_list );
         future_vector.push_back(std::move(future));
 
       }

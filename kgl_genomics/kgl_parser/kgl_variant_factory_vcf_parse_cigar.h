@@ -11,8 +11,6 @@
 
 #include "kel_utility.h"
 #include "kgl_genome_types.h"
-#include "kgl_genome_collection.h"
-#include "kgl_variant_db_population.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -49,6 +47,12 @@ public:
 
 // Use edlib to generate a cigar vector.
   [[nodiscard]] static CigarVector generateEditVector(const std::string& reference, const std::string& alternate);
+
+// Calculate the allele offset, the non-zero value of the first CigarVector item if it is 'UNCHANGED'
+  [[nodiscard]] static ContigOffset_t alleleEditOffset(const std::string& reference, const std::string& alternate);
+  // Calculate the allele offset, the non-zero value of the first CigarVector item if it is 'UNCHANGED'
+  [[nodiscard]] static ContigOffset_t alleleOffset(const std::string& reference, const std::string& alternate);
+
 
   // Given a reference count and a cigar vector compute a number that calculates the equivalent
   // size of the alternate string.

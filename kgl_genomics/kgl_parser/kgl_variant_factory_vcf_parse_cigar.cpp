@@ -3,12 +3,13 @@
 //
 
 #include "kel_utility.h"
+#include "kel_exec_env.h"
 #include "kgl_variant_factory_vcf_parse_cigar.h"
 
 #include <edlib.h>
 
 #include <boost/algorithm/string.hpp>
-#include <fstream>
+#include <sstream>
 
 
 namespace kgl = kellerberrin::genome;
@@ -115,6 +116,52 @@ std::string kgl::ParseVCFCigar::generateCigar(const std::string& reference, cons
   return generateCigar(generateEditVector(reference, alternate));
 
 }
+
+// Calculate the allele offset, the non-zero value of the first CigarVector item if it is 'UNCHANGED'
+kgl::ContigOffset_t kgl::ParseVCFCigar::alleleEditOffset(const std::string& reference, const std::string& alternate) {
+
+  std::vector<kgl::CigarEditItem> cigar =  generateEditVector(reference, alternate);
+
+  if (cigar.empty()) {
+
+    return 0;
+
+  } else if (cigar.front().second == CigarEditType::UNCHANGED) {
+
+    return cigar.front().first;
+
+  } else {
+
+    return 0;
+
+  }
+
+}
+
+
+// Calculate the allele offset, the non-zero value of the first CigarVector item if it is 'UNCHANGED'
+kgl::ContigOffset_t kgl::ParseVCFCigar::alleleOffset(const std::string& reference, const std::string& alternate) {
+
+  const size_t common_size = std::min(reference.size(), alternate.size());
+
+  size_t common_prefix{0};
+  for (size_t index = 0; index < common_size; ++index) {
+
+    if (reference[index] != alternate[index]) {
+
+      return common_prefix;
+
+    }
+
+    ++common_prefix;
+
+  }
+
+  return common_prefix;
+
+}
+
+
 
 
 // Use edlib to generate a cigar vector.

@@ -16,13 +16,12 @@ namespace kel = kellerberrin;
 
 
 kgl::AlleleFreqVector::AlleleFreqVector(const OffsetDBArray& variant_vector,
-                                        const std::string& frequency_field,
-                                        DataSourceEnum data_source) {
+                                        const std::string& frequency_field) {
 
   // Loop through the variants in the locus..
   for (auto const &variant : variant_vector) {
 
-    auto opt_value = FrequencyDatabaseRead::processSuperPopField(*variant, data_source, frequency_field);
+    auto opt_value = FrequencyDatabaseRead::processSuperPopField(*variant, frequency_field);
     if (not opt_value) {
 
       // Problem obtaining allele frequency, this allele may not be defined for the specified super population.
@@ -429,8 +428,7 @@ std::pair<std::vector<kgl::AlleleFreqInfo>, kgl::LocusResults>
 kgl::InbreedingCalculation::generateFrequencies(const GenomeId_t& genome_id,
                                                 const std::shared_ptr<const ContigDB>& contig_ptr,
                                                 const std::string& super_population_field,
-                                                const std::shared_ptr<const ContigDB>& locus_list,
-                                                DataSourceEnum variant_source) {
+                                                const std::shared_ptr<const ContigDB>& locus_list) {
 
   std::vector<AlleleFreqInfo> frequency_vector;
   LocusResults locus_results;
@@ -445,7 +443,7 @@ kgl::InbreedingCalculation::generateFrequencies(const GenomeId_t& genome_id,
     // Get the allele frequencies.
     const OffsetDBArray& locus_variant_array = offset_ptr->getVariantArray();
 
-    AlleleFreqVector allele_freq_vector(locus_variant_array, super_population_field, variant_source);
+    AlleleFreqVector allele_freq_vector(locus_variant_array, super_population_field);
     if (not allele_freq_vector.checkValidAlleleVector()) {
 
       continue; // Next locus.
