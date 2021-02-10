@@ -41,23 +41,33 @@ std::optional<double> kgl::FrequencyDatabaseRead::processFloatField(const Varian
 
       return field_vec.front();
 
-    } else if (field_vec.size() == 0) {
+    } else if (field_vec.empty()) {
 
       // Missing value, this is OK, means the field exists but not defined for this variant.
       return std::nullopt;
+
+    } else if (variant.evidence().altVariantCount() == field_vec.size()
+           and variant.evidence().altVariantIndex() < field_vec.size()) {
+
+      return field_vec[variant.evidence().altVariantIndex()];
 
     } else {
 
       std::string vector_str;
       for (auto const& str : field_vec) {
 
-        vector_str += str;
+        vector_str += std::to_string(str);
         vector_str += ";";
 
       }
 
-      ExecEnv::log().warn("FrequencyDatabaseRead::processFloatField; Field: {} expected vector size 1, get vector size: {}, vector: {}, Variant: {}",
-                          database_field, field_vec.size(), vector_str, variant.output(',', VariantOutputIndex::START_0_BASED, false));
+      ExecEnv::log().warn("FrequencyDatabaseRead::processFloatField; Field: {} expected vector size 1, evidence variants: {}, evidence index: {},  get vector size: {}, vector: {}, Variant: {}",
+                          database_field,
+                          variant.evidence().altVariantCount(),
+                          variant.evidence().altVariantIndex(),
+                          field_vec.size(),
+                          vector_str,
+                          variant.output(',', VariantOutputIndex::START_0_BASED, true));
       return std::nullopt;
 
     }
@@ -65,7 +75,7 @@ std::optional<double> kgl::FrequencyDatabaseRead::processFloatField(const Varian
   } else {
 
     ExecEnv::log().warn("FrequencyDatabaseRead::processFloatField; Field: {} Not found for variant: {}",
-                        database_field, variant.output(',', VariantOutputIndex::START_0_BASED, false));
+                        database_field, variant.output(',', VariantOutputIndex::START_0_BASED, true));
     return std::nullopt;
 
   }

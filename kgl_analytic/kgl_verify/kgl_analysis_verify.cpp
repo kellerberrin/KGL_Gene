@@ -105,7 +105,11 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
 
                 for (auto const& variant_ptr : offsetVariants) {
 
-                  ExecEnv::log().info("Unexpected Count: {}, Genome: {}, {}", offset_size, genome_id, variant_ptr->output(',', VariantOutputIndex::START_0_BASED, true));
+                  ExecEnv::log().info("Unexpected Count: {}, Genome: {}, {}, Hash: {}",
+                                      offset_size,
+                                      genome_id,
+                                      variant_ptr->output(',', VariantOutputIndex::START_0_BASED, true),
+                                      variant_ptr->variantHash());
 
                 }
 
@@ -120,7 +124,10 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
 
                   for (auto const& variant_ptr : offsetVariants) {
 
-                    ExecEnv::log().info("Incorrect Phasing Genome: {}, {}", genome_id, variant_ptr->output(',', VariantOutputIndex::START_0_BASED, true));
+                    ExecEnv::log().info("Incorrect Phasing Genome: {}, {}, Hash: {}",
+                                        genome_id,
+                                        variant_ptr->output(',', VariantOutputIndex::START_0_BASED, true),
+                                        variant_ptr->variantHash());
 
                   }
 

@@ -81,10 +81,8 @@ kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
           std::optional<AlleleFreqRecord> selected_allele = freq_vector.selectMinorHomozygous(allele_selection, class_freqs);
           if (selected_allele) {
 
-            std::shared_ptr<Variant> cloned_variant1 = selected_allele->allele()->clone();
-            cloned_variant1->updatePhaseId(VariantPhase::DIPLOID_PHASE_A);
-            std::shared_ptr<Variant> cloned_variant2 = selected_allele->allele()->clone();
-            cloned_variant2->updatePhaseId(VariantPhase::DIPLOID_PHASE_B);
+            std::shared_ptr<Variant> cloned_variant1 = selected_allele->allele()->clonePhase(VariantPhase::DIPLOID_PHASE_A);
+            std::shared_ptr<Variant> cloned_variant2 = selected_allele->allele()->clonePhase(VariantPhase::DIPLOID_PHASE_B);
             if (not synthetic_pop_ptr->addVariant( cloned_variant1, genome_vector)) {
 
               ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
@@ -114,14 +112,14 @@ kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
           std::optional<AlleleFreqRecord> selected_allele = freq_vector.selectMajorHeterozygous(allele_selection, class_freqs);
           if (selected_allele) {
 
-            std::shared_ptr<Variant> cloned_variant = selected_allele->allele()->clone();
+            std::shared_ptr<const Variant> cloned_variant = selected_allele->allele();
             if (random_boolean.random(entropy_mt.generator())) {
 
-              cloned_variant->updatePhaseId(VariantPhase::DIPLOID_PHASE_A);
+              cloned_variant = cloned_variant->clonePhase(VariantPhase::DIPLOID_PHASE_A);
 
             } else {
 
-              cloned_variant->updatePhaseId(VariantPhase::DIPLOID_PHASE_B);
+              cloned_variant = cloned_variant->clonePhase(VariantPhase::DIPLOID_PHASE_B);
 
             }
             if (not synthetic_pop_ptr->addVariant( cloned_variant, genome_vector)) {
@@ -147,10 +145,8 @@ kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
           std::optional<std::pair<AlleleFreqRecord, AlleleFreqRecord>> selected_alleles = freq_vector.selectMinorHeterozygous(allele_selection, class_freqs);
           if (selected_alleles) {
 
-            std::shared_ptr<Variant> cloned_variant1 = selected_alleles->first.allele()->clone();
-            cloned_variant1->updatePhaseId(VariantPhase::DIPLOID_PHASE_A);
-            std::shared_ptr<Variant> cloned_variant2 = selected_alleles->second.allele()->clone();
-            cloned_variant2->updatePhaseId(VariantPhase::DIPLOID_PHASE_B);
+            std::shared_ptr<Variant> cloned_variant1 = selected_alleles->first.allele()->clonePhase(VariantPhase::DIPLOID_PHASE_A);
+            std::shared_ptr<Variant> cloned_variant2 = selected_alleles->second.allele()->clonePhase(VariantPhase::DIPLOID_PHASE_B);
             if (not synthetic_pop_ptr->addVariant( cloned_variant1, genome_vector)) {
 
               ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"

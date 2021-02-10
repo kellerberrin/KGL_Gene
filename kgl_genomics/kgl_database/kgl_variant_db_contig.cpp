@@ -116,15 +116,13 @@ bool kgl::ContigDB::addUniqueUnphasedVariant(const std::shared_ptr<const Variant
     }
 
     // Variant is unique, so clone, de-phase, and add.
-    std::shared_ptr<Variant> unphased_variant = variant_ptr->clone();
-    unphased_variant->updatePhaseId(VariantPhase::UNPHASED);
+    std::shared_ptr<Variant> unphased_variant = variant_ptr->clonePhase(VariantPhase::UNPHASED);
     result->second->addVariant(unphased_variant);
 
   } else {
     // add the new offset.
     std::unique_ptr<OffsetDB> offset_array_ptr(std::make_unique<OffsetDB>());
-    std::shared_ptr<Variant> unphased_variant = variant_ptr->clone();
-    unphased_variant->updatePhaseId(VariantPhase::UNPHASED);
+    std::shared_ptr<Variant> unphased_variant = variant_ptr->clonePhase(VariantPhase::UNPHASED);
     offset_array_ptr->addVariant(unphased_variant);
     auto insert_result = contig_offset_map_.try_emplace(variant_ptr->offset(), std::move(offset_array_ptr));
 

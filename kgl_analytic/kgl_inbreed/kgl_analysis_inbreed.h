@@ -56,8 +56,6 @@ private:
   std::shared_ptr<const PopulationDB> unphased_population_;
   std::shared_ptr<const GenomePEDData> ped_data_;
 
-  // If necessary, create an unphased population from the diploid population.
-  std::shared_ptr<const PopulationDB> createUnphased();
   // Write to output files.
   bool writeResults();
 

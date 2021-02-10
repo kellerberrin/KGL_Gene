@@ -31,6 +31,7 @@ enum class FilterType   { InfoFilter,
                           UniqueUnphasedFilter,  // Uniqueness excludes phase info
                           UniquePhasedFilter,   // Uniqueness includes phase info
                           DiploidFilter, // Ensure max two variants per offset.
+                          GenomeFilter, // Filter genomes
                           PhaseFilter,
                           PassFilter,
                           SNPFilter,

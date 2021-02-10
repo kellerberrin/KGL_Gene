@@ -20,7 +20,7 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-[[nodiscard]] std::unique_ptr<kgl::Variant> kgl::Variant::clone() const {
+std::unique_ptr<kgl::Variant> kgl::Variant::clone() const {
 
   StringDNA5 reference_str(reference().getAlphabetString());
   StringDNA5 alternate_str(alternate().getAlphabetString());
@@ -39,7 +39,7 @@ namespace kgl = kellerberrin::genome;
 }
 
 
-[[nodiscard]] std::unique_ptr<kgl::Variant> kgl::Variant::cloneNullVariant() const {
+std::unique_ptr<kgl::Variant> kgl::Variant::cloneNullVariant() const {
 
   StringDNA5 reference1_str(reference().getAlphabetString());
   StringDNA5 reference2_str(reference().getAlphabetString());
@@ -56,6 +56,27 @@ namespace kgl = kellerberrin::genome;
   return variant_ptr;
 
 }
+
+
+// Clone with modified phase.
+std::unique_ptr<kgl::Variant> kgl::Variant::clonePhase(VariantPhase phaseId) const {
+
+  StringDNA5 reference_str(reference().getAlphabetString());
+  StringDNA5 alternate_str(alternate().getAlphabetString());
+  std::string variant_ident = identifier();
+
+  std::unique_ptr<Variant> variant_ptr(std::make_unique<Variant>( contigId(),
+                                                                  offset(),
+                                                                  phaseId,
+                                                                  std::move(variant_ident),
+                                                                  std::move(reference_str),
+                                                                  std::move(alternate_str),
+                                                                  evidence()));
+
+  return variant_ptr;
+
+}
+
 
 
 
@@ -231,7 +252,7 @@ std::string kgl::Variant::mutation(char delimiter, VariantOutputIndex output_ind
 
   std::stringstream ss;
 
-  ss << reference().getSequenceAsString() << ">" << offsetOutput(offset(), output_index) << ">";
+  ss << reference().getSequenceAsString() << ">" << offsetOutput(referenceOffset(), output_index) << ">";
   ss << alternate().getSequenceAsString() << delimiter;
   ss << alternateCigar() << delimiter;
 

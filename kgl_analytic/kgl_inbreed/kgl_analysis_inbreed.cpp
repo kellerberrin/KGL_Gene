@@ -106,10 +106,11 @@ bool kgl::InbreedAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Iteration Analysis called for Analysis Id: {}", ident());
 
-  // If necessary, create an unphased population from the diploid population.
-  if (diploid_population_ and not unphased_population_) {
+  // Check that we have the necessary databases available and defined.
+  if (not diploid_population_ or not unphased_population_ or not ped_data_) {
 
-    unphased_population_ = createUnphased();
+    ExecEnv::log().critical("InbreedAnalysis::iterationAnalysis; necessary variant databases not supplied - program terminates.");
+    return false;
 
   }
 
@@ -140,19 +141,6 @@ bool kgl::InbreedAnalysis::finalizeAnalysis() {
 
 }
 
-
-std::shared_ptr<const kgl::PopulationDB> kgl::InbreedAnalysis::createUnphased() {
-
-  ExecEnv::log().info("InbreedAnalysis::processDiploid; Creating unique unphased population using Diploid Population.");
-  std::shared_ptr<GenomeDB> unphased_genome_ptr = diploid_population_->uniqueUnphasedGenome();
-  std::shared_ptr<PopulationDB> unphased_unique_ptr = std::make_shared<PopulationDB>(diploid_population_->populationId(),
-                                                                                     diploid_population_->dataSource());
-  unphased_unique_ptr->addGenome(unphased_genome_ptr);
-  ExecEnv::log().info("InbreedAnalysis::processDiploid; Created unique unphased population, variant count: {}.", unphased_unique_ptr->variantCount());
-
-  return unphased_unique_ptr;
-
-}
 
 
 bool kgl::InbreedAnalysis::writeResults() {

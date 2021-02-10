@@ -115,6 +115,8 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
       // Update the template populations.
       gene_mutation_.updatePopulations(ped_data_);
 
+      filterPedGenomes();
+
     } else {
 
       ExecEnv::log().critical("InbreedAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not a PED Ancestor Object", ident(), data_ptr->fileId());
@@ -140,12 +142,15 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
       auto population = std::const_pointer_cast<PopulationDB>(const_population);
 
       ExecEnv::log().info("Begin uniqueness filter for population: {} variant count: {}", population->populationId(), population->variantCount());
-      auto pass_results = population->inSituFilter(AndFilter(PassFilter(), SNPFilter()));
+      auto pass_results = population->inSituFilter(PassFilter());
       auto diploid_results = population->inSituFilter(DiploidFilter());
       ExecEnv::log().info("Filtered Population: {} 'SNP and Pass' count: {}, 'Diploid' count: {}",
                           population->populationId(), pass_results.second, diploid_results.second);
 
       population_ptr_ = population;
+
+      filterPedGenomes();
+
 
     } else if ( file_characteristic.data_source == DataSourceEnum::Gnomad2_1
                or file_characteristic.data_source == DataSourceEnum::Gnomad3_1) {
@@ -178,15 +183,24 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 }
 
 
-std::shared_ptr<const kgl::PopulationDB> kgl::MutationAnalysis::createUnphased(const std::shared_ptr<const PopulationDB>& population) {
+void kgl::MutationAnalysis::filterPedGenomes() {
 
-  ExecEnv::log().info("InbreedAnalysis::processDiploid; Creating unique unphased population using Diploid Population.");
-  std::shared_ptr<GenomeDB> unphased_genome_ptr = population->uniqueUnphasedGenome();
-  std::shared_ptr<PopulationDB> unphased_unique_ptr = std::make_shared<PopulationDB>(population->populationId(), population->dataSource());
-  unphased_unique_ptr->addGenome(unphased_genome_ptr);
-  ExecEnv::log().info("InbreedAnalysis::processDiploid; Created unique unphased population, variant count: {}.", unphased_unique_ptr->variantCount());
 
-  return unphased_unique_ptr;
+  if (population_ptr_ and ped_data_) {
+
+    std::vector<GenomeId_t> ped_genomes;
+    for (auto const& [genome, ped_data] :ped_data_->getMap()) {
+
+      ped_genomes.push_back(genome);
+
+    }
+
+    auto non_const_population = std::const_pointer_cast<PopulationDB>(population_ptr_);
+    auto count_pair = non_const_population->inSituFilter(GenomeFilter(ped_genomes));
+    ExecEnv::log().info("Filtered population: {} to Ped defined genomes, original variant count: {}, filtered count: {}",
+                        count_pair.first, count_pair.second);
+
+  }
 
 }
 

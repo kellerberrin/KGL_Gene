@@ -62,7 +62,7 @@ private:
   constexpr static const char* OUTPUT_FILE_EXT_ = ".csv";
 
   bool getParameters(const ActiveParameterList& named_parameters, const std::string& work_directory);
-  std::shared_ptr<const PopulationDB> createUnphased(const std::shared_ptr<const PopulationDB>& population);
+  void filterPedGenomes();
 
 };
 

@@ -476,9 +476,9 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Ensure max 2 variants per offset.
-// Note that VCF indels are actually offset by +1 because they always contain
-// a reference to the base that preceeds the indel for verification.
+//
+// Ensure max 2 variants per offset and properly phased (or unphased).
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class DiploidFilter: public VariantFilter {
@@ -502,6 +502,51 @@ public:
 private:
 
 };
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Filter a population for genomes.
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class GenomeFilter: public VariantFilter {
+
+public:
+
+  explicit GenomeFilter(const std::vector<GenomeId_t>& filtered_genomes) {
+
+    filterName("GenomeFilter");
+
+    for (auto const& genome_id : filtered_genomes) {
+
+      filter_genomes_.insert(genome_id);
+
+    }
+
+  }
+  GenomeFilter(const GenomeFilter&) = default;
+  ~GenomeFilter() override = default;
+
+  GenomeFilter& operator=(const GenomeFilter&) = default;
+
+  // Dummy implementation. Implemented at genome level
+  [[nodiscard]] bool applyFilter(const Variant&) const override { return true; }
+
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<GenomeFilter>(*this); }
+
+  [[nodiscard]] FilterType filterType() const override { return FilterType::GenomeFilter; }
+
+  [[nodiscard]] bool filterGenome(const GenomeId_t& genome_id) const { return filter_genomes_.find(genome_id) != filter_genomes_.end(); }
+
+private:
+
+  std::unordered_set<GenomeId_t> filter_genomes_;
+
+};
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

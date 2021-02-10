@@ -35,7 +35,9 @@ enum class VariantPhase : std::uint8_t { HAPLOID_PHASED = 0,
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // This variant class reflects the variant information presented in VCF files.
-// Previous variant objects based on the SAM/BAM file format have been superseded by this class.
+// The object is completely constant (cannot be modified). This is because the object is simultaneously
+// held by multiple genomes to conserve memory. Therefore modifying a variant would modify the variant everywhere.
+// If a modified copy of the variant is required then it must be cloned with modified arguments.
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -67,6 +69,13 @@ public:
   // Create a copy of the variant on heap.
   // Important - all the original variant evidence is also attached to the new variant object.
   [[nodiscard]] std::unique_ptr<Variant> clone() const;
+
+  // Set the alternate to the reference; invalidates the evidence structure.
+  // Used to specify major alleles (no genome change).
+  [[nodiscard]] std::unique_ptr<Variant> cloneNullVariant() const;
+
+  // Clone the variant with a different phase.
+  [[nodiscard]] std::unique_ptr<Variant> clonePhase(VariantPhase phase_id) const;
 
   [[nodiscard]] size_t alternateSize() const { return alternate_.length(); }
 
@@ -113,13 +122,6 @@ public:
   [[nodiscard]] VariantPhase phaseId() const { return phase_id_; }
   [[nodiscard]] const std::string& identifier() const { return identifier_; }
 
-  void updatePhaseId(VariantPhase phase_id) { phase_id_ = phase_id; }
-
-
-
-  // Set the alternate to the reference; invalidates the evidence structure.
-  // Used to specify major alleles (no genome change).
-  [[nodiscard]] std::unique_ptr<Variant> cloneNullVariant() const;
   // Checks if the reference and alternate are equivalent.
   [[nodiscard]] bool isNullVariant() const { return reference_ == alternate_; }
 
@@ -143,7 +145,7 @@ private:
   const ContigId_t contig_id_;                          // The contig of this variant
   const ContigOffset_t contig_reference_offset_;        // Physical Location of the the start of the reference sequence the contig.
   const AlleleOffset_t contig_allele_offset_;           // Offset to where the allele actually occurs. Always 0 for an SNP, always > 0 for an indel.
-  VariantPhase phase_id_;                               // The phase of this variant (which homologous contig)
+  const VariantPhase phase_id_;                         // The phase of this variant (which homologous contig)
   const std::string identifier_;                        // The VCF supplied variant identifier.
 
   // Generate a CIGAR by comparing the reference to the alternate.

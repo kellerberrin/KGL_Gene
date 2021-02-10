@@ -167,8 +167,32 @@ size_t kgl::GenomeDB::variantCount() const {
 
 std::shared_ptr<kgl::GenomeDB> kgl::GenomeDB::filterVariants(const VariantFilter& filter) const {
 
-  std::shared_ptr<GenomeDB> filtered_genome_ptr(std::make_shared<GenomeDB>(genomeId()));
+  // Only genome filter is implemented at this level.
+  if (filter.filterType() == FilterType::GenomeFilter) {
 
+    std::shared_ptr<const GenomeFilter> genome_filter = std::dynamic_pointer_cast<const GenomeFilter>(filter.clone());
+    if (not genome_filter) {
+
+      ExecEnv::log().error("GenomeDB::inSituFilter; unable to clone/cast GenomeFilter");
+      return filterVariants(TrueFilter());
+
+    }
+
+    if (genome_filter->filterGenome(genomeId())) {
+
+      // Called recursively, copy all contigs and offsets.
+      return filterVariants(TrueFilter());
+
+    }
+
+    // Else return an empty genome object.
+    return std::make_shared<GenomeDB>(genomeId());
+
+  }
+
+  // All other filters.
+  // Filter the contigs.
+  std::shared_ptr<GenomeDB> filtered_genome_ptr(std::make_shared<GenomeDB>(genomeId()));
   for (const auto& [contig_id, contig_ptr] : getMap()) {
 
     auto filtered_contig = contig_ptr->filterVariants(filter);
@@ -192,6 +216,33 @@ std::shared_ptr<kgl::GenomeDB> kgl::GenomeDB::filterVariants(const VariantFilter
 // Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
 std::pair<size_t, size_t> kgl::GenomeDB::inSituFilter(const VariantFilter& filter) {
 
+  // Only genome filter is implemented at this level.
+  if (filter.filterType() == FilterType::GenomeFilter) {
+
+    std::pair<size_t, size_t> genome_count{0, 0};
+    genome_count.first = variantCount();
+    std::shared_ptr<const GenomeFilter> genome_filter = std::dynamic_pointer_cast<const GenomeFilter>(filter.clone());
+    if (not genome_filter) {
+
+      ExecEnv::log().error("GenomeDB::inSituFilter; unable to clone/cast GenomeFilter");
+      genome_count.second = genome_count.first;
+      return genome_count;
+
+    }
+
+    if (not genome_filter->filterGenome(genomeId())) {
+
+      // Called recursively, delete all contigs and offsets.
+      return inSituFilter(FalseFilter());
+
+    }
+
+    genome_count.second = genome_count.first;
+    return genome_count;
+
+  }
+
+  // All other filters.
   // Filter the contigs.
   std::pair<size_t, size_t> genome_count{0, 0};
   for (auto& [contig_id, contig_ptr] : contig_map_) {
@@ -220,6 +271,7 @@ std::pair<size_t, size_t> kgl::GenomeDB::inSituFilter(const VariantFilter& filte
   return genome_count;
 
 }
+
 
 
 // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
