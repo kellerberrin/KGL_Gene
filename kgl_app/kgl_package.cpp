@@ -49,9 +49,9 @@ void kgl::ExecutePackage::executeActive() const {
 
       for (auto const& data_file : iterative_files) {
 
-        std::shared_ptr<DataDB> read_data_object = readDataFile(package, reference_genome_ptr, data_file);
+        std::shared_ptr<DataDB> data_ptr = readDataFile(package, reference_genome_ptr, data_file);
 
-        if (not package_analysis_.fileReadAnalysis(read_data_object)) {
+        if (not package_analysis_.fileReadAnalysis(data_ptr)) {
 
           ExecEnv::log().error("ExecutePackage::executeActive, Problem performing Read File Analysis for Package: {}", package_ident);
 
@@ -131,7 +131,9 @@ kgl::ExecutePackage::readDataFile(const RuntimePackage& package,
   auto [file_ident, file_info_ptr] = *result;
 
   // Selects the appropriate parser and returns a base class data object.
-  return ParserSelection::parseData(reference_genomes, file_info_ptr, runtime_config_.evidenceMap(), runtime_config_.contigAlias());
+  std::shared_ptr<kgl::DataDB> data_ptr = ParserSelection::parseData(reference_genomes, file_info_ptr, runtime_config_.evidenceMap(), runtime_config_.contigAlias());
+
+  return data_ptr;
 
 }
 

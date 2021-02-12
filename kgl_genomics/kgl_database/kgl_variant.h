@@ -62,7 +62,7 @@ public:
       contig_reference_offset_(contig_reference_offset),
       contig_allele_offset_(reference_.commonPrefix(alternate_)),
       phase_id_(phase_id),
-      identifier_(std::move(identifier)) {}
+      identifier_(std::move(identifier)) { }
 
   ~Variant() = default;
 
@@ -147,6 +147,7 @@ private:
   const AlleleOffset_t contig_allele_offset_;           // Offset to where the allele actually occurs. Always 0 for an SNP, always > 0 for an indel.
   const VariantPhase phase_id_;                         // The phase of this variant (which homologous contig)
   const std::string identifier_;                        // The VCF supplied variant identifier.
+
 
   // Generate a CIGAR by comparing the reference to the alternate.
   [[nodiscard]] std::string alternateCigar() const;

@@ -33,7 +33,8 @@ public:
   [[nodiscard]] static std::vector<std::string> tokenizer(const std::string& str, const std::string& delims = ",");
   [[nodiscard]] static std::vector<std::string_view> view_tokenizer(const std::string_view& str_view, const char delim);
   [[nodiscard]] static std::vector<std::string> char_tokenizer(const std::string& str, const char delim);
-  [[nodiscard]] static std::pair<double, double> process_mem_usage();
+  [[nodiscard]] static std::pair<double, double> process_mem_usage(); // pair.first is process vm_usage, pair.second is resident memory set.
+  [[nodiscard]] static std::pair<double, double> process_mem_usage2(); // pair.first is process vm_usage, pair.second is physical memory used.
   [[nodiscard]] static std::pair<double, double> stddev(const std::vector<double> &vec); // mean = first,  stdev = second
   static void getElapsedTime(double &Clock, double &System, double &User);
 

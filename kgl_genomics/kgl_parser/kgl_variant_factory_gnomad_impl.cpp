@@ -207,7 +207,7 @@ void kgl::GenomeGnomadVCFImpl::addVariants( const std::map<size_t, std::vector<G
                                           VariantPhase phase,
                                           ContigOffset_t offset,
                                           bool passed_filters,
-                                          const InfoDataEvidence info_evidence_opt,
+                                          const InfoDataEvidence& info_evidence_opt,
                                           const std::string& reference,
                                           const std::string& identifier,
                                           const std::vector<std::string>& alt_vector,

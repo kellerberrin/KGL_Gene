@@ -85,7 +85,7 @@ public:
                      alternate_variant_count_(alternate_variant_count) {}
 
   VariantEvidence() = default;
-  VariantEvidence(const VariantEvidence&) = default;
+  VariantEvidence(const VariantEvidence& copy) = default;
   ~VariantEvidence() = default;
 
   [[nodiscard]] std::string output(char delimiter, VariantOutputIndex output_index) const;
@@ -116,6 +116,7 @@ private:
   // These variables can be used to access Info field vectors that are designated Type='A' for alternate allele.
   uint32_t alternate_variant_index_{0}; // The default index 0 / count 1 implies 1 alternate variant (the usual case).
   uint32_t alternate_variant_count_{0}; // How many comma delimited alternate variants were specified in the VCF record.
+
 
 };
 

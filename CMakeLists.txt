@@ -60,8 +60,8 @@ set(CMAKE_ERROR_WARNING_FLAGS "-std=c++17 -Wall -pthread -Wextra -Wpedantic -Wst
 
 # Actually set the g++ flags.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_RELEASE}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_LINKER_FLAGS_RELEASE}")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_EXE_LINKER_FLAGS_RELEASE}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_EXE_LINKER_FLAGS_RELEASE}")
 
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../..)
@@ -217,7 +217,9 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_genome_genome.h
         kgl_genomics/kgl_parser/kgl_square_parser.cpp
         kgl_genomics/kgl_parser/kgl_square_parser.h
-        kgl_genomics/kgl_database/kgl_variant_db_offset.cpp kgl_genomics/kgl_database/kgl_variant_filter_virtual.h kgl_genomics/kgl_database/kgl_variant_db_offset_diploid.cpp)
+        kgl_genomics/kgl_database/kgl_variant_db_offset.cpp
+        kgl_genomics/kgl_database/kgl_variant_filter_virtual.h
+        kgl_genomics/kgl_database/kgl_variant_db_offset_diploid.cpp)
 
 # 3rd party library for fast Leveshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )

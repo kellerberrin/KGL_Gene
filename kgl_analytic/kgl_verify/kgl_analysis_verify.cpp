@@ -5,6 +5,8 @@
 #include "kgl_analysis_verify.h"
 #include "kgl_variant_filter.h"
 
+#include <chrono>
+#include <thread>
 
 namespace kgl = kellerberrin::genome;
 
@@ -50,12 +52,8 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
         or file_characteristic.data_source == DataSourceEnum::GnomadGenome3_1) {
 
       auto pass_results = non_const_population->inSituFilter(PassFilter());
-      ExecEnv::log().info("Population: {}, pre filter count: {}, 'Pass and SNP' variants: {}",
+      ExecEnv::log().info("Population: {}, pre filter count: {}, 'Pass' variants: {}",
                           non_const_population->populationId(), pass_results.first, pass_results.second);
-
-//      auto snp_results = non_const_population->inSituFilter(SNPFilter());
-//      ExecEnv::log().info("Population: {}, total variants: {}, 'SNP' variants: {}",
-//                          non_const_population->populationId(), snp_results.first, snp_results.second);
 
       auto diploid_results = non_const_population->inSituFilter(DiploidFilter());
       ExecEnv::log().info("Population: {}, pre filter count: {}, 'Diploid' variants: {}",
@@ -63,71 +61,76 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
 
       ExecEnv::log().info("Check Structure of Population: {}", non_const_population->populationId());
 
-      size_t incorrect_phasing{0};
-      size_t unexpected_count{0};
-      bool print_variants{true};
-      std::map<ContigOffset_t, size_t> allele_offset_map;
-      for (auto const& [genome_id, genome_ptr] : non_const_population->getMap()) {
+      bool check_diploid{false};
+      if (check_diploid) {
 
-        for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
+        size_t incorrect_phasing{0};
+        size_t unexpected_count{0};
+        bool print_variants{true};
+        std::map<ContigOffset_t, size_t> allele_offset_map;
+        for (auto const& [genome_id, genome_ptr] : non_const_population->getMap()) {
 
-          for (auto const& [offset, offset_ptr] : contig_ptr->getMap()) {
+          for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
 
-            auto const& offsetVariants = offset_ptr->getVariantArray();
+            for (auto const& [offset, offset_ptr] : contig_ptr->getMap()) {
 
-            for (auto const& variant : offsetVariants) {
+              auto const& offsetVariants = offset_ptr->getVariantArray();
 
-              auto result = allele_offset_map.find(variant->alleleOffset());
-              if (result != allele_offset_map.end()) {
+              for (auto const& variant : offsetVariants) {
 
-                auto& [allele_offset, count] = *result;
-                ++count;
+                auto result = allele_offset_map.find(variant->alleleOffset());
+                if (result != allele_offset_map.end()) {
 
-              } else {
+                  auto& [allele_offset, count] = *result;
+                  ++count;
 
-                auto insert_result = allele_offset_map.try_emplace(variant->alleleOffset(), 1);
-                const auto& [iter, bool_result] = insert_result;
-                if (not bool_result) {
+                } else {
 
-                  ExecEnv::log().error("Could not insert into allele count map");
+                  auto insert_result = allele_offset_map.try_emplace(variant->alleleOffset(), 1);
+                  const auto& [iter, bool_result] = insert_result;
+                  if (not bool_result) {
 
-                }
+                    ExecEnv::log().error("Could not insert into allele count map");
 
-              }
-
-            }
-
-            size_t offset_size = offsetVariants.size();
-            if (offset_size > 2) {
-
-              unexpected_count += offset_size;
-              if (print_variants) {
-
-                for (auto const& variant_ptr : offsetVariants) {
-
-                  ExecEnv::log().info("Unexpected Count: {}, Genome: {}, {}, Hash: {}",
-                                      offset_size,
-                                      genome_id,
-                                      variant_ptr->output(',', VariantOutputIndex::START_0_BASED, true),
-                                      variant_ptr->variantHash());
+                  }
 
                 }
 
               }
 
-            } else if (offset_size == 2){
+              size_t offset_size = offsetVariants.size();
+              if (offset_size > 2) {
 
-              if (offsetVariants.front()->phaseId() == offsetVariants.back()->phaseId() and offsetVariants.front()->phaseId() != VariantPhase::UNPHASED) {
-
-                incorrect_phasing += offset_size;
+                unexpected_count += offset_size;
                 if (print_variants) {
 
                   for (auto const& variant_ptr : offsetVariants) {
 
-                    ExecEnv::log().info("Incorrect Phasing Genome: {}, {}, Hash: {}",
+                    ExecEnv::log().info("Unexpected Count: {}, Genome: {}, {}, Hash: {}",
+                                        offset_size,
                                         genome_id,
                                         variant_ptr->output(',', VariantOutputIndex::START_0_BASED, true),
                                         variant_ptr->variantHash());
+
+                  }
+
+                }
+
+              } else if (offset_size == 2){
+
+                if (offsetVariants.front()->phaseId() == offsetVariants.back()->phaseId() and offsetVariants.front()->phaseId() != VariantPhase::UNPHASED) {
+
+                  incorrect_phasing += offset_size;
+                  if (print_variants) {
+
+                    for (auto const& variant_ptr : offsetVariants) {
+
+                      ExecEnv::log().info("Incorrect Phasing Genome: {}, {}, Hash: {}",
+                                          genome_id,
+                                          variant_ptr->output(',', VariantOutputIndex::START_0_BASED, true),
+                                          variant_ptr->variantHash());
+
+                    }
 
                   }
 
@@ -141,14 +144,14 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
 
         }
 
-      }
+        ExecEnv::log().info("Population: {} verify check found incorrect phased variants: {}, unexpected variant count (should be 2): {}",
+                            non_const_population->populationId(), incorrect_phasing, unexpected_count);
 
-      ExecEnv::log().info("Population: {} verify check found incorrect phased variants: {}, unexpected variant count (should be 2): {}",
-                          non_const_population->populationId(), incorrect_phasing, unexpected_count);
+        for (auto const& [allele_offset, count] : allele_offset_map) {
 
-      for (auto const& [allele_offset, count] : allele_offset_map) {
+          ExecEnv::log().info("Population: {} allele offset: {}, count: {}", non_const_population->populationId(), allele_offset, count);
 
-        ExecEnv::log().info("Population: {} allele offset: {}, count: {}", non_const_population->populationId(), allele_offset, count);
+        }
 
       }
 
@@ -162,24 +165,22 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
     }
 
 
+    std::pair<size_t, size_t> mem_pair = Utility::process_mem_usage2(); // pair.first is process vm_usage, pair.second is resident memory set.
+    ExecEnv::log().info("Population: {}, check total variants: {}, VM Usage: {}, Resident Memory: {}",
+                        non_const_population->populationId(), non_const_population->variantCount(), mem_pair.first, mem_pair.second);
 
-    ExecEnv::log().info("Population: {}, check total variants: {}",
-                        non_const_population->populationId(), non_const_population->variantCount());
+    auto empty_count = non_const_population->inSituFilter(FalseFilter());
 
-    auto snp_filter_count = non_const_population->inSituFilter(SNPFilter());
-    ExecEnv::log().info("Population: {}, total variants: {}, SNP variants: {}",
-                        non_const_population->populationId(), snp_filter_count.first, snp_filter_count.second);
+    const size_t seconds = 300;
+    ExecEnv::log().info("*********** Sleep for seconds: {} ******************", seconds);
+    std::chrono::seconds timespan(seconds); // or whatever
+    std::this_thread::sleep_for(timespan);
 
-    ExecEnv::log().info("Population: {}, check total variants: {}",
-                        non_const_population->populationId(), non_const_population->variantCount());
+    mem_pair = Utility::process_mem_usage2(); // pair.first is process vm_usage, pair.second is resident memory set.
+    ExecEnv::log().info("Population: {}, Before variants: {}, After variants: {}, VM Usage: {}, Resident Memory: {}",
+                        non_const_population->populationId(), empty_count.first, empty_count.second, mem_pair.first, mem_pair.second);
 
-    // Delete the population by applying the FalseFilter to the population, this appears to be faster than unwinding smart pointers.
-    auto false_filter_count = non_const_population->inSituFilter(FalseFilter());
-    ExecEnv::log().info("Population: {}, total variants: {}, False variants: {}",
-                        non_const_population->populationId(), false_filter_count.first, false_filter_count.second);
 
-    ExecEnv::log().info("Population: {}, check total variants: {}",
-                        non_const_population->populationId(), non_const_population->variantCount());
 
   }
 
@@ -198,8 +199,6 @@ bool kgl::VerifyAnalysis::iterationAnalysis() {
 
 // All VCF data has been presented, finalize analysis and write results.
 bool kgl::VerifyAnalysis::finalizeAnalysis() {
-
-  ExecEnv::log().info("Finalize Analysis called for Analysis Id: {}", ident());
 
   return true;
 

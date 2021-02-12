@@ -195,10 +195,12 @@ void kgl::MutationAnalysis::filterPedGenomes() {
 
     }
 
+    size_t orginal_genomes = population_ptr_->getMap().size();
     auto non_const_population = std::const_pointer_cast<PopulationDB>(population_ptr_);
     auto count_pair = non_const_population->inSituFilter(GenomeFilter(ped_genomes));
-    ExecEnv::log().info("Filtered population: {} to Ped defined genomes, original variant count: {}, filtered count: {}",
-                        count_pair.first, count_pair.second);
+    size_t final_genomes = non_const_population->getMap().size();
+    ExecEnv::log().info("Filtered population: {} to Ped defined genomes, original count: {}, genomes: {}; filtered count: {}, genomes: {}",
+                        population_ptr_->populationId(), count_pair.first, orginal_genomes, count_pair.second, final_genomes);
 
   }
 
@@ -221,7 +223,7 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 
   }
 
-  // Explicitly clean up the contig populations to recover memory.
+  // Explicitly clean up the populations to recover memory.
   population_ptr_ = nullptr;
   unphased_population_ptr_ = nullptr;
 

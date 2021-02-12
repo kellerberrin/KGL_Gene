@@ -50,7 +50,6 @@ public:
 
   [[nodiscard]] const std::shared_ptr<const InfoEvidenceHeader>& evidenceHeader() const { return info_evidence_header_; }
 
-
 private:
 
 

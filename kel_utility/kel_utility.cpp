@@ -265,7 +265,7 @@ std::vector<std::string> kel::Utility::char_tokenizer(const std::string& str, co
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// pair.first is process vm_usage, pair.second is resident memory set.
+
 // Attempts to read the system-dependent data for a process' virtual memory
 // size and resident set size, and return the results in KB.
 //
@@ -273,24 +273,27 @@ std::vector<std::string> kel::Utility::char_tokenizer(const std::string& str, co
 std::pair<double, double> kel::Utility::process_mem_usage()
 {
 
-  using std::ios_base;
-  using std::ifstream;
-  using std::string;
-  double vm_usage{0.0};
-  double resident_set{0.0};
-
   // 'file' stat seems to give the most reliable results
-  //
-  ifstream stat_stream("/proc/self/stat",ios_base::in);
+  static const char* STAT_STREAM = "/proc/self/stat";
 
-  // dummy vars for leading entries in stat that we don't care about
-  //
-  string pid, comm, state, ppid, pgrp, session, tty_nr;
-  string tpgid, flags, minflt, cminflt, majflt, cmajflt;
-  string utime, stime, cutime, cstime, priority, nice;
-  string O, itrealvalue, starttime;
 
-  // the two fields we want
+  std::ifstream stat_stream(STAT_STREAM,std::ios_base::in);
+
+  if (not stat_stream.good()) {
+
+    ExecEnv::log().error("Utility::process_mem_usage; Unable to open file stats: {}", STAT_STREAM);
+    return {0.0, 0.0};
+
+  }
+
+  // Dummy vars for leading entries in stat that we don't care about.
+  //
+  std::string pid, comm, state, ppid, pgrp, session, tty_nr;
+  std::string tpgid, flags, minflt, cminflt, majflt, cmajflt;
+  std::string utime, stime, cutime, cstime, priority, nice;
+  std::string _o_, itrealvalue, starttime;
+
+  // The two fields we want
   //
   unsigned long vsize;
   long rss;
@@ -298,14 +301,14 @@ std::pair<double, double> kel::Utility::process_mem_usage()
   stat_stream >> pid >> comm >> state >> ppid >> pgrp >> session >> tty_nr
               >> tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt
               >> utime >> stime >> cutime >> cstime >> priority >> nice
-              >> O >> itrealvalue >> starttime >> vsize >> rss; // don't care about the rest
+              >> _o_ >> itrealvalue >> starttime >> vsize >> rss; // don't care about the rest
 
   stat_stream.close();
 
   // Calc to KBytes.
   long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
-  vm_usage     = vsize / 1024.0;
-  resident_set = rss * page_size_kb;
+  double vm_usage     = vsize / 1024.0;
+  double resident_set = rss * page_size_kb;
 
   // Convert to GBytes.
   vm_usage = vm_usage / (1024.0 * 1024.0);
@@ -314,6 +317,82 @@ std::pair<double, double> kel::Utility::process_mem_usage()
   return std::pair<double, double>(vm_usage, resident_set);
 
 }
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// pair.first is process vm_usage, pair.second is physical memory used.
+// On failure, returns 0.0, 0.0
+std::pair<double, double> kel::Utility::process_mem_usage2()
+{
+
+  // The status pseudo-file.
+  static const char* STAT_STREAM = "/proc/self/status";
+  // vm used.
+  static const char* VM_USAGE = "VmSize:";
+  // Physical mem used.
+  static const char* PM_USAGE = "VmRSS:";
+  // Trimmed text.
+  static const char* KB_TRIM = "kB";
+  // Scale to MegaBytes.
+  static const double SCALE_MB = 1024.0;
+
+  std::ifstream stat_stream(STAT_STREAM,std::ios_base::in);
+
+  if (not stat_stream.good()) {
+
+    ExecEnv::log().error("Utility::process_mem_usage2; Unable to open file stats: {}", STAT_STREAM);
+    return {0.0, 0.0};
+
+  }
+
+  std::pair<double, double> mem_stats{0.0, 0.0};
+  std::string stat_line;
+  while (std::getline(stat_stream, stat_line)) {
+
+    if (stat_line.find(VM_USAGE) != std::string::npos) {
+
+      std::string trimmed_stat = Utility::findAndReplaceAll(stat_line, VM_USAGE, "");
+      trimmed_stat = Utility::findAndReplaceAll(trimmed_stat, KB_TRIM, "");
+      trimmed_stat = Utility::trimAllWhiteSpace(trimmed_stat);
+      try {
+
+        mem_stats.first = std::stod(trimmed_stat);
+
+      } catch(...) {
+
+        ExecEnv::log().error("process_mem_usage2; cannot process {} with value: {}", VM_USAGE, stat_line);
+
+      }
+
+    }
+
+    if (stat_line.find(PM_USAGE) != std::string::npos) {
+
+      std::string trimmed_stat = Utility::findAndReplaceAll(stat_line, PM_USAGE, "");
+      trimmed_stat = Utility::findAndReplaceAll(trimmed_stat, KB_TRIM, "");
+      trimmed_stat = Utility::trimAllWhiteSpace(trimmed_stat);
+      try {
+
+        mem_stats.second = std::stod(trimmed_stat);
+
+      } catch(...) {
+
+        ExecEnv::log().error("process_mem_usage2; cannot process {} with value: {}", PM_USAGE, stat_line);
+
+      }
+
+    }
+
+  }
+
+  return { mem_stats.first / SCALE_MB, mem_stats.second / SCALE_MB };
+
+}
+
+
+
 
 // pair first is the mean, second is the sample standard deviation
 std::pair<double, double> kel::Utility::stddev(const std::vector<double> &vec)
