@@ -157,28 +157,28 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
 
     } else {
 
-      auto unique_variants = non_const_population->filterVariants(UniqueUnphasedFilter());
-      ExecEnv::log().info("Population: {}, 'Unique' variants: {}",
-                          non_const_population->populationId(), unique_variants->variantCount());
+//      auto unique_variants = non_const_population->filterVariants(UniqueUnphasedFilter());
+//      ExecEnv::log().info("Population: {}, 'Unique' variants: {}",
+//                          non_const_population->populationId(), unique_variants->variantCount());
 
 
     }
 
 
     std::pair<size_t, size_t> mem_pair = Utility::process_mem_usage2(); // pair.first is process vm_usage, pair.second is resident memory set.
-    ExecEnv::log().info("Population: {}, check total variants: {}, VM Usage: {}, Resident Memory: {}",
-                        non_const_population->populationId(), non_const_population->variantCount(), mem_pair.first, mem_pair.second);
+    ExecEnv::log().info("Population: {}, check total variants: {}, Variant Objects:{}, VM Usage: {}, Resident Memory: {}",
+                        non_const_population->populationId(), non_const_population->variantCount(), Variant::objectCount(), mem_pair.first, mem_pair.second);
 
     auto empty_count = non_const_population->inSituFilter(FalseFilter());
 
-    const size_t seconds = 300;
+    const size_t seconds = 60;
     ExecEnv::log().info("*********** Sleep for seconds: {} ******************", seconds);
     std::chrono::seconds timespan(seconds); // or whatever
     std::this_thread::sleep_for(timespan);
 
     mem_pair = Utility::process_mem_usage2(); // pair.first is process vm_usage, pair.second is resident memory set.
-    ExecEnv::log().info("Population: {}, Before variants: {}, After variants: {}, VM Usage: {}, Resident Memory: {}",
-                        non_const_population->populationId(), empty_count.first, empty_count.second, mem_pair.first, mem_pair.second);
+    ExecEnv::log().info("Population: {}, Before variants: {}, After variants: {}, Variant Objects: {}, VM Usage: {}, Resident Memory: {}",
+                        non_const_population->populationId(), empty_count.first, empty_count.second, Variant::objectCount(), mem_pair.first, mem_pair.second);
 
 
 

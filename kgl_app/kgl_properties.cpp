@@ -373,7 +373,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
       std::string vcf_ident;
       if (not sub_tree.second.getProperty( key, vcf_ident)) {
 
-        ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF Identifier");
+        ExecEnv::log().error("RuntimeProperties::getDataFiles; No VCF Identifier");
         continue;
 
       }
@@ -382,7 +382,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
       std::string vcf_file_name;
       if (not sub_tree.second.getFileProperty( key, workDirectory(), vcf_file_name)) {
 
-        ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF file name information");
+        ExecEnv::log().error("RuntimeProperties::getDataFiles; No VCF file name information");
         continue;
 
       }
@@ -391,7 +391,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
       std::string vcf_parser_type;
       if (not sub_tree.second.getProperty( key, vcf_parser_type)) {
 
-        ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF file parser type information");
+        ExecEnv::log().error("RuntimeProperties::getDataFiles; No VCF file parser type information");
         continue;
 
       }
@@ -401,7 +401,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
 
       if (not sub_tree.second.getProperty( key, vcf_reference_genome)) {
 
-        ExecEnv::log().error("RuntimeProperties::getVCFFiles, No reference genome information for VCF file: {}", vcf_file_name);
+        ExecEnv::log().error("RuntimeProperties::getDataFiles; No reference genome information for VCF file: {}", vcf_file_name);
         continue;
 
       }
@@ -410,7 +410,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
       std::string evidence_ident;
       if (not sub_tree.second.getProperty(key, evidence_ident)) {
 
-        ExecEnv::log().error("RuntimeProperties::getVCFFiles, No VCF Info evidence specified for VCF file: {}", vcf_file_name);
+        ExecEnv::log().error("RuntimeProperties::getDataFiles; No VCF Info evidence specified for VCF file: {}", vcf_file_name);
 
       }
 
@@ -424,7 +424,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
 
       if (not result.second) {
 
-        ExecEnv::log().error("RuntimeProperties::getVCFFiles, Could not add VCF file ident: {} to map (duplicate)", vcf_ident);
+        ExecEnv::log().error("RuntimeProperties::getDataFiles; Could not add VCF file ident: {} to map (duplicate)", vcf_ident);
 
       }
 
@@ -434,7 +434,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
       std::string ped_ident;
       if (not sub_tree.second.getProperty(key, ped_ident)) {
 
-        ExecEnv::log().error("RuntimeProperties::getPEDFiles, No File Identifier");
+        ExecEnv::log().error("RuntimeProperties::getDataFiles; No File Identifier");
         continue;
 
       }
@@ -443,7 +443,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
       std::string ped_file_name;
       if (not sub_tree.second.getFileProperty(key, workDirectory(), ped_file_name)) {
 
-        ExecEnv::log().error("RuntimeProperties::getPEDFiles, No Ped file name information");
+        ExecEnv::log().error("RuntimeProperties::getDataFiles; No Ped file name information");
         continue;
 
       }
@@ -452,7 +452,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
       std::string ped_parser_type;
       if (not sub_tree.second.getProperty(key, ped_parser_type)) {
 
-        ExecEnv::log().error("RuntimeProperties::getPEDFiles, No Ped file parser type information");
+        ExecEnv::log().error("RuntimeProperties::getDataFiles; No Ped file parser type information");
         continue;
 
       }
@@ -465,7 +465,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
 
       if (not result.second) {
 
-        ExecEnv::log().error("RuntimeProperties::getPEDFiles, Could not add PED file ident: {} to map (duplicate)", ped_ident);
+        ExecEnv::log().error("RuntimeProperties::getDataFiles; Could not add PED file ident: {} to map (duplicate)", ped_ident);
 
       }
 

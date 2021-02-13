@@ -70,7 +70,7 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
 
       ExecEnv::log().warn("InfoFilterAnalysis::fileReadAnalysis could not get Info Field Header from VCF population: {}",
                           population->populationId());
-      return false;
+      return true; // Not necessarily an error.
 
     }
 

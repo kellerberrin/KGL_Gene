@@ -224,8 +224,8 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
   }
 
   // Explicitly clean up the populations to recover memory.
-  population_ptr_ = nullptr;
-  unphased_population_ptr_ = nullptr;
+  std::const_pointer_cast<PopulationDB>(population_ptr_)->clear();
+  std::const_pointer_cast<PopulationDB>(unphased_population_ptr_)->clear();
 
   return true;
 

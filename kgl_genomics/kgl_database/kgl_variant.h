@@ -62,9 +62,9 @@ public:
       contig_reference_offset_(contig_reference_offset),
       contig_allele_offset_(reference_.commonPrefix(alternate_)),
       phase_id_(phase_id),
-      identifier_(std::move(identifier)) { }
+      identifier_(std::move(identifier)) { ++object_count_; }
 
-  ~Variant() = default;
+  ~Variant() { --object_count_; }
 
   // Create a copy of the variant on heap.
   // Important - all the original variant evidence is also attached to the new variant object.
@@ -137,6 +137,8 @@ public:
   // Phase specific hash
   [[nodiscard]] std::string variantPhaseHash() const;
 
+  [[nodiscard]] static size_t objectCount() { return object_count_; }
+
 private:
 
   const DNA5SequenceLinear reference_;                  // reference sequence (ref allele)
@@ -148,6 +150,7 @@ private:
   const VariantPhase phase_id_;                         // The phase of this variant (which homologous contig)
   const std::string identifier_;                        // The VCF supplied variant identifier.
 
+  inline static std::atomic<size_t> object_count_{0};
 
   // Generate a CIGAR by comparing the reference to the alternate.
   [[nodiscard]] std::string alternateCigar() const;

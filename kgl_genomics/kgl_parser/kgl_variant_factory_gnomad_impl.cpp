@@ -221,7 +221,7 @@ void kgl::GenomeGnomadVCFImpl::addVariants( const std::map<size_t, std::vector<G
                              population_ptr_->dataSource(),
                              passed_filters,
                              info_evidence_opt,
-                             null_format_data,
+                             std::nullopt,
                              alt_allele,
                              alt_vector.size());
     // Add the variant.

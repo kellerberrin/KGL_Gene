@@ -44,9 +44,13 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituFilter(const VariantFilter &filte
     case FilterType::TrueFilter:
       return  {variant_vector_.size(), variant_vector_.size()};
 
-    case FilterType::FalseFilter:
+    case FilterType::FalseFilter: {
+
+      size_t vector_size = variant_vector_.size();
       variant_vector_.clear();
-      return {variant_vector_.size(), 0};
+      return { vector_size, 0};
+
+    }
 
     case FilterType::GenomeFilter:   // Not implemented at this level.
       return {variant_vector_.size(), variant_vector_.size()};

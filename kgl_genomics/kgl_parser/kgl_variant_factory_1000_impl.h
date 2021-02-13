@@ -76,7 +76,7 @@ private:
                     VariantPhase phase,
                     ContigOffset_t offset,
                     bool passedFilters,
-                    InfoDataEvidence info_evidence_opt,
+                    const InfoDataEvidence& data_ptr,
                     const std::string& reference,
                     const std::string& identifier,
                     const std::vector<std::string>& alt_vector,

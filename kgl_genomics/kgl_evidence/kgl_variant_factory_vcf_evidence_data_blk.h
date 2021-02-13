@@ -40,6 +40,8 @@ public:
   DataMemoryBlock(const DataMemoryBlock &) = delete;
   ~DataMemoryBlock() = default;
 
+  DataMemoryBlock& operator=(const DataMemoryBlock&) = delete;
+
   // Implementation functions that retrieve data for each internal data type.
   [[nodiscard]] bool getBoolean(const InfoResourceHandle& handle) const;
   [[nodiscard]] std::vector<int64_t> getInteger(const InfoResourceHandle& handle) const;

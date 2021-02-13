@@ -72,15 +72,15 @@ public:
   VariantEvidence( size_t vcf_record_count,
                    DataSourceEnum data_source,
                    bool pass_filter,
-                   InfoDataEvidence info_data_block,
-                   std::optional<std::shared_ptr<FormatData>> format_data,
+                   const InfoDataEvidence& info_data_block,
+                   const std::optional<std::shared_ptr<FormatData>>& format_data,
                    uint32_t alternate_variant_index = 0,
                    uint32_t alternate_variant_count = 1)
                    : vcf_record_count_(vcf_record_count),
                      data_source_(data_source),
                      pass_filter_(pass_filter),
-                     info_data_block_(std::move(info_data_block)),
-                     format_data_(std::move(format_data)),
+                     info_data_block_(info_data_block),
+                     format_data_(format_data),
                      alternate_variant_index_(alternate_variant_index),
                      alternate_variant_count_(alternate_variant_count) {}
 
