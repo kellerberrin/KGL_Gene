@@ -187,7 +187,7 @@ public:
   ~ManageInfoData() = default;
 
 
-  [[nodiscard]] std::unique_ptr<const DataMemoryBlock> createMemoryBlock( const VCFInfoParser& info_parser,
+  [[nodiscard]] std::shared_ptr<const DataMemoryBlock> createMemoryBlock( const VCFInfoParser& info_parser,
                                                                           std::shared_ptr<const InfoEvidenceHeader> evidence_ptr) const;
 
   [[nodiscard]] InfoMemoryResource& resourceAllocator() { return resource_allocator_; }
@@ -212,7 +212,6 @@ private:
 
 // createVariantEvidence() either returns a single data block, InfoDataBlock for a single alternate allele or
 // a MultipleAlleleDataBlock data block for a multiple alternative allele VCF record.
-using InfoDataEvidence = std::optional<std::shared_ptr<const DataMemoryBlock>>;
 class EvidenceFactory {
 
 public:
@@ -227,9 +226,9 @@ public:
   void availableInfoFields(const VCFInfoRecordMap& vcf_info_map);
   [[nodiscard]] const VCFInfoRecordMap& availableInfoFields() const { return all_available_map_; }
   // For each input VCFRecord info text field (std::moved for efficiency), create a parsed data object.
-  [[nodiscard]] InfoDataEvidence createVariantEvidence(std::string&& info);
+  [[nodiscard]] std::shared_ptr<const DataMemoryBlock> createVariantEvidence(std::string&& info);
   // All subscribed Info fields.
-  std::shared_ptr<const InfoEvidenceHeader> getInfoHeader() const { return info_evidence_header_; }
+  [[nodiscard]] std::shared_ptr<const InfoEvidenceHeader> getInfoHeader() const { return info_evidence_header_; }
 
 
 private:

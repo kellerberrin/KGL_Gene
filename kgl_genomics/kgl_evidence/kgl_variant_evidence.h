@@ -72,15 +72,15 @@ public:
   VariantEvidence( size_t vcf_record_count,
                    DataSourceEnum data_source,
                    bool pass_filter,
-                   const InfoDataEvidence& info_data_block,
-                   const std::optional<std::shared_ptr<FormatData>>& format_data,
+                   std::shared_ptr<const DataMemoryBlock> info_data_block,
+                   std::shared_ptr<const FormatData> format_data,
                    uint32_t alternate_variant_index = 0,
                    uint32_t alternate_variant_count = 1)
                    : vcf_record_count_(vcf_record_count),
                      data_source_(data_source),
                      pass_filter_(pass_filter),
-                     info_data_block_(info_data_block),
-                     format_data_(format_data),
+                     info_data_block_(std::move(info_data_block)),
+                     format_data_(std::move(format_data)),
                      alternate_variant_index_(alternate_variant_index),
                      alternate_variant_count_(alternate_variant_count) {}
 
@@ -96,9 +96,11 @@ public:
 
   [[nodiscard]] DataSourceEnum dataSource() const { return data_source_; }
 
-  [[nodiscard]] InfoDataEvidence infoData() const { return info_data_block_; }
+  // Must be checked for null pointer before use.
+  [[nodiscard]] std::shared_ptr<const DataMemoryBlock> infoData() const { return info_data_block_; }
 
-  [[nodiscard]] std::optional<std::shared_ptr<const FormatData>> formatData() const { return format_data_; }
+  // Must be checked for null pointer before use.
+  [[nodiscard]] std::shared_ptr<const FormatData> formatData() const { return format_data_; }
 
   [[nodiscard]] uint32_t altVariantIndex() const { return alternate_variant_index_; }
 
@@ -110,8 +112,8 @@ private:
   size_t vcf_record_count_{0}; // The VCF line count, the original file line record that generated this variant.
   DataSourceEnum data_source_{DataSourceEnum::NotImplemented};
   bool pass_filter_{true};  // The VCF record has "PASS"ed all quality filters.
-  InfoDataEvidence info_data_block_{std::nullopt};   // INFO data items, may be missing.
-  std::optional<std::shared_ptr<FormatData>> format_data_{std::nullopt};  // Format data items, may be missing.
+  std::shared_ptr<const DataMemoryBlock> info_data_block_;   // INFO data items, may be missing.
+  std::shared_ptr<const FormatData> format_data_;  // Format data items, may be missing.
   // Zero based index. Which of the alternate variants (from left to right in the comma delimited alt field) is this variant.
   // These variables can be used to access Info field vectors that are designated Type='A' for alternate allele.
   uint32_t alternate_variant_index_{0}; // The default index 0 / count 1 implies 1 alternate variant (the usual case).

@@ -30,7 +30,7 @@ class AlphabetString {
 public:
 
   AlphabetString() = default;
-  AlphabetString(AlphabetString<Alphabet>&& alphabet_string) noexcept : base_string_(std::move(alphabet_string.base_string_)) {}
+  AlphabetString(AlphabetString<Alphabet>&& alphabet_string) noexcept : base_string_(alphabet_string.base_string_) {}
   AlphabetString(const AlphabetString<Alphabet>& alphabet_string) : base_string_(alphabet_string.base_string_) {}
   explicit AlphabetString(const std::string& alphabet_str) { convertFromCharString(alphabet_str); }
   ~AlphabetString() = default;

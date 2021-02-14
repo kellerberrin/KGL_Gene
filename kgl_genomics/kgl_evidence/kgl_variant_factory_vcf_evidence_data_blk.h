@@ -30,6 +30,9 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 // Forward declarations.
 class InfoEvidenceHeader;
+
+// Uncomment to use std::unique_ptr<T[]>
+//#define KGL_UNIQUE_PTR 1
 class DataMemoryBlock {
 
 public:
@@ -38,7 +41,19 @@ public:
                    const InfoMemoryResource& initial_memory_resource,
                    const VCFInfoParser& info_parser);
   DataMemoryBlock(const DataMemoryBlock &) = delete;
-  ~DataMemoryBlock() = default;
+  ~DataMemoryBlock() {
+
+#ifndef KGL_UNIQUE_PTR
+    delete[] char_memory_;
+    delete[] integer_memory_;
+    delete[] float_memory_;
+    delete[] array_memory_;
+    delete[] string_memory_;
+#endif
+
+    --object_count_;
+
+  }
 
   DataMemoryBlock& operator=(const DataMemoryBlock&) = delete;
 
@@ -52,18 +67,31 @@ public:
 
   [[nodiscard]] const std::shared_ptr<const InfoEvidenceHeader>& evidenceHeader() const { return info_evidence_header_; }
 
+  [[nodiscard]] static size_t objectCount() { return object_count_; }
+
 private:
 
 
   std::shared_ptr<const InfoEvidenceHeader> info_evidence_header_; // The data header and indexing structure.
   MemDataUsage mem_count_;  // Size count object.
 
-  // Raw memory to efficiently store the info data.
+// Raw memory to efficiently store the info data.
+#ifdef KGL_UNIQUE_PTR
   std::unique_ptr<char[]> char_memory_;
   std::unique_ptr<InfoIntegerType[]> integer_memory_;
   std::unique_ptr<InfoFloatType[]> float_memory_;
   std::unique_ptr<InfoArrayIndex[]> array_memory_;
   std::unique_ptr<std::string_view[]> string_memory_;
+#else
+  char* char_memory_;
+  InfoIntegerType* integer_memory_;
+  InfoFloatType* float_memory_;
+  InfoArrayIndex* array_memory_;
+  std::string_view* string_memory_;
+#endif
+
+
+  inline static std::atomic<size_t> object_count_{0};
 
   // Lookup the array index.
   [[nodiscard]] std::optional<const InfoArrayIndex> findArrayIndex(size_t identifier) const;

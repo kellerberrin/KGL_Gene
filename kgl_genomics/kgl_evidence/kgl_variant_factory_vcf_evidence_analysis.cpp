@@ -132,7 +132,7 @@ std::optional<const kgl::InfoSubscribedField> kgl::InfoEvidenceAnalysis::getSubs
 
   if (variant.evidence().infoData()) {
 
-    return variant.evidence().infoData().value()->evidenceHeader()->getSubscribedField(field_ident);
+    return variant.evidence().infoData()->evidenceHeader()->getSubscribedField(field_ident);
 
   }
 
@@ -148,11 +148,16 @@ std::optional<kgl::InfoDataVariant> kgl::InfoEvidenceAnalysis::getInfoData( cons
 
   if (field_opt) {
 
-    const DataMemoryBlock &data_block = *variant.evidence().infoData().value();
+    auto info_data_ptr = variant.evidence().infoData();
+    if (info_data_ptr) {
 
-    InfoDataVariant variant_data = field_opt->getData(data_block);
+      const DataMemoryBlock &data_block = *info_data_ptr;
 
-    return variant_data;
+      InfoDataVariant variant_data = field_opt->getData(data_block);
+
+      return variant_data;
+
+    }
 
   }
 
@@ -205,8 +210,15 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
 
   }
 
+  if (not variant.evidence().infoData()) {
+
+    ExecEnv::log().error("InfoEvidenceAnalysis::getVepSubFields, INFO data not defined for variant");
+    return std::nullopt;
+
+  }
+
   // Access the data block and retrieve the vep field vector.
-  const DataMemoryBlock &data_block = *variant.evidence().infoData().value();
+  const DataMemoryBlock &data_block = *variant.evidence().infoData();
 
   std::vector<std::string> vep_field_vector = varianttoStrings(vep_field_opt.value().getData(data_block));
 

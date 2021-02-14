@@ -166,8 +166,9 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
 
 
     std::pair<size_t, size_t> mem_pair = Utility::process_mem_usage2(); // pair.first is process vm_usage, pair.second is resident memory set.
-    ExecEnv::log().info("Population: {}, check total variants: {}, Variant Objects:{}, VM Usage: {}, Resident Memory: {}",
-                        non_const_population->populationId(), non_const_population->variantCount(), Variant::objectCount(), mem_pair.first, mem_pair.second);
+    ExecEnv::log().info("Population: {}, check total variants: {}, Variant Objects:{}, Data Blocks:{}, VM Usage: {}, Resident Memory: {}",
+                        non_const_population->populationId(), non_const_population->variantCount(), Variant::objectCount(),
+                        DataMemoryBlock::objectCount(), mem_pair.first, mem_pair.second);
 
     auto empty_count = non_const_population->inSituFilter(FalseFilter());
 
@@ -177,8 +178,9 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
     std::this_thread::sleep_for(timespan);
 
     mem_pair = Utility::process_mem_usage2(); // pair.first is process vm_usage, pair.second is resident memory set.
-    ExecEnv::log().info("Population: {}, Before variants: {}, After variants: {}, Variant Objects: {}, VM Usage: {}, Resident Memory: {}",
-                        non_const_population->populationId(), empty_count.first, empty_count.second, Variant::objectCount(), mem_pair.first, mem_pair.second);
+    ExecEnv::log().info("Population: {}, Before variants: {}, After variants: {}, Variant Objects: {}, Data Blocks:{}, VM Usage: {}, Resident Memory: {}",
+                        non_const_population->populationId(), empty_count.first, empty_count.second, Variant::objectCount(),
+                        DataMemoryBlock::objectCount(), mem_pair.first, mem_pair.second);
 
 
 

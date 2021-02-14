@@ -83,7 +83,7 @@ private:
                                       const std::string& alternate,
                                       const VariantEvidence& evidence);
 
-  bool addThreadSafeVariant(std::unique_ptr<const Variant>&&, GenomeId_t genome) const;
+  bool addThreadSafeVariant(const std::shared_ptr<const Variant>& variant_ptr, const GenomeId_t& genome) const;
 
 };
 

@@ -64,7 +64,7 @@ private:
   // mutex to lock the structure for multiple thread access by parsers.
   mutable std::mutex add_variant_mutex_;
 
-  bool addThreadSafeVariant(std::unique_ptr<const Variant> &&, const std::vector<GenomeId_t> &genome_vector) const;
+  bool addThreadSafeVariant(const std::shared_ptr<const Variant>& variant_ptr, const std::vector<GenomeId_t>& genome_vector) const;
 
   // Calculates alternate indexes for the two phases (.first = A, .second = B).
   std::pair<size_t, size_t> alternateIndex(const std::string &genotype, const std::vector<std::string> &alt_vector) const;
@@ -75,7 +75,7 @@ private:
                    VariantPhase phase,
                    ContigOffset_t offset,
                    bool passedFilters,
-                   const InfoDataEvidence& info_evidence_opt,
+                   const std::shared_ptr<const DataMemoryBlock>& info_evidence_ptr,
                    const std::string &reference,
                    const std::string &identifier,
                    const std::vector<std::string> &alt_vector,

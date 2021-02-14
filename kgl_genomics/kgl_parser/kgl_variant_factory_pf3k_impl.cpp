@@ -85,7 +85,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
   // Parse the info fields into a map.
   // For performance reasons the info field is std::moved - don't reference again.
   auto mutable_info = const_cast<std::string&>(record.info);
-  InfoDataEvidence info_evidence_opt = evidence_factory_.createVariantEvidence(std::move(mutable_info));  // Each vcf record.
+  std::shared_ptr<const DataMemoryBlock> info_evidence_ptr = evidence_factory_.createVariantEvidence(std::move(mutable_info));  // Each vcf record.
 
   // Look at the filter field for "Pass"
   bool passed_filter = Utility::toupper(record.filter) == PASSED_FILTERS_;
@@ -199,7 +199,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
             VariantEvidence evidence(vcf_record_count,
                                      unphased_population_ptr_->dataSource(),
                                      passed_filter,
-                                     info_evidence_opt,
+                                     info_evidence_ptr,
                                      format_data_ptr,
                                      allele_index,
                                      allele_count);
@@ -247,7 +247,7 @@ void kgl::Pf3kVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& rec
             VariantEvidence evidence(vcf_record_count,
                                      unphased_population_ptr_->dataSource(),
                                      passed_filter,
-                                     info_evidence_opt,
+                                     info_evidence_ptr,
                                      format_data_ptr,
                                      allele_index,
                                      allele_count);
@@ -331,24 +331,24 @@ bool kgl::Pf3kVCFImpl::createAddVariant(const std::string& genome_name,
   StringDNA5 reference_str(reference_text);
   StringDNA5 alternate_str(alternate_text);
 
-  std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( contig_ptr->contigId(),
-                                                                        contig_offset,
-                                                                        VariantPhase::UNPHASED,
-                                                                        identifier,
-                                                                        std::move(reference_str),
-                                                                        std::move(alternate_str),
-                                                                        evidence));
+  std::shared_ptr<const Variant> variant_ptr(std::make_shared<const Variant>( contig_ptr->contigId(),
+                                                                              contig_offset,
+                                                                              VariantPhase::UNPHASED,
+                                                                              identifier,
+                                                                              std::move(reference_str),
+                                                                              std::move(alternate_str),
+                                                                              evidence));
 
-  return addThreadSafeVariant(std::move(variant_ptr), genome_name);
+  return addThreadSafeVariant(variant_ptr, genome_name);
 
 }
 
 
-bool kgl::Pf3kVCFImpl::addThreadSafeVariant(std::unique_ptr<const Variant>&& variant_ptr, GenomeId_t genome) const {
+bool kgl::Pf3kVCFImpl::addThreadSafeVariant(const std::shared_ptr<const Variant>& variant_ptr, const GenomeId_t& genome) const {
 
   std::vector<GenomeId_t> genome_vector;
-  genome_vector.emplace_back(std::move(genome));
+  genome_vector.push_back(genome);
 
-  return unphased_population_ptr_->addVariant(std::move(variant_ptr), genome_vector);
+  return unphased_population_ptr_->addVariant(variant_ptr, genome_vector);
 
 }

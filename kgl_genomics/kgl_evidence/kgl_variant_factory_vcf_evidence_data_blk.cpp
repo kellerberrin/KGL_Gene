@@ -24,11 +24,21 @@ kgl::DataMemoryBlock::DataMemoryBlock( std::shared_ptr<const InfoEvidenceHeader>
   mem_count_.integerCount(memory_resource.integerSize());
   mem_count_.arrayCount(memory_resource.arraySize());
   // Perform actual memory allocation.
+
+#ifdef KGL_UNIQUE_PTR
   char_memory_ = std::make_unique<char[]>(mem_count_.charCount());
   integer_memory_ = std::make_unique<InfoIntegerType[]>(mem_count_.integerCount());
   float_memory_ = std::make_unique<InfoFloatType[]>(mem_count_.floatCount()) ;
   array_memory_ = std::make_unique<InfoArrayIndex[]>(mem_count_.arrayCount());
   string_memory_ = std::make_unique<std::string_view[]>(mem_count_.stringCount());
+#else
+  char_memory_ = new char[mem_count_.charCount()];
+  integer_memory_ = new InfoIntegerType[mem_count_.integerCount()];
+  float_memory_ = new InfoFloatType[mem_count_.floatCount()] ;
+  array_memory_ = new InfoArrayIndex[mem_count_.arrayCount()];
+  string_memory_ = new std::string_view[mem_count_.stringCount()];
+#endif
+
   // Copy the array blocks.
   // The dynamicAllocation() map ensures that copied array memory blocks will be sorted in ascending identifier order.
   // We can use a binary search for fast access.
@@ -71,6 +81,8 @@ kgl::DataMemoryBlock::DataMemoryBlock( std::shared_ptr<const InfoEvidenceHeader>
 
   }
 
+  ++object_count_;
+
 }
 
 // Binary lookup on the array index.
@@ -78,7 +90,11 @@ std::optional<const kgl::InfoArrayIndex> kgl::DataMemoryBlock::findArrayIndex(si
 
   const auto comp = [](const InfoArrayIndex& a, const InfoArrayIndex& b) -> bool { return a.infoVariableIndex() < b.infoVariableIndex(); };
 
+#ifdef KGL_UNIQUE_PTR
   auto begin_iter = array_memory_.get();
+#else
+  auto begin_iter = array_memory_;
+#endif
 
   auto end_iter = begin_iter + mem_count_.arrayCount();
 

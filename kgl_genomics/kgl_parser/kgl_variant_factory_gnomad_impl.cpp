@@ -65,7 +65,7 @@ void kgl::GenomeGnomadVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRec
   // Parse the info fields into a map.
   // For performance reasons the info field is std::moved - don't reference again.
   auto mutable_info = const_cast<std::string&>(record.info);
-  InfoDataEvidence info_evidence_opt = evidence_factory_.createVariantEvidence(std::move(mutable_info));  // Each vcf record.
+  std::shared_ptr<const DataMemoryBlock> info_evidence_ptr = evidence_factory_.createVariantEvidence(std::move(mutable_info));  // Each vcf record.
 
   // Look at the filter field for "Pass"
   bool passed_filter = Utility::toupper(record.filter) == PASSED_FILTERS_;
@@ -118,7 +118,7 @@ void kgl::GenomeGnomadVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRec
               VariantPhase::UNPHASED,
               record.offset,
               passed_filter,
-              info_evidence_opt,
+              info_evidence_ptr,
               record.ref,
               record.id,
               alt_vector,
@@ -128,7 +128,7 @@ void kgl::GenomeGnomadVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRec
               VariantPhase::UNPHASED,
               record.offset,
               passed_filter,
-              info_evidence_opt,
+              info_evidence_ptr,
               record.ref,
               record.id,
               alt_vector,
@@ -207,7 +207,7 @@ void kgl::GenomeGnomadVCFImpl::addVariants( const std::map<size_t, std::vector<G
                                           VariantPhase phase,
                                           ContigOffset_t offset,
                                           bool passed_filters,
-                                          const InfoDataEvidence& info_evidence_opt,
+                                          const std::shared_ptr<const DataMemoryBlock>& info_evidence_ptr,
                                           const std::string& reference,
                                           const std::string& identifier,
                                           const std::vector<std::string>& alt_vector,
@@ -215,29 +215,27 @@ void kgl::GenomeGnomadVCFImpl::addVariants( const std::map<size_t, std::vector<G
 
   for (const auto& [alt_allele, genome_vector] : phase_map) {
 
-    std::optional<std::shared_ptr<FormatData>> null_format_data = std::nullopt;
     // Setup the evidence object.
     VariantEvidence evidence(vcf_record_count,
                              population_ptr_->dataSource(),
                              passed_filters,
-                             info_evidence_opt,
-                             std::nullopt,
+                             info_evidence_ptr,
+                             nullptr,
                              alt_allele,
                              alt_vector.size());
     // Add the variant.
     StringDNA5 reference_str(reference);
     StringDNA5 alternate_str(alt_vector[alt_allele]);
 
-    std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( contig,
-                                                                          offset,
-                                                                          phase,
-                                                                          identifier,
-                                                                          std::move(reference_str),
-                                                                          std::move(alternate_str),
-                                                                          evidence));
+    std::shared_ptr<const Variant> variant_ptr(std::make_shared<const Variant>( contig,
+                                                                                offset,
+                                                                                phase,
+                                                                                identifier,
+                                                                                std::move(reference_str),
+                                                                                std::move(alternate_str),
+                                                                                evidence));
 
-
-    if (addThreadSafeVariant(std::move(variant_ptr), genome_vector)) {
+    if (addThreadSafeVariant(variant_ptr, genome_vector)) {
 
       ++actual_variant_count_;
       variant_count_ += genome_vector.size();
@@ -253,11 +251,11 @@ void kgl::GenomeGnomadVCFImpl::addVariants( const std::map<size_t, std::vector<G
 }
 
 
-bool kgl::GenomeGnomadVCFImpl::addThreadSafeVariant( std::unique_ptr<const Variant>&& variant_ptr,
-                                                   const std::vector<GenomeId_t>& genome_vector) const {
+bool kgl::GenomeGnomadVCFImpl::addThreadSafeVariant(const std::shared_ptr<const Variant>& variant_ptr,
+                                                    const std::vector<GenomeId_t>& genome_vector) const {
 
   // The population structure can be updated concurrently (embedded mutexes).
-  return population_ptr_->addVariant(std::move(variant_ptr), genome_vector);
+  return population_ptr_->addVariant(variant_ptr, genome_vector);
 
 }
 

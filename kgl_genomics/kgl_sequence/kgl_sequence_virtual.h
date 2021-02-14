@@ -41,8 +41,8 @@ class  AlphabetSequence : public VirtualSequence {
 
 public:
 
-  AlphabetSequence(AlphabetSequence&& sequence) noexcept : alphabet_string_(std::move(sequence.alphabet_string_)) {}
-  explicit AlphabetSequence(AlphabetString<Alphabet>&& sequence) noexcept : alphabet_string_(std::move(sequence)) {}
+  AlphabetSequence(AlphabetSequence&& sequence) noexcept : alphabet_string_(sequence.alphabet_string_) {}
+  explicit AlphabetSequence(AlphabetString<Alphabet>&& sequence) noexcept : alphabet_string_(sequence) {}
   AlphabetSequence() = default;
   AlphabetSequence(const AlphabetSequence&) = delete; // For Performance reasons, don't allow copy constructors
   ~AlphabetSequence() override = default;

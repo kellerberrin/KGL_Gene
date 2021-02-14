@@ -55,7 +55,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
   // Parse the info fields into a map..
   // For performance reasons the info field is std::moved - don't reference again.
   auto mutable_info = const_cast<std::string&>(vcf_record.info);
-  InfoDataEvidence info_evidence_opt = evidence_factory_.createVariantEvidence(std::move(mutable_info));
+  std::shared_ptr<const DataMemoryBlock> info_evidence_ptr = evidence_factory_.createVariantEvidence(std::move(mutable_info));
 
   // Look at the filter field for "Pass"
   bool passed_filter = Utility::toupper(vcf_record.filter) == PASSED_FILTERS_;
@@ -70,15 +70,14 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
     // We have no format data and only 1 variant specified.
     // These variables declared to make this obvious.
-    std::optional<std::shared_ptr<FormatData>> null_format_data = std::nullopt;
     uint32_t variant_count = 1;
     uint32_t variant_index = 0;
 
     VariantEvidence evidence(vcf_record_count,
                              unphased_population_ptr_->dataSource(),
                              passed_filter,
-                             info_evidence_opt,
-                             null_format_data,
+                             info_evidence_ptr,
+                             nullptr,
                              variant_index,
                              variant_count);
     VariantEvidence evidence1(evidence);
@@ -119,13 +118,12 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
     for (auto const& alt : alt_vector) {
 
       // We have no format data and multiple alternate alleles.
-      std::optional<std::shared_ptr<FormatData>> null_format_data = std::nullopt;
       // Setup the evidence object.
       VariantEvidence evidence(vcf_record_count,
                                unphased_population_ptr_->dataSource(),
                                passed_filter,
-                               info_evidence_opt,
-                               null_format_data,
+                               info_evidence_ptr,
+                               nullptr,
                                variant_index,
                                variant_count);
       VariantEvidence evidence1(evidence);
@@ -133,15 +131,15 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
       StringDNA5 reference_str(vcf_record.ref);
       StringDNA5 alternate_str(alt);
 
-      std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( contig,
-                                                                            vcf_record.offset,
-                                                                            VariantPhase::UNPHASED,
-                                                                            vcf_record.id,
-                                                                            std::move(reference_str),
-                                                                            std::move(alternate_str),
-                                                                            evidence));
+      std::shared_ptr<const Variant> variant_ptr(std::make_shared<const Variant>( contig,
+                                                                                  vcf_record.offset,
+                                                                                  VariantPhase::UNPHASED,
+                                                                                  vcf_record.id,
+                                                                                  std::move(reference_str),
+                                                                                  std::move(alternate_str),
+                                                                                  evidence));
 
-      if (not addThreadSafeVariant(std::move(variant_ptr), genome_db_ptr_->genomeId())) {
+      if (not addThreadSafeVariant(variant_ptr, genome_db_ptr_->genomeId())) {
 
         ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Unable to add variant to population");
 
@@ -165,13 +163,13 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 }
 
 
-bool kgl::GrchVCFImpl::addThreadSafeVariant(std::unique_ptr<const Variant>&& variant_ptr, GenomeId_t genome) const {
+bool kgl::GrchVCFImpl::addThreadSafeVariant(const std::shared_ptr<const Variant>& variant_ptr, const GenomeId_t& genome) const {
 
   // The population structure can be updated concurrently (embedded mutexes).
 
   std::vector<GenomeId_t> genome_vector;
-  genome_vector.emplace_back(std::move(genome));
+  genome_vector.push_back(genome);
 
-  return unphased_population_ptr_->addVariant(std::move(variant_ptr), genome_vector);
+  return unphased_population_ptr_->addVariant(variant_ptr, genome_vector);
 
 }

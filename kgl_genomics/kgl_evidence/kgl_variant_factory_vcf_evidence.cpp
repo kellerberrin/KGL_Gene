@@ -199,12 +199,12 @@ std::optional<const kgl::InfoSubscribedField> kgl::InfoEvidenceHeader::getSubscr
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Creates the static data and header indexes, and dynamically creates the InfoDataBlock object per VCF record.
 
-std::unique_ptr<const kgl::DataMemoryBlock> kgl::ManageInfoData::createMemoryBlock( const VCFInfoParser& info_parser,
+std::shared_ptr<const kgl::DataMemoryBlock> kgl::ManageInfoData::createMemoryBlock( const VCFInfoParser& info_parser,
                                                                                     std::shared_ptr<const InfoEvidenceHeader> evidence_ptr) const {
 
   InfoMemoryResource resolved_resource = resolveResources(info_parser, *evidence_ptr);
 
-  return std::make_unique<const DataMemoryBlock>(evidence_ptr, resolved_resource, info_parser);
+  return std::make_shared<const DataMemoryBlock>(evidence_ptr, resolved_resource, info_parser);
 
 }
 
@@ -249,12 +249,12 @@ kgl::InfoMemoryResource kgl::ManageInfoData::resolveResources( const VCFInfoPars
 // The evidence factory also creates an evidence object for each variant (data only).
 
 // Create an indexed data object from the VCF info field, std::moved in as a string.
-kgl::InfoDataEvidence kgl::EvidenceFactory::createVariantEvidence(std::string&& info) {
+std::shared_ptr<const kgl::DataMemoryBlock> kgl::EvidenceFactory::createVariantEvidence(std::string&& info) {
 
   // If no Info fields have been subscribed, then just return std::nullopt
   if (info_evidence_header_->getMap().empty()) {
 
-    return std::nullopt;
+    return nullptr;
 
   }
 
@@ -262,7 +262,7 @@ kgl::InfoDataEvidence kgl::EvidenceFactory::createVariantEvidence(std::string&& 
   VCFInfoParser info_parser(std::move(info));
 
   // Use the parsed data to create a compact memory block with a copy of the Info data.
-  std::unique_ptr<const DataMemoryBlock> mem_blk_ptr = manage_info_data_.createMemoryBlock(info_parser, info_evidence_header_);
+  std::shared_ptr<const DataMemoryBlock> mem_blk_ptr = manage_info_data_.createMemoryBlock(info_parser, info_evidence_header_);
 
   return mem_blk_ptr;
 

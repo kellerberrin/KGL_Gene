@@ -57,7 +57,7 @@ private:
 // Progress counters.
   size_t variant_count_{0};
 
-  bool addThreadSafeVariant(std::unique_ptr<const Variant>&&, GenomeId_t genome) const;
+  bool addThreadSafeVariant(const std::shared_ptr<const Variant>& variant_ptr, const GenomeId_t& genome) const;
 
 };
 

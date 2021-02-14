@@ -16,7 +16,7 @@ std::string kgl::VariantEvidence::output(char delimiter, VariantOutputIndex) con
 
   if (formatData()) {
 
-    ss << formatData().value()->output(delimiter);
+    ss << formatData()->output(delimiter);
 
   }
 
