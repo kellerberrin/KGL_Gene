@@ -6,6 +6,7 @@
 #define KGL_VARIANT_FACTORY_VCF_EVIDENCE_DATA_BLK_H
 
 #include "kel_exec_env.h"
+#include "kgl_variant_factory_vcf_evidence_mem_alloc.h"
 #include "kgl_variant_factory_vcf_evidence_data.h"
 #include "kgl_variant_factory_vcf_evidence_memory.h"
 
@@ -41,19 +42,7 @@ public:
                    const InfoMemoryResource& initial_memory_resource,
                    const VCFInfoParser& info_parser);
   DataMemoryBlock(const DataMemoryBlock &) = delete;
-  ~DataMemoryBlock() {
-
-#ifndef KGL_UNIQUE_PTR
-    delete[] char_memory_;
-    delete[] integer_memory_;
-    delete[] float_memory_;
-    delete[] array_memory_;
-    delete[] string_memory_;
-#endif
-
-    --object_count_;
-
-  }
+  ~DataMemoryBlock();
 
   DataMemoryBlock& operator=(const DataMemoryBlock&) = delete;
 
@@ -74,6 +63,7 @@ private:
 
   std::shared_ptr<const InfoEvidenceHeader> info_evidence_header_; // The data header and indexing structure.
   MemDataUsage mem_count_;  // Size count object.
+  MemoryAllocationStrategy allocation_strategy_;
 
 // Raw memory to efficiently store the info data.
 #ifdef KGL_UNIQUE_PTR
@@ -83,11 +73,11 @@ private:
   std::unique_ptr<InfoArrayIndex[]> array_memory_;
   std::unique_ptr<std::string_view[]> string_memory_;
 #else
-  char* char_memory_;
-  InfoIntegerType* integer_memory_;
-  InfoFloatType* float_memory_;
-  InfoArrayIndex* array_memory_;
-  std::string_view* string_memory_;
+  char* char_memory_{nullptr};
+  InfoIntegerType* integer_memory_{nullptr};
+  InfoFloatType* float_memory_{nullptr};
+  InfoArrayIndex* array_memory_{nullptr};
+  std::string_view* string_memory_{nullptr};
 #endif
 
 

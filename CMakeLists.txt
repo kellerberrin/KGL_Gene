@@ -219,10 +219,10 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_square_parser.h
         kgl_genomics/kgl_database/kgl_variant_db_offset.cpp
         kgl_genomics/kgl_database/kgl_variant_filter_virtual.h
-        kgl_genomics/kgl_database/kgl_variant_db_offset_diploid.cpp)
+        kgl_genomics/kgl_database/kgl_variant_db_offset_diploid.cpp kgl_genomics/kgl_evidence/kgl_variant_factory_vcf_evidence_mem_alloc.cpp kgl_genomics/kgl_evidence/kgl_variant_factory_vcf_evidence_mem_alloc.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kel_utility/kel_mem_alloc.h)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kel_utility/kel_mem_alloc.h kel_utility/kel_mem_alloc.cpp)
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES

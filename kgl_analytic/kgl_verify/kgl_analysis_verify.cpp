@@ -172,6 +172,8 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
 
     auto empty_count = non_const_population->inSituFilter(FalseFilter());
 
+    AuditMemory::trimFreeStore();
+
     const size_t seconds = 60;
     ExecEnv::log().info("*********** Sleep for seconds: {} ******************", seconds);
     std::chrono::seconds timespan(seconds); // or whatever
@@ -182,6 +184,10 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
                         non_const_population->populationId(), empty_count.first, empty_count.second, Variant::objectCount(),
                         DataMemoryBlock::objectCount(), mem_pair.first, mem_pair.second);
 
+    ExecEnv::log().info("Population: {}, Allocated Bytes: {}, Deallocated Bytes: {}, Allocations: {}, Deallocations: {}, Not max byte aligned: {}, Max aligned additional bytes: {}",
+                        non_const_population->populationId(), AuditMemory::allocatedBytes(), AuditMemory::deallocatedBytes(),
+                        AuditMemory::allocations(), AuditMemory::deallocations(), (AuditMemory::allocations() - AuditMemory::countMaxAlign()),
+                        AuditMemory::additionalAlignBytes());
 
 
   }

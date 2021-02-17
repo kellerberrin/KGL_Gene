@@ -195,7 +195,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
         ++gene_mutation.genome_count;
 
 
-        std::shared_ptr<const ContigDB> span_variant_ptr = getGeneSpan(contig_ptr, gene_mutation.gene_characteristic);
+        const std::shared_ptr<const ContigDB> span_variant_ptr = getGeneSpan(contig_ptr, gene_mutation.gene_characteristic);
 
         if (not clinvar_contig) {
 
@@ -355,7 +355,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
           } else if (offset_ptr->getVariantArray().size() == 2) {
 
             auto const& offset_array = offset_ptr->getVariantArray();
-            if (offset_array.front()->homozygous(*offset_array.back())) {
+            if (offset_array.front()->variantHash() == offset_array.back()->variantHash()) {
 
               ++gene_mutation.homozygous;
 

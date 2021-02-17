@@ -226,9 +226,15 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
   std::pair<size_t, size_t> mem_pair = Utility::process_mem_usage2(); // pair.first is process vm_usage, pair.second is resident memory set.
   ExecEnv::log().info("Before Clear(), Variant Objects:{}, Data Blocks:{}, VM Usage: {}, Resident Memory: {}",
                       Variant::objectCount(), DataMemoryBlock::objectCount(), mem_pair.first, mem_pair.second);
+  ExecEnv::log().info("*******Deleting Populations******");
+  AuditMemory::displayMallinfo();
   // Explicitly clean up the populations to recover memory.
   population_ptr_ = nullptr;
   unphased_population_ptr_ = nullptr;
+  AuditMemory::displayMallinfo();
+  ExecEnv::log().info("*******Trimming Heap******");
+  AuditMemory::trimFreeStore();
+  AuditMemory::displayMallinfo();
   mem_pair = Utility::process_mem_usage2();
   ExecEnv::log().info("After Clear(), Variant Objects:{}, Data Blocks:{}, VM Usage: {}, Resident Memory: {}",
                       Variant::objectCount(), DataMemoryBlock::objectCount(), mem_pair.first, mem_pair.second);

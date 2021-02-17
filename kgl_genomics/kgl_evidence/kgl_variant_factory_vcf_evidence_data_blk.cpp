@@ -23,8 +23,8 @@ kgl::DataMemoryBlock::DataMemoryBlock( std::shared_ptr<const InfoEvidenceHeader>
   mem_count_.stringCount(memory_resource.viewSize());
   mem_count_.integerCount(memory_resource.integerSize());
   mem_count_.arrayCount(memory_resource.arraySize());
-  // Perform actual memory allocation.
 
+  // Perform actual memory allocation.
 #ifdef KGL_UNIQUE_PTR
   char_memory_ = std::make_unique<char[]>(mem_count_.charCount());
   integer_memory_ = std::make_unique<InfoIntegerType[]>(mem_count_.integerCount());
@@ -32,11 +32,14 @@ kgl::DataMemoryBlock::DataMemoryBlock( std::shared_ptr<const InfoEvidenceHeader>
   array_memory_ = std::make_unique<InfoArrayIndex[]>(mem_count_.arrayCount());
   string_memory_ = std::make_unique<std::string_view[]>(mem_count_.stringCount());
 #else
-  char_memory_ = new char[mem_count_.charCount()];
-  integer_memory_ = new InfoIntegerType[mem_count_.integerCount()];
-  float_memory_ = new InfoFloatType[mem_count_.floatCount()] ;
-  array_memory_ = new InfoArrayIndex[mem_count_.arrayCount()];
-  string_memory_ = new std::string_view[mem_count_.stringCount()];
+
+  allocation_strategy_.allocateMemory(mem_count_, MemoryStrategy::SINGLE_MALLOC);
+  char_memory_ = allocation_strategy_.charMemory();
+  integer_memory_ = allocation_strategy_.integerMemory();
+  float_memory_ = allocation_strategy_.floatMemory();
+  array_memory_ = allocation_strategy_.arrayMemory();
+  string_memory_ = allocation_strategy_.stringMemory();
+
 #endif
 
   // Copy the array blocks.
@@ -84,6 +87,14 @@ kgl::DataMemoryBlock::DataMemoryBlock( std::shared_ptr<const InfoEvidenceHeader>
   ++object_count_;
 
 }
+
+
+kgl::DataMemoryBlock::~DataMemoryBlock() {
+
+  --object_count_;
+
+}
+
 
 // Binary lookup on the array index.
 std::optional<const kgl::InfoArrayIndex> kgl::DataMemoryBlock::findArrayIndex(size_t identifier) const {
