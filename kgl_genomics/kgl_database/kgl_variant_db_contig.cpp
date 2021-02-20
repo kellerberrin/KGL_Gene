@@ -166,12 +166,17 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::filterVariants(const VariantFilter
 
   for (auto const&[offset, offset_ptr] : getMap()) {
 
-    std::unique_ptr<OffsetDB> filtered_offset(std::make_unique<OffsetDB>(offset_ptr->getVariantArray()));
+    std::unique_ptr<OffsetDB> filtered_offset(std::make_unique<OffsetDB>());
+    filtered_offset->setVariantArray(offset_ptr->getVariantArray());
     filtered_offset->inSituFilter(filter);
-    if (not filtered_contig_ptr->addOffset(offset, std::move(filtered_offset))) {
+    if (not filtered_offset->getVariantArray().empty()) {
 
-      ExecEnv::log().error("ContigDB::filterVariants; Problem adding variant at offset: {}, to contig: {}",
-                           offset, contigId());
+      if (not filtered_contig_ptr->addOffset(offset, std::move(filtered_offset))) {
+
+        ExecEnv::log().error("ContigDB::filterVariants; Problem adding variant at offset: {}, to contig: {}",
+                             offset, contigId());
+
+      }
 
     }
 

@@ -28,8 +28,8 @@ Software requirements:
 Target operating system is Linux and has been developed on a workstation 
 running the Mint 20.04 Linux distribution. The software should compile and be usable under 
 other recent Linux distributions but this is not tested.
-The software is written to the C++ 17 standard using the Clion IDE.
-A switch to the C++ 20 standard is planned soon. 
+The software is written to the C++ 20 standard using the Clion IDE and compiled 
+with gcc version 10.2 (latest version as at Feb 2021).
 I wish to thank JetBrains for providing me with a free Clion license to develop 
 this open source software.
 

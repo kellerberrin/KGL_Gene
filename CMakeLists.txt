@@ -1,14 +1,17 @@
 cmake_minimum_required(VERSION 3.17)
 project(KGL)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 
 # add extra include directories
 include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # the range library required by seqan3.
                     /usr/local/include/seqan3/submodules/sdsl-lite/include   # the sdsl library required by seqan3.
+                    /usr/local/include/seqan3/submodules/cereal/include   # the cereal library required by seqan3.
+                    /usr/local/include/seqan3/include
+                    /usr/local/include/spdlog/include/
                     contrib/edlib # 3rd party library for fast Levenshtein seqence matching.
-                     /usr/local/include/libhmsbeagle-1  # the beagle mcmc library used by kpl
+                    /usr/local/include/libhmsbeagle-1  # the beagle mcmc library used by kpl
                     kel_utility                 # Basic Infrastructure library
                     kgl_genomics                  # Basic Genetic library
                     kgl_genomics/kgl_parser
@@ -92,7 +95,9 @@ set(LIBRARY_SOURCE_FILES
         kel_utility/kel_exec_env_app.h
         kel_utility/kel_bzip.cpp
         kel_utility/kel_bzip.h
-        kel_utility/kel_bound_queue.h)
+        kel_utility/kel_bound_queue.h
+        kel_utility/kel_mem_alloc.h
+        kel_utility/kel_mem_alloc.cpp)
 
 # Basic Genetic infrastructure library
 set(GENETIC_LIBRARY_SOURCE_FILES
@@ -219,10 +224,12 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_square_parser.h
         kgl_genomics/kgl_database/kgl_variant_db_offset.cpp
         kgl_genomics/kgl_database/kgl_variant_filter_virtual.h
-        kgl_genomics/kgl_database/kgl_variant_db_offset_diploid.cpp kgl_genomics/kgl_evidence/kgl_variant_factory_vcf_evidence_mem_alloc.cpp kgl_genomics/kgl_evidence/kgl_variant_factory_vcf_evidence_mem_alloc.h)
+        kgl_genomics/kgl_database/kgl_variant_db_offset_diploid.cpp
+        kgl_genomics/kgl_evidence/kgl_variant_factory_vcf_evidence_mem_alloc.cpp
+        kgl_genomics/kgl_evidence/kgl_variant_factory_vcf_evidence_mem_alloc.h)
 
 # 3rd party library for fast Leveshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kel_utility/kel_mem_alloc.h kel_utility/kel_mem_alloc.cpp)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES
@@ -324,9 +331,6 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_runtime.h
         kgl_app/kgl_runtime_config.cpp
         kgl_app/kgl_runtime_config.h)
-
-
-
 
 
 ############kgd_deconvolv########################################################

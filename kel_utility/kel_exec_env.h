@@ -8,6 +8,7 @@
 #include <string>
 #include <memory>
 #include "kel_logging.h"
+#include "kel_mem_alloc.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Singleton. This class sets up the application runtime environment as a series of static variables
@@ -15,7 +16,6 @@
 // Only uses C++ 14 features so that application logging can be provided to Cuda *.cu source files.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class ImplLogger;
 
 namespace kellerberrin {   //  organization level namespace
 
@@ -44,7 +44,6 @@ private:
 
   static std::string command_line_;
   static std::unique_ptr<Logger> log_ptr_;
-
 
 };
 

@@ -6,6 +6,8 @@
 #include "kgl_variant_factory_grch_impl.h"
 #include "kgl_variant.h"
 
+#include "kel_mem_alloc.h"
+
 #include <string>
 
 namespace kgl = kellerberrin::genome;
@@ -85,15 +87,15 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
     StringDNA5 reference_str(vcf_record.ref);
     StringDNA5 alternate_str(vcf_record.alt);
 
-    std::unique_ptr<const Variant> variant_ptr(std::make_unique<Variant>( contig,
-                                                                          vcf_record.offset,
-                                                                          VariantPhase::UNPHASED,
-                                                                          vcf_record.id,
-                                                                          std::move(reference_str),
-                                                                          std::move(alternate_str),
-                                                                          evidence));
+    std::shared_ptr<const Variant> variant_ptr(std::make_shared<const Variant>( contig,
+                                                                                vcf_record.offset,
+                                                                                VariantPhase::UNPHASED,
+                                                                                vcf_record.id,
+                                                                                std::move(reference_str),
+                                                                                std::move(alternate_str),
+                                                                                evidence));
 
-    if (not addThreadSafeVariant(std::move(variant_ptr), genome_db_ptr_->genomeId())) {
+    if (not addThreadSafeVariant(variant_ptr, genome_db_ptr_->genomeId())) {
 
       ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Unable to add variant to population");
 

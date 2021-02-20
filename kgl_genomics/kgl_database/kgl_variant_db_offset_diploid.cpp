@@ -77,7 +77,7 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituDiploid() {
   // More than 2 variants at the location.
   struct DiploidRecord {
 
-    std::vector<std::shared_ptr<const Variant>> variant_vector;
+    OffsetDBArray variant_vector;
     double frequency{0.0};
 
   };
@@ -140,7 +140,7 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituDiploid() {
 
   // The most likely highest frequency alleles are last
   auto const& [freq, record] = *freq_map.rbegin();
-  std::vector<std::shared_ptr<const Variant>> filtered_variants = record.variant_vector;
+  OffsetDBArray filtered_variants = record.variant_vector;
 
   // If unphased just resize
   if (filtered_variants.front()->phaseId() == VariantPhase::UNPHASED
@@ -153,7 +153,7 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituDiploid() {
     // look for complementary phases.
     bool first_pass = true;
     std::string first_hash = filtered_variants.front()->variantPhaseHash();
-    std::vector<std::shared_ptr<const Variant>> phase_subset;
+    OffsetDBArray phase_subset;
     for (auto& variant_ptr :  filtered_variants) {
 
       if (first_pass) {
@@ -173,7 +173,7 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituDiploid() {
 
     }
 
-    filtered_variants = std::move(phase_subset);
+    filtered_variants = phase_subset;
 
   }
 
@@ -193,7 +193,7 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituDiploid() {
 
   }
 
-  variant_vector_ = std::move(filtered_variants);
+  variant_vector_ = filtered_variants;
   offset_count.second = variant_vector_.size();
 
   return offset_count;

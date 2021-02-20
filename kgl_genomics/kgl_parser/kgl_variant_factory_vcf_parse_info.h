@@ -7,6 +7,7 @@
 
 #include "kel_exec_env.h"
 
+#include <map>
 #include <string>
 #include <array>
 

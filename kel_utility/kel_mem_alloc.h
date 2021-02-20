@@ -12,8 +12,6 @@
 #include <cstring>
 #include <malloc.h>
 
-
-
 namespace kellerberrin {   //  organization level namespace
 
 
@@ -24,6 +22,8 @@ namespace kellerberrin {   //  organization level namespace
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class MonitorAllocate : public std::pmr::memory_resource {
+
+public:
 
   MonitorAllocate() = default;
   ~MonitorAllocate() override = default;
@@ -61,46 +61,54 @@ private:
 
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
+// A polymorphic allocator for use with std::allocate_shared
 //
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+inline static std::pmr::synchronized_pool_resource variant_resource;
+inline static std::pmr::polymorphic_allocator variant_allocator(&variant_resource);
 
 
-class debug_resource : public std::pmr::memory_resource {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// A threaded pool allocator implemented as a Meyers singleton
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+class PoolSingleton{
 
 public:
 
-  explicit debug_resource(std::string name,
-  std::pmr::memory_resource* up = std::pmr::get_default_resource())
-  : name_{std::move(name) }, upstream_{up }
-  { }
+  PoolSingleton(const PoolSingleton&)= delete;
+  PoolSingleton& operator=(const PoolSingleton&)= delete;
 
-  void* do_allocate(size_t bytes, size_t alignment) override {
 
-    void* ret = upstream_->allocate(bytes, alignment);
-    return ret;
+  template <class T>
+  [[nodiscard]] static T& getInstance() {
 
-  }
+    static T instance;
 
-  void do_deallocate(void* ptr, size_t bytes, size_t alignment) override {
+    return instance;
 
-    upstream_->deallocate(ptr, bytes, alignment);
-
-  }
-
-  [[nodiscard]] bool do_is_equal(const std::pmr::memory_resource& other) const noexcept override {
-
-    return this == &other;
   }
 
 private:
 
-  std::string name_;
-  std::pmr::memory_resource* upstream_;
+
+  PoolSingleton()= default;
+  ~PoolSingleton()= default;
+
 
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -31,15 +31,15 @@ class OffsetDB {
 public:
 
   OffsetDB() { variant_vector_.reserve(INITIAL_VECTOR_SIZE_); }
-  explicit OffsetDB(const OffsetDBArray& update) { variant_vector_ = update; }
   ~OffsetDB() = default;
 
   OffsetDB(const OffsetDB &) = delete;
   OffsetDB& operator=(const OffsetDB &) = delete;
 
   [[nodiscard]] const OffsetDBArray& getVariantArray() const { return variant_vector_; }
+  void setVariantArray(const OffsetDBArray& update) { variant_vector_ = update; }
 
-  void addVariant(std::shared_ptr<const Variant> variant_ptr) { variant_vector_.emplace_back(std::move(variant_ptr)); }
+  void addVariant(const std::shared_ptr<const Variant>& variant_ptr) { variant_vector_.push_back(variant_ptr); }
   std::pair<size_t, size_t> inSituFilter(const VariantFilter &filter);
 
 private:

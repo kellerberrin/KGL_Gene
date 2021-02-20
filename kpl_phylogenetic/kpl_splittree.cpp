@@ -2,6 +2,7 @@
 // Created by kellerberrin on 12/12/19.
 //
 
+#include <string>
 
 #include "kpl_splittree.h"
 

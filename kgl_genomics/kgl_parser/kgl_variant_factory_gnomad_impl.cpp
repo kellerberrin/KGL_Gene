@@ -52,7 +52,7 @@ void kgl::GenomeGnomadVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const V
   }
   catch(const std::exception& e) {
 
-    ExecEnv::log().error("GenomeGnomadVCFImpl::processVCFHeader, Unexpected Exception: {} thrown record ignored", e.what());
+    ExecEnv::log().error("GenomeGnomadVCFImpl::processVCFRecord; Unexpected Exception: '{}' thrown, VCF record ignored", e.what());
 
   }
 

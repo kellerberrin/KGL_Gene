@@ -83,6 +83,7 @@ public:
 
 private:
 
+
   ContigId_t contig_id_;
   OffsetDBMap contig_offset_map_;
 

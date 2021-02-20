@@ -15,7 +15,7 @@
 
 #include <seqan3/alphabet/all.hpp>
 #include <seqan3/std/ranges>                    // include all of the standard library's views
-#include <seqan3/range/view/all.hpp>            // include all of SeqAn's views
+#include <seqan3/range/views/all.hpp>            // include all of SeqAn's views
 #include <seqan3/alignment/configuration/align_config_edit.hpp>
 #include <seqan3/alignment/pairwise/align_pairwise.hpp>
 #include <seqan3/alignment/scoring/nucleotide_scoring_scheme.hpp>
@@ -102,16 +102,16 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::localblosum
 kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::LevenshteinGlobalSeqan3(const std::string& sequenceA,
                                                                                              const std::string& sequenceB) const {
 
-  std::vector<seqan3::dna5> Asequence{sequenceA | seqan3::view::char_to<seqan3::dna5>};
-  std::vector<seqan3::dna5> Bsequence{sequenceB | seqan3::view::char_to<seqan3::dna5>};
+  auto Asequence = seqan3::views::char_to<seqan3::dna5>(sequenceA);
+  auto Bsequence = seqan3::views::char_to<seqan3::dna5>(sequenceB);
 
-  auto config = seqan3::align_cfg::edit;
+  auto config = seqan3::align_cfg::method_global{} | seqan3::align_cfg::edit_scheme;
 
   kgl::CompareDistance_t edit_distance = 0.0;
+  for (auto const & res : seqan3::align_pairwise(std::tie(Asequence, Bsequence), config)) {
 
-  for (auto const & res : seqan3::align_pairwise(std::tie(Asequence, Bsequence), config))
-  {
     edit_distance = std::fabs(res.score());
+
   }
 
   return edit_distance;
