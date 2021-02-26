@@ -149,8 +149,34 @@ std::pair<size_t, size_t> kgl::Genome1000VCFImpl::alternateIndex( const std::str
                                                                   const std::string& genotype,
                                                                   const std::vector<std::string>& alt_vector) const {
 
-  std::vector<std::string> phase_vector = Utility::char_tokenizer(genotype, PHASE_MARKER_);
 
+
+  // Expect at least 3 chars.
+  if (genotype.size() < MINIMUM_GENOTYPE_SIZE_) {
+
+    ExecEnv::log().warn("Genome1000VCFImpl::alternateIndex; Genotype: {} Size: {} < {} characters", genotype, genotype.size(), MINIMUM_GENOTYPE_SIZE_);
+    return {REFERENCE_VARIANT_INDEX_, REFERENCE_VARIANT_INDEX_};
+
+  }
+
+  // Size of the GT Block.
+  size_t GT_size{0};
+  auto GT_index = genotype.find(GT_SEPARATOR_);
+  if (GT_index != std::string::npos) {
+
+    GT_size = GT_index;
+
+  } else {
+
+    GT_size = genotype.size();
+
+  }
+
+
+  // The first 3 characters or the first ":" if that exists.
+  std::string_view unphased_view(genotype.c_str(), GT_size);
+  // Look for the "|" phase separator.
+  std::vector<std::string_view> phase_vector = Utility::view_tokenizer(unphased_view, PHASE_MARKER_);
 
   size_t phase_A_alt{REFERENCE_VARIANT_INDEX_};
   size_t phase_B_alt{REFERENCE_VARIANT_INDEX_};
@@ -167,18 +193,18 @@ std::pair<size_t, size_t> kgl::Genome1000VCFImpl::alternateIndex( const std::str
       }
 
       // If the phase vector size is 1 then we assume that we are processing the X/Y chromosomes of a male_.
-      if (phase_vector[0] != REFERENCE_VARIANT_INDICATOR_) {
+      if (unphased_view != REFERENCE_VARIANT_INDICATOR_) {
 
         switch(contig_alias_map_.chromosomeType(contig)) {
 
           case ChromosomeType::CHROM_X:
-            phase_A_alt = std::stoul(phase_vector[0]);
+            phase_A_alt = std::stoul(std::string(unphased_view));
             phase_B_alt = REFERENCE_VARIANT_INDEX_;
             break;
 
           case ChromosomeType::CHROM_Y:
             phase_A_alt = REFERENCE_VARIANT_INDEX_;
-            phase_B_alt = std::stoul(phase_vector[0]);
+            phase_B_alt = std::stoul(std::string(unphased_view));
             break;
 
           default:
@@ -199,13 +225,13 @@ std::pair<size_t, size_t> kgl::Genome1000VCFImpl::alternateIndex( const std::str
 
       return {phase_A_alt, phase_B_alt};
 
-    }
+    } // if != 2
 
     if (phase_vector[0].find(ABSTRACT_ALT_BRACKET_) == std::string::npos) {
 
-      if (phase_vector[0] != REFERENCE_VARIANT_INDICATOR_) {
+      if (phase_vector[0] != REFERENCE_VARIANT_INDICATOR_ or phase_vector[0] != ALT_REFERENCE_VARIANT_INDICATOR_) {
 
-        phase_A_alt = std::stoul(phase_vector[0]);
+        phase_A_alt = std::stoul(std::string(phase_vector[0]));
 
       }
 
@@ -217,9 +243,9 @@ std::pair<size_t, size_t> kgl::Genome1000VCFImpl::alternateIndex( const std::str
 
     if (phase_vector[1].find(ABSTRACT_ALT_BRACKET_) == std::string::npos) {
 
-      if (phase_vector[1] != REFERENCE_VARIANT_INDICATOR_) {
+      if (phase_vector[1] != REFERENCE_VARIANT_INDICATOR_ or phase_vector[0] != ALT_REFERENCE_VARIANT_INDICATOR_) {
 
-        phase_B_alt = std::stoul(phase_vector[1]);
+        phase_B_alt = std::stoul(std::string(phase_vector[1]));
 
       }
 

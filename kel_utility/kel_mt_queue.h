@@ -16,7 +16,7 @@ namespace kellerberrin {   //  organization level namespace
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// threadsafe queue for multiple consumers and producers
+// Thread safe queue for multiple consumers and producers
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -32,31 +32,23 @@ public:
   MtQueue(MtQueue&&) = delete;
   MtQueue& operator=(const MtQueue&) = delete;
 
-  void push(T new_value) {
+  void push(T value) {
 
-    std::scoped_lock lock(mutex_);
+    // Scope for automatic locking/unlocking.
+    {
 
-    data_queue_.push(std::move(new_value));
+      std::scoped_lock lock(mutex_);
 
+      data_queue_.push(std::move(value));
+
+      ++size_;
+      ++activity_;
+
+    }
+
+    // The notification is sent after the queue is unlocked so that any threads on waitAndPop() can immediately execute.
     data_cond_.notify_one();
 
-    ++size_;
-    ++activity_;
-
-  }
-
-  void waitAndPop(T& value) {
-
-    std::unique_lock<std::mutex> lock(mutex_);
-
-    data_cond_.wait(lock,[this]{return not size_ != 0;});
-
-    value = std::move(data_queue_.front());
-
-    data_queue_.pop();
-
-    --size_;
-    ++activity_;
 
   }
 
@@ -64,6 +56,7 @@ public:
 
     std::unique_lock<std::mutex> lock(mutex_);
 
+    // wait on non-empty
     data_cond_.wait(lock,[this]{return size_ != 0;});
 
     T value = std::move(data_queue_.front());
@@ -73,40 +66,13 @@ public:
     --size_;
     ++activity_;
 
+    // Unlock the mutex.
+    lock.unlock();
+
+    // Notify any other waiting threads after the queue is unlocked.
+    data_cond_.notify_one();
+
     return value;
-
-  }
-
-  bool tryPop(T& value) {
-
-    std::scoped_lock lock(mutex_) ;
-
-    if (data_queue_.empty()) return false;
-
-    value = std::move(data_queue_.front());
-
-    data_queue_.pop();
-
-    --size_;
-    ++activity_;
-
-    return true;
-  }
-
-  [[nodiscard]] std::shared_ptr<T> tryPop() {
-
-    std::scoped_lock lock(mutex_) ;
-
-    if (data_queue_.empty()) return std::shared_ptr<T>();
-
-    std::shared_ptr<T> value_ptr(std::make_shared<T>(std::move(data_queue_.front())));
-
-    data_queue_.pop();
-
-    --size_;
-    ++activity_;
-
-    return value_ptr;
 
   }
 

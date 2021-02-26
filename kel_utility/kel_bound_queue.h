@@ -44,7 +44,6 @@ public:
 
   void push(T new_value) {
 
-
     if (queue_state_ == QueueState::Normal) {
 
       if (size() < high_tide_) {  // Possible race condition with size() >= high_tide is considered unimportant.
@@ -58,6 +57,7 @@ public:
         queue_state_ = QueueState::HighTide;
 
       }
+
     }
 
     std::unique_lock<std::mutex> lock(tide_mutex_);
@@ -69,16 +69,9 @@ public:
 
   }
 
-  inline void waitAndPop(T& value) {
+  T waitAndPop() {
 
-    mt_queue_.waitAndPop(value);
-    tide_cond_.notify_one();
-
-  }
-
-  inline T waitAndPop() {
-
-    T value = std::move(mt_queue_.waitAndPop());
+    T value = mt_queue_.waitAndPop();
     tide_cond_.notify_one();
     return value;
 
@@ -151,7 +144,7 @@ public:
 
   void displayQueueStats() const {
 
-    ExecEnv::log().info("Monitor Queue: {}, Samples: {}; High Tide: {} ({}%), Low Tide: {} ({}%), Empty:<={} ({}%), Average Util: {}% ({})",
+    ExecEnv::log().info("Monitor Queue: {}, Samples: {}; High Tide: {} ({:.2f}%), Low Tide: {} ({:.2f}%), Empty:<={} ({:.2f}%), Average Util: {:.2f}% ({:.2f})",
                         queueName(), queueSamples(), highTide(), (averageHighTide() * 100.0),
                         lowTide(), (averageLowTide() * 100.0),  emptySize(), (averageEmpty() * 100.0),
                         avUtilization(), averageSize());

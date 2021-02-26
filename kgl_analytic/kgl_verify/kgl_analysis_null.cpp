@@ -43,7 +43,6 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
 
     std::shared_ptr<const PopulationDB> population = std::dynamic_pointer_cast<const PopulationDB>(data_ptr);
 /*
-    size_t genome_count{0};
     for (auto const& [genome_id, genome_ptr] : population->getMap()) {
 
       ExecEnv::log().info("NullAnalysis::fileReadAnalysis; Diploid Population: {}, GenomeID: {}, Contigs: {}",
@@ -56,14 +55,16 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
 
       }
 
-      ++genome_count;
-
     }
 
     ExecEnv::log().info("NullAnalysis::fileReadAnalysis; Diploid Population: ,{}, Total Genomes: {}",
                         population->populationId(), genome_count);
 
 */
+
+    ExecEnv::log().info("NullAnalysis::fileReadAnalysis; Diploid Population: ,{}, Total Genomes: {}",
+                        population->populationId(), population->getMap().size());
+
     // Iterate any available info fields
     std::optional<std::shared_ptr<const InfoEvidenceHeader>> info_header_opt = population->getVCFInfoEvidenceHeader();
     if (not info_header_opt) {

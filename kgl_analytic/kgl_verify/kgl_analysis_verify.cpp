@@ -61,7 +61,7 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
 
       ExecEnv::log().info("Check Structure of Population: {}", non_const_population->populationId());
 
-      bool check_diploid{false};
+      bool check_diploid{true};
       if (check_diploid) {
 
         size_t incorrect_phasing{0};

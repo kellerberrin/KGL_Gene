@@ -153,40 +153,73 @@ std::pair<size_t, size_t> kgl::GenomeGnomadVCFImpl::alternateIndex(const std::st
 
   }
 
-  std::string_view unphased_view(genotype.c_str(), MINIMUM_GENOTYPE_SIZE_);
+  // Size of the GT Block.
+  size_t GT_size{0};
+  auto GT_index = genotype.find(GT_SEPARATOR_);
+  if (GT_index != std::string::npos) {
 
-  std::vector<std::string_view> phase_vector = Utility::view_tokenizer(unphased_view, PHASE_MARKER_);
+    GT_size = GT_index;
 
-  if (phase_vector.size() != 2) {
+  } else {
 
-    ExecEnv::log().warn("GenomeGnomadVCFImpl::alternateIndex; Unexpected Phase Vector Size: {} Genotype Info {}", phase_vector.size(), genotype);
-    return {REFERENCE_VARIANT_INDEX_, REFERENCE_VARIANT_INDEX_};
+    GT_size = genotype.size();
 
   }
 
+  // The first 3 characters or the first ":" if that exists.
+  std::string_view unphased_view(genotype.c_str(), GT_size);
+  // Look for the "/" phase separator.
+  std::vector<std::string_view> phase_vector = Utility::view_tokenizer(unphased_view, PHASE_MARKER_);
+
+  // Init to Ref allele (which is a no-op).
   size_t phase_A_alt{REFERENCE_VARIANT_INDEX_};
   size_t phase_B_alt{REFERENCE_VARIANT_INDEX_};
 
-  try {
+  if (phase_vector.size() == 2) {
+  // Phase separator found.
 
-    if (phase_vector[0] != REFERENCE_VARIANT_INDICATOR_) {
+    try {
 
-      phase_A_alt = std::stoul(std::string(phase_vector[0]));
+      if (phase_vector[0] != REFERENCE_VARIANT_INDICATOR_) {
+
+        phase_A_alt = std::stoul(std::string(phase_vector[0]));
+
+      }
+
+      if (phase_vector[1] != REFERENCE_VARIANT_INDICATOR_) {
+
+        phase_B_alt = std::stoul(std::string(phase_vector[1]));
+
+      }
+
+    }
+    catch(...) {
+
+      ExecEnv::log().warn("GenomeGnomadVCFImpl::alternateIndex; Problem converting phase indexes to unsigned longs, phase A: {}, phase B: {} genotype: {}",
+                          std::string(phase_vector[0]), std::string(phase_vector[1]), genotype);
+      return {REFERENCE_VARIANT_INDEX_, REFERENCE_VARIANT_INDEX_};
 
     }
 
-    if (phase_vector[1] != REFERENCE_VARIANT_INDICATOR_) {
+  } else {
+  // Phase separator not found, assume an X or Y chromosome with single Genotype indicator for males.
 
-      phase_B_alt = std::stoul(std::string(phase_vector[1]));
+    try {
+
+      if (unphased_view != REFERENCE_VARIANT_INDICATOR_) {
+
+        phase_A_alt = std::stoul(std::string(unphased_view));
+
+      }
 
     }
+    catch(...) {
 
-  }
-  catch(...) {
+      ExecEnv::log().warn("GenomeGnomadVCFImpl::alternateIndex; Problem converting phase index to unsigned long, phase A: {} (only), genotype: {}",
+                          std::string(unphased_view), genotype);
+      return {REFERENCE_VARIANT_INDEX_, REFERENCE_VARIANT_INDEX_};
 
-    ExecEnv::log().warn("GenomeGnomadVCFImpl::alternateIndex; Problem converting phase indexes to unsigned longs, phase A: {}, phase B: {} genotype: {}",
-                        std::string(phase_vector[0]), std::string(phase_vector[1]), genotype);
-    return {REFERENCE_VARIANT_INDEX_, REFERENCE_VARIANT_INDEX_};
+    }
 
   }
 

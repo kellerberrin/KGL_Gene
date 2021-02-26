@@ -52,6 +52,7 @@ private:
 
   constexpr static const size_t REFERENCE_VARIANT_INDEX_{0};
   constexpr static const char *REFERENCE_VARIANT_INDICATOR_{"."};
+  constexpr static const char GT_SEPARATOR_{':'};
   constexpr static const char PHASE_MARKER_{'/'};
   constexpr static const size_t MINIMUM_GENOTYPE_SIZE_{3};
   constexpr static const char MULTIPLE_ALT_SEPARATOR_{','};

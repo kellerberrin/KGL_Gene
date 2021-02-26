@@ -51,13 +51,16 @@ private:
 
   constexpr static const size_t VARIANT_REPORT_INTERVAL_{10000};
 
+  constexpr static const size_t MINIMUM_GENOTYPE_SIZE_{3};
   constexpr static const size_t REFERENCE_VARIANT_INDEX_{0};
+  constexpr static const char* ALT_REFERENCE_VARIANT_INDICATOR_{"-"};
   constexpr static const char* REFERENCE_VARIANT_INDICATOR_{"."};
   constexpr static const char PHASE_MARKER_ {'|'};
   constexpr static const char MULTIPLE_ALT_SEPARATOR_{','};
   constexpr static const char ABSTRACT_ALT_BRACKET_{'<'};
   constexpr static const char* PASSED_FILTERS_{"PASS"};
   constexpr static const char* NULL_IDENTIFIER_{"."};
+  constexpr static const char GT_SEPARATOR_{':'};
 
   const std::shared_ptr<PopulationDB> diploid_population_ptr_;   // Diploid phased variants.
   const std::shared_ptr<const GenomeReference> genome_db_ptr_; // read access only.

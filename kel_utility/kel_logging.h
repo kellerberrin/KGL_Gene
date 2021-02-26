@@ -48,6 +48,7 @@ public:
 private:
 
   static constexpr const char* SPDLOG_DEFAULT_FORMAT{"%+"};  // Default format from spdlog
+  static constexpr const char* DEFAULT_FLOAT_FORMAT = "0:.2f";
 
   std::unique_ptr<spdlog::logger> plog_impl_;
   std::atomic<int> max_error_messages_{100};     // Defaults to 100 error messages
