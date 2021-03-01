@@ -89,24 +89,21 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
 
     }
 
-    if (file_characteristic.data_source == DataSourceEnum::Gnomad2_1) {
-
       // Investigate vep field values.
-/*
-      InfoEvidenceAnalysis::vepSubFieldValues("Consequence", population);
-      InfoEvidenceAnalysis::vepSubFieldValues("IMPACT", population);
-      InfoEvidenceAnalysis::vepSubFieldValues("Feature_type", population);
-      InfoEvidenceAnalysis::vepSubFieldValues("BIOTYPE", population);
+
+//      InfoEvidenceAnalysis::vepSubFieldValues("Consequence", population);
+//      InfoEvidenceAnalysis::vepSubFieldValues("IMPACT", population);
+//      InfoEvidenceAnalysis::vepSubFieldValues("Feature_type", population);
+//      InfoEvidenceAnalysis::vepSubFieldValues("BIOTYPE", population);
 //      InfoEvidenceAnalysis::vepSubFieldValues("EXON", population);
 //      InfoEvidenceAnalysis::vepSubFieldValues("INTRON", population);
-      InfoEvidenceAnalysis::vepSubFieldValues("LoF", population);
-      InfoEvidenceAnalysis::vepSubFieldValues("LoF_filter", population);
-      InfoEvidenceAnalysis::vepSubFieldValues("LoF_flags", population);
-      InfoEvidenceAnalysis::vepSubFieldValues("CLIN_SIG", population);
+    InfoEvidenceAnalysis::vepSubFieldValues("LoF", population);
+//      InfoEvidenceAnalysis::vepSubFieldValues("LoF_filter", population);
+//      InfoEvidenceAnalysis::vepSubFieldValues("LoF_flags", population);
+//     InfoEvidenceAnalysis::vepSubFieldValues("CLIN_SIG", population);
 //      InfoEvidenceAnalysis::vepSubFieldValues("LoF_info", population);
-*/
 
-    }
+
 
   }
 

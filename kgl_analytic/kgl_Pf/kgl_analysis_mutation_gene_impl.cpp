@@ -18,7 +18,7 @@ namespace kgl = kellerberrin::genome;
 std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneSpan(const std::shared_ptr<const ContigDB>& contig_ptr,
                                                                       const GeneCharacteristic& gene_char) {
 
-  return contig_ptr->subset(gene_char.gene_begin, gene_char.gene_end);
+  return contig_ptr->subset(gene_char.geneBegin(), gene_char.geneEnd());
 
 }
 
@@ -26,7 +26,8 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneSpan(const std:
 
 
 kgl::VepInfo kgl::GenomeMutation::geneSpanVep( const std::shared_ptr<const ContigDB>& span_contig,
-                                               const std::shared_ptr<const PopulationDB>& unphased_population_ptr) {
+                                               const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
+                                               const std::shared_ptr<const GenomePEDData>& ped_data) {
 
   VepInfo vep_info;
 
@@ -56,8 +57,8 @@ kgl::VepInfo kgl::GenomeMutation::geneSpanVep( const std::shared_ptr<const Conti
   auto phase_B_variants = span_contig->filterVariants(PhaseFilter(VariantPhase::DIPLOID_PHASE_B));
   auto found_unphased_B = unphased_contig->findContig(phase_B_variants);
 
-  vep_info.female_lof = VepCount(found_unphased_A, LOF_VEP_FIELD, LOF_HC_VALUE);
-  vep_info.male_lof = VepCount(found_unphased_B, LOF_VEP_FIELD, LOF_HC_VALUE);
+  vep_info.female_phase_lof = VepCount(found_unphased_A, LOF_VEP_FIELD, LOF_HC_VALUE);
+  vep_info.male_phase_lof = VepCount(found_unphased_B, LOF_VEP_FIELD, LOF_HC_VALUE);
 
   VepSubFieldValues vep_field(IMPACT_VEP_FIELD);
 
@@ -123,16 +124,3 @@ size_t kgl::GenomeMutation::VepCount( const std::shared_ptr<const ContigDB>& vep
 
 }
 
-
-
-void kgl::GenomeMutation::updatePopulations(const std::shared_ptr<const GenomePEDData>& ped_data) {
-
-  // Generate the template populations.
-  // Insert the templates into the gene records.
-  for (auto& gene_record : gene_vector_) {
-
-    gene_record.clinvar.results.updatePopulations(ped_data);
-
-  }
-
-}

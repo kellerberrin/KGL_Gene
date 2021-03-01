@@ -32,6 +32,23 @@ public:
   GeneCharacteristic(const GeneCharacteristic&) = default;
   GeneCharacteristic& operator=(const GeneCharacteristic&) = default;
 
+  void writeGene(std::ostream& out_file, char output_delimiter) const;
+  void writeGeneHeader(std::ostream& out_file, char output_delimiter) const;
+  bool geneDefinition( const std::shared_ptr<const GeneFeature>& gene_ptr,
+                       const GenomeId_t& genome_id,
+                       const std::string& name,
+                       const std::string& gaf_ident);
+
+  const ContigId_t& contigId() const { return contig; }
+  ContigOffset_t geneBegin() const { return gene_begin; }
+  ContigOffset_t geneEnd() const { return gene_end; }
+  ContigSize_t nucleotides() const { return nucleotides_; }
+  ContigSize_t geneSpan() const { return gene_span_; }
+
+
+private:
+
+  constexpr static const char* CONCAT_TOKEN_ = "&";
 
   GenomeId_t genome;
   ContigId_t contig;
@@ -43,9 +60,9 @@ public:
   std::string gaf_id;
   ContigOffset_t gene_begin{0};
   ContigOffset_t gene_end{0};
-  ContigSize_t gene_span{0};
+  ContigSize_t gene_span_{0};
   ContigSize_t exons{0};
-  ContigSize_t nucleotides{0};
+  ContigSize_t nucleotides_{0};
   std::string strand;
   size_t sequences{0};
   std::string seq_name;
@@ -69,9 +86,11 @@ public:
   VepInfo& operator=(const VepInfo&) = default;
 
 
-  size_t male_lof{0};          // Loss of gene function in the (B) chromosome.
-  size_t female_lof{0};        // Los of function in the female_ (A) chromosome.
+  size_t male_phase_lof{0};          // Loss of gene function in the (B) chromosome.
+  size_t female_phase_lof{0};        // Los of function in the female_ (A) chromosome.
   size_t hom_lof{0};          // Loss of gene function in both chromosomes.
+  size_t male_lof{0};
+  size_t female_lof{0};
   size_t male_high_effect{0};
   size_t female_high_effect{0};
   size_t hom_high_effect{0};          // Loss of gene function in both chromosomes.
@@ -103,6 +122,7 @@ public:
   GeneMutation& operator=(const GeneMutation&) = default;
 
   GeneCharacteristic gene_characteristic;
+
 
   size_t unique_variants{0};
   size_t span_variant_count{0};
@@ -141,7 +161,8 @@ public:
   ~GenomeMutation() = default;
 
   // This analysis is performed first
-  bool genomeAnalysis( const std::shared_ptr<const GenomeReference>& genome_reference);
+  bool genomeAnalysis( const std::shared_ptr<const GenomeReference>& genome_reference,
+                       const std::shared_ptr<const GenomePEDData>& ped_data);
 
   // Then this analysis.
   bool variantAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
@@ -150,8 +171,6 @@ public:
                         const std::shared_ptr<const GenomePEDData>& ped_data);
   // Output to file.
   bool writeOutput(const std::shared_ptr<const GenomePEDData>& ped_data, const std::string& out_file, char output_delimiter) const;
-
-  void updatePopulations(const std::shared_ptr<const GenomePEDData>& ped_data);
 
 private:
 
@@ -167,15 +186,12 @@ private:
   constexpr static const char* CONCAT_TOKEN = "&";
 
 
-  static void writeHeader(const std::shared_ptr<const GenomePEDData>& ped_data, std::ostream& out_file, char output_delimiter);
+  static void writeHeader(const std::shared_ptr<const GenomePEDData>& ped_data,
+                          std::ostream& out_file,
+                          char output_delimiter,
+                          const GeneCharacteristic& gene_characteristic,
+                          const GeneClinvar& clinvar);
 
-  static void writeClinvar( const std::shared_ptr<const GenomePEDData>& ped_data,
-                            const GeneClinvar& results,
-                            std::ostream& out_file,
-                            char output_delimiter);
-
-  static void writeGene(const GeneCharacteristic& gene, std::ostream& out_file, char output_delimiter);
-  static void writeGeneHeader(std::ostream& out_file, char output_delimiter);
 
 
 
@@ -190,17 +206,13 @@ private:
                                  GeneMutation gene_mutation);
 
   VepInfo geneSpanVep( const std::shared_ptr<const ContigDB>& span_contig,
-                       const std::shared_ptr<const PopulationDB>& unphased_population_ptr);
+                       const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
+                       const std::shared_ptr<const GenomePEDData>& ped_data);
 
   size_t VepCount( const std::shared_ptr<const ContigDB>& vep_contig,
                    const std::string& vep_field_ident,
                    const std::string& vep_field_value);
 
-  void processClinvar(const GenomeId_t& genome_id,
-                      const std::shared_ptr<const ContigDB>& gene_variants,
-                      const std::shared_ptr<const ContigDB>& clinvar_contig,
-                      const std::shared_ptr<const GenomePEDData>& ped_data,
-                      GeneClinvar& results);
 
 
 };

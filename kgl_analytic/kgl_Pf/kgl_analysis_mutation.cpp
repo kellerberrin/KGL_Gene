@@ -43,8 +43,6 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
   }
 
-  gene_mutation_.genomeAnalysis(ref_genome_ptr_);
-
   return true;
 
 }
@@ -113,7 +111,7 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
       ped_data_ = ped_data;
       ExecEnv::log().info("Analysis: {}, ped file: {} contains: {} PED records", ident(), ped_data->fileId(), ped_data->getMap().size());
       // Update the template populations.
-      gene_mutation_.updatePopulations(ped_data_);
+      gene_mutation_.genomeAnalysis(ref_genome_ptr_, ped_data_);
 
       filterPedGenomes();
 

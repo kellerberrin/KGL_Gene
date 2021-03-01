@@ -15,12 +15,77 @@
 namespace kgl = kellerberrin::genome;
 
 
+// Perform the genetic analysis per iteration.
+bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFeature>& gene_ptr,
+                                              const GenomeId_t& genome_id,
+                                              const std::string& name,
+                                              const std::string& gaf_ident)
+{
+
+  std::vector<std::string> description_vec;
+  gene_ptr->getAttributes().getDescription(description_vec);
+  std::string description_str = description_vec.empty() ? "" : description_vec.front();
+
+  std::vector<std::string> gene_biotype_vec;
+  gene_ptr->getAttributes().getGeneBioType(gene_biotype_vec);
+  std::string biotype_str = gene_biotype_vec.empty() ? "" : gene_biotype_vec.front();
+
+  genome = genome_id;
+  contig = gene_ptr->contig()->contigId();
+  gene_id = gene_ptr->id();
+  gene_name = name;
+  description = description_str;
+  biotype = biotype_str;
+  valid_protein = ContigReference::verifyGene(gene_ptr);
+  gaf_id = gaf_ident;
+  gene_begin = gene_ptr->sequence().begin();
+  gene_end = gene_ptr->sequence().end();
+  gene_span_ = gene_ptr->sequence().length();
+  strand = gene_ptr->sequence().strandText();
+
+  const std::shared_ptr<const CodingSequenceArray> sequence_array = GeneFeature::getCodingSequences(gene_ptr);
+
+  sequences = sequence_array->size();
+  if (not sequence_array->getMap().empty()) {
+
+    auto [seqence_name, seq_ptr] = *(sequence_array->getMap().begin());
+    seq_name = seq_name;
+    nucleotides_ = seq_ptr->codingNucleotides();
+    exons = seq_ptr->exons();
+
+  }
+  auto const& attribute_map = gene_ptr->getAttributes().getMap();
+  attribute_size = attribute_map.size();
+
+  std::string concat_attributes{"\""};
+  for (auto const& [key, attrib] : attribute_map) {
+
+    if ( key != attribute_map.begin()->first
+         or attrib != attribute_map.begin()->second) {
+
+      concat_attributes += CONCAT_TOKEN_;
+
+    }
+
+    concat_attributes += key;
+    concat_attributes += ":";
+    concat_attributes += attrib;
+
+  }
+
+  concat_attributes += "\"";
+  attributes = concat_attributes;
+
+  return true;
+
+}
 
 
 
 
 // Perform the genetic analysis per iteration.
-bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeReference>& genome_ptr)
+bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeReference>& genome_ptr,
+                                          const std::shared_ptr<const GenomePEDData>& ped_data)
 {
 
   const GafRecordMap& ont_map = genome_ptr->geneOntology().getMap();
@@ -34,8 +99,6 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
   for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
 
     for (auto const& [offset, gene_ptr] : contig_ptr->getGeneMap()) {
-
-      const std::shared_ptr<const CodingSequenceArray> sequence_array = GeneFeature::getCodingSequences(gene_ptr);
 
       std::vector<std::string> name_vec;
       gene_ptr->getAttributes().getName(name_vec);
@@ -65,65 +128,12 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
 
       }
 
-      std::vector<std::string> description_vec;
-      gene_ptr->getAttributes().getDescription(description_vec);
-      std::string description = description_vec.empty() ? "" : description_vec.front();
-
-      std::vector<std::string> gene_biotype_vec;
-      gene_ptr->getAttributes().getGeneBioType(gene_biotype_vec);
-      std::string biotype = gene_biotype_vec.empty() ? "" : gene_biotype_vec.front();
-
       GeneCharacteristic gene_characteristic;
-
-      gene_characteristic.genome = genome_ptr->genomeId();
-      gene_characteristic.contig  = contig_id;
-      gene_characteristic.gene_id = gene_ptr->id();
-      gene_characteristic.gene_name = name;
-      gene_characteristic.description = description;
-      gene_characteristic.biotype = biotype;
-      gene_characteristic.valid_protein = ContigReference::verifyGene(gene_ptr);
-      gene_characteristic.gaf_id = gaf_id;
-      gene_characteristic.gene_begin = gene_ptr->sequence().begin();
-      gene_characteristic.gene_end = gene_ptr->sequence().end();
-      gene_characteristic.gene_span = gene_ptr->sequence().length();
-      gene_characteristic.strand = gene_ptr->sequence().strandText();
-      gene_characteristic.sequences = sequence_array->size();
-      if (not sequence_array->getMap().empty()) {
-
-        auto [seq_name, seq_ptr] = *(sequence_array->getMap().begin());
-        gene_characteristic.seq_name = seq_name;
-        gene_characteristic.nucleotides = seq_ptr->codingNucleotides();
-        gene_characteristic.exons = seq_ptr->exons();
-
-      }
-      auto const& attribute_map = gene_ptr->getAttributes().getMap();
-      gene_characteristic.attribute_size = attribute_map.size();
-
-      std::string concat_attributes{"\""};
-      for (auto const& [key, attrib] : attribute_map) {
-
-        if ( key != attribute_map.begin()->first
-            or attrib != attribute_map.begin()->second) {
-
-          concat_attributes += CONCAT_TOKEN;
-
-        }
-
-        concat_attributes += key;
-        concat_attributes += ":";
-        concat_attributes += attrib;
-
-      }
-
-      concat_attributes += "\"";
-
-      gene_characteristic.attributes = concat_attributes;
-
-
+      gene_characteristic.geneDefinition(gene_ptr, genome_ptr->genomeId(), name, gaf_id);
       GeneMutation mutation;
       mutation.gene_characteristic = gene_characteristic;
+      mutation.clinvar.updateEthnicity().updatePopulations(ped_data);
       gene_vector_.push_back(mutation);
-
 
     } // Gene.
 
@@ -184,7 +194,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
   std::shared_ptr<const ContigDB> clinvar_contig;
   for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()){
 
-    auto contig_opt = genome_ptr->getContig(gene_mutation.gene_characteristic.contig);
+    auto contig_opt = genome_ptr->getContig(gene_mutation.gene_characteristic.contigId());
     if (contig_opt) {
 
       std::shared_ptr<const ContigDB> contig_ptr = contig_opt.value();
@@ -199,32 +209,32 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
         if (not clinvar_contig) {
 
-          clinvar_contig = AnalyzeClinvar::getClinvarContig(gene_mutation.gene_characteristic.contig, clinvar_population_ptr);
+          clinvar_contig = AnalyzeClinvar::getClinvarContig(gene_mutation.gene_characteristic.contigId(), clinvar_population_ptr);
           clinvar_contig = AnalyzeClinvar::FilterPathogenic(clinvar_contig);
 
         } else {
 
-          if (clinvar_contig->contigId() != gene_mutation.gene_characteristic.contig) {
+          if (clinvar_contig->contigId() != gene_mutation.gene_characteristic.contigId()) {
 
-            clinvar_contig = AnalyzeClinvar::getClinvarContig(gene_mutation.gene_characteristic.contig, clinvar_population_ptr);
+            clinvar_contig = AnalyzeClinvar::getClinvarContig(gene_mutation.gene_characteristic.contigId(), clinvar_population_ptr);
             clinvar_contig = AnalyzeClinvar::FilterPathogenic(clinvar_contig);
 
           }
 
         }
 
-        processClinvar(genome_id, span_variant_ptr, clinvar_contig, ped_data, gene_mutation.clinvar);
+        gene_mutation.clinvar.processClinvar(genome_id, span_variant_ptr, clinvar_contig, ped_data);
 
         // Get phased VEP info.
-        VepInfo lof_het_hom = geneSpanVep( span_variant_ptr, unphased_population_ptr);
+        VepInfo lof_het_hom = geneSpanVep( span_variant_ptr, unphased_population_ptr, ped_data);
 
-        if (lof_het_hom.female_lof > 0) {
+        if (lof_het_hom.female_phase_lof > 0) {
 
           ++gene_mutation.female_lof;
 
         }
 
-        if (lof_het_hom.male_lof > 0) {
+        if (lof_het_hom.male_phase_lof > 0) {
 
           ++gene_mutation.male_lof;
 
@@ -232,7 +242,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
         // Loss of Function in both chromosomes, Mendelian genetics.
         size_t hom_lof{0};
-        if (lof_het_hom.female_lof > 0 and lof_het_hom.male_lof > 0) {
+        if (lof_het_hom.female_phase_lof > 0 and lof_het_hom.male_phase_lof > 0) {
 
           hom_lof = 1;
 
@@ -374,58 +384,4 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
   return gene_mutation;
 
 }
-
-
-void kgl::GenomeMutation::processClinvar( const GenomeId_t& genome_id,
-                                          const std::shared_ptr<const ContigDB>& subject_variants,
-                                          const std::shared_ptr<const ContigDB>& clinvar_contig,
-                                          const std::shared_ptr<const GenomePEDData>& ped_data,
-                                          GeneClinvar& results) {
-
-
-  auto subject_clinvar = AnalyzeClinvar::findClinvar(subject_variants, clinvar_contig);
-  auto info_vector = AnalyzeClinvar::clinvarInfo(subject_clinvar);
-  size_t clinvar_variants = subject_clinvar->variantCount();
-  if (clinvar_variants > 0) {
-
-    ++results.phase.phase_either_;
-
-  }
-
-  for (auto const& record : info_vector) {
-
-    // Save any unique descriptions.
-    results.clinvar_desc.insert(record.clndn);
-
-  }
-
-  auto male_variants = subject_variants->filterVariants(PhaseFilter(VariantPhase::DIPLOID_PHASE_B));
-  auto male_clinvar = AnalyzeClinvar::findClinvar(male_variants, clinvar_contig);
-  size_t male_phase_variants = male_clinvar->variantCount();
-  if (male_phase_variants > 0) {
-
-    ++results.phase.phase_male_;
-
-  }
-
-  auto female_variants = subject_variants->filterVariants(PhaseFilter(VariantPhase::DIPLOID_PHASE_A));
-  auto female_clinvar = AnalyzeClinvar::findClinvar(female_variants, clinvar_contig);
-  size_t female_phase_variants = female_clinvar->variantCount();
-  if (female_phase_variants > 0) {
-
-    ++results.phase.phase_female_;
-
-  }
-
-  if (male_phase_variants > 0 and female_phase_variants > 0) {
-
-    ++results.phase.phase_hom_;
-
-  }
-
-  size_t count = clinvar_variants > 0 ? 1 : 0;
-  results.results.pedAnalysis(genome_id, count, ped_data);
-
-}
-
 

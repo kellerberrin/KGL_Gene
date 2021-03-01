@@ -101,12 +101,45 @@ void kgl::GeneEthnicitySex::updatePopulations(const std::shared_ptr<const Genome
 }
 
 
-void kgl::GeneEthnicitySex::writeHeader(const std::shared_ptr<const GenomePEDData>& ped_data,
-                                        std::ostream& out_file,
-                                        char output_delimiter) {
+void kgl::GeneEthnicitySex::writeHeader( const std::shared_ptr<const GenomePEDData>& ped_data,
+                                         std::ostream& out_file,
+                                         char output_delimiter) const {
 
-  out_file << "E_Male" << output_delimiter
-           << "E_Female" << output_delimiter;
+  if (display_flags_ & DISPLAY_SEX_FLAG) {
+
+    writeSexHeader(out_file, output_delimiter);
+    out_file << output_delimiter;
+
+  }
+
+  if (display_flags_ & DISPLAY_SUPER_POP_FLAG) {
+
+    writeSuperPopHeader( ped_data, out_file, output_delimiter);
+    out_file << output_delimiter;
+
+  }
+
+  if (display_flags_ & DISPLAY_POPULATION_FLAG) {
+
+    writePopHeader( ped_data, out_file, output_delimiter);
+    out_file << output_delimiter;
+
+  }
+
+}
+
+
+
+void kgl::GeneEthnicitySex::writeSexHeader( std::ostream& out_file, char output_delimiter) const {
+
+  out_file << header_prefix_ << "Male" << output_delimiter
+           << header_prefix_ << "Female";
+
+}
+
+void kgl::GeneEthnicitySex::writeSuperPopHeader( const std::shared_ptr<const GenomePEDData>& ped_data,
+                                                 std::ostream& out_file,
+                                                 char output_delimiter) const {
 
   for (auto const& [population, description] : ped_data->superPopulationList()) {
 
@@ -116,12 +149,16 @@ void kgl::GeneEthnicitySex::writeHeader(const std::shared_ptr<const GenomePEDDat
 
     }
 
-    out_file << "E_" << population;
+    out_file << header_prefix_ << population;
 
 
   }
 
-  out_file << output_delimiter;
+}
+
+void kgl::GeneEthnicitySex::writePopHeader( const std::shared_ptr<const GenomePEDData>& ped_data,
+                                            std::ostream& out_file,
+                                            char output_delimiter) const {
 
   for (auto const& [population, description] : ped_data->populationList()) {
 
@@ -131,7 +168,7 @@ void kgl::GeneEthnicitySex::writeHeader(const std::shared_ptr<const GenomePEDDat
 
     }
 
-    out_file << "E_" << population;
+    out_file << header_prefix_ << population;
 
 
   }
@@ -139,17 +176,52 @@ void kgl::GeneEthnicitySex::writeHeader(const std::shared_ptr<const GenomePEDDat
 }
 
 
+
 void kgl::GeneEthnicitySex::writeOutput(const std::shared_ptr<const GenomePEDData>& ped_data,
                                         std::ostream& out_file,
                                         char output_delimiter) const {
 
+  if (display_flags_ & DISPLAY_SEX_FLAG) {
+
+    kgl::GeneEthnicitySex::writeSex(out_file, output_delimiter);
+    out_file << output_delimiter;
+
+  }
+
+  if (display_flags_ & DISPLAY_SUPER_POP_FLAG) {
+
+    writeSuperPop( ped_data, out_file, output_delimiter);
+    out_file << output_delimiter;
+
+  }
+
+  if (display_flags_ & DISPLAY_POPULATION_FLAG) {
+
+    writePop( ped_data, out_file, output_delimiter);
+    out_file << output_delimiter;
+
+  }
+
+
+}
+
+
+void kgl::GeneEthnicitySex::writeSex( std::ostream& out_file,
+                                      char output_delimiter) const {
 
   out_file << male_ << output_delimiter
-           << female_ << output_delimiter;
+           << female_;
+
+}
+
+
+void kgl::GeneEthnicitySex::writeSuperPop( const std::shared_ptr<const GenomePEDData>& ped_data,
+                                           std::ostream& out_file,
+                                           char output_delimiter) const {
 
   if (super_population_.size() != ped_data->superPopulationList().size()) {
 
-    ExecEnv::log().error( "GenomeMutation::writeOutput; Mismatch between data super population size: {}, and Ped size: {}",
+    ExecEnv::log().error( "GeneEthnicitySex::writeSuperPop; Mismatch between data super population size: {}, and Ped size: {}",
                           super_population_.size(), ped_data->superPopulationList().size());
 
   }
@@ -166,14 +238,19 @@ void kgl::GeneEthnicitySex::writeOutput(const std::shared_ptr<const GenomePEDDat
 
   }
 
+}
+
+
+void kgl::GeneEthnicitySex::writePop( const std::shared_ptr<const GenomePEDData>& ped_data,
+                                      std::ostream& out_file,
+                                      char output_delimiter) const {
+
   if (population_.size() != ped_data->populationList().size()) {
 
-    ExecEnv::log().error("GenomeMutation::writeOutput; Mismatch between data super population size: {}, and Ped size: {}",
+    ExecEnv::log().error("GeneEthnicitySex::writePop; Mismatch between data super population size: {}, and Ped size: {}",
                          population_.size(), ped_data->populationList().size());
 
   }
-
-  out_file << output_delimiter;
 
   for (auto const& [pop, pop_count] : population_) {
 
@@ -186,7 +263,6 @@ void kgl::GeneEthnicitySex::writeOutput(const std::shared_ptr<const GenomePEDDat
     out_file << pop_count;
 
   }
-
 
 }
 

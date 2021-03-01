@@ -33,12 +33,17 @@ bool kgl::GenomeMutation::writeOutput(const std::shared_ptr<const GenomePEDData>
 
   }
 
-  writeHeader(ped_data, out_file, output_delimiter);
+  if (not gene_vector_.empty()) {
+
+    writeHeader(ped_data, out_file, output_delimiter, gene_vector_.front().gene_characteristic, gene_vector_.front().clinvar);
+
+  }
 
   for (auto const& gene : gene_vector_) {
 
 
-    writeGene(gene.gene_characteristic, out_file, output_delimiter);
+    gene.gene_characteristic.writeGene(out_file, output_delimiter);
+
     out_file << output_delimiter;
     out_file << gene.unique_variants << output_delimiter
         << gene.variant_count << output_delimiter
@@ -52,11 +57,11 @@ bool kgl::GenomeMutation::writeOutput(const std::shared_ptr<const GenomePEDData>
              << gene.hom_high_effect << output_delimiter
              << gene.genome_count << output_delimiter
              << gene.genome_variant << output_delimiter
-             << (static_cast<double>(gene.span_variant_count) / static_cast<double>(gene.gene_characteristic.gene_span)) << output_delimiter;
+             << (static_cast<double>(gene.span_variant_count) / static_cast<double>(gene.gene_characteristic.geneSpan())) << output_delimiter;
 
-    if (gene.gene_characteristic.nucleotides > 0) {
+    if (gene.gene_characteristic.nucleotides() > 0) {
 
-      out_file << (static_cast<double>(gene.variant_count) / static_cast<double>(gene.gene_characteristic.nucleotides)) << output_delimiter;
+      out_file << (static_cast<double>(gene.variant_count) / static_cast<double>(gene.gene_characteristic.nucleotides())) << output_delimiter;
 
     } else {
 
@@ -72,7 +77,7 @@ bool kgl::GenomeMutation::writeOutput(const std::shared_ptr<const GenomePEDData>
              << (gene.transition * 100) << output_delimiter
              << (gene.transversion * 100) << output_delimiter;
 
-    writeClinvar(ped_data, gene.clinvar, out_file, output_delimiter);
+    gene.clinvar.writeOutput(ped_data, out_file, output_delimiter);
 
     out_file << '\n';
 
@@ -83,64 +88,32 @@ bool kgl::GenomeMutation::writeOutput(const std::shared_ptr<const GenomePEDData>
 }
 
 
-void kgl::GenomeMutation::writeGene(const GeneCharacteristic& gene, std::ostream& out_file, char output_delimiter) {
+void kgl::GeneCharacteristic::writeGene(std::ostream& out_file, char output_delimiter) const {
 
-  out_file << gene.genome << output_delimiter
-           << gene.contig << output_delimiter
-           << gene.gene_id << output_delimiter
-           << gene.gene_name << output_delimiter
-           << gene.description << output_delimiter
-           << gene.biotype << output_delimiter
-           << (gene.valid_protein ? "Valid" : "Invalid") << output_delimiter
-           << gene.gaf_id << output_delimiter
-           << gene.gene_begin << output_delimiter
-           << gene.gene_end << output_delimiter
-           << gene.gene_span << output_delimiter
-           << gene.strand << output_delimiter
-           << gene.sequences << output_delimiter
-           << gene.seq_name << output_delimiter
-           << gene.nucleotides << output_delimiter
-           << gene.exons << output_delimiter
-           << gene.attributes;
-
-
-}
-
-
-void kgl::GenomeMutation::writeClinvar(  const std::shared_ptr<const GenomePEDData>& ped_data,
-                                         const GeneClinvar& results,
-                                         std::ostream& out_file,
-                                         char output_delimiter) {
-
-  out_file << results.phase.phase_either_ << output_delimiter
-           << results.phase.phase_male_ << output_delimiter
-           << results.phase.phase_female_ << output_delimiter
-           << results.phase.phase_hom_ << output_delimiter;
-
-  std::string concat_desc{"\""};
-  for (auto const& desc : results.clinvar_desc) {
-
-    if (desc != *results.clinvar_desc.begin()) {
-
-      concat_desc += CONCAT_TOKEN;
-
-    }
-
-    concat_desc += desc;
-
-  }
-  concat_desc += "\"";
-  out_file << concat_desc << output_delimiter;
-
-  results.results.writeOutput(ped_data, out_file, output_delimiter);
+  out_file << genome << output_delimiter
+           << contig << output_delimiter
+           << gene_id << output_delimiter
+           << gene_name << output_delimiter
+           << description << output_delimiter
+           << biotype << output_delimiter
+           << (valid_protein ? "Valid" : "Invalid") << output_delimiter
+           << gaf_id << output_delimiter
+           << gene_begin << output_delimiter
+           << gene_end << output_delimiter
+           << gene_span_ << output_delimiter
+      << strand << output_delimiter
+      << sequences << output_delimiter
+      << seq_name << output_delimiter
+      << nucleotides_ << output_delimiter
+           << exons << output_delimiter
+           << attributes;
 
 }
 
 
 
 
-
-void kgl::GenomeMutation::writeGeneHeader(std::ostream& out_file, char output_delimiter) {
+void kgl::GeneCharacteristic::writeGeneHeader(std::ostream& out_file, char output_delimiter) const {
 
   out_file << "Genome" << output_delimiter
            << "Contig" << output_delimiter
@@ -164,16 +137,20 @@ void kgl::GenomeMutation::writeGeneHeader(std::ostream& out_file, char output_de
 
 
 
-void kgl::GenomeMutation::writeHeader(const std::shared_ptr<const GenomePEDData>& ped_data, std::ostream& out_file, char output_delimiter) {
+void kgl::GenomeMutation::writeHeader(const std::shared_ptr<const GenomePEDData>& ped_data,
+                                      std::ostream& out_file,
+                                      char output_delimiter,
+                                      const GeneCharacteristic& gene_characteristic,
+                                      const GeneClinvar& clinvar) {
 
-  writeGeneHeader(out_file, output_delimiter);
+  gene_characteristic.writeGeneHeader(out_file, output_delimiter);
 
   out_file << output_delimiter
            << "UniqueVariants" << output_delimiter
            << "VariantCount" << output_delimiter
            << "SpanVariantCount" << output_delimiter
-           << "FemaleLoF" << output_delimiter
-           << "MaleLoF" << output_delimiter
+           << "FemalePhaseLoF" << output_delimiter
+           << "MalePhaseLoF" << output_delimiter
            << "HomLoF" << output_delimiter
            << "FemaleHigh" << output_delimiter
            << "MaleHigh" << output_delimiter
@@ -188,12 +165,8 @@ void kgl::GenomeMutation::writeHeader(const std::shared_ptr<const GenomePEDData>
            << "Indel%" << output_delimiter
            << "Transition%" << output_delimiter
            << "Transversion%" << output_delimiter;
-  VariantPhaseStats::writeHeader(out_file, output_delimiter);
 
-  out_file << output_delimiter
-           << "CLV_Desc" << output_delimiter;
-
-  GeneEthnicitySex::writeHeader(ped_data, out_file, output_delimiter);
+           clinvar.writeHeader(ped_data, out_file, output_delimiter);
 
   out_file << '\n';
 

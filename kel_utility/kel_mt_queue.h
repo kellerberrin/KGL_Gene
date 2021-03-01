@@ -16,7 +16,7 @@ namespace kellerberrin {   //  organization level namespace
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Thread safe queue for multiple consumers and producers
+// Thread safe queue for multiple consumer and producer threads.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -57,7 +57,7 @@ public:
     std::unique_lock<std::mutex> lock(mutex_);
 
     // wait on non-empty
-    data_cond_.wait(lock,[this]{return size_ != 0;});
+    data_cond_.wait(lock,[this]{return not empty();});
 
     T value = std::move(data_queue_.front());
 

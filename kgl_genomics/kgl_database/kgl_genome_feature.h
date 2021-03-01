@@ -235,7 +235,7 @@ private:
 };
 
 using GeneVector = std::vector<std::shared_ptr<const GeneFeature>>;  // Multiple alternative genes for sequence region.
-using GeneMap = std::multimap<ContigOffset_t, std::shared_ptr<GeneFeature>>;  // Inserted using the END offset as key.
+using GeneMap = std::multimap<ContigOffset_t, std::shared_ptr<const GeneFeature>>;  // Inserted using the END offset as key.
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
