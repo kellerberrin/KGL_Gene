@@ -165,7 +165,7 @@ void kpl::PolytomyUpdater::proposeNewState() {
     logHastingsRatio(log_hastings_ratio);
     logJacobian(log_jacobian);
 
-    // flag partials and transition matrices for recalculation
+    // flag partials and transition_ matrices for recalculation
     treeManipulator()->selectPartialsHereToRoot(new_nd);
     new_nd->selectTMatrix();
   }
@@ -212,7 +212,7 @@ void kpl::PolytomyUpdater::proposeNewState() {
     logHastingsRatio(log_hastings_ratio);
     logJacobian(log_jacobian);
 
-    // flag partials and transition matrices for recalculation
+    // flag partials and transition_ matrices for recalculation
     treeManipulator()->selectPartialsHereToRoot(pNode);
 
   }

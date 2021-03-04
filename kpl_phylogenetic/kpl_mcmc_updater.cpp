@@ -217,14 +217,14 @@ double kpl::Updater::update(double prev_lnL) {
   double prev_log_prior = calcLogPrior();
 
   // Clear any nodes previously selected so that we can detect those nodes
-  // whose partials and/or transition probabilities need to be recalculated
+  // whose partials and/or transition_ probabilities need to be recalculated
   _tree_manipulator->deselectAllPartials();
   _tree_manipulator->deselectAllTMatrices();
 
   // Set model to proposed state and calculate _log_hastings_ratio
   proposeNewState();
 
-  // Use alternative partials and transition probability buffer for any selected nodes
+  // Use alternative partials and transition_ probability buffer for any selected nodes
   // This allows us to easily revert to the previous values if the move is rejected
   _tree_manipulator->flipPartialsAndTMatrices();
 

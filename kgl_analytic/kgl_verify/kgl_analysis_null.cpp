@@ -58,7 +58,7 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
     }
 
     ExecEnv::log().info("NullAnalysis::fileReadAnalysis; Diploid Population: ,{}, Total Genomes: {}",
-                        population->populationId(), genome_count);
+                        population->populationId(), genome_count_);
 
 */
 

@@ -65,7 +65,7 @@ void kpl::TreeUpdater::starTreeMove() {
   logHastingsRatio(0.0);
   logJacobian(0.0);
 
-  // Change edge lengths and flag partials and transition matrices for recalculation
+  // Change edge lengths and flag partials and transition_ matrices for recalculation
   treeManipulator()->selectPartialsHereToRoot(_x);
   _a->setEdgeLength(new_edgelen_top);
   _a->selectTMatrix();
@@ -326,7 +326,7 @@ void kpl::TreeUpdater::proposeNewState() {
 
   }
 
-  // flag partials and transition matrices for recalculation
+  // flag partials and transition_ matrices for recalculation
   treeManipulator()->selectPartialsHereToRoot(_x);
   _a->selectTMatrix();
   _x->selectTMatrix();

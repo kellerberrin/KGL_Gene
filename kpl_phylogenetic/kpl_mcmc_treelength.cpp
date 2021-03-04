@@ -67,7 +67,7 @@ void kpl::TreeLengthUpdater::proposeNewState() {
   // calculate log of Hastings ratio under GammaDir parameterization
   logHastingsRatio(log(m));
 
-  // This proposal invalidates all transition matrices and partials
+  // This proposal invalidates all transition_ matrices and partials
   treeManipulator()->selectAllPartials();
   treeManipulator()->selectAllTMatrices();
 

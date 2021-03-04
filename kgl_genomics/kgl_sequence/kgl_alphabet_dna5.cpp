@@ -128,7 +128,7 @@ kgl::ContigOffset_t kgl::DNA5::symbolToColumn(Alphabet nucleotide) {
 }
 
 // Transitions involve interchanges of nucleotides of similar shapes: two-ring purines (A<>G)
-// or one-ring pyrimidines (C<>T). A transversion is simply the complement of this function.
+// or one-ring pyrimidines (C<>T). A transversion_ is simply the complement of this function.
 bool kgl::DNA5::isTransition(Alphabet nucleotide_1, Alphabet nucleotide_2) {
 
   return (nucleotide_1 == Alphabet::A and nucleotide_2 == Alphabet::G)

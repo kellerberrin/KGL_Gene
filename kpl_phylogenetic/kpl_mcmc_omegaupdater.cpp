@@ -93,7 +93,7 @@ void kpl::OmegaUpdater::proposeNewState() {
   // Calculate log of Hastings ratio
   logHastingsRatio(log(m));
 
-  // This proposal invalidates all transition matrices and partials
+  // This proposal invalidates all transition_ matrices and partials
   treeManipulator()->selectAllPartials();
   treeManipulator()->selectAllTMatrices();
 

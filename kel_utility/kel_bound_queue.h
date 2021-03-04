@@ -35,8 +35,7 @@ public:
                                                                       low_tide_(low_tide),
                                                                       queue_name_(std::move(queue_name)),
                                                                       sample_frequency_(sample_frequency),
-                                                                      empty_size_(high_tide_/EMPTY_PROPORTION_),
-                                                                      queue_state_(QueueState::Normal) { launchStats(); }
+                                                                      empty_size_(high_tide_/EMPTY_PROPORTION_) { launchStats(); }
   ~BoundedMtQueue() { stopStats(); if (queue_samples_ > MIN_SAMPLES_) displayQueueStats(); }
   BoundedMtQueue(const BoundedMtQueue&) = delete;
   BoundedMtQueue(BoundedMtQueue&&) = delete;
@@ -44,7 +43,7 @@ public:
 
   void push(T new_value) {
 
-    if (queue_state_ == QueueState::Normal) {
+    if (queue_state_) {
 
       if (size() < high_tide_) {  // Possible race condition with size() >= high_tide is considered unimportant.
 
@@ -54,17 +53,18 @@ public:
       }
       else {
 
-        queue_state_ = QueueState::HighTide;
+        queue_state_ = false;
 
       }
 
     }
 
-    std::unique_lock<std::mutex> lock(tide_mutex_);
-    tide_cond_.wait(lock, [this]{return size() <= low_tide_ or queue_state_ == QueueState::Normal;});
+    {
+      std::unique_lock<std::mutex> lock(tide_mutex_);
+      tide_cond_.wait(lock, [this] ()->bool { return queue_state_; });
+      mt_queue_.push(std::move(new_value));
+    }
 
-    mt_queue_.push(std::move(new_value));
-    queue_state_ = QueueState::Normal;
     tide_cond_.notify_one();
 
   }
@@ -72,6 +72,11 @@ public:
   T waitAndPop() {
 
     T value = mt_queue_.waitAndPop();
+    if (not queue_state_) {
+
+      queue_state_ = size() <= low_tide_;
+
+    }
     tide_cond_.notify_one();
     return value;
 
@@ -115,6 +120,17 @@ public:
     return 0.0;
 
   }
+  [[nodiscard]] double averageInterTidal() const {
+
+    if (queue_samples_ > 0) {
+
+      return static_cast<double>(inter_tidal_count_) / static_cast<double>(queue_samples_);
+
+    }
+
+    return 0.0;
+
+  }
   [[nodiscard]] double averageEmpty() const {
 
     if (queue_samples_ > 0) {
@@ -144,10 +160,10 @@ public:
 
   void displayQueueStats() const {
 
-    ExecEnv::log().info("Monitor Queue: {}, Samples: {}; High Tide: {} ({:.2f}%), Low Tide: {} ({:.2f}%), Empty:<={} ({:.2f}%), Average Util: {:.2f}% ({:.2f})",
+    ExecEnv::log().info("Queue: {}, Samples: {}; High Tide ({}): {:.2f}%, Inter Tidal: {:.2f}%, Low Tide ({}): {:.2f}%, Empty ({<={}}): {:.2f}%, Av. Level: {:.2f}% ({:.2f})",
                         queueName(), queueSamples(), highTide(), (averageHighTide() * 100.0),
-                        lowTide(), (averageLowTide() * 100.0),  emptySize(), (averageEmpty() * 100.0),
-                        avUtilization(), averageSize());
+                        (averageInterTidal() * 100.0), lowTide(), (averageLowTide() * 100.0),
+                        emptySize(), (averageEmpty() * 100.0), avUtilization(), averageSize());
 
   }
 
@@ -183,7 +199,7 @@ private:
   const size_t empty_size_;
 
   MtQueue<T> mt_queue_;
-  enum class QueueState { Normal, HighTide } queue_state_;
+  std::atomic<bool> queue_state_{true};
   std::condition_variable tide_cond_;
   mutable std::mutex tide_mutex_;
 
@@ -193,6 +209,7 @@ private:
   std::atomic<bool> terminate_{false};
   std::atomic<size_t> low_tide_count_{0};
   std::atomic<size_t> high_tide_count_{0};
+  std::atomic<size_t> inter_tidal_count_{0};
   std::atomic<size_t> empty_count_{0};
   std::atomic<size_t> previous_count_{0};
   std::atomic<size_t> previous_activity_{0};
@@ -224,10 +241,14 @@ private:
         ++empty_count_;
 
       }
-
-      if (queue_state_ == QueueState::HighTide) {
+      if (sample_size >= high_tide_) {
 
         ++high_tide_count_;
+
+      }
+      if (not queue_state_) {
+
+        ++inter_tidal_count_;
 
       }
 

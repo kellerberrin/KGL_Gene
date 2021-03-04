@@ -110,7 +110,7 @@ void kpl::PinvarUpdater::proposeNewState() {
 
   logHastingsRatio(0.0);  //symmetric proposal
 
-  // This proposal invalidates all transition matrices and partials
+  // This proposal invalidates all transition_ matrices and partials
   treeManipulator()->selectAllPartials();
   treeManipulator()->selectAllTMatrices();
 

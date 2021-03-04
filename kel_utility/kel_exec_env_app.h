@@ -53,7 +53,7 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
 
     double Clock, System, User;
     Utility::getElapsedTime(Clock, System, User);
-    log().info("Elapsed seconds; Clock: {}, System CPU: {}, User CPU: {} (No GPU)", Clock, System, User);
+    log().info("Elapsed seconds; Clock: {:.2f}, System CPU: {:.2f}, User CPU: {:.2f} (No GPU)", Clock, System, User);
     log().info("############ {} {} End Processing ###########", Environment::MODULE_NAME, Environment::VERSION);
 
     environment_ptr = nullptr; // shutdown the application

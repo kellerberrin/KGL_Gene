@@ -8,100 +8,12 @@
 #include "kgl_genome_genome.h"
 #include "kgl_ped_parser.h"
 #include "kgl_variant_db_population.h"
+#include "kgl_analysis_mutation_gene_stats.h"
 #include "kgl_analysis_mutation_gene_clinvar.h"
+#include "kgl_analysis_mutation_gene_variant.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class GeneCharacteristic {
-
-public:
-
-  GeneCharacteristic() = default;
-  ~GeneCharacteristic() = default;
-
-  GeneCharacteristic(const GeneCharacteristic&) = default;
-  GeneCharacteristic& operator=(const GeneCharacteristic&) = default;
-
-  void writeGene(std::ostream& out_file, char output_delimiter) const;
-  void writeGeneHeader(std::ostream& out_file, char output_delimiter) const;
-  bool geneDefinition( const std::shared_ptr<const GeneFeature>& gene_ptr,
-                       const GenomeId_t& genome_id,
-                       const std::string& name,
-                       const std::string& gaf_ident);
-
-  const ContigId_t& contigId() const { return contig; }
-  ContigOffset_t geneBegin() const { return gene_begin; }
-  ContigOffset_t geneEnd() const { return gene_end; }
-  ContigSize_t nucleotides() const { return nucleotides_; }
-  ContigSize_t geneSpan() const { return gene_span_; }
-
-
-private:
-
-  constexpr static const char* CONCAT_TOKEN_ = "&";
-
-  GenomeId_t genome;
-  ContigId_t contig;
-  FeatureIdent_t gene_id;
-  std::string gene_name;
-  std::string description;
-  std::string biotype;
-  bool valid_protein{false};
-  std::string gaf_id;
-  ContigOffset_t gene_begin{0};
-  ContigOffset_t gene_end{0};
-  ContigSize_t gene_span_{0};
-  ContigSize_t exons{0};
-  ContigSize_t nucleotides_{0};
-  std::string strand;
-  size_t sequences{0};
-  std::string seq_name;
-  size_t attribute_size{0};
-  std::string attributes;
-
-};
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class VepInfo {
-
-public:
-
-  VepInfo() = default;
-  ~VepInfo() = default;
-
-  VepInfo(const VepInfo&) = default;
-  VepInfo& operator=(const VepInfo&) = default;
-
-
-  size_t male_phase_lof{0};          // Loss of gene function in the (B) chromosome.
-  size_t female_phase_lof{0};        // Los of function in the female_ (A) chromosome.
-  size_t hom_lof{0};          // Loss of gene function in both chromosomes.
-  size_t male_lof{0};
-  size_t female_lof{0};
-  size_t male_high_effect{0};
-  size_t female_high_effect{0};
-  size_t hom_high_effect{0};          // Loss of gene function in both chromosomes.
-  size_t male_moderate_effect{0};
-  size_t female_moderate_effect{0};
-  size_t hom_moderate_effect{0};          // Loss of gene function in both chromosomes.
-  size_t male_modifier_effect{0};
-  size_t female_modifier_effect{0};
-  size_t hom_modifier_effect{0};          // Loss of gene function in both chromosomes.
-
-};
 
 
 
@@ -121,27 +33,10 @@ public:
   GeneMutation(const GeneMutation&) = default;
   GeneMutation& operator=(const GeneMutation&) = default;
 
+
+
   GeneCharacteristic gene_characteristic;
-
-
-  size_t unique_variants{0};
-  size_t span_variant_count{0};
-  size_t variant_count{0};
-  size_t male_phase{0};  // Variants from the male_ phased (B) chromosome.
-  size_t female_phase{0};  // Variants from the female_ phased (A) chromosome.
-  size_t male_lof{0};          // Loss of gene function in the (B) chromosome.
-  size_t female_lof{0};        // Los of function in the female_ (A) chromosome.
-  size_t hom_lof{0};          // Loss of gene function in both chromosomes.
-  size_t male_high_effect{0};          // High Variant Impact in the (B) chromosome.
-  size_t female_high_effect{0};        // High Variant Impact in the (A) chromosome.
-  size_t hom_high_effect{0};          // High Impact in both in both chromosomes.
-  size_t genome_count{0};   // Total number of genomes.
-  size_t genome_variant{0};  // Number of genomes that contain variants for this gene.
-  size_t homozygous{0};
-  size_t heterozygous{0};
-  double indel{0.0};
-  double transition{0.0};
-  double transversion{0.0};
+  GeneVariants gene_variants;
   GeneClinvar clinvar;
 
 };
@@ -176,12 +71,6 @@ private:
 
   std::vector<GeneMutation> gene_vector_;
 
-  // Vep fields.
-  constexpr static const char* LOF_VEP_FIELD = "LoF";
-  constexpr static const char* LOF_HC_VALUE = "HC";
-  constexpr static const char* IMPACT_VEP_FIELD = "IMPACT";
-  constexpr static const char* IMPACT_MODERATE_VALUE = "MODERATE";
-  constexpr static const char* IMPACT_HIGH_VALUE = "HIGH";
 
   constexpr static const char* CONCAT_TOKEN = "&";
 
@@ -189,12 +78,7 @@ private:
   static void writeHeader(const std::shared_ptr<const GenomePEDData>& ped_data,
                           std::ostream& out_file,
                           char output_delimiter,
-                          const GeneCharacteristic& gene_characteristic,
-                          const GeneClinvar& clinvar);
-
-
-
-
+                          const GeneMutation& gene_mutation);
 
   static std::shared_ptr<const ContigDB> getGeneSpan( const std::shared_ptr<const ContigDB>& contig_ptr,
                                                       const GeneCharacteristic& gene_char);
@@ -204,15 +88,6 @@ private:
                                  const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                  const std::shared_ptr<const GenomePEDData>& ped_data,
                                  GeneMutation gene_mutation);
-
-  VepInfo geneSpanVep( const std::shared_ptr<const ContigDB>& span_contig,
-                       const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
-                       const std::shared_ptr<const GenomePEDData>& ped_data);
-
-  size_t VepCount( const std::shared_ptr<const ContigDB>& vep_contig,
-                   const std::string& vep_field_ident,
-                   const std::string& vep_field_value);
-
 
 
 };

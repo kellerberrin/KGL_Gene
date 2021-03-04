@@ -157,9 +157,9 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
 
     } else {
 
-//      auto unique_variants = non_const_population->filterVariants(UniqueUnphasedFilter());
+//      auto unique_variants_ = non_const_population->filterVariants(UniqueUnphasedFilter());
 //      ExecEnv::log().info("Population: {}, 'Unique' variants: {}",
-//                          non_const_population->populationId(), unique_variants->variantCount());
+//                          non_const_population->populationId(), unique_variants_->variantCount());
 
 
     }

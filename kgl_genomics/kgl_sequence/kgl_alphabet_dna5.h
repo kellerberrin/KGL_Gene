@@ -106,7 +106,7 @@ public:
   // Transitions involve interchanges of nucleotides of similar shapes: two-ring purines (A<>G)
   // or one-ring pyrimidines (C<>T).
   // Transversions involve interchanges of one-ring and two-ring structures (A<>C, A<>T, G<>T, G<>C).
-  // A Transversion is simply the complement of a transition, i.e. not(transition).
+  // A Transversion is simply the complement of a transition_, i.e. not(transition_).
   [[nodiscard]] static bool isTransition(Alphabet nucleotide_1, Alphabet nucleotide_2);
   // Convert to CodingDNA5 without complementary base conversion.
   // Warning - assumes that CodingDNA5::Alphabet and DNA5::Alphabet nucleotides have the same enum values.

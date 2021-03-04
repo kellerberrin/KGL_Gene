@@ -348,7 +348,7 @@ void kpl::Likelihood::newInstance(unsigned nstates, int nrates, std::vector<unsi
       nstates,                     // states
       num_patterns,                // patterns (total across all subsets that use this instance)
       num_subsets,                 // models (one for each distinct eigen decomposition)
-      2*num_subsets*num_tmats,     // transition matrices
+      2*num_subsets*num_tmats,     // transition_ matrices
       ngammacat,                   // rate categories
       (_underflow_scaling ? num_internals + num_subsets : 0),    // scale buffers
       NULL,                        // resource restrictions
@@ -794,7 +794,7 @@ void kpl::Likelihood::updateTransitionMatrices() {
           info.handle,                                // Instance number
           &eigen_indices[0],                          // Index of eigen-decomposition buffer
           &category_rate_indices[0],                  // category rate indices
-          &_pmatrix_index[info.handle][0],            // transition probability matrices to update
+          &_pmatrix_index[info.handle][0],            // transition_ probability matrices to update
           NULL,                                       // first derivative matrices to update
           NULL,                                       // second derivative matrices to update
           &_edge_lengths[info.handle][0],             // List of edge lengths
@@ -804,7 +804,7 @@ void kpl::Likelihood::updateTransitionMatrices() {
       code = beagleUpdateTransitionMatrices(
           info.handle,                                // Instance number
           0,                                          // Index of eigen-decomposition buffer
-          &_pmatrix_index[info.handle][0],            // transition probability matrices to update
+          &_pmatrix_index[info.handle][0],            // transition_ probability matrices to update
           NULL,                                       // first derivative matrices to update
           NULL,                                       // second derivative matrices to update
           &_edge_lengths[info.handle][0],             // List of edge lengths
@@ -813,7 +813,7 @@ void kpl::Likelihood::updateTransitionMatrices() {
 
     if (code != 0) {
 
-      throw XStrom(boost::str(boost::format("Failed to update transition matrices for instance %d. BeagleLib error code was %d (%s)") % info.handle % code % _beagle_error[code]));
+      throw XStrom(boost::str(boost::format("Failed to update transition_ matrices for instance %d. BeagleLib error code was %d (%s)") % info.handle % code % _beagle_error[code]));
 
     }
 
@@ -900,7 +900,7 @@ double kpl::Likelihood::calcInstanceLogLikelihood(InstanceInfo & info, Tree::Sha
   unsigned nsubsets = (unsigned)info.subsets.size();
   assert(nsubsets > 0);
 
-  // Assuming there are as many transition matrices as there are edge lengths
+  // Assuming there are as many transition_ matrices as there are edge lengths
   assert(_pmatrix_index[info.handle].size() == _edge_lengths[info.handle].size());
 
   int stateFrequencyIndex  = 0;
@@ -946,7 +946,7 @@ double kpl::Likelihood::calcInstanceLogLikelihood(InstanceInfo & info, Tree::Sha
         info.handle,                 // instance number
         &_parent_indices[0],         // indices of parent partialsBuffers
         &_child_indices[0],          // indices of child partialsBuffers
-        &_tmatrix_indices[0],        // transition probability matrices for this edge
+        &_tmatrix_indices[0],        // transition_ probability matrices for this edge
         NULL,                        // first derivative matrices
         NULL,                        // second derivative matrices
         &_weights_indices[0],        // weights to apply to each partialsBuffer
@@ -968,7 +968,7 @@ double kpl::Likelihood::calcInstanceLogLikelihood(InstanceInfo & info, Tree::Sha
         info.handle,                 // instance number
         &parent_partials_index,      // indices of parent partialsBuffers
         &child_partials_index,       // indices of child partialsBuffers
-        &parent_tmatrix_index,       // transition probability matrices for this edge
+        &parent_tmatrix_index,       // transition_ probability matrices for this edge
         NULL,                        // first derivative matrices
         NULL,                        // second derivative matrices
         &categoryWeightsIndex,       // weights to apply to each partialsBuffer
@@ -1157,7 +1157,7 @@ void kpl::Likelihood::addOperation(InstanceInfo & info, Node::PtrNode  nd, Node:
   partial = getPartialIndex(lchild, info);
   _operations[info.handle].push_back(partial);
 
-  // 5. left child transition matrix index
+  // 5. left child transition_ matrix index
   unsigned tindex = getTMatrixIndex(lchild, info, subset_index);
   _operations[info.handle].push_back(tindex);
 
@@ -1165,7 +1165,7 @@ void kpl::Likelihood::addOperation(InstanceInfo & info, Node::PtrNode  nd, Node:
   partial = getPartialIndex(rchild, info);
   _operations[info.handle].push_back(partial);
 
-  // 7. right child transition matrix index
+  // 7. right child transition_ matrix index
   tindex = getTMatrixIndex(rchild, info, subset_index);
   _operations[info.handle].push_back(tindex);
 

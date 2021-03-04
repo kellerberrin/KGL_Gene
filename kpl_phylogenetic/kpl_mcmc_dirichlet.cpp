@@ -162,7 +162,7 @@ void kpl::DirichletUpdater::proposeNewState() {
 
   pushToModel();
 
-  // This proposal invalidates all transition matrices and partials
+  // This proposal invalidates all transition_ matrices and partials
   treeManipulator()->selectAllPartials();
   treeManipulator()->selectAllTMatrices();
 
