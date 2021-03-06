@@ -288,24 +288,23 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_args.h
         kgl_analytic/kgl_Pf/kgl_analysis_PfEMP.cpp
         kgl_analytic/kgl_Pf/kgl_analysis_PfEMP.h
-        kgl_analytic/kgl_Pf/kgl_analysis_mutation.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_mutation.h
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation.cpp
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation.h
         kgl_analytic/kgl_Pf/kgl_phase_Pf.cpp
         kgl_analytic/kgl_Pf/kgl_phase_Pf.h
-        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene.h
-        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_impl.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_output.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_mutation_clinvar.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_mutation_clinvar.h
-        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_ethnic.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_ethnic.h
-        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_clinvar.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_clinvar.h
-        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_variant.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_variant.h
-        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_stats.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_mutation_gene_stats.h)
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene.cpp
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene.h
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_output.cpp
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_clinvar.cpp
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_clinvar.h
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_ethnic.cpp
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_ethnic.h
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_clinvar.cpp
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_clinvar.h
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_variant.cpp
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_variant.h
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_stats.cpp
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_stats.h)
 
 # Deconvolution and mixture files.
 

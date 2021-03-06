@@ -81,6 +81,9 @@ public:
   // Retrieves a contig subset in the offset range [begin, end)
   [[nodiscard]] std::shared_ptr<ContigDB> subset(ContigOffset_t start, ContigOffset_t end) const;
 
+  // Unconditionally add all the variants in the supplied contig to this contig.
+  bool merge(const std::shared_ptr<const ContigDB>& contig) { return contig->processAll(*this, &ContigDB::addVariant); }
+
 private:
 
 

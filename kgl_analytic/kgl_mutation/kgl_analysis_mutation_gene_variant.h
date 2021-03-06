@@ -7,6 +7,7 @@
 
 
 #include "kgl_variant_db_population.h"
+#include "kgl_analysis_mutation_gene_ethnic.h"
 
 
 
@@ -32,6 +33,7 @@ public:
   VepInfo &operator=(const VepInfo &) = default;
 
 
+  size_t all_lof{0};
   size_t male_phase_lof{0};          // Loss of gene function in the (B) chromosome.
   size_t female_phase_lof{0};        // Los of function in the female_ (A) chromosome.
   size_t hom_lof{0};          // Loss of gene function in both chromosomes.
@@ -59,7 +61,11 @@ class GeneVariants {
 
 public:
 
-  GeneVariants() = default;
+  GeneVariants() {
+
+    ethnic_lof_.setDisplay("LOF_", (GeneEthnicitySex::DISPLAY_SEX_FLAG | GeneEthnicitySex::DISPLAY_SUPER_POP_FLAG));
+
+  }
 
   ~GeneVariants() = default;
 
@@ -67,12 +73,20 @@ public:
 
   GeneVariants &operator=(const GeneVariants &) = default;
 
-  void writeVariantHeader(std::ostream &out_file, char output_delimiter) const;
+  void writeVariantHeader( const std::shared_ptr<const GenomePEDData>& ped_data,
+                           std::ostream &out_file,
+                           char output_delimiter) const;
 
-  bool writeVariantOutput(std::ostream &out_file, char output_delimiter) const;
+  bool writeVariantOutput( const std::shared_ptr<const GenomePEDData>& ped_data,
+                           std::ostream &out_file,
+                           char output_delimiter) const;
 
-  void ProcessVariantStats(const std::shared_ptr<const ContigDB> &span_variant_ptr,
-                           const std::shared_ptr<const PopulationDB> &unphased_population_ptr);
+  void ProcessVariantStats(const GenomeId_t& genome,
+                           const std::shared_ptr<const ContigDB> &span_variant_ptr,
+                           const std::shared_ptr<const PopulationDB> &unphased_population_ptr,
+                           const std::shared_ptr<const GenomePEDData>& ped_data);
+
+  [[nodiscard]] GeneEthnicitySex& updateEthnicity() { return ethnic_lof_; }
 
 private:
 
@@ -81,9 +95,11 @@ private:
   size_t variant_count_{0};
   size_t male_phase_{0};  // Variants from the male_ phased (B) chromosome.
   size_t female_phase_{0};  // Variants from the female_ phased (A) chromosome.
+  size_t all_lof_{0};            // All lof variants;
   size_t male_lof_{0};          // Loss of gene function in the (B) chromosome.
   size_t female_lof_{0};        // Los of function in the female_ (A) chromosome.
   size_t hom_lof_{0};          // Loss of gene function in both chromosomes.
+  GeneEthnicitySex ethnic_lof_;
   size_t male_high_effect_{0};          // High Variant Impact in the (B) chromosome.
   size_t female_high_effect_{0};        // High Variant Impact in the (A) chromosome.
   size_t hom_high_effect_{0};          // High Impact in both in both chromosomes.

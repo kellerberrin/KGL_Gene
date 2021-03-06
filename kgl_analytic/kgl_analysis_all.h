@@ -14,7 +14,7 @@
 #include "kgl_analysis_info_filter.h" // Age related variant statistics, only applicable to Gnomad variant data.
 #include "kgl_analysis_inbreed.h" // Analysis of Diploid phased population read from the 1000 genomes project.
 #include "kgl_analysis_PfEMP.h"   // Analyze the P. Falciparum protein family for different Pf Genomes.
-#include "kgl_analysis_mutation.h"   // Analyze mutations in genes and genomic regions.
+#include "kgl_mutation/kgl_analysis_mutation.h"   // Analyze mutations in genes and genomic regions.
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

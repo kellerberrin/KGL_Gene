@@ -26,6 +26,7 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
 
   genome_ = genome_id;
   contig_ = gene_ptr->contig()->contigId();
+  gene_ptr_ = gene_ptr;
   gene_id_ = gene_ptr->id();
   gene_name_ = name;
   description_ = description_str;
@@ -42,8 +43,8 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
   sequences_ = sequence_array->size();
   if (not sequence_array->getMap().empty()) {
 
-    auto [seqence_name, seq_ptr] = *(sequence_array->getMap().begin());
-    seq_name_ = seq_name_;
+    auto [sequence_name, seq_ptr] = *(sequence_array->getMap().begin());
+    seq_name_ = sequence_name;
     nucleotides_ = seq_ptr->codingNucleotides();
     exons_ = seq_ptr->exons();
 

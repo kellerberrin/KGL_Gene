@@ -83,6 +83,10 @@ private:
   static std::shared_ptr<const ContigDB> getGeneSpan( const std::shared_ptr<const ContigDB>& contig_ptr,
                                                       const GeneCharacteristic& gene_char);
 
+
+  static std::shared_ptr<const ContigDB> getGeneExon(const std::shared_ptr<const ContigDB>& contig_ptr,
+                                                     const GeneCharacteristic& gene_char);
+
   GeneMutation geneSpanAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
                                  const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                  const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,

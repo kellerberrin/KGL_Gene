@@ -41,6 +41,7 @@ public:
                        const std::string& gaf_ident);
 
   [[nodiscard]] const ContigId_t& contigId() const { return contig_; }
+  [[nodiscard]] const std::shared_ptr<const GeneFeature>& genePtr() const { return gene_ptr_; }
   [[nodiscard]] ContigOffset_t geneBegin() const { return gene_begin_; }
   [[nodiscard]] ContigOffset_t geneEnd() const { return gene_end_; }
   [[nodiscard]] ContigSize_t nucleotides() const { return nucleotides_; }
@@ -68,6 +69,7 @@ private:
   std::string seq_name_;
   size_t attribute_size_{0};
   std::string attributes_;
+  std::shared_ptr<const GeneFeature> gene_ptr_;
 
 };
 

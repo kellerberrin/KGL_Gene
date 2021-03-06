@@ -482,4 +482,3 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::subset(ContigOffset_t start, Conti
 
 }
 
-

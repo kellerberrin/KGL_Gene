@@ -9,8 +9,10 @@
 namespace kgl = kellerberrin::genome;
 
 
-void kgl::GeneVariants::ProcessVariantStats(const std::shared_ptr<const ContigDB>& span_variant_ptr,
-                                            const std::shared_ptr<const PopulationDB>& unphased_population_ptr) {
+void kgl::GeneVariants::ProcessVariantStats(const GenomeId_t& genome_id,
+                                            const std::shared_ptr<const ContigDB>& span_variant_ptr,
+                                            const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
+                                            const std::shared_ptr<const GenomePEDData>& ped_data) {
 
   std::map<std::string, size_t> variant_distribution;
   // Variant statistics.
@@ -18,6 +20,14 @@ void kgl::GeneVariants::ProcessVariantStats(const std::shared_ptr<const ContigDB
 
   // Get phased VEP info.
   VepInfo lof_het_hom = geneSpanVep( span_variant_ptr, unphased_population_ptr);
+
+  if (lof_het_hom.all_lof > 0) {
+
+    ++all_lof_;
+    updateEthnicity().pedAnalysis(genome_id, 1, ped_data);
+
+  }
+
 
   if (lof_het_hom.female_phase_lof > 0) {
 
@@ -63,10 +73,10 @@ void kgl::GeneVariants::ProcessVariantStats(const std::shared_ptr<const ContigDB
   if (variant_count > 0) {
 
     ++genome_variant_;
+    span_variant_count_ += variant_count;
 
   }
 
-  span_variant_count_ += variant_count;
 
   double indel{0.0}, transition{0.0}, transversion{0.0};
 
@@ -103,14 +113,14 @@ void kgl::GeneVariants::ProcessVariantStats(const std::shared_ptr<const ContigDB
 
       }
 
-      auto find_result = variant_distribution.find(variant_ptr->identifier());
+      auto find_result = variant_distribution.find(variant_ptr->variantPhaseHash());
       if (find_result == variant_distribution.end()) {
 
-        auto[it, insert_result] = variant_distribution.try_emplace(variant_ptr->identifier(), 1);
+        auto[it, insert_result] = variant_distribution.try_emplace(variant_ptr->variantPhaseHash(), 1);
         if (not insert_result) {
 
-          ExecEnv::log().error("GenomeMutation::variantAnalysis; cannot insert (duplicate) variant with identifier: {}",
-                               variant_ptr->identifier());
+          ExecEnv::log().error("GenomeMutation::variantAnalysis; cannot insert (duplicate) variant with hash: {}",
+                               variant_ptr->variantPhaseHash());
 
         }
 
@@ -140,7 +150,8 @@ void kgl::GeneVariants::ProcessVariantStats(const std::shared_ptr<const ContigDB
 
   }
 
-  unique_variants_ = variant_distribution.size();
+  unique_variants_ += variant_distribution.size();
+  ++variant_count_;
 
   for (auto const& [offset, offset_ptr] : span_variant_ptr->getMap()) {
 
@@ -196,14 +207,15 @@ kgl::VepInfo kgl::GeneVariants::geneSpanVep( const std::shared_ptr<const ContigD
   auto phase_B_variants = span_contig->filterVariants(PhaseFilter(VariantPhase::DIPLOID_PHASE_B));
   auto found_unphased_B = unphased_contig->findContig(phase_B_variants);
 
+  auto found_all_unphased = unphased_contig->findContig(span_contig);
+
+  vep_info.all_lof = VepCount(found_all_unphased, LOF_VEP_FIELD_, LOF_HC_VALUE_);
   vep_info.female_phase_lof = VepCount(found_unphased_A, LOF_VEP_FIELD_, LOF_HC_VALUE_);
   vep_info.male_phase_lof = VepCount(found_unphased_B, LOF_VEP_FIELD_, LOF_HC_VALUE_);
 
   VepSubFieldValues vep_field(IMPACT_VEP_FIELD_);
 
-  vep_field.getContigValues(phase_A_variants);
-
-  if (vep_field.getMap().size() > 0) ExecEnv::log().info("GenomeMutation::geneSpanVep; IMPACT entries: {}", vep_field.getMap().size());
+  vep_field.getContigValues(found_unphased_A);
 
   auto result = vep_field.getMap().find(IMPACT_HIGH_VALUE_);
   if (result != vep_field.getMap().end()) {
@@ -221,7 +233,7 @@ kgl::VepInfo kgl::GeneVariants::geneSpanVep( const std::shared_ptr<const ContigD
 
   }
 
-  vep_field.getContigValues(phase_B_variants);
+  vep_field.getContigValues(found_unphased_B);
 
   result = vep_field.getMap().find(IMPACT_HIGH_VALUE_);
   if (result != vep_field.getMap().end()) {

@@ -66,6 +66,7 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
       GeneMutation mutation;
       mutation.gene_characteristic = gene_characteristic;
       mutation.clinvar.updateEthnicity().updatePopulations(ped_data);
+      mutation.gene_variants.updateEthnicity().updatePopulations(ped_data);
       gene_vector_.push_back(mutation);
 
     } // Gene.
@@ -134,7 +135,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
       if (not contig_ptr->getMap().empty()) {
 
 
-        const std::shared_ptr<const ContigDB> span_variant_ptr = getGeneSpan(contig_ptr, gene_mutation.gene_characteristic);
+        const std::shared_ptr<const ContigDB> span_variant_ptr = getGeneExon(contig_ptr, gene_mutation.gene_characteristic);
 
         if (not clinvar_contig) {
 
@@ -153,7 +154,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
         }
 
         gene_mutation.clinvar.processClinvar(genome_id, span_variant_ptr, clinvar_contig, ped_data);
-        gene_mutation.gene_variants.ProcessVariantStats(span_variant_ptr, unphased_population_ptr);
+        gene_mutation.gene_variants.ProcessVariantStats(genome_id, span_variant_ptr, unphased_population_ptr, ped_data);
 
       } // contig not empty
 
@@ -166,11 +167,40 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 }
 
 
-
+// Gets variants over the whole gene span.
 std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneSpan(const std::shared_ptr<const ContigDB>& contig_ptr,
                                                                       const GeneCharacteristic& gene_char) {
 
-  return contig_ptr->subset(gene_char.geneBegin(), gene_char.geneEnd());
+  auto subset_contig = contig_ptr->subset(gene_char.geneBegin(), gene_char.geneEnd());
+
+  // Remove duplicates.
+  subset_contig->inSituFilter(UniquePhasedFilter());
+
+  return subset_contig;
+
+}
+
+// Get variants only occurring within exons for all mRNA sequences.
+std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneExon(const std::shared_ptr<const ContigDB>& contig_ptr,
+                                                                      const GeneCharacteristic& gene_char) {
+
+  std::shared_ptr<ContigDB> gene_contig(std::make_shared<ContigDB>(contig_ptr->contigId()));
+  std::shared_ptr<const CodingSequenceArray> coding_sequence_array = GeneFeature::getCodingSequences(gene_char.genePtr());
+
+  for (auto const& [sequence_id, sequence_ptr] : coding_sequence_array->getMap()) {
+
+    for (const auto& [cds_id, cds_ptr] : sequence_ptr->getSortedCDS()) {
+
+      gene_contig->merge(contig_ptr->subset(cds_ptr->sequence().begin(), cds_ptr->sequence().end()));
+
+    }
+
+  }
+
+  // Remove duplicates.
+  gene_contig->inSituFilter(UniquePhasedFilter());
+
+  return gene_contig;
 
 }
 
