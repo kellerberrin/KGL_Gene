@@ -37,17 +37,14 @@ public:
   size_t male_phase_lof{0};          // Loss of gene function in the (B) chromosome.
   size_t female_phase_lof{0};        // Los of function in the female_ (A) chromosome.
   size_t hom_lof{0};          // Loss of gene function in both chromosomes.
-  size_t male_lof{0};
-  size_t female_lof{0};
+  size_t all_high_effect{0};
   size_t male_high_effect{0};
   size_t female_high_effect{0};
   size_t hom_high_effect{0};          // Loss of gene function in both chromosomes.
+  size_t all_moderate_effect{0};
   size_t male_moderate_effect{0};
   size_t female_moderate_effect{0};
   size_t hom_moderate_effect{0};          // Loss of gene function in both chromosomes.
-  size_t male_modifier_effect{0};
-  size_t female_modifier_effect{0};
-  size_t hom_modifier_effect{0};          // Loss of gene function in both chromosomes.
 
 };
 
@@ -64,6 +61,8 @@ public:
   GeneVariants() {
 
     ethnic_lof_.setDisplay("LOF_", (GeneEthnicitySex::DISPLAY_SEX_FLAG | GeneEthnicitySex::DISPLAY_SUPER_POP_FLAG));
+    ethnic_high_.setDisplay("HIGH_", (GeneEthnicitySex::DISPLAY_SEX_FLAG | GeneEthnicitySex::DISPLAY_SUPER_POP_FLAG));
+    ethnic_moderate_.setDisplay("MOD_", (GeneEthnicitySex::DISPLAY_SEX_FLAG | GeneEthnicitySex::DISPLAY_SUPER_POP_FLAG));
 
   }
 
@@ -86,7 +85,9 @@ public:
                            const std::shared_ptr<const PopulationDB> &unphased_population_ptr,
                            const std::shared_ptr<const GenomePEDData>& ped_data);
 
-  [[nodiscard]] GeneEthnicitySex& updateEthnicity() { return ethnic_lof_; }
+  [[nodiscard]] GeneEthnicitySex& updateLofEthnicity() { return ethnic_lof_; }
+  [[nodiscard]] GeneEthnicitySex& updateHighEthnicity() { return ethnic_high_; }
+  [[nodiscard]] GeneEthnicitySex& updateModerateEthnicity() { return ethnic_moderate_; }
 
 private:
 
@@ -96,20 +97,20 @@ private:
   size_t male_phase_{0};  // Variants from the male_ phased (B) chromosome.
   size_t female_phase_{0};  // Variants from the female_ phased (A) chromosome.
   size_t all_lof_{0};            // All lof variants;
-  size_t male_lof_{0};          // Loss of gene function in the (B) chromosome.
-  size_t female_lof_{0};        // Los of function in the female_ (A) chromosome.
-  size_t hom_lof_{0};          // Loss of gene function in both chromosomes.
+  size_t male_lof_{0};
+  size_t female_lof_{0};
+  size_t hom_lof_{0};
   GeneEthnicitySex ethnic_lof_;
-  size_t male_high_effect_{0};          // High Variant Impact in the (B) chromosome.
-  size_t female_high_effect_{0};        // High Variant Impact in the (A) chromosome.
-  size_t hom_high_effect_{0};          // High Impact in both in both chromosomes.
+  size_t all_high_effect_{0};          // High Variant Impact
+  size_t hom_high_effect_{0};
+  GeneEthnicitySex ethnic_high_;
+  size_t all_moderate_effect_{0};          // Moderate impact variant
+  size_t hom_moderate_effect_{0};
+  GeneEthnicitySex ethnic_moderate_;
   size_t genome_count_{0};   // Total number of genomes.
   size_t genome_variant_{0};  // Number of genomes that contain variants for this gene.
   size_t homozygous_{0};
   size_t heterozygous_{0};
-  double indel_{0.0};
-  double transition_{0.0};
-  double transversion_{0.0};
 
   // Vep fields.
   constexpr static const char *LOF_VEP_FIELD_ = "LoF";

@@ -123,21 +123,24 @@ bool kgl::GeneVariants::writeVariantOutput( const std::shared_ptr<const GenomePE
 
   ethnic_lof_.writeOutput(ped_data, out_file, output_delimiter);
 
-  out_file << female_high_effect_ << output_delimiter
-           << male_high_effect_ << output_delimiter
-           << hom_high_effect_ << output_delimiter
-           << genome_count_ << output_delimiter
+  out_file << all_high_effect_ << output_delimiter
+           << hom_high_effect_ << output_delimiter;
+
+  ethnic_high_.writeOutput(ped_data, out_file, output_delimiter);
+
+  out_file << all_moderate_effect_ << output_delimiter
+           << hom_moderate_effect_ << output_delimiter;
+
+  ethnic_moderate_.writeOutput(ped_data, out_file, output_delimiter);
+
+  out_file << genome_count_ << output_delimiter
            << genome_variant_ << output_delimiter;
 
   out_file << heterozygous_ << output_delimiter
            << homozygous_ << output_delimiter;
 
   double ratio = static_cast<double>(heterozygous_) / (static_cast<double>(homozygous_) + homozygous_bias);
-
-  out_file << ratio << output_delimiter
-           << (indel_ * 100) << output_delimiter
-           << (transition_ * 100) << output_delimiter
-           << (transversion_ * 100);
+  out_file << ratio;
 
   return true;
 
@@ -161,17 +164,21 @@ void kgl::GeneVariants::writeVariantHeader( const std::shared_ptr<const GenomePE
 
   ethnic_lof_.writeHeader(ped_data, out_file, output_delimiter);
 
-  out_file  << "FemaleHigh" << output_delimiter
-           << "MaleHigh" << output_delimiter
-           << "HomHigh" << output_delimiter
-           << "GenomeCount" << output_delimiter
+  out_file  << "AllHigh" << output_delimiter
+            << "HomHigh" << output_delimiter;
+
+  ethnic_high_.writeHeader(ped_data, out_file, output_delimiter);
+
+  out_file  << "AllModerate" << output_delimiter
+            << "HomModerate" << output_delimiter;
+
+  ethnic_moderate_.writeHeader(ped_data, out_file, output_delimiter);
+
+  out_file << "GenomeCount" << output_delimiter
            << "GenomeVariant" << output_delimiter
            << "Heterozygous" << output_delimiter
            << "Homozygous" << output_delimiter
-           << "Het/Hom" << output_delimiter
-           << "Indel%" << output_delimiter
-           << "Transition%" << output_delimiter
-           << "Transversion%";
+           << "Het/Hom";
 
 }
 

@@ -19,52 +19,60 @@ void kgl::GeneVariants::ProcessVariantStats(const GenomeId_t& genome_id,
   ++genome_count_;
 
   // Get phased VEP info.
-  VepInfo lof_het_hom = geneSpanVep( span_variant_ptr, unphased_population_ptr);
+  VepInfo vep_info = geneSpanVep(span_variant_ptr, unphased_population_ptr);
 
-  if (lof_het_hom.all_lof > 0) {
+  if (vep_info.all_lof > 0) {
 
     ++all_lof_;
-    updateEthnicity().pedAnalysis(genome_id, 1, ped_data);
+    updateLofEthnicity().pedAnalysis(genome_id, 1, ped_data);
 
   }
 
 
-  if (lof_het_hom.female_phase_lof > 0) {
+  if (vep_info.female_phase_lof > 0) {
 
     ++female_lof_;
 
   }
 
-  if (lof_het_hom.male_phase_lof > 0) {
+  if (vep_info.male_phase_lof > 0) {
 
     ++male_lof_;
 
   }
 
   // Loss of Function in both chromosomes, Mendelian genetics.
-  if (lof_het_hom.female_phase_lof > 0 and lof_het_hom.male_phase_lof > 0) {
+  if (vep_info.hom_lof > 0) {
 
     ++hom_lof_;
 
   }
 
+  if (vep_info.all_high_effect > 0) {
 
-  if (lof_het_hom.female_high_effect > 0) {
-
-    ++female_high_effect_;
-
-  }
-
-  if (lof_het_hom.male_high_effect > 0) {
-
-    ++male_high_effect_;
+    ++all_high_effect_;
+    updateHighEthnicity().pedAnalysis(genome_id, 1, ped_data);
 
   }
 
   // High Impact in both chromosomes, Mendelian genetics.
-  if (lof_het_hom.male_high_effect > 0 and lof_het_hom.female_high_effect > 0) {
+  if (vep_info.hom_high_effect > 0) {
 
     ++hom_high_effect_;
+
+  }
+
+  if (vep_info.all_moderate_effect > 0) {
+
+    ++all_moderate_effect_;
+    updateModerateEthnicity().pedAnalysis(genome_id, 1, ped_data);
+
+  }
+
+  // High Impact in both chromosomes, Mendelian genetics.
+  if (vep_info.hom_moderate_effect > 0) {
+
+    ++hom_moderate_effect_;
 
   }
 
@@ -76,9 +84,6 @@ void kgl::GeneVariants::ProcessVariantStats(const GenomeId_t& genome_id,
     span_variant_count_ += variant_count;
 
   }
-
-
-  double indel{0.0}, transition{0.0}, transversion{0.0};
 
   for (auto const& [offset, offset_ptr] : span_variant_ptr->getMap()) {
 
@@ -97,21 +102,6 @@ void kgl::GeneVariants::ProcessVariantStats(const GenomeId_t& genome_id,
 
       }
 
-      switch (variant_ptr->variantType()) {
-
-        case VariantType::INDEL:
-          indel += 1.0;
-          break;
-
-        case VariantType::TRANSITION:
-          transition += 1.0;
-          break;
-
-        case VariantType::TRANSVERSION:
-          transversion += 1.0;
-          break;
-
-      }
 
       auto find_result = variant_distribution.find(variant_ptr->variantPhaseHash());
       if (find_result == variant_distribution.end()) {
@@ -135,20 +125,6 @@ void kgl::GeneVariants::ProcessVariantStats(const GenomeId_t& genome_id,
 
   } //for offset
 
-  double sum = indel + transition + transversion;
-  if (sum >= 1.0) {
-
-    indel = indel / sum;
-    transition = transition / sum;
-    transversion = transversion / sum;
-
-  } else {
-
-    indel = 0.0;
-    transition = 0.0;
-    transversion = 0.0;
-
-  }
 
   unique_variants_ += variant_distribution.size();
   ++variant_count_;
@@ -209,9 +185,13 @@ kgl::VepInfo kgl::GeneVariants::geneSpanVep( const std::shared_ptr<const ContigD
 
   auto found_all_unphased = unphased_contig->findContig(span_contig);
 
+  auto phase_hom_variants = found_unphased_B->intersection(found_unphased_A, VariantEquality::UNPHASED);
+
   vep_info.all_lof = VepCount(found_all_unphased, LOF_VEP_FIELD_, LOF_HC_VALUE_);
   vep_info.female_phase_lof = VepCount(found_unphased_A, LOF_VEP_FIELD_, LOF_HC_VALUE_);
   vep_info.male_phase_lof = VepCount(found_unphased_B, LOF_VEP_FIELD_, LOF_HC_VALUE_);
+  vep_info.hom_lof = VepCount(phase_hom_variants, LOF_VEP_FIELD_, LOF_HC_VALUE_);
+
 
   VepSubFieldValues vep_field(IMPACT_VEP_FIELD_);
 
@@ -250,6 +230,28 @@ kgl::VepInfo kgl::GeneVariants::geneSpanVep( const std::shared_ptr<const ContigD
     vep_info.male_moderate_effect = count;
 
   }
+
+  vep_field.getContigValues(phase_hom_variants);
+
+  result = vep_field.getMap().find(IMPACT_HIGH_VALUE_);
+  if (result != vep_field.getMap().end()) {
+
+    auto [field_ident, count] = *result;
+    vep_info.hom_high_effect = count;
+
+  }
+
+  result = vep_field.getMap().find(IMPACT_MODERATE_VALUE_);
+  if (result != vep_field.getMap().end()) {
+
+    auto [field_ident, count] = *result;
+    vep_info.hom_moderate_effect = count;
+
+  }
+
+  vep_info.all_high_effect = vep_info.male_high_effect + vep_info.female_high_effect;
+  vep_info.all_moderate_effect = vep_info.male_moderate_effect + vep_info.female_moderate_effect;
+
 
   return vep_info;
 

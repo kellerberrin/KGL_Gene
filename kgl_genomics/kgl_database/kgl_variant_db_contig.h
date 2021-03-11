@@ -83,6 +83,12 @@ public:
 
   // Unconditionally add all the variants in the supplied contig to this contig.
   bool merge(const std::shared_ptr<const ContigDB>& contig) { return contig->processAll(*this, &ContigDB::addVariant); }
+  // Intersection returns a contig that contains variants present in both contigs.
+  // The VariantEquality flag determines whether variant phase is used in the equality.
+  [[nodiscard]] std::shared_ptr<ContigDB> intersection(const std::shared_ptr<const ContigDB>& contig, VariantEquality variant_equality) const;
+  // Complement returns a contig that contains variants present in this contig but not present in the complement_contig.
+  [[nodiscard]] std::shared_ptr<ContigDB> complement(const std::shared_ptr<const ContigDB>& complement_contig, VariantEquality variant_equality) const;
+
 
 private:
 

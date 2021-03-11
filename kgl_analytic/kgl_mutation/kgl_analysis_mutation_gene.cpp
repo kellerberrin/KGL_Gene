@@ -66,7 +66,9 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
       GeneMutation mutation;
       mutation.gene_characteristic = gene_characteristic;
       mutation.clinvar.updateEthnicity().updatePopulations(ped_data);
-      mutation.gene_variants.updateEthnicity().updatePopulations(ped_data);
+      mutation.gene_variants.updateLofEthnicity().updatePopulations(ped_data);
+      mutation.gene_variants.updateHighEthnicity().updatePopulations(ped_data);
+      mutation.gene_variants.updateModerateEthnicity().updatePopulations(ped_data);
       gene_vector_.push_back(mutation);
 
     } // Gene.

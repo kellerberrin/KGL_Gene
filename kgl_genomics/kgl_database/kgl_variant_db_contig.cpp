@@ -482,3 +482,169 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::subset(ContigOffset_t start, Conti
 
 }
 
+
+std::shared_ptr<kgl::ContigDB> kgl::ContigDB::intersection(const std::shared_ptr<const ContigDB>& contig, VariantEquality variant_equality) const {
+
+  std::shared_ptr<ContigDB> intersection_contig(std::make_shared<ContigDB>(contigId()));
+
+  for (auto const& [offset, offset_ptr] : getMap()) {
+
+    auto offset_opt = contig->findOffsetArray(offset);
+
+    if (offset_opt) {
+
+      // Generate a set of unique variants at this offset.
+      std::set<std::string> unique_hash_set;
+      for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
+
+        switch(variant_equality) {
+
+          case VariantEquality::PHASED:
+            unique_hash_set.insert(variant_ptr->allelePhaseHash());
+            break;
+
+          case VariantEquality::UNPHASED:
+            unique_hash_set.insert(variant_ptr->alleleHash());
+            break;
+
+          default:
+            break;
+
+        }
+
+      }
+
+      for (auto const& variant_ptr : offset_opt.value()) {
+
+        switch(variant_equality) {
+
+          case VariantEquality::PHASED:
+            if (unique_hash_set.find(variant_ptr->allelePhaseHash()) != unique_hash_set.end()) {
+
+              if (not intersection_contig->addVariant(variant_ptr)) {
+
+                ExecEnv::log().error( "ContigDB::intersection, error could not insert variant: {}",
+                                      variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+
+              }
+
+            }
+            break;
+
+          case VariantEquality::UNPHASED:
+            if (unique_hash_set.find(variant_ptr->alleleHash()) != unique_hash_set.end()) {
+
+              if (not intersection_contig->addVariant(variant_ptr)) {
+
+                ExecEnv::log().error( "ContigDB::intersection, error could not insert variant: {}",
+                                      variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+
+              }
+
+            }
+            break;
+
+          default:
+            break;
+
+        }
+
+      }
+
+    }
+
+  }
+
+  return intersection_contig;
+
+}
+
+
+std::shared_ptr<kgl::ContigDB> kgl::ContigDB::complement(const std::shared_ptr<const ContigDB>& contig, VariantEquality variant_equality) const {
+
+  std::shared_ptr<ContigDB> complement(std::make_shared<ContigDB>(contigId()));
+
+  for (auto const& [offset, offset_ptr] : getMap()) {
+
+    auto offset_opt = contig->findOffsetArray(offset);
+
+    if (offset_opt) {
+
+      // Generate a set of unique variants at this offset.
+      std::set<std::string> unique_hash_set;
+      for (auto const& variant_ptr : offset_opt.value()) {
+
+        switch (variant_equality) {
+
+          case VariantEquality::PHASED:
+            unique_hash_set.insert(variant_ptr->allelePhaseHash());
+            break;
+
+          case VariantEquality::UNPHASED:
+            unique_hash_set.insert(variant_ptr->alleleHash());
+            break;
+
+          default:
+            break;
+
+        }
+
+      }
+
+      for (auto const &variant_ptr : offset_ptr->getVariantArray()) {
+
+        switch(variant_equality) {
+
+          case VariantEquality::PHASED:
+            if (unique_hash_set.find(variant_ptr->allelePhaseHash()) == unique_hash_set.end()) {
+
+              if (not complement->addVariant(variant_ptr)) {
+
+                ExecEnv::log().error( "ContigDB::intersection, error could not insert variant: {}",
+                                      variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+
+              }
+
+            }
+            break;
+
+          case VariantEquality::UNPHASED:
+            if (unique_hash_set.find(variant_ptr->alleleHash()) == unique_hash_set.end()) {
+
+              if (not complement->addVariant(variant_ptr)) {
+
+                ExecEnv::log().error( "ContigDB::intersection, error could not insert variant: {}",
+                                      variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+
+              }
+
+            }
+            break;
+
+          default:
+            break;
+
+        }
+
+      }
+
+    } else { //add all variants if offset not found.
+
+      for (auto const &variant_ptr : offset_ptr->getVariantArray()) {
+
+        if (not complement->addVariant(variant_ptr)) {
+
+          ExecEnv::log().error( "ContigDB::intersection, error could not insert variant: {}",
+                                variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+
+        }
+
+      }
+
+    }
+
+  }
+
+  return complement;
+
+}
