@@ -257,6 +257,115 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
 }
 
 
+kgl::VepValueMap kgl::InfoEvidenceAnalysis::getVepValues(const Variant& variant, std::vector<std::string> vep_field_list) {
+
+  return getVepData(variant, getVepIndexes(variant, vep_field_list));
+
+}
+
+
+kgl::VepIndexVector kgl::InfoEvidenceAnalysis::getVepIndexes(const Variant& variant, const std::vector<std::string>& vep_field_list) {
+
+  std::optional<std::unique_ptr<const VEPSubFieldEvidence>> vep_fields_opt = InfoEvidenceAnalysis::getVepSubFields(variant);
+
+  if (not vep_fields_opt) {
+
+    return VepIndexVector{};
+
+  }
+
+  auto const &vep_fields = *vep_fields_opt.value();
+  auto const &vep_header = *vep_fields.vepHeader();
+
+  VepIndexVector field_index;
+  if (not vep_field_list.empty()) {
+
+    for (auto const &field_header : vep_field_list) {
+
+      std::optional<size_t> vep_index_opt = vep_header.getSubFieldIndex(field_header);
+
+      if (not vep_index_opt) {
+
+        ExecEnv::log().error("InfoEvidenceAnalysis::getVepValues, sub field: {} not found", field_header);
+        return VepIndexVector{};
+
+      }
+
+      size_t vep_index = vep_index_opt.value();
+      field_index.emplace_back(field_header, vep_index);
+
+    }
+
+  } else {
+
+    size_t index{0};
+    for (auto const &vep_field_header : vep_header.subFieldHeaders()) {
+
+      field_index.emplace_back(vep_field_header, index);
+      ++index;
+
+    }
+
+  }
+
+  return field_index;
+
+}
+
+kgl::VepValueMap kgl::InfoEvidenceAnalysis::getVepData(const Variant& variant, const VepIndexVector& vep_field_list) {
+
+  if (vep_field_list.empty()) {
+
+    return VepValueMap{};
+
+  }
+
+  std::optional<std::unique_ptr<const VEPSubFieldEvidence>> vep_fields_opt = InfoEvidenceAnalysis::getVepSubFields(variant);
+
+  if (not vep_fields_opt) {
+
+    return VepValueMap{};
+
+  }
+
+  auto const &vep_fields = *vep_fields_opt.value();
+  auto const &vep_header = *vep_fields.vepHeader();
+
+  VepValueMap vep_value_map;
+  for (auto const &vep_field : vep_fields.vepFields()) {
+
+    const std::vector<std::string_view> sub_field_vector = VEPSubFieldEvidence::vepSubFields(vep_field);
+
+    if (sub_field_vector.size() != vep_header.subFieldHeaders().size()) {
+
+      ExecEnv::log().error("InfoEvidenceAnalysis::getVepData; Vep Header size: {} not equal vep sub field size: {}, vep field: {}",
+                           vep_header.subFieldHeaders().size(), sub_field_vector.size(), vep_field);
+      for (auto const &sub_field : sub_field_vector) {
+
+        ExecEnv::log().error("InfoEvidenceAnalysis::getVepData; sub field: {}", std::string(sub_field));
+
+      }
+
+      return VepValueMap{};
+
+    }
+
+    std::map<std::string, std::string> sub_field_map;
+    for (auto const&[field_ident, index] : vep_field_list) {
+
+      sub_field_map[field_ident] = sub_field_vector[index];
+
+    }
+
+    vep_value_map.push_back(std::move(sub_field_map));
+
+  }
+
+  return vep_value_map;
+
+}
+
+
 // A temporary function to explore the vep field values.
 // Returns all the distinct field values of a vep sub field from a population.
 void kgl::InfoEvidenceAnalysis::vepSubFieldValues( std::string vep_sub_field,
@@ -279,6 +388,7 @@ void kgl::InfoEvidenceAnalysis::vepSubFieldValues( std::string vep_sub_field,
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 bool kgl::VepSubFieldValues::getSubFieldValues(const std::shared_ptr<const Variant>& variant_ptr) {
 

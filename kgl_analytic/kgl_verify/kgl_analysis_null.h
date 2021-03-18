@@ -42,6 +42,8 @@ public:
 
 private:
 
+  std::string work_directory_;
+
 };
 
 

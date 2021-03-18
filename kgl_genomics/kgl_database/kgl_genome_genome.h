@@ -33,9 +33,6 @@ public:
 
   GenomeReference& operator=(const GenomeReference&) = default;
 
-  // High level function creates a genome database.
-  [[nodiscard]] static std::shared_ptr<GenomeReference> createGenomeDatabase(const RuntimeProperties& runtime_options,
-                                                                             const GenomeId_t& organism);
   // Organism identifier
   [[nodiscard]] const GenomeId_t& genomeId() const { return _genome_id; }
 
@@ -61,13 +58,14 @@ public:
 
   // Creates a genome database object.
   // The fasta and gff files must be specified and present.
-  // The gaf file is optional (empty string if omitted)
+  // The gaf file and id files are optional (empty string if omitted)
   // The translation Amino Acid table is optional (empty string if omitted).
   // Note that different translation tables can be specified for individual contigs if required.
   [[nodiscard]] static std::shared_ptr<GenomeReference> createGenomeDatabase(const GenomeId_t& organism,
                                                                              const std::string& fasta_file,
                                                                              const std::string& gff_file,
                                                                              const std::string& gaf_file,
+                                                                             const std::string& id_file,
                                                                              const std::string& translation_table);
 
 private:

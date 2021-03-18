@@ -159,93 +159,6 @@ std::string kgl::Variant::output(char delimiter, VariantOutputIndex output_index
 
 }
 
-// Identifier is not used in these equivalence relationships.
-// Equal Phase
-bool kgl::Variant::equivalent(const Variant& cmp_var) const {
-
-  return contigId() == cmp_var.contigId()
-         and phaseId() == cmp_var.phaseId()
-         and offset() == cmp_var.offset()
-         and variantType() == cmp_var.variantType()
-         and reference().getSequenceAsString() == cmp_var.reference().getSequenceAsString()
-         and alternate().getSequenceAsString() == cmp_var.alternate().getSequenceAsString();
-
-}
-
-// Opposite Phase
-bool kgl::Variant::homozygous(const Variant& cmp_var) const {
-
-  return contigId() == cmp_var.contigId()
-         and phaseId() != cmp_var.phaseId()
-         and offset() == cmp_var.offset()
-         and variantType() == cmp_var.variantType()
-         and reference().getSequenceAsString() == cmp_var.reference().getSequenceAsString()
-         and alternate().getSequenceAsString() == cmp_var.alternate().getSequenceAsString();
-
-}
-
-// No Phase
-bool kgl::Variant::analogous(const Variant& cmp_var) const {
-
-  return contigId() == cmp_var.contigId()
-         and offset() == cmp_var.offset()
-         and variantType() == cmp_var.variantType()
-         and reference().getSequenceAsString() == cmp_var.reference().getSequenceAsString()
-         and alternate().getSequenceAsString() == cmp_var.alternate().getSequenceAsString();
-
-}
-
-
-
-
-// Order variant types.
-bool kgl::Variant::lessThan(const Variant& cmp_var) const {
-
-
-  if (contigId() < cmp_var.contigId()) {
-
-    return true;
-
-  } else if (contigId() > cmp_var.contigId()) {
-
-    return false;
-
-  } else if (phaseId() < cmp_var.phaseId()) {
-
-    return true;
-
-  } else if (phaseId() > cmp_var.phaseId()) {
-
-    return false;
-
-  } else if (offset() < cmp_var.offset()) {
-
-    return true;
-
-  } else if (offset() > cmp_var.offset()) {
-
-    return false;
-
-  }
-
-  if (reference().getSequenceAsString() < cmp_var.reference().getSequenceAsString()) {
-
-    return true;
-
-  } else if (reference().getSequenceAsString() > cmp_var.reference().getSequenceAsString()) {
-
-    return false;
-
-  } else if (alternate().getSequenceAsString() < cmp_var.alternate().getSequenceAsString()) {
-
-    return true;
-
-  }
-
-  return false;
-
-}
-
 
 std::string kgl::Variant::mutation(char delimiter, VariantOutputIndex output_index) const
 {
@@ -277,32 +190,17 @@ size_t kgl::Variant::alternateSize(size_t reference_size) const {
 }
 
 
-
-// Unique up to phase
-std::string kgl::Variant::alleleHash() const {
-
-  return reference().getSequenceAsString() + ":" + alternate().getSequenceAsString();
-
-}
-
-// Phase specific hash
-std::string kgl::Variant::allelePhaseHash() const {
-
-  return std::to_string(static_cast<uint8_t>(phaseId())) + ":" + reference().getSequenceAsString() + ":" + alternate().getSequenceAsString();
-
-}
-
-
 // Unique upto phase.
 std::string kgl::Variant::variantHash() const {
 
-  return contigId() + ":"  + std::to_string(offset()) + ":" + alleleHash();
+  return contigId() + ":"  + std::to_string(offset()) + ":" + reference().getSequenceAsString() + ":" + alternate().getSequenceAsString();
 
 }
 
 // Phase specific hash
 std::string kgl::Variant::variantPhaseHash() const {
 
-  return contigId() + ":"  + std::to_string(offset()) + ":" + allelePhaseHash();
+  return contigId() + ":"  + std::to_string(offset()) + ":" + std::to_string(static_cast<uint8_t>(phaseId())) +
+         ":" + reference().getSequenceAsString() + ":" + alternate().getSequenceAsString();
 
 }

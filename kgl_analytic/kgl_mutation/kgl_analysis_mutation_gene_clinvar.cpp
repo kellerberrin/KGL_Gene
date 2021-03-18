@@ -150,7 +150,7 @@ void kgl::GeneClinvar::processClinvar( const GenomeId_t& genome_id,
 
   }
 
-  auto phase_hom_variants = male_clinvar->intersection(female_clinvar, VariantEquality::UNPHASED);
+  auto phase_hom_variants = male_clinvar->setIntersection(*female_clinvar, VariantEquality::UNPHASED);
   if (phase_hom_variants->variantCount() > 0) {
 
     ++updatePhase().updatePhaseHomozygous();

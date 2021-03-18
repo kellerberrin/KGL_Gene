@@ -62,13 +62,36 @@ void kgl::GeneCharacteristic::writeGene(std::ostream& out_file, char output_deli
 
   out_file << genome_ << output_delimiter
       << contig_ << output_delimiter
-      << gene_id_ << output_delimiter
+      << HGNC_id_ << output_delimiter
+      << ensembl_id_ << output_delimiter
       << gene_name_ << output_delimiter
       << description_ << output_delimiter
       << biotype_ << output_delimiter
       << (valid_protein_ ? "Valid" : "Invalid") << output_delimiter
-      << gaf_id_ << output_delimiter
-      << gene_begin_ << output_delimiter
+      << gaf_id_ << output_delimiter;
+
+      std::string go_text;
+
+      bool first{true};
+      for (const auto& GO_id : GO_set_) {
+
+        if (not first) {
+
+          go_text += CONCAT_TOKEN_;
+
+        } else {
+
+          first = false;
+
+        }
+
+        go_text += GO_id;
+
+      }
+
+  out_file << go_text << output_delimiter;
+
+  out_file << gene_begin_ << output_delimiter
       << gene_end_ << output_delimiter
       << gene_span_ << output_delimiter
       << strand_ << output_delimiter
@@ -87,12 +110,14 @@ void kgl::GeneCharacteristic::writeGeneHeader(std::ostream& out_file, char outpu
 
   out_file << "Genome" << output_delimiter
            << "Contig" << output_delimiter
-           << "Gene" << output_delimiter
+           << "HGNC_id" << output_delimiter
+           << "Ensembl_Id" << output_delimiter
            << "Name" << output_delimiter
            << "Description" << output_delimiter
            << "BioType" << output_delimiter
            << "ValidProtein" << output_delimiter
            << "GafId" <<  output_delimiter
+           << "GO_Id" << output_delimiter
            << "Begin" << output_delimiter
            << "End" << output_delimiter
            << "Span" << output_delimiter

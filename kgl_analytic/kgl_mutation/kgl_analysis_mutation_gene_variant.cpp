@@ -185,7 +185,7 @@ kgl::VepInfo kgl::GeneVariants::geneSpanVep( const std::shared_ptr<const ContigD
 
   auto found_all_unphased = unphased_contig->findContig(span_contig);
 
-  auto phase_hom_variants = found_unphased_B->intersection(found_unphased_A, VariantEquality::UNPHASED);
+  std::shared_ptr<const ContigDB> phase_hom_variants = found_unphased_B->setIntersection(*found_unphased_A, VariantEquality::UNPHASED);
 
   vep_info.all_lof = VepCount(found_all_unphased, LOF_VEP_FIELD_, LOF_HC_VALUE_);
   vep_info.female_phase_lof = VepCount(found_unphased_A, LOF_VEP_FIELD_, LOF_HC_VALUE_);

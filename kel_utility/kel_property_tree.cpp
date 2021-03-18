@@ -465,7 +465,6 @@ bool kel::PropertyTree::getOptionalProperty(const std::string& property_name, st
 
   } else {
 
-    ExecEnv::log().info("PropertyTree::getOptionalProperty; Optional Property Not Found: {}", property_name);
     return false;
 
   }

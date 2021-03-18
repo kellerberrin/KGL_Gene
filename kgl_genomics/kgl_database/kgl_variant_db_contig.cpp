@@ -272,7 +272,7 @@ std::optional<std::shared_ptr<const kgl::Variant>> kgl::ContigDB::findVariant(co
 }
 
 // This search algorithm has n^2 complexity.
-// The variants in the template contig must be unique regardless of phase.
+// The variants in the template contig are unique. Variant phase is disregarded.
 std::shared_ptr<kgl::ContigDB> kgl::ContigDB::findContig(const std::shared_ptr<const ContigDB>& template_contig) const {
 
   std::shared_ptr<ContigDB> found_contig_ptr(std::make_shared<ContigDB>(template_contig->contigId()));
@@ -286,7 +286,7 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::findContig(const std::shared_ptr<c
       std::unordered_set<std::string> search_hash;
       for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
 
-        search_hash.insert(variant_ptr->alleleHash());
+        search_hash.insert(variant_ptr->variantHash());
 
       }
 
@@ -294,7 +294,7 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::findContig(const std::shared_ptr<c
       auto const& [this_offset, this_offset_ptr] = *result;
       for (auto const& this_variant_ptr : this_offset_ptr->getVariantArray()) {
 
-        auto result = search_hash.find(this_variant_ptr->alleleHash());
+        auto result = search_hash.find(this_variant_ptr->variantHash());
         if (result != search_hash.end()) {
 
           if (not found_contig_ptr->addVariant(this_variant_ptr)) {
@@ -483,69 +483,23 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::subset(ContigOffset_t start, Conti
 }
 
 
-std::shared_ptr<kgl::ContigDB> kgl::ContigDB::intersection(const std::shared_ptr<const ContigDB>& contig, VariantEquality variant_equality) const {
+std::unique_ptr<kgl::ContigDB> kgl::ContigDB::setIntersection(const ContigDB& contig_B, VariantEquality variant_equality) const {
 
-  std::shared_ptr<ContigDB> intersection_contig(std::make_shared<ContigDB>(contigId()));
+  std::unique_ptr<ContigDB> intersection_contig(std::make_unique<ContigDB>(contigId()));
 
   for (auto const& [offset, offset_ptr] : getMap()) {
 
-    auto offset_opt = contig->findOffsetArray(offset);
+    auto result = contig_B.getMap().find(offset);
+    if (result != contig_B.getMap().end()) {
 
-    if (offset_opt) {
+      auto intersection_offset = offset_ptr->setIntersection(*(result->second), variant_equality);
+      // If not empty add the intersection.
+      if (not intersection_offset->getVariantArray().empty()) {
 
-      // Generate a set of unique variants at this offset.
-      std::set<std::string> unique_hash_set;
-      for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
+        ContigOffset_t offset = intersection_offset->getVariantArray().front()->offset();
+        if (not intersection_contig->addOffset(offset, std::move(intersection_offset))) {
 
-        switch(variant_equality) {
-
-          case VariantEquality::PHASED:
-            unique_hash_set.insert(variant_ptr->allelePhaseHash());
-            break;
-
-          case VariantEquality::UNPHASED:
-            unique_hash_set.insert(variant_ptr->alleleHash());
-            break;
-
-          default:
-            break;
-
-        }
-
-      }
-
-      for (auto const& variant_ptr : offset_opt.value()) {
-
-        switch(variant_equality) {
-
-          case VariantEquality::PHASED:
-            if (unique_hash_set.find(variant_ptr->allelePhaseHash()) != unique_hash_set.end()) {
-
-              if (not intersection_contig->addVariant(variant_ptr)) {
-
-                ExecEnv::log().error( "ContigDB::intersection, error could not insert variant: {}",
-                                      variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
-
-              }
-
-            }
-            break;
-
-          case VariantEquality::UNPHASED:
-            if (unique_hash_set.find(variant_ptr->alleleHash()) != unique_hash_set.end()) {
-
-              if (not intersection_contig->addVariant(variant_ptr)) {
-
-                ExecEnv::log().error( "ContigDB::intersection, error could not insert variant: {}",
-                                      variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
-
-              }
-
-            }
-            break;
-
-          default:
-            break;
+          ExecEnv::log().error("ContigDB::setIntersection; Cannot add offset: {}", offset);
 
         }
 
@@ -560,82 +514,32 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::intersection(const std::shared_ptr
 }
 
 
-std::shared_ptr<kgl::ContigDB> kgl::ContigDB::complement(const std::shared_ptr<const ContigDB>& contig, VariantEquality variant_equality) const {
+std::unique_ptr<kgl::ContigDB> kgl::ContigDB::setComplement(const ContigDB& contig_B, VariantEquality variant_equality) const {
 
-  std::shared_ptr<ContigDB> complement(std::make_shared<ContigDB>(contigId()));
+  std::unique_ptr<ContigDB> complement(std::make_unique<ContigDB>(contigId()));
 
   for (auto const& [offset, offset_ptr] : getMap()) {
 
-    auto offset_opt = contig->findOffsetArray(offset);
+    auto result = contig_B.getMap().find(offset);
+    if (result == contig_B.getMap().end()) {
 
-    if (offset_opt) {
+      // Create a copy of this offset by taking the complement of the empty offset.
+      auto offset_copy = offset_ptr->setComplement(OffsetDB(), variant_equality);
+      if (not complement->addOffset(offset, std::move(offset_copy))) {
 
-      // Generate a set of unique variants at this offset.
-      std::set<std::string> unique_hash_set;
-      for (auto const& variant_ptr : offset_opt.value()) {
-
-        switch (variant_equality) {
-
-          case VariantEquality::PHASED:
-            unique_hash_set.insert(variant_ptr->allelePhaseHash());
-            break;
-
-          case VariantEquality::UNPHASED:
-            unique_hash_set.insert(variant_ptr->alleleHash());
-            break;
-
-          default:
-            break;
-
-        }
+        ExecEnv::log().error("ContigDB::setComplement; Cannot add offset: {}", offset);
 
       }
 
-      for (auto const &variant_ptr : offset_ptr->getVariantArray()) {
+    } else {
 
-        switch(variant_equality) {
+      auto complement_offset = offset_ptr->setComplement(*(result->second), variant_equality);
+      // If not empty add the complement.
+      if (not complement_offset->getVariantArray().empty()) {
 
-          case VariantEquality::PHASED:
-            if (unique_hash_set.find(variant_ptr->allelePhaseHash()) == unique_hash_set.end()) {
+        if (not complement->addOffset(offset, std::move(complement_offset))) {
 
-              if (not complement->addVariant(variant_ptr)) {
-
-                ExecEnv::log().error( "ContigDB::intersection, error could not insert variant: {}",
-                                      variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
-
-              }
-
-            }
-            break;
-
-          case VariantEquality::UNPHASED:
-            if (unique_hash_set.find(variant_ptr->alleleHash()) == unique_hash_set.end()) {
-
-              if (not complement->addVariant(variant_ptr)) {
-
-                ExecEnv::log().error( "ContigDB::intersection, error could not insert variant: {}",
-                                      variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
-
-              }
-
-            }
-            break;
-
-          default:
-            break;
-
-        }
-
-      }
-
-    } else { //add all variants if offset not found.
-
-      for (auto const &variant_ptr : offset_ptr->getVariantArray()) {
-
-        if (not complement->addVariant(variant_ptr)) {
-
-          ExecEnv::log().error( "ContigDB::intersection, error could not insert variant: {}",
-                                variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+          ExecEnv::log().error("ContigDB::setComplement; Cannot add offset: {}", offset);
 
         }
 
@@ -646,5 +550,45 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::complement(const std::shared_ptr<c
   }
 
   return complement;
+
+}
+
+
+std::unique_ptr<kgl::ContigDB> kgl::ContigDB::setUnion(const ContigDB& contig_B, VariantEquality variant_equality) const {
+
+  std::unique_ptr<ContigDB> union_contig(std::make_unique<ContigDB>(contigId()));
+
+  for (auto const& [offset, offset_ptr] : getMap()) {
+
+    auto result = contig_B.getMap().find(offset);
+    if (result == contig_B.getMap().end()) {
+
+      // Create a unique copy of this offset by taking the union_contig of the empty offset.
+      auto offset_copy = offset_ptr->setUnion(OffsetDB(), variant_equality);
+      if (not union_contig->addOffset(offset, std::move(offset_copy))) {
+
+        ExecEnv::log().error("ContigDB::setUnion; Cannot add offset: {}", offset);
+
+      }
+
+    } else {
+
+      auto union_offset = offset_ptr->setUnion(*(result->second), variant_equality);
+      // If not empty add the union_contig.
+      if (not union_offset->getVariantArray().empty()) {
+
+        if (not union_contig->addOffset(offset, std::move(union_offset))) {
+
+          ExecEnv::log().error("ContigDB::setUnion; Cannot add offset: {}", offset);
+
+        }
+
+      }
+
+    }
+
+  }
+
+  return union_contig;
 
 }

@@ -10,6 +10,7 @@
 
 
 #include <fstream>
+#include <memory_resource>
 
 
 namespace kgl = kellerberrin::genome;
@@ -37,13 +38,21 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
       gene_ptr->getAttributes().getName(name_vec);
       std::string name;
       std::string gaf_id;
+      std::set<std::string> GO_set;
+
       if (not name_vec.empty()) {
 
         name = name_vec.front();
         auto result = symbolic_gaf.getMap().find(name);
         if (result != symbolic_gaf.getMap().end()) {
 
-          gaf_id = result->second->gene_id();
+          const auto& [symbolic, ontology_ptr] = *result;
+          gaf_id = ontology_ptr->gene_id();
+          for (const auto& GO_record : ontology_ptr->goRecords()) {
+
+            GO_set.insert(GO_record.second.ontolotgy_id);
+
+          }
 
         }
 
@@ -55,14 +64,20 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
         auto result = gene_id_gaf.getMap().find(gene_ptr->id());
         if (result != gene_id_gaf.getMap().end()) {
 
-          gaf_id = result->second->gene_id();
+          const auto& [gene_id, ontology_ptr] = *result;
+          gaf_id = ontology_ptr->gene_id();
+          for (const auto& GO_record : ontology_ptr->goRecords()) {
+
+            GO_set.insert(GO_record.second.ontolotgy_id);
+
+          }
 
         }
 
       }
 
       GeneCharacteristic gene_characteristic;
-      gene_characteristic.geneDefinition(gene_ptr, genome_ptr->genomeId(), name, gaf_id);
+      gene_characteristic.geneDefinition(gene_ptr, genome_ptr->genomeId(), name, gaf_id, GO_set);
       GeneMutation mutation;
       mutation.gene_characteristic = gene_characteristic;
       mutation.clinvar.updateEthnicity().updatePopulations(ped_data);
@@ -90,7 +105,8 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
   ThreadPool thread_pool(ThreadPool::hardwareThreads());
   // A vector for futures.
   std::vector<std::future<GeneMutation>> future_vector;
-
+  // Index by Ensembl gene code.
+  EnsemblIndexMap ensembl_index_map = ensemblIndex(unphased_population_ptr);
   // Queue a thread for each gene.
   for (auto& gene_mutation : gene_vector_) {
 
@@ -100,6 +116,7 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
                                                                 unphased_population_ptr,
                                                                 clinvar_population_ptr,
                                                                 ped_data,
+                                                                ensembl_index_map,
                                                                 gene_mutation);
     future_vector.push_back(std::move(future));
 
@@ -123,6 +140,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
                                                          const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                                          const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                                          const std::shared_ptr<const GenomePEDData>& ped_data,
+                                                         const EnsemblIndexMap& ensembl_index_map,
                                                          GeneMutation gene_mutation) {
 
 
@@ -136,8 +154,24 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
       if (not contig_ptr->getMap().empty()) {
 
+        // Determine which method to determine gene membership of variants.
+        std::shared_ptr<const ContigDB> span_variant_ptr;
+        switch(gene_membership_) {
 
-        const std::shared_ptr<const ContigDB> span_variant_ptr = getGeneExon(contig_ptr, gene_mutation.gene_characteristic);
+          case VariantGeneMembership::BY_SPAN:
+            span_variant_ptr = getGeneSpan(contig_ptr, gene_mutation.gene_characteristic);
+            break;
+
+          case VariantGeneMembership::BY_EXON:
+            span_variant_ptr = getGeneExon(contig_ptr, gene_mutation.gene_characteristic);
+            break;
+
+          default:
+          case VariantGeneMembership::BY_ENSEMBL:
+            span_variant_ptr = getGeneEnsembl( ensembl_index_map, gene_mutation.gene_characteristic);
+            break;
+
+        }
 
         if (not clinvar_contig) {
 
@@ -206,4 +240,99 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneExon(const std:
 
 }
 
+// Get variants matching the ensembl.
+std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsembl( const EnsemblIndexMap& ensembl_index_map,
+                                                                          const GeneCharacteristic& gene_char) {
 
+  std::shared_ptr<ContigDB> gene_contig(std::make_shared<ContigDB>(gene_char.contigId()));
+
+  auto lower_iterator = ensembl_index_map.lower_bound(gene_char.ensemblId());
+  auto const upper_iterator = ensembl_index_map.upper_bound(gene_char.ensemblId());
+
+  while(lower_iterator != upper_iterator) {
+
+    auto const& [ensembl_id, variant_ptr] = *lower_iterator;
+    if (not gene_contig->addVariant(variant_ptr)) {
+
+      ExecEnv::log().error( "GenomeMutation::getGeneEnsembl, unable to add variant: {}",
+                            variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+
+    }
+
+    ++lower_iterator;
+
+  }
+
+  // Remove duplicates.
+  gene_contig->inSituFilter(UniquePhasedFilter());
+
+  return gene_contig;
+
+}
+
+
+// Index variants by the Ensembl gene code in the vep field.
+kgl::EnsemblIndexMap kgl::GenomeMutation::ensemblIndex(const std::shared_ptr<const PopulationDB>& unphased_population_ptr) {
+
+  // Local object performs the indexing.
+  struct IndexMap {
+
+    IndexMap() : pmr_memory_(pmr_byte_array_, sizeof(pmr_byte_array_)), unique_ident_(&pmr_memory_) {}
+    ~IndexMap() = default;
+
+    EnsemblIndexMap ensembl_indexed_variants_;
+    std::byte pmr_byte_array_[4096];
+    std::pmr::monotonic_buffer_resource pmr_memory_;
+    std::pmr::set<std::string> unique_ident_;
+    VepIndexVector field_index_;
+    bool initialized_{false};
+
+    bool ensemblIndex(const std::shared_ptr<const Variant>& variant) {
+
+      if (not initialized_) {
+
+        field_index_ = InfoEvidenceAnalysis::getVepIndexes(*variant, std::vector<std::string>{VEP_ENSEMBL_FIELD_});
+        initialized_ = true;
+
+      }
+
+      auto field_vector = InfoEvidenceAnalysis::getVepData(*variant, field_index_);
+
+      // Only unique gene idents.
+      for (auto const& field : field_vector) {
+
+        // Only 1 field in the map.
+        if (not field.empty()) {
+
+          const auto& [field_ident, field_value] = *field.begin();
+          unique_ident_.insert(field_value);
+
+        }
+
+      }
+
+      for (auto const& ident : unique_ident_) {
+
+        if (not ident.empty()) {
+
+          ensembl_indexed_variants_.emplace(ident, variant);
+
+        }
+
+      }
+
+      unique_ident_.clear();
+
+      return true;
+
+    }
+
+  }; // IndexMap object.
+
+  IndexMap index_map;
+
+  unphased_population_ptr->processAll(index_map, &IndexMap::ensemblIndex);
+
+  return index_map.ensembl_indexed_variants_;
+
+}

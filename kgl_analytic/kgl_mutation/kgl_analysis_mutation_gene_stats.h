@@ -38,7 +38,8 @@ public:
   bool geneDefinition( const std::shared_ptr<const GeneFeature>& gene_ptr,
                        const GenomeId_t& genome_id,
                        const std::string& name,
-                       const std::string& gaf_ident);
+                       const std::string& gaf_ident,
+                       const std::set<std::string>& GO_set);
 
   [[nodiscard]] const ContigId_t& contigId() const { return contig_; }
   [[nodiscard]] const std::shared_ptr<const GeneFeature>& genePtr() const { return gene_ptr_; }
@@ -46,10 +47,13 @@ public:
   [[nodiscard]] ContigOffset_t geneEnd() const { return gene_end_; }
   [[nodiscard]] ContigSize_t nucleotides() const { return nucleotides_; }
   [[nodiscard]] ContigSize_t geneSpan() const { return gene_span_; }
+  [[nodiscard]] const std::string& ensemblId() const { return ensembl_id_; }
 
 private:
 
   constexpr static const char* CONCAT_TOKEN_ = "&";
+  constexpr static const char* DBXREF_ = "DBXREF";
+  constexpr static const char* HGNC_ = "HGNC:";
 
   GenomeId_t genome_;
   ContigId_t contig_;
@@ -59,6 +63,9 @@ private:
   std::string biotype_;
   bool valid_protein_{false};
   std::string gaf_id_;
+  std::set<std::string> GO_set_;
+  std::string HGNC_id_;
+  std::string ensembl_id_;
   ContigOffset_t gene_begin_{0};
   ContigOffset_t gene_end_{0};
   ContigSize_t gene_span_{0};

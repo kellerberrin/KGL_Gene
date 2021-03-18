@@ -88,14 +88,6 @@ public:
 
   [[nodiscard]] bool isSNP() const { return reference().length() == 1 and alternate().length() == 1; }
 
-  [[nodiscard]] bool equivalent(const Variant& cmp_var) const; // Same phase
-
-  [[nodiscard]] bool homozygous(const Variant& cmp_var) const; // Different phase
-
-  [[nodiscard]] bool analogous(const Variant& cmp_var) const; // No phase test
-
-  [[nodiscard]] bool lessThan(const Variant& cmp_var) const;
-
   [[nodiscard]] const DNA5SequenceLinear& reference() const { return reference_; }
 
   [[nodiscard]] const DNA5SequenceLinear& alternate() const { return alternate_; }
@@ -125,20 +117,22 @@ public:
   [[nodiscard]] VariantPhase phaseId() const { return phase_id_; }
   [[nodiscard]] const std::string& identifier() const { return identifier_; }
 
-  // Checks if the reference and alternate are equivalent.
-  [[nodiscard]] bool isNullVariant() const { return reference_ == alternate_; }
-
-  // Unique up to phase
-  [[nodiscard]] std::string alleleHash() const;
-
-  // Phase specific hash
-  [[nodiscard]] std::string allelePhaseHash() const;
-
   // Unique upto phase (not phase specific).
   [[nodiscard]] std::string variantHash() const;
-
   // Phase specific hash
   [[nodiscard]] std::string variantPhaseHash() const;
+  // Equality hash.
+  [[nodiscard]] std::string equalityHash(VariantEquality type) const { return (type == VariantEquality::PHASED) ? variantPhaseHash() : variantHash(); }
+
+  [[nodiscard]] bool equality(const Variant& cmp, VariantEquality type) const { return equalityHash(type) == cmp.equalityHash(type); }
+
+  [[nodiscard]] bool equivalent(const Variant& cmp_var) const { return equality(cmp_var, VariantEquality::PHASED); }
+
+  [[nodiscard]] bool homozygous(const Variant& cmp_var) const { return analogous(cmp_var) and phaseId() != cmp_var.phaseId(); }
+
+  [[nodiscard]] bool analogous(const Variant& cmp_var) const { return equality(cmp_var, VariantEquality::UNPHASED); }
+
+  [[nodiscard]] bool lessThan(const Variant& cmp_var) const {   return variantPhaseHash() < cmp_var.variantPhaseHash(); }
 
   [[nodiscard]] static size_t objectCount() { return object_count_; }
 
@@ -171,7 +165,6 @@ private:
                                          SignedOffset_t& sequence_size_modify) const;
 
   [[nodiscard]] std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
-
 
 };
 

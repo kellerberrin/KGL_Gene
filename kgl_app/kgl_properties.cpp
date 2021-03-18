@@ -331,9 +331,18 @@ kgl::RuntimeGenomeDatabaseMap kgl::RuntimeProperties::getGenomeReferenceMap() co
 
     }
 
+    key = std::string(ID_FILE_);
+    std::string id_file_name;
+    if (not sub_tree.second.getOptionalFileProperty(key, workDirectory(), id_file_name)) {
+
+      id_file_name.clear();
+
+    }
+
     std::pair<std::string, RuntimeGenomeProperty> new_genome(genome_ident, RuntimeGenomeProperty(genome_ident, fasta_file_name, gff_file_name, translation_table));
 
     new_genome.second.setGafFileName(gaf_file_name);
+    new_genome.second.setIdFileName(id_file_name);
 
     auto result = genome_map.insert(new_genome);
 
@@ -731,6 +740,7 @@ void kgl::RuntimeProperties::getGenomeDBFiles(const std::string& organism,
                                               std::string& fasta_file,
                                               std::string& gff_file,
                                               std::string& gaf_file,
+                                              std::string& id_file,
                                               std::string& translationTable) const {
 
 
@@ -739,6 +749,15 @@ void kgl::RuntimeProperties::getGenomeDBFiles(const std::string& organism,
   std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + organism + std::string(DOT_) + std::string(GAF_FILE_) + std::string(DOT_) + std::string(VALUE_);
 
   if (not property_tree_.getOptionalFileProperty(key, work_directory_, gaf_file)) {
+
+    ExecEnv::log().info("Optional runtime XML property not present: {}", key);
+
+  }
+
+  // The Id file is optional.
+  key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + organism + std::string(DOT_) + std::string(ID_FILE_) + std::string(DOT_) + std::string(VALUE_);
+
+  if (not property_tree_.getOptionalFileProperty(key, work_directory_, id_file)) {
 
     ExecEnv::log().info("Optional runtime XML property not present: {}", key);
 

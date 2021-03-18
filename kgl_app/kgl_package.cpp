@@ -92,12 +92,14 @@ std::unique_ptr<kgl::GenomeCollection> kgl::ExecutePackage::loadReferenceGenomes
 
     }
 
+    auto& [genome, genome_parameters] = *result;
      // Create the genome database.
-     std::shared_ptr<GenomeReference> genome_ptr = kgl::GenomeReference::createGenomeDatabase(result->second.genomeIdentifier(),
-                                                                                               result->second.fastaFileName(),
-                                                                                               result->second.gffFileName(),
-                                                                                               result->second.gafFileName(),
-                                                                                               result->second.translationTable());
+    std::shared_ptr<GenomeReference> genome_ptr = kgl::GenomeReference::createGenomeDatabase( genome_parameters.genomeIdentifier(),
+                                                                                              genome_parameters.fastaFileName(),
+                                                                                              genome_parameters.gffFileName(),
+                                                                                              genome_parameters.gafFileName(),
+                                                                                              genome_parameters.idFileName(),
+                                                                                              genome_parameters.translationTable());
 
     if (not genome_collection_ptr->addGenome(genome_ptr)) {
 

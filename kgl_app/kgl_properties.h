@@ -65,6 +65,7 @@ public:
                         std::string& fasta_file,
                         std::string& gff_file,
                         std::string& gaf_file,
+                        std::string& id_file,
                         std::string& tranlation_table) const;
 
   [[nodiscard]] bool getGenomeAuxFiles(const std::string& organism, std::vector<AuxFileInfo>& auxfiles) const;
@@ -124,6 +125,7 @@ private:
   constexpr static const char* FASTA_FILE_ = "fastaFile";
   constexpr static const char* GFF_FILE_ = "gffFile";
   constexpr static const char* GAF_FILE_ = "gafFile";   // optional
+  constexpr static const char* ID_FILE_ = "idFile";   // optional
   constexpr static const char* TRANSLATION_TABLE_ = "translationTable";
   // Contig/Chromosome Alias categories.
   constexpr static const char* ALIAS_LIST_ = "aliasList";

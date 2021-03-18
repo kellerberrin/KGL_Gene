@@ -42,6 +42,10 @@ private:
 // Utility Functions for extracting Info Data.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Indexed by vep field.
+using VepValueMap = std::vector<std::map<std::string, std::string>>;
+using VepIndexVector = std::vector<std::pair<std::string, size_t>>;
+
 class InfoEvidenceAnalysis {
 
 public:
@@ -66,6 +70,13 @@ public:
   static std::vector<double> stringBinToFloat(const std::vector<std::string>& bin_data, size_t expected_bin_size);
 
   static std::optional<std::unique_ptr<const VEPSubFieldEvidence>> getVepSubFields(const Variant& variant);
+
+  // There can multiple vep records per variant. Default empty vector retrieves all fields.
+  static VepValueMap getVepValues(const Variant& variant, std::vector<std::string> vep_fields = std::vector<std::string>{});
+  // Get the vep field offsets. Typically this only need to be done once if all variants have the same vep layout.
+  static VepIndexVector getVepIndexes(const Variant& variant, const std::vector<std::string>& vep_field_list);
+  // Use the indexes generated above retrieve the vep data.
+  static VepValueMap getVepData(const Variant& variant, const VepIndexVector& vep_field_list);
 
   static void vepSubFieldValues( std::string vep_sub_field, const std::shared_ptr<const PopulationDB>& population);
 

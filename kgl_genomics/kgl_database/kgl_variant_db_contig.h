@@ -83,12 +83,16 @@ public:
 
   // Unconditionally add all the variants in the supplied contig to this contig.
   bool merge(const std::shared_ptr<const ContigDB>& contig) { return contig->processAll(*this, &ContigDB::addVariant); }
-  // Intersection returns a contig that contains variants present in both contigs.
-  // The VariantEquality flag determines whether variant phase is used in the equality.
-  [[nodiscard]] std::shared_ptr<ContigDB> intersection(const std::shared_ptr<const ContigDB>& contig, VariantEquality variant_equality) const;
-  // Complement returns a contig that contains variants present in this contig but not present in the complement_contig.
-  [[nodiscard]] std::shared_ptr<ContigDB> complement(const std::shared_ptr<const ContigDB>& complement_contig, VariantEquality variant_equality) const;
 
+  //Set Functions.
+  // setIntersection returns a contig that contains variants present in both contigs.
+  // The VariantEquality flag determines whether variant phase is used in the equality.
+  [[nodiscard]] std::unique_ptr<ContigDB> setIntersection(const ContigDB& intersection_contig, VariantEquality variant_equality) const;
+  // setComplement returns a contig that contains variants present in this contig but not present in the complement_contig.
+  [[nodiscard]] std::unique_ptr<ContigDB> setComplement(const ContigDB& complement_contig, VariantEquality variant_equality) const;
+  // setUnion returns a contig that contains the set union of variants present in this contig and the union_contig.
+  // Specifically, identical variants, defined by the VariantEquality flag as including phase or not, are ignored.
+  [[nodiscard]] std::unique_ptr<ContigDB> setUnion(const ContigDB& union_contig, VariantEquality variant_equality) const;
 
 private:
 

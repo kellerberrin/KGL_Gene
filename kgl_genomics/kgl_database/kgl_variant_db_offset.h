@@ -42,6 +42,16 @@ public:
   void addVariant(const std::shared_ptr<const Variant>& variant_ptr) { variant_vector_.push_back(variant_ptr); }
   std::pair<size_t, size_t> inSituFilter(const VariantFilter &filter);
 
+  // setIntersection returns an OffsetDB that contains unique variants present in both offsets.
+  // The VariantEquality flag determines whether variant phase is used in the equality.
+  [[nodiscard]] std::unique_ptr<OffsetDB> setIntersection(const OffsetDB& intersection_offset, VariantEquality variant_equality) const;
+  // setComplement returns a OffsetDB that contains variants present in this contig but not present in the complement_contig.
+  // This function does NOT guarantee that the returned OffsetDB only has unique variants,
+  [[nodiscard]] std::unique_ptr<OffsetDB> setComplement(const OffsetDB& complement_offset, VariantEquality variant_equality) const;
+  // setUnion returns a offset that contains the set union of unique variants present in this offset and the union_offset.
+  // Specifically, identical variants, defined by the VariantEquality flag as including phase or not, are ignored.
+  [[nodiscard]] std::unique_ptr<OffsetDB> setUnion(const OffsetDB& union_offset, VariantEquality variant_equality) const;
+
 private:
 
   OffsetDBArray variant_vector_;

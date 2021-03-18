@@ -48,11 +48,15 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+using EnsemblIndexMap = std::multimap<std::string, std::shared_ptr<const Variant>>;
+// How variants are allocated to genes.
+enum class VariantGeneMembership { BY_SPAN, BY_EXON, BY_ENSEMBL };
+
 class GenomeMutation {
 
 public:
 
-  GenomeMutation() = default;
+  GenomeMutation() { gene_membership_ = VariantGeneMembership::BY_EXON; }
   ~GenomeMutation() = default;
 
   // This analysis is performed first
@@ -67,12 +71,16 @@ public:
   // Output to file.
   bool writeOutput(const std::shared_ptr<const GenomePEDData>& ped_data, const std::string& out_file, char output_delimiter) const;
 
+  static EnsemblIndexMap ensemblIndex(const std::shared_ptr<const PopulationDB>& unphased_population_ptr);
+
 private:
 
   std::vector<GeneMutation> gene_vector_;
+  VariantGeneMembership gene_membership_;
 
 
   constexpr static const char* CONCAT_TOKEN = "&";
+  constexpr static const char* VEP_ENSEMBL_FIELD_ = "Gene";
 
 
   static void writeHeader(const std::shared_ptr<const GenomePEDData>& ped_data,
@@ -87,11 +95,16 @@ private:
   static std::shared_ptr<const ContigDB> getGeneExon(const std::shared_ptr<const ContigDB>& contig_ptr,
                                                      const GeneCharacteristic& gene_char);
 
+  static std::shared_ptr<const ContigDB> getGeneEnsembl( const EnsemblIndexMap& ensembl_index_map,
+                                                         const GeneCharacteristic& gene_char);
+
   GeneMutation geneSpanAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
                                  const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                  const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                  const std::shared_ptr<const GenomePEDData>& ped_data,
+                                 const EnsemblIndexMap& ensembl_index_map,
                                  GeneMutation gene_mutation);
+
 
 
 };
@@ -104,4 +117,4 @@ private:
 
 
 
-#endif //KGL_KGL_ANALYSIS_MUTATION_GENE_H
+#endif //KGL_ANALYSIS_MUTATION_GENE_H

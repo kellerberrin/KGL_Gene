@@ -130,7 +130,7 @@ public:
   : genome_identifier_(genome_identifier),
     fasta_file_name_(fasta_file_name),
     gff_file_name_(gff_file_name),
-    translation_table_(translation_table) { gaf_file_name_.clear(); }
+    translation_table_(translation_table) {}
   RuntimeGenomeProperty(const RuntimeGenomeProperty&) = default;
   ~RuntimeGenomeProperty() = default;
 
@@ -138,9 +138,12 @@ public:
   [[nodiscard]] const std::string& fastaFileName() const { return fasta_file_name_; }
   [[nodiscard]] const std::string& gffFileName() const { return gff_file_name_; }
   [[nodiscard]] const std::string& translationTable() const { return translation_table_; }
+  // Gaf file and ID file are optional.
   [[nodiscard]] const std::string& gafFileName () const { return gaf_file_name_; }
+  [[nodiscard]] const std::string& idFileName () const { return id_file_name_; }
 
   void setGafFileName(const std::string& gaf_file_name) { gaf_file_name_ = gaf_file_name; }
+  void setIdFileName(const std::string& id_file_name) { id_file_name_ = id_file_name; }
 
 private:
 
@@ -149,6 +152,7 @@ private:
   std::string gff_file_name_;
   std::string translation_table_;
   std::string gaf_file_name_;
+  std::string id_file_name_;
 
 };
 

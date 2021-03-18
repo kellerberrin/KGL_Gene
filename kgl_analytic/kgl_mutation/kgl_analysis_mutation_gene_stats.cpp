@@ -13,7 +13,8 @@ namespace kgl = kellerberrin::genome;
 bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFeature>& gene_ptr,
                                               const GenomeId_t& genome_id,
                                               const std::string& name,
-                                              const std::string& gaf_ident)
+                                              const std::string& gaf_ident,
+                                              const std::set<std::string>& GO_set)
 {
 
   std::vector<std::string> description_vec;
@@ -33,17 +34,18 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
   biotype_ = biotype_str;
   valid_protein_ = ContigReference::verifyGene(gene_ptr);
   gaf_id_ = gaf_ident;
+  GO_set_ = GO_set;
   gene_begin_ = gene_ptr->sequence().begin();
   gene_end_ = gene_ptr->sequence().end();
   gene_span_ = gene_ptr->sequence().length();
   strand_ = gene_ptr->sequence().strandText();
 
-  const std::shared_ptr<const CodingSequenceArray> sequence_array = GeneFeature::getCodingSequences(gene_ptr);
+  std::shared_ptr<const CodingSequenceArray> sequence_array_ptr = GeneFeature::getCodingSequences(gene_ptr);
 
-  sequences_ = sequence_array->size();
-  if (not sequence_array->getMap().empty()) {
+  sequences_ = sequence_array_ptr->size();
+  if (not sequence_array_ptr->getMap().empty()) {
 
-    auto [sequence_name, seq_ptr] = *(sequence_array->getMap().begin());
+    auto& [sequence_name, seq_ptr] = *(sequence_array_ptr->getMap().begin());
     seq_name_ = sequence_name;
     nucleotides_ = seq_ptr->codingNucleotides();
     exons_ = seq_ptr->exons();
@@ -63,8 +65,15 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
     }
 
     concat_attributes += key;
-    concat_attributes += ":";
+    concat_attributes += "-";
     concat_attributes += attrib;
+
+    if (key == DBXREF_ and attrib.find(HGNC_) == 0) {
+
+      HGNC_id_ = attrib.substr(std::string(HGNC_).length(), std::string::npos);
+
+    }
+
 
   }
 

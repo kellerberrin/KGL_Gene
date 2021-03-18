@@ -161,7 +161,6 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 
       }
 
-
     } else if (file_characteristic.data_source == DataSourceEnum::Clinvar) {
 
       clinvar_population_ptr_ = std::dynamic_pointer_cast<const PopulationDB>(data_ptr);
