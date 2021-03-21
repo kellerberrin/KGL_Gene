@@ -382,9 +382,10 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
 
         }
 
-        std::shared_ptr<const OntologyRecord> gene_ontology_ptr;
-        if (genome_db->geneOntology().getGafFeatureVector(gene_ptr->id(), gene_ontology_ptr)) {
+        auto gene_ontology_opt = genome_db->geneOntology().getGafFeatureVector(gene_ptr->id());
+        if (gene_ontology_opt) {
 
+          auto gene_ontology_ptr = gene_ontology_opt.value();
           out_file << gene_ontology_ptr->symbolicReference() << CSV_delimiter;
           out_file << gene_ontology_ptr->altSymbolicReference() << CSV_delimiter;
           out_file << "\"" << gene_ontology_ptr->description() << "\"" << CSV_delimiter;
@@ -583,9 +584,10 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
 
         }
 
-        std::shared_ptr<const OntologyRecord> gene_ontology_ptr;
-        if (genome_db->geneOntology().getGafFeatureVector(gene.second->id(), gene_ontology_ptr)) {
+        auto gene_ontology_opt = genome_db->geneOntology().getGafFeatureVector(gene.second->id());
+        if (gene_ontology_opt) {
 
+          auto gene_ontology_ptr = gene_ontology_opt.value();
           out_file << gene_ontology_ptr->symbolicReference() << CSV_delimiter;
           out_file << gene_ontology_ptr->altSymbolicReference() << CSV_delimiter;
           out_file << "\"" << gene_ontology_ptr->description() << "\"" << CSV_delimiter;
@@ -1196,9 +1198,10 @@ std::string kgl::GenomicMutation::outputSequence(char delimiter,
   ss << strand << delimiter;
   ss << average_DNA_score << delimiter;
 
-  std::shared_ptr<const OntologyRecord> gene_ontology_ptr;
-  if (genome_db->geneOntology().getGafFeatureVector(gene_id, gene_ontology_ptr)) {
+  auto gene_ontology_opt = genome_db->geneOntology().getGafFeatureVector(gene_id);
+  if (gene_ontology_opt) {
 
+    auto gene_ontology_ptr = gene_ontology_opt.value();
     ss << gene_ontology_ptr->symbolicReference() << delimiter;
     ss << gene_ontology_ptr->altSymbolicReference() << delimiter;
     ss << "\"" << gene_ontology_ptr->description() << "\"";

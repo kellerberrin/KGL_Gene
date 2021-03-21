@@ -227,20 +227,14 @@ void VarGeneFamilyTree( DistanceTree& distance_tree,
         std::string alt_symbolic;
         std::string symbolic;
         std::string description;
-        std::shared_ptr<const OntologyRecord> ontology_record_ptr;
-        if (genome_db_ptr->geneOntology().getGafFeatureVector(gene.second->id(), ontology_record_ptr)) {
+        auto ontology_record_opt = genome_db_ptr->geneOntology().getGafFeatureVector(gene.second->id());
+        if (ontology_record_opt) {
 
-          if (ontology_record_ptr) {
+          auto ontology_record_ptr = ontology_record_opt.value();
+          description = Utility::findAndReplaceAll(ontology_record_ptr->description(), ",", ";");
+          symbolic = Utility::findAndReplaceAll(ontology_record_ptr->symbolicReference(), ",", ";");
+          alt_symbolic = Utility::findAndReplaceAll(ontology_record_ptr->altSymbolicReference(), ",", ";");
 
-            description = Utility::findAndReplaceAll(ontology_record_ptr->description(), ",", ";");
-            symbolic = Utility::findAndReplaceAll(ontology_record_ptr->symbolicReference(), ",", ";");
-            alt_symbolic = Utility::findAndReplaceAll(ontology_record_ptr->altSymbolicReference(), ",", ";");
-
-          } else {
-
-            continue;
-
-          }
 
         } else {
 

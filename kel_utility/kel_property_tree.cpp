@@ -527,7 +527,7 @@ bool kel::PropertyTree::getOptionalFileProperty(const std::string& property_name
 
   if (not Utility::fileExists(file_path)) {
 
-    ExecEnv::log().warn("PropertyTree::getFileProperty; File: {} does not exist", file_path);
+    ExecEnv::log().critical("PropertyTree::getFileProperty; Specified optional File: {} does not exist, remove from XML specification.", file_path);
     return false;
 
   }

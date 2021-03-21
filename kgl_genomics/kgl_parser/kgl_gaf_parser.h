@@ -10,6 +10,7 @@
 #include <map>
 
 #include "kgl_genome_types.h"
+#include "kgl_ensembl_id_parser.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -88,6 +89,8 @@ private:
 /// Indexed by gene id (const FeatureIdent_t&).
 ///
 using GafRecordMap = std::map<FeatureIdent_t, std::shared_ptr<OntologyRecord>>;
+
+
 class GeneOntology {
 
 public:
@@ -102,21 +105,21 @@ public:
   ///  \return bool indicating if the read was successful.
   ///
   bool readGafFile(const std::string& filename);
+  bool readIdFile(const std::string& filename);
 
   /// Returns a map with all gene indexed gaf annotations.
   ///
   /// \return const GafRecordMap&
   ///
   [[nodiscard]] const GafRecordMap& getMap() const { return gaf_record_map_; }
-
+  [[nodiscard]] const GeneSynonymVector& getSynonymVector() const { return synonym_vector_; }
 
   /// Returns the gaf annotations of a gene.
   ///
   ///  \param const FeatureIdent_t& gene_feature. This parameter specifies the gene.
-  ///  \param std::shared_ptr<const OntologyRecord>. The gaf records are returned with this obj pointer.
-  ///  Important: the std::shared_ptr == null_ptr if there are no ontology records for this gene.
-  ///  \return bool false if no annotations for gene
-  bool getGafFeatureVector(const FeatureIdent_t& gene_feature, std::shared_ptr<const OntologyRecord>& ontology_record) const;
+  ///  \return std::optional<std::shared_ptr<const OntologyRecord>>. If it exists, the gaf record is optionally returned .
+  [[nodiscard]] std::optional<std::shared_ptr<const OntologyRecord>> getGafFeatureVector(const FeatureIdent_t& gene_feature) const;
+
 
 private:
 
@@ -127,6 +130,7 @@ private:
   void semanticGafParse(const std::vector<std::string> &field_vec);
 
   GafRecordMap gaf_record_map_;
+  GeneSynonymVector  synonym_vector_;
 
 };
 
@@ -156,6 +160,30 @@ private:
 };
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Resort the gene identifiers
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+using GeneIdentMap = std::map<std::string, std::string>;
+class ResortIds {
+
+public:
+
+  ResortIds() = default;
+  ~ResortIds() = default;
+
+  void sortByHGNC(const GeneSynonymVector& ident_vector);
+  void sortByEnsembl(const GeneSynonymVector& ident_vector);
+
+  [[nodiscard]] const GeneIdentMap& getMap() const { return gene_id_map_; }
+
+private:
+
+  GeneIdentMap gene_id_map_;
+
+};
 
 
 

@@ -27,6 +27,10 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
   symbolic_gaf.sortBySymbolic(ont_map);
   ResortGaf gene_id_gaf; // re-sort by the gene id field.
   gene_id_gaf.sortByGeneId(ont_map);
+  const GeneSynonymVector synonym_vector = genome_ptr->geneOntology().getSynonymVector();
+  ResortIds resort_ids;
+  resort_ids.sortByHGNC(synonym_vector);
+  ExecEnv::log().info("GenomeMutation::genomeAnalysis; HGNC sorted Gene Ids: {}", resort_ids.getMap().size());
 
   gene_vector_.clear();
 
@@ -77,7 +81,7 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
       }
 
       GeneCharacteristic gene_characteristic;
-      gene_characteristic.geneDefinition(gene_ptr, genome_ptr->genomeId(), name, gaf_id, GO_set);
+      gene_characteristic.geneDefinition(gene_ptr, genome_ptr->genomeId(), name, gaf_id, GO_set, resort_ids.getMap());
       GeneMutation mutation;
       mutation.gene_characteristic = gene_characteristic;
       mutation.clinvar.updateEthnicity().updatePopulations(ped_data);
@@ -100,13 +104,13 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
                                           const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                           const std::shared_ptr<const GenomePEDData>& ped_data) {
 
-
-
   ThreadPool thread_pool(ThreadPool::hardwareThreads());
   // A vector for futures.
   std::vector<std::future<GeneMutation>> future_vector;
   // Index by Ensembl gene code.
-  EnsemblIndexMap ensembl_index_map = ensemblIndex(unphased_population_ptr);
+  std::shared_ptr<const EnsemblIndexMap> ensembl_index_map_ptr = ensemblIndex(unphased_population_ptr);
+  ExecEnv::log().info("Unphased variants sorted by Ensembl Gene code: {}, Total Unphased Variants: {}",
+                      ensembl_index_map_ptr->size(), unphased_population_ptr->variantCount());
   // Queue a thread for each gene.
   for (auto& gene_mutation : gene_vector_) {
 
@@ -116,7 +120,7 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
                                                                 unphased_population_ptr,
                                                                 clinvar_population_ptr,
                                                                 ped_data,
-                                                                ensembl_index_map,
+                                                                ensembl_index_map_ptr,
                                                                 gene_mutation);
     future_vector.push_back(std::move(future));
 
@@ -140,7 +144,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
                                                          const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                                          const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                                          const std::shared_ptr<const GenomePEDData>& ped_data,
-                                                         const EnsemblIndexMap& ensembl_index_map,
+                                                         const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr,
                                                          GeneMutation gene_mutation) {
 
 
@@ -154,7 +158,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
       if (not contig_ptr->getMap().empty()) {
 
-        // Determine which method to determine gene membership of variants.
+        // Which method gene membership of variants is determined.
         std::shared_ptr<const ContigDB> span_variant_ptr;
         switch(gene_membership_) {
 
@@ -168,7 +172,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
           default:
           case VariantGeneMembership::BY_ENSEMBL:
-            span_variant_ptr = getGeneEnsembl( ensembl_index_map, gene_mutation.gene_characteristic);
+            span_variant_ptr = getGeneEnsemblSpan( contig_ptr, *ensembl_index_map_ptr, gene_mutation.gene_characteristic);
             break;
 
         }
@@ -241,7 +245,25 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneExon(const std:
 }
 
 // Get variants matching the ensembl.
-std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsembl( const EnsemblIndexMap& ensembl_index_map,
+std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsemblSpan( const std::shared_ptr<const ContigDB>& contig_ptr,
+                                                                              const EnsemblIndexMap& ensembl_index_map,
+                                                                              const GeneCharacteristic& gene_char) {
+  if (not gene_char.ensemblId().empty()) {
+
+    return getGeneEnsembl(contig_ptr, ensembl_index_map, gene_char);
+
+  } else {
+
+    return getGeneSpan(contig_ptr, gene_char);
+
+  }
+
+}
+
+
+// Get variants matching the ensembl.
+std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsembl( const std::shared_ptr<const ContigDB>& contig_ptr,
+                                                                          const EnsemblIndexMap& ensembl_index_map,
                                                                           const GeneCharacteristic& gene_char) {
 
   std::shared_ptr<ContigDB> gene_contig(std::make_shared<ContigDB>(gene_char.contigId()));
@@ -263,29 +285,29 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsembl( const 
 
   }
 
-  // Remove duplicates.
-  gene_contig->inSituFilter(UniquePhasedFilter());
+  // Select all variants with the ensembl identifier.
+  auto ensembl_variants = contig_ptr->findContig(gene_contig);
 
-  return gene_contig;
+  // Remove any duplicates.
+  ensembl_variants->inSituFilter(UniquePhasedFilter());
+
+  return ensembl_variants;
 
 }
 
 
 // Index variants by the Ensembl gene code in the vep field.
-kgl::EnsemblIndexMap kgl::GenomeMutation::ensemblIndex(const std::shared_ptr<const PopulationDB>& unphased_population_ptr) {
+std::shared_ptr<const kgl::EnsemblIndexMap> kgl::GenomeMutation::ensemblIndex(const std::shared_ptr<const PopulationDB>& unphased_population_ptr) {
 
   // Local object performs the indexing.
-  struct IndexMap {
+  class IndexMap {
 
-    IndexMap() : pmr_memory_(pmr_byte_array_, sizeof(pmr_byte_array_)), unique_ident_(&pmr_memory_) {}
+  public:
+
+    IndexMap() : ensembl_indexed_variants_ptr_(std::make_shared<EnsemblIndexMap>()),
+                 pmr_memory_(pmr_byte_array_, sizeof(pmr_byte_array_)),
+                 unique_ident_(&pmr_memory_) {}
     ~IndexMap() = default;
-
-    EnsemblIndexMap ensembl_indexed_variants_;
-    std::byte pmr_byte_array_[4096];
-    std::pmr::monotonic_buffer_resource pmr_memory_;
-    std::pmr::set<std::string> unique_ident_;
-    VepIndexVector field_index_;
-    bool initialized_{false};
 
     bool ensemblIndex(const std::shared_ptr<const Variant>& variant) {
 
@@ -305,7 +327,11 @@ kgl::EnsemblIndexMap kgl::GenomeMutation::ensemblIndex(const std::shared_ptr<con
         if (not field.empty()) {
 
           const auto& [field_ident, field_value] = *field.begin();
-          unique_ident_.insert(field_value);
+          if (not field_value.empty()) {
+
+            unique_ident_.insert(field_value);
+
+          }
 
         }
 
@@ -315,7 +341,7 @@ kgl::EnsemblIndexMap kgl::GenomeMutation::ensemblIndex(const std::shared_ptr<con
 
         if (not ident.empty()) {
 
-          ensembl_indexed_variants_.emplace(ident, variant);
+          ensembl_indexed_variants_ptr_->emplace(ident, variant);
 
         }
 
@@ -327,12 +353,24 @@ kgl::EnsemblIndexMap kgl::GenomeMutation::ensemblIndex(const std::shared_ptr<con
 
     }
 
+    [[nodiscard]] std::shared_ptr<const EnsemblIndexMap> ensemblIndexedMap() const { return ensembl_indexed_variants_ptr_; }
+
+  private:
+
+    std::shared_ptr<EnsemblIndexMap> ensembl_indexed_variants_ptr_;
+    std::byte pmr_byte_array_[PMR_BUFFER_SIZE_];
+    std::pmr::monotonic_buffer_resource pmr_memory_;
+    std::pmr::set<std::string> unique_ident_;
+    VepIndexVector field_index_;
+    bool initialized_{false};
+
+
   }; // IndexMap object.
 
   IndexMap index_map;
 
   unphased_population_ptr->processAll(index_map, &IndexMap::ensemblIndex);
 
-  return index_map.ensembl_indexed_variants_;
+  return index_map.ensemblIndexedMap();
 
 }

@@ -14,7 +14,8 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
                                               const GenomeId_t& genome_id,
                                               const std::string& name,
                                               const std::string& gaf_ident,
-                                              const std::set<std::string>& GO_set)
+                                              const std::set<std::string>& GO_set,
+                                              const GeneIdentMap& key_HGNC_map)
 {
 
   std::vector<std::string> description_vec;
@@ -71,6 +72,7 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
     if (key == DBXREF_ and attrib.find(HGNC_) == 0) {
 
       HGNC_id_ = attrib.substr(std::string(HGNC_).length(), std::string::npos);
+      HGNC_id_ = Utility::trimEndWhiteSpace(HGNC_id_);
 
     }
 
@@ -79,6 +81,20 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
 
   concat_attributes += "\"";
   attributes_ = concat_attributes;
+
+  // Retrieve Ensembl gene id, if available.
+  if (not HGNC_id_.empty()) {
+
+    auto result = key_HGNC_map.find(HGNC_id_);
+    if (result != key_HGNC_map.end()) {
+
+      auto const& [HGNC_id, ensembl_id] = *result;
+      ensembl_id_ = ensembl_id;
+
+    }
+
+  }
+
 
   return true;
 

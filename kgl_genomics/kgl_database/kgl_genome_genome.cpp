@@ -48,7 +48,7 @@ std::shared_ptr<kgl::GenomeReference> kgl::GenomeReference::createGenomeDatabase
   // Optionally read in Alternate feature and gene identifiers (Ensembl)
   if (not id_file.empty()) {
 
-    ExecEnv::log().info("GenomeReference::createGenomeDatabase; Id file specified: {}", id_file);
+    genome_db_ptr->gene_ontology_.readIdFile(id_file);
 
   }
 

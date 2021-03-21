@@ -18,8 +18,7 @@ namespace kgl = kellerberrin::genome;
 
 void kgl::OntologyRecord::addGafRecord(GAFRecord gaf_record) {
 
-  std::pair<OntologyIdent_t, GAFRecord> insert_pair(gaf_record.ontolotgy_id, std::move(gaf_record));
-  go_records_.insert(insert_pair);
+  go_records_.emplace(gaf_record.ontolotgy_id, std::move(gaf_record));
 
 }
 
@@ -161,19 +160,35 @@ void kgl::GeneOntology::semanticGafParse(const std::vector<std::string> &field_v
 }
 
 
-bool kgl::GeneOntology::getGafFeatureVector(const FeatureIdent_t& gene_id,
-                                            std::shared_ptr<const OntologyRecord>& ontology_ptr) const {
+std::optional<std::shared_ptr<const kgl::OntologyRecord>> kgl::GeneOntology::getGafFeatureVector(const FeatureIdent_t& gene_id) const {
+
 
   auto result = gaf_record_map_.find(gene_id);
 
   if (result == gaf_record_map_.end()) {
 
-    ontology_ptr = nullptr;
+    return std::nullopt;
+
+  }
+
+  const auto [gene_ident, ontology_ptr] = *result;
+  return ontology_ptr;
+
+}
+
+
+
+bool kgl::GeneOntology::readIdFile(const std::string& filename) {
+
+  ParseGeneIdents parse_gene_idents;
+  if (not parse_gene_idents.parseIdentFile(filename)) {
+
     return false;
 
   }
 
-  ontology_ptr = result->second;
+  synonym_vector_ = parse_gene_idents.getSynonymVector();
+
   return true;
 
 }
@@ -183,10 +198,9 @@ bool kgl::GeneOntology::getGafFeatureVector(const FeatureIdent_t& gene_id,
 void kgl::ResortGaf::sortBySymbolic(const GafRecordMap& gaf_map) {
 
   gaf_record_map_.clear();
-
   for (auto const& [gaf_id, gaf_record_ptr] : gaf_map) {
 
-    auto [it, result] = gaf_record_map_.try_emplace(gaf_record_ptr->symbolicReference(), gaf_record_ptr);
+    auto [iter, result] = gaf_record_map_.try_emplace(gaf_record_ptr->symbolicReference(), gaf_record_ptr);
 
     if (not result) {
 
@@ -204,15 +218,56 @@ void kgl::ResortGaf::sortBySymbolic(const GafRecordMap& gaf_map) {
 void kgl::ResortGaf::sortByGeneId(const GafRecordMap& gaf_map) {
 
   gaf_record_map_.clear();
-
   for (auto const& [gaf_id, gaf_record_ptr] : gaf_map) {
 
-    auto [it, result] = gaf_record_map_.try_emplace(gaf_record_ptr->gene_id(), gaf_record_ptr);
+    auto [iter, result] = gaf_record_map_.try_emplace(gaf_record_ptr->gene_id(), gaf_record_ptr);
 
     if (not result) {
 
       ExecEnv::log().warn( "ResortGaf::sortByGeneId; Cannot insert (duplicate) Gaf record: {}, Gene Id: {}",
                             gaf_id, gaf_record_ptr->gene_id());
+
+    }
+
+  }
+
+}
+
+
+void kgl::ResortIds::sortByHGNC(const GeneSynonymVector& ident_vector) {
+
+  gene_id_map_.clear();
+  for (auto const& [HGNC_id, ensembl_id] :  ident_vector) {
+
+    if (not HGNC_id.empty() and not ensembl_id.empty()) {
+
+      auto [iter, result] = gene_id_map_.try_emplace(HGNC_id, ensembl_id);
+      if (not result) {
+
+        ExecEnv::log().warn("ResortIds::sortByHGNC; Cannot insert (duplicate) HGNC id: {}, ensembl id: {}", HGNC_id, ensembl_id);
+
+      }
+
+    }
+
+  }
+
+}
+
+
+void kgl::ResortIds::sortByEnsembl(const GeneSynonymVector& ident_vector) {
+
+  gene_id_map_.clear();
+  for (auto const& [HGNC_id, ensembl_id] :  ident_vector) {
+
+    if (not HGNC_id.empty() and not ensembl_id.empty()) {
+
+      auto [iter, result] = gene_id_map_.try_emplace(ensembl_id, HGNC_id);
+      if (not result) {
+
+        ExecEnv::log().warn("ResortIds::sortByEnsembl; Cannot insert (duplicate) ensembl id: {}, HGNC id: {}", ensembl_id, HGNC_id);
+
+      }
 
     }
 

@@ -64,24 +64,25 @@ void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeReference> 
 
         }
 
-        std::shared_ptr<const OntologyRecord> ontology_record;
         std::string symbolicReference;
         std::string description;
         std::string altSymbolicReference;
 
-        if (not genome_db_ptr->geneOntology().getGafFeatureVector(gene->id(), ontology_record)) {
+        auto ontology_opt = genome_db_ptr->geneOntology().getGafFeatureVector(gene->id());
+        if (not ontology_opt) {
 
           ExecEnv::log().vwarn("PromoterMotif::displayTFFMotif; No Ontology record for GENE {}", gene->id());
 
-        } else if (ontology_record) {
+        } else {
 
+          auto ontology_record_ptr = ontology_opt.value();
           // Strip out delimiter chars
           std::string search = { delimiter };
-          symbolicReference = ontology_record->symbolicReference();
+          symbolicReference = ontology_record_ptr->symbolicReference();
           symbolicReference = Utility::findAndReplaceAll(symbolicReference, search, ";");
-          description = ontology_record->description();
+          description = ontology_record_ptr->description();
           description = Utility::findAndReplaceAll(description, search, ";");
-          altSymbolicReference = ontology_record->altSymbolicReference();
+          altSymbolicReference = ontology_record_ptr->altSymbolicReference();
           altSymbolicReference = Utility::findAndReplaceAll(altSymbolicReference, search, ";");
 
         }

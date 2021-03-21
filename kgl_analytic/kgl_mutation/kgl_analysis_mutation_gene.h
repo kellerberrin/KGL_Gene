@@ -56,7 +56,7 @@ class GenomeMutation {
 
 public:
 
-  GenomeMutation() { gene_membership_ = VariantGeneMembership::BY_EXON; }
+  GenomeMutation() { gene_membership_ = VariantGeneMembership::BY_ENSEMBL; }
   ~GenomeMutation() = default;
 
   // This analysis is performed first
@@ -71,17 +71,16 @@ public:
   // Output to file.
   bool writeOutput(const std::shared_ptr<const GenomePEDData>& ped_data, const std::string& out_file, char output_delimiter) const;
 
-  static EnsemblIndexMap ensemblIndex(const std::shared_ptr<const PopulationDB>& unphased_population_ptr);
+  static std::shared_ptr<const EnsemblIndexMap> ensemblIndex(const std::shared_ptr<const PopulationDB>& unphased_population_ptr);
 
 private:
 
   std::vector<GeneMutation> gene_vector_;
   VariantGeneMembership gene_membership_;
 
-
   constexpr static const char* CONCAT_TOKEN = "&";
   constexpr static const char* VEP_ENSEMBL_FIELD_ = "Gene";
-
+  constexpr static const size_t PMR_BUFFER_SIZE_ = 4096;
 
   static void writeHeader(const std::shared_ptr<const GenomePEDData>& ped_data,
                           std::ostream& out_file,
@@ -95,14 +94,19 @@ private:
   static std::shared_ptr<const ContigDB> getGeneExon(const std::shared_ptr<const ContigDB>& contig_ptr,
                                                      const GeneCharacteristic& gene_char);
 
-  static std::shared_ptr<const ContigDB> getGeneEnsembl( const EnsemblIndexMap& ensembl_index_map,
+  static std::shared_ptr<const ContigDB> getGeneEnsembl( const std::shared_ptr<const ContigDB>& contig_ptr,
+                                                         const EnsemblIndexMap& ensembl_index_map,
                                                          const GeneCharacteristic& gene_char);
+
+  static std::shared_ptr<const ContigDB> getGeneEnsemblSpan( const std::shared_ptr<const ContigDB>& contig_ptr,
+                                                             const EnsemblIndexMap& ensembl_index_map,
+                                                             const GeneCharacteristic& gene_char);
 
   GeneMutation geneSpanAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
                                  const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                  const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                  const std::shared_ptr<const GenomePEDData>& ped_data,
-                                 const EnsemblIndexMap& ensembl_index_map,
+                                 const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr,
                                  GeneMutation gene_mutation);
 
 
