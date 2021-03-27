@@ -9,10 +9,6 @@
 
 namespace kgl = kellerberrin::genome;
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  Genome information of the variant.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -200,7 +196,7 @@ std::string kgl::Variant::variantHash() const {
 // Phase specific hash
 std::string kgl::Variant::variantPhaseHash() const {
 
-  return contigId() + ":"  + std::to_string(offset()) + ":" + std::to_string(static_cast<uint8_t>(phaseId())) +
-         ":" + reference().getSequenceAsString() + ":" + alternate().getSequenceAsString();
+  return contigId() + ":"  + std::to_string(offset()) + ":" + reference().getSequenceAsString() +
+         ":" + alternate().getSequenceAsString() + ":" + std::to_string(static_cast<uint8_t>(phaseId()));
 
 }

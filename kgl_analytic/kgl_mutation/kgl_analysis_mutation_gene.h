@@ -48,6 +48,7 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Variants indexed by their Ensembl gene id retrieved from the vep field.
 using EnsemblIndexMap = std::multimap<std::string, std::shared_ptr<const Variant>>;
 // How variants are allocated to genes.
 enum class VariantGeneMembership { BY_SPAN, BY_EXON, BY_ENSEMBL };
@@ -56,7 +57,7 @@ class GenomeMutation {
 
 public:
 
-  GenomeMutation() { gene_membership_ = VariantGeneMembership::BY_ENSEMBL; }
+  explicit GenomeMutation(VariantGeneMembership gene_membership) : gene_membership_(gene_membership) { analysisType(); }
   ~GenomeMutation() = default;
 
   // This analysis is performed first
@@ -68,10 +69,12 @@ public:
                         const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                         const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                         const std::shared_ptr<const GenomePEDData>& ped_data);
-  // Output to file.
+
+  // Finally, output to file.
   bool writeOutput(const std::shared_ptr<const GenomePEDData>& ped_data, const std::string& out_file, char output_delimiter) const;
 
-  static std::shared_ptr<const EnsemblIndexMap> ensemblIndex(const std::shared_ptr<const PopulationDB>& unphased_population_ptr);
+  // A population of variants indexed by Ensembl gene code from the vep field. This may be useful elsewhere.
+  [[nodiscard]] static std::shared_ptr<const EnsemblIndexMap> ensemblIndex(const std::shared_ptr<const PopulationDB>& unphased_population_ptr);
 
 private:
 
@@ -109,7 +112,7 @@ private:
                                  const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr,
                                  GeneMutation gene_mutation);
 
-
+  void analysisType();
 
 };
 

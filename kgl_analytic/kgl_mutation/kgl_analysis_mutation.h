@@ -53,8 +53,8 @@ private:
   std::shared_ptr<const PopulationDB> clinvar_population_ptr_;
   std::shared_ptr<const GenomePEDData> ped_data_;
 
-  // Results of the analysis.
-  GenomeMutation gene_mutation_;
+  // Results of the analysis. Type of gene membership is defined here.
+  GenomeMutation gene_mutation_{VariantGeneMembership::BY_EXON};
   std::string output_file_name_;
 
   constexpr static const char* OUTPUT_FILE_ = "OutputFile";

@@ -15,7 +15,29 @@
 
 namespace kgl = kellerberrin::genome;
 
+void kgl::GenomeMutation::analysisType() {
 
+  std::string member_text;
+  switch(gene_membership_) {
+
+    case VariantGeneMembership::BY_SPAN:
+      member_text = "gene variant membership by gene span";
+      break;
+
+    case VariantGeneMembership::BY_EXON:
+      member_text = "gene variant membership by defined exons";
+      break;
+
+    default:
+    case VariantGeneMembership::BY_ENSEMBL:
+      member_text = "gene variant membership by Ensembl gene code (vep field)";
+      break;
+
+  }
+
+  ExecEnv::log().info("Gene variant analysis begins with: {}", member_text);
+
+}
 
 // Perform the genetic analysis per iteration.
 bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeReference>& genome_ptr,
