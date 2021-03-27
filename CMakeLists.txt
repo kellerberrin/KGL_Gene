@@ -405,115 +405,14 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_runtime_config.h)
 
 
-############kgd_deconvolv########################################################
 
-
-
-include_directories(kgd_deconvolv/kgd_deconvolv_app
-        kgd_deconvolv/kgd_deconvolv_lib
-        kgd_deconvolv/contrib/codeCogs
-        kgd_deconvolv/contrib/gzstream
-        kgd_deconvolv/kgd_random)
-
-
-set(DECONVOLV_LIB_CONTRIB_FILES
-        kgd_deconvolv/contrib/codeCogs/asympt_expn.h
-        kgd_deconvolv/contrib/codeCogs/errorfn.h
-        kgd_deconvolv/contrib/codeCogs/errorfnc.h
-        kgd_deconvolv/contrib/codeCogs/errorfnc_exp.h
-        kgd_deconvolv/contrib/codeCogs/expx2.h
-        kgd_deconvolv/contrib/codeCogs/gamma.h
-        kgd_deconvolv/contrib/codeCogs/ln_add1.h
-        kgd_deconvolv/contrib/codeCogs/log_gamma.h
-        kgd_deconvolv/contrib/codeCogs/logbeta.h
-        kgd_deconvolv/contrib/codeCogs/loggammafrac.h
-        kgd_deconvolv/contrib/codeCogs/loggammasum.h
-        kgd_deconvolv/contrib/codeCogs/machine_epsilon.h
-        kgd_deconvolv/contrib/codeCogs/mersenne.hpp
-        kgd_deconvolv/contrib/codeCogs/poly_eval.h
-        kgd_deconvolv/contrib/codeCogs/randomSample.hpp
-        kgd_deconvolv/contrib/codeCogs/stirling.h
-        kgd_deconvolv/contrib/codeCogs/xsub_ln_add1.h
-        kgd_deconvolv/contrib/gzstream/gzstream.cpp
-        kgd_deconvolv/contrib/gzstream/gzstream.h
-        kel_utility/kel_distribution.h)
-
-set(DECONVOLV_LIB_SOURCE_FILES
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_vcf_reader_debug.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_deploid_io_export.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_write_mcmc_related.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_deploid_io.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_deploid_io.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_exceptions.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_global.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdconfig.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdconfig.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_panel.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_panel.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_txt_reader.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_txt_reader.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_update_haplotype.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_update_haplotype.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_utility.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_utility.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_variant_index.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_variant_index.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_vcf_reader.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_vcf_reader.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_update_single_haplotype.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_update_single_haplotype.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_update_pair_haplotype.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_update_pair_haplotype.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_hprior.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_hprior.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdpath.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdpath.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_combinatorial.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_combinatorial.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_sample.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdrecombprobs.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ibdrecombprobs.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_types.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_allelefreq.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_allelefreq.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_alleleread.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_alleleread.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_ibd.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_ibd.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_base.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_base.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_hap.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_hap.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_virtual.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_virtual.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_titre.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_mcmc_titre.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_data.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_data.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_parameter.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_parameter.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_function.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_function.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_output.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_output.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_input.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_ctl_input.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_app.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_deconvolv_app.cpp
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.h
-        kgd_deconvolv/kgd_deconvolv_lib/kgd_prob_cache.cpp)
-
-# Application level objects
-set(DECONVOLV_APPLICATION_SOURCE_FILES
-        kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_main.cpp
-        kgd_deconvolv/kgd_deconvolv_app/kgd_deconvolv_parse.cpp)
 
 #generate libraries.
 add_library(kgl_ontology STATIC ${ONTOLOGY_SOURCE_FILES})
 
 add_library(kel_utility STATIC ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES})
 
-add_library(kgl_genomics STATIC ${GENETIC_LIBRARY_SOURCE_FILES} ${MIXTURE_SOURCE_FILES})
+add_library(kgl_genomics STATIC ${GENETIC_LIBRARY_SOURCE_FILES})
 
 target_link_libraries(kgl_genomics kel_utility )
 
@@ -521,24 +420,11 @@ add_library(kgl_analysis STATIC ${ANALYTIC_SOURCE_FILES})
 
 target_link_libraries(kgl_analysis kgl_genomics kel_utility )
 
-add_library(kgd_contrib_lib STATIC ${DECONVOLV_LIB_CONTRIB_FILES})
-
-target_link_libraries(kgd_contrib_lib ${ZLIB_LIBRARIES})
-
-add_library(kgd_deconvolv_lib STATIC ${DECONVOLV_LIB_SOURCE_FILES})
-
-target_link_libraries(kgd_deconvolv_lib kgd_contrib_lib kel_utility )
-
-#generate kgd_deconvolv executable
-add_executable (kgd_deconvolv ${DECONVOLV_APPLICATION_SOURCE_FILES})
-
-target_link_libraries(kgd_deconvolv kgd_deconvolv_lib kgl_genomics kel_utility ${Boost_LIBRARIES})
-
 #generate kgl_genome executable
 add_executable (kgl_genome ${APPLICATION_SOURCE_FILES} )
 
 # Specify the static libraries.
-target_link_libraries(kgl_genome kgl_analysis kgl_genomics kgd_deconvolv_lib kel_utility ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} nlopt)
+target_link_libraries(kgl_genome kgl_analysis kgl_genomics kel_utility ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} nlopt)
 
 ############################################################################################################
 # Generate the kpl executable.

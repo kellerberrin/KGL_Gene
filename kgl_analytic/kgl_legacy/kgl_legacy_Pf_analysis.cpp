@@ -8,22 +8,17 @@
 
 
 #include <kel_utility.h>
-#include "kgl_read_phasing.h"
 #include "kgl_sequence_distance.h"
 #include "kgl_genome_aux_csv.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_analysis_gene_sequence.h"
 #include "kgl_rna_search.h"
 #include "kgl_legacy_Pf_analysis.h"
-#include "kgl_variant_classify.h"
 #include "kgl_epigenetic_motif.h"
-
-#include "kgd_deconvolv_app.h"
 
 #include <functional>
 
 namespace kgl = kellerberrin::genome;
-namespace kgd = kellerberrin::deconvolv;
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -330,18 +325,6 @@ if (not kgl::GenomicSequence::translateContig("NC_045512_2", "NC_045512.2", geno
 
 void kgl::PhylogeneticAnalysis::performMix() {
 
-// Index variants by ref/alt count.
-VariantClassifier classifier(unphased_population_ptr_);
-
-for (auto const& genome : classifier.getGenomes()) {
-
-  const size_t minimum_offset_base_count = 25;
-  const size_t maximum_offset_base_count = 150;
-  kgd::MixtureDataObj mixture_data = classifier.convertToMixture(genome, minimum_offset_base_count,
-                                                                 maximum_offset_base_count);
-  kgd::Deconvolv::executeLib(mixture_data);
-
-}
 
 }
 

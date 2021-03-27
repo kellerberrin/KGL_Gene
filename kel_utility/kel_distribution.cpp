@@ -3,7 +3,6 @@
 //
 
 
-#include "kgd_deconvolv_app.h"
 #include "kel_distribution.h"
 
 #include <boost/math/special_functions/gamma.hpp>
