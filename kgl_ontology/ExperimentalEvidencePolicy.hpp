@@ -8,7 +8,6 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #define EXPERIMENTAL_EVIDENCE_POLICY
 
 #include <AllowedSetEvidencePolicy.hpp>
-#include <boost/unordered_map.hpp>
 
 /*! \class ExperimentalEvidencePolicy
 	\brief A class to allow experimental evidence codes for annotations
@@ -24,15 +23,18 @@ public:
 	/*!
 		Creates the default(empty) AllowedSetEvidencePolicy
 	*/
-	inline ExperimentalEvidencePolicy():AllowedSetEvidencePolicy(){
-		//_evidenceMap = boost::unordered_map<GO::EvidenceCode,bool>();
+	ExperimentalEvidencePolicy() : AllowedSetEvidencePolicy() {
+
 		addEvidence(GO::EXP);
 		addEvidence(GO::IDA);
 		addEvidence(GO::IPI);
 		addEvidence(GO::IMP);
 		addEvidence(GO::IGI);
 		addEvidence(GO::IEP);
+
 	}
+
+  ~ExperimentalEvidencePolicy() override = default;
 
 };
 #endif

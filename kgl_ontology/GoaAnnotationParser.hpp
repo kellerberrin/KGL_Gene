@@ -28,12 +28,37 @@ class GoaAnnotationParser: public AnnotationParserInterface {
 
 public:
 
+  //! A default constructor method for creating the parser with a policy.
+  /*!
+    Creates the parser
+  */
+  GoaAnnotationParser() : _policy(new DisallowedSetEvidencePolicy) {}
+
+  //! A parameterized constructor method for creating the parser with a policy.
+  /*!
+    Creates the parser
+  */
+  explicit GoaAnnotationParser(std::unique_ptr<const EvidencePolicyInterface> policy){
+
+    _policy = std::move(policy);
+
+  }
+
+  ~GoaAnnotationParser() override = default;
+
+  //! An interface method for creating a new instance of the parser.
+  /*!
+    This method returns a new instance of the class. This method partially
+      fulfills the interface contract.
+  */
+  [[nodiscard]] AnnotationParserInterface* clone() override { return new GoaAnnotationParser(_policy->clone()); }
+
 	//! An interface method for parsing an annotation file.
 	/*!
 		This method takes a filename as in put and returns a pointer to an
 		  AnnotationData object. This method fulfills part of the interface contract.
 	*/
-	inline AnnotationData* parseAnnotationFile(std::string filename){
+	[[nodiscard]] AnnotationData* parseAnnotationFile(std::string filename) override {
 
 		AnnotationData* annoData = new AnnotationData();
 
@@ -63,11 +88,11 @@ public:
 			it = tokens.begin();
 
 			//always check if empty (must have in linux)
-			if(it == tokens.end()){continue;}
+			if(it == tokens.end()) { continue; }
 			//iterator at 0
 
 			//skip comments if line is not empty and starts with !
-			if(line.at(0) == '!'){continue;}
+			if(line.at(0) == '!') { continue; }
 
 
 			std::string database,geneName,qualifierStr,goStr,evidenceCode,ontology;
@@ -103,6 +128,7 @@ public:
 			if(_policy->isAllowed(GO::evidenceStringToCode(evidenceCode))){
 				//add gene to go association to the database
 				annoData->addAssociation(geneName,goStr,evidenceCode);
+
 			}
 
 		}//end while, each line
@@ -116,7 +142,7 @@ public:
 	/*!
 		This function checks that the file exists and its format can be recognized.
 	*/
-	inline bool isFileGood(const std::string &fileName){
+	bool isFileGood(const std::string &fileName) override {
 		std::ifstream in(fileName.c_str());
 		if (!in.good()){
 			return false;
@@ -141,10 +167,10 @@ public:
 			it = tokens.begin();
 
 			//always check if empty (must have in linux)
-			if (it == tokens.end()){ continue; }
+			if (it == tokens.end()) { continue; }
 
 			//skip comments if line is not empty and starts with !
-			if (line.at(0) == '!'){ continue; }
+			if (line.at(0) == '!') { continue; }
 
 
 			std::string database, geneName, qualifierStr, goString, evidenceCode, ontology;
@@ -154,28 +180,28 @@ public:
 				{
 					case 0:
 						database = *it;
-						if (database.size() == 0){ return false; }
+						if (database.size() == 0) { return false; }
 						break;
 					case 1:
 						geneName = *it;
-						if (geneName.size() == 0){ return false; }
+						if (geneName.size() == 0) { return false; }
 						break;
 					case 3:
 						qualifierStr = *it;
 						break;
 					case 4:
 						goString = *it;
-						if (goString.size() == 0){ return false; }           // disallow empty go
-						if (goString.substr(0, 3) != "GO:"){ return false; } // disallow bad go term
+						if (goString.size() == 0) { return false; }           // disallow empty go
+						if (goString.substr(0, 3) != "GO:") { return false; } // disallow bad go term
 						break;
 					case 6:
 						evidenceCode = *it;
-						if (evidenceCode.size() == 0){ return false; }
-						if (GO::evidenceStringToCode(evidenceCode) == GO::ECODE_ERROR){ return false;}
+						if (evidenceCode.size() == 0) { return false; }
+						if (GO::evidenceStringToCode(evidenceCode) == GO::ECODE_ERROR) { return false;}
 						break;
 					case 8:
 						ontology = *it;
-						if (ontology.size() == 0){ return false; }
+						if (ontology.size() == 0) { return false; }
 						break;
 					default:
 						break;
@@ -189,43 +215,22 @@ public:
 
 
 		if (count < 5){
+
 			return false;
+
 		}
 		else{
+
 			return true;
+
 		}
+
 	}
 
-
-	//! A parameterized constructor method for creating the parser with a policy.
-	/*!
-		Creates the parser
-	*/
-	inline GoaAnnotationParser(EvidencePolicyInterface* policy){
-		_policy = policy;
-	}
-
-
-	//! A default constructor method for creating the parser with a policy.
-	/*!
-		Creates the parser
-	*/
-	inline GoaAnnotationParser(){
-		_policy = new DisallowedSetEvidencePolicy();
-	}
-
-
-	//! An interface method for creating a new instance of the parser.
-	/*!
-		This method returns a new instance of the class. This method partially
-		  fulfills the interface contract.
-	*/
-	inline AnnotationParserInterface* clone(){
-		return new GoaAnnotationParser(_policy);
-	}//end method, AnnotationParserInterface
 
 private:
-	EvidencePolicyInterface* _policy;
+
+	std::unique_ptr<const EvidencePolicyInterface> _policy;
 
 };
 #endif

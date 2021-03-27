@@ -17,12 +17,24 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	  of evidence codes when parsing annotations
 */
 class EvidencePolicyInterface{
+
 public:
+
+  EvidencePolicyInterface() = default;
+  virtual ~EvidencePolicyInterface() = default;
+
 	//! A pure virtual method to test if an evidence code is allowed
 	/*!
 		This pure virtual method requires any subclass to imlement an isAllowed
 		  method to enforce the evidence pollicy.
 	*/
-	virtual bool isAllowed(GO::EvidenceCode evidenceCode) = 0;
+	[[nodiscard]] virtual bool isAllowed(const GO::EvidenceCode& evidenceCode) const = 0;
+
+  /*!
+    This pure virtual method copies an evidence policy.
+  */
+	[[nodiscard]] virtual std::unique_ptr<const EvidencePolicyInterface> clone() const = 0;
+
 };
+
 #endif

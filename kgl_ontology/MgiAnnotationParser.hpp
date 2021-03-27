@@ -31,13 +31,16 @@ public:
 	/*!
 		Creates the parser
 	*/
-	inline MgiAnnotationParser() : GoaAnnotationParser(){}
+	MgiAnnotationParser() = default;
 
 	//! A parameterized constructor method for creating the parser with a policy.
 	/*!
 		Creates the parser with a custom policy
 	*/
-	inline MgiAnnotationParser(EvidencePolicyInterface* policy) : GoaAnnotationParser(policy){}
+	explicit MgiAnnotationParser(std::unique_ptr<const EvidencePolicyInterface> policy) : GoaAnnotationParser( std::move(policy) ){}
+
+  ~MgiAnnotationParser() override = default;
+
 };
 
 #endif
