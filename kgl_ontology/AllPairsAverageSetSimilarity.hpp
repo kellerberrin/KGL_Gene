@@ -26,45 +26,43 @@ class AllPairsAverageSetSimilarity : public TermSetSimilarityInterface{
 public:
 	//! Constructor
 	/*!
-		Creates the AllPairsAverageSetSimilarity class assigning the similarity measure private memeber.
+		Creates the AllPairsAverageSetSimilarity class assigning the similarity measure private member.
 	*/
-	AllPairsAverageSetSimilarity(TermSimilarityInterface* simMeasure){
-		_similarity = simMeasure;
-	}
+	AllPairsAverageSetSimilarity(std::shared_ptr<const TermSimilarityInterface> simMeasure) : _similarity(std::move(simMeasure)) {}
+  ~AllPairsAverageSetSimilarity() override = default;
 
 	//! A method for calculating term set to term set similarity for GO terms;
 	/*!
 		This method returns the Relevance similarity.
 	*/
-	inline double calculateSimilarity(const boost::unordered_set<std::string> &termsA, const boost::unordered_set<std::string> &termsB){
+	[[nodiscard]] double calculateSimilarity(const OntologySetType<std::string> &termsA, const OntologySetType<std::string> &termsB) const override {
 		//return 0 if a set is empty
-		if(termsA.size() == 0 || termsB.size() == 0){
+		if(termsA.empty() or termsB.empty()) {
+
 			return 0.0;
+
 		}
 
 		//get mean accumulator
 		Accumulators::MeanAccumulator simMean;
 
 		//get iterators
-		boost::unordered_set<std::string>::iterator aTermIter;
-		boost::unordered_set<std::string>::iterator bTermIter;
 		//iterate A set
-		for(aTermIter = termsA.begin(); aTermIter != termsA.end(); ++aTermIter){
-			//get term from A set
-			std::string aTerm = *aTermIter;
+		for(auto const& aTerm : termsA) {
 			//iterate B terms
-			for(bTermIter = termsB.begin(); bTermIter != termsB.end(); ++bTermIter){
+			for(auto const& bTerm : termsB){
 				//get the term from B set
-				std::string bTerm = *bTermIter;
 				double sim = _similarity->calculateNormalizedTermSimilarity(aTerm,bTerm);
 				//std::cout << aTerm << " " << bTerm << " " << sim << std::endl;
-
 				//add to accumulator
 				simMean(sim);
+
 			}
+
 		}
 		//return the mean from the accumulator
 		return Accumulators::extractMean(simMean);
+
 	}
 
 private:
@@ -72,6 +70,7 @@ private:
 	/*!
 		This object will actually calculate the similarity between pairs of terms.
 	*/
-	TermSimilarityInterface* _similarity;
+	std::shared_ptr<const TermSimilarityInterface> _similarity;
+
 };
 #endif

@@ -28,19 +28,20 @@ public:
 	/*!
 		Creates the BestMatchAverageSetSimilarity class assigning the similarity measure private memeber.
 	*/
-	BestMatchAverageSetSimilarity(TermSimilarityInterface* simMeasure){
-		_similarity = simMeasure;
-	}
+	BestMatchAverageSetSimilarity(std::shared_ptr<const TermSimilarityInterface> simMeasure) : _similarity(std::move(simMeasure)) {}
+  ~BestMatchAverageSetSimilarity() override = default;
 
 	//! A method for calculating term set to term set similarity for GO terms;
 	/*!
 		This method returns the best match average similarity.
 	*/
-	inline double calculateSimilarity(const boost::unordered_set<std::string> &termsA, const boost::unordered_set<std::string> &termsB){
+	[[nodiscard]] double calculateSimilarity(const OntologySetType<std::string> &termsA, const OntologySetType<std::string> &termsB) const override {
 
 		//return 0 if a set is empty
-		if(termsA.size() == 0 || termsB.size() == 0){
+		if (termsA.empty() or termsB.empty()) {
+
 			return 0.0;
+
 		}
 
 		//get mean accumulator
@@ -51,26 +52,23 @@ public:
 
 		//Have to calculate the best match for term in A to terms in B
 		//get iterators
-		boost::unordered_set<std::string>::iterator aTermIter;
-		boost::unordered_set<std::string>::iterator bTermIter;
 		//iterate A set
-		for(aTermIter = termsA.begin(); aTermIter != termsA.end(); ++aTermIter){
-			//get term from A set
-			std::string aTerm = *aTermIter;
+		for(auto const& aTerm : termsA) {
 			//get best match value
 			Accumulators::MaxAccumulator maxForTermA;
 			//iterate B terms
-			for(bTermIter = termsB.begin(); bTermIter != termsB.end(); ++bTermIter){
+			for(auto const bTerm : termsB) {
 				//get the term from B set
-				std::string bTerm = *bTermIter;
-				double sim = _similarity->calculateNormalizedTermSimilarity(aTerm,bTerm);
+				double sim = _similarity->calculateNormalizedTermSimilarity( aTerm, bTerm);
 				//std::cout << aTerm << " " << bTerm << " " << sim << std::endl;
 
 				//add to accumulator
 				maxForTermA(sim);
+
 			}
 			//add to accumulator
 			meanA(Accumulators::extractMax(maxForTermA));
+
 		}
 
 		//std::cout << "--" << std::endl;
@@ -80,27 +78,29 @@ public:
 		//average for best matches
 		Accumulators::MeanAccumulator meanB;
 		//iterate A set
-		for(bTermIter = termsB.begin(); bTermIter != termsB.end(); ++bTermIter){
-			//get term from A set
-			std::string bTerm = *bTermIter;
+		for(auto const& bTerm : termsB){
 			//get best match value
 			Accumulators::MaxAccumulator maxForTermB;
 			//iterate B terms
-			for(aTermIter = termsA.begin(); aTermIter != termsA.end(); ++aTermIter){
+			for(auto const& aTerm : termsA) {
 				//get the term from B set
-				std::string aTerm = *aTermIter;
-				double sim = _similarity->calculateNormalizedTermSimilarity(aTerm,bTerm);
+				double sim = _similarity->calculateNormalizedTermSimilarity( aTerm, bTerm);
 				//std::cout << aTerm << " " << bTerm << " " << sim << std::endl;
 
 				//add to accumulator
 				maxForTermB(sim);
+
 			}
 			//add to accumulator
 			meanB(Accumulators::extractMax(maxForTermB));
+
 		}
 
-		//return the avearage of the 2 means from our accumulator
-		return (Accumulators::extractMean(meanA) + Accumulators::extractMean(meanB))/2.0;
+    //Return the average of the 2 means from our accumulator
+		double mean_average = (Accumulators::extractMean(meanA) + Accumulators::extractMean(meanB)) / 2.0;
+
+		return mean_average;
+
 	}
 
 private:
@@ -108,6 +108,7 @@ private:
 	/*!
 		This object will actually calculate the similarity between pairs of terms.
 	*/
-	TermSimilarityInterface* _similarity;
+	std::shared_ptr<const TermSimilarityInterface> _similarity;
+
 };
 #endif

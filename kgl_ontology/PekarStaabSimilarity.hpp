@@ -29,7 +29,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	GraphDist(LCA,root)/(GraphDist(a,LCA)+GraphDist(b,LCA)+GraphDist(LCA,root))
 
 */
-class PekarStaabSimilarity: public TermSimilarityInterface{
+class PekarStaabSimilarity: public TermSimilarityInterface {
 
 public:
 	
@@ -37,106 +37,88 @@ public:
 	/*!
 		Creates the default(empty) StandardRelationshipPolicy
 	*/
-	inline PekarStaabSimilarity(GoGraph* goGraph,TermDepthMap &icMap){
-		_goGraph = goGraph;
-		_depthMap = icMap;
-	}
+	PekarStaabSimilarity(std::shared_ptr<const GoGraph> goGraph, std::shared_ptr<const TermDepthMap> icMap)
+	:	_goGraph(std::move(goGraph)), _depthMap(std::move(icMap)) {}
+  ~PekarStaabSimilarity() override = default;
+
 
 	//! A method for calculating term-to-term similarity for GO terms using Pekar Staab similarity
 	/*!
 		This method returns the PekarStaab similarity.
 	*/
-	inline double calculateTermSimilarity(std::string goTermA, std::string goTermB){
+	[[nodiscard]] double calculateTermSimilarity(const std::string& goTermA, const std::string& goTermB) const override {
 		//if the terms do not exit return 0.0 similarity
-		if (!_depthMap.hasTerm(goTermA) || !_depthMap.hasTerm(goTermB)){
+		if (not _depthMap->hasTerm(goTermA) or not _depthMap->hasTerm(goTermB)) {
+
 			return 0.0;
+
 		}
 
 		//if not from same ontology, return 0;
 		if(_goGraph->getTermOntology(goTermA) != _goGraph->getTermOntology(goTermB)){
-			return 0;
+
+			return 0.0;
+
 		}
 
 		//create 2 sets
-		boost::unordered_set<std::string> ancestorsA = _goGraph->getAncestorTerms(goTermA);
+		OntologySetType<std::string> ancestorsA = _goGraph->getAncestorTerms(goTermA);
 		ancestorsA.insert(goTermA);
-		boost::unordered_set<std::string> ancestorsB = _goGraph->getAncestorTerms(goTermB);
+		OntologySetType<std::string> ancestorsB = _goGraph->getAncestorTerms(goTermB);
 		ancestorsB.insert(goTermB);
 
 		//if either set is empty, return 0
-		if(ancestorsA.size() == 0 || ancestorsB.size() == 0){
+		if(ancestorsA.empty() || ancestorsB.empty()) {
+
 			return 0.0;
+
 		}
 
-		std::string lca = getLCA(ancestorsA,ancestorsB);
+		std::string lca = _depthMap->getLCA(ancestorsA, ancestorsB);
 
 		//std::cout << "Pekar Staab LCA " << lca << std::endl;
 
-		double lcaDepth = _depthMap[lca];
+		TermDepthType lcaDepth = _depthMap->getValue(lca);
 
 		//std::cout << "Pekar Staab LCA " << lcaDepth << std::endl;
 		//std::cout << "Pekar Staab delta(a,lca) " << (_depthMap[goTermA] - lcaDepth) << std::endl;
 		//std::cout << "Pekar Staab delta(b,lca) " << (_depthMap[goTermB] - lcaDepth) << std::endl;
 
+    TermDepthType denom = (_depthMap->getValue(goTermA) - lcaDepth) + (_depthMap->getValue(goTermA) - lcaDepth) + lcaDepth;
 
-		//return the similarity of Pekar Staab
-		return (double)lcaDepth/( (_depthMap[goTermA] - lcaDepth) + (_depthMap[goTermB] - lcaDepth) +lcaDepth);
+    if (denom == 0) {
+
+      return 0;
+
+    } else {
+
+      return static_cast<double>(lcaDepth) / static_cast<double>(denom);
+
+    }
+
 	}
 
 	//! A method for calculating term-to-term similarity for GO terms using Normalized Pekar Staab similarity
 	/*!
 		This method returns the PekarStaab similarity scaled between 0 and 1 [0,1] inclusive
 	*/
-	inline double calculateNormalizedTermSimilarity(std::string goTermA, std::string goTermB){
+  [[nodiscard]] double calculateNormalizedTermSimilarity(const std::string& goTermA, const std::string& goTermB) const {
 		//if the terms do not exit return 0.0 similarity
-		if (!_depthMap.hasTerm(goTermA) || !_depthMap.hasTerm(goTermB)){
+		if (not _depthMap->hasTerm(goTermA) || not _depthMap->hasTerm(goTermB)) {
+
 			return 0.0;
+
 		}
 		//Pekar and Staab's method is already normalized
 		return calculateTermSimilarity(goTermA,goTermB);
-	}
 
-	//! A method for calculating the least common ancestor
-	/*!
-		This method searches the sets to determine the deepest common ancestor
-	*/
-	inline std::string getLCA(boost::unordered_set<std::string> &ancestorsA,boost::unordered_set<std::string> &ancestorsB){
-		//get the first term as a start
-		std::string lca = *ancestorsA.begin();
-		//max depth
-		double max = -1.0;
-
-		//always traverse the shortest list
-		if(ancestorsA.size() > ancestorsB.size()){
-			ancestorsA.swap(ancestorsB);
-		}
-
-		//loop over shorter list
-		boost::unordered_set<std::string>::iterator iter;
-		for(iter = ancestorsA.begin(); iter != ancestorsA.end(); ++iter){
-			//current string
-			std::string currentTerm = *iter;
-
-			if(ancestorsB.find(currentTerm) == ancestorsB.end()){
-				//continue, not a shared ancestor term
-				continue;
-			}
-
-			//if new max, update
-			if(_depthMap[currentTerm] > max){
-				lca = currentTerm;
-				max = _depthMap[currentTerm];
-			}
-		}
-
-		return lca;
 	}
 
 
 private:
 
-	GoGraph* _goGraph;
-	TermDepthMap _depthMap;
+	std::shared_ptr<const GoGraph> _goGraph;
+	std::shared_ptr<const TermDepthMap> _depthMap;
 
 };
 #endif

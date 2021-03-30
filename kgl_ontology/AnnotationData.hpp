@@ -16,9 +16,6 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #include <map>
 #include <string>
 
-#include <boost/unordered_map.hpp>
-#include <boost/unordered_set.hpp>
-
 
 //! A class for storing information about genes annotated with go terms.
 /*!
@@ -27,7 +24,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	 and mappings from a go term to a list of annotated genes. This class allows querying go annotations
 	 and their evidence codes.
 */
-class AnnotationData{
+class AnnotationData {
 
 public:
 	/////////////////////////////////////////////////////////
@@ -55,14 +52,14 @@ public:
 		This map accespts gene strings and returns gene indices.
 		  boost unordered_map ensures O(1) constant time find/has_key queries (hash table).
 	*/
-	boost::unordered_map<std::string,std::size_t> _stringToGene;
+	OntologyMapType<std::string,std::size_t> _stringToGene;
 
 	//! A map from a go term strings to a go term index.
 	/*!
 		This map accespts go term strings and returns go term indices.
 		  boost unordered_map ensures O(1) constant time find/has_key queries (hash table).
 	*/
-	boost::unordered_map<std::string,std::size_t> _stringToGo;
+  OntologyMapType<std::string,std::size_t> _stringToGo;
 	////////////////////////////////////////////////////////////////////////////////
 	// Main data storage objects 2d vectors storing gos for genes and genes for gos.
 	////////////////////////////////////////////////////////////////////////////////
@@ -99,35 +96,12 @@ public:
 	/*!
 		This constructor initialized each vector as an empty vector of the correct type.
 	*/
-	inline AnnotationData(){
-		_genes   = std::vector<std::string>();
-		_goTerms = std::vector<std::string>();
-
-		_goToGenes         = std::vector<std::vector<std::size_t> >();
-		_goToGenesEvidence = std::vector<std::vector<GO::EvidenceCode> >();
-
-		_geneToGos = std::vector<std::vector<std::size_t> >();
-		_geneToGosEvidence = std::vector<std::vector<GO::EvidenceCode> >();
-	}//constructor
-
-	//! class descructor
+	AnnotationData() = default;
+	//! class destructor
 	/*!
 		This destructor clears all maps and vectors.
 	*/
-	inline ~AnnotationData(){
-		//Clear all containers on desctruction
-		_genes.clear();
-		_goTerms.clear();
-
-		_stringToGene.clear();
-		_stringToGo.clear();
-
-		_goToGenes.clear();
-		_goToGenesEvidence.clear();
-
-		_geneToGos.clear();
-		_geneToGosEvidence.clear();
-	}//end destructor
+	~AnnotationData() = default;
 
 
 	//! A Method to add annotations to the dataset.
@@ -135,7 +109,7 @@ public:
 		This method adds annotations to the database. It takes a gene, a goTerm, and an evidence code.
 		  This method checks existence and indexing to remove the burden from parser implementations.
 	*/
-	inline void addAssociation(const std::string &gene, const std::string &goTerm, const std::string &evidenceCode){
+	void addAssociation(const std::string &gene, const std::string &goTerm, const std::string &evidenceCode) {
 
 		//Index variables
 		std::size_t geneIndex;
@@ -158,7 +132,7 @@ public:
 
 			//initialize the vectors for go and evidence
 			try{
-				_geneToGos.push_back(std::vector<std::size_t>());
+				_geneToGos.emplace_back(std::vector<std::size_t>());
 			}catch(std::exception& e){
 				std::cout << e.what() << std::endl;
 				std::cout << "push_back _geneToGos" << std::endl;
@@ -167,7 +141,7 @@ public:
 			}
 
 			try{
-				_geneToGosEvidence.push_back(std::vector<GO::EvidenceCode>());
+				_geneToGosEvidence.emplace_back(std::vector<GO::EvidenceCode>());
 			}catch(std::exception& e){
 				std::cout << e.what() << std::endl;
 				std::cout << "push_back _geneToGosEvidence" << std::endl;
@@ -200,8 +174,8 @@ public:
 
 
 			//initialize the vectors for genes and evidence
-			_goToGenes.push_back(std::vector<std::size_t>());
-			_goToGenesEvidence.push_back(std::vector<GO::EvidenceCode>());
+			_goToGenes.emplace_back(std::vector<std::size_t>());
+			_goToGenesEvidence.emplace_back(std::vector<GO::EvidenceCode>());
 
 		}//end if, first finding goTerm
 		//get the index in constant time
@@ -213,7 +187,6 @@ public:
 			std::cout << gene << " " << goTerm  << " " << evidenceCode << std::endl;
 			std::cout << "size " << _goTerms.size() << std::endl;
 		}
-
 
 
 		try{
@@ -255,22 +228,26 @@ public:
 		try{
 		//add evidence code to go's list, in parallel with gene
 		_goToGenesEvidence.at(goIndex).push_back(eCode);
-		}catch(std::exception& e){
+
+		} catch(std::exception& e) {
+
 			std::cout << e.what() << std::endl;
 			std::cout << "evidence _goToGenesEvidence" << std::endl;
 			std::cout << "size      " <<  _goToGenesEvidence.size() << std::endl;
 			std::cout << "size sub  " <<  _goToGenesEvidence.at(goIndex).size() << std::endl;
 			std::cin.get();
+
 		}
 
+  } catch(std::exception& e) {
 
-		}catch(std::exception& e){
-			std::cout << e.what() << std::endl;
-			std::cout << "add evidence" << std::endl;
-			std::cout << gene << " " << goTerm  << " " << evidenceCode << std::endl;
-			std::cout << "size " << _goTerms.size() << std::endl;
-			std::cin.get();
-		}
+    std::cout << e.what() << std::endl;
+    std::cout << "add evidence" << std::endl;
+    std::cout << gene << " " << goTerm  << " " << evidenceCode << std::endl;
+    std::cout << "size " << _goTerms.size() << std::endl;
+    std::cin.get();
+
+  }
 	
 	}//end method addAssciation
 
@@ -279,54 +256,45 @@ public:
 	/*!
 		A helper method to check if a term exists in the database.
 	*/
-	inline bool hasGoTerm(const std::string &goTerm){
-		return _stringToGo.find(goTerm) != _stringToGo.end();
-	}
+	[[nodiscard]] bool hasGoTerm(const std::string &goTerm) const { return _stringToGo.find(goTerm) != _stringToGo.end(); }
 
 
 	//! This method tests the existence of a gene in the database.
 	/*!
 		A helper method to check if a gene exists in the database.
 	*/
-	inline bool hasGene(const std::string &gene){
-		return _stringToGene.find(gene) != _stringToGene.end();
-	}
+	[[nodiscard]] bool hasGene(const std::string &gene) const { return _stringToGene.find(gene) != _stringToGene.end(); }
 
 	//! This method returns all the go terms in the database
 	/*!
 		A helper method to return all the GO terms in the databse
 	*/
-	inline std::vector<std::string> getAllGoTerms(){
-		return _goTerms;
-	}
+  [[nodiscard]] const std::vector<std::string>& getAllGoTerms() const { return _goTerms; }
 
 	//! This method returns all genes in the database
 	/*!
 		A helper method to return all the genes in the databse
 	*/
-	inline std::vector<std::string> getAllGenes(){
-		return _genes;
-	}
-
+	[[nodiscard]] const std::vector<std::string>& getAllGenes() const { return _genes; }
 
 	//! This method gets the go terms for a gene.
 	/*!
 		A helper method to return, for a gene, a list of go terms as a vector of strings.
 	*/
-	inline std::vector<std::string> getGoTermsForGene(const std::string &gene){
+	[[nodiscard]] std::vector<std::string> getGoTermsForGene(const std::string &gene) const {
 		//temparary storage variable
 		std::vector<std::string> goTerms;
 
 		//test if gene exists,prevent key error
-		if(hasGene(gene)){
-			std::size_t index = _stringToGene[gene];
+		if (hasGene(gene)){
 
-			//get an iterator of the go indices.
-			std::vector<std::size_t>::iterator iter = _geneToGos.at(index).begin();
+			auto const& [key, index] = *(_stringToGene.find(gene));
 
 			//move other the indices placeing the correct go in the list
-			for(;iter != _geneToGos.at(index).end(); ++iter){
-				goTerms.push_back(_goTerms.at(*iter));
+			for(auto const& element : _geneToGos.at(index)) {
+
+				goTerms.push_back(_goTerms.at(element));
+
 			}
 
 		}
@@ -341,22 +309,25 @@ public:
 		A helper method to return a list of go terms as a set of strings for a gene
 		given the sub ontology BP, MF, or CC.
 	*/
-	inline boost::unordered_set<std::string> getGoTermsForGeneByOntology(const std::string &gene, GO::Onto filterOntology, GoGraph *G){
+	[[nodiscard]] OntologySetType<std::string> getGoTermsForGeneByOntology(const std::string &gene, GO::Onto filterOntology, const GoGraph& G) const {
 		//temparary storage variable
-		boost::unordered_set<std::string> goTerms;
+    OntologySetType<std::string> goTerms;
 
 		//test if gene exists,prevent key error
-		if(hasGene(gene)){
-			std::size_t index = _stringToGene[gene];
+		if (hasGene(gene)) {
 
-			//get an iterator of the go indices.
-			std::vector<std::size_t>::iterator iter = _geneToGos.at(index).begin();
+			auto const& [key, index] = *(_stringToGene.find(gene));
 
 			//move other the indices placeing the correct go in the list
-			for(;iter != _geneToGos.at(index).end(); ++iter){
-				std::string term = _goTerms.at(*iter);
-				if(G->getTermOntology(term) == filterOntology)
-				goTerms.insert(term);
+			for(auto const& element : _geneToGos.at(index)) {
+
+				std::string term = _goTerms.at(element);
+				if (G.getTermOntology(term) == filterOntology) {
+
+          goTerms.insert(term);
+
+				}
+
 			}
 
 		}
@@ -369,24 +340,30 @@ public:
 	/*!
 		A helper method to return a list of BP go terms for a gene.
 	*/
-	inline boost::unordered_set<std::string> getGoTermsForGeneBP(const std::string &gene, GoGraph *G){
+  [[nodiscard]] OntologySetType<std::string> getGoTermsForGeneBP(const std::string &gene, const GoGraph& G) const {
+
 		return getGoTermsForGeneByOntology(gene, GO::BP, G);
+
 	}
 
 	//! This method gets the molecular function go terms for a gene.
 	/*!
 		A helper method to return a list of MF go terms for a gene.
 	*/
-	inline boost::unordered_set<std::string> getGoTermsForGeneMF(const std::string &gene, GoGraph *G){
+	[[nodiscard]] OntologySetType<std::string> getGoTermsForGeneMF(const std::string &gene, const GoGraph& G) const {
+
 		return getGoTermsForGeneByOntology(gene, GO::MF, G);
+
 	}
 
 	//! This method gets the cellular component go terms for a gene.
 	/*!
 	A helper method to return a list of CC go terms for a gene.
 	*/
-	inline boost::unordered_set<std::string> getGoTermsForGeneCC(const std::string &gene, GoGraph *G){
+	[[nodiscard]] OntologySetType<std::string> getGoTermsForGeneCC(const std::string &gene, const GoGraph& G) const {
+
 		return getGoTermsForGeneByOntology(gene, GO::CC, G);
+
 	}
 
 	//! A method to get the evidence codes for a list of go terms.
@@ -394,42 +371,49 @@ public:
 		This method returns the evidence codes for a list of go terms. It parallels the 
 		  getGoTermsForGene method and is used for printing and testing.
 	*/
-	inline std::vector<std::string> getGoTermsEvidenceForGene(const std::string &gene){
+	[[nodiscard]] std::vector<std::string> getGoTermsEvidenceForGene(const std::string &gene) const {
+
 		std::vector<std::string> eCodes;
-		if(hasGene(gene)){
-			std::size_t index = _stringToGene[gene];
-			std::vector<GO::EvidenceCode>::iterator iter = _geneToGosEvidence.at(index).begin();
-			for(;iter != _geneToGosEvidence.at(index).end(); ++iter){
-				std::string code = GO::evidenceStringCodes[*iter];
+		if( hasGene(gene) ) {
+
+			auto const& [key, index] = *(_stringToGene.find(gene));
+			for(auto const& go_element : _geneToGosEvidence.at(index)) {
+
+				std::string code = GO::evidenceStringCodes[go_element];
 				eCodes.push_back(code);
+
 			}
+
 		}
+
 		return eCodes;
+
 	}
 
 	//! This method gets the genes for a go term.
 	/*!
 		A helper method to return, for a go term, a list of genes as a vector of strings.
 	*/
-	inline std::vector<std::string> getGenesForGoTerm(const std::string &goTerm){
+	[[nodiscard]] std::vector<std::string> getGenesForGoTerm(const std::string &goTerm) const {
 		//temparary storage variable
 		std::vector<std::string> genes;
 
 		//test if gene exists,prevent key error
-		if(hasGoTerm(goTerm)){
-			std::size_t index = _stringToGo[goTerm];
+		if (hasGoTerm(goTerm)) {
 
-			//get an iterator of the go indices.
-			std::vector<std::size_t>::iterator iter = _goToGenes.at(index).begin();
+			auto const& [key, index] = *(_stringToGo.find(goTerm));
 
 			//move other the indices placeing the correct go in the list
-			for(;iter != _goToGenes.at(index).end(); ++iter){
-				genes.push_back(_genes.at(*iter));
+			for(auto const& element : _goToGenes.at(index)) {
+
+				genes.push_back(_genes.at(element));
+
 			}
 
 		}
 
 		return genes;
+
 	}//end method, getGenesForGoTerm
 
 	//! This method adds the genes for a go term to a set.
@@ -437,19 +421,21 @@ public:
 		A helper method to add genes associated to a term to a set of genes.
 		  Used in enrichment calculation
 	*/
-	inline void addGenesForGoTerm(const std::string &goTerm,boost::unordered_set<std::string> &geneSet){
+	void addGenesForGoTerm(const std::string &goTerm, OntologySetType<std::string> &geneSet) const {
 		//test if gene exists,prevent key error
-		if(hasGoTerm(goTerm)){
-			std::size_t index = _stringToGo[goTerm];
+		if(hasGoTerm(goTerm)) {
 
-			//get an iterator of the go indices.
-			std::vector<std::size_t>::iterator iter = _goToGenes.at(index).begin();
+			auto const& [key, index] = *(_stringToGo.find(goTerm));
 
 			//move other the indices placeing the correct go in the list
-			for(;iter != _goToGenes.at(index).end(); ++iter){
-				geneSet.insert(_genes.at(*iter));
+			for(auto const& element : _goToGenes.at(index)) {
+
+				geneSet.insert(_genes.at(element));
+
 			}
+
 		}
+
 	}
 
 	//! A method to get the evidence codes for a list of genes.
@@ -457,17 +443,22 @@ public:
 		This method returns the evidence codes for a list of genes. It parallels the 
 		  getGenesForGoTerm method and is used for printing and testing.
 	*/
-	inline std::vector<std::string> getGenesEvidenceForGoTerm(const std::string &goTerm){
+	[[nodiscard]] std::vector<std::string> getGenesEvidenceForGoTerm(const std::string &goTerm) const {
+
 		std::vector<std::string> eCodes;
-		if(hasGoTerm(goTerm)){
-			std::size_t index = _stringToGo[goTerm];
-			std::vector<GO::EvidenceCode>::iterator iter = _goToGenesEvidence.at(index).begin();
-			for(;iter != _goToGenesEvidence.at(index).end(); ++iter){
-				std::string code = GO::evidenceStringCodes[*iter];
+		if (hasGoTerm(goTerm)) {
+
+			auto const& [key, index] = *(_stringToGo.find(goTerm));
+			for(auto const& go_element : _goToGenesEvidence.at(index)) {
+
+				std::string code = GO::evidenceStringCodes[go_element];
 				eCodes.push_back(code);
+
 			}
 		}
+
 		return eCodes;
+
 	}
 
 
@@ -476,12 +467,18 @@ public:
 		This method returns the number of annotations for a go term. Queries the data base
 		  rather than extracting a vector. Used to calculate information content.
 	*/
-	inline std::size_t getNumAnnotationsForGoTerm(const std::string &goTerm){
-		if (!hasGoTerm(goTerm)){
+	[[nodiscard]] size_t getNumAnnotationsForGoTerm(const std::string &goTerm) const {
+
+		if (not hasGoTerm(goTerm)) {
+
 			return 0;
+
 		}
-		std::size_t index = _stringToGo[goTerm];
+
+		auto const& [key, index] = *(_stringToGo.find(goTerm));
+
 		return _goToGenes.at(index).size();
+
 	}
 
 	//! A method to get the number of annotations of a particular gene.
@@ -489,45 +486,53 @@ public:
 		This method returns the number of annotations for a go term. Queries the data base
 		  rather than extracting a vector.
 	*/
-	inline std::size_t getNumAnnotationsForGene(const std::string &gene){
-		if (!hasGene(gene)){
+	[[nodiscard]] size_t getNumAnnotationsForGene(const std::string &gene) const {
+
+		if (not hasGene(gene)){
+
 			return 0;
+
 		}
-		std::size_t index = _stringToGene[gene];
+
+		auto const& [key, index] = *(_stringToGene.find(gene));
+
 		return _geneToGos.at(index).size();
+
 	}
 
 	//! A helper method to get the number of genes in the db
 	/*!
 		This method reutrns the size of the _genes vector.
 	*/
-	inline std::size_t getNumGenes(){
-		return _genes.size();
-	}
+	[[nodiscard]] size_t getNumGenes() const { return _genes.size(); }
 
 
 	//! A helper method to get the number of go terms in the db
 	/*!
 		This method reutrns the size of the _goTerms vector.
 	*/
-	inline std::size_t getNumGoTerms(){
-		return _goTerms.size();
-	}
+	[[nodiscard]] size_t getNumGoTerms() const { return _goTerms.size(); }
 
 	//!	A helper method to return only the terms of the give ontology.
 	/*!
 		Returns only those terms used that occur for the given ontology.
 	*/
-	inline std::vector<std::string> getOntologyTerms(GoGraph* graph, GO::Onto ontology){
+	[[nodiscard]] std::vector<std::string> getOntologyTerms(const GoGraph& graph, GO::Onto ontology) const {
+
 		std::vector<std::string> ontologyTerms;
 		//Use only terms in the annotation database, this will save on space and computation time.
-		std::vector<std::string>::iterator it;
-		for (it = _goTerms.begin(); it != _goTerms.end(); ++it){
-			if (graph->getTermOntology(*it) == ontology){
-				ontologyTerms.push_back(*it);
+		for (auto const& term : _goTerms) {
+
+			if (graph.getTermOntology(term) == ontology){
+
+				ontologyTerms.push_back(term);
+
 			}
+
 		}
+
 		return ontologyTerms;
+
 	}
 
 };

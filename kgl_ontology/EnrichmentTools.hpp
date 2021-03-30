@@ -27,21 +27,24 @@ namespace EnrichmentTools{
 	/*!
 		This method calculates the set of the genes annotated with a given term or transatively with a child of that term.
 	*/
-	inline boost::unordered_set<std::string> getDescendantGenes(GoGraph *go, AnnotationData *data, const std::string &term){
-		boost::unordered_set<std::string> descendants = go->getDescendantTerms(term);
+	[[nodiscard]] static OntologySetType<std::string> getDescendantGenes( const GoGraph &go,
+                                                                        const AnnotationData& data,
+                                                                        const std::string &term) {
+
+		OntologySetType<std::string> descendants = go.getDescendantTerms(term);
 		descendants.insert(term);
 
-		boost::unordered_set<std::string>::iterator si;
-		boost::unordered_set<std::string> genes;
+    OntologySetType<std::string> genes;
 
-		for(si = descendants.begin(); si != descendants.end(); ++si){
-			std::string currentTerm = *si;
+		for(auto const& current_term : descendants) {
 			//std::cout << *si << " " << go->getTermName(*si) << std::endl;
-			data->addGenesForGoTerm(currentTerm,genes);
+			data.addGenesForGoTerm(current_term, genes);
+
 		}
 		//std::cout << genes.size() << std::endl;
 
 		return genes;
+
 	}
 
 	//! A method for calculating the result of a hypergeometic test.
@@ -57,14 +60,19 @@ namespace EnrichmentTools{
 		  in a sample of size n, given that the population of size N 
 		  contains K total successes."
 	*/
-	inline double oneSidedRawPvalue_hyper(size_t sample, size_t success,size_t population,size_t test_value){
+  [[nodiscard]] static double oneSidedRawPvalue_hyper(size_t sample, size_t success, size_t population, size_t test_value) {
+
 		double sum = 0.0;
 		boost::math::hypergeometric dist(sample,success,population);
 		for(size_t i = test_value; i <= sample && i <= success; ++i){
+
 			double prob = boost::math::pdf(dist,i);
 			sum += prob;
+
 		}
+
 		return sum;
+
 	}
 
 
@@ -74,15 +82,16 @@ namespace EnrichmentTools{
 		a set of genes that serves as the sample. The population is taken as all genes
 		in the annotation database.
 	*/
-	inline double enrichmentSignificance(GoGraph *go, AnnotationData *data,
-											boost::unordered_set<std::string> &genes,
-											const std::string &term)
+	[[nodiscard]] [[maybe_unused]] static double enrichmentSignificance( const GoGraph& go,
+                                                                       const AnnotationData& data,
+                                                                       const OntologySetType<std::string>& genes,
+											                                                 const std::string &term)
 	{
 
-		boost::unordered_set<std::string> termGenes = getDescendantGenes(go, data, term);
-		boost::unordered_set<std::string> sharedGenes = SetUtilities::set_intersection(genes,termGenes);
+		OntologySetType<std::string> termGenes = getDescendantGenes(go, data, term);
+    OntologySetType<std::string> sharedGenes = SetUtilities::set_intersection(genes,termGenes);
 
-		if(sharedGenes.size() == 0){
+		if(sharedGenes.empty()){
 
 			return 1.0;
 
@@ -91,7 +100,7 @@ namespace EnrichmentTools{
 		size_t sampleSize = genes.size();
 		size_t sampleWithTerm = sharedGenes.size();
 		size_t populationWithTerm = termGenes.size();
-		size_t populationSize = data->getNumGenes();
+		size_t populationSize = data.getNumGenes();
 
 		return oneSidedRawPvalue_hyper(sampleSize,populationWithTerm,populationSize,sampleWithTerm);
 

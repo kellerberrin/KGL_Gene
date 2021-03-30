@@ -24,7 +24,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	 Pac Symp Biocomput, pp. 601-12, 2003.
 	  
 	distance = IC(termA) + IC(termB) - 2*IC(MICA)
-	maxDistance = 2*IC(single annotaiotn)
+	maxDistance = 2*IC(single annotation)
 	similarity = 1 - distance/maxDistance
 	(see Lord et al.)
 
@@ -37,58 +37,60 @@ public:
 	/*!
 		Creates the Jiang Conrath simialrity measure using a given shared infromation calculator
 	*/
-	inline ModularJiangConrath(SharedInformationInterface *sharedInformationCalculator){
-		_siCalculator = sharedInformationCalculator;
-	}
+	ModularJiangConrath(std::shared_ptr<const SharedInformationInterface> sharedInformationCalculator)
+	: _siCalculator(std::move(sharedInformationCalculator)) {}
+  ~ModularJiangConrath() override = default;
 
 	//! A method for calculating term-to-term similarity for GO terms using Lin similarity
 	/*!
 		This method returns the Resnik similarity or the information content of the most informative common ancestor.
 	*/
-	inline double calculateTermSimilarity(std::string goTermA, std::string goTermB){
-		if (!_siCalculator->hasTerm(goTermA) || !_siCalculator->hasTerm(goTermB)){
+	[[nodiscard]] double calculateTermSimilarity(const std::string& goTermA, const std::string& goTermB) const override {
+
+    if (goTermA == goTermB) {
+
+      return 1.0;
+
+    }
+
+		if (not _siCalculator->hasTerm(goTermA) or not _siCalculator->hasTerm(goTermB)){
+
 			return 0.0;
+
 		}
-		if (!_siCalculator->isSameOntology(goTermA, goTermB)){
+
+		if (not _siCalculator->isSameOntology(goTermA, goTermB)){
+
 			return 0.0;
+
 		}
 
 		double sharedIC = _siCalculator->sharedInformation(goTermA,goTermB);
 		double termA_IC = _siCalculator->sharedInformation(goTermA);
 		double termB_IC = _siCalculator->sharedInformation(goTermB);
-
 		double maxIC = _siCalculator->maxInformationContent(goTermA);
 
-		double dist = termA_IC + termB_IC - 2*sharedIC;
+		double dist = termA_IC + termB_IC - (2.0 * sharedIC);
 
-		if(goTermA != goTermB){
-			return 1 - (dist/(2.0*maxIC));
-		}else{
-			return 1.0;
-		}
+		return 1.0 - (dist / (2.0 * maxIC));
+
 	}
-
 
 	//! A method for calculating term-to-term similarity for GO terms using normalized Lin similarity
 	/*!
 		This method returns the Lin similarity. Lin similarity is already normalized
 	*/
-	inline double calculateNormalizedTermSimilarity(std::string goTermA, std::string goTermB){
-		return calculateTermSimilarity(goTermA,goTermB);
-	}
+	[[nodiscard]] double calculateNormalizedTermSimilarity(const std::string& goTermA, const std::string& goTermB) const override {
 
-	//! A method to set alternative methods of shared information calculators
-	/*!
-		This method accepts a new method for calculating the shared information of two terms.
-	*/
-	inline void setSharedInformationCalculator(SharedInformationInterface *newSharedInformationCalulator){
-		_siCalculator = newSharedInformationCalulator;
+		return calculateTermSimilarity(goTermA,goTermB);
+
 	}
 
 private:
 
 	//! private SharedInformationInterface member used for calculations
-	SharedInformationInterface *_siCalculator;
+	std::shared_ptr<const SharedInformationInterface> _siCalculator;
 
 };
+
 #endif

@@ -27,27 +27,34 @@ public:
 	/*!
 		Creates the default(empty) AllowedSetRelationshipPolicy
 	*/
-	inline AllowedSetRelationshipPolicy(){
-		_relationshipMap = boost::unordered_map<GO::Relationship,bool>();
-	}
+	AllowedSetRelationshipPolicy() = default;
+  AllowedSetRelationshipPolicy(const AllowedSetRelationshipPolicy& copy) = default;
+  ~AllowedSetRelationshipPolicy() override = default;
 
 	//! A parameterized constructor
 	/*!
 		Creats the AllowedSetRelationshipPolicy using a list(vector) of relationships to allow
 	*/
-	inline AllowedSetRelationshipPolicy(std::vector<GO::Relationship> relationships){
-		_relationshipMap = boost::unordered_map<GO::Relationship,bool>();
-		for(std::size_t i = 0; i < relationships.size();++i){
-			_relationshipMap[relationships.at(i)] = true;
+	explicit AllowedSetRelationshipPolicy(const std::vector<GO::Relationship>& relationships) {
+
+		for(auto const& relation : relationships) {
+
+			_relationshipMap[relation] = true;
+
 		}
+
 	}
+
+	std::unique_ptr<RelationshipPolicyInterface> clone() const override { return std::make_unique<AllowedSetRelationshipPolicy>(*this); }
 
 	//! a method to test if a relatinoship is allowed or not
 	/*!
 		tests if the relationship is allowed. Overridden to fulfill the RelationshipPolicyInterface
 	*/
-	inline bool isAllowed(GO::Relationship relationship){
-		return _relationshipMap.find(relationship) != _relationshipMap.end();
+	[[nodiscard]] bool isAllowed(GO::Relationship relationship) const override {
+
+	  return _relationshipMap.find(relationship) != _relationshipMap.end();
+
 	}
 
 
@@ -55,19 +62,22 @@ public:
 	/*!
 		adds a relationship to the set of relationships allowed by setting its mapped value to true
 	*/
-	inline void addRelationship(GO::Relationship relationship){
-		_relationshipMap[relationship] = true;
-	}
+	void addRelationship(GO::Relationship relationship) { _relationshipMap[relationship] = true; }
 
 	//! a method to add a relationship to the set of relationships allowed
 	/*!
 	adds a relationship to the set of relationships allowed by setting its mapped value to true
 	*/
-	inline void addRelationship(const std::string &relString){
+	void addRelationship(const std::string &relString) {
+
 		GO::Relationship relationship = GO::relationshipStringToCode(relString);
+
 		if (relationship != GO::REL_ERROR){
+
 			_relationshipMap[relationship] = true;
+
 		}
+
 	}
 
 
@@ -75,15 +85,12 @@ public:
 	/*!
 		Determines if the Policy is empty
 	*/
-	inline bool isEmpty(){
-		return _relationshipMap.size() == 0;
-	}
-
+	inline bool isEmpty() { return _relationshipMap.empty(); }
 
 private:
-	//! a map of relationships to boo
+	//! a map of relationships to bool
     /*! maps a relationship to a bool. Boost unordered map give constant time find. */
-	boost::unordered_map<GO::Relationship,bool> _relationshipMap;
+	OntologyMapType<GO::Relationship,bool> _relationshipMap;
 
 };
 #endif

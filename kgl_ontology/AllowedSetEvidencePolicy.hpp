@@ -54,9 +54,6 @@ public:
   [[nodiscard]] std::unique_ptr<const EvidencePolicyInterface> clone() const override { return std::make_unique<const AllowedSetEvidencePolicy>(*this); }
 
 
-
-
-
 	//! a method to test if an eviddence code is allowed or not
 	/*!
 		tests if the evidence is allowed. Overridden to fulfill the EvidencePolicyInterface
@@ -67,11 +64,7 @@ public:
 	/*!
 		adds a evidence to the set of evidence codes allowed by setting its mapped value to true
 	*/
-	void addEvidence(GO::EvidenceCode evidenceCode){
-
-		_evidenceMap[evidenceCode] = true;
-
-	}
+	void addEvidence(GO::EvidenceCode evidenceCode) { _evidenceMap[evidenceCode] = true; }
 
 	//! a method to add a evidence to the set of evidence codes allowed
 	/*!
@@ -81,7 +74,7 @@ public:
 
 		GO::EvidenceCode evidenceCode = GO::evidenceStringToCode(stringCode);
 
-		if (evidenceCode != GO::ECODE_ERROR){
+		if (evidenceCode != GO::ECODE_ERROR) {
 
 			_evidenceMap[evidenceCode] = true;
 
@@ -94,13 +87,13 @@ public:
 	/*!
 		Determines if the Policy is empty
 	*/
-	[[nodiscard]] bool isEmpty(){ return _evidenceMap.empty(); }
+	[[nodiscard]] bool isEmpty() { return _evidenceMap.empty(); }
 
 
 private:
 	//! a map of evidence codes to bool
     /*! maps an evidence code to a bool. Boost unordered map give constant time find. */
-	std::unordered_map<GO::EvidenceCode,bool> _evidenceMap;
+	OntologyMapType<GO::EvidenceCode,bool> _evidenceMap;
 
 };
 

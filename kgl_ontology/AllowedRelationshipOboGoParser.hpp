@@ -34,6 +34,30 @@ class AllowedRelationshipOboGoParser : public GoParserInterface{
 
 public:
 
+  //! A parameterized constructor
+  /*!
+    constructor that sets the policy
+  */
+  explicit AllowedRelationshipOboGoParser(const RelationshipPolicyInterface& policy) : relationshipPolicy(policy.clone()) {}
+  AllowedRelationshipOboGoParser() = delete; // Must provide a policy
+  ~AllowedRelationshipOboGoParser() override = default;
+
+  //! a method to create a new instance of this class for use in a factory
+  /*!
+    creats a new pointer to the parser, used by the factory for go parsers.
+  */
+  [[nodiscard]] std::unique_ptr<GoParserInterface> clone() const override {
+
+    return std::make_unique<AllowedRelationshipOboGoParser>(*relationshipPolicy);
+
+  }
+
+  //! a method to set the policy
+  /*!
+    sets the policy of the parser
+  */
+  virtual void setPolicy(const RelationshipPolicyInterface& policy) { relationshipPolicy = policy.clone(); }
+
 
 	//! Method to parse the go file, should be an OBO file
 	/*!
@@ -41,11 +65,12 @@ public:
 		 which are specified to the graph.
 
 	*/
-	inline GoGraph* parseGoFile(std::string filename){
-		typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+	[[nodiscard]] std::unique_ptr<GoGraph> parseGoFile(const std::string& filename) const override {
+
+//		typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
 
 		//graph object to be returned
-		GoGraph* graph = new GoGraph();
+    std::unique_ptr<GoGraph> graph(std::make_unique<GoGraph>());
 
 		std::ifstream in(filename.c_str());
 		std::string line;
@@ -186,7 +211,8 @@ public:
 	/*!
 		Returns true if the file matches accepted format, false otherwise
 	*/
-	inline bool isFileGood(const std::string &filename){
+	[[nodiscard]] bool isFileGood(const std::string &filename) const override {
+
 		std::ifstream in(filename.c_str());
 		if (!in.good()){
 			return false;
@@ -235,55 +261,33 @@ public:
 	}
 
 
-	//! a helper method
-	/*!
-		splits strings on the given string pattern, splitStr.
-	*/
-	inline void splitWith(const std::string &instr,const std::string &splitStr,
-								std::string &attr,       std::string &value)
-	{
-		size_t div = instr.find(splitStr);
-		if(div != std::string::npos){
-			attr = instr.substr(0,div);
-			value = instr.substr(div+1);
-			boost::trim(attr);
-			boost::trim(value);
-		}
-	}
-
-
-
-	//! a method to create a new instance of this class for use in a factory
-	/*!
-		creats a new pointer to the parser, used by the factory for go parsers.
-	*/
-	inline GoParserInterface* clone(){
-		return new AllowedRelationshipOboGoParser(relationshipPolicy);
-	}
-
-
-	//! a method to set the policy
-	/*!
-		sets the policy of the parser
-	*/
-	inline void setPolicy(RelationshipPolicyInterface* policy){
-		relationshipPolicy = policy;
-	}
-
-
-	//! A parameterized constructor
-	/*!
-		constructor that sets the policy
-	*/
-	inline AllowedRelationshipOboGoParser(RelationshipPolicyInterface* policy){
-		setPolicy(policy);
-	}
-
-
 private:
+
 	//! A RelationshipPolicyInterface
     /*! This RelationshipPolicyInterface holds the relationships to be allowed during parsing */
-	RelationshipPolicyInterface* relationshipPolicy;
+	std::unique_ptr<RelationshipPolicyInterface> relationshipPolicy;
+
+
+  //! a helper method
+  /*!
+    splits strings on the given string pattern, splitStr.
+  */
+  void splitWith( const std::string &instr,
+                  const std::string &splitStr,
+                  std::string &attr,
+                  std::string &value) const
+  {
+
+    size_t div = instr.find(splitStr);
+
+    if(div != std::string::npos){
+      attr = instr.substr(0,div);
+      value = instr.substr(div+1);
+      boost::trim(attr);
+      boost::trim(value);
+    }
+
+  }
 
 
 };

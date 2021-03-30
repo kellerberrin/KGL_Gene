@@ -17,14 +17,19 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	 This is the most useful case for comparing genes with multiple annotations to each other.
 
 */
-class TermSetSimilarityInterface{
+class TermSetSimilarityInterface {
+
 public:
+
+  TermSetSimilarityInterface() = default;
+  virtual ~TermSetSimilarityInterface() = default;
+
 	//! A pure virtual method for calculating term set to term set similarity for sets of GO terms
 	/*!
 		This pure virtual method requires similarity measure to implement the basic interface
 		  that returns a similarity value for two sets of go terms.
 	*/
-	virtual double calculateSimilarity(const boost::unordered_set<std::string> &termsA, const boost::unordered_set<std::string> &termsB) = 0;
+	[[nodiscard]] virtual double calculateSimilarity(const OntologySetType<std::string> &termsA, const OntologySetType<std::string> &termsB) const = 0;
 
 };
 #endif

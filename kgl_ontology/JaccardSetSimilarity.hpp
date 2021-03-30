@@ -18,7 +18,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	This class calculates jaccard set similarity between two sets of terms.
 
 */
-class JaccardSetSimilarity : public TermSetSimilarityInterface{
+class JaccardSetSimilarity : public TermSetSimilarityInterface {
 
 public:
 
@@ -26,32 +26,37 @@ public:
 	/*!
 		Creates the JaccardSetSimilarity class.
 	*/
-	JaccardSetSimilarity(){
-	}
+	JaccardSetSimilarity() = default;
+  ~JaccardSetSimilarity() override = default;
 
 
 	//! A method for calculating term set to term set similarity for GO terms;
 	/*!
 		This method returns the Jaccard set similarity.
 	*/
-	inline double calculateSimilarity(const boost::unordered_set<std::string> &termsA, const boost::unordered_set<std::string> &termsB){
+	[[nodiscard]] double calculateSimilarity(const OntologySetType<std::string> &termsA, const  OntologySetType<std::string> &termsB) const override {
 
 		//return 0 if a set is empty
-		if(termsA.size() == 0 || termsB.size() == 0){
+		if(termsA.empty() or termsB.empty()){
+
 			return 0.0;
+
 		}
 
 		//get iterators
-		boost::unordered_set<std::string>::iterator shortSetIter;
+		OntologySetType<std::string> _union = SetUtilities::set_union( termsA, termsB);
+		OntologySetType<std::string> _intersection = SetUtilities::set_intersection( termsA, termsB);
 
-		boost::unordered_set<std::string> _union = SetUtilities::set_union(termsA,termsB);
-		boost::unordered_set<std::string> _intersection = SetUtilities::set_intersection(termsA,termsB);
+		if(_union.empty()){
 
-		if(_union.size() == 0){
 			return 0.0;
-		}else{
-			return (double)_intersection.size()/_union.size();
+
+		} else {
+
+			return static_cast<double>(_intersection.size())/static_cast<double>(_union.size());
+
 		}
+
 	}
 
 };

@@ -16,13 +16,18 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	This class defines the interface for comparing term-to-term GO similarity.
 */
 class TermSimilarityInterface{
+
 public:
+
+  TermSimilarityInterface() = default;
+  virtual ~TermSimilarityInterface() = default;
+
 	//! A pure virtual method for calculating term-to-term similarity for GO terms
 	/*!
 		This pure virtual method requires similarity measure to implement the basic interface
 		  that returns a similarity value for two go terms.
 	*/
-	virtual double calculateTermSimilarity(std::string goTermA, std::string goTermB) = 0;
+	[[nodiscard]] virtual double calculateTermSimilarity(const std::string& goTermA, const std::string& goTermB) const = 0;
 
 	//! A pure virtual method for calculating term-to-term similarity for GO terms
 	/*!
@@ -30,6 +35,9 @@ public:
 		  that returns a similarity value for two go terms.
 		  This version of the function must be normalzied. Returning similarity between 0 and 1
 	*/
-	virtual double calculateNormalizedTermSimilarity(std::string goTermA, std::string goTermB) = 0;
+	[[nodiscard]] virtual double calculateNormalizedTermSimilarity(const std::string& goTermA, const std::string& goTermB) const = 0;
+
+
+
 };
 #endif

@@ -35,96 +35,69 @@ public:
 	/*!
 		Creates the LinSimilarity calculator
 	*/
-	inline LinSimilarity(GoGraph* goGraph,TermInformationContentMap &icMap){
-		_goGraph = goGraph;
-		_icMap = icMap;
-	}
+	LinSimilarity(std::shared_ptr<const GoGraph> goGraph, std::shared_ptr<const TermInformationContentMap> icMap)
+	:	_goGraph(std::move(goGraph)), _icMap(std::move(icMap)) {}
+  ~LinSimilarity() override = default;
 
 	//! A method for calculating term-to-term similarity for GO terms using Lin similarity
 	/*!
 		This method returns the Lin similarity.
 	*/
-	inline double calculateTermSimilarity(std::string goTermA, std::string goTermB){
+	[[nodiscard]] double calculateTermSimilarity(const std::string& goTermA, const std::string& goTermB) const override {
+
+    if (goTermA == goTermB) {
+
+      return 1.0;
+
+    }
+
 		//if the terms do not exit return 0.0 similarity
-		if (!_icMap.hasTerm(goTermA) || !_icMap.hasTerm(goTermB)){
+		if (not _icMap->hasTerm(goTermA) || not _icMap->hasTerm(goTermB)) {
+
 			return 0.0;
+
 		}
 		//if not from same ontology, return 0;
 		if(_goGraph->getTermOntology(goTermA) != _goGraph->getTermOntology(goTermB)){
-			return 0;
+
+			return 0.0;
+
 		}
 
 		//create 2 sets
-		boost::unordered_set<std::string> ancestorsA = _goGraph->getAncestorTerms(goTermA);
+		OntologySetType<std::string> ancestorsA = _goGraph->getAncestorTerms(goTermA);
 		ancestorsA.insert(goTermA);
-		boost::unordered_set<std::string> ancestorsB = _goGraph->getAncestorTerms(goTermB);
+		OntologySetType<std::string> ancestorsB = _goGraph->getAncestorTerms(goTermB);
 		ancestorsB.insert(goTermB);
 
 		//if either set is empty, return 0
-		if(ancestorsA.size() == 0 || ancestorsB.size() == 0){
+		if(ancestorsA.empty() or ancestorsB.empty()) {
+
 			return 0.0;
+
 		}
 
-		//get the MICA
-		std::string mica = getMICA(ancestorsA,ancestorsB);
+    double mica_info = _icMap->getMICAinfo(ancestorsA,ancestorsB);
+    //return the normalized information content similarity of Lin
+    return (2.0 * mica_info) /(_icMap->getValue(goTermA) + _icMap->getValue(goTermB));
 
-		//return the normalized information content similarity of Lin
-		if(goTermA != goTermB){
-			return 2*_icMap[mica]/(_icMap[goTermA]+_icMap[goTermB]);
-		}else{
-			return 1.0;
-		}
+
 	}
 
 	//! A method for calculating term-to-term similarity for GO terms using Normalized Lin similarity
 	/*!
 		This method returns the Lin similarity scaled between 0 and 1 [0,1] inclusive
 	*/
-	inline double calculateNormalizedTermSimilarity(std::string goTermA, std::string goTermB){
+	[[nodiscard]] double calculateNormalizedTermSimilarity(const std::string& goTermA, const std::string& goTermB) const override {
 		//Lin's method is already normalized
 		return calculateTermSimilarity(goTermA,goTermB);
+
 	}
-
-	//! A method for calculating the most informative common ancestor
-	/*!
-		This method searches the sets to determine the most informatics ancestor.
-	*/
-	inline std::string getMICA(boost::unordered_set<std::string> &ancestorsA,boost::unordered_set<std::string> &ancestorsB){
-		//get the first term as a start
-		std::string mica = *ancestorsA.begin();
-		double max = -1.0;
-
-		//always traverse the shortest list
-		if(ancestorsA.size() > ancestorsB.size()){
-			ancestorsA.swap(ancestorsB);
-		}
-
-		//loop over shorter list
-		boost::unordered_set<std::string>::iterator iter;
-		for(iter = ancestorsA.begin(); iter != ancestorsA.end(); ++iter){
-			//current string
-			std::string currentTerm = *iter;
-
-			if(ancestorsB.find(currentTerm) == ancestorsB.end()){
-				//continue, not a shared ancestor term
-				continue;
-			}
-
-			//if new max, update
-			if(_icMap[currentTerm] > max){
-				mica = currentTerm;
-				max = _icMap[currentTerm];
-			}
-		}
-
-		return mica;
-	}
-
 
 private:
 
-	GoGraph* _goGraph;
-	TermInformationContentMap _icMap;
+	std::shared_ptr<const GoGraph> _goGraph;
+	std::shared_ptr<const TermInformationContentMap> _icMap;
 
 };
 #endif

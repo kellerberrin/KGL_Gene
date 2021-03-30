@@ -26,79 +26,80 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 		 Depth first search algorithm to add the number of a child's annotaitons to the parent.
 	*/
 
-	class dfs_cumulative_annotations_visitor: public boost::default_dfs_visitor {
+class dfs_cumulative_annotations_visitor: public boost::default_dfs_visitor {
 
-	  public:
-		//! A parameterized constructor passing parameters to the boost default_dfs_visitor
-		dfs_cumulative_annotations_visitor(GoGraph* inGraph,AnnotationData* inData,
-				std::vector<std::size_t>* annotations,boost::unordered_map<std::string,std::size_t>* nameToIndex)
-			:goGraph(inGraph),annoData(inData),annoList(annotations),nameIndexMap(nameToIndex){}
+  public:
+  //! A parameterized constructor passing parameters to the boost default_dfs_visitor
+  dfs_cumulative_annotations_visitor( std::shared_ptr<const GoGraph> inGraph,
+                                      std::shared_ptr<const AnnotationData> inData,
+                                      std::vector<std::size_t>* annotations,
+                                      std::unordered_map<std::string,std::size_t>* nameToIndex)
+    :goGraph(std::move(inGraph)), annoData(std::move(inData)), annoList(annotations), nameIndexMap(nameToIndex) {}
 
-		//! The extended method of the default_dfs_visitor, finish_vertex
-		/*!
-			This method is called during a depth first search traversal of a graph and called
-			  when the visitor finished or leaves a node. This is the last time the algorithm touches
-			  the node.
+  //! The extended method of the default_dfs_visitor, finish_vertex
+  /*!
+    This method is called during a depth first search traversal of a graph and called
+      when the visitor finished or leaves a node. This is the last time the algorithm touches
+      the node.
 
-			  Here we calculate the number of cummulative annotations for a term (node) by adding the current
-			    term's annotations to the annotations of the term's children.
-		*/
-		template < typename Vertex, typename Graph >
-		void finish_vertex(Vertex u, const Graph & g) 
-		{
+      Here we calculate the number of cummulative annotations for a term (node) by adding the current
+        term's annotations to the annotations of the term's children.
+  */
+  template < typename Vertex, typename Graph >
+  void finish_vertex(Vertex u, const Graph & g)
+  {
 
-			//get the vertx index
-			std::size_t uIndex = get(boost::vertex_index,g)[u];
+    //get the vertx index
+    std::size_t uIndex = get(boost::vertex_index,g)[u];
 
-			//get the termId string
-			std::string termId = goGraph->getTermStringIdByIndex(uIndex);
+    //get the termId string
+    std::string termId = goGraph->getTermStringIdByIndex(uIndex);
 
-			//use the AnnotationData object to get the actual number of annotations
-			std::size_t currentTermAnnos = annoData->getNumAnnotationsForGoTerm(termId);
+    //use the AnnotationData object to get the actual number of annotations
+    std::size_t currentTermAnnos = annoData->getNumAnnotationsForGoTerm(termId);
 
-			//std::cout << termId << std::endl;
+    //std::cout << termId << std::endl;
 
-			//initialized this map for the TermProbablilityMap, can initialize it for free here
-			nameIndexMap->insert(std::make_pair(termId,uIndex));
+    //initialized this map for the TermProbablilityMap, can initialize it for free here
+    nameIndexMap->insert(std::make_pair(termId,uIndex));
 
-			//Iterate over the children of the term to add the child annotations
-			typename boost::graph_traits< Graph >::out_edge_iterator ei, e_end;
-			for(tie(ei, e_end) = boost::out_edges(u, g); ei != e_end; ++ei){
+    //Iterate over the children of the term to add the child annotations
+    typename boost::graph_traits< Graph >::out_edge_iterator ei, e_end;
+    for(tie(ei, e_end) = boost::out_edges(u, g); ei != e_end; ++ei){
 
-				Vertex v = boost::target(*ei, g);
-				std::size_t vIndex = get(boost::vertex_index,g)[v];
+      Vertex v = boost::target(*ei, g);
+      std::size_t vIndex = get(boost::vertex_index,g)[v];
 
-				std::string childTermId = goGraph->getTermStringIdByIndex(vIndex);
+      std::string childTermId = goGraph->getTermStringIdByIndex(vIndex);
 
-				//std::cout << "child " << childTermId << std::endl;
+      //std::cout << "child " << childTermId << std::endl;
 
-				currentTermAnnos += annoList->at(vIndex);
+      currentTermAnnos += annoList->at(vIndex);
 
-			}//end for, each child
+    }//end for, each child
 
-			annoList->at(uIndex) = currentTermAnnos;
+    annoList->at(uIndex) = currentTermAnnos;
 
-			//std::cout << uIndex << std::endl;
-			//std::cout << termId << std::endl;
-			//std::cout << annoList->at(uIndex) << std::endl;
-			//std::cin.get();
+    //std::cout << uIndex << std::endl;
+    //std::cout << termId << std::endl;
+    //std::cout << annoList->at(uIndex) << std::endl;
+    //std::cin.get();
 
-		}//end method, finish_vertex
+  }//end method, finish_vertex
 
-		//! The go graph object
-		GoGraph* goGraph;
+  //! The go graph object
+  std::shared_ptr<const GoGraph> goGraph;
 
-		//! An AnnotationData object for accessing annotations
-		AnnotationData* annoData;
+  //! An AnnotationData object for accessing annotations
+  std::shared_ptr<const AnnotationData> annoData;
 
-		//! The annotaiton list to hold the and query the cummulative annotations
-		std::vector<std::size_t>* annoList;
+  //! The annotaiton list to hold the and query the cummulative annotations
+  std::vector<std::size_t>* annoList;
 
-		//! A map from name To index, initialized in this visitor.
-		boost::unordered_map<std::string,std::size_t>* nameIndexMap;
-	};//end class, DFS visitor class
+  //! A map from name To index, initialized in this visitor.
+  std::unordered_map<std::string,std::size_t>* nameIndexMap;
 
-
+};//end class, DFS visitor class
 
 
 /*! \class TermProbabilityMap
@@ -108,16 +109,22 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	  class is used by Information Content methods to determine the prior probability of
 	  a term give an instance of AnnotationData.
 */
-class TermProbabilityMap{
+class TermProbabilityMap {
 public:
 
+  //! A default constructor
+  /*!
+    Default constructor should not be used.
+  */
+  TermProbabilityMap() = delete;
+  virtual ~TermProbabilityMap() = default;
 	//! A parameterized constructor
 	/*!
 		This constructor takes pointers to GoGraph and AnnotationData objects.
 		  Only the parameterized construtor is allowed to ensure these objects are
 		  created with valid parameters.
 	*/
-	inline TermProbabilityMap(GoGraph* graph, AnnotationData* annoData){
+	TermProbabilityMap(const std::shared_ptr<const GoGraph>& graph, const std::shared_ptr<const AnnotationData>& annoData) {
 
 		//set the default minimum probablity policy for normalization
 		_isSingleAnnoMin = false;
@@ -136,14 +143,14 @@ public:
 		std::vector<std::size_t> annotationCounts(graph->getNumVertices(),0);
 
 		//create the visitor abject
-		dfs_cumulative_annotations_visitor vis(graph ,annoData, &annotationCounts,&_nameToIndex);
+		dfs_cumulative_annotations_visitor vis(graph ,annoData, &annotationCounts, &_nameToIndex);
 
 		//get the boost graph from the GoGraph object. Must be done to utilize boost algorithms
-		GoGraph::Graph* g = graph->getGraph();
+		const GoGraph::Graph& go_graph = graph->getGraph();
 
 		//call the boost depth first search using our custom visitor
-		// revering the graph is necessary otherwise the root vertex would have no edges.
-		boost::depth_first_search(boost::make_reverse_graph(*g), boost::visitor(vis).root_vertex(root));
+		// reversing the graph is necessary otherwise the root vertex would have no edges.
+		boost::depth_first_search(boost::make_reverse_graph(go_graph), boost::visitor(vis).root_vertex(root));
 		 
 		// Traverse the vertices to find the roots for each ontology
 		Accumulators::SimpleAccumulator minMaxBP;
@@ -152,13 +159,16 @@ public:
 
 		// Vertex Iterators
 		GoGraph::GoVertexIterator vi,vend;
-		for(boost::tie(vi,vend) = boost::vertices(*g); vi != vend; ++vi){
+		for(boost::tie(vi,vend) = boost::vertices(go_graph); vi != vend; ++vi){
+
 			GoGraph::GoVertex v = *vi;
 			std::size_t index = graph->getVertexIndex(v);
 
-			double counts = (double)annotationCounts.at(index);
+			auto counts = static_cast<double>(annotationCounts.at(index));
 			if(counts == 0.0){
+
 				continue;
+
 			}
 
 			//switch on ontology, find the max for each set
@@ -178,6 +188,7 @@ public:
 				case GO::ONTO_ERROR:
 					break;
 			}
+
 		}//end for, vertex iterator
 
 		//calculate single annotation minimum normalization factors
@@ -191,109 +202,98 @@ public:
 		_cc_normalization_min_minAnno = Accumulators::extractMin(minMaxCC)/Accumulators::extractMax(minMaxCC);
 
 		//Traverse the cummulative annotation vector, convert to probability, add to probability vector
-		for(boost::tie(vi,vend) = boost::vertices(*g); vi != vend; ++vi){
+		for(boost::tie(vi,vend) = boost::vertices(go_graph); vi != vend; ++vi){
+
 			GoGraph::GoVertex v = *vi;
 			std::size_t index = graph->getVertexIndex(v);
+
 			switch (graph->getTermOntologyByIndex(index)){
+
 				case GO::BP:
 					_probabilities.at(index) = annotationCounts.at(index)/Accumulators::extractMax(minMaxBP);
 					break;
+
 				case GO::MF:
 					_probabilities.at(index) = annotationCounts.at(index)/Accumulators::extractMax(minMaxMF);
 					break;
+
 				case GO::CC:
 					_probabilities.at(index) = annotationCounts.at(index)/Accumulators::extractMax(minMaxCC);
 					break;
+
 				case GO::ONTO_ERROR:
 					break;
+
 			}
+
 		}
+
 	}//end constructor logic
 
-
-	//! A default constructor
-	/*!
-		This constructor initialized the storage structures. Should not be used.
-	*/
-	inline TermProbabilityMap(){
-		//set the default minimum probablity policy for normalization
-		_isSingleAnnoMin = true;
-		//create empty containers
-		_nameToIndex = boost::unordered_map<std::string,std::size_t>();
-		_probabilities = std::vector<double>();
-	}
-
-	//! A default desctructor
-	/*!
-		This desctructor clears the containters
-	*/
-	inline ~TermProbabilityMap(){
-		//empty containers
-		_nameToIndex.clear();
-		_probabilities.clear();
-	}
 
 	//! Accessor for probablities vector
 	/*!
 		Get the vector of values
 	*/
-	inline std::vector<double> getValues(){
-		return _probabilities;
-	}
+	[[nodiscard]] const std::vector<double>& getValues() const { return _probabilities; }
 
 	//! Function to return all the keys in the map
 	/*!
 		Returns all valid keys in the map.
 	*/
-	inline std::vector<std::string> getKeys(){
+	[[nodiscard]] std::vector<std::string> getKeys() const {
+
 		std::vector<std::string> keys;
-		boost::unordered_map<std::string, std::size_t>::iterator it;
-		for (it = _nameToIndex.begin(); it != _nameToIndex.end(); ++it){
-			keys.push_back(it->first);
+		for (auto const& [key, value] : _nameToIndex){
+
+			keys.push_back(key);
+
 		}
+
 		return keys;
+
 	}
 
 	//! Method to test if the id exists in the map
 	/*!
 		Return true the id is found, false if not
 	*/
-	inline bool hasTerm(const std::string &testTerm){
-		return _nameToIndex.find(testTerm) != _nameToIndex.end();
-	}
+	[[nodiscard]] bool hasTerm(const std::string &testTerm) const { return _nameToIndex.find(testTerm) != _nameToIndex.end(); }
 
 	//! Return a default value for a term that does not exist.
 	/*!
 		A value to return if the term is not found (does not exist in the map).
 		Returns probability 1 or certanty. This may not be the ideal behavior.
 	*/
-	inline virtual double badIdValue(){
-		return 1.0;
-	}
+  [[nodiscard]] virtual double badIdValue() const { return 1.0; }
 
 	//! Overloaded [] bracket operator to mimic Map
 	/*!
 	This defines a bracket operator to access the data inside of the map.
 	This is done to mimic the behavior of the map class
 	*/
-	inline double operator[](std::string termId){
-		if (!hasTerm(termId)){
-			return badIdValue();
-		}
-		std::size_t index = _nameToIndex[termId];
-		return _probabilities.at(index);
+  [[nodiscard]] double operator[](const std::string& termId) const {
+
+		return getValue(termId);
+
 	}
 
 	//! Mapping function to return the value mapped by key
 	/*!
 	Get the value mapped by the given key. A specified function for the [] operator
 	*/
-	inline double getValue(std::string termId){
+  [[nodiscard]] double getValue(const std::string& termId) const {
+
 		if (!hasTerm(termId)){
+
 			return badIdValue();
+
 		}
-		std::size_t index = _nameToIndex[termId];
+
+		auto const& [term, index] = *(_nameToIndex.find(termId));
+
 		return _probabilities.at(index);
+
 	}
 
 	//-------------------------------------------------------------------
@@ -302,8 +302,10 @@ public:
 	/*!
 		This function returns the minimum probablity for the bp ontology
 	*/
-	inline double getMinBP(){
+  [[nodiscard]] double getMinBP() const {
+
 		return _isSingleAnnoMin ? _bp_normalization_min_1anno : _bp_normalization_min_minAnno;
+
 	}
 
 
@@ -311,8 +313,10 @@ public:
 	/*!
 		This function returns the minimum probablity for the mf ontology
 	*/
-	inline double getMinMF(){
+  [[nodiscard]] double getMinMF() const {
+
 		return _isSingleAnnoMin ? _mf_normalization_min_1anno : _mf_normalization_min_minAnno;
+
 	}
 
 	
@@ -320,17 +324,45 @@ public:
 	/*!
 		This function returns the minimum probablity for the cc ontology
 	*/
-	inline double getMinCC(){
+  [[nodiscard]] double getMinCC() const {
+
 		return _isSingleAnnoMin ? _cc_normalization_min_1anno : _cc_normalization_min_minAnno;
+
 	}
 
 
+  //! Public method for calculating the most informative common ancestor value
+  /*!
+    This method searches the sets to determine the most informative ancestor.
+  */
+
+  [[nodiscard]] double getMICAinfo(const OntologySetType<std::string> &ancestorsA,
+                                   const OntologySetType<std::string> &ancestorsB) const {
+
+    // Choose the smaller and larger set for maximum efficiency
+    if(ancestorsA.size() < ancestorsB.size()){
+
+      return getEfficientMICA(ancestorsA, ancestorsB);
+
+    } else {
+
+      return getEfficientMICA(ancestorsB, ancestorsA);
+
+    }
+
+  }
+
+
 protected:
+
+	[[nodiscard]] std::vector<double>& probabilities() { return _probabilities; }
+
+private:
 	//! A private map that returns the index of a term.
 	/*!
 		This map takes string term ids and returns the index for annotation count access.
 	*/
-	boost::unordered_map<std::string,std::size_t> _nameToIndex;
+	OntologyMapType<std::string,std::size_t> _nameToIndex;
 
 	//! A private list of term probabilities
 	/*!
@@ -342,7 +374,7 @@ protected:
 	/*!
 		This flag will be true and return true is single annotation probability is used, false otherwise.
 	*/
-	bool _isSingleAnnoMin;
+	bool _isSingleAnnoMin{true};
 
 	//! Normalization factor for calculating normalized simialrites Biological Process
 	/*!
@@ -386,5 +418,35 @@ protected:
 	*/
 	double _cc_normalization_min_minAnno;
 
+
+  //! Private method for calculating the most informative common ancestor value
+  /*!
+    This method searches the sets to determine the most informative ancestor.
+  */
+  [[nodiscard]] double getEfficientMICA( const OntologySetType<std::string> &smaller_set,
+                                         const OntologySetType<std::string> &larger_set) const {
+
+    double max{0.0};
+    //loop over shorter list
+    for(auto const& term : smaller_set) {
+
+      if (larger_set.find(term) != larger_set.end()) {
+        //if new max, update
+        if (getValue(term) > max) {
+
+          max = getValue(term);
+
+        }
+
+      }
+
+    }
+
+    return max;
+
+  }
+
+
 };
+
 #endif

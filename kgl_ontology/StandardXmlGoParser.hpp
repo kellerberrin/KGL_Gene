@@ -28,51 +28,23 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	 Implements GoParserInterface
 
 */
-class StandardXmlGoParser : public GoParserInterface{
+class StandardXmlGoParser : public AllowedRelationshipXmlGoParser {
 
 public:
 
+  StandardXmlGoParser() : AllowedRelationshipXmlGoParser(StandardRelationshipPolicy()) {}
+  ~StandardXmlGoParser() override = default;
 
-	//! Method to parse the go file, should be an XML file
-	/*!
-		This method will read a Gene Ontology XML file and add only those relationship
-		 which are specified to the graph.
+  //! a method to create a new instance of this class for use in a factory
+  /*!
+    Creates a new pointer to the parser, used by the factory for go parsers.
+  */
 
-	*/
-	inline GoGraph* parseGoFile(std::string filename){
-		return _parser->parseGoFile(filename);
-	}//end method parseGoFile
+	[[nodiscard]] std::unique_ptr<GoParserInterface> clone() const override { return std::make_unique<StandardXmlGoParser>(); }
 
-	//! A method to test if a file fits the accepted format
-	/*!
-	Returns true if the file matches accepted format, false otherwise
-	*/
-	inline bool isFileGood(const std::string &filename){
-		return _parser->isFileGood(filename);
-	}
+  // No function
+  void setPolicy(const RelationshipPolicyInterface&) override {}
 
-	//! a method to create a new instance of this class for use in a factory
-	/*!
-		creats a new pointer to the parser, used by the factory for go parsers.
-	*/
-	inline GoParserInterface* clone(){
-		return new StandardXmlGoParser();
-	}//end method clone
-
-	//! A parameterized constructor
-	/*!
-		constructor that sets the policy
-	*/
-	inline StandardXmlGoParser(){
-		_policy = new StandardRelationshipPolicy();
-		_parser = new AllowedRelationshipXmlGoParser(_policy);
-
-	}//end parameterized constructor, StandardXmlGoParser
-
-
-private:
-	AllowedRelationshipXmlGoParser* _parser;
-	StandardRelationshipPolicy* _policy;
 
 };
 #endif

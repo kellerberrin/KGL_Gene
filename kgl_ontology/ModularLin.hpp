@@ -26,7 +26,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	2 * IC(MICA) / ( IC(termA) + IC(termB) )
 
 */
-class ModularLin: public TermSimilarityInterface{
+class ModularLin: public TermSimilarityInterface {
 
 public:
 	
@@ -34,31 +34,40 @@ public:
 	/*!
 		Creates the LinSimilarity calculator with a particular shared information calculator
 	*/
-	inline ModularLin(SharedInformationInterface *sharedInformationCalculator){
-		_siCalculator = sharedInformationCalculator;
-	}
+	ModularLin(std::shared_ptr<const SharedInformationInterface> sharedInformationCalculator)
+	:	_siCalculator(std::move(sharedInformationCalculator)) {}
+  ~ModularLin() override = default;
 
 	//! A method for calculating term-to-term similarity for GO terms using Lin similarity
 	/*!
 		This method returns the Resnik similarity or the information content of the most informative common ancestor.
 	*/
-	inline double calculateTermSimilarity(std::string goTermA, std::string goTermB){
-		if (!_siCalculator->hasTerm(goTermA) || !_siCalculator->hasTerm(goTermB)){
+	[[nodiscard]] double calculateTermSimilarity(const std::string& goTermA, const std::string& goTermB) const override {
+
+    if(goTermA == goTermB) {
+
+      return 1.0;
+
+    }
+
+		if (not _siCalculator->hasTerm(goTermA) or not _siCalculator->hasTerm(goTermB)){
+
 			return 0.0;
+
 		}
-		if (!_siCalculator->isSameOntology(goTermA, goTermB)){
+
+		if (not _siCalculator->isSameOntology(goTermA, goTermB)) {
+
 			return 0.0;
+
 		}
 
 		double sharedIC = _siCalculator->sharedInformation(goTermA,goTermB);
 		double termA_IC = _siCalculator->sharedInformation(goTermA);
 		double termB_IC = _siCalculator->sharedInformation(goTermB);
 
-		if(goTermA != goTermB){
-			return 2*sharedIC/(termA_IC + termB_IC);
-		}else{
-			return 1.0;
-		}
+		return (2.0 * sharedIC) /(termA_IC + termB_IC);
+
 	}
 
 
@@ -66,22 +75,17 @@ public:
 	/*!
 		This method returns the Lin similarity. Lin similarity is already normalized
 	*/
-	inline double calculateNormalizedTermSimilarity(std::string goTermA, std::string goTermB){
-		return calculateTermSimilarity(goTermA,goTermB);
+	[[nodiscard]] double calculateNormalizedTermSimilarity(const std::string& goTermA, const std::string& goTermB) const override {
+
+		return calculateTermSimilarity(goTermA, goTermB);
+
 	}
 
-	//! A method to set alternative methods of shared information calculators
-	/*!
-		This method accepts a new method for calculating the shared information of two terms.
-	*/
-	inline void setSharedInformationCalculator(SharedInformationInterface *newSharedInformationCalulator){
-		_siCalculator = newSharedInformationCalulator;
-	}
 
 private:
 
 	//! private SharedInformationInterface member used for calculations
-	SharedInformationInterface *_siCalculator;
+	std::shared_ptr<const SharedInformationInterface> _siCalculator;
 
 };
 #endif

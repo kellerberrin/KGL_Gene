@@ -30,22 +30,22 @@ public:
 	/*!
 	Creates the MazanduSimUICSetSimilarity class assigning the GoGraph private memeber.
 	*/
-	inline MazanduSimUICSetSimilarity(GoGraph* graph, const TermInformationContentMap &icMap){
-		_graph = graph;
-		_icMap = icMap;
-	}
+	MazanduSimUICSetSimilarity(std::shared_ptr<const GoGraph> graph, std::shared_ptr<const TermInformationContentMap> icMap)
+	: _graph(std::move(graph)), _icMap(std::move(icMap)) {}
+  ~MazanduSimUICSetSimilarity() override = default;
 
 
 	//! A method for calculating term set to term set similarity for GO terms;
 	/*!
 	This method returns the best match average similarity.
 	*/
-	inline double calculateSimilarity(const boost::unordered_set<std::string> &termsA, const boost::unordered_set<std::string> &termsB){
+	[[nodiscard]] double calculateSimilarity(const OntologySetType<std::string> &termsA, const OntologySetType<std::string> &termsB) const override {
+
 		// Get the induced set of terms for each set
-		boost::unordered_set<std::string> inducedTermSetA = getExtendedTermSet(termsA);
-		boost::unordered_set<std::string> inducedTermSetB = getExtendedTermSet(termsB);
+		OntologySetType<std::string> inducedTermSetA = _graph->getExtendedTermSet(termsA);
+		OntologySetType<std::string> inducedTermSetB = _graph->getExtendedTermSet(termsB);
 		// Calculate union and intersection
-		boost::unordered_set<std::string> intersection_set = SetUtilities::set_intersection(inducedTermSetA, inducedTermSetB);
+    OntologySetType<std::string> intersection_set = SetUtilities::set_intersection(inducedTermSetA, inducedTermSetB);
 
 		double intersection_sum = calcICSum(intersection_set);
 		double setA_sum = calcICSum(inducedTermSetA);
@@ -53,18 +53,24 @@ public:
 
 
 		//if the union is 0, return 0. No division by 0.
-		if (setA_sum + setB_sum == 0.0){
+		if (setA_sum + setB_sum == 0.0) {
+
 			return 0.0;
-		}
-		else{
+
+		} else {
+
 			if (setA_sum > setB_sum){
+
 				return intersection_sum / setA_sum;
-			}
-			else{
+
+			} else{
+
 				return intersection_sum / setB_sum;
+
 			}
 			
 		}
+
 	}
 
 private:
@@ -73,46 +79,31 @@ private:
 	/*!
 	A reference to GO graph to be used.
 	*/
-	GoGraph* _graph;
+	std::shared_ptr<const GoGraph> _graph;
 
 	//! The information content map.
 	/*!
 	An information content map.
 	*/
-	TermInformationContentMap _icMap;
+	std::shared_ptr<const TermInformationContentMap> _icMap;
 
-
-	//! A method for calculating the extended term set. The set of all terms in the induced subgraph of the ontology.
-	/*!
-	This method returns the extended term set of a set of terms. Basically the set of terms and all thier ancestors.
-	*/
-	inline boost::unordered_set<std::string> getExtendedTermSet(const boost::unordered_set<std::string> &terms){
-		boost::unordered_set<std::string> inducedSet;
-		boost::unordered_set<std::string>::iterator it, end;
-		it = terms.begin();
-		end = terms.end();
-		for (; it != end; ++it){
-			std::string term = *it;
-			// add the new terms to the set using union and the ancestors from the go graph.
-			inducedSet = SetUtilities::set_union(inducedSet, _graph->getAncestorTerms(term));
-			inducedSet.insert(term);
-		}
-		return inducedSet;
-	}
 
 	//! A method for calculating the sum of information content of the terms in a set.
 	/*!
 		This method calculates the sum of information content of the terms in a set.
 	*/
-	inline double calcICSum(const boost::unordered_set<std::string> &terms){
-		boost::unordered_set<std::string>::iterator it, end;
-		it = terms.begin();
-		end = terms.end();
-		double sum = 0;
-		for (; it != end; ++it){
-			sum += _icMap[*it];
+	[[nodiscard]] double calcICSum(const OntologySetType<std::string> &terms) const {
+
+		double sum{0.0};
+		for (auto const& term : terms) {
+
+			sum += _icMap->getValue(term);
+
 		}
+
 		return sum;
+
 	}
+
 };
 #endif

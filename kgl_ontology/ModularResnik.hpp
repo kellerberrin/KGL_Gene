@@ -33,22 +33,29 @@ public:
 	/*!
 		Creates the default(empty) StandardRelationshipPolicy
 	*/
-	inline ModularResnik(SharedInformationInterface *sharedInformationCalculator){
-		_siCalculator = sharedInformationCalculator;
-	}
+	ModularResnik(std::shared_ptr<const SharedInformationInterface> sharedInformationCalculator)
+	: _siCalculator(std::move(sharedInformationCalculator)) {}
+  ~ModularResnik() override = default;
 
 	//! A method for calculating term-to-term similarity for GO terms using Resnik similarity
 	/*!
 		This method returns the Resnik similarity or the information content of the most informative common ancestor.
 	*/
-	inline double calculateTermSimilarity(std::string goTermA, std::string goTermB){
-		if (!_siCalculator->hasTerm(goTermA) || !_siCalculator->hasTerm(goTermB)){
+	[[nodiscard]] double calculateTermSimilarity(const std::string& goTermA, const std::string& goTermB) const override {
+
+		if (not _siCalculator->hasTerm(goTermA) or not _siCalculator->hasTerm(goTermB)){
+
 			return 0.0;
+
 		}
-		if (!_siCalculator->isSameOntology(goTermA, goTermB)){
+		if (not _siCalculator->isSameOntology(goTermA, goTermB)){
+
 			return 0.0;
+
 		}
-		return _siCalculator->sharedInformation(goTermA,goTermB);
+
+		return _siCalculator->sharedInformation(goTermA, goTermB);
+
 	}
 
 
@@ -56,30 +63,31 @@ public:
 	/*!
 		This method returns the Resnik similarity divided by the maximum possible similarity
 	*/
-	inline double calculateNormalizedTermSimilarity(std::string goTermA, std::string goTermB){
-		if (!_siCalculator->hasTerm(goTermA) || !_siCalculator->hasTerm(goTermB)){
+	[[nodiscard]] double calculateNormalizedTermSimilarity(const std::string& goTermA, const std::string& goTermB) const override {
+
+		if (not _siCalculator->hasTerm(goTermA) or not _siCalculator->hasTerm(goTermB)){
+
 			return 0.0;
+
 		}
-		if (!_siCalculator->isSameOntology(goTermA, goTermB)){
+		if (not _siCalculator->isSameOntology(goTermA, goTermB)){
+
 			return 0.0;
+
 		}
-		double sharedInformation = _siCalculator->sharedInformation(goTermA,goTermB);
-		double maxInformation    = _siCalculator->maxInformationContent(goTermA);
+
+		double sharedInformation = _siCalculator->sharedInformation(goTermA, goTermB);
+		double maxInformation = _siCalculator->maxInformationContent(goTermA);
+
 		return sharedInformation/maxInformation;
+
 	}
 
-	//! A constructor
-	/*!
-		Creates the default(empty) StandardRelationshipPolicy
-	*/
-	inline void setSharedInformationCalculator(SharedInformationInterface *newSharedInformationCalulator){
-		_siCalculator = newSharedInformationCalulator;
-	}
 
 private:
 
 	//! private SharedInformationInterface member used for calculations
-	SharedInformationInterface *_siCalculator;
+	std::shared_ptr<const SharedInformationInterface> _siCalculator;
 
 };
 #endif

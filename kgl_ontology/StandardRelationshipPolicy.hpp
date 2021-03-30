@@ -14,7 +14,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	\brief A class to allow only a set of relationships
 
 	A class to allow only certain relationships in the go graph. It uses a set of 
-	enums to restric the types of relationships considered in a graph.
+	enums to restrict the types of relationships considered in a graph.
 
 */
 class StandardRelationshipPolicy: public RelationshipPolicyInterface{
@@ -23,38 +23,28 @@ public:
 	
 	//! A constructor
 	/*!
-		Creates the default(empty) StandardRelationshipPolicy
+		Creates the default StandardRelationshipPolicy
 	*/
-	inline StandardRelationshipPolicy(){
-		_relationshipMap = boost::unordered_map<GO::Relationship,bool>();
+	StandardRelationshipPolicy() {
+
 		_relationshipMap[GO::IS_A] = true;
 		_relationshipMap[GO::PART_OF] = true;
-	}
 
-	//! A parameterized constructor
-	/*!
-		Creats the StandardRelationshipPolicy using a list(vector) of relationships to allow
-	*/
-	inline StandardRelationshipPolicy(std::vector<GO::Relationship> relationships){
-		_relationshipMap = boost::unordered_map<GO::Relationship,bool>();
-		for(std::size_t i = 0; i < relationships.size();++i){
-			_relationshipMap[relationships.at(i)] = true;
-		}
 	}
+  ~StandardRelationshipPolicy() override = default;
+
+  std::unique_ptr<RelationshipPolicyInterface> clone() const override { return std::make_unique<StandardRelationshipPolicy>(); }
 
 	//! a method to test if a relatinoship is allowed or not
 	/*!
 		tests if the relationship is allowed. Overridden to fulfill the RelationshipPolicyInterface
 	*/
-	inline bool isAllowed(GO::Relationship relationship){
-		return _relationshipMap.find(relationship) != _relationshipMap.end();
-	}
-
+	bool isAllowed(GO::Relationship relationship) const override {return _relationshipMap.find(relationship) != _relationshipMap.end(); }
 
 private:
 	//! a map of relationships to bool
     /*! maps a relationship to a bool. Boost unordered map give constant time find. */
-	boost::unordered_map<GO::Relationship,bool> _relationshipMap;
+	OntologyMapType<GO::Relationship,bool> _relationshipMap;
 
 };
 #endif

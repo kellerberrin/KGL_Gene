@@ -38,111 +38,89 @@ public:
 	/*!
 		Creates the default(empty) StandardRelationshipPolicy
 	*/
-	inline JiangConrathSimilarity(GoGraph* goGraph,TermInformationContentMap &icMap){
-		_goGraph = goGraph;
-		_icMap = icMap;
-	}
-
+	JiangConrathSimilarity(std::shared_ptr<const GoGraph> goGraph, std::shared_ptr<const TermInformationContentMap> icMap)
+	: _goGraph(std::move(goGraph)), _icMap(std::move(icMap)) {}
+  ~JiangConrathSimilarity() override = default;
 	//! A method for calculating term-to-term similarity for GO terms using JiangConrath similarity
 	/*!
 		This method returns the JiangConrath similarity or the information content of the most informative common ancestor.
 	*/
-	inline double calculateTermSimilarity(std::string goTermA, std::string goTermB){
+	[[nodiscard]] double calculateTermSimilarity(const std::string& goTermA, const std::string& goTermB) const override {
 		//if the terms do not exit return 0.0 similarity
-		if(!_icMap.hasTerm(goTermA) || !_icMap.hasTerm(goTermB)){
+		if (not _icMap->hasTerm(goTermA) or not _icMap->hasTerm(goTermB)) {
+
 			return 0.0;
+
 		}
 
 		//if not from same ontology, return 0;
-		if(_goGraph->getTermOntology(goTermA) != _goGraph->getTermOntology(goTermB)){
+		if(_goGraph->getTermOntology(goTermA) != _goGraph->getTermOntology(goTermB)) {
+
 			return 0;
+
 		}
 
 		//create 2 sets
-		boost::unordered_set<std::string> ancestorsA = _goGraph->getAncestorTerms(goTermA);
+		OntologySetType<std::string> ancestorsA = _goGraph->getAncestorTerms(goTermA);
 		ancestorsA.insert(goTermA);
-		boost::unordered_set<std::string> ancestorsB = _goGraph->getAncestorTerms(goTermB);
+		OntologySetType<std::string> ancestorsB = _goGraph->getAncestorTerms(goTermB);
 		ancestorsB.insert(goTermB);
 
 		//if either set is empty, return 0
-		if(ancestorsA.size() == 0 || ancestorsB.size() == 0){
+		if(ancestorsA.empty() or ancestorsB.empty()) {
+
 			return 0.0;
+
 		}
 
 		double maxIC;
-
 		//select the correct ontology normalization factor
 		GO::Onto ontoType = _goGraph->getTermOntology(goTermA);
-		if(ontoType == GO::BP){
-			maxIC = -std::log(_icMap.getMinBP());
-		}else if(ontoType == GO::MF){
-			maxIC = -std::log(_icMap.getMinMF());
+		if(ontoType == GO::BP) {
+
+			maxIC = -std::log(_icMap->getMinBP());
+
+		} else if(ontoType == GO::MF) {
+
+			maxIC = -std::log(_icMap->getMinMF());
+
 		}else{
-			maxIC = -std::log(_icMap.getMinCC());
+
+			maxIC = -std::log(_icMap->getMinCC());
+
 		}
 
-		//get the MICA
-		std::string mica = getMICA(ancestorsA,ancestorsB);
+		//get the MICA value (zero if no mica term)
+		double mica_value = _icMap->getMICAinfo( ancestorsA, ancestorsB);
 
-		double dist = (_icMap[goTermA] + _icMap[goTermB] - 2*_icMap[mica]);
+		double dist = _icMap->getValue(goTermA) + _icMap->getValue(goTermB) - (2 * mica_value);
 
-		return 1 - (dist/(2.0*maxIC));
+		return 1 - (dist / (2.0 * maxIC));
 	}
 
 	//! A method for calculating term-to-term similarity for GO terms using Normalized JiangConrath similarity
 	/*!
 		This method returns the JiangConrath similarity scaled between 0 and 1 [0,1] inclusive
 	*/
-	inline double calculateNormalizedTermSimilarity(std::string goTermA, std::string goTermB){
+	[[nodiscard]] double calculateNormalizedTermSimilarity(const std::string& goTermA, const std::string& goTermB) const override {
 		//if the terms do not exit return 0.0 similarity
-		if (!_icMap.hasTerm(goTermA) || !_icMap.hasTerm(goTermB)){
+		if (not _icMap->hasTerm(goTermA) || not _icMap->hasTerm(goTermB)) {
+
 			return 0.0;
+
 		}
 
 		//JiangConrath's method is already normalized
-		return calculateTermSimilarity(goTermA,goTermB);
-	}
+		return calculateTermSimilarity( goTermA, goTermB);
 
-	//! A method for calculating the most informative common ancestor
-	/*!
-		This method searches the sets to determine the most informatics ancestor.
-	*/
-	inline std::string getMICA(boost::unordered_set<std::string> &ancestorsA,boost::unordered_set<std::string> &ancestorsB){
-		//get the first term as a start
-		std::string mica = *ancestorsA.begin();
-		double max = -1.0;
-
-		//always traverse the shortest list
-		if(ancestorsA.size() > ancestorsB.size()){
-			ancestorsA.swap(ancestorsB);
-		}
-
-		//loop over shorter list
-		boost::unordered_set<std::string>::iterator iter;
-		for(iter = ancestorsA.begin(); iter != ancestorsA.end(); ++iter){
-			//current string
-			std::string currentTerm = *iter;
-
-			if(ancestorsB.find(currentTerm) == ancestorsB.end()){
-				//continue, not a shared ancestor term
-				continue;
-			}
-
-			//if new max, update
-			if(_icMap[currentTerm] > max){
-				mica = currentTerm;
-				max = _icMap[currentTerm];
-			}
-		}
-
-		return mica;
 	}
 
 
 private:
 
-	GoGraph* _goGraph;
-	TermInformationContentMap _icMap;
+	std::shared_ptr<const GoGraph> _goGraph;
+	std::shared_ptr<const TermInformationContentMap> _icMap;
+
 
 };
 #endif

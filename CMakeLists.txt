@@ -232,7 +232,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_ensembl_id_parser.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_ontology/ggtk.cpp)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_ontology/ggtk.cpp kgl_ontology/OntologyTypes.h)
 
 # Genetic analysis library
 set(ONTOLOGY_SOURCE_FILES
@@ -263,7 +263,6 @@ set(ONTOLOGY_SOURCE_FILES
         kgl_ontology/ggtk.hpp
         kgl_ontology/GoaAnnotationParser.hpp
         kgl_ontology/GoEnums.hpp
-        kgl_ontology/GoGraph_Bak.hpp
         kgl_ontology/GoGraph.hpp
         kgl_ontology/GoParserFactory.hpp
         kgl_ontology/GoParserInterface.hpp
@@ -294,7 +293,6 @@ set(ONTOLOGY_SOURCE_FILES
         kgl_ontology/TermDepthMap.hpp
         kgl_ontology/TermInformationContentMap.hpp
         kgl_ontology/TermProbabilityMap.hpp
-        kgl_ontology/TermProbabilityMap_Old.hpp
         kgl_ontology/TermSetSimilarityInterface.hpp
         kgl_ontology/TermSimilarityInterface.hpp
         kgl_ontology/TermSimilarityWriter.hpp

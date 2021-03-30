@@ -34,67 +34,66 @@ public:
 	/*!
 		Creates the CoutoGraSMSharedInformation class
 	*/
-	inline ExclusivelyInheritedSharedInformation(GoGraph* goGraph,TermInformationContentMap &icMap){
-		_goGraph = goGraph;
-		_icMap = icMap;
-	}
-
+	ExclusivelyInheritedSharedInformation(std::shared_ptr<const GoGraph> goGraph, std::shared_ptr<const TermInformationContentMap> icMap)
+	: _goGraph(std::move(goGraph)), _icMap(std::move(icMap)) {}
+  ~ExclusivelyInheritedSharedInformation() override = default;
 
 	//! A method for determining the common disjunctive ancestors
 	/*!
 		This method returns the common disjunctive ancestors for two terms
 	*/
-	inline boost::unordered_set<std::string> getCommonDisjointAncestors(const std::string &termC1, const std::string &termC2){
+	[[nodiscard]] OntologySetType<std::string> getCommonDisjointAncestors(const std::string &termC1, const std::string &termC2) const {
 
 		//Z&L: EICommonSet <- <empty_set>
-		boost::unordered_set<std::string> cda;
+    OntologySetType<std::string> cda;
 
 		//EICA(t,t) = {t}
-		if(termC1.compare(termC2) == 0){
+		if(termC1 == termC2) {
+
 			cda.insert(termC1);
 			return cda;
+
 		}
 
 		//Z&L: CommonAnSet <- GetCommonAnSet(t1,t2,AncestorSet)
-		boost::unordered_set<std::string> ancestorsC1 = _goGraph->getAncestorTerms(termC1);
+    OntologySetType<std::string> ancestorsC1 = _goGraph->getAncestorTerms(termC1);
 		ancestorsC1.insert(termC1);
-		boost::unordered_set<std::string> ancestorsC2 = _goGraph->getAncestorTerms(termC2);
+    OntologySetType<std::string> ancestorsC2 = _goGraph->getAncestorTerms(termC2);
 		ancestorsC2.insert(termC2);
-		boost::unordered_set<std::string> commonAncestors = SetUtilities::set_intersection(ancestorsC1,ancestorsC2);
+    OntologySetType<std::string> commonAncestors = SetUtilities::set_intersection(ancestorsC1,ancestorsC2);
 		//std::cout << commonAncestors.size() << std::endl;
 
 
 		//commonDisjointAncestors(c,c) = {c}, by definition
 		if(commonAncestors.size() == 1){
+
 			return commonAncestors;
+
 		}
 
 
 		//Z&L: UnionAnSet <- GetAnSet(t1,AncestorSet) U GetAnSet(t2,AncestorSet)
-		boost::unordered_set<std::string> unionAncestors = SetUtilities::set_union(ancestorsC1,ancestorsC2);
+    OntologySetType<std::string> unionAncestors = SetUtilities::set_union(ancestorsC1,ancestorsC2);
 
 		//Z&L: DiffAnSet <- UnionAnSet - CommonAnSet
-		boost::unordered_set<std::string> diffSet = SetUtilities::set_difference(unionAncestors,commonAncestors);
+    OntologySetType<std::string> diffSet = SetUtilities::set_difference(unionAncestors,commonAncestors);
 
 		//get the boost graph
-		GoGraph::Graph* g = _goGraph->getGraph();
-		boost::unordered_set<std::string>::iterator iter;
-
+		const GoGraph::Graph& g = _goGraph->getGraph();
 		//Z&L: for each a in CommonAnSet do ...
-		for(iter = commonAncestors.begin(); iter != commonAncestors.end(); ++iter){
+		for(auto const& term : commonAncestors) {
 
 			bool isDisj = false;
 
 			//Z&L: DirectChildSet <- getDirectDescendant(a,ChildSet)
 			//boost::unordered_set<std::string> directChildSet;
-
-			std::string term = *iter;
 			//std::cout << "-----> " << term << std::endl;
 
 			GoGraph::GoVertex v = _goGraph->getVertexByName(term);
 			GoGraph::InEdgeIterator ei,end;
-			for(boost::tie(ei,end) = boost::in_edges(v,*g); ei != end; ++ei){
-				GoGraph::GoVertex child = boost::source(*ei,*g);
+			for(boost::tie(ei,end) = boost::in_edges(v,g); ei != end; ++ei){
+
+				GoGraph::GoVertex child = boost::source(*ei,g);
 				size_t index = _goGraph->getVertexIndex(child);
 				std::string cTerm = _goGraph->getTermStringIdByIndex(index);
 				//std::cout << cTerm << std::endl;
@@ -104,7 +103,9 @@ public:
 					//early exit should improve runtime
 					isDisj = true;
 					break;
+
 				}
+
 			}
 
 			//the below code was dropped to improve runtime, improvement is minor though
@@ -118,6 +119,7 @@ public:
 
 			//if the term is a disjoint ancestor add it to the set
 			if(isDisj){
+
 				cda.insert(term);
 				//std::cout << "eisi " << term << " " << _icMap[term] << std::endl;
 			}
@@ -133,39 +135,48 @@ public:
 	/*!
 		This method returns the mean information content of the frontier ancestors
 	*/
-	inline double sharedInformation(const std::string &termA, const std::string &termB){
+	[[nodiscard]] double sharedInformation(const std::string &termA, const std::string &termB) const override {
 		// return 0 for any terms not in the datbase
-		if (!_icMap.hasTerm(termA) || !_icMap.hasTerm(termB)){
+		if (not _icMap->hasTerm(termA) or not _icMap->hasTerm(termB)){
+
 			return 0.0;
+
 		}
 		// return 0 for terms in different ontologies
 		if (_goGraph->getTermOntology(termA) != _goGraph->getTermOntology(termB)){
+
 			return 0.0;
+
 		}
 
 		Accumulators::MeanAccumulator meanIC;
-		boost::unordered_set<std::string> cda = getCommonDisjointAncestors(termA,termB);
+		OntologySetType<std::string> cda = getCommonDisjointAncestors( termA, termB);
 		//std::cout << "size " << cda.size() << std::endl;
 
-		boost::unordered_set<std::string>::iterator iter = cda.begin();
-		for(;iter != cda.end(); ++iter){
+		for(auto const& element : cda){
 			//std::cout << _icMap[*iter] << std::endl;
-			meanIC(_icMap[*iter]);
+			meanIC(_icMap->getValue(element));
+
 		}
 
 		return Accumulators::extractMean(meanIC);
+
 	}
 
 	//! An interface method for returning the shared information of a single terms,or information content
 	/*!
 		This method privdes a mechanism for returing a term's infromation content.
 	*/
-	inline double sharedInformation(const std::string &term){
+	[[nodiscard]] double sharedInformation(const std::string &term) const override {
 		// return 0 for any terms not in the datbase
-		if (!_icMap.hasTerm(term)){
+		if (not _icMap->hasTerm(term)) {
+
 			return 0.0;
+
 		}
-		return _icMap[term];
+
+		return _icMap->getValue(term);
+
 	}
 
 
@@ -173,18 +184,23 @@ public:
 	/*!
 		This method provides the absolute max information content within a corpus for normalization purposes.
 	*/
-	inline double maxInformationContent(const std::string &term){
+	[[nodiscard]] double maxInformationContent(const std::string &term) const override {
 
-		double maxIC;
-
+		double maxIC{0.0};
 		//select the correct ontology normalization factor
 		GO::Onto ontoType = _goGraph->getTermOntology(term);
 		if(ontoType == GO::BP){
-			maxIC = -std::log(_icMap.getMinBP());
+
+			maxIC = -std::log(_icMap->getMinBP());
+
 		}else if(ontoType == GO::MF){
-			maxIC = -std::log(_icMap.getMinMF());
+
+			maxIC = -std::log(_icMap->getMinMF());
+
 		}else{
-			maxIC = -std::log(_icMap.getMinCC());
+
+			maxIC = -std::log(_icMap->getMinCC());
+
 		}
 
 		return maxIC;
@@ -194,16 +210,16 @@ public:
 	/*!
 	  Determines if the term can be found in the current map.
 	*/
-	inline bool hasTerm(const std::string &term){
-		return _icMap.hasTerm(term);
-	}
+	[[nodiscard]] bool hasTerm(const std::string &term) const override { return _icMap->hasTerm(term); }
 
 	//! An interface method for determining if the two terms are of like ontologies.
 	/*!
 		Determine if two terms are of the same ontology.
 	*/
-	bool isSameOntology(const std::string &termA, const std::string &termB){
+	[[nodiscard]] bool isSameOntology(const std::string &termA, const std::string &termB) const override {
+
 		return _goGraph->getTermOntology(termA) == _goGraph->getTermOntology(termB);
+
 	}
 
 private:
@@ -213,10 +229,10 @@ private:
 	class EdgeSetVisitor:public boost::default_bfs_visitor{
 
 	public:
-		EdgeSetVisitor(boost::unordered_set<std::size_t>& inSet,
-			GoGraph::EdgeIndexMap& inMap,
-			boost::unordered_map<std::string,boost::unordered_set<std::size_t> >& termToEdges):
-		edgeSet(inSet),eMap(inMap),termEdgesMap(termToEdges){}
+		EdgeSetVisitor( OntologySetType<std::size_t>& inSet,
+                    const GoGraph::EdgeIndexMap& inMap,
+                    OntologyMapType<std::string, OntologySetType<std::size_t> >& termToEdges)
+                    : edgeSet(inSet),eMap(inMap),termEdgesMap(termToEdges){}
 
 
 		template < typename Edge, typename Graph >
@@ -231,7 +247,7 @@ private:
 			
 			//create a set for the term if none exists
 			if(termEdgesMap.find(term) == termEdgesMap.end()){
-				termEdgesMap[term] = boost::unordered_set<std::size_t>();
+				termEdgesMap[term] = OntologySetType<std::size_t>();
 			}
 			//add the edge to the map
 			termEdgesMap[term].insert(eMap[e]);
@@ -239,13 +255,14 @@ private:
 
 		}
 
-		boost::unordered_set<std::size_t>& edgeSet;
-		GoGraph::EdgeIndexMap& eMap;
-		boost::unordered_map<std::string,boost::unordered_set<std::size_t> >& termEdgesMap;
+		OntologySetType<std::size_t>& edgeSet;
+		const GoGraph::EdgeIndexMap& eMap;
+		OntologyMapType<std::string, OntologySetType<std::size_t> >& termEdgesMap;
+
 	};
 
-	GoGraph* _goGraph;
-	TermInformationContentMap _icMap;
+	std::shared_ptr<const GoGraph> _goGraph;
+	std::shared_ptr<const TermInformationContentMap> _icMap;
 
 
 };

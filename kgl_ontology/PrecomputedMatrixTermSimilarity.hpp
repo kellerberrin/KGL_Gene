@@ -28,143 +28,34 @@ public:
 	/*!
 		Parses a matrix file and creates the PrecomputedMatrixTermSimilarity object
 	*/
-	inline PrecomputedMatrixTermSimilarity(std::string matrix_file){
-		std::ifstream in(matrix_file.c_str());
-		//Tokenizer type
-		typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-		boost::char_separator<char> tab_sep("\t","",boost::keep_empty_tokens);
-		tokenizer::iterator it;
-		std::string line;
-
-		std::size_t line_count = 0;
-
-		//first line
-		getline(in,line);
-		tokenizer tokens(line,tab_sep);
-		it = tokens.begin();
-
-		std::string firstTerm = *it;
-		_termToIndex[firstTerm] = line_count;
-		++line_count;
-		++it;
-
-		std::vector<double> firstRow;
-		while(it != tokens.end()){
-			std::string strval = *it;
-			double val = atof(strval.c_str());
-			firstRow.push_back(val);
-			++it;
-		}
-
-		std::size_t nRows = firstRow.size();
-		_matrix.reserve(nRows);
-		_matrix.push_back(firstRow);
-
-		while(in.good()){
-			getline(in,line);
-			tokenizer tokens(line,tab_sep);
-			it = tokens.begin();
-			if(it == tokens.end()){continue;}
-
-			std::string term = *it;
-			_termToIndex[term] = line_count;
-			++line_count;
-			++it;
-
-			std::vector<double> row;
-			row.reserve(nRows);
-			while(it != tokens.end()){
-				std::string strval = *it;
-				double val = atof(strval.c_str());
-				row.push_back(val);
-				++it;
-			}
-			_matrix.push_back(row);
-		}
-		//std::cout << "rows " << _matrix.size() << std::endl;
-		//std::cout << "cols " << _matrix.at(0).size() << std::endl;
-		//std::cout << "terms " << _termToIndex.size() << std::endl;
-	}
-
+	explicit PrecomputedMatrixTermSimilarity(const std::string& matrix_file) { readSimilarityMatrix(matrix_file); }
+  ~PrecomputedMatrixTermSimilarity() override = default;
 
 	//! A method to check if the file exists and fits the format
 	/*!
 		This method is used to test if a file can be used.
 	*/
-	bool isFileGood(const std::string &filename){
-		std::ifstream in(filename.c_str());
-		if (!in.good()){
-			return false;
-		}
-
-		typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-		boost::char_separator<char> tab_sep("\t", "", boost::keep_empty_tokens);
-		tokenizer::iterator it;
-		std::string line;
-
-		std::size_t line_count = 0;
-
-		//first line
-		getline(in, line);
-		tokenizer tokens(line, tab_sep);
-		it = tokens.begin();
-
-		std::string firstTerm = *it;
-		++line_count;
-		++it;
-
-		std::vector<double> firstRow;
-		while (it != tokens.end()){
-			std::string strval = *it;
-			double val = atof(strval.c_str());
-			firstRow.push_back(val);
-			++it;
-		}
-
-		try{
-			while (in.good() && line_count < 5){
-				getline(in, line);
-				tokenizer tokens(line, tab_sep);
-				it = tokens.begin();
-				if (it == tokens.end()){ continue; }
-
-				std::string term = *it;
-				++line_count;
-				++it;
-
-				std::vector<double> row;
-				row.reserve(firstRow.size());
-				while (it != tokens.end()){
-					std::string strval = *it;
-					double val = atof(strval.c_str());
-					row.push_back(val);
-					++it;
-				}
-				if (row.size() != firstRow.size()){
-					return false;
-				}
-			}
-		}
-		catch (std::exception& e){
-			return false;
-		}
-
-		return true;
-	}
-
+  [[nodiscard ]] bool isMatrixFileGood(const std::string &filename) { return isFileGood(filename); }
 
 	//! A method for calculating term-to-term similarity for GO terms using a precomputed similarity matrix.
 	/*!
 		This method returns the term similarity as defined by the matrix.
 	*/
-	inline double calculateTermSimilarity(std::string goTermA, std::string goTermB){
-		if(hasTerm(goTermA) && hasTerm(goTermB)){
-			std::size_t i = _termToIndex[goTermA];
-			std::size_t j = _termToIndex[goTermB];
-			return _matrix[i][j];
-		}else{
+	[[nodiscard]] double calculateTermSimilarity(const std::string& goTermA, const std::string& goTermB) const override {
+
+		if (hasTerm(goTermA) && hasTerm(goTermB)){
+
+			auto const& [aterm, row] = *(_termToIndex.find(goTermA));
+			auto const& [bterm, column] = *(_termToIndex.find(goTermB));
+
+			return _matrix[row][column];
+
+		} else {
+
 			return 0.0;
+
 		}
+
 	}
 
 	//! A method for calculating term-to-term similarity for GO terms using a precomputed similarity matrix.
@@ -172,7 +63,9 @@ public:
 		This method returns the similarity scaled between 0 and 1 [0,1] inclusive
 	*/
 	inline double calculateNormalizedTermSimilarity(std::string goTermA, std::string goTermB){
+
 		return calculateTermSimilarity(goTermA,goTermB);
+
 	}
 
 
@@ -181,33 +74,181 @@ public:
 		This method treats the term similarity matrix as a kernel
 		 and projects a set of terms into it.
 	*/
-	std::vector<double> projectTermSet(const std::vector<std::string> &terms){
+	[[nodiscard]] std::vector<double> projectTermSet(const std::vector<std::string> &terms) const {
+
 		std::vector<double> projectedVec(_matrix.size(),0.0);
-		std::vector<std::string>::const_iterator it;
 
 		for(std::size_t col = 0; col < _matrix.size(); ++col){
 			double sum = 0.0;
-			for(it = terms.begin(); it != terms.end(); ++it){
-				std::string prot = *it;
+
+			for(auto prot : terms) {
+
 				if(_termToIndex.find(prot) != _termToIndex.end()){
-					std::size_t row = _termToIndex[prot];
+
+					auto const& [term, row] = *(_termToIndex.find(prot));
 					sum += _matrix.at(row).at(col);
+
 				}
+
 			}
+
 			projectedVec[col] = sum;
+
 		}
 		return projectedVec;
 	}
 
 private:
-	inline bool hasTerm(const std::string &term){
-		return _termToIndex.find(term) != _termToIndex.end();
-	}
 
-	boost::unordered_map<std::string, std::size_t> _termToIndex;
-	std::vector<std::vector<double> >   _matrix;
 
-	
+	OntologyMapType<std::string, std::size_t> _termToIndex;
+	std::vector<std::vector<double> > _matrix;
+
+  [[nodiscard]] bool hasTerm(const std::string &term) const {
+
+    return _termToIndex.find(term) != _termToIndex.end();
+
+  }
+
+  void readSimilarityMatrix(const std::string& matrix_file) {
+
+    std::ifstream in(matrix_file.c_str());
+    //Tokenizer type
+    typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+    boost::char_separator<char> tab_sep("\t","",boost::keep_empty_tokens);
+    tokenizer::iterator it;
+    std::string line;
+
+    std::size_t line_count = 0;
+
+    //first line
+    getline(in,line);
+    tokenizer tokens(line,tab_sep);
+    it = tokens.begin();
+
+    std::string firstTerm = *it;
+    _termToIndex[firstTerm] = line_count;
+    ++line_count;
+    ++it;
+
+    std::vector<double> firstRow;
+    while(it != tokens.end()){
+
+      std::string strval = *it;
+      double val = atof(strval.c_str());
+      firstRow.push_back(val);
+      ++it;
+
+    }
+
+    std::size_t nRows = firstRow.size();
+    _matrix.reserve(nRows);
+    _matrix.push_back(firstRow);
+
+    while(in.good()){
+
+      getline(in,line);
+      tokenizer tokens(line,tab_sep);
+      it = tokens.begin();
+      if(it == tokens.end()){continue;}
+
+      std::string term = *it;
+      _termToIndex[term] = line_count;
+      ++line_count;
+      ++it;
+
+      std::vector<double> row;
+      row.reserve(nRows);
+      while(it != tokens.end()){
+
+        std::string strval = *it;
+        double val = atof(strval.c_str());
+        row.push_back(val);
+        ++it;
+
+      }
+
+      _matrix.push_back(row);
+
+    }
+    //std::cout << "rows " << _matrix.size() << std::endl;
+    //std::cout << "cols " << _matrix.at(0).size() << std::endl;
+    //std::cout << "terms " << _termToIndex.size() << std::endl;
+  }
+
+  [[nodiscard ]] bool isFileGood(const std::string &filename){
+
+    std::ifstream in(filename.c_str());
+    if (!in.good()){
+
+      return false;
+
+    }
+
+    typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+    boost::char_separator<char> tab_sep("\t", "", boost::keep_empty_tokens);
+    tokenizer::iterator it;
+    std::string line;
+
+    std::size_t line_count = 0;
+
+    //first line
+    getline(in, line);
+    tokenizer tokens(line, tab_sep);
+    it = tokens.begin();
+
+    std::string firstTerm = *it;
+    ++line_count;
+    ++it;
+
+    std::vector<double> firstRow;
+    while (it != tokens.end()){
+      std::string strval = *it;
+      double val = atof(strval.c_str());
+      firstRow.push_back(val);
+      ++it;
+    }
+
+    try{
+
+      while (in.good() && line_count < 5){
+
+        getline(in, line);
+        tokenizer tokens(line, tab_sep);
+        it = tokens.begin();
+        if (it == tokens.end()){ continue; }
+
+        std::string term = *it;
+        ++line_count;
+        ++it;
+
+        std::vector<double> row;
+        row.reserve(firstRow.size());
+
+        while (it != tokens.end()){
+          std::string strval = *it;
+          double val = atof(strval.c_str());
+          row.push_back(val);
+          ++it;
+        }
+
+        if (row.size() != firstRow.size()){
+
+          return false;
+
+        }
+
+      }
+
+    }
+    catch (std::exception& e){
+
+      return false;
+
+    }
+
+    return true;
+  }
 
 };
 #endif

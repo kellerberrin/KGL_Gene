@@ -31,52 +31,61 @@ public:
 	/*!
 		Creates the AncestorMeanSharedInformation class
 	*/
-	inline AncestorMeanSharedInformation(GoGraph* goGraph,TermInformationContentMap &icMap){
-		_goGraph = goGraph;
-		_icMap = icMap;
-	}
+	AncestorMeanSharedInformation(std::shared_ptr<const GoGraph> goGraph, std::shared_ptr<const TermInformationContentMap> icMap)
+	: _goGraph(std::move(goGraph)), _icMap(std::move(icMap)) {}
+  ~AncestorMeanSharedInformation() override = default;
 
 	//! A method for calculating the shared infromation between two concepts.
 	/*!
 		This method returns the shared information between two concepts.
 	*/
-	inline double sharedInformation(const std::string &termA, const std::string &termB){
+	[[nodiscard]] double sharedInformation(const std::string &termA, const std::string &termB) const override {
 		// return 0 for any terms not in the datbase
-		if (!_icMap.hasTerm(termA) || !_icMap.hasTerm(termB)){
+		if (not _icMap->hasTerm(termA) or not _icMap->hasTerm(termB)) {
+
 			return 0.0;
+
 		}
 		// return 0 for terms in different ontologies
-		if (!isSameOntology(termA, termB)){
+		if (not isSameOntology(termA, termB)){
+
 			return 0.0;
+
 		}
 
 		Accumulators::MeanAccumulator meanIC;
 
-		boost::unordered_set<std::string> ancestorsA = _goGraph->getAncestorTerms(termA);
+    OntologySetType<std::string> ancestorsA = _goGraph->getAncestorTerms(termA);
 		ancestorsA.insert(termA);
-		boost::unordered_set<std::string> ancestorsB = _goGraph->getAncestorTerms(termB);
+    OntologySetType<std::string> ancestorsB = _goGraph->getAncestorTerms(termB);
 		ancestorsB.insert(termB);
 
-		boost::unordered_set<std::string> sharedAncestors = SetUtilities::set_intersection(ancestorsA,ancestorsB);
+		OntologySetType<std::string> sharedAncestors = SetUtilities::set_intersection(ancestorsA,ancestorsB);
 
-		boost::unordered_set<std::string>::iterator iter = sharedAncestors.begin();
-		for(;iter != sharedAncestors.end(); ++iter){
-			meanIC(_icMap[*iter]);
+		for(auto const& term : sharedAncestors) {
+
+			meanIC(_icMap->getValue(term));
+
 		}
 
 		return Accumulators::extractMean(meanIC);
+
 	}
 
 	//! An interface method for returning the shared information of a single terms,or information content
 	/*!
 		This method privdes a mechanism for returing a term's infromation content.
 	*/
-	inline double sharedInformation(const std::string &term){
+	[[nodiscard]] double sharedInformation(const std::string &term) const override {
 		// return 0 for any terms not in the datbase
-		if (!_icMap.hasTerm(term)){
+		if (not _icMap->hasTerm(term)) {
+
 			return 0.0;
+
 		}
-		return _icMap[term];
+
+		return _icMap->getValue(term);
+
 	}
 
 
@@ -84,43 +93,49 @@ public:
 	/*!
 		This method provides the absolute max information content within a corpus for normalization purposes.
 	*/
-	inline double maxInformationContent(const std::string &term){
+	[[nodiscard]] double maxInformationContent(const std::string &term) const override {
 
 		double maxIC;
 
 		//select the correct ontology normalization factor
 		GO::Onto ontoType = _goGraph->getTermOntology(term);
 		if(ontoType == GO::BP){
-			maxIC = -std::log(_icMap.getMinBP());
+
+			maxIC = -std::log(_icMap->getMinBP());
+
 		}else if(ontoType == GO::MF){
-			maxIC = -std::log(_icMap.getMinMF());
+
+			maxIC = -std::log(_icMap->getMinMF());
+
 		}else{
-			maxIC = -std::log(_icMap.getMinCC());
+
+			maxIC = -std::log(_icMap->getMinCC());
 		}
 
 		return maxIC;
+
 	}
 
 	//! An interface method for determining if a term can be found
 	/*!
 		Determines if the term can be found in the current map.
 	*/
-	inline bool hasTerm(const std::string &term){
-		return _icMap.hasTerm(term);
-	}
+	[[nodiscard]] bool hasTerm(const std::string &term) const override { return _icMap->hasTerm(term); }
 
 	//! An interface method for determining if the two terms are of like ontologies.
 	/*!
 		Determine if two terms are of the same ontology.
 	*/
-	bool isSameOntology(const std::string &termA, const std::string &termB){
+	[[nodiscard]] bool isSameOntology(const std::string &termA, const std::string &termB) const override {
+
 		return _goGraph->getTermOntology(termA) == _goGraph->getTermOntology(termB);
+
 	}
 
 private:
 
-	GoGraph* _goGraph;
-	TermInformationContentMap _icMap;
+	std::shared_ptr<const GoGraph> _goGraph;
+	std::shared_ptr<const TermInformationContentMap> _icMap;
 
 
 };

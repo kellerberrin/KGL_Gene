@@ -7,7 +7,10 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #ifndef GO_PARSER_FACTORY
 #define GO_PARSER_FACTORY
 
-#include <GoParserInterface.hpp>
+#include <StandardOboGoParser.hpp>
+#include <StandardXmlGoParser.hpp>
+#include <RapidXmlGoParser.hpp>
+
 
 #include <vector>
 #include <string>
@@ -16,84 +19,51 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 /*! \class GoParserFactory
 	\brief A class to return an instance of GoParserInterface at runtime based on an argument.
 
-	This class holds a set of parser classes. When queried using the getParser method, it
-	  returns an instance of GoParserInterface based on a string key. This allows
-	  parsers to be easily added to a larger system and switched at runtime.
-
+    STANDARD parsers only parse GO::IS_A and GO::PART_OF go relationships and cannot be modified.
+    ALLOWED parsers are initialised to parse GO::IS_A and GO::PART_OF go relationships but this can be modified at runtime.
+    RAPID_XML_PARSER parses all relationships.
 */
-class GoParserFactory{
+enum class GoParserType { OBO_GO_STANDARD, OBO_GO_ALLOWED, XML_GO_STANDARD, XML_GO_ALLOWED, RAPID_XML_PARSER };
+class GoParserFactory {
 
-private:
-	//! A list of strings which correspond to parsers
-	/*!
-		This list holds the names of parsers added to the factory. These are the
-		  keys used to query a parser.
-	*/
-	std::vector<std::string> _names;
-
-	//! A list of parsers which are currently held in the factory.
-	/*!
-		This list holds the instances of GoParserInterface that can be returned.
-	*/
-	std::vector<GoParserInterface*> _parsers;
 
 public:
 
-	//! Class constructor
 	/*!
-		This constructor initializes the private lists to empty vectors.
+		This object cannot be created.
 	*/
-	inline GoParserFactory(){
-		//initialize vectors
-		_names   = std::vector<std::string>();
-		_parsers = std::vector<GoParserInterface*>();
-	}//end Constructor
-
-	//! Class destructor
-	/*!
-		This destructor clears the names vector. It also deletes each parser pointer explicitly.
-		  Finally it clears the parser list.
-	*/
-	inline ~GoParserFactory(){
-		//clear vectors
-		_names.clear();
-
-		//explicitly delete internal pointers
-		for(std::size_t i = 0; i < _parsers.size();++i){
-			delete _parsers.at(i);
-		}
-		_parsers.clear();
-
-	}//end destructor
-
+	GoParserFactory() = delete;
+  ~GoParserFactory() = delete;
 
 	//! A Method to add a parser to the factory.
 	/*!
 		This method adds a pointer to a parser and a string to the factory.
 		  This string is used to query the appropriate parser.
 	*/
-	inline void addParser(std::string name,GoParserInterface* parser){
-		_names.push_back(name);
-		_parsers.push_back(parser);
-	}//end method addParser
 
+  static std::unique_ptr<GoParserInterface> createGoParser(GoParserType parser_type) {
 
-	//! A method to return a parser based on a query string.
-	/*!
-		If the string supplied matches one of the keys in the database, the
-		 appropriate parser will be returned. If not, a NULL pointer is returned.
-		 The calling environment must check against NULL before using.
-	*/
-	inline GoParserInterface* getParser(std::string name){
-		//check for the string
-		for(std::size_t i = 0; i < _names.size(); ++i){
-			if(_names.at(i).compare(name) == 0){
-				return _parsers.at(i)->clone();
-			}
-		}
-		//if not found return null
-		return NULL;
-	}//end method getParser
+    switch(parser_type) {
+
+      case GoParserType::OBO_GO_STANDARD:
+        return std::make_unique<StandardOboGoParser>();
+
+      case GoParserType::OBO_GO_ALLOWED:
+        return std::make_unique<AllowedRelationshipOboGoParser>(StandardRelationshipPolicy());
+
+      case GoParserType::XML_GO_STANDARD:
+        return std::make_unique<StandardXmlGoParser>();
+
+      case GoParserType::XML_GO_ALLOWED:
+        return std::make_unique<AllowedRelationshipXmlGoParser>(StandardRelationshipPolicy());
+
+      case GoParserType::RAPID_XML_PARSER:
+        return std::make_unique<RapidXmlGoParser>();
+
+    }
+
+  }
+
 
 };
 #endif

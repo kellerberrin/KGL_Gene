@@ -30,9 +30,33 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	 Implements GoParserInterface
 
 */
-class AllowedRelationshipXmlGoParser : public GoParserInterface{
+class AllowedRelationshipXmlGoParser : public GoParserInterface {
 
 public:
+
+  //! A parameterized constructor
+  /*!
+    constructor that sets the policy
+  */
+  explicit AllowedRelationshipXmlGoParser(const RelationshipPolicyInterface& policy) : relationshipPolicy(policy.clone()) {}
+  AllowedRelationshipXmlGoParser() = delete; // Must provide a policy.
+  ~AllowedRelationshipXmlGoParser() override = default;
+
+  //! a method to create a new instance of this class for use in a factory
+  /*!
+    creats a new pointer to the parser, used by the factory for go parsers.
+  */
+  [[nodiscard]] std::unique_ptr<GoParserInterface> clone() const override {
+
+    return std::make_unique<AllowedRelationshipXmlGoParser>(*relationshipPolicy);
+
+  }//end method clone
+
+  //! a method to set the policy
+  /*!
+    sets the policy of the parser
+  */
+  virtual void setPolicy(const RelationshipPolicyInterface& policy) { relationshipPolicy = policy.clone(); }
 
 
 	//! Method to parse the go file, should be an XML file
@@ -41,10 +65,10 @@ public:
 		 which are specified to the graph.
 
 	*/
-	inline GoGraph* parseGoFile(std::string filename){
+	[[nodiscard]] std::unique_ptr<GoGraph> parseGoFile(const std::string& filename) const override {
 
 		//graph object to be returned
-		GoGraph* graph = new GoGraph();
+    std::unique_ptr<GoGraph> graph(std::make_unique<GoGraph>());
 
 		//open xmlfile
 		rapidxml::file<> xmlFile(filename.c_str());
@@ -181,7 +205,8 @@ public:
 	/*!
 	Returns true if the file matches accepted format, false otherwise
 	*/
-	inline bool isFileGood(const std::string &filename){
+	[[nodiscard]] bool isFileGood(const std::string &filename) const override {
+
 		std::ifstream in(filename.c_str());
 		if (!in.good()){
 			return false;
@@ -225,37 +250,12 @@ public:
 
 
 
-	//! a method to create a new instance of this class for use in a factory
-	/*!
-		creats a new pointer to the parser, used by the factory for go parsers.
-	*/
-	inline GoParserInterface* clone(){
-		return new AllowedRelationshipXmlGoParser(relationshipPolicy);
-	}//end method clone
-
-
-	//! a method to set the policy
-	/*!
-		sets the policy of the parser
-	*/
-	inline void setPolicy(RelationshipPolicyInterface* policy){
-		relationshipPolicy = policy;
-	}//end method setPolicy
-
-
-	//! A parameterized constructor
-	/*!
-		constructor that sets the policy
-	*/
-	inline AllowedRelationshipXmlGoParser(RelationshipPolicyInterface* policy){
-		setPolicy(policy);
-	}//end parameterized constructor, AllowedRelationshipXmlGoParser
 
 
 private:
 	//! A RelationshipPolicyInterface
     /*! This RelationshipPolicyInterface holds the relationships to be allowed during parsing */
-	RelationshipPolicyInterface* relationshipPolicy;
+	std::unique_ptr<RelationshipPolicyInterface> relationshipPolicy;
 
 
 };

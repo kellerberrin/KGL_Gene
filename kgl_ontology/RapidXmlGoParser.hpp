@@ -29,16 +29,28 @@ class RapidXmlGoParser : public GoParserInterface{
 
 public:
 
-	//! Method to parse the go file, should be an XML file.
-	/*!
-		This method will read a Gene Ontology XML file and add all relationships
-		 to the graph.
+  RapidXmlGoParser() = default;
+  ~RapidXmlGoParser() override = default;
 
-	*/
-	inline GoGraph* parseGoFile(std::string filename){
+
+
+  //! A method to create a new instance of this class for use in a factory.
+  /*!
+    creats a new pointer to the parser, used by the factory for go parsers.
+  */
+  [[nodiscard]] std::unique_ptr<GoParserInterface> clone() const override { return std::make_unique<RapidXmlGoParser>(); }
+
+  //! Method to parse the go file, should be an XML file.
+  /*!
+    This method will read a Gene Ontology XML file and add all relationships
+     to the graph.
+
+  */
+
+  [[nodiscard]] std::unique_ptr<GoGraph> parseGoFile(const std::string& filename) const override {
 
 		//graph object to be returned
-		GoGraph* graph = new GoGraph();
+		std::unique_ptr<GoGraph> graph(std::make_unique<GoGraph>());
 
 		//open xmlfile
 		rapidxml::file<> xmlFile(filename.c_str());
@@ -168,7 +180,8 @@ public:
 	/*!
 	Returns true if the file matches accepted format, false otherwise
 	*/
-	inline bool isFileGood(const std::string &filename){
+	[[nodiscard]] bool isFileGood(const std::string &filename) const override {
+
 		std::ifstream in(filename.c_str());
 		if (!in.good()){
 			return false;
@@ -213,16 +226,7 @@ public:
 		}
 	}
 
-
-
-
-	//! A method to create a new instance of this class for use in a factory.
-	/*!
-		creats a new pointer to the parser, used by the factory for go parsers.
-	*/
-	inline GoParserInterface* clone(){
-		return new RapidXmlGoParser();
-	}//end method clone
+private:
 
 
 };

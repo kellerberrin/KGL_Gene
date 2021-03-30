@@ -25,30 +25,34 @@ public:
 	/*!
 		Creates the GentlemanUISimilarity class assigning the GoGraph private memeber.
 	*/
-	inline GentlemanSimUISetSimilarity(GoGraph* graph){
-		_graph = graph;
-	}
+	GentlemanSimUISetSimilarity(std::shared_ptr<const GoGraph> graph) : _graph(std::move(graph)) {}
+	~GentlemanSimUISetSimilarity() override = default;
 
 
 	//! A method for calculating term set to term set similarity for GO terms;
 	/*!
 		This method returns the best match average similarity.
 	*/
-	inline double calculateSimilarity(const boost::unordered_set<std::string> &termsA, const boost::unordered_set<std::string> &termsB){
+	[[nodiscard]] double calculateSimilarity(const OntologySetType<std::string> &termsA, const OntologySetType<std::string> &termsB ) const override {
 		// Get the induced set of terms for each set
-		boost::unordered_set<std::string> inducedTermSetA = getExtendedTermSet(termsA);
-		boost::unordered_set<std::string> inducedTermSetB = getExtendedTermSet(termsB);
+
+		OntologySetType<std::string> inducedTermSetA = _graph->getExtendedTermSet(termsA);
+		OntologySetType<std::string> inducedTermSetB = _graph->getExtendedTermSet(termsB);
 		// Calculate union and intersection
-		boost::unordered_set<std::string> union_set = SetUtilities::set_union(inducedTermSetA, inducedTermSetB);
-		boost::unordered_set<std::string> intersection_set = SetUtilities::set_intersection(inducedTermSetA, inducedTermSetB);
+		OntologySetType<std::string> union_set = SetUtilities::set_union(inducedTermSetA, inducedTermSetB);
+		OntologySetType<std::string> intersection_set = SetUtilities::set_intersection(inducedTermSetA, inducedTermSetB);
 
 		//if the union is 0, return 0. No division by 0.
 		if (union_set.size() == 0){
+
 			return 0.0;
+
+		} else {
+
+			return static_cast<double>(intersection_set.size()) / static_cast<double>(union_set.size());
+
 		}
-		else{
-			return (double)intersection_set.size() / union_set.size();
-		}
+
 	}
 
 private:
@@ -57,26 +61,9 @@ private:
 	/*!
 		A reference to GO graph to be used.
 	*/
-	GoGraph* _graph;
+	std::shared_ptr<const GoGraph> _graph;
 
 
-	//! A method for calculating the extended term set. The set of all terms in the induced subgraph of the ontology
-	/*!
-		This method returns the extended term set of a set of terms. Basically the set of terms and all thier ancestors.
-	*/
-	inline boost::unordered_set<std::string> getExtendedTermSet(const boost::unordered_set<std::string> &terms){
-		boost::unordered_set<std::string> inducedSet;
-		boost::unordered_set<std::string>::iterator it, end;
-		it = terms.begin();
-		end = terms.end();
-		for (; it != end; ++it){
-			std::string term = *it;
-			// add the new terms to the set using union and the ancestors from the go graph
-			inducedSet = SetUtilities::set_union(inducedSet, _graph->getAncestorTerms(term));
-			inducedSet.insert(term);
-		}
-		return inducedSet;
-	}
 
 };
 #endif

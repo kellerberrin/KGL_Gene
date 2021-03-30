@@ -33,11 +33,9 @@ public:
 		A simple parameterized constructor.
 		This class take an instance of the GO Graph.
 	*/
-	inline TermSimilarityWriter(GoGraph* goGraph, AnnotationData* annoData){
-		_goGraph = goGraph;
-		_annoData = annoData;
-	}
-
+	TermSimilarityWriter(std::shared_ptr<const GoGraph> goGraph, std::shared_ptr<const AnnotationData> annoData)
+	: _goGraph(std::move(goGraph)), _annoData(std::move(annoData)) {}
+  ~TermSimilarityWriter() = default;
 
 	//! A method to write a term similarity matrix
 	/*!
@@ -47,60 +45,77 @@ public:
 		O(Term Pair Calculation Cost) is usually near constant time,
 		 but some method will be extremely slow and require other methods
 	*/
-	inline void writeSimilarityMatrix(TermSimilarityInterface* termSim, std::string fileName, long ontology_code){
-		GO::Onto ontology = static_cast<GO::Onto>(ontology_code);
+	void writeSimilarityMatrix(const std::shared_ptr<const TermSimilarityInterface>& termSim, const std::string& fileName, long ontology_code) const {
+
+		auto ontology = static_cast<GO::Onto>(ontology_code);
 		std::vector<std::string> ontologyTerms = _annoData->getOntologyTerms(_goGraph, ontology);
 
 		// Initialze a matrix
 		std::size_t nTerms = ontologyTerms.size();
 		std::vector<std::vector<double> > matrix;
 		matrix.reserve(nTerms);
+
 		for (std::size_t i = 0; i < nTerms; ++i){
+
 			matrix.push_back(std::vector<double>());
+
 			for (std::size_t j = 0; j < nTerms; ++j){
 				matrix[i].push_back(0.0);
 			}
+
 		}
 
 		// --- Main Calculation ---
 		for (std::size_t i = 0; i < nTerms; ++i){
+
 			std::string termA = ontologyTerms.at(i);
 			matrix[i][i] = termSim->calculateNormalizedTermSimilarity(termA, termA);
+
 			for (std::size_t j = i + 1; j < nTerms; ++j){
+
 				std::string termB = ontologyTerms.at(j);
 				double value = termSim->calculateNormalizedTermSimilarity(termA, termB);
 				//cout << termA << "\t" << termB << "\t" << value << endl;
 				matrix[i][j] = value;
 				matrix[j][i] = value;
+
 			}
+
 		}
 
 		// write the matrix
 		writeMatrix(fileName, matrix, ontologyTerms);
+
 	}
 
 	//! A method to write a term similarity matrix for Biological Process
 	/*!
 		Calcualtes and writes the biological process term similarity matrix
 	*/
-	inline void writeSimilarityMatrixBP(TermSimilarityInterface* termSim, std::string fileName){
+	void writeSimilarityMatrixBP(const std::shared_ptr<const TermSimilarityInterface>& termSim, const std::string& fileName) const {
+
 		writeSimilarityMatrix(termSim, fileName, GO::BP);
+
 	}
 
 	//! A method to write a term similarity matrix for Molecular Function
 	/*!
 		Calcualtes and writes the molecular function term similarity matrix
 	*/
-	inline void writeSimilarityMatrixMF(TermSimilarityInterface* termSim, std::string fileName){
+	void writeSimilarityMatrixMF(const std::shared_ptr<const TermSimilarityInterface>& termSim, const std::string& fileName) const {
+
 		writeSimilarityMatrix(termSim, fileName, GO::MF);
+
 	}
 
 	//! A method to write a term similarity matrix for Cellular Component
 	/*!
 	Calcualtes and writes the cellular component term similarity matrix
 	*/
-	inline void writeSimilarityMatrixCC(TermSimilarityInterface* termSim, std::string fileName){
+	void writeSimilarityMatrixCC(const std::shared_ptr<const TermSimilarityInterface>& termSim, const std::string& fileName) const {
+
 		writeSimilarityMatrix(termSim, fileName, GO::CC);
+
 	}
 
 private:
@@ -109,24 +124,32 @@ private:
 	/*!
 		writes the matrix to file.
 	*/
-	inline void writeMatrix(std::string fname, const std::vector<std::vector<double> > &matrix, const std::vector<std::string> &terms){
+	static void writeMatrix(const std::string& fname, const std::vector<std::vector<double> > &matrix, const std::vector<std::string> &terms){
+
 		std::ofstream out(fname.c_str());
+
 		std::size_t matrix_size = matrix.size();
 		for (std::size_t i = 0; i < matrix_size; ++i){
+
 			std::string termA = terms.at(i);
 			out << termA;
 			for (std::size_t j = 0; j < matrix_size; ++j){
-				out << "\t" << matrix[i][j];
+
+				out << '\t' << matrix[i][j];
+
 			}
-			out << std::endl;
+
+			out << '\n';
+
 		}
-		out.close();
+
 	}
 
 	//! A pointer to the gene ontology graph
-	GoGraph* _goGraph;
+	std::shared_ptr<const GoGraph> _goGraph;
 	//! A pointer to the annotation database
-	AnnotationData* _annoData;
+	std::shared_ptr<const AnnotationData> _annoData;
+
 };
 
 

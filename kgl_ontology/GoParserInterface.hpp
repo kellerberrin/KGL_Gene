@@ -11,7 +11,8 @@
 	  require that parsers implement these methods.
 
 */
-class GoParserInterface{
+class GoParserInterface {
+
 public:
 
   GoParserInterface() = default;
@@ -22,20 +23,21 @@ public:
 		This pure virtual method requires any parser to have a method that takes
 		  a filename string and returns a GoGraph object pointer.
 	*/
-	virtual GoGraph* parseGoFile(std::string fileName) = 0;
+	[[nodiscard]] virtual std::unique_ptr<GoGraph> parseGoFile(const std::string& fileName) const = 0;
 
 	//! A pure virtual method for parsing the file and returning a GoGraph object.
 	/*!
 	This pure virtual method requires any parser to have a method that takes
 	a filename string and returns a GoGraph object pointer.
 	*/
-	virtual bool isFileGood(const std::string &filename) = 0;
+	[[nodiscard]] virtual bool isFileGood(const std::string& filename) const = 0;
 
 	//! A pure virtual clone function for factory pattern
 	/*!
 		This pure virtual method returns an instance of this interface. This method
 		  is used in a factory class to have the ability to decide the parser at runtime.
 	*/
-	virtual GoParserInterface* clone() = 0;
+	[[nodiscard]] virtual std::unique_ptr<GoParserInterface> clone() const = 0;
+
 };
 #endif
