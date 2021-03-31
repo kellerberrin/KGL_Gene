@@ -25,16 +25,19 @@ public:
 	*/
 	ExperimentalEvidencePolicy() : AllowedSetEvidencePolicy() {
 
-		addEvidence(GO::EXP);
-		addEvidence(GO::IDA);
-		addEvidence(GO::IPI);
-		addEvidence(GO::IMP);
-		addEvidence(GO::IGI);
-		addEvidence(GO::IEP);
+		addEvidence(GO::EvidenceCode::EXP);
+		addEvidence(GO::EvidenceCode::IDA);
+		addEvidence(GO::EvidenceCode::IPI);
+		addEvidence(GO::EvidenceCode::IMP);
+		addEvidence(GO::EvidenceCode::IGI);
+		addEvidence(GO::EvidenceCode::IEP);
 
 	}
 
+
   ~ExperimentalEvidencePolicy() override = default;
+
+  [[nodiscard]] std::unique_ptr<const EvidencePolicyInterface> clone() const override { return std::make_unique<const ExperimentalEvidencePolicy>(); }
 
 };
 #endif

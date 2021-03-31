@@ -11,7 +11,6 @@
 #include <boost/tokenizer.hpp>
 #include <boost/timer/timer.hpp>
 
-#include <algorithm>
 #include <unistd.h>
 #include <ios>
 #include <string>

@@ -72,7 +72,7 @@ public:
 
 		GO::Relationship relationship = GO::relationshipStringToCode(relString);
 
-		if (relationship != GO::REL_ERROR){
+		if (relationship != GO::Relationship::REL_ERROR){
 
 			_relationshipMap[relationship] = true;
 

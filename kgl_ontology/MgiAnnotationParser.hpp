@@ -37,9 +37,12 @@ public:
 	/*!
 		Creates the parser with a custom policy
 	*/
-	explicit MgiAnnotationParser(std::unique_ptr<const EvidencePolicyInterface> policy) : GoaAnnotationParser( std::move(policy) ){}
+	explicit MgiAnnotationParser(const EvidencePolicyInterface& policy) : GoaAnnotationParser(policy) {}
 
   ~MgiAnnotationParser() override = default;
+
+  [[nodiscard]] std::unique_ptr<AnnotationParserInterface> clone() const override { return std::make_unique<MgiAnnotationParser>(getPolicy()); }
+
 
 };
 

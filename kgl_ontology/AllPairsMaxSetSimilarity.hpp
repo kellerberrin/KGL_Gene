@@ -23,7 +23,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	 vol. 2, pp. 330-8, Oct-Dec 2005.
 
 */
-class AllPairsMaxSetSimilarity : public TermSetSimilarityInterface{
+class AllPairsMaxSetSimilarity : public TermSetSimilarityInterface {
 
 
 public:

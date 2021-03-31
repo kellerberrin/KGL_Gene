@@ -80,65 +80,47 @@ namespace Accumulators{
 	/*! extractMin
 	\brief A helper helper function to extract the min.
 	*/
-	inline double extractMin(const MinAccumulator &acc){
-		return  boost::accumulators::min(acc);
-	}
+	[[nodiscard]] double extractMin(const MinAccumulator &acc) { return  boost::accumulators::min(acc); }
 
 	/*! extractMax
 	\brief A helper helper function to extract the max.
 	*/
-	inline double extractMax(const MaxAccumulator &acc){
-		return  boost::accumulators::max(acc);
-	}
+	[[nodiscard]] double extractMax(const MaxAccumulator &acc) { return  boost::accumulators::max(acc); }
 
 	/*! extractMean
 	\brief A helper helper function to extract the mean.
 	*/
-	inline double extractMean(const MeanAccumulator &acc){
-		return  boost::accumulators::mean(acc);
-	}
+	[[nodiscard]] double extractMean(const MeanAccumulator &acc) {return  boost::accumulators::mean(acc); }
 
 	/*! extractMin
 	\brief An overlaoded helper helper function to extract the min.
 	*/
-	inline double extractMin(const SimpleAccumulator &acc){
-		return  boost::accumulators::min(acc);
-	}
+  [[nodiscard]] double extractMin(const SimpleAccumulator &acc) { return  boost::accumulators::min(acc); }
 
 	/*! extractMax
 	\brief An overlaoded helper helper function to extract the max.
 	*/
-	inline double extractMax(const SimpleAccumulator &acc){
-		return  boost::accumulators::max(acc);
-	}
+	[[nodiscard]] double extractMax(const SimpleAccumulator &acc) { return  boost::accumulators::max(acc); }
 
 	/*! extractMean
 	\brief An overlaoded helper helper function to extract the mean.
 	*/
-	inline double extractMean(const SimpleAccumulator &acc){
-		return  boost::accumulators::mean(acc);
-	}
+  [[nodiscard]] double extractMean(const SimpleAccumulator &acc) { return  boost::accumulators::mean(acc); }
 
 	/*! extractCovariance
 	\brief A helper helper function to extract the covariance.
 	*/
-	inline double extractCovariance(const CovarianceAccumulator &acc){
-		return  boost::accumulators::covariance(acc);
-	}
+  [[nodiscard]] double extractCovariance(const CovarianceAccumulator &acc) { return  boost::accumulators::covariance(acc); }
 
 	/*! extractVariance
 	\brief A helper helper function to extract the variance.
 	*/
-	inline double extractVariance(const VarianceAccumulator &acc){
-		return  boost::accumulators::variance(acc);
-	}
+  [[nodiscard]] double extractVariance(const VarianceAccumulator &acc) { return  boost::accumulators::variance(acc); }
 
 	/*! extractVariance
 	\brief A helper helper function to extract the variance.
 	*/
-	inline double extractSD(const VarianceAccumulator &acc){
-		return  sqrt(boost::accumulators::variance(acc));
-	}
+  [[nodiscard]] double extractSD(const VarianceAccumulator &acc) { return  sqrt(boost::accumulators::variance(acc)); }
 
 }
 #endif

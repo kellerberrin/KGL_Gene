@@ -70,7 +70,7 @@ public:
 		//graph object to be returned
     std::unique_ptr<GoGraph> graph(std::make_unique<GoGraph>());
 
-		//open xmlfile
+    //open xmlfile
 		rapidxml::file<> xmlFile(filename.c_str());
 
 		//initialize document
@@ -110,7 +110,7 @@ public:
 						name = childNode->value();
 
 					}else if(attr == "namespace"){
-						//go ontology, BP,MF,CC
+						//go ontology, BIOLOGICAL_PROCESS,MOLECULAR_FUNCTION,CELLULAR_COMPONENT
 						ontology = childNode->value();
 
 					}else if(attr == "def"){
@@ -256,7 +256,6 @@ private:
 	//! A RelationshipPolicyInterface
     /*! This RelationshipPolicyInterface holds the relationships to be allowed during parsing */
 	std::unique_ptr<RelationshipPolicyInterface> relationshipPolicy;
-
 
 };
 #endif

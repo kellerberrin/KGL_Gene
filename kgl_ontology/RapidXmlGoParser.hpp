@@ -92,7 +92,7 @@ public:
 						name = childNode->value();
 
 					}else if(attr == "namespace"){
-						//go ontology, BP,MF,CC
+						//go ontology, BIOLOGICAL_PROCESS,MOLECULAR_FUNCTION,CELLULAR_COMPONENT
 						ontology = childNode->value();
 
 					}else if(attr == "def"){

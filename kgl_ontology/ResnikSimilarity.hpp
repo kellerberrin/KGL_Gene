@@ -91,12 +91,12 @@ public:
 
 		double maxIC;
 		//select the correct ontology normalization factor
-		GO::Onto ontoType = _goGraph->getTermOntology(goTermA);
-		if(ontoType == GO::BP){
+		GO::Ontology ontoType = _goGraph->getTermOntology(goTermA);
+		if(ontoType == GO::Ontology::BIOLOGICAL_PROCESS){
 
 			maxIC = -std::log(_icMap->getMinBP());
 
-		}else if(ontoType == GO::MF){
+		}else if(ontoType == GO::Ontology::MOLECULAR_FUNCTION){
 
 			maxIC = -std::log(_icMap->getMinMF());
 

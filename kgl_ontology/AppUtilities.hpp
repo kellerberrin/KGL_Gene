@@ -27,7 +27,8 @@ namespace AppUtilities{
 	/*!
 		This method parses a tab delimited parameter file and returns a map of parameters.
 	*/
-	inline void parseParamFile(const std::string fname,std::map<std::string,std::string> &paramMap){
+	void parseParamFile(const std::string& fname, std::map<std::string,std::string> &paramMap){
+
 		std::ifstream in(fname.c_str());
 		std::string line;
 
@@ -57,9 +58,9 @@ namespace AppUtilities{
 		If all specified keys exist, true is returned. Otherwise false is returned
 		and specific error messages are placed int the message parameter.
 	*/
-	inline bool checkParams(const std::map<std::string,std::string> &paramMap,
-		                    const std::vector<std::string> &params,
-							std::string &message)
+	[[nodiscard]] bool checkParams( const std::map<std::string,std::string> &paramMap,
+		                              const std::vector<std::string> &params,
+							                    std::string &message)
 	{
 		bool isValid = true;
 		for(size_t i = 0; i < params.size(); ++i){
@@ -76,7 +77,7 @@ namespace AppUtilities{
 		This method checks provides an easy method for inputing a list of madatory params
 		 to be checked with checkParams
 	*/
-	inline std::vector<std::string> paramList(std::string param_str){
+	[[nodiscard]] std::vector<std::string> paramList(const std::string& param_str){
 		//extract params and place in a vector
 		typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
 		boost::char_separator<char> comma_sep(",","");
@@ -86,16 +87,21 @@ namespace AppUtilities{
 
 		tokenizer tokens(param_str,comma_sep);
 		for(it = tokens.begin(); it != tokens.end(); ++it){
+
 			params.push_back(*it);
+
 		}
+
 		return params;
+
 	}
 
 	//! A method for parsing a simple single column file
 	/*!
 		This method parses a simple single column file.
 	*/
-	inline std::vector<std::string> parseSimpleFile(const std::string fname){
+	[[nodiscard]] std::vector<std::string> parseSimpleFile(const std::string& fname) {
+
 		std::ifstream in(fname.c_str());
 		std::vector<std::string> strs;
 		std::string line;
@@ -107,13 +113,14 @@ namespace AppUtilities{
 		}
 		in.close();
 		return strs;
+
 	}
 
 	//! A method to split a string and return the nth element
 	/*!
 		This method splits a string by the given character and return the element at n.
 	*/
-	inline std::string splitTake(const std::string &name, const char &sep, const size_t &n){
+	[[nodiscard]] std::string splitTake(const std::string &name, const char &sep, const size_t &n) {
 		
 		typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
 
@@ -141,30 +148,39 @@ namespace AppUtilities{
 	/*!
 		This method splits a string by the given character and return the element at n.
 	*/
-	inline std::vector< std::string > setToVec(const boost::unordered_set< std::string > &uset){
-		std::vector<std::string> vec;
+  template<class T>
+	[[nodiscard]] std::vector<T> setToVec(const OntologySetType<T> &uset){
+
+		std::vector<T> vec;
 		vec.reserve(uset.size());
-		boost::unordered_set<std::string>::iterator it;
-		it = uset.begin();
-		for(;it != uset.end(); ++it){
-			vec.push_back(*it);
+		for(auto const& element : uset) {
+
+			vec.push_back(element);
+
 		}
+
 		return vec;
+
 	}
 
 	//! A method to split a string and return the nth element
 	/*!
 	This method splits a string by the given character and return the element at n.
 	*/
-	inline boost::unordered_set< std::string > vecToSet(const std::vector< std::string > &vec){
-		boost::unordered_set< std::string > uset;
-		std::vector<std::string>::const_iterator it;
-		it = vec.begin();
-		for (; it != vec.end(); ++it){
-			uset.insert(*it);
+	template<class T>
+	[[nodiscard]] OntologySetType<T> vecToSet(const std::vector<T> &vec) {
+
+    OntologySetType<T> uset;
+		for (auto const& element : vec) {
+
+			uset.insert(element);
+
 		}
+
 		return uset;
+
 	}
+
 
 } // namespace
 #endif

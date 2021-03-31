@@ -19,7 +19,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	enums to restric the types of evidence codes considered for annotations.
 
 */
-class AllowedSetEvidencePolicy: public EvidencePolicyInterface{
+class AllowedSetEvidencePolicy: public EvidencePolicyInterface {
 
 public:
 	
@@ -74,7 +74,7 @@ public:
 
 		GO::EvidenceCode evidenceCode = GO::evidenceStringToCode(stringCode);
 
-		if (evidenceCode != GO::ECODE_ERROR) {
+		if (evidenceCode != GO::EvidenceCode::ECODE_ERROR) {
 
 			_evidenceMap[evidenceCode] = true;
 

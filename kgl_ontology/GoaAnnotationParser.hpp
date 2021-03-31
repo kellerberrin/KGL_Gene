@@ -32,17 +32,13 @@ public:
   /*!
     Creates the parser
   */
-  GoaAnnotationParser() : _policy(new DisallowedSetEvidencePolicy) {}
+  GoaAnnotationParser() : _policy(std::make_unique<DisallowedSetEvidencePolicy>()) {}
 
   //! A parameterized constructor method for creating the parser with a policy.
   /*!
     Creates the parser
   */
-  explicit GoaAnnotationParser(std::unique_ptr<const EvidencePolicyInterface> policy){
-
-    _policy = std::move(policy);
-
-  }
+  explicit GoaAnnotationParser(const EvidencePolicyInterface& policy) : _policy(policy.clone()) {}
 
   ~GoaAnnotationParser() override = default;
 
@@ -51,16 +47,16 @@ public:
     This method returns a new instance of the class. This method partially
       fulfills the interface contract.
   */
-  [[nodiscard]] AnnotationParserInterface* clone() override { return new GoaAnnotationParser(_policy->clone()); }
+  [[nodiscard]] std::unique_ptr<AnnotationParserInterface> clone() const override { return std::make_unique<GoaAnnotationParser>(*_policy); }
 
 	//! An interface method for parsing an annotation file.
 	/*!
 		This method takes a filename as in put and returns a pointer to an
 		  AnnotationData object. This method fulfills part of the interface contract.
 	*/
-	[[nodiscard]] AnnotationData* parseAnnotationFile(std::string filename) override {
+	[[nodiscard]] std::unique_ptr<AnnotationData> parseAnnotationFile(const std::string& filename) const override {
 
-		AnnotationData* annoData = new AnnotationData();
+		std::unique_ptr<AnnotationData> annoData(std::make_unique<AnnotationData>());
 
 		//open afile stream
 		std::ifstream in(filename.c_str());
@@ -142,7 +138,7 @@ public:
 	/*!
 		This function checks that the file exists and its format can be recognized.
 	*/
-	bool isFileGood(const std::string &fileName) override {
+	[[nodiscard]] bool isFileGood(const std::string &fileName) const override {
 		std::ifstream in(fileName.c_str());
 		if (!in.good()){
 			return false;
@@ -197,7 +193,7 @@ public:
 					case 6:
 						evidenceCode = *it;
 						if (evidenceCode.size() == 0) { return false; }
-						if (GO::evidenceStringToCode(evidenceCode) == GO::ECODE_ERROR) { return false;}
+						if (GO::evidenceStringToCode(evidenceCode) == GO::EvidenceCode::ECODE_ERROR) { return false;}
 						break;
 					case 8:
 						ontology = *it;
@@ -227,6 +223,9 @@ public:
 
 	}
 
+protected:
+
+  [[nodiscard]] const EvidencePolicyInterface& getPolicy() const { return *_policy; }
 
 private:
 

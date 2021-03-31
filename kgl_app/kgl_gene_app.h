@@ -22,7 +22,6 @@ struct CmdLineArgs {
   std::string options_file{"runtime_options.xml"};
   int max_error_count{1000};
   int max_warn_count{1000};
-  bool verbose{false};
 
 };
 

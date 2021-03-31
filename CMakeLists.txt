@@ -46,21 +46,21 @@ if (ZLIB_FOUND)
 endif()
 
 # Debug g++
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fPIC -fconcepts -ggdb -DBOOST_MATH_DISABLE_FLOAT128")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++20 -fPIC -fconcepts -ggdb -DBOOST_MATH_DISABLE_FLOAT128")
 set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-ggdb -DBOOST_MATH_DISABLE_FLOAT128")
 
 # Release g++
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fPIC -fconcepts -O3 -s -DNDEBUG -DBOOST_MATH_DISABLE_FLOAT128")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++20 -fPIC -fconcepts -O3 -s -DNDEBUG -DBOOST_MATH_DISABLE_FLOAT128")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE " -O3 -s -DNDEBUG -DBOOST_MATH_DISABLE_FLOAT128")
 
 # Profile g++
-set(CMAKE_CXX_FLAGS_PROFILE "-fPIC -fconcepts -pg -g -ggdb -O3 -DBOOST_MATH_DISABLE_FLOAT128 -Xlinker -Map=output.map ")
+set(CMAKE_CXX_FLAGS_PROFILE "-std=c++20 -fPIC -fconcepts -pg -g -ggdb -O3 -DBOOST_MATH_DISABLE_FLOAT128 -Xlinker -Map=output.map ")
 set(CMAKE_EXE_LINKER_FLAGS_PROFILE "-pg -g -ggdb -O3 -DBOOST_MATH_DISABLE_FLOAT128 -Xlinker -Map=output.map ")
 
 # All possible warnings
-#set(CMAKE_ERROR_WARNING_FLAGS "-std=c++17 -Wall -pthread -Wextra -Werror -Wpedantic -pedantic-errors -Wstrict-aliasing -Wno-variadic-macros")
+#set(CMAKE_ERROR_WARNING_FLAGS "-std=c++20 -Wall -pthread -Wextra -Werror -Wpedantic -pedantic-errors -Wstrict-aliasing -Wno-variadic-macros")
 # Relax slightly to temporarily allow unused parameters.
-set(CMAKE_ERROR_WARNING_FLAGS "-std=c++17 -Wall -pthread -Wextra -Wpedantic -Wstrict-aliasing -Wno-variadic-macros")
+set(CMAKE_ERROR_WARNING_FLAGS "-std=c++20 -Wall -pthread -Wextra -Wpedantic -Wstrict-aliasing -Wno-variadic-macros")
 
 # Actually set the g++ flags.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
@@ -260,8 +260,8 @@ set(ONTOLOGY_SOURCE_FILES
         kgl_ontology/FrontierSharedInformation.hpp
         kgl_ontology/GafAnnotationParser.hpp
         kgl_ontology/GentlemanSimUISetSimilarity.hpp
-        kgl_ontology/ggtk.hpp
         kgl_ontology/GoaAnnotationParser.hpp
+        kgl_ontology/ggtk.hpp
         kgl_ontology/GoEnums.hpp
         kgl_ontology/GoGraph.hpp
         kgl_ontology/GoParserFactory.hpp
@@ -406,7 +406,7 @@ set(APPLICATION_SOURCE_FILES
 
 
 #generate libraries.
-add_library(kgl_ontology STATIC ${ONTOLOGY_SOURCE_FILES})
+add_executable(kgl_test kgl_ontology/ggtk.cpp)
 
 add_library(kel_utility STATIC ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES})
 

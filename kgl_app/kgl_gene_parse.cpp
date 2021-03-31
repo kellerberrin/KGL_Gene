@@ -83,15 +83,6 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-  const char* verbose_desc =
-      R"(Flag. Enables verbose logged output to screen and log file.)";
-
-  const char* verboseFlag_ = "verbose";
-  const char* verboseShortFlag_ = "v";
-
-  addOption(parser, seqan::ArgParseOption(verboseShortFlag_, verboseFlag_, verbose_desc, seqan::ArgParseArgument::BOOL, "FLAG"));
-
   // Parse command line.
   seqan::ArgumentParser::ParseResult parse_result = seqan::parse(parser, argc, argv);
 
@@ -174,11 +165,6 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
 
   }
 
-
-
-  if (seqan::isSet(parser, verboseFlag_)) seqan::getOptionValue(args_.verbose, parser, verboseFlag_);
-
-  ExecEnv::log().SetVerbose(getArgs().verbose);  // Set the logger verbose level.
 
   return true;
 

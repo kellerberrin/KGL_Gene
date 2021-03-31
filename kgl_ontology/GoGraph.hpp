@@ -36,9 +36,9 @@ struct VertexProps{
   std::string termId;
 
   /*!
-    The ontology of the GO term, BP, MF, CC
+    The ontology of the GO term, BIOLOGICAL_PROCESS, MOLECULAR_FUNCTION, CELLULAR_COMPONENT
   */
-  GO::Onto ontology;
+  GO::Ontology ontology;
 
 };
 
@@ -170,7 +170,7 @@ public:
 
   //! Method to insert terms into the graph
   /*!
-    This method takes a go term, description, and ontology information (MF,BP,CC).
+    This method takes a go term, description, and ontology information (MOLECULAR_FUNCTION,BIOLOGICAL_PROCESS,CELLULAR_COMPONENT).
      The method will check if the term already exists in the graph then add the vertex
      or update the meta data accordingly. The parser can call this method without having
      to consider if terms have already been added or not.
@@ -393,11 +393,11 @@ public:
 	/*!
 		This method returns the term's ontoogy taking a string term as an argument
 	*/
-  [[nodiscard]] GO::Onto getTermOntology(const std::string &term) const {
+  [[nodiscard]] GO::Ontology getTermOntology(const std::string &term) const {
 
 		if (not hasTerm(term)){
 
-			return GO::ONTO_ERROR;
+			return GO::Ontology::ONTO_ERROR;
 
 		}else{
 
@@ -411,7 +411,7 @@ public:
 	/*!
 		This method returns the term's ontoogy taking an index as an argument
 	*/
-  [[nodiscard]] GO::Onto getTermOntologyByIndex(std::size_t index) const {
+  [[nodiscard]] GO::Ontology getTermOntologyByIndex(std::size_t index) const {
 
 		GoVertex v = getVertexByIndex(index);
 		return _goGraph[v].ontology;
@@ -422,7 +422,7 @@ public:
 	/*!
 		This method returns the term's ontoogy taking GoVertex as an argument
 	*/
-  [[nodiscard]] GO::Onto getTermOntologyByVertex(GoVertex vertex) const {
+  [[nodiscard]] GO::Ontology getTermOntologyByVertex(GoVertex vertex) const {
 
 		return _goGraph[vertex].ontology;
 
@@ -634,9 +634,9 @@ public:
 
 	}
 
-	//! A helper method to retrieve all terms in the GoGraph belonging to the BP ontology
+	//! A helper method to retrieve all terms in the GoGraph belonging to the BIOLOGICAL_PROCESS ontology
 	/*!
-		This method returns a set of BP terms in the graph
+		This method returns a set of BIOLOGICAL_PROCESS terms in the graph
 	*/
   [[nodiscard]] OntologySetType<std::string> getAllTermsBP() const {
 
@@ -646,9 +646,9 @@ public:
 
 	}
 
-	//! A helper method to retrieve all terms in the GoGraph belonging to the MF ontology
+	//! A helper method to retrieve all terms in the GoGraph belonging to the MOLECULAR_FUNCTION ontology
 	/*!
-		This method returns a set of MF terms in the graph
+		This method returns a set of MOLECULAR_FUNCTION terms in the graph
 	*/
   [[nodiscard]] OntologySetType<std::string> getAllTermsMF() const {
 
@@ -658,9 +658,9 @@ public:
 
 	}
 
-	//! A helper method to retrieve all terms in the GoGraph belonging to the CC ontology
+	//! A helper method to retrieve all terms in the GoGraph belonging to the CELLULAR_COMPONENT ontology
 	/*!
-		This method returns a set of CC terms in the graph
+		This method returns a set of CELLULAR_COMPONENT terms in the graph
 	*/
   [[nodiscard]] OntologySetType<std::string> getAllTermsCC() const {
 
@@ -674,7 +674,7 @@ public:
 	/*!
 		This method returns a filtered set of ontology terms matching the given ontology
 	*/
-  [[nodiscard]] OntologySetType<std::string> filterSetForOntology(const OntologySetType<std::string> &inSet, GO::Onto onto) const {
+  [[nodiscard]] OntologySetType<std::string> filterSetForOntology(const OntologySetType<std::string> &inSet, GO::Ontology onto) const {
 		//create a collection to return
 		OntologySetType<std::string> outSet;
 		//iterate over the collection
@@ -696,7 +696,7 @@ public:
 	/*!
 		This method returns a filtered set of ontology terms matching the given ontology
 	*/
-  [[nodiscard]] OntologySetType<std::string> filterSetForOntology(const std::vector<std::string> &inSet, GO::Onto onto) const {
+  [[nodiscard]] OntologySetType<std::string> filterSetForOntology(const std::vector<std::string> &inSet, GO::Ontology onto) const {
 		//create a collection to return
 		OntologySetType<std::string> outSet;
 
@@ -720,14 +720,14 @@ public:
 	*/
   [[nodiscard]] std::string getTermRoot(const std::string &term) const {
 
-		GO::Onto ontology = getTermOntology(term);
+		GO::Ontology ontology = getTermOntology(term);
 
 		switch (ontology){
-			case GO::BP:
+		  case GO::Ontology::BIOLOGICAL_PROCESS:
 				return GO::getRootTermBP();
-			case GO::MF:
+		  case GO::Ontology::MOLECULAR_FUNCTION:
 				return GO::getRootTermMF();
-			case GO::CC:
+		  case GO::Ontology::CELLULAR_COMPONENT:
 				return GO::getRootTermCC();
 			default:
 				return "";
@@ -747,63 +747,63 @@ public:
 	}
 
 
-	//! A helper method to retrun only BP terms from a vector
+	//! A helper method to retrun only BIOLOGICAL_PROCESS terms from a vector
 	/*!
-		This method returns a filtered set containing only BP terms
+		This method returns a filtered set containing only BIOLOGICAL_PROCESS terms
 	*/
   [[nodiscard]] OntologySetType<std::string> filterSetForBP(const std::vector<std::string> &inSet) const {
 
-		return filterSetForOntology(inSet, GO::BP);
+		return filterSetForOntology(inSet, GO::Ontology::BIOLOGICAL_PROCESS);
 
 	}
 
-	//! A helper method to retrun only BP terms from a set
+	//! A helper method to retrun only BIOLOGICAL_PROCESS terms from a set
 	/*!
-		This method returns a filtered set containing only BP terms
+		This method returns a filtered set containing only BIOLOGICAL_PROCESS terms
 	*/
   [[nodiscard]] OntologySetType<std::string> filterSetForBP(const OntologySetType<std::string> &inSet) const {
 
-		return filterSetForOntology(inSet, GO::BP);
+		return filterSetForOntology(inSet, GO::Ontology::BIOLOGICAL_PROCESS);
 
 	}
 
-	//! A helper method to retrun only MF terms from a vector
+	//! A helper method to retrun only MOLECULAR_FUNCTION terms from a vector
 	/*!
-		This method returns a filtered set containing only MF terms
+		This method returns a filtered set containing only MOLECULAR_FUNCTION terms
 	*/
   [[nodiscard]] OntologySetType<std::string> filterSetForMF(const std::vector<std::string> &inSet) const {
 
-		return filterSetForOntology(inSet, GO::MF);
+		return filterSetForOntology(inSet, GO::Ontology::MOLECULAR_FUNCTION);
 
 	}
 
-	//! A helper method to retrun only MF terms from a set
+	//! A helper method to retrun only MOLECULAR_FUNCTION terms from a set
 	/*!
-		This method returns a filtered set containing only MF terms
+		This method returns a filtered set containing only MOLECULAR_FUNCTION terms
 	*/
   [[nodiscard]] OntologySetType<std::string> filterSetForMF(const OntologySetType<std::string> &inSet) const {
 
-    return filterSetForOntology(inSet, GO::MF);
+    return filterSetForOntology(inSet, GO::Ontology::MOLECULAR_FUNCTION);
 
 	}
 
-	//! A helper method to retrun only CC terms from a vector
+	//! A helper method to retrun only CELLULAR_COMPONENT terms from a vector
 	/*!
-		This method returns a filtered set containing only CC terms
+		This method returns a filtered set containing only CELLULAR_COMPONENT terms
 	*/
   [[nodiscard]] OntologySetType<std::string> filterSetForCC(const std::vector<std::string> &inSet) const {
 
-		return filterSetForOntology(inSet, GO::CC);
+		return filterSetForOntology(inSet, GO::Ontology::CELLULAR_COMPONENT);
 
 	}
 
-	//! A helper method to retrun only CC terms from a set
+	//! A helper method to retrun only CELLULAR_COMPONENT terms from a set
 	/*!
-		This method returns a filtered set containing only CC terms
+		This method returns a filtered set containing only CELLULAR_COMPONENT terms
 	*/
   [[nodiscard]] OntologySetType<std::string> filterSetForCC(const OntologySetType<std::string> &inSet){
 
-		return filterSetForOntology(inSet, GO::CC);
+		return filterSetForOntology(inSet, GO::Ontology::CELLULAR_COMPONENT);
 
 	}
 
@@ -812,17 +812,17 @@ public:
 	/*!
 		Returns only those terms used that occur for the given ontology.
 	*/
-  [[nodiscard]] OntologySetType<std::string> getOntologyTerms(GO::Onto ontology) const {
+  [[nodiscard]] OntologySetType<std::string> getOntologyTerms(GO::Ontology ontology) const {
 		//Use only terms in the annotation database, this will save on space and computation time.
 		std::string rootId;
 		switch (ontology){
-			case GO::BP:
+		  case GO::Ontology::BIOLOGICAL_PROCESS:
 				rootId = GO::getRootTermBP();
 				break;
-			case GO::MF:
+		  case GO::Ontology::MOLECULAR_FUNCTION:
 				rootId = GO::getRootTermMF();
 				break;
-			case GO::CC:
+		  case GO::Ontology::CELLULAR_COMPONENT:
 				rootId = GO::getRootTermCC();
 				break;
 			default:

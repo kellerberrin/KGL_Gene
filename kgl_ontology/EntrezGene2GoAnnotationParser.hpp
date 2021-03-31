@@ -25,13 +25,37 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 class EntrezGene2GoAnnotationParser: public AnnotationParserInterface{
 
 public:
-	//! An interface method for parsing an annotation file.
+
+  //! A default constructor method for creating the parser with the default policy.
+  /*!
+    Creates the parser with the default evidence policy, everything is allowed.
+  */
+  EntrezGene2GoAnnotationParser() : _policy(std::make_unique<const DisallowedSetEvidencePolicy>()) {}
+
+  //! A parameterized constructor method for creating the parser with a policy.
+  /*!
+    Creates the parser
+  */
+  EntrezGene2GoAnnotationParser(const EvidencePolicyInterface& policy) : _policy(policy.clone()) {}
+
+  ~EntrezGene2GoAnnotationParser() override = default;
+
+  //! An interface method for creating a new instance of the parser.
+  /*!
+    This method returns a new instance of the class. This method partially
+      fulfills the interface contract.
+  */
+  [[nodiscard]] std::unique_ptr<AnnotationParserInterface> clone() const override { return std::make_unique<EntrezGene2GoAnnotationParser>(*_policy); }
+
+
+  //! An interface method for parsing an annotation file.
 	/*!
 		This method takes a filename as in put and returns a pointer to an
 		  AnnotationData object. This method fulfills part of the interface contract.
 	*/
-	inline AnnotationData* parseAnnotationFile(std::string filename){
-		AnnotationData* annoData = new AnnotationData();
+	[[nodiscard]] std::unique_ptr <AnnotationData> parseAnnotationFile(const std::string& filename) const override {
+
+		std::unique_ptr<AnnotationData> annoData(std::make_unique<AnnotationData>());
 
 		//open afile stream
 		std::ifstream in(filename.c_str());
@@ -104,7 +128,8 @@ public:
 	/*!
 		This function checks that the file exists and its format can be recognized.
 	*/
-	inline bool isFileGood(const std::string &fileName){
+	[[nodiscard]] bool isFileGood(const std::string &fileName) const override {
+
 		std::ifstream in(fileName.c_str());
 		if (!in.good()){
 			return false;
@@ -150,7 +175,7 @@ public:
 			std::advance(it, 1);
 			evidenceCode = *it;
 			if (evidenceCode.size() == 0){ return false; }
-			if (GO::evidenceStringToCode(evidenceCode) == GO::ECODE_ERROR){ return false; }
+			if (GO::evidenceStringToCode(evidenceCode) == GO::EvidenceCode::ECODE_ERROR){ return false; }
 
 			++count;
 		}
@@ -166,36 +191,10 @@ public:
 	}
 
 
-	//! An interface method for creating a new instance of the parser.
-	/*!
-		This method returns a new instance of the class. This method partially
-		  fulfills the interface contract.
-	*/
-	inline AnnotationParserInterface* clone(){
-		return new EntrezGene2GoAnnotationParser();
-	}//end method, AnnotationParserInterface
-
-
-	//! A parameterized constructor method for creating the parser with a policy.
-	/*!
-		Creates the parser
-	*/
-	inline EntrezGene2GoAnnotationParser(EvidencePolicyInterface* policy){
-		_policy = policy;
-	}
-
-
-	//! A default constructor method for creating the parser with the default policy.
-	/*!
-		Creates the parser with the default evidence policy, everything is allowed.
-	*/
-	inline EntrezGene2GoAnnotationParser(){
-		_policy = new DisallowedSetEvidencePolicy();
-	}
-
 
 private:
-	EvidencePolicyInterface* _policy;
+
+	std::unique_ptr<const EvidencePolicyInterface> _policy;
 
 };
 #endif

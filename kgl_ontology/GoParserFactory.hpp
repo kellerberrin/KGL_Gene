@@ -21,9 +21,9 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
     STANDARD parsers only parse GO::IS_A and GO::PART_OF go relationships and cannot be modified.
     ALLOWED parsers are initialised to parse GO::IS_A and GO::PART_OF go relationships but this can be modified at runtime.
-    RAPID_XML_PARSER parses all relationships.
+    XML_RAPID_PARSER parses all relationships.
 */
-enum class GoParserType { OBO_GO_STANDARD, OBO_GO_ALLOWED, XML_GO_STANDARD, XML_GO_ALLOWED, RAPID_XML_PARSER };
+enum class GoParserType { OBO_GO_STANDARD, OBO_GO_ALLOWED, XML_GO_STANDARD, XML_GO_ALLOWED, XML_RAPID_PARSER };
 class GoParserFactory {
 
 
@@ -35,13 +35,8 @@ public:
 	GoParserFactory() = delete;
   ~GoParserFactory() = delete;
 
-	//! A Method to add a parser to the factory.
-	/*!
-		This method adds a pointer to a parser and a string to the factory.
-		  This string is used to query the appropriate parser.
-	*/
 
-  static std::unique_ptr<GoParserInterface> createGoParser(GoParserType parser_type) {
+  [[nodiscard]] static std::unique_ptr<GoParserInterface> createGoParser(GoParserType parser_type) {
 
     switch(parser_type) {
 
@@ -57,10 +52,12 @@ public:
       case GoParserType::XML_GO_ALLOWED:
         return std::make_unique<AllowedRelationshipXmlGoParser>(StandardRelationshipPolicy());
 
-      case GoParserType::RAPID_XML_PARSER:
+      case GoParserType::XML_RAPID_PARSER:
         return std::make_unique<RapidXmlGoParser>();
 
     }
+
+    return std::make_unique<StandardOboGoParser>(); // Never reached.
 
   }
 

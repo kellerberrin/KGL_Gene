@@ -27,8 +27,8 @@ public:
 	*/
 	StandardRelationshipPolicy() {
 
-		_relationshipMap[GO::IS_A] = true;
-		_relationshipMap[GO::PART_OF] = true;
+		_relationshipMap[GO::Relationship::IS_A] = true;
+		_relationshipMap[GO::Relationship::PART_OF] = true;
 
 	}
   ~StandardRelationshipPolicy() override = default;

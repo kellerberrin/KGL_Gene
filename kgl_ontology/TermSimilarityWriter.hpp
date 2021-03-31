@@ -47,7 +47,7 @@ public:
 	*/
 	void writeSimilarityMatrix(const std::shared_ptr<const TermSimilarityInterface>& termSim, const std::string& fileName, long ontology_code) const {
 
-		auto ontology = static_cast<GO::Onto>(ontology_code);
+		auto ontology = static_cast<GO::Ontology>(ontology_code);
 		std::vector<std::string> ontologyTerms = _annoData->getOntologyTerms(_goGraph, ontology);
 
 		// Initialze a matrix
@@ -94,7 +94,7 @@ public:
 	*/
 	void writeSimilarityMatrixBP(const std::shared_ptr<const TermSimilarityInterface>& termSim, const std::string& fileName) const {
 
-		writeSimilarityMatrix(termSim, fileName, GO::BP);
+		writeSimilarityMatrix(termSim, fileName, GO::Ontology::BIOLOGICAL_PROCESS);
 
 	}
 
@@ -104,7 +104,7 @@ public:
 	*/
 	void writeSimilarityMatrixMF(const std::shared_ptr<const TermSimilarityInterface>& termSim, const std::string& fileName) const {
 
-		writeSimilarityMatrix(termSim, fileName, GO::MF);
+		writeSimilarityMatrix(termSim, fileName, GO::Ontology::MOLECULAR_FUNCTION);
 
 	}
 
@@ -114,7 +114,7 @@ public:
 	*/
 	void writeSimilarityMatrixCC(const std::shared_ptr<const TermSimilarityInterface>& termSim, const std::string& fileName) const {
 
-		writeSimilarityMatrix(termSim, fileName, GO::CC);
+		writeSimilarityMatrix(termSim, fileName, GO::Ontology::CELLULAR_COMPONENT);
 
 	}
 

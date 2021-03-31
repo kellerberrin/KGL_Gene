@@ -188,8 +188,8 @@ private:
                                 ccRoot,
                                 boost::visitor(boost::make_bfs_visitor(boost::record_distances(d_map, boost::on_tree_edge()))));
 
-    //initialize the term to index map
-    _nameToIndex = OntologyMapType<std::string,std::size_t>(boost::num_vertices(go_graph));
+    // Only valid for std::unordered_map.
+    // _nameToIndex = OntologyMapType<std::string,std::size_t>(boost::num_vertices(go_graph));
 
     // Vertex Iterators
     GoGraph::GoVertexIterator vi,vend;

@@ -33,7 +33,7 @@ class dfs_cumulative_annotations_visitor: public boost::default_dfs_visitor {
   dfs_cumulative_annotations_visitor( std::shared_ptr<const GoGraph> inGraph,
                                       std::shared_ptr<const AnnotationData> inData,
                                       std::vector<std::size_t>* annotations,
-                                      std::unordered_map<std::string,std::size_t>* nameToIndex)
+                                      OntologyMapType<std::string,std::size_t>* nameToIndex)
     :goGraph(std::move(inGraph)), annoData(std::move(inData)), annoList(annotations), nameIndexMap(nameToIndex) {}
 
   //! The extended method of the default_dfs_visitor, finish_vertex
@@ -97,7 +97,7 @@ class dfs_cumulative_annotations_visitor: public boost::default_dfs_visitor {
   std::vector<std::size_t>* annoList;
 
   //! A map from name To index, initialized in this visitor.
-  std::unordered_map<std::string,std::size_t>* nameIndexMap;
+  OntologyMapType<std::string,std::size_t>* nameIndexMap;
 
 };//end class, DFS visitor class
 
@@ -173,19 +173,19 @@ public:
 
 			//switch on ontology, find the max for each set
 			switch(graph->getTermOntologyByIndex(index)){
-				case GO::BP:
+			  case GO::Ontology::BIOLOGICAL_PROCESS:
 					minMaxBP(counts);
 					break;
 
-				case GO::MF:
+			  case GO::Ontology::MOLECULAR_FUNCTION:
 					minMaxMF(counts);
 					break;
 			
-				case GO::CC:
+			  case GO::Ontology::CELLULAR_COMPONENT:
 					minMaxCC(counts);
 					break;
 
-				case GO::ONTO_ERROR:
+			  case GO::Ontology::ONTO_ERROR:
 					break;
 			}
 
@@ -209,19 +209,19 @@ public:
 
 			switch (graph->getTermOntologyByIndex(index)){
 
-				case GO::BP:
+			  case GO::Ontology::BIOLOGICAL_PROCESS:
 					_probabilities.at(index) = annotationCounts.at(index)/Accumulators::extractMax(minMaxBP);
 					break;
 
-				case GO::MF:
+			  case GO::Ontology::MOLECULAR_FUNCTION:
 					_probabilities.at(index) = annotationCounts.at(index)/Accumulators::extractMax(minMaxMF);
 					break;
 
-				case GO::CC:
+			  case GO::Ontology::CELLULAR_COMPONENT:
 					_probabilities.at(index) = annotationCounts.at(index)/Accumulators::extractMax(minMaxCC);
 					break;
 
-				case GO::ONTO_ERROR:
+			  case GO::Ontology::ONTO_ERROR:
 					break;
 
 			}
@@ -298,7 +298,7 @@ public:
 
 	//-------------------------------------------------------------------
 
-	//! Get the specific minimum probability for BP
+	//! Get the specific minimum probability for BIOLOGICAL_PROCESS
 	/*!
 		This function returns the minimum probablity for the bp ontology
 	*/
@@ -309,7 +309,7 @@ public:
 	}
 
 
-	//! Get the specific minimum probability for MF
+	//! Get the specific minimum probability for MOLECULAR_FUNCTION
 	/*!
 		This function returns the minimum probablity for the mf ontology
 	*/
@@ -320,7 +320,7 @@ public:
 	}
 
 	
-	//! Get the specific minimum probability for CC
+	//! Get the specific minimum probability for CELLULAR_COMPONENT
 	/*!
 		This function returns the minimum probablity for the cc ontology
 	*/

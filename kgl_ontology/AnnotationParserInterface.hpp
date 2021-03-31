@@ -27,19 +27,20 @@ public:
 		This pure virtual method requires any parser to have a method that takes
 		  a filename string and returns an AnnotationData object pointer.
 	*/
-	virtual AnnotationData* parseAnnotationFile(std::string fileName) = 0;
+	[[nodiscard]] virtual std::unique_ptr<AnnotationData> parseAnnotationFile(const std::string& fileName) const = 0;
 
 	//! A pure virtual method for checking if a file exists and is formatted correctly.
 	/*!
 		This pure virtual function delegates format checking to the implementing class.
 	*/
-	virtual bool isFileGood(const std::string &fileName) = 0;
+	[[nodiscard]] virtual bool isFileGood(const std::string &fileName) const = 0;
 
 	//! A pure virtual clone function for factory pattern
 	/*!
 		This pure virtual method returns an instance of this interface. This method
 		  is used in a factory class to have the ability to decide the parser at runtime.
 	*/
-	virtual AnnotationParserInterface* clone() = 0;
+	[[nodiscard]] virtual std::unique_ptr<AnnotationParserInterface> clone() const = 0;
+
 };
 #endif

@@ -58,7 +58,7 @@ public:
 
 		GO::EvidenceCode evidenceCode = GO::evidenceStringToCode(stringCode);
 
-		if (evidenceCode != GO::ECODE_ERROR){
+		if (evidenceCode != GO::EvidenceCode::ECODE_ERROR){
 
 			_evidenceMap[evidenceCode] = true;
 
