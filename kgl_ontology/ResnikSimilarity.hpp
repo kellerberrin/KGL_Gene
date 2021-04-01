@@ -4,9 +4,9 @@
 #include <cmath>
 #include <string>
 
-#include <TermSimilarityInterface.hpp>
-#include <TermInformationContentMap.hpp>
-#include <GoGraph.hpp>
+#include <TermSimilarityInterface.h>
+#include <TermInformationContentMap.h>
+#include <GoGraph.h>
 
 #include <boost/unordered_set.hpp>
 

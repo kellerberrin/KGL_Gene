@@ -232,75 +232,80 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_ensembl_id_parser.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_ontology/ggtk.cpp kgl_ontology/OntologyTypes.h)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_ontology/OntologyTypes.h)
 
-# Genetic analysis library
+# Gene ontology library
 set(ONTOLOGY_SOURCE_FILES
-        kgl_ontology/Accumulators.hpp
-        kgl_ontology/AllowedRelationshipOboGoParser.hpp
-        kgl_ontology/AllowedRelationshipXmlGoParser.hpp
-        kgl_ontology/AllowedSetEvidencePolicy.hpp
-        kgl_ontology/AllowedSetRelationshipPolicy.hpp
-        kgl_ontology/AllPairsAverageSetSimilarity.hpp
-        kgl_ontology/AllPairsMaxSetSimilarity.hpp
-        kgl_ontology/AncestorMeanSharedInformation.hpp
-        kgl_ontology/AnnotationData.hpp
-        kgl_ontology/AnnotationParserFactory.hpp
-        kgl_ontology/AnnotationParserInterface.hpp
-        kgl_ontology/AppUtilities.hpp
-        kgl_ontology/BestMatchAverageSetSimilarity.hpp
-        kgl_ontology/CoutoGraSMAdjustedSharedInformation.hpp
-        kgl_ontology/CoutoGraSMSharedInformation.hpp
-        kgl_ontology/DisallowedSetEvidencePolicy.hpp
-        kgl_ontology/EnrichmentTools.hpp
-        kgl_ontology/EntrezGene2GoAnnotationParser.hpp
-        kgl_ontology/EvidencePolicyInterface.hpp
-        kgl_ontology/ExclusivelyInheritedSharedInformation.hpp
-        kgl_ontology/ExperimentalEvidencePolicy.hpp
-        kgl_ontology/FrontierSharedInformation.hpp
-        kgl_ontology/GafAnnotationParser.hpp
-        kgl_ontology/GentlemanSimUISetSimilarity.hpp
-        kgl_ontology/GoaAnnotationParser.hpp
-        kgl_ontology/ggtk.hpp
-        kgl_ontology/GoEnums.hpp
-        kgl_ontology/GoGraph.hpp
-        kgl_ontology/GoParserFactory.hpp
-        kgl_ontology/GoParserInterface.hpp
-        kgl_ontology/JaccardSetSimilarity.hpp
-        kgl_ontology/JiangConrathSimilarity.hpp
-        kgl_ontology/LinSimilarity.hpp
-        kgl_ontology/MazanduSimDICSetSimilarity.hpp
-        kgl_ontology/MazanduSimUICSetSimilarity.hpp
-        kgl_ontology/MgiAnnotationParser.hpp
-        kgl_ontology/MICASharedInformation.hpp
-        kgl_ontology/ModularJiangConrath.hpp
-        kgl_ontology/ModularLin.hpp
-        kgl_ontology/ModularResnik.hpp
-        kgl_ontology/NCList.hpp
-        kgl_ontology/PekarStaabSimilarity.hpp
-        kgl_ontology/PesquitaSimGICSetSimilarity.hpp
-        kgl_ontology/PrecomputedMatrixTermSimilarity.hpp
-        kgl_ontology/RapidXmlGoParser.hpp
-        kgl_ontology/RelationshipPolicyInterface.hpp
+        kgl_ontology/Accumulators.h
+        kgl_ontology/AllowedRelationshipOboGoParser.h
+        kgl_ontology/AllowedRelationshipXmlGoParser.h
+        kgl_ontology/AllowedSetEvidencePolicy.h
+        kgl_ontology/AllowedSetRelationshipPolicy.h
+        kgl_ontology/AllPairsAverageSetSimilarity.h
+        kgl_ontology/AllPairsMaxSetSimilarity.h
+        kgl_ontology/AncestorMeanSharedInformation.h
+        kgl_ontology/AnnotationData.h
+        kgl_ontology/AnnotationParserFactory.h
+        kgl_ontology/AnnotationParserInterface.h
+        kgl_ontology/AppUtilities.h
+        kgl_ontology/BestMatchAverageSetSimilarity.h
+        kgl_ontology/CoutoGraSMAdjustedSharedInformation.h
+        kgl_ontology/CoutoGraSMSharedInformation.h
+        kgl_ontology/DisallowedSetEvidencePolicy.h
+        kgl_ontology/EnrichmentTools.h
+        kgl_ontology/EntrezGene2GoAnnotationParser.h
+        kgl_ontology/EvidencePolicyInterface.h
+        kgl_ontology/ExclusivelyInheritedSharedInformation.h
+        kgl_ontology/ExperimentalEvidencePolicy.h
+        kgl_ontology/FrontierSharedInformation.h
+        kgl_ontology/GafAnnotationParser.h
+        kgl_ontology/GentlemanSimUISetSimilarity.h
+        kgl_ontology/GoaAnnotationParser.h
+        kgl_ontology/ggtk.h
+        kgl_ontology/GoEnums.h
+        kgl_ontology/GoGraph.h
+        kgl_ontology/GoParserFactory.h
+        kgl_ontology/GoParserInterface.h
+        kgl_ontology/JaccardSetSimilarity.h
+        kgl_ontology/JiangConrathSimilarity.h
+        kgl_ontology/LinSimilarity.h
+        kgl_ontology/MazanduSimDICSetSimilarity.h
+        kgl_ontology/MazanduSimUICSetSimilarity.h
+        kgl_ontology/MgiAnnotationParser.h
+        kgl_ontology/MICASharedInformation.h
+        kgl_ontology/ModularJiangConrath.h
+        kgl_ontology/ModularLin.h
+        kgl_ontology/ModularResnik.h
+        kgl_ontology/NCList.h
+        kgl_ontology/PekarStaabSimilarity.h
+        kgl_ontology/PesquitaSimGICSetSimilarity.h
+        kgl_ontology/PrecomputedMatrixTermSimilarity.h
+        kgl_ontology/RapidXmlGoParser.h
+        kgl_ontology/RelationshipPolicyInterface.h
         kgl_ontology/RelevanceSimilarity.hpp
         kgl_ontology/ResnikSimilarity.hpp
-        kgl_ontology/SetUtilities.hpp
-        kgl_ontology/SharedInformationInterface.hpp
-        kgl_ontology/SimpleRegion.hpp
-        kgl_ontology/StandardOboGoParser.hpp
-        kgl_ontology/StandardRelationshipPolicy.hpp
-        kgl_ontology/StandardXmlGoParser.hpp
-        kgl_ontology/TermDepthMap.hpp
-        kgl_ontology/TermInformationContentMap.hpp
-        kgl_ontology/TermProbabilityMap.hpp
-        kgl_ontology/TermSetSimilarityInterface.hpp
-        kgl_ontology/TermSimilarityInterface.hpp
-        kgl_ontology/TermSimilarityWriter.hpp
+        kgl_ontology/SetUtilities.h
+        kgl_ontology/SharedInformationInterface.h
+        kgl_ontology/SimpleRegion.h
+        kgl_ontology/StandardOboGoParser.h
+        kgl_ontology/StandardRelationshipPolicy.h
+        kgl_ontology/StandardXmlGoParser.h
+        kgl_ontology/TermDepthMap.h
+        kgl_ontology/TermInformationContentMap.h
+        kgl_ontology/TermProbabilityMap.h
+        kgl_ontology/TermSetSimilarityInterface.h
+        kgl_ontology/TermSimilarityInterface.h
+        kgl_ontology/TermSimilarityWriter.h
         kgl_ontology/xml/rapidxml.h
         kgl_ontology/xml/rapidxml_iterators.h
         kgl_ontology/xml/rapidxml_print.h
         kgl_ontology/xml/rapidxml_utils.h
-        kgl_ontology/ggtk.cpp)
+        )
+
+# Gene ontology unit test suite
+set(ONTOLOGY_UNIT_TEST_FILES
+        kgl_ontology/unit_test/ggtk_test.cpp)
+
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES
@@ -406,7 +411,9 @@ set(APPLICATION_SOURCE_FILES
 
 
 #generate libraries.
-add_executable(kgl_test kgl_ontology/ggtk.cpp)
+add_executable(ggtk_test ${ONTOLOGY_UNIT_TEST_FILES})
+
+target_link_libraries (ggtk_test ${Boost_LIBRARIES})
 
 add_library(kel_utility STATIC ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES})
 

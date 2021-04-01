@@ -7,9 +7,9 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #ifndef RELEVANCE_SIMILARITY
 #define RELEVANCE_SIMILARITY
 
-#include <TermSimilarityInterface.hpp>
-#include <TermInformationContentMap.hpp>
-#include <GoGraph.hpp>
+#include <TermSimilarityInterface.h>
+#include <TermInformationContentMap.h>
+#include <GoGraph.h>
 
 //! A class to calculate Relevance similarity between 2 terms
 /*! \class RelevanceSimilarity
