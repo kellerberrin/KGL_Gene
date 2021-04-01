@@ -64,6 +64,13 @@ public:
 		//graph object to be returned
     std::unique_ptr<GoGraph> graph(std::make_unique<GoGraph>());
 
+    // Check the relationship policy
+    if (not relationshipPolicy->validPolicy()) {
+
+      return graph;
+
+    }
+
     //open xmlfile
 		rapidxml::file<> xmlFile(filename.c_str());
 

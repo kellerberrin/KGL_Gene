@@ -31,5 +31,15 @@ public:
 
 	[[nodiscard]] virtual std::unique_ptr<RelationshipPolicyInterface> clone() const = 0;
 
+  //! a method to determine if the Policy is valid
+  /*!
+    Determines if the Policy is valid.
+    Must contain both Relationship::IS_A and Relationship::PART_OF.
+    Cannot contain Relationship::REL_ERROR.
+  */
+
+  [[nodiscard]] virtual bool validPolicy() const = 0;
+
+
 };
 #endif

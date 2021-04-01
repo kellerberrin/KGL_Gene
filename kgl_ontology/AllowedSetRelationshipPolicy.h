@@ -45,7 +45,7 @@ public:
 
 	}
 
-	std::unique_ptr<RelationshipPolicyInterface> clone() const override { return std::make_unique<AllowedSetRelationshipPolicy>(*this); }
+	[[nodiscard]] std::unique_ptr<RelationshipPolicyInterface> clone() const override { return std::make_unique<AllowedSetRelationshipPolicy>(*this); }
 
 	//! a method to test if a relatinoship is allowed or not
 	/*!
@@ -81,11 +81,14 @@ public:
 	}
 
 
-	//! a method to determine if the Policy is empty
+	//! a method to determine if the Policy is valid
 	/*!
-		Determines if the Policy is empty
+	  Must contain both Relationship::IS_A and Relationship::PART_OF.
+	  Cannot contain Relationship::REL_ERROR.
 	*/
-	inline bool isEmpty() { return _relationshipMap.empty(); }
+	[[nodiscard]] bool validPolicy() const override { return isAllowed(GO::Relationship::IS_A)
+	                                                  and isAllowed(GO::Relationship::PART_OF)
+	                                                  and not isAllowed(GO::Relationship::REL_ERROR); }
 
 private:
 	//! a map of relationships to bool

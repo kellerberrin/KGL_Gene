@@ -304,7 +304,7 @@ set(ONTOLOGY_SOURCE_FILES
 
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES
-        kgl_ontology/unit_test/ggtk_test.cpp)
+        kgl_ontology/unit_test/ggtk_test.cpp kgl_ontology/unit_test/ggtk_test_go_parsers.cpp)
 
 
 # Genetic analysis library

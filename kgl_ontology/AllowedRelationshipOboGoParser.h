@@ -66,6 +66,13 @@ public:
 		//graph object to be returned
     std::unique_ptr<GoGraph> graph(std::make_unique<GoGraph>());
 
+    // Check the relationship policy
+    if (not relationshipPolicy->validPolicy()) {
+
+      return graph;
+
+    }
+
 		std::ifstream in(filename.c_str());
 		std::string line;
 

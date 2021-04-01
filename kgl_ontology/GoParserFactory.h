@@ -36,7 +36,8 @@ public:
   ~GoParserFactory() = delete;
 
 
-  [[nodiscard]] static std::unique_ptr<GoParserInterface> createGoParser(GoParserType parser_type) {
+  [[nodiscard]] static std::unique_ptr<GoParserInterface> createGoParser( GoParserType parser_type,
+                                                                          const RelationshipPolicyInterface& policy = StandardRelationshipPolicy()) {
 
     switch(parser_type) {
 
@@ -44,13 +45,13 @@ public:
         return std::make_unique<StandardOboGoParser>();
 
       case GoParserType::OBO_GO_ALLOWED:
-        return std::make_unique<AllowedRelationshipOboGoParser>(StandardRelationshipPolicy());
+        return std::make_unique<AllowedRelationshipOboGoParser>(policy);
 
       case GoParserType::XML_GO_STANDARD:
         return std::make_unique<StandardXmlGoParser>();
 
       case GoParserType::XML_GO_ALLOWED:
-        return std::make_unique<AllowedRelationshipXmlGoParser>(StandardRelationshipPolicy());
+        return std::make_unique<AllowedRelationshipXmlGoParser>(policy);
 
       case GoParserType::XML_RAPID_PARSER:
         return std::make_unique<RapidXmlGoParser>();
