@@ -10,30 +10,34 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #include <string>
 
 
-//! Number of evidence codes, 22 + 1 error code
-static const constexpr size_t NUM_EVIDENCES = 23;
-
-//! Number of relationships codes, 5 + 1 error code
-static const constexpr size_t NUM_RELATIONSHIPS = 6;
-
-
 //! GO namespaces
 /*!
 	This namespace is a set of static variables related to go terms and relationships.
 */
-namespace GO{
+class GO {
+
+public:
+
+  // Just static functions.
+  GO() = delete;
+
+  //! Ontology root terms
+  /*!
+    These are string representations of the ontology root terms
+  */
+
+  static const constexpr char* ROOT_TERM_BIOLOICAL_PROCESS = "GO:0008150";
+  static const constexpr char* ROOT_TERM_MOLECULAR_FUNCTION = "GO:0003674";
+  static const constexpr char* ROOT_TERM_CELLULAR_COMPONENT = "GO:0005575";
 
 	//! function that returns strings representing the root ontology term biological_process
-  static const constexpr char* ROOT_TERM_BIOLOICAL_PROCESS = "GO:0008150";
-	[[nodiscard]] std::string getRootTermBP(){ return ROOT_TERM_BIOLOICAL_PROCESS; }
+ 	[[nodiscard]] static std::string getRootTermBP() { return ROOT_TERM_BIOLOICAL_PROCESS; }
 
 	//! function that returns strings representing the root ontology term molecular_function
-  static const constexpr char* ROOT_TERM_MOLECULAR_FUNCTION = "GO:0003674";
-	[[nodiscard]] std::string getRootTermMF(){ return ROOT_TERM_MOLECULAR_FUNCTION; }
+	[[nodiscard]] static std::string getRootTermMF() { return ROOT_TERM_MOLECULAR_FUNCTION; }
 	
 	//! function that returns strings representing the root ontology term cellular_component
-  static const constexpr char* ROOT_TERM_CELLULAR_COMPONENT = "GO:0005575";
-	[[nodiscard]] std::string getRootTermCC(){ return ROOT_TERM_CELLULAR_COMPONENT; }
+	[[nodiscard]] static std::string getRootTermCC() { return ROOT_TERM_CELLULAR_COMPONENT; }
 
 	//! Ontology enum type
 	/*!
@@ -46,32 +50,22 @@ namespace GO{
 		ONTO_ERROR=3
 	};
 
-	//! Ontology enum strings
-	/*!
-		These are string representations of the sub-ontologies. Take from obo go files.
-	*/
+  //! Ontology enum strings
+  /*!
+    These are string representations of the sub-ontologies. Taken from obo go files.
+  */
 
-	static const constexpr char* ONTOLOGY_BIOLOGICAL_PROCESS_TEXT = "biological_process";
+  static const constexpr char* ONTOLOGY_BIOLOGICAL_PROCESS_TEXT = "biological_process";
   static const constexpr char* ONTOLOGY_MOLECULAR_FUNCTION_TEXT = "molecular_function";
   static const constexpr char* ONTOLOGY_CELLULAR_COMPONENT_TEXT = "cellular_component";
   static const constexpr char* ONTOLOGY_ERROR_TEXT = "ONTOLOGY_ERROR";
-
-  struct OntologyText { const char* text; Ontology onto; };
-	static const constexpr OntologyText ontology_text[] = {
-
-	    { ONTOLOGY_BIOLOGICAL_PROCESS_TEXT, Ontology::BIOLOGICAL_PROCESS},
-      { ONTOLOGY_MOLECULAR_FUNCTION_TEXT, Ontology::MOLECULAR_FUNCTION},
-      { ONTOLOGY_CELLULAR_COMPONENT_TEXT, Ontology::CELLULAR_COMPONENT},
-      { ONTOLOGY_ERROR_TEXT, Ontology::ONTO_ERROR}
-
-  };
 
 
 	//! A method for returning the ontology code based on string
 	/*!
 		This method takes a string and returns the proper enum
 	*/
-	[[nodiscard]] Ontology ontologyStringToCode(const std::string& code) {
+	[[nodiscard]] static Ontology ontologyStringToCode(const std::string& code) {
 
 		for(auto const& [text, ontology] : ontology_text) {
 			//return the index if matching, cast as enum
@@ -91,7 +85,7 @@ namespace GO{
 	/*!
 		This method takes an ontology enum value and returns a string
 	*/
-[[nodiscard]] std::string ontologyToString(Ontology onto) {
+[[nodiscard]] std::string static ontologyToString(Ontology onto) {
 
     for(auto const& [text, ontology] : ontology_text) {
 
@@ -151,57 +145,12 @@ namespace GO{
 
   enum class EvidenceType { EXPERIMENTAL, COMPUTATIONAL, AUTHOR, CURATOR, AUTO_ASSIGNED, OBSOLETE, ERROR };
 
-	//! Relationship code enum strings
-	/*!
-		These are string representations of the evidence codes for an annotation.
-	*/
-  struct EvidenceText { const char* text; EvidenceCode code; EvidenceType type; };
-  static const constexpr char* EVIDENCE_ERROR_TEXT = "EVIDENCE_CODE_ERROR";
-	static const constexpr EvidenceText evidence_text[] = {
-
-		//experimental
-      { "EXP", EvidenceCode::EXP, EvidenceType::EXPERIMENTAL },
-      { "IDA", EvidenceCode::IDA, EvidenceType::EXPERIMENTAL },
-      { "IPI", EvidenceCode::IPI, EvidenceType::EXPERIMENTAL },
-      { "IMP", EvidenceCode::IMP, EvidenceType::EXPERIMENTAL },
-      { "IGI", EvidenceCode::IGI, EvidenceType::EXPERIMENTAL },
-      { "IEP", EvidenceCode::IEP, EvidenceType::EXPERIMENTAL },
-
-		//computationally assisted
-      { "ISS", EvidenceCode::ISS, EvidenceType::COMPUTATIONAL },
-      { "ISO", EvidenceCode::ISO, EvidenceType::COMPUTATIONAL },
-      { "ISA", EvidenceCode::ISA, EvidenceType::COMPUTATIONAL },
-      { "ISM", EvidenceCode::ISM, EvidenceType::COMPUTATIONAL },
-      { "IGC", EvidenceCode::IGC, EvidenceType::COMPUTATIONAL },
-      { "IBA", EvidenceCode::IBA, EvidenceType::COMPUTATIONAL },
-      { "IBD", EvidenceCode::IBD, EvidenceType::COMPUTATIONAL },
-      { "IKR", EvidenceCode::IKR, EvidenceType::COMPUTATIONAL },
-      { "IRD", EvidenceCode::IRD, EvidenceType::COMPUTATIONAL },
-      { "RCA", EvidenceCode::RCA, EvidenceType::COMPUTATIONAL },
-
-		//author statement
-      { "TAS", EvidenceCode::TAS, EvidenceType::AUTHOR },
-      { "NAS", EvidenceCode::NAS, EvidenceType::AUTHOR },
-
-		//Curator statement
-      { "IC", EvidenceCode::IC, EvidenceType::CURATOR },
-      { "ND", EvidenceCode::ND, EvidenceType::CURATOR },
-
-		//automatically assigned
-      { "IEA", EvidenceCode::IEA, EvidenceType::AUTO_ASSIGNED },
-
-		//obsolete evidence code
-      { "NR", EvidenceCode::NR, EvidenceType::OBSOLETE },
-
-		//Error code
-      { EVIDENCE_ERROR_TEXT, EvidenceCode::ECODE_ERROR, EvidenceType::ERROR }
-	};
 
 	//! A method for converting evidence code strings to enums
 	/*!
 		This method takes a string representing the evidence code and converts it to an enum.
 	*/
-	[[nodiscard]] EvidenceCode evidenceStringToCode(const std::string& text_code){
+	[[nodiscard]] static EvidenceCode evidenceStringToCode(const std::string& text_code){
 
 		for(auto const& [text, code, type] : evidence_text) {
 			//return the index if matching, cast as enum
@@ -221,7 +170,7 @@ namespace GO{
 	/*!
 		This method takes an evidence code enum value and returns a string
 	*/
-	[[nodiscard]] std::string evidenceToString(EvidenceCode evidence){
+	[[nodiscard]] static std::string evidenceToString(EvidenceCode evidence){
 
     for(auto const& [text, code, type] : evidence_text) {
       //return the index if matching, cast as enum
@@ -252,29 +201,11 @@ namespace GO{
 	};
 
 
-//! Relationship code enum strings
-/*!
-  These strings represent the enum codes for each relationship.
-*/
-
-struct RelationshipText { const char* text; Relationship type; };
-static const constexpr char* RELATIONSHIP_ERROR_TEXT = "RELATIONSHIP_ERROR";
-static const constexpr RelationshipText relationship_text[] = {
-
-    { "is_a", Relationship::IS_A },
-    { "part_of", Relationship::PART_OF },
-    { "regulates", Relationship::REGULATES },
-    { "positively_regulates", Relationship::POSITIVELY_REGULATES },
-    { "negatively_regulates", Relationship::NEGATIVELY_REGULATES },
-    { RELATIONSHIP_ERROR_TEXT, Relationship::REL_ERROR }
-
-	};
-
 	//! A method to convert relationship codes from string to enum
 	/*!
 		This method converts the string representation of a relationship to an enum.
 	*/
-	[[nodiscard]] Relationship relationshipStringToCode(const std::string& code){
+	[[nodiscard]] static Relationship relationshipStringToCode(const std::string& code){
 
 		for(auto const& [text, relation] : relationship_text) {
 			//return the index if matching, cast as enum
@@ -294,7 +225,7 @@ static const constexpr RelationshipText relationship_text[] = {
 	/*!
 		This method takes an evidence code enum pointer value and returns a string
 	*/
-	[[nodiscard]] std::string relationshipToString(Relationship relationship){
+	[[nodiscard]] static std::string relationshipToString(Relationship relationship){
 
     for(auto const& [text, relation] : relationship_text) {
       //return the index if matching, cast as enum
@@ -310,5 +241,84 @@ static const constexpr RelationshipText relationship_text[] = {
 
 	}
 
-}
+private:
+
+
+
+  struct OntologyText { const char* text; Ontology onto; };
+  static const constexpr OntologyText ontology_text[] = {
+
+      { ONTOLOGY_BIOLOGICAL_PROCESS_TEXT, Ontology::BIOLOGICAL_PROCESS},
+      { ONTOLOGY_MOLECULAR_FUNCTION_TEXT, Ontology::MOLECULAR_FUNCTION},
+      { ONTOLOGY_CELLULAR_COMPONENT_TEXT, Ontology::CELLULAR_COMPONENT},
+      { ONTOLOGY_ERROR_TEXT, Ontology::ONTO_ERROR}
+
+  };
+
+  //! Relationship code enum strings
+  /*!
+    These are string representations of the evidence codes for an annotation.
+  */
+  struct EvidenceText { const char* text; EvidenceCode code; EvidenceType type; };
+  static const constexpr char* EVIDENCE_ERROR_TEXT = "EVIDENCE_CODE_ERROR";
+  static const constexpr EvidenceText evidence_text[] = {
+
+      //experimental
+      { "EXP", EvidenceCode::EXP, EvidenceType::EXPERIMENTAL },
+      { "IDA", EvidenceCode::IDA, EvidenceType::EXPERIMENTAL },
+      { "IPI", EvidenceCode::IPI, EvidenceType::EXPERIMENTAL },
+      { "IMP", EvidenceCode::IMP, EvidenceType::EXPERIMENTAL },
+      { "IGI", EvidenceCode::IGI, EvidenceType::EXPERIMENTAL },
+      { "IEP", EvidenceCode::IEP, EvidenceType::EXPERIMENTAL },
+
+      //computationally assisted
+      { "ISS", EvidenceCode::ISS, EvidenceType::COMPUTATIONAL },
+      { "ISO", EvidenceCode::ISO, EvidenceType::COMPUTATIONAL },
+      { "ISA", EvidenceCode::ISA, EvidenceType::COMPUTATIONAL },
+      { "ISM", EvidenceCode::ISM, EvidenceType::COMPUTATIONAL },
+      { "IGC", EvidenceCode::IGC, EvidenceType::COMPUTATIONAL },
+      { "IBA", EvidenceCode::IBA, EvidenceType::COMPUTATIONAL },
+      { "IBD", EvidenceCode::IBD, EvidenceType::COMPUTATIONAL },
+      { "IKR", EvidenceCode::IKR, EvidenceType::COMPUTATIONAL },
+      { "IRD", EvidenceCode::IRD, EvidenceType::COMPUTATIONAL },
+      { "RCA", EvidenceCode::RCA, EvidenceType::COMPUTATIONAL },
+
+      //author statement
+      { "TAS", EvidenceCode::TAS, EvidenceType::AUTHOR },
+      { "NAS", EvidenceCode::NAS, EvidenceType::AUTHOR },
+
+      //Curator statement
+      { "IC", EvidenceCode::IC, EvidenceType::CURATOR },
+      { "ND", EvidenceCode::ND, EvidenceType::CURATOR },
+
+      //automatically assigned
+      { "IEA", EvidenceCode::IEA, EvidenceType::AUTO_ASSIGNED },
+
+      //obsolete evidence code
+      { "NR", EvidenceCode::NR, EvidenceType::OBSOLETE },
+
+      //Error code
+      { EVIDENCE_ERROR_TEXT, EvidenceCode::ECODE_ERROR, EvidenceType::ERROR }
+  };
+
+  //! Relationship code enum strings
+  /*!
+    These strings represent the enum codes for each relationship.
+  */
+
+  struct RelationshipText { const char* text; Relationship type; };
+  static const constexpr char* RELATIONSHIP_ERROR_TEXT = "RELATIONSHIP_ERROR";
+  static const constexpr RelationshipText relationship_text[] = {
+
+      { "is_a", Relationship::IS_A },
+      { "part_of", Relationship::PART_OF },
+      { "regulates", Relationship::REGULATES },
+      { "positively_regulates", Relationship::POSITIVELY_REGULATES },
+      { "negatively_regulates", Relationship::NEGATIVELY_REGULATES },
+      { RELATIONSHIP_ERROR_TEXT, Relationship::REL_ERROR }
+
+  };
+
+};
+
 #endif

@@ -4,6 +4,10 @@ Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0. (See accompanying
 file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 ==============================================================================*/
+
+#ifndef GGTK_H
+#define GGTK_H
+
 #include <Accumulators.h>
 #include <AllowedRelationshipOboGoParser.h>
 #include <AllowedRelationshipXmlGoParser.h>
@@ -58,3 +62,6 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #include <TermProbabilityMap.h>
 #include <TermSetSimilarityInterface.h>
 #include <TermSimilarityInterface.h>
+
+
+#endif

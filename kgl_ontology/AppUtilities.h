@@ -21,13 +21,18 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	The main use for this name space is to construct and check the validity of paramaters used as intput
 	to GO applicaitons and to provide certain container converstion (vector -> set etc.).
 */
-namespace AppUtilities{
+class AppUtilities {
+
+public:
+
+  // Just static functions.
+  AppUtilities() = delete;
 
 	//! A method for parsing a parameter file
 	/*!
 		This method parses a tab delimited parameter file and returns a map of parameters.
 	*/
-	void parseParamFile(const std::string& fname, std::map<std::string,std::string> &paramMap){
+	void static parseParamFile(const std::string& fname, std::map<std::string,std::string> &paramMap) {
 
 		std::ifstream in(fname.c_str());
 		std::string line;
@@ -58,9 +63,9 @@ namespace AppUtilities{
 		If all specified keys exist, true is returned. Otherwise false is returned
 		and specific error messages are placed int the message parameter.
 	*/
-	[[nodiscard]] bool checkParams( const std::map<std::string,std::string> &paramMap,
-		                              const std::vector<std::string> &params,
-							                    std::string &message)
+	[[nodiscard]] static bool checkParams( const std::map<std::string,std::string> &paramMap,
+		                                     const std::vector<std::string> &params,
+							                           std::string &message)
 	{
 		bool isValid = true;
 		for(size_t i = 0; i < params.size(); ++i){
@@ -100,7 +105,7 @@ namespace AppUtilities{
 	/*!
 		This method parses a simple single column file.
 	*/
-	[[nodiscard]] std::vector<std::string> parseSimpleFile(const std::string& fname) {
+	[[nodiscard]] static std::vector<std::string> parseSimpleFile(const std::string& fname) {
 
 		std::ifstream in(fname.c_str());
 		std::vector<std::string> strs;
@@ -120,7 +125,7 @@ namespace AppUtilities{
 	/*!
 		This method splits a string by the given character and return the element at n.
 	*/
-	[[nodiscard]] std::string splitTake(const std::string &name, const char &sep, const size_t &n) {
+	[[nodiscard]] static std::string splitTake(const std::string &name, const char &sep, const size_t &n) {
 		
 		typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
 
@@ -149,7 +154,7 @@ namespace AppUtilities{
 		This method splits a string by the given character and return the element at n.
 	*/
   template<class T>
-	[[nodiscard]] std::vector<T> setToVec(const OntologySetType<T> &uset){
+	[[nodiscard]] static std::vector<T> setToVec(const OntologySetType<T> &uset){
 
 		std::vector<T> vec;
 		vec.reserve(uset.size());
@@ -168,7 +173,7 @@ namespace AppUtilities{
 	This method splits a string by the given character and return the element at n.
 	*/
 	template<class T>
-	[[nodiscard]] OntologySetType<T> vecToSet(const std::vector<T> &vec) {
+	[[nodiscard]] static OntologySetType<T> vecToSet(const std::vector<T> &vec) {
 
     OntologySetType<T> uset;
 		for (auto const& element : vec) {
@@ -182,5 +187,6 @@ namespace AppUtilities{
 	}
 
 
-} // namespace
+};
+
 #endif

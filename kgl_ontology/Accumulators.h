@@ -16,111 +16,98 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/accumulators/statistics/variance.hpp>
 #include <boost/accumulators/statistics/variates/covariate.hpp>
 
+
 //! The Accumulators namespace provides min, max, and average accumulators to the broader code base.
 /*!
 	This namespace defines accumulator types from boost. Also provided are specific extactors
 	that will return the accumulator's current value.
 */
-namespace Accumulators{
+class Accumulators {
 
-	//to be able to call Accumulators::covariate1 instread of boost::accumulators::covariate1
-	using namespace boost::accumulators;
+public:
 
+  // Class just defines static members.
+  Accumulators() = delete;
+
+  template <class... T> using AccumulatorType = boost::accumulators::accumulator_set<double, boost::accumulators::stats<T ...>>;
 	//typedefs
 	/*! MinAccumulator
 	\brief A helper type wrapping boost accumulators.
 	*/
-	typedef boost::accumulators::accumulator_set< double,
-		boost::accumulators::stats< boost::accumulators::tag::min >  > MinAccumulator;
+  using MinAccumulator = AccumulatorType<boost::accumulators::tag::min>;
 
 	/*! MaxAccumulator
 	\brief A helper type wrapping boost accumulators.
 	*/
-	typedef boost::accumulators::accumulator_set< double,
-		boost::accumulators::stats< boost::accumulators::tag::max >  > MaxAccumulator;
+  using MaxAccumulator = AccumulatorType< boost::accumulators::tag::max > ;
 
 	/*! MeanAccumulator
 	\brief A helper type wrapping boost accumulators.
 	*/
-	typedef boost::accumulators::accumulator_set< double,
-		boost::accumulators::stats<	boost::accumulators::tag::mean > > MeanAccumulator;
-
-	/*! MeanAccumulator
-	\brief A helper type wrapping boost accumulators.
-	*/
-	typedef boost::accumulators::accumulator_set< double,
-		boost::accumulators::stats<	boost::accumulators::tag::mean > > MeanAccumulator;
+  using MeanAccumulator = AccumulatorType< boost::accumulators::tag::mean >;
 
 	/*! SimpleAccumulator
 	\brief A helper type wrapping min, max, and mean accumulators.
 	*/
-	typedef boost::accumulators::accumulator_set< double,
-		boost::accumulators::stats<
-			boost::accumulators::tag::max,
-			boost::accumulators::tag::min,
-			boost::accumulators::tag::mean > > SimpleAccumulator;
-
+  using SimpleAccumulator = AccumulatorType< boost::accumulators::tag::max, boost::accumulators::tag::min, boost::accumulators::tag::mean >;
 
 	/*! CovarianceAccumulator
 	\brief A helper type wrapping the covariance accumulator.
 	*/
-	typedef boost::accumulators::accumulator_set< double,
-		boost::accumulators::stats< 
-		    boost::accumulators::tag::covariance<double,
-			  boost::accumulators::tag::covariate1> > > CovarianceAccumulator;
+  using CovarianceAccumulator = AccumulatorType< boost::accumulators::tag::covariance<double, boost::accumulators::tag::covariate1 >>;
+
 
 	/*! VarianceAccumulator
 	\brief A helper type wrapping the variance accumulator.
 	*/
-	typedef boost::accumulators::accumulator_set< double,
-		boost::accumulators::stats< 
-		    boost::accumulators::tag::variance> > VarianceAccumulator;
+  using VarianceAccumulator = AccumulatorType< boost::accumulators::tag::variance>;
 
 	//extractors
 	/*! extractMin
 	\brief A helper helper function to extract the min.
 	*/
-	[[nodiscard]] double extractMin(const MinAccumulator &acc) { return  boost::accumulators::min(acc); }
+	[[nodiscard]] static double extractMin(const MinAccumulator &acc) { return  boost::accumulators::min(acc); }
 
 	/*! extractMax
 	\brief A helper helper function to extract the max.
 	*/
-	[[nodiscard]] double extractMax(const MaxAccumulator &acc) { return  boost::accumulators::max(acc); }
+	[[nodiscard]] static double extractMax(const MaxAccumulator &acc) { return  boost::accumulators::max(acc); }
 
 	/*! extractMean
 	\brief A helper helper function to extract the mean.
 	*/
-	[[nodiscard]] double extractMean(const MeanAccumulator &acc) {return  boost::accumulators::mean(acc); }
+	[[nodiscard]] static double extractMean(const MeanAccumulator &acc) {return  boost::accumulators::mean(acc); }
 
 	/*! extractMin
 	\brief An overlaoded helper helper function to extract the min.
 	*/
-  [[nodiscard]] double extractMin(const SimpleAccumulator &acc) { return  boost::accumulators::min(acc); }
+  [[nodiscard]] static double extractMin(const SimpleAccumulator &acc) { return  boost::accumulators::min(acc); }
 
 	/*! extractMax
 	\brief An overlaoded helper helper function to extract the max.
 	*/
-	[[nodiscard]] double extractMax(const SimpleAccumulator &acc) { return  boost::accumulators::max(acc); }
+	[[nodiscard]] static double extractMax(const SimpleAccumulator &acc) { return  boost::accumulators::max(acc); }
 
 	/*! extractMean
 	\brief An overlaoded helper helper function to extract the mean.
 	*/
-  [[nodiscard]] double extractMean(const SimpleAccumulator &acc) { return  boost::accumulators::mean(acc); }
+  [[nodiscard]] static double extractMean(const SimpleAccumulator &acc) { return  boost::accumulators::mean(acc); }
 
 	/*! extractCovariance
 	\brief A helper helper function to extract the covariance.
 	*/
-  [[nodiscard]] double extractCovariance(const CovarianceAccumulator &acc) { return  boost::accumulators::covariance(acc); }
+  [[nodiscard]] static double extractCovariance(const CovarianceAccumulator &acc) { return  boost::accumulators::covariance(acc); }
 
 	/*! extractVariance
 	\brief A helper helper function to extract the variance.
 	*/
-  [[nodiscard]] double extractVariance(const VarianceAccumulator &acc) { return  boost::accumulators::variance(acc); }
+  [[nodiscard]] static double extractVariance(const VarianceAccumulator &acc) { return  boost::accumulators::variance(acc); }
 
 	/*! extractVariance
 	\brief A helper helper function to extract the variance.
 	*/
-  [[nodiscard]] double extractSD(const VarianceAccumulator &acc) { return  sqrt(boost::accumulators::variance(acc)); }
+  [[nodiscard]] static double extractSD(const VarianceAccumulator &acc) { return  sqrt(boost::accumulators::variance(acc)); }
 
-}
+};
+
 #endif

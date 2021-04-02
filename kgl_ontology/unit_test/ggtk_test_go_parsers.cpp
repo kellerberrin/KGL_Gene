@@ -3,16 +3,11 @@
 //
 
 
-#include "ggtk.h"
-
-#define BOOST_TEST_DYN_LINK
+#include <ggtk.h>
+#include "ggtk_test.h"
 #include <boost/test/unit_test.hpp>
-using namespace boost::unit_test;
 
 
-static const constexpr char* DIRECTORY = "Additional/ggtk/";
-static const constexpr char* GO_OBO = "example_graphs/go-basic.obo";
-static const constexpr char* GO_XML = "example_graphs/go_daily-termdb.obo-xml";
 
 class TestGoParsers
 {
@@ -76,14 +71,16 @@ public:
 
 private:
 
-  const std::string go_obo{std::string(DIRECTORY) + std::string(GO_OBO)};
-  const std::string go_xml{std::string(DIRECTORY) + std::string(GO_XML)};
+  const std::string go_obo{UnitTestDefinitions::oboFileName()};
+  const std::string go_xml{UnitTestDefinitions::xmlFileName()};
 
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestGoParserSuite, TestGoParsers)
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Parse go files normally with the standard relationship set
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 BOOST_AUTO_TEST_CASE(test_parse_obo)
 {
@@ -105,7 +102,9 @@ BOOST_AUTO_TEST_CASE(test_parse_xml)
 
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Parse a go file with a custom relationship set
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 BOOST_AUTO_TEST_CASE(test_parse_obo_custom_relationships)
 {
@@ -143,7 +142,7 @@ BOOST_AUTO_TEST_CASE(test_parse_xml_custom_relationships_bad_set)
 {
 
   AllowedSetRelationshipPolicy bad_policy;
-  bad_policy.addRelationship("part_of");
+  bad_policy.addRelationship(GO::Relationship::PART_OF);
   auto graph_ptr = checkRelationshipXmlParser(bad_policy);
   BOOST_REQUIRE(graph_ptr);
   if( graph_ptr->getNumVertices() != 0 or graph_ptr->getNumEdges() != 0) BOOST_FAIL( "Xml graph is non-empty." );
@@ -155,11 +154,11 @@ BOOST_AUTO_TEST_CASE(test_parse_obo_all_relationships)
 {
 
   AllowedSetRelationshipPolicy all_policy;
-  all_policy.addRelationship("is_a");
-  all_policy.addRelationship("part_of");
-  all_policy.addRelationship("regulates");
-  all_policy.addRelationship("positively_regulates");
-  all_policy.addRelationship("negatively_regulates");
+  all_policy.addRelationship(GO::Relationship::IS_A);
+  all_policy.addRelationship(GO::Relationship::PART_OF);
+  all_policy.addRelationship(GO::Relationship::REGULATES);
+  all_policy.addRelationship(GO::Relationship::NEGATIVELY_REGULATES);
+  all_policy.addRelationship(GO::Relationship::POSITIVELY_REGULATES);
   auto graph_ptr = checkRelationshipOboParser(all_policy);
   BOOST_REQUIRE(graph_ptr);
   if( graph_ptr->getNumVertices() == 0 or graph_ptr->getNumEdges() == 0) BOOST_FAIL( "Obo graph is empty." );
@@ -183,8 +182,9 @@ BOOST_AUTO_TEST_CASE(test_parse_xml_all_relationships)
 
 }
 
-
-// Nonexistant file
+//////////////////////////////////////////////////////////////////////////////
+// Nonexistant file and bad format
+//////////////////////////////////////////////////////////////////////////////
 
 BOOST_AUTO_TEST_CASE(test_parse_obo_bad_file_name)
 {

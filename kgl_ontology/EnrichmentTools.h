@@ -21,7 +21,12 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	This namespace defines free functions that allow enrichment p-values to be calculated.
 	These funcitons can serve as the foundation for more sophisticated enrichment anlayis.
 */
-namespace EnrichmentTools{
+class EnrichmentTools {
+
+public:
+
+  // Just static functions.
+  EnrichmentTools() = delete;
 
 	//! A method for determining which genes are annotated with the given term or a child of that term.
 	/*!
@@ -106,5 +111,6 @@ namespace EnrichmentTools{
 
 	}
 
-} // namespace
+};
+
 #endif

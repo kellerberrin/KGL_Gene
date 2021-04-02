@@ -57,7 +57,7 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
   const char* workDirectoryFlag_ = "workDirectory";
   const char* workDirectoryShortFlag_ = "d";
 
-  addOption(parser, seqan::ArgParseOption(workDirectoryShortFlag_, workDirectoryFlag_, dir_desc, seqan::ArgParseArgument::OUTPUT_DIRECTORY, "DIRECTORY"));
+  addOption(parser, seqan::ArgParseOption(workDirectoryShortFlag_, workDirectoryFlag_, dir_desc, seqan::ArgParseArgument::OUTPUT_DIRECTORY, "GRAPH_DIRECTORY"));
 
   const char* option_desc =
   R"(Specifies the options file (default "Runtime_Options.xml"). This file contains all runtime options. The file path is relative to the work directory)";

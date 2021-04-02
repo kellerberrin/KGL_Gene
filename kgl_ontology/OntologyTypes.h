@@ -14,4 +14,9 @@ template<class T> using OntologySetType = std::unordered_set<T>;
 template<class T, class V> using OntologyMapType = std::unordered_map<T, V>;
 
 
+//template<class T> using OntologySetType = std::set<T>;
+//template<class T, class V> using OntologyMapType = std::map<T, V>;
+
+
+
 #endif //ONTOLOGYTYPES_H

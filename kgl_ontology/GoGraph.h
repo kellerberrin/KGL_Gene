@@ -801,7 +801,7 @@ public:
 	/*!
 		This method returns a filtered set containing only CELLULAR_COMPONENT terms
 	*/
-  [[nodiscard]] OntologySetType<std::string> filterSetForCC(const OntologySetType<std::string> &inSet){
+  [[nodiscard]] OntologySetType<std::string> filterSetForCC(const OntologySetType<std::string> &inSet) const {
 
 		return filterSetForOntology(inSet, GO::Ontology::CELLULAR_COMPONENT);
 
@@ -1022,4 +1022,6 @@ private:
   };
 
 };
+
+
 #endif
