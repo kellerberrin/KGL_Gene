@@ -18,7 +18,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 */
 namespace SetUtilities{
 
-	//!set UTILITY funciton to determine if a set contains an element
+	//!set UTILITY function to determine if a set contains an element
 	template<typename Type>
 	[[nodiscard]] static bool set_contains(const OntologySetType<Type> &mySet, const Type& element)
 	{

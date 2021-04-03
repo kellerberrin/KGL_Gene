@@ -83,11 +83,13 @@ public:
 	}
 
 
-	//! a method to determine if the Policy is empty
+	//! An invalid policy contains the error code 'GO::EvidenceCode::ECODE_ERROR'
 	/*!
-		Determines if the Policy is empty
+		Determines if the Policy is valid
 	*/
-	[[nodiscard]] bool isEmpty() { return _evidenceMap.empty(); }
+
+  [[nodiscard]] bool isValid() const override { return _evidenceMap.find(GO::EvidenceCode::ECODE_ERROR) == _evidenceMap.end(); }
+
 
 
 private:

@@ -142,7 +142,7 @@ public:
 		//a variable for the cummulative annotaions of the graph
 		std::vector<std::size_t> annotationCounts(graph->getNumVertices(),0);
 
-		//create the visitor abject
+		//create the visitor object
 		dfs_cumulative_annotations_visitor vis(graph ,annoData, &annotationCounts, &_nameToIndex);
 
 		//get the boost graph from the GoGraph object. Must be done to utilize boost algorithms
@@ -159,7 +159,7 @@ public:
 
 		// Vertex Iterators
 		GoGraph::GoVertexIterator vi,vend;
-		for(boost::tie(vi,vend) = boost::vertices(go_graph); vi != vend; ++vi){
+		for(boost::tie(vi,vend) = boost::vertices(go_graph); vi != vend; ++vi) {
 
 			GoGraph::GoVertex v = *vi;
 			std::size_t index = graph->getVertexIndex(v);
@@ -265,7 +265,7 @@ public:
 		A value to return if the term is not found (does not exist in the map).
 		Returns probability 1 or certanty. This may not be the ideal behavior.
 	*/
-  [[nodiscard]] virtual double badIdValue() const { return 1.0; }
+  [[nodiscard]] double badIdValue() const { return 1.0; }
 
 	//! Overloaded [] bracket operator to mimic Map
 	/*!
@@ -284,7 +284,7 @@ public:
 	*/
   [[nodiscard]] double getValue(const std::string& termId) const {
 
-		if (!hasTerm(termId)){
+		if (not hasTerm(termId)){
 
 			return badIdValue();
 

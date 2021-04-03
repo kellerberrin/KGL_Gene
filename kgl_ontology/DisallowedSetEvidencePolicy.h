@@ -37,7 +37,7 @@ public:
 
   [[nodiscard]] std::unique_ptr<const EvidencePolicyInterface> clone() const override { return std::make_unique<const DisallowedSetEvidencePolicy>(*this); }
 
-  //! a method to test if an eviddence code is allowed or not
+  //! a method to test if an evidence code is allowed or not
 	/*!
 		tests if the evidence is allowed. Overridden to fulfill the EvidencePolicyInterface.
 		This class disallows a set and so returns false if the evidence code is found.
@@ -67,11 +67,12 @@ public:
 	}
 
 
-	//! a method to determine if the Policy is empty, disallowed set is never empty
-	/*!
-		Determines if the Policy is empty
-	*/
-	[[nodiscard]] bool isEmpty(){ return false; }
+  //! An invalid policy contains the error code 'GO::EvidenceCode::ECODE_ERROR'
+  /*!
+    Determines if the Policy is valid
+  */
+
+  [[nodiscard]] bool isValid() const override { return _evidenceMap.find(GO::EvidenceCode::ECODE_ERROR) == _evidenceMap.end(); }
 
 
 private:

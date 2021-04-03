@@ -29,6 +29,7 @@ public:
   // Class just defines static members.
   Accumulators() = delete;
 
+  // Convenience type alias.
   template <class... T> using AccumulatorType = boost::accumulators::accumulator_set<double, boost::accumulators::stats<T ...>>;
 	//typedefs
 	/*! MinAccumulator
@@ -66,47 +67,47 @@ public:
 	/*! extractMin
 	\brief A helper helper function to extract the min.
 	*/
-	[[nodiscard]] static double extractMin(const MinAccumulator &acc) { return  boost::accumulators::min(acc); }
+	[[nodiscard]] static double extractMin(const MinAccumulator &acc) { return boost::accumulators::min(acc); }
 
 	/*! extractMax
 	\brief A helper helper function to extract the max.
 	*/
-	[[nodiscard]] static double extractMax(const MaxAccumulator &acc) { return  boost::accumulators::max(acc); }
+	[[nodiscard]] static double extractMax(const MaxAccumulator &acc) { return boost::accumulators::max(acc); }
 
 	/*! extractMean
 	\brief A helper helper function to extract the mean.
 	*/
-	[[nodiscard]] static double extractMean(const MeanAccumulator &acc) {return  boost::accumulators::mean(acc); }
+	[[nodiscard]] static double extractMean(const MeanAccumulator &acc) { return boost::accumulators::mean(acc); }
 
 	/*! extractMin
 	\brief An overlaoded helper helper function to extract the min.
 	*/
-  [[nodiscard]] static double extractMin(const SimpleAccumulator &acc) { return  boost::accumulators::min(acc); }
+  [[nodiscard]] static double extractMin(const SimpleAccumulator &acc) { return boost::accumulators::min(acc); }
 
 	/*! extractMax
 	\brief An overlaoded helper helper function to extract the max.
 	*/
-	[[nodiscard]] static double extractMax(const SimpleAccumulator &acc) { return  boost::accumulators::max(acc); }
+	[[nodiscard]] static double extractMax(const SimpleAccumulator &acc) { return boost::accumulators::max(acc); }
 
 	/*! extractMean
 	\brief An overlaoded helper helper function to extract the mean.
 	*/
-  [[nodiscard]] static double extractMean(const SimpleAccumulator &acc) { return  boost::accumulators::mean(acc); }
+  [[nodiscard]] static double extractMean(const SimpleAccumulator &acc) { return boost::accumulators::mean(acc); }
 
 	/*! extractCovariance
 	\brief A helper helper function to extract the covariance.
 	*/
-  [[nodiscard]] static double extractCovariance(const CovarianceAccumulator &acc) { return  boost::accumulators::covariance(acc); }
+  [[nodiscard]] static double extractCovariance(const CovarianceAccumulator &acc) { return boost::accumulators::covariance(acc); }
 
 	/*! extractVariance
 	\brief A helper helper function to extract the variance.
 	*/
-  [[nodiscard]] static double extractVariance(const VarianceAccumulator &acc) { return  boost::accumulators::variance(acc); }
+  [[nodiscard]] static double extractVariance(const VarianceAccumulator &acc) { return boost::accumulators::variance(acc); }
 
 	/*! extractVariance
 	\brief A helper helper function to extract the variance.
 	*/
-  [[nodiscard]] static double extractSD(const VarianceAccumulator &acc) { return  sqrt(boost::accumulators::variance(acc)); }
+  [[nodiscard]] static double extractSD(const VarianceAccumulator &acc) { return sqrt(boost::accumulators::variance(acc)); }
 
 };
 

@@ -21,7 +21,7 @@ public:
 
     auto go_parser_ptr = GoParserFactory::createGoParser(GoParserType::OBO_GO_STANDARD);
     BOOST_REQUIRE(go_parser_ptr);
-    return go_parser_ptr->parseGoFile(go_obo);
+    return go_parser_ptr->parseGoFile(go_obo_);
 
   }
 
@@ -29,7 +29,7 @@ public:
 
     auto xml_parser_ptr = GoParserFactory::createGoParser(GoParserType::XML_GO_STANDARD);
     BOOST_REQUIRE(xml_parser_ptr);
-    return xml_parser_ptr->parseGoFile(go_xml);
+    return xml_parser_ptr->parseGoFile(go_xml_);
 
   }
 
@@ -38,7 +38,7 @@ public:
 
     auto go_parser_ptr = GoParserFactory::createGoParser(GoParserType::OBO_GO_ALLOWED, policy);
     BOOST_REQUIRE(go_parser_ptr);
-    return go_parser_ptr->parseGoFile(go_obo);
+    return go_parser_ptr->parseGoFile(go_obo_);
 
   }
 
@@ -46,7 +46,7 @@ public:
 
     auto xml_parser_ptr = GoParserFactory::createGoParser(GoParserType::XML_GO_ALLOWED, policy);
     BOOST_REQUIRE(xml_parser_ptr);
-    return xml_parser_ptr->parseGoFile(go_xml);
+    return xml_parser_ptr->parseGoFile(go_xml_);
 
   }
 
@@ -66,13 +66,13 @@ public:
 
   }
 
-  [[nodiscard]] const std::string& oboFileName() const { return go_obo; }
-  [[nodiscard]] const std::string& xmlFileName() const { return go_xml; }
+  [[nodiscard]] const std::string& oboFileName() const { return go_obo_; }
+  [[nodiscard]] const std::string& xmlFileName() const { return go_xml_; }
 
 private:
 
-  const std::string go_obo{UnitTestDefinitions::oboFileName()};
-  const std::string go_xml{UnitTestDefinitions::xmlFileName()};
+  const std::string go_obo_{UnitTestDefinitions::oboFileName()};
+  const std::string go_xml_{UnitTestDefinitions::xmlFileName()};
 
 };
 

@@ -35,6 +35,12 @@ public:
   */
 	[[nodiscard]] virtual std::unique_ptr<const EvidencePolicyInterface> clone() const = 0;
 
+  /*!
+    An invalid policy contains the error code 'GO::EvidenceCode::ECODE_ERROR'
+  */
+  [[nodiscard]] virtual bool isValid() const = 0;
+
+
 };
 
 #endif

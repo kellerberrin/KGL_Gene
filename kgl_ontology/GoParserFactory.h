@@ -41,9 +41,6 @@ public:
 
     switch(parser_type) {
 
-      case GoParserType::OBO_GO_STANDARD:
-        return std::make_unique<StandardOboGoParser>();
-
       case GoParserType::OBO_GO_ALLOWED:
         return std::make_unique<AllowedRelationshipOboGoParser>(policy);
 
@@ -56,9 +53,11 @@ public:
       case GoParserType::XML_RAPID_PARSER:
         return std::make_unique<RapidXmlGoParser>();
 
-    }
+      default:
+      case GoParserType::OBO_GO_STANDARD:
+        return std::make_unique<StandardOboGoParser>();
 
-    return std::make_unique<StandardOboGoParser>(); // Never reached.
+    }
 
   }
 

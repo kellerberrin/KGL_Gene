@@ -58,6 +58,13 @@ public:
 
 		std::unique_ptr<AnnotationData> annoData(std::make_unique<AnnotationData>());
 
+    // Check that the supplied policy is valid.
+    if (not _policy->isValid()) {
+
+      return annoData;
+
+    }
+
 		//open afile stream
 		std::ifstream in(filename.c_str());
 

@@ -219,15 +219,15 @@ public:
 		A helper method to return, for a gene, a list of go terms as a vector of strings.
 	*/
 	[[nodiscard]] std::vector<std::string> getGoTermsForGene(const std::string &gene) const {
-		//temparary storage variable
+
 		std::vector<std::string> goTerms;
 
 		//test if gene exists,prevent key error
-		if (hasGene(gene)){
+		if (hasGene(gene)) {
 
 			auto const& [key, index] = *(_stringToGene.find(gene));
 
-			//move other the indices placeing the correct go in the list
+			//move other the indices placing the correct go in the list
 			for(auto const& element : _geneToGos.at(index)) {
 
 				goTerms.push_back(_goTerms.at(element));

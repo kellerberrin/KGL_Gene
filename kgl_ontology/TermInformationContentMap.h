@@ -45,11 +45,23 @@ public:
 
 		  if (probabilities().at(i) == 0.0) {
 
-		    throw std::runtime_error("TermInformationContentMap::TermInformationContentMap; zero (0) term probability, log(prob) undefined");
+		    size_t zero_count{0};
+		    double prob_sum{0.0};
+		    for (auto const& prob : probabilities()) {
+
+		      if (prob == 0) ++zero_count;
+		      prob_sum += prob;
+
+		    }
+
+        std::stringstream ss;
+        ss << "TermInformationContentMap::TermInformationContentMap; prob vector size: " << probabilities().size()
+           << " zero terms: " << zero_count <<  " at index: " << i << " prob sum: " << prob_sum;
+		    throw std::runtime_error(ss.str());
 
 		  }
 
-			probabilities().at(i) = -std::log(probabilities().at(i));
+			probabilities().at(i) = -1.0 * std::log(probabilities().at(i));
 
 		}//end for, each probability value
 
@@ -58,9 +70,9 @@ public:
 	//! Return a default value for a term that does not exist.
 	/*!
 	A value to return if the term is not found (does not exist in the map).
-	Returns informaiton content 0. This may not be the ideal behavior.
+	Returns information content 0. This may not be the ideal behavior.
 	*/
-	double badIdValue() const override { return 0.0; }
+	double badIdValue() const { return 0.0; }
 
 
 };

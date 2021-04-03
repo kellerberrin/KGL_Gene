@@ -23,7 +23,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 /*! \class AllowedRelationshipOboGoParser
 	\brief A class to parse only a specified set of relationships
 
-	This class will read a Gene Ontology OBO file and add only those relationship
+	This class will read a Gene Ontology OBO file and add only those relationships
 	 which are specified to the graph. The most important method of this class if the
 	 parseGoFile which takes the file name as a parameter.
 
@@ -39,7 +39,7 @@ public:
     constructor that sets the policy
   */
   explicit AllowedRelationshipOboGoParser(const RelationshipPolicyInterface& policy) : relationshipPolicy(policy.clone()) {}
-  AllowedRelationshipOboGoParser() = delete; // Must provide a policy
+  AllowedRelationshipOboGoParser() = delete; // Must provide a policy.
   ~AllowedRelationshipOboGoParser() override = default;
 
   //! a method to create a new instance of this class for use in a factory
@@ -60,8 +60,6 @@ public:
 
 	*/
 	[[nodiscard]] std::unique_ptr<GoGraph> parseGoFile(const std::string& filename) const override {
-
-//		typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
 
 		//graph object to be returned
     std::unique_ptr<GoGraph> graph(std::make_unique<GoGraph>());
@@ -282,10 +280,12 @@ private:
     size_t div = instr.find(splitStr);
 
     if(div != std::string::npos){
+
       attr = instr.substr(0,div);
       value = instr.substr(div+1);
       boost::trim(attr);
       boost::trim(value);
+
     }
 
   }

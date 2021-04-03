@@ -47,11 +47,12 @@ public:
       case AnnotationParserType::GOA_ANNO_PARSER:
         return std::make_unique<GoaAnnotationParser>(policy);
 
-      case AnnotationParserType::GAF_ANNO_PARSER:
-        return std::make_unique<GafAnnotationParser>(policy);
-
       case AnnotationParserType::MGI_ANNO_PARSER:
         return std::make_unique<MgiAnnotationParser>(policy);
+
+      default:
+      case AnnotationParserType::GAF_ANNO_PARSER:
+        return std::make_unique<GafAnnotationParser>(policy);
 
     }
 
