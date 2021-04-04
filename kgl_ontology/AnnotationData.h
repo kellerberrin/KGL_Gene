@@ -7,6 +7,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #ifndef ANNOTATION_DATA
 #define ANNOTATION_DATA
 
+#include <SetUtilities.h>
 #include <GoEnums.h>
 #include <GoGraph.h>
 
@@ -204,7 +205,7 @@ public:
 
 	//! This method returns all the go terms in the database
 	/*!
-		A helper method to return all the GO terms in the databse
+		A helper method to return all the GO terms in the database
 	*/
   [[nodiscard]] const std::vector<std::string>& getAllGoTerms() const { return _goTerms; }
 
@@ -471,6 +472,104 @@ public:
 		return ontologyTerms;
 
 	}
+
+	// Accessor routines to check database integrity.
+	// Number of genes sorted by gene index.
+  [[nodiscard]] const std::vector<std::string>& genes() const { return _genes; }
+  // Number of go terms sorted by go index.
+  [[nodiscard]] const std::vector<std::string>& goTerms() const { return _goTerms; }
+  // Number of genes, value = gene index.
+  [[nodiscard]] const OntologyMapType<std::string,std::size_t>& geneIndex() const { return _stringToGene; }
+  // Number of go terms value = go index.
+  [[nodiscard]] const OntologyMapType<std::string,std::size_t>& goIndex() const { return _stringToGo; }
+  // Number of go terms X the gene indices for each go term.
+  [[nodiscard]] const std::vector<std::vector<std::size_t> >& goIndexToGeneIndex() const { return _goToGenes; }
+  // Number of go terms X the gene evidence code for each each. Same dimensions as above.
+  [[nodiscard]] const std::vector<std::vector<GO::EvidenceCode> >& goIndexToGeneEvidence() const { return _goToGenesEvidence; }
+  // Number of genes X the index of the go terms for each gene.
+  [[nodiscard]] const std::vector<std::vector<std::size_t> >& geneIndexToGoIndex() const { return _geneToGos; }
+  // Number of genes X the go evidence code for each gene. Same dimensions as above.
+  [[nodiscard]] const std::vector<std::vector<GO::EvidenceCode> >& geneIndexToGoEvidence() const { return _geneToGosEvidence; }
+
+  [[nodiscard]] bool databaseIntegrityCheck() const {
+
+	  // Ensure the uniqueness of the gene and go vectors.
+	  auto const gene_set = SetUtilities::convert_vector(genes());
+	  if (gene_set.size() != genes().size()) {
+
+	    return false;
+
+	  }
+    auto const go_set = SetUtilities::convert_vector(genes());
+    if (go_set.size() != goTerms().size()) {
+
+      return false;
+
+    }
+    // Check the size of the index lookups
+    if (genes().size() != geneIndex().size()) {
+
+      return false;
+
+    }
+
+    // Check the size of the index lookups
+    if (goTerms().size() != goIndex().size()) {
+
+      return false;
+
+    }
+
+    if (goTerms().size() != goIndexToGeneIndex().size()) {
+
+      return false;
+
+    }
+
+    if (goTerms().size() != goIndexToGeneEvidence().size()) {
+
+      return false;
+
+    }
+
+
+    for (size_t idx = 0; idx < goTerms().size(); ++idx) {
+
+      if (goIndexToGeneIndex()[idx].size() != goIndexToGeneEvidence()[idx].size()) {
+
+        return false;
+
+      }
+
+    }
+
+    if (genes().size() != geneIndexToGoIndex().size()) {
+
+      return false;
+
+    }
+
+    if (genes().size() != geneIndexToGoEvidence().size()) {
+
+      return false;
+
+    }
+
+    for (size_t idx = 0; idx < genes().size(); ++idx) {
+
+      if (geneIndexToGoIndex()[idx].size() != geneIndexToGoEvidence()[idx].size()) {
+
+        return false;
+
+      }
+
+    }
+
+    return true;
+
+  }
+
+
 
 private:
 

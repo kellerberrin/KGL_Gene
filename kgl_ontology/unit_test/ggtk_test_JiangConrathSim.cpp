@@ -29,11 +29,6 @@ public:
 
   }
 
-
-private:
-
-  inline static std::unique_ptr<const JiangConrathSimilarity> jiang_conrath_ptr_;
-
   [[nodiscard]] static std::unique_ptr<AnnotationData> getAnnotation() {
 
     auto anno_parser_ptr = AnnotationParserFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
@@ -50,6 +45,11 @@ private:
     return go_parser_ptr->parseGoFile(UnitTestDefinitions::oboFileName());
 
   }
+
+private:
+
+  inline static std::unique_ptr<const JiangConrathSimilarity> jiang_conrath_ptr_;
+
 
   [[nodiscard]] static std::unique_ptr<const JiangConrathSimilarity> getJiangConrath() {
 
@@ -86,6 +86,26 @@ BOOST_AUTO_TEST_CASE(test_similarity_1_bad_1_good_id)
 
 }
 
+BOOST_AUTO_TEST_CASE(check_zero_probability_terms)
+{
+
+  const size_t missing_terms{21936};
+  std::unique_ptr<const AnnotationData> annotation_ptr = getAnnotation();
+  const auto term_set = getGoGraph()->getAllTerms();
+  size_t missing_count{0};
+  for (auto const& term : term_set) {
+
+    if (not annotation_ptr->hasGoTerm(term)) {
+
+      ++missing_count;
+
+    }
+
+  }
+  if (missing_count != missing_terms) BOOST_FAIL("Unexpected missing go term count: " + std::to_string(missing_count));
+  BOOST_TEST_MESSAGE( "check_zero_probability_terms ... OK" );
+
+}
 
 ////////////////////////////////////////////////////////
 // Similarity on CC terms

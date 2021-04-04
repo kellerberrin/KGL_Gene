@@ -315,6 +315,27 @@ BOOST_AUTO_TEST_CASE(test_term_descendants_bad_id)
 
 }
 
+BOOST_AUTO_TEST_CASE(test_terms_with_zero_descendants)
+{
+
+  const size_t leaf_terms{23717};
+  auto const term_set = goGraph().getAllTerms();
+  size_t leaf_count{0};
+  for (auto const& term : term_set) {
+
+    if (goGraph().isLeaf(term)) {
+
+      ++leaf_count;
+
+    }
+
+  }
+  if (leaf_count != leaf_terms) BOOST_FAIL( "Unexpected leaf terms: " + std::to_string(leaf_count) );
+  BOOST_TEST_MESSAGE( "test_terms_with_zero_descendants ... OK" );
+
+}
+
+
 BOOST_AUTO_TEST_CASE(test_term_descendants_BP)
 {
 

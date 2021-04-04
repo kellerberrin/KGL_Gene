@@ -617,6 +617,28 @@ public:
 
 	}
 
+  //! A helper method determines if a term is a leaf on the graph.
+  /*!
+    This method takes a term and returns is true boolean if it is a leaf.
+  */
+  [[nodiscard]] bool isLeaf(const std::string &term) const {
+    //return empty set, if term is not found
+    if (!hasTerm(term)){
+
+      return false;
+
+    }else{
+
+      GoVertex vertex = getVertexByName(term);
+
+      InEdgeIterator ei, end;
+      boost::tie(ei, end) = boost::in_edges(vertex, _goGraph);
+
+      return ei == end;
+
+    }
+
+  }
 
 	//! A helper method to retrieve all terms in the GoGraph
 	/*!

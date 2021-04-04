@@ -40,30 +40,54 @@ public:
 	TermInformationContentMap(const std::shared_ptr<const GoGraph>& graph, const std::shared_ptr<const AnnotationData>& annoData)
 	: TermProbabilityMap(graph,annoData)
 	{
+
+	  if (not checkIntegrity()) {
+
+      throw std::runtime_error("TermProbabilityMap::TermProbabilityMap::failed integrity check.");
+
+	  }
 		//convert term probability to information content
+    auto index_map = indexToName();
+    size_t zero_count{0};
+    size_t missing_non_zero{0};
+    double prob_sum{0.0};
+    double missing_sum{0.0};
 		for(size_t i = 0; i < probabilities().size(); ++i){
+
+      prob_sum += probabilities().at(i);
+      auto result = index_map.find(i);
+      if (result == index_map.end()) {
+
+        throw std::runtime_error("TermInformationContentMap::TermInformationContentMap; index not found");
+
+      }
+      auto const& [index, name] = *result;
+      if (not annoData->hasGoTerm(name) and probabilities().at(i) != 0) {
+
+        ++missing_non_zero;
+        missing_sum += probabilities().at(i);
+
+      }
 
 		  if (probabilities().at(i) == 0.0) {
 
-		    size_t zero_count{0};
-		    double prob_sum{0.0};
-		    for (auto const& prob : probabilities()) {
+        ++zero_count;
+        probabilities().at(i) = badIdValue();
 
-		      if (prob == 0) ++zero_count;
-		      prob_sum += prob;
+      } else {
 
-		    }
-
-        std::stringstream ss;
-        ss << "TermInformationContentMap::TermInformationContentMap; prob vector size: " << probabilities().size()
-           << " zero terms: " << zero_count <<  " at index: " << i << " prob sum: " << prob_sum;
-		    throw std::runtime_error(ss.str());
+        probabilities().at(i) = -1.0 * std::log(probabilities().at(i));
 
 		  }
 
-			probabilities().at(i) = -1.0 * std::log(probabilities().at(i));
 
 		}//end for, each probability value
+
+    std::stringstream ss;
+    ss << "TermInformationContentMap::TermInformationContentMap; prob vector size: " << probabilities().size()
+       << " zero terms: " << zero_count <<  " missing non-zero: "<< missing_non_zero
+       << " missing sum prob: " << missing_sum << " prob sum: " << prob_sum << '\n';
+    std::cout << ss.str();
 
 	}
 

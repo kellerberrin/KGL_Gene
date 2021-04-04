@@ -75,6 +75,16 @@ BOOST_FIXTURE_TEST_SUITE(TestAnnotateSuite, TestAnnotate)
 // Gene and GO Term count accessors
 ///////////////////////////////////////////////
 
+
+BOOST_AUTO_TEST_CASE(test_annotation_integrity)
+{
+
+  if (annotation().databaseIntegrityCheck()) BOOST_FAIL("Annotation integrity check fails" );
+  BOOST_TEST_MESSAGE( "test_annotation_integrity" );
+
+}
+
+
 BOOST_AUTO_TEST_CASE(test_gene_count_accessor)
 {
 
@@ -101,8 +111,9 @@ BOOST_AUTO_TEST_CASE(test_get_all_go_terms)
 {
 
         const size_t go_count{16556};
-        auto go_list = annotation().getAllGoTerms();
-        if (go_list.size() != go_count) BOOST_FAIL("Annotation Go list size is incorrect" );
+        // Check unqiueness by assigning to a set.
+        auto go_set = SetUtilities::convert_vector(annotation().getAllGoTerms());
+        if (go_set.size() != go_count) BOOST_FAIL("Annotation Go list size is incorrect" );
         BOOST_TEST_MESSAGE( "test_get_all_go_terms... OK" );
 
 }
@@ -111,8 +122,9 @@ BOOST_AUTO_TEST_CASE(test_get_all_genes)
 {
 
   const size_t gene_count{19194};
-  auto gene_list = annotation().getAllGenes();
-  if (gene_list.size() != gene_count) BOOST_FAIL("Annotation Gene list size is incorrect" );
+  // Check unqiueness by assigning to a set.
+  auto gene_set = SetUtilities::convert_vector(annotation().getAllGenes());
+  if (gene_set.size() != gene_count) BOOST_FAIL("Annotation Gene list size is incorrect" );
   BOOST_TEST_MESSAGE( "test_get_all_genes ... OK" );
 
 }

@@ -353,9 +353,58 @@ public:
   }
 
 
+
+
+
 protected:
 
 	[[nodiscard]] std::vector<double>& probabilities() { return _probabilities; }
+  [[nodiscard]] const OntologyMapType<std::string,std::size_t>& nameToIndex() const { return _nameToIndex; }
+
+  [[nodiscard]] OntologyMapType<size_t, std::string> indexToName() const {
+
+    OntologyMapType<size_t, std::string> index_map;
+    for (auto const& [name, index] : nameToIndex()) {
+
+      index_map.try_emplace(index, name);
+
+    }
+
+    return index_map;
+
+  }
+
+
+  bool checkIntegrity() const {
+
+    if (_probabilities.size() != nameToIndex().size()) {
+
+      return false;
+
+    }
+
+    OntologyMapType<size_t, std::string> index_map;
+    for (auto const& [name, index] : nameToIndex()) {
+
+      auto [iter, result] = index_map.try_emplace(index, name);
+      if (not result) {
+
+        return false;
+
+      }
+
+    }
+
+    if (index_map.size() != nameToIndex().size()) {
+
+      return false;
+
+    }
+
+    return true;
+
+  }
+
 
 private:
 	//! A private map that returns the index of a term.
