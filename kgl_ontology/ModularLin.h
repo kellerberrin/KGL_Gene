@@ -66,7 +66,7 @@ public:
 		double termA_IC = _siCalculator->sharedInformation(goTermA);
 		double termB_IC = _siCalculator->sharedInformation(goTermB);
 
-		return (2.0 * sharedIC) /(termA_IC + termB_IC);
+		return (2.0 * sharedIC) / (termA_IC + termB_IC);
 
 	}
 

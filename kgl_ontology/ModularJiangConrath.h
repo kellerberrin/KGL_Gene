@@ -29,13 +29,13 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	(see Lord et al.)
 
 */
-class ModularJiangConrath: public TermSimilarityInterface{
+class ModularJiangConrath : public TermSimilarityInterface{
 
 public:
 	
 	//! A constructor
 	/*!
-		Creates the Jiang Conrath simialrity measure using a given shared infromation calculator
+		Creates the Jiang Conrath simialrity measure using a given shared information calculator
 	*/
 	ModularJiangConrath(std::shared_ptr<const SharedInformationInterface> sharedInformationCalculator)
 	: _siCalculator(std::move(sharedInformationCalculator)) {}

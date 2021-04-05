@@ -47,7 +47,9 @@ public:
 	[[nodiscard]] double calculateTermSimilarity(const std::string& goTermA, const std::string& goTermB) const override {
 		//if the terms do not exit return 0.0 similarity
 		if (not _icMap->hasTerm(goTermA) or not _icMap->hasTerm(goTermB)){
+
 			return 0.0;
+
 		}
 
 		//if not from same ontology, return 0;
@@ -58,10 +60,8 @@ public:
 		}
 
 		//create 2 sets
-		OntologySetType<std::string> ancestorsA = _goGraph->getAncestorTerms(goTermA);
-		ancestorsA.insert(goTermA);
-    OntologySetType<std::string> ancestorsB = _goGraph->getAncestorTerms(goTermB);
-		ancestorsB.insert(goTermB);
+		OntologySetType<std::string> ancestorsA = _goGraph->getSelfAncestorTerms(goTermA);
+    OntologySetType<std::string> ancestorsB = _goGraph->getSelfAncestorTerms(goTermB);
 
 		//if either set is empty, return 0
 		if(ancestorsA.empty() or ancestorsB.empty()) {
@@ -73,9 +73,16 @@ public:
 		//get the MICA
 		double mica_info = _icMap->getMICAinfo(ancestorsA, ancestorsB);
 		double complement_prob_mica = 1.0 - std::exp(-1.0 * mica_info);
+		double denom = (_icMap->getValue(goTermA) + _icMap->getValue(goTermB));
+
+		if (denom == 0.0 or mica_info == 0.0) {
+
+		  return 0.0;
+
+		}
 
 		//return the normalized information content similarity of Relevance
-		return (2.0 * mica_info) / ((_icMap->getValue(goTermA) + _icMap->getValue(goTermB)) * complement_prob_mica);
+		return ((2.0 * mica_info) / denom) * complement_prob_mica;
 
 	}
 

@@ -27,7 +27,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	2 * IC(MICA) / ( IC(termA) + IC(termB) )
 
 */
-class LinSimilarity: public TermSimilarityInterface{
+class LinSimilarity : public TermSimilarityInterface{
 
 public:
 	

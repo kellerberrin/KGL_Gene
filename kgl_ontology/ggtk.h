@@ -49,8 +49,8 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #include <PrecomputedMatrixTermSimilarity.h>
 #include <RapidXmlGoParser.h>
 #include <RelationshipPolicyInterface.h>
-#include <RelevanceSimilarity.hpp>
-#include <ResnikSimilarity.hpp>
+#include <RelevanceSimilarity.h>
+#include <ResnikSimilarity.h>
 #include <SetUtilities.h>
 #include <SharedInformationInterface.h>
 #include <SimpleRegion.h>

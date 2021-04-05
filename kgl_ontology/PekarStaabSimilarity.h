@@ -61,11 +61,9 @@ public:
 
 		}
 
-		//create 2 sets
-		OntologySetType<std::string> ancestorsA = _goGraph->getAncestorTerms(goTermA);
-		ancestorsA.insert(goTermA);
-		OntologySetType<std::string> ancestorsB = _goGraph->getAncestorTerms(goTermB);
-		ancestorsB.insert(goTermB);
+		//Create 2 sets self + ancestors.
+		OntologySetType<std::string> ancestorsA = _goGraph->getSelfAncestorTerms(goTermA);
+		OntologySetType<std::string> ancestorsB = _goGraph->getSelfAncestorTerms(goTermB);
 
 		//if either set is empty, return 0
 		if(ancestorsA.empty() || ancestorsB.empty()) {
@@ -75,16 +73,8 @@ public:
 		}
 
 		std::string lca = _depthMap->getLCA(ancestorsA, ancestorsB);
-
-		//std::cout << "Pekar Staab LCA " << lca << std::endl;
-
 		TermDepthType lcaDepth = _depthMap->getValue(lca);
-
-		//std::cout << "Pekar Staab LCA " << lcaDepth << std::endl;
-		//std::cout << "Pekar Staab delta(a,lca) " << (_depthMap[goTermA] - lcaDepth) << std::endl;
-		//std::cout << "Pekar Staab delta(b,lca) " << (_depthMap[goTermB] - lcaDepth) << std::endl;
-
-    TermDepthType denom = (_depthMap->getValue(goTermA) - lcaDepth) + (_depthMap->getValue(goTermA) - lcaDepth) + lcaDepth;
+    TermDepthType denom = (_depthMap->getValue(goTermA) - lcaDepth) + (_depthMap->getValue(goTermB) - lcaDepth) + lcaDepth;
 
     if (denom == 0) {
 

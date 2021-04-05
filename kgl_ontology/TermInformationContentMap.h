@@ -41,38 +41,12 @@ public:
 	: TermProbabilityMap(graph,annoData)
 	{
 
-	  if (not checkIntegrity()) {
+		for(size_t i = 0; i < probabilities().size(); ++i) {
 
-      throw std::runtime_error("TermProbabilityMap::TermProbabilityMap::failed integrity check.");
 
-	  }
-		//convert term probability to information content
-    auto index_map = indexToName();
-    size_t zero_count{0};
-    size_t missing_non_zero{0};
-    double prob_sum{0.0};
-    double missing_sum{0.0};
-		for(size_t i = 0; i < probabilities().size(); ++i){
+		  if (probabilities().at(i) <= 0.0) {
 
-      prob_sum += probabilities().at(i);
-      auto result = index_map.find(i);
-      if (result == index_map.end()) {
-
-        throw std::runtime_error("TermInformationContentMap::TermInformationContentMap; index not found");
-
-      }
-      auto const& [index, name] = *result;
-      if (not annoData->hasGoTerm(name) and probabilities().at(i) != 0) {
-
-        ++missing_non_zero;
-        missing_sum += probabilities().at(i);
-
-      }
-
-		  if (probabilities().at(i) == 0.0) {
-
-        ++zero_count;
-        probabilities().at(i) = badIdValue();
+        probabilities().at(i) = BAD_INFO_VALUE_;
 
       } else {
 
@@ -83,12 +57,6 @@ public:
 
 		}//end for, each probability value
 
-    std::stringstream ss;
-    ss << "TermInformationContentMap::TermInformationContentMap; prob vector size: " << probabilities().size()
-       << " zero terms: " << zero_count <<  " missing non-zero: "<< missing_non_zero
-       << " missing sum prob: " << missing_sum << " prob sum: " << prob_sum << '\n';
-    std::cout << ss.str();
-
 	}
 
 	//! Return a default value for a term that does not exist.
@@ -96,8 +64,11 @@ public:
 	A value to return if the term is not found (does not exist in the map).
 	Returns information content 0. This may not be the ideal behavior.
 	*/
-	double badIdValue() const { return 0.0; }
+	[[nodiscard]] double badIdValue() const override { return BAD_INFO_VALUE_; }
 
+private:
+
+  const static constexpr double BAD_INFO_VALUE_{0.0};
 
 };
 #endif

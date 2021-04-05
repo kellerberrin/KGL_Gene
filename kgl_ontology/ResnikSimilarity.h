@@ -56,21 +56,11 @@ public:
 
 		}
 
-		//create 2 sets
-		OntologySetType<std::string> ancestorsA = _goGraph->getAncestorTerms(goTermA);
-		ancestorsA.insert(goTermA);
-		OntologySetType<std::string> ancestorsB = _goGraph->getAncestorTerms(goTermB);
-		ancestorsB.insert(goTermB);
+		//Create 2 sets of term + ancestors
+		OntologySetType<std::string> ancestorsA = _goGraph->getSelfAncestorTerms(goTermA);
+		OntologySetType<std::string> ancestorsB = _goGraph->getSelfAncestorTerms(goTermB);
 
-		//if either set is empty, return 0
-		if(ancestorsA.empty() or ancestorsB.empty()) {
-
-			return 0.0;
-
-		}
-
-		//return the information content of the mica
-		return _icMap->getMICAinfo(ancestorsA, ancestorsA);
+    return _icMap->getMICAinfo(ancestorsA,  ancestorsB);
 
 	}
 
@@ -79,39 +69,53 @@ public:
 		This method returns the Resnik similarity divided by the maximum possible similarity
 	*/
 	[[nodiscard]] double calculateNormalizedTermSimilarity(const std::string& goTermA, const std::string& goTermB) const override {
-		//if the terms do not exit return 0.0 similarity
-		if (not _icMap->hasTerm(goTermA) or not _icMap->hasTerm(goTermB)) {
-
-			return 0.0;
-
-		}
-
 		//call base similarity
 		double resnik = calculateTermSimilarity(goTermA,goTermB);
 
-		double maxIC;
-		//select the correct ontology normalization factor
-		GO::Ontology ontoType = _goGraph->getTermOntology(goTermA);
-		if(ontoType == GO::Ontology::BIOLOGICAL_PROCESS){
+		if (resnik <= 0) {
 
-			maxIC = -std::log(_icMap->getMinBP());
-
-		}else if(ontoType == GO::Ontology::MOLECULAR_FUNCTION){
-
-			maxIC = -std::log(_icMap->getMinMF());
-
-		}else{
-
-			maxIC = -std::log(_icMap->getMinCC());
+		  return 0.0;
 
 		}
 
+		//select the correct ontology normalization factor
+		GO::Ontology ontology = _goGraph->getTermOntology(goTermA);
+		double ontology_info;
+    switch (ontology) {
+
+      case GO::Ontology::BIOLOGICAL_PROCESS:
+        ontology_info = _icMap->getMinBP();
+        break;
+
+      case GO::Ontology::MOLECULAR_FUNCTION:
+        ontology_info = _icMap->getMinMF();
+        break;
+
+      case GO::Ontology::CELLULAR_COMPONENT:
+        ontology_info = _icMap->getMinCC();
+        break;
+
+      default:
+      case GO::Ontology::ONTO_ERROR:
+        ontology_info = 0.0;
+        break;
+    }
+
+    if (ontology_info <= 0.0) {
+
+      return 0.0;
+
+    }
+
+    double maxIC = -1.0 * std::log(ontology_info);
 		return resnik / maxIC;
+
 	}
 
 private:
 
-	std::shared_ptr<const GoGraph> _goGraph;
+
+  std::shared_ptr<const GoGraph> _goGraph;
 	std::shared_ptr<const TermInformationContentMap> _icMap;
 
 };

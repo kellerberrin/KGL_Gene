@@ -30,7 +30,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	(see Lord et al.)
 
 */
-class JiangConrathSimilarity: public TermSimilarityInterface{
+class JiangConrathSimilarity: public TermSimilarityInterface {
 
 public:
 	

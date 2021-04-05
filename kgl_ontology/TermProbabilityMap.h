@@ -139,7 +139,7 @@ public:
 		//std::cout << root << std::endl;
 		//std::cout << graph->getTermStringIdByIndex(root) << std::endl;
 
-		//a variable for the cummulative annotaions of the graph
+		//a variable for the cumulative annotations of the graph
 		std::vector<std::size_t> annotationCounts(graph->getNumVertices(),0);
 
 		//create the visitor object
@@ -265,7 +265,7 @@ public:
 		A value to return if the term is not found (does not exist in the map).
 		Returns probability 1 or certanty. This may not be the ideal behavior.
 	*/
-  [[nodiscard]] double badIdValue() const { return 1.0; }
+  [[nodiscard]] virtual double badIdValue() const { return BAD_PROB_VALUE_; }
 
 	//! Overloaded [] bracket operator to mimic Map
 	/*!
@@ -339,8 +339,14 @@ public:
   [[nodiscard]] double getMICAinfo(const OntologySetType<std::string> &ancestorsA,
                                    const OntologySetType<std::string> &ancestorsB) const {
 
+    if(ancestorsA.empty() or ancestorsB.empty()) {
+
+      return 0.0;
+
+    }
+
     // Choose the smaller and larger set for maximum efficiency
-    if(ancestorsA.size() < ancestorsB.size()){
+    if(ancestorsA.size() < ancestorsB.size()) {
 
       return getEfficientMICA(ancestorsA, ancestorsB);
 
@@ -353,61 +359,15 @@ public:
   }
 
 
-
-
-
 protected:
 
 	[[nodiscard]] std::vector<double>& probabilities() { return _probabilities; }
-  [[nodiscard]] const OntologyMapType<std::string,std::size_t>& nameToIndex() const { return _nameToIndex; }
-
-  [[nodiscard]] OntologyMapType<size_t, std::string> indexToName() const {
-
-    OntologyMapType<size_t, std::string> index_map;
-    for (auto const& [name, index] : nameToIndex()) {
-
-      index_map.try_emplace(index, name);
-
-    }
-
-    return index_map;
-
-  }
-
-
-  bool checkIntegrity() const {
-
-    if (_probabilities.size() != nameToIndex().size()) {
-
-      return false;
-
-    }
-
-    OntologyMapType<size_t, std::string> index_map;
-    for (auto const& [name, index] : nameToIndex()) {
-
-      auto [iter, result] = index_map.try_emplace(index, name);
-      if (not result) {
-
-        return false;
-
-      }
-
-    }
-
-    if (index_map.size() != nameToIndex().size()) {
-
-      return false;
-
-    }
-
-    return true;
-
-  }
-
 
 private:
-	//! A private map that returns the index of a term.
+
+  const static constexpr double BAD_PROB_VALUE_{1.0};
+
+  //! A private map that returns the index of a term.
 	/*!
 		This map takes string term ids and returns the index for annotation count access.
 	*/
@@ -480,10 +440,11 @@ private:
     for(auto const& term : smaller_set) {
 
       if (larger_set.find(term) != larger_set.end()) {
-        //if new max, update
-        if (getValue(term) > max) {
 
-          max = getValue(term);
+        double term_value = getValue(term);
+        if (term_value > max) {
+
+          max = term_value;
 
         }
 

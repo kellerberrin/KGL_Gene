@@ -532,7 +532,16 @@ public:
 
 	}
 
-  //! A method for calculating the extended term set. The set of all terms in the induced subgraph of the ontology
+
+  [[nodiscard]] OntologySetType<std::string> getSelfAncestorTerms(const std::string &term) const {
+
+    OntologySetType<std::string> self_ancestor_set = getAncestorTerms(term);
+    self_ancestor_set.insert(term);
+    return self_ancestor_set;
+
+  }
+
+    //! A method for calculating the extended term set. The set of all terms in the induced subgraph of the ontology
   /*!
     This method returns the extended term set of a set of terms. Basically the set of terms and all their ancestors.
   */
