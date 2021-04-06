@@ -60,7 +60,9 @@ public:
 			matrix.push_back(std::vector<double>());
 
 			for (std::size_t j = 0; j < nTerms; ++j){
+
 				matrix[i].push_back(0.0);
+
 			}
 
 		}

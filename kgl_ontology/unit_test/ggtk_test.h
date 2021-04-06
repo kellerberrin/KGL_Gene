@@ -26,12 +26,15 @@ public:
   [[nodiscard]] static std::string gafFileName() { return std::string(ANNOTATION_DIRECTORY_) + std::string(HUMAN_GAF_ANNOTATION_); }
   [[nodiscard]] static std::string geneFileName() { return std::string(ANNOTATION_DIRECTORY_) + std::string(GENE_ASSOCIATION_); }
   [[nodiscard]] static std::string entrezFileName() { return std::string(ANNOTATION_DIRECTORY_) + std::string(HUMAN_ENTREZ_ANNOTATION_); }
+  // Matrix File Name
+  [[nodiscard]] static std::string matrixFileName() { return std::string(MATRIX_DIRECTORY_) + std::string(MATRIX_FILE_); }
 
 private:
 
   // Modify these directory constants to change the relative (or absolute) location of the data files.
   static const constexpr char* GRAPH_DIRECTORY_ = "Additional/ggtk/example_graphs/";
   static const constexpr char* ANNOTATION_DIRECTORY_ = "Additional/ggtk/example_annotations/";
+  static const constexpr char* MATRIX_DIRECTORY_ = "Additional/ggtk/python/tests/matrix_files/";
 
 
   static const constexpr char* GO_OBO_ = "go-basic.obo";
@@ -40,6 +43,8 @@ private:
   static const constexpr char* HUMAN_GAF_ANNOTATION_ = "goa_human.gaf";
   static const constexpr char* GENE_ASSOCIATION_ = "gene_association.mgi";
   static const constexpr char* HUMAN_ENTREZ_ANNOTATION_ = "human_gene2go";
+
+  static const constexpr char* MATRIX_FILE_ = "test_bp_mat.txt";
 
 };
 

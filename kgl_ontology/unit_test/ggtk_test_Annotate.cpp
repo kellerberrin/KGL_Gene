@@ -7,13 +7,13 @@
 #include <boost/test/unit_test.hpp>
 
 // This object is re-created for each test case; store the graph in a static pointer so that it is only created once.
-class TestAnnotate
+class TestDepthMap
 {
 
 public:
 
-  TestAnnotate() = default;
-  ~TestAnnotate() = default;
+  TestDepthMap() = default;
+  ~TestDepthMap() = default;
 
   [[nodiscard]] static const AnnotationData& annotation() {
 
@@ -68,7 +68,7 @@ private:
 };
 
 
-BOOST_FIXTURE_TEST_SUITE(TestAnnotateSuite, TestAnnotate)
+BOOST_FIXTURE_TEST_SUITE(TestAnnotateSuite, TestDepthMap)
 
 
 ///////////////////////////////////////////////
