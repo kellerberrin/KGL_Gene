@@ -24,6 +24,7 @@ struct AllPairsAvgSetValues {
 
 using TestSimilarityClass = TestSetTermSimilarity<LinSimilarity, AllPairsAverageSetSimilarity, AllPairsAvgSetValues>;
 
+
 BOOST_FIXTURE_TEST_SUITE(TestAllPairsAvgSetSuite, TestSimilarityClass)
 
 #include "ggtk_test_setsimilarity.h"

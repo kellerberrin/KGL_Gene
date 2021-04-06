@@ -56,10 +56,8 @@ public:
 		}
 
 		//Z&L: CommonAnSet <- GetCommonAnSet(t1,t2,AncestorSet)
-    OntologySetType<std::string> ancestorsC1 = _goGraph->getAncestorTerms(termC1);
-		ancestorsC1.insert(termC1);
-    OntologySetType<std::string> ancestorsC2 = _goGraph->getAncestorTerms(termC2);
-		ancestorsC2.insert(termC2);
+    OntologySetType<std::string> ancestorsC1 = _goGraph->getSelfAncestorTerms(termC1);
+    OntologySetType<std::string> ancestorsC2 = _goGraph->getSelfAncestorTerms(termC2);
     OntologySetType<std::string> commonAncestors = SetUtilities::set_intersection(ancestorsC1,ancestorsC2);
 		//std::cout << commonAncestors.size() << std::endl;
 
@@ -184,27 +182,44 @@ public:
 	/*!
 		This method provides the absolute max information content within a corpus for normalization purposes.
 	*/
-	[[nodiscard]] double maxInformationContent(const std::string &term) const override {
+  [[nodiscard]] double maxInformationContent(const std::string &term) const override {
 
-		double maxIC{0.0};
-		//select the correct ontology normalization factor
-		GO::Ontology ontoType = _goGraph->getTermOntology(term);
-		if(ontoType == GO::Ontology::BIOLOGICAL_PROCESS){
 
-			maxIC = -std::log(_icMap->getMinBP());
+    //select the correct ontology normalization factor
+    GO::Ontology ontology = _goGraph->getTermOntology(term);
+    double maxIC;
 
-		}else if(ontoType == GO::Ontology::MOLECULAR_FUNCTION){
+    switch(ontology) {
 
-			maxIC = -std::log(_icMap->getMinMF());
+      case GO::Ontology::BIOLOGICAL_PROCESS:
+        maxIC = _icMap->getMinBP();
+        break;
 
-		}else{
+      case GO::Ontology::MOLECULAR_FUNCTION:
+        maxIC = _icMap->getMinMF();
+        break;
 
-			maxIC = -std::log(_icMap->getMinCC());
+      case GO::Ontology::CELLULAR_COMPONENT:
+        maxIC = _icMap->getMinCC();
+        break;
 
-		}
+      default:
+      case GO::Ontology::ONTO_ERROR:
+        maxIC = 0.0;
+        break;
 
-		return maxIC;
-	}
+    }
+
+    if (maxIC <= 0.0) {
+
+      return 0.0;
+
+    }
+
+    return -1.0 * std::log(maxIC);
+
+  }
+
 
 	//! An interface method for determining if a term can be found
 	/*!
@@ -224,46 +239,8 @@ public:
 
 private:
 
-
-	//breadth first search to calculate the visited edges
-	class EdgeSetVisitor:public boost::default_bfs_visitor{
-
-	public:
-		EdgeSetVisitor( OntologySetType<std::size_t>& inSet,
-                    const GoGraph::EdgeIndexMap& inMap,
-                    OntologyMapType<std::string, OntologySetType<std::size_t> >& termToEdges)
-                    : edgeSet(inSet),eMap(inMap),termEdgesMap(termToEdges){}
-
-
-		template < typename Edge, typename Graph >
-		void examine_edge(Edge e, const Graph & g)
-		{
-			//add the edge to the set of visited edges
-			edgeSet.insert(eMap[e]);
-
-			//get the vertex of the target
-			typename Graph::vertex_descriptor v = boost::target(e,g);
-			std::string term = g[v].termId;
-			
-			//create a set for the term if none exists
-			if(termEdgesMap.find(term) == termEdgesMap.end()){
-				termEdgesMap[term] = OntologySetType<std::size_t>();
-			}
-			//add the edge to the map
-			termEdgesMap[term].insert(eMap[e]);
-
-
-		}
-
-		OntologySetType<std::size_t>& edgeSet;
-		const GoGraph::EdgeIndexMap& eMap;
-		OntologyMapType<std::string, OntologySetType<std::size_t> >& termEdgesMap;
-
-	};
-
 	std::shared_ptr<const GoGraph> _goGraph;
 	std::shared_ptr<const TermInformationContentMap> _icMap;
-
 
 };
 #endif

@@ -17,12 +17,12 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/accumulators/statistics/max.hpp>
 
 /*! \class MICASharedInformation
-	\brief A class to calculate shared infromation as the most informative common ancestor (MICA)
+	\brief A class to calculate shared information as the most informative common ancestor (MICA)
 
-	This class calculates shared infromation using the most informative common ancestor (MICA).
+	This class calculates shared information using the most informative common ancestor (MICA).
 	 The MICA is a term that is also known as the minimum subsumer.
 
-	 This shared information method forms the basis of 3 inforamtion content measures
+	 This shared information method forms the basis of 3 information content measures
 	 put forward by Lord el al.
 
     P. W. Lord, R. D. Stevens, A. Brass, and C. A. Goble, 
@@ -62,10 +62,8 @@ public:
 
 		Accumulators::MaxAccumulator myMax;
 
-		OntologySetType<std::string> ancestorsA = _goGraph->getAncestorTerms(termA);
-		ancestorsA.insert(termA);
-    OntologySetType<std::string> ancestorsB = _goGraph->getAncestorTerms(termB);
-		ancestorsB.insert(termB);
+		OntologySetType<std::string> ancestorsA = _goGraph->getSelfAncestorTerms(termA);
+    OntologySetType<std::string> ancestorsB = _goGraph->getSelfAncestorTerms(termB);
 
     OntologySetType<std::string> sharedAncestors = SetUtilities::set_intersection( ancestorsA, ancestorsB);
 
@@ -100,28 +98,43 @@ public:
 	/*!
 		This method provides the absolute max information content within a corpus for normalization purposes.
 	*/
-	[[nodiscard]] double maxInformationContent(const std::string &term) const override {
+  [[nodiscard]] double maxInformationContent(const std::string &term) const override {
 
-		double maxIC{0.0};
-		//select the correct ontology normalization factor
-		GO::Ontology ontoType = _goGraph->getTermOntology(term);
-		if(ontoType == GO::Ontology::BIOLOGICAL_PROCESS){
 
-			maxIC = -std::log(_icMap->getMinBP());
+    //select the correct ontology normalization factor
+    GO::Ontology ontology = _goGraph->getTermOntology(term);
+    double maxIC;
 
-		}else if(ontoType == GO::Ontology::MOLECULAR_FUNCTION){
+    switch(ontology) {
 
-			maxIC = -std::log(_icMap->getMinMF());
+      case GO::Ontology::BIOLOGICAL_PROCESS:
+        maxIC = _icMap->getMinBP();
+        break;
 
-		}else{
+      case GO::Ontology::MOLECULAR_FUNCTION:
+        maxIC = _icMap->getMinMF();
+        break;
 
-			maxIC = -std::log(_icMap->getMinCC());
+      case GO::Ontology::CELLULAR_COMPONENT:
+        maxIC = _icMap->getMinCC();
+        break;
 
-		}
+      default:
+      case GO::Ontology::ONTO_ERROR:
+        maxIC = 0.0;
+        break;
 
-		return maxIC;
+    }
 
-	}
+    if (maxIC <= 0.0) {
+
+      return 0.0;
+
+    }
+
+    return -1.0 * std::log(maxIC);
+
+  }
 
 	//! An interface method for determining if a term can be found
 	/*!

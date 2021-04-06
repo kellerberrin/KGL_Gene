@@ -25,7 +25,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	 is used in graph and edge based similarity methods to calculate a node's depth
 */
 using TermDepthType = size_t;
-class TermDepthMap{
+class TermDepthMap {
 public:
 	//! A parameterized constructor
 	/*!

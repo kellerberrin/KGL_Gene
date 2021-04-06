@@ -24,6 +24,7 @@ struct AllPairsMaxSetValues {
 
 using TestSimilarityClass = TestSetTermSimilarity<ResnikSimilarity, AllPairsMaxSetSimilarity, AllPairsMaxSetValues>;
 
+
 BOOST_FIXTURE_TEST_SUITE(TestAllPairsMaxSetSuite, TestSimilarityClass)
 
 #include "ggtk_test_setsimilarity.h"

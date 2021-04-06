@@ -20,15 +20,15 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/graph/breadth_first_search.hpp>
 
 /*! \class CoutoGraSMSharedInformation
-	\brief A class to calculate shared infromation accross disjoint common ancetors using the exact algorithm as written in the paper.
+	\brief A class to calculate shared information across disjoint common ancestors using the exact algorithm as written in the paper.
 
-	This class calculates shared infromation accross disjoint common ancetors.
+	This class calculates shared information across disjoint common ancsetors.
 
     F. M. Couto, M. J. Silva, and P. M. Coutinho, "Measuring semantic similarity
 	between Gene Ontology terms," Data & Knowledge Engineering, vol. 61, 
 	pp. 137-152, Apr 2007.
 
-	Couto proposing calculating this value a subsituite for the IC of the MICA in calculating
+	Couto proposed calculating this value as a subsitute for the IC of the MICA in calculating
 	 Resnik, Lin, and Jiang-Conrath
 
 */
@@ -40,7 +40,7 @@ public:
 	/*!
 		Creates the CoutoGraSMGreaterOrEqual class
 	*/
-	CoutoGraSMSharedInformation(std::shared_ptr<const GoGraph> goGraph, std::shared_ptr<const TermInformationContentMap> &icMap)
+	CoutoGraSMSharedInformation(std::shared_ptr<const GoGraph> goGraph, std::shared_ptr<const TermInformationContentMap> icMap)
 	: _goGraph(std::move(goGraph)), _icMap(std::move(icMap)) {}
   ~CoutoGraSMSharedInformation() override = default;
 
@@ -50,17 +50,15 @@ public:
 	*/
   [[nodiscard]] OntologySetType<std::string> getCommonDisjointAncestors(const std::string &termC1, const std::string &termC2) const {
 
-		OntologySetType<std::string> ancestorsC1 = _goGraph->getAncestorTerms(termC1);
-		ancestorsC1.insert(termC1);
+		OntologySetType<std::string> ancestorsC1 = _goGraph->getSelfAncestorTerms(termC1);
 		//std::cout << ancestorsC1.size() << std::endl;
-    OntologySetType<std::string> ancestorsC2 = _goGraph->getAncestorTerms(termC2);
-		ancestorsC2.insert(termC2);
+    OntologySetType<std::string> ancestorsC2 = _goGraph->getSelfAncestorTerms(termC2);
 		//std::cout << ancestorsC2.size() << std::endl;
 		
 		//Couto: CommonDisjAnc = {}
 		OntologySetType<std::string> cda;
 
-		if(termC1.compare(termC2) == 0){
+		if (termC1 == termC2){
 
 			cda.insert(termC1);
 
@@ -237,26 +235,44 @@ public:
 	/*!
 		This method provides the absolute max information content within a corpus for normalization purposes.
 	*/
-	[[nodiscard]] double maxInformationContent(const std::string &term) const override {
+  [[nodiscard]] double maxInformationContent(const std::string &term) const override {
 
-		double maxIC;
-		//select the correct ontology normalization factor
-		GO::Ontology ontoType = _goGraph->getTermOntology(term);
-		if(ontoType == GO::Ontology::BIOLOGICAL_PROCESS){
 
-			maxIC = -std::log(_icMap->getMinBP());
+    //select the correct ontology normalization factor
+    GO::Ontology ontology = _goGraph->getTermOntology(term);
+    double maxIC;
 
-		}else if(ontoType == GO::Ontology::MOLECULAR_FUNCTION){
+    switch(ontology) {
 
-			maxIC = -std::log(_icMap->getMinMF());
-		}else{
+      case GO::Ontology::BIOLOGICAL_PROCESS:
+        maxIC = _icMap->getMinBP();
+        break;
 
-			maxIC = -std::log(_icMap->getMinCC());
+      case GO::Ontology::MOLECULAR_FUNCTION:
+        maxIC = _icMap->getMinMF();
+        break;
 
-		}
+      case GO::Ontology::CELLULAR_COMPONENT:
+        maxIC = _icMap->getMinCC();
+        break;
 
-		return maxIC;
-	}
+      default:
+      case GO::Ontology::ONTO_ERROR:
+        maxIC = 0.0;
+        break;
+
+    }
+
+    if (maxIC <= 0.0) {
+
+      return 0.0;
+
+    }
+
+    return -1.0 * std::log(maxIC);
+
+  }
+
 
 	//! An interface method for determining if a term can be found
 	/*!

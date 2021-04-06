@@ -26,7 +26,7 @@ class PesquitaSimGICSetSimilarity : public TermSetSimilarityInterface{
 public:
 	//! Constructor
 	/*!
-	Creates the PesquitaSimGICSetSimilarity class assigning the GoGraph private memeber.
+	Creates the PesquitaSimGICSetSimilarity class assigning the GoGraph private member.
 	*/
 	PesquitaSimGICSetSimilarity(std::shared_ptr<const GoGraph> graph, std::shared_ptr<const TermInformationContentMap> icMap)
 	: _graph(std::move(graph)), _icMap(std::move(icMap)) {}
@@ -36,7 +36,7 @@ public:
 	/*!
 	This method returns the best match average similarity.
 	*/
-	[[nodiscard]] double calculateSimilarity(const boost::unordered_set<std::string> &termsA, const boost::unordered_set<std::string> &termsB) const override {
+	[[nodiscard]] double calculateSimilarity(const OntologySetType<std::string> &termsA, const OntologySetType<std::string> &termsB) const override {
 
 		// Get the induced set of terms for each set
 		OntologySetType<std::string> inducedTermSetA = _graph->getExtendedTermSet(termsA);
@@ -49,7 +49,7 @@ public:
     double union_sum{0.0};
 		for (auto const& term : union_set) {
 
-			union_sum += _icMap[term];
+			union_sum += _icMap->getValue(term);
 
 		}
 
@@ -57,7 +57,7 @@ public:
     double intersection_sum{0.0};
 		for (auto const& term : intersection_set) {
 
-			intersection_sum += _icMap[term];
+			intersection_sum += _icMap->getValue(term);
 
 		}
 

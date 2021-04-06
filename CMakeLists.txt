@@ -305,12 +305,12 @@ set(ONTOLOGY_SOURCE_FILES
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES
         kgl_ontology/unit_test/ggtk_test.cpp
-        kgl_ontology/unit_test/ggtk_test_go_parsers.cpp
-        kgl_ontology/unit_test/ggtk_test_go_graph.cpp
+        kgl_ontology/unit_test/ggtk_test_GoParsers.cpp
+        kgl_ontology/unit_test/ggtk_test_GoGraph.cpp
         kgl_ontology/unit_test/ggtk_test.h
-        kgl_ontology/unit_test/ggtk_test_annotate_parsers.cpp
-        kgl_ontology/unit_test/ggtk_test_annotate.cpp
-        kgl_ontology/unit_test/ggtk_test_enrichment_tools.cpp
+        kgl_ontology/unit_test/ggtk_test_AnnotateParsers.cpp
+        kgl_ontology/unit_test/ggtk_test_Annotate.cpp
+        kgl_ontology/unit_test/ggtk_test_EnrichmentTools.cpp
         kgl_ontology/unit_test/ggtk_test_JiangConrathSimilarity.cpp
         kgl_ontology/unit_test/ggtk_test_LinSimilarity.cpp
         kgl_ontology/unit_test/ggtk_test_ModularJiangConrath.cpp
@@ -320,7 +320,17 @@ set(ONTOLOGY_UNIT_TEST_FILES
         kgl_ontology/unit_test/ggtk_test_ModularResnik.cpp
         kgl_ontology/unit_test/ggtk_test_ResnikSimilarity.cpp
         kgl_ontology/unit_test/ggtk_test_PekarStaabSimilarity.cpp
-        kgl_ontology/unit_test/ggtk_test_RelevanceSimilarity.h kgl_ontology/unit_test/ggtk_test_RelevanceSimilarity.cpp kgl_ontology/unit_test/ggtk_test_AllPairsMaxSet.cpp kgl_ontology/unit_test/ggtk_test_AllPairAvgSet.cpp kgl_ontology/unit_test/ggtk_test_setsimilarity.h)
+        kgl_ontology/unit_test/ggtk_test_RelevanceSimilarity.h
+        kgl_ontology/unit_test/ggtk_test_RelevanceSimilarity.cpp
+        kgl_ontology/unit_test/ggtk_test_AllPairsMaxSet.cpp
+        kgl_ontology/unit_test/ggtk_test_AllPairAvgSet.cpp
+        kgl_ontology/unit_test/ggtk_test_setsimilarity.h
+        kgl_ontology/unit_test/ggtk_test_BestPairAvgSet.cpp
+        kgl_ontology/unit_test/ggtk_test_JaccardSet.cpp
+        kgl_ontology/unit_test/ggtk_test_SimDICSet.cpp
+        kgl_ontology/unit_test/ggtk_test_SimGICSet.cpp
+        kgl_ontology/unit_test/ggtk_test_SimUISet.cpp
+        kgl_ontology/unit_test/ggtk_test_SimUICSet.cpp kgl_ontology/unit_test/ggtk_test_SharedInfoAdjCouto.cpp kgl_ontology/unit_test/ggtk_test_sharedinfo.h kgl_ontology/unit_test/ggtk_test_SharedAncestorMean.cpp kgl_ontology/unit_test/ggtk_test_SharedCouto.cpp kgl_ontology/unit_test/ggtk_test_SharedExInherit.cpp kgl_ontology/unit_test/ggtk_test_SharedFrontier.cpp kgl_ontology/unit_test/ggtk_test_SharedMICA.cpp)
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES

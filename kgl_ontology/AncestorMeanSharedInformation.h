@@ -55,10 +55,8 @@ public:
 
 		Accumulators::MeanAccumulator meanIC;
 
-    OntologySetType<std::string> ancestorsA = _goGraph->getAncestorTerms(termA);
-		ancestorsA.insert(termA);
-    OntologySetType<std::string> ancestorsB = _goGraph->getAncestorTerms(termB);
-		ancestorsB.insert(termB);
+    OntologySetType<std::string> ancestorsA = _goGraph->getSelfAncestorTerms(termA);
+    OntologySetType<std::string> ancestorsB = _goGraph->getSelfAncestorTerms(termB);
 
 		OntologySetType<std::string> sharedAncestors = SetUtilities::set_intersection(ancestorsA,ancestorsB);
 
@@ -95,24 +93,39 @@ public:
 	*/
 	[[nodiscard]] double maxInformationContent(const std::string &term) const override {
 
-		double maxIC;
 
 		//select the correct ontology normalization factor
-		GO::Ontology ontoType = _goGraph->getTermOntology(term);
-		if(ontoType == GO::Ontology::BIOLOGICAL_PROCESS){
+		GO::Ontology ontology = _goGraph->getTermOntology(term);
+    double maxIC;
 
-			maxIC = -std::log(_icMap->getMinBP());
+    switch(ontology) {
 
-		}else if(ontoType == GO::Ontology::MOLECULAR_FUNCTION){
+      case GO::Ontology::BIOLOGICAL_PROCESS:
+        maxIC = _icMap->getMinBP();
+        break;
 
-			maxIC = -std::log(_icMap->getMinMF());
+      case GO::Ontology::MOLECULAR_FUNCTION:
+        maxIC = _icMap->getMinMF();
+        break;
 
-		}else{
+      case GO::Ontology::CELLULAR_COMPONENT:
+        maxIC = _icMap->getMinCC();
+        break;
 
-			maxIC = -std::log(_icMap->getMinCC());
-		}
+      default:
+      case GO::Ontology::ONTO_ERROR:
+        maxIC = 0.0;
+        break;
 
-		return maxIC;
+    }
+
+    if (maxIC <= 0.0) {
+
+      return 0.0;
+
+    }
+
+    return -1.0 * std::log(maxIC);
 
 	}
 

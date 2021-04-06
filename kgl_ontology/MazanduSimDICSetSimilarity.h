@@ -72,7 +72,7 @@ private:
 	/*!
 		An information content map.
 	*/
-	std::shared_Ptr<const TermInformationContentMap> _icMap;
+	std::shared_ptr<const TermInformationContentMap> _icMap;
 
   //! A method for calculating the sum of information content of the terms in a set.
   /*!

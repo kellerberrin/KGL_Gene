@@ -55,11 +55,9 @@ public:
 		}
 
 		//std::cout << "Linear GraSm " << std::endl;
-		OntologySetType<std::string> ancestorsC1 = _goGraph->getAncestorTerms(termC1);
-		ancestorsC1.insert(termC1);
+		OntologySetType<std::string> ancestorsC1 = _goGraph->getSelfAncestorTerms(termC1);
 		//std::cout << ancestorsC1.size() << std::endl;
-		OntologySetType<std::string> ancestorsC2 = _goGraph->getAncestorTerms(termC2);
-		ancestorsC2.insert(termC2);
+		OntologySetType<std::string> ancestorsC2 = _goGraph->getSelfAncestorTerms(termC2);
 		//std::cout << ancestorsC2.size() << std::endl;
 
 
@@ -186,29 +184,45 @@ public:
 	/*!
 		This method provides the absolute max information content within a corpus for normalization purposes.
 	*/
-	[[nodiscard]] double maxInformationContent(const std::string &term) const override {
+  [[nodiscard]] double maxInformationContent(const std::string &term) const override {
 
-		double maxIC;
-		//select the correct ontology normalization factor
-		GO::Ontology ontoType = _goGraph->getTermOntology(term);
-		if(ontoType == GO::Ontology::BIOLOGICAL_PROCESS){
 
-			maxIC = -std::log(_icMap->getMinBP());
+    //select the correct ontology normalization factor
+    GO::Ontology ontology = _goGraph->getTermOntology(term);
+    double maxIC;
 
-		}else if(ontoType == GO::Ontology::MOLECULAR_FUNCTION){
+    switch(ontology) {
 
-			maxIC = -std::log(_icMap->getMinMF());
+      case GO::Ontology::BIOLOGICAL_PROCESS:
+        maxIC = _icMap->getMinBP();
+        break;
 
-		}else{
+      case GO::Ontology::MOLECULAR_FUNCTION:
+        maxIC = _icMap->getMinMF();
+        break;
 
-			maxIC = -std::log(_icMap->getMinCC());
+      case GO::Ontology::CELLULAR_COMPONENT:
+        maxIC = _icMap->getMinCC();
+        break;
 
-		}
+      default:
+      case GO::Ontology::ONTO_ERROR:
+        maxIC = 0.0;
+        break;
 
-		return maxIC;
-	}
+    }
 
-	//! An interface method for determining if a term can be found
+    if (maxIC <= 0.0) {
+
+      return 0.0;
+
+    }
+
+    return -1.0 * std::log(maxIC);
+
+  }
+
+  //! An interface method for determining if a term can be found
 	/*!
 		Determines if the term can be found in the current map.
 	*/

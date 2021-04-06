@@ -39,6 +39,8 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #include <JaccardSetSimilarity.h>
 #include <JiangConrathSimilarity.h>
 #include <LinSimilarity.h>
+#include <MazanduSimDICSetSimilarity.h>
+#include <MazanduSimUICSetSimilarity.h>
 #include <MgiAnnotationParser.h>
 #include <MICASharedInformation.h>
 #include <ModularJiangConrath.h>
@@ -46,6 +48,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #include <ModularResnik.h>
 #include <NCList.h>
 #include <PekarStaabSimilarity.h>
+#include <PesquitaSimGICSetSimilarity.h>
 #include <PrecomputedMatrixTermSimilarity.h>
 #include <RapidXmlGoParser.h>
 #include <RelationshipPolicyInterface.h>
