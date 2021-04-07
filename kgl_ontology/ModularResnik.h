@@ -33,8 +33,8 @@ public:
 	/*!
 		Creates the default(empty) StandardRelationshipPolicy
 	*/
-	ModularResnik(std::shared_ptr<const SharedInformationInterface> sharedInformationCalculator)
-	: _siCalculator(std::move(sharedInformationCalculator)) {}
+	ModularResnik(const std::shared_ptr<const SharedInformationInterface>& sharedInformationCalculator)
+	: _siCalculator(sharedInformationCalculator) {}
   ~ModularResnik() override = default;
 
 	//! A method for calculating term-to-term similarity for GO terms using Resnik similarity

@@ -16,7 +16,11 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	SetUtilities provides useful operations on boost::unordered_set. 
 	set_intersection is optimized to traverse the smaller set and test exisitence in the larger set.
 */
-namespace SetUtilities{
+class SetUtilities{
+
+public:
+  // Ony static definitions.
+  SetUtilities() = delete;
 
 	//!set UTILITY function to determine if a set contains an element
 	template<typename Type>
@@ -103,5 +107,6 @@ namespace SetUtilities{
 
 	}
 
-}
+};
+
 #endif

@@ -32,8 +32,8 @@ public:
 	/*!
 		Creates the CoutoGraSMSharedInformation class
 	*/
-	FrontierSharedInformation(std::shared_ptr<const GoGraph> goGraph, std::shared_ptr<const TermInformationContentMap> icMap)
-	: _goGraph(std::move(goGraph)), _icMap(std::move(icMap)) {}
+	FrontierSharedInformation(const std::shared_ptr<const GoGraph>& goGraph, const std::shared_ptr<const TermInformationContentMap>& icMap)
+	: _goGraph(goGraph), _icMap(icMap) {}
   ~FrontierSharedInformation() override = default;
 
 

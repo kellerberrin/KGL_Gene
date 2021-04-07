@@ -33,8 +33,8 @@ public:
 		A simple parameterized constructor.
 		This class take an instance of the GO Graph.
 	*/
-	TermSimilarityWriter(std::shared_ptr<const GoGraph> goGraph, std::shared_ptr<const AnnotationData> annoData)
-	: _goGraph(std::move(goGraph)), _annoData(std::move(annoData)) {}
+	TermSimilarityWriter(const std::shared_ptr<const GoGraph>& goGraph, const std::shared_ptr<const AnnotationData>& annoData)
+	: _goGraph(goGraph), _annoData(annoData) {}
   ~TermSimilarityWriter() = default;
 
 	//! A method to write a term similarity matrix
@@ -45,10 +45,11 @@ public:
 		O(Term Pair Calculation Cost) is usually near constant time,
 		 but some method will be extremely slow and require other methods
 	*/
-	void writeSimilarityMatrix(const std::shared_ptr<const TermSimilarityInterface>& termSim, const std::string& fileName, long ontology_code) const {
+	void writeSimilarityMatrix(const std::shared_ptr<const TermSimilarityInterface>& termSim,
+                             const std::string& fileName,
+                             GO::Ontology ontology) const {
 
-		auto ontology = static_cast<GO::Ontology>(ontology_code);
-		std::vector<std::string> ontologyTerms = _annoData->getOntologyTerms(_goGraph, ontology);
+		std::vector<std::string> ontologyTerms = _annoData->getOntologyTerms(*_goGraph, ontology);
 
 		// Initialze a matrix
 		std::size_t nTerms = ontologyTerms.size();
@@ -57,7 +58,7 @@ public:
 
 		for (std::size_t i = 0; i < nTerms; ++i){
 
-			matrix.push_back(std::vector<double>());
+			matrix.emplace_back(std::vector<double>());
 
 			for (std::size_t j = 0; j < nTerms; ++j){
 

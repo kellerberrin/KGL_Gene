@@ -30,11 +30,11 @@ class dfs_cumulative_annotations_visitor: public boost::default_dfs_visitor {
 
   public:
   //! A parameterized constructor passing parameters to the boost default_dfs_visitor
-  dfs_cumulative_annotations_visitor( std::shared_ptr<const GoGraph> inGraph,
-                                      std::shared_ptr<const AnnotationData> inData,
+  dfs_cumulative_annotations_visitor( const std::shared_ptr<const GoGraph>& inGraph,
+                                      const std::shared_ptr<const AnnotationData>& inData,
                                       std::vector<std::size_t>* annotations,
                                       OntologyMapType<std::string,std::size_t>* nameToIndex)
-    :goGraph(std::move(inGraph)), annoData(std::move(inData)), annoList(annotations), nameIndexMap(nameToIndex) {}
+    :goGraph(inGraph), annoData(inData), annoList(annotations), nameIndexMap(nameToIndex) {}
 
   //! The extended method of the default_dfs_visitor, finish_vertex
   /*!
@@ -121,7 +121,7 @@ public:
 	//! A parameterized constructor
 	/*!
 		This constructor takes pointers to GoGraph and AnnotationData objects.
-		  Only the parameterized construtor is allowed to ensure these objects are
+		  Only the parameterized constructor is allowed to ensure these objects are
 		  created with valid parameters.
 	*/
 	TermProbabilityMap(const std::shared_ptr<const GoGraph>& graph, const std::shared_ptr<const AnnotationData>& annoData) {

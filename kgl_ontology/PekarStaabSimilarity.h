@@ -37,8 +37,8 @@ public:
 	/*!
 		Creates the default(empty) StandardRelationshipPolicy
 	*/
-	PekarStaabSimilarity(std::shared_ptr<const GoGraph> goGraph, std::shared_ptr<const TermDepthMap> icMap)
-	:	_goGraph(std::move(goGraph)), _depthMap(std::move(icMap)) {}
+	PekarStaabSimilarity(const std::shared_ptr<const GoGraph>& goGraph, const std::shared_ptr<const TermDepthMap>& icMap)
+	:	_goGraph(goGraph), _depthMap(icMap) {}
   ~PekarStaabSimilarity() override = default;
 
 

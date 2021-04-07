@@ -29,7 +29,7 @@ public:
   // Class just defines static members.
   Accumulators() = delete;
 
-  // Convenience type alias.
+  // Convenience type alias to simplify typedefs.
   template <class... T> using AccumulatorType = boost::accumulators::accumulator_set<double, boost::accumulators::stats<T ...>>;
 	//typedefs
 	/*! MinAccumulator

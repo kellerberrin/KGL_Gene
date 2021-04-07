@@ -26,8 +26,10 @@ public:
   [[nodiscard]] static std::string gafFileName() { return std::string(ANNOTATION_DIRECTORY_) + std::string(HUMAN_GAF_ANNOTATION_); }
   [[nodiscard]] static std::string geneFileName() { return std::string(ANNOTATION_DIRECTORY_) + std::string(GENE_ASSOCIATION_); }
   [[nodiscard]] static std::string entrezFileName() { return std::string(ANNOTATION_DIRECTORY_) + std::string(HUMAN_ENTREZ_ANNOTATION_); }
-  // Matrix File Name
-  [[nodiscard]] static std::string matrixFileName() { return std::string(MATRIX_DIRECTORY_) + std::string(MATRIX_FILE_); }
+  // Matrix File Names for Different Ontologies.
+  [[nodiscard]] static std::string matrixFileNameBP() { return std::string(MATRIX_DIRECTORY_) + std::string(MATRIX_FILE_BP_); }
+  [[nodiscard]] static std::string matrixFileNameMF() { return std::string(MATRIX_DIRECTORY_) + std::string(MATRIX_FILE_MF_); }
+  [[nodiscard]] static std::string matrixFileNameCC() { return std::string(MATRIX_DIRECTORY_) + std::string(MATRIX_FILE_CC_); }
 
 private:
 
@@ -44,7 +46,9 @@ private:
   static const constexpr char* GENE_ASSOCIATION_ = "gene_association.mgi";
   static const constexpr char* HUMAN_ENTREZ_ANNOTATION_ = "human_gene2go";
 
-  static const constexpr char* MATRIX_FILE_ = "test_bp_mat.txt";
+  static const constexpr char* MATRIX_FILE_BP_ = "test_bp_mat.txt";
+  static const constexpr char* MATRIX_FILE_MF_ = "test_mf_mat.txt";
+  static const constexpr char* MATRIX_FILE_CC_ = "test_cc_mat.txt";
 
 };
 

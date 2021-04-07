@@ -36,8 +36,8 @@ public:
 	/*!
 		Creates the default(empty) StandardRelationshipPolicy
 	*/
-	RelevanceSimilarity(std::shared_ptr<const GoGraph> goGraph, std::shared_ptr<const TermInformationContentMap> icMap)
-	:	_goGraph(std::move(goGraph)), _icMap(std::move(icMap)) {}
+	RelevanceSimilarity(const std::shared_ptr<const GoGraph>& goGraph, const std::shared_ptr<const TermInformationContentMap>& icMap)
+	:	_goGraph(goGraph), _icMap(icMap) {}
   ~RelevanceSimilarity() override = default;
 
 	//! A method for calculating term-to-term similarity for GO terms using Relevance similarity

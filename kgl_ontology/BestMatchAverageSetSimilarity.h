@@ -28,7 +28,7 @@ public:
 	/*!
 		Creates the BestMatchAverageSetSimilarity class assigning the similarity measure private memeber.
 	*/
-	BestMatchAverageSetSimilarity(std::shared_ptr<const TermSimilarityInterface> simMeasure) : _similarity(std::move(simMeasure)) {}
+	BestMatchAverageSetSimilarity(const std::shared_ptr<const TermSimilarityInterface>& simMeasure) : _similarity(simMeasure) {}
   ~BestMatchAverageSetSimilarity() override = default;
 
 	//! A method for calculating term set to term set similarity for GO terms;

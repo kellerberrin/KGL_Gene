@@ -20,7 +20,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	 from term set (gene) similarity measure that use them.
 	 Term similarity is loaded from a matrix file.
 */
-class PrecomputedMatrixTermSimilarity: public TermSimilarityInterface{
+class PrecomputedMatrixTermSimilarity: public TermSimilarityInterface {
 
 public:
 	
@@ -35,8 +35,10 @@ public:
 	/*!
 		This method is used to test if a file can be used.
 	*/
-  [[nodiscard ]] bool isMatrixFileGood(const std::string &filename) { return isFileGood(filename); }
+  [[nodiscard ]] bool isMatrixFileGood(const std::string &filename) const { return isFileGood(filename); }
 
+  // termCount() == 0 is an error condition.
+  [[nodiscard]] size_t termCount() const { return _matrix.size(); }
 	//! A method for calculating term-to-term similarity for GO terms using a precomputed similarity matrix.
 	/*!
 		This method returns the term similarity as defined by the matrix.
@@ -62,7 +64,7 @@ public:
 	/*!
 		This method returns the similarity scaled between 0 and 1 [0,1] inclusive
 	*/
-	inline double calculateNormalizedTermSimilarity(std::string goTermA, std::string goTermB){
+  [[nodiscard]] double calculateNormalizedTermSimilarity(const std::string& goTermA, const std::string& goTermB) const override {
 
 		return calculateTermSimilarity(goTermA,goTermB);
 
@@ -113,6 +115,13 @@ private:
   void readSimilarityMatrix(const std::string& matrix_file) {
 
     std::ifstream in(matrix_file.c_str());
+
+    // Check the file stream.
+    if (not in.good()) {
+
+      return;
+
+    }
     //Tokenizer type
     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
     boost::char_separator<char> tab_sep("\t","",boost::keep_empty_tokens);
@@ -176,10 +185,10 @@ private:
     //std::cout << "terms " << _termToIndex.size() << std::endl;
   }
 
-  [[nodiscard ]] bool isFileGood(const std::string &filename){
+  [[nodiscard ]] bool isFileGood(const std::string &filename) const {
 
     std::ifstream in(filename.c_str());
-    if (!in.good()){
+    if (not in.good()){
 
       return false;
 

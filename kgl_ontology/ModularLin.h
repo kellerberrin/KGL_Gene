@@ -34,8 +34,8 @@ public:
 	/*!
 		Creates the LinSimilarity calculator with a particular shared information calculator
 	*/
-	ModularLin(std::shared_ptr<const SharedInformationInterface> sharedInformationCalculator)
-	:	_siCalculator(std::move(sharedInformationCalculator)) {}
+	ModularLin(const std::shared_ptr<const SharedInformationInterface>& sharedInformationCalculator)
+	:	_siCalculator(sharedInformationCalculator) {}
   ~ModularLin() override = default;
 
 	//! A method for calculating term-to-term similarity for GO terms using Lin similarity

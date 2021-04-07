@@ -25,7 +25,7 @@ public:
 	/*!
 		Creates the GentlemanUISimilarity class assigning the GoGraph private member.
 	*/
-	GentlemanSimUISetSimilarity(std::shared_ptr<const GoGraph> graph) : _graph(std::move(graph)) {}
+	GentlemanSimUISetSimilarity(const std::shared_ptr<const GoGraph>& graph) : _graph(graph) {}
 	~GentlemanSimUISetSimilarity() override = default;
 
 

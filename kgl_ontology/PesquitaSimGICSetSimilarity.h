@@ -28,8 +28,8 @@ public:
 	/*!
 	Creates the PesquitaSimGICSetSimilarity class assigning the GoGraph private member.
 	*/
-	PesquitaSimGICSetSimilarity(std::shared_ptr<const GoGraph> graph, std::shared_ptr<const TermInformationContentMap> icMap)
-	: _graph(std::move(graph)), _icMap(std::move(icMap)) {}
+	PesquitaSimGICSetSimilarity(const std::shared_ptr<const GoGraph>& graph, const std::shared_ptr<const TermInformationContentMap>& icMap)
+	: _graph(graph), _icMap(icMap) {}
   ~PesquitaSimGICSetSimilarity() override = default;
 
 	//! A method for calculating term set to term set similarity for GO terms;

@@ -30,8 +30,8 @@ public:
 	/*!
 	Creates the MazanduSimUICSetSimilarity class assigning the GoGraph private memeber.
 	*/
-	MazanduSimUICSetSimilarity(std::shared_ptr<const GoGraph> graph, std::shared_ptr<const TermInformationContentMap> icMap)
-	: _graph(std::move(graph)), _icMap(std::move(icMap)) {}
+	MazanduSimUICSetSimilarity(const std::shared_ptr<const GoGraph>& graph, const std::shared_ptr<const TermInformationContentMap>& icMap)
+	: _graph(graph), _icMap(icMap) {}
   ~MazanduSimUICSetSimilarity() override = default;
 
 

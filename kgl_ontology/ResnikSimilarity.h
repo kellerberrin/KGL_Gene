@@ -33,8 +33,8 @@ public:
 	/*!
 		Creates the default(empty) StandardRelationshipPolicy
 	*/
-	ResnikSimilarity(std::shared_ptr<const GoGraph> goGraph, std::shared_ptr<const TermInformationContentMap> icMap)
-	:	_goGraph(std::move(goGraph)), _icMap(std::move(icMap)) {}
+	ResnikSimilarity(const std::shared_ptr<const GoGraph>& goGraph, const std::shared_ptr<const TermInformationContentMap>& icMap)
+	:	_goGraph(goGraph), _icMap(icMap) {}
   ~ResnikSimilarity() override = default;
 
 	//! A method for calculating term-to-term similarity for GO terms using Resnik similarity

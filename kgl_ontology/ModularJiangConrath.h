@@ -37,8 +37,8 @@ public:
 	/*!
 		Creates the Jiang Conrath simialrity measure using a given shared information calculator
 	*/
-	ModularJiangConrath(std::shared_ptr<const SharedInformationInterface> sharedInformationCalculator)
-	: _siCalculator(std::move(sharedInformationCalculator)) {}
+	ModularJiangConrath(const std::shared_ptr<const SharedInformationInterface>& sharedInformationCalculator)
+	: _siCalculator(sharedInformationCalculator) {}
   ~ModularJiangConrath() override = default;
 
 	//! A method for calculating term-to-term similarity for GO terms using Lin similarity

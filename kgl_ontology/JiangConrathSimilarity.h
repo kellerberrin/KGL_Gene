@@ -38,8 +38,8 @@ public:
 	/*!
 		Creates the default(empty) StandardRelationshipPolicy
 	*/
-	JiangConrathSimilarity(std::shared_ptr<const GoGraph> goGraph, std::shared_ptr<const TermInformationContentMap> icMap)
-	: _goGraph(std::move(goGraph)), _icMap(std::move(icMap)) {}
+	JiangConrathSimilarity(const std::shared_ptr<const GoGraph>& goGraph, const std::shared_ptr<const TermInformationContentMap>& icMap)
+	: _goGraph(goGraph), _icMap(icMap) {}
   ~JiangConrathSimilarity() override = default;
 	//! A method for calculating term-to-term similarity for GO terms using JiangConrath similarity
 	/*!

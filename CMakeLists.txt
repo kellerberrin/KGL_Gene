@@ -330,7 +330,17 @@ set(ONTOLOGY_UNIT_TEST_FILES
         kgl_ontology/unit_test/ggtk_test_SimDICSet.cpp
         kgl_ontology/unit_test/ggtk_test_SimGICSet.cpp
         kgl_ontology/unit_test/ggtk_test_SimUISet.cpp
-        kgl_ontology/unit_test/ggtk_test_SimUICSet.cpp kgl_ontology/unit_test/ggtk_test_SharedInfoAdjCouto.cpp kgl_ontology/unit_test/ggtk_test_sharedinfo.h kgl_ontology/unit_test/ggtk_test_SharedAncestorMean.cpp kgl_ontology/unit_test/ggtk_test_SharedCouto.cpp kgl_ontology/unit_test/ggtk_test_SharedExInherit.cpp kgl_ontology/unit_test/ggtk_test_SharedFrontier.cpp kgl_ontology/unit_test/ggtk_test_SharedMICA.cpp kgl_ontology/unit_test/ggtk_test_DepthMap.cpp kgl_ontology/unit_test/ggtk_test_TermInfoMap.cpp kgl_ontology/unit_test/ggtk_test_TermProbMap.cpp)
+        kgl_ontology/unit_test/ggtk_test_SimUICSet.cpp
+        kgl_ontology/unit_test/ggtk_test_SharedInfoAdjCouto.cpp
+        kgl_ontology/unit_test/ggtk_test_sharedinfo.h
+        kgl_ontology/unit_test/ggtk_test_SharedAncestorMean.cpp
+        kgl_ontology/unit_test/ggtk_test_SharedCouto.cpp
+        kgl_ontology/unit_test/ggtk_test_SharedExInherit.cpp
+        kgl_ontology/unit_test/ggtk_test_SharedFrontier.cpp
+        kgl_ontology/unit_test/ggtk_test_SharedMICA.cpp
+        kgl_ontology/unit_test/ggtk_test_DepthMap.cpp
+        kgl_ontology/unit_test/ggtk_test_TermInfoMap.cpp
+        kgl_ontology/unit_test/ggtk_test_TermProbMap.cpp kgl_ontology/unit_test/ggtk_test_TermSimMatrix_JC_BP.cpp kgl_ontology/TermSimilarityCache.h kgl_ontology/unit_test/ggtk_test_TermSimMatrix_LIN_MF.cpp kgl_ontology/unit_test/ggtk_test_TermSimMatrix_RES_CC.cpp)
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES

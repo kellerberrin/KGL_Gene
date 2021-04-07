@@ -28,7 +28,7 @@ public:
 	/*!
 		Creates the AllPairsAverageSetSimilarity class assigning the similarity measure private member.
 	*/
-	AllPairsAverageSetSimilarity(std::shared_ptr<const TermSimilarityInterface> simMeasure) : _similarity(std::move(simMeasure)) {}
+	AllPairsAverageSetSimilarity(const std::shared_ptr<const TermSimilarityInterface>& simMeasure) : _similarity(simMeasure) {}
   ~AllPairsAverageSetSimilarity() override = default;
 
 	//! A method for calculating term set to term set similarity for GO terms;

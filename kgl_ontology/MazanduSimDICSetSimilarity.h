@@ -27,8 +27,8 @@ public:
 	/*!
 	Creates the MazanduSimGICSetSimilarity class assigning the GoGraph private member.
 	*/
-	MazanduSimDICSetSimilarity(std::shared_ptr<const GoGraph> graph, std::shared_ptr<const TermInformationContentMap> icMap)
-	: _graph(std::move(graph)), _icMap(std::move(icMap)) {}
+	MazanduSimDICSetSimilarity(const std::shared_ptr<const GoGraph>& graph, const std::shared_ptr<const TermInformationContentMap>& icMap)
+	: _graph(graph), _icMap(icMap) {}
   ~MazanduSimDICSetSimilarity() override = default;
 
 	//! A method for calculating term set to term set similarity for GO terms;

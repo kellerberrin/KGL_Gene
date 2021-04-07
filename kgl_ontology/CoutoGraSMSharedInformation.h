@@ -40,8 +40,8 @@ public:
 	/*!
 		Creates the CoutoGraSMGreaterOrEqual class
 	*/
-	CoutoGraSMSharedInformation(std::shared_ptr<const GoGraph> goGraph, std::shared_ptr<const TermInformationContentMap> icMap)
-	: _goGraph(std::move(goGraph)), _icMap(std::move(icMap)) {}
+	CoutoGraSMSharedInformation(const std::shared_ptr<const GoGraph>& goGraph, const std::shared_ptr<const TermInformationContentMap>& icMap)
+	: _goGraph(goGraph), _icMap(icMap) {}
   ~CoutoGraSMSharedInformation() override = default;
 
 	//! A method for determining the common disjunctive ancestors

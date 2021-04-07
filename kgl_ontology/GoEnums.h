@@ -243,8 +243,6 @@ public:
 
 private:
 
-
-
   struct OntologyText { const char* text; Ontology onto; };
   static const constexpr OntologyText ontology_text[] = {
 

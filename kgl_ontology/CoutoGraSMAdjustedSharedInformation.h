@@ -42,8 +42,8 @@ public:
 	/*!
 		Creates the CoutoGraSMAdjustedSharedInformation class
 	*/
-	CoutoGraSMAdjustedSharedInformation(std::shared_ptr<const GoGraph> goGraph, std::shared_ptr<const TermInformationContentMap> icMap)
-	: _goGraph(std::move(goGraph)), _icMap(std::move(icMap)) {}
+	CoutoGraSMAdjustedSharedInformation(const std::shared_ptr<const GoGraph>& goGraph, const std::shared_ptr<const TermInformationContentMap>& icMap)
+	: _goGraph(goGraph), _icMap(icMap) {}
   ~CoutoGraSMAdjustedSharedInformation() override = default;
 
 	//! Calculate disjunctive ancestors.

@@ -32,7 +32,7 @@ public:
 	/*!
 		Creates the AllPairsMaxSetSimilarity class assigning the similarity measure private memeber.
 	*/
-	AllPairsMaxSetSimilarity(std::shared_ptr<const TermSimilarityInterface> simMeasure) : _similarity(std::move(simMeasure)) {}
+	AllPairsMaxSetSimilarity(const std::shared_ptr<const TermSimilarityInterface>& simMeasure) : _similarity(simMeasure) {}
   ~AllPairsMaxSetSimilarity() override = default;
 
 
