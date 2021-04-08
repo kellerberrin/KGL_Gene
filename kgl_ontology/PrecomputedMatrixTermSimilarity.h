@@ -83,7 +83,7 @@ public:
 		for(std::size_t col = 0; col < _matrix.size(); ++col){
 			double sum = 0.0;
 
-			for(auto prot : terms) {
+			for(auto const& prot : terms) {
 
 				if(_termToIndex.find(prot) != _termToIndex.end()){
 
@@ -180,9 +180,9 @@ private:
       _matrix.push_back(row);
 
     }
-    //std::cout << "rows " << _matrix.size() << std::endl;
-    //std::cout << "cols " << _matrix.at(0).size() << std::endl;
-    //std::cout << "terms " << _termToIndex.size() << std::endl;
+    //std::cout << "rows " << cache_matrix_.size() << std::endl;
+    //std::cout << "cols " << cache_matrix_.at(0).size() << std::endl;
+    //std::cout << "terms " << term_to_index_.size() << std::endl;
   }
 
   [[nodiscard ]] bool isFileGood(const std::string &filename) const {

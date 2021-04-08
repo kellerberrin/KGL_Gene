@@ -32,7 +32,7 @@ public:
 	
 	//! A constructor
 	/*!
-		Creates the LinSimilarity calculator with a particular shared information calculator
+		Creates the linSimPtr calculator with a particular shared information calculator
 	*/
 	ModularLin(const std::shared_ptr<const SharedInformationInterface>& sharedInformationCalculator)
 	:	_siCalculator(sharedInformationCalculator) {}

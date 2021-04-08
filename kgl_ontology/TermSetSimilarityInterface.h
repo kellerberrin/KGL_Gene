@@ -8,7 +8,6 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #define TERM_SET_SIMILARITY_INTERFACE
 
 #include <string>
-#include <boost/unordered_set.hpp>
 
 /*! \class TermSetSimilarityInterface
 	\brief An interface class for comparing semantic similarity of sets of GO terms

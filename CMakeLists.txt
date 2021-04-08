@@ -340,7 +340,7 @@ set(ONTOLOGY_UNIT_TEST_FILES
         kgl_ontology/unit_test/ggtk_test_SharedMICA.cpp
         kgl_ontology/unit_test/ggtk_test_DepthMap.cpp
         kgl_ontology/unit_test/ggtk_test_TermInfoMap.cpp
-        kgl_ontology/unit_test/ggtk_test_TermProbMap.cpp kgl_ontology/unit_test/ggtk_test_TermSimMatrix_JC_BP.cpp kgl_ontology/TermSimilarityCache.h kgl_ontology/unit_test/ggtk_test_TermSimMatrix_LIN_MF.cpp kgl_ontology/unit_test/ggtk_test_TermSimMatrix_RES_CC.cpp)
+        kgl_ontology/unit_test/ggtk_test_TermProbMap.cpp kgl_ontology/unit_test/ggtk_test_TermSimMatrix_JC_BP.cpp kgl_ontology/TermSimilarityCache.h kgl_ontology/unit_test/ggtk_test_TermSimMatrix_LIN_MF.cpp kgl_ontology/unit_test/ggtk_test_TermSimMatrix_RES_CC.cpp kgl_ontology/unit_test/ggtk_test_TermSimCache_LIN_BP.cpp)
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES

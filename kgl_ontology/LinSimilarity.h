@@ -11,7 +11,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #include <TermInformationContentMap.h>
 #include <GoGraph.h>
 
-/*! \class LinSimilarity
+/*! \class linSimPtr
 	\brief A class to calculate Lin similarity between 2 terms
 
 	This class calculates Lin similarity.
@@ -33,7 +33,7 @@ public:
 	
 	//! A constructor
 	/*!
-		Creates the LinSimilarity calculator
+		Creates the linSimPtr calculator
 	*/
 	LinSimilarity(const std::shared_ptr<const GoGraph>& goGraph, const std::shared_ptr<const TermInformationContentMap>& icMap)
 	:	_goGraph(goGraph), _icMap(icMap) {}

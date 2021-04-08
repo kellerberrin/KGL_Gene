@@ -76,14 +76,6 @@ BOOST_FIXTURE_TEST_SUITE(TestAnnotateSuite, TestDepthMap)
 ///////////////////////////////////////////////
 
 
-BOOST_AUTO_TEST_CASE(test_annotation_integrity)
-{
-
-  if (annotation().databaseIntegrityCheck()) BOOST_FAIL("Annotation integrity check fails" );
-  BOOST_TEST_MESSAGE( "test_annotation_integrity" );
-
-}
-
 
 BOOST_AUTO_TEST_CASE(test_gene_count_accessor)
 {
