@@ -179,8 +179,8 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_entrez_bad_format)
 BOOST_AUTO_TEST_CASE(test_annotation_parser_gaf_bad_custom_evidence_set)
 {
 
-  DisallowedSetEvidencePolicy bad_policy;
-  bad_policy.addEvidence(GO::EvidenceCode::ECODE_ERROR);
+  kol::DisallowedSetEvidencePolicy bad_policy;
+  bad_policy.addEvidence(kol::GO::EvidenceCode::ECODE_ERROR);
   auto annotation_ptr = parseGaf(bad_policy);
   BOOST_REQUIRE(annotation_ptr);
   if ( annotation_ptr->getNumGenes() != 0 or annotation_ptr->getNumGoTerms() != 0) BOOST_FAIL( "Gaf annotation is non-empty with bad policy." );
@@ -191,8 +191,8 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_gaf_bad_custom_evidence_set)
 BOOST_AUTO_TEST_CASE(test_annotation_parser_entrez_bad_custom_evidence_set)
 {
 
-  DisallowedSetEvidencePolicy bad_policy;
-  bad_policy.addEvidence(GO::EvidenceCode::ECODE_ERROR);
+  kol::DisallowedSetEvidencePolicy bad_policy;
+  bad_policy.addEvidence(kol::GO::EvidenceCode::ECODE_ERROR);
   auto annotation_ptr = parseEntrez(bad_policy);
   BOOST_REQUIRE(annotation_ptr);
   if ( annotation_ptr->getNumGenes() != 0 or annotation_ptr->getNumGoTerms() != 0) BOOST_FAIL( "Entrez annotation is non-empty with bad policy." );
@@ -207,8 +207,8 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_entrez_bad_custom_evidence_set)
 BOOST_AUTO_TEST_CASE(test_annotation_parser_gaf_experimental_evidence_set)
 {
 
-  const OntologySetType<std::string> experimental_set{"EXP", "IDA", "IPI", "IMP", "IGI", "IEP"};
-  auto annotation_ptr = parseGaf(ExperimentalEvidencePolicy());
+  const kol::OntologySetType<std::string> experimental_set{"EXP", "IDA", "IPI", "IMP", "IGI", "IEP"};
+  auto annotation_ptr = parseGaf(kol::ExperimentalEvidencePolicy());
   BOOST_REQUIRE(annotation_ptr);
   auto gene_list = annotation_ptr->getAllGenes();
 
@@ -244,8 +244,8 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_gaf_experimental_evidence_set)
 BOOST_AUTO_TEST_CASE(test_annotation_parser_entrez_experimental_evidence_set)
 {
 
-  const OntologySetType<std::string> experimental_set{"EXP", "IDA", "IPI", "IMP", "IGI", "IEP"};
-  auto annotation_ptr = parseEntrez(ExperimentalEvidencePolicy());
+  const kol::OntologySetType<std::string> experimental_set{"EXP", "IDA", "IPI", "IMP", "IGI", "IEP"};
+  auto annotation_ptr = parseEntrez(kol::ExperimentalEvidencePolicy());
   BOOST_REQUIRE(annotation_ptr);
   auto gene_list = annotation_ptr->getAllGenes();
 

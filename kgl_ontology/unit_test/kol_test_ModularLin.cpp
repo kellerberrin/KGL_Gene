@@ -7,7 +7,7 @@
 
 namespace kol = kellerberrin::ontology;
 
-using ModularTestClass = kol::TestModTermSimilarity<kol::LinSimilarity, ModularLin>;
+using ModularTestClass = kol::TestModTermSimilarity<kol::LinSimilarity, kol::ModularLin>;
 
 BOOST_FIXTURE_TEST_SUITE(TestModularLinSuite, ModularTestClass)
 

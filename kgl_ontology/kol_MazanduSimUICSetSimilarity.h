@@ -7,10 +7,10 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #ifndef KGL_MAZANDU_SIMUIC_SET_SIMILARITY
 #define KGL_MAZANDU_SIMUIC_SET_SIMILARITY
 
-#include "TermSetSimilarityInterface.h"
+#include "kol_TermSetSimilarityInterface.h"
 #include "kol_TermInformationContentMap.h"
-#include "SetUtilities.h"
-#include "Accumulators.h"
+#include "kol_SetUtilities.h"
+#include "kol_Accumulators.h"
 #include "kol_GoGraph.h"
 
 

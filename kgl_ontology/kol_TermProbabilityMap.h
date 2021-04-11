@@ -10,7 +10,7 @@ Distributed under the Boost Software License, Version 1.0.
 
 #include "kol_GoGraph.h"
 #include "kol_AnnotationData.h"
-#include "Accumulators.h"
+#include "kol_Accumulators.h"
 
 #include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/reverse_graph.hpp>

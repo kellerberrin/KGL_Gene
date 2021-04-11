@@ -104,7 +104,7 @@ BOOST_FIXTURE_TEST_SUITE(TestMatrix_LIN_MFSuite, kol::TestMatrix_LIN_MF)
 BOOST_AUTO_TEST_CASE(test_precomputed_matrix_bad_file)
 {
 
-  auto pre_compute_ptr = std::make_unique<const PrecomputedMatrixTermSimilarity>("fake_file.txt");
+  auto pre_compute_ptr = std::make_unique<const kol::PrecomputedMatrixTermSimilarity>("fake_file.txt");
   BOOST_CHECK_EQUAL(pre_compute_ptr->termCount(), 0.0);
   BOOST_TEST_MESSAGE( "test_precomputed_matrix_bad_file ... OK" );
 

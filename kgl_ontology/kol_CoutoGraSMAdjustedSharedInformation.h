@@ -5,11 +5,11 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef KGL_GRASM_SHARED_INFORMATION_ADJUSTED
 #define KGL_GRASM_SHARED_INFORMATION_ADJUSTED
 
-#include "SharedInformationInterface.h"
+#include "kol_SharedInformationInterface.h"
 #include "kol_TermInformationContentMap.h"
 #include "kol_GoGraph.h"
-#include "SetUtilities.h"
-#include "Accumulators.h"
+#include "kol_SetUtilities.h"
+#include "kol_Accumulators.h"
 
 #include <utility>
 #include <algorithm>

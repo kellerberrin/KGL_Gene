@@ -232,69 +232,69 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_ensembl_id_parser.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_ontology/OntologyTypes.h)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_ontology/kol_OntologyTypes.h)
 
 # Gene ontology library
 set(ONTOLOGY_SOURCE_FILES
-        kgl_ontology/Accumulators.h
+        kgl_ontology/kol_Accumulators.h
         kgl_ontology/kol_AllowedRelationshipOboGoParser.h
         kgl_ontology/kol_AllowedRelationshipXmlGoParser.h
-        kgl_ontology/AllowedSetEvidencePolicy.h
-        kgl_ontology/AllowedSetRelationshipPolicy.h
-        kgl_ontology/AllPairsAverageSetSimilarity.h
-        kgl_ontology/AllPairsMaxSetSimilarity.h
+        kgl_ontology/kol_AllowedSetEvidencePolicy.h
+        kgl_ontology/kol_AllowedSetRelationshipPolicy.h
+        kgl_ontology/kol_AllPairsAverageSetSimilarity.h
+        kgl_ontology/kol_AllPairsMaxSetSimilarity.h
         kgl_ontology/kol_AncestorMeanSharedInformation.h
         kgl_ontology/kol_AnnotationData.h
         kgl_ontology/kol_AnnotationParserFactory.h
         kgl_ontology/kol_AnnotationParserInterface.h
-        kgl_ontology/AppUtilities.h
-        kgl_ontology/BestMatchAverageSetSimilarity.h
+        kgl_ontology/kol_AppUtilities.h
+        kgl_ontology/kol_BestMatchAverageSetSimilarity.h
         kgl_ontology/kol_CoutoGraSMAdjustedSharedInformation.h
         kgl_ontology/kol_CoutoGraSMSharedInformation.h
-        kgl_ontology/DisallowedSetEvidencePolicy.h
+        kgl_ontology/kol_DisallowedSetEvidencePolicy.h
         kgl_ontology/kol_enrichment_tools.h
         kgl_ontology/kol_EntrezGene2GoAnnotationParser.h
-        kgl_ontology/EvidencePolicyInterface.h
+        kgl_ontology/kol_EvidencePolicyInterface.h
         kgl_ontology/kol_ExclusivelyInheritedSharedInformation.h
-        kgl_ontology/ExperimentalEvidencePolicy.h
+        kgl_ontology/kol_ExperimentalEvidencePolicy.h
         kgl_ontology/kol_FrontierSharedInformation.h
         kgl_ontology/kol_GafAnnotationParser.h
         kgl_ontology/kol_GentlemanSimUISetSimilarity.h
         kgl_ontology/kol_GoaAnnotationParser.h
         kgl_ontology/kol_library.h
-        kgl_ontology/GoEnums.h
+        kgl_ontology/kol_GoEnums.h
         kgl_ontology/kol_GoGraph.h
         kgl_ontology/kol_GoParserFactory.h
         kgl_ontology/kol_GoParserInterface.h
-        kgl_ontology/JaccardSetSimilarity.h
+        kgl_ontology/kol_JaccardSetSimilarity.h
         kgl_ontology/kol_JiangConrathSimilarity.h
         kgl_ontology/kol_LinSimilarity.h
         kgl_ontology/kol_MazanduSimDICSetSimilarity.h
         kgl_ontology/kol_MazanduSimUICSetSimilarity.h
         kgl_ontology/kol_MgiAnnotationParser.h
         kgl_ontology/kol_MICASharedInformation.h
-        kgl_ontology/ModularJiangConrath.h
-        kgl_ontology/ModularLin.h
-        kgl_ontology/ModularResnik.h
-        kgl_ontology/NCList.h
+        kgl_ontology/kol_ModularJiangConrath.h
+        kgl_ontology/kol_ModularLin.h
+        kgl_ontology/kol_ModularResnik.h
+        kgl_ontology/kol_NCList.h
         kgl_ontology/kol_PekarStaabSimilarity.h
         kgl_ontology/kol_PesquitaSimGICSetSimilarity.h
-        kgl_ontology/PrecomputedMatrixTermSimilarity.h
+        kgl_ontology/kol_PrecomputedMatrixTermSimilarity.h
         kgl_ontology/kol_RapidXmlGoParser.h
-        kgl_ontology/RelationshipPolicyInterface.h
+        kgl_ontology/kol_RelationshipPolicyInterface.h
         kgl_ontology/kol_RelevanceSimilarity.h
         kgl_ontology/kol_ResnikSimilarity.h
-        kgl_ontology/SetUtilities.h
-        kgl_ontology/SharedInformationInterface.h
-        kgl_ontology/SimpleRegion.h
+        kgl_ontology/kol_SetUtilities.h
+        kgl_ontology/kol_SharedInformationInterface.h
+        kgl_ontology/kol_SimpleRegion.h
         kgl_ontology/kol_StandardOboGoParser.h
-        kgl_ontology/StandardRelationshipPolicy.h
+        kgl_ontology/kol_StandardRelationshipPolicy.h
         kgl_ontology/kol_StandardXmlGoParser.h
         kgl_ontology/kol_TermDepthMap.h
         kgl_ontology/kol_TermInformationContentMap.h
         kgl_ontology/kol_TermProbabilityMap.h
-        kgl_ontology/TermSetSimilarityInterface.h
-        kgl_ontology/TermSimilarityInterface.h
+        kgl_ontology/kol_TermSetSimilarityInterface.h
+        kgl_ontology/kol_TermSimilarityInterface.h
         kgl_ontology/kol_TermSimilarityWriter.h
         kgl_ontology/kol_TermSimilarityCache.h
         kgl_ontology/xml/rapidxml.h

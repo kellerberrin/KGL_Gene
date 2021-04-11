@@ -7,10 +7,10 @@ Distributed under the Boost Software License, Version 1.0.
 #define KGL_MICA_SHARED_INFORMATION
 
 #include "kol_TermInformationContentMap.h"
-#include "SharedInformationInterface.h"
+#include "kol_SharedInformationInterface.h"
 #include "kol_GoGraph.h"
-#include "SetUtilities.h"
-#include "Accumulators.h"
+#include "kol_SetUtilities.h"
+#include "kol_Accumulators.h"
 
 #include <boost/accumulators/statistics/max.hpp>
 

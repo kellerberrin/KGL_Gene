@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(test_bracket_access)
 BOOST_AUTO_TEST_CASE(test_root_depth_0_BP)
 {
 
-  if (probMap()[GO::getRootTermBP()] != 1.0) BOOST_FAIL("Root node depth is not zero" );
+  if (probMap()[kol::GO::getRootTermBP()] != 1.0) BOOST_FAIL("Root node depth is not zero" );
   BOOST_TEST_MESSAGE( "test_root_depth_0_BP ... OK" );
 
 }
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(test_root_depth_0_BP)
 BOOST_AUTO_TEST_CASE(test_root_depth_0_MF)
 {
 
-  if (probMap()[GO::getRootTermMF()] != 1.0) BOOST_FAIL("Root node depth is not zero" );
+  if (probMap()[kol::GO::getRootTermMF()] != 1.0) BOOST_FAIL("Root node depth is not zero" );
   BOOST_TEST_MESSAGE( "test_root_depth_0_MF ... OK" );
 
 }
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(test_root_depth_0_MF)
 BOOST_AUTO_TEST_CASE(test_root_depth_0_CC)
 {
 
-  if (probMap()[GO::getRootTermCC()] != 1.0) BOOST_FAIL("Root node depth is not zero" );
+  if (probMap()[kol::GO::getRootTermCC()] != 1.0) BOOST_FAIL("Root node depth is not zero" );
   BOOST_TEST_MESSAGE( "test_root_depth_0_CC ... OK" );
 
 }

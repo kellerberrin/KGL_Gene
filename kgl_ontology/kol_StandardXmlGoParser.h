@@ -6,9 +6,9 @@ Distributed under the Boost Software License, Version 1.0.
 #define KGL_STANDARD_XML_GO_PARSER
 
 #include "kol_GoParserInterface.h"
-#include "GoEnums.h"
-#include "RelationshipPolicyInterface.h"
-#include "StandardRelationshipPolicy.h"
+#include "kol_GoEnums.h"
+#include "kol_RelationshipPolicyInterface.h"
+#include "kol_StandardRelationshipPolicy.h"
 #include "kol_AllowedRelationshipXmlGoParser.h"
 
 #include <vector>

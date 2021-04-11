@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(test_enrichment_tools_child_genes)
   for (auto const& gene : term_genes) {
 
     auto go_BP = annotation().getGoTermsForGeneBP(gene, goGraph());
-    if (SetUtilities::set_intersection(go_BP, child_terms).empty()) BOOST_FAIL( "Empty intersection of BP go terms and child go terms" );
+    if (kol::SetUtilities::set_intersection(go_BP, child_terms).empty()) BOOST_FAIL( "Empty intersection of BP go terms and child go terms" );
 
   }
   BOOST_TEST_MESSAGE( "test_enrichment_tools_child_genes ... OK" );

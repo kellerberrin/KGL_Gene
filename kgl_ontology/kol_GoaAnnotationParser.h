@@ -6,8 +6,8 @@ Distributed under the Boost Software License, Version 1.0.
 #define KGL_GOA_ANNOTATION_PARSER
 
 #include "kol_AnnotationParserInterface.h"
-#include "EvidencePolicyInterface.h"
-#include "DisallowedSetEvidencePolicy.h"
+#include "kol_EvidencePolicyInterface.h"
+#include "kol_DisallowedSetEvidencePolicy.h"
 
 #include <iostream>
 #include <boost/tokenizer.hpp>

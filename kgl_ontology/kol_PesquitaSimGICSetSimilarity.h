@@ -5,9 +5,9 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef KGL_PESQUITA_SIMGIC_SET_SIMILARITY
 #define KGL_PESQUITA_SIMGIC_SET_SIMILARITY
 
-#include "TermSetSimilarityInterface.h"
+#include "kol_TermSetSimilarityInterface.h"
 #include "kol_TermInformationContentMap.h"
-#include "SetUtilities.h"
+#include "kol_SetUtilities.h"
 #include "kol_GoGraph.h"
 
 

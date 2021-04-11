@@ -12,7 +12,7 @@ Distributed under the Boost Software License, Version 1.0.
 #include "kel_distribution.h"
 #include "kol_AnnotationData.h"
 #include "kol_GoGraph.h"
-#include "SetUtilities.h"
+#include "kol_SetUtilities.h"
 
 namespace kellerberrin::ontology {
   //! The EnrichmentTools namespace provides simple functions for calulating GO term enrichment.

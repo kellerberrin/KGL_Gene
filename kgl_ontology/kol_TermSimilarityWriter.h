@@ -11,10 +11,10 @@ Distributed under the Boost Software License, Version 1.0.
 #include <string>
 #include <iostream>
 
-#include "GoEnums.h"
+#include "kol_GoEnums.h"
 #include "kol_GoGraph.h"
 #include "kol_AnnotationData.h"
-#include "TermSimilarityInterface.h"
+#include "kol_TermSimilarityInterface.h"
 
 namespace kellerberrin::ontology {
 

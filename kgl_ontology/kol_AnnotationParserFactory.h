@@ -6,7 +6,7 @@ Distributed under the Boost Software License, Version 1.0.
 #define KGL_ANNOTATION_PARSER_FACTORY
 
 #include "kol_AnnotationParserInterface.h"
-#include "DisallowedSetEvidencePolicy.h"
+#include "kol_DisallowedSetEvidencePolicy.h"
 #include "kol_EntrezGene2GoAnnotationParser.h"
 #include "kol_GoaAnnotationParser.h"
 #include "kol_GafAnnotationParser.h"

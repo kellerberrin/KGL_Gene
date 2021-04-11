@@ -7,8 +7,8 @@
 #ifndef GO_GRAPH
 #define GO_GRAPH
 
-#include "GoEnums.h"
-#include "OntologyTypes.h"
+#include "kol_GoEnums.h"
+#include "kol_OntologyTypes.h"
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/subgraph.hpp>
 #include <boost/graph/adjacency_iterator.hpp>

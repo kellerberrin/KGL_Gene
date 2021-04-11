@@ -1,13 +1,14 @@
 /*=============================================================================
 Copyright (c) 2016 Paul W. Bible
-
-Distributed under the Boost Software License, Version 1.0. (See accompanying
-file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef EXPERIMENTAL_EVIDENCE_POLICY
-#define EXPERIMENTAL_EVIDENCE_POLICY
+#ifndef KGL_EXPERIMENTAL_EVIDENCE_POLICY
+#define KGL_EXPERIMENTAL_EVIDENCE_POLICY
 
-#include <AllowedSetEvidencePolicy.h>
+#include "kol_AllowedSetEvidencePolicy.h"
+
+
+namespace kellerberrin::ontology {
 
 /*! \class ExperimentalEvidencePolicy
 	\brief A class to allow experimental evidence codes for annotations
@@ -16,23 +17,23 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 	 extends the AllowedSetEvidencePolicy and adds the experimental evidence codes to
 	 the allowed set.
 */
-class ExperimentalEvidencePolicy: public AllowedSetEvidencePolicy{
+class ExperimentalEvidencePolicy : public AllowedSetEvidencePolicy {
 
 public:
-	//! A constructor
-	/*!
-		Creates the default(empty) AllowedSetEvidencePolicy
-	*/
-	ExperimentalEvidencePolicy() : AllowedSetEvidencePolicy() {
+  //! A constructor
+  /*!
+    Creates the default(empty) AllowedSetEvidencePolicy
+  */
+  ExperimentalEvidencePolicy() : AllowedSetEvidencePolicy() {
 
-		addEvidence(GO::EvidenceCode::EXP);
-		addEvidence(GO::EvidenceCode::IDA);
-		addEvidence(GO::EvidenceCode::IPI);
-		addEvidence(GO::EvidenceCode::IMP);
-		addEvidence(GO::EvidenceCode::IGI);
-		addEvidence(GO::EvidenceCode::IEP);
+    addEvidence(GO::EvidenceCode::EXP);
+    addEvidence(GO::EvidenceCode::IDA);
+    addEvidence(GO::EvidenceCode::IPI);
+    addEvidence(GO::EvidenceCode::IMP);
+    addEvidence(GO::EvidenceCode::IGI);
+    addEvidence(GO::EvidenceCode::IEP);
 
-	}
+  }
 
 
   ~ExperimentalEvidencePolicy() override = default;
@@ -40,4 +41,7 @@ public:
   [[nodiscard]] std::unique_ptr<const EvidencePolicyInterface> clone() const override { return std::make_unique<const ExperimentalEvidencePolicy>(); }
 
 };
+
+} // namespace
+
 #endif

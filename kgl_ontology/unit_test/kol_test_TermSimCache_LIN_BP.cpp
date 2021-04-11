@@ -118,7 +118,7 @@ BOOST_FIXTURE_TEST_SUITE(TestCache_LIN_Suite, kol::TestCache_LIN_BP)
 BOOST_AUTO_TEST_CASE(test_precomputed_cache_bad_ontology)
 {
 
-  auto cache_ptr = std::make_unique<const kol::TermSimilarityCache>(goGraphPtr(), annotationPtr(), linSimPtr(), GO::Ontology::ONTO_ERROR);
+  auto cache_ptr = std::make_unique<const kol::TermSimilarityCache>(goGraphPtr(), annotationPtr(), linSimPtr(), kol::GO::Ontology::ONTO_ERROR);
   BOOST_CHECK_EQUAL(cache_ptr->termCount(), 0.0);
   BOOST_TEST_MESSAGE( "test_precomputed_cache_bad_ontology ... OK" );
 
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(test_similarity_Lin_1_bad_1_good_id)
 BOOST_AUTO_TEST_CASE(test_normalized_similarity_Lin_BP_reflexive_sim)
 {
 
-  auto const ontology_terms = annotationPtr()->getOntologyTerms(*goGraphPtr(), GO::Ontology::BIOLOGICAL_PROCESS);
+  auto const ontology_terms = annotationPtr()->getOntologyTerms(*goGraphPtr(), kol::GO::Ontology::BIOLOGICAL_PROCESS);
   size_t term_look_up{0};
   for (auto const& term_A : ontology_terms) {
 

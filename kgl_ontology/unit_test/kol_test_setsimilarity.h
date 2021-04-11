@@ -28,8 +28,8 @@ namespace kol = kellerberrin::ontology;
 BOOST_AUTO_TEST_CASE(test_set_similarity_empty_sets)
 {
 
-  OntologySetType<std::string> termsA;
-  OntologySetType<std::string> termsB;
+  kol::OntologySetType<std::string> termsA;
+  kol::OntologySetType<std::string> termsB;
   if (setSimilarity().calculateSimilarity(termsA, termsB) != getValue().TEST_SET_SIMILARITY_EMPTY_SETS ) {
 
     BOOST_FAIL("Non-zero value on empty sets");
@@ -42,8 +42,8 @@ BOOST_AUTO_TEST_CASE(test_set_similarity_empty_sets)
 
 BOOST_AUTO_TEST_CASE(test_set_similarity_1_empty_1_good)
 {
-  OntologySetType<std::string> termsA = annotation().getGoTermsForGeneBP("A0A0B4J269", goGraph());
-  OntologySetType<std::string> termsB;
+  kol::OntologySetType<std::string> termsA = annotation().getGoTermsForGeneBP("A0A0B4J269", goGraph());
+  kol::OntologySetType<std::string> termsB;
   if (setSimilarity().calculateSimilarity(termsA, termsB) != getValue().TEST_SET_SIMILARITY_1_EMPTY_1_GOOD) {
 
     BOOST_FAIL("Non-zero value on empty set");
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(test_set_similarity_1_empty_1_good)
 BOOST_AUTO_TEST_CASE(test_set_similarity_reflexive_BP)
 {
 
-  OntologySetType<std::string> termsA = annotation().getGoTermsForGeneBP("A0A0B4J269", goGraph());
+  kol::OntologySetType<std::string> termsA = annotation().getGoTermsForGeneBP("A0A0B4J269", goGraph());
   double value = setSimilarity().calculateSimilarity(termsA, termsA);
   BOOST_CHECK_CLOSE(value, getValue().TEST_SET_SIMILARITY_REFLEXIVE_BP, TEST_ACCURACY_PERCENT);
   BOOST_TEST_MESSAGE( "test_set_similarity_reflexive_BP ... OK" );
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(test_set_similarity_reflexive_BP)
 BOOST_AUTO_TEST_CASE(test_set_similarity_reflexive_slice_BP)
 {
 
-  OntologySetType<std::string> termsA = annotation().getGoTermsForGeneBP("A0A0B4J269", goGraph());
+  kol::OntologySetType<std::string> termsA = annotation().getGoTermsForGeneBP("A0A0B4J269", goGraph());
   auto termsB = termsA;
   if (not termsB.empty()) termsB.erase(termsB.begin());
   double value = setSimilarity().calculateSimilarity(termsA, termsB);
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(test_set_similarity_BP)
 BOOST_AUTO_TEST_CASE(test_set_similarity_reflexive_MF)
 {
 
-  OntologySetType<std::string> termsA = annotation().getGoTermsForGeneMF("A0A0J9YVX5", goGraph());
+  kol::OntologySetType<std::string> termsA = annotation().getGoTermsForGeneMF("A0A0J9YVX5", goGraph());
   double value = setSimilarity().calculateSimilarity(termsA, termsA);
   BOOST_CHECK_CLOSE(value, getValue().TEST_SET_SIMILARITY_REFLEXIVE_MF, TEST_ACCURACY_PERCENT);
   BOOST_TEST_MESSAGE( "test_set_similarity_reflexive_MF ... OK" );
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(test_set_similarity_reflexive_MF)
 BOOST_AUTO_TEST_CASE(test_set_similarity_reflexive_slice_MF)
 {
 
-  OntologySetType<std::string> termsA = annotation().getGoTermsForGeneMF("A0A0J9YVX5", goGraph());
+  kol::OntologySetType<std::string> termsA = annotation().getGoTermsForGeneMF("A0A0J9YVX5", goGraph());
   auto termsB = termsA;
   if (not termsB.empty()) termsB.erase(termsB.begin());
   double value = setSimilarity().calculateSimilarity(termsA, termsB);
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(test_set_similarity_MF)
 BOOST_AUTO_TEST_CASE(test_set_similarity_reflexive_CC)
 {
 
-  OntologySetType<std::string> termsA = annotation().getGoTermsForGeneCC("A0AVI4", goGraph());
+  kol::OntologySetType<std::string> termsA = annotation().getGoTermsForGeneCC("A0AVI4", goGraph());
   double value = setSimilarity().calculateSimilarity(termsA, termsA);
   BOOST_CHECK_CLOSE(value, getValue().TEST_SET_SIMILARITY_REFLEXIVE_CC, TEST_ACCURACY_PERCENT);
   BOOST_TEST_MESSAGE( "test_set_similarity_reflexive_CC ... OK" );
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(test_set_similarity_reflexive_CC)
 BOOST_AUTO_TEST_CASE(test_set_similarity_reflexive_slice_CC)
 {
 
-  OntologySetType<std::string> termsA = annotation().getGoTermsForGeneCC("A0AVI4", goGraph());
+  kol::OntologySetType<std::string> termsA = annotation().getGoTermsForGeneCC("A0AVI4", goGraph());
   auto termsB = termsA;
   if (not termsB.empty()) termsB.erase(termsB.begin());
   double value = setSimilarity().calculateSimilarity(termsA, termsB);

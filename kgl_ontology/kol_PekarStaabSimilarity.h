@@ -7,7 +7,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #ifndef PEKAR_STAAB_SIMILARITY
 #define PEKAR_STAAB_SIMILARITY
 
-#include <TermSimilarityInterface.h>
+#include <kol_TermSimilarityInterface.h>
 #include <kol_TermDepthMap.h>
 #include <kol_GoGraph.h>
 

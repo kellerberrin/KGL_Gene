@@ -1,13 +1,14 @@
 /*=============================================================================
 Copyright (c) 2016 Paul W. Bible
-
-Distributed under the Boost Software License, Version 1.0. (See accompanying
-file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef RELATIONSHIP_POLICY_INTERFACE
-#define RELATIONSHIP_POLICY_INTERFACE
+#ifndef KGL_RELATIONSHIP_POLICY_INTERFACE
+#define KGL_RELATIONSHIP_POLICY_INTERFACE
 
-#include <GoEnums.h>
+#include "kol_GoEnums.h"
+
+
+namespace kellerberrin::ontology {
 
 /*! \class RelationshipPolicyInterface
 	\brief An interface to check relationships between GO terms
@@ -20,16 +21,17 @@ class RelationshipPolicyInterface {
 public:
 
   RelationshipPolicyInterface() = default;
+
   virtual ~RelationshipPolicyInterface() = default;
 
   //! A pure virtual method to test if a relationship is allowed
-	/*!
-		This pure virtual method requires any subclass to imlement an isAllowed
-		  method to enforce the relationship pollicy.
-	*/
-	[[nodiscard]] virtual bool isAllowed(GO::Relationship relationship) const = 0;
+  /*!
+    This pure virtual method requires any subclass to imlement an isAllowed
+      method to enforce the relationship pollicy.
+  */
+  [[nodiscard]] virtual bool isAllowed(GO::Relationship relationship) const = 0;
 
-	[[nodiscard]] virtual std::unique_ptr<RelationshipPolicyInterface> clone() const = 0;
+  [[nodiscard]] virtual std::unique_ptr<RelationshipPolicyInterface> clone() const = 0;
 
   //! a method to determine if the Policy is valid
   /*!
@@ -42,4 +44,7 @@ public:
 
 
 };
+
+} // namespace
+
 #endif

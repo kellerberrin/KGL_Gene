@@ -5,7 +5,7 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef KGL_LIN_SIMILARITY
 #define KGL_LIN_SIMILARITY
 
-#include "TermSimilarityInterface.h"
+#include "kol_TermSimilarityInterface.h"
 #include "kol_TermInformationContentMap.h"
 #include "kol_GoGraph.h"
 

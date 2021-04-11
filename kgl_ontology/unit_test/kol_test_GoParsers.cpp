@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(test_parse_xml)
 BOOST_AUTO_TEST_CASE(test_parse_obo_custom_relationships)
 {
 
-  auto graph_ptr = checkRelationshipOboParser(StandardRelationshipPolicy());
+  auto graph_ptr = checkRelationshipOboParser(kol::StandardRelationshipPolicy());
   BOOST_REQUIRE(graph_ptr);
   if( graph_ptr->getNumVertices() == 0 or graph_ptr->getNumEdges() == 0) BOOST_FAIL( "Obo graph is empty." );
   BOOST_TEST_MESSAGE( "test_parse_obo_custom_relationship ... OK" );
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(test_parse_obo_custom_relationships)
 BOOST_AUTO_TEST_CASE(test_parse_xml_custom_relationships)
 {
 
-  auto graph_ptr = checkRelationshipXmlParser(StandardRelationshipPolicy());
+  auto graph_ptr = checkRelationshipXmlParser(kol::StandardRelationshipPolicy());
   BOOST_REQUIRE(graph_ptr);
   if( graph_ptr->getNumVertices() == 0 or graph_ptr->getNumEdges() == 0) BOOST_FAIL( "Xml graph is empty." );
   BOOST_TEST_MESSAGE( "test_parse_xml_custom_relationship ... OK" );
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(test_parse_xml_custom_relationships)
 BOOST_AUTO_TEST_CASE(test_parse_obo_custom_relationships_bad_set)
 {
 
-  AllowedSetRelationshipPolicy bad_policy;
+  kol::AllowedSetRelationshipPolicy bad_policy;
   bad_policy.addRelationship("part_of");
   auto graph_ptr = checkRelationshipOboParser(bad_policy);
   BOOST_REQUIRE(graph_ptr);
@@ -147,8 +147,8 @@ BOOST_AUTO_TEST_CASE(test_parse_obo_custom_relationships_bad_set)
 BOOST_AUTO_TEST_CASE(test_parse_xml_custom_relationships_bad_set)
 {
 
-  AllowedSetRelationshipPolicy bad_policy;
-  bad_policy.addRelationship(GO::Relationship::PART_OF);
+  kol::AllowedSetRelationshipPolicy bad_policy;
+  bad_policy.addRelationship(kol::GO::Relationship::PART_OF);
   auto graph_ptr = checkRelationshipXmlParser(bad_policy);
   BOOST_REQUIRE(graph_ptr);
   if( graph_ptr->getNumVertices() != 0 or graph_ptr->getNumEdges() != 0) BOOST_FAIL( "Xml graph is non-empty." );
@@ -159,12 +159,12 @@ BOOST_AUTO_TEST_CASE(test_parse_xml_custom_relationships_bad_set)
 BOOST_AUTO_TEST_CASE(test_parse_obo_all_relationships)
 {
 
-  AllowedSetRelationshipPolicy all_policy;
-  all_policy.addRelationship(GO::Relationship::IS_A);
-  all_policy.addRelationship(GO::Relationship::PART_OF);
-  all_policy.addRelationship(GO::Relationship::REGULATES);
-  all_policy.addRelationship(GO::Relationship::NEGATIVELY_REGULATES);
-  all_policy.addRelationship(GO::Relationship::POSITIVELY_REGULATES);
+  kol::AllowedSetRelationshipPolicy all_policy;
+  all_policy.addRelationship(kol::GO::Relationship::IS_A);
+  all_policy.addRelationship(kol::GO::Relationship::PART_OF);
+  all_policy.addRelationship(kol::GO::Relationship::REGULATES);
+  all_policy.addRelationship(kol::GO::Relationship::NEGATIVELY_REGULATES);
+  all_policy.addRelationship(kol::GO::Relationship::POSITIVELY_REGULATES);
   auto graph_ptr = checkRelationshipOboParser(all_policy);
   BOOST_REQUIRE(graph_ptr);
   if( graph_ptr->getNumVertices() == 0 or graph_ptr->getNumEdges() == 0) BOOST_FAIL( "Obo graph is empty." );
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(test_parse_obo_all_relationships)
 BOOST_AUTO_TEST_CASE(test_parse_xml_all_relationships)
 {
 
-  AllowedSetRelationshipPolicy all_policy;
+  kol::AllowedSetRelationshipPolicy all_policy;
   all_policy.addRelationship("is_a");
   all_policy.addRelationship("part_of");
   all_policy.addRelationship("regulates");

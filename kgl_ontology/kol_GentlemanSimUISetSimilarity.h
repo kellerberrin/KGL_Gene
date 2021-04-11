@@ -5,8 +5,8 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef KGL_GENTLEMAN_SIMUI_SET_SIMILARITY
 #define KGL_GENTLEMAN_SIMUI_SET_SIMILARITY
 
-#include "TermSetSimilarityInterface.h"
-#include "SetUtilities.h"
+#include "kol_TermSetSimilarityInterface.h"
+#include "kol_SetUtilities.h"
 #include "kol_GoGraph.h"
 
 

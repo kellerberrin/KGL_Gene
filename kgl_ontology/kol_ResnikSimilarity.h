@@ -4,7 +4,7 @@
 #include <cmath>
 #include <string>
 
-#include "TermSimilarityInterface.h"
+#include "kol_TermSimilarityInterface.h"
 #include "kol_TermInformationContentMap.h"
 #include "kol_GoGraph.h"
 

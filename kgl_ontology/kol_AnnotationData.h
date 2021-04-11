@@ -5,8 +5,8 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef KGL_ANNOTATION_DATA
 #define KGL_ANNOTATION_DATA
 
-#include "SetUtilities.h"
-#include "GoEnums.h"
+#include "kol_SetUtilities.h"
+#include "kol_GoEnums.h"
 #include "kol_GoGraph.h"
 
 #include <fstream>

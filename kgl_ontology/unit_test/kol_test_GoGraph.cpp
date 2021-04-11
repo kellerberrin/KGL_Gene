@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(test_term_ontology_bad_id)
 {
 
   const std::string bad_term("GO:00098");
-  if (GO::ontologyToString(goGraph().getTermOntology(bad_term)) != GO::ONTOLOGY_ERROR_TEXT) BOOST_FAIL( "Bad ontology term for: " + bad_term + " found" );
+  if (kol::GO::ontologyToString(goGraph().getTermOntology(bad_term)) != kol::GO::ONTOLOGY_ERROR_TEXT) BOOST_FAIL( "Bad ontology term for: " + bad_term + " found" );
   BOOST_TEST_MESSAGE( "test_term_ontology_bad_id ... OK" );
 
 }
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(test_term_ontology_code_bad_id)
 {
 
   const std::string bad_term("GO:00098");
-  if (goGraph().getTermOntology(bad_term) != GO::Ontology::ONTO_ERROR) BOOST_FAIL( "Bad ontology term for: " + bad_term + " found" );
+  if (goGraph().getTermOntology(bad_term) != kol::GO::Ontology::ONTO_ERROR) BOOST_FAIL( "Bad ontology term for: " + bad_term + " found" );
   BOOST_TEST_MESSAGE( "test_term_ontology_code_bad_id ... OK" );
 
 }
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(test_term_ontology_BP)
 {
 
   const std::string BP_term("GO:0022403");
-  if (GO::ontologyToString(goGraph().getTermOntology(BP_term)) != GO::ONTOLOGY_BIOLOGICAL_PROCESS_TEXT) BOOST_FAIL( "BP ontology term for: " + BP_term + " not found" );
+  if (kol::GO::ontologyToString(goGraph().getTermOntology(BP_term)) != kol::GO::ONTOLOGY_BIOLOGICAL_PROCESS_TEXT) BOOST_FAIL( "BP ontology term for: " + BP_term + " not found" );
   BOOST_TEST_MESSAGE( "test_term_ontology_BP ... OK" );
 
 }
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(test_term_ontology_code_BP)
 {
 
   const std::string BP_term("GO:0022403");
-  if (goGraph().getTermOntology(BP_term) != GO::Ontology::BIOLOGICAL_PROCESS) BOOST_FAIL( "BP ontology term for: " + BP_term + " not found" );
+  if (goGraph().getTermOntology(BP_term) != kol::GO::Ontology::BIOLOGICAL_PROCESS) BOOST_FAIL( "BP ontology term for: " + BP_term + " not found" );
   BOOST_TEST_MESSAGE( "test_term_ontology_code_BP ... OK" );
 
 }
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(test_term_ontology_MF)
 {
 
   const std::string MF_term("GO:0048037");
-  if (GO::ontologyToString(goGraph().getTermOntology(MF_term)) != GO::ONTOLOGY_MOLECULAR_FUNCTION_TEXT) BOOST_FAIL( "MF ontology term for: " + MF_term + " not found" );
+  if (kol::GO::ontologyToString(goGraph().getTermOntology(MF_term)) != kol::GO::ONTOLOGY_MOLECULAR_FUNCTION_TEXT) BOOST_FAIL( "MF ontology term for: " + MF_term + " not found" );
   BOOST_TEST_MESSAGE( "test_term_ontology_MF ... OK" );
 
 }
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(test_term_ontology_code_MF)
 {
 
   const std::string MF_term("GO:0048037");
-  if (goGraph().getTermOntology(MF_term) != GO::Ontology::MOLECULAR_FUNCTION) BOOST_FAIL( "MF ontology term for: " + MF_term + " not found" );
+  if (goGraph().getTermOntology(MF_term) != kol::GO::Ontology::MOLECULAR_FUNCTION) BOOST_FAIL( "MF ontology term for: " + MF_term + " not found" );
   BOOST_TEST_MESSAGE( "test_term_ontology_code_MF ... OK" );
 
 }
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(test_term_ontology_CC)
 {
 
   const std::string CC_term("GO:0005911");
-  if (GO::ontologyToString(goGraph().getTermOntology(CC_term)) != GO::ONTOLOGY_CELLULAR_COMPONENT_TEXT) BOOST_FAIL( "CC ontology term for: " + CC_term + " not found" );
+  if (kol::GO::ontologyToString(goGraph().getTermOntology(CC_term)) != kol::GO::ONTOLOGY_CELLULAR_COMPONENT_TEXT) BOOST_FAIL( "CC ontology term for: " + CC_term + " not found" );
   BOOST_TEST_MESSAGE( "test_term_ontology_CC ... OK" );
 
 }
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(test_term_ontology_code_CC)
 {
 
   const std::string CC_term("GO:0005911");
-  if (goGraph().getTermOntology(CC_term) != GO::Ontology::CELLULAR_COMPONENT) BOOST_FAIL( "CC ontology term for: " + CC_term + " not found" );
+  if (goGraph().getTermOntology(CC_term) != kol::GO::Ontology::CELLULAR_COMPONENT) BOOST_FAIL( "CC ontology term for: " + CC_term + " not found" );
   BOOST_TEST_MESSAGE( "test_term_ontology_code_CC ... OK" );
 
 }
@@ -509,7 +509,7 @@ BOOST_AUTO_TEST_CASE(test_all_terms_accessor_CC)
 BOOST_AUTO_TEST_CASE(test_filter_for_BP)
 {
 
-  OntologySetType<std::string> unfiltered_list{"GO:0033631", "GO:0033627", "GO:0004099", "GO:0019213", "GO:0044225", "GO:0043025"};
+  kol::OntologySetType<std::string> unfiltered_list{"GO:0033631", "GO:0033627", "GO:0004099", "GO:0019213", "GO:0044225", "GO:0043025"};
   std::set<std::string> filtered_list{"GO:0033631", "GO:0033627"};
   if (convertSet(goGraph().filterSetForBP(unfiltered_list)) != filtered_list) BOOST_FAIL( "Filtered terms count not all BP");
   BOOST_TEST_MESSAGE( "test_filter_for_BP ... OK" );
@@ -520,7 +520,7 @@ BOOST_AUTO_TEST_CASE(test_filter_for_BP)
 BOOST_AUTO_TEST_CASE(test_filter_for_MF)
 {
 
-  OntologySetType<std::string> unfiltered_list{"GO:0033631", "GO:0033627", "GO:0004099", "GO:0019213", "GO:0044225", "GO:0043025"};
+  kol::OntologySetType<std::string> unfiltered_list{"GO:0033631", "GO:0033627", "GO:0004099", "GO:0019213", "GO:0044225", "GO:0043025"};
   std::set<std::string> filtered_list{"GO:0004099", "GO:0019213"};
   if (convertSet(goGraph().filterSetForMF(unfiltered_list)) != filtered_list) BOOST_FAIL( "Filtered terms count not all MF");
   BOOST_TEST_MESSAGE( "test_filter_for_MF ... OK" );
@@ -531,7 +531,7 @@ BOOST_AUTO_TEST_CASE(test_filter_for_MF)
 BOOST_AUTO_TEST_CASE(test_filter_for_CC)
 {
 
-  OntologySetType<std::string> unfiltered_list{"GO:0033631", "GO:0033627", "GO:0004099", "GO:0019213", "GO:0044225", "GO:0043025"};
+  kol::OntologySetType<std::string> unfiltered_list{"GO:0033631", "GO:0033627", "GO:0004099", "GO:0019213", "GO:0044225", "GO:0043025"};
   std::set<std::string> filtered_list{"GO:0044225", "GO:0043025"};
   if (convertSet(goGraph().filterSetForCC(unfiltered_list)) != filtered_list) BOOST_FAIL( "Filtered terms count not all CC");
   BOOST_TEST_MESSAGE( "test_filter_for_CC ... OK" );
@@ -545,7 +545,7 @@ BOOST_AUTO_TEST_CASE(test_filter_for_CC)
 BOOST_AUTO_TEST_CASE(test_root_term_access_BP)
 {
 
-  if (goGraph().getTermRoot("GO:0033631") != GO::getRootTermBP()) BOOST_FAIL( "Failed to get root term for BP");
+  if (goGraph().getTermRoot("GO:0033631") != kol::GO::getRootTermBP()) BOOST_FAIL( "Failed to get root term for BP");
   BOOST_TEST_MESSAGE( "test_root_term_access_BP ... OK" );
 
 }
@@ -553,7 +553,7 @@ BOOST_AUTO_TEST_CASE(test_root_term_access_BP)
 BOOST_AUTO_TEST_CASE(test_root_term_access_MF)
 {
 
-  if (goGraph().getTermRoot("GO:0019213") != GO::getRootTermMF()) BOOST_FAIL( "Failed to get root term for MF");
+  if (goGraph().getTermRoot("GO:0019213") != kol::GO::getRootTermMF()) BOOST_FAIL( "Failed to get root term for MF");
   BOOST_TEST_MESSAGE( "test_root_term_access_MF ... OK" );
 
 }
@@ -561,7 +561,7 @@ BOOST_AUTO_TEST_CASE(test_root_term_access_MF)
 BOOST_AUTO_TEST_CASE(test_root_term_access_CC)
 {
 
-  if (goGraph().getTermRoot("GO:0044225") != GO::getRootTermCC()) BOOST_FAIL( "Failed to get root term for CC");
+  if (goGraph().getTermRoot("GO:0044225") != kol::GO::getRootTermCC()) BOOST_FAIL( "Failed to get root term for CC");
   BOOST_TEST_MESSAGE( "test_root_term_access_CC ... OK" );
 
 }

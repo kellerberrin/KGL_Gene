@@ -7,9 +7,9 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #ifndef MAZANDU_SIMDIC_SET_SIMILARITY
 #define MAZANDU_SIMDIC_SET_SIMILARITY
 
-#include <TermSetSimilarityInterface.h>
+#include <kol_TermSetSimilarityInterface.h>
 #include <kol_TermInformationContentMap.h>
-#include <SetUtilities.h>
+#include <kol_SetUtilities.h>
 #include <kol_GoGraph.h>
 
 

@@ -8,7 +8,7 @@
 
 namespace kol = kellerberrin::ontology;
 
-using ModularTestClass = kol::TestModTermSimilarity<kol::JiangConrathSimilarity, ModularJiangConrath>;
+using ModularTestClass = kol::TestModTermSimilarity<kol::JiangConrathSimilarity, kol::ModularJiangConrath>;
 
 BOOST_FIXTURE_TEST_SUITE(TestModularJiangConrathSuite, ModularTestClass)
 
