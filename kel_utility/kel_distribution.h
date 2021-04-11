@@ -215,7 +215,7 @@ public:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Beta distributed random numbers implemented as a ratio of gamma random variates.
+// Gamma distribution.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -367,6 +367,50 @@ private:
 };
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Hypergeometric distribution.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class HypergeometricDistribution
+{
+
+public:
+
+  HypergeometricDistribution(size_t pop_successes_K, size_t sample_size_n, size_t population_N);
+  HypergeometricDistribution(const HypergeometricDistribution&) = delete;
+  ~HypergeometricDistribution() = default;
+
+  HypergeometricDistribution& operator=(HypergeometricDistribution&) = delete;
+
+  [[nodiscard]] double pdf(size_t successes_k) const;
+
+  [[nodiscard]] double cdf(size_t successes_k) const;
+
+  [[nodiscard]] double quantile(size_t successes_k) const;
+
+//  The hypergeometric tests below use the hypergeometric distribution to measure the statistical significance
+//  of having drawn a sample consisting of a specific number of k successes n total draws (without replacement)
+//  from a population of size N containing K successes.
+
+//  The test for over-representation of successes in the sample, the hypergeometric p-value is calculated
+//  as the probability of randomly drawing k or more successes from the population in n total draws.
+  [[nodiscard]] double upperSingleTailTest(size_t successes_k) const;
+
+//  The test for under-representation, the p-value is the probability of randomly drawing k or fewer successes.
+  [[nodiscard]] double lowerSingleTailTest(size_t successes_k) const;
+
+private:
+
+  size_t pop_successes_K_;
+  size_t sample_size_n_;
+  size_t population_N_;
+
+  // Bounds for the number of successes_k in a drawn sample_size_n (without replacement)
+  [[nodiscard]] size_t upperSuccesses_k() const { return std::min(pop_successes_K_, sample_size_n_); }
+  [[nodiscard]] size_t lowerSuccesses_k() const { return std::max<int64_t>(0, (sample_size_n_ + pop_successes_K_ - population_N_)); }
+
+};
 
 
 }   // end namespace

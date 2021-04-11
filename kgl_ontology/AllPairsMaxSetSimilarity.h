@@ -30,7 +30,7 @@ public:
 
 	//! Constructor
 	/*!
-		Creates the AllPairsMaxSetSimilarity class assigning the similarity measure private memeber.
+		Creates the AllPairsMaxSetSimilarity class assigning the similarity measure private member.
 	*/
 	AllPairsMaxSetSimilarity(const std::shared_ptr<const TermSimilarityInterface>& simMeasure) : _similarity(simMeasure) {}
   ~AllPairsMaxSetSimilarity() override = default;

@@ -20,7 +20,7 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
                     kgl_genomics/kgl_database
                     kgl_mixture                  # Deconvolution and mixture library
                     kgl_analytic                  # Genetic analysis library (top level)
-                    kgl_ontology                  # Experimental Ontology Library
+        kgl_ontology                  # Experimental Ontology Library
                     kgl_analytic/kgl_inbreed
                     kgl_analytic/kgl_verify
                     kgl_analytic/kgl_info
@@ -237,65 +237,66 @@ set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_ontology/OntologyTypes.h)
 # Gene ontology library
 set(ONTOLOGY_SOURCE_FILES
         kgl_ontology/Accumulators.h
-        kgl_ontology/AllowedRelationshipOboGoParser.h
-        kgl_ontology/AllowedRelationshipXmlGoParser.h
+        kgl_ontology/kol_AllowedRelationshipOboGoParser.h
+        kgl_ontology/kol_AllowedRelationshipXmlGoParser.h
         kgl_ontology/AllowedSetEvidencePolicy.h
         kgl_ontology/AllowedSetRelationshipPolicy.h
         kgl_ontology/AllPairsAverageSetSimilarity.h
         kgl_ontology/AllPairsMaxSetSimilarity.h
-        kgl_ontology/AncestorMeanSharedInformation.h
-        kgl_ontology/AnnotationData.h
-        kgl_ontology/AnnotationParserFactory.h
-        kgl_ontology/AnnotationParserInterface.h
+        kgl_ontology/kol_AncestorMeanSharedInformation.h
+        kgl_ontology/kol_AnnotationData.h
+        kgl_ontology/kol_AnnotationParserFactory.h
+        kgl_ontology/kol_AnnotationParserInterface.h
         kgl_ontology/AppUtilities.h
         kgl_ontology/BestMatchAverageSetSimilarity.h
-        kgl_ontology/CoutoGraSMAdjustedSharedInformation.h
-        kgl_ontology/CoutoGraSMSharedInformation.h
+        kgl_ontology/kol_CoutoGraSMAdjustedSharedInformation.h
+        kgl_ontology/kol_CoutoGraSMSharedInformation.h
         kgl_ontology/DisallowedSetEvidencePolicy.h
-        kgl_ontology/EnrichmentTools.h
-        kgl_ontology/EntrezGene2GoAnnotationParser.h
+        kgl_ontology/kol_enrichment_tools.h
+        kgl_ontology/kol_EntrezGene2GoAnnotationParser.h
         kgl_ontology/EvidencePolicyInterface.h
-        kgl_ontology/ExclusivelyInheritedSharedInformation.h
+        kgl_ontology/kol_ExclusivelyInheritedSharedInformation.h
         kgl_ontology/ExperimentalEvidencePolicy.h
-        kgl_ontology/FrontierSharedInformation.h
-        kgl_ontology/GafAnnotationParser.h
-        kgl_ontology/GentlemanSimUISetSimilarity.h
-        kgl_ontology/GoaAnnotationParser.h
-        kgl_ontology/ggtk.h
+        kgl_ontology/kol_FrontierSharedInformation.h
+        kgl_ontology/kol_GafAnnotationParser.h
+        kgl_ontology/kol_GentlemanSimUISetSimilarity.h
+        kgl_ontology/kol_GoaAnnotationParser.h
+        kgl_ontology/kol_library.h
         kgl_ontology/GoEnums.h
-        kgl_ontology/GoGraph.h
-        kgl_ontology/GoParserFactory.h
-        kgl_ontology/GoParserInterface.h
+        kgl_ontology/kol_GoGraph.h
+        kgl_ontology/kol_GoParserFactory.h
+        kgl_ontology/kol_GoParserInterface.h
         kgl_ontology/JaccardSetSimilarity.h
-        kgl_ontology/JiangConrathSimilarity.h
-        kgl_ontology/LinSimilarity.h
-        kgl_ontology/MazanduSimDICSetSimilarity.h
-        kgl_ontology/MazanduSimUICSetSimilarity.h
-        kgl_ontology/MgiAnnotationParser.h
-        kgl_ontology/MICASharedInformation.h
+        kgl_ontology/kol_JiangConrathSimilarity.h
+        kgl_ontology/kol_LinSimilarity.h
+        kgl_ontology/kol_MazanduSimDICSetSimilarity.h
+        kgl_ontology/kol_MazanduSimUICSetSimilarity.h
+        kgl_ontology/kol_MgiAnnotationParser.h
+        kgl_ontology/kol_MICASharedInformation.h
         kgl_ontology/ModularJiangConrath.h
         kgl_ontology/ModularLin.h
         kgl_ontology/ModularResnik.h
         kgl_ontology/NCList.h
-        kgl_ontology/PekarStaabSimilarity.h
-        kgl_ontology/PesquitaSimGICSetSimilarity.h
+        kgl_ontology/kol_PekarStaabSimilarity.h
+        kgl_ontology/kol_PesquitaSimGICSetSimilarity.h
         kgl_ontology/PrecomputedMatrixTermSimilarity.h
-        kgl_ontology/RapidXmlGoParser.h
+        kgl_ontology/kol_RapidXmlGoParser.h
         kgl_ontology/RelationshipPolicyInterface.h
-        kgl_ontology/RelevanceSimilarity.h
-        kgl_ontology/ResnikSimilarity.h
+        kgl_ontology/kol_RelevanceSimilarity.h
+        kgl_ontology/kol_ResnikSimilarity.h
         kgl_ontology/SetUtilities.h
         kgl_ontology/SharedInformationInterface.h
         kgl_ontology/SimpleRegion.h
-        kgl_ontology/StandardOboGoParser.h
+        kgl_ontology/kol_StandardOboGoParser.h
         kgl_ontology/StandardRelationshipPolicy.h
-        kgl_ontology/StandardXmlGoParser.h
-        kgl_ontology/TermDepthMap.h
-        kgl_ontology/TermInformationContentMap.h
-        kgl_ontology/TermProbabilityMap.h
+        kgl_ontology/kol_StandardXmlGoParser.h
+        kgl_ontology/kol_TermDepthMap.h
+        kgl_ontology/kol_TermInformationContentMap.h
+        kgl_ontology/kol_TermProbabilityMap.h
         kgl_ontology/TermSetSimilarityInterface.h
         kgl_ontology/TermSimilarityInterface.h
-        kgl_ontology/TermSimilarityWriter.h
+        kgl_ontology/kol_TermSimilarityWriter.h
+        kgl_ontology/kol_TermSimilarityCache.h
         kgl_ontology/xml/rapidxml.h
         kgl_ontology/xml/rapidxml_iterators.h
         kgl_ontology/xml/rapidxml_print.h
@@ -304,43 +305,46 @@ set(ONTOLOGY_SOURCE_FILES
 
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES
-        kgl_ontology/unit_test/ggtk_test.cpp
-        kgl_ontology/unit_test/ggtk_test_GoParsers.cpp
-        kgl_ontology/unit_test/ggtk_test_GoGraph.cpp
-        kgl_ontology/unit_test/ggtk_test.h
-        kgl_ontology/unit_test/ggtk_test_AnnotateParsers.cpp
-        kgl_ontology/unit_test/ggtk_test_Annotate.cpp
-        kgl_ontology/unit_test/ggtk_test_EnrichmentTools.cpp
-        kgl_ontology/unit_test/ggtk_test_JiangConrathSimilarity.cpp
-        kgl_ontology/unit_test/ggtk_test_LinSimilarity.cpp
-        kgl_ontology/unit_test/ggtk_test_ModularJiangConrath.cpp
-        kgl_ontology/unit_test/ggtk_test_similarity.h
-        kgl_ontology/unit_test/ggtk_test_modularsimilarity.h
-        kgl_ontology/unit_test/ggtk_test_ModularLin.cpp
-        kgl_ontology/unit_test/ggtk_test_ModularResnik.cpp
-        kgl_ontology/unit_test/ggtk_test_ResnikSimilarity.cpp
-        kgl_ontology/unit_test/ggtk_test_PekarStaabSimilarity.cpp
-        kgl_ontology/unit_test/ggtk_test_RelevanceSimilarity.h
-        kgl_ontology/unit_test/ggtk_test_RelevanceSimilarity.cpp
-        kgl_ontology/unit_test/ggtk_test_AllPairsMaxSet.cpp
-        kgl_ontology/unit_test/ggtk_test_AllPairAvgSet.cpp
-        kgl_ontology/unit_test/ggtk_test_setsimilarity.h
-        kgl_ontology/unit_test/ggtk_test_BestPairAvgSet.cpp
-        kgl_ontology/unit_test/ggtk_test_JaccardSet.cpp
-        kgl_ontology/unit_test/ggtk_test_SimDICSet.cpp
-        kgl_ontology/unit_test/ggtk_test_SimGICSet.cpp
-        kgl_ontology/unit_test/ggtk_test_SimUISet.cpp
-        kgl_ontology/unit_test/ggtk_test_SimUICSet.cpp
-        kgl_ontology/unit_test/ggtk_test_SharedInfoAdjCouto.cpp
-        kgl_ontology/unit_test/ggtk_test_sharedinfo.h
-        kgl_ontology/unit_test/ggtk_test_SharedAncestorMean.cpp
-        kgl_ontology/unit_test/ggtk_test_SharedCouto.cpp
-        kgl_ontology/unit_test/ggtk_test_SharedExInherit.cpp
-        kgl_ontology/unit_test/ggtk_test_SharedFrontier.cpp
-        kgl_ontology/unit_test/ggtk_test_SharedMICA.cpp
-        kgl_ontology/unit_test/ggtk_test_DepthMap.cpp
-        kgl_ontology/unit_test/ggtk_test_TermInfoMap.cpp
-        kgl_ontology/unit_test/ggtk_test_TermProbMap.cpp kgl_ontology/unit_test/ggtk_test_TermSimMatrix_JC_BP.cpp kgl_ontology/TermSimilarityCache.h kgl_ontology/unit_test/ggtk_test_TermSimMatrix_LIN_MF.cpp kgl_ontology/unit_test/ggtk_test_TermSimMatrix_RES_CC.cpp kgl_ontology/unit_test/ggtk_test_TermSimCache_LIN_BP.cpp)
+        kgl_ontology/unit_test/kol_test.cpp
+        kgl_ontology/unit_test/kol_test_GoParsers.cpp
+        kgl_ontology/unit_test/kol_test_GoGraph.cpp
+        kgl_ontology/unit_test/kol_test.h
+        kgl_ontology/unit_test/kol_test_AnnotateParsers.cpp
+        kgl_ontology/unit_test/kol_test_Annotate.cpp
+        kgl_ontology/unit_test/kol_test_EnrichmentTools.cpp
+        kgl_ontology/unit_test/kol_test_JiangConrathSimilarity.cpp
+        kgl_ontology/unit_test/kol_test_LinSimilarity.cpp
+        kgl_ontology/unit_test/kol_test_ModularJiangConrath.cpp
+        kgl_ontology/unit_test/kol_test_similarity.h
+        kgl_ontology/unit_test/kol_test_modularsimilarity.h
+        kgl_ontology/unit_test/kol_test_ModularLin.cpp
+        kgl_ontology/unit_test/kol_test_ModularResnik.cpp
+        kgl_ontology/unit_test/kol_test_ResnikSimilarity.cpp
+        kgl_ontology/unit_test/kol_test_PekarStaabSimilarity.cpp
+        kgl_ontology/unit_test/kol_test_RelevanceSimilarity.cpp
+        kgl_ontology/unit_test/kol_test_AllPairsMaxSet.cpp
+        kgl_ontology/unit_test/kol_test_AllPairAvgSet.cpp
+        kgl_ontology/unit_test/kol_test_setsimilarity.h
+        kgl_ontology/unit_test/kol_test_BestPairAvgSet.cpp
+        kgl_ontology/unit_test/kol_test_JaccardSet.cpp
+        kgl_ontology/unit_test/kol_test_SimDICSet.cpp
+        kgl_ontology/unit_test/kol_test_SimGICSet.cpp
+        kgl_ontology/unit_test/kol_test_SimUISet.cpp
+        kgl_ontology/unit_test/kol_test_SimUICSet.cpp
+        kgl_ontology/unit_test/kol_test_SharedInfoAdjCouto.cpp
+        kgl_ontology/unit_test/kol_test_sharedinfo.h
+        kgl_ontology/unit_test/kol_test_SharedAncestorMean.cpp
+        kgl_ontology/unit_test/kol_test_SharedCouto.cpp
+        kgl_ontology/unit_test/kol_test_SharedExInherit.cpp
+        kgl_ontology/unit_test/kol_test_SharedFrontier.cpp
+        kgl_ontology/unit_test/kol_test_SharedMICA.cpp
+        kgl_ontology/unit_test/kol_test_DepthMap.cpp
+        kgl_ontology/unit_test/kol_test_TermInfoMap.cpp
+        kgl_ontology/unit_test/kol_test_TermProbMap.cpp
+        kgl_ontology/unit_test/kol_test_TermSimMatrix_JC_BP.cpp
+        kgl_ontology/unit_test/kol_test_TermSimMatrix_LIN_MF.cpp
+        kgl_ontology/unit_test/kol_test_TermSimMatrix_RES_CC.cpp
+        kgl_ontology/unit_test/kol_test_TermSimCache_LIN_BP.cpp kgl_ontology/unit_test/kol_test_data.h)
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES
@@ -445,10 +449,6 @@ set(APPLICATION_SOURCE_FILES
 
 
 
-#generate libraries.
-add_executable(ggtk_test ${ONTOLOGY_UNIT_TEST_FILES})
-
-target_link_libraries (ggtk_test ${Boost_LIBRARIES})
 
 add_library(kel_utility STATIC ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES})
 
@@ -465,6 +465,13 @@ add_executable (kgl_genome ${APPLICATION_SOURCE_FILES} )
 
 # Specify the static libraries.
 target_link_libraries(kgl_genome kgl_analysis kgl_genomics kel_utility ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} nlopt)
+
+#generate libraries.
+add_executable(kol_test ${ONTOLOGY_UNIT_TEST_FILES})
+
+target_link_libraries (kol_test kel_utility ${Boost_LIBRARIES})
+
+
 
 ############################################################################################################
 # Generate the kpl executable.

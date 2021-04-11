@@ -2,13 +2,14 @@
 // Created by kellerberrin on 5/08/18.
 //
 
-
+#include "kel_exec_env.h"
 #include "kel_distribution.h"
 
 #include <boost/math/special_functions/gamma.hpp>
 #include <boost/math/special_functions/binomial.hpp>
 #include <boost/math/special_functions/beta.hpp>
 #include <boost/math/distributions/gamma.hpp>
+#include <boost/math/distributions/hypergeometric.hpp>
 
 namespace bm = boost::math;
 namespace kel = kellerberrin;
@@ -240,3 +241,129 @@ double kel::BinomialDistribution::cdf(size_t n, double k, double prob_success) {
 
 }
 
+
+
+kel::HypergeometricDistribution::HypergeometricDistribution(size_t pop_successes_K, size_t sample_size_n, size_t population_N) {
+
+
+  if (pop_successes_K > population_N) {
+
+    ExecEnv::log().error("HypergeometricDistribution::HypergeometricDistribution; Population Successes K:{} exceeds population size :{}",
+                         pop_successes_K, population_N);
+    pop_successes_K = population_N;
+  }
+
+  if (sample_size_n > population_N) {
+
+    ExecEnv::log().error("HypergeometricDistribution::HypergeometricDistribution; Sample size n:{} exceeds population size :{}",
+                         sample_size_n, population_N);
+    sample_size_n = population_N;
+  }
+
+  pop_successes_K_ = pop_successes_K;
+  sample_size_n_ = sample_size_n;
+  population_N_ = population_N;
+
+}
+
+double kel::HypergeometricDistribution::pdf(size_t successes_k) const {
+
+  if (successes_k > upperSuccesses_k()) {
+
+    ExecEnv::log().error("HypergeometricDistribution::pdf; successes k:{} exceeds upper limit :{}",
+                         successes_k, upperSuccesses_k());
+    successes_k = upperSuccesses_k();
+
+  }
+
+  if (successes_k < lowerSuccesses_k()) {
+
+    ExecEnv::log().error("HypergeometricDistribution::pdf; successes k:{} below lower limit :{}",
+                         successes_k, lowerSuccesses_k());
+    successes_k = lowerSuccesses_k();
+
+  }
+
+  bm::hypergeometric_distribution hypergeometric(pop_successes_K_, sample_size_n_, population_N_);
+
+  return bm::pdf(hypergeometric, successes_k);
+
+}
+
+double kel::HypergeometricDistribution::cdf(size_t successes_k) const {
+
+  if (successes_k > upperSuccesses_k()) {
+
+    ExecEnv::log().error("HypergeometricDistribution::pdf; successes k:{} exceeds upper limit :{}",
+                         successes_k, upperSuccesses_k());
+    successes_k = upperSuccesses_k();
+
+  }
+
+  if (successes_k < lowerSuccesses_k()) {
+
+    ExecEnv::log().error("HypergeometricDistribution::pdf; successes k:{} below lower limit :{}",
+                         successes_k, lowerSuccesses_k());
+    successes_k = lowerSuccesses_k();
+
+  }
+
+  bm::hypergeometric_distribution hypergeometric(pop_successes_K_, sample_size_n_, population_N_);
+
+  return bm::cdf(hypergeometric, successes_k);
+
+}
+
+double kel::HypergeometricDistribution::quantile(size_t successes_k) const {
+
+  if (successes_k > upperSuccesses_k()) {
+
+    ExecEnv::log().error("HypergeometricDistribution::pdf; successes k:{} exceeds upper limit :{}",
+                         successes_k, upperSuccesses_k());
+    successes_k = upperSuccesses_k();
+
+  }
+
+  if (successes_k < lowerSuccesses_k()) {
+
+    ExecEnv::log().error("HypergeometricDistribution::pdf; successes k:{} below lower limit :{}",
+                         successes_k, lowerSuccesses_k());
+    successes_k = lowerSuccesses_k();
+
+  }
+
+  bm::hypergeometric_distribution hypergeometric(pop_successes_K_, sample_size_n_, population_N_);
+
+  return bm::quantile(hypergeometric, successes_k);
+
+}
+
+double kel::HypergeometricDistribution::upperSingleTailTest(size_t test_value_k) const {
+
+  double sum = 0.0;
+  bm::hypergeometric_distribution hypergeometric(pop_successes_K_, sample_size_n_, population_N_);
+  for(size_t k = test_value_k; k <= upperSuccesses_k(); ++k) {
+
+    double prob = bm::pdf(hypergeometric, k);
+    sum += prob;
+
+  }
+
+  return sum;
+
+}
+
+double kel::HypergeometricDistribution::lowerSingleTailTest(size_t test_value_k) const {
+
+  double sum = 0.0;
+  bm::hypergeometric_distribution hypergeometric(pop_successes_K_, sample_size_n_, population_N_);
+  for(size_t k = test_value_k; k >= lowerSuccesses_k(); --k) {
+
+    double prob = bm::pdf(hypergeometric, k);
+    sum += prob;
+
+  }
+
+  return sum;
+
+}
