@@ -41,7 +41,8 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
   auto file_characteristic = data_ptr->dataCharacteristic();
 
   // If the file is a population then list genomes and all available info fields.
-  if (file_characteristic.data_implementation == DataImplEnum::PopulationVariant) {
+  if (file_characteristic.data_implementation == DataImplEnum::PopulationVariant
+      and file_characteristic.data_organism == DataOrganism::HomoSapien) {
 
     std::shared_ptr<const PopulationDB> population = std::dynamic_pointer_cast<const PopulationDB>(data_ptr);
 /*

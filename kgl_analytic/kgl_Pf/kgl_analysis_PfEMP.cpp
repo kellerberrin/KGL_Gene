@@ -44,7 +44,7 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 // Perform the genetic analysis per iteration.
 bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_file_ptr) {
 
-  ExecEnv::log().info("File Read for Analysis Id: {} called for file: {}", base_file_ptr->fileId());
+  ExecEnv::log().info("File Read for Analysis Id: {} called for file: {}", ident(), base_file_ptr->fileId());
 
   return true;
 

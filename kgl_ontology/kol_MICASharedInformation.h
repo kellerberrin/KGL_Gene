@@ -67,7 +67,7 @@ public:
     OntologySetType<std::string> ancestorsA = _goGraph->getSelfAncestorTerms(termA);
     OntologySetType<std::string> ancestorsB = _goGraph->getSelfAncestorTerms(termB);
 
-    OntologySetType<std::string> sharedAncestors = SetUtilities::set_intersection(ancestorsA, ancestorsB);
+    OntologySetType<std::string> sharedAncestors = SetUtilities::setIntersection(ancestorsA, ancestorsB);
 
     for (auto const &term : sharedAncestors) {
 

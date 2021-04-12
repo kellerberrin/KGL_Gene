@@ -49,7 +49,7 @@ public:
     OntologySetType<std::string> inducedTermSetA = _graph->getExtendedTermSet(termsA);
     OntologySetType<std::string> inducedTermSetB = _graph->getExtendedTermSet(termsB);
     // Calculate union and intersection
-    OntologySetType<std::string> intersection_set = SetUtilities::set_intersection(inducedTermSetA, inducedTermSetB);
+    OntologySetType<std::string> intersection_set = SetUtilities::setIntersection(inducedTermSetA, inducedTermSetB);
 
     double intersection_sum = calcICSum(intersection_set);
     double setA_sum = calcICSum(inducedTermSetA);

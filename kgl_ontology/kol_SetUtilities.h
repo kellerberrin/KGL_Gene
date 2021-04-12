@@ -10,10 +10,10 @@ Distributed under the Boost Software License, Version 1.0.
 
 namespace kellerberrin::ontology {
 
-//! The SetUtilities namespace provides useful opperations on generic boost::unordered_set
+//! The SetUtilities namespace provides useful operations on generic boost::unordered_set
 /*!
 	SetUtilities provides useful operations on boost::unordered_set. 
-	set_intersection is optimized to traverse the smaller set and test exisitence in the larger set.
+	setIntersection is optimized to traverse the smaller set and test exisitence in the larger set.
 */
 class SetUtilities {
 
@@ -21,33 +21,25 @@ public:
   // Ony static definitions.
   SetUtilities() = delete;
 
-  //!set UTILITY function to determine if a set contains an element
+  //!set UTILITY function convert a vector to a set
   template<typename Type>
-  [[nodiscard]] static bool set_contains(const OntologySetType<Type> &mySet, const Type &element) {
-
-    return mySet.find(element) != mySet.end();
-
-  }
-
-  //!set UTILITY funciton convert a vector to a set
-  template<typename Type>
-  [[nodiscard]] static OntologySetType<Type> convert_vector(const std::vector<Type> &myVec) {
+  [[nodiscard]] static OntologySetType<Type> convertVector(const std::vector<Type> &myVec) {
 
     OntologySetType<Type> s(myVec.begin(), myVec.end());
     return s;
 
   }
 
-  //!set OPERATION intersection for boost::unordered_set
+  //!set OPERATION intersection f
   template<typename Type>
-  [[nodiscard]] static OntologySetType<Type> set_intersection(const OntologySetType<Type> &setA, const OntologySetType<Type> &setB) {
+  [[nodiscard]] static OntologySetType<Type> setIntersection(const OntologySetType<Type> &setA, const OntologySetType<Type> &setB) {
     //iterate the smaller set O(n)
     if (setA.size() <= setB.size()) {
 
       OntologySetType<Type> intersectionSet;
       for (auto const &element : setA) {
         //find element in O(1)
-        if (set_contains(setB, element)) {
+        if (setB.contains(element)) {
 
           intersectionSet.insert(element);
 
@@ -59,15 +51,15 @@ public:
 
     } else {
 
-      return set_intersection(setB, setA);
+      return setIntersection(setB, setA);
 
     }
 
   }
 
-  //!set OPERATION union for boost::unordered_set
+  //!set OPERATION union
   template<typename Type>
-  [[nodiscard]] static OntologySetType<Type> set_union(const OntologySetType<Type> &setA, const OntologySetType<Type> &setB) {
+  [[nodiscard]] static OntologySetType<Type> setUnion(const OntologySetType<Type> &setA, const OntologySetType<Type> &setB) {
 
     if (setA.size() <= setB.size()) {
 
@@ -77,7 +69,7 @@ public:
 
     } else {
 
-      return set_union(setB, setA);
+      return setUnion(setB, setA);
 
     }
 
@@ -85,12 +77,12 @@ public:
 
   //!set OPERATION difference A - B
   template<typename Type>
-  [[nodiscard]] static OntologySetType<Type> set_difference(const OntologySetType<Type> &setA, const OntologySetType<Type> &setB) {
+  [[nodiscard]] static OntologySetType<Type> setDifference(const OntologySetType<Type> &setA, const OntologySetType<Type> &setB) {
 
     OntologySetType<Type> differenceSet;
     for (auto const &element : setA) {
 
-      if (!set_contains(setB, element)) {
+      if (not setB.contains(element)) {
 
         differenceSet.insert(element);
 

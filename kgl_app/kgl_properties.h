@@ -45,7 +45,7 @@ public:
 
   [[nodiscard]]  RuntimeAnalysisMap getAnalysisMap() const;
 
-  [[nodiscard]]  RuntimeGenomeDatabaseMap getGenomeReferenceMap() const;
+  [[nodiscard]]  RuntimeResourceMap getRuntimeResources() const;
 
   [[nodiscard]] RuntimeDataFileMap getDataFiles() const;
 
@@ -86,7 +86,7 @@ private:
   constexpr static const char* PACKAGE_ = "package";
   constexpr static const char* PACKAGE_IDENT_ = "packageIdent";
   constexpr static const char* PACKAGE_ANALYSIS_LIST_ = "analysisList";
-  constexpr static const char* PACKAGE_GENOME_LIST_ = "genomeList";
+  constexpr static const char* PACKAGE_RESOURCE_LIST_ = "resourceList";
   constexpr static const char* PACKAGE_ITERATION_ = "iteration";
   constexpr static const char* PACKAGE_ITERATION_LIST_ = "iterationList";
   // Analysis Runtime categories.
@@ -118,13 +118,18 @@ private:
   constexpr static const char* EVIDENCE_IDENT_ = "evidenceIdent";
   constexpr static const char* EVIDENCE_INFO_LIST_ = "vcfInfoList";
   constexpr static const char* EVIDENCE_INFO_ITEM_ = "vcfInfoItem";
-  // Genome Database categories.
-  constexpr static const char* GENOME_LIST_ = "genomeList";
+  // Resource Database categories.
+  constexpr static const char* RESOURCE_LIST_ = "resourceList";
+  // Go Ontology Database; this is a Resource Database.
+  constexpr static const char* ONTOLOGY_DATABASE_ = "ontologyDatabase";
+  constexpr static const char* ONTOLOGY_IDENT_ = "ontologyIdent";
+  constexpr static const char* GAF_ANNOTATION_FILE_ = "gafFile";
+  constexpr static const char* GO_ONTOLOGY_FILE_ = "goFile";
+  // Genome Database categories; this a Resource Database.
   constexpr static const char* GENOME_DATABASE_ = "genomeDatabase";
   constexpr static const char* GENOME_IDENT_ = "genomeIdent";
   constexpr static const char* FASTA_FILE_ = "fastaFile";
   constexpr static const char* GFF_FILE_ = "gffFile";
-  constexpr static const char* GAF_FILE_ = "gafFile";   // optional
   constexpr static const char* ID_FILE_ = "idFile";   // optional
   constexpr static const char* TRANSLATION_TABLE_ = "translationTable";
   // Contig/Chromosome Alias categories.

@@ -42,7 +42,7 @@ private:
   const PackageAnalysis package_analysis_;
 
   // Load the reference genomes.
-  [[nodiscard]] std::unique_ptr<GenomeCollection> loadReferenceGenomes(const RuntimePackage& package) const;
+  [[nodiscard]] std::unique_ptr<GenomeCollection> loadRuntimeResources(const RuntimePackage& package) const;
 
   // Load a specified data file and return a base pointer (DataDB) to the file.
   [[nodiscard]] std::shared_ptr<DataDB> readDataFile(const RuntimePackage& package,

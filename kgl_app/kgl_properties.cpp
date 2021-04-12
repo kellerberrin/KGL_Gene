@@ -116,25 +116,38 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
     // Get a Vector of Genome Databases to read.
     // This is done on initialization.
-    std::vector<SubPropertyTree> genome_vector;
-    if (not sub_tree.second.getPropertyTreeVector( PACKAGE_GENOME_LIST_, genome_vector))  {
+    std::vector<SubPropertyTree> resource_vector;
+    if (not sub_tree.second.getPropertyTreeVector(PACKAGE_RESOURCE_LIST_, resource_vector))  {
 
-      ExecEnv::log().error("RuntimeProperties::getPackageMap, No Organism Reference Genomes specified for Package: {}", package_ident);
+      ExecEnv::log().warn("RuntimeProperties::getPackageMap, No resources specified for Package: {}", package_ident);
 
     }
-    std::vector<std::string> genomes;
-    for (auto const& genome_sub_tree : genome_vector) {
+    std::vector<std::pair<std::string,RuntimeResourceType>> resources;
+    for (auto const& resource_sub_tree : resource_vector) {
 
-      if (genome_sub_tree.first == GENOME_DATABASE_) {
+      if (resource_sub_tree.first == GENOME_DATABASE_) {
 
-        std::string genome_database = genome_sub_tree.second.getValue();
+        std::string genome_database = resource_sub_tree.second.getValue();
         if (genome_database.empty()) {
 
           ExecEnv::log().critical("RuntimeProperties::getPackageMap, Package: {}, No Genome Database identifier specified", package_ident);
 
         } else {
 
-          genomes.push_back(genome_database);
+          resources.emplace_back(genome_database, RuntimeResourceType::GENOME_DATABASE);
+
+        }
+
+      } else if (resource_sub_tree.first == ONTOLOGY_DATABASE_) {
+
+        std::string ontology_database = resource_sub_tree.second.getValue();
+        if (ontology_database.empty()) {
+
+          ExecEnv::log().critical("RuntimeProperties::getPackageMap, Package: {}, No Ontology Database identifier specified", package_ident);
+
+        } else {
+
+          resources.emplace_back(ontology_database, RuntimeResourceType::ONTOLOGY_DATABASE);
 
         }
 
@@ -175,7 +188,7 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
     }
 
-    std::pair<std::string, RuntimePackage> new_package(package_ident, RuntimePackage(package_ident, analysis_vector, genomes, vector_iteration_files));
+    std::pair<std::string, RuntimePackage> new_package(package_ident, RuntimePackage(package_ident, analysis_vector, resources, vector_iteration_files));
 
     auto result = package_map.insert(new_package);
 
@@ -267,94 +280,137 @@ kgl::RuntimeAnalysisMap kgl::RuntimeProperties::getAnalysisMap() const {
 
 }
 
-// A map of genomes.
-kgl::RuntimeGenomeDatabaseMap kgl::RuntimeProperties::getGenomeReferenceMap() const {
+// A map of resources.
+kgl::RuntimeResourceMap kgl::RuntimeProperties::getRuntimeResources() const {
 
-  RuntimeGenomeDatabaseMap genome_map;
+  RuntimeResourceMap resource_map;
 
-  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + GENOME_LIST_;
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + RESOURCE_LIST_;
 
   std::vector<SubPropertyTree> property_tree_vector;
   if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
 
-    ExecEnv::log().info("RuntimeProperties::getGenomeReferenceMap, no VCF files specified");
-    return genome_map; // return empty map.
+    ExecEnv::log().warn("RuntimeProperties::getRuntimeResources; No runtime resources specified.");
+    return resource_map; // return empty map.
 
   }
 
-  for (const auto& sub_tree : property_tree_vector) {
+  for (const auto& [tree_type, sub_tree] : property_tree_vector) {
 
     // Only process Genome records.
-    if (sub_tree.first != GENOME_DATABASE_) continue;
+    if (tree_type == GENOME_DATABASE_) {
 
-    key = std::string(GENOME_IDENT_);
-    std::string genome_ident;
-    if (not sub_tree.second.getProperty( key, genome_ident)) {
+      key = std::string(GENOME_IDENT_);
+      std::string genome_ident;
+      if (not sub_tree.getProperty( key, genome_ident)) {
 
-      ExecEnv::log().error("RuntimeProperties::getGenomeReferenceMap, No Genome Database Identifier");
-      continue;
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Genome Database Identifier.");
+        continue;
 
-    }
+      }
 
-    key = std::string(FASTA_FILE_);
-    std::string fasta_file_name;
-    if (not sub_tree.second.getFileProperty( key, workDirectory(), fasta_file_name)) {
+      key = std::string(FASTA_FILE_);
+      std::string fasta_file_name;
+      if (not sub_tree.getFileProperty( key, workDirectory(), fasta_file_name)) {
 
-      ExecEnv::log().error("RuntimeProperties::getGenomeReferenceMap, No Fasta file name information");
-      continue;
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Fasta file name information.");
+        continue;
 
-    }
+      }
 
-    key = std::string(GFF_FILE_);
-    std::string gff_file_name;
-    if (not sub_tree.second.getFileProperty( key, workDirectory(), gff_file_name)) {
+      key = std::string(GFF_FILE_);
+      std::string gff_file_name;
+      if (not sub_tree.getFileProperty( key, workDirectory(), gff_file_name)) {
 
-      ExecEnv::log().error("RuntimeProperties::getGenomeReferenceMap, No Gff file name information");
-      continue;
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources, No Gff file name information.");
+        continue;
 
-    }
+      }
 
-    key = std::string(TRANSLATION_TABLE_);
-    std::string translation_table;
-    if (not sub_tree.second.getProperty( key, translation_table)) {
+      key = std::string(TRANSLATION_TABLE_);
+      std::string translation_table;
+      if (not sub_tree.getProperty( key, translation_table)) {
 
-      ExecEnv::log().error("RuntimeProperties::getGenomeReferenceMap, No DNA/Amino translationb table specified");
-      continue;
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources, No DNA/Amino translation table specified.");
+        continue;
 
-    }
+      }
 
-    key = std::string(GAF_FILE_);
-    std::string gaf_file_name;
-    if (not sub_tree.second.getOptionalFileProperty(key, workDirectory(), gaf_file_name)) {
+      key = std::string(GAF_ANNOTATION_FILE_);
+      std::string gaf_file_name;
+      if (not sub_tree.getOptionalFileProperty(key, workDirectory(), gaf_file_name)) {
 
-      gaf_file_name.clear();
+        gaf_file_name.clear();
 
-    }
+      }
 
-    key = std::string(ID_FILE_);
-    std::string id_file_name;
-    if (not sub_tree.second.getOptionalFileProperty(key, workDirectory(), id_file_name)) {
+      key = std::string(ID_FILE_);
+      std::string id_file_name;
+      if (not sub_tree.getOptionalFileProperty(key, workDirectory(), id_file_name)) {
 
-      id_file_name.clear();
+        id_file_name.clear();
 
-    }
+      }
 
-    std::pair<std::string, RuntimeGenomeProperty> new_genome(genome_ident, RuntimeGenomeProperty(genome_ident, fasta_file_name, gff_file_name, translation_table));
+      RuntimeGenomeResource new_genome_db(genome_ident, fasta_file_name, gff_file_name, translation_table);
 
-    new_genome.second.setGafFileName(gaf_file_name);
-    new_genome.second.setIdFileName(id_file_name);
+      new_genome_db.setGafFileName(gaf_file_name);
+      new_genome_db.setIdFileName(id_file_name);
 
-    auto result = genome_map.insert(new_genome);
+      std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const RuntimeGenomeResource>(new_genome_db);
 
-    if (not result.second) {
+      auto const [iter, result] = resource_map.try_emplace(genome_ident, resource_ptr);
+      if (not result) {
 
-      ExecEnv::log().error("RuntimeProperties::getGenomeReferenceMap, Could not add Genome Database ident: {} to map (duplicate)", genome_ident);
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources, Could not add Genome Database ident: {} to map (duplicate)", genome_ident);
 
-    }
+      }
 
-  }
+    } else if (tree_type == ONTOLOGY_DATABASE_) {
 
-  return genome_map;
+      key = std::string(ONTOLOGY_IDENT_);
+      std::string ontology_ident;
+      if (not sub_tree.getProperty(key, ontology_ident)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Ontology Database Identifier.");
+        continue;
+
+      }
+
+      key = std::string(GAF_ANNOTATION_FILE_);
+      std::string annotation_file_name;
+      if (not sub_tree.getFileProperty(key, workDirectory(), annotation_file_name)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Ontology Annotation (GAF) file name information.");
+        continue;
+
+      }
+
+      key = std::string(GO_ONTOLOGY_FILE_);
+      std::string go_graph_file_name;
+      if (not sub_tree.getFileProperty(key, workDirectory(), go_graph_file_name)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources, No Ontology GO file name information.");
+        continue;
+
+      }
+
+      RuntimeOntologyResource new_ontology_db(ontology_ident, annotation_file_name, go_graph_file_name);
+
+      std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const RuntimeOntologyResource>(new_ontology_db);
+
+      auto const [iter, result] = resource_map.try_emplace(ontology_ident, resource_ptr);
+      if (not result) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources, Could not add Genome Database ident: {} to map (duplicate)", ontology_ident);
+
+      }
+
+    } // Gene Ontology
+
+  } // For all resources.
+
+  return resource_map;
 
 }
 
@@ -746,7 +802,7 @@ void kgl::RuntimeProperties::getGenomeDBFiles(const std::string& organism,
 
 
   // The GAF file is optional.
-  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + organism + std::string(DOT_) + std::string(GAF_FILE_) + std::string(DOT_) + std::string(VALUE_);
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + organism + std::string(DOT_) + std::string(GAF_ANNOTATION_FILE_) + std::string(DOT_) + std::string(VALUE_);
 
   if (not property_tree_.getOptionalFileProperty(key, work_directory_, gaf_file)) {
 

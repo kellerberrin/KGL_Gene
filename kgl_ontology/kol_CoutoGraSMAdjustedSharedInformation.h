@@ -69,7 +69,7 @@ public:
     }
 
     //Couto: Anc = CommonAnc(c1,c2)
-    OntologySetType<std::string> commonAncestors = SetUtilities::set_intersection(ancestorsC1, ancestorsC2);
+    OntologySetType<std::string> commonAncestors = SetUtilities::setIntersection(ancestorsC1, ancestorsC2);
     //std::cout << commonAncestors.size() << std::endl;
 
     std::vector<std::pair<double, std::string> > orderedCommonAncestors;
@@ -327,12 +327,16 @@ private:
       GoGraph::GoVertex child = boost::source(*it, graph);
       std::string childTerm = graph[child].termId;
 
-      if (not SetUtilities::set_contains(ancestors, childTerm)) {
+      if (not ancestors.contains(childTerm)) {
+
         continue;
+
       }
       //recurse if child is not finished
-      if (not SetUtilities::set_contains(finished, childTerm)) {
+      if (not finished.contains(childTerm)) {
+
         visitHelper(child, graph, ancestors, finished, pathMap);
+
       }
       ++childCount;
     }
@@ -351,7 +355,7 @@ private:
 
         GoGraph::GoVertex child = boost::source(*it, graph);
         std::string childTerm = graph[child].termId;
-        if (!SetUtilities::set_contains(ancestors, childTerm)) {
+        if (not ancestors.contains(childTerm)) {
 
           continue;
 

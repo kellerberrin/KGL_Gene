@@ -41,8 +41,8 @@ public:
     OntologySetType<std::string> inducedTermSetA = _graph->getExtendedTermSet(termsA);
     OntologySetType<std::string> inducedTermSetB = _graph->getExtendedTermSet(termsB);
     // Calculate union and intersection
-    OntologySetType<std::string> union_set = SetUtilities::set_union(inducedTermSetA, inducedTermSetB);
-    OntologySetType<std::string> intersection_set = SetUtilities::set_intersection(inducedTermSetA, inducedTermSetB);
+    OntologySetType<std::string> union_set = SetUtilities::setUnion(inducedTermSetA, inducedTermSetB);
+    OntologySetType<std::string> intersection_set = SetUtilities::setIntersection(inducedTermSetA, inducedTermSetB);
 
     //if the union is 0, return 0. No division by 0.
     if (union_set.size() == 0) {

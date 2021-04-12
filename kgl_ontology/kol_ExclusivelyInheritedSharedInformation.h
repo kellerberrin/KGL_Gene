@@ -59,7 +59,7 @@ public:
     //Z&L: CommonAnSet <- GetCommonAnSet(t1,t2,AncestorSet)
     OntologySetType<std::string> ancestorsC1 = _goGraph->getSelfAncestorTerms(termC1);
     OntologySetType<std::string> ancestorsC2 = _goGraph->getSelfAncestorTerms(termC2);
-    OntologySetType<std::string> commonAncestors = SetUtilities::set_intersection(ancestorsC1, ancestorsC2);
+    OntologySetType<std::string> commonAncestors = SetUtilities::setIntersection(ancestorsC1, ancestorsC2);
     //std::cout << commonAncestors.size() << std::endl;
 
 
@@ -72,10 +72,10 @@ public:
 
 
     //Z&L: UnionAnSet <- GetAnSet(t1,AncestorSet) U GetAnSet(t2,AncestorSet)
-    OntologySetType<std::string> unionAncestors = SetUtilities::set_union(ancestorsC1, ancestorsC2);
+    OntologySetType<std::string> unionAncestors = SetUtilities::setUnion(ancestorsC1, ancestorsC2);
 
     //Z&L: DiffAnSet <- UnionAnSet - CommonAnSet
-    OntologySetType<std::string> diffSet = SetUtilities::set_difference(unionAncestors, commonAncestors);
+    OntologySetType<std::string> diffSet = SetUtilities::setDifference(unionAncestors, commonAncestors);
 
     //get the boost graph
     const GoGraph::Graph &g = _goGraph->getGraph();
@@ -110,7 +110,7 @@ public:
       //the below code was dropped to improve runtime, improvement is minor though
 
       //Z&L: tmpset <- DiffAnSet <intersect> DirectChildSet
-      //boost::unordered_set<std::string> tempSet = SetUtilities::set_intersection(diffSet,directChildSet);
+      //boost::unordered_set<std::string> tempSet = SetUtilities::setIntersection(diffSet,directChildSet);
       //Z&L: if tmpset != <empty_set>
       //if(tempSet.size() != 0){
       //	isDisj = true;

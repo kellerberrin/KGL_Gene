@@ -64,7 +64,7 @@ public:
 
 
     //Couto: Anc = CommonAnc(c1,c2)
-    OntologySetType<std::string> commonAncestors = SetUtilities::set_intersection(ancestorsC1, ancestorsC2);
+    OntologySetType<std::string> commonAncestors = SetUtilities::setIntersection(ancestorsC1, ancestorsC2);
     //std::cout << commonAncestors.size() << std::endl;
 
     //commonDisjointAncestors(c,c) = {c}, by definition

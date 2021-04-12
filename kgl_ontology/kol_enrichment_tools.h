@@ -73,7 +73,7 @@ namespace kellerberrin::ontology {
                                                                         const std::string &term) {
 
       OntologySetType<std::string> termGenes = getDescendantGenes(go, data, term);
-      OntologySetType<std::string> sharedGenes = SetUtilities::set_intersection(genes, termGenes);
+      OntologySetType<std::string> sharedGenes = SetUtilities::setIntersection(genes, termGenes);
 
       if (sharedGenes.empty()) {
 

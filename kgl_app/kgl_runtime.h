@@ -31,7 +31,7 @@ class ActivePackage {
 
 public:
 
-  ActivePackage(std::string package_identifier) : package_identifier_(std::move(package_identifier)) {}
+  ActivePackage(const std::string& package_identifier) : package_identifier_(package_identifier) {}
   ~ActivePackage() = default;
 
   [[nodiscard]] const std::string& packageIdentifier() const { return package_identifier_; }
@@ -49,6 +49,8 @@ private:
 
 class RuntimePackage;
 using RuntimePackageMap = std::map<std::string, RuntimePackage>;
+enum class RuntimeResourceType { GENOME_DATABASE, ONTOLOGY_DATABASE };
+
 
 class RuntimePackage {
 
@@ -56,26 +58,26 @@ public:
 
   RuntimePackage( const std::string& package_identifier,
                   const std::vector<std::string>& analysis_list,
-                  const std::vector<std::string>& genome_database_list,
+                  const std::vector<std::pair<std::string, RuntimeResourceType>>& resource_database_list,
                   const std::vector<std::vector<std::string>>& iterative_file_list)
                   : package_identifier_(package_identifier),
-                  analysis_list_(analysis_list),
-                  genome_database_list_(genome_database_list),
-                  iterative_file_list_(iterative_file_list) {}
+                    analysis_list_(analysis_list),
+                    resource_database_list_(resource_database_list),
+                    iterative_file_list_(iterative_file_list) {}
   RuntimePackage(const RuntimePackage&) = default;
   ~RuntimePackage() = default;
 
 
   [[nodiscard]] const std::string& packageIdentifier() const { return package_identifier_; }
   [[nodiscard]] const std::vector<std::string>& analysisList() const { return analysis_list_; }
-  [[nodiscard]] const std::vector<std::string>& genomeDatabaseList() const { return genome_database_list_; }
+  [[nodiscard]] const std::vector<std::pair<std::string, RuntimeResourceType>>& resourceDatabaseList() const { return resource_database_list_; }
   [[nodiscard]] const std::vector<std::vector<std::string>>& iterativeFileList() const { return iterative_file_list_; }
 
 private:
 
   std::string package_identifier_;
   std::vector<std::string> analysis_list_;
-  std::vector<std::string> genome_database_list_;
+  std::vector<std::pair<std::string, RuntimeResourceType>> resource_database_list_;
   std::vector<std::vector<std::string>> iterative_file_list_;
 
 };
@@ -110,20 +112,38 @@ private:
 
 };
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Base Object for resources.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class RuntimeResource;
+using RuntimeResourceMap = std::map<std::string, std::shared_ptr<const RuntimeResource>>;
+
+class RuntimeResource {
+
+public:
+
+  RuntimeResource() = default;
+  virtual ~RuntimeResource() = default;
+
+  [[nodiscard]] virtual RuntimeResourceType resourceType() const = 0;
+
+private:
+
+};
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Object to hold Genome Database file information.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class RuntimeGenomeProperty;
-using RuntimeGenomeDatabaseMap = std::map<std::string, RuntimeGenomeProperty>;
 
-class RuntimeGenomeProperty {
+class RuntimeGenomeResource : public RuntimeResource {
 
 public:
 
-  RuntimeGenomeProperty(const std::string& genome_identifier,
+  RuntimeGenomeResource(const std::string& genome_identifier,
                         const std::string& fasta_file_name,
                         const std::string& gff_file_name,
                         const std::string& translation_table)
@@ -131,8 +151,11 @@ public:
     fasta_file_name_(fasta_file_name),
     gff_file_name_(gff_file_name),
     translation_table_(translation_table) {}
-  RuntimeGenomeProperty(const RuntimeGenomeProperty&) = default;
-  ~RuntimeGenomeProperty() = default;
+  RuntimeGenomeResource() = delete;
+  RuntimeGenomeResource(const RuntimeGenomeResource&) = default;
+  ~RuntimeGenomeResource() override = default;
+
+  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::GENOME_DATABASE; }
 
   [[nodiscard]] const std::string& genomeIdentifier() const { return genome_identifier_; }
   [[nodiscard]] const std::string& fastaFileName() const { return fasta_file_name_; }
@@ -156,6 +179,39 @@ private:
 
 };
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Object to hold Genome Database file information.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class RuntimeOntologyResource : public RuntimeResource {
+
+public:
+
+  RuntimeOntologyResource(const std::string& ontology_identifier,
+                          const std::string& annotation_file_name,
+                          const std::string& go_graph_file_name)
+      : ontology_identifier_(ontology_identifier),
+        annotation_file_name_(annotation_file_name),
+        go_graph_file_name_(go_graph_file_name) {}
+  RuntimeOntologyResource() = delete;
+  RuntimeOntologyResource(const RuntimeOntologyResource&) = default;
+  ~RuntimeOntologyResource() override = default;
+
+  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::ONTOLOGY_DATABASE; }
+
+  [[nodiscard]] const std::string& ontologyIdentifier() const { return ontology_identifier_; }
+  [[nodiscard]] const std::string& annotationFileName() const { return annotation_file_name_; }
+  [[nodiscard]] const std::string& goGraphFileName() const { return go_graph_file_name_; }
+
+private:
+
+  std::string ontology_identifier_;   // A unique short string to identify this annotation database
+  std::string annotation_file_name_;
+  std::string go_graph_file_name_;
+
+};
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Base Object to hold data file information.
@@ -170,12 +226,12 @@ class BaseFileInfo {
 
 public:
 
-  BaseFileInfo(std::string identifier,
-               std::string file_name,
-               std::string file_type)
-      : file_identifier_(std::move(identifier)),
-        file_name_(std::move(file_name)),
-        file_type_(std::move(file_type)) {}
+  BaseFileInfo(const std::string& identifier,
+               const std::string& file_name,
+               const std::string& file_type)
+      : file_identifier_(identifier),
+        file_name_(file_name),
+        file_type_(file_type) {}
   BaseFileInfo(const BaseFileInfo&) = default;
   virtual ~BaseFileInfo() = default;
 

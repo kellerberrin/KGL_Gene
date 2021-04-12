@@ -8,187 +8,14 @@
 
 #include <vector>
 #include <string>
-#include <iostream>
-#include <condition_variable>
-#include <functional>
-#include <iostream>
-#include <future>
-#include <thread>
-#include <queue>
-#include <algorithm>
 
+#include "kel_thread_pool.h"
 #include "kol_GoEnums.h"
 #include "kol_GoGraph.h"
 #include "kol_AnnotationData.h"
 #include "kol_TermSimilarityInterface.h"
 
 namespace kellerberrin::ontology {
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// A general purpose thread safe queue for multiple consumer and producer threads.
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-template<typename T> class MtQueue {
-
-public:
-
-  MtQueue() = default;
-  ~MtQueue() = default;
-  MtQueue(const MtQueue &) = delete;
-  MtQueue(MtQueue &&) = delete;
-
-  MtQueue &operator=(const MtQueue &) = delete;
-
-  void push(T value) {
-
-    // Scope for automatic locking/unlocking.
-    {
-
-      std::scoped_lock lock(mutex_);
-
-      data_queue_.push(std::move(value));
-
-      ++size_;
-      ++activity_;
-
-    }
-
-    // The notification is sent after the queue is unlocked so that any threads on waitAndPop() can immediately execute.
-    data_cond_.notify_one();
-
-
-  }
-
-  [[nodiscard]] T waitAndPop() {
-
-    std::unique_lock<std::mutex> lock(mutex_);
-
-    // wait on non-empty
-    data_cond_.wait(lock, [this] { return not empty(); });
-
-    T value = std::move(data_queue_.front());
-
-    data_queue_.pop();
-
-    --size_;
-    ++activity_;
-
-    // Unlock the mutex.
-    lock.unlock();
-
-    // Notify any other waiting threads after the queue is unlocked.
-    data_cond_.notify_one();
-
-    return value;
-
-  }
-
-  [[nodiscard]] bool empty() const { return size_ == 0; }
-
-  [[nodiscard]] size_t size() const { return size_; }
-
-  [[nodiscard]] size_t activity() const { return activity_; }
-
-private:
-
-  std::mutex mutex_;
-  std::queue<T> data_queue_;
-  std::condition_variable data_cond_;
-  std::atomic<size_t> size_{0};
-  std::atomic<size_t> activity_{0};
-
-};
-
-
-///////////////////////////////////////////////////////////////////////////////////////////
-//
-// A general purpose thread pool class.
-//
-///////////////////////////////////////////////////////////////////////////////////////////
-
-class ThreadPool
-{
-
-  using Proc = std::function<void(void)>;
-
-public:
-
-  explicit ThreadPool(size_t threads) { startThreads(threads); }
-  ~ThreadPool() noexcept { joinThreads(); }
-
-  // Convenience routine, available hardware threads, one less than actually available.
-  [[nodiscard]] static size_t hardwareThreads() { return std::thread::hardware_concurrency() - 1; }
-
-
-  // Returns a std::future holding the function return value.
-  template<typename F, typename... Args>
-  [[nodiscard]] auto enqueueTask(F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type>
-  {
-
-    using return_type = typename std::result_of<F(Args...)>::type;
-    auto task = std::make_shared<std::packaged_task<return_type()>>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
-    std::future<return_type> future = task->get_future();
-    work_queue_.push([task](){ (*task)(); });
-    return future;
-
-  }
-
-  [[nodiscard]] size_t threadCount() const { return threads_.size(); }
-
-private:
-
-  std::vector<std::thread> threads_;
-  MtQueue<Proc> work_queue_;
-
-  void startThreads(size_t threads)
-  {
-
-    if (threads < 1) {
-
-      threads = 1;
-
-    }
-
-    for(size_t i = 0; i < threads; ++i)
-
-      threads_.emplace_back(std::thread([this]() {
-
-        while(true)
-        {
-
-          auto workItem = work_queue_.waitAndPop();
-
-          if (workItem == nullptr) {
-
-            work_queue_.push(nullptr);
-            break;
-
-          }
-
-          workItem();
-
-        }
-      }));
-  }
-
-  void joinThreads() {
-
-    work_queue_.push(nullptr);
-
-    for(auto& thread : threads_) {
-
-      thread.join();
-
-    }
-
-  }
-
-};
 
 
 //! A multi-threaded class write a term similarity matrix to a memory cache.
@@ -391,4 +218,4 @@ private:
 } // namespace
 
 
-#endif //TERMSIMILARITYCACHE_H
+#endif //KGL_TERMSIMILARITYCACHE_H

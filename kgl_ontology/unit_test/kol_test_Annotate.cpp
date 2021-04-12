@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(test_get_all_go_terms)
 
         const size_t go_count{16556};
         // Check unqiueness by assigning to a set.
-        auto go_set = kol::SetUtilities::convert_vector(annotation().getAllGoTerms());
+        auto go_set = kol::SetUtilities::convertVector(annotation().getAllGoTerms());
         if (go_set.size() != go_count) BOOST_FAIL("Annotation Go list size is incorrect" );
         BOOST_TEST_MESSAGE( "test_get_all_go_terms... OK" );
 
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(test_get_all_genes)
 
   const size_t gene_count{19194};
   // Check unqiueness by assigning to a set.
-  auto gene_set = kol::SetUtilities::convert_vector(annotation().getAllGenes());
+  auto gene_set = kol::SetUtilities::convertVector(annotation().getAllGenes());
   if (gene_set.size() != gene_count) BOOST_FAIL("Annotation Gene list size is incorrect" );
   BOOST_TEST_MESSAGE( "test_get_all_genes ... OK" );
 
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(test_go_terms_for_gene)
 {
 
   const std::set<std::string> go_annotations{"GO:0004871", "GO:0005834", "GO:0007186"};
-  if (convertSet(kol::SetUtilities::convert_vector(annotation().getGoTermsForGene("A0A024R161"))) != go_annotations) BOOST_FAIL("Found invalid go terms for gene" );
+  if (convertSet(kol::SetUtilities::convertVector(annotation().getGoTermsForGene("A0A024R161"))) != go_annotations) BOOST_FAIL("Found invalid go terms for gene" );
   BOOST_TEST_MESSAGE( "test_go_terms_for_gene ... OK" );
 
 }
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(test_genes_for_go_term)
 {
 
   const std::set<std::string> gene_set{"A6NNW6", "P06733", "P09104", "P13929"};
-  if (convertSet(kol::SetUtilities::convert_vector(annotation().getGenesForGoTerm("GO:0000015"))) != gene_set) BOOST_FAIL("Invalid gene list for go term" );
+  if (convertSet(kol::SetUtilities::convertVector(annotation().getGenesForGoTerm("GO:0000015"))) != gene_set) BOOST_FAIL("Invalid gene list for go term" );
   BOOST_TEST_MESSAGE( "test_genes_for_go_term ... OK" );
 
 }

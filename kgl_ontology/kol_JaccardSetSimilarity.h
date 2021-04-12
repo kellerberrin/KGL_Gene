@@ -43,8 +43,8 @@ public:
     }
 
     //get iterators
-    OntologySetType<std::string> _union = SetUtilities::set_union(termsA, termsB);
-    OntologySetType<std::string> _intersection = SetUtilities::set_intersection(termsA, termsB);
+    OntologySetType<std::string> _union = SetUtilities::setUnion(termsA, termsB);
+    OntologySetType<std::string> _intersection = SetUtilities::setIntersection(termsA, termsB);
 
     if (_union.empty()) {
 

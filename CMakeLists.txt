@@ -20,7 +20,7 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
                     kgl_genomics/kgl_database
                     kgl_mixture                  # Deconvolution and mixture library
                     kgl_analytic                  # Genetic analysis library (top level)
-        kgl_ontology                  # Experimental Ontology Library
+                    kgl_ontology                  # Experimental Ontology Library
                     kgl_analytic/kgl_inbreed
                     kgl_analytic/kgl_verify
                     kgl_analytic/kgl_info
@@ -232,7 +232,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_ensembl_id_parser.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_ontology/kol_OntologyTypes.h)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_ontology/kol_OntologyTypes.h kgl_ontology/kol_OntologyDatabase.h)
 
 # Gene ontology library
 set(ONTOLOGY_SOURCE_FILES
@@ -344,7 +344,8 @@ set(ONTOLOGY_UNIT_TEST_FILES
         kgl_ontology/unit_test/kol_test_TermSimMatrix_JC_BP.cpp
         kgl_ontology/unit_test/kol_test_TermSimMatrix_LIN_MF.cpp
         kgl_ontology/unit_test/kol_test_TermSimMatrix_RES_CC.cpp
-        kgl_ontology/unit_test/kol_test_TermSimCache_LIN_BP.cpp kgl_ontology/unit_test/kol_test_data.h)
+        kgl_ontology/unit_test/kol_test_TermSimCache_LIN_BP.cpp
+        kgl_ontology/unit_test/kol_test_data.h kgl_ontology/kol_OntologyDatabase.h)
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES
