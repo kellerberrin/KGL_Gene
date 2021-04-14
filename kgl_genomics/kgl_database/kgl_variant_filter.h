@@ -6,7 +6,7 @@
 #define KGL_FILTER_H
 
 #include "kgl_variant.h"
-#include "kgl_genome_collection.h"
+#include "kgl_resource_db.h"
 
 #include "kel_utility.h"
 

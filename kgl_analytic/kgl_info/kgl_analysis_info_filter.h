@@ -7,7 +7,7 @@
 
 
 #include "kgl_runtime.h"
-#include "kgl_genome_collection.h"
+#include "kgl_resource_db.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 
@@ -36,7 +36,7 @@ public:
   // This function must be redefined.
   [[nodiscard]] bool initializeAnalysis( const std::string& work_directory,
                                          const ActiveParameterList& named_parameters,
-                                         std::shared_ptr<const GenomeCollection> reference_genomes) override;
+                                         const std::shared_ptr<const AnalysisResources>& resource_ptr) override;
 
   // Perform the genetic analysis per VCF file (need not be redefined)
   [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataDB> vcf_population) override;

@@ -4,7 +4,7 @@
 
 #include <set>
 #include "kgl_sequence_amino.h"
-#include "kgl_genome_collection.h"
+#include "kgl_resource_db.h"
 
 
 namespace kgl = kellerberrin::genome;

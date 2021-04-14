@@ -6,7 +6,7 @@
 #define KGL_STATISTICS_UPGMA_H
 
 #include "kgl_phylogenetic_tree.h"
-#include "kgl_genome_collection.h"
+#include "kgl_resource_db.h"
 #include "kel_utility.h"
 #include "kgl_sequence_distance.h"
 #include "kgl_variant_db_population.h"

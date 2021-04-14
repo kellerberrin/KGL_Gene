@@ -105,7 +105,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_genome_types.h
         kgl_genomics/kgl_database/kgl_gff_fasta.h
         kgl_genomics/kgl_database/kgl_gff_fasta.cpp
-        kgl_genomics/kgl_database/kgl_genome_collection.h
+        kgl_app/kgl_resource_db.h
         kgl_genomics/kgl_database/kgl_genome_feature.h
         kgl_genomics/kgl_database/kgl_genome_feature.cpp
         kgl_genomics/kgl_database/kgl_variant.h
@@ -216,7 +216,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_variant_db_population.cpp
         kgl_genomics/kgl_database/kgl_variant_db_type.h
         kgl_genomics/kgl_database/kgl_genome_contig.h
-        kgl_genomics/kgl_database/kgl_genome_collection.cpp
         kgl_genomics/kgl_database/kgl_variant_db_type.cpp
         kgl_genomics/kgl_parser/kgl_Pf3k_COI.cpp
         kgl_genomics/kgl_parser/kgl_Pf3k_COI.h
@@ -445,7 +444,7 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_runtime.cpp
         kgl_app/kgl_runtime.h
         kgl_app/kgl_runtime_config.cpp
-        kgl_app/kgl_runtime_config.h)
+        kgl_app/kgl_runtime_config.h kgl_app/kgl_package_resources.cpp)
 
 
 

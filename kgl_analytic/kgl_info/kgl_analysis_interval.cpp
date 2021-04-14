@@ -174,20 +174,20 @@ double kgl::IntervalData::meanEmptyInterval() const {
 // Setup the analytics to process VCF data. Returning false disables the analysis.
 bool kgl::IntervalAnalysis::initializeAnalysis( const std::string& work_directory,
                                                 const ActiveParameterList& named_parameters,
-                                                std::shared_ptr<const GenomeCollection> reference_genomes) {
+                                                const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
   work_directory_ = work_directory;
 
-  if (reference_genomes->getMap().size() != 1) {
+  if (resource_ptr->getGenomes().getMap().size() != 1) {
 
     ExecEnv::log().error("Analytic: {} called with {} genomes.  Only 1 genome can be analysed at a time. Disabled.",
-                    ident(), reference_genomes->getMap().size());
+                    ident(), resource_ptr->getGenomes().getMap().size());
     return false;
 
   }
 
   // The first genome is the only genome.
-  genome_ = reference_genomes->getMap().begin()->second;
+  genome_ = resource_ptr->getGenomes().getMap().begin()->second;
 
   if (not genome_) {
 

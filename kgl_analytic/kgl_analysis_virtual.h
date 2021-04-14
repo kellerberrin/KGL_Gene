@@ -8,7 +8,7 @@
 
 
 #include "kgl_runtime.h"
-#include "kgl_genome_collection.h"
+#include "kgl_resource_db.h"
 #include "kgl_variant_db_population.h"
 
 
@@ -30,7 +30,7 @@ public:
   // Setup the analytics to process VCF data.
   [[nodiscard]] virtual bool initializeAnalysis( const std::string& work_directory,
                                                  const ActiveParameterList& named_parameters,
-                                                 std::shared_ptr<const GenomeCollection> reference_genomes) = 0;
+                                                 const std::shared_ptr<const AnalysisResources>& resource_ptr) = 0;
 
   // Perform the genetic analysis per VCF file
   [[nodiscard]] virtual bool fileReadAnalysis(std::shared_ptr<const DataDB> data_object_ptr) = 0;

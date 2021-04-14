@@ -53,7 +53,7 @@ std::shared_ptr<kgl::DataDB> kgl::ParserSelection::readPf3kCOI(std::shared_ptr<B
 //
 
 
-std::shared_ptr<kgl::DataDB> kgl::ParserSelection::parseData(std::shared_ptr<const GenomeCollection> reference_genomes,
+std::shared_ptr<kgl::DataDB> kgl::ParserSelection::parseData(const std::shared_ptr<const AnalysisResources>& resource_ptr,
                                                              std::shared_ptr<BaseFileInfo> file_info_ptr,
                                                              const VariantEvidenceMap& evidence_map,
                                                              const ContigAliasMap& contig_alias) {
@@ -74,16 +74,16 @@ std::shared_ptr<kgl::DataDB> kgl::ParserSelection::parseData(std::shared_ptr<con
   switch(parser_type) {
 
     case ParserTypeEnum::DiploidFalciparum:
-      return readVCF<Pf3kVCFImpl>(reference_genomes, file_info_ptr, evidence_map, contig_alias, data_source);
+      return readVCF<Pf3kVCFImpl>(resource_ptr, file_info_ptr, evidence_map, contig_alias, data_source);
 
     case ParserTypeEnum::MonoGenomeUnphased:
-      return readVCF<GrchVCFImpl>(reference_genomes, file_info_ptr, evidence_map, contig_alias, data_source);
+      return readVCF<GrchVCFImpl>(resource_ptr, file_info_ptr, evidence_map, contig_alias, data_source);
 
     case ParserTypeEnum::DiploidPhased:
-      return readVCF<Genome1000VCFImpl>(reference_genomes, file_info_ptr, evidence_map, contig_alias, data_source);
+      return readVCF<Genome1000VCFImpl>(resource_ptr, file_info_ptr, evidence_map, contig_alias, data_source);
 
     case ParserTypeEnum::DiploidGnomad:
-      return readVCF<GenomeGnomadVCFImpl>(reference_genomes, file_info_ptr, evidence_map, contig_alias, data_source);
+      return readVCF<GenomeGnomadVCFImpl>(resource_ptr, file_info_ptr, evidence_map, contig_alias, data_source);
 
     case ParserTypeEnum::PedGenome1000:
       return ParserSelection::readPEDAncestry(file_info_ptr, data_source);

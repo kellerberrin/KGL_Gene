@@ -11,7 +11,7 @@
 #include <sstream>
 #include "kgl_genome_types.h"
 #include "kgl_alphabet_amino.h"
-#include "kgl_genome_collection.h"
+#include "kgl_resource_db.h"
 #include "kgl_sequence_base.h"
 #include "kgl_variant_evidence.h"
 #include "kgl_variant_filter_virtual.h"

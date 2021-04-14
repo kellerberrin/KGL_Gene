@@ -11,8 +11,8 @@ namespace kgl = kellerberrin::genome;
 
 // Setup the analytics to process VCF data.
 bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
-                                           const ActiveParameterList& named_parameters,
-                                           std::shared_ptr<const GenomeCollection> reference_genomes) {
+                                            const ActiveParameterList& named_parameters,
+                                            const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
   ExecEnv::log().info("Default Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
   for (auto const& [parameter_ident, parameter_map] : named_parameters.getMap()) {
@@ -21,7 +21,7 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 
   }
 
-  for (auto const& genome : reference_genomes->getMap()) {
+  for (auto const& genome : resource_ptr->getGenomes().getMap()) {
 
     ExecEnv::log().info("Default Initialize for Analysis Id: {} called with Reference Genome: {}", ident(), genome.first);
 
@@ -34,7 +34,7 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 
   }
 
-  reference_genomes_ = reference_genomes;
+  reference_genomes_ = std::make_shared<const  GenomeCollection>(resource_ptr->getGenomes());
   performPFEMP1UPGMA();
 
   return true;

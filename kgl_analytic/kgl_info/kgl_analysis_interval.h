@@ -6,7 +6,7 @@
 #define KGL_ANALYSIS_INTERVAL_H
 
 #include "kgl_runtime.h"
-#include "kgl_genome_collection.h"
+#include "kgl_resource_db.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_analysis_virtual.h"
 #include "kgl_analysis_age.h"
@@ -147,7 +147,7 @@ public:
   // This function must be redefined.
   [[nodiscard]] bool initializeAnalysis( const std::string& work_directory,
                                          const ActiveParameterList& named_parameters,
-                                         std::shared_ptr<const GenomeCollection> reference_genomes) override;
+                                         const std::shared_ptr<const AnalysisResources>& resource_ptr) override;
 
   // Perform the genetic analysis per iteration.
   [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataDB> data_base_ptr) override;

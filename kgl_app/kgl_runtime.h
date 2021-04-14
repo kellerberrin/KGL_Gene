@@ -49,7 +49,7 @@ private:
 
 class RuntimePackage;
 using RuntimePackageMap = std::map<std::string, RuntimePackage>;
-enum class RuntimeResourceType { GENOME_DATABASE, ONTOLOGY_DATABASE };
+enum class RuntimeResourceType { GENOME_DATABASE, ONTOLOGY_DATABASE, GENE_NOMENCLATURE };
 
 
 class RuntimePackage {

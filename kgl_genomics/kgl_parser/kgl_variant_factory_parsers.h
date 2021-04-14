@@ -6,6 +6,7 @@
 #define KGL_VARIANT_FACTORY_PARSERS_H
 
 #include "kgl_runtime.h"
+#include "kgl_resource_db.h"
 
 
 
@@ -27,8 +28,7 @@ public:
   ParserSelection() = default;
   ~ParserSelection() = default;
 
-
-  [[nodiscard]] static std::shared_ptr<DataDB> parseData(std::shared_ptr<const GenomeCollection> reference_genomes,
+  [[nodiscard]] static std::shared_ptr<DataDB> parseData(const std::shared_ptr<const AnalysisResources>& resource_ptr,
                                                          std::shared_ptr<BaseFileInfo> file_info,
                                                          const VariantEvidenceMap& evidence_map,
                                                          const ContigAliasMap& contig_alias);
@@ -46,7 +46,7 @@ private:
 
   // Read and parse a package specified VCF file.
   template<class VCFParser>
-  [[nodiscard]] static std::shared_ptr<DataDB> readVCF(std::shared_ptr<const GenomeCollection> reference_genomes,
+  [[nodiscard]] static std::shared_ptr<DataDB> readVCF(const std::shared_ptr<const AnalysisResources>& resource_ptr,
                                                        std::shared_ptr<BaseFileInfo> file_info,
                                                        const VariantEvidenceMap& evidence_map,
                                                        const ContigAliasMap& contig_alias,
@@ -62,7 +62,7 @@ private:
     }
 
     // Get the specified reference genome to validate the parsed VCF population.
-    std::optional<std::shared_ptr<const GenomeReference>> ref_genome_opt = reference_genomes->getOptionalGenome(vcf_file_info->referenceGenome());
+    std::optional<std::shared_ptr<const GenomeReference>> ref_genome_opt = resource_ptr->getGenomes().getOptionalResource(vcf_file_info->referenceGenome());
 
     if (not ref_genome_opt) {
 

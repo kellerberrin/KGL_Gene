@@ -12,7 +12,7 @@ namespace kgl = kellerberrin::genome;
 // Setup the analytics to process VCF data.
 bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory,
                                                const ActiveParameterList& named_parameters,
-                                               std::shared_ptr<const GenomeCollection> reference_genomes) {
+                                               const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
   ExecEnv::log().info("Default Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
   for (auto const& [parameter_ident, parameter_map] : named_parameters.getMap()) {
@@ -21,13 +21,13 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
   }
 
-  if (reference_genomes->getMap().size() != 1) {
+  if (resource_ptr->getGenomes().getMap().size() != 1) {
 
-    ExecEnv::log().critical("Analysis Id: {}, expected single (1) reference genome, actual count: {}", reference_genomes->getMap().size());
+    ExecEnv::log().critical("Analysis Id: {}, expected single (1) reference genome, actual count: {}", resource_ptr->getGenomes().getMap().size());
 
   }
 
-  auto [genome_id, genome_ptr] = *(reference_genomes->getMap().begin());
+  auto [genome_id, genome_ptr] = *(resource_ptr->getGenomes().getMap().begin());
   ref_genome_ptr_ = genome_ptr;
 
   if (not getParameters(named_parameters, work_directory)) {
@@ -350,7 +350,7 @@ void kgl::MutationAnalysis::performRegion() {
                                               584668,
                                               7280,
                                               population_ptr_,
-                                              ref_genome_ptr_->getGenome(analysis_genome),
+                                              ref_genome_ptr_->getResource(analysis_genome),
                                               region_fasta_file)) {
 
     ExecEnv::log().error("PhylogeneticAnalysis::performRegion(); analysis fails");

@@ -33,7 +33,7 @@ public:
   // Setup the analytics to process VCF data.
   [[nodiscard]] bool initializeAnalysis(const std::string &work_directory,
                                         const ActiveParameterList& named_parameters,
-                                        std::shared_ptr<const GenomeCollection>) override;
+                                        const std::shared_ptr<const AnalysisResources>& resource_ptr) override;
 
   // Perform the genetic analysis per VCF file
   [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataDB> data_object_ptr) override;

@@ -7,7 +7,7 @@
 
 #include "kel_exec_env.h"
 #include "kgl_runtime_config.h"
-#include "kgl_genome_collection.h"
+#include "kgl_resource_db.h"
 #include "kgl_package_analysis.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -42,11 +42,11 @@ private:
   const PackageAnalysis package_analysis_;
 
   // Load the reference genomes.
-  [[nodiscard]] std::unique_ptr<GenomeCollection> loadRuntimeResources(const RuntimePackage& package) const;
+  [[nodiscard]] std::shared_ptr<const AnalysisResources> loadRuntimeResources(const RuntimePackage& package) const;
 
   // Load a specified data file and return a base pointer (DataDB) to the file.
   [[nodiscard]] std::shared_ptr<DataDB> readDataFile(const RuntimePackage& package,
-                                                     std::shared_ptr<const GenomeCollection> reference_genomes,
+                                                     const std::shared_ptr<const AnalysisResources>& resource_ptr,
                                                      const std::string& data_file) const;
 
 

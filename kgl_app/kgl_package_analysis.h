@@ -8,7 +8,7 @@
 
 #include "kel_exec_env.h"
 #include "kgl_runtime_config.h"
-#include "kgl_genome_collection.h"
+#include "kgl_resource_db.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_analysis_all.h" // Includes all the defined active analysis objects.
 
@@ -35,7 +35,7 @@ public:
 
   // Setup the analytics to process data.
   [[nodiscard]] bool initializeAnalysis(const RuntimePackage& package,
-                                        std::shared_ptr<const GenomeCollection> reference_genomes) const;
+                                        const std::shared_ptr<const AnalysisResources>& resource_ptr) const;
 
   // Perform the genetic analysis per VCF file read.
   [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataDB> file_data) const;

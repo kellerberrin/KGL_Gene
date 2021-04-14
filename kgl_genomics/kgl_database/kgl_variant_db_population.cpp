@@ -66,7 +66,7 @@ bool kgl::PopulationDB::addGenome(const std::shared_ptr<GenomeDB>& genome_ptr) {
 
   if (not result) {
 
-    ExecEnv::log().error("PopulationDB::addGenome(), could not add genome: {} (duplicate) to the population", genome_ptr->genomeId());
+    ExecEnv::log().error("PopulationDB::addResource(), could not add genome: {} (duplicate) to the population", genome_ptr->genomeId());
 
   }
 

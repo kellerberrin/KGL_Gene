@@ -9,7 +9,7 @@ namespace kgl = kellerberrin::genome;
 
 
 bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
-                                              std::shared_ptr<const GenomeCollection> reference_genomes) const {
+                                               const std::shared_ptr<const AnalysisResources>& resource_ptr) const {
 
 
   active_analysis_.clear();
@@ -40,9 +40,7 @@ bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
           auto defined_parameters = runtime_contig_.activeParameterList().createParameterList(result->second.parameterMap());
 
           // Initialize.
-          if (analysis_ptr->initializeAnalysis(runtime_contig_.workDirectory(),
-                                               defined_parameters,
-                                               reference_genomes)) {
+          if (analysis_ptr->initializeAnalysis(runtime_contig_.workDirectory(), defined_parameters, resource_ptr)) {
 
             active_analysis_.emplace_back(std::move(analysis_ptr), true);
 
