@@ -231,7 +231,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_ensembl_id_parser.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_ontology/kol_OntologyTypes.h kgl_ontology/kol_OntologyDatabase.h)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kgl_ontology/kol_OntologyTypes.h kgl_ontology/kol_OntologyDatabase.h kgl_ontology/kol_AnnotationData.cpp)
 
 # Gene ontology library
 set(ONTOLOGY_SOURCE_FILES
@@ -251,7 +251,7 @@ set(ONTOLOGY_SOURCE_FILES
         kgl_ontology/kol_CoutoGraSMAdjustedSharedInformation.h
         kgl_ontology/kol_CoutoGraSMSharedInformation.h
         kgl_ontology/kol_DisallowedSetEvidencePolicy.h
-        kgl_ontology/kol_enrichment_tools.h
+        kgl_ontology/kol_EnrichmentTools.h
         kgl_ontology/kol_EntrezGene2GoAnnotationParser.h
         kgl_ontology/kol_EvidencePolicyInterface.h
         kgl_ontology/kol_ExclusivelyInheritedSharedInformation.h
@@ -300,7 +300,9 @@ set(ONTOLOGY_SOURCE_FILES
         kgl_ontology/xml/rapidxml_iterators.h
         kgl_ontology/xml/rapidxml_print.h
         kgl_ontology/xml/rapidxml_utils.h
-        )
+        kgl_ontology/kol_OntologyDatabase.h
+        kgl_ontology/kol_AnnotationData.cpp
+        kgl_ontology/kol_GoGraph.cpp kgl_ontology/kol_FrontierSharedInformation.cpp)
 
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES
@@ -344,7 +346,7 @@ set(ONTOLOGY_UNIT_TEST_FILES
         kgl_ontology/unit_test/kol_test_TermSimMatrix_LIN_MF.cpp
         kgl_ontology/unit_test/kol_test_TermSimMatrix_RES_CC.cpp
         kgl_ontology/unit_test/kol_test_TermSimCache_LIN_BP.cpp
-        kgl_ontology/unit_test/kol_test_data.h kgl_ontology/kol_OntologyDatabase.h)
+        kgl_ontology/unit_test/kol_test_data.h )
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES
@@ -417,7 +419,9 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_variant.cpp
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_variant.h
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_stats.cpp
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_stats.h)
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_stats.h
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_ontology.cpp
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_ontology.h)
 
 # Deconvolution and mixture files.
 
@@ -464,12 +468,14 @@ target_link_libraries(kgl_analysis kgl_genomics kel_utility )
 add_executable (kgl_genome ${APPLICATION_SOURCE_FILES} )
 
 # Specify the static libraries.
-target_link_libraries(kgl_genome kgl_analysis kgl_genomics kel_utility ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} nlopt)
+target_link_libraries(kgl_genome kgl_analysis kgl_genomics kol_ontology kel_utility ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} nlopt)
+
+add_library(kol_ontology STATIC ${ONTOLOGY_SOURCE_FILES})
 
 #generate libraries.
 add_executable(kol_test ${ONTOLOGY_UNIT_TEST_FILES})
 
-target_link_libraries (kol_test kel_utility ${Boost_LIBRARIES})
+target_link_libraries (kol_test kol_ontology kel_utility ${Boost_LIBRARIES})
 
 
 

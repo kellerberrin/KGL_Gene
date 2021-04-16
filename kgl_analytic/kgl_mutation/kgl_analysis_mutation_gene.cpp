@@ -41,9 +41,19 @@ void kgl::GenomeMutation::analysisType() {
 
 // Perform the genetic analysis per iteration.
 bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeReference>& genome_ptr,
-                                          const std::shared_ptr<const GenomePEDData>& ped_data)
+                                          const std::shared_ptr<const GenomePEDData>& ped_data,
+                                          const std::shared_ptr<const OntologyDatabase>& ontology_db_ptr)
 {
 
+  // Only execute this function once.
+
+  if (analysis_initialized_) {
+
+    return  true;
+
+  }
+
+  analysis_initialized_ = true;
   const GafRecordMap& ont_map = genome_ptr->geneOntology().getMap();
   ResortGaf symbolic_gaf; // re-sort by the symbolic reference.
   symbolic_gaf.sortBySymbolic(ont_map);
@@ -110,6 +120,7 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
       mutation.gene_variants.updateLofEthnicity().updatePopulations(ped_data);
       mutation.gene_variants.updateHighEthnicity().updatePopulations(ped_data);
       mutation.gene_variants.updateModerateEthnicity().updatePopulations(ped_data);
+      mutation.ontology.processOntologyStats(mutation.gene_characteristic, ontology_db_ptr);
       gene_vector_.push_back(mutation);
 
     } // Gene.
@@ -124,7 +135,8 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
 bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const PopulationDB>& population_ptr,
                                           const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                           const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
-                                          const std::shared_ptr<const GenomePEDData>& ped_data) {
+                                          const std::shared_ptr<const GenomePEDData>& ped_data,
+                                          const std::shared_ptr<const OntologyDatabase>& ontology_db_ptr) {
 
   ThreadPool thread_pool(ThreadPool::hardwareThreads());
   // A vector for futures.
@@ -142,20 +154,25 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
                                                                 unphased_population_ptr,
                                                                 clinvar_population_ptr,
                                                                 ped_data,
+                                                                ontology_db_ptr,
                                                                 ensembl_index_map_ptr,
                                                                 gene_mutation);
     future_vector.push_back(std::move(future));
 
   } // for genes
 
-  gene_vector_.clear();
 
+  std::vector<GeneMutation> gene_vector;
   // Wait on completed threads
+  gene_vector.reserve(future_vector.size());
   for (auto& future : future_vector) {
 
-    gene_vector_.push_back(future.get());
+    gene_vector.emplace_back(future.get());
 
   }
+
+  // todo: This logic is inefficient, the entire gene vector is copied for each VCF file (24 times). Re-design and Re-code.
+  gene_vector_ = std::move(gene_vector);
 
   return true;
 
@@ -166,6 +183,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
                                                          const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                                          const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                                          const std::shared_ptr<const GenomePEDData>& ped_data,
+                                                         const std::shared_ptr<const OntologyDatabase>& ontology_db_ptr,
                                                          const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr,
                                                          GeneMutation gene_mutation) {
 
@@ -217,6 +235,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
         gene_mutation.clinvar.processClinvar(genome_id, span_variant_ptr, clinvar_contig, ped_data);
         gene_mutation.gene_variants.ProcessVariantStats(genome_id, span_variant_ptr, unphased_population_ptr, ped_data);
+//        gene_mutation.ontology.processOntologyStats(gene_mutation.gene_characteristic, ontology_db_ptr);
 
       } // contig not empty
 

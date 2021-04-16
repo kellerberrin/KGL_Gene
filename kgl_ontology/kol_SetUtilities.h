@@ -7,6 +7,8 @@ Distributed under the Boost Software License, Version 1.0.
 
 #include "kol_OntologyTypes.h"
 
+#include <vector>
+
 
 namespace kellerberrin::ontology {
 

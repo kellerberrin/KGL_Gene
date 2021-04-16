@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(test_bracket_access)
 {
 
   const size_t depth{4};
-  if (depthMap()["GO:0000015"] != depth) BOOST_FAIL("Depth Map wrong depth returned" );
+  if (depthMap().getValue("GO:0000015") != depth) BOOST_FAIL("Depth Map wrong depth returned" );
   BOOST_TEST_MESSAGE( "test_bracket_access ... OK" );
 
 }
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(test_bracket_access_2)
 {
 
   const size_t depth{3};
-  if (depthMap()["GO:0098900"] != depth) BOOST_FAIL("Depth Map wrong depth returned" );
+  if (depthMap().getValue("GO:0098900") != depth) BOOST_FAIL("Depth Map wrong depth returned" );
   BOOST_TEST_MESSAGE( "test_bracket_access_2 ... OK" );
 
 }
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(test_root_depth_0_BP)
 {
 
   const size_t depth{0};
-  if (depthMap()[kol::GO::getRootTermBP()] != depth) BOOST_FAIL("Root node depth is not zero" );
+  if (depthMap().getValue(kol::GO::getRootTermBP()) != depth) BOOST_FAIL("Root node depth is not zero" );
   BOOST_TEST_MESSAGE( "test_root_depth_0_BP ... OK" );
 
 }
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(test_root_depth_0_MF)
 {
 
   const size_t depth{0};
-  if (depthMap()[kol::GO::getRootTermMF()] != depth) BOOST_FAIL("Root node depth is not zero" );
+  if (depthMap().getValue(kol::GO::getRootTermMF()) != depth) BOOST_FAIL("Root node depth is not zero" );
   BOOST_TEST_MESSAGE( "test_root_depth_0_MF ... OK" );
 
 }
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(test_root_depth_0_CC)
 {
 
   const size_t depth{0};
-  if (depthMap()[kol::GO::getRootTermCC()] != depth) BOOST_FAIL("Root node depth is not zero" );
+  if (depthMap().getValue(kol::GO::getRootTermCC()) != depth) BOOST_FAIL("Root node depth is not zero" );
   BOOST_TEST_MESSAGE( "test_root_depth_0_CC ... OK" );
 
 }

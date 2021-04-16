@@ -49,6 +49,9 @@ public:
   [[nodiscard]] ContigSize_t nucleotides() const { return nucleotides_; }
   [[nodiscard]] ContigSize_t geneSpan() const { return gene_span_; }
   [[nodiscard]] const std::string& ensemblId() const { return ensembl_id_; }
+  [[nodiscard]] const std::string& gafId() const { return gaf_id_; }
+  [[nodiscard]] const FeatureIdent_t& geneId() const { return gene_id_; }
+  [[nodiscard]] const std::set<std::string>& goSet() const { return GO_set_; }
 
 private:
 

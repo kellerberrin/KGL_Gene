@@ -7,7 +7,6 @@
 #include "kol_OntologyDatabase.h"
 
 namespace kgl = kellerberrin::genome;
-namespace kol = kellerberrin::ontology;
 
 
 
@@ -17,69 +16,24 @@ std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeRe
 
   for (auto const& [resource_ident, resource_type]  :  package.resourceDatabaseList()) {
 
-    if (resource_type == RuntimeResourceType::GENOME_DATABASE) {
+    switch (resource_type) {
 
+      case RuntimeResourceType::GENOME_DATABASE:
+        loadGenomeResource(resource_ident, resource_ptr);
+        break;
 
-      auto result = runtime_config_.resourceMap().find(resource_ident);
-      if (result == runtime_config_.resourceMap().end()) {
+      case RuntimeResourceType::ONTOLOGY_DATABASE:
+        loadOntologyResource(resource_ident, resource_ptr);
+        break;
 
-        ExecEnv::log().critical("ExecutePackage::loadRuntimeResources, Package: {}, Reference Genome: {}, not defined", package.packageIdentifier(), resource_ident);
+      case RuntimeResourceType::GENE_NOMENCLATURE:
+        loadGeneNomenclatureResource(resource_ident, resource_ptr);
+        break;
 
-      }
-
-      auto const& [resource_ident, resource_base_ptr] = *result;
-      auto genome_resource_ptr = std::dynamic_pointer_cast<const RuntimeGenomeResource>(resource_base_ptr);
-
-      if (not genome_resource_ptr) {
-
-        ExecEnv::log().critical("ExecutePackage::loadRuntimeResources, Resource: {} is not a Genome Database", resource_ident);
-
-      }
-
-      // Create the genome database.
-      std::shared_ptr<GenomeReference> genome_ptr = kgl::GenomeReference::createGenomeDatabase(genome_resource_ptr->genomeIdentifier(),
-                                                                                               genome_resource_ptr->fastaFileName(),
-                                                                                               genome_resource_ptr->gffFileName(),
-                                                                                               genome_resource_ptr->gafFileName(),
-                                                                                               genome_resource_ptr->idFileName(),
-                                                                                               genome_resource_ptr->translationTable());
-
-      if (not resource_ptr->addGenome(genome_ptr)) {
-
-        ExecEnv::log().error("ExecutePackage::loadRuntimeResources; Unable to add Genome Database: {} (probable duplicate)", genome_ptr->genomeId());
-
-      }
-
-    } else if (resource_type == RuntimeResourceType::ONTOLOGY_DATABASE) {
-
-      auto result = runtime_config_.resourceMap().find(resource_ident);
-      if (result == runtime_config_.resourceMap().end()) {
-
-        ExecEnv::log().critical("ExecutePackage::loadRuntimeResources, Package: {}, Ontology Database: {}, not defined", package.packageIdentifier(), resource_ident);
-
-      }
-
-      auto const& [resource_ident, resource_base_ptr] = *result;
-      auto ontology_resource_ptr = std::dynamic_pointer_cast<const RuntimeOntologyResource>(resource_base_ptr);
-
-      if (not ontology_resource_ptr) {
-
-        ExecEnv::log().critical("ExecutePackage::loadRuntimeResources, Resource: {} is not an Ontology Database", resource_ident);
-
-      }
-
-      std::shared_ptr<const kol::OntologyDatabase> ontology_ptr(std::make_shared<const kol::OntologyDatabase>( ontology_resource_ptr->goGraphFileName(),
-                                                                                                               ontology_resource_ptr->annotationFileName()));
-
-      ExecEnv::log().info("ExecutePackage::loadRuntimeResources; **********Creating Ontology Database: {}", resource_ident);
-      ExecEnv::log().info("ExecutePackage::loadRuntimeResources; **********Gaf File : {}, go terms : {}, Genes: {}",
-                          ontology_resource_ptr->annotationFileName(), ontology_ptr->annotation()->getNumGoTerms(), ontology_ptr->annotation()->getNumGenes());
-      ExecEnv::log().info("ExecutePackage::loadRuntimeResources; ***********Go File: {}, Vertices: {}, Edges: {}",
-                          ontology_resource_ptr->goGraphFileName(), ontology_ptr->goGraph()->getNumVertices(), ontology_ptr->goGraph()->getNumEdges());
-
-    } else if (resource_type == RuntimeResourceType::GENE_NOMENCLATURE) {
-
-      ExecEnv::log().info("ExecutePackage::loadRuntimeResources; **********Loading Gene NOMENCLATURE resource: {}", resource_ident);
+      default:
+        ExecEnv::log().critical("ExecutePackage::loadRuntimeResources, Package: {} Attempt to load unknown resource type, resource ident: {}.",
+                                package.packageIdentifier(), resource_ident);
+        break;
 
     }
 
@@ -89,3 +43,74 @@ std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeRe
 
 }
 
+
+void kgl::ExecutePackage::loadGenomeResource(const std::string& genome_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+
+
+  auto result = runtime_config_.resourceMap().find(genome_ident);
+  if (result == runtime_config_.resourceMap().end()) {
+
+    ExecEnv::log().critical("ExecutePackage::loadGenomeResource, Reference Genome: {}, not defined", genome_ident);
+
+  }
+
+  auto const& [resource_ident, resource_base_ptr] = *result;
+  auto genome_resource_ptr = std::dynamic_pointer_cast<const RuntimeGenomeResource>(resource_base_ptr);
+
+  if (not genome_resource_ptr) {
+
+    ExecEnv::log().critical("ExecutePackage::loadGenomeResource, Resource: {} is not a Genome Database", resource_ident);
+
+  }
+
+  // Create the genome database.
+  std::shared_ptr<GenomeReference> genome_ptr = kgl::GenomeReference::createGenomeDatabase(genome_resource_ptr->genomeIdentifier(),
+                                                                                           genome_resource_ptr->fastaFileName(),
+                                                                                           genome_resource_ptr->gffFileName(),
+                                                                                           genome_resource_ptr->gafFileName(),
+                                                                                           genome_resource_ptr->idFileName(),
+                                                                                           genome_resource_ptr->translationTable());
+
+  if (not resource_ptr->addGenome(genome_ptr)) {
+
+    ExecEnv::log().error("ExecutePackage::loadGenomeResource; Unable to add Genome Database: {} (probable duplicate)", genome_ptr->genomeId());
+
+  }
+
+}
+
+void kgl::ExecutePackage::loadOntologyResource(const std::string& ontology_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+
+  auto result = runtime_config_.resourceMap().find(ontology_ident);
+  if (result == runtime_config_.resourceMap().end()) {
+
+    ExecEnv::log().critical("ExecutePackage::loadOntologyResource, Ontology Database: {}, not defined", ontology_ident);
+
+  }
+
+  auto const& [resource_ident, resource_base_ptr] = *result;
+  auto ontology_resource_ptr = std::dynamic_pointer_cast<const RuntimeOntologyResource>(resource_base_ptr);
+
+  if (not ontology_resource_ptr) {
+
+    ExecEnv::log().critical("ExecutePackage::loadOntologyResource, Resource: {} is not an Ontology Database", resource_ident);
+
+  }
+
+  std::shared_ptr<const OntologyDatabase> ontology_ptr(std::make_shared<const OntologyDatabase>( ontology_ident,
+                                                                                                 ontology_resource_ptr->goGraphFileName(),
+                                                                                                 ontology_resource_ptr->annotationFileName()));
+
+  if (not resource_ptr->addOntology(ontology_ptr)) {
+
+    ExecEnv::log().error("ExecutePackage::loadOntologyResource; Unable to add Ontology Database: {} (probable duplicate)", ontology_ptr->ontologyIdent());
+
+  }
+
+}
+
+void kgl::ExecutePackage::loadGeneNomenclatureResource(const std::string& nomenclature_ident, const std::shared_ptr<AnalysisResources>&) const {
+
+  ExecEnv::log().info("ExecutePackage::loadGeneNomenclatureResource; **********Loading Gene NOMENCLATURE resource: {}", nomenclature_ident);
+
+}

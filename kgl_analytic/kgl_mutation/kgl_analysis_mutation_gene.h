@@ -11,6 +11,7 @@
 #include "kgl_analysis_mutation_gene_stats.h"
 #include "kgl_analysis_mutation_gene_clinvar.h"
 #include "kgl_analysis_mutation_gene_variant.h"
+#include "kgl_analysis_mutation_gene_ontology.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -38,6 +39,7 @@ public:
   GeneCharacteristic gene_characteristic;
   GeneVariants gene_variants;
   GeneClinvar clinvar;
+  OntologyStats ontology;
 
 };
 
@@ -60,15 +62,17 @@ public:
   explicit GenomeMutation(VariantGeneMembership gene_membership) : gene_membership_(gene_membership) { analysisType(); }
   ~GenomeMutation() = default;
 
-  // This analysis is performed first
+  // This analysis is performed first and only once.
   bool genomeAnalysis( const std::shared_ptr<const GenomeReference>& genome_reference,
-                       const std::shared_ptr<const GenomePEDData>& ped_data);
+                       const std::shared_ptr<const GenomePEDData>& ped_data,
+                       const std::shared_ptr<const OntologyDatabase>& ontology_db_ptr);
 
   // Then this analysis.
   bool variantAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
                         const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                         const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
-                        const std::shared_ptr<const GenomePEDData>& ped_data);
+                        const std::shared_ptr<const GenomePEDData>& ped_data,
+                        const std::shared_ptr<const OntologyDatabase>& ontology_db_ptr);
 
   // Finally, output to file.
   bool writeOutput(const std::shared_ptr<const GenomePEDData>& ped_data, const std::string& out_file, char output_delimiter) const;
@@ -79,6 +83,7 @@ public:
 private:
 
   std::vector<GeneMutation> gene_vector_;
+  bool analysis_initialized_{false};   // Only execute genomeAnalysis once
   VariantGeneMembership gene_membership_;
 
   constexpr static const char* CONCAT_TOKEN = "&";
@@ -109,6 +114,7 @@ private:
                                  const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                  const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                  const std::shared_ptr<const GenomePEDData>& ped_data,
+                                 const std::shared_ptr<const OntologyDatabase>& ontology_db_ptr,
                                  const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr,
                                  GeneMutation gene_mutation);
 

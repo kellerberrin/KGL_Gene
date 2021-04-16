@@ -27,8 +27,18 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
   }
 
+
   auto [genome_id, genome_ptr] = *(resource_ptr->getGenomes().getMap().begin());
   ref_genome_ptr_ = genome_ptr;
+
+  if (resource_ptr->getOntologies().getMap().size() != 1) {
+
+    ExecEnv::log().critical("Analysis Id: {}, expected single (1) ontology database, actual count: {}", resource_ptr->getOntologies().getMap().size());
+
+  }
+
+  auto [ontology_id, ontology_ptr] = *(resource_ptr->getOntologies().getMap().begin());
+  ontology_db_ptr_ = ontology_ptr;
 
   if (not getParameters(named_parameters, work_directory)) {
 
@@ -111,7 +121,7 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
       ped_data_ = ped_data;
       ExecEnv::log().info("Analysis: {}, ped file: {} contains: {} PED records", ident(), ped_data->fileId(), ped_data->getMap().size());
       // Update the template populations.
-      gene_mutation_.genomeAnalysis(ref_genome_ptr_, ped_data_);
+      gene_mutation_.genomeAnalysis(ref_genome_ptr_, ped_data_, ontology_db_ptr_);
 
       filterPedGenomes();
 
@@ -210,9 +220,9 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
   ExecEnv::log().info("Default Iteration Analysis called for Analysis Id: {}", ident());
 
 
-  if (population_ptr_ and unphased_population_ptr_ and clinvar_population_ptr_ and ped_data_) {
+  if (population_ptr_ and unphased_population_ptr_ and clinvar_population_ptr_ and ped_data_ and ontology_db_ptr_) {
 
-    gene_mutation_.variantAnalysis(population_ptr_, unphased_population_ptr_, clinvar_population_ptr_, ped_data_);
+    gene_mutation_.variantAnalysis(population_ptr_, unphased_population_ptr_, clinvar_population_ptr_, ped_data_, ontology_db_ptr_);
 
   } else {
 

@@ -7,12 +7,12 @@
 
 
 #include "kgl_genome_genome.h"
+#include "kol_OntologyDatabase.h"
 
 #include <memory>
 #include <string>
 #include <vector>
 #include <map>
-
 
 namespace kellerberrin::genome {   //  organization level namespace
 
@@ -98,6 +98,13 @@ private:
 using GenomeCollection = ResourceCollection<GenomeReference>;
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// OntologyCollection - A map of different Ontology databases.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+using OntologyDatabase = kellerberrin::ontology::OntologyDatabase;
+using OntologyCollection = ResourceCollection<OntologyDatabase>;
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Package Resources. A container object to hold the resources specified by an analysis package.
@@ -124,10 +131,18 @@ public:
 
 // Gene Ontology Resources
 
+  [[nodiscard]] const OntologyCollection& getOntologies() const { return ontology_resources_; }
+  [[nodiscard]] bool addOntology(std::shared_ptr<const OntologyDatabase>& ontology_database) {
+
+    return ontology_resources_.addResource(ontology_database->ontologyIdent(), ontology_database);
+
+  }
+
 
 private:
 
   GenomeCollection genome_resources_;
+  OntologyCollection ontology_resources_;
 
 };
 

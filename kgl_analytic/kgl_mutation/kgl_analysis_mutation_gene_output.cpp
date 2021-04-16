@@ -43,6 +43,10 @@ bool kgl::GenomeMutation::writeOutput(const std::shared_ptr<const GenomePEDData>
 
     out_file << output_delimiter;
 
+    gene.ontology.writeOntology(out_file, output_delimiter);
+
+    out_file << output_delimiter;
+
     gene.gene_variants.writeVariantOutput(ped_data, out_file, output_delimiter);
 
     out_file << output_delimiter;
@@ -215,6 +219,10 @@ void kgl::GenomeMutation::writeHeader(const std::shared_ptr<const GenomePEDData>
                                       const GeneMutation& gene_mutation) {
 
   gene_mutation.gene_characteristic.writeGeneHeader(out_file, output_delimiter);
+
+  out_file << output_delimiter;
+
+  gene_mutation.ontology.writeOntologyHeader(out_file, output_delimiter);
 
   out_file << output_delimiter;
 

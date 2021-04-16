@@ -22,7 +22,7 @@ Distributed under the Boost Software License, Version 1.0.
 #include "kol_CoutoGraSMAdjustedSharedInformation.h"
 #include "kol_CoutoGraSMSharedInformation.h"
 #include "kol_DisallowedSetEvidencePolicy.h"
-#include "kol_enrichment_tools.h"
+#include "kol_EnrichmentTools.h"
 #include "kol_EntrezGene2GoAnnotationParser.h"
 #include "kol_EvidencePolicyInterface.h"
 #include "kol_ExclusivelyInheritedSharedInformation.h"
