@@ -40,26 +40,8 @@ public:
       created with valid parameters.
       This constructor relies on the TermProbabilityMap.
   */
-  TermInformationContentMap(const std::shared_ptr<const GoGraph> &graph, const std::shared_ptr<const AnnotationData> &annoData)
-      : TermProbabilityMap(graph, annoData) {
-
-    for (size_t i = 0; i < probabilities().size(); ++i) {
-
-
-      if (probabilities().at(i) <= 0.0) {
-
-        probabilities().at(i) = BAD_INFO_VALUE_;
-
-      } else {
-
-        probabilities().at(i) = -1.0 * std::log(probabilities().at(i));
-
-      }
-
-
-    }//end for, each probability value
-
-  }
+  TermInformationContentMap( const std::shared_ptr<const GoGraph> &graph,
+                             const std::shared_ptr<const AnnotationData> &annoData);
 
   //! Return a default value for a term that does not exist.
   /*!

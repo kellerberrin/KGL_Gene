@@ -39,79 +39,23 @@ public:
   /*!
     Creates the default(empty) StandardRelationshipPolicy
   */
-  JiangConrathSimilarity(const std::shared_ptr<const GoGraph> &goGraph, const std::shared_ptr<const TermInformationContentMap> &icMap)
-      : _goGraph(goGraph), _icMap(icMap) {}
+  JiangConrathSimilarity( const std::shared_ptr<const GoGraph> &graph_ptr,
+                          const std::shared_ptr<const TermInformationContentMap> &ic_map_ptr)
+      : graph_ptr_(graph_ptr), ic_map_ptr_(ic_map_ptr) {}
 
   ~JiangConrathSimilarity() override = default;
   //! A method for calculating term-to-term similarity for GO terms using JiangConrath similarity
   /*!
     This method returns the JiangConrath similarity or the information content of the most informative common ancestor.
   */
-  [[nodiscard]] double calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override {
-    //if the terms do not exit return 0.0 similarity
-    if (not _icMap->hasTerm(goTermA) or not _icMap->hasTerm(goTermB)) {
 
-      return 0.0;
-
-    }
-
-    //if not from same ontology, return 0;
-    if (_goGraph->getTermOntology(goTermA) != _goGraph->getTermOntology(goTermB)) {
-
-      return 0;
-
-    }
-
-    //create 2 sets
-    OntologySetType<std::string> ancestorsA = _goGraph->getAncestorTerms(goTermA);
-    ancestorsA.insert(goTermA);
-    OntologySetType<std::string> ancestorsB = _goGraph->getAncestorTerms(goTermB);
-    ancestorsB.insert(goTermB);
-
-    //if either set is empty, return 0
-    if (ancestorsA.empty() or ancestorsB.empty()) {
-
-      return 0.0;
-
-    }
-
-    double maxIC;
-    //select the correct ontology normalization factor
-    GO::Ontology ontoType = _goGraph->getTermOntology(goTermA);
-    if (ontoType == GO::Ontology::BIOLOGICAL_PROCESS) {
-
-      maxIC = -std::log(_icMap->getMinBP());
-
-    } else if (ontoType == GO::Ontology::MOLECULAR_FUNCTION) {
-
-      maxIC = -std::log(_icMap->getMinMF());
-
-    } else {
-
-      maxIC = -std::log(_icMap->getMinCC());
-
-    }
-
-    //get the MICA value (zero if no mica term)
-    double mica_value = _icMap->getMICAinfo(ancestorsA, ancestorsB);
-
-    double dist = _icMap->getValue(goTermA) + _icMap->getValue(goTermB) - (2 * mica_value);
-
-    return 1 - (dist / (2.0 * maxIC));
-  }
+  [[nodiscard]] double calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override;
 
   //! A method for calculating term-to-term similarity for GO terms using Normalized JiangConrath similarity
   /*!
     This method returns the JiangConrath similarity scaled between 0 and 1 [0,1] inclusive
   */
   [[nodiscard]] double calculateNormalizedTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override {
-    //if the terms do not exit return 0.0 similarity
-    if (not _icMap->hasTerm(goTermA) || not _icMap->hasTerm(goTermB)) {
-
-      return 0.0;
-
-    }
-
     //JiangConrath's method is already normalized
     return calculateTermSimilarity(goTermA, goTermB);
 
@@ -120,9 +64,8 @@ public:
 
 private:
 
-  std::shared_ptr<const GoGraph> _goGraph;
-  std::shared_ptr<const TermInformationContentMap> _icMap;
-
+  std::shared_ptr<const GoGraph> graph_ptr_;
+  std::shared_ptr<const TermInformationContentMap> ic_map_ptr_;
 
 };
 

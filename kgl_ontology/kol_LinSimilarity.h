@@ -18,7 +18,7 @@ namespace kellerberrin::ontology {
 	This class calculates Lin similarity.
 	
 	Lin, D. (1998) An information theoretic definition of similarity. In: Proc. of the
-	  15th Inernational Conference on Machine Learning. San Franscisco, CA:
+	  15th International Conference on Machine Learning. San Francisco, CA:
 	  Morgan Kaufman. pp 296-304
 
 	P. W. Lord, R. D. Stevens, A. Brass, and C. A. Goble, 
@@ -34,10 +34,11 @@ public:
 
   //! A constructor
   /*!
-    Creates the linSimPtr calculator
+    Creates the lin Similarity Calculator.
   */
-  LinSimilarity(const std::shared_ptr<const GoGraph> &goGraph, const std::shared_ptr<const TermInformationContentMap> &icMap)
-      : _goGraph(goGraph), _icMap(icMap) {}
+  LinSimilarity( const std::shared_ptr<const GoGraph> &graph_ptr,
+                 const std::shared_ptr<const TermInformationContentMap> &ic_map_ptr_)
+      : graph_ptr_(graph_ptr), ic_map_ptr_(ic_map_ptr_) {}
 
   ~LinSimilarity() override = default;
 
@@ -45,46 +46,7 @@ public:
   /*!
     This method returns the Lin similarity.
   */
-  [[nodiscard]] double calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override {
-
-    if (goTermA == goTermB) {
-
-      return 1.0;
-
-    }
-
-    //if the terms do not exit return 0.0 similarity
-    if (not _icMap->hasTerm(goTermA) || not _icMap->hasTerm(goTermB)) {
-
-      return 0.0;
-
-    }
-    //if not from same ontology, return 0;
-    if (_goGraph->getTermOntology(goTermA) != _goGraph->getTermOntology(goTermB)) {
-
-      return 0.0;
-
-    }
-
-    //create 2 sets
-    OntologySetType<std::string> ancestorsA = _goGraph->getAncestorTerms(goTermA);
-    ancestorsA.insert(goTermA);
-    OntologySetType<std::string> ancestorsB = _goGraph->getAncestorTerms(goTermB);
-    ancestorsB.insert(goTermB);
-
-    //if either set is empty, return 0
-    if (ancestorsA.empty() or ancestorsB.empty()) {
-
-      return 0.0;
-
-    }
-
-    double mica_info = _icMap->getMICAinfo(ancestorsA, ancestorsB);
-    //return the normalized information content similarity of Lin
-    return (2.0 * mica_info) / (_icMap->getValue(goTermA) + _icMap->getValue(goTermB));
-
-
-  }
+  [[nodiscard]] double calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override;
 
   //! A method for calculating term-to-term similarity for GO terms using Normalized Lin similarity
   /*!
@@ -98,8 +60,8 @@ public:
 
 private:
 
-  std::shared_ptr<const GoGraph> _goGraph;
-  std::shared_ptr<const TermInformationContentMap> _icMap;
+  std::shared_ptr<const GoGraph> graph_ptr_;
+  std::shared_ptr<const TermInformationContentMap> ic_map_ptr_;
 
 };
 

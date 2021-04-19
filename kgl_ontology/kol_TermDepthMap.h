@@ -8,13 +8,6 @@ Distributed under the Boost Software License, Version 1.0.
 #include "kol_GoGraph.h"
 #include "kol_AnnotationData.h"
 
-#include <boost/graph/breadth_first_search.hpp>
-#include <boost/graph/reverse_graph.hpp>
-
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics.hpp>
-#include <boost/accumulators/statistics/min.hpp>
-#include <boost/accumulators/statistics/max.hpp>
 
 
 namespace kellerberrin::ontology {
@@ -51,30 +44,19 @@ public:
   /*!
     Get the vector of values
   */
-  [[nodiscard]] const std::vector<TermDepthType> &getValues() const { return _depths; }
+  [[nodiscard]] const std::vector<TermDepthType> &getValues() const { return depths_; }
 
   //! Function to return all the keys in the map
   /*!
     Returns all valid keys in the map.
   */
-  [[nodiscard]] std::vector<std::string> getKeys() const {
-
-    std::vector<std::string> keys;
-    for (auto const&[key, value] : _nameToIndex) {
-
-      keys.push_back(key);
-
-    }
-
-    return keys;
-
-  }
+  [[nodiscard]] std::vector<std::string> getKeys() const;
 
   //! Method to test if the id exists in the map
   /*!
     Return true the id is found, false if not
   */
-  [[nodiscard]] bool hasTerm(const std::string &testTerm) const { return _nameToIndex.find(testTerm) != _nameToIndex.end(); }
+  [[nodiscard]] bool hasTerm(const std::string &testTerm) const { return name_to_index_.find(testTerm) != name_to_index_.end(); }
 
   //! Overloaded [] bracket operator to mimic Map
   /*!
@@ -82,8 +64,6 @@ public:
       This is done to mimic the behavior of the map class
   */
   [[nodiscard]] TermDepthType operator[](const std::string &termId) const {
-    //inline size_t& operator[](std::string termId){
-
     //return the depth
     return getValue(termId);
 
@@ -93,147 +73,41 @@ public:
   /*!
     Get the value mapped by the given key. A specified function for the [] operator
   */
-  [[nodiscard]] TermDepthType getValue(const std::string &termId) const {
-
-    if (not hasTerm(termId) or termId.empty()) {
-
-      return 0;
-
-    }
-    //get index
-    auto const&[term, index] = *(_nameToIndex.find(termId));
-    //return the depth
-    return _depths.at(index);
-
-  }
+  [[nodiscard]] TermDepthType getValue(const std::string &termId) const;
 
   //! A method for calculating the least common ancestor
   /*!
     This method searches the sets to determine the deepest common ancestor
   */
-  [[nodiscard]] std::string getLCA(const OntologySetType<std::string> &ancestorsA, const OntologySetType<std::string> &ancestorsB) const {
-    //get the first term as a start
-    if (ancestorsA.size() < ancestorsB.size()) {
-
-      return getEfficientLCA(ancestorsA, ancestorsB);
-
-    } else {
-
-      return getEfficientLCA(ancestorsB, ancestorsA);
-
-    }
-
-  }
-
+  [[nodiscard]] std::string getLCA( const OntologySetType<std::string> &ancestorsA,
+                                    const OntologySetType<std::string> &ancestorsB) const;
 
 private:
   //! A private map that returns the index of a term.
   /*!
     This map takes string term ids and returns the index for annotation count access.
   */
-  OntologyMapType<std::string, std::size_t> _nameToIndex;
+  OntologyMapType<std::string, std::size_t> name_to_index_;
 
   //! A private list of term depths
   /*!
     This vector of doubles holds the depth for each term
   */
-  std::vector<TermDepthType> _depths;
+  std::vector<TermDepthType> depths_;
 
-  void initializeDepthMap(const GoGraph &graph) {
+  //! A private method to calculate the depth values on object construction
+  /*!
+    This method actually calculates the depth values.
+  */
 
-    //Initialize an annotation list the size of verticies in go, each value is 0
-    //_depths = std::vector<std::size_t>(graph->getNumVertices(),0);
-    _depths = std::vector<TermDepthType>(graph.getNumVertices(), 0);
-
-    //get the (first) root of the ontology.
-    //GoGraph::GoVertex root = graph->getRoot();
-    //TESTING
-    //std::cout << root << std::endl;
-    //std::cout << graph->getTermStringIdByIndex(root) << std::endl;
-
-    //get the boost graph from the GoGraph object. Must be done to utilize boost algorithms
-    const GoGraph::Graph &go_graph = graph.getGraph();
-
-    //wrap _depth with a vertex map
-    const GoGraph::VertexIndexMap &vMap = graph.vertexIndexMap();
-
-    /* // Temparary fix until I can get SWIG to recognize std::size_t
-    boost::iterator_property_map< std::vector<std::size_t>::iterator,
-                                GoGraph::VertexIndexMap >
-                    d_map(_depths.begin(), vMap);
-    */
-    boost::iterator_property_map<std::vector<TermDepthType>::iterator, GoGraph::VertexIndexMap> d_map(_depths.begin(), vMap);
-
-    //call the boost depth first search using our custom visitor
-    // revering the graph is necessary otherwise the root vertex would have no edges.
-    //boost::depth_first_search(boost::make_reverse_graph(*go_graph),boost::visitor(vis).root_vertex(root));
-    GoGraph::GoVertex bpRoot = graph.getVertexByName(GO::getRootTermBP());
-    GoGraph::GoVertex mfRoot = graph.getVertexByName(GO::getRootTermMF());
-    GoGraph::GoVertex ccRoot = graph.getVertexByName(GO::getRootTermCC());
-
-    //Start at bproot, record depths
-    // must reverse graph due to edge relationship direction
-    boost::breadth_first_search(boost::make_reverse_graph(go_graph),
-                                bpRoot,
-                                boost::visitor(boost::make_bfs_visitor(boost::record_distances(d_map, boost::on_tree_edge()))));
-
-    //Start at bproot, record depths
-    // must reverse graph due to edge relationship direction
-    boost::breadth_first_search(boost::make_reverse_graph(go_graph),
-                                mfRoot,
-                                boost::visitor(boost::make_bfs_visitor(boost::record_distances(d_map, boost::on_tree_edge()))));
-
-    //Start at bproot, record depths
-    // must reverse graph due to edge relationship direction
-    boost::breadth_first_search(boost::make_reverse_graph(go_graph),
-                                ccRoot,
-                                boost::visitor(boost::make_bfs_visitor(boost::record_distances(d_map, boost::on_tree_edge()))));
-
-    // Only valid for std::unordered_map.
-    // _nameToIndex = OntologyMapType<std::string,std::size_t>(boost::num_vertices(go_graph));
-
-    // Vertex Iterators
-    GoGraph::GoVertexIterator vi, vend;
-    for (boost::tie(vi, vend) = boost::vertices(go_graph); vi != vend; ++vi) {
-
-      GoGraph::GoVertex v = *vi;
-      _nameToIndex[graph.getTermStringIdByIndex(vMap[v])] = vMap[v];
-      //std::cout << vMap[v] << " " << _depths.at(vMap[v]) << " " << graph->getTermNameByIndex(vMap[v]) << std::endl;
-      //std::cin.get();
-    }
-
-  }
+  void initializeDepthMap(const GoGraph &graph);
 
   //! A method for calculating the least common ancestor
   /*!
     This method searches the sets to determine the deepest common ancestor
   */
-  [[nodiscard]] std::string getEfficientLCA(const OntologySetType<std::string> &smaller_set, const OntologySetType<std::string> &larger_set) const {
-    //get the first term as a start
-    std::string lca;
-    //max depth
-    TermDepthType max{0};
-
-    //loop over shorter list
-    for (auto const &currentTerm : smaller_set) {
-
-      if (larger_set.find(currentTerm) != smaller_set.end()) {
-
-        //if new max, update
-        if (getValue(currentTerm) > max) {
-
-          lca = currentTerm;
-          max = getValue(currentTerm);
-
-        }
-
-      }
-
-    }
-
-    return lca;
-
-  }
+  [[nodiscard]] std::string getEfficientLCA( const OntologySetType<std::string> &smaller_set,
+                                             const OntologySetType<std::string> &larger_set) const;
 
 };
 

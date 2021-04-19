@@ -35,8 +35,9 @@ public:
   /*!
     Creates the default(empty) StandardRelationshipPolicy
   */
-  ResnikSimilarity(const std::shared_ptr<const GoGraph> &goGraph, const std::shared_ptr<const TermInformationContentMap> &icMap)
-      : _goGraph(goGraph), _icMap(icMap) {}
+  ResnikSimilarity( const std::shared_ptr<const GoGraph> &graph_ptr,
+                    const std::shared_ptr<const TermInformationContentMap> &ic_map_ptr)
+      : graph_ptr_(graph_ptr), ic_map_ptr_(ic_map_ptr) {}
 
   ~ResnikSimilarity() override = default;
 
@@ -44,82 +45,18 @@ public:
   /*!
     This method returns the Resnik similarity or the information content of the most informative common ancestor.
   */
-  [[nodiscard]] double calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override {
-    //if the terms do not exit return 0.0 similarity
-    if (not _icMap->hasTerm(goTermA) or not _icMap->hasTerm(goTermB)) {
-
-      return 0.0;
-
-    }
-
-    //if not from same ontology, return 0;
-    if (_goGraph->getTermOntology(goTermA) != _goGraph->getTermOntology(goTermB)) {
-
-      return 0.0;
-
-    }
-
-    //Create 2 sets of term + ancestors
-    OntologySetType<std::string> ancestorsA = _goGraph->getSelfAncestorTerms(goTermA);
-    OntologySetType<std::string> ancestorsB = _goGraph->getSelfAncestorTerms(goTermB);
-
-    return _icMap->getMICAinfo(ancestorsA, ancestorsB);
-
-  }
+  [[nodiscard]] double calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override;
 
   //! A method for calculating term-to-term similarity for GO terms using Normalized Resnik similarity
   /*!
     This method returns the Resnik similarity divided by the maximum possible similarity
   */
-  [[nodiscard]] double calculateNormalizedTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override {
-    //call base similarity
-    double resnik = calculateTermSimilarity(goTermA, goTermB);
-
-    if (resnik <= 0) {
-
-      return 0.0;
-
-    }
-
-    //select the correct ontology normalization factor
-    GO::Ontology ontology = _goGraph->getTermOntology(goTermA);
-    double ontology_info;
-    switch (ontology) {
-
-      case GO::Ontology::BIOLOGICAL_PROCESS:
-        ontology_info = _icMap->getMinBP();
-        break;
-
-      case GO::Ontology::MOLECULAR_FUNCTION:
-        ontology_info = _icMap->getMinMF();
-        break;
-
-      case GO::Ontology::CELLULAR_COMPONENT:
-        ontology_info = _icMap->getMinCC();
-        break;
-
-      default:
-      case GO::Ontology::ONTO_ERROR:
-        ontology_info = 0.0;
-        break;
-    }
-
-    if (ontology_info <= 0.0) {
-
-      return 0.0;
-
-    }
-
-    double maxIC = -1.0 * std::log(ontology_info);
-    return resnik / maxIC;
-
-  }
+  [[nodiscard]] double calculateNormalizedTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override;
 
 private:
 
-
-  std::shared_ptr<const GoGraph> _goGraph;
-  std::shared_ptr<const TermInformationContentMap> _icMap;
+  std::shared_ptr<const GoGraph> graph_ptr_;
+  std::shared_ptr<const TermInformationContentMap> ic_map_ptr_;
 
 };
 

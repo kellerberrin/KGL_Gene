@@ -316,7 +316,7 @@ set(ONTOLOGY_SOURCE_FILES
         kgl_ontology/kol_MazanduSimUICSetSimilarity.cpp
         kgl_ontology/kol_PesquitaSimGICSetSimilarity.cpp
         kgl_ontology/kol_ExclusivelyInheritedSharedInformation.cpp
-        kgl_ontology/kol_CoutoGraSMSharedInformation.cpp kgl_ontology/kol_CoutoGraSMAdjustedSharedInformation.cpp)
+        kgl_ontology/kol_CoutoGraSMSharedInformation.cpp kgl_ontology/kol_CoutoGraSMAdjustedSharedInformation.cpp kgl_ontology/kol_AllowedRelationshipOboGoParser.cpp kgl_ontology/kol_AllowedRelationshipXmlGoParser.cpp kgl_ontology/kol_AncestorMeanSharedInformation.cpp kgl_ontology/kol_MICASharedInformation.cpp kgl_ontology/kol_LinSimilarity.cpp kgl_ontology/kol_JiangConrathSimilarity.cpp kgl_ontology/kol_ResnikSimilarity.cpp kgl_ontology/kol_TermProbabilityMap.cpp kgl_ontology/kol_TermInformationContentMap.cpp kgl_ontology/kol_TermDepthMap.cpp kgl_ontology/kol_RelevanceSimilarity.cpp kgl_ontology/kol_PekarStaabSimilarity.cpp)
 
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES
