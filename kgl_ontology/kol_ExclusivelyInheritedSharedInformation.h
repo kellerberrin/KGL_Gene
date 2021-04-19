@@ -34,8 +34,9 @@ public:
   /*!
     Creates the CoutoGraSMSharedInformation class
   */
-  ExclusivelyInheritedSharedInformation(const std::shared_ptr<const GoGraph> &goGraph, const std::shared_ptr<const TermInformationContentMap> &icMap)
-      : _goGraph(goGraph), _icMap(icMap) {}
+  ExclusivelyInheritedSharedInformation( const std::shared_ptr<const GoGraph> &graph_ptr,
+                                         const std::shared_ptr<const TermInformationContentMap> &ic_map_ptr)
+      : graph_ptr_(graph_ptr), ic_map_ptr_(ic_map_ptr) {}
 
   ~ExclusivelyInheritedSharedInformation() override = default;
 
@@ -43,190 +44,34 @@ public:
   /*!
     This method returns the common disjunctive ancestors for two terms
   */
-  [[nodiscard]] OntologySetType<std::string> getCommonDisjointAncestors(const std::string &termC1, const std::string &termC2) const {
-
-    //Z&L: EICommonSet <- <empty_set>
-    OntologySetType<std::string> cda;
-
-    //EICA(t,t) = {t}
-    if (termC1 == termC2) {
-
-      cda.insert(termC1);
-      return cda;
-
-    }
-
-    //Z&L: CommonAnSet <- GetCommonAnSet(t1,t2,AncestorSet)
-    OntologySetType<std::string> ancestorsC1 = _goGraph->getSelfAncestorTerms(termC1);
-    OntologySetType<std::string> ancestorsC2 = _goGraph->getSelfAncestorTerms(termC2);
-    OntologySetType<std::string> commonAncestors = SetUtilities::setIntersection(ancestorsC1, ancestorsC2);
-    //std::cout << commonAncestors.size() << std::endl;
-
-
-    //commonDisjointAncestors(c,c) = {c}, by definition
-    if (commonAncestors.size() == 1) {
-
-      return commonAncestors;
-
-    }
-
-
-    //Z&L: UnionAnSet <- GetAnSet(t1,AncestorSet) U GetAnSet(t2,AncestorSet)
-    OntologySetType<std::string> unionAncestors = SetUtilities::setUnion(ancestorsC1, ancestorsC2);
-
-    //Z&L: DiffAnSet <- UnionAnSet - CommonAnSet
-    OntologySetType<std::string> diffSet = SetUtilities::setDifference(unionAncestors, commonAncestors);
-
-    //get the boost graph
-    const GoGraph::Graph &g = _goGraph->getGraph();
-    //Z&L: for each a in CommonAnSet do ...
-    for (auto const &term : commonAncestors) {
-
-      bool isDisj = false;
-
-      //Z&L: DirectChildSet <- getDirectDescendant(a,ChildSet)
-      //boost::unordered_set<std::string> directChildSet;
-      //std::cout << "-----> " << term << std::endl;
-
-      GoGraph::GoVertex v = _goGraph->getVertexByName(term);
-      GoGraph::InEdgeIterator ei, end;
-      for (boost::tie(ei, end) = boost::in_edges(v, g); ei != end; ++ei) {
-
-        GoGraph::GoVertex child = boost::source(*ei, g);
-        size_t index = _goGraph->getVertexIndex(child);
-        std::string cTerm = _goGraph->getTermStringIdByIndex(index);
-        //std::cout << cTerm << std::endl;
-        //directChildSet.insert(cTerm);
-
-        if (diffSet.find(cTerm) != diffSet.end()) {
-          //early exit should improve runtime
-          isDisj = true;
-          break;
-
-        }
-
-      }
-
-      //the below code was dropped to improve runtime, improvement is minor though
-
-      //Z&L: tmpset <- DiffAnSet <intersect> DirectChildSet
-      //boost::unordered_set<std::string> tempSet = SetUtilities::setIntersection(diffSet,directChildSet);
-      //Z&L: if tmpset != <empty_set>
-      //if(tempSet.size() != 0){
-      //	isDisj = true;
-      //}
-
-      //if the term is a disjoint ancestor add it to the set
-      if (isDisj) {
-
-        cda.insert(term);
-        //std::cout << "eisi " << term << " " << _icMap[term] << std::endl;
-      }
-
-    }
-
-    //std::cout << "eisi cda size "<< cda.size() << std::endl;
-    return cda;
-
-  }
+  [[nodiscard]] OntologySetType<std::string> getCommonDisjointAncestors(const std::string &termC1,
+                                                                        const std::string &termC2) const;
 
   //! An method for returning the shared information of two terms
   /*!
     This method returns the mean information content of the frontier ancestors
   */
-  [[nodiscard]] double sharedInformation(const std::string &termA, const std::string &termB) const override {
-    // return 0 for any terms not in the datbase
-    if (not _icMap->hasTerm(termA) or not _icMap->hasTerm(termB)) {
-
-      return 0.0;
-
-    }
-    // return 0 for terms in different ontologies
-    if (_goGraph->getTermOntology(termA) != _goGraph->getTermOntology(termB)) {
-
-      return 0.0;
-
-    }
-
-    Accumulators::MeanAccumulator meanIC;
-    OntologySetType<std::string> cda = getCommonDisjointAncestors(termA, termB);
-    //std::cout << "size " << cda.size() << std::endl;
-
-    for (auto const &element : cda) {
-      //std::cout << _icMap[*iter] << std::endl;
-      meanIC(_icMap->getValue(element));
-
-    }
-
-    return Accumulators::extractMean(meanIC);
-
-  }
+  [[nodiscard]] double sharedInformation(const std::string &termA, const std::string &termB) const override;
 
   //! An interface method for returning the shared information of a single terms,or information content
   /*!
     This method privdes a mechanism for returing a term's infromation content.
   */
-  [[nodiscard]] double sharedInformation(const std::string &term) const override {
-    // return 0 for any terms not in the datbase
-    if (not _icMap->hasTerm(term)) {
-
-      return 0.0;
-
-    }
-
-    return _icMap->getValue(term);
-
-  }
+  [[nodiscard]] double sharedInformation(const std::string &term) const override;
 
 
   //! An interface method for returning the maximum information content for a term
   /*!
     This method provides the absolute max information content within a corpus for normalization purposes.
   */
-  [[nodiscard]] double maxInformationContent(const std::string &term) const override {
-
-
-    //select the correct ontology normalization factor
-    GO::Ontology ontology = _goGraph->getTermOntology(term);
-    double maxIC;
-
-    switch (ontology) {
-
-      case GO::Ontology::BIOLOGICAL_PROCESS:
-        maxIC = _icMap->getMinBP();
-        break;
-
-      case GO::Ontology::MOLECULAR_FUNCTION:
-        maxIC = _icMap->getMinMF();
-        break;
-
-      case GO::Ontology::CELLULAR_COMPONENT:
-        maxIC = _icMap->getMinCC();
-        break;
-
-      default:
-      case GO::Ontology::ONTO_ERROR:
-        maxIC = 0.0;
-        break;
-
-    }
-
-    if (maxIC <= 0.0) {
-
-      return 0.0;
-
-    }
-
-    return -1.0 * std::log(maxIC);
-
-  }
+  [[nodiscard]] double maxInformationContent(const std::string &term) const override;
 
 
   //! An interface method for determining if a term can be found
   /*!
     Determines if the term can be found in the current map.
   */
-  [[nodiscard]] bool hasTerm(const std::string &term) const override { return _icMap->hasTerm(term); }
+  [[nodiscard]] bool hasTerm(const std::string &term) const override { return ic_map_ptr_->hasTerm(term); }
 
   //! An interface method for determining if the two terms are of like ontologies.
   /*!
@@ -234,14 +79,14 @@ public:
   */
   [[nodiscard]] bool isSameOntology(const std::string &termA, const std::string &termB) const override {
 
-    return _goGraph->getTermOntology(termA) == _goGraph->getTermOntology(termB);
+    return graph_ptr_->getTermOntology(termA) == graph_ptr_->getTermOntology(termB);
 
   }
 
 private:
 
-  std::shared_ptr<const GoGraph> _goGraph;
-  std::shared_ptr<const TermInformationContentMap> _icMap;
+  std::shared_ptr<const GoGraph> graph_ptr_;
+  std::shared_ptr<const TermInformationContentMap> ic_map_ptr_;
 
 };
 

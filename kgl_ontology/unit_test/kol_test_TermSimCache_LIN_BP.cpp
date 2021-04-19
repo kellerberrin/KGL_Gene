@@ -66,6 +66,8 @@ public:
 
   }
 
+  [[nodiscard]] static const std::vector<std::string>& malariaGenes() { return malaria_genes_; }
+
   const static constexpr double TEST_ACCURACY_PERCENT{0.0001};
 
 private:
@@ -101,6 +103,16 @@ private:
     cache_similarity_ptr = std::make_shared<const TermSimilarityCache>(go_graph_ptr, annotation_ptr, term_similarity_ptr, GO::Ontology::BIOLOGICAL_PROCESS);
 
   }
+
+  inline static const std::vector<std::string> malaria_genes_ {
+      "P16671", "P06028", "P12318", "P31994", "P05362",
+      "O14931", "P68871", "P35228", "P01375", "O14931",
+      "Q9UNN8", "P02730", "Q9NSE2", "Q96A59", "Q9Y231",
+      "P19320", "P58753", "P04921", "P0C091", "P02724",
+      "P11413", "Q8N126", "Q16570", "P23634", "P17927",
+      "P16442", "P69905", "P35613", "P08174", "Q8NHL6",
+      "Q6GTX8" };
+
 
 };
 
@@ -173,6 +185,42 @@ BOOST_AUTO_TEST_CASE(test_normalized_similarity_Lin_BP_reflexive_sim)
   BOOST_TEST_MESSAGE( "test_normalized_similarity_Lin_BP_reflexive_sim ... OK, Looked up terms: " + std::to_string(term_look_up));
 
 }
+
+BOOST_AUTO_TEST_CASE(test_asymmetric_similarity_Lin_BP)
+{
+
+  auto const ontology_terms = annotationPtr()->getOntologyTerms(*goGraphPtr(), kol::GO::Ontology::BIOLOGICAL_PROCESS);
+  kol::OntologySetType<std::string> go_terms;
+  for (auto const& gene : malariaGenes()) {
+
+    go_terms = kol::SetUtilities::setUnion(go_terms, annotationPtr()->getGoTermsForGeneBP(gene, *goGraphPtr()));
+
+  }
+  std::vector<std::string> malaria_terms = kol::SetUtilities::convertSet(go_terms);
+  auto asymmetric_cache_ptr(std::make_shared<const kol::AsymmetricSimilarityCache>(malaria_terms, ontology_terms, linSimPtr(), kol::GO::Ontology::BIOLOGICAL_PROCESS));
+  size_t term_look_up{0};
+  for (auto const& row_term : malaria_terms) {
+
+    for (auto const& column_term : ontology_terms) {
+
+      if (cacheSimilar().calculateTermSimilarity(row_term, column_term) != asymmetric_cache_ptr->calculateTermSimilarity(row_term, column_term)) {
+
+        BOOST_FAIL("Term Similarity Cache and Asymmtetric Cache Different row: " + row_term + " column: "
+        + column_term + " cache value: " + std::to_string(cacheSimilar().calculateTermSimilarity(row_term, column_term)) +
+        " asymmetric value: " + std::to_string(asymmetric_cache_ptr->calculateTermSimilarity(row_term, column_term)) +
+        " lin value: " + std::to_string(linSimPtr()->calculateTermSimilarity(row_term, column_term)));
+
+      }
+
+      term_look_up += 2;
+
+    }
+
+  }
+  BOOST_TEST_MESSAGE( "test_asymmetric_similarity_Lin_BP ... OK, Looked up terms: " + std::to_string(term_look_up));
+
+}
+
 
 BOOST_AUTO_TEST_CASE(test_normalized_similarity_Lin_BP)
 {

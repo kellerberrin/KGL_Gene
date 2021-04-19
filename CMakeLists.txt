@@ -302,7 +302,21 @@ set(ONTOLOGY_SOURCE_FILES
         kgl_ontology/xml/rapidxml_utils.h
         kgl_ontology/kol_OntologyDatabase.h
         kgl_ontology/kol_AnnotationData.cpp
-        kgl_ontology/kol_GoGraph.cpp kgl_ontology/kol_FrontierSharedInformation.cpp)
+        kgl_ontology/kol_GoGraph.cpp
+        kgl_ontology/kol_FrontierSharedInformation.cpp
+        kgl_ontology/kol_TermSimilarityCache.cpp
+        kgl_ontology/kol_AsymmetricSimilarityCache.cpp
+        kgl_ontology/kol_AsymmetricSimilarityCache.h
+        kgl_ontology/kol_BestMatchAverageSetSimilarity.cpp
+        kgl_ontology/kol_AllPairsAverageSetSimilarity.cpp
+        kgl_ontology/kol_AllPairsMaxSetSimilarity.cpp
+        kgl_ontology/kol_GentlemanSimUISetSimilarity.cpp
+        kgl_ontology/kol_JaccardSetSimilarity.cpp
+        kgl_ontology/kol_MazanduSimDICSetSimilarity.cpp
+        kgl_ontology/kol_MazanduSimUICSetSimilarity.cpp
+        kgl_ontology/kol_PesquitaSimGICSetSimilarity.cpp
+        kgl_ontology/kol_ExclusivelyInheritedSharedInformation.cpp
+        kgl_ontology/kol_CoutoGraSMSharedInformation.cpp kgl_ontology/kol_CoutoGraSMAdjustedSharedInformation.cpp)
 
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES
@@ -448,7 +462,8 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_runtime.cpp
         kgl_app/kgl_runtime.h
         kgl_app/kgl_runtime_config.cpp
-        kgl_app/kgl_runtime_config.h kgl_app/kgl_package_resources.cpp)
+        kgl_app/kgl_runtime_config.h
+        kgl_app/kgl_package_resources.cpp)
 
 
 

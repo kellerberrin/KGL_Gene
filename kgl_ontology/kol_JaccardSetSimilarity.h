@@ -32,31 +32,10 @@ public:
   //! A method for calculating term set to term set similarity for GO terms;
   /*!
     This method returns the Jaccard set similarity.
+    Order of row and column terms important when using Asymmetric similarity caches.
   */
-  [[nodiscard]] double calculateSimilarity(const OntologySetType<std::string> &termsA, const OntologySetType<std::string> &termsB) const override {
-
-    //return 0 if a set is empty
-    if (termsA.empty() or termsB.empty()) {
-
-      return 0.0;
-
-    }
-
-    //get iterators
-    OntologySetType<std::string> _union = SetUtilities::setUnion(termsA, termsB);
-    OntologySetType<std::string> _intersection = SetUtilities::setIntersection(termsA, termsB);
-
-    if (_union.empty()) {
-
-      return 0.0;
-
-    } else {
-
-      return static_cast<double>(_intersection.size()) / static_cast<double>(_union.size());
-
-    }
-
-  }
+  [[nodiscard]] double calculateSimilarity( const OntologySetType<std::string> &row_terms,
+                                            const OntologySetType<std::string> &column_terms) const override;
 
 };
 

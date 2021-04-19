@@ -26,8 +26,7 @@ public:
   /*!
     Creates the GentlemanUISimilarity class assigning the GoGraph private member.
   */
-  GentlemanSimUISetSimilarity(const std::shared_ptr<const GoGraph> &graph) : _graph(graph) {}
-
+  explicit GentlemanSimUISetSimilarity(const std::shared_ptr<const GoGraph> &graph_ptr) : graph_ptr_(graph_ptr) {}
   ~GentlemanSimUISetSimilarity() override = default;
 
 
@@ -35,27 +34,8 @@ public:
   /*!
     This method returns the best match average similarity.
   */
-  [[nodiscard]] double calculateSimilarity(const OntologySetType<std::string> &termsA, const OntologySetType<std::string> &termsB) const override {
-    // Get the induced set of terms for each set
-
-    OntologySetType<std::string> inducedTermSetA = _graph->getExtendedTermSet(termsA);
-    OntologySetType<std::string> inducedTermSetB = _graph->getExtendedTermSet(termsB);
-    // Calculate union and intersection
-    OntologySetType<std::string> union_set = SetUtilities::setUnion(inducedTermSetA, inducedTermSetB);
-    OntologySetType<std::string> intersection_set = SetUtilities::setIntersection(inducedTermSetA, inducedTermSetB);
-
-    //if the union is 0, return 0. No division by 0.
-    if (union_set.size() == 0) {
-
-      return 0.0;
-
-    } else {
-
-      return static_cast<double>(intersection_set.size()) / static_cast<double>(union_set.size());
-
-    }
-
-  }
+  [[nodiscard]] double calculateSimilarity( const OntologySetType<std::string> &row_terms,
+                                            const OntologySetType<std::string> &column_terms) const override;
 
 private:
 
@@ -63,7 +43,7 @@ private:
   /*!
     A reference to GO graph to be used.
   */
-  std::shared_ptr<const GoGraph> _graph;
+  std::shared_ptr<const GoGraph> graph_ptr_;
 
 
 };

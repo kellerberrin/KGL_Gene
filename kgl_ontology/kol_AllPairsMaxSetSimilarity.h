@@ -33,52 +33,26 @@ public:
   /*!
     Creates the AllPairsMaxSetSimilarity class assigning the similarity measure private member.
   */
-  AllPairsMaxSetSimilarity(const std::shared_ptr<const TermSimilarityInterface> &simMeasure)
-      : _similarity(simMeasure) {}
+  AllPairsMaxSetSimilarity(const std::shared_ptr<const TermSimilarityInterface> &similarity_ptr)
+      : similarity_ptr_(similarity_ptr) {}
 
   ~AllPairsMaxSetSimilarity() override = default;
 
 
   //! A method for calculating term set to term set similarity for GO terms;
   /*!
+    Order of row and column terms important when using Asymmetric similarity caches.
     This method returns the all pairs max similarity.
   */
-  [[nodiscard]] double calculateSimilarity(const OntologySetType<std::string> &termsA, const OntologySetType<std::string> &termsB) const override {
-
-    //return 0 if a set is empty
-    if (termsA.empty() or termsB.empty()) {
-
-      return 0.0;
-
-    }
-
-    //get mean accumulator
-    Accumulators::MaxAccumulator simMax;
-
-    //iterate A set
-    for (auto const &aTerm : termsA) {
-      //iterate B terms
-      for (auto const &bTerm : termsB) {
-        //get the term from B set
-        double sim = _similarity->calculateNormalizedTermSimilarity(aTerm, bTerm);
-        //std::cout << aTerm << " " << bTerm << " " << sim << std::endl;
-        //add to accumulator
-        simMax(sim);
-
-      }
-
-    }
-    //return the mean from the accumulator
-    return Accumulators::extractMax(simMax);
-
-  }
+  [[nodiscard]] double calculateSimilarity( const OntologySetType<std::string> &row_terms,
+                                            const OntologySetType<std::string> &column_terms) const override;
 
 private:
   //! Pointer to the actual similarity measure
   /*!
     This object will actually calculate the similarity between pairs of terms.
   */
-  std::shared_ptr<const TermSimilarityInterface> _similarity;
+  std::shared_ptr<const TermSimilarityInterface> similarity_ptr_;
 
 };
 

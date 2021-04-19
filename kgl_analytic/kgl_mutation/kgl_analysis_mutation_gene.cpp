@@ -65,6 +65,9 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
   ExecEnv::log().info("GenomeMutation::genomeAnalysis; HGNC sorted Gene Ids: {}", resort_ids.getMap().size());
 
   gene_vector_.clear();
+  ExecEnv::log().info("Creating Ontology Cache ...");
+  OntologyCache ontology_cache(ontology_db_ptr);
+  ExecEnv::log().info("Ontology Cache Created");
 
   for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
 
@@ -120,7 +123,7 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
       mutation.gene_variants.updateLofEthnicity().updatePopulations(ped_data);
       mutation.gene_variants.updateHighEthnicity().updatePopulations(ped_data);
       mutation.gene_variants.updateModerateEthnicity().updatePopulations(ped_data);
-      mutation.ontology.processOntologyStats(mutation.gene_characteristic, ontology_db_ptr);
+      mutation.ontology.processOntologyStats(mutation.gene_characteristic, ontology_db_ptr, ontology_cache);
       gene_vector_.push_back(mutation);
 
     } // Gene.

@@ -25,10 +25,19 @@ public:
 
   //!set UTILITY function convert a vector to a set
   template<typename Type>
-  [[nodiscard]] static OntologySetType<Type> convertVector(const std::vector<Type> &myVec) {
+  [[nodiscard]] static OntologySetType<Type> convertVector(const std::vector<Type> &vector) {
 
-    OntologySetType<Type> s(myVec.begin(), myVec.end());
-    return s;
+    OntologySetType<Type> set(vector.begin(), vector.end());
+    return set;
+
+  }
+
+  //!set UTILITY function convert a set to a vector
+  template<typename Type>
+  [[nodiscard]] static std::vector<Type> convertSet(const OntologySetType<Type>& set) {
+
+    std::vector<Type> vector(set.begin(), set.end());
+    return vector;
 
   }
 

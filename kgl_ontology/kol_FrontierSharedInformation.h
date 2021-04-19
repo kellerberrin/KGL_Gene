@@ -33,8 +33,9 @@ public:
   /*!
     Creates the CoutoGraSMSharedInformation class
   */
-  FrontierSharedInformation(const std::shared_ptr<const GoGraph> &goGraph, const std::shared_ptr<const TermInformationContentMap> &icMap)
-      : _goGraph(goGraph), _icMap(icMap) {}
+  FrontierSharedInformation( const std::shared_ptr<const GoGraph> &graph_ptr,
+                             const std::shared_ptr<const TermInformationContentMap> &ic_map_ptr)
+      : graph_ptr_(graph_ptr), ic_map_ptr_(ic_map_ptr) {}
 
   ~FrontierSharedInformation() override = default;
 
@@ -65,7 +66,7 @@ public:
   */
   [[nodiscard]] bool hasTerm(const std::string &term) const override {
 
-    return _icMap->hasTerm(term);
+    return ic_map_ptr_->hasTerm(term);
 
   }
 
@@ -75,16 +76,14 @@ public:
   */
   [[nodiscard]] bool isSameOntology(const std::string &termA, const std::string &termB) const override {
 
-    return _goGraph->getTermOntology(termA) == _goGraph->getTermOntology(termB);
+    return graph_ptr_->getTermOntology(termA) == graph_ptr_->getTermOntology(termB);
 
   }
 
 private:
 
-
-
-  std::shared_ptr<const GoGraph> _goGraph;
-  std::shared_ptr<const TermInformationContentMap> _icMap;
+  std::shared_ptr<const GoGraph> graph_ptr_;
+  std::shared_ptr<const TermInformationContentMap> ic_map_ptr_;
 
 
 };

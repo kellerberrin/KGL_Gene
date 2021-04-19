@@ -63,9 +63,9 @@ kol::OntologySetType<std::string> kol::FrontierSharedInformation::getCommonDisjo
   }
 
   //std::cout << "Linear GraSm " << std::endl;
-  OntologySetType<std::string> ancestorsC1 = _goGraph->getSelfAncestorTerms(termC1);
+  OntologySetType<std::string> ancestorsC1 = graph_ptr_->getSelfAncestorTerms(termC1);
   //std::cout << ancestorsC1.size() << std::endl;
-  OntologySetType<std::string> ancestorsC2 = _goGraph->getSelfAncestorTerms(termC2);
+  OntologySetType<std::string> ancestorsC2 = graph_ptr_->getSelfAncestorTerms(termC2);
   //std::cout << ancestorsC2.size() << std::endl;
 
 
@@ -83,22 +83,22 @@ kol::OntologySetType<std::string> kol::FrontierSharedInformation::getCommonDisjo
   //std::cout << "CA size " << commonAncestors.size() << std::endl;
 
   //get the boost graph
-  const GoGraph::Graph &go_graph = _goGraph->getGraph();
+  const GoGraph::Graph &go_graph = graph_ptr_->getGraph();
 
   OntologySetType<std::size_t> edgesC1;
   OntologySetType<std::size_t> edgesC2;
 
-  const GoGraph::EdgeIndexMap &edge_index_map = _goGraph->edgeIndexMap();
+  const GoGraph::EdgeIndexMap &edge_index_map = graph_ptr_->edgeIndexMap();
   OntologyMapType<std::string, OntologySetType<std::size_t> > termToEdges;
 
   EdgeSetVisitor c1EdgeVisitor(edgesC1, edge_index_map, termToEdges);
   EdgeSetVisitor c2EdgeVisitor(edgesC2, edge_index_map, termToEdges);
 
   //get edges for c1
-  boost::breadth_first_search(go_graph, _goGraph->getVertexByName(termC1), boost::visitor(c1EdgeVisitor));
+  boost::breadth_first_search(go_graph, graph_ptr_->getVertexByName(termC1), boost::visitor(c1EdgeVisitor));
 
   //get edges for c1
-  boost::breadth_first_search(go_graph, _goGraph->getVertexByName(termC2), boost::visitor(c2EdgeVisitor));
+  boost::breadth_first_search(go_graph, graph_ptr_->getVertexByName(termC2), boost::visitor(c2EdgeVisitor));
 
   //std::cout << "edges 1 " << edgesC1.size() << std::endl;
   //std::cout << "edges 2 " << edgesC2.size() << std::endl;
@@ -144,13 +144,13 @@ kol::OntologySetType<std::string> kol::FrontierSharedInformation::getCommonDisjo
 */
 double kol::FrontierSharedInformation::sharedInformation(const std::string &termA, const std::string &termB) const {
 // return 0 for any terms not in the datbase
-  if (not _icMap->hasTerm(termA) || not _icMap->hasTerm(termB)) {
+  if (not ic_map_ptr_->hasTerm(termA) || not ic_map_ptr_->hasTerm(termB)) {
 
     return 0.0;
 
   }
 // return 0 for terms in different ontologies
-  if (_goGraph->getTermOntology(termA) != _goGraph->getTermOntology(termB)) {
+  if (graph_ptr_->getTermOntology(termA) != graph_ptr_->getTermOntology(termB)) {
 
     return 0.0;
 
@@ -161,8 +161,8 @@ double kol::FrontierSharedInformation::sharedInformation(const std::string &term
 //std::cout << "size " << cda.size() << std::endl;
 
   for (auto const &term : cda) {
-//std::cout << _icMap[*iter] << std::endl;
-    meanIC(_icMap->getValue(term));
+//std::cout << ic_map_ptr_[*iter] << std::endl;
+    meanIC(ic_map_ptr_->getValue(term));
 
   }
 
@@ -177,13 +177,13 @@ double kol::FrontierSharedInformation::sharedInformation(const std::string &term
 
 double kol::FrontierSharedInformation::sharedInformation(const std::string &term) const {
 // return 0 for any terms not in the datbase
-  if (!_icMap->hasTerm(term)) {
+  if (!ic_map_ptr_->hasTerm(term)) {
 
     return 0.0;
 
   }
 
-  return _icMap->getValue(term);
+  return ic_map_ptr_->getValue(term);
 
 }
 
@@ -195,21 +195,21 @@ double kol::FrontierSharedInformation::maxInformationContent(const std::string &
 
 
 //select the correct ontology normalization factor
-  GO::Ontology ontology = _goGraph->getTermOntology(term);
+  GO::Ontology ontology = graph_ptr_->getTermOntology(term);
   double maxIC;
 
   switch (ontology) {
 
     case GO::Ontology::BIOLOGICAL_PROCESS:
-      maxIC = _icMap->getMinBP();
+      maxIC = ic_map_ptr_->getMinBP();
       break;
 
     case GO::Ontology::MOLECULAR_FUNCTION:
-      maxIC = _icMap->getMinMF();
+      maxIC = ic_map_ptr_->getMinMF();
       break;
 
     case GO::Ontology::CELLULAR_COMPONENT:
-      maxIC = _icMap->getMinCC();
+      maxIC = ic_map_ptr_->getMinCC();
       break;
 
     default:

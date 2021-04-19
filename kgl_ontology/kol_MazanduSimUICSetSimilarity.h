@@ -33,8 +33,9 @@ public:
   /*!
   Creates the MazanduSimUICSetSimilarity class assigning the GoGraph private memeber.
   */
-  MazanduSimUICSetSimilarity(const std::shared_ptr<const GoGraph> &graph, const std::shared_ptr<const TermInformationContentMap> &icMap)
-      : _graph(graph), _icMap(icMap) {}
+  MazanduSimUICSetSimilarity(const std::shared_ptr<const GoGraph> &graph_ptr,
+                             const std::shared_ptr<const TermInformationContentMap> &ic_map_ptr)
+      : graph_ptr_(graph_ptr), ic_map_ptr_(ic_map_ptr) {}
 
   ~MazanduSimUICSetSimilarity() override = default;
 
@@ -43,39 +44,9 @@ public:
   /*!
   This method returns the best match average similarity.
   */
-  [[nodiscard]] double calculateSimilarity(const OntologySetType<std::string> &termsA, const OntologySetType<std::string> &termsB) const override {
+  [[nodiscard]] double calculateSimilarity(const OntologySetType<std::string> &row_terms,
+                                           const OntologySetType<std::string> &column_terms) const override;
 
-    // Get the induced set of terms for each set
-    OntologySetType<std::string> inducedTermSetA = _graph->getExtendedTermSet(termsA);
-    OntologySetType<std::string> inducedTermSetB = _graph->getExtendedTermSet(termsB);
-    // Calculate union and intersection
-    OntologySetType<std::string> intersection_set = SetUtilities::setIntersection(inducedTermSetA, inducedTermSetB);
-
-    double intersection_sum = calcICSum(intersection_set);
-    double setA_sum = calcICSum(inducedTermSetA);
-    double setB_sum = calcICSum(inducedTermSetB);
-
-
-    //if the union is 0, return 0. No division by 0.
-    if (setA_sum + setB_sum == 0.0) {
-
-      return 0.0;
-
-    } else {
-
-      if (setA_sum > setB_sum) {
-
-        return intersection_sum / setA_sum;
-
-      } else {
-
-        return intersection_sum / setB_sum;
-
-      }
-
-    }
-
-  }
 
 private:
 
@@ -83,31 +54,19 @@ private:
   /*!
   A reference to GO graph to be used.
   */
-  std::shared_ptr<const GoGraph> _graph;
+  std::shared_ptr<const GoGraph> graph_ptr_;
 
   //! The information content map.
   /*!
   An information content map.
   */
-  std::shared_ptr<const TermInformationContentMap> _icMap;
-
+  std::shared_ptr<const TermInformationContentMap> ic_map_ptr_;
 
   //! A method for calculating the sum of information content of the terms in a set.
   /*!
     This method calculates the sum of information content of the terms in a set.
   */
-  [[nodiscard]] double calcICSum(const OntologySetType<std::string> &terms) const {
-
-    double sum{0.0};
-    for (auto const &term : terms) {
-
-      sum += _icMap->getValue(term);
-
-    }
-
-    return sum;
-
-  }
+  [[nodiscard]] double calcICSum(const OntologySetType<std::string> &terms) const;
 
 };
 

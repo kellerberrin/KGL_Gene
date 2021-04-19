@@ -28,8 +28,9 @@ public:
   /*!
   Creates the PesquitaSimGICSetSimilarity class assigning the GoGraph private member.
   */
-  PesquitaSimGICSetSimilarity(const std::shared_ptr<const GoGraph> &graph, const std::shared_ptr<const TermInformationContentMap> &icMap)
-      : _graph(graph), _icMap(icMap) {}
+  PesquitaSimGICSetSimilarity(const std::shared_ptr<const GoGraph> &graph_ptr,
+                              const std::shared_ptr<const TermInformationContentMap> &ic_map_ptr)
+      : graph_ptr_(graph_ptr), ic_map_ptr_(ic_map_ptr) {}
 
   ~PesquitaSimGICSetSimilarity() override = default;
 
@@ -37,43 +38,8 @@ public:
   /*!
   This method returns the best match average similarity.
   */
-  [[nodiscard]] double calculateSimilarity(const OntologySetType<std::string> &termsA, const OntologySetType<std::string> &termsB) const override {
-
-    // Get the induced set of terms for each set
-    OntologySetType<std::string> inducedTermSetA = _graph->getExtendedTermSet(termsA);
-    OntologySetType<std::string> inducedTermSetB = _graph->getExtendedTermSet(termsB);
-    // Calculate union and intersection
-    OntologySetType<std::string> union_set = SetUtilities::setUnion(inducedTermSetA, inducedTermSetB);
-    OntologySetType<std::string> intersection_set = SetUtilities::setIntersection(inducedTermSetA, inducedTermSetB);
-
-    // Calculate sum for the union set
-    double union_sum{0.0};
-    for (auto const &term : union_set) {
-
-      union_sum += _icMap->getValue(term);
-
-    }
-
-    // Calculate sum for the intersection set
-    double intersection_sum{0.0};
-    for (auto const &term : intersection_set) {
-
-      intersection_sum += _icMap->getValue(term);
-
-    }
-
-    //if the union is 0, return 0. No division by 0.
-    if (union_sum == 0.0) {
-
-      return 0.0;
-
-    } else {
-
-      return intersection_sum / union_sum;
-
-    }
-
-  }
+  [[nodiscard]] double calculateSimilarity( const OntologySetType<std::string> &row_terms,
+                                            const OntologySetType<std::string> &column_terms) const override;
 
 private:
 
@@ -81,13 +47,13 @@ private:
   /*!
   A reference to GO graph to be used.
   */
-  std::shared_ptr<const GoGraph> _graph;
+  std::shared_ptr<const GoGraph> graph_ptr_;
 
   //! The information content map
   /*!
   An information content map
   */
-  std::shared_ptr<const TermInformationContentMap> _icMap;
+  std::shared_ptr<const TermInformationContentMap> ic_map_ptr_;
 
 };
 

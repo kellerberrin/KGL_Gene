@@ -1,9 +1,9 @@
 //
-// Created by kellerberrin on 7/4/21.
+// Created by kellerberrin on 17/4/21.
 //
 
-#ifndef KGL_KOL_TERMSIMILARITYCACHE_H
-#define KGL_KOL_TERMSIMILARITYCACHE_H
+#ifndef KOL_ASYMMETRICSIMILARITYCACHE_H
+#define KOL_ASYMMETRICSIMILARITYCACHE_H
 
 
 #include <vector>
@@ -17,14 +17,14 @@
 namespace kellerberrin::ontology {
 
 
-//! A multi-threaded class write a term similarity matrix to a memory cache.
-/*! \class TermSimilarityCache
+//! A multi-threaded class write an asymmetric term similarity matrix to a memory cache.
+/*! \class AsymmetricSimilarityCache
 	This class creates a memory cache similarity matrix by calculating all similarity values
 	  between pairs of terms. Warning this object can use several gigabytes of memory.
 	  Matrix creation time will depend on the number of execution threads committed to matrix creation.
 	  Defaults to (HW threads available - 1).
 */
-class TermSimilarityCache : public TermSimilarityInterface {
+class AsymmetricSimilarityCache : public TermSimilarityInterface {
 
 
 public:
@@ -33,19 +33,19 @@ public:
     A simple parameterized constructor.
     This class takes an instance of a similarity interface.
   */
-  TermSimilarityCache(const std::shared_ptr<const GoGraph> &go_graph_ptr,
-                      const std::shared_ptr<const AnnotationData> &annotation_ptr,
-                      const std::shared_ptr<const TermSimilarityInterface> &term_sim_ptr,
-                      GO::Ontology ontology = GO::Ontology::BIOLOGICAL_PROCESS) {
+  AsymmetricSimilarityCache(const std::vector<std::string> &row_terms,
+                            const std::vector<std::string> &column_terms,
+                            const std::shared_ptr<const TermSimilarityInterface> &term_sim_ptr,
+                            GO::Ontology ontology = GO::Ontology::BIOLOGICAL_PROCESS) {
 
-    termSimilarityCache(go_graph_ptr, annotation_ptr, term_sim_ptr, ontology);
+    termSimilarityCache(row_terms, column_terms, term_sim_ptr, ontology);
 
   }
 
-  TermSimilarityCache(const TermSimilarityCache &) = delete; // Too expensive.
-  ~TermSimilarityCache() override = default;
+  AsymmetricSimilarityCache(const AsymmetricSimilarityCache &) = delete; // Too expensive.
+  ~AsymmetricSimilarityCache() override = default;
 
-  TermSimilarityCache &operator=(const TermSimilarityCache &) = delete; // Too expensive.
+  AsymmetricSimilarityCache &operator=(const AsymmetricSimilarityCache &) = delete; // Too expensive.
 
   //! A method for calculating term-to-term similarity for GO terms using a precomputed similarity matrix.
   /*!
@@ -53,22 +53,25 @@ public:
   */
   [[nodiscard]] double calculateTermSimilarity(const std::string &row_term, const std::string &column_term) const override;
 
+
   //! A method for calculating term-to-term similarity for GO terms using a precomputed similarity matrix.
   /*!
     This method returns the similarity scaled between 0 and 1 [0,1] inclusive
   */
-  [[nodiscard]] double calculateNormalizedTermSimilarity(const std::string &term_A, const std::string &term_B) const override {
+  [[nodiscard]] double calculateNormalizedTermSimilarity(const std::string &row_term, const std::string &column_term) const override {
 
-    return calculateTermSimilarity(term_A, term_B);
+    return calculateTermSimilarity(row_term, column_term);
 
   }
 
-  // termCount() == 0 is an error condition.
-  [[nodiscard]] size_t termCount() const { return cache_matrix_.size(); }
+  // rows() == 0 is an error condition.
+  [[nodiscard]] size_t rows() const { return row_term_to_index_.size(); }
+  [[nodiscard]] size_t columns() const { return column_term_to_index_.size(); }
 
 private:
 
-  OntologyMapType<std::string, std::size_t> term_to_index_;
+  OntologyMapType<std::string, std::size_t> row_term_to_index_;
+  OntologyMapType<std::string, std::size_t> column_term_to_index_;
   std::vector<std::unique_ptr<std::vector<double>>> cache_matrix_;
 
   // Lookup function knows the matrix is symmetric
@@ -82,20 +85,19 @@ private:
     O(Term Pair Calculation Cost) is usually near constant time,
      but some methods will be extremely slow and infeasible.
   */
-  bool termSimilarityCache(const std::shared_ptr<const GoGraph> &go_graph_ptr,
-                           const std::shared_ptr<const AnnotationData> &annotation_ptr,
+  bool termSimilarityCache(const std::vector<std::string> &row_terms,
+                           const std::vector<std::string> &column_terms,
                            const std::shared_ptr<const TermSimilarityInterface> &term_similarity_ptr,
                            GO::Ontology ontology);
 
   // Multithreaded calculation.
-  static std::unique_ptr<std::vector<double>> calcColumn(size_t row,
-                                                         const std::string &term_A,
+  static std::unique_ptr<std::vector<double>> calcColumn(const std::string &row_term,
                                                          const std::shared_ptr<const TermSimilarityInterface> &term_similarity_ptr,
-                                                         const std::shared_ptr<const std::vector<std::string>> &ontology_terms_ptr);
+                                                         const std::shared_ptr<const std::vector<std::string>>& column_terms_ptr);
 };
 
 
 } // namespace
 
 
-#endif //KGL_TERMSIMILARITYCACHE_H
+#endif //KOL_ASYMMETRICSIMILARITYCACHE_H
