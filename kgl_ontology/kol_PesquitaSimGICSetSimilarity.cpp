@@ -8,8 +8,8 @@
 namespace kol = kellerberrin::ontology;
 
 
-[[nodiscard]] double kol::PesquitaSimGICSetSimilarity::calculateSimilarity(const OntologySetType<std::string> &row_terms,
-                                                                           const OntologySetType<std::string> &column_terms) const {
+double kol::PesquitaSimGICSetSimilarity::calculateSimilarity( const OntologySetType<std::string> &row_terms,
+                                                              const OntologySetType<std::string> &column_terms) const {
 
   // Get the induced set of terms for each set
   OntologySetType<std::string> induced_row_terms = graph_ptr_->getExtendedTermSet(row_terms);

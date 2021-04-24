@@ -35,8 +35,8 @@ public:
   /*!
     Creates the linSimPtr calculator with a particular shared information calculator
   */
-  ModularLin(const std::shared_ptr<const SharedInformationInterface> &sharedInformationCalculator)
-      : _siCalculator(sharedInformationCalculator) {}
+  ModularLin(const std::shared_ptr<const SharedInformationInterface> &shared_info_ptr)
+      : shared_info_ptr_(shared_info_ptr) {}
 
   ~ModularLin() override = default;
 
@@ -44,34 +44,7 @@ public:
   /*!
     This method returns the Resnik similarity or the information content of the most informative common ancestor.
   */
-  [[nodiscard]] double calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override {
-
-    if (goTermA == goTermB) {
-
-      return 1.0;
-
-    }
-
-    if (not _siCalculator->hasTerm(goTermA) or not _siCalculator->hasTerm(goTermB)) {
-
-      return 0.0;
-
-    }
-
-    if (not _siCalculator->isSameOntology(goTermA, goTermB)) {
-
-      return 0.0;
-
-    }
-
-    double sharedIC = _siCalculator->sharedInformation(goTermA, goTermB);
-    double termA_IC = _siCalculator->sharedInformation(goTermA);
-    double termB_IC = _siCalculator->sharedInformation(goTermB);
-
-    return (2.0 * sharedIC) / (termA_IC + termB_IC);
-
-  }
-
+  [[nodiscard]] double calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override;
 
   //! A method for calculating term-to-term similarity for GO terms using normalized Lin similarity
   /*!
@@ -87,7 +60,7 @@ public:
 private:
 
   //! private SharedInformationInterface member used for calculations
-  std::shared_ptr<const SharedInformationInterface> _siCalculator;
+  std::shared_ptr<const SharedInformationInterface> shared_info_ptr_;
 
 };
 

@@ -8,6 +8,8 @@ Distributed under the Boost Software License, Version 1.0.
 #include "kol_TermSimilarityInterface.h"
 #include "kol_SharedInformationInterface.h"
 
+#include <memory>
+
 namespace kellerberrin::ontology {
 
 
@@ -38,46 +40,16 @@ public:
   /*!
     Creates the Jiang Conrath simialrity measure using a given shared information calculator
   */
-  ModularJiangConrath(const std::shared_ptr<const SharedInformationInterface> &sharedInformationCalculator)
-      : _siCalculator(sharedInformationCalculator) {}
+  ModularJiangConrath(const std::shared_ptr<const SharedInformationInterface> &shared_info_ptr)
+      : shared_info_ptr_(shared_info_ptr) {}
 
   ~ModularJiangConrath() override = default;
 
-  //! A method for calculating term-to-term similarity for GO terms using Lin similarity
+  //! A method for calculating term-to-term similarity for GO terms using JiangConrath similarity
   /*!
     This method returns the Resnik similarity or the information content of the most informative common ancestor.
   */
-  [[nodiscard]] double calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override {
-
-    if (goTermA == goTermB) {
-
-      return 1.0;
-
-    }
-
-    if (not _siCalculator->hasTerm(goTermA) or not _siCalculator->hasTerm(goTermB)) {
-
-      return 0.0;
-
-    }
-
-    if (not _siCalculator->isSameOntology(goTermA, goTermB)) {
-
-      return 0.0;
-
-    }
-
-    double sharedIC = _siCalculator->sharedInformation(goTermA, goTermB);
-    double termA_IC = _siCalculator->sharedInformation(goTermA);
-    double termB_IC = _siCalculator->sharedInformation(goTermB);
-    double maxIC = _siCalculator->maxInformationContent(goTermA);
-
-    double dist = termA_IC + termB_IC - (2.0 * sharedIC);
-
-    return 1.0 - (dist / (2.0 * maxIC));
-
-  }
-
+  [[nodiscard]] double calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override;
   //! A method for calculating term-to-term similarity for GO terms using normalized Lin similarity
   /*!
     This method returns the Lin similarity. Lin similarity is already normalized
@@ -91,7 +63,7 @@ public:
 private:
 
   //! private SharedInformationInterface member used for calculations
-  std::shared_ptr<const SharedInformationInterface> _siCalculator;
+  std::shared_ptr<const SharedInformationInterface> shared_info_ptr_;
 
 };
 

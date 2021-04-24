@@ -33,8 +33,8 @@ public:
   /*!
     Creates the default(empty) StandardRelationshipPolicy
   */
-  ModularResnik(const std::shared_ptr<const SharedInformationInterface> &sharedInformationCalculator)
-      : _siCalculator(sharedInformationCalculator) {}
+  ModularResnik(const std::shared_ptr<const SharedInformationInterface> &shared_info_ptr)
+      : shared_info_ptr_(shared_info_ptr) {}
 
   ~ModularResnik() override = default;
 
@@ -42,53 +42,18 @@ public:
   /*!
     This method returns the Resnik similarity or the information content of the most informative common ancestor.
   */
-  [[nodiscard]] double calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override {
-
-    if (not _siCalculator->hasTerm(goTermA) or not _siCalculator->hasTerm(goTermB)) {
-
-      return 0.0;
-
-    }
-    if (not _siCalculator->isSameOntology(goTermA, goTermB)) {
-
-      return 0.0;
-
-    }
-
-    return _siCalculator->sharedInformation(goTermA, goTermB);
-
-  }
-
+  [[nodiscard]] double calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override;
 
   //! A method for calculating term-to-term similarity for GO terms using Normalized Resnik similarity
   /*!
     This method returns the Resnik similarity divided by the maximum possible similarity
   */
-  [[nodiscard]] double calculateNormalizedTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override {
-
-    if (not _siCalculator->hasTerm(goTermA) or not _siCalculator->hasTerm(goTermB)) {
-
-      return 0.0;
-
-    }
-    if (not _siCalculator->isSameOntology(goTermA, goTermB)) {
-
-      return 0.0;
-
-    }
-
-    double sharedInformation = _siCalculator->sharedInformation(goTermA, goTermB);
-    double maxInformation = _siCalculator->maxInformationContent(goTermA);
-
-    return sharedInformation / maxInformation;
-
-  }
-
+  [[nodiscard]] double calculateNormalizedTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override;
 
 private:
 
   //! private SharedInformationInterface member used for calculations
-  std::shared_ptr<const SharedInformationInterface> _siCalculator;
+  std::shared_ptr<const SharedInformationInterface> shared_info_ptr_;
 
 };
 
