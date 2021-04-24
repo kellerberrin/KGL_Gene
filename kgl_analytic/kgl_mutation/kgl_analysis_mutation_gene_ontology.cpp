@@ -4,6 +4,7 @@
 
 #include "kel_exec_env.h"
 #include "kgl_analysis_mutation_gene_ontology.h"
+#include "kgl_gene_cache_ontology.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -15,127 +16,54 @@ namespace kgl = kellerberrin::genome;
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+kgl::OntologyCache::OntologyCache(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) {
+
+  initializeOntology(ontology_db_ptr);
+
+}
+
+
+kgl::OntologyCache::~OntologyCache() {
+
+
+  gene_cache_ptr_ = nullptr;
+
+}
 
 
 void kgl::OntologyCache::initializeOntology(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) {
 
   // Create a vector of Malaria genes from the map.
-  for (auto const& [Go_gene, Gene_name] : malaria_gene_map_) {
+  std::vector<std::string> gene_vector;
+  for (auto const&[go_gene, gene_name] : malaria_gene_map_) {
 
-    malaria_gene_vector_.push_back(Go_gene);
-
-  }
-
-  auto sim_calc_ptr = getResnikSimilarity(ontology_db_ptr);
-
-  // Biological process
-  malaria_go_terms_BP_ = getMalariaGOVector(ontology_db_ptr, kol::GO::Ontology::BIOLOGICAL_PROCESS);
-  all_go_terms_BP_ = getAllGOVector(ontology_db_ptr, kol::GO::Ontology::BIOLOGICAL_PROCESS);
-  cache_BP_ptr_ = std::make_shared<const kol::AsymmetricSimilarityCache>(malariaGOTermsBP(),
-                                                                         all_go_terms_BP_,
-                                                                         sim_calc_ptr,
-                                                                         kol::GO::Ontology::BIOLOGICAL_PROCESS);
-  set_sim_BP_ptr_ = std::make_shared<const kol::BestMatchAverageSetSimilarity>(cache_BP_ptr_);
-
-  // Molecular Function
-  malaria_go_terms_MF_ = getMalariaGOVector(ontology_db_ptr, kol::GO::Ontology::MOLECULAR_FUNCTION);
-  all_go_terms_MF_ = getAllGOVector(ontology_db_ptr, kol::GO::Ontology::MOLECULAR_FUNCTION);
-  cache_MF_ptr_ = std::make_shared<const kol::AsymmetricSimilarityCache>(malariaGOTermsMF(),
-                                                                         all_go_terms_MF_,
-                                                                         sim_calc_ptr,
-                                                                         kol::GO::Ontology::MOLECULAR_FUNCTION);
-  set_sim_MF_ptr_ = std::make_shared<const kol::BestMatchAverageSetSimilarity>(cache_MF_ptr_);
-
-  // Cellular Component
-  malaria_go_terms_CC_ = getMalariaGOVector(ontology_db_ptr, kol::GO::Ontology::CELLULAR_COMPONENT);
-  all_go_terms_CC_ =  getAllGOVector(ontology_db_ptr, kol::GO::Ontology::CELLULAR_COMPONENT);
-  cache_CC_ptr_ = std::make_shared<const kol::AsymmetricSimilarityCache>(malariaGOTermsCC(),
-                                                                         all_go_terms_CC_,
-                                                                         sim_calc_ptr,
-                                                                         kol::GO::Ontology::CELLULAR_COMPONENT);
-  set_sim_CC_ptr_ = std::make_shared<const kol::BestMatchAverageSetSimilarity>(cache_CC_ptr_);
-
-}
-
-kol::OntologySetType<std::string> kgl::OntologyCache::getMalariaGOVector(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr, kol::GO::Ontology ontology) {
-
-  const kol::AnnotationData& annotation = *ontology_db_ptr->annotation();
-  const kol::GoGraph& go_graph = *ontology_db_ptr->goGraph();
-
-  // Only unique GO terms.
-  kol::OntologySetType<std::string> unique_GO_terms;
-  for (auto const& gene : malaria_gene_vector_) {
-
-    for (auto const& go_term : annotation.getGoTermsForGeneByOntology(gene, ontology, go_graph)) {
-
-      unique_GO_terms.insert(go_term);
-
-    }
+    gene_vector.push_back(go_gene);
 
   }
 
-  return unique_GO_terms;
 
-}
-
-std::vector<std::string> kgl::OntologyCache::getAllGOVector(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr, kol::GO::Ontology ontology) {
-
-  const kol::AnnotationData& annotation = *ontology_db_ptr->annotation();
-  const kol::GoGraph& go_graph = *ontology_db_ptr->goGraph();
-
-  return annotation.getOntologyTerms(go_graph, ontology);
+  gene_cache_ptr_ = std::make_shared<const OntologyGeneCache>(gene_vector, ontology_db_ptr);
 
 }
 
 
-std::shared_ptr<const kol::LinSimilarity> kgl::OntologyCache::getLinSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) {
+double kgl::OntologyCache::setSimilarityBP(const std::string& gene) const {
 
-  std::shared_ptr<const kol::TermInformationContentMap> info_map_ptr(std::make_shared<const kol::TermInformationContentMap>(ontology_db_ptr->goGraph(),
-                                                                                                                            ontology_db_ptr->annotation()));
-  return std::make_shared<const kol::LinSimilarity>(ontology_db_ptr->goGraph(), info_map_ptr);
+  return gene_cache_ptr_->setSimilarityBP(gene);
 
 }
 
 
-std::shared_ptr<const kol::ResnikSimilarity> kgl::OntologyCache::getResnikSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) {
+double kgl::OntologyCache::setSimilarityMF(const std::string& gene) const {
 
-  std::shared_ptr<const kol::TermInformationContentMap> info_map_ptr(std::make_shared<const kol::TermInformationContentMap>(ontology_db_ptr->goGraph(),
-                                                                                                                            ontology_db_ptr->annotation()));
-  return std::make_shared<const kol::ResnikSimilarity>(ontology_db_ptr->goGraph(), info_map_ptr);
+  return gene_cache_ptr_->setSimilarityMF(gene);
 
 }
 
 
-[[nodiscard]] double kgl::OntologyCache::setSimilarityBP(const std::string& gene) const {
+double kgl::OntologyCache::setSimilarityCC(const std::string& gene) const {
 
-  const kol::AnnotationData& annotation = *ontology_db_ptr_->annotation();
-  const kol::GoGraph& go_graph = *ontology_db_ptr_->goGraph();
-
-  auto gene_BP_terms = annotation.getGoTermsForGeneBP(gene, go_graph);
-
-  return set_sim_BP_ptr_->calculateSimilarity(malaria_go_terms_BP_, gene_BP_terms);
-
-}
-
-[[nodiscard]] double kgl::OntologyCache::setSimilarityMF(const std::string& gene) const {
-
-  const kol::AnnotationData& annotation = *ontology_db_ptr_->annotation();
-  const kol::GoGraph& go_graph = *ontology_db_ptr_->goGraph();
-
-  auto gene_MF_terms = annotation.getGoTermsForGeneMF(gene, go_graph);
-
-  return set_sim_MF_ptr_->calculateSimilarity(malaria_go_terms_MF_, gene_MF_terms);
-
-}
-
-[[nodiscard]] double kgl::OntologyCache::setSimilarityCC(const std::string& gene) const {
-
-  const kol::AnnotationData& annotation = *ontology_db_ptr_->annotation();
-  const kol::GoGraph& go_graph = *ontology_db_ptr_->goGraph();
-
-  auto gene_CC_terms = annotation.getGoTermsForGeneCC(gene, go_graph);
-
-  return set_sim_CC_ptr_->calculateSimilarity(malaria_go_terms_CC_, gene_CC_terms);
+  return gene_cache_ptr_->setSimilarityCC(gene);
 
 }
 
