@@ -157,7 +157,6 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
                                                                 unphased_population_ptr,
                                                                 clinvar_population_ptr,
                                                                 ped_data,
-                                                                ontology_db_ptr,
                                                                 ensembl_index_map_ptr,
                                                                 gene_mutation);
     future_vector.push_back(std::move(future));
@@ -186,7 +185,6 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
                                                          const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                                          const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                                          const std::shared_ptr<const GenomePEDData>& ped_data,
-                                                         const std::shared_ptr<const OntologyDatabase>& ontology_db_ptr,
                                                          const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr,
                                                          GeneMutation gene_mutation) {
 
@@ -238,7 +236,6 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
         gene_mutation.clinvar.processClinvar(genome_id, span_variant_ptr, clinvar_contig, ped_data);
         gene_mutation.gene_variants.ProcessVariantStats(genome_id, span_variant_ptr, unphased_population_ptr, ped_data);
-//        gene_mutation.ontology.processOntologyStats(gene_mutation.gene_characteristic, ontology_db_ptr);
 
       } // contig not empty
 

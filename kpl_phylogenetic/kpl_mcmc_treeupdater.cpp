@@ -10,15 +10,15 @@ namespace kpl = kellerberrin::phylogenetic;
 
 
 kpl::TreeUpdater::TreeUpdater() {
-  // std::cout << "Creating a TreeUpdater" << std::endl;
+
   Updater::clear();
   name("Tree Topology and Edge Proportions");
   reset();
+
 }
 
 
 kpl::TreeUpdater::~TreeUpdater() {
-  // std::cout << "Destroying a TreeUpdater" << std::endl;
 }
 
 

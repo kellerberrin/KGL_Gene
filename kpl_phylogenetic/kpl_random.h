@@ -53,6 +53,7 @@ private:
   double                                          _gamma_shape;
   int                                             _low;
   int                                             _high;
+
 };
 
 

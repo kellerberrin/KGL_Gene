@@ -29,44 +29,42 @@ namespace kellerberrin::phylogenetic {   //  organization::project level namespa
 
 class Chain {
 
-//  friend class Likelihood;
 
 public:
 
-  typedef std::vector<Updater::SharedPtr> updater_vect_t;
-  typedef std::shared_ptr<Chain>          SharedPtr;
+  using UpdaterVector = std::vector<std::shared_ptr<Updater>>;
+  using SharedPtr = std::shared_ptr<Chain>;
 
   Chain();
-  ~Chain();
-
-  void clear();
+  ~Chain() = default;
 
   void startTuning();
   void stopTuning();
 
-  void setTreeFromNewick(std::string & newick);
-  unsigned createUpdaters(std::shared_ptr<Model> model_ptr, Lot::SharedPtr lot, Likelihood::SharedPtr likelihood);
+  void setTreeFromNewick(const std::string& newick);
+  [[nodiscard]] size_t createUpdaters(const std::shared_ptr<Model>& model_ptr,
+                                      const std::shared_ptr<Lot>& lot,
+                                      const std::shared_ptr<Likelihood>& likelihood);
 
-  TreeManip::SharedPtr getTreeManip();
-  std::shared_ptr<Model> getModel();
-  double getLogLikelihood() const;
+  [[nodiscard]] const std::shared_ptr<TreeManip>& getTreeManip() const { return tree_manip_ptr_; }
+  [[nodiscard]] const std::shared_ptr<Model>& getModel() const { return model_ptr_; }
+  [[nodiscard]] double getLogLikelihood() const { return log_likelihood_; }
 
 
   void setHeatingPower(double p);
-  double getHeatingPower() const;
+  [[nodiscard]] double getHeatingPower() const { return heating_power_; }
 
   void setChainIndex(unsigned idx);
-  double getChainIndex() const;
+  [[nodiscard]] double getChainIndex() const;
 
-  Updater::SharedPtr findUpdaterByName(std::string name);
-  std::vector<std::string> getUpdaterNames() const;
-  std::vector<double> getAcceptPercentages() const;
-  std::vector<unsigned> getNumUpdates() const;
-  std::vector<double> getLambdas() const;
+  [[nodiscard]] std::vector<std::string> getUpdaterNames() const;
+  [[nodiscard]] std::vector<double> getAcceptPercentages() const;
+  [[nodiscard]] std::vector<unsigned> getNumUpdates() const;
+  [[nodiscard]] std::vector<double> getLambdas() const;
   void setLambdas(std::vector<double> & v);
 
-  double calcLogLikelihood() const;
-  double calcLogJointPrior() const;
+  [[nodiscard]] double calcLogLikelihood() const;
+  [[nodiscard]] double calcLogJointPrior() const;
 
   void start();
   void stop();
@@ -74,15 +72,16 @@ public:
 
 private:
 
-  std::shared_ptr<Model> _model;
-  Lot::SharedPtr _lot;
-  TreeManip::SharedPtr _tree_manipulator;
+  std::shared_ptr<Model> model_ptr_;
+  std::shared_ptr<Lot> lot_ptr_;
+  std::shared_ptr<TreeManip> tree_manip_ptr_;
 
-  updater_vect_t _updaters;
+  UpdaterVector updaters_;
 
-  unsigned _chain_index;
-  double _heating_power;
-  double _log_likelihood;
+  size_t chain_index_{0};
+  double heating_power_{1.0};
+  double log_likelihood_{0.0};
+
 };
 
 

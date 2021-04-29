@@ -12,7 +12,8 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
                     /usr/local/include/spdlog/include/
                     contrib/edlib # 3rd party library for fast Levenshtein seqence matching.
                     /usr/local/include/libhmsbeagle-1  # the beagle mcmc library used by kpl
-                    kel_utility                 # Basic Infrastructure library
+                    /usr/include/eigen3
+                    kel_utility         # Basic Infrastructure library
                     kgl_genomics                  # Basic Genetic library
                     kgl_genomics/kgl_parser
                     kgl_genomics/kgl_evidence
@@ -602,7 +603,7 @@ link_directories(/usr/local/lib/ncl)
 
 link_directories(/usr/local/lib/boost)
 
-link_directories(/usr/local/lib/beagle/lib)
+link_directories(/usr/local/lib/libhmsbeagle-1/lib)
 
 #generate kpl executable
 add_executable (kpl kpl_phylogenetic/kpl_main.cpp)

@@ -16,8 +16,6 @@ namespace kellerberrin::phylogenetic {   //  organization level namespace
 
 class PolytomyUpdater : public Updater {
 
-//  friend class Chain;
-
 public:
 
   typedef std::vector<double> _partition_vect_t;

@@ -7,19 +7,9 @@
 
 namespace kpl = kellerberrin::phylogenetic;
 
-// insert member function bodies here
 
 
-kpl::TreeSummary::TreeSummary() {
-  //std::cout << "Constructing a TreeSummary" << std::endl;
-}
-
-kpl::TreeSummary::~TreeSummary() {
-  //std::cout << "Destroying a TreeSummary" << std::endl;
-}
-
-
-kpl::Tree::SharedPtr kpl::TreeSummary::getTree(unsigned index) {
+std::shared_ptr<kpl::Tree> kpl::TreeSummary::getTree(unsigned index) {
 
   if (index >= _newicks.size()) {
 

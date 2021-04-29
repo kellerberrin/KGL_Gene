@@ -85,7 +85,7 @@ void kpl::GammaRateVarUpdater::proposeNewState() {
   // Save copy of _curr_point in case revert is necessary.
   _prev_point = getCurrentPoint();
 
-  // Propose new value using multiplier with boldness _lambda
+  // Propose new value using multiplier with boldness lambda_
   double m = exp(lambda() *(lot()->uniform() - 0.5));
   _asrv->setRateVar(m*_prev_point);
 

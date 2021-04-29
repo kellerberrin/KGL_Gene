@@ -114,7 +114,6 @@ private:
                                  const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                  const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                  const std::shared_ptr<const GenomePEDData>& ped_data,
-                                 const std::shared_ptr<const OntologyDatabase>& ontology_db_ptr,
                                  const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr,
                                  GeneMutation gene_mutation);
 

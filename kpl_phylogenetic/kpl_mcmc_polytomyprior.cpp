@@ -579,7 +579,7 @@ std::vector<double> kpl::PolytomyTopoPriorCalculator::getTopoPriorVect() {
 }
 
 
-double kpl::PolytomyTopoPriorCalculator::getLogTopoProb(Tree::SharedPtr t) {
+double kpl::PolytomyTopoPriorCalculator::getLogTopoProb(std::shared_ptr<Tree> t) {
 
   unsigned n = t->numLeaves();
   assert(n > 3);

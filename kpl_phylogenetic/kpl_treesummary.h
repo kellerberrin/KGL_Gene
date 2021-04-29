@@ -28,15 +28,14 @@ namespace kellerberrin::phylogenetic {   //  organization level namespace
 
 class TreeSummary {
 public:
-  TreeSummary();
-
-  ~TreeSummary();
+  TreeSummary() = default;
+  ~TreeSummary() =default;
 
   void readTreefile(const std::string filename, unsigned skip);
 
   void showSummary() const;
 
-  typename Tree::SharedPtr getTree(unsigned index);
+  typename std::shared_ptr<Tree> getTree(unsigned index);
 
   std::string getNewick(unsigned index);
 

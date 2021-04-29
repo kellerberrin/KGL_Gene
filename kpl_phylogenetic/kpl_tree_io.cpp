@@ -140,7 +140,7 @@ bool kpl::TreeIO::canHaveSibling(Node::PtrNode node, bool rooted, bool allow_pol
 }
 
 
-std::string kpl::TreeIO::smakeNewick(Tree::ConstSharedPtr tree, unsigned precision) {
+std::string kpl::TreeIO::smakeNewick(std::shared_ptr<const Tree> tree, unsigned precision) {
 
   std::string newick;
   const boost::format tip_node_format(boost::str(boost::format("%%d:%%.%df") % precision));
@@ -199,7 +199,7 @@ std::string kpl::TreeIO::smakeNewick(Tree::ConstSharedPtr tree, unsigned precisi
 }
 
 
-kpl::Tree::SharedPtr kpl::TreeIO::sbuildFromNewick(const std::string& newick, bool rooted, bool allow_polytomies) {
+std::shared_ptr<kpl::Tree> kpl::TreeIO::sbuildFromNewick(const std::string& newick, bool rooted, bool allow_polytomies) {
 
 
   std::set<unsigned> used; // used to ensure that no two leaf nodes have the same number
@@ -220,7 +220,7 @@ kpl::Tree::SharedPtr kpl::TreeIO::sbuildFromNewick(const std::string& newick, bo
   // Calculate the required number of nodes and create them.
   unsigned max_nodes = (2 * leaves) - (rooted ? 0 : 2);
 
-  Tree::SharedPtr tree(std::make_shared<Tree>(max_nodes));
+  std::shared_ptr<Tree> tree(std::make_shared<Tree>(max_nodes));
   tree->setLeaves(leaves);
 
   try {
@@ -567,7 +567,7 @@ kpl::Tree::SharedPtr kpl::TreeIO::sbuildFromNewick(const std::string& newick, bo
 
 
 
-kpl::Tree::SharedPtr kpl::TreeIO::buildFromNewick(const std::string& newick, bool rooted, bool allow_polytomies) {
+std::shared_ptr<kpl::Tree> kpl::TreeIO::buildFromNewick(const std::string& newick, bool rooted, bool allow_polytomies) {
 
 
   std::set<unsigned> used; // used to ensure that no two leaf nodes have the same number
@@ -589,7 +589,7 @@ kpl::Tree::SharedPtr kpl::TreeIO::buildFromNewick(const std::string& newick, boo
 
   unsigned max_nodes = (2 * leaves) - (rooted ? 0 : 2);
 
-  Tree::SharedPtr tree(std::make_shared<Tree>(max_nodes));
+  std::shared_ptr<Tree> tree(std::make_shared<Tree>(max_nodes));
   tree->setLeaves(leaves);
   tree->setRooted(rooted);
 

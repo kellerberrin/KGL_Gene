@@ -35,8 +35,8 @@ public:
   void setPreferGPU(bool prefer_gpu);
   void setAmbiguityEqualsMissing(bool ambig_equals_missing);
 
-  bool usingStoredData() const;
-  void useStoredData(bool using_data);
+  bool usingStoredData() const { return _using_data; }
+  void useStoredData(bool using_data) { _using_data = using_data; }
 
   void useUnderflowScaling(bool do_scaling);
 
@@ -47,7 +47,7 @@ public:
   void initBeagleLib();
   void finalizeBeagleLib(bool use_exceptions);
 
-  double calcLogLikelihood(Tree::SharedPtr tree);
+  double calcLogLikelihood(const Tree& tree);
 
   Data::SharedPtr getData();
   void setData(Data::SharedPtr d);
@@ -63,19 +63,16 @@ public:
 private:
 
   struct InstanceInfo {
-    int handle;
-    int resourcenumber;
+    int handle{-1};
+    int resourcenumber{-1};
     std::string resourcename;
-    unsigned nstates;
-    unsigned nratecateg;
-    unsigned npatterns;
-    unsigned partial_offset;
-    unsigned tmatrix_offset;
-    bool invarmodel;
+    unsigned nstates{0};
+    unsigned nratecateg{0};
+    unsigned npatterns{0};
+    unsigned partial_offset{0};
+    unsigned tmatrix_offset{0};
+    bool invarmodel{false};
     std::vector<unsigned> subsets;
-
-    InstanceInfo() : handle(-1), resourcenumber(-1), resourcename(""), nstates(0), nratecateg(0), npatterns(0), partial_offset(0), tmatrix_offset(0), invarmodel(false) {}
-
   };
 
   using instance_pair_t = std::pair<unsigned, int>;
@@ -91,10 +88,10 @@ private:
   void setAmongSiteRateHeterogenetity();
   void setModelRateMatrix();
   void addOperation(InstanceInfo & info, Node::PtrNode  nd, Node::PtrNode  lchild, Node::PtrNode  rchild, unsigned subset_index);
-  void defineOperations(Tree::SharedPtr tree);
+  void defineOperations(const Tree& tree);
   void updateTransitionMatrices();
   void calculatePartials();
-  double calcInstanceLogLikelihood(InstanceInfo & inst, Tree::SharedPtr tree);
+  double calcInstanceLogLikelihood(InstanceInfo & inst, const Tree& tree);
 
 // Setup Beagle.
   [[nodiscard]] static int setBeagleEigenDecomposition(std::shared_ptr<const Model> model_ptr, int beagle_instance, unsigned subset, unsigned instance_subset);

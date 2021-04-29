@@ -17,11 +17,11 @@ void kpl::Strom::clear() {
   _partition.reset(new Partition());
   _use_gpu                    = true;
   _ambig_missing              = true;
-  //_model.reset(new Model());
+  //model_ptr_.reset(new Model());
   _expected_log_likelihood    = 0.0;
   _use_underflow_scaling      = false;
   _data                       = nullptr;
-  //_likelihood                 = nullptr;
+  //likelihood_ptr_                 = nullptr;
   _lot                        = nullptr;
   _random_seed                = 1;
   _num_iter                   = 1000;
@@ -647,12 +647,12 @@ void kpl::Strom::readTrees() {
   auto m = _likelihoods[0]->getModel();
   unsigned tree_index = m->getTreeIndex();
 
-  std::cout << "\n*** Reading and storing tree number " << (tree_index + 1) << " in the file " << _tree_file_name << std::endl;
+  ExecEnv::log().info("Reading and storing tree number: {}, in file: {}", (tree_index + 1), _tree_file_name);
 
   _tree_summary = TreeSummary::SharedPtr(new TreeSummary());
   _tree_summary->readTreefile(_tree_file_name, 0);
 
-  Tree::SharedPtr tree = _tree_summary->getTree(tree_index);
+  std::shared_ptr<Tree> tree = _tree_summary->getTree(tree_index);
 
   if (tree->numLeaves() != _data->getNumTaxa()) {
 
@@ -789,7 +789,7 @@ void kpl::Strom::showMCMCInfo() {
   if (_likelihoods[0]->usingStoredData()) {
 
     unsigned tree_index = _likelihoods[0]->getModel()->getTreeIndex();
-    Tree::SharedPtr tree = _tree_summary->getTree(tree_index);
+    std::shared_ptr<Tree> tree = _tree_summary->getTree(tree_index);
     double lnL = _chains[0].getLogLikelihood();
     std::cout << boost::str(boost::format("Starting log likelihood = %.5f") % lnL) << std::endl;
 

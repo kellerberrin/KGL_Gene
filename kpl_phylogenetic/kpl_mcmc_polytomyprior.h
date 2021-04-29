@@ -51,7 +51,7 @@ public:
   void setLogScalingFactor(double lnf);
   double getLogScalingFactor() const;
 
-  virtual double getLogTopoProb(Tree::SharedPtr t);
+  virtual double getLogTopoProb(std::shared_ptr<Tree> t);
 
   double getLogTopologyPrior(unsigned m);
   double getLogNormalizedTopologyPrior(unsigned m);

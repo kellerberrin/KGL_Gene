@@ -2,6 +2,7 @@
 // Created by kellerberrin on 16/12/19.
 //
 
+#include "kel_exec_env.h"
 #include "kpl_mcmc_updater.h"
 
 
@@ -18,25 +19,19 @@ kpl::Updater::Updater() {
 }
 
 
-kpl::Updater::~Updater() {
-
-  //std::cout << "Updater destructor called" << std::endl;
-
-}
-
 
 void kpl::Updater::clear() {
 
-  _name                   = "updater";
-  _tuning                 = true;
-  _lambda                 = 0.0001;
-  _weight                 = 1.0;
-  _prob                   = 0.0;
-  _target_acceptance      = 0.3;
-  _naccepts               = 0;
-  _nattempts              = 0;
-  _heating_power          = 1.0;
-  _prior_parameters.clear();
+  name_                   = "updater";
+  tuning_                 = true;
+  lambda_                 = 0.0001;
+  weight_                 = 1.0;
+  prob_                   = 0.0;
+  target_acceptance_      = 0.3;
+  n_accepts_               = 0;
+  n_attempts_              = 0;
+  heating_power_          = 1.0;
+  prior_parameters_.clear();
   reset();
 
 }
@@ -44,7 +39,7 @@ void kpl::Updater::clear() {
 
 void kpl::Updater::reset() {
 
-  _log_hastings_ratio = 0.0;
+  log_hastings_ratio_ = 0.0;
   logJacobian(0.0);
 
 }
@@ -52,78 +47,73 @@ void kpl::Updater::reset() {
 
 void kpl::Updater::setLikelihood(Likelihood::SharedPtr likelihood) {
 
-  _likelihood = likelihood;
+  likelihood_ptr_ = likelihood;
 
 }
 
 
 void kpl::Updater::setTreeManip(TreeManip::SharedPtr treemanip) {
 
-  _tree_manipulator = treemanip;
+  tree_manipulator_ptr_ = treemanip;
 
 }
 
 
-kpl::TreeManip::SharedPtr kpl::Updater::getTreeManip() const {
-
-  return _tree_manipulator;
-
-}
 
 
 void kpl::Updater::setLot(Lot::SharedPtr lot) {
 
-  _lot = lot;
+  lot_ptr_ = lot;
 
 }
 
 
 void kpl::Updater::setHeatingPower(double p) {
 
-  _heating_power = p;
+  heating_power_ = p;
 
 }
 
 
 void kpl::Updater::setLambda(double lambda) {
 
-  _lambda = lambda;
+  lambda_ = lambda;
 
 }
 
 
 void kpl::Updater::setTuning(bool do_tune) {
 
-  _tuning = do_tune;
-  _naccepts = 0;
-  _nattempts = 0;
+  tuning_ = do_tune;
+  n_accepts_ = 0;
+  n_attempts_ = 0;
 
 }
 
 
 void kpl::Updater::tune(bool accepted) {
 
-  _nattempts++;
+  n_attempts_++;
 
-  if (_tuning) {
+  if (tuning_) {
 
-    double gamma_n = 10.0/(100.0 + (double)_nattempts);
+    double gamma_n = 10.0/(100.0 + (double)n_attempts_);
 
     if (accepted) {
 
-      _lambda *= 1.0 + gamma_n*(1.0 - _target_acceptance)/(2.0*_target_acceptance);
+      lambda_ *= 1.0 + gamma_n * (1.0 - target_acceptance_) / (2.0 * target_acceptance_);
 
     }
     else {
 
-      _lambda *= 1.0 - gamma_n*0.5;
+      lambda_ *= 1.0 - gamma_n * 0.5;
 
     }
 
     // Prevent run-away increases in boldness for low-information marginal densities
-    if (_lambda > 1000.0) {
+    if (lambda_ > 1000.0) {
 
-      _lambda = 1000.0;
+      lambda_ = 1000.0;
 
     }
 
@@ -134,22 +124,22 @@ void kpl::Updater::tune(bool accepted) {
 
 void kpl::Updater::setTargetAcceptanceRate(double target) {
 
-  _target_acceptance = target;
+  target_acceptance_ = target;
 
 }
 
 
 void kpl::Updater::setPriorParameters(const std::vector<double> & c) {
 
-  _prior_parameters.clear();
-  _prior_parameters.assign(c.begin(), c.end());
+  prior_parameters_.clear();
+  prior_parameters_.assign(c.begin(), c.end());
 
 }
 
 
 void kpl::Updater::setWeight(double w) {
 
-  _weight = w;
+  weight_ = w;
 
 }
 
@@ -157,56 +147,50 @@ void kpl::Updater::setWeight(double w) {
 void kpl::Updater::calcProb(double wsum) {
 
   assert(wsum > 0.0);
-  _prob = _weight/wsum;
+  prob_ = weight_ / wsum;
 
 }
 
 
 double kpl::Updater::getLambda() const {
 
-  return _lambda;
+  return lambda_;
 
 }
 
-
-double kpl::Updater::getProb() const {
-
-  return _prob;
-
-}
 
 
 double kpl::Updater::getWeight() const {
 
-  return _weight;
+  return weight_;
 
 }
 
 
 double kpl::Updater::getAcceptPct() const {
 
-  return (_nattempts == 0 ? 0.0 : (100.0*_naccepts/_nattempts));
+  return (n_attempts_ == 0 ? 0.0 : (100.0 * n_accepts_ / n_attempts_));
 
 }
 
 
 double kpl::Updater::getNumUpdates() const {
 
-  return _nattempts;
+  return n_attempts_;
 
 }
 
 
 std::string kpl::Updater::getUpdaterName() const {
 
-  return _name;
+  return name_;
 
 }
 
 
 double kpl::Updater::calcLogLikelihood() const {
 
-  return _likelihood->calcLogLikelihood(_tree_manipulator->getTree());
+  return likelihood_ptr_->calcLogLikelihood(*(tree_manipulator_ptr_->getTree()));
 
 }
 
@@ -218,15 +202,15 @@ double kpl::Updater::update(double prev_lnL) {
 
   // Clear any nodes previously selected so that we can detect those nodes
   // whose partials and/or transition_ probabilities need to be recalculated
-  _tree_manipulator->deselectAllPartials();
-  _tree_manipulator->deselectAllTMatrices();
+  tree_manipulator_ptr_->deselectAllPartials();
+  tree_manipulator_ptr_->deselectAllTMatrices();
 
-  // Set model to proposed state and calculate _log_hastings_ratio
+  // Set model to proposed state and calculate log_hastings_ratio_
   proposeNewState();
 
   // Use alternative partials and transition_ probability buffer for any selected nodes
   // This allows us to easily revert to the previous values if the move is rejected
-  _tree_manipulator->flipPartialsAndTMatrices();
+  tree_manipulator_ptr_->flipPartialsAndTMatrices();
 
   // Calculate the log-likelihood and log-prior for the proposed state
   double log_likelihood = calcLogLikelihood();
@@ -237,15 +221,15 @@ double kpl::Updater::update(double prev_lnL) {
   double log_R = 0.0;
   double logu = 0.0;
 
-  if (log_prior > _log_zero) {
+  if (log_prior > LOG_ZERO_) {
 
     log_R = 0.0;
-    log_R += _heating_power*(log_likelihood - prev_lnL);
-    log_R += _heating_power*(log_prior - prev_log_prior);
-    log_R += _log_hastings_ratio;
+    log_R += heating_power_ * (log_likelihood - prev_lnL);
+    log_R += heating_power_ * (log_prior - prev_log_prior);
+    log_R += log_hastings_ratio_;
     log_R += logJacobian();
 
-    logu = _lot->logUniform();
+    logu = lot_ptr_->logUniform();
 
     if (logu > log_R) {
 
@@ -262,13 +246,13 @@ double kpl::Updater::update(double prev_lnL) {
 
   if (accept) {
 
-    _naccepts++;
+    n_accepts_++;
 
   }
   else {
 
     revert();
-    _tree_manipulator->flipPartialsAndTMatrices();
+    tree_manipulator_ptr_->flipPartialsAndTMatrices();
     log_likelihood = prev_lnL;
 
   }
@@ -284,16 +268,16 @@ double kpl::Updater::update(double prev_lnL) {
 
 double kpl::Updater::calcEdgeLengthPrior() const {
 
-  Tree::SharedPtr tree = _tree_manipulator->getTree();
+  std::shared_ptr<Tree> tree = tree_manipulator_ptr_->getTree();
   assert(tree);
 
-  double TL = _tree_manipulator->calcTreeLength();
-  double num_edges = _tree_manipulator->countEdges();
+  double TL = tree_manipulator_ptr_->calcTreeLength();
+  double num_edges = tree_manipulator_ptr_->countEdges();
 
-  assert(_prior_parameters.size() == 3);
-  double a = _prior_parameters[0];    // shape of Gamma prior on TL
-  double b = _prior_parameters[1];    // scale of Gamma prior on TL
-  double c = _prior_parameters[2];    // parameter of Dirichlet prior on edge length proportions
+  assert(prior_parameters_.size() == 3);
+  double a = prior_parameters_[0];    // shape of Gamma prior on TL
+  double b = prior_parameters_[1];    // scale of Gamma prior on TL
+  double c = prior_parameters_[2];    // parameter of Dirichlet prior on edge length proportions
 
   // Calculate Gamma prior on tree length (TL)
   double log_gamma_prior_on_TL = (a - 1.0)*log(TL) - TL/b - a*log(b) - std::lgamma(a);
@@ -333,32 +317,32 @@ double kpl::Updater::calcEdgeLengthPrior() const {
 
 double kpl::Updater::getLogZero() {
 
-  return _log_zero;
+  return LOG_ZERO_;
 
 }
 
 
 double kpl::Updater::calcLogTopologyPrior() const {
 
-  Tree::SharedPtr tree = _tree_manipulator->getTree();
+  std::shared_ptr<Tree> tree = tree_manipulator_ptr_->getTree();
   assert(tree);
 
   if (tree->isRooted()) {
 
-    _topo_prior_calculator.chooseRooted();
+    topo_prior_calculator_.chooseRooted();
 
   }
   else {
 
-    _topo_prior_calculator.chooseUnrooted();
+    topo_prior_calculator_.chooseUnrooted();
 
   }
 
-  _topo_prior_calculator.setNTax(tree->numLeaves());
+  topo_prior_calculator_.setNTax(tree->numLeaves());
 
   unsigned m = tree->numInternals();
 
-  double log_topology_prior = _topo_prior_calculator.getLogNormalizedTopologyPrior(m);
+  double log_topology_prior = topo_prior_calculator_.getLogNormalizedTopologyPrior(m);
 
   return log_topology_prior;
 
@@ -367,16 +351,16 @@ double kpl::Updater::calcLogTopologyPrior() const {
 
 void kpl::Updater::setTopologyPriorOptions(bool resclass, double C) {
 
-  _topo_prior_calculator.setC(C);
+  topo_prior_calculator_.setC(C);
 
   if (resclass) {
 
-    _topo_prior_calculator.chooseResolutionClassPrior();
+    topo_prior_calculator_.chooseResolutionClassPrior();
 
   }
   else {
 
-    _topo_prior_calculator.choosePolytomyPrior();
+    topo_prior_calculator_.choosePolytomyPrior();
 
   }
 

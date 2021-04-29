@@ -2,6 +2,7 @@
 // Created by kellerberrin on 12/12/19.
 //
 
+#include "kel_exec_env.h"
 #include "kpl_likelihood.h"
 
 namespace kpl = kellerberrin::phylogenetic;
@@ -223,20 +224,6 @@ void kpl::Likelihood::setAmbiguityEqualsMissing(bool ambig_equals_missing) {
 }
 
 
-void kpl::Likelihood::useStoredData(bool using_data) {
-
-  _using_data = using_data;
-
-}
-
-
-bool kpl::Likelihood::usingStoredData() const {
-
-  return _using_data;
-
-}
-
-
 void kpl::Likelihood::initBeagleLib() {
 
   assert(_data);
@@ -361,8 +348,8 @@ void kpl::Likelihood::newInstance(unsigned nstates, int nrates, std::vector<unsi
     // beagleCreateInstance returns one of the following:
     //   valid instance (0, 1, 2, ...)
     //   error code (negative integer)
-    std::cerr << "Inst:" << inst << std::endl;
-    throw XStrom(boost::str(boost::format("Likelihood init function failed to create BeagleLib instance (BeagleLib error code was %d)") % _beagle_error[inst]));
+    ExecEnv::log().critical("Likelihood::newInstance; beagleCreateInstance() failed, error code: {},  error msg: {}",
+                            inst, _beagle_error[inst]);
   }
 
   InstanceInfo info;
@@ -702,11 +689,10 @@ void kpl::Likelihood::setModelRateMatrix() {
 }
 
 
-void kpl::Likelihood::defineOperations(Tree::SharedPtr tree) {
+void kpl::Likelihood::defineOperations(const Tree& tree) {
 
   assert(_instances.size() > 0);
-  assert(tree);
-  assert(tree->isRooted() == _rooted);
+  assert(tree.isRooted() == _rooted);
 
   double relrate_normalizing_constant = _model->calcNormalizingConstantForSubsetRelRates();
   const Model::subset_relrate_vect_t & subset_relrates = _model->getSubsetRelRates();
@@ -726,7 +712,7 @@ void kpl::Likelihood::defineOperations(Tree::SharedPtr tree) {
       double subset_relative_rate = subset_relrates[s]/relrate_normalizing_constant;
 
       // Loop through all nodes in reverse level order
-      for (auto node : boost::adaptors::reverse(tree->getConstLevelOrder())) {
+      for (auto node : boost::adaptors::reverse(tree.getConstLevelOrder())) {
         assert(node->getNumber() >= 0);
         if (Node::isNullNode(node->getLeftChild())) {
           // This is a leaf
@@ -894,10 +880,10 @@ void kpl::Likelihood::calculatePartials() {
 }
 
 
-double kpl::Likelihood::calcInstanceLogLikelihood(InstanceInfo & info, Tree::SharedPtr tree) {
+double kpl::Likelihood::calcInstanceLogLikelihood(InstanceInfo & info, const Tree& tree) {
 
   int code = 0;
-  unsigned nsubsets = (unsigned)info.subsets.size();
+  size_t nsubsets = info.subsets.size();
   assert(nsubsets > 0);
 
   // Assuming there are as many transition_ matrices as there are edge lengths
@@ -906,9 +892,9 @@ double kpl::Likelihood::calcInstanceLogLikelihood(InstanceInfo & info, Tree::Sha
   int stateFrequencyIndex  = 0;
   int categoryWeightsIndex = 0;
   int cumulativeScalingIndex = (_underflow_scaling ? 0 : BEAGLE_OP_NONE);
-  int child_partials_index   = getPartialIndex(tree->getRootNode(), info);
-  int parent_partials_index  = getPartialIndex(tree->getConstPreOrder()[0], info);
-  int parent_tmatrix_index   = getTMatrixIndex(tree->getConstPreOrder()[0], info, 0);
+  int child_partials_index   = getPartialIndex(tree.getRootNode(), info);
+  int parent_partials_index  = getPartialIndex(tree.getConstPreOrder()[0], info);
+  int parent_tmatrix_index   = getTMatrixIndex(tree.getConstPreOrder()[0], info, 0);
 
   // storage for results of the likelihood calculation
   std::vector<double> subset_log_likelihoods(nsubsets, 0.0);
@@ -938,7 +924,7 @@ double kpl::Likelihood::calcInstanceLogLikelihood(InstanceInfo & info, Tree::Sha
 
       _subset_indices[s]  = s;
       _freqs_indices[s]   = s;
-      _tmatrix_indices[s] = getTMatrixIndex(tree->getConstPreOrder()[0], info, s); //index_focal_child + s*tmatrix_skip;
+      _tmatrix_indices[s] = getTMatrixIndex(tree.getConstPreOrder()[0], info, s); //index_focal_child + s*tmatrix_skip;
 
     }
 
@@ -1054,11 +1040,11 @@ double kpl::Likelihood::calcInstanceLogLikelihood(InstanceInfo & info, Tree::Sha
 }
 
 
-double kpl::Likelihood::calcLogLikelihood(Tree::SharedPtr tree) {
+double kpl::Likelihood::calcLogLikelihood(const Tree& tree) {
 
   assert(_instances.size() > 0);
 
-  if (!_using_data) {
+  if (not _using_data) {
 
     return 0.0;
 
@@ -1068,14 +1054,16 @@ double kpl::Likelihood::calcLogLikelihood(Tree::SharedPtr tree) {
   assert(_data);
   assert(_model);
 
-  if (tree->isRooted()) {
+  if (tree.isRooted()) {
 
-    throw XStrom("This version of the program can only compute likelihoods for unrooted trees");
+    ExecEnv::log().critical("This version of the program can only compute likelihoods for unrooted trees");
 
   }
 
   // Assuming "root" is leaf 0
-  assert(tree->getRootNode()->getNumber() == 0 && tree->getRootNode()->getLeftChild() == tree->getPreOrder()[0] && Node::isNullNode(tree->getPreOrder()[0]->getRightSib()));
+  assert(tree.getRootNode()->getNumber() == 0
+  and tree.getRootNode()->getLeftChild() == tree.getPreOrder()[0]
+  and Node::isNullNode(tree.getPreOrder()[0]->getRightSib()));
 
   setModelRateMatrix();
   setAmongSiteRateHeterogenetity();

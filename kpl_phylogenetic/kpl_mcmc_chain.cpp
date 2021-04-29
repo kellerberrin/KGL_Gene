@@ -2,13 +2,14 @@
 // Created by kellerberrin on 16/12/19.
 //
 
+
 #include "kpl_mcmc_chain.h"
 #include "kpl_mcmc_exchangeupdater.h"
 #include "kpl_mcmc_omegaupdater.h"
 #include "kpl_mcmc_pinvarupdater.h"
 #include "kpl_mcmc_subsetupdater.h"
 #include "kpl_mcmc_statefrequpdater.h"
-
+#include "kel_exec_env.h"
 
 
 namespace kpl = kellerberrin::phylogenetic;
@@ -16,30 +17,16 @@ namespace kpl = kellerberrin::phylogenetic;
 
 
 kpl::Chain::Chain() {
-  //std::cout << "Chain being created" << std::endl;
-  clear();
-}
 
-
-kpl::Chain::~Chain() {
-  //std::cout << "Chain being destroyed" << std::endl;
-}
-
-
-void kpl::Chain::clear() {
-
-  _log_likelihood = 0.0;
-  _updaters.clear();
-  _chain_index = 0;
-  setHeatingPower(1.0);
   startTuning();
 
 }
 
 
+
 void kpl::Chain::startTuning() {
 
-  for (auto u : _updaters) {
+  for (auto& u : updaters_) {
 
     u->setTuning(true);
 
@@ -50,7 +37,7 @@ void kpl::Chain::startTuning() {
 
 void kpl::Chain::stopTuning() {
 
-  for (auto u : _updaters) {
+  for (auto u : updaters_) {
 
     u->setTuning(false);
 
@@ -58,32 +45,34 @@ void kpl::Chain::stopTuning() {
 }
 
 
-void kpl::Chain::setTreeFromNewick(std::string & newick) {
+void kpl::Chain::setTreeFromNewick(const std::string& newick) {
 
-  assert(_updaters.size() > 0);
+  assert(updaters_.size() > 0);
 
-  if (!_tree_manipulator) {
+  if (!tree_manip_ptr_) {
 
-    _tree_manipulator.reset(new TreeManip);
+    tree_manip_ptr_.reset(new TreeManip);
 
   }
 
-  _tree_manipulator->buildFromNewick(newick, false, true);
+  tree_manip_ptr_->buildFromNewick(newick, false, true);
 
-  for (auto u : _updaters) {
+  for (auto u : updaters_) {
 
-    u->setTreeManip(_tree_manipulator);
+    u->setTreeManip(tree_manip_ptr_);
 
   }
 
 }
 
 
-unsigned kpl::Chain::createUpdaters(std::shared_ptr<Model> model_ptr, Lot::SharedPtr lot, Likelihood::SharedPtr likelihood) {
+size_t kpl::Chain::createUpdaters(const std::shared_ptr<Model>& model_ptr,
+                                  const std::shared_ptr<Lot>& lot,
+                                  const std::shared_ptr<Likelihood>& likelihood) {
 
-  _model = model_ptr;
-  _lot = lot;
-  _updaters.clear();
+  model_ptr_ = model_ptr;
+  lot_ptr_ = lot;
+  updaters_.clear();
 
   double wstd             = 1.0;
   double sum_weights      = 0.0;
@@ -91,7 +80,7 @@ unsigned kpl::Chain::createUpdaters(std::shared_ptr<Model> model_ptr, Lot::Share
   double wtreetopology    = 19.0;
   double wpolytomy        = 0.0;
 
-  if (_model->isAllowPolytomies()) {
+  if (model_ptr_->isAllowPolytomies()) {
 
     wstd             = 1.0;
     wtreelength      = 2.0;
@@ -100,8 +89,8 @@ unsigned kpl::Chain::createUpdaters(std::shared_ptr<Model> model_ptr, Lot::Share
 
   }
 
-  // Add state frequency parameter updaters to _updaters
-  const Model::state_freq_params_t& statefreq_shptr_vect = _model->getStateFreqParams();
+  // Add state frequency parameter updaters to updaters_
+  const Model::state_freq_params_t& statefreq_shptr_vect = model_ptr_->getStateFreqParams();
   for (auto& statefreq_shptr : statefreq_shptr_vect) {
 
     Updater::SharedPtr local_updater_ptr = std::make_shared<StateFreqUpdater>(statefreq_shptr);
@@ -111,12 +100,12 @@ unsigned kpl::Chain::createUpdaters(std::shared_ptr<Model> model_ptr, Lot::Share
     local_updater_ptr->setTargetAcceptanceRate(0.3);
     local_updater_ptr->setPriorParameters(std::vector<double>(statefreq_shptr->getStateFreqsSharedPtr()->size(), 1.0));
     local_updater_ptr->setWeight(wstd); sum_weights += wstd;
-    _updaters.push_back(local_updater_ptr);
+    updaters_.push_back(local_updater_ptr);
 
   }
 
-  // Add exchangeability parameter updaters to _updaters
-  const Model::exchangeability_params_t& exchangeability_shptr_vect = _model->getExchangeabilityParams();
+  // Add exchangeability parameter updaters to updaters_
+  const Model::exchangeability_params_t& exchangeability_shptr_vect = model_ptr_->getExchangeabilityParams();
   for (auto& exchangeability_shptr : exchangeability_shptr_vect) {
 
     Updater::SharedPtr local_updater_ptr = std::make_shared<ExchangeabilityUpdater>(exchangeability_shptr);
@@ -126,12 +115,12 @@ unsigned kpl::Chain::createUpdaters(std::shared_ptr<Model> model_ptr, Lot::Share
     local_updater_ptr->setTargetAcceptanceRate(0.3);
     local_updater_ptr->setPriorParameters({1.0, 1.0, 1.0, 1.0, 1.0, 1.0});
     local_updater_ptr->setWeight(wstd); sum_weights += wstd;
-    _updaters.push_back(local_updater_ptr);
+    updaters_.push_back(local_updater_ptr);
 
   }
 
-  // Add rate variance parameter updaters to _updaters
-  const Model::ratevar_params_t & ratevar_shptr_vect = _model->getRateVarParams();
+  // Add rate variance parameter updaters to updaters_
+  const Model::ratevar_params_t & ratevar_shptr_vect = model_ptr_->getRateVarParams();
   for (auto& ratevar_shptr : ratevar_shptr_vect) {
 
     Updater::SharedPtr local_updater_ptr = std::make_shared<GammaRateVarUpdater>(ratevar_shptr);
@@ -141,12 +130,12 @@ unsigned kpl::Chain::createUpdaters(std::shared_ptr<Model> model_ptr, Lot::Share
     local_updater_ptr->setTargetAcceptanceRate(0.3);
     local_updater_ptr->setPriorParameters({1.0, 1.0});
     local_updater_ptr->setWeight(wstd); sum_weights += wstd;
-    _updaters.push_back(local_updater_ptr);
+    updaters_.push_back(local_updater_ptr);
 
   }
 
-  // Add pinvar parameter updaters to _updaters
-  const Model::pinvar_params_t& pinvar_shptr_vect = _model->getPinvarParams();
+  // Add pinvar parameter updaters to updaters_
+  const Model::pinvar_params_t& pinvar_shptr_vect = model_ptr_->getPinvarParams();
   for (auto& pinvar_shptr : pinvar_shptr_vect) {
 
     Updater::SharedPtr local_updater_ptr = std::make_shared<PinvarUpdater>(pinvar_shptr);
@@ -156,12 +145,12 @@ unsigned kpl::Chain::createUpdaters(std::shared_ptr<Model> model_ptr, Lot::Share
     local_updater_ptr->setTargetAcceptanceRate(0.3);
     local_updater_ptr->setPriorParameters({1.0, 1.0});
     local_updater_ptr->setWeight(wstd); sum_weights += wstd;
-    _updaters.push_back(local_updater_ptr);
+    updaters_.push_back(local_updater_ptr);
 
   }
 
-  // Add omega parameter updaters to _updaters
-  const Model::omega_params_t& omega_shptr_vect = _model->getOmegaParams();
+  // Add omega parameter updaters to updaters_
+  const Model::omega_params_t& omega_shptr_vect = model_ptr_->getOmegaParams();
   std::cout << "Num Omega Params:" << omega_shptr_vect.size() << std::endl;
   for (auto& omega_shptr : omega_shptr_vect) {
 
@@ -172,26 +161,26 @@ unsigned kpl::Chain::createUpdaters(std::shared_ptr<Model> model_ptr, Lot::Share
     local_updater_ptr->setTargetAcceptanceRate(0.3);
     local_updater_ptr->setPriorParameters({1.0, 1.0});
     local_updater_ptr->setWeight(wstd); sum_weights += wstd;
-    _updaters.push_back(local_updater_ptr);
+    updaters_.push_back(local_updater_ptr);
 
   }
 
-  // Add subset relative rate parameter updater to _updaters
-  if (!_model->isFixedSubsetRelRates()) {
+  // Add subset relative rate parameter updater to updaters_
+  if (not model_ptr_->isFixedSubsetRelRates()) {
 
-    Updater::SharedPtr local_updater_ptr = std::make_shared<SubsetRelRateUpdater>(_model);
+    Updater::SharedPtr local_updater_ptr = std::make_shared<SubsetRelRateUpdater>(model_ptr_);
     local_updater_ptr->setLikelihood(likelihood);
     local_updater_ptr->setLot(lot);
     local_updater_ptr->setLambda(1.0);
     local_updater_ptr->setTargetAcceptanceRate(0.3);
-    local_updater_ptr->setPriorParameters(std::vector<double>(_model->getNumSubsets(), 1.0));
+    local_updater_ptr->setPriorParameters(std::vector<double>(model_ptr_->getNumSubsets(), 1.0));
     local_updater_ptr->setWeight(wstd); sum_weights += wstd;
-    _updaters.push_back(local_updater_ptr);
+    updaters_.push_back(local_updater_ptr);
 
   }
 
-  // Add tree updater and tree length updater to _updaters
-  if (!_model->isFixedTree()) {
+  // Add tree updater and tree length updater to updaters_
+  if (!model_ptr_->isFixedTree()) {
 
     double tree_length_shape = 1.0;
     double tree_length_scale = 10.0;
@@ -203,12 +192,12 @@ unsigned kpl::Chain::createUpdaters(std::shared_ptr<Model> model_ptr, Lot::Share
     updater_ptr->setLambda(0.5);
     updater_ptr->setTargetAcceptanceRate(0.3);
     updater_ptr->setPriorParameters({tree_length_shape, tree_length_scale, dirichlet_param});
-    updater_ptr->setTopologyPriorOptions(_model->isResolutionClassTopologyPrior(), _model->getTopologyPriorC());
+    updater_ptr->setTopologyPriorOptions(model_ptr_->isResolutionClassTopologyPrior(), model_ptr_->getTopologyPriorC());
     updater_ptr->setWeight(wtreetopology); sum_weights += wtreetopology;
 
-    _updaters.push_back(updater_ptr);
+    updaters_.push_back(updater_ptr);
 
-    if (_model->isAllowPolytomies()) {
+    if (model_ptr_->isAllowPolytomies()) {
 
       Updater::SharedPtr local_updater_ptr = std::make_shared<PolytomyUpdater>();
       local_updater_ptr->setLikelihood(likelihood);
@@ -216,10 +205,10 @@ unsigned kpl::Chain::createUpdaters(std::shared_ptr<Model> model_ptr, Lot::Share
       local_updater_ptr->setLambda(0.05);
       local_updater_ptr->setTargetAcceptanceRate(0.3);
       local_updater_ptr->setPriorParameters({tree_length_shape, tree_length_scale, dirichlet_param});
-      local_updater_ptr->setTopologyPriorOptions(_model->isResolutionClassTopologyPrior(), _model->getTopologyPriorC());
+      local_updater_ptr->setTopologyPriorOptions(model_ptr_->isResolutionClassTopologyPrior(), model_ptr_->getTopologyPriorC());
       local_updater_ptr->setWeight(wpolytomy); sum_weights += wpolytomy;
 
-      _updaters.push_back(local_updater_ptr);
+      updaters_.push_back(local_updater_ptr);
 
     }
 
@@ -229,57 +218,28 @@ unsigned kpl::Chain::createUpdaters(std::shared_ptr<Model> model_ptr, Lot::Share
     updater_ptr->setLambda(0.2);
     updater_ptr->setTargetAcceptanceRate(0.3);
     updater_ptr->setPriorParameters({tree_length_shape, tree_length_scale, dirichlet_param});
-    updater_ptr->setTopologyPriorOptions(_model->isResolutionClassTopologyPrior(), _model->getTopologyPriorC());
+    updater_ptr->setTopologyPriorOptions(model_ptr_->isResolutionClassTopologyPrior(), model_ptr_->getTopologyPriorC());
     updater_ptr->setWeight(wtreelength); sum_weights += wtreelength;
 
-    _updaters.push_back(updater_ptr);
+    updaters_.push_back(updater_ptr);
 
   }
 
-  for (auto& updater : _updaters) {
+  for (auto& updater : updaters_) {
 
     updater->calcProb(sum_weights);
 
   }
 
-  return (unsigned)_updaters.size();
-
-}
-
-
-
-kpl::TreeManip::SharedPtr kpl::Chain::getTreeManip() {
-
-  return _tree_manipulator;
-
-}
-
-
-std::shared_ptr<kpl::Model> kpl::Chain::getModel() {
-
-  return _model;
-
-}
-
-
-double kpl::Chain::getLogLikelihood() const {
-
-  return _log_likelihood;
-
-}
-
-
-double kpl::Chain::getHeatingPower() const {
-
-  return _heating_power;
+  return updaters_.size();
 
 }
 
 
 void kpl::Chain::setHeatingPower(double p) {
 
-  _heating_power = p;
-  for (auto u : _updaters) {
+  heating_power_ = p;
+  for (auto u : updaters_) {
 
     u->setHeatingPower(p);
 
@@ -290,35 +250,14 @@ void kpl::Chain::setHeatingPower(double p) {
 
 double kpl::Chain::getChainIndex() const {
 
-  return _chain_index;
+  return chain_index_;
 
 }
 
 
 void kpl::Chain::setChainIndex(unsigned idx) {
 
-  _chain_index = idx;
-
-}
-
-
-kpl::Updater::SharedPtr kpl::Chain::findUpdaterByName(std::string name) {
-
-  Updater::SharedPtr retval = nullptr;
-
-  for (auto u : _updaters) {
-
-    if (u->getUpdaterName() == name) {
-
-      retval = u;
-      break;
-
-    }
-
-  }
-
-  assert(retval != nullptr);
-  return retval;
+  chain_index_ = idx;
 
 }
 
@@ -327,7 +266,7 @@ std::vector<std::string> kpl::Chain::getUpdaterNames() const {
 
   std::vector<std::string> v;
 
-  for (auto u : _updaters) {
+  for (auto u : updaters_) {
 
     v.push_back(u->getUpdaterName());
 
@@ -342,7 +281,7 @@ std::vector<double> kpl::Chain::getAcceptPercentages() const {
 
   std::vector<double> v;
 
-  for (auto u : _updaters) {
+  for (auto u : updaters_) {
 
     v.push_back(u->getAcceptPct());
 
@@ -357,7 +296,7 @@ std::vector<unsigned> kpl::Chain::getNumUpdates() const {
 
   std::vector<unsigned> v;
 
-  for (auto u : _updaters) {
+  for (auto u : updaters_) {
 
     v.push_back(u->getNumUpdates());
 
@@ -372,7 +311,7 @@ std::vector<double> kpl::Chain::getLambdas() const {
 
   std::vector<double> v;
 
-  for (auto u : _updaters) {
+  for (auto u : updaters_) {
 
     v.push_back(u->getLambda());
 
@@ -385,10 +324,10 @@ std::vector<double> kpl::Chain::getLambdas() const {
 
 void kpl::Chain::setLambdas(std::vector<double> & v) {
 
-  assert(v.size() == _updaters.size());
+  assert(v.size() == updaters_.size());
 
   unsigned index = 0;
-  for (auto u : _updaters) {
+  for (auto u : updaters_) {
 
     u->setLambda(v[index++]);
 
@@ -399,7 +338,7 @@ void kpl::Chain::setLambdas(std::vector<double> & v) {
 
 double kpl::Chain::calcLogLikelihood() const {
 
-  return _updaters[0]->calcLogLikelihood();
+  return updaters_[0]->calcLogLikelihood();
 
 }
 
@@ -408,7 +347,7 @@ double kpl::Chain::calcLogJointPrior() const {
 
   double lnP = 0.0;
 
-  for (auto u : _updaters) {
+  for (auto u : updaters_) {
 
     if (u->name() != "Tree Length" && u->name() != "Polytomies" ) {
 
@@ -425,11 +364,11 @@ double kpl::Chain::calcLogJointPrior() const {
 
 void kpl::Chain::start() {
 
-  _tree_manipulator->selectAllPartials();
-  _tree_manipulator->selectAllTMatrices();
-  _log_likelihood = calcLogLikelihood();
-  _tree_manipulator->deselectAllPartials();
-  _tree_manipulator->deselectAllTMatrices();
+  tree_manip_ptr_->selectAllPartials();
+  tree_manip_ptr_->selectAllTMatrices();
+  log_likelihood_ = calcLogLikelihood();
+  tree_manip_ptr_->deselectAllPartials();
+  tree_manip_ptr_->deselectAllTMatrices();
 
 }
 
@@ -440,13 +379,11 @@ void kpl::Chain::stop() {
 
 void kpl::Chain::nextStep(int iteration) {
 
-  assert(_lot);
+  double u = lot_ptr_->uniform();
+  double cumprob{0.0};
+  size_t i{0};
 
-  double u = _lot->uniform();
-  double cumprob = 0.0;
-  unsigned i = 0;
-
-  for (auto updater : _updaters) {
+  for (auto const& updater : updaters_) {
 
     cumprob += updater->probability();
 
@@ -460,9 +397,14 @@ void kpl::Chain::nextStep(int iteration) {
 
   }
 
-  assert(i < _updaters.size());
+  if (i >= updaters_.size()) {
 
-  _log_likelihood = _updaters[i]->update(_log_likelihood);
+    ExecEnv::log().error("Chain::nextStep; updater index: {} is invalid, updater count: {}", i, updaters_.size());
+    i = 0;
+
+  }
+
+  log_likelihood_ = updaters_[i]->update(log_likelihood_);
 
 }
 

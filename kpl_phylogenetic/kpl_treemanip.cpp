@@ -18,16 +18,13 @@ kpl::TreeManip::TreeManip() {
 }
 
 
-kpl::TreeManip::TreeManip(Tree::SharedPtr t) {
+kpl::TreeManip::TreeManip(std::shared_ptr<Tree> t) {
 //  std::cerr << "Constructing a TreeManip with a supplied tree" << std::endl;
   clear();
   setTree(t);
 }
 
 
-kpl::TreeManip::~TreeManip() {
-//  std::cerr << "Destroying a TreeManip" << std::endl;
-}
 
 
 void kpl::TreeManip::clear() {
@@ -43,7 +40,7 @@ double kpl::TreeManip::calcTreeLength() const {
 
 }
 
-double kpl::TreeManip::scalcTreeLength(Tree::ConstSharedPtr tree) {
+double kpl::TreeManip::scalcTreeLength(std::shared_ptr<const Tree> tree) {
 
   double TL = 0.0;
 
@@ -64,7 +61,7 @@ void kpl::TreeManip::scaleAllEdgeLengths(double scaler) {
 
 }
 
-void kpl::TreeManip::sscaleAllEdgeLengths(Tree::SharedPtr tree, double scaler) {
+void kpl::TreeManip::sscaleAllEdgeLengths(std::shared_ptr<Tree> tree, double scaler) {
 
   for (auto nd : tree->getConstPreOrder()) {
 
@@ -82,9 +79,9 @@ void kpl::TreeManip::createTestTree() {
 
 }
 
-kpl::Tree::SharedPtr kpl::TreeManip::screateTestTree() {
+std::shared_ptr<kpl::Tree> kpl::TreeManip::screateTestTree() {
 
-  Tree::SharedPtr tree(std::make_shared<Tree>(6));
+  std::shared_ptr<Tree> tree(std::make_shared<Tree>(6));
 
   Node::PtrNode root_node = tree->getNode(0);
   Node::PtrNode first_internal = tree->getNode(1);
@@ -190,7 +187,7 @@ void kpl::TreeManip::refreshPreorder() {
 
 }
 
-void kpl::TreeManip::srefreshPreorder(Tree::SharedPtr tree) {
+void kpl::TreeManip::srefreshPreorder(std::shared_ptr<Tree> tree) {
 
   // Create vector of node pointers in preorder sequence
 
@@ -236,7 +233,7 @@ void kpl::TreeManip::refreshLevelorder() {
 
 }
 
-void kpl::TreeManip::srefreshLevelorder(Tree::SharedPtr tree) {
+void kpl::TreeManip::srefreshLevelorder(std::shared_ptr<Tree> tree) {
 
   if (not tree->getConstRoot()) {
 
@@ -294,7 +291,7 @@ void kpl::TreeManip::renumberInternals() {
 
 }
 
-void kpl::TreeManip::srenumberInternals(Tree::SharedPtr tree) {
+void kpl::TreeManip::srenumberInternals(std::shared_ptr<Tree> tree) {
 
   assert(tree->getConstPreOrder().size() > 0);
 
@@ -351,7 +348,7 @@ void kpl::TreeManip::rerootAtNodeNumber(int node_number) {
 }
 
 
-void kpl::TreeManip::srerootAtNodeNumber(Tree::SharedPtr tree, int node_number) {
+void kpl::TreeManip::srerootAtNodeNumber(std::shared_ptr<Tree> tree, int node_number) {
 
   // Locate node having _number equal to node_number
   Node::PtrNode nd = Node::nullNode();
@@ -396,7 +393,7 @@ void kpl::TreeManip::rerootAtNode(Node::PtrNode prospective_root) {
 
 }
 
-void kpl::TreeManip::srerootAtNode(Tree::SharedPtr tree, Node::PtrNode prospective_root) {
+void kpl::TreeManip::srerootAtNode(std::shared_ptr<Tree> tree, Node::PtrNode prospective_root) {
 
   Node::PtrNode a = prospective_root;
   Node::PtrNode b = prospective_root->getParent();
@@ -488,7 +485,7 @@ void kpl::TreeManip::storeSplits(std::set<Split> &splitset) {
 
 }
 
-void kpl::TreeManip::sstoreSplits(Tree::SharedPtr tree, std::set<Split> &splitset) {
+void kpl::TreeManip::sstoreSplits(std::shared_ptr<Tree> tree, std::set<Split> &splitset) {
   // Start by clearing and resizing all splits
   for (auto nd : tree->getNodes()) {
 
@@ -524,7 +521,7 @@ void kpl::TreeManip::selectAllPartials() {
 
 }
 
-void kpl::TreeManip::sselectAllPartials(Tree::SharedPtr tree) {
+void kpl::TreeManip::sselectAllPartials(std::shared_ptr<Tree> tree) {
 
   for (auto nd : tree->getNodes()) {
 
@@ -541,7 +538,7 @@ void kpl::TreeManip::deselectAllPartials() {
 
 }
 
-void kpl::TreeManip::sdeselectAllPartials(Tree::SharedPtr tree) {
+void kpl::TreeManip::sdeselectAllPartials(std::shared_ptr<Tree> tree) {
 
   for (auto nd : tree->getNodes()) {
 
@@ -558,7 +555,7 @@ void kpl::TreeManip::selectAllTMatrices() {
 }
 
 
-void kpl::TreeManip::sselectAllTMatrices(Tree::SharedPtr tree) {
+void kpl::TreeManip::sselectAllTMatrices(std::shared_ptr<Tree> tree) {
 
   for (auto nd : tree->getNodes()) {
 
@@ -575,7 +572,7 @@ void kpl::TreeManip::deselectAllTMatrices() {
 
 }
 
-void kpl::TreeManip::sdeselectAllTMatrices(Tree::SharedPtr tree) {
+void kpl::TreeManip::sdeselectAllTMatrices(std::shared_ptr<Tree> tree) {
 
   for (auto nd : tree->getNodes()) {
 
@@ -606,7 +603,7 @@ void kpl::TreeManip::flipPartialsAndTMatrices() {
 
 }
 
-void kpl::TreeManip::sflipPartialsAndTMatrices(Tree::SharedPtr tree) {
+void kpl::TreeManip::sflipPartialsAndTMatrices(std::shared_ptr<Tree> tree) {
 
   for (auto nd : tree->getNodes()) {
 
@@ -651,7 +648,7 @@ void kpl::TreeManip::LargetSimonSwap(Node::PtrNode  a, Node::PtrNode  b) {
 
 }
 
-void kpl::TreeManip::sLargetSimonSwap(Tree::SharedPtr tree, Node::PtrNode  a, Node::PtrNode  b) {
+void kpl::TreeManip::sLargetSimonSwap(std::shared_ptr<Tree> tree, Node::PtrNode  a, Node::PtrNode  b) {
   // a and b are the ends of the selected 3-edge path in a Larget-Simon move
   // The 3-edge path is indicated by parentheses around the nodes involved.
   // x is always the parent of a
@@ -876,7 +873,7 @@ kpl::Node::PtrNode  kpl::TreeManip::randomInternalEdge(double uniform_deviate) {
 }
 
 
-kpl::Node::PtrNode  kpl::TreeManip::srandomInternalEdge(Tree::SharedPtr tree, double uniform_deviate) {   ///begin_randomInternalEdge
+kpl::Node::PtrNode  kpl::TreeManip::srandomInternalEdge(std::shared_ptr<Tree> tree, double uniform_deviate) {   ///begin_randomInternalEdge
 
   assert(uniform_deviate >= 0.0);
   assert(uniform_deviate < 1.0);
@@ -1000,7 +997,7 @@ unsigned kpl::TreeManip::calcResolutionClass() const {
 
 }
 
-unsigned kpl::TreeManip::scalcResolutionClass(Tree::ConstSharedPtr tree) {
+unsigned kpl::TreeManip::scalcResolutionClass(std::shared_ptr<const Tree> tree) {
 
   return tree->numInternals();
 
@@ -1012,7 +1009,7 @@ unsigned kpl::TreeManip::countEdges() const {
 
 }
 
-unsigned kpl::TreeManip::scountEdges(Tree::ConstSharedPtr tree)  {
+unsigned kpl::TreeManip::scountEdges(std::shared_ptr<const Tree> tree)  {
 
   return tree->getConstPreOrder().size();
 
@@ -1045,7 +1042,7 @@ unsigned kpl::TreeManip::countInternals() const {
 
 }
 
-unsigned kpl::TreeManip::scountInternals(Tree::ConstSharedPtr tree) {
+unsigned kpl::TreeManip::scountInternals(std::shared_ptr<const Tree> tree) {
 
   unsigned internals = 0;
 
@@ -1228,7 +1225,7 @@ void kpl::TreeManip::rectifyNumInternals(int incr) {
 
 }
 
-void kpl::TreeManip::srectifyNumInternals(Tree::SharedPtr tree, int incr) {
+void kpl::TreeManip::srectifyNumInternals(std::shared_ptr<Tree> tree, int incr) {
 
   assert(tree->getConstNodes().size() == tree->getUnUsed().size() + tree->numLeaves() + tree->numInternals() + incr);
   tree->setInternals(incr + tree->numInternals());
@@ -1242,7 +1239,7 @@ void kpl::TreeManip::refreshNavigationPointers() {
 
 }
 
-void kpl::TreeManip::srefreshNavigationPointers(Tree::SharedPtr tree) {
+void kpl::TreeManip::srefreshNavigationPointers(std::shared_ptr<Tree> tree) {
 
   srefreshPreorder(tree);
   srefreshLevelorder(tree);
@@ -1256,7 +1253,7 @@ kpl::Node::PtrNode  kpl::TreeManip::getUnusedNode() {
 
 }
 
-kpl::Node::PtrNode  kpl::TreeManip::sgetUnusedNode(Tree::SharedPtr tree) {
+kpl::Node::PtrNode  kpl::TreeManip::sgetUnusedNode(std::shared_ptr<Tree> tree) {
 
   assert(tree->getUnUsed().size() > 0);
 
@@ -1274,7 +1271,7 @@ void kpl::TreeManip::putUnusedNode(Node::PtrNode  node) {
 
 }
 
-void kpl::TreeManip::sputUnusedNode(Tree::SharedPtr tree, Node::PtrNode  node) {
+void kpl::TreeManip::sputUnusedNode(std::shared_ptr<Tree> tree, Node::PtrNode  node) {
 
   tree->pushUnused(node);
 

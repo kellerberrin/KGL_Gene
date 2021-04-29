@@ -26,7 +26,6 @@ public:
   using PtrNode = Node*;
   using ConstPtrNode = Node const *;
   using PtrVector = std::vector<PtrNode>;
-  using ConstPtrVector = std::vector<ConstPtrNode>;
   using Vector = std::vector<Node>;
 
   Node() { clear(); }
@@ -60,29 +59,29 @@ public:
   void setNumber(long number) { _number = number; }
   void inValidNumber() { _number = _NO_NUMBER; }
 // Flags
-  bool                isSelected() { return _flags & Flag::Selected; }
-  void                select() { _flags |= Flag::Selected; }
-  void                deselect() { _flags &= ~Flag::Selected; }
+  bool isSelected() const { return _flags & Flag::Selected; }
+  void select() { _flags |= Flag::Selected; }
+  void deselect() { _flags &= ~Flag::Selected; }
 
 
-  bool                isSelPartial() { return _flags & Flag::SelPartial; }
-  void                selectPartial() { _flags |= Flag::SelPartial; }
-  void                deselectPartial() { _flags &= ~Flag::SelPartial; }
+  bool isSelPartial() const { return _flags & Flag::SelPartial; }
+  void selectPartial() { _flags |= Flag::SelPartial; }
+  void deselectPartial() { _flags &= ~Flag::SelPartial; }
 
 
-  bool                isSelTMatrix() { return _flags & Flag::SelTMatrix; }
-  void                selectTMatrix() { _flags |= Flag::SelTMatrix; }
-  void                deselectTMatrix() { _flags &= ~Flag::SelTMatrix; }
+  bool isSelTMatrix() const { return _flags & Flag::SelTMatrix; }
+  void selectTMatrix() { _flags |= Flag::SelTMatrix; }
+  void deselectTMatrix() { _flags &= ~Flag::SelTMatrix; }
 
 
-  bool                isAltPartial() { return _flags & Flag::AltPartial; }
-  void                setAltPartial() { _flags |= Flag::AltPartial; }
-  void                clearAltPartial() { _flags &= ~Flag::AltPartial; }
+  bool isAltPartial() const { return _flags & Flag::AltPartial; }
+  void setAltPartial() { _flags |= Flag::AltPartial; }
+  void clearAltPartial() { _flags &= ~Flag::AltPartial; }
 
 
-  bool                isAltTMatrix() { return _flags & Flag::AltTMatrix; }
-  void                setAltTMatrix() { _flags |= Flag::AltTMatrix; }
-  void                clearAltTMatrix() { _flags &= ~Flag::AltTMatrix; }
+  bool isAltTMatrix() const { return _flags & Flag::AltTMatrix; }
+  void setAltTMatrix() { _flags |= Flag::AltTMatrix; }
+  void clearAltTMatrix() { _flags &= ~Flag::AltTMatrix; }
 
 
   void clearPointers();

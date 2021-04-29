@@ -23,14 +23,13 @@ class Chain;
 
 class Updater {
 
-//  friend class Chain;
 
 public:
   typedef std::shared_ptr<Updater>    SharedPtr;
 
 
   Updater();
-  virtual ~Updater();
+  virtual ~Updater() = default;
 
   // Modify
   void setLikelihood(Likelihood::SharedPtr likelihood);
@@ -44,27 +43,25 @@ public:
   void setTopologyPriorOptions(bool resclass, double C);
   void setWeight(double w);
   void calcProb(double wsum);
-  void name(const std::string& update) { _name = update; }
-  void logHastingsRatio(double log_hastings_ratio) { _log_hastings_ratio = log_hastings_ratio; }
-  void logJacobian(double log_jacobian) { _log_jacobian = log_jacobian; }
-  void lambda(double lambda) { _lambda = lambda; }
+  void name(const std::string& update) { name_ = update; }
+  void logHastingsRatio(double log_hastings_ratio) { log_hastings_ratio_ = log_hastings_ratio; }
+  void logJacobian(double log_jacobian) { log_jacobian_ = log_jacobian; }
+  void lambda(double lambda) { lambda_ = lambda; }
 
 
   // Access
-  [[nodiscard]] TreeManip::SharedPtr getTreeManip() const;
   [[nodiscard]] double getLambda() const;
   [[nodiscard]] double getWeight() const;
-  [[nodiscard]] double getProb() const;
   [[nodiscard]] double getAcceptPct() const;
   [[nodiscard]] double getNumUpdates() const;
   [[nodiscard]] std::string getUpdaterName() const;
-  [[nodiscard]] const std::string& name() const { return _name; }
-  [[nodiscard]] double probability() const { return _prob; }
-  [[nodiscard]] const std::vector<double>& priorParameters() { return _prior_parameters; }
-  [[nodiscard]] static double logZero() { return _log_zero; }
-  [[nodiscard]] double lambda() const { return _lambda; }
-  [[nodiscard]] double logHastingsRatio() const { return _log_hastings_ratio; }
-  [[nodiscard]] double logJacobian() const { return _log_jacobian; }
+  [[nodiscard]] const std::string& name() const { return name_; }
+  [[nodiscard]] double probability() const { return prob_; }
+  [[nodiscard]] const std::vector<double>& priorParameters() { return prior_parameters_; }
+  [[nodiscard]] static double logZero() { return LOG_ZERO_; }
+  [[nodiscard]] double lambda() const { return lambda_; }
+  [[nodiscard]] double logHastingsRatio() const { return log_hastings_ratio_; }
+  [[nodiscard]] double logJacobian() const { return log_jacobian_; }
 
 
   virtual void clear();
@@ -83,8 +80,8 @@ public:
 protected:
 
   virtual void reset();
-  [[nodiscard]] Lot::SharedPtr lot() { return _lot; }
-  [[nodiscard]] TreeManip::SharedPtr treeManipulator() { return _tree_manipulator; }
+  [[nodiscard]] const std::shared_ptr<Lot>& lot() const { return lot_ptr_; }
+  [[nodiscard]] const std::shared_ptr<TreeManip> treeManipulator() const { return tree_manipulator_ptr_; }
 
 private:
 
@@ -92,27 +89,27 @@ private:
   virtual void revert() = 0;
   virtual void proposeNewState() = 0;
 
-  Lot::SharedPtr _lot;
-  Likelihood::SharedPtr _likelihood;
-  TreeManip::SharedPtr _tree_manipulator;
-  std::string _name;
-  double _weight;
-  double _prob;
-  double _lambda;
-  double _log_hastings_ratio;
-  double _log_jacobian;
-  double _target_acceptance;
-  unsigned _naccepts;
-  unsigned _nattempts;
-  bool _tuning;
-  std::vector<double> _prior_parameters;
+  std::shared_ptr<Lot> lot_ptr_;
+  std::shared_ptr<Likelihood> likelihood_ptr_;
+  std::shared_ptr<TreeManip> tree_manipulator_ptr_;
+  std::string name_;
+  double weight_;
+  double prob_;
+  double lambda_;
+  double log_hastings_ratio_;
+  double log_jacobian_;
+  double target_acceptance_;
+  unsigned n_accepts_;
+  unsigned n_attempts_;
+  bool tuning_;
+  std::vector<double> prior_parameters_;
 
-  double _heating_power;
+  double heating_power_;
 
-  mutable PolytomyTopoPriorCalculator _topo_prior_calculator;
+  mutable PolytomyTopoPriorCalculator topo_prior_calculator_;
 
 // The largest negative value.
-  static constexpr double const _log_zero = std::numeric_limits<double>::lowest();
+  static constexpr double const LOG_ZERO_ = std::numeric_limits<double>::lowest();
 
 };
 

@@ -55,9 +55,9 @@ double kpl::PolytomyUpdater::calcLogPrior() {
 
 void kpl::PolytomyUpdater::proposeNewState() {
 
-  Tree::SharedPtr tree = treeManipulator()->getTree();
+  std::shared_ptr<Tree> tree = treeManipulator()->getTree();
 
-  // Translate tuning parameter _lambda into the maximum possible proportion
+  // Translate tuning parameter lambda_ into the maximum possible proportion
   // that a newly created edge could have
   if (lambda() > 1000.0) {
 
@@ -223,7 +223,7 @@ void kpl::PolytomyUpdater::proposeNewState() {
 
 void kpl::PolytomyUpdater::proposeAddEdgeMove(Node::PtrNode  u) {
 
-  Tree::SharedPtr tree = treeManipulator()->getTree();
+  std::shared_ptr<Tree> tree = treeManipulator()->getTree();
 
   // Split up the polytomy at `u' by creating a new internal node v and a new edge
   // connecting u with v. Node u is saved as _orig_par and node v is saved
@@ -509,7 +509,7 @@ void kpl::PolytomyUpdater::revert() {
 
 void kpl::PolytomyUpdater::refreshPolytomies() {
 
-  Tree::SharedPtr tree = treeManipulator()->getTree();
+  std::shared_ptr<Tree> tree = treeManipulator()->getTree();
   _polytomies.clear();
 
   for (auto nd : tree->getConstPreOrder()) {

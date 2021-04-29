@@ -18,17 +18,17 @@ class SubsetRelRateUpdater : public DirichletUpdater {
 public:
   typedef std::shared_ptr< SubsetRelRateUpdater > SharedPtr;
 
-  SubsetRelRateUpdater(std::shared_ptr<Model> model);
-  ~SubsetRelRateUpdater();
+  explicit SubsetRelRateUpdater(const std::shared_ptr<Model>& model_ptr);
+  ~SubsetRelRateUpdater() override = default;
 
   double calcLogPrior() override;
 
 private:
 
-  void pullFromModel();
-  void pushToModel();
+  void pullFromModel() override;
+  void pushToModel() override;
 
-  std::shared_ptr<Model> _model;
+  std::shared_ptr<Model> model_ptr_;
 
 };
 

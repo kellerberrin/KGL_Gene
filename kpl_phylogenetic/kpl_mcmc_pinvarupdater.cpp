@@ -92,7 +92,7 @@ void kpl::PinvarUpdater::proposeNewState() {
   // Save copy of _curr_point in case revert is necessary.
   _prev_point = getCurrentPoint();
 
-  // Propose new value using uniform window of width _lambda centered over _prev_point
+  // Propose new value using uniform window of width lambda_ centered over _prev_point
   double p = (_prev_point - lambda() /2.0) + lambda() * lot()->uniform();
 
   if (p < 0.0) {

@@ -22,9 +22,6 @@ public:
 
   friend TreeManip;
 
-  using SharedPtr = std::shared_ptr<Tree> ;
-  using ConstSharedPtr = std::shared_ptr<const Tree> ;
-
   explicit Tree(unsigned num_nodes = 0);
   ~Tree() = default;
 
@@ -45,7 +42,7 @@ public:
 
   // Modify
   [[nodiscard]] Node::PtrNode getNode(size_t node_index);    // Only used in TreeManip.
-  [[nodiscard]] Node::PtrNode getRootNode() { return _root; }
+  [[nodiscard]] Node::PtrNode getRootNode() const { return _root; }
   [[nodiscard]] Node::PtrVector getNodes();
   [[nodiscard]] Node::PtrVector& getPreOrder() { return _preorder; }
   void clearPreOrder() { _preorder.clear(); }
