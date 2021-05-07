@@ -2,13 +2,12 @@
 // Created by kellerberrin on 12/4/21.
 //
 
-#ifndef KGL_KOL_ONTOLOGYDATABASE_H
-#define KGL_KOL_ONTOLOGYDATABASE_H
+#ifndef KGL_ONTOLOGY_DATABASE_H
+#define KGL_ONTOLOGY_DATABASE_H
 
 
 #include <string>
 #include <memory>
-
 
 
 namespace kellerberrin::ontology {
@@ -50,4 +49,4 @@ private:
 
 } // namespace
 
-#endif //KGL_KOL_ONTOLOGYDATABASE_H
+#endif //KGL_ONTOLOGY_DATABASE_H

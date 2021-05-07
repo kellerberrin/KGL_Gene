@@ -6,7 +6,7 @@
 #define KOL_GENE_CACHE_ONTOLOGY_H
 
 #include <fstream>
-#include "kol_OntologyDatabase.h"
+#include "kgl_ontology_database.h"
 #include "kol_GoEnums.h"
 #include "kol_AsymmetricSimilarityCache.h"
 #include "kol_LinSimilarity.h"

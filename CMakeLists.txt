@@ -302,7 +302,7 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/xml/rapidxml_iterators.h
         kol_ontology/xml/rapidxml_print.h
         kol_ontology/xml/rapidxml_utils.h
-        kol_ontology/kol_OntologyDatabase.h
+        kol_ontology/kgl_ontology/kgl_ontology_database.h
         kol_ontology/kol_AnnotationData.cpp
         kol_ontology/kol_GoGraph.cpp
         kol_ontology/kol_FrontierSharedInformation.cpp
@@ -338,9 +338,9 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_ModularSimilarity.cpp
         kol_ontology/kol_EnrichmentTools.cpp
         kol_ontology/kol_EntrezGene2GoAnnotationParser.cpp
-        kol_ontology/kol_OntologyDatabase.cpp
+        kol_ontology/kgl_ontology/kgl_ontology_database.cpp
         kol_ontology/kol_OntologyTypes.h
-        kol_ontology/kol_OntologyDatabase.h
+        kol_ontology/kgl_ontology/kgl_ontology_database.h
         kol_ontology/kol_AnnotationData.cpp
         kol_ontology/kgl_ontology/kgl_gene_cache_ontology.cpp
         kol_ontology/kgl_ontology/kgl_gene_cache_ontology.h

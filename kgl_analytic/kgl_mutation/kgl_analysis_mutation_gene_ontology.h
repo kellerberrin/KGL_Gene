@@ -6,7 +6,7 @@
 #define KGL_ANALYSIS_MUTATION_GENE_ONTOLOGY_H
 
 #include <fstream>
-#include "kol_OntologyDatabase.h"
+#include "kgl_ontology_database.h"
 #include "kgl_analysis_mutation_gene_stats.h"
 
 

@@ -4,7 +4,7 @@
 
 #include "kgl_package.h"
 #include "kgl_variant_factory_parsers.h"
-#include "kol_OntologyDatabase.h"
+#include "kgl_ontology_database.h"
 
 namespace kgl = kellerberrin::genome;
 namespace kol = kellerberrin::ontology;

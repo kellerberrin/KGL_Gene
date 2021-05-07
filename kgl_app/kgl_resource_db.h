@@ -7,7 +7,7 @@
 
 
 #include "kgl_genome_genome.h"
-#include "kol_OntologyDatabase.h"
+#include "kgl_ontology_database.h"
 
 #include <memory>
 #include <string>

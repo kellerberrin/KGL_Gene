@@ -3,7 +3,7 @@
 //
 
 
-#include "kol_OntologyDatabase.h"
+#include "kgl_ontology_database.h"
 
 #include "kol_GoParserFactory.h"
 #include "kol_GoGraph.h"
