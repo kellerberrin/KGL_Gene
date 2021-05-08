@@ -231,28 +231,73 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
 
   }
 
-  for (auto const& vep_field : vep_field_vector) {
+  size_t field_count{0};
+  std::vector<std::string> checked_field_vector;
+  for (auto& vep_field : vep_field_vector) {
 
     const std::vector<std::string_view>& sub_fields = VEPSubFieldEvidence::vepSubFields(vep_field);
 
     if (sub_fields.size() !=  vep_header_ptr->subFieldHeaders().size()) {
 
-      ExecEnv::log().error("InfoEvidenceAnalysis::getVepSubFields; VEP sub-field count: {} not equal to VEP header size: {}, vep field: {}, variants correctly parsed: {}",
-                           sub_fields.size(),  vep_header_ptr->subFieldHeaders().size(), vep_field, correct_parse);
+      // **** Gnomad 3 VEP bug workaround ****
+      // This is added to handle the Gnomad 3 VEP bug where sub-sub-fields in the 'LoF_info' field are delimited with ','
+      // and are thus parsed as separate VEP records (of size = 1).
+      const size_t loftee_field_size{4};
+      if (sub_fields.size() <= (vep_header_ptr->subFieldHeaders().size() - loftee_field_size)) {
+
+        continue; // Just ignore this sub-sub-field.
+
+      } else {
+
+        // Repair the VEP field.
+        for (size_t index = sub_fields.size(); index < vep_header_ptr->subFieldHeaders().size(); ++index) {
+
+          vep_field += VEPSubFieldHeader::VEP_DELIMITER_CHAR;
+
+        }
+        // Re-check the repaired VEP field.
+        const std::vector<std::string_view>& check_sub_fields = VEPSubFieldEvidence::vepSubFields(vep_field);
+        if (check_sub_fields.size() ==  vep_header_ptr->subFieldHeaders().size()) {
+
+          checked_field_vector.push_back(std::move(vep_field));
+          continue;
+
+        }
+
+      }
+      // **** Gnomad 3 VEP bug workaround ****
+
+      ExecEnv::log().error("InfoEvidenceAnalysis::getVepSubFields; VEP Field index: {}, VEP sub-field count: {} not equal to VEP header size: {}, variants correctly parsed: {}",
+                           field_count, sub_fields.size(),  vep_header_ptr->subFieldHeaders().size(), correct_parse);
 
       for (auto const& sub_field : sub_fields) {
 
-        ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues; sub field: {}", std::string(sub_field));
+        ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues; VEP Field index: {},  parsed sub field: {}", field_count, std::string(sub_field));
 
       }
+
+      size_t error_count{0};
+      for (auto const& field : vep_field_vector) {
+
+        ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues; VEP Field index: {}, vep field: {}", error_count, field);
+        ++error_count;
+
+      }
+
       return std::nullopt;
 
+    } else {
+
+      checked_field_vector.push_back(std::move(vep_field));
+
     }
+
+    ++field_count;
 
   }
 
   ++correct_parse;
-  return std::make_unique<const kgl::VEPSubFieldEvidence>(vep_header_ptr, std::move(vep_field_vector));
+  return std::make_unique<const kgl::VEPSubFieldEvidence>(vep_header_ptr, std::move(checked_field_vector));
 
 }
 
@@ -385,6 +430,20 @@ void kgl::InfoEvidenceAnalysis::vepSubFieldValues( std::string vep_sub_field,
 }
 
 
+// A temporary function to explore the vep field values.
+// Returns all the distinct field values of a vep sub field from a population.
+void kgl::InfoEvidenceAnalysis::vepSubFieldCount( std::string vep_sub_field,
+                                                   const std::shared_ptr<const PopulationDB>& population) {
+
+
+  VepSubFieldValues sub_field_values(vep_sub_field);
+
+  population->processAll(sub_field_values, &VepSubFieldValues::getSubFieldValues);
+
+  ExecEnv::log().info("vep field: {} has count: {} discrete values", vep_sub_field, sub_field_values.getMap().size());
+
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -427,6 +486,12 @@ bool kgl::VepSubFieldValues::getSubFieldValues(const std::shared_ptr<const Varia
       }
 
       std::string field_value(sub_field_vector[vep_index]);
+      if (field_value.empty()) {
+
+        continue;
+
+      }
+
       auto result = field_value_map_.find(field_value);
 
       if (result != field_value_map_.end()) {

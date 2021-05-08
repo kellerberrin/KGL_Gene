@@ -45,7 +45,13 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
       and file_characteristic.data_organism == DataOrganism::HomoSapien) {
 
     std::shared_ptr<const PopulationDB> population = std::dynamic_pointer_cast<const PopulationDB>(data_ptr);
-/*
+
+  if (not population) {
+
+    ExecEnv::log().critical("NullAnalysis::fileReadAnalysis; File: {} is not a Homo Sapien Population", data_ptr->fileId());
+
+  }
+    /*
     for (auto const& [genome_id, genome_ptr] : population->getMap()) {
 
       ExecEnv::log().info("NullAnalysis::fileReadAnalysis; Diploid Population: {}, GenomeID: {}, Contigs: {}",
@@ -94,13 +100,14 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
 
       // Investigate vep field values.
 
+      InfoEvidenceAnalysis::vepSubFieldCount("Gene", population);
       InfoEvidenceAnalysis::vepSubFieldValues("Consequence", population);
       InfoEvidenceAnalysis::vepSubFieldValues("IMPACT", population);
       InfoEvidenceAnalysis::vepSubFieldValues("Feature_type", population);
       InfoEvidenceAnalysis::vepSubFieldValues("BIOTYPE", population);
 //      InfoEvidenceAnalysis::vepSubFieldValues("EXON", population);
 //      InfoEvidenceAnalysis::vepSubFieldValues("INTRON", population);
-//      InfoEvidenceAnalysis::vepSubFieldValues("LoF", population);
+      InfoEvidenceAnalysis::vepSubFieldValues("LoF", population);
 //      InfoEvidenceAnalysis::vepSubFieldValues("LoF_filter", population);
 //      InfoEvidenceAnalysis::vepSubFieldValues("LoF_flags", population);
       InfoEvidenceAnalysis::vepSubFieldValues("CLIN_SIG", population);

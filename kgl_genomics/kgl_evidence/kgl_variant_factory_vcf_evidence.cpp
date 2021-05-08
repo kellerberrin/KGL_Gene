@@ -84,7 +84,7 @@ kgl::InfoDataVariant kgl::InfoSubscribedField::getData(const DataMemoryBlock& me
   if (info_evidence_header_ != memory_block.evidenceHeader()) {
 
     ExecEnv::log().error( "InfoSubscribedField::getData, Incorrect Subscribed Field Index used Access Info Data Block");
-    return std::monostate(); // Inaccessible variant data, will trigger upstream errors.
+    return std::monostate(); // Inaccessible variant data, will trigger downstream errors.
 
   }
 
@@ -191,7 +191,9 @@ std::optional<const kgl::InfoSubscribedField> kgl::InfoEvidenceHeader::getSubscr
 
   }
 
-  return result->second;
+  auto const [field_name, field_info] = *result;
+
+  return field_info;
 
 }
 

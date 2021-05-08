@@ -36,7 +36,6 @@ void kgl::ExecutePackage::executeActive() const {
     // Get reference genomes.
     ExecEnv::log().info("Load Runtime Resources for Package: {}", package_ident);
     std::shared_ptr<const AnalysisResources> resource_ptr = loadRuntimeResources(package);
-    ExecEnv::log().info("Load Data Files and perform Analysis for Package: {}", package_ident);
 
     // Setup the analytics
     if (not package_analysis_.initializeAnalysis(package, resource_ptr)) {

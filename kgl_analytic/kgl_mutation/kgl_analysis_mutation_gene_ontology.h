@@ -91,6 +91,7 @@ private:
   double max_score_{0.0};
   double av_score_{0.0};
   bool targetGene_{false};
+
 };
 
 

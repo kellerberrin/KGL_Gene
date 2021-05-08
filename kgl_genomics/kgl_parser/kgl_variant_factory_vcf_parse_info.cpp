@@ -17,11 +17,11 @@ bool kgl::VCFInfoParser::infoTokenParser() {
 
   enum class ParserStates { KeyToken, ValueToken} parser_state = ParserStates::KeyToken;
   size_t info_length = info_view_.length();
-  size_t key_token_count = 0;
-  size_t key_token_offset = 0;
-  size_t value_token_count = 0;
-  size_t value_token_offset = 0;
-  size_t value_sub_field_count = 0;  // Count the number of sub fields in a value e.g. "9,9,9" = 3.
+  size_t key_token_count{0};
+  size_t key_token_offset{0};
+  size_t value_token_count{0};
+  size_t value_token_offset{0};
+  size_t value_sub_field_count{0};  // Count the number of sub fields in a value e.g. "9,9,9" = 3.
   std::string_view key_view;
   std::string_view value_view;
   const std::string_view empty_value_view;
@@ -78,7 +78,11 @@ bool kgl::VCFInfoParser::infoTokenParser() {
 
         } else {
 
-          if (info_view_[index] == INFO_VECTOR_DELIMITER_) ++value_sub_field_count;
+          if (info_view_[index] == INFO_VECTOR_DELIMITER_) {
+
+            ++value_sub_field_count;
+
+          }
           ++value_token_count;
 
         }

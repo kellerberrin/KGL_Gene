@@ -56,14 +56,14 @@ class RuntimePackage {
 
 public:
 
-  RuntimePackage( const std::string& package_identifier,
-                  const std::vector<std::string>& analysis_list,
-                  const std::vector<std::pair<std::string, RuntimeResourceType>>& resource_database_list,
-                  const std::vector<std::vector<std::string>>& iterative_file_list)
-                  : package_identifier_(package_identifier),
-                    analysis_list_(analysis_list),
-                    resource_database_list_(resource_database_list),
-                    iterative_file_list_(iterative_file_list) {}
+  RuntimePackage( std::string package_identifier,
+                  std::vector<std::string> analysis_list,
+                  std::vector<std::pair<std::string, RuntimeResourceType>> resource_database_list,
+                  std::vector<std::vector<std::string>> iterative_file_list)
+                  : package_identifier_(std::move(package_identifier)),
+                    analysis_list_(std::move(analysis_list)),
+                    resource_database_list_(std::move(resource_database_list)),
+                    iterative_file_list_(std::move(iterative_file_list)) {}
   RuntimePackage(const RuntimePackage&) = default;
   ~RuntimePackage() = default;
 
@@ -96,9 +96,9 @@ class RuntimeAnalysis {
 
 public:
 
-  RuntimeAnalysis(const std::string& analysis_identifier, const RuntimeParameterMap& parameter_map)
-  : analysis_identifier_(analysis_identifier),
-    parameter_map_(parameter_map) {}
+  RuntimeAnalysis(std::string analysis_identifier, RuntimeParameterMap parameter_map)
+  : analysis_identifier_(std::move(analysis_identifier)),
+    parameter_map_(std::move(parameter_map)) {}
   RuntimeAnalysis(const RuntimeAnalysis&) = default;
   ~RuntimeAnalysis() = default;
 
@@ -143,14 +143,14 @@ class RuntimeGenomeResource : public RuntimeResource {
 
 public:
 
-  RuntimeGenomeResource(const std::string& genome_identifier,
-                        const std::string& fasta_file_name,
-                        const std::string& gff_file_name,
-                        const std::string& translation_table)
-  : genome_identifier_(genome_identifier),
-    fasta_file_name_(fasta_file_name),
-    gff_file_name_(gff_file_name),
-    translation_table_(translation_table) {}
+  RuntimeGenomeResource(std::string genome_identifier,
+                        std::string fasta_file_name,
+                        std::string gff_file_name,
+                        std::string translation_table)
+  : genome_identifier_(std::move(genome_identifier)),
+    fasta_file_name_(std::move(fasta_file_name)),
+    gff_file_name_(std::move(gff_file_name)),
+    translation_table_(std::move(translation_table)) {}
   RuntimeGenomeResource() = delete;
   RuntimeGenomeResource(const RuntimeGenomeResource&) = default;
   ~RuntimeGenomeResource() override = default;
@@ -188,12 +188,12 @@ class RuntimeOntologyResource : public RuntimeResource {
 
 public:
 
-  RuntimeOntologyResource(const std::string& ontology_identifier,
-                          const std::string& annotation_file_name,
-                          const std::string& go_graph_file_name)
-      : ontology_identifier_(ontology_identifier),
-        annotation_file_name_(annotation_file_name),
-        go_graph_file_name_(go_graph_file_name) {}
+  RuntimeOntologyResource(std::string ontology_identifier,
+                          std::string annotation_file_name,
+                          std::string go_graph_file_name)
+      : ontology_identifier_(std::move(ontology_identifier)),
+        annotation_file_name_(std::move(annotation_file_name)),
+        go_graph_file_name_(std::move(go_graph_file_name)) {}
   RuntimeOntologyResource() = delete;
   RuntimeOntologyResource(const RuntimeOntologyResource&) = default;
   ~RuntimeOntologyResource() override = default;
@@ -226,12 +226,12 @@ class BaseFileInfo {
 
 public:
 
-  BaseFileInfo(const std::string& identifier,
-               const std::string& file_name,
-               const std::string& file_type)
-      : file_identifier_(identifier),
-        file_name_(file_name),
-        file_type_(file_type) {}
+  BaseFileInfo(std::string identifier,
+               std::string file_name,
+               std::string file_type)
+      : file_identifier_(std::move(identifier)),
+        file_name_(std::move(file_name)),
+        file_type_(std::move(file_type)) {}
   BaseFileInfo(const BaseFileInfo&) = default;
   virtual ~BaseFileInfo() = default;
 

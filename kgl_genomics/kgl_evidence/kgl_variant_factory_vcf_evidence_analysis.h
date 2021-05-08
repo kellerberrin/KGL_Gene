@@ -78,7 +78,10 @@ public:
   // Use the indexes generated above retrieve the vep data.
   static VepValueMap getVepData(const Variant& variant, const VepIndexVector& vep_field_list);
 
+  // Display all discrete values.
   static void vepSubFieldValues( std::string vep_sub_field, const std::shared_ptr<const PopulationDB>& population);
+  // Count discrete values.
+  static void vepSubFieldCount( std::string vep_sub_field, const std::shared_ptr<const PopulationDB>& population);
 
 
 public:
