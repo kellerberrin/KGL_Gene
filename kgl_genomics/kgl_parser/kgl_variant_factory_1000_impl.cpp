@@ -17,7 +17,7 @@ void kgl::Genome1000VCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) 
   VCFInfoRecordMap vcf_info_map;
   if (not VCFParseHeader::parseVcfHeader( header_info, vcf_contig_map, vcf_info_map)) {
 
-    ExecEnv::log().error("Pf3kVCFImpl::processVCFHeader, Problem parsing header information in VCF file. No variants processed.");
+    ExecEnv::log().error("PfVCFImpl::processVCFHeader, Problem parsing header information in VCF file. No variants processed.");
 
   }
 

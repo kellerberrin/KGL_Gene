@@ -4,12 +4,8 @@
 
 #include "kgl_variant_factory_record_vcf_impl.h"
 
-#include <boost/tokenizer.hpp>
-#include <boost/algorithm/string.hpp>
-
 
 namespace kgl = kellerberrin::genome;
-namespace bt = boost;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -17,123 +13,59 @@ namespace bt = boost;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool kgl::ParseVCFRecord::parseRecord(const ContigId_t& contig_id, std::shared_ptr<const GenomeReference> genome_db_ptr) {
-
-  bool parse_result = true;
+kgl::ParseVCFRecord::ParseVCFRecord( const VcfRecord& vcf_record,
+                                     const std::shared_ptr<const GenomeReference>& genome_db_ptr) {
 
   // Get the format fields for Genetype analysis.
-  parseString(vcf_record_.format, FORMAT_SEPARATOR_, format_fields_);
-
-  // Get the GT format offset.
-  if (not findString(format_fields_, GT_, GT_offset_)) {
-
-    ExecEnv::log().error("Format field: {} not found", GT_);
-    parse_result = false;
-
-  }
-
-  // Get the GQ format offset.
-  if (not findString(format_fields_, GQ_, GQ_offset_)) {
-
-    ExecEnv::log().error("Format field: {} not found", GQ_);
-    parse_result = false;
-
-  }
-
-  // Get the AD format offset.
-  if (not findString(format_fields_, AD_, AD_offset_)) {
-
-    ExecEnv::log().error("Format field: {} not found", AD_);
-    parse_result = false;
-
-  }
-
-  // Get the PL format offset.
-  if (not findString(format_fields_, DP_, DP_offset_)) {
-
-    ExecEnv::log().error("Format field: {} not found", DP_);
-    parse_result = false;
-
-  }
-
-  // Get the PL format offset.
-  // Not available in the Free Bayes vcf
-  if (not findString(format_fields_, PL_, PL_GL_offset_)) {
-
-    if (not findString(format_fields_, GL_, PL_GL_offset_)) {
-
-      ExecEnv::log().error("Format fields: {} or {} not found", PL_, GL_);
-      parse_result = false;
-
-    }
-
-  }
-
-  required_size_ = requiredFormatSize();  // Must have this many format fields in a Genotype.
+  format_fields_ = Utility::char_tokenizer(vcf_record.format, FORMAT_SEPARATOR_);
 
   // Get the reference DNA
-  reference_ = vcf_record_.ref;
+  reference_ = vcf_record.ref;
 
   // Get the allelle DNA vector.
-  parseString(vcf_record_.alt, ALLELE_SEPARATOR_, alleles_);
+  alleles_ = Utility::char_tokenizer(vcf_record.alt, ALLELE_SEPARATOR_);
 
   // Get the offset.
-  allele_offset_ = vcf_record_.offset;
+  allele_offset_ = vcf_record.offset;
 
   // Get the contig pointer.
-  contig_opt_ = genome_db_ptr->getContigSequence(contig_id);
+  contig_opt_ = genome_db_ptr->getContigSequence(vcf_record.contig_id);
   if (not contig_opt_) {
 
-    ExecEnv::log().error("Contig: {} is not in the Genome Database", contig_id);
-    return false;
+    ExecEnv::log().error("ParseVCFRecord::parseRecord; Contig: {} is not in the Genome Database", vcf_record.contig_id);
+    parse_result_ =false;
+    return;
 
   }
 
   const DNA5SequenceLinear contig_ref = contig_opt_.value()->sequence().subSequence(allele_offset_, reference_.length());
-
   if (contig_ref.getSequenceAsString() != reference_) {
 
-    ExecEnv::log().error("Variant reference: {} does not match Contig region: {} at offset: {}",
+    ExecEnv::log().error("ParseVCFRecord::parseRecord; Variant reference: {} does not match Contig region: {} at offset: {}",
                          reference_, contig_ref.getSequenceAsString(), allele_offset_);
-    parse_result = false;
+    parse_result_ = false;
+    return;
 
   }
 
-  // Get the overall allelle quality
-  quality_ = static_cast<Phred_t>(vcf_record_.qual);
+  // Get the overall allele quality
+  quality_ = static_cast<Phred_t>(vcf_record.qual);
 
-  parse_result_ = parse_result;
-
-  return parse_result;
+  // Look at the filter field for "Pass"
+  passed_filter_ = Utility::toupper(vcf_record.filter) == PASSED_FILTERS_;
 
 }
 
 
-void kgl::ParseVCFRecord::parseString(const std::string& parse_string,
-                                      const std::string& separator_string,
-                                      std::vector<std::string>& parse_results) {
 
-  bt::char_separator<char> item_key_sep(separator_string.c_str());
-  bt::tokenizer<bt::char_separator<char>> tokenize_item(parse_string, item_key_sep);
-  for(auto iter_item = tokenize_item.begin(); iter_item != tokenize_item.end(); ++iter_item) {
+std::optional<size_t> kgl::ParseVCFRecord::formatIndex(const std::string& format_code) const {
 
-    parse_results.push_back(*iter_item);
+  bool found_string{false};
+  size_t offset{0};
 
-  }
+  for (const auto& string_item : format_fields_) {
 
-}
-
-
-bool kgl::ParseVCFRecord::findString(const std::vector<std::string>& string_vec,
-                                     const std::string& search_string,
-                                     size_t& offset) {
-
-  bool found_string = false;
-  offset = 0;
-
-  for (const auto& string_item : string_vec) {
-
-    if (string_item == search_string) {
+    if (string_item == format_code) {
 
       found_string = true;
       break;
@@ -144,205 +76,16 @@ bool kgl::ParseVCFRecord::findString(const std::vector<std::string>& string_vec,
 
   }
 
-  return found_string;
+  if (found_string) {
 
-}
-
-
-size_t kgl::ParseVCFRecord::requiredFormatSize() const {
-
-  size_t required_size = 0;
-
-  required_size = GT_offset_ >= GQ_offset_ ? GT_offset_ : GQ_offset_;
-  required_size = PL_GL_offset_ >= required_size ? PL_GL_offset_ : required_size;
-  ++required_size; // Convert offset to a size.
-
-  return required_size;
-
-}
-
-
-bool kgl::ParseVCFRecord::isSNP() const {
-
-  if (reference().size() != 1) return false;
-
-  for (auto alt : alleles()) {
-
-    if (alt.size() != 1) return false;
-
-  }
-
-  return true;
-
-}
-
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// VCF seqan genotype parser.
-// .first is the offset (in chars), .second is the size (in chars)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-bool kgl::ParseVCFGenotype::parseGenotype(const std::string& format_char_string) {
-
-  bool parse_result = true;
-  size_t record_index = 0;
-  size_t field_index = 0;
-  size_t field_size = 0;
-
-
-  for (size_t idx = 0; idx < format_char_string.size(); ++idx)
-  {
-
-    if (format_char_string[idx] == FORMAT_SEPARATOR_) {
-
-      format_offsets_[record_index].first = field_index; // index
-      format_offsets_[record_index].second = field_size; // size;
-      ++record_index;
-      field_index = idx;
-      ++field_index;
-      field_size = 0;
-
-    } else {
-
-      ++field_size;
-
-    }
-
-  }
-
-  if (field_size > 0) {
-
-    format_offsets_[record_index].first = field_index; // index
-    format_offsets_[record_index].second = field_size; // size;
-    format_count_ = record_index;
-    ++format_count_;
+    return offset;
 
   } else {
 
-    format_count_ = record_index;
-
-  }
-
-  parse_result_ = parse_result;
-
-  return parse_result;
-
-}
-
-
-std::string kgl::ParseVCFGenotype::getFormatString(size_t format_offset, const std::string &format_char_string) const {
-
-  if (!parse_result_) {
-
-    ExecEnv::log().error("ParseVCFGenotype(), Genotype has not been parsed");
-    return "";
-
-  }
-
-  if (format_offset >= format_count_) {
-
-    ExecEnv::log().error("getFormatChar(), format offset: {} out of range, format count: {}", format_offset, format_count_);
-    return "";
-
-  }
-
-  size_t ptr_offset = formatOffsets()[format_offset].first;
-  size_t size = formatOffsets()[format_offset].second;
-  const char* char_ptr = &(format_char_string[ptr_offset]);
-
-  std::string format_string(char_ptr, size);
-
-  return format_string;
-
-}
-
-
-char kgl::ParseVCFGenotype::getFormatChar(size_t format_offset, const std::string &format_char_string) const {
-
-  if (!parse_result_) {
-
-    ExecEnv::log().error("ParseVCFGenotype(), Genotype has not been parsed");
-    return ' ';
-
-  }
-
-  if (format_offset >= format_count_) {
-
-    ExecEnv::log().error("getFormatChar(), format offset: {} out of range, format count: {}", format_offset, format_count_);
-    return ' ';
-
-  }
-
-  size_t first_PL_char_offset = formatOffsets()[format_offset].first;
-
-  return format_char_string[first_PL_char_offset];
-
-}
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// VCF Diploid genotypes for the format PL field.
-// .first = A, .second = B
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-kgl::DiploidAlleles kgl::DiploidGenotypes::generateGenotype(size_t allele_count) const {
-
-  DiploidAlleles diploid_alleles;
-
-  for (size_t j = 0; j <= allele_count; ++j) {
-
-    for (size_t k = 0; k <= j; ++k) {
-
-      diploid_alleles.push_back(std::pair<size_t, size_t>(k, j));
-
-    }
-
-  }
-
-  return diploid_alleles;
-
-}
-
-
-void kgl::DiploidGenotypes::generateGenotypeVector(size_t max_alleles) {
-
-  for(size_t allele_count = 1; allele_count <= max_alleles; ++allele_count) {
-
-    diploid_alleles_.push_back(generateGenotype(allele_count));
+    return std::nullopt;
 
   }
 
 }
 
-
-std::string kgl::DiploidGenotypes::genotypeText(size_t allele_count) const {
-
-
-  if (allele_count > diploid_alleles_.size() or allele_count < 1) {
-
-    ExecEnv::log().error("genotypeText(), allele count: {} out of range, max alleles defined: {}",
-                         allele_count , diploid_alleles_.size());
-    return "";
-
-  }
-
-  --allele_count; // convert to a vector index offset.
-
-  const DiploidAlleles& diploid_allele = diploid_alleles_[allele_count];
-
-  std::stringstream allele_ss;
-  for (auto allele_item : diploid_allele) {
-
-    allele_ss << "(A:" << allele_item.first << ", B:" << allele_item.second << "), ";
-
-  }
-
-  return allele_ss.str();
-
-}
 

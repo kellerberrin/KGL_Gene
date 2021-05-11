@@ -240,8 +240,19 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
     if (sub_fields.size() !=  vep_header_ptr->subFieldHeaders().size()) {
 
       // **** Gnomad 3 VEP bug workaround ****
-      // This is added to handle the Gnomad 3 VEP bug where sub-sub-fields in the 'LoF_info' field are delimited with ','
-      // and are thus parsed as separate VEP records (of size = 1).
+      // This is added to handle the Gnomad 3 VEP bug where sub-sub-fields in the 'LoF_xxx' fields are delimited with ','
+      // and are thus parsed as separate VEP records.
+
+      // Issue a warning that we have encountered the Gnomad 3 problem.
+      static bool gnomad3_vep_warning{false};
+      if (not gnomad3_vep_warning) {
+
+        ExecEnv::log().warn("InfoEvidenceAnalysis::getVepSubFields; Gnomad 3 VEP bug, VEP sub-field count: {} not equal to VEP header size: {}",
+                             sub_fields.size(),  vep_header_ptr->subFieldHeaders().size());
+        gnomad3_vep_warning = true;
+      }
+
+      // The dodgy workaround.
       const size_t loftee_field_size{4};
       if (sub_fields.size() <= (vep_header_ptr->subFieldHeaders().size() - loftee_field_size)) {
 

@@ -4,7 +4,7 @@
 
 #include "kgl_ped_parser.h"
 #include "kgl_Pf3k_COI.h"
-#include "kgl_variant_factory_pf3k_impl.h"
+#include "kgl_variant_factory_pf_impl.h"
 #include "kgl_variant_factory_grch_impl.h"
 #include "kgl_variant_factory_1000_impl.h"
 #include "kgl_variant_factory_gnomad_impl.h"
@@ -74,7 +74,7 @@ std::shared_ptr<kgl::DataDB> kgl::ParserSelection::parseData(const std::shared_p
   switch(parser_type) {
 
     case ParserTypeEnum::DiploidFalciparum:
-      return readVCF<Pf3kVCFImpl>(resource_ptr, file_info_ptr, evidence_map, contig_alias, data_source);
+      return readVCF<PfVCFImpl>(resource_ptr, file_info_ptr, evidence_map, contig_alias, data_source);
 
     case ParserTypeEnum::MonoGenomeUnphased:
       return readVCF<GrchVCFImpl>(resource_ptr, file_info_ptr, evidence_map, contig_alias, data_source);
