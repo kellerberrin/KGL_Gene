@@ -16,7 +16,6 @@ namespace kgl = kellerberrin::genome;
 const kgl::ContigId_t& kgl::ContigAliasMap::lookupAlias(const ContigId_t& alias) const {
 
   auto result = alias_map_.find(alias);
-
   if (result == alias_map_.end()) {
 
     ExecEnv::log().error("ContigAliasMap::lookupAlias(); Alias: {} Not Found", alias);
@@ -24,14 +23,59 @@ const kgl::ContigId_t& kgl::ContigAliasMap::lookupAlias(const ContigId_t& alias)
 
   }
 
-  return result->second;
+  // Unpack the alias map.
+  auto const& [contig_key, alias_pair] = *result;
+  auto const& [contig_alias, contig_type] = alias_pair;
+
+  return contig_alias;
 
 }
 
-void kgl::ContigAliasMap::setAlias(const ContigId_t& alias, const ContigId_t& contig_id) {
+kgl::ChromosomeType kgl::ContigAliasMap::lookupType(const ContigId_t& alias) const {
 
-  auto result = alias_map_.insert(std::pair<std::string, std::string>(alias, contig_id));
+  auto result = alias_map_.find(alias);
+  if (result == alias_map_.end()) {
 
+    ExecEnv::log().error("ContigAliasMap::lookupType(); Alias: {} Not Found", alias);
+    return ChromosomeType::AUTOSOMAL;
+
+  }
+
+  // Unpack the alias map.
+  auto const& [contig_key, alias_pair] = *result;
+  auto const& [contig_alias, contig_type] = alias_pair;
+
+  return contig_type;
+
+}
+
+void kgl::ContigAliasMap::setAlias(const ContigId_t &alias, const ContigId_t &contig_id, const std::string &chromosome_type) {
+
+  ChromosomeType chrom_type{ChromosomeType::AUTOSOMAL};
+  if (chromosome_type == AUTOSOME_) {
+
+    chrom_type = ChromosomeType::AUTOSOMAL;
+
+  } else if (chromosome_type == ALLOSOME_X_) {
+
+    chrom_type = ChromosomeType::ALLOSOME_X;
+
+  } else if (chromosome_type == ALLOSOME_Y_) {
+
+    chrom_type = ChromosomeType::ALLOSOME_Y;
+
+  } else if (chromosome_type == MITOCHONDRIA_) {
+
+    chrom_type = ChromosomeType::MITOCHONDRIA;
+
+  } else {
+
+    ExecEnv::log().error("ContigAliasMap::setAlias; unknown chromosome type: {} must one of {}, {}, {} or {}, see alias xml file.",
+                          chromosome_type, AUTOSOME_, ALLOSOME_X_, ALLOSOME_Y_, MITOCHONDRIA_);
+
+  }
+
+  auto result = alias_map_.try_emplace(alias, std::pair<std::string, ChromosomeType>{contig_id, chrom_type});
   if (not result.second) {
 
     ExecEnv::log().error("ContigAliasMap::setAlias(); Cannot register Alias: {} for Contig: {} (duplicate)", alias, contig_id);

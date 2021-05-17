@@ -142,7 +142,7 @@ public:
       case N_NUCLEOTIDE_OFFSET: return Alphabet::N;
 
       default:
-        ExecEnv::log().vwarn("DNA5::offsetToNucleotide(), Invalid/Extended Nucleotide Offset", offset);
+        ExecEnv::log().warn("DNA5::offsetToNucleotide(), Invalid/Extended Nucleotide Offset", offset);
         return Alphabet::N;
     }
 

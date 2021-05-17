@@ -279,7 +279,7 @@ bool kgl::GenomicMutation::outputRegionCSV(const std::string &file_name,
 
             } else {
 
-              ExecEnv::log().vinfo("Sequence: {} end offset: {} overlaps sequence: {} begin offset: {}",
+              ExecEnv::log().info("Sequence: {} end offset: {} overlaps sequence: {} begin offset: {}",
                                   previous_seq_ptr->getCDSParent()->id(),
                                   previous_seq_ptr->end(),
                                   sequence.second->getCDSParent()->id(),

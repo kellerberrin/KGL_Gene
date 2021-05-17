@@ -36,4 +36,20 @@ kol::TermInformationContentMap::TermInformationContentMap( const std::shared_ptr
 
   }//end for, each probability value
 
+  for (auto& [term_id, prob_ont_pair] : probabilityMap()) {
+
+    auto& [probability, ontology] = prob_ont_pair;
+
+    if (probability <= 0.0) {
+
+      probability = BAD_INFO_VALUE_;
+
+    } else {
+
+      probability = -1.0 * std::log(probability);
+
+    }
+
+  }
+
 }

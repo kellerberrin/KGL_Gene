@@ -101,6 +101,7 @@ void kgl::PfVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& recor
 
     ExecEnv::log().error("PfVCFImpl::ParseRecord; format: {} does not contain required format fields: {} and {}",
                          record.format, ParseVCFRecord::FORMAT_GT, ParseVCFRecord::FORMAT_AD);
+    return;
   }
 
   size_t genotype_count = 0;
@@ -109,18 +110,18 @@ void kgl::PfVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& recor
 
     std::vector<std::string_view> genotype_formats = Utility::view_tokenizer(genotype, FORMAT_SEPARATOR_);
 
-    // Require GT and AD format fields.
-    if (genotype_formats.size() <= std::max(GT_offset_opt.value(), AD_offset_opt.value())) {
+    // Require GT format field.
+    if (genotype_formats.size() <= GT_offset_opt.value()) {
 
-      ExecEnv::log().error( "PfVCFImpl::ParseRecord; record: {}, genotype format: {} does not contain required format fields: {} and {}",
-                            vcf_record_count, genotype, ParseVCFRecord::FORMAT_GT, ParseVCFRecord::FORMAT_AD);
+      ExecEnv::log().error( "PfVCFImpl::ParseRecord; record: {}, genotype format: {} does not contain required format field: {}",
+                            vcf_record_count, genotype, ParseVCFRecord::FORMAT_GT);
       continue;
 
     }
 
     std::string GT_format(genotype_formats[GT_offset_opt.value()]);
     std::vector<std::string> gt_vector = Utility::char_tokenizer(GT_format, GT_FIELD_SEPARATOR_CHAR_);
-    if (gt_vector.size() != 2) {
+    if (gt_vector.size() != DIPLOID_) {
 
       ExecEnv::log().error("PfVCFImpl::ParseRecord; GT format field: {} is not diploid.", GT_format, genotype);
       continue;
@@ -148,31 +149,64 @@ void kgl::PfVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& recor
 
     }
 
+    // Get the GQ field if it exists.
     double GQ_value{0.0};
     if (GQ_offset_opt) {
 
-      std::string GQ_text(genotype_formats[GQ_offset_opt.value()]);
-      if (GQ_text.find_first_not_of(DIGITS_) !=  std::string::npos) {
+      if (GQ_offset_opt.value() < genotype_formats.size()) {
 
-        ExecEnv::log().error("PfVCFImpl::ParseRecord; Non-numeric GQ_text: {}", GQ_text);
-        continue;
+        std::string GQ_text(genotype_formats[GQ_offset_opt.value()]);
+
+        if (GQ_text != MISSING_VALUE_) {
+
+          if (GQ_text.find_first_not_of(FLOAT_DIGITS_) !=  std::string::npos) {
+
+            ExecEnv::log().error("PfVCFImpl::ParseRecord; Non-numeric GQ_text: {}", GQ_text);
+
+          } else {
+
+            GQ_value = std::stof(GQ_text);
+
+          }
+
+        }
 
       }
-      GQ_value = std::stof(GQ_text);
 
     }
 
+    // Get the DP field if it exists.
     size_t DP_value{0};
     if (DP_offset_opt) {
 
-      std::string DP_text(genotype_formats[DP_offset_opt.value()]);
-      if (DP_text.find_first_not_of(DIGITS_) !=  std::string::npos) {
+      if (DP_offset_opt.value() < genotype_formats.size()) {
 
-        continue;
+        std::string DP_text(genotype_formats[DP_offset_opt.value()]);
+
+        if (DP_text != MISSING_VALUE_) {
+
+          if (DP_text.find_first_not_of(DIGITS_) !=  std::string::npos) {
+
+            ExecEnv::log().error("PfVCFImpl::ParseRecord; Non-numeric DP_text: {}", DP_text);
+
+          } else {
+
+            DP_value = std::stoll(DP_text);
+
+          }
+
+        }
 
       }
 
-      DP_value = std::stoll(DP_text);
+    }
+
+    // Require AD format field.
+    if (genotype_formats.size()  <= AD_offset_opt.value()) {
+
+      ExecEnv::log().error( "PfVCFImpl::ParseRecord; record: {}, genotype format: {} does not contain required format field: {}",
+                            vcf_record_count, genotype, ParseVCFRecord::FORMAT_AD);
+      continue;
 
     }
 

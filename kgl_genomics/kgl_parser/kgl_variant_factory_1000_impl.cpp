@@ -190,14 +190,14 @@ std::pair<size_t, size_t> kgl::Genome1000VCFImpl::alternateIndex( const std::str
       // If the phase vector size is 1 then we assume that we are processing the X/Y chromosomes of a male_.
       if (unphased_view != REFERENCE_VARIANT_INDICATOR_ and unphased_view != ALT_REFERENCE_VARIANT_INDICATOR_) {
 
-        switch(contig_alias_map_.chromosomeType(contig)) {
+        switch(contig_alias_map_.lookupType(contig)) {
 
-          case ChromosomeType::CHROM_X:
+          case ChromosomeType::ALLOSOME_X:
             phase_A_alt = std::stoul(std::string(unphased_view));
             phase_B_alt = REFERENCE_VARIANT_INDEX_;
             break;
 
-          case ChromosomeType::CHROM_Y:
+          case ChromosomeType::ALLOSOME_Y:
             phase_A_alt = REFERENCE_VARIANT_INDEX_;
             phase_B_alt = std::stoul(std::string(unphased_view));
             break;

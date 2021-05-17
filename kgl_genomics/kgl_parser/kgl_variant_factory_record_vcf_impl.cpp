@@ -29,8 +29,8 @@ kgl::ParseVCFRecord::ParseVCFRecord( const VcfRecord& vcf_record,
   allele_offset_ = vcf_record.offset;
 
   // Get the contig pointer.
-  contig_opt_ = genome_db_ptr->getContigSequence(vcf_record.contig_id);
-  if (not contig_opt_) {
+  auto contig_opt = genome_db_ptr->getContigSequence(vcf_record.contig_id);
+  if (not contig_opt) {
 
     ExecEnv::log().error("ParseVCFRecord::parseRecord; Contig: {} is not in the Genome Database", vcf_record.contig_id);
     parse_result_ =false;
@@ -38,7 +38,9 @@ kgl::ParseVCFRecord::ParseVCFRecord( const VcfRecord& vcf_record,
 
   }
 
-  const DNA5SequenceLinear contig_ref = contig_opt_.value()->sequence().subSequence(allele_offset_, reference_.length());
+  contig_ptr_ = contig_opt.value();
+
+  const DNA5SequenceLinear contig_ref = contig_ptr_->sequence().subSequence(allele_offset_, reference_.length());
   if (contig_ref.getSequenceAsString() != reference_) {
 
     ExecEnv::log().error("ParseVCFRecord::parseRecord; Variant reference: {} does not match Contig region: {} at offset: {}",

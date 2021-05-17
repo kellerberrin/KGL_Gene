@@ -568,8 +568,16 @@ kgl::ContigAliasMap kgl::RuntimeProperties::getContigAlias() const {
 
     }
 
+    std::string chromosome_type;
+    if (not sub_tree.second.getProperty(ALIAS_TYPE_, chromosome_type)) {
+
+      ExecEnv::log().error("RuntimeProperties::getContigAlias, No Chromosome type ('autosome', 'allosomeX', 'allosomeY' or 'mitochrondria') specified");
+      continue;
+
+    }
+
     // Alias is idempotent.
-    contig_alias_map.setAlias(contig_ident, contig_ident);
+    contig_alias_map.setAlias(contig_ident, contig_ident, chromosome_type);
 
     // Get a vector of alias
     std::vector<std::string> alias_vector;
@@ -581,7 +589,7 @@ kgl::ContigAliasMap kgl::RuntimeProperties::getContigAlias() const {
 
     for (auto const& alias : alias_vector) {
 
-      contig_alias_map.setAlias(alias, contig_ident);
+      contig_alias_map.setAlias(alias, contig_ident, chromosome_type);
 
     }
 

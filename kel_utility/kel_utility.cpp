@@ -57,6 +57,7 @@ bool kel::Utility::fileExists(const std::string& file_path) {
 
 }
 
+
 // Returns the filename extension.
 std::string kel::Utility::fileExtension(const std::string& file_name) {
 

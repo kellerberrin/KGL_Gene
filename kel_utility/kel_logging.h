@@ -26,8 +26,6 @@ public:
 
   void SetLevel(Severity level) noexcept;
   void SetFormat(const std::string& message) noexcept;
-  void SetVerbose(bool verbose) noexcept { verbose_ = verbose; }
-  bool verbose() { return verbose_; }
 
   static constexpr const int NO_EXIT_ON_ERROR = -1;  // No exit on error messages
   void SetMaxErrorMessages(int max_messages) { max_error_messages_ = max_messages; }
@@ -39,10 +37,6 @@ public:
   template<typename... Args> void warn(const char* message, Args... args) noexcept;
   template<typename... Args> void error(const char* message, Args... args) noexcept;
   template<typename... Args> void critical(const char* message, Args... args) noexcept;
-  // These function only report if the verbose flag is set; see "setVerbose(true)" above.
-  template<typename... Args> void vtrace(const char* message, Args... args) noexcept;
-  template<typename... Args> void vinfo(const char* message, Args... args) noexcept;
-  template<typename... Args> void vwarn(const char* message, Args... args) noexcept;
 
 
 private:
@@ -55,17 +49,10 @@ private:
   std::atomic<int> error_message_count_{0};     // number of error messages issued.
   std::atomic<int> max_warn_messages_{100};     // Defaults to 100 warning messages
   std::atomic<int> warn_message_count_{0};     // number of warning messages issued.
-  std::atomic<bool> verbose_{false};           // enable verbose user output
 
 
 };
 
-
-template<typename... Args> void Logger::vtrace(const char* message, Args... args) noexcept {
-
-  if (verbose_) trace(message, args...);
-
-}
 
 template<typename... Args> void Logger::trace(const char* message, Args... args) noexcept {
 
@@ -74,23 +61,10 @@ template<typename... Args> void Logger::trace(const char* message, Args... args)
 
 }
 
-template<typename... Args> void Logger::vinfo(const char* message, Args... args) noexcept {
-
-  if (verbose_) info(message, args...);
-
-}
-
-
 template<typename... Args> void Logger::info(const char* message, Args... args) noexcept {
 
   plog_impl_->info(message, args...);
   plog_impl_->flush();
-
-}
-
-template<typename... Args> void Logger::vwarn(const char* message, Args... args) noexcept {
-
-  if (verbose_) warn(message, args...);
 
 }
 

@@ -344,7 +344,7 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_AnnotationData.cpp
         kol_ontology/kgl_ontology/kgl_gene_cache_ontology.cpp
         kol_ontology/kgl_ontology/kgl_gene_cache_ontology.h
-        )
+        kol_ontology/kgl_ontology/kgl_ontology_database_test.cpp kol_ontology/kgl_ontology/kgl_ontology_database_test.h)
 
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES

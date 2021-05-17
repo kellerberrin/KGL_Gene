@@ -46,8 +46,11 @@ private:
   constexpr static const char GT_FIELD_SEPARATOR_CHAR_{'/'};
   constexpr static const char AD_FIELD_SEPARATOR_CHAR_{','};
   constexpr static const char* DIGITS_{"0123456789"};
+  constexpr static const char* FLOAT_DIGITS_{"eE.+-0123456789"};
   constexpr static const char* UPSTREAM_ALLELE_{"*"};
   constexpr static const char FORMAT_SEPARATOR_ = ':';
+  constexpr static const char* MISSING_VALUE_{"."};
+  constexpr static const size_t DIPLOID_{2};
 
 
   // Progress counters.

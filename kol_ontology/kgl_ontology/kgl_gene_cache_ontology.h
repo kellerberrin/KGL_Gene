@@ -11,6 +11,7 @@
 #include "kol_AsymmetricSimilarityCache.h"
 #include "kol_LinSimilarity.h"
 #include "kol_ResnikSimilarity.h"
+#include "kol_JiangConrathSimilarity.h"
 #include "kol_BestMatchAverageSetSimilarity.h"
 
 
@@ -77,7 +78,7 @@ private:
                                           kol::GO::Ontology ontology);
   std::shared_ptr<const kol::LinSimilarity> getLinSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
   std::shared_ptr<const kol::ResnikSimilarity> getResnikSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
-
+  std::shared_ptr<const kol::JiangConrathSimilarity> getJiangSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
   // Cached GO Term and Gene Data.
 
   [[nodiscard]] std::vector<std::string> geneSetGOTermsBP() const {

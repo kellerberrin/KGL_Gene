@@ -71,7 +71,7 @@ void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeReference> 
         auto ontology_opt = genome_db_ptr->geneOntology().getGafFeatureVector(gene->id());
         if (not ontology_opt) {
 
-          ExecEnv::log().vwarn("PromoterMotif::displayTFFMotif; No Ontology record for GENE {}", gene->id());
+          ExecEnv::log().warn("PromoterMotif::displayTFFMotif; No Ontology record for GENE {}", gene->id());
 
         } else {
 

@@ -52,7 +52,7 @@ public:
 
   //! An interface method for returning the shared information of a single terms,or information content
   /*!
-    This method privdes a mechanism for returing a term's infromation content.
+    This method privdes a mechanism for returing a term's information content.
   */
   [[nodiscard]] double sharedInformation(const std::string &term) const override;
 

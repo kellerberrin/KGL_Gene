@@ -360,6 +360,7 @@ public:
     This method takes a term and returns is true boolean if it is a leaf.
   */
   [[nodiscard]] bool isLeaf(const std::string &term) const;
+  [[nodiscard]] GoVertex getRightLeaf(GoVertex vertex) const;
 
   //! A helper method to retrieve all terms in the GoGraph
   /*!

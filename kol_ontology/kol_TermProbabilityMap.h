@@ -24,6 +24,9 @@ namespace kellerberrin::ontology {
 	  class is used by Information Content methods to determine the prior probability of
 	  a term give an instance of AnnotationData.
 */
+
+using TermProbOntMap = OntologyMapType<std::string, std::pair<double, GO::Ontology>>;
+
 class TermProbabilityMap {
 public:
 
@@ -40,7 +43,12 @@ public:
       created with valid parameters.
   */
   TermProbabilityMap(const std::shared_ptr<const GoGraph> &graph,
-                     const std::shared_ptr<const AnnotationData> &annoData);
+                     const std::shared_ptr<const AnnotationData> &annotation_data) {
+
+    calcProbabilityIndex(graph, annotation_data);
+    calcProbabilityMap(graph, annotation_data);
+
+  }
 
   //! Accessor for probablities vector
   /*!
@@ -82,7 +90,37 @@ public:
   /*!
   Get the value mapped by the given key. A specified function for the [] operator
   */
-  [[nodiscard]] double getValue(const std::string &termId) const;
+  [[nodiscard]] double getValue(const std::string &term_id) const;
+
+  [[nodiscard]] double getMapValue(const std::string &term_id) const {
+
+    auto result = probability_map_.find(term_id);
+    if (result == probability_map_.end()) {
+
+      return badIdValue();
+
+    }
+    auto const& [map_term_id, prob_ont_pair] = *result;
+    auto const& [probability, ontology] = prob_ont_pair;
+    return probability;
+
+  }
+
+  [[nodiscard]] std::string getMapOntology(const std::string &term_id) const {
+
+    auto result = probability_map_.find(term_id);
+    if (result == probability_map_.end()) {
+
+      return "not found";
+
+    }
+    auto const& [map_term_id, prob_ont_pair] = *result;
+    auto const& [probability, ontology] = prob_ont_pair;
+    return GO::ontologyToString(ontology);
+
+  }
+
+
 
   //-------------------------------------------------------------------
 
@@ -131,6 +169,7 @@ public:
 protected:
 
   [[nodiscard]] std::vector<double> &probabilities() { return probabilities_; }
+  [[nodiscard]] TermProbOntMap& probabilityMap() { return probability_map_; }
 
 private:
 
@@ -141,6 +180,8 @@ private:
     This map takes string term ids and returns the index for annotation count access.
   */
   OntologyMapType<std::string, std::size_t> name_to_index_;
+
+  TermProbOntMap probability_map_;
 
   //! A private list of term probabilities
   /*!
@@ -196,6 +237,13 @@ private:
   */
   double cc_normalization_min_min_anno_;
 
+
+  void calcProbabilityMap( const std::shared_ptr<const GoGraph> &graph,
+                           const std::shared_ptr<const AnnotationData> &annotation_data);
+
+
+  void calcProbabilityIndex( const std::shared_ptr<const GoGraph> &graph,
+                             const std::shared_ptr<const AnnotationData> &annotation_data);
 
   //! Private method for calculating the most informative common ancestor value
   /*!

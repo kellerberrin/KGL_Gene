@@ -135,6 +135,7 @@ private:
   // Contig/Chromosome Alias categories.
   constexpr static const char* ALIAS_LIST_ = "aliasList";
   constexpr static const char* ALIAS_IDENT_ = "ident";
+  constexpr static const char* ALIAS_TYPE_ = "chromosomeType";
   constexpr static const char* ALIAS_ENTRY_ = "alias";
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Legacy

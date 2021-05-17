@@ -35,36 +35,41 @@ std::unique_ptr<kol::GoGraph> kol::AllowedRelationshipOboGoParser::parseGoFile(c
 
   }
 
-  std::ifstream in(filename.c_str());
+  std::ifstream term_file(filename);
   std::string line;
 
   //at first line
-  std::getline(in, line);
+  std::getline(term_file, line);
 
   //advance to first term
-  while (in.good() && line != "[Term]") {
-    std::getline(in, line);
+  while (term_file.good() && line != "[Term]") {
+
+    std::getline(term_file, line);
     boost::trim(line);
+
   }
 
-  //std::cout << "at terms" << std::endl;
-  while (in.good()) {
+  while (term_file.good()) {
     //parse a term
 
     //temp data
     std::string term, name, description, ontology;
-    bool isObsolete = false;
+    bool isObsolete{false};
 
     //vector to hold go accession ids of related terms.
     std::vector<std::string> relatedTerms;
     std::vector<std::string> relatedTermRelationship;
 
     //std::cout << "parsing attributes" << std::endl;
-    while (in.good() && line != "") {
+    while (term_file.good() && line != "") {
 
-      std::getline(in, line);
+      std::getline(term_file, line);
 
-      if (line == "") { continue; }
+      if (line == "") {
+
+        continue;
+
+      }
 
 
       std::string attr, value;
@@ -142,7 +147,11 @@ std::unique_ptr<kol::GoGraph> kol::AllowedRelationshipOboGoParser::parseGoFile(c
         //std::cout << relationship << std::endl;
 
         GO::Relationship relationsihpType = GO::relationshipStringToCode(relationship);
-        if (!relationship_policy_ptr_->isAllowed(relationsihpType)) { continue; }
+        if (not relationship_policy_ptr_->isAllowed(relationsihpType)) {
+
+          continue;
+
+        }
 
         //insert related terms, there are just stubs to be overwritten later on
         graph->insertTerm(relatedTerm, "name", "description", "ontology");
@@ -155,8 +164,8 @@ std::unique_ptr<kol::GoGraph> kol::AllowedRelationshipOboGoParser::parseGoFile(c
 
     //std::cin.get();
     //advance to next term
-    while (in.good() && line != "[Term]") {
-      std::getline(in, line);
+    while (term_file.good() && line != "[Term]") {
+      std::getline(term_file, line);
       boost::trim(line);
     }
     //std::cin.get();

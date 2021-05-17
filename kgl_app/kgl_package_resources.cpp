@@ -12,7 +12,7 @@ namespace kgl = kellerberrin::genome;
 
 std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeResources(const RuntimePackage& package) const {
 
-  std::shared_ptr<AnalysisResources> resource_ptr(std::make_unique<AnalysisResources>());
+  std::shared_ptr<AnalysisResources> resource_ptr(std::make_shared<AnalysisResources>());
 
   for (auto const& [resource_ident, resource_type]  :  package.resourceDatabaseList()) {
 

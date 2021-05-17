@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <set>
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -287,9 +288,8 @@ private:
 // Lookup the Homosapien fasta/gff contig/chromosome  identifier using a VCF contig identifier.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using AliasMap = std::map<ContigId_t, ContigId_t>;
-enum class ChromosomeType { AUTOSOMAL, CHROM_X, CHROM_Y, MITOCHONDRION };
-
+enum class ChromosomeType { AUTOSOMAL, ALLOSOME_X, ALLOSOME_Y, MITOCHONDRIA };
+using AliasMap = std::unordered_map<ContigId_t, std::pair<ContigId_t, ChromosomeType>>;
 
 class ContigAliasMap {
 
@@ -299,29 +299,18 @@ public:
   ContigAliasMap(const ContigAliasMap&) = default;
   ~ContigAliasMap() = default;
 
-  [[nodiscard]] const AliasMap& getMap() const { return alias_map_; }
   [[nodiscard]] const ContigId_t& lookupAlias(const ContigId_t& alias) const;
-  [[nodiscard]] bool isChromX(const ContigId_t& alias) const { return lookupAlias(alias) == CHROM_X_; }
-  [[nodiscard]] bool isChromY(const ContigId_t& alias) const { return lookupAlias(alias) == CHROM_Y_; }
-  [[nodiscard]] bool isMitochondrion(const ContigId_t& alias) const { return lookupAlias(alias) == MITOCHONDRION_; }
-  // Can be expensive with a maximum of 3 map lookups.
-  [[nodiscard]] ChromosomeType chromosomeType(const ContigId_t& alias) const {
+  [[nodiscard]] ChromosomeType lookupType(const ContigId_t& alias) const;
 
-    if (isChromX(alias)) return ChromosomeType::CHROM_X;
-    if (isChromY(alias)) return ChromosomeType::CHROM_Y;
-    if (isMitochondrion(alias)) return ChromosomeType::MITOCHONDRION;
-    return ChromosomeType::AUTOSOMAL;
-
-  }
-
-  void setAlias(const ContigId_t& alias, const ContigId_t& contig_id);
+  void setAlias(const ContigId_t& alias, const ContigId_t& contig_id, const std::string& chromosome_type);
 
 private:
 
-  // See the config files for these constants (uses GRCh38 terminology).
-  constexpr static const char* CHROM_X_ = "NC_000023.11";
-  constexpr static const char* CHROM_Y_ = "NC_000024.10";
-  constexpr static const char* MITOCHONDRION_ = "NC_012920.1";
+  // See the alias config files for these text constants.
+  constexpr static const char* AUTOSOME_ = "autosome";
+  constexpr static const char* ALLOSOME_X_ = "allosomeX";
+  constexpr static const char* ALLOSOME_Y_ = "allosomeY";
+  constexpr static const char* MITOCHONDRIA_ = "mitochondria";
 
   AliasMap alias_map_;
 

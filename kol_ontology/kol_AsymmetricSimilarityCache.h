@@ -22,7 +22,7 @@ namespace kellerberrin::ontology {
 	This class creates a memory cache similarity matrix by calculating all similarity values
 	  between pairs of terms. Warning this object can use several gigabytes of memory.
 	  Matrix creation time will depend on the number of execution threads committed to matrix creation.
-	  Defaults to (HW threads available - 1).
+	  Defaults to Hardware threads available less 1.
 */
 class AsymmetricSimilarityCache : public TermSimilarityInterface {
 

@@ -31,7 +31,7 @@ public:
   [[nodiscard]] const std::string& reference() const { return reference_; }
   [[nodiscard]] const std::vector<std::string>& alleles() const { return alleles_; }
   [[nodiscard]] ContigOffset_t offset() const { return allele_offset_; }
-  [[nodiscard]] std::shared_ptr<const ContigReference> contigPtr() const { return contig_opt_.value(); }
+  [[nodiscard]] const std::shared_ptr<const ContigReference>& contigPtr() const { return contig_ptr_; }
   [[nodiscard]] bool passedFilter() const { return passed_filter_; }
   [[nodiscard]] bool parseResult() const { return parse_result_; }
 
@@ -50,7 +50,7 @@ private:
   std::string reference_;
   std::vector<std::string> alleles_;
   ContigOffset_t allele_offset_{0};
-  std::optional<std::shared_ptr<const ContigReference>> contig_opt_;
+  std::shared_ptr<const ContigReference> contig_ptr_;
   Phred_t quality_{0.0};
   bool passed_filter_{false};
   bool parse_result_{true};

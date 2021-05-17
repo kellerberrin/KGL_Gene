@@ -22,8 +22,13 @@ void kgl::ContigReference::verifyCDSPhasePeptide() {
   size_t well_formed_sequences = 0;
   size_t ill_formed_sequences = 0;
   size_t empty_genes = 0;
+  bool verbose{false};
 
-  ExecEnv::log().info("ContigReference::verifyCDSPhasePeptide; Verifying {} Genes using amino translation table: {}", contigId(), coding_table_.translationTableName());
+  if (verbose) {
+
+    ExecEnv::log().info("ContigReference::verifyCDSPhasePeptide; Verifying {} Genes using amino translation table: {}", contigId(), coding_table_.translationTableName());
+
+  }
 
   for(const auto& feature : gene_exon_features_.offsetFeatureMap()) {
 
@@ -42,11 +47,12 @@ void kgl::ContigReference::verifyCDSPhasePeptide() {
 
         if (not gene_ptr->verifyCDSPhase(coding_seq_ptr)) {
 
-          ExecEnv::log().vinfo("Gene : {} Offset: {} Problem verifying CDS structure - gene sub-features print out",
-                              gene_ptr->id(),
-                              gene_ptr->sequence().begin());
 
-          if (ExecEnv::log().verbose()) {
+          if (verbose) {
+
+            ExecEnv::log().info("Gene : {} Offset: {} Problem verifying CDS structure - gene sub-features print out",
+                                gene_ptr->id(),
+                                gene_ptr->sequence().begin());
 
             feature.second->recusivelyPrintsubfeatures();
 
@@ -111,7 +117,8 @@ bool kgl::ContigReference::verifyGene(const std::shared_ptr<const GeneFeature>& 
 bool kgl::ContigReference::verifyCodingSequences(const std::shared_ptr<const GeneFeature>& gene_ptr,
                                                  const std::shared_ptr<const CodingSequenceArray>& coding_seq_ptr) const {
 
-  bool result = true;
+  bool result{true};
+  bool verbose{false};
 
   if (coding_seq_ptr->empty()) {
 
@@ -132,12 +139,12 @@ bool kgl::ContigReference::verifyCodingSequences(const std::shared_ptr<const Gen
 
     if (not coding_table_.checkStartCodon(coding_sequence)) {
 
-      ExecEnv::log().vinfo("No START codon Gene: {}, Sequence (mRNA): {} | first codon: {}",
-                           sequence.second->getGene()->id(),
-                           sequence.second->getCDSParent()->id(),
-                           coding_table_.firstCodon(coding_sequence).getSequenceAsString());
+      if (verbose) {
 
-      if (ExecEnv::log().verbose()) {
+        ExecEnv::log().info("No START codon Gene: {}, Sequence (mRNA): {} | first codon: {}",
+                            sequence.second->getGene()->id(),
+                            sequence.second->getCDSParent()->id(),
+                            coding_table_.firstCodon(coding_sequence).getSequenceAsString());
 
         gene_ptr->recusivelyPrintsubfeatures();
 
@@ -147,14 +154,13 @@ bool kgl::ContigReference::verifyCodingSequences(const std::shared_ptr<const Gen
     }
     if (not coding_table_.checkStopCodon(coding_sequence)) {
 
+      if (verbose) {
 
-      ExecEnv::log().vinfo("No STOP codon: {} Gene: {}, Sequence (mRNA): {} | last codon: {}",
-                           (Codon::codonLength(coding_sequence)-1),
-                           sequence.second->getGene()->id(),
-                           sequence.second->getCDSParent()->id(),
-                           coding_table_.lastCodon(coding_sequence).getSequenceAsString());
-
-      if (ExecEnv::log().verbose()) {
+        ExecEnv::log().info("No STOP codon: {} Gene: {}, Sequence (mRNA): {} | last codon: {}",
+                            (Codon::codonLength(coding_sequence)-1),
+                            sequence.second->getGene()->id(),
+                            sequence.second->getCDSParent()->id(),
+                            coding_table_.lastCodon(coding_sequence).getSequenceAsString());
 
         gene_ptr->recusivelyPrintsubfeatures();
 
@@ -165,13 +171,13 @@ bool kgl::ContigReference::verifyCodingSequences(const std::shared_ptr<const Gen
     size_t nonsense_index = coding_table_.checkNonsenseMutation(coding_sequence);
     if (nonsense_index > 0) {
 
+      if (verbose) {
 
-      ExecEnv::log().vinfo("NONSENSE mutation codon:{} Gene: {}, Sequence (mRNA): {} | stop codon: {}",
-                           nonsense_index,
-                           sequence.second->getGene()->id(),
-                           sequence.second->getCDSParent()->id(),
-                           Codon(coding_sequence, nonsense_index).getSequenceAsString());
-      if (ExecEnv::log().verbose()) {
+        ExecEnv::log().info("NONSENSE mutation codon:{} Gene: {}, Sequence (mRNA): {} | stop codon: {}",
+                            nonsense_index,
+                            sequence.second->getGene()->id(),
+                            sequence.second->getCDSParent()->id(),
+                            Codon(coding_sequence, nonsense_index).getSequenceAsString());
 
         gene_ptr->recusivelyPrintsubfeatures();
 

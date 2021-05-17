@@ -191,17 +191,14 @@ std::string kol::GoGraph::getTermDescription(const std::string &term) const {
 */
 kol::GoGraph::GoVertex kol::GoGraph::getRoot() const {
 
-  //Create vertex iterators
-  GoVertexIterator vi, vend;
-
   //creat a vertex variable
   GoVertex root;
-
-  for (boost::tie(vi, vend) = boost::vertices(_goGraph); vi != vend; ++vi) {
+  auto [vertex_iter, vertex_end] = boost::vertices(_goGraph);
+  for (; vertex_iter != vertex_end; ++vertex_iter) {
     //if it has no out edges it is a root
-    if (boost::out_degree(*vi, _goGraph) == 0) {
+    if (boost::out_degree(*vertex_iter, _goGraph) == 0) {
       //set the variable and break the loop
-      root = *vi;
+      root = *vertex_iter;
       break;
     }
   }
@@ -212,7 +209,7 @@ kol::GoGraph::GoVertex kol::GoGraph::getRoot() const {
 
 //! A helper method to return the ontology of a term by term string
 /*!
-  This method returns the term's ontoogy taking a string term as an argument
+  This method returns the term's ontology taking a string term as an argument
 */
 kol::GO::Ontology kol::GoGraph::getTermOntology(const std::string &term) const {
 
@@ -222,7 +219,8 @@ kol::GO::Ontology kol::GoGraph::getTermOntology(const std::string &term) const {
 
   } else {
 
-    return _goGraph[getTermIndex(term)].ontology;
+    size_t index = getTermIndex(term);
+    return _goGraph[index].ontology;
 
   }
 
@@ -234,8 +232,8 @@ kol::GO::Ontology kol::GoGraph::getTermOntology(const std::string &term) const {
 */
 kol::GO::Ontology kol::GoGraph::getTermOntologyByIndex(std::size_t index) const {
 
-  GoVertex v = getVertexByIndex(index);
-  return _goGraph[v].ontology;
+  GoVertex vertex = getVertexByIndex(index);
+  return _goGraph[vertex].ontology;
 
 }
 
@@ -376,10 +374,12 @@ kol::OntologySetType<std::string> kol::GoGraph::getParentTerms(const std::string
     GoVertex vertex = getVertexByName(term);
     OntologySetType<std::string> parents;
 
-    OutEdgeIterator ei, end;
-    for (boost::tie(ei, end) = boost::out_edges(vertex, _goGraph); ei != end; ++ei) {
-      GoVertex v = boost::target(*ei, _goGraph);
-      parents.insert(_goGraph[v].termId);
+    auto [parent_vertex_iter, parent_vertex_end] = boost::out_edges(vertex, _goGraph);
+    for (; parent_vertex_iter != parent_vertex_end; ++parent_vertex_iter) {
+
+      GoVertex parent_vertex = boost::target(*parent_vertex_iter, _goGraph);
+      parents.insert(_goGraph[parent_vertex].termId);
+
     }
 
     return parents;
@@ -403,10 +403,12 @@ kol::OntologySetType<std::string> kol::GoGraph::getChildTerms(const std::string 
     GoVertex vertex = getVertexByName(term);
     OntologySetType<std::string> children;
 
-    InEdgeIterator ei, end;
-    for (boost::tie(ei, end) = boost::in_edges(vertex, _goGraph); ei != end; ++ei) {
-      GoVertex v = boost::source(*ei, _goGraph);
-      children.insert(_goGraph[v].termId);
+    auto [child_vertex_iter, child_vertex_end] = boost::in_edges(vertex, _goGraph);
+    for (; child_vertex_iter != child_vertex_end; ++child_vertex_iter) {
+
+      GoVertex child_vertex = boost::source(*child_vertex_iter, _goGraph);
+      children.insert(_goGraph[child_vertex].termId);
+
     }
 
     return children;
@@ -428,15 +430,30 @@ bool kol::GoGraph::isLeaf(const std::string &term) const {
   } else {
 
     GoVertex vertex = getVertexByName(term);
-
-    InEdgeIterator ei, end;
-    boost::tie(ei, end) = boost::in_edges(vertex, _goGraph);
-
-    return ei == end;
+    auto [vertex_begin, vertex_end] = boost::in_edges(vertex, _goGraph);
+    return vertex_begin == vertex_end;
 
   }
 
 }
+
+
+kol::GoGraph::GoVertex kol::GoGraph::getRightLeaf(GoVertex vertex) const {
+
+  do {
+
+    auto [edge_begin, edge_end] = boost::in_edges(vertex, _goGraph);
+    if (edge_begin == edge_end) {
+
+      return vertex;
+
+    }
+    vertex = boost::target(*edge_begin, _goGraph);
+
+  } while(true);
+
+}
+
 
 //! A helper method to retrieve all terms in the GoGraph
 /*!
@@ -626,7 +643,7 @@ kol::GoGraph::Graph& kol::GoGraph::getInducedSubgraph(const std::string &termId)
 //! A method to calculate the number of connected components of the graph
 /*!
   This method calculates the number of connected components in the graph.
-    This is used to check if the GO graph conatains only the 3 sub-ontologies.
+    This is used to check if the GO graph contains only the 3 sub-ontologies.
 */
 std::size_t kol::GoGraph::getNumComponents() const {
 
@@ -655,10 +672,10 @@ std::size_t kol::GoGraph::getNumComponents() const {
 }
 
 
-//! A private recursive helper method to get the desendant terms for a given term.
+//! A private recursive helper method to get the descendant terms for a given term.
 /*!
   This method is wrapped by a public method. It traverses the children of a node,
-    populating the map with node indices of desendant terms.
+    populating the map with node indices of descendant terms.
 */
 void kol::GoGraph::getDescendantTermsHelper(GoVertex vertex, OntologyMapType<std::size_t, bool> &desendantMap) const {
   //create edge iterators
@@ -687,10 +704,10 @@ void kol::GoGraph::getAncestorTermsHelper(GoVertex vertex, OntologyMapType<std::
 
   //loop over each edge
   for (boost::tie(ei, end) = boost::out_edges(vertex, _goGraph); ei != end; ++ei) {
-    //get the soruce vertex ( specific --is_a--> general )
+    //get the source vertex ( specific --is_a--> general )
     GoVertex v = boost::target(*ei, _goGraph);
 
-    //add the vertex index to the desendant map, addressed in the method call
+    //add the vertex index to the descendant map, addressed in the method call
     //  redundancies are handled by the map
     ancestorMap[_vMap[v]] = true;
 
