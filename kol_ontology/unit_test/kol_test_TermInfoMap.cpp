@@ -84,39 +84,6 @@ BOOST_FIXTURE_TEST_SUITE(TestTermInfoMapSuite, kol::TestTermInfoMap)
 ///////////////////////////////////////////////
 
 
-BOOST_AUTO_TEST_CASE(test_get_values_type)
-{
-
-  auto values = termMap().getValues();
-  if constexpr(std::is_same<decltype(values), std::vector<double>>::value) {
-
-    BOOST_TEST_MESSAGE( "test_get_values_type ... OK" );
-
-  } else {
-
-    BOOST_FAIL("Expected returned type 'std::vector<double>>'" );
-
-  }
-
-}
-
-
-BOOST_AUTO_TEST_CASE(test_get_keys_type)
-{
-
-  auto keys = termMap().getKeys();
-  if constexpr(std::is_same<decltype(keys), std::vector<std::string>>::value) {
-
-    BOOST_TEST_MESSAGE( "test_get_keys_type ... OK" );
-
-  } else {
-
-    BOOST_FAIL("Expected returned type 'std::vector<std::string>'" );
-
-  }
-
-}
-
 BOOST_AUTO_TEST_CASE(test_number_of_values)
 {
 
@@ -130,7 +97,7 @@ BOOST_AUTO_TEST_CASE(test_number_of_keys)
 {
 
   const size_t vertex_count = goGraph().getNumVertices();
-  if (termMap().getKeys().size() != vertex_count) BOOST_FAIL("Info Map Keys not equal to GoGraph Vertices" );
+  if (termMap().getValues().size() != vertex_count) BOOST_FAIL("Info Map Keys not equal to GoGraph Vertices" );
   BOOST_TEST_MESSAGE( "test_number_of_keys ... OK" );
 
 }
@@ -155,7 +122,7 @@ BOOST_AUTO_TEST_CASE(test_bracket_access)
 {
 
   const double info{13.52886195};
-  auto value = termMap()["GO:0000015"];
+  auto value = termMap().getValue("GO:0000015");
   BOOST_CHECK_CLOSE( value, info, TEST_ACCURACY_PERCENT);
   BOOST_TEST_MESSAGE( "test_bracket_access ... OK" );
 
@@ -165,7 +132,7 @@ BOOST_AUTO_TEST_CASE(test_bracket_access)
 BOOST_AUTO_TEST_CASE(test_root_depth_0_BP)
 {
 
-  if (termMap()[kol::GO::getRootTermBP()] != 0.0) BOOST_FAIL("Root node depth is not zero" );
+  if (termMap().getValue(kol::GO::getRootTermBP()) != 0.0) BOOST_FAIL("Root node depth is not zero" );
   BOOST_TEST_MESSAGE( "test_root_depth_0_BP ... OK" );
 
 }
@@ -173,7 +140,7 @@ BOOST_AUTO_TEST_CASE(test_root_depth_0_BP)
 BOOST_AUTO_TEST_CASE(test_root_depth_0_MF)
 {
 
-  if (termMap()[kol::GO::getRootTermMF()] != 0.0) BOOST_FAIL("Root node depth is not zero" );
+  if (termMap().getValue(kol::GO::getRootTermMF()) != 0.0) BOOST_FAIL("Root node depth is not zero" );
   BOOST_TEST_MESSAGE( "test_root_depth_0_MF ... OK" );
 
 }
@@ -181,7 +148,7 @@ BOOST_AUTO_TEST_CASE(test_root_depth_0_MF)
 BOOST_AUTO_TEST_CASE(test_root_depth_0_CC)
 {
 
-  if (termMap()[kol::GO::getRootTermCC()] != 0.0) BOOST_FAIL("Root node depth is not zero" );
+  if (termMap().getValue(kol::GO::getRootTermCC()) != 0.0) BOOST_FAIL("Root node depth is not zero" );
   BOOST_TEST_MESSAGE( "test_root_depth_0_CC ... OK" );
 
 }

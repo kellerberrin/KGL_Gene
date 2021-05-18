@@ -30,7 +30,7 @@ public:
   Creates the MazanduSimGICSetSimilarity class assigning the GoGraph private member.
   */
   MazanduSimDICSetSimilarity( const std::shared_ptr<const GoGraph> &graph,
-                              const std::shared_ptr<const TermInformationContentMap> &icMap)
+                              const std::shared_ptr<const TermInformationInterface> &icMap)
       : _graph(graph), _icMap(icMap) {}
 
   ~MazanduSimDICSetSimilarity() override = default;
@@ -54,7 +54,7 @@ private:
   /*!
     An information content map.
   */
-  std::shared_ptr<const TermInformationContentMap> _icMap;
+  std::shared_ptr<const TermInformationInterface> _icMap;
 
   //! A method for calculating the sum of information content of the terms in a set.
   /*!

@@ -109,12 +109,15 @@ void kgl::OntologyDatabaseTest::checkICs() const {
 
   std::shared_ptr<const kol::TermInformationContentMap> term_map_ptr_ = std::make_shared<const kol::TermInformationContentMap>(ontology_db_ptr_->goGraph(),
                                                                                                                                ontology_db_ptr_->annotation());
+
+  std::shared_ptr<const kol::TermInformationContentUnique> unique_map_ptr_ = std::make_shared<const kol::TermInformationContentUnique>(ontology_db_ptr_->goGraph(),
+                                                                                                                                       ontology_db_ptr_->annotation());
+
   for (auto const& [go_term, ic_value] : IC_map) {
 
-    double map_ic_value = term_map_ptr_->getValue(go_term);
-    double alt_ic_value = term_map_ptr_->getMapValue(go_term);
-    std::string ontology = term_map_ptr_->getMapOntology(go_term);
-    out_file << go_term << ',' << ic_value << ',' << map_ic_value << ',' << alt_ic_value << ',' << ontology << '\n';
+    double alt_ic_value = term_map_ptr_->getValue(go_term);
+    double unique_ic_value = unique_map_ptr_->getValue(go_term);
+    out_file << go_term << ',' << ic_value << ',' << unique_ic_value << ',' << alt_ic_value <<  '\n';
 
   }
 

@@ -367,6 +367,8 @@ public:
     This method returns a set of term strings
   */
   [[nodiscard]] OntologySetType<std::string> getAllTerms() const;
+  // Returns all terms and term ontology.
+  [[nodiscard]] OntologyMapType<std::string, GO::Ontology> getAllOntTerms() const;
 
   //! A helper method to retrieve all terms in the GoGraph belonging to the BIOLOGICAL_PROCESS ontology
   /*!

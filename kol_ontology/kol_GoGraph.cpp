@@ -3,6 +3,7 @@
 //
 
 #include "kol_GoGraph.h"
+#include "kel_exec_env.h"
 
 namespace kol = kellerberrin::ontology;
 
@@ -464,12 +465,41 @@ kol::OntologySetType<std::string> kol::GoGraph::getAllTerms() const {
   //create a collection to return
   OntologySetType<std::string> outSet;
   for (std::size_t i = 0; i < getNumVertices(); ++i) {
-    GoVertex v = getVertexByIndex(i);
-    outSet.insert(_goGraph[v].termId);
+
+    GoVertex vertex = getVertexByIndex(i);
+    outSet.insert(_goGraph[vertex].termId);
+
   }
   return outSet;
 
 }
+
+
+//! A helper method to retrieve all terms in the GoGraph
+/*!
+  This method returns a set of term strings
+*/
+kol::OntologyMapType<std::string, kol::GO::Ontology> kol::GoGraph::getAllOntTerms() const {
+
+  //create a collection to return
+  OntologyMapType<std::string, GO::Ontology> outMap;
+  for (std::size_t i = 0; i < getNumVertices(); ++i) {
+
+    GoVertex vertex = getVertexByIndex(i);
+    auto [iter, result] = outMap.try_emplace(_goGraph[vertex].termId, _goGraph[vertex].ontology);
+    if (not result) {
+
+      std::string term_id = _goGraph[vertex].termId;
+      ExecEnv::log().error("GoGraph::getAllOntTerms; duplicate GO term: {}", term_id);
+
+    }
+
+  }
+
+  return outMap;
+
+}
+
 
 //! A helper method to retrieve all terms in the GoGraph belonging to the BIOLOGICAL_PROCESS ontology
 /*!

@@ -1,9 +1,9 @@
-/*=============================================================================
-Copyright (c) 2016 Paul W. Bible
-Distributed under the Boost Software License, Version 1.0.
-==============================================================================*/
-#ifndef KGL_TERM_PROBABILITY_MAP
-#define KGL_TERM_PROBABILITY_MAP
+//
+// Created by kellerberrin on 18/5/21.
+//
+
+#ifndef KOL_TERMPROBABILITYUNIQUE_H
+#define KOL_TERMPROBABILITYUNIQUE_H
 
 
 #include "kol_GoGraph.h"
@@ -24,27 +24,27 @@ namespace kellerberrin::ontology {
 */
 
 
-class TermProbabilityMap : public TermProbabilityInterface {
+class TermProbabilityUnique : public TermProbabilityInterface {
 public:
 
   //! A default constructor
   /*!
     Default constructor should not be used.
   */
-  TermProbabilityMap() = delete;
-  ~TermProbabilityMap() override = default;
+  TermProbabilityUnique() = delete;
+  ~TermProbabilityUnique() override = default;
   //! A parameterized constructor
   /*!
     This constructor takes pointers to GoGraph and AnnotationData objects.
       Only the parameterized constructor is allowed to ensure these objects are
       created with valid parameters.
   */
-  TermProbabilityMap(const std::shared_ptr<const GoGraph> &graph,
-                     const std::shared_ptr<const AnnotationData> &annotation_data) {
+  TermProbabilityUnique( const std::shared_ptr<const GoGraph> &graph,
+                         const std::shared_ptr<const AnnotationData> &annotation_data) {
 
     // Set the default minimum probability policy for normalization
     is_single_anno_min_ = false;
-    calcProbabilityMap(graph, annotation_data);
+    calcProbability(graph, annotation_data);
 
   }
 
@@ -54,7 +54,6 @@ public:
   */
 
   [[nodiscard]] const TermProbOntMap &getValues() const override { return probability_map_; }
-
 
   //! Method to test if the id exists in the map
   /*!
@@ -130,7 +129,6 @@ private:
   */
 
   TermProbOntMap probability_map_;
-  TermProbOntMap singular_probability_map_;
 
   //! A flag designating the minimum policy
   /*!
@@ -181,11 +179,10 @@ private:
   double cc_normalization_min_min_anno_;
 
 
-  void calcProbabilityMap( const std::shared_ptr<const GoGraph> &graph,
-                           const std::shared_ptr<const AnnotationData> &annotation_data);
+  [[nodiscard]] double getRootCount(const std::string& root_id) const;
 
-  double getRootCount(const std::string& root_id) const;
-
+  void calcProbability(const std::shared_ptr<const GoGraph> &graph,
+                       const std::shared_ptr<const AnnotationData> &annotation_data);
 
   //! Private method for calculating the most informative common ancestor value
   /*!
@@ -203,6 +200,8 @@ private:
 
 };
 
+
 }  // namespace
 
-#endif
+
+#endif //KOL_TERMPROBABILITYUNIQUE_H

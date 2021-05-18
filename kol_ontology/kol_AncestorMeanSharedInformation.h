@@ -33,7 +33,7 @@ public:
     Creates the AncestorMeanSharedInformation class
   */
   AncestorMeanSharedInformation( const std::shared_ptr<const GoGraph> &graph_ptr,
-                                 const std::shared_ptr<const TermInformationContentMap> &ic_map_ptr)
+                                 const std::shared_ptr<const TermInformationInterface> &ic_map_ptr)
       : graph_ptr_(graph_ptr), ic_map_ptr_(ic_map_ptr) {}
 
   ~AncestorMeanSharedInformation() override = default;
@@ -76,7 +76,7 @@ public:
 private:
 
   std::shared_ptr<const GoGraph> graph_ptr_;
-  std::shared_ptr<const TermInformationContentMap> ic_map_ptr_;
+  std::shared_ptr<const TermInformationInterface> ic_map_ptr_;
 
 
 };

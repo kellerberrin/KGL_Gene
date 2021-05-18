@@ -92,8 +92,8 @@ std::vector<std::string> kgl::OntologyGeneCache::getAllGOVector(const std::share
 
 std::shared_ptr<const kol::LinSimilarity> kgl::OntologyGeneCache::getLinSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) {
 
-  std::shared_ptr<const kol::TermInformationContentMap> info_map_ptr(std::make_shared<const kol::TermInformationContentMap>(ontology_db_ptr->goGraph(),
-                                                                                                                            ontology_db_ptr->annotation()));
+  std::shared_ptr<const kol::TermInformationContentUnique> info_map_ptr(std::make_shared<const kol::TermInformationContentUnique>( ontology_db_ptr->goGraph(),
+                                                                                                                                   ontology_db_ptr->annotation()));
   return std::make_shared<const kol::LinSimilarity>(ontology_db_ptr->goGraph(), info_map_ptr);
 
 }
@@ -101,16 +101,16 @@ std::shared_ptr<const kol::LinSimilarity> kgl::OntologyGeneCache::getLinSimilari
 
 std::shared_ptr<const kol::ResnikSimilarity> kgl::OntologyGeneCache::getResnikSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) {
 
-  std::shared_ptr<const kol::TermInformationContentMap> info_map_ptr(std::make_shared<const kol::TermInformationContentMap>(ontology_db_ptr->goGraph(),
-                                                                                                                            ontology_db_ptr->annotation()));
+  std::shared_ptr<const kol::TermInformationContentUnique> info_map_ptr(std::make_shared<const kol::TermInformationContentUnique>( ontology_db_ptr->goGraph(),
+                                                                                                                                   ontology_db_ptr->annotation()));
   return std::make_shared<const kol::ResnikSimilarity>(ontology_db_ptr->goGraph(), info_map_ptr);
 
 }
 
 std::shared_ptr<const kol::JiangConrathSimilarity> kgl::OntologyGeneCache::getJiangSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) {
 
-  std::shared_ptr<const kol::TermInformationContentMap> info_map_ptr(std::make_shared<const kol::TermInformationContentMap>(ontology_db_ptr->goGraph(),
-                                                                                                                            ontology_db_ptr->annotation()));
+  std::shared_ptr<const kol::TermInformationContentUnique> info_map_ptr(std::make_shared<const kol::TermInformationContentUnique>( ontology_db_ptr->goGraph(),
+                                                                                                                                   ontology_db_ptr->annotation()));
   return std::make_shared<const kol::JiangConrathSimilarity>(ontology_db_ptr->goGraph(), info_map_ptr);
 
 }
