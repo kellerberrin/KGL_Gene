@@ -248,7 +248,6 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_AnnotationData.h
         kol_ontology/kol_AnnotationParserFactory.h
         kol_ontology/kol_AnnotationParserInterface.h
-        kol_ontology/kol_AppUtilities.h
         kol_ontology/kol_BestMatchAverageSetSimilarity.h
         kol_ontology/kol_CoutoGraSMAdjustedSharedInformation.h
         kol_ontology/kol_CoutoGraSMSharedInformation.h
@@ -277,7 +276,6 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_ModularJiangConrath.h
         kol_ontology/kol_ModularLin.h
         kol_ontology/kol_ModularResnik.h
-        kol_ontology/kol_NCList.h
         kol_ontology/kol_PekarStaabSimilarity.h
         kol_ontology/kol_PesquitaSimGICSetSimilarity.h
         kol_ontology/kol_PrecomputedMatrixTermSimilarity.h
@@ -287,7 +285,6 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_ResnikSimilarity.h
         kol_ontology/kol_SetUtilities.h
         kol_ontology/kol_SharedInformationInterface.h
-        kol_ontology/kol_SimpleRegion.h
         kol_ontology/kol_StandardOboGoParser.h
         kol_ontology/kol_StandardRelationshipPolicy.h
         kol_ontology/kol_StandardXmlGoParser.h
@@ -343,7 +340,7 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_AnnotationData.cpp
         kol_ontology/kgl_ontology/kgl_gene_cache_ontology.cpp
         kol_ontology/kgl_ontology/kgl_gene_cache_ontology.h
-        kol_ontology/kgl_ontology/kgl_ontology_database_test.cpp kol_ontology/kgl_ontology/kgl_ontology_database_test.h kol_ontology/kol_TermProbabilityInterface.h kol_ontology/kol_TermInformationInterface.h kol_ontology/kol_TermProbabilityUnique.cpp kol_ontology/kol_TermProbabilityUnique.h)
+        kol_ontology/kgl_ontology/kgl_ontology_database_test.cpp kol_ontology/kgl_ontology/kgl_ontology_database_test.h kol_ontology/kol_TermProbabilityInterface.h kol_ontology/kol_TermInformationInterface.h kol_ontology/kol_TermProbabilityUnique.cpp kol_ontology/kol_TermProbabilityUnique.h kol_ontology/kol_ModularRelevance.h)
 
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES
@@ -387,7 +384,7 @@ set(ONTOLOGY_UNIT_TEST_FILES
         kol_ontology/unit_test/kol_test_TermSimMatrix_LIN_MF.cpp
         kol_ontology/unit_test/kol_test_TermSimMatrix_RES_CC.cpp
         kol_ontology/unit_test/kol_test_TermSimCache_LIN_BP.cpp
-        kol_ontology/unit_test/kol_test_data.h )
+        kol_ontology/unit_test/kol_test_data.h kol_ontology/unit_test/kol_test_ModularRelevance.cpp)
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES

@@ -1,9 +1,10 @@
-/*=============================================================================
-Copyright (c) 2016 Paul W. Bible
-Distributed under the Boost Software License, Version 1.0.
-==============================================================================*/
-#ifndef KGL_RELEVANCE_SIMILARITY
-#define KGL_RELEVANCE_SIMILARITY
+//
+// Created by kellerberrin on 19/5/21.
+//
+
+#ifndef KOL_MODULARRELEVANCE_H
+#define KOL_MODULARRELEVANCE_H
+
 
 #include "kol_TermSimilarityInterface.h"
 #include "kol_TermInformationContentMap.h"
@@ -16,20 +17,20 @@ namespace kellerberrin::ontology {
 /*! \class RelevanceSimilarity
 
 	This class calculates Relevance similarity.
-	
-	A. Schlicker, F. S. Domingues, J. Rahnenfuhrer, and T. Lengauer, 
+
+	A. Schlicker, F. S. Domingues, J. Rahnenfuhrer, and T. Lengauer,
 	 "A new measure for functional similarity of gene products based
 	 on Gene Ontology," BMC Bioinformatics, vol. 7, p. 302, 2006.
 
-	P. W. Lord, R. D. Stevens, A. Brass, and C. A. Goble, 
+	P. W. Lord, R. D. Stevens, A. Brass, and C. A. Goble,
 	 "Semantic similarity measures as tools for exploring the gene ontology,"
 	 Pac Symp Biocomput, pp. 601-12, 2003.
-	  
-	  Basically this is Lin similarity scaled by the 
+
+	  Basically this is Lin similarity scaled by the
 	   complement of the probability of the mica
 	2 * IC(MICA) / ( IC(termA) + IC(termB) )*(1-p(Mica))
 */
-class RelevanceSimilarity : public TermSimilarityInterface {
+class ModularRelevance : public TermSimilarityInterface {
 
 public:
 
@@ -37,11 +38,10 @@ public:
   /*!
     Creates the default(empty) StandardRelationshipPolicy
   */
-  RelevanceSimilarity( const std::shared_ptr<const GoGraph> &graph_ptr,
-                       const std::shared_ptr<const TermInformationInterface> &ic_map_ptr)
-      : graph_ptr_(graph_ptr), ic_map_ptr_(ic_map_ptr) {}
+  ModularRelevance( const std::shared_ptr<const SharedInformationInterface> &shared_info_ptr)
+      : shared_info_ptr_(shared_info_ptr) {}
 
-  ~RelevanceSimilarity() override = default;
+  ~ModularRelevance() override = default;
 
   //! A method for calculating term-to-term similarity for GO terms using Relevance similarity
   /*!
@@ -62,11 +62,11 @@ public:
 
 private:
 
-  std::shared_ptr<const GoGraph> graph_ptr_;
-  std::shared_ptr<const TermInformationInterface> ic_map_ptr_;
+  //! private SharedInformationInterface member used for calculations
+  std::shared_ptr<const SharedInformationInterface> shared_info_ptr_;
 
 };
 
 }   // namespace
 
-#endif
+#endif //KOL_MODULARRELEVANCE_H

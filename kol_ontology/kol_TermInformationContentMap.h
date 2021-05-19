@@ -90,9 +90,6 @@ public:
     This function returns the the maximum information content for an ontology class
   */
 
-  [[nodiscard]] double getMaxInformation(GO::Ontology ontology) const override;
-
-  // convenience function retrieves the maximum information content of the ontology of the GO term id.
   [[nodiscard]] double getMaxInformation(const std::string term_id) const override;
 
   //! Public method for calculating the most informative common ancestor value
@@ -113,7 +110,7 @@ private:
   void convertProbtoIC();
   [[nodiscard]] double getEfficientMICA( const OntologySetType<std::string> &smaller_set,
                                          const OntologySetType<std::string> &larger_set) const;
-
+  [[nodiscard]] double getMaxInformation(GO::Ontology ontology) const;
 
 };
 

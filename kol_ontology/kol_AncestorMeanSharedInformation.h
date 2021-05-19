@@ -57,21 +57,16 @@ public:
   */
   [[nodiscard]] double maxInformationContent(const std::string &term) const override;
 
-  //! An interface method for determining if a term can be found
+  //! Method to test if the ids exist and have the same ontology in the map
   /*!
-    Determines if the term can be found in the current map.
+    Return true the ids are found and the same ontology, false if not
   */
-  [[nodiscard]] bool hasTerm(const std::string &term) const override { return ic_map_ptr_->hasTerm(term); }
+  [[nodiscard]] bool validateTerms(const std::string &id_termA, const std::string &id_termB) const override {
 
-  //! An interface method for determining if the two terms are of like ontologies.
-  /*!
-    Determine if two terms are of the same ontology.
-  */
-  [[nodiscard]] bool isSameOntology(const std::string &termA, const std::string &termB) const override {
-
-    return graph_ptr_->getTermOntology(termA) == graph_ptr_->getTermOntology(termB);
+    return ic_map_ptr_->validateTerms(id_termA, id_termB);
 
   }
+
 
 private:
 

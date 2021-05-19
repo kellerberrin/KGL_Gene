@@ -44,20 +44,11 @@ public:
   */
   [[nodiscard]] virtual double maxInformationContent(const std::string &term) const = 0;
 
-  //! A pure virtual method for determining if a term can be found.
+  //! Method to test if the ids exist and have the same ontology in the map
   /*!
-    This pure virtual method requires any shared information class to implement this method.
-    This method provides a method for client classes to determine if a term can be found by the method.
+    Return true the ids are found and the same ontology, false if not
   */
-  [[nodiscard]] virtual bool hasTerm(const std::string &term) const = 0;
-
-  //! A pure virtual method for determining if the two terms are of like ontologies.
-  /*!
-    This pure virtual method requires any shared information class to implement this method.
-    This method provides a method for client classes to determine if two terms are of the same ontology.
-  */
-  [[nodiscard]] virtual bool isSameOntology(const std::string &termA, const std::string &termB) const = 0;
-
+  [[nodiscard]] virtual bool validateTerms(const std::string &id_termA, const std::string &id_termB) const = 0;
 
 };
 

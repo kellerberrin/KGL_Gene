@@ -13,18 +13,18 @@ namespace kol = kellerberrin::ontology;
 /*!
   This method returns the Relevance similarity.
 */
-double kol::RelevanceSimilarity::calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const {
+double kol::RelevanceSimilarity::calculateTermSimilarity(const std::string &go_termA, const std::string &go_termB) const {
   //if the terms do not exit return 0.0 similarity
-  if (not ic_map_ptr_->validateTerms(goTermA, goTermB)) {
+  if (not ic_map_ptr_->validateTerms(go_termA, go_termB)) {
 
     return 0.0;
 
   }
 
   //get the MICA value (zero if no mica term)
-  double mica_value = ic_map_ptr_->getMICAinfo(goTermA, goTermB, *graph_ptr_);
+  double mica_value = ic_map_ptr_->getMICAinfo(go_termA, go_termB, *graph_ptr_);
   double complement_prob_mica = 1.0 - std::exp(-1.0 * mica_value);
-  double denom = (ic_map_ptr_->getValue(goTermA) + ic_map_ptr_->getValue(goTermB));
+  double denom = (ic_map_ptr_->getValue(go_termA) + ic_map_ptr_->getValue(go_termB));
 
   if (denom == 0.0 or mica_value == 0.0) {
 

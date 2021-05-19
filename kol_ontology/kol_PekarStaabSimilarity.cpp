@@ -45,7 +45,7 @@ double kol::PekarStaabSimilarity::calculateTermSimilarity(const std::string &goT
 
   if (denom == 0) {
 
-    return 0;
+    return 0.0;
 
   } else {
 

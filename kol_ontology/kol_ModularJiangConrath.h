@@ -49,7 +49,7 @@ public:
   /*!
     This method returns the Resnik similarity or the information content of the most informative common ancestor.
   */
-  [[nodiscard]] double calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override;
+  [[nodiscard]] double calculateTermSimilarity(const std::string &go_termA, const std::string &go_termB) const override;
   //! A method for calculating term-to-term similarity for GO terms using normalized Lin similarity
   /*!
     This method returns the Lin similarity. Lin similarity is already normalized

@@ -48,25 +48,6 @@ public:
 
   ~CoutoGraSMAdjustedSharedInformation() override = default;
 
-  //! Calculate disjunctive ancestors.
-  /*!
-    A method for determining common disjunctive ancestors for two terms
-  */
-  [[nodiscard]] OntologySetType<std::string> getCommonDisjointAncestors( const std::string &termC1,
-                                                                         const std::string &termC2) const;
-
-  //! Determine if a terms are disjoint in a concept.
-  /*!
-    A method for determining if, for a term c, a pair (a1,a2) is disjoint in c
-  */
-  [[nodiscard]] bool isDisjoint(const std::string &termC, const std::string &termA1, const std::string &termA2) const;
-
-  //! Calculate the number of paths between two concept terms.
-  /*!
-    A method for calculating the number of paths from one term to another.
-  */
-  [[nodiscard]] size_t getNumPaths(const std::string &termA, const std::string &termB) const;
-
   //! Shared infromation between two conecepts.
   /*!
     A method for calculating the shared infromation between two concepts.
@@ -85,26 +66,15 @@ public:
   */
   [[nodiscard]] double maxInformationContent(const std::string &term) const override;
 
-  //! An interface method for determining if a term can be found
+  //! Method to test if the ids exist and have the same ontology in the map
   /*!
-    Determines if the term can be found in the current map.
+    Return true the ids are found and the same ontology, false if not
   */
-  [[nodiscard]] bool hasTerm(const std::string &term) const override {
+  [[nodiscard]] bool validateTerms(const std::string &id_termA, const std::string &id_termB) const override {
 
-    return ic_map_ptr_->hasTerm(term);
+    return ic_map_ptr_->validateTerms(id_termA, id_termB);
 
   }
-
-  //! An interface method for determining if the two terms are of like ontologies.
-  /*!
-    Determine if two terms are of the same ontology.
-  */
-  [[nodiscard]] bool isSameOntology(const std::string &termA, const std::string &termB) const override {
-
-    return graph_ptr_->getTermOntology(termA) == graph_ptr_->getTermOntology(termB);
-
-  }
-
 
 private:
 
@@ -127,6 +97,25 @@ private:
                    OntologySetType<std::string> &ancestors,
                    OntologySetType<std::string> &finished,
                    OntologyMapType<std::string, size_t> &pathMap) const;
+
+  //! Calculate disjunctive ancestors.
+  /*!
+    A method for determining common disjunctive ancestors for two terms
+  */
+  [[nodiscard]] OntologySetType<std::string> getCommonDisjointAncestors( const std::string &termC1,
+                                                                         const std::string &termC2) const;
+
+  //! Determine if a terms are disjoint in a concept.
+  /*!
+    A method for determining if, for a term c, a pair (a1,a2) is disjoint in c
+  */
+  [[nodiscard]] bool isDisjoint(const std::string &termC, const std::string &termA1, const std::string &termA2) const;
+
+  //! Calculate the number of paths between two concept terms.
+  /*!
+    A method for calculating the number of paths from one term to another.
+  */
+  [[nodiscard]] size_t getNumPaths(const std::string &termA, const std::string &termB) const;
 
   //! A private function to create a string key from a pair of terms
   /*!

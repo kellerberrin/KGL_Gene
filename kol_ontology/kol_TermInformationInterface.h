@@ -62,9 +62,6 @@ public:
     This function returns the the maximum information content for an ontology
   */
 
-  [[nodiscard]] virtual double getMaxInformation(GO::Ontology ontology) const = 0;
-
-  // convenience function retrieves the maximum information content of the ontology of the GO term id.
   [[nodiscard]] virtual double getMaxInformation(const std::string term_id) const = 0;
 
   //! Public method for calculating the most informative common ancestor value
