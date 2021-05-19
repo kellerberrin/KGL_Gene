@@ -62,16 +62,11 @@ kol::OntologySetType<std::string> kol::FrontierSharedInformation::getCommonDisjo
 
   }
 
-  //std::cout << "Linear GraSm " << std::endl;
   OntologySetType<std::string> ancestorsC1 = graph_ptr_->getSelfAncestorTerms(termC1);
-  //std::cout << ancestorsC1.size() << std::endl;
   OntologySetType<std::string> ancestorsC2 = graph_ptr_->getSelfAncestorTerms(termC2);
-  //std::cout << ancestorsC2.size() << std::endl;
-
 
   //Couto: Anc = CommonAnc(c1,c2)
   OntologySetType<std::string> commonAncestors = SetUtilities::setIntersection(ancestorsC1, ancestorsC2);
-  //std::cout << commonAncestors.size() << std::endl;
 
   //commonDisjointAncestors(c,c) = {c}, by definition
   if (commonAncestors.size() == 1) {
@@ -80,7 +75,6 @@ kol::OntologySetType<std::string> kol::FrontierSharedInformation::getCommonDisjo
 
   }
 
-  //std::cout << "CA size " << commonAncestors.size() << std::endl;
 
   //get the boost graph
   const GoGraph::Graph &go_graph = graph_ptr_->getGraph();
@@ -100,15 +94,10 @@ kol::OntologySetType<std::string> kol::FrontierSharedInformation::getCommonDisjo
   //get edges for c1
   boost::breadth_first_search(go_graph, graph_ptr_->getVertexByName(termC2), boost::visitor(c2EdgeVisitor));
 
-  //std::cout << "edges 1 " << edgesC1.size() << std::endl;
-  //std::cout << "edges 2 " << edgesC2.size() << std::endl;
-  //std::cout << "edge map " << termToEdges.size() << std::endl;
 
   for (auto const &term : commonAncestors) {
 
-    //std::cout << term << std::endl;
     OntologySetType<std::size_t> edges = termToEdges[term];
-    //std::cout << edges.size() << std::endl;
 
     bool isDisj = false;
 
@@ -133,7 +122,6 @@ kol::OntologySetType<std::string> kol::FrontierSharedInformation::getCommonDisjo
 
   }
 
-  //std::cout << "frontier cda size " << cda.size() << std::endl;
   return cda;
 
 }
@@ -144,13 +132,7 @@ kol::OntologySetType<std::string> kol::FrontierSharedInformation::getCommonDisjo
 */
 double kol::FrontierSharedInformation::sharedInformation(const std::string &termA, const std::string &termB) const {
 // return 0 for any terms not in the datbase
-  if (not ic_map_ptr_->hasTerm(termA) || not ic_map_ptr_->hasTerm(termB)) {
-
-    return 0.0;
-
-  }
-// return 0 for terms in different ontologies
-  if (graph_ptr_->getTermOntology(termA) != graph_ptr_->getTermOntology(termB)) {
+  if (not ic_map_ptr_->validateTerms(termA, termB)) {
 
     return 0.0;
 
@@ -158,10 +140,9 @@ double kol::FrontierSharedInformation::sharedInformation(const std::string &term
 
   Accumulators::MeanAccumulator meanIC;
   OntologySetType<std::string> cda = getCommonDisjointAncestors(termA, termB);
-//std::cout << "size " << cda.size() << std::endl;
 
   for (auto const &term : cda) {
-//std::cout << ic_map_ptr_[*iter] << std::endl;
+
     meanIC(ic_map_ptr_->getValue(term));
 
   }
@@ -177,11 +158,6 @@ double kol::FrontierSharedInformation::sharedInformation(const std::string &term
 
 double kol::FrontierSharedInformation::sharedInformation(const std::string &term) const {
 // return 0 for any terms not in the datbase
-  if (!ic_map_ptr_->hasTerm(term)) {
-
-    return 0.0;
-
-  }
 
   return ic_map_ptr_->getValue(term);
 
@@ -193,38 +169,6 @@ double kol::FrontierSharedInformation::sharedInformation(const std::string &term
 */
 double kol::FrontierSharedInformation::maxInformationContent(const std::string &term) const {
 
-
-//select the correct ontology normalization factor
-  GO::Ontology ontology = graph_ptr_->getTermOntology(term);
-  double maxIC;
-
-  switch (ontology) {
-
-    case GO::Ontology::BIOLOGICAL_PROCESS:
-      maxIC = ic_map_ptr_->getMinBP();
-      break;
-
-    case GO::Ontology::MOLECULAR_FUNCTION:
-      maxIC = ic_map_ptr_->getMinMF();
-      break;
-
-    case GO::Ontology::CELLULAR_COMPONENT:
-      maxIC = ic_map_ptr_->getMinCC();
-      break;
-
-    default:
-      case GO::Ontology::ONTO_ERROR:
-      maxIC = 0.0;
-      break;
-
-  }
-
-  if (maxIC <= 0.0) {
-
-    return 0.0;
-
-  }
-
-  return -1.0 * std::log(maxIC);
+  return ic_map_ptr_->getMaxInformation(term);
 
 }

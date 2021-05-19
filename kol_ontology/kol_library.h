@@ -17,7 +17,6 @@ Distributed under the Boost Software License, Version 1.0.
 #include "kol_AnnotationData.h"
 #include "kol_AnnotationParserFactory.h"
 #include "kol_AnnotationParserInterface.h"
-#include "kol_AppUtilities.h"
 #include "kol_AsymmetricSimilarityCache.h"
 #include "kol_BestMatchAverageSetSimilarity.h"
 #include "kol_CoutoGraSMAdjustedSharedInformation.h"

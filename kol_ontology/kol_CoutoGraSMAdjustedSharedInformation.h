@@ -20,10 +20,10 @@ namespace kellerberrin::ontology {
 
 
 /*! \class CoutoGraSMAdjustedSharedInformation
-	\brief A class to calculate shared infromation accross disjoint common ancetors using an adjusted algorithm.
+	\brief A class to calculate shared infromation accross disjoint common ancestors using an adjusted algorithm.
 
-	This class calculates shared infromation accross disjoint common ancetors. This is a modification of the
-	 original algorithm provided by Couto. The adjustment changes the contrain to path lengths to strictly greater than.
+	This class calculates shared infromation accross disjoint common ancestors. This is a modification of the
+	 original algorithm provided by Couto.
 	 See line 150.
 
     F. M. Couto, M. J. Silva, and P. M. Coutinho, "Measuring semantic similarity

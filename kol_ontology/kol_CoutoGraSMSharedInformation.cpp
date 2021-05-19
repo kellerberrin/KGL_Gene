@@ -204,39 +204,7 @@ double kol::CoutoGraSMSharedInformation::sharedInformation(const std::string &te
 */
 double kol::CoutoGraSMSharedInformation::maxInformationContent(const std::string &term) const {
 
-
-  //select the correct ontology normalization factor
-  GO::Ontology ontology = graph_ptr_->getTermOntology(term);
-  double maxIC;
-
-  switch (ontology) {
-
-    case GO::Ontology::BIOLOGICAL_PROCESS:
-      maxIC = ic_map_ptr_->getMinBP();
-      break;
-
-    case GO::Ontology::MOLECULAR_FUNCTION:
-      maxIC = ic_map_ptr_->getMinMF();
-      break;
-
-    case GO::Ontology::CELLULAR_COMPONENT:
-      maxIC = ic_map_ptr_->getMinCC();
-      break;
-
-    default:
-    case GO::Ontology::ONTO_ERROR:
-      maxIC = 0.0;
-      break;
-
-  }
-
-  if (maxIC <= 0.0) {
-
-    return 0.0;
-
-  }
-
-  return -1.0 * std::log(maxIC);
+  return ic_map_ptr_->getMaxInformation(term);
 
 }
 

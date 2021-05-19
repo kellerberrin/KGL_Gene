@@ -30,9 +30,12 @@ private:
   std::shared_ptr<const kol::OntologyDatabase> ontology_db_ptr_;
   const static constexpr char* IC_FILE_NAME_ = "Test_IC.csv";
 
-  std::shared_ptr<const kol::LinSimilarity> getLinSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
-  std::shared_ptr<const kol::ResnikSimilarity> getResnikSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
-  std::shared_ptr<const kol::JiangConrathSimilarity> getJiangSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
+  [[nodiscard]] std::shared_ptr<const kol::LinSimilarity> getLinSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
+  [[nodiscard]] std::shared_ptr<const kol::ResnikSimilarity> getResnikSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
+  [[nodiscard]] std::shared_ptr<const kol::JiangConrathSimilarity> getJiangSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
+  [[nodiscard]] std::shared_ptr<const kol::LinSimilarity> getLinUnique(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
+  [[nodiscard]] std::shared_ptr<const kol::ResnikSimilarity> getResnikUnique(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
+  [[nodiscard]] std::shared_ptr<const kol::JiangConrathSimilarity> getJiangUnique(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
 
   void calcPairs() const;
   void checkICs() const;

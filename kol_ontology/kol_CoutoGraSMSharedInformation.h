@@ -22,7 +22,7 @@ namespace kellerberrin::ontology {
 /*! \class CoutoGraSMSharedInformation
 	\brief A class to calculate shared information across disjoint common ancestors using the exact algorithm as written in the paper.
 
-	This class calculates shared information across disjoint common ancsetors.
+	This class calculates shared information across disjoint common ancesetors.
 
     F. M. Couto, M. J. Silva, and P. M. Coutinho, "Measuring semantic similarity
 	between Gene Ontology terms," Data & Knowledge Engineering, vol. 61, 

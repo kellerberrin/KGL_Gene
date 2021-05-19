@@ -33,7 +33,7 @@ public:
 
   //! A pure virtual method for returning the shared information of a single terms,or information content
   /*!
-    This pure virtual method privdes a mechanism for returing a term's infromation content.
+    This pure virtual method privdes a mechanism for returing a term's information content.
   */
   [[nodiscard]] virtual double sharedInformation(const std::string &term) const = 0;
 
@@ -60,6 +60,7 @@ public:
 
 
 };
+
 
 } // namespace
 

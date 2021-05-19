@@ -42,12 +42,11 @@ public:
   */
   [[nodiscard]] virtual bool hasTerm(const std::string &testTerm) const = 0;
 
-  //! Return a default value for a term that does not exist.
+  //! Method to test if the ids exist and have the same ontology in the map
   /*!
-    A value to return if the term is not found (does not exist in the map).
-    Returns probability 1 or certanty. This may not be the ideal behavior.
+    Return true the ids are found and the same ontology, false if not
   */
-//  [[nodiscard]] virtual double badIdValue() const = 0;
+  [[nodiscard]] virtual bool validateTerms(const std::string &id_termA, const std::string &id_termB) const = 0;
 
   //! Mapping function to return the value mapped by key
   /*!
@@ -58,32 +57,22 @@ public:
 
   //-------------------------------------------------------------------
 
-  //! Get the specific minimum probability for BIOLOGICAL_PROCESS
+  //! Get the maximum information content for an ontology
   /*!
-    This function returns the minimum probablity for the bp ontology
+    This function returns the the maximum information content for an ontology
   */
-  [[nodiscard]] virtual double getMinBP() const = 0;
 
-  //! Get the specific minimum probability for MOLECULAR_FUNCTION
-  /*!
-    This function returns the minimum probablity for the mf ontology
-  */
-  [[nodiscard]] virtual double getMinMF() const = 0;
+  [[nodiscard]] virtual double getMaxInformation(GO::Ontology ontology) const = 0;
 
-  //! Get the specific minimum probability for CELLULAR_COMPONENT
-  /*!
-    This function returns the minimum probablity for the cc ontology
-  */
-  [[nodiscard]] virtual double getMinCC() const = 0;
+  // convenience function retrieves the maximum information content of the ontology of the GO term id.
+  [[nodiscard]] virtual double getMaxInformation(const std::string term_id) const = 0;
 
   //! Public method for calculating the most informative common ancestor value
   /*!
     This method searches the sets to determine the most informative ancestor.
   */
 
-  [[nodiscard]] virtual double getMICAinfo( const OntologySetType<std::string> &ancestorsA,
-                                            const OntologySetType<std::string> &ancestorsB) const = 0;
-
+  [[nodiscard]] virtual double getMICAinfo(const std::string& go_termA, const std::string& go_termB, const GoGraph &graph) const = 0;
 
 
 private:

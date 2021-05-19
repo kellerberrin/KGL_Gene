@@ -66,9 +66,15 @@ public:
 
   //! Method to test if the id exists in the map
   /*!
+    Return true the ids are found and the same ontology, false if not
+  */
+  [[nodiscard]] bool validateTerms(const std::string &id_termA, const std::string &id_termB) const override;
+
+  //! Method to test if the id exists in the map
+  /*!
     Return true the id is found, false if not
   */
-  [[nodiscard]] bool hasTerm(const std::string &id_term) const override { return probability_map_.hasTerm(id_term); }
+  [[nodiscard]] bool hasTerm(const std::string &id_term) const override { return getValues().contains(id_term); }
 
   //! Mapping function to return the value mapped by key
   /*!
@@ -79,53 +85,41 @@ public:
 
   //-------------------------------------------------------------------
 
-  //! Get the specific minimum probability for BIOLOGICAL_PROCESS
+  //! Get the maximum information content for an ontology class
   /*!
-    This function returns the minimum probablity for the bp ontology
+    This function returns the the maximum information content for an ontology class
   */
-  [[nodiscard]] double getMinBP() const override { return probability_map_.getMinBP(); }
 
-  //! Get the specific minimum probability for MOLECULAR_FUNCTION
-  /*!
-    This function returns the minimum probablity for the mf ontology
-  */
-  [[nodiscard]] double getMinMF() const override { return probability_map_.getMinMF(); }
+  [[nodiscard]] double getMaxInformation(GO::Ontology ontology) const override;
 
-  //! Get the specific minimum probability for CELLULAR_COMPONENT
-  /*!
-    This function returns the minimum probablity for the cc ontology
-  */
-  [[nodiscard]] double getMinCC() const override { return probability_map_.getMinCC(); }
+  // convenience function retrieves the maximum information content of the ontology of the GO term id.
+  [[nodiscard]] double getMaxInformation(const std::string term_id) const override;
 
   //! Public method for calculating the most informative common ancestor value
   /*!
     This method searches the sets to determine the most informative ancestor.
   */
 
-  [[nodiscard]] double getMICAinfo( const OntologySetType<std::string> &ancestorsA,
-                                    const OntologySetType<std::string> &ancestorsB) const override {
-
-    return probability_map_.getMICAinfo(ancestorsA, ancestorsB);
-
-  }
-
+  [[nodiscard]] double getMICAinfo(const std::string& go_termA, const std::string& go_termB, const GoGraph &graph) const override;
 
 private:
 
   ProbMap probability_map_;
   const static constexpr double BAD_INFO_VALUE_{0.0};
+  double max_bp_information{0.0};
+  double max_mf_information{0.0};
+  double max_cc_information{0.0};
 
   void convertProbtoIC();
+  [[nodiscard]] double getEfficientMICA( const OntologySetType<std::string> &smaller_set,
+                                         const OntologySetType<std::string> &larger_set) const;
+
 
 };
 
 
-//! A parameterized constructor
 /*!
-  This constructor takes pointers to GoGraph and AnnotationData objects.
-    Only the parameterized construtor is allowed to ensure these objects are
-    created with valid parameters.
-    This constructor relies on the TermProbabilityMap.
+  This function converts the probability terms of the probability map to information content.
 */
 template<class ProbMap>
 void InformationContentMap<ProbMap>::convertProbtoIC() {
@@ -141,14 +135,170 @@ void InformationContentMap<ProbMap>::convertProbtoIC() {
     } else {
 
       probability = -1.0 * std::log(probability);
+      switch(ontology) {
+
+        case GO::Ontology::BIOLOGICAL_PROCESS:
+          max_bp_information = std::max(probability, max_bp_information);
+          break;
+
+        case GO::Ontology::MOLECULAR_FUNCTION:
+          max_mf_information = std::max(probability, max_mf_information);
+          break;
+
+        case GO::Ontology::CELLULAR_COMPONENT:
+          max_cc_information = std::max(probability, max_cc_information);
+          break;
+
+        default:
+        case GO::Ontology::ONTO_ERROR:
+          break;
+
+      }
 
     }
 
   }
 
-  probability_map_.setBadValue(0.0);
+  // The probability map has been converted to information content, so change the missing value to 0.0.
+  probability_map_.setBadValue(BAD_INFO_VALUE_);
 
 }
+
+// Find if the information map contains two terms and they have the same ontology.
+template<class ProbMap>
+bool InformationContentMap<ProbMap>::validateTerms(const std::string &id_termA, const std::string &id_termB) const {
+
+  auto result_A = probability_map_.getValues().find(id_termA);
+  if (result_A == probability_map_.getValues().end()) {
+
+    return false;
+
+  }
+
+  auto result_B = probability_map_.getValues().find(id_termB);
+  if (result_B == probability_map_.getValues().end()) {
+
+    return false;
+
+  }
+
+  auto const& [termA, val_ont_A] = *result_A;
+  auto const& [valA, ontA] = val_ont_A;
+
+  auto const& [termB, val_ont_B] = *result_B;
+  auto const& [valB, ontB] = val_ont_B;
+
+  return ontA == ontB;
+
+}
+
+
+//! Public method for calculating the most informative common ancestor value
+/*!
+  This method searches the sets to determine the most informative ancestor.
+*/
+
+template<class ProbMap>
+double InformationContentMap<ProbMap>::getMICAinfo(const std::string& go_termA, const std::string& go_termB, const GoGraph &graph) const {
+
+  //create 2 sets
+  OntologySetType<std::string> ancestorsA = graph.getSelfAncestorTerms(go_termA);
+  OntologySetType<std::string> ancestorsB = graph.getSelfAncestorTerms(go_termB);
+
+  if (ancestorsA.empty() or ancestorsB.empty()) {
+
+    return 0.0;
+
+  }
+
+  // Choose the smaller and larger set for maximum efficiency
+  if (ancestorsA.size() < ancestorsB.size()) {
+
+    return getEfficientMICA(ancestorsA, ancestorsB);
+
+  } else {
+
+    return getEfficientMICA(ancestorsB, ancestorsA);
+
+  }
+
+}
+
+//! Private method for calculating the most informative common ancestor value
+/*!
+  This method searches the sets to determine the most informative ancestor.
+*/
+template<class ProbMap>
+double InformationContentMap<ProbMap>::getEfficientMICA( const OntologySetType<std::string> &smaller_set,
+                                                         const OntologySetType<std::string> &larger_set) const {
+
+  double max{0.0};
+  //loop over shorter list
+  for (auto const &term : smaller_set) {
+
+    if (larger_set.find(term) != larger_set.end()) {
+
+      double term_value = getValue(term);
+      if (term_value > max) {
+
+        max = term_value;
+
+      }
+
+    }
+
+  }
+
+  return max;
+
+}
+
+template<class ProbMap>
+double InformationContentMap<ProbMap>::getMaxInformation(GO::Ontology ontology) const {
+
+  switch(ontology) {
+
+    case GO::Ontology::BIOLOGICAL_PROCESS:
+      return max_bp_information;
+
+    case GO::Ontology::MOLECULAR_FUNCTION:
+      return max_mf_information;
+
+    case GO::Ontology::CELLULAR_COMPONENT:
+      return max_cc_information;
+
+    default:
+    case GO::Ontology::ONTO_ERROR:
+      return 0.0;
+
+  }
+
+}
+
+
+template<class ProbMap>
+double InformationContentMap<ProbMap>::getMaxInformation(const std::string term_id) const {
+
+  auto result = probability_map_.getValues().find(term_id);
+  if (result == probability_map_.getValues().end()) {
+
+    return BAD_INFO_VALUE_;
+
+  }
+
+  auto const& [term, val_ont_pair] = *result;
+  auto const& [value, ontology] = val_ont_pair;
+
+  return getMaxInformation(ontology);
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 // Uses the DAG information/probability content algorithm.

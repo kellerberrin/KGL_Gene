@@ -23,7 +23,7 @@ namespace kellerberrin::ontology {
 /*! \class FrontierSharedInformation
 	\brief A class to calculate shared information across disjoint common ancestors in linear time.
 
-	This class calculates shared infromation along a semantic frontier between terms.
+	This class calculates shared information along a semantic frontier between terms.
 */
 class FrontierSharedInformation : public SharedInformationInterface {
 

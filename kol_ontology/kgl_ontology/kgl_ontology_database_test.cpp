@@ -14,8 +14,8 @@ namespace kgl = kellerberrin::genome;
 
 std::shared_ptr<const kol::LinSimilarity> kgl::OntologyDatabaseTest::getLinSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const {
 
-  std::shared_ptr<const kol::TermInformationContentMap> info_map_ptr(std::make_shared<const kol::TermInformationContentMap>(ontology_db_ptr->goGraph(),
-                                                                                                                            ontology_db_ptr->annotation()));
+  std::shared_ptr<const kol::TermInformationInterface> info_map_ptr(std::make_shared<const kol::TermInformationContentMap>(ontology_db_ptr->goGraph(),
+                                                                                                                           ontology_db_ptr->annotation()));
   return std::make_shared<const kol::LinSimilarity>(ontology_db_ptr->goGraph(), info_map_ptr);
 
 }
@@ -23,16 +23,42 @@ std::shared_ptr<const kol::LinSimilarity> kgl::OntologyDatabaseTest::getLinSimil
 
 std::shared_ptr<const kol::ResnikSimilarity> kgl::OntologyDatabaseTest::getResnikSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const {
 
-  std::shared_ptr<const kol::TermInformationContentMap> info_map_ptr(std::make_shared<const kol::TermInformationContentMap>(ontology_db_ptr->goGraph(),
-                                                                                                                            ontology_db_ptr->annotation()));
+  std::shared_ptr<const kol::TermInformationInterface> info_map_ptr(std::make_shared<const kol::TermInformationContentMap>(ontology_db_ptr->goGraph(),
+                                                                                                                           ontology_db_ptr->annotation()));
   return std::make_shared<const kol::ResnikSimilarity>(ontology_db_ptr->goGraph(), info_map_ptr);
 
 }
 
 std::shared_ptr<const kol::JiangConrathSimilarity> kgl::OntologyDatabaseTest::getJiangSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const {
 
-  std::shared_ptr<const kol::TermInformationContentMap> info_map_ptr(std::make_shared<const kol::TermInformationContentMap>(ontology_db_ptr->goGraph(),
-                                                                                                                            ontology_db_ptr->annotation()));
+  std::shared_ptr<const kol::TermInformationInterface> info_map_ptr(std::make_shared<const kol::TermInformationContentMap>(ontology_db_ptr->goGraph(),
+                                                                                                                           ontology_db_ptr->annotation()));
+  return std::make_shared<const kol::JiangConrathSimilarity>(ontology_db_ptr->goGraph(), info_map_ptr);
+
+}
+
+
+std::shared_ptr<const kol::LinSimilarity> kgl::OntologyDatabaseTest::getLinUnique(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const {
+
+  std::shared_ptr<const kol::TermInformationInterface> info_map_ptr(std::make_shared<const kol::TermInformationContentUnique>( ontology_db_ptr->goGraph(),
+                                                                                                                               ontology_db_ptr->annotation()));
+  return std::make_shared<const kol::LinSimilarity>(ontology_db_ptr->goGraph(), info_map_ptr);
+
+}
+
+
+std::shared_ptr<const kol::ResnikSimilarity> kgl::OntologyDatabaseTest::getResnikUnique(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const {
+
+  std::shared_ptr<const kol::TermInformationInterface> info_map_ptr(std::make_shared<const kol::TermInformationContentUnique>( ontology_db_ptr->goGraph(),
+                                                                                                                               ontology_db_ptr->annotation()));
+  return std::make_shared<const kol::ResnikSimilarity>(ontology_db_ptr->goGraph(), info_map_ptr);
+
+}
+
+std::shared_ptr<const kol::JiangConrathSimilarity> kgl::OntologyDatabaseTest::getJiangUnique(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const {
+
+  std::shared_ptr<const kol::TermInformationInterface> info_map_ptr(std::make_shared<const kol::TermInformationContentUnique>( ontology_db_ptr->goGraph(),
+                                                                                                                               ontology_db_ptr->annotation()));
   return std::make_shared<const kol::JiangConrathSimilarity>(ontology_db_ptr->goGraph(), info_map_ptr);
 
 }
@@ -49,10 +75,27 @@ void kgl::OntologyDatabaseTest::calcPairs() const {
 
   auto lin_calc_ptr = getLinSimilarity(ontology_db_ptr_);
   double compare = lin_calc_ptr->calculateTermSimilarity("GO:0071312", "GO:0071354");
-  ExecEnv::log().info("Check Lin ('GO:0071312', 'GO:0071354') for BP : {}", compare);
+  ExecEnv::log().info("Check DAG Lin ('GO:0071312', 'GO:0071354') for BP : {}", compare);
+
+  lin_calc_ptr = getLinUnique(ontology_db_ptr_);
+  compare = lin_calc_ptr->calculateTermSimilarity("GO:0071312", "GO:0071354");
+  ExecEnv::log().info("Check Unique Lin ('GO:0071312', 'GO:0071354') for BP : {}", compare);
+
   auto jiang_calc_ptr = getJiangSimilarity(ontology_db_ptr_);
   compare = jiang_calc_ptr->calculateTermSimilarity("GO:0004022", "GO:0005515");
-  ExecEnv::log().info("Check Jiang Conrath ('GO:0004022', 'GO:0005515') for MF : {}", compare);
+  ExecEnv::log().info("Check DAG Jiang Conrath ('GO:0004022', 'GO:0005515') for MF : {}", compare);
+
+  jiang_calc_ptr = getJiangUnique(ontology_db_ptr_);
+  compare = jiang_calc_ptr->calculateTermSimilarity("GO:0004022", "GO:0005515");
+  ExecEnv::log().info("Check Unique Jiang Conrath ('GO:0004022', 'GO:0005515') for MF : {}", compare);
+
+  auto resnik_calc_ptr = getResnikSimilarity(ontology_db_ptr_);
+  compare = resnik_calc_ptr->calculateTermSimilarity("GO:0004022", "GO:0005515");
+  ExecEnv::log().info("Check DAG Resnik ('GO:0004022', 'GO:0005515') for MF : {}", compare);
+
+  resnik_calc_ptr = getResnikUnique(ontology_db_ptr_);
+  compare = resnik_calc_ptr->calculateTermSimilarity("GO:0004022", "GO:0005515");
+  ExecEnv::log().info("Check Unique Resnik ('GO:0004022', 'GO:0005515') for MF : {}", compare);
 
 
 }

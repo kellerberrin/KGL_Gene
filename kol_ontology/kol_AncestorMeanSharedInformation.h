@@ -20,7 +20,7 @@ namespace kellerberrin::ontology {
 /*! \class AncestorMeanSharedInformation
 	\brief A class to calculate shared infromation as the average information conent of all common ancestors
 
-	This class calculates shared infromation by averaging the information content of all common ancestors.
+	This class calculates shared information by averaging the information content of all common ancestors.
 
 	 This shared information method is used a baseline for comparison and may not be meaningful.
 

@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(test_number_of_values)
 BOOST_AUTO_TEST_CASE(test_contains_builtin_bad_id)
 {
 
-  if (probMap().hasTerm("bad_go_term")) BOOST_FAIL("Info Map contains bad term  id" );
+  if (probMap().getValues().contains("bad_go_term")) BOOST_FAIL("Info Map contains bad term  id" );
   BOOST_TEST_MESSAGE( "ttest_contains_builtin_bad_id ... OK" );
 
 }
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(test_contains_builtin_bad_id)
 BOOST_AUTO_TEST_CASE(test_contains_builtin)
 {
 
-  if (not probMap().hasTerm("GO:0000015")) BOOST_FAIL("Info Map cannot find term" );
+  if (not probMap().getValues().contains("GO:0000015")) BOOST_FAIL("Info Map cannot find term" );
   BOOST_TEST_MESSAGE( "test_contains_builtin ... OK" );
 
 }

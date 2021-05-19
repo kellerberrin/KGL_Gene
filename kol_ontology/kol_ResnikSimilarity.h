@@ -49,7 +49,7 @@ public:
 
   //! A method for calculating term-to-term similarity for GO terms using Normalized Resnik similarity
   /*!
-    This method returns the Resnik similarity divided by the maximum possible similarity
+    This method returns the Resnik similarity divided by the maximum possible similarity (same as GoSemSim)
   */
   [[nodiscard]] double calculateNormalizedTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override;
 

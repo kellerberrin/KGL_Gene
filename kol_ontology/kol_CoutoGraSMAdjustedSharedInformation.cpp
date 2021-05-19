@@ -190,12 +190,6 @@ double kol::CoutoGraSMAdjustedSharedInformation::sharedInformation(const std::st
 double kol::CoutoGraSMAdjustedSharedInformation::sharedInformation(const std::string &term) const {
   // return 0 for any terms not in the datbase
 
-  if (not ic_map_ptr_->hasTerm(term)) {
-
-    return 0.0;
-
-  }
-
   return ic_map_ptr_->getValue(term);
 
 }
@@ -206,24 +200,7 @@ double kol::CoutoGraSMAdjustedSharedInformation::sharedInformation(const std::st
 */
 double kol::CoutoGraSMAdjustedSharedInformation::maxInformationContent(const std::string &term) const {
 
-  double maxIC;
-  //select the correct ontology normalization factor
-  GO::Ontology ontoType = graph_ptr_->getTermOntology(term);
-  if (ontoType == GO::Ontology::BIOLOGICAL_PROCESS) {
-
-    maxIC = -std::log(ic_map_ptr_->getMinBP());
-
-  } else if (ontoType == GO::Ontology::MOLECULAR_FUNCTION) {
-
-    maxIC = -std::log(ic_map_ptr_->getMinMF());
-
-  } else {
-
-    maxIC = -std::log(ic_map_ptr_->getMinCC());
-
-  }
-
-  return maxIC;
+  return ic_map_ptr_->getMaxInformation(term);
 
 }
 

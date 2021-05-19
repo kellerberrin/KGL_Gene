@@ -16,35 +16,16 @@ double kol::LinSimilarity::calculateTermSimilarity(const std::string &goTermA, c
 
   }
 
-  //if the terms do not exit return 0.0 similarity
-  if (not ic_map_ptr_->hasTerm(goTermA) || not ic_map_ptr_->hasTerm(goTermB)) {
-
-    return 0.0;
-
-  }
-  //if not from same ontology, return 0;
-  if (graph_ptr_->getTermOntology(goTermA) != graph_ptr_->getTermOntology(goTermB)) {
+  //If the terms do not exit of have different ontology return 0.0
+  if (not ic_map_ptr_->validateTerms(goTermA, goTermB)) {
 
     return 0.0;
 
   }
 
-  //create 2 sets
-  OntologySetType<std::string> ancestorsA = graph_ptr_->getAncestorTerms(goTermA);
-  ancestorsA.insert(goTermA);
-  OntologySetType<std::string> ancestorsB = graph_ptr_->getAncestorTerms(goTermB);
-  ancestorsB.insert(goTermB);
-
-  //if either set is empty, return 0
-  if (ancestorsA.empty() or ancestorsB.empty()) {
-
-    return 0.0;
-
-  }
-
-  double mica_info = ic_map_ptr_->getMICAinfo(ancestorsA, ancestorsB);
+  //get the MICA value (zero if no mica term)
+  double mica_value = ic_map_ptr_->getMICAinfo(goTermA, goTermB, *graph_ptr_);
   //return the normalized information content similarity of Lin
-  return (2.0 * mica_info) / (ic_map_ptr_->getValue(goTermA) + ic_map_ptr_->getValue(goTermB));
-
+  return (2.0 * mica_value) / (ic_map_ptr_->getValue(goTermA) + ic_map_ptr_->getValue(goTermB));
 
 }

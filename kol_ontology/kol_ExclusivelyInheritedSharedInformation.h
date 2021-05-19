@@ -23,7 +23,7 @@ namespace kellerberrin::ontology {
 	\brief A class to calculate shared infromation in linear time after Zhang and Lai.
 
 	Shu-Bo Zhang and Jian-Huang Lai. Semantic Similarity measurement between gene ontology
-	  terms based on exclusively inherited shared informaiton. Gene 558 (2015) 108-117.
+	  terms based on exclusively inherited shared information. Gene 558 (2015) 108-117.
 
 */
 class ExclusivelyInheritedSharedInformation : public SharedInformationInterface {

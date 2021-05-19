@@ -15,13 +15,7 @@ namespace kol = kellerberrin::ontology;
 */
 double kol::AncestorMeanSharedInformation::sharedInformation(const std::string &termA, const std::string &termB) const  {
   // return 0 for any terms not in the datbase
-  if (not ic_map_ptr_->hasTerm(termA) or not ic_map_ptr_->hasTerm(termB)) {
-
-    return 0.0;
-
-  }
-  // return 0 for terms in different ontologies
-  if (not isSameOntology(termA, termB)) {
+  if (not ic_map_ptr_->validateTerms(termA, termB)) {
 
     return 0.0;
 
@@ -46,15 +40,10 @@ double kol::AncestorMeanSharedInformation::sharedInformation(const std::string &
 
 //! An interface method for returning the shared information of a single terms,or information content
 /*!
-  This method privdes a mechanism for returing a term's infromation content.
+  This method provides a mechanism for returning a term's information content.
 */
 double kol::AncestorMeanSharedInformation::sharedInformation(const std::string &term) const {
   // return 0 for any terms not in the datbase
-  if (not ic_map_ptr_->hasTerm(term)) {
-
-    return 0.0;
-
-  }
 
   return ic_map_ptr_->getValue(term);
 
@@ -68,37 +57,6 @@ double kol::AncestorMeanSharedInformation::sharedInformation(const std::string &
 double kol::AncestorMeanSharedInformation::maxInformationContent(const std::string &term) const {
 
 
-  //select the correct ontology normalization factor
-  GO::Ontology ontology = graph_ptr_->getTermOntology(term);
-  double maxIC;
-
-  switch (ontology) {
-
-    case GO::Ontology::BIOLOGICAL_PROCESS:
-      maxIC = ic_map_ptr_->getMinBP();
-      break;
-
-    case GO::Ontology::MOLECULAR_FUNCTION:
-      maxIC = ic_map_ptr_->getMinMF();
-      break;
-
-    case GO::Ontology::CELLULAR_COMPONENT:
-      maxIC = ic_map_ptr_->getMinCC();
-      break;
-
-    default:
-    case GO::Ontology::ONTO_ERROR:
-      maxIC = 0.0;
-      break;
-
-  }
-
-  if (maxIC <= 0.0) {
-
-    return 0.0;
-
-  }
-
-  return -1.0 * std::log(maxIC);
+  return ic_map_ptr_->getMaxInformation(term);
 
 }

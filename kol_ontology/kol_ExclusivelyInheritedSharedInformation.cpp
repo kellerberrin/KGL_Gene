@@ -31,8 +31,6 @@ kol::OntologySetType<std::string> kol::ExclusivelyInheritedSharedInformation::ge
   OntologySetType<std::string> ancestorsC1 = graph_ptr_->getSelfAncestorTerms(termC1);
   OntologySetType<std::string> ancestorsC2 = graph_ptr_->getSelfAncestorTerms(termC2);
   OntologySetType<std::string> commonAncestors = SetUtilities::setIntersection(ancestorsC1, ancestorsC2);
-  //std::cout << commonAncestors.size() << std::endl;
-
 
   //commonDisjointAncestors(c,c) = {c}, by definition
   if (commonAncestors.size() == 1) {
@@ -40,7 +38,6 @@ kol::OntologySetType<std::string> kol::ExclusivelyInheritedSharedInformation::ge
     return commonAncestors;
 
   }
-
 
   //Z&L: UnionAnSet <- GetAnSet(t1,AncestorSet) U GetAnSet(t2,AncestorSet)
   OntologySetType<std::string> unionAncestors = SetUtilities::setUnion(ancestorsC1, ancestorsC2);
@@ -55,10 +52,6 @@ kol::OntologySetType<std::string> kol::ExclusivelyInheritedSharedInformation::ge
 
     bool isDisj = false;
 
-    //Z&L: DirectChildSet <- getDirectDescendant(a,ChildSet)
-    //boost::unordered_set<std::string> directChildSet;
-    //std::cout << "-----> " << term << std::endl;
-
     GoGraph::GoVertex v = graph_ptr_->getVertexByName(term);
     GoGraph::InEdgeIterator ei, end;
     for (boost::tie(ei, end) = boost::in_edges(v, g); ei != end; ++ei) {
@@ -66,8 +59,6 @@ kol::OntologySetType<std::string> kol::ExclusivelyInheritedSharedInformation::ge
       GoGraph::GoVertex child = boost::source(*ei, g);
       size_t index = graph_ptr_->getVertexIndex(child);
       std::string cTerm = graph_ptr_->getTermStringIdByIndex(index);
-      //std::cout << cTerm << std::endl;
-      //directChildSet.insert(cTerm);
 
       if (diffSet.find(cTerm) != diffSet.end()) {
         //early exit should improve runtime
@@ -78,25 +69,16 @@ kol::OntologySetType<std::string> kol::ExclusivelyInheritedSharedInformation::ge
 
     }
 
-    //the below code was dropped to improve runtime, improvement is minor though
-
-    //Z&L: tmpset <- DiffAnSet <intersect> DirectChildSet
-    //boost::unordered_set<std::string> tempSet = SetUtilities::setIntersection(diffSet,directChildSet);
-    //Z&L: if tmpset != <empty_set>
-    //if(tempSet.size() != 0){
-    //	isDisj = true;
-    //}
 
     //if the term is a disjoint ancestor add it to the set
     if (isDisj) {
 
       cda.insert(term);
-      //std::cout << "eisi " << term << " " << ic_map_ptr_[term] << std::endl;
+
     }
 
   }
 
-  //std::cout << "eisi cda size "<< cda.size() << std::endl;
   return cda;
 
 }
@@ -108,13 +90,7 @@ kol::OntologySetType<std::string> kol::ExclusivelyInheritedSharedInformation::ge
 */
 double kol::ExclusivelyInheritedSharedInformation::sharedInformation(const std::string &termA, const std::string &termB) const {
   // return 0 for any terms not in the datbase
-  if (not ic_map_ptr_->hasTerm(termA) or not ic_map_ptr_->hasTerm(termB)) {
-
-    return 0.0;
-
-  }
-  // return 0 for terms in different ontologies
-  if (graph_ptr_->getTermOntology(termA) != graph_ptr_->getTermOntology(termB)) {
+  if (not ic_map_ptr_->validateTerms(termA, termB)) {
 
     return 0.0;
 
@@ -122,10 +98,9 @@ double kol::ExclusivelyInheritedSharedInformation::sharedInformation(const std::
 
   Accumulators::MeanAccumulator meanIC;
   OntologySetType<std::string> cda = getCommonDisjointAncestors(termA, termB);
-  //std::cout << "size " << cda.size() << std::endl;
 
   for (auto const &element : cda) {
-    //std::cout << ic_map_ptr_[*iter] << std::endl;
+
     meanIC(ic_map_ptr_->getValue(element));
 
   }
@@ -141,12 +116,6 @@ double kol::ExclusivelyInheritedSharedInformation::sharedInformation(const std::
 */
 
 double kol::ExclusivelyInheritedSharedInformation::sharedInformation(const std::string &term) const  {
-  // return 0 for any terms not in the datbase
-  if (not ic_map_ptr_->hasTerm(term)) {
-
-    return 0.0;
-
-  }
 
   return ic_map_ptr_->getValue(term);
 
@@ -159,39 +128,7 @@ double kol::ExclusivelyInheritedSharedInformation::sharedInformation(const std::
 */
 double kol::ExclusivelyInheritedSharedInformation::maxInformationContent(const std::string &term) const  {
 
-
-  //select the correct ontology normalization factor
-  GO::Ontology ontology = graph_ptr_->getTermOntology(term);
-  double maxIC;
-
-  switch (ontology) {
-
-    case GO::Ontology::BIOLOGICAL_PROCESS:
-      maxIC = ic_map_ptr_->getMinBP();
-      break;
-
-    case GO::Ontology::MOLECULAR_FUNCTION:
-      maxIC = ic_map_ptr_->getMinMF();
-      break;
-
-    case GO::Ontology::CELLULAR_COMPONENT:
-      maxIC = ic_map_ptr_->getMinCC();
-      break;
-
-    default:
-    case GO::Ontology::ONTO_ERROR:
-      maxIC = 0.0;
-      break;
-
-  }
-
-  if (maxIC <= 0.0) {
-
-    return 0.0;
-
-  }
-
-  return -1.0 * std::log(maxIC);
+  return ic_map_ptr_->getMaxInformation(term);
 
 }
 

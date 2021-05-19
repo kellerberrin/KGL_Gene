@@ -4,14 +4,11 @@
 
 #include "kol_OntologyTypes.h"
 #include "kol_TermProbabilityUnique.h"
-#include "kol_Accumulators.h"
 #include "kel_exec_env.h"
-
 
 
 namespace kol = kellerberrin::ontology;
 namespace kel = kellerberrin;
-
 
 
 double kol::TermProbabilityUnique::getRootCount(const std::string& root_id) const {
@@ -25,7 +22,7 @@ double kol::TermProbabilityUnique::getRootCount(const std::string& root_id) cons
   }
 
   auto const& [term_id, anno_ont_pair] = *result;
-  auto const& [annotations, ontology] = anno_ont_pair;
+  auto const& [annotations, root_onto] = anno_ont_pair;
 
   if (annotations <= 0.0) {
 
@@ -55,63 +52,6 @@ double kol::TermProbabilityUnique::getValue(const std::string &term_id) const {
 }
 
 
-//! Public method for calculating the most informative common ancestor value
-/*!
-  This method searches the sets to determine the most informative ancestor.
-*/
-
-double kol::TermProbabilityUnique::getMICAinfo(const OntologySetType<std::string> &ancestorsA,
-                                               const OntologySetType<std::string> &ancestorsB) const {
-
-  if (ancestorsA.empty() or ancestorsB.empty()) {
-
-    return 0.0;
-
-  }
-
-  // Choose the smaller and larger set for maximum efficiency
-  if (ancestorsA.size() < ancestorsB.size()) {
-
-    return getEfficientMICA(ancestorsA, ancestorsB);
-
-  } else {
-
-    return getEfficientMICA(ancestorsB, ancestorsA);
-
-  }
-
-}
-
-//! Private method for calculating the most informative common ancestor value
-/*!
-  This method searches the sets to determine the most informative ancestor.
-*/
-double kol::TermProbabilityUnique::getEfficientMICA(const OntologySetType<std::string> &smaller_set,
-                                                    const OntologySetType<std::string> &larger_set) const {
-
-  double max{0.0};
-  //loop over shorter list
-  for (auto const &term : smaller_set) {
-
-    if (larger_set.find(term) != larger_set.end()) {
-
-      double term_value = getValue(term);
-      if (term_value > max) {
-
-        max = term_value;
-
-      }
-
-    }
-
-  }
-
-  return max;
-
-}
-
-
-
 void kol::TermProbabilityUnique::calcProbability(const std::shared_ptr<const GoGraph> &graph,
                                                  const std::shared_ptr<const AnnotationData> &annotation_data) {
 
@@ -136,9 +76,6 @@ void kol::TermProbabilityUnique::calcProbability(const std::shared_ptr<const GoG
 
   }
 
-  Accumulators::SimpleAccumulator minMaxBP;
-  Accumulators::SimpleAccumulator minMaxMF;
-  Accumulators::SimpleAccumulator minMaxCC;
 
   const double const_bp_annotations = getRootCount(GO::getRootTermBP());
   const double const_mf_annotations = getRootCount(GO::getRootTermMF());
@@ -157,17 +94,14 @@ void kol::TermProbabilityUnique::calcProbability(const std::shared_ptr<const GoG
     switch (ontology) {
 
       case GO::Ontology::BIOLOGICAL_PROCESS:
-        minMaxBP(annotations);
         annotations = annotations / const_bp_annotations;
         break;
 
       case GO::Ontology::MOLECULAR_FUNCTION:
-        minMaxMF(annotations);
         annotations = annotations / const_mf_annotations;
         break;
 
       case GO::Ontology::CELLULAR_COMPONENT:
-        minMaxCC(annotations);
         annotations = annotations / const_cc_annotations;
         break;
 
@@ -179,15 +113,5 @@ void kol::TermProbabilityUnique::calcProbability(const std::shared_ptr<const GoG
     }
 
   }
-
-  //calculate single annotation minimum normalization factors
-  bp_normalization_min_1anno_ = 1.0 / Accumulators::extractMax(minMaxBP);
-  mf_normalization_min_1anno_ = 1.0 / Accumulators::extractMax(minMaxMF);
-  cc_normalization_min_1anno_ = 1.0 / Accumulators::extractMax(minMaxCC);
-
-  //calculate minimum annotation minimum normalization factors
-  bp_normalization_min_min_anno_ = Accumulators::extractMin(minMaxBP) / Accumulators::extractMax(minMaxBP);
-  mf_normalization_min_min_anno_ = Accumulators::extractMin(minMaxMF) / Accumulators::extractMax(minMaxMF);
-  cc_normalization_min_min_anno_ = Accumulators::extractMin(minMaxCC) / Accumulators::extractMax(minMaxCC);
 
 }

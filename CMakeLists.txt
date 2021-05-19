@@ -328,7 +328,6 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_JiangConrathSimilarity.cpp
         kol_ontology/kol_ResnikSimilarity.cpp
         kol_ontology/kol_TermProbabilityMap.cpp
-        kol_ontology/kol_TermInformationContentMap.cpp
         kol_ontology/kol_TermDepthMap.cpp
         kol_ontology/kol_RelevanceSimilarity.cpp
         kol_ontology/kol_PekarStaabSimilarity.cpp

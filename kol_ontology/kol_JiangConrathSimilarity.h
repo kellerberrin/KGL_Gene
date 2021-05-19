@@ -66,6 +66,8 @@ private:
 
   std::shared_ptr<const GoGraph> graph_ptr_;
   std::shared_ptr<const TermInformationInterface> ic_map_ptr_;
+  // For testing purposes.
+  const bool GOSemSimFormula{false};
 
 };
 
