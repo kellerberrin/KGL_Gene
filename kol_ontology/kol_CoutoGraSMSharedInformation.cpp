@@ -154,13 +154,7 @@ size_t kol::CoutoGraSMSharedInformation::getNumPaths(const std::string &termA, c
 */
 double kol::CoutoGraSMSharedInformation::sharedInformation(const std::string &termA, const std::string &termB) const {
   // return 0 for any terms not in the datbase
-  if (not ic_map_ptr_->hasTerm(termA) or not ic_map_ptr_->hasTerm(termB)) {
-
-    return 0.0;
-
-  }
-  // return 0 for terms in different ontologies
-  if (graph_ptr_->getTermOntology(termA) != graph_ptr_->getTermOntology(termB)) {
+  if (not ic_map_ptr_->validateTerms(termA, termB)) {
 
     return 0.0;
 
@@ -187,12 +181,6 @@ double kol::CoutoGraSMSharedInformation::sharedInformation(const std::string &te
   This method privdes a mechanism for returing a term's information content.
 */
 double kol::CoutoGraSMSharedInformation::sharedInformation(const std::string &term) const {
-  // return 0 for any terms not in the datbase
-  if (not ic_map_ptr_->hasTerm(term)) {
-
-    return 0.0;
-
-  }
 
   return ic_map_ptr_->getValue(term);
 

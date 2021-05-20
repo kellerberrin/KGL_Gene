@@ -22,6 +22,10 @@ namespace kellerberrin::ontology {
 	  a term give an instance of AnnotationData.
 */
 
+
+
+using TermProbOntMap = OntologyMapType<std::string, std::pair<double, GO::Ontology>>;
+
 class TermInformationInterface {
 public:
 
@@ -34,13 +38,6 @@ public:
   */
 
   [[nodiscard]] virtual const TermProbOntMap &getValues() const = 0;
-
-
-  //! Method to test if the id exists in the map
-  /*!
-    Return true the id is found, false if not
-  */
-  [[nodiscard]] virtual bool hasTerm(const std::string &testTerm) const = 0;
 
   //! Method to test if the ids exist and have the same ontology in the map
   /*!
@@ -62,7 +59,7 @@ public:
     This function returns the the maximum information content for an ontology
   */
 
-  [[nodiscard]] virtual double getMaxInformation(const std::string term_id) const = 0;
+  [[nodiscard]] virtual double getMaxInformation(const std::string& term_id) const = 0;
 
   //! Public method for calculating the most informative common ancestor value
   /*!

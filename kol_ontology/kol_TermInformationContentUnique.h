@@ -1,9 +1,9 @@
-/*=============================================================================
-Copyright (c) 2016 Paul W. Bible
-Distributed under the Boost Software License, Version 1.0.
-==============================================================================*/
-#ifndef KGL_TERM_INFORMATION_CONTENT_MAP
-#define KGL_TERM_INFORMATION_CONTENT_MAP
+//
+// Created by kellerberrin on 20/5/21.
+//
+
+#ifndef KOL_TERMINFORMATIONCONTENTUNIQUE_H
+#define KOL_TERMINFORMATIONCONTENTUNIQUE_H
 
 
 #include "kol_TermInformationContentImpl.h"
@@ -19,14 +19,14 @@ namespace kellerberrin::ontology {
 	  class is used by Information Content methods.
 
 */
-class TermInformationContentMap : public TermInformationContentImpl {
+class TermInformationContentUnique : public TermInformationContentImpl {
 public:
   //! A default constructor
   /*!
     This constructor creates an empty IC map. Should not be used.
   */
-  TermInformationContentMap() = delete;
-  ~TermInformationContentMap() override = default;
+  TermInformationContentUnique() = delete;
+  ~TermInformationContentUnique() override = default;
   //! A parameterized constructor
   /*!
     This constructor takes pointers to GoGraph and AnnotationData objects.
@@ -34,8 +34,8 @@ public:
       created with valid parameters.
       This constructor relies on the TermProbabilityMap.
   */
-  TermInformationContentMap( const std::shared_ptr<const GoGraph> &graph,
-                             const std::shared_ptr<const AnnotationData> &annoData) {
+  TermInformationContentUnique( const std::shared_ptr<const GoGraph> &graph,
+                                const std::shared_ptr<const AnnotationData> &annoData) {
 
     calcProbabilityMap(graph, annoData);
     convertProbtoIC();
@@ -55,6 +55,4 @@ private:
 } // namespace
 
 
-
-#endif
-
+#endif //KOL_TERMINFORMATIONCONTENTUNIQUE_H

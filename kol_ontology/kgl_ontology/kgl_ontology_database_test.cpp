@@ -7,6 +7,7 @@
 #include "kgl_gene_app.h"
 #include "kel_utility.h"
 #include "kol_TermInformationContentMap.h"
+#include "kol_TermInformationContentUnique.h"
 
 
 namespace kgl = kellerberrin::genome;

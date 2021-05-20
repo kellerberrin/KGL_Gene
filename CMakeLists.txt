@@ -340,7 +340,7 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_AnnotationData.cpp
         kol_ontology/kgl_ontology/kgl_gene_cache_ontology.cpp
         kol_ontology/kgl_ontology/kgl_gene_cache_ontology.h
-        kol_ontology/kgl_ontology/kgl_ontology_database_test.cpp kol_ontology/kgl_ontology/kgl_ontology_database_test.h kol_ontology/kol_TermProbabilityInterface.h kol_ontology/kol_TermInformationInterface.h kol_ontology/kol_TermProbabilityUnique.cpp kol_ontology/kol_TermProbabilityUnique.h kol_ontology/kol_ModularRelevance.h)
+        kol_ontology/kgl_ontology/kgl_ontology_database_test.cpp kol_ontology/kgl_ontology/kgl_ontology_database_test.h kol_ontology/kol_TermProbabilityInterface.h kol_ontology/kol_TermInformationInterface.h kol_ontology/kol_TermProbabilityUnique.cpp kol_ontology/kol_TermProbabilityUnique.h kol_ontology/kol_ModularRelevance.h kol_ontology/kol_TermInformationContentUnique.h kol_ontology/kol_TermInformationContentMap.cpp kol_ontology/kol_TermInformationContentImpl.cpp kol_ontology/kol_TermInformationContentImpl.h kol_ontology/kol_TermInformationContentUnique.cpp)
 
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES

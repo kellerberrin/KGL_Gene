@@ -157,13 +157,7 @@ size_t kol::CoutoGraSMAdjustedSharedInformation::getNumPaths( const std::string 
 double kol::CoutoGraSMAdjustedSharedInformation::sharedInformation(const std::string &termA,
                                                                    const std::string &termB) const {
   // return 0 for any terms not in the datbase
-  if (!ic_map_ptr_->hasTerm(termA) || !ic_map_ptr_->hasTerm(termB)) {
-
-    return 0.0;
-
-  }
-  // return 0 for terms in different ontologies
-  if (graph_ptr_->getTermOntology(termA) != graph_ptr_->getTermOntology(termB)) {
+  if (!ic_map_ptr_->validateTerms(termA, termB)) {
 
     return 0.0;
 
