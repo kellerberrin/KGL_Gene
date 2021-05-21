@@ -52,16 +52,6 @@ public:
   */
   [[nodiscard]] double calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override;
 
-  //! A method for calculating term-to-term similarity for GO terms using Normalized Pekar Staab similarity
-  /*!
-    This method returns the PekarStaab similarity scaled between 0 and 1 [0,1] inclusive
-  */
-  [[nodiscard]] double calculateNormalizedTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override {
-    //Pekar and Staab's method is already normalized
-    return calculateTermSimilarity(goTermA, goTermB);
-
-  }
-
 
 private:
 

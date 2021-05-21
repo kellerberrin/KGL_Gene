@@ -30,7 +30,7 @@ double kol::AncestorMeanSharedInformation::sharedInformation(const std::string &
 
   for (auto const &term : sharedAncestors) {
 
-    meanIC(ic_map_ptr_->getValue(term));
+    meanIC(ic_map_ptr_->termInformation(term));
 
   }
 
@@ -42,10 +42,10 @@ double kol::AncestorMeanSharedInformation::sharedInformation(const std::string &
 /*!
   This method provides a mechanism for returning a term's information content.
 */
-double kol::AncestorMeanSharedInformation::sharedInformation(const std::string &term) const {
+double kol::AncestorMeanSharedInformation::termInformation(const std::string &term) const {
   // return 0 for any terms not in the datbase
 
-  return ic_map_ptr_->getValue(term);
+  return ic_map_ptr_->termInformation(term);
 
 }
 
@@ -57,6 +57,6 @@ double kol::AncestorMeanSharedInformation::sharedInformation(const std::string &
 double kol::AncestorMeanSharedInformation::maxInformationContent(const std::string &term) const {
 
 
-  return ic_map_ptr_->getMaxInformation(term);
+  return ic_map_ptr_->maxInformationContent(term);
 
 }

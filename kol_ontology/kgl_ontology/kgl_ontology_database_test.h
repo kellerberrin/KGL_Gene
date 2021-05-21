@@ -5,9 +5,9 @@
 #ifndef KGL_ONTOLOGY_DATABASE_TEST_H
 #define KGL_ONTOLOGY_DATABASE_TEST_H
 
-#include "kol_LinSimilarity.h"
-#include "kol_ResnikSimilarity.h"
-#include "kol_JiangConrathSimilarity.h"
+#include "kol_SimilarityLin.h"
+#include "kol_SimilarityResnik.h"
+#include "kol_SimilarityJiangConrath.h"
 #include "kol_BestMatchAverageSetSimilarity.h"
 #include "kgl_ontology_database.h"
 

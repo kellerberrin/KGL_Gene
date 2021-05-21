@@ -54,15 +54,6 @@ public:
   [[nodiscard]] double calculateTermSimilarity(const std::string &row_term, const std::string &column_term) const override;
 
 
-  //! A method for calculating term-to-term similarity for GO terms using a precomputed similarity matrix.
-  /*!
-    This method returns the similarity scaled between 0 and 1 [0,1] inclusive
-  */
-  [[nodiscard]] double calculateNormalizedTermSimilarity(const std::string &row_term, const std::string &column_term) const override {
-
-    return calculateTermSimilarity(row_term, column_term);
-
-  }
 
   // rows() == 0 is an error condition.
   [[nodiscard]] size_t rows() const { return row_term_to_index_.size(); }

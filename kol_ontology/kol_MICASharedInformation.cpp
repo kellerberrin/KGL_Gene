@@ -33,7 +33,7 @@ double kol::MICASharedInformation::sharedInformation(const std::string &termA, c
 
   for (auto const &term : sharedAncestors) {
 
-    myMax(ic_map_ptr_->getValue(term));
+    myMax(ic_map_ptr_->termInformation(term));
 
   }
 
@@ -45,10 +45,10 @@ double kol::MICASharedInformation::sharedInformation(const std::string &termA, c
 /*!
   This method privdes a mechanism for returning a term's information content.
 */
-double kol::MICASharedInformation::sharedInformation(const std::string &term) const {
+double kol::MICASharedInformation::termInformation(const std::string &term) const {
   // return 0 for any terms not in the database
 
-  return ic_map_ptr_->getValue(term);
+  return ic_map_ptr_->termInformation(term);
 
 }
 
@@ -58,7 +58,7 @@ double kol::MICASharedInformation::sharedInformation(const std::string &term) co
 */
 double kol::MICASharedInformation::maxInformationContent(const std::string &term) const {
 
-  return ic_map_ptr_->getMaxInformation(term);
+  return ic_map_ptr_->maxInformationContent(term);
 
 }
 

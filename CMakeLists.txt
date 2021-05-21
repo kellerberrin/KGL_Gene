@@ -267,22 +267,18 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_GoParserFactory.h
         kol_ontology/kol_GoParserInterface.h
         kol_ontology/kol_JaccardSetSimilarity.h
-        kol_ontology/kol_JiangConrathSimilarity.h
-        kol_ontology/kol_LinSimilarity.h
         kol_ontology/kol_MazanduSimDICSetSimilarity.h
         kol_ontology/kol_MazanduSimUICSetSimilarity.h
         kol_ontology/kol_MgiAnnotationParser.h
         kol_ontology/kol_MICASharedInformation.h
-        kol_ontology/kol_ModularJiangConrath.h
-        kol_ontology/kol_ModularLin.h
-        kol_ontology/kol_ModularResnik.h
-        kol_ontology/kol_PekarStaabSimilarity.h
+        kol_ontology/kol_SimilarityJiangConrath.h
+        kol_ontology/kol_SimilarityLin.h
+        kol_ontology/kol_SimilarityResnik.h
+        kol_ontology/kol_SimilarityPekarStaab.h
         kol_ontology/kol_PesquitaSimGICSetSimilarity.h
         kol_ontology/kol_PrecomputedMatrixTermSimilarity.h
         kol_ontology/kol_RapidXmlGoParser.h
         kol_ontology/kol_RelationshipPolicyInterface.h
-        kol_ontology/kol_RelevanceSimilarity.h
-        kol_ontology/kol_ResnikSimilarity.h
         kol_ontology/kol_SetUtilities.h
         kol_ontology/kol_SharedInformationInterface.h
         kol_ontology/kol_StandardOboGoParser.h
@@ -290,7 +286,6 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_StandardXmlGoParser.h
         kol_ontology/kol_TermDepthMap.h
         kol_ontology/kol_TermInformationContentMap.h
-        kol_ontology/kol_TermProbabilityMap.h
         kol_ontology/kol_TermSetSimilarityInterface.h
         kol_ontology/kol_TermSimilarityInterface.h
         kol_ontology/kol_TermSimilarityWriter.h
@@ -321,17 +316,12 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_AllowedRelationshipXmlGoParser.cpp
         kol_ontology/kol_AncestorMeanSharedInformation.cpp
         kol_ontology/kol_MICASharedInformation.cpp
-        kol_ontology/kol_LinSimilarity.cpp
-        kol_ontology/kol_JiangConrathSimilarity.cpp
-        kol_ontology/kol_ResnikSimilarity.cpp
-        kol_ontology/kol_TermProbabilityMap.cpp
         kol_ontology/kol_TermDepthMap.cpp
-        kol_ontology/kol_RelevanceSimilarity.cpp
-        kol_ontology/kol_PekarStaabSimilarity.cpp
+        kol_ontology/kol_SimilarityPekarStaab.cpp
         kol_ontology/kol_TermSimilarityWriter.cpp
         kol_ontology/kol_RapidXmlGoParser.cpp
         kol_ontology/kol_PrecomputedMatrixTermSimilarity.cpp
-        kol_ontology/kol_ModularSimilarity.cpp
+        kol_ontology/kol_SimilarityImpl.cpp
         kol_ontology/kol_EnrichmentTools.cpp
         kol_ontology/kol_EntrezGene2GoAnnotationParser.cpp
         kol_ontology/kgl_ontology/kgl_ontology_database.cpp
@@ -340,7 +330,7 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_AnnotationData.cpp
         kol_ontology/kgl_ontology/kgl_gene_cache_ontology.cpp
         kol_ontology/kgl_ontology/kgl_gene_cache_ontology.h
-        kol_ontology/kgl_ontology/kgl_ontology_database_test.cpp kol_ontology/kgl_ontology/kgl_ontology_database_test.h kol_ontology/kol_TermProbabilityInterface.h kol_ontology/kol_TermInformationInterface.h kol_ontology/kol_TermProbabilityUnique.cpp kol_ontology/kol_TermProbabilityUnique.h kol_ontology/kol_ModularRelevance.h kol_ontology/kol_TermInformationContentUnique.h kol_ontology/kol_TermInformationContentMap.cpp kol_ontology/kol_TermInformationContentImpl.cpp kol_ontology/kol_TermInformationContentImpl.h kol_ontology/kol_TermInformationContentUnique.cpp)
+        kol_ontology/kgl_ontology/kgl_ontology_database_test.cpp kol_ontology/kgl_ontology/kgl_ontology_database_test.h kol_ontology/kol_TermInformationInterface.h kol_ontology/kol_SimilarityRelevance.h kol_ontology/kol_TermInformationContentUnique.h kol_ontology/kol_TermInformationContentMap.cpp kol_ontology/kol_TermInformationContentImpl.cpp kol_ontology/kol_TermInformationContentImpl.h kol_ontology/kol_TermInformationContentUnique.cpp)
 
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES
@@ -353,11 +343,7 @@ set(ONTOLOGY_UNIT_TEST_FILES
         kol_ontology/unit_test/kol_test_EnrichmentTools.cpp
         kol_ontology/unit_test/kol_test_JiangConrathSimilarity.cpp
         kol_ontology/unit_test/kol_test_LinSimilarity.cpp
-        kol_ontology/unit_test/kol_test_ModularJiangConrath.cpp
         kol_ontology/unit_test/kol_test_similarity.h
-        kol_ontology/unit_test/kol_test_modularsimilarity.h
-        kol_ontology/unit_test/kol_test_ModularLin.cpp
-        kol_ontology/unit_test/kol_test_ModularResnik.cpp
         kol_ontology/unit_test/kol_test_ResnikSimilarity.cpp
         kol_ontology/unit_test/kol_test_PekarStaabSimilarity.cpp
         kol_ontology/unit_test/kol_test_RelevanceSimilarity.cpp
@@ -379,12 +365,11 @@ set(ONTOLOGY_UNIT_TEST_FILES
         kol_ontology/unit_test/kol_test_SharedMICA.cpp
         kol_ontology/unit_test/kol_test_DepthMap.cpp
         kol_ontology/unit_test/kol_test_TermInfoMap.cpp
-        kol_ontology/unit_test/kol_test_TermProbMap.cpp
         kol_ontology/unit_test/kol_test_TermSimMatrix_JC_BP.cpp
         kol_ontology/unit_test/kol_test_TermSimMatrix_LIN_MF.cpp
         kol_ontology/unit_test/kol_test_TermSimMatrix_RES_CC.cpp
         kol_ontology/unit_test/kol_test_TermSimCache_LIN_BP.cpp
-        kol_ontology/unit_test/kol_test_data.h kol_ontology/unit_test/kol_test_ModularRelevance.cpp)
+        kol_ontology/unit_test/kol_test_data.h)
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES

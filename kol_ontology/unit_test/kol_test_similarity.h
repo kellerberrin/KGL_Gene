@@ -81,41 +81,6 @@ BOOST_AUTO_TEST_CASE(test_similarity_CC_1_good_1_root)
 }
 
 
-/////////////////////////////////////////////////////////////////////////
-// Normalized Similarity [0-1], on CC terms
-/////////////////////////////////////////////////////////////////////////
-
-
-
-BOOST_AUTO_TEST_CASE(test_normalized_similarity_CC_reflexive_sim)
-{
-
-  double value = termSimilarityAnalysis().calculateNormalizedTermSimilarity("GO:0043234", "GO:0043234");
-  BOOST_CHECK_CLOSE( value, getValue().TEST_NORMALIZED_SIMILARITY_CC_REFLEXIVE_SIM, TEST_ACCURACY_PERCENT);
-  BOOST_TEST_MESSAGE( "test_normalized_similarity_CC_reflexive_sim ... OK" );
-
-}
-
-
-BOOST_AUTO_TEST_CASE(test_normalized_similarity_CC)
-{
-
-  double value = termSimilarityAnalysis().calculateNormalizedTermSimilarity("GO:0043234", "GO:0000791");
-  BOOST_CHECK_CLOSE( value, getValue().TEST_NORMALIZED_SIMILARITY_CC, TEST_ACCURACY_PERCENT);
-  BOOST_TEST_MESSAGE( "test_normalized_similarity_CC ... OK" );
-
-}
-
-BOOST_AUTO_TEST_CASE(test_normalized_similarity_CC_1_good_1_root)
-{
-
-  double value = termSimilarityAnalysis().calculateNormalizedTermSimilarity("GO:0043234", "GO:0005575");
-  BOOST_CHECK_CLOSE( value, getValue().TEST_NORMALIZED_SIMILARITY_CC_1_GOOD_1_ROOT, TEST_ACCURACY_PERCENT);
-  BOOST_TEST_MESSAGE( "test_normalized_similarity_CC_1_good_1_root ... OK" );
-
-}
-
-
 ///////////////////////////////////////////////////////////////////////
 // Similarity in BP
 ///////////////////////////////////////////////////////////////////////
@@ -126,15 +91,6 @@ BOOST_AUTO_TEST_CASE(test_similarity_BP)
   double value = termSimilarityAnalysis().calculateTermSimilarity("GO:0007155", "GO:0044406");
   BOOST_CHECK_CLOSE( value, getValue().TEST_SIMILARITY_BP, TEST_ACCURACY_PERCENT);
   BOOST_TEST_MESSAGE( "test_similarity_BP ... OK" );
-
-}
-
-BOOST_AUTO_TEST_CASE(test_normalized_similarity_BP)
-{
-
-  double value = termSimilarityAnalysis().calculateNormalizedTermSimilarity("GO:0007155", "GO:0044406");
-  BOOST_CHECK_CLOSE( value, getValue().TEST_NORMALIZED_SIMILARITY_BP, TEST_ACCURACY_PERCENT);
-  BOOST_TEST_MESSAGE( "test_normalized_similarity_BP ... OK" );
 
 }
 
@@ -153,15 +109,6 @@ BOOST_AUTO_TEST_CASE(test_similarity_MF)
 
 }
 
-BOOST_AUTO_TEST_CASE(test_normalized_similarity_MF)
-{
-
-  double value = termSimilarityAnalysis().calculateNormalizedTermSimilarity("GO:0051192", "GO:0050662");
-  BOOST_CHECK_CLOSE( value, getValue().TEST_NORMALIZED_SIMILARITY_MF, TEST_ACCURACY_PERCENT);
-  BOOST_TEST_MESSAGE( "test_normalized_similarity_MF ... OK" );
-
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // Cross Ontology similarity
 ////////////////////////////////////////////////////////////////////////////////
@@ -176,14 +123,6 @@ BOOST_AUTO_TEST_CASE(test_cross_ontology_similarity)
 
 }
 
-BOOST_AUTO_TEST_CASE(test_cross_ontology_normalized_similarity)
-{
-
-  double value = termSimilarityAnalysis().calculateNormalizedTermSimilarity("GO:0051192", "GO:0007155");
-  BOOST_CHECK_CLOSE( value, getValue().TEST_CROSS_ONTOLOGY_NORMALIZED_SIMILARITY, TEST_ACCURACY_PERCENT);
-  BOOST_TEST_MESSAGE( "test_cross_ontology_normalized_similarity ... OK" );
-
-}
 
 
 #endif //GGTK_TEST_SIMILARITY_H

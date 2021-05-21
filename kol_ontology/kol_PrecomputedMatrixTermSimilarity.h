@@ -44,16 +44,6 @@ public:
   */
   [[nodiscard]] double calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override;
 
-  //! A method for calculating term-to-term similarity for GO terms using a precomputed similarity matrix.
-  /*!
-    This method returns the similarity scaled between 0 and 1 [0,1] inclusive
-  */
-  [[nodiscard]] double calculateNormalizedTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override {
-
-    return calculateTermSimilarity(goTermA, goTermB);
-
-  }
-
 
   //! This method projects a set of terms into it the kernel space
   /*!

@@ -170,7 +170,7 @@ std::unique_ptr<std::vector<double>> kol::TermSimilarityCache::calcColumn( size_
   for (std::size_t row = 0; row < row_size; ++row) {
 
     const std::string &row_term = ontology_terms_ptr->at(row + column);
-    double value = term_similarity_ptr->calculateNormalizedTermSimilarity(row_term, column_term);
+    double value = term_similarity_ptr->calculateTermSimilarity(row_term, column_term);
     row_vector_ptr->at(row) = value;
 
   }

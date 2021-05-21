@@ -118,7 +118,7 @@ bool kol::EntrezGene2GoAnnotationParser::isFileGood(const std::string &fileName)
   while (in.good() && count < 5) {
     //get next line in 'in' file stream
     getline(in, line);
-    if (line[0] == '#') { continue; }
+    if (line[0] == '#' or line[0] == '!') { continue; }
 
     //split line
     tokenizer tokens(line, tab_sep);

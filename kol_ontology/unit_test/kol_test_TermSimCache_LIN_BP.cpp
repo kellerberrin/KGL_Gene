@@ -2,6 +2,7 @@
 // Created by kellerberrin on 7/4/21.
 //
 #include "kol_test.h"
+#include "kol_TermInformationContentUnique.h"
 
 
 namespace kellerberrin::ontology {
@@ -98,8 +99,9 @@ private:
 
     go_graph_ptr = getGoGraph();
     annotation_ptr = getAnnotation();
-    std::shared_ptr<const TermInformationContentMap> info_map_ptr(std::make_shared<const TermInformationContentMap>(go_graph_ptr, annotation_ptr));
-    term_similarity_ptr = std::make_shared<const LinSimilarity>(go_graph_ptr, info_map_ptr);
+    std::shared_ptr<const TermInformationContentUnique> ic_map_ptr(std::make_shared<const TermInformationContentUnique>(go_graph_ptr, annotation_ptr));
+    std::shared_ptr<const MICASharedInformation> info_map_ptr(std::make_shared<const MICASharedInformation>( go_graph_ptr, ic_map_ptr));
+    term_similarity_ptr = std::make_shared<const LinSimilarity>(info_map_ptr);
     cache_similarity_ptr = std::make_shared<const TermSimilarityCache>(go_graph_ptr, annotation_ptr, term_similarity_ptr, GO::Ontology::BIOLOGICAL_PROCESS);
 
   }

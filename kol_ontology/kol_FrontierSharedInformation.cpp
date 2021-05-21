@@ -143,7 +143,7 @@ double kol::FrontierSharedInformation::sharedInformation(const std::string &term
 
   for (auto const &term : cda) {
 
-    meanIC(ic_map_ptr_->getValue(term));
+    meanIC(ic_map_ptr_->termInformation(term));
 
   }
 
@@ -156,10 +156,10 @@ double kol::FrontierSharedInformation::sharedInformation(const std::string &term
   This method privdes a mechanism for returing a term's infromation content.
 */
 
-double kol::FrontierSharedInformation::sharedInformation(const std::string &term) const {
+double kol::FrontierSharedInformation::termInformation(const std::string &term) const {
 // return 0 for any terms not in the datbase
 
-  return ic_map_ptr_->getValue(term);
+  return ic_map_ptr_->termInformation(term);
 
 }
 
@@ -169,6 +169,6 @@ double kol::FrontierSharedInformation::sharedInformation(const std::string &term
 */
 double kol::FrontierSharedInformation::maxInformationContent(const std::string &term) const {
 
-  return ic_map_ptr_->getMaxInformation(term);
+  return ic_map_ptr_->maxInformationContent(term);
 
 }

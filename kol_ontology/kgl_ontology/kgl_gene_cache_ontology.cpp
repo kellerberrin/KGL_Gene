@@ -5,6 +5,7 @@
 #include "kgl_gene_cache_ontology.h"
 #include "kgl_ontology_database_test.h"
 #include "kol_TermInformationContentUnique.h"
+#include "kol_MICASharedInformation.h"
 #include "kel_exec_env.h"
 
 namespace kol = kellerberrin::ontology;
@@ -93,26 +94,33 @@ std::vector<std::string> kgl::OntologyGeneCache::getAllGOVector(const std::share
 
 std::shared_ptr<const kol::LinSimilarity> kgl::OntologyGeneCache::getLinSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) {
 
-  std::shared_ptr<const kol::TermInformationContentUnique> info_map_ptr(std::make_shared<const kol::TermInformationContentUnique>( ontology_db_ptr->goGraph(),
-                                                                                                                                   ontology_db_ptr->annotation()));
-  return std::make_shared<const kol::LinSimilarity>(ontology_db_ptr->goGraph(), info_map_ptr);
+
+  std::shared_ptr<const kol::TermInformationContentUnique> ic_map_ptr(std::make_shared<kol::TermInformationContentUnique>(ontology_db_ptr->goGraph(),
+                                                                                                                          ontology_db_ptr->annotation()));
+  std::shared_ptr<const kol::MICASharedInformation> info_map_ptr(std::make_shared<const kol::MICASharedInformation>( ontology_db_ptr->goGraph(), ic_map_ptr));
+
+  return std::make_shared<const kol::LinSimilarity>(info_map_ptr);
 
 }
 
 
 std::shared_ptr<const kol::ResnikSimilarity> kgl::OntologyGeneCache::getResnikSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) {
 
-  std::shared_ptr<const kol::TermInformationContentUnique> info_map_ptr(std::make_shared<const kol::TermInformationContentUnique>( ontology_db_ptr->goGraph(),
-                                                                                                                                   ontology_db_ptr->annotation()));
-  return std::make_shared<const kol::ResnikSimilarity>(ontology_db_ptr->goGraph(), info_map_ptr);
+  std::shared_ptr<const kol::TermInformationContentUnique> ic_map_ptr(std::make_shared<kol::TermInformationContentUnique>(ontology_db_ptr->goGraph(),
+                                                                                                                          ontology_db_ptr->annotation()));
+  std::shared_ptr<const kol::MICASharedInformation> info_map_ptr(std::make_shared<const kol::MICASharedInformation>( ontology_db_ptr->goGraph(), ic_map_ptr));
+
+  return std::make_shared<const kol::ResnikSimilarity>(info_map_ptr);
 
 }
 
 std::shared_ptr<const kol::JiangConrathSimilarity> kgl::OntologyGeneCache::getJiangSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) {
 
-  std::shared_ptr<const kol::TermInformationContentUnique> info_map_ptr(std::make_shared<const kol::TermInformationContentUnique>( ontology_db_ptr->goGraph(),
-                                                                                                                                   ontology_db_ptr->annotation()));
-  return std::make_shared<const kol::JiangConrathSimilarity>(ontology_db_ptr->goGraph(), info_map_ptr);
+  std::shared_ptr<const kol::TermInformationContentUnique> ic_map_ptr(std::make_shared<kol::TermInformationContentUnique>(ontology_db_ptr->goGraph(),
+                                                                                                                          ontology_db_ptr->annotation()));
+  std::shared_ptr<const kol::MICASharedInformation> info_map_ptr(std::make_shared<const kol::MICASharedInformation>( ontology_db_ptr->goGraph(), ic_map_ptr));
+
+  return std::make_shared<const kol::JiangConrathSimilarity>(info_map_ptr);
 
 }
 

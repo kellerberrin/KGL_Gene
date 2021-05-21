@@ -13,7 +13,7 @@ Distributed under the Boost Software License, Version 1.0.
 namespace kellerberrin::ontology {
 
 
-/*! \class ModularJiangConrath
+/*! \class JiangConrathSimilarity
 	\brief A class to calculate Jiang Conrath similarity between 2 terms
 
 	This class calculates Jiang Conrath similarity.
@@ -32,7 +32,7 @@ namespace kellerberrin::ontology {
 	(see Lord et al.)
 
 */
-class ModularJiangConrath : public TermSimilarityInterface {
+class JiangConrathSimilarity : public TermSimilarityInterface {
 
 public:
 
@@ -40,25 +40,20 @@ public:
   /*!
     Creates the Jiang Conrath simialrity measure using a given shared information calculator
   */
-  ModularJiangConrath(const std::shared_ptr<const SharedInformationInterface> &shared_info_ptr)
+  JiangConrathSimilarity(const std::shared_ptr<const SharedInformationInterface> &shared_info_ptr)
       : shared_info_ptr_(shared_info_ptr) {}
 
-  ~ModularJiangConrath() override = default;
+  ~JiangConrathSimilarity() override = default;
 
   //! A method for calculating term-to-term similarity for GO terms using JiangConrath similarity
   /*!
     This method returns the Resnik similarity or the information content of the most informative common ancestor.
   */
+  // Implements the normalization formula used by the 'R' package GoSemSim.
   [[nodiscard]] double calculateTermSimilarity(const std::string &go_termA, const std::string &go_termB) const override;
-  //! A method for calculating term-to-term similarity for GO terms using normalized Lin similarity
-  /*!
-    This method returns the Lin similarity. Lin similarity is already normalized
-  */
-  [[nodiscard]] double calculateNormalizedTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override {
 
-    return calculateTermSimilarity(goTermA, goTermB);
-
-  }
+  // Alternative normalization formula.
+  [[nodiscard]] double calculateTermSimilarityAlt(const std::string &goTermA, const std::string &goTermB) const;
 
 private:
 

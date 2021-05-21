@@ -23,7 +23,7 @@ public:
       static_graph_ = getGoGraph();
 
     }
-    BOOST_REQUIRE(static_graph_);
+//    BOOST_REQUIRE(static_graph_);
     return *static_graph_;
 
   }

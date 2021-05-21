@@ -48,7 +48,7 @@ public:
   /*!
     This method privdes a mechanism for returing a term's infromation content.
   */
-  [[nodiscard]] double sharedInformation(const std::string &term) const override;
+  [[nodiscard]] double termInformation(const std::string &term) const override;
 
 
   //! An interface method for returning the maximum information content for a term

@@ -190,7 +190,7 @@ std::unique_ptr<std::vector<double>> kol::AsymmetricSimilarityCache::calcColumn(
   for (std::size_t column = 0; column < column_size; ++column) {
 
     const std::string &column_term = column_terms_ptr->at(column);
-    double value = term_similarity_ptr->calculateNormalizedTermSimilarity(row_term, column_term);
+    double value = term_similarity_ptr->calculateTermSimilarity(row_term, column_term);
     column_vector_ptr->at(column) = value;
 
   }

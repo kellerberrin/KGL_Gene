@@ -101,7 +101,7 @@ double kol::ExclusivelyInheritedSharedInformation::sharedInformation(const std::
 
   for (auto const &element : cda) {
 
-    meanIC(ic_map_ptr_->getValue(element));
+    meanIC(ic_map_ptr_->termInformation(element));
 
   }
 
@@ -115,9 +115,9 @@ double kol::ExclusivelyInheritedSharedInformation::sharedInformation(const std::
   This method privdes a mechanism for returing a term's infromation content.
 */
 
-double kol::ExclusivelyInheritedSharedInformation::sharedInformation(const std::string &term) const  {
+double kol::ExclusivelyInheritedSharedInformation::termInformation(const std::string &term) const  {
 
-  return ic_map_ptr_->getValue(term);
+  return ic_map_ptr_->termInformation(term);
 
 }
 
@@ -128,7 +128,7 @@ double kol::ExclusivelyInheritedSharedInformation::sharedInformation(const std::
 */
 double kol::ExclusivelyInheritedSharedInformation::maxInformationContent(const std::string &term) const  {
 
-  return ic_map_ptr_->getMaxInformation(term);
+  return ic_map_ptr_->maxInformationContent(term);
 
 }
 

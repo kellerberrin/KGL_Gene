@@ -32,7 +32,6 @@ public:
     This constructor takes pointers to GoGraph and AnnotationData objects.
       Only the parameterized construtor is allowed to ensure these objects are
       created with valid parameters.
-      This constructor relies on the TermProbabilityMap.
   */
   TermInformationContentMap( const std::shared_ptr<const GoGraph> &graph,
                              const std::shared_ptr<const AnnotationData> &annoData) {

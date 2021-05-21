@@ -35,7 +35,7 @@ double kol::TermInformationContentImpl::getRootCount(const std::string& root_id)
 }
 
 
-double kol::TermInformationContentImpl::getValue(const std::string &term_id) const {
+double kol::TermInformationContentImpl::termInformation(const std::string &term_id) const {
 
   auto result = probability_map_.find(term_id);
   if (result == probability_map_.end()) {
@@ -127,7 +127,7 @@ bool kol::TermInformationContentImpl::validateTerms(const std::string &id_termA,
   This method searches the sets to determine the most informative ancestor.
 */
 
-double kol::TermInformationContentImpl::getMICAinfo(const std::string& go_termA, const std::string& go_termB, const GoGraph &graph) const {
+double kol::TermInformationContentImpl::sharedInformation(const std::string& go_termA, const std::string& go_termB, const GoGraph &graph) const {
 
   //create 2 sets
   OntologySetType<std::string> ancestorsA = graph.getSelfAncestorTerms(go_termA);
@@ -165,7 +165,7 @@ double kol::TermInformationContentImpl::getEfficientMICA( const OntologySetType<
 
     if (larger_set.find(term) != larger_set.end()) {
 
-      double term_value = getValue(term);
+      double term_value = termInformation(term);
       if (term_value > max) {
 
         max = term_value;
@@ -202,7 +202,7 @@ double kol::TermInformationContentImpl::getMaxInformation(GO::Ontology ontology)
 }
 
 
-double kol::TermInformationContentImpl::getMaxInformation(const std::string& term_id) const {
+double kol::TermInformationContentImpl::maxInformationContent(const std::string& term_id) const {
 
   auto result = probability_map_.find(term_id);
   if (result == probability_map_.end()) {

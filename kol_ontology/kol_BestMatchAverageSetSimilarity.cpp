@@ -38,7 +38,7 @@ double kol::BestMatchAverageSetSimilarity::calculateSimilarity(const OntologySet
     //iterate B terms
     for (auto const& column : column_terms) {
       //get the term from B set
-      double sim = similarity_ptr_->calculateNormalizedTermSimilarity(row, column);
+      double sim = similarity_ptr_->calculateTermSimilarity(row, column);
 
       //add to accumulator
       max_row_term(sim);
@@ -61,7 +61,7 @@ double kol::BestMatchAverageSetSimilarity::calculateSimilarity(const OntologySet
     //iterate B terms
     for (auto const &row : row_terms) {
       //get the term from B set
-      double sim = similarity_ptr_->calculateNormalizedTermSimilarity(row, column);
+      double sim = similarity_ptr_->calculateTermSimilarity(row, column);
 
       //add to accumulator
       max_column_term(sim);

@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(test_number_of_keys)
 BOOST_AUTO_TEST_CASE(test_contains_builtin_bad_id)
 {
 
-  if (termMap().getValue("bad_go_term") != 0.0) BOOST_FAIL("Info Map contains bad term  id" );
+  if (termMap().termInformation("bad_go_term") != 0.0) BOOST_FAIL("Info Map contains bad term  id" );
   BOOST_TEST_MESSAGE( "ttest_contains_builtin_bad_id ... OK" );
 
 }
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(test_contains_builtin_bad_id)
 BOOST_AUTO_TEST_CASE(test_contains_builtin)
 {
 
-  if (termMap().getValue("GO:0000015") == 0.0) BOOST_FAIL("Info Map cannot find term" );
+  if (termMap().termInformation("GO:0000015") == 0.0) BOOST_FAIL("Info Map cannot find term" );
   BOOST_TEST_MESSAGE( "test_contains_builtin ... OK" );
 
 }
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(test_bracket_access)
 {
 
   const double info{13.52886195};
-  auto value = termMap().getValue("GO:0000015");
+  auto value = termMap().termInformation("GO:0000015");
   BOOST_CHECK_CLOSE( value, info, TEST_ACCURACY_PERCENT);
   BOOST_TEST_MESSAGE( "test_bracket_access ... OK" );
 
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(test_bracket_access)
 BOOST_AUTO_TEST_CASE(test_root_depth_0_BP)
 {
 
-  if (termMap().getValue(kol::GO::getRootTermBP()) != 0.0) BOOST_FAIL("Root node depth is not zero" );
+  if (termMap().termInformation(kol::GO::getRootTermBP()) != 0.0) BOOST_FAIL("Root node depth is not zero" );
   BOOST_TEST_MESSAGE( "test_root_depth_0_BP ... OK" );
 
 }
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(test_root_depth_0_BP)
 BOOST_AUTO_TEST_CASE(test_root_depth_0_MF)
 {
 
-  if (termMap().getValue(kol::GO::getRootTermMF()) != 0.0) BOOST_FAIL("Root node depth is not zero" );
+  if (termMap().termInformation(kol::GO::getRootTermMF()) != 0.0) BOOST_FAIL("Root node depth is not zero" );
   BOOST_TEST_MESSAGE( "test_root_depth_0_MF ... OK" );
 
 }
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(test_root_depth_0_MF)
 BOOST_AUTO_TEST_CASE(test_root_depth_0_CC)
 {
 
-  if (termMap().getValue(kol::GO::getRootTermCC()) != 0.0) BOOST_FAIL("Root node depth is not zero" );
+  if (termMap().termInformation(kol::GO::getRootTermCC()) != 0.0) BOOST_FAIL("Root node depth is not zero" );
   BOOST_TEST_MESSAGE( "test_root_depth_0_CC ... OK" );
 
 }

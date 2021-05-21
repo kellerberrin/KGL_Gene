@@ -30,7 +30,7 @@ namespace kellerberrin::ontology {
 	   complement of the probability of the mica
 	2 * IC(MICA) / ( IC(termA) + IC(termB) )*(1-p(Mica))
 */
-class ModularRelevance : public TermSimilarityInterface {
+class RelevanceSimilarity : public TermSimilarityInterface {
 
 public:
 
@@ -38,26 +38,16 @@ public:
   /*!
     Creates the default(empty) StandardRelationshipPolicy
   */
-  ModularRelevance( const std::shared_ptr<const SharedInformationInterface> &shared_info_ptr)
+  RelevanceSimilarity(const std::shared_ptr<const SharedInformationInterface> &shared_info_ptr)
       : shared_info_ptr_(shared_info_ptr) {}
 
-  ~ModularRelevance() override = default;
+  ~RelevanceSimilarity() override = default;
 
   //! A method for calculating term-to-term similarity for GO terms using Relevance similarity
   /*!
     This method returns the Relevance similarity.
   */
   [[nodiscard]] double calculateTermSimilarity(const std::string &go_termA, const std::string &go_termB) const override;
-
-  //! A method for calculating term-to-term similarity for GO terms using Normalized Relevance similarity
-  /*!
-    This method returns the Relevance similarity scaled between 0 and 1 [0,1] inclusive
-  */
-  [[nodiscard]] double calculateNormalizedTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override {
-    //Relevance's method is already normalized
-    return calculateTermSimilarity(goTermA, goTermB);
-
-  }
 
 
 private:

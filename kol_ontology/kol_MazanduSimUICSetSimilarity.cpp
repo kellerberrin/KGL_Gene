@@ -58,7 +58,7 @@ double kol::MazanduSimUICSetSimilarity::calcICSum(const OntologySetType<std::str
   double sum{0.0};
   for (auto const &term : terms) {
 
-    sum += ic_map_ptr_->getValue(term);
+    sum += ic_map_ptr_->termInformation(term);
 
   }
 

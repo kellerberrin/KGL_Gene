@@ -5,13 +5,15 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef KGL_MODULAR_LIN
 #define KGL_MODULAR_LIN
 
+
 #include "kol_TermSimilarityInterface.h"
 #include "kol_SharedInformationInterface.h"
 
+#include <memory>
 
 namespace kellerberrin::ontology {
 
-/*! \class ModularLin
+/*! \class LinSimilarity
 	\brief A class to calculate Lin similarity between 2 terms
 
 	This class calculates Lin similarity.
@@ -27,7 +29,7 @@ namespace kellerberrin::ontology {
 	2 * IC(MICA) / ( IC(termA) + IC(termB) )
 
 */
-class ModularLin : public TermSimilarityInterface {
+class LinSimilarity : public TermSimilarityInterface {
 
 public:
 
@@ -35,26 +37,14 @@ public:
   /*!
     Creates the linSimPtr calculator with a particular shared information calculator
   */
-  ModularLin(const std::shared_ptr<const SharedInformationInterface> &shared_info_ptr)
-      : shared_info_ptr_(shared_info_ptr) {}
-
-  ~ModularLin() override = default;
+  LinSimilarity(const std::shared_ptr<const SharedInformationInterface> &shared_info_ptr) : shared_info_ptr_(shared_info_ptr) {}
+  ~LinSimilarity() override = default;
 
   //! A method for calculating term-to-term similarity for GO terms using Lin similarity
   /*!
     This method returns the Resnik similarity or the information content of the most informative common ancestor.
   */
   [[nodiscard]] double calculateTermSimilarity(const std::string &go_termA, const std::string &go_termB) const override;
-
-  //! A method for calculating term-to-term similarity for GO terms using normalized Lin similarity
-  /*!
-    This method returns the Lin similarity. Lin similarity is already normalized
-  */
-  [[nodiscard]] double calculateNormalizedTermSimilarity(const std::string &goTermA, const std::string &goTermB) const override {
-
-    return calculateTermSimilarity(goTermA, goTermB);
-
-  }
 
 
 private:

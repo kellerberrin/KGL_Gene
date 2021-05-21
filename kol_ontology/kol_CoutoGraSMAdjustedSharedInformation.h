@@ -58,7 +58,7 @@ public:
   /*!
     An interface method to conventiently get information content of a single term
   */
-  [[nodiscard]] double sharedInformation(const std::string &term) const override;
+  [[nodiscard]] double termInformation(const std::string &term) const override;
 
   //! Maximum Ontology IC for normalization.
   /*!

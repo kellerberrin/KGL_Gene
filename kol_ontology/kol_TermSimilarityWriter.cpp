@@ -43,12 +43,12 @@ void kol::TermSimilarityWriter::writeSimilarityMatrix( const std::shared_ptr<con
   for (std::size_t i = 0; i < nTerms; ++i) {
 
     std::string termA = ontologyTerms.at(i);
-    matrix[i][i] = termSim->calculateNormalizedTermSimilarity(termA, termA);
+    matrix[i][i] = termSim->calculateTermSimilarity(termA, termA);
 
     for (std::size_t j = i + 1; j < nTerms; ++j) {
 
       std::string termB = ontologyTerms.at(j);
-      double value = termSim->calculateNormalizedTermSimilarity(termA, termB);
+      double value = termSim->calculateTermSimilarity(termA, termB);
       //cout << termA << "\t" << termB << "\t" << value << endl;
       matrix[i][j] = value;
       matrix[j][i] = value;

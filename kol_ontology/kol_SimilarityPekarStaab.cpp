@@ -4,7 +4,7 @@
 
 
 #include "kol_OntologyTypes.h"
-#include "kol_PekarStaabSimilarity.h"
+#include "kol_SimilarityPekarStaab.h"
 
 namespace kol = kellerberrin::ontology;
 

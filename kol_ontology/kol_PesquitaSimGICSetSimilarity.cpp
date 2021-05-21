@@ -22,7 +22,7 @@ double kol::PesquitaSimGICSetSimilarity::calculateSimilarity( const OntologySetT
   double union_sum{0.0};
   for (auto const &term : union_set) {
 
-    union_sum += ic_map_ptr_->getValue(term);
+    union_sum += ic_map_ptr_->termInformation(term);
 
   }
 
@@ -30,7 +30,7 @@ double kol::PesquitaSimGICSetSimilarity::calculateSimilarity( const OntologySetT
   double intersection_sum{0.0};
   for (auto const &term : intersection_set) {
 
-    intersection_sum += ic_map_ptr_->getValue(term);
+    intersection_sum += ic_map_ptr_->termInformation(term);
 
   }
 

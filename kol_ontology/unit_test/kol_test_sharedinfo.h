@@ -100,8 +100,8 @@ BOOST_AUTO_TEST_CASE(test_shared_information_CC_1_good_1_root)
 BOOST_AUTO_TEST_CASE(test_shared_information_single_term_CC)
 {
 
-  double value = sharedAnalysis().sharedInformation("GO:0043234");
-  BOOST_CHECK_EQUAL(value, termInformation().getValue("GO:0043234"));
+  double value = sharedAnalysis().termInformation("GO:0043234");
+  BOOST_CHECK_EQUAL(value, termInformation().termInformation("GO:0043234"));
   BOOST_TEST_MESSAGE( "test_shared_information_single_term_CC ... OK" );
 
 }
@@ -134,8 +134,8 @@ BOOST_AUTO_TEST_CASE(test_shared_information_BP)
 BOOST_AUTO_TEST_CASE(test_shared_information_single_term_BP)
 {
 
-  double value = sharedAnalysis().sharedInformation("GO:0007155");
-  BOOST_CHECK_EQUAL(value, termInformation().getValue("GO:0007155"));
+  double value = sharedAnalysis().termInformation("GO:0007155");
+  BOOST_CHECK_EQUAL(value, termInformation().termInformation("GO:0007155"));
   BOOST_TEST_MESSAGE( "test_shared_information_single_term_BP ... OK" );
 
 }
@@ -168,8 +168,8 @@ BOOST_AUTO_TEST_CASE(test_shared_information_MF)
 BOOST_AUTO_TEST_CASE(test_shared_information_single_term_MF)
 {
 
-  double value = sharedAnalysis().sharedInformation("GO:0051192");
-  BOOST_CHECK_EQUAL(value, termInformation().getValue("GO:0051192"));
+  double value = sharedAnalysis().termInformation("GO:0051192");
+  BOOST_CHECK_EQUAL(value, termInformation().termInformation("GO:0051192"));
   BOOST_TEST_MESSAGE( "test_shared_information_single_term_MF ... OK" );
 
 }

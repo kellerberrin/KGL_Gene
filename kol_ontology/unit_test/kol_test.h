@@ -62,10 +62,12 @@ protected:
 
   }
 
+
+
 private:
 
   inline static std::unique_ptr<const TermSimilarityInterface> term_similarity_ptr_;
-  const static TestValues test_values_;
+  inline const static TestValues test_values_;
 
   [[nodiscard]] virtual std::unique_ptr<const TermSimilarityInterface> getSimilarityAnalysis() = 0;
 
@@ -89,9 +91,11 @@ private:
     std::shared_ptr<const GoGraph> graph_ptr = TestSimilarity<TestValues>::getGoGraph();
     std::shared_ptr<const AnnotationData> annotation_ptr = TestSimilarity<TestValues>::getAnnotation();
     std::shared_ptr<const TermInformationContentMap> info_map_ptr(std::make_shared<const TermInformationContentMap>(graph_ptr, annotation_ptr));
-    return std::make_unique<const SimAnalysis>(graph_ptr, info_map_ptr);
+    std::shared_ptr<const MICASharedInformation> shared_information_ptr(std::make_shared<const MICASharedInformation>(graph_ptr, info_map_ptr));
+    return std::make_unique<const SimAnalysis>(shared_information_ptr);
 
   }
+
 
 };
 
@@ -118,80 +122,6 @@ private:
 };
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Test Modular Similarity Types
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class SimAnalysis, class ModSimAnalysis>
-class TestModTermSimilarity {
-
-public:
-
-  TestModTermSimilarity() = default;
-
-  ~TestModTermSimilarity() = default;
-
-
-  [[nodiscard]] static const TermSimilarityInterface &termSimilarity() {
-
-    if (not term_similarity_ptr_) {
-
-      getModSimilarityAnalysis();
-
-    }
-    BOOST_REQUIRE(term_similarity_ptr_);
-    return *term_similarity_ptr_;
-
-  }
-
-  [[nodiscard]] static const TermSimilarityInterface &termModSimilarity() {
-
-    if (not term_modular_similarity_ptr_) {
-
-      getModSimilarityAnalysis();
-
-    }
-    BOOST_REQUIRE(term_modular_similarity_ptr_);
-    return *term_modular_similarity_ptr_;
-
-  }
-
-  const static constexpr double TEST_ACCURACY_PERCENT{0.0001};
-
-
-private:
-
-  inline static std::unique_ptr<const TermSimilarityInterface> term_similarity_ptr_;
-  inline static std::unique_ptr<const TermSimilarityInterface> term_modular_similarity_ptr_;
-
-  static void getModSimilarityAnalysis() {
-
-    std::shared_ptr<const GoGraph> graph_ptr = getGoGraph();
-    std::shared_ptr<const AnnotationData> annotation_ptr = getAnnotation();
-    std::shared_ptr<const TermInformationContentMap> info_map_ptr(std::make_shared<const TermInformationContentMap>(graph_ptr, annotation_ptr));
-    term_similarity_ptr_ = std::make_unique<const SimAnalysis>(graph_ptr, info_map_ptr);
-    std::shared_ptr<const MICASharedInformation> shared_information_ptr(std::make_shared<const MICASharedInformation>(graph_ptr, info_map_ptr));
-    term_modular_similarity_ptr_ = std::make_unique<const ModSimAnalysis>(shared_information_ptr);
-
-  }
-
-  [[nodiscard]] static std::unique_ptr<const AnnotationData> getAnnotation() {
-
-    auto anno_parser_ptr = AnnotationParserFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
-                                                                           DisallowedSetEvidencePolicy());
-    BOOST_REQUIRE(anno_parser_ptr);
-    return anno_parser_ptr->parseAnnotationFile(UnitTestDefinitions::gafFileName());
-
-  }
-
-  [[nodiscard]] static std::unique_ptr<const GoGraph> getGoGraph() {
-
-    auto go_parser_ptr = GoParserFactory::createGoParser(GoParserType::OBO_GO_STANDARD);
-    BOOST_REQUIRE(go_parser_ptr);
-    return go_parser_ptr->parseGoFile(UnitTestDefinitions::oboFileName());
-
-  }
-
-};
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -256,7 +186,7 @@ protected:
   inline static std::shared_ptr<const AnnotationData> annotation_ptr_;
   inline static std::shared_ptr<const GoGraph> graph_ptr_;
   inline static std::unique_ptr<const TermSetSimilarityInterface> set_similarity_ptr_;
-  const static TestValues test_values_;
+  inline const static TestValues test_values_;
 
   virtual void getSetSimilarityAnalysis() = 0;
 
@@ -298,8 +228,9 @@ private:
 
     TSS::graph_ptr_ = TSS::getGoGraph();
     TSS::annotation_ptr_ = TSS::getAnnotation();
-    std::shared_ptr<const TermInformationContentMap> info_map_ptr(std::make_shared<const TermInformationContentMap>(TSS::graph_ptr_, TSS::annotation_ptr_));
-    std::shared_ptr<const SimAnalysis> similarity_ptr(std::make_shared<const SimAnalysis>(TSS::graph_ptr_, info_map_ptr));
+    std::shared_ptr<const TermInformationContentMap> ic_map_ptr(std::make_shared<const TermInformationContentMap>(TSS::graph_ptr_, TSS::annotation_ptr_));
+    std::shared_ptr<const MICASharedInformation> info_map_ptr(std::make_shared<const MICASharedInformation>( TSS::graph_ptr_, ic_map_ptr));
+    std::shared_ptr<const SimAnalysis> similarity_ptr(std::make_shared<const SimAnalysis>(info_map_ptr));
     TSS::set_similarity_ptr_ = std::make_unique<const SetSimAnalysis>(similarity_ptr);
 
   }
@@ -454,7 +385,7 @@ protected:
 
 private:
 
-  const static TestValues test_values_;
+  inline const static TestValues test_values_;
 
   virtual void getSimilarityAnalysis() = 0;
 

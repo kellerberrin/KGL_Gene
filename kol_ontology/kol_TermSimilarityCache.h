@@ -20,7 +20,8 @@ namespace kellerberrin::ontology {
 //! A multi-threaded class write a term similarity matrix to a memory cache.
 /*! \class TermSimilarityCache
 	This class creates a memory cache similarity matrix by calculating all similarity values
-	  between pairs of terms. Warning this object can use several gigabytes of memory.
+	  between pairs of terms.
+	  Warning! this object can use several gigabytes of memory.
 	  Matrix creation time will depend on the number of execution threads committed to matrix creation.
 	  Defaults to (HW threads available - 1).
 */
@@ -53,15 +54,6 @@ public:
   */
   [[nodiscard]] double calculateTermSimilarity(const std::string &row_term, const std::string &column_term) const override;
 
-  //! A method for calculating term-to-term similarity for GO terms using a precomputed similarity matrix.
-  /*!
-    This method returns the similarity scaled between 0 and 1 [0,1] inclusive
-  */
-  [[nodiscard]] double calculateNormalizedTermSimilarity(const std::string &term_A, const std::string &term_B) const override {
-
-    return calculateTermSimilarity(term_A, term_B);
-
-  }
 
   // termCount() == 0 is an error condition.
   [[nodiscard]] size_t termCount() const { return cache_matrix_.size(); }

@@ -9,17 +9,11 @@ struct JiangConrathSimValues {
   const static constexpr double TEST_SIMILARITY_BAD_IDS{0.0};
   const static constexpr double TEST_SIMILARITY_1_BAD_1_GOOD_ID{0.0};
   const static constexpr double TEST_SIMILARITY_CC_REFLEXIVE_SIM{1.0};
-  const static constexpr double TEST_SIMILARITY_CC{0.789688805};
-  const static constexpr double TEST_SIMILARITY_CC_1_GOOD_1_ROOT{0.808623394};
-  const static constexpr double TEST_NORMALIZED_SIMILARITY_CC_REFLEXIVE_SIM{1.0};
-  const static constexpr double TEST_NORMALIZED_SIMILARITY_CC{0.789688805};
-  const static constexpr double TEST_NORMALIZED_SIMILARITY_CC_1_GOOD_1_ROOT{0.808623394};
-  const static constexpr double TEST_SIMILARITY_BP{0.814125375};
-  const static constexpr double TEST_NORMALIZED_SIMILARITY_BP{0.81412537};
-  const static constexpr double TEST_SIMILARITY_MF{0.74620920};
-  const static constexpr double TEST_NORMALIZED_SIMILARITY_MF{0.74620920};
+  const static constexpr double TEST_SIMILARITY_CC{0.57937761048302017};
+  const static constexpr double TEST_SIMILARITY_CC_1_GOOD_1_ROOT{0.61724678962370871};
+  const static constexpr double TEST_SIMILARITY_BP{0.62825075086167881};
+  const static constexpr double TEST_SIMILARITY_MF{0.49241841725331459};
   const static constexpr double TEST_CROSS_ONTOLOGY_SIMILARITY{0.0};
-  const static constexpr double TEST_CROSS_ONTOLOGY_NORMALIZED_SIMILARITY{0.0};
 
 };
 

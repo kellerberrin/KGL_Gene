@@ -35,7 +35,7 @@ public:
   /*!
     This pure virtual method privdes a mechanism for returing a term's information content.
   */
-  [[nodiscard]] virtual double sharedInformation(const std::string &term) const = 0;
+  [[nodiscard]] virtual double termInformation(const std::string &term) const = 0;
 
   //! A pure virtual method for returning the maximum information content for a term
   /*!
@@ -48,7 +48,7 @@ public:
   /*!
     Return true the ids are found and the same ontology, false if not
   */
-  [[nodiscard]] virtual bool validateTerms(const std::string &id_termA, const std::string &id_termB) const = 0;
+  [[nodiscard]] virtual bool validateTerms(const std::string &termA, const std::string &termB) const = 0;
 
 };
 

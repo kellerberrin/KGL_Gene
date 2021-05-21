@@ -10,7 +10,7 @@ Distributed under the Boost Software License, Version 1.0.
 
 namespace kellerberrin::ontology {
 
-/*! \class ModularResnik
+/*! \class ResnikSimilarity
 	\brief A class to calculate resnik similarity between 2 terms using a shared information interface
 
 	This class calculates Resnik similarity.
@@ -25,7 +25,7 @@ namespace kellerberrin::ontology {
 	IC(MICA)
 
 */
-class ModularResnik : public TermSimilarityInterface {
+class ResnikSimilarity : public TermSimilarityInterface {
 
 public:
 
@@ -33,22 +33,14 @@ public:
   /*!
     Creates the default(empty) StandardRelationshipPolicy
   */
-  ModularResnik(const std::shared_ptr<const SharedInformationInterface> &shared_info_ptr)
-      : shared_info_ptr_(shared_info_ptr) {}
-
-  ~ModularResnik() override = default;
+  ResnikSimilarity(const std::shared_ptr<const SharedInformationInterface> &shared_info_ptr) : shared_info_ptr_(shared_info_ptr) {}
+  ~ResnikSimilarity() override = default;
 
   //! A method for calculating term-to-term similarity for GO terms using Resnik similarity
   /*!
     This method returns the Resnik similarity or the information content of the most informative common ancestor.
   */
   [[nodiscard]] double calculateTermSimilarity(const std::string &go_termA, const std::string &go_termB) const override;
-
-  //! A method for calculating term-to-term similarity for GO terms using Normalized Resnik similarity
-  /*!
-    This method returns the Resnik similarity divided by the maximum possible similarity
-  */
-  [[nodiscard]] double calculateNormalizedTermSimilarity(const std::string &go_termA, const std::string &go_termB) const override;
 
 private:
 

@@ -39,7 +39,7 @@ kol::OntologySetType<std::string> kol::CoutoGraSMAdjustedSharedInformation::getC
   //create a pair to associate a term with its information content
   for (auto const &term : commonAncestors) {
 
-    orderedCommonAncestors.emplace_back(ic_map_ptr_->getValue(term), term);
+    orderedCommonAncestors.emplace_back(ic_map_ptr_->termInformation(term), term);
 
   }
 
@@ -106,7 +106,7 @@ bool kol::CoutoGraSMAdjustedSharedInformation::isDisjoint( const std::string &te
 
   }
 
-  if (ic_map_ptr_->getValue(termA1) <= ic_map_ptr_->getValue(termA2)) {
+  if (ic_map_ptr_->termInformation(termA1) <= ic_map_ptr_->termInformation(termA2)) {
     //std::cout << "case 1" << std::endl;
     size_t nPaths = getNumPaths(termA1, termA2);
     //std::cout << "nPaths " << termA1 << " to "  << termA2 << " " << nPaths << std::endl << std::endl;
@@ -139,7 +139,7 @@ bool kol::CoutoGraSMAdjustedSharedInformation::isDisjoint( const std::string &te
 size_t kol::CoutoGraSMAdjustedSharedInformation::getNumPaths( const std::string &termA,
                                                               const std::string &termB) const {
 
-  if (ic_map_ptr_->getValue(termA) > ic_map_ptr_->getValue(termB)) {
+  if (ic_map_ptr_->termInformation(termA) > ic_map_ptr_->termInformation(termB)) {
 
     return 0;
 
@@ -169,7 +169,7 @@ double kol::CoutoGraSMAdjustedSharedInformation::sharedInformation(const std::st
 
   for (auto const &term : cda) {
     //std::cout << ic_map_ptr_[*iter] << std::endl;
-    meanIC(ic_map_ptr_->getValue(term));
+    meanIC(ic_map_ptr_->termInformation(term));
 
   }
 
@@ -181,10 +181,10 @@ double kol::CoutoGraSMAdjustedSharedInformation::sharedInformation(const std::st
 /*!
   An interface method to conventiently get information content of a single term
 */
-double kol::CoutoGraSMAdjustedSharedInformation::sharedInformation(const std::string &term) const {
+double kol::CoutoGraSMAdjustedSharedInformation::termInformation(const std::string &term) const {
   // return 0 for any terms not in the datbase
 
-  return ic_map_ptr_->getValue(term);
+  return ic_map_ptr_->termInformation(term);
 
 }
 
@@ -194,7 +194,7 @@ double kol::CoutoGraSMAdjustedSharedInformation::sharedInformation(const std::st
 */
 double kol::CoutoGraSMAdjustedSharedInformation::maxInformationContent(const std::string &term) const {
 
-  return ic_map_ptr_->getMaxInformation(term);
+  return ic_map_ptr_->maxInformationContent(term);
 
 }
 
@@ -205,7 +205,7 @@ double kol::CoutoGraSMAdjustedSharedInformation::maxInformationContent(const std
 */
 std::size_t kol::CoutoGraSMAdjustedSharedInformation::pathCount(const std::string &termA, const std::string &termB) const {
 
-  if (ic_map_ptr_->getValue(termA) > ic_map_ptr_->getValue(termB)) {
+  if (ic_map_ptr_->termInformation(termA) > ic_map_ptr_->termInformation(termB)) {
 
     return 0;
 

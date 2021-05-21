@@ -9,9 +9,9 @@
 #include "kgl_ontology_database.h"
 #include "kol_GoEnums.h"
 #include "kol_AsymmetricSimilarityCache.h"
-#include "kol_LinSimilarity.h"
-#include "kol_ResnikSimilarity.h"
-#include "kol_JiangConrathSimilarity.h"
+#include "kol_SimilarityLin.h"
+#include "kol_SimilarityResnik.h"
+#include "kol_SimilarityJiangConrath.h"
 #include "kol_BestMatchAverageSetSimilarity.h"
 
 

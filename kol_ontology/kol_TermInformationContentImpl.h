@@ -23,6 +23,9 @@ namespace kellerberrin::ontology {
 
 */
 
+
+using TermProbOntMap = OntologyMapType<std::string, std::pair<double, GO::Ontology>>;
+
 class TermInformationContentImpl : public TermInformationInterface {
 
 public:
@@ -32,7 +35,7 @@ public:
     Get the vector of values
   */
 
-  [[nodiscard]] const TermProbOntMap &getValues() const override { return probability_map_; }
+  [[nodiscard]] const TermProbOntMap &getValues() const { return probability_map_; }
 
   //! Method to test if the id exists in the map
   /*!
@@ -45,7 +48,7 @@ public:
   Get the value mapped by the given key. A specified function for the [] operator
   */
 
-  [[nodiscard]] double getValue(const std::string &term_id) const override;
+  [[nodiscard]] double termInformation(const std::string &term_id) const override;
 
   //-------------------------------------------------------------------
 
@@ -54,14 +57,14 @@ public:
     This function returns the the maximum information content for an ontology class
   */
 
-  [[nodiscard]] double getMaxInformation(const std::string& term_id) const override;
+  [[nodiscard]] double maxInformationContent(const std::string& term_id) const override;
 
   //! Public method for calculating the most informative common ancestor value
   /*!
     This method searches the sets to determine the most informative ancestor.
   */
 
-  [[nodiscard]] double getMICAinfo(const std::string& go_termA, const std::string& go_termB, const GoGraph &graph) const override;
+  [[nodiscard]] double sharedInformation(const std::string& go_termA, const std::string& go_termB, const GoGraph &graph) const override;
 
 protected:
 
