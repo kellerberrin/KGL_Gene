@@ -4,7 +4,7 @@
 
 #include "kel_exec_env.h"
 #include "kel_thread_pool.h"
-#include "kol_TermSimilarityCache.h"
+#include "kol_SimilarityCache.h"
 
 
 namespace kol = kellerberrin::ontology;

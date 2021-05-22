@@ -8,7 +8,7 @@ Distributed under the Boost Software License, Version 1.0.
 #include <vector>
 #include <exception>
 
-#include "kol_TermSimilarityInterface.h"
+#include "kol_SimilarityInterface.h"
 
 namespace kellerberrin::ontology {
 

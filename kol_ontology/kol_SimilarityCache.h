@@ -2,8 +2,8 @@
 // Created by kellerberrin on 7/4/21.
 //
 
-#ifndef KGL_KOL_TERMSIMILARITYCACHE_H
-#define KGL_KOL_TERMSIMILARITYCACHE_H
+#ifndef KGL_KOL_SIMILARITYCACHE_H
+#define KGL_KOL_SIMILARITYCACHE_H
 
 
 #include <vector>
@@ -12,7 +12,7 @@
 #include "kol_GoEnums.h"
 #include "kol_GoGraph.h"
 #include "kol_AnnotationData.h"
-#include "kol_TermSimilarityInterface.h"
+#include "kol_SimilarityInterface.h"
 
 namespace kellerberrin::ontology {
 

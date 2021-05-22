@@ -6,7 +6,7 @@ Distributed under the Boost Software License, Version 1.0.
 #define KGL_MODULAR_LIN
 
 
-#include "kol_TermSimilarityInterface.h"
+#include "kol_SimilarityInterface.h"
 #include "kol_SharedInformationInterface.h"
 
 #include <memory>

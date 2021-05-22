@@ -287,9 +287,9 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_TermDepthMap.h
         kol_ontology/kol_TermInformationContentMap.h
         kol_ontology/kol_TermSetSimilarityInterface.h
-        kol_ontology/kol_TermSimilarityInterface.h
+        kol_ontology/kol_SimilarityInterface.h
         kol_ontology/kol_TermSimilarityWriter.h
-        kol_ontology/kol_TermSimilarityCache.h
+        kol_ontology/kol_SimilarityCache.h
         kol_ontology/xml/rapidxml.h
         kol_ontology/xml/rapidxml_iterators.h
         kol_ontology/xml/rapidxml_print.h
@@ -298,7 +298,7 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_AnnotationData.cpp
         kol_ontology/kol_GoGraph.cpp
         kol_ontology/kol_FrontierSharedInformation.cpp
-        kol_ontology/kol_TermSimilarityCache.cpp
+        kol_ontology/kol_SimilarityCache.cpp
         kol_ontology/kol_AsymmetricSimilarityCache.cpp
         kol_ontology/kol_AsymmetricSimilarityCache.h
         kol_ontology/kol_BestMatchAverageSetSimilarity.cpp
@@ -330,7 +330,15 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_AnnotationData.cpp
         kol_ontology/kgl_ontology/kgl_gene_cache_ontology.cpp
         kol_ontology/kgl_ontology/kgl_gene_cache_ontology.h
-        kol_ontology/kgl_ontology/kgl_ontology_database_test.cpp kol_ontology/kgl_ontology/kgl_ontology_database_test.h kol_ontology/kol_TermInformationInterface.h kol_ontology/kol_SimilarityRelevance.h kol_ontology/kol_TermInformationContentUnique.h kol_ontology/kol_TermInformationContentMap.cpp kol_ontology/kol_TermInformationContentImpl.cpp kol_ontology/kol_TermInformationContentImpl.h kol_ontology/kol_TermInformationContentUnique.cpp)
+        kol_ontology/kgl_ontology/kgl_ontology_database_test.cpp
+        kol_ontology/kgl_ontology/kgl_ontology_database_test.h
+        kol_ontology/kol_TermInformationInterface.h
+        kol_ontology/kol_SimilarityRelevance.h
+        kol_ontology/kol_TermInformationContentUnique.h
+        kol_ontology/kol_TermInformationContentMap.cpp
+        kol_ontology/kol_TermInformationContentImpl.cpp
+        kol_ontology/kol_TermInformationContentImpl.h
+        kol_ontology/kol_TermInformationContentUnique.cpp)
 
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES

@@ -6,7 +6,7 @@
 #define KOL_MODULARRELEVANCE_H
 
 
-#include "kol_TermSimilarityInterface.h"
+#include "kol_SimilarityInterface.h"
 #include "kol_TermInformationContentMap.h"
 #include "kol_GoGraph.h"
 

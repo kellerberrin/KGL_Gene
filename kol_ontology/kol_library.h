@@ -57,8 +57,8 @@ Distributed under the Boost Software License, Version 1.0.
 #include "kol_TermInformationContentMap.h"
 #include "kol_TermInformationContentUnique.h"
 #include "kol_TermSetSimilarityInterface.h"
-#include "kol_TermSimilarityCache.h"
-#include "kol_TermSimilarityInterface.h"
+#include "kol_SimilarityCache.h"
+#include "kol_SimilarityInterface.h"
 #include "kol_TermSimilarityWriter.h"
 
 

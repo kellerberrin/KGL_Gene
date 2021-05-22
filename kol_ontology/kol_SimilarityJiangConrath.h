@@ -5,7 +5,7 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef KGL_MODULAR_JIANG_CONRATH
 #define KGL_MODULAR_JIANG_CONRATH
 
-#include "kol_TermSimilarityInterface.h"
+#include "kol_SimilarityInterface.h"
 #include "kol_SharedInformationInterface.h"
 
 #include <memory>
