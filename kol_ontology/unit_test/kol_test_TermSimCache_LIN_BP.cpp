@@ -100,8 +100,7 @@ private:
     go_graph_ptr = getGoGraph();
     annotation_ptr = getAnnotation();
     std::shared_ptr<const InformationContent> ic_map_ptr(std::make_shared<const InformationContent>(go_graph_ptr, annotation_ptr));
-    std::shared_ptr<const MICASharedInformation> info_map_ptr(std::make_shared<const MICASharedInformation>( go_graph_ptr, ic_map_ptr));
-    term_similarity_ptr = std::make_shared<const SimilarityLin>(info_map_ptr);
+    term_similarity_ptr = std::make_shared<const SimilarityLin>(ic_map_ptr);
     cache_similarity_ptr = std::make_shared<const TermSimilarityCache>(go_graph_ptr, annotation_ptr, term_similarity_ptr, GO::Ontology::BIOLOGICAL_PROCESS);
 
   }

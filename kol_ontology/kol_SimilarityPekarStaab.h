@@ -8,7 +8,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #define PEKAR_STAAB_SIMILARITY
 
 #include <kol_SimilarityInterface.h>
-#include <kol_TermDepthMap.h>
+#include <kol_InformationDepthMap.h>
 #include <kol_GoGraph.h>
 
 namespace kellerberrin::ontology {
@@ -40,7 +40,7 @@ public:
     Creates the default(empty) StandardRelationshipPolicy
   */
   SimilarityPekarStaab(const std::shared_ptr<const GoGraph> &graph_ptr,
-                       const std::shared_ptr<const TermDepthMap> &depth_map_ptr)
+                       const std::shared_ptr<const InformationDepthMap> &depth_map_ptr)
       : graph_ptr_(graph_ptr), depth_map_ptr_(depth_map_ptr) {}
 
   ~SimilarityPekarStaab() override = default;
@@ -56,7 +56,7 @@ public:
 private:
 
   std::shared_ptr<const GoGraph> graph_ptr_;
-  std::shared_ptr<const TermDepthMap> depth_map_ptr_;
+  std::shared_ptr<const InformationDepthMap> depth_map_ptr_;
 
 };
 

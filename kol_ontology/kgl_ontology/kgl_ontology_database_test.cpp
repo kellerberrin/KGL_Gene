@@ -6,7 +6,6 @@
 #include "kel_exec_env.h"
 #include "kgl_gene_app.h"
 #include "kel_utility.h"
-#include "kol_MICASharedInformation.h"
 #include "kol_InformationContentDAG.h"
 #include "kol_InformationContent.h"
 

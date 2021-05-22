@@ -12,7 +12,7 @@ Distributed under the Boost Software License, Version 1.0.
 
 namespace kellerberrin::ontology {
 
-/*! \class TermDepthMap
+/*! \class InformationDepthMap
 	\brief A class to calculate the depth of a GO term in the ontology.
 
 	This class provides a map that returns the depth of a GO term. This method
@@ -20,7 +20,7 @@ namespace kellerberrin::ontology {
 */
 using TermDepthType = size_t;
 
-class TermDepthMap {
+class InformationDepthMap {
 public:
   //! A parameterized constructor
   /*!
@@ -28,17 +28,17 @@ public:
       Only the parameterized construtor is allowed to ensure these objects are
       created with valid parameters.
   */
-  explicit TermDepthMap(const GoGraph &graph) { initializeDepthMap(graph); }
+  explicit InformationDepthMap(const GoGraph &graph) { initializeDepthMap(graph); }
   //! A default constructor
   /*!
     This constructor initialized the storage structures. Should not be used.
   */
-  TermDepthMap() = delete;
+  InformationDepthMap() = delete;
   //! A default desctructor
   /*!
     This desctructor clears the containters
   */
-  ~TermDepthMap() = default;
+  ~InformationDepthMap() = default;
 
   //! Accessor for probablities vector
   /*!

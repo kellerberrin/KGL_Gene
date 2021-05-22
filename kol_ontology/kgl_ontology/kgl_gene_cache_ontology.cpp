@@ -5,7 +5,6 @@
 #include "kgl_gene_cache_ontology.h"
 #include "kgl_ontology_database_test.h"
 #include "kol_InformationContent.h"
-#include "kol_MICASharedInformation.h"
 #include "kel_exec_env.h"
 
 namespace kol = kellerberrin::ontology;

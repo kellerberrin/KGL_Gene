@@ -4,7 +4,7 @@
 
 
 #include "kol_OntologyTypes.h"
-#include "kol_TermDepthMap.h"
+#include "kol_InformationDepthMap.h"
 
 #include <boost/graph/breadth_first_search.hpp>
 #include <boost/graph/reverse_graph.hpp>
@@ -22,7 +22,7 @@ namespace kol = kellerberrin::ontology;
 /*!
   Returns all valid keys in the map.
 */
-std::vector<std::string> kol::TermDepthMap::getKeys() const {
+std::vector<std::string> kol::InformationDepthMap::getKeys() const {
 
   std::vector<std::string> keys;
   for (auto const&[key, value] : name_to_index_) {
@@ -39,7 +39,7 @@ std::vector<std::string> kol::TermDepthMap::getKeys() const {
 /*!
   Get the value mapped by the given key. A specified function for the [] operator
 */
-kol::TermDepthType kol::TermDepthMap::getValue(const std::string &termId) const {
+kol::TermDepthType kol::InformationDepthMap::getValue(const std::string &termId) const {
 
   if (not hasTerm(termId) or termId.empty()) {
 
@@ -57,8 +57,8 @@ kol::TermDepthType kol::TermDepthMap::getValue(const std::string &termId) const 
 /*!
   This method searches the sets to determine the deepest common ancestor
 */
-std::string kol::TermDepthMap::getLCA( const OntologySetType<std::string> &ancestorsA,
-                                       const OntologySetType<std::string> &ancestorsB) const {
+std::string kol::InformationDepthMap::getLCA(const OntologySetType<std::string> &ancestorsA,
+                                             const OntologySetType<std::string> &ancestorsB) const {
   //get the first term as a start
   if (ancestorsA.size() < ancestorsB.size()) {
 
@@ -77,7 +77,7 @@ std::string kol::TermDepthMap::getLCA( const OntologySetType<std::string> &ances
   This method actually calculates the depth values.
 */
 
-void kol::TermDepthMap::initializeDepthMap(const GoGraph &graph) {
+void kol::InformationDepthMap::initializeDepthMap(const GoGraph &graph) {
 
   //Initialize an annotation list the size of verticies in go, each value is 0
   //depths_ = std::vector<std::size_t>(graph->getNumVertices(),0);
@@ -147,7 +147,7 @@ void kol::TermDepthMap::initializeDepthMap(const GoGraph &graph) {
 /*!
   This method searches the sets to determine the deepest common ancestor
 */
-std::string kol::TermDepthMap::getEfficientLCA(const OntologySetType<std::string> &smaller_set, const OntologySetType<std::string> &larger_set) const {
+std::string kol::InformationDepthMap::getEfficientLCA(const OntologySetType<std::string> &smaller_set, const OntologySetType<std::string> &larger_set) const {
   //get the first term as a start
   std::string lca;
   //max depth

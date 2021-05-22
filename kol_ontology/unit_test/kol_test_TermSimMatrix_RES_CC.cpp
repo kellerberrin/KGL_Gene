@@ -75,8 +75,7 @@ private:
     std::shared_ptr<const GoGraph> graph_ptr = getGoGraph();
     std::shared_ptr<const AnnotationData> annotation_ptr = getAnnotation();
     std::shared_ptr<const InformationContentDAG> ic_map_ptr(std::make_shared<const InformationContentDAG>(graph_ptr, annotation_ptr));
-    std::shared_ptr<const MICASharedInformation> info_map_ptr(std::make_shared<const MICASharedInformation>( graph_ptr, ic_map_ptr));
-    term_similarity_ptr_ = std::make_shared<const SimilarityResnik>(info_map_ptr);
+    term_similarity_ptr_ = std::make_shared<const SimilarityResnik>(ic_map_ptr);
     std::shared_ptr<const SimilarityWriter> sim_writer_ptr = std::make_shared<const SimilarityWriter>(graph_ptr, annotation_ptr);
     if constexpr (WRITER_TEST) {
 

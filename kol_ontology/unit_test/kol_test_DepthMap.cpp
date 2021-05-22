@@ -17,7 +17,7 @@ public:
 
   ~TestDepthMap() = default;
 
-  [[nodiscard]] static const TermDepthMap &depthMap() {
+  [[nodiscard]] static const InformationDepthMap &depthMap() {
 
     if (not depth_map_ptr_) {
 
@@ -56,11 +56,11 @@ private:
 
     go_graph_ptr_ = getGoGraph();
     BOOST_REQUIRE(go_graph_ptr_);
-    depth_map_ptr_ = std::make_unique<const TermDepthMap>(*go_graph_ptr_);
+    depth_map_ptr_ = std::make_unique<const InformationDepthMap>(*go_graph_ptr_);
 
   }
 
-  inline static std::unique_ptr<const TermDepthMap> depth_map_ptr_;
+  inline static std::unique_ptr<const InformationDepthMap> depth_map_ptr_;
   inline static std::unique_ptr<const GoGraph> go_graph_ptr_;
 
 };

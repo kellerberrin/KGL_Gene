@@ -270,7 +270,6 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_SetSimilarityMazanduSimDIC.h
         kol_ontology/kol_SetSimilarityMazanduSimUIC.h
         kol_ontology/kol_MgiAnnotationParser.h
-        kol_ontology/kol_MICASharedInformation.h
         kol_ontology/kol_SimilarityJiangConrath.h
         kol_ontology/kol_SimilarityLin.h
         kol_ontology/kol_SimilarityResnik.h
@@ -284,7 +283,7 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_StandardOboGoParser.h
         kol_ontology/kol_StandardRelationshipPolicy.h
         kol_ontology/kol_StandardXmlGoParser.h
-        kol_ontology/kol_TermDepthMap.h
+        kol_ontology/kol_InformationDepthMap.h
         kol_ontology/kol_InformationContentDAG.h
         kol_ontology/kol_SetSimilarityInterface.h
         kol_ontology/kol_SimilarityInterface.h
@@ -315,8 +314,7 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_AllowedRelationshipOboGoParser.cpp
         kol_ontology/kol_AllowedRelationshipXmlGoParser.cpp
         kol_ontology/kol_InformationAncestorMean.cpp
-        kol_ontology/kol_MICASharedInformation.cpp
-        kol_ontology/kol_TermDepthMap.cpp
+        kol_ontology/kol_InformationDepthMap.cpp
         kol_ontology/kol_SimilarityPekarStaab.cpp
         kol_ontology/kol_SimilarityWriter.cpp
         kol_ontology/kol_RapidXmlGoParser.cpp
@@ -332,7 +330,6 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kgl_ontology/kgl_gene_cache_ontology.h
         kol_ontology/kgl_ontology/kgl_ontology_database_test.cpp
         kol_ontology/kgl_ontology/kgl_ontology_database_test.h
-        kol_ontology/kol_TermInformationInterface.h
         kol_ontology/kol_SimilarityRelevance.h
         kol_ontology/kol_InformationContent.h
         kol_ontology/kol_InformationContentDAG.cpp
@@ -370,7 +367,6 @@ set(ONTOLOGY_UNIT_TEST_FILES
         kol_ontology/unit_test/kol_test_SharedCouto.cpp
         kol_ontology/unit_test/kol_test_SharedExInherit.cpp
         kol_ontology/unit_test/kol_test_SharedFrontier.cpp
-        kol_ontology/unit_test/kol_test_SharedMICA.cpp
         kol_ontology/unit_test/kol_test_DepthMap.cpp
         kol_ontology/unit_test/kol_test_TermInfoMap.cpp
         kol_ontology/unit_test/kol_test_TermSimMatrix_JC_BP.cpp
