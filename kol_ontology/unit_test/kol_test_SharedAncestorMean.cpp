@@ -26,7 +26,7 @@ struct AncestorMeanSharedValues {
 
 namespace kol = kellerberrin::ontology;
 
-using TestSimilarityClass = kol::TestSharedSimilarity<kol::AncestorMeanSharedInformation, AncestorMeanSharedValues>;
+using TestSimilarityClass = kol::TestSharedSimilarity<kol::InformationAncestorMean, AncestorMeanSharedValues>;
 
 BOOST_FIXTURE_TEST_SUITE(TestAncestorMeanSharedSuite, TestSimilarityClass)
 

@@ -25,7 +25,7 @@ struct AdjCoutoSharedValues {
 
 namespace kol = kellerberrin::ontology;
 
-using TestSimilarityClass = kol::TestSharedSimilarity<kol::CoutoGraSMAdjustedSharedInformation, AdjCoutoSharedValues>;
+using TestSimilarityClass = kol::TestSharedSimilarity<kol::InformationCoutoGraSMAdjusted, AdjCoutoSharedValues>;
 
 BOOST_FIXTURE_TEST_SUITE(TestAdjCoutoSharedSuite, TestSimilarityClass)
 

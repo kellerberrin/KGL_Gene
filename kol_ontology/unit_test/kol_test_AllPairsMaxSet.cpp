@@ -24,7 +24,7 @@ struct AllPairsMaxSetValues {
 
 namespace kol = kellerberrin::ontology;
 
-using TestSimilarityClass = kol::TestSetTermSimilarity<kol::ResnikSimilarity, kol::AllPairsMaxSetSimilarity, AllPairsMaxSetValues>;
+using TestSimilarityClass = kol::TestSetTermSimilarity<kol::SimilarityResnik, kol::SetSimilarityAllPairsMax, AllPairsMaxSetValues>;
 
 BOOST_FIXTURE_TEST_SUITE(TestAllPairsMaxSetSuite, TestSimilarityClass)
 

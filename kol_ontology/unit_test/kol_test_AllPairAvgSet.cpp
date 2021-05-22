@@ -24,7 +24,7 @@ struct AllPairsAvgSetValues {
 
 namespace kol = kellerberrin::ontology;
 
-using TestSimilarityClass = kol::TestSetTermSimilarity<kol::LinSimilarity, kol::AllPairsAverageSetSimilarity, AllPairsAvgSetValues>;
+using TestSimilarityClass = kol::TestSetTermSimilarity<kol::SimilarityLin, kol::SetSimilarityAllPairsAverage, AllPairsAvgSetValues>;
 
 BOOST_FIXTURE_TEST_SUITE(TestAllPairsAvgSetSuite, TestSimilarityClass)
 

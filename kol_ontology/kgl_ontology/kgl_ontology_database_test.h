@@ -8,7 +8,7 @@
 #include "kol_SimilarityLin.h"
 #include "kol_SimilarityResnik.h"
 #include "kol_SimilarityJiangConrath.h"
-#include "kol_BestMatchAverageSetSimilarity.h"
+#include "kol_SetSimilarityBestMatchAverage.h"
 #include "kgl_ontology_database.h"
 
 namespace kol = kellerberrin::ontology;
@@ -30,12 +30,12 @@ private:
   std::shared_ptr<const kol::OntologyDatabase> ontology_db_ptr_;
   const static constexpr char* IC_FILE_NAME_ = "Test_IC.csv";
 
-  [[nodiscard]] std::shared_ptr<const kol::LinSimilarity> getLinSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
-  [[nodiscard]] std::shared_ptr<const kol::ResnikSimilarity> getResnikSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
-  [[nodiscard]] std::shared_ptr<const kol::JiangConrathSimilarity> getJiangSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
-  [[nodiscard]] std::shared_ptr<const kol::LinSimilarity> getLinUnique(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
-  [[nodiscard]] std::shared_ptr<const kol::ResnikSimilarity> getResnikUnique(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
-  [[nodiscard]] std::shared_ptr<const kol::JiangConrathSimilarity> getJiangUnique(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
+  [[nodiscard]] std::shared_ptr<const kol::SimilarityLin> getDAGLinSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
+  [[nodiscard]] std::shared_ptr<const kol::SimilarityResnik> getDAGResnikSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
+  [[nodiscard]] std::shared_ptr<const kol::SimilarityJIangConrath> getDAGJiangSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
+  [[nodiscard]] std::shared_ptr<const kol::SimilarityLin> getLinSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
+  [[nodiscard]] std::shared_ptr<const kol::SimilarityResnik> getResnikSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
+  [[nodiscard]] std::shared_ptr<const kol::SimilarityJIangConrath> getJiangSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
 
   void calcPairs() const;
   void checkICs() const;

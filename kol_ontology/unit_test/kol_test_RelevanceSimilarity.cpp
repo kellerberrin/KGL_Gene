@@ -25,7 +25,7 @@ struct RelevanceSimValues {
 
 namespace kol = kellerberrin::ontology;
 
-using TestSimilarityClass = kol::TestTermSimilarity<kol::RelevanceSimilarity, RelevanceSimValues>;
+using TestSimilarityClass = kol::TestTermSimilarity<kol::SimilarityRelevance, RelevanceSimValues>;
 
 BOOST_FIXTURE_TEST_SUITE(TestRelevanceSimSuite, TestSimilarityClass)
 

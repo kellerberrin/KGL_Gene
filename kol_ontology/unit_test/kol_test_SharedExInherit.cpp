@@ -24,7 +24,7 @@ struct ExInheritSharedValues {
 
 namespace kol = kellerberrin::ontology;
 
-using TestSimilarityClass = kol::TestSharedSimilarity<kol::ExclusivelyInheritedSharedInformation, ExInheritSharedValues>;
+using TestSimilarityClass = kol::TestSharedSimilarity<kol::InformationExclusiveInherited, ExInheritSharedValues>;
 
 BOOST_FIXTURE_TEST_SUITE(TestExInheritSharedSuite, TestSimilarityClass)
 

@@ -27,7 +27,7 @@ struct LinSimValues {
 
 namespace kol = kellerberrin::ontology;
 
-using TestSimilarityClass = kol::TestTermSimilarity<kol::LinSimilarity, LinSimValues>;
+using TestSimilarityClass = kol::TestTermSimilarity<kol::SimilarityLin, LinSimValues>;
 
 BOOST_FIXTURE_TEST_SUITE(TestLinSimSuite, TestSimilarityClass)
 

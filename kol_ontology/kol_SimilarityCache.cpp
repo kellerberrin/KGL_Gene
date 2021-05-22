@@ -92,7 +92,7 @@ double kol::TermSimilarityCache::lookUpMatrix(size_t row, size_t column) const {
 */
 bool kol::TermSimilarityCache::termSimilarityCache(const std::shared_ptr<const GoGraph> &go_graph_ptr,
                                                    const std::shared_ptr<const AnnotationData> &annotation_ptr,
-                                                   const std::shared_ptr<const TermSimilarityInterface> &term_similarity_ptr,
+                                                   const std::shared_ptr<const SimilarityInterface> &term_similarity_ptr,
                                                    GO::Ontology ontology) {
 
   // Return the empty cache.
@@ -160,7 +160,7 @@ bool kol::TermSimilarityCache::termSimilarityCache(const std::shared_ptr<const G
 
 std::unique_ptr<std::vector<double>> kol::TermSimilarityCache::calcColumn( size_t column,
                                                                            const std::string &column_term,
-                                                                           const std::shared_ptr<const TermSimilarityInterface> &term_similarity_ptr,
+                                                                           const std::shared_ptr<const SimilarityInterface> &term_similarity_ptr,
                                                                            const std::shared_ptr<const std::vector<std::string>> &ontology_terms_ptr) {
 
   size_t term_count = ontology_terms_ptr->size();

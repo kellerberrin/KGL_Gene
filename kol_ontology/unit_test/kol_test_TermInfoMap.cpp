@@ -17,7 +17,7 @@ public:
 
   ~TestTermInfoMap() = default;
 
-  [[nodiscard]] static const TermInformationContentMap &termMap() {
+  [[nodiscard]] static const InformationContentDAG &termMap() {
 
     if (not term_map_ptr_) {
 
@@ -62,11 +62,11 @@ private:
                                                                            DisallowedSetEvidencePolicy());
     BOOST_REQUIRE(anno_parser_ptr);
     std::shared_ptr<const AnnotationData> annotation_ptr = anno_parser_ptr->parseAnnotationFile(UnitTestDefinitions::gafFileName());
-    term_map_ptr_ = std::make_unique<const TermInformationContentMap>(go_graph_ptr_, annotation_ptr);
+    term_map_ptr_ = std::make_unique<const InformationContentDAG>(go_graph_ptr_, annotation_ptr);
 
   }
 
-  inline static std::unique_ptr<const TermInformationContentMap> term_map_ptr_;
+  inline static std::unique_ptr<const InformationContentDAG> term_map_ptr_;
   inline static std::shared_ptr<const GoGraph> go_graph_ptr_;
 
 };

@@ -15,7 +15,7 @@ namespace kol = kellerberrin::ontology;
   This method returns the Resnik similarity or the information content of the most informative common ancestor.
 */
 
-double kol::JiangConrathSimilarity::calculateTermSimilarityAlt(const std::string &go_termA, const std::string &go_termB) const {
+double kol::SimilarityJIangConrath::calculateTermSimilarityAlt(const std::string &go_termA, const std::string &go_termB) const {
 
   if (go_termA == go_termB) {
 
@@ -41,7 +41,7 @@ double kol::JiangConrathSimilarity::calculateTermSimilarityAlt(const std::string
 }
 
 // This is the JiangConrath formula used by GOSemSim
-double kol::JiangConrathSimilarity::calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const {
+double kol::SimilarityJIangConrath::calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const {
 
   //if the terms do not exist return 0.0 similarity
   if (not shared_info_ptr_->validateTerms(goTermA, goTermB)) {
@@ -66,7 +66,7 @@ double kol::JiangConrathSimilarity::calculateTermSimilarity(const std::string &g
 /*!
   This method returns the Resnik similarity or the information content of the most informative common ancestor.
 */
-double kol::LinSimilarity::calculateTermSimilarity(const std::string &go_termA, const std::string &go_termB) const {
+double kol::SimilarityLin::calculateTermSimilarity(const std::string &go_termA, const std::string &go_termB) const {
 
   if (go_termA == go_termB) {
 
@@ -93,7 +93,7 @@ double kol::LinSimilarity::calculateTermSimilarity(const std::string &go_termA, 
 /*!
   This method returns the Resnik similarity divided by the maximum possible similarity
 */
-double kol::ResnikSimilarity::calculateTermSimilarity(const std::string &go_termA, const std::string &go_termB) const {
+double kol::SimilarityResnik::calculateTermSimilarity(const std::string &go_termA, const std::string &go_termB) const {
 
   if (not shared_info_ptr_->validateTerms(go_termA, go_termB)) {
 
@@ -113,7 +113,7 @@ double kol::ResnikSimilarity::calculateTermSimilarity(const std::string &go_term
 /*!
   This method returns the Relevance similarity.
 */
-double kol::RelevanceSimilarity::calculateTermSimilarity(const std::string &go_termA, const std::string &go_termB) const {
+double kol::SimilarityRelevance::calculateTermSimilarity(const std::string &go_termA, const std::string &go_termB) const {
   //if the terms do not exit return 0.0 similarity
   if (not shared_info_ptr_->validateTerms(go_termA, go_termB)) {
 

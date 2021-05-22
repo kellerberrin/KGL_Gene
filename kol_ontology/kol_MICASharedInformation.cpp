@@ -7,6 +7,12 @@
 #include "kol_OntologyTypes.h"
 #include "kol_MICASharedInformation.h"
 
+
+#include "kol_SetUtilities.h"
+#include "kol_Accumulators.h"
+
+#include <boost/accumulators/statistics/max.hpp>
+
 namespace kol = kellerberrin::ontology;
 
 

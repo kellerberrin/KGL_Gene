@@ -25,7 +25,7 @@ struct SimDICSetValues {
 
 namespace kol = kellerberrin::ontology;
 
-using TestSimilarityClass = kol::TestSetTheorySimilarity<kol::MazanduSimDICSetSimilarity, SimDICSetValues>;
+using TestSimilarityClass = kol::TestSetTheorySimilarity<kol::SetSimilarityMazanduSimDIC, SimDICSetValues>;
 
 
 BOOST_FIXTURE_TEST_SUITE(SimDICSetSuite, TestSimilarityClass)

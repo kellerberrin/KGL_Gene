@@ -27,7 +27,7 @@ struct FrontierSharedValues {
 
 namespace kol = kellerberrin::ontology;
 
-using TestSimilarityClass = kol::TestSharedSimilarity<kol::FrontierSharedInformation, FrontierSharedValues>;
+using TestSimilarityClass = kol::TestSharedSimilarity<kol::InformationFrontier, FrontierSharedValues>;
 
 BOOST_FIXTURE_TEST_SUITE(TestFrontierSharedSuite, TestSimilarityClass)
 

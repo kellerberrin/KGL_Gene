@@ -7,13 +7,13 @@ Distributed under the Boost Software License, Version 1.0.
 
 
 #include "kol_SimilarityInterface.h"
-#include "kol_SharedInformationInterface.h"
+#include "kol_InformationInterface.h"
 
 #include <memory>
 
 namespace kellerberrin::ontology {
 
-/*! \class LinSimilarity
+/*! \class SimilarityLin
 	\brief A class to calculate Lin similarity between 2 terms
 
 	This class calculates Lin similarity.
@@ -29,7 +29,7 @@ namespace kellerberrin::ontology {
 	2 * IC(MICA) / ( IC(termA) + IC(termB) )
 
 */
-class LinSimilarity : public TermSimilarityInterface {
+class SimilarityLin : public SimilarityInterface {
 
 public:
 
@@ -37,8 +37,8 @@ public:
   /*!
     Creates the linSimPtr calculator with a particular shared information calculator
   */
-  LinSimilarity(const std::shared_ptr<const SharedInformationInterface> &shared_info_ptr) : shared_info_ptr_(shared_info_ptr) {}
-  ~LinSimilarity() override = default;
+  SimilarityLin(const std::shared_ptr<const InformationInterface> &shared_info_ptr) : shared_info_ptr_(shared_info_ptr) {}
+  ~SimilarityLin() override = default;
 
   //! A method for calculating term-to-term similarity for GO terms using Lin similarity
   /*!
@@ -49,8 +49,8 @@ public:
 
 private:
 
-  //! private SharedInformationInterface member used for calculations
-  std::shared_ptr<const SharedInformationInterface> shared_info_ptr_;
+  //! private InformationInterface member used for calculations
+  std::shared_ptr<const InformationInterface> shared_info_ptr_;
 
 };
 

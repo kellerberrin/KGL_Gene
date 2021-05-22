@@ -13,7 +13,7 @@ namespace kol = kellerberrin::ontology;
 /*!
   This method returns the PekarStaab similarity.
 */
-double kol::PekarStaabSimilarity::calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const {
+double kol::SimilarityPekarStaab::calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const {
   //if the terms do not exit return 0.0 similarity
   if (not depth_map_ptr_->hasTerm(goTermA) or not depth_map_ptr_->hasTerm(goTermB)) {
 

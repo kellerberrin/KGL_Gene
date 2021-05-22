@@ -22,7 +22,7 @@ struct ResnikSimValues {
 
 namespace kol = kellerberrin::ontology;
 
-using TestSimilarityClass = kol::TestTermSimilarity<kol::ResnikSimilarity, ResnikSimValues>;
+using TestSimilarityClass = kol::TestTermSimilarity<kol::SimilarityResnik, ResnikSimValues>;
 
 BOOST_FIXTURE_TEST_SUITE(TestResnikSimilaritySuite, TestSimilarityClass)
 

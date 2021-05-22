@@ -12,17 +12,17 @@ Distributed under the Boost Software License, Version 1.0.
 namespace kellerberrin::ontology {
 
 //! An interface class for comparing semantic similarity of GO terms
-/*! \class TermSimilarityInterface
+/*! \class SimilarityInterface
 
 	This class defines the interface for comparing term-to-term GO similarity.
 */
-class TermSimilarityInterface {
+class SimilarityInterface {
 
 public:
 
-  TermSimilarityInterface() = default;
+  SimilarityInterface() = default;
 
-  virtual ~TermSimilarityInterface() = default;
+  virtual ~SimilarityInterface() = default;
 
   //! A pure virtual method for calculating term-to-term similarity for GO terms
   /*!

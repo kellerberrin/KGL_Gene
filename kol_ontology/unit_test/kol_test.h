@@ -27,7 +27,7 @@ public:
   virtual ~TestSimilarity() = default;
 
 
-  [[nodiscard]] const TermSimilarityInterface &termSimilarityAnalysis() {
+  [[nodiscard]] const SimilarityInterface &termSimilarityAnalysis() {
 
     if (not term_similarity_ptr_) {
 
@@ -66,10 +66,10 @@ protected:
 
 private:
 
-  inline static std::unique_ptr<const TermSimilarityInterface> term_similarity_ptr_;
+  inline static std::unique_ptr<const SimilarityInterface> term_similarity_ptr_;
   inline const static TestValues test_values_;
 
-  [[nodiscard]] virtual std::unique_ptr<const TermSimilarityInterface> getSimilarityAnalysis() = 0;
+  [[nodiscard]] virtual std::unique_ptr<const SimilarityInterface> getSimilarityAnalysis() = 0;
 
 
 };
@@ -86,11 +86,11 @@ public:
 
 private:
 
-  [[nodiscard]] std::unique_ptr<const TermSimilarityInterface> getSimilarityAnalysis() override {
+  [[nodiscard]] std::unique_ptr<const SimilarityInterface> getSimilarityAnalysis() override {
 
     std::shared_ptr<const GoGraph> graph_ptr = TestSimilarity<TestValues>::getGoGraph();
     std::shared_ptr<const AnnotationData> annotation_ptr = TestSimilarity<TestValues>::getAnnotation();
-    std::shared_ptr<const TermInformationContentMap> info_map_ptr(std::make_shared<const TermInformationContentMap>(graph_ptr, annotation_ptr));
+    std::shared_ptr<const InformationContentDAG> info_map_ptr(std::make_shared<const InformationContentDAG>(graph_ptr, annotation_ptr));
     std::shared_ptr<const MICASharedInformation> shared_information_ptr(std::make_shared<const MICASharedInformation>(graph_ptr, info_map_ptr));
     return std::make_unique<const SimAnalysis>(shared_information_ptr);
 
@@ -110,11 +110,11 @@ public:
 
 private:
 
-  [[nodiscard]] std::unique_ptr<const TermSimilarityInterface> getSimilarityAnalysis() override {
+  [[nodiscard]] std::unique_ptr<const SimilarityInterface> getSimilarityAnalysis() override {
 
     std::shared_ptr<const GoGraph> graph_ptr = TestSimilarity<TestValues>::getGoGraph();
     std::shared_ptr<const TermDepthMap> info_map_ptr(std::make_shared<const TermDepthMap>(*graph_ptr));
-    return std::make_unique<const PekarStaabSimilarity>(graph_ptr, info_map_ptr);
+    return std::make_unique<const SimilarityPekarStaab>(graph_ptr, info_map_ptr);
 
   }
 
@@ -151,7 +151,7 @@ public:
 
   }
 
-  [[nodiscard]] const TermSetSimilarityInterface &setSimilarity() {
+  [[nodiscard]] const SetSimilarityInterface &setSimilarity() {
 
     if (not set_similarity_ptr_) {
 
@@ -185,7 +185,7 @@ protected:
 
   inline static std::shared_ptr<const AnnotationData> annotation_ptr_;
   inline static std::shared_ptr<const GoGraph> graph_ptr_;
-  inline static std::unique_ptr<const TermSetSimilarityInterface> set_similarity_ptr_;
+  inline static std::unique_ptr<const SetSimilarityInterface> set_similarity_ptr_;
   inline const static TestValues test_values_;
 
   virtual void getSetSimilarityAnalysis() = 0;
@@ -228,7 +228,7 @@ private:
 
     TSS::graph_ptr_ = TSS::getGoGraph();
     TSS::annotation_ptr_ = TSS::getAnnotation();
-    std::shared_ptr<const TermInformationContentMap> ic_map_ptr(std::make_shared<const TermInformationContentMap>(TSS::graph_ptr_, TSS::annotation_ptr_));
+    std::shared_ptr<const InformationContentDAG> ic_map_ptr(std::make_shared<const InformationContentDAG>(TSS::graph_ptr_, TSS::annotation_ptr_));
     std::shared_ptr<const MICASharedInformation> info_map_ptr(std::make_shared<const MICASharedInformation>( TSS::graph_ptr_, ic_map_ptr));
     std::shared_ptr<const SimAnalysis> similarity_ptr(std::make_shared<const SimAnalysis>(info_map_ptr));
     TSS::set_similarity_ptr_ = std::make_unique<const SetSimAnalysis>(similarity_ptr);
@@ -309,7 +309,7 @@ private:
 
     TSS::graph_ptr_ = TSS::getGoGraph();
     TSS::annotation_ptr_ = TSS::getAnnotation();
-    std::shared_ptr<const TermInformationContentMap> info_map_ptr(std::make_shared<const TermInformationContentMap>(TSS::graph_ptr_, TSS::annotation_ptr_));
+    std::shared_ptr<const InformationContentDAG> info_map_ptr(std::make_shared<const InformationContentDAG>(TSS::graph_ptr_, TSS::annotation_ptr_));
     TSS::set_similarity_ptr_ = std::make_unique<const SetSimilarity>(TSS::graph_ptr_, info_map_ptr);
 
   }
@@ -332,7 +332,7 @@ public:
   virtual ~SharedSimilarity() = default;
 
 
-  [[nodiscard]] const SharedInformationInterface &sharedAnalysis() {
+  [[nodiscard]] const InformationInterface &sharedAnalysis() {
 
     if (not term_similarity_ptr_) {
 
@@ -344,7 +344,7 @@ public:
 
   }
 
-  [[nodiscard]] const TermInformationContentMap &termInformation() {
+  [[nodiscard]] const InformationContentDAG &termInformation() {
 
     if (not term_information_ptr_) {
 
@@ -380,8 +380,8 @@ protected:
 
   }
 
-  inline static std::shared_ptr<const TermInformationContentMap> term_information_ptr_;
-  inline static std::unique_ptr<const SharedInformationInterface> term_similarity_ptr_;
+  inline static std::shared_ptr<const InformationContentDAG> term_information_ptr_;
+  inline static std::unique_ptr<const InformationInterface> term_similarity_ptr_;
 
 private:
 
@@ -410,7 +410,7 @@ private:
 
     std::shared_ptr<const GoGraph> graph_ptr = SS::getGoGraph();
     std::shared_ptr<const AnnotationData> annotation_ptr = SS::getAnnotation();
-    SS::term_information_ptr_ = std::make_shared<const TermInformationContentMap>(graph_ptr, annotation_ptr);
+    SS::term_information_ptr_ = std::make_shared<const InformationContentDAG>(graph_ptr, annotation_ptr);
     SS::term_similarity_ptr_ = std::make_unique<const SharedAnalysis>(graph_ptr, SS::term_information_ptr_);
 
   }

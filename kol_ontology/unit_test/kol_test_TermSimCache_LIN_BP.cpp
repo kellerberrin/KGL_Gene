@@ -2,7 +2,7 @@
 // Created by kellerberrin on 7/4/21.
 //
 #include "kol_test.h"
-#include "kol_TermInformationContentUnique.h"
+#include "kol_InformationContent.h"
 
 
 namespace kellerberrin::ontology {
@@ -19,7 +19,7 @@ public:
 
   ~TestCache_LIN_BP() = default;
 
-  [[nodiscard]] static const std::shared_ptr<const LinSimilarity> &linSimPtr() {
+  [[nodiscard]] static const std::shared_ptr<const SimilarityLin> &linSimPtr() {
 
     if (not term_similarity_ptr) {
 
@@ -73,7 +73,7 @@ public:
 
 private:
 
-  inline static std::shared_ptr<const LinSimilarity> term_similarity_ptr;
+  inline static std::shared_ptr<const SimilarityLin> term_similarity_ptr;
   inline static std::shared_ptr<const TermSimilarityCache> cache_similarity_ptr;
   inline static std::shared_ptr<const GoGraph> go_graph_ptr;
   inline static std::shared_ptr<const AnnotationData> annotation_ptr;
@@ -99,9 +99,9 @@ private:
 
     go_graph_ptr = getGoGraph();
     annotation_ptr = getAnnotation();
-    std::shared_ptr<const TermInformationContentUnique> ic_map_ptr(std::make_shared<const TermInformationContentUnique>(go_graph_ptr, annotation_ptr));
+    std::shared_ptr<const InformationContent> ic_map_ptr(std::make_shared<const InformationContent>(go_graph_ptr, annotation_ptr));
     std::shared_ptr<const MICASharedInformation> info_map_ptr(std::make_shared<const MICASharedInformation>( go_graph_ptr, ic_map_ptr));
-    term_similarity_ptr = std::make_shared<const LinSimilarity>(info_map_ptr);
+    term_similarity_ptr = std::make_shared<const SimilarityLin>(info_map_ptr);
     cache_similarity_ptr = std::make_shared<const TermSimilarityCache>(go_graph_ptr, annotation_ptr, term_similarity_ptr, GO::Ontology::BIOLOGICAL_PROCESS);
 
   }
@@ -126,7 +126,7 @@ BOOST_FIXTURE_TEST_SUITE(TestCache_LIN_Suite, kol::TestCache_LIN_BP)
 
 
 //////////////////////////////////////////////////////////////////////////
-// Test PrecomputedMatrixTermSimilarity raises error on bad filename
+// Test SimilarityMatrix raises error on bad filename
 /////////////////////////////////////////////////////////////////////////
 
 BOOST_AUTO_TEST_CASE(test_precomputed_cache_bad_ontology)
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(test_asymmetric_similarity_Lin_BP)
 
   }
   std::vector<std::string> malaria_terms = kol::SetUtilities::convertSet(go_terms);
-  auto asymmetric_cache_ptr(std::make_shared<const kol::AsymmetricSimilarityCache>(malaria_terms, ontology_terms, linSimPtr(), kol::GO::Ontology::BIOLOGICAL_PROCESS));
+  auto asymmetric_cache_ptr(std::make_shared<const kol::SimilarityCacheAsymmetric>(malaria_terms, ontology_terms, linSimPtr(), kol::GO::Ontology::BIOLOGICAL_PROCESS));
   size_t term_look_up{0};
   for (auto const& row_term : malaria_terms) {
 

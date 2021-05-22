@@ -28,7 +28,7 @@ struct SimGICSetValues {
 namespace kol = kellerberrin::ontology;
 
 
-using TestSimilarityClass = kol::TestSetTheorySimilarity<kol::PesquitaSimGICSetSimilarity, SimGICSetValues>;
+using TestSimilarityClass = kol::TestSetTheorySimilarity<kol::SetSimilarityPesquitaSimGIC, SimGICSetValues>;
 
 
 BOOST_FIXTURE_TEST_SUITE(SimGICSetSuite, TestSimilarityClass)

@@ -7,14 +7,14 @@
 
 
 #include "kol_SimilarityInterface.h"
-#include "kol_TermInformationContentMap.h"
+#include "kol_InformationContentDAG.h"
 #include "kol_GoGraph.h"
 
 
 namespace kellerberrin::ontology {
 
 //! A class to calculate Relevance similarity between 2 terms
-/*! \class RelevanceSimilarity
+/*! \class SimilarityRelevance
 
 	This class calculates Relevance similarity.
 
@@ -30,7 +30,7 @@ namespace kellerberrin::ontology {
 	   complement of the probability of the mica
 	2 * IC(MICA) / ( IC(termA) + IC(termB) )*(1-p(Mica))
 */
-class RelevanceSimilarity : public TermSimilarityInterface {
+class SimilarityRelevance : public SimilarityInterface {
 
 public:
 
@@ -38,10 +38,10 @@ public:
   /*!
     Creates the default(empty) StandardRelationshipPolicy
   */
-  RelevanceSimilarity(const std::shared_ptr<const SharedInformationInterface> &shared_info_ptr)
+  SimilarityRelevance(const std::shared_ptr<const InformationInterface> &shared_info_ptr)
       : shared_info_ptr_(shared_info_ptr) {}
 
-  ~RelevanceSimilarity() override = default;
+  ~SimilarityRelevance() override = default;
 
   //! A method for calculating term-to-term similarity for GO terms using Relevance similarity
   /*!
@@ -52,8 +52,8 @@ public:
 
 private:
 
-  //! private SharedInformationInterface member used for calculations
-  std::shared_ptr<const SharedInformationInterface> shared_info_ptr_;
+  //! private InformationInterface member used for calculations
+  std::shared_ptr<const InformationInterface> shared_info_ptr_;
 
 };
 

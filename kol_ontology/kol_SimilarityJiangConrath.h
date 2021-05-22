@@ -6,14 +6,14 @@ Distributed under the Boost Software License, Version 1.0.
 #define KGL_MODULAR_JIANG_CONRATH
 
 #include "kol_SimilarityInterface.h"
-#include "kol_SharedInformationInterface.h"
+#include "kol_InformationInterface.h"
 
 #include <memory>
 
 namespace kellerberrin::ontology {
 
 
-/*! \class JiangConrathSimilarity
+/*! \class SimilarityJIangConrath
 	\brief A class to calculate Jiang Conrath similarity between 2 terms
 
 	This class calculates Jiang Conrath similarity.
@@ -32,7 +32,7 @@ namespace kellerberrin::ontology {
 	(see Lord et al.)
 
 */
-class JiangConrathSimilarity : public TermSimilarityInterface {
+class SimilarityJIangConrath : public SimilarityInterface {
 
 public:
 
@@ -40,10 +40,10 @@ public:
   /*!
     Creates the Jiang Conrath simialrity measure using a given shared information calculator
   */
-  JiangConrathSimilarity(const std::shared_ptr<const SharedInformationInterface> &shared_info_ptr)
+  SimilarityJIangConrath(const std::shared_ptr<const InformationInterface> &shared_info_ptr)
       : shared_info_ptr_(shared_info_ptr) {}
 
-  ~JiangConrathSimilarity() override = default;
+  ~SimilarityJIangConrath() override = default;
 
   //! A method for calculating term-to-term similarity for GO terms using JiangConrath similarity
   /*!
@@ -57,8 +57,8 @@ public:
 
 private:
 
-  //! private SharedInformationInterface member used for calculations
-  std::shared_ptr<const SharedInformationInterface> shared_info_ptr_;
+  //! private InformationInterface member used for calculations
+  std::shared_ptr<const InformationInterface> shared_info_ptr_;
 
 };
 

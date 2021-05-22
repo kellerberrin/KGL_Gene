@@ -8,11 +8,11 @@
 #include <fstream>
 #include "kgl_ontology_database.h"
 #include "kol_GoEnums.h"
-#include "kol_AsymmetricSimilarityCache.h"
+#include "kol_SimilarityCacheAsymmetric.h"
 #include "kol_SimilarityLin.h"
 #include "kol_SimilarityResnik.h"
 #include "kol_SimilarityJiangConrath.h"
-#include "kol_BestMatchAverageSetSimilarity.h"
+#include "kol_SetSimilarityBestMatchAverage.h"
 
 
 namespace kol = kellerberrin::ontology;
@@ -57,18 +57,18 @@ private:
 
   kol::OntologySetType<std::string> gene_set_go_terms_BP_;
   std::vector<std::string> all_go_terms_BP_;
-  std::shared_ptr<const kol::AsymmetricSimilarityCache> cache_BP_ptr_;
-  std::shared_ptr<const kol::BestMatchAverageSetSimilarity> set_sim_BP_ptr_;
+  std::shared_ptr<const kol::SimilarityCacheAsymmetric> cache_BP_ptr_;
+  std::shared_ptr<const kol::SetSimilarityBestMatchAverage> set_sim_BP_ptr_;
 
   kol::OntologySetType<std::string> gene_set_go_terms_MF_;
   std::vector<std::string> all_go_terms_MF_;
-  std::shared_ptr<const kol::AsymmetricSimilarityCache> cache_MF_ptr_;
-  std::shared_ptr<const kol::BestMatchAverageSetSimilarity> set_sim_MF_ptr_;
+  std::shared_ptr<const kol::SimilarityCacheAsymmetric> cache_MF_ptr_;
+  std::shared_ptr<const kol::SetSimilarityBestMatchAverage> set_sim_MF_ptr_;
 
   kol::OntologySetType<std::string> gene_set_go_terms_CC_;
   std::vector<std::string> all_go_terms_CC_;
-  std::shared_ptr<const kol::AsymmetricSimilarityCache> cache_CC_ptr_;
-  std::shared_ptr<const kol::BestMatchAverageSetSimilarity> set_sim_CC_ptr_;
+  std::shared_ptr<const kol::SimilarityCacheAsymmetric> cache_CC_ptr_;
+  std::shared_ptr<const kol::SetSimilarityBestMatchAverage> set_sim_CC_ptr_;
 
 
   void initializeOntology(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
@@ -76,9 +76,9 @@ private:
                                                        kol::GO::Ontology ontology);
   std::vector<std::string> getAllGOVector(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr,
                                           kol::GO::Ontology ontology);
-  std::shared_ptr<const kol::LinSimilarity> getLinSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
-  std::shared_ptr<const kol::ResnikSimilarity> getResnikSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
-  std::shared_ptr<const kol::JiangConrathSimilarity> getJiangSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
+  std::shared_ptr<const kol::SimilarityLin> getLinSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
+  std::shared_ptr<const kol::SimilarityResnik> getResnikSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
+  std::shared_ptr<const kol::SimilarityJIangConrath> getJiangSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
   // Cached GO Term and Gene Data.
 
   [[nodiscard]] std::vector<std::string> geneSetGOTermsBP() const {
@@ -89,7 +89,7 @@ private:
 
   }
   [[nodiscard]] const std::vector<std::string>& allGOTermsBP() const { return all_go_terms_BP_; }
-  [[nodiscard]] const kol::AsymmetricSimilarityCache& cacheBP() const { return *cache_BP_ptr_; }
+  [[nodiscard]] const kol::SimilarityCacheAsymmetric& cacheBP() const { return *cache_BP_ptr_; }
 
   [[nodiscard]] std::vector<std::string> geneSetGOTermsMF() const {
 
@@ -99,7 +99,7 @@ private:
 
   }
   [[nodiscard]] const std::vector<std::string>& allGOTermsMF() const { return all_go_terms_MF_; }
-  [[nodiscard]] const kol::AsymmetricSimilarityCache& cacheMF() const { return *cache_MF_ptr_; }
+  [[nodiscard]] const kol::SimilarityCacheAsymmetric& cacheMF() const { return *cache_MF_ptr_; }
 
   [[nodiscard]] std::vector<std::string> geneSetGOTermsCC() const {
 
@@ -109,7 +109,7 @@ private:
 
   }
   [[nodiscard]] const std::vector<std::string>& allGOTermsCC() const { return all_go_terms_CC_; }
-  [[nodiscard]] const kol::AsymmetricSimilarityCache&  cacheCC() const { return *cache_CC_ptr_; }
+  [[nodiscard]] const kol::SimilarityCacheAsymmetric&  cacheCC() const { return *cache_CC_ptr_; }
 
 };
 

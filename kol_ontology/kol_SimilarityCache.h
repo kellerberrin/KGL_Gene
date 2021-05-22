@@ -25,7 +25,7 @@ namespace kellerberrin::ontology {
 	  Matrix creation time will depend on the number of execution threads committed to matrix creation.
 	  Defaults to (HW threads available - 1).
 */
-class TermSimilarityCache : public TermSimilarityInterface {
+class TermSimilarityCache : public SimilarityInterface {
 
 
 public:
@@ -36,7 +36,7 @@ public:
   */
   TermSimilarityCache(const std::shared_ptr<const GoGraph> &go_graph_ptr,
                       const std::shared_ptr<const AnnotationData> &annotation_ptr,
-                      const std::shared_ptr<const TermSimilarityInterface> &term_sim_ptr,
+                      const std::shared_ptr<const SimilarityInterface> &term_sim_ptr,
                       GO::Ontology ontology = GO::Ontology::BIOLOGICAL_PROCESS) {
 
     termSimilarityCache(go_graph_ptr, annotation_ptr, term_sim_ptr, ontology);
@@ -76,13 +76,13 @@ private:
   */
   bool termSimilarityCache(const std::shared_ptr<const GoGraph> &go_graph_ptr,
                            const std::shared_ptr<const AnnotationData> &annotation_ptr,
-                           const std::shared_ptr<const TermSimilarityInterface> &term_similarity_ptr,
+                           const std::shared_ptr<const SimilarityInterface> &term_similarity_ptr,
                            GO::Ontology ontology);
 
   // Multithreaded calculation.
   static std::unique_ptr<std::vector<double>> calcColumn(size_t row,
                                                          const std::string &term_A,
-                                                         const std::shared_ptr<const TermSimilarityInterface> &term_similarity_ptr,
+                                                         const std::shared_ptr<const SimilarityInterface> &term_similarity_ptr,
                                                          const std::shared_ptr<const std::vector<std::string>> &ontology_terms_ptr);
 };
 

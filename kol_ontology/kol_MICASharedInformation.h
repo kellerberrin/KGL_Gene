@@ -6,13 +6,8 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef KGL_MICA_SHARED_INFORMATION
 #define KGL_MICA_SHARED_INFORMATION
 
-#include "kol_TermInformationContentMap.h"
-#include "kol_SharedInformationInterface.h"
+#include "kol_InformationInterface.h"
 #include "kol_GoGraph.h"
-#include "kol_SetUtilities.h"
-#include "kol_Accumulators.h"
-
-#include <boost/accumulators/statistics/max.hpp>
 
 namespace kellerberrin::ontology {
 
@@ -31,7 +26,7 @@ namespace kellerberrin::ontology {
 	 Pac Symp Biocomput, pp. 601-12, 2003.
 
 */
-class MICASharedInformation : public SharedInformationInterface {
+class MICASharedInformation : public InformationInterface {
 
 public:
   //! A constructor
@@ -39,7 +34,7 @@ public:
     Creates the MICASharedInformation class
   */
   MICASharedInformation( const std::shared_ptr<const GoGraph> &graph_ptr,
-                         const std::shared_ptr<const TermInformationInterface> &ic_map_ptr)
+                         const std::shared_ptr<const InformationInterface> &ic_map_ptr)
       : graph_ptr_(graph_ptr), ic_map_ptr_(ic_map_ptr) {}
 
   ~MICASharedInformation() override = default;
@@ -75,7 +70,7 @@ public:
 private:
 
   std::shared_ptr<const GoGraph> graph_ptr_;
-  std::shared_ptr<const TermInformationInterface> ic_map_ptr_;
+  std::shared_ptr<const InformationInterface> ic_map_ptr_;
 
 };
 

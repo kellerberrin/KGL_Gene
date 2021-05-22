@@ -20,7 +20,7 @@ public:
   virtual ~TestMatrix_LIN_MF() = default;
 
 
-  [[nodiscard]] const TermSimilarityInterface &termSimilar() {
+  [[nodiscard]] const SimilarityInterface &termSimilar() {
 
     if (not term_similarity_ptr_) {
 
@@ -32,7 +32,7 @@ public:
 
   }
 
-  [[nodiscard]] const TermSimilarityInterface &matrixSimilar() {
+  [[nodiscard]] const SimilarityInterface &matrixSimilar() {
 
     if (not matrix_similarity_ptr_) {
 
@@ -50,8 +50,8 @@ public:
 
 private:
 
-  inline static std::shared_ptr<const TermSimilarityInterface> term_similarity_ptr_;
-  inline static std::shared_ptr<const TermSimilarityInterface> matrix_similarity_ptr_;
+  inline static std::shared_ptr<const SimilarityInterface> term_similarity_ptr_;
+  inline static std::shared_ptr<const SimilarityInterface> matrix_similarity_ptr_;
 
 
   [[nodiscard]] std::unique_ptr<const AnnotationData> getAnnotation() {
@@ -75,16 +75,16 @@ private:
 
     std::shared_ptr<const GoGraph> graph_ptr = getGoGraph();
     std::shared_ptr<const AnnotationData> annotation_ptr = getAnnotation();
-    std::shared_ptr<const TermInformationContentMap> ic_map_ptr(std::make_shared<const TermInformationContentMap>(graph_ptr, annotation_ptr));
+    std::shared_ptr<const InformationContentDAG> ic_map_ptr(std::make_shared<const InformationContentDAG>(graph_ptr, annotation_ptr));
     std::shared_ptr<const MICASharedInformation> info_map_ptr(std::make_shared<const MICASharedInformation>( graph_ptr, ic_map_ptr));
-    term_similarity_ptr_ = std::make_shared<const LinSimilarity>(info_map_ptr);
-    std::shared_ptr<const TermSimilarityWriter> sim_writer_ptr = std::make_shared<const TermSimilarityWriter>(graph_ptr, annotation_ptr);
+    term_similarity_ptr_ = std::make_shared<const SimilarityLin>(info_map_ptr);
+    std::shared_ptr<const SimilarityWriter> sim_writer_ptr = std::make_shared<const SimilarityWriter>(graph_ptr, annotation_ptr);
     if constexpr (WRITER_TEST) {
 
       sim_writer_ptr->writeSimilarityMatrixMF(term_similarity_ptr_, UnitTestDefinitions::matrixFileNameMF());
 
     }
-    matrix_similarity_ptr_ = std::make_shared<const PrecomputedMatrixTermSimilarity>(UnitTestDefinitions::matrixFileNameMF());
+    matrix_similarity_ptr_ = std::make_shared<const SimilarityMatrix>(UnitTestDefinitions::matrixFileNameMF());
 
   }
 
@@ -99,13 +99,13 @@ BOOST_FIXTURE_TEST_SUITE(TestMatrix_LIN_MFSuite, kol::TestMatrix_LIN_MF)
 
 
 //////////////////////////////////////////////////////////////////////////
-// Test PrecomputedMatrixTermSimilarity raises error on bad filename
+// Test SimilarityMatrix raises error on bad filename
 /////////////////////////////////////////////////////////////////////////
 
 BOOST_AUTO_TEST_CASE(test_precomputed_matrix_bad_file)
 {
 
-  auto pre_compute_ptr = std::make_unique<const kol::PrecomputedMatrixTermSimilarity>("fake_file.txt");
+  auto pre_compute_ptr = std::make_unique<const kol::SimilarityMatrix>("fake_file.txt");
   BOOST_CHECK_EQUAL(pre_compute_ptr->termCount(), 0.0);
   BOOST_TEST_MESSAGE( "test_precomputed_matrix_bad_file ... OK" );
 

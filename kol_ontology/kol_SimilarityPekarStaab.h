@@ -13,7 +13,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 namespace kellerberrin::ontology {
 
-/*! \class PekarStaabSimilarity
+/*! \class SimilarityPekarStaab
 	\brief A class to calculate PekarStaab similarity between 2 terms
 
 	This class calculates Pekar Staab similarity.
@@ -31,7 +31,7 @@ namespace kellerberrin::ontology {
 	GraphDist(LCA,root)/(GraphDist(a,LCA)+GraphDist(b,LCA)+GraphDist(LCA,root))
 
 */
-class PekarStaabSimilarity : public TermSimilarityInterface {
+class SimilarityPekarStaab : public SimilarityInterface {
 
 public:
 
@@ -39,11 +39,11 @@ public:
   /*!
     Creates the default(empty) StandardRelationshipPolicy
   */
-  PekarStaabSimilarity( const std::shared_ptr<const GoGraph> &graph_ptr,
-                        const std::shared_ptr<const TermDepthMap> &depth_map_ptr)
+  SimilarityPekarStaab(const std::shared_ptr<const GoGraph> &graph_ptr,
+                       const std::shared_ptr<const TermDepthMap> &depth_map_ptr)
       : graph_ptr_(graph_ptr), depth_map_ptr_(depth_map_ptr) {}
 
-  ~PekarStaabSimilarity() override = default;
+  ~SimilarityPekarStaab() override = default;
 
 
   //! A method for calculating term-to-term similarity for GO terms using Pekar Staab similarity

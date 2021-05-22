@@ -242,53 +242,53 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_AllowedRelationshipXmlGoParser.h
         kol_ontology/kol_AllowedSetEvidencePolicy.h
         kol_ontology/kol_AllowedSetRelationshipPolicy.h
-        kol_ontology/kol_AllPairsAverageSetSimilarity.h
-        kol_ontology/kol_AllPairsMaxSetSimilarity.h
-        kol_ontology/kol_AncestorMeanSharedInformation.h
+        kol_ontology/kol_SetSimilarityAllPairsAverage.h
+        kol_ontology/kol_SetSimilarityAllPairsMax.h
+        kol_ontology/kol_InformationAncestorMean.h
         kol_ontology/kol_AnnotationData.h
         kol_ontology/kol_AnnotationParserFactory.h
         kol_ontology/kol_AnnotationParserInterface.h
-        kol_ontology/kol_BestMatchAverageSetSimilarity.h
-        kol_ontology/kol_CoutoGraSMAdjustedSharedInformation.h
-        kol_ontology/kol_CoutoGraSMSharedInformation.h
+        kol_ontology/kol_SetSimilarityBestMatchAverage.h
+        kol_ontology/kol_InformationCoutoGraSMAdjusted.h
+        kol_ontology/kol_InformationCoutoGraSM.h
         kol_ontology/kol_DisallowedSetEvidencePolicy.h
         kol_ontology/kol_EnrichmentTools.h
         kol_ontology/kol_EntrezGene2GoAnnotationParser.h
         kol_ontology/kol_EvidencePolicyInterface.h
-        kol_ontology/kol_ExclusivelyInheritedSharedInformation.h
+        kol_ontology/kol_InformationExclusiveInherited.h
         kol_ontology/kol_ExperimentalEvidencePolicy.h
-        kol_ontology/kol_FrontierSharedInformation.h
+        kol_ontology/kol_InformationFrontier.h
         kol_ontology/kol_GafAnnotationParser.h
-        kol_ontology/kol_GentlemanSimUISetSimilarity.h
+        kol_ontology/kol_SetSimilarityGentlemanSimUI.h
         kol_ontology/kol_GoaAnnotationParser.h
         kol_ontology/kol_library.h
         kol_ontology/kol_GoEnums.h
         kol_ontology/kol_GoGraph.h
         kol_ontology/kol_GoParserFactory.h
         kol_ontology/kol_GoParserInterface.h
-        kol_ontology/kol_JaccardSetSimilarity.h
-        kol_ontology/kol_MazanduSimDICSetSimilarity.h
-        kol_ontology/kol_MazanduSimUICSetSimilarity.h
+        kol_ontology/kol_SetSimilarityJaccard.h
+        kol_ontology/kol_SetSimilarityMazanduSimDIC.h
+        kol_ontology/kol_SetSimilarityMazanduSimUIC.h
         kol_ontology/kol_MgiAnnotationParser.h
         kol_ontology/kol_MICASharedInformation.h
         kol_ontology/kol_SimilarityJiangConrath.h
         kol_ontology/kol_SimilarityLin.h
         kol_ontology/kol_SimilarityResnik.h
         kol_ontology/kol_SimilarityPekarStaab.h
-        kol_ontology/kol_PesquitaSimGICSetSimilarity.h
-        kol_ontology/kol_PrecomputedMatrixTermSimilarity.h
+        kol_ontology/kol_SetSimilarityPesquitaSimGIC.h
+        kol_ontology/kol_SimilarityMatrix.h
         kol_ontology/kol_RapidXmlGoParser.h
         kol_ontology/kol_RelationshipPolicyInterface.h
         kol_ontology/kol_SetUtilities.h
-        kol_ontology/kol_SharedInformationInterface.h
+        kol_ontology/kol_InformationInterface.h
         kol_ontology/kol_StandardOboGoParser.h
         kol_ontology/kol_StandardRelationshipPolicy.h
         kol_ontology/kol_StandardXmlGoParser.h
         kol_ontology/kol_TermDepthMap.h
-        kol_ontology/kol_TermInformationContentMap.h
-        kol_ontology/kol_TermSetSimilarityInterface.h
+        kol_ontology/kol_InformationContentDAG.h
+        kol_ontology/kol_SetSimilarityInterface.h
         kol_ontology/kol_SimilarityInterface.h
-        kol_ontology/kol_TermSimilarityWriter.h
+        kol_ontology/kol_SimilarityWriter.h
         kol_ontology/kol_SimilarityCache.h
         kol_ontology/xml/rapidxml.h
         kol_ontology/xml/rapidxml_iterators.h
@@ -297,30 +297,30 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kgl_ontology/kgl_ontology_database.h
         kol_ontology/kol_AnnotationData.cpp
         kol_ontology/kol_GoGraph.cpp
-        kol_ontology/kol_FrontierSharedInformation.cpp
+        kol_ontology/kol_InformationFrontier.cpp
         kol_ontology/kol_SimilarityCache.cpp
-        kol_ontology/kol_AsymmetricSimilarityCache.cpp
-        kol_ontology/kol_AsymmetricSimilarityCache.h
-        kol_ontology/kol_BestMatchAverageSetSimilarity.cpp
-        kol_ontology/kol_AllPairsAverageSetSimilarity.cpp
-        kol_ontology/kol_AllPairsMaxSetSimilarity.cpp
-        kol_ontology/kol_GentlemanSimUISetSimilarity.cpp
-        kol_ontology/kol_JaccardSetSimilarity.cpp
-        kol_ontology/kol_MazanduSimDICSetSimilarity.cpp
-        kol_ontology/kol_MazanduSimUICSetSimilarity.cpp
-        kol_ontology/kol_PesquitaSimGICSetSimilarity.cpp
-        kol_ontology/kol_ExclusivelyInheritedSharedInformation.cpp
-        kol_ontology/kol_CoutoGraSMSharedInformation.cpp
-        kol_ontology/kol_CoutoGraSMAdjustedSharedInformation.cpp
+        kol_ontology/kol_SimilarityCacheAsymmetric.cpp
+        kol_ontology/kol_SimilarityCacheAsymmetric.h
+        kol_ontology/kol_SetSimilarityBestMatchAverage.cpp
+        kol_ontology/kol_SetSimilarityAllPairsAverage.cpp
+        kol_ontology/kol_SetSimilarityAllPairsMax.cpp
+        kol_ontology/kol_SetSimilarityGentlemanSimUI.cpp
+        kol_ontology/kol_SetSimilarityJaccard.cpp
+        kol_ontology/kol_SetSimilarityMazanduSimDIC.cpp
+        kol_ontology/kol_SetSimilarityMazanduSimUIC.cpp
+        kol_ontology/kol_SetSimilarityPesquitaSimGIC.cpp
+        kol_ontology/kol_InformationExclusiveInherited.cpp
+        kol_ontology/kol_InformationCoutoGraSM.cpp
+        kol_ontology/kol_InformationCoutoGraSMAdjusted.cpp
         kol_ontology/kol_AllowedRelationshipOboGoParser.cpp
         kol_ontology/kol_AllowedRelationshipXmlGoParser.cpp
-        kol_ontology/kol_AncestorMeanSharedInformation.cpp
+        kol_ontology/kol_InformationAncestorMean.cpp
         kol_ontology/kol_MICASharedInformation.cpp
         kol_ontology/kol_TermDepthMap.cpp
         kol_ontology/kol_SimilarityPekarStaab.cpp
-        kol_ontology/kol_TermSimilarityWriter.cpp
+        kol_ontology/kol_SimilarityWriter.cpp
         kol_ontology/kol_RapidXmlGoParser.cpp
-        kol_ontology/kol_PrecomputedMatrixTermSimilarity.cpp
+        kol_ontology/kol_SimilarityMatrix.cpp
         kol_ontology/kol_SimilarityImpl.cpp
         kol_ontology/kol_EnrichmentTools.cpp
         kol_ontology/kol_EntrezGene2GoAnnotationParser.cpp
@@ -334,11 +334,11 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kgl_ontology/kgl_ontology_database_test.h
         kol_ontology/kol_TermInformationInterface.h
         kol_ontology/kol_SimilarityRelevance.h
-        kol_ontology/kol_TermInformationContentUnique.h
-        kol_ontology/kol_TermInformationContentMap.cpp
-        kol_ontology/kol_TermInformationContentImpl.cpp
-        kol_ontology/kol_TermInformationContentImpl.h
-        kol_ontology/kol_TermInformationContentUnique.cpp)
+        kol_ontology/kol_InformationContent.h
+        kol_ontology/kol_InformationContentDAG.cpp
+        kol_ontology/kol_InformationContentImpl.cpp
+        kol_ontology/kol_InformationContentImpl.h
+        kol_ontology/kol_InformationContent.cpp)
 
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES

@@ -6,11 +6,11 @@ Distributed under the Boost Software License, Version 1.0.
 #define KGL_MODULAR_RESNIK
 
 #include "kol_SimilarityInterface.h"
-#include "kol_SharedInformationInterface.h"
+#include "kol_InformationInterface.h"
 
 namespace kellerberrin::ontology {
 
-/*! \class ResnikSimilarity
+/*! \class SimilarityResnik
 	\brief A class to calculate resnik similarity between 2 terms using a shared information interface
 
 	This class calculates Resnik similarity.
@@ -25,7 +25,7 @@ namespace kellerberrin::ontology {
 	IC(MICA)
 
 */
-class ResnikSimilarity : public TermSimilarityInterface {
+class SimilarityResnik : public SimilarityInterface {
 
 public:
 
@@ -33,8 +33,8 @@ public:
   /*!
     Creates the default(empty) StandardRelationshipPolicy
   */
-  ResnikSimilarity(const std::shared_ptr<const SharedInformationInterface> &shared_info_ptr) : shared_info_ptr_(shared_info_ptr) {}
-  ~ResnikSimilarity() override = default;
+  SimilarityResnik(const std::shared_ptr<const InformationInterface> &shared_info_ptr) : shared_info_ptr_(shared_info_ptr) {}
+  ~SimilarityResnik() override = default;
 
   //! A method for calculating term-to-term similarity for GO terms using Resnik similarity
   /*!
@@ -44,8 +44,8 @@ public:
 
 private:
 
-  //! private SharedInformationInterface member used for calculations
-  std::shared_ptr<const SharedInformationInterface> shared_info_ptr_;
+  //! private InformationInterface member used for calculations
+  std::shared_ptr<const InformationInterface> shared_info_ptr_;
 
 };
 
