@@ -5,7 +5,7 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef KGL_RAPIDXML_GO_PARSER
 #define KGL_RAPIDXML_GO_PARSER
 
-#include "kol_GoParserInterface.h"
+#include "kol_ParserGoInterface.h"
 
 #include <vector>
 #include <string>
@@ -17,29 +17,23 @@ Distributed under the Boost Software License, Version 1.0.
 
 namespace kellerberrin::ontology {
 
-/*! \class RapidXmlGoParser
+/*! \class GoParserRapidXml
 	\brief This class parses a go XML file using RapidXML library.
 
 	This class parses a Gene Ontology XML file using RapidXML library.
 
-	Implements GoParserInterface
+	Implements ParserGoInterface
 
 */
-class RapidXmlGoParser : public GoParserInterface {
+class GoParserRapidXml : public ParserGoInterface {
 
 public:
 
-  RapidXmlGoParser() = default;
+  GoParserRapidXml() = default;
 
-  ~RapidXmlGoParser() override = default;
+  ~GoParserRapidXml() override = default;
 
 
-
-  //! A method to create a new instance of this class for use in a factory.
-  /*!
-    creats a new pointer to the parser, used by the factory for go parsers.
-  */
-  [[nodiscard]] std::unique_ptr<GoParserInterface> clone() const override { return std::make_unique<RapidXmlGoParser>(); }
 
   //! Method to parse the go file, should be an XML file.
   /*!

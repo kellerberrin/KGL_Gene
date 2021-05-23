@@ -6,6 +6,7 @@ Distributed under the Boost Software License, Version 1.0.
 #define KGL_GO_ENUMS
 
 #include <string>
+#include <vector>
 
 namespace kellerberrin::ontology {
 
@@ -64,41 +65,13 @@ public:
   /*!
     This method takes a string and returns the proper enum
   */
-  [[nodiscard]] static Ontology ontologyStringToCode(const std::string &code) {
-
-    for (auto const&[text, ontology] : ontology_text) {
-      //return the index if matching, cast as enum
-      if (code == text) {
-
-        return ontology;
-
-      }
-
-    }
-    //return error enum if not found
-    return Ontology::ONTO_ERROR;
-
-  }
+  [[nodiscard]] static Ontology ontologyStringToCode(const std::string &code);
 
   //! A method for returning a human readable string from the ontology code
   /*!
     This method takes an ontology enum value and returns a string
   */
-  [[nodiscard]] std::string static ontologyToString(Ontology onto) {
-
-    for (auto const&[text, ontology] : ontology_text) {
-
-      if (ontology == onto) {
-
-        return text;
-
-      }
-
-    }
-
-    return ONTOLOGY_ERROR_TEXT;
-
-  }
+  [[nodiscard]] std::string static ontologyToString(Ontology onto);
 
   //! Evcidence Code enum type
   /*!
@@ -146,46 +119,23 @@ public:
     EXPERIMENTAL, COMPUTATIONAL, AUTHOR, CURATOR, AUTO_ASSIGNED, OBSOLETE, ERROR
   };
 
+  // Retrieve evidence codes by evidence type.
+  [[nodiscard]] static const std::vector<EvidenceCode> getEvidenceType(EvidenceType evidence_type);
+
+  // Retrieve all valid evidence codes.
+  [[nodiscard]] static const std::vector<EvidenceCode> getAllValidEvidence();
 
   //! A method for converting evidence code strings to enums
   /*!
     This method takes a string representing the evidence code and converts it to an enum.
   */
-  [[nodiscard]] static EvidenceCode evidenceStringToCode(const std::string &text_code) {
-
-    for (auto const&[text, code, type] : evidence_text) {
-      //return the index if matching, cast as enum
-      if (text_code == text) {
-
-        return code;
-
-      }
-
-    }
-    //return evidence error if not found
-    return EvidenceCode::ECODE_ERROR;
-
-  }
+  [[nodiscard]] static EvidenceCode evidenceStringToCode(const std::string &text_code);
 
   //! A method for returning a human readable string from an evidence code
   /*!
     This method takes an evidence code enum value and returns a string
   */
-  [[nodiscard]] static std::string evidenceToString(EvidenceCode evidence) {
-
-    for (auto const&[text, code, type] : evidence_text) {
-      //return the index if matching, cast as enum
-      if (evidence == code) {
-
-        return text;
-
-      }
-
-    }
-    //return evidence error if not found
-    return EVIDENCE_ERROR_TEXT;
-
-  }
+  [[nodiscard]] static std::string evidenceToString(EvidenceCode evidence);
 
 
   //! Relationship codes enum
@@ -206,39 +156,29 @@ public:
   /*!
     This method converts the string representation of a relationship to an enum.
   */
-  [[nodiscard]] static Relationship relationshipStringToCode(const std::string &code) {
-
-    for (auto const&[text, relation] : relationship_text) {
-      //return the index if matching, cast as enum
-      if (code == text) {
-
-        return relation;
-
-      }
-
-    }
-    //return error code if not found
-    return Relationship::REL_ERROR;
-
-  }
+  [[nodiscard]] static Relationship relationshipStringToCode(const std::string &code);
 
   //! A method for returning a human readable string from a Relationship
   /*!
     This method takes an evidence code enum pointer value and returns a string
   */
-  [[nodiscard]] static std::string relationshipToString(Relationship relationship) {
+  [[nodiscard]] static std::string relationshipToString(Relationship relationship);
 
-    for (auto const&[text, relation] : relationship_text) {
-      //return the index if matching, cast as enum
-      if (relation == relationship) {
+  // Standard term relationships are defined as the 'IS_A' and 'PART_OF' relationships.
+  [[nodiscard]] static const std::vector<Relationship> standardRelationships() {
 
-        return text;
+    return std::vector<Relationship>{ Relationship::IS_A, Relationship::PART_OF };
 
-      }
+  }
 
-    }
-    //return error code if not found
-    return RELATIONSHIP_ERROR_TEXT;
+  // All valid term relationships.
+  [[nodiscard]] static const std::vector<Relationship> allRelationships() {
+
+    return std::vector<Relationship>{ Relationship::IS_A,
+                                      Relationship::PART_OF,
+                                      Relationship::REGULATES,
+                                      Relationship::POSITIVELY_REGULATES,
+                                      Relationship::NEGATIVELY_REGULATES };
 
   }
 

@@ -5,23 +5,23 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef KGL_ENTREZ_GENE2GO_ANNOTATION_PARSER
 #define KGL_ENTREZ_GENE2GO_ANNOTATION_PARSER
 
-#include "kol_AnnotationParserInterface.h"
-#include "kol_DisallowedSetEvidencePolicy.h"
+#include "kol_ParserAnnotationInterface.h"
+#include "kol_PolicyAllowedEvidence.h"
 
 
 namespace kellerberrin::ontology {
 
-/*! \class EntrezGene2GoAnnotationParser
+/*! \class ParserAnnotationEntrezGene2Go
 	\brief A class to parse an Entrez gene2go annotation file.
 
 	This class will read an Entrez gene2go file and add those annoations to 
 	  an AnnotationData class.
 	  Available at: ftp://ftp.ncbi.nih.gov/gene/DATA/
 
-	 Implements AnnotationParserInterface
+	 Implements ParserAnnotationInterface
 
 */
-class EntrezGene2GoAnnotationParser : public AnnotationParserInterface {
+class ParserAnnotationEntrezGene2Go : public ParserAnnotationInterface {
 
 public:
 
@@ -29,22 +29,14 @@ public:
   /*!
     Creates the parser with the default evidence policy, everything is allowed.
   */
-  EntrezGene2GoAnnotationParser() : policy_ptr_(std::make_unique<const DisallowedSetEvidencePolicy>()) {}
+  ParserAnnotationEntrezGene2Go() = default;
 
   //! A parameterized constructor method for creating the parser with a policy.
   /*!
     Creates the parser
   */
-  EntrezGene2GoAnnotationParser(const EvidencePolicyInterface &policy) : policy_ptr_(policy.clone()) {}
-
-  ~EntrezGene2GoAnnotationParser() override = default;
-
-  //! An interface method for creating a new instance of the parser.
-  /*!
-    This method returns a new instance of the class. This method partially
-      fulfills the interface contract.
-  */
-  [[nodiscard]] std::unique_ptr<AnnotationParserInterface> clone() const override { return std::make_unique<EntrezGene2GoAnnotationParser>(*policy_ptr_); }
+  ParserAnnotationEntrezGene2Go(const PolicyAllowedEvidence &policy) : policy_(policy) {}
+  ~ParserAnnotationEntrezGene2Go() override = default;
 
 
   //! An interface method for parsing an annotation file.
@@ -62,7 +54,7 @@ public:
 
 private:
 
-  std::unique_ptr<const EvidencePolicyInterface> policy_ptr_;
+  const PolicyAllowedEvidence policy_;
 
 };
 

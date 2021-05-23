@@ -238,51 +238,46 @@ set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
 # Gene ontology library
 set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_Accumulators.h
-        kol_ontology/kol_AllowedRelationshipOboGoParser.h
-        kol_ontology/kol_AllowedRelationshipXmlGoParser.h
-        kol_ontology/kol_AllowedSetEvidencePolicy.h
-        kol_ontology/kol_AllowedSetRelationshipPolicy.h
+        kol_ontology/kol_ParserGoAllowedRelationshipObo.h
+        kol_ontology/kol_ParserGoAllowedRelationshipXml.h
+        kol_ontology/kol_PolicyAllowedEvidence.h
+        kol_ontology/kol_PolicyAllowedRelationship.h
         kol_ontology/kol_SetSimilarityAllPairsAverage.h
         kol_ontology/kol_SetSimilarityAllPairsMax.h
         kol_ontology/kol_InformationAncestorMean.h
         kol_ontology/kol_AnnotationData.h
-        kol_ontology/kol_AnnotationParserFactory.h
-        kol_ontology/kol_AnnotationParserInterface.h
+        kol_ontology/kol_ParserAnnotationFactory.h
+        kol_ontology/kol_ParserAnnotationInterface.h
         kol_ontology/kol_SetSimilarityBestMatchAverage.h
         kol_ontology/kol_InformationCoutoGraSMAdjusted.h
         kol_ontology/kol_InformationCoutoGraSM.h
-        kol_ontology/kol_DisallowedSetEvidencePolicy.h
         kol_ontology/kol_EnrichmentTools.h
-        kol_ontology/kol_EntrezGene2GoAnnotationParser.h
-        kol_ontology/kol_EvidencePolicyInterface.h
+        kol_ontology/kol_ParserAnnotationEntrezGene2Go.h
         kol_ontology/kol_InformationExclusiveInherited.h
-        kol_ontology/kol_ExperimentalEvidencePolicy.h
         kol_ontology/kol_InformationFrontier.h
-        kol_ontology/kol_GafAnnotationParser.h
+        kol_ontology/kol_ParserAnnotationGaf.h
         kol_ontology/kol_SetSimilarityGentlemanSimUI.h
-        kol_ontology/kol_GoaAnnotationParser.h
+        kol_ontology/kol_ParserAnnotationGoa.h
         kol_ontology/kol_library.h
         kol_ontology/kol_GoEnums.h
         kol_ontology/kol_GoGraph.h
-        kol_ontology/kol_GoParserFactory.h
-        kol_ontology/kol_GoParserInterface.h
+        kol_ontology/kol_ParserGoFactory.h
+        kol_ontology/kol_ParserGoInterface.h
         kol_ontology/kol_SetSimilarityJaccard.h
         kol_ontology/kol_SetSimilarityMazanduSimDIC.h
         kol_ontology/kol_SetSimilarityMazanduSimUIC.h
-        kol_ontology/kol_MgiAnnotationParser.h
+        kol_ontology/kol_ParserAnnotationMgi.h
         kol_ontology/kol_SimilarityJiangConrath.h
         kol_ontology/kol_SimilarityLin.h
         kol_ontology/kol_SimilarityResnik.h
         kol_ontology/kol_SimilarityPekarStaab.h
         kol_ontology/kol_SetSimilarityPesquitaSimGIC.h
         kol_ontology/kol_SimilarityMatrix.h
-        kol_ontology/kol_RapidXmlGoParser.h
-        kol_ontology/kol_RelationshipPolicyInterface.h
+        kol_ontology/kol_ParserGoRapidXml.h
         kol_ontology/kol_SetUtilities.h
         kol_ontology/kol_InformationInterface.h
-        kol_ontology/kol_StandardOboGoParser.h
-        kol_ontology/kol_StandardRelationshipPolicy.h
-        kol_ontology/kol_StandardXmlGoParser.h
+        kol_ontology/kol_ParserGoStandardObo.h
+        kol_ontology/kol_ParserGoStandardXml.h
         kol_ontology/kol_InformationDepthMap.h
         kol_ontology/kol_InformationContentDAG.h
         kol_ontology/kol_SetSimilarityInterface.h
@@ -311,17 +306,17 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_InformationExclusiveInherited.cpp
         kol_ontology/kol_InformationCoutoGraSM.cpp
         kol_ontology/kol_InformationCoutoGraSMAdjusted.cpp
-        kol_ontology/kol_AllowedRelationshipOboGoParser.cpp
-        kol_ontology/kol_AllowedRelationshipXmlGoParser.cpp
+        kol_ontology/kol_ParserGoAllowedRelationshipObo.cpp
+        kol_ontology/kol_ParserGoAllowedRelationshipXml.cpp
         kol_ontology/kol_InformationAncestorMean.cpp
         kol_ontology/kol_InformationDepthMap.cpp
         kol_ontology/kol_SimilarityPekarStaab.cpp
         kol_ontology/kol_SimilarityWriter.cpp
-        kol_ontology/kol_RapidXmlGoParser.cpp
+        kol_ontology/kol_ParserGoRapidXml.cpp
         kol_ontology/kol_SimilarityMatrix.cpp
         kol_ontology/kol_SimilarityImpl.cpp
         kol_ontology/kol_EnrichmentTools.cpp
-        kol_ontology/kol_EntrezGene2GoAnnotationParser.cpp
+        kol_ontology/kol_ParserAnnotationEntrezGene2Go.cpp
         kol_ontology/kgl_ontology/kgl_ontology_database.cpp
         kol_ontology/kol_OntologyTypes.h
         kol_ontology/kgl_ontology/kgl_ontology_database.h
@@ -335,7 +330,7 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_InformationContentDAG.cpp
         kol_ontology/kol_InformationContentImpl.cpp
         kol_ontology/kol_InformationContentImpl.h
-        kol_ontology/kol_InformationContent.cpp)
+        kol_ontology/kol_InformationContent.cpp kol_ontology/kol_GoEnums.cpp)
 
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES

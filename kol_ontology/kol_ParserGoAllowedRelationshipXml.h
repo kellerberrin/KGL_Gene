@@ -5,9 +5,9 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef KGL_ALLOWED_RELATIONSHIP_XML_GO_PARSER
 #define KGL_ALLOWED_RELATIONSHIP_XML_GO_PARSER
 
-#include "kol_GoParserInterface.h"
+#include "kol_ParserGoInterface.h"
 #include "kol_GoEnums.h"
-#include "kol_RelationshipPolicyInterface.h"
+#include "kol_PolicyAllowedRelationship.h"
 
 #include <vector>
 #include <string>
@@ -16,17 +16,17 @@ Distributed under the Boost Software License, Version 1.0.
 namespace kellerberrin::ontology {
 
 
-/*! \class AllowedRelationshipXmlGoParser
+/*! \class ParserGoAllowedRelationshipXml
 	\brief A class to parse only a specified set of relationships
 
 	This class will read a Gene Ontology XML file and add only those relationship
 	 which are specified to the graph. The most important method of this class if the
 	 parseGoFile which takes the file name as a parameter.
 
-	 Implements GoParserInterface
+	 Implements ParserGoInterface
 
 */
-class AllowedRelationshipXmlGoParser : public GoParserInterface {
+class ParserGoAllowedRelationshipXml : public ParserGoInterface {
 
 public:
 
@@ -34,21 +34,10 @@ public:
   /*!
     constructor that sets the policy
   */
-  explicit AllowedRelationshipXmlGoParser(const RelationshipPolicyInterface &policy)
-      : relationship_policy_ptr_(policy.clone()) {}
+  explicit ParserGoAllowedRelationshipXml(const PolicyAllowedRelationship &policy) : relationship_policy_(policy) {}
 
-  AllowedRelationshipXmlGoParser() = delete; // Must provide a policy.
-  ~AllowedRelationshipXmlGoParser() override = default;
-
-  //! a method to create a new instance of this class for use in a factory
-  /*!
-    creats a new pointer to the parser, used by the factory for go parsers.
-  */
-  [[nodiscard]] std::unique_ptr<GoParserInterface> clone() const override {
-
-    return std::make_unique<AllowedRelationshipXmlGoParser>(*relationship_policy_ptr_);
-
-  }//end method clone
+  ParserGoAllowedRelationshipXml() = delete; // Must provide a policy.
+  ~ParserGoAllowedRelationshipXml() override = default;
 
 
   //! Method to parse the go file, should be an XML file
@@ -67,9 +56,9 @@ public:
   [[nodiscard]] bool isFileGood(const std::string &filename) const override;
 
 private:
-  //! A RelationshipPolicyInterface
-  /*! This RelationshipPolicyInterface holds the relationships to be allowed during parsing */
-  std::unique_ptr<RelationshipPolicyInterface> relationship_policy_ptr_;
+  //! A PolicyRelationshipInterface
+  /*! This PolicyRelationshipInterface holds the relationships to be allowed during parsing */
+  PolicyAllowedRelationship relationship_policy_;
 
 };
 

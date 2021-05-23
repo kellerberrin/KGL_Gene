@@ -6,20 +6,20 @@
 namespace kellerberrin::ontology {
 
 
-/*! \class GoParserInterface
+/*! \class ParserGoInterface
 	\brief An interface class to define go graph parsers
 
 	This class defines the interface of a go graph parser. Pure virtual methods
 	  require that parsers implement these methods.
 
 */
-class GoParserInterface {
+class ParserGoInterface {
 
 public:
 
-  GoParserInterface() = default;
+  ParserGoInterface() = default;
 
-  virtual ~GoParserInterface() = default;
+  virtual ~ParserGoInterface() = default;
 
   //! A pure virtual method for parsing the file and returning a GoGraph object.
   /*!
@@ -35,12 +35,6 @@ public:
   */
   [[nodiscard]] virtual bool isFileGood(const std::string &filename) const = 0;
 
-  //! A pure virtual clone function for factory pattern
-  /*!
-    This pure virtual method returns an instance of this interface. This method
-      is used in a factory class to have the ability to decide the parser at runtime.
-  */
-  [[nodiscard]] virtual std::unique_ptr<GoParserInterface> clone() const = 0;
 
 };
 

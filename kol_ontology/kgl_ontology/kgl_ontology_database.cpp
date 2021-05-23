@@ -5,9 +5,9 @@
 
 #include "kgl_ontology_database.h"
 
-#include "kol_GoParserFactory.h"
+#include "kol_ParserGoFactory.h"
 #include "kol_GoGraph.h"
-#include "kol_AnnotationParserFactory.h"
+#include "kol_ParserAnnotationFactory.h"
 #include "kol_AnnotationData.h"
 
 
@@ -36,15 +36,15 @@ kol::OntologyDatabase::~OntologyDatabase() {
 
 std::unique_ptr<const kol::AnnotationData> kol::OntologyDatabase::getAnnotation(const std::string& annotation_file) {
 
-    auto anno_parser_ptr = AnnotationParserFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
-                                                                           DisallowedSetEvidencePolicy());
+    auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
+                                                                           PolicyAllowedEvidence());
     return anno_parser_ptr->parseAnnotationFile(annotation_file);
 
 }
 
 std::unique_ptr<const kol::GoGraph> kol::OntologyDatabase::getGoGraph(const std::string& go_graph_file) {
 
-    auto go_parser_ptr = GoParserFactory::createGoParser(GoParserType::OBO_GO_STANDARD);
+    auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::OBO_GO_STANDARD);
     return go_parser_ptr->parseGoFile(go_graph_file);
 
 }

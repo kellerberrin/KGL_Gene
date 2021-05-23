@@ -5,7 +5,7 @@
 
 
 #include "kol_OntologyTypes.h"
-#include "kol_RapidXmlGoParser.h"
+#include "kol_ParserGoRapidXml.h"
 
 namespace kol = kellerberrin::ontology;
 
@@ -17,7 +17,7 @@ namespace kol = kellerberrin::ontology;
 
 */
 
-std::unique_ptr<kol::GoGraph> kol::RapidXmlGoParser::parseGoFile(const std::string &filename) const {
+std::unique_ptr<kol::GoGraph> kol::GoParserRapidXml::parseGoFile(const std::string &filename) const {
 
   //graph object to be returned
   std::unique_ptr<GoGraph> graph(std::make_unique<GoGraph>());
@@ -150,7 +150,7 @@ std::unique_ptr<kol::GoGraph> kol::RapidXmlGoParser::parseGoFile(const std::stri
 /*!
 Returns true if the file matches accepted format, false otherwise
 */
-bool kol::RapidXmlGoParser::isFileGood(const std::string &filename) const {
+bool kol::GoParserRapidXml::isFileGood(const std::string &filename) const {
 
   std::ifstream in(filename.c_str());
   if (!in.good()) {

@@ -2,7 +2,7 @@
 // Created by kellerberrin on 19/4/21.
 //
 
-#include "kol_AllowedRelationshipXmlGoParser.h"
+#include "kol_ParserGoAllowedRelationshipXml.h"
 
 #include <xml/rapidxml_utils.h>
 #include <xml/rapidxml.h>
@@ -16,13 +16,13 @@ namespace kol = kellerberrin::ontology;
    which are specified to the graph.
 
 */
-std::unique_ptr<kol::GoGraph> kol::AllowedRelationshipXmlGoParser::parseGoFile(const std::string &filename) const {
+std::unique_ptr<kol::GoGraph> kol::ParserGoAllowedRelationshipXml::parseGoFile(const std::string &filename) const {
 
   //graph object to be returned
   std::unique_ptr<GoGraph> graph(std::make_unique<GoGraph>());
 
   // Check the relationship policy
-  if (not relationship_policy_ptr_->validPolicy()) {
+  if (not relationship_policy_.validPolicy()) {
 
     return graph;
 
@@ -133,7 +133,7 @@ std::unique_ptr<kol::GoGraph> kol::AllowedRelationshipXmlGoParser::parseGoFile(c
           //std::cout << relationship << std::endl;
 
           GO::Relationship relationsihpType = GO::relationshipStringToCode(relationship);
-          if (!relationship_policy_ptr_->isAllowed(relationsihpType)) { continue; }
+          if (!relationship_policy_.isAllowed(relationsihpType)) { continue; }
 
           //insert related terms, there are just stubs to be overwritten later on
           graph->insertTerm(relatedTerm, "name", "description", "ontology");
@@ -163,7 +163,7 @@ std::unique_ptr<kol::GoGraph> kol::AllowedRelationshipXmlGoParser::parseGoFile(c
 /*!
 Returns true if the file matches accepted format, false otherwise
 */
-bool kol::AllowedRelationshipXmlGoParser::isFileGood(const std::string &filename) const {
+bool kol::ParserGoAllowedRelationshipXml::isFileGood(const std::string &filename) const {
 
   std::ifstream in(filename.c_str());
   if (!in.good()) {

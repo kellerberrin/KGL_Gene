@@ -10,19 +10,18 @@ Distributed under the Boost Software License, Version 1.0.
 namespace kellerberrin::ontology {
 
 
-/*! \class AnnotationParserInterface
+/*! \class ParserAnnotationInterface
 	\brief An interface class to define annotation parsers
 
 	This class defines the interface of an annotation parser. Pure virtual methods
 	  require that parsers implement these methods.
 
 */
-class AnnotationParserInterface {
+class ParserAnnotationInterface {
 public:
 
-  AnnotationParserInterface() = default;
-
-  virtual ~AnnotationParserInterface() = default;
+  ParserAnnotationInterface() = default;
+  virtual ~ParserAnnotationInterface() = default;
 
   //! A pure virtual method for parsing the file and returning an AnnotationData object.
   /*!
@@ -37,12 +36,6 @@ public:
   */
   [[nodiscard]] virtual bool isFileGood(const std::string &fileName) const = 0;
 
-  //! A pure virtual clone function for factory pattern
-  /*!
-    This pure virtual method returns an instance of this interface. This method
-      is used in a factory class to have the ability to decide the parser at runtime.
-  */
-  [[nodiscard]] virtual std::unique_ptr<AnnotationParserInterface> clone() const = 0;
 
 };
 

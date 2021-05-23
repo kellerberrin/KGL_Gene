@@ -37,7 +37,7 @@ public:
 
   //! A constructor
   /*!
-    Creates the default(empty) StandardRelationshipPolicy
+    Creates the default(empty) PolicyStandardRelationship
   */
   SimilarityPekarStaab(const std::shared_ptr<const GoGraph> &graph_ptr,
                        const std::shared_ptr<const InformationDepthMap> &depth_map_ptr)

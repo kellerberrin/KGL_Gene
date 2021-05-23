@@ -3,7 +3,7 @@
 //
 
 #include "kol_OntologyTypes.h"
-#include "kol_EntrezGene2GoAnnotationParser.h"
+#include "kol_ParserAnnotationEntrezGene2Go.h"
 
 #include <iostream>
 #include <boost/tokenizer.hpp>
@@ -17,12 +17,12 @@ namespace kol = kellerberrin::ontology;
   This method takes a filename as in put and returns a pointer to an
     AnnotationData object. This method fulfills part of the interface contract.
 */
-std::unique_ptr<kol::AnnotationData> kol::EntrezGene2GoAnnotationParser::parseAnnotationFile(const std::string &filename) const  {
+std::unique_ptr<kol::AnnotationData> kol::ParserAnnotationEntrezGene2Go::parseAnnotationFile(const std::string &filename) const  {
 
   std::unique_ptr<AnnotationData> annoData(std::make_unique<AnnotationData>());
 
   // Check that the supplied policy is valid.
-  if (not policy_ptr_->isValid()) {
+  if (not policy_.isValid()) {
 
     return annoData;
 
@@ -84,7 +84,7 @@ std::unique_ptr<kol::AnnotationData> kol::EntrezGene2GoAnnotationParser::parseAn
     evidenceCode = *it;
 
     //add gene to go association to the database, if the evidence is allowed
-    if (policy_ptr_->isAllowed(GO::evidenceStringToCode(evidenceCode))) {
+    if (policy_.isAllowed(GO::evidenceStringToCode(evidenceCode))) {
       //add gene to go association to the database
       annoData->addAssociation(geneName, goTerm, evidenceCode);
     }
@@ -99,7 +99,7 @@ std::unique_ptr<kol::AnnotationData> kol::EntrezGene2GoAnnotationParser::parseAn
 /*!
   This function checks that the file exists and its format can be recognized.
 */
-bool kol::EntrezGene2GoAnnotationParser::isFileGood(const std::string &fileName) const {
+bool kol::ParserAnnotationEntrezGene2Go::isFileGood(const std::string &fileName) const {
 
   std::ifstream in(fileName.c_str());
   if (!in.good()) {

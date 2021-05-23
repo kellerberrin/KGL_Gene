@@ -36,7 +36,7 @@ public:
 
   //! A constructor
   /*!
-    Creates the default(empty) StandardRelationshipPolicy
+    Creates the default(empty) PolicyStandardRelationship
   */
   SimilarityRelevance(const std::shared_ptr<const InformationInterface> &shared_info_ptr)
       : shared_info_ptr_(shared_info_ptr) {}

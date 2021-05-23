@@ -17,19 +17,19 @@ public:
   ~TestAnnotateParsers() = default;
 
 
-  [[nodiscard]] std::unique_ptr<AnnotationData> parseGaf(const EvidencePolicyInterface &policy = DisallowedSetEvidencePolicy()) {
+  [[nodiscard]] std::unique_ptr<AnnotationData> parseGaf(const PolicyAllowedEvidence &policy = PolicyAllowedEvidence()) {
 
     return parseAnnotation(AnnotationParserType::GAF_ANNO_PARSER, UnitTestDefinitions::gafFileName(), policy);
 
   }
 
-  [[nodiscard]] std::unique_ptr<AnnotationData> parseEntrez(const EvidencePolicyInterface &policy = DisallowedSetEvidencePolicy()) {
+  [[nodiscard]] std::unique_ptr<AnnotationData> parseEntrez(const PolicyAllowedEvidence &policy = PolicyAllowedEvidence()) {
 
     return parseAnnotation(AnnotationParserType::ENTREZ_ANNO_PARSER, UnitTestDefinitions::entrezFileName(), policy);
 
   }
 
-  [[nodiscard]] std::unique_ptr<AnnotationData> parseGene(const EvidencePolicyInterface &policy = DisallowedSetEvidencePolicy()) {
+  [[nodiscard]] std::unique_ptr<AnnotationData> parseGene(const PolicyAllowedEvidence &policy = PolicyAllowedEvidence()) {
 
     return parseAnnotation(AnnotationParserType::MGI_ANNO_PARSER, UnitTestDefinitions::geneFileName(), policy);
 
@@ -58,9 +58,9 @@ private:
 
   [[nodiscard]] std::unique_ptr<AnnotationData> parseAnnotation(AnnotationParserType parser_type,
                                                                 const std::string &annotation_file,
-                                                                const EvidencePolicyInterface &policy) {
+                                                                const PolicyAllowedEvidence &policy) {
 
-    auto anno_parser_ptr = AnnotationParserFactory::createAnnotationParser(parser_type, policy);
+    auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(parser_type, policy);
     BOOST_REQUIRE(anno_parser_ptr);
     return anno_parser_ptr->parseAnnotationFile(annotation_file);
 
@@ -69,7 +69,7 @@ private:
   [[nodiscard]] bool verifyAnnotation(AnnotationParserType parser_type,
                                       const std::string &annotation_file) {
 
-    auto anno_parser_ptr = AnnotationParserFactory::createAnnotationParser(parser_type, DisallowedSetEvidencePolicy());
+    auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(parser_type, PolicyAllowedEvidence());
     BOOST_REQUIRE(anno_parser_ptr);
     return anno_parser_ptr->isFileGood(annotation_file);
 
@@ -179,8 +179,8 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_entrez_bad_format)
 BOOST_AUTO_TEST_CASE(test_annotation_parser_gaf_bad_custom_evidence_set)
 {
 
-  kol::DisallowedSetEvidencePolicy bad_policy;
-  bad_policy.addEvidence(kol::GO::EvidenceCode::ECODE_ERROR);
+  std::vector<kol::GO::EvidenceCode> empty_vector;
+  kol::PolicyAllowedEvidence bad_policy(empty_vector);
   auto annotation_ptr = parseGaf(bad_policy);
   BOOST_REQUIRE(annotation_ptr);
   if ( annotation_ptr->getNumGenes() != 0 or annotation_ptr->getNumGoTerms() != 0) BOOST_FAIL( "Gaf annotation is non-empty with bad policy." );
@@ -191,8 +191,8 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_gaf_bad_custom_evidence_set)
 BOOST_AUTO_TEST_CASE(test_annotation_parser_entrez_bad_custom_evidence_set)
 {
 
-  kol::DisallowedSetEvidencePolicy bad_policy;
-  bad_policy.addEvidence(kol::GO::EvidenceCode::ECODE_ERROR);
+  std::vector<kol::GO::EvidenceCode> empty_vector;
+  kol::PolicyAllowedEvidence bad_policy(empty_vector);
   auto annotation_ptr = parseEntrez(bad_policy);
   BOOST_REQUIRE(annotation_ptr);
   if ( annotation_ptr->getNumGenes() != 0 or annotation_ptr->getNumGoTerms() != 0) BOOST_FAIL( "Entrez annotation is non-empty with bad policy." );
@@ -207,8 +207,9 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_entrez_bad_custom_evidence_set)
 BOOST_AUTO_TEST_CASE(test_annotation_parser_gaf_experimental_evidence_set)
 {
 
-  const kol::OntologySetType<std::string> experimental_set{"EXP", "IDA", "IPI", "IMP", "IGI", "IEP"};
-  auto annotation_ptr = parseGaf(kol::ExperimentalEvidencePolicy());
+  auto experimental_codes = kol::GO::getEvidenceType(kol::GO::EvidenceType::EXPERIMENTAL);
+  auto experimental_policy = kol::PolicyAllowedEvidence(experimental_codes);
+  auto annotation_ptr = parseGaf(experimental_policy);
   BOOST_REQUIRE(annotation_ptr);
   auto gene_list = annotation_ptr->getAllGenes();
 
@@ -217,9 +218,9 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_gaf_experimental_evidence_set)
 
     auto code_list = annotation_ptr->getGoTermsEvidenceForGene(gene);
     bool found_experimental_codes{false};
-    for (auto const& code : code_list) {
+    for (auto const& code_text : code_list) {
 
-      if (experimental_set.find(code) != experimental_set.end()) {
+      if (experimental_policy.isAllowed(kol::GO::evidenceStringToCode(code_text))) {
 
         found_experimental_codes = true;
         break;
@@ -244,8 +245,10 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_gaf_experimental_evidence_set)
 BOOST_AUTO_TEST_CASE(test_annotation_parser_entrez_experimental_evidence_set)
 {
 
-  const kol::OntologySetType<std::string> experimental_set{"EXP", "IDA", "IPI", "IMP", "IGI", "IEP"};
-  auto annotation_ptr = parseEntrez(kol::ExperimentalEvidencePolicy());
+
+  auto experimental_codes = kol::GO::getEvidenceType(kol::GO::EvidenceType::EXPERIMENTAL);
+  auto experimental_policy = kol::PolicyAllowedEvidence(experimental_codes);
+  auto annotation_ptr = parseEntrez(experimental_policy);
   BOOST_REQUIRE(annotation_ptr);
   auto gene_list = annotation_ptr->getAllGenes();
 
@@ -254,9 +257,9 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_entrez_experimental_evidence_set)
 
     auto code_list = annotation_ptr->getGoTermsEvidenceForGene(gene);
     bool found_experimental_codes{false};
-    for (auto const& code : code_list) {
+    for (auto const& code_text : code_list) {
 
-      if (experimental_set.find(code) != experimental_set.end()) {
+      if (experimental_policy.isAllowed(kol::GO::evidenceStringToCode(code_text))) {
 
         found_experimental_codes = true;
         break;

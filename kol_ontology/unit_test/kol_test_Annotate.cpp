@@ -57,8 +57,8 @@ private:
 
   [[nodiscard]] static std::unique_ptr<AnnotationData> getAnnotation() {
 
-    auto anno_parser_ptr = AnnotationParserFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
-                                                                           DisallowedSetEvidencePolicy());
+    auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
+                                                                           PolicyAllowedEvidence());
     BOOST_REQUIRE(anno_parser_ptr);
     return anno_parser_ptr->parseAnnotationFile(UnitTestDefinitions::gafFileName());
 

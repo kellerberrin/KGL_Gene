@@ -5,9 +5,9 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef KGL_ALLOWED_RELATIONSHIP_OBO_GO_PARSER
 #define KGL_ALLOWED_RELATIONSHIP_OBO_GO_PARSER
 
-#include "kol_GoParserInterface.h"
+#include "kol_ParserGoInterface.h"
 #include "kol_GoEnums.h"
-#include "kol_RelationshipPolicyInterface.h"
+#include "kol_PolicyAllowedRelationship.h"
 #include <vector>
 #include <string>
 
@@ -15,17 +15,17 @@ Distributed under the Boost Software License, Version 1.0.
 namespace kellerberrin::ontology {
 
 
-/*! \class AllowedRelationshipOboGoParser
+/*! \class ParserGoAllowedRelationshipObo
 	\brief A class to parse only a specified set of relationships
 
 	This class will read a Gene Ontology OBO file and add only those relationships
 	 which are specified to the graph. The most important method of this class if the
 	 parseGoFile which takes the file name as a parameter.
 
-	 Implements GoParserInterface
+	 Implements ParserGoInterface
 
 */
-class AllowedRelationshipOboGoParser : public GoParserInterface {
+class ParserGoAllowedRelationshipObo : public ParserGoInterface {
 
 public:
 
@@ -33,21 +33,11 @@ public:
   /*!
     constructor that sets the policy
   */
-  explicit AllowedRelationshipOboGoParser(const RelationshipPolicyInterface &policy)
-      : relationship_policy_ptr_(policy.clone()) {}
+  explicit ParserGoAllowedRelationshipObo(const PolicyAllowedRelationship &policy)
+      : relationship_policy_(policy) {}
 
-  AllowedRelationshipOboGoParser() = delete; // Must provide a policy.
-  ~AllowedRelationshipOboGoParser() override = default;
-
-  //! a method to create a new instance of this class for use in a factory
-  /*!
-    creats a new pointer to the parser, used by the factory for go parsers.
-  */
-  [[nodiscard]] std::unique_ptr<GoParserInterface> clone() const override {
-
-    return std::make_unique<AllowedRelationshipOboGoParser>(*relationship_policy_ptr_);
-
-  }
+  ParserGoAllowedRelationshipObo() = delete; // Must provide a policy.
+  ~ParserGoAllowedRelationshipObo() override = default;
 
 
   //! Method to parse the go file, should be an OBO file
@@ -67,9 +57,10 @@ public:
 
 private:
 
-  //! A RelationshipPolicyInterface
-  /*! This RelationshipPolicyInterface holds the relationships to be allowed during parsing */
-  std::unique_ptr<RelationshipPolicyInterface> relationship_policy_ptr_;
+  //! A PolicyRelationshipInterface
+  /*! This PolicyRelationshipInterface holds the relationships to be allowed during parsing */
+
+  PolicyAllowedRelationship relationship_policy_;
 
 
   //! a helper method

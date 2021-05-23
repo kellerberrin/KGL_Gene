@@ -5,9 +5,8 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef KGL_GOA_ANNOTATION_PARSER
 #define KGL_GOA_ANNOTATION_PARSER
 
-#include "kol_AnnotationParserInterface.h"
-#include "kol_EvidencePolicyInterface.h"
-#include "kol_DisallowedSetEvidencePolicy.h"
+#include "kol_ParserAnnotationInterface.h"
+#include "kol_PolicyAllowedEvidence.h"
 
 #include <iostream>
 #include <boost/tokenizer.hpp>
@@ -15,16 +14,16 @@ Distributed under the Boost Software License, Version 1.0.
 
 namespace kellerberrin::ontology {
 
-/*! \class GoaAnnotationParser
+/*! \class ParserAnnotationGoa
 	\brief A class to parse a Uniprot Gene Ontolog Annotation (GOA) file.
 
 	This class will read a GOA file an return an AnnotationData object pointer.
 	  Defined at: http://www.ebi.ac.uk/GOA
 
-	 Implements AnnotationParserInterface
+	 Implements ParserAnnotationInterface
 
 */
-class GoaAnnotationParser : public AnnotationParserInterface {
+class ParserAnnotationGoa : public ParserAnnotationInterface {
 
 public:
 
@@ -32,22 +31,15 @@ public:
   /*!
     Creates the parser
   */
-  GoaAnnotationParser() : _policy(std::make_unique<DisallowedSetEvidencePolicy>()) {}
+  ParserAnnotationGoa() = default;
 
   //! A parameterized constructor method for creating the parser with a policy.
   /*!
     Creates the parser
   */
-  explicit GoaAnnotationParser(const EvidencePolicyInterface &policy) : _policy(policy.clone()) {}
+  explicit ParserAnnotationGoa(const PolicyAllowedEvidence &policy) : _policy(policy) {}
+  ~ParserAnnotationGoa() override = default;
 
-  ~GoaAnnotationParser() override = default;
-
-  //! An interface method for creating a new instance of the parser.
-  /*!
-    This method returns a new instance of the class. This method partially
-      fulfills the interface contract.
-  */
-  [[nodiscard]] std::unique_ptr<AnnotationParserInterface> clone() const override { return std::make_unique<GoaAnnotationParser>(*_policy); }
 
   //! An interface method for parsing an annotation file.
   /*!
@@ -59,7 +51,7 @@ public:
     std::unique_ptr<AnnotationData> annoData(std::make_unique<AnnotationData>());
 
     // Check that the supplied policy is valid.
-    if (not _policy->isValid()) {
+    if (not _policy.isValid()) {
 
       return annoData;
 
@@ -128,7 +120,7 @@ public:
       ontology = *it;
 
 
-      if (_policy->isAllowed(GO::evidenceStringToCode(evidenceCode))) {
+      if (_policy.isAllowed(GO::evidenceStringToCode(evidenceCode))) {
         //add gene to go association to the database
         annoData->addAssociation(geneName, goStr, evidenceCode);
 
@@ -228,13 +220,9 @@ public:
 
   }
 
-protected:
-
-  [[nodiscard]] const EvidencePolicyInterface &getPolicy() const { return *_policy; }
-
 private:
 
-  std::unique_ptr<const EvidencePolicyInterface> _policy;
+  const PolicyAllowedEvidence _policy;
 
 };
 

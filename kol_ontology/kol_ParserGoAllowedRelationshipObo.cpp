@@ -4,7 +4,7 @@
 
 
 #include "kol_OntologyTypes.h"
-#include "kol_AllowedRelationshipOboGoParser.h"
+#include "kol_ParserGoAllowedRelationshipObo.h"
 
 #include <iostream>
 #include <fstream>
@@ -23,13 +23,13 @@ namespace kol = kellerberrin::ontology;
    which are specified to the graph.
 
 */
-std::unique_ptr<kol::GoGraph> kol::AllowedRelationshipOboGoParser::parseGoFile(const std::string &filename) const {
+std::unique_ptr<kol::GoGraph> kol::ParserGoAllowedRelationshipObo::parseGoFile(const std::string &filename) const {
 
   //graph object to be returned
   std::unique_ptr<GoGraph> graph(std::make_unique<GoGraph>());
 
   // Check the relationship policy
-  if (not relationship_policy_ptr_->validPolicy()) {
+  if (not relationship_policy_.validPolicy()) {
 
     return graph;
 
@@ -147,7 +147,7 @@ std::unique_ptr<kol::GoGraph> kol::AllowedRelationshipOboGoParser::parseGoFile(c
         //std::cout << relationship << std::endl;
 
         GO::Relationship relationsihpType = GO::relationshipStringToCode(relationship);
-        if (not relationship_policy_ptr_->isAllowed(relationsihpType)) {
+        if (not relationship_policy_.isAllowed(relationsihpType)) {
 
           continue;
 
@@ -183,7 +183,7 @@ std::unique_ptr<kol::GoGraph> kol::AllowedRelationshipOboGoParser::parseGoFile(c
 /*!
   Returns true if the file matches accepted format, false otherwise
 */
-bool kol::AllowedRelationshipOboGoParser::isFileGood(const std::string &filename) const {
+bool kol::ParserGoAllowedRelationshipObo::isFileGood(const std::string &filename) const {
 
   std::ifstream in(filename.c_str());
   if (!in.good()) {
@@ -238,10 +238,10 @@ bool kol::AllowedRelationshipOboGoParser::isFileGood(const std::string &filename
 /*!
   splits strings on the given string pattern, splitStr.
 */
-void kol::AllowedRelationshipOboGoParser::splitWith( const std::string &instr,
-                                                     const std::string &splitStr,
-                                                     std::string &attr,
-                                                     std::string &value) const {
+void kol::ParserGoAllowedRelationshipObo::splitWith(const std::string &instr,
+                                                    const std::string &splitStr,
+                                                    std::string &attr,
+                                                    std::string &value) const {
 
   size_t div = instr.find(splitStr);
 
