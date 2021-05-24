@@ -47,7 +47,7 @@ private:
 
   [[nodiscard]] static std::unique_ptr<GoGraph> getGoGraph() {
 
-    auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::OBO_GO_STANDARD);
+    auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO);
     BOOST_REQUIRE(go_parser_ptr);
     return go_parser_ptr->parseGoFile(UnitTestDefinitions::oboFileName());
 
@@ -59,7 +59,7 @@ private:
     go_graph_ptr_ = getGoGraph();
     BOOST_REQUIRE(go_graph_ptr_);
     auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
-                                                                           PolicyAllowedEvidence());
+                                                                           PolicyEvidence());
     BOOST_REQUIRE(anno_parser_ptr);
     std::shared_ptr<const AnnotationData> annotation_ptr = anno_parser_ptr->parseAnnotationFile(UnitTestDefinitions::gafFileName());
     term_map_ptr_ = std::make_unique<const InformationContentDAG>(go_graph_ptr_, annotation_ptr);

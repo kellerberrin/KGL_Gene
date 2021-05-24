@@ -11,29 +11,29 @@ Distributed under the Boost Software License, Version 1.0.
 
 namespace kellerberrin::ontology {
 
-/*! \class PolicyAllowedEvidence
+/*! \class PolicyEvidence
 	\brief A class to allow only a set of evidence codes for annotations
 
 	A class to allow only certain evidence codes in the go graph. It uses a set of 
 	enums to restric the types of evidence codes considered for annotations.
 
 */
-class PolicyAllowedEvidence {
+class PolicyEvidence {
 
 public:
 
   //! A constructor
   /*!
-    Creates the default PolicyAllowedEvidence, subscribes to all valid evidence types.
+    Creates the default PolicyEvidence, subscribes to all valid evidence types.
   */
-  PolicyAllowedEvidence() { addEvidenceSet(GO::getAllValidEvidence()); }
-  ~PolicyAllowedEvidence() = default;
+  PolicyEvidence() { addEvidenceSet(GO::getAllValidEvidence()); }
+  ~PolicyEvidence() = default;
 
   //! A parameterized constructor
   /*!
-    Creates the PolicyAllowedEvidence using a list(vector) of evidence codes to allow
+    Creates the PolicyEvidence using a list(vector) of evidence codes to allow
   */
-  explicit PolicyAllowedEvidence(const std::vector<GO::EvidenceCode> &evidenceCodes) { addEvidenceSet(evidenceCodes); }
+  explicit PolicyEvidence(const std::vector<GO::EvidenceCode> &evidenceCodes) { addEvidenceSet(evidenceCodes); }
 
 
   //! a method to test if an evidence code is allowed or not

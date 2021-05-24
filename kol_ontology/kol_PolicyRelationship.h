@@ -11,29 +11,29 @@ Distributed under the Boost Software License, Version 1.0.
 
 namespace kellerberrin::ontology {
 
-/*! \class PolicyAllowedRelationship
+/*! \class PolicyRelationship
 	\brief A class to allow only a set of relationships
 
 	A class to allow only certain relationships in the go graph. It uses a set of 
 	enums to restric the types of relationships considered in a graph.
 
 */
-class PolicyAllowedRelationship  {
+class PolicyRelationship  {
 
 public:
 
   //! A constructor
   /*!
-    Creates the default PolicyAllowedRelationship
+    Creates the default PolicyRelationship
   */
-  PolicyAllowedRelationship() { addRelationships(GO::standardRelationships()); }
-  ~PolicyAllowedRelationship()  = default;
+  PolicyRelationship() { addRelationships(GO::standardRelationships()); }
+  ~PolicyRelationship()  = default;
 
   //! A parameterized constructor
   /*!
-    Creates the PolicyAllowedRelationship using a list(vector) of relationships.
+    Creates the PolicyRelationship using a list(vector) of relationships.
   */
-  explicit PolicyAllowedRelationship(const std::vector<GO::Relationship> &relationships) { addRelationships(relationships); }
+  explicit PolicyRelationship(const std::vector<GO::Relationship> &relationships) { addRelationships(relationships); }
 
   //! a method to test if a relatinoship is allowed or not
   /*!

@@ -6,7 +6,7 @@ Distributed under the Boost Software License, Version 1.0.
 #define KGL_ENTREZ_GENE2GO_ANNOTATION_PARSER
 
 #include "kol_ParserAnnotationInterface.h"
-#include "kol_PolicyAllowedEvidence.h"
+#include "kol_PolicyEvidence.h"
 
 
 namespace kellerberrin::ontology {
@@ -35,7 +35,7 @@ public:
   /*!
     Creates the parser
   */
-  ParserAnnotationEntrezGene2Go(const PolicyAllowedEvidence &policy) : policy_(policy) {}
+  ParserAnnotationEntrezGene2Go(const PolicyEvidence &policy) : policy_(policy) {}
   ~ParserAnnotationEntrezGene2Go() override = default;
 
 
@@ -54,7 +54,7 @@ public:
 
 private:
 
-  const PolicyAllowedEvidence policy_;
+  const PolicyEvidence policy_;
 
 };
 

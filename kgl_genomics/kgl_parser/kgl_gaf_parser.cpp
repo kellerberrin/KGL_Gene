@@ -197,15 +197,17 @@ bool kgl::GeneOntology::readIdFile(const std::string& filename) {
 // The Gaf data structure with records sorted by the Symbolic Reference field.
 void kgl::ResortGaf::sortBySymbolic(const GafRecordMap& gaf_map) {
 
+  static bool warning{false};
   gaf_record_map_.clear();
   for (auto const& [gaf_id, gaf_record_ptr] : gaf_map) {
 
     auto [iter, result] = gaf_record_map_.try_emplace(gaf_record_ptr->symbolicReference(), gaf_record_ptr);
 
-    if (not result) {
+    if (not result and not warning) {
 
       ExecEnv::log().warn( "ResortGaf::sortBySymbolic; Cannot insert (duplicate) Gaf record: {}, Symbolic Ref: {}",
                            gaf_id, gaf_record_ptr->symbolicReference());
+      warning = true;
 
     }
 
@@ -217,16 +219,17 @@ void kgl::ResortGaf::sortBySymbolic(const GafRecordMap& gaf_map) {
 // The Gaf data structure with records sorted by the Gene id field.
 void kgl::ResortGaf::sortByGeneId(const GafRecordMap& gaf_map) {
 
+  static bool warning{false};
   gaf_record_map_.clear();
   for (auto const& [gaf_id, gaf_record_ptr] : gaf_map) {
 
     auto [iter, result] = gaf_record_map_.try_emplace(gaf_record_ptr->gene_id(), gaf_record_ptr);
 
-    if (not result) {
+    if (not result and not warning) {
 
       ExecEnv::log().warn( "ResortGaf::sortByGeneId; Cannot insert (duplicate) Gaf record: {}, Gene Id: {}",
                             gaf_id, gaf_record_ptr->gene_id());
-
+      warning = true;
     }
 
   }
@@ -236,15 +239,17 @@ void kgl::ResortGaf::sortByGeneId(const GafRecordMap& gaf_map) {
 
 void kgl::ResortIds::sortByHGNC(const GeneSynonymVector& ident_vector) {
 
+  static bool warning{false};
   gene_id_map_.clear();
   for (auto const& [HGNC_id, ensembl_id] :  ident_vector) {
 
     if (not HGNC_id.empty() and not ensembl_id.empty()) {
 
       auto [iter, result] = gene_id_map_.try_emplace(HGNC_id, ensembl_id);
-      if (not result) {
+      if (not result and not warning) {
 
         ExecEnv::log().warn("ResortIds::sortByHGNC; Cannot insert (duplicate) HGNC id: {}, ensembl id: {}", HGNC_id, ensembl_id);
+        warning = true;
 
       }
 
@@ -257,15 +262,17 @@ void kgl::ResortIds::sortByHGNC(const GeneSynonymVector& ident_vector) {
 
 void kgl::ResortIds::sortByEnsembl(const GeneSynonymVector& ident_vector) {
 
+  static bool warning{false};
   gene_id_map_.clear();
   for (auto const& [HGNC_id, ensembl_id] :  ident_vector) {
 
     if (not HGNC_id.empty() and not ensembl_id.empty()) {
 
       auto [iter, result] = gene_id_map_.try_emplace(ensembl_id, HGNC_id);
-      if (not result) {
+      if (not result and not warning) {
 
         ExecEnv::log().warn("ResortIds::sortByEnsembl; Cannot insert (duplicate) ensembl id: {}, HGNC id: {}", ensembl_id, HGNC_id);
+        warning = true;
 
       }
 

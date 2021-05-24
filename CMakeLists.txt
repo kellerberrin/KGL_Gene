@@ -238,10 +238,10 @@ set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
 # Gene ontology library
 set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_Accumulators.h
-        kol_ontology/kol_ParserGoAllowedRelationshipObo.h
-        kol_ontology/kol_ParserGoAllowedRelationshipXml.h
-        kol_ontology/kol_PolicyAllowedEvidence.h
-        kol_ontology/kol_PolicyAllowedRelationship.h
+        kol_ontology/kol_ParserGoObo.h
+        kol_ontology/kol_ParserGoXml.h
+        kol_ontology/kol_PolicyEvidence.h
+        kol_ontology/kol_PolicyRelationship.h
         kol_ontology/kol_SetSimilarityAllPairsAverage.h
         kol_ontology/kol_SetSimilarityAllPairsMax.h
         kol_ontology/kol_InformationAncestorMean.h
@@ -276,8 +276,6 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_ParserGoRapidXml.h
         kol_ontology/kol_SetUtilities.h
         kol_ontology/kol_InformationInterface.h
-        kol_ontology/kol_ParserGoStandardObo.h
-        kol_ontology/kol_ParserGoStandardXml.h
         kol_ontology/kol_InformationDepthMap.h
         kol_ontology/kol_InformationContentDAG.h
         kol_ontology/kol_SetSimilarityInterface.h
@@ -306,8 +304,8 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_InformationExclusiveInherited.cpp
         kol_ontology/kol_InformationCoutoGraSM.cpp
         kol_ontology/kol_InformationCoutoGraSMAdjusted.cpp
-        kol_ontology/kol_ParserGoAllowedRelationshipObo.cpp
-        kol_ontology/kol_ParserGoAllowedRelationshipXml.cpp
+        kol_ontology/kol_ParserGoObo.cpp
+        kol_ontology/kol_ParserGoXml.cpp
         kol_ontology/kol_InformationAncestorMean.cpp
         kol_ontology/kol_InformationDepthMap.cpp
         kol_ontology/kol_SimilarityPekarStaab.cpp

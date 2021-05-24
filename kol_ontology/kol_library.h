@@ -7,10 +7,10 @@ Distributed under the Boost Software License, Version 1.0.
 #define KGL_KOL_LIBRARY
 
 #include "kol_Accumulators.h"
-#include "kol_ParserGoAllowedRelationshipObo.h"
-#include "kol_ParserGoAllowedRelationshipXml.h"
-#include "kol_PolicyAllowedEvidence.h"
-#include "kol_PolicyAllowedRelationship.h"
+#include "kol_ParserGoObo.h"
+#include "kol_ParserGoXml.h"
+#include "kol_PolicyEvidence.h"
+#include "kol_PolicyRelationship.h"
 #include "kol_SetSimilarityAllPairsAverage.h"
 #include "kol_SetSimilarityAllPairsMax.h"
 #include "kol_InformationAncestorMean.h"
@@ -45,8 +45,6 @@ Distributed under the Boost Software License, Version 1.0.
 #include "kol_ParserGoRapidXml.h"
 #include "kol_SetUtilities.h"
 #include "kol_InformationInterface.h"
-#include "kol_ParserGoStandardObo.h"
-#include "kol_ParserGoStandardXml.h"
 #include "kol_InformationDepthMap.h"
 #include "kol_InformationContentDAG.h"
 #include "kol_InformationContent.h"

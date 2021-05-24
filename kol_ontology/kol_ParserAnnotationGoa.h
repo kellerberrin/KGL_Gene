@@ -6,7 +6,7 @@ Distributed under the Boost Software License, Version 1.0.
 #define KGL_GOA_ANNOTATION_PARSER
 
 #include "kol_ParserAnnotationInterface.h"
-#include "kol_PolicyAllowedEvidence.h"
+#include "kol_PolicyEvidence.h"
 
 #include <iostream>
 #include <boost/tokenizer.hpp>
@@ -37,7 +37,7 @@ public:
   /*!
     Creates the parser
   */
-  explicit ParserAnnotationGoa(const PolicyAllowedEvidence &policy) : _policy(policy) {}
+  explicit ParserAnnotationGoa(const PolicyEvidence &policy) : _policy(policy) {}
   ~ParserAnnotationGoa() override = default;
 
 
@@ -222,7 +222,7 @@ public:
 
 private:
 
-  const PolicyAllowedEvidence _policy;
+  const PolicyEvidence _policy;
 
 };
 

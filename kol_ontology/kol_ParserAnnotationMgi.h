@@ -38,7 +38,7 @@ public:
   /*!
     Creates the parser with a custom policy
   */
-  explicit ParserAnnotationMgi(const PolicyAllowedEvidence &policy) : ParserAnnotationGoa(policy) {}
+  explicit ParserAnnotationMgi(const PolicyEvidence &policy) : ParserAnnotationGoa(policy) {}
   ~ParserAnnotationMgi() override = default;
 
 };

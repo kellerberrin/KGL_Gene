@@ -20,7 +20,7 @@ public:
 
   [[nodiscard]] auto checkOboParser() const {
 
-    auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::OBO_GO_STANDARD);
+    auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO);
     BOOST_REQUIRE(go_parser_ptr);
     return go_parser_ptr->parseGoFile(go_obo_);
 
@@ -28,24 +28,24 @@ public:
 
   [[nodiscard]] auto checkXmlParser() const {
 
-    auto xml_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::XML_GO_STANDARD);
+    auto xml_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_XML);
     BOOST_REQUIRE(xml_parser_ptr);
     return xml_parser_ptr->parseGoFile(go_xml_);
 
   }
 
 
-  [[nodiscard]] auto checkRelationshipOboParser(const PolicyAllowedRelationship &policy) const {
+  [[nodiscard]] auto checkRelationshipOboParser(const PolicyRelationship &policy) const {
 
-    auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::OBO_GO_ALLOWED, policy);
+    auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO, policy);
     BOOST_REQUIRE(go_parser_ptr);
     return go_parser_ptr->parseGoFile(go_obo_);
 
   }
 
-  [[nodiscard]] auto checkRelationshipXmlParser(const PolicyAllowedRelationship &policy) const {
+  [[nodiscard]] auto checkRelationshipXmlParser(const PolicyRelationship &policy) const {
 
-    auto xml_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::XML_GO_ALLOWED, policy);
+    auto xml_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_XML, policy);
     BOOST_REQUIRE(xml_parser_ptr);
     return xml_parser_ptr->parseGoFile(go_xml_);
 
@@ -53,7 +53,7 @@ public:
 
   [[nodiscard]] bool checkOboFile(const std::string &file_name) const {
 
-    auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::OBO_GO_STANDARD);
+    auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO);
     BOOST_REQUIRE(go_parser_ptr);
     return go_parser_ptr->isFileGood(file_name);
 
@@ -61,7 +61,7 @@ public:
 
   [[nodiscard]] bool checkXmlFile(const std::string &file_name) const {
 
-    auto xml_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::XML_GO_STANDARD);
+    auto xml_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_XML);
     BOOST_REQUIRE(xml_parser_ptr);
     return xml_parser_ptr->isFileGood(file_name);
 
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(test_parse_xml)
 BOOST_AUTO_TEST_CASE(test_parse_obo_custom_relationships)
 {
 
-  auto graph_ptr = checkRelationshipOboParser(kol::PolicyAllowedRelationship());
+  auto graph_ptr = checkRelationshipOboParser(kol::PolicyRelationship());
   BOOST_REQUIRE(graph_ptr);
   if( graph_ptr->getNumVertices() == 0 or graph_ptr->getNumEdges() == 0) BOOST_FAIL( "Obo graph is empty." );
   BOOST_TEST_MESSAGE( "test_parse_obo_custom_relationship ... OK" );
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(test_parse_obo_custom_relationships)
 BOOST_AUTO_TEST_CASE(test_parse_xml_custom_relationships)
 {
 
-  auto graph_ptr = checkRelationshipXmlParser(kol::PolicyAllowedRelationship());
+  auto graph_ptr = checkRelationshipXmlParser(kol::PolicyRelationship());
   BOOST_REQUIRE(graph_ptr);
   if( graph_ptr->getNumVertices() == 0 or graph_ptr->getNumEdges() == 0) BOOST_FAIL( "Xml graph is empty." );
   BOOST_TEST_MESSAGE( "test_parse_xml_custom_relationship ... OK" );
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(test_parse_obo_custom_relationships_bad_set)
 {
 
   std::vector<kol::GO::Relationship> bad_set{ kol::GO::Relationship::PART_OF };
-  kol::PolicyAllowedRelationship bad_policy(bad_set);
+  kol::PolicyRelationship bad_policy(bad_set);
   auto graph_ptr = checkRelationshipOboParser(bad_policy);
   BOOST_REQUIRE(graph_ptr);
   if( graph_ptr->getNumVertices() != 0 or graph_ptr->getNumEdges() != 0) BOOST_FAIL( "Obo graph is non-empty." );
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(test_parse_xml_custom_relationships_bad_set)
 {
 
   std::vector<kol::GO::Relationship> bad_set{ kol::GO::Relationship::PART_OF };
-  kol::PolicyAllowedRelationship bad_policy(bad_set);
+  kol::PolicyRelationship bad_policy(bad_set);
   auto graph_ptr = checkRelationshipXmlParser(bad_policy);
   BOOST_REQUIRE(graph_ptr);
   if( graph_ptr->getNumVertices() != 0 or graph_ptr->getNumEdges() != 0) BOOST_FAIL( "Xml graph is non-empty." );
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(test_parse_obo_all_relationships)
 {
 
   auto all_relationships = kol::GO::allRelationships();
-  kol::PolicyAllowedRelationship all_policy(all_relationships);
+  kol::PolicyRelationship all_policy(all_relationships);
   auto graph_ptr = checkRelationshipOboParser(all_policy);
   BOOST_REQUIRE(graph_ptr);
   if( graph_ptr->getNumVertices() == 0 or graph_ptr->getNumEdges() == 0) BOOST_FAIL( "Obo graph is empty." );
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(test_parse_xml_all_relationships)
 {
 
   auto all_relationships = kol::GO::allRelationships();
-  kol::PolicyAllowedRelationship all_policy(all_relationships);
+  kol::PolicyRelationship all_policy(all_relationships);
   auto graph_ptr = checkRelationshipXmlParser(all_policy);
   BOOST_REQUIRE(graph_ptr);
   if( graph_ptr->getNumVertices() == 0 or graph_ptr->getNumEdges() == 0) BOOST_FAIL( "Xml graph is empty." );

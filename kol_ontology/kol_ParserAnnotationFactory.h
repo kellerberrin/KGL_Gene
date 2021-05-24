@@ -37,7 +37,7 @@ public:
 
 
   [[nodiscard]] static std::unique_ptr<ParserAnnotationInterface> createAnnotationParser(AnnotationParserType parser_type,
-                                                                                         const PolicyAllowedEvidence &policy = PolicyAllowedEvidence()) {
+                                                                                         const PolicyEvidence &policy = PolicyEvidence()) {
 
     switch (parser_type) {
 

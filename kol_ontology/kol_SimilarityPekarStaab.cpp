@@ -40,8 +40,8 @@ double kol::SimilarityPekarStaab::calculateTermSimilarity(const std::string &goT
   }
 
   std::string lca = depth_map_ptr_->getLCA(ancestorsA, ancestorsB);
-  TermDepthType lcaDepth = depth_map_ptr_->getValue(lca);
-  TermDepthType denom = (depth_map_ptr_->getValue(goTermA) - lcaDepth) + (depth_map_ptr_->getValue(goTermB) - lcaDepth) + lcaDepth;
+  size_t lcaDepth = depth_map_ptr_->getValue(lca);
+  size_t denom = (depth_map_ptr_->getValue(goTermA) - lcaDepth) + (depth_map_ptr_->getValue(goTermB) - lcaDepth) + lcaDepth;
 
   if (denom == 0) {
 

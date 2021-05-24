@@ -37,14 +37,15 @@ kol::OntologyDatabase::~OntologyDatabase() {
 std::unique_ptr<const kol::AnnotationData> kol::OntologyDatabase::getAnnotation(const std::string& annotation_file) {
 
     auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
-                                                                           PolicyAllowedEvidence());
+                                                                           PolicyEvidence());
     return anno_parser_ptr->parseAnnotationFile(annotation_file);
 
 }
 
 std::unique_ptr<const kol::GoGraph> kol::OntologyDatabase::getGoGraph(const std::string& go_graph_file) {
 
-    auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::OBO_GO_STANDARD);
+    auto relationship_policy = PolicyRelationship(GO::allRelationships());
+    auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO, relationship_policy);
     return go_parser_ptr->parseGoFile(go_graph_file);
 
 }

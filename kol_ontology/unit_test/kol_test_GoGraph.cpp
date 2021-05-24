@@ -55,7 +55,7 @@ private:
 
   [[nodiscard]] static std::unique_ptr<GoGraph> getGoGraph() {
 
-    auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::OBO_GO_STANDARD);
+    auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO);
     BOOST_REQUIRE(go_parser_ptr);
     return go_parser_ptr->parseGoFile(UnitTestDefinitions::oboFileName());
 

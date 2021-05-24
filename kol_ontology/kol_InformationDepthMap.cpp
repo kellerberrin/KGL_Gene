@@ -39,7 +39,7 @@ std::vector<std::string> kol::InformationDepthMap::getKeys() const {
 /*!
   Get the value mapped by the given key. A specified function for the [] operator
 */
-kol::TermDepthType kol::InformationDepthMap::getValue(const std::string &termId) const {
+size_t kol::InformationDepthMap::getValue(const std::string &termId) const {
 
   if (not hasTerm(termId) or termId.empty()) {
 
@@ -81,7 +81,7 @@ void kol::InformationDepthMap::initializeDepthMap(const GoGraph &graph) {
 
   //Initialize an annotation list the size of verticies in go, each value is 0
   //depths_ = std::vector<std::size_t>(graph->getNumVertices(),0);
-  depths_ = std::vector<TermDepthType>(graph.getNumVertices(), 0);
+  depths_ = std::vector<size_t>(graph.getNumVertices(), 0);
 
   //get the (first) root of the ontology.
   //GoGraph::GoVertex root = graph->getRoot();
@@ -100,7 +100,7 @@ void kol::InformationDepthMap::initializeDepthMap(const GoGraph &graph) {
                               GoGraph::VertexIndexMap >
                   d_map(depths_.begin(), vMap);
   */
-  boost::iterator_property_map<std::vector<TermDepthType>::iterator, GoGraph::VertexIndexMap> d_map(depths_.begin(), vMap);
+  boost::iterator_property_map<std::vector<size_t>::iterator, GoGraph::VertexIndexMap> d_map(depths_.begin(), vMap);
 
   //call the boost depth first search using our custom visitor
   // revering the graph is necessary otherwise the root vertex would have no edges.
@@ -151,7 +151,7 @@ std::string kol::InformationDepthMap::getEfficientLCA(const OntologySetType<std:
   //get the first term as a start
   std::string lca;
   //max depth
-  TermDepthType max{0};
+  size_t max{0};
 
   //loop over shorter list
   for (auto const &currentTerm : smaller_set) {

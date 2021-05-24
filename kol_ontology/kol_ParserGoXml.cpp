@@ -2,7 +2,7 @@
 // Created by kellerberrin on 19/4/21.
 //
 
-#include "kol_ParserGoAllowedRelationshipXml.h"
+#include "kol_ParserGoXml.h"
 
 #include <xml/rapidxml_utils.h>
 #include <xml/rapidxml.h>
@@ -16,7 +16,7 @@ namespace kol = kellerberrin::ontology;
    which are specified to the graph.
 
 */
-std::unique_ptr<kol::GoGraph> kol::ParserGoAllowedRelationshipXml::parseGoFile(const std::string &filename) const {
+std::unique_ptr<kol::GoGraph> kol::ParserGoXml::parseGoFile(const std::string &filename) const {
 
   //graph object to be returned
   std::unique_ptr<GoGraph> graph(std::make_unique<GoGraph>());
@@ -163,7 +163,7 @@ std::unique_ptr<kol::GoGraph> kol::ParserGoAllowedRelationshipXml::parseGoFile(c
 /*!
 Returns true if the file matches accepted format, false otherwise
 */
-bool kol::ParserGoAllowedRelationshipXml::isFileGood(const std::string &filename) const {
+bool kol::ParserGoXml::isFileGood(const std::string &filename) const {
 
   std::ifstream in(filename.c_str());
   if (!in.good()) {

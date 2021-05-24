@@ -5,8 +5,8 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef KGL_GO_PARSER_FACTORY
 #define KGL_GO_PARSER_FACTORY
 
-#include "kol_ParserGoStandardObo.h"
-#include "kol_ParserGoStandardXml.h"
+#include "kol_ParserGoObo.h"
+#include "kol_ParserGoXml.h"
 #include "kol_ParserGoRapidXml.h"
 
 
@@ -20,9 +20,9 @@ namespace kellerberrin::ontology {
 
     STANDARD parsers only parse GO::IS_A and GO::PART_OF go relationships and cannot be modified.
     ALLOWED parsers are initialised to parse GO::IS_A and GO::PART_OF go relationships but this can be modified at runtime.
-    XML_RAPID_PARSER parses all relationships.
+    PARSER_GO_XML_RAPID parses all relationships.
 */
-enum class ParserGoType { OBO_GO_STANDARD, OBO_GO_ALLOWED, XML_GO_STANDARD, XML_GO_ALLOWED, XML_RAPID_PARSER };
+enum class ParserGoType { PARSER_GO_OBO, PARSER_GO_XML, PARSER_GO_XML_RAPID };
 
 class ParserGoFactory {
 
@@ -37,25 +37,19 @@ public:
 
 
   [[nodiscard]] static std::unique_ptr<ParserGoInterface> createGoParser(ParserGoType parser_type,
-                                                                         const PolicyAllowedRelationship &policy = PolicyAllowedRelationship()) {
+                                                                         const PolicyRelationship &policy = PolicyRelationship()) {
 
     switch (parser_type) {
 
-      case ParserGoType::OBO_GO_ALLOWED:
-        return std::make_unique<ParserGoAllowedRelationshipObo>(policy);
+      case ParserGoType::PARSER_GO_XML:
+        return std::make_unique<ParserGoXml>(policy);
 
-      case ParserGoType::XML_GO_STANDARD:
-        return std::make_unique<GoParserStandardXml>();
-
-      case ParserGoType::XML_GO_ALLOWED:
-        return std::make_unique<ParserGoAllowedRelationshipXml>(policy);
-
-      case ParserGoType::XML_RAPID_PARSER:
+      case ParserGoType::PARSER_GO_XML_RAPID:
         return std::make_unique<GoParserRapidXml>();
 
       default:
-      case ParserGoType::OBO_GO_STANDARD:
-        return std::make_unique<ParserGoStandardObo>();
+      case ParserGoType::PARSER_GO_OBO:
+        return std::make_unique<ParserGoObo>(policy);
 
     }
 

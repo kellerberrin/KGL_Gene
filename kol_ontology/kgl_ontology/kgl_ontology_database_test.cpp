@@ -151,7 +151,7 @@ void kgl::OntologyDatabaseTest::checkICs() const {
   std::ofstream out_file(out_file_path);
   if (not out_file.good()) {
 
-    ExecEnv::log().error("OntologyDatabaseTest::checkICs; pronlem opening output file: {}", out_file_path);
+    ExecEnv::log().error("OntologyDatabaseTest::checkICs; problem opening output file: {}", out_file_path);
 
   }
 

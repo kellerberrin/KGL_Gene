@@ -34,7 +34,7 @@ public:
   /*!
     Creates the parser with a custom policy
   */
-  explicit ParserAnnotationGaf(const PolicyAllowedEvidence &policy) : ParserAnnotationGoa(policy) {}
+  explicit ParserAnnotationGaf(const PolicyEvidence &policy) : ParserAnnotationGoa(policy) {}
   ~ParserAnnotationGaf() override = default;
 
 

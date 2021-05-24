@@ -18,7 +18,6 @@ namespace kellerberrin::ontology {
 	This class provides a map that returns the depth of a GO term. This method
 	 is used in graph and edge based similarity methods to calculate a node's depth
 */
-using TermDepthType = size_t;
 
 class InformationDepthMap {
 public:
@@ -44,7 +43,7 @@ public:
   /*!
     Get the vector of values
   */
-  [[nodiscard]] const std::vector<TermDepthType> &getValues() const { return depths_; }
+  [[nodiscard]] const std::vector<size_t> &getValues() const { return depths_; }
 
   //! Function to return all the keys in the map
   /*!
@@ -63,7 +62,7 @@ public:
     This defines a bracket operator to access the data inside of the map.
       This is done to mimic the behavior of the map class
   */
-  [[nodiscard]] TermDepthType operator[](const std::string &termId) const {
+  [[nodiscard]] size_t operator[](const std::string &termId) const {
     //return the depth
     return getValue(termId);
 
@@ -73,7 +72,7 @@ public:
   /*!
     Get the value mapped by the given key. A specified function for the [] operator
   */
-  [[nodiscard]] TermDepthType getValue(const std::string &termId) const;
+  [[nodiscard]] size_t getValue(const std::string &termId) const;
 
   //! A method for calculating the least common ancestor
   /*!
@@ -87,13 +86,13 @@ private:
   /*!
     This map takes string term ids and returns the index for annotation count access.
   */
-  OntologyMapType<std::string, std::size_t> name_to_index_;
+  OntologyMapType<std::string, size_t> name_to_index_;
 
   //! A private list of term depths
   /*!
     This vector of doubles holds the depth for each term
   */
-  std::vector<TermDepthType> depths_;
+  std::vector<size_t> depths_;
 
   //! A private method to calculate the depth values on object construction
   /*!

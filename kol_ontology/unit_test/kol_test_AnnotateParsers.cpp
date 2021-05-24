@@ -17,19 +17,19 @@ public:
   ~TestAnnotateParsers() = default;
 
 
-  [[nodiscard]] std::unique_ptr<AnnotationData> parseGaf(const PolicyAllowedEvidence &policy = PolicyAllowedEvidence()) {
+  [[nodiscard]] std::unique_ptr<AnnotationData> parseGaf(const PolicyEvidence &policy = PolicyEvidence()) {
 
     return parseAnnotation(AnnotationParserType::GAF_ANNO_PARSER, UnitTestDefinitions::gafFileName(), policy);
 
   }
 
-  [[nodiscard]] std::unique_ptr<AnnotationData> parseEntrez(const PolicyAllowedEvidence &policy = PolicyAllowedEvidence()) {
+  [[nodiscard]] std::unique_ptr<AnnotationData> parseEntrez(const PolicyEvidence &policy = PolicyEvidence()) {
 
     return parseAnnotation(AnnotationParserType::ENTREZ_ANNO_PARSER, UnitTestDefinitions::entrezFileName(), policy);
 
   }
 
-  [[nodiscard]] std::unique_ptr<AnnotationData> parseGene(const PolicyAllowedEvidence &policy = PolicyAllowedEvidence()) {
+  [[nodiscard]] std::unique_ptr<AnnotationData> parseGene(const PolicyEvidence &policy = PolicyEvidence()) {
 
     return parseAnnotation(AnnotationParserType::MGI_ANNO_PARSER, UnitTestDefinitions::geneFileName(), policy);
 
@@ -58,7 +58,7 @@ private:
 
   [[nodiscard]] std::unique_ptr<AnnotationData> parseAnnotation(AnnotationParserType parser_type,
                                                                 const std::string &annotation_file,
-                                                                const PolicyAllowedEvidence &policy) {
+                                                                const PolicyEvidence &policy) {
 
     auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(parser_type, policy);
     BOOST_REQUIRE(anno_parser_ptr);
@@ -69,7 +69,7 @@ private:
   [[nodiscard]] bool verifyAnnotation(AnnotationParserType parser_type,
                                       const std::string &annotation_file) {
 
-    auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(parser_type, PolicyAllowedEvidence());
+    auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(parser_type, PolicyEvidence());
     BOOST_REQUIRE(anno_parser_ptr);
     return anno_parser_ptr->isFileGood(annotation_file);
 
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_gaf_bad_custom_evidence_set)
 {
 
   std::vector<kol::GO::EvidenceCode> empty_vector;
-  kol::PolicyAllowedEvidence bad_policy(empty_vector);
+  kol::PolicyEvidence bad_policy(empty_vector);
   auto annotation_ptr = parseGaf(bad_policy);
   BOOST_REQUIRE(annotation_ptr);
   if ( annotation_ptr->getNumGenes() != 0 or annotation_ptr->getNumGoTerms() != 0) BOOST_FAIL( "Gaf annotation is non-empty with bad policy." );
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_entrez_bad_custom_evidence_set)
 {
 
   std::vector<kol::GO::EvidenceCode> empty_vector;
-  kol::PolicyAllowedEvidence bad_policy(empty_vector);
+  kol::PolicyEvidence bad_policy(empty_vector);
   auto annotation_ptr = parseEntrez(bad_policy);
   BOOST_REQUIRE(annotation_ptr);
   if ( annotation_ptr->getNumGenes() != 0 or annotation_ptr->getNumGoTerms() != 0) BOOST_FAIL( "Entrez annotation is non-empty with bad policy." );
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_gaf_experimental_evidence_set)
 {
 
   auto experimental_codes = kol::GO::getEvidenceType(kol::GO::EvidenceType::EXPERIMENTAL);
-  auto experimental_policy = kol::PolicyAllowedEvidence(experimental_codes);
+  auto experimental_policy = kol::PolicyEvidence(experimental_codes);
   auto annotation_ptr = parseGaf(experimental_policy);
   BOOST_REQUIRE(annotation_ptr);
   auto gene_list = annotation_ptr->getAllGenes();
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_entrez_experimental_evidence_set)
 
 
   auto experimental_codes = kol::GO::getEvidenceType(kol::GO::EvidenceType::EXPERIMENTAL);
-  auto experimental_policy = kol::PolicyAllowedEvidence(experimental_codes);
+  auto experimental_policy = kol::PolicyEvidence(experimental_codes);
   auto annotation_ptr = parseEntrez(experimental_policy);
   BOOST_REQUIRE(annotation_ptr);
   auto gene_list = annotation_ptr->getAllGenes();
