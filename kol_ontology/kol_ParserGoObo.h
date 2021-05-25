@@ -15,6 +15,55 @@ Distributed under the Boost Software License, Version 1.0.
 namespace kellerberrin::ontology {
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class GoTermRecord {
+
+public:
+
+  GoTermRecord() = default;
+  GoTermRecord(const GoTermRecord&) = default;
+  ~GoTermRecord() = default;
+
+  // Getters
+  [[nodiscard]] const std::string& termId() const { return term_id_; }
+  [[nodiscard]] const std::string& name() const { return name_; }
+  [[nodiscard]] const std::string& definition() const { return definition_; }
+  [[nodiscard]] GO::Ontology ontology() const { return ontology_; }
+  [[nodiscard]] const std::vector<std::pair<std::string, GO::Relationship>>& relations() const { return relations_; }
+  [[nodiscard]] const std::vector<std::string>& altId() const { return alt_id_; }
+  [[nodiscard]] const std::vector<std::pair<std::string, std::string>>& attributes() const { return attributes_; }
+
+  // Setters.
+  void termId(const std::string& term_id) { term_id_ = term_id; }
+  void name(const std::string& name) { name_ = name; }
+  void definition(const std::string& definition) { definition_ = definition; }
+  void ontology(GO::Ontology ontology) { ontology_ = ontology; }
+  void relations(std::pair<std::string, GO::Relationship> relation) { relations_.push_back(std::move(relation)); }
+  void altId(const std::string& alt_id) { alt_id_.push_back(alt_id); }
+  void attributes(std::pair<std::string, std::string> attribute) { attributes_.push_back(std::move(attribute)); }
+
+  void clearRecord();
+  [[nodiscard]] bool validRecord() const;
+
+private:
+
+  std::string term_id_;
+  std::string name_;
+  std::string definition_;
+  GO::Ontology ontology_{GO::Ontology::ONTO_ERROR};
+  std::vector<std::pair<std::string, GO::Relationship>> relations_;
+  std::vector<std::string> alt_id_;
+  std::vector<std::pair<std::string, std::string>> attributes_;  // key:value pairs is all misc attributes.
+
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /*! \class ParserGoObo
 	\brief A class to parse only a specified set of relationships
 
@@ -44,7 +93,7 @@ public:
      which are specified to the graph.
 
   */
-  [[nodiscard]] std::unique_ptr<GoGraph> parseGoFile(const std::string &filename) const override {
+  [[nodiscard]] std::shared_ptr<GoGraph> parseGoFile(const std::string &filename) const override {
 
     parseGoFile2(filename);
     return parseGoFile1(filename);
@@ -90,8 +139,8 @@ private:
                  std::string &attr,
                  std::string &value) const;
 
-  std::unique_ptr<GoGraph> parseGoFile1(const std::string &file_name) const;
-  std::unique_ptr<GoGraph>  parseGoFile2(const std::string &filename) const;
+  std::shared_ptr<GoGraph> parseGoFile1(const std::string &file_name) const;
+  std::shared_ptr<GoGraph>  parseGoFile2(const std::string &filename) const;
 
 };
 

@@ -43,7 +43,7 @@ private:
   std::shared_ptr<const AnnotationData> annotation_ptr_;
 
   [[nodiscard]] std::unique_ptr<const AnnotationData> getAnnotation(const std::string& annotation_file);
-  [[nodiscard]] std::unique_ptr<const GoGraph> getGoGraph(const std::string& go_graph_file);
+  [[nodiscard]] std::shared_ptr<const GoGraph> getGoGraph(const std::string& go_graph_file);
 
 };
 

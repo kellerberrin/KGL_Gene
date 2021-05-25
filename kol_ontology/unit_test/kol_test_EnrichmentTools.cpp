@@ -45,7 +45,7 @@ public:
 
 private:
 
-  inline static std::unique_ptr<const GoGraph> static_graph_;
+  inline static std::shared_ptr<const GoGraph> static_graph_;
   inline static std::unique_ptr<const AnnotationData> static_annotation_;
 
   [[nodiscard]] static std::unique_ptr<AnnotationData> getAnnotation() {
@@ -57,7 +57,7 @@ private:
 
   }
 
-  [[nodiscard]] static std::unique_ptr<GoGraph> getGoGraph() {
+  [[nodiscard]] static std::shared_ptr<GoGraph> getGoGraph() {
 
     auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO);
     BOOST_REQUIRE(go_parser_ptr);

@@ -63,7 +63,7 @@ private:
 
   }
 
-  [[nodiscard]] std::unique_ptr<const GoGraph> getGoGraph() {
+  [[nodiscard]] std::shared_ptr<const GoGraph> getGoGraph() {
 
     auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO);
     BOOST_REQUIRE(go_parser_ptr);

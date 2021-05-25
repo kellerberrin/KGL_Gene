@@ -48,7 +48,7 @@ public:
     //Get the vertx index.
     size_t vertex_index = get(boost::vertex_index, graph)[vertex];
 
-    //Get the term_id string.
+    //Get the term_id_ string.
     std::string term_id = graph_ptr_->getTermStringIdByIndex(vertex_index);
 
     auto term_ontology = graph_ptr_->getTermOntologyByIndex(vertex_index);

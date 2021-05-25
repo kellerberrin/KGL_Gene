@@ -43,7 +43,7 @@ public:
 
 private:
 
-  [[nodiscard]] static std::unique_ptr<GoGraph> getGoGraph() {
+  [[nodiscard]] static std::shared_ptr<GoGraph> getGoGraph() {
 
     auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO);
     BOOST_REQUIRE(go_parser_ptr);
@@ -61,7 +61,7 @@ private:
   }
 
   inline static std::unique_ptr<const InformationDepthMap> depth_map_ptr_;
-  inline static std::unique_ptr<const GoGraph> go_graph_ptr_;
+  inline static std::shared_ptr<const GoGraph> go_graph_ptr_;
 
 };
 

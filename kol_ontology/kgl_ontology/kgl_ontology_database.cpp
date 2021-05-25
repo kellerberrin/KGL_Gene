@@ -42,7 +42,7 @@ std::unique_ptr<const kol::AnnotationData> kol::OntologyDatabase::getAnnotation(
 
 }
 
-std::unique_ptr<const kol::GoGraph> kol::OntologyDatabase::getGoGraph(const std::string& go_graph_file) {
+std::shared_ptr<const kol::GoGraph> kol::OntologyDatabase::getGoGraph(const std::string& go_graph_file) {
 
     auto relationship_policy = PolicyRelationship(GO::allRelationships());
     auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO, relationship_policy);

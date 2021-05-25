@@ -11,57 +11,80 @@
 #include "kel_exec_env.h"
 #include "kel_utility.h"
 
-#include <iostream>
 #include <fstream>
 
-#include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
 
 
 namespace kol = kellerberrin::ontology;
 
-struct TermRecord {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  std::string term_id;
-  std::string name;
-  std::string definition;
-  kol::GO::Ontology ontology;
-  std::vector<std::pair<std::string, kol::GO::Relationship>> relations;
-  std::vector<std::string> alt_id;
 
-  void clearRecord();
-  bool validRecord() const;
+void kol::GoTermRecord::clearRecord() {
 
-};
+  term_id_.clear();
+  name_.clear();
+  definition_.clear();
+  ontology_ = GO::Ontology::ONTO_ERROR;
+  relations_.clear();
+  alt_id_.clear();
+  attributes_.clear();
 
-void TermRecord::clearRecord() {
-
-  term_id.clear();
-  name.clear();
-  definition.clear();
-  ontology = kol::GO::Ontology::ONTO_ERROR;
-  relations.clear();
-  alt_id.clear();
 }
 
-bool TermRecord::validRecord() const {
+// Check the record for integrity
+bool kol::GoTermRecord::validRecord() const {
 
   bool valid;
-  valid = not term_id.empty();
-  valid = valid and not name.empty();
-  valid = valid and not definition.empty();
-  valid = valid and ontology != kol::GO::Ontology::ONTO_ERROR;
+  valid = not term_id_.empty();
+  valid = valid and not name_.empty();
+  valid = valid and not definition_.empty();
+  valid = valid and ontology_ != kol::GO::Ontology::ONTO_ERROR;
+  // All nodes except root nodes must have relations to another node.
+  if (relations_.empty() and valid) {
+
+    switch(ontology_) {
+
+      case GO::Ontology::BIOLOGICAL_PROCESS:
+        valid = term_id_ == GO::getRootTermBP();
+        break;
+
+      case GO::Ontology::MOLECULAR_FUNCTION:
+        valid = term_id_ == GO::getRootTermMF();
+        break;
+
+      case GO::Ontology::CELLULAR_COMPONENT:
+        valid = term_id_ == GO::getRootTermCC();
+        break;
+
+     default:
+     case GO::Ontology::ONTO_ERROR:
+        valid = false;
+        break;
+
+    }
+
+  }
+
   return valid;
 
 }
 
 
-std::unique_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile1(const std::string &file_name) const {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+std::shared_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile1(const std::string &file_name) const {
 
   enum class GoParserState { FIND_TERM, PROCESS_TERM};
 
   //graph object to be returned
-  std::unique_ptr<GoGraph> graph_ptr(std::make_unique<GoGraph>());
+  std::shared_ptr<GoGraph> graph_ptr(std::make_shared<GoGraph>());
 
   // Check the relationship policy
   if (not relationship_policy_.validPolicy()) {
@@ -89,7 +112,7 @@ std::unique_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile1(const std::string &
   size_t term_mf{0};
 
   GoParserState parser_state = GoParserState::FIND_TERM;
-  TermRecord term_record;
+  GoTermRecord term_record;
   while (not std::getline(term_file, line).eof()) {
 
     ++line_count;
@@ -114,18 +137,18 @@ std::unique_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile1(const std::string &
 
       if (not term_record.validRecord()) {
 
-        ExecEnv::log().error("ParserGoObo::parseGoFile; invalid term record at term: {}, line:{}, ",  term_record.term_id, line_count);
+        ExecEnv::log().error("ParserGoObo::parseGoFile; invalid term record at term: {}, line:{}, ",  term_record.termId(), line_count);
         ExecEnv::log().error("ParserGoObo::parseGoFile; id: {}, name: {}, def: {}, ontology: {}",
-                             term_record.term_id, term_record.name, term_record.definition, GO::ontologyToString(term_record.ontology));
+                             term_record.termId(), term_record.name(), term_record.definition(), GO::ontologyToString(term_record.ontology()));
 
       }
-      graph_ptr->insertTerm(term_record.term_id, term_record.name, term_record.definition, GO::ontologyToString(term_record.ontology));
-      for (auto const& [related_term, relation] : term_record.relations) {
+      graph_ptr->insertTerm(term_record.termId(), term_record.name(), term_record.definition(), GO::ontologyToString(term_record.ontology()));
+      for (auto const& [related_term, relation] : term_record.relations()) {
         //insert related terms, there are just stubs to be overwritten later on
         graph_ptr->insertTerm(related_term, "name", "description", "ontology");
 
         //insert edge
-        graph_ptr->insertRelationship(term_record.term_id, related_term, GO::relationshipToString(relation));
+        graph_ptr->insertRelationship(term_record.termId(), related_term, GO::relationshipToString(relation));
 
       }
       parser_state = GoParserState::FIND_TERM;
@@ -155,17 +178,17 @@ std::unique_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile1(const std::string &
 
       if (value == NAMESPACE_BP) {
 
-        term_record.ontology = GO::Ontology::BIOLOGICAL_PROCESS;
+        term_record.ontology(GO::Ontology::BIOLOGICAL_PROCESS);
         ++term_bp;
 
       } else if (value == NAMESPACE_MF) {
 
-        term_record.ontology = GO::Ontology::MOLECULAR_FUNCTION;
+        term_record.ontology(GO::Ontology::MOLECULAR_FUNCTION);
         ++term_mf;
 
       } else if (value == NAMESPACE_CC) {
 
-        term_record.ontology = GO::Ontology::CELLULAR_COMPONENT;
+        term_record.ontology(GO::Ontology::CELLULAR_COMPONENT);
         ++term_cc;
 
       } else {
@@ -178,24 +201,25 @@ std::unique_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile1(const std::string &
 
     } else if (key == ID_TOKEN) {
 
-      term_record.term_id = Utility::trimEndWhiteSpace(value);
+      term_record.termId(Utility::trimEndWhiteSpace(value));
 
     } else if (key == ALT_ID_TOKEN) {
 
-      term_record.alt_id.push_back(Utility::trimEndWhiteSpace(value));
+      term_record.altId(Utility::trimEndWhiteSpace(value));
 
     } else if (key == NAME_TOKEN) {
 
-      term_record.name = value;
+      term_record.name(value);
 
     } else if (key == DEF_TOKEN) {
 
-      term_record.definition = value;
+      term_record.definition(value);
 
     } else if (key == CHILD_TOKEN) {
 
       auto view_vector = Utility::view_tokenizer(value, SEPARATOR_SPACE);
-      term_record.relations.emplace_back(std::string(view_vector[0]), GO::Relationship::IS_A);
+      std::pair<std::string, GO::Relationship> relation{ std::string(view_vector[0]),  GO::Relationship::IS_A};
+      term_record.relations(relation);
 
     } else if (key == RELATIONSHIP_TOKEN) {
 
@@ -208,8 +232,8 @@ std::unique_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile1(const std::string &
 
       }
 
-      GO::Relationship relation = GO::relationshipStringToCode(std::string(view_vector[0]));
-      if (relation == GO::Relationship::REL_ERROR) {
+      GO::Relationship relationship = GO::relationshipStringToCode(std::string(view_vector[0]));
+      if (relationship == GO::Relationship::REL_ERROR) {
 
         ExecEnv::log().error("ParserGoObo::parseGoFile; unable to parse relationship: {}, line: {}", value, line_count);
         parser_state = GoParserState::FIND_TERM;
@@ -217,14 +241,17 @@ std::unique_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile1(const std::string &
 
       }
 
-      if (relationship_policy_.isAllowed(relation)) {
+      if (relationship_policy_.isAllowed(relationship)) {
 
-        term_record.relations.emplace_back(std::string(view_vector[1]), relation);
+        std::pair<std::string, GO::Relationship> relation{ std::string(view_vector[1]),  relationship};
+        term_record.relations(relation);
 
       }
 
     } else {
 
+      std::pair<std::string, std::string> attribute{key, value};
+      term_record.attributes(attribute);
     // Additional term informatiomn.
 
     }
@@ -248,10 +275,10 @@ std::unique_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile1(const std::string &
    which are specified to the graph.
 
 */
-std::unique_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile2(const std::string &filename) const {
+std::shared_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile2(const std::string &filename) const {
 
   //graph object to be returned
-  std::unique_ptr<GoGraph> graph(std::make_unique<GoGraph>());
+  std::shared_ptr<GoGraph> graph(std::make_shared<GoGraph>());
 
   // Check the relationship policy
   if (not relationship_policy_.validPolicy()) {

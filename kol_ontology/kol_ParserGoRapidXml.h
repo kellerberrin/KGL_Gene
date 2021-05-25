@@ -42,7 +42,7 @@ public:
 
   */
 
-  [[nodiscard]] std::unique_ptr<GoGraph> parseGoFile(const std::string &filename) const override;
+  [[nodiscard]] std::shared_ptr<GoGraph> parseGoFile(const std::string &filename) const override;
 
   //! A method to test if a file fits the accepted format
   /*!

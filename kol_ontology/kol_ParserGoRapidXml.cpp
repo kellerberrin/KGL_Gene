@@ -17,10 +17,10 @@ namespace kol = kellerberrin::ontology;
 
 */
 
-std::unique_ptr<kol::GoGraph> kol::GoParserRapidXml::parseGoFile(const std::string &filename) const {
+std::shared_ptr<kol::GoGraph> kol::GoParserRapidXml::parseGoFile(const std::string &filename) const {
 
   //graph object to be returned
-  std::unique_ptr<GoGraph> graph(std::make_unique<GoGraph>());
+  std::shared_ptr<GoGraph> graph(std::make_shared<GoGraph>());
 
   //open xmlfile
   rapidxml::file<> xmlFile(filename.c_str());
