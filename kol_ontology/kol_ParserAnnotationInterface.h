@@ -28,7 +28,7 @@ public:
     This pure virtual method requires any parser to have a method that takes
       a filename string and returns an AnnotationData object pointer.
   */
-  [[nodiscard]] virtual std::unique_ptr<AnnotationData> parseAnnotationFile(const std::string &fileName) const = 0;
+  [[nodiscard]] virtual std::shared_ptr<AnnotationData> parseAnnotationFile(const std::string &fileName) const = 0;
 
   //! A pure virtual method for checking if a file exists and is formatted correctly.
   /*!

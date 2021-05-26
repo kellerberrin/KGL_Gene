@@ -39,6 +39,9 @@ public:
   //! function that returns strings representing the root ontology term cellular_component
   [[nodiscard]] static std::string getRootTermCC() { return ROOT_TERM_CELLULAR_COMPONENT; }
 
+  [[nodiscard]] static bool isRootTerm(const std::string& term_id) { return term_id == ROOT_TERM_BIOLOICAL_PROCESS
+                                                                         or term_id == ROOT_TERM_MOLECULAR_FUNCTION
+                                                                         or term_id == ROOT_TERM_CELLULAR_COMPONENT; }
   //! Ontology enum type
   /*!
     This enum defines a type for sub-ontologies.

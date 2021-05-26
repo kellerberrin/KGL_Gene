@@ -21,6 +21,56 @@
 
 namespace kellerberrin::ontology {
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class GoTermRecord {
+
+public:
+
+  GoTermRecord() = default;
+  GoTermRecord(const GoTermRecord&) = default;
+  ~GoTermRecord() = default;
+
+  // Getters
+  [[nodiscard]] const std::string& termId() const { return term_id_; }
+  [[nodiscard]] const std::string& name() const { return name_; }
+  [[nodiscard]] const std::string& definition() const { return definition_; }
+  [[nodiscard]] GO::Ontology ontology() const { return ontology_; }
+  [[nodiscard]] const std::vector<std::pair<std::string, GO::Relationship>>& relations() const { return relations_; }
+  [[nodiscard]] const std::vector<std::string>& altId() const { return alt_id_; }
+  [[nodiscard]] const std::vector<std::pair<std::string, std::string>>& attributes() const { return attributes_; }
+
+  // Setters.
+  void termId(const std::string& term_id) { term_id_ = term_id; }
+  void name(const std::string& name) { name_ = name; }
+  void definition(const std::string& definition) { definition_ = definition; }
+  void ontology(GO::Ontology ontology) { ontology_ = ontology; }
+  void relations(std::pair<std::string, GO::Relationship> relation) { relations_.push_back(std::move(relation)); }
+  void relations(std::vector<std::pair<std::string, GO::Relationship>>&& relations) { relations_ = relations; }
+  void altId(const std::string& alt_id) { alt_id_.push_back(alt_id); }
+  void attributes(std::pair<std::string, std::string> attribute) { attributes_.push_back(std::move(attribute)); }
+
+  void clearRecord();
+  [[nodiscard]] bool validRecord() const;
+
+private:
+
+  std::string term_id_;
+  std::string name_;
+  std::string definition_;
+  GO::Ontology ontology_{GO::Ontology::ONTO_ERROR};
+  std::vector<std::pair<std::string, GO::Relationship>> relations_;
+  std::vector<std::string> alt_id_;
+  std::vector<std::pair<std::string, std::string>> attributes_;  // key:value pairs is all misc attributes.
+
+};
+
+using GoTermMap = OntologyMapType<std::string, std::shared_ptr<const GoTermRecord>>;
+
+
 //! A Vertex Property object
 /*!
 This struct represent the data needed by each vertex. Boost provides
@@ -149,8 +199,9 @@ public:
 
 
   GoGraph() = default;
-
+  explicit GoGraph(const GoTermMap& go_term_map);
   ~GoGraph() = default;
+
 
   //! A method to return the boost graph
   /*!

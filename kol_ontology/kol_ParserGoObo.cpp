@@ -23,74 +23,38 @@ namespace kol = kellerberrin::ontology;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void kol::GoTermRecord::clearRecord() {
+std::shared_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile(const std::string &filename) const {
 
-  term_id_.clear();
-  name_.clear();
-  definition_.clear();
-  ontology_ = GO::Ontology::ONTO_ERROR;
-  relations_.clear();
-  alt_id_.clear();
-  attributes_.clear();
+//    parseGoFile2(filename);
+  const std::string term("GO:0002269");
+  const std::string parent_term("GO:0002269");
+  auto term_map = parseGoTermFile(filename);
+  auto filtered_term_map = filterTermMap(term_map, relationship_policy_);
+  ExecEnv::log().info("Parsed term map: {} term: {}", (term_map.contains(term) ? "contains" : "does NOT contain"), term);
+  std::shared_ptr<GoGraph> graph_ptr(std::make_shared<GoGraph>(filtered_term_map));
+  auto descendents = graph_ptr->getSelfDescendantTerms(parent_term);
+  for (auto const& descendent : descendents) {
 
-}
-
-// Check the record for integrity
-bool kol::GoTermRecord::validRecord() const {
-
-  bool valid;
-  valid = not term_id_.empty();
-  valid = valid and not name_.empty();
-  valid = valid and not definition_.empty();
-  valid = valid and ontology_ != kol::GO::Ontology::ONTO_ERROR;
-  // All nodes except root nodes must have relations to another node.
-  if (relations_.empty() and valid) {
-
-    switch(ontology_) {
-
-      case GO::Ontology::BIOLOGICAL_PROCESS:
-        valid = term_id_ == GO::getRootTermBP();
-        break;
-
-      case GO::Ontology::MOLECULAR_FUNCTION:
-        valid = term_id_ == GO::getRootTermMF();
-        break;
-
-      case GO::Ontology::CELLULAR_COMPONENT:
-        valid = term_id_ == GO::getRootTermCC();
-        break;
-
-     default:
-     case GO::Ontology::ONTO_ERROR:
-        valid = false;
-        break;
-
-    }
+    ExecEnv::log().info("Descendents of term: {},  descendent: {}", parent_term, descendent);
 
   }
-
-  return valid;
+//  descendents = graph_ptr->getSelfDescendantTerms(GO::getRootTermBP());
+//  ExecEnv::log().info("Descendents of root BP term: {},  count: {}", GO::getRootTermBP(), descendents.size());
+  return graph_ptr;
 
 }
 
+kol::GoTermMap kol::ParserGoObo::parseGoTermFile(const std::string &file_name) const {
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-std::shared_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile1(const std::string &file_name) const {
-
+  std::shared_ptr<GoTermRecord> term_record_ptr(std::make_shared<GoTermRecord>());
+  GoTermMap go_term_map;
   enum class GoParserState { FIND_TERM, PROCESS_TERM};
-
-  //graph object to be returned
-  std::shared_ptr<GoGraph> graph_ptr(std::make_shared<GoGraph>());
 
   // Check the relationship policy
   if (not relationship_policy_.validPolicy()) {
 
     ExecEnv::log().error("ParserGoObo::parseGoFile; invalid relationship policy, go file: {}", file_name);
-    return graph_ptr;
+    return go_term_map;
 
   }
 
@@ -98,7 +62,7 @@ std::shared_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile1(const std::string &
   if (not term_file.good()) {
 
     ExecEnv::log().error("ParserGoObo::parseGoFile; problem opening go file: {}", file_name);
-    return graph_ptr;
+    return go_term_map;
 
   }
 
@@ -112,7 +76,7 @@ std::shared_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile1(const std::string &
   size_t term_mf{0};
 
   GoParserState parser_state = GoParserState::FIND_TERM;
-  GoTermRecord term_record;
+//  GoTermRecord term_record;
   while (not std::getline(term_file, line).eof()) {
 
     ++line_count;
@@ -123,7 +87,7 @@ std::shared_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile1(const std::string &
       if (trimmed_line == TERM_TOKEN) {
 
         parser_state = GoParserState::PROCESS_TERM;
-        term_record.clearRecord();
+        term_record_ptr->clearRecord();
         ++term_count;
 
       }
@@ -135,22 +99,23 @@ std::shared_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile1(const std::string &
     if (trimmed_line.empty())
     {
 
-      if (not term_record.validRecord()) {
+      if (not term_record_ptr->validRecord()) {
 
-        ExecEnv::log().error("ParserGoObo::parseGoFile; invalid term record at term: {}, line:{}, ",  term_record.termId(), line_count);
+        ExecEnv::log().error("ParserGoObo::parseGoFile; invalid term record at term: {}, line:{}, ",  term_record_ptr->termId(), line_count);
         ExecEnv::log().error("ParserGoObo::parseGoFile; id: {}, name: {}, def: {}, ontology: {}",
-                             term_record.termId(), term_record.name(), term_record.definition(), GO::ontologyToString(term_record.ontology()));
+                             term_record_ptr->termId(), term_record_ptr->name(), term_record_ptr->definition(), GO::ontologyToString(term_record_ptr->ontology()));
+
+      } else {
+
+        auto [insert_iter, result] = go_term_map.try_emplace(term_record_ptr->termId(), term_record_ptr);
+        if (not result) {
+
+          ExecEnv::log().error("ParserGoObo::parseGoFile; cannot insert term, duplicate term id: {}, line:{}",  term_record_ptr->termId(), line_count);
+
+        }
 
       }
-      graph_ptr->insertTerm(term_record.termId(), term_record.name(), term_record.definition(), GO::ontologyToString(term_record.ontology()));
-      for (auto const& [related_term, relation] : term_record.relations()) {
-        //insert related terms, there are just stubs to be overwritten later on
-        graph_ptr->insertTerm(related_term, "name", "description", "ontology");
-
-        //insert edge
-        graph_ptr->insertRelationship(term_record.termId(), related_term, GO::relationshipToString(relation));
-
-      }
+      term_record_ptr = std::make_shared<GoTermRecord>();
       parser_state = GoParserState::FIND_TERM;
       continue;
 
@@ -176,19 +141,19 @@ std::shared_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile1(const std::string &
 
     } else if (key == NAMESPACE_TOKEN) {
 
-      if (value == NAMESPACE_BP) {
+      if (value == GO::ONTOLOGY_BIOLOGICAL_PROCESS_TEXT) {
 
-        term_record.ontology(GO::Ontology::BIOLOGICAL_PROCESS);
+        term_record_ptr->ontology(GO::Ontology::BIOLOGICAL_PROCESS);
         ++term_bp;
 
-      } else if (value == NAMESPACE_MF) {
+      } else if (value == GO::ONTOLOGY_MOLECULAR_FUNCTION_TEXT) {
 
-        term_record.ontology(GO::Ontology::MOLECULAR_FUNCTION);
+        term_record_ptr->ontology(GO::Ontology::MOLECULAR_FUNCTION);
         ++term_mf;
 
-      } else if (value == NAMESPACE_CC) {
+      } else if (value == GO::ONTOLOGY_CELLULAR_COMPONENT_TEXT) {
 
-        term_record.ontology(GO::Ontology::CELLULAR_COMPONENT);
+        term_record_ptr->ontology(GO::Ontology::CELLULAR_COMPONENT);
         ++term_cc;
 
       } else {
@@ -201,25 +166,25 @@ std::shared_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile1(const std::string &
 
     } else if (key == ID_TOKEN) {
 
-      term_record.termId(Utility::trimEndWhiteSpace(value));
+      term_record_ptr->termId(Utility::trimEndWhiteSpace(value));
 
     } else if (key == ALT_ID_TOKEN) {
 
-      term_record.altId(Utility::trimEndWhiteSpace(value));
+      term_record_ptr->altId(Utility::trimEndWhiteSpace(value));
 
     } else if (key == NAME_TOKEN) {
 
-      term_record.name(value);
+      term_record_ptr->name(value);
 
     } else if (key == DEF_TOKEN) {
 
-      term_record.definition(value);
+      term_record_ptr->definition(value);
 
     } else if (key == CHILD_TOKEN) {
 
       auto view_vector = Utility::view_tokenizer(value, SEPARATOR_SPACE);
       std::pair<std::string, GO::Relationship> relation{ std::string(view_vector[0]),  GO::Relationship::IS_A};
-      term_record.relations(relation);
+      term_record_ptr->relations(relation);
 
     } else if (key == RELATIONSHIP_TOKEN) {
 
@@ -241,30 +206,86 @@ std::shared_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile1(const std::string &
 
       }
 
-      if (relationship_policy_.isAllowed(relationship)) {
-
-        std::pair<std::string, GO::Relationship> relation{ std::string(view_vector[1]),  relationship};
-        term_record.relations(relation);
-
-      }
+      std::pair<std::string, GO::Relationship> relation{ std::string(view_vector[1]),  relationship};
+      term_record_ptr->relations(relation);
 
     } else {
 
       std::pair<std::string, std::string> attribute{key, value};
-      term_record.attributes(attribute);
+      term_record_ptr->attributes(attribute);
     // Additional term informatiomn.
+
+    }
+
+  } // Term record loop.
+
+  ExecEnv::log().info("Parsed GO file: {}, terms: {}, BP: {}, MF: {}, CC: {}, obsolete: {}, lines: {}",
+                      file_name, term_count, term_bp, term_mf, term_cc, obsolete_terms, line_count);
+
+  return go_term_map;
+
+}
+
+
+kol::GoTermMap kol::ParserGoObo::filterTermMap(const GoTermMap& unfiltered_term_map, const PolicyRelationship& relationship_policy) const {
+
+  GoTermMap filtered_term_map;
+
+  size_t term_bp{0};
+  size_t term_cc{0};
+  size_t term_mf{0};
+
+  for (auto const& [term_id, term_record_ptr] : unfiltered_term_map) {
+
+    std::vector<std::pair<std::string, GO::Relationship>> filtered_relationships;
+    for (auto const& [rel_term, rel_type] : term_record_ptr->relations()) {
+
+      if (relationship_policy.isAllowed(rel_type)) {
+
+        filtered_relationships.emplace_back(rel_term, rel_type);
+
+      }
+
+    }
+
+    if (not filtered_relationships.empty() or GO::isRootTerm(term_id)) {
+
+      std::shared_ptr<GoTermRecord> filtered_record_ptr(std::make_shared<GoTermRecord>(*term_record_ptr));
+      filtered_record_ptr->relations(std::move(filtered_relationships));
+      auto [insert_iter, result] = filtered_term_map.try_emplace(term_id, filtered_record_ptr);
+      if (not result) {
+
+        ExecEnv::log().error("ParserGoObo::filterTermMap; (Duplicate) Unable to insert filtered term: {}", term_id);
+
+      }
+
+      switch(filtered_record_ptr->ontology()) {
+
+        case GO::Ontology::BIOLOGICAL_PROCESS:
+          ++term_bp;
+          break;
+
+        case GO::Ontology::MOLECULAR_FUNCTION:
+          ++term_mf;
+          break;
+
+        case GO::Ontology::CELLULAR_COMPONENT:
+          ++term_cc;
+          break;
+
+        default:
+          ExecEnv::log().error("ParserGoObo::filterTermMap; Invalid ontology for term: {}", term_id);
+          break;
+
+      }
 
     }
 
   }
 
-  ExecEnv::log().info("Parsed GO file: {}, terms: {}, BP: {}, MF: {}, CC: {}, obsolete: {}, lines: {}",
-                      file_name, term_count, term_bp, term_mf, term_cc, obsolete_terms, line_count);
+  ExecEnv::log().info("Filtered Term Map, Terms: {}, BP: {}, MF: {}, CC: {}", filtered_term_map.size(), term_bp, term_mf, term_cc);
 
-  //call to initialize the graph's vertex to index maps
-  graph_ptr->initMaps();
-
-  return graph_ptr;
+  return filtered_term_map;
 
 }
 

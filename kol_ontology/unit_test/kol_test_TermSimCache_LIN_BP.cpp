@@ -78,7 +78,7 @@ private:
   inline static std::shared_ptr<const GoGraph> go_graph_ptr;
   inline static std::shared_ptr<const AnnotationData> annotation_ptr;
 
-  [[nodiscard]] static std::unique_ptr<const AnnotationData> getAnnotation() {
+  [[nodiscard]] static std::shared_ptr<const AnnotationData> getAnnotation() {
 
     auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
                                                                            PolicyEvidence());

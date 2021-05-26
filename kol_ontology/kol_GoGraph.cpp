@@ -28,6 +28,82 @@ public:
 
 };
 
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void kol::GoTermRecord::clearRecord() {
+
+  term_id_.clear();
+  name_.clear();
+  definition_.clear();
+  ontology_ = GO::Ontology::ONTO_ERROR;
+  relations_.clear();
+  alt_id_.clear();
+  attributes_.clear();
+
+}
+
+// Check the record for integrity
+bool kol::GoTermRecord::validRecord() const {
+
+  bool valid;
+  valid = not term_id_.empty();
+  valid = valid and not name_.empty();
+  valid = valid and not definition_.empty();
+  valid = valid and ontology_ != kol::GO::Ontology::ONTO_ERROR;
+  // All nodes except root nodes must have relations to another node.
+  valid = valid and (not relations().empty() or GO::isRootTerm(term_id_));
+
+  return valid;
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+kol::GoGraph::GoGraph(const GoTermMap& go_term_map) {
+
+  size_t relation_count{0};
+
+  for (auto const& [term_id, term_record_ptr] : go_term_map) {
+
+    if (not term_record_ptr->validRecord()) {
+
+      ExecEnv::log().error("GoGraph::GoGraph; invalid term record at term: {}",  term_record_ptr->termId());
+      ExecEnv::log().error("GoGraph::GoGraph; id: {}, name: {}, def: {}, ontology: {}",
+                           term_record_ptr->termId(), term_record_ptr->name(), term_record_ptr->definition(), GO::ontologyToString(term_record_ptr->ontology()));
+
+    } else {
+
+      insertTerm(term_record_ptr->termId(), term_record_ptr->name(), term_record_ptr->definition(), GO::ontologyToString(term_record_ptr->ontology()));
+      for (auto const& [related_term, relation] : term_record_ptr->relations()) {
+        //insert related terms, there are just stubs to be overwritten later on
+        insertTerm(related_term, "name", "description", "ontology");
+
+        //insert edge
+        insertRelationship(term_record_ptr->termId(), related_term, GO::relationshipToString(relation));
+        ++relation_count;
+
+      }
+
+    }
+
+  }
+
+  ExecEnv::log().info("GoGraph::GoGraph: {}, relationships: {}", go_term_map.size(), relation_count);
+  //call to initialize the graph's vertex to index maps
+  initMaps();
+
+}
+
+
 //! Method to insert terms into the graph
 /*!
   This method takes a go term, description, and ontology information (MOLECULAR_FUNCTION,BIOLOGICAL_PROCESS,CELLULAR_COMPONENT).

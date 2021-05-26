@@ -44,7 +44,7 @@ public:
     This method takes a filename as in put and returns a pointer to an
       AnnotationData object. This method fulfills part of the interface contract.
   */
-  [[nodiscard]] std::unique_ptr<AnnotationData> parseAnnotationFile(const std::string &filename) const override;
+  [[nodiscard]] std::shared_ptr<AnnotationData> parseAnnotationFile(const std::string &filename) const override;
 
   //! A method for checking if a file exists and is formatted correctly.
   /*!

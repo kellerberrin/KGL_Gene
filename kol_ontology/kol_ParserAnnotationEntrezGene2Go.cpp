@@ -17,9 +17,9 @@ namespace kol = kellerberrin::ontology;
   This method takes a filename as in put and returns a pointer to an
     AnnotationData object. This method fulfills part of the interface contract.
 */
-std::unique_ptr<kol::AnnotationData> kol::ParserAnnotationEntrezGene2Go::parseAnnotationFile(const std::string &filename) const  {
+std::shared_ptr<kol::AnnotationData> kol::ParserAnnotationEntrezGene2Go::parseAnnotationFile(const std::string &filename) const  {
 
-  std::unique_ptr<AnnotationData> annoData(std::make_unique<AnnotationData>());
+  std::shared_ptr<AnnotationData> annoData(std::make_unique<AnnotationData>());
 
   // Check that the supplied policy is valid.
   if (not policy_.isValid()) {

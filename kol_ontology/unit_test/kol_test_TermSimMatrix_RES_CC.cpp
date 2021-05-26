@@ -53,7 +53,7 @@ private:
   inline static std::shared_ptr<const SimilarityInterface> matrix_similarity_ptr_;
 
 
-  [[nodiscard]] std::unique_ptr<const AnnotationData> getAnnotation() {
+  [[nodiscard]] std::shared_ptr<const AnnotationData> getAnnotation() {
 
     auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
                                                                            PolicyEvidence());

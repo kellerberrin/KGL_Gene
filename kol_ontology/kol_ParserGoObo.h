@@ -14,52 +14,6 @@ Distributed under the Boost Software License, Version 1.0.
 
 namespace kellerberrin::ontology {
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class GoTermRecord {
-
-public:
-
-  GoTermRecord() = default;
-  GoTermRecord(const GoTermRecord&) = default;
-  ~GoTermRecord() = default;
-
-  // Getters
-  [[nodiscard]] const std::string& termId() const { return term_id_; }
-  [[nodiscard]] const std::string& name() const { return name_; }
-  [[nodiscard]] const std::string& definition() const { return definition_; }
-  [[nodiscard]] GO::Ontology ontology() const { return ontology_; }
-  [[nodiscard]] const std::vector<std::pair<std::string, GO::Relationship>>& relations() const { return relations_; }
-  [[nodiscard]] const std::vector<std::string>& altId() const { return alt_id_; }
-  [[nodiscard]] const std::vector<std::pair<std::string, std::string>>& attributes() const { return attributes_; }
-
-  // Setters.
-  void termId(const std::string& term_id) { term_id_ = term_id; }
-  void name(const std::string& name) { name_ = name; }
-  void definition(const std::string& definition) { definition_ = definition; }
-  void ontology(GO::Ontology ontology) { ontology_ = ontology; }
-  void relations(std::pair<std::string, GO::Relationship> relation) { relations_.push_back(std::move(relation)); }
-  void altId(const std::string& alt_id) { alt_id_.push_back(alt_id); }
-  void attributes(std::pair<std::string, std::string> attribute) { attributes_.push_back(std::move(attribute)); }
-
-  void clearRecord();
-  [[nodiscard]] bool validRecord() const;
-
-private:
-
-  std::string term_id_;
-  std::string name_;
-  std::string definition_;
-  GO::Ontology ontology_{GO::Ontology::ONTO_ERROR};
-  std::vector<std::pair<std::string, GO::Relationship>> relations_;
-  std::vector<std::string> alt_id_;
-  std::vector<std::pair<std::string, std::string>> attributes_;  // key:value pairs is all misc attributes.
-
-};
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -93,12 +47,7 @@ public:
      which are specified to the graph.
 
   */
-  [[nodiscard]] std::shared_ptr<GoGraph> parseGoFile(const std::string &filename) const override {
-
-    parseGoFile2(filename);
-    return parseGoFile1(filename);
-
-  }
+  [[nodiscard]] std::shared_ptr<GoGraph> parseGoFile(const std::string &filename) const override;
 
   //! A method to test if a file fits the accepted format
   /*!
@@ -120,9 +69,6 @@ private:
   const static constexpr char* OBSOLETE_TOKEN = "is_obsolete";
   const static constexpr char* CHILD_TOKEN = "is_a";
   const static constexpr char* RELATIONSHIP_TOKEN = "relationship";
-  const static constexpr char* NAMESPACE_BP = "biological_process";
-  const static constexpr char* NAMESPACE_MF = "molecular_function";
-  const static constexpr char* NAMESPACE_CC = "cellular_component";
 
   //! A PolicyRelationshipInterface
   /*! This PolicyRelationshipInterface holds the relationships to be allowed during parsing */
@@ -139,8 +85,9 @@ private:
                  std::string &attr,
                  std::string &value) const;
 
-  std::shared_ptr<GoGraph> parseGoFile1(const std::string &file_name) const;
+  GoTermMap parseGoTermFile(const std::string &file_name) const;
   std::shared_ptr<GoGraph>  parseGoFile2(const std::string &filename) const;
+  GoTermMap filterTermMap(const GoTermMap& unfiltered_term_map, const PolicyRelationship& relationship_policy) const;
 
 };
 

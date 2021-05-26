@@ -17,19 +17,19 @@ public:
   ~TestAnnotateParsers() = default;
 
 
-  [[nodiscard]] std::unique_ptr<AnnotationData> parseGaf(const PolicyEvidence &policy = PolicyEvidence()) {
+  [[nodiscard]] std::shared_ptr<AnnotationData> parseGaf(const PolicyEvidence &policy = PolicyEvidence()) {
 
     return parseAnnotation(AnnotationParserType::GAF_ANNO_PARSER, UnitTestDefinitions::gafFileName(), policy);
 
   }
 
-  [[nodiscard]] std::unique_ptr<AnnotationData> parseEntrez(const PolicyEvidence &policy = PolicyEvidence()) {
+  [[nodiscard]] std::shared_ptr<AnnotationData> parseEntrez(const PolicyEvidence &policy = PolicyEvidence()) {
 
     return parseAnnotation(AnnotationParserType::ENTREZ_ANNO_PARSER, UnitTestDefinitions::entrezFileName(), policy);
 
   }
 
-  [[nodiscard]] std::unique_ptr<AnnotationData> parseGene(const PolicyEvidence &policy = PolicyEvidence()) {
+  [[nodiscard]] std::shared_ptr<AnnotationData> parseGene(const PolicyEvidence &policy = PolicyEvidence()) {
 
     return parseAnnotation(AnnotationParserType::MGI_ANNO_PARSER, UnitTestDefinitions::geneFileName(), policy);
 
@@ -56,7 +56,7 @@ public:
 
 private:
 
-  [[nodiscard]] std::unique_ptr<AnnotationData> parseAnnotation(AnnotationParserType parser_type,
+  [[nodiscard]] std::shared_ptr<AnnotationData> parseAnnotation(AnnotationParserType parser_type,
                                                                 const std::string &annotation_file,
                                                                 const PolicyEvidence &policy) {
 

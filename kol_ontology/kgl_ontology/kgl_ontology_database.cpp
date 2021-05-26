@@ -34,7 +34,7 @@ kol::OntologyDatabase::~OntologyDatabase() {
 }
 
 
-std::unique_ptr<const kol::AnnotationData> kol::OntologyDatabase::getAnnotation(const std::string& annotation_file) {
+std::shared_ptr<const kol::AnnotationData> kol::OntologyDatabase::getAnnotation(const std::string& annotation_file) {
 
     auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
                                                                            PolicyEvidence());

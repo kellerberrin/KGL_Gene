@@ -55,7 +55,7 @@ public:
 
 private:
 
-  [[nodiscard]] static std::unique_ptr<AnnotationData> getAnnotation() {
+  [[nodiscard]] static std::shared_ptr<AnnotationData> getAnnotation() {
 
     auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
                                                                            PolicyEvidence());
@@ -65,7 +65,7 @@ private:
   }
 
 
-  inline static std::unique_ptr<const AnnotationData> static_annotation_;
+  inline static std::shared_ptr<const AnnotationData> static_annotation_;
 
 };
 

@@ -45,7 +45,7 @@ public:
 
 protected:
 
-  [[nodiscard]] std::unique_ptr<const AnnotationData> getAnnotation() {
+  [[nodiscard]] std::shared_ptr<const AnnotationData> getAnnotation() {
 
     auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
                                                                            PolicyEvidence());
@@ -189,7 +189,7 @@ protected:
 
   virtual void getSetSimilarityAnalysis() = 0;
 
-  [[nodiscard]] static std::unique_ptr<const AnnotationData> getAnnotation() {
+  [[nodiscard]] static std::shared_ptr<const AnnotationData> getAnnotation() {
 
     auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
                                                                            PolicyEvidence());
@@ -361,7 +361,7 @@ public:
 
 protected:
 
-  [[nodiscard]] std::unique_ptr<const AnnotationData> getAnnotation() {
+  [[nodiscard]] std::shared_ptr<const AnnotationData> getAnnotation() {
 
     auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
                                                                            PolicyEvidence());
