@@ -86,8 +86,9 @@ BOOST_FIXTURE_TEST_SUITE(TestAnnotateSuite, kol::TestDepthMap)
 BOOST_AUTO_TEST_CASE(test_gene_count_accessor)
 {
 
-  const size_t gene_count{19194};
-  if (annotation().getNumGenes() != gene_count) BOOST_FAIL("Annotation gene count is incorrect" );
+  const size_t gene_count{19187};
+  const size_t anno_gene_count = annotation().getNumGenes();
+  if (anno_gene_count != gene_count) BOOST_FAIL("Annotation gene count is incorrect: " + std::to_string(anno_gene_count));
   BOOST_TEST_MESSAGE( "test_gene_count_accessor... OK" );
 
 }
@@ -95,8 +96,9 @@ BOOST_AUTO_TEST_CASE(test_gene_count_accessor)
 BOOST_AUTO_TEST_CASE(test_go_count_accessor)
 {
 
-  const size_t go_count{16556};
-  if (annotation().getNumGoTerms() != go_count) BOOST_FAIL("Annotation GO count is incorrect" );
+  const size_t go_count{16496};
+  const size_t anno_go_terms = annotation().getNumGoTerms();
+  if (anno_go_terms != go_count) BOOST_FAIL("Annotation GO count is incorrect: " + std::to_string(anno_go_terms));
   BOOST_TEST_MESSAGE( "test_go_count_accessor ... OK" );
 
 }
@@ -108,10 +110,10 @@ BOOST_AUTO_TEST_CASE(test_go_count_accessor)
 BOOST_AUTO_TEST_CASE(test_get_all_go_terms)
 {
 
-        const size_t go_count{16556};
+        const size_t go_count{16496};
         // Check unqiueness by assigning to a set.
         auto go_set = kol::SetUtilities::convertVector(annotation().getAllGoTerms());
-        if (go_set.size() != go_count) BOOST_FAIL("Annotation Go list size is incorrect" );
+        if (go_set.size() != go_count) BOOST_FAIL("Annotation Go list size is incorrect: " + std::to_string(go_set.size()));
         BOOST_TEST_MESSAGE( "test_get_all_go_terms... OK" );
 
 }
@@ -119,10 +121,10 @@ BOOST_AUTO_TEST_CASE(test_get_all_go_terms)
 BOOST_AUTO_TEST_CASE(test_get_all_genes)
 {
 
-  const size_t gene_count{19194};
+  const size_t gene_count{19187};
   // Check unqiueness by assigning to a set.
   auto gene_set = kol::SetUtilities::convertVector(annotation().getAllGenes());
-  if (gene_set.size() != gene_count) BOOST_FAIL("Annotation Gene list size is incorrect" );
+  if (gene_set.size() != gene_count) BOOST_FAIL("Annotation Gene list size is incorrect: " + std::to_string(gene_set.size()));
   BOOST_TEST_MESSAGE( "test_get_all_genes ... OK" );
 
 }

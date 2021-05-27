@@ -9,15 +9,15 @@ struct AllPairsMaxSetValues {
 
   const static constexpr double TEST_SET_SIMILARITY_EMPTY_SETS{0.0};
   const static constexpr double TEST_SET_SIMILARITY_1_EMPTY_1_GOOD{0.0};
-  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_BP{0.529139364};
-  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_BP{0.529139364};
-  const static constexpr double TEST_SET_SIMILARITY_BP{0.510371095};
-  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_MF{0.65664689};
-  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_MF{0.65664689};
-  const static constexpr double TEST_SET_SIMILARITY_MF{0.573227697};
-  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_CC{0.480874635};
-  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_CC{0.480874635};
-  const static constexpr double TEST_SET_SIMILARITY_CC{0.406859406};
+  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_BP{0.53039471027009177};
+  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_BP{0.53039471027009177};
+  const static constexpr double TEST_SET_SIMILARITY_BP{0.51160913084658399};
+  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_MF{0.65650687706855415};
+  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_MF{0.65650687706855415};
+  const static constexpr double TEST_SET_SIMILARITY_MF{0.57305365849318746};
+  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_CC{0.48085467210274191};
+  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_CC{0.48085467210274191};
+  const static constexpr double TEST_SET_SIMILARITY_CC{0.40694935907978297};
 
 
 };

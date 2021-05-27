@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(test_contains_builtin)
 BOOST_AUTO_TEST_CASE(test_bracket_access)
 {
 
-  const double info{13.52886195};
+  const double info{13.525779721561488};
   auto value = termMap().termInformation("GO:0000015");
   BOOST_CHECK_CLOSE( value, info, TEST_ACCURACY_PERCENT);
   BOOST_TEST_MESSAGE( "test_bracket_access ... OK" );

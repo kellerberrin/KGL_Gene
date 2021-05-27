@@ -328,7 +328,7 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_InformationContentDAG.cpp
         kol_ontology/kol_InformationContentImpl.cpp
         kol_ontology/kol_InformationContentImpl.h
-        kol_ontology/kol_InformationContent.cpp kol_ontology/kol_GoEnums.cpp kol_ontology/kol_ParserAnnotationGoa.cpp)
+        kol_ontology/kol_InformationContent.cpp kol_ontology/kol_GoEnums.cpp kol_ontology/kol_ParserAnnotationGoa.cpp kol_ontology/kol_NewAnnotationData.cpp kol_ontology/kol_NewAnnotationData.h)
 
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES

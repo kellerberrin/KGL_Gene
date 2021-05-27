@@ -10,11 +10,11 @@ struct ResnikSimValues {
 
   const static constexpr double TEST_SIMILARITY_BAD_IDS{0.0};
   const static constexpr double TEST_SIMILARITY_1_BAD_1_GOOD_ID{0.0};
-  const static constexpr double TEST_SIMILARITY_CC_REFLEXIVE_SIM{0.38275321037629129};
-  const static constexpr double TEST_SIMILARITY_CC{0.36488372817959552};
+  const static constexpr double TEST_SIMILARITY_CC_REFLEXIVE_SIM{0.38311894167822957};
+  const static constexpr double TEST_SIMILARITY_CC{0.36527021227148865};
   const static constexpr double TEST_SIMILARITY_CC_1_GOOD_1_ROOT{0.0};
-  const static constexpr double TEST_SIMILARITY_BP{0.4651964752};
-  const static constexpr double TEST_SIMILARITY_MF{0.523675325};
+  const static constexpr double TEST_SIMILARITY_BP{0.46515938054577954};
+  const static constexpr double TEST_SIMILARITY_MF{0.52369916183257603};
   const static constexpr double TEST_CROSS_ONTOLOGY_SIMILARITY{0.0};
 
 };

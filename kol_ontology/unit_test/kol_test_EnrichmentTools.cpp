@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(test_enrichment_tools_enrichment_significance)
 
   auto term_genes = kol::EnrichmentTools::getDescendantGenes(goGraph(), annotation(), "GO:0002507");
   auto p_val = kol::EnrichmentTools::enrichmentSignificance(goGraph(), annotation(), term_genes, "GO:0002507");
-  BOOST_CHECK_CLOSE( p_val, 1.9224043e-43, 0.0001);
+  BOOST_CHECK_CLOSE( p_val, 1.9308398555944575e-43, 0.0001);
   BOOST_TEST_MESSAGE( "test_enrichment_tools_enrichment_significance ... OK" );
 
 }
