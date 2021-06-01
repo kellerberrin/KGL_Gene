@@ -1,10 +1,11 @@
 //
 // Created by kellerberrin on 7/4/21.
 //
+#include "kel_exec_env.h"
 #include "kol_test.h"
 #include "kol_InformationContent.h"
 
-
+namespace kel = kellerberrin;
 namespace kellerberrin::ontology {
 
 ///////////////////////////////////////////////////////////////////////////////////////

@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(test_get_all_go_terms)
 
         const size_t go_count{16496};
         // Check unqiueness by assigning to a set.
-        auto go_set = kol::SetUtilities::convertVector(annotation().getAllGoTerms());
+        auto go_set = annotation().getAllGoTerms();
         if (go_set.size() != go_count) BOOST_FAIL("Annotation Go list size is incorrect: " + std::to_string(go_set.size()));
         BOOST_TEST_MESSAGE( "test_get_all_go_terms... OK" );
 
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(test_get_all_genes)
 
   const size_t gene_count{19187};
   // Check unqiueness by assigning to a set.
-  auto gene_set = kol::SetUtilities::convertVector(annotation().getAllGenes());
+  auto gene_set = annotation().getAllGenes();
   if (gene_set.size() != gene_count) BOOST_FAIL("Annotation Gene list size is incorrect: " + std::to_string(gene_set.size()));
   BOOST_TEST_MESSAGE( "test_get_all_genes ... OK" );
 
@@ -182,8 +182,19 @@ BOOST_AUTO_TEST_CASE(test_num_go_annotations_bad_id)
 BOOST_AUTO_TEST_CASE(test_num_go_annotations)
 {
 
-  const size_t go_annotations{216};
-  if (annotation().getNumAnnotationsForGoTerm("GO:0004871") != go_annotations) BOOST_FAIL("Found incorrect number of go annotations." );
+//  const size_t gaf_record_annotations{216};
+  const size_t go_annotations{196};
+  auto gene_map =  annotation().getGOGeneMap("GO:0004871");
+  size_t gaf_count{0};
+  for (auto const& [gene_id, gaf_vector] : gene_map) {
+
+    gaf_count += gaf_vector.size();
+
+  }
+  size_t found_annotations = annotation().getNumAnnotationsForGoTerm("GO:0004871");
+  if (found_annotations != go_annotations) BOOST_FAIL("Found incorrect number of go annotations: "
+                                                      + std::to_string(found_annotations)
+                                                      + "  GAF Count: " + std::to_string(gaf_count));
   BOOST_TEST_MESSAGE( "test_num_go_annotations ... OK" );
 
 }
@@ -227,87 +238,24 @@ BOOST_AUTO_TEST_CASE(test_genes_for_go_term)
 
 }
 
-//////////////////////////////////////////////////////////////////////////
-// List of evidence codes for each annotated term or gene
-//////////////////////////////////////////////////////////////////////////
 
-
-BOOST_AUTO_TEST_CASE(test_evidence_codes_for_gos_w_gene_query_bad_id)
-{
-
-  if (not annotation().getGoTermsEvidenceForGene("ABC12345").empty()) BOOST_FAIL("Found evidence codes for bad gene id" );
-  BOOST_TEST_MESSAGE( "test_evidence_codes_for_gos_w_gene_query_bad_id ... OK" );
-
-}
-
-BOOST_AUTO_TEST_CASE(test_evidence_codes_for_gos_w_gene_query)
-{
-
-  const std::vector<std::string> go_evidence_codes{"IEA", "IEA", "IEA"};
-  if (annotation().getGoTermsEvidenceForGene("A0A024R161") != go_evidence_codes) {
-
-    BOOST_FAIL("Found invalid go evidence types for gene" );
-
-  }
-  BOOST_TEST_MESSAGE( "test_evidence_codes_for_gos_w_gene_query ... OK" );
-
-}
-
-BOOST_AUTO_TEST_CASE(test_evidence_codes_for_gene_w_go_query_bad_id)
-{
-
-  if (not annotation().getGenesEvidenceForGoTerm("GO:1234").empty()) BOOST_FAIL("Found evidence codes for bad go term" );
-  BOOST_TEST_MESSAGE( "test_evidence_codes_for_gene_w_go_query_bad_id ... OK" );
-
-}
-
-BOOST_AUTO_TEST_CASE(test_evidence_codes_for_gene_w_go_query)
-{
-
-  const std::vector<std::string> evidence_set{"IEA", "IEA", "IEA", "IEA"};
-  if (annotation().getGenesEvidenceForGoTerm("GO:0000015") != evidence_set) {
-
-    BOOST_FAIL("Invalid evidence list for go term" );
-
-  }
-  BOOST_TEST_MESSAGE( "test_evidence_codes_for_gene_w_go_query ... OK" );
-
-}
-
-BOOST_AUTO_TEST_CASE(test_evidence_codes_for_gos_w_gene_query_2)
-{
-
-  const std::vector<std::string> go_evidence_codes{"IEA", "ISS", "IEA", "ISS", "IEA",
-                                                   "ISS", "ISS", "ISS", "TAS", "TAS",
-                                                   "TAS", "TAS", "TAS", "TAS", "TAS", "TAS"};
-  if (annotation().getGoTermsEvidenceForGene("A0AVF1") != go_evidence_codes) {
-
-    BOOST_FAIL("Found invalid go evidence types for gene" );
-
-  }
-  BOOST_TEST_MESSAGE( "test_evidence_codes_for_gos_w_gene_query_2 ... OK" );
-
-}
 
 
 BOOST_AUTO_TEST_CASE(test_evidence_codes_and_go_list_w_gene_query)
 {
 
-  const std::vector<std::string> go_terms = {"GO:0005813", "GO:0007224", "GO:0007286",
+  const kol::OntologySetType<std::string> go_terms = {"GO:0005813", "GO:0007224", "GO:0007286",
                                              "GO:0030992", "GO:0036064", "GO:0042073",
                                              "GO:0042384", "GO:0072372", "GO:0072372",
                                              "GO:0072372", "GO:0072372", "GO:0072372",
                                              "GO:0097542", "GO:0097542", "GO:0097542", "GO:0097542"};
 
-  const std::vector<std::string> evidence_codes{"IEA", "ISS", "IEA", "ISS", "IEA",
-                                                "ISS", "ISS", "ISS", "TAS", "TAS",
-                                                "TAS", "TAS", "TAS", "TAS", "TAS", "TAS"};
 
-  auto gene_evidence = annotation().getGoTermsEvidenceForGene("A0AVF1");
   auto gene_go_terms = annotation().getGoTermsForGene("A0AVF1");
-  if (gene_evidence != evidence_codes or gene_go_terms != go_terms) {
+  auto set_go_terms = kol::SetUtilities::convertVector(gene_go_terms);
+  if (set_go_terms != go_terms) {
 
-    BOOST_FAIL("Found invalid go evidence types for gene" );
+    BOOST_FAIL("Found invalid go terms for gene" );
 
   }
   BOOST_TEST_MESSAGE( "test_evidence_codes_and_go_list_w_gene_query ... OK" );

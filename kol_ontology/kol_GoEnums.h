@@ -82,40 +82,48 @@ public:
      Defined at http://www.geneontology.org/GO.evidence.shtml
   */
   enum class EvidenceCode {
-    //experimental
-    EXP = 0,
-    IDA = 1,
-    IPI = 2,
-    IMP = 3,
-    IGI = 4,
-    IEP = 5,
+    // Experimental
+    EXP,
+    IDA,
+    IPI,
+    IMP,
+    IGI,
+    IEP,
+
+    // High throughput experimental.
+    HTP, // Inferred from High Throughput Experiment (HTP)
+    HDA, // Inferred from High Throughput Direct Assay (HDA)
+    HMP, // Inferred from High Throughput Mutant Phenotype (HMP)
+    HGI, // Inferred from High Throughput Genetic Interaction (HGI)
+    HEP, // Inferred from High Throughput Expression Pattern (HEP)
 
     //computationally assisted
-    ISS = 6,
-    ISO = 7,
-    ISA = 8,
-    ISM = 9,
-    IGC = 10,
-    IBA = 11,
-    IBD = 12,
-    IKR = 13,
-    IRD = 14,
-    RCA = 15,
+    ISS,
+    ISO,
+    ISA,
+    ISM,
+    IGC,
+    IBA,
+    IBD,
+    IKR,
+    IMR,  // Possibly obsolete synonym for IKR
+    IRD,
+    RCA,
 
     //author statement
-    TAS = 16,
-    NAS = 17,
+    TAS,
+    NAS,
 
     //Curator statement
-    IC = 18,
-    ND = 19,
+    IC,
+    ND,
 
     //automatically assigned
-    IEA = 20,
+    IEA,
 
     //obsolete evidence code
-    NR = 21,
-    ECODE_ERROR = 22
+    NR,
+    ECODE_ERROR
   };
 
   enum class EvidenceType {
@@ -220,6 +228,13 @@ private:
       {"IGI",               EvidenceCode::IGI,         EvidenceType::EXPERIMENTAL},
       {"IEP",               EvidenceCode::IEP,         EvidenceType::EXPERIMENTAL},
 
+      // High throughput experimental.
+      { "HTP",              EvidenceCode::HTP,        EvidenceType::EXPERIMENTAL}, // Inferred from High Throughput Experiment (HTP)
+      { "HDA",              EvidenceCode::HDA,        EvidenceType::EXPERIMENTAL}, // Inferred from High Throughput Direct Assay (HDA)
+      { "HMP",              EvidenceCode::HMP,        EvidenceType::EXPERIMENTAL}, // Inferred from High Throughput Mutant Phenotype (HMP)
+      { "HGI",              EvidenceCode::HGI,        EvidenceType::EXPERIMENTAL}, // Inferred from High Throughput Genetic Interaction (HGI)
+      { "HEP",              EvidenceCode::HEP,        EvidenceType::EXPERIMENTAL}, // Inferred from High Throughput Expression Pattern (HEP)
+
       //computationally assisted
       {"ISS",               EvidenceCode::ISS,         EvidenceType::COMPUTATIONAL},
       {"ISO",               EvidenceCode::ISO,         EvidenceType::COMPUTATIONAL},
@@ -229,6 +244,7 @@ private:
       {"IBA",               EvidenceCode::IBA,         EvidenceType::COMPUTATIONAL},
       {"IBD",               EvidenceCode::IBD,         EvidenceType::COMPUTATIONAL},
       {"IKR",               EvidenceCode::IKR,         EvidenceType::COMPUTATIONAL},
+      {"IMR",               EvidenceCode::IMR,         EvidenceType::COMPUTATIONAL}, // Possibly obsolete synonym for IKR
       {"IRD",               EvidenceCode::IRD,         EvidenceType::COMPUTATIONAL},
       {"RCA",               EvidenceCode::RCA,         EvidenceType::COMPUTATIONAL},
 

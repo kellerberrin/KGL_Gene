@@ -8,11 +8,10 @@ Distributed under the Boost Software License, Version 1.0.
 #include "kol_ParserAnnotationInterface.h"
 #include "kol_PolicyEvidence.h"
 
-#include <iostream>
-#include <boost/tokenizer.hpp>
 
 
 namespace kellerberrin::ontology {
+
 
 /*! \class ParserAnnotationGoa
 	\brief A class to parse a Uniprot Gene Ontolog Annotation (GOA) file.
@@ -61,6 +60,7 @@ private:
   const static constexpr char TAB_FIELD_DELIMITER = '\t';
   const static constexpr size_t EXPECTED_FIELD_COUNT = 17;
   const static constexpr char COMMENT_CHAR = '!';
+  const static constexpr size_t FIELD_OFFSET_DB_ID = 0;
   const static constexpr size_t FIELD_OFFSET_UNIPROT_ID = 1;
   const static constexpr size_t FIELD_OFFSET_GENE_ID = 2;
   const static constexpr size_t FIELD_OFFSET_QUALIFIER = 3;
@@ -73,13 +73,15 @@ private:
   const static constexpr char* ONTOLOGY_BP_CODE = "P";
   const static constexpr char* ONTOLOGY_MF_CODE = "F";
   const static constexpr char* ONTOLOGY_CC_CODE = "C";
+  const static constexpr size_t FIELD_OFFSET_NAME = 9;
+  const static constexpr size_t FIELD_OFFSET_SYNONYM = 10;
+  const static constexpr size_t FIELD_OFFSET_TYPE = 11;
+  const static constexpr size_t FIELD_OFFSET_TAXON = 12;
+  const static constexpr size_t FIELD_OFFSET_DATE = 13;
+  const static constexpr size_t FIELD_OFFSET_ASSIGNED = 14;
+  const static constexpr size_t FIELD_OFFSET_EXTENSION = 15;
+  const static constexpr size_t FIELD_OFFSET_PRODUCT = 16;
 
-
-
-
-
-  [[nodiscard]] std::shared_ptr<AnnotationData> parseAnnotationFileNew(const std::string &filename) const;
-  [[nodiscard]] std::shared_ptr<AnnotationData> parseAnnotationFileOld(const std::string &filename) const;
 
 };
 

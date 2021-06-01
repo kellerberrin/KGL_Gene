@@ -6,7 +6,6 @@ Distributed under the Boost Software License, Version 1.0.
 #define KGL_ANNOTATION_PARSER_FACTORY
 
 #include "kol_ParserAnnotationInterface.h"
-#include "kol_ParserAnnotationEntrezGene2Go.h"
 #include "kol_ParserAnnotationGoa.h"
 #include "kol_ParserAnnotationGaf.h"
 #include "kol_ParserAnnotationMgi.h"
@@ -24,7 +23,7 @@ namespace kellerberrin::ontology {
 	  parsers to be easily added to a larger system and switched at runtime.
 
 */
-enum class AnnotationParserType { ENTREZ_ANNO_PARSER, GOA_ANNO_PARSER, GAF_ANNO_PARSER, MGI_ANNO_PARSER };
+enum class AnnotationParserType { GOA_ANNO_PARSER, GAF_ANNO_PARSER, MGI_ANNO_PARSER };
 
 class ParserAnnotationFactory {
 
@@ -40,9 +39,6 @@ public:
                                                                                          const PolicyEvidence &policy = PolicyEvidence()) {
 
     switch (parser_type) {
-
-      case AnnotationParserType::ENTREZ_ANNO_PARSER:
-        return std::make_unique<ParserAnnotationEntrezGene2Go>(policy);
 
       case AnnotationParserType::GOA_ANNO_PARSER:
         return std::make_unique<ParserAnnotationGoa>(policy);

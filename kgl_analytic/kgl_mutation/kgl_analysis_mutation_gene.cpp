@@ -86,10 +86,10 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
         if (result != symbolic_gaf.getMap().end()) {
 
           const auto& [symbolic, ontology_ptr] = *result;
-          gaf_id = ontology_ptr->gene_id();
+          gaf_id = ontology_ptr->gene_uniprot_id();
           for (const auto& GO_record : ontology_ptr->goRecords()) {
 
-            GO_set.insert(GO_record.second.ontolotgy_id);
+            GO_set.insert(GO_record.second->goIdent());
 
           }
 
@@ -104,10 +104,10 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
         if (result != gene_id_gaf.getMap().end()) {
 
           const auto& [gene_id, ontology_ptr] = *result;
-          gaf_id = ontology_ptr->gene_id();
+          gaf_id = ontology_ptr->gene_uniprot_id();
           for (const auto& GO_record : ontology_ptr->goRecords()) {
 
-            GO_set.insert(GO_record.second.ontolotgy_id);
+            GO_set.insert(GO_record.second->goIdent());
 
           }
 

@@ -1,23 +1,32 @@
-/*=============================================================================
-Copyright (c) 2016 Paul W. Bible
-Distributed under the Boost Software License, Version 1.0.
-==============================================================================*/
-#ifndef KGL_ANNOTATION_DATA
-#define KGL_ANNOTATION_DATA
+//
+// Created by kellerberrin on 27/5/21.
+//
+
+#ifndef KOL_ANNOTATIONDATA_H
+#define KOL_ANNOTATIONDATA_H
+
 
 #include "kol_SetUtilities.h"
 #include "kol_GoEnums.h"
 #include "kol_GoGraph.h"
+#include "kol_ParserGafRecord.h"
+#include "kol_PolicyEvidence.h"
 
 #include <fstream>
 #include <vector>
-#include <iostream> 
+#include <iostream>
 #include <map>
 #include <string>
 
 
 namespace kellerberrin::ontology {
 
+// A map keyed by gene name, value is a map of GO terms and GAFRecords.
+using GeneGOMap = OntologyMapType<std::string, std::vector<std::shared_ptr<const GAFRecord>>>;
+using GeneAnnotationMap = OntologyMapType<std::string, GeneGOMap>;
+// A map keyed by go term, value is a map of annotated genes and GAFRecords.
+using GOGeneMap = OntologyMapType<std::string, std::vector<std::shared_ptr<const GAFRecord>>>;
+using GOAnnotationMap = OntologyMapType<std::string, GOGeneMap>;
 
 //! A class for storing information about genes annotated with go terms.
 /*!
@@ -31,50 +40,33 @@ class AnnotationData {
 public:
 
 
-  //! Class constructor.
-  /*!
-    This constructor initialized each vector as an empty vector of the correct type.
-  */
-  AnnotationData() = default;
-  //! class destructor
-  /*!
-    This destructor clears all maps and vectors.
-  */
+  explicit AnnotationData(const std::vector<std::shared_ptr<const GAFRecord>>& gaf_records) { createAnnotationMap(gaf_records); }
   ~AnnotationData() = default;
-
-
-  //! A Method to add annotations to the dataset.
-  /*!
-    This method adds annotations to the database. It takes a gene, a goTerm, and an evidence code.
-      This method checks existence and indexing to remove the burden from parser implementations.
-  */
-  void addAssociation(const std::string &gene, const std::string &goTerm, const std::string &evidenceCode);
-
 
   //! This method tests the existence of a term in the database.
   /*!
     A helper method to check if a term exists in the database.
   */
-  [[nodiscard]] bool hasGoTerm(const std::string &goTerm) const { return _stringToGo.contains(goTerm); }
+  [[nodiscard]] bool hasGoTerm(const std::string &goTerm) const { return go_annotation_map_.contains(goTerm); }
 
 
   //! This method tests the existence of a gene in the database.
   /*!
     A helper method to check if a gene exists in the database.
   */
-  [[nodiscard]] bool hasGene(const std::string &gene) const { return _stringToGene.contains(gene); }
+  [[nodiscard]] bool hasGene(const std::string &gene) const { return gene_annotation_map_.contains(gene); }
 
   //! This method returns all the go terms in the database
   /*!
     A helper method to return all the GO terms in the database
   */
-  [[nodiscard]] const std::vector<std::string> &getAllGoTerms() const { return _goTerms; }
+  [[nodiscard]] const GOAnnotationMap& getAllGoTerms() const { return go_annotation_map_; }
 
   //! This method returns all genes in the database
   /*!
     A helper method to return all the genes in the databse
   */
-  [[nodiscard]] const std::vector<std::string> &getAllGenes() const { return _genes; }
+  [[nodiscard]] const GeneAnnotationMap& getAllGenes() const { return gene_annotation_map_; }
 
   //! This method gets the go terms for a gene.
   /*!
@@ -92,9 +84,9 @@ public:
   /*!
     A helper method to return a list of BIOLOGICAL_PROCESS go terms for a gene.
   */
-  [[nodiscard]] OntologySetType<std::string> getGoTermsForGeneBP(const std::string &gene, const GoGraph &graph) const {
+  [[nodiscard]] OntologySetType<std::string> getGoTermsForGeneBP(const std::string &gene, const GoGraph &G) const {
 
-    return getGoTermsForGeneByOntology(gene, GO::Ontology::BIOLOGICAL_PROCESS, graph);
+    return getGoTermsForGeneByOntology(gene, GO::Ontology::BIOLOGICAL_PROCESS, G);
 
   }
 
@@ -102,9 +94,9 @@ public:
   /*!
     A helper method to return a list of MOLECULAR_FUNCTION go terms for a gene.
   */
-  [[nodiscard]] OntologySetType<std::string> getGoTermsForGeneMF(const std::string &gene, const GoGraph &graph) const {
+  [[nodiscard]] OntologySetType<std::string> getGoTermsForGeneMF(const std::string &gene, const GoGraph &G) const {
 
-    return getGoTermsForGeneByOntology(gene, GO::Ontology::MOLECULAR_FUNCTION, graph);
+    return getGoTermsForGeneByOntology(gene, GO::Ontology::MOLECULAR_FUNCTION, G);
 
   }
 
@@ -112,18 +104,16 @@ public:
   /*!
   A helper method to return a list of CELLULAR_COMPONENT go terms for a gene.
   */
-  [[nodiscard]] OntologySetType<std::string> getGoTermsForGeneCC(const std::string &gene, const GoGraph &graph) const {
+  [[nodiscard]] OntologySetType<std::string> getGoTermsForGeneCC(const std::string &gene, const GoGraph &G) const {
 
-    return getGoTermsForGeneByOntology(gene, GO::Ontology::CELLULAR_COMPONENT, graph);
+    return getGoTermsForGeneByOntology(gene, GO::Ontology::CELLULAR_COMPONENT, G);
 
   }
 
-  //! A method to get the evidence codes for a list of go terms.
-  /*!
-    This method returns the evidence codes for a list of go terms. It parallels the
-      getGoTermsForGene method and is used for printing and testing.
-  */
-  [[nodiscard]] std::vector<std::string> getGoTermsEvidenceForGene(const std::string &gene) const;
+
+  [[nodiscard]] const GeneGOMap& getGeneGOMap(const std::string &gene) const;
+  [[nodiscard]] const GOGeneMap& getGOGeneMap(const std::string &go_ident) const;
+  [[nodiscard]] std::vector<std::shared_ptr<const GAFRecord>> getAllGAFRecords() const;
 
   //! This method gets the genes for a go term.
   /*!
@@ -131,122 +121,56 @@ public:
   */
   [[nodiscard]] std::vector<std::string> getGenesForGoTerm(const std::string &goTerm) const;
 
-  //! This method adds the genes for a go term to a set.
-  /*!
-    A helper method to add genes associated to a term to a set of genes.
-      Used in enrichment calculation
-  */
-  void addGenesForGoTerm(const std::string &goTerm, OntologySetType<std::string> &geneSet) const;
-  //! A method to get the evidence codes for a list of genes.
-  /*!
-    This method returns the evidence codes for a list of genes. It parallels the
-      getGenesForGoTerm method and is used for printing and testing.
-  */
-  [[nodiscard]] std::vector<std::string> getGenesEvidenceForGoTerm(const std::string &goTerm) const;
-
   //! A method to get the number of annotations of a particular go term.
   /*!
     This method returns the number of annotations for a go term. Queries the data base
       rather than extracting a vector. Used to calculate information content.
   */
-  [[nodiscard]] size_t getNumAnnotationsForGoTerm(const std::string &goTerm) const;
+  [[nodiscard]] size_t getNumAnnotationsForGoTerm(const std::string &go_term) const { return getGOGeneMap(go_term).size(); }
 
   //! A method to get the number of annotations of a particular gene.
   /*!
     This method returns the number of annotations for a go term. Queries the data base
       rather than extracting a vector.
   */
-  [[nodiscard]] size_t getNumAnnotationsForGene(const std::string &gene) const;
+  [[nodiscard]] size_t getNumAnnotationsForGene(const std::string &gene) const { return getGeneGOMap(gene).size(); }
   //! A helper method to get the number of genes in the db
   /*!
     This method reutrns the size of the _genes vector.
   */
-  [[nodiscard]] size_t getNumGenes() const { return _genes.size(); }
+  [[nodiscard]] size_t getNumGenes() const { return gene_annotation_map_.size(); }
 
+  void addGenesForGoTerm(const std::string &goTerm, OntologySetType<std::string> &geneSet) const;
 
   //! A helper method to get the number of go terms in the db
   /*!
     This method reutrns the size of the _goTerms vector.
   */
-  [[nodiscard]] size_t getNumGoTerms() const { return _goTerms.size(); }
+  [[nodiscard]] size_t getNumGoTerms() const { return go_annotation_map_.size(); }
 
-  //!	A helper method to return only the terms of the give ontology.
+  //!	A helper method to return only the terms of the given ontology.
   /*!
     Returns only those terms used that occur for the given ontology.
   */
   [[nodiscard]] std::vector<std::string> getOntologyTerms(const GoGraph &graph, GO::Ontology ontology) const;
 
+  [[nodiscard]] static std::vector<std::shared_ptr<const GAFRecord>> filterGAFRecords(const PolicyEvidence& evidence_policy,
+                                                                                      const std::vector<std::shared_ptr<const GAFRecord>>& gaf_records);
+
 private:
 
-  /////////////////////////////////////////////////////////
-  //  Lists of gene names and go terms used as mapping keys
-  /////////////////////////////////////////////////////////
-  //! A list of genes stored by the annotation data object.
-  /*!
-    This storage variable stores the gene names.
-  */
-  std::vector<std::string> _genes;
+  GeneAnnotationMap gene_annotation_map_;
+  GOAnnotationMap go_annotation_map_;
 
-  //! A list of go terms stored by the annotation data object.
-  /*!
-    This storage variable stores the go terms.
-  */
-  std::vector<std::string> _goTerms;
-
-
-
-  /////////////////////////////////
-  // A map of keys to index in list
-  /////////////////////////////////
-  //! A map from a gene strings to a gene index.
-  /*!
-    This map accespts gene strings and returns gene indices.
-      boost unordered_map ensures O(1) constant time find/has_key queries (hash table).
-  */
-  OntologyMapType<std::string, std::size_t> _stringToGene;
-
-  //! A map from a go term strings to a go term index.
-  /*!
-    This map accepts go term strings and returns go term indices.
-      boost unordered_map ensures O(1) constant time find/has_key queries (hash table).
-  */
-  OntologyMapType<std::string, std::size_t> _stringToGo;
-  ////////////////////////////////////////////////////////////////////////////////
-  // Main data storage objects 2d vectors storing gos for genes and genes for gos.
-  ////////////////////////////////////////////////////////////////////////////////
-  //! A list of lists of genes, one for each go term.
-  /*!
-    This vector holds one entry for each go term. Each entry holds a list of genes
-      annotated to that go term.
-  */
-  std::vector<std::vector<std::size_t> > _goToGenes;
-  //! A list of lists of evidence codes, one for each go term. Parallel to _goToGenes.
-  /*!
-    This vector holds one entry for each go term. Each entry holds a list of evidence
-      codes for each gene annotated to that go term. It parallels the _goToGenes vectors
-      having the same size and dimensions for each element.
-  */
-  std::vector<std::vector<GO::EvidenceCode> > _goToGenesEvidence;
-
-  //! A list of lists of go terms, one for each gene.
-  /*!
-    This vector holds one entry for each gene. Each entry holds a list of go terms
-      annotated to that gene.
-  */
-  std::vector<std::vector<std::size_t> > _geneToGos;
-  //! A list of lists of evidence codes, one for each gene. Parallel to _geneToGos.
-  /*!
-    This vector holds one entry for each gene. Each entry holds a list of evidence
-      codes for each go term annotated to that gene. It parallels the _geneToGos vectors
-      having the same size and dimensions for each element.
-  */
-  std::vector<std::vector<GO::EvidenceCode> > _geneToGosEvidence;
-
+  bool addGAFRecord(const std::shared_ptr<const GAFRecord>& gaf_record_ptr);
+  void createAnnotationMap(const std::vector<std::shared_ptr<const GAFRecord>>& gaf_records);
 
 };
 
-}
 
 
-#endif
+} // Namespace.
+
+
+#endif //KGL_KOL_ANNOTATIONDATANEW_H
 

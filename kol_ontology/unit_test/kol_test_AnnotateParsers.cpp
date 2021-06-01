@@ -23,12 +23,6 @@ public:
 
   }
 
-  [[nodiscard]] std::shared_ptr<AnnotationData> parseEntrez(const PolicyEvidence &policy = PolicyEvidence()) {
-
-    return parseAnnotation(AnnotationParserType::ENTREZ_ANNO_PARSER, UnitTestDefinitions::entrezFileName(), policy);
-
-  }
-
   [[nodiscard]] std::shared_ptr<AnnotationData> parseGene(const PolicyEvidence &policy = PolicyEvidence()) {
 
     return parseAnnotation(AnnotationParserType::MGI_ANNO_PARSER, UnitTestDefinitions::geneFileName(), policy);
@@ -38,12 +32,6 @@ public:
   [[nodiscard]] bool verifyGaf(const std::string &file_name = UnitTestDefinitions::gafFileName()) {
 
     return verifyAnnotation(AnnotationParserType::GAF_ANNO_PARSER, file_name);
-
-  }
-
-  [[nodiscard]] bool verifyEntrez(const std::string &file_name = UnitTestDefinitions::entrezFileName()) {
-
-    return verifyAnnotation(AnnotationParserType::ENTREZ_ANNO_PARSER, file_name);
 
   }
 
@@ -109,15 +97,6 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_mgi)
 
 }
 
-BOOST_AUTO_TEST_CASE(test_annotation_parser_entrez)
-{
-
-  auto annotation_ptr = parseEntrez();
-  BOOST_REQUIRE(annotation_ptr);
-  if ( annotation_ptr->getNumGenes() == 0 or annotation_ptr->getNumGoTerms() == 0) BOOST_FAIL( "Entrez annotation is empty." );
-  BOOST_TEST_MESSAGE( "test_annotation_parser_entrez ... OK" );
-
-}
 
 //////////////////////////////////////////////////////
 // Test Parser with bad input
@@ -143,14 +122,6 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_mgi_nonexistent_file)
 
 
 
-BOOST_AUTO_TEST_CASE(test_annotation_parser_entrez_nonexistent_file)
-{
-
-  if ( verifyEntrez("") ) BOOST_FAIL( "Empty Entrez file is verified valid" );
-  BOOST_TEST_MESSAGE( "test_annotation_parser_entrez_nonexistent_file ... OK" );
-
-}
-
 //////////////////////////////////////////////////////
 // Bad file format
 //////////////////////////////////////////////////////
@@ -160,15 +131,6 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_gaf_bad_format)
 
   if ( verifyGaf(UnitTestDefinitions::entrezFileName()) ) BOOST_FAIL( "Invalid Gaf file is verified valid" );
   BOOST_TEST_MESSAGE( "test_annotation_parser_gaf_bad_format ... OK" );
-
-}
-
-
-BOOST_AUTO_TEST_CASE(test_annotation_parser_entrez_bad_format)
-{
-
-  if ( verifyEntrez(UnitTestDefinitions::gafFileName()) ) BOOST_FAIL( "Invalid Entrez Annotation file is verified valid" );
-  BOOST_TEST_MESSAGE( "test_annotation_parser_entrez_bad_format ... OK" );
 
 }
 
@@ -188,17 +150,6 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_gaf_bad_custom_evidence_set)
 
 }
 
-BOOST_AUTO_TEST_CASE(test_annotation_parser_entrez_bad_custom_evidence_set)
-{
-
-  std::vector<kol::GO::EvidenceCode> empty_vector;
-  kol::PolicyEvidence bad_policy(empty_vector);
-  auto annotation_ptr = parseEntrez(bad_policy);
-  BOOST_REQUIRE(annotation_ptr);
-  if ( annotation_ptr->getNumGenes() != 0 or annotation_ptr->getNumGoTerms() != 0) BOOST_FAIL( "Entrez annotation is non-empty with bad policy." );
-  BOOST_TEST_MESSAGE( "test_annotation_parser_entrez_bad_custom_evidence_set ... OK" );
-
-}
 
 /////////////////////////////////////////
 // Experimental evidence codes
@@ -211,74 +162,25 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_gaf_experimental_evidence_set)
   auto experimental_policy = kol::PolicyEvidence(experimental_codes);
   auto annotation_ptr = parseGaf(experimental_policy);
   BOOST_REQUIRE(annotation_ptr);
-  auto gene_list = annotation_ptr->getAllGenes();
+  auto gaf_record_vector = annotation_ptr->getAllGAFRecords();
+  bool found_bad_codes{false};
+  for (auto const& gaf_record_ptr : gaf_record_vector) {
 
-  bool no_experimental_codes{false};
-  for (auto const& gene : gene_list) {
+    if (not experimental_policy.isAllowed(gaf_record_ptr->evidenceCode())) {
 
-    auto code_list = annotation_ptr->getGoTermsEvidenceForGene(gene);
-    bool found_experimental_codes{false};
-    for (auto const& code_text : code_list) {
-
-      if (experimental_policy.isAllowed(kol::GO::evidenceStringToCode(code_text))) {
-
-        found_experimental_codes = true;
-        break;
-
-      }
-
-    }
-    if (not found_experimental_codes) {
-
-      no_experimental_codes = true;
+      found_bad_codes = true;
       break;
 
     }
 
   }
-  if (no_experimental_codes) BOOST_FAIL( "Found an annotated gene with no experimental codes." );
+
+  if (found_bad_codes) BOOST_FAIL( "Found an annotated gene with no experimental codes." );
   BOOST_TEST_MESSAGE( "test_annotation_parser_gaf_experimental_evidence_set ... OK" );
 
 }
 
 
-BOOST_AUTO_TEST_CASE(test_annotation_parser_entrez_experimental_evidence_set)
-{
-
-
-  auto experimental_codes = kol::GO::getEvidenceType(kol::GO::EvidenceType::EXPERIMENTAL);
-  auto experimental_policy = kol::PolicyEvidence(experimental_codes);
-  auto annotation_ptr = parseEntrez(experimental_policy);
-  BOOST_REQUIRE(annotation_ptr);
-  auto gene_list = annotation_ptr->getAllGenes();
-
-  bool no_experimental_codes{false};
-  for (auto const& gene : gene_list) {
-
-    auto code_list = annotation_ptr->getGoTermsEvidenceForGene(gene);
-    bool found_experimental_codes{false};
-    for (auto const& code_text : code_list) {
-
-      if (experimental_policy.isAllowed(kol::GO::evidenceStringToCode(code_text))) {
-
-        found_experimental_codes = true;
-        break;
-
-      }
-
-    }
-    if (not found_experimental_codes) {
-
-      no_experimental_codes = true;
-      break;
-
-    }
-
-  }
-  if (no_experimental_codes) BOOST_FAIL( "Found an annotated gene with no experimental codes." );
-  BOOST_TEST_MESSAGE( "test_annotation_parser_entrez_experimental_evidence_set ... OK" );
-
-}
 
 
 BOOST_AUTO_TEST_SUITE_END()

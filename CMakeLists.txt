@@ -287,7 +287,6 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/xml/rapidxml_print.h
         kol_ontology/xml/rapidxml_utils.h
         kol_ontology/kgl_ontology/kgl_ontology_database.h
-        kol_ontology/kol_AnnotationData.cpp
         kol_ontology/kol_GoGraph.cpp
         kol_ontology/kol_InformationFrontier.cpp
         kol_ontology/kol_SimilarityCache.cpp
@@ -314,11 +313,9 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_SimilarityMatrix.cpp
         kol_ontology/kol_SimilarityImpl.cpp
         kol_ontology/kol_EnrichmentTools.cpp
-        kol_ontology/kol_ParserAnnotationEntrezGene2Go.cpp
         kol_ontology/kgl_ontology/kgl_ontology_database.cpp
         kol_ontology/kol_OntologyTypes.h
         kol_ontology/kgl_ontology/kgl_ontology_database.h
-        kol_ontology/kol_AnnotationData.cpp
         kol_ontology/kgl_ontology/kgl_gene_cache_ontology.cpp
         kol_ontology/kgl_ontology/kgl_gene_cache_ontology.h
         kol_ontology/kgl_ontology/kgl_ontology_database_test.cpp
@@ -328,7 +325,7 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_InformationContentDAG.cpp
         kol_ontology/kol_InformationContentImpl.cpp
         kol_ontology/kol_InformationContentImpl.h
-        kol_ontology/kol_InformationContent.cpp kol_ontology/kol_GoEnums.cpp kol_ontology/kol_ParserAnnotationGoa.cpp kol_ontology/kol_NewAnnotationData.cpp kol_ontology/kol_NewAnnotationData.h)
+        kol_ontology/kol_InformationContent.cpp kol_ontology/kol_GoEnums.cpp kol_ontology/kol_ParserAnnotationGoa.cpp kol_ontology/kol_AnnotationData.cpp kol_ontology/kol_ParserGafRecord.cpp kol_ontology/kol_ParserGafRecord.h kol_ontology/kol_AnnotationDataOld.cpp kol_ontology/kol_AnnotationDataOld.h)
 
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES

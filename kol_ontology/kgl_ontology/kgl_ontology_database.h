@@ -9,6 +9,7 @@
 #include <string>
 #include <memory>
 
+#include "kol_AnnotationData.h"
 
 namespace kellerberrin::ontology {
 

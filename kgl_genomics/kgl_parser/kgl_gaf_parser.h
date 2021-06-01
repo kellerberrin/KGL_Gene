@@ -11,41 +11,13 @@
 
 #include "kgl_genome_types.h"
 #include "kgl_ensembl_id_parser.h"
+#include "kol_ParserGafRecord.h"
 
-
+namespace kol = kellerberrin::ontology;
 namespace kellerberrin::genome {   //  organization level namespace
 
 
-class GAFRecord {
-
-public:
-
-  GAFRecord() = default;
-  GAFRecord(const GAFRecord&) = default;
-  ~GAFRecord() = default;
-
-  std::string DB_ID;              // required
-  FeatureIdent_t gene_id;    // required
-  std::string symbolic_ref;	  // required
-  std::string Qualifier;    	    // optional
-  OntologyIdent_t ontolotgy_id;	        // required
-  std::string DB_Reference;       // required
-  std::string	Evidence_Code;	    // required
-  std::string With_From;	        // optional
-  std::string Aspect;             // required
-  std::string description;	      // optional
-  std::string	alt_symbolic_ref;  // required
-  std::string DB_Object_Type;	    // required
-  std::string	Taxon;              // required
-  std::string Date;               // required
-  std::string	Assigned_By;        // required
-  std::string Annotation;         // optional
-  std::string	Gene_Product;       // optional
-
-};
-
-
-using GafGoMap = std::multimap<OntologyIdent_t, GAFRecord>;
+using GafGoMap = std::multimap<std::string, std::shared_ptr<const kol::GAFRecord>>;
 class OntologyRecord {
 
 public:
@@ -53,7 +25,7 @@ public:
   OntologyRecord(FeatureIdent_t gene_id,
                 std::string symbolic_ref,
                 std::string alt_symbolic_ref,
-                std::string description) : gene_id_(std::move(gene_id)),
+                std::string description) : gene_uniprot_id_(std::move(gene_id)),
                                            symbolic_ref_(std::move(symbolic_ref)),
                                            alt_symbolic_ref_(std::move(alt_symbolic_ref)),
                                            description_(std::move(description)) {}
@@ -61,9 +33,9 @@ public:
   OntologyRecord(const OntologyRecord&) = default;
   ~OntologyRecord() = default;
 
-  void addGafRecord(GAFRecord gaf_record);
+  void addGafRecord(const std::shared_ptr<const kol::GAFRecord>& gaf_record_ptr);
 
-  [[nodiscard]] const FeatureIdent_t& gene_id() const { return gene_id_; }
+  [[nodiscard]] const std::string& gene_uniprot_id() const { return gene_uniprot_id_; }
   [[nodiscard]] const std::string& symbolicReference() const { return symbolic_ref_;	}
   [[nodiscard]] const std::string& description() const { return description_; }
   [[nodiscard]] const std::string& altSymbolicReference() const { return alt_symbolic_ref_; }
@@ -71,7 +43,7 @@ public:
 
 private:
 
-  FeatureIdent_t gene_id_;        // required (1) primary key
+  std::string gene_uniprot_id_;        // required (1) primary key
   std::string symbolic_ref_;	    // required (1) secondary key, gene family
   std::string alt_symbolic_ref_;  // required (1) (alt gene family)
   std::string description_;	      // optional (1)
@@ -88,8 +60,7 @@ private:
 ///	This class will read a gaf file and add those annotations to the GafRecordMap container.
 /// Indexed by gene id (const FeatureIdent_t&).
 ///
-using GafRecordMap = std::map<FeatureIdent_t, std::shared_ptr<OntologyRecord>>;
-
+using GafRecordMap = std::map<std::string, std::shared_ptr<OntologyRecord>>;
 
 class GeneOntology {
 
@@ -124,10 +95,9 @@ public:
 private:
 
   constexpr static const size_t REPORT_INCREMENT_ = 50000;
-  constexpr static const size_t GO_FIELD_COUNT_ = 17;
+  constexpr static const char HEADER_CHAR_ = '!';
 
-  void parseGafRecord(const std::string& record_str);
-  void semanticGafParse(const std::vector<std::string> &field_vec);
+  void semanticGafParse(const std::shared_ptr<const kol::GAFRecord>& gaf_record_ptr);
 
   GafRecordMap gaf_record_map_;
   GeneSynonymVector  synonym_vector_;
