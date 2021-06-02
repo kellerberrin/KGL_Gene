@@ -2,8 +2,8 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_GENTLEMAN_SIMUI_SET_SIMILARITY
-#define KGL_GENTLEMAN_SIMUI_SET_SIMILARITY
+#ifndef KOL_GENTLEMAN_SIMUI_SET_SIMILARITY
+#define KOL_GENTLEMAN_SIMUI_SET_SIMILARITY
 
 #include "kol_SetSimilarityInterface.h"
 #include "kol_SetUtilities.h"

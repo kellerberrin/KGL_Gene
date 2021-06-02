@@ -245,19 +245,15 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_SetSimilarityAllPairsAverage.h
         kol_ontology/kol_SetSimilarityAllPairsMax.h
         kol_ontology/kol_InformationAncestorMean.h
-        kol_ontology/kol_AnnotationData.h
-        kol_ontology/kol_ParserAnnotationFactory.h
-        kol_ontology/kol_ParserAnnotationInterface.h
+        kol_ontology/kol_TermAnnotation.h
         kol_ontology/kol_SetSimilarityBestMatchAverage.h
         kol_ontology/kol_InformationCoutoGraSMAdjusted.h
         kol_ontology/kol_InformationCoutoGraSM.h
         kol_ontology/kol_EnrichmentTools.h
-        kol_ontology/kol_ParserAnnotationEntrezGene2Go.h
         kol_ontology/kol_InformationExclusiveInherited.h
         kol_ontology/kol_InformationFrontier.h
-        kol_ontology/kol_ParserAnnotationGaf.h
         kol_ontology/kol_SetSimilarityGentlemanSimUI.h
-        kol_ontology/kol_ParserAnnotationGoa.h
+        kol_ontology/kol_ParserAnnotationGaf.h
         kol_ontology/kol_library.h
         kol_ontology/kol_GoEnums.h
         kol_ontology/kol_GoGraph.h
@@ -266,7 +262,6 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_SetSimilarityJaccard.h
         kol_ontology/kol_SetSimilarityMazanduSimDIC.h
         kol_ontology/kol_SetSimilarityMazanduSimUIC.h
-        kol_ontology/kol_ParserAnnotationMgi.h
         kol_ontology/kol_SimilarityJiangConrath.h
         kol_ontology/kol_SimilarityLin.h
         kol_ontology/kol_SimilarityResnik.h
@@ -325,7 +320,7 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_InformationContentDAG.cpp
         kol_ontology/kol_InformationContentImpl.cpp
         kol_ontology/kol_InformationContentImpl.h
-        kol_ontology/kol_InformationContent.cpp kol_ontology/kol_GoEnums.cpp kol_ontology/kol_ParserAnnotationGoa.cpp kol_ontology/kol_AnnotationData.cpp kol_ontology/kol_ParserGafRecord.cpp kol_ontology/kol_ParserGafRecord.h kol_ontology/kol_AnnotationDataOld.cpp kol_ontology/kol_AnnotationDataOld.h)
+        kol_ontology/kol_InformationContent.cpp kol_ontology/kol_GoEnums.cpp kol_ontology/kol_ParserAnnotationGaf.cpp kol_ontology/kol_TermAnnotation.cpp kol_ontology/kol_ParserGafRecord.cpp kol_ontology/kol_ParserGafRecord.h)
 
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES
@@ -363,7 +358,7 @@ set(ONTOLOGY_UNIT_TEST_FILES
         kol_ontology/unit_test/kol_test_TermSimMatrix_LIN_MF.cpp
         kol_ontology/unit_test/kol_test_TermSimMatrix_RES_CC.cpp
         kol_ontology/unit_test/kol_test_TermSimCache_LIN_BP.cpp
-        kol_ontology/unit_test/kol_test_data.h)
+        kol_ontology/unit_test/kol_test_data.h kol_ontology/unit_test/kol_test_SymbolicSet.cpp kol_ontology/unit_test/kol_test_symbolicset.h)
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES

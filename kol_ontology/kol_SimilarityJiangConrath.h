@@ -2,8 +2,8 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_MODULAR_JIANG_CONRATH
-#define KGL_MODULAR_JIANG_CONRATH
+#ifndef KOL_MODULAR_JIANG_CONRATH
+#define KOL_MODULAR_JIANG_CONRATH
 
 #include "kol_SimilarityInterface.h"
 #include "kol_InformationInterface.h"

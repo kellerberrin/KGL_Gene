@@ -10,8 +10,7 @@
 #include <string>
 
 #include "kol_GoEnums.h"
-#include "kol_GoGraph.h"
-#include "kol_AnnotationData.h"
+#include "kol_OntologyTypes.h"
 #include "kol_SimilarityInterface.h"
 
 namespace kellerberrin::ontology {

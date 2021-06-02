@@ -27,7 +27,7 @@ class AnnotationMapVisitor : public boost::default_dfs_visitor {
 public:
   //! A parameterized constructor passing parameters to the boost default_dfs_visitor
   AnnotationMapVisitor( const std::shared_ptr<const kol::GoGraph> &graph_ptr,
-                        const std::shared_ptr<const kol::AnnotationData> &anno_data_ptr,
+                        const std::shared_ptr<const kol::TermAnnotation> &anno_data_ptr,
                         kol::TermProbOntMap& probability_map)
       : graph_ptr_(graph_ptr),
         anno_data_ptr_(anno_data_ptr),
@@ -52,7 +52,7 @@ public:
     std::string term_id = graph_ptr_->getTermStringIdByIndex(vertex_index);
 
     auto term_ontology = graph_ptr_->getTermOntologyByIndex(vertex_index);
-    //Use the AnnotationData object to get the actual number of annotations.
+    //Use the TermAnnotation object to get the actual number of annotations.
     size_t term_annotations = anno_data_ptr_->getNumAnnotationsForGoTerm(term_id);
     auto float_annotations = static_cast<double>(term_annotations);
 
@@ -98,8 +98,8 @@ public:
   //! The go graph object
   std::shared_ptr<const kol::GoGraph> graph_ptr_;
 
-  //! An AnnotationData object for accessing annotations
-  std::shared_ptr<const kol::AnnotationData> anno_data_ptr_;
+  //! An TermAnnotation object for accessing annotations
+  std::shared_ptr<const kol::TermAnnotation> anno_data_ptr_;
 
   //! A map from name To probabilities.
   kol::TermProbOntMap& probability_map_;
@@ -109,7 +109,7 @@ public:
 
 // Constructor
 void kol::InformationContentDAG::calcProbabilityMap(const std::shared_ptr<const GoGraph> &graph,
-                                                    const std::shared_ptr<const AnnotationData> &annotation_data) {
+                                                    const std::shared_ptr<const TermAnnotation> &annotation_data) {
 
 
   GoGraph::GoVertex root = graph->getRoot();

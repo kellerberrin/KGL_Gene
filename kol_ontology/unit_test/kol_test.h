@@ -45,12 +45,10 @@ public:
 
 protected:
 
-  [[nodiscard]] std::shared_ptr<const AnnotationData> getAnnotation() {
+  [[nodiscard]] std::shared_ptr<const TermAnnotation> getAnnotation() {
 
-    auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
-                                                                           PolicyEvidence());
-    BOOST_REQUIRE(anno_parser_ptr);
-    return anno_parser_ptr->parseAnnotationFile(UnitTestDefinitions::gafFileName());
+    PolicyEvidence default_evidence;
+    return ParserAnnotationGaf::parseAnnotationFile(default_evidence, UnitTestDefinitions::gafFileName());
 
   }
 
@@ -89,7 +87,7 @@ private:
   [[nodiscard]] std::unique_ptr<const SimilarityInterface> getSimilarityAnalysis() override {
 
     std::shared_ptr<const GoGraph> graph_ptr = TestSimilarity<TestValues>::getGoGraph();
-    std::shared_ptr<const AnnotationData> annotation_ptr = TestSimilarity<TestValues>::getAnnotation();
+    std::shared_ptr<const TermAnnotation> annotation_ptr = TestSimilarity<TestValues>::getAnnotation();
     std::shared_ptr<const InformationContentDAG> info_map_ptr(std::make_shared<const InformationContentDAG>(graph_ptr, annotation_ptr));
     return std::make_unique<const SimAnalysis>(info_map_ptr);
 
@@ -138,7 +136,7 @@ public:
   virtual ~TestSetSimilarity() = default;
 
 
-  [[nodiscard]] const AnnotationData &annotation() {
+  [[nodiscard]] const TermAnnotation &annotation() {
 
     if (not annotation_ptr_) {
 
@@ -182,21 +180,29 @@ public:
 
 protected:
 
-  inline static std::shared_ptr<const AnnotationData> annotation_ptr_;
+  inline static std::shared_ptr<const TermAnnotation> annotation_ptr_;
   inline static std::shared_ptr<const GoGraph> graph_ptr_;
   inline static std::unique_ptr<const SetSimilarityInterface> set_similarity_ptr_;
   inline const static TestValues test_values_;
 
   virtual void getSetSimilarityAnalysis() = 0;
 
-  [[nodiscard]] static std::shared_ptr<const AnnotationData> getAnnotation() {
+  [[nodiscard]] static std::shared_ptr<const TermAnnotation> getAnnotation() {
 
-    auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
-                                                                           PolicyEvidence());
-    BOOST_REQUIRE(anno_parser_ptr);
-    return anno_parser_ptr->parseAnnotationFile(UnitTestDefinitions::gafFileName());
+    PolicyEvidence default_evidence;
+    return ParserAnnotationGaf::parseAnnotationFile(default_evidence, UnitTestDefinitions::gafFileName());
 
   }
+
+  [[nodiscard]] static std::shared_ptr<const TermAnnotation> getSymbolicAnnotation() {
+
+    PolicyEvidence default_evidence;
+    return ParserAnnotationGaf::parseAnnotationFile( default_evidence,
+                                                     UnitTestDefinitions::gafFileName(),
+                                                     AnnotationGeneName::SYMBOLIC_GENE_ID);
+
+  }
+
 
   [[nodiscard]] static std::shared_ptr<const GoGraph> getGoGraph() {
 
@@ -235,6 +241,36 @@ private:
 
 
 };
+
+
+template<class SimAnalysis, class SetSimAnalysis, class TestValues>
+class TestSetTermSymbolicSimilarity : public TestSetSimilarity<TestValues> {
+
+public:
+
+  TestSetTermSymbolicSimilarity() = default;
+
+  ~TestSetTermSymbolicSimilarity() override = default;
+
+
+private:
+
+  using TSS = TestSetSimilarity<TestValues>;
+
+  void getSetSimilarityAnalysis() override {
+
+    TSS::graph_ptr_ = TSS::getGoGraph();
+    TSS::annotation_ptr_ = TSS::getSymbolicAnnotation();
+    std::shared_ptr<const InformationContentDAG> ic_map_ptr(std::make_shared<const InformationContentDAG>(TSS::graph_ptr_, TSS::annotation_ptr_));
+    std::shared_ptr<const SimAnalysis> similarity_ptr(std::make_shared<const SimAnalysis>(ic_map_ptr));
+    TSS::set_similarity_ptr_ = std::make_unique<const SetSimAnalysis>(similarity_ptr);
+
+  }
+
+
+};
+
+
 
 
 template<class TestValues>
@@ -361,12 +397,10 @@ public:
 
 protected:
 
-  [[nodiscard]] std::shared_ptr<const AnnotationData> getAnnotation() {
+  [[nodiscard]] std::shared_ptr<const TermAnnotation> getAnnotation() {
 
-    auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
-                                                                           PolicyEvidence());
-    BOOST_REQUIRE(anno_parser_ptr);
-    return anno_parser_ptr->parseAnnotationFile(UnitTestDefinitions::gafFileName());
+    PolicyEvidence default_evidence;
+    return ParserAnnotationGaf::parseAnnotationFile(default_evidence, UnitTestDefinitions::gafFileName());
 
   }
 
@@ -407,7 +441,7 @@ private:
   void getSimilarityAnalysis() override {
 
     std::shared_ptr<const GoGraph> graph_ptr = SS::getGoGraph();
-    std::shared_ptr<const AnnotationData> annotation_ptr = SS::getAnnotation();
+    std::shared_ptr<const TermAnnotation> annotation_ptr = SS::getAnnotation();
     SS::term_information_ptr_ = std::make_shared<const InformationContentDAG>(graph_ptr, annotation_ptr);
     SS::term_similarity_ptr_ = std::make_unique<const SharedAnalysis>(graph_ptr, SS::term_information_ptr_);
 

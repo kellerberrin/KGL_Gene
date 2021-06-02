@@ -12,7 +12,7 @@ namespace kel = kellerberrin;
 
 
 void kol::InformationContent::calcProbabilityMap(const std::shared_ptr<const GoGraph> &graph,
-                                                 const std::shared_ptr<const AnnotationData> &annotation_data) {
+                                                 const std::shared_ptr<const TermAnnotation> &annotation_data) {
 
   auto term_ont_map = graph->getAllOntTerms();
   for (auto const& [term_id, ontology] : term_ont_map) {

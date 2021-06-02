@@ -2,8 +2,8 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_GO_ENUMS
-#define KGL_GO_ENUMS
+#ifndef KOL_GO_ENUMS
+#define KOL_GO_ENUMS
 
 #include <string>
 #include <vector>

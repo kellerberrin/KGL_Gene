@@ -4,8 +4,8 @@ Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0. (See accompanying
 file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 ==============================================================================*/
-#ifndef MAZANDU_SIMDIC_SET_SIMILARITY
-#define MAZANDU_SIMDIC_SET_SIMILARITY
+#ifndef KOL_MAZANDU_SIMDIC_SET_SIMILARITY
+#define KOL_MAZANDU_SIMDIC_SET_SIMILARITY
 
 #include <kol_SetSimilarityInterface.h>
 #include <kol_InformationInterface.h>

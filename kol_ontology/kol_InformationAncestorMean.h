@@ -2,8 +2,8 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_ANCESTOR_MEAN_SHARED_INFORMATION
-#define KGL_ANCESTOR_MEAN_SHARED_INFORMATION
+#ifndef KOL_ANCESTOR_MEAN_SHARED_INFORMATION
+#define KOL_ANCESTOR_MEAN_SHARED_INFORMATION
 
 #include "kol_InformationContentImpl.h"
 #include "kol_GoGraph.h"

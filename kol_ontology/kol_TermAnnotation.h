@@ -2,21 +2,19 @@
 // Created by kellerberrin on 27/5/21.
 //
 
-#ifndef KOL_ANNOTATIONDATA_H
-#define KOL_ANNOTATIONDATA_H
+#ifndef KOL_TERMANNOTATION_H
+#define KOL_TERMANNOTATION_H
 
 
-#include "kol_SetUtilities.h"
 #include "kol_GoEnums.h"
-#include "kol_GoGraph.h"
+#include "kol_OntologyTypes.h"
 #include "kol_ParserGafRecord.h"
 #include "kol_PolicyEvidence.h"
 
-#include <fstream>
 #include <vector>
-#include <iostream>
 #include <map>
 #include <string>
+#include <memory>
 
 
 namespace kellerberrin::ontology {
@@ -28,6 +26,8 @@ using GeneAnnotationMap = OntologyMapType<std::string, GeneGOMap>;
 using GOGeneMap = OntologyMapType<std::string, std::vector<std::shared_ptr<const GAFRecord>>>;
 using GOAnnotationMap = OntologyMapType<std::string, GOGeneMap>;
 
+
+enum class AnnotationGeneName { UNIPROT_GENE_ID, SYMBOLIC_GENE_ID};
 //! A class for storing information about genes annotated with go terms.
 /*!
 	This class hold all information about a set of annotations for genes annotated with go terms.
@@ -35,13 +35,26 @@ using GOAnnotationMap = OntologyMapType<std::string, GOGeneMap>;
 	 and mappings from a go term to a list of annotated genes. This class allows querying go annotations
 	 and their evidence codes.
 */
-class AnnotationData {
+class TermAnnotation {
 
 public:
 
 
-  explicit AnnotationData(const std::vector<std::shared_ptr<const GAFRecord>>& gaf_records) { createAnnotationMap(gaf_records); }
-  ~AnnotationData() = default;
+  explicit TermAnnotation( const std::vector<std::shared_ptr<const GAFRecord>>& gaf_records,
+                           AnnotationGeneName gene_id_type = AnnotationGeneName::UNIPROT_GENE_ID) : gene_id_type_(gene_id_type) {
+
+    createAnnotationMap(gaf_records, gene_id_type);
+
+  }
+
+  TermAnnotation( const PolicyEvidence& evidence_policy,
+                  const std::vector<std::shared_ptr<const GAFRecord>>& gaf_records,
+                  AnnotationGeneName gene_id_type = AnnotationGeneName::UNIPROT_GENE_ID) : gene_id_type_(gene_id_type) {
+
+    createAnnotationMap(filterGAFRecords(evidence_policy, gaf_records), gene_id_type);
+
+  }
+  ~TermAnnotation() = default;
 
   //! This method tests the existence of a term in the database.
   /*!
@@ -79,14 +92,14 @@ public:
     A helper method to return a list of go terms as a set of strings for a gene
     given the sub ontology BIOLOGICAL_PROCESS, MOLECULAR_FUNCTION, or CELLULAR_COMPONENT.
   */
-  [[nodiscard]] OntologySetType<std::string> getGoTermsForGeneByOntology(const std::string &gene, GO::Ontology filterOntology, const GoGraph &G) const;
+  [[nodiscard]] OntologySetType<std::string> getGoTermsForGeneByOntology(const std::string &gene, GO::Ontology filterOntology) const;
   //! This method gets the biological process go terms for a gene.
   /*!
     A helper method to return a list of BIOLOGICAL_PROCESS go terms for a gene.
   */
-  [[nodiscard]] OntologySetType<std::string> getGoTermsForGeneBP(const std::string &gene, const GoGraph &G) const {
+  [[nodiscard]] OntologySetType<std::string> getGoTermsForGeneBP(const std::string &gene) const {
 
-    return getGoTermsForGeneByOntology(gene, GO::Ontology::BIOLOGICAL_PROCESS, G);
+    return getGoTermsForGeneByOntology(gene, GO::Ontology::BIOLOGICAL_PROCESS);
 
   }
 
@@ -94,9 +107,9 @@ public:
   /*!
     A helper method to return a list of MOLECULAR_FUNCTION go terms for a gene.
   */
-  [[nodiscard]] OntologySetType<std::string> getGoTermsForGeneMF(const std::string &gene, const GoGraph &G) const {
+  [[nodiscard]] OntologySetType<std::string> getGoTermsForGeneMF(const std::string &gene) const {
 
-    return getGoTermsForGeneByOntology(gene, GO::Ontology::MOLECULAR_FUNCTION, G);
+    return getGoTermsForGeneByOntology(gene, GO::Ontology::MOLECULAR_FUNCTION);
 
   }
 
@@ -104,9 +117,9 @@ public:
   /*!
   A helper method to return a list of CELLULAR_COMPONENT go terms for a gene.
   */
-  [[nodiscard]] OntologySetType<std::string> getGoTermsForGeneCC(const std::string &gene, const GoGraph &G) const {
+  [[nodiscard]] OntologySetType<std::string> getGoTermsForGeneCC(const std::string &gene) const {
 
-    return getGoTermsForGeneByOntology(gene, GO::Ontology::CELLULAR_COMPONENT, G);
+    return getGoTermsForGeneByOntology(gene, GO::Ontology::CELLULAR_COMPONENT);
 
   }
 
@@ -152,18 +165,22 @@ public:
   /*!
     Returns only those terms used that occur for the given ontology.
   */
-  [[nodiscard]] std::vector<std::string> getOntologyTerms(const GoGraph &graph, GO::Ontology ontology) const;
+  [[nodiscard]] std::vector<std::string> getOntologyTerms(GO::Ontology ontology) const;
 
   [[nodiscard]] static std::vector<std::shared_ptr<const GAFRecord>> filterGAFRecords(const PolicyEvidence& evidence_policy,
                                                                                       const std::vector<std::shared_ptr<const GAFRecord>>& gaf_records);
+
+  [[nodiscard]] AnnotationGeneName geneIdType() const { return gene_id_type_; }
 
 private:
 
   GeneAnnotationMap gene_annotation_map_;
   GOAnnotationMap go_annotation_map_;
+  const AnnotationGeneName gene_id_type_;
 
-  bool addGAFRecord(const std::shared_ptr<const GAFRecord>& gaf_record_ptr);
-  void createAnnotationMap(const std::vector<std::shared_ptr<const GAFRecord>>& gaf_records);
+  bool addGAFRecord(const std::shared_ptr<const GAFRecord>& gaf_record_ptr, AnnotationGeneName gene_name_type);
+  void createAnnotationMap(const std::vector<std::shared_ptr<const GAFRecord>>& gaf_records, AnnotationGeneName gene_name_type);
+  const std::string& geneName(const std::shared_ptr<const GAFRecord>& gaf_record_ptr, AnnotationGeneName gene_name_type);
 
 };
 
@@ -172,5 +189,5 @@ private:
 } // Namespace.
 
 
-#endif //KGL_KOL_ANNOTATIONDATANEW_H
+#endif //KOL_ANNOTATIONDATA_H
 

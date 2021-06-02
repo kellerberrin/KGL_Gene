@@ -9,6 +9,8 @@
 #include "kol_InformationContentDAG.h"
 #include "kol_InformationContent.h"
 
+#include <fstream>
+
 
 namespace kgl = kellerberrin::genome;
 

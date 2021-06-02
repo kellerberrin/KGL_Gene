@@ -62,14 +62,13 @@ void kgl::OntologyGeneCache::initializeOntology(const std::shared_ptr<const kol:
 kol::OntologySetType<std::string> kgl::OntologyGeneCache::getGeneSetGOVector(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr,
                                                                              kol::GO::Ontology ontology) {
 
-  const kol::AnnotationData& annotation = *ontology_db_ptr->annotation();
-  const kol::GoGraph& go_graph = *ontology_db_ptr->goGraph();
+  const kol::TermAnnotation& annotation = *ontology_db_ptr->annotation();
 
   // Only unique GO terms.
   kol::OntologySetType<std::string> unique_GO_terms;
   for (auto const& gene : gene_set_) {
 
-    for (auto const& go_term : annotation.getGoTermsForGeneByOntology(gene, ontology, go_graph)) {
+    for (auto const& go_term : annotation.getGoTermsForGeneByOntology(gene, ontology)) {
 
       unique_GO_terms.insert(go_term);
 
@@ -83,10 +82,9 @@ kol::OntologySetType<std::string> kgl::OntologyGeneCache::getGeneSetGOVector(con
 
 std::vector<std::string> kgl::OntologyGeneCache::getAllGOVector(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr, kol::GO::Ontology ontology) {
 
-  const kol::AnnotationData& annotation = *ontology_db_ptr->annotation();
-  const kol::GoGraph& go_graph = *ontology_db_ptr->goGraph();
+  const kol::TermAnnotation& annotation = *ontology_db_ptr->annotation();
 
-  return annotation.getOntologyTerms(go_graph, ontology);
+  return annotation.getOntologyTerms(ontology);
 
 }
 
@@ -120,10 +118,9 @@ std::shared_ptr<const kol::SimilarityJIangConrath> kgl::OntologyGeneCache::getJi
 
 double kgl::OntologyGeneCache::setSimilarityBP(const std::string& gene) const {
 
-  const kol::AnnotationData& annotation = *ontology_db_ptr_->annotation();
-  const kol::GoGraph& go_graph = *ontology_db_ptr_->goGraph();
+  const kol::TermAnnotation& annotation = *ontology_db_ptr_->annotation();
 
-  auto gene_BP_terms = annotation.getGoTermsForGeneBP(gene, go_graph);
+  auto gene_BP_terms = annotation.getGoTermsForGeneBP(gene);
 
   return set_sim_BP_ptr_->calculateSimilarity(gene_set_go_terms_BP_, gene_BP_terms);
 
@@ -131,10 +128,9 @@ double kgl::OntologyGeneCache::setSimilarityBP(const std::string& gene) const {
 
 double kgl::OntologyGeneCache::setSimilarityMF(const std::string& gene) const {
 
-  const kol::AnnotationData& annotation = *ontology_db_ptr_->annotation();
-  const kol::GoGraph& go_graph = *ontology_db_ptr_->goGraph();
+  const kol::TermAnnotation& annotation = *ontology_db_ptr_->annotation();
 
-  auto gene_MF_terms = annotation.getGoTermsForGeneMF(gene, go_graph);
+  auto gene_MF_terms = annotation.getGoTermsForGeneMF(gene);
 
   return set_sim_MF_ptr_->calculateSimilarity(gene_set_go_terms_MF_, gene_MF_terms);
 
@@ -142,10 +138,9 @@ double kgl::OntologyGeneCache::setSimilarityMF(const std::string& gene) const {
 
 double kgl::OntologyGeneCache::setSimilarityCC(const std::string& gene) const {
 
-  const kol::AnnotationData& annotation = *ontology_db_ptr_->annotation();
-  const kol::GoGraph& go_graph = *ontology_db_ptr_->goGraph();
+  const kol::TermAnnotation& annotation = *ontology_db_ptr_->annotation();
 
-  auto gene_CC_terms = annotation.getGoTermsForGeneCC(gene, go_graph);
+  auto gene_CC_terms = annotation.getGoTermsForGeneCC(gene);
 
   return set_sim_CC_ptr_->calculateSimilarity(gene_set_go_terms_CC_, gene_CC_terms);
 

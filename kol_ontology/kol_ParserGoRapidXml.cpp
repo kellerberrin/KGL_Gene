@@ -3,8 +3,12 @@
 //
 
 
+#include <vector>
+#include <string>
 
-#include "kol_OntologyTypes.h"
+#include <xml/rapidxml_utils.h>
+#include <xml/rapidxml.h>
+
 #include "kol_ParserGoRapidXml.h"
 
 namespace kol = kellerberrin::ontology;

@@ -2,8 +2,8 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_TERM_SIMILARITY_INTERFACE
-#define KGL_TERM_SIMILARITY_INTERFACE
+#ifndef KOL_TERM_SIMILARITY_INTERFACE
+#define KOL_TERM_SIMILARITY_INTERFACE
 
 #include <string>
 #include "kol_GoEnums.h"

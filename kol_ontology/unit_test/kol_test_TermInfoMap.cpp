@@ -58,15 +58,13 @@ private:
 
     go_graph_ptr_ = getGoGraph();
     BOOST_REQUIRE(go_graph_ptr_);
-    auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
-                                                                           PolicyEvidence());
-    BOOST_REQUIRE(anno_parser_ptr);
-    std::shared_ptr<const AnnotationData> annotation_ptr = anno_parser_ptr->parseAnnotationFile(UnitTestDefinitions::gafFileName());
-    term_map_ptr_ = std::make_unique<const InformationContentDAG>(go_graph_ptr_, annotation_ptr);
+    PolicyEvidence default_evidence;
+    std::shared_ptr<const TermAnnotation> annotation_ptr = ParserAnnotationGaf::parseAnnotationFile(default_evidence, UnitTestDefinitions::gafFileName());
+    term_map_ptr_ = std::make_shared<const InformationContentDAG>(go_graph_ptr_, annotation_ptr);
 
   }
 
-  inline static std::unique_ptr<const InformationContentDAG> term_map_ptr_;
+  inline static std::shared_ptr<const InformationContentDAG> term_map_ptr_;
   inline static std::shared_ptr<const GoGraph> go_graph_ptr_;
 
 };
@@ -121,7 +119,7 @@ BOOST_AUTO_TEST_CASE(test_contains_builtin)
 BOOST_AUTO_TEST_CASE(test_bracket_access)
 {
 
-  const double info{13.525779721561488};
+  const double info{12.907426682529115};
   auto value = termMap().termInformation("GO:0000015");
   BOOST_CHECK_CLOSE( value, info, TEST_ACCURACY_PERCENT);
   BOOST_TEST_MESSAGE( "test_bracket_access ... OK" );

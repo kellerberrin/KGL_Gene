@@ -97,7 +97,7 @@ kol::GoGraph::GoGraph(const GoTermMap& go_term_map) {
 
   }
 
-  ExecEnv::log().info("GoGraph::GoGraph: {}, relationships: {}", go_term_map.size(), relation_count);
+//  ExecEnv::log().info("GoGraph::GoGraph: {}, relationships: {}", go_term_map.size(), relation_count);
   //call to initialize the graph's vertex to index maps
   initMaps();
 

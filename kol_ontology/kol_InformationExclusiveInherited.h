@@ -2,8 +2,8 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef EXCLUSIVELY_INHERITED_SHARED_INFORMATION
-#define EXCLUSIVELY_INHERITED_SHARED_INFORMATION
+#ifndef KOL_EXCLUSIVELY_INHERITED_SHARED_INFORMATION
+#define KOL_EXCLUSIVELY_INHERITED_SHARED_INFORMATION
 
 #include "kol_InformationContentImpl.h"
 #include "kol_GoGraph.h"

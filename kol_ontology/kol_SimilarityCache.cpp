@@ -90,8 +90,7 @@ double kol::TermSimilarityCache::lookUpMatrix(size_t row, size_t column) const {
   O(Term Pair Calculation Cost) is usually near constant time,
    but some methods will be extremely slow and infeasible.
 */
-bool kol::TermSimilarityCache::termSimilarityCache(const std::shared_ptr<const GoGraph> &go_graph_ptr,
-                                                   const std::shared_ptr<const AnnotationData> &annotation_ptr,
+bool kol::TermSimilarityCache::termSimilarityCache(const std::shared_ptr<const TermAnnotation> &annotation_ptr,
                                                    const std::shared_ptr<const SimilarityInterface> &term_similarity_ptr,
                                                    GO::Ontology ontology) {
 
@@ -102,7 +101,7 @@ bool kol::TermSimilarityCache::termSimilarityCache(const std::shared_ptr<const G
 
   }
 
-  auto const ontology_terms_ptr(std::make_shared<const std::vector<std::string>>(annotation_ptr->getOntologyTerms(*go_graph_ptr, ontology)));
+  auto const ontology_terms_ptr(std::make_shared<const std::vector<std::string>>(annotation_ptr->getOntologyTerms(ontology)));
 
   size_t index{0};
   for (auto const &term : *ontology_terms_ptr) {

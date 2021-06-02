@@ -2,8 +2,8 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_SHARED_INFORMATION_INTERFACE
-#define KGL_SHARED_INFORMATION_INTERFACE
+#ifndef KOL_SHARED_INFORMATION_INTERFACE
+#define KOL_SHARED_INFORMATION_INTERFACE
 
 #include <string>
 

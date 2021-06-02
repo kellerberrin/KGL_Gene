@@ -25,21 +25,11 @@ namespace kol = kellerberrin::ontology;
 
 std::shared_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile(const std::string &filename) const {
 
-//    parseGoFile2(filename);
-  const std::string term("GO:0002269");
-  const std::string parent_term("GO:0002269");
+
   auto term_map = parseGoTermFile(filename);
   auto filtered_term_map = filterTermMap(term_map, relationship_policy_);
-  ExecEnv::log().info("Parsed term map: {} term: {}", (term_map.contains(term) ? "contains" : "does NOT contain"), term);
   std::shared_ptr<GoGraph> graph_ptr(std::make_shared<GoGraph>(filtered_term_map));
-  auto descendents = graph_ptr->getSelfDescendantTerms(parent_term);
-  for (auto const& descendent : descendents) {
 
-    ExecEnv::log().info("Descendents of term: {},  descendent: {}", parent_term, descendent);
-
-  }
-//  descendents = graph_ptr->getSelfDescendantTerms(GO::getRootTermBP());
-//  ExecEnv::log().info("Descendents of root BP term: {},  count: {}", GO::getRootTermBP(), descendents.size());
   return graph_ptr;
 
 }
@@ -69,11 +59,6 @@ kol::GoTermMap kol::ParserGoObo::parseGoTermFile(const std::string &file_name) c
   std::string line;
   std::string trimmed_line;
   size_t line_count{0};
-  size_t term_count{0};
-  size_t obsolete_terms{0};
-  size_t term_bp{0};
-  size_t term_cc{0};
-  size_t term_mf{0};
 
   GoParserState parser_state = GoParserState::FIND_TERM;
 //  GoTermRecord term_record;
@@ -88,7 +73,6 @@ kol::GoTermMap kol::ParserGoObo::parseGoTermFile(const std::string &file_name) c
 
         parser_state = GoParserState::PROCESS_TERM;
         term_record_ptr->clearRecord();
-        ++term_count;
 
       }
 
@@ -135,7 +119,6 @@ kol::GoTermMap kol::ParserGoObo::parseGoTermFile(const std::string &file_name) c
 
     if (key == OBSOLETE_TOKEN) {
 
-      ++obsolete_terms;
       parser_state = GoParserState::FIND_TERM;
       continue;
 
@@ -144,17 +127,14 @@ kol::GoTermMap kol::ParserGoObo::parseGoTermFile(const std::string &file_name) c
       if (value == GO::ONTOLOGY_BIOLOGICAL_PROCESS_TEXT) {
 
         term_record_ptr->ontology(GO::Ontology::BIOLOGICAL_PROCESS);
-        ++term_bp;
 
       } else if (value == GO::ONTOLOGY_MOLECULAR_FUNCTION_TEXT) {
 
         term_record_ptr->ontology(GO::Ontology::MOLECULAR_FUNCTION);
-        ++term_mf;
 
       } else if (value == GO::ONTOLOGY_CELLULAR_COMPONENT_TEXT) {
 
         term_record_ptr->ontology(GO::Ontology::CELLULAR_COMPONENT);
-        ++term_cc;
 
       } else {
 
@@ -219,8 +199,6 @@ kol::GoTermMap kol::ParserGoObo::parseGoTermFile(const std::string &file_name) c
 
   } // Term record loop.
 
-  ExecEnv::log().info("Parsed GO file: {}, terms: {}, BP: {}, MF: {}, CC: {}, obsolete: {}, lines: {}",
-                      file_name, term_count, term_bp, term_mf, term_cc, obsolete_terms, line_count);
 
   return go_term_map;
 
@@ -230,10 +208,6 @@ kol::GoTermMap kol::ParserGoObo::parseGoTermFile(const std::string &file_name) c
 kol::GoTermMap kol::ParserGoObo::filterTermMap(const GoTermMap& unfiltered_term_map, const PolicyRelationship& relationship_policy) const {
 
   GoTermMap filtered_term_map;
-
-  size_t term_bp{0};
-  size_t term_cc{0};
-  size_t term_mf{0};
 
   for (auto const& [term_id, term_record_ptr] : unfiltered_term_map) {
 
@@ -259,31 +233,9 @@ kol::GoTermMap kol::ParserGoObo::filterTermMap(const GoTermMap& unfiltered_term_
 
       }
 
-      switch(filtered_record_ptr->ontology()) {
-
-        case GO::Ontology::BIOLOGICAL_PROCESS:
-          ++term_bp;
-          break;
-
-        case GO::Ontology::MOLECULAR_FUNCTION:
-          ++term_mf;
-          break;
-
-        case GO::Ontology::CELLULAR_COMPONENT:
-          ++term_cc;
-          break;
-
-        default:
-          ExecEnv::log().error("ParserGoObo::filterTermMap; Invalid ontology for term: {}", term_id);
-          break;
-
-      }
-
     }
 
   }
-
-  ExecEnv::log().info("Filtered Term Map, Terms: {}, BP: {}, MF: {}, CC: {}", filtered_term_map.size(), term_bp, term_mf, term_cc);
 
   return filtered_term_map;
 

@@ -10,14 +10,14 @@ struct BestPairsAvgSetValues {
   const static constexpr double TEST_SET_SIMILARITY_EMPTY_SETS{0.0};
   const static constexpr double TEST_SET_SIMILARITY_1_EMPTY_1_GOOD{0.0};
   const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_BP{1.0};
-  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_BP{0.90081168227851638};
-  const static constexpr double TEST_SET_SIMILARITY_BP{0.6416547152446499};
+  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_BP{0.87638595311283085};
+  const static constexpr double TEST_SET_SIMILARITY_BP{0.64090910308113758};
   const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_MF{1.0};
-  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_MF{0.9318839156680081};
-  const static constexpr double TEST_SET_SIMILARITY_MF{0.59207761786757906};
+  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_MF{0.93431455927095342};
+  const static constexpr double TEST_SET_SIMILARITY_MF{0.60511658596942541};
   const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_CC{1.0};
-  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_CC{0.97007118883996779};
-  const static constexpr double TEST_SET_SIMILARITY_CC{0.83834750038075156};
+  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_CC{0.95167796503881386};
+  const static constexpr double TEST_SET_SIMILARITY_CC{0.83620454724454052};
 
 
 };

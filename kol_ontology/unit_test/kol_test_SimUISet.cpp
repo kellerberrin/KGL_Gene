@@ -11,13 +11,13 @@ struct SimUISetValues {
   const static constexpr double TEST_SET_SIMILARITY_EMPTY_SETS{0.0};
   const static constexpr double TEST_SET_SIMILARITY_1_EMPTY_1_GOOD{0.0};
   const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_BP{1.0};
-  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_BP{0.473684210};
+  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_BP{0.78947368421052633};
   const static constexpr double TEST_SET_SIMILARITY_BP{0.414634146};
   const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_MF{1.0};
-  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_MF{0.92307692};
+  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_MF{0.84615384615384615};
   const static constexpr double TEST_SET_SIMILARITY_MF{0.446428571};
   const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_CC{1.0};
-  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_CC{0.91666666};
+  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_CC{1.0};
   const static constexpr double TEST_SET_SIMILARITY_CC{0.53125};
 
 

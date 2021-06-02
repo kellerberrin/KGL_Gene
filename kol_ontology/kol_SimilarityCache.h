@@ -2,16 +2,15 @@
 // Created by kellerberrin on 7/4/21.
 //
 
-#ifndef KGL_KOL_SIMILARITYCACHE_H
-#define KGL_KOL_SIMILARITYCACHE_H
+#ifndef KOL_SIMILARITY_CACHE_H
+#define KOL_SIMILARITY_CACHE_H
 
 
 #include <vector>
 #include <string>
 
 #include "kol_GoEnums.h"
-#include "kol_GoGraph.h"
-#include "kol_AnnotationData.h"
+#include "kol_TermAnnotation.h"
 #include "kol_SimilarityInterface.h"
 
 namespace kellerberrin::ontology {
@@ -34,12 +33,11 @@ public:
     A simple parameterized constructor.
     This class takes an instance of a similarity interface.
   */
-  TermSimilarityCache(const std::shared_ptr<const GoGraph> &go_graph_ptr,
-                      const std::shared_ptr<const AnnotationData> &annotation_ptr,
+  TermSimilarityCache(const std::shared_ptr<const TermAnnotation> &annotation_ptr,
                       const std::shared_ptr<const SimilarityInterface> &term_sim_ptr,
                       GO::Ontology ontology = GO::Ontology::BIOLOGICAL_PROCESS) {
 
-    termSimilarityCache(go_graph_ptr, annotation_ptr, term_sim_ptr, ontology);
+    termSimilarityCache(annotation_ptr, term_sim_ptr, ontology);
 
   }
 
@@ -74,8 +72,7 @@ private:
     O(Term Pair Calculation Cost) is usually near constant time,
      but some methods will be extremely slow and infeasible.
   */
-  bool termSimilarityCache(const std::shared_ptr<const GoGraph> &go_graph_ptr,
-                           const std::shared_ptr<const AnnotationData> &annotation_ptr,
+  bool termSimilarityCache(const std::shared_ptr<const TermAnnotation> &annotation_ptr,
                            const std::shared_ptr<const SimilarityInterface> &term_similarity_ptr,
                            GO::Ontology ontology);
 

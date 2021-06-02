@@ -2,8 +2,8 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_GO_PARSER_FACTORY
-#define KGL_GO_PARSER_FACTORY
+#ifndef KOL_GO_PARSER_FACTORY
+#define KOL_GO_PARSER_FACTORY
 
 #include "kol_ParserGoObo.h"
 #include "kol_ParserGoXml.h"

@@ -2,8 +2,8 @@
 // Created by kellerberrin on 28/3/21.
 //
 
-#ifndef KGL_KOL_ONTOLOGYTYPES_H
-#define KGL_KOL_ONTOLOGYTYPES_H
+#ifndef KKOL_ONTOLOGYTYPES_H
+#define KOL_ONTOLOGYTYPES_H
 
 #include <set>
 #include <unordered_set>
@@ -24,4 +24,4 @@ template<class T, class V> using OntologyMapType = std::unordered_map<T, V>;
 
 } // namespace
 
-#endif //ONTOLOGYTYPES_H
+#endif //KOL_ONTOLOGYTYPES_H

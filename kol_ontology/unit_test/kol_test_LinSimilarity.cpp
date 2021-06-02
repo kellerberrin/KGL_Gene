@@ -11,12 +11,11 @@ struct LinSimValues {
   const static constexpr double TEST_SIMILARITY_BAD_IDS{0.0};
   const static constexpr double TEST_SIMILARITY_1_BAD_1_GOOD_ID{0.0};
   const static constexpr double TEST_SIMILARITY_CC_REFLEXIVE_SIM{1.0};
-  const static constexpr double TEST_SIMILARITY_CC{0.63486193783327172};
+  const static constexpr double TEST_SIMILARITY_CC{0.62261208913791399};
   const static constexpr double TEST_SIMILARITY_CC_1_GOOD_1_ROOT{0.0};
-  const static constexpr double TEST_SIMILARITY_BP{0.71450767998131559};
-  const static constexpr double TEST_SIMILARITY_MF{0.67353668681990719};
+  const static constexpr double TEST_SIMILARITY_BP{0.71210853647059946};
+  const static constexpr double TEST_SIMILARITY_MF{0.6636771401566991};
   const static constexpr double TEST_CROSS_ONTOLOGY_SIMILARITY{0.0};
-  const static constexpr double TEST_CROSS_ONTOLOGY_NORMALIZED_SIMILARITY{0.0};
 
 };
 

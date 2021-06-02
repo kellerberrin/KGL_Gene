@@ -2,8 +2,8 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_PRECOMPUTED_MATRIX_TERM_SIMILARITY
-#define KGL_PRECOMPUTED_MATRIX_TERM_SIMILARITY
+#ifndef KOL_PRECOMPUTED_MATRIX_TERM_SIMILARITY
+#define KOL_PRECOMPUTED_MATRIX_TERM_SIMILARITY
 
 #include <vector>
 #include <exception>

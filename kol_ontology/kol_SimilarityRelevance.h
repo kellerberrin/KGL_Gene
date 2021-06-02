@@ -8,7 +8,6 @@
 
 #include "kol_SimilarityInterface.h"
 #include "kol_InformationContentDAG.h"
-#include "kol_GoGraph.h"
 
 
 namespace kellerberrin::ontology {

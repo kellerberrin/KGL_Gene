@@ -4,10 +4,11 @@
     Distributed under the Boost Software License, Version 1.0. (See accompanying
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 ==============================================================================*/
-#ifndef GO_GRAPH
-#define GO_GRAPH
+#ifndef KOL_GO_GRAPH
+#define KOL_GO_GRAPH
 
 #include "kol_GoEnums.h"
+
 #include "kol_OntologyTypes.h"
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/subgraph.hpp>
@@ -609,7 +610,7 @@ private:
     This method is wrapped by a public method. It traverses the children of a node,
       populating the map with node indices of desendant terms.
   */
-  void getDescendantTermsHelper(GoVertex vertex, OntologyMapType<std::size_t, bool> &desendantMap) const;
+  void getDescendantTermsHelper(GoVertex vertex, OntologyMapType<std::size_t, bool> &descendantMap) const;
 
   //! A private recursive helper method to get the ancestor terms for a given term.
   /*!

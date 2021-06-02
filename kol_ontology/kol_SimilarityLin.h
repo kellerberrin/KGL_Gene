@@ -2,8 +2,8 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_MODULAR_LIN
-#define KGL_MODULAR_LIN
+#ifndef KOL_MODULAR_LIN
+#define KOL_MODULAR_LIN
 
 
 #include "kol_SimilarityInterface.h"

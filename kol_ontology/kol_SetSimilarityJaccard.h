@@ -2,8 +2,8 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_JACCARD_SET_SIMILARITY
-#define KGL_JACCARD_SET_SIMILARITY
+#ifndef KOL_JACCARD_SET_SIMILARITY
+#define KOL_JACCARD_SET_SIMILARITY
 
 #include "kol_SetUtilities.h"
 #include "kol_SetSimilarityInterface.h"

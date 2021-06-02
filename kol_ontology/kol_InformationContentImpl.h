@@ -8,7 +8,7 @@
 
 
 #include "kol_GoGraph.h"
-#include "kol_AnnotationData.h"
+#include "kol_TermAnnotation.h"
 #include "kol_InformationInterface.h"
 
 
@@ -84,9 +84,9 @@ protected:
   TermProbOntMap probability_map_;
   std::shared_ptr<const GoGraph> graph_ptr_;
   const static constexpr double BAD_INFO_VALUE_{0.0};
-  double max_bp_information{0.0};
-  double max_mf_information{0.0};
-  double max_cc_information{0.0};
+  double max_bp_information_{0.0};
+  double max_mf_information_{0.0};
+  double max_cc_information_{0.0};
 
   void convertProbtoIC();
   [[nodiscard]] double getEfficientMICA( const OntologySetType<std::string> &smaller_set,

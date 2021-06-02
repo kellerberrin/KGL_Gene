@@ -4,6 +4,8 @@
 
 #include "kol_SimilarityWriter.h"
 
+#include <fstream>
+
 namespace kol = kellerberrin::ontology;
 
 //! A method to write a term similarity matrix
@@ -20,7 +22,7 @@ void kol::SimilarityWriter::writeSimilarityMatrix(const std::shared_ptr<const Si
                                                   const std::string &fileName,
                                                   GO::Ontology ontology) const {
 
-  std::vector<std::string> ontologyTerms = annotation_ptr_->getOntologyTerms(*graph_ptr_, ontology);
+  std::vector<std::string> ontologyTerms = annotation_ptr_->getOntologyTerms(ontology);
 
   // Initialze a matrix
   std::size_t nTerms = ontologyTerms.size();

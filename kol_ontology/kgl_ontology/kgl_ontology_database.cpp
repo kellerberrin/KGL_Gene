@@ -7,8 +7,8 @@
 
 #include "kol_ParserGoFactory.h"
 #include "kol_GoGraph.h"
-#include "kol_ParserAnnotationFactory.h"
-#include "kol_AnnotationData.h"
+#include "kol_ParserAnnotationGaf.h"
+#include "kol_TermAnnotation.h"
 
 
 
@@ -20,32 +20,23 @@ kol::OntologyDatabase::OntologyDatabase( const std::string& ontology_ident,
                                          const std::string& go_graph_file,
                                          const std::string& annotation_file) : ontology_ident_(ontology_ident) {
 
-    go_graph_ptr_ = getGoGraph(go_graph_file);
-    annotation_ptr_ = getAnnotation(annotation_file);
+  go_graph_ptr_ = getGoGraph(go_graph_file);
+  annotation_ptr_ = getAnnotation(annotation_file);
 
 }
 
 
-kol::OntologyDatabase::~OntologyDatabase() {
+std::shared_ptr<const kol::TermAnnotation> kol::OntologyDatabase::getAnnotation(const std::string& annotation_file) {
 
-    go_graph_ptr_ = nullptr;
-    annotation_ptr_ = nullptr;
-
-}
-
-
-std::shared_ptr<const kol::AnnotationData> kol::OntologyDatabase::getAnnotation(const std::string& annotation_file) {
-
-    auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
-                                                                           PolicyEvidence());
-    return anno_parser_ptr->parseAnnotationFile(annotation_file);
+  PolicyEvidence default_evidence;
+  return ParserAnnotationGaf::parseAnnotationFile(default_evidence, annotation_file);
 
 }
 
 std::shared_ptr<const kol::GoGraph> kol::OntologyDatabase::getGoGraph(const std::string& go_graph_file) {
 
-    auto relationship_policy = PolicyRelationship(GO::allRelationships());
-    auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO, relationship_policy);
-    return go_parser_ptr->parseGoFile(go_graph_file);
+  auto relationship_policy = PolicyRelationship(GO::allRelationships());
+  auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO, relationship_policy);
+  return go_parser_ptr->parseGoFile(go_graph_file);
 
 }

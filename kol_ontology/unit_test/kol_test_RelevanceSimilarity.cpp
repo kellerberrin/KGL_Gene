@@ -8,11 +8,11 @@ struct RelevanceSimValues {
 
   const static constexpr double TEST_SIMILARITY_BAD_IDS{0.0};
   const static constexpr double TEST_SIMILARITY_1_BAD_1_GOOD_ID{0.0};
-  const static constexpr double TEST_SIMILARITY_CC_REFLEXIVE_SIM{0.99669757436887496};
-  const static constexpr double TEST_SIMILARITY_CC{0.63212600872438718};
+  const static constexpr double TEST_SIMILARITY_CC_REFLEXIVE_SIM{0.99510471520625343};
+  const static constexpr double TEST_SIMILARITY_CC{0.61856808335433244};
   const static constexpr double TEST_SIMILARITY_CC_1_GOOD_1_ROOT{0.0};
-  const static constexpr double TEST_SIMILARITY_BP{0.71390286143977499};
-  const static constexpr double TEST_SIMILARITY_MF{0.67252305245403665};
+  const static constexpr double TEST_SIMILARITY_BP{0.7114354700285126};
+  const static constexpr double TEST_SIMILARITY_MF{0.66223173923082712};
   const static constexpr double TEST_CROSS_ONTOLOGY_SIMILARITY{0.0};
 
 };

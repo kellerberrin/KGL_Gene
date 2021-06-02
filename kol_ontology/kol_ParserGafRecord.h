@@ -2,8 +2,8 @@
 // Created by kellerberrin on 31/5/21.
 //
 
-#ifndef KGL_KOL_PARSERGAFRECORD_H
-#define KGL_KOL_PARSERGAFRECORD_H
+#ifndef KOL_PARSER_GAFRECORD_H
+#define KOL_PARSER_GAFRECORD_H
 
 
 #include "kol_GoEnums.h"

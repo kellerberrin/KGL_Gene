@@ -70,15 +70,15 @@ void kol::InformationContentImpl::convertProbtoIC() {
       switch(ontology) {
 
         case GO::Ontology::BIOLOGICAL_PROCESS:
-          max_bp_information = std::max(probability, max_bp_information);
+          max_bp_information_ = std::max(probability, max_bp_information_);
           break;
 
         case GO::Ontology::MOLECULAR_FUNCTION:
-          max_mf_information = std::max(probability, max_mf_information);
+          max_mf_information_ = std::max(probability, max_mf_information_);
           break;
 
         case GO::Ontology::CELLULAR_COMPONENT:
-          max_cc_information = std::max(probability, max_cc_information);
+          max_cc_information_ = std::max(probability, max_cc_information_);
           break;
 
         default:
@@ -185,13 +185,13 @@ double kol::InformationContentImpl::getMaxInformation(GO::Ontology ontology) con
   switch(ontology) {
 
     case GO::Ontology::BIOLOGICAL_PROCESS:
-      return max_bp_information;
+      return max_bp_information_;
 
     case GO::Ontology::MOLECULAR_FUNCTION:
-      return max_mf_information;
+      return max_mf_information_;
 
     case GO::Ontology::CELLULAR_COMPONENT:
-      return max_cc_information;
+      return max_cc_information_;
 
     default:
     case GO::Ontology::ONTO_ERROR:

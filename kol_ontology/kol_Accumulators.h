@@ -2,8 +2,8 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_ACCUMULATORS
-#define KGL_ACCUMULATORS
+#ifndef KOL_ACCUMULATORS
+#define KOL_ACCUMULATORS
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>

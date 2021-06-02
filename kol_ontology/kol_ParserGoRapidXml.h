@@ -2,18 +2,11 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_RAPIDXML_GO_PARSER
-#define KGL_RAPIDXML_GO_PARSER
+#ifndef KOL_RAPIDXML_GO_PARSER
+#define KOL_RAPIDXML_GO_PARSER
 
 #include "kol_ParserGoInterface.h"
 
-#include <vector>
-#include <string>
-
-#include <xml/rapidxml_utils.h>
-#include <xml/rapidxml.h>
-
-#include <boost/tokenizer.hpp>
 
 namespace kellerberrin::ontology {
 

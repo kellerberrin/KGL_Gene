@@ -29,13 +29,13 @@ public:
   ~InformationContent() override = default;
   //! A parameterized constructor
   /*!
-    This constructor takes pointers to GoGraph and AnnotationData objects.
+    This constructor takes pointers to GoGraph and TermAnnotation objects.
       Only the parameterized construtor is allowed to ensure these objects are
       created with valid parameters.
       This constructor relies on the TermProbabilityMap.
   */
   InformationContent(const std::shared_ptr<const GoGraph> &graph,
-                     const std::shared_ptr<const AnnotationData> &annoData)  : InformationContentImpl(graph) {
+                     const std::shared_ptr<const TermAnnotation> &annoData)  : InformationContentImpl(graph) {
 
     calcProbabilityMap(graph, annoData);
     convertProbtoIC();
@@ -46,7 +46,7 @@ public:
 private:
 
   void calcProbabilityMap(const std::shared_ptr<const GoGraph> &graph,
-                          const std::shared_ptr<const AnnotationData> &annoData);
+                          const std::shared_ptr<const TermAnnotation> &annoData);
 
 };
 

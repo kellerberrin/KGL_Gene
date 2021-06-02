@@ -17,7 +17,7 @@ public:
 
   ~TestDepthMap() = default;
 
-  [[nodiscard]] static const AnnotationData &annotation() {
+  [[nodiscard]] static const TermAnnotation &annotation() {
 
     if (not static_annotation_) {
 
@@ -55,17 +55,15 @@ public:
 
 private:
 
-  [[nodiscard]] static std::shared_ptr<AnnotationData> getAnnotation() {
+  [[nodiscard]] static std::shared_ptr<const TermAnnotation> getAnnotation() {
 
-    auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
-                                                                           PolicyEvidence());
-    BOOST_REQUIRE(anno_parser_ptr);
-    return anno_parser_ptr->parseAnnotationFile(UnitTestDefinitions::gafFileName());
+    PolicyEvidence default_evidence;
+    return ParserAnnotationGaf::parseAnnotationFile(default_evidence, UnitTestDefinitions::gafFileName());
 
   }
 
 
-  inline static std::shared_ptr<const AnnotationData> static_annotation_;
+  inline static std::shared_ptr<const TermAnnotation> static_annotation_;
 
 };
 

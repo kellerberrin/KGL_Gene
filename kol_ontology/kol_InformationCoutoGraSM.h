@@ -2,8 +2,8 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_GRASM_SHARED_INFORMATION
-#define KGL_GRASM_SHARED_INFORMATION
+#ifndef KOL_GRASM_SHARED_INFORMATION
+#define KOL_GRASM_SHARED_INFORMATION
 
 #include "kol_InformationContentImpl.h"
 #include "kol_GoGraph.h"
@@ -14,13 +14,13 @@ namespace kellerberrin::ontology {
 /*! \class InformationCoutoGraSM
 	\brief A class to calculate shared information across disjoint common ancestors using the exact algorithm as written in the paper.
 
-	This class calculates shared information across disjoint common ancesetors.
+	This class calculates shared information across disjoint common ancestors.
 
     F. M. Couto, M. J. Silva, and P. M. Coutinho, "Measuring semantic similarity
 	between Gene Ontology terms," Data & Knowledge Engineering, vol. 61, 
 	pp. 137-152, Apr 2007.
 
-	Couto proposed calculating this value as a subsitute for the IC of the MICA in calculating
+	Couto proposed calculating this value as a substitute for the IC of the MICA in calculating
 	 Resnik, Lin, and Jiang-Conrath
 
 */

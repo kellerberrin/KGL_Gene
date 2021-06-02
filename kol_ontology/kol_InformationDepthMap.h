@@ -2,11 +2,11 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_TERM_DEPTH_MAP
-#define KGL_TERM_DEPTH_MAP
+#ifndef KOL_TERM_DEPTH_MAP
+#define KOL_TERM_DEPTH_MAP
 
 #include "kol_GoGraph.h"
-#include "kol_AnnotationData.h"
+#include "kol_TermAnnotation.h"
 
 
 
@@ -23,7 +23,7 @@ class InformationDepthMap {
 public:
   //! A parameterized constructor
   /*!
-    This constructor takes pointers to GoGraph and AnnotationData objects.
+    This constructor takes pointers to GoGraph and TermAnnotation objects.
       Only the parameterized construtor is allowed to ensure these objects are
       created with valid parameters.
   */

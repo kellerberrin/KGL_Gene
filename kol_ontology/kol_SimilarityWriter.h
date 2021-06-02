@@ -4,16 +4,15 @@ Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
 
 
-#ifndef KGL_TERM_SIMILARITY_WRITER
-#define KGL_TERM_SIMILARITY_WRITER
+#ifndef KOL_TERM_SIMILARITY_WRITER
+#define KOL_TERM_SIMILARITY_WRITER
 
 #include <vector>
 #include <string>
 #include <iostream>
 
 #include "kol_GoEnums.h"
-#include "kol_GoGraph.h"
-#include "kol_AnnotationData.h"
+#include "kol_TermAnnotation.h"
 #include "kol_SimilarityInterface.h"
 
 namespace kellerberrin::ontology {
@@ -34,9 +33,7 @@ public:
     A simple parameterized constructor.
     This class take an instance of the GO Graph.
   */
-  SimilarityWriter(const std::shared_ptr<const GoGraph> &graph_ptr,
-                   const std::shared_ptr<const AnnotationData> &annotation_ptr)
-      : graph_ptr_(graph_ptr), annotation_ptr_(annotation_ptr) {}
+  SimilarityWriter(const std::shared_ptr<const TermAnnotation> &annotation_ptr) : annotation_ptr_(annotation_ptr) {}
 
   ~SimilarityWriter() = default;
 
@@ -84,10 +81,8 @@ public:
 
 private:
 
-  //! A pointer to the gene ontology graph
-  std::shared_ptr<const GoGraph> graph_ptr_;
   //! A pointer to the annotation database
-  std::shared_ptr<const AnnotationData> annotation_ptr_;
+  std::shared_ptr<const TermAnnotation> annotation_ptr_;
 
   //! A method to write a matrix to file
   /*!

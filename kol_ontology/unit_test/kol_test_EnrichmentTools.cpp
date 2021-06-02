@@ -18,7 +18,7 @@ public:
 
   ~TestEnrichment() = default;
 
-  [[nodiscard]] static const AnnotationData &annotation() {
+  [[nodiscard]] static const TermAnnotation &annotation() {
 
     if (not static_annotation_) {
 
@@ -46,14 +46,12 @@ public:
 private:
 
   inline static std::shared_ptr<const GoGraph> static_graph_;
-  inline static std::shared_ptr<const AnnotationData> static_annotation_;
+  inline static std::shared_ptr<const TermAnnotation> static_annotation_;
 
-  [[nodiscard]] static std::shared_ptr<AnnotationData> getAnnotation() {
+  [[nodiscard]] static std::shared_ptr<const TermAnnotation> getAnnotation() {
 
-    auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
-                                                                           PolicyEvidence());
-    BOOST_REQUIRE(anno_parser_ptr);
-    return anno_parser_ptr->parseAnnotationFile(UnitTestDefinitions::gafFileName());
+    PolicyEvidence default_evidence;
+    return ParserAnnotationGaf::parseAnnotationFile(default_evidence, UnitTestDefinitions::gafFileName());
 
   }
 
@@ -99,7 +97,7 @@ BOOST_AUTO_TEST_CASE(test_enrichment_tools_child_genes)
 
   for (auto const& gene : term_genes) {
 
-    auto go_BP = annotation().getGoTermsForGeneBP(gene, goGraph());
+    auto go_BP = annotation().getGoTermsForGeneBP(gene);
     if (kol::SetUtilities::setIntersection(go_BP, child_terms).empty()) BOOST_FAIL("Empty intersection of BP go terms and child go terms" );
 
   }

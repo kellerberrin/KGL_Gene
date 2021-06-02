@@ -2,8 +2,8 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_MODULAR_RESNIK
-#define KGL_MODULAR_RESNIK
+#ifndef KOL_MODULAR_RESNIK
+#define KOL_MODULAR_RESNIK
 
 #include "kol_SimilarityInterface.h"
 #include "kol_InformationInterface.h"

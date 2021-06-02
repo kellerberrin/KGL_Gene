@@ -10,15 +10,15 @@ struct AdjCoutoSharedValues {
 
   const static constexpr double TEST_SHARED_INFORMATION_BAD_IDS{0.0};
   const static constexpr double TEST_SHARED_INFORMATION_1_BAD_1_GOOD_ID{0.0};
-  const static constexpr double TEST_SHARED_INFORMATION_DEEP_TERMS_BP{3.5391119850933377};
-  const static constexpr double TEST_SHARED_INFORMATION_CC_REFLEXIVE_SIM{5.7130980407842458};
-  const static constexpr double TEST_SHARED_INFORMATION_CC{2.7234682327945956};
+  const static constexpr double TEST_SHARED_INFORMATION_DEEP_TERMS_BP{3.6030574825469763};
+  const static constexpr double TEST_SHARED_INFORMATION_CC_REFLEXIVE_SIM{5.3194828241514251};
+  const static constexpr double TEST_SHARED_INFORMATION_CC{2.5183439718404204};
   const static constexpr double TEST_SHARED_INFORMATION_CC_1_GOOD_1_ROOT{0.0};
-  const static constexpr double TEST_MAX_SHARED_INFORMATION_CC{14.912074082681379};
-  const static constexpr double TEST_SHARED_INFORMATION_BP{3.5372102716694918};
-  const static constexpr double TEST_MAX_SHARED_INFORMATION_BP{15.208594815476888};
-  const static constexpr double TEST_SHARED_INFORMATION_MF{6.4990002120440069};
-  const static constexpr double TEST_MAX_SHARED_INFORMATION_MF{12.409796856084533};
+  const static constexpr double TEST_MAX_SHARED_INFORMATION_CC{14.293721043649006};
+  const static constexpr double TEST_SHARED_INFORMATION_BP{3.4820707838137075};
+  const static constexpr double TEST_MAX_SHARED_INFORMATION_BP{15.075769645935155};
+  const static constexpr double TEST_SHARED_INFORMATION_MF{6.1294090560911201};
+  const static constexpr double TEST_MAX_SHARED_INFORMATION_MF{11.975847831148844};
   const static constexpr double TEST_CROSS_ONTOLOGY_SHARED_INFORMATION{0.0};
 
 };

@@ -44,7 +44,7 @@ public:
 
   }
 
-  [[nodiscard]] static const std::shared_ptr<const AnnotationData> &annotationPtr() {
+  [[nodiscard]] static const std::shared_ptr<const TermAnnotation> &annotationPtr() {
 
     if (not annotation_ptr) {
 
@@ -77,14 +77,12 @@ private:
   inline static std::shared_ptr<const SimilarityLin> term_similarity_ptr;
   inline static std::shared_ptr<const TermSimilarityCache> cache_similarity_ptr;
   inline static std::shared_ptr<const GoGraph> go_graph_ptr;
-  inline static std::shared_ptr<const AnnotationData> annotation_ptr;
+  inline static std::shared_ptr<const TermAnnotation> annotation_ptr;
 
-  [[nodiscard]] static std::shared_ptr<const AnnotationData> getAnnotation() {
+  [[nodiscard]] static std::shared_ptr<const TermAnnotation> getAnnotation() {
 
-    auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
-                                                                           PolicyEvidence());
-    BOOST_REQUIRE(anno_parser_ptr);
-    return anno_parser_ptr->parseAnnotationFile(UnitTestDefinitions::gafFileName());
+    PolicyEvidence default_evidence;
+    return ParserAnnotationGaf::parseAnnotationFile(default_evidence, UnitTestDefinitions::gafFileName());
 
   }
 
@@ -102,7 +100,7 @@ private:
     annotation_ptr = getAnnotation();
     std::shared_ptr<const InformationContent> ic_map_ptr(std::make_shared<const InformationContent>(go_graph_ptr, annotation_ptr));
     term_similarity_ptr = std::make_shared<const SimilarityLin>(ic_map_ptr);
-    cache_similarity_ptr = std::make_shared<const TermSimilarityCache>(go_graph_ptr, annotation_ptr, term_similarity_ptr, GO::Ontology::BIOLOGICAL_PROCESS);
+    cache_similarity_ptr = std::make_shared<const TermSimilarityCache>(annotation_ptr, term_similarity_ptr, GO::Ontology::BIOLOGICAL_PROCESS);
 
   }
 
@@ -132,7 +130,7 @@ BOOST_FIXTURE_TEST_SUITE(TestCache_LIN_Suite, kol::TestCache_LIN_BP)
 BOOST_AUTO_TEST_CASE(test_precomputed_cache_bad_ontology)
 {
 
-  auto cache_ptr = std::make_unique<const kol::TermSimilarityCache>(goGraphPtr(), annotationPtr(), linSimPtr(), kol::GO::Ontology::ONTO_ERROR);
+  auto cache_ptr = std::make_unique<const kol::TermSimilarityCache>(annotationPtr(), linSimPtr(), kol::GO::Ontology::ONTO_ERROR);
   BOOST_CHECK_EQUAL(cache_ptr->termCount(), 0.0);
   BOOST_TEST_MESSAGE( "test_precomputed_cache_bad_ontology ... OK" );
 
@@ -167,7 +165,7 @@ BOOST_AUTO_TEST_CASE(test_similarity_Lin_1_bad_1_good_id)
 BOOST_AUTO_TEST_CASE(test_normalized_similarity_Lin_BP_reflexive_sim)
 {
 
-  auto const ontology_terms = annotationPtr()->getOntologyTerms(*goGraphPtr(), kol::GO::Ontology::BIOLOGICAL_PROCESS);
+  auto const ontology_terms = annotationPtr()->getOntologyTerms(kol::GO::Ontology::BIOLOGICAL_PROCESS);
   size_t term_look_up{0};
   for (auto const& term_A : ontology_terms) {
 
@@ -191,11 +189,11 @@ BOOST_AUTO_TEST_CASE(test_normalized_similarity_Lin_BP_reflexive_sim)
 BOOST_AUTO_TEST_CASE(test_asymmetric_similarity_Lin_BP)
 {
 
-  auto const ontology_terms = annotationPtr()->getOntologyTerms(*goGraphPtr(), kol::GO::Ontology::BIOLOGICAL_PROCESS);
+  auto const ontology_terms = annotationPtr()->getOntologyTerms(kol::GO::Ontology::BIOLOGICAL_PROCESS);
   kol::OntologySetType<std::string> go_terms;
   for (auto const& gene : malariaGenes()) {
 
-    go_terms = kol::SetUtilities::setUnion(go_terms, annotationPtr()->getGoTermsForGeneBP(gene, *goGraphPtr()));
+    go_terms = kol::SetUtilities::setUnion(go_terms, annotationPtr()->getGoTermsForGeneBP(gene));
 
   }
   std::vector<std::string> malaria_terms = kol::SetUtilities::convertSet(go_terms);

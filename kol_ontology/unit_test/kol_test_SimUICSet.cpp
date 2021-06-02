@@ -11,14 +11,14 @@ struct SimUICSetValues {
   const static constexpr double TEST_SET_SIMILARITY_EMPTY_SETS{0.0};
   const static constexpr double TEST_SET_SIMILARITY_1_EMPTY_1_GOOD{0.0};
   const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_BP{1.0};
-  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_BP{0.47088083566352013};
-  const static constexpr double TEST_SET_SIMILARITY_BP{0.31131876926800245};
+  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_BP{0.72323621031173235};
+  const static constexpr double TEST_SET_SIMILARITY_BP{0.3106082121140285};
   const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_MF{1.0};
-  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_MF{0.90435928627147066};
-  const static constexpr double TEST_SET_SIMILARITY_MF{0.47346598671347079};
+  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_MF{0.85361424837233557};
+  const static constexpr double TEST_SET_SIMILARITY_MF{0.46338940921070382};
   const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_CC{1.0};
-  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_CC{0.87559808111421167};
-  const static constexpr double TEST_SET_SIMILARITY_CC{0.49248196075247869};
+  const static constexpr double TEST_SET_SIMILARITY_REFLEXIVE_SLICE_CC{1.0};
+  const static constexpr double TEST_SET_SIMILARITY_CC{0.48746338271902645};
 
 
 };

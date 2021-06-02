@@ -1,5 +1,5 @@
-#ifndef KGL_GO_PARSER_INTERFACE
-#define KGL_GO_PARSER_INTERFACE
+#ifndef KOL_GO_PARSER_INTERFACE
+#define KOL_GO_PARSER_INTERFACE
 
 #include "kol_GoGraph.h"
 

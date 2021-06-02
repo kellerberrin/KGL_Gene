@@ -2,8 +2,8 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_ALL_PAIRS_MAX_SIMILARITY
-#define KGL_ALL_PAIRS_MAX_SIMILARITY
+#ifndef KOL_ALL_PAIRS_MAX_SIMILARITY
+#define KOL_ALL_PAIRS_MAX_SIMILARITY
 
 #include "kol_SetSimilarityInterface.h"
 #include "kol_SimilarityInterface.h"

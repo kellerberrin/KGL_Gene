@@ -17,51 +17,28 @@ public:
   ~TestAnnotateParsers() = default;
 
 
-  [[nodiscard]] std::shared_ptr<AnnotationData> parseGaf(const PolicyEvidence &policy = PolicyEvidence()) {
+  [[nodiscard]] std::shared_ptr<const TermAnnotation> parseGaf(const PolicyEvidence &policy = PolicyEvidence()) {
 
-    return parseAnnotation(AnnotationParserType::GAF_ANNO_PARSER, UnitTestDefinitions::gafFileName(), policy);
-
-  }
-
-  [[nodiscard]] std::shared_ptr<AnnotationData> parseGene(const PolicyEvidence &policy = PolicyEvidence()) {
-
-    return parseAnnotation(AnnotationParserType::MGI_ANNO_PARSER, UnitTestDefinitions::geneFileName(), policy);
+    return parseAnnotation(UnitTestDefinitions::gafFileName(), policy);
 
   }
 
-  [[nodiscard]] bool verifyGaf(const std::string &file_name = UnitTestDefinitions::gafFileName()) {
+  [[nodiscard]] std::shared_ptr<const TermAnnotation> parseGene(const PolicyEvidence &policy = PolicyEvidence()) {
 
-    return verifyAnnotation(AnnotationParserType::GAF_ANNO_PARSER, file_name);
-
-  }
-
-  [[nodiscard]] bool verifyGene(const std::string &file_name = UnitTestDefinitions::geneFileName()) {
-
-    return verifyAnnotation(AnnotationParserType::MGI_ANNO_PARSER, file_name);
+    return parseAnnotation(UnitTestDefinitions::geneFileName(), policy);
 
   }
 
 
 private:
 
-  [[nodiscard]] std::shared_ptr<AnnotationData> parseAnnotation(AnnotationParserType parser_type,
-                                                                const std::string &annotation_file,
-                                                                const PolicyEvidence &policy) {
+  [[nodiscard]] std::shared_ptr<const TermAnnotation> parseAnnotation( const std::string &annotation_file,
+                                                                       const PolicyEvidence &policy) {
 
-    auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(parser_type, policy);
-    BOOST_REQUIRE(anno_parser_ptr);
-    return anno_parser_ptr->parseAnnotationFile(annotation_file);
+    return ParserAnnotationGaf::parseAnnotationFile(policy, annotation_file);
 
   }
 
-  [[nodiscard]] bool verifyAnnotation(AnnotationParserType parser_type,
-                                      const std::string &annotation_file) {
-
-    auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(parser_type, PolicyEvidence());
-    BOOST_REQUIRE(anno_parser_ptr);
-    return anno_parser_ptr->isFileGood(annotation_file);
-
-  }
 
 
 };
@@ -98,41 +75,8 @@ BOOST_AUTO_TEST_CASE(test_annotation_parser_mgi)
 }
 
 
-//////////////////////////////////////////////////////
-// Test Parser with bad input
-//////////////////////////////////////////////////////
 
 
-BOOST_AUTO_TEST_CASE(test_annotation_parser_gaf_nonexistent_file)
-{
-
-  if ( verifyGaf("") ) BOOST_FAIL( "Empty Gaf file is verified valid" );
-  BOOST_TEST_MESSAGE( "test_annotation_parser_gaf_nonexistent_file ... OK" );
-
-}
-
-
-BOOST_AUTO_TEST_CASE(test_annotation_parser_mgi_nonexistent_file)
-{
-
-  if ( verifyGene("") ) BOOST_FAIL( "Empty Gene Annotation file is verified valid" );
-  BOOST_TEST_MESSAGE( "test_annotation_parser_mgi_nonexistent_file ... OK" );
-
-}
-
-
-
-//////////////////////////////////////////////////////
-// Bad file format
-//////////////////////////////////////////////////////
-
-BOOST_AUTO_TEST_CASE(test_annotation_parser_gaf_bad_format)
-{
-
-  if ( verifyGaf(UnitTestDefinitions::entrezFileName()) ) BOOST_FAIL( "Invalid Gaf file is verified valid" );
-  BOOST_TEST_MESSAGE( "test_annotation_parser_gaf_bad_format ... OK" );
-
-}
 
 //////////////////////////////////////////////////
 // Bad evidence codes

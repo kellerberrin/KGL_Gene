@@ -2,8 +2,8 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_FRONTIER_SHARED_INFORMATION
-#define KGL_FRONTIER_SHARED_INFORMATION
+#ifndef KOL_FRONTIER_SHARED_INFORMATION
+#define KOL_FRONTIER_SHARED_INFORMATION
 
 #include "kol_InformationContentImpl.h"
 #include "kol_GoGraph.h"

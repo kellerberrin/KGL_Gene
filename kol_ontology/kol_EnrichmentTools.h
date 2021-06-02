@@ -4,13 +4,13 @@ Distributed under the Boost Software License, Version 1.0.
 
 ==============================================================================*/
 
-#ifndef ENRICHMENT_TOOLS
-#define ENRICHMENT_TOOLS
+#ifndef KOL_ENRICHMENT_TOOLS
+#define KOL_ENRICHMENT_TOOLS
 
 #include <stdlib.h>
 
 #include "kel_distribution.h"
-#include "kol_AnnotationData.h"
+#include "kol_TermAnnotation.h"
 #include "kol_GoGraph.h"
 #include "kol_SetUtilities.h"
 
@@ -32,7 +32,7 @@ public:
     This method calculates the set of the genes annotated with a given term or transatively with a child of that term.
   */
   [[nodiscard]] static OntologySetType<std::string> getDescendantGenes(const GoGraph &go,
-                                                                       const AnnotationData &data,
+                                                                       const TermAnnotation &data,
                                                                        const std::string &term);
 
 
@@ -56,7 +56,7 @@ public:
     in the annotation database.
   */
   [[nodiscard]] [[maybe_unused]] static double enrichmentSignificance(const GoGraph &go,
-                                                                      const AnnotationData &data,
+                                                                      const TermAnnotation &data,
                                                                       const OntologySetType<std::string> &genes,
                                                                       const std::string &term);
 

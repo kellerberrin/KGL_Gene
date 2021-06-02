@@ -4,8 +4,8 @@ Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0. (See accompanying
 file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 ==============================================================================*/
-#ifndef PEKAR_STAAB_SIMILARITY
-#define PEKAR_STAAB_SIMILARITY
+#ifndef KOL_PEKAR_STAAB_SIMILARITY
+#define KOL_PEKAR_STAAB_SIMILARITY
 
 #include <kol_SimilarityInterface.h>
 #include <kol_InformationDepthMap.h>

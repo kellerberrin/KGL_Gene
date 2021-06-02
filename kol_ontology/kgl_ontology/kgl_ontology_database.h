@@ -9,7 +9,7 @@
 #include <string>
 #include <memory>
 
-#include "kol_AnnotationData.h"
+#include "kol_TermAnnotation.h"
 
 namespace kellerberrin::ontology {
 
@@ -20,7 +20,7 @@ namespace kellerberrin::ontology {
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class GoGraph;
-class AnnotationData;
+class TermAnnotation;
 
 
 class OntologyDatabase {
@@ -31,19 +31,19 @@ public:
                    const std::string& go_graph_file,
                    const std::string& annotation_file);
 
-  ~OntologyDatabase();
+  ~OntologyDatabase() = default;
 
   [[nodiscard]] const std::string& ontologyIdent() const { return ontology_ident_; }
   [[nodiscard]] const std::shared_ptr<const GoGraph>& goGraph() const { return go_graph_ptr_; }
-  [[nodiscard]] const std::shared_ptr<const AnnotationData>& annotation() const { return annotation_ptr_; }
+  [[nodiscard]] const std::shared_ptr<const TermAnnotation>& annotation() const { return annotation_ptr_; }
 
 private:
 
   const std::string ontology_ident_;
   std::shared_ptr<const GoGraph> go_graph_ptr_;
-  std::shared_ptr<const AnnotationData> annotation_ptr_;
+  std::shared_ptr<const TermAnnotation> annotation_ptr_;
 
-  [[nodiscard]] std::shared_ptr<const AnnotationData> getAnnotation(const std::string& annotation_file);
+  [[nodiscard]] std::shared_ptr<const TermAnnotation> getAnnotation(const std::string& annotation_file);
   [[nodiscard]] std::shared_ptr<const GoGraph> getGoGraph(const std::string& go_graph_file);
 
 };

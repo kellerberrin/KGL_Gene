@@ -2,8 +2,8 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_ALLOWED_RELATIONSHIP_OBO_GO_PARSER
-#define KGL_ALLOWED_RELATIONSHIP_OBO_GO_PARSER
+#ifndef KOL_ALLOWED_RELATIONSHIP_OBO_GO_PARSER
+#define KOL_ALLOWED_RELATIONSHIP_OBO_GO_PARSER
 
 #include "kol_ParserGoInterface.h"
 #include "kol_GoEnums.h"

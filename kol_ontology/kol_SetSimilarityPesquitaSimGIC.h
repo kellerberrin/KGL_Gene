@@ -2,8 +2,8 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_PESQUITA_SIMGIC_SET_SIMILARITY
-#define KGL_PESQUITA_SIMGIC_SET_SIMILARITY
+#ifndef KOL_PESQUITA_SIMGIC_SET_SIMILARITY
+#define KOL_PESQUITA_SIMGIC_SET_SIMILARITY
 
 #include "kol_SetSimilarityInterface.h"
 #include "kol_InformationInterface.h"

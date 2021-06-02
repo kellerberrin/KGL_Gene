@@ -54,12 +54,10 @@ private:
   inline static std::shared_ptr<const SimilarityInterface> matrix_similarity_ptr_;
 
 
-  [[nodiscard]] std::shared_ptr<const AnnotationData> getAnnotation() {
+  [[nodiscard]] std::shared_ptr<const TermAnnotation> getAnnotation() {
 
-    auto anno_parser_ptr = ParserAnnotationFactory::createAnnotationParser(AnnotationParserType::GAF_ANNO_PARSER,
-                                                                           PolicyEvidence());
-    BOOST_REQUIRE(anno_parser_ptr);
-    return anno_parser_ptr->parseAnnotationFile(UnitTestDefinitions::gafFileName());
+    PolicyEvidence default_evidence;
+    return ParserAnnotationGaf::parseAnnotationFile(default_evidence, UnitTestDefinitions::gafFileName());
 
   }
 
@@ -74,10 +72,10 @@ private:
   void getMatrixAnalysis() {
 
     std::shared_ptr<const GoGraph> graph_ptr = getGoGraph();
-    std::shared_ptr<const AnnotationData> annotation_ptr = getAnnotation();
+    std::shared_ptr<const TermAnnotation> annotation_ptr = getAnnotation();
     std::shared_ptr<const InformationContent> ic_map_ptr(std::make_shared<const InformationContent>(graph_ptr, annotation_ptr));
     term_similarity_ptr_ = std::make_shared<const SimilarityJIangConrath>(ic_map_ptr);
-    std::shared_ptr<const SimilarityWriter> sim_writer_ptr = std::make_unique<SimilarityWriter>(graph_ptr, annotation_ptr);
+    std::shared_ptr<const SimilarityWriter> sim_writer_ptr = std::make_unique<SimilarityWriter>(annotation_ptr);
     if constexpr (WRITER_TEST) {
 
       sim_writer_ptr->writeSimilarityMatrixBP(term_similarity_ptr_, UnitTestDefinitions::matrixFileNameBP());

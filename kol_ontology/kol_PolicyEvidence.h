@@ -2,11 +2,12 @@
 Copyright (c) 2016 Paul W. Bible
 Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
-#ifndef KGL_ALLOWED_SET_EVIDENCE_POLICY
-#define KGL_ALLOWED_SET_EVIDENCE_POLICY
+#ifndef KOL_ALLOWED_SET_EVIDENCE_POLICY
+#define KOL_ALLOWED_SET_EVIDENCE_POLICY
 
 #include <vector>
 #include "kol_GoEnums.h"
+#include "kol_OntologyTypes.h"
 
 
 namespace kellerberrin::ontology {
