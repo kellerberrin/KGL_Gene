@@ -123,9 +123,9 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
 // Mutates a single gene and compares to other selected genes
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool kgl::UPGMAGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> gene_ptr,
-                                        std::shared_ptr<const GenomeReference> genome_db_ptr,
-                                        const std::string& protein_family) {
+bool kgl::UPGMAGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> ,
+                                        std::shared_ptr<const GenomeReference> ,
+                                        const std::string& ) {
 
   return false;
 
@@ -394,9 +394,9 @@ kgl::DistanceType_t kgl::DNAGeneDistance::distance(std::shared_ptr<const Virtual
 }
 
 
-bool kgl::ReferenceGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> gene_ptr,
-                                            std::shared_ptr<const GenomeReference> genome_db_ptr,
-                                            const std::string& protein_family) {
+bool kgl::ReferenceGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> ,
+                                            std::shared_ptr<const GenomeReference> ,
+                                            const std::string& ) {
 
 
   return false;

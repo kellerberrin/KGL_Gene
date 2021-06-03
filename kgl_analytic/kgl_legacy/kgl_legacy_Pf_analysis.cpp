@@ -244,11 +244,6 @@ void kgl::PhylogeneticAnalysis::performSequence() {
 
   // Split into country populations.
   std::string aux_file_path;
-  if (not runtime_options_.getPropertiesAuxFile(aux_file_path)) {
-
-    ExecEnv::log().critical("Aux Genome information file not found");
-
-  }
 
   std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr_);
 
@@ -334,11 +329,6 @@ void kgl::PhylogeneticAnalysis::performSNP() {
 
 // Split into country populations.
 std::string aux_file_path;
-if (not runtime_options_.getPropertiesAuxFile(aux_file_path)) {
-
-  ExecEnv::log().critical("performSNP; Aux Genome information file not found");
-
-}
 
 std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr_);
 GenomeAuxData aux_data;

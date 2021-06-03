@@ -427,44 +427,6 @@ private:
 
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Object to hold genome auxiliary file information.
-// Legacy code.
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class AuxFileInfo {
-
-public:
-
-  AuxFileInfo(const std::string& file_name, const std::string& aux_type) : file_name_(file_name), aux_type_(aux_type) {}
-  AuxFileInfo(const AuxFileInfo&) = default;
-  ~AuxFileInfo() = default;
-
-  [[nodiscard]] const std::string& fileName() const { return file_name_; }
-  [[nodiscard]] const std::string& auxType() const { return aux_type_; }
-
-  [[nodiscard]] bool supportedFile(const std::string& aux_type) const { return supported_types_.find(aux_type) != supported_types_.end(); }
-
-  constexpr static const char* AUX_FILE_NAME_ = "fileName.";
-  constexpr static const char* AUX_FILE_TYPE_ = "auxType.";
-
-  // Supported auxiliary file types.
-  // GFF file that contains the offsets for the Translation Start Sequences (TSS) in the Genome of Plasmodium Falciparum (3D7).
-  constexpr static const char* ADJALLEY_TSS_GFF_ = "ADJALLEY_TSS_GFF";
-
-private:
-
-  std::string file_name_;
-  std::string aux_type_;
-
-  const std::set<std::string> supported_types_ = { ADJALLEY_TSS_GFF_ };
-
-
-};
-
-
-
-
 
 } // namespace
 

@@ -15,6 +15,14 @@ namespace kgl = kellerberrin::genome;
 // Boilerplate code to extract structured analytic and file information from "runtime.xml"
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+bool kgl::RuntimeProperties::readProperties(const std::string& properties_file) {
+
+  std::string properties_path = Utility::filePath(properties_file, work_directory_);
+  return property_tree_.readProperties(properties_path);
+
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  Runtime xml retrieval
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -766,141 +774,4 @@ kgl::ActiveParameterList kgl::RuntimeProperties::getParameterMap() const {
   return defined_named_parameters;
 
 }
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Legacy Code (To be demolished)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-bool kgl::RuntimeProperties::getPropertiesAuxFile(std::string &aux_file) const {
-
-  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + std::string(AUX_FILE_) + std::string(DOT_) + std::string(VALUE_);
-  if (not property_tree_.getProperty(key, aux_file)) {
-
-    return false;
-
-  }
-
-  aux_file = Utility::filePath(aux_file, work_directory_);
-
-  return Utility::fileExists(aux_file);
-
-}
-
-
-bool kgl::RuntimeProperties::readProperties(const std::string& properties_file) {
-
-  std::string properties_path = Utility::filePath(properties_file, work_directory_);
-  return property_tree_.readProperties(properties_path);
-
-}
-
-
-
-void kgl::RuntimeProperties::getGenomeDBFiles(const std::string& organism,
-                                              std::string& fasta_file,
-                                              std::string& gff_file,
-                                              std::string& gaf_file,
-                                              std::string& id_file,
-                                              std::string& translationTable) const {
-
-
-
-  // The GAF file is optional.
-  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + organism + std::string(DOT_) + std::string(GAF_ANNOTATION_FILE_) + std::string(DOT_) + std::string(VALUE_);
-
-  if (not property_tree_.getOptionalFileProperty(key, work_directory_, gaf_file)) {
-
-    ExecEnv::log().info("Optional runtime XML property not present: {}", key);
-
-  }
-
-  // The Id file is optional.
-  key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + organism + std::string(DOT_) + std::string(ID_FILE_) + std::string(DOT_) + std::string(VALUE_);
-
-  if (not property_tree_.getOptionalFileProperty(key, work_directory_, id_file)) {
-
-    ExecEnv::log().info("Optional runtime XML property not present: {}", key);
-
-  }
-
-  key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + organism + std::string(DOT_) + std::string(FASTA_FILE_) + std::string(DOT_) + std::string(VALUE_);
-  if (not property_tree_.getFileProperty(key, work_directory_, fasta_file)) {
-
-    ExecEnv::log().critical("Required Fasta File: {} does not exist.", fasta_file);
-
-  }
-
-  key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + organism + std::string(DOT_) + std::string(GFF_FILE_) + std::string(DOT_) + std::string(VALUE_);
-  if (not property_tree_.getFileProperty(key, work_directory_, gff_file)) {
-
-    ExecEnv::log().critical("Required GFF3 File: {} does not exist.", gff_file);
-
-  }
-
-  key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + organism + std::string(DOT_) + std::string(TRANSLATION_TABLE_) + std::string(DOT_) + std::string(VALUE_);
-  if (not property_tree_.getProperty(key, translationTable)) {
-
-    translationTable = Tables::STANDARDTABLE->table_name; // The standard amino acid translation table.
-    ExecEnv::log().warn("Amino Acid translation table not specified, using standard table: {}", translationTable);
-
-  }
-
-}
-
-
-
-bool kgl::RuntimeProperties::getGenomeAuxFiles(const std::string& organism, std::vector<AuxFileInfo>& auxfiles) const {
-
-  auxfiles.clear();
-
-  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + organism;
-
-//  std::string key = std::string(RUNTIME_ROOT_) + organism + dot + AUX_GENOME_FILE_;
-
-  std::vector<SubPropertyTree> property_tree_vector;
-  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
-
-    return false;
-
-  }
-
-  for (auto sub_tree : property_tree_vector) {
-
-    if (sub_tree.first == AUX_GENOME_FILE_) {
-
-      std::string aux_file;
-      if (not sub_tree.second.getFileProperty(AuxFileInfo::AUX_FILE_NAME_, work_directory_, aux_file)) {
-
-        ExecEnv::log().error("RuntimeProperties::getGenomeAuxFiles, problem retrieving auxiliary file name");
-        sub_tree.second.treeTraversal();
-        continue;
-
-      }
-
-      std::string aux_type;
-      if (not sub_tree.second.getProperty(AuxFileInfo::AUX_FILE_TYPE_, aux_type)) {
-
-        ExecEnv::log().error("RuntimeProperties::getGenomeAuxFiles, problem retrieving auxiliary file type");
-        sub_tree.second.treeTraversal();
-        continue;
-
-      }
-
-      auxfiles.emplace_back(AuxFileInfo(aux_file, aux_type));
-
-    }
-
-  }
-
-  return true;
-
-}
-
-
-
-
 

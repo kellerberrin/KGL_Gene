@@ -55,21 +55,6 @@ public:
 
   [[nodiscard]] ActiveParameterList getParameterMap() const;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Legacy Code.
-
-  [[nodiscard]] bool getPropertiesAuxFile(std::string &aux_file) const;
-
-
-  void getGenomeDBFiles(const std::string& organism,
-                        std::string& fasta_file,
-                        std::string& gff_file,
-                        std::string& gaf_file,
-                        std::string& id_file,
-                        std::string& tranlation_table) const;
-
-  [[nodiscard]] bool getGenomeAuxFiles(const std::string& organism, std::vector<AuxFileInfo>& auxfiles) const;
-
 
 private:
 
@@ -137,13 +122,6 @@ private:
   constexpr static const char* ALIAS_IDENT_ = "ident";
   constexpr static const char* ALIAS_TYPE_ = "chromosomeType";
   constexpr static const char* ALIAS_ENTRY_ = "alias";
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // Legacy
-  constexpr static const char* FILE_LIST_ = "fileList";
-  constexpr static const char* VCF_PLOIDY_ = "vcfPloidy";
-  constexpr static const char* MIXTURE_FILE_ = "mixtureFile";
-  constexpr static const char* AUX_FILE_ = "auxFile";
-  constexpr static const char* AUX_GENOME_FILE_ = "auxGenomeFile";
 
   std::string work_directory_;  // The work directory, all files are specified 'work_directory/file_name'
   PropertyTree property_tree_;   // All the option XML files.
