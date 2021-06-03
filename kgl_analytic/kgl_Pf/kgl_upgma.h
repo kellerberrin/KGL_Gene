@@ -227,20 +227,8 @@ void VarGeneFamilyTree( DistanceTree& distance_tree,
         std::string alt_symbolic;
         std::string symbolic;
         std::string description;
-        auto ontology_record_opt = genome_db_ptr->geneOntology().getGafFeatureVector(gene.second->id());
-        if (ontology_record_opt) {
 
-          auto ontology_record_ptr = ontology_record_opt.value();
-          description = Utility::findAndReplaceAll(ontology_record_ptr->description(), ",", ";");
-          symbolic = Utility::findAndReplaceAll(ontology_record_ptr->symbolicReference(), ",", ";");
-          alt_symbolic = Utility::findAndReplaceAll(ontology_record_ptr->altSymbolicReference(), ",", ";");
-
-
-        } else {
-
-          continue;
-
-        }
+        continue;
 
         // Is this gene a member of the requested family.
         if (Utility::toupper(description).find(protein_family) != std::string::npos) {

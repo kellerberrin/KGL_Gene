@@ -58,50 +58,6 @@ std::shared_ptr<kgl::GenomeReference> kgl::GenomeReference::createGenomeDatabase
 }
 
 
-bool kgl::GenomeReference::readGenomeAuxiliary(const RuntimeProperties& runtime_options) {
-
-  std::vector<AuxFileInfo> aux_file_list;
-
-  if (not runtime_options.getGenomeAuxFiles(genomeId(), aux_file_list)) {
-
-    ExecEnv::log().error("GenomeReference::readGenomeAuxiliary; problem reading runtime genome auxiliary file list for organism: {}", genomeId());
-    return false;
-
-  }
-
-  for (auto aux_file : aux_file_list) {
-
-    if (aux_file.auxType() == AuxFileInfo::ADJALLEY_TSS_GFF_) {
-
-      readAuxillary(aux_file.fileName());
-
-    } else {
-
-      ExecEnv::log().error("GenomeReference::readGenomeAuxiliary; genome aux file type: {} not supported for organism: {}", aux_file.auxType(), genomeId());
-
-    }
-
-  }
-
-  return true;
-
-}
-
-void kgl::GenomeReference::readAuxillary(const std::string& tss_gff_file) {
-
-  // Optionally read in tss_gff records into the genome database.
-  if (not tss_gff_file.empty()) {
-
-    ParseGffFasta().readTssGffFile(tss_gff_file, *this);
-
-  }
-
-  // Wire-up the genome auxillary database.
-  createVerifyAuxillary();
-
-}
-
-
 bool kgl::GenomeReference::addContigSequence(const kgl::ContigId_t& contig_id,
                                              const std::string& description,
                                              std::shared_ptr<kgl::DNA5SequenceContig> sequence_ptr) {
@@ -141,16 +97,6 @@ void kgl::GenomeReference::createVerifyGenomeDatabase() {
 
 }
 
-
-void kgl::GenomeReference::createVerifyAuxillary() {
-
-  for (auto contig_pair : genome_sequence_map_) {
-
-    contig_pair.second->verifyAuxillaryHierarchy();
-
-  }
-
-}
 
 
 void kgl::GenomeReference::setTranslationTable(const std::string& table) {

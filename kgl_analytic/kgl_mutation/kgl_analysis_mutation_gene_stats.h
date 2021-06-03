@@ -39,7 +39,6 @@ public:
                        const GenomeId_t& genome_id,
                        const std::string& name,
                        const std::string& gaf_ident,
-                       const std::set<std::string>& GO_set,
                        const GeneIdentMap& key_HGNC_map);
 
   [[nodiscard]] const ContigId_t& contigId() const { return contig_; }

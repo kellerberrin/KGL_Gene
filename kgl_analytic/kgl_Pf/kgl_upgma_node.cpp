@@ -67,24 +67,9 @@ void kgl::UPGMAProteinDistance::mutateProteins() {
 
     for (auto gene : contig.second->getGeneMap()) {
 
-      if (protein_family_ != PROTEIN_FAMILY_WILDCARD) {
-
-        auto ontology_record_opt = ontology().getGafFeatureVector(gene.second->id());
-        if (ontology_record_opt) {
-
-          auto ontology_record_ptr = ontology_record_opt.value();
-          if (ontology_record_ptr->symbolicReference() == protein_family_) {
-
-            getProtein(gene.second);
-
-          }
-        }
-      }
-      else {
 
         getProtein(gene.second);
 
-      }
 
     }
 
@@ -141,18 +126,6 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
 bool kgl::UPGMAGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> gene_ptr,
                                         std::shared_ptr<const GenomeReference> genome_db_ptr,
                                         const std::string& protein_family) {
-
-  auto ontology_record_opt = genome_db_ptr->geneOntology().getGafFeatureVector(gene_ptr->id());
-  if (ontology_record_opt) {
-
-    auto ontology_record_ptr = ontology_record_opt.value();
-    if (ontology_record_ptr->symbolicReference() == protein_family) {
-
-      return true;
-
-    }
-
-  }
 
   return false;
 
@@ -242,14 +215,6 @@ void kgl::UPGMAGeneDistance::writeNode(std::ostream& outfile) const {
   double contig_proportion = static_cast<double>(gene_ptr_->sequence().begin()) / static_cast<double>(gene_ptr_->contig()->contigSize());
   contig_proportion = contig_proportion * 100.0;
   ss << gene_ptr_->id() << "_" << std::setprecision(3) << contig_proportion;
-
-  auto ontology_record_opt = genome_db_ptr_->geneOntology().getGafFeatureVector(gene_ptr_->id());
-  if (ontology_record_opt) {
-
-    auto ontology_record_ptr = ontology_record_opt.value();
-    ss << "_" << ontology_record_ptr->altSymbolicReference();
-
-  }
 
   outfile << ss.str();
 
@@ -358,18 +323,8 @@ std::shared_ptr<const kgl::CodingSequence>  kgl::ReferenceGeneDistance::getCodin
 void kgl::ReferenceGeneDistance::writeNode(std::ostream& outfile) const {
 
   std::string alt_symbolic;
-  auto ontology_record_opt = genome_db_ptr_->geneOntology().getGafFeatureVector(gene_ptr_->id());
-  if (ontology_record_opt) {
 
-    auto ontology_record_ptr = ontology_record_opt.value();
-    alt_symbolic = "-";
-    alt_symbolic += ontology_record_ptr->altSymbolicReference();
-
-  } else {
-
-    alt_symbolic = "-*";
-
-  }
+  alt_symbolic = "-*";
 
 
   outfile << gene_ptr_->id();
@@ -443,17 +398,6 @@ bool kgl::ReferenceGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> g
                                             std::shared_ptr<const GenomeReference> genome_db_ptr,
                                             const std::string& protein_family) {
 
-  auto ontology_record_opt = genome_db_ptr->geneOntology().getGafFeatureVector(gene_ptr->id());
-  if (ontology_record_opt) {
-
-    auto ontology_record_ptr = ontology_record_opt.value();
-    if (ontology_record_ptr->symbolicReference() == protein_family) {
-
-      return true;
-
-    }
-
-  }
 
   return false;
 

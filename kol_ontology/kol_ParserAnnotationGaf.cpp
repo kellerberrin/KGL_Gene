@@ -18,6 +18,7 @@ std::shared_ptr<const kol::TermAnnotation> kol::ParserAnnotationGaf::parseAnnota
 
 
   std::vector<std::shared_ptr<const GAFRecord>> gaf_records;
+
   // Check that the supplied policy is valid.
   if (not policy.isValid()) {
 
@@ -26,11 +27,25 @@ std::shared_ptr<const kol::TermAnnotation> kol::ParserAnnotationGaf::parseAnnota
 
   }
 
+  gaf_records = readAnnotationFile(file_name);
+
+  std::shared_ptr<const TermAnnotation> annoData(std::make_shared<TermAnnotation>(policy, gaf_records, gene_id_type));
+
+  return annoData;
+
+}
+
+
+std::vector<std::shared_ptr<const kol::GAFRecord>> kol::ParserAnnotationGaf::readAnnotationFile(const std::string &file_name) {
+
+
+  std::vector<std::shared_ptr<const GAFRecord>> gaf_records;
+
   std::ifstream anno_file(file_name);
   if (not anno_file.good()) {
 
     ExecEnv::log().error("ParserAnnotationGaf::parseAnnotationFile; problem opening annotation file: {}", file_name);
-    return  std::make_shared<TermAnnotation>(gaf_records);
+    return  std::vector<std::shared_ptr<const GAFRecord>>();
 
   }
 
@@ -48,7 +63,7 @@ std::shared_ptr<const kol::TermAnnotation> kol::ParserAnnotationGaf::parseAnnota
     auto view_vector = Utility::view_tokenizer(line, TAB_FIELD_DELIMITER_);
     if (view_vector.size() != EXPECTED_FIELD_COUNT_) {
 
-      ExecEnv::log().error("ParserAnnotationGaf::parseAnnotationFile; line: {}, expected fields: {}, found: {}, file: {}",
+      ExecEnv::log().error("ParserAnnotationGaf::readAnnotationFile; line: {}, expected fields: {}, found: {}, file: {}",
                            line_count, EXPECTED_FIELD_COUNT_, view_vector.size(), file_name);
       continue;
 
@@ -68,7 +83,7 @@ std::shared_ptr<const kol::TermAnnotation> kol::ParserAnnotationGaf::parseAnnota
     std::shared_ptr<GAFRecord> record_ptr(std::make_shared<GAFRecord>());
     if (not record_ptr->parseGafRecord(line)) {
 
-      ExecEnv::log().error("TermAnnotation::addGAFRecord; error parsing Gaf record from line: {}", line);
+      ExecEnv::log().error("ParserAnnotationGaf::readAnnotationFile; error parsing Gaf record from line: {}", line);
 
     } else {
 
@@ -78,8 +93,6 @@ std::shared_ptr<const kol::TermAnnotation> kol::ParserAnnotationGaf::parseAnnota
 
   }
 
-  std::shared_ptr<const TermAnnotation> annoData(std::make_shared<TermAnnotation>(policy, gaf_records, gene_id_type));
-
-  return annoData;
+  return gaf_records;
 
 }

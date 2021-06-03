@@ -38,6 +38,7 @@ public:
   [[nodiscard]] static std::shared_ptr<const TermAnnotation> parseAnnotationFile( const PolicyEvidence &policy,
                                                                                   const std::string &filename,
                                                                                   AnnotationGeneName gene_id_type = AnnotationGeneName::UNIPROT_GENE_ID);
+  [[nodiscard]] static std::vector<std::shared_ptr<const GAFRecord>> readAnnotationFile(const std::string &filename);
 
 private:
 

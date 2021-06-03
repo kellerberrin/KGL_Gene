@@ -68,24 +68,6 @@ void kgl::PromoterMotif::displayTFFMotif(std::shared_ptr<const GenomeReference> 
         std::string description;
         std::string altSymbolicReference;
 
-        auto ontology_opt = genome_db_ptr->geneOntology().getGafFeatureVector(gene->id());
-        if (not ontology_opt) {
-
-          ExecEnv::log().warn("PromoterMotif::displayTFFMotif; No Ontology record for GENE {}", gene->id());
-
-        } else {
-
-          auto ontology_record_ptr = ontology_opt.value();
-          // Strip out delimiter chars
-          std::string search = { delimiter };
-          symbolicReference = ontology_record_ptr->symbolicReference();
-          symbolicReference = Utility::findAndReplaceAll(symbolicReference, search, ";");
-          description = ontology_record_ptr->description();
-          description = Utility::findAndReplaceAll(description, search, ";");
-          altSymbolicReference = ontology_record_ptr->altSymbolicReference();
-          altSymbolicReference = Utility::findAndReplaceAll(altSymbolicReference, search, ";");
-
-        }
 
         motif_file << gene->id() << delimiter;
         motif_file << description << delimiter;

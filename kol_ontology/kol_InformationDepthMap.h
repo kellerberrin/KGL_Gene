@@ -57,17 +57,6 @@ public:
   */
   [[nodiscard]] bool hasTerm(const std::string &testTerm) const { return name_to_index_.find(testTerm) != name_to_index_.end(); }
 
-  //! Overloaded [] bracket operator to mimic Map
-  /*!
-    This defines a bracket operator to access the data inside of the map.
-      This is done to mimic the behavior of the map class
-  */
-  [[nodiscard]] size_t operator[](const std::string &termId) const {
-    //return the depth
-    return getValue(termId);
-
-  }
-
   //! Mapping function to return the value mapped by key
   /*!
     Get the value mapped by the given key. A specified function for the [] operator

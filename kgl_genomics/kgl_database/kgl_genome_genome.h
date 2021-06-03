@@ -45,8 +45,6 @@ public:
 
   [[nodiscard]] const GenomeContigMap& getMap() const { return genome_sequence_map_; }
 
-  [[nodiscard]] size_t contigCount() const { return getMap().size(); }
-
   [[nodiscard]] const GeneOntology& geneOntology() const { return gene_ontology_; }
 
   // Given a gene sequence offset with 5' start = 0 (strand adjusted), returns a strand adjusted offset within the contig.
@@ -75,12 +73,6 @@ private:
   GeneOntology gene_ontology_;
 
   void createVerifyGenomeDatabase();
-  void createVerifyAuxillary();
-
-  // Reads auxiliary genome information about the database. Promoter sites, motifs, tss etc.
-  [[nodiscard]] bool readGenomeAuxiliary(const RuntimeProperties& runtime_options);
-  // Read the auxillary genome database features.
-  void readAuxillary(const std::string& tss_gff_file);
 
 };
 

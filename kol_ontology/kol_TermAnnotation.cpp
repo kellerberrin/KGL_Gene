@@ -265,3 +265,30 @@ void kol::TermAnnotation::addGenesForGoTerm(const std::string &go_ident, Ontolog
   }
 
 }
+
+
+std::pair<std::string, std::string> kol::TermAnnotation::getGeneIdentifiers(const std::string &gene_id) const {
+
+  auto gene_map = getGeneGOMap(gene_id);
+
+  if (gene_map.empty()) {
+
+    return std::pair<std::string, std::string>();
+
+  }
+
+  auto const& [go_id, gaf_record_vector] = *gene_map.begin();
+
+  if (gaf_record_vector.empty()) {
+
+    ExecEnv::log().error("TermAnnotation::getGeneIdentifiers; no GAF records found for gene id: {}, go id: {}", gene_id, go_id);
+    return std::pair<std::string, std::string>();
+
+  }
+
+  auto symbolic_id = gaf_record_vector.front()->geneSymbolicId();
+  auto uniprot_id = gaf_record_vector.front()->geneUniprotId();
+
+  return std::pair<std::string, std::string>{uniprot_id, symbolic_id};
+
+}

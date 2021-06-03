@@ -172,6 +172,12 @@ public:
 
   [[nodiscard]] AnnotationGeneName geneIdType() const { return gene_id_type_; }
 
+  // Returns the Uniprot Gene Id as .first. The Symbolic gene Id as .second.
+  // If the TermAnnotation geneIdType() == AnnotationGeneName::UNIPROT_GENE_ID then the query gene id should be a Uniprot id.
+  // If the TermAnnotation geneIdType() == AnnotationGeneName::SYMBOLIC_GENE_ID then the query gene id should be a Symbolic id.
+  // If the gene id is not found (UNIPROT or SYMBOLIC), then empty strings are returned.
+  std::pair<std::string, std::string> getGeneIdentifiers(const std::string &gene_id) const;
+
 private:
 
   GeneAnnotationMap gene_annotation_map_;

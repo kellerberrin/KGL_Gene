@@ -14,6 +14,7 @@
 
 
 namespace kgl = kellerberrin::genome;
+namespace kol = kellerberrin::ontology;
 
 void kgl::GenomeMutation::analysisType() {
 
@@ -54,11 +55,8 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
   }
 
   analysis_initialized_ = true;
-  const GafRecordMap& ont_map = genome_ptr->geneOntology().getMap();
-  ResortGaf symbolic_gaf; // re-sort by the symbolic reference.
-  symbolic_gaf.sortBySymbolic(ont_map);
-  ResortGaf gene_id_gaf; // re-sort by the gene id field.
-  gene_id_gaf.sortByGeneId(ont_map);
+
+  kol::TermAnnotation term_annotation(genome_ptr->geneOntology().getGafRecordVector(), kol::AnnotationGeneName::SYMBOLIC_GENE_ID);
   const GeneSynonymVector synonym_vector = genome_ptr->geneOntology().getSynonymVector();
   ResortIds resort_ids;
   resort_ids.sortByHGNC(synonym_vector);
@@ -77,46 +75,26 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
       gene_ptr->getAttributes().getName(name_vec);
       std::string name;
       std::string gaf_id;
-      std::set<std::string> GO_set;
 
       if (not name_vec.empty()) {
 
         name = name_vec.front();
-        auto result = symbolic_gaf.getMap().find(name);
-        if (result != symbolic_gaf.getMap().end()) {
-
-          const auto& [symbolic, ontology_ptr] = *result;
-          gaf_id = ontology_ptr->gene_uniprot_id();
-          for (const auto& GO_record : ontology_ptr->goRecords()) {
-
-            GO_set.insert(GO_record.second->goIdent());
-
-          }
-
-        }
+        auto [uniprot_id, symbolic_id] = term_annotation.getGeneIdentifiers(name);
+        gaf_id = uniprot_id;
 
       }
 
       // If gaf_id_ is empty then try a lookup with the gene id.
       if (gaf_id.empty()) {
 
-        auto result = gene_id_gaf.getMap().find(gene_ptr->id());
-        if (result != gene_id_gaf.getMap().end()) {
-
-          const auto& [gene_id, ontology_ptr] = *result;
-          gaf_id = ontology_ptr->gene_uniprot_id();
-          for (const auto& GO_record : ontology_ptr->goRecords()) {
-
-            GO_set.insert(GO_record.second->goIdent());
-
-          }
-
-        }
+        auto [uniprot_id, symbolic_id] = term_annotation.getGeneIdentifiers(gene_ptr->id());
+        gaf_id = uniprot_id;
 
       }
 
+
       GeneCharacteristic gene_characteristic;
-      gene_characteristic.geneDefinition(gene_ptr, genome_ptr->genomeId(), name, gaf_id, GO_set, resort_ids.getMap());
+      gene_characteristic.geneDefinition(gene_ptr, genome_ptr->genomeId(), name, gaf_id, resort_ids.getMap());
       GeneMutation mutation;
       mutation.gene_characteristic = gene_characteristic;
       mutation.clinvar.updateEthnicity().updatePopulations(ped_data);

@@ -14,7 +14,6 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
                                               const GenomeId_t& genome_id,
                                               const std::string& name,
                                               const std::string& gaf_ident,
-                                              const std::set<std::string>& GO_set,
                                               const GeneIdentMap& key_HGNC_map)
 {
 
@@ -35,7 +34,6 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
   biotype_ = biotype_str;
   valid_protein_ = ContigReference::verifyGene(gene_ptr);
   gaf_id_ = gaf_ident;
-  GO_set_ = GO_set;
   gene_begin_ = gene_ptr->sequence().begin();
   gene_end_ = gene_ptr->sequence().end();
   gene_span_ = gene_ptr->sequence().length();

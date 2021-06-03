@@ -382,52 +382,25 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
 
         }
 
-        auto gene_ontology_opt = genome_db->geneOntology().getGafFeatureVector(gene_ptr->id());
-        if (gene_ontology_opt) {
 
-          auto gene_ontology_ptr = gene_ontology_opt.value();
-          out_file << gene_ontology_ptr->symbolicReference() << CSV_delimiter;
-          out_file << gene_ontology_ptr->altSymbolicReference() << CSV_delimiter;
-          out_file << "\"" << gene_ontology_ptr->description() << "\"" << CSV_delimiter;
+        out_file << CSV_delimiter;
+        out_file << CSV_delimiter;
+        std::vector<std::string> description_vec;
+        if (not gene_ptr->getAttributes().getDescription(description_vec)) {
 
-          std::set<std::string> uniqueGOrecords;
-          for (auto gorec : gene_ontology_ptr->goRecords()) {
-
-            uniqueGOrecords.insert(gorec.first);
-
-          }
-          std::string GOrecords;
-          for (auto gorec : uniqueGOrecords) {
-
-            GOrecords += gorec;
-            GOrecords += ";";
-
-          }
-
-          out_file << "\"" << GOrecords << "\"" << CSV_delimiter;
-
-        } else {
-
-          out_file << CSV_delimiter;
-          out_file << CSV_delimiter;
-          std::vector<std::string> description_vec;
-          if (not gene_ptr->getAttributes().getDescription(description_vec)) {
-
-            ExecEnv::log().error("outputSequenceCSV(), Cannot get description vector for Gene: {}", gene_ptr->id());
-
-          }
-          std::string description;
-          for (const auto &desc : description_vec) {
-
-            description += desc;
-            description += ";";
-
-          }
-
-          out_file << "\"" << description << "\"" << CSV_delimiter;
-          out_file << CSV_delimiter;
+          ExecEnv::log().error("outputSequenceCSV(), Cannot get description vector for Gene: {}", gene_ptr->id());
 
         }
+        std::string description;
+        for (const auto &desc : description_vec) {
+
+          description += desc;
+          description += ";";
+
+        }
+
+        out_file << "\"" << description << "\"" << CSV_delimiter;
+        out_file << CSV_delimiter;
 
 
         for(const auto& [genome, genome_ptr] : pop_variant_ptr->getMap()) {
@@ -584,55 +557,27 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
 
         }
 
-        auto gene_ontology_opt = genome_db->geneOntology().getGafFeatureVector(gene.second->id());
-        if (gene_ontology_opt) {
 
-          auto gene_ontology_ptr = gene_ontology_opt.value();
-          out_file << gene_ontology_ptr->symbolicReference() << CSV_delimiter;
-          out_file << gene_ontology_ptr->altSymbolicReference() << CSV_delimiter;
-          out_file << "\"" << gene_ontology_ptr->description() << "\"" << CSV_delimiter;
+        out_file << CSV_delimiter;
+        out_file << CSV_delimiter;
+        std::vector<std::string> description_vec;
 
-          std::set<std::string> uniqueGOrecords;
-          for (auto gorec : gene_ontology_ptr->goRecords()) {
+        if (not gene.second->getAttributes().getDescription(description_vec)) {
 
-            uniqueGOrecords.insert(gorec.first);
-
-          }
-          std::string GOrecords;
-          for (auto gorec : uniqueGOrecords) {
-
-            GOrecords += gorec;
-            GOrecords += ";";
-
-          }
-
-          out_file << "\"" << GOrecords << "\"" << CSV_delimiter;
-
-        } else {
-
-          out_file << CSV_delimiter;
-          out_file << CSV_delimiter;
-          std::vector<std::string> description_vec;
-
-          if (not gene.second->getAttributes().getDescription(description_vec)) {
-
-            ExecEnv::log().error("outputSequenceCSV(), Cannot get description vector for Gene: {}", gene.second->id());
-
-          }
-
-          std::string description;
-          for (const auto &desc : description_vec) {
-
-            description += desc;
-            description += ";";
-
-          }
-
-          out_file << "\"" << description << "\"" << CSV_delimiter;
-          out_file << CSV_delimiter;
+          ExecEnv::log().error("outputSequenceCSV(), Cannot get description vector for Gene: {}", gene.second->id());
 
         }
 
+        std::string description;
+        for (const auto &desc : description_vec) {
+
+          description += desc;
+          description += ";";
+
+        }
+
+        out_file << "\"" << description << "\"" << CSV_delimiter;
+        out_file << CSV_delimiter;
 
         for( auto [genome, genome_ptr] : pop_variant_ptr->getMap()) {
 
@@ -1198,29 +1143,18 @@ std::string kgl::GenomicMutation::outputSequence(char delimiter,
   ss << strand << delimiter;
   ss << average_DNA_score << delimiter;
 
-  auto gene_ontology_opt = genome_db->geneOntology().getGafFeatureVector(gene_id);
-  if (gene_ontology_opt) {
 
-    auto gene_ontology_ptr = gene_ontology_opt.value();
-    ss << gene_ontology_ptr->symbolicReference() << delimiter;
-    ss << gene_ontology_ptr->altSymbolicReference() << delimiter;
-    ss << "\"" << gene_ontology_ptr->description() << "\"";
+  ss << "<NULL>" << delimiter;
+  ss << "<NULL>" << delimiter;
+  std::vector<std::string> description_vec;
+  if (not coding_sequence->getGene()->getAttributes().getDescription(description_vec)) {
 
-  } else {
+    ExecEnv::log().error("GenomicMutation::outputSequence(); Cannot get description vector for Gene: {}", coding_sequence->getGene()->id());
 
-    ss << "<NULL>" << delimiter;
-    ss << "<NULL>" << delimiter;
-    std::vector<std::string> description_vec;
-    if (not coding_sequence->getGene()->getAttributes().getDescription(description_vec)) {
+  }
+  for (const auto &description : description_vec) {
 
-      ExecEnv::log().error("GenomicMutation::outputSequence(); Cannot get description vector for Gene: {}", coding_sequence->getGene()->id());
-
-    }
-    for (const auto &description : description_vec) {
-
-      ss << "\"" << description << "\"";
-
-    }
+    ss << "\"" << description << "\"";
 
   }
 
