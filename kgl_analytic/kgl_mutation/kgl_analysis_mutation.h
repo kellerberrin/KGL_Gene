@@ -51,7 +51,7 @@ private:
   std::shared_ptr<const PopulationDB> unphased_population_ptr_;
   std::shared_ptr<const PopulationDB> clinvar_population_ptr_;
   std::shared_ptr<const GenomePEDData> ped_data_;
-  std::shared_ptr<const OntologyDatabase> ontology_db_ptr_;
+  std::shared_ptr<const kol::OntologyDatabase> ontology_db_ptr_;
   // Results of the analysis. Type of gene membership is defined here.
   GenomeMutation gene_mutation_{VariantGeneMembership::BY_EXON};
   std::string output_file_name_;

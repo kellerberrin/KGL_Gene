@@ -178,16 +178,15 @@ bool kgl::IntervalAnalysis::initializeAnalysis( const std::string& work_director
 
   work_directory_ = work_directory;
 
-  if (resource_ptr->getGenomes().getMap().size() != 1) {
+  auto genome_resource_vector = resource_ptr->getResources(RuntimeResourceType::GENOME_DATABASE);
+  if (genome_resource_vector.size() != 1) {
 
     ExecEnv::log().error("Analytic: {} called with {} genomes.  Only 1 genome can be analysed at a time. Disabled.",
-                    ident(), resource_ptr->getGenomes().getMap().size());
+                         ident(), genome_resource_vector.size());
     return false;
 
   }
-
-  // The first genome is the only genome.
-  genome_ = resource_ptr->getGenomes().getMap().begin()->second;
+  genome_ = std::dynamic_pointer_cast<const GenomeReference>(genome_resource_vector.front());
 
   if (not genome_) {
 

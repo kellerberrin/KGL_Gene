@@ -3,7 +3,6 @@
 //
 
 #include "kgl_properties.h"
-#include "kgl_table_impl.h"
 #include "kel_utility.h"
 
 #include <set>
@@ -122,7 +121,8 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
     }
 
-    // Get a Vector of Genome Databases to read.
+    // Get a Vector of Package Resources to be provided to the package by the runtime executive.
+    // A package resource is simply a pair of a resource type as a string and a resource identifier as a string.
     // This is done on initialization.
     std::vector<SubPropertyTree> resource_vector;
     if (not sub_tree.second.getPropertyTreeVector(PACKAGE_RESOURCE_LIST_, resource_vector))  {
@@ -130,32 +130,24 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
       ExecEnv::log().warn("RuntimeProperties::getPackageMap, No resources specified for Package: {}", package_ident);
 
     }
-    std::vector<std::pair<std::string,RuntimeResourceType>> resources;
+    std::vector<std::pair<RuntimeResourceType,std::string>> resources;
     for (auto const& resource_sub_tree : resource_vector) {
 
-      if (resource_sub_tree.first == GENOME_DATABASE_) {
+      std::string resource_type = resource_sub_tree.first;
+      std::string resource_identifier = resource_sub_tree.second.getValue();
+      if (resource_identifier.empty()) {
 
-        std::string genome_database = resource_sub_tree.second.getValue();
-        if (genome_database.empty()) {
+        ExecEnv::log().critical("RuntimeProperties::getPackageMap, Package: {}, Resource: {} No resource identifier specified", package_ident, resource_type);
 
-          ExecEnv::log().critical("RuntimeProperties::getPackageMap, Package: {}, No Genome Database identifier specified", package_ident);
+      } else {
 
-        } else {
+        if (resource_type == ONTOLOGY_DATABASE_) {
 
-          resources.emplace_back(genome_database, RuntimeResourceType::GENOME_DATABASE);
+          resources.emplace_back(RuntimeResourceType::ONTOLOGY_DATABASE, resource_identifier);
 
-        }
+        } else if (resource_type == GENOME_DATABASE_) {
 
-      } else if (resource_sub_tree.first == ONTOLOGY_DATABASE_) {
-
-        std::string ontology_database = resource_sub_tree.second.getValue();
-        if (ontology_database.empty()) {
-
-          ExecEnv::log().critical("RuntimeProperties::getPackageMap, Package: {}, No Ontology Database identifier specified", package_ident);
-
-        } else {
-
-          resources.emplace_back(ontology_database, RuntimeResourceType::ONTOLOGY_DATABASE);
+          resources.emplace_back(RuntimeResourceType::GENOME_DATABASE, resource_identifier);
 
         }
 

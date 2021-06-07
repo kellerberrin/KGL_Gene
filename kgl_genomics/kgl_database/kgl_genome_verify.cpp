@@ -5,7 +5,7 @@
 
 #include "kel_patterns.h"
 #include "kgl_genome_feature.h"
-#include "kgl_resource_db.h"
+#include "kgl_genome_contig.h"
 
 namespace kgl = kellerberrin::genome;
 

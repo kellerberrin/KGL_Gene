@@ -3,7 +3,8 @@
 //
 
 
-#include "kgl_resource_db.h"
+#include "kgl_genome_contig_feature.h"
+#include "kgl_genome_contig.h"
 #include "kel_patterns.h"
 
 
@@ -49,9 +50,9 @@ void kgl::StructuredFeatures::verifyContigOverlap() {
   // Adjust to [0, size) here.
   // Note that this suggests a problem with the (3rd party) Gff read functionality and should be addressed there.
 
-  for (auto feature_pair : offsetFeatureMap()) {
+  for (auto [offset, feature_ptr] : offsetFeatureMap()) {
 
-    Feature &feature = *feature_pair.second;
+    Feature &feature = *feature_ptr;
     // Error if feature overlaps the and of the contig.
     // If [1,contig_size] then adjust to [0, contig_size)
 

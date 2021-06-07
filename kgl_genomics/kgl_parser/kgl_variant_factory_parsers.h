@@ -62,16 +62,31 @@ private:
     }
 
     // Get the specified reference genome to validate the parsed VCF population.
-    std::optional<std::shared_ptr<const GenomeReference>> ref_genome_opt = resource_ptr->getGenomes().getOptionalResource(vcf_file_info->referenceGenome());
+    std::shared_ptr<const GenomeReference> ref_genome;
+    for (auto const& genome_resource : resource_ptr->getResources(RuntimeResourceType::GENOME_DATABASE)) {
 
-    if (not ref_genome_opt) {
+      auto genome_ptr = std::dynamic_pointer_cast<const GenomeReference>(genome_resource);
+      if (not genome_ptr) {
+
+        ExecEnv::log().critical("ParserSelection::readVCF; Serious Internal Error, Invalid Genome resource.");
+
+      }
+
+      if (genome_ptr->genomeId() == vcf_file_info->referenceGenome()) {
+
+        ref_genome = genome_ptr;
+        break;
+
+      }
+
+    }
+
+    if (not ref_genome) {
 
       ExecEnv::log().critical("ParserSelection::readVCF; Reference Genome {} Not Found for VCF file ident: {}",
                               vcf_file_info->referenceGenome(), vcf_file_info->identifier());
 
     }
-
-    std::shared_ptr<const GenomeReference> ref_genome = ref_genome_opt.value();
 
     // Get the defined INFO subset defined for the VCF (can be all INFO fields).
     auto evidence_opt = evidence_map.lookupEvidence(vcf_file_info->evidenceIdent());
@@ -89,7 +104,7 @@ private:
     // Read the VCF with the appropriate parser in a unique block so that that the parser is deleted before validation begins.
     // This prevents the parser queues stall warning from activating if the population verification is lengthy.
     {
-      VCFParser reader(vcf_population_ptr, ref_genome_opt.value(), contig_alias, evidence_opt.value());
+      VCFParser reader(vcf_population_ptr, ref_genome, contig_alias, evidence_opt.value());
       reader.readParseVCFImpl(vcf_file_info->fileName());
     }
 

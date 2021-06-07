@@ -7,7 +7,7 @@
 
 
 #include "kel_utility.h"
-#include "kgl_resource_db.h"
+#include "kgl_genome_genome.h"
 #include "kgl_variant_file_vcf_record.h"
 
 

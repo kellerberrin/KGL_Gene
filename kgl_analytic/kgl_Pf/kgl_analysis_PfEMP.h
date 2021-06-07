@@ -7,6 +7,7 @@
 
 
 #include "kgl_analysis_virtual.h"
+#include "kgl_genome_collection.h"
 
 
 
@@ -17,7 +18,7 @@ class PfEMPAnalysis : public VirtualAnalysis {
 
 public:
 
-  PfEMPAnalysis() = default;
+  PfEMPAnalysis() { reference_genomes_ = std::make_shared<GenomeCollection>(); }
   ~PfEMPAnalysis() override = default;
 
   // Functions redefined in super classes
@@ -42,7 +43,7 @@ public:
 
 private:
 
-  std::shared_ptr<const GenomeCollection> reference_genomes_;
+  std::shared_ptr<GenomeCollection> reference_genomes_;
 
   void performPFEMP1UPGMA();
   bool getParameters(const ActiveParameterList& named_parameters, const std::string& work_directory);

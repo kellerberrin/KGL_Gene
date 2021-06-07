@@ -21,9 +21,11 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 
   }
 
-  for (auto const& genome : resource_ptr->getGenomes().getMap()) {
+  for (auto const& genome_resource_ptr : resource_ptr->getResources(RuntimeResourceType::GENOME_DATABASE)) {
 
-    ExecEnv::log().info("Default Initialize for Analysis Id: {} called with Reference Genome: {}", ident(), genome.first);
+    auto genome_ptr = std::dynamic_pointer_cast<const GenomeReference>(genome_resource_ptr);
+    ExecEnv::log().info("Initialize for Analysis Id: {} called with Reference Genome: {}", ident(), genome_ptr->genomeId());
+    reference_genomes_->addGenome(genome_ptr);
 
   }
 
@@ -34,7 +36,6 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 
   }
 
-  reference_genomes_ = std::make_shared<const  GenomeCollection>(resource_ptr->getGenomes());
   performPFEMP1UPGMA();
 
   return true;

@@ -47,7 +47,7 @@ void kgl::RuntimeConfiguration::verifyPackages() const {
     }
 
     //confirm that all reference genomes exist
-    for (auto const& [resource_ident, resource_type] : package.resourceDatabaseList()) {
+    for (auto const& [resource_type, resource_ident] : package.resourceDatabaseList()) {
 
       if (not resource_map_.contains(resource_ident)) {
 

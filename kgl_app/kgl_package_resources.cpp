@@ -14,7 +14,7 @@ std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeRe
 
   std::shared_ptr<AnalysisResources> resource_ptr(std::make_shared<AnalysisResources>());
 
-  for (auto const& [resource_ident, resource_type]  :  package.resourceDatabaseList()) {
+  for (auto const& [resource_type, resource_ident]  :  package.resourceDatabaseList()) {
 
     switch (resource_type) {
 
@@ -71,11 +71,7 @@ void kgl::ExecutePackage::loadGenomeResource(const std::string& genome_ident, co
                                                                                            genome_resource_ptr->idFileName(),
                                                                                            genome_resource_ptr->translationTable());
 
-  if (not resource_ptr->addGenome(genome_ptr)) {
-
-    ExecEnv::log().error("ExecutePackage::loadGenomeResource; Unable to add Genome Database: {} (probable duplicate)", genome_ptr->genomeId());
-
-  }
+  resource_ptr->addResource(genome_ptr);
 
 }
 
@@ -97,15 +93,11 @@ void kgl::ExecutePackage::loadOntologyResource(const std::string& ontology_ident
 
   }
 
-  std::shared_ptr<const OntologyDatabase> ontology_ptr(std::make_shared<const OntologyDatabase>( ontology_ident,
-                                                                                                 ontology_resource_ptr->goGraphFileName(),
-                                                                                                 ontology_resource_ptr->annotationFileName()));
+  std::shared_ptr<const kol::OntologyDatabase> ontology_ptr(std::make_shared<const kol::OntologyDatabase>( ontology_ident,
+                                                                                                           ontology_resource_ptr->goGraphFileName(),
+                                                                                                           ontology_resource_ptr->annotationFileName()));
 
-  if (not resource_ptr->addOntology(ontology_ptr)) {
-
-    ExecEnv::log().error("ExecutePackage::loadOntologyResource; Unable to add Ontology Database: {} (probable duplicate)", ontology_ptr->ontologyIdent());
-
-  }
+  resource_ptr->addResource(ontology_ptr);
 
 }
 

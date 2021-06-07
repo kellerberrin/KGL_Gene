@@ -14,6 +14,7 @@
 #include "kgl_variant_db_population.h"
 #include "kgl_variant_filter.h"
 #include "kgl_gff_fasta.h"
+#include "kgl_genome_collection.h"
 
 
 

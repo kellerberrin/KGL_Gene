@@ -21,24 +21,22 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
   }
 
-  if (resource_ptr->getGenomes().getMap().size() != 1) {
+  auto genome_resource_vector = resource_ptr->getResources(RuntimeResourceType::GENOME_DATABASE);
+  if (genome_resource_vector.size() != 1) {
 
-    ExecEnv::log().critical("Analysis Id: {}, expected single (1) reference genome, actual count: {}", resource_ptr->getGenomes().getMap().size());
+    ExecEnv::log().critical("Analysis Id: {}, expected single (1) reference genome, actual count: {}", genome_resource_vector.size());
+
+  }
+  ref_genome_ptr_ = std::dynamic_pointer_cast<const GenomeReference>(genome_resource_vector.front());
+
+  auto ontology_resource_vector = resource_ptr->getResources(RuntimeResourceType::ONTOLOGY_DATABASE);
+  if (ontology_resource_vector.size() != 1) {
+
+    ExecEnv::log().critical("Analysis Id: {}, expected single (1) ontology database, actual count: {}", ontology_resource_vector.size());
 
   }
 
-
-  auto [genome_id, genome_ptr] = *(resource_ptr->getGenomes().getMap().begin());
-  ref_genome_ptr_ = genome_ptr;
-
-  if (resource_ptr->getOntologies().getMap().size() != 1) {
-
-    ExecEnv::log().critical("Analysis Id: {}, expected single (1) ontology database, actual count: {}", resource_ptr->getOntologies().getMap().size());
-
-  }
-
-  auto [ontology_id, ontology_ptr] = *(resource_ptr->getOntologies().getMap().begin());
-  ontology_db_ptr_ = ontology_ptr;
+  ontology_db_ptr_ = std::dynamic_pointer_cast<const kol::OntologyDatabase>(ontology_resource_vector.front());
 
   if (not getParameters(named_parameters, work_directory)) {
 
@@ -46,10 +44,10 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
   }
 
-  // Sanity Check.
-  if (not ref_genome_ptr_) {
+  // Just in case.
+  if (not ref_genome_ptr_ or not ontology_db_ptr_) {
 
-    ExecEnv::log().critical("Analysis Id: {}, no genomes defined, program ends.", ident());
+    ExecEnv::log().critical("Analysis Id: {}, no genomes defined or ontology database not defined, program ends.", ident());
 
   }
 
@@ -360,7 +358,7 @@ void kgl::MutationAnalysis::performRegion() {
                                               584668,
                                               7280,
                                               population_ptr_,
-                                              ref_genome_ptr_->getResource(analysis_genome),
+                                              ref_genome_ptr_->getGenome(analysis_genome),
                                               region_fasta_file)) {
 
     ExecEnv::log().error("PhylogeneticAnalysis::performRegion(); analysis fails");

@@ -21,7 +21,7 @@ bool kgl::GenomicSequence::translateContig(const GenomeId_t& genome_id,
                                            const std::shared_ptr<const GenomeCollection>& genomes,
                                            const std::string& fasta_file_name) {
   // Get the genome object
-  std::optional<std::shared_ptr<const GenomeReference>> genome_opt = genomes->getOptionalResource(genome_id);
+  std::optional<std::shared_ptr<const GenomeReference>> genome_opt = genomes->getOptionalGenome(genome_id);
   if (not genome_opt) {
 
     ExecEnv::log().warn("Could not find Genome: {} in genome collection", genome_id);
@@ -114,7 +114,7 @@ bool kgl::GenomicSequence::translateGene(const GenomeId_t& genome_id,
                                          const std::string& fasta_file_name) {
 
   // Get the genome object
-  std::optional<std::shared_ptr<const GenomeReference>> genome_opt = genomes->getOptionalResource(genome_id);
+  std::optional<std::shared_ptr<const GenomeReference>> genome_opt = genomes->getOptionalGenome(genome_id);
   if (not genome_opt) {
 
     ExecEnv::log().warn("Could not find Genome: {} in genome collection", genome_id);

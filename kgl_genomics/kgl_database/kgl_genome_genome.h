@@ -7,6 +7,7 @@
 
 
 #include "kgl_genome_contig.h"
+#include "kgl_resource_db.h"
 
 #include <memory>
 #include <string>
@@ -19,11 +20,12 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GenomeDatabase - A map of contigs defining the genome of an organism.
+// This object is passed as a requested resource into an analysis package.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using GenomeContigMap = std::map<ContigId_t, std::shared_ptr<ContigReference>>;
 
-class GenomeReference {
+class GenomeReference : public ResourceBase {
 
 public:
 
@@ -31,8 +33,8 @@ public:
   GenomeReference(const GenomeReference&) = default;
   ~GenomeReference() = default;
 
-  GenomeReference& operator=(const GenomeReference&) = default;
-
+  // Resource type identifier.
+  [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::GENOME_DATABASE; }
   // Organism identifier
   [[nodiscard]] const GenomeId_t& genomeId() const { return _genome_id; }
 

@@ -65,14 +65,14 @@ public:
   // This analysis is performed first and only once.
   bool genomeAnalysis( const std::shared_ptr<const GenomeReference>& genome_reference,
                        const std::shared_ptr<const GenomePEDData>& ped_data,
-                       const std::shared_ptr<const OntologyDatabase>& ontology_db_ptr);
+                       const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
 
   // Then this analysis.
   bool variantAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
                         const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                         const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                         const std::shared_ptr<const GenomePEDData>& ped_data,
-                        const std::shared_ptr<const OntologyDatabase>& ontology_db_ptr);
+                        const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
 
   // Finally, output to file.
   bool writeOutput(const std::shared_ptr<const GenomePEDData>& ped_data, const std::string& out_file, char output_delimiter) const;

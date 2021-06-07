@@ -11,7 +11,7 @@
 
 #include "kgl_genome_types.h"
 #include "kgl_ensembl_id_parser.h"
-#include "kol_ParserGafRecord.h"
+#include "kol_TermAnnotation.h"
 
 namespace kol = kellerberrin::ontology;
 namespace kellerberrin::genome {   //  organization level namespace
@@ -37,7 +37,7 @@ public:
   ///  \param const std::string& filename.
   ///  \return bool indicating if the read was successful.
   ///
-  bool readGafFile(const std::string& filename);
+  bool readGafFile( const std::string& filename);
   bool readIdFile(const std::string& filename);
 
   /// Returns a map with all gene indexed gaf annotations.
@@ -50,7 +50,6 @@ public:
 
 private:
 
-  void semanticGafParse(const std::shared_ptr<const kol::GAFRecord>& gaf_record_ptr);
 
   GeneSynonymVector  synonym_vector_;
   std::vector<std::shared_ptr<const kol::GAFRecord>> gaf_record_vector_;

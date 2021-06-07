@@ -43,7 +43,7 @@ void kgl::GenomeMutation::analysisType() {
 // Perform the genetic analysis per iteration.
 bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeReference>& genome_ptr,
                                           const std::shared_ptr<const GenomePEDData>& ped_data,
-                                          const std::shared_ptr<const OntologyDatabase>& ontology_db_ptr)
+                                          const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr)
 {
 
   // Only execute this function once.
@@ -117,7 +117,7 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
                                           const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                           const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                           const std::shared_ptr<const GenomePEDData>& ped_data,
-                                          const std::shared_ptr<const OntologyDatabase>& ontology_db_ptr) {
+                                          const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) {
 
   ThreadPool thread_pool(ThreadPool::hardwareThreads());
   // A vector for futures.

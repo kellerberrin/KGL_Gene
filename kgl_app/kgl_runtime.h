@@ -6,6 +6,7 @@
 #define KGL_KGL_RUNTIME_H
 
 #include "kgl_genome_types.h"
+#include "kgl_resource_db.h"
 
 #include <memory>
 #include <string>
@@ -50,7 +51,6 @@ private:
 
 class RuntimePackage;
 using RuntimePackageMap = std::map<std::string, RuntimePackage>;
-enum class RuntimeResourceType { GENOME_DATABASE, ONTOLOGY_DATABASE, GENE_NOMENCLATURE };
 
 
 class RuntimePackage {
@@ -59,7 +59,7 @@ public:
 
   RuntimePackage( std::string package_identifier,
                   std::vector<std::string> analysis_list,
-                  std::vector<std::pair<std::string, RuntimeResourceType>> resource_database_list,
+                  std::vector<std::pair<RuntimeResourceType, std::string>> resource_database_list,
                   std::vector<std::vector<std::string>> iterative_file_list)
                   : package_identifier_(std::move(package_identifier)),
                     analysis_list_(std::move(analysis_list)),
@@ -71,14 +71,14 @@ public:
 
   [[nodiscard]] const std::string& packageIdentifier() const { return package_identifier_; }
   [[nodiscard]] const std::vector<std::string>& analysisList() const { return analysis_list_; }
-  [[nodiscard]] const std::vector<std::pair<std::string, RuntimeResourceType>>& resourceDatabaseList() const { return resource_database_list_; }
+  [[nodiscard]] const std::vector<std::pair<RuntimeResourceType, std::string>>& resourceDatabaseList() const { return resource_database_list_; }
   [[nodiscard]] const std::vector<std::vector<std::string>>& iterativeFileList() const { return iterative_file_list_; }
 
 private:
 
   std::string package_identifier_;
   std::vector<std::string> analysis_list_;
-  std::vector<std::pair<std::string, RuntimeResourceType>> resource_database_list_;
+  std::vector<std::pair<RuntimeResourceType, std::string>> resource_database_list_;
   std::vector<std::vector<std::string>> iterative_file_list_;
 
 };
@@ -177,6 +177,7 @@ private:
   std::string translation_table_;
   std::string gaf_file_name_;
   std::string id_file_name_;
+
 
 };
 

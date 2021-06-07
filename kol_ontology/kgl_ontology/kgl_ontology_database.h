@@ -9,8 +9,10 @@
 #include <string>
 #include <memory>
 
+#include "kgl_resource_db.h"
 #include "kol_TermAnnotation.h"
 
+namespace kgl = kellerberrin::genome;
 namespace kellerberrin::ontology {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -23,7 +25,7 @@ class GoGraph;
 class TermAnnotation;
 
 
-class OntologyDatabase {
+class OntologyDatabase : public kgl::ResourceBase {
 
 public:
 
@@ -33,6 +35,10 @@ public:
 
   ~OntologyDatabase() = default;
 
+  // Resource type identifier.
+  [[nodiscard]] kgl::RuntimeResourceType getResourceType() const override { return kgl::RuntimeResourceType::ONTOLOGY_DATABASE; }
+
+  // Ontology Resources.
   [[nodiscard]] const std::string& ontologyIdent() const { return ontology_ident_; }
   [[nodiscard]] const std::shared_ptr<const GoGraph>& goGraph() const { return go_graph_ptr_; }
   [[nodiscard]] const std::shared_ptr<const TermAnnotation>& annotation() const { return annotation_ptr_; }
@@ -47,6 +53,8 @@ private:
   [[nodiscard]] std::shared_ptr<const GoGraph> getGoGraph(const std::string& go_graph_file);
 
 };
+
+
 
 } // namespace
 
