@@ -65,7 +65,8 @@ public:
   // This analysis is performed first and only once.
   bool genomeAnalysis( const std::shared_ptr<const GenomeReference>& genome_reference,
                        const std::shared_ptr<const GenomePEDData>& ped_data,
-                       const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
+                       const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr,
+                       const std::shared_ptr<const EnsemblHGNCResource>& nomenclature_ptr);
 
   // Then this analysis.
   bool variantAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,

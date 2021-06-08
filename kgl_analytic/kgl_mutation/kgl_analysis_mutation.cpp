@@ -38,6 +38,15 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
   ontology_db_ptr_ = std::dynamic_pointer_cast<const kol::OntologyDatabase>(ontology_resource_vector.front());
 
+  auto nomenclature_resource_vector = resource_ptr->getResources(RuntimeResourceType::GENE_NOMENCLATURE);
+  if (nomenclature_resource_vector.size() != 1) {
+
+    ExecEnv::log().critical("Analysis Id: {}, expected single (1) Nomenclature database, actual count: {}", nomenclature_resource_vector.size());
+
+  }
+
+  nomenclature_ptr_ = std::dynamic_pointer_cast<const EnsemblHGNCResource>(nomenclature_resource_vector.front());
+
   if (not getParameters(named_parameters, work_directory)) {
 
     ExecEnv::log().critical("Analysis Id: {}, problem parsing parameters, program ends.", ident());
@@ -45,9 +54,9 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
   }
 
   // Just in case.
-  if (not ref_genome_ptr_ or not ontology_db_ptr_) {
+  if (not ref_genome_ptr_ or not ontology_db_ptr_ or not nomenclature_ptr_) {
 
-    ExecEnv::log().critical("Analysis Id: {}, no genomes defined or ontology database not defined, program ends.", ident());
+    ExecEnv::log().critical("Analysis Id: {}, A required resource is not defined, program ends.", ident());
 
   }
 
@@ -119,7 +128,7 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
       ped_data_ = ped_data;
       ExecEnv::log().info("Analysis: {}, ped file: {} contains: {} PED records", ident(), ped_data->fileId(), ped_data->getMap().size());
       // Update the template populations.
-      gene_mutation_.genomeAnalysis(ref_genome_ptr_, ped_data_, ontology_db_ptr_);
+      gene_mutation_.genomeAnalysis(ref_genome_ptr_, ped_data_, ontology_db_ptr_, nomenclature_ptr_);
 
       filterPedGenomes();
 

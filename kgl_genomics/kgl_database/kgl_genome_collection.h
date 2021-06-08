@@ -34,7 +34,7 @@ public:
   [[nodiscard]] std::shared_ptr<const GenomeReference> getGenome(const std::string &genome_id) const;
   [[nodiscard]] std::optional<std::shared_ptr<const GenomeReference>> getOptionalGenome(const std::string &genome_id) const;
   [[nodiscard]] const GenomeReferenceMap &getMap() const { return genome_map_; }
-  // Returns false if the genome already exists.
+  // Returns false if the genome already exists in the collection.
   bool addGenome(const std::shared_ptr<const GenomeReference> &genome_ptr);
 
 private:

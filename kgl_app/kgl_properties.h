@@ -115,8 +115,11 @@ private:
   constexpr static const char* GENOME_IDENT_ = "genomeIdent";
   constexpr static const char* FASTA_FILE_ = "fastaFile";
   constexpr static const char* GFF_FILE_ = "gffFile";
-  constexpr static const char* ID_FILE_ = "idFile";   // optional
   constexpr static const char* TRANSLATION_TABLE_ = "translationTable";
+  // Gene Nomenclature files; this a Resource Database.
+  constexpr static const char* GENE_ID_DATABASE_ = "geneNomenclature";
+  constexpr static const char* GENE_ID_IDENT_ = "nomenclatureIdent";
+  constexpr static const char* GENE_ID_FILE_ = "nomenclatureFile";
   // Contig/Chromosome Alias categories.
   constexpr static const char* ALIAS_LIST_ = "aliasList";
   constexpr static const char* ALIAS_IDENT_ = "ident";

@@ -5,6 +5,7 @@
 #ifndef KGL_ENSEMBL_ID_PARSER_H
 #define KGL_ENSEMBL_ID_PARSER_H
 
+#include "kgl_resource_db.h"
 #include "kgl_square_parser.h"
 
 
@@ -12,7 +13,7 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Parse a gene ident file.
+// Gene nomenclature resource object.
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -23,6 +24,33 @@ struct GeneIDSynonyms {
 
 };
 using GeneSynonymVector = std::vector<GeneIDSynonyms>;
+
+
+class EnsemblHGNCResource : public ResourceBase {
+
+public:
+
+  explicit EnsemblHGNCResource(std::string identifier, GeneSynonymVector synonym_vector) : identifier_(std::move(identifier)),
+                                                                                           synonym_vector_(std::move(synonym_vector)) {}
+  ~EnsemblHGNCResource() override = default;
+
+  [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::GENE_NOMENCLATURE; }
+
+  [[nodiscard]] const std::string& identifier() const { return identifier_; }
+  [[nodiscard]] const GeneSynonymVector& getGeneSynonym() const { return synonym_vector_; }
+
+private:
+
+  const std::string identifier_;
+  const GeneSynonymVector synonym_vector_;
+
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Parse a gene ident file.
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 class ParseGeneIdents : public SquareTextParser {

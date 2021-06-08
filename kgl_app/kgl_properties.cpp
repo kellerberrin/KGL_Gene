@@ -149,6 +149,10 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
           resources.emplace_back(RuntimeResourceType::GENOME_DATABASE, resource_identifier);
 
+        } else if (resource_type == GENE_ID_DATABASE_) {
+
+          resources.emplace_back(RuntimeResourceType::GENE_NOMENCLATURE, resource_identifier);
+
         }
 
       }
@@ -344,18 +348,10 @@ kgl::RuntimeResourceMap kgl::RuntimeProperties::getRuntimeResources() const {
 
       }
 
-      key = std::string(ID_FILE_);
-      std::string id_file_name;
-      if (not sub_tree.getOptionalFileProperty(key, workDirectory(), id_file_name)) {
-
-        id_file_name.clear();
-
-      }
 
       RuntimeGenomeResource new_genome_db(genome_ident, fasta_file_name, gff_file_name, translation_table);
 
       new_genome_db.setGafFileName(gaf_file_name);
-      new_genome_db.setIdFileName(id_file_name);
 
       std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const RuntimeGenomeResource>(new_genome_db);
 
@@ -406,7 +402,37 @@ kgl::RuntimeResourceMap kgl::RuntimeProperties::getRuntimeResources() const {
 
       }
 
-    } // Gene Ontology
+    } else if (tree_type == GENE_ID_DATABASE_) {
+
+      key = std::string(GENE_ID_IDENT_);
+      std::string nomenclature_ident;
+      if (not sub_tree.getProperty(key, nomenclature_ident)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No gene Nomenclature Identifier.");
+        continue;
+
+      }
+
+      key = std::string(GENE_ID_FILE_);
+      std::string nomenclature_file_name;
+      if (not sub_tree.getFileProperty(key, workDirectory(), nomenclature_file_name)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Gene Nomenclature file name information, ident: {}", nomenclature_ident);
+        continue;
+
+      }
+
+      std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const RuntimeNomenclatureResource>(nomenclature_ident,
+                                                                                                                nomenclature_file_name);
+
+      auto const [iter, result] = resource_map.try_emplace(nomenclature_ident, resource_ptr);
+      if (not result) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources, Could not add Gene Nomenclature ident: {} to map (duplicate)", nomenclature_ident);
+
+      }
+
+    } // Gene Nomenclature
 
   } // For all resources.
 

@@ -31,7 +31,7 @@ public:
 
   explicit GenomeReference(const GenomeId_t& genome_id) : _genome_id(genome_id) {}
   GenomeReference(const GenomeReference&) = default;
-  ~GenomeReference() = default;
+  ~GenomeReference() override = default;
 
   // Resource type identifier.
   [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::GENOME_DATABASE; }
@@ -65,7 +65,6 @@ public:
                                                                              const std::string& fasta_file,
                                                                              const std::string& gff_file,
                                                                              const std::string& gaf_file,
-                                                                             const std::string& id_file,
                                                                              const std::string& translation_table);
 
 private:

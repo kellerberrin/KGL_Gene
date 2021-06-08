@@ -164,10 +164,8 @@ public:
   [[nodiscard]] const std::string& translationTable() const { return translation_table_; }
   // Gaf file and ID file are optional.
   [[nodiscard]] const std::string& gafFileName () const { return gaf_file_name_; }
-  [[nodiscard]] const std::string& idFileName () const { return id_file_name_; }
 
   void setGafFileName(const std::string& gaf_file_name) { gaf_file_name_ = gaf_file_name; }
-  void setIdFileName(const std::string& id_file_name) { id_file_name_ = id_file_name; }
 
 private:
 
@@ -176,7 +174,6 @@ private:
   std::string gff_file_name_;
   std::string translation_table_;
   std::string gaf_file_name_;
-  std::string id_file_name_;
 
 
 };
@@ -213,6 +210,37 @@ private:
   std::string go_graph_file_name_;
 
 };
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Object to hold Gene Nomenclature file information.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class RuntimeNomenclatureResource : public RuntimeResource {
+
+public:
+
+  RuntimeNomenclatureResource(std::string nomenclature_identifier,
+                              std::string nomenclature_file_name)
+      : nomenclature_identifier_(std::move(nomenclature_identifier)),
+        nomenclature_file_name_(std::move(nomenclature_file_name)) {}
+  RuntimeNomenclatureResource() = delete;
+  RuntimeNomenclatureResource(const RuntimeNomenclatureResource&) = default;
+  ~RuntimeNomenclatureResource() override = default;
+
+  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::GENE_NOMENCLATURE; }
+
+  [[nodiscard]] const std::string& nomenclatureIdentifier() const { return nomenclature_identifier_; }
+  [[nodiscard]] const std::string& nomenclatureFileName() const { return nomenclature_file_name_; }
+
+private:
+
+  std::string nomenclature_identifier_;   // A unique short string to identify this nomenclature database
+  std::string nomenclature_file_name_;
+
+};
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

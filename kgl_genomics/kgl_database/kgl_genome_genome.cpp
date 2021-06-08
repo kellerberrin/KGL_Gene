@@ -22,7 +22,6 @@ std::shared_ptr<kgl::GenomeReference> kgl::GenomeReference::createGenomeDatabase
                                                                                  const std::string& fasta_file,
                                                                                  const std::string& gff_file,
                                                                                  const std::string& gaf_file,
-                                                                                 const std::string& id_file,
                                                                                  const std::string& translation_table) {
   // Create a genome database object.
   std::shared_ptr<kgl::GenomeReference> genome_db_ptr = ParseGffFasta().readFastaGffFile(organism, fasta_file, gff_file);
@@ -42,13 +41,6 @@ std::shared_ptr<kgl::GenomeReference> kgl::GenomeReference::createGenomeDatabase
   if (not gaf_file.empty()) {
 
     genome_db_ptr->gene_ontology_.readGafFile(gaf_file);
-
-  }
-
-  // Optionally read in Alternate feature and gene identifiers (Ensembl)
-  if (not id_file.empty()) {
-
-    genome_db_ptr->gene_ontology_.readIdFile(id_file);
 
   }
 

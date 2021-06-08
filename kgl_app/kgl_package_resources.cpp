@@ -68,7 +68,6 @@ void kgl::ExecutePackage::loadGenomeResource(const std::string& genome_ident, co
                                                                                            genome_resource_ptr->fastaFileName(),
                                                                                            genome_resource_ptr->gffFileName(),
                                                                                            genome_resource_ptr->gafFileName(),
-                                                                                           genome_resource_ptr->idFileName(),
                                                                                            genome_resource_ptr->translationTable());
 
   resource_ptr->addResource(genome_ptr);
@@ -101,8 +100,33 @@ void kgl::ExecutePackage::loadOntologyResource(const std::string& ontology_ident
 
 }
 
-void kgl::ExecutePackage::loadGeneNomenclatureResource(const std::string& nomenclature_ident, const std::shared_ptr<AnalysisResources>&) const {
+void kgl::ExecutePackage::loadGeneNomenclatureResource(const std::string& nomenclature_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
 
-  ExecEnv::log().info("ExecutePackage::loadGeneNomenclatureResource; **********Loading Gene NOMENCLATURE resource: {}", nomenclature_ident);
+  auto result = runtime_config_.resourceMap().find(nomenclature_ident);
+  if (result == runtime_config_.resourceMap().end()) {
+
+    ExecEnv::log().critical("ExecutePackage::loadOntologyResource, Nomenclature Database: {}, not defined", nomenclature_ident);
+
+  }
+
+  auto const& [resource_ident, resource_base_ptr] = *result;
+  auto nomenclature_resource_ptr = std::dynamic_pointer_cast<const RuntimeNomenclatureResource>(resource_base_ptr);
+
+  if (not nomenclature_resource_ptr) {
+
+    ExecEnv::log().critical("ExecutePackage::loadNomenclatureResource, Resource: {} is not a Nomenclature Database", resource_ident);
+
+  }
+
+  ParseGeneIdents parse_gene_idents;
+  if (not parse_gene_idents.parseIdentFile(nomenclature_resource_ptr->nomenclatureFileName())) {
+
+    ExecEnv::log().critical("ExecutePackage::loadGeneNomenclatureResource, Unable to parse Gene Nomenclature file: {}", nomenclature_resource_ptr->nomenclatureFileName());
+
+  }
+
+  std::shared_ptr<const EnsemblHGNCResource> gene_id_resource(std::make_shared<const EnsemblHGNCResource>(resource_ident, parse_gene_idents.getSynonymVector()));
+
+  resource_ptr->addResource(gene_id_resource);
 
 }

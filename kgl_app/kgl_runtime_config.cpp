@@ -51,6 +51,12 @@ void kgl::RuntimeConfiguration::verifyPackages() const {
 
       if (not resource_map_.contains(resource_ident)) {
 
+        for (auto const& [id, type] : resource_map_) {
+
+          ExecEnv::log().info("ExecutePackage::verifyPackage, Package: {}, Resource map content: {}", package_ident, id);
+
+        }
+
         ExecEnv::log().critical("ExecutePackage::verifyPackage, Package: {}, Runtime Resource: {}, not defined", package_ident, resource_ident);
 
       }

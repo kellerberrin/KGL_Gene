@@ -30,23 +30,6 @@ bool kgl::GeneOntology::readGafFile(const std::string &file_name) {
 }
 
 
-bool kgl::GeneOntology::readIdFile(const std::string& filename) {
-
-  ParseGeneIdents parse_gene_idents;
-  if (not parse_gene_idents.parseIdentFile(filename)) {
-
-    return false;
-
-  }
-
-  synonym_vector_ = parse_gene_idents.getSynonymVector();
-
-  return true;
-
-}
-
-
-
 void kgl::ResortIds::sortByHGNC(const GeneSynonymVector& ident_vector) {
 
   static bool warning{false};

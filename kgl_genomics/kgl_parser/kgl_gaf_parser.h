@@ -38,20 +38,17 @@ public:
   ///  \return bool indicating if the read was successful.
   ///
   bool readGafFile( const std::string& filename);
-  bool readIdFile(const std::string& filename);
 
   /// Returns a map with all gene indexed gaf annotations.
   ///
   /// \return const GafRecordMap&
   ///
-  [[nodiscard]] const GeneSynonymVector& getSynonymVector() const { return synonym_vector_; }
   [[nodiscard]] const std::vector<std::shared_ptr<const kol::GAFRecord>>& getGafRecordVector() const { return gaf_record_vector_; }
 
 
 private:
 
 
-  GeneSynonymVector  synonym_vector_;
   std::vector<std::shared_ptr<const kol::GAFRecord>> gaf_record_vector_;
 
 };

@@ -33,7 +33,7 @@ public:
                    const std::string& go_graph_file,
                    const std::string& annotation_file);
 
-  ~OntologyDatabase() = default;
+  ~OntologyDatabase() override = default;
 
   // Resource type identifier.
   [[nodiscard]] kgl::RuntimeResourceType getResourceType() const override { return kgl::RuntimeResourceType::ONTOLOGY_DATABASE; }
